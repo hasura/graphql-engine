@@ -314,9 +314,9 @@ A nested insert mutation is processed as follows:
 
 3. The array relationships are inserted at the end. i.e. in this case, the articles are now inserted with their ``author_id`` set to the author's ``id`` collected in the step 2. Hence, it's not possible to specify ``author_id`` in the data for the articles relationship.
 
-Insert an object with a JSONB column
-------------------------------------
-**Example:** Insert a new ``author`` object with a JSONB ``address`` column:
+Insert an object with a JSONB field
+-----------------------------------
+**Example:** Insert a new ``author`` object with a JSONB ``address`` field:
 
 .. graphiql::
   :view_only:
@@ -371,43 +371,84 @@ Insert an object with a JSONB column
       }
     }
 
-Insert an object with an array column
--------------------------------------
-The way to insert an array field depends on its type. If the type is JSONB, you can pass a JSONB array as a variable. If it's a Postgres array, you have to pass the array as a string literal.
+Insert an object with an ARRAY field
+------------------------------------
 
-**Example 1:** Insert a new ``article`` object with an array column called ``tags`` using JSONB:
+To insert fields of array types, you currently have to pass them as a `Postgres array literal <https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT>`_.
+
+**Example:** Insert a new ``author`` with a text array ``emails`` field:
 
 .. graphiql::
   :view_only:
   :query:
-    mutation insert_article_with_tags($tags: jsonb) {
-      insert_article(
+    mutation insert_author {
+      insert_author (
         objects: [
           {
-            title: "Article 1",
-            content: "Sample article content",
-            author_id: 3,
-            tags: $tags
+            id: 1,
+            name: "Ash",
+            emails: "{ash@ash.com, ash123@ash.com}"
           }
         ]
       ) {
+        affected_rows
         returning {
           id
-          title
-          tags
+          name
+          emails
         }
       }
     }
   :response:
     {
       "data": {
-        "insert_article": {
+        "insert_author": {
           "affected_rows": 1,
           "returning": [
             {
-              "id": 21,
-              "title": "Article 1",
-              "tags": ["tag1", "tag2"]
+              "id": 1,
+              "name": "Ash",
+              "emails": ["ash@ash.com", "ash123@ash.com"]
+            }
+          ]
+        }
+      }
+    }
+
+
+Using variables:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_author($emails: _text) {
+      insert_author (
+        objects: [
+          {
+            id: 1,
+            name: "Ash",
+            emails: $emails
+          }
+        ]
+      ) {
+        affected_rows
+        returning {
+          id
+          name
+          emails
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 1,
+              "name": "Ash",
+              "emails": ["ash@ash.com", "ash123@ash.com"]
             }
           ]
         }
@@ -415,46 +456,7 @@ The way to insert an array field depends on its type. If the type is JSONB, you 
     }
   :variables:
     {
-      "tags": ["tag1", "tag2"]
-    }
-    
-**Example 2:** Insert a new ``article`` passing ``tags`` as literal strings:
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation insert_article_with_tags() {
-      insert_article(
-        objects: [
-          {
-            title: "Article 1",
-            content: "Sample article content",
-            author_id: 3,
-            tags: "{Hello, world}"
-          }
-        ]
-      ) {
-        returning {
-          id
-          title
-          tags
-        }
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_article": {
-          "affected_rows": 1,
-          "returning": [
-            {
-              "id": 21,
-              "title": "Article 1",
-              "tags": ["Hello", "world"]
-            }
-          ]
-        }
-      }
+      "emails": "{ash@ash.com, ash123@ash.com}"
     }
 
 Set a field to its default value during insert
