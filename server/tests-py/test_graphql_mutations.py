@@ -294,6 +294,9 @@ class TestGraphqlUpdateBasic(DefaultTestMutations):
     def test_no_operator_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/person_error_no_operator.yaml")
 
+    def test_column_in_multiple_operators(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/update/basic"
