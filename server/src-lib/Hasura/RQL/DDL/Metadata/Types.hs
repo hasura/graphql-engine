@@ -225,9 +225,11 @@ $(deriveToJSON defaultOptions ''DropInconsistentMetadata)
 instance FromJSON DropInconsistentMetadata where
   parseJSON _ = return DropInconsistentMetadata
 
--- | Encode 'ReplaceMetadata' to JSON Value with deterministic ordering of keys in Objects
--- Warning:- While modifying any part of the code below make sure the encoded JSON of any
--- type should be parsable via its 'FromJSON' instance
+-- | Encode 'ReplaceMetadata' to JSON with deterministic ordering. Ordering of object keys and array
+-- elements should  remain consistent across versions of graphql-engine if possible!
+--
+-- Note: While modifying any part of the code below, make sure the encoded JSON of each type is
+-- parsable via its 'FromJSON' instance.
 replaceMetadataToOrdJSON :: ReplaceMetadata -> AO.Value
 replaceMetadataToOrdJSON ( ReplaceMetadata
                                version
