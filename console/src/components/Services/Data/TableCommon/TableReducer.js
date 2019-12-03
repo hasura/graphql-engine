@@ -26,6 +26,7 @@ import {
   TOGGLE_ENUM_SUCCESS,
   TOGGLE_ENUM_FAILURE,
   MODIFY_ROOT_FIELD,
+  SET_CHECK_CONSTRAINTS,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -611,6 +612,11 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       return {
         ...modifyState,
         rootFieldsEdit: action.data,
+      };
+    case SET_CHECK_CONSTRAINTS:
+      return {
+        ...modifyState,
+        checkConstraintsModify: action.constraints,
       };
     default:
       return modifyState;

@@ -190,9 +190,8 @@ emptyFunctionConfig = FunctionConfig Nothing
 -- Validate function tracking operation. Fails if function is already being
 -- tracked, or if a table with the same name is being tracked.
 trackFunctionP1
-  :: (CacheRM m, UserInfoM m, QErrM m) => QualifiedFunction -> m ()
+  :: (CacheRM m, QErrM m) => QualifiedFunction -> m ()
 trackFunctionP1 qf = do
-  adminOnly
   rawSchemaCache <- askSchemaCache
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
@@ -252,8 +251,10 @@ fetchRawFunctioInfo qf@(QualifiedObject sn fn) =
           |] (sn, fn) True
 
 runTrackFunc
-  :: ( QErrM m, CacheRWM m, HasSystemDefined m
-     , MonadTx m, UserInfoM m
+  :: ( QErrM m
+     , CacheRWM m
+     , HasSystemDefined m
+     , MonadTx m
      )
   => TrackFunction -> m EncJSON
 runTrackFunc (TrackFunction qf)= do
@@ -275,7 +276,7 @@ instance FromJSON TrackFunctionV2 where
 
 runTrackFunctionV2
   :: ( QErrM m, CacheRWM m, HasSystemDefined m
-     , MonadTx m, UserInfoM m
+     , MonadTx m
      )
   => TrackFunctionV2 -> m EncJSON
 runTrackFunctionV2 (TrackFunctionV2 qf config) = do
@@ -288,12 +289,9 @@ newtype UnTrackFunction
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
 runUntrackFunc
-  :: ( QErrM m, CacheRWM m, MonadTx m
-     , UserInfoM m
-     )
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => UnTrackFunction -> m EncJSON
 runUntrackFunc (UnTrackFunction qf) = do
-  adminOnly
   void $ askFunctionInfo qf
   liftTx $ delFunctionFromCatalog qf
   delFunctionFromCache qf
