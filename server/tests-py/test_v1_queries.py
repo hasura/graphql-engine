@@ -722,3 +722,11 @@ class TestBulkQuery(DefaultTestQueries):
 
     def test_run_bulk_mixed_access_mode(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mixed_access_mode.yaml')
+
+    def test_run_bulk_with_select_and_writes(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_with_writes.yaml')
+
+    def test_run_bulk_with_select_and_reads(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_with_reads.yaml')
+
+  
