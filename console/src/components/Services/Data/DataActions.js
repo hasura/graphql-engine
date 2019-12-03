@@ -68,8 +68,8 @@ const useCompositeFnsNewCheck =
 const compositeFnCheck = useCompositeFnsNewCheck
   ? 'c'
   : {
-      $ilike: '%composite%',
-    };
+    $ilike: '%composite%',
+  };
 
 const initQueries = {
   schemaList: {
@@ -285,6 +285,7 @@ const loadSchema = configOptions => {
       }
     }
 
+    // TODO: make read_only sub-queries. blocked as query 2 is v1/query select
     const body = {
       type: 'bulk',
       args: [
@@ -563,12 +564,14 @@ const getBulkColumnInfoFetchQuery = schema => {
     type: 'run_sql',
     args: {
       sql: fetchColumnTypesQuery,
+      read_only: true,
     },
   };
   const fetchTypeDefaultValues = {
     type: 'run_sql',
     args: {
       sql: fetchColumnDefaultFunctions(schema),
+      read_only: true,
     },
   };
 
@@ -576,6 +579,7 @@ const getBulkColumnInfoFetchQuery = schema => {
     type: 'run_sql',
     args: {
       sql: fetchColumnCastsQuery,
+      read_only: true,
     },
   };
 
