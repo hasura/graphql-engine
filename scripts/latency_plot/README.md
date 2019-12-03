@@ -4,16 +4,21 @@ development branch, at several load levels.
 
 ## Usage:
 
-    $ plot.py <path_to_data_dir> <y_data_label> <param_label> <categories_label>
+    $ plot.py <path_to_data_dir> <y_data_label>
 
 The first argument should be a path to a directory that contains 1 or more CSV
 files, which should be named like, e.g.
 
     my_special_branch.1000_rps.csv
 
-where the two dot-separated sections correspond to `<param_label>` and
-`<categories_label>` respectively. If you aren't comparing across several
-categories, the file can have an underdash or something meaningless.
+where the two dot-separated sections correspond to `<variant_name>.<group_name>.csv`.
+If you aren't comparing the same variant across multiple categories (e.g. at
+several different requests-per-second), you can use `_` in place of
+`<group_name>`. 
+
+See:
+
+    $ plot.py --help
 
 ### Data file format
 
@@ -24,6 +29,18 @@ The Y scale on the graph will automatically display generic human-readable
 units (G, M, K, m, u, n), so that e.g. 0.001 will be displayed around the "1 m"
 scale (which might correspond to 1-millisecond, say; it's up to you to keep
 track of actual units).
+
+### Interpreting plots
+
+The plots contain:
+- thin hatches marking percentiles; e.g. a blue line at 120 means that 99% of samples were less than 120
+- a randomly jittered scatter plot; these aid in viewing the distribution, and
+  individual outliers. Samples from the second half of each dataset (i.e. those
+  that were taken later in time) will appear in red; this is to help draw
+  attention to any simple drift that is happening (i.e. when the sample value
+  is highly correlated with time).
+- a violin plot, which is like a sideways histogram; where it is widest
+  indicates the largest concentration of samples.
 
 ### Example
 

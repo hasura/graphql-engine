@@ -20,15 +20,20 @@ import argparse
 parser = argparse.ArgumentParser(description='Plot latency samples across categories. See README.md')
 parser.add_argument('--log', action='store_true',
                     help='Use a log scale for the Y axis')
+parser.add_argument('--baseline-variant',
+                    help='Variant to use as the baseline for comparing improvements/regressions. '+
+                         'The name should correspond to some <variant>.foo.csv in the data file names'
+                    )
 parser.add_argument('data_dir_path',
                     help='The path to the directory containing CSV files')
 parser.add_argument('y_label', help='Label for the Y axis (i.e. description of data points)')
-# The remaining arguments correspond to the dot-separated parts of the sample
-# filenames found in data_dir_path.
-parser.add_argument('x_label', help='See README.md')
-parser.add_argument('category_label', help='See README.md')
 args = parser.parse_args()
 
+# These correspond to the dot-separated parts of the sample filenames found in
+# data_dir_path. These labels are aort of arbitrary and appear in the
+# dataframes and graphs and tables.
+x_label = 'Variant'
+category_label = 'Group'
 
 # Can be used to scale number of Y axis tics, while maintaining nice intervals:
 approx_target_y_tics = 20
@@ -72,17 +77,27 @@ if len(data_files) == 0:
     sys.exit("No .csv files found in " + args.data_dir_path)
 
 data = []
+# We use these to try to visualize drift using scatter points
+data_first_half = []
+data_second_half = []
 
 error_cnt = 0
 for path in data_files:
     dim1, dim2, _ = prettify(os.path.basename(path).split('.'))
+    halfway = sum(1 for _ in open(path)) / 2
     with open(path) as f:
-        for val in f:
+        for idx, val in enumerate(f):
             try:
-                data.append({args.y_label: float(val)
-                            ,args.x_label: dim1
-                            ,args.category_label: dim2
-                            })
+                def ap(d):
+                    d.append({args.y_label: float(val)
+                             ,x_label: dim1
+                             ,category_label: dim2
+                             })
+                ap(data)
+                if idx > halfway:
+                    ap(data_second_half)
+                else:
+                    ap(data_first_half)
             except: 
                 error_cnt = error_cnt + 1
 
@@ -91,6 +106,9 @@ if error_cnt > 0:
     print('Ignored bad samples: ' + str(error_cnt))
 
 df = pd.DataFrame(data)
+# I couldn't easily figure out how to derive these from 'df' so we build them separately above:
+df_first_half = pd.DataFrame(data_first_half)
+df_second_half = pd.DataFrame(data_second_half)
 
 
 sns.set_style("whitegrid")
@@ -98,11 +116,19 @@ plt.figure(figsize=(18,10))
 
 # Plot raw points lightly under everything
 # NOTE: this is pretty slow:
-ax = sns.stripplot(x=args.category_label, y=args.y_label, hue=args.x_label, data=df, palette=sns.color_palette(["#AAAAAA"]), 
-                   jitter=0.40,
-                   size=2.2,
-                   dodge=True) 
-plt.setp(ax.collections, zorder=-1000) 
+def sub_stripplot(d, c, a):
+    ax = sns.stripplot(x=category_label, y=args.y_label, hue=x_label, data=d, 
+                       palette=sns.color_palette([c]), alpha=a,
+                       jitter=0.40,
+                       size=2.2,
+                       dodge=True) 
+    plt.setp(ax.collections, zorder=-1000) 
+
+# Try to make simple drift apparent by coloring samples from the first and
+# second halves of the run differently. This doesn't quite work as we'd like;
+# the zorder of each point should be randomly interleaved.
+sub_stripplot(df_second_half, "#FF4444", '0.5')
+sub_stripplot(df_first_half,  "#AAAAAA", '0.9')
 # TODO I tried to filter and restyle the outliers to make them more prominent,
 # but failed. I think they are visible enough above though, with the styling
 # tweaks I did.
@@ -119,7 +145,7 @@ percentiles = [(99.9, 'red'), (99, 'blue'), (95, 'green')]
 #     for pctl, color in percentiles:
 #     ...
 for pctl, color in percentiles:
-    ax = sns.boxplot(x=args.category_label, y=args.y_label, hue=args.x_label, data=df, 
+    ax = sns.boxplot(x=category_label, y=args.y_label, hue=x_label, data=df, 
            showfliers=False, 
            showbox=False, 
            # Showing bottom percentiles just seemed to add visual noise:
@@ -133,7 +159,6 @@ for pctl, color in percentiles:
     for h in handles:
         h.remove()
 
-# TODO add median value labels (this has been really frustrating)
 
 # This will get overwritten; add back below:
 pctl_legend = plt.legend(title='Percentile markers', loc='upper left', 
@@ -141,8 +166,11 @@ pctl_legend = plt.legend(title='Percentile markers', loc='upper left',
                                  [mpatches.Patch(color="black", label='median')]
                         )
 
+# TODO use matplotlib's violin plots for decent log space support?
+#   https://github.com/mwaskom/seaborn/issues/1257 
+#   or: https://github.com/ciortanmadalina/modality_tests/blob/master/violinboxplot_hybrid_axes.ipynb 
 # See: https://seaborn.pydata.org/generated/seaborn.violinplot.html 
-sns.violinplot(x=args.category_label, y=args.y_label, hue=args.x_label, data=df, palette="Set1", 
+sns.violinplot(x=category_label, y=args.y_label, hue=x_label, data=df, palette="Set1", 
                scale_hue=True,
                # All violins get the same area (number of samples may differ):
                scale="area", 
@@ -159,10 +187,12 @@ ax.add_artist(pctl_legend)
 
 if args.log:
     ax.set(yscale="log")
-
-# Get approx number of desired Y tics, while maintining nice (factor of 10)
-# intervals:
-ax.yaxis.set_major_locator(ticker.MaxNLocator(approx_target_y_tics)) 
+    ax.yaxis.set_minor_formatter(ticker.FuncFormatter(y_fmt)) 
+    ax.grid(b=True, which='minor', color='#888888', linewidth=0.2)
+    ax.grid(b=True, which='major', color='#BBBBBB', linewidth=0.8)
+else:
+    # Get approx number of desired Y tics, while maintining nice (factor of 10) intervals:
+    ax.yaxis.set_major_locator(ticker.MaxNLocator(approx_target_y_tics)) 
 # human-readable Y axis labels:
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt)) 
 
@@ -170,12 +200,91 @@ if not args.log:
     plt.ylim(0, None)
 
 
+#### Print useful tables and statistics:
+medians_df = df.groupby([category_label, x_label]).median()
+mins_df    = df.groupby([category_label, x_label]).min()
+print("")
+print("======================== Medians per variant ========================")
+print(medians_df)
+print("")
+medians_grid_df = medians_df.pivot_table(index=category_label, columns=x_label, values=args.y_label)
+mins_grid_df    =    mins_df.pivot_table(index=category_label, columns=x_label, values=args.y_label)
 
+
+#### Generate HTML table reports 
+def html_tablify(pivoted_df, caption):
+    styles = [
+        dict(selector="tr, td, caption", props=[("color", "#777"), ("line-height", "1.6"), ("font-family", "Helvetica, Arial, sans-serif")]),
+        dict(selector="th" , props=[("background-color", "#e0e0e0"), ("color", "#000"), ("text-align", "left")]),
+        dict(selector="td" , props=[("border-width", "0 0 1px 0"), ("border-bottom", "1px solid #cbcbcb")]),
+        dict(selector="caption", props=[("caption-side", "top"), ("padding", "20px"), ("font-size", "130%")])
+    ]
+    def highlight_pct_change(s):
+        if args.baseline_variant:
+            baseline = s[args.baseline_variant.replace("_", " ")]
+            if pd.isnull(baseline):
+                baseline = s.max()
+        else:
+            baseline = s.max()
+        def color(v):
+            if baseline == 0:
+                pct_chg = 0
+            else:
+                pct_chg = (v - baseline) / baseline 
+
+            # insignificant
+            if pd.isnull(v):
+                return ''
+            elif abs(pct_chg) < 0.02:
+                return ''
+            # negative (faster/good)
+            elif pct_chg > 0:
+                if abs(pct_chg) < 0.05:
+                    return 'background-color: #da080826'
+                if abs(pct_chg) < 0.20:
+                    return 'background-color: #da080870'
+                if abs(pct_chg) < 0.50:
+                    return 'background-color: #da0808; color: white'
+                else:
+                    return 'background-color: #a00101; color: white'
+            # positive (slower/bad)
+            else:
+                if abs(pct_chg) < 0.05:
+                    return 'background-color: #08da0826'
+                if abs(pct_chg) < 0.20:
+                    return 'background-color: #08da0870'
+                if abs(pct_chg) < 0.50:
+                    return 'background-color: #08da08; color: white'
+                else:
+                    return 'background-color: #01a001; color: white'
+
+        return [color(v) for v in s]
+
+    return (pivoted_df.style
+             .set_table_styles(styles) 
+             .set_caption(caption)
+             # Hide NaNs:
+             .applymap(lambda x: 'color: white' if pd.isnull(x) else '') 
+             .apply(highlight_pct_change, axis=1)
+             .render())
+
+table_path = args.data_dir_path + '/table.html'
+with open(table_path,'w') as f:
+    f.write(html_tablify(medians_grid_df, "Medians"))
+    f.write(html_tablify(mins_grid_df,    "Minimums"))
+    f.close()
+    print("Saved data table to '%s'" % table_path)
+    pass
+
+
+#### Save the plot to a file:
 # NOTE: won't work without python3-tk:
 # plt.show()
 # SVG also works, but unsurprisingly performance is terrible when we add 'stripplot' above:
-plt.savefig("plot.png", format="png") 
-print("Saved graph to 'plot.png'")
+plot_path = args.data_dir_path + "/plot.png"
+plt.savefig(plot_path, format="png") 
+print("Saved graph to '%s'" % plot_path)
+
 
 ###############################################################################
 #

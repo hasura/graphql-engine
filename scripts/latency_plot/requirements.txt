@@ -10,3 +10,5 @@ pytz==2019.3
 scipy==1.3.1
 seaborn==0.9.0
 six==1.13.0
+jinja2==2.10.3 
+MarkupSafe==1.1.1 
