@@ -80,7 +80,7 @@ handlers = MkHandlers({
     '/state': StateHandler
 })
 
-def create_server(host='127.0.0.1', port=5000):
+def create_server(host='127.0.0.1', port=5001):
     return WebServer((host, port), handlers)
 
 def stop_server(server):
