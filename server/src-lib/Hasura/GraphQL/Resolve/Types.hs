@@ -98,8 +98,8 @@ data SyncReturnStrategy
 
 data SyncActionExecutionContext
   = SyncActionExecutionContext
-  { _saecStrategy   :: !SyncReturnStrategy
-  , _saecWebhook    :: !ResolvedWebhook
+  { _saecStrategy :: !SyncReturnStrategy
+  , _saecWebhook  :: !ResolvedWebhook
   } deriving (Show, Eq)
 
 data ActionExecutionContext
@@ -107,9 +107,10 @@ data ActionExecutionContext
   | ActionExecutionAsync !AnnBoolExpPartialSQL
   deriving (Show, Eq)
 
-newtype ActionSelectOpContext
+data ActionSelectOpContext
   = ActionSelectOpContext
-  { _asocFilter :: AnnBoolExpPartialSQL
+  { _asocFilter         :: AnnBoolExpPartialSQL
+  , _asocDefinitionList :: [(PGCol, PGScalarType)]
   } deriving (Show, Eq)
 
 -- (custom name | generated name) -> PG column info

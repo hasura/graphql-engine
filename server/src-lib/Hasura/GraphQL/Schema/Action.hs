@@ -100,11 +100,12 @@ mkQueryField
   :: ActionName
   -> ResolvedActionDefinition
   -> ActionPermissionInfo
+  -> [(PGCol, PGScalarType)]
   -> Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
-mkQueryField actionName definition permission =
+mkQueryField actionName definition permission definitionList =
   case getActionKind definition of
     ActionAsynchronous ->
-      Just ( ActionSelectOpContext $ _apiFilter permission
+      Just ( ActionSelectOpContext (_apiFilter permission) definitionList
            , fieldInfo
            , TIObj $ mkActionResponseTypeInfo actionName $
              _adOutputType definition
@@ -138,7 +139,7 @@ mkActionFieldsAndTypes
      , FieldMap
      )
 mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
-  return ( mkQueryField actionName definition permission
+  return ( mkQueryField actionName definition permission definitionList
          , mkMutationField actionName actionInfo permission definitionList
          -- , maybe mempty mkFieldMap annotatedOutputTypeM
          , fieldMap

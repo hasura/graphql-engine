@@ -43,7 +43,7 @@ data QueryRootFldAST v
   | QRFAgg !(DS.AnnAggSelG v)
   | QRFFnSimple !(DS.AnnSimpleSelG v)
   | QRFFnAgg !(DS.AnnAggSelG v)
-  | QRFActionSelect !(RA.ActionSelect v)
+  | QRFActionSelect !(DS.AnnSimpleSelG v)
   deriving (Show, Eq)
 
 type QueryRootFldUnresolved = QueryRootFldAST UnresolvedVal
@@ -60,7 +60,7 @@ traverseQueryRootFldAST f = \case
   QRFAgg s          -> QRFAgg <$> DS.traverseAnnAggSel f s
   QRFFnSimple s     -> QRFFnSimple <$> DS.traverseAnnSimpleSel f s
   QRFFnAgg s        -> QRFFnAgg <$> DS.traverseAnnAggSel f s
-  QRFActionSelect s -> QRFActionSelect <$> RA.traverseActionSelect f s
+  QRFActionSelect s -> QRFActionSelect <$> DS.traverseAnnSimpleSel f s
 
 toPGQuery :: QueryRootFldResolved -> Q.Query
 toPGQuery = \case
@@ -69,7 +69,7 @@ toPGQuery = \case
   QRFAgg s          -> DS.selectAggQuerySQL s
   QRFFnSimple s     -> DS.selectQuerySQL False s
   QRFFnAgg s        -> DS.selectAggQuerySQL s
-  QRFActionSelect s -> RA.actionSelectToSql s
+  QRFActionSelect s -> DS.selectQuerySQL True s
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
@@ -106,7 +106,7 @@ queryFldToPGAST fld = do
       validateHdrs userInfo (_fqocHeaders ctx)
       QRFFnAgg <$> RS.convertFuncQueryAgg ctx fld
     QCActionFetch ctx ->
-      QRFActionSelect <$> RA.resolveActionSelect ctx fld
+      QRFActionSelect <$> RA.resolveAsyncResponse ctx fld
 
 mutFldToTx
   :: ( MonadResolve m
