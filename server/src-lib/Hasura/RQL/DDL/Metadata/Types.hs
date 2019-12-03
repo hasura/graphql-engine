@@ -225,8 +225,9 @@ $(deriveToJSON defaultOptions ''DropInconsistentMetadata)
 instance FromJSON DropInconsistentMetadata where
   parseJSON _ = return DropInconsistentMetadata
 
--- Functions enable encoding Metadata types and their dependants to ordered JSON
-
+-- | Encode 'ReplaceMetadata' to JSON Value with deterministic ordering of keys in Objects
+-- Warning:- While modifying any part of the code below make sure the encoded JSON of any
+-- type should be parsable via its 'FromJSON' instance
 replaceMetadataToOrdJSON :: ReplaceMetadata -> AO.Value
 replaceMetadataToOrdJSON ( ReplaceMetadata
                                version
@@ -256,179 +257,165 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
 
     allowlistPair = allowlist >>= listToMaybeOrdPair "allowlist" AO.toOrdered
 
-tableMetaToOrdJSON :: TableMeta -> AO.Value
-tableMetaToOrdJSON ( TableMeta
-                     table
-                     isEnum
-                     config
-                     objectRelationships
-                     arrayRelationships
-                     computedFields
-                     insertPermissions
-                     selectPermissions
-                     updatePermissions
-                     deletePermissions
-                     eventTriggers
-                   ) = AO.object $ [("table", AO.toOrdered table)]
-                       <> catMaybes [ isEnumPair
-                                    , configPair
-                                    , objectRelationshipsPair
-                                    , arrayRelationshipsPair
-                                    , computedFieldsPair
-                                    , insertPermissionsPair
-                                    , selectPermissionsPair
-                                    , updatePermissionsPair
-                                    , deletePermissionsPair
-                                    , eventTriggersPair
+    tableMetaToOrdJSON :: TableMeta -> AO.Value
+    tableMetaToOrdJSON ( TableMeta
+                         table
+                         isEnum
+                         config
+                         objectRelationships
+                         arrayRelationships
+                         computedFields
+                         insertPermissions
+                         selectPermissions
+                         updatePermissions
+                         deletePermissions
+                         eventTriggers
+                       ) = AO.object $ [("table", AO.toOrdered table)]
+                           <> catMaybes [ isEnumPair
+                                        , configPair
+                                        , objectRelationshipsPair
+                                        , arrayRelationshipsPair
+                                        , computedFieldsPair
+                                        , insertPermissionsPair
+                                        , selectPermissionsPair
+                                        , updatePermissionsPair
+                                        , deletePermissionsPair
+                                        , eventTriggersPair
+                                        ]
+      where
+        isEnumPair = if isEnum then Just ("is_enum", AO.toOrdered isEnum) else Nothing
+        configPair = if config == emptyTableConfig then Nothing
+                     else Just ("configuration" , AO.toOrdered config)
+        objectRelationshipsPair = listToMaybeOrdPair "object_relationships"
+                                  relDefToOrdJSON objectRelationships
+        arrayRelationshipsPair = listToMaybeOrdPair "array_relationships"
+                                 relDefToOrdJSON arrayRelationships
+        computedFieldsPair = listToMaybeOrdPair "computed_fields"
+                             computedFieldMetaToOrdJSON computedFields
+        insertPermissionsPair = listToMaybeOrdPair "insert_permissions"
+                                insPermDefToOrdJSON insertPermissions
+        selectPermissionsPair = listToMaybeOrdPair "select_permissions"
+                                selPermDefToOrdJSON selectPermissions
+        updatePermissionsPair = listToMaybeOrdPair "update_permissions"
+                                updPermDefToOrdJSON updatePermissions
+        deletePermissionsPair = listToMaybeOrdPair "delete_permissions"
+                                delPermDefToOrdJSON deletePermissions
+        eventTriggersPair = listToMaybeOrdPair "event_triggers"
+                            eventTriggerConfToOrdJSON eventTriggers
+
+        relDefToOrdJSON :: (ToJSON a) => Relationship.RelDef a -> AO.Value
+        relDefToOrdJSON (Relationship.RelDef name using comment) =
+          AO.object $ [ ("name", AO.toOrdered name)
+                      , ("using", AO.toOrdered using)
+                      ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
+
+        computedFieldMetaToOrdJSON :: ComputedFieldMeta -> AO.Value
+        computedFieldMetaToOrdJSON (ComputedFieldMeta name definition comment) =
+          AO.object $ [ ("name", AO.toOrdered name)
+                      , ("definition", AO.toOrdered definition)
+                      ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
+
+        insPermDefToOrdJSON :: Permission.InsPermDef -> AO.Value
+        insPermDefToOrdJSON = permDefToOrdJSON insPermToOrdJSON
+          where
+            insPermToOrdJSON (Permission.InsPerm check set columns) =
+              let columnsPair = ("columns",) . AO.toOrdered <$> columns
+              in AO.object $ [("check", AO.toOrdered check)]
+                 <> catMaybes [maybeSetToMaybeOrdPair set, columnsPair]
+
+        selPermDefToOrdJSON :: Permission.SelPermDef -> AO.Value
+        selPermDefToOrdJSON = permDefToOrdJSON selPermToOrdJSON
+          where
+            selPermToOrdJSON (Permission.SelPerm columns fltr limit allowAgg computedFieldsPerm) =
+              AO.object $ catMaybes [ columnsPair
+                                    , computedFieldsPermPair
+                                    , filterPair
+                                    , limitPair
+                                    , allowAggPair
                                     ]
-  where
-    isEnumPair = if isEnum then Just ("is_enum", AO.toOrdered isEnum) else Nothing
-    configPair = if config == emptyTableConfig then Nothing
-                 else Just ("configuration" , AO.toOrdered config)
+              where
+                columnsPair = Just ("columns", AO.toOrdered columns)
+                computedFieldsPermPair = listToMaybeOrdPair "computed_fields" AO.toOrdered computedFieldsPerm
+                filterPair = Just ("filter", AO.toOrdered fltr)
+                limitPair = maybeAnyToMaybeOrdPair "limit" AO.toOrdered limit
+                allowAggPair = if allowAgg
+                               then Just ("allow_aggregations", AO.toOrdered allowAgg)
+                               else Nothing
 
-    objectRelationshipsPair = listToMaybeOrdPair "object_relationships"
-                              relDefToOrdJSON objectRelationships
+        updPermDefToOrdJSON :: Permission.UpdPermDef -> AO.Value
+        updPermDefToOrdJSON = permDefToOrdJSON updPermToOrdJSON
+          where
+            updPermToOrdJSON (Permission.UpdPerm columns set fltr) =
+              AO.object $ [ ("columns", AO.toOrdered columns)
+                          , ("filter", AO.toOrdered fltr)
+                          ] <> catMaybes [maybeSetToMaybeOrdPair set]
 
-    arrayRelationshipsPair = listToMaybeOrdPair "array_relationships"
-                             relDefToOrdJSON arrayRelationships
+        delPermDefToOrdJSON :: Permission.DelPermDef -> AO.Value
+        delPermDefToOrdJSON = permDefToOrdJSON AO.toOrdered
 
-    computedFieldsPair = listToMaybeOrdPair "computed_fields"
-                         computedFieldMetaToOrdJSON computedFields
+        permDefToOrdJSON :: (a -> AO.Value) -> Permission.PermDef a -> AO.Value
+        permDefToOrdJSON permToOrdJSON (Permission.PermDef role permission comment) =
+          AO.object $ [ ("role", AO.toOrdered role)
+                      , ("permission", permToOrdJSON permission)
+                      ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
-    insertPermissionsPair = listToMaybeOrdPair "insert_permissions"
-                            insPermDefToOrdJSON insertPermissions
+        eventTriggerConfToOrdJSON :: EventTriggerConf -> AO.Value
+        eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers) =
+          AO.object $ [ ("name", AO.toOrdered name)
+                      , ("definition", AO.toOrdered definition)
+                      , ("retry_conf", AO.toOrdered retryConf)
+                      ] <> catMaybes [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook
+                                     , maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv
+                                     , headers >>= listToMaybeOrdPair "headers" AO.toOrdered
+                                     ]
 
-    selectPermissionsPair = listToMaybeOrdPair "select_permissions"
-                            selPermDefToOrdJSON selectPermissions
+    functionsMetadataToOrdJSON :: FunctionsMetadata -> Maybe AO.Value
+    functionsMetadataToOrdJSON fm =
+      let withList _ []   = Nothing
+          withList f list = Just $ f list
+          functionV2ToOrdJSON (Schema.TrackFunctionV2 function config) =
+            AO.object $ [("function", AO.toOrdered function)]
+                        <> if config == Schema.emptyFunctionConfig then []
+                           else pure ("configuration", AO.toOrdered config)
+      in case fm of
+        FMVersion1 functionsV1 -> withList AO.toOrdered functionsV1
+        FMVersion2 functionsV2 -> withList (AO.array . map functionV2ToOrdJSON) functionsV2
 
-    updatePermissionsPair = listToMaybeOrdPair "update_permissions"
-                            updPermDefToOrdJSON updatePermissions
-
-    deletePermissionsPair = listToMaybeOrdPair "delete_permissions"
-                            delPermDefToOrdJSON deletePermissions
-
-    eventTriggersPair = listToMaybeOrdPair "event_triggers"
-                        eventTriggerConfToOrdJSON eventTriggers
-
-computedFieldMetaToOrdJSON :: ComputedFieldMeta -> AO.Value
-computedFieldMetaToOrdJSON (ComputedFieldMeta name definition comment) =
-  AO.object $ [ ("name", AO.toOrdered name)
-              , ("definition", AO.toOrdered definition)
-              ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
-
-functionsMetadataToOrdJSON :: FunctionsMetadata -> Maybe AO.Value
-functionsMetadataToOrdJSON fm =
-  let withList _ []   = Nothing
-      withList f list = Just $ f list
-
-      functionV2ToOrdJSON (Schema.TrackFunctionV2 function config) =
-        AO.object $ [("function", AO.toOrdered function)]
-                    <> if config == Schema.emptyFunctionConfig then []
-                       else pure ("configuration", AO.toOrdered config)
-  in case fm of
-    FMVersion1 functions   -> withList AO.toOrdered functions
-    FMVersion2 functionsV2 -> withList (AO.array . map functionV2ToOrdJSON) functionsV2
-
-
-relDefToOrdJSON :: (ToJSON a) => Relationship.RelDef a -> AO.Value
-relDefToOrdJSON (Relationship.RelDef name using comment) =
-  AO.object $ [ ("name", AO.toOrdered name)
-              , ("using", AO.toOrdered using)
-              ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
-
-permDefToOrdJSON :: (a -> AO.Value) -> Permission.PermDef a -> AO.Value
-permDefToOrdJSON permToOrdJSON (Permission.PermDef role permission comment) =
-  AO.object $ [ ("role", AO.toOrdered role)
-              , ("permission", permToOrdJSON permission)
-              ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
-
-insPermDefToOrdJSON :: Permission.InsPermDef -> AO.Value
-insPermDefToOrdJSON = permDefToOrdJSON insPermToOrdJSON
-  where
-    insPermToOrdJSON (Permission.InsPerm check set columns) =
-      AO.object $ [("check", AO.toOrdered check)]
-                  <> catMaybes [maybeSetToMaybeOrdPair set, columnsPair]
+    remoteSchemaQToOrdJSON :: AddRemoteSchemaQuery -> AO.Value
+    remoteSchemaQToOrdJSON (AddRemoteSchemaQuery name definition comment) =
+      AO.object $ [ ("name", AO.toOrdered name)
+                  , ("definition", remoteSchemaDefToOrdJSON definition)
+                  ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
       where
-        columnsPair = ("columns",) . AO.toOrdered <$> columns
+        remoteSchemaDefToOrdJSON :: RemoteSchemaDef -> AO.Value
+        remoteSchemaDefToOrdJSON (RemoteSchemaDef url urlFromEnv headers frwrdClientHdrs timeout) =
+          AO.object $ catMaybes [ maybeToPair "url" url
+                                , maybeToPair "url_from_env" urlFromEnv
+                                , maybeToPair "timeout_seconds" timeout
+                                , headers >>= listToMaybeOrdPair "headers" AO.toOrdered
+                                ] <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
+          where
+            maybeToPair n = maybeAnyToMaybeOrdPair n AO.toOrdered
+
+    createCollectionToOrdJSON :: Collection.CreateCollection -> AO.Value
+    createCollectionToOrdJSON (Collection.CreateCollection name definition comment) =
+      AO.object $ [ ("name", AO.toOrdered name)
+                  , ("definition", AO.toOrdered definition)
+                  ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
 
-selPermDefToOrdJSON :: Permission.SelPermDef -> AO.Value
-selPermDefToOrdJSON = permDefToOrdJSON selPermToOrdJSON
-  where
-    selPermToOrdJSON (Permission.SelPerm columns fltr limit allowAgg computedFields) =
-      AO.object $ catMaybes [ columnsPair
-                            , computedFieldsPair
-                            , filterPair
-                            , limitPair
-                            , allowAggPair
-                            ]
-      where
-        columnsPair = Just ("columns", AO.toOrdered columns)
-        computedFieldsPair = listToMaybeOrdPair "computed_fields" AO.toOrdered computedFields
-        filterPair = Just ("filter", AO.toOrdered fltr)
-        limitPair = maybeAnyToMaybeOrdPair "limit" AO.toOrdered limit
-        allowAggPair = if allowAgg
-                       then Just ("allow_aggregations", AO.toOrdered allowAgg)
-                       else Nothing
+    -- Utility functions
+    listToMaybeOrdPair :: Text -> (a -> AO.Value) -> [a] -> Maybe (Text, AO.Value)
+    listToMaybeOrdPair name f = \case
+      []   -> Nothing
+      list -> Just $ (name,) $ AO.array $ map f list
 
-updPermDefToOrdJSON :: Permission.UpdPermDef -> AO.Value
-updPermDefToOrdJSON = permDefToOrdJSON updPermToOrdJSON
-  where
-    updPermToOrdJSON (Permission.UpdPerm columns set fltr) =
-      AO.object $ [ ("columns", AO.toOrdered columns)
-                  , ("filter", AO.toOrdered fltr)
-                  ] <> catMaybes [maybeSetToMaybeOrdPair set]
+    maybeSetToMaybeOrdPair :: Maybe ColVals -> Maybe (Text, AO.Value)
+    maybeSetToMaybeOrdPair set = set >>= \colVals -> if colVals == HM.empty then Nothing
+                                      else Just ("set", AO.toOrdered colVals)
 
+    maybeCommentToMaybeOrdPair :: Maybe Text -> Maybe (Text, AO.Value)
+    maybeCommentToMaybeOrdPair = maybeAnyToMaybeOrdPair "comment" AO.toOrdered
 
-delPermDefToOrdJSON :: Permission.DelPermDef -> AO.Value
-delPermDefToOrdJSON = permDefToOrdJSON AO.toOrdered
-
-eventTriggerConfToOrdJSON :: EventTriggerConf -> AO.Value
-eventTriggerConfToOrdJSON (EventTriggerConf name definition webhook webhookFromEnv retryConf headers) =
-  AO.object $ [ ("name", AO.toOrdered name)
-              , ("definition", AO.toOrdered definition)
-              , ("retry_conf", AO.toOrdered retryConf)
-              ] <> catMaybes [ maybeAnyToMaybeOrdPair "webhook" AO.toOrdered webhook
-                             , maybeAnyToMaybeOrdPair "webhook_from_env" AO.toOrdered webhookFromEnv
-                             , headers >>= listToMaybeOrdPair "headers" AO.toOrdered
-                             ]
-
-remoteSchemaDefToOrdJSON :: RemoteSchemaDef -> AO.Value
-remoteSchemaDefToOrdJSON (RemoteSchemaDef url urlFromEnv headers frwrdClientHdrs timeout) =
-  AO.object $ catMaybes [ maybeToPair "url" url
-                        , maybeToPair "url_from_env" urlFromEnv
-                        , maybeToPair "timeout_seconds" timeout
-                        , headers >>= listToMaybeOrdPair "headers" AO.toOrdered
-                        ] <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
-  where
-    maybeToPair name = maybeAnyToMaybeOrdPair name AO.toOrdered
-
-remoteSchemaQToOrdJSON :: AddRemoteSchemaQuery -> AO.Value
-remoteSchemaQToOrdJSON (AddRemoteSchemaQuery name definition comment) =
-  AO.object $ [ ("name", AO.toOrdered name)
-              , ("definition", remoteSchemaDefToOrdJSON definition)
-              ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
-
-
-createCollectionToOrdJSON :: Collection.CreateCollection -> AO.Value
-createCollectionToOrdJSON (Collection.CreateCollection name definition comment) =
-  AO.object $ [ ("name", AO.toOrdered name)
-              , ("definition", AO.toOrdered definition)
-              ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
-
--- Utility functions
-
-listToMaybeOrdPair :: Text -> (a -> AO.Value) -> [a] -> Maybe (Text, AO.Value)
-listToMaybeOrdPair name f = \case
-  []   -> Nothing
-  list -> Just $ (name,) $ AO.array $ map f list
-
-maybeSetToMaybeOrdPair :: Maybe ColVals -> Maybe (Text, AO.Value)
-maybeSetToMaybeOrdPair set = set >>= \colVals -> if colVals == HM.empty then Nothing
-                                  else Just ("set", AO.toOrdered colVals)
-
-maybeCommentToMaybeOrdPair :: Maybe Text -> Maybe (Text, AO.Value)
-maybeCommentToMaybeOrdPair = maybeAnyToMaybeOrdPair "comment" AO.toOrdered
-
-maybeAnyToMaybeOrdPair :: Text -> (a -> AO.Value) -> Maybe a -> Maybe (Text, AO.Value)
-maybeAnyToMaybeOrdPair name f = fmap ((name,) . f)
+    maybeAnyToMaybeOrdPair :: Text -> (a -> AO.Value) -> Maybe a -> Maybe (Text, AO.Value)
+    maybeAnyToMaybeOrdPair name f = fmap ((name,) . f)
