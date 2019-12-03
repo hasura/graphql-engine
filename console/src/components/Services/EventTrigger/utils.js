@@ -133,7 +133,7 @@ FROM
       hdb_et.name, 
       row_to_json(hdb_pk.*):: JSONB 
     ORDER BY 
-      hdb_et.name ASC NULLS LASTZ
+      hdb_et.name ASC NULLS LAST
   ) AS info
 `;
   return {
