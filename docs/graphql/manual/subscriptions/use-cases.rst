@@ -284,6 +284,8 @@ Now we can use the following subscription to display the latest poll result:
 Check this `sample app <https://realtime-poll.demo.hasura.app/>`__ for a working demo
 (`source code <https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/realtime-poll>`__).
 
+.. _subscribe_and_fetch:
+
 How to get diffs via subscriptions
 ---------------------------------- 
 

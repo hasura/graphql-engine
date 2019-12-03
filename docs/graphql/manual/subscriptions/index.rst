@@ -26,6 +26,7 @@ Use cases
 - :ref:`subscribe_field`
 - :ref:`subscribe_table`
 - :ref:`subscribe_derived`
+- :ref:`subscribe_and_fetch`
 
 Communication protocol
 ----------------------
