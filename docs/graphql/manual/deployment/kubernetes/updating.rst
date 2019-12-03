@@ -50,3 +50,11 @@ Step 3: Rollout the change
 
   $ kubectl replace -f deployment.yaml
 
+
+.. note::
+
+  If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue version
+  as described in :doc:`../downgrading`
+
+
+

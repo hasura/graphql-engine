@@ -20,8 +20,8 @@ Convert insert mutation to upsert
 
 To convert an :doc:`insert mutation <insert>` into an upsert, you need to use the ``on_conflict`` argument to specify:
 
-- a unique or primary key constraint using the ``constraint`` field, and
-- the columns to be updated in the case of a violation of that constraint using the ``update_columns`` field.
+- a **unique or primary key constraint** using the ``constraint`` field, and
+- the **columns to be updated** in the case of a violation of that constraint using the ``update_columns`` field.
 
 The value of the ``update_columns`` field determines the behaviour of the upsert request as shown via the use cases
 below.
@@ -44,15 +44,15 @@ The upsert functionality is sometimes confused with the update functionality. Ho
 differently. An upsert mutation is used in the case when it's not clear if the respective row is already present
 in the database. If it's known that the row is present in the database, ``update`` is the functionality to use.
 
-For an upsert, **all columns need to be passed**. 
+For an upsert, **all columns that are necessary for an insert are required**.
 
 **How it works**
 
-1. Postgres tries to insert a row (hence all the columns need to be present) 
+1. Postgres tries to insert a row (hence all the required columns need to be present)
 
 2. If this fails because of some constraint, it updates the specified columns
 
-If not all columns are present, an error like ``NULL value unexpected for <not-specified-column>`` can occur.
+If not all required columns are present, an error like ``NULL value unexpected for <not-specified-column>`` can occur.
 
 
 Update selected columns on conflict
@@ -103,6 +103,53 @@ the columns specified in ``update_columns``:
     }
 
 The ``published_on`` column is left unchanged as it wasn't present in ``update_columns``.
+
+Update selected columns on conflict using a filter
+--------------------------------------------------
+Insert a new object in the ``article`` table, or if the primary key constraint ``article_pkey`` is violated, update
+the columns specified in ``update_columns`` only if the provided ``where`` condition is met:
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation upsert_article {
+      insert_article (
+        objects: [
+          {
+            id: 2,
+            published_on: "2018-10-12"
+          }
+        ],
+        on_conflict: {
+          constraint: article_pkey,
+          update_columns: [published_on],
+          where: {
+            published_on: {_lt: "2018-10-12"}
+          }
+        }
+      ) {
+        returning {
+          id
+          published_on
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_article": {
+          "returning": [
+            {
+              "id": 2,
+              "published_on": "2018-10-12"
+            }
+          ]
+        }
+      }
+    }
+
+The ``published_on`` column is updated only if the new value is greater than the old value.
 
 Ignore request on conflict
 --------------------------
@@ -179,15 +226,22 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
     }
 
 
-.. admonition:: Edge-cases
+.. _nested-upsert-caveats:
+
+Nested upsert caveats
+^^^^^^^^^^^^^^^^^^^^^
+
+.. note::
+
+  The process by which nested inserts/upserts are executed is documented :ref:`here <nested_inserts>`.
 
   Nested upserts will fail when:
 
   - In case of an array relationship, the parent upsert does not affect any rows (i.e. ``update_columns: []`` for parent
-    and a conflict occurs)
+    and a conflict occurs), as the array relationship objects are inserted after the parent.
   - In case of an object relationship, the nested object upsert does not affect any row (i.e. ``update_columns: []`` for
-    nested object and a conflict occurs)
+    nested object and a conflict occurs), as the object relationship object is inserted before the parent.
 
-  To allow upserting in these cases, set ``update_columns: [<conflict-column>]``. By doing this, in case of a
-  conflict, the conflicted column will be updated with the new value (which is the same value it had before and hence
-  will effectively leave it unchanged) and will allow the upsert to go through.
+  To allow upserting in these cases, set ``update_columns: [<conflict-columns>]``. By doing this, in case of a
+  conflict, the conflicted column/s will be updated with the new value (which is the same values as they had before and hence
+  will effectively leave them unchanged) and will allow the upsert to go through.

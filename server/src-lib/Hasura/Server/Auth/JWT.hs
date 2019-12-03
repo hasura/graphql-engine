@@ -22,7 +22,8 @@ import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           Network.URI                     (URI)
 
 import           Hasura.HTTP
-import           Hasura.Logging                  (LogLevel (..), Logger (..))
+import           Hasura.Logging                  (Hasura, LogLevel (..),
+                                                  Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
@@ -107,7 +108,7 @@ computeDiffTime t =
 -- | create a background thread to refresh the JWK
 jwkRefreshCtrl
   :: (MonadIO m)
-  => Logger
+  => Logger Hasura
   -> HTTP.Manager
   -> URI
   -> IORef Jose.JWKSet
@@ -129,8 +130,9 @@ jwkRefreshCtrl lggr mngr url ref time =
 -- | Given a JWK url, fetch JWK from it and update the IORef
 updateJwkRef
   :: ( MonadIO m
-     , MonadError T.Text m)
-  => Logger
+     , MonadError T.Text m
+     )
+  => Logger Hasura
   -> HTTP.Manager
   -> URI
   -> IORef Jose.JWKSet

@@ -1,5 +1,7 @@
 // TODO: make functions from this file available without imports
 
+import { showErrorNotification } from '../../Services/Common/Notification';
+
 export const exists = value => {
   return value !== null && value !== undefined;
 };
@@ -143,4 +145,87 @@ export const getConfirmation = (
   }
 
   return isConfirmed;
+};
+
+export const uploadFile = (
+  fileHandler,
+  fileFormat = null,
+  invalidFileHandler = null
+) => dispatch => {
+  const fileInputElement = document.createElement('div');
+  fileInputElement.innerHTML = '<input style="display:none" type="file">';
+  const fileInput = fileInputElement.firstChild;
+  document.body.appendChild(fileInputElement);
+
+  const onFileUpload = () => {
+    const file = fileInput.files[0];
+    const fileName = file.name;
+
+    let isValidFile = true;
+    if (fileFormat) {
+      const expectedFileSuffix = '.' + fileFormat;
+
+      if (!fileName.endsWith(expectedFileSuffix)) {
+        isValidFile = false;
+
+        if (invalidFileHandler) {
+          invalidFileHandler(fileName);
+        } else {
+          dispatch(
+            showErrorNotification(
+              'Invalid file format',
+              `Expected a ${expectedFileSuffix} file`
+            )
+          );
+        }
+
+        fileInputElement.remove();
+      }
+    }
+
+    if (isValidFile) {
+      const reader = new FileReader();
+
+      // this function will execute once the reader has successfully read the file
+      reader.onload = () => {
+        fileInputElement.remove();
+
+        fileHandler(reader.result);
+      };
+
+      reader.readAsText(file);
+    }
+  };
+
+  // attach file upload handler
+  fileInput.addEventListener('change', onFileUpload);
+
+  // trigger file upload window
+  fileInput.click();
+};
+
+export const downloadFile = (fileName, dataString) => {
+  const downloadLinkElem = document.createElement('a');
+  downloadLinkElem.setAttribute('href', dataString);
+  downloadLinkElem.setAttribute('download', fileName);
+  document.body.appendChild(downloadLinkElem);
+
+  // trigger download
+  downloadLinkElem.click();
+
+  downloadLinkElem.remove();
+};
+
+export const downloadObjectAsJsonFile = (fileName, object) => {
+  const contentType = 'application/json;charset=utf-8;';
+
+  const jsonSuffix = '.json';
+  const fileNameWithSuffix = fileName.endsWith(jsonSuffix)
+    ? fileName
+    : fileName + jsonSuffix;
+
+  const dataString =
+    'data:' + contentType + ',' + encodeURIComponent(JSON.stringify(object));
+
+  downloadFile(fileNameWithSuffix, dataString);
 };

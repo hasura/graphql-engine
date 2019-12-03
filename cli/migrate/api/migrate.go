@@ -55,6 +55,19 @@ func MigrateAPI(c *gin.Context) {
 
 	// Switch on request method
 	switch c.Request.Method {
+	case "GET":
+		// Rescan file system
+		err := t.ReScan()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
+			return
+		}
+		status, err := t.GetStatus()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: "Something went wrong"})
+			return
+		}
+		c.JSON(http.StatusOK, status)
 	case "POST":
 		var request Request
 
@@ -65,7 +78,6 @@ func MigrateAPI(c *gin.Context) {
 		}
 
 		startTime := time.Now()
-		// Convert to Millisecond
 		timestamp := startTime.UnixNano() / int64(time.Millisecond)
 
 		createOptions := cmd.New(timestamp, request.Name, sourceURL.Path)

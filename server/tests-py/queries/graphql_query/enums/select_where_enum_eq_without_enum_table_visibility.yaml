@@ -1,0 +1,64 @@
+- description: >
+    Test that the enum table is not visible under a restricted role, but the generated enum type
+    still is
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: anonymous
+  query:
+    query: |
+      {
+        table: __type(name: "colors") {
+          name
+          kind
+        }
+        enum: __type(name: "colors_enum") {
+          name
+          kind
+          enumValues {
+            name
+            description
+          }
+        }
+      }
+  status: 200
+  response:
+    data:
+      table: null
+      enum:
+        name: colors_enum
+        kind: ENUM
+        enumValues:
+        - name: blue
+          description: '#0000FF'
+        - name: green
+          description: '#00FF00'
+        - name: orange
+          description: '#FFFF00'
+        - name: purple
+          description: '#FF00FF'
+        - name: red
+          description: '#FF0000'
+        - name: yellow
+          description: '#00FFFF'
+
+- description: >
+    Test querying a table that references an enum table and filtering on enum equality works even if
+    the user performing the query does not have access to query the enum table itself
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: anonymous
+  query:
+    query: |
+      {
+        like_red:   users(where: { favorite_color: { _eq: red   }}) { name }
+        like_blue:  users(where: { favorite_color: { _eq: blue  }}) { name }
+        like_green: users(where: { favorite_color: { _eq: green }}) { name }
+      }
+  status: 200
+  response:
+    data:
+      like_red:
+      - name: Alyssa
+      like_blue:
+      - name: Ben
+      like_green: []

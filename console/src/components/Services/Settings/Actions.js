@@ -8,6 +8,7 @@ import { RELOAD_METADATA_API_CHANGE } from '../../../helpers/versionUtils';
 import {
   setConsistentSchema,
   setConsistentFunctions,
+  makeMigrationCall,
 } from '../Data/DataActions';
 import { setConsistentRemoteSchemas } from '../RemoteSchema/Actions';
 import {
@@ -66,6 +67,116 @@ const reloadCacheAndGetInconsistentObjectsQuery = {
 const dropInconsistentObjectsQuery = {
   type: 'drop_inconsistent_metadata',
   args: {},
+};
+
+export const exportMetadata = (successCb, errorCb) => (dispatch, getState) => {
+  const { dataHeaders } = getState().tables;
+
+  const query = {
+    type: 'export_metadata',
+    args: {},
+  };
+
+  const options = {
+    method: 'POST',
+    headers: {
+      ...dataHeaders,
+    },
+    body: JSON.stringify(query),
+  };
+
+  dispatch(requestAction(endpoints.query, options))
+    .then(response => {
+      successCb(response);
+    })
+    .catch(err => {
+      errorCb(err);
+    });
+};
+
+export const replaceMetadata = (newMetadata, successCb, errorCb) => (
+  dispatch,
+  getState
+) => {
+  const exportSuccessCb = oldMetadata => {
+    const generateReplaceMetadataQuery = metadataJson => {
+      return {
+        type: 'replace_metadata',
+        args: metadataJson,
+      };
+    };
+
+    const upQuery = generateReplaceMetadataQuery(newMetadata);
+    const downQuery = generateReplaceMetadataQuery(oldMetadata);
+
+    const migrationName = 'replace_metadata';
+
+    const requestMsg = 'Importing metadata...';
+    const successMsg = 'Metadata imported';
+    const errorMsg = 'Failed importing metadata';
+
+    const customOnSuccess = () => {
+      if (successCb) successCb();
+    };
+    const customOnError = () => {
+      if (errorCb) errorCb();
+    };
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      [downQuery],
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+
+  const exportErrorCb = () => {
+    if (errorCb) errorCb();
+
+    dispatch(
+      showErrorNotification(
+        'Metadata import failed',
+        'Failed to get the existing metadata from the server'
+      )
+    );
+  };
+
+  dispatch(exportMetadata(exportSuccessCb, exportErrorCb));
+};
+
+export const replaceMetadataFromFile = (
+  fileContent,
+  successCb,
+  errorCb
+) => dispatch => {
+  let parsedFileContent;
+  try {
+    parsedFileContent = JSON.parse(fileContent);
+  } catch (e) {
+    dispatch(
+      showErrorNotification('Error parsing metadata file', e.toString())
+    );
+
+    if (errorCb) errorCb();
+
+    return;
+  }
+
+  const onSuccess = () => {
+    if (successCb) successCb();
+  };
+
+  const onError = () => {
+    if (errorCb) errorCb();
+  };
+
+  dispatch(replaceMetadata(parsedFileContent, onSuccess, onError));
 };
 
 const handleInconsistentObjects = inconsistentObjects => {
@@ -222,7 +333,7 @@ export const dropInconsistentObjects = () => {
 };
 
 export const isMetadataStatusPage = () => {
-  return window.location.pathname.includes('/setting/metadata-status');
+  return window.location.pathname.includes('/settings/metadata-status');
 };
 
 export const redirectToMetadataStatus = () => {
