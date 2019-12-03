@@ -69,6 +69,7 @@ class ModifyTable extends React.Component {
       allTables,
       dispatch,
       migrationMode,
+      readOnlyMode,
       currentSchema,
       tableCommentEdit,
       columnEdit,
@@ -190,6 +191,7 @@ class ModifyTable extends React.Component {
           table={table}
           tabName="modify"
           migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
         />
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
@@ -284,6 +286,7 @@ ModifyTable.propTypes = {
   currentSchema: PropTypes.string.isRequired,
   allTables: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   activeEdit: PropTypes.object.isRequired,
   fkAdd: PropTypes.object.isRequired,
   relAdd: PropTypes.object.isRequired,
@@ -302,6 +305,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allTables: state.tables.allSchemas,
   migrationMode: state.main.migrationMode,
+  readOnlyMode: state.main.readOnlyMode,
   serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,
   columnEdit: state.tables.modify.columnEdit,
