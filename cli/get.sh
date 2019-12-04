@@ -92,7 +92,7 @@ fi
 log "${PURPLE}Downloading hasura for $platform-$arch to ${targetFile}${NC}"
 url=https://github.com/hasura/graphql-engine/releases/download/$version/cli-hasura$suffix
 
-try curl -L# -o $targetFile "$url"
+try curl -L# -f -o $targetFile "$url"
 try chmod +x $targetFile
 
 log "${GREEN}Download complete!${NC}"
