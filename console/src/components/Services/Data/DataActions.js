@@ -285,7 +285,6 @@ const loadSchema = configOptions => {
       }
     }
 
-    // TODO: make read_only sub-queries. blocked as query 2 is v1/query select
     const body = {
       type: 'bulk',
       args: [

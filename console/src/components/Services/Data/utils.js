@@ -340,7 +340,7 @@ FROM
     type: 'run_sql',
     args: {
       sql: runSql,
-      // read_only: true, TODO
+      read_only: true,
     },
   };
 };
@@ -376,7 +376,7 @@ FROM
     type: 'run_sql',
     args: {
       sql: runSql,
-      // read_only: true, TODO
+      read_only: true,
     },
   };
 };
@@ -455,7 +455,7 @@ FROM
     type: 'run_sql',
     args: {
       sql: runSql,
-      // read_only: true, TODO
+      read_only: true,
     },
   };
 };
