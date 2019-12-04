@@ -74,7 +74,7 @@ import qualified Data.Text                          as T
 data InsPerm
   = InsPerm
   { ipCheck   :: !BoolExp
-  , ipSet     :: !(Maybe ColVals)
+  , ipSet     :: !(Maybe (ColumnValues Value))
   , ipColumns :: !(Maybe PermColSpec)
   } deriving (Show, Eq, Lift)
 
@@ -107,7 +107,7 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo PGColumnInfo -> Maybe ColVals
+  => TableInfo PGColumnInfo -> Maybe (ColumnValues Value)
   -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   (setColTups, deps) <- withPathK "set" $
@@ -294,7 +294,7 @@ instance IsPerm SelPerm where
 data UpdPerm
   = UpdPerm
   { ucColumns :: !PermColSpec -- Allowed columns
-  , ucSet     :: !(Maybe ColVals) -- Preset columns
+  , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
   , ucFilter  :: !BoolExp     -- Filter expression
   } deriving (Show, Eq, Lift)
 

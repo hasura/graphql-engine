@@ -49,27 +49,30 @@ mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
 mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
 mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
   -- Perform mutation and fetch unique columns
-  MutateResp _ colVals <- mutateAndFetchCols qt allCols q strfyNum
-  selCTE <- mkSelCTEFromColVals parseJSONStringAsLiteral qt allCols colVals
+  MutateResp _ columnVals <- mutateAndFetchCols qt allCols q strfyNum
+  selCTE <- mkSelCTEFromColVals parseTextAsLiteral qt allCols columnVals
   let selWith = mkSelWith qt selCTE mutFlds False strfyNum
   -- Perform select query and fetch returning fields
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
   where
-    parseJSONStringAsLiteral colTy = \case
-      String t ->
+    parseTextAsLiteral colTy = \case
+      Nothing -> pure S.SENull
+      Just textValue ->
         case colTy of
-          PGColumnEnumReference _ -> parsePGScalarValue colTy $ String t
-          PGColumnScalar scalarTy -> pure $ WithScalarType scalarTy $ PGValText t
-      v        -> parsePGScalarValue colTy v
+          PGColumnEnumReference _ ->
+            let textWithTyAnn (WithScalarType ty val) = S.withTyAnn ty $ txtEncoder val
+            in textWithTyAnn <$> parsePGScalarValue colTy (String textValue)
+          PGColumnScalar scalarTy -> pure $ S.withTyAnn scalarTy $ S.SELit textValue
 
 
 mutateAndFetchCols
-  :: QualifiedTable
+  :: (FromJSON a)
+  => QualifiedTable
   -> [PGColumnInfo]
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
-  -> Q.TxE QErr MutateResp
+  -> Q.TxE QErr (MutateResp a)
 mutateAndFetchCols qt cols (cte, p) strfyNum =
   Q.getAltJ . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
@@ -98,8 +101,8 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
 
 mkSelCTEFromColVals
   :: (MonadError QErr m)
-  => (PGColumnType -> Value -> m (WithScalarType PGScalarValue))
-  -> QualifiedTable -> [PGColumnInfo] -> [ColVals] -> m S.CTE
+  => (PGColumnType -> a -> m S.SQLExp)
+  -> QualifiedTable -> [PGColumnInfo] -> [ColumnValues a] -> m S.CTE
 mkSelCTEFromColVals parseFn qt allCols colVals =
   S.CTESelect <$> case colVals of
     [] -> return selNoRows
@@ -118,7 +121,7 @@ mkSelCTEFromColVals parseFn qt allCols colVals =
         let pgCol = pgiColumn ci
         val <- onNothing (Map.lookup pgCol colVal) $
           throw500 $ "column " <> pgCol <<> " not found in returning values"
-        toTxtValue <$> parseFn (pgiType ci) val
+        parseFn (pgiType ci) val
 
     selNoRows =
       S.mkSelect { S.selExtr = [S.selectStar]
