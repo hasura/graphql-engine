@@ -11,8 +11,8 @@ log() {
 DEFAULT_MIGRATIONS_DIR="/hasura-migrations"
 TEMP_MIGRATIONS_DIR="/tmp/hasura-migrations"
 
-# TODO: something clever here
-HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT=9999
+# Find a random port. If the port is occupied, container fails and should be rerun again.
+HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT=`shuf -i 9000-9999 -n 1`
 
 if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT+x} ]; then
     log "server timeout is not set defaulting to 30 seconds"
