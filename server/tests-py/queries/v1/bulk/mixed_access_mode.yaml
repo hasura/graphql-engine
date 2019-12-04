@@ -3,7 +3,7 @@ url: /v1/query
 status: 400
 response:
   path: $
-  error: "incompatible access mode requirements in bulk query, expected access mode: Just READ WRITE but $.args[1] forces Just READ ONLY"
+  error: "incompatible access mode requirements in bulk query, expected access mode: READ WRITE but $.args[1] forces READ ONLY"
   code: bad-request
 query:
   type: bulk
