@@ -29,5 +29,4 @@ Postgres constructs.
   Enum type fields <enums>
   computed-fields
   Using an existing database <using-existing-database>
-  Setting up soft deletes <soft-deletes>
   Export GraphQL schema <export-graphql-schema>
