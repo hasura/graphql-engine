@@ -25,6 +25,7 @@ Postgres constructs.
   Basics <basics>
   Relationships <relationships/index>
   Customise with views <views>
+  Customize with SQL functions <custom-functions>
   Default field values <default-values/index>
   Enum type fields <enums>
   computed-fields

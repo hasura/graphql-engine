@@ -13,6 +13,11 @@ The **name of the aggregate field** is of the form ``<field-name> + _aggregate``
 
 You can see the complete specification of the aggregate field in the :ref:`API reference <AggregateObject>`.
 
+.. note::
+
+  For more advanced use cases, you can use :ref:`views <custom_views>` or
+  :ref:`custom SQL functions <custom_sql_functions>`.
+
 Fetch aggregated data of an object
 ----------------------------------
 
@@ -182,6 +187,3 @@ and articles.
         ]
       }
     }
-
-.. note::
-  For more advanced use cases, you can use :doc:`custom SQL functions <custom-functions>`.

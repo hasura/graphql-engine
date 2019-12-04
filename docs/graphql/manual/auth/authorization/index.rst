@@ -43,6 +43,5 @@ Follow the example at :doc:`access control basics <basics>`.
   basics
   roles-variables
   permission-rules
-  control-access
   common-roles-auth-examples
-
+  role-multiple-rules
