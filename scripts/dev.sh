@@ -359,8 +359,8 @@ elif [ "$MODE" = "test" ]; then
     if [ "$DEVSH_VERSION" = "$(cat $DEVSH_VERSION_FILE 2>/dev/null || true)" ]; then
       true # ok
     else
-      echo_warn 'dev.sh version was bumped. Forcing reinstallation of dependencies.'
-      rm -r "$PY_VENV"
+      echo_warn 'dev.sh version was bumped or fresh install. Forcing reinstallation of dependencies.'
+      rm -rf "$PY_VENV"
       echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
     fi
     set +u  # for venv activate
