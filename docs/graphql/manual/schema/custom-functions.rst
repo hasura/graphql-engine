@@ -50,7 +50,7 @@ Use cases
 
 Custom functions are ideal solutions for retrieving some derived data based on some custom business logic that
 requires user input to be calculated. If your custom logic requires does not require any user input, you can use
-:ref:`views <views>` instead.
+:ref:`views <custom_views>` instead.
 
 Let's see a few example use cases for custom functions:
 
