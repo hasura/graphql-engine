@@ -67,11 +67,25 @@ in JSON format:
 Health check API
 ^^^^^^^^^^^^^^^^
 
-A ``GET`` request to the public ``/healthz`` endpoint will respond with ``200``
-if the GraphQL engine is ready to serve requests and there are no inconsistencies
-with the metadata. The response will be ``500`` if there are metadata
-inconsistencies and you should use the console or check the server logs to find
-out what the errors are.
+A ``GET`` request to the public ``/healthz`` endpoint will respond with the following:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Server condition
+     - HTTP Status
+     - Message
+   * - All healthy
+     - 200
+     - OK
+   * - Serving requests but some metadata objects are inconsistent/not-available
+     - 200
+     - WARN: inconsistent objects in schema
+   * - Unhealthy
+     - 500
+     - ERROR
+
+If there are metadata inconsistencies, you should use the console or use the `get_inconsistent_metadata <schema-metadata-api/manage-metadata.html#get-inconsistent-metadata>`_ API to find out what the inconsistent objects are.
 
 
 .. _pg_dump_api:
