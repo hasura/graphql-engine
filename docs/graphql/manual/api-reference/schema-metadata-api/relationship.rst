@@ -459,7 +459,7 @@ Args syntax
 rename_relationship
 -------------------
 
-``rename_relationship`` is used to the modify name of an existing relationship.
+``rename_relationship`` is used to modify the name of an existing relationship.
 
 An example:
 
