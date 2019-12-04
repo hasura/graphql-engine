@@ -42,4 +42,4 @@ Sample response
 Disabling Version API
 ---------------------
 
-The ``version`` API endpoint is public and cannot be disabled
+The ``version`` API endpoint is public and cannot be disabled.
