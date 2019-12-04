@@ -11,7 +11,7 @@ log() {
 DEFAULT_MIGRATIONS_DIR="/hasura-migrations"
 TEMP_MIGRATIONS_DIR="/tmp/hasura-migrations"
 
-# Find a random port. If the port is occupied, container fails and should be rerun again.
+# Find a random port. If the port is occupied (according to docker networking), container fails and should be rerun again.
 HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT=`shuf -i 9000-9999 -n 1`
 
 if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT+x} ]; then
