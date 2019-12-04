@@ -55,18 +55,38 @@ See details at :doc:`schema-metadata-api/index`.
 Version API
 ^^^^^^^^^^^
 
-The ``/v1/version`` is a public endpoint that responds with the current server version in JSON format.
+A ``GET`` request to the public ``/v1/version`` endpoint responds with the current server version
+in JSON format:
 
-See details at :doc:`version`.
+.. code-block:: js
+
+   {"version": "v1.0.0-alpha01"}
 
 .. _health_api:
 
 Health check API
 ^^^^^^^^^^^^^^^^
 
-The ``/healthz`` is a public endpoint that returns the server health status.
+A ``GET`` request to the public ``/healthz`` endpoint will respond with the following:
 
-See details at :doc:`health`.
+.. list-table::
+   :header-rows: 1
+
+   * - Server condition
+     - HTTP Status
+     - Message
+   * - All healthy
+     - 200
+     - OK
+   * - Serving requests but some metadata objects are inconsistent/not-available
+     - 200
+     - WARN: inconsistent objects in schema
+   * - Unhealthy
+     - 500
+     - ERROR
+
+If there are metadata inconsistencies, you should use the console or use the `get_inconsistent_metadata <schema-metadata-api/manage-metadata.html#get-inconsistent-metadata>`_ API to find out what the inconsistent objects are.
+
 
 .. _pg_dump_api:
 
@@ -102,8 +122,6 @@ You can refer to the following to know about all PostgreSQL types supported by t
 
   GraphQL API <graphql-api/index>
   Schema / Metadata APIs <schema-metadata-api/index>
-  Version API <version>
-  Health check API <health>
   PG Dump API <pgdump>
   Config API <config>
   Supported PostgreSQL types <postgresql-types>
