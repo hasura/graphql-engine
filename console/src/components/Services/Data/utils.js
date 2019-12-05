@@ -1,6 +1,7 @@
 import {
   TABLE_ENUMS_SUPPORT,
   CUSTOM_GRAPHQL_FIELDS_SUPPORT,
+  READ_ONLY_RUN_SQL_QUERIES,
   checkFeatureSupport,
 } from '../../../helpers/versionUtils';
 
@@ -340,7 +341,7 @@ FROM
     type: 'run_sql',
     args: {
       sql: runSql,
-      read_only: true,
+      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
     },
   };
 };
@@ -376,7 +377,7 @@ FROM
     type: 'run_sql',
     args: {
       sql: runSql,
-      read_only: true,
+      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
     },
   };
 };
@@ -455,7 +456,7 @@ FROM
     type: 'run_sql',
     args: {
       sql: runSql,
-      read_only: true,
+      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
     },
   };
 };
