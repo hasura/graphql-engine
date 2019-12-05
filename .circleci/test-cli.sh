@@ -4,6 +4,8 @@ set -euo pipefail
 IFS=$'\n\t'
 CLI_ROOT="${BASH_SOURCE[0]%/*}/../cli"
 
+unset GOCACHE
+
 wait_for_port() {
     local PORT=$1
     echo "waiting for $PORT"
