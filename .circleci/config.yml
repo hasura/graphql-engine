@@ -278,13 +278,13 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - cli-gopkg
+        - cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
     - run:
         name: get cli dependencies
         working_directory: cli
         command: make deps
     - save_cache:
-        key: cli-gopkg
+        key: cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
         paths:
         - /go/pkg
     - *wait_for_postgres
@@ -311,13 +311,13 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - cli-gopkg
+        - cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
     - run:
         name: get cli dependencies
         working_directory: cli
         command: make deps
     - save_cache:
-        key: cli-gopkg
+        key: cli-gopkg-{{ checksum "cli/go.mod" }}-{{ checksum "cli/go.sum" }}
         paths:
         - /go/pkg
     - *wait_for_postgres
