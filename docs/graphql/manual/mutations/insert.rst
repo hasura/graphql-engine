@@ -436,9 +436,9 @@ a bridge table ``article_tags``.
 ``on_conflict`` can be passed as an argument in a nested insert statement. In our example, we say that if the unique key (``label``) already
 exists for a tag, we update the ``label`` of this respective tag (see :ref:`nested upsert caveats <nested-upsert-caveats>`).
 
-Insert an object with a JSONB column
-------------------------------------
-**Example:** Insert a new ``author`` object with a JSONB ``address`` column:
+Insert an object with a JSONB field
+-----------------------------------
+**Example:** Insert a new ``author`` object with a JSONB ``address`` field:
 
 .. graphiql::
   :view_only:
@@ -491,6 +491,94 @@ Insert an object with a JSONB column
         "state": "Karnataka",
         "pincode": 560095
       }
+    }
+
+Insert an object with an ARRAY field
+------------------------------------
+
+To insert fields of array types, you currently have to pass them as a `Postgres array literal <https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT>`_.
+
+**Example:** Insert a new ``author`` with a text array ``emails`` field:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_author {
+      insert_author (
+        objects: [
+          {
+            id: 1,
+            name: "Ash",
+            emails: "{ash@ash.com, ash123@ash.com}"
+          }
+        ]
+      ) {
+        affected_rows
+        returning {
+          id
+          name
+          emails
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 1,
+              "name": "Ash",
+              "emails": ["ash@ash.com", "ash123@ash.com"]
+            }
+          ]
+        }
+      }
+    }
+
+
+Using variables:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_author($emails: _text) {
+      insert_author (
+        objects: [
+          {
+            id: 1,
+            name: "Ash",
+            emails: $emails
+          }
+        ]
+      ) {
+        affected_rows
+        returning {
+          id
+          name
+          emails
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 1,
+              "name": "Ash",
+              "emails": ["ash@ash.com", "ash123@ash.com"]
+            }
+          ]
+        }
+      }
+    }
+  :variables:
+    {
+      "emails": "{ash@ash.com, ash123@ash.com}"
     }
 
 Set a field to its default value during insert
