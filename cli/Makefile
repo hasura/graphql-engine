@@ -26,6 +26,7 @@ endif
 .PHONY: build
 build: export CGO_ENABLED=0
 build:
+	unset GOCACHE
 	gox -ldflags '-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION) -s -w -extldflags "-static"' \
 	-rebuild \
 	-os="$(OS)" \
@@ -47,6 +48,7 @@ ci-copy-binary:
 # run tests
 .PHONY: test
 test:
+	unset GOCACHE
 	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" ./...
 
 # clean the output directory
