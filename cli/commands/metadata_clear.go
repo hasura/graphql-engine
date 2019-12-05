@@ -19,14 +19,14 @@ func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Aliases: []string{"reset"},
 		Short:   "Clear Hasura GraphQL Engine metadata on the database",
 		Example: `
-		# Clear all the metadata information from database:
-  	hasura metadata clear
+	# Clear all the metadata information from database:
+	hasura metadata clear
 
-		# Apply admin secret for Hasura GraphQL Engine:
-		hasura metadata clear --admin-secret "<admin-secret>"
+	# Use with admin secret:
+	hasura metadata clear --admin-secret "<admin-secret>"
 
-		# Add Hasura GraphQL Server endpoint:
-		hasura metadata clear --endpoint "<http-endpoint>"`,
+	# Clear metadata on a different Hasura instance:
+	hasura metadata clear --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
