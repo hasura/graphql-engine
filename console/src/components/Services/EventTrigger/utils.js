@@ -140,6 +140,7 @@ FROM
     type: 'run_sql',
     args: {
       sql: runSql,
+      read_only: true,
     },
   };
 };
