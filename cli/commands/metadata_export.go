@@ -23,14 +23,15 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataExportCmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export Hasura GraphQL Engine metadata from the database",
-		Example: `  # Export metadata and save it in migrations/metadata.yaml file:
+		Example: `
+	# Export metadata and save it in migrations/metadata.yaml file:
   hasura metadata export
 
-	# Apply admin secret for Hasura GraphQL Engine:
+	# Use with admin secret:
 	hasura metadata export --admin-secret "<admin-secret>"
 
-	# Add Hasura GraphQL Server endpoint:
-	hasura metadata export --endpoint "<http-endpoint>"`,
+	# Export metadata to another instance specified by the flag:
+	hasura metadata export --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
