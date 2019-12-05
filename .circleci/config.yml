@@ -267,7 +267,7 @@ jobs:
     docker:
     - image: hasura/graphql-engine-cli-builder:20191205
       environment:
-        GOCACHE: on
+        GOCACHE: /go/pkg
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
@@ -302,7 +302,7 @@ jobs:
     docker:
     - image: hasura/graphql-engine-cli-builder:20191205
       environment:
-        GOCACHE: on
+        GOCACHE: /go/pkg
     - image: circleci/postgres:10-alpine
       environment:
         POSTGRES_USER: gql_test
