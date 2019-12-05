@@ -50,8 +50,8 @@ By default, shows changes between exported metadata file and server metadata.`,
 	# Apply admin secret for Hasura GraphQL Engine:
 	hasura metadata diff --admin-secret "<admin-secret>"
 
-	# Add Hasura GraphQL Server endpoint:
-	hasura metadata diff --endpoint "<http-endpoint>"`,
+	# Diff metadata on a different Hasura instance:
+	hasura metadata diff --endpoint "<endpoint>"`,
 		Args: cobra.MaximumNArgs(2),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
