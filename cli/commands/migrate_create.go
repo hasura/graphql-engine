@@ -19,17 +19,13 @@ import (
 
 const migrateCreateCmdExamples = `
 	# Setup migration files for the first time by introspecting a server:
-  hasura migrate create "init" --from-server
+	hasura migrate create "init" --from-server
 
-	# Add admin secret for Hasura GraphQL Engine:
+	# Use with admin secret:
 	hasura migrate create --admin-secret "<admin-secret>"
 
-	# Add Hasura GraphQL Server endpoint:
-	hasura migrate create --endpoint "<http-endpoint>"
-
-	# Get SQL statements and Hasura metadata from the server:
-	hasura migrate create "<migration_name>" --from-server
-`
+	# Setup migration files from an instance mentioned by the flag:
+	hasura migrate create init --from-server --endpoint "<endpoint>"`
 
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
