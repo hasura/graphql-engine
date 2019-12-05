@@ -31,14 +31,8 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
   # squash all migrations from version 123 to the latest one:
   hasura migrate squash --from 123
 
-	# Add admin secret for Hasura GraphQL Engine:
-	hasura migrate squash --admin-secret "<admin-secret>"
-
-	# Add Hasura GraphQL Server endpoint:
-	hasura migrate squash --endpoint "<http-endpoint>"
-
 	# Add a name for the new squashed migration
-	hasura migrate squash --name "<name>"`,
+	hasura migrate squash --name "<name>" --from 123`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
