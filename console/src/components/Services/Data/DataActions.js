@@ -20,8 +20,6 @@ import { loadInconsistentObjects } from '../Settings/Actions';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import globals from '../../../Globals';
 
-import { COMPUTED_FIELDS_SUPPORT } from '../../../helpers/versionUtils';
-
 import {
   fetchTrackedTableReferencedFkQuery,
   fetchTrackedTableFkQuery,
@@ -60,16 +58,6 @@ const RESET_COLUMN_TYPE_INFO = 'Data/RESET_COLUMN_TYPE_INFO';
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
-
-const useCompositeFnsNewCheck =
-  globals.featuresCompatibility &&
-  globals.featuresCompatibility[COMPUTED_FIELDS_SUPPORT];
-
-const compositeFnCheck = useCompositeFnsNewCheck
-  ? 'c'
-  : {
-    $ilike: '%composite%',
-  };
 
 const initQueries = {
   schemaList: {
@@ -134,7 +122,7 @@ const initQueries = {
         function_schema: '', // needs to be set later
         has_variadic: false,
         returns_set: true,
-        return_type_type: compositeFnCheck, // COMPOSITE type
+        return_type_type: 'c', // COMPOSITE type
         $or: [
           {
             function_type: {
@@ -178,7 +166,7 @@ const initQueries = {
         $not: {
           has_variadic: false,
           returns_set: true,
-          return_type_type: compositeFnCheck, // COMPOSITE type
+          return_type_type: 'c', // COMPOSITE type
           $or: [
             {
               function_type: {
