@@ -164,9 +164,9 @@ class HGEWrkBench(HGETestSetup):
                 if state == 'histogram_values':
                     (val, percentile, total_count, _) = line.strip().split()
                     histogram.append({
-                        'percentile': percentile,
-                        'latency': val,
-                        'total_count': total_count
+                        'percentile': float(percentile),
+                        'latency': float(val),
+                        'total_count': float(total_count)
                     })
         return histogram
 
