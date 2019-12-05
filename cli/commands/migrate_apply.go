@@ -19,6 +19,29 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateApplyCmd := &cobra.Command{
 		Use:          "apply",
 		Short:        "Apply migrations on the database",
+		Example: `
+		# Create migration files from server:
+		hasura migrate create "<filename>" --from-server
+
+		# Add admin secret for Hasura GraphQL Engine:
+		hasura migrate apply --admin-secret "<admin-secret>"
+
+		# Mark migration as applied on the server and skip execution:
+		hasura migrate apply --skip-execution
+
+		# Apply a particular migration:
+		hasura migrate apply --version "<version>"
+
+		# Apply all or N down migrations:
+		hasura migrate apply --down 1
+		hasura migrate apply --down all
+
+		# Apply all or N up migrations:
+		hasura migrate apply --up 1
+		hasura migrate apply --up all
+
+		# Apply type of migration (up, down) to be used with version flag (default 'up'):
+		hasura migrate apply --admin-secret "<admin-secret>" --type (down or up) --version "<version>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v

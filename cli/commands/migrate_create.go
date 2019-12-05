@@ -17,8 +17,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const migrateCreateCmdExamples = `  # Setup migration files for the first time by introspecting a server:
-  hasura migrate create "init" --from-server`
+const migrateCreateCmdExamples = `
+	# Setup migration files for the first time by introspecting a server:
+  hasura migrate create "init" --from-server
+
+	# Add admin secret for Hasura GraphQL Engine:
+	hasura migrate create --admin-secret "<admin-secret>"
+
+	# Add Hasura GraphQL Server endpoint:
+	hasura migrate create --endpoint "<http-endpoint>"
+
+	# Get SQL statements and Hasura metadata from the server:
+	hasura migrate create "<migration_name>" --from-server
+`
 
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()

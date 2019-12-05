@@ -38,7 +38,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	# Start console without opening the browser automatically
 	hasura console --no-browser
-	
+
 	# Apply admin secret for Hasura GraphQL Engine:
 	hasura console --admin-secret "<admin-secret>"
 

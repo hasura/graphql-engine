@@ -19,10 +19,10 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataApplyCmd := &cobra.Command{
 		Use:   "apply",
 		Short: "Apply Hasura metadata on a database",
-		Example: ` 
+		Example: `
 		# Apply Hasura GraphQL Engine metadata present in metadata.[yaml|json] file:
 		hasura metadata apply
-		
+
 		# Apply admin secret for Hasura GraphQL Engine:
 		hasura metadata apply --admin-secret "<admin-secret>"
 
