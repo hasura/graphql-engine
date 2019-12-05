@@ -4,8 +4,6 @@ set -euo pipefail
 IFS=$'\n\t'
 CLI_ROOT="${BASH_SOURCE[0]%/*}/../cli"
 
-unset GOCACHE
-
 wait_for_port() {
     local PORT=$1
     echo "waiting for $PORT"
@@ -43,5 +41,5 @@ PID=$!
 wait_for_port 8080
 
 # test cli
-GOCACHE=off HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make test
+HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make test
 kill -s INT $PID
