@@ -34,7 +34,16 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura console
 
   # Start console on a different address and ports:
-  hasura console --address 0.0.0.0 --console-port 8080 --api-port 8081`,
+  hasura console --address 0.0.0.0 --console-port 8080 --api-port 8081
+
+	# Start console without opening the browser automatically
+	hasura console --no-browser
+	
+	# Apply admin secret for Hasura GraphQL Engine:
+	hasura console --admin-secret "<admin-secret>"
+
+	# Add Hasura GraphQL Server endpoint:
+	hasura console --admin-secret "<admin-secret>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
