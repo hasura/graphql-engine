@@ -238,7 +238,7 @@ class HGEWrkBench(HGETestSetup):
     def get_results(self):
         query = '''
 query results {
-  hge_bench_latest_results {
+  latency: hge_bench_latest_results {
     query_name
     requests_per_sec
     docker_image
@@ -249,10 +249,16 @@ query results {
       latency
     }
   }
+  max_rps: hge_bench_avg_query_max_rps {
+    query_name
+    docker_image
+    version
+    max_rps
+  }
 }
         '''
         output = self.results_hge.graphql_q(query)
-        return output['data']['hge_bench_latest_results']
+        return output['data']
 
     def set_cpu_info(self, insert_var):
         cpu_key = self.cpu_info['brand'] + ' vCPUs: ' + str(self.cpu_info['count'])

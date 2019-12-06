@@ -10,5 +10,7 @@ dash-renderer
 dash-html-components
 dash-bootstrap-components
 dash-core-components
-plotly
 graphene==3.0.dev20190817210753
+matplotlib
+pandas
+seaborn

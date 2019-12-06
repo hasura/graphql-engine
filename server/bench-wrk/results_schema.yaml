@@ -61,6 +61,11 @@
         total_count integer not null
       );
 
+      create or replace view hge_bench.avg_query_max_rps as
+      select cpu_key, query_name, docker_image, version, avg(max_rps) as max_rps
+      from hge_bench.query_max_rps
+      group by cpu_key, query_name, docker_image, version;
+
 - type: track_table
   args:
      schema: hge_bench

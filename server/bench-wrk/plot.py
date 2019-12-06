@@ -3,8 +3,8 @@
 # Avoid tkinter dependency
 import matplotlib
 matplotlib.use('agg')
+
 import dash
-from plotly.tools import mpl_to_plotly
 from dash.dependencies import Input, Output, State
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
@@ -30,15 +30,59 @@ def as_pairs(l, pair_size=2):
         return [l[0:pair_size]] + as_pairs(l[pair_size:], pair_size)
 
 
-def seaborn_violin_plot_data(bench_results, scenarios, y_label, x_label, category_label):
-    data = []
+def get_scenario_results(results, scenarios):
+    out_results = []
     for snro in scenarios:
         def allowed_value(x):
             for k in snro:
                 if x[k] != snro[k]:
                     return False
             return True
-        req_results = [x for x in bench_results if allowed_value(x)]
+        req_results = [x for x in results if allowed_value(x)]
+        out_results.append((snro, req_results))
+    return out_results
+
+def throughput_data(max_rps_results, scenarios):
+    results = get_scenario_results(max_rps_results, scenarios)
+    data = []
+    for (snro, req_results) in results:
+        ver_info = snro['version'] or snro['docker_image'].split(':')[1]
+        if req_results:
+            data.append({
+                'version': ver_info,
+                'query name': snro['query_name'],
+                'throughput': float(req_results[0]['max_rps'])
+            })
+    return pd.DataFrame(data)
+
+def throughput_figure(df):
+    sns.set_style("whitegrid")
+    fig, ax = plt.subplots(figsize=(14,6))
+    sns.lineplot(x='version', y='throughput', hue='query name', data=df, ax=ax)
+    ax.grid()
+    ax.set(
+        xlabel='Version/Docker image',
+        ylabel='Throughput (req/s)'
+    )
+    out_fig = gen_plot_figure_data(plt)
+    plt.close()
+    return out_fig
+
+def gen_plot_figure_data(plt):
+    with BytesIO() as out_img:
+        plt.savefig(out_img, format='png', bbox_inches='tight', dpi=100)
+        out_img.seek(0)
+        encoded = base64.b64encode(out_img.read()).decode('ascii').replace('\n','')
+    return "data:image/png;base64,{}".format(encoded)
+
+
+def violin_plot_data(latency_results, scenarios):
+    y_label = 'latency (ms)'
+    x_label = 'version'
+    category_label = 'req/sec'
+    data = []
+    results = get_scenario_results(latency_results, scenarios)
+    for (snro, req_results) in results:
         ver_info = snro['version'] or snro['docker_image'].split(':')[1]
         if req_results:
             latencies = urlopen(req_results[0]['latencies_uri']).readlines()
@@ -52,7 +96,10 @@ def seaborn_violin_plot_data(bench_results, scenarios, y_label, x_label, categor
     return pd.DataFrame(data)
 
 
-def seaborn_violin_plot_figure(df, y_label, x_label, category_label):
+def violin_plot_figure(df):
+    y_label = 'latency (ms)'
+    x_label = 'version'
+    category_label = 'req/sec'
     sns.set_style("whitegrid")
     plt.figure(figsize=(14,6))
 
@@ -114,17 +161,14 @@ def seaborn_violin_plot_figure(df, y_label, x_label, category_label):
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(y_fmt))
 
     plt.ylim(0, None)
-    out_img = BytesIO()
-    plt.savefig(out_img, format='png', bbox_inches='tight', dpi=100)
-    out_img.seek(0)
-    encoded = base64.b64encode(out_img.read()).decode('ascii').replace('\n','')
+    out_fig = gen_plot_figure_data(plt)
     plt.close()
-    return "data:image/png;base64,{}".format(encoded)
+    return out_fig
 
-def get_seaborn_hdr_histogram_figure(df):
+def hdrhistogram_figure(df):
     sns.set_style("whitegrid")
     fig, ax = plt.subplots(figsize=(14,6))
-    sns.lineplot(x='percentile', y='latency', hue='version', style='requests/sec',
+    sns.lineplot(x='percentile', y='latency', hue='version',
                  data=df, ax=ax)
     ax.grid()
     ax.set(
@@ -137,24 +181,15 @@ def get_seaborn_hdr_histogram_figure(df):
     majors = ['25%', '50%', '90%', '99%' , '99.9%', '99.99%']
     ax.xaxis.set_major_formatter(ticker.FixedFormatter(majors))
     ax.xaxis.set_minor_formatter(ticker.NullFormatter())
-    out_img = BytesIO()
-    plt.savefig(out_img, format='png', bbox_inches='tight', dpi=100)
-    out_img.seek(0)
-    encoded = base64.b64encode(out_img.read()).decode('ascii').replace('\n','')
+    out_fig = gen_plot_figure_data(plt)
     plt.close()
-    return "data:image/png;base64,{}".format(encoded)
+    return out_fig
 
 
-# TODO use logit x-axis scale for hdr histogram
-def get_seaborn_hdr_histogram_data(bench_results, scenarios):
+def hdrhistogram_data(latency_results, scenarios):
+    results = get_scenario_results(latency_results, scenarios)
     data = []
-    for snro in scenarios:
-        def allowed_value(x):
-            for k in snro:
-                if x[k] != snro[k]:
-                    return False
-            return True
-        req_results = [x for x in bench_results if allowed_value(x)]
+    for (snro, req_results) in results:
         ver_info = snro['version'] or snro['docker_image'].split(':')[1]
         if req_results:
             histogram = req_results[0]['latency_histogram']
@@ -162,7 +197,7 @@ def get_seaborn_hdr_histogram_data(bench_results, scenarios):
                 data.append({
                     'latency': float(e['latency']),
                     'percentile': float(e['percentile']),
-                    'requests/sec': snro['requests_per_sec'],
+                    'req/sec': snro['requests_per_sec'],
                     'version': ver_info
                 })
     return pd.DataFrame(data)
@@ -189,70 +224,26 @@ def y_fmt(y, pos):
                 return tx.format(val=val, suffix=suffix[i])
     return y
 
-def get_violin_plot_data(bench_results, scenarios):
-    x_vals = []
-    y_vals = []
-    for snro in scenarios:
-        def allowed_value(x):
-            for k in snro:
-                if x[k] != snro[k]:
-                    return False
-            return True
-        req_results = [x for x in bench_results if allowed_value(x)]
-        ver_info = snro['version'] or snro['docker_image'].split(':')[1]
-        if req_results:
-            latencies = urlopen(req_results[0]['latencies_uri']).readlines()
-            for x in latencies:
-                val_ms = float(x.decode())/1000.0
-                y_vals.append(val_ms)
-                x_vals.append(ver_info)
-    return [{
-        'type': 'violin',
-        'x': x_vals,
-        'y': y_vals,
-        'points': False
-    }]
-
-def get_histogram_data(bench_results, scenarios):
-    data = []
-    for snro in scenarios:
-        def allowed_value(x):
-            for k in snro:
-                if x[k] != snro[k]:
-                    return False
-            return True
-        req_results = [x for x in bench_results if allowed_value(x)]
-        ver_info = snro['version'] or snro['docker_image'].split(':')[1]
-        if req_results:
-            histogram = req_results[0]['latency_histogram']
-            dataRow = {
-                'x' : [1/(1.0-float(x['percentile'])) for x in histogram if float(x['percentile']) < 1],
-                'y' : [float(y['latency']) for y in histogram],
-                'type': 'line',
-                'name': ver_info
-            }
-            data.append(dataRow)
-    return data
-
 def run_dash_server(bench_results):
-
-    bench_results.sort(key=lambda x : x['version'] or x['docker_image'])
+    latency_results = bench_results['latency']
+    max_rps_results = bench_results['max_rps']
+    latency_results.sort(key=lambda x : x['version'] or x['docker_image'])
 
     app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-    uniq_queries = list( set( [ x['query_name'] for x in bench_results ] ) )
+    uniq_queries = list( set( [ x['query_name'] for x in latency_results ] ) )
     children = []
 
 
     rows = []
-    plot_types = ['histogram','violin plot']
+    plot_types = ['histogram','violin plot', 'throughput']
     plots_filters_1 = [
         dbc.Col([
             html.Label('Plot type'),
             dcc.Dropdown(
                 id='plot-type',
                 options=[{'label':q, 'value': q} for q in plot_types],
-                value= plot_types[0]
+                value= plot_types[2]
             )
         ]),
         dbc.Col([
@@ -267,7 +258,7 @@ def run_dash_server(bench_results):
             html.Label('Requests/sec'),
             dcc.Dropdown(
                 id='rps',
-                multi=True
+                multi=False
             )
         ])
     ]
@@ -284,8 +275,6 @@ def run_dash_server(bench_results):
     ]
     rows.append(dbc.Row(plots_filter_2))
 
-
-
     graph = dbc.Col(
         html.Div([html.Img(id = 'graph', src = '')], id='plot_div')
     )
@@ -295,12 +284,19 @@ def run_dash_server(bench_results):
 
     app.layout = html.Div(children=children)
 
+    def as_list(x):
+        if not isinstance(x, list):
+            return [x]
+        else:
+            return x
+
     @app.callback(
         Output('ver', 'options'),
-        [ Input('query-name', 'value'), Input('rps', 'value') ]
+        [ Input('plot-type', 'value'), Input('query-name', 'value'), Input('rps', 'value') ]
     )
-    def updateVerOptions(query_name, rps_list):
-        relvnt_q = [ x for x in bench_results if x['query_name'] ==  query_name and x['requests_per_sec'] in rps_list ]
+    def updateVerOptions(plot_type, query_name, rps_list):
+        rps_list = as_list(rps_list)
+        relvnt_q = [ x for x in latency_results if x['query_name'] ==  query_name and x['requests_per_sec'] in rps_list ]
         uniq_vers = list(set([
             (x['version'], x['docker_image'])
             for x in relvnt_q
@@ -317,32 +313,46 @@ def run_dash_server(bench_results):
             for x in uniq_vers
         ]
 
+
+    def updateMultiValue(options, vals):
+        new_vals = []
+        allowed_vals = [ x['value'] for x in options]
+        def_val_size = min(2, len(allowed_vals))
+        default_vals = allowed_vals[:def_val_size]
+        if not vals:
+            return default_vals
+        for val in vals:
+            if val in allowed_vals:
+                new_vals.append(val)
+        if new_vals:
+            return new_vals
+        else:
+            return default_vals
+
+    def updateSingleValue(options, val):
+        allowed_vals = [ x['value'] for x in options]
+        if val and val in allowed_vals:
+            return val
+        elif allowed_vals:
+            return allowed_vals[0]
+        else:
+            return None
+
     @app.callback(
         Output('ver', 'value'),
         [ Input('ver', 'options') ],
         [ State('ver', 'value') ]
     )
     def updateVerValue(options, vers):
-        new_vers = []
-        allowed_vers = [ o['value'] for o in options]
-        default_vers = allowed_vers[:min(2, len(allowed_vers))]
-        if not vers:
-            return default_vers
-        for ver in vers:
-            if ver in allowed_vers:
-              new_vers.append(ver)
-        if new_vers:
-            return new_vers
-        else:
-            return default_vers
+        return updateMultiValue(options, vers)
 
 
     @app.callback(
         Output('rps', 'options'),
-        [ Input('query-name', 'value') ]
+        [ Input('plot-type', 'value'),  Input('query-name', 'value') ]
     )
-    def updateRPSOptions(query_name):
-        relvnt_q = [ x for x in bench_results if x['query_name'] ==  query_name ]
+    def updateRPSOptions(plot_type, query_name):
+        relvnt_q = [ x for x in latency_results if x['query_name'] ==  query_name ]
         rps = list( set( [x['requests_per_sec'] for x in relvnt_q ] ) )
         return [
             {
@@ -353,65 +363,46 @@ def run_dash_server(bench_results):
 
     @app.callback(
         Output('rps', 'value'),
-        [ Input('rps', 'options') ],
+        [ Input('plot-type', 'value'), Input('rps', 'options') ],
         [ State('rps', 'value') ]
     )
-    def updateRPSValue(options, rps_list):
-        new_rps_list = []
-        allowed_rps_list = [ o['value'] for o in options]
-        default_rps_list = allowed_rps_list[:min(2, len(allowed_rps_list))]
-        if not rps_list:
-            return default_rps_list
-        if rps not in rps_list:
-            if rps in allowed_rps_list:
-                new_rps_list.append(rps)
-        if new_rps_list:
-            return new_rps_list
+    def updateRPSValue(plot_type, options, rps):
+        if plot_type == 'histogram':
+            return updateSingleValue(options, rps)
         else:
-            return default_rps_list
+            rps = as_list(rps)
+            return updateMultiValue(options, rps)
 
+    # Change RPS to multi for violin plot
+    @app.callback(
+        Output('rps', 'multi'),
+        [ Input('plot-type', 'value') ],
+    )
+    def rps_dropdown_multi(plot_type):
+        return plot_type == 'violin plot'
 
-    def get_seaborn_histogram_figure(scenarios):
-        df = get_seaborn_hdr_histogram_data(bench_results, scenarios)
-        return get_seaborn_hdr_histogram_figure(df)
+    # Hide RPS dropdown if plot type is throughput
+    @app.callback(
+        Output('rps', 'style'),
+        [ Input('plot-type', 'value') ],
+    )
+    def rps_dropdown_style(plot_type):
+        if plot_type == 'throughput':
+            return {'display': 'none'}
+        else:
+            return {'display': 'block'}
 
-    def get_histgoram_figure(scenarios):
-        return {
-            'data': get_histogram_data(bench_results, scenarios),
-            'layout': {
-                'yaxis' : {
-                    'title': "Latency (ms)"
-                },
-                'xaxis' : {
-                    'title': "Percentile",
-                    'type': 'log',
-                    'tickvals': [1.0,2.0,10.0,100.0,1000.0,10000.0,10000.0,100000.0],
-                    'ticktext': ['0%','50%','90%','99%','99.9%','99.99%','99.999%','99.9999%']
-                },
-                'title' : 'Latency histogram'
-            }
-        }
-
-    def get_seaborn_violin_figure(scenarios):
-        y_label = 'latency (ms)'
-        x_label = 'version'
-        category_label = 'req/sec'
-        df = seaborn_violin_plot_data(bench_results, scenarios, y_label, x_label, category_label)
-        return seaborn_violin_plot_figure(df, y_label, x_label, category_label)
+    def get_hdrhistogram_figure(scenarios):
+        df = hdrhistogram_data(latency_results, scenarios)
+        return hdrhistogram_figure(df)
 
     def get_violin_figure(scenarios):
-        return {
-            'data': get_violin_plot_data(bench_results, scenarios),
-            'layout': {
-                'yaxis' : {
-                    'title': "Latency (ms)"
-                },
-                'xaxis': {
-                    'title': 'version/docker_image'
-                },
-                'title': 'Latency'
-            }
-        }
+        df = violin_plot_data(latency_results, scenarios)
+        return violin_plot_figure(df)
+
+    def get_throughput_figure(scenarios):
+        df = throughput_data(max_rps_results, scenarios)
+        return throughput_figure(df)
 
     @app.callback(
         Output('graph', 'src'),
@@ -423,20 +414,38 @@ def run_dash_server(bench_results):
         ]
     )
     def updateGraph(plot_type, query_name, rps_list, vers):
-        scenarios = [
-            {
-                'query_name': query_name,
-                'requests_per_sec': rps,
-                **json.loads(v)
-            }
-            for v in set(vers)
-            for rps in set(rps_list)
-        ]
-        print('Scenario:', scenarios)
+        print(plot_type, query_name, rps_list, vers)
+        rps_list = as_list(rps_list)
+        def latency_scenarios():
+            return [
+                {
+                    'query_name': query_name,
+                    'requests_per_sec': rps,
+                    **json.loads(v)
+                }
+                for v in set(vers)
+                for rps in set(rps_list)
+            ]
+        def throughput_scenarios():
+            return [
+                {
+                    'query_name': query_name,
+                    **json.loads(v)
+                }
+                for v in set(vers)
+            ]
+        if plot_type == 'throughput':
+            scenarios = throughput_scenarios()
+        else:
+            scenarios = latency_scenarios()
+        print(scenarios)
+
         if plot_type == 'histogram':
-            return get_seaborn_histogram_figure(scenarios)
+            return get_hdrhistogram_figure(scenarios)
         elif plot_type == 'violin plot':
-            return get_seaborn_violin_figure(scenarios)
+            return get_violin_figure(scenarios)
+        elif plot_type == 'throughput':
+            return get_throughput_figure(scenarios)
 
     app.run_server(host="127.0.0.1", debug=False)
 
