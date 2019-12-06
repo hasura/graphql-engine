@@ -481,7 +481,7 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
 	go m.read(version, direction, ret)
-	if !m.DryRun {
+	if m.DryRun {
 		return m.unlockErr(m.addDryRun(ret))
 	} else {
 		return m.unlockErr(m.runMigrations(ret))
@@ -516,7 +516,7 @@ func (m *Migrate) Steps(n int64) error {
 		go m.readDown(-n, ret)
 	}
 
-	if !m.DryRun {
+	if m.DryRun {
 		return m.unlockErr(m.addDryRun(ret))
 	} else {
 		return m.unlockErr(m.runMigrations(ret))
@@ -552,7 +552,7 @@ func (m *Migrate) Up() error {
 
 	go m.readUp(-1, ret)
 
-	if !m.DryRun {
+	if m.DryRun {
 		return m.unlockErr(m.addDryRun(ret))
 	} else {
 		return m.unlockErr(m.runMigrations(ret))
@@ -587,7 +587,7 @@ func (m *Migrate) Down() error {
 	ret := make(chan interface{}, m.PrefetchMigrations)
 	go m.readDown(-1, ret)
 
-	if !m.DryRun {
+	if m.DryRun {
 		return m.unlockErr(m.addDryRun(ret))
 	} else {
 		return m.unlockErr(m.runMigrations(ret))
