@@ -29,5 +29,6 @@ Postgres constructs.
   Default field values <default-values/index>
   Enum type fields <enums>
   computed-fields
+  custom-field-names
   Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>
