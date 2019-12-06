@@ -95,6 +95,7 @@ type Migrate struct {
 	status *Status
 
 	SkipExecution bool
+	DryRun        bool
 }
 
 // New returns a new Migrate instance from a source URL and a database URL.
@@ -480,8 +481,11 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 
 	ret := make(chan interface{}, m.PrefetchMigrations)
 	go m.read(version, direction, ret)
-
-	return m.unlockErr(m.runMigrations(ret))
+	if !m.DryRun {
+		return m.unlockErr(m.addDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 // Steps looks at the currently active migration version.
@@ -512,7 +516,11 @@ func (m *Migrate) Steps(n int64) error {
 		go m.readDown(-n, ret)
 	}
 
-	return m.unlockErr(m.runMigrations(ret))
+	if !m.DryRun {
+		return m.unlockErr(m.addDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 // Up looks at the currently active migration version
@@ -544,7 +552,11 @@ func (m *Migrate) Up() error {
 
 	go m.readUp(-1, ret)
 
-	return m.unlockErr(m.runMigrations(ret))
+	if !m.DryRun {
+		return m.unlockErr(m.addDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 // Down looks at the currently active migration version
@@ -575,7 +587,11 @@ func (m *Migrate) Down() error {
 	ret := make(chan interface{}, m.PrefetchMigrations)
 	go m.readDown(-1, ret)
 
-	return m.unlockErr(m.runMigrations(ret))
+	if !m.DryRun {
+		return m.unlockErr(m.addDryRun(ret))
+	} else {
+		return m.unlockErr(m.runMigrations(ret))
+	}
 }
 
 // Reset resets public schema and hasuradb metadata
@@ -1445,4 +1461,28 @@ func (m *Migrate) unlockErr(prevErr error) error {
 		return NewMultiError(prevErr, err)
 	}
 	return prevErr
+}
+
+func (m *Migrate) addDryRun(ret <-chan interface{}) error {
+	var lastInsertVersion int64
+	for r := range ret {
+		if m.stop() {
+			return nil
+		}
+
+		switch r.(type) {
+		case error:
+			return r.(error)
+		case *Migration:
+			migr := r.(*Migration)
+			if migr.Body != nil {
+				version := int64(migr.Version)
+				if version != lastInsertVersion {
+					fmt.Println(version)
+					lastInsertVersion = version
+				}
+			}
+		}
+	}
+	return nil
 }
