@@ -3,11 +3,9 @@ url: /v1/query
 status: 200
 response:
   - affected_rows: 2
-  - result_type: TuplesOk
-    result:
-      - ['id', 'name', 'is_registered']
-      - ['1', 'author1', 't']
-      - ['2', 'author2', 'f']
+  -
+    - name: "author1"
+    - name: "author2"
 query:
   type: bulk
   args:
@@ -19,6 +17,8 @@ query:
           is_registered: true
         - name: "author2"
           is_registered: false
-  - type: run_sql
+  - type: select
     args:
-      sql: "select * from author"
+      table: author
+      columns:
+        - name
