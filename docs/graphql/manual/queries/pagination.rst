@@ -243,9 +243,8 @@ position of the row in the dataset as done by ``offset`` and duplicate records a
     }
 
 Here we are fetching authors where the value of ``id`` is greater than 5. This will always skip the previously fetched
-results which would have been ids 1 to 5, ensuring no duplicate results. ``id`` is acting as the cursor column here,
-unique and sequential. Similarly we can apply this for timestamps provided they are always unique, since they are
-already sequential.
+results which would have been ids 1 to 5, ensuring no duplicate results. Column ``id`` is acting as the cursor here,
+unique and sequential.
 
 The choice of cursor columns depends on the order of the expected results. i.e. if the query has an ``order_by``
 clause, the column(s) used in the ``order_by`` need to be used as the cursor.
