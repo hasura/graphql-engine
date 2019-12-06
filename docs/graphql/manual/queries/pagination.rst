@@ -189,8 +189,75 @@ Limit results in a nested object
       }
     }
 
-Fetch limited results along with aggregated data on all results *(e.g. total count)* in the same query
-------------------------------------------------------------------------------------------------------
+Keyset cursor based pagination
+------------------------------
+
+Cursors are used to traverse across rows of a dataset. They work by returning a pointer to a specific row in the dataset.
+
+Keyset cursors are a column (or set of columns) of the data that are used as the cursor. The column(s) used as the
+cursor must be unique and sequential. This ensures that duplicate records are not fetched again and data is read after
+a specific row rather than relying on the position of the row in the result set as done by offset.
+
+Commonly used keyset cursor columns are ``id`` (auto-incrementing integer/big integer) or ``created_at`` timestamp as
+they should be unique and sequential.
+
+**For example**, consider the following query to fetch a list of authors with a ``where`` clause used in place of
+``offset``:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(
+        limit: 5,
+        where: { id: {_gt: 5} }
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 6,
+            "name": "Corny"
+          },
+          {
+            "id": 7,
+            "name": "Berti"
+          },
+          {
+            "id": 8,
+            "name": "April"
+          },
+          {
+            "id": 9,
+            "name": "Ninnetta"
+          },
+          {
+            "id": 10,
+            "name": "Lyndsay"
+          }
+        ]
+      }
+    }
+
+
+
+Here we are fetching authors where the value of ``id`` is greater than 5. This will always skip the previously fetched
+results which would have been ids 1 to 5, ensuring no duplicate results. ``id`` is acting as the cursor column here,
+unique and sequential. Similarly we can apply this for timestamps provided they are always unique, since they are
+already sequential.
+
+.. note::
+
+  Keyset cursor based pagination using ``where`` is more performant than using ``offset`` because we can leverage
+  database indexes on the columns that are being used as cursors.
+
+Fetch limited results along with data aggregated over all results *(e.g. total count)* in the same query
+--------------------------------------------------------------------------------------------------------
 
 Sometimes, some aggregated information on all the data is required along with a subset of data.
 
