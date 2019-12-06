@@ -27,7 +27,7 @@ Options
       --skip-execution        skip executing the migration action, but mark them as applied
       --type string           type of migration (up, down) to be used with version flag (default "up")
       --up string             apply all or N up migration steps
-      --version string        migrate the database to a specific version
+      --version string        only apply this particular migration
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -35,6 +35,7 @@ Options inherited from parent commands
 ::
 
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
       --skip-update-check   Skip automatic update check on command execution
 

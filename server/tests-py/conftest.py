@@ -82,6 +82,14 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
+        "--test-jwk-url",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Run testcases for JWK url behaviour"
+    )
+
+    parser.addoption(
         "--accept",
         action="store_true",
         default=False,

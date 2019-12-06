@@ -8,6 +8,7 @@ import           Control.Concurrent.MVar
 import           Control.Exception                      (IOException, try)
 import           Control.Monad.Stateless
 import           Data.Aeson                             hiding (json)
+import           Data.Either                            (isRight)
 import           Data.Int                               (Int64)
 import           Data.IORef
 import           Data.Time.Clock                        (UTCTime)
@@ -530,9 +531,12 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     -- Health check endpoint
     Spock.get "healthz" $ do
       sc <- liftIO $ getSCFromRef $ scCacheRef serverCtx
-      if null $ scInconsistentObjs sc
-        then Spock.setStatus HTTP.status200 >> Spock.lazyBytes "OK"
-        else Spock.setStatus HTTP.status500 >> Spock.lazyBytes "ERROR"
+      dbOk <- checkDbConnection
+      if dbOk
+        then Spock.setStatus HTTP.status200 >> (Spock.text $ if null (scInconsistentObjs sc)
+                                                 then "OK"
+                                                 else "WARN: inconsistent objects in schema")
+        else Spock.setStatus HTTP.status500 >> Spock.text "ERROR"
 
     Spock.get "v1/version" $ do
       uncurry Spock.setHeader jsonHeader
@@ -617,6 +621,14 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     enableMetadata = isMetadataEnabled serverCtx
     enablePGDump = isPGDumpEnabled serverCtx
     enableConfig = isConfigEnabled serverCtx
+
+    checkDbConnection = do
+      e <- liftIO $ runExceptT $ runLazyTx' (scPGExecCtx serverCtx) select1Query
+      pure $ isRight e
+      where
+        select1Query :: (MonadTx m) => m Int
+        select1Query =   liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+                         [Q.sql| SELECT 1 |] () False
 
     serveApiConsole = do
       -- redirect / to /console

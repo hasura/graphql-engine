@@ -940,6 +940,7 @@ const fetchViewDefinition = (viewName, isRedirect) => {
       type: 'run_sql',
       args: {
         sql: sqlQuery,
+        read_only: true,
       },
     };
 
