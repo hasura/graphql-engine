@@ -42,6 +42,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.versionMigration, "version", "", "only apply this particular migration")
 	f.StringVar(&opts.migrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 	f.BoolVar(&opts.skipExecution, "skip-execution", false, "skip executing the migration action, but mark them as applied")
+	f.BoolVar(&opts.dryRun, "dry-run", false, "print the names of migrations which are going to be applied")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -63,6 +64,7 @@ type migrateApplyOptions struct {
 	versionMigration string
 	migrationType    string
 	skipExecution    bool
+	dryRun           bool
 }
 
 func (o *migrateApplyOptions) run() error {
@@ -76,6 +78,7 @@ func (o *migrateApplyOptions) run() error {
 		return err
 	}
 	migrateDrv.SkipExecution = o.skipExecution
+	migrateDrv.DryRun = o.dryRun
 
 	err = ExecuteMigration(migrationType, migrateDrv, step)
 	if err != nil {
