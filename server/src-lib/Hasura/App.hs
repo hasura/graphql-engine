@@ -30,6 +30,7 @@ import qualified Text.Mustache.Compile       as M
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Events.Lib
+import           Hasura.Events.Timed
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache
@@ -252,6 +253,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
     _icHttpManager _icPgPool scRef eventEngineCtx
 
+  void $ liftIO $ C.forkIO $ runScheduledEventsGenerator _icPgPool -- logger logEnvHeaders
+  void $ liftIO $ C.forkIO $ processScheduledQueue _icPgPool -- logger logEnvHeaders
   -- start a background thread to check for updates
   void $ liftIO $ C.forkIO $ checkForUpdates loggerCtx _icHttpManager
 

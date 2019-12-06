@@ -181,6 +181,9 @@ library
                      -- caching
                      , psqueues >= 0.2
 
+                     -- scheduled triggers
+                     , cron
+
   exposed-modules:     Control.Monad.Stateless
 
                      , Hasura.Prelude
@@ -255,6 +258,7 @@ library
                      , Hasura.RQL.DDL.Schema.Table
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.EventTrigger
+                     , Hasura.RQL.DDL.TimedTrigger
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.QueryCollection
@@ -317,6 +321,7 @@ library
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
+                     , Hasura.Events.Timed
 
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended

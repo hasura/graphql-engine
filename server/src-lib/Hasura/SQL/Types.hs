@@ -16,8 +16,7 @@ module Hasura.SQL.Types
 
   , PGDescription(..)
 
-  , PGCol
-  , getPGColTxt
+  , PGCol(..)
   , showPGCols
 
   , isIntegerType
@@ -41,6 +40,7 @@ module Hasura.SQL.Types
   , SchemaName(..)
   , publicSchema
   , hdbViewsSchema
+  , hdbCatalogSchema
 
   , TableName(..)
   , FunctionName(..)
@@ -234,6 +234,9 @@ publicSchema = SchemaName "public"
 
 hdbViewsSchema :: SchemaName
 hdbViewsSchema = SchemaName "hdb_views"
+
+hdbCatalogSchema :: SchemaName
+hdbCatalogSchema = SchemaName "hdb_catalog"
 
 instance IsIden SchemaName where
   toIden (SchemaName t) = Iden t
