@@ -7,6 +7,7 @@ import           Hasura.Prelude
 import           Hasura.Logging
 import           Hasura.RQL.DDL.Schema     (runCacheRWT)
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.App         (SchemaCacheRef (..), withSCUpdate)
 import           Hasura.Server.Init        (InstanceId (..))
 import           Hasura.Server.Logging

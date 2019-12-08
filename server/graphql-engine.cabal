@@ -222,6 +222,7 @@ library
                      , Hasura.Server.PGDump
 
                      , Hasura.RQL.Types
+                     , Hasura.RQL.Types.Run
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Metadata.Types
                      , Hasura.RQL.DDL.Metadata.Generator
@@ -267,6 +268,10 @@ library
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.Relationship.Types
                      , Hasura.RQL.DDL.Schema.Cache
+                     , Hasura.RQL.DDL.Schema.Cache.Common
+                     , Hasura.RQL.DDL.Schema.Cache.Dependencies
+                     , Hasura.RQL.DDL.Schema.Cache.Fields
+                     , Hasura.RQL.DDL.Schema.Cache.Permission
                      , Hasura.RQL.DDL.Schema.Catalog
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Schema.Enum

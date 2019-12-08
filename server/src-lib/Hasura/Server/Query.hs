@@ -1,11 +1,8 @@
-{-# LANGUAGE NamedFieldPuns       #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE NamedFieldPuns #-}
 
 module Hasura.Server.Query where
 
 import           Control.Lens
-import           Control.Monad.Trans.Control        (MonadBaseControl (..))
-import           Control.Monad.Unique
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -34,6 +31,7 @@ import           Hasura.RQL.DML.Insert
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 
@@ -151,37 +149,6 @@ $(deriveJSON
   ''RQLQueryV2
  )
 
-data RunCtx
-  = RunCtx
-  { _rcUserInfo  :: !UserInfo
-  , _rcHttpMgr   :: !HTTP.Manager
-  , _rcSqlGenCtx :: !SQLGenCtx
-  }
-
-newtype Run a
-  = Run { unRun :: ReaderT RunCtx (LazyTx QErr) a }
-  deriving ( Functor, Applicative, Monad
-           , MonadError QErr
-           , MonadReader RunCtx
-           , MonadTx
-           , MonadIO
-           , MonadBase IO
-           , MonadBaseControl IO
-           , MonadUnique
-           )
-
-instance UserInfoM Run where
-  askUserInfo = asks _rcUserInfo
-
-instance HasHttpManager Run where
-  askHttpManager = asks _rcHttpMgr
-
-instance HasSQLGenCtx Run where
-  askSQLGenCtx = asks _rcSqlGenCtx
-
--- see Note [Specialization of buildRebuildableSchemaCache]
-{-# SPECIALIZE buildRebuildableSchemaCache :: Run (RebuildableSchemaCache Run) #-}
-
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
   Q.withQE defaultTxErrorHandler
@@ -199,16 +166,6 @@ recordSchemaUpdate instanceId =
              ON CONFLICT ((occurred_at IS NOT NULL))
              DO UPDATE SET instance_id = $1::uuid, occurred_at = DEFAULT
             |] (Identity instanceId) True
-
-peelRun
-  :: (MonadIO m)
-  => RunCtx
-  -> PGExecCtx
-  -> Q.TxAccess
-  -> Run a
-  -> ExceptT QErr m a
-peelRun runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
-  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo $ runReaderT m runCtx
 
 runQuery
   :: (MonadIO m, MonadError QErr m)

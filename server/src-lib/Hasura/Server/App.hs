@@ -38,7 +38,9 @@ import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth                     (AuthMode (..), UserAuthentication (..))
+import           Hasura.RQL.Types.Run
+import           Hasura.Server.Auth                     (AuthMode (..),
+                                                         UserAuthentication (..))
 import           Hasura.Server.Compression
 import           Hasura.Server.Config                   (runGetConfig)
 import           Hasura.Server.Context

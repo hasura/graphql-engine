@@ -148,6 +148,7 @@ jobs:
   build_server:
     docker:
     - image: hasura/graphql-engine-server-builder:20190826
+    resource_class: large
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -176,7 +177,7 @@ jobs:
             make ci-binary
           else
             echo "Non-release branch, build with coverage"
-            BUILD_FLAGS="--coverage" make ci-binary
+            make BUILD_FLAGS='--coverage' ci-binary
           fi
     - run:
         name: Build the docker image

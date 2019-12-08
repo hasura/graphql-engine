@@ -19,10 +19,10 @@ import qualified Test.Hspec.Runner          as Hspec
 
 import           Hasura.Db                  (PGExecCtx (..))
 import           Hasura.RQL.Types           (SQLGenCtx (..), adminUserInfo)
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init         (RawConnInfo, mkConnInfo, mkRawConnInfo,
                                              parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
-import           Hasura.Server.Query        (Run, RunCtx (..), peelRun)
 
 import qualified Hasura.IncrementalSpec     as IncrementalSpec
 import qualified Hasura.RQL.MetadataSpec    as MetadataSpec

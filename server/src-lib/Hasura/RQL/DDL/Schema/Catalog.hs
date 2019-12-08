@@ -7,18 +7,24 @@ module Hasura.RQL.DDL.Schema.Catalog
   , updateTableConfig
   , deleteTableFromCatalog
   , getTableConfig
+  , purgeDependentObject
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.Text                    as T
-import qualified Database.PG.Query            as Q
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
 
 -- import           Data.Time.Clock
 
 import           Data.Aeson
 
 import           Hasura.Db
+import           Hasura.RQL.DDL.ComputedField
+import           Hasura.RQL.DDL.EventTrigger
+import           Hasura.RQL.DDL.Permission.Internal
+import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
@@ -78,3 +84,12 @@ getTableConfig (QualifiedObject sn tn) = liftTx $
        SELECT configuration::json FROM hdb_catalog.hdb_table
         WHERE table_schema = $1 AND table_name = $2
     |] (sn, tn) True
+
+purgeDependentObject :: (MonadTx m) => SchemaObjId -> m ()
+purgeDependentObject = \case
+  SOTableObj tn (TOPerm rn pt) -> liftTx $ dropPermFromCatalog tn rn pt
+  SOTableObj qt (TORel rn) -> liftTx $ delRelFromCatalog qt rn
+  SOFunction qf -> liftTx $ delFunctionFromCatalog qf
+  SOTableObj _ (TOTrigger trn) -> liftTx $ delEventTriggerFromCatalog trn
+  SOTableObj qt (TOComputedField ccn) -> dropComputedFieldFromCatalog qt ccn
+  schemaObjId -> throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId

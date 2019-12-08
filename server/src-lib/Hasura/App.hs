@@ -41,14 +41,14 @@ import           Hasura.RQL.Types            (CacheRWM, Code (..),
                                               adminUserInfo, decodeValue,
                                               throw400,
                                               userRole, withPathK, buildSchemaCacheStrict)
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates           (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Migrate                (migrateCatalog)
-import           Hasura.Server.Query                  (Run, RunCtx (..), peelRun, requiresAdmin,
-                                                       runQueryM)
+import           Hasura.Server.Migrate       (migrateCatalog)
+import           Hasura.Server.Query         (requiresAdmin, runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version

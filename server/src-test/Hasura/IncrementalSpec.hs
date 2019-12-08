@@ -4,13 +4,13 @@ module Hasura.IncrementalSpec (spec) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict as M
-import qualified Data.HashSet        as S
+import qualified Data.HashMap.Strict    as M
+import qualified Data.HashSet           as S
 
 import           Control.Arrow.Extended
 import           Test.Hspec
 
-import qualified Hasura.Incremental  as Inc
+import qualified Hasura.Incremental     as Inc
 
 spec :: Spec
 spec = do

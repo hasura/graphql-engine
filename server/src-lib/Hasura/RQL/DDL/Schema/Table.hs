@@ -26,7 +26,7 @@ module Hasura.RQL.DDL.Schema.Table
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
-import {-# SOURCE #-} Hasura.RQL.DDL.Schema.Cache
+import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Enum
@@ -35,23 +35,23 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query             as Q
-import qualified Hasura.GraphQL.Context        as GC
-import qualified Hasura.GraphQL.Schema         as GS
-import qualified Hasura.Incremental            as Inc
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Database.PG.Query                  as Q
+import qualified Hasura.GraphQL.Context             as GC
+import qualified Hasura.GraphQL.Schema              as GS
+import qualified Hasura.Incremental                 as Inc
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Arrow.Extended
-import           Control.Lens.Extended         hiding ((.=))
+import           Control.Lens.Extended              hiding ((.=))
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Lift)
-import           Network.URI.Extended          ()
+import           Instances.TH.Lift                  ()
+import           Language.Haskell.TH.Syntax         (Lift)
+import           Network.URI.Extended               ()
 
-import qualified Data.HashMap.Strict.Extended  as M
-import qualified Data.Text                     as T
+import qualified Data.HashMap.Strict.Extended       as M
+import qualified Data.Text                          as T
 
 data TrackTable
   = TrackTable
@@ -296,7 +296,7 @@ buildTableCache
   => [CatalogTable] `arr` M.HashMap QualifiedTable (TableCoreInfo PGColumnInfo)
 buildTableCache = proc catalogTables -> do
   rawTableInfos <-
-    (| Inc.keyed (| withTable (\tables -> buildRawTableInfo <<< noDuplicates -< tables) |)
+    (| Inc.keyed (| withTable (\tables -> buildRawTableInfo <<< noDuplicateTables -< tables) |)
     |) (M.groupOnNE _ctName catalogTables)
   let rawTableCache = M.catMaybes rawTableInfos
       enumTables = M.mapMaybe _tciEnumValues rawTableCache
@@ -309,7 +309,7 @@ buildTableCache = proc catalogTables -> do
     withTable f = withRecordInconsistency f <<<
       second (first $ arr \name -> MetadataObject (MOTable name) (toJSON name))
 
-    noDuplicates = proc tables -> case tables of
+    noDuplicateTables = proc tables -> case tables of
       table :| [] -> returnA -< table
       _           -> throwA -< err400 AlreadyExists "duplication definition for table"
 
@@ -410,3 +410,7 @@ buildTableCache = proc catalogTables -> do
               $ "cannot handle exotic schema: column " <> prciName rawInfo <<> " in table "
               <> tableName <<> " references multiple foreign tables ("
               <> T.intercalate ", " (map dquote referencedTables) <> ")?"
+
+-- see Note [Specialization of buildRebuildableSchemaCache] in Hasura.RQL.DDL.Schema.Cache
+{-# SPECIALIZE buildTableCache
+    :: CacheBuildA [CatalogTable] (M.HashMap QualifiedTable (TableCoreInfo PGColumnInfo)) #-}

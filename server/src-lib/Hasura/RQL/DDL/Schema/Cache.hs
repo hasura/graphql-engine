@@ -15,38 +15,37 @@ module Hasura.RQL.DDL.Schema.Cache
   , runCacheRWT
 
   , withMetadataCheck
-  , purgeDependentObject
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended       as M
-import qualified Data.HashSet                       as HS
-import qualified Data.Sequence                      as Seq
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
+import qualified Data.HashMap.Strict.Extended             as M
+import qualified Data.HashSet                             as HS
+import qualified Data.Text                                as T
+import qualified Database.PG.Query                        as Q
 
 import           Control.Arrow.Extended
-import           Control.Lens                       hiding ((.=))
+import           Control.Lens                             hiding ((.=))
 import           Control.Monad.Unique
 import           Data.Aeson
 -- import           Data.IORef
-import           Data.List                          (nub)
+import           Data.List                                (nub)
 -- import           Data.Time.Clock
 
-import qualified Hasura.GraphQL.Context             as GC
-import qualified Hasura.GraphQL.Schema              as GS
-import qualified Hasura.Incremental                 as Inc
+import qualified Hasura.GraphQL.Context                   as GC
+import qualified Hasura.GraphQL.Schema                    as GS
+import qualified Hasura.Incremental                       as Inc
 
 import           Hasura.Db
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
-import           Hasura.RQL.DDL.Permission
-import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.RQL.DDL.Schema.Cache.Common
+import           Hasura.RQL.DDL.Schema.Cache.Dependencies
+import           Hasura.RQL.DDL.Schema.Cache.Fields
+import           Hasura.RQL.DDL.Schema.Cache.Permission
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
@@ -55,49 +54,9 @@ import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
+import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 
--- | A map used to explicitly invalidate part of the build cache, which is most useful for external
--- resources (currently only remote schemas). The 'InvalidationKey' values it contains are used as
--- inputs to build rules, so setting an entry to a fresh 'InvalidationKey' forces it to be
--- re-executed.
-type InvalidationMap = HashMap RemoteSchemaName InvalidationKey
-type InvalidationKey = Unique
-
-data BuildInputs
-  = BuildInputs
-  { _biReason          :: !BuildReason
-  , _biCatalogMetadata :: !CatalogMetadata
-  , _biInvalidationMap :: !InvalidationMap
-  } deriving (Eq)
-
--- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
--- schema cache, but dependencies and inconsistent metadata objects are collected via a separate
--- 'MonadWriter' side channel.
-data BuildOutputs
-  = BuildOutputs
-  { _boTables            :: !TableCache
-  , _boFunctions         :: !FunctionCache
-  , _boRemoteSchemas     :: !RemoteSchemaMap
-  , _boAllowlist         :: !(HS.HashSet GQLQuery)
-  , _boGCtxMap           :: !GC.GCtxMap
-  , _boDefaultRemoteGCtx :: !GC.GCtx
-  } deriving (Show, Eq)
-$(makeLensesFor
-  [ ("_boTables", "boTables")
-  , ("_boFunctions", "boFunctions")
-  , ("_boRemoteSchemas", "boRemoteSchemas")
-  ] ''BuildOutputs)
-
-data RebuildableSchemaCache m
-  = RebuildableSchemaCache
-  { lastBuiltSchemaCache :: !SchemaCache
-  , _rscInvalidationMap :: !InvalidationMap
-  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (CatalogMetadata, InvalidationMap) SchemaCache)
-  }
-$(makeLensesFor [("_rscInvalidationMap", "rscInvalidationMap")] ''RebuildableSchemaCache)
-
-{-# INLINABLE buildRebuildableSchemaCache #-} -- see Note [Specialization of buildRebuildableSchemaCache]
 buildRebuildableSchemaCache
   :: (MonadIO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
   => m (RebuildableSchemaCache m)
@@ -105,6 +64,9 @@ buildRebuildableSchemaCache = do
   catalogMetadata <- liftTx fetchCatalogData
   result <- flip runReaderT CatalogSync $ Inc.build buildSchemaCacheRule (catalogMetadata, M.empty)
   pure $ RebuildableSchemaCache (Inc.result result) M.empty (Inc.rebuildRule result)
+
+-- see Note [Specialization of buildRebuildableSchemaCache]
+{-# SPECIALIZE buildRebuildableSchemaCache :: Run (RebuildableSchemaCache Run) #-}
 
 newtype CacheRWT m a
   = CacheRWT { unCacheRWT :: StateT (RebuildableSchemaCache m) m a }
@@ -263,54 +225,10 @@ buildSchemaCacheRule = proc inputs -> do
         , _boDefaultRemoteGCtx = remoteGQLSchema
         }
 
-    mkRelationshipMetadataObject (CatalogRelation qt rn rt rDef cmnt) =
-      let objectId = MOTableObj qt $ MTORel rn rt
-          definition = toJSON $ WithTable qt $ RelDef rn rDef cmnt
-      in MetadataObject objectId definition
-
-    mkComputedFieldMetadataObject (CatalogComputedField column _) =
-      let AddComputedField qt name _ _ = column
-          objectId = MOTableObj qt $ MTOComputedField name
-      in MetadataObject objectId (toJSON column)
-
-    mkPermissionMetadataObject (CatalogPermission qt rn pt pDef cmnt) =
-      let objectId = MOTableObj qt $ MTOPerm rn pt
-          definition = toJSON $ WithTable qt $ PermDef rn pDef cmnt
-      in MetadataObject objectId definition
-
     mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =
       let objectId = MOTableObj qt $ MTOTrigger trn
           definition = object ["table" .= qt, "configuration" .= configuration]
       in MetadataObject objectId definition
-
-    bindErrorA
-      :: (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m)
-      => arr (m a) a
-    bindErrorA = (throwA ||| returnA) <<< arrM \m -> (Right <$> m) `catchError` (pure . Left)
-
-    withRecordDependencies
-      :: (ArrowWriter (Seq CollectedInfo) arr)
-      => WriterA (Seq SchemaDependency) arr (e, s) a
-      -> arr (e, (MetadataObject, (SchemaObjId, s))) a
-    withRecordDependencies f = proc (e, (metadataObject, (schemaObjectId, s))) -> do
-      (result, dependencies) <- runWriterA f -< (e, s)
-      recordDependencies -< (metadataObject, schemaObjectId, toList dependencies)
-      returnA -< result
-
-    noDuplicates
-      :: (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr)
-      => (a -> MetadataObject)
-      -> [a] `arr` Maybe a
-    noDuplicates mkMetadataObject = proc values -> case values of
-      []      -> returnA -< Nothing
-      [value] -> returnA -< Just value
-      value:_ -> do
-        let objectId = _moId $ mkMetadataObject value
-            definitions = map (_moDefinition . mkMetadataObject) values
-        tellA -< Seq.singleton $ CIInconsistency (DuplicateObjects objectId definitions)
-        returnA -< Nothing
-
-    addTableContext tableName e = "in table " <> tableName <<> ": " <> e
 
     -- Given a map of table info, “folds in” another map of information, accumulating inconsistent
     -- metadata objects for any entries in the second map that don’t appear in the first map. This
@@ -337,174 +255,6 @@ buildSchemaCacheRule = proc inputs -> do
             let errorMessage = "table " <> tableName <<> " does not exist"
             recordInconsistencies -< (map mkMetadataObject extras, errorMessage)
             returnA -< Nothing
-
-    addNonColumnFields
-      :: ( Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-         , ArrowKleisli m arr, MonadError QErr m )
-      => ( HashSet ForeignKey -- ^ all foreign keys
-         , HashSet QualifiedTable -- ^ the names of all tracked tables
-         , FieldInfoMap PGColumnInfo
-         , [CatalogRelation]
-         , [CatalogComputedField]
-         ) `arr` FieldInfoMap FieldInfo
-    addNonColumnFields =
-      proc (foreignKeys, trackedTableNames, columns, relationships, computedFields) -> do
-        relationshipInfos <-
-          (| Inc.keyed (\_ relationshipsByName -> do
-               maybeRelationship <- noDuplicates mkRelationshipMetadataObject -< relationshipsByName
-               (\info -> join info >- returnA) <-<
-                 (| traverseA (\relationship -> do
-                      info <- buildRelationship -< (foreignKeys, relationship)
-                      returnA -< info <&> (, mkRelationshipMetadataObject relationship))
-                 |) maybeRelationship)
-          |) (M.groupOn _crRelName relationships)
-
-        computedFieldInfos <-
-          (| Inc.keyed (\_ computedFieldsByName -> do
-               maybeComputedField <- noDuplicates mkComputedFieldMetadataObject -< computedFieldsByName
-               (\info -> join info >- returnA) <-<
-                 (| traverseA (\computedField -> do
-                      info <- buildComputedField -< (trackedTableNames, computedField)
-                      returnA -< info <&> (, mkComputedFieldMetadataObject computedField))
-                 |) maybeComputedField)
-          |) (M.groupOn (_afcName . _cccComputedField) computedFields)
-
-        let mapKey f = M.fromList . map (first f) . M.toList
-            relationshipFields = mapKey fromRel $ M.catMaybes relationshipInfos
-            computedFieldFields = mapKey fromComputedField $ M.catMaybes computedFieldInfos
-        nonColumnFields <-
-          (| Inc.keyed (\fieldName fields -> noFieldConflicts -< (fieldName, fields))
-          |) (align relationshipFields computedFieldFields)
-
-        (| Inc.keyed (\_ fields -> noColumnConflicts -< fields)
-         |) (align columns (M.catMaybes nonColumnFields))
-      where
-        buildRelationship = proc (foreignKeys, relationship) -> do
-          let CatalogRelation tableName rn rt rDef _ = relationship
-              metadataObject = mkRelationshipMetadataObject relationship
-              schemaObject = SOTableObj tableName $ TORel rn
-              addRelationshipContext e = "in relationship " <> rn <<> ": " <> e
-          (| withRecordInconsistency (
-             (| modifyErrA (do
-                  (info, dependencies) <- bindErrorA -< case rt of
-                    ObjRel -> do
-                      using <- decodeValue rDef
-                      objRelP2Setup tableName foreignKeys (RelDef rn using Nothing)
-                    ArrRel -> do
-                      using <- decodeValue rDef
-                      arrRelP2Setup tableName foreignKeys (RelDef rn using Nothing)
-                  recordDependencies -< (metadataObject, schemaObject, dependencies)
-                  returnA -< info)
-             |) (addTableContext tableName . addRelationshipContext))
-           |) metadataObject
-
-        buildComputedField = proc (trackedTableNames, computedField) -> do
-          let CatalogComputedField column funcDefs = computedField
-              AddComputedField qt name def comment = column
-              addComputedFieldContext e = "in computed field " <> name <<> ": " <> e
-          (| withRecordInconsistency (
-             (| modifyErrA (do
-                  rawfi <- bindErrorA -< handleMultipleFunctions (_cfdFunction def) funcDefs
-                  bindErrorA -< addComputedFieldP2Setup trackedTableNames qt name def rawfi comment)
-             |) (addTableContext qt . addComputedFieldContext))
-           |) (mkComputedFieldMetadataObject computedField)
-
-        noFieldConflicts = proc (fieldName, fields) -> case fields of
-          This (relationship, metadata) -> returnA -< Just (FIRelationship relationship, metadata)
-          That (computedField, metadata) -> returnA -< Just (FIComputedField computedField, metadata)
-          These (_, relationshipMetadata) (_, computedFieldMetadata) -> do
-            tellA -< Seq.singleton $ CIInconsistency $ ConflictingObjects
-              ("conflicting definitions for field " <>> fieldName)
-              [relationshipMetadata, computedFieldMetadata]
-            returnA -< Nothing
-
-        noColumnConflicts = proc fields -> case fields of
-          This columnInfo -> returnA -< FIColumn columnInfo
-          That (fieldInfo, _) -> returnA -< fieldInfo
-          These columnInfo (_, fieldMetadata) -> do
-            recordInconsistency -< (fieldMetadata, "field definition conflicts with postgres column")
-            returnA -< FIColumn columnInfo
-
-    buildTablePermissions
-      :: ( Inc.ArrowCache arr, Inc.ArrowDistribute arr, ArrowKleisli m arr
-         , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m )
-      => ( TableCoreCache
-         , TableCoreInfo FieldInfo
-         , [CatalogPermission]
-         ) `arr` RolePermInfoMap
-    buildTablePermissions = proc (tableCache, tableInfo, tablePermissions) ->
-      (| Inc.keyed (\_ rolePermissions -> do
-           let (insertPerms, selectPerms, updatePerms, deletePerms) =
-                 partitionPermissions rolePermissions
-
-           insertPermInfo <- buildPermission -< (tableCache, tableInfo, insertPerms)
-           selectPermInfo <- buildPermission -< (tableCache, tableInfo, selectPerms)
-           updatePermInfo <- buildPermission -< (tableCache, tableInfo, updatePerms)
-           deletePermInfo <- buildPermission -< (tableCache, tableInfo, deletePerms)
-
-           returnA -< RolePermInfo
-             { _permIns = insertPermInfo
-             , _permSel = selectPermInfo
-             , _permUpd = updatePermInfo
-             , _permDel = deletePermInfo
-             })
-      |) (M.groupOn _cpRole tablePermissions)
-      where
-        partitionPermissions = flip foldr ([], [], [], []) $
-          \perm (insertPerms, selectPerms, updatePerms, deletePerms) -> case _cpPermType perm of
-            PTInsert -> (perm:insertPerms, selectPerms, updatePerms, deletePerms)
-            PTSelect -> (insertPerms, perm:selectPerms, updatePerms, deletePerms)
-            PTUpdate -> (insertPerms, selectPerms, perm:updatePerms, deletePerms)
-            PTDelete -> (insertPerms, selectPerms, updatePerms, perm:deletePerms)
-
-        withPermission
-          :: (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr)
-          => WriterA (Seq SchemaDependency) (ErrorA QErr arr) (a, s) b
-          -> arr (a, (CatalogPermission, s)) (Maybe b)
-        withPermission f = proc (e, (permission, s)) -> do
-          let CatalogPermission tableName roleName permType _ _ = permission
-              metadataObject = mkPermissionMetadataObject permission
-              schemaObject = SOTableObj tableName $ TOPerm roleName permType
-              addPermContext err = "in permission for role " <> roleName <<> ": " <> err
-          (| withRecordInconsistency (
-             (| withRecordDependencies (
-                (| modifyErrA (f -< (e, s))
-                |) (addTableContext tableName . addPermContext))
-             |) metadataObject schemaObject)
-           |) metadataObject
-
-        buildPermission
-          :: ( Inc.ArrowCache arr, Inc.ArrowDistribute arr, ArrowKleisli m arr
-             , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m
-             , Eq a, IsPerm a, FromJSON a, Eq (PermInfo a) )
-          => ( TableCoreCache
-             , TableCoreInfo FieldInfo
-             , [CatalogPermission]
-             ) `arr` Maybe (PermInfo a)
-        buildPermission = proc (tableCache, tableInfo, permissions) ->
-              (permissions >- noDuplicates mkPermissionMetadataObject)
-          >-> (| traverseA (\permission@(CatalogPermission _ roleName _ pDef _) ->
-                 (| withPermission (do
-                      bindErrorA -< when (roleName == adminRole) $
-                        throw400 ConstraintViolation "cannot define permission for admin role"
-                      perm <- bindErrorA -< decodeValue pDef
-                      let permDef = PermDef roleName perm Nothing
-                      (info, dependencies) <- bindErrorA -<
-                        runTableCoreCacheRT (buildPermInfo tableInfo permDef) tableCache
-                      tellA -< Seq.fromList dependencies
-                      rebuildViewsIfNeeded -< (_tciName tableInfo, permDef, info)
-                      returnA -< info)
-                 |) permission) |)
-          >-> (\info -> join info >- returnA)
-
-        rebuildViewsIfNeeded
-          :: ( Inc.ArrowCache arr, ArrowKleisli m arr, MonadTx m, MonadReader BuildReason m
-             , Eq a, IsPerm a, Eq (PermInfo a) )
-          => (QualifiedTable, PermDef a, PermInfo a) `arr` ()
-        rebuildViewsIfNeeded = Inc.cache $ arrM \(tableName, permDef, info) -> do
-          buildReason <- ask
-          when (buildReason == CatalogUpdate) $
-            addPermP2Setup tableName permDef info
 
     buildTableEventTriggers
       :: ( Inc.ArrowDistribute arr, ArrowKleisli m arr, ArrowWriter (Seq CollectedInfo) arr
@@ -649,132 +399,6 @@ withMetadataCheck cascade action = do
         diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
         newInconsistentObjects = nub $ concatMap toList $
           M.elems (currentInconsMeta `diffInconsistentObjects` originalInconsMeta)
-
-purgeDependentObject :: (MonadTx m) => SchemaObjId -> m ()
-purgeDependentObject = \case
-  SOTableObj tn (TOPerm rn pt) -> liftTx $ dropPermFromCatalog tn rn pt
-  SOTableObj qt (TORel rn) -> liftTx $ delRelFromCatalog qt rn
-  SOFunction qf -> liftTx $ delFunctionFromCatalog qf
-  SOTableObj _ (TOTrigger trn) -> liftTx $ delEventTriggerFromCatalog trn
-  SOTableObj qt (TOComputedField ccn) -> dropComputedFieldFromCatalog qt ccn
-  schemaObjId -> throw500 $ "unexpected dependent object: " <> reportSchemaObj schemaObjId
-
--- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
--- ensure the dependencies actually exist. If a dependency is missing, its transitive dependents are
--- removed from the cache, and 'InconsistentMetadata's are returned.
-resolveDependencies
-  :: forall arr m. (ArrowKleisli m arr, QErrM m)
-  => ( BuildOutputs
-     , [(MetadataObject, SchemaObjId, SchemaDependency)]
-     ) `arr` (BuildOutputs, [InconsistentMetadata], DepMap)
-resolveDependencies = arrM \(cache, dependencies) -> do
-  let dependencyMap = dependencies
-        & M.groupOn (view _2)
-        & fmap (map \(metadataObject, _, schemaDependency) -> (metadataObject, schemaDependency))
-  performIteration 0 cache [] dependencyMap
-  where
-    -- Processes dependencies using an iterative process that alternates between two steps:
-    --
-    --   1. First, pruneDanglingDependents searches for any dependencies that do not exist in the
-    --      current cache and removes their dependents from the dependency map, returning an
-    --      InconsistentMetadata for each dependent that was removed. This step does not change
-    --      the schema cache in any way.
-    --
-    --   2. Second, deleteMetadataObject drops the pruned dependent objects from the cache. It does
-    --      not alter (or consult) the dependency map, so transitive dependents are /not/ removed.
-    --
-    -- By iterating the above process until pruneDanglingDependents does not discover any new
-    -- inconsistencies, all missing dependencies will eventually be removed, and since dependency
-    -- graphs between schema objects are unlikely to be very deep, it will usually terminate in just
-    -- a few iterations.
-    performIteration
-      :: Int
-      -> BuildOutputs
-      -> [InconsistentMetadata]
-      -> HashMap SchemaObjId [(MetadataObject, SchemaDependency)]
-      -> m (BuildOutputs, [InconsistentMetadata], DepMap)
-    performIteration iterationNumber cache inconsistencies dependencies = do
-      let (newInconsistencies, prunedDependencies) = pruneDanglingDependents cache dependencies
-      case newInconsistencies of
-        [] -> pure (cache, inconsistencies, HS.fromList . map snd <$> prunedDependencies)
-        _ | iterationNumber < 100 -> do
-              let inconsistentIds = nub $ concatMap imObjectIds newInconsistencies
-                  prunedCache = foldl' (flip deleteMetadataObject) cache inconsistentIds
-                  allInconsistencies = inconsistencies <> newInconsistencies
-              performIteration (iterationNumber + 1) prunedCache allInconsistencies prunedDependencies
-          | otherwise ->
-              -- Running for 100 iterations without terminating is (hopefully) enormously unlikely
-              -- unless we did something very wrong, so halt the process and abort with some
-              -- debugging information.
-              throwError (err500 Unexpected "schema dependency resolution failed to terminate")
-                { qeInternal = Just $ object
-                    [ "inconsistent_objects" .= object
-                      [ "old" .= inconsistencies
-                      , "new" .= newInconsistencies ]
-                    , "pruned_dependencies" .= (map snd <$> prunedDependencies) ] }
-
-    pruneDanglingDependents
-      :: BuildOutputs
-      -> HashMap SchemaObjId [(MetadataObject, SchemaDependency)]
-      -> ([InconsistentMetadata], HashMap SchemaObjId [(MetadataObject, SchemaDependency)])
-    pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
-      partitionEithers . map \(metadataObject, dependency) -> case resolveDependency dependency of
-        Right ()          -> Right (metadataObject, dependency)
-        Left errorMessage -> Left (InconsistentObject errorMessage metadataObject)
-      where
-        resolveDependency :: SchemaDependency -> Either Text ()
-        resolveDependency (SchemaDependency objectId _) = case objectId of
-          SOTable tableName -> void $ resolveTable tableName
-          SOFunction functionName -> unless (functionName `M.member` _boFunctions cache) $
-            Left $ "function " <> functionName <<> " is not tracked"
-          SOTableObj tableName tableObjectId -> do
-            tableInfo <- resolveTable tableName
-            -- let coreInfo = _tiCoreInfo tableInfo
-            case tableObjectId of
-              TOCol columnName ->
-                void $ resolveField tableInfo (fromPGCol columnName) _FIColumn "column"
-              TORel relName ->
-                void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
-              TOComputedField fieldName ->
-                void $ resolveField tableInfo (fromComputedField fieldName) _FIComputedField "computed field"
-              TOCons _constraintName ->
-                -- FIXME: foreign key constraints
-                pure ()
-                -- unless (constraintName `elem` _tciUniqueOrPrimaryKeyConstraints coreInfo) $ do
-                --   Left $ "no unique or primary key constraint named " <> constraintName <<> " is "
-                --     <> "defined for table " <>> tableName
-              TOPerm roleName permType -> withPermType permType \accessor -> do
-                let permLens = permAccToLens accessor
-                unless (has (tiRolePermInfoMap.ix roleName.permLens._Just) tableInfo) $
-                  Left $ "no " <> permTypeToCode permType <> " permission defined on table "
-                    <> tableName <<> " for role " <>> roleName
-              TOTrigger triggerName ->
-                unless (M.member triggerName (_tiEventTriggerInfoMap tableInfo)) $ Left $
-                  "no event trigger named " <> triggerName <<> " is defined for table " <>> tableName
-
-        resolveTable tableName = M.lookup tableName (_boTables cache) `onNothing`
-          Left ("table " <> tableName <<> " is not tracked")
-
-        resolveField :: TableInfo -> FieldName -> Getting (First a) FieldInfo a -> Text -> Either Text a
-        resolveField tableInfo fieldName fieldType fieldTypeName = do
-          let coreInfo = _tiCoreInfo tableInfo
-              tableName = _tciName coreInfo
-          fieldInfo <- M.lookup fieldName (_tciFieldInfoMap coreInfo) `onNothing` Left
-            ("table " <> tableName <<> " has no field named " <>> fieldName)
-          (fieldInfo ^? fieldType) `onNothing` Left
-            ("field " <> fieldName <<> "of table " <> tableName <<> " is not a " <> fieldTypeName)
-
-    deleteMetadataObject :: MetadataObjId -> BuildOutputs -> BuildOutputs
-    deleteMetadataObject objectId = case objectId of
-      MOTable        name -> boTables        %~ M.delete name
-      MOFunction     name -> boFunctions     %~ M.delete name
-      MORemoteSchema name -> boRemoteSchemas %~ M.delete name
-      MOTableObj tableName tableObjectId -> boTables.ix tableName %~ case tableObjectId of
-        MTORel           name _ -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
-        MTOComputedField name   -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)
-        MTOPerm roleName permType -> withPermType permType \accessor ->
-          tiRolePermInfoMap.ix roleName.permAccToLens accessor .~ Nothing
-        MTOTrigger name -> tiEventTriggerInfoMap %~ M.delete name
 
 {- Note [Specialization of buildRebuildableSchemaCache]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
