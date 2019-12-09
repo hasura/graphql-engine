@@ -25,6 +25,7 @@ module Data.Aeson.Ordered
   , toEncJSON
   , Data.Aeson.Ordered.lookup
   , toOrdered
+  , fromOrdered
   ) where
 
 import           Control.Applicative              hiding (empty)
@@ -167,6 +168,17 @@ toOrdered v = case J.toJSON v of
   J.Number number -> Number number
   J.Bool boolean  -> Bool boolean
   J.Null          -> Null
+
+-- | Convert Ordered Value to Aeson Value
+fromOrdered :: Value -> J.Value
+fromOrdered v = case v of
+  Object obj    -> J.Object $ Map.fromList $ map (second fromOrdered) $
+                   Data.Aeson.Ordered.toList obj
+  Array arr     -> J.Array $ V.fromList $ map fromOrdered $ V.toList arr
+  String text   -> J.String text
+  Number number -> J.Number number
+  Bool boolean  -> J.Bool boolean
+  Null          -> J.Null
 
 --------------------------------------------------------------------------------
 -- Top-level entry points

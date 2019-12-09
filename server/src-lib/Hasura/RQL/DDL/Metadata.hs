@@ -64,7 +64,7 @@ runClearMetadata _ = do
 applyQP1
   :: (QErrM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowlist) = do
+applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) = do
 
   withPathK "tables" $ do
 
@@ -91,24 +91,20 @@ applyQP1 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowli
       checkMultipleDecls "computed fields" computedFields
 
   withPathK "functions" $
-    case mFunctionsMeta of
-      Nothing -> pure ()
-      Just (FMVersion1 qualifiedFunctions)   ->
+    case functionsMeta of
+      FMVersion1 qualifiedFunctions ->
         checkMultipleDecls "functions" qualifiedFunctions
-      Just (FMVersion2 functionsV2) ->
+      FMVersion2 functionsV2 ->
         checkMultipleDecls "functions" $ map Schema._tfv2Function functionsV2
 
-  onJust mSchemas $ \schemas ->
-      withPathK "remote_schemas" $
-        checkMultipleDecls "remote schemas" $ map _arsqName schemas
+  withPathK "remote_schemas" $
+    checkMultipleDecls "remote schemas" $ map _arsqName schemas
 
-  onJust mCollections $ \collections ->
-    withPathK "query_collections" $
-        checkMultipleDecls "query collections" $ map Collection._ccName collections
+  withPathK "query_collections" $
+    checkMultipleDecls "query collections" $ map Collection._ccName collections
 
-  onJust mAllowlist $ \allowlist ->
-    withPathK "allowlist" $
-        checkMultipleDecls "allow list" $ map Collection._crCollection allowlist
+  withPathK "allowlist" $
+    checkMultipleDecls "allow list" $ map Collection._crCollection allowlist
 
   where
     withTableName qt = withPathK (qualObjectToText qt)
@@ -133,7 +129,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowlist) = do
+applyQP2 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) = do
 
   liftTx clearMetadata
   Schema.buildSchemaCacheStrict
@@ -181,7 +177,7 @@ applyQP2 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowli
         subTableP2 (table ^. tmTable) False etc
 
   -- sql functions
-  withPathK "functions" $ forM_ mFunctionsMeta $ \case
+  withPathK "functions" $ case functionsMeta of
       FMVersion1 qualifiedFunctions -> indexedForM_ qualifiedFunctions $
         \qf -> void $ Schema.trackFunctionP2 qf Schema.emptyFunctionConfig
       FMVersion2 functionsV2 -> indexedForM_ functionsV2 $
@@ -199,9 +195,8 @@ applyQP2 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowli
     Collection.refreshAllowlist
 
   -- remote schemas
-  onJust mSchemas $ \schemas ->
-    withPathK "remote_schemas" $
-      indexedMapM_ (void . addRemoteSchemaP2) schemas
+  withPathK "remote_schemas" $
+    indexedMapM_ (void . addRemoteSchemaP2) schemas
 
   -- build GraphQL Context with Remote schemas
   buildGCtxMap
@@ -209,8 +204,6 @@ applyQP2 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowli
   return successMsg
 
   where
-    collections = fromMaybe [] mCollections
-    allowlist = fromMaybe [] mAllowlist
     processPerms tabInfo perms =
       indexedForM_ perms $ \permDef -> do
         permInfo <- Permission.addPermP1 tabInfo permDef
@@ -279,8 +272,8 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map Collection.CollectionReq <$> fetchAllowlists
 
-  return $ ReplaceMetadata currentMetadataVersion (HMIns.elems postRelMap) (Just functions)
-                           (Just remoteSchemas) (Just collections) (Just allowlist)
+  return $ ReplaceMetadata currentMetadataVersion (HMIns.elems postRelMap) functions
+                           remoteSchemas collections allowlist
 
   where
 

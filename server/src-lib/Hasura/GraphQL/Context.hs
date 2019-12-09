@@ -87,7 +87,7 @@ data TableCustomRootFields
   , _tcrfInsert          :: !(Maybe G.Name)
   , _tcrfUpdate          :: !(Maybe G.Name)
   , _tcrfDelete          :: !(Maybe G.Name)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''TableCustomRootFields)
 
 instance FromJSON TableCustomRootFields where

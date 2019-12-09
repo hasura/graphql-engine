@@ -2,27 +2,38 @@ module Main (main) where
 
 import           Hasura.Prelude
 
-import           Data.Either             (isRight)
-import           Data.Time.Clock         (getCurrentTime)
+import           Data.Aeson                        (eitherDecodeStrict)
+import           Data.Either                       (isRight)
+import           Data.Time.Clock                   (getCurrentTime)
+import           Hasura.EncJSON
 import           Options.Applicative
-import           System.Environment      (getEnvironment)
-import           System.Exit             (exitFailure)
+import           System.Environment                (getEnvironment)
+import           System.Exit                       (exitFailure)
 import           Test.Hspec
+import           Test.QuickCheck
 
-import qualified Database.PG.Query       as Q
-import qualified Network.HTTP.Client     as HTTP
-import qualified Network.HTTP.Client.TLS as HTTP
-import qualified Test.Hspec.Runner       as Hspec
+import qualified Data.Aeson.Ordered                as AO
+import qualified Database.PG.Query                 as Q
+import qualified Network.HTTP.Client               as HTTP
+import qualified Network.HTTP.Client.TLS           as HTTP
+import qualified Test.Hspec.Runner                 as Hspec
 
-import           Hasura.Db               (PGExecCtx (..))
-import           Hasura.RQL.DDL.Metadata (ClearMetadata (..), runClearMetadata)
-import           Hasura.RQL.Types        (QErr, SQLGenCtx (..), adminUserInfo,
-                                          emptySchemaCache, successMsg)
-import           Hasura.Server.Init      (mkConnInfo, mkRawConnInfo,
-                                          parseRawConnInfo, runWithEnv)
+import           Hasura.Db                         (PGExecCtx (..))
+import           Hasura.RQL.DDL.Metadata           (ClearMetadata (..),
+                                                    runClearMetadata)
+import           Hasura.RQL.DDL.Metadata.Generator (genReplaceMetadata)
+import           Hasura.RQL.DDL.Metadata.Types     (ReplaceMetadata,
+                                                    replaceMetadataToOrdJSON)
+import           Hasura.RQL.Types                  (QErr, SQLGenCtx (..),
+                                                    adminUserInfo,
+                                                    emptySchemaCache,
+                                                    successMsg)
+import           Hasura.Server.Init                (mkConnInfo, mkRawConnInfo,
+                                                    parseRawConnInfo,
+                                                    runWithEnv)
 import           Hasura.Server.Migrate
 import           Hasura.Server.PGDump
-import           Hasura.Server.Query     (Run, RunCtx (..), peelRun)
+import           Hasura.Server.Query               (Run, RunCtx (..), peelRun)
 
 main :: IO ()
 main = do
@@ -80,6 +91,10 @@ main = do
           secondDump <- dumpMetadata
           secondDump `shouldBe` firstDump
 
+  putStrLn "Running property tests"
+  passed <- runPropertyTests
+  unless passed $ printErrExit "Property tests failed"
+
   where
     runHspec :: Spec -> IO ()
     runHspec m = do
@@ -88,3 +103,16 @@ main = do
 
     printErrExit :: String -> IO a
     printErrExit = (*> exitFailure) . putStrLn
+
+    runPropertyTests :: IO Bool
+    runPropertyTests =
+      isSuccess <$> quickCheckResult (withMaxSuccess 75 prop_replacemetadata)
+      where
+        prop_replacemetadata =
+          forAll (resize 3 genReplaceMetadata) $ \metadata ->
+            let encodedString = encJToBS $ AO.toEncJSON $ replaceMetadataToOrdJSON metadata
+                eitherResult :: Either String ReplaceMetadata
+                  = eitherDecodeStrict encodedString
+            in case eitherResult of
+                 Left err -> counterexample err False
+                 Right _  -> property True

@@ -3,6 +3,7 @@
 {-# LANGUAGE TypeApplications #-}
 module Hasura.RQL.DDL.Metadata.Types
   ( currentMetadataVersion
+  , MetadataVersion(..)
   , TableMeta(..)
   , tmTable
   , tmIsEnum
@@ -52,7 +53,7 @@ import qualified Hasura.RQL.DDL.Schema          as Schema
 data MetadataVersion
   = MVVersion1
   | MVVersion2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 instance ToJSON MetadataVersion where
   toJSON MVVersion1 = toJSON @Int 1
@@ -74,7 +75,7 @@ data ComputedFieldMeta
   { _cfmName       :: !ComputedFieldName
   , _cfmDefinition :: !ComputedField.ComputedFieldDefinition
   , _cfmComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldMeta)
 
 data TableMeta
@@ -90,7 +91,7 @@ data TableMeta
   , _tmUpdatePermissions   :: ![Permission.UpdPermDef]
   , _tmDeletePermissions   :: ![Permission.DelPermDef]
   , _tmEventTriggers       :: ![EventTriggerConf]
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(makeLenses ''TableMeta)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMeta
@@ -141,12 +142,10 @@ instance FromJSON TableMeta where
   parseJSON _ =
     fail "expecting an Object for TableMetadata"
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TableMeta)
-
 data FunctionsMetadata
   = FMVersion1 ![QualifiedFunction]
   | FMVersion2 ![Schema.TrackFunctionV2]
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 instance ToJSON FunctionsMetadata where
   toJSON (FMVersion1 qualifiedFunctions) = toJSON qualifiedFunctions
@@ -164,26 +163,26 @@ data ReplaceMetadata
   = ReplaceMetadata
   { aqVersion          :: !MetadataVersion
   , aqTables           :: ![TableMeta]
-  , aqFunctions        :: !(Maybe FunctionsMetadata)
-  , aqRemoteSchemas    :: !(Maybe [AddRemoteSchemaQuery])
-  , aqQueryCollections :: !(Maybe [Collection.CreateCollection])
-  , aqAllowlist        :: !(Maybe [Collection.CollectionReq])
+  , aqFunctions        :: !FunctionsMetadata
+  , aqRemoteSchemas    :: ![AddRemoteSchemaQuery]
+  , aqQueryCollections :: ![Collection.CreateCollection]
+  , aqAllowlist        :: ![Collection.CollectionReq]
   } deriving (Show, Eq, Lift)
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
 
 instance FromJSON ReplaceMetadata where
   parseJSON = withObject "Object" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
     ReplaceMetadata version
       <$> o .: "tables"
-      <*> (o .:? "functions" >>= mapM (parseFunctions version))
-      <*> o .:? "remote_schemas"
-      <*> o .:? "query_collections"
-      <*> o .:? "allow_list"
+      <*> (o .:? "functions" >>= parseFunctions version)
+      <*> o .:? "remote_schemas" .!= []
+      <*> o .:? "query_collections" .!= []
+      <*> o .:? "allow_list" .!= []
     where
-      parseFunctions = \case
-        MVVersion1 -> fmap FMVersion1 . parseJSON
-        MVVersion2 -> fmap FMVersion2 . parseJSON
+      parseFunctions version maybeValue =
+        case version of
+          MVVersion1 -> FMVersion1 <$> maybe (pure []) parseJSON maybeValue
+          MVVersion2 -> FMVersion2 <$> maybe (pure []) parseJSON maybeValue
 
 data ExportMetadata
   = ExportMetadata
@@ -225,6 +224,9 @@ $(deriveToJSON defaultOptions ''DropInconsistentMetadata)
 instance FromJSON DropInconsistentMetadata where
   parseJSON _ = return DropInconsistentMetadata
 
+instance ToJSON ReplaceMetadata where
+  toJSON = AO.fromOrdered . replaceMetadataToOrdJSON
+
 -- | Encode 'ReplaceMetadata' to JSON with deterministic ordering. Ordering of object keys and array
 -- elements should  remain consistent across versions of graphql-engine if possible!
 --
@@ -238,26 +240,22 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                remoteSchemas
                                queryCollections
                                allowlist
-                             ) = AO.object $
-                                 catMaybes [ versionPair
-                                           , tablesPair
-                                           , functionsPair
+                             ) = AO.object $ [versionPair, tablesPair] <>
+                                 catMaybes [ functionsPair
                                            , remoteSchemasPair
                                            , queryCollectionsPair
                                            , allowlistPair
                                            ]
   where
-    versionPair = Just ("version", AO.toOrdered version)
-    tablesPair = Just ("tables", AO.array $ map tableMetaToOrdJSON tables)
-    functionsPair = functions >>= fmap ("functions",) . functionsMetadataToOrdJSON
+    versionPair = ("version", AO.toOrdered version)
+    tablesPair = ("tables", AO.array $ map tableMetaToOrdJSON tables)
+    functionsPair = ("functions",) <$> functionsMetadataToOrdJSON functions
 
-    remoteSchemasPair = remoteSchemas >>=
-                        listToMaybeOrdPair "remote_schemas" remoteSchemaQToOrdJSON
+    remoteSchemasPair = listToMaybeOrdPair "remote_schemas" remoteSchemaQToOrdJSON remoteSchemas
 
-    queryCollectionsPair = queryCollections >>=
-                           listToMaybeOrdPair "query_collections" createCollectionToOrdJSON
+    queryCollectionsPair = listToMaybeOrdPair "query_collections" createCollectionToOrdJSON queryCollections
 
-    allowlistPair = allowlist >>= listToMaybeOrdPair "allowlist" AO.toOrdered
+    allowlistPair = listToMaybeOrdPair "allowlist" AO.toOrdered allowlist
 
     tableMetaToOrdJSON :: TableMeta -> AO.Value
     tableMetaToOrdJSON ( TableMeta
