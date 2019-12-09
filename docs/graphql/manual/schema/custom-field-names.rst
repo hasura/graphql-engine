@@ -10,7 +10,6 @@ Customise auto-generated field names
 
 It is possible to override the auto-generated table and column field names exposed over the GraphQL API.
 
-
 ..  note::
 
   This feature is supported in versions ``v1.0.0-beta.8`` and later.
