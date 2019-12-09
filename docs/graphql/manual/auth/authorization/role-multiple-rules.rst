@@ -115,3 +115,5 @@ If the ``X-Hasura-Role`` and the ``X-Hasura-User-Id`` session variables are set 
       }
     }
 
+Note that the ``private_info`` field is returned as ``null`` for all rows without the appropriate access.
+
