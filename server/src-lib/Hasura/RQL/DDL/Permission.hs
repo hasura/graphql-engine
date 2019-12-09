@@ -87,8 +87,11 @@ type CreateInsPerm = CreatePerm InsPerm
 buildViewName :: QualifiedTable -> RoleName -> PermType -> QualifiedTable
 buildViewName qt rn pt = QualifiedObject hdbViewsSchema tableName
   where
+    -- Generate a unique hash for view name from role name, permission type and qualified table.
+    -- See Note [Postgres identifier length limitations].
+    -- Black2b_224 generates 56 character hash. See Note [Blake2b faster than SHA-256].
+    -- Refer https://github.com/hasura/graphql-engine/issues/3444.
     tableName = TableName $ T.pack $ show hash
-    -- Blake2b_224 generates 56 character length hash
     hash :: CH.Digest CH.Blake2b_224 =
       CH.hash $ txtToBs $ roleNameToTxt rn <> "__" <> T.pack (show pt) <> "__" <> qualObjectToText qt
 
