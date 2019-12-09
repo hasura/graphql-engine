@@ -41,6 +41,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.downMigration, "down", "", "apply all or N down migration steps")
 	f.StringVar(&opts.versionMigration, "version", "", "only apply this particular migration")
 	f.StringVar(&opts.migrationType, "type", "up", "type of migration (up, down) to be used with version flag")
+	f.StringVar(&opts.goTo, "goto", "", "migrate to a particular version")
 	f.BoolVar(&opts.skipExecution, "skip-execution", false, "skip executing the migration action, but mark them as applied")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
@@ -63,10 +64,11 @@ type migrateApplyOptions struct {
 	versionMigration string
 	migrationType    string
 	skipExecution    bool
+	goTo             string
 }
 
 func (o *migrateApplyOptions) run() error {
-	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.migrationType, o.skipExecution)
+	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.migrationType, o.goTo, o.skipExecution)
 	if err != nil {
 		return errors.Wrap(err, "error validating flags")
 	}
@@ -97,7 +99,7 @@ func (o *migrateApplyOptions) run() error {
 
 // Only one flag out of up, down and version can be set at a time. This function
 // checks whether that is the case and returns an error is not
-func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType string, skipExecution bool) (string, int64, error) {
+func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType, goTo string, skipExecution bool) (string, int64, error) {
 	var flagCount = 0
 	var stepString = "all"
 	var migrationName = "up"
@@ -117,6 +119,11 @@ func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migra
 			stepString = "-" + stepString
 		}
 		flagCount++
+	}
+
+	if goTo != "" {
+		migrationName = "goto"
+		stepString = goTo
 	}
 
 	if flagCount > 1 {
