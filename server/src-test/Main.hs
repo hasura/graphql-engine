@@ -106,7 +106,7 @@ main = do
 
     runPropertyTests :: IO Bool
     runPropertyTests =
-      isSuccess <$> quickCheckResult (withMaxSuccess 75 prop_replacemetadata)
+      isSuccess <$> quickCheckResult (withMaxSuccess 30 prop_replacemetadata)
       where
         prop_replacemetadata =
           forAll (resize 3 genReplaceMetadata) $ \metadata ->
