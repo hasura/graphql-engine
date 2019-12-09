@@ -1,6 +1,6 @@
 .. _custom_sql_functions:
 
-Customize schema with SQL functions
+Customise schema with SQL functions
 ===================================
 
 .. contents:: Table of contents

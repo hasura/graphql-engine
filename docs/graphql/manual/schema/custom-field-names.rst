@@ -1,6 +1,6 @@
 .. _custom_field_names:
 
-Customize auto-generated field names
+Customise auto-generated field names
 ====================================
 
 .. contents:: Table of contents
@@ -8,7 +8,7 @@ Customize auto-generated field names
   :depth: 2
   :local:
 
-It is possible to override the auto-generated field names exposed over the GraphQL API.
+It is possible to override the auto-generated table and column field names exposed over the GraphQL API.
 
 
 ..  note::
@@ -32,7 +32,8 @@ Expose columns with a different name in the GraphQL API
 
     A custom field name can be set for a column via the following 2 methods:
 
-    - passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`track_table_v2` API while tracking a table
+    - passing a :ref:`table_config` with the :ref:`CustomColumnNames` to the :ref:`track_table_v2` API while
+      tracking a table
     - using the :ref:`set_table_custom_fields` API to set the :ref:`CustomColumnNames`
 
 
@@ -52,7 +53,8 @@ Expose table root fields with a different name in the GraphQL API
 
     A custom field name can be set for a table root field via the following 2 methods:
 
-    - passing a :ref:`table_config` with the :ref:`custom_root_fields` names to the :ref:`track_table_v2` API while tracking a table
+    - passing a :ref:`table_config` with the :ref:`custom_root_fields` names to the :ref:`track_table_v2` API while
+      tracking a table
     - using the :ref:`set_table_custom_fields` API to set the :ref:`custom_root_fields` names
 
 
