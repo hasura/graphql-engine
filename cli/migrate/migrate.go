@@ -484,6 +484,27 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 	return m.unlockErr(m.runMigrations(ret))
 }
 
+func (m *Migrate) MigrateTo(version uint64) error {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return err
+	}
+
+	if mode != "true" {
+		return ErrNoMigrationMode
+	}
+
+	if err := m.lock(); err != nil {
+		return err
+	}
+
+	ret := make(chan interface{}, m.PrefetchMigrations)
+	go m.readTo(version, ret)
+
+	return m.unlockErr(m.runMigrations(ret))
+
+}
+
 // Steps looks at the currently active migration version.
 // It will migrate up if n > 0, and down if n < 0.
 func (m *Migrate) Steps(n int64) error {
@@ -833,6 +854,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 	}
 }
 
+
 // readUp reads up migrations from `from` limitted by `limit`.
 // limit can be -1, implying no limit and reading until there are no more migrations.
 // Each migration is then written to the ret channel.
@@ -957,6 +979,65 @@ func (m *Migrate) readUp(limit int64, ret chan<- interface{}) {
 		go migr.Buffer()
 		from = int64(next)
 		count++
+	}
+}
+
+func (m *Migrate) readTo(to uint64, ret chan<- interface{}) {
+	defer close(ret)
+
+	directions := m.sourceDrv.GetDirections(to)
+
+	from, _, err := m.databaseDrv.Version()
+	if err != nil {
+		ret <- err
+		return
+	}
+
+	curr := uint64(from)
+
+	for curr != to {
+		if m.stop() {
+			return
+		}
+
+		err = m.versionDownExists(curr)
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		next, ok := curr, true
+		if directions[source.Up] {
+			next, err = m.sourceDrv.Next(curr)
+			if err != nil {
+				ret <- err
+				return
+			}
+		} else {
+			next, ok = m.databaseDrv.Prev(curr)
+			if !ok {
+				return
+			}
+		}
+
+		migr, err := m.metanewMigration(uint64(int64(curr)), int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+
+		migr, err = m.newMigration(curr, int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+		curr = next
 	}
 }
 
