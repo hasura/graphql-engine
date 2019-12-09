@@ -260,7 +260,7 @@ class (ToJSON a) => IsPerm a where
 
   buildPermInfo
     :: (QErrM m, TableCoreInfoRM m)
-    => TableCoreInfo FieldInfo
+    => TableCoreInfo
     -> PermDef a
     -> m (WithDeps (PermInfo a))
 
@@ -284,7 +284,7 @@ class (ToJSON a) => IsPerm a where
 
 -- FIXME: Push into addPermP1
 validateViewPerm
-  :: (IsPerm a, QErrM m) => PermDef a -> TableCoreInfo fieldInfo -> m ()
+  :: (IsPerm a, QErrM m) => PermDef a -> TableCoreInfo -> m ()
 validateViewPerm permDef tableInfo =
   case permAcc of
     PASelect -> return ()

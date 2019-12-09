@@ -22,8 +22,8 @@ import qualified Database.PG.Query        as Q
 import qualified Hasura.SQL.DML           as S
 
 data ConflictTarget
-  = Column ![PGCol]
-  | Constraint !ConstraintName
+  = CTColumn ![PGCol]
+  | CTConstraint !ConstraintName
   deriving (Show, Eq)
 
 data ConflictClauseP1
@@ -59,8 +59,8 @@ toSQLConflict conflict = case conflict of
 
   where
     toSQLCT ct = case ct of
-      Column pgCols -> S.SQLColumn pgCols
-      Constraint cn -> S.SQLConstraint cn
+      CTColumn pgCols -> S.SQLColumn pgCols
+      CTConstraint cn -> S.SQLConstraint cn
 
 convObj
   :: (UserInfoM m, QErrM m)
@@ -108,10 +108,10 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
     (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing Nothing
     (Just col, Nothing, CAIgnore)   -> do
       validateCols col
-      return $ CP1DoNothing $ Just $ Column $ getPGCols col
+      return $ CP1DoNothing $ Just $ CTColumn $ getPGCols col
     (Nothing, Just cons, CAIgnore)  -> do
       validateConstraint cons
-      return $ CP1DoNothing $ Just $ Constraint cons
+      return $ CP1DoNothing $ Just $ CTConstraint cons
     (Nothing, Nothing, CAUpdate)    -> throw400 UnexpectedPayload
       "Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'"
     (Just col, Nothing, CAUpdate)   -> do
@@ -119,14 +119,14 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
       (updFltr, preSet) <- getUpdPerm
       resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
       resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
-      return $ CP1Update (Column $ getPGCols col) inpCols resolvedPreSet $
+      return $ CP1Update (CTColumn $ getPGCols col) inpCols resolvedPreSet $
         toSQLBool resolvedUpdFltr
     (Nothing, Just cons, CAUpdate)  -> do
       validateConstraint cons
       (updFltr, preSet) <- getUpdPerm
       resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
       resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
-      return $ CP1Update (Constraint cons) inpCols resolvedPreSet $
+      return $ CP1Update (CTConstraint cons) inpCols resolvedPreSet $
         toSQLBool resolvedUpdFltr
     (Just _, Just _, _)             -> throw400 UnexpectedPayload
       "'constraint' and 'constraint_on' cannot be set at a time"
@@ -141,7 +141,7 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
         \pgCol -> askPGType fieldInfoMap pgCol ""
 
     validateConstraint c = do
-      let tableConsNames = _tciUniqueOrPrimaryKeyConstraints coreInfo
+      let tableConsNames = _cName <$> tciUniqueOrPrimaryKeyConstraints coreInfo
       withPathK "constraint" $
        unless (c `elem` tableConsNames) $
        throw400 Unexpected $ "constraint " <> getConstraintTxt c
@@ -270,7 +270,7 @@ extractConflictCtx cp =
       constraintName <- extractConstraintName conflictTar
       return $ CCUpdate constraintName inpCols preSet filtr
   where
-    extractConstraintName (Constraint cn) = return cn
+    extractConstraintName (CTConstraint cn) = return cn
     extractConstraintName _ = throw400 NotSupported
       "\"constraint_on\" not supported for non admin insert. use \"constraint\" instead"
 

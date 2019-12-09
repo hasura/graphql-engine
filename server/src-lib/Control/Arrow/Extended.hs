@@ -23,6 +23,7 @@ module Control.Arrow.Extended
   , bindA
 
   , ArrowError(..)
+  , liftEitherA
   , mapErrorA
   , ErrorA(..)
 
@@ -180,6 +181,9 @@ class (Arrow arr) => ArrowError e arr | arr -> e where
   throwA :: arr e a
   -- see Note [Weird control operator types]
   catchA :: arr (a, s) b -> arr (a, (e, s)) b -> arr (a, s) b
+
+liftEitherA :: (ArrowChoice arr, ArrowError e arr) => arr (Either e a) a
+liftEitherA = throwA ||| returnA
 
 mapErrorA :: (ArrowError e arr) => arr (a, s) b -> arr (a, ((e -> e), s)) b
 mapErrorA f = proc (a, (g, s)) -> (f -< (a, s)) `catchA` \e -> throwA -< g e

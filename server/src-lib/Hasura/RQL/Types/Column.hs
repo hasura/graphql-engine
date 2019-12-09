@@ -126,18 +126,19 @@ parsePGScalarValues columnType values = do
 data PGRawColumnInfo
   = PGRawColumnInfo
   { prciName        :: !PGCol
+  , prciPosition    :: !Int
+  -- ^ The “ordinal position” of the column according to Postgres. Numbering starts at 1 and
+  -- increases. Dropping a column does /not/ cause the columns to be renumbered, so a column can be
+  -- consistently identified by its position.
   , prciType        :: !PGScalarType
   , prciIsNullable  :: !Bool
-  , prciReferences  :: ![QualifiedTable]
-  -- ^ only stores single-column references to primary key of foreign tables (used for detecting
-  -- references to enum tables)
   , prciDescription :: !(Maybe PGDescription)
   } deriving (Show, Eq, Generic)
 instance NFData PGRawColumnInfo
 $(deriveJSON (aesonDrop 4 snakeCase) ''PGRawColumnInfo)
 
--- | “Resolved” column info, produced from a 'PGRawColumnInfo' value that has been combined with other
--- schema information to produce a 'PGColumnType'.
+-- | “Resolved” column info, produced from a 'PGRawColumnInfo' value that has been combined with
+-- other schema information to produce a 'PGColumnType'.
 data PGColumnInfo
   = PGColumnInfo
   { pgiColumn      :: !PGCol

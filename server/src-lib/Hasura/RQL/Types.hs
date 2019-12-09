@@ -19,6 +19,7 @@ module Hasura.RQL.Types
   , mkAdminQCtx
   , askTabInfo
   , isTableTracked
+  , getTableInfo
   , askTableCoreInfo
   , askFieldInfoMap
   , askPGType
@@ -182,9 +183,16 @@ instance (Monad m) => HasSystemDefined (HasSystemDefinedT m) where
 liftMaybe :: (QErrM m) => QErr -> Maybe a -> m a
 liftMaybe e = maybe (throwError e) return
 
-askTableCoreInfo :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m (TableCoreInfo FieldInfo)
-askTableCoreInfo tableName = lookupTableCoreInfo tableName >>=
-  (`onNothing` throw400 NotExists ("table " <> tableName <<> " does not exist"))
+throwTableDoesNotExist :: (QErrM m) => QualifiedTable -> m a
+throwTableDoesNotExist tableName = throw400 NotExists ("table " <> tableName <<> " does not exist")
+
+getTableInfo :: (QErrM m) => QualifiedTable -> HashMap QualifiedTable a -> m a
+getTableInfo tableName infoMap =
+  M.lookup tableName infoMap `onNothing` throwTableDoesNotExist tableName
+
+askTableCoreInfo :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m TableCoreInfo
+askTableCoreInfo tableName =
+  lookupTableCoreInfo tableName >>= (`onNothing` throwTableDoesNotExist tableName)
 
 askFieldInfoMap :: (QErrM m, TableCoreInfoRM m) => QualifiedTable -> m (FieldInfoMap FieldInfo)
 askFieldInfoMap = fmap _tciFieldInfoMap . askTableCoreInfo

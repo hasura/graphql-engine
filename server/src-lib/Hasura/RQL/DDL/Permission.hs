@@ -109,7 +109,7 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableCoreInfo FieldInfo -> Maybe (ColumnValues Value)
+  => TableCoreInfo -> Maybe (ColumnValues Value)
   -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   (setColTups, deps) <- withPathK "set" $
@@ -131,7 +131,7 @@ procSetObj ti mObj = do
 
 buildInsPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => TableCoreInfo FieldInfo
+  => TableCoreInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
 buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
@@ -221,7 +221,7 @@ instance FromJSON SelPerm where
 
 buildSelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => TableCoreInfo FieldInfo
+  => TableCoreInfo
   -> SelPerm
   -> m (WithDeps SelPermInfo)
 buildSelPermInfo tabInfo sp = withPathK "permission" $ do
@@ -304,7 +304,7 @@ type CreateUpdPerm = CreatePerm UpdPerm
 
 buildUpdPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => TableCoreInfo FieldInfo
+  => TableCoreInfo
   -> UpdPerm
   -> m (WithDeps UpdPermInfo)
 buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
@@ -366,7 +366,7 @@ type CreateDelPerm = CreatePerm DelPerm
 
 buildDelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => TableCoreInfo FieldInfo
+  => TableCoreInfo
   -> DelPerm
   -> m (WithDeps DelPermInfo)
 buildDelPermInfo tabInfo (DelPerm fltr) = do

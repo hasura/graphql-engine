@@ -96,7 +96,6 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
         Left $ "function " <> functionName <<> " is not tracked"
       SOTableObj tableName tableObjectId -> do
         tableInfo <- resolveTable tableName
-        -- let coreInfo = _tiCoreInfo tableInfo
         case tableObjectId of
           TOCol columnName ->
             void $ resolveField tableInfo (fromPGCol columnName) _FIColumn "column"
@@ -104,12 +103,11 @@ pruneDanglingDependents cache = fmap (M.filter (not . null)) . traverse do
             void $ resolveField tableInfo (fromRel relName) _FIRelationship "relationship"
           TOComputedField fieldName ->
             void $ resolveField tableInfo (fromComputedField fieldName) _FIComputedField "computed field"
-          TOCons _constraintName ->
-            -- FIXME: foreign key constraints
-            pure ()
-            -- unless (constraintName `elem` _tciUniqueOrPrimaryKeyConstraints coreInfo) $ do
-            --   Left $ "no unique or primary key constraint named " <> constraintName <<> " is "
-            --     <> "defined for table " <>> tableName
+          TOForeignKey constraintName -> do
+            let foreignKeys = _tciForeignKeys $ _tiCoreInfo tableInfo
+            unless (isJust $ find ((== constraintName) . _cName . _fkConstraint) foreignKeys) $
+              Left $ "no foreign key constraint named " <> constraintName <<> " is "
+                <> "defined for table " <>> tableName
           TOPerm roleName permType -> withPermType permType \accessor -> do
             let permLens = permAccToLens accessor
             unless (has (tiRolePermInfoMap.ix roleName.permLens._Just) tableInfo) $

@@ -169,7 +169,7 @@ parseOnConflict
   -> m RI.ConflictClauseP1
 parseOnConflict tn updFiltrM allColMap val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
-    constraint <- RI.Constraint <$> parseConstraint obj
+    constraint <- RI.CTConstraint <$> parseConstraint obj
     updCols <- getUpdCols obj
     case updCols of
       [] -> return $ RI.CP1DoNothing $ Just constraint

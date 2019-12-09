@@ -204,7 +204,7 @@ runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
   unTrackExistingTableOrViewP2 q
 
-processTableChanges :: (MonadTx m, CacheRM m) => TableCoreInfo FieldInfo -> TableDiff -> m ()
+processTableChanges :: (MonadTx m, CacheRM m) => TableCoreInfo -> TableDiff -> m ()
 processTableChanges ti tableDiff = do
   -- If table rename occurs then don't replace constraints and
   -- process dropped/added columns, because schema reload happens eventually
@@ -237,8 +237,8 @@ processTableChanges ti tableDiff = do
         liftTx $ updateTableConfig tn $ TableConfig customFields modifiedCustomColumnNames
 
     procAlteredCols sc tn = for_ alteredCols $
-      \( PGRawColumnInfo oldName oldType _ _ _
-       , PGRawColumnInfo newName newType _ _ _ ) -> do
+      \( PGRawColumnInfo oldName _ oldType _ _
+       , PGRawColumnInfo newName _ newType _ _ ) -> do
         if | oldName /= newName -> renameColInCatalog oldName newName tn (_tciFieldInfoMap ti)
 
            | oldType /= newType -> do
@@ -293,13 +293,14 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
 buildTableCache
   :: forall arr m
    . (Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr, ArrowKleisli m arr, MonadTx m)
-  => [CatalogTable] `arr` M.HashMap QualifiedTable (TableCoreInfo PGColumnInfo)
+  => [CatalogTable] `arr` M.HashMap QualifiedTable TableRawInfo
 buildTableCache = proc catalogTables -> do
   rawTableInfos <-
     (| Inc.keyed (| withTable (\tables -> buildRawTableInfo <<< noDuplicateTables -< tables) |)
     |) (M.groupOnNE _ctName catalogTables)
   let rawTableCache = M.catMaybes rawTableInfos
-      enumTables = M.mapMaybe _tciEnumValues rawTableCache
+      enumTables = flip M.mapMaybe rawTableCache \rawTableInfo ->
+        (,) <$> _tciPrimaryKey rawTableInfo <*> _tciEnumValues rawTableInfo
   tableInfos <-
     (| Inc.keyed (| withTable (\table -> processTableInfo -< (enumTables, table)) |)
     |) rawTableCache
@@ -314,18 +315,20 @@ buildTableCache = proc catalogTables -> do
       _           -> throwA -< err400 AlreadyExists "duplication definition for table"
 
     -- Step 1: Build the raw table cache from metadata information.
-    buildRawTableInfo :: ErrorA QErr arr CatalogTable (TableCoreInfo PGRawColumnInfo)
+    buildRawTableInfo :: ErrorA QErr arr CatalogTable (TableCoreInfoG PGRawColumnInfo PGCol)
     buildRawTableInfo = proc (CatalogTable name systemDefined isEnum config maybeInfo) -> do
         catalogInfo <-
           (| onNothingA (throwA -<
                err400 NotExists $ "no such table/view exists in postgres: " <>> name)
           |) maybeInfo
 
-        let CatalogTableInfo columns constraints primaryKeyColumnNames viewInfo maybeDesc = catalogInfo
-            primaryKeyColumns = flip filter columns $ \column ->
-              prciName column `elem` primaryKeyColumnNames
-        maybeEnumValues <- if isEnum
-          then bindA -< Just <$> fetchAndValidateEnumValues name primaryKeyColumns columns
+        let columns = _ctiColumns catalogInfo
+            columnMap = mapFromL (fromPGCol . prciName) columns
+            primaryKey = _ctiPrimaryKey catalogInfo
+
+        rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
+        enumValues <- if isEnum
+          then bindErrorA -< Just <$> fetchAndValidateEnumValues name rawPrimaryKey columns
           else returnA -< Nothing
 
         -- validate tableConfig
@@ -334,13 +337,14 @@ buildTableCache = proc catalogTables -> do
         returnA -< TableCoreInfo
           { _tciName = name
           , _tciSystemDefined = systemDefined
-          , _tciFieldInfoMap = mapFromL (fromPGCol . prciName) columns
-          , _tciUniqueOrPrimaryKeyConstraints = constraints
-          , _tciPrimaryKeyColumns = primaryKeyColumnNames
-          , _tciViewInfo = viewInfo
-          , _tciEnumValues = maybeEnumValues
+          , _tciFieldInfoMap = columnMap
+          , _tciPrimaryKey = primaryKey
+          , _tciUniqueConstraints = _ctiUniqueConstraints catalogInfo
+          , _tciForeignKeys = unCatalogForeignKey <$> _ctiForeignKeys catalogInfo
+          , _tciViewInfo = _ctiViewInfo catalogInfo
+          , _tciEnumValues = enumValues
           , _tciCustomConfig = config
-          , _tciDescription = maybeDesc
+          , _tciDescription = _ctiDescription catalogInfo
           }
 
     -- validateTableConfig :: TableCoreInfo a -> TableConfig -> m ()
@@ -363,25 +367,39 @@ buildTableCache = proc catalogTables -> do
     -- types.
     processTableInfo
       :: ErrorA QErr arr
-       ( M.HashMap QualifiedTable EnumValues
-       , TableCoreInfo PGRawColumnInfo
-       ) (TableCoreInfo PGColumnInfo)
-    processTableInfo = (throwA ||| returnA) <<< arr \(enumTables, rawInfo) -> runExcept do
+       ( M.HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
+       , TableCoreInfoG PGRawColumnInfo PGCol
+       ) TableRawInfo
+    processTableInfo = proc (enumTables, rawInfo) -> liftEitherA -< do
       let tableName = _tciName rawInfo
+          enumReferences = resolveEnumReferences enumTables (_tciForeignKeys rawInfo)
           customFields = _tcCustomColumnNames $ _tciCustomConfig rawInfo
-          process = processColumnInfo enumTables customFields tableName
-      traverseOf (tciFieldInfoMap.traverse) process rawInfo
+
+      columnInfoMap <- _tciFieldInfoMap rawInfo
+        & traverse (processColumnInfo enumReferences customFields tableName)
+      primaryKey <- traverse (resolvePrimaryKeyColumns columnInfoMap) (_tciPrimaryKey rawInfo)
+
+      pure rawInfo
+        { _tciFieldInfoMap = columnInfoMap
+        , _tciPrimaryKey = primaryKey
+        }
+
+    resolvePrimaryKeyColumns
+      :: (QErrM n) => HashMap FieldName a -> PrimaryKey PGCol -> n (PrimaryKey a)
+    resolvePrimaryKeyColumns columnMap = traverseOf (pkColumns.traverse) \columnName ->
+      M.lookup (fromPGCol columnName) columnMap
+        `onNothing` throw500 "column in primary key not in table!"
 
     -- | “Processes” a 'PGRawColumnInfo' into a 'PGColumnInfo' by resolving its type using a map of
     -- known enum tables.
     processColumnInfo
       :: (QErrM n)
-      => M.HashMap QualifiedTable EnumValues -- ^ known enum tables
+      => M.HashMap PGCol (NonEmpty EnumReference)
       -> CustomColumnNames -- ^ customised graphql names
       -> QualifiedTable -- ^ the table this column belongs to
       -> PGRawColumnInfo -- ^ the column’s raw information
       -> n PGColumnInfo
-    processColumnInfo enumTables customFields tableName rawInfo = do
+    processColumnInfo tableEnumReferences customFields tableName rawInfo = do
       resolvedType <- resolveColumnType
       pure PGColumnInfo
         { pgiColumn = pgCol
@@ -392,25 +410,19 @@ buildTableCache = proc catalogTables -> do
         }
       where
         pgCol = prciName rawInfo
-        graphqlName = fromMaybe (G.Name $ getPGColTxt pgCol) $
-                      M.lookup pgCol customFields
+        graphqlName = fromMaybe (G.Name $ getPGColTxt pgCol) $ M.lookup pgCol customFields
         resolveColumnType =
-          case prciReferences rawInfo of
-            -- no referenced tables? definitely not an enum
-            [] -> pure $ PGColumnScalar (prciType rawInfo)
-
-            -- one referenced table? might be an enum, so check if the referenced table is an enum
-            [referencedTableName] -> pure $ M.lookup referencedTableName enumTables & maybe
-              (PGColumnScalar $ prciType rawInfo)
-              (PGColumnEnumReference . EnumReference referencedTableName)
-
-            -- multiple referenced tables? we could check if any of them are enums, but the schema
-            -- is strange, so let’s just reject it
-            referencedTables -> throw400 ConstraintViolation
-              $ "cannot handle exotic schema: column " <> prciName rawInfo <<> " in table "
-              <> tableName <<> " references multiple foreign tables ("
-              <> T.intercalate ", " (map dquote referencedTables) <> ")?"
+          case M.lookup pgCol tableEnumReferences of
+            -- no references? not an enum
+            Nothing -> pure $ PGColumnScalar (prciType rawInfo)
+            -- one reference? is an enum
+            Just (enumReference:|[]) -> pure $ PGColumnEnumReference enumReference
+            -- multiple referenced enums? the schema is strange, so let’s reject it
+            Just enumReferences -> throw400 ConstraintViolation
+              $ "column " <> prciName rawInfo <<> " in table " <> tableName
+              <<> " references multiple enum tables ("
+              <> T.intercalate ", " (map (dquote . erTable) $ toList enumReferences) <> ")"
 
 -- see Note [Specialization of buildRebuildableSchemaCache] in Hasura.RQL.DDL.Schema.Cache
 {-# SPECIALIZE buildTableCache
-    :: CacheBuildA [CatalogTable] (M.HashMap QualifiedTable (TableCoreInfo PGColumnInfo)) #-}
+    :: CacheBuildA [CatalogTable] (M.HashMap QualifiedTable TableRawInfo) #-}

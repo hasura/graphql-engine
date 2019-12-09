@@ -8,6 +8,7 @@ module Hasura.RQL.DDL.Schema.Cache.Fields
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended       as M
+import qualified Data.HashSet       as HS
 import qualified Data.Sequence                      as Seq
 
 import           Control.Arrow.Extended
@@ -26,8 +27,7 @@ import           Hasura.SQL.Types
 -- see Note [Specialization of buildRebuildableSchemaCache] in Hasura.RQL.DDL.Schema.Cache
 {-# SPECIALIZE addNonColumnFields
     :: CacheBuildA
-    ( HashSet ForeignKey
-    , HashSet QualifiedTable
+    ( HashMap QualifiedTable TableRawInfo
     , FieldInfoMap PGColumnInfo
     , [CatalogRelation]
     , [CatalogComputedField]
@@ -36,14 +36,14 @@ import           Hasura.SQL.Types
 addNonColumnFields
   :: ( Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
-  => ( HashSet ForeignKey -- ^ all foreign keys
-     , HashSet QualifiedTable -- ^ the names of all tracked tables
+  => ( HashMap QualifiedTable TableRawInfo
      , FieldInfoMap PGColumnInfo
      , [CatalogRelation]
      , [CatalogComputedField]
      ) `arr` FieldInfoMap FieldInfo
 addNonColumnFields =
-  proc (foreignKeys, trackedTableNames, columns, relationships, computedFields) -> do
+  proc (rawTableInfo, columns, relationships, computedFields) -> do
+    let foreignKeys = _tciForeignKeys <$> rawTableInfo
     relationshipInfos <-
       (| Inc.keyed (\_ relationshipsByName -> do
            maybeRelationship <- noDuplicates mkRelationshipMetadataObject -< relationshipsByName
@@ -54,6 +54,7 @@ addNonColumnFields =
              |) maybeRelationship)
       |) (M.groupOn _crRelName relationships)
 
+    let trackedTableNames = HS.fromList $ M.keys rawTableInfo
     computedFieldInfos <-
       (| Inc.keyed (\_ computedFieldsByName -> do
            maybeComputedField <- noDuplicates mkComputedFieldMetadataObject -< computedFieldsByName
@@ -97,9 +98,8 @@ mkRelationshipMetadataObject (CatalogRelation qt rn rt rDef cmnt) =
   in MetadataObject objectId definition
 
 buildRelationship
-  :: ( Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-     , ArrowKleisli m arr, MonadError QErr m )
-  => (HashSet ForeignKey, CatalogRelation) `arr` Maybe RelInfo
+  :: (Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr)
+  => (HashMap QualifiedTable [ForeignKey], CatalogRelation) `arr` Maybe RelInfo
 buildRelationship = proc (foreignKeys, relationship) -> do
   let CatalogRelation tableName rn rt rDef _ = relationship
       metadataObject = mkRelationshipMetadataObject relationship
@@ -107,13 +107,14 @@ buildRelationship = proc (foreignKeys, relationship) -> do
       addRelationshipContext e = "in relationship " <> rn <<> ": " <> e
   (| withRecordInconsistency (
      (| modifyErrA (do
-          (info, dependencies) <- bindErrorA -< case rt of
+          (info, dependencies) <- liftEitherA -< case rt of
             ObjRel -> do
               using <- decodeValue rDef
-              objRelP2Setup tableName foreignKeys (RelDef rn using Nothing)
+              tableForeignKeys <- getTableInfo tableName foreignKeys
+              objRelP2Setup tableName tableForeignKeys (RelDef rn using Nothing)
             ArrRel -> do
               using <- decodeValue rDef
-              arrRelP2Setup tableName foreignKeys (RelDef rn using Nothing)
+              arrRelP2Setup foreignKeys tableName (RelDef rn using Nothing)
           recordDependencies -< (metadataObject, schemaObject, dependencies)
           returnA -< info)
      |) (addTableContext tableName . addRelationshipContext))

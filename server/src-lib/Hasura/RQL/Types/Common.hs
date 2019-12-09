@@ -14,6 +14,12 @@ module Hasura.RQL.Types.Common
        , WithTable(..)
        , ColumnValues
        , MutateResp(..)
+
+       , OID(..)
+       , Constraint(..)
+       , PrimaryKey(..)
+       , pkConstraint
+       , pkColumns
        , ForeignKey(..)
        , CustomColumnNames
 
@@ -36,6 +42,7 @@ import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift)
+import Control.Lens (makeLenses)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
@@ -173,18 +180,37 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 
 type ColMapping = HM.HashMap PGCol PGCol
 
+-- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
+newtype OID = OID { unOID :: Int }
+  deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, Q.FromCol)
+
+data Constraint
+  = Constraint
+  { _cName :: !ConstraintName
+  , _cOid  :: !OID
+  } deriving (Show, Eq, Generic)
+instance NFData Constraint
+instance Hashable Constraint
+$(deriveJSON (aesonDrop 2 snakeCase) ''Constraint)
+
+data PrimaryKey a
+  = PrimaryKey
+  { _pkConstraint :: !Constraint
+  , _pkColumns    :: !(NonEmpty a)
+  } deriving (Show, Eq, Generic)
+instance (NFData a) => NFData (PrimaryKey a)
+$(makeLenses ''PrimaryKey)
+$(deriveJSON (aesonDrop 3 snakeCase) ''PrimaryKey)
+
 data ForeignKey
   = ForeignKey
-  { _fkTable         :: !QualifiedTable
-  , _fkRefTable      :: !QualifiedTable
-  , _fkOid           :: !Int
-  , _fkConstraint    :: !ConstraintName
+  { _fkConstraint    :: !Constraint
+  , _fkForeignTable  :: !QualifiedTable
   , _fkColumnMapping :: !ColMapping
   } deriving (Show, Eq, Generic)
 instance NFData ForeignKey
-$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
-
 instance Hashable ForeignKey
+$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
 type CustomColumnNames = HM.HashMap PGCol G.Name
 

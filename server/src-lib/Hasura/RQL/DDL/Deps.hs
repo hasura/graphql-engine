@@ -73,7 +73,7 @@ parseDropNotice t = do
             [_, cn, _, _, tn] -> do
               qt <- dottedTxtToQualTable tn
               return $ Right $ SOTableObj qt $
-                                 TOCons $ ConstraintName cn
+                                 TOForeignKey $ ConstraintName cn
             _       -> throw500 $ "failed to parse constraint cascade line : " <> cl
       | otherwise = return $ Left cl
 

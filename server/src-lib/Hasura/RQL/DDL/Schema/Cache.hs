@@ -138,24 +138,22 @@ buildSchemaCacheRule = proc inputs -> do
       => (CatalogMetadata, InvalidationMap) `arr` BuildOutputs
     buildAndCollectInfo = proc (catalogMetadata, invalidationMap) -> do
       let CatalogMetadata tables relationships permissions
-            eventTriggers remoteSchemas functions fkeys' allowlistDefs
+            eventTriggers remoteSchemas functions allowlistDefs
             computedFields = catalogMetadata
 
       -- tables
       tableRawInfos <- buildTableCache -< tables
-      let tableNames = HS.fromList $ M.keys tableRawInfos
 
       -- relationships and computed fields
       let relationshipsByTable = M.groupOn _crTable relationships
           computedFieldsByTable = M.groupOn (_afcTable . _cccComputedField) computedFields
-          fkeys = HS.fromList fkeys'
       tableCoreInfos <- (tableRawInfos >- returnA)
         >-> (\info -> (info, relationshipsByTable) >- alignExtraTableInfo mkRelationshipMetadataObject)
         >-> (\info -> (info, computedFieldsByTable) >- alignExtraTableInfo mkComputedFieldMetadataObject)
         >-> (| Inc.keyed (\_ ((tableRawInfo, tableRelationships), tableComputedFields) -> do
                  let columns = _tciFieldInfoMap tableRawInfo
                  allFields <- addNonColumnFields -<
-                   (fkeys, tableNames, columns, tableRelationships, tableComputedFields)
+                   (tableRawInfos, columns, tableRelationships, tableComputedFields)
                  returnA -< tableRawInfo { _tciFieldInfoMap = allFields }) |)
 
       -- permissions and event triggers
@@ -183,6 +181,7 @@ buildSchemaCacheRule = proc inputs -> do
       -- bindA -< liftIO $ putStrLn $ "----> [build/events] " <> show eventTime
 
       -- sql functions
+      let tableNames = HS.fromList $ M.keys tableCache
       functionCache <- (mapFromL _cfFunction functions >- returnA)
         >-> (| Inc.keyed (\_ (CatalogFunction qf systemDefined config funcDefs) -> do
                  let definition = toJSON $ TrackFunction qf
@@ -299,7 +298,7 @@ buildSchemaCacheRule = proc inputs -> do
       (| onNothingA (returnA -< (remoteSchemas, gCtxMap, defGCtx)) |) <-<
          (| withRecordInconsistency (case M.lookup name remoteSchemas of
               Just _ -> throwA -< err400 AlreadyExists "duplicate definition for remote schema"
-              Nothing -> (throwA ||| returnA) <<< bindA -< runExceptT do
+              Nothing -> liftEitherA <<< bindA -< runExceptT do
                 rsCtx <- addRemoteSchemaP2Setup remoteSchema
                 let rGCtx = convRemoteGCtx $ rscGCtx rsCtx
                 mergedGCtxMap <- mergeRemoteSchema gCtxMap rGCtx

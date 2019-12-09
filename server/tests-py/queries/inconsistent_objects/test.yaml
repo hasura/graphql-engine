@@ -69,7 +69,7 @@ inconsistent_objects:
     comment:
     table: author
   reason: >-
-    in table "author": in relationship "articles": no foreign constraint exists on the given column
+    in table "author": in relationship "articles": table "article" does not exist
   type: array_relation
 
 # Teardown

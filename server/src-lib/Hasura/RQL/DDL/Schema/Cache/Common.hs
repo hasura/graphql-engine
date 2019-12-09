@@ -64,7 +64,7 @@ type CacheBuildA = WriterA (Seq CollectedInfo) (Inc.Rule CacheBuildM)
 bindErrorA
   :: (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m)
   => arr (m a) a
-bindErrorA = (throwA ||| returnA) <<< arrM \m -> (Right <$> m) `catchError` (pure . Left)
+bindErrorA = liftEitherA <<< arrM \m -> (Right <$> m) `catchError` (pure . Left)
 {-# INLINABLE bindErrorA #-}
 
 withRecordDependencies

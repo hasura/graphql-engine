@@ -27,7 +27,7 @@ import           Hasura.SQL.Types
 {-# SPECIALIZE buildTablePermissions
     :: CacheBuildA
     ( TableCoreCache
-    , TableCoreInfo FieldInfo
+    , TableCoreInfo
     , [CatalogPermission]
     ) RolePermInfoMap #-}
 
@@ -35,7 +35,7 @@ buildTablePermissions
   :: ( Inc.ArrowCache arr, Inc.ArrowDistribute arr, ArrowKleisli m arr
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m )
   => ( TableCoreCache
-     , TableCoreInfo FieldInfo
+     , TableCoreInfo
      , [CatalogPermission]
      ) `arr` RolePermInfoMap
 buildTablePermissions = proc (tableCache, tableInfo, tablePermissions) ->
@@ -90,7 +90,7 @@ buildPermission
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m
      , Eq a, IsPerm a, FromJSON a, Eq (PermInfo a) )
   => ( TableCoreCache
-     , TableCoreInfo FieldInfo
+     , TableCoreInfo
      , [CatalogPermission]
      ) `arr` Maybe (PermInfo a)
 buildPermission = proc (tableCache, tableInfo, permissions) ->

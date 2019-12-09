@@ -17,30 +17,30 @@ module Hasura.RQL.Types.SchemaCache
   , TableCoreCache
   , TableCache
 
-  , TableCoreInfo(..)
+  , TableCoreInfoG(..)
+  , TableRawInfo
+  , TableCoreInfo
   , tciName
   , tciDescription
   , tciSystemDefined
   , tciFieldInfoMap
-  , tciUniqueOrPrimaryKeyConstraints
-  , tciPrimaryKeyColumns
+  , tciPrimaryKey
+  , tciUniqueConstraints
+  , tciForeignKeys
   , tciViewInfo
   , tciEnumValues
   , tciCustomConfig
+  , tciUniqueOrPrimaryKeyConstraints
 
   , TableInfo(..)
   , tiCoreInfo
   , tiRolePermInfoMap
   , tiEventTriggerInfoMap
 
-  , TableConstraint(..)
-  , ConstraintType(..)
   , ViewInfo(..)
   , checkForFieldConflict
   , isMutable
   , mutableView
-  , isUniqueOrPrimary
-  , isForeignKey
 
   , RemoteSchemaCtx(..)
   , RemoteSchemaMap
@@ -276,55 +276,6 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
 
 type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
 
-data ConstraintType
-  = CTCHECK
-  | CTFOREIGNKEY
-  | CTPRIMARYKEY
-  | CTUNIQUE
-  deriving (Eq, Generic)
-instance NFData ConstraintType
-
-constraintTyToTxt :: ConstraintType -> T.Text
-constraintTyToTxt ty = case ty of
-  CTCHECK      -> "CHECK"
-  CTFOREIGNKEY -> "FOREIGN KEY"
-  CTPRIMARYKEY -> "PRIMARY KEY"
-  CTUNIQUE     -> "UNIQUE"
-
-instance Show ConstraintType where
-  show = T.unpack . constraintTyToTxt
-
-instance FromJSON ConstraintType where
-  parseJSON = withText "ConstraintType" $ \case
-    "CHECK"       -> return CTCHECK
-    "FOREIGN KEY" -> return CTFOREIGNKEY
-    "PRIMARY KEY" -> return CTPRIMARYKEY
-    "UNIQUE"      -> return CTUNIQUE
-    c             -> fail $ "unexpected ConstraintType: " <> T.unpack c
-
-instance ToJSON ConstraintType where
-  toJSON = String . constraintTyToTxt
-
-isUniqueOrPrimary :: ConstraintType -> Bool
-isUniqueOrPrimary = \case
-  CTPRIMARYKEY -> True
-  CTUNIQUE     -> True
-  _            -> False
-
-isForeignKey :: ConstraintType -> Bool
-isForeignKey = \case
-  CTFOREIGNKEY -> True
-  _            -> False
-
-data TableConstraint
-  = TableConstraint
-  { tcType :: !ConstraintType
-  , tcName :: !ConstraintName
-  } deriving (Show, Eq, Generic)
-instance NFData TableConstraint
-
-$(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
-
 data ViewInfo
   = ViewInfo
   { viIsUpdatable  :: !Bool
@@ -363,24 +314,38 @@ instance FromJSON TableConfig where
     <$> obj .:? "custom_root_fields" .!= GC.emptyCustomRootFields
     <*> obj .:? "custom_column_names" .!= M.empty
 
-data TableCoreInfo fieldInfo
+-- | The @field@ and @primaryKeyColumn@ type parameters vary as the schema cache is built and more
+-- information is accumulated. See 'TableRawInfo' and 'TableCoreInfo'.
+data TableCoreInfoG field primaryKeyColumn
   = TableCoreInfo
   { _tciName                          :: !QualifiedTable
   , _tciDescription                   :: !(Maybe PGDescription)
   , _tciSystemDefined                 :: !SystemDefined
-  , _tciFieldInfoMap                  :: !(FieldInfoMap fieldInfo)
-  , _tciUniqueOrPrimaryKeyConstraints :: ![ConstraintName]
-  , _tciPrimaryKeyColumns             :: ![PGCol]
+  , _tciFieldInfoMap                  :: !(FieldInfoMap field)
+  , _tciPrimaryKey :: !(Maybe (PrimaryKey primaryKeyColumn))
+  , _tciUniqueConstraints :: ![Constraint]
+  -- ^ Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
+  , _tciForeignKeys :: ![ForeignKey]
   , _tciViewInfo                      :: !(Maybe ViewInfo)
   , _tciEnumValues                    :: !(Maybe EnumValues)
   , _tciCustomConfig                  :: !TableConfig
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 4 snakeCase) ''TableCoreInfo)
-$(makeLenses ''TableCoreInfo)
+$(deriveToJSON (aesonDrop 4 snakeCase) ''TableCoreInfoG)
+$(makeLenses ''TableCoreInfoG)
+
+-- | The result of the initial processing step for table info. Includes all basic information, but
+-- is missing non-column fields.
+type TableRawInfo = TableCoreInfoG PGColumnInfo PGColumnInfo
+-- | Fully-processed table info that includes non-column fields.
+type TableCoreInfo = TableCoreInfoG FieldInfo PGColumnInfo
+
+tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> [Constraint]
+tciUniqueOrPrimaryKeyConstraints info =
+  maybeToList (_pkConstraint <$> _tciPrimaryKey info) <> _tciUniqueConstraints info
 
 data TableInfo
   = TableInfo
-  { _tiCoreInfo            :: TableCoreInfo FieldInfo
+  { _tiCoreInfo            :: TableCoreInfo
   , _tiRolePermInfoMap     :: !RolePermInfoMap
   , _tiEventTriggerInfoMap :: !EventTriggerInfoMap
   } deriving (Show, Eq)
@@ -389,7 +354,7 @@ $(makeLenses ''TableInfo)
 
 checkForFieldConflict
   :: (MonadError QErr m)
-  => TableCoreInfo fieldInfo
+  => TableCoreInfoG a b
   -> FieldName
   -> m ()
 checkForFieldConflict tableInfo f =
@@ -401,7 +366,7 @@ checkForFieldConflict tableInfo f =
       ]
     Nothing -> return ()
 
-type TableCoreCache = M.HashMap QualifiedTable (TableCoreInfo FieldInfo)
+type TableCoreCache = M.HashMap QualifiedTable TableCoreInfo
 type TableCache = M.HashMap QualifiedTable TableInfo -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 
@@ -451,8 +416,8 @@ getFuncsOfTable qt fc = flip filter allFuncs $ \f -> qt == fiReturnType f
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
 class (Monad m) => TableCoreInfoRM m where
-  lookupTableCoreInfo :: QualifiedTable -> m (Maybe (TableCoreInfo FieldInfo))
-  default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe (TableCoreInfo FieldInfo))
+  lookupTableCoreInfo :: QualifiedTable -> m (Maybe TableCoreInfo)
+  default lookupTableCoreInfo :: (CacheRM m) => QualifiedTable -> m (Maybe TableCoreInfo)
   lookupTableCoreInfo tableName = fmap _tiCoreInfo . M.lookup tableName . scTables <$> askSchemaCache
 
 instance (TableCoreInfoRM m) => TableCoreInfoRM (ReaderT r m) where

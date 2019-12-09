@@ -18,11 +18,10 @@ data TableObjId
   = TOCol !PGCol
   | TORel !RelName
   | TOComputedField !ComputedFieldName
-  | TOCons !ConstraintName
+  | TOForeignKey !ConstraintName
   | TOPerm !RoleName !PermType
   | TOTrigger !TriggerName
   deriving (Show, Eq, Generic)
-
 instance Hashable TableObjId
 
 data SchemaObjId
@@ -40,7 +39,7 @@ reportSchemaObj (SOTableObj tn (TOCol cn)) =
   "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
 reportSchemaObj (SOTableObj tn (TORel cn)) =
   "relationship " <> qualObjectToText tn <> "." <> relNameToTxt cn
-reportSchemaObj (SOTableObj tn (TOCons cn)) =
+reportSchemaObj (SOTableObj tn (TOForeignKey cn)) =
   "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
 reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
   "permission " <> qualObjectToText tn <> "." <> roleNameToTxt rn
