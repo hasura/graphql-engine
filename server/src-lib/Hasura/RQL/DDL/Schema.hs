@@ -85,9 +85,8 @@ instance ToJSON RunSQL where
           Q.ReadWrite -> False
       ]
 
-runRunSQL :: (CacheBuildM m, UserInfoM m) => RunSQL -> m EncJSON
+runRunSQL :: (CacheBuildM m) => RunSQL -> m EncJSON
 runRunSQL RunSQL {..} = do
-  adminOnly
   metadataCheckNeeded <- onNothing rCheckMetadataConsistency $ isAltrDropReplace rSql
   bool (execRawSQL rSql) (withMetadataCheck rCascade $ execRawSQL rSql) metadataCheckNeeded
   where

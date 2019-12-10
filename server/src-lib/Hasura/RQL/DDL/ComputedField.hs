@@ -61,7 +61,6 @@ addComputedFieldP1
   :: (UserInfoM m, QErrM m, CacheRM m)
   => AddComputedField -> m ()
 addComputedFieldP1 q = do
-  adminOnly
   tableInfo <- withPathK "table" $ askTabInfo tableName
   withPathK "name" $ checkForFieldConflict tableInfo $
     fromComputedField computedFieldName
@@ -253,7 +252,6 @@ runDropComputedField
   => DropComputedField -> m EncJSON
 runDropComputedField (DropComputedField table computedField cascade) = do
   -- Validation
-  adminOnly
   fields <- withPathK "table" $ _tiFieldInfoMap <$> askTabInfo table
   void $ withPathK "name" $ askComputedFieldInfo fields computedField
 
