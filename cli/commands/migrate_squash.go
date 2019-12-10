@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
 	"github.com/spf13/viper"
 
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
@@ -50,6 +51,9 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
+
+	// mark flag as required
+	migrateSquashCmd.MarkFlagRequired("from")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
