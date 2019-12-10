@@ -947,7 +947,8 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
 .. note::
 
   The ``_or`` operator expects an array of expressions as input. Passing an object to it will result in the
-  behaviour of the ``_and`` operator.
+  behaviour of the ``_and`` operator due to the way `GraphQL list input coercion <https://graphql.github.io/graphql-spec/June2018/#sec-Type-System.List>`_
+  behaves.
 
   **For example:**
 
@@ -960,7 +961,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
       }
     }
 
-    # will be resolved to:
+    # will be coerced to:
 
     {
       _or: [
