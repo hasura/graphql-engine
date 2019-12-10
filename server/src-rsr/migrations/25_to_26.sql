@@ -38,3 +38,12 @@ CREATE TABLE hdb_catalog.hdb_custom_types
 (
   custom_types jsonb NOT NULL
 );
+
+CREATE VIEW hdb_catalog.hdb_role AS
+(
+  SELECT DISTINCT role_name FROM (
+    SELECT role_name FROM hdb_catalog.hdb_permission
+    UNION ALL
+    SELECT role_name FROM hdb_catalog.hdb_action_permission
+  ) q
+);
