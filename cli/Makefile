@@ -15,6 +15,7 @@ HAS_BINDATA := $(shell command -v go-bindata;)
 .PHONY: deps
 # get dependencies
 deps:
+go mod download
 ifndef HAS_GOX
 	go get github.com/mitchellh/gox
 endif
