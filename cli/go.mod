@@ -9,7 +9,7 @@ require (
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
-	github.com/aws/aws-sdk-go v1.25.49 // indirect
+	github.com/aws/aws-sdk-go v1.25.48 // indirect
 	github.com/briandowns/spinner v1.8.0
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
