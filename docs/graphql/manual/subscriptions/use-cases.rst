@@ -376,7 +376,7 @@ We can implement this with the ``subscribe and fetch`` pattern:
    is received set ``previousIds = []`` and ``currentIds = <subscription-result>`` i.e. ``currentIds = [1,2,3]``
 
 3. When we receive an update, set ``previousIds = currentIds`` and ``currentIds = <new-subscription-result>``. e.g.
-   ``previousIds = [1,2,3]`` and ``currentIds`` = [1,4,5]
+   ``previousIds = [1,2,3]`` and ``currentIds = [1,4,5]``
 
 4. Perform a union to get all the ids we want data for. i.e. ``allIds = [1,2,3,4,5]`` and fetch data for all the ids:
 
