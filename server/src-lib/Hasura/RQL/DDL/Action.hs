@@ -175,8 +175,16 @@ runDropAction (DropAction actionName clearDataM)= do
   adminOnly
   void $ getActionInfo actionName
   delActionFromCache actionName
-  liftTx $ deleteActionFromCatalog actionName clearDataM
+  liftTx $ do
+    deleteActionPermissionsFromCatalog
+    deleteActionFromCatalog actionName clearDataM
   return successMsg
+  where
+    deleteActionPermissionsFromCatalog =
+      Q.unitQE defaultTxErrorHandler [Q.sql|
+          DELETE FROM hdb_catalog.hdb_action_permission
+            WHERE action_name = $1
+          |] (Identity actionName) True
 
 deleteActionFromCatalog
   :: ActionName
