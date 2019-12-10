@@ -275,60 +275,6 @@ Permissions for role ``editor``
 
   .. thumbnail:: ../../../../img/graphql/manual/auth/multirole-example-editor-update.png
 
-Permissions with conditions across tables
------------------------------------------
-
-Sometimes your data/user model requires that:
-
-- You have permissions based on a condition on another table
-- The tables have no relationship to each other
-
-Example
-^^^^^^^
-
-There will be one role on the ``account`` table:
-
-``user``: The permissions are dependent on the ``user`` table.
-
-Database schema
-^^^^^^^^^^^^^^^
-
-We create the following two tables:
-
-.. code-block:: sql
-
-  -- user information from your auth system
-  
-  user (
-      id INTEGER PRIMARY KEY,
-      name TEXT,
-      is_admin BOOLEAN DEFAULT FALSE,
-  )
-
-  -- account information from your auth system
-
-  account (
-      id INTEGER PRIMARY KEY,
-      account_number INTEGER
-      email TEXT
-  )
-
-Relationships
-^^^^^^^^^^^^^
-
-There exist **no relationships** between the ``account`` and the ``user`` tables.
-
-Permissions
-^^^^^^^^^^^
-
-Permissions for the role ``user`` for the table ``account``
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-Inside the ``_exists`` operator, you can define the table that holds the condisions for the permissions. The respective table is specified by the ``_table`` operator and the conditions can be defined inside the ``_where`` operator.
-
-.. thumbnail:: ../../../../img/graphql/manual/auth/permissions-conditions-across-table.png
-
-
 
 
 
