@@ -257,7 +257,7 @@ runCreateActionPermission_ createActionPermission = do
       liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
         INSERT into hdb_catalog.hdb_action_permission
           (action_name, role_name, definition, comment)
-          VALUES ($1, $2, $3)
+          VALUES ($1, $2, $3, $4)
       |] (actionName, role, Q.AltJ permissionDefinition, comment) True
 
 runCreateActionPermission
