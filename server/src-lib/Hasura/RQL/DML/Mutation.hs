@@ -50,20 +50,16 @@ mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
 mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
   -- Perform mutation and fetch unique columns
   MutateResp _ columnVals <- mutateAndFetchCols qt allCols q strfyNum
-  selCTE <- mkSelCTEFromColVals parseTextAsLiteral qt allCols columnVals
+  selCTE <- mkSelCTEFromColVals txtEncodedToSQLExp qt allCols columnVals
   let selWith = mkSelWith qt selCTE mutFlds False strfyNum
   -- Perform select query and fetch returning fields
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
   where
-    parseTextAsLiteral colTy = \case
-      Nothing -> pure S.SENull
-      Just textValue ->
-        case colTy of
-          PGColumnEnumReference _ ->
-            let textWithTyAnn (WithScalarType ty val) = S.withTyAnn ty $ txtEncoder val
-            in textWithTyAnn <$> parsePGScalarValue colTy (String textValue)
-          PGColumnScalar scalarTy -> pure $ S.withTyAnn scalarTy $ S.SELit textValue
+    txtEncodedToSQLExp colTy = pure . \case
+      TENull          -> S.SENull
+      TELit textValue ->
+        S.withTyAnn (unsafePGColumnToRepresentation colTy) $ S.SELit textValue
 
 
 mutateAndFetchCols
