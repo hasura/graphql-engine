@@ -19,8 +19,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateApplyCmd := &cobra.Command{
 		Use:          "apply",
 		Short:        "Apply migrations on the database",
-		Example: `
-	# Apply all migrations
+		Example: `  # Apply all migrations
   hasura migrate apply
 
   # Use with admin secret:

@@ -17,15 +17,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const migrateCreateCmdExamples = `
-	# Setup migration files for the first time by introspecting a server:
-	hasura migrate create "init" --from-server
+const migrateCreateCmdExamples = `  # Setup migration files for the first time by introspecting a server:
+  hasura migrate create "init" --from-server
 
-	# Use with admin secret:
-	hasura migrate create --admin-secret "<admin-secret>"
+  # Use with admin secret:
+  hasura migrate create --admin-secret "<admin-secret>"
 
-	# Setup migration files from an instance mentioned by the flag:
-	hasura migrate create init --from-server --endpoint "<endpoint>"`
+  # Setup migration files from an instance mentioned by the flag:
+  hasura migrate create init --from-server --endpoint "<endpoint>"`
 
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
