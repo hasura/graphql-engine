@@ -286,58 +286,32 @@ Check this `sample app <https://realtime-poll.demo.hasura.app/>`__ for a working
 
 .. _subscribe_and_fetch:
 
-How to get diffs via subscriptions
----------------------------------- 
+Fetch diffs via subscriptions
+-----------------------------
 
-Subscriptions implement the ``live query`` semantics i.e. you can subscribe to any query and get the new result set when the underlying data changes. In case you are only interested in the ``diff`` of changes, you can implement a simple ``subscribe and fetch`` pattern depending on your use-case. 
+Subscriptions implement the ``live query`` semantics, i.e. you can subscribe to any query and get the new result set
+when the underlying data changes.
 
-Example: Subscribe and fetch pattern
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In case you are only interested in the "diff" of changes, you can implement a simple ``subscribe and fetch`` pattern
+depending on your use-case.
 
-Suppose you have the following subscription to fetch all active users:
+Subscribe and fetch pattern
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The subscribe and fetch pattern involves the following steps:
+
+1. **Subscribe** to the identifiers of the result data we are looking for.
+2. Maintain two variables on the client to store the ``previousIds`` and ``currentIds`` returned by the subscription.
+3. Every time we receive an update, set ``previousIds = currentIds`` and ``currentIds = <new result of subscription>``
+4. Perform a union equivalent to ``allIds = previousIds + currentIds`` and **fetch** the data for all the identifiers.
+
+**For example**, suppose you have the following subscription to fetch all active users:
 
 .. graphiql::
   :view_only:
   :query:
-    subscription getUsers {
+    subscription getActiveUsers {
       users(where: { status: { _eq : "ACTIVE" } }) {
-        id
-        name
-      }
-    }
-  :response:
-    {
-      "data": {
-        "users": [
-          {
-            "id": 1,
-            "name": "Justin"
-          },
-          {
-            "id": 2,
-            "name": "Beltran"
-          },
-          {
-            "id": 3,
-            "name": "Sidney"
-          }
-        ]
-      }
-    }
-
-Now, suppose you recieved an update and want to know the status of users who got removed in the new list. You can implement this with the ``subscribe and fetch`` pattern in 3 steps:
-
-1. Define two variables ``prevActiveUsers`` and ``currentActiveUsers``. Initially both variables are equal to the value of the current subscription.
-
-2. Every time you receive an update, set ``prevActiveUsers = currentActiveUsers`` and ``currentActiveUsers = <new value of subscription>``. Perform a diff equivalent to ``diff = prevActiveUsers - currentActiveUsers``.
-
-3. Now ``diff`` will have the ``id`` of all rows that were removed in the new update. Fetch their state by performing a query like below:
-
-.. graphiql::
-  :view_only:
-  :query:
-    query inactiveUsers($diff: [Int]) {
-      users(where: { id: { _in: $diff } }) {
         id
         name
         status
@@ -350,18 +324,113 @@ Now, suppose you recieved an update and want to know the status of users who got
           {
             "id": 1,
             "name": "Justin",
-            "status": "blocked"
+            "status": "ACTIVE"
+          },
+          {
+            "id": 2,
+            "name": "Beltran",
+            "status": "ACTIVE"
           },
           {
             "id": 3,
             "name": "Sidney",
-            "status": "deleted"
+            "status": "ACTIVE"
           }
         ]
       }
     }
 
+Now, suppose when we receive updated data from this subscription we want to know the status of users who got removed in
+the new list.
+
+We can implement this with the ``subscribe and fetch`` pattern:
+
+1. Subscribe to the ids of active users:
+
+   .. graphiql::
+     :view_only:
+     :query:
+       subscription getActiveUser {
+         users(where: { status: { _eq : "ACTIVE" } }) {
+           id
+         }
+       }
+     :response:
+       {
+         "data": {
+           "users": [
+             {
+               "id": 1,
+             },
+             {
+               "id": 2,
+             },
+             {
+               "id": 3,
+             }
+           ]
+         }
+       }
+
+2. Maintain two variables on the client, ``previousIds`` and ``currentIds``. After the first response of the subscription
+   is received set ``previousIds = []`` and ``currentIds = <subscription-result>`` i.e. ``currentIds = [1,2,3]``
+
+3. When we receive an update, set ``previousIds = currentIds`` and ``currentIds = <new-subscription-result>``. e.g.
+   ``previousIds = [1,2,3]`` and ``currentIds`` = [1,4,5]
+
+4. Perform a union to get all the ids we want data for. i.e. ``allIds = [1,2,3,4,5]`` and fetch data for all the ids:
+
+   .. graphiql::
+     :view_only:
+     :query:
+       query userInfo($allIds: [Int!]!) {
+         users(where: { id: { _in: $allIds } }) {
+           id
+           name
+           status
+         }
+       }
+     :response:
+       {
+         "data": {
+           "users": [
+             {
+               "id": 1,
+               "name": "Justin",
+               "status": "ACTIVE"
+             },
+             {
+               "id": 2,
+               "name": "Beltran",
+               "status": "BLOCKED"
+             },
+             {
+               "id": 3,
+               "name": "Sidney",
+               "status": "BLOCKED"
+             },
+             {
+               "id": 4,
+               "name": "Anjela",
+               "status": "ACTIVE"
+             },
+             {
+               "id": 5,
+               "name": "Amii",
+               "status": "ACTIVE"
+             }
+           ]
+         }
+       }
+     :variables:
+       {
+         "allIds": [1,2,3,4,5]
+       }
+
+
 
 .. note::
 
-   The ``subscribe and fetch`` pattern is not equivalent to getting change streams i.e. where you need the *before* and *after* of every row that changed. For e.g., in the above example though you could construct the *before* and *after* state of inactive users but you cannot get the *before* of the newly active users.
+   The ``subscribe and fetch`` pattern is not equivalent to getting change streams i.e. where you need the *before* and
+   *after* of every row that changed. For e.g., in the above example though you could construct the *before* and *after*
+   state of inactive users but you cannot get the *before* of the newly active users.
