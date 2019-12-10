@@ -866,6 +866,28 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
       }
     }
 
+.. admonition:: Syntactic sugar
+
+  You can simplify an ``_and`` expression by passing the sub-expressions separated by a ``,``
+
+  **For example:**
+
+  .. code-block:: graphql
+
+    {
+      _and: [
+        { rating: { _gte: 4 } },
+        { published_on: { _gte: "2018-01-01" } }
+      ]
+    }
+
+    # can be simplified to:
+
+    {
+      rating: { _gte: 4 },
+      published_on: { _gte: "2018-01-01" }
+    }
+
 Example:  _or
 ^^^^^^^^^^^^^
 Fetch a list of articles rated more than 4 or published after "01/01/2018":
@@ -919,6 +941,45 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
           }
         ]
       }
+    }
+
+
+.. note::
+
+  The ``_or`` operator expects an array of expressions as input. Passing an object to it will result in the
+  behaviour of the ``_and`` operator.
+
+  **For example:**
+
+  .. code-block:: graphql
+
+    {
+      _or: {
+       rating: { _gte: 4 },
+       published_on: { _gte: "2018-01-01" }
+      }
+    }
+
+    # will be resolved to:
+
+    {
+      _or: [
+        {
+          rating: { _gte: 4 },
+          published_on: { _gte: "2018-01-01" }
+        }
+      ]
+    }
+
+    # which is equivalent to:
+
+    {
+      _or: [
+        _and: [
+          { rating: { _gte: 4 } },
+          { published_on: { _gte: "2018-01-01" } }
+        ]
+      ]
     }
 
 .. _nested_filter:

@@ -309,6 +309,16 @@ AndExp
       _and: [BoolExp_]
     }
 
+or
+
+.. parsed-literal::
+
+    {
+      BoolExp_,
+      BoolExp_,
+      ...
+    }
+
 OrExp
 #####
 
