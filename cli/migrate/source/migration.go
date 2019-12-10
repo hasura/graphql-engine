@@ -166,6 +166,13 @@ func (i *Migrations) MetaDown(version uint64) (m *Migration, ok bool) {
 	return nil, false
 }
 
+func (i *Migrations) ReadName(version uint64) (name string) {
+	for k := range i.migrations[version] {
+		return i.migrations[version][k].Identifier
+	}
+	return "-"
+}
+
 func (i *Migrations) findPos(version uint64) int {
 	if len(i.index) > 0 {
 		ix := i.index.Search(version)

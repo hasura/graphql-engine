@@ -5,7 +5,6 @@
 
 module Hasura.Server.Telemetry
   ( runTelemetry
-  , getDbId
   , mkTelemetryLog
   )
   where
@@ -31,7 +30,6 @@ import qualified Data.ByteString.Lazy    as BL
 import qualified Data.HashMap.Strict     as Map
 import qualified Data.String.Conversions as CS
 import qualified Data.Text               as T
-import qualified Database.PG.Query       as Q
 import qualified Network.HTTP.Client     as HTTP
 import qualified Network.HTTP.Types      as HTTP
 import qualified Network.Wreq            as Wreq
@@ -95,7 +93,7 @@ mkPayload dbId instanceId version metrics = do
   where topic = bool "server" "server_test" isDevVersion
 
 runTelemetry
-  :: Logger
+  :: Logger Hasura
   -> HTTP.Manager
   -> IORef (SchemaCache, SchemaCacheVer)
   -> Text
@@ -162,15 +160,6 @@ computeMetrics sc =
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
 
-getDbId :: Q.TxE QErr Text
-getDbId =
-  (runIdentity . Q.getRow) <$>
-  Q.withQE defaultTxErrorHandler
-  [Q.sql|
-    SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
-  |] () False
-
-
 -- | Logging related
 
 data TelemetryLog
@@ -205,8 +194,8 @@ instance A.ToJSON TelemetryHttpError where
              ]
 
 
-instance ToEngineLog TelemetryLog where
-  toEngineLog tl = (_tlLogLevel tl, ELTTelemetryLog, A.toJSON tl)
+instance ToEngineLog TelemetryLog Hasura where
+  toEngineLog tl = (_tlLogLevel tl, ELTInternal ILTTelemetry, A.toJSON tl)
 
 mkHttpError
   :: Text

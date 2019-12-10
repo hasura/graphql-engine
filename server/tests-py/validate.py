@@ -16,7 +16,7 @@ import random
 import time
 import warnings
 
-from context import GQLWsClient
+from context import GQLWsClient, PytestConf
 
 def check_keys(keys, obj):
     for k in keys:
@@ -254,7 +254,7 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query):
     exp_response = collapse_order_not_selset(exp_response_orig, query)
     matched = equal_CommentedMap(resp, exp_response)
 
-    if pytest.config.getoption("--accept"):
+    if PytestConf.config.getoption("--accept"):
         print('skipping assertion since we chose to --accept new output')
     else:
         yml = yaml.YAML()
@@ -309,7 +309,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
         if isinstance(conf, list):
             for ix, sconf in enumerate(conf):
                 actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth)
-                if pytest.config.getoption("--accept") and not matched:
+                if PytestConf.config.getoption("--accept") and not matched:
                     conf[ix]['response'] = actual_resp
                     should_write_back = True
         else:
@@ -318,7 +318,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
             actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth)
             # If using `--accept` write the file back out with the new expected
             # response set to the actual response we got:
-            if pytest.config.getoption("--accept") and not matched:
+            if PytestConf.config.getoption("--accept") and not matched:
                 conf['response'] = actual_resp
                 should_write_back = True
 

@@ -66,6 +66,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
+import qualified Crypto.Hash                        as CH
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashSet                       as HS
 import qualified Data.Text                          as T
@@ -84,12 +85,15 @@ type InsPermDef = PermDef InsPerm
 type CreateInsPerm = CreatePerm InsPerm
 
 buildViewName :: QualifiedTable -> RoleName -> PermType -> QualifiedTable
-buildViewName (QualifiedObject sn tn) rn pt =
-  QualifiedObject hdbViewsSchema $ TableName
-  (roleNameToTxt rn <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
+buildViewName qt rn pt = QualifiedObject hdbViewsSchema tableName
   where
-    snTxt = getSchemaTxt sn
-    tnTxt = getTableTxt tn
+    -- Generate a unique hash for view name from role name, permission type and qualified table.
+    -- See Note [Postgres identifier length limitations].
+    -- Black2b_224 generates 56 character hash. See Note [Blake2b faster than SHA-256].
+    -- Refer https://github.com/hasura/graphql-engine/issues/3444.
+    tableName = TableName $ T.pack $ show hash
+    hash :: CH.Digest CH.Blake2b_224 =
+      CH.hash $ txtToBs $ roleNameToTxt rn <> "__" <> T.pack (show pt) <> "__" <> qualObjectToText qt
 
 buildView :: QualifiedTable -> QualifiedTable -> Q.Query
 buildView tn vn =
@@ -417,7 +421,6 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''SetPermComment)
 
 setPermCommentP1 :: (UserInfoM m, QErrM m, CacheRM m) => SetPermComment -> m ()
 setPermCommentP1 (SetPermComment qt rn pt _) = do
-  adminOnly
   tabInfo <- askTabInfo qt
   action tabInfo
   where
