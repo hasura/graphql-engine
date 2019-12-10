@@ -202,50 +202,6 @@ Update based on a nested object's fields
       }
     }
 
-Update all relationships of an object
--------------------------------------
-
-In order to replace all existing relationships of an object, it's required to use two mutations: one to delete all the existing relationships and one to add a list of new relationships. These two mutations will be executed in one transaction.
-
-**Example:** Replace all tags of an article with a new list:
-
-.. graphiql::
-  :view_only:
-  :query:
-    mutation updateArticleTags {
-      delete_article_tags(
-        where: {tag_id: {_eq: 21}}
-      ) {
-        affected_rows
-      }
-      insert_article_tags(
-        objects: [
-          {
-            article_id: 31,
-            tag: {
-              data: {
-                id: 42,
-                label: "Cooking"
-              }
-            }
-          }
-        ]
-      ) {
-        affected_rows
-      }
-    }
-  :response:
-    {
-      "data": {
-        "delete_article_tags": {
-          "affected_rows": 1
-        },
-        "insert_article_tags": {
-          "affected_rows": 2
-        }
-      }
-    }
-
 Update all objects
 ------------------
 
@@ -539,4 +495,55 @@ The input value should be a ``String Array``.
         }
       }
     }
+
+Replace all nested array objects of an object
+---------------------------------------------
+
+In order to replace all existing nested array objects of an object, currently it's required to use two mutations:
+one to delete all the existing objects and one to add a list of new nested objects.
+
+**Example:** Replace all articles of an author with a new list:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation updateAuthorArticles($author_id: Int!) {
+      delete_articles(
+        where: {author_id: {_eq: $author_id}}
+      ) {
+        affected_rows
+      }
+      insert_articles(
+        objects: [
+          {
+            author_id: $author_id,
+            title: "title",
+            content: "some content"
+          },
+          {
+            author_id: $author_id,
+            title: "another title",
+            content: "some other content"
+          }
+        ]
+      ) {
+        affected_rows
+      }
+    }
+  :response:
+    {
+      "data": {
+        "delete_article_tags": {
+          "affected_rows": 3
+        },
+        "insert_article_tags": {
+          "affected_rows": 2
+        }
+      }
+    }
+  :variables:
+    {
+      "author_id": 21
+    }
+
 
