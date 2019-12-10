@@ -278,6 +278,8 @@ dmlTxErrorHandler = mkTxErrorHandler $ \case
 
 toJSONableExp :: Bool -> PGColumnType -> Bool -> S.SQLExp -> S.SQLExp
 toJSONableExp strfyNum colTy asText expn
+  | asText || (isScalarColumnWhere isBigNum colTy && strfyNum) =
+    expn `S.SETyAnn` S.textTypeAnn
   | isScalarColumnWhere isGeoType colTy =
       S.SEFnApp "ST_AsGeoJSON"
       [ expn
@@ -285,8 +287,6 @@ toJSONableExp strfyNum colTy asText expn
       , S.SEUnsafe "4"  -- to print out crs
       ] Nothing
       `S.SETyAnn` S.jsonTypeAnn
-  | asText || (isScalarColumnWhere isBigNum colTy && strfyNum) =
-    expn `S.SETyAnn` S.textTypeAnn
   | otherwise = expn
 
 -- validate headers

@@ -1,12 +1,13 @@
-description: Update mutation on author
+description: Delete mutation on author with returning articles
 url: /v1/graphql
+status: 200
 response:
   data:
-    update_author:
+    delete_author:
       affected_rows: 1
       returning:
-      - id: 1
-        name: Jane
+      - id: 3
+        name: Author 3
         emails: []
         info:
           age: 23
@@ -20,14 +21,10 @@ response:
           - -118.4079
           - 33.9434
         articles: []
-status: 200
 query:
   query: |
-    mutation update_author {
-      update_author(
-        where: {id: {_eq: 1}},
-        _set: {name: "Jane"}
-      ) {
+    mutation DeleteAuthor3 {
+      delete_author(where: {id: {_eq: 3}}){
         affected_rows
         returning{
           id
@@ -39,7 +36,6 @@ query:
             id
             title
             content
-            is_published
           }
         }
       }

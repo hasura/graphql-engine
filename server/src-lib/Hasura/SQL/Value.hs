@@ -4,7 +4,7 @@ module Hasura.SQL.Value
   , withConstructorFn
   , parsePGValue
 
-  , TxtEncodedPGVal
+  , TxtEncodedPGVal(..)
   , txtEncodedPGVal
 
   , binEncoder
@@ -129,6 +129,11 @@ instance ToJSON TxtEncodedPGVal where
   toJSON = \case
     TENull  -> Null
     TELit t -> String t
+
+instance FromJSON TxtEncodedPGVal where
+  parseJSON Null       = pure TENull
+  parseJSON (String t) = pure $ TELit t
+  parseJSON v          = AT.typeMismatch "String" v
 
 txtEncodedPGVal :: PGScalarValue -> TxtEncodedPGVal
 txtEncodedPGVal colVal = case colVal of
