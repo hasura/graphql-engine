@@ -232,12 +232,13 @@ validateAndCacheActionPermission createActionPermission = do
     actionName = _capAction createActionPermission
     role = _capRole createActionPermission
     permissionDefinition = _capDefinition createActionPermission
-  -- TODO
+    -- TODO
     buildActionFilter
       :: (QErrM m)
       => ActionPermissionSelect
       -> m AnnBoolExpPartialSQL
-    buildActionFilter permission = undefined
+    buildActionFilter permission =
+      return annBoolExpTrue
 
 runCreateActionPermission_
   :: ( QErrM m , CacheRWM m, MonadTx m)
