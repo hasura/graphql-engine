@@ -5,6 +5,9 @@ const tabInfo = {
   relationships: {
     display_text: 'Relationships',
   },
+  permissions: {
+    display_text: 'Permissions',
+  },
 };
 
 export default tabInfo;

@@ -1,8 +1,14 @@
 import React from 'react';
 import ActionContainer from '../Containers/ActionContainer';
+import Permissions from './Permissions';
 
-const Permissions = ({ params, allActions, dispatch, ...permissionProps }) => {
-  console.log(permissionProps);
+const PermWrapper = ({
+  params,
+  allActions,
+  allRoles,
+  dispatch,
+  ...permissionProps
+}) => {
   return (
     <ActionContainer
       params={params}
@@ -10,9 +16,13 @@ const Permissions = ({ params, allActions, dispatch, ...permissionProps }) => {
       tabName="permissions"
       dispatch={dispatch}
     >
-      <div> Hello Permissions </div>
+      <Permissions
+        allRoles={allRoles}
+        dispatch={dispatch}
+        {...permissionProps}
+      />
     </ActionContainer>
   );
 };
 
-export default Permissions;
+export default PermWrapper;

@@ -8,6 +8,7 @@ import Button from '../../../Common/Button/Button';
 import styles from './PermissionsSummary.scss';
 
 import { getTablePermissionsRoute } from '../../../Common/utils/routesUtils';
+import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import {
   findTable,
   getTableSchema,
@@ -25,7 +26,6 @@ import { updateSchemaInfo } from '../DataActions';
 import { copyRolePermissions, permOpenEdit } from '../TablePermissions/Actions';
 
 import {
-  permissionsSymbols,
   getAllRoles,
   getPermissionFilterString,
   getPermissionColumnAccessSummary,

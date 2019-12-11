@@ -3,7 +3,7 @@ import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLay
 import tabInfo from './customTypesTabs';
 import { appPrefix } from '../constants';
 
-const ActionContainer = ({ children, tabName }) => {
+const CustomTypesContainer = ({ children, tabName }) => {
   const styles = require('../Actions.scss');
 
   const breadCrumbs = [
@@ -38,4 +38,4 @@ const ActionContainer = ({ children, tabName }) => {
   );
 };
 
-export default ActionContainer;
+export default CustomTypesContainer;

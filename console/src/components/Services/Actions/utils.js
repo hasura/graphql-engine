@@ -33,3 +33,11 @@ export const getActionArguments = action => {
 export const getAllActions = getState => {
   return getState().actions.common.actions;
 };
+
+export const getActionPermissions = action => {
+  return action.permissions;
+};
+
+export const findActionPermission = (perms, role) => {
+  return perms.find(p => p.role_name === role);
+};

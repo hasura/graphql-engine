@@ -1,7 +1,12 @@
 const state = {
-  isEditting: false,
-  role: '',
-  permission: {},
+  isEditing: false,
+  isFetching: false,
+  permissionEdit: {
+    isNew: false,
+    newRole: '',
+    role: '',
+    filter: '',
+  },
 };
 
 export default state;

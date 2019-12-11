@@ -8,13 +8,15 @@ import {
   LOADING_ACTIONS_FAILURE,
 } from './reducer';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
-import { makeMigrationCall } from '../Data/DataActions';
+import { makeMigrationCall, fetchRoleList } from '../Data/DataActions';
 import {
   generateSetCustomTypesQuery,
   generateCreateActionQuery,
   generateDropActionQuery,
   getFetchActionsQuery,
   getFetchCustomTypesQuery,
+  getCreateActionPermissionQuery,
+  getDropActionPermissionQuery,
 } from '../../Common/utils/v1QueryUtils';
 import { getConfirmation } from '../../Common/utils/jsUtils';
 import {
@@ -40,6 +42,14 @@ import {
   setFetching as modifyActionRequestInProgress,
   unsetFetching as modifyActionRequestComplete,
 } from './Modify/reducer';
+
+import {
+  makeRequest as makePermRequest,
+  setRequestSuccess as setPermRequestSuccess,
+  setRequestFailure as setPermRequestFailure
+} from './Permissions/reducer';
+import { findAction, getActionPermissions } from './utils';
+import { getActionPermissionQueries } from './Permissions/utils';
 
 export const fetchActions = () => {
   return (dispatch, getState) => {
@@ -400,6 +410,115 @@ export const addActionRel = (objectType, successCb) => (dispatch, getState) => {
     getState,
     upQueries,
     downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+export const saveActionPermission = (successCb, errorCb) => (
+  dispatch,
+  getState
+) => {
+  const {
+    common: { actions: allActions, currentAction },
+    permissions: { permissionEdit },
+  } = getState().actions;
+
+  const allPermissions = getActionPermissions(
+    findAction(allActions, currentAction)
+  );
+
+  const { upQueries, downQueries } = getActionPermissionQueries(
+    permissionEdit,
+    allPermissions,
+    currentAction
+  );
+
+  const migrationName = 'save_action_perm';
+  const requestMsg = 'Saving permission...';
+  const successMsg = 'Permission saved successfully';
+  const errorMsg = 'Saving permission failed';
+
+  const customOnSuccess = () => {
+    dispatch(fetchActions());
+    dispatch(fetchRoleList());
+    dispatch(setPermRequestSuccess());
+    if (successCb) {
+      successCb();
+    }
+  };
+  const customOnError = () => {
+    dispatch(setPermRequestFailure());
+    if (errorCb) {
+      errorCb();
+    }
+  };
+
+  dispatch(makePermRequest());
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+export const removeActionPermission = (successCb, errorCb) => (
+  dispatch,
+  getState
+) => {
+  const isOk = getConfirmation('This will remove the permission for this role');
+  if (!isOk) return;
+
+  const {
+    common: { currentAction },
+    permissions: { permissionEdit },
+  } = getState().actions;
+
+  const { role, filter } = permissionEdit;
+
+  const upQuery = getDropActionPermissionQuery(role, currentAction);
+  const downQuery = getCreateActionPermissionQuery(
+    { role, filter },
+    currentAction
+  );
+
+  const migrationName = 'removing_action_perm';
+  const requestMsg = 'Removing permission...';
+  const successMsg = 'Permission removed successfully';
+  const errorMsg = 'Removing permission failed';
+
+  const customOnSuccess = () => {
+    dispatch(fetchActions());
+    dispatch(fetchRoleList());
+    dispatch(setPermRequestSuccess());
+    if (successCb) {
+      successCb();
+    }
+  };
+  const customOnError = () => {
+    dispatch(setPermRequestFailure());
+    if (errorCb) {
+      errorCb();
+    }
+  };
+
+  dispatch(makePermRequest());
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
     migrationName,
     customOnSuccess,
     customOnError,

@@ -1657,8 +1657,14 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       }
     }
 
-    const colDefaultWithQuotes = (colType === 'text' && !isPostgresFunction(colDefault)) ? `'${colDefault}'` : colDefault;
-    const originalColDefaultWithQuotes = (colType === 'text' && !isPostgresFunction(originalColDefault)) ? `'${originalColDefault}'` : originalColDefault;
+    const colDefaultWithQuotes =
+      colType === 'text' && !isPostgresFunction(colDefault)
+        ? `'${colDefault}'`
+        : colDefault;
+    const originalColDefaultWithQuotes =
+      colType === 'text' && !isPostgresFunction(originalColDefault)
+        ? `'${originalColDefault}'`
+        : originalColDefault;
 
     /* column default up/down migration */
     let columnDefaultUpQuery;
@@ -1701,37 +1707,37 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
 
     if (originalColDefault !== '') {
       columnDefaultDownQuery =
-          'ALTER TABLE ONLY ' +
-          '"' +
-          currentSchema +
-          '"' +
-          '.' +
-          '"' +
-          tableName +
-          '"' +
-          ' ALTER COLUMN ' +
-          '"' +
-          colName +
-          '"' +
-          ' SET DEFAULT ' +
-          originalColDefaultWithQuotes +
-          ';';
+        'ALTER TABLE ONLY ' +
+        '"' +
+        currentSchema +
+        '"' +
+        '.' +
+        '"' +
+        tableName +
+        '"' +
+        ' ALTER COLUMN ' +
+        '"' +
+        colName +
+        '"' +
+        ' SET DEFAULT ' +
+        originalColDefaultWithQuotes +
+        ';';
     } else {
       // there was no default value originally. so drop default.
       columnDefaultDownQuery =
-          'ALTER TABLE ONLY ' +
-          '"' +
-          currentSchema +
-          '"' +
-          '.' +
-          '"' +
-          tableName +
-          '"' +
-          ' ALTER COLUMN ' +
-          '"' +
-          colName +
-          '"' +
-          ' DROP DEFAULT;';
+        'ALTER TABLE ONLY ' +
+        '"' +
+        currentSchema +
+        '"' +
+        '.' +
+        '"' +
+        tableName +
+        '"' +
+        ' ALTER COLUMN ' +
+        '"' +
+        colName +
+        '"' +
+        ' DROP DEFAULT;';
     }
 
     // check if default is unchanged and then do a drop. if not skip

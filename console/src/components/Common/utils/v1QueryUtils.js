@@ -93,6 +93,42 @@ export const getSetCustomRootFieldsQuery = (
   };
 };
 
+export const getFetchAllRolesQuery = () => ({
+  type: 'select',
+  args: {
+    table: {
+      schema: 'hdb_catalog',
+      name: 'hdb_role',
+    },
+    columns: ['role_name'],
+  },
+});
+
+export const getCreateActionPermissionQuery = (def, actionName) => {
+  return {
+    type: 'create_action_permission',
+    args: {
+      action: actionName,
+      role: def.role,
+      definition: {
+        select: {
+          filter: def.filter,
+        },
+      },
+    },
+  };
+};
+
+export const getDropActionPermissionQuery = (role, actionName) => {
+  return {
+    type: 'drop_action_permission',
+    args: {
+      action: actionName,
+      role,
+    },
+  };
+};
+
 export const getRunSqlQuery = (sql, shouldCascade) => {
   return {
     type: 'run_sql',
