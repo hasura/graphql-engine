@@ -309,6 +309,10 @@ article ol ol {
   color: #D66700;
 }
 
+#docs-header-actions .social_icons_wrapper .social_icons iframe {
+  height: 20px;
+}
+
 #docs-header-actions .tooltip {
   position: relative;
 }
