@@ -96,6 +96,11 @@
      schema: hge_bench
      name: latest_results
 
+- type: track_table
+  args:
+     schema: hge_bench
+     name: avg_query_max_rps
+
 - type: create_object_relationship
   args:
     table:

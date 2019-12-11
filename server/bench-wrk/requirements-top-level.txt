@@ -13,4 +13,5 @@ dash-core-components
 graphene==3.0.dev20190817210753
 matplotlib
 pandas
+boto3
 seaborn

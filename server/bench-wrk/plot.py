@@ -22,6 +22,8 @@ from io import BytesIO
 import sys
 import argparse
 import base64
+from urllib.parse import urlparse
+import boto3
 
 def as_pairs(l, pair_size=2):
     if len(l) < pair_size:
@@ -64,6 +66,7 @@ def throughput_figure(df):
         xlabel='Version/Docker image',
         ylabel='Throughput (req/s)'
     )
+    plt.ylim(0,None)
     out_fig = gen_plot_figure_data(plt)
     plt.close()
     return out_fig
@@ -76,6 +79,19 @@ def gen_plot_figure_data(plt):
     return "data:image/png;base64,{}".format(encoded)
 
 
+def uri_readlines(uri):
+    print('Latency file:', uri)
+    p = urlparse(uri)
+    if p.scheme == 'file':
+        return urlopen(req_results[0]['latencies_uri']).readlines()
+    elif p.scheme == 's3':
+        s3 = boto3.resource('s3')
+        obj = s3.Object(bucket_name=p.netloc, key=p.path.lstrip('/'))
+        with BytesIO() as data:
+            obj.download_fileobj(data)
+            return data.getvalue().splitlines()
+
+
 def violin_plot_data(latency_results, scenarios):
     y_label = 'latency (ms)'
     x_label = 'version'
@@ -85,9 +101,11 @@ def violin_plot_data(latency_results, scenarios):
     for (snro, req_results) in results:
         ver_info = snro['version'] or snro['docker_image'].split(':')[1]
         if req_results:
-            latencies = urlopen(req_results[0]['latencies_uri']).readlines()
+            latencies = uri_readlines(req_results[0]['latencies_uri'])
             for x in latencies:
-                val_ms = float(x.decode())/1000.0
+                if isinstance(x, bytes):
+                    x = x.decode()
+                val_ms = float(x)/1000.0
                 data.append({
                     y_label: val_ms,
                     x_label: ver_info,
@@ -414,7 +432,6 @@ def run_dash_server(bench_results):
         ]
     )
     def updateGraph(plot_type, query_name, rps_list, vers):
-        print(plot_type, query_name, rps_list, vers)
         rps_list = as_list(rps_list)
         def latency_scenarios():
             return [
@@ -438,7 +455,6 @@ def run_dash_server(bench_results):
             scenarios = throughput_scenarios()
         else:
             scenarios = latency_scenarios()
-        print(scenarios)
 
         if plot_type == 'histogram':
             return get_hdrhistogram_figure(scenarios)

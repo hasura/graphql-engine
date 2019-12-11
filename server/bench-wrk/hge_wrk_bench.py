@@ -15,9 +15,16 @@ from colorama import Fore, Style
 from plot import run_dash_server
 import webbrowser
 import pathlib
+from urllib.parse import urlparse, urlunparse
+import boto3
 
 
 fileLoc = os.path.dirname(os.path.abspath(__file__))
+
+def uri_path_join(uri, *paths):
+    p = urlparse(uri)
+    new_path = os.path.join(p.path, *paths)
+    return urlunparse(p._replace(path=new_path))
 
 
 class HGEWrkBench(HGETestSetup):
@@ -70,6 +77,16 @@ class HGEWrkBench(HGETestSetup):
         return '{}:{}'.format(os.geteuid(), os.getegid())
 
     def wrk2_test(self, query, rps):
+        def upload_files(files):
+            if self.upload_root_uri:
+                p = urlparse(self.upload_root_uri)
+                if p.scheme == 's3':
+                    bucket = p.netloc
+                    key = p.path.lstrip('/')
+                    s3_client = boto3.client('s3')
+                    for (f, f_key) in files:
+                        s3_client.upload_file(f, bucket, os.path.join(key, f_key))
+
         query_str = graphql.print_ast(query)
         params = self.get_wrk2_params()
         print(Fore.GREEN + "Running benchmark wrk2 for at {} req/s (duration: {}) for query\n".format(rps, params['duration']), query_str +  Style.RESET_ALL)
@@ -77,8 +94,8 @@ class HGEWrkBench(HGETestSetup):
         graphql_url = self.hge.url + '/v1/graphql'
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         results_dir = self.results_root_dir
-        for path in [str(rps), timestamp]:
-            results_dir = os.path.join(results_dir, path)
+        tests_path = [str(rps), timestamp]
+        results_dir = os.path.join(results_dir, *tests_path)
         os.makedirs(results_dir, exist_ok=True)
         wrk2_command = [
             'wrk2',
@@ -117,7 +134,28 @@ class HGEWrkBench(HGETestSetup):
         with open(summary_file) as f:
             summary = json.load(f)
         latencies_file = os.path.join(results_dir, 'latencies')
-        self.insert_result(query, rps, summary, histogram, latencies_file)
+
+        def extract_data(v):
+            return v['data'] if isinstance(v, dict) and 'data' in v else v
+        tests_info = { k:extract_data(v) for (k, v) in self.gen_test_info(query, rps).items() }
+        tests_setup_file = os.path.join(results_dir, 'test_setup.json')
+        with open(tests_setup_file, 'w') as f:
+            f.write(json.dumps(tests_info, indent=2))
+
+        upload_files([
+            (x, os.path.join(*tests_path,y))
+            for (x,y) in [
+                    (summary_file, 'summary.json'),
+                    (latencies_file, 'latencies'),
+                    (histogram_file, 'latencies.hgrm'),
+                    (tests_setup_file, 'test_setup.json')
+            ]
+        ])
+        if self.upload_root_uri:
+            latencies_uri = uri_path_join(self.upload_root_uri, *tests_path, 'latencies')
+        else:
+            latencies_uri = pathlib.Path(latencies_file).as_uri()
+        self.insert_result(query, rps, summary, histogram, latencies_uri)
         return (summary, histogram)
 
     def get_latency_histogram(self, result, write_histogram_file):
@@ -217,9 +255,10 @@ class HGEWrkBench(HGETestSetup):
             user = self.get_current_user()
         )
         summary = json.loads(result)['summary']
-        self.max_rps = round(summary['requests']/float(duration))
-        self.insert_max_rps(query, self.max_rps)
-        return self.max_rps
+        max_rps = round(summary['requests']/float(duration))
+        self.insert_max_rps_result(query, max_rps)
+        print("Max RPS", max_rps)
+        return max_rps
 
     def get_version(self):
         script = os.path.join(fileLoc, 'gen-version.sh')
@@ -324,30 +363,28 @@ query results {
         threading.Thread(target=open_plot_in_browser).start()
         run_dash_server(self.get_results())
 
+    # Collect info about the test environment
+    def gen_test_info(self, query, rps):
+        test_info = dict()
+        self.set_cpu_info(test_info)
+        self.set_query_info(test_info, query)
+        self.set_version_info(test_info)
+        self.set_hge_args_env_vars(test_info)
+        test_info["requests_per_sec"] = rps
+        test_info['wrk2_parameters'] = self.get_wrk2_params()
+        return test_info
 
-    def gen_result_insert_var(self, query, rps, summary, latency_histogram, latencies_file):
-        insert_var = dict()
-        def set_latencies_uri():
-            insert_var['latencies_uri'] = pathlib.Path(latencies_file).as_uri()
-
-        def set_wrk_params():
-            insert_var['wrk2_parameters'] = self.get_wrk2_params()
-
+    def gen_result_insert_var(self, query, rps, summary, latency_histogram, latencies_uri):
+        insert_var = self.gen_test_info(query, rps)
         insert_var["summary"] = summary
-        insert_var["requests_per_sec"] = rps
         insert_var['latency_histogram'] = {
             'data' : latency_histogram
         }
-        self.set_cpu_info(insert_var)
-        self.set_query_info(insert_var, query)
-        self.set_version_info(insert_var)
-        self.set_hge_args_env_vars(insert_var)
-        set_wrk_params()
-        set_latencies_uri()
+        insert_var['latencies_uri'] = latencies_uri
         return insert_var
 
-    def insert_result(self, query, rps, summary, latency_histogram, latencies_file):
-        result_var = self.gen_result_insert_var(query, rps, summary, latency_histogram, latencies_file)
+    def insert_result(self, query, rps, summary, latency_histogram, latencies_uri):
+        result_var = self.gen_result_insert_var(query, rps, summary, latency_histogram, latencies_uri)
         insert_query = """
 mutation insertResult($result: hge_bench_results_insert_input!) {
   insert_hge_bench_results(objects: [$result]){
@@ -357,7 +394,7 @@ mutation insertResult($result: hge_bench_results_insert_input!) {
         variables = {'result': result_var}
         self.results_hge.graphql_q(insert_query, variables)
 
-    def insert_max_rps(self, query, max_rps):
+    def insert_max_rps_result(self, query, max_rps):
         result_var = self.gen_max_rps_insert_var(query, max_rps)
         insert_query = """
 mutation insertMaxRps($result: hge_bench_query_max_rps_insert_input!) {
@@ -390,18 +427,19 @@ mutation insertMaxRps($result: hge_bench_query_max_rps_insert_input!) {
 
 
     def run_query_benchmarks(self):
+        def get_results_root_dir(query):
+            if self.hge_docker_image:
+                ver_info = 'docker-tag-' + self.hge_docker_image.split(':')[1]
+            else:
+                ver_info = self.get_version()
+            query_name = query.name.value
+            results_root_dir = os.path.abspath(self.work_dir)
+            return os.path.join(results_root_dir, ver_info, query_name)
+
         for query in self.queries:
             try:
-                if self.hge_docker_image:
-                    ver_info = 'docker-tag-' + self.hge_docker_image.split(':')[1]
-                else:
-                    ver_info = self.get_version()
-                query_name = query.name.value
-                self.results_root_dir = os.path.abspath(self.work_dir)
-                for path in [ver_info, query_name]:
-                    self.results_root_dir = os.path.join( self.results_root_dir, path)
+                self.results_root_dir = get_results_root_dir(query)
                 max_rps = self.max_rps_test(query)
-                print("Max RPS", max_rps)
                 for rps in self.rps_steps:
                     # The tests should definitely not be running very close to or higher than maximum requests per second
                     if rps < int(0.6*max_rps):
@@ -443,21 +481,36 @@ class HGEWrkBenchArgs(HGETestSetupArgs):
         wrk_opts.add_argument('--queries-file', metavar='HASURA_BENCH_QUERIES_FILE', help='Queries file for benchmarks', default='queries.graphql')
         wrk_opts.add_argument('--connections', metavar='HASURA_BENCH_CONNECTIONS', help='Total number of open connections', default=50)
         wrk_opts.add_argument('--duration', metavar='HASURA_BENCH_DURATION', help='Duration of tests in seconds', default=300)
+        wrk_opts.add_argument('--upload-root-uri', metavar='HASURA_BENCH_UPLOAD_ROOT_URI', help='The URI to which the latency results should be uploaded', required=False)
         wrk_opts.add_argument('--results-hge-url', metavar='HASURA_BENCH_RESULTS_HGE_URL', help='The GraphQL engine to which the results should be uploaded', required=False)
         wrk_opts.add_argument('--results-hge-admin-secret', metavar='HASURA_BENCH_RESULTS_HGE_ADMIN_SECRET', help='Admin secret of the GraphQL engine to which the results should be uploaded', required=False)
         wrk_opts.add_argument('--skip-plots', help='Skip plotting', action='store_true', required=False)
         wrk_opts.add_argument('--run-benchmarks', metavar='HASURA_BENCH_RUN_BENCHMARKS', help='Whether benchmarks should be run or not', default=True, type=boolean_string)
 
+    def get_s3_caller_identity(self):
+        return boto3.client('sts').get_caller_identity()
+
     def parse_wrk_options(self):
-        self.connections, self.duration, self.graphql_queries_file, self.res_hge_url, self.res_hge_admin_secret, self.run_benchmarks = \
+        self.connections, self.duration, self.graphql_queries_file, self.res_hge_url, upload_root_uri, self.res_hge_admin_secret, self.run_benchmarks = \
             self.get_params([
                 ('connections', 'HASURA_BENCH_CONNECTIONS'),
                 ('duration', 'HASURA_BENCH_DURATION'),
                 ('queries_file', 'HASURA_BENCH_QUERIES_FILE'),
                 ('results_hge_url', 'HASURA_BENCH_RESULTS_HGE_URL'),
+                ('upload_root_uri', 'HASURA_BENCH_UPLOAD_ROOT_URI'),
                 ('results_hge_admin_secret', 'HASURA_BENCH_RESULTS_HGE_ADMIN_SECRET'),
                 ('run_benchmarks', 'HASURA_BENCH_RUN_BENCHMARKS')
             ])
+        self.upload_root_uri = None
+        if upload_root_uri:
+            p = urlparse(upload_root_uri)
+            if p.scheme == 's3':
+                # Check if aws credentials are set
+                self.get_s3_caller_identity()
+            self.upload_root_uri = upload_root_uri
+
+
+
         self.skip_plots = self.parsed_args.skip_plots
 
 
@@ -476,10 +529,6 @@ class HGEWrkBenchWithArgs(HGEWrkBenchArgs, HGEWrkBench):
             connections = self.connections,
             duration = self.duration
         )
-        # TODO initialize values
-
-    # TODO Any extra argument passed after -- should go to GraphQL Engine
-    # Allow environmental variables to be passed to GraphQL Engine even if run as a docker image
 
 if __name__ == "__main__":
     bench = HGEWrkBenchWithArgs()
