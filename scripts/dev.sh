@@ -335,10 +335,7 @@ elif [ "$MODE" = "test" ]; then
   # These also depend on a running DB:
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
-    echo_pretty "Running migrate test"
-    HASURA_GRAPHQL_DATABASE_URL="$DB_URL" $TEST_INVOCATION --coverage --test-arguments "migrate"
-    echo_pretty "Running property test"
-    $TEST_INVOCATION --coverate --test-arguments "property"
+    HASURA_GRAPHQL_DATABASE_URL="$DB_URL" $TEST_INVOCATION --coverage
   fi
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then

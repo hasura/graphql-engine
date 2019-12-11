@@ -37,13 +37,19 @@ import           Hasura.Server.PGDump
 import           Hasura.Server.Query               (Run, RunCtx (..), peelRun)
 
 data TestCommand
-  = TCMigrate !RawConnInfo
-  | TCProperty
+  = TCMigrate !RawConnInfo -- ^ Run migrate tests
+  | TCProperty -- ^ Run property tests
 
-parseCommand :: ParserInfo TestCommand
-parseCommand =
-  info (helper <*> parseSubCommand) $ fullDesc <> header "Hasura GraphQL Engine test suite"
+data TestArgs
+  = TANoCommand !RawConnInfo -- ^ Run all tests
+  | TACommand !TestCommand -- ^ Run specified tests
+
+parseArgs :: ParserInfo TestArgs
+parseArgs =
+  info (helper <*> (parseNoCommand <|> (TACommand <$> parseSubCommand))) $
+    fullDesc <> header "Hasura GraphQL Engine test suite"
   where
+    parseNoCommand = TANoCommand <$> parseRawConnInfo
     parseSubCommand = subparser
                      ( command "migrate" (info (helper <*> (TCMigrate <$> parseRawConnInfo))
                          (progDesc "Run catalog migrate tests")
@@ -55,11 +61,14 @@ parseCommand =
 
 main :: IO ()
 main = do
-  testCommand <- execParser parseCommand
-  case testCommand of
-    TCMigrate pgConnOptions -> do
+  testArgs <- execParser parseArgs
+  case testArgs of
+    TANoCommand pgConnOptions           -> runMigrateTests pgConnOptions >> runPropertyTests
+    TACommand (TCMigrate pgConnOptions) -> runMigrateTests pgConnOptions
+    TACommand TCProperty                -> runPropertyTests
+  where
+    runMigrateTests pgConnOptions = do
       env <- getEnvironment
-
       rawPGConnInfo <- flip onLeft printErrExit $ runWithEnv env (mkRawConnInfo pgConnOptions)
       pgConnInfo <- flip onLeft printErrExit $ mkConnInfo rawPGConnInfo
       pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
@@ -110,23 +119,10 @@ main = do
               secondDump <- dumpMetadata
               secondDump `shouldBe` firstDump
 
-    TCProperty -> do
+    runPropertyTests = do
       putStrLn "Running property tests"
-      passed <- runPropertyTests
+      passed <- isSuccess <$> quickCheckResult (withMaxSuccess 30 prop_replacemetadata)
       unless passed $ printErrExit "Property tests failed"
-
-  where
-    runHspec :: Spec -> IO ()
-    runHspec m = do
-      config <- Hspec.readConfig Hspec.defaultConfig []
-      Hspec.evaluateSummary =<< Hspec.runSpec m config
-
-    printErrExit :: String -> IO a
-    printErrExit = (*> exitFailure) . putStrLn
-
-    runPropertyTests :: IO Bool
-    runPropertyTests =
-      isSuccess <$> quickCheckResult (withMaxSuccess 30 prop_replacemetadata)
       where
         prop_replacemetadata =
           forAll (resize 3 genReplaceMetadata) $ \metadata ->
@@ -136,3 +132,11 @@ main = do
             in case eitherResult of
                  Left err -> counterexample err False
                  Right _  -> property True
+
+    runHspec :: Spec -> IO ()
+    runHspec m = do
+      config <- Hspec.readConfig Hspec.defaultConfig []
+      Hspec.evaluateSummary =<< Hspec.runSpec m config
+
+    printErrExit :: String -> IO a
+    printErrExit = (*> exitFailure) . putStrLn
