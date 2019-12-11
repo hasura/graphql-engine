@@ -9,9 +9,12 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
+	"github.com/hasura/graphql-engine/cli/util"
 	"os"
 	"sync"
+	"text/tabwriter"
 	"time"
+	s "strings"
 
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
@@ -1477,12 +1480,37 @@ func (m *Migrate) addDryRun(ret <-chan interface{}) error {
 			migr := r.(*Migration)
 			if migr.Body != nil {
 				version := int64(migr.Version)
+				fileName := migr.Identifier
+				fileType := convertBool(s.HasSuffix(fileName, "down.yaml"))
 				if version != lastInsertVersion {
-					fmt.Println(version)
+					status := printDryRunStatus(version, fileName, fileType)
+					fmt.Println(status.String())
 					lastInsertVersion = version
 				}
 			}
 		}
 	}
 	return nil
+}
+
+func printDryRunStatus(v int64, n, t string) *bytes.Buffer {
+	out := new(tabwriter.Writer)
+	buf := &bytes.Buffer{}
+	out.Init(buf, 0, 8, 2, ' ', 0)
+	w := util.NewPrefixWriter(out)
+	w.Write(util.LEVEL_0, "VERSION\tType\tName\n")
+	w.Write(util.LEVEL_0, "%d\t%s\t%s\n",
+		v, t, n)
+	out.Flush()
+	return buf
+}
+
+func convertBool(ok bool) string {
+	switch ok {
+	case true:
+		return "down"
+	case false:
+		return "up"
+	}
+	return ""
 }
