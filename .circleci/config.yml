@@ -222,9 +222,10 @@ jobs:
     <<: *test_server
     environment:
       PG_VERSION: "12"
+      POSTGIS_VERSION: "3.0.0"
     docker:
     - image: hasura/graphql-engine-server-builder:20190826
-    - image: circleci/postgres:12-alpine-postgis
+    - image: hasura/postgres-12.0-alpine-postgis3:6cbd863d47c0
       <<: *test_pg_env
  
   test_server_pg_11:
