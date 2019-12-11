@@ -101,7 +101,7 @@ cd "$PROJECT_ROOT"
 # Use pyenv if available to set an appropriate python version that will work with pytests etc.
 if command -v pyenv >/dev/null; then
   # For now I guess use the greatest python3 >= 3.5
-  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '{if($1>=3.5)print$1}' | tail -n1) 
+  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '{if($1>=3.5)print$1}' | tail -n1)
   if [ -z "$v" ]; then
     echo_error 'Please `pyenv install` a version of python >= 3.5 so we can use it'
     exit 2
@@ -335,7 +335,10 @@ elif [ "$MODE" = "test" ]; then
   # These also depend on a running DB:
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
-    HASURA_GRAPHQL_DATABASE_URL="$DB_URL" $TEST_INVOCATION --coverage
+    echo_pretty "Running migrate test"
+    HASURA_GRAPHQL_DATABASE_URL="$DB_URL" $TEST_INVOCATION --coverage --test-arguments "migrate"
+    echo_pretty "Running property test"
+    $TEST_INVOCATION --coverate --test-arguments "property"
   fi
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then

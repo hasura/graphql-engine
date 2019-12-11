@@ -28,72 +28,92 @@ import           Hasura.RQL.Types                  (QErr, SQLGenCtx (..),
                                                     adminUserInfo,
                                                     emptySchemaCache,
                                                     successMsg)
-import           Hasura.Server.Init                (mkConnInfo, mkRawConnInfo,
+import           Hasura.Server.Init                (RawConnInfo, mkConnInfo,
+                                                    mkRawConnInfo,
                                                     parseRawConnInfo,
                                                     runWithEnv)
 import           Hasura.Server.Migrate
 import           Hasura.Server.PGDump
 import           Hasura.Server.Query               (Run, RunCtx (..), peelRun)
 
+data TestCommand
+  = TCMigrate !RawConnInfo
+  | TCProperty
+
+parseCommand :: ParserInfo TestCommand
+parseCommand =
+  info (helper <*> parseSubCommand) $ fullDesc <> header "Hasura GraphQL Engine test suite"
+  where
+    parseSubCommand = subparser
+                     ( command "migrate" (info (helper <*> (TCMigrate <$> parseRawConnInfo))
+                         (progDesc "Run catalog migrate tests")
+                       )
+                       <> command "property" (info (pure TCProperty)
+                            (progDesc "Run property tests")
+                          )
+                     )
+
 main :: IO ()
 main = do
-  pgConnOptions <- execParser $ info (helper <*> parseRawConnInfo) $
-    fullDesc <> header "Hasura GraphQL Engine test suite"
-  env <- getEnvironment
+  testCommand <- execParser parseCommand
+  case testCommand of
+    TCMigrate pgConnOptions -> do
+      env <- getEnvironment
 
-  rawPGConnInfo <- flip onLeft printErrExit $ runWithEnv env (mkRawConnInfo pgConnOptions)
-  pgConnInfo <- flip onLeft printErrExit $ mkConnInfo rawPGConnInfo
-  pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
+      rawPGConnInfo <- flip onLeft printErrExit $ runWithEnv env (mkRawConnInfo pgConnOptions)
+      pgConnInfo <- flip onLeft printErrExit $ mkConnInfo rawPGConnInfo
+      pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
 
-  httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-  let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
-      pgContext = PGExecCtx pgPool Q.Serializable
+      httpManager <- HTTP.newManager HTTP.tlsManagerSettings
+      let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
+          pgContext = PGExecCtx pgPool Q.Serializable
 
-      runAsAdmin :: Run a -> IO (Either QErr a)
-      runAsAdmin = runExceptT . fmap fst . peelRun emptySchemaCache runContext pgContext Q.ReadWrite
+          runAsAdmin :: Run a -> IO (Either QErr a)
+          runAsAdmin = runExceptT . fmap fst . peelRun emptySchemaCache runContext pgContext Q.ReadWrite
 
-  runHspec $ do
-    describe "Hasura.Server.Migrate" $ do
-      let dropAndInit time = runAsAdmin (dropCatalog *> migrateCatalog time)
+      runHspec $ do
+        describe "Hasura.Server.Migrate" $ do
+          let dropAndInit time = runAsAdmin (dropCatalog *> migrateCatalog time)
 
-      describe "migrateCatalog" $ do
-        it "initializes the catalog" $ do
-          (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
+          describe "migrateCatalog" $ do
+            it "initializes the catalog" $ do
+              (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
 
-        it "is idempotent" $ do
-          let dumpSchema = runAsAdmin $
-                execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
-          time <- getCurrentTime
-          dropAndInit time `shouldReturn` Right MRInitialized
-          firstDump <- dumpSchema
-          firstDump `shouldSatisfy` isRight
-          dropAndInit time `shouldReturn` Right MRInitialized
-          secondDump <- dumpSchema
-          secondDump `shouldBe` firstDump
+            it "is idempotent" $ do
+              let dumpSchema = runAsAdmin $
+                    execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
+              time <- getCurrentTime
+              dropAndInit time `shouldReturn` Right MRInitialized
+              firstDump <- dumpSchema
+              firstDump `shouldSatisfy` isRight
+              dropAndInit time `shouldReturn` Right MRInitialized
+              secondDump <- dumpSchema
+              secondDump `shouldBe` firstDump
 
-      describe "recreateSystemMetadata" $ do
-        let dumpMetadata = runAsAdmin $
-              execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo
+          describe "recreateSystemMetadata" $ do
+            let dumpMetadata = runAsAdmin $
+                  execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo
 
-        it "is idempotent" $ do
-          (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
-          firstDump <- dumpMetadata
-          firstDump `shouldSatisfy` isRight
-          runAsAdmin recreateSystemMetadata `shouldReturn` Right ()
-          secondDump <- dumpMetadata
-          secondDump `shouldBe` firstDump
+            it "is idempotent" $ do
+              (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
+              firstDump <- dumpMetadata
+              firstDump `shouldSatisfy` isRight
+              runAsAdmin recreateSystemMetadata `shouldReturn` Right ()
+              secondDump <- dumpMetadata
+              secondDump `shouldBe` firstDump
 
-        it "does not create any objects affected by ClearMetadata" $ do
-          (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
-          firstDump <- dumpMetadata
-          firstDump `shouldSatisfy` isRight
-          runAsAdmin (runClearMetadata ClearMetadata) `shouldReturn` Right successMsg
-          secondDump <- dumpMetadata
-          secondDump `shouldBe` firstDump
+            it "does not create any objects affected by ClearMetadata" $ do
+              (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
+              firstDump <- dumpMetadata
+              firstDump `shouldSatisfy` isRight
+              runAsAdmin (runClearMetadata ClearMetadata) `shouldReturn` Right successMsg
+              secondDump <- dumpMetadata
+              secondDump `shouldBe` firstDump
 
-  putStrLn "Running property tests"
-  passed <- runPropertyTests
-  unless passed $ printErrExit "Property tests failed"
+    TCProperty -> do
+      putStrLn "Running property tests"
+      passed <- runPropertyTests
+      unless passed $ printErrExit "Property tests failed"
 
   where
     runHspec :: Spec -> IO ()
