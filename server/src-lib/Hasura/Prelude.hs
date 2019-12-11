@@ -13,8 +13,7 @@ module Hasura.Prelude
   ) where
 
 import           Control.Applicative               as M (Alternative (..))
-import           Control.Arrow                     as M (first, second, (&&&),
-                                                         (***))
+import           Control.Arrow                     as M (first, second, (&&&), (***))
 import           Control.Monad                     as M (void, when)
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
@@ -24,24 +23,16 @@ import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M
 import           Data.Bool                         as M (bool)
 import           Data.Data                         as M (Data (..))
-import           Data.Either                       as M (lefts,
-                                                         partitionEithers,
-                                                         rights)
-import           Data.Foldable                     as M (asum, foldrM, for_,
-                                                         toList, traverse_)
+import           Data.Either                       as M (lefts, partitionEithers, rights)
+import           Data.Foldable                     as M (asum, foldrM, for_, toList, traverse_)
 import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))
 import           Data.Hashable                     as M (Hashable)
-import           Data.List                         as M (find, findIndex,
-                                                         foldl', group,
-                                                         intercalate, intersect,
-                                                         lookup, sort, sortBy,
-                                                         sortOn, union, unionBy,
-                                                         (\\))
-import           Data.Maybe                        as M (catMaybes, fromMaybe,
-                                                         isJust, isNothing,
-                                                         listToMaybe, mapMaybe,
-                                                         maybeToList)
+import           Data.List                         as M (find, findIndex, foldl', group,
+                                                         intercalate, intersect, lookup, sort,
+                                                         sortBy, sortOn, union, unionBy, (\\))
+import           Data.Maybe                        as M (catMaybes, fromMaybe, isJust, isNothing,
+                                                         listToMaybe, mapMaybe, maybeToList)
 import           Data.Ord                          as M (comparing)
 import           Data.Semigroup                    as M (Semigroup (..))
 import           Data.Sequence                     as M (Seq)
@@ -50,8 +41,7 @@ import           Data.Text                         as M (Text)
 import           Data.Traversable                  as M (for)
 import           Data.Word                         as M (Word64)
 import           GHC.Generics                      as M (Generic)
-import           Prelude                           as M hiding (fail, init,
-                                                         lookup)
+import           Prelude                           as M hiding (fail, init, lookup)
 import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
 

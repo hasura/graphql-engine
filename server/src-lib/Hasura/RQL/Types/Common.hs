@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
        , WithTable(..)
-       , ColVals
+       , ColumnValues
        , MutateResp(..)
        , ForeignKey(..)
        , CustomColumnNames
@@ -162,12 +162,12 @@ instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
 
-type ColVals = HM.HashMap PGCol Value
+type ColumnValues a = HM.HashMap PGCol a
 
-data MutateResp
+data MutateResp a
   = MutateResp
   { _mrAffectedRows     :: !Int
-  , _mrReturningColumns :: ![ColVals]
+  , _mrReturningColumns :: ![ColumnValues a]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 

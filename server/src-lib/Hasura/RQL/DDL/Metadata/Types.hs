@@ -410,7 +410,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
       []   -> Nothing
       list -> Just $ (name,) $ AO.array $ map f list
 
-    maybeSetToMaybeOrdPair :: Maybe ColVals -> Maybe (Text, AO.Value)
+    maybeSetToMaybeOrdPair :: Maybe (ColumnValues Value) -> Maybe (Text, AO.Value)
     maybeSetToMaybeOrdPair set = set >>= \colVals -> if colVals == HM.empty then Nothing
                                       else Just ("set", AO.toOrdered colVals)
 

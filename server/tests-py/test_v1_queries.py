@@ -633,6 +633,9 @@ class TestCreatePermission(DefaultTestQueries):
     def test_create_permission_user_role_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_article_permission_role_user.yaml')
 
+    def test_create_author_insert_permission_long_role(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_author_insert_permission_long_role.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/permissions"
