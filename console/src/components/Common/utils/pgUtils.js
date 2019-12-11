@@ -69,6 +69,10 @@ export const getTrackedTables = tables => {
   return tables.filter(t => t.is_table_tracked);
 };
 
+export const getUntrackedTables = tables => {
+  return tables.filter(t => !t.is_table_tracked);
+};
+
 export const getOnlyTables = tablesOrViews => {
   return tablesOrViews.filter(t => checkIfTable(t));
 };
@@ -211,8 +215,14 @@ export const getTableCheckConstraints = table => {
   return table.check_constraints;
 };
 
+export const getCheckConstraintName = constraint => {
+  return constraint.constraint_name;
+};
+
 export const findTableCheckConstraint = (checkConstraints, constraintName) => {
-  return checkConstraints.find(c => c.constraint_name === constraintName);
+  return checkConstraints.find(
+    c => getCheckConstraintName(c) === constraintName
+  );
 };
 
 /*** Function utils ***/

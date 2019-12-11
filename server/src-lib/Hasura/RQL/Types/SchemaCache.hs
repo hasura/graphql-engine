@@ -55,6 +55,7 @@ module Hasura.RQL.Types.SchemaCache
        , getCols
        , getRels
        , getComputedFieldInfos
+       , possibleNonColumnGraphQLFields
 
        , isPGColInfo
        , RelInfo(..)
@@ -127,6 +128,7 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
@@ -142,8 +144,8 @@ import           Language.Haskell.TH.Syntax        (Lift)
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
-import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
+import qualified Language.GraphQL.Draft.Syntax     as G
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
@@ -175,6 +177,18 @@ $(deriveToJSON
 $(makePrisms ''FieldInfo)
 
 type FieldInfoMap columnInfo = M.HashMap FieldName (FieldInfo columnInfo)
+
+possibleNonColumnGraphQLFields :: FieldInfoMap PGColumnInfo -> [G.Name]
+possibleNonColumnGraphQLFields fields =
+  flip concatMap (M.toList fields) $ \case
+    (_, FIColumn _)             -> []
+    (_, FIRelationship relInfo) ->
+      let relationshipName = G.Name $ relNameToTxt $ riName relInfo
+      in case riType relInfo of
+           ObjRel -> [relationshipName]
+           ArrRel -> [relationshipName, relationshipName <> "_aggregate"]
+    (_, FIComputedField info) ->
+      pure $ G.Name $ computedFieldNameToText $ _cfiName info
 
 getCols :: FieldInfoMap columnInfo -> [columnInfo]
 getCols = mapMaybe (^? _FIColumn) . M.elems
@@ -366,46 +380,25 @@ $(makeLenses ''TableInfo)
 
 checkForFieldConflict
   :: (MonadError QErr m)
-  => TableInfo a
+  => TableInfo PGColumnInfo
   -> FieldName
   -> m ()
-checkForFieldConflict tabInfo f =
-  case M.lookup f (_tiFieldInfoMap tabInfo) of
+checkForFieldConflict tableInfo f = do
+  case M.lookup f fieldInfoMap of
     Just _ -> throw400 AlreadyExists $ mconcat
-      [ "column/relationship " <>> f
-      , " of table " <>> _tiName tabInfo
+      [ "column/relationship/computed field " <>> f
+      , " of table " <>> tableName
       , " already exists"
       ]
     Nothing -> return ()
-
-data FunctionType
-  = FTVOLATILE
-  | FTIMMUTABLE
-  | FTSTABLE
-  deriving (Eq)
-
-$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
-
-funcTypToTxt :: FunctionType -> T.Text
-funcTypToTxt FTVOLATILE  = "VOLATILE"
-funcTypToTxt FTIMMUTABLE = "IMMUTABLE"
-funcTypToTxt FTSTABLE    = "STABLE"
-
-instance Show FunctionType where
-  show = T.unpack . funcTypToTxt
-
-data FunctionInfo
-  = FunctionInfo
-  { fiName          :: !QualifiedFunction
-  , fiSystemDefined :: !SystemDefined
-  , fiType          :: !FunctionType
-  , fiInputArgs     :: !(Seq.Seq FunctionArg)
-  , fiReturnType    :: !QualifiedTable
-  , fiDeps          :: ![SchemaDependency]
-  , fiDescription   :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
+  when (f `elem` customColumnFields) $
+    throw400 AlreadyExists $
+    "custom column name " <> f <<> " of table " <> tableName <<> " already exists"
+  where
+    tableName = _tiName tableInfo
+    fieldInfoMap = _tiFieldInfoMap tableInfo
+    customColumnFields =
+      map (FieldName . G.unName . pgiName) $ getCols fieldInfoMap
 
 type TableCache columnInfo = M.HashMap QualifiedTable (TableInfo columnInfo) -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
@@ -434,7 +427,7 @@ removeFromDepMap =
 
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
-  deriving (Show, Eq, Hashable, ToJSON, FromJSON)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, FromJSON)
 
 initSchemaCacheVer :: SchemaCacheVer
 initSchemaCacheVer = SchemaCacheVer 0
@@ -677,8 +670,8 @@ delEventTriggerFromCache qt trn = do
 
 addFunctionToCache
   :: (QErrM m, CacheRWM m)
-  => FunctionInfo -> m ()
-addFunctionToCache fi = do
+  => FunctionInfo -> [SchemaDependency] -> m ()
+addFunctionToCache fi deps = do
   sc <- askSchemaCache
   let functionCache = scFunctions sc
   case M.lookup fn functionCache of
@@ -690,7 +683,6 @@ addFunctionToCache fi = do
   where
     fn = fiName fi
     objId = SOFunction $ fiName fi
-    deps = fiDeps fi
 
 askFunctionInfo
   :: (CacheRM m, QErrM m)

@@ -41,8 +41,9 @@ common common-all
     ApplicativeDo BangPatterns ConstraintKinds DeriveDataTypeable DeriveFoldable DeriveFunctor
     DeriveGeneric DeriveLift DeriveTraversable EmptyCase FlexibleContexts FlexibleInstances
     FunctionalDependencies GeneralizedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses
-    MultiWayIf NoImplicitPrelude OverloadedStrings QuasiQuotes RankNTypes ScopedTypeVariables
-    StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies
+    MultiWayIf NoImplicitPrelude OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes
+    ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications
+    TypeFamilies TypeOperators
 
 common common-exe
   ghc-options:
@@ -57,6 +58,7 @@ library
   import: common-all
   hs-source-dirs:      src-lib
   build-depends:       base
+                     , lifted-base
                      , pg-client
                      , text
                      , text-builder >= 0.6
@@ -86,6 +88,7 @@ library
                      , wai
                      , postgresql-binary
                      , process
+                     , http-client-tls
 
                      -- Encoder related
                      , uuid
@@ -149,6 +152,7 @@ library
                      , stm-containers
                      , list-t
                      , async
+                     , lifted-async
 
                      -- logging related
                      , base64-bytestring >= 1.0
@@ -171,40 +175,59 @@ library
                      , filepath >= 1.4
                      , mime-types >= 0.1
 
+                     -- for handling posix signals for graceful shutdown
+                     , unix
                      -- HTTP compression
                      , zlib
 
-  exposed-modules:     Hasura.Prelude
-                     , Hasura.Logging
-                     , Hasura.EncJSON
+                     -- caching
+                     , psqueues >= 0.2
+
+  exposed-modules:     Control.Monad.Stateless
+
+                     , Hasura.Prelude
+                     , Hasura.App
                      , Hasura.Db
-                     , Hasura.Cache
+                     , Hasura.Logging
+                     , Hasura.HTTP
 
                      , Hasura.Server.App
                      , Hasura.Server.Auth
-                     , Hasura.Server.Auth.JWT
                      , Hasura.Server.Init
-                     , Hasura.Server.Context
-                     , Hasura.Server.Middleware
-                     , Hasura.Server.Logging
                      , Hasura.Server.Query
                      , Hasura.Server.Utils
-                     , Hasura.Server.Cors
                      , Hasura.Server.Version
+                     , Hasura.Server.Logging
+                     , Hasura.Server.Context
+                     , Hasura.Server.Migrate
+                     , Hasura.Server.Compression
+                     , Hasura.Server.PGDump
+
+                     , Hasura.RQL.Types
+                     , Hasura.RQL.DDL.Metadata
+                     , Hasura.EncJSON
+
+  other-modules:       Hasura.Cache
+                     , Hasura.Cache
+                     , Hasura.Cache.Bounded
+                     , Hasura.Cache.Unbounded
+
+                     , Hasura.Server.Auth.JWT
+                     , Hasura.Server.Middleware
+                     , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
                      , Hasura.Server.Telemetry
                      , Hasura.Server.SchemaUpdate
-                     , Hasura.Server.PGDump
                      , Hasura.Server.Config
-                     , Hasura.Server.Compression
-                     , Hasura.Server.Migrate
                      , Hasura.Server.Migrate.Version
+                     , Hasura.Server.Auth.JWT.Internal
+                     , Hasura.Server.Auth.JWT.Logging
 
-                     , Hasura.RQL.Types
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.BoolExp
+                     , Hasura.RQL.Types.Function
                      , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
                      , Hasura.RQL.Types.Common
@@ -232,7 +255,6 @@ library
                      , Hasura.RQL.DDL.Schema.Function
                      , Hasura.RQL.DDL.Schema.Rename
                      , Hasura.RQL.DDL.Schema.Table
-                     , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.EventTrigger
                      , Hasura.RQL.DDL.Headers
@@ -298,8 +320,6 @@ library
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
 
-                     , Hasura.HTTP
-
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
@@ -319,33 +339,15 @@ library
                      , Hasura.SQL.Value
                      , Network.URI.Extended
 
-  other-modules:       Hasura.Server.Auth.JWT.Internal
-                     , Hasura.Server.Auth.JWT.Logging
-
 executable graphql-engine
   import: common-all, common-exe
   main-is:           Main.hs
   hs-source-dirs:    src-exec
-  build-depends:       base
-                     , warp >= 3.2
-                     , graphql-engine
-                     , aeson >= 1.0
-                     , bytestring >= 0.10
-                     , mtl
-                     , optparse-applicative >= 0.12
-                     , yaml
-                     , template-haskell >= 2.11 , time >= 1.6
-                     , text
-                     , lens
-                     , unordered-containers >= 0.2
-                     , pg-client
-                     , http-client
-                     , http-client-tls
-                     , stm
-                     , wreq
-                     , string-conversions
-                     , uuid
-                     , unix
+  build-depends:     base
+                   , graphql-engine
+                   , pg-client
+                   , text
+                   , bytestring
 
 test-suite graphql-engine-tests
   import: common-all, common-exe

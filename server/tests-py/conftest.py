@@ -1,6 +1,6 @@
 import pytest
 import time
-from context import HGECtx, HGECtxError, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient
+from context import HGECtx, HGECtxError, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf
 import threading
 import random
 from datetime import datetime
@@ -82,6 +82,14 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
+        "--test-jwk-url",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Run testcases for JWK url behaviour"
+    )
+
+    parser.addoption(
         "--accept",
         action="store_true",
         default=False,
@@ -101,14 +109,17 @@ def pytest_cmdline_preparse(config, args):
 
 
 def pytest_configure(config):
+    # Pytest has removed the global pytest.config
+    # As a solution we are going to store it in PytestConf.config
+    PytestConf.config = config
     if is_master(config):
-        config.hge_ctx_gql_server = HGECtxGQLServer()
         if not config.getoption('--hge-urls'):
             print("hge-urls should be specified")
         if not config.getoption('--pg-urls'):
             print("pg-urls should be specified")
         config.hge_url_list = config.getoption('--hge-urls')
         config.pg_url_list =  config.getoption('--pg-urls')
+        config.hge_ctx_gql_server = HGECtxGQLServer(config.hge_url_list)
         if config.getoption('-n', default=None):
             xdist_threads = config.getoption('-n')
             assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))

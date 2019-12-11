@@ -37,6 +37,7 @@ query_collections: []
 remote_schemas: []
 tables:
 - array_relationships: []
+  computed_fields: []
   configuration:
     custom_column_names: {}
     custom_root_fields:
@@ -88,12 +89,14 @@ tables:
   select_permissions: []
   table: test
   update_permissions: []
+version: 2
 `),
 	"empty-metadata": []byte(`allowlist: []
 functions: []
 query_collections: []
 remote_schemas: []
 tables: []
+version: 2
 `),
 }
 
@@ -199,11 +202,13 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	expectedStatus := migrate.NewStatus()
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:   1,
+		Name:      "create_table_test",
 		IsApplied: true,
 		IsPresent: true,
 	})
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:   2,
+		Name:      "add_table_test",
 		IsApplied: false,
 		IsPresent: true,
 	})
@@ -216,11 +221,13 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	expectedStatus = migrate.NewStatus()
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:   1,
+		Name:      "create_table_test",
 		IsApplied: true,
 		IsPresent: true,
 	})
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:   2,
+		Name:      "add_table_test",
 		IsApplied: true,
 		IsPresent: true,
 	})
@@ -233,11 +240,13 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	expectedStatus = migrate.NewStatus()
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:   1,
+		Name:      "create_table_test",
 		IsApplied: true,
 		IsPresent: true,
 	})
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:   2,
+		Name:      "add_table_test",
 		IsApplied: false,
 		IsPresent: true,
 	})
@@ -250,11 +259,13 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	expectedStatus = migrate.NewStatus()
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:   1,
+		Name:      "create_table_test",
 		IsApplied: false,
 		IsPresent: true,
 	})
 	expectedStatus.Append(&migrate.MigrationStatus{
 		Version:   2,
+		Name:      "add_table_test",
 		IsApplied: false,
 		IsPresent: true,
 	})
@@ -283,7 +294,7 @@ func mustWriteFile(t testing.TB, dir, file string, body string) {
 
 func compareMetadata(t testing.TB, metadataFile string, actualType string, serverVersion *semver.Version) {
 	var actualData []byte
-	c, err := semver.NewConstraint("<= v1.0.0-beta.9")
+	c, err := semver.NewConstraint("<= v1.0.0-beta.10")
 	if err != nil {
 		t.Fatal(err)
 	}

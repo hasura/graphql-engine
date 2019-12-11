@@ -6,6 +6,7 @@ module Hasura.RQL.DML.Mutation
   )
 where
 
+import           Data.Aeson
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict      as Map
@@ -48,20 +49,26 @@ mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
 mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
 mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
   -- Perform mutation and fetch unique columns
-  MutateResp _ colVals <- mutateAndFetchCols qt allCols q strfyNum
-  selCTE <- mkSelCTEFromColVals qt allCols colVals
+  MutateResp _ columnVals <- mutateAndFetchCols qt allCols q strfyNum
+  selCTE <- mkSelCTEFromColVals txtEncodedToSQLExp qt allCols columnVals
   let selWith = mkSelWith qt selCTE mutFlds False strfyNum
   -- Perform select query and fetch returning fields
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
+  where
+    txtEncodedToSQLExp colTy = pure . \case
+      TENull          -> S.SENull
+      TELit textValue ->
+        S.withTyAnn (unsafePGColumnToRepresentation colTy) $ S.SELit textValue
 
 
 mutateAndFetchCols
-  :: QualifiedTable
+  :: (FromJSON a)
+  => QualifiedTable
   -> [PGColumnInfo]
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
-  -> Q.TxE QErr MutateResp
+  -> Q.TxE QErr (MutateResp a)
 mutateAndFetchCols qt cols (cte, p) strfyNum =
   Q.getAltJ . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
@@ -90,8 +97,9 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
 
 mkSelCTEFromColVals
   :: (MonadError QErr m)
-  => QualifiedTable -> [PGColumnInfo] -> [ColVals] -> m S.CTE
-mkSelCTEFromColVals qt allCols colVals =
+  => (PGColumnType -> a -> m S.SQLExp)
+  -> QualifiedTable -> [PGColumnInfo] -> [ColumnValues a] -> m S.CTE
+mkSelCTEFromColVals parseFn qt allCols colVals =
   S.CTESelect <$> case colVals of
     [] -> return selNoRows
     _  -> do
@@ -109,7 +117,7 @@ mkSelCTEFromColVals qt allCols colVals =
         let pgCol = pgiColumn ci
         val <- onNothing (Map.lookup pgCol colVal) $
           throw500 $ "column " <> pgCol <<> " not found in returning values"
-        toTxtValue <$> parsePGScalarValue (pgiType ci) val
+        parseFn (pgiType ci) val
 
     selNoRows =
       S.mkSelect { S.selExtr = [S.selectStar]

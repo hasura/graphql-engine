@@ -257,9 +257,7 @@ const RawSQL = ({
           <h4 className={styles.subheading_text}>SQL Result:</h4>
           <div className={styles.tableContainer}>
             <table
-              className={`table table-bordered table-striped table-hover ${
-                styles.table
-              } `}
+              className={`table table-bordered table-striped table-hover ${styles.table} `}
             >
               <thead>
                 <tr>{getTableHeadings()}</tr>
@@ -301,7 +299,7 @@ const RawSQL = ({
         <label>
           <input
             checked={isCascadeChecked}
-            className={styles.add_mar_right_small}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
             id="cascade-checkbox"
             type="checkbox"
             onChange={() => {
@@ -336,7 +334,7 @@ const RawSQL = ({
         <label>
           <input
             checked={isTableTrackChecked}
-            className={styles.add_mar_right_small}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
             id="track-checkbox"
             type="checkbox"
             onChange={dispatchTrackThis}
@@ -481,9 +479,7 @@ const RawSQL = ({
           </div>
 
           <div
-            className={`${styles.padd_left_remove} ${
-              styles.add_mar_bottom
-            } col-xs-8`}
+            className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
           >
             {getTrackThisSection()}
             {getMetadataCascadeSection()}

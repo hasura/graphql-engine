@@ -8,4 +8,5 @@ args:
       DROP TABLE test cascade;
       DROP TABLE integer_column cascade;
       DROP TABLE "user" cascade;
+      DROP TABLE text_result cascade;
     cascade: true

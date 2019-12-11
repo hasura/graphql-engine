@@ -12,7 +12,7 @@ module Hasura.RQL.Types.Common
 
        , ToAesonPairs(..)
        , WithTable(..)
-       , ColVals
+       , ColumnValues
        , MutateResp(..)
        , ForeignKey(..)
        , CustomColumnNames
@@ -22,9 +22,6 @@ module Hasura.RQL.Types.Common
        , unNonEmptyText
        , adminText
        , rootText
-
-       , FunctionArgName(..)
-       , FunctionArg(..)
 
        , SystemDefined(..)
        , isSystemDefined
@@ -161,12 +158,12 @@ instance (ToAesonPairs a) => ToJSON (WithTable a) where
   toJSON (WithTable tn rel) =
     object $ ("table" .= tn):toAesonPairs rel
 
-type ColVals = HM.HashMap PGCol Value
+type ColumnValues a = HM.HashMap PGCol a
 
-data MutateResp
+data MutateResp a
   = MutateResp
   { _mrAffectedRows     :: !Int
-  , _mrReturningColumns :: ![ColVals]
+  , _mrReturningColumns :: ![ColumnValues a]
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 
@@ -184,19 +181,7 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
 instance Hashable ForeignKey
 
-newtype FunctionArgName =
-  FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Lift, DQuote, IsString)
-
 type CustomColumnNames = HM.HashMap PGCol G.Name
-
-data FunctionArg
-  = FunctionArg
-  { faName       :: !(Maybe FunctionArgName)
-  , faType       :: !QualifiedPGType
-  , faHasDefault :: !Bool
-  } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
 
 newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
   deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg)

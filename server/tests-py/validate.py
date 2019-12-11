@@ -2,6 +2,8 @@
 
 import pytest
 import ruamel.yaml as yaml
+from ruamel.yaml.compat import ordereddict, StringIO
+from ruamel.yaml.comments import CommentedMap
 import json
 import copy
 import graphql
@@ -14,7 +16,7 @@ import random
 import time
 import warnings
 
-from context import GQLWsClient
+from context import GQLWsClient, PytestConf
 
 def check_keys(keys, obj):
     for k in keys:
@@ -250,12 +252,15 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query):
     # consideration only the ordering that we care about:
     resp         = collapse_order_not_selset(resp_orig,         query)
     exp_response = collapse_order_not_selset(exp_response_orig, query)
-    matched = resp == exp_response
+    matched = equal_CommentedMap(resp, exp_response)
 
-    if pytest.config.getoption("--accept"):
+    if PytestConf.config.getoption("--accept"):
         print('skipping assertion since we chose to --accept new output')
     else:
-        assert matched, '\n' + yaml.dump({
+        yml = yaml.YAML()
+        # https://yaml.readthedocs.io/en/latest/example.html#output-of-dump-as-a-string  :
+        dump_str = StringIO()
+        yml.dump({
             # Keep strict received order when displaying errors:
             'response': resp_orig,
             'expected': exp_response_orig,
@@ -263,9 +268,30 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query):
               (lambda diff: 
                  "(results differ only in their order of keys)" if diff == {} else diff)
               (stringify_keys(jsondiff.diff(exp_response, resp)))
-        }, Dumper=yaml.RoundTripDumper )
+        }, stream=dump_str)
+        assert matched, dump_str.getvalue()
     return resp, matched  # matched always True unless --accept
 
+# This really sucks; newer ruamel made __eq__ ignore ordering:
+#   https://bitbucket.org/ruamel/yaml/issues/326/commentedmap-equality-no-longer-takes-into
+def equal_CommentedMap(m1, m2):
+    if isinstance(m1, list) and isinstance(m2, list):
+        return (len(m1) == len(m2) and all(equal_CommentedMap(x,y) for x,y in zip(m1,m2)))
+    elif isinstance(m1, dict) and isinstance(m2, dict):
+        # (see collapse_order_not_selset):
+        if isinstance(m1, (ordereddict, CommentedMap)) and \
+           isinstance(m2, (ordereddict, CommentedMap)):
+            m1_l = list(m1.items())
+            m2_l = list(m2.items())
+        else:
+            m1_l = sorted(list(m1.items()))
+            m2_l = sorted(list(m2.items()))
+        return (len(m1_l) == len(m2_l) and 
+                all(k1 == k2 and equal_CommentedMap(v1,v2) 
+                    for (k1,v1),(k2,v2) in zip(m1_l,m2_l)))
+    # else this is a scalar:
+    else:
+        return m1 == m2
 
 def check_query_f(hge_ctx, f, transport='http', add_auth=True):
     print("Test file: " + f)
@@ -275,14 +301,15 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
         # For `--accept`:
         should_write_back = False
 
-        # ruamel RoundTripLoader will preserve order so that we can test the
-        # JSON ordering property conforms to YAML spec.
-        # It also lets us write back the yaml nicely when we --accept.
-        conf = yaml.load(c, yaml.RoundTripLoader)
+        # ruamel will preserve order so that we can test the JSON ordering
+        # property conforms to YAML spec.  It also lets us write back the yaml
+        # nicely when we `--accept.`
+        yml = yaml.YAML()
+        conf = yml.load(c)
         if isinstance(conf, list):
             for ix, sconf in enumerate(conf):
                 actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth)
-                if pytest.config.getoption("--accept") and not matched:
+                if PytestConf.config.getoption("--accept") and not matched:
                     conf[ix]['response'] = actual_resp
                     should_write_back = True
         else:
@@ -291,7 +318,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
             actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth)
             # If using `--accept` write the file back out with the new expected
             # response set to the actual response we got:
-            if pytest.config.getoption("--accept") and not matched:
+            if PytestConf.config.getoption("--accept") and not matched:
                 conf['response'] = actual_resp
                 should_write_back = True
 
@@ -305,7 +332,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
                 "\n   NOTE: if this case was marked 'xfail' this won't be correct!"
             )
             c.seek(0)
-            c.write(yaml.dump(conf, Dumper=yaml.RoundTripDumper))
+            c.write(yml.dump(conf))
             c.truncate()
 
 

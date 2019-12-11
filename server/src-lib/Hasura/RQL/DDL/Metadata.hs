@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeApplications #-}
 module Hasura.RQL.DDL.Metadata
   ( TableMeta
 
@@ -54,6 +55,23 @@ import qualified Hasura.RQL.DDL.Permission          as Permission
 import qualified Hasura.RQL.DDL.QueryCollection     as Collection
 import qualified Hasura.RQL.DDL.Relationship        as Relationship
 import qualified Hasura.RQL.DDL.Schema              as Schema
+
+data MetadataVersion
+  = MVVersion1
+  | MVVersion2
+  deriving (Show, Eq, Lift)
+
+instance ToJSON MetadataVersion where
+  toJSON MVVersion1 = toJSON @Int 1
+  toJSON MVVersion2 = toJSON @Int 2
+
+instance FromJSON MetadataVersion where
+  parseJSON v = do
+    version :: Int <- parseJSON v
+    case version of
+      1 -> pure MVVersion1
+      2 -> pure MVVersion2
+      i -> fail $ "expected 1 or 2, encountered " ++ show i
 
 data ComputedFieldMeta
   = ComputedFieldMeta
@@ -129,6 +147,15 @@ instance FromJSON TableMeta where
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TableMeta)
 
+data FunctionsMetadata
+  = FMVersion1 ![QualifiedFunction]
+  | FMVersion2 ![Schema.TrackFunctionV2]
+  deriving (Show, Eq, Lift)
+
+instance ToJSON FunctionsMetadata where
+  toJSON (FMVersion1 qualifiedFunctions) = toJSON qualifiedFunctions
+  toJSON (FMVersion2 functionsV2)        = toJSON functionsV2
+
 data ClearMetadata
   = ClearMetadata
   deriving (Show, Eq, Lift)
@@ -150,31 +177,43 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
 
 runClearMetadata
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
-  adminOnly
   liftTx clearMetadata
   Schema.buildSchemaCacheStrict
   return successMsg
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqTables           :: ![TableMeta]
-  , aqFunctions        :: !(Maybe [QualifiedFunction])
+  { aqVersion          :: !MetadataVersion
+  , aqTables           :: ![TableMeta]
+  , aqFunctions        :: !(Maybe FunctionsMetadata)
   , aqRemoteSchemas    :: !(Maybe [AddRemoteSchemaQuery])
   , aqQueryCollections :: !(Maybe [Collection.CreateCollection])
   , aqAllowlist        :: !(Maybe [Collection.CollectionReq])
   } deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ReplaceMetadata)
+
+instance FromJSON ReplaceMetadata where
+  parseJSON = withObject "Object" $ \o -> do
+    version <- o .:? "version" .!= MVVersion1
+    ReplaceMetadata version
+      <$> o .: "tables"
+      <*> (o .:? "functions" >>= mapM (parseFunctions version))
+      <*> o .:? "remote_schemas"
+      <*> o .:? "query_collections"
+      <*> o .:? "allow_list"
+    where
+      parseFunctions = \case
+        MVVersion1 -> fmap FMVersion1 . parseJSON
+        MVVersion2 -> fmap FMVersion2 . parseJSON
 
 applyQP1
-  :: (QErrM m, UserInfoM m)
+  :: (QErrM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
-
-  adminOnly
+applyQP1 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowlist) = do
 
   withPathK "tables" $ do
 
@@ -201,7 +240,12 @@ applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
       checkMultipleDecls "computed fields" computedFields
 
   withPathK "functions" $
-    checkMultipleDecls "functions" functions
+    case mFunctionsMeta of
+      Nothing -> pure ()
+      Just (FMVersion1 qualifiedFunctions)   ->
+        checkMultipleDecls "functions" qualifiedFunctions
+      Just (FMVersion2 functionsV2) ->
+        checkMultipleDecls "functions" $ map Schema._tfv2Function functionsV2
 
   onJust mSchemas $ \schemas ->
       withPathK "remote_schemas" $
@@ -217,7 +261,6 @@ applyQP1 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
 
   where
     withTableName qt = withPathK (qualObjectToText qt)
-    functions = fromMaybe [] mFunctions
 
     checkMultipleDecls t l = do
       let dups = getDups l
@@ -239,7 +282,7 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = do
+applyQP2 (ReplaceMetadata _ tables mFunctionsMeta mSchemas mCollections mAllowlist) = do
 
   liftTx clearMetadata
   Schema.buildSchemaCacheStrict
@@ -287,18 +330,20 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
         subTableP2 (table ^. tmTable) False etc
 
   -- sql functions
-  withPathK "functions" $
-    indexedMapM_ (void . Schema.trackFunctionP2) functions
+  withPathK "functions" $ forM_ mFunctionsMeta $ \case
+      FMVersion1 qualifiedFunctions -> indexedForM_ qualifiedFunctions $
+        \qf -> void $ Schema.trackFunctionP2 qf Schema.emptyFunctionConfig
+      FMVersion2 functionsV2 -> indexedForM_ functionsV2 $
+        \(Schema.TrackFunctionV2 function config) -> void $ Schema.trackFunctionP2 function config
 
   -- query collections
   withPathK "query_collections" $
-    indexedForM_ collections $ \c ->
-    liftTx $ Collection.addCollectionToCatalog c systemDefined
+    indexedForM_ collections $ \c -> liftTx $ Collection.addCollectionToCatalog c systemDefined
 
   -- allow list
   withPathK "allowlist" $ do
-    indexedForM_ allowlist $ \(Collection.CollectionReq name) ->
-      liftTx $ Collection.addCollectionToAllowlistCatalog name
+    indexedForM_ allowlist $
+      \(Collection.CollectionReq name) -> liftTx $ Collection.addCollectionToAllowlistCatalog name
     -- add to cache
     Collection.refreshAllowlist
 
@@ -313,7 +358,6 @@ applyQP2 (ReplaceMetadata tables mFunctions mSchemas mCollections mAllowlist) = 
   return successMsg
 
   where
-    functions = fromMaybe [] mFunctions
     collections = fromMaybe [] mCollections
     allowlist = fromMaybe [] mAllowlist
     processPerms tabInfo perms =
@@ -382,8 +426,7 @@ fetchMetadata = do
         modMetaMap tmComputedFields computedFields
 
   -- fetch all functions
-  functions <- map (uncurry QualifiedObject) <$>
-    Q.catchE defaultTxErrorHandler fetchFunctions
+  functions <- FMVersion2 <$> Q.catchE defaultTxErrorHandler fetchFunctions
 
   -- fetch all custom resolvers
   remoteSchemas <- fetchRemoteSchemas
@@ -394,7 +437,7 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map Collection.CollectionReq <$> fetchAllowlists
 
-  return $ ReplaceMetadata (HMIns.elems postRelMap) (Just functions)
+  return $ ReplaceMetadata MVVersion2 (HMIns.elems postRelMap) (Just functions)
                            (Just remoteSchemas) (Just collections) (Just allowlist)
 
   where
@@ -452,13 +495,15 @@ fetchMetadata = do
               ORDER BY e.schema_name ASC, e.table_name ASC, e.name ASC
               |] () False
 
-    fetchFunctions =
-      Q.listQ [Q.sql|
-                SELECT function_schema, function_name
+    fetchFunctions = do
+      l <- Q.listQ [Q.sql|
+                SELECT function_schema, function_name, configuration::json
                 FROM hdb_catalog.hdb_function
                 WHERE is_system_defined = 'false'
                 ORDER BY function_schema ASC, function_name ASC
                     |] () False
+      pure $ flip map l $ \(sn, fn, Q.AltJ config) ->
+                            Schema.TrackFunctionV2 (QualifiedObject sn fn) config
 
     fetchCollections =
       map fromRow <$> Q.listQE defaultTxErrorHandler [Q.sql|
@@ -501,10 +546,9 @@ fetchMetadata = do
                           )
 
 runExportMetadata
-  :: (QErrM m, UserInfoM m, MonadTx m)
+  :: (QErrM m, MonadTx m)
   => ExportMetadata -> m EncJSON
-runExportMetadata _ = do
-  adminOnly
+runExportMetadata _ =
   encJFromJValue <$> liftTx fetchMetadata
 
 data ReloadMetadata
@@ -517,10 +561,9 @@ instance FromJSON ReloadMetadata where
 $(deriveToJSON defaultOptions ''ReloadMetadata)
 
 runReloadMetadata
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
   => ReloadMetadata -> m EncJSON
 runReloadMetadata _ = do
-  adminOnly
   Schema.buildSchemaCache
   return successMsg
 
@@ -534,10 +577,9 @@ instance FromJSON DumpInternalState where
 $(deriveToJSON defaultOptions ''DumpInternalState)
 
 runDumpInternalState
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, CacheRM m)
   => DumpInternalState -> m EncJSON
-runDumpInternalState _ = do
-  adminOnly
+runDumpInternalState _ =
   encJFromJValue <$> askSchemaCache
 
 
@@ -551,10 +593,9 @@ instance FromJSON GetInconsistentMetadata where
 $(deriveToJSON defaultOptions ''GetInconsistentMetadata)
 
 runGetInconsistentMetadata
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, CacheRM m)
   => GetInconsistentMetadata -> m EncJSON
 runGetInconsistentMetadata _ = do
-  adminOnly
   inconsObjs <- scInconsistentObjs <$> askSchemaCache
   return $ encJFromJValue $ object
                 [ "is_consistent" .= null inconsObjs
@@ -571,10 +612,9 @@ instance FromJSON DropInconsistentMetadata where
 $(deriveToJSON defaultOptions ''DropInconsistentMetadata)
 
 runDropInconsistentMetadata
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => DropInconsistentMetadata -> m EncJSON
 runDropInconsistentMetadata _ = do
-  adminOnly
   sc <- askSchemaCache
   let inconsSchObjs = map _moId $ scInconsistentObjs sc
   mapM_ purgeMetadataObj inconsSchObjs

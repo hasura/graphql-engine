@@ -6,6 +6,7 @@ module Hasura.RQL.Types.ComputedField where
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.Function
 import           Hasura.SQL.Types
 
 import           Control.Lens               hiding ((.=))
