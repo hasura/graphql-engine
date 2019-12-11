@@ -65,7 +65,7 @@ bindErrorA
   :: (ArrowChoice arr, ArrowKleisli m arr, ArrowError e arr, MonadError e m)
   => arr (m a) a
 bindErrorA = liftEitherA <<< arrM \m -> (Right <$> m) `catchError` (pure . Left)
-{-# INLINABLE bindErrorA #-}
+{-# INLINE bindErrorA #-}
 
 withRecordDependencies
   :: (ArrowWriter (Seq CollectedInfo) arr)

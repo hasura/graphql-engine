@@ -54,7 +54,6 @@ import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
-import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 
 buildRebuildableSchemaCache
@@ -64,9 +63,6 @@ buildRebuildableSchemaCache = do
   catalogMetadata <- liftTx fetchCatalogData
   result <- flip runReaderT CatalogSync $ Inc.build buildSchemaCacheRule (catalogMetadata, M.empty)
   pure $ RebuildableSchemaCache (Inc.result result) M.empty (Inc.rebuildRule result)
-
--- see Note [Specialization of buildRebuildableSchemaCache]
-{-# SPECIALIZE buildRebuildableSchemaCache :: Run (RebuildableSchemaCache Run) #-}
 
 newtype CacheRWT m a
   = CacheRWT { unCacheRWT :: StateT (RebuildableSchemaCache m) m a }
@@ -108,11 +104,11 @@ instance (MonadIO m, MonadTx m, MonadUnique m) => CacheRWM (CacheRWT m) where
     unique <- newUnique
     assign (rscInvalidationMap . at name) (Just unique)
 
-{-# INLINABLE buildSchemaCacheRule #-} -- see Note [Specialization of buildRebuildableSchemaCache]
+{-# SCC buildSchemaCacheRule #-}
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
-  :: ( Inc.ArrowCache arr, Inc.ArrowDistribute arr, ArrowKleisli m arr
+  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache arr, ArrowKleisli m arr
      , MonadIO m, MonadTx m, MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
   => (CatalogMetadata, InvalidationMap) `arr` SchemaCache
 buildSchemaCacheRule = proc inputs -> do
@@ -131,8 +127,9 @@ buildSchemaCacheRule = proc inputs -> do
     , scInconsistentObjs = inconsistentObjects <> extraInconsistentObjects
     }
   where
+    {-# SCC buildAndCollectInfo #-}
     buildAndCollectInfo
-      :: ( Inc.ArrowCache arr, Inc.ArrowDistribute arr, ArrowKleisli m arr
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache arr, ArrowKleisli m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadTx m, MonadReader BuildReason m
          , HasHttpManager m, HasSQLGenCtx m )
       => (CatalogMetadata, InvalidationMap) `arr` BuildOutputs
@@ -233,9 +230,10 @@ buildSchemaCacheRule = proc inputs -> do
     -- metadata objects for any entries in the second map that don’t appear in the first map. This
     -- is used to “line up” the metadata for relationships, computed fields, permissions, etc. with
     -- the tracked table info.
+    {-# SCC alignExtraTableInfo #-}
     alignExtraTableInfo
       :: forall a b arr
-       . (Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr)
+       . (ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr)
       => (b -> MetadataObject)
       -> ( M.HashMap QualifiedTable a
          , M.HashMap QualifiedTable [b]
@@ -255,10 +253,10 @@ buildSchemaCacheRule = proc inputs -> do
             recordInconsistencies -< (map mkMetadataObject extras, errorMessage)
             returnA -< Nothing
 
+    {-# SCC buildTableEventTriggers #-}
     buildTableEventTriggers
-      :: ( Inc.ArrowDistribute arr, ArrowKleisli m arr, ArrowWriter (Seq CollectedInfo) arr
-         , MonadIO m, MonadTx m, MonadReader BuildReason m
-         , HasSQLGenCtx m )
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+         , ArrowKleisli m arr, MonadIO m, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
       => (TableCoreCache, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
     buildTableEventTriggers = proc (tableCache, eventTriggers) ->
       (\infos -> M.catMaybes infos >- returnA) <-<
@@ -287,6 +285,7 @@ buildSchemaCacheRule = proc inputs -> do
              |) (addTableContext qt . addTriggerContext))
            |) metadataObject
 
+    {-# SCC addRemoteSchema #-}
     addRemoteSchema
       :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, ArrowKleisli m arr
          , MonadIO m, HasHttpManager m )
@@ -398,39 +397,3 @@ withMetadataCheck cascade action = do
         diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
         newInconsistentObjects = nub $ concatMap toList $
           M.elems (currentInconsMeta `diffInconsistentObjects` originalInconsMeta)
-
-{- Note [Specialization of buildRebuildableSchemaCache]
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-As mentioned in Note [Arrow rewrite rules] in Control.Arrow.Extended and Note [Rule rewrite rules]
-in Hasura.Incremental, it is very important that `buildRebuildableSchemaCache` be specialized to
-ensure the relevant rules fire. This is a bit subtle, as GHC will only specialize non-class methods
-across modules under the following conditions:
-
-    (1) The definition is marked INLINABLE.
-    (2) The use site is not overloaded; i.e. all typeclass constraints are satisfied.
-
-This means that even if we mark `buildRebuildableSchemaCache` INLINABLE, GHC still won’t be able to
-specialize it unless its immediate use site has a concrete type. If we were to have some polymorphic
-function
-
-    foo :: (MonadFoo m) => m Bar
-    foo = do { ...; cache <- buildRebuildableSchemaCache; ... }
-
-then GHC would not be able to specialize `buildRebuildableSchemaCache` unless `foo` is also
-specialized, since that’s the only way it is able to know which type to specialize it at!
-
-Fortunately, this cross-module specialization is transitive, so as long as we mark `foo` INLINABLE
-as well, then when `foo` is specialized, `buildRebuildableSchemaCache` is also specialized. The only
-downside to this approach is it means the eventual top-level caller that instantiates the
-constraints ends up having to specialize an enormous amount of code all at once, which tends to
-bring compile times to a crawl (and may even run out of memory).
-
-A better solution, where possible, is to insert explicit SPECIALIZE pragmas to encourage GHC to do
-the specialization early. For example, we could write
-
-    {-# SPECIALIZE foo :: FooM Bar #-}
-
-alongside the definition of `foo`, and GHC will immediately produce a specialized version of `foo`
-on `FooM`. If a caller then uses `foo` in `FooM`, it will use the specialized version.
-
-I regret this being necessary, but I don’t see a way around it. -}

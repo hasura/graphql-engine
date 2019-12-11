@@ -79,6 +79,7 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
       recordInconsistency -< (metadataObject, qeError err)
       returnA -< Nothing
     Right v -> returnA -< Just v
+{-# INLINABLE withRecordInconsistency #-}
 
 -- ----------------------------------------------------------------------------
 -- operations for triggering a schema cache rebuild

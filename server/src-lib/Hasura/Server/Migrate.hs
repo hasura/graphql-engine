@@ -32,7 +32,6 @@ import qualified Language.Haskell.TH.Syntax    as TH
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Run
 import           Hasura.Server.Logging         (StartupLog (..))
 import           Hasura.Server.Migrate.Version (latestCatalogVersion,
                                                 latestCatalogVersionString)
@@ -66,9 +65,7 @@ instance ToEngineLog MigrationResult Hasura where
             <> latestCatalogVersionString <> "."
     }
 
--- see Note [Specialization of buildRebuildableSchemaCache]
-{-# SPECIALIZE migrateCatalog :: UTCTime -> Run (MigrationResult, RebuildableSchemaCache Run) #-}
-
+{-# SCC migrateCatalog #-}
 migrateCatalog
   :: forall m
    . ( MonadIO m
@@ -228,6 +225,7 @@ migrateCatalog migrationTime = do
                                              WHERE name = $2
                                              |] (Q.AltJ $ A.toJSON etc, name) True
 
+{-# SCC recreateSystemMetadata #-}
 recreateSystemMetadata
   :: ( MonadIO m
      , MonadTx m

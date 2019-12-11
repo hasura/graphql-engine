@@ -24,17 +24,9 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
--- see Note [Specialization of buildRebuildableSchemaCache] in Hasura.RQL.DDL.Schema.Cache
-{-# SPECIALIZE addNonColumnFields
-    :: CacheBuildA
-    ( HashMap QualifiedTable TableRawInfo
-    , FieldInfoMap PGColumnInfo
-    , [CatalogRelation]
-    , [CatalogComputedField]
-    ) (FieldInfoMap FieldInfo) #-}
-
+{-# SCC addNonColumnFields #-}
 addNonColumnFields
-  :: ( Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
   => ( HashMap QualifiedTable TableRawInfo
      , FieldInfoMap PGColumnInfo
@@ -97,8 +89,9 @@ mkRelationshipMetadataObject (CatalogRelation qt rn rt rDef cmnt) =
       definition = toJSON $ WithTable qt $ RelDef rn rDef cmnt
   in MetadataObject objectId definition
 
+{-# SCC buildRelationship #-}
 buildRelationship
-  :: (Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr)
+  :: (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr)
   => (HashMap QualifiedTable [ForeignKey], CatalogRelation) `arr` Maybe RelInfo
 buildRelationship = proc (foreignKeys, relationship) -> do
   let CatalogRelation tableName rn rt rDef _ = relationship
@@ -126,8 +119,9 @@ mkComputedFieldMetadataObject (CatalogComputedField column _) =
       objectId = MOTableObj qt $ MTOComputedField name
   in MetadataObject objectId (toJSON column)
 
+{-# SCC buildComputedField #-}
 buildComputedField
-  :: ( Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+  :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
   => (HashSet QualifiedTable, CatalogComputedField) `arr` Maybe ComputedFieldInfo
 buildComputedField = proc (trackedTableNames, computedField) -> do

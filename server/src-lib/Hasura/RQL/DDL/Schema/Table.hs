@@ -290,9 +290,11 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
 -- | Builds an initial @'TableCache' 'PGColumnInfo'@ from catalog information. Does not fill in
 -- '_tiRolePermInfoMap' or '_tiEventTriggerInfoMap' at all, and '_tiFieldInfoMap' only contains
 -- columns, not relationships; those pieces of information are filled in by later stages.
+{-# SCC buildTableCache #-}
 buildTableCache
   :: forall arr m
-   . (Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr, ArrowKleisli m arr, MonadTx m)
+   . ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+     , ArrowKleisli m arr, MonadTx m )
   => [CatalogTable] `arr` M.HashMap QualifiedTable TableRawInfo
 buildTableCache = proc catalogTables -> do
   rawTableInfos <-
@@ -315,6 +317,7 @@ buildTableCache = proc catalogTables -> do
       _           -> throwA -< err400 AlreadyExists "duplication definition for table"
 
     -- Step 1: Build the raw table cache from metadata information.
+    {-# SCC buildRawTableInfo #-}
     buildRawTableInfo :: ErrorA QErr arr CatalogTable (TableCoreInfoG PGRawColumnInfo PGCol)
     buildRawTableInfo = proc (CatalogTable name systemDefined isEnum config maybeInfo) -> do
         catalogInfo <-
@@ -365,6 +368,7 @@ buildTableCache = proc catalogTables -> do
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
     -- types.
+    {-# SCC processTableInfo #-}
     processTableInfo
       :: ErrorA QErr arr
        ( M.HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
@@ -422,7 +426,3 @@ buildTableCache = proc catalogTables -> do
               $ "column " <> prciName rawInfo <<> " in table " <> tableName
               <<> " references multiple enum tables ("
               <> T.intercalate ", " (map (dquote . erTable) $ toList enumReferences) <> ")"
-
--- see Note [Specialization of buildRebuildableSchemaCache] in Hasura.RQL.DDL.Schema.Cache
-{-# SPECIALIZE buildTableCache
-    :: CacheBuildA [CatalogTable] (M.HashMap QualifiedTable TableRawInfo) #-}

@@ -690,6 +690,7 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
 noFilter :: AnnBoolExpPartialSQL
 noFilter = annBoolExpTrue
 
+{-# SCC mkGCtxMap #-}
 mkGCtxMap
   :: forall m. (MonadError QErr m)
   => TableCache -> FunctionCache -> m GCtxMap

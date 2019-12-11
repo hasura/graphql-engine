@@ -31,6 +31,7 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
 
+{-# SCC fetchCatalogData #-}
 fetchCatalogData :: (MonadTx m) => m CatalogMetadata
 fetchCatalogData = do
   -- startTime <- liftTx $ liftIO getCurrentTime

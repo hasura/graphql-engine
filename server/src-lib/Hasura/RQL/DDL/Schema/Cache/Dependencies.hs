@@ -12,22 +12,14 @@ import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.List                          (nub)
 
-import qualified Hasura.Incremental                 as Inc
-
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
--- see Note [Specialization of buildRebuildableSchemaCache] in Hasura.RQL.DDL.Schema.Cache
-{-# SPECIALIZE resolveDependencies
-    :: Inc.Rule CacheBuildM
-    ( BuildOutputs
-    , [(MetadataObject, SchemaObjId, SchemaDependency)]
-    ) (BuildOutputs, [InconsistentMetadata], DepMap) #-}
-
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
 -- ensure the dependencies actually exist. If a dependency is missing, its transitive dependents are
 -- removed from the cache, and 'InconsistentMetadata's are returned.
+{-# SCC resolveDependencies #-}
 resolveDependencies
   :: (ArrowKleisli m arr, QErrM m)
   => ( BuildOutputs

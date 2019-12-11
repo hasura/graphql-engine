@@ -23,16 +23,9 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
--- see Note [Specialization of buildRebuildableSchemaCache] in Hasura.RQL.DDL.Schema.Cache
-{-# SPECIALIZE buildTablePermissions
-    :: CacheBuildA
-    ( TableCoreCache
-    , TableCoreInfo
-    , [CatalogPermission]
-    ) RolePermInfoMap #-}
-
+{-# SCC buildTablePermissions #-}
 buildTablePermissions
-  :: ( Inc.ArrowCache arr, Inc.ArrowDistribute arr, ArrowKleisli m arr
+  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache arr, ArrowKleisli m arr
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m )
   => ( TableCoreCache
      , TableCoreInfo
@@ -86,7 +79,7 @@ withPermission f = proc (e, (permission, s)) -> do
    |) metadataObject
 
 buildPermission
-  :: ( Inc.ArrowCache arr, Inc.ArrowDistribute arr, ArrowKleisli m arr
+  :: ( ArrowChoice arr, Inc.ArrowCache arr, ArrowKleisli m arr
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m
      , Eq a, IsPerm a, FromJSON a, Eq (PermInfo a) )
   => ( TableCoreCache
