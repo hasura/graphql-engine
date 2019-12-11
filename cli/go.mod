@@ -1,6 +1,6 @@
 module github.com/hasura/graphql-engine/cli
 
-go 1.12
+go 1.13
 
 require (
 	github.com/Masterminds/semver v1.5.0
@@ -9,7 +9,7 @@ require (
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a // indirect
-	github.com/aws/aws-sdk-go v1.25.48 // indirect
+	github.com/aws/aws-sdk-go v1.25.50 // indirect
 	github.com/briandowns/spinner v1.8.0
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
@@ -22,12 +22,11 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-contrib/static v0.0.0-20191128031702-f81c604d8ac2
-	github.com/gin-gonic/contrib v0.0.0-20190923054218-35076c1b2bea
+	github.com/gin-gonic/contrib v0.0.0-20191209060500-d6e26eeaa607
 	github.com/gin-gonic/gin v1.5.0
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/gosimple/slug v1.9.0 // indirect
-	github.com/hasura/graphql-engine v1.0.0-rc.1
 	github.com/jinzhu/configor v1.1.1 // indirect
 	github.com/jinzhu/gorm v1.9.11 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
@@ -56,10 +55,9 @@ require (
 	github.com/qor/validations v0.0.0-20171228122639-f364bca61b46 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
-	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/pflag v1.0.3
-	github.com/spf13/viper v1.5.0
+	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.6.1
 	github.com/stretchr/testify v1.4.0
 	github.com/theplant/cldr v0.0.0-20190423050709-9f76f7ce4ee8 // indirect
 	github.com/theplant/htmltestingutils v0.0.0-20190423050759-0e06de7b6967 // indirect
