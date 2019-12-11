@@ -185,8 +185,7 @@ from
       coalesce(
         json_agg(
           json_build_object(
-            'name',
-            action_name,
+            'name', action_name,
             'definition', action_defn :: json,
             'comment', comment
           )
@@ -201,10 +200,8 @@ from
       coalesce(
         json_agg(
           json_build_object(
-            'name',
-            action_name,
-            'role',
-            role_name,
+            'action', action_name,
+            'role', role_name,
             'definition', definition :: json,
             'comment', comment
           )

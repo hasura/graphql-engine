@@ -500,14 +500,10 @@ fetchMetadata = do
           coalesce(
             json_agg(
               json_build_object(
-                'name',
-                a.action_name,
-                'definition',
-                a.action_defn,
-                'comment',
-                a.comment,
-                'permissions',
-                ap.permissions
+                'name', a.action_name,
+                'definition', a.action_defn,
+                'comment', a.comment,
+                'permissions', ap.permissions
               )
             ),
             '[]'
@@ -519,12 +515,9 @@ fetchMetadata = do
               coalesce(
                 json_agg(
                   json_build_object(
-                    'role',
-                    ap.role_name,
-                    'definition',
-                    ap.definition,
-                    'comment',
-                    ap.comment
+                    'role', ap.role_name,
+                    'definition', ap.definition,
+                    'comment', ap.comment
                   )
                 ),
                 '[]'
