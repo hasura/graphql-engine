@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/printer"
 	"os"
 	"sync"
 	"text/tabwriter"
