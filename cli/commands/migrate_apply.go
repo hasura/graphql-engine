@@ -28,9 +28,6 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if !opts.dryRun {
 				opts.EC.Spin("Applying migrations...")
 			}
-			if opts.dryRun {
-				opts.EC.Logger.Print("Migrations to be applied:")
-			}
 			err := opts.run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
