@@ -14,6 +14,7 @@ changes upstream.
 
 The Hasura GraphQL engine subscriptions are actually **live queries** i.e. a subscription will return the
 latest result of the query being made and not necessarily all the individual events leading up to the result.
+You can read more about the implementation of subscriptions `here <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`_.
 
 Subscriptions are supported for all kinds of queries. All the concepts of
 :doc:`queries <../queries/index>` hold true for subscriptions as well.
@@ -62,8 +63,8 @@ for sending and receiving events.
       }
     });
 
-  See `this <https://www.apollographql.com/docs/react/data/subscriptions/#authentication-over-websocket>`_ for more info on
-  using ``connectionParams``.
+  See `this <https://www.apollographql.com/docs/react/data/subscriptions/#authentication-over-websocket>`_ for more
+  info on using ``connectionParams``.
 
 
 Cookies and WebSockets
