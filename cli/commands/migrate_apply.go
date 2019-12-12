@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -25,6 +26,9 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if opts.dryRun && opts.skipExecution {
+				return fmt.Errorf("error")
+			}
 			if !opts.dryRun {
 				opts.EC.Spin("Applying migrations...")
 			}
