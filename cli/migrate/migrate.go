@@ -9,7 +9,7 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/printer"
+	"github.com/hasura/graphql-engine/cli/migrate/printer"
 	"os"
 	"sync"
 	"text/tabwriter"
@@ -1495,8 +1495,8 @@ func printDryRunStatus(migrations []*Migration) *bytes.Buffer {
 	out := new(tabwriter.Writer)
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
-	w := util.NewPrefixWriter(out)
-	w.Write(util.LEVEL_0, "VERSION\tTYPE\tNAME\n")
+	w := printer.NewPrefixWriter(out)
+	w.Write(printer.LEVEL_0, "VERSION\tTYPE\tNAME\n")
 	fmt.Println("Migrations to be applied:")
 	for _, migration := range migrations {
 		if int64(migration.Version) == migration.TargetVersion {
@@ -1504,7 +1504,7 @@ func printDryRunStatus(migrations []*Migration) *bytes.Buffer {
 		} else {
 			migration.FileType = "down"
 		}
-		w.Write(util.LEVEL_0, "%d\t%s\t%s\n",
+		w.Write(printer.LEVEL_0, "%d\t%s\t%s\n",
 			migration.Version,
 			migration.FileType,
 			migration.Identifier,
