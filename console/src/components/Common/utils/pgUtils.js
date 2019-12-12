@@ -235,6 +235,18 @@ export const getFunctionName = pgFunction => {
   return pgFunction.function_name;
 };
 
+export const getFunctionDefinition = pgFunction => {
+  return pgFunction.function_definition;
+};
+
+export const findFunction = (allFunctions, functionName, functionSchema) => {
+  return allFunctions.find(
+    f =>
+      getFunctionName(f) === functionName &&
+      getFunctionSchema(f) === functionSchema
+  );
+};
+
 /*** Schema utils ***/
 
 export const getSchemaName = schema => {

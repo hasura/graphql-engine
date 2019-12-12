@@ -2,6 +2,7 @@ import {
   TABLE_ENUMS_SUPPORT,
   CUSTOM_GRAPHQL_FIELDS_SUPPORT,
   READ_ONLY_RUN_SQL_QUERIES,
+  COMPUTED_FIELDS_REL_SUPPORT,
   checkFeatureSupport,
 } from '../../../helpers/versionUtils';
 
@@ -251,6 +252,13 @@ export const fetchTrackedTableListQuery = options => {
 
   if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
     query.args.columns.push('configuration');
+  }
+
+  if (checkFeatureSupport(COMPUTED_FIELDS_REL_SUPPORT)) {
+    query.args.columns.push({
+      name: 'computed_fields',
+      columns: ['*'],
+    });
   }
 
   if (

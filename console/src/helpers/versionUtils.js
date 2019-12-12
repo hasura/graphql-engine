@@ -12,6 +12,7 @@ export const CUSTOM_GRAPHQL_FIELDS_SUPPORT = 'customGraphQLFieldsSupport';
 export const COMPUTED_FIELDS_SUPPORT = 'computedFieldsSupport';
 export const IMPROVED_EVENT_FETCH_QUERY = 'improvedEventFetchQuery';
 export const READ_ONLY_RUN_SQL_QUERIES = 'readOnlyRunSqlQueries';
+export const COMPUTED_FIELDS_REL_SUPPORT = 'computedFieldsRelationshipSupport';
 
 // list of feature launch versions
 const featureLaunchVersions = {
@@ -25,6 +26,7 @@ const featureLaunchVersions = {
   [COMPUTED_FIELDS_SUPPORT]: 'v1.0.0-beta.8',
   [IMPROVED_EVENT_FETCH_QUERY]: 'v1.0.0-beta.10',
   [READ_ONLY_RUN_SQL_QUERIES]: 'v1.0.0-rc.2',
+  [COMPUTED_FIELDS_REL_SUPPORT]: 'v1.0.0-rc.2',
 };
 
 export const checkValidServerVersion = version => {
