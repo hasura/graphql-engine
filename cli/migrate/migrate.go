@@ -1498,14 +1498,15 @@ func printDryRunStatus(migrations []*Migration) *bytes.Buffer {
 	w := printer.NewPrefixWriter(out)
 	w.Write(printer.LEVEL_0, "VERSION\tTYPE\tNAME\n")
 	for _, migration := range migrations {
+		var direction string
 		if int64(migration.Version) == migration.TargetVersion {
-			migration.FileType = "up"
+			direction = "up"
 		} else {
-			migration.FileType = "down"
+			direction = "down"
 		}
 		w.Write(printer.LEVEL_0, "%d\t%s\t%s\n",
 			migration.Version,
-			migration.FileType,
+			direction,
 			migration.Identifier,
 		)
 	}
