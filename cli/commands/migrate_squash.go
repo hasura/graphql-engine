@@ -8,13 +8,13 @@ import (
 	"text/tabwriter"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	"github.com/hasura/graphql-engine/cli/migrate/printer"
 )
 
 func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -117,9 +117,9 @@ func ask2confirmDeleteMigrations(versions []int64, log *logrus.Logger) bool {
 	out := new(tabwriter.Writer)
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
-	w := util.NewPrefixWriter(out)
+	w := printer.NewPrefixWriter(out)
 	for _, version := range versions {
-		w.Write(util.LEVEL_0, "%d\n",
+		w.Write(printer.LEVEL_0, "%d\n",
 			version,
 		)
 	}

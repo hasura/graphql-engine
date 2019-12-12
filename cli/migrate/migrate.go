@@ -9,13 +9,13 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
-	"github.com/hasura/graphql-engine/cli/migrate/printer"
 	"os"
 	"sync"
 	"text/tabwriter"
 	"time"
 
 	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/hasura/graphql-engine/cli/migrate/printer"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 
 	log "github.com/sirupsen/logrus"
@@ -484,7 +484,7 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 	ret := make(chan interface{}, m.PrefetchMigrations)
 	go m.read(version, direction, ret)
 	if m.DryRun {
-		return m.unlockErr(m.addDryRun(ret))
+		return m.unlockErr(m.runDryRun(ret))
 	} else {
 		return m.unlockErr(m.runMigrations(ret))
 	}
@@ -519,7 +519,7 @@ func (m *Migrate) Steps(n int64) error {
 	}
 
 	if m.DryRun {
-		return m.unlockErr(m.addDryRun(ret))
+		return m.unlockErr(m.runDryRun(ret))
 	} else {
 		return m.unlockErr(m.runMigrations(ret))
 	}
@@ -555,7 +555,7 @@ func (m *Migrate) Up() error {
 	go m.readUp(-1, ret)
 
 	if m.DryRun {
-		return m.unlockErr(m.addDryRun(ret))
+		return m.unlockErr(m.runDryRun(ret))
 	} else {
 		return m.unlockErr(m.runMigrations(ret))
 	}
@@ -590,7 +590,7 @@ func (m *Migrate) Down() error {
 	go m.readDown(-1, ret)
 
 	if m.DryRun {
-		return m.unlockErr(m.addDryRun(ret))
+		return m.unlockErr(m.runDryRun(ret))
 	} else {
 		return m.unlockErr(m.runMigrations(ret))
 	}
@@ -1119,6 +1119,32 @@ func (m *Migrate) runMigrations(ret <-chan interface{}) error {
 	return nil
 }
 
+func (m *Migrate) runDryRun(ret <-chan interface{}) error {
+	migrations := make([]*Migration, 0)
+	var lastInsertVersion int64
+	for r := range ret {
+		if m.stop() {
+			return nil
+		}
+
+		switch r.(type) {
+		case error:
+			return r.(error)
+		case *Migration:
+			migr := r.(*Migration)
+			if migr.Body != nil {
+				version := int64(migr.Version)
+				if version != lastInsertVersion {
+					migrations = append(migrations, migr)
+					lastInsertVersion = version
+				}
+			}
+		}
+	}
+	fmt.Println(printDryRunStatus(migrations).String())
+	return nil
+}
+
 func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan interface{}, dataUp chan<- interface{}, dataDown chan<- interface{}, versions chan<- int64) error {
 	var latestVersion int64
 	go func() {
@@ -1465,39 +1491,12 @@ func (m *Migrate) unlockErr(prevErr error) error {
 	return prevErr
 }
 
-func (m *Migrate) addDryRun(ret <-chan interface{}) error {
-	migrations := make([]*Migration, 0)
-	var lastInsertVersion int64
-	for r := range ret {
-		if m.stop() {
-			return nil
-		}
-
-		switch r.(type) {
-		case error:
-			return r.(error)
-		case *Migration:
-			migr := r.(*Migration)
-			if migr.Body != nil {
-				version := int64(migr.Version)
-				if version != lastInsertVersion {
-					migrations = append(migrations, migr)
-					lastInsertVersion = version
-				}
-			}
-		}
-	}
-	fmt.Println(printDryRunStatus(migrations).String())
-	return nil
-}
-
 func printDryRunStatus(migrations []*Migration) *bytes.Buffer {
 	out := new(tabwriter.Writer)
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
 	w := printer.NewPrefixWriter(out)
 	w.Write(printer.LEVEL_0, "VERSION\tTYPE\tNAME\n")
-	fmt.Println("Migrations to be applied:")
 	for _, migration := range migrations {
 		if int64(migration.Version) == migration.TargetVersion {
 			migration.FileType = "up"

@@ -7,7 +7,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/migrate/printer"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -73,10 +73,10 @@ func printStatus(status *migrate.Status) *bytes.Buffer {
 	out := new(tabwriter.Writer)
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
-	w := util.NewPrefixWriter(out)
-	w.Write(util.LEVEL_0, "VERSION\tNAME\tSOURCE STATUS\tDATABASE STATUS\n")
+	w := printer.NewPrefixWriter(out)
+	w.Write(printer.LEVEL_0, "VERSION\tNAME\tSOURCE STATUS\tDATABASE STATUS\n")
 	for _, version := range status.Index {
-		w.Write(util.LEVEL_0, "%d\t%s\t%s\t%s\n",
+		w.Write(printer.LEVEL_0, "%d\t%s\t%s\t%s\n",
 			version,
 			status.Migrations[version].Name,
 			convertBool(status.Migrations[version].IsPresent),
