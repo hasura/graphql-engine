@@ -132,7 +132,7 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
 
         PGDataException code -> case code of
           Just (PGErrorSpecific PGInvalidEscapeSequence) -> (BadRequest, message)
-          _ -> (DataException, message)
+          _                                              -> (DataException, message)
 
         PGSyntaxErrorOrAccessRuleViolation code -> (ConstraintError,) $ case code of
           Just (PGErrorSpecific PGInvalidColumnReference) ->

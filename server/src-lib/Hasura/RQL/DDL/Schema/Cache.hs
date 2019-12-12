@@ -28,9 +28,7 @@ import           Control.Arrow.Extended
 import           Control.Lens                             hiding ((.=))
 import           Control.Monad.Unique
 import           Data.Aeson
--- import           Data.IORef
 import           Data.List                                (nub)
--- import           Data.Time.Clock
 
 import qualified Hasura.GraphQL.Context                   as GC
 import qualified Hasura.GraphQL.Schema                    as GS
@@ -55,6 +53,8 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.SQL.Types
+
+import           Debug.Trace
 
 buildRebuildableSchemaCache
   :: (MonadIO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
@@ -82,19 +82,17 @@ instance (Monad m) => CacheRM (CacheRWT m) where
 
 instance (MonadIO m, MonadTx m, MonadUnique m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason = CacheRWT do
-    -- startTime <- liftIO getCurrentTime
+    liftIO $ traceEventIO "START refresh"
     RebuildableSchemaCache _ invalidationMap rule <- get
     catalogMetadata <- liftTx fetchCatalogData
-    -- afterFetchTime <- liftIO getCurrentTime
-    -- liftIO $ putStrLn $ "--> [fetch] " <> show (afterFetchTime `diffUTCTime` startTime)
+    liftIO $ traceEventIO "START build"
     result <- lift $ flip runReaderT buildReason $ Inc.build rule (catalogMetadata, invalidationMap)
-    let !schemaCache = Inc.result result
-    -- afterBuildTime <- liftIO getCurrentTime
-    -- liftIO $ putStrLn $ "--> [build] " <> show (afterBuildTime `diffUTCTime` afterFetchTime)
+    let schemaCache = Inc.result result
+    liftIO $ traceEventIO "STOP build"
+    liftIO $ traceEventIO "START prune"
     let !prunedInvalidationMap = pruneInvalidationMap schemaCache invalidationMap
-    -- afterPruneTime <- liftIO getCurrentTime
-    -- liftIO $ putStrLn $ "--> [prune] " <> show (afterPruneTime `diffUTCTime` afterBuildTime)
-    -- liftIO $ putStrLn $ "[TOTAL] " <> show (afterPruneTime `diffUTCTime` startTime)
+    liftIO $ traceEventIO "STOP prune"
+    liftIO $ traceEventIO "STOP refresh"
     put $ RebuildableSchemaCache schemaCache prunedInvalidationMap (Inc.rebuildRule result)
     where
       pruneInvalidationMap schemaCache = M.filterWithKey \name _ ->
@@ -104,7 +102,6 @@ instance (MonadIO m, MonadTx m, MonadUnique m) => CacheRWM (CacheRWT m) where
     unique <- newUnique
     assign (rscInvalidationMap . at name) (Just unique)
 
-{-# SCC buildSchemaCacheRule #-}
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
@@ -127,7 +124,6 @@ buildSchemaCacheRule = proc inputs -> do
     , scInconsistentObjs = inconsistentObjects <> extraInconsistentObjects
     }
   where
-    {-# SCC buildAndCollectInfo #-}
     buildAndCollectInfo
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache arr, ArrowKleisli m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadTx m, MonadReader BuildReason m
@@ -139,11 +135,14 @@ buildSchemaCacheRule = proc inputs -> do
             computedFields = catalogMetadata
 
       -- tables
+      bindA -< liftIO $ traceEventIO "START tables"
       tableRawInfos <- buildTableCache -< tables
+      bindA -< liftIO $ traceEventIO "STOP tables"
 
       -- relationships and computed fields
       let relationshipsByTable = M.groupOn _crTable relationships
           computedFieldsByTable = M.groupOn (_afcTable . _cccComputedField) computedFields
+      bindA -< liftIO $ traceEventIO "START fields"
       tableCoreInfos <- (tableRawInfos >- returnA)
         >-> (\info -> (info, relationshipsByTable) >- alignExtraTableInfo mkRelationshipMetadataObject)
         >-> (\info -> (info, computedFieldsByTable) >- alignExtraTableInfo mkComputedFieldMetadataObject)
@@ -152,32 +151,28 @@ buildSchemaCacheRule = proc inputs -> do
                  allFields <- addNonColumnFields -<
                    (tableRawInfos, columns, tableRelationships, tableComputedFields)
                  returnA -< tableRawInfo { _tciFieldInfoMap = allFields }) |)
+      bindA -< liftIO $ traceEventIO "STOP fields"
 
       -- permissions and event triggers
-      -- permTimeRef <- bindA -< liftIO $ newIORef 0
-      -- eventTimeRef <- bindA -< liftIO $ newIORef 0
       tableCache <- (tableCoreInfos >- returnA)
         >-> (\info -> (info, M.groupOn _cpTable permissions) >- alignExtraTableInfo mkPermissionMetadataObject)
         >-> (\info -> (info, M.groupOn _cetTable eventTriggers) >- alignExtraTableInfo mkEventTriggerMetadataObject)
         >-> (| Inc.keyed (\_ ((tableCoreInfo, tablePermissions), tableEventTriggers) -> do
-                 -- startTime <- bindA -< liftIO getCurrentTime
-                 permissionInfos <- buildTablePermissions -< (tableCoreInfos, tableCoreInfo, tablePermissions)
-                 -- afterPermTime <- bindA -< liftIO getCurrentTime
-                 eventTriggerInfos <- buildTableEventTriggers -< (tableCoreInfos, tableEventTriggers)
-                 -- afterEventsTime <- bindA -< liftIO getCurrentTime
-                 -- bindA -< liftIO $ modifyIORef' permTimeRef (+ (afterPermTime `diffUTCTime` startTime))
-                 -- bindA -< liftIO $ modifyIORef' eventTimeRef (+ (afterEventsTime `diffUTCTime` afterPermTime))
+                 bindA -< liftIO $ traceEventIO "START permissions"
+                 permissionInfos <- buildTablePermissions -<
+                   (tableCoreInfos, tableCoreInfo, HS.fromList tablePermissions)
+                 bindA -< liftIO $ traceEventIO "STOP permissions"
+                 bindA -< liftIO $ traceEventIO "START event triggers"
+                 eventTriggerInfos <- buildTableEventTriggers -< (tableCoreInfo, tableEventTriggers)
+                 bindA -< liftIO $ traceEventIO "STOP event triggers"
                  returnA -< TableInfo
                    { _tiCoreInfo = tableCoreInfo
                    , _tiRolePermInfoMap = permissionInfos
                    , _tiEventTriggerInfoMap = eventTriggerInfos
                    }) |)
-      -- permTime <- bindA -< liftIO $ readIORef permTimeRef
-      -- eventTime <- bindA -< liftIO $ readIORef eventTimeRef
-      -- bindA -< liftIO $ putStrLn $ "----> [build/perms] " <> show permTime
-      -- bindA -< liftIO $ putStrLn $ "----> [build/events] " <> show eventTime
 
       -- sql functions
+      bindA -< liftIO $ traceEventIO "START functions"
       let tableNames = HS.fromList $ M.keys tableCache
       functionCache <- (mapFromL _cfFunction functions >- returnA)
         >-> (| Inc.keyed (\_ (CatalogFunction qf systemDefined config funcDefs) -> do
@@ -195,6 +190,7 @@ buildSchemaCacheRule = proc inputs -> do
                     |) addFunctionContext)
                   |) metadataObject) |)
         >-> (\infos -> M.catMaybes infos >- returnA)
+      bindA -< liftIO $ traceEventIO "STOP functions"
 
       -- allow list
       let allowList = allowlistDefs
@@ -203,14 +199,18 @@ buildSchemaCacheRule = proc inputs -> do
             & HS.fromList
 
       -- build GraphQL context with tables and functions
+      bindA -< liftIO $ traceEventIO "START GQL"
       baseGQLSchema <- bindA -< GS.mkGCtxMap tableCache functionCache
+      bindA -< liftIO $ traceEventIO "STOP GQL"
 
       -- remote schemas
+      bindA -< liftIO $ traceEventIO "START remote schemas"
       let invalidatedRemoteSchemas = flip map remoteSchemas \remoteSchema ->
             (M.lookup (_arsqName remoteSchema) invalidationMap, remoteSchema)
       (remoteSchemaMap, gqlSchema, remoteGQLSchema) <-
         (| foldlA' (\schemas schema -> (schemas, schema) >- addRemoteSchema)
         |) (M.empty, baseGQLSchema, GC.emptyGCtx) invalidatedRemoteSchemas
+      bindA -< liftIO $ traceEventIO "STOP remote schemas"
 
       returnA -< BuildOutputs
         { _boTables = tableCache
@@ -230,7 +230,6 @@ buildSchemaCacheRule = proc inputs -> do
     -- metadata objects for any entries in the second map that don’t appear in the first map. This
     -- is used to “line up” the metadata for relationships, computed fields, permissions, etc. with
     -- the tracked table info.
-    {-# SCC alignExtraTableInfo #-}
     alignExtraTableInfo
       :: forall a b arr
        . (ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr)
@@ -253,21 +252,21 @@ buildSchemaCacheRule = proc inputs -> do
             recordInconsistencies -< (map mkMetadataObject extras, errorMessage)
             returnA -< Nothing
 
-    {-# SCC buildTableEventTriggers #-}
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-         , ArrowKleisli m arr, MonadIO m, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
-      => (TableCoreCache, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
-    buildTableEventTriggers = proc (tableCache, eventTriggers) ->
+         , Inc.ArrowCache arr, ArrowKleisli m arr
+         , MonadIO m, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
+      => (TableCoreInfo, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
+    buildTableEventTriggers = proc (tableInfo, eventTriggers) ->
       (\infos -> M.catMaybes infos >- returnA) <-<
         (| Inc.keyed (\_ duplicateEventTriggers -> do
              maybeEventTrigger <- noDuplicates mkEventTriggerMetadataObject -< duplicateEventTriggers
              (\info -> join info >- returnA) <-<
-               (| traverseA (\eventTrigger -> buildEventTrigger -< (tableCache, eventTrigger))
+               (| traverseA (\eventTrigger -> buildEventTrigger -< (tableInfo, eventTrigger))
                |) maybeEventTrigger)
         |) (M.groupOn _cetName eventTriggers)
       where
-        buildEventTrigger = proc (tableCache, eventTrigger) -> do
+        buildEventTrigger = proc (tableInfo, eventTrigger) -> do
           let CatalogEventTrigger qt trn configuration = eventTrigger
               metadataObject = mkEventTriggerMetadataObject eventTrigger
               schemaObjectId = SOTableObj qt $ TOTrigger trn
@@ -276,16 +275,19 @@ buildSchemaCacheRule = proc inputs -> do
              (| modifyErrA (do
                   etc <- bindErrorA -< decodeValue configuration
                   (info, dependencies) <- bindErrorA -< subTableP2Setup qt etc
-                  bindErrorA -< flip runTableCoreCacheRT tableCache $ do
-                    buildReason <- ask
-                    when (buildReason == CatalogUpdate) $
-                      mkAllTriggersQ trn qt (etcDefinition etc)
+                  let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
+                  recreateViewIfNeeded -< (qt, tableColumns, trn, etcDefinition etc)
                   recordDependencies -< (metadataObject, schemaObjectId, dependencies)
                   returnA -< info)
              |) (addTableContext qt . addTriggerContext))
            |) metadataObject
 
-    {-# SCC addRemoteSchema #-}
+        recreateViewIfNeeded = Inc.cache $
+          arrM \(tableName, tableColumns, triggerName, triggerDefinition) -> do
+            buildReason <- ask
+            when (buildReason == CatalogUpdate) $
+              mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
+
     addRemoteSchema
       :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, ArrowKleisli m arr
          , MonadIO m, HasHttpManager m )

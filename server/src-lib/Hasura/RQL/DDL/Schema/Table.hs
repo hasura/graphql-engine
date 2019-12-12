@@ -51,6 +51,7 @@ import           Language.Haskell.TH.Syntax         (Lift)
 import           Network.URI.Extended               ()
 
 import qualified Data.HashMap.Strict.Extended       as M
+import qualified Data.HashSet                       as S
 import qualified Data.Text                          as T
 
 data TrackTable
@@ -290,13 +291,12 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
 -- | Builds an initial @'TableCache' 'PGColumnInfo'@ from catalog information. Does not fill in
 -- '_tiRolePermInfoMap' or '_tiEventTriggerInfoMap' at all, and '_tiFieldInfoMap' only contains
 -- columns, not relationships; those pieces of information are filled in by later stages.
-{-# SCC buildTableCache #-}
 buildTableCache
   :: forall arr m
    . ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-     , ArrowKleisli m arr, MonadTx m )
+     , Inc.ArrowCache arr, ArrowKleisli m arr, MonadTx m )
   => [CatalogTable] `arr` M.HashMap QualifiedTable TableRawInfo
-buildTableCache = proc catalogTables -> do
+buildTableCache = Inc.cache proc catalogTables -> do
   rawTableInfos <-
     (| Inc.keyed (| withTable (\tables -> buildRawTableInfo <<< noDuplicateTables -< tables) |)
     |) (M.groupOnNE _ctName catalogTables)
@@ -317,9 +317,8 @@ buildTableCache = proc catalogTables -> do
       _           -> throwA -< err400 AlreadyExists "duplication definition for table"
 
     -- Step 1: Build the raw table cache from metadata information.
-    {-# SCC buildRawTableInfo #-}
     buildRawTableInfo :: ErrorA QErr arr CatalogTable (TableCoreInfoG PGRawColumnInfo PGCol)
-    buildRawTableInfo = proc (CatalogTable name systemDefined isEnum config maybeInfo) -> do
+    buildRawTableInfo = Inc.cache proc (CatalogTable name systemDefined isEnum config maybeInfo) -> do
         catalogInfo <-
           (| onNothingA (throwA -<
                err400 NotExists $ "no such table/view exists in postgres: " <>> name)
@@ -343,7 +342,7 @@ buildTableCache = proc catalogTables -> do
           , _tciFieldInfoMap = columnMap
           , _tciPrimaryKey = primaryKey
           , _tciUniqueConstraints = _ctiUniqueConstraints catalogInfo
-          , _tciForeignKeys = unCatalogForeignKey <$> _ctiForeignKeys catalogInfo
+          , _tciForeignKeys = S.map unCatalogForeignKey $ _ctiForeignKeys catalogInfo
           , _tciViewInfo = _ctiViewInfo catalogInfo
           , _tciEnumValues = enumValues
           , _tciCustomConfig = config
@@ -368,7 +367,6 @@ buildTableCache = proc catalogTables -> do
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
     -- types.
-    {-# SCC processTableInfo #-}
     processTableInfo
       :: ErrorA QErr arr
        ( M.HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)

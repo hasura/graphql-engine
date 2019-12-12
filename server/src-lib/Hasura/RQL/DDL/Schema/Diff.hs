@@ -24,18 +24,18 @@ module Hasura.RQL.DDL.Schema.Diff
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.Server.Utils (duplicates)
+import           Hasura.Server.Utils      (duplicates)
 import           Hasura.SQL.Types
 
-import qualified Database.PG.Query   as Q
+import qualified Database.PG.Query        as Q
 
-import           Control.Arrow       ((&&&))
+import           Control.Arrow            ((&&&))
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
-import qualified Data.HashMap.Strict as M
-import qualified Data.HashSet        as HS
-import qualified Data.List.NonEmpty  as NE
+import qualified Data.HashMap.Strict      as M
+import qualified Data.HashSet             as HS
+import qualified Data.List.NonEmpty       as NE
 
 data FunctionMeta
   = FunctionMeta
@@ -109,7 +109,7 @@ getTableDiff oldtm newtm =
 
     uniqueOrPrimaryCons = map _cName $
       maybeToList (_pkConstraint <$> _ctiPrimaryKey (tmInfo newtm))
-        <> _ctiUniqueConstraints (tmInfo newtm)
+        <> toList (_ctiUniqueConstraints $ tmInfo newtm)
 
     mNewDesc = _ctiDescription $ tmInfo newtm
 
@@ -122,7 +122,7 @@ getTableDiff oldtm newtm =
     -- and (ref-table, column mapping) are changed
     droppedFKeyConstraints = map (_cName . _fkConstraint) $ HS.toList $
       droppedFKeysWithOid `HS.intersection` droppedFKeysWithUniq
-    tmForeignKeys = fmap unCatalogForeignKey . _ctiForeignKeys . tmInfo
+    tmForeignKeys = fmap unCatalogForeignKey . toList . _ctiForeignKeys . tmInfo
     droppedFKeysWithOid = HS.fromList $
       (getDifference (_cOid . _fkConstraint) `on` tmForeignKeys) oldtm newtm
     droppedFKeysWithUniq = HS.fromList $

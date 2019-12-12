@@ -19,7 +19,6 @@ import           Hasura.SQL.Types
 -- | Processes collected 'CIDependency' values into a 'DepMap', performing integrity checking to
 -- ensure the dependencies actually exist. If a dependency is missing, its transitive dependents are
 -- removed from the cache, and 'InconsistentMetadata's are returned.
-{-# SCC resolveDependencies #-}
 resolveDependencies
   :: (ArrowKleisli m arr, QErrM m)
   => ( BuildOutputs

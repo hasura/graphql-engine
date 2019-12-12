@@ -24,11 +24,11 @@ import qualified Data.Text                          as T
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalog)
-import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog,
-                                                     subTableP2)
 import           Hasura.RQL.DDL.Metadata.Types
+import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
-import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2, removeRemoteSchemaFromCatalog)
+import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2,
+                                                     removeRemoteSchemaFromCatalog)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 

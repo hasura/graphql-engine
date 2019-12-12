@@ -15,8 +15,7 @@ import           Test.Hspec.Expectations.Lifted
 
 import qualified Database.PG.Query              as Q
 
-import           Hasura.RQL.DDL.Metadata        (ClearMetadata (..),
-                                                 runClearMetadata)
+import           Hasura.RQL.DDL.Metadata        (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Migrate

@@ -14,6 +14,7 @@ module Control.Arrow.Extended
   , (<-<)
 
   , foldlA'
+  , traverseA_
   , traverseA
   , onNothingA
 
@@ -70,6 +71,11 @@ foldlA' f = arr (\(e, (v, (xs, s))) -> (e, (v, (toList xs, s)))) >>> go where
     x:xs' -> Right ((e, (v, (x, s))), (e, (xs', s)))
   step = first f >>> arr (\(!v, (e, (xs, s))) -> (e, (v, (xs, s)))) >>> go
 {-# INLINABLE foldlA' #-}
+
+traverseA_ :: (ArrowChoice arr, Foldable t) => arr (e, (a, s)) b -> arr (e, (t a, s)) ()
+traverseA_ f = proc (e, (xs, s)) ->
+  (| foldlA' (\() x -> do { (e, (x, s)) >- f; () >- returnA }) |) () xs
+{-# INLINABLE traverseA_ #-}
 
 -- | An indexed version of Twan van Laarhoven’s @FunList@ type (see
 -- <https://twanvl.nl/blog/haskell/non-regular1>). A value of type @'Traversal' a b (t b)@ is a

@@ -15,8 +15,6 @@ import           Hasura.Prelude
 import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 
--- import           Data.Time.Clock
-
 import           Data.Aeson
 
 import           Hasura.Db
@@ -31,18 +29,18 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
 
-{-# SCC fetchCatalogData #-}
+import           Debug.Trace
+
 fetchCatalogData :: (MonadTx m) => m CatalogMetadata
 fetchCatalogData = do
-  -- startTime <- liftTx $ liftIO getCurrentTime
+  liftTx . liftIO $ traceEventIO "START fetch"
+  liftTx . liftIO $ traceEventIO "START fetch/query"
   metadataBytes <- (liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True)
-  -- afterFetchTime <- liftTx $ liftIO getCurrentTime
-  -- liftTx $ liftIO $ putStrLn $
-  --   "----> [fetch/query] " <> show (afterFetchTime `diffUTCTime` startTime)
+  liftTx . liftIO $ traceEventIO "STOP fetch/query"
+  liftTx . liftIO $ traceEventIO "START fetch/decode"
   let !decodedValue = force (eitherDecodeStrict' metadataBytes)
-  -- afterDecodeTime <- liftTx $ liftIO getCurrentTime
-  -- liftTx $ liftIO $ putStrLn $
-  --   "----> [fetch/decode] " <> show (afterDecodeTime `diffUTCTime` afterFetchTime)
+  liftTx . liftIO $ traceEventIO "STOP fetch/decode"
+  liftTx . liftIO $ traceEventIO "STOP fetch"
   decodedValue `onLeft` \err -> throw500 (T.pack err)
 
 saveTableToCatalog :: (MonadTx m) => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m ()

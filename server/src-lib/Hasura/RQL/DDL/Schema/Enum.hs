@@ -26,8 +26,8 @@ import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.Db
-import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Error
 import           Hasura.Server.Utils           (makeReasonMessage)
 import           Hasura.SQL.Types
@@ -42,10 +42,10 @@ import qualified Hasura.SQL.DML                as S
 --   3. The referenced table is, in fact, an enum table.
 resolveEnumReferences
   :: HashMap QualifiedTable (PrimaryKey PGCol, EnumValues)
-  -> [ForeignKey]
+  -> HashSet ForeignKey
   -> HashMap PGCol (NonEmpty EnumReference)
 resolveEnumReferences enumTables =
-  M.fromListWith (<>) . map (fmap (:|[])) . mapMaybe resolveEnumReference
+  M.fromListWith (<>) . map (fmap (:|[])) . mapMaybe resolveEnumReference . toList
   where
     resolveEnumReference :: ForeignKey -> Maybe (PGCol, EnumReference)
     resolveEnumReference foreignKey = do
@@ -95,7 +95,7 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
             [] -> pure Nothing
             [column] -> case prciType column of
               PGText -> pure $ Just column
-              _ -> dispute [EnumTableNonTextualCommentColumn column] $> Nothing
+              _      -> dispute [EnumTableNonTextualCommentColumn column] $> Nothing
             columns -> dispute [EnumTableTooManyColumns $ map prciName columns] $> Nothing
 
         fetchEnumValues maybeCommentColumn primaryKeyColumn = do

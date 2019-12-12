@@ -23,15 +23,16 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
-{-# SCC buildTablePermissions #-}
+import           Debug.Trace
+
 buildTablePermissions
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache arr, ArrowKleisli m arr
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m )
   => ( TableCoreCache
      , TableCoreInfo
-     , [CatalogPermission]
+     , HashSet CatalogPermission
      ) `arr` RolePermInfoMap
-buildTablePermissions = proc (tableCache, tableInfo, tablePermissions) ->
+buildTablePermissions = Inc.cache proc (tableCache, tableInfo, tablePermissions) ->
   (| Inc.keyed (\_ rolePermissions -> do
        let (insertPerms, selectPerms, updatePerms, deletePerms) =
              partitionPermissions rolePermissions
@@ -86,16 +87,20 @@ buildPermission
      , TableCoreInfo
      , [CatalogPermission]
      ) `arr` Maybe (PermInfo a)
-buildPermission = proc (tableCache, tableInfo, permissions) ->
+buildPermission = Inc.cache proc (tableCache, tableInfo, permissions) -> do
       (permissions >- noDuplicates mkPermissionMetadataObject)
   >-> (| traverseA (\permission@(CatalogPermission _ roleName _ pDef _) ->
          (| withPermission (do
               bindErrorA -< when (roleName == adminRole) $
                 throw400 ConstraintViolation "cannot define permission for admin role"
+              bindA -< liftTx . liftIO $ traceEventIO "START permissions/build/decode"
               perm <- bindErrorA -< decodeValue pDef
+              bindA -< liftTx . liftIO $ traceEventIO "STOP permissions/build/decode"
               let permDef = PermDef roleName perm Nothing
+              bindA -< liftTx . liftIO $ traceEventIO "START permissions/build/info"
               (info, dependencies) <- bindErrorA -<
                 runTableCoreCacheRT (buildPermInfo tableInfo permDef) tableCache
+              bindA -< liftTx . liftIO $ traceEventIO "STOP permissions/build/info"
               tellA -< Seq.fromList dependencies
               rebuildViewsIfNeeded -< (_tciName tableInfo, permDef, info)
               returnA -< info)
@@ -107,6 +112,8 @@ rebuildViewsIfNeeded
      , Eq a, IsPerm a, Eq (PermInfo a) )
   => (QualifiedTable, PermDef a, PermInfo a) `arr` ()
 rebuildViewsIfNeeded = Inc.cache $ arrM \(tableName, permDef, info) -> do
+  liftTx . liftIO $ traceEventIO "START permissions/build/views"
   buildReason <- ask
   when (buildReason == CatalogUpdate) $
     addPermP2Setup tableName permDef info
+  liftTx . liftIO $ traceEventIO "STOP permissions/build/views"

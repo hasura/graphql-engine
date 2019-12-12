@@ -24,7 +24,7 @@ import           Hasura.SQL.Types
 
 import           Data.Aeson.Types
 import qualified Data.HashMap.Strict               as HM
-import qualified Data.Map.Strict                   as M
+import qualified Data.HashSet                      as HS
 import           Data.Tuple                        (swap)
 import           Instances.TH.Lift                 ()
 
@@ -86,19 +86,19 @@ delRelFromCatalog (QualifiedObject sn tn) rn =
 objRelP2Setup
   :: (QErrM m)
   => QualifiedTable
-  -> [ForeignKey]
+  -> HashSet ForeignKey
   -> RelDef ObjRelUsing
   -> m (RelInfo, [SchemaDependency])
 objRelP2Setup qt foreignKeys (RelDef rn ru _) = case ru of
   RUManual (ObjRelManualConfig rm) -> do
     let refqt = rmTable rm
-        (lCols, rCols) = unzip $ M.toList $ rmColumns rm
+        (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
         mkDependency tableName reason col = SchemaDependency (SOTableObj tableName $ TOCol col) reason
         dependencies = map (mkDependency qt DRLeftColumn) lCols
                     <> map (mkDependency refqt DRRightColumn) rCols
-    pure (RelInfo rn ObjRel (zip lCols rCols) refqt True, dependencies)
+    pure (RelInfo rn ObjRel (rmColumns rm) refqt True, dependencies)
   RUFKeyOn columnName -> do
-    ForeignKey constraint foreignTable colMap <- getRequiredFkey columnName foreignKeys
+    ForeignKey constraint foreignTable colMap <- getRequiredFkey columnName (HS.toList foreignKeys)
     let dependencies =
           [ SchemaDependency (SOTableObj qt $ TOForeignKey (_cName constraint)) DRFkey
           , SchemaDependency (SOTableObj qt $ TOCol columnName) DRUsingColumn
@@ -106,24 +106,24 @@ objRelP2Setup qt foreignKeys (RelDef rn ru _) = case ru of
           -- neither the using_col nor the constraint name will help.
           , SchemaDependency (SOTable foreignTable) DRRemoteTable
           ]
-    pure (RelInfo rn ObjRel (HM.toList colMap) foreignTable False, dependencies)
+    pure (RelInfo rn ObjRel colMap foreignTable False, dependencies)
 
 arrRelP2Setup
   :: (QErrM m)
-  => HashMap QualifiedTable [ForeignKey]
+  => HashMap QualifiedTable (HashSet ForeignKey)
   -> QualifiedTable
   -> ArrRelDef
   -> m (RelInfo, [SchemaDependency])
 arrRelP2Setup foreignKeys qt (RelDef rn ru _) = case ru of
   RUManual (ArrRelManualConfig rm) -> do
     let refqt = rmTable rm
-        (lCols, rCols) = unzip $ M.toList $ rmColumns rm
+        (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
         deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) DRLeftColumn) lCols
                 <> map (\c -> SchemaDependency (SOTableObj refqt $ TOCol c) DRRightColumn) rCols
-    pure (RelInfo rn ArrRel (zip lCols rCols) refqt True, deps)
+    pure (RelInfo rn ArrRel (rmColumns rm) refqt True, deps)
   RUFKeyOn (ArrRelUsingFKeyOn refqt refCol) -> do
     foreignTableForeignKeys <- getTableInfo refqt foreignKeys
-    let keysThatReferenceUs = filter ((== qt) . _fkForeignTable) foreignTableForeignKeys
+    let keysThatReferenceUs = filter ((== qt) . _fkForeignTable) (HS.toList foreignTableForeignKeys)
     ForeignKey constraint _ colMap <- getRequiredFkey refCol keysThatReferenceUs
     let deps = [ SchemaDependency (SOTableObj refqt $ TOForeignKey (_cName constraint)) DRRemoteFkey
                , SchemaDependency (SOTableObj refqt $ TOCol refCol) DRUsingColumn
@@ -132,8 +132,8 @@ arrRelP2Setup foreignKeys qt (RelDef rn ru _) = case ru of
                -- tracked by tracking the constraint name and 'using_col'
                , SchemaDependency (SOTable refqt) DRRemoteTable
                ]
-        mapping = HM.toList colMap
-    pure (RelInfo rn ArrRel (map swap mapping) refqt False, deps)
+        mapping = HM.fromList $ map swap $ HM.toList colMap
+    pure (RelInfo rn ArrRel mapping refqt False, deps)
 
 purgeRelDep :: (MonadTx m) => SchemaObjId -> m ()
 purgeRelDep (SOTableObj tn (TOPerm rn pt)) = purgePerm tn rn pt

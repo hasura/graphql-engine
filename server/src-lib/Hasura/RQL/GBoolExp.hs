@@ -341,10 +341,10 @@ convColRhs tableQual = \case
         newIdenQ = S.QualIden newIden
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
     let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
-          flip map colMapping $ \(lCol, rCol) ->
-          S.BECompare S.SEQ
-          (mkQCol (S.QualIden newIden) rCol)
-          (mkQCol tableQual lCol)
+          flip map (M.toList colMapping) $ \(lCol, rCol) ->
+            S.BECompare S.SEQ
+            (mkQCol (S.QualIden newIden) rCol)
+            (mkQCol tableQual lCol)
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
     return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
   where

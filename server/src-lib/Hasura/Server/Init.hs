@@ -23,8 +23,7 @@ import qualified Hasura.Logging                   as L
 
 import           Hasura.Db
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (QErr, RoleName (..),
-                                                   SchemaCache (..),
+import           Hasura.RQL.Types                 (QErr, RoleName (..), SchemaCache (..),
                                                    mkNonEmptyText)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
@@ -235,10 +234,10 @@ parseStrAsBool t
 readIsoLevel :: String -> Either String Q.TxIsolation
 readIsoLevel isoS =
   case isoS of
-    "read-committed" -> return Q.ReadCommitted
+    "read-committed"  -> return Q.ReadCommitted
     "repeatable-read" -> return Q.RepeatableRead
-    "serializable" -> return Q.Serializable
-    _ -> Left "Only expecting read-committed / repeatable-read / serializable"
+    "serializable"    -> return Q.Serializable
+    _                 -> Left "Only expecting read-committed / repeatable-read / serializable"
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 

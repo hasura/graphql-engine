@@ -157,9 +157,9 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
 
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
 buildInsInfra tn (InsPermInfo _ vn be _ _) = do
-  resolvedBoolExp <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting be
-  let trigFnQ = buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
-  Q.catchE defaultTxErrorHandler $ do
+  resolvedBoolExp <- {-# SCC "buildInsInfra/convAnnBoolExpPartialSQL" #-} convAnnBoolExpPartialSQL sessVarFromCurrentSetting be
+  let trigFnQ = {-# SCC "buildInsInfra/buildInsTrigFn" #-} buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
+  {-# SCC "buildInsInfra/execute" #-} Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     dropView vn
     Q.unitQ (buildView tn vn) () False

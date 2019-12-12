@@ -36,13 +36,13 @@ module Hasura.RQL.Types.Common
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
+import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift)
-import Control.Lens (makeLenses)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
@@ -114,8 +114,8 @@ instance ToJSON RelType where
 
 instance FromJSON RelType where
   parseJSON (String "object") = return ObjRel
-  parseJSON (String "array") = return ArrRel
-  parseJSON _ = fail "expecting either 'object' or 'array' for rel_type"
+  parseJSON (String "array")  = return ArrRel
+  parseJSON _                 = fail "expecting either 'object' or 'array' for rel_type"
 
 instance Q.FromCol RelType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
@@ -127,11 +127,11 @@ data RelInfo
   = RelInfo
   { riName     :: !RelName
   , riType     :: !RelType
-  , riMapping  :: ![(PGCol, PGCol)]
+  , riMapping  :: !(HashMap PGCol PGCol)
   , riRTable   :: !QualifiedTable
   , riIsManual :: !Bool
-  } deriving (Show, Eq)
-
+  } deriving (Show, Eq, Generic)
+instance NFData RelInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName

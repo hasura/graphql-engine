@@ -209,8 +209,8 @@ data InsPermInfo
   , ipiCheck           :: !AnnBoolExpPartialSQL
   , ipiSet             :: !PreSetColsPartial
   , ipiRequiredHeaders :: ![T.Text]
-  } deriving (Show, Eq)
-
+  } deriving (Show, Eq, Generic)
+instance NFData InsPermInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''InsPermInfo)
 
 data SelPermInfo
@@ -222,8 +222,8 @@ data SelPermInfo
   , spiLimit                :: !(Maybe Int)
   , spiAllowAgg             :: !Bool
   , spiRequiredHeaders      :: ![T.Text]
-  } deriving (Show, Eq)
-
+  } deriving (Show, Eq, Generic)
+instance NFData SelPermInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''SelPermInfo)
 
 data UpdPermInfo
@@ -233,8 +233,8 @@ data UpdPermInfo
   , upiFilter          :: !AnnBoolExpPartialSQL
   , upiSet             :: !PreSetColsPartial
   , upiRequiredHeaders :: ![T.Text]
-  } deriving (Show, Eq)
-
+  } deriving (Show, Eq, Generic)
+instance NFData UpdPermInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''UpdPermInfo)
 
 data DelPermInfo
@@ -242,8 +242,8 @@ data DelPermInfo
   { dpiTable           :: !QualifiedTable
   , dpiFilter          :: !AnnBoolExpPartialSQL
   , dpiRequiredHeaders :: ![T.Text]
-  } deriving (Show, Eq)
-
+  } deriving (Show, Eq, Generic)
+instance NFData DelPermInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''DelPermInfo)
 
 emptyRolePermInfo :: RolePermInfo
@@ -255,8 +255,8 @@ data RolePermInfo
   , _permSel :: !(Maybe SelPermInfo)
   , _permUpd :: !(Maybe UpdPermInfo)
   , _permDel :: !(Maybe DelPermInfo)
-  } deriving (Show, Eq)
-
+  } deriving (Show, Eq, Generic)
+instance NFData RolePermInfo
 $(deriveToJSON (aesonDrop 5 snakeCase) ''RolePermInfo)
 
 makeLenses ''RolePermInfo
@@ -270,8 +270,8 @@ data EventTriggerInfo
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo
    , etiHeaders     :: ![EventHeaderInfo]
-   } deriving (Show, Eq)
-
+   } deriving (Show, Eq, Generic)
+instance NFData EventTriggerInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
 
 type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
@@ -318,17 +318,17 @@ instance FromJSON TableConfig where
 -- information is accumulated. See 'TableRawInfo' and 'TableCoreInfo'.
 data TableCoreInfoG field primaryKeyColumn
   = TableCoreInfo
-  { _tciName                          :: !QualifiedTable
-  , _tciDescription                   :: !(Maybe PGDescription)
-  , _tciSystemDefined                 :: !SystemDefined
-  , _tciFieldInfoMap                  :: !(FieldInfoMap field)
-  , _tciPrimaryKey :: !(Maybe (PrimaryKey primaryKeyColumn))
-  , _tciUniqueConstraints :: ![Constraint]
+  { _tciName              :: !QualifiedTable
+  , _tciDescription       :: !(Maybe PGDescription)
+  , _tciSystemDefined     :: !SystemDefined
+  , _tciFieldInfoMap      :: !(FieldInfoMap field)
+  , _tciPrimaryKey        :: !(Maybe (PrimaryKey primaryKeyColumn))
+  , _tciUniqueConstraints :: !(HashSet Constraint)
   -- ^ Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
-  , _tciForeignKeys :: ![ForeignKey]
-  , _tciViewInfo                      :: !(Maybe ViewInfo)
-  , _tciEnumValues                    :: !(Maybe EnumValues)
-  , _tciCustomConfig                  :: !TableConfig
+  , _tciForeignKeys       :: !(HashSet ForeignKey)
+  , _tciViewInfo          :: !(Maybe ViewInfo)
+  , _tciEnumValues        :: !(Maybe EnumValues)
+  , _tciCustomConfig      :: !TableConfig
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''TableCoreInfoG)
 $(makeLenses ''TableCoreInfoG)
@@ -341,7 +341,7 @@ type TableCoreInfo = TableCoreInfoG FieldInfo PGColumnInfo
 
 tciUniqueOrPrimaryKeyConstraints :: TableCoreInfoG a b -> [Constraint]
 tciUniqueOrPrimaryKeyConstraints info =
-  maybeToList (_pkConstraint <$> _tciPrimaryKey info) <> _tciUniqueConstraints info
+  maybeToList (_pkConstraint <$> _tciPrimaryKey info) <> toList (_tciUniqueConstraints info)
 
 data TableInfo
   = TableInfo

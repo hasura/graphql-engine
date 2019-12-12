@@ -33,8 +33,7 @@ import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineL
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging         (StartupLog (..))
-import           Hasura.Server.Migrate.Version (latestCatalogVersion,
-                                                latestCatalogVersionString)
+import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
 import           Hasura.Server.Query
 import           Hasura.SQL.Types
 
@@ -65,7 +64,6 @@ instance ToEngineLog MigrationResult Hasura where
             <> latestCatalogVersionString <> "."
     }
 
-{-# SCC migrateCatalog #-}
 migrateCatalog
   :: forall m
    . ( MonadIO m
@@ -225,7 +223,6 @@ migrateCatalog migrationTime = do
                                              WHERE name = $2
                                              |] (Q.AltJ $ A.toJSON etc, name) True
 
-{-# SCC recreateSystemMetadata #-}
 recreateSystemMetadata
   :: ( MonadIO m
      , MonadTx m

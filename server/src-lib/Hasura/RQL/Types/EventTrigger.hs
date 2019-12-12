@@ -47,7 +47,9 @@ type EventId = T.Text
 
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 
-data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift, Generic)
+data SubscribeColumns = SubCStar | SubCArray [PGCol]
+  deriving (Show, Eq, Generic, Lift)
+instance NFData SubscribeColumns
 
 instance FromJSON SubscribeColumns where
   parseJSON (String s) = case s of
@@ -64,8 +66,8 @@ data SubscribeOpSpec
   = SubscribeOpSpec
   { sosColumns :: !SubscribeColumns
   , sosPayload :: !(Maybe SubscribeColumns)
-  } deriving (Show, Eq, Lift, Generic)
-
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData SubscribeOpSpec
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
 
 defaultNumRetries :: Int
@@ -85,20 +87,21 @@ data RetryConf
   { rcNumRetries  :: !Int
   , rcIntervalSec :: !Int
   , rcTimeoutSec  :: !(Maybe Int)
-  } deriving (Show, Eq, Lift, Generic)
-
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData RetryConf
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
 data EventHeaderInfo
   = EventHeaderInfo
   { ehiHeaderConf  :: !HeaderConf
   , ehiCachedValue :: !T.Text
-  } deriving (Show, Eq, Lift)
-
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData EventHeaderInfo
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventHeaderInfo)
 
 data WebhookConf = WCValue T.Text | WCEnv T.Text
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Generic, Lift)
+instance NFData WebhookConf
 
 instance ToJSON WebhookConf where
   toJSON (WCValue w)  = String w
@@ -108,8 +111,8 @@ data WebhookConfInfo
   = WebhookConfInfo
   { wciWebhookConf :: !WebhookConf
   , wciCachedValue :: !T.Text
-  } deriving (Show, Eq, Lift)
-
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData WebhookConfInfo
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookConfInfo)
 
 data CreateEventTriggerQuery
@@ -153,7 +156,7 @@ instance FromJSON CreateEventTriggerQuery where
       (Just _, Nothing) -> return ()
       (Nothing, Just _) -> return ()
       (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
-      _ ->   fail "must provide webhook or webhook_from_env"
+      _                 ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
     return $ CreateEventTriggerQuery name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace
     where
@@ -172,8 +175,8 @@ data TriggerOpsDef
   , tdUpdate       :: !(Maybe SubscribeOpSpec)
   , tdDelete       :: !(Maybe SubscribeOpSpec)
   , tdEnableManual :: !(Maybe Bool)
-  } deriving (Show, Eq, Lift, Generic)
-
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData TriggerOpsDef
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
 data DeleteEventTriggerQuery

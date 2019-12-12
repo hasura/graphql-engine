@@ -21,7 +21,6 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict                as M
-import qualified Data.Map.Strict                    as Map
 import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson
@@ -392,7 +391,7 @@ updateColInArrRel fromQT toQT rnCol = \case
     RUManual $ ArrRelManualConfig $
     updateRelManualConfig fromQT toQT rnCol manConfig
 
-type ColMap = Map.Map PGCol PGCol
+type ColMap = HashMap PGCol PGCol
 
 getNewCol
   :: RenameCol -> QualifiedTable -> PGCol -> PGCol
@@ -412,8 +411,8 @@ updateRelManualConfig fromQT toQT rnCol manConfig =
 updateColMap
   :: QualifiedTable -> QualifiedTable
   -> RenameCol -> ColMap -> ColMap
-updateColMap fromQT toQT rnCol colMap =
-  Map.fromList $ map (modCol fromQT *** modCol toQT) (Map.toList colMap)
+updateColMap fromQT toQT rnCol =
+  M.fromList . map (modCol fromQT *** modCol toQT) . M.toList
   where
     RenameItem qt oCol nCol = rnCol
     modCol colQt col = if colQt == qt && col == oCol then nCol else col

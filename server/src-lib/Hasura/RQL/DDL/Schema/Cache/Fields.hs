@@ -8,7 +8,7 @@ module Hasura.RQL.DDL.Schema.Cache.Fields
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended       as M
-import qualified Data.HashSet       as HS
+import qualified Data.HashSet                       as HS
 import qualified Data.Sequence                      as Seq
 
 import           Control.Arrow.Extended
@@ -24,7 +24,6 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
-{-# SCC addNonColumnFields #-}
 addNonColumnFields
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
@@ -89,10 +88,9 @@ mkRelationshipMetadataObject (CatalogRelation qt rn rt rDef cmnt) =
       definition = toJSON $ WithTable qt $ RelDef rn rDef cmnt
   in MetadataObject objectId definition
 
-{-# SCC buildRelationship #-}
 buildRelationship
   :: (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr)
-  => (HashMap QualifiedTable [ForeignKey], CatalogRelation) `arr` Maybe RelInfo
+  => (HashMap QualifiedTable (HashSet ForeignKey), CatalogRelation) `arr` Maybe RelInfo
 buildRelationship = proc (foreignKeys, relationship) -> do
   let CatalogRelation tableName rn rt rDef _ = relationship
       metadataObject = mkRelationshipMetadataObject relationship
@@ -119,7 +117,6 @@ mkComputedFieldMetadataObject (CatalogComputedField column _) =
       objectId = MOTableObj qt $ MTOComputedField name
   in MetadataObject objectId (toJSON column)
 
-{-# SCC buildComputedField #-}
 buildComputedField
   :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )

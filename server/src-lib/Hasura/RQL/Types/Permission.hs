@@ -24,10 +24,9 @@ module Hasura.RQL.Types.Permission
        ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common    (NonEmptyText, adminText,
-                                             mkNonEmptyText, unNonEmptyText)
-import           Hasura.Server.Utils        (adminSecretHeader,
-                                             deprecatedAccessKeyHeader,
+import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
+                                             unNonEmptyText)
+import           Hasura.Server.Utils        (adminSecretHeader, deprecatedAccessKeyHeader,
                                              userRoleHeader)
 import           Hasura.SQL.Types
 

@@ -33,22 +33,20 @@ import           Hasura.EncJSON
 import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.Types            (CacheRWM, Code (..),
-                                              HasHttpManager, HasSQLGenCtx,
-                                              HasSystemDefined, QErr (..),
-                                              SQLGenCtx (..), SchemaCache (..),
-                                              UserInfoM, adminRole,
-                                              adminUserInfo, decodeValue,
-                                              throw400,
-                                              userRole, withPathK, buildSchemaCacheStrict)
+import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
+                                                       HasSQLGenCtx, HasSystemDefined, QErr (..),
+                                                       SQLGenCtx (..), SchemaCache (..), UserInfoM,
+                                                       adminRole, adminUserInfo,
+                                                       buildSchemaCacheStrict, decodeValue,
+                                                       throw400, userRole, withPathK)
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates           (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Migrate       (migrateCatalog)
-import           Hasura.Server.Query         (requiresAdmin, runQueryM)
+import           Hasura.Server.Migrate                (migrateCatalog)
+import           Hasura.Server.Query                  (requiresAdmin, runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version

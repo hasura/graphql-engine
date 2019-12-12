@@ -89,7 +89,7 @@ isRelNullable
   :: FieldInfoMap FieldInfo -> RelInfo -> Bool
 isRelNullable fim ri = isNullable
   where
-    lCols = map fst $ riMapping ri
+    lCols = Map.keys $ riMapping ri
     allCols = getValidCols fim
     lColInfos = getColInfos lCols allCols
     isNullable = any pgiIsNullable lColInfos
@@ -690,7 +690,6 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
 noFilter :: AnnBoolExpPartialSQL
 noFilter = annBoolExpTrue
 
-{-# SCC mkGCtxMap #-}
 mkGCtxMap
   :: forall m. (MonadError QErr m)
   => TableCache -> FunctionCache -> m GCtxMap

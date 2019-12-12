@@ -54,7 +54,7 @@ parseDropNotice t = do
         Just rest -> case T.splitOn "DETAIL:" $ T.strip rest of
           [singleDetail] -> return [singleDetail]
           [_, detailTxt] -> return $ T.lines $ T.strip detailTxt
-          _ -> throw500 "splitOn DETAIL has unexpected structure"
+          _              -> throw500 "splitOn DETAIL has unexpected structure"
         Nothing   -> throw500 "unexpected beginning of notice"
       let cascadeLines = mapMaybe (T.stripPrefix "drop cascades to") detailLines
       when (length detailLines /= length cascadeLines) $
@@ -86,9 +86,9 @@ getPGDeps tx = do
     Q.unitQ "RELEASE SAVEPOINT hdb_get_pg_deps" () False
     return dropNotices
   case dropNotices of
-    [] -> return []
+    []       -> return []
     [notice] -> parseDropNotice notice
-    _ -> throw500 "unexpected number of notices when getting dependencies"
+    _        -> throw500 "unexpected number of notices when getting dependencies"
 
 getIndirectDeps
   :: (CacheRM m, MonadTx m)

@@ -99,7 +99,7 @@ infixr 6 <+>
 
 newtype Iden
   = Iden { getIdenTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Semigroup, Data)
+  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data)
 
 instance ToSQL Iden where
   toSQL (Iden t) =
@@ -519,7 +519,8 @@ data WithScalarType a
 data PGType a
   = PGTypeScalar !a
   | PGTypeArray !a
-  deriving (Show, Eq, Data, Functor)
+  deriving (Show, Eq, Generic, Data, Functor)
+instance (NFData a) => NFData (PGType a)
 $(deriveJSON defaultOptions{constructorTagModifier = drop 6} ''PGType)
 
 instance (ToSQL a) => ToSQL (PGType a) where

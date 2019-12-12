@@ -17,8 +17,7 @@ import           Hasura.Prelude
 import           Hasura.EncJSON
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..),
-                                                     mkFunctionArgs)
+import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                (makeReasonMessage)
 import           Hasura.SQL.Types

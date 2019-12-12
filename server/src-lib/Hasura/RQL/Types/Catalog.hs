@@ -16,7 +16,7 @@ module Hasura.RQL.Types.Catalog
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict as M
+import qualified Data.HashMap.Strict              as M
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -36,7 +36,7 @@ import           Hasura.SQL.Types
 newtype CatalogForeignKey
   = CatalogForeignKey
   { unCatalogForeignKey :: ForeignKey
-  } deriving (Show, Eq, NFData)
+  } deriving (Show, Eq, NFData, Hashable)
 
 instance FromJSON CatalogForeignKey where
   parseJSON = withObject "CatalogForeignKey" \o -> do
@@ -59,9 +59,9 @@ data CatalogTableInfo
   { _ctiOid               :: !OID
   , _ctiColumns           :: ![PGRawColumnInfo]
   , _ctiPrimaryKey        :: !(Maybe (PrimaryKey PGCol))
-  , _ctiUniqueConstraints :: ![Constraint]
+  , _ctiUniqueConstraints :: !(HashSet Constraint)
   -- ^ Does /not/ include the primary key!
-  , _ctiForeignKeys       :: ![CatalogForeignKey]
+  , _ctiForeignKeys       :: !(HashSet CatalogForeignKey)
   , _ctiViewInfo          :: !(Maybe ViewInfo)
   , _ctiDescription       :: !(Maybe PGDescription)
   } deriving (Show, Eq, Generic)
@@ -99,6 +99,7 @@ data CatalogPermission
   , _cpComment  :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance NFData CatalogPermission
+instance Hashable CatalogPermission
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogPermission)
 
 data CatalogComputedField

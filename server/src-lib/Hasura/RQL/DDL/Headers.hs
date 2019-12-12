@@ -36,7 +36,7 @@ instance FromJSON HeaderConf where
 
 instance ToJSON HeaderConf where
   toJSON (HeaderConf name (HVValue val)) = object ["name" .= name, "value" .= val]
-  toJSON (HeaderConf name (HVEnv val)) = object ["name" .= name, "value_from_env" .= val]
+  toJSON (HeaderConf name (HVEnv val))   = object ["name" .= name, "value_from_env" .= val]
 
 
 -- | This is used by schema stitching
@@ -49,5 +49,5 @@ getHeadersFromConf = mapM getHeader
       (HeaderConf name (HVEnv val))   -> do
         mEnv <- liftIO $ lookupEnv (T.unpack val)
         case mEnv of
-          Nothing -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
+          Nothing     -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
           Just envval -> return (name, T.pack envval)
