@@ -326,6 +326,7 @@ query results {
             }
         }
 
+    #TODO add executable shasum also
     def set_version_info(self, insert_var):
         if self.hge_docker_image:
             insert_var["docker_image"] = self.hge_docker_image
@@ -334,6 +335,8 @@ query results {
             insert_var["server_shasum"] = self.get_server_shasum()
 
         insert_var['postgres_version'] = self.pg.get_server_version()
+        if self.scenario_name:
+            insert_var['scenario_name'] = self.scenario_name
 
     def set_hge_args_env_vars(self, insert_var):
         to_hide_env = ['HASURA_GRAPHQL_' + env for env in
@@ -481,7 +484,8 @@ class HGEWrkBenchArgs(HGETestSetupArgs):
         wrk_opts.add_argument('--queries-file', metavar='HASURA_BENCH_QUERIES_FILE', help='Queries file for benchmarks', default='queries.graphql')
         wrk_opts.add_argument('--connections', metavar='HASURA_BENCH_CONNECTIONS', help='Total number of open connections', default=50)
         wrk_opts.add_argument('--duration', metavar='HASURA_BENCH_DURATION', help='Duration of tests in seconds', default=300)
-        wrk_opts.add_argument('--upload-root-uri', metavar='HASURA_BENCH_UPLOAD_ROOT_URI', help='The URI to which the latency results should be uploaded', required=False)
+        wrk_opts.add_argument('--upload-root-uri', metavar='HASURA_BENCH_UPLOAD_ROOT_URI', help='The URI to which the latency results should be uploaded. Curently only s3 is supported', required=False)
+        wrk_opts.add_argument('--set-scenario-name', metavar='HASURA_BENCH_SCENARIO_NAME', help='Set a name for the test scenario. This will be shown in logs', required=False)
         wrk_opts.add_argument('--results-hge-url', metavar='HASURA_BENCH_RESULTS_HGE_URL', help='The GraphQL engine to which the results should be uploaded', required=False)
         wrk_opts.add_argument('--results-hge-admin-secret', metavar='HASURA_BENCH_RESULTS_HGE_ADMIN_SECRET', help='Admin secret of the GraphQL engine to which the results should be uploaded', required=False)
         wrk_opts.add_argument('--skip-plots', help='Skip plotting', action='store_true', required=False)
@@ -491,7 +495,7 @@ class HGEWrkBenchArgs(HGETestSetupArgs):
         return boto3.client('sts').get_caller_identity()
 
     def parse_wrk_options(self):
-        self.connections, self.duration, self.graphql_queries_file, self.res_hge_url, upload_root_uri, self.res_hge_admin_secret, self.run_benchmarks = \
+        self.connections, self.duration, self.graphql_queries_file, self.res_hge_url, upload_root_uri, self.res_hge_admin_secret, self.run_benchmarks, self.scenario_name = \
             self.get_params([
                 ('connections', 'HASURA_BENCH_CONNECTIONS'),
                 ('duration', 'HASURA_BENCH_DURATION'),
@@ -499,7 +503,8 @@ class HGEWrkBenchArgs(HGETestSetupArgs):
                 ('results_hge_url', 'HASURA_BENCH_RESULTS_HGE_URL'),
                 ('upload_root_uri', 'HASURA_BENCH_UPLOAD_ROOT_URI'),
                 ('results_hge_admin_secret', 'HASURA_BENCH_RESULTS_HGE_ADMIN_SECRET'),
-                ('run_benchmarks', 'HASURA_BENCH_RUN_BENCHMARKS')
+                ('run_benchmarks', 'HASURA_BENCH_RUN_BENCHMARKS'),
+                ('set_scenario_name', 'HASURA_BENCH_SCENARIO_NAME'),
             ])
         self.upload_root_uri = None
         if upload_root_uri:
