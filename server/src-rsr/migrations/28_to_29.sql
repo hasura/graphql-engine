@@ -38,13 +38,15 @@ CREATE VIEW hdb_catalog.hdb_table_info_agg AS
     ( SELECT jsonb_agg(jsonb_build_object(
         'name', "column".attname,
         'position', "column".attnum,
-        'type', "type".typname,
+        'type', coalesce(base_type.typname, "type".typname),
         'is_nullable', NOT "column".attnotnull,
         'description', pg_catalog.col_description("table".oid, "column".attnum)
       )) AS info
       FROM pg_catalog.pg_attribute "column"
       LEFT JOIN pg_catalog.pg_type "type"
         ON "type".oid = "column".atttypid
+      LEFT JOIN pg_catalog.pg_type base_type
+        ON "type".typtype = 'd' AND base_type.oid = "type".typbasetype
       WHERE "column".attrelid = "table".oid
         -- columns where attnum <= 0 are special, system-defined columns
         AND "column".attnum > 0
