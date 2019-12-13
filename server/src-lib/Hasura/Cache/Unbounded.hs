@@ -69,11 +69,9 @@ getLocal (UnboundedCache handles) = do
 
   (i, _) <- myThreadId >>= threadCapability
 
-  -- The number of capability could be dynamically changed.
-  -- So, let's check the upper boundary of the vector
-  let lim = V.length handles
-      j | i < lim   = i
-        | otherwise = i `mod` lim
+  -- The number of capabilities can grow dynamically so make sure we wrap
+  -- around when indexing.
+  let j = i `mod` V.length handles
 
   return $ handles V.! j
 
