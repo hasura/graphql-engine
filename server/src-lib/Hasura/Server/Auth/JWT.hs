@@ -53,7 +53,6 @@ import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
 
-
 newtype RawJWT = RawJWT BL.ByteString
 
 data JWTClaimsFormat
@@ -93,9 +92,9 @@ instance A.FromJSON JWTClaimsMap where
   parseJSON = A.withObject "Object" $ \obj -> do
     let onlyXHasuraTuples = filter (isXHasuraPrefix . fst) $ Map.toList obj
     jsonPathTuples <- forM onlyXHasuraTuples $
-      \(t, val) -> (T.toLower t,) <$> case val of
-                     A.String s -> either fail pure $ parseJSONPath s
-                     _          -> fail "expecting String for JSONPath"
+      \(t, val) -> flip (A.<?>) (A.Key t) $ (T.toLower t,) <$> case val of
+                         A.String s -> either fail pure $ parseJSONPath s
+                         _          -> fail "expecting String for JSONPath"
 
     let withParseError l = maybe (fail $ T.unpack $ l <> " is expected but not found")
                            pure $ Map.lookup l $ Map.fromList jsonPathTuples
@@ -340,7 +339,8 @@ parseHasuraClaims unregisteredClaims = \case
   JCNamespace namespace claimsFormat -> do
     claimsV <- maybe (claimsNotFound namespace) pure $ Map.lookup namespace unregisteredClaims
     -- get hasura claims value as an object. parse from string possibly
-    claimsObject <- parseObjectFromString namespace claimsFormat claimsV
+    claimsObject <- Map.fromList . map (first T.toLower) . Map.toList <$>
+                    parseObjectFromString namespace claimsFormat claimsV
 
     allowedRoles <- parseAllowedRolesClaim $ Map.lookup allowedRolesClaim claimsObject
     defaultRole <- parseDefaultRoleClaim $ Map.lookup defaultRoleClaim claimsObject

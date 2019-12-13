@@ -214,6 +214,7 @@ library
                      , Hasura.EncJSON
 
                      , Data.Aeson.Ordered
+                     , Data.Parser.JSONPath
 
   other-modules:       Hasura.Cache
                      , Hasura.Cache
@@ -332,7 +333,6 @@ library
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
-                     , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.Text.Extended
@@ -373,3 +373,4 @@ test-suite graphql-engine-tests
     , time
     , aeson
     , QuickCheck
+    , text

@@ -4,6 +4,7 @@ import           Hasura.Prelude
 
 import           Data.Aeson                        (eitherDecodeStrict)
 import           Data.Either                       (isRight)
+import           Data.Parser.JSONPath
 import           Data.Time.Clock                   (getCurrentTime)
 import           Hasura.EncJSON
 import           Options.Applicative
@@ -13,25 +14,20 @@ import           Test.Hspec
 import           Test.QuickCheck
 
 import qualified Data.Aeson.Ordered                as AO
+import qualified Data.Text                         as T
 import qualified Database.PG.Query                 as Q
 import qualified Network.HTTP.Client               as HTTP
 import qualified Network.HTTP.Client.TLS           as HTTP
 import qualified Test.Hspec.Runner                 as Hspec
 
 import           Hasura.Db                         (PGExecCtx (..))
-import           Hasura.RQL.DDL.Metadata           (ClearMetadata (..),
-                                                    runClearMetadata)
+import           Hasura.RQL.DDL.Metadata           (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Metadata.Generator (genReplaceMetadata)
-import           Hasura.RQL.DDL.Metadata.Types     (ReplaceMetadata,
-                                                    replaceMetadataToOrdJSON)
-import           Hasura.RQL.Types                  (QErr, SQLGenCtx (..),
-                                                    adminUserInfo,
-                                                    emptySchemaCache,
-                                                    successMsg)
-import           Hasura.Server.Init                (RawConnInfo, mkConnInfo,
-                                                    mkRawConnInfo,
-                                                    parseRawConnInfo,
-                                                    runWithEnv)
+import           Hasura.RQL.DDL.Metadata.Types     (ReplaceMetadata, replaceMetadataToOrdJSON)
+import           Hasura.RQL.Types                  (QErr, SQLGenCtx (..), adminUserInfo,
+                                                    emptySchemaCache, encodeJSONPath, successMsg)
+import           Hasura.Server.Init                (RawConnInfo, mkConnInfo, mkRawConnInfo,
+                                                    parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
 import           Hasura.Server.PGDump
 import           Hasura.Server.Query               (Run, RunCtx (..), peelRun)
@@ -120,9 +116,11 @@ main = do
               secondDump `shouldBe` firstDump
 
     runPropertyTests = do
-      putStrLn "Running property tests"
-      passed <- isSuccess <$> quickCheckResult (withMaxSuccess 30 prop_replacemetadata)
-      unless passed $ printErrExit "Property tests failed"
+      putStrLn "Running Metadata property tests"
+      metadataTest <- isSuccess <$> quickCheckResult (withMaxSuccess 30 prop_replacemetadata)
+      putStrLn "Running JSONPath property tests"
+      jsonpathTest <- isSuccess <$> quickCheckResult (withMaxSuccess 1000 prop_jsonpath_parser)
+      unless (and [metadataTest, jsonpathTest]) $ printErrExit "Property tests failed"
       where
         prop_replacemetadata =
           forAll (resize 3 genReplaceMetadata) $ \metadata ->
@@ -133,6 +131,14 @@ main = do
                  Left err -> counterexample err False
                  Right _  -> property True
 
+        prop_jsonpath_parser =
+          forAll(resize 20 generateJSONPath) $ \jsonPath ->
+            let encPath = encodeJSONPath jsonPath
+                parsedJSONPathE =  parseJSONPath $ T.pack encPath
+            in case parsedJSONPathE of
+                 Left err             -> counterexample (err <> ": " <> encPath) False
+                 Right parsedJSONPath -> property $ parsedJSONPath == jsonPath
+
     runHspec :: Spec -> IO ()
     runHspec m = do
       config <- Hspec.readConfig Hspec.defaultConfig []
@@ -140,3 +146,13 @@ main = do
 
     printErrExit :: String -> IO a
     printErrExit = (*> exitFailure) . putStrLn
+
+generateJSONPath :: Gen JSONPath
+generateJSONPath = map (either id id) <$> listOf1 genPathElementEither
+  where
+    genPathElementEither = do
+      indexLeft <- Left <$> genIndex
+      keyRight <- Right <$> genKey
+      elements [indexLeft, keyRight]
+    genIndex = Index <$> choose (0, 100)
+    genKey = (Key . T.pack) <$> listOf1 (elements $ ['a'..'z'] ++ ['A'..'Z'] ++ "0123456789.,!@#$%^&*_-?:;|/\"")

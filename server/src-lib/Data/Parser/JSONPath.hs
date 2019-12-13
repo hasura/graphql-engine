@@ -8,50 +8,46 @@ import           Control.Applicative  ((<|>))
 import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
 import           Data.Attoparsec.Text
 import           Data.Bool            (bool)
-import           Data.Char            (isDigit)
-import qualified Data.Text            as T
 import           Prelude              hiding (takeWhile)
 import           Text.Read            (readMaybe)
 
-parseKey :: Parser T.Text
-parseKey = do
-  firstChar <- letter
-           <?> "the first character of property name must be a letter."
-  name <- many' (letter
-           <|> digit
-           <|> satisfy (`elem` ("-_" :: String))
-            )
-  return $ T.pack (firstChar:name)
+import qualified Data.Text            as T
 
-parseIndex :: Parser Int
-parseIndex = skip (== '[') *> anyChar >>= parseDigits
-  where
-    parseDigits :: Char -> Parser Int
-    parseDigits firstDigit
-      | firstDigit == ']' = fail "empty array index"
-      | not $ isDigit firstDigit =
-          fail $ "invalid array index: " ++ [firstDigit]
-      | otherwise = do
-          remain <- many' (notChar ']')
-          skip (== ']')
-          let content = firstDigit:remain
-          case (readMaybe content :: Maybe Int) of
-            Nothing -> fail $ "invalid array index: " ++ content
-            Just v  -> return v
+parseSimpleKeyText :: Parser T.Text
+parseSimpleKeyText = takeWhile1 (inClass "a-zA-Z0-9_-")
 
-parseElement :: Parser JSONPathElement
-parseElement = do
-  dotLen <- T.length <$> takeWhile (== '.')
-  if dotLen > 1
-    then fail "multiple dots in json path"
-    else peekChar >>= \case
-      Nothing ->  fail "empty json path"
-      Just '[' -> Index <$> parseIndex
-      _ -> Key <$> parseKey
+parseKey :: Parser JSONPathElement
+parseKey = Key <$>
+  ( (char '.' *> parseSimpleKeyText) -- Parse `.key`
+   <|> T.pack <$> ((string ".['" <|> string "['") *> manyTill anyChar (string "']")) -- Parse `['key']` or `.['key']`
+   <|> fail "invalid key element"
+  )
+
+parseIndex :: Parser JSONPathElement
+parseIndex = Index <$>
+  ( ((char '[' *> manyTill anyChar (char ']')) >>= maybe (fail "invalid array index") pure . readMaybe) -- Parse `[Int]`
+   <|> fail "invalid index element"
+  )
 
 parseElements :: Parser JSONPath
-parseElements = skipWhile (== '$') *> many1 parseElement
+parseElements = skipWhile (== '$') *> parseRemaining
+  where
+    parseFirstKey = Key <$> parseSimpleKeyText
+    parseElements' = many1 (parseIndex <|> parseKey)
+    parseRemaining = do
+      maybeFirstChar <- peekChar
+      case maybeFirstChar of
+        Nothing -> fail "end of input"
+        Just firstChar ->
+          -- If first char is not any of '.' and '[', then parse first key
+          -- Eg:- Parse "key1.key2[0]"
+          if firstChar `notElem` (".[" :: String) then do
+            firstKey <- parseFirstKey
+            remainingElements <- parseElements'
+            pure $ firstKey:remainingElements
+          else parseElements'
 
+-- | Parse jsonpath String value
 parseJSONPath :: T.Text -> Either String JSONPath
 parseJSONPath = parseResult . parse parseElements
   where
@@ -67,3 +63,4 @@ parseJSONPath = parseResult . parse parseElements
 
     invalidMessage s = "invalid property name: "  ++ T.unpack s
       ++ ". Accept letters, digits, underscore (_) or hyphen (-) only"
+      ++ ". Use single quotes enclosed in bracket if there are any special characters"
