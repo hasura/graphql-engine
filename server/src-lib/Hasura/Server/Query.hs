@@ -24,8 +24,8 @@ import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
 import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.Schema
-import           Hasura.RQL.DDL.TimedTrigger
 import           Hasura.RQL.DML.Count
 import           Hasura.RQL.DML.Delete
 import           Hasura.RQL.DML.Insert
@@ -87,7 +87,7 @@ data RQLQueryV1
   | RQRedeliverEvent     !RedeliverEventQuery
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
-  | RQCreateTimedTrigger !TimedTriggerQuery
+  | RQCreateScheduledTrigger !ScheduledTriggerQuery
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
@@ -278,7 +278,7 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQDeleteEventTrigger _          -> True
   RQRedeliverEvent _              -> False
   RQInvokeEventTrigger _          -> False
-  RQCreateTimedTrigger _          -> False
+  RQCreateScheduledTrigger _          -> False
 
   RQCreateQueryCollection _       -> True
   RQDropQueryCollection _         -> True
@@ -402,7 +402,7 @@ runQueryM rq =
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
       RQRedeliverEvent q           -> runRedeliverEvent q
       RQInvokeEventTrigger q       -> runInvokeEventTrigger q
-      RQCreateTimedTrigger q       -> runCreateTimedTrigger q
+      RQCreateScheduledTrigger q       -> runCreateScheduledTrigger q
 
       RQCreateQueryCollection q        -> runCreateCollection q
       RQDropQueryCollection q          -> runDropCollection q
@@ -476,7 +476,7 @@ requiresAdmin = \case
     RQDeleteEventTrigger _          -> True
     RQRedeliverEvent _              -> True
     RQInvokeEventTrigger _          -> True
-    RQCreateTimedTrigger _          -> True
+    RQCreateScheduledTrigger _      -> True
 
     RQCreateQueryCollection _       -> True
     RQDropQueryCollection _         -> True

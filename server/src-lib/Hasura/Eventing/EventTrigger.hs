@@ -41,7 +41,6 @@ import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
-type Version = T.Text
 
 invocationVersion :: Version
 invocationVersion = "2"
@@ -51,32 +50,11 @@ type LogEnvHeaders = Bool
 newtype CacheRef
   = CacheRef { unCacheRef :: IORef (SchemaCache, SchemaCacheVer) }
 
-newtype EventInternalErr
-  = EventInternalErr QErr
-  deriving (Show, Eq)
-
-instance L.ToEngineLog EventInternalErr L.Hasura where
-  toEngineLog (EventInternalErr qerr) = (L.LevelError, L.eventTriggerLogType, toJSON qerr)
-
-data TriggerMeta
-  = TriggerMeta { tmName :: TriggerName }
-  deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMeta)
-
-data DeliveryInfo
-  = DeliveryInfo
-  { diCurrentRetry :: Int
-  , diMaxRetries   :: Int
-  } deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeliveryInfo)
-
 data Event
   = Event
   { eId        :: EventId
   , eTable     :: QualifiedTable
-  , eTrigger   :: TriggerMeta
+  , eTrigger   :: TriggerMetadata
   , eEvent     :: Value
   , eTries     :: Int
   , eCreatedAt :: Time.UTCTime
@@ -98,54 +76,13 @@ data EventPayload
   = EventPayload
   { epId           :: EventId
   , epTable        :: QualifiedTableStrict
-  , epTrigger      :: TriggerMeta
+  , epTrigger      :: TriggerMetadata
   , epEvent        :: Value
   , epDeliveryInfo :: DeliveryInfo
   , epCreatedAt    :: Time.UTCTime
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
-
-data WebhookRequest
-  = WebhookRequest
-  { _rqPayload :: Value
-  , _rqHeaders :: Maybe [HeaderConf]
-  , _rqVersion :: T.Text
-  }
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookRequest)
-
-data WebhookResponse
-  = WebhookResponse
-  { _wrsBody    :: TBS.TByteString
-  , _wrsHeaders :: Maybe [HeaderConf]
-  , _wrsStatus  :: Int
-  }
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''WebhookResponse)
-
-data ClientError =  ClientError { _ceMessage :: TBS.TByteString}
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ClientError)
-
-data Response = ResponseType1 WebhookResponse | ResponseType2 ClientError
-
-instance ToJSON Response where
-  toJSON (ResponseType1 resp) = object
-    [ "type" .= String "webhook_response"
-    , "data" .= toJSON resp
-    , "version" .= invocationVersion
-    ]
-  toJSON (ResponseType2 err)  = object
-    [ "type" .= String "client_error"
-    , "data" .= toJSON err
-    , "version" .= invocationVersion
-    ]
-
-data Invocation
-  = Invocation
-  { iEventId  :: EventId
-  , iStatus   :: Int
-  , iRequest  :: WebhookRequest
-  , iResponse :: Response
-  }
 
 data EventEngineCtx
   = EventEngineCtx
@@ -354,43 +291,8 @@ mkInvo ep status reqHeaders respBody respHeaders
       Invocation
       (epId ep)
       status
-      (mkWebhookReq (toJSON ep) reqHeaders)
+      (mkWebhookReq (toJSON ep) reqHeaders invocationVersion)
       resp
-
-mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response
-mkResp status payload headers =
-  let wr = WebhookResponse payload (mkMaybe headers) status
-  in ResponseType1 wr
-
-mkClientErr :: TBS.TByteString -> Response
-mkClientErr message =
-  let cerr = ClientError message
-  in ResponseType2 cerr
-
-mkWebhookReq :: Value -> [HeaderConf] -> WebhookRequest
-mkWebhookReq payload headers = WebhookRequest payload (mkMaybe headers) invocationVersion
-
-isClientError :: Int -> Bool
-isClientError status = status >= 1000
-
-mkMaybe :: [a] -> Maybe [a]
-mkMaybe [] = Nothing
-mkMaybe x  = Just x
-
-logQErr :: ( MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
-logQErr err = do
-  logger :: L.Logger L.Hasura <- asks getter
-  L.unLogger logger $ EventInternalErr err
-
-logHTTPErr
-  :: ( MonadReader r m
-     , Has (L.Logger L.Hasura) r
-     , MonadIO m
-     )
-  => HTTPErr -> m ()
-logHTTPErr err = do
-  logger :: L.Logger L.Hasura <- asks getter
-  L.unLogger logger $ err
 
 tryWebhook
   :: ( Has (L.Logger L.Hasura) r
@@ -406,6 +308,7 @@ tryWebhook headers responseTimeout ep webhook = do
   let createdAt = epCreatedAt ep
       eventId =  epId ep
   initReqE <- liftIO $ try $ HTTP.parseRequest webhook
+  manager <- asks getter
   case initReqE of
     Left excp -> throwError $ HClient excp
     Right initReq -> do
@@ -424,7 +327,7 @@ tryWebhook headers responseTimeout ep webhook = do
           then retry
           else modifyTVar' c (+1)
 
-      eitherResp <- runHTTP req  (Just (ExtraContext createdAt eventId))
+      eitherResp <- runHTTP manager req (Just (ExtraContext createdAt eventId))
 
       -- decrement counter once http is done
       liftIO $ atomically $ do
@@ -456,7 +359,7 @@ fetchEvents =
           Event
           { eId        = id'
           , eTable     = QualifiedObject sn tn
-          , eTrigger   = TriggerMeta trn
+          , eTrigger   = TriggerMetadata trn
           , eEvent     = payload
           , eTries     = tries
           , eCreatedAt = created

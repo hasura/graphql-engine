@@ -1,8 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Hasura.RQL.DDL.TimedTrigger
-  ( TimedTriggerQuery(..)
-  , runCreateTimedTrigger
+module Hasura.RQL.DDL.ScheduledTrigger
+  ( ScheduledTriggerQuery(..)
+  , runCreateScheduledTrigger
   ) where
 
 import           Data.Aeson
@@ -17,22 +17,22 @@ import           Language.Haskell.TH.Syntax  (Lift)
 
 import qualified Database.PG.Query           as Q
 
-data TimedTriggerQuery
-  = TimedTriggerQuery
-  { ttqName     :: !NonEmptyText
-  , ttqWebhook  :: !NonEmptyText
-  , ttqSchedule :: !NonEmptyText
+data ScheduledTriggerQuery
+  = ScheduledTriggerQuery
+  { stqName     :: !NonEmptyText
+  , stqWebhook  :: !NonEmptyText
+  , stqSchedule :: !NonEmptyText
   }
   deriving (Show, Eq, Lift)
 
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''TimedTriggerQuery)
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ScheduledTriggerQuery)
 
-runCreateTimedTrigger :: CacheBuildM m => TimedTriggerQuery ->  m EncJSON
-runCreateTimedTrigger TimedTriggerQuery{..} = do
+runCreateScheduledTrigger :: CacheBuildM m => ScheduledTriggerQuery ->  m EncJSON
+runCreateScheduledTrigger ScheduledTriggerQuery{..} = do
   liftTx $  Q.unitQE defaultTxErrorHandler
          [Q.sql|
            INSERT into hdb_catalog.hdb_scheduled_trigger
                        (name, webhook, schedule)
            VALUES ($1, $2, $3)
-         |] (ttqName, Q.AltJ $ toJSON ttqWebhook, ttqSchedule) False
+         |] (stqName, stqWebhook, stqSchedule) False
   return successMsg

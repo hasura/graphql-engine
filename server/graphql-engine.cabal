@@ -258,7 +258,7 @@ library
                      , Hasura.RQL.DDL.Schema.Table
                      , Hasura.RQL.DDL.Utils
                      , Hasura.RQL.DDL.EventTrigger
-                     , Hasura.RQL.DDL.TimedTrigger
+                     , Hasura.RQL.DDL.ScheduledTrigger
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.QueryCollection
