@@ -71,6 +71,7 @@ class ModifyTable extends React.Component {
       tableName,
       allTables,
       nonTrackableFunctions,
+      trackableFunctions,
       dispatch,
       migrationMode,
       currentSchema,
@@ -187,9 +188,9 @@ class ModifyTable extends React.Component {
     };
 
     const getComputedFieldsSection = () => {
-      if (!checkFeatureSupport(COMPUTED_FIELDS_REL_SUPPORT)) {
-        return null;
-      }
+      if (!checkFeatureSupport(COMPUTED_FIELDS_REL_SUPPORT)) return null;
+
+      const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
 
       return (
         <React.Fragment>
@@ -203,7 +204,7 @@ class ModifyTable extends React.Component {
           <ComputedFieldsEditor
             table={table}
             currentSchema={currentSchema}
-            functions={nonTrackableFunctions} // TODO: confirm all computed field fns are nonTrackable + fix cross schema functions
+            functions={allFunctions} // TODO: fix cross schema functions
             schemaList={schemaList}
             dispatch={dispatch}
           />
@@ -333,6 +334,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allTables: state.tables.allSchemas,
   nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],
+  trackableFunctions: state.tables.postgresFunctions || [],
   migrationMode: state.main.migrationMode,
   serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,

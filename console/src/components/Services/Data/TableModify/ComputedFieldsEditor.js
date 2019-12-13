@@ -22,16 +22,26 @@ const ComputedFieldsEditor = ({
 }) => {
   const computedFields = table.computed_fields;
 
-  const [computedFieldsState] = React.useState(
-    computedFields.concat({
-      computed_field_name: '',
-      function_name: '',
-      function_schema: '',
-    })
+  const emptyComputedField = {
+    computed_field_name: '',
+    function_name: '',
+    function_schema: '',
+  };
+
+  const [computedFieldsState, setComputedFieldsState] = React.useState(
+    computedFields.concat({ ...emptyComputedField })
   );
 
   return computedFieldsState.map((computedField, i) => {
     const isLast = computedFields.length <= i;
+
+    const origComputedField = isLast ? emptyComputedField : computedFields[i];
+    let origComputedFieldName = '';
+    let origComputedFieldFunctionName = '';
+    if (origComputedField) {
+      origComputedFieldName = origComputedField.computed_field_name;
+      origComputedFieldFunctionName = origComputedField.function_name;
+    }
 
     const computedFieldName = computedField.computed_field_name;
     const computedFieldFunctionName = computedField.function_name;
@@ -65,8 +75,8 @@ const ComputedFieldsEditor = ({
 
       return (
         <div>
-          <b>{computedFieldName}</b>&nbsp;-&nbsp;
-          <i>{computedFieldFunctionName}</i>
+          <b>{origComputedFieldName}</b>&nbsp;-&nbsp;
+          <i>{origComputedFieldFunctionName}</i>
         </div>
       );
     };
@@ -84,7 +94,7 @@ const ComputedFieldsEditor = ({
         return null;
       }
 
-      return <b>{computedFieldName}</b>;
+      return <b>{origComputedFieldName}</b>;
     };
 
     const expandedContent = () => {
@@ -93,7 +103,7 @@ const ComputedFieldsEditor = ({
           return null;
         }
 
-        let computedFieldFunctionDefinition = '';
+        let computedFieldFunctionDefinition = '-- Function not found';
         if (functions) {
           const computedFieldFunction = findFunction(
             functions,
@@ -146,6 +156,39 @@ const ComputedFieldsEditor = ({
         );
       };
 
+      const handleNameChange = e => {
+        const newState = [...computedFieldsState];
+
+        newState[i] = {
+          ...newState[i],
+          computed_field_name: e.target.value,
+        };
+
+        setComputedFieldsState(newState);
+      };
+
+      const handleFnSchemaChange = e => {
+        const newState = [...computedFieldsState];
+
+        newState[i] = {
+          ...newState[i],
+          function_schema: e.target.value,
+        };
+
+        setComputedFieldsState(newState);
+      };
+
+      const handleFnNameChange = e => {
+        const newState = [...computedFieldsState];
+
+        newState[i] = {
+          ...newState[i],
+          function_name: e.target.value,
+        };
+
+        setComputedFieldsState(newState);
+      };
+
       return (
         <div>
           <div className={`${styles.add_mar_bottom}`}>
@@ -155,7 +198,7 @@ const ComputedFieldsEditor = ({
             <input
               type="text"
               value={computedFieldName}
-              // onChange={nameOnChange} TODO
+              onChange={handleNameChange}
               className={`form-control ${styles.wd50percent}`}
             />
           </div>
@@ -169,7 +212,7 @@ const ComputedFieldsEditor = ({
                 styles.add_pad_left
               } ${styles.wd50percent}`}
               data-test={'computed_field-fn-ref-schema'}
-              // onChange={fnSchemaOnChange} TODO
+              onChange={handleFnSchemaChange}
             >
               {schemaList.map((s, j) => {
                 const schemaName = getSchemaName(s);
@@ -189,7 +232,7 @@ const ComputedFieldsEditor = ({
             <input
               type="text"
               value={computedFieldFunctionName}
-              // onChange={fnNameOnChange} TODO
+              onChange={handleFnNameChange}
               className={`form-control ${styles.wd50percent}`}
             />
           </div>
@@ -198,12 +241,24 @@ const ComputedFieldsEditor = ({
       );
     };
 
+    const resetComputedField = () => {
+      const newState = [...computedFieldsState];
+
+      newState[i] = {
+        ...newState[i],
+        ...origComputedField,
+      };
+
+      setComputedFieldsState(newState);
+    };
+
     return (
-      <div key={`computed-field-${computedFieldName || i}`}>
+      <div key={`computed-field-${origComputedFieldName || i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}
           collapsedLabel={collapsedLabel}
+          collapseCallback={resetComputedField}
           property={`computed-field-${i}`}
           service="modify-table"
           expandButtonText={expandButtonText}
