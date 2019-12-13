@@ -11,6 +11,7 @@ module Hasura.Cache.Bounded
   , initialise
   , clear
   , insert
+  , insertAllStripes
   , lookup
   , getEntries
   ) where
@@ -169,11 +170,19 @@ getLocal (BoundedCache handles) = do
 
   return $ handles V.! j
 
+-- | Insert into our thread's local cache stripe.
 insert
   :: (Hashable k, Ord k) => k -> v -> BoundedCache k v -> IO ()
 insert k v striped = do
   localHandle <- getLocal striped
   insertLocal localHandle k v
+
+-- | Insert into all stripes (non-atomically).
+insertAllStripes
+  :: (Hashable k, Ord k) =>  k -> v -> BoundedCache k v ->IO ()
+insertAllStripes k v (BoundedCache handles) = do
+  forM_ handles $ \localHandle->
+    insertLocal localHandle k v
 
 lookup :: (Hashable k, Ord k) => k -> BoundedCache k v -> IO (Maybe v)
 lookup k striped = do

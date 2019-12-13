@@ -6,6 +6,7 @@ module Hasura.Cache.Unbounded
   , initialise
   , clear
   , insert
+  , insertAllStripes
   , lookup
   , getEntries
   ) where
@@ -75,12 +76,19 @@ getLocal (UnboundedCache handles) = do
 
   return $ handles V.! j
 
--- | Striped version of 'cached'.
+-- | Insert into our thread's local cache stripe.
 insert
   :: (Hashable k, Eq k) =>  k -> v -> UnboundedCache k v ->IO ()
 insert k v striped = do
   localHandle <- getLocal striped
   insertLocal localHandle k v
+
+-- | Insert into all stripes (non-atomically).
+insertAllStripes
+  :: (Hashable k, Eq k) =>  k -> v -> UnboundedCache k v ->IO ()
+insertAllStripes k v (UnboundedCache handles) = do
+  forM_ handles $ \localHandle->
+    insertLocal localHandle k v
 
 lookup :: (Hashable k, Eq k) => k -> UnboundedCache k v ->IO (Maybe v)
 lookup k striped = do
