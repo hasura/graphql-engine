@@ -345,12 +345,12 @@ func (ec *ExecutionContext) setupSpinner() {
 
 // Spin stops any existing spinner and starts a new one with the given message.
 func (ec *ExecutionContext) Spin(message string) {
-	ec.Spinner.Stop()
 	if !ec.isEnv {
+		ec.Spinner.Stop()
 		ec.Spinner.Prefix = message
 		ec.Spinner.Start()
 	}
-	ec.Spinner.Prefix = message
+	ec.Logger.Print(message)
 }
 
 // setupLogger creates a default logger if context does not have one set.
