@@ -182,6 +182,8 @@ type ExecutionContext struct {
 
 	// SkipUpdateCheck will skip the auto update check if set to true
 	SkipUpdateCheck bool
+
+	isEnv bool
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -203,6 +205,8 @@ func (ec *ExecutionContext) Prepare() error {
 	}
 	ec.CMDName = cmdName
 
+
+
 	// set spinner
 	ec.setupSpinner()
 
@@ -211,6 +215,12 @@ func (ec *ExecutionContext) Prepare() error {
 
 	// populate version
 	ec.setVersion()
+
+	// set environment
+	val, _ := os.LookupEnv("HASURA_GRAPHQL_CLI_ENVIRONMENT")
+	if  val == "server-on-docker"{
+		ec.isEnv = true
+	}
 
 	// setup global config
 	err := ec.setupGlobalConfig()
@@ -338,8 +348,11 @@ func (ec *ExecutionContext) setupSpinner() {
 // Spin stops any existing spinner and starts a new one with the given message.
 func (ec *ExecutionContext) Spin(message string) {
 	ec.Spinner.Stop()
+	if !ec.isEnv {
+		ec.Spinner.Prefix = message
+		ec.Spinner.Start()
+	}
 	ec.Spinner.Prefix = message
-	ec.Spinner.Start()
 }
 
 // setupLogger creates a default logger if context does not have one set.
@@ -347,15 +360,21 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
 
-		logger.Formatter = &logrus.TextFormatter{
-			ForceColors:      true,
-			DisableTimestamp: true,
+		if ec.isEnv {
+			logger.Formatter = &logrus.JSONFormatter{
+				PrettyPrint:      true,
+			}
+		} else {
+			logger.Formatter = &logrus.TextFormatter{
+				ForceColors:      true,
+				DisableTimestamp: true,
+			}
 		}
 		logger.Out = colorable.NewColorableStdout()
 		ec.Logger = logger
 	}
 
-	if ec.NoColor {
+	if ec.NoColor && !ec.isEnv {
 		ec.Logger.Formatter = &logrus.TextFormatter{
 			DisableColors:    true,
 			DisableTimestamp: true,
