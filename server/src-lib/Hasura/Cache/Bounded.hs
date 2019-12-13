@@ -25,6 +25,7 @@ import qualified Data.Aeson         as J
 import qualified Data.HashPSQ       as HashPSQ
 import qualified Data.IORef         as IORef
 import qualified Data.Vector        as V
+import           GHC.Natural        (Natural)
 
 newtype CacheSize
   = CacheSize { unCacheSize :: Word16 }
@@ -32,9 +33,12 @@ newtype CacheSize
 
 mkCacheSize :: String -> Either String CacheSize
 mkCacheSize v =
-  case readMaybe v of
-    Just w16 -> return (CacheSize w16)
-    Nothing  -> fail "cache size should be between 1 - 65,535"
+  -- NOTE: naively using readMaybe Word16 will silently wrap
+  case readMaybe v :: Maybe Natural of
+    Just n | n <= max16 && n > 0 -> return (CacheSize $ fromIntegral n)
+    _ -> fail "cache size must be given as a number between 1 and 65535"
+  where
+    max16 = fromIntegral (maxBound :: Word16) :: Natural
 
 newtype Tick
   = Tick { unTick :: Word64 }
