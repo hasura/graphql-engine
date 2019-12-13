@@ -59,7 +59,7 @@ module Hasura.RQL.Types.SchemaCache
   , _FIRelationship
   , _FIComputedField
   , fieldInfoName
-  , possibleNonColumnGraphQLFields
+  , fieldInfoGraphQLNames
   , getCols
   , getRels
   , getComputedFieldInfos
@@ -172,22 +172,22 @@ type FieldInfoMap = M.HashMap FieldName
 
 fieldInfoName :: FieldInfo -> FieldName
 fieldInfoName = \case
-  -- TODO: should this be pgiName?
   FIColumn info -> fromPGCol $ pgiColumn info
   FIRelationship info -> fromRel $ riName info
   FIComputedField info -> fromComputedField $ _cfiName info
 
-possibleNonColumnGraphQLFields :: FieldInfoMap FieldInfo -> [G.Name]
-possibleNonColumnGraphQLFields fields =
-  flip concatMap (M.toList fields) $ \case
-    (_, FIColumn _)             -> []
-    (_, FIRelationship relInfo) ->
-      let relationshipName = G.Name $ relNameToTxt $ riName relInfo
-      in case riType relInfo of
-           ObjRel -> [relationshipName]
-           ArrRel -> [relationshipName, relationshipName <> "_aggregate"]
-    (_, FIComputedField info) ->
-      pure $ G.Name $ computedFieldNameToText $ _cfiName info
+-- | Returns all the field names created for the given field. Columns, object relationships, and
+-- computed fields only ever produce a single field, but array relationships also contain an
+-- @_aggregate@ field.
+fieldInfoGraphQLNames :: FieldInfo -> [G.Name]
+fieldInfoGraphQLNames = \case
+  FIColumn info -> [pgiName info]
+  FIRelationship info ->
+    let name = G.Name . relNameToTxt $ riName info
+    in case riType info of
+      ObjRel -> [name]
+      ArrRel -> [name, name <> "_aggregate"]
+  FIComputedField info -> [G.Name . computedFieldNameToText $ _cfiName info]
 
 getCols :: FieldInfoMap FieldInfo -> [PGColumnInfo]
 getCols = mapMaybe (^? _FIColumn) . M.elems

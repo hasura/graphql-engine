@@ -33,6 +33,7 @@ import           Hasura.RQL.DDL.Schema.Enum
 import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
+import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
@@ -319,51 +320,31 @@ buildTableCache = Inc.cache proc catalogTables -> do
     -- Step 1: Build the raw table cache from metadata information.
     buildRawTableInfo :: ErrorA QErr arr CatalogTable (TableCoreInfoG PGRawColumnInfo PGCol)
     buildRawTableInfo = Inc.cache proc (CatalogTable name systemDefined isEnum config maybeInfo) -> do
-        catalogInfo <-
-          (| onNothingA (throwA -<
-               err400 NotExists $ "no such table/view exists in postgres: " <>> name)
-          |) maybeInfo
+      catalogInfo <-
+        (| onNothingA (throwA -<
+             err400 NotExists $ "no such table/view exists in postgres: " <>> name)
+        |) maybeInfo
 
-        let columns = _ctiColumns catalogInfo
-            columnMap = mapFromL (fromPGCol . prciName) columns
-            primaryKey = _ctiPrimaryKey catalogInfo
+      let columns = _ctiColumns catalogInfo
+          columnMap = mapFromL (fromPGCol . prciName) columns
+          primaryKey = _ctiPrimaryKey catalogInfo
+      rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
+      enumValues <- if isEnum
+        then bindErrorA -< Just <$> fetchAndValidateEnumValues name rawPrimaryKey columns
+        else returnA -< Nothing
 
-        rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
-        enumValues <- if isEnum
-          then bindErrorA -< Just <$> fetchAndValidateEnumValues name rawPrimaryKey columns
-          else returnA -< Nothing
-
-        -- validate tableConfig
-        -- FIXME
-        -- withPathK "configuration" $ validateTableConfig info config
-        returnA -< TableCoreInfo
-          { _tciName = name
-          , _tciSystemDefined = systemDefined
-          , _tciFieldInfoMap = columnMap
-          , _tciPrimaryKey = primaryKey
-          , _tciUniqueConstraints = _ctiUniqueConstraints catalogInfo
-          , _tciForeignKeys = S.map unCatalogForeignKey $ _ctiForeignKeys catalogInfo
-          , _tciViewInfo = _ctiViewInfo catalogInfo
-          , _tciEnumValues = enumValues
-          , _tciCustomConfig = config
-          , _tciDescription = _ctiDescription catalogInfo
-          }
-
-    -- validateTableConfig :: TableCoreInfo a -> TableConfig -> m ()
-    -- validateTableConfig tableInfo (TableConfig rootFlds colFlds) = do
-    --     withPathK "custom_root_fields" $ do
-    --       sc <- askSchemaCache
-    --       let defRemoteGCtx = scDefaultRemoteGCtx sc
-    --       validateCustomRootFlds defRemoteGCtx rootFlds
-    --     withPathK "custom_column_names" $
-    --       forM_ (M.toList colFlds) $ \(col, customName) -> do
-    --         void $ askPGColInfo (_tciFieldInfoMap tableInfo) col ""
-    --         withPathK (getPGColTxt col) $
-    --           _checkForFieldConflict tableInfo $ FieldName $ G.unName customName
-    --         when (not $ null duplicateNames) $ throw400 NotSupported $
-    --           "the following names are duplicated: " <> showNames duplicateNames
-    --   where
-    --     duplicateNames = duplicates $ M.elems colFlds
+      returnA -< TableCoreInfo
+        { _tciName = name
+        , _tciSystemDefined = systemDefined
+        , _tciFieldInfoMap = columnMap
+        , _tciPrimaryKey = primaryKey
+        , _tciUniqueConstraints = _ctiUniqueConstraints catalogInfo
+        , _tciForeignKeys = S.map unCatalogForeignKey $ _ctiForeignKeys catalogInfo
+        , _tciViewInfo = _ctiViewInfo catalogInfo
+        , _tciEnumValues = enumValues
+        , _tciCustomConfig = config
+        , _tciDescription = _ctiDescription catalogInfo
+        }
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
     -- types.
@@ -373,14 +354,14 @@ buildTableCache = Inc.cache proc catalogTables -> do
        , TableCoreInfoG PGRawColumnInfo PGCol
        ) TableRawInfo
     processTableInfo = proc (enumTables, rawInfo) -> liftEitherA -< do
-      let tableName = _tciName rawInfo
+      let columns = _tciFieldInfoMap rawInfo
           enumReferences = resolveEnumReferences enumTables (_tciForeignKeys rawInfo)
-          customFields = _tcCustomColumnNames $ _tciCustomConfig rawInfo
+      columnInfoMap <-
+            alignCustomColumnNames columns (_tcCustomColumnNames $ _tciCustomConfig rawInfo)
+        >>= traverse (processColumnInfo enumReferences (_tciName rawInfo))
+      assertNoDuplicateFieldNames (M.elems columnInfoMap)
 
-      columnInfoMap <- _tciFieldInfoMap rawInfo
-        & traverse (processColumnInfo enumReferences customFields tableName)
       primaryKey <- traverse (resolvePrimaryKeyColumns columnInfoMap) (_tciPrimaryKey rawInfo)
-
       pure rawInfo
         { _tciFieldInfoMap = columnInfoMap
         , _tciPrimaryKey = primaryKey
@@ -392,27 +373,38 @@ buildTableCache = Inc.cache proc catalogTables -> do
       M.lookup (fromPGCol columnName) columnMap
         `onNothing` throw500 "column in primary key not in table!"
 
+    alignCustomColumnNames
+      :: (QErrM n)
+      => FieldInfoMap PGRawColumnInfo
+      -> CustomColumnNames
+      -> n (FieldInfoMap (PGRawColumnInfo, G.Name))
+    alignCustomColumnNames columns customNames = do
+      let customNamesByFieldName = M.fromList $ map (first fromPGCol) $ M.toList customNames
+      flip M.traverseWithKey (align columns customNamesByFieldName) \columnName -> \case
+        This column -> pure (column, G.Name $ getFieldNameTxt columnName)
+        These column customName -> pure (column, customName)
+        That customName -> throw400 NotExists $ "the custom field name " <> customName
+          <<> " was given for the column " <> columnName <<> ", but no such column exists"
+
     -- | “Processes” a 'PGRawColumnInfo' into a 'PGColumnInfo' by resolving its type using a map of
     -- known enum tables.
     processColumnInfo
       :: (QErrM n)
       => M.HashMap PGCol (NonEmpty EnumReference)
-      -> CustomColumnNames -- ^ customised graphql names
       -> QualifiedTable -- ^ the table this column belongs to
-      -> PGRawColumnInfo -- ^ the column’s raw information
+      -> (PGRawColumnInfo, G.Name)
       -> n PGColumnInfo
-    processColumnInfo tableEnumReferences customFields tableName rawInfo = do
+    processColumnInfo tableEnumReferences tableName (rawInfo, name) = do
       resolvedType <- resolveColumnType
       pure PGColumnInfo
         { pgiColumn = pgCol
-        , pgiName = graphqlName
+        , pgiName = name
         , pgiType = resolvedType
         , pgiIsNullable = prciIsNullable rawInfo
         , pgiDescription = prciDescription rawInfo
         }
       where
         pgCol = prciName rawInfo
-        graphqlName = fromMaybe (G.Name $ getPGColTxt pgCol) $ M.lookup pgCol customFields
         resolveColumnType =
           case M.lookup pgCol tableEnumReferences of
             -- no references? not an enum
@@ -424,3 +416,11 @@ buildTableCache = Inc.cache proc catalogTables -> do
               $ "column " <> prciName rawInfo <<> " in table " <> tableName
               <<> " references multiple enum tables ("
               <> T.intercalate ", " (map (dquote . erTable) $ toList enumReferences) <> ")"
+
+    assertNoDuplicateFieldNames columns =
+      flip M.traverseWithKey (M.groupOn pgiName columns) \name columnsWithName ->
+        case columnsWithName of
+          one:two:more -> throw400 AlreadyExists $ "the definitions of columns "
+            <> englishList (dquoteTxt . pgiColumn <$> (one:|two:more))
+            <> " are in conflict: they are mapped to the same field name, " <>> name
+          _ -> pure ()

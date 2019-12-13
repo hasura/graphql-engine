@@ -10,6 +10,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended       as M
 import qualified Data.HashSet                       as HS
 import qualified Data.Sequence                      as Seq
+import qualified Language.GraphQL.Draft.Syntax      as G
 
 import           Control.Arrow.Extended
 import           Data.Aeson
@@ -32,39 +33,44 @@ addNonColumnFields
      , [CatalogRelation]
      , [CatalogComputedField]
      ) `arr` FieldInfoMap FieldInfo
-addNonColumnFields =
-  proc (rawTableInfo, columns, relationships, computedFields) -> do
-    let foreignKeys = _tciForeignKeys <$> rawTableInfo
-    relationshipInfos <-
-      (| Inc.keyed (\_ relationshipsByName -> do
-           maybeRelationship <- noDuplicates mkRelationshipMetadataObject -< relationshipsByName
-           (\info -> join info >- returnA) <-<
-             (| traverseA (\relationship -> do
-                  info <- buildRelationship -< (foreignKeys, relationship)
-                  returnA -< info <&> (, mkRelationshipMetadataObject relationship))
-             |) maybeRelationship)
-      |) (M.groupOn _crRelName relationships)
+addNonColumnFields = proc (rawTableInfo, columns, relationships, computedFields) -> do
+  let foreignKeys = _tciForeignKeys <$> rawTableInfo
+  relationshipInfos <-
+    (| Inc.keyed (\_ relationshipsByName -> do
+         maybeRelationship <- noDuplicates mkRelationshipMetadataObject -< relationshipsByName
+         (\info -> join info >- returnA) <-<
+           (| traverseA (\relationship -> do
+                info <- buildRelationship -< (foreignKeys, relationship)
+                returnA -< info <&> (, mkRelationshipMetadataObject relationship))
+           |) maybeRelationship)
+    |) (M.groupOn _crRelName relationships)
 
-    let trackedTableNames = HS.fromList $ M.keys rawTableInfo
-    computedFieldInfos <-
-      (| Inc.keyed (\_ computedFieldsByName -> do
-           maybeComputedField <- noDuplicates mkComputedFieldMetadataObject -< computedFieldsByName
-           (\info -> join info >- returnA) <-<
-             (| traverseA (\computedField -> do
-                  info <- buildComputedField -< (trackedTableNames, computedField)
-                  returnA -< info <&> (, mkComputedFieldMetadataObject computedField))
-             |) maybeComputedField)
-      |) (M.groupOn (_afcName . _cccComputedField) computedFields)
+  let trackedTableNames = HS.fromList $ M.keys rawTableInfo
+  computedFieldInfos <-
+    (| Inc.keyed (\_ computedFieldsByName -> do
+         maybeComputedField <- noDuplicates mkComputedFieldMetadataObject -< computedFieldsByName
+         (\info -> join info >- returnA) <-<
+           (| traverseA (\computedField -> do
+                info <- buildComputedField -< (trackedTableNames, computedField)
+                returnA -< info <&> (, mkComputedFieldMetadataObject computedField))
+           |) maybeComputedField)
+    |) (M.groupOn (_afcName . _cccComputedField) computedFields)
 
-    let mapKey f = M.fromList . map (first f) . M.toList
-        relationshipFields = mapKey fromRel $ M.catMaybes relationshipInfos
-        computedFieldFields = mapKey fromComputedField $ M.catMaybes computedFieldInfos
-    nonColumnFields <-
-      (| Inc.keyed (\fieldName fields -> noFieldConflicts -< (fieldName, fields))
-      |) (align relationshipFields computedFieldFields)
+  let mapKey f = M.fromList . map (first f) . M.toList
+      relationshipFields = mapKey fromRel $ M.catMaybes relationshipInfos
+      computedFieldFields = mapKey fromComputedField $ M.catMaybes computedFieldInfos
 
-    (| Inc.keyed (\_ fields -> noColumnConflicts -< fields)
-     |) (align columns (M.catMaybes nonColumnFields))
+  -- First, check for conflicts between non-column fields, since we can raise a better error
+  -- message in terms of the two metadata objects that define them.
+  (align relationshipFields computedFieldFields >- returnA)
+    >-> (| Inc.keyed (\fieldName fields -> (fieldName, fields) >- noFieldConflicts) |)
+    -- Next, check for conflicts with custom field names. This is easiest to do before merging with
+    -- the column info itself because we have access to the information separately, and custom field
+    -- names are not currently stored as a separate map (but maybe should be!).
+    >-> (\fields -> (columns, M.catMaybes fields) >- noCustomFieldConflicts)
+    -- Finally, check for conflicts with the columns themselves.
+    >-> (\fields -> align columns (M.catMaybes fields) >- returnA)
+    >-> (| Inc.keyed (\_ fields -> fields >- noColumnConflicts) |)
   where
     noFieldConflicts = proc (fieldName, fields) -> case fields of
       This (relationship, metadata) -> returnA -< Just (FIRelationship relationship, metadata)
@@ -74,6 +80,24 @@ addNonColumnFields =
           ("conflicting definitions for field " <>> fieldName)
           [relationshipMetadata, computedFieldMetadata]
         returnA -< Nothing
+
+    noCustomFieldConflicts = proc (columns, nonColumnFields) -> do
+      let columnsByGQLName = mapFromL pgiName $ M.elems columns
+      (| Inc.keyed (\_ (fieldInfo, metadata) ->
+         (| withRecordInconsistency (do
+            (| traverseA_ (\fieldGQLName -> case M.lookup fieldGQLName columnsByGQLName of
+                 -- Only raise an error if the GQL name isn’t the same as the Postgres column name.
+                 -- If they are the same, `noColumnConflicts` will catch it, and it will produce a
+                 -- more useful error message.
+                 Just columnInfo | getPGColTxt (pgiColumn columnInfo) /= G.unName fieldGQLName ->
+                   throwA -< err400 AlreadyExists
+                     $ "field definition conflicts with custom field name for postgres column "
+                     <>> pgiColumn columnInfo
+                 _ -> returnA -< ())
+             |) (fieldInfoGraphQLNames fieldInfo)
+            returnA -< (fieldInfo, metadata))
+         |) metadata)
+       |) nonColumnFields
 
     noColumnConflicts = proc fields -> case fields of
       This columnInfo -> returnA -< FIColumn columnInfo
