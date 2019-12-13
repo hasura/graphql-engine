@@ -21,20 +21,16 @@ import           Control.Monad.Reader       as M
 import           Control.Monad.State.Strict as M
 import           Data.Bool                  as M (bool)
 import           Data.Data                  as M (Data (..))
-import           Data.Either                as M (lefts, partitionEithers,
-                                                  rights)
-import           Data.Foldable              as M (asum, foldrM, for_, toList,
-                                                  traverse_)
+import           Data.Either                as M (lefts, partitionEithers, rights)
+import           Data.Foldable              as M (asum, foldrM, for_, toList, traverse_)
 import           Data.Function              as M (on, (&))
 import           Data.Functor               as M (($>), (<&>))
 import           Data.Hashable              as M (Hashable)
-import           Data.List                  as M (find, findIndex, foldl',
-                                                  group, intercalate, intersect,
-                                                  lookup, sort, sortBy, sortOn,
-                                                  union, unionBy, (\\))
-import           Data.Maybe                 as M (catMaybes, fromMaybe, isJust,
-                                                  isNothing, listToMaybe,
-                                                  mapMaybe, maybeToList)
+import           Data.List                  as M (find, findIndex, foldl', group, intercalate,
+                                                  intersect, lookup, sort, sortBy, sortOn, union,
+                                                  unionBy, (\\))
+import           Data.Maybe                 as M (catMaybes, fromMaybe, isJust, isNothing,
+                                                  listToMaybe, mapMaybe, maybeToList)
 import           Data.Ord                   as M (comparing)
 import           Data.Semigroup             as M (Semigroup (..))
 import           Data.Sequence              as M (Seq)

@@ -8,11 +8,12 @@ module Hasura.GraphQL.Transport.WebSocket
   ) where
 
 import qualified Control.Concurrent.Async                    as A
+import qualified Control.Concurrent.Async.Lifted.Safe        as LA
 import qualified Control.Concurrent.STM                      as STM
+import qualified Control.Monad.Trans.Control                 as MC
 import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.TH                               as J
-import qualified Data.ByteString                             as B
 import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
@@ -37,11 +38,11 @@ import           Hasura.GraphQL.Transport.WebSocket.Protocol
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Error                      (Code (StartFailed))
-import           Hasura.Server.Auth                          (AuthMode, getUserInfoWithExpTime)
+import           Hasura.Server.Auth                          (AuthMode, UserAuthentication,
+                                                              resolveUserInfo)
 import           Hasura.Server.Context
 import           Hasura.Server.Cors
-import           Hasura.Server.Utils                         (RequestId,
-                                                              diffTimeToMicro,
+import           Hasura.Server.Utils                         (RequestId, diffTimeToMicro,
                                                               getRequestId)
 
 import qualified Hasura.GraphQL.Execute                      as E
@@ -172,7 +173,8 @@ data WSServerEnv
   , _wseEnableAllowlist :: !Bool
   }
 
-onConn :: L.Logger L.Hasura -> CorsPolicy -> WS.OnConnH WSConnData
+onConn :: (MonadIO m)
+       => L.Logger L.Hasura -> CorsPolicy -> WS.OnConnH m WSConnData
 onConn (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
     errType <- checkPath
@@ -182,12 +184,12 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
   either reject (uncurry accept) res
 
   where
-    keepAliveAction wsConn = forever $ do
+    keepAliveAction wsConn = liftIO $ forever $ do
       sendMsg wsConn SMConnKeepAlive
       threadDelay $ 5 * 1000 * 1000
 
     jwtExpiryHandler wsConn = do
-      expTime <- STM.atomically $ do
+      expTime <- liftIO $ STM.atomically $ do
         connState <- STM.readTVar $ (_wscUser . WS.getData) wsConn
         case connState of
           CSNotInitialised _         -> STM.retry
@@ -199,7 +201,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
 
     accept hdrs errType = do
       logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
-      connData <- WSConnData
+      connData <- liftIO $ WSConnData
                   <$> STM.newTVarIO (CSNotInitialised hdrs)
                   <*> STMMap.newIO
                   <*> pure errType
@@ -224,15 +226,13 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
     getOrigin =
       find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
 
-    enforceCors :: B.ByteString -> [H.Header] -> ExceptT QErr IO [H.Header]
     enforceCors origin reqHdrs = case cpConfig corsPolicy of
       CCAllowAll -> return reqHdrs
       CCDisabled readCookie ->
         if readCookie
         then return reqHdrs
         else do
-          liftIO $ logger $
-            mkWsInfoLog Nothing (WsConnInfo wsId Nothing (Just corsNote)) EAccepted
+          lift $ logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing (Just corsNote)) EAccepted
           return $ filter (\h -> fst h /= "Cookie") reqHdrs
       CCAllowedOrigins ds
         -- if the origin is in our cors domains, no error
@@ -399,9 +399,10 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     catchAndIgnore m = void $ runExceptT m
 
 onMessage
-  :: AuthMode
+  :: (MonadIO m, UserAuthentication m)
+  => AuthMode
   -> WSServerEnv
-  -> WSConn -> BL.ByteString -> IO ()
+  -> WSConn -> BL.ByteString -> m ()
 onMessage authMode serverEnv wsConn msgRaw =
   case J.eitherDecode msgRaw of
     Left e    -> do
@@ -413,9 +414,9 @@ onMessage authMode serverEnv wsConn msgRaw =
       CMConnInit params -> onConnInit (_wseLogger serverEnv)
                            (_wseHManager serverEnv)
                            wsConn authMode params
-      CMStart startMsg  -> onStart serverEnv wsConn startMsg
-      CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
-      CMConnTerm        -> WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
+      CMStart startMsg  -> liftIO $ onStart serverEnv wsConn startMsg
+      CMStop stopMsg    -> liftIO $ onStop serverEnv wsConn stopMsg
+      CMConnTerm        -> liftIO $ WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
     logger = _wseLogger serverEnv
 
@@ -463,11 +464,11 @@ logWSEvent (L.Logger logger) wsConn wsEv = do
         ODStopped    -> False
 
 onConnInit
-  :: (MonadIO m)
+  :: (MonadIO m, UserAuthentication m)
   => L.Logger L.Hasura -> H.Manager -> WSConn -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn authMode connParamsM = do
   headers <- mkHeaders <$> liftIO (STM.readTVarIO (_wscUser $ WS.getData wsConn))
-  res <- runExceptT $ getUserInfoWithExpTime logger manager headers authMode
+  res <- resolveUserInfo logger manager headers authMode
   case res of
     Left e  -> do
       liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
@@ -496,20 +497,22 @@ onConnInit logger manager wsConn authMode connParamsM = do
       _                  -> []
 
 onClose
-  :: L.Logger L.Hasura
+  :: MonadIO m
+  => L.Logger L.Hasura
   -> LQ.LiveQueriesState
   -> WSConn
-  -> IO ()
+  -> m ()
 onClose logger lqMap wsConn = do
   logWSEvent logger wsConn EClosed
-  operations <- STM.atomically $ ListT.toList $ STMMap.listT opMap
-  void $ A.forConcurrently operations $ \(_, (lqId, _)) ->
+  operations <- liftIO $ STM.atomically $ ListT.toList $ STMMap.listT opMap
+  void $ liftIO $ A.forConcurrently operations $ \(_, (lqId, _)) ->
     LQ.removeLiveQuery lqMap lqId
   where
     opMap = _wscOpMap $ WS.getData wsConn
 
 createWSServerEnv
-  :: L.Logger L.Hasura
+  :: (MonadIO m)
+  => L.Logger L.Hasura
   -> PGExecCtx
   -> LQ.LiveQueriesState
   -> IORef.IORef (SchemaCache, SchemaCacheVer)
@@ -518,15 +521,24 @@ createWSServerEnv
   -> SQLGenCtx
   -> Bool
   -> E.PlanCache
-  -> IO WSServerEnv
+  -> m WSServerEnv
 createWSServerEnv logger pgExecCtx lqState cacheRef httpManager
   corsPolicy sqlGenCtx enableAL planCache = do
-  wsServer <- STM.atomically $ WS.createWSServer logger
+  wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
     WSServerEnv logger pgExecCtx lqState cacheRef httpManager corsPolicy
     sqlGenCtx planCache wsServer enableAL
 
-createWSServerApp :: AuthMode -> WSServerEnv -> WS.ServerApp
+createWSServerApp
+  :: ( MonadIO m
+     , MC.MonadBaseControl IO m
+     , LA.Forall (LA.Pure m)
+     , UserAuthentication m
+     )
+  => AuthMode
+  -> WSServerEnv
+  -> WS.PendingConnection -> m ()
+  -- ^ aka generalized 'WS.ServerApp'
 createWSServerApp authMode serverEnv =
   WS.createServerApp (_wseServer serverEnv) handlers
   where
