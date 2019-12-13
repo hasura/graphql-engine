@@ -319,9 +319,9 @@ library
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Logging
 
-                     , Hasura.Events.Lib
-                     , Hasura.Events.HTTP
-                     , Hasura.Events.Timed
+                     , Hasura.Eventing.HTTP
+                     , Hasura.Eventing.EventTrigger
+                     , Hasura.Eventing.ScheduledTrigger
 
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended

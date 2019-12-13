@@ -1,4 +1,4 @@
-module Hasura.Events.Timed
+module Hasura.Eventing.ScheduledTrigger
   ( processScheduledQueue
   , runScheduledEventsGenerator
   ) where
@@ -99,6 +99,7 @@ generateScheduledEventsBetween from till cron = takeWhile ((>=) till) $ go from
 processScheduledQueue :: Q.PGPool -> IO ()
 processScheduledQueue pgpool =
   forever $ do
+    traceM "entering processor queue"
     scheduledEventsE <-
       runExceptT $
       Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) getScheduledEvents

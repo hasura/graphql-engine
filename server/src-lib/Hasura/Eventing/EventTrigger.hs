@@ -1,4 +1,4 @@
-module Hasura.Events.Lib
+module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx
   , processEventQueue
   , unlockAllEvents
@@ -19,7 +19,7 @@ import           Data.Has
 import           Data.Int                      (Int64)
 import           Data.IORef                    (IORef, readIORef)
 import           Data.Time.Clock
-import           Hasura.Events.HTTP
+import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers

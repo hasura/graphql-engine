@@ -1,4 +1,4 @@
-module Hasura.Events.HTTP
+module Hasura.Eventing.HTTP
   ( HTTPErr(..)
   , HTTPResp(..)
   , runHTTP
