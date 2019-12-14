@@ -195,6 +195,7 @@ library
                      , generic-arbitrary
 
   exposed-modules:     Control.Arrow.Extended
+                     , Control.Arrow.Trans
                      , Control.Monad.Stateless
                      , Control.Monad.Unique
 

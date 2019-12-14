@@ -262,39 +262,19 @@ instance (Monad m) => ArrowKleisli m (Rule m) where
   {-# INLINE arrM #-}
 
 class (Arrow arr) => ArrowCache arr where
-  -- | Adds equality-based caching to the given rule. After each execution of the rule, its input
-  -- and result values are cached. On the next rebuild, the input value is compared via '==' to the
-  -- previous input value. If they are the same, the previous build result is returned /without/
-  -- re-executing the rule. Otherwise, the old cached values are discarded, and the rule is
+  -- | Adds equality-based caching to the given arrow. After each execution of the arrow, its input
+  -- and result values are cached. On the next execution, the new input value is compared via '=='
+  -- to the previous input value. If they are the same, the previous result is returned /without/
+  -- re-executing the arrow. Otherwise, the old cached values are discarded, and the arrow is
   -- re-executed to produce a new set of cached values.
   --
   -- Indescriminate use of 'cache' is likely to have little effect except to increase memory usage,
-  -- since the input and result of each rule execution must be retained in memory. Avoid using
-  -- 'cache' around rules with large input or output that is likely to change often unless profiling
+  -- since the input and result of each execution must be retained in memory. Avoid using 'cache'
+  -- around arrows with large input or output that is likely to change often unless profiling
   -- indicates it is computationally expensive enough to be worth the memory overhead.
   --
-  -- __Note that only direct inputs and outputs of a 'Rule' are cached.__ It is extremely important
-  -- to take care in your choice of the base monad @m@:
-  --
-  --   * Monads that provide access to extra information through a side-channel, such as 'ReaderT',
-  --     'StateT', or 'IO', will __not__ expose that information to dependency analysis. If that
-  --     information changes between builds, but the rule’s direct inputs remain unchanged, the rule
-  --     will __not__ be re-executed.
-  --
-  --   * Dually, monads that perform side-effects as part of execution, such as 'StateT', 'WriterT',
-  --     or 'IO', will __not__ have their side-effects automatically replayed if the cached result
-  --     is used. If the side effects are only necessary to change some state to bring it in line
-  --     with the updated inputs, that is entirely fine (and likely even desirable), but if the
-  --     side-effects are necessary to produce each result, caching will lead to incorrect behavior.
-  --
-  -- The safest monad to use for @m@ is therefore 'Identity', which suffers neither of the above
-  -- problems by construction. However, in practice, it is highly desirable to be able to execute
-  -- rules that may perform side-effects in 'IO', so the capability is exposed.
-  --
-  -- For a safe way to use other effects with 'Rule', use arrow transformers like 'ErrorA',
-  -- 'ReaderA', and 'WriterA' on top of a base @'Rule' m@ arrow. Such uses are completely safe, as
-  -- the extra information added by other transformers /will/ be exposed to dependency analysis and
-  -- /will/ be cached.
+  -- __Note that only direct inputs and outputs of the given arrow are cached.__ If an arrow
+  -- provides access to values through a side-channel, they will __not__ participate in caching.
   cache :: (Eq a) => arr a b -> arr a b
 
 instance (ArrowChoice arr, ArrowCache arr) => ArrowCache (ErrorA e arr) where
