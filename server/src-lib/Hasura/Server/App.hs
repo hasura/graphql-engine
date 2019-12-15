@@ -1,6 +1,5 @@
-{-# LANGUAGE CPP        #-}
-{-# LANGUAGE DataKinds  #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE CPP       #-}
+{-# LANGUAGE DataKinds #-}
 
 module Hasura.Server.App where
 
@@ -18,6 +17,7 @@ import           System.Exit                            (exitFailure)
 import           System.FilePath                        (joinPath, takeFileName)
 import           Web.Spock.Core                         ((<//>))
 
+import qualified Control.Concurrent.Async.Lifted.Safe   as LA
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.HashSet                           as S
@@ -38,8 +38,7 @@ import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth                     (AuthMode (..),
-                                                         UserAuthentication (..))
+import           Hasura.Server.Auth                     (AuthMode (..), UserAuthentication (..))
 import           Hasura.Server.Compression
 import           Hasura.Server.Config                   (runGetConfig)
 import           Hasura.Server.Context
@@ -208,9 +207,9 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
     requestId <- getRequestId headers
 
-    userInfoE <- lift $ resolveUserInfo logger manager headers authMode
+    userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode)
     userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
-                return userInfoE
+                 return userInfoE
 
     let handlerState = HandlerCtx serverCtx userInfo headers requestId
         curRole = userRole userInfo
@@ -424,12 +423,14 @@ data HasuraApp
   }
 
 mkWaiApp
-  :: ( MonadIO m
+  :: forall m.
+     ( MonadIO m
      , MonadStateless IO m
      , ConsoleRenderer m
      , HttpLog m
      , UserAuthentication m
      , MetadataApiAuthorization m
+     , LA.Forall (LA.Pure m)
      )
   => Q.TxIsolation
   -> L.Logger L.Hasura
@@ -469,7 +470,7 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
     let corsPolicy = mkDefaultCorsPolicy corsCfg
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx
-    wsServerEnv <- liftIO $ WS.createWSServerEnv logger pgExecCtx lqState cacheRef httpManager corsPolicy
+    wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState cacheRef httpManager corsPolicy
                    sqlGenCtx enableAL planCache
 
     ekgStore <- liftIO EKG.newStore
@@ -501,11 +502,10 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
         stopWSServer = WS.stopWSServerApp wsServerEnv
 
-    return $ HasuraApp
-      (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp)
-      schemaCacheRef
-      cacheBuiltTime
-      stopWSServer
+    waiApp <- liftWithStateless $ \lowerIO ->
+      pure $ WS.websocketsOr WS.defaultConnectionOptions (lowerIO . wsServerApp) spockApp
+
+    return $ HasuraApp waiApp schemaCacheRef cacheBuiltTime stopWSServer
   where
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime

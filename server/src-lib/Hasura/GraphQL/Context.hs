@@ -87,8 +87,8 @@ data TableCustomRootFields
   , _tcrfInsert          :: !(Maybe G.Name)
   , _tcrfUpdate          :: !(Maybe G.Name)
   , _tcrfDelete          :: !(Maybe G.Name)
-  } deriving (Show, Eq, Lift)
-$(deriveToJSON (aesonDrop 5 snakeCase) ''TableCustomRootFields)
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''TableCustomRootFields)
 
 instance FromJSON TableCustomRootFields where
   parseJSON = withObject "Object" $ \obj -> do
@@ -109,7 +109,6 @@ instance FromJSON TableCustomRootFields where
 
     pure $ TableCustomRootFields select selectByPk selectAggregate
                                  insert update delete
-
 emptyCustomRootFields :: TableCustomRootFields
 emptyCustomRootFields =
   TableCustomRootFields

@@ -48,7 +48,7 @@ class (Monad m) => UserAuthentication m where
     -> [N.Header]
     -- ^ request headers
     -> AuthMode
-    -> m (Either QErr UserInfo)
+    -> m (Either QErr (UserInfo, Maybe UTCTime))
 
 newtype AdminSecret
   = AdminSecret { getAdminSecret :: T.Text }
