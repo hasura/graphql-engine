@@ -244,7 +244,7 @@ mkInsertQ vn onConflictM insCols defVals role = do
 
 asSingleObject
   :: MonadError QErr m
-  => [ColVals] -> m (Maybe ColVals)
+  => [ColumnValues J.Value] -> m (Maybe (ColumnValues J.Value))
 asSingleObject = \case
   []  -> return Nothing
   [a] -> return $ Just a
@@ -252,7 +252,7 @@ asSingleObject = \case
 
 fetchFromColVals
   :: MonadError QErr m
-  => ColVals
+  => ColumnValues J.Value
   -> [PGColumnInfo]
   -> (PGColumnInfo -> a)
   -> m [(a, WithScalarType PGScalarValue)]
@@ -268,11 +268,13 @@ mkSelCTE
   :: MonadError QErr m
   => QualifiedTable
   -> [PGColumnInfo]
-  -> Maybe ColVals
+  -> Maybe (ColumnValues J.Value)
   -> m CTEExp
 mkSelCTE tn allCols colValM = do
-  selCTE <- mkSelCTEFromColVals tn allCols $ maybe [] pure colValM
+  selCTE <- mkSelCTEFromColVals parseFn tn allCols $ maybe [] pure colValM
   return $ CTEExp selCTE Seq.Empty
+  where
+    parseFn ty val = toTxtValue <$> parsePGScalarValue ty val
 
 execCTEExp
   :: Bool

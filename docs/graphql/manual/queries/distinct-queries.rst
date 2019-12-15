@@ -6,6 +6,9 @@ Distinct query results
   :depth: 2
   :local:
 
+The **distinct_on** argument
+----------------------------
+
 You can fetch rows with only distinct values of a column using the ``distinct_on`` argument.
 
 This requires the data to be first sorted by the column i.e. the ``distinct_on`` column should also be the first

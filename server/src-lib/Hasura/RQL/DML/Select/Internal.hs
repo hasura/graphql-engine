@@ -1,7 +1,6 @@
 module Hasura.RQL.DML.Select.Internal
   ( mkSQLSelect
   , mkAggSelect
-  , mkFuncSelectWith
   , module Hasura.RQL.DML.Select.Types
   )
 where
@@ -773,30 +772,3 @@ mkSQLSelect isSingleObject annSel =
     baseNode = annSelToBaseNode False rootPrefix rootFldName annSel
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
-
-mkFuncSelectWith
-  :: (AnnSelG a S.SQLExp -> S.Select)
-  -> AnnFnSelG (AnnSelG a S.SQLExp) S.SQLExp
-  -> S.SelectWith
-mkFuncSelectWith f annFn =
-  S.SelectWith [(funcAls, S.CTESelect funcSel)] $
-  -- we'll need to modify the table from of the underlying
-  -- select to the alias of the select from function
-  f annSel { _asnFrom = newSelFrom }
-  where
-    AnnFnSel qf fnArgs annSel = annFn
-
-    -- SELECT * FROM function_name(args)
-    funcSel = S.mkSelect { S.selFrom = Just $ S.FromExp [frmItem]
-                         , S.selExtr = [S.Extractor S.SEStar Nothing]
-                         }
-    frmItem = S.mkFuncFromItem qf $ mkSQLFunctionArgs fnArgs
-
-    mkSQLFunctionArgs (FunctionArgsExp positional named) =
-      S.FunctionArgs positional named
-
-    newSelFrom = FromIden $ toIden funcAls
-
-    QualifiedObject sn fn = qf
-    funcAls = S.Alias $ Iden $
-      getSchemaTxt sn <> "_" <> getFunctionTxt fn <> "__result"

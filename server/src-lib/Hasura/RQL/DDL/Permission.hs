@@ -66,6 +66,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
+import qualified Crypto.Hash                        as CH
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashSet                       as HS
 import qualified Data.Text                          as T
@@ -74,9 +75,9 @@ import qualified Data.Text                          as T
 data InsPerm
   = InsPerm
   { ipCheck   :: !BoolExp
-  , ipSet     :: !(Maybe ColVals)
+  , ipSet     :: !(Maybe (ColumnValues Value))
   , ipColumns :: !(Maybe PermColSpec)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
 
@@ -84,12 +85,15 @@ type InsPermDef = PermDef InsPerm
 type CreateInsPerm = CreatePerm InsPerm
 
 buildViewName :: QualifiedTable -> RoleName -> PermType -> QualifiedTable
-buildViewName (QualifiedObject sn tn) rn pt =
-  QualifiedObject hdbViewsSchema $ TableName
-  (roleNameToTxt rn <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
+buildViewName qt rn pt = QualifiedObject hdbViewsSchema tableName
   where
-    snTxt = getSchemaTxt sn
-    tnTxt = getTableTxt tn
+    -- Generate a unique hash for view name from role name, permission type and qualified table.
+    -- See Note [Postgres identifier length limitations].
+    -- Black2b_224 generates 56 character hash. See Note [Blake2b faster than SHA-256].
+    -- Refer https://github.com/hasura/graphql-engine/issues/3444.
+    tableName = TableName $ T.pack $ show hash
+    hash :: CH.Digest CH.Blake2b_224 =
+      CH.hash $ txtToBs $ roleNameToTxt rn <> "__" <> T.pack (show pt) <> "__" <> qualObjectToText qt
 
 buildView :: QualifiedTable -> QualifiedTable -> Q.Query
 buildView tn vn =
@@ -107,7 +111,7 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo PGColumnInfo -> Maybe ColVals
+  => TableInfo PGColumnInfo -> Maybe (ColumnValues Value)
   -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   (setColTups, deps) <- withPathK "set" $
@@ -206,7 +210,7 @@ data SelPerm
   , spLimit             :: !(Maybe Int)         -- ^ Limit value
   , spAllowAggregations :: !Bool                -- ^ Allow aggregation
   , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
 
 instance FromJSON SelPerm where
@@ -294,14 +298,15 @@ instance IsPerm SelPerm where
 data UpdPerm
   = UpdPerm
   { ucColumns :: !PermColSpec -- Allowed columns
-  , ucSet     :: !(Maybe ColVals) -- Preset columns
+  , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
   , ucFilter  :: !BoolExp     -- Filter expression
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UpdPerm)
 
 type UpdPermDef = PermDef UpdPerm
 type CreateUpdPerm = CreatePerm UpdPerm
+
 
 buildUpdPermInfo
   :: (QErrM m, CacheRM m)
@@ -360,7 +365,7 @@ instance IsPerm UpdPerm where
 -- Delete permission
 data DelPerm
   = DelPerm { dcFilter :: !BoolExp }
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DelPerm)
 
