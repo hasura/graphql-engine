@@ -35,8 +35,6 @@ extra-deps:
 # needed for Text.Shakespeare.Text.stextFile; can be removed once the newer version is in stackage
 - shakespeare-2.0.22
 
-- brotli-0.0.0.0
-
 # Override default flag values for local packages and extra-deps
 flags: {}
 
