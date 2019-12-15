@@ -162,7 +162,8 @@ class ToTxt a where
 
 newtype TableName
   = TableName { getTableTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data
+           , Generic, Arbitrary, NFData, Cacheable )
 
 instance IsIden TableName where
   toIden (TableName t) = Iden t

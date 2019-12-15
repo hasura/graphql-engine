@@ -9,6 +9,12 @@ module Hasura.Incremental.Select
   , UniqueS
   , newUniqueS
   , DMapS(..)
+
+  -- * Re-exports
+  , GEq(..)
+  , GCompare(..)
+  , GOrdering(..)
+  , (:~:)(..)
   ) where
 
 import           Hasura.Prelude

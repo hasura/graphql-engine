@@ -113,7 +113,8 @@ module Hasura.RQL.Types.SchemaCache
 import qualified Hasura.GraphQL.Context            as GC
 
 import           Hasura.Db
-import           Hasura.Incremental                (Cacheable)
+import           Hasura.Incremental                (Cacheable, Dependency, MonadDepend (..),
+                                                    selectKeyD)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
@@ -436,16 +437,17 @@ instance (TableCoreInfoRM m) => TableCoreInfoRM (StateT s m) where
 instance (Monoid w, TableCoreInfoRM m) => TableCoreInfoRM (WriterT w m) where
   lookupTableCoreInfo = lift . lookupTableCoreInfo
 
-newtype TableCoreCacheRT m a = TableCoreCacheRT { runTableCoreCacheRT :: TableCoreCache -> m a }
+newtype TableCoreCacheRT m a
+  = TableCoreCacheRT { runTableCoreCacheRT :: Dependency TableCoreCache -> m a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, MonadTx)
-    via (ReaderT TableCoreCache m)
-  deriving (MonadTrans) via (ReaderT TableCoreCache)
+    via (ReaderT (Dependency TableCoreCache) m)
+  deriving (MonadTrans) via (ReaderT (Dependency TableCoreCache))
 
 instance (MonadReader r m) => MonadReader r (TableCoreCacheRT m) where
   ask = lift ask
   local f m = TableCoreCacheRT (local f . runTableCoreCacheRT m)
-instance (Monad m) => TableCoreInfoRM (TableCoreCacheRT m) where
-  lookupTableCoreInfo tableName = TableCoreCacheRT (pure . M.lookup tableName)
+instance (MonadDepend m) => TableCoreInfoRM (TableCoreCacheRT m) where
+  lookupTableCoreInfo tableName = TableCoreCacheRT (dependOnM . selectKeyD tableName)
 
 class (TableCoreInfoRM m) => CacheRM m where
   askSchemaCache :: m SchemaCache

@@ -105,7 +105,7 @@ instance (MonadIO m, MonadTx m, MonadUnique m) => CacheRWM (CacheRWT m) where
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
-  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache arr, ArrowKleisli m arr
+  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadTx m, MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
   => (CatalogMetadata, InvalidationMap) `arr` SchemaCache
 buildSchemaCacheRule = proc inputs -> do
@@ -125,7 +125,7 @@ buildSchemaCacheRule = proc inputs -> do
     }
   where
     buildAndCollectInfo
-      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache arr, ArrowKleisli m arr
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadTx m, MonadReader BuildReason m
          , HasHttpManager m, HasSQLGenCtx m )
       => (CatalogMetadata, InvalidationMap) `arr` BuildOutputs
@@ -154,13 +154,16 @@ buildSchemaCacheRule = proc inputs -> do
       bindA -< liftIO $ traceEventIO "STOP fields"
 
       -- permissions and event triggers
+      tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos
       tableCache <- (tableCoreInfos >- returnA)
         >-> (\info -> (info, M.groupOn _cpTable permissions) >- alignExtraTableInfo mkPermissionMetadataObject)
         >-> (\info -> (info, M.groupOn _cetTable eventTriggers) >- alignExtraTableInfo mkEventTriggerMetadataObject)
         >-> (| Inc.keyed (\_ ((tableCoreInfo, tablePermissions), tableEventTriggers) -> do
                  bindA -< liftIO $ traceEventIO "START permissions"
+                 let tableName = _tciName tableCoreInfo
+                     tableFields = _tciFieldInfoMap tableCoreInfo
                  permissionInfos <- buildTablePermissions -<
-                   (tableCoreInfos, tableCoreInfo, HS.fromList tablePermissions)
+                   (tableCoreInfosDep, tableName, tableFields, HS.fromList tablePermissions)
                  bindA -< liftIO $ traceEventIO "STOP permissions"
                  bindA -< liftIO $ traceEventIO "START event triggers"
                  eventTriggerInfos <- buildTableEventTriggers -< (tableCoreInfo, tableEventTriggers)
@@ -254,8 +257,7 @@ buildSchemaCacheRule = proc inputs -> do
 
     buildTableEventTriggers
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-         , Inc.ArrowCache arr, ArrowKleisli m arr
-         , MonadIO m, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
+         , Inc.ArrowCache m arr, MonadIO m, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
       => (TableCoreInfo, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
     buildTableEventTriggers = proc (tableInfo, eventTriggers) ->
       (\infos -> M.catMaybes infos >- returnA) <-<

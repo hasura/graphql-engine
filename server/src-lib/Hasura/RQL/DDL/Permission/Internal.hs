@@ -179,7 +179,9 @@ data CreatePermP1Res a
 
 procBoolExp
   :: (QErrM m, TableCoreInfoRM m)
-  => QualifiedTable -> FieldInfoMap FieldInfo -> BoolExp
+  => QualifiedTable
+  -> FieldInfoMap FieldInfo
+  -> BoolExp
   -> m (AnnBoolExpPartialSQL, [SchemaDependency])
 procBoolExp tn fieldInfoMap be = do
   abe <- annBoolExp valueParser fieldInfoMap $ unBoolExp be
@@ -262,7 +264,8 @@ class (ToJSON a) => IsPerm a where
 
   buildPermInfo
     :: (QErrM m, TableCoreInfoRM m)
-    => TableCoreInfo
+    => QualifiedTable
+    -> FieldInfoMap FieldInfo
     -> PermDef a
     -> m (WithDeps (PermInfo a))
 

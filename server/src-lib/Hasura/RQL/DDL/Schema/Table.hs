@@ -295,7 +295,7 @@ delTableAndDirectDeps qtn@(QualifiedObject sn tn) = do
 buildTableCache
   :: forall arr m
    . ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-     , Inc.ArrowCache arr, ArrowKleisli m arr, MonadTx m )
+     , Inc.ArrowCache m arr, MonadTx m )
   => [CatalogTable] `arr` M.HashMap QualifiedTable TableRawInfo
 buildTableCache = Inc.cache proc catalogTables -> do
   rawTableInfos <-

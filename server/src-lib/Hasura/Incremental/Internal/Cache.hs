@@ -1,4 +1,5 @@
 {-# OPTIONS_HADDOCK not-home #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Incremental.Internal.Cache where
 
@@ -11,7 +12,7 @@ import           Hasura.Incremental.Internal.Dependency
 import           Hasura.Incremental.Internal.Rule
 import           Hasura.Incremental.Select
 
-class (Arrow arr) => ArrowCache arr where
+class (ArrowKleisli m arr) => ArrowCache m arr | arr -> m where
   -- | Adds equality-based caching to the given arrow. After each execution of the arrow, its input
   -- and result values are cached. On the next execution, the new input value is compared via '=='
   -- to the previous input value. If they are the same, the previous result is returned /without/
@@ -35,23 +36,31 @@ class (Arrow arr) => ArrowCache arr where
   -- only a portion of the value, use 'selectD' or 'selectKeyD' before passing it to 'dependOn'.
   dependOn :: (Cacheable a) => arr (Dependency a) a
 
-instance (ArrowChoice arr, ArrowCache arr) => ArrowCache (ErrorA e arr) where
+  -- | Run a monadic sub-computation with the ability to access dependencies; see 'MonadDepend' for
+  -- more details.
+  bindDepend :: arr (DependT m a) a
+
+instance (ArrowChoice arr, ArrowCache m arr) => ArrowCache m (ErrorA e arr) where
   cache (ErrorA f) = ErrorA (cache f)
   {-# INLINE cache #-}
   newDependency = liftA newDependency
   {-# INLINE newDependency #-}
   dependOn = liftA dependOn
   {-# INLINE dependOn #-}
+  bindDepend = liftA bindDepend
+  {-# INLINE bindDepend #-}
 
-instance (Monoid w, ArrowCache arr) => ArrowCache (WriterA w arr) where
+instance (Monoid w, ArrowCache m arr) => ArrowCache m (WriterA w arr) where
   cache (WriterA f) = WriterA (cache f)
   {-# INLINE cache #-}
   newDependency = liftA newDependency
   {-# INLINE newDependency #-}
   dependOn = liftA dependOn
   {-# INLINE dependOn #-}
+  bindDepend = liftA bindDepend
+  {-# INLINE bindDepend #-}
 
-instance (MonadUnique m) => ArrowCache (Rule m) where
+instance (MonadUnique m) => ArrowCache m (Rule m) where
   cache r0 = Rule \s a k -> do
     let Rule r = listenAccesses r0
     r s a \s' (b, accesses) r' -> k s' b (cached accesses a b r')
@@ -68,3 +77,19 @@ instance (MonadUnique m) => ArrowCache (Rule m) where
   {-# INLINABLE newDependency #-}
 
   dependOn = Rule \s (Dependency key v) k -> (k $! recordAccess key AccessedAll s) v dependOn
+
+  bindDepend = Rule \s m k -> runStateT (unDependT m) s >>= \(v, s') -> k s' v bindDepend
+
+-- | A restricted, monadic variant of 'ArrowCache' that can only read dependencies, not create new
+-- ones or add local caching. This serves as a limited adapter between arrow and monadic code.
+class (Monad m) => MonadDepend m where
+  dependOnM :: (Cacheable a) => Dependency a -> m a
+
+instance (MonadDepend m) => MonadDepend (ExceptT e m) where
+  dependOnM = lift . dependOnM
+
+newtype DependT m a = DependT { unDependT :: StateT Accesses m a }
+  deriving (Functor, Applicative, Monad, MonadTrans, MonadError e)
+
+instance (Monad m) => MonadDepend (DependT m) where
+  dependOnM (Dependency key v) = DependT (modify' (recordAccess key AccessedAll) $> v)

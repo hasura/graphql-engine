@@ -10,6 +10,8 @@ module Hasura.Incremental
 
   , ArrowDistribute(..)
   , ArrowCache(..)
+  , MonadDepend(..)
+  , DependT
 
   , Dependency
   , Selector

@@ -110,9 +110,11 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableCoreInfo -> Maybe (ColumnValues Value)
+  => QualifiedTable
+  -> FieldInfoMap FieldInfo
+  -> Maybe (ColumnValues Value)
   -> m (PreSetColsPartial, [Text], [SchemaDependency])
-procSetObj ti mObj = do
+procSetObj tn fieldInfoMap mObj = do
   (setColTups, deps) <- withPathK "set" $
     fmap unzip $ forM (HM.toList setObj) $ \(pgCol, val) -> do
       ty <- askPGType fieldInfoMap pgCol $
@@ -122,8 +124,6 @@ procSetObj ti mObj = do
       return ((pgCol, sqlExp), dep)
   return (HM.fromList setColTups, depHeaders, deps)
   where
-    fieldInfoMap = _tciFieldInfoMap ti
-    tn = _tciName ti
     setObj = fromMaybe mempty mObj
     depHeaders = getDepHeadersFromVal $ Object $
       HM.fromList $ map (first getPGColTxt) $ HM.toList setObj
@@ -132,26 +132,23 @@ procSetObj ti mObj = do
 
 buildInsPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => TableCoreInfo
+  => QualifiedTable
+  -> FieldInfoMap FieldInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
-buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
+buildInsPermInfo tn fieldInfoMap (PermDef rn (InsPerm chk set mCols) _) =
   withPathK "permission" $ do
-  (be, beDeps) <- withPathK "check" $
-    -- procBoolExp tn fieldInfoMap (S.QualVar "NEW") chk
-    procBoolExp tn fieldInfoMap chk
-  (setColsSQL, setHdrs, setColDeps) <- procSetObj tabInfo set
-  void $ withPathK "columns" $ indexedForM insCols $ \col ->
-         askPGType fieldInfoMap col ""
-  let fltrHeaders = getDependentHeaders chk
-      reqHdrs = fltrHeaders `union` setHdrs
-      insColDeps = map (mkColDep DRUntyped tn) insCols
-      deps = mkParentDep tn : beDeps ++ setColDeps ++ insColDeps
-      insColsWithoutPresets = insCols \\ HM.keys setColsSQL
-  return (InsPermInfo (HS.fromList insColsWithoutPresets) vn be setColsSQL reqHdrs, deps)
+    (be, beDeps) <- withPathK "check" $ procBoolExp tn fieldInfoMap chk
+    (setColsSQL, setHdrs, setColDeps) <- procSetObj tn fieldInfoMap set
+    void $ withPathK "columns" $ indexedForM insCols $ \col ->
+           askPGType fieldInfoMap col ""
+    let fltrHeaders = getDependentHeaders chk
+        reqHdrs = fltrHeaders `union` setHdrs
+        insColDeps = map (mkColDep DRUntyped tn) insCols
+        deps = mkParentDep tn : beDeps ++ setColDeps ++ insColDeps
+        insColsWithoutPresets = insCols \\ HM.keys setColsSQL
+    return (InsPermInfo (HS.fromList insColsWithoutPresets) vn be setColsSQL reqHdrs, deps)
   where
-    fieldInfoMap = _tciFieldInfoMap tabInfo
-    tn = _tciName tabInfo
     vn = buildViewName tn rn PTInsert
     allCols = map pgiColumn $ getCols fieldInfoMap
     insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
@@ -223,10 +220,11 @@ instance FromJSON SelPerm where
 
 buildSelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => TableCoreInfo
+  => QualifiedTable
+  -> FieldInfoMap FieldInfo
   -> SelPerm
   -> m (WithDeps SelPermInfo)
-buildSelPermInfo tabInfo sp = withPathK "permission" $ do
+buildSelPermInfo tn fieldInfoMap sp = withPathK "permission" $ do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
   (be, beDeps) <- withPathK "filter" $
@@ -259,8 +257,6 @@ buildSelPermInfo tabInfo sp = withPathK "permission" $ do
          , deps
          )
   where
-    tn = _tciName tabInfo
-    fieldInfoMap = _tciFieldInfoMap tabInfo
     allowAgg = spAllowAggregations sp
     computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
@@ -280,8 +276,8 @@ instance IsPerm SelPerm where
 
   permAccessor = PASelect
 
-  buildPermInfo ti (PermDef _ a _) =
-    buildSelPermInfo ti a
+  buildPermInfo tn fieldInfoMap (PermDef _ a _) =
+    buildSelPermInfo tn fieldInfoMap a
 
   buildDropPermP1Res =
     void . dropPermP1
@@ -306,14 +302,15 @@ type CreateUpdPerm = CreatePerm UpdPerm
 
 buildUpdPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => TableCoreInfo
+  => QualifiedTable
+  -> FieldInfoMap FieldInfo
   -> UpdPerm
   -> m (WithDeps UpdPermInfo)
-buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
+buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr) = do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap fltr
 
-  (setColsSQL, setHeaders, setColDeps) <- procSetObj tabInfo set
+  (setColsSQL, setHeaders, setColDeps) <- procSetObj tn fieldInfoMap set
 
   -- check if the columns exist
   void $ withPathK "columns" $ indexedForM updCols $ \updCol ->
@@ -328,8 +325,6 @@ buildUpdPermInfo tabInfo (UpdPerm colSpec set fltr) = do
   return (UpdPermInfo (HS.fromList updColsWithoutPreSets) tn be setColsSQL reqHeaders, deps)
 
   where
-    tn = _tciName tabInfo
-    fieldInfoMap = _tciFieldInfoMap tabInfo
     updCols     = convColSpec fieldInfoMap colSpec
     relInUpdErr = "relationships can't be used in update"
 
@@ -346,8 +341,8 @@ instance IsPerm UpdPerm where
 
   permAccessor = PAUpdate
 
-  buildPermInfo ti (PermDef _ a _) =
-    buildUpdPermInfo ti a
+  buildPermInfo tn fieldInfoMap (PermDef _ a _) =
+    buildUpdPermInfo tn fieldInfoMap a
 
   addPermP2Setup _ _ _ = return ()
 
@@ -368,18 +363,16 @@ type CreateDelPerm = CreatePerm DelPerm
 
 buildDelPermInfo
   :: (QErrM m, TableCoreInfoRM m)
-  => TableCoreInfo
+  => QualifiedTable
+  -> FieldInfoMap FieldInfo
   -> DelPerm
   -> m (WithDeps DelPermInfo)
-buildDelPermInfo tabInfo (DelPerm fltr) = do
+buildDelPermInfo tn fieldInfoMap (DelPerm fltr) = do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap  fltr
   let deps = mkParentDep tn : beDeps
       depHeaders = getDependentHeaders fltr
   return (DelPermInfo tn be depHeaders, deps)
-  where
-    tn = _tciName tabInfo
-    fieldInfoMap = _tciFieldInfoMap tabInfo
 
 type DropDelPerm = DropPerm DelPerm
 
@@ -394,8 +387,8 @@ instance IsPerm DelPerm where
 
   permAccessor = PADelete
 
-  buildPermInfo ti (PermDef _ a _) =
-    buildDelPermInfo ti a
+  buildPermInfo tn fieldInfoMap (PermDef _ a _) =
+    buildDelPermInfo tn fieldInfoMap a
 
   addPermP2Setup _ _ _ = return ()
 

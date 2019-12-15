@@ -26,21 +26,22 @@ import           Hasura.SQL.Types
 import           Debug.Trace
 
 buildTablePermissions
-  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache arr, ArrowKleisli m arr
+  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m )
-  => ( TableCoreCache
-     , TableCoreInfo
+  => ( Inc.Dependency TableCoreCache
+     , QualifiedTable
+     , FieldInfoMap FieldInfo
      , HashSet CatalogPermission
      ) `arr` RolePermInfoMap
-buildTablePermissions = Inc.cache proc (tableCache, tableInfo, tablePermissions) ->
+buildTablePermissions = Inc.cache proc (tableCache, tableName, tableFields, tablePermissions) ->
   (| Inc.keyed (\_ rolePermissions -> do
        let (insertPerms, selectPerms, updatePerms, deletePerms) =
              partitionPermissions rolePermissions
 
-       insertPermInfo <- buildPermission -< (tableCache, tableInfo, insertPerms)
-       selectPermInfo <- buildPermission -< (tableCache, tableInfo, selectPerms)
-       updatePermInfo <- buildPermission -< (tableCache, tableInfo, updatePerms)
-       deletePermInfo <- buildPermission -< (tableCache, tableInfo, deletePerms)
+       insertPermInfo <- buildPermission -< (tableCache, tableName, tableFields, insertPerms)
+       selectPermInfo <- buildPermission -< (tableCache, tableName, tableFields, selectPerms)
+       updatePermInfo <- buildPermission -< (tableCache, tableName, tableFields, updatePerms)
+       deletePermInfo <- buildPermission -< (tableCache, tableName, tableFields, deletePerms)
 
        returnA -< RolePermInfo
          { _permIns = insertPermInfo
@@ -80,14 +81,15 @@ withPermission f = proc (e, (permission, s)) -> do
    |) metadataObject
 
 buildPermission
-  :: ( ArrowChoice arr, Inc.ArrowCache arr, ArrowKleisli m arr
+  :: ( ArrowChoice arr, Inc.ArrowCache m arr
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m
      , Inc.Cacheable a, IsPerm a, FromJSON a, Inc.Cacheable (PermInfo a) )
-  => ( TableCoreCache
-     , TableCoreInfo
+  => ( Inc.Dependency TableCoreCache
+     , QualifiedTable
+     , FieldInfoMap FieldInfo
      , [CatalogPermission]
      ) `arr` Maybe (PermInfo a)
-buildPermission = Inc.cache proc (tableCache, tableInfo, permissions) -> do
+buildPermission = Inc.cache proc (tableCache, tableName, tableFields, permissions) -> do
       (permissions >- noDuplicates mkPermissionMetadataObject)
   >-> (| traverseA (\permission@(CatalogPermission _ roleName _ pDef _) ->
          (| withPermission (do
@@ -98,17 +100,17 @@ buildPermission = Inc.cache proc (tableCache, tableInfo, permissions) -> do
               bindA -< liftTx . liftIO $ traceEventIO "STOP permissions/build/decode"
               let permDef = PermDef roleName perm Nothing
               bindA -< liftTx . liftIO $ traceEventIO "START permissions/build/info"
-              (info, dependencies) <- bindErrorA -<
-                runTableCoreCacheRT (buildPermInfo tableInfo permDef) tableCache
+              (info, dependencies) <- liftEitherA <<< Inc.bindDepend -< runExceptT $
+                runTableCoreCacheRT (buildPermInfo tableName tableFields permDef) tableCache
               bindA -< liftTx . liftIO $ traceEventIO "STOP permissions/build/info"
               tellA -< Seq.fromList dependencies
-              rebuildViewsIfNeeded -< (_tciName tableInfo, permDef, info)
+              rebuildViewsIfNeeded -< (tableName, permDef, info)
               returnA -< info)
          |) permission) |)
   >-> (\info -> join info >- returnA)
 
 rebuildViewsIfNeeded
-  :: ( Inc.ArrowCache arr, ArrowKleisli m arr, MonadTx m, MonadReader BuildReason m
+  :: ( Inc.ArrowCache m arr, MonadTx m, MonadReader BuildReason m
      , Inc.Cacheable a, IsPerm a, Inc.Cacheable (PermInfo a) )
   => (QualifiedTable, PermDef a, PermInfo a) `arr` ()
 rebuildViewsIfNeeded = Inc.cache $ arrM \(tableName, permDef, info) -> do
