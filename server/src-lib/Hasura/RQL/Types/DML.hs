@@ -62,10 +62,10 @@ data ColExp
   = ColExp
   { ceCol :: !FieldName
   , ceVal :: !Value
-  } deriving (Show, Eq, Lift, Data)
+  } deriving (Show, Eq, Lift, Data, Generic)
 
 newtype BoolExp
-  = BoolExp { unBoolExp :: GBoolExp ColExp } deriving (Show, Eq, Lift)
+  = BoolExp { unBoolExp :: GBoolExp ColExp } deriving (Show, Eq, Lift, Generic)
 
 $(makeWrapped ''BoolExp)
 

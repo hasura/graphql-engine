@@ -183,6 +183,10 @@ library
                      -- caching
                      , psqueues >= 0.2
 
+                     -- testing
+                     , QuickCheck
+                     , generic-arbitrary
+
   exposed-modules:     Control.Monad.Stateless
 
                      , Hasura.Prelude
@@ -205,7 +209,11 @@ library
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.DDL.Metadata
+                     , Hasura.RQL.DDL.Metadata.Types
+                     , Hasura.RQL.DDL.Metadata.Generator
                      , Hasura.EncJSON
+
+                     , Data.Aeson.Ordered
 
   other-modules:       Hasura.Cache
                      , Hasura.Cache
@@ -363,3 +371,5 @@ test-suite graphql-engine-tests
     , optparse-applicative
     , pg-client
     , time
+    , aeson
+    , QuickCheck
