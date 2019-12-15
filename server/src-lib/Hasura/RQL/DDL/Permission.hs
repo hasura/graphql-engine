@@ -48,6 +48,7 @@ module Hasura.RQL.DDL.Permission
     ) where
 
 import           Hasura.EncJSON
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Permission.Triggers
@@ -76,7 +77,7 @@ data InsPerm
   , ipSet     :: !(Maybe (ColumnValues Value))
   , ipColumns :: !(Maybe PermColSpec)
   } deriving (Show, Eq, Lift, Generic)
-
+instance Cacheable InsPerm
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
 
 type InsPermDef = PermDef InsPerm
@@ -208,6 +209,7 @@ data SelPerm
   , spAllowAggregations :: !Bool                -- ^ Allow aggregation
   , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
   } deriving (Show, Eq, Lift, Generic)
+instance Cacheable SelPerm
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
 
 instance FromJSON SelPerm where
@@ -295,7 +297,7 @@ data UpdPerm
   , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
   , ucFilter  :: !BoolExp     -- Filter expression
   } deriving (Show, Eq, Lift, Generic)
-
+instance Cacheable UpdPerm
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UpdPerm)
 
 type UpdPermDef = PermDef UpdPerm
@@ -358,7 +360,7 @@ instance IsPerm UpdPerm where
 data DelPerm
   = DelPerm { dcFilter :: !BoolExp }
   deriving (Show, Eq, Lift, Generic)
-
+instance Cacheable DelPerm
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DelPerm)
 
 type DelPermDef = PermDef DelPerm

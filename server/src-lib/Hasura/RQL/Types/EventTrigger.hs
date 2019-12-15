@@ -26,6 +26,7 @@ module Hasura.RQL.Types.EventTrigger
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.Common    (NonEmptyText (..))
@@ -38,7 +39,7 @@ import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
 
 newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
-  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData)
+  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable)
 
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName
@@ -50,6 +51,7 @@ data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 data SubscribeColumns = SubCStar | SubCArray [PGCol]
   deriving (Show, Eq, Generic, Lift)
 instance NFData SubscribeColumns
+instance Cacheable SubscribeColumns
 
 instance FromJSON SubscribeColumns where
   parseJSON (String s) = case s of
@@ -68,6 +70,7 @@ data SubscribeOpSpec
   , sosPayload :: !(Maybe SubscribeColumns)
   } deriving (Show, Eq, Generic, Lift)
 instance NFData SubscribeOpSpec
+instance Cacheable SubscribeOpSpec
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
 
 defaultNumRetries :: Int
@@ -177,6 +180,7 @@ data TriggerOpsDef
   , tdEnableManual :: !(Maybe Bool)
   } deriving (Show, Eq, Generic, Lift)
 instance NFData TriggerOpsDef
+instance Cacheable TriggerOpsDef
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
 data DeleteEventTriggerQuery

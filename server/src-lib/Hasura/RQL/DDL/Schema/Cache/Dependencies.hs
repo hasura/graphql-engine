@@ -11,6 +11,7 @@ import           Control.Arrow.Extended
 import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 import           Data.List                          (nub)
+import           Data.Monoid                        (First)
 
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.Types

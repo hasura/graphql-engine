@@ -82,6 +82,8 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Text.Builder                  as TB
 
+import           Hasura.Incremental            (Cacheable)
+
 class ToSQL a where
   toSQL :: a -> TB.Builder
 
@@ -100,7 +102,7 @@ infixr 6 <+>
 
 newtype Iden
   = Iden { getIdenTxt :: T.Text }
-  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data)
+  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
 
 instance ToSQL Iden where
   toSQL (Iden t) =
@@ -160,7 +162,7 @@ class ToTxt a where
 
 newtype TableName
   = TableName { getTableTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary, NFData)
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
 
 instance IsIden TableName where
   toIden (TableName t) = Iden t
@@ -204,7 +206,7 @@ isView _      = False
 
 newtype ConstraintName
   = ConstraintName { getConstraintTxt :: T.Text }
-  deriving (Show, Eq, DQuote, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, NFData)
+  deriving (Show, Eq, DQuote, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, NFData, Cacheable)
 
 instance IsIden ConstraintName where
   toIden (ConstraintName t) = Iden t
@@ -214,7 +216,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data, Generic, Arbitrary, NFData)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -230,7 +232,7 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary, NFData)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -250,6 +252,7 @@ data QualifiedObject a
   , qName   :: !a
   } deriving (Show, Eq, Functor, Ord, Generic, Lift, Data)
 instance (NFData a) => NFData (QualifiedObject a)
+instance (Cacheable a) => Cacheable (QualifiedObject a)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -299,11 +302,11 @@ type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGDescription
   = PGDescription { getPGDescription :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol, NFData)
+  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol, NFData, Cacheable)
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data, Generic, Arbitrary, NFData)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
 
 instance IsIden PGCol where
   toIden (PGCol t) = Iden t
@@ -342,8 +345,8 @@ data PGScalarType
   | PGUnknown !T.Text
   deriving (Show, Eq, Lift, Generic, Data)
 instance NFData PGScalarType
-
 instance Hashable PGScalarType
+instance Cacheable PGScalarType
 
 instance ToSQL PGScalarType where
   toSQL = \case
@@ -524,6 +527,7 @@ data PGType a
   | PGTypeArray !a
   deriving (Show, Eq, Generic, Data, Functor)
 instance (NFData a) => NFData (PGType a)
+instance (Cacheable a) => Cacheable (PGType a)
 $(deriveJSON defaultOptions{constructorTagModifier = drop 6} ''PGType)
 
 instance (ToSQL a) => ToSQL (PGType a) where
@@ -542,6 +546,7 @@ data PGTypeKind
   | PGKindUnknown !T.Text
   deriving (Show, Eq, Generic)
 instance NFData PGTypeKind
+instance Cacheable PGTypeKind
 
 instance FromJSON PGTypeKind where
   parseJSON = withText "postgresTypeKind" $
@@ -571,6 +576,7 @@ data QualifiedPGType
   , _qptType   :: !PGTypeKind
   } deriving (Show, Eq, Generic)
 instance NFData QualifiedPGType
+instance Cacheable QualifiedPGType
 $(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
 
 isBaseType :: QualifiedPGType -> Bool

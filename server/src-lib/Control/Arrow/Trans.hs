@@ -18,10 +18,10 @@ module Control.Arrow.Trans
   , WriterA(WriterA, runWriterA)
   ) where
 
-import Prelude hiding ((.), id)
+import           Prelude                    hiding (id, (.))
 
-import Control.Arrow
-import Control.Category
+import           Control.Arrow
+import           Control.Category
 import           Control.Monad.Error.Class
 import           Control.Monad.Reader.Class
 import           Control.Monad.Writer.Class

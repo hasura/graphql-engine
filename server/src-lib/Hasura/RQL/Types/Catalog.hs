@@ -22,6 +22,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
+import           Hasura.Incremental               (Cacheable)
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Column
@@ -36,7 +37,7 @@ import           Hasura.SQL.Types
 newtype CatalogForeignKey
   = CatalogForeignKey
   { unCatalogForeignKey :: ForeignKey
-  } deriving (Show, Eq, NFData, Hashable)
+  } deriving (Show, Eq, NFData, Hashable, Cacheable)
 
 instance FromJSON CatalogForeignKey where
   parseJSON = withObject "CatalogForeignKey" \o -> do
@@ -66,6 +67,7 @@ data CatalogTableInfo
   , _ctiDescription       :: !(Maybe PGDescription)
   } deriving (Show, Eq, Generic)
 instance NFData CatalogTableInfo
+instance Cacheable CatalogTableInfo
 $(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogTableInfo)
 
 data CatalogTable
@@ -77,6 +79,7 @@ data CatalogTable
   , _ctInfo            :: !(Maybe CatalogTableInfo)
   } deriving (Show, Eq, Generic)
 instance NFData CatalogTable
+instance Cacheable CatalogTable
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogTable)
 
 data CatalogRelation
@@ -88,6 +91,7 @@ data CatalogRelation
   , _crComment :: !(Maybe Text)
   } deriving (Show, Eq, Generic)
 instance NFData CatalogRelation
+instance Cacheable CatalogRelation
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogRelation)
 
 data CatalogPermission
@@ -100,6 +104,7 @@ data CatalogPermission
   } deriving (Show, Eq, Generic)
 instance NFData CatalogPermission
 instance Hashable CatalogPermission
+instance Cacheable CatalogPermission
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogPermission)
 
 data CatalogComputedField
@@ -108,6 +113,7 @@ data CatalogComputedField
   , _cccFunctionInfo  :: ![RawFunctionInfo] -- ^ multiple functions with same name
   } deriving (Show, Eq, Generic)
 instance NFData CatalogComputedField
+instance Cacheable CatalogComputedField
 $(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogComputedField)
 
 data CatalogEventTrigger
@@ -117,6 +123,7 @@ data CatalogEventTrigger
   , _cetDef   :: !Value
   } deriving (Show, Eq, Generic)
 instance NFData CatalogEventTrigger
+instance Cacheable CatalogEventTrigger
 $(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogEventTrigger)
 
 data CatalogFunction
@@ -127,6 +134,7 @@ data CatalogFunction
   , _cfInfo            :: ![RawFunctionInfo] -- ^ multiple functions with same name
   } deriving (Show, Eq, Generic)
 instance NFData CatalogFunction
+instance Cacheable CatalogFunction
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
 data CatalogMetadata
@@ -141,4 +149,5 @@ data CatalogMetadata
   , _cmComputedFields       :: ![CatalogComputedField]
   } deriving (Show, Eq, Generic)
 instance NFData CatalogMetadata
+instance Cacheable CatalogMetadata
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

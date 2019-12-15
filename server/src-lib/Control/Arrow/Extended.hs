@@ -13,6 +13,8 @@ module Control.Arrow.Extended
   , (>->)
   , (<-<)
   , dup
+  , bothA
+  , orA
 
   , foldlA'
   , traverseA_
@@ -51,6 +53,17 @@ f >-> g = proc (e, s) -> do
 dup :: (Arrow arr) => arr a (a, a)
 dup = arr \x -> (x, x)
 {-# INLINE dup #-}
+
+bothA :: (Arrow arr) => arr a b -> arr (a, a) (b, b)
+bothA f = f *** f
+{-# INLINE bothA #-}
+
+orA :: (ArrowChoice arr) => arr a Bool -> arr b Bool -> arr (a, b) Bool
+orA f g = proc (a, b) -> do
+  c <- f -< a
+  if c then returnA -< True else g -< b
+{-# INLINABLE orA #-}
+{-# RULES "orA/arr" forall f g. arr f `orA` arr g = arr (f `orA` g) #-}
 
 -- | 'foldl'' lifted to arrows. See also Note [Weird control operator types].
 foldlA' :: (ArrowChoice arr, Foldable t) => arr (e, (b, (a, s))) b -> arr (e, (b, (t a, s))) b

@@ -23,6 +23,7 @@ module Hasura.RQL.Types.Permission
        , PermId(..)
        ) where
 
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
                                              unNonEmptyText)
@@ -44,7 +45,7 @@ import qualified PostgreSQL.Binary.Decoding as PD
 newtype RoleName
   = RoleName {getRoleTxt :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
-           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary, NFData )
+           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary, NFData, Cacheable )
 
 instance DQuote RoleName where
   dquoteTxt = roleNameToTxt
@@ -122,6 +123,7 @@ data PermType
   | PTDelete
   deriving (Eq, Lift, Generic)
 instance NFData PermType
+instance Cacheable PermType
 
 instance Q.FromCol PermType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case

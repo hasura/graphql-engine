@@ -82,7 +82,7 @@ withPermission f = proc (e, (permission, s)) -> do
 buildPermission
   :: ( ArrowChoice arr, Inc.ArrowCache arr, ArrowKleisli m arr
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m
-     , Eq a, IsPerm a, FromJSON a, Eq (PermInfo a) )
+     , Inc.Cacheable a, IsPerm a, FromJSON a, Inc.Cacheable (PermInfo a) )
   => ( TableCoreCache
      , TableCoreInfo
      , [CatalogPermission]
@@ -109,7 +109,7 @@ buildPermission = Inc.cache proc (tableCache, tableInfo, permissions) -> do
 
 rebuildViewsIfNeeded
   :: ( Inc.ArrowCache arr, ArrowKleisli m arr, MonadTx m, MonadReader BuildReason m
-     , Eq a, IsPerm a, Eq (PermInfo a) )
+     , Inc.Cacheable a, IsPerm a, Inc.Cacheable (PermInfo a) )
   => (QualifiedTable, PermDef a, PermInfo a) `arr` ()
 rebuildViewsIfNeeded = Inc.cache $ arrM \(tableName, permDef, info) -> do
   liftTx . liftIO $ traceEventIO "START permissions/build/views"

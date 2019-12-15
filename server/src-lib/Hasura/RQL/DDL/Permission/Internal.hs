@@ -18,6 +18,7 @@ import qualified Data.Text.Extended         as T
 import qualified Hasura.SQL.DML             as S
 
 import           Hasura.EncJSON
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
@@ -31,6 +32,7 @@ data PermColSpec
   = PCStar
   | PCCols ![PGCol]
   deriving (Show, Eq, Lift, Generic)
+instance Cacheable PermColSpec
 
 instance FromJSON PermColSpec where
   parseJSON (String "*") = return PCStar
@@ -156,7 +158,7 @@ data PermDef a =
   , pdPermission :: !a
   , pdComment    :: !(Maybe T.Text)
   } deriving (Show, Eq, Lift, Generic)
-
+instance (Cacheable a) => Cacheable (PermDef a)
 $(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''PermDef)
 
 instance (ToJSON a) => ToJSON (PermDef a) where

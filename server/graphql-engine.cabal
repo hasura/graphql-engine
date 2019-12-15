@@ -91,6 +91,8 @@ library
                      , http-client-tls
                      , profunctors
                      , deepseq
+                     , dependent-map >=0.2.4 && <0.4
+                     , dependent-sum >=0.4 && <0.5
 
                      -- `these >=1` is split into several different packages, but our current stack
                      -- resolver has `these <1`; when we upgrade we just need to add an extra
@@ -232,7 +234,12 @@ library
 
                      , Data.Aeson.Ordered
 
-  other-modules:       Hasura.Server.Auth.JWT
+  other-modules:       Hasura.Incremental.Select
+                     , Hasura.Incremental.Internal.Cache
+                     , Hasura.Incremental.Internal.Dependency
+                     , Hasura.Incremental.Internal.Rule
+
+                     , Hasura.Server.Auth.JWT
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates

@@ -113,6 +113,7 @@ module Hasura.RQL.Types.SchemaCache
 import qualified Hasura.GraphQL.Context            as GC
 
 import           Hasura.Db
+import           Hasura.Incremental                (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
@@ -160,7 +161,8 @@ data FieldInfo
   = FIColumn !PGColumnInfo
   | FIRelationship !RelInfo
   | FIComputedField !ComputedFieldInfo
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+instance Cacheable FieldInfo
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
                  , sumEncoding = TaggedObject "type" "detail"
@@ -211,6 +213,7 @@ data InsPermInfo
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq, Generic)
 instance NFData InsPermInfo
+instance Cacheable InsPermInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''InsPermInfo)
 
 data SelPermInfo
@@ -224,6 +227,7 @@ data SelPermInfo
   , spiRequiredHeaders      :: ![T.Text]
   } deriving (Show, Eq, Generic)
 instance NFData SelPermInfo
+instance Cacheable SelPermInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''SelPermInfo)
 
 data UpdPermInfo
@@ -235,6 +239,7 @@ data UpdPermInfo
   , upiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq, Generic)
 instance NFData UpdPermInfo
+instance Cacheable UpdPermInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''UpdPermInfo)
 
 data DelPermInfo
@@ -244,6 +249,7 @@ data DelPermInfo
   , dpiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq, Generic)
 instance NFData DelPermInfo
+instance Cacheable DelPermInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''DelPermInfo)
 
 emptyRolePermInfo :: RolePermInfo
@@ -283,6 +289,7 @@ data ViewInfo
   , viIsInsertable :: !Bool
   } deriving (Show, Eq, Generic)
 instance NFData ViewInfo
+instance Cacheable ViewInfo
 $(deriveJSON (aesonDrop 2 snakeCase) ''ViewInfo)
 
 isMutable :: (ViewInfo -> Bool) -> Maybe ViewInfo -> Bool
@@ -302,6 +309,7 @@ data TableConfig
   , _tcCustomColumnNames :: !CustomColumnNames
   } deriving (Show, Eq, Lift, Generic)
 instance NFData TableConfig
+instance Cacheable TableConfig
 $(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
 
 emptyTableConfig :: TableConfig
@@ -329,7 +337,8 @@ data TableCoreInfoG field primaryKeyColumn
   , _tciViewInfo          :: !(Maybe ViewInfo)
   , _tciEnumValues        :: !(Maybe EnumValues)
   , _tciCustomConfig      :: !TableConfig
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance (Cacheable a, Cacheable b) => Cacheable (TableCoreInfoG a b)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''TableCoreInfoG)
 $(makeLenses ''TableCoreInfoG)
 

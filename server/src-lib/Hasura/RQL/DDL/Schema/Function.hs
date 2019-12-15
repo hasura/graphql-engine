@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils          (showNames)
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils           (makeReasonMessage)
@@ -41,6 +42,7 @@ data RawFunctionInfo
   , rfiDescription      :: !(Maybe PGDescription)
   } deriving (Show, Eq, Generic)
 instance NFData RawFunctionInfo
+instance Cacheable RawFunctionInfo
 $(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
 
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
@@ -184,6 +186,7 @@ data FunctionConfig
   { _fcSessionArgument :: !(Maybe FunctionArgName)
   } deriving (Show, Eq, Generic, Lift)
 instance NFData FunctionConfig
+instance Cacheable FunctionConfig
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
 
 emptyFunctionConfig :: FunctionConfig

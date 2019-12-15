@@ -57,7 +57,7 @@ import           Hasura.SQL.Types
 import           Debug.Trace
 
 buildRebuildableSchemaCache
-  :: (MonadIO m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
+  :: (MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
   => m (RebuildableSchemaCache m)
 buildRebuildableSchemaCache = do
   catalogMetadata <- liftTx fetchCatalogData

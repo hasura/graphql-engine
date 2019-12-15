@@ -15,6 +15,7 @@ module Hasura.RQL.DDL.ComputedField
 import           Hasura.Prelude
 
 import           Hasura.EncJSON
+import           Hasura.Incremental                 (Cacheable)
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Schema.Function     (RawFunctionInfo (..), mkFunctionArgs)
@@ -39,6 +40,7 @@ data ComputedFieldDefinition
   , _cfdTableArgument :: !(Maybe FunctionArgName)
   } deriving (Show, Eq, Lift, Generic)
 instance NFData ComputedFieldDefinition
+instance Cacheable ComputedFieldDefinition
 $(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldDefinition)
 
 data AddComputedField
@@ -49,6 +51,7 @@ data AddComputedField
   , _afcComment    :: !(Maybe Text)
   } deriving (Show, Eq, Lift, Generic)
 instance NFData AddComputedField
+instance Cacheable AddComputedField
 $(deriveJSON (aesonDrop 4 snakeCase) ''AddComputedField)
 
 runAddComputedField :: (MonadTx m, CacheRWM m) => AddComputedField -> m EncJSON
