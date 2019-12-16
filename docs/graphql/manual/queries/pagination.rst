@@ -195,9 +195,9 @@ Keyset cursor based pagination
 Cursors are used to traverse across rows of a dataset. They work by returning a pointer to a specific row which can
 then be used to fetch the next batch of data.
 
-Keyset cursors are a column (or set of columns) of the data that are used as the cursor. The column(s) used as the
+Keyset cursors are a column (or a set of columns) of the data that are used as the cursor. The column(s) used as the
 cursor must be unique and sequential. This ensures that data is read after a specific row rather than relying on the
-position of the row in the dataset as done by ``offset`` and duplicate records are not fetched again.
+position of the row in the dataset as done by ``offset``, and that duplicate records are not fetched again.
 
 **For example**, consider the following query to fetch a list of authors with a ``where`` clause used in place of
 ``offset``:
@@ -246,11 +246,11 @@ Here we are fetching authors where the value of ``id`` is greater than 5. This w
 results which would have been ids 1 to 5, ensuring no duplicate results. Column ``id`` is acting as the cursor here,
 unique and sequential.
 
-The choice of cursor columns depends on the order of the expected results. i.e. if the query has an ``order_by``
+The choice of cursor columns depends on the order of the expected results i.e. if the query has an ``order_by``
 clause, the column(s) used in the ``order_by`` need to be used as the cursor.
 
 Columns such as ``id`` (auto-incrementing integer/big integer) or ``created_at`` (timestamp) are commonly used as
-as cursors when an order is not explicit as they should be unique and sequential.
+cursors when an order is not explicit, as they should be unique and sequential.
 
 
 .. note::
