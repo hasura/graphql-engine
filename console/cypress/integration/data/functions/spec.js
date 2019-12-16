@@ -49,7 +49,7 @@ export const unTrackFunction = () => {
   cy.get(getElementFromAlias('custom-function-edit-untrack-btn')).click();
   cy.wait(5000);
   validateUntrackedFunc(getCustomFunctionName(1), getSchema(), 'success');
-  cy.wait(5000);
+  cy.wait(4500);
 };
 
 export const trackFunction = () => {
