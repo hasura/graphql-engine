@@ -353,40 +353,6 @@ insertFunctionArg argName index value (FunctionArgsExp positional named) =
   where
     insertAt i a = toList . Seq.insertAt i a . Seq.fromList
 
-data AnnFnSelG s v
-  = AnnFnSel
-  { _afFn     :: !QualifiedFunction
-  , _afFnArgs :: !(FunctionArgsExpG v)
-  , _afSelect :: !s
-  } deriving (Show, Eq)
-
-traverseAnnFnSel
-  :: (Applicative f)
-  => (a -> f b) -> (v -> f w)
-  -> AnnFnSelG a v -> f (AnnFnSelG b w)
-traverseAnnFnSel fs fv (AnnFnSel fn fnArgs s) =
-  AnnFnSel fn <$> traverse fv fnArgs <*> fs s
-
-type AnnFnSelSimpleG v = AnnFnSelG (AnnSimpleSelG v) v
-type AnnFnSelSimple = AnnFnSelSimpleG S.SQLExp
-
-traverseAnnFnSimple
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnFnSelSimpleG a -> f (AnnFnSelSimpleG b)
-traverseAnnFnSimple f =
-  traverseAnnFnSel (traverseAnnSimpleSel f) f
-
-type AnnFnSelAggG v = AnnFnSelG (AnnAggSelG v) v
-type AnnFnSelAgg = AnnFnSelAggG S.SQLExp
-
-traverseAnnFnAgg
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnFnSelAggG a -> f (AnnFnSelAggG b)
-traverseAnnFnAgg f =
-  traverseAnnFnSel (traverseAnnAggSel f) f
-
 data BaseNode
   = BaseNode
   { _bnPrefix              :: !Iden

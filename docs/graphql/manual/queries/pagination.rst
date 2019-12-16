@@ -6,6 +6,9 @@ Paginate query results
   :depth: 2
   :local:
 
+The **limit** & **offset** arguments
+------------------------------------
+
 The operators ``limit`` and ``offset`` are used for pagination.
 
 ``limit`` specifies the number of rows to retain from the result set and ``offset`` determines which slice to

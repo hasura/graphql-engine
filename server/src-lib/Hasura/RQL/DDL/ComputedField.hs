@@ -38,7 +38,7 @@ data ComputedFieldDefinition
   = ComputedFieldDefinition
   { _cfdFunction      :: !QualifiedFunction
   , _cfdTableArgument :: !(Maybe FunctionArgName)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldDefinition)
 
 data AddComputedField

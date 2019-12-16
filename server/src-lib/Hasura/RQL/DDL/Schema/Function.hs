@@ -180,7 +180,7 @@ newtype TrackFunction
 data FunctionConfig
   = FunctionConfig
   { _fcSessionArgument :: !(Maybe FunctionArgName)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
 
 emptyFunctionConfig :: FunctionConfig
@@ -265,7 +265,7 @@ data TrackFunctionV2
   = TrackFunctionV2
   { _tfv2Function      :: !QualifiedFunction
   , _tfv2Configuration :: !FunctionConfig
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
 
 instance FromJSON TrackFunctionV2 where
