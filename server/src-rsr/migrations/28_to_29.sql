@@ -1,6 +1,30 @@
 DROP VIEW hdb_catalog.hdb_table_info_agg;
 DROP VIEW hdb_catalog.hdb_column;
 
+-- we need to drop this view temporarily so we can change the type of hdb_permission columns
+DROP VIEW hdb_catalog.hdb_permission_agg;
+
+-- See Note [Reference system columns using type name] in initialise.sql
+ALTER TABLE hdb_catalog.hdb_table
+  ALTER COLUMN table_schema TYPE name,
+  ALTER COLUMN table_name TYPE name;
+ALTER TABLE hdb_catalog.hdb_relationship
+  ALTER COLUMN table_schema TYPE name,
+  ALTER COLUMN table_name TYPE name;
+ALTER TABLE hdb_catalog.hdb_permission
+  ALTER COLUMN table_schema TYPE name,
+  ALTER COLUMN table_name TYPE name;
+
+-- this just recreates the view we dropped above with no actual changes
+CREATE VIEW hdb_catalog.hdb_permission_agg AS
+SELECT
+  table_schema,
+  table_name,
+  role_name,
+  json_object_agg(perm_type, perm_def) as permissions
+FROM hdb_catalog.hdb_permission
+GROUP BY table_schema, table_name, role_name;
+
 CREATE VIEW hdb_catalog.hdb_table_info_agg AS
   SELECT
     schema.nspname AS table_schema,

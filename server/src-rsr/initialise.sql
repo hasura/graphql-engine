@@ -9,11 +9,24 @@ CREATE TABLE hdb_catalog.hdb_version (
 CREATE UNIQUE INDEX hdb_version_one_row
 ON hdb_catalog.hdb_version((version IS NOT NULL));
 
+/* Note [Reference system columns using type name]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+While working on #3394, I (Alexis) discovered that Postgres seems to sometimes generate very bad
+query plans when joining against the system catalogs if we store things like table/schema names
+using type `text` rather than type `name`, the latter of which is used internally. The two types are
+compatible in the sense that Postgres will willingly widen `name` to `type` automatically, but
+`name`s are restricted to 64 bytes.
+
+Using `name` for ordinary user data would be a deep sin, but using it to store references to actual
+Postgres identifiers makes a lot of sense, so using `name` in those places is alright. And by doing
+so, we make Postgres much more likely to take advantage of certain indexes that can significantly
+improve query performance. */
+
 CREATE TABLE hdb_catalog.hdb_table
 (
-    table_schema TEXT,
-    table_name TEXT,
-    configuration JSONB,
+    table_schema name, -- See Note [Reference system columns using type name]
+    table_name name,
+    configuration jsonb,
     is_system_defined boolean default false,
     is_enum boolean NOT NULL DEFAULT false,
 
@@ -22,8 +35,8 @@ CREATE TABLE hdb_catalog.hdb_table
 
 CREATE TABLE hdb_catalog.hdb_relationship
 (
-    table_schema TEXT,
-    table_name TEXT,
+    table_schema name, -- See Note [Reference system columns using type name]
+    table_name name,
     rel_name   TEXT,
     rel_type   TEXT CHECK (rel_type IN ('object', 'array')),
     rel_def    JSONB NOT NULL,
@@ -36,8 +49,8 @@ CREATE TABLE hdb_catalog.hdb_relationship
 
 CREATE TABLE hdb_catalog.hdb_permission
 (
-    table_schema TEXT,
-    table_name TEXT,
+    table_schema name, -- See Note [Reference system columns using type name]
+    table_name name,
     role_name  TEXT,
     perm_type  TEXT CHECK(perm_type IN ('insert', 'select', 'update', 'delete')),
     perm_def   JSONB NOT NULL,
