@@ -2,22 +2,26 @@ description: Create object relationship using foreign key
 url: /v1/query
 status: 400
 response:
-  path: $.args
-  error: >-
-    in table "author": in relationship "articles": no foreign constraint exists on the given column
-  code: constraint-violation
   internal:
-  - type: array_relation
-    definition:
-      name: articles
-      table: author
+  - definition:
       using:
         foreign_key_constraint_on:
           column: published_on
-          table: article
+          table:
+            schema: public
+            name: article
+      name: articles
       comment:
-    reason: >-
-      in table "author": in relationship "articles": no foreign constraint exists on the given column
+      table:
+        schema: public
+        name: author
+    reason: 'in table "author": in relationship "articles": no foreign constraint
+      exists on the given column'
+    type: array_relation
+  path: $.args
+  error: 'in table "author": in relationship "articles": no foreign constraint exists
+    on the given column'
+  code: constraint-violation
 query:
   type: create_array_relationship
   args:

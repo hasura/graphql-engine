@@ -27,11 +27,15 @@
     internal:
     - definition:
         definition:
-          function: full_name
+          function:
+            schema: public
+            name: full_name
           table_argument:
         name: first_name
         comment:
-        table: author
+        table:
+          schema: public
+          name: author
       reason: field definition conflicts with postgres column
       type: computed_field
     path: $.args
@@ -51,11 +55,15 @@
     internal:
     - definition:
         definition:
-          function: random_function
+          function:
+            schema: public
+            name: random_function
           table_argument:
         name: full_name
         comment:
-        table: author
+        table:
+          schema: public
+          name: author
       reason: 'in table "author": in computed field "full_name": no such function
         exists in postgres : "random_function"'
       type: computed_field
@@ -78,11 +86,15 @@
     internal:
     - definition:
         definition:
-          function: full_name
+          function:
+            schema: public
+            name: full_name
           table_argument: random
         name: full_name
         comment:
-        table: author
+        table:
+          schema: public
+          name: author
       reason: 'in table "author": in computed field "full_name": the computed field
         "full_name" cannot be added to table "author" because "random" is not an input
         argument of "full_name" function'
@@ -107,11 +119,15 @@
     internal:
     - definition:
         definition:
-          function: fetch_articles_volatile
+          function:
+            schema: public
+            name: fetch_articles_volatile
           table_argument: random
         name: get_articles
         comment:
-        table: author
+        table:
+          schema: public
+          name: author
       reason: "in table \"author\": in computed field \"get_articles\": the computed\
         \ field \"get_articles\" cannot be added to table \"author\" for the following\
         \ reasons:\n  • the function \"fetch_articles_volatile\" is of type VOLATILE;\
@@ -139,11 +155,15 @@
     internal:
     - definition:
         definition:
-          function: hello_world
+          function:
+            schema: public
+            name: hello_world
           table_argument:
         name: hello_world
         comment:
-        table: author
+        table:
+          schema: public
+          name: author
       reason: 'in table "author": in computed field "hello_world": the computed field
         "hello_world" cannot be added to table "author" because the function "hello_world"
         has no input arguments'
@@ -167,11 +187,15 @@
     internal:
     - definition:
         definition:
-          function: fetch_articles
+          function:
+            schema: public
+            name: fetch_articles
           table_argument:
         name: get_articles
         comment:
-        table: author
+        table:
+          schema: public
+          name: author
       reason: "in table \"author\": in computed field \"get_articles\": the computed\
         \ field \"get_articles\" cannot be added to table \"author\" for the following\
         \ reasons:\n  • first argument of the function \"fetch_articles\" is not COMPOSITE\

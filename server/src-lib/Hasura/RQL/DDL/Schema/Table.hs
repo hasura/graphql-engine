@@ -157,8 +157,8 @@ instance FromJSON SetTableCustomFields where
 runSetTableCustomFieldsQV2
   :: (MonadTx m, CacheRWM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
-  let tableConfig = TableConfig rootFields columnNames
-  updateTableConfig tableName tableConfig
+  void $ askTabInfo tableName -- assert that table is tracked
+  updateTableConfig tableName (TableConfig rootFields columnNames)
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 

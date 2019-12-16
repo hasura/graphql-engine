@@ -12,7 +12,9 @@ response:
         columns: '*'
         filter:
           id: X-Hasura-User-Id
-      table: author
+      table:
+        schema: public
+        name: author
     reason: 'in table "author": in permission for role "admin": cannot define permission
       for admin role'
     type: select_permission

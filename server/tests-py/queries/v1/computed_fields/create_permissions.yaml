@@ -51,7 +51,9 @@
           - random
           columns: '*'
           filter: {}
-        table: author
+        table:
+          schema: public
+          name: author
       reason: 'in table "author": in permission for role "user": computed field "random"
         does not exist'
       type: select_permission
@@ -86,7 +88,9 @@
           - get_articles
           columns: '*'
           filter: {}
-        table: author
+        table:
+          schema: public
+          name: author
       reason: 'in table "author": in permission for role "user": select permissions
         on computed field "get_articles" are auto-derived from the permissions on
         its returning table "article" and cannot be specified manually'

@@ -7,10 +7,14 @@ response:
       using:
         foreign_key_constraint_on:
           column: author_id
-          table: article
+          table:
+            schema: public
+            name: article
       name: AuthorId
       comment:
-      table: author
+      table:
+        schema: public
+        name: author
     reason: field definition conflicts with custom field name for postgres column
       "id"
     type: array_relation
