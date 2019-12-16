@@ -1,5 +1,5 @@
-import { parse as sdlParse } from 'graphql/language/parser';
-import { getAstTypeMetadata, wrapTypename } from './wrappingTypeUtils';
+import { parse as sdlParse } from 'graphql/language/parser'; import { getAstTypeMetadata, wrapTypename } from './wrappingTypeUtils';
+import { reformCustomTypes, parseCustomTypes, hydrateTypeRelationships } from './hasuraCustomTypeUtils';
 
 export const getTypesFromSdl = sdl => {
   const typeDefinition = {
@@ -202,7 +202,11 @@ const getTypeSdl = type => {
   }
 };
 
-export const getTypesSdl = types => {
+export const getTypesSdl = _types => {
+  let types = _types;
+  if (types.constructor.name !== 'Array') {
+    types = parseCustomTypes(_types)
+  }
   let sdl = '';
   types.forEach(t => {
     sdl += getTypeSdl(t);
@@ -221,4 +225,12 @@ export const getActionDefinitionSdl = (name, args, outputType) => {
       },
     ],
   });
+};
+
+export const getServerTypesFromSdl = (sdl, existingTypes) => {
+  const { types: typesFromSdl, error } = getTypesFromSdl(sdl)
+  return {
+    types: reformCustomTypes(hydrateTypeRelationships(typesFromSdl, parseCustomTypes(existingTypes))),
+    error
+  };
 };

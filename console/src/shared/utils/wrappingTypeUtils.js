@@ -1,33 +1,5 @@
 import { isWrappingType, isListType, isNonNullType } from 'graphql';
 
-const wrapNonNullable = typename => {
-  return `${typename}!`;
-};
-
-const wrapList = typename => {
-  return `[${typename}]`;
-};
-
-const wrapNullableListOfNonNullable = typename => {
-  return `[${typename}!]`;
-};
-
-const wrapNonNullableListOfNullable = typename => {
-  return `[${typename}]!`;
-};
-
-const wrapNonNullableListOfNonNullable = typename => {
-  return `[${typename}!]!`;
-};
-
-export const isNonNullable = wrappedTypename => {
-  return wrappedTypename[wrappedTypename.length - 1] === '!';
-};
-
-export const isList = wrappedTypename => {
-  return wrappedTypename[wrappedTypename.length - 1] === ']';
-};
-
 const unwrapNonNullable = wrappedTypename => {
   return wrappedTypename.substring(0, wrappedTypename.length - 1);
 };
@@ -35,33 +7,6 @@ const unwrapNonNullable = wrappedTypename => {
 const unwrapList = wrappedTypename => {
   return wrappedTypename.substring(1, wrappedTypename.length - 1);
 };
-
-export const typeWrappers = [
-  {
-    label: 'Nullable',
-    wrapperFunc: typename => typename,
-  },
-  {
-    label: 'Non-nullable',
-    wrapperFunc: wrapNonNullable,
-  },
-  {
-    label: 'Nullable list of nullable',
-    wrapperFunc: wrapList,
-  },
-  {
-    label: 'Nullable list of non-nullable',
-    wrapperFunc: wrapNullableListOfNonNullable,
-  },
-  {
-    label: 'Non-nullable list of nullable',
-    wrapperFunc: wrapNonNullableListOfNullable,
-  },
-  {
-    label: 'Non-nullable list of non-nullable',
-    wrapperFunc: wrapNonNullableListOfNonNullable,
-  },
-];
 
 export const unwrapType = wrappedTypename => {
   let _typename = wrappedTypename;
@@ -87,14 +32,6 @@ export const unwrapType = wrappedTypename => {
     stack: typeWrapperStack,
     typename: _typename,
   };
-};
-
-export const getUnderlyingType = graphqlType => {
-  let _type = graphqlType;
-  while (isWrappingType(_type)) {
-    _type = _type.ofType;
-  }
-  return _type;
 };
 
 export const getAstTypeMetadata = type => {

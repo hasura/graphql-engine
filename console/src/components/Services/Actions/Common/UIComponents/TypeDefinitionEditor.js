@@ -7,7 +7,7 @@ import CopyIcon from '../../../../Common/Icons/Copy';
 import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
 import Modal from '../../../../Common/Modal/Modal';
 import CloneTypeModal from './CloneTypeModal';
-import { getTypesSdl } from '../../../Types/sdlUtils';
+import { getTypesSdl } from '../../../../../shared/utils/sdlUtils';
 
 const editorLabel = 'New types definition';
 const editorTooltip =

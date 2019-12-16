@@ -1,7 +1,3 @@
-import { typeWrappers } from '../../Types/wrappingTypeUtils';
-
-export { typeWrappers };
-
 export const defaultArg = {
   name: '',
   type: '',

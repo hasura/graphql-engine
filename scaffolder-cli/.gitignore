@@ -1,0 +1,4 @@
+bin
+build
+src/shared
+node_modules

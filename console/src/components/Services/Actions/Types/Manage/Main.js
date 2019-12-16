@@ -3,7 +3,10 @@ import CustomTypesContainer from '../../Containers/CustomTypesContainer';
 import TypesEditor from '../../Common/UIComponents/TypeDefinitionEditor';
 import Button from '../../../../Common/Button/Button';
 import styles from '../../Common/UIComponents/Styles.scss';
-import { getTypesSdl, getTypesFromSdl } from '../../../Types/sdlUtils';
+import {
+  getTypesSdl,
+  getTypesFromSdl,
+} from '../../../../../shared/utils/sdlUtils';
 import { setTypeDefinition, setFetching, unsetFetching } from '../reducer';
 import { setCustomGraphQLTypes } from '../../../Types/ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';

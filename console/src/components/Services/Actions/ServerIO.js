@@ -31,8 +31,11 @@ import {
   reformCustomTypes,
   mergeCustomTypes,
   hydrateTypeRelationships,
-} from '../Types/utils';
-import { getActionDefinitionFromSdl, getTypesFromSdl } from '../Types/sdlUtils';
+} from '../../../shared/utils/hasuraCustomTypeUtils';
+import {
+  getActionDefinitionFromSdl,
+  getTypesFromSdl,
+} from '../../../shared/utils/sdlUtils';
 import {
   setFetching as createActionRequestInProgress,
   unsetFetching as createActionRequestComplete,
@@ -46,7 +49,7 @@ import {
 import {
   makeRequest as makePermRequest,
   setRequestSuccess as setPermRequestSuccess,
-  setRequestFailure as setPermRequestFailure
+  setRequestFailure as setPermRequestFailure,
 } from './Permissions/reducer';
 import { findAction, getActionPermissions } from './utils';
 import { getActionPermissionQueries } from './Permissions/utils';

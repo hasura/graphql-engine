@@ -1,12 +1,12 @@
 /* eslint-disable no-use-before-define */
 
 import { camelize } from 'inflection';
-import { filterNameLessTypeLess } from '../../Types/utils';
+import { filterNameLessTypeLess } from '../../../../shared/utils/hasuraCustomTypeUtils';
 import {
   getSchemaTypeMetadata,
   wrapTypename,
   unwrapType,
-} from '../../Types/wrappingTypeUtils';
+} from '../../../../shared/utils/wrappingTypeUtils';
 import {
   isInputObjectType,
   isEnumType,

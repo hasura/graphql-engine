@@ -1,4 +1,7 @@
-import { getActionDefinitionSdl, getTypesSdl } from '../../Types/sdlUtils';
+import {
+  getActionDefinitionSdl,
+  getTypesSdl,
+} from '../../../../shared/utils/sdlUtils';
 import {
   getActionArguments,
   getActionName,
