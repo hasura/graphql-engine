@@ -20,7 +20,13 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , closeAll
   , createServerApp
   , shutdown
+
+  , ErrRespType(..)
+  , checkPath
   ) where
+
+import           Control.Exception        (try)
+import           Hasura.RQL.Types.Error
 
 import qualified Control.Concurrent.Async as A
 import qualified Control.Concurrent.STM   as STM
@@ -31,12 +37,11 @@ import qualified Data.ByteString.Lazy     as BL
 import qualified Data.TByteString         as TBS
 import qualified Data.UUID                as UUID
 import qualified Data.UUID.V4             as UUID
+import           Data.Word                (Word16)
 import qualified ListT
 import qualified Network.WebSockets       as WS
 import qualified StmContainers.Map        as STMMap
-import           Data.Word                (Word16)
 
-import           Control.Exception        (try)
 import qualified Hasura.Logging           as L
 import           Hasura.Prelude
 
@@ -118,7 +123,7 @@ data ServerStatus a
 
 data WSServer a
   = WSServer
-  { _wssLogger   :: L.Logger
+  { _wssLogger :: L.Logger
   , _wssStatus :: !(STM.TVar (ServerStatus a))
   }
 
@@ -215,7 +220,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
       status <- STM.atomically $ do
         status <- STM.readTVar serverStatus
         case status of
-          ShuttingDown -> pure ()
+          ShuttingDown           -> pure ()
           AcceptingConns connMap -> STMMap.insert wsConn wsId connMap
         return status
 
@@ -268,3 +273,15 @@ shutdown (WSServer (L.Logger writeLog) serverStatus) = do
     STM.writeTVar serverStatus ShuttingDown
     return conns
   closeAllWith (flip forceConnReconnect) "shutting server down" conns
+
+data ErrRespType
+  = ERTLegacy
+  | ERTGraphqlCompliant
+  deriving (Show)
+
+checkPath :: MonadError QErr m => WS.RequestHead -> m ErrRespType
+checkPath requestHead = case WS.requestPath requestHead of
+  "/v1alpha1/graphql" -> return ERTLegacy
+  "/v1/graphql"       -> return ERTGraphqlCompliant
+  _                   ->
+    throw404 "only '/v1/graphql', '/v1alpha1/graphql' are supported on websockets"

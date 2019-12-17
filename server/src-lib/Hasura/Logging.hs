@@ -45,6 +45,7 @@ newtype FormattedTime
 data EngineLogType
   = ELTHttpLog
   | ELTWebsocketLog
+  | ELTWebsocketTxLog
   | ELTWebhookLog
   | ELTQueryLog
   | ELTStartup
@@ -83,7 +84,7 @@ alwaysOnLogTypes = Set.fromList
 defaultEnabledLogTypes :: Set.HashSet EngineLogType
 defaultEnabledLogTypes =
   Set.union alwaysOnLogTypes $
-  Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog]
+  Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog, ELTWebsocketTxLog]
 
 -- log types that can be set by the user
 userAllowedLogTypes :: [EngineLogType]

@@ -16,8 +16,8 @@ rebuild-ghc-options: true
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
 # use https URLs so that build systems can clone these repos
-- git: https://github.com/hasura/pg-client-hs.git
-  commit: de5c023ed7d2f75a77972ff52b6e5ed19d010ca2
+- git: https://github.com/rakeshkky/pg-client-hs.git
+  commit: 8c26ce5b64f7b10b350642c5ed47eaa51cb23ea3
 - git: https://github.com/0x777/graphql-parser-hs.git
   commit: 6eda2bf6bafe6d90bc4fe369f656a3cb979b041a
 - git: https://github.com/hasura/ci-info-hs.git

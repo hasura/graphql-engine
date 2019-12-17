@@ -7,6 +7,10 @@ module Hasura.Db
   , PGExecCtx(..)
   , runLazyTx
   , runLazyTx'
+  , runLazyTxWithConn
+  , beginTx
+  , abortTx
+  , commitTx
   , withUserInfo
 
   , RespTx
@@ -19,6 +23,7 @@ import           Control.Lens
 import           Control.Monad.Validate
 
 import qualified Data.Aeson.Extended          as J
+import qualified Data.Text                    as T
 import qualified Database.PG.Query            as Q
 import qualified Database.PG.Query.Connection as Q
 
@@ -79,6 +84,23 @@ runLazyTx' (PGExecCtx pgPool _) = \case
   LTNoTx a -> return a
   LTTx tx  -> Q.runTx' pgPool tx
 
+runLazyTxWithConn :: MonadIO m => Q.PGConn -> LazyTx QErr a -> ExceptT QErr m a
+runLazyTxWithConn pgConn = \case
+  LTErr e -> throwError e
+  LTNoTx a -> pure a
+  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ Q.runTxWithConn pgConn tx
+
+beginTx :: Q.TxIsolation -> LazyTx QErr ()
+beginTx txIso = liftTx $ Q.unitQE defaultTxErrorHandler query () False
+  where
+    query = Q.fromText $ T.pack $ "BEGIN " <> show txIso
+
+abortTx :: LazyTx QErr ()
+abortTx = liftTx $ Q.unitQE defaultTxErrorHandler "ABORT" () False
+
+commitTx :: LazyTx QErr ()
+commitTx = liftTx $ Q.unitQE defaultTxErrorHandler "COMMIT" () False
+
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
 
@@ -118,7 +140,7 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
 
         PGDataException code -> case code of
           Just (PGErrorSpecific PGInvalidEscapeSequence) -> (BadRequest, message)
-          _ -> (DataException, message)
+          _                                              -> (DataException, message)
 
         PGSyntaxErrorOrAccessRuleViolation code -> (ConstraintError,) $ case code of
           Just (PGErrorSpecific PGInvalidColumnReference) ->
