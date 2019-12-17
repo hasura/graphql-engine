@@ -17,6 +17,8 @@ Pipfile.lock
 .cabal-sandbox/
 cabal.sandbox.config
 cabal.config
+# Configurable for local dev/experimentation:
+cabal.project.local
 *.prof*
 *.aux
 *.hp
