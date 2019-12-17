@@ -36,6 +36,9 @@ oneMinute = 60 * oneSecond
 oneHour :: Int
 oneHour = 60 * oneMinute
 
+endOfTime :: UTCTime
+endOfTime = read "2999-12-31 00:00:00 Z"
+
 -- type LogEnvHeaders = Bool
 
 type ScheduledEventPayload = J.Value
@@ -92,18 +95,19 @@ generateScheduledEvents = do
     toArr (ScheduledEvent _ n w t) = n : w : (pure $ formatTime' t)
     toTupleExp = TupleExp . map SELit
     uncurrySchedule (n, w, st) =
-      ScheduledTriggerQuery {stqName = n, stqWebhook = w, stqSchedule = st}
+      ScheduledTriggerQuery {stqName = n, stqWebhook = w, stqSchedule = fromBS st}
+    fromBS st = fromMaybe (OneOff endOfTime) $ J.decodeStrict' st
 
 mkScheduledEvents :: UTCTime -> ScheduledTriggerQuery -> [ScheduledEvent]
 mkScheduledEvents time ScheduledTriggerQuery{..} =
   let events =
-        case parseCronSchedule $ unNonEmptyText stqSchedule of
-          Right cron ->
+        case stqSchedule of
+          OneOff _ -> [] -- one-off scheduled events need not be generated
+          Cron cron ->
             generateScheduledEventsBetween
               time
               (addUTCTime nominalDay time)
               cron
-          Left _err -> []
    in map (ScheduledEvent Nothing (unNonEmptyText stqName) (unNonEmptyText stqWebhook)) events
 
 -- generates events (from, till] according to CronSchedule
