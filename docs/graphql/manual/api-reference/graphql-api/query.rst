@@ -333,7 +333,7 @@ AndExp
       published_on: { _gte: "2018-01-01" }
     }
 
-.. _orExp:
+.. _OrExp:
 
 OrExp
 #####
