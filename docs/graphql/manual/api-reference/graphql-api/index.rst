@@ -28,15 +28,15 @@ The following types of requests can be made using the GraphQL API:
 - :doc:`Query / Subscription <query>`
 - :doc:`Mutation <mutation>`
 
-Batching requests
------------------
+Batching operations
+-------------------
 
-The GraphQL API provides support for batched queries and mutations. The endpoint will accept
-an array of requests in place of a single request, and return an array of corresponding 
+The GraphQL API provides support for batched operations (which can be a combination of queries and mutations).
+The endpoint will accept an array of operations in place of a single operation, and return an array of corresponding 
 responses.
 
 **Example:** using a client which supports batching (such as Apollo Client), we can send two
-queries in one request:
+query operations in one request:
 
 .. graphiql::
   :view_only:
@@ -84,4 +84,4 @@ queries in one request:
 
   Query / Subscription <query>
   Mutation <mutation>
-  Batching requests <batching>
+  Batching operations <batching>
