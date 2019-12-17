@@ -4,8 +4,6 @@ import requestAction from '../../../../utils/requestAction';
 import pendingFilterReducer from './FilterActions';
 import { findTableFromRel } from '../utils';
 import dataHeaders from '../Common/Headers';
-import globals from '../../../../Globals';
-import { IMPROVED_EVENT_FETCH_QUERY } from '../../../../helpers/versionUtils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'PendingEvents/V_SET_DEFAULTS';
@@ -58,6 +56,7 @@ const vMakeRequest = () => {
         currentQuery.columns[1].where = {
           delivered: false,
           error: false,
+          archived: false,
         };
       }
       currentQuery.where = { name: state.triggers.currentTrigger };
@@ -65,18 +64,8 @@ const vMakeRequest = () => {
         trigger_name: state.triggers.currentTrigger,
         delivered: false,
         error: false,
+        archived: false,
       };
-    }
-
-    if (
-      globals.featuresCompatibility &&
-      globals.featuresCompatibility[IMPROVED_EVENT_FETCH_QUERY]
-    ) {
-      if (currentQuery.columns[1]) {
-        currentQuery.columns[1].where = currentQuery.columns[1].where || {};
-        currentQuery.columns[1].where.archived = false;
-      }
-      countQuery.where.archived = false;
     }
 
     // order_by for relationship

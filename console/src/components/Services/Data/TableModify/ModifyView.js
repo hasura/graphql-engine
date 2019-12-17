@@ -16,10 +16,6 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
-  checkFeatureSupport,
-  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
-} from '../../../../helpers/versionUtils';
-import {
   findTable,
   generateTableDef,
   getColumnName,
@@ -117,8 +113,6 @@ class ModifyView extends Component {
     };
 
     const getViewRootFieldsSection = () => {
-      if (!checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) return null;
-
       const existingRootFields = getTableCustomRootFields(tableSchema);
 
       return (
