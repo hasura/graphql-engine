@@ -866,27 +866,9 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
       }
     }
 
-.. admonition:: Syntactic sugar
+.. note::
 
-  You can simplify an ``_and`` expression by passing the sub-expressions separated by a ``,``
-
-  **For example:**
-
-  .. code-block:: graphql
-
-    {
-      _and: [
-        { rating: { _gte: 4 } },
-        { published_on: { _gte: "2018-01-01" } }
-      ]
-    }
-
-    # can be simplified to:
-
-    {
-      rating: { _gte: 4 },
-      published_on: { _gte: "2018-01-01" }
-    }
+  It is possible to simplify the ``_and`` expression. See the :ref:`API reference <AndExp>` for more details.
 
 Example:  _or
 ^^^^^^^^^^^^^
@@ -946,42 +928,8 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
 
 .. note::
 
-  The ``_or`` operator expects an array of expressions as input. Passing an object to it will result in the
-  behaviour of the ``_and`` operator due to the way `GraphQL list input coercion <https://graphql.github.io/graphql-spec/June2018/#sec-Type-System.List>`_
-  behaves.
-
-  **For example:**
-
-  .. code-block:: graphql
-
-    {
-      _or: {
-       rating: { _gte: 4 },
-       published_on: { _gte: "2018-01-01" }
-      }
-    }
-
-    # will be coerced to:
-
-    {
-      _or: [
-        {
-          rating: { _gte: 4 },
-          published_on: { _gte: "2018-01-01" }
-        }
-      ]
-    }
-
-    # which is equivalent to:
-
-    {
-      _or: [
-        _and: [
-          { rating: { _gte: 4 } },
-          { published_on: { _gte: "2018-01-01" } }
-        ]
-      ]
-    }
+  The ``_or`` operator expects an array of expressions as input. See the :ref:`API reference <OrExp>` for details on
+  the behaviour if an object is passed as input
 
 .. _nested_filter:
 

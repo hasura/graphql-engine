@@ -300,6 +300,8 @@ BoolExp
 
    AndExp_ | OrExp_ | NotExp_ | TrueExp_ | ColumnExp_
 
+.. _AndExp:
+
 AndExp
 ######
 
@@ -309,15 +311,29 @@ AndExp
       _and: [BoolExp_]
     }
 
-or
+.. admonition:: Syntactic sugar
 
-.. parsed-literal::
+  You can simplify an ``_and`` expression by passing the sub-expressions separated by a ``,``
+
+  **For example:**
+
+  .. code-block:: graphql
 
     {
-      BoolExp_,
-      BoolExp_,
-      ...
+      _and: [
+        { rating: { _gte: 4 } },
+        { published_on: { _gte: "2018-01-01" } }
+      ]
     }
+
+    # can be simplified to:
+
+    {
+      rating: { _gte: 4 },
+      published_on: { _gte: "2018-01-01" }
+    }
+
+.. _orExp:
 
 OrExp
 #####
@@ -327,6 +343,46 @@ OrExp
     {
       _or: [BoolExp_]
     }
+
+.. note::
+
+  The ``_or`` operator expects an array of expressions as input. Passing an object to it will result in the
+  behaviour of the ``_and`` operator due to the way `GraphQL list input coercion <https://graphql.github.io/graphql-spec/June2018/#sec-Type-System.List>`_
+  behaves.
+
+  **For example:**
+
+  .. code-block:: graphql
+
+    {
+      _or: {
+       rating: { _gte: 4 },
+       published_on: { _gte: "2018-01-01" }
+      }
+    }
+
+    # will be coerced to:
+
+    {
+      _or: [
+        {
+          rating: { _gte: 4 },
+          published_on: { _gte: "2018-01-01" }
+        }
+      ]
+    }
+
+    # which is equivalent to:
+
+    {
+      _or: [
+        _and: [
+          { rating: { _gte: 4 } },
+          { published_on: { _gte: "2018-01-01" } }
+        ]
+      ]
+    }
+
 
 NotExp
 ######
