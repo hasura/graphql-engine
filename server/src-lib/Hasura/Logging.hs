@@ -62,6 +62,7 @@ data Hasura
 data instance EngineLogType Hasura
   = ELTHttpLog
   | ELTWebsocketLog
+  | ELTWebsocketTxLog
   | ELTWebhookLog
   | ELTQueryLog
   | ELTStartup
@@ -73,12 +74,13 @@ instance Hashable (EngineLogType Hasura)
 
 instance J.ToJSON (EngineLogType Hasura) where
   toJSON = \case
-    ELTHttpLog      -> "http-log"
-    ELTWebsocketLog -> "websocket-log"
-    ELTWebhookLog   -> "webhook-log"
-    ELTQueryLog     -> "query-log"
-    ELTStartup      -> "startup"
-    ELTInternal t   -> J.toJSON t
+    ELTHttpLog        -> "http-log"
+    ELTWebsocketLog   -> "websocket-log"
+    ELTWebsocketTxLog -> "websocket-tx-log"
+    ELTWebhookLog     -> "webhook-log"
+    ELTQueryLog       -> "query-log"
+    ELTStartup        -> "startup"
+    ELTInternal t     -> J.toJSON t
 
 instance J.FromJSON (EngineLogType Hasura) where
   parseJSON = J.withText "log-type" $ \s -> case T.toLower $ T.strip s of
@@ -120,7 +122,7 @@ instance J.ToJSON InternalLogTypes where
 -- the default enabled log-types
 defaultEnabledEngineLogTypes :: Set.HashSet (EngineLogType Hasura)
 defaultEnabledEngineLogTypes =
-  Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog]
+  Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog, ELTWebsocketTxLog]
 
 isEngineLogTypeEnabled :: Set.HashSet (EngineLogType Hasura) -> EngineLogType Hasura -> Bool
 isEngineLogTypeEnabled enabledTypes logTy = case logTy of

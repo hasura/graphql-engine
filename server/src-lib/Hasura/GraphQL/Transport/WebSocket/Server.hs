@@ -20,11 +20,15 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , closeAll
   , createServerApp
   , shutdown
+
+  , ErrRespType(..)
+  , checkPath
   ) where
 
 import           Control.Exception.Lifted             (try)
 import           Data.Word                            (Word16)
 import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
 
 import qualified Control.Concurrent.Async             as A
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
@@ -271,3 +275,15 @@ shutdown (WSServer (L.Logger writeLog) serverStatus) = do
     STM.writeTVar serverStatus ShuttingDown
     return conns
   closeAllWith (flip forceConnReconnect) "shutting server down" conns
+
+data ErrRespType
+  = ERTLegacy
+  | ERTGraphqlCompliant
+  deriving (Show)
+
+checkPath :: MonadError QErr m => WS.RequestHead -> m ErrRespType
+checkPath requestHead = case WS.requestPath requestHead of
+  "/v1alpha1/graphql" -> return ERTLegacy
+  "/v1/graphql"       -> return ERTGraphqlCompliant
+  _                   ->
+    throw404 "only '/v1/graphql', '/v1alpha1/graphql' are supported on websockets"

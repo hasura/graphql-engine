@@ -1,4 +1,4 @@
-module Hasura.GraphQL.Transport.WebSocket.Protocol
+module Hasura.GraphQL.Transport.WebSocket.Queries.Protocol
   ( OperationId(..)
   , ConnParams(..)
   , StartMsg(..)
@@ -56,11 +56,11 @@ instance J.FromJSON ClientMsg where
   parseJSON = J.withObject "ClientMessage" $ \obj -> do
     t <- obj J..: "type"
     case t of
-      "connection_init" -> CMConnInit <$> obj J..:? "payload"
-      "start" -> CMStart <$> J.parseJSON (J.Object obj)
-      "stop" -> CMStop <$> J.parseJSON (J.Object obj)
+      "connection_init"      -> CMConnInit <$> obj J..:? "payload"
+      "start"                -> CMStart <$> J.parseJSON (J.Object obj)
+      "stop"                 -> CMStop <$> J.parseJSON (J.Object obj)
       "connection_terminate" -> return CMConnTerm
-      _ -> fail $ "unexpected type for ClientMessage: " <> t
+      _                      -> fail $ "unexpected type for ClientMessage: " <> t
 
 -- server to client messages
 
