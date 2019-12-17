@@ -18,8 +18,6 @@ import { showSuccessNotification } from '../../Common/Notification';
 
 import { fetchTrackedFunctions } from '../DataActions';
 
-import { COMPUTED_FIELDS_SUPPORT } from '../../../../helpers/versionUtils';
-
 import _push from '../push';
 import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
 
@@ -186,15 +184,8 @@ const deleteFunctionSql = () => {
       inputArgTypes.forEach((inputArg, i) => {
         functionArgString += i > 0 ? ', ' : '';
 
-        if (
-          globals.featuresCompatibility &&
-          globals.featuresCompatibility[COMPUTED_FIELDS_SUPPORT]
-        ) {
-          functionArgString +=
-            '"' + inputArg.schema + '"' + '.' + '"' + inputArg.name + '"';
-        } else {
-          functionArgString += inputArg;
-        }
+        functionArgString +=
+          '"' + inputArg.schema + '"' + '.' + '"' + inputArg.name + '"';
       });
       functionArgString += ')';
     }
