@@ -157,7 +157,7 @@ class ToTxt a where
 
 newtype TableName
   = TableName { getTableTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data)
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary)
 
 instance IsIden TableName where
   toIden (TableName t) = Iden t
@@ -211,7 +211,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data, Generic, Arbitrary)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -227,7 +227,7 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -258,7 +258,6 @@ instance (FromJSON a) => FromJSON (QualifiedObject a) where
     fail "expecting a string/object for QualifiedObject"
 
 instance (ToJSON a) => ToJSON (QualifiedObject a) where
-  toJSON (QualifiedObject (SchemaName "public") o) = toJSON o
   toJSON (QualifiedObject sn o) =
     object [ "schema" .= sn
            , "name"  .= o
@@ -300,7 +299,7 @@ newtype PGDescription
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data, Generic, Arbitrary)
 
 instance IsIden PGCol where
   toIden (PGCol t) = Iden t

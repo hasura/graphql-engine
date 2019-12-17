@@ -7,7 +7,7 @@ export const READ_ONLY_RUN_SQL_QUERIES = 'readOnlyRunSqlQueries';
 // list of feature launch versions
 const featureLaunchVersions = {
   // feature: 'v1.0.0'
-  [READ_ONLY_RUN_SQL_QUERIES]: 'v1.0.0-rc.2',
+  [READ_ONLY_RUN_SQL_QUERIES]: 'v1.1.0',
 };
 
 export const checkValidServerVersion = version => {

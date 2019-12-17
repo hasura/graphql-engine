@@ -251,7 +251,7 @@ updateDelPermFlds refQT rename rn (DelPerm fltr) = do
   liftTx $ updatePermDefInCatalog PTDelete refQT rn $ DelPerm updFltr
 
 updatePreset
-  :: QualifiedTable -> RenameField -> ColVals -> ColVals
+  :: QualifiedTable -> RenameField -> (ColumnValues Value) -> (ColumnValues Value)
 updatePreset qt rf obj =
    case rf of
      RFCol (RenameItem opQT oCol nCol) ->

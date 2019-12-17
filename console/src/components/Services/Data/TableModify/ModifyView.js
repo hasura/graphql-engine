@@ -15,6 +15,14 @@ import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import {
+  findTable,
+  generateTableDef,
+  getColumnName,
+  getTableCustomRootFields,
+} from '../../../Common/utils/pgUtils';
+import RootFields from './RootFields';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 class ModifyView extends Component {
   componentDidMount() {
@@ -42,12 +50,14 @@ class ModifyView extends Component {
       currentSchema,
       tableCommentEdit,
       migrationMode,
+      rootFieldsEdit,
     } = this.props;
 
     const styles = require('./ModifyTable.scss');
 
-    const tableSchema = allSchemas.find(
-      t => t.table_name === tableName && t.table_schema === currentSchema
+    const tableSchema = findTable(
+      allSchemas,
+      generateTableDef(tableName, currentSchema)
     );
 
     if (!tableSchema) {
@@ -81,30 +91,53 @@ class ModifyView extends Component {
       );
     }
 
-    const columns = tableSchema.columns.sort(ordinalColSort);
-    const columnEditors = columns.map((c, i) => {
-      const bg = '';
-      return (
-        <div key={i} className={bg}>
-          <div className="container-fluid">
-            <div className={`row + ${styles.add_mar_bottom}`}>
-              <h5>
-                <Button disabled="disabled" size="xs">
-                  -
-                </Button>{' '}
-                &nbsp; <b>{c.column_name}</b>
-              </h5>
+    const getViewColumnsSection = () => {
+      const columns = tableSchema.columns.sort(ordinalColSort);
+
+      return columns.map((c, i) => {
+        return (
+          <div key={i}>
+            <div className="container-fluid">
+              <div className={`row + ${styles.add_mar_bottom}`}>
+                <h5>
+                  <Button disabled="disabled" size="xs">
+                    -
+                  </Button>{' '}
+                  &nbsp; <b>{getColumnName(c)}</b>
+                </h5>
+              </div>
             </div>
           </div>
-        </div>
+        );
+      });
+    };
+
+    const getViewRootFieldsSection = () => {
+      const existingRootFields = getTableCustomRootFields(tableSchema);
+
+      return (
+        <React.Fragment>
+          <h4 className={styles.subheading_text}>
+            Custom GraphQL Root Fields
+            <Tooltip
+              message={'Change the root fields for the view in the GraphQL API'}
+            />
+          </h4>
+          <RootFields
+            existingRootFields={existingRootFields}
+            rootFieldsEdit={rootFieldsEdit}
+            dispatch={dispatch}
+            tableName={tableName}
+          />
+          <hr />
+        </React.Fragment>
       );
-    });
+    };
 
     const modifyBtn = (
       <Button
         type="submit"
-        color="yellow"
-        size="sm"
+        size="xs"
         className={styles.add_mar_right}
         onClick={() => {
           this.modifyViewDefinition(tableName);
@@ -170,9 +203,12 @@ class ModifyView extends Component {
               dispatch={dispatch}
             />
             <h4 className={styles.subheading_text}>Columns</h4>
-            {columnEditors}
+            {getViewColumnsSection()}
             <br />
-            <h4>View Definition:</h4>
+            <h4 className={styles.subheading_text}>
+              View Definition:
+              <span className={styles.add_mar_left}>{modifyBtn}</span>
+            </h4>
             <AceEditor
               mode="sql"
               theme="github"
@@ -185,7 +221,7 @@ class ModifyView extends Component {
               readOnly
             />
             <hr />
-            {modifyBtn}
+            {getViewRootFieldsSection()}
             {untrackBtn}
             {deleteBtn}
             <br />

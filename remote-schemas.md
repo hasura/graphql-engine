@@ -62,8 +62,8 @@ The fastest way to try remote schema out is via Heroku.
 
 Boilerplates for custom GraphQL servers in popular languages/frameworks are available.
 
-* [Regular boilerplates](community/boilerplates/graphql-servers) that can be deployed anywhere.
-* [Serverless boilerplates](https://github.com/hasura/graphql-serverless) that can be deployed on serverless platforms like AWS Lambda, etc.
+* [Regular boilerplates](community/boilerplates/remote-schemas) that can be deployed anywhere.
+* [Serverless boilerplates](community/boilerplates/remote-schemas) that can be deployed on serverless platforms like AWS Lambda, etc.
 
 Please note that boilerplates for more languages, frameworks, serverless platforms, etc. are being iterated upon and community contributions are very welcome. 
 
