@@ -120,7 +120,7 @@ clearLocal (LocalCacheRef ref)=
 -- | lookup for a key in the local cache
 lookupLocal :: (Hashable k, Ord k) => LocalCacheRef k v -> k -> IO (Maybe v)
 lookupLocal (LocalCacheRef ref) k =
-  -- | Return the result and replace the cache if needed
+  -- Return the result and replace the cache if needed
   IORef.atomicModifyIORef' ref $ \currentCache ->
     case lookupPure k currentCache of
       Just (v, newCache) -> (newCache, Just v)
