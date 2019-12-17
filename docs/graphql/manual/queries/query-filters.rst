@@ -1086,7 +1086,7 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
 .. note::
 
   The ``_or`` operator expects an array of expressions as input. See the :ref:`API reference <OrExp>` for details on
-  the behaviour if an object is passed as input
+  the behaviour if an object is passed as input.
 
 .. _nested_filter:
 

@@ -313,7 +313,7 @@ AndExp
 
 .. admonition:: Syntactic sugar
 
-  You can simplify an ``_and`` expression by passing the sub-expressions separated by a ``,``
+  You can simplify an ``_and`` expression by passing the sub-expressions separated by a ``,``.
 
   **For example:**
 
