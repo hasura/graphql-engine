@@ -4,14 +4,13 @@ import AceEditor from 'react-ace';
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
+import RawSqlButton from '../Common/ReusableComponents/RawSqlButton';
 import {
   findFunction,
   getFunctionDefinition,
   getSchemaName,
 } from '../../../Common/utils/pgUtils';
-import { SET_SQL } from '../RawSQL/Actions';
-import _push from '../push';
-import Button from '../../../Common/Button/Button';
+import { deleteComputedField, saveComputedField } from './ModifyActions';
 
 const ComputedFieldsEditor = ({
   table,
@@ -25,7 +24,7 @@ const ComputedFieldsEditor = ({
   const emptyComputedField = {
     computed_field_name: '',
     function_name: '',
-    function_schema: '',
+    function_schema: currentSchema,
   };
 
   const [computedFieldsState, setComputedFieldsState] = React.useState(
@@ -35,7 +34,7 @@ const ComputedFieldsEditor = ({
   return computedFieldsState.map((computedField, i) => {
     const isLast = computedFields.length <= i;
 
-    const origComputedField = isLast ? emptyComputedField : computedFields[i];
+    const origComputedField = isLast ? null : computedFields[i];
     let origComputedFieldName = '';
     let origComputedFieldFunctionName = '';
     if (origComputedField) {
@@ -47,22 +46,44 @@ const ComputedFieldsEditor = ({
     const computedFieldFunctionName = computedField.function_name;
     const computedFieldFunctionSchema = computedField.function_schema;
 
-    const onDelete = () => {
-      const confirmMessage = `This will permanently delete the computed field "${computedFieldName}" from this table`;
-      const isOk = getConfirmation(confirmMessage, true, computedFieldName);
-      if (isOk) {
-        // TODO
-        // dispatch(deleteComputedField(computedField, table));
+    let computedFieldFunction = null;
+    let computedFieldFunctionDefinition = null;
+    if (functions) {
+      computedFieldFunction = findFunction(
+        functions,
+        computedFieldFunctionName,
+        computedFieldFunctionSchema
+      );
+
+      if (computedFieldFunction) {
+        computedFieldFunctionDefinition = getFunctionDefinition(
+          computedFieldFunction
+        );
       }
-    };
+    }
+
+    let removeFunc;
+    if (!isLast) {
+      removeFunc = () => {
+        const confirmMessage = `This will permanently delete the computed field "${computedFieldName}" from this table`;
+        const isOk = getConfirmation(
+          confirmMessage,
+          true,
+          origComputedFieldName
+        );
+        if (isOk) {
+          dispatch(deleteComputedField(origComputedField, table));
+        }
+      };
+    }
 
     let saveFunc;
-    if (computedFieldName && computedFieldFunctionName) {
-      // TODO
-      // saveFunc = toggle => {
-      //   dispatch(saveComputedField(i, toggle));
-      // };
-      saveFunc = () => {};
+    if (computedFieldName && computedFieldFunctionDefinition) {
+      saveFunc = toggle => {
+        dispatch(
+          saveComputedField(computedField, table, origComputedField, toggle)
+        );
+      };
     }
 
     const collapsedLabel = () => {
@@ -99,53 +120,29 @@ const ComputedFieldsEditor = ({
 
     const expandedContent = () => {
       const getFunctionDefinitionSection = () => {
-        if (isLast) {
-          return null;
-        }
-
-        let computedFieldFunctionDefinition = '-- Function not found';
-        if (functions) {
-          const computedFieldFunction = findFunction(
-            functions,
-            computedFieldFunctionName,
-            computedFieldFunctionSchema
-          );
-          if (computedFieldFunction) {
-            computedFieldFunctionDefinition = getFunctionDefinition(
-              computedFieldFunction
-            );
-          }
-        }
+        const modifyFunctionBtn = (
+          <RawSqlButton
+            dataTestId={`modify-function-${computedFieldFunctionName}`}
+            customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
+            sql={computedFieldFunctionDefinition}
+            dispatch={dispatch}
+          >
+            Modify
+          </RawSqlButton>
+        );
 
         return (
           <div>
             <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Computed field function definition: </b>
-              <Button
-                data-test={`modify-function-${computedFieldFunctionName}`}
-                className={`${styles.display_inline} ${
-                  styles.add_mar_left
-                } btn btn-xs btn-default`}
-                onClick={e => {
-                  e.preventDefault();
-
-                  dispatch(_push('/data/sql'));
-
-                  dispatch({
-                    type: SET_SQL,
-                    data: computedFieldFunctionDefinition,
-                  });
-                }}
-              >
-                Modify
-              </Button>
+              <b>Function definition: </b>
+              {computedFieldFunctionDefinition && modifyFunctionBtn}
             </div>
             <AceEditor
               mode="sql"
               readOnly
               theme="github"
               name="computed_field_fn_def"
-              value={computedFieldFunctionDefinition}
+              value={computedFieldFunctionDefinition || '-- Function not found'}
               minLines={3}
               maxLines={100}
               width="100%"
@@ -204,7 +201,7 @@ const ComputedFieldsEditor = ({
           </div>
           <div className={`${styles.add_mar_bottom}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Computed field function schema: </b>
+              <b>Function schema: </b>
             </div>
             <select
               value={computedFieldFunctionSchema || currentSchema}
@@ -227,7 +224,7 @@ const ComputedFieldsEditor = ({
           </div>
           <div className={`${styles.add_mar_bottom}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Computed field function name: </b>
+              <b>Function name: </b>
             </div>
             <input
               type="text"
@@ -246,7 +243,7 @@ const ComputedFieldsEditor = ({
 
       newState[i] = {
         ...newState[i],
-        ...origComputedField,
+        ...(origComputedField || emptyComputedField),
       };
 
       setComputedFieldsState(newState);
@@ -263,7 +260,7 @@ const ComputedFieldsEditor = ({
           service="modify-table"
           expandButtonText={expandButtonText}
           saveFunc={saveFunc}
-          removeFunc={onDelete}
+          removeFunc={removeFunc}
           isCollapsable
         />
       </div>
