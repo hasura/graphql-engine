@@ -1,0 +1,42 @@
+description: Delete mutation on author with returning articles
+url: /v1/graphql
+status: 200
+response:
+  data:
+    delete_author:
+      affected_rows: 1
+      returning:
+      - id: 3
+        name: Author 3
+        emails: []
+        info:
+          age: 23
+        location:
+          type: Point
+          crs:
+            type: name
+            properties:
+              name: urn:ogc:def:crs:EPSG::4326
+          coordinates:
+          - -118.4079
+          - 33.9434
+        articles: []
+query:
+  query: |
+    mutation DeleteAuthor3 {
+      delete_author(where: {id: {_eq: 3}}){
+        affected_rows
+        returning{
+          id
+          name
+          emails
+          info
+          location
+          articles{
+            id
+            title
+            content
+          }
+        }
+      }
+    }

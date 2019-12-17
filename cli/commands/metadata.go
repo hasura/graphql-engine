@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	v2yaml "gopkg.in/yaml.v2"
 )
 
 func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -36,12 +36,7 @@ func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) e
 			return errors.Wrap(err, "cannot export metadata")
 		}
 
-		t, err := json.Marshal(metaData)
-		if err != nil {
-			return errors.Wrap(err, "cannot Marshal metadata")
-		}
-
-		data, err := yaml.JSONToYAML(t)
+		databyt, err := v2yaml.Marshal(metaData)
 		if err != nil {
 			return err
 		}
@@ -51,7 +46,7 @@ func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) e
 			return errors.Wrap(err, "cannot save metadata")
 		}
 
-		err = ioutil.WriteFile(metadataPath, data, 0644)
+		err = ioutil.WriteFile(metadataPath, databyt, 0644)
 		if err != nil {
 			return errors.Wrap(err, "cannot save metadata")
 		}
