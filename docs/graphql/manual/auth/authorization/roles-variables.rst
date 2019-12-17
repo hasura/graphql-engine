@@ -85,7 +85,7 @@ Examples:
 
 .. admonition:: ABAC
 
-  Session variables are analogous to *attributes* in a typical attribute-based access control (ABAC) system.
+  Session variables are analogous to *attributes* in a typical `attribute-based access control <https://en.wikipedia.org/wiki/Attribute-based_access_control>`_ (ABAC) system.
 
 
 Modelling Roles in Hasura
