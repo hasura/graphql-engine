@@ -1,6 +1,4 @@
 import {
-  TABLE_ENUMS_SUPPORT,
-  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
   READ_ONLY_RUN_SQL_QUERIES,
   COMPUTED_FIELDS_REL_SUPPORT,
   checkFeatureSupport,
@@ -217,6 +215,8 @@ export const fetchTrackedTableListQuery = options => {
       columns: [
         'table_schema',
         'table_name',
+        'is_enum',
+        'configuration',
         {
           name: 'primary_key',
           columns: ['*'],
@@ -245,14 +245,6 @@ export const fetchTrackedTableListQuery = options => {
       order_by: [{ column: 'table_name', type: 'asc' }],
     },
   };
-
-  if (checkFeatureSupport(TABLE_ENUMS_SUPPORT)) {
-    query.args.columns.push('is_enum');
-  }
-
-  if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
-    query.args.columns.push('configuration');
-  }
 
   if (checkFeatureSupport(COMPUTED_FIELDS_REL_SUPPORT)) {
     query.args.columns.push({

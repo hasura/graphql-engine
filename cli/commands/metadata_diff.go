@@ -8,12 +8,12 @@ import (
 	"strings"
 
 	"github.com/aryann/difflib"
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/mgutz/ansi"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	v2yaml "gopkg.in/yaml.v2"
 )
 
 type metadataDiffOptions struct {
@@ -119,7 +119,7 @@ func (o *metadataDiffOptions) run() error {
 			return errors.Wrap(err, "cannot fetch metadata from server")
 		}
 
-		newYaml, err = yaml.Marshal(m)
+		newYaml, err = v2yaml.Marshal(m)
 		if err != nil {
 			return errors.Wrap(err, "cannot convert metadata from server to yaml")
 		}
