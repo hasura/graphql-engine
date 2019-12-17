@@ -10,6 +10,7 @@ Pipfile.lock
 *.dyn_o
 *.dyn_hi
 .virtualenv
+.python-venv
 .hpc
 *.tix
 .hsenv

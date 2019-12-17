@@ -269,7 +269,7 @@ article ol ol {
 }
 
 #docs-header-actions .header_links {
-  width: 33%;
+  min-width: 33%;
   text-align: right;
 }
 
@@ -287,8 +287,9 @@ article ol ol {
 
 #docs-header-actions .social_icons_wrapper .social_icons {
   display: inline-block;
-  padding: 0 5px;
+  padding: 10px 5px;
   opacity: 0.7;
+  vertical-align: middle;
 }
 
 #docs-header-actions .social_icons_wrapper .social_icons:hover {
@@ -303,11 +304,20 @@ article ol ol {
   display: inline-block;
 }
 
+#docs-header-actions .social_icons_wrapper .social_icons a {
+  text-decoration: none;
+  color: #D66700;
+}
+
+#docs-header-actions .social_icons_wrapper .social_icons iframe {
+  height: 20px;
+}
+
 #docs-header-actions .tooltip {
   position: relative;
 }
 
-#docs-header-actions .tooltip .tooltiptext {
+#docs-header-actions .tooltip .tooltip_text {
   visibility: hidden;
   width: 272px;
   background-color: black;
@@ -322,7 +332,7 @@ article ol ol {
   font-size: 14px;
 }
 
-#docs-header-actions .tooltip:hover .tooltiptext {
+#docs-header-actions .tooltip:hover .tooltip_text {
   visibility: visible;
 }
 

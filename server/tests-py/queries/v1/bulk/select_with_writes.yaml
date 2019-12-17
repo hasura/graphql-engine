@@ -1,0 +1,24 @@
+description: Bulk query
+url: /v1/query
+status: 200
+response:
+  - affected_rows: 2
+  -
+    - name: "author1"
+    - name: "author2"
+query:
+  type: bulk
+  args:
+  - type: insert
+    args:
+      table: author
+      objects:
+        - name: "author1"
+          is_registered: true
+        - name: "author2"
+          is_registered: false
+  - type: select
+    args:
+      table: author
+      columns:
+        - name

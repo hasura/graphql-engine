@@ -1,10 +1,9 @@
-FROM golang:1.10
+FROM golang:1.13
 
 ARG upx_version="3.94"
 
 # install go dependencies
-RUN	go get github.com/golang/dep/cmd/dep \
-    && go get github.com/mitchellh/gox \
+RUN	go get github.com/mitchellh/gox \
     && go get github.com/hasura/go-bindata/go-bindata \
     && go get github.com/tcnksm/ghr
 

@@ -563,12 +563,14 @@ const getBulkColumnInfoFetchQuery = schema => {
     type: 'run_sql',
     args: {
       sql: fetchColumnTypesQuery,
+      read_only: true,
     },
   };
   const fetchTypeDefaultValues = {
     type: 'run_sql',
     args: {
       sql: fetchColumnDefaultFunctions(schema),
+      read_only: true,
     },
   };
 
@@ -576,6 +578,7 @@ const getBulkColumnInfoFetchQuery = schema => {
     type: 'run_sql',
     args: {
       sql: fetchColumnCastsQuery,
+      read_only: true,
     },
   };
 

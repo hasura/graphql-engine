@@ -121,3 +121,15 @@ args:
     definition:
       function: fetch_articles
       table_argument: author_row
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE text_result(
+        result text
+      );
+
+      CREATE FUNCTION get_session_var(hasura_session json, session_var text)
+      RETURNS SETOF text_result AS $$
+          SELECT q.* FROM (VALUES (hasura_session ->> session_var)) q
+      $$ LANGUAGE sql STABLE;
