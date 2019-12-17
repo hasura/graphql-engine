@@ -102,13 +102,6 @@ packages:
       sha256: 3561f4c3121d05e5390c2b32f9e0a58b6408ecb5cfb74f234f3b8ca37b467a5e
   original:
     hackage: shakespeare-2.0.22
-- completed:
-    hackage: brotli-0.0.0.0@sha256:448061ceabdcaa752bbaf208f255bbb7e90bbcf8ea8a913d26ffa7887636823b,2887
-    pantry-tree:
-      size: 407
-      sha256: 5ad2a6b25c8145f58c43b10f1b60a1e1b5bf57f0e33e4a203f9671b361fb03c0
-  original:
-    hackage: brotli-0.0.0.0
 snapshots:
 - completed:
     size: 498167

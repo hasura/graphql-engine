@@ -75,9 +75,9 @@ import qualified Data.Text                          as T
 data InsPerm
   = InsPerm
   { ipCheck   :: !BoolExp
-  , ipSet     :: !(Maybe ColVals)
+  , ipSet     :: !(Maybe (ColumnValues Value))
   , ipColumns :: !(Maybe PermColSpec)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
 
@@ -111,7 +111,7 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo PGColumnInfo -> Maybe ColVals
+  => TableInfo PGColumnInfo -> Maybe (ColumnValues Value)
   -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   (setColTups, deps) <- withPathK "set" $
@@ -210,7 +210,7 @@ data SelPerm
   , spLimit             :: !(Maybe Int)         -- ^ Limit value
   , spAllowAggregations :: !Bool                -- ^ Allow aggregation
   , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
 
 instance FromJSON SelPerm where
@@ -298,14 +298,15 @@ instance IsPerm SelPerm where
 data UpdPerm
   = UpdPerm
   { ucColumns :: !PermColSpec -- Allowed columns
-  , ucSet     :: !(Maybe ColVals) -- Preset columns
+  , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
   , ucFilter  :: !BoolExp     -- Filter expression
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UpdPerm)
 
 type UpdPermDef = PermDef UpdPerm
 type CreateUpdPerm = CreatePerm UpdPerm
+
 
 buildUpdPermInfo
   :: (QErrM m, CacheRM m)
@@ -364,7 +365,7 @@ instance IsPerm UpdPerm where
 -- Delete permission
 data DelPerm
   = DelPerm { dcFilter :: !BoolExp }
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DelPerm)
 

@@ -1,6 +1,5 @@
-{-# LANGUAGE CPP        #-}
-{-# LANGUAGE DataKinds  #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE CPP       #-}
+{-# LANGUAGE DataKinds #-}
 
 module Hasura.Server.App where
 
@@ -18,6 +17,7 @@ import           System.Exit                            (exitFailure)
 import           System.FilePath                        (joinPath, takeFileName)
 import           Web.Spock.Core                         ((<//>))
 
+import qualified Control.Concurrent.Async.Lifted.Safe   as LA
 import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.HashSet                           as S
@@ -38,8 +38,7 @@ import           Hasura.EncJSON
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth                     (AuthMode (..),
-                                                         UserAuthentication (..))
+import           Hasura.Server.Auth                     (AuthMode (..), UserAuthentication (..))
 import           Hasura.Server.Compression
 import           Hasura.Server.Config                   (runGetConfig)
 import           Hasura.Server.Context
@@ -208,9 +207,9 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
     requestId <- getRequestId headers
 
-    userInfoE <- lift $ resolveUserInfo logger manager headers authMode
+    userInfoE <- fmap fst <$> lift (resolveUserInfo logger manager headers authMode)
     userInfo  <- either (logErrorAndResp Nothing requestId req (Left reqBody) False headers . qErrModifier)
-                return userInfoE
+                 return userInfoE
 
     let handlerState = HandlerCtx serverCtx userInfo headers requestId
         curRole = userRole userInfo
@@ -237,7 +236,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     case modResult of
       Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
                    in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) headers err
-      Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2)) headers
+      Right res -> logSuccessAndResp (Just userInfo) requestId req (fmap toJSON q) res (Just (t1, t2)) headers
 
     where
       logger = scLogger serverCtx
@@ -257,21 +256,21 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         Spock.setStatus $ qeStatus qErr
         Spock.json $ qErrEncoder includeInternal qErr
 
-      logSuccessAndResp userInfo reqId req result qTime reqHeaders =
+      logSuccessAndResp userInfo reqId req reqBody result qTime reqHeaders =
         case result of
           JSONResp (HttpResponse encJson h) ->
-            possiblyCompressedLazyBytes userInfo reqId req qTime (encJToLBS encJson)
+            possiblyCompressedLazyBytes userInfo reqId req reqBody qTime (encJToLBS encJson)
               (pure jsonHeader <> mkHeaders h) reqHeaders
           RawResp (HttpResponse rawBytes h) ->
-            possiblyCompressedLazyBytes userInfo reqId req qTime rawBytes (mkHeaders h) reqHeaders
+            possiblyCompressedLazyBytes userInfo reqId req reqBody qTime rawBytes (mkHeaders h) reqHeaders
 
-      possiblyCompressedLazyBytes userInfo reqId req qTime respBytes respHeaders reqHeaders = do
+      possiblyCompressedLazyBytes userInfo reqId req reqBody qTime respBytes respHeaders reqHeaders = do
         let (compressedResp, mEncodingHeader, mCompressionType) =
               compressResponse (Wai.requestHeaders req) respBytes
             encodingHeader = maybe [] pure mEncodingHeader
             reqIdHeader = (requestIdHeader, unRequestId reqId)
             allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
-        lift $ logHttpSuccess logger userInfo reqId req respBytes compressedResp qTime mCompressionType reqHeaders
+        lift $ logHttpSuccess logger userInfo reqId req reqBody respBytes compressedResp qTime mCompressionType reqHeaders
         mapM_ (uncurry Spock.setHeader) allRespHeaders
         Spock.lazyBytes compressedResp
 
@@ -424,12 +423,14 @@ data HasuraApp
   }
 
 mkWaiApp
-  :: ( MonadIO m
+  :: forall m.
+     ( MonadIO m
      , MonadStateless IO m
      , ConsoleRenderer m
      , HttpLog m
      , UserAuthentication m
      , MetadataApiAuthorization m
+     , LA.Forall (LA.Pure m)
      )
   => Q.TxIsolation
   -> L.Logger L.Hasura
@@ -469,7 +470,7 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
     let corsPolicy = mkDefaultCorsPolicy corsCfg
 
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx
-    wsServerEnv <- liftIO $ WS.createWSServerEnv logger pgExecCtx lqState cacheRef httpManager corsPolicy
+    wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState cacheRef httpManager corsPolicy
                    sqlGenCtx enableAL planCache
 
     ekgStore <- liftIO EKG.newStore
@@ -501,11 +502,10 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
     let wsServerApp = WS.createWSServerApp mode wsServerEnv
         stopWSServer = WS.stopWSServerApp wsServerEnv
 
-    return $ HasuraApp
-      (WS.websocketsOr WS.defaultConnectionOptions wsServerApp spockApp)
-      schemaCacheRef
-      cacheBuiltTime
-      stopWSServer
+    waiApp <- liftWithStateless $ \lowerIO ->
+      pure $ WS.websocketsOr WS.defaultConnectionOptions (lowerIO . wsServerApp) spockApp
+
+    return $ HasuraApp waiApp schemaCacheRef cacheBuiltTime stopWSServer
   where
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
