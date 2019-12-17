@@ -36,6 +36,21 @@ const EventPageContainer = ({
           dispatch={dispatch}
         />
       </li>
+      <li
+        role="presentation"
+        className={
+          currentLocation.includes('events/scheduled-triggers')
+            ? styles.active
+            : ''
+        }
+      >
+        <Link
+          className={styles.linkBorder}
+          to={appPrefix + '/scheduled-triggers'}
+        >
+          Scheduled Triggers
+        </Link>
+      </li>
     </ul>
   );
 

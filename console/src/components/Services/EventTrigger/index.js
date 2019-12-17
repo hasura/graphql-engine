@@ -11,3 +11,7 @@ export pendingEventsConnector from './PendingEvents/ViewTable';
 export runningEventsConnector from './RunningEvents/ViewTable';
 export streamingLogsConnector from './StreamingLogs/Logs';
 export landingConnector from './Landing/EventTrigger';
+
+export viewScheduledTrigger from './ScheduledTriggers/ViewScheduledTrigger';
+export viewPastInvocations from './ScheduledTriggers/ViewPastInvocations';
+export addScheduledTrigger from './ScheduledTriggers/AddScheduledTrigger';

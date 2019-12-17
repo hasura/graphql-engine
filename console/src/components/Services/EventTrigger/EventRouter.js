@@ -12,6 +12,9 @@ import {
   runningEventsConnector,
   eventPageConnector,
   streamingLogsConnector,
+  addScheduledTrigger,
+  viewScheduledTrigger,
+  viewPastInvocations,
 } from '.';
 
 import { rightContainerConnector } from '../../Common/Layout';
@@ -37,6 +40,21 @@ const makeEventRouter = (
       onEnter={composeOnEnterHooks([requireSchema])}
     >
       <IndexRedirect to="manage" />
+      <Route
+        path="scheduled-triggers"
+        component={rightContainerConnector(connect)}
+      >
+        <IndexRedirect to="view-scheduled-triggers" />
+        <Route path="add" component={addScheduledTrigger(connect)} />
+        <Route
+          path="view-scheduled-triggers"
+          component={viewScheduledTrigger(connect)}
+        />
+        <Route
+          path="view-past-invocations"
+          component={viewPastInvocations(connect)}
+        />
+      </Route>
       <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="triggers" />
         <Route path="triggers" component={landingConnector(connect)} />

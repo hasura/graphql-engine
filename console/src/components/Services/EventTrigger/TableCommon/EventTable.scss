@@ -1,5 +1,11 @@
 @import "../../../Common/TableCommon/Table.scss";
 
+.subHeader {
+  .heading_text {
+    padding-bottom: 0px;
+  }
+}
+
 .dropdown_wrapper {
   width: 300px;
 }
