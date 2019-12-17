@@ -37,14 +37,13 @@ import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+import RawSqlButton from '../Common/ReusableComponents/RawSqlButton';
 import {
   displayTableName,
   getFunctionName,
   getSchemaTables,
   getUntrackedTables,
 } from '../../../Common/utils/pgUtils';
-import { SET_SQL } from '../RawSQL/Actions';
-import _push from '../push';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
@@ -628,24 +627,14 @@ class Schema extends Component {
                         styles.add_mar_right
                       }`}
                     >
-                      <Button
-                        data-test={`view-function-${p.function_name}`}
-                        className={`${
-                          styles.display_inline
-                        } btn btn-xs btn-default`}
-                        onClick={e => {
-                          e.preventDefault();
-
-                          dispatch(_push('/data/sql'));
-
-                          dispatch({
-                            type: SET_SQL,
-                            data: p.function_definition,
-                          });
-                        }}
+                      <RawSqlButton
+                        dataTestId={`view-function-${p.function_name}`}
+                        customStyles={styles.display_inline}
+                        sql={p.function_definition}
+                        dispatch={dispatch}
                       >
                         View
-                      </Button>
+                      </RawSqlButton>
                     </div>
                     <div className={styles.display_inline}>
                       {p.function_name}
