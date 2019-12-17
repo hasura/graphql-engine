@@ -5,8 +5,9 @@ import os
 import time
 
 import pytest
+from context import PytestConf
 
-if not pytest.config.getoption("--test-logging"):
+if not PytestConf.config.getoption("--test-logging"):
     pytest.skip("--test-logging missing, skipping tests", allow_module_level=True)
 
 class TestLogging():

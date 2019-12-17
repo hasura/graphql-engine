@@ -1,6 +1,6 @@
 import sanitize from 'sanitize-filename';
-import { push } from 'react-router-redux';
 
+import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
@@ -29,6 +29,8 @@ import {
   fetchTrackedTableListQuery,
   mergeLoadSchemaData,
 } from './utils';
+
+import _push from './push';
 
 import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 
@@ -99,8 +101,9 @@ const initQueries = {
         schema: 'hdb_catalog',
       },
       columns: ['function_name', 'function_schema', 'is_system_defined'],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
       where: {
-        function_schema: '',
+        function_schema: '', // needs to be set later
       },
     },
   },
@@ -126,8 +129,9 @@ const initQueries = {
           columns: ['table_schema', 'table_name'],
         },
       ],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
       where: {
-        function_schema: '',
+        function_schema: '', // needs to be set later
         has_variadic: false,
         returns_set: true,
         return_type_type: compositeFnCheck, // COMPOSITE type
@@ -163,15 +167,30 @@ const initQueries = {
         'return_type_name',
         'return_type_type',
         'returns_set',
+        {
+          name: 'return_table_info',
+          columns: ['table_schema', 'table_name'],
+        },
       ],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
       where: {
-        // TODO: set correct where
-        function_schema: '',
-        has_variadic: false,
-        returns_set: true,
-        return_type_type: compositeFnCheck, // COMPOSITE type
-        function_type: {
-          $ilike: '%volatile%',
+        function_schema: '', // needs to be set later
+        $not: {
+          has_variadic: false,
+          returns_set: true,
+          return_type_type: compositeFnCheck, // COMPOSITE type
+          $or: [
+            {
+              function_type: {
+                $ilike: '%stable%',
+              },
+            },
+            {
+              function_type: {
+                $ilike: '%immutable%',
+              },
+            },
+          ],
         },
       },
     },
@@ -387,10 +406,12 @@ const fetchFunctionInit = () => (dispatch, getState) => {
     headers: dataHeaders(getState),
     body: JSON.stringify(body),
   };
+
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: LOAD_FUNCTIONS, data: data[0] });
       dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: data[1] });
+
       let consistentFunctions = data[2];
       const { inconsistentObjects } = getState().metadata;
       if (inconsistentObjects.length > 0) {
@@ -410,7 +431,7 @@ const fetchFunctionInit = () => (dispatch, getState) => {
 
 const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
   if (redirect) {
-    dispatch(push(`${globals.urlPrefix}/data/schema/${schemaName}`));
+    dispatch(_push(getSchemaBaseRoute(schemaName)));
   }
 
   Promise.all([
@@ -542,12 +563,14 @@ const getBulkColumnInfoFetchQuery = schema => {
     type: 'run_sql',
     args: {
       sql: fetchColumnTypesQuery,
+      read_only: true,
     },
   };
   const fetchTypeDefaultValues = {
     type: 'run_sql',
     args: {
       sql: fetchColumnDefaultFunctions(schema),
+      read_only: true,
     },
   };
 
@@ -555,6 +578,7 @@ const getBulkColumnInfoFetchQuery = schema => {
     type: 'run_sql',
     args: {
       sql: fetchColumnCastsQuery,
+      read_only: true,
     },
   };
 

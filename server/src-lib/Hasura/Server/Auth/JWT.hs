@@ -22,12 +22,13 @@ import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           Network.URI                     (URI)
 
 import           Hasura.HTTP
-import           Hasura.Logging                  (LogLevel (..), Logger (..))
+import           Hasura.Logging                  (Hasura, LogLevel (..),
+                                                  Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (diffTimeToMicro,
+import           Hasura.Server.Utils             (diffTimeToMicro, fmapL,
                                                   userRoleHeader)
 
 import qualified Control.Concurrent              as C
@@ -35,6 +36,7 @@ import qualified Crypto.JWT                      as Jose
 import qualified Data.Aeson                      as A
 import qualified Data.Aeson.Casing               as A
 import qualified Data.Aeson.TH                   as A
+import qualified Data.Attoparsec.Text            as AT
 import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI
@@ -107,30 +109,34 @@ computeDiffTime t =
 -- | create a background thread to refresh the JWK
 jwkRefreshCtrl
   :: (MonadIO m)
-  => Logger
+  => Logger Hasura
   -> HTTP.Manager
   -> URI
   -> IORef Jose.JWKSet
   -> NominalDiffTime
   -> m ()
-jwkRefreshCtrl lggr mngr url ref time =
+jwkRefreshCtrl logger manager url ref time =
   void $ liftIO $ C.forkIO $ do
     C.threadDelay $ diffTimeToMicro time
     forever $ do
-      res <- runExceptT $ updateJwkRef lggr mngr url ref
-      mTime <- either (const $ return Nothing) return res
+      res <- runExceptT $ updateJwkRef logger manager url ref
+      mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
       let delay = maybe (60 * aSecond) computeDiffTime mTime
       C.threadDelay delay
   where
+    logNotice = do
+      let err = JwkRefreshLog LevelInfo (JLNInfo "retrying again in 60 secs") Nothing
+      liftIO $ unLogger logger err
     aSecond = 1000 * 1000
 
 
 -- | Given a JWK url, fetch JWK from it and update the IORef
 updateJwkRef
   :: ( MonadIO m
-     , MonadError T.Text m)
-  => Logger
+     , MonadError T.Text m
+     )
+  => Logger Hasura
   -> HTTP.Manager
   -> URI
   -> IORef Jose.JWKSet
@@ -152,18 +158,39 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     logAndThrow errMsg httpErr
 
   let parseErr e = "Error parsing JWK from url (" <> urlT <> "): " <> T.pack e
-  jwkset <- either (\e -> logAndThrow (parseErr e) Nothing) return $
-    A.eitherDecode respBody
+  jwkset <- either (\e -> logAndThrow (parseErr e) Nothing) return $ A.eitherDecode respBody
   liftIO $ modifyIORef jwkRef (const jwkset)
 
-  let mExpiresT = resp ^? Wreq.responseHeader "Expires"
-  forM mExpiresT $ \expiresT -> do
-    let expiresE = parseTimeM True defaultTimeLocale timeFmt $ CS.cs expiresT
-    expires  <- either (`logAndThrow` Nothing) return expiresE
-    currTime <- liftIO getCurrentTime
-    return $ diffUTCTime expires currTime
+  -- first check for Cache-Control header to get max-age, if not found, look for Expires header
+  let cacheHeader   = resp ^? Wreq.responseHeader "Cache-Control"
+      expiresHeader = resp ^? Wreq.responseHeader "Expires"
+  case cacheHeader of
+    Just header -> getTimeFromCacheControlHeader header
+    Nothing     -> mapM getTimeFromExpiresHeader expiresHeader
 
   where
+    getTimeFromExpiresHeader header = do
+      let maybeExpires = parseTimeM True defaultTimeLocale timeFmt $ CS.cs header
+      expires  <- maybe (logAndThrow parseTimeErr Nothing) return maybeExpires
+      currTime <- liftIO getCurrentTime
+      return $ diffUTCTime expires currTime
+
+    getTimeFromCacheControlHeader header =
+      case parseCacheControlHeader $ bsToTxt header of
+        Left e       -> logAndThrow e Nothing
+        Right maxAge -> return $ Just $ fromInteger maxAge
+
+    parseCacheControlHeader =
+     fmapL (const parseCacheControlErr) . AT.parseOnly cacheControlHeaderParser
+
+    cacheControlHeaderParser :: AT.Parser Integer
+    cacheControlHeaderParser = ("s-maxage=" <|> "max-age=") *> AT.decimal
+
+    parseCacheControlErr =
+      "Failed parsing Cache-Control header from JWK response. Could not find max-age or s-maxage"
+    parseTimeErr =
+      "Failed parsing Expires header from JWK response. Value of header is not a valid timestamp"
+
     logAndThrow
       :: (MonadIO m, MonadError T.Text m)
       => T.Text -> Maybe JwkRefreshHttpError -> m a
@@ -410,3 +437,4 @@ instance A.FromJSON JWTConfig where
 
       runEither = either (invalidJwk . T.unpack) return
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
+

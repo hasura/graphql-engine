@@ -395,6 +395,51 @@ Search nearby landmarks with ``distance_kms`` default value which is 2 kms:
     }
 
 
+Accessing Hasura session variables in custom functions
+******************************************************
+
+Use the v2 :ref:`track_function <track_function_v2>` to add a function by defining a session argument.
+The session argument will be a JSON object where keys are session variable names (in lower case) and values are strings.
+Use the ``->>`` JSON operator to fetch the value of a session variable as shown in the following example.
+
+.. code-block:: plpgsql
+
+      -- single text column table
+      CREATE TABLE text_result(
+        result text
+      );
+
+      -- simple function which returns the hasura role
+      -- where 'hasura_session' will be session argument
+      CREATE FUNCTION get_session_role(hasura_session json)
+      RETURNS SETOF text_result AS $$
+          SELECT q.* FROM (VALUES (hasura_session ->> 'x-hasura-role')) q
+      $$ LANGUAGE sql STABLE;
+
+
+.. graphiql::
+  :view_only:
+  :query:
+     query {
+         get_session_role {
+             result
+         }
+     }
+  :response:
+    {
+        "data": {
+            "get_session_role": [
+                {
+                    "result": "admin"
+                }
+             ]
+        }
+    }
+
+.. note::
+
+   The specified session argument will not be included in the ``<function-name>_args`` input object in the GraphQL schema.
+
 Permissions for custom function queries
 ---------------------------------------
 

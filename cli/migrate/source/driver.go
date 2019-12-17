@@ -92,6 +92,10 @@ type Driver interface {
 	// it must return os.ErrNotExist.
 	// Do not start reading, just return the ReadCloser!
 	ReadMetaDown(version uint64) (r io.ReadCloser, identifier string, fileName string, err error)
+
+	// ReadName returns an name that helps
+	// finding this migration in the source for a given version
+	ReadName(version uint64) (name string)
 }
 
 // Open returns a new driver instance.

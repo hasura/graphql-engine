@@ -17,6 +17,7 @@ import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
+import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -64,15 +65,16 @@ data SelPkOpCtx
   , _spocArgMap  :: !PGColArgMap
   } deriving (Show, Eq)
 
+type FunctionArgSeq = Seq.Seq (InputArgument FunctionArgItem)
+
 data FuncQOpCtx
   = FuncQOpCtx
-  { _fqocTable    :: !QualifiedTable
+  { _fqocFunction :: !QualifiedFunction
+  , _fqocArgs     :: !FunctionArgSeq
   , _fqocHeaders  :: ![T.Text]
   , _fqocAllCols  :: !PGColGNameMap
   , _fqocFilter   :: !AnnBoolExpPartialSQL
   , _fqocLimit    :: !(Maybe Int)
-  , _fqocFunction :: !QualifiedFunction
-  , _fqocArgs     :: !FuncArgSeq
   } deriving (Show, Eq)
 
 data UpdOpCtx
@@ -129,11 +131,13 @@ data ComputedFieldType
   | CFTTable !ComputedFieldTable
   deriving (Show, Eq)
 
+type ComputedFieldFunctionArgSeq = Seq.Seq FunctionArgItem
+
 data ComputedField
   = ComputedField
   { _cfName     :: !ComputedFieldName
   , _cfFunction :: !ComputedFieldFunction
-  , _cfArgSeq   :: !FuncArgSeq
+  , _cfArgSeq   :: !ComputedFieldFunctionArgSeq
   , _cfType     :: !ComputedFieldType
   } deriving (Show, Eq)
 
@@ -156,14 +160,12 @@ type OrdByItemMap = Map.HashMap G.Name OrdByItem
 
 type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
 
-data FuncArgItem
-  = FuncArgItem
+data FunctionArgItem
+  = FunctionArgItem
   { _faiInputArgName :: !G.Name
   , _faiSqlArgName   :: !(Maybe FunctionArgName)
-  , _faiHasDefault   :: !Bool
+  , _faiHasDefault   :: !HasDefault
   } deriving (Show, Eq)
-
-type FuncArgSeq = Seq.Seq FuncArgItem
 
 -- insert context
 type RelationInfoMap = Map.HashMap RelName RelInfo
@@ -205,7 +207,9 @@ partialSQLExpToUnresolvedVal = \case
 
 -- | A value that will be converted to an sql expression eventually
 data UnresolvedVal
-  = UVSessVar !(PGType PGScalarType) !SessVar
+  -- | an entire session variables JSON object
+  = UVSession
+  | UVSessVar !(PGType PGScalarType) !SessVar
   -- | a SQL value literal that can be parameterized over
   | UVPG !AnnPGVal
   -- | an arbitrary SQL expression, which /cannot/ be parameterized over
@@ -216,3 +220,8 @@ type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
 
 -- template haskell related
 $(makePrisms ''ResolveField)
+
+data InputFunctionArgument
+  = IFAKnown !FunctionArgName !UnresolvedVal -- ^ Known value
+  | IFAUnknown !FunctionArgItem -- ^ Unknown value, need to be parsed
+  deriving (Show, Eq)

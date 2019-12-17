@@ -13,11 +13,11 @@ packages:
     git: https://github.com/hasura/pg-client-hs.git
     pantry-tree:
       size: 1107
-      sha256: e008d56e5b0535223b856be94a8e71e31d7dabe10b2951a38447df5089de1876
-    commit: de5c023ed7d2f75a77972ff52b6e5ed19d010ca2
+      sha256: aaa78473e95368c73c4f6cd5d85f1016af5783090d804aeb7e0d244c02dd3354
+    commit: bd21e66d8197af381a6c0b493e22d611ed1fa386
   original:
     git: https://github.com/hasura/pg-client-hs.git
-    commit: de5c023ed7d2f75a77972ff52b6e5ed19d010ca2
+    commit: bd21e66d8197af381a6c0b493e22d611ed1fa386
 - completed:
     cabal-file:
       size: 3364
@@ -102,13 +102,6 @@ packages:
       sha256: 3561f4c3121d05e5390c2b32f9e0a58b6408ecb5cfb74f234f3b8ca37b467a5e
   original:
     hackage: shakespeare-2.0.22
-- completed:
-    hackage: brotli-0.0.0.0@sha256:0a8232f028dbc6a1f9db291ef996a5abe74aa00c7c3dc00a741c41f3da75a4dc,2873
-    pantry-tree:
-      size: 407
-      sha256: f4c2e742f10ca010554aeb0037294f118be4f35228acca98c0df97e1093bca33
-  original:
-    hackage: brotli-0.0.0.0
 snapshots:
 - completed:
     size: 498167
