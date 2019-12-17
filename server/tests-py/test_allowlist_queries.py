@@ -3,9 +3,11 @@
 import pytest
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries
+from context import PytestConf
 
-@pytest.mark.skipif(not pytest.config.getoption("--test-allowlist-queries"),
-                    reason="flag --test-allowlist-queries is not set. Cannot runt tests for allowlist queries")
+if not PytestConf.config.getoption("--test-allowlist-queries"):
+    pytest.skip("flag --test-allowlist-queries is not set. Cannot runt tests for allowlist queries", allow_module_level=True)
+
 @pytest.mark.parametrize("transport", ['http','websocket'])
 class TestAllowlistQueries(DefaultTestSelectQueries):
 

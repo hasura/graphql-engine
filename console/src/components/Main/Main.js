@@ -30,7 +30,7 @@ import {
   setLoveConsentState,
 } from './loveConsentLocalStorage';
 
-import { versionGT, FT_JWT_ANALYZER } from '../../helpers/versionUtils';
+import { versionGT } from '../../helpers/versionUtils';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
 
 class Main extends React.Component {
@@ -65,22 +65,8 @@ class Main extends React.Component {
         this.setShowUpdateNotification();
       });
     });
-  }
 
-  componentWillReceiveProps(nextProps) {
-    const {
-      [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility,
-    } = this.props.featuresCompatibility;
-    const {
-      [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility,
-    } = nextProps.featuresCompatibility;
-
-    if (
-      currJwtAnalyzerCompatibility !== nextJwtAnalyzerCompatibility &&
-      nextJwtAnalyzerCompatibility
-    ) {
-      this.fetchServerConfig();
-    }
+    dispatch(fetchServerConfig());
   }
 
   setShowUpdateNotification() {
@@ -103,12 +89,6 @@ class Main extends React.Component {
     } catch (e) {
       console.error(e);
     }
-  }
-
-  fetchServerConfig() {
-    const { dispatch } = this.props;
-
-    dispatch(fetchServerConfig());
   }
 
   handleBodyClick(e) {

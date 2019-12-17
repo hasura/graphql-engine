@@ -390,7 +390,7 @@ Args syntax
      - true
      - :ref:`TableName`
      - Name of the table
-   * - name
+   * - relationship
      - true
      - :ref:`RelationshipName`
      - Name of the relationship that needs to be dropped
@@ -445,7 +445,7 @@ Args syntax
      - true
      - :ref:`TableName`
      - Name of the table
-   * - name
+   * - relationship
      - true
      - :ref:`RelationshipName`
      - The relationship

@@ -335,6 +335,8 @@ data FunctionArgsExpG a
 emptyFunctionArgsExp :: FunctionArgsExpG a
 emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
 
+type FunctionArgExp = FunctionArgsExpG S.SQLExp
+
 -- | If argument positional index is less than or equal to length of 'positional' arguments then
 -- insert the value in 'positional' arguments else insert the value with argument name in 'named' arguments
 insertFunctionArg
@@ -350,42 +352,6 @@ insertFunctionArg argName index value (FunctionArgsExp positional named) =
     HM.insert (getFuncArgNameTxt argName) value named
   where
     insertAt i a = toList . Seq.insertAt i a . Seq.fromList
-
-type FunctionArgExp = FunctionArgsExpG S.SQLExp
-
-data AnnFnSelG s v
-  = AnnFnSel
-  { _afFn     :: !QualifiedFunction
-  , _afFnArgs :: !(FunctionArgsExpG v)
-  , _afSelect :: !s
-  } deriving (Show, Eq)
-
-traverseAnnFnSel
-  :: (Applicative f)
-  => (a -> f b) -> (v -> f w)
-  -> AnnFnSelG a v -> f (AnnFnSelG b w)
-traverseAnnFnSel fs fv (AnnFnSel fn fnArgs s) =
-  AnnFnSel fn <$> traverse fv fnArgs <*> fs s
-
-type AnnFnSelSimpleG v = AnnFnSelG (AnnSimpleSelG v) v
-type AnnFnSelSimple = AnnFnSelSimpleG S.SQLExp
-
-traverseAnnFnSimple
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnFnSelSimpleG a -> f (AnnFnSelSimpleG b)
-traverseAnnFnSimple f =
-  traverseAnnFnSel (traverseAnnSimpleSel f) f
-
-type AnnFnSelAggG v = AnnFnSelG (AnnAggSelG v) v
-type AnnFnSelAgg = AnnFnSelAggG S.SQLExp
-
-traverseAnnFnAgg
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnFnSelAggG a -> f (AnnFnSelAggG b)
-traverseAnnFnAgg f =
-  traverseAnnFnSel (traverseAnnAggSel f) f
 
 data BaseNode
   = BaseNode

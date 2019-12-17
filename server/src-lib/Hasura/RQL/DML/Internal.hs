@@ -230,9 +230,11 @@ sessVarFromCurrentSetting' ty sessVar =
     PGTypeScalar baseTy -> withConstructorFn baseTy sessVarVal
     PGTypeArray _       -> sessVarVal
   where
-    curSess = S.SEUnsafe "current_setting('hasura.user')::json"
     sessVarVal = S.SEOpApp (S.SQLOp "->>")
-                 [curSess, S.SELit $ T.toLower sessVar]
+                 [currentSession, S.SELit $ T.toLower sessVar]
+
+currentSession :: S.SQLExp
+currentSession = S.SEUnsafe "current_setting('hasura.user')::json"
 
 checkSelPerm
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -276,6 +278,8 @@ dmlTxErrorHandler = mkTxErrorHandler $ \case
 
 toJSONableExp :: Bool -> PGColumnType -> Bool -> S.SQLExp -> S.SQLExp
 toJSONableExp strfyNum colTy asText expn
+  | asText || (isScalarColumnWhere isBigNum colTy && strfyNum) =
+    expn `S.SETyAnn` S.textTypeAnn
   | isScalarColumnWhere isGeoType colTy =
       S.SEFnApp "ST_AsGeoJSON"
       [ expn
@@ -283,8 +287,6 @@ toJSONableExp strfyNum colTy asText expn
       , S.SEUnsafe "4"  -- to print out crs
       ] Nothing
       `S.SETyAnn` S.jsonTypeAnn
-  | asText || (isScalarColumnWhere isBigNum colTy && strfyNum) =
-    expn `S.SETyAnn` S.textTypeAnn
   | otherwise = expn
 
 -- validate headers

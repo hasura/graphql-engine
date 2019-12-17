@@ -1,6 +1,5 @@
 import {
-  TABLE_ENUMS_SUPPORT,
-  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
+  READ_ONLY_RUN_SQL_QUERIES,
   checkFeatureSupport,
 } from '../../../helpers/versionUtils';
 
@@ -215,6 +214,8 @@ export const fetchTrackedTableListQuery = options => {
       columns: [
         'table_schema',
         'table_name',
+        'is_enum',
+        'configuration',
         {
           name: 'primary_key',
           columns: ['*'],
@@ -243,14 +244,6 @@ export const fetchTrackedTableListQuery = options => {
       order_by: [{ column: 'table_name', type: 'asc' }],
     },
   };
-
-  if (checkFeatureSupport(TABLE_ENUMS_SUPPORT)) {
-    query.args.columns.push('is_enum');
-  }
-
-  if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
-    query.args.columns.push('configuration');
-  }
 
   if (
     (options.schemas && options.schemas.length !== 0) ||
@@ -340,6 +333,7 @@ FROM
     type: 'run_sql',
     args: {
       sql: runSql,
+      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
     },
   };
 };
@@ -375,6 +369,7 @@ FROM
     type: 'run_sql',
     args: {
       sql: runSql,
+      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
     },
   };
 };
@@ -453,6 +448,7 @@ FROM
     type: 'run_sql',
     args: {
       sql: runSql,
+      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
     },
   };
 };

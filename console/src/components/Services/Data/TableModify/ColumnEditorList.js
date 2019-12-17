@@ -22,10 +22,6 @@ import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/Gql
 
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import {
-  checkFeatureSupport,
-  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
-} from '../../../../helpers/versionUtils';
 
 const ColumnEditorList = ({
   tableSchema,
@@ -82,11 +78,8 @@ const ColumnEditorList = ({
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
       comment: col.comment || '',
+      customFieldName: customColumnNames[colName] || '',
     };
-
-    if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
-      columnProperties.customFieldName = customColumnNames[colName] || '';
-    }
 
     const onSubmit = toggleEditor => {
       dispatch(saveColumnChangesSql(colName, col, toggleEditor));
