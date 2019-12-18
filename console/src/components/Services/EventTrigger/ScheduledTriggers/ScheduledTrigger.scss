@@ -1,0 +1,15 @@
+@import "../../../Common/TableCommon/Table.scss";
+
+.display_inline {
+  display: inline-block
+}
+
+.parseValue {
+  margin-left: 10px;
+  font-weight: 400;
+  font-size: 13px;
+}
+
+.error_parsing {
+  color: #e53935;
+}

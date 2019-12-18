@@ -7,6 +7,8 @@ import { push } from 'react-router-redux';
 
 import globals from '../../../../Globals';
 
+import parser from 'cron-parser';
+
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -39,6 +41,7 @@ const AddScheduledTrigger = props => {
     scheduleValue,
   } = addScheduledTrigger;
   const styles = require('../TableCommon/EventTable.scss');
+  const scheduledStyles = require('./ScheduledTrigger.scss');
   const createBtnText = 'Create Scheduled Trigger';
   /*
   if (ongoingRequest) {
@@ -71,6 +74,68 @@ const AddScheduledTrigger = props => {
           showErrorNotification('Error creating trigger', JSON.stringify(err))
         );
       });
+  };
+  const parseScheduleValue = () => {
+    if (!scheduleValue) {
+      return null;
+    }
+    if (scheduleType === CRON_TYPE) {
+      try {
+        const parsed = parser.parseExpression(scheduleValue);
+        if (parsed) {
+          return (
+            <span>
+              Next event will occur at <code>{parsed.next().toString()}</code>
+            </span>
+          );
+        }
+        return (
+          <span className={scheduledStyles.error_parsing}>
+            Seems like an invalid cron expression. You can generate it from{' '}
+            <a
+              href="https://crontab.guru/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              here
+            </a>
+          </span>
+        );
+      } catch (e) {
+        return (
+          <span className={scheduledStyles.error_parsing}>
+            Seems like an invalid cron expression. You can generate it from{' '}
+            <a
+              href="https://crontab.guru/#*_*_*_*_5"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              here
+            </a>
+          </span>
+        );
+      }
+    }
+    if (scheduleType === ONE_OFF_TYPE) {
+      try {
+        const d = new Date(scheduleValue);
+        if (new Date().getTime() > d.getTime()) {
+          throw new Error('Date is in the past');
+        }
+        return (
+          <span>
+            Next event will occur at <code>{d.toLocaleString()}</code>
+          </span>
+        );
+      } catch (e) {
+        return (
+          <span className={scheduledStyles.error_parsing}>
+            Seems like an invalid date <code>{e.toString()}</code>
+          </span>
+        );
+      }
+    }
+    return <span>Invalid type</span>;
   };
   return (
     <div className={`${styles.clear_fix}`}>
@@ -163,9 +228,18 @@ const AddScheduledTrigger = props => {
                   inputVal={scheduleValue}
                   testId="schedule-type"
                   inputPlaceHolder={
-                    scheduleType === CRON_TYPE ? '* * * * 5' : 'date'
+                    scheduleType === CRON_TYPE
+                      ? '* * * * 5'
+                      : '2019/12/18 02:02:02 (yyyy/mm/dd hh:mm:ss)'
                   }
                 />
+              </div>
+              <div
+                className={`${scheduledStyles.display_inline} ${
+                  scheduledStyles.parseValue
+                }`}
+              >
+                {parseScheduleValue()}
               </div>
             </div>
             <hr />

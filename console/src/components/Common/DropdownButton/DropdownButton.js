@@ -22,6 +22,7 @@ class DropButton extends React.Component {
       inputPlaceHolder,
       id,
       testId,
+      inputType,
     } = this.props;
     return (
       <InputGroup className={bsClass}>
@@ -46,7 +47,7 @@ class DropButton extends React.Component {
           ))}
         </DropdownButton>
         <input
-          type="text"
+          type={inputType || 'text'}
           data-key={dataKey}
           data-index-id={dataIndex}
           className={'form-control'}
