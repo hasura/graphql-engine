@@ -118,7 +118,6 @@ onMessageHandler serverEnv wsTxData wsConn rawMessage =
 
     execute :: RequestId -> GQLReqUnparsed -> ExceptT QErr IO ServerMessage
     execute reqId query = do
-      logOp $ OExecute $ ExecuteQuery reqId query
       (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
       execPlan <- E.getResolvedExecPlan pgExecCtx
                    planCache userInfo sqlGenCtx enableAL sc scVer hMgr query
@@ -143,14 +142,12 @@ onMessageHandler serverEnv wsTxData wsConn rawMessage =
           sendMsg wsConn m
           case m of
             SMClose _ _ -> liftIO $ do
-              onCloseHandler lg wsId wsTxData
               WS.closeConn wsConn "Closing connection after 'Commit' and 'Abort'"
             _ -> pure ()
         Left e -> do
           logger $ mkErrorLog wsId $ EQueryError e
           sendMsg wsConn $ SMError $ ErrorMessage maybeReqId wsId $ errFn e
           when (qeError e == "connection error") $ do
-            onCloseHandler lg wsId wsTxData
             liftIO $ WS.closeConn wsConn "PG Connection error occured, closing the connection now"
 
     errFn =
