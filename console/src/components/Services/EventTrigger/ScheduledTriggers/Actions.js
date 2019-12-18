@@ -34,7 +34,18 @@ export const fetchPastInvocations = () => {
     type: 'run_sql',
     args: {
       sql:
-        'select * from hdb_catalog.hdb_scheduled_event_invocation_logs order by created_at limit 30 ',
+        'select e.name, l.event_id, l.status, l.id, l.request, l.response, l.created_at from hdb_catalog.hdb_scheduled_event_invocation_logs l JOIN hdb_catalog.hdb_scheduled_events e ON e.id = l.event_id order by created_at limit 30;',
+    },
+  };
+  return query;
+};
+
+export const fetchUpcomingEvents = () => {
+  const query = {
+    type: 'run_sql',
+    args: {
+      sql:
+        'select name, webhook, scheduled_time, id from hdb_catalog.hdb_scheduled_events where delivered=false and error=false and scheduled_time > now() order by scheduled_time asc limit 30;',
     },
   };
   return query;

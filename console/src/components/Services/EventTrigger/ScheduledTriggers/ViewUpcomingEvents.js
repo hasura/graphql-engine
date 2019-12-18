@@ -1,10 +1,7 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-// import { vSetDefaults, vMakeRequest, vExpandHeading } from './ViewActions'; // eslint-disable-line no-unused-vars
-// import { setTrigger } from '../EventActions';
 import TableHeader from './TableHeader';
-// import ViewRows from './ViewRows';
-// import { NotFoundError } from '../../../Error/PageNotFound';
+import ViewUpcomingEventsRows from './ViewUpcomingEventsRows';
 
 class ViewUpcomingEvents extends Component {
   constructor(props) {
@@ -24,7 +21,7 @@ class ViewUpcomingEvents extends Component {
       <div>
         {header}
         <br />
-        Upcoming invocations
+        <ViewUpcomingEventsRows dispatch={dispatch} />
       </div>
     );
   }

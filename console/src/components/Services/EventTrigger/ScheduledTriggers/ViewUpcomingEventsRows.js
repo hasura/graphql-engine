@@ -3,16 +3,11 @@ import React from 'react';
 // import { useQuery } from '@apollo/react-hooks';
 import useHasuraQuery from './useHasuraQuery';
 
-import Tabs from 'react-bootstrap/lib/Tabs';
-import AceEditor from 'react-ace';
-import Tab from 'react-bootstrap/lib/Tab';
-import 'brace/mode/json';
+import { fetchUpcomingEvents } from './Actions';
 
-import { fetchPastInvocations } from './Actions';
+import { convertDateTimeToLocale } from '../utils';
 
-import { verifySuccessStatus } from '../utils';
-
-import { allowedColumns } from './utils';
+// import { allowedColumns } from './utils';
 
 import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
 
@@ -31,12 +26,12 @@ const ViewPastInvocationRows = props => {
   const { dispatch } = props;
 
   const { loading, error, data } = useHasuraQuery({
-    query: fetchPastInvocations(),
+    query: fetchUpcomingEvents(),
     dispatcher: dispatch,
   });
 
   if (loading) {
-    return <span>Fetching past invocations...</span>;
+    return <span>Fetching upcoming events</span>;
   }
   if (error) {
     return (
@@ -48,7 +43,7 @@ const ViewPastInvocationRows = props => {
   }
 
   const showDataNotAvailableMessage = () => {
-    return <div>There are no invocations yet!</div>;
+    return <div>There are no scheduled invocations yet!</div>;
   };
 
   if (!data || (data && 'result' in data && data.result.length === 1)) {
@@ -129,7 +124,7 @@ const ViewPastInvocationRows = props => {
           Math.max(maxContentCellWidth, headerCellWidth)
         );
       };
-      const columns = info[0].filter(i => allowedColumns.indexOf(i) !== -1);
+      const columns = info[0];
       const headerRows = columns.map((c, key) => {
         return {
           Header: (
@@ -156,16 +151,7 @@ const ViewPastInvocationRows = props => {
     return [];
   };
 
-  const styles = require('../TableCommon/EventTable.scss');
-  const scheduledStyles = require('./ScheduledTrigger.scss');
-
-  const successIcon = (
-    <i className={styles.invocationSuccess + ' fa fa-check'} />
-  );
-
-  const failureIcon = (
-    <i className={styles.invocationFailure + ' fa fa-times'} />
-  );
+  // const scheduledStyles = require('./ScheduledTrigger.scss');
 
   const getRows = () => {
     if (info.length > 1) {
@@ -175,8 +161,8 @@ const ViewPastInvocationRows = props => {
         // newRow.tableRowActionButtons = null;
         d.forEach((elem, key) => {
           const getElement = () => {
-            if (info[0][key] === 'status') {
-              return verifySuccessStatus(elem) ? successIcon : failureIcon;
+            if (info[0][key] === 'scheduled_time') {
+              return convertDateTimeToLocale(elem);
             }
             return elem;
           };
@@ -208,11 +194,7 @@ const ViewPastInvocationRows = props => {
       };
       */
       return (
-        <div
-          className={`${tableScss.tableContainer} ${
-            scheduledStyles.pastInvocationsContainer
-          }`}
-        >
+        <div className={`${tableScss.tableContainer}`}>
           <DragFoldTable
             className="-highlight -fit-content"
             data={_rows}
@@ -222,56 +204,6 @@ const ViewPastInvocationRows = props => {
             showPagination={false}
             sortable={false}
             minRows={0}
-            SubComponent={row => {
-              if (info && info.length >= row.index + 1) {
-                const currentRow = info[row.index + 1];
-                return (
-                  <div style={{ padding: '20px' }}>
-                    <Tabs
-                      animation={false}
-                      defaultActiveKey={1}
-                      id="requestResponseTab"
-                    >
-                      <Tab eventKey={1} title="Request">
-                        <AceEditor
-                          mode="json"
-                          theme="github"
-                          name="request"
-                          value={JSON.stringify(
-                            JSON.parse((currentRow[3] && currentRow[3]) || {}),
-                            null,
-                            4
-                          )}
-                          minLines={4}
-                          maxLines={100}
-                          width="100%"
-                          showPrintMargin={false}
-                          showGutter={false}
-                        />
-                      </Tab>
-                      <Tab eventKey={2} title="Response">
-                        <AceEditor
-                          mode="json"
-                          theme="github"
-                          name="response"
-                          value={JSON.stringify(
-                            JSON.parse((currentRow[4] && currentRow[4]) || {}),
-                            null,
-                            4
-                          )}
-                          minLines={4}
-                          maxLines={100}
-                          width="100%"
-                          showPrintMargin={false}
-                          showGutter={false}
-                        />
-                      </Tab>
-                    </Tabs>
-                  </div>
-                );
-              }
-              return <span>Something went wrong while processing!</span>;
-            }}
           />
         </div>
       );

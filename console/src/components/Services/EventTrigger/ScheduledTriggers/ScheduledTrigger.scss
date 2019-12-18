@@ -16,3 +16,9 @@
 .textCenter {
   text-align: center
 }
+
+.pastInvocationsContainer {
+  :global .ReactTable .rt-table .rt-thead .rt-tr .rt-th:first-child {
+    padding-left: 0px !important
+  }
+}
