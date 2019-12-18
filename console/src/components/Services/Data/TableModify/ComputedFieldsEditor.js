@@ -31,6 +31,10 @@ const ComputedFieldsEditor = ({
     computedFields.concat({ ...emptyComputedField })
   );
 
+  React.useEffect(() => {
+    setComputedFieldsState(computedFields.concat({ ...emptyComputedField }));
+  }, [computedFields]); // Only re-run the effect if computedFields change
+
   return computedFieldsState.map((computedField, i) => {
     const isLast = computedFields.length <= i;
 
