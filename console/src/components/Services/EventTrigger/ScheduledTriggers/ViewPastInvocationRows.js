@@ -2,6 +2,7 @@ import React from 'react';
 
 // import { useQuery } from '@apollo/react-hooks';
 import useHasuraQuery from './useHasuraQuery';
+import Button from '../../../Common/Button/Button';
 
 import Tabs from 'react-bootstrap/lib/Tabs';
 import AceEditor from 'react-ace';
@@ -31,7 +32,7 @@ const defaultState = {
 const ViewPastInvocationRows = props => {
   const { dispatch } = props;
 
-  const { loading, error, data } = useHasuraQuery({
+  const { loading, error, data, refetch } = useHasuraQuery({
     query: fetchPastInvocations(),
     dispatcher: dispatch,
   });
@@ -49,7 +50,20 @@ const ViewPastInvocationRows = props => {
   }
 
   const showDataNotAvailableMessage = () => {
-    return <div>There are no invocations yet!</div>;
+    return (
+      <div>
+        There are no invocations yet! &nbsp;&nbsp;&nbsp;
+        <Button
+          type="submit"
+          color="yellow"
+          size="sm"
+          data-test="reload-past-invocations"
+          onClick={() => refetch()}
+        >
+          Reload
+        </Button>
+      </div>
+    );
   };
 
   if (!data || (data && 'result' in data && data.result.length === 1)) {

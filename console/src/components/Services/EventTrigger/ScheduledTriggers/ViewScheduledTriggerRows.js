@@ -2,6 +2,7 @@ import React from 'react';
 
 // import { useQuery } from '@apollo/react-hooks';
 import useHasuraQuery from './useHasuraQuery';
+import Button from '../../../Common/Button/Button';
 
 import { fetchScheduledTriggers } from './Actions';
 
@@ -41,7 +42,20 @@ const ViewScheduledTriggerRows = props => {
   }
 
   const showDataNotAvailableMessage = () => {
-    return <div>There are no scheduled triggers created yet!</div>;
+    return (
+      <div>
+        There are no scheduled triggers created yet! &nbsp;&nbsp;&nbsp;
+        <Button
+          type="submit"
+          color="yellow"
+          size="sm"
+          data-test="reload-scheduled-trigger"
+          onClick={() => refetch()}
+        >
+          Reload
+        </Button>
+      </div>
+    );
   };
 
   if (!data || (data && 'result' in data && data.result.length === 1)) {

@@ -3,6 +3,7 @@ import React from 'react';
 // import { useQuery } from '@apollo/react-hooks';
 import useHasuraQuery from './useHasuraQuery';
 
+import Button from '../../../Common/Button/Button';
 import { fetchUpcomingEvents } from './Actions';
 
 import { convertDateTimeToLocale } from '../utils';
@@ -25,7 +26,7 @@ const defaultState = {
 const ViewPastInvocationRows = props => {
   const { dispatch } = props;
 
-  const { loading, error, data } = useHasuraQuery({
+  const { loading, error, data, refetch } = useHasuraQuery({
     query: fetchUpcomingEvents(),
     dispatcher: dispatch,
   });
@@ -43,7 +44,20 @@ const ViewPastInvocationRows = props => {
   }
 
   const showDataNotAvailableMessage = () => {
-    return <div>There are no scheduled events yet!</div>;
+    return (
+      <div>
+        There are no scheduled events yet! &nbsp;&nbsp;&nbsp;
+        <Button
+          type="submit"
+          color="yellow"
+          size="sm"
+          data-test="reload-upcoming-events"
+          onClick={() => refetch()}
+        >
+          Reload
+        </Button>
+      </div>
+    );
   };
 
   if (!data || (data && 'result' in data && data.result.length === 1)) {
