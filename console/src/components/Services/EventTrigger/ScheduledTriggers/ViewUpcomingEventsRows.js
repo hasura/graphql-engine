@@ -43,7 +43,7 @@ const ViewPastInvocationRows = props => {
   }
 
   const showDataNotAvailableMessage = () => {
-    return <div>There are no scheduled invocations yet!</div>;
+    return <div>There are no scheduled events yet!</div>;
   };
 
   if (!data || (data && 'result' in data && data.result.length === 1)) {
@@ -62,7 +62,7 @@ const ViewPastInvocationRows = props => {
   const info = data.result;
 
   const getHeaders = () => {
-    if (info.length > 0) {
+    if (info.length > 1) {
       const getColWidth = (header, contentRows = []) => {
         const MAX_WIDTH = 200;
         const HEADER_PADDING = 24;
@@ -98,6 +98,8 @@ const ViewPastInvocationRows = props => {
               contentString = 'NULL';
             } else if (typeof content === 'object') {
               contentString = JSON.stringify(content, null, 4);
+            } else if (header === 'scheduled_time') {
+              contentString = convertDateTimeToLocale(content);
             } else {
               contentString = content.toString();
             }

@@ -60,7 +60,7 @@ const ViewScheduledTriggerRows = props => {
   const info = data.result;
 
   const getHeaders = () => {
-    if (info.length > 0) {
+    if (info.length > 1) {
       const getColWidth = (header, contentRows = []) => {
         const MAX_WIDTH = 600;
         const HEADER_PADDING = 50;
@@ -88,8 +88,8 @@ const ViewScheduledTriggerRows = props => {
 
         let maxContentWidth = 0;
         for (let i = 0; i < contentRows.length; i++) {
-          if (contentRows[i] !== undefined && contentRows[i][header] !== null) {
-            const content = contentRows[i][header];
+          if (contentRows[i] !== undefined && contentRows[i] !== null) {
+            const content = contentRows[i];
 
             let contentString;
             if (content === null || content === undefined) {
@@ -133,7 +133,7 @@ const ViewScheduledTriggerRows = props => {
           accessor: c,
           id: c,
           foldable: true,
-          width: getColWidth(c, info),
+          width: getColWidth(c, info[1]),
         };
       });
       const actionRow = {

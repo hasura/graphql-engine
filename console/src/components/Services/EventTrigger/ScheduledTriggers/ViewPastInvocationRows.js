@@ -13,6 +13,7 @@ import { fetchPastInvocations } from './Actions';
 import { verifySuccessStatus } from '../utils';
 
 import { allowedColumns } from './utils';
+import { convertDateTimeToLocale } from '../utils';
 
 import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
 
@@ -67,7 +68,7 @@ const ViewPastInvocationRows = props => {
   const info = data.result;
 
   const getHeaders = () => {
-    if (info.length > 0) {
+    if (info.length > 1) {
       const getColWidth = (header, contentRows = []) => {
         const MAX_WIDTH = 200;
         const HEADER_PADDING = 24;
@@ -103,6 +104,8 @@ const ViewPastInvocationRows = props => {
               contentString = 'NULL';
             } else if (typeof content === 'object') {
               contentString = JSON.stringify(content, null, 4);
+            } else if (header === 'created_at') {
+              contentString = convertDateTimeToLocale(content);
             } else {
               contentString = content.toString();
             }
@@ -178,6 +181,9 @@ const ViewPastInvocationRows = props => {
             if (info[0][key] === 'status') {
               return verifySuccessStatus(elem) ? successIcon : failureIcon;
             }
+            if (info[0][key] === 'created_at') {
+              return convertDateTimeToLocale(elem);
+            }
             return elem;
           };
           newRow[info[0][key]] = (
@@ -238,7 +244,7 @@ const ViewPastInvocationRows = props => {
                           theme="github"
                           name="request"
                           value={JSON.stringify(
-                            JSON.parse((currentRow[3] && currentRow[3]) || {}),
+                            JSON.parse((currentRow[4] && currentRow[4]) || {}),
                             null,
                             4
                           )}
@@ -255,7 +261,7 @@ const ViewPastInvocationRows = props => {
                           theme="github"
                           name="response"
                           value={JSON.stringify(
-                            JSON.parse((currentRow[4] && currentRow[4]) || {}),
+                            JSON.parse((currentRow[5] && currentRow[5]) || {}),
                             null,
                             4
                           )}

@@ -23,7 +23,8 @@ export const fetchScheduledTriggers = () => {
   const query = {
     type: 'run_sql',
     args: {
-      sql: 'select * from hdb_catalog.hdb_scheduled_trigger',
+      sql:
+        'select name, webhook, schedule from hdb_catalog.hdb_scheduled_trigger',
     },
   };
   return query;
@@ -58,7 +59,7 @@ export const deleteScheduledTriggersQuery = name => {
   const query = {
     type: 'run_sql',
     args: {
-      sql: `Delete from hdb_catalog.hdb_scheduled_trigger where name='${name}'`,
+      sql: `delete from hdb_catalog.hdb_scheduled_trigger where name='${name}'`,
     },
   };
   return query;
