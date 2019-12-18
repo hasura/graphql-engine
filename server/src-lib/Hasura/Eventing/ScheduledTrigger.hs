@@ -19,7 +19,9 @@ import           Hasura.SQL.Types
 import           System.Cron
 
 import qualified Data.Aeson                      as J
+import qualified Data.ByteString.Lazy            as LBS
 import qualified Data.Text                       as T
+import qualified Data.Text.Encoding              as TE
 import qualified Database.PG.Query               as Q
 import qualified Hasura.Logging                  as L
 import qualified Network.HTTP.Client             as HTTP
@@ -54,6 +56,7 @@ data ScheduledEvent
   { seId            :: !(Maybe Text)
   , seName          :: !T.Text
   , seWebhook       :: !T.Text
+  , sePayload       :: !J.Value
   , seScheduledTime :: !UTCTime
   } deriving (Show, Eq)
 
@@ -74,7 +77,7 @@ generateScheduledEvents :: Q.TxE QErr ()
 generateScheduledEvents = do
   allSchedules <- map uncurrySchedule <$> Q.listQE defaultTxErrorHandler
       [Q.sql|
-       SELECT st.name, st.webhook, st.schedule
+       SELECT st.name, st.webhook, st.schedule, st.payload
         FROM hdb_catalog.hdb_scheduled_trigger st
       |] () False
   currentTime <- liftIO getCurrentTime
@@ -85,30 +88,30 @@ generateScheduledEvents = do
       let insertScheduledEventsSql = TB.run $ toSQL
             SQLInsert
               { siTable    = scheduledEventsTable
-              , siCols     = map (PGCol . T.pack) ["name", "webhook", "scheduled_time"]
+              , siCols     = map (PGCol . T.pack) ["name", "webhook", "payload", "scheduled_time"]
               , siValues   = ValuesExp $ map (toTupleExp . toArr) events
               , siConflict = Just $ DoNothing Nothing
               , siRet      = Nothing
               }
       Q.unitQE defaultTxErrorHandler (Q.fromText insertScheduledEventsSql) () False
   where
-    toArr (ScheduledEvent _ n w t) = n : w : (pure $ formatTime' t)
+    toArr (ScheduledEvent _ n w p t) = n : w : (TE.decodeUtf8 . LBS.toStrict $ J.encode p) : (pure $ formatTime' t)
     toTupleExp = TupleExp . map SELit
-    uncurrySchedule (n, w, st) =
-      ScheduledTriggerQuery {stqName = n, stqWebhook = w, stqSchedule = fromBS st}
+    uncurrySchedule (n, w, st, p) =
+      ScheduledTrigger {stName = n, stWebhook = w, stSchedule = fromBS st, stPayload = Q.getAltJ <$> p}
     fromBS st = fromMaybe (OneOff endOfTime) $ J.decodeStrict' st
 
-mkScheduledEvents :: UTCTime -> ScheduledTriggerQuery -> [ScheduledEvent]
-mkScheduledEvents time ScheduledTriggerQuery{..} =
+mkScheduledEvents :: UTCTime -> ScheduledTrigger-> [ScheduledEvent]
+mkScheduledEvents time ScheduledTrigger{..} =
   let events =
-        case stqSchedule of
+        case stSchedule of
           OneOff _ -> [] -- one-off scheduled events need not be generated
           Cron cron ->
             generateScheduledEventsBetween
               time
               (addUTCTime nominalDay time)
               cron
-   in map (ScheduledEvent Nothing (unNonEmptyText stqName) (unNonEmptyText stqWebhook)) events
+   in map (ScheduledEvent Nothing stName stWebhook (fromMaybe J.Null stPayload)) events
 
 -- generates events (from, till] according to CronSchedule
 generateScheduledEventsBetween :: UTCTime -> UTCTime -> CronSchedule -> [UTCTime]
@@ -150,8 +153,7 @@ processScheduledEvent pgpool httpMgr se@ScheduledEvent{..} = do
   --     etHeaders = map encodeHeader headerInfos
   --     headers = addDefaultHeaders etHeaders
   --     ep = createEventPayload retryConf e
-      eventPayload = J.Null
-  res <- runExceptT $ tryWebhook httpMgr responseTimeout eventPayload seWebhook
+  res <- runExceptT $ tryWebhook httpMgr responseTimeout sePayload seWebhook
   -- let decodedHeaders = map (decodeHeader logenv headerInfos) headers
   finally <- either
     (processError pgpool se)
@@ -233,14 +235,15 @@ getScheduledEvents = do
                           )
                     FOR UPDATE SKIP LOCKED
                     )
-      RETURNING id, name, webhook, scheduled_time
+      RETURNING id, name, webhook, payload, scheduled_time
       |] (Identity currentTime) True
   pure $ allSchedules
-  where uncurryEvent (i, n, w, st) =
+  where uncurryEvent (i, n, w, Q.AltJ p, st) =
           ScheduledEvent
           { seId      = i
           , seName    = n
           , seWebhook = w
+          , sePayload = p
           , seScheduledTime = st
           }
 

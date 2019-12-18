@@ -667,7 +667,8 @@ CREATE TABLE hdb_catalog.hdb_scheduled_trigger
 (
   name TEXT PRIMARY KEY,
   webhook TEXT NOT NULL,
-  schedule TEXT
+  schedule JSON NOT NULL,
+  payload JSON
 );
 
 CREATE TABLE hdb_catalog.hdb_scheduled_trigger_events
@@ -676,6 +677,7 @@ CREATE TABLE hdb_catalog.hdb_scheduled_trigger_events
   name TEXT,
   webhook TEXT NOT NULL,
   scheduled_time TIMESTAMP NOT NULL,
+  payload JSON,
   delivered BOOLEAN NOT NULL DEFAULT FALSE,
   error BOOLEAN NOT NULL DEFAULT FALSE,
   tries INTEGER NOT NULL DEFAULT 0,
