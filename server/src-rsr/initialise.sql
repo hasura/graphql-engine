@@ -671,7 +671,7 @@ CREATE TABLE hdb_catalog.hdb_scheduled_trigger
   payload JSON
 );
 
-CREATE TABLE hdb_catalog.hdb_scheduled_trigger_events
+CREATE TABLE hdb_catalog.hdb_scheduled_events
 (
   id TEXT DEFAULT gen_random_uuid() UNIQUE,
   name TEXT,
@@ -686,4 +686,16 @@ CREATE TABLE hdb_catalog.hdb_scheduled_trigger_events
 
   PRIMARY KEY (name, scheduled_time),
   FOREIGN KEY (name) REFERENCES hdb_catalog.hdb_scheduled_trigger(name) ON UPDATE CASCADE
+);
+
+CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
+(
+  id TEXT DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_id TEXT,
+  status INTEGER,
+  request JSON,
+  response JSON,
+  created_at TIMESTAMP DEFAULT NOW(),
+
+  FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
 );

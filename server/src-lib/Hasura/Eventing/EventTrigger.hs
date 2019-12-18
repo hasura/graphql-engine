@@ -16,7 +16,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
-import           Data.Int                      (Int64)
 import           Data.IORef                    (IORef, readIORef)
 import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
@@ -409,6 +408,3 @@ unlockAllEvents =
           SET locked = 'f'
           WHERE locked = 't'
           |] () False
-
-toInt64 :: (Integral a) => a -> Int64
-toInt64 = fromIntegral
