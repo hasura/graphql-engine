@@ -19,11 +19,12 @@ newtype CollectionName
   = CollectionName {unCollectionName :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift
            , FromJSON, Q.FromCol, Q.ToPrepArg, DQuote
+           , Generic, Arbitrary
            )
 
 newtype QueryName
   = QueryName {unQueryName :: NonEmptyText}
-  deriving (Show, Eq, Ord, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, DQuote)
+  deriving (Show, Eq, Ord, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, DQuote, Generic, Arbitrary)
 
 newtype GQLQuery
   = GQLQuery {unGQLQuery :: G.ExecutableDocument}
@@ -31,7 +32,7 @@ newtype GQLQuery
 
 newtype GQLQueryWithText
   = GQLQueryWithText (T.Text, GQLQuery)
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 instance FromJSON GQLQueryWithText where
   parseJSON v@(String t) = GQLQueryWithText . (t, ) <$> parseJSON v
@@ -52,7 +53,7 @@ data ListedQuery
   = ListedQuery
   { _lqName  :: !QueryName
   , _lqQuery :: !GQLQueryWithText
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 3 snakeCase) ''ListedQuery)
 
 type QueryList = [ListedQuery]
@@ -60,7 +61,7 @@ type QueryList = [ListedQuery]
 newtype CollectionDef
   = CollectionDef
   { _cdQueries :: QueryList }
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CollectionDef)
 
 data CreateCollection
@@ -68,7 +69,7 @@ data CreateCollection
   { _ccName       :: !CollectionName
   , _ccDefinition :: !CollectionDef
   , _ccComment    :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CreateCollection)
 
 data DropCollection
@@ -96,5 +97,5 @@ $(deriveJSON (aesonDrop 5 snakeCase) ''DropQueryFromCollection)
 newtype CollectionReq
   = CollectionReq
   {_crCollection :: CollectionName}
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CollectionReq)

@@ -21,7 +21,7 @@ import qualified Database.PG.Query          as Q
 
 newtype ComputedFieldName =
   ComputedFieldName { unComputedFieldName :: NonEmptyText}
-  deriving (Show, Eq, Lift, FromJSON, ToJSON, Q.ToPrepArg, DQuote, Hashable, Q.FromCol)
+  deriving (Show, Eq, Lift, FromJSON, ToJSON, Q.ToPrepArg, DQuote, Hashable, Q.FromCol, Generic, Arbitrary)
 
 computedFieldNameToText :: ComputedFieldName -> Text
 computedFieldNameToText = unNonEmptyText . unComputedFieldName

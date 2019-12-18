@@ -51,10 +51,14 @@ inconsistent_objects:
     using:
       foreign_key_constraint_on:
         column: author_id
-        table: article
+        table:
+          schema: public
+          name: article
     name: articles
     comment:
-    table: author
+    table:
+      schema: public
+      name: author
   reason: table "article" does not exist
   type: array_relation
 - definition:
@@ -62,10 +66,14 @@ inconsistent_objects:
       foreign_key_constraint_on: author_id
     name: author
     comment:
-    table: article
+    table:
+      schema: public
+      name: article
   reason: table "article" does not exist
   type: object_relation
-- definition: article
+- definition:
+    schema: public
+    name: article
   reason: 'no such table/view exists in postgres: "article"'
   type: table
 

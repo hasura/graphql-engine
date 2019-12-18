@@ -137,6 +137,11 @@ The various types of queries are listed in the following table:
      - 1
      - Drop an existing relationship
 
+   * - :ref:`rename_relationship`
+     - :ref:`rename_relationship_args <rename_relationship_syntax>`
+     - 1
+     - Modify name of an existing relationship
+
    * - :ref:`set_relationship_comment`
      - :ref:`set_relationship_comment_args <set_relationship_comment_syntax>`
      - 1
