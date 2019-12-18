@@ -148,6 +148,7 @@ func (o *consoleOptions) run() error {
 	o.WG = wg
 	wg.Add(1)
 	go func() {
+		r.router.Use(verifyHeader())
 		err = r.router.Run(o.Address + ":" + o.APIPort)
 		if err != nil {
 			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
@@ -280,4 +281,16 @@ func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, err
 	})
 
 	return r, nil
+}
+
+func verifyHeader() gin.HandlerFunc{
+	return func(c *gin.Context) {
+		if ec.ServerConfig.AdminSecret != "" {
+			if  c.GetHeader(XHasuraAdminSecret) != ec.ServerConfig.AdminSecret {
+				//reject
+				http.Error(c.Writer, "unauthorized", http.StatusUnauthorized )
+
+			}
+		}
+	}
 }
