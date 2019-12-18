@@ -685,7 +685,8 @@ CREATE TABLE hdb_catalog.hdb_scheduled_events
   locked BOOLEAN NOT NULL DEFAULT FALSE,
 
   PRIMARY KEY (name, scheduled_time),
-  FOREIGN KEY (name) REFERENCES hdb_catalog.hdb_scheduled_trigger(name) ON UPDATE CASCADE
+  FOREIGN KEY (name) REFERENCES hdb_catalog.hdb_scheduled_trigger(name)
+    ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
@@ -697,5 +698,5 @@ CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
   response JSON,
   created_at TIMESTAMP DEFAULT NOW(),
 
-  FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id)
+  FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id) ON DELETE CASCADE
 );
