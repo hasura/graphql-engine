@@ -5,6 +5,7 @@ module Hasura.GraphQL.Transport.WebSocket.Transaction.Handlers
   ) where
 
 import           Hasura.Db
+import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Common
@@ -130,7 +131,7 @@ onMessageHandler serverEnv wsTxData wsConn rawMessage =
             E.ExOpSubs _ -> throw400 NotSupported "Subscriptions are not allowed in graphql transactions"
           lift $ logger $ QueryLog query genSql reqId
           res <- runLazyTxWithConn pgConn tx
-          pure $ SMData $ DataMessage reqId wsId res
+          pure $ SMData $ DataMessage reqId wsId $ GRHasura $ GQSuccess $ encJToLBS res
         E.GExPRemote _ _  ->
           throw400 NotSupported "Remote server queries are not supported over graphql transactions"
 

@@ -93,6 +93,7 @@ userAllowedLogTypes =
   , ELTHttpLog
   , ELTWebhookLog
   , ELTWebsocketLog
+  , ELTWebsocketTxLog
   , ELTQueryLog
   ]
 
