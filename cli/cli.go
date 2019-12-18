@@ -183,7 +183,7 @@ type ExecutionContext struct {
 	// SkipUpdateCheck will skip the auto update check if set to true
 	SkipUpdateCheck bool
 
-	isEnv bool
+	isRunningOnDocker bool
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -213,12 +213,6 @@ func (ec *ExecutionContext) Prepare() error {
 
 	// populate version
 	ec.setVersion()
-
-	// check environment
-	val, _ := os.LookupEnv("HASURA_GRAPHQL_CLI_ENVIRONMENT")
-	if  val == "server-on-docker"{
-		ec.isEnv = true
-	}
 
 	// setup global config
 	err := ec.setupGlobalConfig()
@@ -330,6 +324,12 @@ func (ec *ExecutionContext) readConfig() error {
 		Endpoint:    v.GetString("endpoint"),
 		AdminSecret: adminSecret,
 	}
+
+	// check environment
+	val := v.GetString("HASURA_GRAPHQL_CLI_ENVIRONMENT")
+	if  val == "server-on-docker"{
+		ec.isRunningOnDocker = true
+	}
 	return ec.ServerConfig.ParseEndpoint()
 }
 
@@ -345,7 +345,7 @@ func (ec *ExecutionContext) setupSpinner() {
 
 // Spin stops any existing spinner and starts a new one with the given message.
 func (ec *ExecutionContext) Spin(message string) {
-	if !ec.isEnv {
+	if !ec.isRunningOnDocker {
 		ec.Spinner.Stop()
 		ec.Spinner.Prefix = message
 		ec.Spinner.Start()
@@ -358,7 +358,7 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
 
-		if ec.isEnv {
+		if ec.isRunningOnDocker {
 			logger.Formatter = &logrus.JSONFormatter{
 				PrettyPrint:      true,
 			}
@@ -372,7 +372,7 @@ func (ec *ExecutionContext) setupLogger() {
 		ec.Logger = logger
 	}
 
-	if ec.NoColor && !ec.isEnv {
+	if ec.NoColor && !ec.isRunningOnDocker {
 		ec.Logger.Formatter = &logrus.TextFormatter{
 			DisableColors:    true,
 			DisableTimestamp: true,
