@@ -29,7 +29,7 @@ def uri_path_join(uri, *paths):
 
 class HGEWrkBench(HGETestSetup):
 
-    wrk_docker_image = 'hasura/wrk:v0.2'
+    wrk_docker_image = 'hasura/wrk:v0.3'
 
     lua_dir = '/tmp/bench_scripts'
 
