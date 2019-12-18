@@ -9,7 +9,6 @@ import           Control.Concurrent              (threadDelay)
 import           Control.Exception               (try)
 import           Data.Has
 import           Data.Time.Clock
-import           Data.Time.Format
 import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
@@ -290,7 +289,7 @@ getScheduledEvents = do
   allSchedules <- map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.hdb_scheduled_events
       SET locked = 't'
-      WHERE name IN ( SELECT t.name
+      WHERE id IN ( SELECT t.id
                     FROM hdb_catalog.hdb_scheduled_events t
                     WHERE ( t.locked = 'f'
                             and t.delivered = 'f'
@@ -310,7 +309,3 @@ getScheduledEvents = do
           , sePayload = p
           , seScheduledTime = st
           }
-
--- RFC822
-formatTime' :: UTCTime -> T.Text
-formatTime' = T.pack . formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S %z"
