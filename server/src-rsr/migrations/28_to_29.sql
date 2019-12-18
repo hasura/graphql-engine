@@ -1,0 +1,1 @@
+-- No SQL changes in this migration, only metadata changes.
