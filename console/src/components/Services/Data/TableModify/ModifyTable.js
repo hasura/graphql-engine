@@ -20,6 +20,7 @@ import {
   setTable,
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
+  fetchFunctionInit,
 } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
@@ -55,6 +56,7 @@ class ModifyTable extends React.Component {
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchColumnTypeInfo());
+    dispatch(fetchFunctionInit());
   }
 
   componentWillUnmount() {
