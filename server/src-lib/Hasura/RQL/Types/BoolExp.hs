@@ -58,7 +58,7 @@ data GExists a
   = GExists
   { _geTable :: !QualifiedTable
   , _geWhere :: !(GBoolExp a)
-  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data)
+  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
 
 instance (Data a) => Plated (GExists a)
 
@@ -83,7 +83,7 @@ data GBoolExp a
   | BoolNot !(GBoolExp a)
   | BoolExists !(GExists a)
   | BoolFld !a
-  deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data)
+  deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
 
 instance (Data a) => Plated (GBoolExp a)
 
