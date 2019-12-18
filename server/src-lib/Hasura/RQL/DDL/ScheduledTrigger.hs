@@ -6,12 +6,14 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runCreateScheduledTrigger
   , ScheduleType(..)
   , ScheduledTrigger(..)
+  , formatTime'
   ) where
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Time.Clock
+import           Data.Time.Format
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache (CacheBuildM)
@@ -25,6 +27,11 @@ import           System.Cron.Types
 import qualified Data.Aeson                  as J
 import qualified Data.Text                   as T
 import qualified Database.PG.Query           as Q
+
+-- aeson doesn't decode 'UTC' identifier so explicitly provide 'Z'
+-- TODO: take proper timezone
+formatTime' :: UTCTime -> T.Text
+formatTime'= T.pack . formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S Z"
 
 data ScheduleType = OneOff UTCTime | Cron CronSchedule
   deriving (Show, Eq)
@@ -74,8 +81,8 @@ instance FromJSON ScheduledTriggerQuery where
         either fail pure $ eitherDecode' (J.encode stqScheduleUnstrict)
       stqSchedule <-
         case scheduleType of
-          OneOff utcTime -> pure $ UnstrictOneOff (T.pack $ show utcTime)
-          Cron cron      -> pure $ UnstrictCron(serializeCronSchedule cron)
+          OneOff utcTime -> pure $ UnstrictOneOff (formatTime' utcTime)
+          Cron cron      -> pure $ UnstrictCron (serializeCronSchedule cron)
       pure ScheduledTriggerQuery {..}
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ScheduledTriggerQuery)
@@ -89,7 +96,3 @@ runCreateScheduledTrigger ScheduledTriggerQuery{..} = do
            VALUES ($1, $2, $3, $4)
          |] (stqName, stqWebhook, Q.AltJ $ toJSON stqSchedule, Q.AltJ <$> stqPayload) False
   return successMsg
-  where
-    toTxt = \case
-      UnstrictOneOff utcTime -> utcTime
-      UnstrictCron cron -> cron

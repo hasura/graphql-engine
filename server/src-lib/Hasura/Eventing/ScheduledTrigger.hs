@@ -9,7 +9,6 @@ import           Control.Concurrent              (threadDelay)
 import           Control.Exception               (try)
 import           Data.Has
 import           Data.Time.Clock
-import           Data.Time.Format
 import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
@@ -310,7 +309,3 @@ getScheduledEvents = do
           , sePayload = p
           , seScheduledTime = st
           }
-
--- RFC822
-formatTime' :: UTCTime -> T.Text
-formatTime' = T.pack . formatTime defaultTimeLocale "%a, %d %b %Y %H:%M:%S %z"
