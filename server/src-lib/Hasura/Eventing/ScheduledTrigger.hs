@@ -79,7 +79,7 @@ runScheduledEventsGenerator pgpool = do
          generateScheduledEvents) >>= \case
       Right _ -> pure ()
       Left err -> traceShowM err
-    threadDelay oneMinute
+    threadDelay (10 * oneSecond)
 
 generateScheduledEvents :: Q.TxE QErr ()
 generateScheduledEvents = do
