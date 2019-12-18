@@ -66,7 +66,8 @@ def throughput_figure(df):
         xlabel='Version/Docker image',
         ylabel='Throughput (req/s)'
     )
-    plt.ylim(0,None)
+    ymax = round(max(df['throughput'])*1.05)
+    plt.ylim(0, ymax)
     out_fig = gen_plot_figure_data(plt)
     plt.close()
     return out_fig
