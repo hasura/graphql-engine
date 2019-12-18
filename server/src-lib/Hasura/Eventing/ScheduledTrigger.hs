@@ -287,7 +287,6 @@ insertInvocation invo = do
 
 getScheduledEvents :: Q.TxE QErr [ScheduledEvent]
 getScheduledEvents = do
-  currentTime <- liftIO getCurrentTime
   allSchedules <- map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.hdb_scheduled_events
       SET locked = 't'
@@ -296,12 +295,12 @@ getScheduledEvents = do
                     WHERE ( t.locked = 'f'
                             and t.delivered = 'f'
                             and t.error = 'f'
-                            and t.scheduled_time <= $1
+                            and t.scheduled_time <= now()
                           )
                     FOR UPDATE SKIP LOCKED
                     )
       RETURNING id, name, webhook, payload, scheduled_time
-      |] (Identity currentTime) True
+      |] () True
   pure $ allSchedules
   where uncurryEvent (i, n, w, Q.AltJ p, st) =
           ScheduledEvent
