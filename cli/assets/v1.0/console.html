@@ -8,11 +8,6 @@
         cliVersion: {{.cliVersion}},
         dataApiUrl: {{.dataApiUrl}},
         dataApiVersion: {{.dataApiVersion}},
-        {{- if .hasAccessKey }}
-        accessKey: {{.adminSecret}},
-        {{ else }}
-        adminSecret: {{.adminSecret}},
-        {{ end -}}
         urlPrefix: "/",
         consoleMode: "cli",
         cliUUID: {{.cliUUID}},
