@@ -83,7 +83,7 @@ def uri_readlines(uri):
     print('Latency file:', uri)
     p = urlparse(uri)
     if p.scheme == 'file':
-        return urlopen(req_results[0]['latencies_uri']).readlines()
+        return urlopen(uri).readlines()
     elif p.scheme == 's3':
         s3 = boto3.resource('s3')
         obj = s3.Object(bucket_name=p.netloc, key=p.path.lstrip('/'))
