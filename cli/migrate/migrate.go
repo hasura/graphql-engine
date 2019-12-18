@@ -1141,7 +1141,7 @@ func (m *Migrate) runDryRun(ret <-chan interface{}) error {
 			}
 		}
 	}
-	fmt.Println(printDryRunStatus(migrations).String())
+	m.Logger.Print(printDryRunStatus(migrations).String())
 	return nil
 }
 
