@@ -39,7 +39,7 @@ data DataMessage
   = DataMessage
   { _dmId      :: !RequestId
   , _dmWsId    :: !WS.WSId
-  , _dmPayload :: !EncJSON
+  , _dmPayload :: !GraphqlResponse
   }
 
 data ErrorMessage
@@ -91,7 +91,7 @@ encodeServerMessage msg =
     [ encTy SMT_GQL_TX_DATA
     , ("request_id", encJFromJValue reqId)
     , ("id", encJFromJValue wsId)
-    , ("payload", payload)
+    , ("payload", encodeGraphqlResponse payload)
     ]
 
   SMError (ErrorMessage reqId wsId payload) ->
