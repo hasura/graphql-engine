@@ -494,6 +494,7 @@ export const mergeLoadSchemaData = (
     let _isEnum = false;
     let _checkConstraints = [];
     let _configuration = {};
+    let _computed_fields = [];
 
     if (_isTableTracked) {
       _primaryKey = trackedTableInfo.primary_key;
@@ -503,6 +504,7 @@ export const mergeLoadSchemaData = (
       _isEnum = trackedTableInfo.is_enum;
       _checkConstraints = trackedTableInfo.check_constraints;
       _configuration = trackedTableInfo.configuration;
+      _computed_fields = trackedTableInfo.computed_fields;
 
       _fkConstraints = fkData.filter(
         fk => fk.table_schema === _tableSchema && fk.table_name === _tableName
@@ -533,6 +535,7 @@ export const mergeLoadSchemaData = (
       view_info: _viewInfo,
       is_enum: _isEnum,
       configuration: _configuration,
+      computed_fields: _computed_fields,
     };
 
     _mergedTableData.push(_mergedInfo);
