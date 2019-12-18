@@ -5,6 +5,7 @@ module Hasura.Eventing.HTTP
   , isNetworkError
   , isNetworkErrorHC
   , ExtraContext(..)
+  , EventId
   , Invocation(..)
   , Version
   , Response(..)
@@ -20,9 +21,8 @@ module Hasura.Eventing.HTTP
   , EventInternalErr(..)
   , mkWebhookReq
   , mkResp
+  , toInt64
   ) where
-
-import           Data.Either
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
@@ -41,7 +41,9 @@ import qualified Network.HTTP.Types            as HTTP
 import           Control.Exception             (try)
 import           Control.Monad.IO.Class        (MonadIO, liftIO)
 import           Control.Monad.Reader          (MonadReader)
+import           Data.Either
 import           Data.Has
+import           Data.Int                      (Int64)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
@@ -261,3 +263,6 @@ logHTTPErr
 logHTTPErr err = do
   logger :: L.Logger L.Hasura <- asks getter
   L.unLogger logger err
+
+toInt64 :: (Integral a) => a -> Int64
+toInt64 = fromIntegral
