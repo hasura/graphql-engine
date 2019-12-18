@@ -10,3 +10,13 @@ export const scheduledTriggerName = (
 export const scheduledTriggerWebhook = (
   <Tooltip id="tooltip-postgres-description">Webhook to invoke</Tooltip>
 );
+
+export const scheduledTriggerPayload = (
+  <Tooltip id="tooltip-postgres-description">
+    Static Payload to be sent to the webhook
+  </Tooltip>
+);
+
+export const deleteScheduleTrigger = (
+  <Tooltip id="tooltip-postgres-description">Delete this trigger</Tooltip>
+);

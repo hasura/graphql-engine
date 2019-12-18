@@ -1,12 +1,15 @@
-import { CRON_TYPE } from './constants';
+import { CRON_TYPE, ONE_OFF_TYPE } from './constants';
 
 import { makeQuery } from './Actions';
+
+import { showErrorNotification } from '../../Common/Notification';
 
 const defaultState = {
   triggerName: '',
   webhookUrl: '',
   scheduleType: CRON_TYPE,
   scheduleValue: '',
+  payload: '',
 };
 
 /* Action constants */
@@ -21,6 +24,7 @@ const createScheduledTrigger = () => {
       webhookUrl: webhook,
       scheduleType: type,
       scheduleValue: value,
+      payload,
     } = addScheduledTrigger;
     const query = {
       type: 'create_scheduled_trigger',
@@ -31,8 +35,19 @@ const createScheduledTrigger = () => {
           type,
           value,
         },
+        payload,
       },
     };
+    if (query.args.schedule.type === ONE_OFF_TYPE) {
+      try {
+        query.args.schedule.value = new Date(
+          query.args.schedule.value
+        ).toISOString();
+      } catch (e) {
+        dispatch(showErrorNotification('Error creating trigger', e.toString()));
+        return;
+      }
+    }
     return dispatch(makeQuery(query));
   };
 };

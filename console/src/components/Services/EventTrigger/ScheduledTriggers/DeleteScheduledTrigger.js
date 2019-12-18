@@ -2,6 +2,9 @@ import React from 'react';
 import useHasuraQuery from './useHasuraQuery';
 import { deleteScheduledTriggersQuery } from './Actions';
 
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import * as tooltip from './Tooltips';
+
 const DeleteScheduledTrigger = ({ dispatch, name, refetch }) => {
   const { loading, refetch: run } = useHasuraQuery({
     query: deleteScheduledTriggersQuery(name),
@@ -18,10 +21,12 @@ const DeleteScheduledTrigger = ({ dispatch, name, refetch }) => {
       return <i className="fa fa-spinner fa-spin" />;
     }
     return (
-      <i
-        onClick={deleteTrigger}
-        className={`fa fa-times ${styles.cursorPointer}`}
-      />
+      <OverlayTrigger placement="right" overlay={tooltip.deleteScheduleTrigger}>
+        <i
+          onClick={deleteTrigger}
+          className={`fa fa-times ${styles.cursorPointer}`}
+        />
+      </OverlayTrigger>
     );
   };
   return <div className={`${styles.textCenter}`}>{renderIcon()}</div>;

@@ -39,6 +39,7 @@ const AddScheduledTrigger = props => {
     webhookUrl,
     scheduleType,
     scheduleValue,
+    payload,
   } = addScheduledTrigger;
   const styles = require('../TableCommon/EventTable.scss');
   const scheduledStyles = require('./ScheduledTrigger.scss');
@@ -242,6 +243,26 @@ const AddScheduledTrigger = props => {
                 {parseScheduleValue()}
               </div>
             </div>
+            <hr />
+            <h4 className={styles.subheading_text}>
+              Payload &nbsp; &nbsp;
+              <OverlayTrigger
+                placement="right"
+                overlay={tooltip.scheduledTriggerPayload}
+              >
+                <i className="fa fa-question-circle" aria-hidden="true" />
+              </OverlayTrigger>{' '}
+            </h4>
+            <input
+              type="text"
+              data-test="scheduled-trigger-payload"
+              placeholder="{'email': 'abcd@example.com'}"
+              required
+              className={`${styles.tableNameInput} form-control`}
+              data-field-name="payload"
+              onChange={onInputChange}
+              value={payload}
+            />
             <hr />
             <Button
               type="submit"
