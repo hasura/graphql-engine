@@ -1,7 +1,5 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-// import { vSetDefaults, vMakeRequest, vExpandHeading } from './ViewActions'; // eslint-disable-line no-unused-vars
-// import { setTrigger } from '../EventActions';
 import TableHeader from './TableHeader';
 
 import ViewScheduledTriggerRows from './ViewScheduledTriggerRows';

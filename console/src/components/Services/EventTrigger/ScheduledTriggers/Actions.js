@@ -29,6 +29,17 @@ export const fetchScheduledTriggers = () => {
   return query;
 };
 
+export const fetchPastInvocations = () => {
+  const query = {
+    type: 'run_sql',
+    args: {
+      sql:
+        'select * from hdb_catalog.hdb_scheduled_event_invocation_logs order by created_at limit 30 ',
+    },
+  };
+  return query;
+};
+
 export const deleteScheduledTriggersQuery = name => {
   if (!name) {
     throw new Error('Invalid trigger name');
