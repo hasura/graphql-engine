@@ -29,6 +29,19 @@ export const fetchScheduledTriggers = () => {
   return query;
 };
 
+export const deleteScheduledTriggersQuery = name => {
+  if (!name) {
+    throw new Error('Invalid trigger name');
+  }
+  const query = {
+    type: 'run_sql',
+    args: {
+      sql: `Delete from hdb_catalog.hdb_scheduled_trigger where name='${name}'`,
+    },
+  };
+  return query;
+};
+
 export const applyAllowList = exportList => (dispatch, getState) => {
   const { dataHeaders } = getState().tables;
 

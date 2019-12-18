@@ -14,4 +14,5 @@ export landingConnector from './Landing/EventTrigger';
 
 export viewScheduledTrigger from './ScheduledTriggers/ViewScheduledTrigger';
 export viewPastInvocations from './ScheduledTriggers/ViewPastInvocations';
+export viewUpcomingEvents from './ScheduledTriggers/ViewUpcomingEvents';
 export addScheduledTrigger from './ScheduledTriggers/AddScheduledTrigger';

@@ -21,6 +21,8 @@ const TableHeader = ({ dispatch, tabName, count }) => {
     activeTab = 'ScheduledTriggers';
   } else if (tabName === 'pastInvocations') {
     activeTab = 'Past Invocation';
+  } else if (tabName === 'upcomingEvents') {
+    activeTab = 'Upcoming Events';
   }
 
   const getBreadCrumbs = () => {
@@ -83,6 +85,18 @@ const TableHeader = ({ dispatch, tabName, count }) => {
               >
                 Scheduled Triggers{' '}
                 {tabName === 'scheduledTriggers' ? showCount : null}
+              </Link>
+            </li>
+            <li
+              role="presentation"
+              className={tabName === 'upcomingEvents' ? styles.active : ''}
+            >
+              <Link
+                to={'/events/scheduled-triggers/view-upcoming-events'}
+                data-test="tab-upcoming-events"
+              >
+                Upcoming Events{' '}
+                {tabName === 'upcomingEvents' ? showCount : null}
               </Link>
             </li>
             <li

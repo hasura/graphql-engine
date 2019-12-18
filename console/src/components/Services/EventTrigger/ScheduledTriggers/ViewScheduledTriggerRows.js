@@ -7,6 +7,8 @@ import { fetchScheduledTriggers } from './Actions';
 
 import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
 
+import DeleteScheduledTrigger from './DeleteScheduledTrigger';
+
 const tableScss = require('../../../Common/TableCommon/TableStyles.scss');
 
 /*
@@ -21,7 +23,7 @@ const defaultState = {
 const ViewScheduledTriggerRows = props => {
   const { dispatch } = props;
 
-  const { loading, error, data } = useHasuraQuery({
+  const { loading, error, data, refetch } = useHasuraQuery({
     query: fetchScheduledTriggers(),
     dispatcher: dispatch,
   });
@@ -145,26 +147,18 @@ const ViewScheduledTriggerRows = props => {
     return [];
   };
 
-  /*
-  const renderActionButtonForGroups = name => {
-    return (
-      <DeleteFromOperationGroup
-        projectId={projectId}
-        operationGroupName={collectionName}
-        operationName={name}
-        refetch={refetch}
-        dispatch={dispatch}
-      />
-    );
-  };
-  */
-
   const getRows = () => {
     if (info.length > 1) {
       const dat = info.slice(1);
       return dat.map(d => {
         const newRow = {};
-        newRow.tableRowActionButtons = <div>Cancel</div>;
+        newRow.tableRowActionButtons = (
+          <DeleteScheduledTrigger
+            dispatch={dispatch}
+            name={d[0]}
+            refetch={refetch}
+          />
+        );
         d.forEach((elem, key) => {
           newRow[info[0][key]] = (
             <div key={key} title={elem}>

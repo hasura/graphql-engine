@@ -15,6 +15,7 @@ import {
   addScheduledTrigger,
   viewScheduledTrigger,
   viewPastInvocations,
+  viewUpcomingEvents,
 } from '.';
 
 import { rightContainerConnector } from '../../Common/Layout';
@@ -49,6 +50,10 @@ const makeEventRouter = (
         <Route
           path="view-scheduled-triggers"
           component={viewScheduledTrigger(connect)}
+        />
+        <Route
+          path="view-upcoming-events"
+          component={viewUpcomingEvents(connect)}
         />
         <Route
           path="view-past-invocations"
