@@ -289,7 +289,7 @@ getScheduledEvents = do
   allSchedules <- map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.hdb_scheduled_events
       SET locked = 't'
-      WHERE name IN ( SELECT t.name
+      WHERE id IN ( SELECT t.id
                     FROM hdb_catalog.hdb_scheduled_events t
                     WHERE ( t.locked = 'f'
                             and t.delivered = 'f'
