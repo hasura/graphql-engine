@@ -60,7 +60,11 @@ def throughput_data(max_rps_results, scenarios):
 def throughput_figure(df):
     sns.set_style("whitegrid")
     fig, ax = plt.subplots(figsize=(14,6))
-    sns.lineplot(x='version', y='throughput', hue='query name', data=df, ax=ax)
+    uniq_versions = set(df['version'])
+    if len(uniq_versions) >1:
+        sns.lineplot(x='version', y='throughput', hue='query name', data=df, ax=ax)
+    else:
+        sns.barplot(x='version', y='throughput', hue='query name', data=df, ax=ax)
     ax.grid()
     ax.set(
         xlabel='Version/Docker image',
@@ -270,7 +274,8 @@ def run_dash_server(bench_results):
             dcc.Dropdown(
                 id='query-name',
                 options=[{'label':q, 'value': q} for q in uniq_queries],
-                value= uniq_queries[0]
+                value= uniq_queries[:min(len(uniq_queries), 4)],
+                multi=True
             )
         ]),
         dbc.Col([
@@ -313,13 +318,19 @@ def run_dash_server(bench_results):
         Output('ver', 'options'),
         [ Input('plot-type', 'value'), Input('query-name', 'value'), Input('rps', 'value') ]
     )
-    def updateVerOptions(plot_type, query_name, rps_list):
+    def updateVerOptions(plot_type, query_names, rps_list):
+        query_names = as_list(query_names)
         rps_list = as_list(rps_list)
-        relvnt_q = [ x for x in latency_results if x['query_name'] ==  query_name and x['requests_per_sec'] in rps_list ]
+        relvnt_q = [
+            x for x in latency_results
+            if x['query_name'] in query_names and
+            (x['requests_per_sec'] in rps_list or plot_type == 'throughput')
+        ]
         uniq_vers = list(set([
             (x['version'], x['docker_image'])
             for x in relvnt_q
         ]))
+        print("Updating version options to", uniq_vers)
         return [
             {
                 'label': x[0] or x[1],
@@ -332,11 +343,20 @@ def run_dash_server(bench_results):
             for x in uniq_vers
         ]
 
+    @app.callback(
+        Output('ver', 'value'),
+        [ Input('plot-type', 'value'), Input('ver', 'options') ],
+        [ State('ver', 'value') ]
+    )
+    def updateVerValue(plot_types, options, vers):
+        print('Updating version value, options', options)
+        return updateMultiValue(options, vers)
 
-    def updateMultiValue(options, vals):
+    def updateMultiValue(options, vals, def_list_size=2):
+        vals = as_list(vals)
         new_vals = []
         allowed_vals = [ x['value'] for x in options]
-        def_val_size = min(2, len(allowed_vals))
+        def_val_size = min(def_list_size, len(allowed_vals))
         default_vals = allowed_vals[:def_val_size]
         if not vals:
             return default_vals
@@ -357,13 +377,24 @@ def run_dash_server(bench_results):
         else:
             return None
 
+    # Change queries to multi for throughput plot
     @app.callback(
-        Output('ver', 'value'),
-        [ Input('ver', 'options') ],
-        [ State('ver', 'value') ]
+        Output('query-name', 'multi'),
+        [ Input('plot-type', 'value') ],
     )
-    def updateVerValue(options, vers):
-        return updateMultiValue(options, vers)
+    def query_dropdown_multi(plot_type):
+        return plot_type == 'throughput'
+
+    @app.callback(
+        Output('query-name', 'value'),
+        [ Input('plot-type', 'value'), Input('query-name', 'options'), Input('query-name', 'multi') ],
+        [ State('query-name', 'value') ]
+    )
+    def updateQueryValue(plot_type, options, multi, query_names):
+        if plot_type == 'throughput':
+            return updateMultiValue(options, query_names, 4)
+        else:
+            return updateSingleValue(options, query_names)
 
 
     @app.callback(
@@ -447,15 +478,17 @@ def run_dash_server(bench_results):
         def throughput_scenarios():
             return [
                 {
-                    'query_name': query_name,
+                    'query_name': qname,
                     **json.loads(v)
                 }
                 for v in set(vers)
+                for qname in as_list(query_name)
             ]
         if plot_type == 'throughput':
             scenarios = throughput_scenarios()
         else:
             scenarios = latency_scenarios()
+
 
         if plot_type == 'histogram':
             return get_hdrhistogram_figure(scenarios)
