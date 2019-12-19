@@ -8,6 +8,9 @@
         cliVersion: {{.cliVersion}},
         dataApiUrl: {{.dataApiUrl}},
         dataApiVersion: {{.dataApiVersion}},
+        {{- if .isAdminSecretSet }}
+        isAdminSecretSet: {{.isAdminSecretSet}},
+        {{ end -}}
         urlPrefix: "/",
         consoleMode: "cli",
         cliUUID: {{.cliUUID}},
