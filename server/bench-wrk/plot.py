@@ -268,7 +268,7 @@ def run_dash_server(bench_results):
                 options=[{'label':q, 'value': q} for q in plot_types],
                 value= plot_types[2]
             )
-        ]),
+        ], width=2),
         dbc.Col([
             html.Label('Query'),
             dcc.Dropdown(
@@ -278,13 +278,14 @@ def run_dash_server(bench_results):
                 multi=True
             )
         ]),
-        dbc.Col([
-            html.Label('Requests/sec'),
-            dcc.Dropdown(
-                id='rps',
-                multi=False
-            )
-        ])
+        dbc.Col(html.Div(
+            children=[
+                html.Label('Requests/sec'),
+                dcc.Dropdown(id='rps', multi=False)
+
+            ],
+            id='rps-div'
+        ), width=3)
     ]
     rows.append(dbc.Row(plots_filters_1))
 
@@ -433,12 +434,12 @@ def run_dash_server(bench_results):
 
     # Hide RPS dropdown if plot type is throughput
     @app.callback(
-        Output('rps', 'style'),
+        Output('rps-div', 'style'),
         [ Input('plot-type', 'value') ],
     )
     def rps_dropdown_style(plot_type):
         if plot_type == 'throughput':
-            return {'display': 'none'}
+            return { 'display': 'none' }
         else:
             return {'display': 'block'}
 
