@@ -60,6 +60,8 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
+	f.StringVar(&opts.ServerExternalEndpoint, "server-external-endpoint", "", "endpoint using which console can access graphql engine")
+	f.StringVar(&opts.CliExternalEndpoint, "cli-external-endpoint", "", "endpoint using which console can access graphql engine")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -76,11 +78,12 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 type consoleOptions struct {
 	EC *cli.ExecutionContext
 
-	APIPort     string
-	ConsolePort string
-	Address     string
-
-	DontOpenBrowser bool
+	APIPort                string
+	ConsolePort            string
+	Address                string
+	ServerExternalEndpoint string
+	CliExternalEndpoint    string
+	DontOpenBrowser        bool
 
 	WG *sync.WaitGroup
 
@@ -127,17 +130,17 @@ func (o *consoleOptions) run() error {
 	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
 
 	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
-		"apiHost":         "http://" + o.Address,
-		"apiPort":         o.APIPort,
-		"cliVersion":      o.EC.Version.GetCLIVersion(),
-		"serverVersion":   o.EC.Version.GetServerVersion(),
-		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
-		"dataApiVersion":  "",
-		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
-		"adminSecret":     o.EC.ServerConfig.AdminSecret,
-		"assetsVersion":   consoleAssetsVersion,
-		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
-		"cliUUID":         o.EC.GlobalConfig.UUID,
+		"apiHost":          o.CliExternalEndpoint,
+		"apiPort":          o.APIPort,
+		"cliVersion":       o.EC.Version.GetCLIVersion(),
+		"serverVersion":    o.EC.Version.GetServerVersion(),
+		"dataApiUrl":       o.ServerExternalEndpoint,
+		"dataApiVersion":   "",
+		"hasAccessKey":     adminSecretHeader == XHasuraAccessKey,
+		"assetsVersion":    consoleAssetsVersion,
+		"enableTelemetry":  o.EC.GlobalConfig.EnableTelemetry,
+		"cliUUID":          o.EC.GlobalConfig.UUID,
+		"isAdminSecretSet": o.EC.ServerConfig.AdminSecret != "",
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
@@ -148,7 +151,7 @@ func (o *consoleOptions) run() error {
 	o.WG = wg
 	wg.Add(1)
 	go func() {
-		r.router.Use(verifyHeader())
+		r.router.Use(verifyAdminSecret())
 		err = r.router.Run(o.Address + ":" + o.APIPort)
 		if err != nil {
 			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
@@ -283,13 +286,12 @@ func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, err
 	return r, nil
 }
 
-func verifyHeader() gin.HandlerFunc{
+func verifyAdminSecret() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if ec.ServerConfig.AdminSecret != "" {
-			if  c.GetHeader(XHasuraAdminSecret) != ec.ServerConfig.AdminSecret {
+			if c.GetHeader(XHasuraAdminSecret) != ec.ServerConfig.AdminSecret {
 				//reject
-				http.Error(c.Writer, "unauthorized", http.StatusUnauthorized )
-
+				http.Error(c.Writer, "unauthorized", http.StatusUnauthorized)
 			}
 		}
 	}
