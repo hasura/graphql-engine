@@ -179,8 +179,8 @@ data UpdPermForIns
 
 data InsCtx
   = InsCtx
-  { icView      :: !QualifiedTable
-  , icAllCols   :: !PGColGNameMap
+  { icAllCols   :: !PGColGNameMap
+  , icCheck     :: !AnnBoolExpPartialSQL
   , icSet       :: !PreSetColsPartial
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)

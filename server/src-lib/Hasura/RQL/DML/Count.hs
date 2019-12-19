@@ -56,7 +56,7 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
           , S.selExtr     = extrs
           }
       Nothing -> S.mkSelect
-                 { S.selExtr = [S.Extractor S.SEStar Nothing] }
+                 { S.selExtr = [S.Extractor (S.SEStar Nothing) Nothing] }
 
 -- SELECT count(*) FROM (SELECT DISTINCT c1, .. cn FROM .. WHERE ..) r;
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;

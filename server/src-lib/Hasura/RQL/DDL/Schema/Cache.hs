@@ -118,10 +118,10 @@ buildSchemaCacheWithOptions withSetup = do
     modifyErr (\e -> "table " <> qt <<> "; role " <> rn <<> "; " <> e) $
       withSchemaObject_ mkInconsObj $
       case pt of
-          PTInsert -> permHelper withSetup sqlGenCtx qt rn pDef PAInsert
-          PTSelect -> permHelper withSetup sqlGenCtx qt rn pDef PASelect
-          PTUpdate -> permHelper withSetup sqlGenCtx qt rn pDef PAUpdate
-          PTDelete -> permHelper withSetup sqlGenCtx qt rn pDef PADelete
+          PTInsert -> permHelper sqlGenCtx qt rn pDef PAInsert
+          PTSelect -> permHelper sqlGenCtx qt rn pDef PASelect
+          PTUpdate -> permHelper sqlGenCtx qt rn pDef PAUpdate
+          PTDelete -> permHelper sqlGenCtx qt rn pDef PADelete
 
   -- event triggers
   forM_ eventTriggers $ \(CatalogEventTrigger qt trn configuration) -> do
@@ -158,13 +158,12 @@ buildSchemaCacheWithOptions withSetup = do
   validateTablesCustomRootFields
 
   where
-    permHelper setup sqlGenCtx qt rn pDef pa = do
+    permHelper sqlGenCtx qt rn pDef pa = do
       qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
       perm <- decodeValue pDef
       let permDef = PermDef rn perm Nothing
           createPerm = WithTable qt permDef
       (permInfo, deps) <- liftP1WithQCtx qCtx $ createPermP1 createPerm
-      when setup $ addPermP2Setup qt permDef permInfo
       addPermToCache qt rn pa permInfo deps
       -- p2F qt rn p1Res
 
@@ -301,14 +300,9 @@ withMetadataCheck cascade action = do
 
       withoutReload = do
         postSc <- askSchemaCache
-        -- recreate the insert permission infra
-        forM_ (M.elems $ scTables postSc) $ \ti -> do
-          let tn = _tiName ti
-          forM_ (M.elems $ _tiRolePermInfoMap ti) $ \rpi ->
-            maybe (return ()) (liftTx . buildInsInfra tn) $ _permIns rpi
-
         strfyNum <- stringifyNum <$> askSQLGenCtx
-        --recreate triggers
+        
+        -- recreate triggers
         forM_ (M.elems $ scTables postSc) $ \ti -> do
           let tn = _tiName ti
               cols = getCols $ _tiFieldInfoMap ti

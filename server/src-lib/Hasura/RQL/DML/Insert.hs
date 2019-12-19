@@ -33,22 +33,22 @@ data ConflictClauseP1
 
 data InsertQueryP1
   = InsertQueryP1
-  { iqp1Table    :: !QualifiedTable
-  , iqp1View     :: !QualifiedTable
-  , iqp1Cols     :: ![PGCol]
-  , iqp1Tuples   :: ![[S.SQLExp]]
-  , iqp1Conflict :: !(Maybe ConflictClauseP1)
-  , iqp1MutFlds  :: !MutFlds
-  , iqp1AllCols  :: ![PGColumnInfo]
+  { iqp1Table     :: !QualifiedTable
+  , iqp1Cols      :: ![PGCol]
+  , iqp1Tuples    :: ![[S.SQLExp]]
+  , iqp1Conflict  :: !(Maybe ConflictClauseP1)
+  , iqp1CheckCond :: !(Maybe AnnBoolExpSQL)
+  , iqp1MutFlds   :: !MutFlds
+  , iqp1AllCols   :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
-mkInsertCTE (InsertQueryP1 _ vn cols vals c _ _) =
-  S.CTEInsert insert
+mkInsertCTE (InsertQueryP1 tn cols vals c _ _ _) =
+    S.CTEInsert insert
   where
     tupVals = S.ValuesExp $ map S.TupleExp vals
     insert =
-      S.SQLInsert vn cols tupVals (toSQLConflict <$> c) $ Just S.returningStar
+      S.SQLInsert tn cols tupVals (toSQLConflict <$> c) $ Just S.returningStar
 
 toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
 toSQLConflict conflict = case conflict of
@@ -197,7 +197,6 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
                    map pgiColumn $ getCols fieldInfoMap
       allCols    = getCols fieldInfoMap
       insCols    = HM.keys defInsVals
-      insView    = ipiView insPerm
 
   resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) setInsVals
 
@@ -206,16 +205,17 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   let sqlExps = map snd insTuples
       inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 
+  checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting (ipiCheck insPerm)
+  
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
       roleName <- askCurRole
       unless (isTabUpdatable roleName tableInfo) $ throw400 PermissionDenied $
         "upsert is not allowed for role " <> roleName
         <<> " since update permissions are not defined"
       buildConflictClause sessVarBldr tableInfo inpCols c
-
-  return $ InsertQueryP1 tableName insView insCols sqlExps
-           conflictClause mutFlds allCols
-
+  
+  return $ InsertQueryP1 tableName insCols sqlExps
+           conflictClause (Just checkExpr) mutFlds allCols
   where
     selNecessaryMsg =
       "; \"returning\" can only be used if the role has "
@@ -239,38 +239,108 @@ convInsQ =
 
 insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 insertP2 strfyNum (u, p) =
-  runMutation $ Mutation (iqp1Table u) (insertCTE, p)
+  runMutationWith addCheck
+     $ Mutation (iqp1Table u) (insertCTE, p)
                 (iqp1MutFlds u) (iqp1AllCols u) strfyNum
   where
     insertCTE = mkInsertCTE u
+    
+    addCheck | Just cond <- iqp1CheckCond u
+             = insertPermsCheck (iqp1Table u) (qualTableToAliasIden (iqp1Table u)) cond
+             | otherwise = id
+
+-- | This function modifies a CTE to insert a check constraint
+-- based on the current user's insert permissions.
+--
+-- The resulting SQL will look something like this:
+--
+-- > WITH 
+-- >   ... original CTEs here, binding {insertResult} ...
+-- >   , {tn}__inserted AS ( ... results of previous SelectWith ... )
+-- >   , {tn}__checks AS
+-- >     ( SELECT bool_and(
+-- >         CASE WHEN {cond} 
+-- >           THEN NULL 
+-- >           ELSE hdb_catalog.check_violation() 
+-- >         END
+-- >       ) FROM {insertResult}
+-- >     )
+-- >   SELECT {tn}__inserted.*
+-- >   FROM {tn}__inserted, {tn}__checks;
+--
+-- A concrete example might look like this:
+--
+-- > WITH "public_author__mutation_result_alias" AS 
+-- >   ( INSERT INTO "public"."author" ("name", "id") 
+-- >       VALUES ($1, DEFAULT)
+-- >       RETURNING *
+-- >   ), "public_author__inserted" AS 
+-- >   ( SELECT 
+-- >       json_build_object(
+-- >         'affected_rows', 
+-- >           ( SELECT count(*) 
+-- >             FROM "public_author__mutation_result_alias"
+-- >           )
+-- >       )
+-- >   ), "public_author__checks" AS
+-- >   ( SELECT 
+-- >       CASE 
+-- >         WHEN "public_author__mutation_result_alias"."is_public" THEN NULL 
+-- >         ELSE "hdb_catalog"."check_violation"() 
+-- >       END 
+-- >     FROM "public_author__mutation_result_alias"
+-- >   ) 
+-- > SELECT "public_author__inserted".* 
+-- > FROM "public_author__inserted", 
+-- >      "public_author__checks"
+insertPermsCheck
+  :: QualifiedTable
+  -> Iden
+  -> AnnBoolExpSQL
+  -> S.SelectWith
+  -> S.SelectWith
+insertPermsCheck tn insertResult cond sw =
+  let inserted = Iden $ snakeCaseTable tn <> "__inserted"
+      checks = Iden $ snakeCaseTable tn <> "__checks"
+      condExpr = toSQLBoolExp (S.QualIden insertResult) cond
+   in S.cteAndThen (S.Alias inserted) sw
+        (S.SelectWith
+          { S.swCTEs =
+              [ ( S.Alias checks
+                , S.CTESelect $ S.mkSelect
+                  { S.selExtr = 
+                      [ S.Extractor
+                          (S.SEFnApp "bool_and"
+                            [ S.SECond condExpr S.SENull
+                              (S.SEFunction 
+                                (S.FunctionExp 
+                                  (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation")) 
+                                  (S.FunctionArgs [] mempty)
+                                  Nothing)
+                              )
+                            ] Nothing)
+                          Nothing
+                      ]
+                  , S.selFrom = Just $ S.FromExp 
+                      [ S.FIIden insertResult
+                      ]
+                  }
+                )
+              ]
+          , S.swSelect = S.mkSelect
+              { S.selExtr = [S.selectStar' (S.QualIden inserted)]
+              , S.selFrom = Just $ S.FromExp 
+                  [ S.FIIden inserted
+                  , S.FIIden checks
+                  ]
+              }
+          }
+        )
 
 data ConflictCtx
   = CCUpdate !ConstraintName ![PGCol] !PreSetCols !S.BoolExp
   | CCDoNothing !(Maybe ConstraintName)
   deriving (Show, Eq)
-
-nonAdminInsert :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
-nonAdminInsert strfyNum (insQueryP1, args) = do
-  conflictCtxM <- mapM extractConflictCtx conflictClauseP1
-  setConflictCtx conflictCtxM
-  insertP2 strfyNum (withoutConflictClause, args)
-  where
-    withoutConflictClause = insQueryP1{iqp1Conflict=Nothing}
-    conflictClauseP1 = iqp1Conflict insQueryP1
-
-extractConflictCtx :: (MonadError QErr m) => ConflictClauseP1 -> m ConflictCtx
-extractConflictCtx cp =
-  case cp of
-    (CP1DoNothing mConflictTar) -> do
-      mConstraintName <- mapM extractConstraintName mConflictTar
-      return $ CCDoNothing mConstraintName
-    (CP1Update conflictTar inpCols preSet filtr) -> do
-      constraintName <- extractConstraintName conflictTar
-      return $ CCUpdate constraintName inpCols preSet filtr
-  where
-    extractConstraintName (Constraint cn) = return cn
-    extractConstraintName _ = throw400 NotSupported
-      "\"constraint_on\" not supported for non admin insert. use \"constraint\" instead"
 
 setConflictCtx :: Maybe ConflictCtx -> Q.TxE QErr ()
 setConflictCtx conflictCtxM = do
@@ -293,6 +363,5 @@ runInsert
   -> m EncJSON
 runInsert q = do
   res <- convInsQ q
-  role <- userRole <$> askUserInfo
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  liftTx $ bool (nonAdminInsert strfyNum res) (insertP2 strfyNum res) $ isAdmin role
+  liftTx $ insertP2 strfyNum res
