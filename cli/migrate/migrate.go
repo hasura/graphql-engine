@@ -678,6 +678,10 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			return
 		}
 
+		if from < version {
+			return
+		}
+
 		err = m.versionDownExists(from)
 		if err != nil {
 			ret <- err
@@ -701,10 +705,6 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			}
 			ret <- migr
 			go migr.Buffer()
-		}
-
-		if from == version {
-			return
 		}
 
 		migr, err := m.metanewMigration(from, int64(prev))
