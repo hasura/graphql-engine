@@ -1,6 +1,5 @@
 import {
   READ_ONLY_RUN_SQL_QUERIES,
-  COMPUTED_FIELDS_REL_SUPPORT,
   checkFeatureSupport,
 } from '../../../helpers/versionUtils';
 
@@ -241,17 +240,18 @@ export const fetchTrackedTableListQuery = options => {
             type: 'asc',
           },
         },
+        {
+          name: 'computed_fields',
+          columns: ['*'],
+          order_by: {
+            column: 'computed_field_name',
+            type: 'asc',
+          },
+        },
       ],
       order_by: [{ column: 'table_name', type: 'asc' }],
     },
   };
-
-  if (checkFeatureSupport(COMPUTED_FIELDS_REL_SUPPORT)) {
-    query.args.columns.push({
-      name: 'computed_fields',
-      columns: ['*'],
-    });
-  }
 
   if (
     (options.schemas && options.schemas.length !== 0) ||

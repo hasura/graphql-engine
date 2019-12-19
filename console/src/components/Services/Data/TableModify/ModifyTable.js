@@ -5,11 +5,6 @@ import TableHeader from '../TableCommon/TableHeader';
 import { getAllDataTypeMap } from '../Common/utils';
 
 import {
-  checkFeatureSupport,
-  COMPUTED_FIELDS_REL_SUPPORT,
-} from '../../../../helpers/versionUtils';
-
-import {
   deleteTableSql,
   untrackTableSql,
   RESET,
@@ -180,8 +175,6 @@ class ModifyTable extends React.Component {
     };
 
     const getComputedFieldsSection = () => {
-      if (!checkFeatureSupport(COMPUTED_FIELDS_REL_SUPPORT)) return null;
-
       const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
 
       return (

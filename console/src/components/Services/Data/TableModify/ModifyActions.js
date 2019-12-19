@@ -182,23 +182,6 @@ export const saveComputedField = (
         name: originalComputedField.computed_field_name,
       },
     });
-
-    // TODO: confirm down migration order
-    migrationDown.push({
-      type: 'add_computed_field',
-      args: {
-        table: getTableDef(table),
-        name: originalComputedField.computed_field_name,
-        definition: {
-          function: {
-            name: originalComputedField.function_name,
-            schema: originalComputedField.function_schema,
-          },
-          // comment: '' // TODO
-          // table_argument: '' // TODO
-        },
-      },
-    });
   }
 
   migrationUp.push({
@@ -211,7 +194,7 @@ export const saveComputedField = (
           name: computedField.function_name,
           schema: computedField.function_schema,
         },
-        // comment: '' // TODO
+        comment: computedField.comment,
         // table_argument: '' // TODO
       },
     },
@@ -224,6 +207,24 @@ export const saveComputedField = (
       name: computedField.computed_field_name,
     },
   });
+
+  if (originalComputedField) {
+    migrationDown.push({
+      type: 'add_computed_field',
+      args: {
+        table: getTableDef(table),
+        name: originalComputedField.computed_field_name,
+        definition: {
+          function: {
+            name: originalComputedField.function_name,
+            schema: originalComputedField.function_schema,
+          },
+          comment: originalComputedField.comment,
+          // table_argument: '' // TODO
+        },
+      },
+    });
+  }
 
   const migrationName = `save_computed_field_${computedField.table_schema}_${
     computedField.table_name
@@ -275,7 +276,7 @@ export const deleteComputedField = (computedField, table) => (
           name: computedField.function_name,
           schema: computedField.function_schema,
         },
-        // comment: '' // TODO
+        comment: computedField.comment,
         // table_argument: '' // TODO
       },
     },

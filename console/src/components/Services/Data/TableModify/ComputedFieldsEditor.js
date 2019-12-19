@@ -25,6 +25,7 @@ const ComputedFieldsEditor = ({
     computed_field_name: '',
     function_name: '',
     function_schema: currentSchema,
+    comment: '',
   };
 
   const [computedFieldsState, setComputedFieldsState] = React.useState(
@@ -49,6 +50,7 @@ const ComputedFieldsEditor = ({
     const computedFieldName = computedField.computed_field_name;
     const computedFieldFunctionName = computedField.function_name;
     const computedFieldFunctionSchema = computedField.function_schema;
+    const computedFieldComment = computedField.comment;
 
     let computedFieldFunction = null;
     let computedFieldFunctionDefinition = null;
@@ -157,34 +159,12 @@ const ComputedFieldsEditor = ({
         );
       };
 
-      const handleNameChange = e => {
+      const handleAttributeChange = attribute => e => {
         const newState = [...computedFieldsState];
 
         newState[i] = {
           ...newState[i],
-          computed_field_name: e.target.value,
-        };
-
-        setComputedFieldsState(newState);
-      };
-
-      const handleFnSchemaChange = e => {
-        const newState = [...computedFieldsState];
-
-        newState[i] = {
-          ...newState[i],
-          function_schema: e.target.value,
-        };
-
-        setComputedFieldsState(newState);
-      };
-
-      const handleFnNameChange = e => {
-        const newState = [...computedFieldsState];
-
-        newState[i] = {
-          ...newState[i],
-          function_name: e.target.value,
+          [attribute]: e.target.value,
         };
 
         setComputedFieldsState(newState);
@@ -192,18 +172,18 @@ const ComputedFieldsEditor = ({
 
       return (
         <div>
-          <div className={`${styles.add_mar_bottom}`}>
+          <div>
             <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Computed field name:</b>
             </div>
             <input
               type="text"
               value={computedFieldName}
-              onChange={handleNameChange}
+              onChange={handleAttributeChange('computed_field_name')}
               className={`form-control ${styles.wd50percent}`}
             />
           </div>
-          <div className={`${styles.add_mar_bottom}`}>
+          <div className={`${styles.add_mar_top}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Function schema: </b>
             </div>
@@ -213,7 +193,7 @@ const ComputedFieldsEditor = ({
                 styles.add_pad_left
               } ${styles.wd50percent}`}
               data-test={'computed_field-fn-ref-schema'}
-              onChange={handleFnSchemaChange}
+              onChange={handleAttributeChange('function_schema')}
             >
               {schemaList.map((s, j) => {
                 const schemaName = getSchemaName(s);
@@ -226,18 +206,31 @@ const ComputedFieldsEditor = ({
               })}
             </select>
           </div>
-          <div className={`${styles.add_mar_bottom}`}>
+          <div className={`${styles.add_mar_top}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Function name: </b>
             </div>
             <input
               type="text"
               value={computedFieldFunctionName}
-              onChange={handleFnNameChange}
+              onChange={handleAttributeChange('function_name')}
               className={`form-control ${styles.wd50percent}`}
             />
           </div>
-          {getFunctionDefinitionSection()}
+          <div className={`${styles.add_mar_top}`}>
+            {getFunctionDefinitionSection()}
+          </div>
+          <div className={`${styles.add_mar_top}`}>
+            <div className={`${styles.add_mar_bottom_mid}`}>
+              <b>Comment:</b>
+            </div>
+            <input
+              type="text"
+              value={computedFieldComment}
+              onChange={handleAttributeChange('comment')}
+              className={`form-control ${styles.wd50percent}`}
+            />
+          </div>
         </div>
       );
     };
