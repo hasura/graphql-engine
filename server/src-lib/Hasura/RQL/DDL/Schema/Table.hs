@@ -88,9 +88,8 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
 -- | Track table/view, Phase 1:
 -- Validate table tracking operation. Fails if table is already being tracked,
 -- or if a function with the same name is being tracked.
-trackExistingTableOrViewP1 :: (CacheBuildM m, UserInfoM m) => QualifiedTable -> m ()
+trackExistingTableOrViewP1 :: (CacheBuildM m) => QualifiedTable -> m ()
 trackExistingTableOrViewP1 qt = do
-  adminOnly
   rawSchemaCache <- askSchemaCache
   when (M.member qt $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> qt
@@ -108,7 +107,7 @@ trackExistingTableOrViewP2 tableName systemDefined isEnum config = do
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
-runTrackTableQ :: (CacheBuildM m, UserInfoM m, HasSystemDefined m) => TrackTable -> m EncJSON
+runTrackTableQ :: (CacheBuildM m, HasSystemDefined m) => TrackTable -> m EncJSON
 runTrackTableQ (TrackTable qt isEnum) = do
   trackExistingTableOrViewP1 qt
   systemDefined <- askSystemDefined
@@ -121,15 +120,14 @@ data TrackTableV2
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
 
-runTrackTableV2Q :: (CacheBuildM m, UserInfoM m, HasSystemDefined m) => TrackTableV2 -> m EncJSON
+runTrackTableV2Q :: (CacheBuildM m, HasSystemDefined m) => TrackTableV2 -> m EncJSON
 runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) config) = do
   trackExistingTableOrViewP1 qt
   systemDefined <- askSystemDefined
   trackExistingTableOrViewP2 qt systemDefined isEnum config
 
-runSetExistingTableIsEnumQ :: (CacheBuildM m, UserInfoM m) => SetTableIsEnum -> m EncJSON
+runSetExistingTableIsEnumQ :: (CacheBuildM m) => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
-  adminOnly
   void $ askTabInfo tableName -- assert that table is tracked
   updateTableIsEnumInCatalog tableName isEnum
   buildSchemaCacheFor (MOTable tableName)
@@ -150,9 +148,8 @@ instance FromJSON SetTableCustomFields where
     <*> o .:? "custom_root_fields" .!= GC.emptyCustomRootFields
     <*> o .:? "custom_column_names" .!= M.empty
 
-runSetTableCustomFieldsQV2 :: (CacheBuildM m, UserInfoM m) => SetTableCustomFields -> m EncJSON
+runSetTableCustomFieldsQV2 :: (CacheBuildM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
-  adminOnly
   fields <- _tiFieldInfoMap <$> askTabInfo tableName
   let tableConfig = TableConfig rootFields columnNames
   withPathK "custom_column_names" $ validateWithNonColumnFields fields
@@ -169,9 +166,8 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnName
         <> showNames conflictingNames
 
 unTrackExistingTableOrViewP1
-  :: (CacheRM m, UserInfoM m, QErrM m) => UntrackTable -> m ()
+  :: (CacheRM m, QErrM m) => UntrackTable -> m ()
 unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
-  adminOnly
   rawSchemaCache <- askSchemaCache
   case M.lookup vn (scTables rawSchemaCache) of
     Just ti ->
@@ -207,7 +203,7 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
       _                  -> False
 
 runUntrackTableQ
-  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => UntrackTable -> m EncJSON
 runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q

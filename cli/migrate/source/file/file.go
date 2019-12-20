@@ -219,3 +219,7 @@ func (f *File) ReadMetaDown(version uint64) (r io.ReadCloser, identifier string,
 	}
 	return nil, "", "", &os.PathError{Op: fmt.Sprintf("read version %v", version), Path: f.path, Err: os.ErrNotExist}
 }
+
+func (f *File) ReadName(version uint64) (name string) {
+	return f.migrations.ReadName(version)
+}

@@ -21,7 +21,6 @@ import { getEventTriggersQuery } from './utils';
 
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { REQUEST_COMPLETE, REQUEST_ONGOING } from './Modify/Actions';
-import { IMPROVED_EVENT_FETCH_QUERY } from '../../../helpers/versionUtils';
 
 const SET_TRIGGER = 'Event/SET_TRIGGER';
 const LOAD_TRIGGER_LIST = 'Event/LOAD_TRIGGER_LIST';
@@ -107,20 +106,13 @@ const loadPendingEvents = () => (dispatch, getState) => {
             '*',
             { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
           ],
-          where: { delivered: false, error: false, tries: 0 },
+          where: { delivered: false, error: false, tries: 0, archived: false },
           order_by: ['-created_at'],
           limit: 10,
         },
       ],
     },
   };
-
-  if (
-    globals.featuresCompatibility &&
-    globals.featuresCompatibility[IMPROVED_EVENT_FETCH_QUERY]
-  ) {
-    body.args.columns[1].where.archived = false;
-  }
 
   const options = {
     credentials: globalCookiePolicy,
@@ -155,20 +147,18 @@ const loadRunningEvents = () => (dispatch, getState) => {
             '*',
             { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
           ],
-          where: { delivered: false, error: false, tries: { $gt: 0 } },
+          where: {
+            delivered: false,
+            error: false,
+            tries: { $gt: 0 },
+            archived: false,
+          },
           order_by: ['-created_at'],
           limit: 10,
         },
       ],
     },
   };
-
-  if (
-    globals.featuresCompatibility &&
-    globals.featuresCompatibility[IMPROVED_EVENT_FETCH_QUERY]
-  ) {
-    body.args.columns[1].where.archived = false;
-  }
 
   const options = {
     credentials: globalCookiePolicy,
@@ -226,20 +216,15 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
                     columns: ['*'],
                   },
                 ],
-                where: { event: { trigger_name: triggerData[0].name } },
+                where: {
+                  event: { trigger_name: triggerData[0].name, archived: false },
+                },
                 order_by: ['-created_at'],
                 limit: 10,
               },
             },
           ],
         };
-
-        if (
-          globals.featuresCompatibility &&
-          globals.featuresCompatibility[IMPROVED_EVENT_FETCH_QUERY]
-        ) {
-          body.args[0].args.where.event.archived = false;
-        }
 
         const logOptions = {
           credentials: globalCookiePolicy,

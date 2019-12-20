@@ -6,3 +6,5 @@ args:
       DROP TABLE test1 cascade;
       DROP TABLE test2 cascade;
     cascade: true
+- type: clear_metadata
+  args: {}

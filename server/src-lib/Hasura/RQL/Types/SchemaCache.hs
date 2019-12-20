@@ -348,7 +348,7 @@ data TableConfig
   = TableConfig
   { _tcCustomRootFields  :: !GC.TableCustomRootFields
   , _tcCustomColumnNames :: !CustomColumnNames
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
 
 emptyTableConfig :: TableConfig
@@ -427,7 +427,7 @@ removeFromDepMap =
 
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
-  deriving (Show, Eq, Hashable, ToJSON, FromJSON)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, FromJSON)
 
 initSchemaCacheVer :: SchemaCacheVer
 initSchemaCacheVer = SchemaCacheVer 0
