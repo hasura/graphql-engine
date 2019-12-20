@@ -47,7 +47,6 @@ class DragFoldTable extends Component {
 
       header.ondrop = e => {
         e.preventDefault();
-        const { target, dataTransfer } = e;
         if (this.dragged) {
           this.reorder.push({ a: i, b: this.dragged });
         }

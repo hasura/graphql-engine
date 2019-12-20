@@ -12,6 +12,8 @@ that will be referred to throughout this guide.
 
 Here are some examples of common use cases.
 
+.. _anonymous_users_example:
+
 Anonymous (not logged in) users
 -------------------------------
 
@@ -26,9 +28,7 @@ Anonymous (not logged in) users
 .. thumbnail:: ../../../../img/graphql/manual/auth/anonymous-role-examples.png
    :class: no-shadow
 
-You can use the env variable ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE`` or ``--unauthorized-role`` flag to set a role
-for non-logged in users. The configured unauthorized role will be used whenever an access token is not present
-in a request to the GraphQL API.
+See :doc:`../authentication/unauthenticated-access` for steps to configure the anonymous user role in Hasura.
 
 Logged-in users
 ---------------
@@ -274,7 +274,6 @@ Permissions for role ``editor``
   There's no need for row-level permissions in this case either but we need to restrict access to certain columns only:
 
   .. thumbnail:: ../../../../img/graphql/manual/auth/multirole-example-editor-update.png
-
 
 
 

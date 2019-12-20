@@ -34,7 +34,16 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura console
 
   # Start console on a different address and ports:
-  hasura console --address 0.0.0.0 --console-port 8080 --api-port 8081`,
+  hasura console --address 0.0.0.0 --console-port 8080 --api-port 8081
+
+  # Start console without opening the browser automatically
+  hasura console --no-browser
+
+  # Use with admin secret:
+  hasura console --admin-secret "<admin-secret>"
+
+  # Connect to an instance specified by the flag, overrides the one mentioned in config.yaml:
+  hasura console --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -192,6 +201,11 @@ func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Lo
 			settingsAPIs := migrateAPIs.Group("/settings")
 			{
 				settingsAPIs.Any("", api.SettingsAPI)
+			}
+			squashAPIs := migrateAPIs.Group("/squash")
+			{
+				squashAPIs.POST("/create", api.SquashCreateAPI)
+				squashAPIs.POST("/delete", api.SquashDeleteAPI)
 			}
 			migrateAPIs.Any("", api.MigrateAPI)
 		}

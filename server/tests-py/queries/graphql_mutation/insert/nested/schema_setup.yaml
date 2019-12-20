@@ -8,7 +8,8 @@ args:
       create table author(
           id serial primary key,
           name text unique,
-          is_registered boolean not null default false
+          is_registered boolean not null default false,
+          emails text[] not null default '{}'::text[]
       );
 - type: track_table
   args:
@@ -48,4 +49,3 @@ args:
       foreign_key_constraint_on:
         table: article
         column: author_id
-

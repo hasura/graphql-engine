@@ -6,9 +6,27 @@ Subscriptions
   :depth: 1
   :local:
 
-A GraphQL subscription is essentially a query where the client receives an event whenever the value of any field changes
-upstream. The Hasura GraphQL engine supports subscriptions for all kinds of queries. All the concepts of
+Introduction
+------------
+
+A GraphQL subscription is essentially a query where the client receives an update whenever the value of any field
+changes upstream.
+
+Subscriptions are supported for all kinds of queries. All the concepts of
 :doc:`queries <../queries/index>` hold true for subscriptions as well.
+
+Execution
+---------
+
+The Hasura GraphQL engine subscriptions are actually **live queries**, i.e. a subscription will return the
+latest result of the query being made and not necessarily all the individual events leading up to the result.
+
+By default updates are delivered to clients every **1 sec**. This interval can be configured via the
+``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`` env var or the
+``--live-queries-multiplexed-refetch-interval`` flag. See the
+:doc:`server flag reference <../deployment/graphql-engine-flags/reference>` for info on setting the flag/env var.
+
+You can read more about the implementation of subscriptions in the `architecture doc <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`_.
 
 Convert a query to a subscription
 ---------------------------------
@@ -17,7 +35,7 @@ You can turn any query into a subscription by simply replacing ``query`` with ``
 
 .. admonition:: Caveat
 
-  Hasura follows the `GraphQL spec <http://facebook.github.io/graphql/June2018/#sec-Single-root-field>`_ which 
+  Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`_ which
   allows for only one root field in a subscription.
 
 Use cases
@@ -38,7 +56,7 @@ for sending and receiving events.
 .. admonition:: Setting headers for subscriptions with Apollo client
 
   If you are using Apollo Client, headers can be passed to a subscription by setting ``connectionParams`` while
-  `creating the wsLink <https://www.apollographql.com/docs/react/advanced/subscriptions.html#subscriptions-client>`_:
+  `creating the wsLink <https://www.apollographql.com/docs/react/data/subscriptions/#client-setup>`_:
 
   .. code-block:: js
     :emphasize-lines: 6-8
@@ -54,8 +72,8 @@ for sending and receiving events.
       }
     });
 
-  See `this <https://www.apollographql.com/docs/react/advanced/subscriptions.html#authentication>`_ for more info on
-  using ``connectionParams``.
+  See `this <https://www.apollographql.com/docs/react/data/subscriptions/#authentication-over-websocket>`_ for more
+  info on using ``connectionParams``.
 
 
 Cookies and WebSockets

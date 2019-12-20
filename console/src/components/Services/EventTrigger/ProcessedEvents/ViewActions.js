@@ -69,6 +69,7 @@ const vMakeRequest = () => {
       if (currentQuery.columns[1]) {
         currentQuery.columns[1].where = {
           $or: [{ delivered: { $eq: true } }, { error: { $eq: true } }],
+          archived: false,
         };
       }
       currentQuery.where = { name: state.triggers.currentTrigger };
@@ -77,6 +78,7 @@ const vMakeRequest = () => {
           { trigger_name: state.triggers.currentTrigger },
           { $or: [{ delivered: { $eq: true } }, { error: { $eq: true } }] },
         ],
+        archived: false,
       };
     }
 

@@ -112,6 +112,11 @@ The various types of queries are listed in the following table:
      - 1
      - Add an SQL function
 
+   * - :ref:`track_function`
+     - :ref:`track_function_args <track_function_args_syntax_v2>`
+     - 2
+     - Add an SQL function with configuration
+
    * - :ref:`untrack_function`
      - :ref:`FunctionName <FunctionName>`
      - 1
@@ -132,10 +137,25 @@ The various types of queries are listed in the following table:
      - 1
      - Drop an existing relationship
 
+   * - :ref:`rename_relationship`
+     - :ref:`rename_relationship_args <rename_relationship_syntax>`
+     - 1
+     - Modify name of an existing relationship
+
    * - :ref:`set_relationship_comment`
      - :ref:`set_relationship_comment_args <set_relationship_comment_syntax>`
      - 1
      - Set comment on an existing relationship
+
+   * - :ref:`add_computed_field`
+     - :ref:`add_computed_field_args <add_computed_field_syntax>`
+     - 1
+     - Add a computed field
+
+   * - :ref:`drop_computed_field`
+     - :ref:`drop_computed_field_args <drop_computed_field_syntax>`
+     - 1
+     - Drop a computed field
 
    * - :ref:`create_insert_permission`
      - :ref:`create_insert_permission_args <create_insert_permission_syntax>`
@@ -278,6 +298,7 @@ The various types of queries are listed in the following table:
 - :doc:`Tables/Views <table-view>`
 - :doc:`Custom SQL Functions <custom-functions>`
 - :doc:`Relationships <relationship>`
+- :doc:`Computed Fields <computed-field>`
 - :doc:`Permissions <permission>`
 - :doc:`Event Triggers <event-triggers>`
 - :doc:`Remote Schemas <remote-schemas>`
@@ -362,6 +383,7 @@ See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting t
   Custom Functions <custom-functions>
   Relationships <relationship>
   Permissions <permission>
+  Computed Fields <computed-field>
   Event Triggers <event-triggers>
   Remote Schemas <remote-schemas>
   Query Collections <query-collections>

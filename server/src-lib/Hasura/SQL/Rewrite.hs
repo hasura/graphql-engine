@@ -8,11 +8,14 @@ import           Hasura.Prelude
 import qualified Hasura.SQL.DML      as S
 import           Hasura.SQL.Types    (Iden (..))
 
+{- Note [Postgres identifier length limitations]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Postgres truncates identifiers to a maximum of 63 characters by default (see
+https://www.postgresql.org/docs/12/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS).
+-}
 
--- add an int as a prefix to all aliases.
--- This is needed in cases identifiers exceed 63 chars
--- as postgres only considers first 63 chars of
--- an identifier
+-- Prefix an Int to all aliases to preserve the uniqueness of identifiers.
+-- See Note [Postgres identifier length limitations].
 prefixNumToAliases :: S.Select -> S.Select
 prefixNumToAliases s =
   uSelect s `evalState` UniqSt 0 Map.empty
@@ -81,14 +84,22 @@ uFromExp :: S.FromExp -> Uniq S.FromExp
 uFromExp (S.FromExp fromItems) =
   S.FromExp <$> mapM uFromItem fromItems
 
+uFunctionArgs :: S.FunctionArgs -> Uniq S.FunctionArgs
+uFunctionArgs (S.FunctionArgs positional named) =
+  S.FunctionArgs <$> mapM uSqlExp positional <*> mapM uSqlExp named
+
+uFunctionExp :: S.FunctionExp -> Uniq S.FunctionExp
+uFunctionExp (S.FunctionExp qf args alM) =
+  S.FunctionExp qf <$> uFunctionArgs args <*> mapM addAlias alM
+
 uFromItem :: S.FromItem -> Uniq S.FromItem
 uFromItem fromItem = case fromItem of
   S.FISimple t alM ->
     S.FISimple t <$> mapM addAlias alM
   S.FIIden iden ->
     S.FIIden <$> return iden
-  S.FIFunc f args alM ->
-    S.FIFunc f args <$> mapM addAlias alM
+  S.FIFunc funcExp ->
+    S.FIFunc <$> uFunctionExp funcExp
   S.FIUnnest args als cols ->
     S.FIUnnest <$> mapM uSqlExp args <*> addAlias als <*> mapM uSqlExp cols
   S.FISelect isLateral sel al -> do
@@ -185,6 +196,7 @@ uSqlExp = restoringIdens . \case
     S.SEArray <$> mapM uSqlExp l
   S.SECount cty                 -> return $ S.SECount cty
   S.SENamedArg arg val          -> S.SENamedArg arg <$> uSqlExp val
+  S.SEFunction funcExp          -> S.SEFunction <$> uFunctionExp funcExp
   where
     uQual = \case
       S.QualIden iden -> S.QualIden <$> getIden iden
