@@ -25,13 +25,10 @@ func newMetadataGetInconsistencyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Spin("Fetching inconsistent metadata...")
 			err := opts.run()
-			opts.EC.Spinner.Stop()
 			if err != nil {
 				return errors.Wrap(err, "failed to fetch inconsistent metadata")
 			}
-			opts.EC.Logger.Info("Fetched inconsistent metadata")
 			return nil
 		},
 	}

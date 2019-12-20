@@ -320,7 +320,7 @@ func (m *Migrate) ReloadMetadata() error {
 	return m.databaseDrv.ReloadMetadata()
 }
 
-func (m *Migrate) GetInconsistentMetadata() (interface{}, error) {
+func (m *Migrate) GetInconsistentMetadata() (bool, []database.InconsistentMetadataInterface, error) {
 	return m.databaseDrv.GetInconsistentMetadata()
 }
 
