@@ -15,6 +15,7 @@ data JWTInfo
   = JWTInfo
   { jwtiClaimsNamespace :: !Text
   , jwtiClaimsFormat    :: !JWTClaimsFormat
+  , jwtiClaimsMap       :: !(Maybe JWTClaimsMap)
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)
@@ -54,9 +55,11 @@ isJWTSet = \case
   _                     -> False
 
 getJWTInfo :: AuthMode -> Maybe JWTInfo
-getJWTInfo (AMAdminSecretAndJWT _ jwtCtx _) =
-  Just $ JWTInfo ns format
-  where
-    ns = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
-    format = jcxClaimsFormat jwtCtx
-getJWTInfo _ = Nothing
+getJWTInfo = \case
+  AMAdminSecretAndJWT _ jwtCtx _ ->
+    Just $ case jcxClaims jwtCtx of
+             JCNamespace namespace claimsFormat ->
+               JWTInfo namespace claimsFormat Nothing
+             JCMap claimsMap ->
+               JWTInfo defaultClaimsNamespace defaultClaimsFormat $ Just claimsMap
+  _                              -> Nothing

@@ -135,8 +135,7 @@ mkJwtCtx conf httpManager logger = do
         Just t -> do
           jwkRefreshCtrl logger httpManager url ref t
           return ref
-  let claimsFmt = fromMaybe JCFJson (jcClaimsFormat conf)
-  return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf) claimsFmt (jcIssuer conf)
+  return $ JWTCtx jwkRef (jcAudience conf) (jcIssuer conf) (jcClaims conf)
 
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)

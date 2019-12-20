@@ -1,6 +1,7 @@
 module Hasura.RQL.Types.Error
        ( Code(..)
        , QErr(..)
+       , encodeJSONPath
        , encodeQErr
        , encodeGQLErr
        , noInternalQErrEnc
@@ -16,6 +17,8 @@ module Hasura.RQL.Types.Error
        , throw500
        , throw500WithDetail
        , throw401
+
+       , iResultToMaybe
 
          -- Aeson helpers
        , runAesonParser
@@ -297,6 +300,10 @@ liftIResult (IError path msg) =
   throwError $ QErr path N.status400 (T.pack $ formatMsg msg) ParseFailed Nothing
 liftIResult (ISuccess a) =
   return a
+
+iResultToMaybe :: IResult a -> Maybe a
+iResultToMaybe (IError _ _) = Nothing
+iResultToMaybe (ISuccess a) = Just a
 
 formatMsg :: String -> String
 formatMsg str = case T.splitOn "the key " txt of

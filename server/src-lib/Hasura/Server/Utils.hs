@@ -2,6 +2,7 @@
 module Hasura.Server.Utils where
 
 import           Data.Aeson
+import           Data.Aeson.Internal
 import           Data.Char
 import           Data.List                  (find)
 import           Data.Time.Clock
@@ -18,6 +19,7 @@ import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.IO               as TI
 import qualified Data.UUID                  as UUID
 import qualified Data.UUID.V4               as UUID
+import qualified Data.Vector                as V
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
@@ -214,3 +216,17 @@ makeReasonMessage errors showError =
     [singleError] -> "because " <> showError singleError
     _ -> "for the following reasons:\n" <> T.unlines
          (map (("  • " <>) . showError) errors)
+
+executeJSONPath :: JSONPath -> Value -> IResult Value
+executeJSONPath jsonPath = iparse (valueParser jsonPath)
+  where
+    valueParser path value = case path of
+      []                      -> fail "Empty JSON Path"
+      [pathElement]           -> parseWithPathElement pathElement value
+      (pathElement:remaining) -> parseWithPathElement pathElement value >>=
+                                 ((<?> pathElement) . valueParser remaining)
+      where
+        parseWithPathElement = \case
+                  Key k   -> withObject "Object" (.: k)
+                  Index i -> withArray "Array" $
+                             maybe (fail "Array index out of range") pure . (V.!? i)
