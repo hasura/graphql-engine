@@ -317,6 +317,10 @@ func (m *Migrate) ReloadMetadata() error {
 	return m.databaseDrv.ReloadMetadata()
 }
 
+func (m *Migrate) GetInconsistentMetadata() (interface{}, error) {
+	return m.databaseDrv.GetInconsistentMetadata()
+}
+
 func (m *Migrate) DropInconsistentMetadata() error {
 	return m.databaseDrv.DropInconsistentMetadata()
 }

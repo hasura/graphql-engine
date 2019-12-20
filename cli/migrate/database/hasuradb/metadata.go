@@ -91,7 +91,11 @@ func (h *HasuraDB) ReloadMetadata() error {
 	return nil
 }
 
-func(h *HasuraDB) DropInconsistentMetadata() error {
+func (h *HasuraDB) GetInconsistentMetadata() (interface{}, error) {
+	return nil, nil
+}
+
+func (h *HasuraDB) DropInconsistentMetadata() error {
 	query := HasuraInterfaceQuery{
 		Type: "drop_inconsistent_metadata",
 		Args: HasuraArgs{},

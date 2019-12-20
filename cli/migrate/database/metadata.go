@@ -7,6 +7,8 @@ type MetadataDriver interface {
 
 	ReloadMetadata() error
 
+	GetInconsistentMetadata() (interface{}, error)
+
 	DropInconsistentMetadata() error
 
 	ApplyMetadata(data interface{}) error
