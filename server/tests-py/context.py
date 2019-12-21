@@ -244,7 +244,7 @@ class HGECtx:
 
     def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure,
                  hge_jwt_key_file, hge_jwt_conf, metadata_disabled,
-                 ws_read_cookie, hge_scale_url):
+                 ws_read_cookie, hge_scale_url, use_api_explorer):
 
         self.http = requests.Session()
         self.hge_key = hge_key
@@ -267,6 +267,7 @@ class HGECtx:
         self.ws_read_cookie = ws_read_cookie
 
         self.hge_scale_url = hge_scale_url
+        self.use_api_explorer = use_api_explorer
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
 

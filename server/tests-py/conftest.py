@@ -97,13 +97,21 @@ def pytest_addoption(parser):
         help="Accept any failing test cases from YAML files as correct, and write the new files out to disk."
     )
 
+    parser.addoption(
+        '--api-explorer',
+        action='store_true',
+        default=False,
+        required=False,
+        help='Run query on console using selenium'
+    )
+
 
 #By default,
 #1) Set default parallelism to one
 #2) Set test grouping to by filename (--dist=loadfile)
 def pytest_cmdline_preparse(config, args):
     worker = os.environ.get('PYTEST_XDIST_WORKER')
-    if 'xdist' in sys.modules and not worker:  # pytest-xdist plugin
+    if 'xdist' in sys.modules and not worker and 'no:xdist not in args':  # pytest-xdist plugin
         num = 1
         args[:] = ["-n" + str(num),"--dist=loadfile"] + args
 
@@ -126,6 +134,13 @@ def pytest_configure(config):
             assert xdist_threads <= len(config.pg_url_list), "Not enough pg_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.pg_url_list))
 
     random.seed(datetime.now())
+
+def pytest_collection_modifyitems(session, config, items):
+    fn_names = set()
+    for item in items:
+        fn_names.add(item.function.__name__)
+    assert not ( config.getoption('--api-explorer') and len(fn_names) > 1), \
+        "--api-explorer should be used only with a single test case."
 
 @pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node):
@@ -169,6 +184,7 @@ def hge_ctx(request):
             ws_read_cookie=ws_read_cookie,
             metadata_disabled=metadata_disabled,
             hge_scale_url=hge_scale_url,
+            use_api_explorer = config.getoption('--api-explorer')
         )
     except HGECtxError as e:
         assert False, "Error from hge_cxt: " + str(e)

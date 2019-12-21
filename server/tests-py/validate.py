@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-import pytest
 import ruamel.yaml as yaml
 from ruamel.yaml.compat import ordereddict, StringIO
 from ruamel.yaml.comments import CommentedMap
-import json
 import copy
 import graphql
 import os
@@ -13,8 +11,8 @@ import json
 import jsondiff
 import jwt
 import random
-import time
 import warnings
+from api_explorer import run_query_on_selenium
 
 from context import GQLWsClient, PytestConf
 
@@ -74,9 +72,7 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
     else:
         status = [401, 404]
 
-    headers = {}
-    if 'headers' in conf:
-        headers = conf['headers']
+    headers = conf.get('headers',{}).copy()
 
     # Test without admin secret
     code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
@@ -128,7 +124,7 @@ def test_forbidden_webhook(hge_ctx, conf):
 def check_query(hge_ctx, conf, transport='http', add_auth=True):
     headers = {}
     if 'headers' in conf:
-        headers = conf['headers']
+        headers = conf['headers'].copy()
 
     # No headers in conf => Admin role
     # Set the X-Hasura-Role header randomly
@@ -294,46 +290,85 @@ def equal_CommentedMap(m1, m2):
         return m1 == m2
 
 def check_query_f(hge_ctx, f, transport='http', add_auth=True):
+    yml = yaml.YAML()
+
+    def use_explorer_mode(conf):
+        return transport == 'http' and hge_ctx.use_api_explorer and conf['url'].endswith('/graphql')
+
+    def mod_conf_with_explorer(conf):
+        return run_query_on_selenium(hge_ctx, conf)
+
+    def get_conf():
+        try:
+            with open(f, 'r') as c:
+                # ruamel will preserve order so that we can test the JSON ordering
+                # property conforms to YAML spec.  It also lets us write back the yaml
+                # nicely when we `--accept.`
+                return yml.load(c)
+        except FileNotFoundError:
+            # When api_explorer is involved, start with a minimal test conf
+            if transport == 'http' and hge_ctx.use_api_explorer:
+                return {
+                    'url': '/v1/graphql',
+                    'status': 200
+                }
+            else:
+                raise
+
+    all_metaqs = []
     print("Test file: " + f)
     hge_ctx.may_skip_test_teardown = False
     print ("transport="+transport)
-    with open(f, 'r+') as c:
-        # For `--accept`:
-        should_write_back = False
+    # For `--accept` and `--api-explorer`:
+    should_write_back = False
 
-        # ruamel will preserve order so that we can test the JSON ordering
-        # property conforms to YAML spec.  It also lets us write back the yaml
-        # nicely when we `--accept.`
-        yml = yaml.YAML()
-        conf = yml.load(c)
-        if isinstance(conf, list):
-            for ix, sconf in enumerate(conf):
-                actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth)
-                if PytestConf.config.getoption("--accept") and not matched:
-                    conf[ix]['response'] = actual_resp
-                    should_write_back = True
-        else:
-            if conf['status'] != 200:
-                hge_ctx.may_skip_test_teardown = True
-            actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth)
-            # If using `--accept` write the file back out with the new expected
-            # response set to the actual response we got:
-            if PytestConf.config.getoption("--accept") and not matched:
-                conf['response'] = actual_resp
+    conf = get_conf()
+
+    if isinstance(conf, list):
+        for ix, sconf in enumerate(conf):
+            if use_explorer_mode(sconf):
+                (metaqs, conf[ix]) = mod_conf_with_explorer(sconf)
+                all_metaqs.extend(metaqs)
                 should_write_back = True
 
-        # TODO only write back when this test is not xfail. I'm stumped on how
-        # best to do this. Where the 'request' fixture comes into scope we can
-        # do : `request.node.get_closest_marker("xfail")` but don't want to
-        # require that everywhere...
-        if should_write_back:
+            actual_resp, matched = check_query(hge_ctx, conf[ix], transport, add_auth)
+
+            if PytestConf.config.getoption("--accept") and not matched:
+                conf[ix]['response'] = actual_resp
+                should_write_back = True
+    else:
+        if use_explorer_mode(conf):
+            (metaqs, conf) = mod_conf_with_explorer(conf)
+            all_metaqs.extend(metaqs)
+            should_write_back = True
+        if conf['status'] != 200:
+            hge_ctx.may_skip_test_teardown = True
+        actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth)
+        # If using `--accept` write the file back out with the new expected
+        # response set to the actual response we got:
+        if PytestConf.config.getoption("--accept") and not matched:
+            conf['response'] = actual_resp
+            should_write_back = True
+
+    if all_metaqs:
+        # all_metaqs captures all the successful metadata queries executed in api
+        # explorer. Maybe these queries are necessary to make the tests work, and hence
+        # may have to be included in test setup. So we are going to print those queries and exit.
+        print(yml.dump(all_metaqs))
+        assert False, "The metadata operations above maybe needed for tests to work"
+
+    # TODO only write back when this test is not xfail. I'm stumped on how
+    # best to do this. Where the 'request' fixture comes into scope we can
+    # do : `request.node.get_closest_marker("xfail")` but don't want to
+    # require that everywhere...
+    if should_write_back:
+        if PytestConf.config.getoption('--accept'):
             warnings.warn(
                 "\nRecording formerly failing case as correct in: " + f +
                 "\n   NOTE: if this case was marked 'xfail' this won't be correct!"
             )
-            c.seek(0)
-            c.write(yml.dump(conf))
-            c.truncate()
+        with open(f, 'w') as c:
+            yml.dump(conf, c)
 
 
 # Return a new dict that discards the object key ordering properties of
