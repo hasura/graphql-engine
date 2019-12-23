@@ -190,13 +190,9 @@ export const saveComputedField = (
       table: getTableDef(table),
       name: computedField.computed_field_name,
       definition: {
-        function: {
-          name: computedField.function_name,
-          schema: computedField.function_schema,
-        },
-        comment: computedField.comment,
-        // table_argument: '' // TODO
+        ...computedField.definition,
       },
+      comment: computedField.comment,
     },
   });
 
@@ -215,13 +211,9 @@ export const saveComputedField = (
         table: getTableDef(table),
         name: originalComputedField.computed_field_name,
         definition: {
-          function: {
-            name: originalComputedField.function_name,
-            schema: originalComputedField.function_schema,
-          },
-          comment: originalComputedField.comment,
-          // table_argument: '' // TODO
+          ...originalComputedField.definition,
         },
+        comment: originalComputedField.comment,
       },
     });
   }
@@ -629,14 +621,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}"
           foreign key (${Object.keys(oldConstraint.column_mapping)
-    .map(lc => `"${lc}"`)
-    .join(', ')})
+            .map(lc => `"${lc}"`)
+            .join(', ')})
           references "${oldConstraint.ref_table_table_schema}"."${
-  oldConstraint.ref_table
-}"
+        oldConstraint.ref_table
+      }"
           (${Object.values(oldConstraint.column_mapping)
-    .map(rc => `"${rc}"`)
-    .join(', ')})
+            .map(rc => `"${rc}"`)
+            .join(', ')})
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -884,8 +876,8 @@ const deleteTrigger = (trigger, table) => {
 
     downMigrationSql += `CREATE TRIGGER "${triggerName}"
 ${trigger.action_timing} ${
-  trigger.event_manipulation
-} ON "${tableSchema}"."${tableName}"
+      trigger.event_manipulation
+    } ON "${tableSchema}"."${tableName}"
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
@@ -1738,24 +1730,24 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesUpQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesUpQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-          {
-            type: 'run_sql',
-            args: {
-              sql: columnChangesDownQuery,
+            {
+              type: 'run_sql',
+              args: {
+                sql: columnChangesDownQuery,
+              },
             },
-          },
-        ]
+          ]
         : [];
 
     /* column custom field up/down migration*/

@@ -8,6 +8,7 @@ import RawSqlButton from '../Common/ReusableComponents/RawSqlButton';
 import {
   findFunction,
   getFunctionDefinition,
+  getQualifiedTableDef,
   getSchemaName,
 } from '../../../Common/utils/pgUtils';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
@@ -23,33 +24,54 @@ const ComputedFieldsEditor = ({
 
   const emptyComputedField = {
     computed_field_name: '',
-    function_name: '',
-    function_schema: currentSchema,
+    definition: {
+      function: {
+        name: '',
+        schema: currentSchema,
+      },
+    },
     comment: '',
   };
 
-  const [computedFieldsState, setComputedFieldsState] = React.useState(
-    computedFields.concat({ ...emptyComputedField })
+  // State management - start
+
+  const getStateComputedFields = () => {
+    return computedFields.concat({ ...emptyComputedField });
+  };
+
+  const [stateComputedFields, setComputedFieldsState] = React.useState(
+    getStateComputedFields()
   );
 
   React.useEffect(() => {
-    setComputedFieldsState(computedFields.concat({ ...emptyComputedField }));
+    setComputedFieldsState(getStateComputedFields());
   }, [computedFields]); // Only re-run the effect if computedFields change
 
-  return computedFieldsState.map((computedField, i) => {
+  // State management - end
+
+  return stateComputedFields.map((computedField, i) => {
     const isLast = computedFields.length <= i;
 
     const origComputedField = isLast ? null : computedFields[i];
     let origComputedFieldName = '';
     let origComputedFieldFunctionName = '';
     if (origComputedField) {
+      const origComputedFieldFunctionDef = getQualifiedTableDef(
+        origComputedField.definition.function
+      );
+
       origComputedFieldName = origComputedField.computed_field_name;
-      origComputedFieldFunctionName = origComputedField.function_name;
+      origComputedFieldFunctionName = origComputedFieldFunctionDef.name;
     }
 
+    const computedFieldFunctionDef = getQualifiedTableDef(
+      computedField.definition.function
+    );
+
     const computedFieldName = computedField.computed_field_name;
-    const computedFieldFunctionName = computedField.function_name;
-    const computedFieldFunctionSchema = computedField.function_schema;
+    const computedFieldFunctionName = computedFieldFunctionDef.name;
+    const computedFieldFunctionSchema = computedFieldFunctionDef.schema;
+    const computedFieldTableRowArg = computedField.definition.table_argument;
     const computedFieldComment = computedField.comment;
 
     let computedFieldFunction = null;
@@ -159,12 +181,71 @@ const ComputedFieldsEditor = ({
         );
       };
 
-      const handleAttributeChange = attribute => e => {
-        const newState = [...computedFieldsState];
+      const handleNameChange = e => {
+        const newState = [...stateComputedFields];
 
         newState[i] = {
           ...newState[i],
-          [attribute]: e.target.value,
+          computed_field_name: e.target.value,
+        };
+
+        setComputedFieldsState(newState);
+      };
+
+      const handleFnSchemaChange = e => {
+        const newState = [...stateComputedFields];
+
+        newState[i] = {
+          ...newState[i],
+          definition: {
+            ...newState[i].definition,
+            function: {
+              ...newState[i].definition.function,
+              schema: e.target.value,
+            },
+          },
+        };
+
+        setComputedFieldsState(newState);
+      };
+
+      const handleFnNameChange = e => {
+        const newState = [...stateComputedFields];
+
+        newState[i] = {
+          ...newState[i],
+          definition: {
+            ...newState[i].definition,
+            function: {
+              ...newState[i].definition.function,
+              name: e.target.value,
+            },
+          },
+        };
+
+        setComputedFieldsState(newState);
+      };
+
+      const handleCommentChange = e => {
+        const newState = [...stateComputedFields];
+
+        newState[i] = {
+          ...newState[i],
+          comment: e.target.value,
+        };
+
+        setComputedFieldsState(newState);
+      };
+
+      const handleTableRowArgChange = e => {
+        const newState = [...stateComputedFields];
+
+        newState[i] = {
+          ...newState[i],
+          definition: {
+            ...newState[i].definition,
+            table_argument: e.target.value,
+          },
         };
 
         setComputedFieldsState(newState);
@@ -179,7 +260,7 @@ const ComputedFieldsEditor = ({
             <input
               type="text"
               value={computedFieldName}
-              onChange={handleAttributeChange('computed_field_name')}
+              onChange={handleNameChange}
               className={`form-control ${styles.wd50percent}`}
             />
           </div>
@@ -193,7 +274,7 @@ const ComputedFieldsEditor = ({
                 styles.add_pad_left
               } ${styles.wd50percent}`}
               data-test={'computed_field-fn-ref-schema'}
-              onChange={handleAttributeChange('function_schema')}
+              onChange={handleFnSchemaChange}
             >
               {schemaList.map((s, j) => {
                 const schemaName = getSchemaName(s);
@@ -213,7 +294,7 @@ const ComputedFieldsEditor = ({
             <input
               type="text"
               value={computedFieldFunctionName}
-              onChange={handleAttributeChange('function_name')}
+              onChange={handleFnNameChange}
               className={`form-control ${styles.wd50percent}`}
             />
           </div>
@@ -222,12 +303,24 @@ const ComputedFieldsEditor = ({
           </div>
           <div className={`${styles.add_mar_top}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
+              <b>Table row argument:</b>
+            </div>
+            <input
+              type="text"
+              value={computedFieldTableRowArg}
+              placeholder={'default: first argument'}
+              onChange={handleTableRowArgChange}
+              className={`form-control ${styles.wd50percent}`}
+            />
+          </div>
+          <div className={`${styles.add_mar_top}`}>
+            <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Comment:</b>
             </div>
             <input
               type="text"
               value={computedFieldComment}
-              onChange={handleAttributeChange('comment')}
+              onChange={handleCommentChange}
               className={`form-control ${styles.wd50percent}`}
             />
           </div>
@@ -236,7 +329,7 @@ const ComputedFieldsEditor = ({
     };
 
     const resetComputedField = () => {
-      const newState = [...computedFieldsState];
+      const newState = [...stateComputedFields];
 
       newState[i] = {
         ...newState[i],
