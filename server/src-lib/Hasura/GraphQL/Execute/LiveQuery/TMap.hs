@@ -7,11 +7,13 @@ module Hasura.GraphQL.Execute.LiveQuery.TMap
   , insert
   , delete
   , toList
+  , length
   ) where
 
-import           Hasura.Prelude         hiding (lookup, null, toList)
+import           Hasura.Prelude         hiding (length, lookup, null, toList)
 
 import qualified Data.HashMap.Strict    as Map
+import qualified Data.List              as L
 
 import           Control.Concurrent.STM
 
@@ -40,3 +42,6 @@ delete k mapTv = modifyTVar' (unTMap mapTv) $ Map.delete k
 
 toList :: TMap k v -> STM [(k, v)]
 toList = fmap Map.toList . readTVar . unTMap
+
+length :: TMap k v -> STM Int
+length = fmap L.length . toList

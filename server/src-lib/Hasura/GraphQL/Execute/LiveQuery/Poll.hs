@@ -247,12 +247,14 @@ dumpPollerMap extended lqMap =
         if extended
         then Just <$> dumpCohortMap cohortsMap
         else return Nothing
+      subscribers <- getSubscribersCount cohortsMap
       return $ J.object
         [ "role" J..= role
         , "thread_id" J..= show (A.asyncThreadId threadId)
         , "multiplexed_query" J..= query
         , "cohorts" J..= cohortsJ
         , "metrics" J..= metricsJ
+        , "subscribers" J..= subscribers
         ]
   where
     dumpRefetchMetrics metrics = do
@@ -275,6 +277,14 @@ dumpPollerMap extended lqMap =
       , "min" J..= Metrics.min stats
       , "max" J..= Metrics.max stats
       ]
+
+    getSubscribersCount cohortMap = STM.atomically $ do
+      cohorts <- TMap.toList cohortMap
+      counts <- forM (map snd cohorts) $ \cohort -> do
+        currentCount <- TMap.length $ _cExistingSubscribers cohort
+        newCount <- TMap.length $ _cNewSubscribers cohort
+        pure $ currentCount + newCount
+      pure $ sum counts
 
 -- | Where the magic happens: the top-level action run periodically by each active 'Poller'.
 pollQuery
