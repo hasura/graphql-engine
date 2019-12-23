@@ -26,7 +26,7 @@ If the authorization passes, then all of the ``x-hasura-*`` values in the claim
 are used for the permissions system.
 
 .. admonition:: Prerequisite
-   
+
    It is mandatory to first :doc:`secure your GraphQL endpoint <../../deployment/securing-graphql-endpoint>` for the JWT mode to take effect.
 
 
@@ -126,7 +126,8 @@ JSON object:
      "claims_namespace": "<optional-key-name-in-claims>",
      "claims_format": "json|stringified_json",
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
-     "issuer": "<optional-string-to-verify-issuer>"
+     "issuer": "<optional-string-to-verify-issuer>",
+     "claims_map": "<optional-object-of-session-variable-to-claim-jsonpath>"
    }
 
 ``key`` or ``jwk_url``, **one of them has to be present**.
@@ -183,7 +184,7 @@ inside which the Hasura specific claims will be present, e.g. ``https://mydomain
 **Default value** is: ``https://hasura.io/jwt/claims``.
 
 
-``claims_format``
+
 ^^^^^^^^^^^^^^^^^
 This is an optional field, with only the following possible values:
 - ``json``
@@ -300,6 +301,48 @@ Examples:
 
    Certain providers require you to verify the ``iss`` claim on the JWT. To do
    that you can set this field to the appropriate value.
+
+
+``claims_map``
+^^^^^^^^^^^^^^
+This is an optional field. Certain providers might not allow adding custom claims.
+In such case the users can map hasura session variables with existing JWT claims
+using ``claims_map``. The ``claims_map`` is a JSON object where keys are session
+variables and values are JSONPaths. The value of claim referred by a JSONPath must be
+``String``.
+
+Consider the following JWT claim.
+
+.. code-block:: json
+
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "user": {
+      "id": "ujdh739kd"
+    },
+    "hasura": {
+      "all_roles": ["user", "editor"],
+    }
+
+  }
+
+The mapping for ``x-hasura-allowed-roles``, ``x-hasura-default-role`` and ``x-hasura-user-id`` session
+variables can be specified in ``claims_map`` configuration as follows.
+
+.. code-block:: json
+
+  {
+    "type":"RS512",
+    "key": "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugd\nUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQs\nHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5D\no2kQ+X5xK9cipRgEKwIDAQAB\n-----END PUBLIC KEY-----\n",
+    "claims_map": {
+      "x-hasura-allowed-roles": "$.hasura.all_roles",
+      "x-hasura-default-role": "$.hasura.all_roles[0]",
+      "x-hasura-user-id": "$.user.id"
+    }
+  }
 
 
 
