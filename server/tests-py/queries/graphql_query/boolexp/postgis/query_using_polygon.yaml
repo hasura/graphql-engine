@@ -7,12 +7,20 @@ response:
     - id: 1
       geom_col:
         type: Point
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - 1
         - 2
     - id: 2
       geom_col:
         type: LineString
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - - 0
           - 0
@@ -25,6 +33,10 @@ response:
     - id: 3
       geom_col:
         type: LineString
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - - 1
           - 0
@@ -35,6 +47,10 @@ response:
     - id: 4
       geom_col:
         type: Polygon
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - - - 0
             - 0
@@ -49,6 +65,10 @@ response:
     - id: 5
       geom_col:
         type: Polygon
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - - - 2
             - 0
@@ -64,12 +84,20 @@ response:
     - id: 1
       geom_col:
         type: Point
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - 1
         - 2
     - id: 2
       geom_col:
         type: LineString
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - - 0
           - 0
@@ -82,6 +110,10 @@ response:
     - id: 3
       geom_col:
         type: LineString
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - - 1
           - 0
@@ -92,6 +124,10 @@ response:
     - id: 4
       geom_col:
         type: Polygon
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - - - 0
             - 0
@@ -106,6 +142,10 @@ response:
     - id: 5
       geom_col:
         type: Polygon
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - - - 2
             - 0
@@ -122,6 +162,10 @@ query:
   variables:
     polygon:
       type: Polygon
+      crs:
+        type: name
+        properties:
+          name: urn:ogc:def:crs:EPSG::4326
       coordinates:
       - - - 2
           - 0

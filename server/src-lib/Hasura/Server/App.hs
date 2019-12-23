@@ -297,7 +297,7 @@ v1QueryHandler query = do
       instanceId <- scInstanceId . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
-v1Alpha1GQHandler :: (MonadIO m) => GH.GQLReqUnparsed -> Handler m (HttpResponse EncJSON)
+v1Alpha1GQHandler :: (MonadIO m) => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
@@ -312,11 +312,11 @@ v1Alpha1GQHandler query = do
   requestId <- asks hcRequestId
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
                 sc scVer manager enableAL
-  flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query
+  flip runReaderT execCtx $ GH.runGQBatched requestId userInfo reqHeaders query
 
 v1GQHandler
   :: (MonadIO m)
-  => GH.GQLReqUnparsed
+  => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
 

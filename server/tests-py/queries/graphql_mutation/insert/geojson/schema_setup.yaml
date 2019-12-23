@@ -9,6 +9,16 @@ args:
 - type: run_sql
   args:
     sql: |
+      DO $$
+      BEGIN
+        IF PostGIS_lib_version() ~ '^3.*' THEN
+          CREATE EXTENSION IF NOT EXISTS postgis_raster;
+        END IF;
+      END$$;
+
+- type: run_sql
+  args:
+    sql: |
      CREATE EXTENSION IF NOT EXISTS postgis_topology;
 
 #User location table
