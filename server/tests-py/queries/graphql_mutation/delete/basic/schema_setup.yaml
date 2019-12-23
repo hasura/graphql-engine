@@ -7,6 +7,12 @@ args:
     sql: |
       CREATE EXTENSION IF NOT EXISTS postgis;
       CREATE EXTENSION IF NOT EXISTS postgis_topology;
+      DO $$
+      BEGIN
+        IF PostGIS_lib_version() ~ '^3.*' THEN
+          CREATE EXTENSION IF NOT EXISTS postgis_raster;
+        END IF;
+      END$$;
       create table author(
           id serial primary key,
           name text unique,
