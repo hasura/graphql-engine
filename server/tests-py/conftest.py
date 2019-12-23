@@ -115,11 +115,15 @@ def pytest_cmdline_preparse(config, args):
         num = 1
         args[:] = ["-n" + str(num),"--dist=loadfile"] + args
 
+def has_a_help_option(config):
+    return config.getoption('--help') or config.getoption('--fixtures')
 
 def pytest_configure(config):
     # Pytest has removed the global pytest.config
     # As a solution we are going to store it in PytestConf.config
     PytestConf.config = config
+    if has_a_help_option(config):
+        return
     if is_master(config):
         if not config.getoption('--hge-urls'):
             print("hge-urls should be specified")
@@ -144,11 +148,15 @@ def pytest_collection_modifyitems(session, config, items):
 
 @pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node):
+    if has_a_help_option(node.config):
+        return
     node.slaveinput["hge-url"] = node.config.hge_url_list.pop()
     node.slaveinput["pg-url"] = node.config.pg_url_list.pop()
 
 def pytest_unconfigure(config):
-        config.hge_ctx_gql_server.teardown()
+    if has_a_help_option(config):
+        return
+    config.hge_ctx_gql_server.teardown()
 
 @pytest.fixture(scope='module')
 def hge_ctx(request):
