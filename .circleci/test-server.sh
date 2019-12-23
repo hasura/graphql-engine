@@ -320,7 +320,7 @@ unset HASURA_GRAPHQL_JWT_SECRET
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_map) #####################################>\n"
 TEST_TYPE="jwt-claims-map"
 
-export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": "$.['https://myapp.com/jwt/claims'].user.id", "x-hasura-allowed-roles": "$.['https://myapp.com/jwt/claims'].role.allowed", "x-hasura-default-role": "$.['https://myapp.com/jwt/claims'].role.default"}}')"
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": "$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id", "x-hasura-allowed-roles": "$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed", "x-hasura-default-role": "$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default"}}')"
 
 run_hge_with_args serve
 wait_for_port 8080
