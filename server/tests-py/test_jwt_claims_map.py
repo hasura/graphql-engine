@@ -141,12 +141,7 @@ class TestJWTClaimsMapBasic():
         check_query(hge_ctx, self.conf, add_auth=False)
 
     def test_jwt_claims_map_claim_not_found(self, hge_ctx, endpoint):
-        self.claims['https://myapp.com/jwt/claims'] = {
-            'role': {
-                'allowed': ['user', 'editor'],
-                'default': 'user'
-            }
-        }
+        self.mk_claims(None, ['user', 'editor'], 'user')
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
