@@ -393,7 +393,8 @@ def collapse_order_not_selset(result_inp, query):
 # Copy-pasta from: https://stackoverflow.com/q/12734517/176841 
 def stringify_keys(d):
  """Convert a dict's keys to strings if they are not."""
- for key in d.keys():
+ if isinstance(d, dict):
+   for key in d.keys():
      # check inner dict
      if isinstance(d[key], dict):
          value = stringify_keys(d[key])

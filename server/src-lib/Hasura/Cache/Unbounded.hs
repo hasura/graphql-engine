@@ -6,6 +6,7 @@ module Hasura.Cache.Unbounded
   , initialise
   , clear
   , insert
+  , insertAllStripes
   , lookup
   , getEntries
   ) where
@@ -69,20 +70,25 @@ getLocal (UnboundedCache handles) = do
 
   (i, _) <- myThreadId >>= threadCapability
 
-  -- The number of capability could be dynamically changed.
-  -- So, let's check the upper boundary of the vector
-  let lim = V.length handles
-      j | i < lim   = i
-        | otherwise = i `mod` lim
+  -- The number of capabilities can grow dynamically so make sure we wrap
+  -- around when indexing.
+  let j = i `mod` V.length handles
 
   return $ handles V.! j
 
--- | Striped version of 'cached'.
+-- | Insert into our thread's local cache stripe.
 insert
   :: (Hashable k, Eq k) =>  k -> v -> UnboundedCache k v ->IO ()
 insert k v striped = do
   localHandle <- getLocal striped
   insertLocal localHandle k v
+
+-- | Insert into all stripes (non-atomically).
+insertAllStripes
+  :: (Hashable k, Eq k) =>  k -> v -> UnboundedCache k v ->IO ()
+insertAllStripes k v (UnboundedCache handles) = do
+  forM_ handles $ \localHandle->
+    insertLocal localHandle k v
 
 lookup :: (Hashable k, Eq k) => k -> UnboundedCache k v ->IO (Maybe v)
 lookup k striped = do
