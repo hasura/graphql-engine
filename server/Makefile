@@ -55,8 +55,7 @@ release-image: $(project).cabal
 ci-binary:
 	mkdir -p packaging/build/rootfs
 	# --no-terminal for a cleaner output in circleci
-	# stack $(STACK_FLAGS) build --no-terminal --test --no-run-tests --ghc-options=-Werror $(BUILD_FLAGS)
-	stack $(STACK_FLAGS) build --no-terminal --test --no-run-tests $(BUILD_FLAGS)
+	stack $(STACK_FLAGS) build --no-terminal --test --no-run-tests --ghc-options=-Werror $(BUILD_FLAGS)
 	mkdir -p $(build_output)
 	cp $(build_dir)/$(project)/$(project) $(build_dir)/graphql-engine-tests/graphql-engine-tests $(build_output)
 	echo "$(VERSION)" > $(build_output)/version.txt
