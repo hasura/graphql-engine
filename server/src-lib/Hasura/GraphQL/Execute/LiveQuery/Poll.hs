@@ -26,6 +26,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , newSinkId
   , SubscriberMap
   , OnChange
+  , OnChangeMeta(..)
   ) where
 
 import           Hasura.Prelude
@@ -64,7 +65,12 @@ data Subscriber
   , _sOnChangeCallback :: !OnChange
   }
 
-type OnChange = GQResponse -> IO ()
+data OnChangeMeta
+  = OnChangeMeta
+  { _ocmExecutionTime :: !(Maybe Double)
+  }
+
+type OnChange = GQResponse -> OnChangeMeta -> IO ()
 
 newtype SubscriberId = SubscriberId { _unSinkId :: UUID.UUID }
   deriving (Show, Eq, Hashable, J.ToJSON)
@@ -159,9 +165,10 @@ pushResultToCohort
   :: GQResult EncJSON
   -- ^ a response that still needs to be wrapped with each 'Subscriber'’s root 'G.Alias'
   -> Maybe ResponseHash
+  -> OnChangeMeta
   -> CohortSnapshot
   -> IO ()
-pushResultToCohort result respHashM cohortSnapshot = do
+pushResultToCohort result respHashM actionMeta cohortSnapshot = do
   prevRespHashM <- STM.readTVarIO respRef
   -- write to the current websockets if needed
   sinks <-
@@ -178,7 +185,7 @@ pushResultToCohort result respHashM cohortSnapshot = do
       let aliasText = G.unName $ G.unAlias alias
           wrapWithAlias response =
             encJToLBS $ encJFromAssocList [(aliasText, response)]
-      in action (wrapWithAlias <$> result)
+      in action (wrapWithAlias <$> result) actionMeta
 
 -- -------------------------------------------------------------------------------------------------
 -- Pollers
@@ -301,11 +308,12 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
     queryInit <- Clock.getCurrentTime
     mxRes <- runExceptT . runLazyTx' pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
     queryFinish <- Clock.getCurrentTime
-    Metrics.add (_rmQuery metrics) $
-      realToFrac $ Clock.diffUTCTime queryFinish queryInit
-    let operations = getCohortOperations cohortSnapshotMap mxRes
+    let queryTime = realToFrac $ Clock.diffUTCTime queryFinish queryInit
+        operations = getCohortOperations cohortSnapshotMap (OnChangeMeta $ Just queryTime) mxRes
+    Metrics.add (_rmQuery metrics) queryTime
+
     -- concurrently push each unique result
-    A.mapConcurrently_ (uncurry3 pushResultToCohort) operations
+    A.mapConcurrently_ (uncurry4 pushResultToCohort) operations
     pushFinish <- Clock.getCurrentTime
     Metrics.add (_rmPush metrics) $
       realToFrac $ Clock.diffUTCTime pushFinish queryFinish
@@ -316,8 +324,8 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
   where
     Poller cohortMap _ = handler
 
-    uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
-    uncurry3 f (a, b, c) = f a b c
+    uncurry4 :: (a -> b -> c -> d -> e) -> (a, b, c, d) -> e
+    uncurry4 f (a, b, c, d) = f a b c d
 
     getCohortSnapshot (cohortVars, handlerC) = do
       let Cohort resId respRef curOpsTV newOpsTV = handlerC
@@ -331,11 +339,11 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
     getQueryVars cohortSnapshotMap =
       Map.toList $ fmap _csVariables cohortSnapshotMap
 
-    getCohortOperations cohortSnapshotMap = \case
+    getCohortOperations cohortSnapshotMap actionMeta = \case
       Left e ->
         -- TODO: this is internal error
         let resp = GQExecError [encodeGQErr False e]
-        in [ (resp, Nothing, snapshot)
+        in [ (resp, Nothing, actionMeta, snapshot)
            | (_, snapshot) <- Map.toList cohortSnapshotMap
            ]
       Right responses ->
@@ -345,4 +353,4 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
               -- from Postgres strictly and (2) even if we didn’t, hashing will have to force the
               -- whole thing anyway.
               respHash = mkRespHash (encJToBS result)
-          in (GQSuccess result, Just respHash,) <$> Map.lookup respId cohortSnapshotMap
+          in (GQSuccess result, Just respHash, actionMeta,) <$> Map.lookup respId cohortSnapshotMap

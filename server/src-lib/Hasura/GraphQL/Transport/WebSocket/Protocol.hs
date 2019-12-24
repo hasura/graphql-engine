@@ -56,18 +56,19 @@ instance J.FromJSON ClientMsg where
   parseJSON = J.withObject "ClientMessage" $ \obj -> do
     t <- obj J..: "type"
     case t of
-      "connection_init" -> CMConnInit <$> obj J..:? "payload"
-      "start" -> CMStart <$> J.parseJSON (J.Object obj)
-      "stop" -> CMStop <$> J.parseJSON (J.Object obj)
+      "connection_init"      -> CMConnInit <$> obj J..:? "payload"
+      "start"                -> CMStart <$> J.parseJSON (J.Object obj)
+      "stop"                 -> CMStop <$> J.parseJSON (J.Object obj)
       "connection_terminate" -> return CMConnTerm
-      _ -> fail $ "unexpected type for ClientMessage: " <> t
+      _                      -> fail $ "unexpected type for ClientMessage: " <> t
 
 -- server to client messages
 
 data DataMsg
   = DataMsg
-  { _dmId      :: !OperationId
-  , _dmPayload :: !GraphqlResponse
+  { _dmId                 :: !OperationId
+  , _dmPayload            :: !GraphqlResponse
+  , _dmQueryExecutionTime :: !(Maybe Double)
   }
 
 data ErrorMsg
@@ -128,11 +129,14 @@ encodeServerMsg msg =
     , ("payload", encJFromJValue connErr)
     ]
 
-  SMData (DataMsg opId payload) ->
-    [ encTy SMT_GQL_DATA
-    , ("id", encJFromJValue opId)
-    , ("payload", encodeGraphqlResponse payload)
-    ]
+  SMData (DataMsg opId payload execTime) ->
+    let encPayload = encodeGraphqlResponse payload
+    in [ encTy SMT_GQL_DATA
+       , ("id", encJFromJValue opId)
+       , ("response_size", encJFromJValue $ BL.length $ encJToLBS encPayload)
+       , ("query_execution_time", encJFromJValue execTime)
+       , ("payload", encPayload)
+       ]
 
   SMErr (ErrorMsg opId payload) ->
     [ encTy SMT_GQL_ERROR
