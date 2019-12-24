@@ -6,12 +6,14 @@ Aggregation queries
   :depth: 2
   :local:
 
+Aggregate fields
+----------------
 You can fetch aggregations on columns along with nodes using an aggregation query.
-Available aggregation functions are ``count``, ``sum``, ``avg``, ``max`` and ``min``.
 
 The **name of the aggregate field** is of the form ``<field-name> + _aggregate``.
 
-You can see the complete specification of the aggregate field in the :ref:`API reference <AggregateObject>`.
+Common aggregation functions are ``count``, ``sum``, ``avg``, ``max``, ``min``, etc. You can see the complete
+specification of the aggregate field in the :ref:`API reference <AggregateObject>`.
 
 Fetch aggregated data of an object
 ----------------------------------

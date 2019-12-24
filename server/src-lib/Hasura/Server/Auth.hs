@@ -15,6 +15,7 @@ module Hasura.Server.Auth
   , processJwt
   , updateJwkRef
   , jwkRefreshCtrl
+  , UserAuthentication (..)
   ) where
 
 import           Control.Exception      (try)
@@ -39,8 +40,15 @@ import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 
-import qualified Hasura.Logging         as L
-
+-- | Typeclass representing the @UserInfo@ authorization and resolving effect
+class (Monad m) => UserAuthentication m where
+  resolveUserInfo
+    :: Logger Hasura
+    -> H.Manager
+    -> [N.Header]
+    -- ^ request headers
+    -> AuthMode
+    -> m (Either QErr (UserInfo, Maybe UTCTime))
 
 newtype AdminSecret
   = AdminSecret { getAdminSecret :: T.Text }
@@ -79,16 +87,16 @@ mkAuthMode
   -> Maybe JWTConfig
   -> Maybe RoleName
   -> H.Manager
-  -> LoggerCtx
+  -> Logger Hasura
   -> m AuthMode
-mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
+mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager logger =
   case (mAdminSecret, mWebHook, mJwtSecret) of
     (Nothing,  Nothing,   Nothing)      -> return AMNoAuth
     (Just key, Nothing,   Nothing)      -> return $ AMAdminSecret key mUnAuthRole
     (Just key, Just hook, Nothing)      -> unAuthRoleNotReqForWebHook >>
                                            return (AMAdminSecretAndHook key hook)
     (Just key, Nothing,   Just jwtConf) -> do
-      jwtCtx <- mkJwtCtx jwtConf httpManager lCtx
+      jwtCtx <- mkJwtCtx jwtConf httpManager logger
       return $ AMAdminSecretAndJWT key jwtCtx mUnAuthRole
 
     (Nothing, Just _, Nothing)     -> throwError $
@@ -114,14 +122,13 @@ mkJwtCtx
      )
   => JWTConfig
   -> H.Manager
-  -> LoggerCtx
+  -> Logger Hasura
   -> m JWTCtx
-mkJwtCtx conf httpManager loggerCtx = do
+mkJwtCtx conf httpManager logger = do
   jwkRef <- case jcKeyOrUrl conf of
     Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
     Right url -> do
       ref <- liftIO $ newIORef $ JWKSet []
-      let logger = mkLogger loggerCtx
       mTime <- updateJwkRef logger httpManager url ref
       case mTime of
         Nothing -> return ref
@@ -133,7 +140,7 @@ mkJwtCtx conf httpManager loggerCtx = do
 
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
-  => L.Logger
+  => Logger Hasura
   -> T.Text
   -> N.StdMethod
   -> N.Status
@@ -162,19 +169,19 @@ mkUserInfoFromResp logger url method statusCode respBody
           logError
           throw500 "missing x-hasura-role key in webhook response"
         Just rn -> do
-          logWebHookResp L.LevelInfo Nothing
+          logWebHookResp LevelInfo Nothing
           return $ mkUserInfo rn usrVars
 
     logError =
-      logWebHookResp L.LevelError $ Just respBody
+      logWebHookResp LevelError $ Just respBody
 
     logWebHookResp logLevel mResp =
-      liftIO $ L.unLogger logger $ WebHookLog logLevel (Just statusCode)
+      unLogger logger $ WebHookLog logLevel (Just statusCode)
         url method Nothing $ fmap (bsToTxt . BL.toStrict) mResp
 
 userInfoFromAuthHook
   :: (MonadIO m, MonadError QErr m)
-  => L.Logger
+  => Logger Hasura
   -> H.Manager
   -> AuthHook
   -> [N.Header]
@@ -203,8 +210,8 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
                object ["headers" J..= postHdrsPayload]
 
     logAndThrow err = do
-      liftIO $ L.unLogger logger $
-        WebHookLog L.LevelError Nothing urlT method
+      unLogger logger $
+        WebHookLog LevelError Nothing urlT method
         (Just $ HttpException err) Nothing
       throw500 "Internal Server Error"
 
@@ -213,7 +220,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
 
 getUserInfo
   :: (MonadIO m, MonadError QErr m)
-  => L.Logger
+  => Logger Hasura
   -> H.Manager
   -> [N.Header]
   -> AuthMode
@@ -222,7 +229,7 @@ getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
 
 getUserInfoWithExpTime
   :: (MonadIO m, MonadError QErr m)
-  => L.Logger
+  => Logger Hasura
   -> H.Manager
   -> [N.Header]
   -> AuthMode
@@ -256,11 +263,6 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
 
     usrVars = mkUserVars $ hdrsToText rawHeaders
 
-    userInfoFromHeaders =
-      case roleFromVars usrVars of
-        Just rn -> mkUserInfo rn usrVars
-        Nothing -> mkUserInfo adminRole usrVars
-
     userInfoWhenAdminSecret key reqKey = do
       when (reqKey /= getAdminSecret key) $ throw401 $
         "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
@@ -272,3 +274,8 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
       Just role -> return $ mkUserInfo role usrVars
 
     withNoExpTime a = (, Nothing) <$> a
+
+    userInfoFromHeaders =
+      case roleFromVars usrVars of
+        Just rn -> mkUserInfo rn usrVars
+        Nothing -> mkUserInfo adminRole usrVars

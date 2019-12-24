@@ -87,9 +87,9 @@ data TableMeta
 fetchTableMeta :: Q.Tx [TableMeta]
 fetchTableMeta = do
   res <- Q.listQ $(Q.sqlFromFile "src-rsr/table_meta.sql") () False
-  forM res $ \(ts, tn, toid, descM, cols, constrnts, fkeys, computedCols) ->
+  forM res $ \(ts, tn, toid, descM, cols, constrnts, fkeys, computedFields) ->
     return $ TableMeta toid (QualifiedObject ts tn) descM (Q.getAltJ cols)
-             (Q.getAltJ constrnts) (Q.getAltJ fkeys) (Q.getAltJ computedCols)
+             (Q.getAltJ constrnts) (Q.getAltJ fkeys) (Q.getAltJ computedFields)
 
 getOverlap :: (Eq k, Hashable k) => (v -> k) -> [v] -> [v] -> [(v, v)]
 getOverlap getKey left right =
@@ -128,7 +128,7 @@ data TableDiff
 getTableDiff :: TableMeta -> TableMeta -> TableDiff
 getTableDiff oldtm newtm =
   TableDiff mNewName droppedCols addedCols alteredCols
-  droppedFKeyConstraints computedColDiff uniqueOrPrimaryCons mNewDesc
+  droppedFKeyConstraints computedFieldDiff uniqueOrPrimaryCons mNewDesc
   where
     mNewName = bool (Just $ tmTable newtm) Nothing $ tmTable oldtm == tmTable newtm
     oldCols = tmColumns oldtm
@@ -183,7 +183,7 @@ getTableDiff oldtm newtm =
          flip NE.groupBy newComputedFieldMeta $ \l r ->
          ccmName l == ccmName r && getFunction l == getFunction r
 
-    computedColDiff = ComputedFieldDiff droppedComputedFields alteredComputedFields
+    computedFieldDiff = ComputedFieldDiff droppedComputedFields alteredComputedFields
                       overloadedComputedFieldFunctions
 
 getTableChangeDeps
@@ -202,8 +202,8 @@ getTableChangeDeps ti tableDiff = do
   return $ droppedConsDeps <> droppedColDeps <> droppedComputedFieldDeps
   where
     tn = _tiName ti
-    TableDiff _ droppedCols _ _ droppedFKeyConstraints computedColDiff _ _ = tableDiff
-    droppedComputedFieldDeps = map (SOTableObj tn . TOComputedField) $ _cfdDropped computedColDiff
+    TableDiff _ droppedCols _ _ droppedFKeyConstraints computedFieldDiff _ _ = tableDiff
+    droppedComputedFieldDeps = map (SOTableObj tn . TOComputedField) $ _cfdDropped computedFieldDiff
 
 data SchemaDiff
   = SchemaDiff

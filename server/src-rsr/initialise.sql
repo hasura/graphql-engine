@@ -280,11 +280,13 @@ CREATE TABLE hdb_catalog.event_log
   tries INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
   locked BOOLEAN NOT NULL DEFAULT FALSE,
-  next_retry_at TIMESTAMP
+  next_retry_at TIMESTAMP,
+  archived BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE INDEX ON hdb_catalog.event_log (trigger_name);
 CREATE INDEX ON hdb_catalog.event_log (locked);
+CREATE INDEX ON hdb_catalog.event_log (delivered);
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
@@ -304,6 +306,7 @@ CREATE TABLE hdb_catalog.hdb_function
 (
     function_schema TEXT,
     function_name TEXT,
+    configuration JSONB NOT NULL DEFAULT '{}'::jsonb,
     is_system_defined boolean default false,
 
     PRIMARY KEY (function_schema, function_name)

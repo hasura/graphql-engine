@@ -2,8 +2,6 @@ module Hasura.RQL.DML.Select
   ( selectP2
   , selectQuerySQL
   , selectAggQuerySQL
-  , mkFuncSelectSimple
-  , mkFuncSelectAgg
   , convSelectQuery
   , asSingleRowJsonResp
   , module Hasura.RQL.DML.Select.Internal
@@ -165,7 +163,7 @@ convSelectQ fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
     indexedForM (sqColumns selQ) $ \case
     (ECSimple pgCol) -> do
       colInfo <- convExtSimple fieldInfoMap selPermInfo pgCol
-      return (fromPGCol pgCol, FCol colInfo Nothing)
+      return (fromPGCol pgCol, mkAnnColField colInfo Nothing)
     (ECRel relName mAlias relSelQ) -> do
       annRel <- convExtRel fieldInfoMap relName mAlias
                 relSelQ sessVarBldr prepValBldr
@@ -268,20 +266,6 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ (_tiFieldInfoMap tabInfo) selPermInfo
     extSelQ sessVarBldr prepArgBuilder
-
-mkFuncSelectSimple
-  :: AnnFnSelSimple
-  -> Q.Query
-mkFuncSelectSimple annFnSel =
-  Q.fromBuilder $ toSQL $
-  mkFuncSelectWith (mkSQLSelect False) annFnSel
-
-mkFuncSelectAgg
-  :: AnnFnSelAgg
-  -> Q.Query
-mkFuncSelectAgg annFnSel =
-  Q.fromBuilder $ toSQL $
-  mkFuncSelectWith mkAggSelect annFnSel
 
 selectP2 :: Bool -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 asSingleObject (sel, p) =

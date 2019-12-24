@@ -30,7 +30,7 @@ import qualified Database.PG.Query          as Q
 data PermColSpec
   = PCStar
   | PCCols ![PGCol]
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 instance FromJSON PermColSpec where
   parseJSON (String "*") = return PCStar
@@ -154,7 +154,7 @@ data PermDef a =
   { pdRole       :: !RoleName
   , pdPermission :: !a
   , pdComment    :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''PermDef)
 
@@ -319,7 +319,6 @@ createPermP1
      )
   => WithTable (PermDef a) -> m (WithDeps (PermInfo a))
 createPermP1 (WithTable tn pd) = do
-  adminOnly
   tabInfo <- askTabInfo tn
   validateViewPerm pd tabInfo
   addPermP1 tabInfo pd
@@ -336,10 +335,9 @@ runCreatePerm defn@(WithTable tn pd) = do
   return successMsg
 
 dropPermP1
-  :: (QErrM m, CacheRM m, UserInfoM m, IsPerm a)
+  :: (QErrM m, CacheRM m, IsPerm a)
   => DropPerm a -> m (PermInfo a)
 dropPermP1 dp@(DropPerm tn rn) = do
-  adminOnly
   tabInfo <- askTabInfo tn
   askPermInfo tabInfo rn $ getPermAcc2 dp
 
