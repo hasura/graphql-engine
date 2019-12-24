@@ -52,7 +52,12 @@ const toPayload = {
 
 const fromPayload = {
   "sdl": {
-    "complete": `type Mutation { actionName (arg1: SampleInput!): SampleOutput }\ntype SampleOutput { accessToken: String! } input SampleInput { username: String! password: String! }`
+    "complete": `
+type Mutation { actionName1 (arg1: SampleInput!): SampleOutput }
+type SampleOutput { accessToken: String! }
+input SampleInput { username: String! password: String! }
+type Mutation { actionName2 (arg1: SampleInput!): SampleOutput }
+`
   },
 };
 
