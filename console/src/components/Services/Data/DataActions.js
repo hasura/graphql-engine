@@ -371,7 +371,7 @@ const fetchDataInit = () => (dispatch, getState) => {
   );
 };
 
-const fetchFunctionInit = () => (dispatch, getState) => {
+const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const body = {
     type: 'bulk',
@@ -383,10 +383,10 @@ const fetchFunctionInit = () => (dispatch, getState) => {
   };
 
   // set schema in queries
-  const currentSchema = getState().tables.currentSchema;
-  body.args[0].args.where.function_schema = currentSchema;
-  body.args[1].args.where.function_schema = currentSchema;
-  body.args[2].args.where.function_schema = currentSchema;
+  const fnSchema = schema || getState().tables.currentSchema;
+  body.args[0].args.where.function_schema = fnSchema;
+  body.args[1].args.where.function_schema = fnSchema;
+  body.args[2].args.where.function_schema = fnSchema;
 
   const options = {
     credentials: globalCookiePolicy,

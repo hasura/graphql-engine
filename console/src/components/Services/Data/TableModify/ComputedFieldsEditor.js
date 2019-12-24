@@ -8,10 +8,13 @@ import RawSqlButton from '../Common/ReusableComponents/RawSqlButton';
 import {
   findFunction,
   getFunctionDefinition,
+  getFunctionName,
   getQualifiedTableDef,
+  getSchemaFunctions,
   getSchemaName,
 } from '../../../Common/utils/pgUtils';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
+import { fetchFunctionInit } from '../DataActions';
 
 const ComputedFieldsEditor = ({
   table,
@@ -55,6 +58,7 @@ const ComputedFieldsEditor = ({
     const origComputedField = isLast ? null : computedFields[i];
     let origComputedFieldName = '';
     let origComputedFieldFunctionName = '';
+    let origComputedFieldComment = '';
     if (origComputedField) {
       const origComputedFieldFunctionDef = getQualifiedTableDef(
         origComputedField.definition.function
@@ -62,6 +66,7 @@ const ComputedFieldsEditor = ({
 
       origComputedFieldName = origComputedField.computed_field_name;
       origComputedFieldFunctionName = origComputedFieldFunctionDef.name;
+      origComputedFieldComment = origComputedField.comment;
     }
 
     const computedFieldFunctionDef = getQualifiedTableDef(
@@ -126,6 +131,10 @@ const ComputedFieldsEditor = ({
         <div>
           <b>{origComputedFieldName}</b>&nbsp;-&nbsp;
           <i>{origComputedFieldFunctionName}</i>
+          <br />
+          <span key={'comment'} className={styles.text_gray}>
+            {origComputedFieldComment}
+          </span>
         </div>
       );
     };
@@ -148,6 +157,8 @@ const ComputedFieldsEditor = ({
 
     const expandedContent = () => {
       const getFunctionDefinitionSection = () => {
+        if (!computedFieldFunctionName) return null;
+
         const modifyFunctionBtn = (
           <RawSqlButton
             dataTestId={`modify-function-${computedFieldFunctionName}`}
@@ -193,6 +204,9 @@ const ComputedFieldsEditor = ({
       };
 
       const handleFnSchemaChange = e => {
+        // fetch schema fns
+        dispatch(fetchFunctionInit(e.target.value));
+
         const newState = [...stateComputedFields];
 
         newState[i] = {
@@ -269,7 +283,7 @@ const ComputedFieldsEditor = ({
               <b>Function schema: </b>
             </div>
             <select
-              value={computedFieldFunctionSchema || currentSchema}
+              value={computedFieldFunctionSchema}
               className={`${styles.select} form-control ${
                 styles.add_pad_left
               } ${styles.wd50percent}`}
@@ -290,13 +304,38 @@ const ComputedFieldsEditor = ({
           <div className={`${styles.add_mar_top}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Function name: </b>
+              <RawSqlButton
+                dataTestId={'create-function'}
+                customStyles={`${styles.display_inline} ${styles.add_mar_left}`}
+                sql={''}
+                dispatch={dispatch}
+              >
+                Create new
+              </RawSqlButton>
             </div>
-            <input
-              type="text"
+            <select
               value={computedFieldFunctionName}
+              className={`${styles.select} form-control ${
+                styles.add_pad_left
+              } ${styles.wd50percent}`}
+              data-test={'computed_field-fn-ref-fn'}
               onChange={handleFnNameChange}
-              className={`form-control ${styles.wd50percent}`}
-            />
+            >
+              <option disabled key={-1} value={''}>
+                --
+              </option>
+              {getSchemaFunctions(functions, computedFieldFunctionSchema).map(
+                (fn, j) => {
+                  const functionName = getFunctionName(fn);
+
+                  return (
+                    <option key={j} value={functionName}>
+                      {functionName}
+                    </option>
+                  );
+                }
+              )}
+            </select>
           </div>
           <div className={`${styles.add_mar_top}`}>
             {getFunctionDefinitionSection()}
@@ -339,12 +378,19 @@ const ComputedFieldsEditor = ({
       setComputedFieldsState(newState);
     };
 
+    const refreshFunctions = () => {
+      if (computedFieldFunctionSchema) {
+        dispatch(fetchFunctionInit(computedFieldFunctionSchema));
+      }
+    };
+
     return (
       <div key={`computed-field-${origComputedFieldName || i}`}>
         <ExpandableEditor
           editorExpanded={expandedContent}
           expandedLabel={expandedLabel}
           collapsedLabel={collapsedLabel}
+          expandCallback={refreshFunctions}
           collapseCallback={resetComputedField}
           property={`computed-field-${i}`}
           service="modify-table"
