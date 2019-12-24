@@ -28,7 +28,8 @@ import qualified Database.PG.Query.Connection  as Q
 import qualified Language.Haskell.TH.Lib       as TH
 import qualified Language.Haskell.TH.Syntax    as TH
 
-import           Hasura.Logging                (LogLevel (..), ToEngineLog (..))
+import           Hasura.Logging                (Hasura, LogLevel (..),
+                                                ToEngineLog (..))
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging         (StartupLog (..))
@@ -49,7 +50,7 @@ data MigrationResult
   | MRMigrated T.Text -- ^ old catalog version
   deriving (Show, Eq)
 
-instance ToEngineLog MigrationResult where
+instance ToEngineLog MigrationResult Hasura where
   toEngineLog result = toEngineLog $ StartupLog
     { slLogLevel = LevelInfo
     , slKind = "db_migrate"
@@ -65,14 +66,14 @@ instance ToEngineLog MigrationResult where
     }
 
 migrateCatalog
-  :: forall m
-   . ( MonadTx m
-     , HasHttpManager m
-     , CacheRWM m
-     , UserInfoM m
-     , MonadIO m
-     , HasSQLGenCtx m
-     )
+  :: forall m.
+  ( MonadTx m
+  , HasHttpManager m
+  , CacheRWM m
+  , UserInfoM m
+  , MonadIO m
+  , HasSQLGenCtx m
+  )
   => UTCTime -> m MigrationResult
 migrateCatalog migrationTime = do
   doesSchemaExist (SchemaName "hdb_catalog") >>= \case

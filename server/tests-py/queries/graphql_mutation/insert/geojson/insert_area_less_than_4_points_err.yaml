@@ -18,6 +18,10 @@ query:
           - [43.80009, 11.03208]
           - [42.60009, 10.13248]
         type: Polygon
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
   query: |
     mutation insertArea($areas: [area_insert_input!]!) {
       insert_area(objects: $areas) {

@@ -5,13 +5,6 @@ import TableHeader from '../TableCommon/TableHeader';
 import { getAllDataTypeMap } from '../Common/utils';
 
 import {
-  checkFeatureSupport,
-  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
-  TABLE_ENUMS_SUPPORT,
-} from '../../../../helpers/versionUtils';
-import globals from '../../../../Globals';
-
-import {
   deleteTableSql,
   untrackTableSql,
   RESET,
@@ -74,6 +67,7 @@ class ModifyTable extends React.Component {
       columnEdit,
       pkModify,
       fkModify,
+      checkConstraintsModify,
       dataTypes,
       validTypeCasts,
       uniqueKeyModify,
@@ -135,11 +129,6 @@ class ModifyTable extends React.Component {
     );
 
     const getEnumsSection = () => {
-      const supportEnums =
-        globals.featuresCompatibility &&
-        globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
-      if (!supportEnums) return null;
-
       const toggleEnum = () => dispatch(toggleTableAsEnum(table.is_enum));
 
       return (
@@ -156,8 +145,6 @@ class ModifyTable extends React.Component {
 
     // if (table.primary_key.columns > 0) {}
     const getTableRootFieldsSection = () => {
-      if (!checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) return null;
-
       const existingRootFields = getTableCustomRootFields(table);
 
       return (
@@ -261,6 +248,7 @@ class ModifyTable extends React.Component {
             <h4 className={styles.subheading_text}>Check Constraints</h4>
             <CheckConstraints
               constraints={getTableCheckConstraints(table)}
+              checkConstraintsModify={checkConstraintsModify}
               dispatch={dispatch}
             />
             <hr />
