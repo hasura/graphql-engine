@@ -7,7 +7,6 @@ import {
 const commandArgs = process.argv;
 
 const handleArgs = () => {
-
   const rootArg = commandArgs[2];
 
   switch(rootArg) {

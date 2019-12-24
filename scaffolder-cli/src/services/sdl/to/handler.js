@@ -2,7 +2,8 @@ const { getTypesSdl, getActionDefinitionSdl } = require('../../../shared/utils/s
 const { deriveMutation } = require('../../derive/derive')
 
 const handlePayload = (payload) => {
-  const { action, types, derive } = payload;
+
+  const { actions, types, derive } = payload;
   const {
     mutation: toDeriveMutation,
     introspection_schema: introspectionSchema
@@ -18,19 +19,21 @@ const handlePayload = (payload) => {
     status: 200
   };
 
-  let actionSdl;
-  let typesSdl;
+  let actionSdl = '';
+  let typesSdl = '';
   let actionSdlError, typesSdlError, deriveMutationError;
 
-  if (action) {
+  if (actions) {
     try {
-      actionSdl = getActionDefinitionSdl(action);
+      actions.forEach(a => {
+        actionSdl += getActionDefinitionSdl(a.name, a.arguments, a.output_type) + '\n';
+      })
     } catch (e) {
-      actionsError = e;
+      actionSdlError = e;
     }
   }
 
-  if (types && !deriveMutationName) {
+  if (types) {
     try {
       typesSdl = getTypesSdl(types);
     } catch (e) {
@@ -38,13 +41,14 @@ const handlePayload = (payload) => {
     }
   }
 
+  let sdl = `${actionSdl}\n\n${typesSdl}`;
+
   if (deriveMutationName) {
     try {
-      const derivation = deriveMutation(deriveMutationName, introspectionSchema, types, actionName);
-      actionSdl = getActionDefinitionSdl(derivation.action);
+      const derivation = deriveMutation(deriveMutationName, introspectionSchema, actionName);
+      const derivedActionSdl = getActionDefinitionSdl(derivation.action.name, derivation.action.arguments, derivation.action.output_type);
       const derivedTypesSdl = getTypesSdl(derivation.types);
-      const existingTypesSdl = getTypesSdl(types);
-      typesSdl = `${derivedTypesSdl}\n\n${existingTypesSdl}`;
+      sdl = `${derivedActionSdl}\n\n${derivedTypesSdl}\n\n${sdl}`
     } catch (e) {
       deriveMutationError = e;
     }
@@ -52,7 +56,7 @@ const handlePayload = (payload) => {
 
   if (actionSdlError) {
     response.body = {
-      error: 'invalid action definition'
+      error: 'invalid actions definition'
     };
     response.status = 400;
     return response;
@@ -76,16 +80,15 @@ const handlePayload = (payload) => {
 
   response.body = {
     sdl: {
-      action: actionSdl || null,
-      types: typesSdl || null
+      complete: sdl
     }
   };
 
   return response;
+
 }
 
 const requestHandler = (payload) => {
-
 
   const {
     body, status

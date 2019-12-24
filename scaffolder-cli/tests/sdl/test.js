@@ -4,6 +4,7 @@ const { handlePayload: toHandler  } = require('../../build/services/sdl/to/handl
 const { handlePayload: fromHandler } = require('../../build/services/sdl/from/handler');
 
 const test = async () => {
+
   const toResponse = toHandler(toPayload);
   if (
     toResponse.status === 200

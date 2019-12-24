@@ -12,7 +12,7 @@ const {
 
 // TODO sanity
 
-const deriveMutation = (mutationName, introspectionSchema, types, actionName) => {
+const deriveMutation = (mutationName, introspectionSchema, actionName) => {
   const clientSchema = buildClientSchema(introspectionSchema.data);
   const mutationType = clientSchema._mutationType;
   if (!mutationType) {
@@ -32,7 +32,7 @@ const deriveMutation = (mutationName, introspectionSchema, types, actionName) =>
   }
 
   const prefixTypename = (typename) => {
-    return camelize(`${actionName}${typename}`);
+    return camelize(`${actionName}_${typename}`);
   };
 
   const mutationDefinition = {
@@ -47,6 +47,7 @@ const deriveMutation = (mutationName, introspectionSchema, types, actionName) =>
     if (newTypes[typename]) { return; }
     const newType = {};
     newType.name = typename;
+
     if (isScalarType(type)) {
       if (!inbuiltTypes[type.name]) {
         newType.kind = 'scalar';
@@ -54,6 +55,7 @@ const deriveMutation = (mutationName, introspectionSchema, types, actionName) =>
       }
       return;
     }
+
     if (isEnumType(type)) {
       newType.kind = 'enum',
       newType.values = type._values.map(v => ({ value: v.value, description: v.description}));
