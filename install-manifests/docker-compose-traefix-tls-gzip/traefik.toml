@@ -1,0 +1,15 @@
+[entryPoints]
+ [entryPoints.web-ui]
+   address=":8080"
+   [entryPoints.foo.auth]
+     [entryPoints.foo.auth.basic]
+       users = [
+         # Change these below for BASIC Auth on the Traefik Web UI
+         # @see: https://docs.traefik.io/v1.7/configuration/api/#security
+         # @see: https://docs.traefik.io/v1.7/configuration/api/#authentication
+         "test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/",
+         "test2:$apr1$d9hr9HBB$4HxwgUir3HP4EsggP/QNo0",
+       ]
+
+[api]
+entrypoint="web-ui"

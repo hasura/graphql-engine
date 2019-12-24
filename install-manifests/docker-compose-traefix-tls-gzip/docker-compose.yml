@@ -34,6 +34,7 @@ services:
     volumes:
       - ~/acme.json:/acme.json
       - /var/run/docker.sock:/var/run/docker.sock # So that Traefik can listen to the Docker events
+      - ./traefik.toml:/traefik.toml
   postgres:
     image: postgres
     restart: always
@@ -73,7 +74,7 @@ services:
       - 'traefik.http.middlewares.testHeader.headers.framedeny=true'
       - 'traefik.http.middlewares.testHeader.headers.sslredirect=true'
       # CORS
-      - 'traefik.http.middlewares.testheader.headers.accesscontrolallowmethods=GET,OPTIONS,PUT'
+      - 'traefik.http.middlewares.testheader.headers.accesscontrolallowmethods=GET,PUT,POST,PATCH,DELETE,HEAD,OPTIONS'
       - 'traefik.http.middlewares.testheader.headers.accesscontrolalloworigin=origin-list-or-null'
       - 'traefik.http.middlewares.testheader.headers.accesscontrolmaxage=100'
       - 'traefik.http.middlewares.testheader.headers.addvaryheader=true'

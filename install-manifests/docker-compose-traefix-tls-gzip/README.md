@@ -1,6 +1,6 @@
-# Hasura GraphQL Engine on Docker with Traefix (Reverse Proxy and Load Balancer)
+# Hasura GraphQL Engine on Docker with Traefik (Reverse Proxy and Load Balancer)
 
-This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura/graphql-engine) along with Postgres, Platypus (authentication), and Traefix (a reverse proxy and load balancer, it's officially classified as an edge router) using `docker-compose`.
+This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura/graphql-engine) along with Postgres, [Platypus](https://github.com/platyplus/authentication-server) (authentication), and [Traefix](https://docs.traefik.io/) (a reverse proxy and load balancer, it's officially classified as an edge router) using `docker-compose`.
 
 The platypus and Hasura engine will be both serving with TLS enabled behind _Traefix_. They will have HSTS (TLS Security headers) enabled and gzip compression enabled, and CORS enabled. These are confiurable from the `labels` section in the `docker-compose.yml`.
 
@@ -13,14 +13,20 @@ The platypus and Hasura engine will be both serving with TLS enabled behind _Tra
 
 - Clone this repo on a machine where you'd like to deploy graphql engine
 - Edit the environment variables in the `.env` file.
-  - **NOTE**: Your public key and private key have to be formatted with newlines. This can be achieved with `awk -v ORS='\\n' '1' public_key.pem`.
+  - **NOTE**: Your public key and private key have to be formatted with newlines. This can be achieved with `awk -v ORS='\\n' '1' public_key.pem`. These keys will be utilized for JWT authentication.
 - Add an `acme.json` in your home directory (`~`) and leave it empty. This can be done with `touch ~/acme.json`. Feel free to move this volume elsewhere to your liking.
+- Traefik will have the Web UI enabled with BASIC Authentication enabled. Please change the dummy credentials provided in the Traefik config file, [`traefik.toml`](./traefik.toml).
+- Run: `docker network create traefik_webgateway`. This network is Docker Compose service agnostic thus we create it externally.
 - `docker-compose up -d`
 
 To view logs: `docker-compose logs -f`.
 
 GraphQL endpoint will be `https://<your-domain.com>/v1/graphql`
 Console will be available on `https://<your-domain.com>/console`
+
+## Security
+
+Traefik has CORS preconfigured. Please feel free to modify the CORS settings to be more restrictive/lenient to your liking.
 
 ## Connecting to External Postgres
 
