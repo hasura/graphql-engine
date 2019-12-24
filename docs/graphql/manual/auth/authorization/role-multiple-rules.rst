@@ -10,21 +10,21 @@ Use case
 --------
 
 In some cases we might want to allow access to certain columns for a role only if a particular condition is met
-while allowing access to other columns based on a different condition.
+while allowing access to other columns based on a different condition
 i.e. have different column permissions based on different row permissions.
 
 Currently it is not possible to define multiple column + row permission rules for the same role.
 
 We can work around this limitation by using :ref:`views <custom_views>`.
 
-**For example**
+**Example**
 
 Let's say we have a table called ``user_info`` with columns ``(id, name, city, email, phone, address)``.
 
 We want the role ``user`` to be able to access:
 
-- the ``email``, ``phone`` and ``address`` columns only if the ``id`` column is the requesting user's id, i.e. current
-  user is owner of the row.
+- the ``email``, ``phone`` and ``address`` columns only if the ``id`` column is the requesting user's id i.e. the current
+  user is the owner of the row.
 
 - the ``id``, ``name`` and ``city`` columns for all rows.
 
@@ -59,7 +59,7 @@ For the role ``user``, create the following permissions for ``select``:
 .. thumbnail:: ../../../../img/graphql/manual/auth/multiple-rules-define-public-permissions.png
 
 - View ``user_private``: allow access to ``id``, ``phone``, ``email`` and ``address`` if the ``user-id``
-  passed in the session variable is equal to row's ``user_id``
+  passed in the session variable is equal to the row's ``user_id``.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/multiple-rules-define-private-permissions.png
 
@@ -68,7 +68,7 @@ Step 4: Query with appropriate access control
 
 Now we can fetch the required data with the appropriate access control by using the relationship.
 
-If the ``X-Hasura-Role`` and the ``X-Hasura-User-Id`` session variables are set to ``user`` and ``2`` respectively:
+If the ``X-Hasura-Role`` and the ``X-Hasura-User-Id`` session variables are set to ``user`` and ``2`` respectively, we'll get the following result:
 
 .. graphiql::
   :view_only:
@@ -116,4 +116,3 @@ If the ``X-Hasura-Role`` and the ``X-Hasura-User-Id`` session variables are set 
     }
 
 Note that the ``private_info`` field is returned as ``null`` for all rows without the appropriate access.
-

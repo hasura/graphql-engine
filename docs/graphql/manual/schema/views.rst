@@ -13,7 +13,7 @@ What are views?
 ---------------
 
 `Views <https://www.postgresql.org/docs/current/sql-createview.html>`_ can be used to expose the results of a custom
-query as a virtual table. Views are not persisted physically, i.e. the query defining a view is executed whenever
+query as a virtual table. Views are not persisted physically i.e. the query defining a view is executed whenever
 data is requested from the view.
 
 Hasura GraphQL engine lets you expose views over the GraphQL API to allow querying them using both ``queries`` and
@@ -68,4 +68,3 @@ Let's say our ``author`` table has the fields ``id, name, city, email, phone, ad
   CREATE VIEW author_public AS
     SELECT id, name, city
       FROM author
-
