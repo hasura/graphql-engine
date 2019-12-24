@@ -85,7 +85,7 @@ generateScheduledEvents :: Q.TxE QErr ()
 generateScheduledEvents = do
   allSchedules <- map uncurrySchedule <$> Q.listQE defaultTxErrorHandler
       [Q.sql|
-       SELECT st.name, st.webhook, st.schedule, st.payload
+       SELECT st.name, st.webhook, st.schedule, st.payload, st.retry_conf
         FROM hdb_catalog.hdb_scheduled_trigger st
       |] () False
   currentTime <- liftIO getCurrentTime
@@ -106,12 +106,13 @@ generateScheduledEvents = do
     toArr (ScheduledEvent _ n w p t) =
       n : w : (TE.decodeUtf8 . LBS.toStrict $ J.encode p) : (pure $ formatTime' t)
     toTupleExp = TupleExp . map SELit
-    uncurrySchedule (n, w, st, p) =
+    uncurrySchedule (n, w, st, p, Q.AltJ rc) =
       ScheduledTrigger
-      { stName = n,
-        stWebhook = w,
-        stSchedule = fromBS st,
-        stPayload = Q.getAltJ <$> p
+      { stName = n
+      , stWebhook = w
+      , stSchedule = fromBS st
+      , stPayload = Q.getAltJ <$> p
+      , stRetryConf = rc
       }
     fromBS st = fromMaybe (OneOff endOfTime) $ J.decodeStrict' st
 

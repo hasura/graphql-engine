@@ -22,6 +22,8 @@ extra-deps:
   commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
 - git: https://github.com/hasura/ci-info-hs.git
   commit: ad6df731584dc89b72a6e131687d37ef01714fe8
+- git: https://github.com/hasura/cron.git
+  commit: cc35408f4a05575d8305f5c45bdfeeb31dd3ea5b
 
 # extra dep for pg-client-hs
 - select-0.4.0.1

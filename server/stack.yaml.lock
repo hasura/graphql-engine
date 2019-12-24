@@ -47,6 +47,20 @@ packages:
     git: https://github.com/hasura/ci-info-hs.git
     commit: ad6df731584dc89b72a6e131687d37ef01714fe8
 - completed:
+    cabal-file:
+      size: 3947
+      sha256: 8c06d160d745978f2167aed7be788ff3d95b57c515e0de52cf2638c1d530004d
+    name: cron
+    version: 0.6.1
+    git: https://github.com/hasura/cron.git
+    pantry-tree:
+      size: 1882
+      sha256: 72d4503f9d73c71f50d273b30598853cf5b0a359a3ca62e991e09e70a76a2274
+    commit: cc35408f4a05575d8305f5c45bdfeeb31dd3ea5b
+  original:
+    git: https://github.com/hasura/cron.git
+    commit: cc35408f4a05575d8305f5c45bdfeeb31dd3ea5b
+- completed:
     hackage: select-0.4.0.1@sha256:d409315752a069693bdd4169fa9a8ea7777d814da77cd8604f367cf0741de295,2492
     pantry-tree:
       size: 1256

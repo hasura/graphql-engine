@@ -2,8 +2,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.RQL.DDL.ScheduledTrigger
-  ( ScheduledTriggerQuery(..)
-  , runCreateScheduledTrigger
+  ( runCreateScheduledTrigger
   , ScheduleType(..)
   , ScheduledTrigger(..)
   , formatTime'
@@ -18,13 +17,10 @@ import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache (CacheBuildM)
-import           Hasura.RQL.DDL.Utils
-import           Hasura.RQL.Types.Common     (NonEmptyText)
-import           Instances.TH.Lift           ()
+import           Hasura.RQL.Types            (successMsg)
 import           Language.Haskell.TH.Syntax  as TH
 import           System.Cron.Parser
 import           System.Cron.Types
-
 
 import qualified Data.Aeson                  as J
 import qualified Data.Text                   as T
@@ -35,43 +31,44 @@ import qualified Database.PG.Query           as Q
 formatTime' :: UTCTime -> T.Text
 formatTime'= T.pack . formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S Z"
 
+instance TH.Lift DiffTime where
+  lift x = [|picosecondsToDiffTime x'|]
+    where
+      x' = diffTimeToPicoseconds x
+
 data RetryConf
   = RetryConf
   { rcNumRetries  :: !Int
   , rcIntervalSec :: !Int
-  , rcTimeoutSec  :: !(Maybe Int)
+  , rcTimeoutSec  :: !Int
   , rcTolerance   :: !DiffTime
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
+defaultRetryConf :: RetryConf
+defaultRetryConf =
+  RetryConf
+  { rcNumRetries = 1
+  , rcIntervalSec = 10
+  , rcTimeoutSec = 60
+  , rcTolerance = fromInteger 21600 -- 6 hours
+  }
+
+instance TH.Lift UTCTime
+
 data ScheduleType = OneOff UTCTime | Cron CronSchedule
-  deriving (Show, Eq)
+  deriving (Show, Eq, Lift)
 
 $(deriveJSON (defaultOptions){sumEncoding=TaggedObject "type" "value"} ''ScheduleType)
 
 data ScheduledTrigger
   = ScheduledTrigger
-  { stName     :: !T.Text
-  , stWebhook  :: !T.Text
-  , stSchedule :: !ScheduleType
-  , stPayload  :: !(Maybe J.Value)
-  }
-  deriving (Show, Eq)
-
--- TODO :: Change stqSchedule to ScheduleType after writing TH.Lift instances
-
-data ScheduleTypeUnstrict = UnstrictOneOff T.Text | UnstrictCron T.Text
-  deriving (Show, Eq, Lift)
-
-$(deriveJSON (defaultOptions){constructorTagModifier = drop 8,  sumEncoding=TaggedObject "type" "value"} ''ScheduleTypeUnstrict)
-
-data ScheduledTriggerQuery
-  = ScheduledTriggerQuery
-  { stqName     :: !NonEmptyText
-  , stqWebhook  :: !NonEmptyText
-  , stqSchedule :: !ScheduleTypeUnstrict
-  , stqPayload  :: !(Maybe J.Value)
+  { stName      :: !T.Text
+  , stWebhook   :: !T.Text
+  , stSchedule  :: !ScheduleType
+  , stPayload   :: !(Maybe J.Value)
+  , stRetryConf :: !RetryConf
   }
   deriving (Show, Eq, Lift)
 
@@ -82,29 +79,24 @@ instance FromJSON CronSchedule where
 instance ToJSON CronSchedule where
   toJSON = J.String . serializeCronSchedule
 
-instance FromJSON ScheduledTriggerQuery where
+instance FromJSON ScheduledTrigger where
   parseJSON =
-    withObject "ScheduledTriggerQuery" $ \o -> do
-      stqName <- o .: "name"
-      stqWebhook <- o .: "webhook"
-      stqPayload <- o .:? "payload"
-      stqScheduleUnstrict :: ScheduleTypeUnstrict <- o .: "schedule"
-      scheduleType :: ScheduleType <-
-        either fail pure $ eitherDecode' (J.encode stqScheduleUnstrict)
-      stqSchedule <-
-        case scheduleType of
-          OneOff utcTime -> pure $ UnstrictOneOff (formatTime' utcTime)
-          Cron cron      -> pure $ UnstrictCron (serializeCronSchedule cron)
-      pure ScheduledTriggerQuery {..}
+    withObject "ScheduledTriggerQuery " $ \o -> do
+      stName <- o .: "name"
+      stWebhook <- o .: "webhook"
+      stPayload <- o .:? "payload"
+      stSchedule <- o .: "schedule"
+      stRetryConf <- o .:? "retry_conf" .!= defaultRetryConf
+      pure ScheduledTrigger {..}
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ScheduledTriggerQuery)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ScheduledTrigger)
 
-runCreateScheduledTrigger :: CacheBuildM m => ScheduledTriggerQuery ->  m EncJSON
-runCreateScheduledTrigger ScheduledTriggerQuery{..} = do
+runCreateScheduledTrigger :: CacheBuildM m => ScheduledTrigger ->  m EncJSON
+runCreateScheduledTrigger ScheduledTrigger {..} = do
   liftTx $  Q.unitQE defaultTxErrorHandler
          [Q.sql|
            INSERT into hdb_catalog.hdb_scheduled_trigger
-                       (name, webhook, schedule, payload)
-           VALUES ($1, $2, $3, $4)
-         |] (stqName, stqWebhook, Q.AltJ $ toJSON stqSchedule, Q.AltJ <$> stqPayload) False
+                       (name, webhook, schedule, payload, retry_conf)
+           VALUES ($1, $2, $3, $4, $5)
+         |] (stName, stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf) False
   return successMsg

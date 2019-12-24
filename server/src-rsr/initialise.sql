@@ -668,7 +668,8 @@ CREATE TABLE hdb_catalog.hdb_scheduled_trigger
   name TEXT PRIMARY KEY,
   webhook TEXT NOT NULL,
   schedule JSON NOT NULL,
-  payload JSON
+  payload JSON,
+  retry_conf JSON
 );
 
 CREATE TABLE hdb_catalog.hdb_scheduled_events
