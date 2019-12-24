@@ -44,7 +44,7 @@ Step 1: Create a view
 Step 2: Create a relationship
 -----------------------------
 
-For the table ``user_info``, :ref:`create <create_manual_relationships>` a manual object relationship called
+For the table ``user_info``, create a :ref:`manual object relationship <create_manual_relationships>` called
 ``private_info`` using ``user_info : id -> user_private : user_id``:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/multiple-rules-create-manual-relationship.png
