@@ -52,15 +52,8 @@ const toPayload = {
 
 const fromPayload = {
   "sdl": {
-    "action": "type Mutation { actionName (arg1: SampleInput!): SampleOutput }",
-    "types": "type SampleOutput { accessToken: String! } input SampleInput { username: String! password: String! }"
+    "complete": `type Mutation { actionName (arg1: SampleInput!): SampleOutput }\ntype SampleOutput { accessToken: String! } input SampleInput { username: String! password: String! }`
   },
-  "types": {
-    "scalars": [],
-    "enums": [],
-    "input_objects": [],
-    "objects": []
-  }
 };
 
 module.exports = {

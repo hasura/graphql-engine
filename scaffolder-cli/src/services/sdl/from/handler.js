@@ -1,4 +1,4 @@
-const { getActionDefinitionFromSdl, getServerTypesFromSdl  } = require('../../../shared/utils/sdlUtils');
+const { getAllActionsFromSdl, getAllTypesFromSdl } = require('../../../shared/utils/sdlUtils');
 
 const handlePayload = (payload) => {
 
@@ -7,37 +7,45 @@ const handlePayload = (payload) => {
     status: 200
   };
 
-  const { sdl, types: existingTypes } = payload;
+  const { sdl } = payload;
 
-  const { types: customTypes, error: typesParseError } = getServerTypesFromSdl(sdl.types, existingTypes);
+  let customTypes, typesParseError;
+  try {
+    customTypes = getAllTypesFromSdl(sdl.complete);
+  } catch (e) {
+    typesParseError = e;
+  }
+  
 
   if (typesParseError) {
     response.body = {
-      error: typesParseError
+      error: typesParseError.message
     };
     response.status = 400;
     return response;
   }
 
-  const { name: actionName, arguments: args, outputType, error: actionsParseError } = getActionDefinitionFromSdl(sdl.action);
+  let allActions, actionsParseError;
+  try {
+    allActions = getAllActionsFromSdl(sdl.complete);
+  } catch (e) {
+    actionsParseError = e;
+  }
 
   if (actionsParseError) {
     response.body = {
-      error: actionsParseError
+      error: actionsParseError.message
     };
     response.status = 400;
   }
 
   response.body = {
-    action: {
-      arguments: args,
-      output_type: outputType,
-      name: actionName
-    },
+    actions: allActions,
     types: customTypes
   };
 
   return response;
+
 }
 
 const requestHandler = (payload) => {
