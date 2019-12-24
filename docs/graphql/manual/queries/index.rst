@@ -6,6 +6,9 @@ Queries
   :depth: 1
   :local:
 
+Introduction
+------------
+
 GraphQL queries are used to fetch data from the server.
 
 Hasura GraphQL engine auto-generates queries as part of the GraphQL schema from your Postgres schema model.

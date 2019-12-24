@@ -301,31 +301,40 @@ queryNeedsReload (RQV2 qi) = case qi of
   RQV2SetTableCustomFields _ -> True
   RQV2TrackFunction _        -> True
 
--- TODO: RQSelect query should also be run in READ ONLY mode.
--- But this could be part of console's bulk statement and hence should be added after console changes
 getQueryAccessMode :: (MonadError QErr m) => RQLQuery -> m Q.TxAccess
-getQueryAccessMode (RQV1 q) =
-  case q of
-    RQRunSql RunSQL{rTxAccessMode} -> pure rTxAccessMode
-    RQBulk qs -> assertAllTxAccess (zip [0::Integer ..] qs)
-    _                              -> pure Q.ReadWrite
+getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q
   where
-    assertAllTxAccess = \case
-      [] -> throw400 BadRequest "expected atleast one query in bulk"
-      (_i, q1):[] -> getQueryAccessMode q1
-      q1:q2:qs -> assertSameTxAccess q1 q2 >> assertAllTxAccess (q2:qs)
+    getQueryAccessMode' ::
+         (MonadError QErr m) => RQLQuery -> m (Maybe Q.TxAccess)
+    getQueryAccessMode' (RQV1 q') =
+      case q' of
+        RQSelect _ -> pure Nothing
+        RQCount _ -> pure Nothing
+        RQRunSql RunSQL {rTxAccessMode} -> pure $ Just rTxAccessMode
+        RQBulk qs -> foldM reconcileAccessModeWith Nothing (zip [0 :: Integer ..] qs)
+        _ -> pure $ Just Q.ReadWrite
+      where
+        reconcileAccessModeWith expectedMode (i, query) = do
+          queryMode <- getQueryAccessMode' query
+          onLeft (reconcileAccessModes expectedMode queryMode) $ \errMode ->
+            throw400 BadRequest $
+            "incompatible access mode requirements in bulk query, " <>
+            "expected access mode: " <>
+            (T.pack $ maybe "ANY" show expectedMode) <>
+            " but " <>
+            "$.args[" <>
+            (T.pack $ show i) <>
+            "] forces " <>
+            (T.pack $ show errMode)
+    getQueryAccessMode' (RQV2 _) = pure $ Just Q.ReadWrite
 
-    assertSameTxAccess (i1, q1) (i2, q2) = do
-      accessModeQ1 <- getQueryAccessMode q1
-      accessModeQ2 <- getQueryAccessMode q2
-      if (accessModeQ1 /= accessModeQ2)
-        then
-        throw400 BadRequest $ "incompatible access mode requirements in bulk query: "
-        <> "$.args[" <> (T.pack $ show i1) <> "] requires " <> (T.pack $ show accessModeQ1) <> ", "
-        <> "$.args[" <> (T.pack $ show i2) <> "] requires " <> (T.pack $ show accessModeQ2)
-        else
-        pure accessModeQ1
-getQueryAccessMode (RQV2 _) = pure Q.ReadWrite
+-- | onRight, return reconciled access mode. onLeft, return conflicting access mode
+reconcileAccessModes :: Maybe Q.TxAccess -> Maybe Q.TxAccess -> Either Q.TxAccess (Maybe Q.TxAccess)
+reconcileAccessModes Nothing mode = pure mode
+reconcileAccessModes mode Nothing = pure mode
+reconcileAccessModes (Just mode1) (Just mode2)
+  | mode1 == mode2 = pure $ Just mode1
+  | otherwise = Left mode2
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
