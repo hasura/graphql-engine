@@ -12,7 +12,7 @@ const ERROR_IGNORE = 'error ignore'
 const resolveScaffolderPath = (framework, scaffoldConfig) => {
   let scaffolderName = framework || scaffoldConfig.default;
   if (!scaffolderName) return;
-  let scaffolderPath = scaffoldConfig.custom_scaffolders && scaffoldConfig.custom_scaffolders[scaffolderName];
+  let scaffolderPath = scaffoldConfig.custom_scaffolders ? scaffoldConfig.custom_scaffolders[scaffolderName] : null;
   if (!scaffolderPath) {
     scaffolderPath = getTemplatePath(scaffolderName)
   }
