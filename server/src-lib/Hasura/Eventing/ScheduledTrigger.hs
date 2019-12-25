@@ -46,9 +46,6 @@ oneMinute = 60 * oneSecond
 oneHour :: Int
 oneHour = 60 * oneMinute
 
-endOfTime :: UTCTime
-endOfTime = read "2999-12-31 00:00:00 Z"
-
 type ScheduledEventPayload = J.Value
 
 scheduledEventsTable :: QualifiedTable
@@ -165,23 +162,27 @@ processScheduledEvent ::
   -> ScheduledTriggerInfo
   -> ScheduledEvent
   -> m ()
-processScheduledEvent pgpool httpMgr ScheduledTriggerInfo{..} se@ScheduledEvent{..} = do
+processScheduledEvent pgpool httpMgr ScheduledTriggerInfo {..} se@ScheduledEvent {..} = do
   currentTime <- liftIO getCurrentTime
   if diffUTCTime currentTime seScheduledTime > rcstTolerance stiRetryConf
-  then undefined -- do nothing
-  else do
-    let webhook = wciCachedValue stiWebhookInfo
-        timeoutSeconds = 60
-        responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
-        headers = map encodeHeader stiHeaders
-        headers' = addDefaultHeaders headers
-    --     ep = createEventPayload retryConf e
-    res <- runExceptT $ tryWebhook httpMgr responseTimeout headers' sePayload webhook
+    then processDead'
+    else do
+      let webhook = wciCachedValue stiWebhookInfo
+          timeoutSeconds = rcstTimeoutSec stiRetryConf
+          responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
+          headers = map encodeHeader stiHeaders
+          headers' = addDefaultHeaders headers
+      res <-
+        runExceptT $
+        tryWebhook httpMgr responseTimeout headers' sePayload webhook
     -- let decodedHeaders = map (decodeHeader logenv headerInfos) headers
-    finally <- either
-      (processError pgpool se)
-      (processSuccess pgpool se) res
-    either logQErr return finally
+      finally <- either (processError pgpool se) (processSuccess pgpool se) res
+      either logQErr return finally
+  where
+    processDead' =
+      processDead pgpool se >>= \case
+        Left err -> logQErr err
+        Right _ -> pure ()
 
 tryWebhook ::
      ( MonadReader r m
@@ -264,6 +265,20 @@ processSuccess pgpool se resp = do
         SET delivered = 't', locked = 'f'
         WHERE id = $1
       |] (Identity $ seId se) True
+
+processDead :: (MonadIO m) => Q.PGPool -> ScheduledEvent -> m (Either QErr ())
+processDead pgpool se =
+  liftIO $
+  runExceptT $ Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) markDead
+  where
+    markDead =
+      Q.unitQE
+        defaultTxErrorHandler
+        [Q.sql|
+          UPDATE hdb_catalog.hdb_scheduled_events
+          SET dead = 't', locked = 'f'
+          WHERE id = $1
+        |] (Identity $ seId se) False
 
 mkInvo
   :: ScheduledEvent -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
