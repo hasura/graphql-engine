@@ -1,20 +1,21 @@
 package commands
 
 import (
-	"github.com/hasura/graphql-engine/cli/version"
 	"net/url"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/hasura/graphql-engine/cli"
 	"github.com/sirupsen/logrus/hooks/test"
+
+	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/version"
 )
 
-func testMetadataDropInconsistencyCmd(t *testing.T, migrationsDir string,  metadataFile string, endpoint *url.URL) {
+func testMetadataInconsistencyDropCmd(t *testing.T, migrationsDir string, metadataFile string, endpoint *url.URL) {
 	logger, _ := test.NewNullLogger()
-	opts := &metadataDropInconsistencyOptions{
+	opts := &metadataInconsistencyDropOptions{
 		EC: &cli.ExecutionContext{
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
@@ -25,9 +26,8 @@ func testMetadataDropInconsistencyCmd(t *testing.T, migrationsDir string,  metad
 				ParsedEndpoint: endpoint,
 			},
 			MigrationDir: migrationsDir,
-
 		},
-		actionType:  "dropInconsistency",
+		actionType: "dropInconsistency",
 	}
 
 	opts.EC.Version = version.New()

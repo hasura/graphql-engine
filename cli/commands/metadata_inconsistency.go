@@ -5,13 +5,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewMetadataInconsistecyCmd(ec *cli.ExecutionContext) *cobra.Command {
+func newMetadataInconsistencyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataInconsistencyCmd := &cobra.Command{
 		Use:          "inconsistency",
+		Short:        "Manage inconsistent objects in Hasura Metadata",
 		Aliases:      []string{"inconsistencies", "ic"},
 		SilenceUsage: true,
 	}
 
-	metadataInconsistencyCmd.AddCommand()
+	metadataInconsistencyCmd.AddCommand(
+		newMetadataInconsistencyListCmd(ec),
+		newMetadataInconsistencyDropCmd(ec),
+		newMetadataInconsistencyStatusCmd(ec),
+	)
 	return metadataInconsistencyCmd
 }

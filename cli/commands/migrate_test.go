@@ -263,7 +263,7 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	testMetadataExport(t, metadataFile, endpoint)
 	compareMetadata(t, metadataFile, "empty-metadata", versionCtx.ServerSemver)
 
-	testMetadataDropInconsistencyCmd(t, migrationsDir, metadataFile, endpoint)
+	testMetadataInconsistencyDropCmd(t, migrationsDir, metadataFile, endpoint)
 }
 
 func mustWriteFile(t testing.TB, dir, file string, body string) {

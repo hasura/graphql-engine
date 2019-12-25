@@ -7,33 +7,37 @@ import (
 	"github.com/spf13/viper"
 )
 
-func newMetadataInconsistencyDropCmd(ec *cli.ExecutionContext) *cobra.Command {
+func newMetadataInconsistencyStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	opts := &metadataInconsistencyDropOptions{
+	opts := &metadataInconsistencyListOptions{
 		EC: ec,
 	}
 
-	metadataInconsistencyDropCmd := &cobra.Command{
-		Use:          "drop",
-		Short:        "Drop inconsistent objects from the metadata",
+	metadataInconsistencyStatusCmd := &cobra.Command{
+		Use:          "status",
+		Short:        "Check if the metadata is inconsistent or not",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.EC.Spin("Dropping inconsistent metadata...")
-			err := opts.run()
+			opts.EC.Spin("reading metadata status...")
+			err := opts.read()
 			opts.EC.Spinner.Stop()
 			if err != nil {
-				return errors.Wrap(err, "failed to drop inconsistent metadata")
+				return errors.Wrap(err, "failed to read metadata status")
 			}
-			opts.EC.Logger.Info("all inconsistent objects removed from metadata")
+			if opts.isConsistent {
+				opts.EC.Logger.Println("metadata is consistent")
+			} else {
+				return errors.New("metadata is inconsistent, use list command to see the objects")
+			}
 			return nil
 		},
 	}
 
-	f := metadataInconsistencyDropCmd.Flags()
+	f := metadataInconsistencyStatusCmd.Flags()
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
@@ -44,17 +48,5 @@ func newMetadataInconsistencyDropCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
 	v.BindPFlag("access_key", f.Lookup("access-key"))
 
-	return metadataInconsistencyDropCmd
-}
-
-type metadataInconsistencyDropOptions struct {
-	EC *cli.ExecutionContext
-}
-
-func (o *metadataInconsistencyDropOptions) run() error {
-	d, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
-	if err != nil {
-		return err
-	}
-	return d.DropInconsistentMetadata()
+	return metadataInconsistencyStatusCmd
 }
