@@ -68,6 +68,7 @@ const RESET_COLUMN_TYPE_INFO = 'Data/RESET_COLUMN_TYPE_INFO';
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
+const SET_FILTER_SCHEMA = 'Data/SET_FILTER_SCHEMA';
 
 const SET_ADDITIONAL_COLUMNS_INFO = 'Data/SET_ADDITIONAL_COLUMNS_INFO';
 
@@ -77,112 +78,226 @@ export const setAllRoles = roles => ({
   roles,
 });
 
-const initQueries = {
-  schemaList: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'schemata',
-        schema: 'information_schema',
+const initQueries = (schemaFilter = []) => {
+  if (schemaFilter.length > 0) {
+    return {
+      schemaList: {
+        type: 'select',
+        args: {
+          table: {
+            name: 'schemata',
+            schema: 'information_schema',
+          },
+          columns: ['schema_name'],
+          order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
+          where: {
+            $and: [
+              {
+                schema_name: {
+                  $nin: [
+                    'information_schema',
+                    'pg_catalog',
+                    'hdb_catalog',
+                    'hdb_views',
+                  ],
+                },
+              },
+              {
+                schema_name: {
+                  $in: [...schemaFilter],
+                },
+              },
+            ],
+          },
+        },
       },
-      columns: ['schema_name'],
-      order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
-      where: {
-        schema_name: {
-          $nin: [
-            'information_schema',
-            'pg_catalog',
-            'hdb_catalog',
-            'hdb_views',
+      loadTrackedFunctions: {
+        type: 'select',
+        args: {
+          table: {
+            name: 'hdb_function',
+            schema: 'hdb_catalog',
+          },
+          columns: ['function_name', 'function_schema', 'is_system_defined'],
+          order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+          where: {
+            $and: [
+              {
+                function_schema: {
+                  $in: [...schemaFilter],
+                },
+              },
+            ],
+          },
+        },
+      },
+      loadTrackableFunctions: {
+        type: 'select',
+        args: {
+          table: {
+            name: 'hdb_function_agg',
+            schema: 'hdb_catalog',
+          },
+          columns: [
+            'function_name',
+            'function_schema',
+            'has_variadic',
+            'function_type',
+            'function_definition',
+            'return_type_schema',
+            'return_type_name',
+            'return_type_type',
+            'returns_set',
+            {
+              name: 'return_table_info',
+              columns: ['table_schema', 'table_name'],
+            },
+          ],
+          order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+          where: {
+            $and: [
+              {
+                function_schema: {
+                  $in: [...schemaFilter],
+                },
+              },
+            ],
+            has_variadic: false,
+            returns_set: true,
+            return_type_type: compositeFnCheck, // COMPOSITE type
+            $or: [
+              {
+                function_type: {
+                  $ilike: '%stable%',
+                },
+              },
+              {
+                function_type: {
+                  $ilike: '%immutable%',
+                },
+              },
+            ],
+          },
+        },
+      },
+      loadNonTrackableFunctions: {
+        type: 'select',
+        args: {
+          table: {
+            name: 'hdb_function_agg',
+            schema: 'hdb_catalog',
+          },
+          columns: [
+            'function_name',
+            'function_schema',
+            'has_variadic',
+            'function_type',
+            'function_definition',
+            'return_type_schema',
+            'return_type_name',
+            'return_type_type',
+            'returns_set',
+            {
+              name: 'return_table_info',
+              columns: ['table_schema', 'table_name'],
+            },
+          ],
+          order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+          where: {
+            $and: [
+              {
+                function_schema: {
+                  $in: [...schemaFilter],
+                },
+              },
+            ],
+            $not: {
+              has_variadic: false,
+              returns_set: true,
+              return_type_type: compositeFnCheck, // COMPOSITE type
+              $or: [
+                {
+                  function_type: {
+                    $ilike: '%stable%',
+                  },
+                },
+                {
+                  function_type: {
+                    $ilike: '%immutable%',
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+    };
+  }
+  return {
+    schemaList: {
+      type: 'select',
+      args: {
+        table: {
+          name: 'schemata',
+          schema: 'information_schema',
+        },
+        columns: ['schema_name'],
+        order_by: [{ column: 'schema_name', type: 'asc', nulls: 'last' }],
+        where: {
+          $and: [
+            {
+              schema_name: {
+                $nin: [
+                  'information_schema',
+                  'pg_catalog',
+                  'hdb_catalog',
+                  'hdb_views',
+                ],
+              },
+            },
           ],
         },
       },
     },
-  },
-  loadTrackedFunctions: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'hdb_function',
-        schema: 'hdb_catalog',
-      },
-      columns: ['function_name', 'function_schema', 'is_system_defined'],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
-      where: {
-        function_schema: '', // needs to be set later
+    loadTrackedFunctions: {
+      type: 'select',
+      args: {
+        table: {
+          name: 'hdb_function',
+          schema: 'hdb_catalog',
+        },
+        columns: ['function_name', 'function_schema', 'is_system_defined'],
+        order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+        where: {
+          $and: [],
+        },
       },
     },
-  },
-  loadTrackableFunctions: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'hdb_function_agg',
-        schema: 'hdb_catalog',
-      },
-      columns: [
-        'function_name',
-        'function_schema',
-        'has_variadic',
-        'function_type',
-        'function_definition',
-        'return_type_schema',
-        'return_type_name',
-        'return_type_type',
-        'returns_set',
-        {
-          name: 'return_table_info',
-          columns: ['table_schema', 'table_name'],
+    loadTrackableFunctions: {
+      type: 'select',
+      args: {
+        table: {
+          name: 'hdb_function_agg',
+          schema: 'hdb_catalog',
         },
-      ],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
-      where: {
-        function_schema: '', // needs to be set later
-        has_variadic: false,
-        returns_set: true,
-        return_type_type: 'c', // COMPOSITE type
-        return_table_info: {},
-        $or: [
+        columns: [
+          'function_name',
+          'function_schema',
+          'has_variadic',
+          'function_type',
+          'function_definition',
+          'return_type_schema',
+          'return_type_name',
+          'return_type_type',
+          'returns_set',
           {
-            function_type: {
-              $ilike: '%stable%',
-            },
-          },
-          {
-            function_type: {
-              $ilike: '%immutable%',
-            },
+            name: 'return_table_info',
+            columns: ['table_schema', 'table_name'],
           },
         ],
-      },
-    },
-  },
-  loadNonTrackableFunctions: {
-    type: 'select',
-    args: {
-      table: {
-        name: 'hdb_function_agg',
-        schema: 'hdb_catalog',
-      },
-      columns: [
-        'function_name',
-        'function_schema',
-        'has_variadic',
-        'function_type',
-        'function_definition',
-        'return_type_schema',
-        'return_type_name',
-        'return_type_type',
-        'returns_set',
-        {
-          name: 'return_table_info',
-          columns: ['table_schema', 'table_name'],
-        },
-      ],
-      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
-      where: {
-        function_schema: '', // needs to be set later
-        $not: {
+        order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+        where: {
+          $and: [],
           has_variadic: false,
           returns_set: true,
           return_type_type: 'c', // COMPOSITE type
@@ -202,7 +317,52 @@ const initQueries = {
         },
       },
     },
-  },
+    loadNonTrackableFunctions: {
+      type: 'select',
+      args: {
+        table: {
+          name: 'hdb_function_agg',
+          schema: 'hdb_catalog',
+        },
+        columns: [
+          'function_name',
+          'function_schema',
+          'has_variadic',
+          'function_type',
+          'function_definition',
+          'return_type_schema',
+          'return_type_name',
+          'return_type_type',
+          'returns_set',
+          {
+            name: 'return_table_info',
+            columns: ['table_schema', 'table_name'],
+          },
+        ],
+        order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+        where: {
+          $and: [],
+          $not: {
+            has_variadic: false,
+            returns_set: true,
+            return_type_type: compositeFnCheck, // COMPOSITE type
+            $or: [
+              {
+                function_type: {
+                  $ilike: '%stable%',
+                },
+              },
+              {
+                function_type: {
+                  $ilike: '%immutable%',
+                },
+              },
+            ],
+          },
+        },
+      },
+    },
+  };
 };
 
 export const mergeRemoteRelationshipsWithSchema = (
@@ -234,9 +394,14 @@ const fetchTrackedFunctions = () => {
     const url = Endpoints.getSchema;
 
     const currentSchema = getState().tables.currentSchema;
+    const { schemaFilter } = getState().tables;
 
-    const body = initQueries.loadTrackedFunctions;
-    body.args.where.function_schema = currentSchema;
+    const body = initQueries(schemaFilter).loadTrackedFunctions;
+    body.args.where.$and.push({
+      function_schema: {
+        $eq: currentSchema,
+      },
+    });
 
     const options = {
       credentials: globalCookiePolicy,
@@ -473,9 +638,10 @@ const setConsistentFunctions = data => ({
 const fetchDataInit = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
 
+  const { schemaFilter } = getState().tables;
   const body = {
     type: 'bulk',
-    args: [initQueries.schemaList],
+    args: [initQueries(schemaFilter).schemaList],
   };
 
   const options = {
@@ -498,12 +664,18 @@ const fetchDataInit = () => (dispatch, getState) => {
 
 const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const { schemaFilter } = getState().tables;
+  const {
+    loadTrackableFunctions,
+    loadNonTrackableFunctions,
+    loadTrackedFunctions,
+  } = initQueries(schemaFilter);
   const body = {
     type: 'bulk',
     args: [
-      initQueries.loadTrackableFunctions,
-      initQueries.loadNonTrackableFunctions,
-      initQueries.loadTrackedFunctions,
+      loadTrackableFunctions,
+      loadNonTrackableFunctions,
+      loadTrackedFunctions,
     ],
   };
 
@@ -558,11 +730,12 @@ const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
 /* ************ action creators *********************** */
 const fetchSchemaList = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const { schemaFilter } = getState().tables;
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify(initQueries.schemaList),
+    body: JSON.stringify(initQueries(schemaFilter).schemaList),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -969,6 +1142,11 @@ const dataReducer = (state = defaultState, action) => {
           };
         }),
       };
+    case SET_FILTER_SCHEMA:
+      return {
+        ...state,
+        schemaFilter: [...action.data],
+      };
     default:
       return state;
   }
@@ -979,6 +1157,7 @@ export {
   MAKE_REQUEST,
   REQUEST_SUCCESS,
   REQUEST_ERROR,
+  SET_FILTER_SCHEMA,
   setTable,
   updateSchemaInfo,
   handleMigrationErrors,

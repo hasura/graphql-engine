@@ -73,7 +73,14 @@ const routes = store => {
 
     return;
   };
-  const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
+  // const allowedSchemas = ['payroll', 'personal'];
+
+  const _dataRouterUtils = dataRouterUtils(
+    connect,
+    store,
+    composeOnEnterHooks,
+    {}
+  );
   const requireSchema = _dataRouterUtils.requireSchema;
   const dataRouter = _dataRouterUtils.makeDataRouter;
 
