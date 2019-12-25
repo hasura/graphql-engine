@@ -1,47 +1,14 @@
 const samplePayload = {
-    "action": {
-        "action_defn": {
-           "arguments": [
-              {
-                  "name": "arg1",
-                  "type": "SampleInput!"
-              }
-            ],
-            "output_type": "SampleOutput"
-        },
-        "name": "actionName"
-    },
-    "types": {
-        "scalars": [],
-        "input_objects": [
-            {
-                "name": "SampleInput",
-                "fields": [
-                    {
-                        "name": "username",
-                        "type": "String!"
-                    },
-                    {
-                        "name": "password",
-                        "type": "String!"
-                    }
-                ]
-            }
-        ],
-        "objects": [
-            {
-                "name": "SampleOutput",
-                "fields": [
-                    {
-                        "name": "accessToken",
-                        "type": "String!"
-                    }
-                ]
-            }
-        ],
-        "enums": []
-    },
-    "framework": "typescript-express"
+    "framework": "typescript-express",
+    "action_name": "actionName1",
+    "sdl": {
+        complete: `
+type Mutation { actionName1 (arg1: SampleInput!): SampleOutput }
+type SampleOutput { accessToken: String! }
+input SampleInput { username: String! password: String! }
+type Mutation { actionName2 (arg1: SampleInput!): SampleOutput }
+        `
+    }
 };
 
 module.exports = {

@@ -26,7 +26,7 @@ const handlePayload = (payload) => {
   if (actions) {
     try {
       actions.forEach(a => {
-        actionSdl += getActionDefinitionSdl(a.name, a.arguments, a.output_type) + '\n';
+        actionSdl += getActionDefinitionSdl(a.name, a.definition.arguments, a.definition.output_type) + '\n';
       })
     } catch (e) {
       actionSdlError = e;

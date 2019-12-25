@@ -13,7 +13,7 @@ const {
 // TODO sanity
 
 const deriveMutation = (mutationName, introspectionSchema, actionName) => {
-  const clientSchema = buildClientSchema(introspectionSchema.data);
+  const clientSchema = buildClientSchema(introspectionSchema);
   const mutationType = clientSchema._mutationType;
   if (!mutationType) {
     throw Error('this mutation does not exist in the Hasura schema');

@@ -1,24 +1,137 @@
+const fetch = require('node-fetch');
+const path = require('path')
+const fs = require('fs');
 const templaters = require('../../templaters');
+const { getTemplatePath } = require('../../utils/utils')
 
-const getFrameworkScaffold = async (framework, mutationSdl, typesSdl) => {
+const SCAFFOLDER_NOT_FOUND = 'given scaffolder not found';
+const FILE_SYSTEM_PATH = 'fs_path';
+const URL_PATH = 'url path';
+const ERROR_IGNORE = 'error ignore'
 
-  if (!templaters[framework]) {
-    return {
-      error: 'could not find the given scaffold'
+const sampleScaffoldConfig = {
+  default: 'typescript-express',
+  outputDir: 'somethingsomething',
+  customScaffolders: {
+    'typescript-express': '/tmp/tse.js'
+  }
+}
+
+const resolveScaffolderPath = (framework, scaffoldConfig) => {
+  let scaffolderName = framework || scaffoldConfig.default;
+  if (!scaffolderName) return;
+  let scaffolderPath = scaffoldConfig.customScaffolders[scaffolderName];
+  if (!scaffolderPath) {
+    scaffolderPath = getTemplatePath(scaffolderName)
+  }
+  return scaffolderPath;
+}
+
+const resolveScaffolderFromUrl = async (url) => {
+  let scaffolder;
+  try {
+    const fetchResp = await fetch(url);
+    if (fetchResp.status >= 300) {
+      throw Error(SCAFFOLDER_NOT_FOUND);
+    }
+    const scaffolderText = await fetch.text()
+    eval(`${scaffoldertext} scaffolder = templater`);
+    return scaffolder;
+  } catch (e) {
+    throw e;
+  }
+}
+
+const resolveScaffolderFromFs = async (fsPath) => {
+  let scaffolder;
+  try {
+    const scaffoldertext = fs.readFileSync(path.resolve(fsPath), { encoding: 'utf8'});
+    eval(`${scaffoldertext} scaffolder = templater`);
+    return scaffolder;
+  } catch (e) {
+    throw e;
+  }
+}
+
+const resolveScaffolder = async (framework, scaffoldConfig=sampleScaffoldConfig) => {
+  const scaffolderPath = resolveScaffolderPath(framework, scaffoldConfig);
+  let scaffolder
+  if (!scaffolderPath) {
+    throw Error(ERROR_IGNORE);
+  }
+
+  let pathType = URL_PATH;
+  try {
+    new URL(scaffolderPath)
+  } catch (_) {
+    pathType = FILE_SYSTEM_PATH;
+  }
+
+  try {
+    if (pathType === FILE_SYSTEM_PATH) {
+      scaffolder = await resolveScaffolderFromFs(scaffolderPath)
+    } else {
+      scaffolder = await resolveScaffolderFromUrl(scaffolderPath);
+    }
+  } catch (e) {
+    if (!framework) {
+      throw Error(ERROR_IGNORE);
+    } else {
+      throw e
+    }
+  }
+  
+  return scaffolder;
+
+}
+
+const getScaffoldFiles = async (framework, actionName, actionsSdl, derive) => {
+  let scaffolder;
+  try {
+    scaffolder = await resolveScaffolder(framework)
+  } catch (e) {
+    if (e.message === ERROR_IGNORE) {
+      return [];
+    } else {
+      throw e;
     }
   }
 
-  let scaffoldFiles = templaters[framework](mutationSdl, typesSdl);
-  if (scaffoldFiles && scaffoldFiles.constructor.name === 'Promise') {
-    scaffoldFiles = await scaffoldFiles;
+  let scaffolds = scaffolder(actionName, actionsSdl, derive);
+  if (scaffolds && scaffolds.constructor.name === 'Promise') {
+    scaffolds = await scaffolds;
   }
 
-  return {
-    files: scaffoldFiles
+  return scaffolds;
+
+}
+
+const getFrameworkScaffold = async (framework, actionName, actionsSdl, derive) => {
+
+  try {
+    const scaffoldFiles = await getScaffoldFiles(framework, actionName, actionsSdl, derive);
+    return {
+      files: scaffoldFiles
+    }
+  } catch (e) {
+    return {
+      error: e.message
+    }
   }
 
 };
+/*
+let aSdl = `
+type Mutation { actionName1 (arg1: SampleInput!): SampleOutput }
+type SampleOutput { accessToken: String! }
+input SampleInput { username: String! password: String! }
+type Mutation { actionName2 (arg1: SampleInput!): SampleOutput }
+`
 
+let aName = 'actionName2';
+
+getFrameworkScaffold('nodejs-zeit', aName, aSdl).then(s => console.log(s)).catch(e => console.log(e));
+*/
 module.exports = {
   getFrameworkScaffold 
 };
