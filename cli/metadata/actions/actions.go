@@ -50,7 +50,7 @@ type ActionExecutionConfig struct {
 type ScaffoldExecutionConfig struct {
 	Default           string            `json:"default,omitempty"`
 	OutputDir         string            `json:"output_dir,omitempty"`
-	CustomScaffolders map[string]string `json:"custom_scaffolders,omitempty"`
+	CustomScaffolders map[string]string `json:"custom_scaffolders"`
 }
 
 type ActionConfig struct {
@@ -187,7 +187,7 @@ input SampleInput {
 	return nil
 }
 
-func (a *ActionConfig) Scaffold(name string, scaffolderName string) error {
+func (a *ActionConfig) Scaffold(name string, scaffolderName string, derivePayload map[string]interface{}) error {
 	graphByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, graphqlFileName))
 	if err != nil {
 		return err
@@ -199,6 +199,7 @@ func (a *ActionConfig) Scaffold(name string, scaffolderName string) error {
 			"complete": string(graphByt),
 		},
 		"scaffold_config": a.ScaffoldConfig,
+		"derive": derivePayload,
 	}
 	dataByt, err := json.Marshal(data)
 	if err != nil {

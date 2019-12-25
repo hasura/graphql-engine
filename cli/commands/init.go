@@ -139,6 +139,11 @@ func (o *initOptions) createFiles() error {
 			Kind:    o.ActionKind,
 			Webhook: o.ActionWebhook,
 		},
+		Scaffold: &actions.ScaffoldExecutionConfig{
+			Default: "nodejs-zeit",
+			OutputDir: "./",
+			CustomScaffolders: make(map[string]string),
+		},
 	}
 	if o.Endpoint != "" {
 		config.Endpoint = o.Endpoint
