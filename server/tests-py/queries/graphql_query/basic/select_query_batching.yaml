@@ -1,0 +1,25 @@
+description: GraphQL query to test batching in the style of Apollo
+url: /v1/graphql
+status: 200
+response:
+  - data:
+      user:
+      - id: '1'
+      - id: '2'
+  - data:
+      author:
+      - id: 1
+      - id: 2
+query:
+  - query: |
+      query {
+        user {
+          id
+        }
+      }
+  - query: |
+      query {
+        author {
+          id
+        }
+      }
