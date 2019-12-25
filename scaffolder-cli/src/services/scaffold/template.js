@@ -9,18 +9,10 @@ const FILE_SYSTEM_PATH = 'fs_path';
 const URL_PATH = 'url path';
 const ERROR_IGNORE = 'error ignore'
 
-const sampleScaffoldConfig = {
-  default: 'typescript-express',
-  outputDir: 'somethingsomething',
-  customScaffolders: {
-    'typescript-express': '/tmp/tse.js'
-  }
-}
-
 const resolveScaffolderPath = (framework, scaffoldConfig) => {
   let scaffolderName = framework || scaffoldConfig.default;
   if (!scaffolderName) return;
-  let scaffolderPath = scaffoldConfig.customScaffolders[scaffolderName];
+  let scaffolderPath = scaffoldConfig.custom_scaffolders && scaffoldConfig.custom_scaffolders[scaffolderName];
   if (!scaffolderPath) {
     scaffolderPath = getTemplatePath(scaffolderName)
   }
@@ -85,10 +77,10 @@ const resolveScaffolder = async (framework, scaffoldConfig=sampleScaffoldConfig)
 
 }
 
-const getScaffoldFiles = async (framework, actionName, actionsSdl, derive) => {
+const getScaffoldFiles = async (framework, actionName, actionsSdl, derive, scaffoldConfig) => {
   let scaffolder;
   try {
-    scaffolder = await resolveScaffolder(framework)
+    scaffolder = await resolveScaffolder(framework, scaffoldConfig)
   } catch (e) {
     if (e.message === ERROR_IGNORE) {
       return [];
@@ -106,10 +98,10 @@ const getScaffoldFiles = async (framework, actionName, actionsSdl, derive) => {
 
 }
 
-const getFrameworkScaffold = async (framework, actionName, actionsSdl, derive) => {
+const getFrameworkScaffold = async (framework, actionName, actionsSdl, derive, scaffoldConfig) => {
 
   try {
-    const scaffoldFiles = await getScaffoldFiles(framework, actionName, actionsSdl, derive);
+    const scaffoldFiles = await getScaffoldFiles(framework, actionName, actionsSdl, derive, scaffoldConfig);
     return {
       files: scaffoldFiles
     }

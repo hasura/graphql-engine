@@ -5,9 +5,7 @@ const handler = async (payload) => {
   try {
     const scaffolds = await getActionScaffold(payload);
     return JSON.stringify({
-      data: {
-        scaffolds
-      }
+      scaffolds
     });
   } catch (e) {
     return JSON.stringify({

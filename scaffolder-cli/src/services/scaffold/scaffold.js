@@ -12,11 +12,13 @@ const getActionScaffold = async (payload) => {
     action_name: actionName,
     sdl: {
       complete: sdlComplete
-    }
+    },
+    derive,
+    scaffold_config: scaffoldConfig
   } = payload;
 
   try {
-    const scaffoldResp = await getFrameworkScaffold(framework, actionName, sdlComplete)
+    const scaffoldResp = await getFrameworkScaffold(framework, actionName, sdlComplete, derive, scaffoldConfig)
     if (scaffoldResp.error) {
       throw Error(scaffoldResp.error)
     } else {
