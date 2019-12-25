@@ -183,6 +183,9 @@ type ExecutionContext struct {
 
 	// SkipUpdateCheck will skip the auto update check if set to true
 	SkipUpdateCheck bool
+
+	// IsTerminal indicates whether the current session is a terminal or not
+	IsTerminal bool
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -203,6 +206,8 @@ func (ec *ExecutionContext) Prepare() error {
 		cmdName = "hasura"
 	}
 	ec.CMDName = cmdName
+
+	ec.IsTerminal = terminal.IsTerminal(int(os.Stdout.Fd()))
 
 	// set spinner
 	ec.setupSpinner()
@@ -338,12 +343,13 @@ func (ec *ExecutionContext) setupSpinner() {
 
 // Spin stops any existing spinner and starts a new one with the given message.
 func (ec *ExecutionContext) Spin(message string) {
-	if terminal.IsTerminal(int(os.Stdout.Fd())) {
+	if ec.IsTerminal {
 		ec.Spinner.Stop()
 		ec.Spinner.Prefix = message
 		ec.Spinner.Start()
+	} else {
+		ec.Logger.Println(message)
 	}
-	ec.Logger.Print(message)
 }
 
 // setupLogger creates a default logger if context does not have one set.
@@ -351,25 +357,25 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
 
-		if terminal.IsTerminal(int(os.Stdout.Fd())) {
-			logger.Formatter = &logrus.TextFormatter{
-				ForceColors:      true,
-				DisableTimestamp: true,
+		if ec.IsTerminal {
+			if ec.NoColor {
+				logger.Formatter = &logrus.TextFormatter{
+					DisableColors:    true,
+					DisableTimestamp: true,
+				}
+			} else {
+				logger.Formatter = &logrus.TextFormatter{
+					ForceColors:      true,
+					DisableTimestamp: true,
+				}
 			}
 		} else {
 			logger.Formatter = &logrus.JSONFormatter{
-				PrettyPrint:      true,
+				PrettyPrint: false,
 			}
 		}
 		logger.Out = colorable.NewColorableStdout()
 		ec.Logger = logger
-	}
-
-	if ec.NoColor && terminal.IsTerminal(int(os.Stdout.Fd())) {
-		ec.Logger.Formatter = &logrus.TextFormatter{
-			DisableColors:    true,
-			DisableTimestamp: true,
-		}
 	}
 
 	if ec.LogLevel != "" {
@@ -395,7 +401,7 @@ func (ec *ExecutionContext) setVersion() {
 	}
 }
 
-// GetMetadataPath returns the file path based on the format.
+// GetMetadataFilePath returns the file path based on the format.
 func (ec *ExecutionContext) GetMetadataFilePath(format string) (string, error) {
 	ext := fmt.Sprintf(".%s", format)
 	for _, filePath := range ec.MetadataFile {
