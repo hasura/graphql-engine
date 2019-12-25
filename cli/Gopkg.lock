@@ -253,17 +253,15 @@
   version = "v1.7.0"
 
 [[projects]]
-  digest = "1:7fbb40f65374cb64a7bf3f1f74e2cb4c4437d93bc3d8921cf7e3d7ad2ab20989"
+  digest = "1:5054b9e295c8ac1bd3223e1f66f65079c108e8e3e2fedf574cf2270cd9d984ac"
   name = "github.com/graphql-go/graphql"
   packages = [
-    ".",
     "gqlerrors",
     "language/ast",
     "language/kinds",
     "language/lexer",
     "language/location",
     "language/parser",
-    "language/printer",
     "language/source",
     "language/typeInfo",
     "language/visitor",
@@ -789,7 +787,10 @@
     "github.com/gin-gonic/contrib/renders/multitemplate",
     "github.com/gin-gonic/gin",
     "github.com/gofrs/uuid",
-    "github.com/graphql-go/graphql",
+    "github.com/graphql-go/graphql/language/ast",
+    "github.com/graphql-go/graphql/language/kinds",
+    "github.com/graphql-go/graphql/language/parser",
+    "github.com/graphql-go/graphql/language/visitor",
     "github.com/kardianos/osext",
     "github.com/lib/pq",
     "github.com/manifoldco/promptui",

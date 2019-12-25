@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli/metadata/actions"
+
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/manifoldco/promptui"
@@ -51,6 +53,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
+
+	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "")
+	f.StringVar(&opts.ActionWebhook, "action-webhook", "http://localhost:3000", "")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	return initCmd
@@ -62,6 +67,9 @@ type initOptions struct {
 	Endpoint    string
 	AdminSecret string
 	InitDir     string
+
+	ActionKind    string
+	ActionWebhook string
 }
 
 func (o *initOptions) run() error {
@@ -127,6 +135,10 @@ func (o *initOptions) createFiles() error {
 	// set config object
 	config := &cli.ServerConfig{
 		Endpoint: "http://localhost:8080",
+		Action: actions.ActionExecutionConfig{
+			Kind:    o.ActionKind,
+			Webhook: o.ActionWebhook,
+		},
 	}
 	if o.Endpoint != "" {
 		config.Endpoint = o.Endpoint

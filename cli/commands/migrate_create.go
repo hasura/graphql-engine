@@ -109,7 +109,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 
 	var migrateDrv *migrate.Migrate
 	if o.sqlServer || o.metaDataServer {
-		migrateDrv, err = newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
+		migrateDrv, err = newMigrate(o.EC.MigrationDir, o.EC.MetadataDir, o.EC.ServerConfig.Action, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot create migrate instance")
 		}

@@ -77,7 +77,7 @@ func (o *migrateSquashOptions) run() error {
 	o.EC.Logger.Warnln("This command is currently experimental and hence in preview, correctness of squashed migration is not guaranteed!")
 	o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
 	defer o.EC.Spinner.Stop()
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.MetadataDir, o.EC.ServerConfig.Action, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize migrations driver")
 	}

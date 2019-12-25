@@ -7,14 +7,13 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	gyaml "github.com/ghodss/yaml"
+	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/kinds"
 	"github.com/graphql-go/graphql/language/parser"
-	"github.com/graphql-go/graphql/language/printer"
-
-	gyaml "github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/printer"
 	"gopkg.in/yaml.v2"
 
-	"github.com/graphql-go/graphql/language/ast"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
@@ -35,82 +34,51 @@ type sdlFrom struct {
 	Actions []types.Action    `json:"actions"`
 }
 
-type ActionConfig struct {
-	MetadataDir string
+type sdlFromDerive struct {
+	Derive map[string]interface{} `json:"derive"`
 }
 
-func New(baseDir string) *ActionConfig {
+type scaffoldResponse struct {
+	Files []map[string]string `json:"scaffolds"`
+}
+
+type ActionExecutionConfig struct {
+	Kind    string `json:"kind"`
+	Webhook string `json:"webhook"`
+}
+
+type ScaffoldExecutionConfig struct {
+	Default           string            `json:"default,omitempty"`
+	OutputDir         string            `json:"output_dir,omitempty"`
+	CustomScaffolders map[string]string `json:"custom_scaffolders,omitempty"`
+}
+
+type ActionConfig struct {
+	MetadataDir    string
+	ActionConfig   ActionExecutionConfig
+	ScaffoldConfig *ScaffoldExecutionConfig
+}
+
+func New(baseDir string, actionConfig ActionExecutionConfig, scaffoldConfig *ScaffoldExecutionConfig) *ActionConfig {
 	return &ActionConfig{
-		MetadataDir: baseDir,
+		MetadataDir:    baseDir,
+		ActionConfig:   actionConfig,
+		ScaffoldConfig: scaffoldConfig,
 	}
 }
 
-func (a *ActionConfig) Create(name string) error {
-	// Parse the actions.graphql
+func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMutation string) error {
 	graphByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, graphqlFileName))
 	if err != nil {
 		return err
 	}
 	doc, err := parser.Parse(parser.ParseParams{
 		Source: string(graphByt),
-		Options: parser.ParseOptions{
-			NoLocation: true,
-		},
 	})
 	if err != nil {
 		return err
 	}
-	newDefaultMutation := &ast.ObjectDefinition{
-		Kind: kinds.ObjectDefinition,
-		Name: &ast.Name{
-			Kind:  kinds.Name,
-			Value: "Mutation",
-		},
-		Fields: make([]*ast.FieldDefinition, 0),
-	}
-	newDefaultField := &ast.FieldDefinition{
-		Kind: kinds.FieldDefinition,
-		Description: &ast.StringValue{
-			Kind:  kinds.StringValue,
-			Value: "Define your action as a mutation here",
-		},
-		Name: &ast.Name{
-			Kind:  kinds.Name,
-			Value: name,
-		},
-		Type: &ast.Named{
-			Kind: kinds.Named,
-			Name: &ast.Name{
-				Kind:  kinds.Name,
-				Value: "SampleOutput",
-			},
-		},
-		Arguments: make([]*ast.InputValueDefinition, 0),
-	}
-	newDefaultArg := &ast.InputValueDefinition{
-		Kind: kinds.InputValueDefinition,
-		Name: &ast.Name{
-			Kind:  kinds.Name,
-			Value: "arg1",
-		},
-		Type: &ast.NonNull{
-			Kind: kinds.NonNull,
-			Type: &ast.Named{
-				Kind: kinds.Named,
-				Name: &ast.Name{
-					Kind:  kinds.Name,
-					Value: "SampleInput",
-				},
-			},
-		},
-	}
-	newDefaultField.Arguments = append(newDefaultField.Arguments, newDefaultArg)
-	newDefaultMutation.Fields = append(newDefaultMutation.Fields, newDefaultField)
-	doc.Definitions = append([]ast.Node{newDefaultMutation}, doc.Definitions...)
 	for index, def := range doc.Definitions {
-		if index == 0 {
-			continue
-		}
 		switch obj := def.(type) {
 		case *ast.ObjectDefinition:
 			if obj.Kind == kinds.ObjectDefinition && obj.Name.Kind == kinds.Name && obj.Name.Value == "Mutation" {
@@ -122,12 +90,96 @@ func (a *ActionConfig) Create(name string) error {
 			}
 		}
 	}
+	var defaultSDL string
+	if introSchema == nil {
+		defaultSDL = `
+type Mutation {
+	""" Define your action as a mutation here """
+	` + name + ` (arg1: SampleInput!): SampleOutput
+}
+
+type SampleOutput {
+	accessToken: String!
+}
+
+input SampleInput {
+	username: String!
+	password: String!
+}
+`
+	} else {
+		from := sdlFromDerive{
+			Derive: map[string]interface{}{
+				"introspection_schema": introSchema,
+				"mutation": map[string]string{
+					"name":        deriveFromMutation,
+					"action_name": name,
+				},
+			},
+		}
+		fromByt, err := json.Marshal(from)
+		if err != nil {
+			return err
+		}
+		out, err := exec.Command("scaffolder", "sdl", "to", string(fromByt)).Output()
+		if err != nil {
+			return err
+		}
+		var to sdlTo
+		err = json.Unmarshal(out, &to)
+		if err != nil {
+			return err
+		}
+		defaultSDL = to.SDL["complete"]
+	}
+	newDoc, err := parser.Parse(parser.ParseParams{
+		Source: defaultSDL,
+	})
+	doc.Definitions = append(newDoc.Definitions, doc.Definitions...)
 	defaultText := printer.Print(doc).(string)
 	data, err := editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, defaultText)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(data))
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), data, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *ActionConfig) Scaffold(name string, scaffolderName string) error {
+	graphByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, graphqlFileName))
+	if err != nil {
+		return err
+	}
+	data := map[string]interface{}{
+		"action_name": name,
+		"framework":   scaffolderName,
+		"sdl": map[string]string{
+			"complete": string(graphByt),
+		},
+		"scaffold_config": a.ScaffoldConfig,
+	}
+	dataByt, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	out, err := exec.Command("scaffolder", "scaffold", string(dataByt)).Output()
+	if err != nil {
+		return err
+	}
+	var resp scaffoldResponse
+	err = json.Unmarshal(out, &resp)
+	if err != nil {
+		return err
+	}
+	for _, file := range resp.Files {
+		err = ioutil.WriteFile(filepath.Join(a.ScaffoldConfig.OutputDir, file["name"]), []byte(file["content"]), 0644)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -138,7 +190,6 @@ func (a *ActionConfig) Validate() error {
 func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	graphByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, graphqlFileName))
 	if err != nil {
-		fmt.Println("1")
 		return err
 	}
 	to := sdlTo{
@@ -148,40 +199,33 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	}
 	toByt, err := json.Marshal(to)
 	if err != nil {
-		fmt.Println("2")
 		return err
 	}
 	out, err := exec.Command("scaffolder", "sdl", "from", string(toByt)).Output()
 	if err != nil {
-		fmt.Println("3")
 		return err
 	}
 	var newAction sdlFrom
 	err = json.Unmarshal(out, &newAction)
 	if err != nil {
-		fmt.Println("4")
 		return err
 	}
 	// Read actions.yaml and custom_types.yaml
 	actionByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, actionsFileName))
 	if err != nil {
-		fmt.Println("5")
 		return err
 	}
 	cusTypeByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, customTypesFileName))
 	if err != nil {
-		fmt.Println("6")
 		return err
 	}
 	var oldAction sdlFrom
 	err = gyaml.Unmarshal(cusTypeByt, &oldAction.Types)
 	if err != nil {
-		fmt.Println("8")
 		return err
 	}
 	err = gyaml.Unmarshal(actionByt, &oldAction.Actions)
 	if err != nil {
-		fmt.Println("7")
 		return err
 	}
 	for actionIndex, action := range oldAction.Actions {
@@ -218,7 +262,6 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 		for newTypeObjIndex, newTypeObj := range newAction.Types.InputObjects {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				fmt.Println(newAction.Types.InputObjects[newTypeObjIndex].Fields)
 				newAction.Types.InputObjects[newTypeObjIndex].Description = oldAction.Types.InputObjects[customTypeIndex].Description
 				newAction.Types.InputObjects[newTypeObjIndex].Relationships = oldAction.Types.InputObjects[customTypeIndex].Relationships
 				break
@@ -257,7 +300,32 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 		}
 	}
 	metadata.Actions = newAction.Actions
+	for index, action := range metadata.Actions {
+		if action.Definition.Kind == "" {
+			metadata.Actions[index].Definition.Kind = a.ActionConfig.Kind
+		}
+		if action.Definition.Webhook == "" {
+			metadata.Actions[index].Definition.Webhook = a.ActionConfig.Webhook
+		}
+	}
 	metadata.CustomTypes = newAction.Types
+	// write actions.yaml and custom_types.yaml
+	actionsByt, err := yaml.Marshal(metadata.Actions)
+	if err != nil {
+		return err
+	}
+	customTypesByt, err := yaml.Marshal(metadata.CustomTypes)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), actionsByt, 0644)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, customTypesFileName), customTypesByt, 0644)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -278,6 +346,9 @@ func (a *ActionConfig) Export(metadata dbTypes.Metadata) error {
 	if err != nil {
 		return err
 	}
+	doc, err := parser.Parse(parser.ParseParams{
+		Source: data.SDL["complete"],
+	})
 	actionByt, err := yaml.Marshal(metadata.Actions)
 	if err != nil {
 		return err
@@ -294,7 +365,7 @@ func (a *ActionConfig) Export(metadata dbTypes.Metadata) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), []byte(data.SDL["complete"]), 0644)
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), []byte(printer.Print(doc).(string)), 0644)
 	if err != nil {
 		return err
 	}

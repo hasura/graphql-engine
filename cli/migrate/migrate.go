@@ -307,6 +307,14 @@ func (m *Migrate) GetUnappliedMigrations(version uint64) []uint64 {
 	return m.sourceDrv.GetUnappliedMigrations(version)
 }
 
+func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
+	return m.databaseDrv.GetIntroSpectionSchema()
+}
+
+func (m *Migrate) SetMetadataPlugins(plugins interface{}) {
+	m.databaseDrv.SetMetadataPlugins(plugins)
+}
+
 func (m *Migrate) ExportMetadata() (interface{}, error) {
 	return m.databaseDrv.ExportMetadata()
 }
