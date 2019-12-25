@@ -1,10 +1,10 @@
 import { unwrapType } from './wrappingTypeUtils';
 
-const inbuiltTypes = {
-  'Int': true,
-  'Boolean': true,
-  'String': true,
-  'Float': true
+export const inbuiltTypes = {
+  Int: true,
+  Boolean: true,
+  String: true,
+  Float: true
 };
 
 const singularize = kind => {

@@ -1,30 +1,24 @@
 const fetch = require('node-fetch');
 const { getTemplatePath } = require('../../utils/utils')
-const { parseCustomTypes, getActionTypes } = require('../../utils/typeUtils')
+const { parseCustomTypes, getActionTypes } = require('../../shared/utils/hasuraCustomTypeUtils')
 const { getFrameworkScaffold } = require('./template');
-const { getActionDefinitionSdl, getTypesSdl } = require('../sdl/utils')
+const { getActionDefinitionSdl, getTypesSdl } = require('../../shared/utils/sdlUtils');
 const { parse: sdlParse } = require('graphql/language/parser');
 
 const getActionScaffold = async (payload) => {
 
   const {
     framework,
-    action: {
-      action_name: actionName,
-      action_defn: actionDef
+    action_name: actionName,
+    sdl: {
+      complete: sdlComplete
     },
-    types: serverTypes
+    derive,
+    scaffold_config: scaffoldConfig
   } = payload;
 
-  const mutationSdl = getActionDefinitionSdl({
-    ...actionDef,
-    name: actionName
-  });
-
-  const typesSdl = getTypesSdl(parseCustomTypes(serverTypes));
-
   try {
-    const scaffoldResp = await getFrameworkScaffold(framework, mutationSdl, typesSdl)
+    const scaffoldResp = await getFrameworkScaffold(framework, actionName, sdlComplete, derive, scaffoldConfig)
     if (scaffoldResp.error) {
       throw Error(scaffoldResp.error)
     } else {
