@@ -67,6 +67,13 @@ func (o *actionsCreateOptions) run() error {
 	}
 	actionCfg := actions.New(o.EC.MetadataDir, o.EC.ServerConfig.Action, o.EC.ServerConfig.Scaffold)
 	err = actionCfg.Create(o.name, introSchema, o.deriveFromMutation)
+	derivePayload := map[string]interface{}{
+		"introspection_schema": introSchema,
+		"mutation": map[string]string{
+			"name":        o.deriveFromMutation,
+			"action_name": o.name,
+		},
+	}
 	if err != nil {
 		return err
 	}
@@ -74,5 +81,5 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return err
 	}
-	return actionCfg.Scaffold(o.name, o.scaffolderName)
+	return actionCfg.Scaffold(o.name, o.scaffolderName, derivePayload)
 }
