@@ -2,10 +2,20 @@ package hasuradb
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
+	gyaml "github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
+	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"github.com/oliveagle/jsonpath"
 )
+
+type MetadataPluginsDriver interface {
+	Build(metadata *dbTypes.Metadata) error
+	// Should create a tmp dir with the files, and then move the data
+	Export(metadata dbTypes.Metadata) error
+}
 
 func (h *HasuraDB) ExportMetadata() (interface{}, error) {
 	query := HasuraQuery{
@@ -37,6 +47,19 @@ func (h *HasuraDB) ExportMetadata() (interface{}, error) {
 		return nil, err
 	}
 
+	var data dbTypes.Metadata
+	err = gyaml.Unmarshal(body, &data)
+	if err != nil {
+		h.logger.Debug(err)
+		return nil, err
+	}
+
+	for _, plg := range h.config.Plugins {
+		err = plg.Export(data)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return hres, nil
 }
 
@@ -92,6 +115,13 @@ func (h *HasuraDB) ReloadMetadata() error {
 }
 
 func (h *HasuraDB) ApplyMetadata(data interface{}) error {
+	var tmpMeta types.Metadata
+	for _, plg := range h.config.Plugins {
+		err := plg.Build(&tmpMeta)
+		if err != nil {
+			return err
+		}
+	}
 	query := HasuraInterfaceBulk{
 		Type: "bulk",
 		Args: []interface{}{
@@ -101,13 +131,13 @@ func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 			},
 			HasuraInterfaceQuery{
 				Type: "replace_metadata",
-				Args: data,
+				Args: tmpMeta,
 			},
 		},
 	}
-
 	resp, body, err := h.sendv1Query(query)
 	if err != nil {
+		fmt.Println("asdasd")
 		h.logger.Debug(err)
 		return err
 	}
