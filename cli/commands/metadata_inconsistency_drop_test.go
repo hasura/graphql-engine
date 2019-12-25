@@ -27,7 +27,6 @@ func testMetadataInconsistencyDropCmd(t *testing.T, migrationsDir string, metada
 			},
 			MigrationDir: migrationsDir,
 		},
-		actionType: "dropInconsistency",
 	}
 
 	opts.EC.Version = version.New()
