@@ -4,6 +4,7 @@ import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSele
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
 import { getValidAlterOptions } from './utils';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 const ColumnEditor = ({
   onSubmit,
@@ -57,18 +58,46 @@ const ColumnEditor = ({
   const updateColumnType = selected => {
     dispatch(editColumn(colName, 'type', selected.value));
   };
-  const updateColumnDef = (e, data) => {
+  const toggleColumnNullable = e => {
+    dispatch(editColumn(colName, 'isNullable', e.target.value === 'true'));
+  };
+  const toggleColumnUnique = e => {
+    dispatch(editColumn(colName, 'isUnique', e.target.value === 'true'));
+  };
+  const updateColumnDefault = (e, data) => {
     const { newValue } = data;
     dispatch(editColumn(colName, 'default', newValue));
   };
   const updateColumnComment = e => {
     dispatch(editColumn(colName, 'comment', e.target.value));
   };
-  const toggleColumnNullable = e => {
-    dispatch(editColumn(colName, 'isNullable', e.target.value === 'true'));
+  const updateColumnCustomField = e => {
+    dispatch(editColumn(colName, 'customFieldName', e.target.value));
   };
-  const toggleColumnUnique = e => {
-    dispatch(editColumn(colName, 'isUnique', e.target.value === 'true'));
+
+  const getColumnCustomFieldInput = () => {
+    return (
+      <div className={`${styles.display_flex} form-group`}>
+        <label className={'col-xs-4'}>
+          GraphQL field name
+          <Tooltip
+            message={
+              'Expose the column with a different name in the GraphQL API'
+            }
+          />
+        </label>
+        <div className="col-xs-6">
+          <input
+            className="input-sm form-control"
+            value={selectedProperties[colName].customFieldName}
+            onChange={updateColumnCustomField}
+            placeholder={`${colName} (default)`}
+            type="text"
+            data-test="edit-col-custom-field"
+          />
+        </div>
+      </div>
+    );
   };
 
   const getColumnDefaultInput = () => {
@@ -79,7 +108,7 @@ const ColumnEditor = ({
         options={defaultOptions}
         className="input-sm form-control"
         value={selectedProperties[colName].default || ''}
-        onChange={updateColumnDef}
+        onChange={updateColumnDefault}
         type="text"
         disabled={columnProperties.pkConstraint}
         data-test="edit-col-default"
@@ -92,7 +121,7 @@ const ColumnEditor = ({
     <div className={`${styles.colEditor} container-fluid`}>
       <form className="form-horizontal" onSubmit={onSubmit}>
         <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-2">Name</label>
+          <label className={'col-xs-4'}>Name</label>
           <div className="col-xs-6">
             <input
               className="input-sm form-control"
@@ -104,7 +133,7 @@ const ColumnEditor = ({
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-2">Type</label>
+          <label className={'col-xs-4'}>Type</label>
           <div className="col-xs-6">
             <SearchableSelectBox
               options={alterOptions}
@@ -118,7 +147,7 @@ const ColumnEditor = ({
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-2">Nullable</label>
+          <label className={'col-xs-4'}>Nullable</label>
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
@@ -133,7 +162,7 @@ const ColumnEditor = ({
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-2">Unique</label>
+          <label className={'col-xs-4'}>Unique</label>
           <div className="col-xs-6">
             <select
               className="input-sm form-control"
@@ -148,11 +177,11 @@ const ColumnEditor = ({
           </div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-2">Default</label>
+          <label className={'col-xs-4'}>Default</label>
           <div className="col-xs-6">{getColumnDefaultInput()}</div>
         </div>
         <div className={`${styles.display_flex} form-group`}>
-          <label className="col-xs-2">Comment</label>
+          <label className={'col-xs-4'}>Comment</label>
           <div className="col-xs-6">
             <input
               className="input-sm form-control"
@@ -163,6 +192,7 @@ const ColumnEditor = ({
             />
           </div>
         </div>
+        {getColumnCustomFieldInput()}
       </form>
       <div className="row">
         <br />

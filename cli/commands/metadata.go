@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
 
@@ -10,19 +9,24 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	v2yaml "gopkg.in/yaml.v2"
 )
 
+// NewMetadataCmd returns the metadata command
 func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataCmd := &cobra.Command{
 		Use:          "metadata",
+		Aliases:      []string{"md"},
 		Short:        "Manage Hasura GraphQL Engine metadata saved in the database",
 		SilenceUsage: true,
 	}
 	metadataCmd.AddCommand(
+		newMetadataDiffCmd(ec),
 		newMetadataExportCmd(ec),
 		newMetadataClearCmd(ec),
 		newMetadataReloadCmd(ec),
 		newMetadataApplyCmd(ec),
+		newMetadataInconsistencyCmd(ec),
 	)
 	return metadataCmd
 }
@@ -35,12 +39,7 @@ func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) e
 			return errors.Wrap(err, "cannot export metadata")
 		}
 
-		t, err := json.Marshal(metaData)
-		if err != nil {
-			return errors.Wrap(err, "cannot Marshal metadata")
-		}
-
-		data, err := yaml.JSONToYAML(t)
+		databyt, err := v2yaml.Marshal(metaData)
 		if err != nil {
 			return err
 		}
@@ -50,7 +49,7 @@ func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) e
 			return errors.Wrap(err, "cannot save metadata")
 		}
 
-		err = ioutil.WriteFile(metadataPath, data, 0644)
+		err = ioutil.WriteFile(metadataPath, databyt, 0644)
 		if err != nil {
 			return errors.Wrap(err, "cannot save metadata")
 		}

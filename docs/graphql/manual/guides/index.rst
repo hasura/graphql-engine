@@ -17,3 +17,10 @@ Guides / Tutorials / Resources
    Auditing tables <auditing-tables>
    Telemetry <telemetry>
    Code Editor Integrations <code-editor-integrations/index>
+
+
+
+.. note::
+
+  If you are new to GraphQL you can check out some front-end and back-end tutorials for building applications using
+  GraphQL at `learn.hasura.io <https://learn.hasura.io/>`_.

@@ -98,10 +98,17 @@ data Cohort
   -- result changed, then merge them in the map of existing subscribers
   }
 
+{- Note [Blake2b faster than SHA-256]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+At the time of writing, from https://blake2.net, it is stated,
+"BLAKE2 is a cryptographic hash function faster than MD5, SHA-1, SHA-2, and SHA-3,
+yet is at least as secure as the latest standard SHA-3".
+-}
+
 -- | A hash used to determine if the result changed without having to keep the entire result in
 -- memory. Using a cryptographic hash ensures that a hash collision is almost impossible: with 256
 -- bits, even if a subscription changes once per second for an entire year, the probability of a
--- hash collision is ~4.294417×10-63. We use Blake2b because it is faster than SHA-256
+-- hash collision is ~4.294417×10-63. See Note [Blake2b faster than SHA-256].
 newtype ResponseHash = ResponseHash { unResponseHash :: CH.Digest CH.Blake2b_256 }
   deriving (Show, Eq)
 

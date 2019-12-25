@@ -40,7 +40,10 @@ const vMakeRequest = triggerName => {
     const countQuery = JSON.parse(JSON.stringify(state.triggers.log.query));
     countQuery.columns = ['id'];
 
-    currentQuery.where = { event: { trigger_name: triggerName } };
+    currentQuery.where = {
+      event: { trigger_name: triggerName, archived: false },
+    };
+    countQuery.where.event.archived = false;
 
     // order_by for relationship
     currentQuery.order_by = ['-created_at'];
@@ -108,9 +111,11 @@ const loadNewerEvents = (latestTimestamp, triggerName) => {
     countQuery.columns = ['id'];
 
     currentQuery.where = {
-      event: { trigger_name: triggerName },
+      event: { trigger_name: triggerName, archived: false },
       created_at: { $gt: latestTimestamp },
     };
+
+    countQuery.where.event.archived = false;
 
     // order_by for relationship
     currentQuery.order_by = ['-created_at'];
@@ -198,9 +203,11 @@ const loadOlderEvents = (oldestTimestamp, triggerName) => {
     countQuery.columns = ['id'];
 
     currentQuery.where = {
-      event: { trigger_name: triggerName },
+      event: { trigger_name: triggerName, archived: false },
       created_at: { $lt: oldestTimestamp },
     };
+
+    countQuery.where.event.archived = false;
 
     // order_by for relationship
     currentQuery.order_by = ['-created_at'];

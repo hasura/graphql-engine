@@ -18,7 +18,7 @@ data RelDef a
   { rdName    :: !RelName
   , rdUsing   :: !a
   , rdComment :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RelDef)
 
@@ -36,7 +36,7 @@ data RelManualConfig
   = RelManualConfig
   { rmTable   :: !QualifiedTable
   , rmColumns :: !(M.Map PGCol PGCol)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 instance FromJSON RelManualConfig where
   parseJSON (Object v) =
@@ -56,7 +56,7 @@ instance ToJSON RelManualConfig where
 data RelUsing a b
   = RUFKeyOn a
   | RUManual b
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 instance (ToJSON a, ToJSON b) => ToJSON (RelUsing a b) where
   toJSON (RUFKeyOn fkey) =
@@ -79,13 +79,13 @@ instance (FromJSON a, FromJSON b) => FromJSON (RelUsing a b) where
 
 newtype ArrRelManualConfig =
   ArrRelManualConfig { getArrRelMapping :: RelManualConfig }
-  deriving (Show, Eq, FromJSON, ToJSON, Lift)
+  deriving (Show, Eq, FromJSON, ToJSON, Lift, Generic)
 
 data ArrRelUsingFKeyOn
   = ArrRelUsingFKeyOn
   { arufTable  :: !QualifiedTable
   , arufColumn :: !PGCol
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ArrRelUsingFKeyOn)
 
@@ -95,7 +95,7 @@ type CreateArrRel = WithTable ArrRelDef
 
 newtype ObjRelManualConfig =
   ObjRelManualConfig { getObjRelMapping :: RelManualConfig }
-  deriving (Show, Eq, FromJSON, ToJSON, Lift)
+  deriving (Show, Eq, FromJSON, ToJSON, Lift, Generic)
 
 type ObjRelUsing = RelUsing PGCol ObjRelManualConfig
 type ObjRelDef = RelDef ObjRelUsing

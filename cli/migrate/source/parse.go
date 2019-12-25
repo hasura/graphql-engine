@@ -26,7 +26,7 @@ var (
 var Regex = regexp.MustCompile(`^([0-9]+)_(.*)\.(` + string(Down) + `|` + string(Up) + `)\.(.*)$`)
 
 // Parse returns Migration for matching Regex pattern.
-func Parse(raw string, directory string) (*Migration, error) {
+func Parse(raw string) (*Migration, error) {
 	var direction Direction
 	m := Regex.FindStringSubmatch(raw)
 	if len(m) == 5 {
@@ -58,7 +58,6 @@ func Parse(raw string, directory string) (*Migration, error) {
 			Version:    versionUint64,
 			Identifier: m[2],
 			Direction:  direction,
-			Raw:        raw,
 		}, nil
 	}
 	return nil, ErrParse

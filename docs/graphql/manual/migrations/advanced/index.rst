@@ -7,5 +7,6 @@ Migrations advanced use cases
   ../auto-apply-migrations
   writing-migrations-manually
   rolling-back-migrations
+  seed-data-migration
 
   
