@@ -45,7 +45,7 @@ const templater = (actionName, actionsSdl, derive) => {
       }
     };
     const refMutationName = derive.mutation.name;
-    const hasuraSchema = buildClientSchema(derive.introspection_schema.data);
+    const hasuraSchema = buildClientSchema(derive.introspection_schema);
     const mutationType = hasuraSchema._mutationType;
     const allMutations = mutationType._fields;
     const refMutation = allMutations[refMutationName];
