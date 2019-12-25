@@ -28,7 +28,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newMetadataClearCmd(ec),
 		newMetadataReloadCmd(ec),
 		newMetadataApplyCmd(ec),
-		newMetadataGetInconsistencyCmd(ec),
+		newMetadataInconsistencyListCmd(ec),
 		newMetadataDropInconsistencyCmd(ec),
 	)
 	return metadataCmd

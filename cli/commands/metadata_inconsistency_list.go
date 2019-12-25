@@ -7,18 +7,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-func newMetadataGetInconsistencyCmd(ec *cli.ExecutionContext) *cobra.Command {
+func newMetadataInconsistencyListCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	opts := &metadataGetInconsistencyOptions{
 		EC:         ec,
 		actionType: "get_inconsistent",
 	}
 
-	metadataGetInconsistencyCmd := &cobra.Command{
-		Use:   "get_inconsistent",
-		Short: "get all inconsistent objects from the metadata",
-		Example: `  # get all inconsistent objects from the metadata:
-  hasura metadata get_inconsistent`,
+	metadataInconsistencyListCmd := &cobra.Command{
+		Use:          "list",
+		Short:        "list all inconsistent objects from the metadata",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -27,13 +25,13 @@ func newMetadataGetInconsistencyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := opts.run()
 			if err != nil {
-				return errors.Wrap(err, "failed to fetch inconsistent metadata")
+				return errors.Wrap(err, "failed to list inconsistent metadata")
 			}
 			return nil
 		},
 	}
 
-	f := metadataGetInconsistencyCmd.Flags()
+	f := metadataInconsistencyListCmd.Flags()
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
@@ -44,7 +42,7 @@ func newMetadataGetInconsistencyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
 	v.BindPFlag("access_key", f.Lookup("access-key"))
 
-	return metadataGetInconsistencyCmd
+	return metadataInconsistencyListCmd
 }
 
 type metadataGetInconsistencyOptions struct {
