@@ -23,9 +23,8 @@ if (
 const isProduction = window.__env.nodeEnv !== 'development';
 
 const globals = {
-  apiHost: window.__env.apiHost,
-  apiPort: window.__env.apiPort,
   dataApiUrl: stripTrailingSlash(window.__env.dataApiUrl), // overridden below if server mode
+  migrateApiUrl: stripTrailingSlash(window.__env.migrateApiUrl), // overridden below if server mode
   urlPrefix: stripTrailingSlash(window.__env.urlPrefix || '/'), // overridden below if server mode in production
   adminSecret: window.__env.adminSecret || null, // gets updated after login/logout in server mode
   isAdminSecretSet:

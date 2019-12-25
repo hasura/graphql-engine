@@ -99,8 +99,7 @@ Environment variables accepted in `cli` mode:
 
 - `NODE_ENV`: Console build environment (`development`/`production`) 
 - `PORT`: The port where Hasura console will run locally
-- `API_HOST`: Hasura CLI host. Hasura CLI runs on `http://localhost` by default.
-- `API_PORT`: Hasura CLI port. Hasura CLI exposes the API at `9693` by default
+- `MIGRATE_API_URL`: CLI Migrate API URL, `http://localhost:9693` by default.
 - `CDN_ASSETS`: Should assets be loaded from CDN (`true`/`false`)
 - `ASSETS_PATH`: Path to console assets
 - `ASSETS_VERSION`: Version of console assets being served 
