@@ -49,7 +49,7 @@ const templater = async (
   derive
 ) => {
   const ast = parse(`${actionsSdl}`);
-  typesAst = {
+  const typesAst = {
     ...ast,
     definitions: ast.definitions.filter(d => d.name.value !== 'Mutation')
   };
