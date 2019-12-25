@@ -56,11 +56,11 @@ instance J.FromJSON ClientMsg where
   parseJSON = J.withObject "ClientMessage" $ \obj -> do
     t <- obj J..: "type"
     case t of
-      "connection_init"      -> CMConnInit <$> obj J..:? "payload"
-      "start"                -> CMStart <$> J.parseJSON (J.Object obj)
-      "stop"                 -> CMStop <$> J.parseJSON (J.Object obj)
+      "connection_init" -> CMConnInit <$> obj J..:? "payload"
+      "start" -> CMStart <$> J.parseJSON (J.Object obj)
+      "stop" -> CMStop <$> J.parseJSON (J.Object obj)
       "connection_terminate" -> return CMConnTerm
-      _                      -> fail $ "unexpected type for ClientMessage: " <> t
+      _ -> fail $ "unexpected type for ClientMessage: " <> t
 
 -- server to client messages
 
@@ -129,11 +129,10 @@ encodeServerMsg msg =
     ]
 
   SMData (DataMsg opId payload) ->
-    let encPayload = encodeGraphqlResponse payload
-    in [ encTy SMT_GQL_DATA
-       , ("id", encJFromJValue opId)
-       , ("payload", encPayload)
-       ]
+    [ encTy SMT_GQL_DATA
+    , ("id", encJFromJValue opId)
+    , ("payload", encodeGraphqlResponse payload)
+    ]
 
   SMErr (ErrorMsg opId payload) ->
     [ encTy SMT_GQL_ERROR

@@ -130,8 +130,8 @@ closeConnWithCode wsConn code bs = do
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> BL.ByteString -> Maybe WSEventInfo -> IO ()
-sendMsg wsConn msg logEx =
-  STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) (msg, logEx)
+sendMsg wsConn msg wsEnvInfo =
+  STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) (msg, wsEnvInfo)
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
 
