@@ -26,8 +26,8 @@ const resolveScaffolderFromUrl = async (url) => {
     if (fetchResp.status >= 300) {
       throw Error(SCAFFOLDER_NOT_FOUND);
     }
-    const scaffolderText = await fetch.text()
-    eval(`${scaffoldertext} scaffolder = templater`);
+    const scaffolderText = await fetchResp.text()
+    eval(`${scaffolderText} scaffolder = templater`);
     return scaffolder;
   } catch (e) {
     throw e;
@@ -37,15 +37,15 @@ const resolveScaffolderFromUrl = async (url) => {
 const resolveScaffolderFromFs = async (fsPath) => {
   let scaffolder;
   try {
-    const scaffoldertext = fs.readFileSync(path.resolve(fsPath), { encoding: 'utf8'});
-    eval(`${scaffoldertext} scaffolder = templater`);
+    const scaffolderText = fs.readFileSync(path.resolve(fsPath), { encoding: 'utf8'});
+    eval(`${scaffolderText} scaffolder = templater`);
     return scaffolder;
   } catch (e) {
     throw e;
   }
 }
 
-const resolveScaffolder = async (framework, scaffoldConfig=sampleScaffoldConfig) => {
+const resolveScaffolder = async (framework, scaffoldConfig) => {
   const scaffolderPath = resolveScaffolderPath(framework, scaffoldConfig);
   let scaffolder
   if (!scaffolderPath) {

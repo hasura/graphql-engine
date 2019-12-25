@@ -2,12 +2,12 @@ const PORT = process.env.PORT || 4000;
 
 const INIT_MESSAGE = `Scaffolder listening at ${PORT}`;
 
-const SCAFFOLDS_REPO = process.env.SCAFFOLDS_REPO || "hasura/scaffolds";
-const SCAFFOLDS_REPO_BRANCH = process.env.SCAFFOLDS_REPO_BRANCH || "master";
+const GRAPHQL_ENGINE_REPO_OWNER = process.env.GRAPHQL_ENGINE_REPO_OWNER || 'hasura'
+const GRAPHQL_ENGINE_REPO_BRANCH = process.env.GRAPHQL_ENGINE_REPO_BRANCH || 'master'
 
 module.exports = {
   PORT,
   INIT_MESSAGE,
-  SCAFFOLDS_REPO,
-  SCAFFOLDS_REPO_BRANCH
+  GRAPHQL_ENGINE_REPO_OWNER,
+  GRAPHQL_ENGINE_REPO_BRANCH 
 };
