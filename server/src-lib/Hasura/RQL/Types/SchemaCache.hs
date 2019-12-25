@@ -117,6 +117,8 @@ module Hasura.RQL.Types.SchemaCache
        , updateFunctionDescription
 
        , replaceAllowlist
+
+       , ScheduledTriggerInfo(..)
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -133,6 +135,7 @@ import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
+import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCacheTypes
 import           Hasura.SQL.Types
 
@@ -276,6 +279,20 @@ data EventTriggerInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)
 
 type EventTriggerInfoMap = M.HashMap TriggerName EventTriggerInfo
+
+data ScheduledTriggerInfo
+ = ScheduledTriggerInfo
+   { stiName        :: !TriggerName
+   , stiSchedule    :: !ScheduleType
+   , stiPayload     :: !(Maybe Value)
+   , stiRetryConf   :: !RetryConfST
+   , stiWebhookInfo :: !WebhookConfInfo
+   , stiHeaders     :: ![EventHeaderInfo]
+   } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 3 snakeCase) ''ScheduledTriggerInfo)
+
+type ScheduledTriggerInfoMap = M.HashMap TriggerName ScheduledTriggerInfo
 
 data ConstraintType
   = CTCHECK
@@ -446,6 +463,7 @@ data SchemaCache
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
   , scInconsistentObjs  :: ![InconsistentMetadataObj]
+  , scScheduledTriggers :: !ScheduledTriggerInfoMap
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
@@ -481,7 +499,7 @@ instance (Monad m) => CacheRWM (StateT SchemaCache m) where
 emptySchemaCache :: SchemaCache
 emptySchemaCache =
   SchemaCache M.empty M.empty M.empty
-              HS.empty M.empty GC.emptyGCtx mempty []
+              HS.empty M.empty GC.emptyGCtx mempty [] M.empty
 
 modTableCache :: (CacheRWM m) => TableCache PGColumnInfo -> m ()
 modTableCache tc = do

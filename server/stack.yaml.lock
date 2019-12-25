@@ -48,18 +48,18 @@ packages:
     commit: ad6df731584dc89b72a6e131687d37ef01714fe8
 - completed:
     cabal-file:
-      size: 3947
-      sha256: 8c06d160d745978f2167aed7be788ff3d95b57c515e0de52cf2638c1d530004d
+      size: 3949
+      sha256: 17c43e706339cd5ef8631d83a7f2211ed84e0df9b91b01b6b0d73367d5350aec
     name: cron
     version: 0.6.1
     git: https://github.com/hasura/cron.git
     pantry-tree:
       size: 1882
-      sha256: 72d4503f9d73c71f50d273b30598853cf5b0a359a3ca62e991e09e70a76a2274
-    commit: cc35408f4a05575d8305f5c45bdfeeb31dd3ea5b
+      sha256: 6e3dec01d3608c85a4ba7325c706bea845dbcb68e4320f2e649f7d187c17e6f3
+    commit: e73cab157f2d47f80fe25b77c32212248884d483
   original:
     git: https://github.com/hasura/cron.git
-    commit: cc35408f4a05575d8305f5c45bdfeeb31dd3ea5b
+    commit: e73cab157f2d47f80fe25b77c32212248884d483
 - completed:
     hackage: select-0.4.0.1@sha256:d409315752a069693bdd4169fa9a8ea7777d814da77cd8604f367cf0741de295,2492
     pantry-tree:
@@ -123,9 +123,44 @@ packages:
       sha256: 5ad2a6b25c8145f58c43b10f1b60a1e1b5bf57f0e33e4a203f9671b361fb03c0
   original:
     hackage: brotli-0.0.0.0
+- completed:
+    hackage: aeson-1.4.6.0@sha256:560575b008a23960403a128331f0e59594786b5cd19a35be0cd74b9a7257958e,6980
+    pantry-tree:
+      size: 40193
+      sha256: 5769473440ae594ae8679dde9fe12b6d00a49264a9dd8962a53ff3ae5740d7a5
+  original:
+    hackage: aeson-1.4.6.0
+- completed:
+    hackage: time-1.9.3@sha256:8f1b5448722a12a952248b356c9eb366e351226543d9086a2da71270522d5f45,5679
+    pantry-tree:
+      size: 6558
+      sha256: a1043c1719491764f0fa37a1fd70d9451080548a41632fee88d8e1b8db4942d6
+  original:
+    hackage: time-1.9.3
+- completed:
+    hackage: directory-1.3.5.0@sha256:a7d0f5e79a6bb31a75dfceb9656d2de119de9f91076ec18ad30e4496d0385cfa,2782
+    pantry-tree:
+      size: 3365
+      sha256: 13abe2f1a1f82059563af1ee076f23a6067d402f61834c738bb38eb606b847e8
+  original:
+    hackage: directory-1.3.5.0@sha256:a7d0f5e79a6bb31a75dfceb9656d2de119de9f91076ec18ad30e4496d0385cfa,2782
+- completed:
+    hackage: process-1.6.7.0@sha256:305bcf44c42a96425e77af1748183f505a701648f68cc299d5ad8ac1b866a6a1,2468
+    pantry-tree:
+      size: 1211
+      sha256: 49c3e531d2473fe455c1cde655f074a320fa4ec8569d650262bf382f9c5796fb
+  original:
+    hackage: process-1.6.7.0@sha256:305bcf44c42a96425e77af1748183f505a701648f68cc299d5ad8ac1b866a6a1,2468
+- completed:
+    hackage: unix-2.7.2.2@sha256:e69269a17b9fa26cb77f3f55e86c39d0a4940ccfa0c4bc20826919d2572076ad,3496
+    pantry-tree:
+      size: 3536
+      sha256: c355f7924ce67e5bf8f20767462af18f09b8c0d1f7161117221cbb94c15deee3
+  original:
+    hackage: unix-2.7.2.2@sha256:e69269a17b9fa26cb77f3f55e86c39d0a4940ccfa0c4bc20826919d2572076ad,3496
 snapshots:
 - completed:
-    size: 498167
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/13/20.yaml
-    sha256: cda928d57b257a5f17bcad796843c9daa674fef47d600dbea3aa7b0e49d64a11
-  original: lts-13.20
+    size: 524789
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/18.yaml
+    sha256: 646be71223e08234131c6989912e6011e01b9767bc447b6d466a35e14360bdf2
+  original: lts-14.18

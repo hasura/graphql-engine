@@ -5,7 +5,6 @@ module Hasura.RQL.Types
        , MonadTx(..)
 
        , UserInfoM(..)
-       , successMsg
 
        , HasHttpManager (..)
        , HasGCtxMap (..)
@@ -43,29 +42,28 @@ module Hasura.RQL.Types
        , module R
        ) where
 
-import           Hasura.EncJSON
+import           Hasura.Db                         as R
 import           Hasura.Prelude
+import           Hasura.RQL.Types.BoolExp          as R
+import           Hasura.RQL.Types.Column           as R
+import           Hasura.RQL.Types.Common           as R
+import           Hasura.RQL.Types.ComputedField    as R
+import           Hasura.RQL.Types.DML              as R
+import           Hasura.RQL.Types.Error            as R
+import           Hasura.RQL.Types.EventTrigger     as R
+import           Hasura.RQL.Types.Function         as R
+import           Hasura.RQL.Types.Helpers          as R
+import           Hasura.RQL.Types.Metadata         as R
+import           Hasura.RQL.Types.Permission       as R
+import           Hasura.RQL.Types.RemoteSchema     as R
+import           Hasura.RQL.Types.ScheduledTrigger as R
+import           Hasura.RQL.Types.SchemaCache      as R
 import           Hasura.SQL.Types
 
-import           Hasura.Db                      as R
-import           Hasura.RQL.Types.BoolExp       as R
-import           Hasura.RQL.Types.Column        as R
-import           Hasura.RQL.Types.Common        as R
-import           Hasura.RQL.Types.ComputedField as R
-import           Hasura.RQL.Types.DML           as R
-import           Hasura.RQL.Types.Error         as R
-import           Hasura.RQL.Types.EventTrigger  as R
-import           Hasura.RQL.Types.Function      as R
-import           Hasura.RQL.Types.Metadata      as R
-import           Hasura.RQL.Types.Permission    as R
-import           Hasura.RQL.Types.RemoteSchema  as R
-import           Hasura.RQL.Types.SchemaCache   as R
-
-import qualified Hasura.GraphQL.Context         as GC
-
-import qualified Data.HashMap.Strict            as M
-import qualified Data.Text                      as T
-import qualified Network.HTTP.Client            as HTTP
+import qualified Data.HashMap.Strict               as M
+import qualified Data.Text                         as T
+import qualified Hasura.GraphQL.Context            as GC
+import qualified Network.HTTP.Client               as HTTP
 
 getFieldInfoMap
   :: QualifiedTable
@@ -322,8 +320,5 @@ adminOnly = do
   unless (curRole == adminRole) $ throw400 AccessDenied errMsg
   where
     errMsg = "restricted access : admin only"
-
-successMsg :: EncJSON
-successMsg = "{\"message\":\"success\"}"
 
 type HeaderObj = M.HashMap T.Text T.Text

@@ -2,7 +2,7 @@
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
 # resolver: lts-10.8
-resolver: lts-13.20
+resolver: lts-14.18
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
@@ -23,7 +23,7 @@ extra-deps:
 - git: https://github.com/hasura/ci-info-hs.git
   commit: ad6df731584dc89b72a6e131687d37ef01714fe8
 - git: https://github.com/hasura/cron.git
-  commit: cc35408f4a05575d8305f5c45bdfeeb31dd3ea5b
+  commit: e73cab157f2d47f80fe25b77c32212248884d483
 
 # extra dep for pg-client-hs
 - select-0.4.0.1
@@ -38,6 +38,12 @@ extra-deps:
 - shakespeare-2.0.22
 
 - brotli-0.0.0.0
+- aeson-1.4.6.0
+- time-1.9.3
+
+- directory-1.3.5.0@sha256:a7d0f5e79a6bb31a75dfceb9656d2de119de9f91076ec18ad30e4496d0385cfa,2782
+- process-1.6.7.0@sha256:305bcf44c42a96425e77af1748183f505a701648f68cc299d5ad8ac1b866a6a1,2468
+- unix-2.7.2.2@sha256:e69269a17b9fa26cb77f3f55e86c39d0a4940ccfa0c4bc20826919d2572076ad,3496
 
 # Override default flag values for local packages and extra-deps
 flags: {}

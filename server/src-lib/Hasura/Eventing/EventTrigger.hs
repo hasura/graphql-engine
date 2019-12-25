@@ -26,14 +26,10 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Control.Concurrent.STM.TQueue as TQ
-import qualified Data.ByteString               as BS
 import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as M
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as T
-import qualified Data.Text.Encoding            as TE
-import qualified Data.Text.Encoding.Error      as TE
 import qualified Data.Time.Clock               as Time
 import qualified Database.PG.Query             as Q
 import qualified Hasura.Logging                as L
@@ -43,8 +39,6 @@ import qualified Network.HTTP.Types            as HTTP
 
 invocationVersion :: Version
 invocationVersion = "2"
-
-type LogEnvHeaders = Bool
 
 newtype CacheRef
   = CacheRef { unCacheRef :: IORef (SchemaCache, SchemaCacheVer) }
@@ -255,29 +249,6 @@ retryOrSetError e retryConf err = do
         in case seconds of
              Nothing  -> Nothing
              Just sec -> if sec > 0 then Just sec else Nothing
-
-encodeHeader :: EventHeaderInfo -> HTTP.Header
-encodeHeader (EventHeaderInfo hconf cache) =
-  let (HeaderConf name _) = hconf
-      ciname = CI.mk $ T.encodeUtf8 name
-      value = T.encodeUtf8 cache
-  in  (ciname, value)
-
-decodeHeader
-  :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
-  -> HeaderConf
-decodeHeader logenv headerInfos (hdrName, hdrVal)
-  = let name = decodeBS $ CI.original hdrName
-        getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
-                      in name'
-        mehi = find (\hi -> getName hi == name) headerInfos
-    in case mehi of
-         Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
-         Just ehi -> if logenv
-                     then HeaderConf name (HVValue (ehiCachedValue ehi))
-                     else ehiHeaderConf ehi
-   where
-     decodeBS = TE.decodeUtf8With TE.lenientDecode
 
 mkInvo
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]

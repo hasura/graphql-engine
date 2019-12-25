@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Hasura.Eventing.ScheduledTrigger
   ( processScheduledQueue
   , runScheduledEventsGenerator
@@ -8,15 +6,17 @@ module Hasura.Eventing.ScheduledTrigger
 import           Control.Concurrent              (threadDelay)
 import           Control.Exception               (try)
 import           Data.Has
+import           Data.IORef                      (IORef, readIORef)
 import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.DDL.ScheduledTrigger
+import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types
 import           Hasura.SQL.DML
 import           Hasura.SQL.Types
 import           System.Cron
+import           Hasura.HTTP
 
 import qualified Data.Aeson                      as J
 import qualified Data.Aeson.Casing               as J
@@ -28,7 +28,9 @@ import qualified Data.Text.Encoding              as TE
 import qualified Database.PG.Query               as Q
 import qualified Hasura.Logging                  as L
 import qualified Network.HTTP.Client             as HTTP
+import qualified Network.HTTP.Types              as HTTP
 import qualified Text.Builder                    as TB (run)
+import qualified Data.HashMap.Strict             as Map
 
 import           Debug.Trace
 
@@ -47,8 +49,6 @@ oneHour = 60 * oneMinute
 endOfTime :: UTCTime
 endOfTime = read "2999-12-31 00:00:00 Z"
 
--- type LogEnvHeaders = Bool
-
 type ScheduledEventPayload = J.Value
 
 scheduledEventsTable :: QualifiedTable
@@ -60,7 +60,7 @@ scheduledEventsTable =
 data ScheduledEvent
   = ScheduledEvent
   { seId            :: !(Maybe Text)
-  , seName          :: !T.Text
+  , seName          :: !TriggerName
   , seWebhook       :: !T.Text
   , sePayload       :: !J.Value
   , seScheduledTime :: !UTCTime
@@ -68,28 +68,30 @@ data ScheduledEvent
 
 $(J.deriveToJSON (J.aesonDrop 2 J.snakeCase){J.omitNothingFields=True} ''ScheduledEvent)
 
-runScheduledEventsGenerator :: Q.PGPool -> IO ()
-runScheduledEventsGenerator pgpool = do
+runScheduledEventsGenerator ::
+     L.Logger L.Hasura
+  -> Q.PGPool
+  -> IORef (SchemaCache, SchemaCacheVer)
+  -> IO ()
+runScheduledEventsGenerator logger pgpool scRef = do
   forever $ do
     traceM "entering scheduled events generator"
+    (sc, _) <- liftIO $ readIORef scRef
+    let scheduledTriggers = Map.elems $ scScheduledTriggers sc
     runExceptT
       (Q.runTx
          pgpool
          (Q.ReadCommitted, Just Q.ReadWrite)
-         generateScheduledEvents) >>= \case
+         (insertScheduledEventsFor scheduledTriggers) ) >>= \case
       Right _ -> pure ()
-      Left err -> traceShowM err
+      Left err ->
+        L.unLogger logger $ EventInternalErr $ err500 Unexpected (T.pack $ show err)
     threadDelay (10 * oneSecond)
 
-generateScheduledEvents :: Q.TxE QErr ()
-generateScheduledEvents = do
-  allSchedules <- map uncurrySchedule <$> Q.listQE defaultTxErrorHandler
-      [Q.sql|
-       SELECT st.name, st.webhook, st.schedule, st.payload, st.retry_conf
-        FROM hdb_catalog.hdb_scheduled_trigger st
-      |] () False
+insertScheduledEventsFor :: [ScheduledTriggerInfo] -> Q.TxE QErr ()
+insertScheduledEventsFor scheduledTriggers = do
   currentTime <- liftIO getCurrentTime
-  let scheduledEvents = concatMap (mkScheduledEvents currentTime) allSchedules
+  let scheduledEvents = concatMap (generateScheduledEventsFrom currentTime) scheduledTriggers
   case scheduledEvents of
     []     -> pure ()
     events -> do
@@ -104,29 +106,23 @@ generateScheduledEvents = do
       Q.unitQE defaultTxErrorHandler (Q.fromText insertScheduledEventsSql) () False
   where
     toArr (ScheduledEvent _ n w p t) =
-      n : w : (TE.decodeUtf8 . LBS.toStrict $ J.encode p) : (pure $ formatTime' t)
+      (triggerNameToTxt n) : w : (TE.decodeUtf8 . LBS.toStrict $ J.encode p) : (pure $ formatTime' t)
     toTupleExp = TupleExp . map SELit
-    uncurrySchedule (n, w, st, p, Q.AltJ rc) =
-      ScheduledTrigger
-      { stName = n
-      , stWebhook = w
-      , stSchedule = fromBS st
-      , stPayload = Q.getAltJ <$> p
-      , stRetryConf = rc
-      }
-    fromBS st = fromMaybe (OneOff endOfTime) $ J.decodeStrict' st
 
-mkScheduledEvents :: UTCTime -> ScheduledTrigger-> [ScheduledEvent]
-mkScheduledEvents time ScheduledTrigger{..} =
+generateScheduledEventsFrom :: UTCTime -> ScheduledTriggerInfo-> [ScheduledEvent]
+generateScheduledEventsFrom time ScheduledTriggerInfo{..} =
   let events =
-        case stSchedule of
-          OneOff schedTime -> [schedTime] -- one-off scheduled events need not be generated
+        case stiSchedule of
+          OneOff _ -> empty -- one-off scheduled events are generated during creation
           Cron cron ->
             generateScheduledEventsBetween
               time
               (addUTCTime nominalDay time)
               cron
-   in map (ScheduledEvent Nothing stName stWebhook (fromMaybe J.Null stPayload)) events
+      webhook = wciCachedValue stiWebhookInfo
+   in map
+      (ScheduledEvent Nothing stiName webhook (fromMaybe J.Null stiPayload))
+      events
 
 -- generates events (from, till] according to CronSchedule
 generateScheduledEventsBetween :: UTCTime -> UTCTime -> CronSchedule -> [UTCTime]
@@ -137,19 +133,28 @@ generateScheduledEventsBetween from till cron = takeWhile ((>=) till) $ go from
         Nothing   -> []
         Just next -> next : (go next)
 
-processScheduledQueue :: L.Logger L.Hasura -> Q.PGPool -> HTTP.Manager -> IO ()
-processScheduledQueue logger pgpool httpMgr =
+processScheduledQueue ::
+     L.Logger L.Hasura
+  -> Q.PGPool
+  -> HTTP.Manager
+  -> IORef (SchemaCache, SchemaCacheVer)
+  -> IO ()
+processScheduledQueue logger pgpool httpMgr scRef =
   forever $ do
     traceM "entering processor queue"
+    (sc, _) <- liftIO $ readIORef scRef
+    let scheduledTriggersInfo = scScheduledTriggers sc
     scheduledEventsE <-
       runExceptT $
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getScheduledEvents
     case scheduledEventsE of
       Right events ->
         sequence_ $
-        map
-          (\ev -> runReaderT (processScheduledEvent pgpool httpMgr ev) (logger))
-          events
+        flip map events $ \ev -> do
+          let st' = Map.lookup (seName ev) scheduledTriggersInfo
+          case st' of
+            Nothing -> traceM "ERROR: couldn't find scheduled trigger in cache"
+            Just st -> runReaderT (processScheduledEvent pgpool httpMgr st ev) logger
       Left err -> traceShowM err
     threadDelay (10 * oneSecond)
 
@@ -157,23 +162,26 @@ processScheduledEvent ::
      (MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m)
   => Q.PGPool
   -> HTTP.Manager
+  -> ScheduledTriggerInfo
   -> ScheduledEvent
   -> m ()
-processScheduledEvent pgpool httpMgr se@ScheduledEvent{..} = do
-  -- let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
-  --     retryConf = etiRetryConf eti
-  let timeoutSeconds = 60
-      responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
-  --     headerInfos = etiHeaders eti
-  --     etHeaders = map encodeHeader headerInfos
-  --     headers = addDefaultHeaders etHeaders
-  --     ep = createEventPayload retryConf e
-  res <- runExceptT $ tryWebhook httpMgr responseTimeout sePayload seWebhook
-  -- let decodedHeaders = map (decodeHeader logenv headerInfos) headers
-  finally <- either
-    (processError pgpool se)
-    (processSuccess pgpool se) res
-  either logQErr return finally
+processScheduledEvent pgpool httpMgr ScheduledTriggerInfo{..} se@ScheduledEvent{..} = do
+  currentTime <- liftIO getCurrentTime
+  if diffUTCTime currentTime seScheduledTime > rcstTolerance stiRetryConf
+  then undefined -- do nothing
+  else do
+    let webhook = wciCachedValue stiWebhookInfo
+        timeoutSeconds = 60
+        responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
+        headers = map encodeHeader stiHeaders
+        headers' = addDefaultHeaders headers
+    --     ep = createEventPayload retryConf e
+    res <- runExceptT $ tryWebhook httpMgr responseTimeout headers' sePayload webhook
+    -- let decodedHeaders = map (decodeHeader logenv headerInfos) headers
+    finally <- either
+      (processError pgpool se)
+      (processSuccess pgpool se) res
+    either logQErr return finally
 
 tryWebhook ::
      ( MonadReader r m
@@ -183,10 +191,11 @@ tryWebhook ::
      )
   => HTTP.Manager
   -> HTTP.ResponseTimeout
+  -> [HTTP.Header]
   -> ScheduledEventPayload
   -> T.Text
   -> m HTTPResp
-tryWebhook httpMgr timeout payload webhook = do
+tryWebhook httpMgr timeout headers payload webhook = do
   initReqE <- liftIO $ try $ HTTP.parseRequest (T.unpack webhook)
   case initReqE of
     Left excp -> throwError $ HClient excp
@@ -194,7 +203,7 @@ tryWebhook httpMgr timeout payload webhook = do
       let req =
             initReq
               { HTTP.method = "POST"
-              -- , HTTP.requestHeaders = []
+              , HTTP.requestHeaders = headers
               , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode payload)
               , HTTP.responseTimeout = timeout
               }
@@ -273,7 +282,8 @@ mkInvo se status reqHeaders respBody respHeaders
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
-          INSERT INTO hdb_catalog.hdb_scheduled_event_invocation_logs (event_id, status, request, response)
+          INSERT INTO hdb_catalog.hdb_scheduled_event_invocation_logs
+          (event_id, status, request, response)
           VALUES ($1, $2, $3, $4)
           |] ( iEventId invo
              , toInt64 $ iStatus invo
@@ -296,6 +306,7 @@ getScheduledEvents = do
                             and t.delivered = 'f'
                             and t.error = 'f'
                             and t.scheduled_time <= now()
+                            and t.dead = 'f'
                           )
                     FOR UPDATE SKIP LOCKED
                     )

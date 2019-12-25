@@ -254,8 +254,9 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
     _icHttpManager _icPgPool scRef eventEngineCtx
 
-  void $ liftIO $ C.forkIO $ runScheduledEventsGenerator _icPgPool -- logger logEnvHeaders
-  void $ liftIO $ C.forkIO $ processScheduledQueue logger _icPgPool _icHttpManager -- logger logEnvHeaders
+  void $ liftIO $ C.forkIO $ runScheduledEventsGenerator logger _icPgPool scRef
+  void $ liftIO $ C.forkIO $ processScheduledQueue logger _icPgPool _icHttpManager scRef -- logEnvHeaders
+
   -- start a background thread to check for updates
   void $ liftIO $ C.forkIO $ checkForUpdates loggerCtx _icHttpManager
 
