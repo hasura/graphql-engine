@@ -4,6 +4,9 @@ module Hasura.RQL.DDL.Action
   , runCreateAction
   , runCreateAction_
 
+  , UpdateAction
+  , runUpdateAction
+
   , DropAction
   , runDropAction
   , deleteActionFromCatalog
@@ -98,15 +101,16 @@ validateAndCacheAction q = do
   onJust (Map.lookup actionName actionMap) $
     const $ throw400 AlreadyExists $
     "action with name " <> actionName <<> " already exists"
-  actionInfo <- buildActionInfo q
+  actionInfo <- buildActionInfo actionName actionDefinition
   addActionToCache actionInfo
   where
     actionName  = _caName q
+    actionDefinition = _caDefinition q
 
 buildActionInfo
   :: (QErrM m, CacheRM m, MonadIO m)
-  => CreateAction -> m ActionInfo
-buildActionInfo q = do
+  => ActionName -> ActionDefinitionInput -> m ActionInfo
+buildActionInfo actionName actionDefinition = do
   let responseType = unGraphQLType $ _adOutputType actionDefinition
       responseBaseType = G.getBaseType responseType
   forM (_adArguments actionDefinition) $ \argument -> do
@@ -154,11 +158,40 @@ buildActionInfo q = do
         throw400 NotExists $ "the type: "
         <> showNamedTy typeName <>
         " is not an object type defined in custom types"
-    CreateAction actionName actionDefinition _ = q
 
     hasList = \case
       G.TypeList _ _  -> True
       G.TypeNamed _ _ -> False
+
+runUpdateAction
+  :: forall m. ( QErrM m, UserInfoM m
+               , CacheRWM m, MonadTx m
+               , MonadIO m
+               )
+  => UpdateAction -> m EncJSON
+runUpdateAction (UpdateAction actionName actionDefinition) = do
+  adminOnly
+  sc <- askSchemaCache
+  let actionsMap = scActions sc
+  actionPerms <- fmap _aiPermissions $ onNothing (Map.lookup actionName actionsMap) $
+                 throw400 NotExists $ "action with name " <> actionName <<> " not exists"
+  newActionInfo <- buildActionInfo actionName actionDefinition
+  -- FIXME:- This is not ideal implementation of updating ActionInfo.
+  -- With incremental schema build PR (https://github.com/hasura/graphql-engine/pull/3394) going in
+  -- the logic here would be just updating the catalog with definition and incrementally
+  -- building schema cache for action
+  let newActionInfoPerms = newActionInfo{_aiPermissions = actionPerms}
+  writeSchemaCache sc{scActions = Map.insert actionName newActionInfoPerms actionsMap}
+  updateActionInCatalog
+  pure successMsg
+  where
+    updateActionInCatalog :: m ()
+    updateActionInCatalog =
+      liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+        UPDATE hdb_catalog.hdb_action
+           SET action_defn = $2
+         WHERE action_name = $1
+      |] (actionName, Q.AltJ actionDefinition) True
 
 newtype ClearActionData
   = ClearActionData { unClearActionData :: Bool }

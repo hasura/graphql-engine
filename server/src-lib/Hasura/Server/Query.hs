@@ -12,10 +12,10 @@ import qualified Network.HTTP.Client                as HTTP
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Action
+import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
-import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
@@ -95,6 +95,7 @@ data RQLQueryV1
 
   | RQCreateAction !CreateAction
   | RQDropAction !DropAction
+  | RQUpdateAction !UpdateAction
   | RQCreateActionPermission !CreateActionPermission
   | RQDropActionPermission !DropActionPermission
 
@@ -283,6 +284,7 @@ queryNeedsReload (RQV1 qi) = case qi of
 
   RQCreateAction _                -> True
   RQDropAction _                  -> True
+  RQUpdateAction _                -> True
   RQCreateActionPermission _      -> True
   RQDropActionPermission _        -> True
 
@@ -368,6 +370,7 @@ runQueryM rq =
 
       RQCreateAction q           -> runCreateAction q
       RQDropAction q             -> runDropAction q
+      RQUpdateAction q           -> runUpdateAction q
       RQCreateActionPermission q -> runCreateActionPermission q
       RQDropActionPermission q   -> runDropActionPermission q
 
