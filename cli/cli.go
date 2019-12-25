@@ -25,6 +25,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Other constants used in the package
@@ -182,8 +183,6 @@ type ExecutionContext struct {
 
 	// SkipUpdateCheck will skip the auto update check if set to true
 	SkipUpdateCheck bool
-
-	isRunningOnDocker bool
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -324,12 +323,6 @@ func (ec *ExecutionContext) readConfig() error {
 		Endpoint:    v.GetString("endpoint"),
 		AdminSecret: adminSecret,
 	}
-
-	// check environment
-	val := v.GetString("HASURA_GRAPHQL_CLI_ENVIRONMENT")
-	if  val == "server-on-docker"{
-		ec.isRunningOnDocker = true
-	}
 	return ec.ServerConfig.ParseEndpoint()
 }
 
@@ -345,7 +338,7 @@ func (ec *ExecutionContext) setupSpinner() {
 
 // Spin stops any existing spinner and starts a new one with the given message.
 func (ec *ExecutionContext) Spin(message string) {
-	if !ec.isRunningOnDocker {
+	if terminal.IsTerminal(int(os.Stdout.Fd())) {
 		ec.Spinner.Stop()
 		ec.Spinner.Prefix = message
 		ec.Spinner.Start()
@@ -358,21 +351,21 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
 
-		if ec.isRunningOnDocker {
-			logger.Formatter = &logrus.JSONFormatter{
-				PrettyPrint:      true,
-			}
-		} else {
+		if terminal.IsTerminal(int(os.Stdout.Fd())) {
 			logger.Formatter = &logrus.TextFormatter{
 				ForceColors:      true,
 				DisableTimestamp: true,
+			}
+		} else {
+			logger.Formatter = &logrus.JSONFormatter{
+				PrettyPrint:      true,
 			}
 		}
 		logger.Out = colorable.NewColorableStdout()
 		ec.Logger = logger
 	}
 
-	if ec.NoColor && !ec.isRunningOnDocker {
+	if ec.NoColor && terminal.IsTerminal(int(os.Stdout.Fd())) {
 		ec.Logger.Formatter = &logrus.TextFormatter{
 			DisableColors:    true,
 			DisableTimestamp: true,
