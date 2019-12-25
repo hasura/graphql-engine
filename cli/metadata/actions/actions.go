@@ -136,6 +136,45 @@ input SampleInput {
 		Source: defaultSDL,
 	})
 	doc.Definitions = append(newDoc.Definitions, doc.Definitions...)
+	inputDupData := map[string][]int{}
+	objDupData := map[string][]int{}
+	for index, def := range doc.Definitions {
+		switch obj := def.(type) {
+		case *ast.ObjectDefinition:
+			if obj.GetName().Value != "Mutation" {
+				// check if name already exists
+				_, ok := objDupData[obj.GetName().Value]
+				if !ok {
+					objDupData[obj.GetName().Value] = []int{index}
+				} else {
+					objDupData[obj.GetName().Value] = append(objDupData[obj.GetName().Value], index)
+				}
+			}
+		case *ast.InputObjectDefinition:
+			_, ok := inputDupData[obj.GetName().Value]
+			if !ok {
+				inputDupData[obj.GetName().Value] = []int{index}
+			} else {
+				inputDupData[obj.GetName().Value] = append(inputDupData[obj.GetName().Value], index)
+			}
+		}
+	}
+	for _, indexes := range inputDupData {
+		if len(indexes) > 0 {
+			indexes = indexes[:len(indexes)-1]
+		}
+		for _, index := range indexes {
+			doc.Definitions = append(doc.Definitions[:index], doc.Definitions[index+1:]...)
+		}
+	}
+	for _, indexes := range objDupData {
+		if len(indexes) > 0 {
+			indexes = indexes[:len(indexes)-1]
+		}
+		for _, index := range indexes {
+			doc.Definitions = append(doc.Definitions[:index], doc.Definitions[index+1:]...)
+		}
+	}
 	defaultText := printer.Print(doc).(string)
 	data, err := editor.CaptureInputFromEditor(editor.GetPreferredEditorFromEnvironment, defaultText)
 	if err != nil {
