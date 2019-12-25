@@ -60,6 +60,7 @@ func init() {
 		NewConsoleCmd(ec),
 		NewMetadataCmd(ec),
 		NewMigrateCmd(ec),
+		NewActionsCmd(ec),
 		NewVersionCmd(ec),
 		NewDocsCmd(ec),
 		NewCompletionCmd(ec),

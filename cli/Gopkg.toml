@@ -103,3 +103,11 @@
 [[constraint]]
   name = "github.com/qor/transition"
   version = "1.1.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/icza/dyno"
+
+[[constraint]]
+  name = "github.com/graphql-go/graphql"
+  version = "0.7.8"

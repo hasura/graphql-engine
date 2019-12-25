@@ -13,6 +13,13 @@ import (
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
+	"github.com/hasura/graphql-engine/cli/metadata/functions"
+	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
+	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
+	"github.com/hasura/graphql-engine/cli/metadata/tables"
+	"github.com/hasura/graphql-engine/cli/metadata/version"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/oliveagle/jsonpath"
 	"github.com/parnurzeal/gorequest"
@@ -43,6 +50,7 @@ type Config struct {
 	schemDumpURL    *nurl.URL
 	Headers         map[string]string
 	isCMD           bool
+	Plugins         map[string]MetadataPluginsDriver
 }
 
 type HasuraDB struct {
@@ -115,7 +123,7 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		}
 	}
 
-	hx, err := WithInstance(&Config{
+	config := &Config{
 		MigrationsTable: DefaultMigrationsTable,
 		SettingsTable:   DefaultSettingsTable,
 		v1URL: &nurl.URL{
@@ -130,13 +138,21 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		},
 		isCMD:   isCMD,
 		Headers: headers,
-	}, logger)
-
+		Plugins: make(map[string]MetadataPluginsDriver),
+	}
+	metadataDir := ""
+	config.Plugins["version"] = version.New(metadataDir)
+	config.Plugins["tables"] = tables.New(metadataDir)
+	config.Plugins["functions"] = functions.New(metadataDir)
+	config.Plugins["query_collections"] = querycollections.New(metadataDir)
+	config.Plugins["allow_list"] = allowlist.New(metadataDir)
+	config.Plugins["remote_schemas"] = remoteschemas.New(metadataDir)
+	config.Plugins["actions"] = actions.New(metadataDir)
+	hx, err := WithInstance(config, logger)
 	if err != nil {
 		logger.Debug(err)
 		return nil, err
 	}
-
 	return hx, nil
 }
 
@@ -485,7 +501,6 @@ func (h *HasuraDB) ensureVersionTable() error {
 
 func (h *HasuraDB) sendv1Query(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := gorequest.New()
-
 	request = request.Post(h.config.v1URL.String()).Send(m)
 
 	for headerName, headerValue := range h.config.Headers {
