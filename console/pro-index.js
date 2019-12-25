@@ -89,7 +89,10 @@ import { metadataReducer } from './src/components/Services/Settings/Actions';
 import globals from './src/Globals';
 import endpoints from './src/Endpoints';
 import mainState from './src/components/Main/State';
-import { changeRequestHeader } from './src/components/Services/ApiExplorer/Actions';
+import {
+  changeRequestHeader,
+  removeRequestHeader,
+} from './src/components/Services/ApiExplorer/Actions';
 import validateLogin from './src/utils/validateLogin';
 
 import DragFoldTable from './src/components/Common/TableCommon/DragFoldTable';
@@ -146,7 +149,7 @@ export { getRemoteSchemaRouter, remoteSchemaReducer };
 // export other globals
 
 export { globals, endpoints, mainState };
-export { changeRequestHeader, loadMigrationStatus };
+export { changeRequestHeader, loadMigrationStatus, removeRequestHeader };
 export { validateLogin };
 export { handleMigrationErrors };
 
