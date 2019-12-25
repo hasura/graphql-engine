@@ -11,10 +11,8 @@ import (
 	"github.com/oliveagle/jsonpath"
 )
 
-type MetadataPluginsDriver interface {
-	Build(metadata *dbTypes.Metadata) error
-	// Should create a tmp dir with the files, and then move the data
-	Export(metadata dbTypes.Metadata) error
+func (h *HasuraDB) SetMetadataPlugins(plugins interface{}) {
+	h.config.Plugins = plugins.(types.MetadataPlugins)
 }
 
 func (h *HasuraDB) ExportMetadata() (interface{}, error) {

@@ -13,14 +13,8 @@ import (
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli/metadata/actions"
-	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
-	"github.com/hasura/graphql-engine/cli/metadata/functions"
-	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
-	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
-	"github.com/hasura/graphql-engine/cli/metadata/tables"
-	"github.com/hasura/graphql-engine/cli/metadata/version"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"github.com/oliveagle/jsonpath"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
@@ -47,10 +41,11 @@ type Config struct {
 	MigrationsTable string
 	SettingsTable   string
 	v1URL           *nurl.URL
+	graphqlURL      *nurl.URL
 	schemDumpURL    *nurl.URL
 	Headers         map[string]string
 	isCMD           bool
-	Plugins         map[string]MetadataPluginsDriver
+	Plugins         types.MetadataPlugins
 }
 
 type HasuraDB struct {
@@ -131,6 +126,11 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 			Host:   hurl.Host,
 			Path:   path.Join(hurl.Path, "v1/query"),
 		},
+		graphqlURL: &nurl.URL{
+			Scheme: scheme,
+			Host:   hurl.Host,
+			Path:   path.Join(hurl.Path, "v1/graphql"),
+		},
 		schemDumpURL: &nurl.URL{
 			Scheme: scheme,
 			Host:   hurl.Host,
@@ -138,16 +138,8 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		},
 		isCMD:   isCMD,
 		Headers: headers,
-		Plugins: make(map[string]MetadataPluginsDriver),
+		Plugins: make(types.MetadataPlugins),
 	}
-	metadataDir := ""
-	config.Plugins["version"] = version.New(metadataDir)
-	config.Plugins["tables"] = tables.New(metadataDir)
-	config.Plugins["functions"] = functions.New(metadataDir)
-	config.Plugins["query_collections"] = querycollections.New(metadataDir)
-	config.Plugins["allow_list"] = allowlist.New(metadataDir)
-	config.Plugins["remote_schemas"] = remoteschemas.New(metadataDir)
-	config.Plugins["actions"] = actions.New(metadataDir)
 	hx, err := WithInstance(config, logger)
 	if err != nil {
 		logger.Debug(err)
@@ -502,6 +494,25 @@ func (h *HasuraDB) ensureVersionTable() error {
 func (h *HasuraDB) sendv1Query(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := gorequest.New()
 	request = request.Post(h.config.v1URL.String()).Send(m)
+
+	for headerName, headerValue := range h.config.Headers {
+		request.Set(headerName, headerValue)
+	}
+
+	resp, body, errs := request.EndBytes()
+
+	if len(errs) == 0 {
+		err = nil
+	} else {
+		err = errs[0]
+	}
+
+	return resp, body, err
+}
+
+func (h *HasuraDB) sendv1GraphQL(query interface{}) (resp *http.Response, body []byte, err error) {
+	request := gorequest.New()
+	request = request.Post(h.config.graphqlURL.String()).Send(query)
 
 	for headerName, headerValue := range h.config.Headers {
 		request.Set(headerName, headerValue)

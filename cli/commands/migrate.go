@@ -7,8 +7,16 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
+	"github.com/hasura/graphql-engine/cli/metadata/functions"
+	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
+	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
+	"github.com/hasura/graphql-engine/cli/metadata/tables"
+	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	hasuradbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -35,13 +43,23 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return migrateCmd
 }
 
-func newMigrate(dir string, db *url.URL, adminSecretValue string, logger *logrus.Logger, v *version.Version, isCmd bool) (*migrate.Migrate, error) {
+func newMigrate(migrateDir string, metadataDir string, actionConfig actions.ActionExecutionConfig, db *url.URL, adminSecretValue string, logger *logrus.Logger, v *version.Version, isCmd bool) (*migrate.Migrate, error) {
 	dbURL := getDataPath(db, getAdminSecretHeaderName(v), adminSecretValue)
-	fileURL := getFilePath(dir)
+	fileURL := getFilePath(migrateDir)
 	t, err := migrate.New(fileURL.String(), dbURL.String(), isCmd, logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}
+	// Set Plugins
+	plugins := hasuradbTypes.MetadataPlugins{}
+	plugins["version"] = metadataVersion.New(metadataDir)
+	plugins["tables"] = tables.New(metadataDir)
+	plugins["functions"] = functions.New(metadataDir)
+	plugins["query_collections"] = querycollections.New(metadataDir)
+	plugins["allow_list"] = allowlist.New(metadataDir)
+	plugins["remote_schemas"] = remoteschemas.New(metadataDir)
+	plugins["actions"] = actions.New(metadataDir, actionConfig, nil)
+	t.SetMetadataPlugins(plugins)
 	return t, nil
 }
 

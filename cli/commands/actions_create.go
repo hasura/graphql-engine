@@ -16,16 +16,22 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Use:          "create",
 		Short:        "",
 		SilenceUsage: true,
+		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.name = args[0]
 			return opts.run()
 		},
 	}
 
 	f := actionsCreateCmd.Flags()
+
+	f.StringVar(&opts.deriveFromMutation, "derive-from-mutation", "", "")
+	f.StringVar(&opts.scaffolderName, "scaffolder-name", "", "")
+
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
@@ -41,9 +47,32 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 type actionsCreateOptions struct {
 	EC *cli.ExecutionContext
+
+	name               string
+	deriveFromMutation string
+	scaffolderName     string
 }
 
 func (o *actionsCreateOptions) run() error {
-	actionCfg := actions.New(o.EC.MetadataDir)
-	return actionCfg.Create("testAction")
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.MetadataDir, o.EC.ServerConfig.Action, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
+	if err != nil {
+		return err
+	}
+	var introSchema interface{}
+	if o.deriveFromMutation != "" {
+		introSchema, err = migrateDrv.GetIntroSpectionSchema()
+		if err != nil {
+			return err
+		}
+	}
+	actionCfg := actions.New(o.EC.MetadataDir, o.EC.ServerConfig.Action, o.EC.ServerConfig.Scaffold)
+	err = actionCfg.Create(o.name, introSchema, o.deriveFromMutation)
+	if err != nil {
+		return err
+	}
+	err = migrateDrv.ApplyMetadata(nil)
+	if err != nil {
+		return err
+	}
+	return actionCfg.Scaffold(o.name, o.scaffolderName)
 }

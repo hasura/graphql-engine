@@ -1,6 +1,8 @@
 package database
 
 type MetadataDriver interface {
+	SetMetadataPlugins(plugins interface{})
+
 	ExportMetadata() (interface{}, error)
 
 	ResetMetadata() error
