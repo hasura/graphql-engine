@@ -86,9 +86,20 @@ data WSConnData
 type WSServer = WS.WSServer WSConnData
 
 type WSConn = WS.WSConn WSConnData
+
 sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
-sendMsg wsConn =
-  liftIO . WS.sendMsg wsConn . encodeServerMsg
+sendMsg wsConn msg =
+  liftIO $ WS.sendMsg wsConn (encodeServerMsg msg) Nothing
+
+sendMsg' :: (MonadIO m) => WSConn -> ServerMsg -> LQ.OnChangeMeta -> m ()
+sendMsg' wsConn msg (LQ.OnChangeMeta execTime) =
+  liftIO $ WS.sendMsg wsConn bs wsInfo
+  where
+    bs = encodeServerMsg msg
+    wsInfo = Just $ WS.WSEventInfo
+      { WS._wseiQueryExecutionTime = execTime
+      , WS._wseiResponseSize = Just $ BL.length bs
+      }
 
 data OpDetail
   = ODStarted
@@ -193,7 +204,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       expTime <- liftIO $ STM.atomically $ do
         connState <- STM.readTVar $ (_wscUser . WS.getData) wsConn
         case connState of
-          CSNotInitialised _         -> STM.retry
+          CSNotInitialised _        -> STM.retry
           CSInitError _              -> STM.retry
           CSInitialised _ expTimeM _ ->
             maybe STM.retry return expTimeM
@@ -314,8 +325,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       t1 <- liftIO TC.getCurrentTime -- for measuring response time purposes
       resp <- liftIO $ runExceptT action
       t2 <- liftIO TC.getCurrentTime -- for measuring response time purposes
-      let execTime = realToFrac $ TC.diffUTCTime t2 t1
-      either (postExecErr reqId) (`sendSuccResp` execTime) resp
+      let ocMeta = LQ.OnChangeMeta $ Just $ realToFrac $ TC.diffUTCTime t2 t1
+      either (postExecErr reqId) (`sendSuccResp` ocMeta) resp
       sendCompleted (Just reqId)
 
     runRemoteGQ :: E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
@@ -331,14 +342,14 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       resp <- runExceptT $ flip runReaderT execCtx $
               E.execRemoteGQ reqId userInfo reqHdrs q rsi opDef
       t2 <- liftIO TC.getCurrentTime -- for measuring response time purposes
-      let execTime = realToFrac $ TC.diffUTCTime t2 t1
-      either (postExecErr reqId) (\val -> sendRemoteResp reqId (_hrBody val) execTime) resp
+      let ocMeta = LQ.OnChangeMeta $ Just $ realToFrac $ TC.diffUTCTime t2 t1
+      either (postExecErr reqId) (\val -> sendRemoteResp reqId (_hrBody val) ocMeta) resp
       sendCompleted (Just reqId)
 
-    sendRemoteResp reqId resp execTime =
+    sendRemoteResp reqId resp meta =
       case J.eitherDecodeStrict (encJToBS resp) of
         Left e    -> postExecErr reqId $ invalidGqlErr $ T.pack e
-        Right res -> sendMsg wsConn $ SMData $ DataMsg opId (GRRemote res) (Just execTime)
+        Right res -> sendMsg' wsConn (SMData $ DataMsg opId $ GRRemote res) meta
 
     invalidGqlErr err = err500 Unexpected $
       "Failed parsing GraphQL response from remote: " <> err
@@ -364,19 +375,19 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     sendStartErr e = do
       let errFn = getErrFn errRespTy
-      sendMsg wsConn $ SMErr $ ErrorMsg opId $ errFn False $
-        err400 StartFailed e
+      sendMsg wsConn $
+        SMErr $ ErrorMsg opId $ errFn False $ err400 StartFailed e
       logOpEv (ODProtoErr e) Nothing
 
     sendCompleted reqId = do
-      sendMsg wsConn $ SMComplete $ CompletionMsg opId
+      sendMsg wsConn (SMComplete $ CompletionMsg opId)
       logOpEv ODCompleted reqId
 
     postExecErr reqId qErr = do
       let errFn = getErrFn errRespTy
       logOpEv (ODQueryErr qErr) (Just reqId)
-      sendMsg wsConn $ SMData $ DataMsg opId
-        (GRHasura $ GQExecError $ pure $ errFn False qErr) Nothing
+      sendMsg wsConn $ SMData $
+        DataMsg opId $ GRHasura $ GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr reqId qErr = do
@@ -385,11 +396,10 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       let err = case errRespTy of
             ERTLegacy           -> errFn False qErr
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
-      sendMsg wsConn $ SMErr $ ErrorMsg opId err
+      sendMsg wsConn (SMErr $ ErrorMsg opId err)
 
-    sendSuccResp encJson execTime =
-      sendMsg wsConn $ SMData $ DataMsg opId
-        (GRHasura $ GQSuccess $ encJToLBS encJson) (Just execTime)
+    sendSuccResp resp =
+      sendMsg' wsConn (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS resp)
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
@@ -398,9 +408,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       throwError ()
 
     -- on change, send message on the websocket
-    liveQOnChange resp (LQ.OnChangeMeta execTime) =
-      WS.sendMsg wsConn $ encodeServerMsg $ SMData $
-        DataMsg opId (GRHasura resp) execTime
+    liveQOnChange resp =
+      sendMsg' wsConn (SMData $ DataMsg opId $ GRHasura resp)
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m

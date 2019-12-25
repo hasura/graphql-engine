@@ -66,9 +66,8 @@ instance J.FromJSON ClientMsg where
 
 data DataMsg
   = DataMsg
-  { _dmId                 :: !OperationId
-  , _dmPayload            :: !GraphqlResponse
-  , _dmQueryExecutionTime :: !(Maybe Double)
+  { _dmId      :: !OperationId
+  , _dmPayload :: !GraphqlResponse
   }
 
 data ErrorMsg
@@ -129,12 +128,10 @@ encodeServerMsg msg =
     , ("payload", encJFromJValue connErr)
     ]
 
-  SMData (DataMsg opId payload execTime) ->
+  SMData (DataMsg opId payload) ->
     let encPayload = encodeGraphqlResponse payload
     in [ encTy SMT_GQL_DATA
        , ("id", encJFromJValue opId)
-       , ("response_size", encJFromJValue $ BL.length $ encJToLBS encPayload)
-       , ("query_execution_time", encJFromJValue execTime)
        , ("payload", encPayload)
        ]
 
