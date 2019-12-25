@@ -119,6 +119,7 @@ module Hasura.RQL.Types.SchemaCache
        , replaceAllowlist
 
        , ScheduledTriggerInfo(..)
+       , addScheduledTriggerToCache
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -685,6 +686,12 @@ delEventTriggerFromCache qt trn = do
       let etim = _tiEventTriggerInfoMap ti
       return $ ti { _tiEventTriggerInfoMap = M.delete trn etim }
     schObjId = SOTableObj qt $ TOTrigger trn
+
+addScheduledTriggerToCache :: (QErrM m, CacheRWM m) => ScheduledTriggerInfo -> m ()
+addScheduledTriggerToCache stInfo = do
+  sc <- askSchemaCache
+  let scScheduledTriggers' = M.insert (stiName stInfo) stInfo $ scScheduledTriggers sc
+  writeSchemaCache $ sc {scScheduledTriggers = scScheduledTriggers'}
 
 addFunctionToCache
   :: (QErrM m, CacheRWM m)

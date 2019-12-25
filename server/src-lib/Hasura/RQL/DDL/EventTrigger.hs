@@ -14,6 +14,8 @@ module Hasura.RQL.DDL.EventTrigger
   , mkAllTriggersQ
   , getEventTriggerDef
   , updateEventTriggerDef
+  , getWebhookInfoFromConf
+  , getHeaderInfosFromConf
   ) where
 
 import           Data.Aeson

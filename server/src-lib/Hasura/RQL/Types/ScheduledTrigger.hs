@@ -2,7 +2,7 @@
 
 module Hasura.RQL.Types.ScheduledTrigger
   ( ScheduleType(..)
-  , ScheduledTrigger(..)
+  , CreateScheduledTrigger(..)
   , RetryConfST(..)
   , formatTime'
   ) where
@@ -58,8 +58,8 @@ data ScheduleType = OneOff UTCTime | Cron CronSchedule
 
 $(deriveJSON defaultOptions{sumEncoding=TaggedObject "type" "value"} ''ScheduleType)
 
-data ScheduledTrigger
-  = ScheduledTrigger
+data CreateScheduledTrigger
+  = CreateScheduledTrigger
   { stName      :: !TriggerName
   , stWebhook   :: !T.Text
   , stSchedule  :: !ScheduleType
@@ -75,17 +75,17 @@ instance FromJSON CronSchedule where
 instance ToJSON CronSchedule where
   toJSON = J.String . serializeCronSchedule
 
-instance FromJSON ScheduledTrigger where
+instance FromJSON CreateScheduledTrigger where
   parseJSON =
-    withObject "ScheduledTriggerQuery " $ \o -> do
+    withObject "CreateScheduledTrigger" $ \o -> do
       stName <- o .: "name"
       stWebhook <- o .: "webhook"
       stPayload <- o .:? "payload"
       stSchedule <- o .: "schedule"
       stRetryConf <- o .:? "retry_conf" .!= defaultRetryConf
-      pure ScheduledTrigger {..}
+      pure CreateScheduledTrigger {..}
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ScheduledTrigger)
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
 
 -- aeson doesn't decode 'UTC' identifier so explicitly provide 'Z'
 -- TODO: take proper timezone

@@ -87,7 +87,7 @@ data RQLQueryV1
   | RQRedeliverEvent     !RedeliverEventQuery
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
-  | RQCreateScheduledTrigger !ScheduledTrigger
+  | RQCreateScheduledTrigger !CreateScheduledTrigger
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
