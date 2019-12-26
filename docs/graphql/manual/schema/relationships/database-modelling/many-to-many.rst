@@ -1,4 +1,4 @@
-.. _many-to-many-modelling:
+.. _many_to_many_modelling:
 
 Modelling many-to-many table relationships
 ==========================================
