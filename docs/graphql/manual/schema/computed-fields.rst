@@ -9,15 +9,17 @@ Computed fields
 What are computed fields?
 -------------------------
 
-Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table's columns.
-Computed fields are computed when requested for via SQL functions using other columns of the table and other custom inputs if needed.
+Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table's
+columns. When requested for, computed fields are computed via SQL functions using the other columns of the table and
+any user inputs if needed.
 
 .. note::
 
-  Computed fields are only exposed over the GraphQL API and the database schema is not modified on addition of a computed field.
+  Computed fields are only exposed over the GraphQL API and the database schema is not modified on addition of a
+  computed field.
 
 Supported SQL functions
-***********************
+-----------------------
 
 Only functions which satisfy the following constraints can be added as a computed field to a table.
 (*terminology from* `Postgres docs <https://www.postgresql.org/docs/current/sql-createfunction.html>`__):
