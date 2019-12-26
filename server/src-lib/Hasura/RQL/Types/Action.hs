@@ -80,7 +80,7 @@ data ActionDefinition a
   { _adArguments  :: ![ArgumentDefinition]
   , _adOutputType :: !GraphQLType
   , _adKind       :: !(Maybe ActionKind)
-  , _adWebhook    :: !a
+  , _adHandler    :: !a
   } deriving (Show, Eq, Lift, Functor)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionDefinition)
 
@@ -118,7 +118,7 @@ type ActionPermissionMap
 data ActionInfo
   = ActionInfo
   { _aiName        :: !ActionName
-  , _aiDefinition   :: !ResolvedActionDefinition
+  , _aiDefinition  :: !ResolvedActionDefinition
   , _aiPermissions :: !ActionPermissionMap
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)

@@ -326,7 +326,7 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
   threadDelay (1 * 1000 * 1000)
   where
     getActionWebhook actionCache actionName =
-      _adWebhook . _aiDefinition <$> Map.lookup actionName actionCache
+      _adHandler . _aiDefinition <$> Map.lookup actionName actionCache
 
     runTx :: (Monoid a) => Q.TxE QErr a -> IO a
     runTx q = do

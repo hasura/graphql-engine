@@ -72,7 +72,7 @@ mkMutationField actionName actionInfo permission definitionList =
           ActionExecutionSyncWebhook $ SyncActionExecutionContext
   -- TODO: only covers object types
           (ExecOnPostgres definitionList)
-          (_adWebhook definition)
+          (_adHandler definition)
         ActionAsynchronous -> ActionExecutionAsync $ _apiFilter permission
 
     -- TODO: we need to capture the comment from action definition
