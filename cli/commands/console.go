@@ -296,7 +296,7 @@ func verifyAdminSecret() gin.HandlerFunc {
 		if ec.ServerConfig.AdminSecret != "" {
 			if c.GetHeader(XHasuraAdminSecret) != ec.ServerConfig.AdminSecret {
 				//reject
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"Message": "Unauthorized"})
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
 			}
 		}
 	}
