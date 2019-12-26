@@ -1,11 +1,11 @@
 const loveConsentState = 'console:loveIcon';
-const proConsentState = 'console:pro';
+const proClickState = 'console:pro';
 const defaultState = {
   isDismissed: false,
 };
-const defaultStatePro = {
+const defaultProClickState = {
   isProClicked: false,
-}
+};
 const setLoveConsentState = stateData => {
   window.localStorage.setItem(loveConsentState, JSON.stringify(stateData));
 };
@@ -22,18 +22,28 @@ const getLoveConsentState = stateData => {
   return defaultState;
 };
 
-const setproConsentState = proStateData => {
-  window.localStorage.setItem(proConsentState, JSON.stringify(proStateData));
-}
-const getproConsentState = proStateData => {
-  const p = window.localStorage.getItem(
-    proConsentState,
-    JSON.stringify(proStateData)
-  );
-  if (p) {
-    return JSON.parse(p);
+const setProClickState = proStateData => {
+  window.localStorage.setItem(proClickState, JSON.stringify(proStateData));
+};
+const getProClickState = () => {
+  try {
+    const p = window.localStorage.getItem(proClickState);
+    if (p) {
+      return JSON.parse(p);
+    }
+    window.localStorage.setItem(
+      proClickState,
+      JSON.stringify(defaultProClickState)
+    );
+    return defaultProClickState;
+  } catch (e) {
+    console.error(e);
+    return defaultProClickState;
   }
-  window.localStorage.setItem(proConsentState, JSON.stringify(defaultStatePro));
-  return defaultStatePro;
-}
-export { getLoveConsentState, setLoveConsentState, getproConsentState, setproConsentState };
+};
+export {
+  getLoveConsentState,
+  setLoveConsentState,
+  getProClickState,
+  setProClickState,
+};

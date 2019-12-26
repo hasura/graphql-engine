@@ -28,8 +28,8 @@ import {
 import {
   getLoveConsentState,
   setLoveConsentState,
-  getproConsentState,
-  setproConsentState,
+  getProClickState,
+  setProClickState,
 } from './loveConsentLocalStorage';
 
 import { versionGT } from '../../helpers/versionUtils';
@@ -42,7 +42,7 @@ class Main extends React.Component {
     this.state = {
       showUpdateNotification: false,
       loveConsentState: getLoveConsentState(),
-      proConsentState: getproConsentState(),
+      proClickState: getProClickState(),
       isProPopUp: false,
     };
 
@@ -133,10 +133,10 @@ class Main extends React.Component {
   clickProIcon() {
     const p = {
       isProClicked: true,
-    }
-    setproConsentState(p);
+    };
+    setProClickState(p);
     this.setState({
-      proConsentState: { ...getproConsentState() },
+      proClickState: { ...getProClickState() },
     });
     this.toggleProPopup();
   }
@@ -159,6 +159,8 @@ class Main extends React.Component {
       latestServerVersion,
       metadata,
     } = this.props;
+
+    const { isProClicked } = this.state.proClickState;
 
     const styles = require('./Main.scss');
 
@@ -457,6 +459,105 @@ class Main extends React.Component {
       );
     };
 
+    const renderProPopup = () => {
+      const { isProPopUp } = this.state;
+      if (isProPopUp) {
+        return (
+          <div className={styles.proPopUpWrapper}>
+            <div className={styles.popUpHeader}>
+              Hasura <span>PRO</span>
+              <img
+                onClick={this.toggleProPopup.bind(this)}
+                className={styles.popUpClose}
+                src={close}
+                alt={'Close'}
+              />
+            </div>
+            <div className={styles.popUpBodyWrapper}>
+              <div className={styles.featuresDescription}>
+                Hasura Pro is an enterprise-ready version of Hasura that comes
+                with the following features:
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={monitoring} alt={'Monitoring'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>
+                    Monitoring/Analytics
+                  </div>
+                  <div className={styles.featuresDescription}>
+                    Complete observability: Troubleshoot errors & drill-down
+                    into individual operations.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={rate} alt={'Rate'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Rate Limiting</div>
+                  <div className={styles.featuresDescription}>
+                    Role-based rate limits to prevent abuse.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={regression} alt={'Regression'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Regression Testing</div>
+                  <div className={styles.featuresDescription}>
+                    Automatically create regression suites to prevent breaking
+                    changes.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={management} alt={'Management'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Team Management</div>
+                  <div className={styles.featuresDescription}>
+                    Login to Hasura project with granular privileges.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={allow} alt={'allow'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Allow Listing</div>
+                  <div className={styles.featuresDescription}>
+                    Allow listing workflows across dev, staging and production
+                    environments.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className={styles.popUpFooter}>
+              <a
+                href={'https://hasura.io/getintouch?type=hasuraprodemo'}
+                target={'_blank'}
+              >
+                Set up a chat with us to learn more{' '}
+                <img
+                  className={styles.arrow}
+                  src={arrowForwardRed}
+                  alt={'Arrow'}
+                />
+              </a>
+            </div>
+          </div>
+        );
+      }
+      return null;
+    };
+
     return (
       <div className={styles.container}>
         <div className={styles.flexRow}>
@@ -505,89 +606,15 @@ class Main extends React.Component {
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
               <div className={styles.helpSection + ' ' + styles.proWrapper}>
-                <span className={(!this.state.proConsentState.isProClicked) ? styles.proName : styles.proNameClicked } onClick={this.clickProIcon.bind(this)}>PRO</span>
-                {this.state.isProPopUp ? (
-                    <div className={styles.proPopUpWrapper}>
-                      <div className={styles.popUpHeader}>
-                        Hasura <span>PRO</span>
-                        <img onClick={this.toggleProPopup.bind(this)} className={styles.popUpClose} src={close} alt={'Close'} />
-                      </div>
-                      <div className={styles.popUpBodyWrapper}>
-                        <div className={styles.featuresDescription}>
-                          Hasura Pro is an enterprise-ready version of Hasura that comes with the following features:
-                        </div>
-                        <div className={styles.proFeaturesList}>
-                          <div className={styles.featuresImg}>
-                            <img src={monitoring} alt={'Monitoring'} />
-                          </div>
-                          <div className={styles.featuresList}>
-                            <div className={styles.featuresTitle}>
-                              Monitoring/Analytics
-                            </div>
-                            <div className={styles.featuresDescription}>
-                              Complete observability: Troubleshoot errors & drill-down into individual operations.
-                            </div>
-                          </div>
-                        </div>
-                        <div className={styles.proFeaturesList}>
-                          <div className={styles.featuresImg}>
-                            <img src={rate} alt={'Rate'} />
-                          </div>
-                          <div className={styles.featuresList}>
-                            <div className={styles.featuresTitle}>
-                              Rate Limiting
-                            </div>
-                            <div className={styles.featuresDescription}>
-                              Role-based rate limits to prevent abuse.
-                            </div>
-                          </div>
-                        </div>
-                        <div className={styles.proFeaturesList}>
-                          <div className={styles.featuresImg}>
-                            <img src={regression} alt={'Regression'} />
-                          </div>
-                          <div className={styles.featuresList}>
-                            <div className={styles.featuresTitle}>
-                              Regression Testing
-                            </div>
-                            <div className={styles.featuresDescription}>
-                              Automatically create regression suites to prevent breaking changes.
-                            </div>
-                          </div>
-                        </div>
-                        <div className={styles.proFeaturesList}>
-                          <div className={styles.featuresImg}>
-                            <img src={management} alt={'Management'} />
-                          </div>
-                          <div className={styles.featuresList}>
-                            <div className={styles.featuresTitle}>
-                              Team Management
-                            </div>
-                            <div className={styles.featuresDescription}>
-                              Login to Hasura project with granular privileges.
-                            </div>
-                          </div>
-                        </div>
-                        <div className={styles.proFeaturesList}>
-                          <div className={styles.featuresImg}>
-                            <img src={allow} alt={'allow'} />
-                          </div>
-                          <div className={styles.featuresList}>
-                            <div className={styles.featuresTitle}>
-                              Allow Listing
-                            </div>
-                            <div className={styles.featuresDescription}>
-                              Allow listing workflows across dev, staging and production environments.
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className={styles.popUpFooter}>
-                        <a href={'https://hasura.io/getintouch?type=hasuraprodemo'} target={'_blank'}>Set up a chat with us to learn more <img className={styles.arrow} src={arrowForwardRed} alt={'Arrow'} /></a>
-                      </div>
-                    </div>
-                  ) : null
-                }
+                <span
+                  className={
+                    !isProClicked ? styles.proName : styles.proNameClicked
+                  }
+                  onClick={this.clickProIcon.bind(this)}
+                >
+                  PRO
+                </span>
+                {renderProPopup()}
               </div>
               <Link to="/settings">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
