@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/hasura/graphql-engine/cli/migrate/database"
+
 	"github.com/oliveagle/jsonpath"
 	v2yaml "gopkg.in/yaml.v2"
 )
@@ -69,6 +71,66 @@ func (h *HasuraDB) ResetMetadata() error {
 func (h *HasuraDB) ReloadMetadata() error {
 	query := HasuraInterfaceQuery{
 		Type: "reload_metadata",
+		Args: HasuraArgs{},
+	}
+
+	resp, body, err := h.sendv1Query(query)
+	if err != nil {
+		h.logger.Debug(err)
+		return err
+	}
+	h.logger.Debug("response: ", string(body))
+
+	var horror HasuraError
+	if resp.StatusCode != http.StatusOK {
+		err = json.Unmarshal(body, &horror)
+		if err != nil {
+			h.logger.Debug(err)
+			return err
+		}
+		return horror.Error(h.config.isCMD)
+	}
+	return nil
+}
+
+func (h *HasuraDB) GetInconsistentMetadata() (bool, []database.InconsistentMetadataInterface, error) {
+	query := HasuraInterfaceQuery{
+		Type: "get_inconsistent_metadata",
+		Args: HasuraArgs{},
+	}
+
+	resp, body, err := h.sendv1Query(query)
+	if err != nil {
+		h.logger.Debug(err)
+		return false, nil, err
+	}
+	h.logger.Debug("response: ", string(body))
+
+	var horror HasuraError
+	if resp.StatusCode != http.StatusOK {
+		err = json.Unmarshal(body, &horror)
+		if err != nil {
+			h.logger.Debug(err)
+			return false, nil, err
+		}
+		return false, nil, horror.Error(h.config.isCMD)
+	}
+
+	var inMet InconsistentMetadata
+	err = json.Unmarshal(body, &inMet)
+	if err != nil {
+		return false, nil, err
+	}
+	inMetInterface := make([]database.InconsistentMetadataInterface, 0)
+	for _, obj := range inMet.InConsistentObjects {
+		inMetInterface = append(inMetInterface, database.InconsistentMetadataInterface(obj))
+	}
+	return inMet.IsConsistent, inMetInterface, nil
+}
+
+func (h *HasuraDB) DropInconsistentMetadata() error {
+	query := HasuraInterfaceQuery{
+		Type: "drop_inconsistent_metadata",
 		Args: HasuraArgs{},
 	}
 

@@ -161,7 +161,7 @@
     "less-loader": "^4.1.0",
     "lint-staged": "^6.1.1",
     "mini-css-extract-plugin": "^0.4.0",
-    "node-sass": "^4.12.0",
+    "node-sass": "^4.13.0",
     "nyc": "^13.3.0",
     "optimize-css-assets-webpack-plugin": "^4.0.2",
     "react-a11y": "^0.2.6",
