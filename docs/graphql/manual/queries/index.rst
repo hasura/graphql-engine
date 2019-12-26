@@ -61,7 +61,4 @@ based on a typical author/article schema for reference.
   pagination
   Using multiple arguments <multiple-arguments>
   multiple-queries
-  custom-functions
-  derived-data
-  control-access
   variables-aliases-fragments-directives

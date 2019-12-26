@@ -1,3 +1,5 @@
+.. _one_to_many_modelling:
+
 Modelling one-to-many table relationships
 =========================================
 
