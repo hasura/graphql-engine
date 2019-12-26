@@ -11,8 +11,10 @@ log() {
 DEFAULT_MIGRATIONS_DIR="/hasura-migrations"
 TEMP_MIGRATIONS_DIR="/tmp/hasura-migrations"
 
-# Find a random port. If the port is occupied (according to docker networking), container fails and should be rerun again.
-HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT=`shuf -i 9000-9999 -n 1`
+# Use 9691 port for running temporary instance. 
+# In case 9691 is occupied (according to docker networking), then this will fail.
+# TODO: Find a proper random port or read from env variable.
+HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT=9691
 
 if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT+x} ]; then
     log "server timeout is not set defaulting to 30 seconds"
