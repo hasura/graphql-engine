@@ -1,0 +1,19 @@
+Guides: Data modelling
+======================
+
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 1
+  :local:
+
+- :ref:`soft_deletes`
+- :ref:`one_to_one_modelling`
+- :ref:`one_to_many_modelling`
+- :ref:`many_to_many_modelling`
+
+.. toctree::
+  :maxdepth: 1
+  :titlesonly:
+  :hidden:
+
+  soft-deletes
