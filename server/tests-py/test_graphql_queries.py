@@ -493,6 +493,10 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     def test_track_function_v2_errors(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_function_v2_errors.yaml')
 
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_test_session_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_get_test_session_id.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions'
