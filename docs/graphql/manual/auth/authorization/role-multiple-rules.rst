@@ -33,7 +33,7 @@ We can achieve this via the following steps:
 Step 1: Create a view 
 ---------------------
 
-:ref:`Create <create_views>` a view ``user_private`` with columns ``(user_id, email, phone, address)``:
+Create a :ref:`view <create_views>` called ``user_private`` with columns ``(user_id, email, phone, address)``:
 
 .. code-block:: SQL
 
