@@ -1,6 +1,8 @@
 const loveConsentState = 'console:loveIcon';
+const proConsentState = 'console:pro';
 const defaultState = {
   isDismissed: false,
+  isProClicked: false,
 };
 
 const setLoveConsentState = stateData => {
@@ -19,4 +21,18 @@ const getLoveConsentState = stateData => {
   return defaultState;
 };
 
-export { getLoveConsentState, setLoveConsentState };
+const setproConsentState = proStateData => {
+  window.localStorage.setItem(proConsentState, JSON.stringify(proStateData));
+}
+const getproConsentState = proStateData => {
+  const p = window.localStorage.getItem(
+    proConsentState,
+    JSON.stringify(proStateData)
+  );
+  if (p) {
+    return JSON.parse(p);
+  }
+  window.localStorage.setItem(proConsentState, JSON.stringify(defaultState));
+  return defaultState;
+}
+export { getLoveConsentState, setLoveConsentState, getproConsentState, setproConsentState };
