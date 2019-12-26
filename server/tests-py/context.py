@@ -3,8 +3,6 @@
 from http import HTTPStatus
 from urllib.parse import urlparse
 from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml 
-# from collections import OrderedDict
-# import socketserver
 import threading
 import http.server
 import json
@@ -12,7 +10,6 @@ import queue
 import socket
 import subprocess
 import time
-import uuid
 import string
 import random
 import os
@@ -25,6 +22,10 @@ from sqlalchemy.schema import MetaData
 import graphql_server
 import graphql
 
+# pytest has removed the global pytest.config
+# As a solution to this we are going to store it in PyTestConf.config
+class PytestConf():
+    pass
 
 class HGECtxError(Exception):
     pass
@@ -288,7 +289,8 @@ class HGECtx:
         )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
-        return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
+        # Returning response headers to get the request id from response
+        return resp.status_code, resp.json(object_pairs_hook=OrderedDict), resp.headers
 
     def sql(self, q):
         conn = self.engine.connect()

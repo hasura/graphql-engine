@@ -1,6 +1,4 @@
 import React from 'react';
-import globals from '../../../../Globals';
-import { REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT } from '../../../../helpers/versionUtils';
 import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
@@ -81,14 +79,6 @@ class Common extends React.Component {
     };
 
     const getTimeoutSection = () => {
-      const supportTimeoutConf =
-        globals.featuresCompatibility &&
-        globals.featuresCompatibility[REMOTE_SCHEMA_TIMEOUT_CONF_SUPPORT];
-
-      if (!supportTimeoutConf) {
-        return null;
-      }
-
       return (
         <React.Fragment>
           <div className={styles.subheading_text}>

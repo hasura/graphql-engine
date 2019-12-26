@@ -5,27 +5,28 @@ module Hasura.App where
 
 import           Control.Monad.Base
 import           Control.Monad.Stateless
-import           Control.Monad.STM           (atomically)
-import           Control.Monad.Trans.Control (MonadBaseControl (..))
-import           Data.Aeson                  ((.=))
-import           Data.Time.Clock             (UTCTime, getCurrentTime)
+import           Control.Monad.STM                    (atomically)
+import           Control.Monad.Trans.Control          (MonadBaseControl (..))
+import           Data.Aeson                           ((.=))
+import           Data.Time.Clock                      (UTCTime, getCurrentTime)
 import           Options.Applicative
-import           System.Environment          (getEnvironment, lookupEnv)
-import           System.Exit                 (exitFailure)
+import           System.Environment                   (getEnvironment, lookupEnv)
+import           System.Exit                          (exitFailure)
 
-import qualified Control.Concurrent          as C
-import qualified Data.Aeson                  as A
-import qualified Data.ByteString.Char8       as BC
-import qualified Data.ByteString.Lazy.Char8  as BLC
-import qualified Data.Text                   as T
-import qualified Data.Time.Clock             as Clock
-import qualified Data.Yaml                   as Y
-import qualified Database.PG.Query           as Q
-import qualified Network.HTTP.Client         as HTTP
-import qualified Network.HTTP.Client.TLS     as HTTP
-import qualified Network.Wai.Handler.Warp    as Warp
-import qualified System.Posix.Signals        as Signals
-import qualified Text.Mustache.Compile       as M
+import qualified Control.Concurrent                   as C
+import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Data.Aeson                           as A
+import qualified Data.ByteString.Char8                as BC
+import qualified Data.ByteString.Lazy.Char8           as BLC
+import qualified Data.Text                            as T
+import qualified Data.Time.Clock                      as Clock
+import qualified Data.Yaml                            as Y
+import qualified Database.PG.Query                    as Q
+import qualified Network.HTTP.Client                  as HTTP
+import qualified Network.HTTP.Client.TLS              as HTTP
+import qualified Network.Wai.Handler.Warp             as Warp
+import qualified System.Posix.Signals                 as Signals
+import qualified Text.Mustache.Compile                as M
 
 import           Hasura.Db
 import           Hasura.EncJSON
@@ -33,22 +34,20 @@ import           Hasura.Events.Lib
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.Types            (CacheRWM, Code (..),
-                                              HasHttpManager, HasSQLGenCtx,
-                                              HasSystemDefined, QErr (..),
-                                              SQLGenCtx (..), SchemaCache (..),
-                                              UserInfoM, adminRole,
-                                              adminUserInfo, decodeValue,
-                                              emptySchemaCache, throw400,
-                                              userRole, withPathK)
+import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
+                                                       HasSQLGenCtx, HasSystemDefined, QErr (..),
+                                                       SQLGenCtx (..), SchemaCache (..), UserInfoM,
+                                                       adminRole, adminUserInfo, decodeValue,
+                                                       emptySchemaCache, throw400, userRole,
+                                                       withPathK)
 import           Hasura.Server.App
 import           Hasura.Server.Auth
-import           Hasura.Server.CheckUpdates  (checkForUpdates)
+import           Hasura.Server.CheckUpdates           (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Migrate       (migrateCatalog)
-import           Hasura.Server.Query         (Run, RunCtx (..), peelRun,
-                                              requiresAdmin, runQueryM)
+import           Hasura.Server.Migrate                (migrateCatalog)
+import           Hasura.Server.Query                  (Run, RunCtx (..), peelRun, requiresAdmin,
+                                                       runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
@@ -165,7 +164,7 @@ initialiseCtx hgeCmd rci = do
   eDbId <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
   dbId <- either printErrJExit return eDbId
 
-  return $ (InitCtx httpManager instanceId dbId loggers connInfo pool, initTime)
+  return (InitCtx httpManager instanceId dbId loggers connInfo pool, initTime)
   where
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
@@ -194,6 +193,7 @@ runHGEServer
      , MetadataApiAuthorization m
      , HttpLog m
      , ConsoleRenderer m
+     , LA.Forall (LA.Pure m)
      )
   => ServeOptions impl
   -> InitCtx
@@ -205,12 +205,12 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
       Loggers loggerCtx logger _ = _icLoggers
 
   authModeRes <- runExceptT $ mkAuthMode soAdminSecret soAuthHook soJwtSecret soUnAuthRole
-                             _icHttpManager loggerCtx
+                              _icHttpManager logger
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
   HasuraApp app cacheRef cacheInitTime shutdownApp <- mkWaiApp soTxIso
-                                                               loggerCtx
+                                                               logger
                                                                sqlGenCtx
                                                                soEnableAllowlist
                                                                _icPgPool
@@ -249,7 +249,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
   let scRef = _scrCache cacheRef
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-  void $ liftIO $ C.forkIO $ processEventQueue loggerCtx logEnvHeaders
+  void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
     _icHttpManager _icPgPool scRef eventEngineCtx
 
   -- start a background thread to check for updates
@@ -339,13 +339,13 @@ instance HttpLog AppM where
     unLogger logger $ mkHttpLog $
       mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing Nothing headers
 
-  logHttpSuccess logger userInfoM reqId httpReq _ compressedResponse qTime cType headers =
+  logHttpSuccess logger userInfoM reqId httpReq _ _ compressedResponse qTime cType headers =
     unLogger logger $ mkHttpLog $
       mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
 
 instance UserAuthentication AppM where
   resolveUserInfo logger manager headers authMode =
-    runExceptT $ getUserInfo logger manager headers authMode
+    runExceptT $ getUserInfoWithExpTime logger manager headers authMode
 
 instance MetadataApiAuthorization AppM where
   authorizeMetadataApi query userInfo = do

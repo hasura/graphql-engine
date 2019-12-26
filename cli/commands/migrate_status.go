@@ -21,6 +21,11 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateStatusCmd := &cobra.Command{
 		Use:          "status",
 		Short:        "Display current status of migrations on a database",
+		Example: `  # Use with admin secret:
+  hasura migrate status --admin-secret "<your-admin-secret>"
+
+  # Check status on a different server:
+  hasura migrate status --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -74,10 +79,11 @@ func printStatus(status *migrate.Status) *bytes.Buffer {
 	buf := &bytes.Buffer{}
 	out.Init(buf, 0, 8, 2, ' ', 0)
 	w := util.NewPrefixWriter(out)
-	w.Write(util.LEVEL_0, "VERSION\tSOURCE STATUS\tDATABASE STATUS\n")
+	w.Write(util.LEVEL_0, "VERSION\tNAME\tSOURCE STATUS\tDATABASE STATUS\n")
 	for _, version := range status.Index {
-		w.Write(util.LEVEL_0, "%d\t%s\t%s\n",
+		w.Write(util.LEVEL_0, "%d\t%s\t%s\t%s\n",
 			version,
+			status.Migrations[version].Name,
 			convertBool(status.Migrations[version].IsPresent),
 			convertBool(status.Migrations[version].IsApplied),
 		)

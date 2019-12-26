@@ -48,7 +48,7 @@ class (Monad m) => UserAuthentication m where
     -> [N.Header]
     -- ^ request headers
     -> AuthMode
-    -> m (Either QErr UserInfo)
+    -> m (Either QErr (UserInfo, Maybe UTCTime))
 
 newtype AdminSecret
   = AdminSecret { getAdminSecret :: T.Text }
@@ -87,16 +87,16 @@ mkAuthMode
   -> Maybe JWTConfig
   -> Maybe RoleName
   -> H.Manager
-  -> LoggerCtx Hasura
+  -> Logger Hasura
   -> m AuthMode
-mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager lCtx =
+mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager logger =
   case (mAdminSecret, mWebHook, mJwtSecret) of
     (Nothing,  Nothing,   Nothing)      -> return AMNoAuth
     (Just key, Nothing,   Nothing)      -> return $ AMAdminSecret key mUnAuthRole
     (Just key, Just hook, Nothing)      -> unAuthRoleNotReqForWebHook >>
                                            return (AMAdminSecretAndHook key hook)
     (Just key, Nothing,   Just jwtConf) -> do
-      jwtCtx <- mkJwtCtx jwtConf httpManager lCtx
+      jwtCtx <- mkJwtCtx jwtConf httpManager logger
       return $ AMAdminSecretAndJWT key jwtCtx mUnAuthRole
 
     (Nothing, Just _, Nothing)     -> throwError $
@@ -122,14 +122,13 @@ mkJwtCtx
      )
   => JWTConfig
   -> H.Manager
-  -> LoggerCtx Hasura
+  -> Logger Hasura
   -> m JWTCtx
-mkJwtCtx conf httpManager loggerCtx = do
+mkJwtCtx conf httpManager logger = do
   jwkRef <- case jcKeyOrUrl conf of
     Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
     Right url -> do
       ref <- liftIO $ newIORef $ JWKSet []
-      let logger = mkLogger loggerCtx
       mTime <- updateJwkRef logger httpManager url ref
       case mTime of
         Nothing -> return ref

@@ -171,16 +171,15 @@ initEventEngineCtx maxT fetchI = do
   return $ EventEngineCtx q c maxT fetchI
 
 processEventQueue
-  :: L.LoggerCtx L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
+  :: L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
   -> IORef (SchemaCache, SchemaCacheVer) -> EventEngineCtx
   -> IO ()
-processEventQueue logctx logenv httpMgr pool cacheRef eectx = do
+processEventQueue logger logenv httpMgr pool cacheRef eectx = do
   threads <- mapM async [fetchThread, consumeThread]
   void $ waitAny threads
   where
-    fetchThread = pushEvents (L.mkLogger logctx) pool eectx
-    consumeThread = consumeEvents (L.mkLogger logctx)
-                    logenv httpMgr pool (CacheRef cacheRef) eectx
+    fetchThread = pushEvents logger pool eectx
+    consumeThread = consumeEvents logger logenv httpMgr pool (CacheRef cacheRef) eectx
 
 pushEvents
   :: L.Logger L.Hasura -> Q.PGPool -> EventEngineCtx -> IO ()

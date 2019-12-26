@@ -344,6 +344,8 @@ mkServeOptions rso = do
 #endif
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
+      -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
+      -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
@@ -497,13 +499,16 @@ serveHostEnv =
 pgConnsEnv :: (String, String)
 pgConnsEnv =
   ( "HASURA_GRAPHQL_PG_CONNECTIONS"
-  , "Number of connections per stripe that need to be opened to Postgres (default: 50)"
+  , "Maximum number of Postgres connections that can be opened per stripe (default: 50). "
+    <> "When the maximum is reached we will block until a new connection becomes available, "
+    <> "even if there is capacity in other stripes."
   )
 
 pgStripesEnv :: (String, String)
 pgStripesEnv =
   ( "HASURA_GRAPHQL_PG_STRIPES"
-  , "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1)"
+  , "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1). "
+    <> "New connections will be taken from a particular stripe pseudo-randomly."
   )
 
 pgTimeoutEnv :: (String, String)
