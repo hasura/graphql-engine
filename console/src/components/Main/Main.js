@@ -43,7 +43,7 @@ class Main extends React.Component {
       showUpdateNotification: false,
       loveConsentState: getLoveConsentState(),
       proClickState: getProClickState(),
-      isProPopUp: false,
+      isPopUpOpen: false,
     };
 
     this.handleBodyClick = this.handleBodyClick.bind(this);
@@ -72,7 +72,7 @@ class Main extends React.Component {
     dispatch(fetchServerConfig());
   }
   toggleProPopup() {
-    this.setState({ isProPopUp: !this.state.isProPopUp });
+    this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
   }
   setShowUpdateNotification() {
     const { latestServerVersion, serverVersion } = this.props;
@@ -460,8 +460,8 @@ class Main extends React.Component {
     };
 
     const renderProPopup = () => {
-      const { isProPopUp } = this.state;
-      if (isProPopUp) {
+      const { isPopUpOpen } = this.state;
+      if (isPopUpOpen) {
         return (
           <div className={styles.proPopUpWrapper}>
             <div className={styles.popUpHeader}>
