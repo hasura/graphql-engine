@@ -57,11 +57,11 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.StringVar(&opts.APIPort, "api-port", "9693", "port for serving migrate api")
 	f.StringVar(&opts.ConsolePort, "console-port", "9695", "port for serving console")
-	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
+	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migrate api from")
+	f.StringVar(&opts.ServerExternalEndpoint, "server-external-endpoint", "", "endpoint using which console can access graphql engine")
+	f.StringVar(&opts.CliExternalEndpoint, "cli-external-endpoint", "", "endpoint using which console can access the migrate api served by cli")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
-	f.StringVar(&opts.ServerExternalEndpoint, "server-external-endpoint", "", "endpoint using which console can access graphql engine")
-	f.StringVar(&opts.CliExternalEndpoint, "cli-external-endpoint", "", "endpoint using which console can access graphql engine")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -114,6 +114,13 @@ func (o *consoleOptions) run() error {
 		return err
 	}
 
+	if o.CliExternalEndpoint == "" {
+		o.CliExternalEndpoint = "http://" + o.Address + ":" + o.APIPort
+	}
+	if o.ServerExternalEndpoint == "" {
+		o.ServerExternalEndpoint = o.EC.ServerConfig.Endpoint
+	}
+
 	// My Router struct
 	r := &cRouter{
 		g,
@@ -130,10 +137,9 @@ func (o *consoleOptions) run() error {
 	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
 
 	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
-		"apiHost":          o.CliExternalEndpoint,
-		"apiPort":          o.APIPort,
 		"cliVersion":       o.EC.Version.GetCLIVersion(),
 		"serverVersion":    o.EC.Version.GetServerVersion(),
+		"migrateApiUrl":    o.CliExternalEndpoint,
 		"dataApiUrl":       o.ServerExternalEndpoint,
 		"dataApiVersion":   "",
 		"hasAccessKey":     adminSecretHeader == XHasuraAccessKey,

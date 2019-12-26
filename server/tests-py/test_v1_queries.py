@@ -509,13 +509,13 @@ class TestMetadataOrder(DefaultTestSelectQueries):
         headers = {}
         if hge_ctx.hge_key is not None:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
-        export_code, export_resp = hge_ctx.anyq(url, export_query, headers)
+        export_code, export_resp, _ = hge_ctx.anyq(url, export_query, headers)
         assert export_code == 200, export_resp
         replace_query = {
             'type': 'replace_metadata',
             'args': export_resp
         }
-        replace_code, replace_resp = hge_ctx.anyq(url, replace_query, headers)
+        replace_code, replace_resp, _ = hge_ctx.anyq(url, replace_query, headers)
         assert replace_code == 200, replace_resp
 
 

@@ -3,8 +3,7 @@
     <link rel="icon" type="image/png" href="https://graphql-engine-cdn.hasura.io/console/assets/common/img/favicon_green.png" />
     <script>
       window.__env = {
-        apiHost: {{.apiHost}},
-        apiPort: "{{.apiPort}}",
+        migrateApiUrl: {{.migrateApiUrl}},
         cliVersion: {{.cliVersion}},
         dataApiUrl: {{.dataApiUrl}},
         dataApiVersion: {{.dataApiVersion}},
@@ -15,6 +14,7 @@
         consoleMode: "cli",
         cliUUID: {{.cliUUID}},
         enableTelemetry: {{.enableTelemetry}},
+        assetsPath: "https://graphql-engine-cdn.hasura.io/console/assets",
         serverVersion: "{{.serverVersion}}",
       };
     </script>

@@ -14,7 +14,7 @@ const (
 // a message which states the reason for the result.
 func (v *Version) CheckCLIServerCompatibility() (compatible bool, reason string) {
 	// mark dev builds as compatible
-	if v.CLI == "dev" {
+	if v.CLI == DevVersion {
 		return true, devCLI
 	}
 	// empty cli version

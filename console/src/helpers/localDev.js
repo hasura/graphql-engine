@@ -15,8 +15,7 @@ const serverEnvVars = `
 `;
 
 const cliEnvVars = `
-  apiPort: '${process.env.API_PORT}',
-  apiHost: '${process.env.API_HOST}',
+  migrateApiUrl: '${process.env.MIGRATE_API_URL}',
   dataApiUrl: '${process.env.DATA_API_URL}',
   adminSecret: '${process.env.ADMIN_SECRET}',
   consoleMode: '${process.env.CONSOLE_MODE}',
