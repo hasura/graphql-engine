@@ -119,7 +119,7 @@ func (o *consoleOptions) run() error {
 		g,
 		t,
 	}
-
+	r.router.Use(verifyAdminSecret())
 	r.setRoutes(o.EC.MigrationDir, metadataPath, o.EC.Logger)
 
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
@@ -151,7 +151,6 @@ func (o *consoleOptions) run() error {
 	o.WG = wg
 	wg.Add(1)
 	go func() {
-		r.router.Use(verifyAdminSecret())
 		err = r.router.Run(o.Address + ":" + o.APIPort)
 		if err != nil {
 			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
@@ -291,7 +290,7 @@ func verifyAdminSecret() gin.HandlerFunc {
 		if ec.ServerConfig.AdminSecret != "" {
 			if c.GetHeader(XHasuraAdminSecret) != ec.ServerConfig.AdminSecret {
 				//reject
-				http.Error(c.Writer, "unauthorized", http.StatusUnauthorized)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"Message": "Unauthorized"})
 			}
 		}
 	}
