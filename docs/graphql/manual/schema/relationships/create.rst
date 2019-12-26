@@ -174,12 +174,12 @@ Fetch a list of authors and a nested list of each author's articles:
       }
     }
 
-.. _relationships-without-fkey:
+.. _create_manual_relationships:
 
 Using manual relationships
 --------------------------
 
-Let's say you have a table ``author(id, name)`` and a view ``author_avg_rating(id, avg)`` which has the
+Let's say you have a table ``author (id, name)`` and a view ``author_avg_rating (id, avg)`` which has the
 average rating of articles for each author.
 
 Let us now create an ``object relationship`` called ``avg_rating`` from the ``author`` table to the
