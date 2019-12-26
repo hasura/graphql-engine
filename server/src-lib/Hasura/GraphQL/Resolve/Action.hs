@@ -197,10 +197,17 @@ data ActionWebhookPayload
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
 
+data ActionWebhookError
+  = ActionWebhookError
+  { _aweCode    :: !(Maybe Text)
+  , _aweMessage :: !(Maybe Text)
+  } deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookError)
+
 data ActionWebhookResponse
   = ActionWebhookResponse
   { _awrData   :: !(Maybe J.Value)
-  , _awrErrors :: !(Maybe J.Value)
+  , _awrErrors :: !(Maybe ActionWebhookError)
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookResponse)
 
@@ -279,17 +286,25 @@ callWebhook manager resolvedWebhook actionWebhookPayload = do
     Right (Left (Wreq.JSONError e)) ->
       throw500WithDetail "not a valid json response from webhook" $
       J.toJSON e
-    Right (Right responseWreq) ->
-      let response = responseWreq ^. Wreq.responseBody
-      in case (_awrData response, _awrErrors response) of
-      (Nothing, Nothing) ->
-        throw500WithDetail "internal error" $
-        J.String "webhook response has neither 'data' nor 'errors'"
-      (Just _, Just _) ->
-        throw500WithDetail "internal error" $
-        J.String "webhook response cannot have both 'data' and 'errors'"
-      (Just d, Nothing) -> return d
-      (Nothing, Just e) -> throwVE $ T.pack $ show e
+    Right (Right responseWreq) -> do
+      let responseValue = responseWreq ^. Wreq.responseBody
+      response <- decodeValue responseValue
+      case (_awrData response, _awrErrors response) of
+        (Nothing, Nothing) ->
+          throw500WithDetail "internal error" $
+          J.String "webhook response has neither 'data' nor 'errors'"
+        (Just _, Just _) ->
+          throw500WithDetail "internal error" $
+          J.String "webhook response cannot have both 'data' and 'errors'"
+        (Just d, Nothing) -> return d
+        (Nothing, Just errorResponse) -> do
+          let ActionWebhookError maybeCode maybeMessage = errorResponse
+              code = maybe Unexpected ActionWebhookCode maybeCode
+              withMessage message = err500 code message
+              noMessagekey = "\"message\" key is not found in webhook \"errors\" response"
+              withoutMessage = (err500 code noMessagekey)
+                               {qeInternal = Just $ J.object ["webhook_response" J..= responseValue]}
+          throwError $ maybe withoutMessage withMessage maybeMessage
 
 data ActionLogItem
   = ActionLogItem

@@ -86,6 +86,8 @@ data Code
   -- Websocket/Subscription errors
   | StartFailed
   | InvalidCustomTypes
+  -- Actions Webhook code
+  | ActionWebhookCode !Text
   deriving (Eq)
 
 instance Show Code where
@@ -125,6 +127,7 @@ instance Show Code where
     RemoteSchemaConflicts -> "remote-schema-conflicts"
     StartFailed           -> "start-failed"
     InvalidCustomTypes    -> "invalid-custom-types"
+    ActionWebhookCode t   -> T.unpack t
 
 data QErr
   = QErr
