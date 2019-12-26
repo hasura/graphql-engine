@@ -326,7 +326,7 @@ A nested insert mutation is processed as follows:
 
 Many-to-many relationships
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Let's say the ``articles`` has a :ref:`many-to-many relationship <many-to-many-modelling>` with the ``tags`` table via
+Let's say the ``articles`` has a :ref:`many-to-many relationship <many_to_many_modelling>` with the ``tags`` table via
 a bridge table ``article_tags``.
 
 **Example:** Insert an ``article`` along with a few ``tags``.

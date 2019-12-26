@@ -1,3 +1,5 @@
+.. _one_to_one_modelling:
+
 Modelling one-to-one table relationships
 ========================================
 
