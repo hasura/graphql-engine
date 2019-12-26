@@ -1206,6 +1206,7 @@
 /* PRO popup section */
 .proWrapper {
   position: relative;
+  padding: 12px 15px;
   .proName, .proNameClicked {
     font-size: 15px;
     font-weight: bold;
@@ -1234,6 +1235,8 @@
     top: 60px;
     right: -35px;
     text-transform: none;
+    overflow: auto;
+    height: calc(100vh - 60px);
     .popUpHeader {
       font-size: 20px;
       font-weight: bold;
