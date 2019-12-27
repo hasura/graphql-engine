@@ -144,7 +144,7 @@ ${argumentType.fields.map(f => `  ${f.name}: ${f.type}`).join(',\n')}
 
     const getHandler = () => {
       return `
-const handler = (request: NowRequest, response: NowResponse) => {
+const handler = async (request: NowRequest, response: NowResponse) => {
   const mutationInput: ${argumentType.name} = request.body.input;
 
   // perform your business logic here
