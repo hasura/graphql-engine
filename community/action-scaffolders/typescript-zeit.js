@@ -149,6 +149,17 @@ const handler = async (request: NowRequest, response: NowResponse) => {
 
   // perform your business logic here
 
+  In case of error,
+
+  return response.status(400).json({
+    errors: {
+      code: '<error code>',
+      message: 'error happened'
+    }
+  })
+
+  */
+
   // return the output type
   return response.json({
     data: {}

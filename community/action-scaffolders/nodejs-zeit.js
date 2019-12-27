@@ -125,11 +125,25 @@ ${varCodegen}
   }
 
   const handlerContent = `
-${derive ? 'const fetch = require("node-fetch")\n' : ''}
-${derive ? mutationCodegen + '\n' : ''}
+${derive ? 'const fetch = require("node-fetch")' : ''}
+${derive ? mutationCodegen : ''}
 const handler = async (req, res) => {
-${derive ? graphqlClientCode + '\n' : ''}  
-  res.json({ data: {} })
+${derive ? graphqlClientCode : ''}  
+
+  /*
+
+  In case of errors:
+  
+  return res.status(400).json({
+    errors: {
+      code: '<error code>',
+      message: "error happened"
+    }
+  })
+
+  */
+
+  return res.json({ data: {} })
 }
 
 module.exports = handler;
