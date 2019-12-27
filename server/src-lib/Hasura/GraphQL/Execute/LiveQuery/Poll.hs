@@ -26,7 +26,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , newSinkId
   , SubscriberMap
   , OnChange
-  , OnChangeMeta(..)
+  , LiveQueryMetadata(..)
   ) where
 
 import           Hasura.Prelude
@@ -65,12 +65,13 @@ data Subscriber
   , _sOnChangeCallback :: !OnChange
   }
 
-data OnChangeMeta
-  = OnChangeMeta
-  { _ocmExecutionTime :: !(Maybe Double)
+-- live query onChange metadata, used for adding more extra analytics data
+data LiveQueryMetadata
+  = LiveQueryMetadata
+  { _lqmExecutionTime :: !(Maybe Double)
   }
 
-type OnChange = GQResponse -> OnChangeMeta -> IO ()
+type OnChange = GQResponse -> LiveQueryMetadata -> IO ()
 
 newtype SubscriberId = SubscriberId { _unSinkId :: UUID.UUID }
   deriving (Show, Eq, Hashable, J.ToJSON)
@@ -165,7 +166,7 @@ pushResultToCohort
   :: GQResult EncJSON
   -- ^ a response that still needs to be wrapped with each 'Subscriber'’s root 'G.Alias'
   -> Maybe ResponseHash
-  -> OnChangeMeta
+  -> LiveQueryMetadata
   -> CohortSnapshot
   -> IO ()
 pushResultToCohort result respHashM actionMeta cohortSnapshot = do
@@ -309,7 +310,8 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
     mxRes <- runExceptT . runLazyTx' pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
     queryFinish <- Clock.getCurrentTime
     let queryTime = realToFrac $ Clock.diffUTCTime queryFinish queryInit
-        operations = getCohortOperations cohortSnapshotMap (OnChangeMeta $ Just queryTime) mxRes
+        lqMeta = LiveQueryMetadata $ Just queryTime
+        operations = getCohortOperations cohortSnapshotMap lqMeta mxRes
     Metrics.add (_rmQuery metrics) queryTime
 
     -- concurrently push each unique result

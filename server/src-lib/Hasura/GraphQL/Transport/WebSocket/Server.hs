@@ -17,6 +17,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
 
   , WSServer
   , WSEventInfo(..)
+  , WSQueueResponse(..)
   , createWSServer
   , closeAll
   , createServerApp
@@ -98,12 +99,18 @@ instance L.ToEngineLog WSLog L.Hasura where
   toEngineLog wsLog =
     (L.LevelDebug, L.ELTInternal L.ILTWsServer, J.toJSON wsLog)
 
+data WSQueueResponse
+  = WSQueueResponse
+  { _wsqrMessage   :: BL.ByteString
+  , _wsqrEventInfo :: Maybe WSEventInfo
+  }
+
 data WSConn a
   = WSConn
   { _wcConnId    :: !WSId
   , _wcLogger    :: !(L.Logger L.Hasura)
   , _wcConnRaw   :: !WS.Connection
-  , _wcSendQ     :: !(STM.TQueue (BL.ByteString, Maybe WSEventInfo))
+  , _wcSendQ     :: !(STM.TQueue WSQueueResponse)
   , _wcExtraData :: !a
   }
 
@@ -129,9 +136,8 @@ closeConnWithCode wsConn code bs = do
 
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
-sendMsg :: WSConn a -> BL.ByteString -> Maybe WSEventInfo -> IO ()
-sendMsg wsConn msg wsEnvInfo =
-  STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) (msg, wsEnvInfo)
+sendMsg :: WSConn a -> WSQueueResponse -> IO ()
+sendMsg wsConn = STM.atomically . STM.writeTQueue (_wcSendQ wsConn)
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
 
@@ -256,7 +262,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
             _hOnMessage wsHandlers wsConn msg
 
           sendRef <- LA.async $ forever $ do
-            (msg, wsInfo) <- liftIO $ STM.atomically $ STM.readTQueue sendQ
+            WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
             liftIO $ WS.sendTextData conn msg
             writeLog $ WSLog wsId (EMessageSent $ TBS.fromLBS msg) wsInfo
 

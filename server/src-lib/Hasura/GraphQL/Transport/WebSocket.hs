@@ -89,11 +89,11 @@ type WSConn = WS.WSConn WSConnData
 
 sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
 sendMsg wsConn msg =
-  liftIO $ WS.sendMsg wsConn (encodeServerMsg msg) Nothing
+  liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing
 
-sendMsg' :: (MonadIO m) => WSConn -> ServerMsg -> LQ.OnChangeMeta -> m ()
-sendMsg' wsConn msg (LQ.OnChangeMeta execTime) =
-  liftIO $ WS.sendMsg wsConn bs wsInfo
+sendMsgWithMetadata :: (MonadIO m) => WSConn -> ServerMsg -> LQ.LiveQueryMetadata -> m ()
+sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
+  liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
   where
     bs = encodeServerMsg msg
     wsInfo = Just $ WS.WSEventInfo
@@ -325,7 +325,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       t1 <- liftIO TC.getCurrentTime -- for measuring response time purposes
       resp <- liftIO $ runExceptT action
       t2 <- liftIO TC.getCurrentTime -- for measuring response time purposes
-      let ocMeta = LQ.OnChangeMeta $ Just $ realToFrac $ TC.diffUTCTime t2 t1
+      let ocMeta = LQ.LiveQueryMetadata $ Just $ realToFrac $ TC.diffUTCTime t2 t1
       either (postExecErr reqId) (`sendSuccResp` ocMeta) resp
       sendCompleted (Just reqId)
 
@@ -342,14 +342,14 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       resp <- runExceptT $ flip runReaderT execCtx $
               E.execRemoteGQ reqId userInfo reqHdrs q rsi opDef
       t2 <- liftIO TC.getCurrentTime -- for measuring response time purposes
-      let ocMeta = LQ.OnChangeMeta $ Just $ realToFrac $ TC.diffUTCTime t2 t1
+      let ocMeta = LQ.LiveQueryMetadata $ Just $ realToFrac $ TC.diffUTCTime t2 t1
       either (postExecErr reqId) (\val -> sendRemoteResp reqId (_hrBody val) ocMeta) resp
       sendCompleted (Just reqId)
 
     sendRemoteResp reqId resp meta =
       case J.eitherDecodeStrict (encJToBS resp) of
         Left e    -> postExecErr reqId $ invalidGqlErr $ T.pack e
-        Right res -> sendMsg' wsConn (SMData $ DataMsg opId $ GRRemote res) meta
+        Right res -> sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRRemote res) meta
 
     invalidGqlErr err = err500 Unexpected $
       "Failed parsing GraphQL response from remote: " <> err
@@ -398,8 +398,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
       sendMsg wsConn (SMErr $ ErrorMsg opId err)
 
-    sendSuccResp resp =
-      sendMsg' wsConn (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS resp)
+    sendSuccResp resp = sendMsgWithMetadata wsConn
+      (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS resp)
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
@@ -409,7 +409,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     -- on change, send message on the websocket
     liveQOnChange resp =
-      sendMsg' wsConn (SMData $ DataMsg opId $ GRHasura resp)
+      sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRHasura resp)
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m
