@@ -93,7 +93,7 @@ func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMu
 	var defaultSDL string
 	if introSchema == nil {
 		defaultSDL = `
-type Mutation {
+extend type Mutation {
 	""" Define your action as a mutation here """
 	` + name + ` (arg1: SampleInput!): SampleOutput
 }
