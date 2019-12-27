@@ -11,13 +11,26 @@ log() {
 DEFAULT_MIGRATIONS_DIR="/hasura-migrations"
 TEMP_MIGRATIONS_DIR="/tmp/hasura-migrations"
 
+# configure the target database for migrations
+if [ ${HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR} ]; then
+    log "database url for migrations is set by $HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR"
+    HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL=$(printenv $HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR)
+elif [ -z ${HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL+x} ]; then
+    HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL=$HASURA_GRAPHQL_DATABASE_URL
+fi
+log "database url for migrations is set by HASURA_GRAPHQL_DATABASE_URL"
+
 # Use 9691 port for running temporary instance. 
 # In case 9691 is occupied (according to docker networking), then this will fail.
-# TODO: Find a proper random port or read from env variable.
-HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT=9691
+# override with another port in that case
+# TODO: Find a proper random port
+if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT+x} ]; then
+    log "migrations server port env var is not set, defaulting to 9691"
+    HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT=9691
+fi
 
 if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT+x} ]; then
-    log "server timeout is not set defaulting to 30 seconds"
+    log "server timeout is not set, defaulting to 30 seconds"
     HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT=30
 fi
 
@@ -36,7 +49,9 @@ wait_for_port() {
 log "starting graphql engine temporarily on port $HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT"
 
 # start graphql engine with metadata api enabled
-graphql-engine serve --server-port=${HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT} --enabled-apis="metadata" &
+graphql-engine --database-url "$HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL" \
+               serve --enabled-apis="metadata" \
+               --server-port=${HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT}  &
 # store the pid to kill it later
 PID=$!
 
