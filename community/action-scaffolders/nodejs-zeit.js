@@ -127,7 +127,7 @@ ${varCodegen}
   const handlerContent = `
 ${derive ? 'const fetch = require("node-fetch")\n' : ''}
 ${derive ? mutationCodegen + '\n' : ''}
-const handler = (req, res) => {
+const handler = async (req, res) => {
 ${derive ? graphqlClientCode + '\n' : ''}  
   res.json({ data: {} })
 }
