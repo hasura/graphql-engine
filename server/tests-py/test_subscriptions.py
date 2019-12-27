@@ -275,7 +275,7 @@ class TestSubscriptionMultiplexing(GraphQLEngineTest):
             headers['X-Hasura-Admin-Secret'] = admin_secret
 
         request = { 'query': { 'query': query, 'variables': variables }, 'user': {} }
-        status_code, response = hge_ctx.anyq('/v1/graphql/explain', request, headers)
+        status_code, response, _ = hge_ctx.anyq('/v1/graphql/explain', request, headers)
         assert status_code == 200, (request, status_code, response)
 
         sql = response['sql']

@@ -255,6 +255,7 @@ func (m *Migrate) newMigrationStatus(version uint64, driverType string) *Migrati
 	if !ok {
 		migrStatus = &MigrationStatus{
 			Version: version,
+			Name:    m.sourceDrv.ReadName(version),
 		}
 	}
 
@@ -317,6 +318,14 @@ func (m *Migrate) ResetMetadata() error {
 // ReloadMetadata - Reload metadata on the database
 func (m *Migrate) ReloadMetadata() error {
 	return m.databaseDrv.ReloadMetadata()
+}
+
+func (m *Migrate) GetInconsistentMetadata() (bool, []database.InconsistentMetadataInterface, error) {
+	return m.databaseDrv.GetInconsistentMetadata()
+}
+
+func (m *Migrate) DropInconsistentMetadata() error {
+	return m.databaseDrv.DropInconsistentMetadata()
 }
 
 func (m *Migrate) ApplyMetadata(data interface{}) error {

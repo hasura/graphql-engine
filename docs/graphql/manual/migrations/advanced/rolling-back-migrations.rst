@@ -22,7 +22,7 @@ To roll back all the applied migrations, execute:
 
 .. code-block:: bash
 
-   hasura migrate apply --down
+   hasura migrate apply --down all
 
 To roll back the last 2 migration versions:
 

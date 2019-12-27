@@ -88,44 +88,14 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UntrackTable)
 -- | Track table/view, Phase 1:
 -- Validate table tracking operation. Fails if table is already being tracked,
 -- or if a function with the same name is being tracked.
-trackExistingTableOrViewP1 :: (CacheBuildM m, UserInfoM m) => QualifiedTable -> m ()
+trackExistingTableOrViewP1 :: (CacheBuildM m) => QualifiedTable -> m ()
 trackExistingTableOrViewP1 qt = do
-  adminOnly
   rawSchemaCache <- askSchemaCache
   when (M.member qt $ scTables rawSchemaCache) $
     throw400 AlreadyTracked $ "view/table already tracked : " <>> qt
   let qf = fmap (FunctionName . getTableTxt) qt
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
-
-validateCustomRootFlds
-  :: (MonadError QErr m)
-  => GS.GCtx
-  -> GC.TableCustomRootFields
-  -> m ()
-validateCustomRootFlds defRemoteGCtx rootFlds =
-  forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
-  where
-    GC.TableCustomRootFields sel selByPk selAgg ins upd del = rootFlds
-    rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
-
-validateTableConfig
-  :: (QErrM m, CacheRM m)
-  => TableInfo a -> TableConfig -> m ()
-validateTableConfig tableInfo (TableConfig rootFlds colFlds) = do
-    withPathK "custom_root_fields" $ do
-      sc <- askSchemaCache
-      let defRemoteGCtx = scDefaultRemoteGCtx sc
-      validateCustomRootFlds defRemoteGCtx rootFlds
-    withPathK "custom_column_names" $
-      forM_ (M.toList colFlds) $ \(col, customName) -> do
-        void $ askPGColInfo (_tiFieldInfoMap tableInfo) col ""
-        withPathK (getPGColTxt col) $
-          checkForFieldConflict tableInfo $ FieldName $ G.unName customName
-        when (not $ null duplicateNames) $ throw400 NotSupported $
-          "the following names are duplicated: " <> showNames duplicateNames
-  where
-    duplicateNames = duplicates $ M.elems colFlds
 
 trackExistingTableOrViewP2
   :: (CacheBuildM m) => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m EncJSON
@@ -137,7 +107,7 @@ trackExistingTableOrViewP2 tableName systemDefined isEnum config = do
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
-runTrackTableQ :: (CacheBuildM m, UserInfoM m, HasSystemDefined m) => TrackTable -> m EncJSON
+runTrackTableQ :: (CacheBuildM m, HasSystemDefined m) => TrackTable -> m EncJSON
 runTrackTableQ (TrackTable qt isEnum) = do
   trackExistingTableOrViewP1 qt
   systemDefined <- askSystemDefined
@@ -150,15 +120,14 @@ data TrackTableV2
   } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 4 snakeCase) ''TrackTableV2)
 
-runTrackTableV2Q :: (CacheBuildM m, UserInfoM m, HasSystemDefined m) => TrackTableV2 -> m EncJSON
+runTrackTableV2Q :: (CacheBuildM m, HasSystemDefined m) => TrackTableV2 -> m EncJSON
 runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) config) = do
   trackExistingTableOrViewP1 qt
   systemDefined <- askSystemDefined
   trackExistingTableOrViewP2 qt systemDefined isEnum config
 
-runSetExistingTableIsEnumQ :: (CacheBuildM m, UserInfoM m) => SetTableIsEnum -> m EncJSON
+runSetExistingTableIsEnumQ :: (CacheBuildM m) => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
-  adminOnly
   void $ askTabInfo tableName -- assert that table is tracked
   updateTableIsEnumInCatalog tableName isEnum
   buildSchemaCacheFor (MOTable tableName)
@@ -179,19 +148,26 @@ instance FromJSON SetTableCustomFields where
     <*> o .:? "custom_root_fields" .!= GC.emptyCustomRootFields
     <*> o .:? "custom_column_names" .!= M.empty
 
-runSetTableCustomFieldsQV2 :: (CacheBuildM m, UserInfoM m) => SetTableCustomFields -> m EncJSON
+runSetTableCustomFieldsQV2 :: (CacheBuildM m) => SetTableCustomFields -> m EncJSON
 runSetTableCustomFieldsQV2 (SetTableCustomFields tableName rootFields columnNames) = do
-  adminOnly
-  void $ askTabInfo tableName
+  fields <- _tiFieldInfoMap <$> askTabInfo tableName
   let tableConfig = TableConfig rootFields columnNames
+  withPathK "custom_column_names" $ validateWithNonColumnFields fields
   updateTableConfig tableName tableConfig
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
+  where
+    validateWithNonColumnFields fields = do
+      let customNames = M.elems columnNames
+          nonColumnFields = possibleNonColumnGraphQLFields fields
+          conflictingNames = customNames `intersect` nonColumnFields
+      when (not $ null conflictingNames) $ throw400 NotSupported $
+        "the following custom column names conflict with existing non-column fields: "
+        <> showNames conflictingNames
 
 unTrackExistingTableOrViewP1
-  :: (CacheRM m, UserInfoM m, QErrM m) => UntrackTable -> m ()
+  :: (CacheRM m, QErrM m) => UntrackTable -> m ()
 unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
-  adminOnly
   rawSchemaCache <- askSchemaCache
   case M.lookup vn (scTables rawSchemaCache) of
     Just ti ->
@@ -227,7 +203,7 @@ unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
       _                  -> False
 
 runUntrackTableQ
-  :: (QErrM m, CacheRWM m, MonadTx m, UserInfoM m)
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => UntrackTable -> m EncJSON
 runUntrackTableQ q = do
   unTrackExistingTableOrViewP1 q
@@ -419,8 +395,9 @@ buildTableCache = processTableCache <=< buildRawTableCache
               , _tiDescription = maybeDesc
               }
 
-        -- validate tableConfig
-        withPathK "configuration" $ validateTableConfig info config
+        -- validate custom column names with existing columns
+        withPathK "configuration" $
+          validateWithExistingColumns columnFields $ _tcCustomColumnNames config
         pure (name, info)
 
     -- Step 2: Process the raw table cache to replace Postgres column types with logical column
@@ -434,6 +411,23 @@ buildTableCache = processTableCache <=< buildRawTableCache
           processColumnInfo enumTables customFields tableName
       where
         enumTables = M.mapMaybe _tiEnumValues rawTables
+
+    validateWithExistingColumns :: FieldInfoMap PGRawColumnInfo -> CustomColumnNames -> m ()
+    validateWithExistingColumns columnFields customColumnNames = do
+      withPathK "custom_column_names" $ do
+        -- Check all keys are valid columns
+        forM_ (M.keys customColumnNames) $ \col -> void $ askPGColInfo columnFields col ""
+        let columns = getCols columnFields
+            defaultNameMap = M.fromList $ flip map columns $
+              \col -> ( prciName col
+                      , G.Name $ getPGColTxt $ prciName col
+                      )
+            customNames = M.elems $ defaultNameMap `M.union` customColumnNames
+            conflictingCustomNames = duplicates customNames
+
+        when (not $ null conflictingCustomNames) $ throw400 NotSupported $
+          "the following custom column names are conflicting: " <> showNames conflictingCustomNames
+
 
 
 -- | “Processes” a 'PGRawColumnInfo' into a 'PGColumnInfo' by resolving its type using a map of known
