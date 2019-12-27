@@ -121,8 +121,8 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		q.Args = &replaceMetadataInput{}
 	case clearMetadata:
 		q.Args = &clearMetadataInput{}
-	case runSQL:
-		q.Args = &runSQLInput{}
+	case RunSQL:
+		q.Args = &RunSQLInput{}
 	case addComputedField:
 		q.Args = &addComputedFieldInput{}
 	case dropComputedField:
@@ -281,7 +281,7 @@ const (
 	dropCollectionFromAllowList              = "drop_collection_from_allowlist"
 	replaceMetadata                          = "replace_metadata"
 	clearMetadata                            = "clear_metadata"
-	runSQL                                   = "run_sql"
+	RunSQL                                   = "run_sql"
 	bulkQuery                                = "bulk"
 	addComputedField                         = "add_computed_field"
 	dropComputedField                        = "drop_computed_field"
@@ -727,7 +727,7 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	}
 }
 
-type runSQLInput struct {
+type RunSQLInput struct {
 	SQL string `json:"sql" yaml:"sql"`
 }
 

@@ -54,7 +54,7 @@ type actionsCreateOptions struct {
 }
 
 func (o *actionsCreateOptions) run() error {
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.MetadataDir, o.EC.ServerConfig.Action, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
+	migrateDrv, err := newMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}
@@ -65,21 +65,21 @@ func (o *actionsCreateOptions) run() error {
 			return err
 		}
 	}
-	actionCfg := actions.New(o.EC.MetadataDir, o.EC.ServerConfig.Action, o.EC.ServerConfig.Scaffold)
+	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action)
 	err = actionCfg.Create(o.name, introSchema, o.deriveFromMutation)
+	if err != nil {
+		return err
+	}
+	err = migrateDrv.ApplyMetadata()
+	if err != nil {
+		return err
+	}
 	derivePayload := map[string]interface{}{
 		"introspection_schema": introSchema,
 		"mutation": map[string]string{
 			"name":        o.deriveFromMutation,
 			"action_name": o.name,
 		},
-	}
-	if err != nil {
-		return err
-	}
-	err = migrateDrv.ApplyMetadata(nil)
-	if err != nil {
-		return err
 	}
 	return actionCfg.Scaffold(o.name, o.scaffolderName, derivePayload)
 }

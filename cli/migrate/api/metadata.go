@@ -30,7 +30,7 @@ func MetadataAPI(c *gin.Context) {
 	// Switch on request method
 	switch c.Request.Method {
 	case "GET":
-		metaData, err := t.ExportMetadata()
+		err := t.ExportMetadata()
 		if err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
@@ -46,6 +46,7 @@ func MetadataAPI(c *gin.Context) {
 			return
 		}
 
+		var metaData interface{}
 		queryValues := c.Request.URL.Query()
 		export := queryValues.Get("export")
 		if export == "true" {
@@ -93,30 +94,12 @@ func MetadataAPI(c *gin.Context) {
 			return
 		}
 
-		metaData, err := t.ExportMetadata()
+		err = t.ExportMetadata()
 		if err != nil {
 			if strings.HasPrefix(err.Error(), DataAPIError) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "data_api_error", Message: err.Error()})
 				return
 			}
-			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-			return
-		}
-
-		t, err := json.Marshal(metaData)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-			return
-		}
-
-		data, err := yaml.JSONToYAML(t)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-			return
-		}
-
-		err = ioutil.WriteFile(metadataFile, data, 0644)
-		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return
 		}

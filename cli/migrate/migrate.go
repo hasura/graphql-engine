@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"time"
@@ -315,7 +316,7 @@ func (m *Migrate) SetMetadataPlugins(plugins interface{}) {
 	m.databaseDrv.SetMetadataPlugins(plugins)
 }
 
-func (m *Migrate) ExportMetadata() (interface{}, error) {
+func (m *Migrate) ExportMetadata() error {
 	return m.databaseDrv.ExportMetadata()
 }
 
@@ -328,15 +329,15 @@ func (m *Migrate) ReloadMetadata() error {
 	return m.databaseDrv.ReloadMetadata()
 }
 
-func (m *Migrate) ApplyMetadata(data interface{}) error {
-	return m.databaseDrv.ApplyMetadata(data)
+func (m *Migrate) ApplyMetadata() error {
+	return m.databaseDrv.ApplyMetadata()
 }
 
 func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
 	return m.databaseDrv.ExportSchemaDump(schemName)
 }
 
-func (m *Migrate) Query(data []interface{}) error {
+func (m *Migrate) Query(data interface{}) error {
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
 		return err
@@ -345,7 +346,6 @@ func (m *Migrate) Query(data []interface{}) error {
 	if mode == "true" {
 		return ErrMigrationMode
 	}
-
 	return m.databaseDrv.Query(data)
 }
 
@@ -490,6 +490,34 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 	go m.read(version, direction, ret)
 
 	return m.unlockErr(m.runMigrations(ret))
+}
+
+func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser) error {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return err
+	}
+
+	if mode != "true" {
+		return ErrNoMigrationMode
+	}
+
+	if err := m.lock(); err != nil {
+		return err
+	}
+
+	if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
+		m.databaseDrv.ResetQuery()
+		return m.unlockErr(err)
+	}
+
+	if version != 0 {
+		if err := m.databaseDrv.InsertVersion(int64(version)); err != nil {
+			m.databaseDrv.ResetQuery()
+			return m.unlockErr(err)
+		}
+	}
+	return m.unlockErr(nil)
 }
 
 // Steps looks at the currently active migration version.

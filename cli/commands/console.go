@@ -10,6 +10,7 @@ import (
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
@@ -92,12 +93,13 @@ func (o *consoleOptions) run() error {
 		return errors.New("cannot validate version, object is nil")
 	}
 
-	metadataPath, err := o.EC.GetMetadataFilePath("yaml")
+	m := metadata.New(o.EC.MigrationDir)
+	metadataPath, err := m.GetMetadataFilePath("yaml")
 	if err != nil {
 		return err
 	}
 
-	t, err := newMigrate(o.EC.MigrationDir, o.EC.MetadataDir, o.EC.ServerConfig.Action, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, false)
+	t, err := newMigrate(o.EC, false)
 	if err != nil {
 		return err
 	}
@@ -122,10 +124,10 @@ func (o *consoleOptions) run() error {
 		"apiPort":         o.APIPort,
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
 		"serverVersion":   o.EC.Version.GetServerVersion(),
-		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
+		"dataApiUrl":      o.EC.Config.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
 		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
-		"adminSecret":     o.EC.ServerConfig.AdminSecret,
+		"adminSecret":     o.EC.Config.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,

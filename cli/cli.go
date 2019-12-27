@@ -9,10 +9,10 @@ package cli
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
@@ -47,21 +47,21 @@ visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
 `
 )
 
-// ServerConfig has the config values required to contact the server.
-type ServerConfig struct {
+// Config has the config values required to contact the server.
+type Config struct {
 	// Endpoint for the GraphQL Engine
 	Endpoint string
 	// AdminSecret (optional) required to query the endpoint
 	AdminSecret string
 
-	Action actions.ActionExecutionConfig
+	MetadataDirectory string
 
-	Scaffold *actions.ScaffoldExecutionConfig
+	Action actions.ActionExecutionConfig
 
 	ParsedEndpoint *url.URL
 }
 
-type rawServerConfig struct {
+type rawConfig struct {
 	// Endpoint for the GraphQL Engine
 	Endpoint string `json:"endpoint"`
 	// AccessKey (deprecated) (optional) Admin secret key required to query the endpoint
@@ -69,61 +69,61 @@ type rawServerConfig struct {
 	// AdminSecret (optional) Admin secret required to query the endpoint
 	AdminSecret string `json:"admin_secret,omitempty"`
 
-	Action actions.ActionExecutionConfig `json:"action"`
+	MetadataDirectory string `json:"metadata_directory"`
 
-	Scaffold *actions.ScaffoldExecutionConfig `json:"scaffold,omitempty"`
+	Action actions.ActionExecutionConfig `json:"action"`
 
 	ParsedEndpoint *url.URL `json:"-"`
 }
 
-func (r rawServerConfig) toServerConfig() ServerConfig {
+func (r rawConfig) toConfig() Config {
 	s := r.AdminSecret
 	if s == "" {
 		s = r.AccessKey
 	}
-	return ServerConfig{
-		Endpoint:       r.Endpoint,
-		AdminSecret:    s,
-		ParsedEndpoint: r.ParsedEndpoint,
-		Action:         r.Action,
-		Scaffold:       r.Scaffold,
+	return Config{
+		Endpoint:          r.Endpoint,
+		AdminSecret:       s,
+		ParsedEndpoint:    r.ParsedEndpoint,
+		MetadataDirectory: r.MetadataDirectory,
+		Action:            r.Action,
 	}
 }
 
-func (s ServerConfig) toRawServerConfig() rawServerConfig {
-	return rawServerConfig{
-		Endpoint:       s.Endpoint,
-		AccessKey:      "",
-		AdminSecret:    s.AdminSecret,
-		ParsedEndpoint: s.ParsedEndpoint,
-		Action:         s.Action,
-		Scaffold:       s.Scaffold,
+func (s Config) toRawConfig() rawConfig {
+	return rawConfig{
+		Endpoint:          s.Endpoint,
+		AccessKey:         "",
+		AdminSecret:       s.AdminSecret,
+		ParsedEndpoint:    s.ParsedEndpoint,
+		MetadataDirectory: s.MetadataDirectory,
+		Action:            s.Action,
 	}
 }
 
 // MarshalJSON converts s to JSON
-func (s ServerConfig) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.toRawServerConfig())
+func (s Config) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.toRawConfig())
 }
 
 // UnmarshalJSON converts b to struct s
-func (s ServerConfig) UnmarshalJSON(b []byte) error {
-	var r rawServerConfig
+func (s Config) UnmarshalJSON(b []byte) error {
+	var r rawConfig
 	err := json.Unmarshal(b, &r)
 	if err != nil {
 		return errors.Wrap(err, "unmarshal error")
 	}
-	sc := r.toServerConfig()
+	sc := r.toConfig()
 	s.Endpoint = sc.Endpoint
 	s.AdminSecret = sc.AdminSecret
 	s.ParsedEndpoint = sc.ParsedEndpoint
+	s.MetadataDirectory = sc.MetadataDirectory
 	s.Action = sc.Action
-	s.Scaffold = sc.Scaffold
 	return nil
 }
 
 // ParseEndpoint ensures the endpoint is valid.
-func (s *ServerConfig) ParseEndpoint() error {
+func (s *Config) ParseEndpoint() error {
 	nurl, err := url.Parse(s.Endpoint)
 	if err != nil {
 		return err
@@ -160,12 +160,10 @@ type ExecutionContext struct {
 	MetadataDir string
 	// ConfigFile is the file where endpoint etc. are stored.
 	ConfigFile string
-	// MetadataFile (optional) is a yaml|json file where Hasura metadata is stored.
-	MetadataFile []string
 
-	// ServerConfig is the configuration object storing the endpoint and admin secret
+	// Config is the configuration object storing the endpoint and admin secret
 	// information after reading from config file or env var.
-	ServerConfig *ServerConfig
+	Config *Config
 
 	// GlobalConfigDir is the ~/.hasura-graphql directory to store configuration
 	// globally.
@@ -238,8 +236,8 @@ func (ec *ExecutionContext) Prepare() error {
 	ec.LastUpdateCheckFile = filepath.Join(ec.GlobalConfigDir, LastUpdateCheckFileName)
 
 	// initialize a blank server config
-	if ec.ServerConfig == nil {
-		ec.ServerConfig = &ServerConfig{}
+	if ec.Config == nil {
+		ec.Config = &Config{}
 	}
 
 	// generate an execution id
@@ -272,10 +270,7 @@ func (ec *ExecutionContext) Validate() error {
 
 	// set names of files and directories
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, "migrations")
-	ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, "metadata")
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
-	ec.MetadataFile = append(ec.MetadataFile, filepath.Join(ec.MigrationDir, "metadata.yaml"))
-	ec.MetadataFile = append(ec.MetadataFile, filepath.Join(ec.MigrationDir, "metadata.json"))
 
 	// read config and parse the values into Config
 	err = ec.readConfig()
@@ -283,8 +278,19 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "cannot read config")
 	}
 
-	ec.Logger.Debug("graphql engine endpoint: ", ec.ServerConfig.Endpoint)
-	ec.Logger.Debug("graphql engine admin_secret: ", ec.ServerConfig.AdminSecret)
+	if ec.Config.MetadataDirectory != "" {
+		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
+	}
+
+	if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) {
+		err = os.MkdirAll(ec.MetadataDir, os.ModePerm)
+		if err != nil {
+			return errors.Wrap(err, "cannot write metadata directory")
+		}
+	}
+
+	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.Endpoint)
+	ec.Logger.Debug("graphql engine admin_secret: ", ec.Config.AdminSecret)
 
 	// get version from the server and match with the cli version
 	err = ec.checkServerVersion()
@@ -292,7 +298,7 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "version check")
 	}
 
-	state := util.GetServerState(ec.ServerConfig.Endpoint, ec.ServerConfig.AdminSecret, ec.Version.ServerSemver, ec.Logger)
+	state := util.GetServerState(ec.Config.Endpoint, ec.Config.AdminSecret, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
@@ -301,7 +307,7 @@ func (ec *ExecutionContext) Validate() error {
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	v, err := version.FetchServerVersion(ec.ServerConfig.Endpoint)
+	v, err := version.FetchServerVersion(ec.Config.Endpoint)
 	if err != nil {
 		return errors.Wrap(err, "failed to get version from server")
 	}
@@ -322,14 +328,16 @@ func (ec *ExecutionContext) readConfig() error {
 	// need to get existing viper because https://github.com/spf13/viper/issues/233
 	v := ec.Viper
 	v.SetEnvPrefix("HASURA_GRAPHQL")
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 	v.SetConfigName("config")
 	v.SetDefault("endpoint", "http://localhost:8080")
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
-	v.SetDefault("action.kind", "synchronous")
-	v.SetDefault("action.webhook", "http://localhost:3000")
-	v.SetDefault("scaffold.output_dir", ec.ExecutionDirectory)
+	v.SetDefault("metadata_directory", "")
+	v.SetDefault("action.default_kind", "synchronous")
+	v.SetDefault("action.default_handler", "{{DEFAULT_HANDLER}}")
+	v.SetDefault("action.scaffold.output_dir", ec.ExecutionDirectory)
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
@@ -339,20 +347,21 @@ func (ec *ExecutionContext) readConfig() error {
 	if adminSecret == "" {
 		adminSecret = v.GetString("access_key")
 	}
-	ec.ServerConfig = &ServerConfig{
-		Endpoint:    v.GetString("endpoint"),
-		AdminSecret: adminSecret,
+	ec.Config = &Config{
+		Endpoint:          v.GetString("endpoint"),
+		AdminSecret:       adminSecret,
+		MetadataDirectory: v.GetString("metadata_directory"),
 		Action: actions.ActionExecutionConfig{
-			Kind:    v.GetString("action.kind"),
-			Webhook: v.GetString("action.webhook"),
-		},
-		Scaffold: &actions.ScaffoldExecutionConfig{
-			Default:           v.GetString("scaffold.default"),
-			OutputDir:         v.GetString("scaffold.output_dir"),
-			CustomScaffolders: v.GetStringMapString("scaffold.custom_scaffolders"),
+			Kind:    v.GetString("action.default_kind"),
+			Handler: v.GetString("action.default_handler"),
+			Scaffold: actions.ScaffoldExecutionConfig{
+				Default:           v.GetString("action.scaffold.default"),
+				OutputDir:         v.GetString("action.scaffold.output_dir"),
+				CustomScaffolders: v.GetStringMapString("action.scaffold.custom_scaffolders"),
+			},
 		},
 	}
-	return ec.ServerConfig.ParseEndpoint()
+	return ec.Config.ParseEndpoint()
 }
 
 // setupSpinner creates a default spinner if the context does not already have
@@ -413,36 +422,4 @@ func (ec *ExecutionContext) setVersion() {
 	if ec.Version == nil {
 		ec.Version = version.New()
 	}
-}
-
-// GetMetadataPath returns the file path based on the format.
-func (ec *ExecutionContext) GetMetadataFilePath(format string) (string, error) {
-	ext := fmt.Sprintf(".%s", format)
-	for _, filePath := range ec.MetadataFile {
-		switch p := filepath.Ext(filePath); p {
-		case ext:
-			return filePath, nil
-		}
-	}
-	return "", errors.New("unsupported file type")
-}
-
-// GetExistingMetadataFile returns the path to the default metadata file that
-// also exists, json or yaml
-func (ec *ExecutionContext) GetExistingMetadataFile() (string, error) {
-	filename := ""
-	for _, format := range []string{"yaml", "json"} {
-		f, err := ec.GetMetadataFilePath(format)
-		if err != nil {
-			return "", errors.Wrap(err, "cannot get metadata file")
-		}
-
-		filename = f
-		if _, err := os.Stat(filename); os.IsNotExist(err) {
-			continue
-		}
-		break
-	}
-
-	return filename, nil
 }

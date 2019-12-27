@@ -5,11 +5,12 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/aryann/difflib"
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/mgutz/ansi"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -58,7 +59,8 @@ By default, shows changes between exported metadata file and server metadata.`,
 			switch len(args) {
 			case 0:
 				// no args, diff exported metadata and metadata on server
-				filename, err := ec.GetExistingMetadataFile()
+				m := metadata.New(opts.EC.MigrationDir)
+				filename, err := m.GetExistingMetadataFile()
 				if err != nil {
 					return errors.Wrap(err, "failed getting metadata file")
 				}
@@ -101,21 +103,21 @@ By default, shows changes between exported metadata file and server metadata.`,
 func (o *metadataDiffOptions) run() error {
 	var oldYaml, newYaml []byte
 	var err error
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.MetadataDir, o.EC.ServerConfig.Action, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
+	migrateDrv, err := newMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}
 
 	if o.metadata[1] == "" {
 		// get metadata from server
-		m, err := migrateDrv.ExportMetadata()
+		err := migrateDrv.ExportMetadata()
 		if err != nil {
 			return errors.Wrap(err, "cannot fetch metadata from server")
 		}
 
-		newYaml, err = yaml.Marshal(m)
+		newYaml, err = ioutil.ReadFile(filepath.Join(o.EC.MigrationDir, "metadata.yaml"))
 		if err != nil {
-			return errors.Wrap(err, "cannot convert metadata from server to yaml")
+			return err
 		}
 	} else {
 		newYaml, err = ioutil.ReadFile(o.metadata[1])
