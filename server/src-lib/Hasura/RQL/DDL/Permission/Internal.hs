@@ -30,7 +30,7 @@ import qualified Database.PG.Query          as Q
 data PermColSpec
   = PCStar
   | PCCols ![PGCol]
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 instance FromJSON PermColSpec where
   parseJSON (String "*") = return PCStar
@@ -106,14 +106,15 @@ savePermToCatalog
   => PermType
   -> QualifiedTable
   -> PermDef a
+  -> SystemDefined
   -> Q.TxE QErr ()
-savePermToCatalog pt (QualifiedObject sn tn) (PermDef  rn qdef mComment) =
+savePermToCatalog pt (QualifiedObject sn tn) (PermDef  rn qdef mComment) systemDefined =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            INSERT INTO
                hdb_catalog.hdb_permission
-               (table_schema, table_name, role_name, perm_type, perm_def, comment)
-           VALUES ($1, $2, $3, $4, $5 :: jsonb, $6)
-                |] (sn, tn, rn, permTypeToCode pt, Q.AltJ qdef, mComment) True
+               (table_schema, table_name, role_name, perm_type, perm_def, comment, is_system_defined)
+           VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7)
+                |] (sn, tn, rn, permTypeToCode pt, Q.AltJ qdef, mComment, systemDefined) True
 
 updatePermDefInCatalog
   :: (ToJSON a)
@@ -153,7 +154,7 @@ data PermDef a =
   { pdRole       :: !RoleName
   , pdPermission :: !a
   , pdComment    :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''PermDef)
 
@@ -301,12 +302,13 @@ addPermP1 tabInfo pd = do
   assertPermNotDefined (pdRole pd) (getPermAcc1 pd) tabInfo
   buildPermInfo tabInfo pd
 
-addPermP2 :: (IsPerm a, QErrM m, CacheRWM m, MonadTx m)
+addPermP2 :: (IsPerm a, QErrM m, CacheRWM m, MonadTx m, HasSystemDefined m)
           => QualifiedTable -> PermDef a -> WithDeps (PermInfo a) -> m ()
 addPermP2 tn pd (permInfo, deps) = do
   addPermP2Setup tn pd permInfo
   addPermToCache tn (pdRole pd) pa permInfo deps
-  liftTx $ savePermToCatalog pt tn pd
+  systemDefined <- askSystemDefined
+  liftTx $ savePermToCatalog pt tn pd systemDefined
   where
     pa = getPermAcc1 pd
     pt = permAccToType pa
@@ -317,7 +319,6 @@ createPermP1
      )
   => WithTable (PermDef a) -> m (WithDeps (PermInfo a))
 createPermP1 (WithTable tn pd) = do
-  adminOnly
   tabInfo <- askTabInfo tn
   validateViewPerm pd tabInfo
   addPermP1 tabInfo pd
@@ -325,6 +326,7 @@ createPermP1 (WithTable tn pd) = do
 runCreatePerm
   :: ( UserInfoM m
      , CacheRWM m, IsPerm a, MonadTx m
+     , HasSystemDefined m
      )
   => CreatePerm a -> m EncJSON
 runCreatePerm defn@(WithTable tn pd) = do
@@ -333,10 +335,9 @@ runCreatePerm defn@(WithTable tn pd) = do
   return successMsg
 
 dropPermP1
-  :: (QErrM m, CacheRM m, UserInfoM m, IsPerm a)
+  :: (QErrM m, CacheRM m, IsPerm a)
   => DropPerm a -> m (PermInfo a)
 dropPermP1 dp@(DropPerm tn rn) = do
-  adminOnly
   tabInfo <- askTabInfo tn
   askPermInfo tabInfo rn $ getPermAcc2 dp
 

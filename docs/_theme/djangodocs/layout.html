@@ -67,6 +67,11 @@
                   <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
                       <div class="social_icons">
+                        <a href="https://learn.hasura.io/" target="_blank">
+                          Tutorials
+                        </a>
+                      </div>
+                      <div class="social_icons">
                         <iframe src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true" frameBorder="0" scrolling="0" width="100px" height="25px"></iframe>
                       </div>
                       <div class="social_icons">
@@ -78,7 +83,7 @@
                         <a href="https://discord.gg/vBPpJkS" target="_blank">
                           <img class="responsive" src="{{ pathto('_images/layout/Discord.svg', 1) }}" />
                         </a>
-                        <span class="tooltiptext">Get instant support on our discord server</span>
+                        <span class="tooltip_text">Get instant support on our discord server</span>
                       </div>
                     </div>
                   </div>
@@ -176,17 +181,22 @@
     ga('send', 'pageview');
   </script>
 
-  <!-- crisp -->
-  <script type="text/javascript">
-    window.$crisp=[];window.CRISP_WEBSITE_ID="20ddaf80-763d-4a52-a5f8-c8c939a128e9";(function(){d=document;s=d.createElement("script");s.src="https://client.crisp.chat/l.js";s.async=1;d.getElementsByTagName("head")[0].appendChild(s);})();
+  <!-- intercom -->
+  <script>
+    window.intercomSettings = {
+      app_id: "rucirpb3"
+    };
+  </script>
+  <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/rucirpb3';var
+    x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()
   </script>
 
   <!-- support button -->
   <script type="text/javascript">
     $(document).ready( function() {
       const supportBtnHandler = function() {
-        if (window.$crisp) {
-          window.$crisp.push(['do', 'chat:open']);
+        if ( window.Intercom ) {
+          window.Intercom('show');
         }
       };
       $('.supportBtn').on('click', supportBtnHandler);

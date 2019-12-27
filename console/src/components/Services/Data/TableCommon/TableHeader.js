@@ -55,7 +55,7 @@ const TableHeader = ({ tabName, count, table, migrationMode, dispatch }) => {
       },
       {
         title: tableName,
-        url: getTableBrowseRoute(table),
+        url: getTableBrowseRoute(tableSchema, tableName, isTable),
       },
       {
         title: activeTab,
@@ -93,31 +93,39 @@ const TableHeader = ({ tabName, count, table, migrationMode, dispatch }) => {
           <ul className="nav nav-pills">
             {getTab(
               'browse',
-              getTableBrowseRoute(table),
+              getTableBrowseRoute(tableSchema, tableName, isTable),
               `Browse Rows ${countDisplay}`,
               'table-browse-rows'
             )}
             {isTable &&
               getTab(
                 'insert',
-                getTableInsertRowRoute(table),
+                getTableInsertRowRoute(tableSchema, tableName, isTable),
                 'Insert Row',
                 'table-insert-rows'
               )}
             {migrationMode &&
-              getTab('modify', getTableModifyRoute(table), 'Modify')}
+              getTab(
+                'modify',
+                getTableModifyRoute(tableSchema, tableName, isTable),
+                'Modify'
+              )}
             {getTab(
               'relationships',
-              getTableRelationshipsRoute(table),
+              getTableRelationshipsRoute(tableSchema, tableName, isTable),
               'Relationships'
             )}
             {getTab(
               'permissions',
-              getTablePermissionsRoute(table),
+              getTablePermissionsRoute(tableSchema, tableName, isTable),
               'Permissions'
             )}
             {tabName === 'edit' &&
-              getTab('edit', getTableEditRowRoute(table), 'Edit Row')}
+              getTab(
+                'edit',
+                getTableEditRowRoute(tableSchema, tableName, isTable),
+                'Edit Row'
+              )}
           </ul>
         </div>
         <div className="clearfix" />
