@@ -20,6 +20,11 @@
   {%- endif %}
 {%- endmacro %}
 
+{% block linktags %}
+{{ super() }}
+    <link rel="canonical" href="https://docs.{{ BASE_DOMAIN }}/1.0/{{ pagename }}{{ file_suffix }}" />
+{% endblock %}
+
 {% block extrahead %}
   <!--<meta name="viewport" content="user-scalable=no">-->
   <meta name="viewport" content="width=device-width, initial-scale=1">
