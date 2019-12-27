@@ -11,7 +11,7 @@ import {
   parseCustomTypes,
   reformCustomTypes,
   hydrateTypeRelationships,
-} from './utils';
+} from '../../../shared/utils/hasuraCustomTypeUtils';
 import {
   getFetchCustomTypesQuery,
   generateSetCustomTypesQuery,

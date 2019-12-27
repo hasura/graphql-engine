@@ -1,12 +1,12 @@
 /* eslint-disable no-use-before-define */
 
 import { camelize } from 'inflection';
-import { filterNameLessTypeLess } from '../../Types/utils';
+import { filterNameLessTypeLess } from '../../../../shared/utils/hasuraCustomTypeUtils';
 import {
   getSchemaTypeMetadata,
   wrapTypename,
   unwrapType,
-} from '../../Types/wrappingTypeUtils';
+} from '../../../../shared/utils/wrappingTypeUtils';
 import {
   isInputObjectType,
   isEnumType,
@@ -26,22 +26,22 @@ export const generateActionDefinition = ({
   arguments: args,
   outputType,
   kind = 'synchronous',
-  webhook,
+  handler,
 }) => {
   return {
     arguments: filterNameLessTypeLess(args),
     kind,
     output_type: outputType,
-    webhook,
+    handler,
   };
 };
 
-export const getStateValidationError = ({ webhook }) => {
-  if (!webhook) return 'Webhook cannot be empty';
+export const getStateValidationError = ({ handler }) => {
+  if (!handler) return 'Handler cannot be empty';
   try {
-    new URL(webhook); // eslint-disable-line
+    new URL(handler); // eslint-disable-line
   } catch (e) {
-    return 'Webhook must be a valid URL';
+    return 'Handler must be a valid URL';
   }
   return null;
 };

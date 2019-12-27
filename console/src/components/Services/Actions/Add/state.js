@@ -17,7 +17,7 @@ input SampleInput {
 `;
 
 const state = {
-  webhook: '',
+  handler: '',
   actionDefinition: {
     sdl: defaultActionDefSdl,
     error: '',

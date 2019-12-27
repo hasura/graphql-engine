@@ -6,7 +6,7 @@ const editorLabel = 'Kind';
 const editorTooltip = 'Synchronous or Asynchronous';
 // Tooltip todo
 
-const WebhookEditor = ({ value, onChange, className }) => {
+const HandlerEditor = ({ value, onChange, className }) => {
   const setAsynchronous = () => {
     onChange('asynchronous');
   };
@@ -55,4 +55,4 @@ const WebhookEditor = ({ value, onChange, className }) => {
   );
 };
 
-export default WebhookEditor;
+export default HandlerEditor;

@@ -1,5 +1,12 @@
 import { unwrapType } from './wrappingTypeUtils';
 
+export const inbuiltTypes = {
+  Int: true,
+  Boolean: true,
+  String: true,
+  Float: true
+};
+
 const singularize = kind => {
   return kind.substr(0, kind.length - 1);
 };

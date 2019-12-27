@@ -6,7 +6,7 @@ import AddedRelationships from './Components/AddedRelationships';
 import { findAction } from '../utils';
 import { setTypes } from './reducer';
 import { generateTableDef } from '../../../Common/utils/pgUtils';
-import { unwrapType } from '../../Types/wrappingTypeUtils';
+import { unwrapType } from '../../../../shared/utils/wrappingTypeUtils';
 
 const Relationships = ({
   params,

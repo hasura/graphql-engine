@@ -1,4 +1,7 @@
-import { getActionDefinitionSdl, getTypesSdl } from '../../Types/sdlUtils';
+import {
+  getActionDefinitionSdl,
+  getTypesSdl,
+} from '../../../../shared/utils/sdlUtils';
 import {
   getActionArguments,
   getActionName,
@@ -22,7 +25,7 @@ export const getModifyState = (currentAction, allTypes) => {
       sdl: getTypesSdl(getActionTypes(currentAction, allTypes)),
       error: null,
     },
-    webhook: actionDef.webhook,
+    handler: actionDef.handler,
     kind: actionDef.kind,
   };
   return modifyState;

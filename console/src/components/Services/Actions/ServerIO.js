@@ -17,6 +17,7 @@ import {
   getFetchCustomTypesQuery,
   getCreateActionPermissionQuery,
   getDropActionPermissionQuery,
+  getUpdateActionQuery,
 } from '../../Common/utils/v1QueryUtils';
 import { getConfirmation } from '../../Common/utils/jsUtils';
 import {
@@ -31,8 +32,11 @@ import {
   reformCustomTypes,
   mergeCustomTypes,
   hydrateTypeRelationships,
-} from '../Types/utils';
-import { getActionDefinitionFromSdl, getTypesFromSdl } from '../Types/sdlUtils';
+} from '../../../shared/utils/hasuraCustomTypeUtils';
+import {
+  getActionDefinitionFromSdl,
+  getTypesFromSdl,
+} from '../../../shared/utils/sdlUtils';
 import {
   setFetching as createActionRequestInProgress,
   unsetFetching as createActionRequestComplete,
@@ -46,7 +50,7 @@ import {
 import {
   makeRequest as makePermRequest,
   setRequestSuccess as setPermRequestSuccess,
-  setRequestFailure as setPermRequestFailure
+  setRequestFailure as setPermRequestFailure,
 } from './Permissions/reducer';
 import { findAction, getActionPermissions } from './utils';
 import { getActionPermissionQueries } from './Permissions/utils';
@@ -121,7 +125,7 @@ export const createAction = () => (dispatch, getState) => {
   }
 
   const state = {
-    webhook: rawState.webhook,
+    handler: rawState.handler,
     kind: rawState.kind,
     types,
     name: actionName,
@@ -205,10 +209,7 @@ export const createAction = () => (dispatch, getState) => {
 };
 
 export const saveAction = currentAction => (dispatch, getState) => {
-  const {
-    modify: rawState,
-    common: { actions: allActions },
-  } = getState().actions;
+  const { modify: rawState } = getState().actions;
   const { types: existingTypesList } = getState().types;
 
   const {
@@ -233,7 +234,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
   }
 
   const state = {
-    webhook: rawState.webhook,
+    handler: rawState.handler,
     kind: rawState.kind,
     types,
     name: actionName,
@@ -252,22 +253,12 @@ export const saveAction = currentAction => (dispatch, getState) => {
     existingTypesList
   );
 
-  const { types: mergedTypes, overlappingTypenames } = mergeCustomTypes(
+  const { types: mergedTypes } = mergeCustomTypes(
     typesWithRelationships,
     existingTypesList
   );
 
-  if (overlappingTypenames) {
-    const isOk = getOverlappingTypeConfirmation(
-      state.name,
-      allActions,
-      existingTypesList,
-      overlappingTypenames
-    );
-    if (!isOk) {
-      return;
-    }
-  }
+  const isActionNameChange = currentAction.action_name !== state.name;
 
   const customFieldsQueryUp = generateSetCustomTypesQuery(
     reformCustomTypes(mergedTypes)
@@ -280,7 +271,17 @@ export const saveAction = currentAction => (dispatch, getState) => {
   const dropCurrentActionQuery = generateDropActionQuery(
     currentAction.action_name
   );
-  const actionQueryUp = generateCreateActionQuery(
+
+  const updateCurrentActionQuery = getUpdateActionQuery(
+    generateActionDefinition(state),
+    currentAction.action_name
+  );
+  const rollbackActionQuery = getUpdateActionQuery(
+    currentAction.action_defn,
+    currentAction.action_name
+  );
+
+  const createNewActionQuery = generateCreateActionQuery(
     state.name,
     generateActionDefinition(state)
   );
@@ -291,16 +292,23 @@ export const saveAction = currentAction => (dispatch, getState) => {
     currentAction.action_defn
   );
 
-  const upQueries = [
-    dropCurrentActionQuery,
-    customFieldsQueryUp,
-    actionQueryUp,
-  ];
-  const downQueries = [
-    actionQueryDown,
-    customFieldsQueryDown,
-    oldActionQueryUp,
-  ];
+  let upQueries;
+  let downQueries;
+  if (!isActionNameChange) {
+    upQueries = [customFieldsQueryUp, updateCurrentActionQuery];
+    downQueries = [customFieldsQueryDown, rollbackActionQuery];
+  } else {
+    const isOk = getConfirmation(
+      'You seem to have changed the action name. This will cause the permissions to be dropped.'
+    );
+    if (!isOk) return;
+    upQueries = [
+      dropCurrentActionQuery,
+      customFieldsQueryUp,
+      createNewActionQuery,
+    ];
+    downQueries = [actionQueryDown, customFieldsQueryDown, oldActionQueryUp];
+  }
 
   const migrationName = `modify_action_${currentAction.action_name}_to_${
     state.name
@@ -310,11 +318,15 @@ export const saveAction = currentAction => (dispatch, getState) => {
   const errorMsg = 'Saving action failed';
   const customOnSuccess = () => {
     dispatch(modifyActionRequestComplete());
-    const newHref = window.location.href.replace(
-      `/manage/${currentAction.action_name}/modify`,
-      `/manage/${state.name}/modify`
-    );
-    window.location.replace(newHref);
+    if (isActionNameChange) {
+      const newHref = window.location.href.replace(
+        `/manage/${currentAction.action_name}/modify`,
+        `/manage/${state.name}/modify`
+      );
+      window.location.replace(newHref);
+    } else {
+      dispatch(fetchActions());
+    }
   };
   const customOnError = () => {
     dispatch(modifyActionRequestComplete());

@@ -2,11 +2,11 @@ import React from 'react';
 import styles from './Styles.scss';
 import Tooltip from './Tooltip';
 
-const editorLabel = 'Webhook';
+const editorLabel = 'Handler';
 const editorTooltip =
-  'Set a webhook. This webhook will be called with mutation payload';
+  'Set a handler. This handler will be called with mutation payload';
 
-const WebhookEditor = ({ value, onChange, className, placeholder }) => {
+const HandlerEditor = ({ value, onChange, className, placeholder }) => {
   return (
     <div className={`${className || ''}`}>
       <h2
@@ -30,4 +30,4 @@ const WebhookEditor = ({ value, onChange, className, placeholder }) => {
   );
 };
 
-export default WebhookEditor;
+export default HandlerEditor;

@@ -1,13 +1,13 @@
 import React from 'react';
 import styles from './Styles.scss';
 import Helmet from 'react-helmet';
-import WebhookEditor from '../Common/UIComponents/WebhookEditor';
+import HandlerEditor from '../Common/UIComponents/HandlerEditor';
 import KindEditor from '../Common/UIComponents/KindEditor';
 import ActionDefinitionEditor from '../Common/UIComponents/ActionDefinitionEditor';
 import TypeDefinitionEditor from '../Common/UIComponents/TypeDefinitionEditor';
 import Button from '../../../Common/Button';
 import {
-  setActionWebhook,
+  setActionHandler,
   setActionKind,
   setDefaults,
   setActionDefinition,
@@ -16,7 +16,7 @@ import {
 import { createAction } from '../ServerIO';
 
 const AddAction = ({
-  webhook,
+  handler,
   dispatch,
   kind,
   actionDefinition,
@@ -27,7 +27,7 @@ const AddAction = ({
     dispatch(setDefaults());
   }, []);
 
-  const webhookOnChange = e => dispatch(setActionWebhook(e.target.value));
+  const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));
 
   const {
@@ -65,10 +65,10 @@ const AddAction = ({
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
       <div className={styles.heading_text}>Add a new action</div>
-      <WebhookEditor
-        value={webhook}
-        onChange={webhookOnChange}
-        placeholder="action webhook"
+      <HandlerEditor
+        value={handler}
+        onChange={handlerOnChange}
+        placeholder="action handler"
         className={styles.add_mar_bottom_mid}
         service="create-action"
       />

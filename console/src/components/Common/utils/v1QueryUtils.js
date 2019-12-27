@@ -119,6 +119,16 @@ export const getCreateActionPermissionQuery = (def, actionName) => {
   };
 };
 
+export const getUpdateActionQuery = (def, actionName) => {
+  return {
+    type: 'update_action',
+    args: {
+      name: actionName,
+      definition: def,
+    },
+  };
+};
+
 export const getDropActionPermissionQuery = (role, actionName) => {
   return {
     type: 'drop_action_permission',

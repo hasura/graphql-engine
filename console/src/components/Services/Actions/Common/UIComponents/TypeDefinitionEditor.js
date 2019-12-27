@@ -7,7 +7,7 @@ import CopyIcon from '../../../../Common/Icons/Copy';
 import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
 import Modal from '../../../../Common/Modal/Modal';
 import CloneTypeModal from './CloneTypeModal';
-import { getTypesSdl } from '../../../Types/sdlUtils';
+import { getTypesSdl } from '../../../../../shared/utils/sdlUtils';
 
 const editorLabel = 'New types definition';
 const editorTooltip =
@@ -52,17 +52,6 @@ const ActionDefinitionEditor = ({
 
   const errorMessage =
     error && (error.message || 'This is not valid GraphQL SDL');
-
-  let markers = [];
-  if (error && error.locations) {
-    markers = error.locations.map(l => ({
-      line: l.line,
-      column: l.column,
-      type: 'error',
-      message: errorMessage,
-      className: styles.errorMarker,
-    }));
-  }
 
   const handleClonedTypes = types => {
     onChange(`${value}\n\n${getTypesSdl(types)}`);
@@ -114,7 +103,6 @@ const ActionDefinitionEditor = ({
           value={value}
           onChange={onChangeWithError}
           placeholder={placeholder}
-          markers={markers}
           height={editorHeight}
           width={editorWidth}
         />
