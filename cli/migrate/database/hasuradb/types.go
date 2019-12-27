@@ -128,10 +128,13 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 	case dropComputedField:
 		q.Args = &dropComputedFieldInput{}
 	default:
-		return fmt.Errorf("cannot squash type %s", h.Type)
+		return fmt.Errorf("cannot squash type %s", q.Type)
 	}
 	if err := json.Unmarshal(argBody, &q.Args); err != nil {
 		return err
+	}
+	if q.Args == nil {
+		return fmt.Errorf("args is missing in metadata action %s", q.Type)
 	}
 	*h = newHasuraIntefaceQuery(q)
 	return nil
