@@ -14,15 +14,15 @@ See [./docker-entrypoint.sh](docker-entrypoint.sh)
       - [Deploy](#deploy)
   - [Configuration](#configuration)
     - [Migrations Directory (Optional)](#migrations-directory-optional)
-      - [DEFAULT_MIGRATIONS_DIR (default=&quot;/hasura-migrations&quot;)](#defaultmigrationsdir-defaultquothasura-migrationsquot)
-      - [TEMP_MIGRATIONS_DIR (default=&quot;/tmp/hasura-migrations&quot;)](#tempmigrationsdir-defaultquottmphasura-migrationsquot)
+      - [`DEFAULT_MIGRATIONS_DIR` (default=`/hasura-migrations`)](#defaultmigrationsdir-defaultquothasura-migrationsquot)
+      - [`TEMP_MIGRATIONS_DIR` (default=`/tmp/hasura-migrations`)](#tempmigrationsdir-defaultquottmphasura-migrationsquot)
     - [Database (One of required)](#database-one-of-required)
-      - [HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR (default=null)](#hasuragraphqlmigrationsdatabaseenvvar-defaultnull)
-      - [HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL (default=null)](#hasuragraphqlmigrationsdatabaseurl-defaultnull)
-      - [HASURA_GRAPHQL_DATABASE_URL (default=null)](#hasuragraphqldatabaseurl-defaultnull)
+      - [`HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR` (default=`null`)](#hasuragraphqlmigrationsdatabaseenvvar-defaultnull)
+      - [`HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL` (default=`null`)](#hasuragraphqlmigrationsdatabaseurl-defaultnull)
+      - [`HASURA_GRAPHQL_DATABASE_URL` (default=`null`)](#hasuragraphqldatabaseurl-defaultnull)
     - [GraphQL Server (Optional)](#graphql-server-optional)
-      - [HASURA_GRAPHQL_SERVER_PORT (default=8080)](#hasuragraphqlserverport-default8080)
-      - [HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT (default=30s)](#hasuragraphqlmigrationsservertimeout-default30s)
+      - [`HASURA_GRAPHQL_SERVER_PORT` (default=`8080`)](#hasuragraphqlserverport-default8080)
+      - [`HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT` (default=`30s`)](#hasuragraphqlmigrationsservertimeout-default30s)
 
 ## Examples
 
@@ -89,11 +89,11 @@ Migrations are run from the committed code base.
 
 If it has been stored in a directory other than the default then it can be configured using the following:
 
-#### DEFAULT_MIGRATIONS_DIR (default="/hasura-migrations")
+#### `DEFAULT_MIGRATIONS_DIR` (default=`/hasura-migrations`)
 
 A path to the migrations directory.
 
-#### TEMP_MIGRATIONS_DIR (default="/tmp/hasura-migrations")
+#### `TEMP_MIGRATIONS_DIR` (default=`/tmp/hasura-migrations`)
 
 A path to the temporary migrations directory.
 
@@ -102,13 +102,13 @@ A path to the temporary migrations directory.
 The following are listed in order of evaluation, therefore if setting the first, the latter will not be evaluated.
 At least one of these **must** be configured to migrate the database successfully.
 
-#### HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR (default=null)
+#### `HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR` (default=`null`)
 
 Defines a pointer to an environment variable, which holds the database url e.g.
 
 `HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR=DATABASE_URL`
 
-#### HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL (default=null)
+#### `HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL` (default=`null`)
 
 Defines the database url for migrations, allowing it to be separate from the database used for querying.
 An example use case is for a read only follower database used for querying your graphql endpoint. In this
@@ -116,7 +116,7 @@ scenario you would migrate only the master and the follower would be kept in syn
 
 `HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL=postgres://<username>:<password>@<host>:<port>/<database_name>`
 
-#### HASURA_GRAPHQL_DATABASE_URL (default=null)
+#### `HASURA_GRAPHQL_DATABASE_URL` (default=`null`)
 
 Use as above to point to the default database url.
 
@@ -126,11 +126,11 @@ Use as above to point to the default database url.
 
 Optional configuration for the server which boots during migrations.
 
-#### HASURA_GRAPHQL_SERVER_PORT (default=8080)
+#### `HASURA_GRAPHQL_SERVER_PORT` (default=`8080`)
 
 Specify the port running the graphql server during execution of the migration script.
 It is advised that you do not specify a PORT that may be open e.g. 80/443 and the default should rarely require changing.
 
-#### HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT (default=30s)
+#### `HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT` (default=`30s`)
 
 Specify the server timeout threshold.
