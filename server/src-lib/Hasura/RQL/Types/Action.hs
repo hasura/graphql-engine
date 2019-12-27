@@ -8,6 +8,7 @@ module Hasura.RQL.Types.Action
   , getActionKind
   , CreateAction(..)
   , ActionDefinitionInput
+  , InputWebhook(..)
 
   , ResolvedWebhook(..)
   , ResolvedActionDefinition
@@ -24,6 +25,7 @@ module Hasura.RQL.Types.Action
   ) where
 
 
+import           Data.URL.Template
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.CustomTypes
@@ -36,6 +38,7 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -81,7 +84,7 @@ data ActionDefinition a
   , _adOutputType :: !GraphQLType
   , _adKind       :: !(Maybe ActionKind)
   , _adHandler    :: !a
-  } deriving (Show, Eq, Lift, Functor)
+  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionDefinition)
 
 getActionKind :: ActionDefinition a -> ActionKind
@@ -123,7 +126,24 @@ data ActionInfo
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
 
-type InputWebhook = Text
+data InputWebhook
+  = IWTemplate !URLTemplate
+  | IWPlain !Text
+  deriving (Show, Eq, Lift)
+
+instance J.ToJSON InputWebhook where
+  toJSON = \case
+    IWTemplate template -> J.String $ printURLTemplate template
+    IWPlain t           -> J.String t
+
+instance J.FromJSON InputWebhook where
+  parseJSON = J.withText "String" $ \t ->
+    if T.any (== '{') t then
+      case parseURLTemplate t of
+        Left _         -> fail "Parsing URL template failed"
+        Right template -> pure $ IWTemplate template
+    else pure $ IWPlain t
+
 type ActionDefinitionInput = ActionDefinition InputWebhook
 
 data CreateAction

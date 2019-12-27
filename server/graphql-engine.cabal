@@ -282,6 +282,7 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
+                     , Data.URL.Template
                      , Data.List.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.Parser.JSONPath

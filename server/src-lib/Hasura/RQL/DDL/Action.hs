@@ -33,9 +33,11 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Data.URL.Template             (renderURLTemplate)
 import           Language.Haskell.TH.Syntax    (Lift)
 -- data RetryConf
 --   = RetryConf
@@ -65,6 +67,7 @@ getActionInfo actionName = do
 runCreateAction
   :: ( QErrM m, UserInfoM m
      , CacheRWM m, MonadTx m
+     , MonadIO m
      )
   => CreateAction -> m EncJSON
 runCreateAction q = do
@@ -73,7 +76,7 @@ runCreateAction q = do
   return successMsg
 
 runCreateAction_
-  :: (QErrM m , CacheRWM m, MonadTx m)
+  :: (QErrM m , CacheRWM m, MonadTx m, MonadIO m)
   => CreateAction -> m ()
 runCreateAction_ q@(CreateAction actionName actionDefinition comment) = do
   validateAndCacheAction q
@@ -88,7 +91,7 @@ runCreateAction_ q@(CreateAction actionName actionDefinition comment) = do
       |] (actionName, Q.AltJ actionDefinition, comment) True
 
 validateAndCacheAction
-  :: (QErrM m, CacheRWM m)
+  :: (QErrM m, CacheRWM m, MonadIO m)
   => CreateAction -> m ()
 validateAndCacheAction q = do
   actionMap <- scActions <$> askSchemaCache
@@ -101,7 +104,7 @@ validateAndCacheAction q = do
     actionName  = _caName q
 
 buildActionInfo
-  :: (QErrM m, CacheRM m)
+  :: (QErrM m, CacheRM m, MonadIO m)
   => CreateAction -> m ActionInfo
 buildActionInfo q = do
   let responseType = unGraphQLType $ _adOutputType actionDefinition
@@ -129,8 +132,8 @@ buildActionInfo q = do
   --   _ -> throw400 InvalidParams $ "the output type: " <>
   --        showNamedTy responseBaseType <>
   --        " should be a scalar/enum/object"
-  return $ ActionInfo actionName
-    (fmap ResolvedWebhook actionDefinition) mempty
+  resolvedDefinition <- traverse resolveWebhook actionDefinition
+  return $ ActionInfo actionName resolvedDefinition mempty
   where
     getNonObjectTypeInfo typeName = do
       nonObjectTypeMap <- (unNonObjectTypeMap . fst . scCustomTypes) <$> askSchemaCache
@@ -138,6 +141,12 @@ buildActionInfo q = do
       onNothing (Map.lookup typeName inputTypeInfos) $
         throw400 NotExists $ "the type: " <> showNamedTy typeName <>
         " is not defined in custom types"
+
+    resolveWebhook = \case
+      IWPlain t           -> pure $ ResolvedWebhook t
+      IWTemplate template -> do
+        eitherRenderedTemplate <- renderURLTemplate template
+        either (throw400 Unexpected . T.pack) (pure . ResolvedWebhook) eitherRenderedTemplate
 
     getObjectTypeInfo typeName = do
       customTypes <- (snd . scCustomTypes) <$> askSchemaCache
