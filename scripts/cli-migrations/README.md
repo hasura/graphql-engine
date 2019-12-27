@@ -122,4 +122,4 @@ At least one of these **must** be configured to migrate the database successfull
 
 - `HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT` (default=`30s`)
 
-Specify the server timeout threshold.
+  Specify the server timeout threshold.
