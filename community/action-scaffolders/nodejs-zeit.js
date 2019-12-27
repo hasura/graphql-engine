@@ -27,7 +27,7 @@ const templater = (actionName, actionsSdl, derive) => {
   let mutationCodegen = '';
 
 
-  if (derive) {
+  if (derive && derive.mutation && derive.mutation.name) {
     const getSampleValue = (typename) => {
       switch(typename) {
         case 'String':

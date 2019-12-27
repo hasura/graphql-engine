@@ -110,15 +110,13 @@ const getActionFromMutationAstDef = astDef => {
     error: null,
   };
 
-  const actionDef = astDef.fields[0];
-
-  definition.name = actionDef.name.value;
-  const outputTypeMetadata = getAstTypeMetadata(actionDef.type);
+  definition.name = astDef.name.value;
+  const outputTypeMetadata = getAstTypeMetadata(astDef.type);
   definition.outputType = wrapTypename(
     outputTypeMetadata.typename,
     outputTypeMetadata.stack
   );
-  definition.arguments = actionDef.arguments.map(a => {
+  definition.arguments = astDef.arguments.map(a => {
     const argTypeMetadata = getAstTypeMetadata(a.type);
     return {
       name: a.name.value,
@@ -160,7 +158,7 @@ export const getActionDefinitionFromSdl = sdl => {
 
   return {
     ...definition,
-    ...getActionFromMutationAstDef(sdlDef),
+    ...getActionFromMutationAstDef(sdlDef.fields[0]),
   };
 };
 
@@ -260,15 +258,19 @@ export const getServerTypesFromSdl = (sdl, existingTypes) => {
 export const getAllActionsFromSdl = sdl => {
   const ast = sdlParse(sdl);
   ast.definitions = ast.definitions.filter(d => d.name.value === 'Mutation');
-  const actions = ast.definitions.map(d => {
-    const action = getActionFromMutationAstDef(d);
-    return {
-      name: action.name,
-      definition: {
-        arguments: action.arguments,
-        output_type: action.outputType,
-      },
-    };
+  const actions = [];
+
+  ast.definitions.forEach(d => {
+    d.fields.forEach(f => {
+      const action = getActionFromMutationAstDef(f);
+      actions.push({
+        name: action.name,
+        definition: {
+          arguments: action.arguments,
+          output_type: action.outputType,
+        },
+      });
+    });
   });
   return actions;
 };
