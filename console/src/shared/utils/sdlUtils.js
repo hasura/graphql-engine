@@ -6,10 +6,21 @@ import {
   hydrateTypeRelationships,
 } from './hasuraCustomTypeUtils';
 
+const getAstEntityDescription = def => {
+  return def.description ? def.description.value : null;
+};
+
+const getEntityDescriptionSdl = def => {
+  let entityDescription = def.description;
+  entityDescription = entityDescription ? `"""${entityDescription}""" ` : '';
+  return entityDescription;
+};
+
 export const getTypeFromAstDef = astDef => {
   const handleScalar = def => {
     return {
       name: def.name.value,
+      description: getAstEntityDescription(def),
       kind: 'scalar',
     };
   };
@@ -18,9 +29,10 @@ export const getTypeFromAstDef = astDef => {
     return {
       name: def.name.value,
       kind: 'enum',
+      description: getAstEntityDescription(def),
       values: def.values.map(v => ({
         value: v.name.value,
-        description: v.description,
+        description: getAstEntityDescription(v),
       })),
     };
   };
@@ -29,6 +41,7 @@ export const getTypeFromAstDef = astDef => {
     return {
       name: def.name.value,
       kind: 'input_object',
+      description: getAstEntityDescription(def),
       fields: def.fields.map(f => {
         const fieldTypeMetadata = getAstTypeMetadata(f.type);
         return {
@@ -37,6 +50,7 @@ export const getTypeFromAstDef = astDef => {
             fieldTypeMetadata.typename,
             fieldTypeMetadata.stack
           ),
+          description: getAstEntityDescription(f),
         };
       }),
     };
@@ -46,6 +60,7 @@ export const getTypeFromAstDef = astDef => {
     return {
       name: def.name.value,
       kind: 'object',
+      description: getAstEntityDescription(def),
       fields: def.fields.map(f => {
         const fieldTypeMetadata = getAstTypeMetadata(f.type);
         return {
@@ -54,6 +69,7 @@ export const getTypeFromAstDef = astDef => {
             fieldTypeMetadata.typename,
             fieldTypeMetadata.stack
           ),
+          description: getAstEntityDescription(f),
         };
       }),
     };
@@ -121,7 +137,7 @@ const getActionFromMutationAstDef = astDef => {
     return {
       name: a.name.value,
       type: wrapTypename(argTypeMetadata.typename, argTypeMetadata.stack),
-      description: a.description,
+      description: getAstEntityDescription(a),
     };
   });
 
@@ -166,7 +182,7 @@ const getArgumentsSdl = args => {
   if (!args.length) return '';
 
   const argsSdl = args.map(a => {
-    return `    ${a.name}: ${a.type}`;
+    return `    ${getEntityDescriptionSdl(a)}${a.name}: ${a.type}`;
   });
 
   return `(\n${argsSdl.join('\n')}\n  )`;
@@ -175,32 +191,32 @@ const getArgumentsSdl = args => {
 const getFieldsSdl = fields => {
   const fieldsSdl = fields.map(f => {
     const argSdl = f.arguments ? getArgumentsSdl(f.arguments) : '';
-    return `  ${f.name} ${argSdl}: ${f.type}`;
+    return `  ${getEntityDescriptionSdl(f)}${f.name} ${argSdl}: ${f.type}`;
   });
   return fieldsSdl.join('\n');
 };
 
 const getObjectTypeSdl = type => {
-  return `type ${type.name} {
+  return `${getEntityDescriptionSdl(type)}type ${type.name} {
 ${getFieldsSdl(type.fields)}
 }\n\n`;
 };
 
 const getInputTypeSdl = type => {
-  return `input ${type.name} {
+  return `${getEntityDescriptionSdl(type)}input ${type.name} {
 ${getFieldsSdl(type.fields)}
 }\n\n`;
 };
 
 const getScalarTypeSdl = type => {
-  return `scalar ${type.name}\n\n`;
+  return `${getEntityDescriptionSdl}scalar ${type.name}\n\n`;
 };
 
 const getEnumTypeSdl = type => {
   const enumValuesSdl = type.values.map(v => {
-    return `  ${v.value}`;
+    return `  ${getEntityDescriptionSdl(v)}${v.value}`;
   });
-  return `enum ${type.name} {
+  return `${getEntityDescriptionSdl(type)}enum ${type.name} {
 ${enumValuesSdl.join('\n')}
 }\n\n`;
 };
