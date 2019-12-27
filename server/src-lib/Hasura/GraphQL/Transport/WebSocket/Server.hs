@@ -101,8 +101,8 @@ instance L.ToEngineLog WSLog L.Hasura where
 
 data WSQueueResponse
   = WSQueueResponse
-  { _wsqrMessage   :: BL.ByteString
-  , _wsqrEventInfo :: Maybe WSEventInfo
+  { _wsqrMessage   :: !BL.ByteString
+  , _wsqrEventInfo :: !(Maybe WSEventInfo)
   }
 
 data WSConn a
