@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './Styles.scss';
 import Helmet from 'react-helmet';
-import WebhookEditor from '../Common/UIComponents/WebhookEditor';
+import HandlerEditor from '../Common/UIComponents/HandlerEditor';
 import KindEditor from '../Common/UIComponents/KindEditor';
 import ActionDefinitionEditor from '../Common/UIComponents/ActionDefinitionEditor';
 import TypeDefinitionEditor from '../Common/UIComponents/TypeDefinitionEditor';
@@ -9,7 +9,7 @@ import Button from '../../../Common/Button';
 import { getModifyState } from './utils';
 import {
   setModifyState,
-  setActionWebhook,
+  setActionHandler,
   setActionKind,
   setActionDefinition,
   setTypeDefinition,
@@ -24,7 +24,7 @@ const ActionEditor = ({
   isFetching,
   ...modifyProps
 }) => {
-  const { webhook, kind, actionDefinition, typeDefinition } = modifyProps;
+  const { handler, kind, actionDefinition, typeDefinition } = modifyProps;
 
   const {
     sdl: typesDefinitionSdl,
@@ -45,7 +45,7 @@ const ActionEditor = ({
   };
   React.useEffect(init, [currentAction]);
 
-  const webhookOnChange = e => dispatch(setActionWebhook(e.target.value));
+  const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
   const kindOnChange = k => dispatch(setActionKind(k));
 
   const actionDefinitionOnChange = (value, error, timer, ast) => {
@@ -74,10 +74,10 @@ const ActionEditor = ({
   return (
     <div>
       <Helmet title={`Modify Action - ${actionName} Actions | Hasura`} />
-      <WebhookEditor
-        value={webhook}
-        onChange={webhookOnChange}
-        placeholder="action webhook"
+      <HandlerEditor
+        value={handler}
+        onChange={handlerOnChange}
+        placeholder="action handler"
         className={styles.add_mar_bottom_mid}
         service="create-action"
       />

@@ -1,9 +1,9 @@
 import defaultState from './state';
 
 const SET_TYPE_DEFINITION = 'Actions/Types/SET_TYPE_DEFINITION';
-export const setTypeDefinition = (sdl, error = null) => ({
+export const setTypeDefinition = (sdl, error = null, timer, ast) => ({
   type: SET_TYPE_DEFINITION,
-  definition: { sdl, error },
+  definition: { sdl, error, timer, ast },
 });
 
 const SET_FETCHING = 'Actions/Types/SET_FETCHING';
@@ -27,7 +27,13 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         manage: {
-          definition: action.definition,
+          definition: {
+            ...action.definition,
+            sdl:
+              action.definition.sdl !== null
+                ? action.definition.sdl
+                : state.manage.definition.sdl,
+          },
         },
       };
     default:

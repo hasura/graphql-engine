@@ -3,10 +3,10 @@ import defaultState from './state';
 const SET_DEFAULTS = 'Actions/Add/SET_DEFAULTS';
 export const setDefaults = () => ({ type: SET_DEFAULTS });
 
-const SET_ACTION_WEBHOOK = 'Actions/Add/SET_ACTION_WEBHOOK';
-export const setActionWebhook = webhook => ({
-  type: SET_ACTION_WEBHOOK,
-  webhook,
+const SET_ACTION_HANDLER = 'Actions/Add/SET_ACTION_HANDLER';
+export const setActionHandler = handler => ({
+  type: SET_ACTION_HANDLER,
+  handler,
 });
 
 const SET_ACTION_KIND = 'Actions/Add/SET_ACTION_KIND';
@@ -36,10 +36,10 @@ const reducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_DEFAULTS:
       return defaultState;
-    case SET_ACTION_WEBHOOK:
+    case SET_ACTION_HANDLER:
       return {
         ...state,
-        webhook: action.webhook,
+        handler: action.handler,
       };
     case SET_ACTION_KIND:
       return {

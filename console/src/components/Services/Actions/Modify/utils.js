@@ -25,7 +25,7 @@ export const getModifyState = (currentAction, allTypes) => {
       sdl: getTypesSdl(getActionTypes(currentAction, allTypes)),
       error: null,
     },
-    webhook: actionDef.webhook,
+    handler: actionDef.handler,
     kind: actionDef.kind,
   };
   return modifyState;

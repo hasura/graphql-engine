@@ -2,7 +2,9 @@ const state = {
   manage: {
     definition: {
       sdl: '',
-      error: null,
+      error: '',
+      timer: '',
+      ast: null,
     },
   },
   relationships: {},

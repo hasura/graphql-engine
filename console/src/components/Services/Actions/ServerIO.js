@@ -124,7 +124,7 @@ export const createAction = () => (dispatch, getState) => {
   }
 
   const state = {
-    webhook: rawState.webhook,
+    handler: rawState.handler,
     kind: rawState.kind,
     types,
     name: actionName,
@@ -236,7 +236,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
   }
 
   const state = {
-    webhook: rawState.webhook,
+    handler: rawState.handler,
     kind: rawState.kind,
     types,
     name: actionName,

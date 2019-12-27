@@ -1,5 +1,5 @@
 const state = {
-  webhook: '',
+  handler: '',
   kind: 'synchronous',
   actionDefinition: {
     sdl: '',

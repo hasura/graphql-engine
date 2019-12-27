@@ -12,8 +12,8 @@ import { setCustomGraphQLTypes } from '../../../Types/ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';
 
 const Manage = ({ allTypes, dispatch, ...manageProps }) => {
-  const sdlOnChange = (value, _error) => {
-    dispatch(setTypeDefinition(value, _error));
+  const sdlOnChange = (value, _error, _timer, ast) => {
+    dispatch(setTypeDefinition(value, _error, _timer, ast));
   };
 
   const init = () => {
@@ -25,7 +25,7 @@ const Manage = ({ allTypes, dispatch, ...manageProps }) => {
 
   const {
     manage: {
-      definition: { sdl, error },
+      definition: { sdl, error, timer },
     },
     isFetching,
   } = manageProps;
@@ -53,6 +53,7 @@ const Manage = ({ allTypes, dispatch, ...manageProps }) => {
       <TypesEditor
         value={sdl}
         error={error}
+        timer={timer}
         onChange={sdlOnChange}
         placeholder={''}
         label={editorLabel}
