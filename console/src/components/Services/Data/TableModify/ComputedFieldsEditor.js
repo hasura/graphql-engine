@@ -5,6 +5,7 @@ import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RawSqlButton from '../Common/ReusableComponents/RawSqlButton';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 import {
   findFunction,
   getFunctionDefinition,
@@ -258,7 +259,7 @@ const ComputedFieldsEditor = ({
           ...newState[i],
           definition: {
             ...newState[i].definition,
-            table_argument: e.target.value,
+            table_argument: e.target.value || null,
           },
         };
 
@@ -343,6 +344,7 @@ const ComputedFieldsEditor = ({
           <div className={`${styles.add_mar_top}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Table row argument:</b>
+              <Tooltip message="The argument of the function to which the table row is passed. By default, the first argument of the function is assumed to be the table row argument" />
             </div>
             <input
               type="text"

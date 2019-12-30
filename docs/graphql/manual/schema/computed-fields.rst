@@ -169,6 +169,10 @@ Adding a computed field to a table
 
      .. thumbnail:: ../../../img/graphql/manual/schema/computed-field-create.png
 
+     .. note::
+
+       Console support is available in ``v1.1.0`` and above
+
   .. tab:: API
 
      A computed field can be added to a table using the :doc:`add_computed_field <../api-reference/schema-metadata-api/computed-field>`
