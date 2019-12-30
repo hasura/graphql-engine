@@ -64,6 +64,14 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/select_query_batching.yaml", transport)
 
+    def test_select_query_batching_with_mutation(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_mutation.yaml", transport)
+
+    def test_select_query_batching_with_one_error(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_one_error.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
