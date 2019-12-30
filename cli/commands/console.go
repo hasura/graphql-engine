@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/fatih/color"
@@ -60,6 +61,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
+	f.StringVar(&opts.Browser, "browser", "", "open user specified browser")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -85,6 +87,7 @@ type consoleOptions struct {
 	WG *sync.WaitGroup
 
 	StaticDir string
+	Browser   string
 }
 
 func (o *consoleOptions) run() error {
@@ -165,7 +168,16 @@ func (o *consoleOptions) run() error {
 
 	consoleURL := fmt.Sprintf("http://%s:%s/", o.Address, o.ConsolePort)
 
-	if !o.DontOpenBrowser {
+	if o.Browser != "" {
+		o.EC.Spin((color.CyanString("Opening console on: %s", o.Browser)))
+		defer o.EC.Spinner.Stop()
+
+		err = open.RunWith(consoleURL, o.Browser)
+		if err != nil {
+			o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url with another browser")
+			os.Exit(1)
+		}
+	} else if !o.DontOpenBrowser {
 		o.EC.Spin(color.CyanString("Opening console using default browser..."))
 		defer o.EC.Spinner.Stop()
 
@@ -176,7 +188,11 @@ func (o *consoleOptions) run() error {
 	}
 
 	o.EC.Spinner.Stop()
-	log.Infof("console running at: %s", consoleURL)
+	if o.Browser != "" {
+		log.Infof("console running at: %s on %s", consoleURL, o.Browser)
+	} else {
+		log.Infof("console running at: %s", consoleURL)
+	}
 
 	o.EC.Telemetry.Beam()
 
