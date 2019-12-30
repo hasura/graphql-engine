@@ -63,6 +63,7 @@ const ViewRows = ({
   updateInvocationFunction,
   triggeredRow,
   triggeredFunction,
+  readOnlyMode,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
@@ -429,7 +430,7 @@ const ViewRows = ({
           );
         };
 
-        const showActionBtns = !_isSingleRow && !isView;
+        const showActionBtns = !readOnlyMode && !_isSingleRow && !isView;
 
         if (showActionBtns) {
           const pkClause = getPKClause();
@@ -686,6 +687,7 @@ const ViewRows = ({
               curDepth={curDepth + 1}
               dispatch={dispatch}
               expandedRow={expandedRow}
+              readOnlyMode={readOnlyMode}
             />
           );
         }

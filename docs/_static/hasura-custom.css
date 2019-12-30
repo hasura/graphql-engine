@@ -127,7 +127,8 @@ ul {
 #docs-content a.reference {
   /*color: #1CD3C6 !important;*/
   /*color: #1CD3C6 !important;*/
-  color: #FF3264 !important;
+  /* color: #FF3264 !important; */
+  color: #DB0037 !important;
   background-color: transparent !important;
 }
 
@@ -306,7 +307,7 @@ article ol ol {
 
 #docs-header-actions .social_icons_wrapper .social_icons a {
   text-decoration: none;
-  color: #FF3264;
+  color: #DB0037;
 }
 
 #docs-header-actions .social_icons_wrapper .social_icons iframe {
