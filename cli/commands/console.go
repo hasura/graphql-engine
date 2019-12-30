@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"sync"
 
 	"github.com/fatih/color"
@@ -168,22 +167,23 @@ func (o *consoleOptions) run() error {
 
 	consoleURL := fmt.Sprintf("http://%s:%s/", o.Address, o.ConsolePort)
 
-	if o.Browser != "" {
-		o.EC.Spin((color.CyanString("Opening console on: %s", o.Browser)))
-		defer o.EC.Spinner.Stop()
+	if !o.DontOpenBrowser {
+		if o.Browser != "" {
+			o.EC.Spin((color.CyanString("Opening console on: %s", o.Browser)))
+			defer o.EC.Spinner.Stop()
+			err = open.RunWith(consoleURL, o.Browser)
+			if err != nil {
+				o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url with another browser")
+				return err
+			}
+		} else {
+			o.EC.Spin(color.CyanString("Opening console using default browser..."))
+			defer o.EC.Spinner.Stop()
 
-		err = open.RunWith(consoleURL, o.Browser)
-		if err != nil {
-			o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url with another browser")
-			os.Exit(1)
-		}
-	} else if !o.DontOpenBrowser {
-		o.EC.Spin(color.CyanString("Opening console using default browser..."))
-		defer o.EC.Spinner.Stop()
-
-		err = open.Run(consoleURL)
-		if err != nil {
-			o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
+			err = open.Run(consoleURL)
+			if err != nil {
+				o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
+			}
 		}
 	}
 
