@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/Masterminds/semver"
-
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mt "github.com/hasura/graphql-engine/cli/migrate/testing"
 	"github.com/hasura/graphql-engine/cli/version"
@@ -272,7 +271,7 @@ func mustWriteFile(t testing.TB, dir, file string, body string) {
 
 func compareMetadata(t testing.TB, metadataFile string, actualType string, serverVersion *semver.Version) {
 	var actualData []byte
-	c, err := semver.NewConstraint("<= v1.0.0-rc.1")
+	c, err := semver.NewConstraint("<= v1.0.0")
 	if err != nil {
 		t.Fatal(err)
 	}
