@@ -17,12 +17,11 @@ rebuild-ghc-options: true
 extra-deps:
 # use https URLs so that build systems can clone these repos
 - git: https://github.com/hasura/pg-client-hs.git
-  commit: de5c023ed7d2f75a77972ff52b6e5ed19d010ca2
+  commit: bd21e66d8197af381a6c0b493e22d611ed1fa386
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
 - git: https://github.com/hasura/ci-info-hs.git
   commit: ad6df731584dc89b72a6e131687d37ef01714fe8
-- ginger-0.8.4.0
 
 # extra dep for pg-client-hs
 - select-0.4.0.1
@@ -33,8 +32,8 @@ extra-deps:
 - reroute-0.5.0.0
 - Spock-core-0.13.0.0
 - monad-validate-1.2.0.0
-
-- brotli-0.0.0.0
+# needed for Text.Shakespeare.Text.stextFile; can be removed once the newer version is in stackage
+- shakespeare-2.0.22
 
 # Override default flag values for local packages and extra-deps
 flags: {}

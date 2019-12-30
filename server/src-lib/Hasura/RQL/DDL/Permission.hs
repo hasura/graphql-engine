@@ -53,7 +53,7 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Permission.Triggers
-import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -66,6 +66,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax         (Lift)
 
+import qualified Crypto.Hash                        as CH
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashSet                       as HS
 import qualified Data.Text                          as T
@@ -74,9 +75,9 @@ import qualified Data.Text                          as T
 data InsPerm
   = InsPerm
   { ipCheck   :: !BoolExp
-  , ipSet     :: !(Maybe ColVals)
+  , ipSet     :: !(Maybe (ColumnValues Value))
   , ipColumns :: !(Maybe PermColSpec)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
 
@@ -84,12 +85,15 @@ type InsPermDef = PermDef InsPerm
 type CreateInsPerm = CreatePerm InsPerm
 
 buildViewName :: QualifiedTable -> RoleName -> PermType -> QualifiedTable
-buildViewName (QualifiedObject sn tn) rn pt =
-  QualifiedObject hdbViewsSchema $ TableName
-  (roleNameToTxt rn <> "__" <> T.pack (show pt) <> "__" <> snTxt <> "__" <> tnTxt)
+buildViewName qt rn pt = QualifiedObject hdbViewsSchema tableName
   where
-    snTxt = getSchemaTxt sn
-    tnTxt = getTableTxt tn
+    -- Generate a unique hash for view name from role name, permission type and qualified table.
+    -- See Note [Postgres identifier length limitations].
+    -- Black2b_224 generates 56 character hash. See Note [Blake2b faster than SHA-256].
+    -- Refer https://github.com/hasura/graphql-engine/issues/3444.
+    tableName = TableName $ T.pack $ show hash
+    hash :: CH.Digest CH.Blake2b_224 =
+      CH.hash $ txtToBs $ roleNameToTxt rn <> "__" <> T.pack (show pt) <> "__" <> qualObjectToText qt
 
 buildView :: QualifiedTable -> QualifiedTable -> Q.Query
 buildView tn vn =
@@ -107,7 +111,7 @@ dropView vn =
 
 procSetObj
   :: (QErrM m)
-  => TableInfo PGColumnInfo -> Maybe ColVals
+  => TableInfo PGColumnInfo -> Maybe (ColumnValues Value)
   -> m (PreSetColsPartial, [Text], [SchemaDependency])
 procSetObj ti mObj = do
   (setColTups, deps) <- withPathK "set" $
@@ -156,8 +160,7 @@ buildInsPermInfo tabInfo (PermDef rn (InsPerm chk set mCols) _) =
 buildInsInfra :: QualifiedTable -> InsPermInfo -> Q.TxE QErr ()
 buildInsInfra tn (InsPermInfo _ vn be _ _) = do
   resolvedBoolExp <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting be
-  trigFnQ <- buildInsTrigFn vn tn $
-    toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
+  let trigFnQ = buildInsTrigFn vn tn $ toSQLBoolExp (S.QualVar "NEW") resolvedBoolExp
   Q.catchE defaultTxErrorHandler $ do
     -- Create the view
     Q.unitQ (buildView tn vn) () False
@@ -202,20 +205,29 @@ instance IsPerm InsPerm where
 -- Select constraint
 data SelPerm
   = SelPerm
-  { spColumns           :: !PermColSpec       -- Allowed columns
-  , spFilter            :: !BoolExp   -- Filter expression
-  , spLimit             :: !(Maybe Int) -- Limit value
-  , spAllowAggregations :: !(Maybe Bool) -- Allow aggregation
-  } deriving (Show, Eq, Lift)
+  { spColumns           :: !PermColSpec         -- ^ Allowed columns
+  , spFilter            :: !BoolExp             -- ^ Filter expression
+  , spLimit             :: !(Maybe Int)         -- ^ Limit value
+  , spAllowAggregations :: !Bool                -- ^ Allow aggregation
+  , spComputedFields    :: ![ComputedFieldName] -- ^ Allowed computed fields
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''SelPerm)
+instance FromJSON SelPerm where
+  parseJSON = withObject "SelPerm" $ \o ->
+    SelPerm
+    <$> o .: "columns"
+    <*> o .: "filter"
+    <*> o .:? "limit"
+    <*> o .:? "allow_aggregations" .!= False
+    <*> o .:? "computed_fields" .!= []
 
 buildSelPermInfo
   :: (QErrM m, CacheRM m)
   => TableInfo PGColumnInfo
   -> SelPerm
   -> m (WithDeps SelPermInfo)
-buildSelPermInfo tabInfo sp = do
+buildSelPermInfo tabInfo sp = withPathK "permission" $ do
   let pgCols     = convColSpec fieldInfoMap $ spColumns sp
 
   (be, beDeps) <- withPathK "filter" $
@@ -225,18 +237,33 @@ buildSelPermInfo tabInfo sp = do
   void $ withPathK "columns" $ indexedForM pgCols $ \pgCol ->
     askPGType fieldInfoMap pgCol autoInferredErr
 
+  -- validate computed fields
+  scalarComputedFields <-
+    withPathK "computed_fields" $ indexedForM computedFields $ \fieldName -> do
+      computedFieldInfo <- askComputedFieldInfo fieldInfoMap fieldName
+      case _cfiReturnType computedFieldInfo of
+        CFRScalar _               -> pure fieldName
+        CFRSetofTable returnTable -> throw400 NotSupported $
+          "select permissions on computed field " <> fieldName
+          <<> " are auto-derived from the permissions on its returning table "
+          <> returnTable <<> " and cannot be specified manually"
+
   let deps = mkParentDep tn : beDeps ++ map (mkColDep DRUntyped tn) pgCols
+             ++ map (mkComputedFieldDep DRUntyped tn) scalarComputedFields
       depHeaders = getDependentHeaders $ spFilter sp
       mLimit = spLimit sp
 
   withPathK "limit" $ mapM_ onlyPositiveInt mLimit
 
-  return (SelPermInfo (HS.fromList pgCols) tn be mLimit allowAgg depHeaders, deps)
-
+  return ( SelPermInfo (HS.fromList pgCols) (HS.fromList computedFields)
+                        tn be mLimit allowAgg depHeaders
+         , deps
+         )
   where
     tn = _tiName tabInfo
     fieldInfoMap = _tiFieldInfoMap tabInfo
-    allowAgg = or $ spAllowAggregations sp
+    allowAgg = spAllowAggregations sp
+    computedFields = spComputedFields sp
     autoInferredErr = "permissions for relationships are automatically inferred"
 
 type SelPermDef = PermDef SelPerm
@@ -271,14 +298,15 @@ instance IsPerm SelPerm where
 data UpdPerm
   = UpdPerm
   { ucColumns :: !PermColSpec -- Allowed columns
-  , ucSet     :: !(Maybe ColVals) -- Preset columns
+  , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
   , ucFilter  :: !BoolExp     -- Filter expression
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UpdPerm)
 
 type UpdPermDef = PermDef UpdPerm
 type CreateUpdPerm = CreatePerm UpdPerm
+
 
 buildUpdPermInfo
   :: (QErrM m, CacheRM m)
@@ -337,7 +365,7 @@ instance IsPerm UpdPerm where
 -- Delete permission
 data DelPerm
   = DelPerm { dcFilter :: !BoolExp }
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DelPerm)
 
@@ -394,7 +422,6 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''SetPermComment)
 
 setPermCommentP1 :: (UserInfoM m, QErrM m, CacheRM m) => SetPermComment -> m ()
 setPermCommentP1 (SetPermComment qt rn pt _) = do
-  adminOnly
   tabInfo <- askTabInfo qt
   action tabInfo
   where

@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 import pytest
-import yaml
+import ruamel.yaml as yaml
 import jsondiff
 
 from super_classes import DefaultTestSelectQueries
-from validate import json_ordered
 
 class TestCompression(DefaultTestSelectQueries):
 
@@ -37,7 +36,7 @@ class TestCompression(DefaultTestSelectQueries):
 
     def _assert_resp(self, resp, exp_resp):
         json_resp = resp.json()
-        assert json_ordered(json_resp) == json_ordered(exp_resp), yaml.dump({
+        assert json_resp == exp_resp, yaml.dump({
             'response': json_resp,
             'expected': exp_resp,
             'diff': jsondiff.diff(exp_resp, json_resp)
@@ -63,27 +62,16 @@ class TestCompression(DefaultTestSelectQueries):
         resp = self._make_post(hge_ctx, url, q, self.gzip_header)
         self._assert_gzip(resp, exp_resp)
 
-    def test_brotli_compression_graphql(self, hge_ctx):
-        url, q, exp_resp = self._get_config(self.dir() + '/graphql_query.yaml')
-        resp = self._make_post(hge_ctx, url, q, self.brotli_header)
-        self._assert_brotli(resp, exp_resp)
 
-    def test_brotli_compression_v1_query(self, hge_ctx):
-        url, q, exp_resp = self._get_config(self.dir() + '/v1_query.yaml')
-        resp = self._make_post(hge_ctx, url, q, self.brotli_header)
-        self._assert_brotli(resp, exp_resp)
-
-
-    # If gzip and brotli encoding are requested the server prefers brotli
     def test_gzip_brotli_graphql_query(self, hge_ctx):
         url, q, exp_resp = self._get_config(self.dir() + '/graphql_query.yaml')
         resp = self._make_post(hge_ctx, url, q, self.gzip_brotli_header)
-        self._assert_brotli(resp, exp_resp)
+        self._assert_gzip(resp, exp_resp)
 
     def test_gzip_brotli_v1_query(self, hge_ctx):
         url, q, exp_resp = self._get_config(self.dir() + '/v1_query.yaml')
         resp = self._make_post(hge_ctx, url, q, self.gzip_brotli_header)
-        self._assert_brotli(resp, exp_resp)
+        self._assert_gzip(resp, exp_resp)
 
     @classmethod
     def dir(cls):

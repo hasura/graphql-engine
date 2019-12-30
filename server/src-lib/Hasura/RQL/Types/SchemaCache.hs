@@ -52,20 +52,21 @@ module Hasura.RQL.Types.SchemaCache
        , FieldInfo(..)
        , _FIColumn
        , _FIRelationship
-       , fieldInfoToEither
-       , partitionFieldInfos
-       , partitionFieldInfosWith
        , getCols
        , getRels
+       , getComputedFieldInfos
+       , possibleNonColumnGraphQLFields
 
        , isPGColInfo
        , RelInfo(..)
        , addColToCache
        , addRelToCache
+       , addComputedFieldToCache
 
        , delColFromCache
        , updColInCache
        , delRelFromCache
+       , deleteComputedFieldFromCache
 
        , RolePermInfo(..)
        , permIns
@@ -99,6 +100,7 @@ module Hasura.RQL.Types.SchemaCache
        , SchemaDependency(..)
        , mkParentDep
        , mkColDep
+       , mkComputedFieldDep
        , getDependentObjs
        , getDependentObjsWith
 
@@ -123,8 +125,10 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
@@ -140,8 +144,8 @@ import           Language.Haskell.TH.Syntax        (Lift)
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
-import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
+import qualified Language.GraphQL.Draft.Syntax     as G
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
@@ -153,11 +157,17 @@ mkColDep :: DependencyReason -> QualifiedTable -> PGCol -> SchemaDependency
 mkColDep reason tn col =
   flip SchemaDependency reason . SOTableObj tn $ TOCol col
 
+mkComputedFieldDep
+  :: DependencyReason -> QualifiedTable -> ComputedFieldName -> SchemaDependency
+mkComputedFieldDep reason tn computedField =
+  flip SchemaDependency reason . SOTableObj tn $ TOComputedField computedField
+
 type WithDeps a = (a, [SchemaDependency])
 
 data FieldInfo columnInfo
   = FIColumn !columnInfo
   | FIRelationship !RelInfo
+  | FIComputedField !ComputedFieldInfo
   deriving (Show, Eq)
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -166,27 +176,28 @@ $(deriveToJSON
   ''FieldInfo)
 $(makePrisms ''FieldInfo)
 
-fieldInfoToEither :: FieldInfo columnInfo -> Either columnInfo RelInfo
-fieldInfoToEither (FIColumn l)       = Left l
-fieldInfoToEither (FIRelationship r) = Right r
-
-partitionFieldInfos :: [FieldInfo columnInfo] -> ([columnInfo], [RelInfo])
-partitionFieldInfos = partitionFieldInfosWith (id, id)
-
-partitionFieldInfosWith :: (columnInfo -> a, RelInfo -> b)
-                        -> [FieldInfo columnInfo] -> ([a], [b])
-partitionFieldInfosWith fns =
-  partitionEithers . map (biMapEither fns . fieldInfoToEither)
-  where
-    biMapEither (f1, f2) = either (Left . f1) (Right . f2)
-
 type FieldInfoMap columnInfo = M.HashMap FieldName (FieldInfo columnInfo)
 
+possibleNonColumnGraphQLFields :: FieldInfoMap PGColumnInfo -> [G.Name]
+possibleNonColumnGraphQLFields fields =
+  flip concatMap (M.toList fields) $ \case
+    (_, FIColumn _)             -> []
+    (_, FIRelationship relInfo) ->
+      let relationshipName = G.Name $ relNameToTxt $ riName relInfo
+      in case riType relInfo of
+           ObjRel -> [relationshipName]
+           ArrRel -> [relationshipName, relationshipName <> "_aggregate"]
+    (_, FIComputedField info) ->
+      pure $ G.Name $ computedFieldNameToText $ _cfiName info
+
 getCols :: FieldInfoMap columnInfo -> [columnInfo]
-getCols fim = lefts $ map fieldInfoToEither $ M.elems fim
+getCols = mapMaybe (^? _FIColumn) . M.elems
 
 getRels :: FieldInfoMap columnInfo -> [RelInfo]
-getRels fim = rights $ map fieldInfoToEither $ M.elems fim
+getRels = mapMaybe (^? _FIRelationship) . M.elems
+
+getComputedFieldInfos :: FieldInfoMap columnInfo -> [ComputedFieldInfo]
+getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
 
 isPGColInfo :: FieldInfo columnInfo -> Bool
 isPGColInfo (FIColumn _) = True
@@ -205,12 +216,13 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''InsPermInfo)
 
 data SelPermInfo
   = SelPermInfo
-  { spiCols            :: !(HS.HashSet PGCol)
-  , spiTable           :: !QualifiedTable
-  , spiFilter          :: !AnnBoolExpPartialSQL
-  , spiLimit           :: !(Maybe Int)
-  , spiAllowAgg        :: !Bool
-  , spiRequiredHeaders :: ![T.Text]
+  { spiCols                 :: !(HS.HashSet PGCol)
+  , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
+  , spiTable                :: !QualifiedTable
+  , spiFilter               :: !AnnBoolExpPartialSQL
+  , spiLimit                :: !(Maybe Int)
+  , spiAllowAgg             :: !Bool
+  , spiRequiredHeaders      :: ![T.Text]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''SelPermInfo)
@@ -336,7 +348,7 @@ data TableConfig
   = TableConfig
   { _tcCustomRootFields  :: !GC.TableCustomRootFields
   , _tcCustomColumnNames :: !CustomColumnNames
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
 
 emptyTableConfig :: TableConfig
@@ -353,7 +365,7 @@ data TableInfo columnInfo
   = TableInfo
   { _tiName                  :: !QualifiedTable
   , _tiDescription           :: !(Maybe PGDescription)
-  , _tiSystemDefined         :: !Bool
+  , _tiSystemDefined         :: !SystemDefined
   , _tiFieldInfoMap          :: !(FieldInfoMap columnInfo)
   , _tiRolePermInfoMap       :: !RolePermInfoMap
   , _tiUniqOrPrimConstraints :: ![ConstraintName]
@@ -363,60 +375,30 @@ data TableInfo columnInfo
   , _tiEnumValues            :: !(Maybe EnumValues)
   , _tiCustomConfig          :: !TableConfig
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 2 snakeCase) ''TableInfo)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''TableInfo)
 $(makeLenses ''TableInfo)
 
 checkForFieldConflict
   :: (MonadError QErr m)
-  => TableInfo a
+  => TableInfo PGColumnInfo
   -> FieldName
   -> m ()
-checkForFieldConflict tabInfo f =
-  case M.lookup f (_tiFieldInfoMap tabInfo) of
+checkForFieldConflict tableInfo f = do
+  case M.lookup f fieldInfoMap of
     Just _ -> throw400 AlreadyExists $ mconcat
-      [ "column/relationship " <>> f
-      , " of table " <>> _tiName tabInfo
+      [ "column/relationship/computed field " <>> f
+      , " of table " <>> tableName
       , " already exists"
       ]
     Nothing -> return ()
-
-data FunctionType
-  = FTVOLATILE
-  | FTIMMUTABLE
-  | FTSTABLE
-  deriving (Eq)
-
-$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
-
-funcTypToTxt :: FunctionType -> T.Text
-funcTypToTxt FTVOLATILE  = "VOLATILE"
-funcTypToTxt FTIMMUTABLE = "IMMUTABLE"
-funcTypToTxt FTSTABLE    = "STABLE"
-
-instance Show FunctionType where
-  show = T.unpack . funcTypToTxt
-
-data FunctionArg
-  = FunctionArg
-  { faName       :: !(Maybe FunctionArgName)
-  , faType       :: !PGScalarType
-  , faHasDefault :: !Bool
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
-
-data FunctionInfo
-  = FunctionInfo
-  { fiName          :: !QualifiedFunction
-  , fiSystemDefined :: !Bool
-  , fiType          :: !FunctionType
-  , fiInputArgs     :: !(Seq.Seq FunctionArg)
-  , fiReturnType    :: !QualifiedTable
-  , fiDeps          :: ![SchemaDependency]
-  , fiDescription   :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
+  when (f `elem` customColumnFields) $
+    throw400 AlreadyExists $
+    "custom column name " <> f <<> " of table " <> tableName <<> " already exists"
+  where
+    tableName = _tiName tableInfo
+    fieldInfoMap = _tiFieldInfoMap tableInfo
+    customColumnFields =
+      map (FieldName . G.unName . pgiName) $ getCols fieldInfoMap
 
 type TableCache columnInfo = M.HashMap QualifiedTable (TableInfo columnInfo) -- info of all tables
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
@@ -445,7 +427,7 @@ removeFromDepMap =
 
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
-  deriving (Show, Eq, Hashable, ToJSON, FromJSON)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, FromJSON)
 
 initSchemaCacheVer :: SchemaCacheVer
 initSchemaCacheVer = SchemaCacheVer 0
@@ -481,11 +463,17 @@ modDepMapInCache f = do
 class (Monad m) => CacheRM m where
   askSchemaCache :: m SchemaCache
 
+instance (CacheRM m) => CacheRM (ReaderT r m) where
+  askSchemaCache = lift askSchemaCache
+
 instance (Monad m) => CacheRM (StateT SchemaCache m) where
   askSchemaCache = get
 
 class (CacheRM m) => CacheRWM m where
   writeSchemaCache :: SchemaCache -> m ()
+
+instance (CacheRWM m) => CacheRWM (ReaderT r m) where
+  writeSchemaCache = lift . writeSchemaCache
 
 instance (Monad m) => CacheRWM (StateT SchemaCache m) where
   writeSchemaCache = put
@@ -565,6 +553,14 @@ addRelToCache rn ri deps tn = do
   where
     schObjId = SOTableObj tn $ TORel $ riName ri
 
+addComputedFieldToCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable -> ComputedFieldInfo -> m ()
+addComputedFieldToCache table computedFieldInfo =
+  addFldToCache computedField (FIComputedField computedFieldInfo) table
+  where
+    computedField = fromComputedField $ _cfiName computedFieldInfo
+
 addFldToCache
   :: (QErrM m, CacheRWM m)
   => FieldName -> FieldInfo PGColumnInfo
@@ -603,6 +599,12 @@ delRelFromCache rn tn = do
   modDepMapInCache (removeFromDepMap schObjId)
   where
     schObjId = SOTableObj tn $ TORel rn
+
+deleteComputedFieldFromCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable -> ComputedFieldName -> m ()
+deleteComputedFieldFromCache table computedField =
+  delFldFromCache (fromComputedField computedField) table
 
 updColInCache
   :: (QErrM m, CacheRWM m)
@@ -668,8 +670,8 @@ delEventTriggerFromCache qt trn = do
 
 addFunctionToCache
   :: (QErrM m, CacheRWM m)
-  => FunctionInfo -> m ()
-addFunctionToCache fi = do
+  => FunctionInfo -> [SchemaDependency] -> m ()
+addFunctionToCache fi deps = do
   sc <- askSchemaCache
   let functionCache = scFunctions sc
   case M.lookup fn functionCache of
@@ -681,7 +683,6 @@ addFunctionToCache fi = do
   where
     fn = fiName fi
     objId = SOFunction $ fiName fi
-    deps = fiDeps fi
 
 askFunctionInfo
   :: (CacheRM m, QErrM m)

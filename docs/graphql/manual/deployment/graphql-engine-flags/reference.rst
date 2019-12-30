@@ -132,11 +132,14 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
-     - Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1)
+     - Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1).
+       New connections will be taken from a particular stripe pseudo-randomly.
 
    * - ``-c, --connections <NO_OF_CONNS>``
      - ``HASURA_GRAPHQL_PG_CONNECTIONS``
-     - Number of connections per stripe that need to be opened to Postgres (default: 50)
+     - Maximum number of Postgres connections that can be opened per stripe (default: 50). 
+       When the maximum is reached we will block until a new connection becomes available, 
+       even if there is capacity in other stripes.
 
    * - ``--timeout <SECONDS>``
      - ``HASURA_GRAPHQL_PG_TIMEOUT``
@@ -160,11 +163,6 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
      - ``HASURA_GRAPHQL_ENABLED_APIS``
      - Comma separated list of APIs (options: ``metadata``, ``graphql``, ``pgdump``) to be enabled.
        (default: ``metadata,graphql,pgdump``)
-
-   * - ``--live-queries-fallback-refetch-interval``
-     - ``HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL``
-     - Updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
-       which cannot be multiplexed. Default: 1000 (1sec)
 
    * - ``--live-queries-multiplexed-refetch-interval``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL``

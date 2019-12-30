@@ -92,14 +92,15 @@ resolveMultiplexedValue = \case
     varJsonPath <- case varM of
       Just varName -> do
         modifying _1 $ Map.insert varName colVal
-        pure ["variables", G.unName $ G.unVariable varName]
+        pure ["query", G.unName $ G.unVariable varName]
       Nothing -> do
         syntheticVarIndex <- gets (length . snd)
         modifying _2 (|> colVal)
         pure ["synthetic", T.pack $ show syntheticVarIndex]
     pure $ fromResVars (PGTypeScalar $ pstType colVal) varJsonPath
-  GR.UVSessVar ty sessVar -> pure $ fromResVars ty ["user", T.toLower sessVar]
+  GR.UVSessVar ty sessVar -> pure $ fromResVars ty ["session", T.toLower sessVar]
   GR.UVSQL sqlExp -> pure sqlExp
+  GR.UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
   where
     fromResVars ty jPath =
       flip S.SETyAnn (S.mkTypeAnn ty) $ S.SEOpApp (S.SQLOp "#>>")

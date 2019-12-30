@@ -2,6 +2,7 @@ module Hasura.GraphQL.Resolve.Insert
   (convertInsert)
 where
 
+import           Control.Arrow                     ((>>>))
 import           Data.Has
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -21,6 +22,7 @@ import qualified Hasura.RQL.DML.Returning          as RR
 
 import qualified Hasura.SQL.DML                    as S
 
+import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Resolve.Mutation
@@ -85,7 +87,7 @@ data AnnInsObj
   } deriving (Show, Eq)
 
 mkAnnInsObj
-  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m)
+  :: (MonadReusability m, MonadError QErr m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
   => RelationInfoMap
   -> PGColGNameMap
   -> AnnGObject
@@ -96,7 +98,7 @@ mkAnnInsObj relInfoMap allColMap annObj =
     emptyInsObj = AnnInsObj [] [] []
 
 traverseInsObj
-  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m)
+  :: (MonadReusability m, MonadError QErr m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
   => RelationInfoMap
   -> PGColGNameMap
   -> (G.Name, AnnInpVal)
@@ -159,7 +161,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
             bool withNonEmptyArrData (return defVal) $ null arrDataVals
 
 parseOnConflict
-  :: (MonadResolve m)
+  :: (MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r)
   => QualifiedTable
   -> Maybe UpdPermForIns
   -> PGColGNameMap
@@ -178,8 +180,10 @@ parseOnConflict tn updFiltrM allColMap val = withPathK "on_conflict" $
           updFltrRes <- traverseAnnBoolExp
                         (convPartialSQLExp sessVarFromCurrentSetting)
                         updFiltr
-          return $ RI.CP1Update constraint updCols preSetRes $
-            toSQLBoolExp (S.mkQual tn) updFltrRes
+          whereExp <- parseWhereExp obj
+          let updateBoolExp = toSQLBoolExp (S.mkQual tn) updFltrRes
+              whereCondition = S.BEBin S.AndOp updateBoolExp whereExp
+          return $ RI.CP1Update constraint updCols preSetRes whereCondition
 
   where
     getUpdCols o = do
@@ -192,6 +196,11 @@ parseOnConflict tn updFiltrM allColMap val = withPathK "on_conflict" $
            "\"constraint\" is expected, but not found"
       (_, enumVal) <- asEnumVal v
       return $ ConstraintName $ G.unName $ G.unEnumValue enumVal
+
+    parseWhereExp =
+          OMap.lookup "where"
+      >>> traverse (parseBoolExp >=> traverse (traverse resolveValTxt))
+      >>> fmap (maybe (S.BELit True) (toSQLBoolExp (S.mkQual tn)))
 
 toSQLExps
   :: (MonadError QErr m, MonadState PrepArgs m)
@@ -235,7 +244,7 @@ mkInsertQ vn onConflictM insCols defVals role = do
 
 asSingleObject
   :: MonadError QErr m
-  => [ColVals] -> m (Maybe ColVals)
+  => [ColumnValues J.Value] -> m (Maybe (ColumnValues J.Value))
 asSingleObject = \case
   []  -> return Nothing
   [a] -> return $ Just a
@@ -243,7 +252,7 @@ asSingleObject = \case
 
 fetchFromColVals
   :: MonadError QErr m
-  => ColVals
+  => ColumnValues J.Value
   -> [PGColumnInfo]
   -> (PGColumnInfo -> a)
   -> m [(a, WithScalarType PGScalarValue)]
@@ -259,11 +268,13 @@ mkSelCTE
   :: MonadError QErr m
   => QualifiedTable
   -> [PGColumnInfo]
-  -> Maybe ColVals
+  -> Maybe (ColumnValues J.Value)
   -> m CTEExp
 mkSelCTE tn allCols colValM = do
-  selCTE <- mkSelCTEFromColVals tn allCols $ maybe [] pure colValM
+  selCTE <- mkSelCTEFromColVals parseFn tn allCols $ maybe [] pure colValM
   return $ CTEExp selCTE Seq.Empty
+  where
+    parseFn ty val = toTxtValue <$> parsePGScalarValue ty val
 
 execCTEExp
   :: Bool
@@ -486,7 +497,7 @@ prefixErrPath fld =
   withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
 
 convertInsert
-  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
      )
   => RoleName

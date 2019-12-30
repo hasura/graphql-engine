@@ -9,8 +9,6 @@ const defaultState = {
   ],
 };
 
-/* */
-
 /* Action constants */
 const generateHeaderSyms = (prefix = 'API_HEADER') => {
   // TODO: change this anti-pattern
@@ -25,7 +23,6 @@ const generateHeaderSyms = (prefix = 'API_HEADER') => {
     DELETE_HEADER: `${prefix}/DELETE_HEADER`,
   };
 };
-/* */
 
 const generateReducer = (eventPrefix, defaultHeaders) => {
   /* Action constants */
@@ -41,7 +38,6 @@ const generateReducer = (eventPrefix, defaultHeaders) => {
     ADD_NEW_HEADER,
     UPDATE_HEADERS,
   } = generateHeaderSyms(eventPrefix);
-  /* */
 
   /* Reducer */
   const headerReducer = (state = defaultState, action) => {
@@ -112,7 +108,6 @@ const generateReducer = (eventPrefix, defaultHeaders) => {
     }
   };
   return headerReducer;
-  /* */
 };
 
 export { generateHeaderSyms };

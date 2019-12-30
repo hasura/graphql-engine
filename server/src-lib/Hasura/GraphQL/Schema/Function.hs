@@ -3,6 +3,7 @@ module Hasura.GraphQL.Schema.Function
   , mkFuncArgsInp
   , mkFuncQueryFld
   , mkFuncAggQueryFld
+  , mkFuncArgsTy
   ) where
 
 import qualified Data.Sequence                 as Seq
@@ -16,15 +17,6 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-mkFuncArgsName :: QualifiedFunction -> G.Name
-mkFuncArgsName fn =
-  qualObjectToName fn <> "_args"
-
-mkFuncArgsTy :: QualifiedFunction -> G.NamedType
-mkFuncArgsTy =
-  G.NamedType . mkFuncArgsName
-
-
 {-
 input function_args {
   arg1: arg-type1!
@@ -34,37 +26,33 @@ input function_args {
 }
 -}
 
-procFuncArgs
-  :: Seq.Seq FunctionArg
-  -> (FunctionArg -> Text -> a) -> [a]
-procFuncArgs argSeq f =
+procFuncArgs :: Seq.Seq a -> (a -> Maybe FunctionArgName) -> (a -> Text -> b) -> [b]
+procFuncArgs argSeq nameFn resultFn =
   fst $ foldl mkItem ([], 1::Int) argSeq
   where
     mkItem (items, argNo) fa =
-      case faName fa of
+      case nameFn fa of
         Just argName ->
           let argT = getFuncArgNameTxt argName
-          in (items <> pure (f fa argT), argNo)
+          in (items <> pure (resultFn fa argT), argNo)
         Nothing ->
           let argT = "arg_" <> T.pack (show argNo)
-          in (items <> pure (f fa argT), argNo + 1)
+          in (items <> pure (resultFn fa argT), argNo + 1)
 
-mkFuncArgsInp :: FunctionInfo -> Maybe InpObjTyInfo
-mkFuncArgsInp funcInfo =
+mkFuncArgsInp :: QualifiedFunction -> Seq.Seq FunctionArg -> Maybe InpObjTyInfo
+mkFuncArgsInp funcName funcArgs =
   bool (Just inpObj) Nothing $ null funcArgs
   where
-    funcName = fiName funcInfo
-    funcArgs = fiInputArgs funcInfo
     funcArgsTy = mkFuncArgsTy funcName
 
     inpObj = mkHsraInpTyInfo Nothing funcArgsTy $
              fromInpValL argInps
 
-    argInps = procFuncArgs funcArgs mkInpVal
+    argInps = procFuncArgs funcArgs faName mkInpVal
 
     mkInpVal fa t =
       InpValInfo Nothing (G.Name t) Nothing $
-      G.toGT $ mkScalarTy $ faType fa
+      G.toGT $ mkScalarTy $ _qptName $ faType fa
 
 {-
 
@@ -82,7 +70,7 @@ mkFuncArgs funInfo =
   fromInpValL $ funcInpArgs <> mkSelArgs retTable
   where
     funcName = fiName funInfo
-    funcArgs = fiInputArgs funInfo
+    funcArgs = getInputArgs funInfo
     retTable = fiReturnType funInfo
 
     funcArgDesc = G.Description $ "input parameters for function " <>> funcName

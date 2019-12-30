@@ -91,32 +91,34 @@ const loadTriggers = triggerNames => (dispatch, getState) => {
 
 const loadPendingEvents = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const body = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'event_triggers',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        '*',
+        {
+          name: 'events',
+          columns: [
+            '*',
+            { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
+          ],
+          where: { delivered: false, error: false, tries: 0, archived: false },
+          order_by: ['-created_at'],
+          limit: 10,
+        },
+      ],
+    },
+  };
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: [
-          '*',
-          {
-            name: 'events',
-            columns: [
-              '*',
-              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-            ],
-            where: { delivered: false, error: false, tries: 0 },
-            order_by: ['-created_at'],
-            limit: 10,
-          },
-        ],
-      },
-    }),
+    body: JSON.stringify(body),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -130,32 +132,39 @@ const loadPendingEvents = () => (dispatch, getState) => {
 
 const loadRunningEvents = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const body = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'event_triggers',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        '*',
+        {
+          name: 'events',
+          columns: [
+            '*',
+            { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
+          ],
+          where: {
+            delivered: false,
+            error: false,
+            tries: { $gt: 0 },
+            archived: false,
+          },
+          order_by: ['-created_at'],
+          limit: 10,
+        },
+      ],
+    },
+  };
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: [
-          '*',
-          {
-            name: 'events',
-            columns: [
-              '*',
-              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-            ],
-            where: { delivered: false, error: false, tries: { $gt: 0 } },
-            order_by: ['-created_at'],
-            limit: 10,
-          },
-        ],
-      },
-    }),
+    body: JSON.stringify(body),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -207,13 +216,16 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
                     columns: ['*'],
                   },
                 ],
-                where: { event: { trigger_name: triggerData[0].name } },
+                where: {
+                  event: { trigger_name: triggerData[0].name, archived: false },
+                },
                 order_by: ['-created_at'],
                 limit: 10,
               },
             },
           ],
         };
+
         const logOptions = {
           credentials: globalCookiePolicy,
           method: 'POST',

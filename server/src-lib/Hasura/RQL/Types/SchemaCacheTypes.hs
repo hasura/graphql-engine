@@ -6,9 +6,10 @@ import           Data.Aeson.TH
 import           Data.Aeson.Types
 import           Hasura.Prelude
 
-import qualified Data.Text                     as T
+import qualified Data.Text                      as T
 
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
@@ -19,6 +20,7 @@ data TableObjId
   | TOCons !ConstraintName
   | TOPerm !RoleName !PermType
   | TOTrigger !TriggerName
+  | TOComputedField !ComputedFieldName
   deriving (Show, Eq, Generic)
 
 instance Hashable TableObjId
@@ -45,6 +47,8 @@ reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
   <> "." <> permTypeToCode pt
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
   "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
+reportSchemaObj (SOTableObj tn (TOComputedField ccn)) =
+  "computed field " <> qualObjectToText tn <> "." <> computedFieldNameToText ccn
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi
