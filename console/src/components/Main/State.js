@@ -2,6 +2,7 @@ const defaultState = {
   migrationError: null,
   hasuractlEnv: null,
   migrationMode: true,
+  readOnlyMode: false,
   migrationModeProgress: false,
   metadataExport: { error: false, info: null },
   adminSecretInput: null,
