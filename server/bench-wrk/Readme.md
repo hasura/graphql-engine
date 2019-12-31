@@ -11,7 +11,11 @@ The data will be same in both the databases. The tables reside in different data
 The methods in script `sportsdb_setup.py` helps in setting up the databases, starting the Hasura GraphQL engines, and setting up relationships. This script can either take urls of already running Postgres databases as input, or it can start the databases as Docker instances. The GraphQL engines can be run either with `stack exec` or as Docker containers.
 
 ### Run benchmark ###
-- Install dependencies for the Python script in a virtual environment (requires Python>=3.6).
+- Install Python 3.7.6 using pyenv
+```sh
+$ pyenv install 3.7.6
+```
+- Install dependencies for the Python script in a virtual environment.
 ```sh
 $ python3 -m venv venv
 $ source venv/bin/activate
