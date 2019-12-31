@@ -31,7 +31,7 @@ func (h *HasuraDB) ensureSettingsTable() error {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
 			h.logger.Debug(err)
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 		return horror.Error(h.config.isCMD)
 	}
@@ -69,7 +69,7 @@ func (h *HasuraDB) ensureSettingsTable() error {
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 
 		return horror.Error(h.config.isCMD)
@@ -115,7 +115,7 @@ func (h *HasuraDB) setDefaultSettings() error {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
 			h.logger.Debug(err)
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 		return horror.Error(h.config.isCMD)
 	}
@@ -144,7 +144,7 @@ func (h *HasuraDB) GetSetting(name string) (value string, err error) {
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			return value, err
+			return value, fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 
 		return value, horror.Error(h.config.isCMD)
@@ -193,7 +193,7 @@ func (h *HasuraDB) UpdateSetting(name string, value string) error {
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 
 		return horror.Error(h.config.isCMD)

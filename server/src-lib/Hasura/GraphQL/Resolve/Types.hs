@@ -69,13 +69,12 @@ type FunctionArgSeq = Seq.Seq (InputArgument FunctionArgItem)
 
 data FuncQOpCtx
   = FuncQOpCtx
-  { _fqocTable    :: !QualifiedTable
+  { _fqocFunction :: !QualifiedFunction
+  , _fqocArgs     :: !FunctionArgSeq
   , _fqocHeaders  :: ![T.Text]
   , _fqocAllCols  :: !PGColGNameMap
   , _fqocFilter   :: !AnnBoolExpPartialSQL
   , _fqocLimit    :: !(Maybe Int)
-  , _fqocFunction :: !QualifiedFunction
-  , _fqocArgs     :: !FunctionArgSeq
   } deriving (Show, Eq)
 
 data UpdOpCtx
@@ -226,3 +225,4 @@ data InputFunctionArgument
   = IFAKnown !FunctionArgName !UnresolvedVal -- ^ Known value
   | IFAUnknown !FunctionArgItem -- ^ Unknown value, need to be parsed
   deriving (Show, Eq)
+$(makePrisms ''InputFunctionArgument)

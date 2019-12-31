@@ -2,8 +2,6 @@ module Hasura.RQL.DML.Select
   ( selectP2
   , selectQuerySQL
   , selectAggQuerySQL
-  , mkFuncSelectSimple
-  , mkFuncSelectAgg
   , convSelectQuery
   , asSingleRowJsonResp
   , module Hasura.RQL.DML.Select.Internal
@@ -268,20 +266,6 @@ convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   validateHeaders $ spiRequiredHeaders selPermInfo
   convSelectQ (_tiFieldInfoMap tabInfo) selPermInfo
     extSelQ sessVarBldr prepArgBuilder
-
-mkFuncSelectSimple
-  :: AnnFnSelSimple
-  -> Q.Query
-mkFuncSelectSimple annFnSel =
-  Q.fromBuilder $ toSQL $
-  mkFuncSelectWith (mkSQLSelect False) annFnSel
-
-mkFuncSelectAgg
-  :: AnnFnSelAgg
-  -> Q.Query
-mkFuncSelectAgg annFnSel =
-  Q.fromBuilder $ toSQL $
-  mkFuncSelectWith mkAggSelect annFnSel
 
 selectP2 :: Bool -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 selectP2 asSingleObject (sel, p) =

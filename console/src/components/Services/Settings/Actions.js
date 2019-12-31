@@ -4,7 +4,6 @@ import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
 import defaultState from './State';
 import { filterInconsistentMetadataObjects } from './utils';
-import { RELOAD_METADATA_API_CHANGE } from '../../../helpers/versionUtils';
 import {
   setConsistentSchema,
   setConsistentFunctions,
@@ -261,11 +260,10 @@ export const loadInconsistentObjects = (
 export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
-    const { featuresCompatibility } = getState().main;
 
-    const reloadQuery = featuresCompatibility[RELOAD_METADATA_API_CHANGE]
-      ? reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery(remoteSchemaName)
-      : reloadCacheAndGetInconsistentObjectsQuery;
+    const reloadQuery = reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery(
+      remoteSchemaName
+    );
 
     dispatch({ type: LOADING_METADATA });
     return dispatch(

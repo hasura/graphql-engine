@@ -8,11 +8,14 @@ import           Hasura.Prelude
 import qualified Hasura.SQL.DML      as S
 import           Hasura.SQL.Types    (Iden (..))
 
+{- Note [Postgres identifier length limitations]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Postgres truncates identifiers to a maximum of 63 characters by default (see
+https://www.postgresql.org/docs/12/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS).
+-}
 
--- add an int as a prefix to all aliases.
--- This is needed in cases identifiers exceed 63 chars
--- as postgres only considers first 63 chars of
--- an identifier
+-- Prefix an Int to all aliases to preserve the uniqueness of identifiers.
+-- See Note [Postgres identifier length limitations].
 prefixNumToAliases :: S.Select -> S.Select
 prefixNumToAliases s =
   uSelect s `evalState` UniqSt 0 Map.empty

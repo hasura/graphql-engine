@@ -101,7 +101,7 @@ cd "$PROJECT_ROOT"
 # Use pyenv if available to set an appropriate python version that will work with pytests etc.
 if command -v pyenv >/dev/null; then
   # For now I guess use the greatest python3 >= 3.5
-  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '{if($1>=3.5)print$1}' | tail -n1) 
+  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '{if($1>=3.5)print$1}' | tail -n1)
   if [ -z "$v" ]; then
     echo_error 'Please `pyenv install` a version of python >= 3.5 so we can use it'
     exit 2
@@ -359,8 +359,8 @@ elif [ "$MODE" = "test" ]; then
     if [ "$DEVSH_VERSION" = "$(cat $DEVSH_VERSION_FILE 2>/dev/null || true)" ]; then
       true # ok
     else
-      echo_warn 'dev.sh version was bumped. Forcing reinstallation of dependencies.'
-      rm -r "$PY_VENV"
+      echo_warn 'dev.sh version was bumped or fresh install. Forcing reinstallation of dependencies.'
+      rm -rf "$PY_VENV"
       echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
     fi
     set +u  # for venv activate
