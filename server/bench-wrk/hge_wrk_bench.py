@@ -301,7 +301,6 @@ query results {
 
     def set_cpu_info(self, insert_var):
         cpu_key = self.cpu_info['brand'] + ' vCPUs: ' + str(self.cpu_info['count'])
-        print("CPU KEY:", cpu_key)
         insert_var['cpu']= {
             'data' : {
                 'info': self.cpu_info,
@@ -443,8 +442,10 @@ mutation insertMaxRps($result: hge_bench_query_max_rps_insert_input!) {
             try:
                 self.results_root_dir = get_results_root_dir(query)
                 max_rps = self.max_rps_test(query)
-                for rps in self.rps_steps:
-                    # The tests should definitely not be running very close to or higher than maximum requests per second
+                # The tests should definitely not be running very close to or higher than maximum requests per second
+                rps_steps = [ r for r in self.rps_steps if r < 0.6*max_rps]
+                print("Benchmarking queries with wrk2 for the following requests/sec", ", ".join(rps_steps))
+                for rps in rps_steps:
                     if rps < int(0.6*max_rps):
                         self.wrk2_test(query, rps)
             except Exception:
