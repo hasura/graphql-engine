@@ -128,10 +128,13 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 	case dropComputedField:
 		q.Args = &dropComputedFieldInput{}
 	default:
-		return fmt.Errorf("cannot squash type %s", h.Type)
+		return fmt.Errorf("cannot squash type %s", q.Type)
 	}
 	if err := json.Unmarshal(argBody, &q.Args); err != nil {
 		return err
+	}
+	if q.Args == nil {
+		return fmt.Errorf("args is missing in metadata action %s", q.Type)
 	}
 	*h = newHasuraIntefaceQuery(q)
 	return nil
@@ -523,9 +526,9 @@ type deleteEventTriggerInput struct {
 }
 
 type addRemoteSchemaInput struct {
-	Name       string      `json:"name" yaml:"name"`
-	Definition interface{} `json:"definition" yaml:"definition"`
-	Comment    *string     `json:"comment,omitempty" yaml:"comment,omitempty"`
+	Name       string                 `json:"name" yaml:"name"`
+	Definition map[string]interface{} `json:"definition" yaml:"definition"`
+	Comment    *string                `json:"comment,omitempty" yaml:"comment,omitempty"`
 }
 
 type removeRemoteSchemaInput struct {
@@ -725,6 +728,121 @@ func (rmi *replaceMetadataInput) convertToMetadataActions(l *database.CustomList
 	for _, rs := range rmi.RemoteSchemas {
 		l.PushBack(rs)
 	}
+}
+
+type InconsistentMetadata struct {
+	IsConsistent        bool                          `json:"is_consistent"`
+	InConsistentObjects []InconsistentMeatadataObject `json:"inconsistent_objects"`
+}
+
+type InconsistentMeatadataObject struct {
+	Type       string      `json:"type"`
+	Reason     string      `json:"reason"`
+	Definition interface{} `json:"definition"`
+}
+
+func (i *InconsistentMeatadataObject) UnmarshalJSON(b []byte) error {
+	type t InconsistentMeatadataObject
+	var q t
+	if err := json.Unmarshal(b, &q); err != nil {
+		return err
+	}
+	defBody, err := json.Marshal(q.Definition)
+	if err != nil {
+		return err
+	}
+	switch q.Type {
+	case "object_relation":
+		q.Definition = &createObjectRelationshipInput{}
+	case "array_relation":
+		q.Definition = &createArrayRelationshipInput{}
+	case "select_permission":
+		q.Definition = &createSelectPermissionInput{}
+	case "update_permission":
+		q.Definition = &createUpdatePermissionInput{}
+	case "insert_permission":
+		q.Definition = &createInsertPermissionInput{}
+	case "delete_permission":
+		q.Definition = &createDeletePermissionInput{}
+	case "table":
+		q.Definition = &trackTableInput{}
+	case "function":
+		q.Definition = &trackFunctionInput{}
+	case "event_trigger":
+		q.Definition = &createEventTriggerInput{}
+	case "remote_schema":
+		q.Definition = &addRemoteSchemaInput{}
+	}
+	if err := json.Unmarshal(defBody, &q.Definition); err != nil {
+		return err
+	}
+	*i = InconsistentMeatadataObject(q)
+	return nil
+}
+
+func (i InconsistentMeatadataObject) GetType() string {
+	return i.Type
+}
+
+func (i InconsistentMeatadataObject) GetName() string {
+	switch defType := i.Definition.(type) {
+	case *createObjectRelationshipInput:
+		return defType.Name
+	case *createArrayRelationshipInput:
+		return defType.Name
+	case *createSelectPermissionInput:
+		return fmt.Sprintf("%s-permission", defType.Role)
+	case *createUpdatePermissionInput:
+		return fmt.Sprintf("%s-permission", defType.Role)
+	case *createInsertPermissionInput:
+		return fmt.Sprintf("%s-permission", defType.Role)
+	case *createDeletePermissionInput:
+		return fmt.Sprintf("%s-permission", defType.Role)
+	case *trackTableInput:
+		return defType.Name
+	case *trackFunctionInput:
+		return defType.Name
+	case *createEventTriggerInput:
+		return defType.Name
+	case *addRemoteSchemaInput:
+		return defType.Name
+	}
+	return "N/A"
+}
+
+func (i InconsistentMeatadataObject) GetDescription() string {
+	switch defType := i.Definition.(type) {
+	case *createObjectRelationshipInput:
+		return fmt.Sprintf("relationship of table %s in %s schema", defType.Table.Name, defType.Table.Schema)
+	case *createArrayRelationshipInput:
+		return fmt.Sprintf("relationship of table %s in %s schema", defType.Table.Name, defType.Table.Schema)
+	case *createSelectPermissionInput:
+		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
+	case *createUpdatePermissionInput:
+		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
+	case *createInsertPermissionInput:
+		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
+	case *createDeletePermissionInput:
+		return fmt.Sprintf("%s on table %s in %s schema", i.Type, defType.Table.Name, defType.Table.Schema)
+	case *trackTableInput:
+		return fmt.Sprintf("table %s in %s schema", defType.tableSchema.Name, defType.tableSchema.Schema)
+	case *trackFunctionInput:
+		return fmt.Sprintf("function %s in %s schema", defType.Name, defType.Schema)
+	case *createEventTriggerInput:
+		return fmt.Sprintf("event trigger %s on table %s in %s schema", defType.Name, defType.Table.Name, defType.Table.Schema)
+	case *addRemoteSchemaInput:
+		url := defType.Definition["url"]
+		urlFromEnv, ok := defType.Definition["url_from_env"]
+		if ok {
+			url = fmt.Sprintf("the url from the value of env var %s", urlFromEnv)
+		}
+		return fmt.Sprintf("remote schema %s at %s", defType.Name, url)
+	}
+	return "N/A"
+}
+
+func (i InconsistentMeatadataObject) GetReason() string {
+	return i.Reason
 }
 
 type runSQLInput struct {
