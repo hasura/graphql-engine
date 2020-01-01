@@ -153,6 +153,13 @@ func (o *initOptions) createFiles() error {
 		return errors.Wrap(err, "cannot write migration directory")
 	}
 
+	// create seeds directory
+	o.EC.SeedDir = filepath.Join(o.EC.ExecutionDirectory, "seeds")
+	err = os.MkdirAll(o.EC.SeedDir, os.ModePerm)
+	if err != nil {
+		return errors.Wrap(err, "cannot write seed directory")
+	}
+
 	return nil
 }
 

@@ -324,8 +324,12 @@ func (m *Migrate) ApplyMetadata(data interface{}) error {
 	return m.databaseDrv.ApplyMetadata(data)
 }
 
-func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
-	return m.databaseDrv.ExportSchemaDump(schemName)
+func (m *Migrate) ExportSchemaDump(schemName []string, includeData bool) ([]byte, error) {
+	return m.databaseDrv.ExportSchemaDump(schemName, true)
+}
+
+func (m *Migrate) ExportDataDump(schemName []string, tableNames []string) ([]byte, error) {
+	return m.databaseDrv.ExportDataDump(schemName, tableNames)
 }
 
 func (m *Migrate) Query(data []interface{}) error {
