@@ -103,8 +103,6 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	timestamp := getTime()
 	createOptions := mig.New(timestamp, o.name, o.EC.MigrationDir)
 
-	ec.Logger.Debugf("includeData value: %v", o.includeData)
-
 	if o.fromServer {
 		o.sqlServer = true
 		o.metaDataServer = true
