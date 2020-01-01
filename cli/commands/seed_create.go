@@ -15,13 +15,13 @@ import (
 )
 
 const migrateSeedCmdExamples = `  # Setup seed files for tables:
-  hasura migrate seed --endpoint "<endpoint>" 
+  hasura seed create --endpoint "<endpoint>" 
 
   # Create seeds for specified tables only:
-  hasura migrate create --tables one,two,three
+  hasura seed create --tables one,two,three
 
   # Use with admin secret:
-  hasura migrate seed --admin-secret "<admin-secret>"`
+  hasura seed create --admin-secret "<admin-secret>"`
 
 func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
@@ -30,7 +30,7 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	migrateSeedCmd := &cobra.Command{
-		Use:          "create [migration-name]",
+		Use:          "create [seed-name]",
 		Short:        "Create files required for seeding",
 		Long:         "Create sql files required for seeding",
 		Example:      migrateSeedCmdExamples,

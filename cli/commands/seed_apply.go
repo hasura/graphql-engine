@@ -18,25 +18,25 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	seedApplyCmd := &cobra.Command{
 		Use:   "apply",
 		Short: "Apply seeds on the database",
-		Example: `  # Apply all migrations
+		Example: `  # Apply all seeds
   hasura seed apply
 
   # Use with admin secret:
   hasura seed apply --admin-secret "<admin-secret>"
 
-  # Apply migrations on another Hasura instance:
+  # Apply seeds on another Hasura instance:
   hasura seed apply --endpoint "<endpoint>"
 
-  # Mark migration as applied on the server and skip execution:
+  # Mark seeds as applied on the server and skip execution:
   hasura seed apply --skip-execution
 
-  # Apply a particular migration version only:
+  # Apply a seed version only:
   hasura seed apply --version "<version>"
 
-  # Apply last 2 down migrations:
+  # Apply last 2 down seeds:
   hasura seed apply --down 2
 
-  # Apply only 2 up migrations:
+  # Apply only 2 up seeds:
   hasura seed apply --up 2
 
   # Apply only a particular version
@@ -45,7 +45,7 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Rollback a particular version:
   hasura seed apply --type down --version "<version>"
 
-  # Rollback all migrations:
+  # Rollback all seeds:
   hasura seed apply --down all`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -59,7 +59,7 @@ func newSeedApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			opts.EC.Logger.Info("migrations applied")
+			opts.EC.Logger.Info("seeds applied")
 			return nil
 		},
 	}
