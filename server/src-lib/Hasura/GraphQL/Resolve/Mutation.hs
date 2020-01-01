@@ -8,23 +8,27 @@ module Hasura.GraphQL.Resolve.Mutation
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                        as J
-import qualified Data.HashMap.Strict               as Map
-import qualified Data.HashMap.Strict.InsOrd        as OMap
-import qualified Language.GraphQL.Draft.Syntax     as G
+import qualified Control.Monad.Validate              as MV
+import qualified Data.Aeson                          as J
+import qualified Data.HashMap.Strict                 as Map
+import qualified Data.HashMap.Strict.InsOrd          as OMap
+import qualified Data.HashMap.Strict.InsOrd.Extended as OMap
+import qualified Data.Sequence.NonEmpty              as NESeq
+import qualified Data.Text                           as T
+import qualified Language.GraphQL.Draft.Syntax       as G
 
-import qualified Hasura.RQL.DML.Delete             as RD
-import qualified Hasura.RQL.DML.Returning          as RR
-import qualified Hasura.RQL.DML.Update             as RU
+import qualified Hasura.RQL.DML.Delete               as RD
+import qualified Hasura.RQL.DML.Returning            as RR
+import qualified Hasura.RQL.DML.Update               as RU
 
-import qualified Hasura.RQL.DML.Select             as RS
-import qualified Hasura.SQL.DML                    as S
+import qualified Hasura.RQL.DML.Select               as RS
+import qualified Hasura.SQL.DML                      as S
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select     (fromSelSet)
+import           Hasura.GraphQL.Resolve.Select       (fromSelSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
@@ -43,14 +47,15 @@ convertMutResp ty selSet =
     "returning"     -> do
       annFlds <- fromSelSet (_fType fld) $ _fSelSet fld
       annFldsResolved <- traverse
-        (traverse (RS.traverseAnnFld convertUnresolvedVal)) annFlds
+        (traverse (RS.traverseAnnFld convertPGValueToTextValue)) annFlds
       return $ RR.MRet annFldsResolved
     G.Name t        -> throw500 $ "unexpected field in mutation resp : " <> t
   where
-    convertUnresolvedVal = \case
+    convertPGValueToTextValue = \case
       UVPG annPGVal -> UVSQL <$> txtConverter annPGVal
       UVSessVar colTy sessVar -> pure $ UVSessVar colTy sessVar
       UVSQL sqlExp -> pure $ UVSQL sqlExp
+      UVSession    -> pure UVSession
 
 convertRowObj
   :: (MonadReusability m, MonadError QErr m)
@@ -114,53 +119,69 @@ convertUpdateP1
   -> m (RU.AnnUpdG UnresolvedVal)
 convertUpdateP1 opCtx fld = do
   -- a set expression is same as a row object
-  setExpM   <- withArgM args "_set" $ convertRowObj colGNameMap
+  setExpM   <- resolveUpdateOperator "_set" $ convertRowObj colGNameMap
   -- where bool expression to filter column
   whereExp <- withArg args "where" parseBoolExp
   -- increment operator on integer columns
-  incExpM <- withArgM args "_inc" $
+  incExpM <- resolveUpdateOperator "_inc" $
     convObjWithOp' $ rhsExpOp S.incOp S.intTypeAnn
   -- append jsonb value
-  appendExpM <- withArgM args "_append" $
+  appendExpM <- resolveUpdateOperator "_append" $
     convObjWithOp' $ rhsExpOp S.jsonbConcatOp S.jsonbTypeAnn
   -- prepend jsonb value
-  prependExpM <- withArgM args "_prepend" $
+  prependExpM <- resolveUpdateOperator "_prepend" $
     convObjWithOp' $ lhsExpOp S.jsonbConcatOp S.jsonbTypeAnn
   -- delete a key in jsonb object
-  deleteKeyExpM <- withArgM args "_delete_key" $
+  deleteKeyExpM <- resolveUpdateOperator "_delete_key" $
     convObjWithOp' $ rhsExpOp S.jsonbDeleteOp S.textTypeAnn
   -- delete an element in jsonb array
-  deleteElemExpM <- withArgM args "_delete_elem" $
+  deleteElemExpM <- resolveUpdateOperator "_delete_elem" $
     convObjWithOp' $ rhsExpOp S.jsonbDeleteOp S.intTypeAnn
   -- delete at path in jsonb value
-  deleteAtPathExpM <- withArgM args "_delete_at_path" $ convDeleteAtPathObj colGNameMap
-  mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
+  deleteAtPathExpM <- resolveUpdateOperator "_delete_at_path" $
+    convDeleteAtPathObj colGNameMap
 
-  let resolvedPreSetItems =
-        Map.toList $ fmap partialSQLExpToUnresolvedVal preSetCols
-
-  let updExpsM = [ setExpM, incExpM, appendExpM, prependExpM
+  updateItems <- combineUpdateExpressions
+                 [ setExpM, incExpM, appendExpM, prependExpM
                  , deleteKeyExpM, deleteElemExpM, deleteAtPathExpM
                  ]
-      setItems = resolvedPreSetItems ++ concat (catMaybes updExpsM)
 
-  -- atleast one of update operators is expected
-  -- or preSetItems shouldn't be empty
-  -- this is not equivalent to (null setItems)
-  unless (any isJust updExpsM || not (null resolvedPreSetItems)) $ throwVE $
-    "atleast any one of _set, _inc, _append, _prepend, "
-    <> "_delete_key, _delete_elem and "
-    <> "_delete_at_path operator is expected"
+  mutFlds <- convertMutResp (_fType fld) $ _fSelSet fld
 
-  let unresolvedPermFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal filterExp
-
-  return $ RU.AnnUpd tn setItems
-    (unresolvedPermFltr, whereExp) mutFlds allCols
+  pure $ RU.AnnUpd tn updateItems (unresolvedPermFilter, whereExp) mutFlds allCols
   where
     convObjWithOp' = convObjWithOp colGNameMap
     allCols = Map.elems colGNameMap
     UpdOpCtx tn _ colGNameMap filterExp preSetCols = opCtx
     args = _fArguments fld
+    resolvedPreSetItems = Map.toList $ fmap partialSQLExpToUnresolvedVal preSetCols
+    unresolvedPermFilter = fmapAnnBoolExp partialSQLExpToUnresolvedVal filterExp
+
+    resolveUpdateOperator operator resolveAction =
+      (operator,) <$> withArgM args operator resolveAction
+
+    combineUpdateExpressions updateExps = do
+      let allOperatorNames = map fst updateExps
+          updateItems = mapMaybe (\(op, itemsM) -> (op,) <$> itemsM) updateExps
+      -- Atleast any one of operator is expected or preset expressions shouldn't be empty
+      if null updateItems && null resolvedPreSetItems then
+        throwVE $ "atleast any one of " <> showNames allOperatorNames <> " is expected"
+      else do
+        let itemsWithOps = concatMap (\(op, items) -> map (second (op,)) items) updateItems
+            validateMultiOps col items = do
+              when (length items > 1) $ MV.dispute [(col, map fst $ toList items)]
+              pure $ snd $ NESeq.head items
+            eitherResult = MV.runValidate $ OMap.traverseWithKey validateMultiOps $
+                           OMap.groupTuples itemsWithOps
+        case eitherResult of
+          -- A column shouldn't be present in more than one operator.
+          -- If present, then generated UPDATE statement throws unexpected query error
+          Left columnsWithMultiOps -> throwVE $
+                                      "column found in multiple operators; "
+                                      <> T.intercalate ". "
+                                      (map (\(col, ops) -> col <<> " in " <> showNames ops)
+                                       columnsWithMultiOps)
+          Right items -> pure $ resolvedPreSetItems <> OMap.toList items
 
 convertUpdate
   :: ( MonadReusability m, MonadError QErr m

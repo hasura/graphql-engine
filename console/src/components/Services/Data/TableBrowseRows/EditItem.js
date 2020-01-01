@@ -13,6 +13,7 @@ import { replace } from 'react-router-redux';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
+import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 
 class EditItem extends Component {
   constructor() {
@@ -27,6 +28,7 @@ class EditItem extends Component {
       schemas,
       oldItem,
       migrationMode,
+      readOnlyMode,
       ongoingRequest,
       lastError,
       lastSuccess,
@@ -38,8 +40,11 @@ class EditItem extends Component {
     if (!oldItem) {
       dispatch(
         replace(
-          `${globals.urlPrefix ||
-            ''}/data/schema/${currentSchema}/tables/${tableName}/browse`
+          `${globals.urlPrefix || ''}${getTableBrowseRoute(
+            currentSchema,
+            tableName,
+            true
+          )}`
         )
       );
       return null;
@@ -249,6 +254,7 @@ class EditItem extends Component {
           table={currentTable}
           tabName="edit"
           migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
         />
         <br />
         <div className={styles.insertContainer + ' container-fluid'}>
@@ -288,6 +294,7 @@ EditItem.propTypes = {
   lastSuccess: PropTypes.object,
   lastError: PropTypes.object,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   count: PropTypes.number,
   dispatch: PropTypes.func.isRequired,
 };
@@ -298,6 +305,7 @@ const mapStateToProps = (state, ownProps) => {
     ...state.tables.update,
     schemas: state.tables.allSchemas,
     migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
   };
 };

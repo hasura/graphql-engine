@@ -6,18 +6,21 @@ import (
 
 type MigrationStatus struct {
 	// Version is the version of this migration.
-	Version uint64
+	Version uint64 `json:"-"`
+
+	// Name helps finding this migration in the source folder
+	Name string `json:"-"`
 
 	// Check if the migration is applied on the cluster
-	IsApplied bool
+	IsApplied bool `json:"database_status"`
 
 	// Check if the migration is present on the local.
-	IsPresent bool
+	IsPresent bool `json:"source_status"`
 }
 
 type Status struct {
-	Index      uint64Slice
-	Migrations map[uint64]*MigrationStatus
+	Index      uint64Slice                 `json:"migrations"`
+	Migrations map[uint64]*MigrationStatus `json:"status"`
 }
 
 func NewStatus() *Status {

@@ -112,6 +112,11 @@ The various types of queries are listed in the following table:
      - 1
      - Add an SQL function
 
+   * - :ref:`track_function`
+     - :ref:`track_function_args <track_function_args_syntax_v2>`
+     - 2
+     - Add an SQL function with configuration
+
    * - :ref:`untrack_function`
      - :ref:`FunctionName <FunctionName>`
      - 1
@@ -131,6 +136,11 @@ The various types of queries are listed in the following table:
      - :ref:`drop_relationship_args <drop_relationship_syntax>`
      - 1
      - Drop an existing relationship
+
+   * - :ref:`rename_relationship`
+     - :ref:`rename_relationship_args <rename_relationship_syntax>`
+     - 1
+     - Modify name of an existing relationship
 
    * - :ref:`set_relationship_comment`
      - :ref:`set_relationship_comment_args <set_relationship_comment_syntax>`

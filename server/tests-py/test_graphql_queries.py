@@ -1,4 +1,4 @@
-import yaml
+import ruamel.yaml as yaml
 import pytest
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries
@@ -9,6 +9,12 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
 
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)
+
+    def test_select_query_author_with_skip_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_skip_directive.yaml', transport)
+
+    def test_select_query_author_with_include_directive(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
 
     def test_select_various_postgres_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types.yaml', transport)
@@ -54,10 +60,38 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
 
+    def test_select_query_batching(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_batching.yaml", transport)
+
+    def test_select_query_batching_with_mutation(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_mutation.yaml", transport)
+
+    def test_select_query_batching_with_one_error(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_one_error.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
 
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestGraphQLQueryFragments(DefaultTestSelectQueries):
+
+    def test_select_query_top_level_fragment(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_top_level_fragment.yaml', transport)
+
+    def test_select_query_nested_fragment(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_nested_fragment.yaml', transport)
+
+    def test_select_query_fragment_cycles(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/select_query_fragment_cycles.yaml', transport)
+
+    @classmethod
+    def dir(cls):
+        return 'queries/graphql_query/basic'
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphQLQueryAgg(DefaultTestSelectQueries):
@@ -263,9 +297,11 @@ class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
     def test_user_query_auction(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/user_query_auction.yaml', transport)
 
-    @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine-internal/issues/252")
-    def test_jsonb_has_all(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + '/jsonb_has_all.yaml', transport)
+    # FIXME: This test fails nondeterministically: strict=false doesn't seem to
+    # work on CI, so just disable for now:
+    # @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine-internal/issues/252")
+    # def test_jsonb_has_all(self, hge_ctx, transport):
+    #     check_query_f(hge_ctx, self.dir() + '/jsonb_has_all.yaml', transport)
 
     def test_jsonb_has_any(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/jsonb_has_any.yaml', transport)
@@ -458,6 +494,17 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     def test_query_my_add(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_my_add.yaml')
 
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_session_var(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_get_session_var.yaml', transport)
+
+    def test_track_function_v2_errors(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_function_v2_errors.yaml')
+
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_test_session_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_get_test_session_id.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions'
@@ -516,6 +563,9 @@ class TestGraphQLQueryComputedFields(DefaultTestSelectQueries):
 
     def test_computed_fields_permission(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/computed_fields_permission.yaml', transport)
+
+    def test_locations(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/locations.yaml', transport)
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 class TestGraphQLQueryCaching(DefaultTestSelectQueries):
