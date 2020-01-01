@@ -84,6 +84,15 @@
       "metadata": {
         "description": "Name of the database to be created."
       }
+    },
+    "adminSecret": {
+      "type": "securestring",
+      "defaultValue": null,
+      "minLength": 8,
+      "maxLength": 128,
+      "metadata": {
+        "description": "Hasura admin secret"
+      }
     }
   },
   "variables": {
@@ -97,7 +106,8 @@
     "firewallRuleName": "allow-all-azure-firewall-rule",
     "containerGroupName": "[concat(parameters('name'), '-container-group')]",
     "containerName": "hasura-graphql-engine",
-    "containerImage": "hasura/graphql-engine:v1.0.0"
+    "containerImage": "hasura/graphql-engine:v1.0.0",
+    "hasuraAdminSecret": "[parameters('adminSecret')]"
   },
   "resources": [
     {
@@ -145,7 +155,6 @@
           "dependsOn": [
             "[resourceId('Microsoft.DBforPostgreSQL/servers', variables('serverName'))]"
           ]
-
         }
       ]
     },
@@ -188,7 +197,13 @@
                   "memoryInGB": 1,
                   "cpu": 1
                 }
-              }
+              },
+              "environmentVariables": [
+                {
+                  "name": "HASURA_GRAPHQL_ADMIN_SECRET",
+                  "value": "[variables('hasuraAdminSecret')]"
+                }
+              ]
             }
           }
         ],
