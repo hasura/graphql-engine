@@ -192,6 +192,10 @@ library
                      , Hasura.Prelude
                      , Hasura.App
                      , Hasura.Db
+                     -- Exposed for benchmark:
+                     , Hasura.Cache.Bounded
+                     , Hasura.Cache.Unbounded
+                     , Hasura.Cache
                      , Hasura.Logging
                      , Hasura.HTTP
 
@@ -215,12 +219,7 @@ library
 
                      , Data.Aeson.Ordered
 
-  other-modules:       Hasura.Cache
-                     , Hasura.Cache
-                     , Hasura.Cache.Bounded
-                     , Hasura.Cache.Unbounded
-
-                     , Hasura.Server.Auth.JWT
+  other-modules:       Hasura.Server.Auth.JWT
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
@@ -373,3 +372,23 @@ test-suite graphql-engine-tests
     , time
     , aeson
     , QuickCheck
+
+-- Benchmarks related to caching (e.g. the plan cache).
+--
+-- NOTE: Some of these are very slow and can only be reasonably run with `cache -n 1` for now.
+benchmark cache
+  import: common-all, common-exe
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: src-bench-cache
+  build-depends:     base
+                   , criterion
+                   , mwc-random
+                   , mwc-probability
+                   , vector
+                   , deepseq
+                   , graphql-engine
+                   , split
+                   , async
+                   , text
+                   , bytestring

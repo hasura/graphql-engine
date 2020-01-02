@@ -15,6 +15,7 @@ To use the Hasura GraphQL engine, you need to:
 .. thumbnail:: ../../../img/graphql/manual/getting-started/running-hasura.png
    :width: 75%
    :class: no-shadow
+   :alt: Running Hasura
 
 Get started from scratch
 ------------------------
