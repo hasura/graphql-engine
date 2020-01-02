@@ -118,6 +118,7 @@ class Permissions extends Component {
       lastSuccess,
       permissionsState,
       migrationMode,
+      readOnlyMode,
       currentSchema,
     } = this.props;
 
@@ -183,6 +184,7 @@ class Permissions extends Component {
           table={tableSchema}
           tabName="permissions"
           migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
         />
       );
     };
@@ -1461,6 +1463,10 @@ class Permissions extends Component {
       };
 
       const getClonePermsSection = () => {
+        if (readOnlyMode) {
+          return null;
+        }
+
         // const applySameSelected = e => {
         //   const isChecked = e.target.checked;
         //   const selectedRole = e.target.getAttribute('data-role');
@@ -1620,6 +1626,10 @@ class Permissions extends Component {
       };
 
       const getButtonsSection = () => {
+        if (readOnlyMode) {
+          return null;
+        }
+
         const dispatchSavePermissions = () => {
           dispatch(permChangePermissions(permChangeTypes.save));
         };
@@ -1800,6 +1810,7 @@ Permissions.propTypes = {
   tableType: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   permissionsState: PropTypes.object.isRequired,
@@ -1815,6 +1826,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
+  readOnlyMode: state.main.readOnlyMode,
   currentSchema: state.tables.currentSchema,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   ...state.tables.modify,

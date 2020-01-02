@@ -64,6 +64,14 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/select_query_batching.yaml", transport)
 
+    def test_select_query_batching_with_mutation(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_mutation.yaml", transport)
+
+    def test_select_query_batching_with_one_error(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_one_error.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
@@ -492,6 +500,10 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
 
     def test_track_function_v2_errors(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_function_v2_errors.yaml')
+
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_test_session_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_get_test_session_id.yaml')
 
     @classmethod
     def dir(cls):

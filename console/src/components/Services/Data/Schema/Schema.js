@@ -62,6 +62,7 @@ class Schema extends Component {
       schema,
       schemaList,
       migrationMode,
+      readOnlyMode,
       untrackedRelations,
       currentSchema,
       dispatch,
@@ -296,6 +297,10 @@ class Schema extends Component {
 
     const getUntrackedTablesSection = () => {
       const getTrackAllBtn = () => {
+        if (readOnlyMode) {
+          return null;
+        }
+
         let trackAllBtn = null;
 
         const trackAllTables = e => {
@@ -339,15 +344,19 @@ class Schema extends Component {
           allUntrackedTables.forEach((table, i) => {
             const tableName = table.table_name;
 
-            const handleTrackTable = e => {
-              e.preventDefault();
+            const getTrackBtn = () => {
+              if (readOnlyMode) {
+                return null;
+              }
 
-              dispatch(setTableName(tableName));
-              dispatch(addExistingTableSql());
-            };
+              const handleTrackTable = e => {
+                e.preventDefault();
 
-            untrackedTablesList.push(
-              <div className={styles.padd_bottom} key={`untracked-${i}`}>
+                dispatch(setTableName(tableName));
+                dispatch(addExistingTableSql());
+              };
+
+              return (
                 <div
                   className={`${styles.display_inline} ${styles.add_mar_right}`}
                 >
@@ -361,6 +370,12 @@ class Schema extends Component {
                     Track
                   </Button>
                 </div>
+              );
+            };
+
+            untrackedTablesList.push(
+              <div className={styles.padd_bottom} key={`untracked-${i}`}>
+                {getTrackBtn()}
                 <div className={styles.display_inline}>
                   {displayTableName(table)}
                 </div>
@@ -372,6 +387,7 @@ class Schema extends Component {
             );
           });
         }
+
         return untrackedTablesList;
       };
 
@@ -395,6 +411,10 @@ class Schema extends Component {
 
     const getUntrackedRelationsSection = () => {
       const getTrackAllBtn = () => {
+        if (readOnlyMode) {
+          return null;
+        }
+
         let trackAllBtn = null;
 
         const trackAllRelations = e => {
@@ -434,15 +454,37 @@ class Schema extends Component {
         if (isEmpty(untrackedRelations)) {
           untrackedRelList.push(
             <div key="no-untracked-rel">There are no untracked relations</div>
+              .ne
           );
         } else {
           untrackedRelations.forEach((rel, i) => {
             const relData = rel.data;
 
-            const handleAddRel = e => {
-              e.preventDefault();
+            const getTrackBtn = () => {
+              if (readOnlyMode) {
+                return null;
+              }
 
-              dispatch(autoAddRelName(rel));
+              const handleTrackRel = e => {
+                e.preventDefault();
+
+                dispatch(autoAddRelName(rel));
+              };
+
+              return (
+                <div
+                  className={`${styles.display_inline} ${styles.add_mar_right}`}
+                >
+                  <Button
+                    className={styles.display_inline}
+                    color="white"
+                    size="xs"
+                    onClick={handleTrackRel}
+                  >
+                    Track
+                  </Button>
+                </div>
+              );
             };
 
             const relFrom = <b>{relData.lTable}</b>;
@@ -455,18 +497,7 @@ class Schema extends Component {
 
             untrackedRelList.push(
               <div className={styles.padd_bottom} key={`untracked-rel-${i}`}>
-                <div
-                  className={`${styles.display_inline} ${styles.add_mar_right}`}
-                >
-                  <Button
-                    className={styles.display_inline}
-                    color="white"
-                    size="xs"
-                    onClick={handleAddRel}
-                  >
-                    Track
-                  </Button>
-                </div>
+                {getTrackBtn()}
                 <div className={styles.display_inline}>
                   <span>
                     {relFrom} &rarr; {relTo}
@@ -514,11 +545,18 @@ class Schema extends Component {
           );
         } else {
           trackableFuncs.forEach((p, i) => {
-            trackableFunctionList.push(
-              <div
-                className={styles.padd_bottom}
-                key={`untracked-function-${i}`}
-              >
+            const getTrackBtn = () => {
+              if (readOnlyMode) {
+                return null;
+              }
+
+              const handleTrackFn = e => {
+                e.preventDefault();
+
+                dispatch(addExistingFunction(p.function_name));
+              };
+
+              return (
                 <div
                   className={`${styles.display_inline} ${styles.add_mar_right}`}
                 >
@@ -527,15 +565,20 @@ class Schema extends Component {
                     className={`${
                       styles.display_inline
                     } btn btn-xs btn-default`}
-                    onClick={e => {
-                      e.preventDefault();
-
-                      dispatch(addExistingFunction(p.function_name));
-                    }}
+                    onClick={handleTrackFn}
                   >
                     Track
                   </Button>
                 </div>
+              );
+            };
+
+            trackableFunctionList.push(
+              <div
+                className={styles.padd_bottom}
+                key={`untracked-function-${i}`}
+              >
+                {getTrackBtn()}
                 <div className={styles.display_inline}>
                   <span>{p.function_name}</span>
                 </div>
@@ -687,6 +730,7 @@ const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
   schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
+  readOnlyMode: state.main.readOnlyMode,
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
   functionsList: [...state.tables.postgresFunctions],

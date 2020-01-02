@@ -55,8 +55,13 @@ runGQBatched reqId userInfo reqHdrs reqs =
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
       -- in this case, and don't forward any.
-      let removeHeaders = flip HttpResponse Nothing . encJFromList . map _hrBody
-      removeHeaders <$> traverse (runGQ reqId userInfo reqHdrs) batch
+      let removeHeaders = 
+            flip HttpResponse Nothing 
+            . encJFromList 
+            . map (either (encJFromJValue . encodeGQErr False) _hrBody)
+          try = flip catchError (pure . Left) . fmap Right
+      fmap removeHeaders $ 
+        traverse (try . runGQ reqId userInfo reqHdrs) batch
 
 runHasuraGQ
   :: ( MonadIO m
