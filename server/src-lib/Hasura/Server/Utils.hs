@@ -98,15 +98,6 @@ duplicates = mapMaybe greaterThanOne . group . sort
   where
     greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
 
-_1 :: (a, b, c) -> a
-_1 (x, _, _) = x
-
-_2 :: (a, b, c) -> b
-_2 (_, y, _) = y
-
-_3 :: (a, b, c) -> c
-_3 (_, _, z) = z
-
 -- regex related
 matchRegex :: B.ByteString -> Bool -> T.Text -> Either String Bool
 matchRegex regex caseSensitive src =
@@ -216,3 +207,10 @@ instance FromJSON APIVersion where
       1 -> return VIVersion1
       2 -> return VIVersion2
       i -> fail $ "expected 1 or 2, encountered " ++ show i
+
+makeReasonMessage :: [a] -> (a -> Text) -> Text
+makeReasonMessage errors showError =
+  case errors of
+    [singleError] -> "because " <> showError singleError
+    _ -> "for the following reasons:\n" <> T.unlines
+         (map (("  • " <>) . showError) errors)

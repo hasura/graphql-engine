@@ -44,8 +44,7 @@ import           Hasura.HTTP
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.SQL.Value                  (PGScalarValue (..),
-                                                    pgScalarValueToJson,
+import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
                                                     toTxtValue)
 
 data InputFieldResolved
@@ -101,7 +100,7 @@ resolveResponseSelectionSet ty selSet =
     G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
 
   where
-    mkMetadataField = ResponseFieldMetadata . PGCol
+    mkMetadataField = ResponseFieldMetadata . unsafePGCol
 
 
 data ActionSelect v
@@ -143,7 +142,7 @@ actionSelectToSql (ActionSelect actionIdExp selection actionFilter) =
       -- and hence the prepared value will be a PGText
       -- S.SETyAnn actionIdExp $ S.TypeAnn "uuid"
       where
-        actionIdColumn = PGCol "id"
+        actionIdColumn = unsafePGCol "id"
 
     actionLogTable =
       QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
@@ -159,7 +158,7 @@ actionSelectToSql (ActionSelect actionIdExp selection actionFilter) =
       OutputFieldRelationship     -> undefined
       OutputFieldTypename ty      -> S.SELit $ G.unName $ G.unNamedType ty
       where
-        outputColumn = S.SEIden $ toIden $ PGCol "response_payload"
+        outputColumn = S.SEIden $ toIden $ unsafePGCol "response_payload"
 
     usingJsonBuildObj :: [(Text, a)] -> (a -> S.SQLExp) -> S.SQLExp
     usingJsonBuildObj l f =
@@ -168,8 +167,12 @@ actionSelectToSql (ActionSelect actionIdExp selection actionFilter) =
 
 
 resolveActionSelect
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, MonadResolve m
+  :: ( MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
      )
   => ActionSelectOpContext
   -> Field
@@ -217,24 +220,31 @@ data ResolvePlan
   deriving (Show, Eq)
 
 processOutputSelectionSet
-  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r
+  :: ( MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
      )
-  => RS.FromExpression UnresolvedVal
+  => RS.SelectFromG UnresolvedVal
   -> G.NamedType -> SelSet -> m GRS.AnnSimpleSelect
-processOutputSelectionSet fromExpression fldTy flds = do
+processOutputSelectionSet selectFrom fldTy flds = do
   stringifyNumerics <- stringifyNum <$> asks getter
   annotatedFields <- processTableSelectionSet fldTy flds
-  let selectAst = RS.AnnSelG annotatedFields fromExpression
+  let selectAst = RS.AnnSelG annotatedFields selectFrom
                   RS.noTablePermissions RS.noTableArgs stringifyNumerics
   return selectAst
 
 resolveActionInsertSync
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
-     , MonadResolve m
-     , Has OrdByCtx r, Has SQLGenCtx r
-     , Has HTTP.Manager r
+  :: ( MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
      , MonadIO m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     , Has HTTP.Manager r
      )
   => Field
   -> SyncActionExecutionContext
@@ -266,7 +276,7 @@ resolveActionInsertSync field executionContext sessionVariables = do
           functionArgs = RS.FunctionArgsExp
                          (pure $ UVSQL webhookResponseExpression)
                          mempty
-      in RS.FromExpressionFunction functionName functionArgs
+      in RS.FromFunction functionName (RS.AEInput <$> functionArgs)
             (Just definitionList)
 
 callWebhook
@@ -408,10 +418,14 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
 
 
 resolveActionInsert
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, Has HTTP.Manager r
+  :: ( MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
      , MonadIO m
-     , MonadResolve m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     , Has HTTP.Manager r
      )
   => Field
   -> ActionExecutionContext
@@ -494,8 +508,12 @@ annInpValueToJson annInpValue =
     AGArray _ valuesM         -> J.toJSON $ fmap (fmap annInpValueToJson) valuesM
 
 resolveAsyncResponse
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, MonadResolve m
+  :: ( MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
      )
   => ActionSelectOpContext
   -> Field
@@ -512,7 +530,7 @@ resolveAsyncResponse selectContext field = do
         let relationshipFromExp =
               mkJsonToRecordFromExpression (_asocDefinitionList selectContext) $
               -- TODO: An absolute hack, please fix this
-              UVSQL $ S.mkQIdenExp (Iden "_0_root.base") (Iden "response_payload")
+              RS.AEInput $ UVSQL $ S.mkQIdenExp (Iden "_0_root.base") (Iden "response_payload")
         outputSelect <- processOutputSelectionSet relationshipFromExp (_fType fld)
                         (_fSelSet fld)
         return $ RS.FObj $ RS.AnnRelG outputRelName [] outputSelect
@@ -522,7 +540,7 @@ resolveAsyncResponse selectContext field = do
       -- "status"     -> return $ mkAnnFldFromPGCol "status"
       "errors"     -> return $ mkAnnFldFromPGCol "errors" PGJSONB
       G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
-  let tableFromExp = RS.FromExpressionTable actionLogTable
+  let tableFromExp = RS.FromTable actionLogTable
       tableArguments = RS.noTableArgs
                        { RS._taWhere = Just $ mkTableBoolExpression actionId}
       tablePermissions = RS.TablePerm unresolvedFilter Nothing
@@ -537,7 +555,8 @@ resolveAsyncResponse selectContext field = do
     actionLogTable =
       QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
     mkAnnFldFromPGCol column columnType =
-      RS.FCol (PGCol column, PGColumnScalar columnType) Nothing
+      flip RS.mkAnnColField Nothing $
+      PGColumnInfo (unsafePGCol column) (G.Name column) (PGColumnScalar columnType) True Nothing
     unresolvedFilter =
       fmapAnnBoolExp partialSQLExpToUnresolvedVal $
       _asocFilter selectContext
@@ -545,7 +564,7 @@ resolveAsyncResponse selectContext field = do
       mkParameterizablePGValue <$> asPGColumnValue annInpValue
     mkTableBoolExpression actionId =
       BoolFld $ AVCol
-      (PGColumnInfo (PGCol "id") "id" (PGColumnScalar PGUUID) False Nothing) $
+      (PGColumnInfo (unsafePGCol "id") "id" (PGColumnScalar PGUUID) False Nothing) $
       pure $ AEQ True actionId
     mkJsonToRecordFromExpression definitionList webhookResponseExpression =
       let functionName = QualifiedObject (SchemaName "pg_catalog") $
@@ -553,5 +572,5 @@ resolveAsyncResponse selectContext field = do
           functionArgs = RS.FunctionArgsExp
                          (pure webhookResponseExpression)
                          mempty
-      in RS.FromExpressionFunction functionName functionArgs
+      in RS.FromFunction functionName functionArgs
             (Just definitionList)

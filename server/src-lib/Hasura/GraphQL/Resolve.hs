@@ -25,6 +25,7 @@ import qualified Network.HTTP.Client               as HTTP
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.Prelude
+import           Hasura.RQL.DML.Internal           (currentSession, sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -41,8 +42,6 @@ data QueryRootFldAST v
   = QRFPk !(DS.AnnSimpleSelG v)
   | QRFSimple !(DS.AnnSimpleSelG v)
   | QRFAgg !(DS.AnnAggSelG v)
-  | QRFFnSimple !(DS.AnnSimpleSelG v)
-  | QRFFnAgg !(DS.AnnAggSelG v)
   | QRFActionSelect !(DS.AnnSimpleSelG v)
   deriving (Show, Eq)
 
@@ -58,8 +57,6 @@ traverseQueryRootFldAST f = \case
   QRFPk s           -> QRFPk <$> DS.traverseAnnSimpleSel f s
   QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
   QRFAgg s          -> QRFAgg <$> DS.traverseAnnAggSel f s
-  QRFFnSimple s     -> QRFFnSimple <$> DS.traverseAnnSimpleSel f s
-  QRFFnAgg s        -> QRFFnAgg <$> DS.traverseAnnAggSel f s
   QRFActionSelect s -> QRFActionSelect <$> DS.traverseAnnSimpleSel f s
 
 toPGQuery :: QueryRootFldResolved -> Q.Query
@@ -67,8 +64,6 @@ toPGQuery = \case
   QRFPk s           -> DS.selectQuerySQL True s
   QRFSimple s       -> DS.selectQuerySQL False s
   QRFAgg s          -> DS.selectAggQuerySQL s
-  QRFFnSimple s     -> DS.selectQuerySQL False s
-  QRFFnAgg s        -> DS.selectAggQuerySQL s
   QRFActionSelect s -> DS.selectQuerySQL True s
 
 validateHdrs
@@ -80,7 +75,7 @@ validateHdrs userInfo hdrs = do
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
 queryFldToPGAST
-  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
      , Has QueryCtxMap r
      )
@@ -101,15 +96,33 @@ queryFldToPGAST fld = do
       QRFAgg <$> RS.convertAggSelect ctx fld
     QCFuncQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
-      QRFFnSimple <$> RS.convertFuncQuerySimple ctx fld
+      QRFSimple <$> RS.convertFuncQuerySimple ctx fld
     QCFuncAggQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
-      QRFFnAgg <$> RS.convertFuncQueryAgg ctx fld
+      QRFAgg <$> RS.convertFuncQueryAgg ctx fld
     QCActionFetch ctx ->
       QRFActionSelect <$> RA.resolveAsyncResponse ctx fld
 
+queryFldToSQL
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
+     , Has QueryCtxMap r
+     )
+  => PrepFn m
+  -> V.Field
+  -> m Q.Query
+queryFldToSQL fn fld = do
+  pgAST <- queryFldToPGAST fld
+  resolvedAST <- flip traverseQueryRootFldAST pgAST $ \case
+    UVPG annPGVal -> fn annPGVal
+    UVSQL sqlExp  -> return sqlExp
+    UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+    UVSession -> pure currentSession
+  return $ toPGQuery resolvedAST
+
 mutFldToTx
-  :: ( MonadResolve m
+  :: ( MonadReusability m
+     , MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
      , Has MutationCtxMap r
@@ -140,7 +153,8 @@ mutFldToTx fld = do
       RA.resolveActionInsert fld ctx (userVars userInfo)
 
 getOpCtx
-  :: ( MonadResolve m
+  :: ( MonadReusability m
+     , MonadError QErr m
      , MonadReader r m
      , Has (OpCtxMap a) r
      )

@@ -1,6 +1,10 @@
 # Remote schemas
 
-Merge remote GraphQL schemas with GraphQL Engine's Postgres-based schema to query all your GraphQL types from the same endpoint. Remote schemas are ideal for use cases such as:
+Hasura gives you CRUD + realtime GraphQL APIs with authorization & access control. However, in many cases, you will need to write APIs (queries, mutations) that contain custom logic. For example, implementing a payment API, or querying data that is not in your database.
+
+Hasura has the ability to merge remote GraphQL schemas and provide a unified GraphQL API. Think of it like automated schema merging. All you need to do is build your own GraphQL service and then provide the HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework.
+
+Remote schemas are ideal for use cases such as:
 
 * Customizing mutations (*e.g. running validations before inserts*)
 * Supporting features like payments, etc. and providing a consistent interface to access them i.e. behind the GraphQL Engine's API
@@ -15,6 +19,8 @@ To support custom business logic, you'll need to create a custom GraphQL server 
 [![video demo of merging remote schemas](https://img.youtube.com/vi/eY4n9aPsi0M/0.jpg)](https://www.youtube.com/watch?v=eY4n9aPsi0M)
 
 [Merge remote GraphQL schemas (YouTube link)](https://youtu.be/eY4n9aPsi0M)
+
+[Adding a remote schema ](https://youtu.be/01t4t2t4q1c)
 
 ## Quickstart
 
@@ -57,7 +63,7 @@ The fastest way to try remote schema out is via Heroku.
 Boilerplates for custom GraphQL servers in popular languages/frameworks are available.
 
 * [Regular boilerplates](community/boilerplates/graphql-servers) that can be deployed anywhere.
-* [Serverless boilerplates](https://github.com/hasura/graphql-serverless) that can deployed on serverless platforms like AWS Lambda, etc.
+* [Serverless boilerplates](https://github.com/hasura/graphql-serverless) that can be deployed on serverless platforms like AWS Lambda, etc.
 
 Please note that boilerplates for more languages, frameworks, serverless platforms, etc. are being iterated upon and community contributions are very welcome. 
 
@@ -66,7 +72,7 @@ Please note that boilerplates for more languages, frameworks, serverless platfor
 
 **Current limitations**:
 
-* Nomenclature: Type names and node names need to be unique across all merged schemas (case-sensitive match). In the next few iterations, support for merging types with the exact same name and structure will be available.
+* Nomenclature: Type names and node names need to be unique across all merged schemas (case-sensitive match). In the next few iterations, support for merging types with the same name and structure will be available.
 * Nodes from different GraphQL servers cannot be used in the same query/mutation. All top-level nodes have to be from the same GraphQL server.
 * Subscriptions on remote GraphQL server are not supported.
 
@@ -81,3 +87,4 @@ Read the complete [documentation](https://docs.hasura.io/1.0/graphql/manual/remo
 This document is available in the following translations:
 
 - [French :fr:](translations/remote-schemas.french.md)
+- [Hindi  :india:](translations/remote-schemas.hindi.md)

@@ -16,8 +16,9 @@ module Hasura.SQL.Types
 
   , PGDescription(..)
 
-  , PGCol(..)
-  -- , getPGColTxt
+  , PGCol
+  , unsafePGCol
+  , getPGColTxt
   , showPGCols
 
   , isIntegerType
@@ -53,8 +54,13 @@ module Hasura.SQL.Types
   , PGScalarType(..)
   , WithScalarType(..)
   , PGType(..)
-  , txtToPgColTy
+  , textToPGScalarType
   , pgTypeOid
+
+  , PGTypeKind(..)
+  , QualifiedPGType(..)
+  , isBaseType
+  , typeToTable
   )
 where
 
@@ -64,8 +70,9 @@ import qualified Database.PG.Query.PTI         as PTI
 import           Hasura.Prelude
 
 import           Data.Aeson
-import           Data.Aeson.TH
+import           Data.Aeson.Casing
 import           Data.Aeson.Encoding           (text)
+import           Data.Aeson.TH
 import           Data.Aeson.Types              (toJSONKeyText)
 import           Instances.TH.Lift             ()
 import           Language.Haskell.TH.Syntax    (Lift)
@@ -155,7 +162,7 @@ class ToTxt a where
 
 newtype TableName
   = TableName { getTableTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data)
+  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary)
 
 instance IsIden TableName where
   toIden (TableName t) = Iden t
@@ -209,7 +216,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data, Generic, Arbitrary)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -225,7 +232,7 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -256,7 +263,6 @@ instance (FromJSON a) => FromJSON (QualifiedObject a) where
     fail "expecting a string/object for QualifiedObject"
 
 instance (ToJSON a) => ToJSON (QualifiedObject a) where
-  toJSON (QualifiedObject (SchemaName "public") o) = toJSON o
   toJSON (QualifiedObject sn o) =
     object [ "schema" .= sn
            , "name"  .= o
@@ -298,7 +304,7 @@ newtype PGDescription
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data, Generic, Arbitrary)
 
 instance IsIden PGCol where
   toIden (PGCol t) = Iden t
@@ -308,6 +314,9 @@ instance ToSQL PGCol where
 
 instance DQuote PGCol where
   dquoteTxt (PGCol t) = t
+
+unsafePGCol :: Text -> PGCol
+unsafePGCol = PGCol
 
 showPGCols :: (Foldable t) => t PGCol -> T.Text
 showPGCols cols =
@@ -374,8 +383,8 @@ instance ToJSONKey PGScalarType where
 instance DQuote PGScalarType where
   dquoteTxt = toSQLTxt
 
-txtToPgColTy :: Text -> PGScalarType
-txtToPgColTy t = case t of
+textToPGScalarType :: Text -> PGScalarType
+textToPGScalarType t = case t of
   "serial"                   -> PGSerial
   "bigserial"                -> PGBigSerial
 
@@ -428,7 +437,7 @@ txtToPgColTy t = case t of
 
 
 instance FromJSON PGScalarType where
-  parseJSON (String t) = return $ txtToPgColTy t
+  parseJSON (String t) = return $ textToPGScalarType t
   parseJSON _          = fail "Expecting a string for PGScalarType"
 
 pgTypeOid :: PGScalarType -> PQ.Oid
@@ -528,3 +537,54 @@ instance (ToSQL a) => ToSQL (PGType a) where
     PGTypeScalar ty -> toSQL ty
     -- typename array is an sql standard way of declaring types
     PGTypeArray ty -> toSQL ty <> " array"
+
+data PGTypeKind
+  = PGKindBase
+  | PGKindComposite
+  | PGKindDomain
+  | PGKindEnum
+  | PGKindRange
+  | PGKindPseudo
+  | PGKindUnknown !T.Text
+  deriving (Show, Eq)
+
+instance FromJSON PGTypeKind where
+  parseJSON = withText "postgresTypeKind" $
+    \t -> pure $ case t of
+      "b" -> PGKindBase
+      "c" -> PGKindComposite
+      "d" -> PGKindDomain
+      "e" -> PGKindEnum
+      "r" -> PGKindRange
+      "p" -> PGKindPseudo
+      _   -> PGKindUnknown t
+
+instance ToJSON PGTypeKind where
+  toJSON = \case
+    PGKindBase      -> "b"
+    PGKindComposite -> "c"
+    PGKindDomain    -> "d"
+    PGKindEnum      -> "e"
+    PGKindRange     -> "r"
+    PGKindPseudo    -> "p"
+    PGKindUnknown t -> String t
+
+data QualifiedPGType
+  = QualifiedPGType
+  { _qptSchema :: !SchemaName
+  , _qptName   :: !PGScalarType
+  , _qptType   :: !PGTypeKind
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
+
+isBaseType :: QualifiedPGType -> Bool
+isBaseType (QualifiedPGType _ n ty) =
+  notUnknown && (ty == PGKindBase)
+  where
+    notUnknown = case n of
+      PGUnknown _ -> False
+      _           -> True
+
+typeToTable :: QualifiedPGType -> QualifiedTable
+typeToTable (QualifiedPGType sch n _) =
+  QualifiedObject sch $ TableName $ toSQLTxt n

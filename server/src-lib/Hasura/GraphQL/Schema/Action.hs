@@ -166,10 +166,10 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
         (False, OutputFieldScalar _) ->
           case Map.lookup fieldName fieldReferences of
             Just columnInfo -> unsafePGColumnToRepresentation $ pgiType columnInfo
-            Nothing -> PGJSON
+            Nothing         -> PGJSON
 
     definitionList =
-      [ (coerce k, mkPGFieldType k v)
+      [ (unsafePGCol $ coerce k, mkPGFieldType k v)
       | (k, v) <- Map.toList $ _aotAnnotatedFields annotatedOutputType
       ]
     -- mkFieldMap annotatedOutputType =
@@ -180,8 +180,8 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
           flip map (Map.toList $ _aotAnnotatedFields annotatedOutputType) $
           \(fieldName, (fieldType, fieldTypeInfo)) ->
             ( (actionOutputBaseType, unObjectFieldName fieldName)
-            , Left $ PGColumnInfo
-              (PGCol $ coerce fieldName)
+            , RFPGColumn $ PGColumnInfo
+              (unsafePGCol $ coerce fieldName)
               (coerce fieldName)
               (PGColumnScalar $ mkPGFieldType fieldName (fieldType, fieldTypeInfo))
               (G.isNullable fieldType)
@@ -194,7 +194,7 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
                 remoteTable = _tiName remoteTableInfo
                 filterAndLimitM = getFilterAndLimit remoteTableInfo
                 columnMapping =
-                  [ (PGCol $ coerce k, pgiColumn v)
+                  [ (unsafePGCol $ coerce k, pgiColumn v)
                   | (k, v) <- Map.toList $ _orFieldMapping relationship
                   ]
             in case filterAndLimitM of
@@ -202,7 +202,7 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
                 Just ( ( actionOutputBaseType
                        , unObjectRelationshipName relationshipName
                        )
-                     , Right $ RelationshipField
+                     , RFRelationship $ RelationshipField
                        (RelInfo
                         (RelName $ mkNonEmptyTextUnsafe $ coerce relationshipName)
                         ObjRel

@@ -6,7 +6,7 @@ import           Hasura.Db
 import           Hasura.RQL.Types
 
 type CacheBuildM m
-  = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m, HasSystemDefined m)
+  = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
 
 buildSchemaCacheStrict :: (CacheBuildM m) => m ()
 buildSchemaCacheFor :: (CacheBuildM m) => MetadataObjId -> m ()

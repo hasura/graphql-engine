@@ -15,11 +15,11 @@ import { loadMigrationStatus } from '../../../Main/Actions';
 import { handleMigrationErrors } from '../../EventTrigger/EventActions';
 
 import { showSuccessNotification } from '../../Common/Notification';
-// import { push } from 'react-router-redux';
 
 import { fetchTrackedFunctions } from '../DataActions';
 
 import _push from '../push';
+import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
 
 /* Constants */
 
@@ -174,19 +174,24 @@ const deleteFunctionSql = () => {
       functionDefinition,
       inputArgTypes,
     } = getState().functions;
-    let functionWSchemaName =
+
+    const functionNameWithSchema =
       '"' + currentSchema + '"' + '.' + '"' + functionName + '"';
 
+    let functionArgString = '';
     if (inputArgTypes.length > 0) {
-      let functionString = '(';
-      inputArgTypes.forEach((i, index) => {
-        functionString +=
-          i + ' ' + (index === inputArgTypes.length - 1 ? ')' : ',');
+      functionArgString += '(';
+      inputArgTypes.forEach((inputArg, i) => {
+        functionArgString += i > 0 ? ', ' : '';
+
+        functionArgString +=
+          '"' + inputArg.schema + '"' + '.' + '"' + inputArg.name + '"';
       });
-      functionWSchemaName += functionString;
+      functionArgString += ')';
     }
 
-    const sqlDropFunction = 'DROP FUNCTION ' + functionWSchemaName;
+    const sqlDropFunction =
+      'DROP FUNCTION ' + functionNameWithSchema + functionArgString;
 
     const sqlUpQueries = [
       {
@@ -194,6 +199,7 @@ const deleteFunctionSql = () => {
         args: { sql: sqlDropFunction },
       },
     ];
+
     const sqlDownQueries = [];
     if (functionDefinition && functionDefinition.length > 0) {
       sqlDownQueries.push({
@@ -210,7 +216,7 @@ const deleteFunctionSql = () => {
     const errorMsg = 'Deleting function failed';
 
     const customOnSuccess = () => {
-      dispatch(_push(`/schema/${currentSchema}`));
+      dispatch(_push(getSchemaBaseRoute(currentSchema)));
     };
     const customOnError = () => {
       dispatch({ type: DELETE_CUSTOM_FUNCTION_FAIL });
@@ -275,7 +281,7 @@ const unTrackCustomFunction = () => {
     const errorMsg = 'Delete custom function failed';
 
     const customOnSuccess = () => {
-      dispatch(_push(`/schema/${currentSchema}`));
+      dispatch(_push(getSchemaBaseRoute(currentSchema)));
       dispatch({ type: RESET });
       dispatch(fetchTrackedFunctions());
     };

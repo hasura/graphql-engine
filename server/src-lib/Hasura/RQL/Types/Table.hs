@@ -32,11 +32,10 @@ module Hasura.RQL.Types.Table
        , _FIRelationship
        , getFieldInfoM
        , getPGColumnInfoM
-       , fieldInfoToEither
-       , partitionFieldInfos
-       , partitionFieldInfosWith
        , getCols
        , getRels
+       , getComputedFieldInfos
+       , possibleNonColumnGraphQLFields
 
        , isPGColInfo
        , RelInfo(..)
@@ -69,25 +68,28 @@ module Hasura.RQL.Types.Table
 
 -- import qualified Hasura.GraphQL.Context            as GC
 
+import           Hasura.GraphQL.Utils           (showNames)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.Server.Utils            (duplicates)
 import           Hasura.SQL.Types
 
 import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax     (Lift)
 
-import qualified Data.HashMap.Strict           as M
-import qualified Data.HashSet                  as HS
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict            as M
+import qualified Data.HashSet                   as HS
+import qualified Data.Text                      as T
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 data TableCustomRootFields
   = TableCustomRootFields
@@ -97,9 +99,28 @@ data TableCustomRootFields
   , _tcrfInsert          :: !(Maybe G.Name)
   , _tcrfUpdate          :: !(Maybe G.Name)
   , _tcrfDelete          :: !(Maybe G.Name)
-  } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 5 snakeCase) ''TableCustomRootFields)
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''TableCustomRootFields)
 
+instance FromJSON TableCustomRootFields where
+  parseJSON = withObject "Object" $ \obj -> do
+    select <- obj .:? "select"
+    selectByPk <- obj .:? "select_by_pk"
+    selectAggregate <- obj .:? "select_aggregate"
+    insert <- obj .:? "insert"
+    update <- obj .:? "update"
+    delete <- obj .:? "delete"
+
+    let duplicateRootFields = duplicates $
+                              catMaybes [ select, selectByPk, selectAggregate
+                                        , insert, update, delete
+                                        ]
+    when (not $ null duplicateRootFields) $ fail $ T.unpack $
+      "the following custom root field names are duplicated: "
+      <> showNames duplicateRootFields
+
+    pure $ TableCustomRootFields select selectByPk selectAggregate
+                                 insert update delete
 emptyCustomRootFields :: TableCustomRootFields
 emptyCustomRootFields =
   TableCustomRootFields
@@ -114,6 +135,7 @@ emptyCustomRootFields =
 data FieldInfo columnInfo
   = FIColumn !columnInfo
   | FIRelationship !RelInfo
+  | FIComputedField !ComputedFieldInfo
   deriving (Show, Eq)
 $(deriveToJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 2
@@ -122,27 +144,28 @@ $(deriveToJSON
   ''FieldInfo)
 $(makePrisms ''FieldInfo)
 
-fieldInfoToEither :: FieldInfo columnInfo -> Either columnInfo RelInfo
-fieldInfoToEither (FIColumn l)       = Left l
-fieldInfoToEither (FIRelationship r) = Right r
-
-partitionFieldInfos :: [FieldInfo columnInfo] -> ([columnInfo], [RelInfo])
-partitionFieldInfos = partitionFieldInfosWith (id, id)
-
-partitionFieldInfosWith :: (columnInfo -> a, RelInfo -> b)
-                        -> [FieldInfo columnInfo] -> ([a], [b])
-partitionFieldInfosWith fns =
-  partitionEithers . map (biMapEither fns . fieldInfoToEither)
-  where
-    biMapEither (f1, f2) = either (Left . f1) (Right . f2)
-
 type FieldInfoMap columnInfo = M.HashMap FieldName (FieldInfo columnInfo)
 
+possibleNonColumnGraphQLFields :: FieldInfoMap PGColumnInfo -> [G.Name]
+possibleNonColumnGraphQLFields fields =
+  flip concatMap (M.toList fields) $ \case
+    (_, FIColumn _)             -> []
+    (_, FIRelationship relInfo) ->
+      let relationshipName = G.Name $ relNameToTxt $ riName relInfo
+      in case riType relInfo of
+           ObjRel -> [relationshipName]
+           ArrRel -> [relationshipName, relationshipName <> "_aggregate"]
+    (_, FIComputedField info) ->
+      pure $ G.Name $ computedFieldNameToText $ _cfiName info
+
 getCols :: FieldInfoMap columnInfo -> [columnInfo]
-getCols fim = lefts $ map fieldInfoToEither $ M.elems fim
+getCols = mapMaybe (^? _FIColumn) . M.elems
 
 getRels :: FieldInfoMap columnInfo -> [RelInfo]
-getRels fim = rights $ map fieldInfoToEither $ M.elems fim
+getRels = mapMaybe (^? _FIRelationship) . M.elems
+
+getComputedFieldInfos :: FieldInfoMap columnInfo -> [ComputedFieldInfo]
+getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
 
 isPGColInfo :: FieldInfo columnInfo -> Bool
 isPGColInfo (FIColumn _) = True
@@ -161,12 +184,13 @@ $(deriveToJSON (aesonDrop 3 snakeCase) ''InsPermInfo)
 
 data SelPermInfo
   = SelPermInfo
-  { spiCols            :: !(HS.HashSet PGCol)
-  , spiTable           :: !QualifiedTable
-  , spiFilter          :: !AnnBoolExpPartialSQL
-  , spiLimit           :: !(Maybe Int)
-  , spiAllowAgg        :: !Bool
-  , spiRequiredHeaders :: ![T.Text]
+  { spiCols                 :: !(HS.HashSet PGCol)
+  , spiScalarComputedFields :: !(HS.HashSet ComputedFieldName)
+  , spiTable                :: !QualifiedTable
+  , spiFilter               :: !AnnBoolExpPartialSQL
+  , spiLimit                :: !(Maybe Int)
+  , spiAllowAgg             :: !Bool
+  , spiRequiredHeaders      :: ![T.Text]
   } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 3 snakeCase) ''SelPermInfo)
@@ -292,7 +316,7 @@ data TableConfig
   = TableConfig
   { _tcCustomRootFields  :: !TableCustomRootFields
   , _tcCustomColumnNames :: !CustomColumnNames
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(deriveToJSON (aesonDrop 3 snakeCase) ''TableConfig)
 
 emptyTableConfig :: TableConfig

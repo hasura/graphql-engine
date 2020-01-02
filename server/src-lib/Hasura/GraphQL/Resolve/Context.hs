@@ -1,5 +1,5 @@
 module Hasura.GraphQL.Resolve.Context
-  ( FuncArgItem(..)
+  ( FunctionArgItem(..)
   , OrdByItem(..)
   , UpdPermForIns(..)
   , InsCtx(..)
@@ -42,7 +42,7 @@ import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal       (sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Internal       (currentSession, sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -52,7 +52,7 @@ import qualified Hasura.SQL.DML                as S
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType -> G.Name
-  -> m (Either PGColumnInfo RelationshipField)
+  -> m ResolveField
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -65,9 +65,12 @@ getPGColInfo
 getPGColInfo nt n = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    Left pgColInfo -> return pgColInfo
-    Right _        -> throw500 $
-      "found relinfo when expecting pgcolinfo for "
+    RFPGColumn pgColInfo -> return pgColInfo
+    RFRelationship _     -> throw500 $ mkErrMsg "relation"
+    RFComputedField _    -> throw500 $ mkErrMsg "computed field"
+  where
+    mkErrMsg ty =
+      "found " <> ty <> " when expecting pgcolinfo for "
       <> showNamedTy nt <> ":" <> showName n
 
 getArg
@@ -99,7 +102,7 @@ withArg args arg f = prependArgsInPath $ nameAsPath arg $
   getArg args arg >>= f
 
 withArgM
-  :: (MonadResolve m)
+  :: (MonadReusability m, MonadError QErr m)
   => ArgsMap
   -> G.Name
   -> (AnnInpVal -> m a)
@@ -120,6 +123,7 @@ resolveValTxt = \case
   UVPG annPGVal -> txtConverter annPGVal
   UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
   UVSQL sqlExp -> pure sqlExp
+  UVSession -> pure currentSession
 
 withPrepArgs :: StateT PrepArgs m a -> m (a, PrepArgs)
 withPrepArgs m = runStateT m Seq.empty

@@ -59,22 +59,22 @@ module Hasura.RQL.Types.SchemaCache
        , FieldInfo(..)
        , _FIColumn
        , _FIRelationship
-       , getFieldInfoM
        , getPGColumnInfoM
-       , fieldInfoToEither
-       , partitionFieldInfos
-       , partitionFieldInfosWith
        , getCols
        , getRels
+       , getComputedFieldInfos
+       , possibleNonColumnGraphQLFields
 
        , isPGColInfo
        , RelInfo(..)
        , addColToCache
        , addRelToCache
+       , addComputedFieldToCache
 
        , delColFromCache
        , updColInCache
        , delRelFromCache
+       , deleteComputedFieldFromCache
 
        , RolePermInfo(..)
        , permIns
@@ -111,6 +111,7 @@ module Hasura.RQL.Types.SchemaCache
        , SchemaDependency(..)
        , mkParentDep
        , mkColDep
+       , mkComputedFieldDep
        , getDependentObjs
        , getDependentObjsWith
 
@@ -142,15 +143,17 @@ import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
+import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Metadata
-import           Hasura.RQL.Types.Table
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCacheTypes
+import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -160,8 +163,8 @@ import           Data.Aeson.TH
 
 import qualified Data.HashMap.Strict               as M
 import qualified Data.HashSet                      as HS
-import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
+import qualified Language.GraphQL.Draft.Syntax     as G
 
 reportSchemaObjs :: [SchemaObjId] -> T.Text
 reportSchemaObjs = T.intercalate ", " . map reportSchemaObj
@@ -172,6 +175,11 @@ mkParentDep tn = SchemaDependency (SOTable tn) DRTable
 mkColDep :: DependencyReason -> QualifiedTable -> PGCol -> SchemaDependency
 mkColDep reason tn col =
   flip SchemaDependency reason . SOTableObj tn $ TOCol col
+
+mkComputedFieldDep
+  :: DependencyReason -> QualifiedTable -> ComputedFieldName -> SchemaDependency
+mkComputedFieldDep reason tn computedField =
+  flip SchemaDependency reason . SOTableObj tn $ TOComputedField computedField
 
 type WithDeps a = (a, [SchemaDependency])
 
@@ -224,55 +232,25 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''TableConstraint)
 
 checkForFieldConflict
   :: (MonadError QErr m)
-  => TableInfo a
+  => TableInfo PGColumnInfo
   -> FieldName
   -> m ()
-checkForFieldConflict tabInfo f =
-  case M.lookup f (_tiFieldInfoMap tabInfo) of
+checkForFieldConflict tableInfo f = do
+  case M.lookup f fieldInfoMap of
     Just _ -> throw400 AlreadyExists $ mconcat
-      [ "column/relationship " <>> f
-      , " of table " <>> _tiName tabInfo
+      [ "column/relationship/computed field " <>> f
+      , " of table " <>> tableName
       , " already exists"
       ]
     Nothing -> return ()
-
-data FunctionType
-  = FTVOLATILE
-  | FTIMMUTABLE
-  | FTSTABLE
-  deriving (Eq)
-
-$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
-
-funcTypToTxt :: FunctionType -> T.Text
-funcTypToTxt FTVOLATILE  = "VOLATILE"
-funcTypToTxt FTIMMUTABLE = "IMMUTABLE"
-funcTypToTxt FTSTABLE    = "STABLE"
-
-instance Show FunctionType where
-  show = T.unpack . funcTypToTxt
-
-data FunctionArg
-  = FunctionArg
-  { faName       :: !(Maybe FunctionArgName)
-  , faType       :: !PGScalarType
-  , faHasDefault :: !Bool
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
-
-data FunctionInfo
-  = FunctionInfo
-  { fiName          :: !QualifiedFunction
-  , fiSystemDefined :: !SystemDefined
-  , fiType          :: !FunctionType
-  , fiInputArgs     :: !(Seq.Seq FunctionArg)
-  , fiReturnType    :: !QualifiedTable
-  , fiDeps          :: ![SchemaDependency]
-  , fiDescription   :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionInfo)
+  when (f `elem` customColumnFields) $
+    throw400 AlreadyExists $
+    "custom column name " <> f <<> " of table " <> tableName <<> " already exists"
+  where
+    tableName = _tiName tableInfo
+    fieldInfoMap = _tiFieldInfoMap tableInfo
+    customColumnFields =
+      map (FieldName . G.unName . pgiName) $ getCols fieldInfoMap
 
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 
@@ -300,7 +278,7 @@ removeFromDepMap =
 
 newtype SchemaCacheVer
   = SchemaCacheVer { unSchemaCacheVer :: Word64 }
-  deriving (Show, Eq, Hashable, ToJSON, FromJSON)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, FromJSON)
 
 initSchemaCacheVer :: SchemaCacheVer
 initSchemaCacheVer = SchemaCacheVer 0
@@ -337,6 +315,9 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 class (Monad m) => CacheRM m where
   askSchemaCache :: m SchemaCache
 
+-- instance (CacheRM m) => CacheRM (ReaderT r m) where
+--   askSchemaCache = lift askSchemaCache
+
 instance (Monad m) => CacheRM (StateT SchemaCache m) where
   askSchemaCache = get
 
@@ -352,6 +333,9 @@ askTabInfoM tabName = do
 
 class (CacheRM m) => CacheRWM m where
   writeSchemaCache :: SchemaCache -> m ()
+
+-- instance (CacheRWM m) => CacheRWM (ReaderT r m) where
+--   writeSchemaCache = lift . writeSchemaCache
 
 instance (Monad m) => CacheRWM (StateT SchemaCache m) where
   writeSchemaCache = put
@@ -431,6 +415,31 @@ modTableInCache f tn = do
   newTi <- f ti
   modTableCache $ M.insert tn newTi $ scTables sc
 
+addColToCache
+  :: (QErrM m, CacheRWM m)
+  => PGCol -> PGColumnInfo
+  -> QualifiedTable -> m ()
+addColToCache cn ci =
+  addFldToCache (fromPGCol cn) (FIColumn ci)
+
+addRelToCache
+  :: (QErrM m, CacheRWM m)
+  => RelName -> RelInfo -> [SchemaDependency]
+  -> QualifiedTable -> m ()
+addRelToCache rn ri deps tn = do
+  addFldToCache (fromRel rn) (FIRelationship ri)  tn
+  modDepMapInCache (addToDepMap schObjId deps)
+  where
+    schObjId = SOTableObj tn $ TORel $ riName ri
+
+addComputedFieldToCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable -> ComputedFieldInfo -> m ()
+addComputedFieldToCache table computedFieldInfo =
+  addFldToCache computedField (FIComputedField computedFieldInfo) table
+  where
+    computedField = fromComputedField $ _cfiName computedFieldInfo
+
 addFldToCache
   :: (QErrM m, CacheRWM m)
   => FieldName -> FieldInfo PGColumnInfo
@@ -465,27 +474,10 @@ setCustomTypesInCache customTypes = do
   sc <- askSchemaCache
   writeSchemaCache sc {scCustomTypes = customTypes}
 
-addColToCache
-  :: (QErrM m, CacheRWM m)
-  => PGCol -> PGColumnInfo
-  -> QualifiedTable -> m ()
-addColToCache cn ci =
-  addFldToCache (fromPGCol cn) (FIColumn ci)
-
 delColFromCache :: (QErrM m, CacheRWM m)
                 => PGCol -> QualifiedTable -> m ()
 delColFromCache cn =
   delFldFromCache (fromPGCol cn)
-
-addRelToCache
-  :: (QErrM m, CacheRWM m)
-  => RelName -> RelInfo -> [SchemaDependency]
-  -> QualifiedTable -> m ()
-addRelToCache rn ri deps tn = do
-  addFldToCache (fromRel rn) (FIRelationship ri)  tn
-  modDepMapInCache (addToDepMap schObjId deps)
-  where
-    schObjId = SOTableObj tn $ TORel $ riName ri
 
 delRelFromCache :: (QErrM m, CacheRWM m)
                 => RelName -> QualifiedTable -> m ()
@@ -494,6 +486,12 @@ delRelFromCache rn tn = do
   modDepMapInCache (removeFromDepMap schObjId)
   where
     schObjId = SOTableObj tn $ TORel rn
+
+deleteComputedFieldFromCache
+  :: (QErrM m, CacheRWM m)
+  => QualifiedTable -> ComputedFieldName -> m ()
+deleteComputedFieldFromCache table computedField =
+  delFldFromCache (fromComputedField computedField) table
 
 updColInCache
   :: (QErrM m, CacheRWM m)
@@ -651,8 +649,8 @@ delActionPermissionFromCache actionName role =
 
 addFunctionToCache
   :: (QErrM m, CacheRWM m)
-  => FunctionInfo -> m ()
-addFunctionToCache fi = do
+  => FunctionInfo -> [SchemaDependency] -> m ()
+addFunctionToCache fi deps = do
   sc <- askSchemaCache
   let functionCache = scFunctions sc
   case M.lookup fn functionCache of
@@ -664,7 +662,6 @@ addFunctionToCache fi = do
   where
     fn = fiName fi
     objId = SOFunction $ fiName fi
-    deps = fiDeps fi
 
 askFunctionInfo
   :: (CacheRM m, QErrM m)

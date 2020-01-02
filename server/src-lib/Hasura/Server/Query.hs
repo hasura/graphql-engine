@@ -1,5 +1,8 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Hasura.Server.Query where
 
+import           Control.Lens
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -7,11 +10,14 @@ import           Data.Time                          (UTCTime)
 import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.HashMap.Strict                as HM
+import qualified Data.Text                          as T
+import qualified Database.PG.Query                  as Q
 import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Action
+import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
@@ -30,7 +36,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 
-import qualified Database.PG.Query                  as Q
 
 data RQLQueryV1
   = RQAddExistingTableOrView !TrackTable
@@ -46,6 +51,11 @@ data RQLQueryV1
   | RQDropRelationship !DropRel
   | RQSetRelationshipComment !SetRelComment
   | RQRenameRelationship !RenameRel
+
+  -- computed fields related
+
+  | RQAddComputedField !AddComputedField
+  | RQDropComputedField !DropComputedField
 
   | RQCreateInsertPermission !CreateInsPerm
   | RQCreateSelectPermission !CreateSelPerm
@@ -106,6 +116,7 @@ data RQLQueryV1
 data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
   | RQV2SetTableCustomFields !SetTableCustomFields
+  | RQV2TrackFunction !TrackFunctionV2
   deriving (Show, Eq, Lift)
 
 data RQLQuery
@@ -148,10 +159,9 @@ $(deriveJSON
 
 data RunCtx
   = RunCtx
-  { _rcUserInfo      :: !UserInfo
-  , _rcHttpMgr       :: !HTTP.Manager
-  , _rcSqlGenCtx     :: !SQLGenCtx
-  , _rcSystemDefined :: !SystemDefined
+  { _rcUserInfo  :: !UserInfo
+  , _rcHttpMgr   :: !HTTP.Manager
+  , _rcSqlGenCtx :: !SQLGenCtx
   }
 
 newtype Run a
@@ -175,9 +185,6 @@ instance HasHttpManager Run where
 instance HasSQLGenCtx Run where
   askSQLGenCtx = asks _rcSqlGenCtx
 
-instance HasSystemDefined Run where
-  askSystemDefined = asks _rcSystemDefined
-
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
   Q.withQE defaultTxErrorHandler
@@ -197,13 +204,15 @@ recordSchemaUpdate instanceId =
             |] (Identity instanceId) True
 
 peelRun
-  :: SchemaCache
+  :: (MonadIO m)
+  => SchemaCache
   -> RunCtx
   -> PGExecCtx
+  -> Q.TxAccess
   -> Run a
-  -> ExceptT QErr IO (a, SchemaCache)
-peelRun sc runCtx@(RunCtx userInfo _ _ _) pgExecCtx (Run m) =
-  runLazyTx pgExecCtx $ withUserInfo userInfo lazyTx
+  -> ExceptT QErr m (a, SchemaCache)
+peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
+  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo lazyTx
   where
     lazyTx = runReaderT (runStateT m sc) runCtx
 
@@ -213,13 +222,18 @@ runQuery
   -> UserInfo -> SchemaCache -> HTTP.Manager
   -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, SchemaCache)
 runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
-  resE <- liftIO $ runExceptT $ peelRun sc runCtx pgExecCtx $ runQueryM query
+  accessMode <- getQueryAccessMode query
+  resE <- runQueryM query
+    & runHasSystemDefinedT systemDefined
+    & peelRun sc runCtx pgExecCtx accessMode
+    & runExceptT
+    & liftIO
   either throwError withReload resE
   where
-    runCtx = RunCtx userInfo hMgr sqlGenCtx systemDefined
+    runCtx = RunCtx userInfo hMgr sqlGenCtx
     withReload r = do
       when (queryNeedsReload query) $ do
-        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx
+        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite
              $ liftTx $ recordSchemaUpdate instanceId
         liftEither e
       return r
@@ -238,6 +252,9 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQDropRelationship  _           -> True
   RQSetRelationshipComment  _     -> False
   RQRenameRelationship _          -> True
+
+  RQAddComputedField _            -> True
+  RQDropComputedField _           -> True
 
   RQCreateInsertPermission _      -> True
   RQCreateSelectPermission _      -> True
@@ -275,7 +292,10 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQAddCollectionToAllowlist _    -> True
   RQDropCollectionFromAllowlist _ -> True
 
-  RQRunSql _                      -> True
+  RQRunSql RunSQL{rTxAccessMode}  ->
+    case rTxAccessMode of
+      Q.ReadOnly  -> False
+      Q.ReadWrite -> True
 
   RQReplaceMetadata _             -> True
   RQExportMetadata _              -> False
@@ -295,6 +315,42 @@ queryNeedsReload (RQV1 qi) = case qi of
 queryNeedsReload (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
+  RQV2TrackFunction _        -> True
+
+getQueryAccessMode :: (MonadError QErr m) => RQLQuery -> m Q.TxAccess
+getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q
+  where
+    getQueryAccessMode' ::
+         (MonadError QErr m) => RQLQuery -> m (Maybe Q.TxAccess)
+    getQueryAccessMode' (RQV1 q') =
+      case q' of
+        RQSelect _ -> pure Nothing
+        RQCount _ -> pure Nothing
+        RQRunSql RunSQL {rTxAccessMode} -> pure $ Just rTxAccessMode
+        RQBulk qs -> foldM reconcileAccessModeWith Nothing (zip [0 :: Integer ..] qs)
+        _ -> pure $ Just Q.ReadWrite
+      where
+        reconcileAccessModeWith expectedMode (i, query) = do
+          queryMode <- getQueryAccessMode' query
+          onLeft (reconcileAccessModes expectedMode queryMode) $ \errMode ->
+            throw400 BadRequest $
+            "incompatible access mode requirements in bulk query, " <>
+            "expected access mode: " <>
+            (T.pack $ maybe "ANY" show expectedMode) <>
+            " but " <>
+            "$.args[" <>
+            (T.pack $ show i) <>
+            "] forces " <>
+            (T.pack $ show errMode)
+    getQueryAccessMode' (RQV2 _) = pure $ Just Q.ReadWrite
+
+-- | onRight, return reconciled access mode. onLeft, return conflicting access mode
+reconcileAccessModes :: Maybe Q.TxAccess -> Maybe Q.TxAccess -> Either Q.TxAccess (Maybe Q.TxAccess)
+reconcileAccessModes Nothing mode = pure mode
+reconcileAccessModes mode Nothing = pure mode
+reconcileAccessModes (Just mode1) (Just mode2)
+  | mode1 == mode2 = pure $ Just mode1
+  | otherwise = Left mode2
 
 runQueryM
   :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
@@ -326,6 +382,9 @@ runQueryM rq =
       RQDropRelationship  q        -> runDropRel q
       RQSetRelationshipComment  q  -> runSetRelComment q
       RQRenameRelationship q       -> runRenameRel q
+
+      RQAddComputedField q        -> runAddComputedField q
+      RQDropComputedField q       -> runDropComputedField q
 
       RQCreateInsertPermission q   -> runCreatePerm q
       RQCreateSelectPermission q   -> runCreatePerm q
@@ -385,3 +444,84 @@ runQueryM rq =
     runQueryV2M = \case
       RQV2TrackTable q           -> runTrackTableV2Q q
       RQV2SetTableCustomFields q -> runSetTableCustomFieldsQV2 q
+      RQV2TrackFunction q        -> runTrackFunctionV2 q
+
+
+requiresAdmin :: RQLQuery -> Bool
+requiresAdmin = \case
+  RQV1 q -> case q of
+    RQAddExistingTableOrView _      -> True
+    RQTrackTable _                  -> True
+    RQUntrackTable _                -> True
+    RQSetTableIsEnum _              -> True
+
+    RQTrackFunction _               -> True
+    RQUntrackFunction _             -> True
+
+    RQCreateObjectRelationship _    -> True
+    RQCreateArrayRelationship  _    -> True
+    RQDropRelationship  _           -> True
+    RQSetRelationshipComment  _     -> True
+    RQRenameRelationship _          -> True
+
+    RQAddComputedField _            -> True
+    RQDropComputedField _           -> True
+
+    RQCreateInsertPermission _      -> True
+    RQCreateSelectPermission _      -> True
+    RQCreateUpdatePermission _      -> True
+    RQCreateDeletePermission _      -> True
+
+    RQDropInsertPermission _        -> True
+    RQDropSelectPermission _        -> True
+    RQDropUpdatePermission _        -> True
+    RQDropDeletePermission _        -> True
+    RQSetPermissionComment _        -> True
+
+    RQGetInconsistentMetadata _     -> True
+    RQDropInconsistentMetadata _    -> True
+
+    RQInsert _                      -> False
+    RQSelect _                      -> False
+    RQUpdate _                      -> False
+    RQDelete _                      -> False
+    RQCount  _                      -> False
+
+    RQAddRemoteSchema    _          -> True
+    RQRemoveRemoteSchema _          -> True
+    RQReloadRemoteSchema _          -> True
+
+    RQCreateEventTrigger _          -> True
+    RQDeleteEventTrigger _          -> True
+    RQRedeliverEvent _              -> True
+    RQInvokeEventTrigger _          -> True
+
+    RQCreateQueryCollection _       -> True
+    RQDropQueryCollection _         -> True
+    RQAddQueryToCollection _        -> True
+    RQDropQueryFromCollection _     -> True
+    RQAddCollectionToAllowlist _    -> True
+    RQDropCollectionFromAllowlist _ -> True
+
+    RQReplaceMetadata _             -> True
+    RQClearMetadata _               -> True
+    RQExportMetadata _              -> True
+    RQReloadMetadata _              -> True
+
+    RQCreateAction _                -> True
+    RQDropAction _                  -> True
+    RQUpdateAction _                -> True
+    RQCreateActionPermission _      -> True
+    RQDropActionPermission _        -> True
+
+    RQDumpInternalState _           -> True
+    RQSetCustomTypes _              -> True
+
+    RQRunSql _                      -> True
+
+    RQBulk qs                       -> any requiresAdmin qs
+
+  RQV2 q -> case q of
+    RQV2TrackTable _           -> True
+    RQV2SetTableCustomFields _ -> True
+    RQV2TrackFunction _        -> True

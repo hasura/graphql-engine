@@ -7,6 +7,7 @@ module Hasura.RQL.Types.Catalog
   , CatalogTableInfo(..)
 
   , CatalogRelation(..)
+  , CatalogComputedField(..)
   , CatalogPermission(..)
   , CatalogEventTrigger(..)
   , CatalogFunction(..)
@@ -18,16 +19,17 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
+import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Schema.Function
+import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
-import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.Action
 import           Hasura.SQL.Types
 
 data CatalogTableInfo
@@ -70,6 +72,13 @@ data CatalogPermission
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogPermission)
 
+data CatalogComputedField
+  = CatalogComputedField
+  { _cccComputedField :: !AddComputedField
+  , _cccFunctionInfo  :: ![RawFunctionInfo] -- ^ multiple functions with same name
+  } deriving (Show, Eq)
+$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogComputedField)
+
 data CatalogEventTrigger
   = CatalogEventTrigger
   { _cetTable :: !QualifiedTable
@@ -80,8 +89,10 @@ $(deriveJSON (aesonDrop 4 snakeCase) ''CatalogEventTrigger)
 
 data CatalogFunction
   = CatalogFunction
-  { _cfFunction :: !QualifiedFunction
-  , _cfInfo     :: !(Maybe RawFuncInfo)
+  { _cfFunction        :: !QualifiedFunction
+  , _cfIsSystemDefined :: !SystemDefined
+  , _cfConfiguration   :: !FunctionConfig
+  , _cfInfo            :: ![RawFunctionInfo] -- ^ multiple functions with same name
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
@@ -95,6 +106,7 @@ data CatalogMetadata
   , _cmFunctions            :: ![CatalogFunction]
   , _cmForeignKeys          :: ![ForeignKey]
   , _cmAllowlistCollections :: ![CollectionDef]
+  , _cmComputedFields       :: ![CatalogComputedField]
   , _cmCustomTypes          :: !CustomTypes
   , _cmActions              :: ![CreateAction]
   , _cmActionPermissions    :: ![CreateActionPermission]

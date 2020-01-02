@@ -39,6 +39,7 @@ import           Hasura.GraphQL.RemoteServer
 import           Hasura.GraphQL.Schema.CustomTypes
 import           Hasura.GraphQL.Utils               (showNames)
 import           Hasura.RQL.DDL.Action
+import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
@@ -57,7 +58,7 @@ import           Hasura.RQL.Types.QueryCollection
 import           Hasura.SQL.Types
 
 type CacheBuildM m
-  = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m, HasSystemDefined m)
+  = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
 
 buildSchemaCache :: (CacheBuildM m) => m ()
 buildSchemaCache = buildSchemaCacheWithOptions True
@@ -75,8 +76,8 @@ buildSchemaCacheWithOptions withSetup = do
 
   -- fetch all catalog metadata
   CatalogMetadata tables relationships permissions
-    eventTriggers remoteSchemas functions fkeys' allowlistDefs customTypes
-    actions actionPermissions
+    eventTriggers remoteSchemas functions fkeys' allowlistDefs computedFields
+    customTypes actions actionPermissions
     <- liftTx fetchCatalogData
 
   let fkeys = HS.fromList fkeys'
@@ -102,6 +103,18 @@ buildSchemaCacheWithOptions withSetup = do
           let relDef = RelDef rn using Nothing
           validateArrRel qt relDef
           arrRelP2Setup qt fkeys relDef
+
+  -- computedFields
+  forM_ computedFields $ \(CatalogComputedField column funcDefs) -> do
+    let AddComputedField qt name def comment = column
+        qf = _cfdFunction def
+        mkInconsObj =
+          InconsistentMetadataObj (MOTableObj qt $ MTOComputedField name)
+          MOTComputedField $ toJSON column
+    modifyErr (\e -> "computed field " <> name <<> "; " <> e) $
+      withSchemaObject_ mkInconsObj $ do
+      rawfi <- handleMultipleFunctions qf funcDefs
+      addComputedFieldP2Setup qt name def rawfi comment
 
   -- permissions
   forM_ permissions $ \(CatalogPermission qt rn pt pDef cmnt) -> do
@@ -129,15 +142,14 @@ buildSchemaCacheWithOptions withSetup = do
         mkAllTriggersQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
 
   -- sql functions
-  forM_ functions $ \(CatalogFunction qf rawfiM) -> do
+  forM_ functions $ \(CatalogFunction qf systemDefined config funcDefs) -> do
     let def = toJSON $ TrackFunction qf
         mkInconsObj =
           InconsistentMetadataObj (MOFunction qf) MOTFunction def
     modifyErr (\e -> "function " <> qf <<> "; " <> e) $
       withSchemaObject_ mkInconsObj $ do
-      rawfi <- onNothing rawfiM $
-        throw400 NotExists $ "no such function exists in postgres : " <>> qf
-      trackFunctionP2Setup qf rawfi
+      rawfi <- handleMultipleFunctions qf funcDefs
+      trackFunctionP2Setup qf systemDefined config rawfi
 
   -- allow list
   replaceAllowlist $ concatMap _cdQueries allowlistDefs
@@ -166,6 +178,8 @@ buildSchemaCacheWithOptions withSetup = do
       sc { scGCtxMap = finalGCtxMap
          , scDefaultRemoteGCtx = finalDefaultGCtx
          }
+  -- validate tables' custom root fields
+  validateTablesCustomRootFields
 
   where
     permHelper setup sqlGenCtx qt rn pDef pa = do
@@ -193,6 +207,16 @@ buildSchemaCacheWithOptions withSetup = do
         writeSchemaCache sc { scGCtxMap = mergedGCtxMap
                             , scDefaultRemoteGCtx = mergedDefGCtx
                             }
+
+    validateTablesCustomRootFields = do
+      sc <- askSchemaCache
+      let tables = M.elems $ scTables sc
+          defRemoteGCtx = scDefaultRemoteGCtx sc
+      forM_ tables $ \table -> do
+        let TableCustomRootFields sel selByPk selAgg ins upd del =
+              _tcCustomRootFields $ _tiCustomConfig table
+            rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
+        forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
 
 -- | build GraphQL schema
 buildGCtxMap
@@ -315,7 +339,7 @@ withMetadataCheck cascade action = do
       oldMeta = flip filter oldMetaU $ \tm -> tmTable tm `elem` existingTables
       schemaDiff = getSchemaDiff oldMeta newMeta
       existingFuncs = M.keys $ scFunctions sc
-      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> funcFromMeta fm `elem` existingFuncs
+      oldFuncMeta = flip filter oldFuncMetaU $ \fm -> fmFunction fm `elem` existingFuncs
       FunctionDiff droppedFuncs alteredFuncs = getFuncDiff oldFuncMeta newFuncMeta
       overloadedFuncs = getOverloadedFuncs existingFuncs newFuncMeta
 
@@ -422,6 +446,10 @@ purgeDependentObject schemaObjId = case schemaObjId of
   (SOTableObj qt (TOTrigger trn)) -> do
     liftTx $ delEventTriggerFromCatalog trn
     delEventTriggerFromCache qt trn
+
+  (SOTableObj qt (TOComputedField ccn)) -> do
+    deleteComputedFieldFromCache qt ccn
+    dropComputedFieldFromCatalog qt ccn
 
   _ -> throw500 $
     "unexpected dependent object : " <> reportSchemaObj schemaObjId

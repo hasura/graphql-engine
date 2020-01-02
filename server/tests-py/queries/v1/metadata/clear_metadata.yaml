@@ -11,13 +11,8 @@
   url: /v1/query
   status: 200
   response:
-    allowlist: []
-    functions: []
-    query_collections: []
+    version: 2
     tables: []
-    remote_schemas: []
-    actions: []
-    custom_types: null
   query:
     type: export_metadata
     args: {}

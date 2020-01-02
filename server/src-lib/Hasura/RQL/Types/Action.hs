@@ -46,7 +46,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 newtype ActionName
   = ActionName { unActionName :: G.Name }
   deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
-           , Hashable, DQuote, Lift)
+           , Hashable, DQuote, Lift, Generic)
 
 instance Q.FromCol ActionName where
   fromCol bs = ActionName . G.Name <$> Q.fromCol bs
@@ -61,7 +61,7 @@ newtype ResolvedWebhook
 data ActionKind
   = ActionSynchronous
   | ActionAsynchronous
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 $(J.deriveJSON
   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 6}
   ''ActionKind)
@@ -69,14 +69,14 @@ $(J.deriveJSON
 newtype ArgumentName
   = ArgumentName { unArgumentName :: G.Name }
   deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
-           , Hashable, DQuote, Lift)
+           , Hashable, DQuote, Lift, Generic)
 
 data ArgumentDefinition
   = ArgumentDefinition
   { _argName        :: !ArgumentName
   , _argType        :: !GraphQLType
   , _argDescription :: !(Maybe G.Description)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ArgumentDefinition)
 
 data ActionDefinition a
@@ -85,7 +85,7 @@ data ActionDefinition a
   , _adOutputType :: !GraphQLType
   , _adKind       :: !(Maybe ActionKind)
   , _adHandler    :: !a
-  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable)
+  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionDefinition)
 
 getActionKind :: ActionDefinition a -> ActionKind
@@ -130,7 +130,7 @@ $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
 data InputWebhook
   = IWTemplate !URLTemplate
   | IWPlain !Text
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 instance J.ToJSON InputWebhook where
   toJSON = \case
@@ -165,13 +165,13 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''UpdateAction)
 newtype ActionPermissionSelect
   = ActionPermissionSelect
   { _apsFilter :: BoolExp
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionSelect)
 
 newtype ActionPermissionDefinition
   = ActionPermissionDefinition
   { _apdSelect :: ActionPermissionSelect
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionDefinition)
 
 data CreateActionPermission

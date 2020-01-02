@@ -8,6 +8,7 @@ select
     'functions', functions.items,
     'foreign_keys', foreign_keys.items,
     'allowlist_collections', allowlist.item,
+    'computed_fields', computed_field.items,
     'custom_types', coalesce((select custom_types from hdb_catalog.hdb_custom_types), '{}'),
     'actions', actions.items,
     'action_permissions', action_permissions.items
@@ -131,15 +132,19 @@ from
               'schema', hf.function_schema,
               'name', hf.function_name
             ),
-            'info', function_info
+            'configuration', hf.configuration,
+            'is_system_defined', hf.is_system_defined,
+            'info', hf_agg.function_info
           ) as info
         from
           hdb_catalog.hdb_function hf
-        left outer join
-            hdb_catalog.hdb_function_info_agg hf_agg on
-            ( hf_agg.function_name = hf.function_name
-              and hf_agg.function_schema = hf.function_schema
-            )
+        left join lateral
+            (
+              select coalesce(json_agg(function_info), '[]') as function_info
+              from hdb_catalog.hdb_function_info_agg
+               where function_name = hf.function_name
+                     and function_schema = hf.function_schema
+            ) hf_agg on 'true'
       ) as q
    ) as functions,
   (
@@ -178,8 +183,39 @@ from
     left outer join
          hdb_catalog.hdb_query_collection hqc
          on (hqc.collection_name = ha.collection_name)
-
   ) as allowlist,
+  (
+    select
+      coalesce(json_agg(
+        json_build_object('computed_field', cc.computed_field,
+                          'function_info', fi.function_info
+                         )
+      ), '[]') as items
+    from
+      (
+        select json_build_object(
+          'table', jsonb_build_object('name', hcc.table_name,'schema', hcc.table_schema),
+          'name', hcc.computed_field_name,
+          'definition', hcc.definition,
+          'comment', hcc.comment
+        ) as computed_field,
+        hccf.function_name,
+        hccf.function_schema
+        from hdb_catalog.hdb_computed_field hcc
+        left outer join
+             hdb_catalog.hdb_computed_field_function hccf
+             on ( hcc.table_name = hccf.table_name
+                 and hcc.table_schema = hccf.table_schema
+                 and hcc.computed_field_name = hccf.computed_field_name
+                )
+      ) cc
+    left join lateral
+      (
+        select coalesce(json_agg(function_info), '[]') as function_info
+        from hdb_catalog.hdb_function_info_agg
+        where function_name = cc.function_name and function_schema = cc.function_schema
+      ) fi on 'true'
+  ) as computed_field,
   (
     select
       coalesce(

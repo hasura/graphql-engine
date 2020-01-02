@@ -87,7 +87,7 @@ data AnnInsObj
   } deriving (Show, Eq)
 
 mkAnnInsObj
-  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
+  :: (MonadReusability m, MonadError QErr m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
   => RelationInfoMap
   -> PGColGNameMap
   -> AnnGObject
@@ -98,7 +98,7 @@ mkAnnInsObj relInfoMap allColMap annObj =
     emptyInsObj = AnnInsObj [] [] []
 
 traverseInsObj
-  :: (MonadResolve m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
+  :: (MonadReusability m, MonadError QErr m, Has InsCtxMap r, MonadReader r m, Has FieldMap r)
   => RelationInfoMap
   -> PGColGNameMap
   -> (G.Name, AnnInpVal)
@@ -161,7 +161,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
             bool withNonEmptyArrData (return defVal) $ null arrDataVals
 
 parseOnConflict
-  :: (MonadResolve m, MonadReader r m, Has FieldMap r)
+  :: (MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r)
   => QualifiedTable
   -> Maybe UpdPermForIns
   -> PGColGNameMap
@@ -244,7 +244,7 @@ mkInsertQ vn onConflictM insCols defVals role = do
 
 asSingleObject
   :: MonadError QErr m
-  => [ColVals] -> m (Maybe ColVals)
+  => [ColumnValues J.Value] -> m (Maybe (ColumnValues J.Value))
 asSingleObject = \case
   []  -> return Nothing
   [a] -> return $ Just a
@@ -252,7 +252,7 @@ asSingleObject = \case
 
 fetchFromColVals
   :: MonadError QErr m
-  => ColVals
+  => ColumnValues J.Value
   -> [PGColumnInfo]
   -> (PGColumnInfo -> a)
   -> m [(a, WithScalarType PGScalarValue)]
@@ -268,11 +268,13 @@ mkSelCTE
   :: MonadError QErr m
   => QualifiedTable
   -> [PGColumnInfo]
-  -> Maybe ColVals
+  -> Maybe (ColumnValues J.Value)
   -> m CTEExp
 mkSelCTE tn allCols colValM = do
-  selCTE <- mkSelCTEFromColVals tn allCols $ maybe [] pure colValM
+  selCTE <- mkSelCTEFromColVals parseFn tn allCols $ maybe [] pure colValM
   return $ CTEExp selCTE Seq.Empty
+  where
+    parseFn ty val = toTxtValue <$> parsePGScalarValue ty val
 
 execCTEExp
   :: Bool
@@ -495,7 +497,7 @@ prefixErrPath fld =
   withPathK "selectionSet" . fieldAsPath fld . withPathK "args"
 
 convertInsert
-  :: ( MonadResolve m, MonadReader r m, Has FieldMap r
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
      )
   => RoleName

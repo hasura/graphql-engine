@@ -2,6 +2,7 @@
 
 module Data.URL.Template
   ( URLTemplate
+  , Variable
   , printURLTemplate
   , parseURLTemplate
   , renderURLTemplate
@@ -18,7 +19,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment         (lookupEnv)
 
 newtype Variable = Variable {unVariable :: Text}
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
 
 -- | A String with single environment variable enclosed in '{{' and '}}'
 -- http://{{APP_HOST}}/v1/api
@@ -27,7 +28,7 @@ data URLTemplate
   { _utPreVarText  :: !Text
   , _utVariable    :: !Variable
   , _utPostVarText :: !Text
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 printURLTemplate :: URLTemplate -> Text
 printURLTemplate (URLTemplate preVar var postVar) =
