@@ -12,6 +12,7 @@ class About extends Component {
     serverVersion: null,
     latestServerVersion: null,
     consoleAssetVersion: globals.consoleAssetVersion,
+    pgVersion: null,
   };
 
   componentDidMount() {
@@ -30,7 +31,8 @@ class About extends Component {
           latestServerVersion: latest.latest,
         })
       );
-    fetch('http://localhost:8080/v1/query', {
+
+    fetch(Endpoints.query, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
