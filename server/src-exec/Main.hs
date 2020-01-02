@@ -8,7 +8,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
-import           Hasura.Server.Migrate      (dropCatalog)
+import           Hasura.Server.Migrate      (migrateCatalog, dropCatalog)
 import           Hasura.Server.Version
 
 import qualified Data.ByteString.Lazy       as BL
@@ -43,6 +43,13 @@ runApp (HGEOptionsG rci hgeCmd) =
              & runHasSystemDefinedT (SystemDefined False)
              & runAsAdmin _icPgPool sqlGenCtx _icHttpManager
       either printErrJExit (liftIO . BLC.putStrLn) res
+
+    HCDowngrade opts -> do
+      (InitCtx{..}, initTime) <- initialiseCtx hgeCmd rci
+      let sqlGenCtx = SQLGenCtx False
+      res <- migrateCatalog (Just opts) initTime
+             & runAsAdmin _icPgPool sqlGenCtx _icHttpManager
+      either printErrJExit (liftIO . print) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
 

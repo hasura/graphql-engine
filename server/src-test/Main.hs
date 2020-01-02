@@ -28,7 +28,9 @@ import           Hasura.RQL.Types                  (QErr, SQLGenCtx (..),
                                                     adminUserInfo,
                                                     emptySchemaCache,
                                                     successMsg)
-import           Hasura.Server.Init                (RawConnInfo, mkConnInfo,
+import           Hasura.Server.Init                (RawConnInfo, 
+                                                    DowngradeOptions (..),
+                                                    mkConnInfo,
                                                     mkRawConnInfo,
                                                     parseRawConnInfo,
                                                     runWithEnv)
@@ -82,15 +84,20 @@ main = do
 
       runHspec $ do
         describe "Hasura.Server.Migrate" $ do
-          let dropAndInit time = runAsAdmin (dropCatalog *> migrateCatalog time)
+          let dropAndInit time = runAsAdmin $
+                dropCatalog *> migrateCatalog Nothing time
+              upgradeToLatest time = runAsAdmin $
+                migrateCatalog Nothing time
+              downgradeTo ver time = runAsAdmin $
+                migrateCatalog (Just DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = ver }) time
+              dumpSchema = runAsAdmin $
+                execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
 
           describe "migrateCatalog" $ do
             it "initializes the catalog" $ do
               (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
 
             it "is idempotent" $ do
-              let dumpSchema = runAsAdmin $
-                    execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
               time <- getCurrentTime
               dropAndInit time `shouldReturn` Right MRInitialized
               firstDump <- dumpSchema
@@ -98,6 +105,17 @@ main = do
               dropAndInit time `shouldReturn` Right MRInitialized
               secondDump <- dumpSchema
               secondDump `shouldBe` firstDump
+              
+            it "supports upgrades after downgrade to version 12" $ do
+              time <- getCurrentTime
+              dropAndInit time `shouldReturn` Right MRInitialized
+              firstDump <- dumpSchema
+              firstDump `shouldSatisfy` isRight
+              downgradeResult <- downgradeTo "12" time 
+              downgradeResult `shouldSatisfy` \case
+                Right MRMigrated{} -> True
+                _ -> False
+              upgradeToLatest time `shouldReturn` Right (MRMigrated "12")
 
           describe "recreateSystemMetadata" $ do
             let dumpMetadata = runAsAdmin $

@@ -22,6 +22,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                    as A
 import qualified Data.Text                     as T
+import qualified Data.Text.IO                  as TIO
 import qualified Data.Yaml.TH                  as Y
 import qualified Database.PG.Query             as Q
 import qualified Database.PG.Query.Connection  as Q
@@ -32,11 +33,13 @@ import           Hasura.Logging                (Hasura, LogLevel (..),
                                                 ToEngineLog (..))
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
+import           Hasura.Server.Init            (DowngradeOptions (..))
 import           Hasura.Server.Logging         (StartupLog (..))
 import           Hasura.Server.Migrate.Version (latestCatalogVersion,
                                                 latestCatalogVersionString)
 import           Hasura.Server.Query
 import           Hasura.SQL.Types
+import           System.Directory              (doesFileExist)
 
 dropCatalog :: (MonadTx m) => m ()
 dropCatalog = liftTx $ Q.catchE defaultTxErrorHandler $ do
@@ -74,8 +77,10 @@ migrateCatalog
   , MonadIO m
   , HasSQLGenCtx m
   )
-  => UTCTime -> m MigrationResult
-migrateCatalog migrationTime = do
+  => Maybe DowngradeOptions
+  -> UTCTime 
+  -> m MigrationResult
+migrateCatalog downgradeOpts migrationTime = do
   doesSchemaExist (SchemaName "hdb_catalog") >>= \case
     False -> initialize True
     True  -> doesTableExist (SchemaName "hdb_catalog") (TableName "hdb_version") >>= \case
@@ -123,19 +128,64 @@ migrateCatalog migrationTime = do
 
     -- migrates an existing catalog to the latest version from an existing verion
     migrateFrom :: T.Text -> m MigrationResult
-    migrateFrom previousVersion
-      | previousVersion == latestCatalogVersionString = pure MRNothingToDo
-      | [] <- neededMigrations = throw400 NotSupported $
-          "Cannot use database previously used with a newer version of graphql-engine (expected"
-            <> " a catalog version <=" <> latestCatalogVersionString <> ", but the current version"
-            <> " is " <> previousVersion <> ")."
-      | otherwise =
-          traverse_ snd neededMigrations *> postMigrate $> MRMigrated previousVersion
+    migrateFrom previousVersion =
+      case downgradeOpts of
+        Nothing
+          | previousVersion == latestCatalogVersionString ->
+              pure MRNothingToDo
+          | [] <- neededMigrations ->
+              throw400 NotSupported $
+                "Cannot use database previously used with a newer version of graphql-engine (expected"
+                  <> " a catalog version <=" <> latestCatalogVersionString <> ", but the current version"
+                  <> " is " <> previousVersion <> ")."
+          | otherwise ->
+              traverse_ (fst . snd) neededMigrations *> postMigrate $> MRMigrated previousVersion
+        Just dg
+          | previousVersion == dgoTargetVersion dg ->
+              pure MRNothingToDo
+          | otherwise -> 
+              case neededDownMigrations (dgoTargetVersion dg) of
+                Left reason -> 
+                  throw400 NotSupported $
+                    "This downgrade path (from "
+                      <> previousVersion <> " to " 
+                      <> dgoTargetVersion dg <> 
+                      ") is unfortunately not supported, because "
+                      <> reason
+                Right path -> 
+                  sequence_ path $> MRMigrated previousVersion
+      
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) migrations
+        neededDownMigrations newVersion = 
+          downgrade previousVersion newVersion (reverse migrations)
         postMigrate = updateCatalogVersion *> recreateSystemMetadata *> buildSchemaCacheStrict
 
-        migrations :: [(T.Text, m ())]
+        downgrade 
+          :: T.Text
+          -> T.Text 
+          -> [(T.Text, (m (), Maybe (m ())))]
+          -> Either T.Text [m ()]
+        downgrade from to = step1 where
+          step1, step2 :: [(T.Text, (m (), Maybe (m ())))] -> Either T.Text [m ()]
+          step1 xs | previousVersion == from = step2 xs
+          step1 [] = Left "the starting version is unrecognized."
+          step1 ((x, _):xs)
+            | x == from = step2 xs
+            | otherwise = step1 xs
+            
+          step2 [] = Left "the target version is unrecognized."
+          step2 ((x, (_, Nothing)):_) = Left $ "there is no available migration back to version " <> x <> "."
+          step2 ((x, (_, Just y)):xs)
+            | x == to = Right [y]
+            | otherwise = (y:) <$> step2 xs
+
+        runTxOrPrint
+          | Just DowngradeOptions{ dgoDryRun = True } <- downgradeOpts = 
+              liftIO . TIO.putStrLn . Q.getQueryText
+          | otherwise = runTx
+
+        migrations :: [(T.Text, (m (), Maybe (m ())))]
         migrations =
           -- We need to build the list of migrations at compile-time so that we can compile the SQL
           -- directly into the executable using `Q.sqlFromFile`. The GHC stage restriction makes
@@ -143,17 +193,26 @@ migrateCatalog migrationTime = do
           -- compile-time), but putting a `let` inside the splice itself is allowed.
           $(let migrationFromFile from to =
                   let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
-                  in [| runTx $(Q.sqlFromFile path) |]
+                   in [| runTxOrPrint $(Q.sqlFromFile path) |]
+                migrationFromFileMaybe from to = do
+                  let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
+                  exists <- TH.runIO (doesFileExist path)
+                  if exists
+                    then [| Just (runTxOrPrint $(Q.sqlFromFile path)) |]
+                    else [| Nothing |]
+                       
                 migrationsFromFile = map $ \(to :: Integer) ->
                   let from = to - 1
                   in [| ( $(TH.lift $ T.pack (show from))
-                        , $(migrationFromFile (show from) (show to))
+                        , ( $(migrationFromFile (show from) (show to))
+                          , $(migrationFromFileMaybe (show to) (show from))
+                          )
                         ) |]
             in TH.listE
               -- version 0.8 is the only non-integral catalog version
-              $  [| ("0.8", $(migrationFromFile "08" "1")) |]
+              $  [| ("0.8", ($(migrationFromFile "08" "1"), Nothing)) |]
               :  migrationsFromFile [2..3]
-              ++ [| ("3", from3To4) |]
+              ++ [| ("3", (from3To4, Nothing)) |]
               :  migrationsFromFile [5..latestCatalogVersion])
 
     -- the old 0.8 catalog version is non-integral, so we store it in the database as a string

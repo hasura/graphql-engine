@@ -186,6 +186,8 @@ library
                      -- testing
                      , QuickCheck
                      , generic-arbitrary
+                     
+                     , directory
 
   exposed-modules:     Control.Monad.Stateless
 

@@ -117,6 +117,12 @@ data ServeOptions impl
   , soPlanCacheOptions :: !E.PlanCacheOptions
   }
 
+data DowngradeOptions
+  = DowngradeOptions
+  { dgoTargetVersion :: !T.Text
+  , dgoDryRun        :: !Bool
+  } deriving (Show, Eq)
+
 data RawConnInfo =
   RawConnInfo
   { connHost     :: !(Maybe String)
@@ -135,6 +141,7 @@ data HGECommandG a
   | HCClean
   | HCExecute
   | HCVersion
+  | HCDowngrade !DowngradeOptions
   deriving (Show, Eq)
 
 data API
@@ -287,11 +294,12 @@ mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
   where
     connInfo = mkRawConnInfo rawConnInfo
     cmd = case rawCmd of
-      HCServe rso -> HCServe <$> mkServeOptions rso
-      HCExport    -> return HCExport
-      HCClean     -> return HCClean
-      HCExecute   -> return HCExecute
-      HCVersion   -> return HCVersion
+      HCServe rso     -> HCServe <$> mkServeOptions rso
+      HCExport        -> return HCExport
+      HCClean         -> return HCClean
+      HCExecute       -> return HCExecute
+      HCVersion       -> return HCVersion
+      HCDowngrade tgt -> return (HCDowngrade tgt)
 
 mkRawConnInfo :: RawConnInfo -> WithEnv RawConnInfo
 mkRawConnInfo rawConnInfo = do
@@ -1062,3 +1070,16 @@ serveOptionsParser =
   <*> parseEnabledLogs
   <*> parseLogLevel
   <*> parsePlanCacheSize
+
+downgradeOptionsParser :: Parser DowngradeOptions
+downgradeOptionsParser = 
+  DowngradeOptions
+  <$> strOption
+      ( long "to" <>
+        metavar "<VERSION>" <>
+        help "The target schema version"
+      )
+  <*> switch
+      ( long "dryRun" <>
+        help "Don't run any migrations, just print out the SQL."
+      )
