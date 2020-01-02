@@ -12,6 +12,7 @@ class About extends Component {
     serverVersion: null,
     latestServerVersion: null,
     consoleAssetVersion: globals.consoleAssetVersion,
+    pgVersion: null,
   };
 
   componentDidMount() {
@@ -30,6 +31,25 @@ class About extends Component {
           latestServerVersion: latest.latest,
         })
       );
+
+    fetch(Endpoints.query, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'run_sql',
+        args: {
+          sql: 'SELECT version();',
+        },
+      }),
+    })
+      .then(response => response.json())
+      .then(data =>
+        this.setState({
+          pgVersion: data.result[1],
+        })
+      );
   }
 
   render() {
@@ -37,6 +57,7 @@ class About extends Component {
       serverVersion,
       latestServerVersion,
       consoleAssetVersion,
+      pgVersion,
     } = this.state;
 
     const spinner = <i className="fa fa-spinner fa-spin" />;
@@ -110,6 +131,17 @@ class About extends Component {
       );
     };
 
+    const getPgVersionSection = () => {
+      return (
+        <div>
+          <b>Postgres version: </b>
+          <span className={styles.add_mar_left_mid}>
+            {pgVersion || spinner}
+          </span>
+        </div>
+      );
+    };
+
     return (
       <div className={`container-fluid ${styles.full_container}`}>
         <div className={styles.subHeader}>
@@ -125,6 +157,7 @@ class About extends Component {
             <div className={styles.add_mar_top}>
               {getConsoleAssetVersionSection()}
             </div>
+            <div className={styles.add_mar_top}>{getPgVersionSection()}</div>
           </div>
         </div>
       </div>
