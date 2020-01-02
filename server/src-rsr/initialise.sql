@@ -484,6 +484,7 @@ from
           'references', primary_key_references,
           'description', description
         )
+        ORDER BY c.ordinal_position ASC
       ) as columns
     from
       hdb_catalog.hdb_column c

@@ -50,6 +50,7 @@ import           Language.Haskell.TH.Syntax    (Lift)
 import           Network.URI.Extended          ()
 
 import qualified Data.HashMap.Strict           as M
+import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.Text                     as T
 
 data TrackTable
@@ -273,7 +274,7 @@ processTableChanges ti tableDiff = do
       -- In the newly added columns check that there is no conflict with relationships
       forM_ addedCols $ \rawInfo -> do
         let colName = prciName rawInfo
-        case M.lookup (fromPGCol colName) $ _tiFieldInfoMap ti of
+        case OMap.lookup (fromPGCol colName) $ _tiFieldInfoMap ti of
           Just (FIRelationship _) ->
             throw400 AlreadyExists $ "cannot add column " <> colName
             <<> " in table " <> tn <<>
@@ -372,7 +373,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
           throw400 NotExists $ "no such table/view exists in postgres: " <>> name
 
         let CatalogTableInfo columns constraints primaryKeyColumnNames viewInfo maybeDesc = catalogInfo
-            columnFields = M.fromList . flip map columns $ \column ->
+            columnFields = OMap.fromList . flip map columns $ \column ->
               (fromPGCol $ prciName column, FIColumn column)
 
             primaryKeyColumns = flip filter columns $ \column ->

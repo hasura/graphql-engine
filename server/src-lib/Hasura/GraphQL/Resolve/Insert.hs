@@ -29,8 +29,7 @@ import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal           (convPartialSQLExp,
-                                                    dmlTxErrorHandler,
+import           Hasura.RQL.DML.Internal           (convPartialSQLExp, dmlTxErrorHandler,
                                                     sessVarFromCurrentSetting)
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
@@ -112,7 +111,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
   where
     parseValue = do
       (_, WithScalarType scalarType maybeScalarValue) <- asPGColumnTypeAndValueM annVal
-      columnInfo <- onNothing (Map.lookup gName allColMap) $
+      columnInfo <- onNothing (OMap.lookup gName allColMap) $
                  throw500 "column not found in PGColGNameMap"
       let columnName = pgiColumn columnInfo
       scalarValue <- maybe (pure $ PGNull scalarType) openOpaqueValue maybeScalarValue
@@ -133,7 +132,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
 
         let rTable = riRTable relInfo
         InsCtx rtView rtColMap rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
-        let rtCols = Map.elems rtColMap
+        let rtCols = OMap.elems rtColMap
         rtDefValsRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting) rtDefVals
 
         withPathK (G.unName gName) $ case riType relInfo of
@@ -522,7 +521,7 @@ convertInsert role tn fld = prefixErrPath fld $ do
                       defValMap
       let multiObjIns = AnnIns annInsObjs conflictClauseM
                         vn tableCols defValMapRes
-          tableCols = Map.elems tableColMap
+          tableCols = OMap.elems tableColMap
       strfyNum <- stringifyNum <$> asks getter
       return $ prefixErrPath fld $ insertMultipleObjects strfyNum role tn
         multiObjIns [] mutFlds "objects"
@@ -540,7 +539,7 @@ getInsCtx tn = do
   insCtx <- onNothing (Map.lookup tn ctxMap) $
     throw500 $ "table " <> tn <<> " not found"
   let defValMap = fmap PSESQLExp $ S.mkColDefValMap $ map pgiColumn $
-                  Map.elems $ icAllCols insCtx
+                  OMap.elems $ icAllCols insCtx
       setCols = icSet insCtx
   return $ insCtx {icSet = Map.union setCols defValMap}
 

@@ -143,6 +143,7 @@ import           Data.Aeson.TH
 import           Language.Haskell.TH.Syntax        (Lift)
 
 import qualified Data.HashMap.Strict               as M
+import qualified Data.HashMap.Strict.InsOrd        as OMap
 import qualified Data.HashSet                      as HS
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
@@ -176,11 +177,11 @@ $(deriveToJSON
   ''FieldInfo)
 $(makePrisms ''FieldInfo)
 
-type FieldInfoMap columnInfo = M.HashMap FieldName (FieldInfo columnInfo)
+type FieldInfoMap columnInfo = OMap.InsOrdHashMap FieldName (FieldInfo columnInfo)
 
 possibleNonColumnGraphQLFields :: FieldInfoMap PGColumnInfo -> [G.Name]
 possibleNonColumnGraphQLFields fields =
-  flip concatMap (M.toList fields) $ \case
+  flip concatMap (OMap.toList fields) $ \case
     (_, FIColumn _)             -> []
     (_, FIRelationship relInfo) ->
       let relationshipName = G.Name $ relNameToTxt $ riName relInfo
@@ -191,13 +192,13 @@ possibleNonColumnGraphQLFields fields =
       pure $ G.Name $ computedFieldNameToText $ _cfiName info
 
 getCols :: FieldInfoMap columnInfo -> [columnInfo]
-getCols = mapMaybe (^? _FIColumn) . M.elems
+getCols = mapMaybe (^? _FIColumn) . OMap.elems
 
 getRels :: FieldInfoMap columnInfo -> [RelInfo]
-getRels = mapMaybe (^? _FIRelationship) . M.elems
+getRels = mapMaybe (^? _FIRelationship) . OMap.elems
 
 getComputedFieldInfos :: FieldInfoMap columnInfo -> [ComputedFieldInfo]
-getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
+getComputedFieldInfos = mapMaybe (^? _FIComputedField) . OMap.elems
 
 isPGColInfo :: FieldInfo columnInfo -> Bool
 isPGColInfo (FIColumn _) = True
@@ -384,7 +385,7 @@ checkForFieldConflict
   -> FieldName
   -> m ()
 checkForFieldConflict tableInfo f = do
-  case M.lookup f fieldInfoMap of
+  case OMap.lookup f fieldInfoMap of
     Just _ -> throw400 AlreadyExists $ mconcat
       [ "column/relationship/computed field " <>> f
       , " of table " <>> tableName
@@ -570,10 +571,10 @@ addFldToCache fn fi =
   where
     modFieldInfoMap ti = do
       let fim = _tiFieldInfoMap ti
-      case M.lookup fn fim of
+      case OMap.lookup fn fim of
         Just _  -> throw500 "field already exists "
         Nothing -> return $
-          ti { _tiFieldInfoMap = M.insert fn fi fim }
+          ti { _tiFieldInfoMap = OMap.insert fn fi fim }
 
 delFldFromCache :: (QErrM m, CacheRWM m)
                 => FieldName -> QualifiedTable -> m ()
@@ -582,9 +583,9 @@ delFldFromCache fn =
   where
     modFieldInfoMap ti = do
       let fim = _tiFieldInfoMap ti
-      case M.lookup fn fim of
+      case OMap.lookup fn fim of
         Just _  -> return $
-          ti { _tiFieldInfoMap = M.delete fn fim }
+          ti { _tiFieldInfoMap = OMap.delete fn fim }
         Nothing -> throw500 "field does not exist"
 
 delColFromCache :: (QErrM m, CacheRWM m)

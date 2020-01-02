@@ -6,13 +6,12 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Relationship       (validateRelP1)
 import           Hasura.RQL.DDL.Relationship.Types
-import           Hasura.RQL.DDL.Schema             (buildSchemaCache,
-                                                    renameRelInCatalog,
+import           Hasura.RQL.DDL.Schema             (buildSchemaCache, renameRelInCatalog,
                                                     withNewInconsistentObjsCheck)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.HashMap.Strict               as HM
+import qualified Data.HashMap.Strict.InsOrd        as OMap
 
 renameRelP2
   :: ( QErrM m
@@ -26,7 +25,7 @@ renameRelP2
 renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
   tabInfo <- askTabInfo qt
   -- check for conflicts in fieldInfoMap
-  case HM.lookup (fromRel newRN) $ _tiFieldInfoMap tabInfo of
+  case OMap.lookup (fromRel newRN) $ _tiFieldInfoMap tabInfo of
     Nothing -> return ()
     Just _  ->
       throw400 AlreadyExists $ "cannot rename relationship " <> oldRN

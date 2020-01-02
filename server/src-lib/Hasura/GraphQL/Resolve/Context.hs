@@ -35,6 +35,7 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.Sequence                 as Seq
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -43,8 +44,7 @@ import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal       (currentSession,
-                                                sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Internal       (currentSession, sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -162,5 +162,5 @@ fieldAsPath = nameAsPath . _fName
 resolvePGCol :: (MonadError QErr m)
              => PGColGNameMap -> G.Name -> m PGColumnInfo
 resolvePGCol colFldMap fldName =
-  onNothing (Map.lookup fldName colFldMap) $ throw500 $
+  onNothing (OMap.lookup fldName colFldMap) $ throw500 $
   "no column associated with name " <> G.unName fldName
