@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using HTTP compression with Hasura
+   :keywords: hasura, docs, deployment, http compression
+
 .. _http-compression:
 
 HTTP Compression

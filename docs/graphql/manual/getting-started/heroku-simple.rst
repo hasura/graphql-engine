@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for getting started with Hasura using Heroku
+   :keywords: hasura, docs, start, heroku
+
 Quickstart with Heroku
 ======================
 

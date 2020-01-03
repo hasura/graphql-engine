@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for Hasura logs
+   :keywords: hasura, docs, deployment, logs
+
 .. _hge_logs:
 
 Hasura GraphQL engine logs

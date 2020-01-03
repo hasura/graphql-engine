@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for deploying Hasura with Docker
+   :keywords: hasura, docs, deployment, docker
+
 Run Hasura GraphQL engine using Docker
 ======================================
 

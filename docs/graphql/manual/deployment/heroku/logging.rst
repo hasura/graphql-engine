@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using logs with Heroku deployment
+   :keywords: hasura, docs, deployment, heroku, logs
+
 Hasura GraphQL engine server logs (Heroku)
 ==========================================
 

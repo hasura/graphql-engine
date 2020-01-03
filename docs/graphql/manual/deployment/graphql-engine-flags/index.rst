@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for server configuration with Hasura
+   :keywords: hasura, docs, deployment, flags, server, configuration
+
 .. _hge_flags:
 
 GraphQL engine server configuration

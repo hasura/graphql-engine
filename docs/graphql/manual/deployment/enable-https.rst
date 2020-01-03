@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for enabling HTTPS with Hasura
+   :keywords: hasura, docs, deployment, https
+
 .. _enable-https:
 
 Enable HTTPS

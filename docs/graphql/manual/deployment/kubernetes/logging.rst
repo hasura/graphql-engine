@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using logs with Kubernetes deployment
+   :keywords: hasura, docs, deployment, kubernetes, logs
+
 Hasura GraphQL engine server logs (Kubernetes)
 ==============================================
 

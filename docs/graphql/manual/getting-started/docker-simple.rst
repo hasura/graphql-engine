@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for getting started with Hasura using Docker
+   :keywords: hasura, docs, start, docker
+
 Quickstart with Docker
 ======================
 

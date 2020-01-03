@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for deploying Hasura to production
+   :keywords: hasura, docs, deployment, production, checklist
+
 .. _production-checklist:
 
 Production checklist

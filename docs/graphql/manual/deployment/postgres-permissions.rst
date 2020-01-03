@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing postgres permissions with Hasura
+   :keywords: hasura, docs, deployment, postgres, permissions
+
 Postgres permissions
 ====================
 

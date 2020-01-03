@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for making a first query with Hasura
+   :keywords: hasura, docs, start, query
+
 .. _first_graphql_query:
 
 Making your first GraphQL query

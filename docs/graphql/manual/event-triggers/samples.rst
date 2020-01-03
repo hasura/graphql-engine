@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for event trigger samples with Hasura
+   :keywords: hasura, docs, event trigger, example
+
 Event trigger samples
 =====================
 

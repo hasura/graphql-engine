@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for creating event triggers with Hasura
+   :keywords: hasura, docs, event trigger, create
+
 Creating an event trigger
 =========================
 

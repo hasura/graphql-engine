@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for event trigger payload of Hasura
+   :keywords: hasura, docs, event trigger, payload
+
 Event trigger payload
 =====================
 

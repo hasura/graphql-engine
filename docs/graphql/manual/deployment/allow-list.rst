@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using allow list with Hasura
+   :keywords: hasura, docs, deployment, allow list
+
 .. _allow-list:
 
 Allow-list for queries

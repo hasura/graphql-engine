@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for Hasura server flags reference
+   :keywords: hasura, docs, deployment, server, flags
+
 GraphQL engine server flags reference
 =====================================
 
