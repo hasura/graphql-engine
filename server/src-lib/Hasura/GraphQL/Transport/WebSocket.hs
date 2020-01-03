@@ -394,9 +394,9 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
       sendMsg wsConn (SMErr $ ErrorMsg opId err)
 
-    sendSuccResp resp meta =
+    sendSuccResp encJson =
       sendMsgWithMetadata wsConn
-        (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS resp) meta
+        (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS encJson)
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
@@ -409,10 +409,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     liveQOnChange (GQSuccess (LQ.LiveQueryResponse bs dTime)) =
       sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRHasura $ GQSuccess bs) $
         LQ.LiveQueryMetadata dTime
-    liveQOnChange (GQPreExecError e) = sendMsg wsConn $
-      SMData $ DataMsg opId $ GRHasura $ GQPreExecError e
-    liveQOnChange (GQExecError e) = sendMsg wsConn $
-      SMData $ DataMsg opId $ GRHasura $ GQExecError e
+    liveQOnChange resp = sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $ 
+      LQ._lqrPayload <$> resp
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m
