@@ -1,6 +1,6 @@
 .. meta::
    :description: User's manual for using custom functions in Hasura
-   :keywords: hasura, docs, schema, custom functions
+   :keywords: hasura, docs, schema, custom function
 
 .. _custom_sql_functions:
 

@@ -1,6 +1,6 @@
 .. meta::
    :description: User's manual for using mutations with the Hasura GraphQL API
-   :keywords: hasura, docs, GraphQL API, reference, mutation
+   :keywords: hasura, docs, GraphQL API, API reference, mutation
 
 API Reference - Mutation
 ========================

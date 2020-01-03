@@ -1,5 +1,5 @@
 .. meta::
-   :description: Uninstalling the hasura CLI on Linux, Mac OS, Windows.
+   :description: Uninstalling the hasura CLI on Linux, Mac OS, Windows
    :keywords: hasura, hasura CLI, uninstall, linux, mac, windows
 
 Uninstalling the Hasura CLI

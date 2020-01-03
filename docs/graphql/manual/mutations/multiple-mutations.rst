@@ -1,6 +1,6 @@
 .. meta::
    :description: User's manual for managing multiple mutations with Hasura
-   :keywords: hasura, docs, mutation, multiple
+   :keywords: hasura, docs, mutation, multiple mutations, request
 
 Multiple mutations in a request
 ===============================

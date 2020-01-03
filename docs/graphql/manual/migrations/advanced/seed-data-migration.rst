@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for creating a Hasura seed data migration
+   :description: User's manual for creating a seed data migration in Hasura
    :keywords: hasura, docs, migration, seed data
 
 Creating a seed data migration

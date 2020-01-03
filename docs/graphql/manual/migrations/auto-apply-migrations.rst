@@ -1,6 +1,6 @@
 .. meta::
    :description: User's manual for auto-applying migrations and metadata when the server starts
-   :keywords: hasura, docs, auto-apply, migration, server
+   :keywords: hasura, docs, auto-apply, migration, metadata, server
 
 .. _auto_apply_migrations:
 

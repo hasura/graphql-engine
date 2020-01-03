@@ -1,6 +1,6 @@
 .. meta::
    :description: User's manual for using permissions with the Hasura schema/metadata API
-   :keywords: hasura, docs, schema/metadata API, reference, permission
+   :keywords: hasura, docs, schema/metadata API, API reference, permission
 
 Schema/Metadata API Reference: Permissions
 ==========================================

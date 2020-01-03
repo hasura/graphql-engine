@@ -1,6 +1,6 @@
 .. meta::
    :description: User's manual for using the Hasura API
-   :keywords: hasura, docs, API, reference
+   :keywords: hasura, docs, API, API reference
 
 .. _api-reference:
 

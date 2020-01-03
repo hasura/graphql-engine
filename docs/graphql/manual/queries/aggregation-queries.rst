@@ -1,6 +1,6 @@
 .. meta::
    :description: User's manual for managing aggregation queries with Hasura
-   :keywords: hasura, docs, query, aggregation
+   :keywords: hasura, docs, query, aggregation query
 
 Aggregation queries
 ===================

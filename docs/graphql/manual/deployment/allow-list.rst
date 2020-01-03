@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using allow list with Hasura
+   :description: User's manual for managing allow list with Hasura
    :keywords: hasura, docs, deployment, allow list
 
 .. _allow-list:

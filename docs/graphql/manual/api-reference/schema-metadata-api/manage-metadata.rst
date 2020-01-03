@@ -1,6 +1,6 @@
 .. meta::
    :description: User's manual for managing metadata with the Hasura schema/metadata API
-   :keywords: hasura, docs, schema/metadata API, reference, metadata
+   :keywords: hasura, docs, schema/metadata API, API reference, metadata
 
 Schema/Metadata API Reference: Manage metadata
 ==============================================

@@ -1,6 +1,6 @@
 .. meta::
    :description: User's manual for server configuration with Hasura
-   :keywords: hasura, docs, deployment, flags, server, configuration
+   :keywords: hasura, docs, deployment, flags, server, server configuration
 
 .. _hge_flags:
 

@@ -1,6 +1,6 @@
 .. meta::
    :description: User's manual for using the Hasura health API
-   :keywords: hasura, docs, health API, reference
+   :keywords: hasura, docs, health API, API reference
 
 .. _health_api_reference:
 

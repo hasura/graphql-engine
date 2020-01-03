@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for event trigger payload of Hasura
+   :description: User's manual for event trigger payload in Hasura
    :keywords: hasura, docs, event trigger, payload
 
 Event trigger payload
