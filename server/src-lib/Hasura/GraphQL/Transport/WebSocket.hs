@@ -43,7 +43,7 @@ import           Hasura.Server.Auth                          (AuthMode, UserAuth
 import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                         (RequestId, diffTimeToMicro,
-                                                              getRequestId)
+                                                              getRequestId, withElapsedTime)
 
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
@@ -97,7 +97,7 @@ sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
   where
     bs = encodeServerMsg msg
     wsInfo = Just $ WS.WSEventInfo
-      { WS._wseiQueryExecutionTime = execTime
+      { WS._wseiQueryExecutionTime = Just $ realToFrac execTime
       , WS._wseiResponseSize = Just $ BL.length bs
       }
 
@@ -322,11 +322,9 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       logOpEv ODStarted (Just reqId)
       -- log the generated SQL and the graphql query
       L.unLogger logger $ QueryLog query genSql reqId
-      t1 <- liftIO TC.getCurrentTime -- for measuring response time purposes
-      resp <- liftIO $ runExceptT action
-      t2 <- liftIO TC.getCurrentTime -- for measuring response time purposes
-      let ocMeta = LQ.LiveQueryMetadata $ Just $ realToFrac $ TC.diffUTCTime t2 t1
-      either (postExecErr reqId) (`sendSuccResp` ocMeta) resp
+      (dt, resp) <- withElapsedTime $ liftIO $ runExceptT action
+      let lqMeta = LQ.LiveQueryMetadata dt
+      either (postExecErr reqId) (`sendSuccResp` lqMeta) resp
       sendCompleted (Just reqId)
 
     runRemoteGQ :: E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
@@ -338,11 +336,9 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         err400 NotSupported "subscription to remote server is not supported"
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
-      t1 <- liftIO TC.getCurrentTime -- for measuring response time purposes
-      resp <- runExceptT $ flip runReaderT execCtx $
+      (dt, resp) <- withElapsedTime $ runExceptT $ flip runReaderT execCtx $
               E.execRemoteGQ reqId userInfo reqHdrs q rsi opDef
-      t2 <- liftIO TC.getCurrentTime -- for measuring response time purposes
-      let ocMeta = LQ.LiveQueryMetadata $ Just $ realToFrac $ TC.diffUTCTime t2 t1
+      let ocMeta = LQ.LiveQueryMetadata dt
       either (postExecErr reqId) (\val -> sendRemoteResp reqId (_hrBody val) ocMeta) resp
       sendCompleted (Just reqId)
 
@@ -398,8 +394,9 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
       sendMsg wsConn (SMErr $ ErrorMsg opId err)
 
-    sendSuccResp resp = sendMsgWithMetadata wsConn
-      (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS resp)
+    sendSuccResp resp meta =
+      sendMsgWithMetadata wsConn
+        (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS resp) meta
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
@@ -408,8 +405,14 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       throwError ()
 
     -- on change, send message on the websocket
-    liveQOnChange resp =
-      sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRHasura resp)
+    liveQOnChange :: LQ.OnChange
+    liveQOnChange (GQSuccess (LQ.LiveQueryResponse bs dTime)) =
+      sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRHasura $ GQSuccess bs) $
+        LQ.LiveQueryMetadata dTime
+    liveQOnChange (GQPreExecError e) = sendMsg wsConn $
+      SMData $ DataMsg opId $ GRHasura $ GQPreExecError e
+    liveQOnChange (GQExecError e) = sendMsg wsConn $
+      SMData $ DataMsg opId $ GRHasura $ GQExecError e
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m

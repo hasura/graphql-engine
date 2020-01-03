@@ -26,6 +26,8 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , newSinkId
   , SubscriberMap
   , OnChange
+  , LGQResponse
+  , LiveQueryResponse(..)
   , LiveQueryMetadata(..)
   ) where
 
@@ -36,6 +38,7 @@ import qualified Control.Concurrent.STM                   as STM
 import qualified Crypto.Hash                              as CH
 import qualified Data.Aeson.Extended                      as J
 import qualified Data.ByteString                          as BS
+import qualified Data.ByteString.Lazy                     as BL
 import qualified Data.HashMap.Strict                      as Map
 import qualified Data.Time.Clock                          as Clock
 import qualified Data.UUID                                as UUID
@@ -68,10 +71,19 @@ data Subscriber
 -- live query onChange metadata, used for adding more extra analytics data
 data LiveQueryMetadata
   = LiveQueryMetadata
-  { _lqmExecutionTime :: !(Maybe Double)
+  { _lqmExecutionTime :: !Clock.NominalDiffTime
   }
 
-type OnChange = GQResponse -> LiveQueryMetadata -> IO ()
+-- live query response data
+data LiveQueryResponse
+  = LiveQueryResponse
+  { _lqrPayload       :: !BL.ByteString
+  , _lqrExecutionTime :: !Clock.NominalDiffTime
+  }
+
+type LGQResponse = GQResult LiveQueryResponse
+
+type OnChange = LGQResponse -> IO ()
 
 newtype SubscriberId = SubscriberId { _unSinkId :: UUID.UUID }
   deriving (Show, Eq, Hashable, J.ToJSON)
@@ -169,7 +181,7 @@ pushResultToCohort
   -> LiveQueryMetadata
   -> CohortSnapshot
   -> IO ()
-pushResultToCohort result respHashM actionMeta cohortSnapshot = do
+pushResultToCohort result respHashM (LiveQueryMetadata dTime) cohortSnapshot = do
   prevRespHashM <- STM.readTVarIO respRef
   -- write to the current websockets if needed
   sinks <-
@@ -184,9 +196,11 @@ pushResultToCohort result respHashM actionMeta cohortSnapshot = do
     CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
     pushResultToSubscribers = A.mapConcurrently_ $ \(Subscriber alias action) ->
       let aliasText = G.unName $ G.unAlias alias
-          wrapWithAlias response =
-            encJToLBS $ encJFromAssocList [(aliasText, response)]
-      in action (wrapWithAlias <$> result) actionMeta
+          wrapWithAlias response = LiveQueryResponse
+            { _lqrPayload = encJToLBS $ encJFromAssocList [(aliasText, response)]
+            , _lqrExecutionTime = dTime
+            }
+      in action (wrapWithAlias <$> result)
 
 -- -------------------------------------------------------------------------------------------------
 -- Pollers
@@ -309,8 +323,9 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
     queryInit <- Clock.getCurrentTime
     mxRes <- runExceptT . runLazyTx' pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
     queryFinish <- Clock.getCurrentTime
-    let queryTime = realToFrac $ Clock.diffUTCTime queryFinish queryInit
-        lqMeta = LiveQueryMetadata $ Just queryTime
+    let dt = Clock.diffUTCTime queryFinish queryInit
+        queryTime = realToFrac dt
+        lqMeta = LiveQueryMetadata dt
         operations = getCohortOperations cohortSnapshotMap lqMeta mxRes
     Metrics.add (_rmQuery metrics) queryTime
 
