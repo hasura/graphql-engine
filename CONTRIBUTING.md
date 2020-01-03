@@ -27,8 +27,6 @@ can quickly merge or address your contributions will increase.
 
 Please follow our [Code of conduct](code-of-conduct.md) in the context of any contributions made to Hasura.
 
-<a name="translations"></a>
-
 <a name="overview"></a>
 
 ## 2. Repo overview
@@ -146,6 +144,8 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 - Don't capitalize the first letter of the summary line.
 
 - Don't add a period/dot (.) at the end of the summary line.
+
+<a name="translations"></a>
 
 ## 7. Translations
 
