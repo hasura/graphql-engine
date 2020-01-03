@@ -17,7 +17,9 @@ can quickly merge or address your contributions will increase.
 
 [5. Commit messages ](#commit-messages)
 
-[6. Translations ](#translations)
+[6. Code of conduct ](#code-of-conduct)
+
+[7. Translations ](#translations)
 
 <a name="overview"></a>
 
@@ -137,9 +139,15 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 
 - Don't add a period/dot (.) at the end of the summary line.
 
+<a name="code-of-conduct"></a>
+
+## 6. Code of conduct
+
+Please follow our [Code of conduct](code-of-conduct.md) in the context of any contributions made to Hasura.
+
 <a name="translations"></a>
 
-## 6. Translations
+## 7. Translations
 
 This document is available in the following translations:
 
