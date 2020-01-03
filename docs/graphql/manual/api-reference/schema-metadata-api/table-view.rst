@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using tables and views with the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, reference, tables, views
+
 Schema/Metadata API Reference: Tables/Views
 ===========================================
 

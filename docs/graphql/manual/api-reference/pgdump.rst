@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using the Hasura PG dump API
+   :keywords: hasura, docs, PG dump API, reference
+
 .. _pg_dump_api_reference:
 
 PG Dump API Reference

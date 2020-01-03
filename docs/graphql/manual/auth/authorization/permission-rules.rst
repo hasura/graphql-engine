@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing permission rules with Hasura
+   :keywords: hasura, docs, autorization, permissions, rules
+
 Configuring Permission Rules
 ============================
 

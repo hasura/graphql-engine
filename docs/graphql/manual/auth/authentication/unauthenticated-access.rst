@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing unauthenticated access with Hasura
+   :keywords: hasura, docs, authentication, auth, unauthenticated access
+
 Unauthenticated access
 ======================
 

@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using run_sql with the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, reference, run_sql
+
 Schema/Metadata API Reference: Run SQL
 ======================================
 

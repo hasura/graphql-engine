@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing access control with Hasura
+   :keywords: hasura, docs, autorization, access control
+
 Access control basics
 =====================
 

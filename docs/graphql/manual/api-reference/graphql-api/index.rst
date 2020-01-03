@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using the Hasura GraphQL API
+   :keywords: hasura, docs, GraphQL API, reference
+
 GraphQL API Reference
 =====================
 
