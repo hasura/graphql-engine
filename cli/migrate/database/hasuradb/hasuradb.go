@@ -494,7 +494,6 @@ func (h *HasuraDB) ensureVersionTable() error {
 func (h *HasuraDB) sendv1Query(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := gorequest.New()
 	request = request.Post(h.config.v1URL.String()).Send(m)
-
 	for headerName, headerValue := range h.config.Headers {
 		request.Set(headerName, headerValue)
 	}

@@ -55,7 +55,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
 
 	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "")
-	f.StringVar(&opts.ActionWebhook, "action-webhook", "http://localhost:3000", "")
+	f.StringVar(&opts.ActionHandler, "action-handler", "{{DEFAULT_HANDLER}}", "")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	return initCmd
@@ -69,7 +69,7 @@ type initOptions struct {
 	InitDir     string
 
 	ActionKind    string
-	ActionWebhook string
+	ActionHandler string
 }
 
 func (o *initOptions) run() error {
@@ -133,16 +133,17 @@ func (o *initOptions) createFiles() error {
 		return errors.Wrap(err, "error creating setup directories")
 	}
 	// set config object
-	config := &cli.ServerConfig{
-		Endpoint: "http://localhost:8080",
+	config := &cli.Config{
+		Endpoint:          "http://localhost:8080",
+		MetadataDirectory: "metadata",
 		Action: actions.ActionExecutionConfig{
 			Kind:    o.ActionKind,
-			Webhook: o.ActionWebhook,
-		},
-		Scaffold: &actions.ScaffoldExecutionConfig{
-			Default: "nodejs-zeit",
-			OutputDir: "./",
-			CustomScaffolders: make(map[string]string),
+			Handler: o.ActionHandler,
+			Scaffold: actions.ScaffoldExecutionConfig{
+				Default:           "nodejs-zeit",
+				OutputDir:         "./",
+				CustomScaffolders: make(map[string]string),
+			},
 		},
 	}
 	if o.Endpoint != "" {

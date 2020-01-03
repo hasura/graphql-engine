@@ -45,7 +45,7 @@ func TestPrepare(t *testing.T) {
 	if ec.GlobalConfigFile == "" {
 		t.Fatalf("global config file: expected $HOME/%s/%s, got %s", cli.GlobalConfigDirName, cli.GlobalConfigFileName, ec.GlobalConfigFile)
 	}
-	if ec.ServerConfig == nil {
+	if ec.Config == nil {
 		t.Fatal("got empty Config")
 	}
 }

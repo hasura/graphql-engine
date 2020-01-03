@@ -19,7 +19,7 @@ func testMetadataReset(t *testing.T, metadataFile string, endpoint *url.URL) {
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MetadataFile: []string{metadataFile},
-			ServerConfig: &cli.ServerConfig{
+			Config: &cli.Config{
 				Endpoint:       endpoint.String(),
 				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 				ParsedEndpoint: endpoint,
@@ -29,7 +29,7 @@ func testMetadataReset(t *testing.T, metadataFile string, endpoint *url.URL) {
 	}
 
 	opts.EC.Version = version.New()
-	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
+	v, err := version.FetchServerVersion(opts.EC.Config.Endpoint)
 	if err != nil {
 		t.Fatalf("getting server version failed: %v", err)
 	}

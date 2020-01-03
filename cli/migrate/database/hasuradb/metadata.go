@@ -2,7 +2,6 @@ package hasuradb
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	gyaml "github.com/ghodss/yaml"
@@ -15,7 +14,7 @@ func (h *HasuraDB) SetMetadataPlugins(plugins interface{}) {
 	h.config.Plugins = plugins.(types.MetadataPlugins)
 }
 
-func (h *HasuraDB) ExportMetadata() (interface{}, error) {
+func (h *HasuraDB) ExportMetadata() error {
 	query := HasuraQuery{
 		Type: "export_metadata",
 		Args: HasuraArgs{},
@@ -24,7 +23,7 @@ func (h *HasuraDB) ExportMetadata() (interface{}, error) {
 	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		h.logger.Debug(err)
-		return nil, err
+		return err
 	}
 	h.logger.Debug("response: ", string(body))
 
@@ -33,32 +32,25 @@ func (h *HasuraDB) ExportMetadata() (interface{}, error) {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
 			h.logger.Debug(err)
-			return nil, err
+			return err
 		}
-		return nil, horror.Error(h.config.isCMD)
-	}
-
-	var hres interface{}
-	err = json.Unmarshal(body, &hres)
-	if err != nil {
-		h.logger.Debug(err)
-		return nil, err
+		return horror.Error(h.config.isCMD)
 	}
 
 	var data dbTypes.Metadata
 	err = gyaml.Unmarshal(body, &data)
 	if err != nil {
 		h.logger.Debug(err)
-		return nil, err
+		return err
 	}
 
 	for _, plg := range h.config.Plugins {
 		err = plg.Export(data)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
-	return hres, nil
+	return nil
 }
 
 func (h *HasuraDB) ResetMetadata() error {
@@ -112,7 +104,7 @@ func (h *HasuraDB) ReloadMetadata() error {
 	return nil
 }
 
-func (h *HasuraDB) ApplyMetadata(data interface{}) error {
+func (h *HasuraDB) ApplyMetadata() error {
 	var tmpMeta types.Metadata
 	for _, plg := range h.config.Plugins {
 		err := plg.Build(&tmpMeta)
@@ -135,7 +127,6 @@ func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 	}
 	resp, body, err := h.sendv1Query(query)
 	if err != nil {
-		fmt.Println("asdasd")
 		h.logger.Debug(err)
 		return err
 	}
@@ -173,8 +164,8 @@ func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 	return nil
 }
 
-func (h *HasuraDB) Query(data []interface{}) error {
-	query := HasuraInterfaceBulk{
+func (h *HasuraDB) Query(data interface{}) error {
+	query := HasuraInterfaceQuery{
 		Type: "bulk",
 		Args: data,
 	}

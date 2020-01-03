@@ -2,6 +2,11 @@ package types
 
 import "encoding/json"
 
+type Common struct {
+	Actions     []Action    `json:"actions" yaml:"actions"`
+	CustomTypes CustomTypes `json:"custom_types" yaml:"custom_types"`
+}
+
 type Action struct {
 	Name        string        `json:"name" yaml:"name"`
 	Definition  ActionDef     `json:"definition" yaml:"definition"`
@@ -24,7 +29,7 @@ type ActionDef struct {
 	Arguments  []interface{} `json:"arguments" yaml:"arguments,omitempty"`
 	OutputType string        `json:"output_type" yaml:"output_type,omitempty"`
 	Kind       string        `json:"kind" yaml:"kind"`
-	Webhook    string        `json:"webhook" yaml:"webhook"`
+	Handler    string        `json:"handler" yaml:"handler"`
 }
 
 func (a ActionDef) MarshalYAML() (interface{}, error) {

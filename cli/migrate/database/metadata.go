@@ -3,13 +3,13 @@ package database
 type MetadataDriver interface {
 	SetMetadataPlugins(plugins interface{})
 
-	ExportMetadata() (interface{}, error)
+	ExportMetadata() error
 
 	ResetMetadata() error
 
 	ReloadMetadata() error
 
-	ApplyMetadata(data interface{}) error
+	ApplyMetadata() error
 
-	Query(data []interface{}) error
+	Query(data interface{}) error
 }

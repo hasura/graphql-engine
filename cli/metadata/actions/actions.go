@@ -20,9 +20,8 @@ import (
 )
 
 const (
-	actionsFileName     string = "actions.yaml"
-	graphqlFileName            = "actions.graphql"
-	customTypesFileName        = "custom_types.yaml"
+	actionsFileName string = "actions.yaml"
+	graphqlFileName        = "actions.graphql"
 )
 
 type sdlTo struct {
@@ -43,8 +42,9 @@ type scaffoldResponse struct {
 }
 
 type ActionExecutionConfig struct {
-	Kind    string `json:"kind"`
-	Webhook string `json:"webhook"`
+	Kind     string                  `json:"default_kind"`
+	Handler  string                  `json:"default_handler"`
+	Scaffold ScaffoldExecutionConfig `json:"scaffold"`
 }
 
 type ScaffoldExecutionConfig struct {
@@ -54,16 +54,14 @@ type ScaffoldExecutionConfig struct {
 }
 
 type ActionConfig struct {
-	MetadataDir    string
-	ActionConfig   ActionExecutionConfig
-	ScaffoldConfig *ScaffoldExecutionConfig
+	MetadataDir  string
+	ActionConfig ActionExecutionConfig
 }
 
-func New(baseDir string, actionConfig ActionExecutionConfig, scaffoldConfig *ScaffoldExecutionConfig) *ActionConfig {
+func New(baseDir string, actionConfig ActionExecutionConfig) *ActionConfig {
 	return &ActionConfig{
-		MetadataDir:    baseDir,
-		ActionConfig:   actionConfig,
-		ScaffoldConfig: scaffoldConfig,
+		MetadataDir:  baseDir,
+		ActionConfig: actionConfig,
 	}
 }
 
@@ -198,8 +196,8 @@ func (a *ActionConfig) Scaffold(name string, scaffolderName string, derivePayloa
 		"sdl": map[string]string{
 			"complete": string(graphByt),
 		},
-		"scaffold_config": a.ScaffoldConfig,
-		"derive": derivePayload,
+		"scaffold_config": a.ActionConfig.Scaffold,
+		"derive":          derivePayload,
 	}
 	dataByt, err := json.Marshal(data)
 	if err != nil {
@@ -215,7 +213,7 @@ func (a *ActionConfig) Scaffold(name string, scaffolderName string, derivePayloa
 		return err
 	}
 	for _, file := range resp.Files {
-		err = ioutil.WriteFile(filepath.Join(a.ScaffoldConfig.OutputDir, file["name"]), []byte(file["content"]), 0644)
+		err = ioutil.WriteFile(filepath.Join(a.ActionConfig.Scaffold.OutputDir, file["name"]), []byte(file["content"]), 0644)
 		if err != nil {
 			return err
 		}
@@ -250,21 +248,13 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	if err != nil {
 		return err
 	}
-	// Read actions.yaml and custom_types.yaml
-	actionByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, actionsFileName))
+	// Read actions.yaml
+	commonByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, actionsFileName))
 	if err != nil {
 		return err
 	}
-	cusTypeByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, customTypesFileName))
-	if err != nil {
-		return err
-	}
-	var oldAction sdlFrom
-	err = gyaml.Unmarshal(cusTypeByt, &oldAction.Types)
-	if err != nil {
-		return err
-	}
-	err = gyaml.Unmarshal(actionByt, &oldAction.Actions)
+	var oldAction types.Common
+	err = gyaml.Unmarshal(commonByt, &oldAction)
 	if err != nil {
 		return err
 	}
@@ -275,7 +265,7 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 				isFound = true
 				newAction.Actions[newActionIndex].Permissions = oldAction.Actions[actionIndex].Permissions
 				newAction.Actions[newActionIndex].Definition.Kind = oldAction.Actions[actionIndex].Definition.Kind
-				newAction.Actions[newActionIndex].Definition.Webhook = oldAction.Actions[actionIndex].Definition.Webhook
+				newAction.Actions[newActionIndex].Definition.Handler = oldAction.Actions[actionIndex].Definition.Handler
 				break
 			}
 		}
@@ -283,96 +273,100 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 			return fmt.Errorf("action %s is not present in %s", action.Name, graphqlFileName)
 		}
 	}
-	for customTypeIndex, customType := range oldAction.Types.Enums {
+	for customTypeIndex, customType := range oldAction.CustomTypes.Enums {
 		var isFound bool
 		for newTypeObjIndex, newTypeObj := range newAction.Types.Enums {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				newAction.Types.Enums[newTypeObjIndex].Description = oldAction.Types.Enums[customTypeIndex].Description
-				newAction.Types.Enums[newTypeObjIndex].Relationships = oldAction.Types.Enums[customTypeIndex].Relationships
+				newAction.Types.Enums[newTypeObjIndex].Description = oldAction.CustomTypes.Enums[customTypeIndex].Description
+				newAction.Types.Enums[newTypeObjIndex].Relationships = oldAction.CustomTypes.Enums[customTypeIndex].Relationships
 				break
 			}
 		}
 		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, customTypesFileName)
+			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
 	}
-	for customTypeIndex, customType := range oldAction.Types.InputObjects {
+	for customTypeIndex, customType := range oldAction.CustomTypes.InputObjects {
 		var isFound bool
 		for newTypeObjIndex, newTypeObj := range newAction.Types.InputObjects {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				newAction.Types.InputObjects[newTypeObjIndex].Description = oldAction.Types.InputObjects[customTypeIndex].Description
-				newAction.Types.InputObjects[newTypeObjIndex].Relationships = oldAction.Types.InputObjects[customTypeIndex].Relationships
+				newAction.Types.InputObjects[newTypeObjIndex].Description = oldAction.CustomTypes.InputObjects[customTypeIndex].Description
+				newAction.Types.InputObjects[newTypeObjIndex].Relationships = oldAction.CustomTypes.InputObjects[customTypeIndex].Relationships
 				break
 			}
 		}
 		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, customTypesFileName)
+			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
 	}
-	for customTypeIndex, customType := range oldAction.Types.Objects {
+	for customTypeIndex, customType := range oldAction.CustomTypes.Objects {
 		var isFound bool
 		for newTypeObjIndex, newTypeObj := range newAction.Types.Objects {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				newAction.Types.Objects[newTypeObjIndex].Description = oldAction.Types.Objects[customTypeIndex].Description
-				newAction.Types.Objects[newTypeObjIndex].Relationships = oldAction.Types.Objects[customTypeIndex].Relationships
+				newAction.Types.Objects[newTypeObjIndex].Description = oldAction.CustomTypes.Objects[customTypeIndex].Description
+				newAction.Types.Objects[newTypeObjIndex].Relationships = oldAction.CustomTypes.Objects[customTypeIndex].Relationships
 				break
 			}
 		}
 		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, customTypesFileName)
+			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
 	}
-	for customTypeIndex, customType := range oldAction.Types.Scalars {
+	for customTypeIndex, customType := range oldAction.CustomTypes.Scalars {
 		var isFound bool
 		for newTypeObjIndex, newTypeObj := range newAction.Types.Scalars {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				newAction.Types.Scalars[newTypeObjIndex].Description = oldAction.Types.Scalars[customTypeIndex].Description
-				newAction.Types.Scalars[newTypeObjIndex].Relationships = oldAction.Types.Scalars[customTypeIndex].Relationships
+				newAction.Types.Scalars[newTypeObjIndex].Description = oldAction.CustomTypes.Scalars[customTypeIndex].Description
+				newAction.Types.Scalars[newTypeObjIndex].Relationships = oldAction.CustomTypes.Scalars[customTypeIndex].Relationships
 				break
 			}
 		}
 		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, customTypesFileName)
+			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
 	}
-	metadata.Actions = newAction.Actions
-	for index, action := range metadata.Actions {
+	for index, action := range newAction.Actions {
 		if action.Definition.Kind == "" {
-			metadata.Actions[index].Definition.Kind = a.ActionConfig.Kind
+			newAction.Actions[index].Definition.Kind = a.ActionConfig.Kind
 		}
-		if action.Definition.Webhook == "" {
-			metadata.Actions[index].Definition.Webhook = a.ActionConfig.Webhook
+		if action.Definition.Handler == "" {
+			newAction.Actions[index].Definition.Handler = a.ActionConfig.Handler + "/" + action.Name
 		}
 	}
-	metadata.CustomTypes = newAction.Types
+	var common types.Common
+	common.Actions = newAction.Actions
+	common.CustomTypes = newAction.Types
 	// write actions.yaml and custom_types.yaml
-	actionsByt, err := yaml.Marshal(metadata.Actions)
+	commonByt, err = yaml.Marshal(common)
 	if err != nil {
 		return err
 	}
-	customTypesByt, err := yaml.Marshal(metadata.CustomTypes)
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), commonByt, 0644)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), actionsByt, 0644)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, customTypesFileName), customTypesByt, 0644)
-	if err != nil {
-		return err
-	}
+	metadata.Actions = common.Actions
+	metadata.CustomTypes = common.CustomTypes
 	return nil
 }
 
 func (a *ActionConfig) Export(metadata dbTypes.Metadata) error {
+	tmpByt, err := json.Marshal(metadata)
+	if err != nil {
+		return err
+	}
+	var common types.Common
+	err = json.Unmarshal(tmpByt, &common)
+	if err != nil {
+		return err
+	}
 	var dataFrom sdlFrom
-	dataFrom.Types = metadata.CustomTypes
-	dataFrom.Actions = metadata.Actions
+	dataFrom.Types = common.CustomTypes
+	dataFrom.Actions = common.Actions
 	fromByt, err := json.Marshal(dataFrom)
 	if err != nil {
 		return err
@@ -389,19 +383,11 @@ func (a *ActionConfig) Export(metadata dbTypes.Metadata) error {
 	doc, err := parser.Parse(parser.ParseParams{
 		Source: data.SDL["complete"],
 	})
-	actionByt, err := yaml.Marshal(metadata.Actions)
+	commonByt, err := yaml.Marshal(common)
 	if err != nil {
 		return err
 	}
-	customTypesByt, err := yaml.Marshal(metadata.CustomTypes)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), actionByt, 0644)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, customTypesFileName), customTypesByt, 0644)
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), commonByt, 0644)
 	if err != nil {
 		return err
 	}
