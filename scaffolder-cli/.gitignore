@@ -3,3 +3,4 @@ build
 src/shared
 _tmptests
 node_modules
+version.json

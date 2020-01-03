@@ -3,6 +3,7 @@ import {
   sdl,
   scaffold
 } from './services';
+import version from './utils/version';
 
 const commandArgs = process.argv;
 
@@ -16,6 +17,9 @@ const handleArgs = () => {
     case 'scaffold':
       const scaffoldSubCommands = commandArgs.slice(3);
       return scaffold(scaffoldSubCommands);
+    case 'version':
+      const versionSubCommands = commandArgs.slice(3);
+      return version(versionSubCommands);
     default:
       return;
   }
