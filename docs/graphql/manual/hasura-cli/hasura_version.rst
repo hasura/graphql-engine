@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for the hasura version command on the Hasura CLI
+   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura version
+
 .. _hasura_version:
 
 Hasura CLI: hasura version

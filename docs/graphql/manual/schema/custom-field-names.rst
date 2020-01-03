@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using custom field names in Hasura
+   :keywords: hasura, docs, schema, custom field names
+
 .. _custom_field_names:
 
 Customise auto-generated field names

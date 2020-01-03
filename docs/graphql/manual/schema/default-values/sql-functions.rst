@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual setting default field values using SQL functions
+   :keywords: hasura, docs, schema, default value, sql function, stored procedure
+
 Setting values of fields using SQL functions/stored procedures
 ==============================================================
 

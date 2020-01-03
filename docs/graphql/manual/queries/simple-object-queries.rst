@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for making simple object queries in Hasura
+   :keywords: hasura, docs, query, object query
+
 Simple object queries
 =====================
 

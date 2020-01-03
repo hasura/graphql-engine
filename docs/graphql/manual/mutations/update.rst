@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing update mutations with Hasura
+   :keywords: hasura, docs, mutation, update
+
 Update mutation
 ===============
 

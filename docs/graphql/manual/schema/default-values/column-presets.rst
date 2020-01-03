@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for setting default field values using column presets
+   :keywords: hasura, docs, schema, default value, role-based, column preset
+
 Setting default values for fields using role-based column presets
 =================================================================
 

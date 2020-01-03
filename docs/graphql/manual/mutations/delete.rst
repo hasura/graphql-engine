@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing delete mutations with Hasura
+   :keywords: hasura, docs, mutation, delete
+
 Delete mutation
 ===============
 

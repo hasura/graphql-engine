@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for filtering query results in Hasura
+   :keywords: hasura, docs, query, filter, search
+
 Filter query results / search queries
 =====================================
 

@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for advanced Hasura migration use cases
+   :keywords: hasura, docs, migration, advanced, use case
+
 Migrations advanced use cases
 =============================
 

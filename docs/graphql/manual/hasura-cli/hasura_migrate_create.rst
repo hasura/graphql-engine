@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for the hasura migrate create command on the Hasura CLI
+   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura migrate create
+
 .. _hasura_migrate_create:
 
 Hasura CLI: hasura migrate create

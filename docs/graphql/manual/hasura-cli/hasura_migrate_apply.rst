@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for the hasura migrate apply command on the Hasura CLI
+   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura migrate apply
+
 .. _hasura_migrate_apply:
 
 Hasura CLI: hasura migrate apply

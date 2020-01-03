@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for writing Hasura migrations manually
+   :keywords: hasura, docs, migration, manual
+
 Writing migrations manually
 ===========================
 

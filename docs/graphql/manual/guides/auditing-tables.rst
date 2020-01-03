@@ -1,3 +1,7 @@
+.. meta::
+   :description: Guide for auditing actions on tables with Hasura
+   :keywords: hasura, docs, guide, postgres, audit table
+
 Auditing actions on tables in Postgres
 ======================================
 

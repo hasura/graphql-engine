@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for the hasura completion init on the Hasura CLI
+   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura init
+
 .. _hasura_init:
 
 Hasura CLI: hasura init

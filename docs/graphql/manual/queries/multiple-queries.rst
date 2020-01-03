@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using multiple queries in a request
+   :keywords: hasura, docs, query, multiple queries, request
+
 Multiple queries in a request
 =============================
 

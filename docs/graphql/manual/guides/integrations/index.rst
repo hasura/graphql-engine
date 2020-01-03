@@ -1,3 +1,7 @@
+.. meta::
+   :description: Guides for integrations and migrations with Hasura
+   :keywords: hasura, docs, integration, migration
+
 Guides: Integration/migration tutorials
 =======================================
 

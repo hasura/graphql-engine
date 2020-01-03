@@ -1,3 +1,7 @@
+.. meta::
+   :description: Guide for using AWS Cognito with Hasura
+   :keywords: hasura, docs, guide, authentication, auth, integration
+
 .. _aws_cognito:
 
 Using AWS Cognito for authentication

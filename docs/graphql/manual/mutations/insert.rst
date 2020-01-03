@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing insert mutations with Hasura
+   :keywords: hasura, docs, mutation, insert
+
 Insert mutation
 ===============
 

@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for the schema in Hasura
+   :keywords: hasura, docs, schema
+
 Schema
 ======
 

@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing relationships in Hasura
+   :keywords: hasura, docs, schema, relationship
+
 Relationships between tables/views
 ==================================
 

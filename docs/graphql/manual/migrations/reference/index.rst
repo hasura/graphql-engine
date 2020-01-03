@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for migrations reference
+   :keywords: hasura, docs, migration, referemce
+
 Migrations reference documentation
 ==================================
 

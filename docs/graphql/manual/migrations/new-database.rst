@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for migrations on a new database
+   :keywords: hasura, docs, migration, new database
+
 Migrations for a new database and Hasura instance
 =================================================
 

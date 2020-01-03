@@ -1,3 +1,7 @@
+.. meta::
+   :description: Guide for deploying Hasura on Google Cloud
+   :keywords: hasura, docs, guide, deployment, google cloud, kubernetes, cloud sql
+
 Hasura GraphQL engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
 ===================================================================================
 

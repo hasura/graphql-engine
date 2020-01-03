@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for the Hasura GraphQL engine
+   :keywords: hasura, docs, manual, graphql engine
+
 .. title:: Hasura GraphQL engine Documentation
 
 Hasura GraphQL engine documentation

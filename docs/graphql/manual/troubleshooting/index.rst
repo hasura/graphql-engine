@@ -1,3 +1,7 @@
+.. meta::
+   :description: Guide on troubleshooting Hasura errors
+   :keywords: hasura, docs, error, troubleshooting
+
 Troubleshooting Hasura GraphQL engine errors
 ============================================
 

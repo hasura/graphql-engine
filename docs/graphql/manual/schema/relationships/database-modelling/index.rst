@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for database modelling in Hasura
+   :keywords: hasura, docs, schema, database modelling
+
 Database modelling guides
 =========================
 

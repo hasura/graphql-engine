@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for the hasura metadata apply command on the Hasura CLI
+   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura metadata apply
+
 .. _hasura_metadata_apply:
 
 Hasura CLI: hasura metadata apply

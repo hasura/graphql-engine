@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using multiple arguments in Hasura queries
+   :keywords: hasura, docs, query, multiple arguments
+
 Using multiple arguments in a query
 ===================================
 

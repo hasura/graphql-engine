@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using nested object queries in Hasura
+   :keywords: hasura, docs, query, nested object query
+
 Nested object queries
 =====================
 

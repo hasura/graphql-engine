@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using enums in Hasura
+   :keywords: hasura, docs, schema, enum
+
 Enum type fields
 ================
 

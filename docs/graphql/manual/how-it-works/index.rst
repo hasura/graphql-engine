@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for how Hasura GraphQL engine works
+   :keywords: hasura, docs, graphql engine, how it works
+
 How Hasura GraphQL engine works
 ===============================
 

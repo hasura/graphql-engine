@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing upsert mutations with Hasura
+   :keywords: hasura, docs, mutation, upsert
+
 Upsert mutation
 ===============
 

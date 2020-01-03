@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing subscriptions with Hasura
+   :keywords: hasura, docs, subscription
+
 Subscriptions
 =============
 

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Guide for managing soft deletes with Hasura
+   :keywords: hasura, docs, guide, soft deletes
+
 .. _soft_deletes:
 
 Setting up soft deletes for data

@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for migration file format
+   :keywords: hasura, docs, migration, file format
+
 .. _metadata_file_format:
 
 Metadata file format reference

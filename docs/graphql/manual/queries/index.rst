@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing queries with Hasura
+   :keywords: hasura, docs, query
+
 Queries
 =======
 

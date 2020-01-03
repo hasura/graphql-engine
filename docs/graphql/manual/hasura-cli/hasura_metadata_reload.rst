@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for the hasura metadata reload command on the Hasura CLI
+   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura metadata reload
+
 .. _hasura_metadata_reload:
 
 Hasura CLI: hasura metadata reload

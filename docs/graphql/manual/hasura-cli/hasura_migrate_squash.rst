@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for the hasura migrate squash command on the Hasura CLI
+   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura migrate squash
+
 .. _hasura_migrate_squash:
 
 Hasura CLI: hasura migrate squash

@@ -1,4 +1,4 @@
-.. .. meta::
+.. meta::
    :description: Installing the hasura CLI on Linux, Mac OS, Windows.
    :keywords: hasura, hasura CLI, install, linux, mac, windows
 

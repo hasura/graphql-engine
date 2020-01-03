@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for managing Hasura migrations and metadata
+   :keywords: hasura, docs, migration, metadata
+
 .. _migrations:
 
 Migrations & Metadata

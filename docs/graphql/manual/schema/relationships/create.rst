@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for creating relationships in Hasura
+   :keywords: hasura, docs, schema, relationship, create
+
 Creating relationships
 ======================
 

@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for using views in Hasura
+   :keywords: hasura, docs, schema, view
+
 .. _custom_views:
 
 Customise schema with views

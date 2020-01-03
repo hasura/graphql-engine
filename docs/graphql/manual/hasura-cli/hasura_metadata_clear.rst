@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for the hasura metadata clear command on the Hasura CLI
+   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura metadata clear
+
 .. _hasura_metadata_clear:
 
 Hasura CLI: hasura metadata clear

@@ -1,3 +1,7 @@
+.. meta::
+   :description: User's manual for the hasura metadata diff command on the Hasura CLI
+   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura metadata diff
+
 .. _hasura_metadata_diff:
 
 Hasura CLI: hasura metadata diff
