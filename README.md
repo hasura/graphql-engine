@@ -34,7 +34,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
 * **High-performance & low-footprint**: ~15MB docker image; ~50MB RAM @ 1000 req/s; multi-core aware
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
-* **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
+* **Postgres** â¤ď¸: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
 Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
 
@@ -180,7 +180,7 @@ Check out our [contributing guide](CONTRIBUTING.md) for more details.
 Hasura brand assets (logos, the Hasura mascot, powered by badges etc.) can be
 found in the [assets/brand](assets/brand) folder. Feel free to use them in your
 application/website etc. We'd be thrilled if you add the "Powered by Hasura"
-badge to your applications built using Hasura. ❤️
+badge to your applications built using Hasura. â¤ď¸
 
 <div style="display: flex;">
   <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
@@ -215,10 +215,12 @@ This readme is available in the following translations:
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
 - [Chinese :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
+- [Bosnian :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
 - [Russian :ru:](translations/README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
-- [Greek 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [Greek đŹđˇ](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [Spanish đ˛đ˝](/translations/README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
 - [Indonesian :indonesia:](translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
 - [Brazilian Portuguese :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
-- [German 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
+- [German đŠđŞ](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
 
 Translations for other files can be found [here](translations).
