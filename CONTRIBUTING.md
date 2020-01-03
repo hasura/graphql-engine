@@ -7,23 +7,31 @@ can quickly merge or address your contributions will increase.
 
 ## Table of contents
 
-[1. Repo overview ](#overview)
+[1. Code of conduct ](#code-of-conduct)
 
-[2. First time contributors welcome! ](#first-timers)
+[2. Repo overview ](#overview)
 
-[3. Areas for contributing ](#areas)
+[3. First time contributors welcome! ](#first-timers)
 
-[4. Ways of contributing ](#ways)
+[4. Areas for contributing ](#areas)
 
-[5. Commit messages ](#commit-messages)
+[5. Ways of contributing ](#ways)
 
-[6. Code of conduct ](#code-of-conduct)
+[6. Commit messages ](#commit-messages)
 
 [7. Translations ](#translations)
 
+<a name="code-of-conduct"></a>
+
+## 1. Code of conduct
+
+Please follow our [Code of conduct](code-of-conduct.md) in the context of any contributions made to Hasura.
+
+<a name="translations"></a>
+
 <a name="overview"></a>
 
-## 1. Repo overview
+## 2. Repo overview
 
 [hasura/graphql-engine](https://github.com/hasura/graphql-engine) is a mono-repo
 consisting of 3 components. Each has their own contributing guides:
@@ -40,7 +48,7 @@ For all contributions, a CLA (Contributor License Agreement) needs to be signed 
 
 <a name="first-timers"></a>
 
-## 2. First time contributors welcome!
+## 3. First time contributors welcome!
 
 We appreciate first time contributors and we are happy to assist you in getting started. In case of questions, just reach out to us!
 
@@ -48,7 +56,7 @@ You find all issues suitable for first time contributors [here](https://github.c
 
 <a name="areas"></a>
 
-## 3. Areas for contributing
+## 4. Areas for contributing
 
 Of course, we appreciate contributions to all components of Hasura. However, we have identified three areas that are particularly suitable for open source contributions.
 
@@ -102,7 +110,7 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 
 <a name="ways"></a>
 
-## 4. Ways of contributing
+## 5. Ways of contributing
 
 ### Reporting an Issue
 
@@ -126,7 +134,7 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 
 <a name="commit-messages"></a>
 
-## 5. Commit messages
+## 6. Commit messages
 
 - The first line should be a summary of the changes, not exceeding 50
   characters, followed by an optional body which has more details about the
@@ -138,14 +146,6 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 - Don't capitalize the first letter of the summary line.
 
 - Don't add a period/dot (.) at the end of the summary line.
-
-<a name="code-of-conduct"></a>
-
-## 6. Code of conduct
-
-Please follow our [Code of conduct](code-of-conduct.md) in the context of any contributions made to Hasura.
-
-<a name="translations"></a>
 
 ## 7. Translations
 
