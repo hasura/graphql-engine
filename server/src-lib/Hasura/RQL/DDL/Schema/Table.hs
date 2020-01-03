@@ -50,7 +50,6 @@ import           Language.Haskell.TH.Syntax    (Lift)
 import           Network.URI.Extended          ()
 
 import qualified Data.HashMap.Strict           as M
-import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.Text                     as T
 
 data TrackTable
@@ -274,7 +273,7 @@ processTableChanges ti tableDiff = do
       -- In the newly added columns check that there is no conflict with relationships
       forM_ addedCols $ \rawInfo -> do
         let colName = prciName rawInfo
-        case OMap.lookup (fromPGCol colName) $ _tiFieldInfoMap ti of
+        case M.lookup (fromPGCol colName) $ _tiFieldInfoMap ti of
           Just (FIRelationship _) ->
             throw400 AlreadyExists $ "cannot add column " <> colName
             <<> " in table " <> tn <<>
@@ -284,8 +283,8 @@ processTableChanges ti tableDiff = do
             addColToCache colName info tn
 
     procAlteredCols sc customColumnNames tn = fmap or $ forM alteredCols $
-      \( PGRawColumnInfo oldName oldType _ _ _
-       , newRawInfo@(PGRawColumnInfo newName newType _ _ _) ) -> do
+      \( PGRawColumnInfo oldName oldType _ _ _ _
+       , newRawInfo@(PGRawColumnInfo newName newType _ _ _ _) ) -> do
         let performColumnUpdate = do
               newInfo <- processColumnInfoUsingCache tn customColumnNames newRawInfo
               updColInCache newName newInfo tn
@@ -373,7 +372,7 @@ buildTableCache = processTableCache <=< buildRawTableCache
           throw400 NotExists $ "no such table/view exists in postgres: " <>> name
 
         let CatalogTableInfo columns constraints primaryKeyColumnNames viewInfo maybeDesc = catalogInfo
-            columnFields = OMap.fromList . flip map columns $ \column ->
+            columnFields = M.fromList . flip map columns $ \column ->
               (fromPGCol $ prciName column, FIColumn column)
 
             primaryKeyColumns = flip filter columns $ \column ->
@@ -448,6 +447,7 @@ processColumnInfo enumTables customFields tableName rawInfo = do
     , pgiType = resolvedType
     , pgiIsNullable = prciIsNullable rawInfo
     , pgiDescription = prciDescription rawInfo
+    , pgiOrdinalPosition = prciOrdinalPosition rawInfo
     }
   where
     pgCol = prciName rawInfo

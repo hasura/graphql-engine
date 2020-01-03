@@ -482,9 +482,9 @@ from
           'type', type,
           'is_nullable', is_nullable :: boolean,
           'references', primary_key_references,
-          'description', description
+          'description', description,
+          'ordinal_position', ordinal_position
         )
-        ORDER BY c.ordinal_position ASC
       ) as columns
     from
       hdb_catalog.hdb_column c

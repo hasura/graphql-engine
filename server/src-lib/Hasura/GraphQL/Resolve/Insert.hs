@@ -111,7 +111,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
   where
     parseValue = do
       (_, WithScalarType scalarType maybeScalarValue) <- asPGColumnTypeAndValueM annVal
-      columnInfo <- onNothing (OMap.lookup gName allColMap) $
+      columnInfo <- onNothing (Map.lookup gName allColMap) $
                  throw500 "column not found in PGColGNameMap"
       let columnName = pgiColumn columnInfo
       scalarValue <- maybe (pure $ PGNull scalarType) openOpaqueValue maybeScalarValue
@@ -132,7 +132,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
 
         let rTable = riRTable relInfo
         InsCtx rtView rtColMap rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
-        let rtCols = OMap.elems rtColMap
+        let rtCols = Map.elems rtColMap
         rtDefValsRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting) rtDefVals
 
         withPathK (G.unName gName) $ case riType relInfo of
@@ -521,7 +521,7 @@ convertInsert role tn fld = prefixErrPath fld $ do
                       defValMap
       let multiObjIns = AnnIns annInsObjs conflictClauseM
                         vn tableCols defValMapRes
-          tableCols = OMap.elems tableColMap
+          tableCols = Map.elems tableColMap
       strfyNum <- stringifyNum <$> asks getter
       return $ prefixErrPath fld $ insertMultipleObjects strfyNum role tn
         multiObjIns [] mutFlds "objects"
@@ -539,7 +539,7 @@ getInsCtx tn = do
   insCtx <- onNothing (Map.lookup tn ctxMap) $
     throw500 $ "table " <> tn <<> " not found"
   let defValMap = fmap PSESQLExp $ S.mkColDefValMap $ map pgiColumn $
-                  OMap.elems $ icAllCols insCtx
+                  Map.elems $ icAllCols insCtx
       setCols = icSet insCtx
   return $ insCtx {icSet = Map.union setCols defValMap}
 

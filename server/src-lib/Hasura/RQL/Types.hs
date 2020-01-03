@@ -64,7 +64,6 @@ import           Hasura.RQL.Types.SchemaCache   as R
 import qualified Hasura.GraphQL.Context         as GC
 
 import qualified Data.HashMap.Strict            as M
-import qualified Data.HashMap.Strict.InsOrd     as OMap
 import qualified Data.Text                      as T
 import qualified Network.HTTP.Client            as HTTP
 
@@ -307,7 +306,7 @@ askFieldInfo :: (MonadError QErr m)
            -> FieldName
            -> m (FieldInfo columnInfo)
 askFieldInfo m f =
-  case OMap.lookup f m of
+  case M.lookup f m of
   Just colInfo -> return colInfo
   Nothing ->
     throw400 NotExists $ mconcat

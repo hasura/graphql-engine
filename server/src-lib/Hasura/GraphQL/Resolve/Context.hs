@@ -35,7 +35,6 @@ import           Data.Has
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashMap.Strict.InsOrd    as OMap
 import qualified Data.Sequence                 as Seq
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -162,5 +161,5 @@ fieldAsPath = nameAsPath . _fName
 resolvePGCol :: (MonadError QErr m)
              => PGColGNameMap -> G.Name -> m PGColumnInfo
 resolvePGCol colFldMap fldName =
-  onNothing (OMap.lookup fldName colFldMap) $ throw500 $
+  onNothing (Map.lookup fldName colFldMap) $ throw500 $
   "no column associated with name " <> G.unName fldName

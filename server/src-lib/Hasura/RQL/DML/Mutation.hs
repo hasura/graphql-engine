@@ -111,9 +111,11 @@ mkSelCTEFromColVals parseFn qt allCols colVals =
         }
   where
     tableAls = S.Alias $ Iden $ snakeCaseQualObject qt
-    colNames = map pgiColumn allCols
+    sortedCols = flip sortBy allCols $ \lCol rCol ->
+                 compare (pgiOrdinalPosition lCol) (pgiOrdinalPosition rCol)
+    colNames = map pgiColumn sortedCols
     mkTupsFromColVal colVal =
-      fmap S.TupleExp $ forM allCols $ \ci -> do
+      fmap S.TupleExp $ forM sortedCols $ \ci -> do
         let pgCol = pgiColumn ci
         val <- onNothing (Map.lookup pgCol colVal) $
           throw500 $ "column " <> pgCol <<> " not found in returning values"

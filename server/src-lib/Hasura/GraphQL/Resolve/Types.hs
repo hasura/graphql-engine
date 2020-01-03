@@ -8,7 +8,6 @@ import           Control.Lens.TH
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict            as Map
-import qualified Data.HashMap.Strict.InsOrd     as OMap
 import qualified Data.Sequence                  as Seq
 import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
@@ -108,7 +107,7 @@ data OpCtx
 
 -- (custom name | generated name) -> PG column info
 -- used in resolvers
-type PGColGNameMap = OMap.InsOrdHashMap G.Name PGColumnInfo
+type PGColGNameMap = Map.HashMap G.Name PGColumnInfo
 
 data RelationshipField
   = RelationshipField
@@ -189,7 +188,7 @@ data InsCtx
 
 type InsCtxMap = Map.HashMap QualifiedTable InsCtx
 
-type PGColArgMap = OMap.InsOrdHashMap G.Name PGColumnInfo
+type PGColArgMap = Map.HashMap G.Name PGColumnInfo
 
 data AnnPGVal
   = AnnPGVal

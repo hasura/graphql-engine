@@ -301,7 +301,7 @@ annColExp
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (PGColumnInfo _ _ (PGColumnScalar PGJSON) _ _) ->
+    FIColumn (PGColumnInfo _ _ (PGColumnScalar PGJSON) _ _ _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal

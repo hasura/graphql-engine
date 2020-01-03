@@ -147,8 +147,8 @@ getTableDiff oldtm newtm =
 
     existingCols = getOverlap pcmOrdinalPosition oldCols newCols
 
-    pcmToPci (PGColMeta colName _ colType isNullable references descM)
-      = PGRawColumnInfo colName colType isNullable references descM
+    pcmToPci (PGColMeta colName ordPos colType isNullable references descM)
+      = PGRawColumnInfo colName colType isNullable references descM ordPos
 
     alteredCols =
       flip map (filter (uncurry (/=)) existingCols) $ pcmToPci *** pcmToPci

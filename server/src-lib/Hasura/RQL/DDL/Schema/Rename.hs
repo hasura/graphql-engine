@@ -21,7 +21,6 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict                as M
-import qualified Data.HashMap.Strict.InsOrd         as OMap
 import qualified Data.Map.Strict                    as Map
 import qualified Database.PG.Query                  as Q
 
@@ -104,7 +103,7 @@ renameColInCatalog oCol nCol qt ti = do
   where
     errMsg = "cannot rename column " <> oCol <<> " to " <>> nCol
     assertFldNotExists =
-      case OMap.lookup (fromPGCol oCol) $ _tiFieldInfoMap ti of
+      case M.lookup (fromPGCol oCol) $ _tiFieldInfoMap ti of
         Just (FIRelationship _) ->
           throw400 AlreadyExists $ "cannot rename column " <> oCol
           <<> " to " <> nCol <<> " in table " <> qt <<>

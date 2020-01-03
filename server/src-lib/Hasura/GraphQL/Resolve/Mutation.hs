@@ -151,7 +151,7 @@ convertUpdateP1 opCtx fld = do
   pure $ RU.AnnUpd tn updateItems (unresolvedPermFilter, whereExp) mutFlds allCols
   where
     convObjWithOp' = convObjWithOp colGNameMap
-    allCols = OMap.elems colGNameMap
+    allCols = Map.elems colGNameMap
     UpdOpCtx tn _ colGNameMap filterExp preSetCols = opCtx
     args = _fArguments fld
     resolvedPreSetItems = Map.toList $ fmap partialSQLExpToUnresolvedVal preSetCols

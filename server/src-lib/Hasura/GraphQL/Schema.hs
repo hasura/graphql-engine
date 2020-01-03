@@ -20,7 +20,6 @@ module Hasura.GraphQL.Schema
 import           Control.Lens.Extended                 hiding (op)
 
 import qualified Data.HashMap.Strict                   as Map
-import qualified Data.HashMap.Strict.InsOrd            as OMap
 import qualified Data.HashSet                          as Set
 import qualified Data.Sequence                         as Seq
 
@@ -97,7 +96,7 @@ isRelNullable fim ri = isNullable
     isNullable = any pgiIsNullable lColInfos
 
 mkPGColGNameMap :: [PGColumnInfo] -> PGColGNameMap
-mkPGColGNameMap cols = OMap.fromList $
+mkPGColGNameMap cols = Map.fromList $
   flip map cols $ \ci -> (pgiName ci, ci)
 
 numAggOps :: [G.Name]

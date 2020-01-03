@@ -11,7 +11,7 @@ import           Hasura.RQL.DDL.Schema             (buildSchemaCache, renameRelI
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.HashMap.Strict.InsOrd        as OMap
+import qualified Data.HashMap.Strict               as Map
 
 renameRelP2
   :: ( QErrM m
@@ -25,7 +25,7 @@ renameRelP2
 renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
   tabInfo <- askTabInfo qt
   -- check for conflicts in fieldInfoMap
-  case OMap.lookup (fromRel newRN) $ _tiFieldInfoMap tabInfo of
+  case Map.lookup (fromRel newRN) $ _tiFieldInfoMap tabInfo of
     Nothing -> return ()
     Just _  ->
       throw400 AlreadyExists $ "cannot rename relationship " <> oldRN
