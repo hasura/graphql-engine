@@ -16,6 +16,7 @@ import {
   fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,
+  PRO_CLICKED,
 } from './Actions';
 
 import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
@@ -61,7 +62,6 @@ class Main extends React.Component {
       dispatch(loadInconsistentObjects()).then(() => {
         this.handleMetadataRedirect();
       });
-
       dispatch(loadConsoleTelemetryOpts());
 
       dispatch(loadLatestServerVersion()).then(() => {
@@ -522,7 +522,7 @@ class Main extends React.Component {
                 <div className={styles.featuresList}>
                   <div className={styles.featuresTitle}>Team Management</div>
                   <div className={styles.featuresDescription}>
-                    Login to Hasura project with granular privileges.
+                    Login to a Hasura project with granular privileges.
                   </div>
                 </div>
               </div>
@@ -533,16 +533,16 @@ class Main extends React.Component {
                 <div className={styles.featuresList}>
                   <div className={styles.featuresTitle}>Allow Listing</div>
                   <div className={styles.featuresDescription}>
-                    Allow listing workflows across dev, staging and production
-                    environments.
+                    Easy workflows to setup allow lists across dev, staging and production environments.
                   </div>
                 </div>
               </div>
             </div>
             <div className={styles.popUpFooter}>
               <a
-                href={'https://hasura.io/getintouch?type=hasuraprodemo'}
+                href={'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'}
                 target={'_blank'}
+                onClick={() => dispatch({ type: PRO_CLICKED , data: isProClicked })}
               >
                 Set up a chat with us to learn more{' '}
                 <img

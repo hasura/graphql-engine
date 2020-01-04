@@ -28,6 +28,7 @@ const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
 const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
 const SET_FEATURES_COMPATIBILITY = 'Main/SET_FEATURES_COMPATIBILITY';
+const PRO_CLICKED = 'Main/PRO_CLICKED';
 const setFeaturesCompatibility = data => ({
   type: SET_FEATURES_COMPATIBILITY,
   data,
@@ -304,6 +305,7 @@ export {
   updateMigrationModeStatus,
   LOGIN_IN_PROGRESS,
   LOGIN_ERROR,
+  PRO_CLICKED,
   loadServerVersion,
   fetchServerConfig,
   loadLatestServerVersion,
