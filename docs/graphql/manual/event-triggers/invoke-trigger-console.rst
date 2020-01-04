@@ -19,7 +19,7 @@ only if you have any triggers configured)*:
 Click on the event trigger you want to run and a modal will pop up with the request and response.
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/run-manual-trigger.png
-   :alt: Request and response from the invoked event trigger
+   :alt: Request and response of event trigger
 
 .. note::
 

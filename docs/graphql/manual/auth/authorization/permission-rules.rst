@@ -127,7 +127,7 @@ the value in the ``id`` column is greater than 10 **and** the value in the ``nam
 or "A":
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/composite-boolean-expression.png
-   :alt: Example or a rule with the _and operator
+   :alt: Example of a rule with the _and operator
 
 Using session variables
 ***********************
