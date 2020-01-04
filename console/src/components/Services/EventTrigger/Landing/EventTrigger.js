@@ -23,7 +23,7 @@ class EventTrigger extends Component {
   }
 
   render() {
-    const { dispatch, listingTrigger } = this.props;
+    const { dispatch, listingTrigger, readOnlyMode } = this.props;
 
     const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
@@ -52,6 +52,10 @@ class EventTrigger extends Component {
     };
 
     const getAddBtn = () => {
+      if (readOnlyMode) {
+        return null;
+      }
+
       const handleClick = e => {
         e.preventDefault();
 
@@ -127,6 +131,7 @@ const mapStateToProps = state => ({
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
   listingTrigger: state.triggers.listingTrigger,
+  readOnlyMode: state.main.readOnlyMode,
 });
 
 const eventTriggerConnector = connect => connect(mapStateToProps)(EventTrigger);

@@ -13,6 +13,7 @@ module Hasura.GraphQL.Resolve.Select
   , toPGQuery
   ) where
 
+import           Control.Lens                      ((^?), _2)
 import           Data.Has
 import           Data.Parser.JSONPath
 import           Hasura.Prelude
@@ -62,9 +63,8 @@ resolveComputedField
      )
   => ComputedField -> Field -> m (RS.ComputedFieldSel UnresolvedVal)
 resolveComputedField computedField fld = fieldAsPath fld $ do
-  funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq argFn
-  let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
-      argsWithTableArgument = withTableArgument funcArgs
+  funcArgs <- parseFunctionArgs argSeq argFn $ Map.lookup "args" $ _fArguments fld
+  let argsWithTableArgument = withTableArgument funcArgs
   case fieldType of
     CFTScalar scalarTy -> do
       colOpM <- argsToColOp $ _fArguments fld
@@ -455,12 +455,19 @@ parseFunctionArgs
   :: (MonadReusability m, MonadError QErr m)
   => Seq.Seq a
   -> (a -> InputFunctionArgument)
-  -> AnnInpVal
+  -> Maybe AnnInpVal
   -> m (RS.FunctionArgsExpG UnresolvedVal)
-parseFunctionArgs argSeq argFn val = flip withObject val $ \_ obj -> do
-  (positionalArgs, argsLeft) <- spanMaybeM (parsePositionalArg obj) argSeq
-  namedArgs <- Map.fromList . catMaybes <$> traverse (parseNamedArg obj) argsLeft
-  pure $ RS.FunctionArgsExp positionalArgs namedArgs
+parseFunctionArgs argSeq argFn = withPathK "args" . \case
+  Nothing  -> do
+    -- The input "args" field is not provided, hence resolve only known
+    -- input arguments as positional arguments
+    let positionalArgs = mapMaybe ((^? _IFAKnown._2) . argFn) $ toList argSeq
+    pure RS.emptyFunctionArgsExp{RS._faePositional = positionalArgs}
+
+  Just val -> flip withObject val $ \_ obj -> do
+    (positionalArgs, argsLeft) <- spanMaybeM (parsePositionalArg obj) argSeq
+    namedArgs <- Map.fromList . catMaybes <$> traverse (parseNamedArg obj) argsLeft
+    pure $ RS.FunctionArgsExp positionalArgs namedArgs
   where
     parsePositionalArg obj inputArg = case argFn inputArg of
       IFAKnown _ resolvedVal -> pure $ Just resolvedVal
@@ -488,10 +495,9 @@ makeFunctionSelectFrom
   -> FunctionArgSeq
   -> Field
   -> m (RS.SelectFromG UnresolvedVal)
-makeFunctionSelectFrom qf argSeq fld = do
-  funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq argFn
-  let funcArgs = RS.AEInput <$> fromMaybe RS.emptyFunctionArgsExp funcArgsM
-  pure $ RS.FromFunction qf funcArgs
+makeFunctionSelectFrom qf argSeq fld = withPathK "args" $ do
+  funcArgs <- parseFunctionArgs argSeq argFn $ Map.lookup "args" $ _fArguments fld
+  pure $ RS.FromFunction qf $ RS.AEInput <$> funcArgs
   where
     argFn (IAUserProvided val)         = IFAUnknown val
     argFn (IASessionVariables argName) = IFAKnown argName UVSession

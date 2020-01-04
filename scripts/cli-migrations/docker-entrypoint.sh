@@ -11,13 +11,26 @@ log() {
 DEFAULT_MIGRATIONS_DIR="/hasura-migrations"
 TEMP_MIGRATIONS_DIR="/tmp/hasura-migrations"
 
-# check server port and set default as 8080
-if [ -z ${HASURA_GRAPHQL_SERVER_PORT+x} ]; then
-    log "port env var is not set, defaulting to 8080"
-    HASURA_GRAPHQL_SERVER_PORT=8080
+# configure the target database for migrations
+if [ ${HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR} ]; then
+    log "database url for migrations is set by $HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR"
+    HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL=$(printenv $HASURA_GRAPHQL_MIGRATIONS_DATABASE_ENV_VAR)
+elif [ -z ${HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL+x} ]; then
+    HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL=$HASURA_GRAPHQL_DATABASE_URL
 fi
+log "database url for migrations is set by HASURA_GRAPHQL_DATABASE_URL"
+
+# Use 9691 port for running temporary instance. 
+# In case 9691 is occupied (according to docker networking), then this will fail.
+# override with another port in that case
+# TODO: Find a proper random port
+if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT+x} ]; then
+    log "migrations server port env var is not set, defaulting to 9691"
+    HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT=9691
+fi
+
 if [ -z ${HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT+x} ]; then
-    log "server timeout is not set defaulting to 30 seconds"
+    log "server timeout is not set, defaulting to 30 seconds"
     HASURA_GRAPHQL_MIGRATIONS_SERVER_TIMEOUT=30
 fi
 
@@ -33,15 +46,17 @@ wait_for_port() {
     log "failed waiting for $PORT" && exit 1
 }
 
-log "starting graphql engine temporarily on port $HASURA_GRAPHQL_SERVER_PORT"
+log "starting graphql engine temporarily on port $HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT"
 
 # start graphql engine with metadata api enabled
-graphql-engine serve --enabled-apis="metadata" &
+graphql-engine --database-url "$HASURA_GRAPHQL_MIGRATIONS_DATABASE_URL" \
+               serve --enabled-apis="metadata" \
+               --server-port=${HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT}  &
 # store the pid to kill it later
 PID=$!
 
 # wait for port to be ready
-wait_for_port $HASURA_GRAPHQL_SERVER_PORT
+wait_for_port $HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT
 
 # check if migration directory is set, default otherwise
 log "checking for migrations directory"
@@ -56,7 +71,7 @@ if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     mkdir -p "$TEMP_MIGRATIONS_DIR"
     cp -a "$HASURA_GRAPHQL_MIGRATIONS_DIR/." "$TEMP_MIGRATIONS_DIR/migrations/"
     cd "$TEMP_MIGRATIONS_DIR"
-    echo "endpoint: http://localhost:$HASURA_GRAPHQL_SERVER_PORT" > config.yaml
+    echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" > config.yaml
     echo "show_update_notification: false" >> config.yaml
     hasura-cli migrate apply
     # check if metadata.[yaml|json] exist and apply
