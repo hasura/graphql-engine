@@ -16,7 +16,7 @@ import {
   fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,
-  PRO_CLICKED,
+  emitProClickedEvent,
 } from './Actions';
 
 import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
@@ -31,7 +31,7 @@ import {
   setLoveConsentState,
   getProClickState,
   setProClickState,
-} from './loveConsentLocalStorage';
+} from './utils';
 
 import { versionGT } from '../../helpers/versionUtils';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
@@ -72,6 +72,8 @@ class Main extends React.Component {
     dispatch(fetchServerConfig());
   }
   toggleProPopup() {
+    const { dispatch } = this.props;
+    dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
     this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
   }
   setShowUpdateNotification() {
@@ -130,14 +132,20 @@ class Main extends React.Component {
       loveConsentState: { ...getLoveConsentState() },
     });
   }
+  updateLocalStorageState() {
+    const s = getProClickState();
+    if (s && 'isProClicked' in s && !s.isProClicked) {
+      setProClickState({
+        isProClicked: !s.isProClicked,
+      });
+      this.setState({
+        proClickState: { ...getProClickState() },
+      });
+    }
+  }
+
   clickProIcon() {
-    const p = {
-      isProClicked: true,
-    };
-    setProClickState(p);
-    this.setState({
-      proClickState: { ...getProClickState() },
-    });
+    this.updateLocalStorageState();
     this.toggleProPopup();
   }
   closeUpdateBanner() {
@@ -533,16 +541,18 @@ class Main extends React.Component {
                 <div className={styles.featuresList}>
                   <div className={styles.featuresTitle}>Allow Listing</div>
                   <div className={styles.featuresDescription}>
-                    Easy workflows to setup allow lists across dev, staging and production environments.
+                    Easy workflows to setup allow lists across dev, staging and
+                    production environments.
                   </div>
                 </div>
               </div>
             </div>
             <div className={styles.popUpFooter}>
               <a
-                href={'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'}
+                href={
+                  'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'
+                }
                 target={'_blank'}
-                onClick={() => dispatch({ type: PRO_CLICKED , data: isProClicked })}
               >
                 Set up a chat with us to learn more{' '}
                 <img

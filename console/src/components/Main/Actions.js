@@ -34,6 +34,11 @@ const setFeaturesCompatibility = data => ({
   data,
 });
 
+const emitProClickedEvent = data => ({
+  type: PRO_CLICKED,
+  data,
+});
+
 const featureCompatibilityInit = () => {
   return (dispatch, getState) => {
     const { serverVersion } = getState().main;
@@ -305,7 +310,7 @@ export {
   updateMigrationModeStatus,
   LOGIN_IN_PROGRESS,
   LOGIN_ERROR,
-  PRO_CLICKED,
+  emitProClickedEvent,
   loadServerVersion,
   fetchServerConfig,
   loadLatestServerVersion,
