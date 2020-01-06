@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for rolling back Hasura migrations
+   :description: Roll back Hasura migrations
    :keywords: hasura, docs, migration, roll back
 
 Rolling back applied migrations

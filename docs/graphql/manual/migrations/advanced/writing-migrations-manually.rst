@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for writing Hasura migrations manually
+   :description: Write manual migrations for Hasura GraphQL engine
    :keywords: hasura, docs, migration, manual
 
 Writing migrations manually
