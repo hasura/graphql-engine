@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for the schema in Hasura
+   :description: Hasura GraphQL engine schema documentation
    :keywords: hasura, docs, schema
 
 Schema

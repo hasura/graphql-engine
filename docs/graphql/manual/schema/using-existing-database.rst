@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for setting up a Hasura GraphQL schema with an existing database
+   :description: Set up a Hasura GraphQL schema with an existing database
    :keywords: hasura, docs, schema, existing database
 
 Setting up a GraphQL schema using an existing database

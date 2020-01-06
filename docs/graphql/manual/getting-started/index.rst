@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for getting started with Hasura
+   :description: Get started with Hasura
    :keywords: hasura, docs, start
 
 Getting started
