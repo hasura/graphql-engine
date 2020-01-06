@@ -49,7 +49,7 @@ Hasura可帮助您构建基于Postgres的GraphQL应用程序，或将使用Postg
 - [客户端工具](#客户端工具)
 - [添加业务逻辑](#添加业务逻辑)
     - [远端Schema](#远端Schema)
-    - [在数据库事件上触发Webhooks](#在数据库事件上触发Webhooks)
+    - [通过数据库事件触发Webhooks](#通过数据库事件触发Webhooks)
 - [演示](#演示)
     - [实时应用](#实时应用)
     - [视频](#视频)
@@ -111,7 +111,7 @@ GraphQL Engine提供了易用，可伸缩，高性能的往后端插入自定义
 
 您可以在远端Schema中编写自定义resolver，再和Hasura的基于Postgres的GraphQL Schema合并。 适用于实现支付API或查询数据库中不存在的数据等用例 - [阅读更多](../remote-schemas.md).
 
-### 在数据库事件上触发Webhooks
+### 通过数据库事件触发Webhooks
 
 添加基于数据库事件触发的异步业务逻辑。
 通知，源自Postgres的数据流水线或异步处理的理想选择
