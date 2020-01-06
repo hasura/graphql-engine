@@ -49,7 +49,7 @@ Hasura可帮助您构建基于Postgres的GraphQL应用程序，或将使用Postg
 - [客户端工具](#客户端工具)
 - [添加业务逻辑](#添加业务逻辑)
     - [远端Schema](#远端Schema)
-    - [通过数据库事件调用Webhook](#通过数据库事件触发Webhooks)
+    - [在数据库事件上触发Webhooks](#在数据库事件上触发Webhooks)
 - [演示](#演示)
     - [实时应用](#实时应用)
     - [视频](#视频)
@@ -168,7 +168,7 @@ GraphQL Engine提供了易用，可伸缩，高性能的往后端插入自定义
 
 ## 品牌资料
 
-你可以在[assets/brand](assets/brand)文件夹中找到Hasura的品牌资产（logo，Hasura吉祥物，powered-by badges等）。请随意在你的应用程序/网站等地方使用它们吧！我们将非常高兴看到在你用Hasura构建的应用里看到"Powered by Hasura"徽章。❤️
+你可以在[assets/brand](../assets/brand)文件夹中找到Hasura的品牌资产（logo，Hasura吉祥物，powered-by badges等）。请随意在你的应用程序/网站等地方使用它们吧！我们将非常高兴看到在你用Hasura构建的应用里看到"Powered by Hasura"徽章。❤️
 
 <div style="display: flex;">
   <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
