@@ -41,7 +41,7 @@ For Auth0.js:
 
     function (user, context, callback) {
       const namespace = "https://hasura.io/jwt/claims";
-      context.accessToken[namespace] = 
+      context.idToken[namespace] = 
         { 
           'x-hasura-default-role': 'user',
           // do some custom logic to decide allowed roles
@@ -72,8 +72,10 @@ For auth0-spa-js:
 Create an Auth0 API
 ^^^^^^^^^^^^^^^^^^^
 
+In case you are using auth0-spa-js, you also need to create an API so that the access token issued by Auth0 is following the JWT standard. Read more about this `here <https://auth0.com/docs/tokens/access-tokens#json-web-token-access-tokens>`__.
+
 - Navigate to the `Auth0 dashboard <https://manage.auth0.com>`__.
-- Click on the ``API`` menu option on the left and then click the ``+ Create API`` button.
+- Click on the ``APIs`` menu option on the left sidebar and then click the ``+ Create API`` button.
 - In the ``New API`` window, set a name for your API and enter an ``identifier`` (e.g. ``hasura``)
 - In your application code, configure your API ``identifier`` as the ``audience`` when initializing Auth0, e.g.:
 
@@ -107,6 +109,8 @@ You don't need to integrate your UI with auth0 for testing. You can follow the s
 
 .. note::
    In case the above method gives a callback error (with ``access_denied`` in log), try disabling OIDC Conformant setting (https://auth0.com/docs/api-auth/tutorials/adoption/oidc-conformant) under Advanced Settings -> OAuth.
+
+   Do note that this method of generating tokens doesn't work in case you are using ``auth0-spa-js`` with a custom API created.
 
 3. After successfully logging in, you will be redirected to ``https://localhost:3000/callback#xxxxxxxx&id_token=yyyyyyy``. This page may be a 404 if you don't have a UI running on localhost:3000.
 
