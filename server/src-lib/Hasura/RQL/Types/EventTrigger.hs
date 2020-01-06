@@ -18,6 +18,7 @@ module Hasura.RQL.Types.EventTrigger
   , EventHeaderInfo(..)
   , WebhookConf(..)
   , WebhookConfInfo(..)
+  , HeaderConf(..)
 
   , defaultRetryConf
   , defaultTimeoutSeconds
@@ -101,8 +102,8 @@ data WebhookConf = WCValue T.Text | WCEnv T.Text
   deriving (Show, Eq, Lift)
 
 instance ToJSON WebhookConf where
-  toJSON (WCValue w)  = String w
-  toJSON (WCEnv wEnv) = String wEnv
+  toJSON (WCValue w)  = object ["type" .= String "static", "value" .= w ]
+  toJSON (WCEnv wEnv) = object ["type" .= String "env", "value" .= wEnv ]
 
 data WebhookConfInfo
   = WebhookConfInfo

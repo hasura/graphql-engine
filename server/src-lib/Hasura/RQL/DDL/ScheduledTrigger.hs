@@ -9,12 +9,12 @@ import           Hasura.RQL.DDL.Schema.Cache       (CacheBuildM)
 import           Hasura.RQL.DDL.EventTrigger ( getWebhookInfoFromConf
                                              , getHeaderInfosFromConf)
 import           Hasura.RQL.Types.Helpers
-import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCache ( addScheduledTriggerToCache
                                               , ScheduledTriggerInfo(..))
 
-import qualified Database.PG.Query                 as Q
+import qualified Data.Aeson            as J
+import qualified Database.PG.Query     as Q
 
 runCreateScheduledTrigger :: CacheBuildM m => CreateScheduledTrigger ->  m EncJSON
 runCreateScheduledTrigger q = do
@@ -28,21 +28,15 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $
   Q.unitQE defaultTxErrorHandler
   [Q.sql|
     INSERT into hdb_catalog.hdb_scheduled_trigger
-                (name, webhook, schedule, payload, retry_conf)
+                (name, webhook_conf, schedule, payload, retry_conf)
     VALUES ($1, $2, $3, $4, $5)
-  |] (stName, stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf) False
+  |] (stName, Q.AltJ $ J.toJSON stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf) False
 
 addScheduledTriggerSetup ::
      (CacheBuildM m) => CreateScheduledTrigger -> m ScheduledTriggerInfo
 addScheduledTriggerSetup CreateScheduledTrigger {..} = do
-  webhookConf <- return $ WCValue stWebhook
-    -- case (webhook, webhookFromEnv) of
-    --   (Just w, Nothing) -> return $ WCValue w
-    --   (Nothing, Just wEnv) -> return $ WCEnv wEnv
-    --   _ -> throw500 "expected webhook or webhook_from_env"
-  -- let headerConfs = fromMaybe [] mheaders
-  let headerConfs = []
-  webhookInfo <- getWebhookInfoFromConf webhookConf
+  let headerConfs = fromMaybe [] stHeaders
+  webhookInfo <- getWebhookInfoFromConf stWebhookConf
   headerInfo <- getHeaderInfosFromConf headerConfs
   let stInfo =
         ScheduledTriggerInfo

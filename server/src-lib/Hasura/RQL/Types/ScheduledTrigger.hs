@@ -16,11 +16,11 @@ import           Data.Fixed
 import           Hasura.Prelude
 import           Language.Haskell.TH.Syntax as TH
 import           System.Cron.Types
-import           Hasura.RQL.Types.EventTrigger (TriggerName)
 import           System.Cron.Parser
 
-import qualified Data.Text                         as T
-import qualified Data.Aeson                        as J
+import qualified Data.Text                     as T
+import qualified Data.Aeson                    as J
+import qualified Hasura.RQL.Types.EventTrigger as ET
 
 instance TH.Lift (Fixed E12) where
   lift x = [| MkFixed x' |]
@@ -60,13 +60,13 @@ $(deriveJSON defaultOptions{sumEncoding=TaggedObject "type" "value"} ''ScheduleT
 
 data CreateScheduledTrigger
   = CreateScheduledTrigger
-  { stName      :: !TriggerName
-  , stWebhook   :: !T.Text
-  , stSchedule  :: !ScheduleType
-  , stPayload   :: !(Maybe J.Value)
-  , stRetryConf :: !RetryConfST
-  }
-  deriving (Show, Eq, Lift)
+  { stName           :: !ET.TriggerName
+  , stWebhookConf    :: !ET.WebhookConf
+  , stSchedule       :: !ScheduleType
+  , stPayload        :: !(Maybe J.Value)
+  , stRetryConf      :: !RetryConfST
+  , stHeaders        :: !(Maybe [ET.HeaderConf])
+  } deriving (Show, Eq, Lift)
 
 instance FromJSON CronSchedule where
   parseJSON = withText "CronSchedule" $ \t ->
@@ -80,9 +80,16 @@ instance FromJSON CreateScheduledTrigger where
     withObject "CreateScheduledTrigger" $ \o -> do
       stName <- o .: "name"
       stWebhook <- o .: "webhook"
+      stWebhookFromEnv <- o .: "webhook_from_env"
       stPayload <- o .:? "payload"
       stSchedule <- o .: "schedule"
       stRetryConf <- o .:? "retry_conf" .!= defaultRetryConf
+      stHeaders <- o .:? "headers"
+      stWebhookConf <- case (stWebhook, stWebhookFromEnv) of
+        (Just value, Nothing) -> pure $ ET.WCValue value
+        (Nothing, Just env) -> pure $ ET.WCEnv env
+        (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
+        (Nothing, Nothing) ->   fail "must provide webhook or webhook_from_env"
       pure CreateScheduledTrigger {..}
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)

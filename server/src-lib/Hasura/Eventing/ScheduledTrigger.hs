@@ -1,3 +1,6 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE PolyKinds #-}
+
 module Hasura.Eventing.ScheduledTrigger
   ( processScheduledQueue
   , runScheduledEventsGenerator
@@ -21,10 +24,8 @@ import           Hasura.HTTP
 import qualified Data.Aeson                      as J
 import qualified Data.Aeson.Casing               as J
 import qualified Data.Aeson.TH                   as J
-import qualified Data.ByteString.Lazy            as LBS
 import qualified Data.TByteString                as TBS
 import qualified Data.Text                       as T
-import qualified Data.Text.Encoding              as TE
 import qualified Database.PG.Query               as Q
 import qualified Hasura.Logging                  as L
 import qualified Network.HTTP.Client             as HTTP
@@ -54,14 +55,41 @@ scheduledEventsTable =
     hdbCatalogSchema
     (TableName $ T.pack "hdb_scheduled_events")
 
-data ScheduledEvent
+data ScheduledEventSeed
+ = ScheduledEventSeed
+ { sesName          :: !TriggerName
+ , sesScheduledTime :: !UTCTime
+ } deriving (Show, Eq)
+
+
+-- ScheduledEvents can be "partial" or "full"
+-- Partial represents the event as present in db
+-- Full represents the partial event combined with schema cache configuration elements
+
+data SE_P = SE_PARTIAL | SE_FULL
+
+type family Param (p :: k) x
+
+data ScheduledEvent (p :: SE_P)
   = ScheduledEvent
-  { seId            :: !(Maybe Text)
+  { seId            :: !Text
   , seName          :: !TriggerName
-  , seWebhook       :: !T.Text
-  , sePayload       :: !J.Value
   , seScheduledTime :: !UTCTime
-  } deriving (Show, Eq)
+  , seWebhook       :: !(Param p T.Text)
+  , sePayload       :: !(Param p J.Value)
+  }
+
+deriving instance Show (ScheduledEvent 'SE_PARTIAL)
+deriving instance Show (ScheduledEvent 'SE_FULL)
+
+type instance Param 'SE_PARTIAL a = ()
+type instance Param 'SE_FULL a = a
+
+instance J.ToJSON (Param 'SE_PARTIAL a) where
+  toJSON _ = J.Null
+
+instance (J.ToJSON a) => J.ToJSON (Param 'SE_FULL a) where
+  toJSON _ = toJSON a
 
 $(J.deriveToJSON (J.aesonDrop 2 J.snakeCase){J.omitNothingFields=True} ''ScheduledEvent)
 
@@ -95,35 +123,31 @@ insertScheduledEventsFor scheduledTriggers = do
       let insertScheduledEventsSql = TB.run $ toSQL
             SQLInsert
               { siTable    = scheduledEventsTable
-              , siCols     = map (PGCol . T.pack) ["name", "webhook", "payload", "scheduled_time"]
+              , siCols     = map (PGCol . T.pack) ["name", "scheduled_time"]
               , siValues   = ValuesExp $ map (toTupleExp . toArr) events
               , siConflict = Just $ DoNothing Nothing
               , siRet      = Nothing
               }
       Q.unitQE defaultTxErrorHandler (Q.fromText insertScheduledEventsSql) () False
   where
-    toArr (ScheduledEvent _ n w p t) =
-      (triggerNameToTxt n) : w : (TE.decodeUtf8 . LBS.toStrict $ J.encode p) : (pure $ formatTime' t)
+    toArr (ScheduledEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
     toTupleExp = TupleExp . map SELit
 
-generateScheduledEventsFrom :: UTCTime -> ScheduledTriggerInfo-> [ScheduledEvent]
+generateScheduledEventsFrom :: UTCTime -> ScheduledTriggerInfo-> [ScheduledEventSeed]
 generateScheduledEventsFrom time ScheduledTriggerInfo{..} =
   let events =
         case stiSchedule of
           OneOff _ -> empty -- one-off scheduled events are generated during creation
           Cron cron ->
-            generateScheduledEventsBetween
+            generateSchedulesBetween
               time
               (addUTCTime nominalDay time)
               cron
-      webhook = wciCachedValue stiWebhookInfo
-   in map
-      (ScheduledEvent Nothing stiName webhook (fromMaybe J.Null stiPayload))
-      events
+   in map (ScheduledEventSeed stiName) events
 
 -- generates events (from, till] according to CronSchedule
-generateScheduledEventsBetween :: UTCTime -> UTCTime -> CronSchedule -> [UTCTime]
-generateScheduledEventsBetween from till cron = takeWhile ((>=) till) $ go from
+generateSchedulesBetween :: UTCTime -> UTCTime -> CronSchedule -> [UTCTime]
+generateSchedulesBetween from till cron = takeWhile ((>=) till) $ go from
   where
     go init =
       case nextMatch cron init of
@@ -145,13 +169,17 @@ processScheduledQueue logger pgpool httpMgr scRef =
       runExceptT $
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getScheduledEvents
     case scheduledEventsE of
-      Right events ->
+      Right partialEvents ->
         sequence_ $
-        flip map events $ \ev -> do
-          let st' = Map.lookup (seName ev) scheduledTriggersInfo
-          case st' of
+        flip map partialEvents $ \(ScheduledEvent id' name st _ _) -> do
+          let sti' = Map.lookup name scheduledTriggersInfo
+          case sti' of
             Nothing -> traceM "ERROR: couldn't find scheduled trigger in cache"
-            Just st -> runReaderT (processScheduledEvent pgpool httpMgr st ev) logger
+            Just sti -> do
+              let webhook = wciCachedValue $ stiWebhookInfo sti
+                  payload = fromMaybe J.Null $ stiPayload sti
+                  se = ScheduledEvent id' name st webhook payload
+              runReaderT (processScheduledEvent pgpool httpMgr sti se) logger
       Left err -> traceShowM err
     threadDelay (10 * oneSecond)
 
@@ -160,21 +188,20 @@ processScheduledEvent ::
   => Q.PGPool
   -> HTTP.Manager
   -> ScheduledTriggerInfo
-  -> ScheduledEvent
+  -> ScheduledEvent 'SE_FULL
   -> m ()
 processScheduledEvent pgpool httpMgr ScheduledTriggerInfo {..} se@ScheduledEvent {..} = do
   currentTime <- liftIO getCurrentTime
   if diffUTCTime currentTime seScheduledTime > rcstTolerance stiRetryConf
     then processDead'
     else do
-      let webhook = wciCachedValue stiWebhookInfo
-          timeoutSeconds = rcstTimeoutSec stiRetryConf
+      let timeoutSeconds = rcstTimeoutSec stiRetryConf
           responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
           headers = map encodeHeader stiHeaders
           headers' = addDefaultHeaders headers
       res <-
         runExceptT $
-        tryWebhook httpMgr responseTimeout headers' sePayload webhook
+        tryWebhook httpMgr responseTimeout headers' sePayload seWebhook
     -- let decodedHeaders = map (decodeHeader logenv headerInfos) headers
       finally <- either (processError pgpool se) (processSuccess pgpool se) res
       either logQErr return finally
@@ -211,7 +238,7 @@ tryWebhook httpMgr timeout headers payload webhook = do
       eitherResp <- runHTTP httpMgr req Nothing
       onLeft eitherResp throwError
 
-processError :: (MonadIO m) => Q.PGPool -> ScheduledEvent -> HTTPErr -> m (Either QErr ())
+processError :: (MonadIO m) => Q.PGPool -> ScheduledEvent 'SE_FULL -> HTTPErr -> m (Either QErr ())
 processError pgpool se err = do
   let decodedHeaders = []
       invocation = case err of
@@ -244,7 +271,7 @@ processError pgpool se err = do
         WHERE id = $1
       |] (Identity $ seId se) True
 
-processSuccess :: (MonadIO m) => Q.PGPool -> ScheduledEvent -> HTTPResp -> m (Either QErr ())
+processSuccess :: (MonadIO m) => Q.PGPool -> ScheduledEvent 'SE_FULL -> HTTPResp -> m (Either QErr ())
 processSuccess pgpool se resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
@@ -266,7 +293,7 @@ processSuccess pgpool se resp = do
         WHERE id = $1
       |] (Identity $ seId se) True
 
-processDead :: (MonadIO m) => Q.PGPool -> ScheduledEvent -> m (Either QErr ())
+processDead :: (MonadIO m) => Q.PGPool -> ScheduledEvent 'SE_FULL -> m (Either QErr ())
 processDead pgpool se =
   liftIO $
   runExceptT $ Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) markDead
@@ -281,7 +308,7 @@ processDead pgpool se =
         |] (Identity $ seId se) False
 
 mkInvo
-  :: ScheduledEvent -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
+  :: ScheduledEvent 'SE_FULL -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
   -> Invocation
 mkInvo se status reqHeaders respBody respHeaders
   = let resp = if isClientError status
@@ -289,7 +316,7 @@ mkInvo se status reqHeaders respBody respHeaders
           else mkResp status respBody respHeaders
     in
       Invocation
-      (fromMaybe "unknown" $ seId se) -- WARN: should never happen?
+      (seId se)
       status
       (mkWebhookReq (J.toJSON se) reqHeaders invocationVersion)
       resp
@@ -310,9 +337,9 @@ insertInvocation invo = do
           WHERE id = $1
           |] (Identity $ iEventId invo) True
 
-getScheduledEvents :: Q.TxE QErr [ScheduledEvent]
+getScheduledEvents :: Q.TxE QErr [ScheduledEvent 'SE_PARTIAL]
 getScheduledEvents = do
-  allSchedules <- map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
+  partialSchedules <- map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.hdb_scheduled_events
       SET locked = 't'
       WHERE id IN ( SELECT t.id
@@ -325,14 +352,7 @@ getScheduledEvents = do
                           )
                     FOR UPDATE SKIP LOCKED
                     )
-      RETURNING id, name, webhook, payload, scheduled_time
+      RETURNING id, name, scheduled_time
       |] () True
-  pure $ allSchedules
-  where uncurryEvent (i, n, w, Q.AltJ p, st) =
-          ScheduledEvent
-          { seId      = i
-          , seName    = n
-          , seWebhook = w
-          , sePayload = p
-          , seScheduledTime = st
-          }
+  pure $ partialSchedules
+  where uncurryEvent (i, n, st) = ScheduledEvent i n st () ()
