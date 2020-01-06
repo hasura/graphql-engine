@@ -79,7 +79,7 @@ const routes = store => {
     connect,
     store,
     composeOnEnterHooks,
-    {}
+    () => {}
   );
   const requireSchema = _dataRouterUtils.requireSchema;
   const dataRouter = _dataRouterUtils.makeDataRouter;

@@ -137,7 +137,7 @@ const dataRouterUtils = (
   connect,
   store,
   composeOnEnterHooks,
-  { allowedSchemas }
+  getAllowedSchemas
 ) => {
   const requireSchema = (nextState, replaceState, cb) => {
     // check if admin secret is available in localstorage. if so use that.
@@ -153,6 +153,8 @@ const dataRouterUtils = (
       cb();
       return;
     }
+
+    const { allowedSchemas } = getAllowedSchemas();
 
     let currentSchema = nextState.params.schema;
     if (
