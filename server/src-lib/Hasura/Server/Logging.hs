@@ -24,7 +24,6 @@ import           Data.Bits                 (shift, (.&.))
 import           Data.ByteString.Char8     (ByteString)
 import           Data.Int                  (Int64)
 import           Data.List                 (find)
-import           Data.Time.Clock
 import           Data.Word                 (Word32)
 import           Network.Socket            (SockAddr (..))
 import           System.ByteOrder          (ByteOrder (..), byteOrder)
@@ -222,7 +221,7 @@ mkHttpAccessLogContext
   -> Maybe CompressionType
   -> [HTTP.Header]
   -> HttpLogContext
-mkHttpAccessLogContext userInfoM reqId req res mTimeT compressTypeM headers =
+mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = status
              , hlMethod      = bsToTxt $ Wai.requestMethod req
@@ -246,7 +245,6 @@ mkHttpAccessLogContext userInfoM reqId req res mTimeT compressTypeM headers =
   where
     status = HTTP.status200
     respSize = Just $ BL.length res
-    respTime = computeTimeDiff mTimeT
 
 mkHttpErrorLogContext
   :: Maybe UserInfo
@@ -259,7 +257,7 @@ mkHttpErrorLogContext
   -> Maybe CompressionType
   -> [HTTP.Header]
   -> HttpLogContext
-mkHttpErrorLogContext userInfoM reqId req err query mTimeT compressTypeM headers =
+mkHttpErrorLogContext userInfoM reqId req err query mTiming compressTypeM headers =
   let http = HttpInfoLog
              { hlStatus      = qeStatus err
              , hlMethod      = bsToTxt $ Wai.requestMethod req
@@ -296,9 +294,6 @@ mkHttpLog httpLogCtx =
   let isError = isJust $ olError $ hlcOperation httpLogCtx
       logLevel = bool LevelInfo LevelError isError
   in HttpLogLine logLevel httpLogCtx
-
-computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
-computeTimeDiff = fmap (realToFrac . uncurry (flip diffUTCTime))
 
 getSourceFromSocket :: Wai.Request -> ByteString
 getSourceFromSocket = BS.pack . showSockAddr . Wai.remoteHost
