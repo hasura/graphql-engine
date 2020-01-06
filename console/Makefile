@@ -1,6 +1,6 @@
 export PATH := node_modules/.bin:$(PATH)
 DIST_PATH ?= ./static/dist
-BUCKET_NAME ?= hasura-graphql-engine
+BUCKET_NAME ?= graphql-engine-cdn.hasura.io
 VERSION ?= $(shell ../scripts/get-version.sh)
 
 all: deps build gzip-assets gcloud-cp-stable gcloud-set-metadata
