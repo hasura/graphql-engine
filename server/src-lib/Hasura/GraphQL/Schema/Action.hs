@@ -73,6 +73,7 @@ mkMutationField actionName actionInfo permission definitionList =
   -- TODO: only covers object types
           (ExecOnPostgres definitionList)
           (_adHandler definition)
+          (fromMaybe False $ _adForwardClientHeaders definition)
         ActionAsynchronous -> ActionExecutionAsync $ _apiFilter permission
 
     -- TODO: we need to capture the comment from action definition

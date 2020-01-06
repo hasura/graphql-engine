@@ -47,7 +47,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
-import           Hasura.Server.Utils                    (RequestId, filterRequestHeaders)
+import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -185,10 +185,11 @@ getResolvedExecPlan
   -> SchemaCache
   -> SchemaCacheVer
   -> HTTP.Manager
+  -> [N.Header]
   -> GQLReqUnparsed
   -> m ExecPlanResolved
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  enableAL sc scVer httpManager reqUnparsed = do
+  enableAL sc scVer httpManager reqHeaders reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
   let usrVars = userVars userInfo
@@ -213,7 +214,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
           VQ.RMutation selSet ->
-            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo httpManager selSet
+            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
           VQ.RQuery selSet -> do
             (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability selSet
             traverse_ (addPlanToCache . EP.RPQuery) plan
@@ -278,6 +279,7 @@ resolveMutSelSet
      , Has SQLGenCtx r
      , Has InsCtxMap r
      , Has HTTP.Manager r
+     , Has [N.Header] r
      , MonadIO m
      )
   => VQ.SelSet
@@ -307,16 +309,17 @@ getMutOp
   -> SQLGenCtx
   -> UserInfo
   -> HTTP.Manager
+  -> [N.Header]
   -> VQ.SelSet
   -> m LazyRespTx
-getMutOp ctx sqlGenCtx userInfo manager selSet =
+getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
   runE_ $ resolveMutSelSet selSet
   where
     runE_ action = do
       res <- runExceptT $ runReaderT action
         ( userInfo, queryCtxMap, mutationCtxMap
         , typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx
-        , manager
+        , manager, reqHeaders
         )
       either throwError return res
       where
@@ -386,12 +389,11 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
     throw400 NotSupported "subscription to remote server is not supported"
   hdrs <- getHeadersFromConf hdrConf
   let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
-      clientHdrs = bool [] filteredHeaders fwdClientHdrs
+      clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
       -- filter out duplicate headers
-      -- priority: conf headers > resolved userinfo vars > x-forwarded headers > client headers
+      -- priority: conf headers > resolved userinfo vars > client headers
       hdrMaps    = [ Map.fromList confHdrs
                    , Map.fromList userInfoToHdrs
-                   , Map.fromList xForwardedHeaders
                    , Map.fromList clientHdrs
                    ]
       headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
@@ -421,18 +423,6 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                      userInfoToList userInfo
-    filteredHeaders = filterUserVars $ filterRequestHeaders reqHdrs
-
-    xForwardedHeaders = flip mapMaybe reqHdrs $ \(hdrName, hdrValue) ->
-      case hdrName of
-        "Host"       -> Just ("X-Forwarded-Host", hdrValue)
-        "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
-        _            -> Nothing
-
-    filterUserVars hdrs =
-      let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
-      in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-         filter (not . isUserVar . fst) txHdrs
 
     getCookieHdr = fmap (\h -> ("Set-Cookie", h))
 

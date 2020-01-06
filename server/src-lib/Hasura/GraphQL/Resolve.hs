@@ -22,6 +22,7 @@ import qualified Data.HashMap.Strict               as Map
 import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
 import qualified Network.HTTP.Client               as HTTP
+import qualified Network.HTTP.Types                as HTTP
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.Prelude
@@ -131,6 +132,7 @@ mutFldToTx
      , Has SQLGenCtx r
      , Has InsCtxMap r
      , Has HTTP.Manager r
+     , Has [HTTP.Header] r
      , MonadIO m
      )
   => V.Field

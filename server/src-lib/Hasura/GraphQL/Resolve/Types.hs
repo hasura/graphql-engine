@@ -104,8 +104,9 @@ data SyncReturnStrategy
 
 data SyncActionExecutionContext
   = SyncActionExecutionContext
-  { _saecStrategy :: !SyncReturnStrategy
-  , _saecWebhook  :: !ResolvedWebhook
+  { _saecStrategy             :: !SyncReturnStrategy
+  , _saecWebhook              :: !ResolvedWebhook
+  , _saecForwardClientHeaders :: !Bool
   } deriving (Show, Eq)
 
 data ActionExecutionContext

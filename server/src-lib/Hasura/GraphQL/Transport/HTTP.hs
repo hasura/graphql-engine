@@ -30,7 +30,7 @@ runGQ
 runGQ reqId userInfo reqHdrs req = do
   E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
   execPlan <- E.getResolvedExecPlan pgExecCtx planCache
-              userInfo sqlGenCtx enableAL sc scVer httpManager req
+              userInfo sqlGenCtx enableAL sc scVer httpManager reqHdrs req
   case execPlan of
     E.GExPHasura resolvedOp ->
       flip HttpResponse Nothing <$> runHasuraGQ reqId req userInfo resolvedOp
@@ -55,12 +55,12 @@ runGQBatched reqId userInfo reqHdrs reqs =
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
       -- in this case, and don't forward any.
-      let removeHeaders = 
-            flip HttpResponse Nothing 
-            . encJFromList 
+      let removeHeaders =
+            flip HttpResponse Nothing
+            . encJFromList
             . map (either (encJFromJValue . encodeGQErr False) _hrBody)
           try = flip catchError (pure . Left) . fmap Right
-      fmap removeHeaders $ 
+      fmap removeHeaders $
         traverse (try . runGQ reqId userInfo reqHdrs) batch
 
 runHasuraGQ

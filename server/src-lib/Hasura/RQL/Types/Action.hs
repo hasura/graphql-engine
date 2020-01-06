@@ -81,10 +81,11 @@ $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ArgumentDefinition)
 
 data ActionDefinition a
   = ActionDefinition
-  { _adArguments  :: ![ArgumentDefinition]
-  , _adOutputType :: !GraphQLType
-  , _adKind       :: !(Maybe ActionKind)
-  , _adHandler    :: !a
+  { _adArguments            :: ![ArgumentDefinition]
+  , _adOutputType           :: !GraphQLType
+  , _adKind                 :: !(Maybe ActionKind)
+  , _adForwardClientHeaders :: !(Maybe Bool)
+  , _adHandler              :: !a
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionDefinition)
 

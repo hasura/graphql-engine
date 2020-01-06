@@ -25,6 +25,7 @@ CREATE TABLE hdb_catalog.hdb_action_log
   -- after dropping the action
   action_name TEXT,
   input_payload JSONB NOT NULL,
+  request_headers JSONB NOT NULL,
   session_variables JSONB NOT NULL,
   response_payload JSONB NULL,
   errors JSONB NULL,

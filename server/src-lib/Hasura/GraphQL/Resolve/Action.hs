@@ -22,12 +22,14 @@ import qualified Control.Concurrent.Async          as A
 import qualified Data.Aeson                        as J
 import qualified Data.Aeson.Casing                 as J
 import qualified Data.Aeson.TH                     as J
+import qualified Data.CaseInsensitive              as CI
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Text                         as T
 import qualified Data.UUID                         as UUID
 import qualified Database.PG.Query                 as Q
 import qualified Language.GraphQL.Draft.Syntax     as G
 import qualified Network.HTTP.Client               as HTTP
+import qualified Network.HTTP.Types                as HTTP
 import qualified Network.Wreq                      as Wreq
 
 import qualified Hasura.GraphQL.Resolve.Select     as GRS
@@ -43,6 +45,7 @@ import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils               (mkClientHeadersForward)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
                                                     toTxtValue)
@@ -245,6 +248,7 @@ resolveActionInsertSync
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has HTTP.Manager r
+     , Has [HTTP.Header] r
      )
   => Field
   -> SyncActionExecutionContext
@@ -254,7 +258,8 @@ resolveActionInsertSync field executionContext sessionVariables = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       handlerPayload = ActionWebhookPayload sessionVariables inputArgs
   manager <- asks getter
-  webhookRes <- callWebhook manager resolvedWebhook handlerPayload
+  reqHeaders <- asks getter
+  webhookRes <- callWebhook manager reqHeaders forwardClientHeaders resolvedWebhook handlerPayload
   case returnStrategy of
     ReturnJson -> return $ return $ encJFromJValue webhookRes
     ExecOnPostgres definitionList -> do
@@ -267,8 +272,7 @@ resolveActionInsertSync field executionContext sessionVariables = do
       astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
       return $ asSingleRowJsonResp (RS.selectQuerySQL True astResolved) []
   where
-    resolvedWebhook = _saecWebhook executionContext
-    returnStrategy = _saecStrategy executionContext
+    SyncActionExecutionContext returnStrategy resolvedWebhook forwardClientHeaders = executionContext
 
     mkJsonToRecordFromExpression definitionList webhookResponseExpression =
       let functionName = QualifiedObject (SchemaName "pg_catalog") $
@@ -281,9 +285,15 @@ resolveActionInsertSync field executionContext sessionVariables = do
 
 callWebhook
   :: (MonadIO m, MonadError QErr m)
-  => HTTP.Manager -> ResolvedWebhook -> ActionWebhookPayload -> m J.Value
-callWebhook manager resolvedWebhook actionWebhookPayload = do
-  let options = wreqOptions manager [contentType]
+  => HTTP.Manager
+  -> [HTTP.Header]
+  -> Bool
+  -> ResolvedWebhook
+  -> ActionWebhookPayload
+  -> m J.Value
+callWebhook manager reqHeaders forwardClientHeaders resolvedWebhook actionWebhookPayload = do
+  let options = wreqOptions manager (contentType:clientHeaders)
+      clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
       contentType = ("Content-Type", "application/json")
       postPayload = J.toJSON actionWebhookPayload
       url = (T.unpack $ unResolvedWebhook resolvedWebhook)
@@ -320,6 +330,7 @@ data ActionLogItem
   = ActionLogItem
   { _aliId               :: !UUID.UUID
   , _aliActionName       :: !ActionName
+  , _aliRequestHeaders   :: ![HTTP.Header]
   , _aliSessionVariables :: !UserVars
   , _aliInputPayload     :: !J.Value
   } deriving (Show, Eq)
@@ -335,8 +346,8 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
   A.mapConcurrently_ (callHandler actionCache) asyncInvocations
   threadDelay (1 * 1000 * 1000)
   where
-    getActionWebhook actionCache actionName =
-      _adHandler . _aiDefinition <$> Map.lookup actionName actionCache
+    getActionDefinition actionCache actionName =
+      _aiDefinition <$> Map.lookup actionName actionCache
 
     runTx :: (Monoid a) => Q.TxE QErr a -> IO a
     runTx q = do
@@ -345,12 +356,14 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
 
     callHandler :: ActionCache -> ActionLogItem -> IO ()
     callHandler actionCache actionLogItem = do
-      let ActionLogItem actionId actionName
+      let ActionLogItem actionId actionName reqHeaders
             sessionVariables inputPayload = actionLogItem
-      case getActionWebhook actionCache actionName of
+      case getActionDefinition actionCache actionName of
         Nothing -> return ()
-        Just webhookUrl -> do
-          res <- runExceptT $ callWebhook httpManager webhookUrl $
+        Just definition -> do
+          let webhookUrl = _adHandler definition
+              forwardClientHeaders = fromMaybe False $ _adForwardClientHeaders definition
+          res <- runExceptT $ callWebhook httpManager reqHeaders forwardClientHeaders webhookUrl $
             ActionWebhookPayload sessionVariables inputPayload
           case res of
             Left e                -> setError actionId e
@@ -394,12 +407,14 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
             for update skip locked limit 10
           )
         returning
-          id, action_name, session_variables::json, input_payload::json
+          id, action_name, request_headers::json, session_variables::json, input_payload::json
       |] () False
      where
-       mapEvent (actionId, actionName,
+       mapEvent (actionId, actionName, Q.AltJ headersMap,
                  Q.AltJ sessionVariables, Q.AltJ inputPayload) =
-         ActionLogItem actionId actionName sessionVariables inputPayload
+         ActionLogItem actionId actionName (fromHeadersMap headersMap) sessionVariables inputPayload
+
+       fromHeadersMap = map ((CI.mk . txtToBs) *** txtToBs) . Map.toList
 
     getUndeliveredEvents = runTx undeliveredEventsQuery
 
@@ -426,6 +441,7 @@ resolveActionInsert
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has HTTP.Manager r
+     , Has [HTTP.Header] r
      )
   => Field
   -> ActionExecutionContext
@@ -441,7 +457,7 @@ resolveActionInsert field executionContext sessionVariables =
 
 resolveActionInsertAsync
   :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r
+     , Has OrdByCtx r, Has SQLGenCtx r, Has [HTTP.Header] r
      )
   => Field
   -> AnnBoolExpPartialSQL
@@ -451,6 +467,7 @@ resolveActionInsertAsync
 resolveActionInsertAsync field actionFilter sessionVariables = do
 
   responseSelectionSet <- resolveResponseSelectionSet (_fType field) $ _fSelSet field
+  reqHeaders <- asks getter
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
 
   -- resolvedPresetFields <- resolvePresetFields
@@ -466,18 +483,19 @@ resolveActionInsertAsync field actionFilter sessionVariables = do
     actionId <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
       INSERT INTO
           "hdb_catalog"."hdb_action_log"
-          ("action_name", "session_variables", "input_payload", "status")
+          ("action_name", "session_variables", "request_headers", "input_payload", "status")
       VALUES
-          ($1, $2, $3, $4)
+          ($1, $2, $3, $4, $5)
       RETURNING "id"
               |]
-      (actionName, Q.AltJ sessionVariables, Q.AltJ inputArgs, "created"::Text) False
+      (actionName, Q.AltJ sessionVariables, Q.AltJ $ toHeadersMap reqHeaders, Q.AltJ inputArgs, "created"::Text) False
 
     actionSelectToTx $
       ActionSelect (S.SELit $ UUID.toText actionId)
       responseSelectionSet resolvedFilter
   where
     actionName = G.unName $ _fName field
+    toHeadersMap = Map.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
 
     -- resolveFilter =
     --   flip traverseAnnBoolExp (_aiocSelectFilter insertContext) $ \case
