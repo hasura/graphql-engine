@@ -215,7 +215,6 @@ makeReasonMessage errors showError =
     _ -> "for the following reasons:\n" <> T.unlines
          (map (("  • " <>) . showError) errors)
 
--- A wrapper for elasped time measuring
 withElapsedTime :: MonadIO m => m a -> m (NominalDiffTime, a)
 withElapsedTime ma = do
   t1 <- liftIO getCurrentTime
