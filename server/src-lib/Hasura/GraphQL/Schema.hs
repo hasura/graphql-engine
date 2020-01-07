@@ -847,10 +847,11 @@ mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =
         then Set.union (Set.fromList [PGColumnScalar PGGeometry, PGColumnScalar PGGeography]) colTys
         else colTys
 
-    additionalScalars =
-      Set.fromList
+    additionalScalars = Set.fromList $
         -- raster comparison expression needs geometry input
       (guard anyRasterTypes *> pure PGGeometry)
+        -- scalar computed field return types
+      <> mapMaybe (^? _RFComputedField.cfType._CFTScalar) (Map.elems fldInfos)
 
     allScalarTypes = (allComparableTypes ^.. folded._PGColumnScalar)
                      <> additionalScalars <> scalars
