@@ -102,9 +102,9 @@ instance L.ToEngineLog WSLog L.Hasura where
 data WSQueueResponse
   = WSQueueResponse
   { _wsqrMessage   :: !BL.ByteString
-  -- extra metadata that we use for other actions, such as print log
-  -- we don't want to inlcude them into websocket message payload
   , _wsqrEventInfo :: !(Maybe WSEventInfo)
+  -- ^ extra metadata that we use for other actions, such as print log
+  -- we don't want to inlcude them into websocket message payload
   }
 
 data WSConn a
