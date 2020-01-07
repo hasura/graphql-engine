@@ -68,13 +68,12 @@ data Subscriber
   , _sOnChangeCallback :: !OnChange
   }
 
--- live query onChange metadata, used for adding more extra analytics data
+-- | live query onChange metadata, used for adding more extra analytics data
 data LiveQueryMetadata
   = LiveQueryMetadata
   { _lqmExecutionTime :: !Clock.NominalDiffTime
   }
 
--- live query response data
 data LiveQueryResponse
   = LiveQueryResponse
   { _lqrPayload       :: !BL.ByteString
