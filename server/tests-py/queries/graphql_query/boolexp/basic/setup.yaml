@@ -275,3 +275,172 @@ args:
           _where:
             id: X-Hasura-User-Id
             is_admin: true
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TYPE complex AS (
+          r       double precision,
+          i       double precision
+      );
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TYPE inventory_item AS (
+          name            text,
+          supplier_id     integer,
+          price           numeric
+      );
+
+#Test table with different types
+- type: run_sql
+  args:
+    sql: |
+      create table test_types (
+          c1_smallint smallint,
+          c2_integer integer,
+          c3_bigint bigint,
+          c4_decimal decimal (5, 2),
+          c5_numeric numeric (4, 3),
+          c6_real real,
+          c7_double_precision double precision,
+          c8_smallserial smallserial,
+          c9_serial serial,
+          c10_bigserial bigserial,
+          c11_varchar_3 varchar(3),
+          c12_char_4 char(4),
+          c13_text text,
+          c14_timestamp timestamp,
+          c15_timestamptz timestamptz,
+          c16_date date,
+          c17_time time,
+          c18_time_with_zone time with time zone,
+          c19_interval interval,
+          c20_boolean boolean,
+          c21_point point,
+          c22_line line,
+          c23_lseg lseg,
+          c24_box box,
+          c25_closed_path path,
+          c26_open_path path,
+          c27_polygon  polygon,
+          c28_circle circle,
+          c29_cidr cidr,
+          c30_inet inet,
+          c31_macaddr macaddr,
+          c32_json json,
+          c33_jsonb jsonb,
+          c34_text_array text[],
+          c35_integer_2d_array integer[][],
+          c36_uuid uuid,
+          c37_composite_type_complex complex,
+          c38_composite_type_inventory inventory_item,
+          c39_range_integer int4range,
+          c40_range_bigint int8range,
+          c41_range_numeric numrange,
+          c42_range_timestamp tsrange,
+          c43_range_timestamptz tstzrange,
+          c44_xml xml
+      );
+
+# Here we have two set of insert queries for test_types table
+# In each inserted row, only one of the non-auto increment columns will be non-null
+# All the entries in first insert < corresponding entries in the second insert,
+# so that comparison tests can be made
+- type: track_table
+  args:
+    schema: public
+    name: test_types
+
+- type: insert
+  args:
+    table:
+      schema: public
+      name: test_types
+    objects:
+      - c1_smallint: 32766
+      - c2_integer: 2147483645
+      - c3_bigint: "9223372036854775806"
+      - c4_decimal: '234.54'
+      - c5_numeric: '3.456'
+      - c6_real: 1.456
+      - c7_double_precision: '1.23456'
+      - c11_varchar_3: "abc"
+      - c12_char_4: "abcd"
+      - c13_text: "abc def"
+      - c14_timestamp: "2004-10-19T10:23:54"
+      - c15_timestamptz: "2015-10-17T14:42:43+00:00"
+      - c16_date: "2014-09-14"
+      - c17_time: "11:09:23"
+      - c18_time_with_zone: "15:22:23+00"
+      - c19_interval: "01:03:02"
+      - c20_boolean: false
+      - c21_point: "(1,2)"
+      - c22_line: "{2,3,-1}"
+      - c23_lseg: "[(4,2),(3,1)]"
+      - c24_box: "(31,15),(14,11)"
+      - c25_closed_path: "((0,0),(0,3),(1,0))"
+      - c26_open_path: "[(0,0),(0,-1),(-3,0)]"
+      - c27_polygon: "((0,0),(0,6),(2,0))"
+      - c28_circle: "<(-2,-3),3>"
+      - c29_cidr: "192.168.100.0/25"
+      - c30_inet: "198.24.10.0"
+      - c31_macaddr: "08:00:2b:01:02:03"
+      - c32_json:
+          a: b
+      - c33_jsonb:
+          c: d
+      - c36_uuid: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+      - c39_range_integer: "[123,456)"
+      - c40_range_bigint: "[1147483647,2147483647)"
+      - c41_range_numeric: "[1.23,4.56]"
+      - c42_range_timestamp: "[\"2010-01-01 14:30:00\",\"2010-01-01 15:30:02\")"
+      - c43_range_timestamptz: "(\"2011-02-05 12:03:00+00\",\"2012-03-04 16:40:04+00\"]"
+      - c44_xml: "<foo>bar</foo>"
+
+- type: insert
+  args:
+    table:
+      schema: public
+      name: test_types
+    objects:
+      - c1_smallint: 32767
+      - c2_integer: 2147483646
+      - c3_bigint: "9223372036854775807"
+      - c4_decimal: '345.67'
+      - c5_numeric: '4.567'
+      - c6_real: 1.567
+      - c7_double_precision: '2.345567'
+      - c11_varchar_3: "def"
+      - c12_char_4: "efgh"
+      - c13_text: "efg hij"
+      - c14_timestamp: "2005-11-20T11:24:55"
+      - c15_timestamptz: "2016-11-18T15:43:44+00:00"
+      - c16_date: "2015-10-15"
+      - c17_time: "11:10:24"
+      - c18_time_with_zone: "16:23:24+00"
+      - c19_interval: "02:04:03"
+      - c20_boolean: true
+      - c21_point: "(3,4)"
+      - c22_line: "{3,4,0}"
+      - c23_lseg: "[(8,3),(6,2)]"
+      - c24_box: "(32,16),(13,10)"
+      - c25_closed_path: "((2,0),(1,3),(1,4),(2,5))"
+      - c26_open_path: "[(0,3),(-1,0),(3,-4),(2,5)]"
+      - c27_polygon: "((0,0),(0,5),(1,0))"
+      - c28_circle: "<(-3,1),4>"
+      - c29_cidr: "192.168.100.128/25"
+      - c30_inet: "198.24.11.0"
+      - c31_macaddr: "08:00:2b:01:02:04"
+      - c32_json:
+          a: {b: c}
+      - c33_jsonb:
+          c: {d: {e: f}}
+      - c36_uuid: "cee5d385-6556-4b85-adce-8153948068d1"
+      - c39_range_integer: "[345,685)"
+      - c40_range_bigint: "[2113280647,3215271517)"
+      - c41_range_numeric: "[3.21,6.54]"
+      - c42_range_timestamp: "[\"2010-01-02 15:03:01\",\"2010-01-02 15:45:03\")"
+      - c43_range_timestamptz: "(\"2014-04-05 12:05:00+00\",\"2014-04-06 16:45:04+00\"]"
+      - c44_xml: "<bar>foo</bar>"

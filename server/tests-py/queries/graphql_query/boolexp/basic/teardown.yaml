@@ -11,4 +11,7 @@ args:
       DROP TABLE uuid_test;
       DROP TABLE "user";
       DROP TABLE account;
+      DROP TABLE test_types;
+      DROP TYPE complex;
+      DROP TYPE inventory_item;
     cascade: true

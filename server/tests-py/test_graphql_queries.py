@@ -1,7 +1,26 @@
 import ruamel.yaml as yaml
+import time
 import pytest
-from validate import check_query_f
+from validate import check_query_f, check_query
 from super_classes import DefaultTestSelectQueries
+from utils import graphql_dumps
+
+def gql_test(hge_ctx, query, data, variables = {}, errors= None, transport='http'):
+    conf = {
+        'url': '/v1/graphql',
+        'query' : {
+            'query' : query
+        },
+        'status' : 200,
+        'response': {
+            'data' : data
+        }
+    }
+    if errors:
+        conf['data']['errors'] = errors
+    if variables:
+        conf['query']['variables'] = variables
+    return check_query(hge_ctx, conf, transport)
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
@@ -190,23 +209,61 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_author_article_where_not_equal(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_neq.yaml', transport)
 
+    def test_various_types_where_not_equal(self, hge_ctx, transport):
+        result_fns = (lambda x1, x2 : [x2], lambda x1, x2 : [x1])
+        return self.generic_various_types_test(hge_ctx, transport, '_neq', 'variousTypesNotEqual', result_fns)
+
+    def test_various_types_where_equal(self, hge_ctx, transport):
+        result_fns = (lambda x1, x2 : [x1], lambda x1, x2 : [x2])
+        return self.generic_various_types_test(hge_ctx, transport, '_eq', 'variousTypesEqual', result_fns)
+
     def test_author_article_operator_ne_not_found_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_operator_ne_not_found_err.yaml', transport)
 
     def test_author_article_where_greater_than(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_gt.yaml', transport)
 
+    def test_various_types_where_greater_than(self, hge_ctx, transport):
+        result_fns = (lambda x, x_g : [x_g], lambda x, x_g : [])
+        return self.generic_various_types_test(hge_ctx, transport, '_gt', 'variousTypesGreaterThan', result_fns)
+
     def test_author_article_where_greater_than_or_equal(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_gte.yaml', transport)
+
+    def test_various_types_where_greater_than_or_equal(self, hge_ctx, transport):
+        result_fns = (lambda x, x_g : [x, x_g], lambda x, x_g : [x_g])
+        return self.generic_various_types_test(hge_ctx, transport, '_gte', 'variousTypesGreaterThan', result_fns)
 
     def test_author_article_where_less_than(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_lt.yaml', transport)
 
+    def test_various_types_where_less_than(self, hge_ctx, transport):
+        result_fns = (lambda x, x_g : [], lambda x, x_g : [x])
+        return self.generic_various_types_test(hge_ctx, transport, '_lt', 'variousTypesLessThan', result_fns)
+
     def test_author_article_where_less_than_or_equal(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_lte.yaml', transport)
 
+    def test_various_types_where_less_than_or_equal(self, hge_ctx, transport):
+        result_fns = (lambda x, x_g : [x], lambda x, x_g : [x, x_g])
+        return self.generic_various_types_test(hge_ctx, transport, '_lte', 'variousTypesLessThanOrEqual', result_fns)
+
     def test_author_article_where_in(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in.yaml', transport)
+
+    def test_various_types_where_not_null(self, hge_ctx, transport):
+        ins_vals = self.get_test_types_inserts()
+        query = ' query variousTypesNonNull {\n'
+        exp_data = dict()
+        for k in ins_vals[0]:
+            query += '''  %s_non_null: test_types(where: { %s: {_is_null: false} }, order_by: {c8_smallserial: asc}) {
+                %s
+              }''' % (k,k,k)
+            vals =[row[k] for row in ins_vals]
+            exp_data[k + '_non_null'] = [{k: val} for val in vals]
+        query += '}'
+        print(query)
+        gql_test(hge_ctx, query, exp_data)
 
     def test_author_article_where_in_empty_array(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_in_empty_array.yaml', transport)
@@ -247,10 +304,68 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_query_account_permission_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_account_permission_fail.yaml', transport)
 
+    # For each non-auto-incrementing column, we have two non-null value inserts (where the value in the first insert < that in second)
+    # A GraphQL top-level field each is made for the non-null inserts, with the non-null value as the input for comparison.
+    # The corresponding result functions take as input the list of non-null values of the columns,
+    # and returns what the expected filtered list will be for each of the above top-level fields for the given comparison operator.
+    def generic_various_types_test(self, hge_ctx, transport, oper, query_name, res_fns):
+        def exclude_list():
+            if oper == '_neq':
+                # These columns types does not have <> operator
+                return ['c22_line', 'c24_box', 'c25_closed_path', 'c26_open_path','c27_polygon', 'c32_json', 'c44_xml']
+            elif oper == '_eq':
+                # These columns types does not have = operator
+                return ['c21_point', 'c27_polygon', 'c32_json', 'c44_xml']
+            else:
+                # These columns types lack operators > >= < <=
+                return ['c21_point', 'c22_line', 'c27_polygon', 'c32_json', 'c44_xml']
+
+        ins_vals = self.get_test_types_inserts()
+        # Not all data types accept the given comparison operator.
+        to_check_cols = [ k for k in ins_vals[0].keys() if k not in exclude_list() ]
+        def gen_query():
+            query = 'query %s {\n' % (query_name,)
+            for col in to_check_cols:
+                col_vals =[row[col] for row in ins_vals]
+                for (idx, val) in enumerate(col_vals):
+                    query += '''  %s%s_val_%d: test_types(where: { %s: {%s: %s} }) {
+                            %s
+                    }''' % (col, oper, idx, col, oper, graphql_dumps(val), col)
+            query += '}'
+            print(query)
+            return query
+        def gen_exp_resp():
+            res_data = dict()
+            for col in to_check_cols:
+                col_vals =[row[col] for row in ins_vals]
+                for (idx, res_fn) in enumerate(res_fns):
+                    res_data[col + oper + '_val_' + str(idx)] = [ {col: v} for v in res_fn(*col_vals) ]
+            return res_data
+        gql_test(hge_ctx, gen_query(), gen_exp_resp(), transport=transport)
+
+    # In each row in the insert query, only one non-auto-increment column has non-null value
+    # The inserted rows are converted into list of maps of column vs non-null value inserted in that particular query
+    def get_test_types_inserts(self):
+        test_types_table = {'schema' : 'public', 'name' : 'test_types'}
+        with open(self.dir() + '/setup.yaml') as f:
+            test_conf = yaml.load(f)
+        ins_objects = [ x['args']['objects']
+            for x in test_conf['args']
+            if  x['type'] == 'insert'
+            and x['args']['table'] == test_types_table
+        ]
+        row_values = []
+        for i, ins_objs in enumerate(ins_objects):
+            row_values.append(dict())
+            for val in ins_objs:
+                row_values[i].update(val)
+        print(row_values)
+        return row_values
+
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'
-
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlQueryPermissions(DefaultTestSelectQueries):
