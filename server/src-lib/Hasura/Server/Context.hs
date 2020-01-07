@@ -17,4 +17,4 @@ data HttpResponse a
   = HttpResponse
   { _hrBody    :: !a
   , _hrHeaders :: !(Maybe Headers)
-  }
+  } deriving (Functor, Foldable, Traversable)

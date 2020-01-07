@@ -60,11 +60,6 @@ import {
   getTableModifyRoute,
 } from '../../../Common/utils/routesUtils';
 
-import {
-  checkFeatureSupport,
-  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
-} from '../../../../helpers/versionUtils';
-
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';
 
@@ -1623,42 +1618,46 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
         : [];
 
     /* column custom field up/down migration*/
-    if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
-      const existingCustomColumnNames = getTableCustomColumnNames(table);
-      const existingRootFields = getTableCustomRootFields(table);
-      const newCustomColumnNames = { ...existingCustomColumnNames };
-      let isCustomFieldNameChanged = false;
-      if (customFieldName) {
-        if (customFieldName !== existingCustomColumnNames[colName]) {
-          isCustomFieldNameChanged = true;
-          newCustomColumnNames[colName] = customFieldName;
-        }
-      } else {
-        if (existingCustomColumnNames[colName]) {
-          isCustomFieldNameChanged = true;
-          delete newCustomColumnNames[colName];
-        }
+    const existingCustomColumnNames = getTableCustomColumnNames(table);
+    const existingRootFields = getTableCustomRootFields(table);
+    const newCustomColumnNames = { ...existingCustomColumnNames };
+    let isCustomFieldNameChanged = false;
+    if (customFieldName) {
+      if (customFieldName !== existingCustomColumnNames[colName]) {
+        isCustomFieldNameChanged = true;
+        newCustomColumnNames[colName] = customFieldName.trim();
       }
-      if (isCustomFieldNameChanged) {
-        schemaChangesUp.push(
-          getSetCustomRootFieldsQuery(
-            tableDef,
-            existingRootFields,
-            newCustomColumnNames
-          )
-        );
-        schemaChangesDown.push(
-          getSetCustomRootFieldsQuery(
-            tableDef,
-            existingRootFields,
-            existingCustomColumnNames
-          )
-        );
+    } else {
+      if (existingCustomColumnNames[colName]) {
+        isCustomFieldNameChanged = true;
+        delete newCustomColumnNames[colName];
       }
     }
+    if (isCustomFieldNameChanged) {
+      schemaChangesUp.push(
+        getSetCustomRootFieldsQuery(
+          tableDef,
+          existingRootFields,
+          newCustomColumnNames
+        )
+      );
+      schemaChangesDown.push(
+        getSetCustomRootFieldsQuery(
+          tableDef,
+          existingRootFields,
+          existingCustomColumnNames
+        )
+      );
+    }
 
-    const colDefaultWithQuotes = (colType === 'text' && !isPostgresFunction(colDefault)) ? `'${colDefault}'` : colDefault;
-    const originalColDefaultWithQuotes = (colType === 'text' && !isPostgresFunction(originalColDefault)) ? `'${originalColDefault}'` : originalColDefault;
+    const colDefaultWithQuotes =
+      colType === 'text' && !isPostgresFunction(colDefault)
+        ? `'${colDefault}'`
+        : colDefault;
+    const originalColDefaultWithQuotes =
+      colType === 'text' && !isPostgresFunction(originalColDefault)
+        ? `'${originalColDefault}'`
+        : originalColDefault;
 
     /* column default up/down migration */
     let columnDefaultUpQuery;
@@ -1701,37 +1700,37 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
 
     if (originalColDefault !== '') {
       columnDefaultDownQuery =
-          'ALTER TABLE ONLY ' +
-          '"' +
-          currentSchema +
-          '"' +
-          '.' +
-          '"' +
-          tableName +
-          '"' +
-          ' ALTER COLUMN ' +
-          '"' +
-          colName +
-          '"' +
-          ' SET DEFAULT ' +
-          originalColDefaultWithQuotes +
-          ';';
+        'ALTER TABLE ONLY ' +
+        '"' +
+        currentSchema +
+        '"' +
+        '.' +
+        '"' +
+        tableName +
+        '"' +
+        ' ALTER COLUMN ' +
+        '"' +
+        colName +
+        '"' +
+        ' SET DEFAULT ' +
+        originalColDefaultWithQuotes +
+        ';';
     } else {
       // there was no default value originally. so drop default.
       columnDefaultDownQuery =
-          'ALTER TABLE ONLY ' +
-          '"' +
-          currentSchema +
-          '"' +
-          '.' +
-          '"' +
-          tableName +
-          '"' +
-          ' ALTER COLUMN ' +
-          '"' +
-          colName +
-          '"' +
-          ' DROP DEFAULT;';
+        'ALTER TABLE ONLY ' +
+        '"' +
+        currentSchema +
+        '"' +
+        '.' +
+        '"' +
+        tableName +
+        '"' +
+        ' ALTER COLUMN ' +
+        '"' +
+        colName +
+        '"' +
+        ' DROP DEFAULT;';
     }
 
     // check if default is unchanged and then do a drop. if not skip

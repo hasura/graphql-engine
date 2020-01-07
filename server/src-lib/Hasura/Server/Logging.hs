@@ -147,6 +147,8 @@ class (Monad m) => HttpLog m where
     -- ^ request id of the request
     -> Wai.Request
     -- ^ the Wai.Request object
+    -> Maybe Value
+    -- ^ the actual request body, if present
     -> BL.ByteString
     -- ^ the response bytes
     -> BL.ByteString

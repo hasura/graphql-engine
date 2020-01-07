@@ -1,5 +1,7 @@
-Query custom SQL Functions
-==========================
+.. _custom_sql_functions:
+
+Customise schema with SQL functions
+===================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -9,8 +11,8 @@ Query custom SQL Functions
 What are custom SQL functions?
 ------------------------------
 
-Custom SQL functions are user-defined SQL functions that can be used to either encapsulate some custom business
-logic or extend the built-in SQL functions and operators.
+Custom SQL functions are `user-defined SQL functions <https://www.postgresql.org/docs/current/sql-createfunction.html>`_
+that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators.
 
 Hasura GraphQL engine lets you expose certain types of custom functions over the GraphQL API to allow querying them
 using both ``queries`` and ``subscriptions``.
@@ -43,10 +45,14 @@ Custom SQL functions can be created using SQL which can be run in the Hasura con
   create and track an empty table with the required schema to support the function before executing the above
   steps.
 
-Querying custom functions using GraphQL queries
------------------------------------------------
+Use cases
+---------
 
-Let's see how we can query custom functions using a GraphQL query as via the below examples:
+Custom functions are ideal solutions for retrieving some derived data based on some custom business logic that
+requires user input to be calculated. If your custom logic does not require any user input, you can use
+:ref:`views <custom_views>` instead.
+
+Let's see a few example use cases for custom functions:
 
 Example: Text-search functions
 ******************************
@@ -294,6 +300,9 @@ function in our GraphQL API as follows:
       }
     }
 
+Querying custom functions using GraphQL queries
+-----------------------------------------------
+
 Aggregations on custom functions
 ********************************
 
@@ -443,7 +452,7 @@ Use the ``->>`` JSON operator to fetch the value of a session variable as shown 
 Permissions for custom function queries
 ---------------------------------------
 
-Access control permissions configured for the ``SETOF`` table of a function are also applicable to the function itself.
+:doc:`Access control permissions <../auth/authorization/permission-rules>` configured for the ``SETOF`` table of a function are also applicable to the function itself.
 
 **For example**, in our text-search example above, if the role ``user`` doesn't have the requisite permissions to view
 the table ``article``, a validation error will be thrown if the ``search_articles`` query is run using the ``user``

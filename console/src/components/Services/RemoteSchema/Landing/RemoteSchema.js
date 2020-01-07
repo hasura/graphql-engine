@@ -12,7 +12,7 @@ class RemoteSchema extends React.Component {
   render() {
     const styles = require('../RemoteSchema.scss');
 
-    const { dispatch, remoteSchemaList } = this.props;
+    const { dispatch, readOnlyMode, remoteSchemaList } = this.props;
     const showIntroSection = !remoteSchemaList.remoteSchemas.length;
     const getIntroSection = () => {
       if (!showIntroSection) {
@@ -33,14 +33,16 @@ class RemoteSchema extends React.Component {
     };
 
     const getAddBtn = () => {
-      let addBtn = null;
+      if (readOnlyMode) {
+        return null;
+      }
 
       const handleClick = e => {
         e.preventDefault();
         dispatch(push(`${globals.urlPrefix}${appPrefix}/manage/add`));
       };
 
-      addBtn = (
+      return (
         <Button
           data-test="data-create-remote-schemas"
           color="yellow"
@@ -51,8 +53,6 @@ class RemoteSchema extends React.Component {
           Add
         </Button>
       );
-
-      return addBtn;
     };
 
     return (
@@ -96,6 +96,7 @@ class RemoteSchema extends React.Component {
 const mapStateToProps = state => {
   return {
     remoteSchemaList: state.remoteSchemas.listData,
+    readOnlyMode: state.main.readOnlyMode,
   };
 };
 

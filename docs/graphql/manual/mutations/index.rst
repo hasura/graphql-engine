@@ -6,6 +6,9 @@ Mutations
   :depth: 1
   :local:
 
+Introduction
+------------
+
 GraphQL mutations are used to modify data on the server (i.e. write, update or delete data).
 
 Hasura GraphQL engine auto-generates mutations as part of the GraphQL schema from your Postgres schema model.

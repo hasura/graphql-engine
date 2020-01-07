@@ -339,7 +339,7 @@ instance HttpLog AppM where
     unLogger logger $ mkHttpLog $
       mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing Nothing headers
 
-  logHttpSuccess logger userInfoM reqId httpReq _ compressedResponse qTime cType headers =
+  logHttpSuccess logger userInfoM reqId httpReq _ _ compressedResponse qTime cType headers =
     unLogger logger $ mkHttpLog $
       mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
 

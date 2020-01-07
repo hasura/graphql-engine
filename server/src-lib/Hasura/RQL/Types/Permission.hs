@@ -24,8 +24,8 @@ module Hasura.RQL.Types.Permission
        ) where
 
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
-                                             unNonEmptyText)
+import           Hasura.RQL.Types.Common    (NonEmptyText, adminText,
+                                             mkNonEmptyText, unNonEmptyText)
 import           Hasura.Server.Utils        (adminSecretHeader,
                                              deprecatedAccessKeyHeader,
                                              userRoleHeader)
@@ -45,7 +45,7 @@ import qualified PostgreSQL.Binary.Decoding as PD
 newtype RoleName
   = RoleName {getRoleTxt :: NonEmptyText}
   deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
-           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift)
+           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary)
 
 instance DQuote RoleName where
   dquoteTxt = roleNameToTxt

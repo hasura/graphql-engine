@@ -36,7 +36,7 @@ columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's 
 - Clone this repo:
   ```bash
   git clone https://github.com/hasura/graphql-engine
-  cd graphql-engine/community/sample-apps/nuxtjs-postgres-graphql
+  cd graphql-engine/community/sample-apps/quasar-framework-vue-graphql
   ```
 
 - Install node modules:

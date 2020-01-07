@@ -183,11 +183,19 @@ library
                      -- caching
                      , psqueues >= 0.2
 
+                     -- testing
+                     , QuickCheck
+                     , generic-arbitrary
+
   exposed-modules:     Control.Monad.Stateless
 
                      , Hasura.Prelude
                      , Hasura.App
                      , Hasura.Db
+                     -- Exposed for benchmark:
+                     , Hasura.Cache.Bounded
+                     , Hasura.Cache.Unbounded
+                     , Hasura.Cache
                      , Hasura.Logging
                      , Hasura.HTTP
 
@@ -205,14 +213,13 @@ library
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.DDL.Metadata
+                     , Hasura.RQL.DDL.Metadata.Types
+                     , Hasura.RQL.DDL.Metadata.Generator
                      , Hasura.EncJSON
 
-  other-modules:       Hasura.Cache
-                     , Hasura.Cache
-                     , Hasura.Cache.Bounded
-                     , Hasura.Cache.Unbounded
+                     , Data.Aeson.Ordered
 
-                     , Hasura.Server.Auth.JWT
+  other-modules:       Hasura.Server.Auth.JWT
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
@@ -363,3 +370,25 @@ test-suite graphql-engine-tests
     , optparse-applicative
     , pg-client
     , time
+    , aeson
+    , QuickCheck
+
+-- Benchmarks related to caching (e.g. the plan cache).
+--
+-- NOTE: Some of these are very slow and can only be reasonably run with `cache -n 1` for now.
+benchmark cache
+  import: common-all, common-exe
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: src-bench-cache
+  build-depends:     base
+                   , criterion
+                   , mwc-random
+                   , mwc-probability
+                   , vector
+                   , deepseq
+                   , graphql-engine
+                   , split
+                   , async
+                   , text
+                   , bytestring
