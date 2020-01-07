@@ -315,7 +315,15 @@ insertPermsCheck tn insertResult cond sw =
                               (S.SEFunction 
                                 (S.FunctionExp 
                                   (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation")) 
-                                  (S.FunctionArgs [] mempty)
+                                  (S.FunctionArgs 
+                                    [ S.SEOpApp (S.SQLOp " || ")
+                                      [ S.SELit "The record "
+                                      , S.SETyAnn (S.SERowIden insertResult) (S.TypeAnn "text")
+                                      , S.SELit " does not satisfy the check constraint."
+                                      ] 
+                                    ]
+                                    mempty
+                                  )
                                   Nothing)
                               )
                             ] Nothing)

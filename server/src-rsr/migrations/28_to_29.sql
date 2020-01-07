@@ -1,6 +1,6 @@
-CREATE OR REPLACE FUNCTION hdb_catalog.check_violation() RETURNS bool AS 
+CREATE OR REPLACE FUNCTION hdb_catalog.check_violation(msg text) RETURNS bool AS 
 $$
   BEGIN
-    RAISE check_violation USING message='insert check constraint failed';
+    RAISE check_violation USING message=msg;
   END;
 $$ LANGUAGE plpgsql;
