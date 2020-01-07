@@ -41,6 +41,7 @@ class About extends Component {
         type: 'run_sql',
         args: {
           sql: 'SELECT version();',
+          read_only: true,
         },
       }),
     })
