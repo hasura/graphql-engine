@@ -17,7 +17,6 @@ import {
   inferDefaultValues,
 } from '../Common/utils';
 
-import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 import styles from './ModifyTable.scss';
@@ -98,11 +97,12 @@ const ColumnEditorList = ({
     };
 
     const gqlCompatibilityWarning = () => {
-      return !gqlPattern.test(colName) ? (
-        <span className={styles.add_mar_left_small}>
-          <GqlCompatibilityWarning />
-        </span>
-      ) : null;
+      return (
+        <GqlCompatibilityWarning
+          identifier={colName}
+          className={styles.add_mar_left_small}
+        />
+      );
     };
 
     const keyProperties = () => {
