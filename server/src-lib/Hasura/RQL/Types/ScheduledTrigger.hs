@@ -94,7 +94,13 @@ instance FromJSON CreateScheduledTrigger where
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
 
--- aeson doesn't decode 'UTC' identifier so explicitly provide 'Z'
--- TODO: take proper timezone
+-- Supported time string formats for the API:
+-- (see FromJSON for ZonedTime: https://hackage.haskell.org/package/aeson-1.4.6.0/docs/src/Data.Aeson.Types.FromJSON.html#line-2050)
+
+-- YYYY-MM-DD HH:MM Z YYYY-MM-DD HH:MM:SS Z YYYY-MM-DD HH:MM:SS.SSS Z
+
+-- The first space may instead be a T, and the second space is optional. The Z represents UTC.
+-- The Z may be replaced with a time zone offset of the form +0000 or -08:00,
+-- where the first two digits are hours, the : is optional and the second two digits (also optional) are minutes.
 formatTime' :: UTCTime -> T.Text
 formatTime'= T.pack . formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S Z"
