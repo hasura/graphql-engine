@@ -60,7 +60,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
-	f.StringVar(&opts.Browser, "browser", "", "open user specified browser")
+	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -169,12 +169,11 @@ func (o *consoleOptions) run() error {
 
 	if !o.DontOpenBrowser {
 		if o.Browser != "" {
-			o.EC.Spin((color.CyanString("Opening console on: %s", o.Browser)))
+			o.EC.Spin(color.CyanString("Opening console on: %s", o.Browser))
 			defer o.EC.Spinner.Stop()
 			err = open.RunWith(consoleURL, o.Browser)
 			if err != nil {
-				o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url with another browser")
-				return err
+				o.EC.Logger.WithError(err).Warnf("failed opening console in '%s', try to open the url manually", o.Browser)
 			}
 		} else {
 			o.EC.Spin(color.CyanString("Opening console using default browser..."))
@@ -188,11 +187,7 @@ func (o *consoleOptions) run() error {
 	}
 
 	o.EC.Spinner.Stop()
-	if o.Browser != "" {
-		log.Infof("console running at: %s on %s", consoleURL, o.Browser)
-	} else {
-		log.Infof("console running at: %s", consoleURL)
-	}
+	log.Infof("console running at: %s", consoleURL)
 
 	o.EC.Telemetry.Beam()
 
