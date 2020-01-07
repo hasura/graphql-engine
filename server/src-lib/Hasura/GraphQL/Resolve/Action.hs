@@ -204,19 +204,23 @@ data ActionWebhookPayload
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
 
-data ActionWebhookError
-  = ActionWebhookError
-  { _aweCode    :: !(Maybe Text)
-  , _aweMessage :: !(Maybe Text)
+newtype ActionWebhookSuccess
+  = ActionWebhookSuccess {_awsData :: Maybe J.Value}
+  deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookSuccess)
+
+data ActionWebhookErrorResponse
+  = ActionWebhookErrorResponse
+  { _awerMessage :: !Text
+  , _awerCode    :: !(Maybe Text)
   } deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
+
+newtype ActionWebhookError
+  = ActionWebhookError {_aweErrors :: Maybe ActionWebhookErrorResponse}
+  deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookError)
 
-data ActionWebhookResponse
-  = ActionWebhookResponse
-  { _awrData   :: !(Maybe J.Value)
-  , _awrErrors :: !(Maybe ActionWebhookError)
-  } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookResponse)
 
 data ResolvePlan
   = ResolveReturn
@@ -315,23 +319,25 @@ callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook 
       J.toJSON e
     Right (Right responseWreq) -> do
       let responseValue = responseWreq ^. Wreq.responseBody
-      response <- decodeValue responseValue
-      case (_awrData response, _awrErrors response) of
-        (Nothing, Nothing) ->
-          throw500WithDetail "internal error" $
-          J.String "webhook response has neither 'data' nor 'errors'"
-        (Just _, Just _) ->
-          throw500WithDetail "internal error" $
-          J.String "webhook response cannot have both 'data' and 'errors'"
-        (Just d, Nothing) -> return d
-        (Nothing, Just errorResponse) -> do
-          let ActionWebhookError maybeCode maybeMessage = errorResponse
-              code = maybe Unexpected ActionWebhookCode maybeCode
-              withMessage message = err500 code message
-              noMessagekey = "\"message\" key is not found in webhook \"errors\" response"
-              withoutMessage = (err500 code noMessagekey)
-                               {qeInternal = Just $ J.object ["webhook_response" J..= responseValue]}
-          throwError $ maybe withoutMessage withMessage maybeMessage
+          responseStatus = responseWreq ^. Wreq.responseStatus
+
+      if | HTTP.statusIsSuccessful responseStatus  -> do
+             maybeData <- _awsData <$> decodeValue responseValue
+             onNothing maybeData $ throw500WithDetail "internal error" $
+               "webhook response does not have 'data' key for 2xx response status"
+
+         | HTTP.statusIsClientError responseStatus -> do
+             maybeError <- _aweErrors <$> decodeValue responseValue
+             ActionWebhookErrorResponse message maybeCode <-
+               onNothing maybeError $ throw500WithDetail "internal error" $
+               "webhook response does not have 'errors' key for 4xx response status"
+             let code = maybe Unexpected ActionWebhookCode maybeCode
+                 qErr = QErr [] responseStatus message code Nothing
+             throwError qErr
+
+         | otherwise ->
+             throw500WithDetail "internal error" $
+               J.object ["webhook_response" J..= responseValue]
 
 data ActionLogItem
   = ActionLogItem
