@@ -43,6 +43,7 @@ import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
+import           Hasura.RQL.DDL.Headers            (HeaderConf, makeHeadersFromConf)
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils               (mkClientHeadersForward)
@@ -259,7 +260,7 @@ resolveActionInsertSync field executionContext sessionVariables = do
       handlerPayload = ActionWebhookPayload sessionVariables inputArgs
   manager <- asks getter
   reqHeaders <- asks getter
-  webhookRes <- callWebhook manager reqHeaders forwardClientHeaders resolvedWebhook handlerPayload
+  webhookRes <- callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook handlerPayload
   case returnStrategy of
     ReturnJson -> return $ return $ encJFromJValue webhookRes
     ExecOnPostgres definitionList -> do
@@ -272,7 +273,8 @@ resolveActionInsertSync field executionContext sessionVariables = do
       astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
       return $ asSingleRowJsonResp (RS.selectQuerySQL True astResolved) []
   where
-    SyncActionExecutionContext returnStrategy resolvedWebhook forwardClientHeaders = executionContext
+    SyncActionExecutionContext returnStrategy resolvedWebhook confHeaders
+      forwardClientHeaders = executionContext
 
     mkJsonToRecordFromExpression definitionList webhookResponseExpression =
       let functionName = QualifiedObject (SchemaName "pg_catalog") $
@@ -287,14 +289,19 @@ callWebhook
   :: (MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> [HTTP.Header]
+  -> [HeaderConf]
   -> Bool
   -> ResolvedWebhook
   -> ActionWebhookPayload
   -> m J.Value
-callWebhook manager reqHeaders forwardClientHeaders resolvedWebhook actionWebhookPayload = do
-  let options = wreqOptions manager (contentType:clientHeaders)
-      clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
+callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook actionWebhookPayload = do
+  resolvedConfHeaders <- makeHeadersFromConf confHeaders
+  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
       contentType = ("Content-Type", "application/json")
+      options = wreqOptions manager $
+                -- Using HashMap to avoid duplicate headers between configuration headers
+                -- and client headers where configuration headers are preferred
+                contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
       postPayload = J.toJSON actionWebhookPayload
       url = (T.unpack $ unResolvedWebhook resolvedWebhook)
   httpResponse <- liftIO $ try $ try $
@@ -362,8 +369,9 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
         Nothing -> return ()
         Just definition -> do
           let webhookUrl = _adHandler definition
-              forwardClientHeaders = fromMaybe False $ _adForwardClientHeaders definition
-          res <- runExceptT $ callWebhook httpManager reqHeaders forwardClientHeaders webhookUrl $
+              forwardClientHeaders = _adForwardClientHeaders definition
+              confHeaders = _adHeaders definition
+          res <- runExceptT $ callWebhook httpManager reqHeaders confHeaders forwardClientHeaders webhookUrl $
             ActionWebhookPayload sessionVariables inputPayload
           case res of
             Left e                -> setError actionId e

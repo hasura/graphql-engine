@@ -387,9 +387,8 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
       opTy    = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
-  hdrs <- getHeadersFromConf hdrConf
-  let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
-      clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
+  confHdrs <- makeHeadersFromConf hdrConf
+  let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
       -- filter out duplicate headers
       -- priority: conf headers > resolved userinfo vars > client headers
       hdrMaps    = [ Map.fromList confHdrs

@@ -67,13 +67,14 @@ mkMutationField actionName actionInfo permission definitionList =
   where
     definition = _aiDefinition actionInfo
     actionExecutionContext =
-      case getActionKind definition of
+      case _adKind definition of
         ActionSynchronous  ->
           ActionExecutionSyncWebhook $ SyncActionExecutionContext
   -- TODO: only covers object types
           (ExecOnPostgres definitionList)
           (_adHandler definition)
-          (fromMaybe False $ _adForwardClientHeaders definition)
+          (_adHeaders definition)
+          (_adForwardClientHeaders definition)
         ActionAsynchronous -> ActionExecutionAsync $ _apiFilter permission
 
     -- TODO: we need to capture the comment from action definition
@@ -93,7 +94,7 @@ mkMutationField actionName actionInfo permission definitionList =
 
 actionFieldResponseType :: ActionName -> ActionDefinition a -> G.GType
 actionFieldResponseType actionName definition =
-  case getActionKind definition of
+  case _adKind definition of
     ActionSynchronous  -> unGraphQLType $ _adOutputType definition
     ActionAsynchronous -> G.toGT $ G.toGT $ mkActionSelectionType actionName
 
@@ -104,7 +105,7 @@ mkQueryField
   -> [(PGCol, PGScalarType)]
   -> Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
 mkQueryField actionName definition permission definitionList =
-  case getActionKind definition of
+  case _adKind definition of
     ActionAsynchronous ->
       Just ( ActionSelectOpContext (_apiFilter permission) definitionList
            , fieldInfo

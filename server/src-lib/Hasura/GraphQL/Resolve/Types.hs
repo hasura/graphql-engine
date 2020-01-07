@@ -13,6 +13,7 @@ import qualified Data.Text                      as T
 import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DDL.Headers         (HeaderConf)
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
@@ -106,6 +107,7 @@ data SyncActionExecutionContext
   = SyncActionExecutionContext
   { _saecStrategy             :: !SyncReturnStrategy
   , _saecWebhook              :: !ResolvedWebhook
+  , _saecHeaders              :: ![HeaderConf]
   , _saecForwardClientHeaders :: !Bool
   } deriving (Show, Eq)
 

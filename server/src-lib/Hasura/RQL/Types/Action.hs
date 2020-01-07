@@ -5,7 +5,6 @@ module Hasura.RQL.Types.Action
   , ActionName(..)
   , ActionKind(..)
   , ActionDefinition(..)
-  , getActionKind
   , CreateAction(..)
   , UpdateAction(..)
   , ActionDefinitionInput
@@ -28,6 +27,7 @@ module Hasura.RQL.Types.Action
 
 import           Data.URL.Template
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.DML
@@ -83,14 +83,22 @@ data ActionDefinition a
   = ActionDefinition
   { _adArguments            :: ![ArgumentDefinition]
   , _adOutputType           :: !GraphQLType
-  , _adKind                 :: !(Maybe ActionKind)
-  , _adForwardClientHeaders :: !(Maybe Bool)
+  , _adKind                 :: !ActionKind
+  , _adHeaders              :: ![HeaderConf]
+  , _adForwardClientHeaders :: !Bool
   , _adHandler              :: !a
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionDefinition)
+$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionDefinition)
 
-getActionKind :: ActionDefinition a -> ActionKind
-getActionKind = fromMaybe ActionSynchronous . _adKind
+instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
+  parseJSON = J.withObject "ActionDefinition" $ \o ->
+    ActionDefinition
+      <$> o J..:  "arguments"
+      <*> o J..:  "output_type"
+      <*> o J..:? "kind" J..!= ActionSynchronous -- Synchronous is default action kind
+      <*> o J..:? "headers" J..!= []
+      <*> o J..:? "forward_client_headers" J..!= False
+      <*> o J..:  "handler"
 
 type ResolvedActionDefinition = ActionDefinition ResolvedWebhook
 
