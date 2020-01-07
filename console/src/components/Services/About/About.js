@@ -1,11 +1,14 @@
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
-import Endpoints from '../../../Endpoints';
+import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 
 import globals from '../../../Globals';
 
 import styles from './About.scss';
+import requestAction from '../../../utils/requestAction';
+import { showErrorNotification } from '../Common/Notification';
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 
 class About extends Component {
   state = {
@@ -32,25 +35,32 @@ class About extends Component {
         })
       );
 
-    fetch(Endpoints.query, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        type: 'run_sql',
-        args: {
-          sql: 'SELECT version();',
-          read_only: true,
+    const fetchPgVersion = () => {
+      const { dispatch, dataHeaders } = this.props;
+
+      const url = Endpoints.query;
+      const options = {
+        method: 'POST',
+        credentials: globalCookiePolicy,
+        headers: dataHeaders,
+        body: JSON.stringify(getRunSqlQuery('SELECT version();', false, true)),
+      };
+
+      dispatch(requestAction(url, options)).then(
+        data => {
+          this.setState({
+            pgVersion: data.result[1][0],
+          });
         },
-      }),
-    })
-      .then(response => response.json())
-      .then(data =>
-        this.setState({
-          pgVersion: data.result[1],
-        })
+        error => {
+          dispatch(
+            showErrorNotification('Failed fetching PG version', null, error)
+          );
+        }
       );
+    };
+
+    fetchPgVersion();
   }
 
   render() {
@@ -166,8 +176,10 @@ class About extends Component {
   }
 }
 
-const mapStateToProps = () => {
-  return {};
+const mapStateToProps = state => {
+  return {
+    dataHeaders: state.tables.dataHeaders,
+  };
 };
 
 const aboutConnector = connect => connect(mapStateToProps)(About);
