@@ -1,11 +1,11 @@
-const { getActionScaffold } = require('./scaffold');
+const { getActionsCodegen  } = require('./codegen');
 
 const handler = async (payload) => {
 
   try {
-    const scaffolds = await getActionScaffold(payload);
+    const codegen = await getActionsCodegen(payload);
     return JSON.stringify({
-      scaffolds
+      codegen
     });
   } catch (e) {
     return JSON.stringify({

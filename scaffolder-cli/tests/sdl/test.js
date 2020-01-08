@@ -6,14 +6,17 @@ const { handlePayload: fromHandler } = require('../../build/services/sdl/from/ha
 const test = async () => {
 
   const toResponse = toHandler(toPayload);
+  const expectedToResponse = "type Mutation {\n  actionName (\n    input: [ActionNameUserInsertInput!]!\n  ): ActionNameUser\n}\n\n\n\ninput ActionNameUserInsertInput {\n  id : Int\n  name : String\n  nullable : String\n}\n\ntype ActionNameUser {\n  id : Int!\n  name : String!\n  nullable : String\n}\n\n\n\ntype Mutation {\n  validatedUserInsert (\n    user: UserInput\n  ): [UserInfo!]\n}\n\n\n\n\ninput UserInput {\n  username : String\n  password : String!\n}\n\ntype UserInfo {\n  accessToken : String\n}\n\n"
+
   if (
     toResponse.status === 200 &&
-    toResponse.body.sdl.complete === "type Mutation {\n  actionName (\n    input: [ActionNameUserInsertInput!]!\n  ): ActionNameUser\n}\n\n\n\ninput ActionNameUserInsertInput {\n  id : Int\n  name : String\n  nullable : String\n}\n\ntype ActionNameUser {\n  id : Int!\n  name : String!\n  nullable : String\n}\n\n\n\ntype Mutation {\n  validatedUserInsert (\n    user: UserInput\n  ): [UserInfo!]\n}\n\n\n\n\ninput UserInput {\n  username : String\n  password : String!\n}\n\ntype UserInfo {\n  accessToken : String\n}\n\n"
+    toResponse.body.sdl.complete.replace('\n', '') === expectedToResponse.replace('\n', '')
   ) {
     console.log('✓ Conversion from metadata to SDL passed');
   } else {
     console.log('✘ Conversion from metadata to SDL failed');
     console.log(toResponse);
+    console.log(expectedToResponse)
     process.exit(1);
   }
 

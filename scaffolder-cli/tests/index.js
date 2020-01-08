@@ -1,9 +1,9 @@
 import "regenerator-runtime/runtime";
-const scaffoldTest = require('./scaffold');
+const actionsCodegen = require('./actions-codegen');
 const sdlTest =  require('./sdl');
 
 const runTests = async () => {
-  await scaffoldTest();
+  await actionsCodegen();
   await sdlTest();
 };
 

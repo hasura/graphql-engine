@@ -1,7 +1,7 @@
-const scaffoldHandler = require('./scaffold');
+const actionsCodegenHandler = require('./actions-codegen');
 const sdlHandler = require('./sdl');
 
 module.exports = {
-  scaffold: scaffoldHandler,
+  actionsCodegen: actionsCodegenHandler,
   sdl: sdlHandler
 };

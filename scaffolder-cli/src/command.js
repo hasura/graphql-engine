@@ -1,7 +1,7 @@
 import "regenerator-runtime/runtime";
 import {
   sdl,
-  scaffold
+  actionsCodegen
 } from './services';
 import version from './utils/version';
 
@@ -14,9 +14,9 @@ const handleArgs = () => {
     case 'sdl':
       const sdlSubCommands = commandArgs.slice(3);
       return sdl(sdlSubCommands);
-    case 'scaffold':
-      const scaffoldSubCommands = commandArgs.slice(3);
-      return scaffold(scaffoldSubCommands);
+    case 'actions-codegen':
+      const actionCodegenSubCommands = commandArgs.slice(3);
+      return actionsCodegen(actionCodegenSubCommands);
     case 'version':
       const versionSubCommands = commandArgs.slice(3);
       return version(versionSubCommands);
