@@ -1368,8 +1368,8 @@ class Permissions extends Component {
 
         const presetTooltip = (
           <Tooltip id="tooltip-insert-set-operations">
-            Set static values or session variables as default values for columns
-            while {getIngForm(query)}
+            Set static values or session variables as pre-determined values for
+            columns while {getIngForm(query)}
           </Tooltip>
         );
 
