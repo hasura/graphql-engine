@@ -12,3 +12,6 @@ graphene
 brotlipy
 ruamel.yaml > 0.15
 graphql-core
+selenium
+selenium-wire
+pyperclip
