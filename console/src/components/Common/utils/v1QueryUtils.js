@@ -1,9 +1,10 @@
+import { terminateSql } from './sqlUtils';
+
 export const getRunSqlQuery = (sql, shouldCascade, readOnly) => {
-  const sqlWithSemicolon = sql[sql.length - 1] !== ';' ? sql + ';' : sql;
   return {
     type: 'run_sql',
     args: {
-      sql: sqlWithSemicolon,
+      sql: terminateSql(sql),
       cascade: !!shouldCascade,
       read_only: !!readOnly,
     },
@@ -52,7 +53,7 @@ export const getSetCustomRootFieldsQuery = (
   };
 };
 
-export const getSetTableEnumQUery = (tableDef, isEnum) => {
+export const getSetTableEnumQuery = (tableDef, isEnum) => {
   return {
     type: 'set_table_is_enum',
     args: {
