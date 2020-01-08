@@ -367,6 +367,8 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
                 "\nRecording formerly failing case as correct in: " + f +
                 "\n   NOTE: if this case was marked 'xfail' this won't be correct!"
             )
+        else:
+            warnings.warn('Using API Explorer data to modify test configuration file: ' + f)
         with open(f, 'w') as c:
             yml.dump(conf, c)
 
