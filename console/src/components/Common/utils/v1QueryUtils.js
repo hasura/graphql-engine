@@ -1,8 +1,9 @@
 export const getRunSqlQuery = (sql, shouldCascade, readOnly) => {
+  const sqlWithSemicolon = sql[sql.length - 1] !== ';' ? sql + ';' : sql;
   return {
     type: 'run_sql',
     args: {
-      sql,
+      sql: sqlWithSemicolon,
       cascade: !!shouldCascade,
       read_only: !!readOnly,
     },
@@ -47,6 +48,32 @@ export const getSetCustomRootFieldsQuery = (
       table: tableDef,
       custom_root_fields: rootFields,
       custom_column_names: customColumnNames,
+    },
+  };
+};
+
+export const getSetTableEnumQUery = (tableDef, isEnum) => {
+  return {
+    type: 'set_table_is_enum',
+    args: {
+      table: tableDef,
+      is_enum: isEnum,
+    },
+  };
+};
+
+export const getTrackTableQuery = tableDef => {
+  return {
+    type: 'add_existing_table_or_view',
+    args: tableDef,
+  };
+};
+
+export const getUntrackTableQuery = tableDef => {
+  return {
+    type: 'untrack_table',
+    args: {
+      table: tableDef,
     },
   };
 };
