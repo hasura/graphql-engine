@@ -35,3 +35,4 @@ A public disclosure date is negotiated by the Hasura product security team and t
 This document is available in the following translations:
 
 - [French :fr:](translations/SECURITY.french.md)
+- [Hindi :india:](translations/SECURITY.hindi.md)

@@ -214,3 +214,10 @@ makeReasonMessage errors showError =
     [singleError] -> "because " <> showError singleError
     _ -> "for the following reasons:\n" <> T.unlines
          (map (("  • " <>) . showError) errors)
+
+withElapsedTime :: MonadIO m => m a -> m (NominalDiffTime, a)
+withElapsedTime ma = do
+  t1 <- liftIO getCurrentTime
+  a <- ma
+  t2 <- liftIO getCurrentTime
+  return (diffUTCTime t2 t1, a)
