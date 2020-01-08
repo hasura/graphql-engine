@@ -141,7 +141,6 @@ const ComputedFieldsEditor = ({
     };
 
     // expand button text "View"
-    // eslint-disable-next-line no-nested-ternary
     const expandButtonText = isLast
       ? computedFields.length
         ? 'Add a new computed field'
