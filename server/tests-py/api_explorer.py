@@ -103,7 +103,7 @@ def get_last_header_index(driver):
 
 def type_headers(driver, headers):
     i = get_last_header_index(driver)
-    assert i > 1
+    assert i > 0
     for (key, value) in headers.items():
         (key_form, value_form, _) = get_header_forms_at_index(driver, i)
         for (val, form) in [(key, key_form), (value, value_form)]:
