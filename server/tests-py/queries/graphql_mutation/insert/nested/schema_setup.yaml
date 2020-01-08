@@ -26,7 +26,8 @@ args:
         content TEXT,
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
-        published_on TIMESTAMP
+        published_on TIMESTAMP,
+        tags JSON
       );
 
       CREATE FUNCTION fetch_articles(search text, author_row author)

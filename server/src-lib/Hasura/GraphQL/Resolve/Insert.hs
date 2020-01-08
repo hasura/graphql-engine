@@ -9,6 +9,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                        as J
 import qualified Data.Aeson.Casing                 as J
+import qualified Data.Aeson.Ordered                as JO
 import qualified Data.Aeson.TH                     as J
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
@@ -243,7 +244,7 @@ mkInsertQ vn onConflictM insCols defVals role = do
 
 asSingleObject
   :: MonadError QErr m
-  => [ColumnValues J.Value] -> m (Maybe (ColumnValues J.Value))
+  => [ColumnValues a] -> m (Maybe (ColumnValues a))
 asSingleObject = \case
   []  -> return Nothing
   [a] -> return $ Just a
@@ -251,39 +252,33 @@ asSingleObject = \case
 
 fetchFromColVals
   :: MonadError QErr m
-  => ColumnValues J.Value
+  => ColumnValues v
+  -> (PGColumnType -> v -> m (WithScalarType PGScalarValue))
   -> [PGColumnInfo]
   -> (PGColumnInfo -> a)
   -> m [(a, WithScalarType PGScalarValue)]
-fetchFromColVals colVal reqCols f =
+fetchFromColVals colVal parseFn reqCols f =
   forM reqCols $ \ci -> do
     let valM = Map.lookup (pgiColumn ci) colVal
     val <- onNothing valM $ throw500 $ "column "
            <> pgiColumn ci <<> " not found in given colVal"
-    pgColVal <- parsePGScalarValue (pgiType ci) val
+    pgColVal <- parseFn (pgiType ci) val
     return (f ci, pgColVal)
-
-mkSelCTE
-  :: MonadError QErr m
-  => QualifiedTable
-  -> [PGColumnInfo]
-  -> Maybe (ColumnValues J.Value)
-  -> m CTEExp
-mkSelCTE tn allCols colValM = do
-  selCTE <- mkSelCTEFromColVals parseFn tn allCols $ maybe [] pure colValM
-  return $ CTEExp selCTE Seq.Empty
-  where
-    parseFn ty val = toTxtValue <$> parsePGScalarValue ty val
 
 execCTEExp
   :: Bool
   -> QualifiedTable
   -> CTEExp
   -> RR.MutFlds
-  -> Q.TxE QErr J.Object
-execCTEExp strfyNum tn (CTEExp cteExp args) flds =
-  Q.getAltJ . runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
+  -> Q.TxE QErr JO.Object
+execCTEExp strfyNum tn (CTEExp cteExp args) flds = do
+  lazyBytes <- runIdentity . Q.getRow
+               <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
+  case JO.eitherDecode lazyBytes of
+    Left e  -> throw500 $ "cannot parse as JSON; " <> T.pack e
+    Right v -> case v of
+      JO.Object o -> pure o
+      _           -> throw500 "expecting ordered object"
   where
     sqlBuilder = toSQL $ RR.mkSelWith tn cteExp flds True strfyNum
 
@@ -326,7 +321,7 @@ insertObjRel strfyNum role objRelIns =
     MutateResp aRows colVals <- decodeEncJSON resp
     colValM <- asSingleObject colVals
     colVal <- onNothing colValM $ throw400 NotSupported errMsg
-    retColsWithVals <- fetchFromColVals colVal rColInfos pgiColumn
+    retColsWithVals <- fetchFromColVals colVal parsePGScalarValue rColInfos pgiColumn
     let c = mergeListsWith mapCols retColsWithVals
           (\(_, rCol) (col, _) -> rCol == col)
           (\(lCol, _) (_, cVal) -> (lCol, cVal))
@@ -406,7 +401,7 @@ insertObj strfyNum role tn singleObjIns addCols = do
   RI.setConflictCtx ccM
   MutateResp affRows colVals <- mutateAndFetchCols tn allCols (cte, insPArgs) strfyNum
   colValM <- asSingleObject colVals
-  cteExp <- mkSelCTE tn allCols colValM
+  cteExp <- flip CTEExp Seq.empty <$> mkSelCTEFromColVals tn allCols (maybe [] pure colValM)
 
   arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrRels
   let totAffRows = objRelAffRows + affRows + arrRelAffRows
@@ -421,7 +416,7 @@ insertObj strfyNum role tn singleObjIns addCols = do
 
     withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
-      arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols pgiColumn
+      arrDepColsWithVal <- fetchFromColVals colVal parseTxtEncodedPGValue arrRelDepCols pgiColumn
 
       arrInsARows <- forM arrRels $ insertArrRel strfyNum role arrDepColsWithVal
 
@@ -478,18 +473,21 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
       let affRows = sum $ map fst insResps
           cteExps = map snd insResps
           retFlds = mapMaybe getRet mutFlds
-      respVals <- forM cteExps $ \cteExp ->
-        execCTEExp strfyNum tn cteExp retFlds
+      respVals <- forM cteExps $ \cteExp -> execCTEExp strfyNum tn cteExp retFlds
       respTups <- forM mutFlds $ \(t, mutFld) -> do
         jsonVal <- case mutFld of
-          RR.MCount   -> return $ J.toJSON affRows
-          RR.MExp txt -> return $ J.toJSON txt
-          RR.MRet _   -> J.toJSON <$> mapM (fetchVal t) respVals
-        return (t, jsonVal)
-      return $ encJFromJValue $ OMap.fromList respTups
+          RR.MCount   -> pure $ JO.Number $ fromIntegral affRows
+          RR.MExp txt -> pure $ JO.String txt
+          RR.MRet _   -> JO.array <$> mapM (fetchVal t) respVals
+        pure (t, jsonVal)
+      pure $ JO.toEncJSON $ JO.object respTups
 
     getRet (t, r@(RR.MRet _)) = Just (t, r)
     getRet _                  = Nothing
+
+    fetchVal t obj =
+      onNothing (JO.lookup t obj) $
+      throw500 $ "key " <> t <> " not found in ordered hashmap"
 
 prefixErrPath :: (MonadError QErr m) => Field -> m a -> m a
 prefixErrPath fld =
@@ -542,11 +540,6 @@ getInsCtx tn = do
                   Map.elems $ icAllCols insCtx
       setCols = icSet insCtx
   return $ insCtx {icSet = Map.union setCols defValMap}
-
-fetchVal :: (MonadError QErr m)
-  => T.Text -> Map.HashMap T.Text a -> m a
-fetchVal t m = onNothing (Map.lookup t m) $ throw500 $
-  "key " <> t <> " not found in hashmap"
 
 mergeListsWith
   :: [a] -> [b] -> (a -> b -> Bool) -> (a -> b -> c) -> [c]
