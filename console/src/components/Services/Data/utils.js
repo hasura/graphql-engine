@@ -2,6 +2,7 @@ import {
   READ_ONLY_RUN_SQL_QUERIES,
   checkFeatureSupport,
 } from '../../../helpers/versionUtils';
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
@@ -329,13 +330,11 @@ FROM
     ${whereQuery}
   ) as info
 `;
-  return {
-    type: 'run_sql',
-    args: {
-      sql: runSql,
-      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
-    },
-  };
+  return getRunSqlQuery(
+    runSql,
+    false,
+    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+  );
 };
 
 export const fetchTrackedTableReferencedFkQuery = options => {
@@ -365,13 +364,11 @@ FROM
     ${whereQuery}
   ) as info
 `;
-  return {
-    type: 'run_sql',
-    args: {
-      sql: runSql,
-      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
-    },
-  };
+  return getRunSqlQuery(
+    runSql,
+    false,
+    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+  );
 };
 
 export const fetchTableListQuery = options => {
@@ -444,13 +441,11 @@ FROM
       is_views.*
   ) AS info
 `;
-  return {
-    type: 'run_sql',
-    args: {
-      sql: runSql,
-      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
-    },
-  };
+  return getRunSqlQuery(
+    runSql,
+    false,
+    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+  );
 };
 
 export const mergeLoadSchemaData = (
