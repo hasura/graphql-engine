@@ -485,6 +485,21 @@ class TestMetadata(DefaultTestQueries):
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
 
+    @classmethod
+    def dir(cls):
+        return "queries/v1/metadata"
+
+class TestMetadataOrder(DefaultTestSelectQueries):
+    @classmethod
+    def dir(cls):
+        return "queries/v1/metadata_order"
+
+    def test_export_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/export_metadata.yaml')
+
+    def test_clear_export_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/clear_export_metadata.yaml')
+
     def test_export_replace(self, hge_ctx):
         url = '/v1/query'
         export_query = {
@@ -494,26 +509,15 @@ class TestMetadata(DefaultTestQueries):
         headers = {}
         if hge_ctx.hge_key is not None:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
-        export_code, export_resp = hge_ctx.anyq(url, export_query, headers)
+        export_code, export_resp, _ = hge_ctx.anyq(url, export_query, headers)
         assert export_code == 200, export_resp
         replace_query = {
             'type': 'replace_metadata',
             'args': export_resp
         }
-        replace_code, replace_resp = hge_ctx.anyq(url, replace_query, headers)
+        replace_code, replace_resp, _ = hge_ctx.anyq(url, replace_query, headers)
         assert replace_code == 200, replace_resp
 
-    @classmethod
-    def dir(cls):
-        return "queries/v1/metadata"
-
-class TestMetadataOrder(DefaultTestQueries):
-    @classmethod
-    def dir(cls):
-        return "queries/v1/metadata_order"
-
-    def test_export_metadata_order(self, hge_ctx):
-        check_query_f(hge_ctx, self.dir() + '/export_metadata_order.yaml')
 
 class TestRunSQL(DefaultTestQueries):
 
@@ -628,6 +632,9 @@ class TestCreatePermission(DefaultTestQueries):
 
     def test_create_permission_user_role_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_article_permission_role_user.yaml')
+
+    def test_create_author_insert_permission_long_role(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_author_insert_permission_long_role.yaml')
 
     @classmethod
     def dir(cls):

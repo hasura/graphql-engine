@@ -37,6 +37,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
 
   const sql = getState().rawSQL.sql;
   const currMigrationMode = getState().main.migrationMode;
+  const readOnlyMode = getState().main.readOnlyMode;
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
   const isCascadeChecked = getState().rawSQL.isCascadeChecked;
@@ -45,7 +46,11 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   const schemaChangesUp = [
     {
       type: 'run_sql',
-      args: { sql: sql, cascade: isCascadeChecked },
+      args: {
+        sql: sql,
+        cascade: isCascadeChecked,
+        read_only: readOnlyMode,
+      },
     },
   ];
   // check if track view enabled

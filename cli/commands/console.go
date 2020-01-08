@@ -34,7 +34,16 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura console
 
   # Start console on a different address and ports:
-  hasura console --address 0.0.0.0 --console-port 8080 --api-port 8081`,
+  hasura console --address 0.0.0.0 --console-port 8080 --api-port 8081
+
+  # Start console without opening the browser automatically
+  hasura console --no-browser
+
+  # Use with admin secret:
+  hasura console --admin-secret "<admin-secret>"
+
+  # Connect to an instance specified by the flag, overrides the one mentioned in config.yaml:
+  hasura console --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -51,6 +60,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
+	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -76,6 +86,7 @@ type consoleOptions struct {
 	WG *sync.WaitGroup
 
 	StaticDir string
+	Browser   string
 }
 
 func (o *consoleOptions) run() error {
@@ -157,12 +168,21 @@ func (o *consoleOptions) run() error {
 	consoleURL := fmt.Sprintf("http://%s:%s/", o.Address, o.ConsolePort)
 
 	if !o.DontOpenBrowser {
-		o.EC.Spin(color.CyanString("Opening console using default browser..."))
-		defer o.EC.Spinner.Stop()
+		if o.Browser != "" {
+			o.EC.Spin(color.CyanString("Opening console on: %s", o.Browser))
+			defer o.EC.Spinner.Stop()
+			err = open.RunWith(consoleURL, o.Browser)
+			if err != nil {
+				o.EC.Logger.WithError(err).Warnf("failed opening console in '%s', try to open the url manually", o.Browser)
+			}
+		} else {
+			o.EC.Spin(color.CyanString("Opening console using default browser..."))
+			defer o.EC.Spinner.Stop()
 
-		err = open.Run(consoleURL)
-		if err != nil {
-			o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
+			err = open.Run(consoleURL)
+			if err != nil {
+				o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
+			}
 		}
 	}
 

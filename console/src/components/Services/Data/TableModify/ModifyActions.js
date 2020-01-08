@@ -60,11 +60,6 @@ import {
   getTableModifyRoute,
 } from '../../../Common/utils/routesUtils';
 
-import {
-  checkFeatureSupport,
-  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
-} from '../../../../helpers/versionUtils';
-
 const DELETE_PK_WARNING =
   'Without a primary key there is no way to uniquely identify a row of a table';
 
@@ -1550,27 +1545,19 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const colType = columnEdit.type;
     const nullable = columnEdit.isNullable;
     const unique = columnEdit.isUnique;
-    const def = columnEdit.default || '';
-    const comment = columnEdit.comment || '';
-    const newName = columnEdit.name;
+    const colDefault = (columnEdit.default || '').trim();
+    const comment = (columnEdit.comment || '').trim();
+    const newName = columnEdit.name.trim();
     const currentSchema = columnEdit.schemaName;
-    const customFieldName = columnEdit.customFieldName;
-    const checkIfFunctionFormat = isPostgresFunction(def);
-    // ALTER TABLE <table> ALTER COLUMN <column> TYPE <column_type>;
-    let defWithQuotes;
-    if (colType === 'text' && !checkIfFunctionFormat) {
-      defWithQuotes = `'${def}'`;
-    } else {
-      defWithQuotes = def;
-    }
+    const customFieldName = (columnEdit.customFieldName || '').trim();
 
     const tableDef = generateTableDef(tableName, currentSchema);
     const table = findTable(getState().tables.allSchemas, tableDef);
 
     // check if column type has changed before making it part of the migration
     const originalColType = column.data_type; // "value"
-    const originalColDefault = column.column_default; // null or "value"
-    const originalColComment = column.comment; // null or "value"
+    const originalColDefault = column.column_default || ''; // null or "value"
+    const originalColComment = column.comment || ''; // null or "value"
     const originalColNullable = column.is_nullable; // "YES" or "NO"
     const originalColUnique = isColumnUnique(table, colName);
 
@@ -1631,44 +1618,53 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
         : [];
 
     /* column custom field up/down migration*/
-    if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
-      const existingCustomColumnNames = getTableCustomColumnNames(table);
-      const existingRootFields = getTableCustomRootFields(table);
-      const newCustomColumnNames = { ...existingCustomColumnNames };
-      let isCustomFieldNameChanged = false;
-      if (customFieldName) {
-        if (customFieldName !== existingCustomColumnNames[colName]) {
-          isCustomFieldNameChanged = true;
-          newCustomColumnNames[colName] = customFieldName.trim();
-        }
-      } else {
-        if (existingCustomColumnNames[colName]) {
-          isCustomFieldNameChanged = true;
-          delete newCustomColumnNames[colName];
-        }
+    const existingCustomColumnNames = getTableCustomColumnNames(table);
+    const existingRootFields = getTableCustomRootFields(table);
+    const newCustomColumnNames = { ...existingCustomColumnNames };
+    let isCustomFieldNameChanged = false;
+    if (customFieldName) {
+      if (customFieldName !== existingCustomColumnNames[colName]) {
+        isCustomFieldNameChanged = true;
+        newCustomColumnNames[colName] = customFieldName.trim();
       }
-      if (isCustomFieldNameChanged) {
-        schemaChangesUp.push(
-          getSetCustomRootFieldsQuery(
-            tableDef,
-            existingRootFields,
-            newCustomColumnNames
-          )
-        );
-        schemaChangesDown.push(
-          getSetCustomRootFieldsQuery(
-            tableDef,
-            existingRootFields,
-            existingCustomColumnNames
-          )
-        );
+    } else {
+      if (existingCustomColumnNames[colName]) {
+        isCustomFieldNameChanged = true;
+        delete newCustomColumnNames[colName];
       }
     }
+    if (isCustomFieldNameChanged) {
+      schemaChangesUp.push(
+        getSetCustomRootFieldsQuery(
+          tableDef,
+          existingRootFields,
+          newCustomColumnNames
+        )
+      );
+      schemaChangesDown.push(
+        getSetCustomRootFieldsQuery(
+          tableDef,
+          existingRootFields,
+          existingCustomColumnNames
+        )
+      );
+    }
+
+    const colDefaultWithQuotes =
+      colType === 'text' && !isPostgresFunction(colDefault)
+        ? `'${colDefault}'`
+        : colDefault;
+    const originalColDefaultWithQuotes =
+      colType === 'text' && !isPostgresFunction(originalColDefault)
+        ? `'${originalColDefault}'`
+        : originalColDefault;
 
     /* column default up/down migration */
-    if (def.trim() !== '') {
+    let columnDefaultUpQuery;
+    let columnDefaultDownQuery;
+    if (colDefault !== '') {
       // ALTER TABLE ONLY <table> ALTER COLUMN <column> SET DEFAULT <default>;
-      const columnDefaultUpQuery =
+      columnDefaultUpQuery =
         'ALTER TABLE ONLY ' +
         '"' +
         currentSchema +
@@ -1682,101 +1678,11 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
         colName +
         '"' +
         ' SET DEFAULT ' +
-        defWithQuotes +
+        colDefaultWithQuotes +
         ';';
-      let columnDefaultDownQuery =
-        'ALTER TABLE ONLY ' +
-        '"' +
-        currentSchema +
-        '"' +
-        '.' +
-        '"' +
-        tableName +
-        '"' +
-        ' ALTER COLUMN ' +
-        '"' +
-        colName +
-        ' DROP DEFAULT;';
-
-      // form migration queries
-      if (
-        column.column_default !== '' &&
-        column.column_default === def.trim()
-      ) {
-        // default value unchanged
-        columnDefaultDownQuery =
-          'ALTER TABLE ONLY ' +
-          '"' +
-          currentSchema +
-          '"' +
-          '.' +
-          '"' +
-          tableName +
-          '"' +
-          ' ALTER COLUMN ' +
-          '"' +
-          colName +
-          '"' +
-          ' SET DEFAULT ' +
-          defWithQuotes +
-          ';';
-      } else if (
-        column.column_default !== '' &&
-        column.column_default !== def.trim()
-      ) {
-        // default value has changed
-        columnDefaultDownQuery =
-          'ALTER TABLE ONLY ' +
-          '"' +
-          currentSchema +
-          '"' +
-          '.' +
-          '"' +
-          tableName +
-          '"' +
-          ' ALTER COLUMN ' +
-          '"' +
-          colName +
-          '"' +
-          ' SET DEFAULT ' +
-          defWithQuotes +
-          ';';
-      } else {
-        // there was no default value originally. so drop default.
-        columnDefaultDownQuery =
-          'ALTER TABLE ONLY ' +
-          '"' +
-          currentSchema +
-          '"' +
-          '.' +
-          '"' +
-          tableName +
-          '"' +
-          ' ALTER COLUMN ' +
-          '"' +
-          colName +
-          '"' +
-          ' DROP DEFAULT;';
-      }
-
-      // check if default is unchanged and then do a drop. if not skip
-      if (originalColDefault !== def.trim()) {
-        schemaChangesUp.push({
-          type: 'run_sql',
-          args: {
-            sql: columnDefaultUpQuery,
-          },
-        });
-        schemaChangesDown.push({
-          type: 'run_sql',
-          args: {
-            sql: columnDefaultDownQuery,
-          },
-        });
-      }
     } else {
       // ALTER TABLE <table> ALTER COLUMN <column> DROP DEFAULT;
-      const columnDefaultUpQuery =
+      columnDefaultUpQuery =
         'ALTER TABLE ' +
         '"' +
         currentSchema +
@@ -1790,39 +1696,57 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
         colName +
         '"' +
         ' DROP DEFAULT;';
-      if (column.column_default !== null) {
-        const columnDefaultDownQuery =
-          'ALTER TABLE ' +
-          '"' +
-          currentSchema +
-          '"' +
-          '.' +
-          '"' +
-          tableName +
-          '"' +
-          ' ALTER COLUMN ' +
-          '"' +
-          colName +
-          '"' +
-          ' SET DEFAULT ' +
-          column.column_default +
-          ';';
-        schemaChangesDown.push({
-          type: 'run_sql',
-          args: {
-            sql: columnDefaultDownQuery,
-          },
-        });
-      }
+    }
 
-      if (originalColDefault !== def.trim() && originalColDefault !== null) {
-        schemaChangesUp.push({
-          type: 'run_sql',
-          args: {
-            sql: columnDefaultUpQuery,
-          },
-        });
-      }
+    if (originalColDefault !== '') {
+      columnDefaultDownQuery =
+        'ALTER TABLE ONLY ' +
+        '"' +
+        currentSchema +
+        '"' +
+        '.' +
+        '"' +
+        tableName +
+        '"' +
+        ' ALTER COLUMN ' +
+        '"' +
+        colName +
+        '"' +
+        ' SET DEFAULT ' +
+        originalColDefaultWithQuotes +
+        ';';
+    } else {
+      // there was no default value originally. so drop default.
+      columnDefaultDownQuery =
+        'ALTER TABLE ONLY ' +
+        '"' +
+        currentSchema +
+        '"' +
+        '.' +
+        '"' +
+        tableName +
+        '"' +
+        ' ALTER COLUMN ' +
+        '"' +
+        colName +
+        '"' +
+        ' DROP DEFAULT;';
+    }
+
+    // check if default is unchanged and then do a drop. if not skip
+    if (originalColDefault !== colDefault) {
+      schemaChangesUp.push({
+        type: 'run_sql',
+        args: {
+          sql: columnDefaultUpQuery,
+        },
+      });
+      schemaChangesDown.push({
+        type: 'run_sql',
+        args: {
+          sql: columnDefaultDownQuery,
+        },
+      });
     }
 
     /* column nullable up/down migration */
@@ -2055,7 +1979,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       sqlEscapeText(originalColComment);
 
     // check if comment is unchanged and then do an update. if not skip
-    if (originalColComment !== comment.trim()) {
+    if (originalColComment !== comment) {
       schemaChangesUp.push({
         type: 'run_sql',
         args: {

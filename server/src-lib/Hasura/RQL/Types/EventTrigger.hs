@@ -39,7 +39,7 @@ import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
 
 newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
-  deriving (Show, Eq, Hashable, Lift, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg)
+  deriving (Show, Eq, Hashable, Lift, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary)
 
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName
@@ -48,7 +48,7 @@ type EventId = T.Text
 
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 
-data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift)
+data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift, Generic)
 
 instance FromJSON SubscribeColumns where
   parseJSON (String s) = case s of
@@ -65,7 +65,7 @@ data SubscribeOpSpec
   = SubscribeOpSpec
   { sosColumns :: !SubscribeColumns
   , sosPayload :: !(Maybe SubscribeColumns)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
 
@@ -86,7 +86,7 @@ data RetryConf
   { rcNumRetries  :: !Int
   , rcIntervalSec :: !Int
   , rcTimeoutSec  :: !(Maybe Int)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
@@ -173,7 +173,7 @@ data TriggerOpsDef
   , tdUpdate       :: !(Maybe SubscribeOpSpec)
   , tdDelete       :: !(Maybe SubscribeOpSpec)
   , tdEnableManual :: !(Maybe Bool)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
@@ -192,7 +192,7 @@ data EventTriggerConf
   , etcWebhookFromEnv :: !(Maybe T.Text)
   , etcRetryConf      :: !RetryConf
   , etcHeaders        :: !(Maybe [HeaderConf])
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)
 
