@@ -4,7 +4,7 @@
 -- This expects that the url specified confirms to
 -- the graphql url POST spec.
 
-local gqbench = require "bench-lib"
+local gqbench = require "bench-lib-wrk"
 
 local req_body = ""
 function init(args)
