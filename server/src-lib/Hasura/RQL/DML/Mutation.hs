@@ -88,6 +88,9 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     colSel = S.SESelect $ mkSQLSelect False $
              AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
 
+-- | Note:- Using sorted columns is necessary to enable casting the rows returned by VALUES expression to table type.
+-- For example, let's consider the table, `CREATE TABLE test (id serial primary key, name text not null, age int)`.
+-- The generated values expression should be in order of columns; `VALUES (1, 'Robert', 23) AS "test"("id", "name", "age")`.
 mkSelCTEFromColVals
   :: (MonadError QErr m)
   => QualifiedTable -> [PGColumnInfo] -> [ColumnValues TxtEncodedPGVal] -> m S.CTE
