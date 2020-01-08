@@ -1,5 +1,4 @@
 const samplePayload = {
-    "framework": "typescript-express",
     "action_name": "actionName1",
     "sdl": {
         complete: `
@@ -10,7 +9,10 @@ type Mutation { actionName2 (arg1: SampleInput!): SampleOutput }
         `
     },
     "actions_config": {
-      default: 'typescript-express'
+      codegen: {
+        framework: 'typescript-express',
+        uri: '/tmp/uritest.js'
+      }
     }
 };
 

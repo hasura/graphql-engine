@@ -9,12 +9,11 @@ const FILE_SYSTEM_PATH = 'fs_path';
 const URL_PATH = 'url path';
 const ERROR_IGNORE = 'error ignore'
 
-const resolveCodegeneratorPath = (framework, codegenConfig) => {
-  let codegeneratorName = framework || codegenConfig.default;
-  if (!codegeneratorName) return;
-  let codegeneratorPath = codegenConfig.custom_codegenerators ? codegenConfig.custom_codegenerators[codegeneratorName] : null;
+const resolveCodegeneratorPath = (codegenConfig) => {
+  let { framework } = codegenConfig;
+  let codegeneratorPath = codegenConfig.uri;
   if (!codegeneratorPath) {
-    codegeneratorPath = getTemplatePath(codegeneratorName)
+    codegeneratorPath = getTemplatePath(framework)
   }
   return codegeneratorPath;
 };
@@ -26,7 +25,7 @@ const resolveCodegeneratorFromUrl = async (url) => {
     if (fetchResp.status >= 300) {
       throw Error(_NOT_FOUND);
     }
-    const codegneratorText = await fetchResp.text()
+    const codegeneratorText = await fetchResp.text()
     eval(`${codegeneratorText} codegenerator = templater`);
     return codegenerator;
   } catch (e) {
@@ -38,17 +37,17 @@ const resolveCodegeneratorFromFs = async (fsPath) => {
   let codegenerator;
   try {
     const codegeneratorText = fs.readFileSync(path.resolve(fsPath), { encoding: 'utf8'});
-    eval(`${codegeneratorText} scaffolder = templater`);
+    eval(`${codegeneratorText}\n codegenerator = templater`);
     return codegenerator;
   } catch (e) {
     throw e;
   }
 };
 
-const resolveCodegenerator = async (framework, codegenConfig) => {
-  const codegeneratorPath = resolveCodegeneratorPath(framework, codegenConfig);
+const resolveCodegenerator = async (codegenConfig) => {
+  const codegeneratorPath = resolveCodegeneratorPath(codegenConfig);
   let codegenerator
-  if (!codegenerator) {
+  if (!codegeneratorPath) {
     throw Error(ERROR_IGNORE);
   }
 
@@ -66,21 +65,17 @@ const resolveCodegenerator = async (framework, codegenConfig) => {
       codegenerator = await resolveCodegeneratorFromUrl(codegeneratorPath);
     }
   } catch (e) {
-    if (!framework) {
-      throw Error(ERROR_IGNORE);
-    } else {
-      throw e
-    }
+    throw e;
   }
   
   return codegenerator;
 
 }
 
-const getCodegenFiles = async (framework, actionName, actionsSdl, derive, codegenConfig) => {
+const getCodegenFiles = async (actionName, actionsSdl, derive, codegenConfig) => {
   let codegenerator;
   try {
-    codegenerator = await resolveCodegenerator(framework, codegenConfig)
+    codegenerator = await resolveCodegenerator(codegenConfig)
   } catch (e) {
     if (e.message === ERROR_IGNORE) {
       return [];
@@ -98,10 +93,10 @@ const getCodegenFiles = async (framework, actionName, actionsSdl, derive, codege
 
 }
 
-const getFrameworkCodegen = async (framework, actionName, actionsSdl, derive, scaffoldConfig) => {
+const getFrameworkCodegen = async (actionName, actionsSdl, derive, codegenConfig) => {
 
   try {
-    const codegenFiles = await getCodegenFiles(framework, actionName, actionsSdl, derive, scaffoldConfig);
+    const codegenFiles = await getCodegenFiles(actionName, actionsSdl, derive, codegenConfig);
     return {
       files: codegenFiles
     }
@@ -112,18 +107,7 @@ const getFrameworkCodegen = async (framework, actionName, actionsSdl, derive, sc
   }
 
 };
-/*
-let aSdl = `
-type Mutation { actionName1 (arg1: SampleInput!): SampleOutput }
-type SampleOutput { accessToken: String! }
-input SampleInput { username: String! password: String! }
-type Mutation { actionName2 (arg1: SampleInput!): SampleOutput }
-`
 
-let aName = 'actionName2';
-
-getFrameworkScaffold('nodejs-zeit', aName, aSdl).then(s => console.log(s)).catch(e => console.log(e));
-*/
 module.exports = {
   getFrameworkCodegen
 };

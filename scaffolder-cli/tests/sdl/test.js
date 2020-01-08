@@ -16,7 +16,6 @@ const test = async () => {
   } else {
     console.log('✘ Conversion from metadata to SDL failed');
     console.log(toResponse);
-    console.log(expectedToResponse)
     process.exit(1);
   }
 
