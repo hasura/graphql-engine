@@ -278,7 +278,7 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQDeleteEventTrigger _          -> True
   RQRedeliverEvent _              -> False
   RQInvokeEventTrigger _          -> False
-  RQCreateScheduledTrigger _          -> False
+  RQCreateScheduledTrigger _      -> True
 
   RQCreateQueryCollection _       -> True
   RQDropQueryCollection _         -> True

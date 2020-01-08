@@ -79,8 +79,8 @@ instance FromJSON CreateScheduledTrigger where
   parseJSON =
     withObject "CreateScheduledTrigger" $ \o -> do
       stName <- o .: "name"
-      stWebhook <- o .: "webhook"
-      stWebhookFromEnv <- o .: "webhook_from_env"
+      stWebhook <- o .:? "webhook"
+      stWebhookFromEnv <- o .:? "webhook_from_env"
       stPayload <- o .:? "payload"
       stSchedule <- o .: "schedule"
       stRetryConf <- o .:? "retry_conf" .!= defaultRetryConf

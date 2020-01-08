@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.Eventing.ScheduledTrigger
   ( processScheduledQueue
@@ -61,11 +62,9 @@ data ScheduledEventSeed
  , sesScheduledTime :: !UTCTime
  } deriving (Show, Eq)
 
-
--- ScheduledEvents can be "partial" or "full"
+-- | ScheduledEvents can be "partial" or "full"
 -- Partial represents the event as present in db
 -- Full represents the partial event combined with schema cache configuration elements
-
 data SE_P = SE_PARTIAL | SE_FULL
 
 type family Param (p :: k) x
@@ -85,13 +84,12 @@ deriving instance Show (ScheduledEvent 'SE_FULL)
 type instance Param 'SE_PARTIAL a = ()
 type instance Param 'SE_FULL a = a
 
-instance J.ToJSON (Param 'SE_PARTIAL a) where
-  toJSON _ = J.Null
+-- empty splice to bring all the above definitions in scope
+$(pure [])
 
-instance (J.ToJSON a) => J.ToJSON (Param 'SE_FULL a) where
-  toJSON _ = toJSON a
-
-$(J.deriveToJSON (J.aesonDrop 2 J.snakeCase){J.omitNothingFields=True} ''ScheduledEvent)
+instance (J.ToJSON (Param p T.Text), J.ToJSON (Param p J.Value)) =>
+         J.ToJSON (ScheduledEvent p) where
+  toJSON = $(J.mkToJSON (J.aesonDrop 2 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEvent)
 
 runScheduledEventsGenerator ::
      L.Logger L.Hasura
@@ -102,7 +100,7 @@ runScheduledEventsGenerator logger pgpool scRef = do
   forever $ do
     traceM "entering scheduled events generator"
     (sc, _) <- liftIO $ readIORef scRef
-    let scheduledTriggers = Map.elems $ scScheduledTriggers sc
+    let scheduledTriggers = traceShowId $ Map.elems $ scScheduledTriggers sc
     runExceptT
       (Q.runTx
          pgpool

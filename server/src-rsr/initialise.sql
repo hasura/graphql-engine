@@ -682,7 +682,7 @@ CREATE TABLE hdb_catalog.hdb_scheduled_events
   tries INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT NOW(),
   locked BOOLEAN NOT NULL DEFAULT FALSE,
-  dead BOOLEAN NOT NULL DEFAULT FALSE
+  dead BOOLEAN NOT NULL DEFAULT FALSE,
 
   PRIMARY KEY (name, scheduled_time),
   FOREIGN KEY (name) REFERENCES hdb_catalog.hdb_scheduled_trigger(name)
