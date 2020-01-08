@@ -15,11 +15,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/telemetry"
-	"github.com/hasura/graphql-engine/cli/util"
-
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
+	"github.com/hasura/graphql-engine/cli/telemetry"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
