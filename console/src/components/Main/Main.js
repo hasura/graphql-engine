@@ -495,7 +495,7 @@ class Main extends React.Component {
                     Monitoring/Analytics
                   </div>
                   <div className={styles.featuresDescription}>
-                    Complete observability: Troubleshoot errors & drill-down
+                    Complete observability to troubleshoot errors and drill-down
                     into individual operations.
                   </div>
                 </div>
@@ -507,7 +507,7 @@ class Main extends React.Component {
                 <div className={styles.featuresList}>
                   <div className={styles.featuresTitle}>Rate Limiting</div>
                   <div className={styles.featuresDescription}>
-                    Role-based rate limits to prevent abuse.
+                    Prevent abuse with role-based rate limits.
                   </div>
                 </div>
               </div>
@@ -539,10 +539,12 @@ class Main extends React.Component {
                   <img src={allow} alt={'allow'} />
                 </div>
                 <div className={styles.featuresList}>
-                  <div className={styles.featuresTitle}>Allow Listing</div>
+                  <div className={styles.featuresTitle}>
+                    Allow Listing Workflows
+                  </div>
                   <div className={styles.featuresDescription}>
-                    Easy workflows to setup allow lists across dev, staging and
-                    production environments.
+                    Setup allow lists across dev, staging and production
+                    environments with easy workflows.
                   </div>
                 </div>
               </div>
@@ -554,7 +556,7 @@ class Main extends React.Component {
                 }
                 target={'_blank'}
               >
-                Set up a chat with us to learn more{' '}
+                Set up a chat to learn more{' '}
                 <img
                   className={styles.arrow}
                   src={arrowForwardRed}
