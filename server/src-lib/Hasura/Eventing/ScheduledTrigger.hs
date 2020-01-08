@@ -74,8 +74,10 @@ data ScheduledEvent (p :: SE_P)
   { seId            :: !Text
   , seName          :: !TriggerName
   , seScheduledTime :: !UTCTime
+  , seTries         :: !Int
   , seWebhook       :: !(Param p T.Text)
   , sePayload       :: !(Param p J.Value)
+  , seRetryConf     :: !(Param p RetryConfST)
   }
 
 deriving instance Show (ScheduledEvent 'SE_PARTIAL)
@@ -87,7 +89,11 @@ type instance Param 'SE_FULL a = a
 -- empty splice to bring all the above definitions in scope
 $(pure [])
 
-instance (J.ToJSON (Param p T.Text), J.ToJSON (Param p J.Value)) =>
+instance ( J.ToJSON (Param p T.Text)
+         , J.ToJSON (Param p J.Value)
+         , J.ToJSON (Param p Int)
+         , J.ToJSON (Param p RetryConfST)
+         ) =>
          J.ToJSON (ScheduledEvent p) where
   toJSON = $(J.mkToJSON (J.aesonDrop 2 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEvent)
 
@@ -100,7 +106,7 @@ runScheduledEventsGenerator logger pgpool scRef = do
   forever $ do
     traceM "entering scheduled events generator"
     (sc, _) <- liftIO $ readIORef scRef
-    let scheduledTriggers = traceShowId $ Map.elems $ scScheduledTriggers sc
+    let scheduledTriggers = Map.elems $ scScheduledTriggers sc
     runExceptT
       (Q.runTx
          pgpool
@@ -169,14 +175,15 @@ processScheduledQueue logger pgpool httpMgr scRef =
     case scheduledEventsE of
       Right partialEvents ->
         sequence_ $
-        flip map partialEvents $ \(ScheduledEvent id' name st _ _) -> do
+        flip map partialEvents $ \(ScheduledEvent id' name st tries _ _ _) -> do
           let sti' = Map.lookup name scheduledTriggersInfo
           case sti' of
             Nothing -> traceM "ERROR: couldn't find scheduled trigger in cache"
             Just sti -> do
               let webhook = wciCachedValue $ stiWebhookInfo sti
                   payload = fromMaybe J.Null $ stiPayload sti
-                  se = ScheduledEvent id' name st webhook payload
+                  retryConf = stiRetryConf sti
+                  se = ScheduledEvent id' name st tries webhook payload retryConf
               runReaderT (processScheduledEvent pgpool httpMgr sti se) logger
       Left err -> traceShowM err
     threadDelay (10 * oneSecond)
@@ -258,7 +265,24 @@ processError pgpool se err = do
     runExceptT $
     Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
       insertInvocation invocation
+      retryOrMarkError se err
+
+retryOrMarkError :: ScheduledEvent 'SE_FULL -> HTTPErr -> Q.TxE QErr ()
+retryOrMarkError se@ScheduledEvent{..} err = do
+  let mretryHeader = getRetryAfterHeaderFromHTTPErr err
+      mretryHeaderSeconds = join $ parseRetryHeaderValue <$> mretryHeader
+      triesExhausted = seTries >= rcstNumRetries seRetryConf
+      noRetryHeader = isNothing mretryHeaderSeconds
+  -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
+  if triesExhausted && noRetryHeader
+    then do
       markError
+    else do
+      currentTime <- liftIO getCurrentTime
+      let delay = fromMaybe (rcstIntervalSec seRetryConf) mretryHeaderSeconds
+          diff = fromIntegral delay
+          retryTime = addUTCTime diff currentTime
+      setRetry se retryTime
   where
     markError =
       Q.unitQE
@@ -267,7 +291,7 @@ processError pgpool se err = do
         UPDATE hdb_catalog.hdb_scheduled_events
         SET error = 't', locked = 'f'
         WHERE id = $1
-      |] (Identity $ seId se) True
+      |] (Identity seId) True
 
 processSuccess :: (MonadIO m) => Q.PGPool -> ScheduledEvent 'SE_FULL -> HTTPResp -> m (Either QErr ())
 processSuccess pgpool se resp = do
@@ -304,6 +328,14 @@ processDead pgpool se =
           SET dead = 't', locked = 'f'
           WHERE id = $1
         |] (Identity $ seId se) False
+
+setRetry :: ScheduledEvent 'SE_FULL -> UTCTime -> Q.TxE QErr ()
+setRetry se time =
+  Q.unitQE defaultTxErrorHandler [Q.sql|
+          UPDATE hdb_catalog.hdb_scheduled_events
+          SET next_retry_at = $1, locked = 'f'
+          WHERE id = $2
+          |] (time, seId se) True
 
 mkInvo
   :: ScheduledEvent 'SE_FULL -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
@@ -345,12 +377,15 @@ getScheduledEvents = do
                     WHERE ( t.locked = 'f'
                             and t.delivered = 'f'
                             and t.error = 'f'
-                            and t.scheduled_time <= now()
+                            and (
+                             (t.next_retry_at is NULL and t.scheduled_time <= now()) or
+                             (t.next_retry_at is not NULL and t.next_retry_at <= now())
+                            )
                             and t.dead = 'f'
                           )
                     FOR UPDATE SKIP LOCKED
                     )
-      RETURNING id, name, scheduled_time
+      RETURNING id, name, scheduled_time, tries
       |] () True
   pure $ partialSchedules
-  where uncurryEvent (i, n, st) = ScheduledEvent i n st () ()
+  where uncurryEvent (i, n, st, tries) = ScheduledEvent i n st tries () () ()

@@ -26,7 +26,6 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Control.Concurrent.STM.TQueue as TQ
-import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as M
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
@@ -90,9 +89,6 @@ defaultMaxEventThreads = 100
 
 defaultFetchIntervalMilliSec :: Int
 defaultFetchIntervalMilliSec = 1000
-
-retryAfterHeader :: CI.CI T.Text
-retryAfterHeader = "Retry-After"
 
 initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
 initEventEngineCtx maxT fetchI = do
@@ -218,9 +214,9 @@ processError pool e retryConf decodedHeaders ep err = do
 
 retryOrSetError :: Event -> RetryConf -> HTTPErr -> Q.TxE QErr ()
 retryOrSetError e retryConf err = do
-  let mretryHeader = getRetryAfterHeaderFromError err
+  let mretryHeader = getRetryAfterHeaderFromHTTPErr err
       tries = eTries e
-      mretryHeaderSeconds = parseRetryHeader mretryHeader
+      mretryHeaderSeconds = join $ parseRetryHeaderValue <$> mretryHeader
       triesExhausted = tries >= rcNumRetries retryConf
       noRetryHeader = isNothing mretryHeaderSeconds
   -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
@@ -233,22 +229,6 @@ retryOrSetError e retryConf err = do
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
       setRetry e retryTime
-  where
-    getRetryAfterHeaderFromError (HStatus resp) = getRetryAfterHeaderFromResp resp
-    getRetryAfterHeaderFromError _              = Nothing
-
-    getRetryAfterHeaderFromResp resp
-      = let mHeader = find (\(HeaderConf name _)
-                            -> CI.mk name == retryAfterHeader) (hrsHeaders resp)
-        in case mHeader of
-             Just (HeaderConf _ (HVValue value)) -> Just value
-             _                                   -> Nothing
-    parseRetryHeader Nothing = Nothing
-    parseRetryHeader (Just hValue)
-      = let seconds = readMaybe $ T.unpack hValue
-        in case seconds of
-             Nothing  -> Nothing
-             Just sec -> if sec > 0 then Just sec else Nothing
 
 mkInvo
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]

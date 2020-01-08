@@ -25,6 +25,9 @@ module Hasura.Eventing.HTTP
   , LogEnvHeaders
   , encodeHeader
   , decodeHeader
+  , getRetryAfterHeaderFromHTTPErr
+  , getRetryAfterHeaderFromResp
+  , parseRetryHeaderValue
   ) where
 
 import qualified Data.Aeson                    as J
@@ -55,6 +58,9 @@ import           Hasura.RQL.Types.Error        (QErr)
 import           Hasura.RQL.Types.EventTrigger
 
 type LogEnvHeaders = Bool
+
+retryAfterHeader :: CI.CI T.Text
+retryAfterHeader = "Retry-After"
 
 data WebhookRequest
   = WebhookRequest
@@ -295,3 +301,27 @@ decodeHeader logenv headerInfos (hdrName, hdrVal)
                      else ehiHeaderConf ehi
    where
      decodeBS = TE.decodeUtf8With TE.lenientDecode
+
+getRetryAfterHeaderFromHTTPErr :: HTTPErr -> Maybe Text
+getRetryAfterHeaderFromHTTPErr (HStatus resp) = getRetryAfterHeaderFromResp resp
+getRetryAfterHeaderFromHTTPErr _              = Nothing
+
+getRetryAfterHeaderFromResp :: HTTPResp -> Maybe Text
+getRetryAfterHeaderFromResp resp =
+  let mHeader =
+        find
+          (\(HeaderConf name _) -> CI.mk name == retryAfterHeader)
+          (hrsHeaders resp)
+   in case mHeader of
+        Just (HeaderConf _ (HVValue value)) -> Just value
+        _                                   -> Nothing
+
+parseRetryHeaderValue :: T.Text -> Maybe Int
+parseRetryHeaderValue hValue =
+  let seconds = readMaybe $ T.unpack hValue
+   in case seconds of
+        Nothing -> Nothing
+        Just sec ->
+          if sec > 0
+            then Just sec
+            else Nothing
