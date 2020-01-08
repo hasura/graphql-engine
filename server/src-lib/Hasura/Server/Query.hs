@@ -184,14 +184,21 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = d
   where
     runCtx = RunCtx userInfo hMgr sqlGenCtx
     withReload r = do
-      when (queryNeedsReload query) $ do
+      when (queryModifiesSchemaCache query) $ do
         e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite
              $ liftTx $ recordSchemaUpdate instanceId
         liftEither e
       return r
 
-queryNeedsReload :: RQLQuery -> Bool
-queryNeedsReload (RQV1 qi) = case qi of
+-- | A predicate that determines whether the given query might modify/rebuild the schema cache. If
+-- so, it needs to acquire the global lock on the schema cache so that other queries do not modify
+-- it concurrently.
+--
+-- Ideally, we would enforce this using the type system — queries for which this function returns
+-- 'False' should not be allowed to modify the schema cache. But for now we just ensure consistency
+-- by hand.
+queryModifiesSchemaCache :: RQLQuery -> Bool
+queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQAddExistingTableOrView _      -> True
   RQTrackTable _                  -> True
   RQUntrackTable _                -> True
@@ -256,8 +263,8 @@ queryNeedsReload (RQV1 qi) = case qi of
 
   RQDumpInternalState _           -> False
 
-  RQBulk qs                       -> any queryNeedsReload qs
-queryNeedsReload (RQV2 qi) = case qi of
+  RQBulk qs                       -> any queryModifiesSchemaCache qs
+queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
   RQV2TrackFunction _        -> True
@@ -304,16 +311,10 @@ runQueryM
      )
   => RQLQuery
   -> m EncJSON
-runQueryM rq =
-  withPathK "args" $ runQueryM' <* rebuildGCtx
+runQueryM rq = withPathK "args" $ case rq of
+  RQV1 q -> runQueryV1M q
+  RQV2 q -> runQueryV2M q
   where
-    -- FIXME: rethink this
-    rebuildGCtx = when (queryNeedsReload rq) buildSchemaCache
-
-    runQueryM' = case rq of
-      RQV1 q -> runQueryV1M q
-      RQV2 q -> runQueryV2M q
-
     runQueryV1M = \case
       RQAddExistingTableOrView q   -> runTrackTableQ q
       RQTrackTable q               -> runTrackTableQ q

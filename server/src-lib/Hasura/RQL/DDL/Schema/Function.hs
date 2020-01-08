@@ -22,7 +22,6 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Control.Monad.Validate        as MV
 import qualified Data.HashMap.Strict           as M
-import qualified Data.HashSet                  as S
 import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
@@ -71,7 +70,8 @@ validateFuncArgs args =
     invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
 
 data FunctionIntegrityError
-  = FunctionVariadic
+  = FunctionNameNotGQLCompliant
+  | FunctionVariadic
   | FunctionReturnNotCompositeType
   | FunctionReturnNotSetof
   | FunctionReturnNotSetofTable
@@ -101,15 +101,11 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
     throwValidateError = MV.dispute . pure
 
     validateFunction = do
-      -- throw error if function has variadic arguments
+      unless (G.isValidName $ GS.qualObjectToName qf) $ throwValidateError FunctionNameNotGQLCompliant
       when hasVariadic $ throwValidateError FunctionVariadic
-      -- throw error if return type is not composite type
       when (retTyTyp /= PGKindComposite) $ throwValidateError FunctionReturnNotCompositeType
-      -- throw error if function do not returns SETOF
       unless retSet $ throwValidateError FunctionReturnNotSetof
-      -- throw error if return type is not a valid table
       unless returnsTab $ throwValidateError FunctionReturnNotSetofTable
-      -- throw error if function type is VOLATILE
       when (funTy == FTVOLATILE) $ throwValidateError FunctionVolatile
 
       -- validate function argument names
@@ -147,6 +143,7 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
       <> makeReasonMessage allErrors showOneError
 
     showOneError = \case
+      FunctionNameNotGQLCompliant -> "function name is not a legal GraphQL identifier"
       FunctionVariadic -> "function with \"VARIADIC\" parameters are not supported"
       FunctionReturnNotCompositeType -> "the function does not return a \"COMPOSITE\" type"
       FunctionReturnNotSetof -> "the function does not return a SETOF"
@@ -205,35 +202,9 @@ trackFunctionP1 qf = do
   when (M.member qt $ scTables rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
-trackFunctionP2Setup
-  :: (QErrM m)
-  => HashSet QualifiedTable
-  -- ^ the set of all tracked tables
-  -> QualifiedFunction
-  -> SystemDefined
-  -> FunctionConfig
-  -> RawFunctionInfo
-  -> m (FunctionInfo, SchemaDependency)
-trackFunctionP2Setup trackedTableNames qf systemDefined config rawfi = do
-  (fi, deps) <- mkFunctionInfo qf systemDefined config rawfi
-  -- FIXME: eliminate redundant check now handled by dependencies
-  unless (fiReturnType fi `S.member` trackedTableNames) $
-    throw400 NotExists $ "table " <> fiReturnType fi <<> " is not tracked"
-  pure (fi, deps)
-
 trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)
                 => QualifiedFunction -> FunctionConfig -> m EncJSON
 trackFunctionP2 qf config = do
-  let funcNameGQL = GS.qualObjectToName qf
-  -- check function name is in compliance with GraphQL spec
-  -- FIXME: move check into trackFunctionP2Setup
-  unless (G.isValidName funcNameGQL) $ throw400 NotSupported $
-    "function name " <> qf <<> " is not in compliance with GraphQL spec"
-  -- check for conflicts in remote schema
-  -- FIXME: ensure check is preserved
-  -- GS.checkConflictingNode defGCtx funcNameGQL
-
-  -- fetch function info
   systemDefined <- askSystemDefined
   liftTx $ saveFunctionToCatalog qf config systemDefined
   buildSchemaCacheFor $ MOFunction qf

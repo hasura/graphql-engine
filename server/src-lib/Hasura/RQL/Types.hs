@@ -32,8 +32,6 @@ module Hasura.RQL.Types
   , askEventTriggerInfo
   , askTabInfoFromTrigger
 
-  , adminOnly
-
   , HeaderObj
 
   , liftMaybe
@@ -286,13 +284,6 @@ askFieldInfo m f =
 
 askCurRole :: (UserInfoM m) => m RoleName
 askCurRole = userRole <$> askUserInfo
-
-adminOnly :: (UserInfoM m, QErrM m) => m ()
-adminOnly = do
-  curRole <- askCurRole
-  unless (curRole == adminRole) $ throw400 AccessDenied errMsg
-  where
-    errMsg = "restricted access : admin only"
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"

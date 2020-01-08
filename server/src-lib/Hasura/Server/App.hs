@@ -284,7 +284,7 @@ v1QueryHandler query = do
   scRef <- scCacheRef . hcServerCtx <$> ask
   logger <- scLogger . hcServerCtx <$> ask
   res <- bool (fst <$> dbAction) (withSCUpdate scRef logger dbAction) $
-         queryNeedsReload query
+         queryModifiesSchemaCache query
   return $ HttpResponse res Nothing
   where
     -- Hit postgres

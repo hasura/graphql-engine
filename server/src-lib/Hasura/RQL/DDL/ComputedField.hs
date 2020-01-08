@@ -102,7 +102,6 @@ showError qf = \case
       FTAFirst          -> "first argument of the function " <>> qf
       FTANamed argName _ -> argName <<> " argument of the function " <>> qf
 
--- FIXME: ensure all call sites are updated
 addComputedFieldP2Setup
   :: (QErrM m)
   => S.HashSet QualifiedTable

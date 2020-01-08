@@ -29,10 +29,9 @@ renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
     oldRN = riName relInfo
 
 runRenameRel
-  :: (MonadTx m, CacheRWM m, UserInfoM m)
+  :: (MonadTx m, CacheRWM m)
   => RenameRel -> m EncJSON
 runRenameRel (RenameRel qt rn newRN) = do
-  adminOnly
   tabInfo <- askTableCoreInfo qt
   ri <- askRelType (_tciFieldInfoMap tabInfo) rn ""
   withNewInconsistentObjsCheck do

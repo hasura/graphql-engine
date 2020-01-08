@@ -54,8 +54,6 @@ import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.SQL.Types
 
-import           Debug.Trace
-
 buildRebuildableSchemaCache
   :: (MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
   => m (RebuildableSchemaCache m)
@@ -82,18 +80,12 @@ instance (Monad m) => CacheRM (CacheRWT m) where
 
 instance (MonadIO m, MonadTx m, MonadUnique m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason = CacheRWT do
-    liftIO $ traceEventIO "START refresh"
     RebuildableSchemaCache _ invalidationMap rule <- get
     catalogMetadata <- liftTx fetchCatalogData
-    liftIO $ traceEventIO "START build"
     result <- lift $ flip runReaderT buildReason $ Inc.build rule (catalogMetadata, invalidationMap)
     let schemaCache = Inc.result result
-    liftIO $ traceEventIO "STOP build"
-    liftIO $ traceEventIO "START prune"
-    let !prunedInvalidationMap = pruneInvalidationMap schemaCache invalidationMap
-    liftIO $ traceEventIO "STOP prune"
-    liftIO $ traceEventIO "STOP refresh"
-    put $ RebuildableSchemaCache schemaCache prunedInvalidationMap (Inc.rebuildRule result)
+        prunedInvalidationMap = pruneInvalidationMap schemaCache invalidationMap
+    put $! RebuildableSchemaCache schemaCache prunedInvalidationMap (Inc.rebuildRule result)
     where
       pruneInvalidationMap schemaCache = M.filterWithKey \name _ ->
         M.member name (scRemoteSchemas schemaCache)
@@ -135,14 +127,11 @@ buildSchemaCacheRule = proc inputs -> do
             computedFields = catalogMetadata
 
       -- tables
-      bindA -< liftIO $ traceEventIO "START tables"
       tableRawInfos <- buildTableCache -< tables
-      bindA -< liftIO $ traceEventIO "STOP tables"
 
       -- relationships and computed fields
       let relationshipsByTable = M.groupOn _crTable relationships
           computedFieldsByTable = M.groupOn (_afcTable . _cccComputedField) computedFields
-      bindA -< liftIO $ traceEventIO "START fields"
       tableCoreInfos <- (tableRawInfos >- returnA)
         >-> (\info -> (info, relationshipsByTable) >- alignExtraTableInfo mkRelationshipMetadataObject)
         >-> (\info -> (info, computedFieldsByTable) >- alignExtraTableInfo mkComputedFieldMetadataObject)
@@ -151,7 +140,6 @@ buildSchemaCacheRule = proc inputs -> do
                  allFields <- addNonColumnFields -<
                    (tableRawInfos, columns, tableRelationships, tableComputedFields)
                  returnA -< tableRawInfo { _tciFieldInfoMap = allFields }) |)
-      bindA -< liftIO $ traceEventIO "STOP fields"
 
       -- permissions and event triggers
       tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos
@@ -159,15 +147,11 @@ buildSchemaCacheRule = proc inputs -> do
         >-> (\info -> (info, M.groupOn _cpTable permissions) >- alignExtraTableInfo mkPermissionMetadataObject)
         >-> (\info -> (info, M.groupOn _cetTable eventTriggers) >- alignExtraTableInfo mkEventTriggerMetadataObject)
         >-> (| Inc.keyed (\_ ((tableCoreInfo, tablePermissions), tableEventTriggers) -> do
-                 bindA -< liftIO $ traceEventIO "START permissions"
                  let tableName = _tciName tableCoreInfo
                      tableFields = _tciFieldInfoMap tableCoreInfo
                  permissionInfos <- buildTablePermissions -<
                    (tableCoreInfosDep, tableName, tableFields, HS.fromList tablePermissions)
-                 bindA -< liftIO $ traceEventIO "STOP permissions"
-                 bindA -< liftIO $ traceEventIO "START event triggers"
                  eventTriggerInfos <- buildTableEventTriggers -< (tableCoreInfo, tableEventTriggers)
-                 bindA -< liftIO $ traceEventIO "STOP event triggers"
                  returnA -< TableInfo
                    { _tiCoreInfo = tableCoreInfo
                    , _tiRolePermInfoMap = permissionInfos
@@ -175,8 +159,6 @@ buildSchemaCacheRule = proc inputs -> do
                    }) |)
 
       -- sql functions
-      bindA -< liftIO $ traceEventIO "START functions"
-      let tableNames = HS.fromList $ M.keys tableCache
       functionCache <- (mapFromL _cfFunction functions >- returnA)
         >-> (| Inc.keyed (\_ (CatalogFunction qf systemDefined config funcDefs) -> do
                  let definition = toJSON $ TrackFunction qf
@@ -186,14 +168,12 @@ buildSchemaCacheRule = proc inputs -> do
                  (| withRecordInconsistency (
                     (| modifyErrA (do
                          rawfi <- bindErrorA -< handleMultipleFunctions qf funcDefs
-                         (fi, dep) <- bindErrorA -<
-                           trackFunctionP2Setup tableNames qf systemDefined config rawfi
+                         (fi, dep) <- bindErrorA -< mkFunctionInfo qf systemDefined config rawfi
                          recordDependencies -< (metadataObject, schemaObject, [dep])
                          returnA -< fi)
                     |) addFunctionContext)
                   |) metadataObject) |)
         >-> (\infos -> M.catMaybes infos >- returnA)
-      bindA -< liftIO $ traceEventIO "STOP functions"
 
       -- allow list
       let allowList = allowlistDefs
@@ -202,18 +182,14 @@ buildSchemaCacheRule = proc inputs -> do
             & HS.fromList
 
       -- build GraphQL context with tables and functions
-      bindA -< liftIO $ traceEventIO "START GQL"
       baseGQLSchema <- bindA -< GS.mkGCtxMap tableCache functionCache
-      bindA -< liftIO $ traceEventIO "STOP GQL"
 
       -- remote schemas
-      bindA -< liftIO $ traceEventIO "START remote schemas"
       let invalidatedRemoteSchemas = flip map remoteSchemas \remoteSchema ->
             (M.lookup (_arsqName remoteSchema) invalidationMap, remoteSchema)
       (remoteSchemaMap, gqlSchema, remoteGQLSchema) <-
         (| foldlA' (\schemas schema -> (schemas, schema) >- addRemoteSchema)
         |) (M.empty, baseGQLSchema, GC.emptyGCtx) invalidatedRemoteSchemas
-      bindA -< liftIO $ traceEventIO "STOP remote schemas"
 
       returnA -< BuildOutputs
         { _boTables = tableCache

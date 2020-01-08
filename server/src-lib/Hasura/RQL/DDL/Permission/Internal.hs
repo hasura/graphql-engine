@@ -46,24 +46,6 @@ convColSpec :: FieldInfoMap FieldInfo -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
 convColSpec cim PCStar      = map pgiColumn $ getCols cim
 
--- FIXME: move check into collecting code for addPermP1 (probably buildSchemaCache)
-assertPermNotDefined
-  :: (MonadError QErr m)
-  => RoleName
-  -> PermAccessor a
-  -> TableInfo
-  -> m ()
-assertPermNotDefined roleName pa tableInfo =
-  when (permissionIsDefined rpi pa || roleName == adminRole)
-  $ throw400 AlreadyExists $ mconcat
-  [ "'" <> T.pack (show $ permAccToType pa) <> "'"
-  , " permission on " <>> _tciName (_tiCoreInfo tableInfo)
-  , " for role " <>> roleName
-  , " already exists"
-  ]
-  where
-    rpi = M.lookup roleName $ _tiRolePermInfoMap tableInfo
-
 permissionIsDefined
   :: Maybe RolePermInfo -> PermAccessor a -> Bool
 permissionIsDefined rpi pa =
@@ -287,20 +269,6 @@ class (ToJSON a) => IsPerm a where
     :: DropPerm a -> PermAccessor (PermInfo a)
   getPermAcc2 _ = permAccessor
 
--- FIXME: Push into addPermP1
-validateViewPerm
-  :: (IsPerm a, QErrM m) => PermDef a -> TableCoreInfo -> m ()
-validateViewPerm permDef tableInfo =
-  case permAcc of
-    PASelect -> return ()
-    PAInsert -> mutableView tn viIsInsertable viewInfo "insertable"
-    PAUpdate -> mutableView tn viIsUpdatable viewInfo "updatable"
-    PADelete -> mutableView tn viIsDeletable viewInfo "deletable"
-  where
-    tn = _tciName tableInfo
-    viewInfo = _tciViewInfo tableInfo
-    permAcc = getPermAcc1 permDef
-
 addPermP2 :: (IsPerm a, MonadTx m, HasSystemDefined m) => QualifiedTable -> PermDef a -> m ()
 addPermP2 tn pd = do
   let pt = permAccToType $ getPermAcc1 pd
@@ -311,7 +279,6 @@ runCreatePerm
   :: (UserInfoM m, CacheRWM m, IsPerm a, MonadTx m, HasSystemDefined m)
   => CreatePerm a -> m EncJSON
 runCreatePerm (WithTable tn pd) = do
-  adminOnly
   addPermP2 tn pd
   let pt = permAccToType $ getPermAcc1 pd
   buildSchemaCacheFor $ MOTableObj tn (MTOPerm (pdRole pd) pt)

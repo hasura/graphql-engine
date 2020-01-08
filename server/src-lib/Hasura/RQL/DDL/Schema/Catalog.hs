@@ -12,7 +12,6 @@ module Hasura.RQL.DDL.Schema.Catalog
 
 import           Hasura.Prelude
 
-import qualified Data.Text                          as T
 import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson
@@ -29,19 +28,9 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
 
-import           Debug.Trace
-
 fetchCatalogData :: (MonadTx m) => m CatalogMetadata
-fetchCatalogData = do
-  liftTx . liftIO $ traceEventIO "START fetch"
-  liftTx . liftIO $ traceEventIO "START fetch/query"
-  metadataBytes <- (liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True)
-  liftTx . liftIO $ traceEventIO "STOP fetch/query"
-  liftTx . liftIO $ traceEventIO "START fetch/decode"
-  let !decodedValue = force (eitherDecodeStrict' metadataBytes)
-  liftTx . liftIO $ traceEventIO "STOP fetch/decode"
-  liftTx . liftIO $ traceEventIO "STOP fetch"
-  decodedValue `onLeft` \err -> throw500 (T.pack err)
+fetchCatalogData = liftTx $ Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+  $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
 
 saveTableToCatalog :: (MonadTx m) => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m ()
 saveTableToCatalog (QualifiedObject sn tn) systemDefined isEnum config = liftTx $

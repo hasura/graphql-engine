@@ -23,8 +23,6 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.SQL.Types
 
-import           Debug.Trace
-
 buildTablePermissions
   :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , ArrowWriter (Seq CollectedInfo) arr, MonadTx m, MonadReader BuildReason m )
@@ -95,14 +93,10 @@ buildPermission = Inc.cache proc (tableCache, tableName, tableFields, permission
          (| withPermission (do
               bindErrorA -< when (roleName == adminRole) $
                 throw400 ConstraintViolation "cannot define permission for admin role"
-              bindA -< liftTx . liftIO $ traceEventIO "START permissions/build/decode"
               perm <- bindErrorA -< decodeValue pDef
-              bindA -< liftTx . liftIO $ traceEventIO "STOP permissions/build/decode"
               let permDef = PermDef roleName perm Nothing
-              bindA -< liftTx . liftIO $ traceEventIO "START permissions/build/info"
               (info, dependencies) <- liftEitherA <<< Inc.bindDepend -< runExceptT $
                 runTableCoreCacheRT (buildPermInfo tableName tableFields permDef) tableCache
-              bindA -< liftTx . liftIO $ traceEventIO "STOP permissions/build/info"
               tellA -< Seq.fromList dependencies
               rebuildViewsIfNeeded -< (tableName, permDef, info)
               returnA -< info)
@@ -114,8 +108,6 @@ rebuildViewsIfNeeded
      , Inc.Cacheable a, IsPerm a, Inc.Cacheable (PermInfo a) )
   => (QualifiedTable, PermDef a, PermInfo a) `arr` ()
 rebuildViewsIfNeeded = Inc.cache $ arrM \(tableName, permDef, info) -> do
-  liftTx . liftIO $ traceEventIO "START permissions/build/views"
   buildReason <- ask
   when (buildReason == CatalogUpdate) $
     addPermP2Setup tableName permDef info
-  liftTx . liftIO $ traceEventIO "STOP permissions/build/views"

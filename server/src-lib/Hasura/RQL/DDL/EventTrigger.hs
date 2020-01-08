@@ -265,10 +265,9 @@ runCreateEventTriggerQuery q = do
   return successMsg
 
 runDeleteEventTriggerQuery
-  :: (MonadTx m, UserInfoM m, CacheRWM m)
+  :: (MonadTx m, CacheRWM m)
   => DeleteEventTriggerQuery -> m EncJSON
 runDeleteEventTriggerQuery (DeleteEventTriggerQuery name) = do
-  adminOnly
   liftTx $ delEventTriggerFromCatalog name
   withNewInconsistentObjsCheck buildSchemaCache
   pure successMsg

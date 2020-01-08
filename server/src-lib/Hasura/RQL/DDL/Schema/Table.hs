@@ -177,23 +177,21 @@ unTrackExistingTableOrViewP1 (UntrackTable vn _) = do
 unTrackExistingTableOrViewP2
   :: (CacheRWM m, MonadTx m)
   => UntrackTable -> m EncJSON
-unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = do
+unTrackExistingTableOrViewP2 (UntrackTable qtn cascade) = withNewInconsistentObjsCheck do
   sc <- askSchemaCache
 
   -- Get relational, query template and function dependants
   let allDeps = getDependentObjs sc (SOTable qtn)
       indirectDeps = filter (not . isDirectDep) allDeps
-
   -- Report bach with an error if cascade is not set
   when (indirectDeps /= [] && not (or cascade)) $ reportDepsExt indirectDeps []
-
   -- Purge all the dependents from state
   mapM_ purgeDependentObject indirectDeps
-
   -- delete the table and its direct dependencies
   delTableAndDirectDeps qtn
+  buildSchemaCache
 
-  return successMsg
+  pure successMsg
   where
     isDirectDep = \case
       (SOTableObj dtn _) -> qtn == dtn
