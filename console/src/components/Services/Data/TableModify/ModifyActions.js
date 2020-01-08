@@ -48,6 +48,8 @@ import {
 import {
   getSetCustomRootFieldsQuery,
   getRunSqlQuery,
+  getDropComputedFieldQuery,
+  getAddComputedFieldQuery,
 } from '../../../Common/utils/v1QueryUtils';
 
 import {
@@ -174,48 +176,39 @@ export const saveComputedField = (
   const migrationUp = [];
   const migrationDown = [];
 
+  const tableDef = getTableDef(table);
+
   if (originalComputedField) {
-    migrationUp.push({
-      type: 'drop_computed_field',
-      args: {
-        table: getTableDef(table),
-        name: originalComputedField.computed_field_name,
-      },
-    });
+    migrationUp.push(
+      getDropComputedFieldQuery(
+        tableDef,
+        originalComputedField.computed_field_name
+      )
+    );
   }
 
-  migrationUp.push({
-    type: 'add_computed_field',
-    args: {
-      table: getTableDef(table),
-      name: computedField.computed_field_name,
-      definition: {
-        ...computedField.definition,
-      },
-      comment: computedField.comment,
-    },
-  });
+  migrationUp.push(
+    getAddComputedFieldQuery(
+      tableDef,
+      computedField.computed_field_name,
+      computedField.definition,
+      computedField.comment
+    )
+  );
 
-  migrationDown.push({
-    type: 'drop_computed_field',
-    args: {
-      table: getTableDef(table),
-      name: computedField.computed_field_name,
-    },
-  });
+  migrationDown.push(
+    getDropComputedFieldQuery(tableDef, computedField.computed_field_name)
+  );
 
   if (originalComputedField) {
-    migrationDown.push({
-      type: 'add_computed_field',
-      args: {
-        table: getTableDef(table),
-        name: originalComputedField.computed_field_name,
-        definition: {
-          ...originalComputedField.definition,
-        },
-        comment: originalComputedField.comment,
-      },
-    });
+    migrationDown.push(
+      getAddComputedFieldQuery(
+        tableDef,
+        originalComputedField.computed_field_name,
+        originalComputedField.definition,
+        originalComputedField.comment
+      )
+    );
   }
 
   const migrationName = `save_computed_field_${computedField.table_schema}_${
@@ -621,14 +614,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}"
           foreign key (${Object.keys(oldConstraint.column_mapping)
-            .map(lc => `"${lc}"`)
-            .join(', ')})
+    .map(lc => `"${lc}"`)
+    .join(', ')})
           references "${oldConstraint.ref_table_table_schema}"."${
-        oldConstraint.ref_table
-      }"
+  oldConstraint.ref_table
+}"
           (${Object.values(oldConstraint.column_mapping)
-            .map(rc => `"${rc}"`)
-            .join(', ')})
+    .map(rc => `"${rc}"`)
+    .join(', ')})
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -876,8 +869,8 @@ const deleteTrigger = (trigger, table) => {
 
     downMigrationSql += `CREATE TRIGGER "${triggerName}"
 ${trigger.action_timing} ${
-      trigger.event_manipulation
-    } ON "${tableSchema}"."${tableName}"
+  trigger.event_manipulation
+} ON "${tableSchema}"."${tableName}"
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
@@ -1730,24 +1723,24 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     const schemaChangesUp =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesUpQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesUpQuery,
             },
-          ]
+          },
+        ]
         : [];
     const schemaChangesDown =
       originalColType !== colType
         ? [
-            {
-              type: 'run_sql',
-              args: {
-                sql: columnChangesDownQuery,
-              },
+          {
+            type: 'run_sql',
+            args: {
+              sql: columnChangesDownQuery,
             },
-          ]
+          },
+        ]
         : [];
 
     /* column custom field up/down migration*/

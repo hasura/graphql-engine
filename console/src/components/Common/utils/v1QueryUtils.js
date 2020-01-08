@@ -50,3 +50,32 @@ export const getSetCustomRootFieldsQuery = (
     },
   };
 };
+
+export const getAddComputedFieldQuery = (
+  tableDef,
+  computedFieldName,
+  definition,
+  comment
+) => {
+  return {
+    type: 'add_computed_field',
+    args: {
+      table: tableDef,
+      name: computedFieldName,
+      definition: {
+        ...definition,
+      },
+      comment: comment,
+    },
+  };
+};
+
+export const getDropComputedFieldQuery = (tableDef, computedFieldName) => {
+  return {
+    type: 'drop_computed_field',
+    args: {
+      table: tableDef,
+      name: computedFieldName,
+    },
+  };
+};
