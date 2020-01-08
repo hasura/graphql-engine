@@ -28,14 +28,20 @@ const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
 const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
 const SET_FEATURES_COMPATIBILITY = 'Main/SET_FEATURES_COMPATIBILITY';
-const PRO_CLICKED = 'Main/PRO_CLICKED';
 const setFeaturesCompatibility = data => ({
   type: SET_FEATURES_COMPATIBILITY,
   data,
 });
 
+const PRO_CLICKED = 'Main/PRO_CLICKED';
 const emitProClickedEvent = data => ({
   type: PRO_CLICKED,
+  data,
+});
+
+const SET_READ_ONLY_MODE = 'Main/SET_READ_ONLY_MODE';
+const setReadOnlyMode = data => ({
+  type: SET_READ_ONLY_MODE,
   data,
 });
 
@@ -251,6 +257,12 @@ const mainReducer = (state = defaultState, action) => {
       };
     case UPDATE_MIGRATION_STATUS_ERROR:
       return { ...state, migrationError: action.data };
+    case SET_READ_ONLY_MODE:
+      return {
+        ...state,
+        readOnlyMode: action.data,
+        migrationMode: !action.data, // HACK
+      };
     case HASURACTL_URL_ENV:
       return { ...state, hasuractlEnv: action.data };
     case UPDATE_MIGRATION_MODE:
@@ -307,6 +319,7 @@ export {
   UPDATE_MIGRATION_STATUS_ERROR,
   UPDATE_ADMIN_SECRET_INPUT,
   loadMigrationStatus,
+  setReadOnlyMode,
   updateMigrationModeStatus,
   LOGIN_IN_PROGRESS,
   LOGIN_ERROR,
