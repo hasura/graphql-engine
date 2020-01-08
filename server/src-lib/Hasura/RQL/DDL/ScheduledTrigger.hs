@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.ScheduledTrigger
   ( runCreateScheduledTrigger
+  , runCancelScheduledEvent
   ) where
 
 import           Hasura.Db
@@ -47,3 +48,19 @@ addScheduledTriggerSetup CreateScheduledTrigger {..} = do
           webhookInfo
           headerInfo
   pure stInfo
+
+runCancelScheduledEvent :: CacheBuildM m => CancelScheduledEvent -> m EncJSON
+runCancelScheduledEvent se = do
+  affectedRows <- deleteScheduledEventFromCatalog se
+  if affectedRows == 1
+    then pure successMsg
+    else undefined
+
+deleteScheduledEventFromCatalog :: CacheBuildM m => CancelScheduledEvent -> m Int
+deleteScheduledEventFromCatalog se = liftTx $
+  Q.listQE defaultTxErrorHandler
+   [Q.sql|
+    DELETE FROM hdb_catalog.hdb_scheduled_events
+    WHERE id = $1
+    RETURNING count(*)
+   |] (Identity (cseId se)) False

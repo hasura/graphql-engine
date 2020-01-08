@@ -4,6 +4,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   ( ScheduleType(..)
   , CreateScheduledTrigger(..)
   , RetryConfST(..)
+  , CancelScheduledEvent(..)
   , formatTime'
   ) where
 
@@ -93,6 +94,12 @@ instance FromJSON CreateScheduledTrigger where
       pure CreateScheduledTrigger {..}
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
+
+newtype CancelScheduledEvent
+  = CancelScheduledEvent { cseId :: T.Text }
+  deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CancelScheduledEvent)
 
 -- Supported time string formats for the API:
 -- (see FromJSON for ZonedTime: https://hackage.haskell.org/package/aeson-1.4.6.0/docs/src/Data.Aeson.Types.FromJSON.html#line-2050)

@@ -88,6 +88,7 @@ data RQLQueryV1
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
   | RQCreateScheduledTrigger !CreateScheduledTrigger
+  | RQCancelScheduledEvent !CancelScheduledEvent
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
@@ -278,7 +279,9 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQDeleteEventTrigger _          -> True
   RQRedeliverEvent _              -> False
   RQInvokeEventTrigger _          -> False
+
   RQCreateScheduledTrigger _      -> True
+  RQCancelScheduledEvent _        -> False
 
   RQCreateQueryCollection _       -> True
   RQDropQueryCollection _         -> True
@@ -402,7 +405,9 @@ runQueryM rq =
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
       RQRedeliverEvent q           -> runRedeliverEvent q
       RQInvokeEventTrigger q       -> runInvokeEventTrigger q
+
       RQCreateScheduledTrigger q       -> runCreateScheduledTrigger q
+      RQCancelScheduledEvent q         -> runCancelScheduledEvent q
 
       RQCreateQueryCollection q        -> runCreateCollection q
       RQDropQueryCollection q          -> runDropCollection q
@@ -476,7 +481,9 @@ requiresAdmin = \case
     RQDeleteEventTrigger _          -> True
     RQRedeliverEvent _              -> True
     RQInvokeEventTrigger _          -> True
+
     RQCreateScheduledTrigger _      -> True
+    RQCancelScheduledEvent _        -> True
 
     RQCreateQueryCollection _       -> True
     RQDropQueryCollection _         -> True
