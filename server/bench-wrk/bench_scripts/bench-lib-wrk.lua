@@ -39,7 +39,8 @@ function _M.done(summary, latency, requests)
   io.stderr:write(
     json.encode({
         time=getTime(),
-        latency=get_stat_summary(latency),
+        -- Latency info from wrk framework is not that useful
+        -- latency=get_stat_summary(latency),
         summary=summary,
         requests=get_stat_summary(requests)
     })
