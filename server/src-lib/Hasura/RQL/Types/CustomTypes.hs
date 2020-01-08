@@ -12,10 +12,10 @@ module Hasura.RQL.Types.CustomTypes
   , InputObjectTypeDefinition(..)
   , ObjectFieldName(..)
   , ObjectFieldDefinition(..)
-  , ObjectRelationshipName(..)
-  , ObjectRelationship(..)
-  , orName, orRemoteTable, orFieldMapping
-  , ObjectRelationshipDefinition
+  , RelationshipName(..)
+  , TypeRelationship(..)
+  , trName, trType, trRemoteTable, trFieldMapping
+  , TypeRelationshipDefinition
   , ObjectTypeName(..)
   , ObjectTypeDefinition(..)
   , CustomTypeName
@@ -49,6 +49,7 @@ import qualified Hasura.GraphQL.Validate.Types       as VT
 import           Hasura.Prelude
 import           Hasura.RQL.Instances                ()
 import           Hasura.RQL.Types.Column
+import           Hasura.RQL.Types.Common             (RelType)
 import           Hasura.RQL.Types.Table
 import           Hasura.SQL.Types
 
@@ -109,22 +110,23 @@ data ObjectFieldDefinition
   } deriving (Show, Eq, Lift, Generic)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectFieldDefinition)
 
-newtype ObjectRelationshipName
-  = ObjectRelationshipName { unObjectRelationshipName :: G.Name }
+newtype RelationshipName
+  = RelationshipName { unRelationshipName :: G.Name }
   deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, Lift, Generic)
 
-data ObjectRelationship t f
-  = ObjectRelationship
-  { _orName         :: !ObjectRelationshipName
-  , _orRemoteTable  :: !t
-  , _orFieldMapping :: !(Map.HashMap ObjectFieldName f)
+data TypeRelationship t f
+  = TypeRelationship
+  { _trName         :: !RelationshipName
+  , _trType         :: !RelType
+  , _trRemoteTable  :: !t
+  , _trFieldMapping :: !(Map.HashMap ObjectFieldName f)
   } deriving (Show, Eq, Lift, Generic)
-$(makeLenses ''ObjectRelationship)
+$(makeLenses ''TypeRelationship)
 
-type ObjectRelationshipDefinition =
-  ObjectRelationship QualifiedTable PGCol
+type TypeRelationshipDefinition =
+  TypeRelationship QualifiedTable PGCol
 
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ObjectRelationship)
+$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''TypeRelationship)
 
 newtype ObjectTypeName
   = ObjectTypeName { unObjectTypeName :: G.NamedType }
@@ -136,7 +138,7 @@ data ObjectTypeDefinition
   { _otdName          :: !ObjectTypeName
   , _otdDescription   :: !(Maybe G.Description)
   , _otdFields        :: !(NEList.NonEmpty ObjectFieldDefinition)
-  , _otdRelationships :: !(Maybe [ObjectRelationshipDefinition])
+  , _otdRelationships :: !(Maybe [TypeRelationshipDefinition])
   } deriving (Show, Eq, Lift, Generic)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectTypeDefinition)
 
@@ -193,7 +195,7 @@ emptyCustomTypes :: CustomTypes
 emptyCustomTypes = CustomTypes Nothing Nothing Nothing Nothing
 
 type AnnotatedRelationship =
-  ObjectRelationship (TableInfo PGColumnInfo) PGColumnInfo
+  TypeRelationship (TableInfo PGColumnInfo) PGColumnInfo
 
 data OutputFieldTypeInfo
   = OutputFieldScalar !VT.ScalarTyInfo
@@ -204,7 +206,7 @@ data AnnotatedObjectType
   = AnnotatedObjectType
   { _aotDefinition      :: !ObjectTypeDefinition
   , _aotAnnotatedFields :: !(Map.HashMap ObjectFieldName (G.GType, OutputFieldTypeInfo))
-  , _aotRelationships   :: !(Map.HashMap ObjectRelationshipName AnnotatedRelationship)
+  , _aotRelationships   :: !(Map.HashMap RelationshipName AnnotatedRelationship)
   } deriving (Show, Eq)
 
 instance J.ToJSON AnnotatedObjectType where

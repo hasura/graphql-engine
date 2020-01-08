@@ -19,8 +19,8 @@ module Hasura.RQL.Types.SchemaCache
        , OutputFieldTypeInfo(..)
        , AnnotatedObjectType(..)
        , AnnotatedObjects
-       , ObjectRelationship(..)
-       , orName, orRemoteTable, orFieldMapping
+       , TypeRelationship(..)
+       , trName, trType, trRemoteTable, trFieldMapping
        , NonObjectTypeMap(..)
        , TableInfo(..)
        , askTabInfoM

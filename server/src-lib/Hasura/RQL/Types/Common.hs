@@ -102,7 +102,7 @@ relTypeToTxt ArrRel = "array"
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Lift, Generic)
 
 instance Hashable RelType
 
@@ -111,8 +111,8 @@ instance ToJSON RelType where
 
 instance FromJSON RelType where
   parseJSON (String "object") = return ObjRel
-  parseJSON (String "array") = return ArrRel
-  parseJSON _ = fail "expecting either 'object' or 'array' for rel_type"
+  parseJSON (String "array")  = return ArrRel
+  parseJSON _                 = fail "expecting either 'object' or 'array' for rel_type"
 
 instance Q.FromCol RelType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case

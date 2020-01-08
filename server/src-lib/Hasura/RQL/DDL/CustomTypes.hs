@@ -99,7 +99,7 @@ validateCustomTypeDefinitions customTypes = do
           fieldNames = map (unObjectFieldName . _ofdName) $
                        toList (_otdFields objectDefinition)
           relationships = fromMaybe [] $ _otdRelationships objectDefinition
-          relNames = map (unObjectRelationshipName . _orName) relationships
+          relNames = map (unRelationshipName . _trName) relationships
           duplicateFieldNames = L.duplicates $ fieldNames <> relNames
           fields = toList $ _otdFields objectDefinition
 
@@ -138,9 +138,9 @@ validateCustomTypeDefinitions customTypes = do
           else pure Nothing
 
       for_ relationships $ \relationshipField -> do
-        let relationshipName = _orName relationshipField
-            remoteTable = _orRemoteTable relationshipField
-            fieldMapping = _orFieldMapping relationshipField
+        let relationshipName = _trName relationshipField
+            remoteTable = _trRemoteTable relationshipField
+            fieldMapping = _trFieldMapping relationshipField
 
         --check that the table exists
         remoteTableInfoM <- askTabInfoM remoteTable
@@ -187,13 +187,13 @@ data CustomTypeValidationError
   | ObjectFieldObjectBaseType !ObjectTypeName !ObjectFieldName !G.NamedType
   -- ^ The table specified in the relationship does not exist
   | ObjectRelationshipTableDoesNotExist
-    !ObjectTypeName !ObjectRelationshipName !QualifiedTable
+    !ObjectTypeName !RelationshipName !QualifiedTable
   -- ^ The field specified in the relationship mapping does not exist
   | ObjectRelationshipFieldDoesNotExist
-    !ObjectTypeName !ObjectRelationshipName !ObjectFieldName
+    !ObjectTypeName !RelationshipName !ObjectFieldName
   -- ^ The column specified in the relationship mapping does not exist
   | ObjectRelationshipColumnDoesNotExist
-    !ObjectTypeName !ObjectRelationshipName !QualifiedTable !PGCol
+    !ObjectTypeName !RelationshipName !QualifiedTable !PGCol
   -- ^ duplicate enum values
   | DuplicateEnumValues !EnumTypeName !(Set.HashSet G.EnumValue)
   deriving (Show, Eq)

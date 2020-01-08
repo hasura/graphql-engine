@@ -3,7 +3,7 @@ module Hasura.GraphQL.Schema.CustomTypes
   , buildCustomTypesSchema
   ) where
 
-import Control.Lens
+import           Control.Lens
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -29,20 +29,23 @@ buildObjectTypeInfo roleName annotatedObjectType =
 
     relationships =
       flip map (toList $ _aotRelationships annotatedObjectType) $
-      \(ObjectRelationship name remoteTableInfo _) ->
+      \(TypeRelationship name ty remoteTableInfo _) ->
         if isJust (getSelectPermissionInfoM remoteTableInfo roleName) ||
            roleName == adminRole
-        then Just (relationshipToFieldInfo name $ _tiName remoteTableInfo)
+        then Just (relationshipToFieldInfo name ty $ _tiName remoteTableInfo)
         else Nothing
       where
-        relationshipToFieldInfo name remoteTableName =
-          VT.ObjFldInfo
-          { VT._fiDesc = Nothing -- TODO
-          , VT._fiName = unObjectRelationshipName name
-          , VT._fiParams = mempty
-          , VT._fiTy = G.toGT $ mkTableTy remoteTableName
-          , VT._fiLoc = VT.TLCustom
-          }
+        relationshipToFieldInfo name relTy remoteTableName =
+          let fieldTy = case relTy of
+                ObjRel -> G.toGT $ mkTableTy remoteTableName
+                ArrRel -> G.toGT $ G.toLT $ mkTableTy remoteTableName
+          in VT.ObjFldInfo
+             { VT._fiDesc = Nothing -- TODO
+             , VT._fiName = unRelationshipName name
+             , VT._fiParams = mempty
+             , VT._fiTy = fieldTy
+             , VT._fiLoc = VT.TLCustom
+             }
 
     fields =
       map convertObjectFieldDefinition $
@@ -82,20 +85,20 @@ annotateObjectType nonObjectTypeMap objectDefinition = do
   annotatedRelationships <-
     fmap Map.fromList $ forM relationships $
     \relationship -> do
-      let relationshipName = _orName relationship
-          remoteTable = _orRemoteTable relationship
+      let relationshipName = _trName relationship
+          remoteTable = _trRemoteTable relationship
       remoteTableInfoM <- askTabInfoM remoteTable
       remoteTableInfo <- onNothing remoteTableInfoM $
         throw500 $ "missing table info for: " <>> remoteTable
       annotatedFieldMapping <-
-        forM (_orFieldMapping relationship) $ \remoteTableColumn -> do
+        forM (_trFieldMapping relationship) $ \remoteTableColumn -> do
         let fieldName = fromPGCol remoteTableColumn
         onNothing (getPGColumnInfoM remoteTableInfo fieldName) $
           throw500 $ "missing column info of " <> fieldName
           <<> " in table" <>> remoteTable
       return ( relationshipName
-             , relationship & orRemoteTable .~ remoteTableInfo
-               & orFieldMapping .~ annotatedFieldMapping)
+             , relationship & trRemoteTable .~ remoteTableInfo
+               & trFieldMapping .~ annotatedFieldMapping)
   return $ AnnotatedObjectType objectDefinition
     annotatedFields annotatedRelationships
   where

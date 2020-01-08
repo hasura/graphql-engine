@@ -241,13 +241,16 @@ instance Arbitrary InputObjectFieldDefinition where
 instance Arbitrary InputObjectTypeDefinition where
   arbitrary = genericArbitrary
 
-instance Arbitrary ObjectRelationshipName where
+instance Arbitrary RelType where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RelationshipName where
   arbitrary = genericArbitrary
 
 instance Arbitrary ObjectFieldName where
   arbitrary = genericArbitrary
 
-instance Arbitrary ObjectRelationshipDefinition  where
+instance Arbitrary TypeRelationshipDefinition  where
   arbitrary = genericArbitrary
 
 instance Arbitrary ObjectTypeName where

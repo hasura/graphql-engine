@@ -153,7 +153,7 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
 
     -- all the possible field references
     fieldReferences =
-      Map.unions $ map _orFieldMapping $ Map.elems $
+      Map.unions $ map _trFieldMapping $ Map.elems $
       _aotRelationships annotatedOutputType
 
     mkPGFieldType fieldName (fieldType, fieldTypeInfo) =
@@ -192,22 +192,22 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
         relationships =
           flip map (Map.toList $ _aotRelationships annotatedOutputType) $
           \(relationshipName, relationship) ->
-            let remoteTableInfo = _orRemoteTable relationship
+            let remoteTableInfo = _trRemoteTable relationship
                 remoteTable = _tiName remoteTableInfo
                 filterAndLimitM = getFilterAndLimit remoteTableInfo
                 columnMapping =
                   [ (unsafePGCol $ coerce k, pgiColumn v)
-                  | (k, v) <- Map.toList $ _orFieldMapping relationship
+                  | (k, v) <- Map.toList $ _trFieldMapping relationship
                   ]
             in case filterAndLimitM of
               Just (tableFilter, tableLimit) ->
                 Just ( ( actionOutputBaseType
-                       , unObjectRelationshipName relationshipName
+                       , unRelationshipName relationshipName
                        )
                      , RFRelationship $ RelationshipField
                        (RelInfo
                         (RelName $ mkNonEmptyTextUnsafe $ coerce relationshipName)
-                        ObjRel
+                        (_trType relationship)
                         columnMapping remoteTable True)
                        False mempty
                        tableFilter
