@@ -3,7 +3,6 @@ module Hasura.RQL.DML.Insert where
 import           Data.Aeson.Types
 import           Instances.TH.Lift        ()
 
-import qualified Data.Aeson.Extended      as J
 import qualified Data.HashMap.Strict      as HM
 import qualified Data.HashSet             as HS
 import qualified Data.Sequence            as DS
@@ -22,8 +21,8 @@ import qualified Database.PG.Query        as Q
 import qualified Hasura.SQL.DML           as S
 
 data ConflictTarget
-  = Column ![PGCol]
-  | Constraint !ConstraintName
+  = CTColumn ![PGCol]
+  | CTConstraint !ConstraintName
   deriving (Show, Eq)
 
 data ConflictClauseP1
@@ -59,15 +58,15 @@ toSQLConflict conflict = case conflict of
 
   where
     toSQLCT ct = case ct of
-      Column pgCols -> S.SQLColumn pgCols
-      Constraint cn -> S.SQLConstraint cn
+      CTColumn pgCols -> S.SQLColumn pgCols
+      CTConstraint cn -> S.SQLConstraint cn
 
 convObj
   :: (UserInfoM m, QErrM m)
   => (PGColumnType -> Value -> m S.SQLExp)
   -> HM.HashMap PGCol S.SQLExp
   -> HM.HashMap PGCol S.SQLExp
-  -> FieldInfoMap PGColumnInfo
+  -> FieldInfoMap FieldInfo
   -> InsObj
   -> m ([PGCol], [S.SQLExp])
 convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
@@ -99,7 +98,7 @@ validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
 buildConflictClause
   :: (UserInfoM m, QErrM m)
   => SessVarBldr m
-  -> TableInfo PGColumnInfo
+  -> TableInfo
   -> [PGCol]
   -> OnConflict
   -> m ConflictClauseP1
@@ -108,10 +107,10 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
     (Nothing, Nothing, CAIgnore)    -> return $ CP1DoNothing Nothing
     (Just col, Nothing, CAIgnore)   -> do
       validateCols col
-      return $ CP1DoNothing $ Just $ Column $ getPGCols col
+      return $ CP1DoNothing $ Just $ CTColumn $ getPGCols col
     (Nothing, Just cons, CAIgnore)  -> do
       validateConstraint cons
-      return $ CP1DoNothing $ Just $ Constraint cons
+      return $ CP1DoNothing $ Just $ CTConstraint cons
     (Nothing, Nothing, CAUpdate)    -> throw400 UnexpectedPayload
       "Expecting 'constraint' or 'constraint_on' when the 'action' is 'update'"
     (Just col, Nothing, CAUpdate)   -> do
@@ -119,20 +118,21 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
       (updFltr, preSet) <- getUpdPerm
       resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
       resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
-      return $ CP1Update (Column $ getPGCols col) inpCols resolvedPreSet $
+      return $ CP1Update (CTColumn $ getPGCols col) inpCols resolvedPreSet $
         toSQLBool resolvedUpdFltr
     (Nothing, Just cons, CAUpdate)  -> do
       validateConstraint cons
       (updFltr, preSet) <- getUpdPerm
       resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr updFltr
       resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) preSet
-      return $ CP1Update (Constraint cons) inpCols resolvedPreSet $
+      return $ CP1Update (CTConstraint cons) inpCols resolvedPreSet $
         toSQLBool resolvedUpdFltr
     (Just _, Just _, _)             -> throw400 UnexpectedPayload
       "'constraint' and 'constraint_on' cannot be set at a time"
   where
-    fieldInfoMap = _tiFieldInfoMap tableInfo
-    toSQLBool = toSQLBoolExp (S.mkQual $ _tiName tableInfo)
+    coreInfo = _tiCoreInfo tableInfo
+    fieldInfoMap = _tciFieldInfoMap coreInfo
+    toSQLBool = toSQLBoolExp (S.mkQual $ _tciName coreInfo)
 
     validateCols c = do
       let targetcols = getPGCols c
@@ -140,11 +140,11 @@ buildConflictClause sessVarBldr tableInfo inpCols (OnConflict mTCol mTCons act) 
         \pgCol -> askPGType fieldInfoMap pgCol ""
 
     validateConstraint c = do
-      let tableConsNames = _tiUniqOrPrimConstraints tableInfo
+      let tableConsNames = _cName <$> tciUniqueOrPrimaryKeyConstraints coreInfo
       withPathK "constraint" $
        unless (c `elem` tableConsNames) $
        throw400 Unexpected $ "constraint " <> getConstraintTxt c
-                   <<> " for table " <> _tiName tableInfo
+                   <<> " for table " <> _tciName coreInfo
                    <<> " does not exist"
 
     getUpdPerm = do
@@ -169,10 +169,11 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   -- Get the current table information
   tableInfo <- askTabInfo tableName
+  let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it is insertable
   mutableView tableName viIsInsertable
-    (_tiViewInfo tableInfo) "insertable"
+    (_tciViewInfo coreInfo) "insertable"
 
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
@@ -180,7 +181,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   -- Check if all dependent headers are present
   validateHeaders $ ipiRequiredHeaders insPerm
 
-  let fieldInfoMap = _tiFieldInfoMap tableInfo
+  let fieldInfoMap = _tciFieldInfoMap coreInfo
       setInsVals = ipiSet insPerm
 
   -- convert the returning cols into sql returing exp
@@ -228,11 +229,11 @@ decodeInsObjs v = do
   return objs
 
 convInsQ
-  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m)
   => InsertQuery
   -> m (InsertQueryP1, DS.Seq Q.PrepArg)
 convInsQ =
-  liftDMLP1 .
+  runDMLP1T .
   convInsertQuery (withPathK "objects" . decodeInsObjs)
   sessVarFromCurrentSetting
   binRHSBuilder
@@ -337,28 +338,8 @@ insertPermsCheck tn insertResult cond sw =
           }
         )
 
-data ConflictCtx
-  = CCUpdate !ConstraintName ![PGCol] !PreSetCols !S.BoolExp
-  | CCDoNothing !(Maybe ConstraintName)
-  deriving (Show, Eq)
-
-setConflictCtx :: Maybe ConflictCtx -> Q.TxE QErr ()
-setConflictCtx conflictCtxM = do
-  let t = maybe "null" conflictCtxToJSON conflictCtxM
-      setVal = toSQL $ S.SELit t
-      setVar = "SET LOCAL hasura.conflict_clause = "
-      q = Q.fromBuilder $ setVar <> setVal
-  Q.unitQE defaultTxErrorHandler q () False
-  where
-    conflictCtxToJSON (CCDoNothing constrM) =
-        J.encodeToStrictText $ InsertTxConflictCtx CAIgnore constrM Nothing
-    conflictCtxToJSON (CCUpdate constr updCols preSet filtr) =
-        J.encodeToStrictText $ InsertTxConflictCtx CAUpdate (Just constr) $
-        Just $ toSQLTxt (S.buildUpsertSetExp updCols preSet)
-               <> " " <> toSQLTxt (S.WhereFrag filtr)
-
 runInsert
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
   => InsertQuery
   -> m EncJSON
 runInsert q = do

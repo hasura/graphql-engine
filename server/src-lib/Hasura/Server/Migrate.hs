@@ -16,6 +16,7 @@ module Hasura.Server.Migrate
   , dropCatalog
   ) where
 
+import           Control.Monad.Unique
 import           Data.Time.Clock               (UTCTime)
 
 import           Hasura.Prelude
@@ -28,13 +29,11 @@ import qualified Database.PG.Query.Connection  as Q
 import qualified Language.Haskell.TH.Lib       as TH
 import qualified Language.Haskell.TH.Syntax    as TH
 
-import           Hasura.Logging                (Hasura, LogLevel (..),
-                                                ToEngineLog (..))
+import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging         (StartupLog (..))
-import           Hasura.Server.Migrate.Version (latestCatalogVersion,
-                                                latestCatalogVersionString)
+import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
 import           Hasura.Server.Query
 import           Hasura.SQL.Types
 
@@ -66,15 +65,15 @@ instance ToEngineLog MigrationResult Hasura where
     }
 
 migrateCatalog
-  :: forall m.
-  ( MonadTx m
-  , HasHttpManager m
-  , CacheRWM m
-  , UserInfoM m
-  , MonadIO m
-  , HasSQLGenCtx m
-  )
-  => UTCTime -> m MigrationResult
+  :: forall m
+   . ( MonadIO m
+     , MonadTx m
+     , MonadUnique m
+     , UserInfoM m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     )
+  => UTCTime -> m (MigrationResult, RebuildableSchemaCache m)
 migrateCatalog migrationTime = do
   doesSchemaExist (SchemaName "hdb_catalog") >>= \case
     False -> initialize True
@@ -83,7 +82,7 @@ migrateCatalog migrationTime = do
       True  -> migrateFrom =<< getCatalogVersion
   where
     -- initializes the catalog, creating the schema if necessary
-    initialize :: Bool -> m MigrationResult
+    initialize :: Bool -> m (MigrationResult, RebuildableSchemaCache m)
     initialize createSchema =  do
       liftTx $ Q.catchE defaultTxErrorHandler $
         when createSchema $ do
@@ -100,9 +99,9 @@ migrateCatalog migrationTime = do
           <> "PostgreSQL server. Please make sure this extension is available."
 
       runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
-      recreateSystemMetadata
+      schemaCache <- buildCacheAndRecreateSystemMetadata
       updateCatalogVersion
-      pure MRInitialized
+      pure (MRInitialized, schemaCache)
       where
         needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
           case err of
@@ -122,18 +121,22 @@ migrateCatalog migrationTime = do
               <> " https://docs.hasura.io/1.0/graphql/manual/deployment/postgres-permissions.html"
 
     -- migrates an existing catalog to the latest version from an existing verion
-    migrateFrom :: T.Text -> m MigrationResult
+    migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
     migrateFrom previousVersion
-      | previousVersion == latestCatalogVersionString = pure MRNothingToDo
+      | previousVersion == latestCatalogVersionString = do
+          schemaCache <- buildRebuildableSchemaCache
+          pure (MRNothingToDo, schemaCache)
       | [] <- neededMigrations = throw400 NotSupported $
           "Cannot use database previously used with a newer version of graphql-engine (expected"
             <> " a catalog version <=" <> latestCatalogVersionString <> ", but the current version"
             <> " is " <> previousVersion <> ")."
-      | otherwise =
-          traverse_ snd neededMigrations *> postMigrate $> MRMigrated previousVersion
+      | otherwise = do
+          traverse_ snd neededMigrations
+          schemaCache <- buildCacheAndRecreateSystemMetadata
+          updateCatalogVersion
+          pure (MRMigrated previousVersion, schemaCache)
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) migrations
-        postMigrate = updateCatalogVersion *> recreateSystemMetadata *> buildSchemaCacheStrict
 
         migrations :: [(T.Text, m ())]
         migrations =
@@ -155,6 +158,13 @@ migrateCatalog migrationTime = do
               :  migrationsFromFile [2..3]
               ++ [| ("3", from3To4) |]
               :  migrationsFromFile [5..latestCatalogVersion])
+
+    buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
+    buildCacheAndRecreateSystemMetadata = do
+      schemaCache <- buildRebuildableSchemaCache
+      snd <$> runCacheRWT schemaCache do
+        recreateSystemMetadata
+        buildSchemaCacheStrict
 
     -- the old 0.8 catalog version is non-integral, so we store it in the database as a string
     getCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
@@ -214,16 +224,17 @@ migrateCatalog migrationTime = do
                                              |] (Q.AltJ $ A.toJSON etc, name) True
 
 recreateSystemMetadata
-  :: ( MonadTx m
-     , HasHttpManager m
+  :: ( MonadIO m
+     , MonadTx m
      , CacheRWM m
      , UserInfoM m
-     , MonadIO m
+     , HasHttpManager m
      , HasSQLGenCtx m
      )
   => m ()
 recreateSystemMetadata = do
   runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
+  buildSchemaCache
   void . runHasSystemDefinedT (SystemDefined True) $
     runQueryM $$(Y.decodeFile "src-rsr/hdb_metadata.yaml")
 

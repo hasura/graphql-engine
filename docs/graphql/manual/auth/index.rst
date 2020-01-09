@@ -10,6 +10,7 @@ In Hasura, access control or authorization is based on **roles**. Let's take a l
 when the GraphQL engine receives a request:
 
 .. thumbnail:: ../../../img/graphql/manual/auth/auth-high-level-overview.png
+   :alt: Authentication and authorization with Hasura
 
 As you can see from this:
 

@@ -1,6 +1,7 @@
 module Hasura.RQL.Types.QueryCollection where
 
 import           Hasura.GraphQL.Validate.Types    (stripTypenames)
+import           Hasura.Incremental               (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common          (NonEmptyText)
 import           Hasura.SQL.Types
@@ -24,15 +25,15 @@ newtype CollectionName
 
 newtype QueryName
   = QueryName {unQueryName :: NonEmptyText}
-  deriving (Show, Eq, Ord, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, DQuote, Generic, Arbitrary)
+  deriving (Show, Eq, Ord, NFData, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, DQuote, Generic, Arbitrary, Cacheable)
 
 newtype GQLQuery
   = GQLQuery {unGQLQuery :: G.ExecutableDocument}
-  deriving (Show, Eq, Hashable, Lift, ToJSON, FromJSON)
+  deriving (Show, Eq, NFData, Hashable, Lift, ToJSON, FromJSON, Cacheable)
 
 newtype GQLQueryWithText
   = GQLQueryWithText (T.Text, GQLQuery)
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, NFData, Lift, Generic, Cacheable)
 
 instance FromJSON GQLQueryWithText where
   parseJSON v@(String t) = GQLQueryWithText . (t, ) <$> parseJSON v
@@ -54,6 +55,8 @@ data ListedQuery
   { _lqName  :: !QueryName
   , _lqQuery :: !GQLQueryWithText
   } deriving (Show, Eq, Lift, Generic)
+instance NFData ListedQuery
+instance Cacheable ListedQuery
 $(deriveJSON (aesonDrop 3 snakeCase) ''ListedQuery)
 
 type QueryList = [ListedQuery]
@@ -61,7 +64,7 @@ type QueryList = [ListedQuery]
 newtype CollectionDef
   = CollectionDef
   { _cdQueries :: QueryList }
-  deriving (Show, Eq, Lift, Generic)
+  deriving (Show, Eq, Lift, Generic, NFData, Cacheable)
 $(deriveJSON (aesonDrop 3 snakeCase) ''CollectionDef)
 
 data CreateCollection
