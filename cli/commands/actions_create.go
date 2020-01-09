@@ -39,7 +39,6 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := actionsCreateCmd.Flags()
 
 	f.StringVar(&opts.deriveFromMutation, "derive-from-mutation", "", "")
-	f.StringVar(&opts.scaffolderName, "scaffolder-name", "", "")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -59,7 +58,6 @@ type actionsCreateOptions struct {
 
 	name               string
 	deriveFromMutation string
-	scaffolderName     string
 }
 
 func (o *actionsCreateOptions) run() error {
@@ -83,12 +81,12 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return err
 	}
-	derivePayload := map[string]interface{}{
-		"introspection_schema": introSchema,
-		"mutation": map[string]string{
-			"name":        o.deriveFromMutation,
-			"action_name": o.name,
+	derivePayload := actions.DerivePayload{
+		IntrospectionSchema: introSchema,
+		Mutation: actions.DeriveMutationPayload{
+			MutationName: o.deriveFromMutation,
+			ActionName: o.name,
 		},
 	}
-	return actionCfg.Scaffold(o.name, o.scaffolderName, derivePayload)
+	return actionCfg.Codegen(o.name, derivePayload)
 }

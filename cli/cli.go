@@ -379,12 +379,11 @@ func (ec *ExecutionContext) readConfig() error {
 		AdminSecret:       adminSecret,
 		MetadataDirectory: v.GetString("metadata_directory"),
 		Action: actions.ActionExecutionConfig{
-			Kind:    v.GetString("action.default_kind"),
-			Handler: v.GetString("action.default_handler"),
-			Scaffold: actions.ScaffoldExecutionConfig{
-				Default:           v.GetString("action.scaffold.default"),
-				OutputDir:         v.GetString("action.scaffold.output_dir"),
-				CustomScaffolders: v.GetStringMapString("action.scaffold.custom_scaffolders"),
+			Kind:    v.GetString("action.kind"),
+			HandlerWebhookBaseURL: v.GetString("action.handler_webhook_baseurl"),
+			Codegen: actions.CodegenExecutionConfig{
+				Framework:         v.GetString("action.codegen.framework"),
+				OutputDir:         v.GetString("action.codegen.output_dir"),
 			},
 		},
 	}

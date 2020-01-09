@@ -138,11 +138,10 @@ func (o *initOptions) createFiles() error {
 		MetadataDirectory: "metadata",
 		Action: actions.ActionExecutionConfig{
 			Kind:    o.ActionKind,
-			Handler: o.ActionHandler,
-			Scaffold: actions.ScaffoldExecutionConfig{
-				Default:           "nodejs-zeit",
-				OutputDir:         "./",
-				CustomScaffolders: make(map[string]string),
+			HandlerWebhookBaseURL: o.ActionHandler,
+			Codegen: actions.CodegenExecutionConfig{
+				Framework: "nodejs-zeit",
+				OutputDir: "./",
 			},
 		},
 	}
