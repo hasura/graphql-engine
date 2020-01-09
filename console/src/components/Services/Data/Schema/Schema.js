@@ -82,13 +82,9 @@ class Schema extends Component {
       const trackedFuncNames = trackedFunctions.map(fn => getFunctionName(fn));
 
       // Assuming schema for both function and tables are same
-      // return function which are tracked && function name whose
-      // set of tables are tracked
+      // return function which are tracked
       const filterCondition = func => {
-        return (
-          !trackedFuncNames.includes(getFunctionName(func)) &&
-          !!func.return_table_info
-        );
+        return !trackedFuncNames.includes(getFunctionName(func));
       };
 
       return functionsList.filter(filterCondition);
@@ -556,9 +552,7 @@ class Schema extends Component {
               };
 
               return (
-                <div
-                  className={`${styles.display_inline} ${styles.add_mar_right}`}
-                >
+                <div className={styles.display_inline}>
                   <Button
                     data-test={`add-track-function-${p.function_name}`}
                     className={`${
@@ -578,7 +572,23 @@ class Schema extends Component {
                 key={`untracked-function-${i}`}
               >
                 {getTrackBtn()}
-                <div className={styles.display_inline}>
+                <div
+                  className={`${styles.display_inline} ${
+                    styles.add_mar_left_mid
+                  }`}
+                >
+                  <RawSqlButton
+                    dataTestId={`view-function-${p.function_name}`}
+                    customStyles={styles.display_inline}
+                    sql={p.function_definition}
+                    dispatch={dispatch}
+                  >
+                    View
+                  </RawSqlButton>
+                </div>
+                <div
+                  className={`${styles.display_inline} ${styles.add_mar_left}`}
+                >
                   <span>{p.function_name}</span>
                 </div>
               </div>
