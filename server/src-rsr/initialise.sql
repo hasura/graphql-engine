@@ -663,9 +663,9 @@ CREATE VIEW hdb_catalog.hdb_computed_field_function AS
   FROM hdb_catalog.hdb_computed_field
 );
 
-CREATE OR REPLACE FUNCTION hdb_catalog.check_violation(msg text) RETURNS bool AS 
+CREATE OR REPLACE FUNCTION hdb_catalog.check_violation() RETURNS bool AS 
 $$
   BEGIN
-    RAISE check_violation USING message=msg;
+    RAISE check_violation USING message='insert check constraint failed';
   END;
 $$ LANGUAGE plpgsql;
