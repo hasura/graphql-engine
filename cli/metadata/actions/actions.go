@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/url"
 	"path/filepath"
 
 	gyaml "github.com/ghodss/yaml"
@@ -74,9 +73,9 @@ type actionsCodegenResponse struct {
 }
 
 type CodegenExecutionConfig struct {
-	Framework string   `json:"framework"`
-	OutputDir string   `json:"output_dir"`
-	URI       *url.URL `json:"uri,omitempty"`
+	Framework string `json:"framework"`
+	OutputDir string `json:"output_dir"`
+	URI       string `json:"uri,omitempty"`
 }
 
 type ActionExecutionConfig struct {

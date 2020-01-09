@@ -134,10 +134,11 @@ func (o *initOptions) createFiles() error {
 	}
 	// set config object
 	config := &cli.Config{
+		Version:           "2",
 		Endpoint:          "http://localhost:8080",
 		MetadataDirectory: "metadata",
 		Action: actions.ActionExecutionConfig{
-			Kind:    o.ActionKind,
+			Kind:                  o.ActionKind,
 			HandlerWebhookBaseURL: o.ActionHandler,
 			Codegen: actions.CodegenExecutionConfig{
 				Framework: "nodejs-zeit",

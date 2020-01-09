@@ -51,6 +51,8 @@ visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
 
 // Config has the config values required to contact the server.
 type Config struct {
+	// Version for the CLI config
+	Version string
 	// Endpoint for the GraphQL Engine
 	Endpoint string
 	// AdminSecret (optional) required to query the endpoint
@@ -64,6 +66,8 @@ type Config struct {
 }
 
 type rawConfig struct {
+	// Version for the CLI config
+	Version string
 	// Endpoint for the GraphQL Engine
 	Endpoint string `json:"endpoint"`
 	// AccessKey (deprecated) (optional) Admin secret key required to query the endpoint
@@ -84,6 +88,7 @@ func (r rawConfig) toConfig() Config {
 		s = r.AccessKey
 	}
 	return Config{
+		Version:           r.Version,
 		Endpoint:          r.Endpoint,
 		AdminSecret:       s,
 		ParsedEndpoint:    r.ParsedEndpoint,
@@ -94,6 +99,7 @@ func (r rawConfig) toConfig() Config {
 
 func (s Config) toRawConfig() rawConfig {
 	return rawConfig{
+		Version:           s.Version,
 		Endpoint:          s.Endpoint,
 		AccessKey:         "",
 		AdminSecret:       s.AdminSecret,
@@ -116,6 +122,7 @@ func (s Config) UnmarshalJSON(b []byte) error {
 		return errors.Wrap(err, "unmarshal error")
 	}
 	sc := r.toConfig()
+	s.Version = sc.Version
 	s.Endpoint = sc.Endpoint
 	s.AdminSecret = sc.AdminSecret
 	s.ParsedEndpoint = sc.ParsedEndpoint
@@ -358,13 +365,16 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 	v.SetConfigName("config")
+	v.SetDefault("version", "1")
 	v.SetDefault("endpoint", "http://localhost:8080")
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
 	v.SetDefault("metadata_directory", "")
 	v.SetDefault("action.default_kind", "synchronous")
 	v.SetDefault("action.default_handler", "{{DEFAULT_HANDLER}}")
-	v.SetDefault("action.scaffold.output_dir", ec.ExecutionDirectory)
+	v.SetDefault("action.codegen.framework", "")
+	v.SetDefault("action.codegen.output_dir", ec.ExecutionDirectory)
+	v.SetDefault("action.codegen.uri", "")
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
@@ -375,15 +385,17 @@ func (ec *ExecutionContext) readConfig() error {
 		adminSecret = v.GetString("access_key")
 	}
 	ec.Config = &Config{
+		Version:           v.GetString("version"),
 		Endpoint:          v.GetString("endpoint"),
 		AdminSecret:       adminSecret,
 		MetadataDirectory: v.GetString("metadata_directory"),
 		Action: actions.ActionExecutionConfig{
-			Kind:    v.GetString("action.kind"),
+			Kind:                  v.GetString("action.kind"),
 			HandlerWebhookBaseURL: v.GetString("action.handler_webhook_baseurl"),
 			Codegen: actions.CodegenExecutionConfig{
-				Framework:         v.GetString("action.codegen.framework"),
-				OutputDir:         v.GetString("action.codegen.output_dir"),
+				Framework: v.GetString("action.codegen.framework"),
+				OutputDir: v.GetString("action.codegen.output_dir"),
+				URI:       v.GetString("action.codegen.uri"),
 			},
 		},
 	}
