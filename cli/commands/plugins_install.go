@@ -53,7 +53,7 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 					failed = append(failed, plugin.Name)
 					continue
 				}
-				output := fmt.Sprintf("Use this plugin:\n\tkubectl %s\n", plugin.Name)
+				output := fmt.Sprintf("Use this plugin:\n\thasura %s\n", plugin.Name)
 				if plugin.Homepage != "" {
 					output += fmt.Sprintf("Documentation:\n\t%s\n", plugin.Homepage)
 				}
