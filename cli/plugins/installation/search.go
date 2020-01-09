@@ -1,7 +1,6 @@
 package installation
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -10,14 +9,13 @@ import (
 )
 
 // GetBinaryPath returns the binary path for a plugin
-func GetBinaryPath(p paths.Paths, name string) error {
+func GetBinaryPath(p paths.Paths, name string) (string, error) {
 	if _, err := Load(p.PluginInstallReceiptPath(name)); err != nil {
 		if os.IsNotExist(err) {
-			return ErrIsNotInstalled
+			return "", ErrIsNotInstalled
 		}
-		return errors.Wrapf(err, "failed to look up install receipt for plugin %q", name)
+		return "", errors.Wrapf(err, "failed to look up install receipt for plugin %q", name)
 	}
 	symlinkPath := filepath.Join(p.BinPath(), pluginNameToBin(name, IsWindows()))
-	fmt.Println(symlinkPath)
-	return nil
+	return symlinkPath, nil
 }
