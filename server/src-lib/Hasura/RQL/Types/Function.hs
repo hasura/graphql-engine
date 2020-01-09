@@ -31,7 +31,7 @@ instance Show FunctionType where
 
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Lift, DQuote, IsString)
+  deriving (Show, Eq, ToJSON, FromJSON, Lift, DQuote, IsString, Generic, Arbitrary)
 
 newtype HasDefault = HasDefault { unHasDefault :: Bool }
   deriving (Show, Eq, ToJSON)

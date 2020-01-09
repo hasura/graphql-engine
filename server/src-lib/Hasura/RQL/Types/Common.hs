@@ -18,6 +18,7 @@ module Hasura.RQL.Types.Common
        , CustomColumnNames
 
        , NonEmptyText
+       , mkNonEmptyTextUnsafe
        , mkNonEmptyText
        , unNonEmptyText
        , adminText
@@ -42,13 +43,20 @@ import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified PostgreSQL.Binary.Decoding    as PD
+import qualified Test.QuickCheck               as QC
 
 newtype NonEmptyText = NonEmptyText {unNonEmptyText :: T.Text}
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote)
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic)
+
+instance Arbitrary NonEmptyText where
+  arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
 
 mkNonEmptyText :: T.Text -> Maybe NonEmptyText
 mkNonEmptyText ""   = Nothing
 mkNonEmptyText text = Just $ NonEmptyText text
+
+mkNonEmptyTextUnsafe :: T.Text -> NonEmptyText
+mkNonEmptyTextUnsafe = NonEmptyText
 
 parseNonEmptyText :: T.Text -> Parser NonEmptyText
 parseNonEmptyText text = case mkNonEmptyText text of
@@ -73,7 +81,7 @@ rootText = NonEmptyText "root"
 
 newtype RelName
   = RelName {getRelTxt :: NonEmptyText}
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary)
 
 instance IsIden RelName where
   toIden rn = Iden $ relNameToTxt rn
@@ -94,7 +102,7 @@ relTypeToTxt ArrRel = "array"
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Lift, Generic)
 
 instance Hashable RelType
 
@@ -103,8 +111,8 @@ instance ToJSON RelType where
 
 instance FromJSON RelType where
   parseJSON (String "object") = return ObjRel
-  parseJSON (String "array") = return ArrRel
-  parseJSON _ = fail "expecting either 'object' or 'array' for rel_type"
+  parseJSON (String "array")  = return ArrRel
+  parseJSON _                 = fail "expecting either 'object' or 'array' for rel_type"
 
 instance Q.FromCol RelType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
@@ -125,7 +133,7 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift, Data)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift, Data, Generic, Arbitrary)
 
 instance IsIden FieldName where
   toIden (FieldName f) = Iden f

@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Transport.HTTP
   ( runGQ
+  , runGQBatched
   ) where
 
 import qualified Network.HTTP.Types                     as N
@@ -24,17 +25,43 @@ runGQ
   => RequestId
   -> UserInfo
   -> [N.Header]
-  -> GQLReqUnparsed
+  -> GQLReq GQLQueryText
   -> m (HttpResponse EncJSON)
 runGQ reqId userInfo reqHdrs req = do
-  E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer _ enableAL <- ask
+  E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
   execPlan <- E.getResolvedExecPlan pgExecCtx planCache
-              userInfo sqlGenCtx enableAL sc scVer req
+              userInfo sqlGenCtx enableAL sc scVer httpManager reqHdrs req
   case execPlan of
     E.GExPHasura resolvedOp ->
       flip HttpResponse Nothing <$> runHasuraGQ reqId req userInfo resolvedOp
     E.GExPRemote rsi opDef  ->
       E.execRemoteGQ reqId userInfo reqHdrs req rsi opDef
+
+runGQBatched
+  :: ( MonadIO m
+     , MonadError QErr m
+     , MonadReader E.ExecutionCtx m
+     )
+  => RequestId
+  -> UserInfo
+  -> [N.Header]
+  -> GQLBatchedReqs GQLQueryText
+  -> m (HttpResponse EncJSON)
+runGQBatched reqId userInfo reqHdrs reqs =
+  case reqs of
+    GQLSingleRequest req ->
+      runGQ reqId userInfo reqHdrs req
+    GQLBatchedReqs batch -> do
+      -- It's unclear what we should do if we receive multiple
+      -- responses with distinct headers, so just do the simplest thing
+      -- in this case, and don't forward any.
+      let removeHeaders =
+            flip HttpResponse Nothing
+            . encJFromList
+            . map (either (encJFromJValue . encodeGQErr False) _hrBody)
+          try = flip catchError (pure . Left) . fmap Right
+      fmap removeHeaders $
+        traverse (try . runGQ reqId userInfo reqHdrs) batch
 
 runHasuraGQ
   :: ( MonadIO m

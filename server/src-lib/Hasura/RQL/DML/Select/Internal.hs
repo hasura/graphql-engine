@@ -34,15 +34,20 @@ selFromToFromItem :: Iden -> SelectFrom -> S.FromItem
 selFromToFromItem pfx = \case
   FromTable tn -> S.FISimple tn Nothing
   FromIden i   -> S.FIIden i
-  FromFunction qf args ->
+  FromFunction qf args defListM ->
     S.FIFunc $ S.FunctionExp qf (fromTableRowArgs pfx args) $
-    Just $ S.toAlias $ functionToIden qf
+    Just $ S.mkFunctionAlias (functionToIden qf) defListM
 
+-- This function shouldn't be present ideally
+-- You should be able to retrieve this information
+-- from the FromItem generated with selFromToFromItem
+-- however given from S.FromItem is modelled, it is not
+-- possible currently
 selFromToQual :: SelectFrom -> S.Qual
 selFromToQual = \case
   FromTable tn         -> S.QualTable tn
   FromIden i           -> S.QualIden i
-  FromFunction qf _    -> S.QualIden $ functionToIden qf
+  FromFunction qf _ _  -> S.QualIden $ functionToIden qf
 
 aggFldToExp :: AggFlds -> S.SQLExp
 aggFldToExp aggFlds = jsonRow
@@ -172,8 +177,8 @@ mkBaseTableAls pfx =
   pfx <> Iden ".base"
 
 mkBaseTableColAls :: Iden -> PGCol -> Iden
-mkBaseTableColAls pfx pgCol =
-  pfx <> Iden ".pg." <> toIden pgCol
+mkBaseTableColAls pfx pgColumn =
+  pfx <> Iden ".pg." <> toIden pgColumn
 
 mkOrderByFieldName :: RelName -> FieldName
 mkOrderByFieldName relName =
@@ -271,9 +276,9 @@ mkAggObExtrAndFlds annAggOb = case annAggOb of
     ( S.Extractor S.countStar als
     , [(FieldName "count", AFCount S.CTStar)]
     )
-  AAOOp op pgCol ->
-    ( S.Extractor (S.SEFnApp op [S.SEIden $ toIden pgCol] Nothing) als
-    , [(FieldName op, AFOp $ AggOp op [(fromPGCol pgCol, PCFCol pgCol)])]
+  AAOOp op pgColumn ->
+    ( S.Extractor (S.SEFnApp op [S.SEIden $ toIden pgColumn] Nothing) als
+    , [(FieldName op, AFOp $ AggOp op [(fromPGCol pgColumn, PCFCol pgColumn)])]
     )
   where
     als = Just $ S.toAlias $ mkAggObFld annAggOb
@@ -317,10 +322,10 @@ processAnnOrderByCol
      , OrderByNode
      )
 processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
-  AOCPG colInfo ->
+  AOCPG pgColumn ->
     let
-      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiColumn colInfo)
-      obColAls = mkBaseTableColAls pfx $ pgiColumn colInfo
+      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden pgColumn)
+      obColAls = mkBaseTableColAls pfx pgColumn
     in ( (S.Alias obColAls, qualCol)
        , OBNNothing
        )
@@ -623,7 +628,7 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
 
     distItemsM = processDistinctOnCol thisPfx <$> distM
     distExprM = fst <$> distItemsM
-    distExtrs = fromMaybe [] (snd <$> distItemsM)
+    distExtrs = maybe [] snd distItemsM
 
     -- process an object relationship
     mkObjItem (fld, objSel) =

@@ -16,7 +16,9 @@ import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
+import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -101,7 +103,14 @@ data RQLQueryV1
   | RQClearMetadata !ClearMetadata
   | RQReloadMetadata !ReloadMetadata
 
+  | RQCreateAction !CreateAction
+  | RQDropAction !DropAction
+  | RQUpdateAction !UpdateAction
+  | RQCreateActionPermission !CreateActionPermission
+  | RQDropActionPermission !DropActionPermission
+
   | RQDumpInternalState !DumpInternalState
+  | RQSetCustomTypes !CustomTypes
   deriving (Show, Eq, Lift)
 
 data RQLQueryV2
@@ -293,7 +302,14 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQClearMetadata _               -> True
   RQReloadMetadata _              -> True
 
+  RQCreateAction _                -> True
+  RQDropAction _                  -> True
+  RQUpdateAction _                -> True
+  RQCreateActionPermission _      -> True
+  RQDropActionPermission _        -> True
+
   RQDumpInternalState _           -> False
+  RQSetCustomTypes _              -> True
 
   RQBulk qs                       -> any queryNeedsReload qs
 queryNeedsReload (RQV2 qi) = case qi of
@@ -411,9 +427,17 @@ runQueryM rq =
       RQExportMetadata q           -> runExportMetadata q
       RQReloadMetadata q           -> runReloadMetadata q
 
+      RQCreateAction q           -> runCreateAction q
+      RQDropAction q             -> runDropAction q
+      RQUpdateAction q           -> runUpdateAction q
+      RQCreateActionPermission q -> runCreateActionPermission q
+      RQDropActionPermission q   -> runDropActionPermission q
+
       RQDumpInternalState q        -> runDumpInternalState q
 
       RQRunSql q                   -> runRunSQL q
+
+      RQSetCustomTypes q           -> runSetCustomTypes q
 
       RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs
 
@@ -484,7 +508,14 @@ requiresAdmin = \case
     RQExportMetadata _              -> True
     RQReloadMetadata _              -> True
 
+    RQCreateAction _                -> True
+    RQDropAction _                  -> True
+    RQUpdateAction _                -> True
+    RQCreateActionPermission _      -> True
+    RQDropActionPermission _        -> True
+
     RQDumpInternalState _           -> True
+    RQSetCustomTypes _              -> True
 
     RQRunSql _                      -> True
 

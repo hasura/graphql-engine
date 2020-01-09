@@ -48,14 +48,14 @@ For Docker-based deployment and advanced configuration options, see [deployment 
 ### Serverless boilerplates
 
 Use one of the [serverless trigger
-boilerplates](community/boilerplates/serverless-triggers) to deploy a webhook
+boilerplates](community/boilerplates/event-triggers) to deploy a webhook
 that can capture database events.  
 Serverless/cloud-function platforms covered by boilerplates: 
 
-* [AWS Lambda](community/boilerplates/serverless-triggers/aws-lambda)
-* [Google Cloud Functions](community/boilerplates/serverless-triggers/google-cloud-functions)
-* [Azure Functions](community/boilerplates/serverless-triggers/azure-functions)
-* [Zeit Now](community/boilerplates/serverless-triggers/zeit-now)
+* [AWS Lambda](community/boilerplates/event-triggers/aws-lambda)
+* [Google Cloud Functions](community/boilerplates/event-triggers/google-cloud-functions)
+* [Azure Functions](community/boilerplates/event-triggers/azure-functions)
+* [Zeit Now](community/boilerplates/event-triggers/zeit-now)
 
 ## Architecture
 

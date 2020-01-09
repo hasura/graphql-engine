@@ -31,6 +31,7 @@ import qualified Text.Mustache.Compile                as M
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Events.Lib
+import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Schema.Cache
@@ -252,6 +253,9 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
     _icHttpManager _icPgPool scRef eventEngineCtx
 
+  -- start a backgroud thread to handle async actions
+  void $ liftIO $ C.forkIO $ asyncActionsProcessor scRef _icPgPool _icHttpManager
+
   -- start a background thread to check for updates
   void $ liftIO $ C.forkIO $ checkForUpdates loggerCtx _icHttpManager
 
@@ -339,7 +343,7 @@ instance HttpLog AppM where
     unLogger logger $ mkHttpLog $
       mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing Nothing headers
 
-  logHttpSuccess logger userInfoM reqId httpReq _ compressedResponse qTime cType headers =
+  logHttpSuccess logger userInfoM reqId httpReq _ _ compressedResponse qTime cType headers =
     unLogger logger $ mkHttpLog $
       mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
 

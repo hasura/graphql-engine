@@ -183,11 +183,19 @@ library
                      -- caching
                      , psqueues >= 0.2
 
+                     -- testing
+                     , QuickCheck
+                     , generic-arbitrary
+
   exposed-modules:     Control.Monad.Stateless
 
                      , Hasura.Prelude
                      , Hasura.App
                      , Hasura.Db
+                     -- Exposed for benchmark:
+                     , Hasura.Cache.Bounded
+                     , Hasura.Cache.Unbounded
+                     , Hasura.Cache
                      , Hasura.Logging
                      , Hasura.HTTP
 
@@ -205,14 +213,13 @@ library
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.DDL.Metadata
+                     , Hasura.RQL.DDL.Metadata.Types
+                     , Hasura.RQL.DDL.Metadata.Generator
                      , Hasura.EncJSON
 
-  other-modules:       Hasura.Cache
-                     , Hasura.Cache
-                     , Hasura.Cache.Bounded
-                     , Hasura.Cache.Unbounded
+                     , Data.Aeson.Ordered
 
-                     , Hasura.Server.Auth.JWT
+  other-modules:       Hasura.Server.Auth.JWT
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
@@ -225,6 +232,7 @@ library
 
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
+                     , Hasura.RQL.Types.Table
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Function
@@ -238,9 +246,11 @@ library
                      , Hasura.RQL.Types.Metadata
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
+                     , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.Relationship
+                     , Hasura.RQL.Types.CustomTypes
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
                      , Hasura.RQL.DDL.Permission.Triggers
@@ -260,6 +270,8 @@ library
                      , Hasura.RQL.DDL.Headers
                      , Hasura.RQL.DDL.RemoteSchema
                      , Hasura.RQL.DDL.QueryCollection
+                     , Hasura.RQL.DDL.Action
+                     , Hasura.RQL.DDL.CustomTypes
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal
                      , Hasura.RQL.DML.Insert
@@ -279,6 +291,9 @@ library
                      , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
+                     , Hasura.GraphQL.Schema.CustomTypes
+                     , Hasura.GraphQL.Schema.Builder
+                     , Hasura.GraphQL.Schema.Action
                      , Hasura.GraphQL.Schema.Function
                      , Hasura.GraphQL.Schema.OrderBy
                      , Hasura.GraphQL.Schema.Select
@@ -305,6 +320,7 @@ library
                      , Hasura.GraphQL.Execute.LiveQuery.State
                      , Hasura.GraphQL.Execute.LiveQuery.TMap
                      , Hasura.GraphQL.Resolve
+                     , Hasura.GraphQL.Resolve.Action
                      , Hasura.GraphQL.Resolve.Types
                      , Hasura.GraphQL.Resolve.Context
                      , Hasura.GraphQL.Resolve.BoolExp
@@ -323,6 +339,8 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
+                     , Data.URL.Template
+                     , Data.List.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
@@ -363,3 +381,25 @@ test-suite graphql-engine-tests
     , optparse-applicative
     , pg-client
     , time
+    , aeson
+    , QuickCheck
+
+-- Benchmarks related to caching (e.g. the plan cache).
+--
+-- NOTE: Some of these are very slow and can only be reasonably run with `cache -n 1` for now.
+benchmark cache
+  import: common-all, common-exe
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  hs-source-dirs: src-bench-cache
+  build-depends:     base
+                   , criterion
+                   , mwc-random
+                   , mwc-probability
+                   , vector
+                   , deepseq
+                   , graphql-engine
+                   , split
+                   , async
+                   , text
+                   , bytestring

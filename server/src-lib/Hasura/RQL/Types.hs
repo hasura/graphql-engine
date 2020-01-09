@@ -48,10 +48,12 @@ import           Hasura.Prelude
 import           Hasura.SQL.Types
 
 import           Hasura.Db                      as R
+import           Hasura.RQL.Types.Action        as R
 import           Hasura.RQL.Types.BoolExp       as R
 import           Hasura.RQL.Types.Column        as R
 import           Hasura.RQL.Types.Common        as R
 import           Hasura.RQL.Types.ComputedField as R
+import           Hasura.RQL.Types.CustomTypes   as R
 import           Hasura.RQL.Types.DML           as R
 import           Hasura.RQL.Types.Error         as R
 import           Hasura.RQL.Types.EventTrigger  as R
@@ -60,6 +62,7 @@ import           Hasura.RQL.Types.Metadata      as R
 import           Hasura.RQL.Types.Permission    as R
 import           Hasura.RQL.Types.RemoteSchema  as R
 import           Hasura.RQL.Types.SchemaCache   as R
+import           Hasura.RQL.Types.Table         as R
 
 import qualified Hasura.GraphQL.Context         as GC
 
@@ -169,7 +172,13 @@ instance (HasSystemDefined m) => HasSystemDefined (ReaderT r m) where
 newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadError e, MonadTx
-           , HasHttpManager, HasSQLGenCtx, CacheRM, CacheRWM, UserInfoM )
+           , HasHttpManager, HasSQLGenCtx, UserInfoM )
+
+instance (CacheRM m) => CacheRM (HasSystemDefinedT m) where
+  askSchemaCache = HasSystemDefinedT $ lift askSchemaCache
+
+instance (CacheRWM m) => CacheRWM (HasSystemDefinedT m) where
+  writeSchemaCache = HasSystemDefinedT . lift . writeSchemaCache
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT

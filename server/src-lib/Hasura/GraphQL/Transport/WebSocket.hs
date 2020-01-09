@@ -279,7 +279,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   requestId <- getRequestId reqHdrs
   (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
-               planCache userInfo sqlGenCtx enableAL sc scVer q
+               planCache userInfo sqlGenCtx enableAL sc scVer httpMgr reqHdrs q
   execPlan <- either (withComplete . preExecErr requestId) return execPlanE
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx
                 planCache sc scVer httpMgr enableAL

@@ -20,8 +20,6 @@ import { loadInconsistentObjects } from '../Settings/Actions';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import globals from '../../../Globals';
 
-import { COMPUTED_FIELDS_SUPPORT } from '../../../helpers/versionUtils';
-
 import {
   fetchTrackedTableReferencedFkQuery,
   fetchTrackedTableFkQuery,
@@ -67,16 +65,6 @@ export const setAllRoles = roles => ({
   type: SET_ALL_ROLES,
   roles,
 });
-
-const useCompositeFnsNewCheck =
-  globals.featuresCompatibility &&
-  globals.featuresCompatibility[COMPUTED_FIELDS_SUPPORT];
-
-const compositeFnCheck = useCompositeFnsNewCheck
-  ? 'c'
-  : {
-    $ilike: '%composite%',
-  };
 
 const initQueries = {
   schemaList: {
@@ -141,7 +129,7 @@ const initQueries = {
         function_schema: '', // needs to be set later
         has_variadic: false,
         returns_set: true,
-        return_type_type: compositeFnCheck, // COMPOSITE type
+        return_type_type: 'c', // COMPOSITE type
         $or: [
           {
             function_type: {
@@ -185,7 +173,7 @@ const initQueries = {
         $not: {
           has_variadic: false,
           returns_set: true,
-          return_type_type: compositeFnCheck, // COMPOSITE type
+          return_type_type: 'c', // COMPOSITE type
           $or: [
             {
               function_type: {

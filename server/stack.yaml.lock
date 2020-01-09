@@ -13,25 +13,25 @@ packages:
     git: https://github.com/hasura/pg-client-hs.git
     pantry-tree:
       size: 1107
-      sha256: aaa78473e95368c73c4f6cd5d85f1016af5783090d804aeb7e0d244c02dd3354
-    commit: bd21e66d8197af381a6c0b493e22d611ed1fa386
+      sha256: 7dd16080034ac2a94763106ead8296105b538424533bed5ba3567824e2dfe4ea
+    commit: 70a849d09bea9461e72c5a5bbde06df65aab61c0
   original:
     git: https://github.com/hasura/pg-client-hs.git
-    commit: bd21e66d8197af381a6c0b493e22d611ed1fa386
+    commit: 70a849d09bea9461e72c5a5bbde06df65aab61c0
 - completed:
     cabal-file:
       size: 3364
       sha256: 09bad175e8ccb1fec5ddbc94d95d18b4206ac4481cf3749e42ffbaac90bc4a37
     name: graphql-parser
     version: 0.1.0.0
-    git: https://github.com/hasura/graphql-parser-hs.git
+    git: https://github.com/0x777/graphql-parser-hs.git
     pantry-tree:
       size: 1826
-      sha256: 4ac0632e9f0e2c386b056ac078cf04fd4c211f683c0fee51e767da913d7d4764
-    commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
+      sha256: 57f83a277efa6642085141ccd86bc71c95654f4083220e4a0137f59146f8c5bf
+    commit: 6eda2bf6bafe6d90bc4fe369f656a3cb979b041a
   original:
-    git: https://github.com/hasura/graphql-parser-hs.git
-    commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
+    git: https://github.com/0x777/graphql-parser-hs.git
+    commit: 6eda2bf6bafe6d90bc4fe369f656a3cb979b041a
 - completed:
     cabal-file:
       size: 1253
@@ -46,13 +46,6 @@ packages:
   original:
     git: https://github.com/hasura/ci-info-hs.git
     commit: ad6df731584dc89b72a6e131687d37ef01714fe8
-- completed:
-    hackage: select-0.4.0.1@sha256:d409315752a069693bdd4169fa9a8ea7777d814da77cd8604f367cf0741de295,2492
-    pantry-tree:
-      size: 1256
-      sha256: b6ae36ccba2a7cdd1ad130575931364002682e532d7043da62771e58294ddb7a
-  original:
-    hackage: select-0.4.0.1
 - completed:
     hackage: primitive-extras-0.7.1@sha256:23905c57089418b1a2d324cfee3e81bbd5a344a0fa56a827867b2dce275fdb5e,2945
     pantry-tree:
@@ -102,16 +95,9 @@ packages:
       sha256: 3561f4c3121d05e5390c2b32f9e0a58b6408ecb5cfb74f234f3b8ca37b467a5e
   original:
     hackage: shakespeare-2.0.22
-- completed:
-    hackage: brotli-0.0.0.0@sha256:448061ceabdcaa752bbaf208f255bbb7e90bbcf8ea8a913d26ffa7887636823b,2887
-    pantry-tree:
-      size: 407
-      sha256: 5ad2a6b25c8145f58c43b10f1b60a1e1b5bf57f0e33e4a203f9671b361fb03c0
-  original:
-    hackage: brotli-0.0.0.0
 snapshots:
 - completed:
-    size: 498167
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/13/20.yaml
-    sha256: cda928d57b257a5f17bcad796843c9daa674fef47d600dbea3aa7b0e49d64a11
-  original: lts-13.20
+    size: 500539
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/13/27.yaml
+    sha256: 690db832392afe55733b4c7023fd29b1b1c660ee42f1fb505b86b07394ca994e
+  original: lts-13.27

@@ -23,6 +23,7 @@ newtype RemoteSchemaName
   { unRemoteSchemaName :: NonEmptyText }
   deriving ( Show, Eq, Lift, Hashable, J.ToJSON, J.ToJSONKey
            , J.FromJSON, Q.ToPrepArg, Q.FromCol, DQuote
+           , Generic, Arbitrary
            )
 
 data RemoteSchemaInfo
@@ -44,17 +45,24 @@ data RemoteSchemaDef
   , _rsdHeaders              :: !(Maybe [HeaderConf])
   , _rsdForwardClientHeaders :: !Bool
   , _rsdTimeoutSeconds       :: !(Maybe Int)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''RemoteSchemaDef)
 
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''RemoteSchemaDef)
+instance J.FromJSON RemoteSchemaDef where
+  parseJSON = J.withObject "Object" $ \o ->
+    RemoteSchemaDef
+      <$> o J..:? "url"
+      <*> o J..:? "url_from_env"
+      <*> o J..:? "headers"
+      <*> o J..:? "forward_client_headers" J..!= False
+      <*> o J..:? "timeout_seconds"
 
 data AddRemoteSchemaQuery
   = AddRemoteSchemaQuery
-  { _arsqName       :: !RemoteSchemaName -- TODO: name validation: cannot be empty?
+  { _arsqName       :: !RemoteSchemaName
   , _arsqDefinition :: !RemoteSchemaDef
   , _arsqComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift)
-
+  } deriving (Show, Eq, Lift, Generic)
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
 
 newtype RemoteSchemaNameQuery

@@ -8,7 +8,10 @@ select
     'functions', functions.items,
     'foreign_keys', foreign_keys.items,
     'allowlist_collections', allowlist.item,
-    'computed_fields', computed_field.items
+    'computed_fields', computed_field.items,
+    'custom_types', coalesce((select custom_types from hdb_catalog.hdb_custom_types), '{}'),
+    'actions', actions.items,
+    'action_permissions', action_permissions.items
   )
 from
   (
@@ -212,4 +215,35 @@ from
         from hdb_catalog.hdb_function_info_agg
         where function_name = cc.function_name and function_schema = cc.function_schema
       ) fi on 'true'
-  ) as computed_field
+  ) as computed_field,
+  (
+    select
+      coalesce(
+        json_agg(
+          json_build_object(
+            'name', action_name,
+            'definition', action_defn :: json,
+            'comment', comment
+          )
+        ),
+        '[]'
+      ) as items
+    from
+      hdb_catalog.hdb_action
+  ) as actions,
+  (
+    select
+      coalesce(
+        json_agg(
+          json_build_object(
+            'action', action_name,
+            'role', role_name,
+            'definition', definition :: json,
+            'comment', comment
+          )
+        ),
+        '[]'
+      ) as items
+    from
+      hdb_catalog.hdb_action_permission
+  ) as action_permissions

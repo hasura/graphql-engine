@@ -236,7 +236,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     case modResult of
       Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
                    in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) headers err
-      Right res -> logSuccessAndResp (Just userInfo) requestId req res (Just (t1, t2)) headers
+      Right res -> logSuccessAndResp (Just userInfo) requestId req (fmap toJSON q) res (Just (t1, t2)) headers
 
     where
       logger = scLogger serverCtx
@@ -256,21 +256,21 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         Spock.setStatus $ qeStatus qErr
         Spock.json $ qErrEncoder includeInternal qErr
 
-      logSuccessAndResp userInfo reqId req result qTime reqHeaders =
+      logSuccessAndResp userInfo reqId req reqBody result qTime reqHeaders =
         case result of
           JSONResp (HttpResponse encJson h) ->
-            possiblyCompressedLazyBytes userInfo reqId req qTime (encJToLBS encJson)
+            possiblyCompressedLazyBytes userInfo reqId req reqBody qTime (encJToLBS encJson)
               (pure jsonHeader <> mkHeaders h) reqHeaders
           RawResp (HttpResponse rawBytes h) ->
-            possiblyCompressedLazyBytes userInfo reqId req qTime rawBytes (mkHeaders h) reqHeaders
+            possiblyCompressedLazyBytes userInfo reqId req reqBody qTime rawBytes (mkHeaders h) reqHeaders
 
-      possiblyCompressedLazyBytes userInfo reqId req qTime respBytes respHeaders reqHeaders = do
+      possiblyCompressedLazyBytes userInfo reqId req reqBody qTime respBytes respHeaders reqHeaders = do
         let (compressedResp, mEncodingHeader, mCompressionType) =
               compressResponse (Wai.requestHeaders req) respBytes
             encodingHeader = maybe [] pure mEncodingHeader
             reqIdHeader = (requestIdHeader, unRequestId reqId)
             allRespHeaders = pure reqIdHeader <> encodingHeader <> respHeaders
-        lift $ logHttpSuccess logger userInfo reqId req respBytes compressedResp qTime mCompressionType reqHeaders
+        lift $ logHttpSuccess logger userInfo reqId req reqBody respBytes compressedResp qTime mCompressionType reqHeaders
         mapM_ (uncurry Spock.setHeader) allRespHeaders
         Spock.lazyBytes compressedResp
 
@@ -297,7 +297,7 @@ v1QueryHandler query = do
       instanceId <- scInstanceId . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
-v1Alpha1GQHandler :: (MonadIO m) => GH.GQLReqUnparsed -> Handler m (HttpResponse EncJSON)
+v1Alpha1GQHandler :: (MonadIO m) => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
@@ -312,11 +312,11 @@ v1Alpha1GQHandler query = do
   requestId <- asks hcRequestId
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
                 sc scVer manager enableAL
-  flip runReaderT execCtx $ GH.runGQ requestId userInfo reqHeaders query
+  flip runReaderT execCtx $ GH.runGQBatched requestId userInfo reqHeaders query
 
 v1GQHandler
   :: (MonadIO m)
-  => GH.GQLReqUnparsed
+  => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
 
@@ -411,7 +411,7 @@ initErrExit :: QErr -> IO a
 initErrExit e = do
   putStrLn $
     "failed to build schema-cache because of inconsistent metadata: "
-    <> T.unpack (qeError e)
+    <> (show e)
   exitFailure
 
 data HasuraApp

@@ -5,6 +5,7 @@ import           Hasura.Prelude
 
 import qualified Data.Text                      as T
 
+import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
@@ -20,6 +21,7 @@ data MetadataObjType
   | MOTFunction
   | MOTRemoteSchema
   | MOTComputedField
+  | MOTCustomTypes
   deriving (Eq, Generic)
 instance Hashable MetadataObjType
 
@@ -31,6 +33,7 @@ instance Show MetadataObjType where
   show MOTFunction      = "function"
   show MOTRemoteSchema  = "remote_schema"
   show MOTComputedField = "computed_field"
+  show MOTCustomTypes   = "custom_types"
 
 instance ToJSON MetadataObjType where
   toJSON = String . T.pack . show
@@ -48,6 +51,9 @@ data MetadataObjId
   | MOFunction !QualifiedFunction
   | MORemoteSchema !RemoteSchemaName
   | MOTableObj !QualifiedTable !TableMetadataObjId
+  | MOCustomTypes
+  | MOAction !ActionName
+  | MOActionPermission !ActionName !RoleName
   deriving (Show, Eq, Generic)
 instance Hashable MetadataObjId
 

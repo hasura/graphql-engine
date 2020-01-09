@@ -50,7 +50,7 @@ data AnnAggOrdBy
   deriving (Show, Eq)
 
 data AnnObColG v
-  = AOCPG !PGColumnInfo
+  = AOCPG !PGCol
   | AOCObj !RelInfo !(AnnBoolExp v) !(AnnObColG v)
   | AOCAgg !RelInfo !(AnnBoolExp v) !AnnAggOrdBy
   deriving (Show, Eq)
@@ -259,7 +259,9 @@ type FunctionArgsExpTableRow v = FunctionArgsExpG (ArgumentExp v)
 data SelectFromG v
   = FromTable !QualifiedTable
   | FromIden !Iden
-  | FromFunction !QualifiedFunction !(FunctionArgsExpTableRow v)
+  | FromFunction !QualifiedFunction
+                 !(FunctionArgsExpTableRow v)
+                 !(Maybe [(PGCol, PGScalarType)])
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
 type SelectFrom = SelectFromG S.SQLExp
@@ -279,6 +281,10 @@ traverseTablePerm f (TablePerm boolExp limit) =
   TablePerm
   <$> traverseAnnBoolExp f boolExp
   <*> pure limit
+
+noTablePermissions :: TablePermG v
+noTablePermissions =
+  TablePerm annBoolExpTrue Nothing
 
 type TablePerm = TablePermG S.SQLExp
 

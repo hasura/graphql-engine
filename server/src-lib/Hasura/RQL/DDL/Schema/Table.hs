@@ -37,7 +37,6 @@ import           Hasura.Server.Utils           (duplicates)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query             as Q
-import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -136,7 +135,7 @@ runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
 data SetTableCustomFields
   = SetTableCustomFields
   { _stcfTable             :: !QualifiedTable
-  , _stcfCustomRootFields  :: !GC.TableCustomRootFields
+  , _stcfCustomRootFields  :: !TableCustomRootFields
   , _stcfCustomColumnNames :: !CustomColumnNames
   } deriving (Show, Eq, Lift)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''SetTableCustomFields)
@@ -145,7 +144,7 @@ instance FromJSON SetTableCustomFields where
   parseJSON = withObject "SetTableCustomFields" $ \o ->
     SetTableCustomFields
     <$> o .: "table"
-    <*> o .:? "custom_root_fields" .!= GC.emptyCustomRootFields
+    <*> o .:? "custom_root_fields" .!= emptyCustomRootFields
     <*> o .:? "custom_column_names" .!= M.empty
 
 runSetTableCustomFieldsQV2 :: (CacheBuildM m) => SetTableCustomFields -> m EncJSON

@@ -28,9 +28,10 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
-import           Hasura.GraphQL.Resolve.Select       (fromSelSet)
+import           Hasura.GraphQL.Resolve.Select       (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DML.Internal             (currentSession, sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -45,7 +46,7 @@ convertMutResp ty selSet =
     "__typename"    -> return $ RR.MExp $ G.unName $ G.unNamedType ty
     "affected_rows" -> return RR.MCount
     "returning"     -> do
-      annFlds <- fromSelSet (_fType fld) $ _fSelSet fld
+      annFlds <- processTableSelectionSet (_fType fld) $ _fSelSet fld
       annFldsResolved <- traverse
         (traverse (RS.traverseAnnFld convertPGValueToTextValue)) annFlds
       return $ RR.MRet annFldsResolved
@@ -236,3 +237,12 @@ buildEmptyMutResp = mkTx
       RR.MCount -> J.toJSON (0 :: Int)
       RR.MExp e -> J.toJSON e
       RR.MRet _ -> J.toJSON ([] :: [J.Value])
+
+resolveValPrep
+  :: (MonadState PrepArgs m)
+  => UnresolvedVal -> m S.SQLExp
+resolveValPrep = \case
+  UVPG annPGVal -> prepare annPGVal
+  UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
+  UVSQL sqlExp -> pure sqlExp
+  UVSession -> pure currentSession

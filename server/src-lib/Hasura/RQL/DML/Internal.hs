@@ -216,7 +216,7 @@ convPartialSQLExp
   -> f S.SQLExp
 convPartialSQLExp f = \case
   PSESQLExp sqlExp -> pure sqlExp
-  PSESessVar colTy sessVar -> f colTy sessVar
+  PSESessVar colTy sessionVariable -> f colTy sessionVariable
 
 sessVarFromCurrentSetting
   :: (Applicative f) => PGType PGScalarType -> SessVar -> f S.SQLExp

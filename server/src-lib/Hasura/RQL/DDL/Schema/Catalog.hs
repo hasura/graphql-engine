@@ -22,7 +22,8 @@ import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
 
 fetchCatalogData :: (MonadTx m) => m CatalogMetadata
-fetchCatalogData = liftTx $ Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+fetchCatalogData =
+  liftTx $ Q.getAltJ . runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
   $(Q.sqlFromFile "src-rsr/catalog_metadata.sql") () True
 
 saveTableToCatalog :: (MonadTx m) => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m ()
