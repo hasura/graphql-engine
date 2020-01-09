@@ -159,3 +159,10 @@ func indent(s string) string {
 	out += "\n/"
 	return out
 }
+
+func limitString(s string, length int) string {
+	if len(s) > length && length > 3 {
+		s = s[:length-3] + "..."
+	}
+	return s
+}

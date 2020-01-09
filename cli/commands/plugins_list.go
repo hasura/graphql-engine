@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"sort"
 	"strings"
 	"text/tabwriter"
@@ -12,7 +13,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/plugins/index"
 	"github.com/hasura/graphql-engine/cli/plugins/installation"
+	"github.com/hasura/graphql-engine/cli/plugins/types"
 )
 
 func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -22,21 +25,45 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Example:      ``,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			installedPlugins, err := installation.ListInstalledPlugins(ec.PluginsPath.InstallReceiptsPath())
+			plugins, err := index.LoadPluginListFromFS(ec.PluginsPath.IndexPluginsPath())
 			if err != nil {
-				return errors.Wrap(err, "failed to find all installed versions")
+				return errors.Wrap(err, "failed to load the list of plugins from the index")
+			}
+			names := make([]string, len(plugins))
+			pluginMap := make(map[string]types.Plugin, len(plugins))
+			for i, p := range plugins {
+				names[i] = p.Name
+				pluginMap[p.Name] = p
 			}
 
-			// print installed plugins
-			// TODO: print if update is available
+			installed, err := installation.ListInstalledPlugins(ec.PluginsPath.InstallReceiptsPath())
+			if err != nil {
+				return errors.Wrap(err, "failed to load installed plugins")
+			}
+
+			// No plugins found
+			if len(names) == 0 {
+				return nil
+			}
+
 			var rows [][]string
-			for p, version := range installedPlugins {
-				rows = append(rows, []string{p, version})
+			cols := []string{"NAME", "DESCRIPTION", "INSTALLED"}
+			for _, name := range names {
+				plugin := pluginMap[name]
+				var status string
+				if _, ok := installed[name]; ok {
+					status = "yes"
+				} else if _, ok, err := installation.GetMatchingPlatform(plugin.Platforms); err != nil {
+					return errors.Wrapf(err, "failed to get the matching platform for plugin %s", name)
+				} else if ok {
+					status = "no"
+				} else {
+					status = "unavailable on " + runtime.GOOS
+				}
+				rows = append(rows, []string{name, limitString(plugin.ShortDescription, 50), status})
 			}
 			rows = sortByFirstColumn(rows)
-			return printTable(os.Stdout, []string{"PLUGIN", "VERSION"}, rows)
-
-			// TODO: print plugins available to install
+			return printTable(os.Stdout, cols, rows)
 		},
 	}
 	return pluginsListCmd
