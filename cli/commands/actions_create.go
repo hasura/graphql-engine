@@ -73,7 +73,7 @@ func (o *actionsCreateOptions) run() error {
 			return err
 		}
 	}
-	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action)
+	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action, o.EC.CMDName)
 	err = actionCfg.Create(o.name, introSchema, o.deriveFromMutation)
 	if err != nil {
 		return err

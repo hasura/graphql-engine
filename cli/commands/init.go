@@ -55,7 +55,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
 
 	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "")
-	f.StringVar(&opts.ActionHandler, "action-handler", "{{DEFAULT_HANDLER}}", "")
+	f.StringVar(&opts.ActionHandler, "action-handler", "http://localhost:3000", "")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	return initCmd

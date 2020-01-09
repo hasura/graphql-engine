@@ -14,7 +14,7 @@ const (
 )
 
 type Version struct {
-	Version string `json:"version" yaml:"version"`
+	Version int `json:"version" yaml:"version"`
 }
 
 type VersionConfig struct {

@@ -88,12 +88,15 @@ type ActionConfig struct {
 	MetadataDir   string
 	ActionConfig  ActionExecutionConfig
 	CodegenConfig *CodegenExecutionConfig
+
+	cmdName string
 }
 
-func New(baseDir string, actionConfig ActionExecutionConfig) *ActionConfig {
+func New(baseDir string, actionConfig ActionExecutionConfig, cmdName string) *ActionConfig {
 	return &ActionConfig{
 		MetadataDir:  baseDir,
 		ActionConfig: actionConfig,
+		cmdName:      cmdName,
 	}
 }
 
@@ -147,7 +150,7 @@ input SampleInput {
 				},
 			},
 		}
-		sdlToResp, err := convertMetadataToSDL(sdlToReq)
+		sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName)
 		if err != nil {
 			return err
 		}
@@ -156,6 +159,9 @@ input SampleInput {
 	newDoc, err := parser.Parse(parser.ParseParams{
 		Source: defaultSDL,
 	})
+	if err != nil {
+		return err
+	}
 	doc.Definitions = append(newDoc.Definitions, doc.Definitions...)
 	inputDupData := map[string][]int{}
 	objDupData := map[string][]int{}
@@ -221,8 +227,7 @@ func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
 		CodegenConfig: a.CodegenConfig,
 		Derive:        derivePld,
 	}
-	resp, err := getActionsCodegen(data)
-
+	resp, err := getActionsCodegen(data, a.cmdName)
 	if err != nil {
 		return err
 	}
@@ -251,7 +256,7 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 		},
 	}
 
-	sdlFromResp, err := convertSDLToMetadata(sdlFromReq)
+	sdlFromResp, err := convertSDLToMetadata(sdlFromReq, a.cmdName)
 	if err != nil {
 		return err
 	}
@@ -375,10 +380,16 @@ func (a *ActionConfig) Export(metadata dbTypes.Metadata) error {
 	var sdlToReq sdlToRequest
 	sdlToReq.Types = common.CustomTypes
 	sdlToReq.Actions = common.Actions
-	sdlToResp, err := convertMetadataToSDL(sdlToReq)
+	sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName)
+	if err != nil {
+		return err
+	}
 	doc, err := parser.Parse(parser.ParseParams{
 		Source: sdlToResp.SDL.Complete,
 	})
+	if err != nil {
+		return err
+	}
 	commonByt, err := yaml.Marshal(common)
 	if err != nil {
 		return err

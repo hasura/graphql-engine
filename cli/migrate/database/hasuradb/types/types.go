@@ -1,7 +1,7 @@
 package types
 
 type Metadata struct {
-	Version          string      `json:"version,omitempty" yaml:"version,omitempty"`
+	Version          int         `json:"version,omitempty" yaml:"version,omitempty"`
 	Tables           interface{} `json:"tables" yaml:"tables"`
 	Functions        interface{} `json:"functions,omitempty" yaml:"functions"`
 	QueryCollections interface{} `json:"query_collections,omitempty" yaml:"query_collections"`

@@ -67,7 +67,7 @@ type Config struct {
 
 type rawConfig struct {
 	// Version for the CLI config
-	Version string
+	Version string `json:"version"`
 	// Endpoint for the GraphQL Engine
 	Endpoint string `json:"endpoint"`
 	// AccessKey (deprecated) (optional) Admin secret key required to query the endpoint
