@@ -1,28 +1,27 @@
 const fetch = require('node-fetch');
-const { getTemplatePath } = require('../../utils/utils')
+const { getTemplatePath } = require('../../utils/utils');
 const { parseCustomTypes, getActionTypes } = require('../../shared/utils/hasuraCustomTypeUtils')
-const { getFrameworkScaffold } = require('./template');
+const { getFrameworkCodegen } = require('./template');
 const { getActionDefinitionSdl, getTypesSdl } = require('../../shared/utils/sdlUtils');
 const { parse: sdlParse } = require('graphql/language/parser');
 
-const getActionScaffold = async (payload) => {
+const getActionsCodegen = async (payload) => {
 
   const {
-    framework,
     action_name: actionName,
     sdl: {
       complete: sdlComplete
     },
     derive,
-    scaffold_config: scaffoldConfig
+    actions_config: actionsConfig
   } = payload;
 
   try {
-    const scaffoldResp = await getFrameworkScaffold(framework, actionName, sdlComplete, derive, scaffoldConfig)
-    if (scaffoldResp.error) {
-      throw Error(scaffoldResp.error)
+    const codegenResp = await getFrameworkCodegen(actionName, sdlComplete, derive, actionsConfig.codegen)
+    if (codegenResp.error) {
+      throw Error(codegenResp.error)
     } else {
-      return scaffoldResp.files
+      return codegenResp.files
     }
   } catch (e) {
     throw e;
@@ -30,6 +29,6 @@ const getActionScaffold = async (payload) => {
 };
 
 module.exports = {
-  getActionScaffold
-}
+  getActionsCodegen 
+};
 
