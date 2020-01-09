@@ -10,10 +10,12 @@ module Hasura.Prelude
   , txtToBs
   , spanMaybeM
   , findWithIndex
+  , mapFromL
   ) where
 
 import           Control.Applicative               as M (Alternative (..))
-import           Control.Arrow                     as M (first, second, (&&&), (***))
+import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
+import           Control.DeepSeq                   as M (NFData, deepseq, force)
 import           Control.Monad                     as M (void, when)
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
@@ -21,6 +23,9 @@ import           Control.Monad.Fail                as M (MonadFail)
 import           Control.Monad.Identity            as M
 import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M
+import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..))
+import           Data.Align                        as M (Align (align, alignWith))
+import           Data.Align.Key                    as M (AlignWithKey (..))
 import           Data.Bool                         as M (bool)
 import           Data.Data                         as M (Data (..))
 import           Data.Either                       as M (lefts, partitionEithers, rights)
@@ -28,9 +33,12 @@ import           Data.Foldable                     as M (asum, foldrM, for_, toL
 import           Data.Function                     as M (on, (&))
 import           Data.Functor                      as M (($>), (<&>))
 import           Data.Hashable                     as M (Hashable)
+import           Data.HashMap.Strict               as M (HashMap)
+import           Data.HashSet                      as M (HashSet)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
+import           Data.List.NonEmpty                as M (NonEmpty(..))
 import           Data.Maybe                        as M (catMaybes, fromMaybe, isJust, isNothing,
                                                          listToMaybe, mapMaybe, maybeToList)
 import           Data.Ord                          as M (comparing)
@@ -38,6 +46,8 @@ import           Data.Semigroup                    as M (Semigroup (..))
 import           Data.Sequence                     as M (Seq)
 import           Data.String                       as M (IsString)
 import           Data.Text                         as M (Text)
+import           Data.These                        as M (These (..), fromThese, mergeThese,
+                                                         mergeTheseWith, these)
 import           Data.Traversable                  as M (for)
 import           Data.Word                         as M (Word64)
 import           GHC.Generics                      as M (Generic)
@@ -46,6 +56,7 @@ import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
 
 import qualified Data.ByteString                   as B
+import qualified Data.HashMap.Strict               as Map
 import qualified Data.Text                         as T
 import qualified Data.Text.Encoding                as TE
 import qualified Data.Text.Encoding.Error          as TE
@@ -91,3 +102,7 @@ findWithIndex p l = do
   v <- find p l
   i <- findIndex p l
   pure (v, i)
+
+-- TODO: Move to Data.HashMap.Strict.Extended; rename to fromListWith?
+mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
+mapFromL f = Map.fromList . map (\v -> (f v, v))

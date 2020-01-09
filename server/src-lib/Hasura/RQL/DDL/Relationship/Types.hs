@@ -8,7 +8,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import qualified Data.HashMap.Strict        as HM
-import qualified Data.Map.Strict            as M
 import qualified Data.Text                  as T
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
@@ -35,7 +34,7 @@ instance (ToJSON a) => ToAesonPairs (RelDef a) where
 data RelManualConfig
   = RelManualConfig
   { rmTable   :: !QualifiedTable
-  , rmColumns :: !(M.Map PGCol PGCol)
+  , rmColumns :: !(HashMap PGCol PGCol)
   } deriving (Show, Eq, Lift, Generic)
 
 instance FromJSON RelManualConfig where

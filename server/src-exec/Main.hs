@@ -6,6 +6,7 @@ import           Hasura.App
 import           Hasura.Logging             (Hasura)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Metadata    (fetchMetadata)
+import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Init
 import           Hasura.Server.Migrate      (dropCatalog)
@@ -39,13 +40,15 @@ runApp (HGEOptionsG rci hgeCmd) =
       (InitCtx{..}, _) <- initialiseCtx hgeCmd rci
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-      res <- execQuery queryBs
-             & runHasSystemDefinedT (SystemDefined False)
-             & runAsAdmin _icPgPool sqlGenCtx _icHttpManager
+      res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager do
+        schemaCache <- buildRebuildableSchemaCache
+        execQuery queryBs
+          & runHasSystemDefinedT (SystemDefined False)
+          & runCacheRWT schemaCache
+          & fmap fst
       either printErrJExit (liftIO . BLC.putStrLn) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
-
   where
     runTx' initCtx tx =
       liftIO $ runExceptT $ Q.runTx (_icPgPool initCtx) (Q.Serializable, Nothing) tx

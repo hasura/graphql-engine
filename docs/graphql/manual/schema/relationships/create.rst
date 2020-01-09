@@ -34,6 +34,7 @@ the Foreign Keys section and configure the ``author_id`` column as a foreign-key
 the ``author`` table:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/add-foreign-key.png
+   :alt: Add foreign-key constraint
 
 Step 2: Create an object relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -46,6 +47,7 @@ The console infers this using the foreign-key created above and recommends the p
 Add an ``object relationship`` named ``author`` for the ``article`` table as shown here:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/add-1-1-relationship.png
+   :alt: Create an object relationship
 
 We can now run a nested object query that is based on this ``object relationship``.
 
@@ -106,6 +108,7 @@ You can add an ``array relationship`` in the same fashion as an ``object relatio
 Add an ``array relationship`` named ``articles`` for the ``author`` table as shown here:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/add-1-many-relationship.png
+   :alt: Create an array relationship
 
 We can now run a nested object query that is based on this ``array relationship``.
 
@@ -196,6 +199,7 @@ Step 1: Open the manual relationship section
 - Click on the ``Configure`` button:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/manual-relationship-btn.png
+   :alt: Open the manual relationship section
 
 Step 2: Define the relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -203,6 +207,7 @@ Step 2: Define the relationship
 The above step will open up a section as shown below:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/manual-relationship-create.png
+   :alt: Define the relationship
 
 In this case:
 

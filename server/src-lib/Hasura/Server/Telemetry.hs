@@ -11,7 +11,6 @@ module Hasura.Server.Telemetry
 
 import           Control.Exception       (try)
 import           Control.Lens
-import           Data.IORef
 import           Data.List
 
 import           Hasura.HTTP
@@ -95,14 +94,15 @@ mkPayload dbId instanceId version metrics = do
 runTelemetry
   :: Logger Hasura
   -> HTTP.Manager
-  -> IORef (SchemaCache, SchemaCacheVer)
+  -> IO SchemaCache
+  -- ^ an action that always returns the latest schema cache
   -> Text
   -> InstanceId
   -> IO ()
-runTelemetry (Logger logger) manager cacheRef dbId instanceId = do
+runTelemetry (Logger logger) manager getSchemaCache dbId instanceId = do
   let options = wreqOptions manager []
   forever $ do
-    schemaCache <- fmap fst $ readIORef cacheRef
+    schemaCache <- getSchemaCache
     let metrics = computeMetrics schemaCache
     payload <- A.encode <$> mkPayload dbId instanceId currentVersion metrics
     logger $ debugLBS $ "metrics_info: " <> payload
@@ -127,10 +127,10 @@ runTelemetry (Logger logger) manager cacheRef dbId instanceId = do
 
 computeMetrics :: SchemaCache -> Metrics
 computeMetrics sc =
-  let nTables = countUserTables (isNothing . _tiViewInfo)
-      nViews = countUserTables (isJust . _tiViewInfo)
-      nEnumTables = countUserTables (isJust . _tiEnumValues)
-      allRels = join $ Map.elems $ Map.map (getRels . _tiFieldInfoMap) userTables
+  let nTables = countUserTables (isNothing . _tciViewInfo . _tiCoreInfo)
+      nViews = countUserTables (isJust . _tciViewInfo . _tiCoreInfo)
+      nEnumTables = countUserTables (isJust . _tciEnumValues . _tiCoreInfo)
+      allRels = join $ Map.elems $ Map.map (getRels . _tciFieldInfoMap . _tiCoreInfo) userTables
       (manualRels, autoRels) = partition riIsManual allRels
       relMetrics = RelationshipMetric (length manualRels) (length autoRels)
       rolePerms = join $ Map.elems $ Map.map permsOfTbl userTables
@@ -150,13 +150,13 @@ computeMetrics sc =
   in Metrics nTables nViews nEnumTables relMetrics permMetrics evtTriggers rmSchemas funcs
 
   where
-    userTables = Map.filter (not . isSystemDefined . _tiSystemDefined) $ scTables sc
+    userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) $ scTables sc
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
     calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
     calcPerms fn perms = length $ catMaybes $ map fn perms
 
-    permsOfTbl :: TableInfo PGColumnInfo -> [(RoleName, RolePermInfo)]
+    permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
 

@@ -33,6 +33,12 @@ const setFeaturesCompatibility = data => ({
   data,
 });
 
+const PRO_CLICKED = 'Main/PRO_CLICKED';
+const emitProClickedEvent = data => ({
+  type: PRO_CLICKED,
+  data,
+});
+
 const SET_READ_ONLY_MODE = 'Main/SET_READ_ONLY_MODE';
 const setReadOnlyMode = data => ({
   type: SET_READ_ONLY_MODE,
@@ -317,6 +323,7 @@ export {
   updateMigrationModeStatus,
   LOGIN_IN_PROGRESS,
   LOGIN_ERROR,
+  emitProClickedEvent,
   loadServerVersion,
   fetchServerConfig,
   loadLatestServerVersion,
