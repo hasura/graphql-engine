@@ -6,6 +6,7 @@ type Plugin struct {
 	Version          string     `json:"version,omitempty"`
 	ShortDescription string     `json:"shortDescription,omitempty"`
 	Homepage         string     `json:"homepage,omitempty"`
+	Hidden           bool       `json:"hidden,omitempty"`
 	Platforms        []Platform `json:"platforms,omitempty"`
 }
 
