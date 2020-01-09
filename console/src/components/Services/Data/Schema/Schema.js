@@ -453,7 +453,6 @@ class Schema extends Component {
         if (isEmpty(untrackedRelations)) {
           untrackedRelList.push(
             <div key="no-untracked-rel">There are no untracked relations</div>
-              .ne
           );
         } else {
           untrackedRelations.forEach((rel, i) => {

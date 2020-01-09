@@ -16,6 +16,7 @@ import {
 } from '../../../Common/utils/pgUtils';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
+import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 
 const ComputedFieldsEditor = ({
   table,
@@ -203,9 +204,9 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleFnSchemaChange = e => {
+      const handleFnSchemaChange = selectedOption => {
         // fetch schema fns
-        dispatch(fetchFunctionInit(e.target.value));
+        dispatch(fetchFunctionInit(selectedOption.value));
 
         const newState = [...stateComputedFields];
 
@@ -215,7 +216,7 @@ const ComputedFieldsEditor = ({
             ...newState[i].definition,
             function: {
               ...newState[i].definition.function,
-              schema: e.target.value,
+              schema: selectedOption.value,
             },
           },
         };
@@ -223,7 +224,7 @@ const ComputedFieldsEditor = ({
         setComputedFieldsState(newState);
       };
 
-      const handleFnNameChange = e => {
+      const handleFnNameChange = selectedOption => {
         const newState = [...stateComputedFields];
 
         newState[i] = {
@@ -232,7 +233,7 @@ const ComputedFieldsEditor = ({
             ...newState[i].definition,
             function: {
               ...newState[i].definition.function,
-              name: e.target.value,
+              name: selectedOption.value,
             },
           },
         };
@@ -282,24 +283,21 @@ const ComputedFieldsEditor = ({
             <div className={`${styles.add_mar_bottom_mid}`}>
               <b>Function schema: </b>
             </div>
-            <select
-              value={computedFieldFunctionSchema}
-              className={`${styles.select} form-control ${
-                styles.add_pad_left
-              } ${styles.wd50percent}`}
-              data-test={'computed_field-fn-ref-schema'}
-              onChange={handleFnSchemaChange}
-            >
-              {schemaList.map((s, j) => {
-                const schemaName = getSchemaName(s);
-
-                return (
-                  <option key={j} value={schemaName}>
-                    {schemaName}
-                  </option>
-                );
-              })}
-            </select>
+            <div className={styles.wd50percent}>
+              <SearchableSelectBox
+                options={schemaList.map(s => getSchemaName(s))}
+                onChange={handleFnSchemaChange}
+                value={computedFieldFunctionSchema}
+                bsClass={'function-schema-select'}
+                styleOverrides={{
+                  menu: {
+                    zIndex: 5,
+                  },
+                }}
+                filterOption={'prefix'}
+                placeholder="function_name"
+              />
+            </div>
           </div>
           <div className={`${styles.add_mar_top}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
@@ -313,29 +311,24 @@ const ComputedFieldsEditor = ({
                 Create new
               </RawSqlButton>
             </div>
-            <select
-              value={computedFieldFunctionName}
-              className={`${styles.select} form-control ${
-                styles.add_pad_left
-              } ${styles.wd50percent}`}
-              data-test={'computed_field-fn-ref-fn'}
-              onChange={handleFnNameChange}
-            >
-              <option disabled key={-1} value={''}>
-                --
-              </option>
-              {getSchemaFunctions(functions, computedFieldFunctionSchema).map(
-                (fn, j) => {
-                  const functionName = getFunctionName(fn);
-
-                  return (
-                    <option key={j} value={functionName}>
-                      {functionName}
-                    </option>
-                  );
-                }
-              )}
-            </select>
+            <div className={styles.wd50percent}>
+              <SearchableSelectBox
+                options={getSchemaFunctions(
+                  functions,
+                  computedFieldFunctionSchema
+                ).map(fn => getFunctionName(fn))}
+                onChange={handleFnNameChange}
+                value={computedFieldFunctionName}
+                bsClass={'function-name-select'}
+                styleOverrides={{
+                  menu: {
+                    zIndex: 5,
+                  },
+                }}
+                filterOption={'prefix'}
+                placeholder="function_name"
+              />
+            </div>
           </div>
           <div className={`${styles.add_mar_top}`}>
             {getFunctionDefinitionSection()}
