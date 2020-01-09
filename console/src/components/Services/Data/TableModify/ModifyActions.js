@@ -44,6 +44,7 @@ import {
   getTableCustomRootFields,
   getTableCustomColumnNames,
   getTableDef,
+  getComputedFieldName,
 } from '../../../Common/utils/pgUtils';
 import {
   getSetCustomRootFieldsQuery,
@@ -178,11 +179,13 @@ export const saveComputedField = (
 
   const tableDef = getTableDef(table);
 
+  const computedFieldName = getComputedFieldName(computedField);
+
   if (originalComputedField) {
     migrationUp.push(
       getDropComputedFieldQuery(
         tableDef,
-        originalComputedField.computed_field_name
+        getComputedFieldName(originalComputedField)
       )
     );
   }
@@ -190,21 +193,19 @@ export const saveComputedField = (
   migrationUp.push(
     getAddComputedFieldQuery(
       tableDef,
-      computedField.computed_field_name,
+      computedFieldName,
       computedField.definition,
       computedField.comment
     )
   );
 
-  migrationDown.push(
-    getDropComputedFieldQuery(tableDef, computedField.computed_field_name)
-  );
+  migrationDown.push(getDropComputedFieldQuery(tableDef, computedFieldName));
 
   if (originalComputedField) {
     migrationDown.push(
       getAddComputedFieldQuery(
         tableDef,
-        originalComputedField.computed_field_name,
+        getComputedFieldName(originalComputedField),
         originalComputedField.definition,
         originalComputedField.comment
       )
@@ -213,7 +214,7 @@ export const saveComputedField = (
 
   const migrationName = `save_computed_field_${computedField.table_schema}_${
     computedField.table_name
-  }_${computedField.computed_field_name}`;
+  }_${computedFieldName}`;
   const requestMsg = 'Saving computed field...';
   const successMsg = 'Saving computed field successful';
   const errorMsg = 'Saving computed field failed';
@@ -243,33 +244,23 @@ export const deleteComputedField = (computedField, table) => (
   const migrationUp = [];
   const migrationDown = [];
 
-  migrationUp.push({
-    type: 'drop_computed_field',
-    args: {
-      table: getTableDef(table),
-      name: computedField.computed_field_name,
-    },
-  });
+  const tableDef = getTableDef(table);
+  const computedFieldName = getComputedFieldName(computedField);
 
-  migrationDown.push({
-    type: 'add_computed_field',
-    args: {
-      table: getTableDef(table),
-      name: computedField.computed_field_name,
-      definition: {
-        function: {
-          name: computedField.function_name,
-          schema: computedField.function_schema,
-        },
-        comment: computedField.comment,
-        // table_argument: '' // TODO
-      },
-    },
-  });
+  migrationUp.push(getDropComputedFieldQuery(tableDef, computedFieldName));
+
+  migrationDown.push(
+    getAddComputedFieldQuery(
+      tableDef,
+      computedFieldName,
+      computedFieldName.definition,
+      computedField.comment
+    )
+  );
 
   const migrationName = `delete_computed_field_${computedField.table_schema}_${
     computedField.table_name
-  }_${computedField.computed_field_name}`;
+  }_${computedFieldName}`;
   const requestMsg = 'Deleting computed field...';
   const successMsg = 'Deleting computed field successful';
   const errorMsg = 'Deleting computed field failed';

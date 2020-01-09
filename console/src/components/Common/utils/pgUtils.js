@@ -280,3 +280,34 @@ export const getTableCustomColumnNames = table => {
   }
   return {};
 };
+
+/*** Table/View Computed Field utils ***/
+
+export const getTableComputedFields = table => {
+  return table.computed_fields;
+};
+
+export const getComputedFieldName = computedField => {
+  return computedField.computed_field_name;
+};
+
+export const getGroupedTableComputedFields = (table, allFunctions) => {
+  const groupedComputedFields = { scalar: [], table: [] };
+
+  getTableComputedFields(table).forEach(computedField => {
+    const computedFieldFnDef = computedField.definition.function;
+    const computedFieldFn = findFunction(
+      allFunctions,
+      computedFieldFnDef.name,
+      computedFieldFnDef.schema
+    );
+
+    if (computedFieldFn && computedFieldFn.return_type_type === 'b') {
+      groupedComputedFields.scalar.push(computedField);
+    } else {
+      groupedComputedFields.table.push(computedField);
+    }
+  });
+
+  return groupedComputedFields;
+};
