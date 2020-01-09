@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/spf13/cobra"
@@ -19,7 +21,14 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
-			return ec.Validate()
+			err := ec.Validate()
+			if err != nil {
+				return err
+			}
+			if ec.MetadataDir == "" {
+				return fmt.Errorf("actions commands can be executed only when metadata_dir is set in config")
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]

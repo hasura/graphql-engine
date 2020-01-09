@@ -61,6 +61,7 @@ func init() {
 		NewMetadataCmd(ec),
 		NewMigrateCmd(ec),
 		NewActionsCmd(ec),
+		NewPluginsCmd(ec),
 		NewVersionCmd(ec),
 		NewDocsCmd(ec),
 		NewCompletionCmd(ec),

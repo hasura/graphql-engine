@@ -16,8 +16,10 @@ import (
 	"time"
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/plugins/paths"
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
+	homedir "github.com/mitchellh/go-homedir"
 
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
@@ -197,6 +199,9 @@ type ExecutionContext struct {
 
 	// SkipUpdateCheck will skip the auto update check if set to true
 	SkipUpdateCheck bool
+
+	// PluginsPath is the path used by the plugins
+	PluginsPath paths.Paths
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -233,6 +238,12 @@ func (ec *ExecutionContext) Prepare() error {
 		return errors.Wrap(err, "setting up global config failed")
 	}
 
+	// setup plugins path
+	err = ec.GetPluginsPath()
+	if err != nil {
+		return errors.Wrap(err, "setting up plugins path failed")
+	}
+
 	ec.LastUpdateCheckFile = filepath.Join(ec.GlobalConfigDir, LastUpdateCheckFileName)
 
 	// initialize a blank server config
@@ -254,6 +265,22 @@ func (ec *ExecutionContext) Prepare() error {
 	}
 	ec.Telemetry.ExecutionID = ec.ID
 
+	return nil
+}
+
+// GetPluginsPath returns the inferred paths for hasura. By default, it assumes
+// $HOME/.hasura as the base path
+func (ec *ExecutionContext) GetPluginsPath() error {
+	home, err := homedir.Dir()
+	if err != nil {
+		return errors.Wrap(err, "cannot get home directory")
+	}
+	base := filepath.Join(home, GlobalConfigDirName, "plugins")
+	base, err = filepath.Abs(base)
+	if err != nil {
+		return errors.Wrap(err, "cannot get absolute path")
+	}
+	ec.PluginsPath = paths.NewPaths(base)
 	return nil
 }
 
