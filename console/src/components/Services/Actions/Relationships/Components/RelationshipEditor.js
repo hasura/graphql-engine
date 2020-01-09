@@ -105,10 +105,14 @@ class RelationshipEditor extends React.Component {
           ? '( ' + Object.values(relMeta.field_mapping).join(', ') + ' )'
           : Object.values(relMeta.field_mapping)[0];
 
+      const tableLabel = relMeta.remote_table.schema
+        ? `${relMeta.remote_table.schema}.${relMeta.remote_table.name}`
+        : relMeta.remote_table;
+
       return (
         <span>
           {lcol} &nbsp;&rarr;&nbsp;
-          {relMeta.remote_table} . {rcol}
+          {tableLabel} . {rcol}
         </span>
       );
     };
