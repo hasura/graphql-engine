@@ -247,6 +247,9 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
     def test_query_account_permission_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_account_permission_fail.yaml', transport)
 
+    def test_in_sql_identifier_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/in_sql_identifier_array.yaml', transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/boolexp/basic'

@@ -111,7 +111,7 @@ mkSelWith qt cte mutFlds singleObj strfyNum =
 
 checkRetCols
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap PGColumnInfo
+  => FieldInfoMap FieldInfo
   -> SelPermInfo
   -> [PGCol]
   -> m [PGColumnInfo]
