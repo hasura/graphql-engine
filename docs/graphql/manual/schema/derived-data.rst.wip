@@ -14,7 +14,7 @@ purpose. If you can express your query in SQL, define a view with it and then us
 type in the GraphQL query.
 
 .. note::
-  Also see :doc:`aggregation-queries` to fetch aggregation data without creating a view.
+  Also see :doc:`../queries/aggregation-queries` to fetch aggregation data without creating a view.
 
 **For example**, let’s see how to fetch the average article rating for each author in our author/article schema:
 

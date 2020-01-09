@@ -47,6 +47,7 @@ class InsertItem extends Component {
       clone,
       schemas,
       migrationMode,
+      readOnlyMode,
       ongoingRequest,
       lastError,
       lastSuccess,
@@ -260,6 +261,7 @@ class InsertItem extends Component {
           table={currentTable}
           tabName="insert"
           migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
         />
         <br />
         <div className={styles.insertContainer + ' container-fluid'}>
@@ -345,6 +347,7 @@ InsertItem.propTypes = {
   lastSuccess: PropTypes.object,
   lastError: PropTypes.object,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   count: PropTypes.number,
   dispatch: PropTypes.func.isRequired,
 };
@@ -356,6 +359,7 @@ const mapStateToProps = (state, ownProps) => {
     schemas: state.tables.allSchemas,
     ...state.tables.view,
     migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
   };
 };

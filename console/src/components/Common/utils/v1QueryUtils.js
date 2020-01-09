@@ -1,3 +1,14 @@
+export const getRunSqlQuery = (sql, shouldCascade, readOnly) => {
+  return {
+    type: 'run_sql',
+    args: {
+      sql,
+      cascade: !!shouldCascade,
+      read_only: !!readOnly,
+    },
+  };
+};
+
 export const getCreatePermissionQuery = (
   action,
   tableDef,
@@ -36,16 +47,6 @@ export const getSetCustomRootFieldsQuery = (
       table: tableDef,
       custom_root_fields: rootFields,
       custom_column_names: customColumnNames,
-    },
-  };
-};
-
-export const getRunSqlQuery = (sql, shouldCascade) => {
-  return {
-    type: 'run_sql',
-    args: {
-      sql,
-      cascade: !!shouldCascade,
     },
   };
 };

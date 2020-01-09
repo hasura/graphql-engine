@@ -148,6 +148,7 @@ jobs:
   build_server:
     docker:
     - image: hasura/graphql-engine-server-builder:20190826
+    resource_class: large
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -176,7 +177,7 @@ jobs:
             make ci-binary
           else
             echo "Non-release branch, build with coverage"
-            BUILD_FLAGS="--coverage" make ci-binary
+            make BUILD_FLAGS='--coverage' ci-binary
           fi
     - run:
         name: Build the docker image
@@ -222,9 +223,10 @@ jobs:
     <<: *test_server
     environment:
       PG_VERSION: "12"
+      POSTGIS_VERSION: "3.0.0"
     docker:
     - image: hasura/graphql-engine-server-builder:20190826
-    - image: circleci/postgres:12-alpine-postgis
+    - image: hasura/postgres-12.0-alpine-postgis3:6cbd863d47c0
       <<: *test_pg_env
 
   test_server_pg_11:
@@ -263,7 +265,7 @@ jobs:
     - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
-  server_property_tests:
+  server_unit_tests:
     resource_class: large
     docker:
     - image: hasura/graphql-engine-server-builder:20190826
@@ -280,11 +282,11 @@ jobs:
         keys:
         - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - run:
-        name: Run property tests
+        name: Run unit tests
         environment:
           GHCRTS: -N2
         command: |
-          /build/_server_output/graphql-engine-tests property
+          /build/_server_output/graphql-engine-tests unit
 
   test_cli_with_last_release:
     docker:
@@ -521,7 +523,7 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - build_server
-    - server_property_tests:
+    - server_unit_tests:
         <<: *filter_only_vtags
         requires:
         - build_server
@@ -537,7 +539,7 @@ workflows:
         - test_server_pg_10
         - test_server_pg_9.6
         - test_server_pg_9.5
-        - server_property_tests
+        - server_unit_tests
         - test_server_upgrade
     - test_cli_with_last_release:
         <<: *filter_only_vtags

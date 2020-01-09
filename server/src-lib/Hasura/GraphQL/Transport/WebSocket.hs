@@ -17,7 +17,6 @@ import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
-import qualified Data.IORef                                  as IORef
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
@@ -43,10 +42,11 @@ import           Hasura.Server.Auth                          (AuthMode, UserAuth
 import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                         (RequestId, diffTimeToMicro,
-                                                              getRequestId)
+                                                              getRequestId, withElapsedTime)
 
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll       as LQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 
@@ -85,9 +85,20 @@ data WSConnData
 type WSServer = WS.WSServer WSConnData
 
 type WSConn = WS.WSConn WSConnData
+
 sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
-sendMsg wsConn =
-  liftIO . WS.sendMsg wsConn . encodeServerMsg
+sendMsg wsConn msg =
+  liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing
+
+sendMsgWithMetadata :: (MonadIO m) => WSConn -> ServerMsg -> LQ.LiveQueryMetadata -> m ()
+sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
+  liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
+  where
+    bs = encodeServerMsg msg
+    wsInfo = Just $ WS.WSEventInfo
+      { WS._wseiQueryExecutionTime = Just $ realToFrac execTime
+      , WS._wseiResponseSize = Just $ BL.length bs
+      }
 
 data OpDetail
   = ODStarted
@@ -164,7 +175,8 @@ data WSServerEnv
   { _wseLogger          :: !(L.Logger L.Hasura)
   , _wseRunTx           :: !PGExecCtx
   , _wseLiveQMap        :: !LQ.LiveQueriesState
-  , _wseGCtxMap         :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
+  , _wseGCtxMap         :: !(IO (SchemaCache, SchemaCacheVer))
+  -- ^ an action that always returns the latest version of the schema cache
   , _wseHManager        :: !H.Manager
   , _wseCorsPolicy      :: !CorsPolicy
   , _wseSQLCtx          :: !SQLGenCtx
@@ -192,7 +204,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       expTime <- liftIO $ STM.atomically $ do
         connState <- STM.readTVar $ (_wscUser . WS.getData) wsConn
         case connState of
-          CSNotInitialised _         -> STM.retry
+          CSNotInitialised _        -> STM.retry
           CSInitError _              -> STM.retry
           CSInitialised _ expTimeM _ ->
             maybe STM.retry return expTimeM
@@ -277,7 +289,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       withComplete $ sendStartErr e
 
   requestId <- getRequestId reqHdrs
-  (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
+  (sc, scVer) <- liftIO getSchemaCache
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
                planCache userInfo sqlGenCtx enableAL sc scVer q
   execPlan <- either (withComplete . preExecErr requestId) return execPlanE
@@ -310,8 +322,9 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       logOpEv ODStarted (Just reqId)
       -- log the generated SQL and the graphql query
       L.unLogger logger $ QueryLog query genSql reqId
-      resp <- liftIO $ runExceptT action
-      either (postExecErr reqId) sendSuccResp resp
+      (dt, resp) <- withElapsedTime $ liftIO $ runExceptT action
+      let lqMeta = LQ.LiveQueryMetadata dt
+      either (postExecErr reqId) (`sendSuccResp` lqMeta) resp
       sendCompleted (Just reqId)
 
     runRemoteGQ :: E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
@@ -323,20 +336,21 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         err400 NotSupported "subscription to remote server is not supported"
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
-      resp <- runExceptT $ flip runReaderT execCtx $
+      (dt, resp) <- withElapsedTime $ runExceptT $ flip runReaderT execCtx $
               E.execRemoteGQ reqId userInfo reqHdrs q rsi opDef
-      either (postExecErr reqId) (sendRemoteResp reqId . _hrBody) resp
+      let ocMeta = LQ.LiveQueryMetadata dt
+      either (postExecErr reqId) (\val -> sendRemoteResp reqId (_hrBody val) ocMeta) resp
       sendCompleted (Just reqId)
 
-    sendRemoteResp reqId resp =
+    sendRemoteResp reqId resp meta =
       case J.eitherDecodeStrict (encJToBS resp) of
         Left e    -> postExecErr reqId $ invalidGqlErr $ T.pack e
-        Right res -> sendMsg wsConn $ SMData $ DataMsg opId (GRRemote res)
+        Right res -> sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRRemote res) meta
 
     invalidGqlErr err = err500 Unexpected $
       "Failed parsing GraphQL response from remote: " <> err
 
-    WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr _ sqlGenCtx planCache
+    WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx planCache
       _ enableAL = serverEnv
 
     WSConnData userInfoR opMap errRespTy = WS.getData wsConn
@@ -357,19 +371,19 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     sendStartErr e = do
       let errFn = getErrFn errRespTy
-      sendMsg wsConn $ SMErr $ ErrorMsg opId $ errFn False $
-        err400 StartFailed e
+      sendMsg wsConn $
+        SMErr $ ErrorMsg opId $ errFn False $ err400 StartFailed e
       logOpEv (ODProtoErr e) Nothing
 
     sendCompleted reqId = do
-      sendMsg wsConn $ SMComplete $ CompletionMsg opId
+      sendMsg wsConn (SMComplete $ CompletionMsg opId)
       logOpEv ODCompleted reqId
 
     postExecErr reqId qErr = do
       let errFn = getErrFn errRespTy
       logOpEv (ODQueryErr qErr) (Just reqId)
-      sendMsg wsConn $ SMData $ DataMsg opId $
-        GRHasura $ GQExecError $ pure $ errFn False qErr
+      sendMsg wsConn $ SMData $
+        DataMsg opId $ GRHasura $ GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
     preExecErr reqId qErr = do
@@ -378,11 +392,11 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       let err = case errRespTy of
             ERTLegacy           -> errFn False qErr
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
-      sendMsg wsConn $ SMErr $ ErrorMsg opId err
+      sendMsg wsConn (SMErr $ ErrorMsg opId err)
 
     sendSuccResp encJson =
-      sendMsg wsConn $ SMData $ DataMsg opId $
-        GRHasura $ GQSuccess $ encJToLBS encJson
+      sendMsgWithMetadata wsConn
+        (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS encJson)
 
     withComplete :: ExceptT () IO () -> ExceptT () IO a
     withComplete action = do
@@ -391,9 +405,12 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       throwError ()
 
     -- on change, send message on the websocket
-    liveQOnChange resp =
-      WS.sendMsg wsConn $ encodeServerMsg $ SMData $
-        DataMsg opId (GRHasura resp)
+    liveQOnChange :: LQ.OnChange
+    liveQOnChange (GQSuccess (LQ.LiveQueryResponse bs dTime)) =
+      sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRHasura $ GQSuccess bs) $
+        LQ.LiveQueryMetadata dTime
+    liveQOnChange resp = sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $ 
+      LQ._lqrPayload <$> resp
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m
@@ -515,18 +532,18 @@ createWSServerEnv
   => L.Logger L.Hasura
   -> PGExecCtx
   -> LQ.LiveQueriesState
-  -> IORef.IORef (SchemaCache, SchemaCacheVer)
+  -> IO (SchemaCache, SchemaCacheVer)
   -> H.Manager
   -> CorsPolicy
   -> SQLGenCtx
   -> Bool
   -> E.PlanCache
   -> m WSServerEnv
-createWSServerEnv logger pgExecCtx lqState cacheRef httpManager
+createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
   corsPolicy sqlGenCtx enableAL planCache = do
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
-    WSServerEnv logger pgExecCtx lqState cacheRef httpManager corsPolicy
+    WSServerEnv logger pgExecCtx lqState getSchemaCache httpManager corsPolicy
     sqlGenCtx planCache wsServer enableAL
 
 createWSServerApp
