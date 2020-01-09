@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for Hasura server logs
+   :description:  Hasura GraphQL engine server logs
    :keywords: hasura, docs, deployment, logs, server logs
 
 .. _hge_logs:

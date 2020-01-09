@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for managing Hasura migrations
+   :description: Manage Hasura migrations
    :keywords: hasura, docs, migration
 
 .. _postgres_schema_metadata:

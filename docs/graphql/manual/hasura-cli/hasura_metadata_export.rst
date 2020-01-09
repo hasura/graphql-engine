@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for the hasura metadata export command on the Hasura CLI
+   :description: Export Hasura metadata from the database with the Hasura CLI
    :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura metadata export
 
 .. _hasura_metadata_export:

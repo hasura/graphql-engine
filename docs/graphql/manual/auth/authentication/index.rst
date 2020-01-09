@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using authenticaton with Hasura
+   :description: Use authenticaton with Hasura
    :keywords: hasura, docs, authentication, auth
 
 Authentication

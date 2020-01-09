@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using event triggers with the Hasura schema/metadata API
+   :description: Use event triggers with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, event trigger
 
 Schema/Metadata API Reference: Event Triggers 

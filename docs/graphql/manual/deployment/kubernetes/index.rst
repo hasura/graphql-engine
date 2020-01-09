@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for deploying Hasura with Kubernetes
+   :description: Deploy Hasura with Kubernetes
    :keywords: hasura, docs, deployment, kubernetes
 
 Run Hasura GraphQL engine on Kubernetes

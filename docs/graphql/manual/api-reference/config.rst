@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using the Hasura config API
+   :description: Hasura config API reference
    :keywords: hasura, docs, config API, API reference
 
 .. _config_api_reference:

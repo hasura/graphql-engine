@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for managing migrations on an existing database
+   :description: Manage migrations on an existing database and Hasura instance
    :keywords: hasura, docs, migration, existing database
 
 Migrations for an existing database and Hasura instance

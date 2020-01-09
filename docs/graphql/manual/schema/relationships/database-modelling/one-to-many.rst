@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for modelling one-to-many relationships in Hasura
+   :description: Model one-to-many relationships in Hasura
    :keywords: hasura, docs, schema, relationship, one-to-many, 1-n
 
 .. _one_to_many_modelling:

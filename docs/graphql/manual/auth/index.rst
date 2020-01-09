@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using authentication and authorization with Hasura
+   :description: Manage authentication and authorization with Hasura
    :keywords: hasura, docs, authentication, auth, autorization
 
 Authentication & Authorization

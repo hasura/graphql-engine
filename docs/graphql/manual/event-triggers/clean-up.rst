@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for cleaning up event data with Hasura
+   :description: Clean up event data of event triggers in Hasura
    :keywords: hasura, docs, event trigger, event data, clean up
 
 Clean up event data

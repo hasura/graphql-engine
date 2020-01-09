@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using serverless functions with Hasura
+   :description: Use serverless functions with Hasura
    :keywords: hasura, docs, event trigger, serverless function
 
 Using serverless functions

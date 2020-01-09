@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for setting default field values in Hasura
+   :description: Set default field values in Hasura
    :keywords: hasura, docs, schema, default value
 
 Setting default values for fields

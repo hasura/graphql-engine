@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for how the Hasura metadata catalogue works
+   :description: Hasura metadata catalogue
    :keywords: hasura, docs, metadata catalogue, how it works
 
 .. _hasura_metadata_schema:

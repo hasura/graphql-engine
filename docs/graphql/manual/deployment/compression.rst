@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using HTTP compression with Hasura
+   :description: Use HTTP compression with Hasura GraphQL engine
    :keywords: hasura, docs, deployment, http compression
 
 .. _http-compression:

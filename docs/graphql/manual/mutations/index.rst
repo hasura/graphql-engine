@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for managing mutations with Hasura
+   :description: Manage mutations with Hasura
    :keywords: hasura, docs, mutation
 
 Mutations

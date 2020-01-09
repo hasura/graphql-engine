@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for metadata file format in Hasura
+   :description: Hasura Metadata file format reference
    :keywords: hasura, docs, metadata, file format
 
 .. _metadata_file_format:

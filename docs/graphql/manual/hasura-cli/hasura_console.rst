@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for the hasura console command on the Hasura CLI
+   :description: Open the Hasura console from the Hasura CLI
    :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura console
 
 .. _hasura_console:

@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for managing delete mutations with Hasura
+   :description: Delete an object from the database using a mutation
    :keywords: hasura, docs, mutation, delete
 
 Delete mutation

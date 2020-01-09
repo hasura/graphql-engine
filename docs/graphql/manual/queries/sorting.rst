@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for sorting query results in Hasura
+   :description: Sort query results in Hasura
    :keywords: hasura, docs, query, sort
 
 Sort query results

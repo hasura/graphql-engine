@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for use cases with Hasura subscriptions
+   :description: Use cases for Hasura subscriptions
    :keywords: hasura, docs, subscription, use case
 
 Subscriptions sample use cases

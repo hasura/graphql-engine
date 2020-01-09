@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for securing the Hasura GraphQL endpoint
+   :description: Secure the Hasura GraphQL endpoint
    :keywords: hasura, docs, deployment, secure
 
 .. _securing-graphql-endpoint:

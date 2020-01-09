@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using variables, aliases, fragments and directives in Hasura queries
+   :description: Use variables, aliases, fragments and directives in Hasura queries
    :keywords: hasura, docs, query, variable, alias, fragment, directive
 
 Using variables / aliases / fragments / directives in queries

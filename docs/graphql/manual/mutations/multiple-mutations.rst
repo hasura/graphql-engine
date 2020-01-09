@@ -1,5 +1,5 @@
 .. meta::
-   :description: Insert objects with multiple mutations in one request
+   :description: Insert objects into the database with multiple mutations in one request
    :keywords: hasura, docs, mutation, multiple mutations, request
 
 Multiple mutations in a request

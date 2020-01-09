@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using relationships with the Hasura schema/metadata API
+   :description: Use relationships with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, relationship
 
 Schema/Metadata API Reference: Relationships

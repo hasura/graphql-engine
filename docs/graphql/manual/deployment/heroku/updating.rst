@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for updating Hasura with Heroku deployment
+   :description: Update Hasura GraphQL engin with Heroku deployment
    :keywords: hasura, docs, deployment, heroku, update
 
 Updating Hasura GraphQL engine on Heroku

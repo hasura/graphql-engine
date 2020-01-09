@@ -1,5 +1,5 @@
 .. meta::
-   :description: Guide on troubleshooting Hasura errors
+   :description: Troubleshoot Hasura GraphQL engine errors
    :keywords: hasura, docs, error, troubleshooting
 
 Troubleshooting Hasura GraphQL engine errors

@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using an existing database with Heroku deployment
+   :description: Use an existing database with Heroku deployment
    :keywords: hasura, docs, deployment, heroku, existing database
 
 Using an existing Heroku database

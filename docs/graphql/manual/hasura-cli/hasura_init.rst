@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for the hasura init command on the Hasura CLI
+   :description: Initialise a directory for Hasura migrations on the Hasura CLI
    :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura init
 
 .. _hasura_init:

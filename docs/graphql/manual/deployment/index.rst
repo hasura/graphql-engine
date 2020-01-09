@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for deploying Hasura GraphQL engine
+   :description: Deploy Hasura GraphQL engine
    :keywords: hasura, docs, deployment
 
 Deploying Hasura GraphQL engine

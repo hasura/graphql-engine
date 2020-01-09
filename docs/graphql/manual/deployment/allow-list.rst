@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for managing allow list with Hasura
+   :description: Manage allow list with Hasura GraphQL engine
    :keywords: hasura, docs, deployment, allow list
 
 .. _allow-list:

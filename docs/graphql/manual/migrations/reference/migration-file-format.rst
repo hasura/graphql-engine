@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for migration file format in Hasura
+   :description: Hasura Migration file format reference
    :keywords: hasura, docs, migration, file format
 
 .. _migration_file_format:

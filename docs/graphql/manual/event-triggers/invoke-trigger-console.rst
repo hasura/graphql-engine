@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for invoking event triggers on the console with Hasura
+   :description: Invoke event triggers on the Hasura console
    :keywords: hasura, docs, event trigger, console, invoke
 
 Invoke event trigger via console

@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for managing distinct queries with Hasura
+   :description: Make distinct queries with Hasura
    :keywords: hasura, docs, query, distinct query
 
 Distinct query results

@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for modelling many-to-many relationships in Hasura
+   :description: Model many-to-many relationships in Hasura
    :keywords: hasura, docs, schema, relationship, many-to-many, n-m
 
 .. _many_to_many_modelling:

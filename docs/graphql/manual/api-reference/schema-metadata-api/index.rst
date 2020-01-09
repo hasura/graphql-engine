@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using the Hasura schema/metadata API
+   :description: Hasura schema/metadata API reference
    :keywords: hasura, docs, schema/metadata API, API reference
 
 .. _metadata_apis:

@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for managing Postgres permissions with Hasura
+   :description: Manage Postgres permissions with Hasura GraphQL engine
    :keywords: hasura, docs, deployment, postgres, postgres permissions
 
 Postgres permissions

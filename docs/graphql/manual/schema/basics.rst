@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for schema design basics in Hasura
+   :description: Schema design basics in Hasura
    :keywords: hasura, docs, schema, basics
 
 Schema design basics

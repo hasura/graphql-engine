@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for updating Hasura
+   :description: Update Hasura GraphQL engine
    :keywords: hasura, docs, deployment, update
 
 Updating Hasura GraphQL engine

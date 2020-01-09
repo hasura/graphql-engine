@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for enabling HTTPS with Hasura
+   :description: Enable HTTPS with Hasura GraphQL engine
    :keywords: hasura, docs, deployment, https
 
 .. _enable-https:

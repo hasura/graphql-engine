@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for managing event triggers with Hasura
+   :description: Manage event triggers with Hasura
    :keywords: hasura, docs, event trigger
 
 Event Triggers

@@ -1,5 +1,5 @@
 .. meta::
-   :description: User's manual for using authenticaton with webhooks with Hasura
+   :description: Use authenticaton with webhooks in Hasura
    :keywords: hasura, docs, authentication, auth, webhook
 
 Authentication using webhooks
