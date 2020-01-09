@@ -15,10 +15,11 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	actionsCreateCmd := &cobra.Command{
-		Use:          "create",
-		Short:        "",
-		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		Use:               "create",
+		Short:             "",
+		SilenceUsage:      true,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: ensureCLIExtension,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
 			err := ec.Validate()
@@ -85,7 +86,7 @@ func (o *actionsCreateOptions) run() error {
 		IntrospectionSchema: introSchema,
 		Mutation: actions.DeriveMutationPayload{
 			MutationName: o.deriveFromMutation,
-			ActionName: o.name,
+			ActionName:   o.name,
 		},
 	}
 	return actionCfg.Codegen(o.name, derivePayload)

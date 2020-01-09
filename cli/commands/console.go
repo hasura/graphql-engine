@@ -36,7 +36,8 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 
   # Start console on a different address and ports:
   hasura console --address 0.0.0.0 --console-port 8080 --api-port 8081`,
-		SilenceUsage: true,
+		SilenceUsage:      true,
+		PersistentPreRunE: ensureCLIExtension,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
 			return ec.Validate()
