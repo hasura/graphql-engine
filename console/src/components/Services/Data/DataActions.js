@@ -123,6 +123,7 @@ const initQueries = {
         has_variadic: false,
         returns_set: true,
         return_type_type: 'c', // COMPOSITE type
+        return_table_info: {},
         $or: [
           {
             function_type: {
@@ -167,6 +168,7 @@ const initQueries = {
           has_variadic: false,
           returns_set: true,
           return_type_type: 'c', // COMPOSITE type
+          return_table_info: {},
           $or: [
             {
               function_type: {
