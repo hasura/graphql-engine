@@ -13,11 +13,11 @@ packages:
     git: https://github.com/hasura/pg-client-hs.git
     pantry-tree:
       size: 1107
-      sha256: aaa78473e95368c73c4f6cd5d85f1016af5783090d804aeb7e0d244c02dd3354
-    commit: bd21e66d8197af381a6c0b493e22d611ed1fa386
+      sha256: 7dd16080034ac2a94763106ead8296105b538424533bed5ba3567824e2dfe4ea
+    commit: 70a849d09bea9461e72c5a5bbde06df65aab61c0
   original:
     git: https://github.com/hasura/pg-client-hs.git
-    commit: bd21e66d8197af381a6c0b493e22d611ed1fa386
+    commit: 70a849d09bea9461e72c5a5bbde06df65aab61c0
 - completed:
     cabal-file:
       size: 3364
