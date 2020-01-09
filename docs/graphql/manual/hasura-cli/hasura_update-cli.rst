@@ -1,5 +1,5 @@
 .. meta::
-   :description: Update the Hasura CLI to the latest version
+   :description: Use hasura update-cli to update the Hasura CLI to the latest version
    :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura update-cli
 
 .. _hasura_update-cli:

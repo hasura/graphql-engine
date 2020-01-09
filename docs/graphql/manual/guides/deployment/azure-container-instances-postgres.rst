@@ -1,5 +1,5 @@
 .. meta::
-   :description: Guide for deploying Hasura GraphQL engine on Azure with Container Instances and Postgres
+   :description: Deploy Hasura GraphQL engine on Azure with Container Instances and Postgres
    :keywords: hasura, docs, guide, deployment, azure, container, postgres
 
 .. _deploy_azure_ci_pg:

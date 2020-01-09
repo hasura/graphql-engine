@@ -1,5 +1,5 @@
 .. meta::
-   :description: Apply Hasura metadata on a database with the Hasura CLI
+   :description: Use hasura metadata apply to apply Hasura metadata on a database with the Hasura CLI
    :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura metadata apply
 
 .. _hasura_metadata_apply:

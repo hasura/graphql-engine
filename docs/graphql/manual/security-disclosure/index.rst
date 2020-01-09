@@ -1,5 +1,5 @@
 .. meta::
-   :description: Guide on Hasura security vulnerability disclosure
+   :description: Hasura security vulnerability reporting and disclosure
    :keywords: hasura, docs, security, security disclosure, vulnerability
 
 Security vulnerability reporting and disclosure

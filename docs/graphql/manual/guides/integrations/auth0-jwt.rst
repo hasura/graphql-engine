@@ -1,5 +1,5 @@
 .. meta::
-   :description: Guide for integrating Auth0 JWT with Hasura
+   :description: Integrate Auth0 JWT with Hasura
    :keywords: hasura, docs, guide, authentication, auth, jwt, integration
 
 .. _auth0_jwt:

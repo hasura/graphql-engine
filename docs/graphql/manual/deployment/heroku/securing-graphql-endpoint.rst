@@ -1,5 +1,5 @@
 .. meta::
-   :description: Secure GraphQL endpoint with Heroku deployment
+   :description: Secure Hasura GraphQL endpoint with Heroku deployment
    :keywords: hasura, docs, deployment, heroku, secure
 
 Securing the GraphQL endpoint (Heroku)

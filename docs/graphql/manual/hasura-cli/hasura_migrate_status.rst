@@ -1,5 +1,5 @@
 .. meta::
-   :description: Display the current status of Hasura migrations on the Hasura CLI
+   :description: Use hasura migrate status to display the current status of Hasura migrations on the Hasura CLI
    :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura migrate status
 
 .. _hasura_migrate_status:

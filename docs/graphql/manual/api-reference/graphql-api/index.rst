@@ -1,5 +1,5 @@
 .. meta::
-   :description: Hasure GraphQL API reference
+   :description: Hasura GraphQL API reference
    :keywords: hasura, docs, GraphQL API, reference
 
 GraphQL API Reference

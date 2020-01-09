@@ -1,5 +1,5 @@
 .. meta::
-   :description: Guide for deploying Hasura GraphQL engine One-click App on DigitalOcean Marketplace
+   :description: Deploy Hasura GraphQL engine One-click App on DigitalOcean Marketplace
    :keywords: hasura, docs, guide, deployment, digital ocean, marketplace
 
 Hasura GraphQL engine One-click App on DigitalOcean Marketplace

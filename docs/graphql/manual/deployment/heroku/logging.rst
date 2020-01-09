@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use logs with Heroku deployment
+   :description: Use Hasura GraphQL engine server logs with Heroku deployment
    :keywords: hasura, docs, deployment, heroku, logs
 
 Hasura GraphQL engine server logs (Heroku)

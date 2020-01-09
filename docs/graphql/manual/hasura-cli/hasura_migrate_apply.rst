@@ -1,5 +1,5 @@
 .. meta::
-   :description: Apply Hasura migrations on a database with the Hasura CLI
+   :description: Use hasura migrate apply to apply Hasura migrations on a database with the Hasura CLI
    :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura migrate apply
 
 .. _hasura_migrate_apply:

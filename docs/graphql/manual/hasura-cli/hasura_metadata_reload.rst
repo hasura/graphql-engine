@@ -1,5 +1,5 @@
 .. meta::
-   :description: Reload Hasura metadata on the database from the Hasura CLI
+   :description: Use hasura metadata reload to reload Hasura metadata on the database from the Hasura CLI
    :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura metadata reload
 
 .. _hasura_metadata_reload:

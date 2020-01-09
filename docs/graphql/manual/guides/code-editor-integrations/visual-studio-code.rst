@@ -1,5 +1,5 @@
 .. meta::
-   :description: Guide for visual studio code integration with Hasura
+   :description: Visual studio code integration with Hasura
    :keywords: hasura, docs, guide, code editor, integration, visual studio code, vs code
 
 Guides: Visual Studio Code Setup

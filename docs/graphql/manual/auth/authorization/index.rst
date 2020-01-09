@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use authorization with Hasura
+   :description: Manage authorization with Hasura
    :keywords: hasura, docs, autorization, auth
 
 Authorization / Access control
