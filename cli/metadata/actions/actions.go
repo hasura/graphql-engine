@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"path/filepath"
 
 	gyaml "github.com/ghodss/yaml"
@@ -24,13 +25,13 @@ const (
 )
 
 type DeriveMutationPayload struct {
-	MutationName   string `json:"name"`
-	ActionName     string `json:"action_name"`
+	MutationName string `json:"name"`
+	ActionName   string `json:"action_name"`
 }
 
 type DerivePayload struct {
-	IntrospectionSchema interface{} `json:"introspection_schema"`
-	Mutation            DeriveMutationPayload  `json:"mutation"`
+	IntrospectionSchema interface{}           `json:"introspection_schema"`
+	Mutation            DeriveMutationPayload `json:"mutation"`
 }
 
 type sdlPayload struct {
@@ -48,7 +49,7 @@ type sdlToResponse struct {
 }
 
 type sdlFromRequest struct {
-	SDL sdlPayload `json:"sdl"`		
+	SDL sdlPayload `json:"sdl"`
 }
 
 type sdlFromResponse struct {
@@ -57,14 +58,14 @@ type sdlFromResponse struct {
 }
 
 type actionsCodegenRequest struct {
-	ActionName    string `json:"action_name"`
-	SDL           sdlPayload `json:"sdl"`
-	Derive        DerivePayload `json:"derive,omitempty"`
-	CodegenConfig *CodegenExecutionConfig `json:"codegen_config"`	
+	ActionName    string                  `json:"action_name"`
+	SDL           sdlPayload              `json:"sdl"`
+	Derive        DerivePayload           `json:"derive,omitempty"`
+	CodegenConfig *CodegenExecutionConfig `json:"codegen_config"`
 }
 
 type codegenFile struct {
-	Name    string `json:"name`
+	Name    string `json:"name"`
 	Content string `json:"content"`
 }
 
@@ -73,27 +74,27 @@ type actionsCodegenResponse struct {
 }
 
 type CodegenExecutionConfig struct {
-	Framework string `json:"framework"`
-	OutputDir string `json:"output_dir"`	
-	Uri       string `json:"uri,omitempty"`
+	Framework string   `json:"framework"`
+	OutputDir string   `json:"output_dir"`
+	URI       *url.URL `json:"uri,omitempty"`
 }
 
 type ActionExecutionConfig struct {
-	Kind                  string 								 `json:"kind"`
-	HandlerWebhookBaseURL string 								 `json:"handler_webhook_baseurl"`
+	Kind                  string                 `json:"kind"`
+	HandlerWebhookBaseURL string                 `json:"handler_webhook_baseurl"`
 	Codegen               CodegenExecutionConfig `json:"codegen"`
 }
 
 type ActionConfig struct {
-	MetadataDir    string
-	ActionConfig   ActionExecutionConfig
+	MetadataDir   string
+	ActionConfig  ActionExecutionConfig
 	CodegenConfig *CodegenExecutionConfig
 }
 
 func New(baseDir string, actionConfig ActionExecutionConfig) *ActionConfig {
 	return &ActionConfig{
-		MetadataDir:    baseDir,
-		ActionConfig:   actionConfig,
+		MetadataDir:  baseDir,
+		ActionConfig: actionConfig,
 	}
 }
 
@@ -143,7 +144,7 @@ input SampleInput {
 				IntrospectionSchema: introSchema,
 				Mutation: DeriveMutationPayload{
 					MutationName: deriveFromMutation,
-					ActionName: name,	
+					ActionName:   name,
 				},
 			},
 		}
@@ -188,7 +189,7 @@ input SampleInput {
 			doc.Definitions = append(doc.Definitions[:index], doc.Definitions[index+1:]...)
 		}
 	}
-	for _, indexes := range objDupData { 
+	for _, indexes := range objDupData {
 		if len(indexes) > 0 {
 			indexes = indexes[:len(indexes)-1]
 		}
@@ -219,7 +220,7 @@ func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
 			Complete: string(graphByt),
 		},
 		CodegenConfig: a.CodegenConfig,
-		Derive: derivePld,
+		Derive:        derivePld,
 	}
 	resp, err := getActionsCodegen(data)
 
@@ -245,7 +246,7 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	if err != nil {
 		return err
 	}
-	sdlFromReq := sdlFromRequest {
+	sdlFromReq := sdlFromRequest{
 		SDL: sdlPayload{
 			Complete: string(graphByt),
 		},
