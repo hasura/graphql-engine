@@ -10,9 +10,6 @@ import           System.Environment         (getEnvironment)
 import           System.Exit                (exitFailure)
 import           Test.Hspec
 
-import           Test.QuickCheck
-
-
 import qualified Data.Aeson                 as A
 import qualified Data.ByteString.Lazy.Char8 as BL
 import qualified Database.PG.Query          as Q
@@ -23,8 +20,7 @@ import qualified Test.Hspec.Runner          as Hspec
 import           Hasura.Db                  (PGExecCtx (..))
 import           Hasura.RQL.Types           (SQLGenCtx (..), adminUserInfo)
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Init         (DowngradeOptions (..),
-                                             RawConnInfo, mkConnInfo, mkRawConnInfo,
+import           Hasura.Server.Init         (RawConnInfo, mkConnInfo, mkRawConnInfo,
                                              parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
 
