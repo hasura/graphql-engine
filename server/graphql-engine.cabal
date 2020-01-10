@@ -27,7 +27,7 @@ flag profile
 
 common common-all
   ghc-options:
-    -O2 -foptimal-applicative-do
+    -O2 -fmax-simplifier-iterations=20 -foptimal-applicative-do
     -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
     -fdefer-typed-holes
 
@@ -38,18 +38,24 @@ common common-all
 
   default-language: Haskell2010
   default-extensions:
-    ApplicativeDo BangPatterns ConstraintKinds DeriveDataTypeable DeriveFoldable DeriveFunctor
-    DeriveGeneric DeriveLift DeriveTraversable EmptyCase FlexibleContexts FlexibleInstances
-    FunctionalDependencies GeneralizedNewtypeDeriving InstanceSigs LambdaCase MultiParamTypeClasses
-    MultiWayIf NoImplicitPrelude OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes
-    ScopedTypeVariables StandaloneDeriving TemplateHaskell TupleSections TypeApplications
-    TypeFamilies TypeOperators
+    ApplicativeDo BangPatterns BlockArguments ConstraintKinds DefaultSignatures DeriveDataTypeable
+    DeriveFoldable DeriveFunctor DeriveGeneric DeriveLift DeriveTraversable DerivingVia EmptyCase
+    FlexibleContexts FlexibleInstances FunctionalDependencies GeneralizedNewtypeDeriving
+    InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns NoImplicitPrelude
+    OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes ScopedTypeVariables
+    StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeOperators
 
 common common-exe
   ghc-options:
     -threaded -rtsopts
     -- Re. `-I2` see #2565
-    "-with-rtsopts=-N -I2"
+    --
+    -- `-qn2` limits the parallel GC to at most 2 capabilities. This came up in #3354/#3394, as the
+    -- parallel GC was causing significant performance overhead. Folks in #ghc on freenode advised
+    -- limiting the parallel GC to 2 or 3 capabilities as a very conservative choice, since more
+    -- than that is highly unlikely to ever be helpful. More benchmarking would be useful to know if
+    -- this is the right decision. It’s possible it would better to just turn it off completely.
+    "-with-rtsopts=-N -I2 -qn2"
 
   if flag(profile)
     ghc-prof-options: -rtsopts
@@ -89,6 +95,15 @@ library
                      , postgresql-binary
                      , process
                      , http-client-tls
+                     , profunctors
+                     , deepseq
+                     , dependent-map >=0.2.4 && <0.4
+                     , dependent-sum >=0.4 && <0.5
+
+                     -- `these >=1` is split into several different packages, but our current stack
+                     -- resolver has `these <1`; when we upgrade we just need to add an extra
+                     -- dependency on `semialign`
+                     , these >=0.7.1 && <0.8
 
                      -- Encoder related
                      , uuid
@@ -187,7 +202,10 @@ library
                      , QuickCheck
                      , generic-arbitrary
 
-  exposed-modules:     Control.Monad.Stateless
+  exposed-modules:     Control.Arrow.Extended
+                     , Control.Arrow.Trans
+                     , Control.Monad.Stateless
+                     , Control.Monad.Unique
 
                      , Hasura.Prelude
                      , Hasura.App
@@ -198,6 +216,7 @@ library
                      , Hasura.Cache
                      , Hasura.Logging
                      , Hasura.HTTP
+                     , Hasura.Incremental
 
                      , Hasura.Server.App
                      , Hasura.Server.Auth
@@ -212,14 +231,21 @@ library
                      , Hasura.Server.PGDump
 
                      , Hasura.RQL.Types
+                     , Hasura.RQL.Types.Run
                      , Hasura.RQL.DDL.Metadata
                      , Hasura.RQL.DDL.Metadata.Types
                      , Hasura.RQL.DDL.Metadata.Generator
+                     , Hasura.RQL.DDL.Schema
                      , Hasura.EncJSON
 
                      , Data.Aeson.Ordered
 
-  other-modules:       Hasura.Server.Auth.JWT
+  other-modules:       Hasura.Incremental.Select
+                     , Hasura.Incremental.Internal.Cache
+                     , Hasura.Incremental.Internal.Dependency
+                     , Hasura.Incremental.Internal.Rule
+
+                     , Hasura.Server.Auth.JWT
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
@@ -232,6 +258,7 @@ library
 
                      , Hasura.RQL.Instances
                      , Hasura.RQL.Types.SchemaCache
+                     , Hasura.RQL.Types.SchemaCache.Build
                      , Hasura.RQL.Types.SchemaCacheTypes
                      , Hasura.RQL.Types.BoolExp
                      , Hasura.RQL.Types.Function
@@ -254,8 +281,11 @@ library
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.Relationship.Types
-                     , Hasura.RQL.DDL.Schema
                      , Hasura.RQL.DDL.Schema.Cache
+                     , Hasura.RQL.DDL.Schema.Cache.Common
+                     , Hasura.RQL.DDL.Schema.Cache.Dependencies
+                     , Hasura.RQL.DDL.Schema.Cache.Fields
+                     , Hasura.RQL.DDL.Schema.Cache.Permission
                      , Hasura.RQL.DDL.Schema.Catalog
                      , Hasura.RQL.DDL.Schema.Diff
                      , Hasura.RQL.DDL.Schema.Enum
@@ -330,6 +360,7 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
+                     , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
                      , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
@@ -359,19 +390,32 @@ executable graphql-engine
 test-suite graphql-engine-tests
   import: common-all, common-exe
   type: exitcode-stdio-1.0
-  hs-source-dirs: src-test
-  main-is: Main.hs
   build-depends:
+    , aeson
     , base
+    , bytestring
     , graphql-engine
-    , hspec
+    , hspec >=2.6.1 && <3
+    , hspec-core >=2.6.1 && <3
+    , hspec-expectations-lifted
     , http-client
     , http-client-tls
+    , lifted-base
+    , monad-control
+    , mtl
+    , natural-transformation >=0.4 && <0.5
     , optparse-applicative
     , pg-client
-    , time
-    , aeson
     , QuickCheck
+    , time
+    , transformers-base
+    , unordered-containers
+  hs-source-dirs: src-test
+  main-is: Main.hs
+  other-modules:
+    Hasura.IncrementalSpec
+    Hasura.RQL.MetadataSpec
+    Hasura.Server.MigrateSpec
 
 -- Benchmarks related to caching (e.g. the plan cache).
 --

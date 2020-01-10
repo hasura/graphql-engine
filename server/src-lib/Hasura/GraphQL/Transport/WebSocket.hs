@@ -17,7 +17,6 @@ import qualified Data.Aeson.TH                               as J
 import qualified Data.ByteString.Lazy                        as BL
 import qualified Data.CaseInsensitive                        as CI
 import qualified Data.HashMap.Strict                         as Map
-import qualified Data.IORef                                  as IORef
 import qualified Data.Text                                   as T
 import qualified Data.Text.Encoding                          as TE
 import qualified Data.Time.Clock                             as TC
@@ -176,7 +175,8 @@ data WSServerEnv
   { _wseLogger          :: !(L.Logger L.Hasura)
   , _wseRunTx           :: !PGExecCtx
   , _wseLiveQMap        :: !LQ.LiveQueriesState
-  , _wseGCtxMap         :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
+  , _wseGCtxMap         :: !(IO (SchemaCache, SchemaCacheVer))
+  -- ^ an action that always returns the latest version of the schema cache
   , _wseHManager        :: !H.Manager
   , _wseCorsPolicy      :: !CorsPolicy
   , _wseSQLCtx          :: !SQLGenCtx
@@ -289,7 +289,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       withComplete $ sendStartErr e
 
   requestId <- getRequestId reqHdrs
-  (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
+  (sc, scVer) <- liftIO getSchemaCache
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
                planCache userInfo sqlGenCtx enableAL sc scVer q
   execPlan <- either (withComplete . preExecErr requestId) return execPlanE
@@ -350,7 +350,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     invalidGqlErr err = err500 Unexpected $
       "Failed parsing GraphQL response from remote: " <> err
 
-    WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr _ sqlGenCtx planCache
+    WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx planCache
       _ enableAL = serverEnv
 
     WSConnData userInfoR opMap errRespTy = WS.getData wsConn
@@ -532,18 +532,18 @@ createWSServerEnv
   => L.Logger L.Hasura
   -> PGExecCtx
   -> LQ.LiveQueriesState
-  -> IORef.IORef (SchemaCache, SchemaCacheVer)
+  -> IO (SchemaCache, SchemaCacheVer)
   -> H.Manager
   -> CorsPolicy
   -> SQLGenCtx
   -> Bool
   -> E.PlanCache
   -> m WSServerEnv
-createWSServerEnv logger pgExecCtx lqState cacheRef httpManager
+createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
   corsPolicy sqlGenCtx enableAL planCache = do
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
-    WSServerEnv logger pgExecCtx lqState cacheRef httpManager corsPolicy
+    WSServerEnv logger pgExecCtx lqState getSchemaCache httpManager corsPolicy
     sqlGenCtx planCache wsServer enableAL
 
 createWSServerApp
