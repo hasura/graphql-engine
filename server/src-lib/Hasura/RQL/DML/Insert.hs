@@ -42,12 +42,21 @@ data InsertQueryP1
   } deriving (Show, Eq)
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
-mkInsertCTE (InsertQueryP1 tn cols vals c _ _ _) =
+mkInsertCTE (InsertQueryP1 tn cols vals c checkCond _ _) =
     S.CTEInsert insert
   where
     tupVals = S.ValuesExp $ map S.TupleExp vals
     insert =
-      S.SQLInsert tn cols tupVals (toSQLConflict <$> c) $ Just S.returningStar
+      S.SQLInsert tn cols tupVals (toSQLConflict <$> c) 
+        . Just 
+        . S.RetExp 
+        $ maybe 
+            [S.selectStar] 
+            (\e -> 
+              [ S.selectStar
+              , insertCheckExpr (toSQLBoolExp (S.QualTable tn) e)
+              ]) 
+            checkCond
 
 toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
 toSQLConflict conflict = case conflict of
@@ -240,103 +249,43 @@ convInsQ =
 
 insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 insertP2 strfyNum (u, p) =
-  runMutationWith addCheck
+  runMutationWith id
      $ Mutation (iqp1Table u) (insertCTE, p)
                 (iqp1MutFlds u) (iqp1AllCols u) strfyNum
   where
     insertCTE = mkInsertCTE u
-    
-    addCheck | Just cond <- iqp1CheckCond u
-             = insertPermsCheck (iqp1Table u) (qualTableToAliasIden (iqp1Table u)) cond
-             | otherwise = id
 
--- | This function modifies a CTE to insert a check constraint
--- based on the current user's insert permissions.
+-- | Create an expression which will fail with a check constraint violation error
+-- if the condition is not met on any of the inserted rows.
 --
 -- The resulting SQL will look something like this:
 --
 -- > WITH 
--- >   ... original CTEs here, binding {insertResult} ...
--- >   , {tn}__inserted AS ( ... results of previous SelectWith ... )
--- >   , {tn}__checks AS
--- >     ( SELECT bool_and(
--- >         CASE WHEN {cond} 
--- >           THEN NULL 
--- >           ELSE hdb_catalog.check_violation() 
--- >         END
--- >       ) FROM {insertResult}
--- >     )
--- >   SELECT {tn}__inserted.*
--- >   FROM {tn}__inserted, {tn}__checks;
---
--- A concrete example might look like this:
---
--- > WITH "public_author__mutation_result_alias" AS 
--- >   ( INSERT INTO "public"."author" ("name", "id") 
--- >       VALUES ($1, DEFAULT)
--- >       RETURNING *
--- >   ), "public_author__inserted" AS 
--- >   ( SELECT 
--- >       json_build_object(
--- >         'affected_rows', 
--- >           ( SELECT count(*) 
--- >             FROM "public_author__mutation_result_alias"
--- >           )
--- >       )
--- >   ), "public_author__checks" AS
--- >   ( SELECT 
--- >       CASE 
--- >         WHEN "public_author__mutation_result_alias"."is_public" THEN NULL 
--- >         ELSE "hdb_catalog"."check_violation"() 
--- >       END 
--- >     FROM "public_author__mutation_result_alias"
--- >   ) 
--- > SELECT "public_author__inserted".* 
--- > FROM "public_author__inserted", 
--- >      "public_author__checks"
-insertPermsCheck
-  :: QualifiedTable
-  -> Iden
-  -> AnnBoolExpSQL
-  -> S.SelectWith
-  -> S.SelectWith
-insertPermsCheck tn insertResult cond sw =
-  let inserted = Iden $ snakeCaseTable tn <> "__inserted"
-      checks = Iden $ snakeCaseTable tn <> "__checks"
-      condExpr = toSQLBoolExp (S.QualIden insertResult) cond
-   in S.cteAndThen (S.Alias inserted) sw
-        (S.SelectWith
-          { S.swCTEs =
-              [ ( S.Alias checks
-                , S.CTESelect $ S.mkSelect
-                  { S.selExtr = 
-                      [ S.Extractor
-                          (S.SEFnApp "bool_and"
-                            [ S.SECond condExpr S.SENull
-                              (S.SEFunction 
-                                (S.FunctionExp 
-                                  (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation")) 
-                                  (S.FunctionArgs [] mempty)
-                                  Nothing)
-                              )
-                            ] Nothing)
-                          Nothing
-                      ]
-                  , S.selFrom = Just $ S.FromExp 
-                      [ S.FIIden insertResult
-                      ]
-                  }
-                )
-              ]
-          , S.swSelect = S.mkSelect
-              { S.selExtr = [S.selectStar' (S.QualIden inserted)]
-              , S.selFrom = Just $ S.FromExp 
-                  [ S.FIIden inserted
-                  , S.FIIden checks
-                  ]
-              }
-          }
-        )
+-- >   {tn}__inserted AS ( 
+-- >     INSERT INTO 
+-- >       ...
+-- >     RETURNING 
+-- >       *, 
+-- >       CASE WHEN {cond} 
+-- >         THEN NULL 
+-- >         ELSE hdb_catalog.check_violation() 
+-- >       END
+-- >   )
+-- > SELECT {tn}__inserted.*
+-- > FROM {tn}__inserted;
+insertCheckExpr
+  :: S.BoolExp
+  -> S.Extractor
+insertCheckExpr condExpr = 
+  S.Extractor
+    (S.SECond condExpr S.SENull
+      (S.SEFunction 
+        (S.FunctionExp 
+          (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation")) 
+          (S.FunctionArgs [] mempty)
+          Nothing)
+      ))
+    Nothing
 
 runInsert
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)

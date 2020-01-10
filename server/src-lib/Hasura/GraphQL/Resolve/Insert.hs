@@ -29,7 +29,7 @@ import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Insert             (insertPermsCheck)
+import           Hasura.RQL.DML.Insert             (insertCheckExpr)
 import           Hasura.RQL.DML.Internal           (convPartialSQLExp,
                                                     convAnnBoolExpPartialSQL, 
                                                     dmlTxErrorHandler,
@@ -226,8 +226,9 @@ mkInsertQ
   -> [PGColWithValue]
   -> Map.HashMap PGCol S.SQLExp
   -> RoleName
+  -> AnnBoolExpSQL
   -> m CTEExp
-mkInsertQ tn onConflictM insCols defVals role = do
+mkInsertQ tn onConflictM insCols defVals role checkCond = do
   (givenCols, args) <- flip runStateT Seq.Empty $ toSQLExps insCols
   let sqlConflict = RI.toSQLConflict <$> onConflictM
       sqlExps = mkSQLRow defVals givenCols
@@ -235,7 +236,12 @@ mkInsertQ tn onConflictM insCols defVals role = do
       tableCols = Map.keys defVals
       sqlInsert =
         S.SQLInsert tn tableCols valueExp sqlConflict 
-          $ Just S.returningStar
+          . Just
+          $ S.RetExp
+            [ S.selectStar
+            , insertCheckExpr (toSQLBoolExp (S.QualTable tn) checkCond)
+            ]
+              
       adminIns = return (CTEExp (S.CTEInsert sqlInsert) args)
       nonAdminInsert = do
         let cteIns = S.CTEInsert sqlInsert
@@ -403,13 +409,11 @@ insertObj strfyNum role tn singleObjIns addCols = do
 
   -- prepare insert query as with expression
   checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting checkCond
-  let mutResultName = RR.qualTableToAliasIden tn
-      addCheck = insertPermsCheck tn mutResultName checkExpr
       
   CTEExp cte insPArgs <-
-    mkInsertQ tn onConflictM finalInsCols defVals role
+    mkInsertQ tn onConflictM finalInsCols defVals role checkExpr
 
-  MutateResp affRows colVals <- mutateAndFetchCols addCheck tn allCols (cte, insPArgs) strfyNum
+  MutateResp affRows colVals <- mutateAndFetchCols id tn allCols (cte, insPArgs) strfyNum
   colValM <- asSingleObject colVals
   cteExp <- mkSelCTE tn allCols colValM
 
