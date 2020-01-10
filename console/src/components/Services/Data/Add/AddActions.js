@@ -11,6 +11,7 @@ import { setTable } from '../DataActions.js';
 
 import { isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
@@ -315,16 +316,10 @@ const createTableSql = () => {
     if (hasUUIDDefault) {
       const sqlCreateExtension = 'CREATE EXTENSION IF NOT EXISTS pgcrypto;';
 
-      upQueryArgs.push({
-        type: 'run_sql',
-        args: { sql: sqlCreateExtension },
-      });
+      upQueryArgs.push(getRunSqlQuery(sqlCreateExtension));
     }
 
-    upQueryArgs.push({
-      type: 'run_sql',
-      args: { sql: sqlCreateTable },
-    });
+    upQueryArgs.push(getRunSqlQuery(sqlCreateTable));
 
     upQueryArgs.push({
       type: 'add_existing_table_or_view',
@@ -345,12 +340,7 @@ const createTableSql = () => {
 
     const downQuery = {
       type: 'bulk',
-      args: [
-        {
-          type: 'run_sql',
-          args: { sql: sqlDropTable },
-        },
-      ],
+      args: [getRunSqlQuery(sqlDropTable)],
     };
 
     // make request
