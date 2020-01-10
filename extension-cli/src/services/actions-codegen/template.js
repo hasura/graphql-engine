@@ -1,13 +1,11 @@
 const fetch = require('node-fetch');
 const path = require('path')
 const fs = require('fs');
-const templaters = require('../../templaters');
 const { getTemplatePath } = require('../../utils/utils')
 
 const CODEGENERATOR_NOT_FOUND = 'given codegen framework not found';
 const FILE_SYSTEM_PATH = 'fs_path';
 const URL_PATH = 'url path';
-const ERROR_IGNORE = 'error ignore'
 
 const resolveCodegeneratorPath = (codegenConfig) => {
   let { framework } = codegenConfig;
@@ -45,12 +43,13 @@ const resolveCodegeneratorFromFs = async (fsPath) => {
 };
 
 const resolveCodegenerator = async (codegenConfig) => {
+
   const codegeneratorPath = resolveCodegeneratorPath(codegenConfig);
-  let codegenerator
   if (!codegeneratorPath) {
-    throw Error(ERROR_IGNORE);
+    throw Error(CODEGENERATOR_NOT_FOUND)
   }
 
+  let codegenerator
   let pathType = URL_PATH;
   try {
     new URL(codegeneratorPath)
@@ -73,15 +72,12 @@ const resolveCodegenerator = async (codegenConfig) => {
 }
 
 const getCodegenFiles = async (actionName, actionsSdl, derive, codegenConfig) => {
+
   let codegenerator;
   try {
     codegenerator = await resolveCodegenerator(codegenConfig)
   } catch (e) {
-    if (e.message === ERROR_IGNORE) {
-      return [];
-    } else {
-      throw e;
-    }
+    throw e;
   }
 
   let codegenFiles = codegenerator(actionName, actionsSdl, derive);

@@ -13,11 +13,11 @@ const getActionsCodegen = async (payload) => {
       complete: sdlComplete
     },
     derive,
-    actions_config: actionsConfig
+    codegen_config: codegenConfig
   } = payload;
 
   try {
-    const codegenResp = await getFrameworkCodegen(actionName, sdlComplete, derive, actionsConfig.codegen)
+    const codegenResp = await getFrameworkCodegen(actionName, sdlComplete, derive, codegenConfig)
     if (codegenResp.error) {
       throw Error(codegenResp.error)
     } else {

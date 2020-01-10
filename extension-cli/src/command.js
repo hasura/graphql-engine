@@ -6,6 +6,7 @@ import {
 import version from './utils/version';
 import fs from 'fs';
 import { getFlagValue, OUTPUT_FILE_FLAG } from './utils/commandUtils';
+import { importDeps } from './utils/dependencies'
 
 const commandArgs = process.argv;
 const outputFilePath = getFlagValue(commandArgs, OUTPUT_FILE_FLAG);
@@ -53,7 +54,7 @@ try {
       process.exit(1);
     })
   } else {
-    logOutput(r);
+    logOutput(cliResponse);
   }
 } catch (e) {
   console.error(e);
