@@ -10,11 +10,11 @@ import           Hasura.RQL.DDL.Schema.Cache       (CacheBuildM)
 import           Hasura.RQL.DDL.EventTrigger ( getWebhookInfoFromConf
                                              , getHeaderInfosFromConf)
 import           Hasura.RQL.Types.Helpers
+import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCache ( addScheduledTriggerToCache
                                               , ScheduledTriggerInfo(..))
 
-import qualified Data.Aeson            as J
 import qualified Database.PG.Query     as Q
 
 runCreateScheduledTrigger :: CacheBuildM m => CreateScheduledTrigger ->  m EncJSON
@@ -31,7 +31,7 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $
     INSERT into hdb_catalog.hdb_scheduled_trigger
                 (name, webhook_conf, schedule, payload, retry_conf)
     VALUES ($1, $2, $3, $4, $5)
-  |] (stName, Q.AltJ $ J.toJSON stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf) False
+  |] (stName, Q.AltJ stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf) False
 
 addScheduledTriggerSetup ::
      (CacheBuildM m) => CreateScheduledTrigger -> m ScheduledTriggerInfo
@@ -52,13 +52,13 @@ addScheduledTriggerSetup CreateScheduledTrigger {..} = do
 runCancelScheduledEvent :: CacheBuildM m => CancelScheduledEvent -> m EncJSON
 runCancelScheduledEvent se = do
   affectedRows <- deleteScheduledEventFromCatalog se
-  if affectedRows == 1
-    then pure successMsg
-    else undefined
+  if | affectedRows == 1 -> pure successMsg
+     | affectedRows == 0 -> throw400 NotFound "scheduled event not found"
+     | otherwise -> throw500 "more than one scheduled events cancelled"
 
 deleteScheduledEventFromCatalog :: CacheBuildM m => CancelScheduledEvent -> m Int
-deleteScheduledEventFromCatalog se = liftTx $
-  Q.listQE defaultTxErrorHandler
+deleteScheduledEventFromCatalog se = liftTx $ do
+  (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
     DELETE FROM hdb_catalog.hdb_scheduled_events
     WHERE id = $1
