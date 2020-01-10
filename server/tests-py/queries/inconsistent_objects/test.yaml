@@ -48,6 +48,21 @@ sql: drop table article;
 # Inconsistent objects to be returned
 inconsistent_objects:
 - definition:
+    schema: public
+    name: article
+  reason: 'no such table/view exists in postgres: "article"'
+  type: table
+- definition:
+    using:
+      foreign_key_constraint_on: author_id
+    name: author
+    comment:
+    table:
+      schema: public
+      name: article
+  reason: 'table "article" does not exist'
+  type: object_relation
+- definition:
     using:
       foreign_key_constraint_on:
         column: author_id
@@ -59,23 +74,9 @@ inconsistent_objects:
     table:
       schema: public
       name: author
-  reason: table "article" does not exist
+  reason: >-
+    in table "author": in relationship "articles": table "article" does not exist
   type: array_relation
-- definition:
-    using:
-      foreign_key_constraint_on: author_id
-    name: author
-    comment:
-    table:
-      schema: public
-      name: article
-  reason: table "article" does not exist
-  type: object_relation
-- definition:
-    schema: public
-    name: article
-  reason: 'no such table/view exists in postgres: "article"'
-  type: table
 
 # Teardown
 teardown:

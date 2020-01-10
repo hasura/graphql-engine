@@ -3,7 +3,6 @@ module Hasura.GraphQL.Utils
   , showNamedTy
   , throwVE
   , getBaseTy
-  , mapFromL
   , groupTuples
   , groupListWith
   , mkMapWith
@@ -35,10 +34,6 @@ getBaseTy = \case
   G.TypeList _ lt     -> getBaseTyL lt
   where
     getBaseTyL = getBaseTy . G.unListType
-
-mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
-mapFromL f l =
-  Map.fromList [(f v, v) | v <- l]
 
 groupListWith
   :: (Eq k, Hashable k, Foldable t, Functor t)

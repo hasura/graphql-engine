@@ -48,6 +48,7 @@ For the table ``user_info``, create a :ref:`manual object relationship <create_m
 ``private_info`` using ``user_info : id -> user_private : user_id``:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/multiple-rules-create-manual-relationship.png
+   :alt: Create a manual object relationship
 
 Step 3: Define permissions
 --------------------------
@@ -57,11 +58,13 @@ For the role ``user``, create the following permissions for ``select``:
 - Table ``user_info``: allow access to ``id``, ``name`` and ``city`` without any row conditions.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/multiple-rules-define-public-permissions.png
+   :alt: Column access for the role user
 
 - View ``user_private``: allow access to ``id``, ``phone``, ``email`` and ``address`` if the ``user-id``
   passed in the session variable is equal to the row's ``user_id``.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/multiple-rules-define-private-permissions.png
+   :alt: Column access for the role user based on row level permissions
 
 Step 4: Query with appropriate access control
 ---------------------------------------------
