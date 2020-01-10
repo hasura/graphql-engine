@@ -13,6 +13,13 @@ const frequentlyUsedColumns = [
   {
     name: 'id',
     validFor: ['add'],
+    type: 'bigserial',
+    typeText: 'bigint (auto-increment)',
+    primary: true,
+  },
+  {
+    name: 'id',
+    validFor: ['add'],
     type: 'uuid',
     typeText: 'UUID',
     primary: true,
