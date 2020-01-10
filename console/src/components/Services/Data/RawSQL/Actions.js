@@ -16,6 +16,7 @@ import {
 import { parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -43,16 +44,7 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   const isCascadeChecked = getState().rawSQL.isCascadeChecked;
 
   let url = Endpoints.rawSQL;
-  const schemaChangesUp = [
-    {
-      type: 'run_sql',
-      args: {
-        sql: sql,
-        cascade: isCascadeChecked,
-        read_only: readOnlyMode,
-      },
-    },
-  ];
+  const schemaChangesUp = [getRunSqlQuery(sql, isCascadeChecked, readOnlyMode)];
   // check if track view enabled
 
   if (getState().rawSQL.isTableTrackChecked) {
