@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Transport.HTTP.Protocol
   ( GQLReq(..)
+  , GQLBatchedReqs(..)
   , GQLReqUnparsed
   , GQLReqParsed
   , toParsed
@@ -64,6 +65,24 @@ $(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
 
 instance (Hashable a) => Hashable (GQLReq a)
 
+-- | Batched queries are sent as a JSON array of
+-- 'GQLReq' records. This newtype exists to support
+-- the unusual JSON encoding.
+--
+-- See <https://github.com/hasura/graphql-engine/issues/1812>.
+data GQLBatchedReqs a
+  = GQLSingleRequest (GQLReq a)
+  | GQLBatchedReqs [GQLReq a]
+  deriving (Show, Eq, Generic)
+  
+instance J.ToJSON a => J.ToJSON (GQLBatchedReqs a) where
+  toJSON (GQLSingleRequest q) = J.toJSON q
+  toJSON (GQLBatchedReqs qs) = J.toJSON qs
+
+instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
+  parseJSON arr@J.Array{} = GQLBatchedReqs <$> J.parseJSON arr
+  parseJSON other = GQLSingleRequest <$> J.parseJSON other
+
 newtype GQLQueryText
   = GQLQueryText
   { _unGQLQueryText :: Text
@@ -74,7 +93,7 @@ type GQLReqParsed = GQLReq GQLExecDoc
 
 toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
 toParsed req = case G.parseExecutableDoc gqlText of
-  Left _ -> withPathK "query" $ throwVE "not a valid graphql query"
+  Left _  -> withPathK "query" $ throwVE "not a valid graphql query"
   Right a -> return $ req { _grQuery = GQLExecDoc $ G.getExecutableDefinitions a }
   where
     gqlText = _unGQLQueryText $ _grQuery req

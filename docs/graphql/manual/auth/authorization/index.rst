@@ -19,6 +19,7 @@ session variables. Other session variables can be passed by your auth service as
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/hasura-perms.png
    :width: 80 %
+   :alt: Create a permission rule
 
 Trying out access control
 -------------------------
@@ -44,4 +45,4 @@ Follow the example at :doc:`access control basics <basics>`.
   roles-variables
   permission-rules
   common-roles-auth-examples
-
+  role-multiple-rules

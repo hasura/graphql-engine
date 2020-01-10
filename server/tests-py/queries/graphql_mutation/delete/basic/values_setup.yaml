@@ -13,6 +13,10 @@ args:
           age: 23
         location:
           type: Point
+          crs:
+            type: name
+            properties:
+              name: urn:ogc:def:crs:EPSG::4326
           coordinates:
           - -118.4079
           - 33.9434

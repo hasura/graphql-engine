@@ -58,10 +58,10 @@ import           Hasura.Server.Utils            (matchRegex)
 
 data RunSQL
   = RunSQL
-  { rSql                          :: Text
-  , rCascade                      :: !Bool
-  , rCheckMetadataConsistency     :: !(Maybe Bool)
-  , rTxAccessMode                 :: !Q.TxAccess
+  { rSql                      :: Text
+  , rCascade                  :: !Bool
+  , rCheckMetadataConsistency :: !(Maybe Bool)
+  , rTxAccessMode             :: !Q.TxAccess
   } deriving (Show, Eq, Lift)
 
 instance FromJSON RunSQL where
@@ -81,11 +81,11 @@ instance ToJSON RunSQL where
       , "check_metadata_consistency" .= rCheckMetadataConsistency
       , "read_only" .=
         case rTxAccessMode of
-          Q.ReadOnly -> True
+          Q.ReadOnly  -> True
           Q.ReadWrite -> False
       ]
 
-runRunSQL :: (CacheBuildM m) => RunSQL -> m EncJSON
+runRunSQL :: (MonadTx m, CacheRWM m) => RunSQL -> m EncJSON
 runRunSQL RunSQL {..} = do
   metadataCheckNeeded <- onNothing rCheckMetadataConsistency $ isAltrDropReplace rSql
   bool (execRawSQL rSql) (withMetadataCheck rCascade $ execRawSQL rSql) metadataCheckNeeded

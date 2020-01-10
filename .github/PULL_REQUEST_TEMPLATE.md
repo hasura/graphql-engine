@@ -26,6 +26,14 @@
 <!-- How is this issue solved/fixed? What is the design? -->
 <!-- It's better if we elaborate -->
 
+### Steps to test and verify
+<!-- If this is a feature, what are the steps to try them out? -->
+<!-- If this is a bug-fix, how do we verify the fix? -->
+
+### Limitations, known bugs & workarounds
+<!-- Limitations of the PR, known bugs and suggested workarounds -->
+<!-- Feel free to delete these comment lines -->
+
 ### Server checklist
 <!-- A checklist for server code -->
 
@@ -97,13 +105,3 @@ Does this PR add a new Metadata feature?
 <!-- Add any other breaking change not mentioned above -->
 
 <!-- Explain briefly about your breaking changes below -->
-
-
-### Steps to test and verify
-<!-- If this is a feature, what are the steps to try them out? -->
-<!-- If this is a bug-fix, how do we verify the fix? -->
-
-### Limitations, known bugs & workarounds
-<!-- Limitations of the PR, known bugs and suggested workarounds -->
-
-<!-- Feel free to delete these comment lines -->

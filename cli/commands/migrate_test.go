@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	sqldriver "database/sql/driver"
 	"fmt"
+	"github.com/hasura/graphql-engine/cli/migrate"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -13,8 +14,6 @@ import (
 	"testing"
 
 	"github.com/Masterminds/semver"
-
-	"github.com/hasura/graphql-engine/cli/migrate"
 	mt "github.com/hasura/graphql-engine/cli/migrate/testing"
 	"github.com/hasura/graphql-engine/cli/version"
 	_ "github.com/lib/pq"
@@ -262,6 +261,8 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	testMetadataReset(t, metadataFile, endpoint)
 	testMetadataExport(t, metadataFile, endpoint)
 	compareMetadata(t, metadataFile, "empty-metadata", versionCtx.ServerSemver)
+
+	testMetadataInconsistencyDropCmd(t, migrationsDir, metadataFile, endpoint)
 }
 
 func mustWriteFile(t testing.TB, dir, file string, body string) {
