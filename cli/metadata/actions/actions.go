@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os/exec"
 	"path/filepath"
 
 	gyaml "github.com/ghodss/yaml"
@@ -24,44 +23,80 @@ const (
 	graphqlFileName        = "actions.graphql"
 )
 
-type sdlTo struct {
-	SDL map[string]string `json:"sdl"`
+type DeriveMutationPayload struct {
+	MutationName string `json:"name"`
+	ActionName   string `json:"action_name"`
 }
 
-type sdlFrom struct {
+type DerivePayload struct {
+	IntrospectionSchema interface{}           `json:"introspection_schema"`
+	Mutation            DeriveMutationPayload `json:"mutation"`
+}
+
+type sdlPayload struct {
+	Complete string `json:"complete"`
+}
+
+type sdlToRequest struct {
+	Types   types.CustomTypes `json:"types,omitempty"`
+	Actions []types.Action    `json:"actions,omitempty"`
+	Derive  DerivePayload     `json:"derive,omitempty"`
+}
+
+type sdlToResponse struct {
+	SDL sdlPayload `json:"sdl"`
+}
+
+type sdlFromRequest struct {
+	SDL sdlPayload `json:"sdl"`
+}
+
+type sdlFromResponse struct {
 	Types   types.CustomTypes `json:"types"`
 	Actions []types.Action    `json:"actions"`
 }
 
-type sdlFromDerive struct {
-	Derive map[string]interface{} `json:"derive"`
+type actionsCodegenRequest struct {
+	ActionName    string                  `json:"action_name"`
+	SDL           sdlPayload              `json:"sdl"`
+	Derive        DerivePayload           `json:"derive,omitempty"`
+	CodegenConfig *CodegenExecutionConfig `json:"codegen_config"`
 }
 
-type scaffoldResponse struct {
-	Files []map[string]string `json:"scaffolds"`
+type codegenFile struct {
+	Name    string `json:"name"`
+	Content string `json:"content"`
+}
+
+type actionsCodegenResponse struct {
+	Files []codegenFile `json:"codegen"`
+}
+
+type CodegenExecutionConfig struct {
+	Framework string `json:"framework"`
+	OutputDir string `json:"output_dir"`
+	URI       string `json:"uri,omitempty"`
 }
 
 type ActionExecutionConfig struct {
-	Kind     string                  `json:"default_kind"`
-	Handler  string                  `json:"default_handler"`
-	Scaffold ScaffoldExecutionConfig `json:"scaffold"`
-}
-
-type ScaffoldExecutionConfig struct {
-	Default           string            `json:"default,omitempty"`
-	OutputDir         string            `json:"output_dir,omitempty"`
-	CustomScaffolders map[string]string `json:"custom_scaffolders"`
+	Kind                  string                 `json:"kind"`
+	HandlerWebhookBaseURL string                 `json:"handler_webhook_baseurl"`
+	Codegen               CodegenExecutionConfig `json:"codegen"`
 }
 
 type ActionConfig struct {
-	MetadataDir  string
-	ActionConfig ActionExecutionConfig
+	MetadataDir   string
+	ActionConfig  ActionExecutionConfig
+	CodegenConfig *CodegenExecutionConfig
+
+	cmdName string
 }
 
-func New(baseDir string, actionConfig ActionExecutionConfig) *ActionConfig {
+func New(baseDir string, actionConfig ActionExecutionConfig, cmdName string) *ActionConfig {
 	return &ActionConfig{
 		MetadataDir:  baseDir,
 		ActionConfig: actionConfig,
+		cmdName:      cmdName,
 	}
 }
 
@@ -106,33 +141,27 @@ input SampleInput {
 }
 `
 	} else {
-		from := sdlFromDerive{
-			Derive: map[string]interface{}{
-				"introspection_schema": introSchema,
-				"mutation": map[string]string{
-					"name":        deriveFromMutation,
-					"action_name": name,
+		sdlToReq := sdlToRequest{
+			Derive: DerivePayload{
+				IntrospectionSchema: introSchema,
+				Mutation: DeriveMutationPayload{
+					MutationName: deriveFromMutation,
+					ActionName:   name,
 				},
 			},
 		}
-		fromByt, err := json.Marshal(from)
+		sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName)
 		if err != nil {
 			return err
 		}
-		out, err := exec.Command("scaffolder", "sdl", "to", string(fromByt)).Output()
-		if err != nil {
-			return err
-		}
-		var to sdlTo
-		err = json.Unmarshal(out, &to)
-		if err != nil {
-			return err
-		}
-		defaultSDL = to.SDL["complete"]
+		defaultSDL = sdlToResp.SDL.Complete
 	}
 	newDoc, err := parser.Parse(parser.ParseParams{
 		Source: defaultSDL,
 	})
+	if err != nil {
+		return err
+	}
 	doc.Definitions = append(newDoc.Definitions, doc.Definitions...)
 	inputDupData := map[string][]int{}
 	objDupData := map[string][]int{}
@@ -185,35 +214,26 @@ input SampleInput {
 	return nil
 }
 
-func (a *ActionConfig) Scaffold(name string, scaffolderName string, derivePayload map[string]interface{}) error {
+func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
 	graphByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, graphqlFileName))
 	if err != nil {
 		return err
 	}
-	data := map[string]interface{}{
-		"action_name": name,
-		"framework":   scaffolderName,
-		"sdl": map[string]string{
-			"complete": string(graphByt),
+	data := actionsCodegenRequest{
+		ActionName: name,
+		SDL: sdlPayload{
+			Complete: string(graphByt),
 		},
-		"scaffold_config": a.ActionConfig.Scaffold,
-		"derive":          derivePayload,
+		CodegenConfig: a.CodegenConfig,
+		Derive:        derivePld,
 	}
-	dataByt, err := json.Marshal(data)
+	resp, err := getActionsCodegen(data, a.cmdName)
 	if err != nil {
 		return err
 	}
-	out, err := exec.Command("scaffolder", "scaffold", string(dataByt)).Output()
-	if err != nil {
-		return err
-	}
-	var resp scaffoldResponse
-	err = json.Unmarshal(out, &resp)
-	if err != nil {
-		return err
-	}
+
 	for _, file := range resp.Files {
-		err = ioutil.WriteFile(filepath.Join(a.ActionConfig.Scaffold.OutputDir, file["name"]), []byte(file["content"]), 0644)
+		err = ioutil.WriteFile(filepath.Join(a.ActionConfig.Codegen.OutputDir, file.Name), []byte(file.Content), 0644)
 		if err != nil {
 			return err
 		}
@@ -230,24 +250,17 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	if err != nil {
 		return err
 	}
-	to := sdlTo{
-		SDL: map[string]string{
-			"complete": string(graphByt),
+	sdlFromReq := sdlFromRequest{
+		SDL: sdlPayload{
+			Complete: string(graphByt),
 		},
 	}
-	toByt, err := json.Marshal(to)
+
+	sdlFromResp, err := convertSDLToMetadata(sdlFromReq, a.cmdName)
 	if err != nil {
 		return err
 	}
-	out, err := exec.Command("scaffolder", "sdl", "from", string(toByt)).Output()
-	if err != nil {
-		return err
-	}
-	var newAction sdlFrom
-	err = json.Unmarshal(out, &newAction)
-	if err != nil {
-		return err
-	}
+
 	// Read actions.yaml
 	commonByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, actionsFileName))
 	if err != nil {
@@ -260,12 +273,12 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	}
 	for actionIndex, action := range oldAction.Actions {
 		var isFound bool
-		for newActionIndex, newActionObj := range newAction.Actions {
+		for newActionIndex, newActionObj := range sdlFromResp.Actions {
 			if action.Name == newActionObj.Name {
 				isFound = true
-				newAction.Actions[newActionIndex].Permissions = oldAction.Actions[actionIndex].Permissions
-				newAction.Actions[newActionIndex].Definition.Kind = oldAction.Actions[actionIndex].Definition.Kind
-				newAction.Actions[newActionIndex].Definition.Handler = oldAction.Actions[actionIndex].Definition.Handler
+				sdlFromResp.Actions[newActionIndex].Permissions = oldAction.Actions[actionIndex].Permissions
+				sdlFromResp.Actions[newActionIndex].Definition.Kind = oldAction.Actions[actionIndex].Definition.Kind
+				sdlFromResp.Actions[newActionIndex].Definition.Handler = oldAction.Actions[actionIndex].Definition.Handler
 				break
 			}
 		}
@@ -275,11 +288,11 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	}
 	for customTypeIndex, customType := range oldAction.CustomTypes.Enums {
 		var isFound bool
-		for newTypeObjIndex, newTypeObj := range newAction.Types.Enums {
+		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Enums {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				newAction.Types.Enums[newTypeObjIndex].Description = oldAction.CustomTypes.Enums[customTypeIndex].Description
-				newAction.Types.Enums[newTypeObjIndex].Relationships = oldAction.CustomTypes.Enums[customTypeIndex].Relationships
+				sdlFromResp.Types.Enums[newTypeObjIndex].Description = oldAction.CustomTypes.Enums[customTypeIndex].Description
+				sdlFromResp.Types.Enums[newTypeObjIndex].Relationships = oldAction.CustomTypes.Enums[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -289,11 +302,11 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	}
 	for customTypeIndex, customType := range oldAction.CustomTypes.InputObjects {
 		var isFound bool
-		for newTypeObjIndex, newTypeObj := range newAction.Types.InputObjects {
+		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.InputObjects {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				newAction.Types.InputObjects[newTypeObjIndex].Description = oldAction.CustomTypes.InputObjects[customTypeIndex].Description
-				newAction.Types.InputObjects[newTypeObjIndex].Relationships = oldAction.CustomTypes.InputObjects[customTypeIndex].Relationships
+				sdlFromResp.Types.InputObjects[newTypeObjIndex].Description = oldAction.CustomTypes.InputObjects[customTypeIndex].Description
+				sdlFromResp.Types.InputObjects[newTypeObjIndex].Relationships = oldAction.CustomTypes.InputObjects[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -303,11 +316,11 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	}
 	for customTypeIndex, customType := range oldAction.CustomTypes.Objects {
 		var isFound bool
-		for newTypeObjIndex, newTypeObj := range newAction.Types.Objects {
+		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Objects {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				newAction.Types.Objects[newTypeObjIndex].Description = oldAction.CustomTypes.Objects[customTypeIndex].Description
-				newAction.Types.Objects[newTypeObjIndex].Relationships = oldAction.CustomTypes.Objects[customTypeIndex].Relationships
+				sdlFromResp.Types.Objects[newTypeObjIndex].Description = oldAction.CustomTypes.Objects[customTypeIndex].Description
+				sdlFromResp.Types.Objects[newTypeObjIndex].Relationships = oldAction.CustomTypes.Objects[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -317,11 +330,11 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	}
 	for customTypeIndex, customType := range oldAction.CustomTypes.Scalars {
 		var isFound bool
-		for newTypeObjIndex, newTypeObj := range newAction.Types.Scalars {
+		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Scalars {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				newAction.Types.Scalars[newTypeObjIndex].Description = oldAction.CustomTypes.Scalars[customTypeIndex].Description
-				newAction.Types.Scalars[newTypeObjIndex].Relationships = oldAction.CustomTypes.Scalars[customTypeIndex].Relationships
+				sdlFromResp.Types.Scalars[newTypeObjIndex].Description = oldAction.CustomTypes.Scalars[customTypeIndex].Description
+				sdlFromResp.Types.Scalars[newTypeObjIndex].Relationships = oldAction.CustomTypes.Scalars[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -329,17 +342,17 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
 	}
-	for index, action := range newAction.Actions {
+	for index, action := range sdlFromResp.Actions {
 		if action.Definition.Kind == "" {
-			newAction.Actions[index].Definition.Kind = a.ActionConfig.Kind
+			sdlFromResp.Actions[index].Definition.Kind = a.ActionConfig.Kind
 		}
 		if action.Definition.Handler == "" {
-			newAction.Actions[index].Definition.Handler = a.ActionConfig.Handler + "/" + action.Name
+			sdlFromResp.Actions[index].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
 		}
 	}
 	var common types.Common
-	common.Actions = newAction.Actions
-	common.CustomTypes = newAction.Types
+	common.Actions = sdlFromResp.Actions
+	common.CustomTypes = sdlFromResp.Types
 	// write actions.yaml and custom_types.yaml
 	commonByt, err = yaml.Marshal(common)
 	if err != nil {
@@ -364,25 +377,19 @@ func (a *ActionConfig) Export(metadata dbTypes.Metadata) error {
 	if err != nil {
 		return err
 	}
-	var dataFrom sdlFrom
-	dataFrom.Types = common.CustomTypes
-	dataFrom.Actions = common.Actions
-	fromByt, err := json.Marshal(dataFrom)
-	if err != nil {
-		return err
-	}
-	out, err := exec.Command("scaffolder", "sdl", "to", string(fromByt)).Output()
-	if err != nil {
-		return err
-	}
-	var data sdlTo
-	err = json.Unmarshal(out, &data)
+	var sdlToReq sdlToRequest
+	sdlToReq.Types = common.CustomTypes
+	sdlToReq.Actions = common.Actions
+	sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName)
 	if err != nil {
 		return err
 	}
 	doc, err := parser.Parse(parser.ParseParams{
-		Source: data.SDL["complete"],
+		Source: sdlToResp.SDL.Complete,
 	})
+	if err != nil {
+		return err
+	}
 	commonByt, err := yaml.Marshal(common)
 	if err != nil {
 		return err

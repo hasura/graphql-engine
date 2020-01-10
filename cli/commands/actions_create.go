@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/spf13/cobra"
@@ -13,13 +15,21 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	actionsCreateCmd := &cobra.Command{
-		Use:          "create",
-		Short:        "",
-		SilenceUsage: true,
-		Args:         cobra.ExactArgs(1),
+		Use:               "create",
+		Short:             "",
+		SilenceUsage:      true,
+		Args:              cobra.ExactArgs(1),
+		PersistentPreRunE: ensureCLIExtension,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
-			return ec.Validate()
+			err := ec.Validate()
+			if err != nil {
+				return err
+			}
+			if ec.MetadataDir == "" {
+				return fmt.Errorf("actions commands can be executed only when metadata_dir is set in config")
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]
@@ -30,7 +40,6 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := actionsCreateCmd.Flags()
 
 	f.StringVar(&opts.deriveFromMutation, "derive-from-mutation", "", "")
-	f.StringVar(&opts.scaffolderName, "scaffolder-name", "", "")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -50,7 +59,6 @@ type actionsCreateOptions struct {
 
 	name               string
 	deriveFromMutation string
-	scaffolderName     string
 }
 
 func (o *actionsCreateOptions) run() error {
@@ -65,7 +73,7 @@ func (o *actionsCreateOptions) run() error {
 			return err
 		}
 	}
-	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action)
+	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action, o.EC.CMDName)
 	err = actionCfg.Create(o.name, introSchema, o.deriveFromMutation)
 	if err != nil {
 		return err
@@ -74,12 +82,12 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return err
 	}
-	derivePayload := map[string]interface{}{
-		"introspection_schema": introSchema,
-		"mutation": map[string]string{
-			"name":        o.deriveFromMutation,
-			"action_name": o.name,
+	derivePayload := actions.DerivePayload{
+		IntrospectionSchema: introSchema,
+		Mutation: actions.DeriveMutationPayload{
+			MutationName: o.deriveFromMutation,
+			ActionName:   o.name,
 		},
 	}
-	return actionCfg.Scaffold(o.name, o.scaffolderName, derivePayload)
+	return actionCfg.Codegen(o.name, derivePayload)
 }

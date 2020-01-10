@@ -16,8 +16,10 @@ import (
 	"time"
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/plugins/paths"
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
+	homedir "github.com/mitchellh/go-homedir"
 
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
@@ -49,6 +51,8 @@ visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
 
 // Config has the config values required to contact the server.
 type Config struct {
+	// Version for the CLI config
+	Version string
 	// Endpoint for the GraphQL Engine
 	Endpoint string
 	// AdminSecret (optional) required to query the endpoint
@@ -62,6 +66,8 @@ type Config struct {
 }
 
 type rawConfig struct {
+	// Version for the CLI config
+	Version string `json:"version"`
 	// Endpoint for the GraphQL Engine
 	Endpoint string `json:"endpoint"`
 	// AccessKey (deprecated) (optional) Admin secret key required to query the endpoint
@@ -82,6 +88,7 @@ func (r rawConfig) toConfig() Config {
 		s = r.AccessKey
 	}
 	return Config{
+		Version:           r.Version,
 		Endpoint:          r.Endpoint,
 		AdminSecret:       s,
 		ParsedEndpoint:    r.ParsedEndpoint,
@@ -92,6 +99,7 @@ func (r rawConfig) toConfig() Config {
 
 func (s Config) toRawConfig() rawConfig {
 	return rawConfig{
+		Version:           s.Version,
 		Endpoint:          s.Endpoint,
 		AccessKey:         "",
 		AdminSecret:       s.AdminSecret,
@@ -114,6 +122,7 @@ func (s Config) UnmarshalJSON(b []byte) error {
 		return errors.Wrap(err, "unmarshal error")
 	}
 	sc := r.toConfig()
+	s.Version = sc.Version
 	s.Endpoint = sc.Endpoint
 	s.AdminSecret = sc.AdminSecret
 	s.ParsedEndpoint = sc.ParsedEndpoint
@@ -197,6 +206,9 @@ type ExecutionContext struct {
 
 	// SkipUpdateCheck will skip the auto update check if set to true
 	SkipUpdateCheck bool
+
+	// PluginsPath is the path used by the plugins
+	PluginsPath paths.Paths
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -233,6 +245,12 @@ func (ec *ExecutionContext) Prepare() error {
 		return errors.Wrap(err, "setting up global config failed")
 	}
 
+	// setup plugins path
+	err = ec.GetPluginsPath()
+	if err != nil {
+		return errors.Wrap(err, "setting up plugins path failed")
+	}
+
 	ec.LastUpdateCheckFile = filepath.Join(ec.GlobalConfigDir, LastUpdateCheckFileName)
 
 	// initialize a blank server config
@@ -254,6 +272,22 @@ func (ec *ExecutionContext) Prepare() error {
 	}
 	ec.Telemetry.ExecutionID = ec.ID
 
+	return nil
+}
+
+// GetPluginsPath returns the inferred paths for hasura. By default, it assumes
+// $HOME/.hasura as the base path
+func (ec *ExecutionContext) GetPluginsPath() error {
+	home, err := homedir.Dir()
+	if err != nil {
+		return errors.Wrap(err, "cannot get home directory")
+	}
+	base := filepath.Join(home, GlobalConfigDirName, "plugins")
+	base, err = filepath.Abs(base)
+	if err != nil {
+		return errors.Wrap(err, "cannot get absolute path")
+	}
+	ec.PluginsPath = paths.NewPaths(base)
 	return nil
 }
 
@@ -331,13 +365,16 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 	v.SetConfigName("config")
+	v.SetDefault("version", "1")
 	v.SetDefault("endpoint", "http://localhost:8080")
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
 	v.SetDefault("metadata_directory", "")
 	v.SetDefault("action.default_kind", "synchronous")
 	v.SetDefault("action.default_handler", "{{DEFAULT_HANDLER}}")
-	v.SetDefault("action.scaffold.output_dir", ec.ExecutionDirectory)
+	v.SetDefault("action.codegen.framework", "")
+	v.SetDefault("action.codegen.output_dir", ec.ExecutionDirectory)
+	v.SetDefault("action.codegen.uri", "")
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
@@ -348,16 +385,17 @@ func (ec *ExecutionContext) readConfig() error {
 		adminSecret = v.GetString("access_key")
 	}
 	ec.Config = &Config{
+		Version:           v.GetString("version"),
 		Endpoint:          v.GetString("endpoint"),
 		AdminSecret:       adminSecret,
 		MetadataDirectory: v.GetString("metadata_directory"),
 		Action: actions.ActionExecutionConfig{
-			Kind:    v.GetString("action.default_kind"),
-			Handler: v.GetString("action.default_handler"),
-			Scaffold: actions.ScaffoldExecutionConfig{
-				Default:           v.GetString("action.scaffold.default"),
-				OutputDir:         v.GetString("action.scaffold.output_dir"),
-				CustomScaffolders: v.GetStringMapString("action.scaffold.custom_scaffolders"),
+			Kind:                  v.GetString("action.kind"),
+			HandlerWebhookBaseURL: v.GetString("action.handler_webhook_baseurl"),
+			Codegen: actions.CodegenExecutionConfig{
+				Framework: v.GetString("action.codegen.framework"),
+				OutputDir: v.GetString("action.codegen.output_dir"),
+				URI:       v.GetString("action.codegen.uri"),
 			},
 		},
 	}
