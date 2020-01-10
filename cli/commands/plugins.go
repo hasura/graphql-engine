@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"unicode"
 
+	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/plugins/index"
 	"github.com/hasura/graphql-engine/cli/plugins/installation"
@@ -26,18 +28,15 @@ func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return ensureDirs(ec.PluginsPath.BasePath(),
-				ec.PluginsPath.DownloadPath(),
-				ec.PluginsPath.InstallPath(),
-				ec.PluginsPath.BinPath(),
-				ec.PluginsPath.InstallReceiptsPath(),
-			)
+			return gitutil.EnsureCloned(ec.PluginsPath.IndexPath())
 		},
 	}
 	pluginsCmd.AddCommand(
 		newPluginsListCmd(ec),
 		newPluginsInstallCmd(ec),
 		newPluginsUnInstallCmd(ec),
+		newPluginsUpgradeCmd(ec),
+		newPluginsUpdateCmd(ec),
 	)
 	return pluginsCmd
 }
@@ -144,6 +143,17 @@ func HandlePluginCommand(pluginHandler PluginHandler, cmdArgs []string) error {
 
 	return nil
 }
+
+/*
+func checkIndex(_ *cobra.Command, _ []string) error {
+	if ok, err := gitutil.IsGitCloned(paths.IndexPath()); err != nil {
+		return errors.Wrap(err, "failed to check local index git repository")
+	} else if !ok {
+		return errors.New(`hasura local plugin index is not initialized (run "hasura plugins update")`)
+	}
+	return nil
+}
+*/
 
 func ensureDirs(paths ...string) error {
 	for _, p := range paths {

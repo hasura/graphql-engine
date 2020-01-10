@@ -246,7 +246,7 @@ func (ec *ExecutionContext) Prepare() error {
 	}
 
 	// setup plugins path
-	err = ec.GetPluginsPath()
+	err = ec.setupPlugins()
 	if err != nil {
 		return errors.Wrap(err, "setting up plugins path failed")
 	}
@@ -275,9 +275,9 @@ func (ec *ExecutionContext) Prepare() error {
 	return nil
 }
 
-// GetPluginsPath returns the inferred paths for hasura. By default, it assumes
+// setupPlugins create and returns the inferred paths for hasura. By default, it assumes
 // $HOME/.hasura as the base path
-func (ec *ExecutionContext) GetPluginsPath() error {
+func (ec *ExecutionContext) setupPlugins() error {
 	home, err := homedir.Dir()
 	if err != nil {
 		return errors.Wrap(err, "cannot get home directory")
@@ -288,7 +288,20 @@ func (ec *ExecutionContext) GetPluginsPath() error {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
 	ec.PluginsPath = paths.NewPaths(base)
-	return nil
+	ensureDirs := func(paths ...string) error {
+		for _, p := range paths {
+			if err := os.MkdirAll(p, 0755); err != nil {
+				return errors.Wrapf(err, "failed to ensure create directory %q", p)
+			}
+		}
+		return nil
+	}
+	return ensureDirs(ec.PluginsPath.BasePath(),
+		ec.PluginsPath.DownloadPath(),
+		ec.PluginsPath.InstallPath(),
+		ec.PluginsPath.BinPath(),
+		ec.PluginsPath.InstallReceiptsPath(),
+	)
 }
 
 // Validate prepares the ExecutionContext ec and then validates the

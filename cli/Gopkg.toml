@@ -107,3 +107,7 @@
 [[constraint]]
   name = "github.com/graphql-go/graphql"
   version = "0.7.8"
+  
+[[constraint]]
+  name = "gopkg.in/src-d/go-git.v4"
+  version = "4.13.1"
