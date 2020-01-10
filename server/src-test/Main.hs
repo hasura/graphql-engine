@@ -27,6 +27,7 @@ import           Hasura.Server.Migrate
 import qualified Hasura.IncrementalSpec     as IncrementalSpec
 import qualified Hasura.RQL.MetadataSpec    as MetadataSpec
 import qualified Hasura.Server.MigrateSpec  as MigrateSpec
+import qualified Parser.CacheControl        as CacheControlParser
 
 data TestSuites
   = AllSuites !RawConnInfo
@@ -48,6 +49,7 @@ main = parseArgs >>= \case
 unitSpecs :: Spec
 unitSpecs = do
   describe "Hasura.Incremental" IncrementalSpec.spec
+  describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Hasura.RQL.Metadata" MetadataSpec.spec
 
 buildPostgresSpecs :: RawConnInfo -> IO Spec

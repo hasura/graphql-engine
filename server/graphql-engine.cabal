@@ -207,6 +207,9 @@ library
                      , Control.Monad.Stateless
                      , Control.Monad.Unique
 
+                     -- exposed for tests
+                     , Data.Parser.CacheControl
+
                      , Hasura.Prelude
                      , Hasura.App
                      , Hasura.Db
@@ -416,6 +419,7 @@ test-suite graphql-engine-tests
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec
+    Parser.CacheControl
 
 -- Benchmarks related to caching (e.g. the plan cache).
 --
