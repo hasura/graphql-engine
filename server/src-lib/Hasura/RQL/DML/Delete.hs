@@ -66,10 +66,11 @@ validateDeleteQWith
 validateDeleteQWith sessVarBldr prepValBldr
   (DeleteQuery tableName rqlBE mRetCols) = do
   tableInfo <- askTabInfo tableName
+  let coreInfo = _tiCoreInfo tableInfo
 
   -- If table is view then check if it deletable
   mutableView tableName viIsDeletable
-    (_tiViewInfo tableInfo) "deletable"
+    (_tciViewInfo coreInfo) "deletable"
 
   -- Check if the role has delete permissions
   delPerm <- askDelPermInfo tableInfo
@@ -81,7 +82,7 @@ validateDeleteQWith sessVarBldr prepValBldr
   selPerm <- modifyErr (<> selNecessaryMsg) $
              askSelPermInfo tableInfo
 
-  let fieldInfoMap = _tiFieldInfoMap tableInfo
+  let fieldInfoMap = _tciFieldInfoMap coreInfo
       allCols = getCols fieldInfoMap
 
   -- convert the returning cols into sql returing exp
@@ -106,10 +107,10 @@ validateDeleteQWith sessVarBldr prepValBldr
       <> "without \"select\" permission on the table"
 
 validateDeleteQ
-  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m)
   => DeleteQuery -> m (AnnDel, DS.Seq Q.PrepArg)
 validateDeleteQ =
-  liftDMLP1 . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
+  runDMLP1T . validateDeleteQWith sessVarFromCurrentSetting binRHSBuilder
 
 deleteQueryToTx :: Bool -> (AnnDel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 deleteQueryToTx strfyNum (u, p) =

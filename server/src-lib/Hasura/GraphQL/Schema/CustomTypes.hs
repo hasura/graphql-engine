@@ -22,7 +22,7 @@ buildObjectTypeInfo roleName annotatedObjectType =
     { VT._otiDesc = _otdDescription objectDefinition
     , VT._otiName = unObjectTypeName $ _otdName objectDefinition
     , VT._otiImplIFaces = mempty
-    , VT._otiFields = VT.mapFromL VT._fiName $ fields <> catMaybes relationships
+    , VT._otiFields = mapFromL VT._fiName $ fields <> catMaybes relationships
     }
   where
     objectDefinition = _aotDefinition annotatedObjectType
@@ -32,7 +32,7 @@ buildObjectTypeInfo roleName annotatedObjectType =
       \(TypeRelationship name ty remoteTableInfo _) ->
         if isJust (getSelectPermissionInfoM remoteTableInfo roleName) ||
            roleName == adminRole
-        then Just (relationshipToFieldInfo name ty $ _tiName remoteTableInfo)
+        then Just (relationshipToFieldInfo name ty $ _tciName $ _tiCoreInfo $ remoteTableInfo)
         else Nothing
       where
         relationshipToFieldInfo name relTy remoteTableName =
@@ -66,14 +66,14 @@ buildCustomTypesSchema nonObjectTypeMap annotatedObjectTypes roleName =
   unNonObjectTypeMap nonObjectTypeMap <> objectTypeInfos
   where
     objectTypeInfos =
-      VT.mapFromL VT.getNamedTy $
+      mapFromL VT.getNamedTy $
       map (VT.TIObj . buildObjectTypeInfo roleName) $
       Map.elems annotatedObjectTypes
 
 annotateObjectType
-  :: (CacheRM m, MonadError QErr m)
-  => NonObjectTypeMap -> ObjectTypeDefinition -> m AnnotatedObjectType
-annotateObjectType nonObjectTypeMap objectDefinition = do
+  :: (MonadError QErr m)
+  => TableCache -> NonObjectTypeMap -> ObjectTypeDefinition -> m AnnotatedObjectType
+annotateObjectType tableCache nonObjectTypeMap objectDefinition = do
   annotatedFields <-
     fmap Map.fromList $ forM (toList $ _otdFields objectDefinition) $
     \objectField -> do
@@ -87,8 +87,7 @@ annotateObjectType nonObjectTypeMap objectDefinition = do
     \relationship -> do
       let relationshipName = _trName relationship
           remoteTable = _trRemoteTable relationship
-      remoteTableInfoM <- askTabInfoM remoteTable
-      remoteTableInfo <- onNothing remoteTableInfoM $
+      remoteTableInfo <- onNothing (Map.lookup remoteTable tableCache) $
         throw500 $ "missing table info for: " <>> remoteTable
       annotatedFieldMapping <-
         forM (_trFieldMapping relationship) $ \remoteTableColumn -> do
@@ -105,7 +104,7 @@ annotateObjectType nonObjectTypeMap objectDefinition = do
     relationships = fromMaybe [] $ _otdRelationships objectDefinition
     getFieldTypeInfo typeName = do
       let inputTypeInfos = unNonObjectTypeMap nonObjectTypeMap
-                           <> VT.mapFromL VT.getNamedTy defaultTypes
+                           <> mapFromL VT.getNamedTy defaultTypes
       typeInfo <- onNothing (Map.lookup typeName inputTypeInfos) $
         throw500 $ "the type: " <> VT.showNamedTy typeName <>
         " is not found in non-object cutom types"
@@ -117,19 +116,19 @@ annotateObjectType nonObjectTypeMap objectDefinition = do
              VT.showNamedTy typeName
 
 buildCustomTypesSchemaPartial
-  :: (CacheRM m, QErrM m)
-  => CustomTypes -> m (NonObjectTypeMap, AnnotatedObjects)
-buildCustomTypesSchemaPartial customTypes = do
+  :: (QErrM m)
+  => TableCache -> CustomTypes -> m (NonObjectTypeMap, AnnotatedObjects)
+buildCustomTypesSchemaPartial tableCache customTypes = do
   let typeInfos =
         map (VT.TIEnum . convertEnumDefinition) enumDefinitions <>
         -- map (VT.TIObj . convertObjectDefinition) objectDefinitions <>
         map (VT.TIInpObj . convertInputObjectDefinition) inputObjectDefinitions <>
         map (VT.TIScalar . convertScalarDefinition) scalarDefinitions
         -- <> defaultTypes
-      nonObjectTypeMap = NonObjectTypeMap $ VT.mapFromL VT.getNamedTy typeInfos
+      nonObjectTypeMap = NonObjectTypeMap $ mapFromL VT.getNamedTy typeInfos
 
-  annotatedObjectTypes <- VT.mapFromL (_otdName . _aotDefinition) <$>
-    traverse (annotateObjectType nonObjectTypeMap) objectDefinitions
+  annotatedObjectTypes <- mapFromL (_otdName . _aotDefinition) <$>
+    traverse (annotateObjectType tableCache nonObjectTypeMap) objectDefinitions
 
   return (nonObjectTypeMap, annotatedObjectTypes)
   where
@@ -146,7 +145,7 @@ buildCustomTypesSchemaPartial customTypes = do
     convertEnumDefinition enumDefinition =
       VT.EnumTyInfo (_etdDescription enumDefinition)
       (unEnumTypeName $ _etdName enumDefinition)
-      (VT.EnumValuesSynthetic $ VT.mapFromL VT._eviVal $
+      (VT.EnumValuesSynthetic $ mapFromL VT._eviVal $
        map convertEnumValueDefinition $ toList $ _etdValues enumDefinition)
       VT.TLCustom
       where
@@ -159,7 +158,7 @@ buildCustomTypesSchemaPartial customTypes = do
       VT.InpObjTyInfo
       { VT._iotiDesc = _iotdDescription inputObjectDefinition
       , VT._iotiName = unInputObjectTypeName $ _iotdName inputObjectDefinition
-      , VT._iotiFields = VT.mapFromL VT._iviName $ map convertInputFieldDefinition $
+      , VT._iotiFields = mapFromL VT._iviName $ map convertInputFieldDefinition $
                          toList $ _iotdFields inputObjectDefinition
       , VT._iotiLoc = VT.TLCustom
       }

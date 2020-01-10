@@ -209,7 +209,7 @@ export const passWithRemoteSchemaHeader = () => {
     .type('sampleHeaderValue2');
 
   cy.get(getElementFromAlias('add-remote-schema-submit')).click();
-  cy.wait(5000);
+  cy.wait(15000);
   validateRS(getRemoteSchemaName(3, testName), 'success');
   cy.url().should(
     'eq',

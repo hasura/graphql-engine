@@ -193,9 +193,9 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
           flip map (Map.toList $ _aotRelationships annotatedOutputType) $
           \(relationshipName, relationship) ->
             let remoteTableInfo = _trRemoteTable relationship
-                remoteTable = _tiName remoteTableInfo
+                remoteTable = _tciName $ _tiCoreInfo remoteTableInfo
                 filterAndLimitM = getFilterAndLimit remoteTableInfo
-                columnMapping =
+                columnMapping = Map.fromList $
                   [ (unsafePGCol $ coerce k, pgiColumn v)
                   | (k, v) <- Map.toList $ _trFieldMapping relationship
                   ]

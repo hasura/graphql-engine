@@ -4,6 +4,8 @@ import           Hasura.Prelude
 
 import           Data.Aeson
 import           Data.Has
+import           Hasura.Incremental            (Cacheable)
+import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
@@ -11,6 +13,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Permission
 
 -- | A /GraphQL context/, aka the final output of GraphQL schema generation. Used to both validate
