@@ -35,7 +35,20 @@ const getValidAlterOptions = (alterTypeOptions, colName) => {
       ...currentMap,
     };
   }
-
+  // adding text object
+  const text = {
+    value: 'text',
+    label: 'text',
+    key: 'item_0',
+    colIdentifier: 0,
+    description: 'variable-length string, no limit specified',
+  };
+  if (!allOptionsMap.hasOwnProperty('text')) {
+    allOptionsMap.text = text;
+  }
+  if (!allInfo.some(e => e.value === 'text')) {
+    allInfo.push(text);
+  }
   return {
     alterOptions: allInfo,
     alterOptionsValueMap: allOptionsMap,
