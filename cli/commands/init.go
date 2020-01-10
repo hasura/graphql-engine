@@ -140,7 +140,7 @@ func (o *initOptions) createFiles() error {
 		Action: actions.ActionExecutionConfig{
 			Kind:                  o.ActionKind,
 			HandlerWebhookBaseURL: o.ActionHandler,
-			Codegen: actions.CodegenExecutionConfig{
+			Codegen: &actions.CodegenExecutionConfig{
 				Framework: "nodejs-zeit",
 				OutputDir: "./",
 			},

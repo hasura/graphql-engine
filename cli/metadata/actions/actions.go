@@ -81,14 +81,12 @@ type CodegenExecutionConfig struct {
 type ActionExecutionConfig struct {
 	Kind                  string                 `json:"kind"`
 	HandlerWebhookBaseURL string                 `json:"handler_webhook_baseurl"`
-	Codegen               CodegenExecutionConfig `json:"codegen"`
+	Codegen               *CodegenExecutionConfig `json:"codegen"`
 }
 
 type ActionConfig struct {
 	MetadataDir   string
 	ActionConfig  ActionExecutionConfig
-	CodegenConfig *CodegenExecutionConfig
-
 	cmdName string
 }
 
@@ -224,7 +222,7 @@ func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
 		SDL: sdlPayload{
 			Complete: string(graphByt),
 		},
-		CodegenConfig: a.CodegenConfig,
+		CodegenConfig: a.ActionConfig.Codegen,
 		Derive:        derivePld,
 	}
 	resp, err := getActionsCodegen(data, a.cmdName)
