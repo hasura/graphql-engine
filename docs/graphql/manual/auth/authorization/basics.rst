@@ -1,6 +1,6 @@
 .. meta::
    :description: Manage access control with Hasura
-   :keywords: hasura, docs, autorization, access control
+   :keywords: hasura, docs, authorization, access control
 
 Access control basics
 =====================

@@ -1,6 +1,6 @@
 .. meta::
    :description: Manage roles and session variables for permissions with Hasura
-   :keywords: hasura, docs, autorization, access control, permission, role, session variable
+   :keywords: hasura, docs, authorization, access control, permission, role, session variable
 
 Roles & Session variables
 =========================

@@ -1,6 +1,6 @@
 .. meta::
    :description: Manage authentication and authorization with Hasura
-   :keywords: hasura, docs, authentication, auth, autorization
+   :keywords: hasura, docs, authentication, auth, authorization
 
 Authentication & Authorization
 ==============================
