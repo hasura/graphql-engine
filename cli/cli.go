@@ -405,7 +405,7 @@ func (ec *ExecutionContext) readConfig() error {
 		Action: actions.ActionExecutionConfig{
 			Kind:                  v.GetString("action.kind"),
 			HandlerWebhookBaseURL: v.GetString("action.handler_webhook_baseurl"),
-			Codegen: actions.CodegenExecutionConfig{
+			Codegen: &actions.CodegenExecutionConfig{
 				Framework: v.GetString("action.codegen.framework"),
 				OutputDir: v.GetString("action.codegen.output_dir"),
 				URI:       v.GetString("action.codegen.uri"),

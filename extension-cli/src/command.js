@@ -4,12 +4,31 @@ import {
   actionsCodegen
 } from './services';
 import version from './utils/version';
+import fs from 'fs';
+import { getFlagValue, OUTPUT_FILE_FLAG } from './utils/commandUtils';
+import { importDeps } from './utils/dependencies'
 
 const commandArgs = process.argv;
+const outputFilePath = getFlagValue(commandArgs, OUTPUT_FILE_FLAG);
+
+const logOutput = (log) => {
+  try {
+    fs.writeFile(outputFilePath, log, 'utf8', () => {
+      console.log(JSON.stringify({
+        success: true,
+        output_file_path: outputFilePath
+      }));
+    });
+  } catch (e) {
+    console.log(e);
+    console.error({
+      error: `could not write output to "${outputFilePath}"`
+    })
+  }
+};
 
 const handleArgs = () => {
   const rootArg = commandArgs[2];
-
   switch(rootArg) {
     case 'sdl':
       const sdlSubCommands = commandArgs.slice(3);
@@ -29,13 +48,13 @@ try {
   let cliResponse = handleArgs();
   if (cliResponse.constructor.name === 'Promise') {
     cliResponse.then(r => {
-      console.log(r);
+      logOutput(r);
     }).catch(e => {
       console.error(e);
       process.exit(1);
     })
   } else {
-    console.log(cliResponse);
+    logOutput(cliResponse);
   }
 } catch (e) {
   console.error(e);
