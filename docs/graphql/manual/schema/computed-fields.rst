@@ -183,9 +183,10 @@ Computed fields permissions
 
 :doc:`Access control <../auth/authorization/index>` to computed fields depends on the type of computed field.
 
-For scalar computed fields, permissions are managed similar to the columns of the table.
+- For **scalar computed fields**, permissions are managed similar to the :ref:`columns permissions <col-level-permissions>`
+  of the table.
 
-For table computed fields, the permissions set on the returning table are respected.
+- For **table computed fields**, the permissions set on the return table are respected.
 
 
 Computed fields vs. Postgres generated columns
