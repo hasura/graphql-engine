@@ -5,8 +5,9 @@ where
 import           Hasura.Prelude
 
 import           Hasura.Logging
-import           Hasura.RQL.DDL.Schema     (buildSchemaCacheWithoutSetup)
+import           Hasura.RQL.DDL.Schema     (runCacheRWT)
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.App         (SchemaCacheRef (..), withSCUpdate)
 import           Hasura.Server.Init        (InstanceId (..))
 import           Hasura.Server.Logging
@@ -15,6 +16,7 @@ import           Hasura.Server.Query
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.IORef
 
 import qualified Control.Concurrent        as C
 import qualified Control.Concurrent.STM    as STM
@@ -204,11 +206,14 @@ refreshSchemaCache
   -> T.Text -> IO ()
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = do
   -- Reload schema cache from catalog
-  resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger $
-    peelRun emptySchemaCache runCtx pgCtx PG.ReadWrite buildSchemaCacheWithoutSetup
+  resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
+    rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
+    buildSchemaCacheWithOptions CatalogSync
+      & runCacheRWT rebuildableCache
+      & peelRun runCtx pgCtx PG.ReadWrite
   case resE of
-    Left e  -> logError logger threadType $ TEQueryError e
-    Right _ -> logInfo logger threadType $ object ["message" .= msg]
+    Left e   -> logError logger threadType $ TEQueryError e
+    Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
   pgCtx = PGExecCtx pool PG.Serializable

@@ -84,7 +84,7 @@ type AnnOrderByItem = AnnOrderByItemG S.SQLExp
 data AnnRelG a
   = AnnRelG
   { aarName    :: !RelName -- Relationship name
-  , aarMapping :: ![(PGCol, PGCol)] -- Column of left table to join with
+  , aarMapping :: !(HashMap PGCol PGCol) -- Column of left table to join with
   , aarAnnSel  :: !a -- Current table. Almost ~ to SQL Select
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 
@@ -408,7 +408,7 @@ type ArrNodeItem = ArrNodeItemG S.SQLExp
 
 data ObjNode
   = ObjNode
-  { _rnRelMapping :: ![(PGCol, PGCol)]
+  { _rnRelMapping :: !(HashMap PGCol PGCol)
   , _rnNodeDet    :: !BaseNode
   } deriving (Show, Eq)
 
@@ -424,7 +424,7 @@ mergeObjNodes lNode rNode =
 data ArrNode
   = ArrNode
   { _anExtr       :: ![S.Extractor]
-  , _anRelMapping :: ![(PGCol, PGCol)]
+  , _anRelMapping :: !(HashMap PGCol PGCol)
   , _anNodeDet    :: !BaseNode
   } deriving (Show, Eq)
 

@@ -803,7 +803,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 		prev, err := m.sourceDrv.Prev(version)
 		if os.IsNotExist(err) {
 			// apply nil migration
-			migr, err := m.newMigration(version, -1)
+			migr, err := m.metanewMigration(version, -1)
 			if err != nil {
 				ret <- err
 				return
@@ -811,7 +811,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 			ret <- migr
 			go migr.Buffer()
 
-			migr, err = m.metanewMigration(version, -1)
+			migr, err = m.newMigration(version, -1)
 			if err != nil {
 				ret <- err
 				return
@@ -824,7 +824,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 			return
 		}
 
-		migr, err := m.newMigration(version, int64(prev))
+		migr, err := m.metanewMigration(version, int64(prev))
 		if err != nil {
 			ret <- err
 			return
@@ -833,7 +833,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.metanewMigration(version, int64(prev))
+		migr, err = m.newMigration(version, int64(prev))
 		if err != nil {
 			ret <- err
 			return
