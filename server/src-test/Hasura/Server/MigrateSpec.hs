@@ -18,6 +18,7 @@ import qualified Database.PG.Query              as Q
 import           Hasura.RQL.DDL.Metadata        (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
+import           Hasura.Server.Init             (DowngradeOptions (..))
 import           Hasura.Server.Migrate
 import           Hasura.Server.PGDump
 
@@ -62,21 +63,33 @@ spec
   => Q.ConnInfo -> SpecWithCache m
 spec pgConnInfo = do
   let dropAndInit time = CacheRefT $ flip modifyMVar \_ ->
-        dropCatalog *> (swap <$> migrateCatalog time)
+        dropCatalog *> (swap <$> migrateCatalog Nothing time)
+      upgradeToLatest time = CacheRefT $ flip modifyMVar \_ ->
+        swap <$> migrateCatalog Nothing time
+      downgradeTo v time = CacheRefT $ flip modifyMVar \_ ->
+        swap <$> migrateCatalog (Just DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }) time
+      dumpSchema = execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
 
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
       (dropAndInit =<< liftIO getCurrentTime) `shouldReturn` MRInitialized
 
     it "is idempotent" \(NT transact) -> do
-      let dumpSchema = transact $
-            execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
       time <- getCurrentTime
       transact (dropAndInit time) `shouldReturn` MRInitialized
-      firstDump <- dumpSchema
+      firstDump <- transact dumpSchema
       transact (dropAndInit time) `shouldReturn` MRInitialized
-      secondDump <- dumpSchema
+      secondDump <- transact dumpSchema
       secondDump `shouldBe` firstDump
+      
+    it "supports upgrades after downgrade to version 12" \(NT transact) -> do
+      time <- getCurrentTime
+      transact (dropAndInit time) `shouldReturn` MRInitialized
+      downgradeResult <- transact (downgradeTo "12" time)
+      downgradeResult `shouldSatisfy` \case
+        MRMigrated{} -> True
+        _ -> False
+      transact (upgradeToLatest time) `shouldReturn` MRMigrated "12"
 
   describe "recreateSystemMetadata" $ do
     let dumpMetadata = execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo

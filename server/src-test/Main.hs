@@ -74,7 +74,7 @@ buildPostgresSpecs pgConnOptions = do
               >>> runExceptT
               >=> flip onLeft printErrJExit
 
-        schemaCache <- snd <$> runAsAdmin (migrateCatalog =<< liftIO getCurrentTime)
+        schemaCache <- snd <$> runAsAdmin (migrateCatalog Nothing =<< liftIO getCurrentTime)
         cacheRef <- newMVar schemaCache
         pure $ NT (runAsAdmin . flip MigrateSpec.runCacheRefT cacheRef)
 
@@ -85,97 +85,6 @@ parseArgs :: IO TestSuites
 parseArgs = execParser $ info (helper <*> (parseNoCommand <|> parseSubCommand)) $
   fullDesc <> header "Hasura GraphQL Engine test suite"
   where
-<<<<<<< HEAD
-    runMigrateTests pgConnOptions = do
-      env <- getEnvironment
-      rawPGConnInfo <- flip onLeft printErrExit $ runWithEnv env (mkRawConnInfo pgConnOptions)
-      pgConnInfo <- flip onLeft printErrExit $ mkConnInfo rawPGConnInfo
-      pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
-
-      httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-      let runContext = RunCtx adminUserInfo httpManager (SQLGenCtx False)
-          pgContext = PGExecCtx pgPool Q.Serializable
-
-          runAsAdmin :: Run a -> IO (Either QErr a)
-          runAsAdmin = runExceptT . fmap fst . peelRun emptySchemaCache runContext pgContext Q.ReadWrite
-
-      runHspec $ do
-        describe "Hasura.Server.Migrate" $ do
-          let dropAndInit time = runAsAdmin $
-                dropCatalog *> migrateCatalog Nothing time
-              upgradeToLatest time = runAsAdmin $
-                migrateCatalog Nothing time
-              downgradeTo ver time = runAsAdmin $
-                migrateCatalog (Just DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = ver }) time
-              dumpSchema = runAsAdmin $
-                execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
-
-          describe "migrateCatalog" $ do
-            it "initializes the catalog" $ do
-              (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
-
-            it "is idempotent" $ do
-              time <- getCurrentTime
-              dropAndInit time `shouldReturn` Right MRInitialized
-              firstDump <- dumpSchema
-              firstDump `shouldSatisfy` isRight
-              dropAndInit time `shouldReturn` Right MRInitialized
-              secondDump <- dumpSchema
-              secondDump `shouldBe` firstDump
-              
-            it "supports upgrades after downgrade to version 12" $ do
-              time <- getCurrentTime
-              dropAndInit time `shouldReturn` Right MRInitialized
-              firstDump <- dumpSchema
-              firstDump `shouldSatisfy` isRight
-              downgradeResult <- downgradeTo "12" time 
-              downgradeResult `shouldSatisfy` \case
-                Right MRMigrated{} -> True
-                _ -> False
-              upgradeToLatest time `shouldReturn` Right (MRMigrated "12")
-
-          describe "recreateSystemMetadata" $ do
-            let dumpMetadata = runAsAdmin $
-                  execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo
-
-            it "is idempotent" $ do
-              (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
-              firstDump <- dumpMetadata
-              firstDump `shouldSatisfy` isRight
-              runAsAdmin recreateSystemMetadata `shouldReturn` Right ()
-              secondDump <- dumpMetadata
-              secondDump `shouldBe` firstDump
-
-            it "does not create any objects affected by ClearMetadata" $ do
-              (dropAndInit =<< getCurrentTime) `shouldReturn` Right MRInitialized
-              firstDump <- dumpMetadata
-              firstDump `shouldSatisfy` isRight
-              runAsAdmin (runClearMetadata ClearMetadata) `shouldReturn` Right successMsg
-              secondDump <- dumpMetadata
-              secondDump `shouldBe` firstDump
-
-    runPropertyTests = do
-      putStrLn "Running property tests"
-      passed <- isSuccess <$> quickCheckResult (withMaxSuccess 30 prop_replacemetadata)
-      unless passed $ printErrExit "Property tests failed"
-      where
-        prop_replacemetadata =
-          forAll (resize 3 genReplaceMetadata) $ \metadata ->
-            let encodedString = encJToBS $ AO.toEncJSON $ replaceMetadataToOrdJSON metadata
-                eitherResult :: Either String ReplaceMetadata
-                  = eitherDecodeStrict encodedString
-            in case eitherResult of
-                 Left err -> counterexample err False
-                 Right _  -> property True
-
-    runHspec :: Spec -> IO ()
-    runHspec m = do
-      config <- Hspec.readConfig Hspec.defaultConfig []
-      Hspec.evaluateSummary =<< Hspec.runSpec m config
-
-    printErrExit :: String -> IO a
-    printErrExit = (*> exitFailure) . putStrLn
-=======
     parseNoCommand = AllSuites <$> parseRawConnInfo
     parseSubCommand = fmap SingleSuite . subparser $ mconcat
       [ command "unit" $ info (pure UnitSuite) $
@@ -194,4 +103,3 @@ printErrExit = (*> exitFailure) . putStrLn
 
 printErrJExit :: (A.ToJSON a) => a -> IO b
 printErrJExit = (*> exitFailure) . BL.putStrLn . A.encode
->>>>>>> origin
