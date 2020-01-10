@@ -13,6 +13,7 @@ import           System.Process
 import qualified Data.ByteString            as B
 import qualified Data.CaseInsensitive       as CI
 import qualified Data.HashSet               as Set
+import qualified Data.List.NonEmpty         as NE
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.IO               as TI
@@ -207,6 +208,14 @@ instance FromJSON APIVersion where
       1 -> return VIVersion1
       2 -> return VIVersion2
       i -> fail $ "expected 1 or 2, encountered " ++ show i
+
+englishList :: NonEmpty Text -> Text
+englishList = \case
+  one :| []    -> one
+  one :| [two] -> one <> " and " <> two
+  several      ->
+    let final :| initials = NE.reverse several
+    in T.intercalate ", " (reverse initials) <> ", and " <> final
 
 makeReasonMessage :: [a] -> (a -> Text) -> Text
 makeReasonMessage errors showError =

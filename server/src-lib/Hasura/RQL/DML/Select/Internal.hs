@@ -684,10 +684,9 @@ injectJoinCond :: S.BoolExp       -- ^ Join condition
 injectJoinCond joinCond whereCond =
   S.WhereFrag $ S.simplifyBoolExp $ S.BEBin S.AndOp joinCond whereCond
 
-mkJoinCond :: S.Alias -> [(PGCol, PGCol)] -> S.BoolExp
+mkJoinCond :: S.Alias -> HashMap PGCol PGCol -> S.BoolExp
 mkJoinCond baseTablepfx colMapn =
-  foldl' (S.BEBin S.AndOp) (S.BELit True) $ flip map colMapn $
-  \(lCol, rCol) ->
+  foldl' (S.BEBin S.AndOp) (S.BELit True) $ flip map (HM.toList colMapn) $ \(lCol, rCol) ->
     S.BECompare S.SEQ (S.mkQIdenExp baseTablepfx lCol) (S.mkSIdenExp rCol)
 
 baseNodeToSel :: S.BoolExp -> BaseNode -> S.Select
@@ -754,7 +753,7 @@ mkAggSelect :: AnnAggSel -> S.Select
 mkAggSelect annAggSel =
   prefixNumToAliases $ arrNodeToSelect bn extr $ S.BELit True
   where
-    aggSel = AnnRelG rootRelName [] annAggSel
+    aggSel = AnnRelG rootRelName HM.empty annAggSel
     rootIden = Iden "root"
     rootPrefix = Prefixes rootIden rootIden
     ArrNode extr _ bn =

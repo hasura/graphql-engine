@@ -18,8 +18,7 @@ module Hasura.Cache.Bounded
 
 import           Hasura.Prelude     hiding (lookup)
 
-import           Control.Concurrent (getNumCapabilities, myThreadId,
-                                     threadCapability)
+import           Control.Concurrent (getNumCapabilities, myThreadId, threadCapability)
 import           Data.Word          (Word16)
 
 import qualified Data.Aeson         as J
