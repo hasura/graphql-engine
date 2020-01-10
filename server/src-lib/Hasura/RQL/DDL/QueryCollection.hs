@@ -9,7 +9,6 @@ module Hasura.RQL.DDL.QueryCollection
   , runDropCollectionFromAllowlist
   , addCollectionToAllowlistCatalog
   , delCollectionFromAllowlistCatalog
-  , refreshAllowlist
   , fetchAllCollections
   , fetchAllowlist
   , module Hasura.RQL.Types.QueryCollection
@@ -54,7 +53,7 @@ runCreateCollection cc = do
     CreateCollection collName def _ = cc
 
 runAddQueryToCollection
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadTx m)
   => AddQueryToCollection -> m EncJSON
 runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
   CollectionDef qList <- getCollectionDef collName
@@ -64,14 +63,14 @@ runAddQueryToCollection (AddQueryToCollection collName queryName query) = do
     <> queryName <<> " already exists in collection " <>> collName
 
   let collDef = CollectionDef $ qList <> pure listQ
-  collInAllowlist <- liftTx $ updateCollectionDefCatalog collName collDef
-  when collInAllowlist refreshAllowlist
+  liftTx $ updateCollectionDefCatalog collName collDef
+  withNewInconsistentObjsCheck buildSchemaCache
   return successMsg
   where
     listQ = ListedQuery queryName query
 
 runDropCollection
-  :: (QErrM m, MonadTx m, CacheRWM m)
+  :: (MonadTx m, CacheRWM m)
   => DropCollection -> m EncJSON
 runDropCollection (DropCollection collName cascade) = do
   withPathK "collection" $ do
@@ -83,14 +82,14 @@ runDropCollection (DropCollection collName cascade) = do
       if cascade then do
         -- drop collection in allowlist
         liftTx $ delCollectionFromAllowlistCatalog collName
-        refreshAllowlist
+        withNewInconsistentObjsCheck buildSchemaCache
       else throw400 DependencyError $ "query collection with name "
            <> collName <<> " is present in allowlist; cannot proceed to drop"
   liftTx $ delCollectionFromCatalog collName
   return successMsg
 
 runDropQueryFromCollection
-  :: (QErrM m, CacheRWM m, MonadTx m)
+  :: (CacheRWM m, MonadTx m)
   => DropQueryFromCollection -> m EncJSON
 runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
   CollectionDef qList <- getCollectionDef collName
@@ -99,44 +98,27 @@ runDropQueryFromCollection (DropQueryFromCollection collName queryName) = do
     <> queryName <<> " not found in collection " <>> collName
   let collDef = CollectionDef $ flip filter qList $
                                 \q -> _lqName q /= queryName
-  collInAllowlist <- liftTx $ updateCollectionDefCatalog collName collDef
-  when collInAllowlist refreshAllowlist
+  liftTx $ updateCollectionDefCatalog collName collDef
+  withNewInconsistentObjsCheck buildSchemaCache
   return successMsg
 
 runAddCollectionToAllowlist
-  :: (QErrM m, MonadTx m, CacheRWM m)
+  :: (MonadTx m, CacheRWM m)
   => CollectionReq -> m EncJSON
 runAddCollectionToAllowlist (CollectionReq collName) = do
   void $ withPathK "collection" $ getCollectionDef collName
   liftTx $ addCollectionToAllowlistCatalog collName
-  refreshAllowlist
+  withNewInconsistentObjsCheck buildSchemaCache
   return successMsg
 
 runDropCollectionFromAllowlist
-  :: (QErrM m, MonadTx m, CacheRWM m)
+  :: (UserInfoM m, MonadTx m, CacheRWM m)
   => CollectionReq -> m EncJSON
 runDropCollectionFromAllowlist (CollectionReq collName) = do
   void $ withPathK "collection" $ getCollectionDef collName
   liftTx $ delCollectionFromAllowlistCatalog collName
-  refreshAllowlist
+  withNewInconsistentObjsCheck buildSchemaCache
   return successMsg
-
-refreshAllowlist
-  :: (CacheRWM m, MonadTx m) => m ()
-refreshAllowlist = do
-  queries <- liftTx fetchAllowlistQueries
-  replaceAllowlist queries
-  where
-    fetchAllowlistQueries = do
-      r <- map (Q.getAltJ . runIdentity) <$>
-           Q.listQE defaultTxErrorHandler [Q.sql|
-             SELECT qc.collection_defn::json
-               FROM hdb_catalog.hdb_allowlist a
-               LEFT OUTER JOIN
-                 hdb_catalog.hdb_query_collection qc
-                 ON (qc.collection_name = a.collection_name)
-           |] () True
-      return $ concatMap _cdQueries r
 
 getCollectionDef
   :: (QErrM m, MonadTx m)
@@ -190,7 +172,7 @@ delCollectionFromCatalog name =
   |] (Identity name) True
 
 updateCollectionDefCatalog
-  :: CollectionName -> CollectionDef -> Q.TxE QErr Bool
+  :: CollectionName -> CollectionDef -> Q.TxE QErr ()
 updateCollectionDefCatalog collName def = do
   -- Update definition
   Q.unitQE defaultTxErrorHandler [Q.sql|
@@ -198,14 +180,6 @@ updateCollectionDefCatalog collName def = do
        SET collection_defn = $1
      WHERE collection_name = $2
   |] (Q.AltJ def, collName) True
-
-  -- Check whether collection present in allowlist
-  runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
-    [Q.sql|
-       SELECT EXISTS (
-          SELECT 1 FROM hdb_catalog.hdb_allowlist WHERE collection_name = $1
-                     )
-    |] (Identity collName) True
 
 addCollectionToAllowlistCatalog :: CollectionName -> Q.TxE QErr ()
 addCollectionToAllowlistCatalog collName =

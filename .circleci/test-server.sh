@@ -24,7 +24,7 @@ fail_if_port_busy() {
 wait_for_port() {
     local PORT=$1
     echo "waiting for $PORT"
-    for _ in $(seq 1 240);
+    for _ in $(seq 1 60);
     do
       nc -z localhost $PORT && echo "port $PORT is ready" && return
       echo -n .
@@ -218,8 +218,8 @@ run_pytest_parallel() {
 	fi
 }
 
-echo -e "\n$(time_elapsed): <########## RUN GRAPHQL-ENGINE HASKELL TESTS(migrate) ###########################################>\n"
-"${GRAPHQL_ENGINE_TESTS:?}" migrate
+echo -e "\n$(time_elapsed): <########## RUN GRAPHQL-ENGINE HASKELL TESTS ###########################################>\n"
+"${GRAPHQL_ENGINE_TESTS:?}" postgres
 
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
 TEST_TYPE="no-auth"

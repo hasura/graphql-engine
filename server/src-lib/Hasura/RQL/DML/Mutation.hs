@@ -107,7 +107,7 @@ mkSelCTEFromColVals qt allCols colVals =
   where
     tableAls = S.Alias $ Iden $ snakeCaseQualObject qt
     sortedCols = flip sortBy allCols $ \lCol rCol ->
-                 compare (pgiOrdinalPosition lCol) (pgiOrdinalPosition rCol)
+                 compare (pgiPosition lCol) (pgiPosition rCol)
     colNames = map pgiColumn sortedCols
     mkTupsFromColVal colVal =
       fmap S.TupleExp $ forM sortedCols $ \ci -> do

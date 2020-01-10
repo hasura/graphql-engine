@@ -15,9 +15,8 @@ The idea is that your auth server will return JWT tokens, which are decoded and
 verified by the GraphQL engine, to authorize and get metadata about the request
 (``x-hasura-*`` values).
 
-
 .. thumbnail:: ../../../../img/graphql/manual/auth/jwt-auth.png
-
+   :alt: Authentication using JWT
 
 The JWT is decoded, the signature is verified, then it is asserted that the
 current role of the user (if specified in the request) is in the list of allowed roles.
@@ -478,6 +477,7 @@ care of escaping new lines.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
    :width: 75%
+   :alt: Generating JWT config
 
 Auth JWT Examples
 -----------------
