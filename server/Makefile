@@ -32,10 +32,17 @@ ci-build:
 	# recompiled, which is important so that the right git SHA gets used as the executable version.)
 	shopt -s nullglob globstar && \
 		for directory in $(package_directory_glob)/**/opt/cache/; do rm -rf "$$directory"; done
-	## build
+	## configure
 	cp cabal.project.ci cabal.project.local
+	# Passing `--enable-coverage` to `cabal v2-build` appears to enable coverage for all packages, not
+	# just local packages (at least as of cabal-install-2.4.1.0), so add `coverage: true` to the
+	# `cabal.project.local` file in the appropriate package stanza.
+	if [[ -n '$(enable_coverage)' ]]; then \
+		printf '\npackage graphql-engine\n  coverage: true\n' >> cabal.project.local; \
+	fi
 	cabal v2-update
-	cabal v2-build $(build_options)
+	## build
+	cabal v2-build
 	## install
 	mkdir -p '$(build_output)'
 	echo '$(VERSION)' > '$(build_output)/version.txt'

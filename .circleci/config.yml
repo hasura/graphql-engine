@@ -107,13 +107,6 @@ refs:
           GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
         command: |
           OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
-    - run:
-        name: Generate coverage report
-        working_directory: ./server
-        environment:
-          LC_ALL: 'C.UTF-8'
-        command: |
-          hpc report /build/_server_test_output/$PG_VERSION/graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
     - store_artifacts:
         path: /build/_server_test_output
         destination: server_test
@@ -174,7 +167,7 @@ jobs:
             make ci-build
           else
             echo "Non-release branch, build with coverage"
-            make build_options=--enable-coverage ci-build
+            make enable_coverage=true ci-build
           fi
     - run:
         name: Build the docker image
@@ -203,6 +196,7 @@ jobs:
     - persist_to_workspace:
         root: /build
         paths:
+        - dist-newstyle # need .mix files for hpc
         - _server_output # binary is called graphql-engine
 
 
