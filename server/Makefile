@@ -5,7 +5,7 @@ registry := hasura
 VERSION  ?= $(shell ../scripts/get-version.sh)
 export VERSION
 
-packager_ver := 20190923
+packager_ver := 20190731
 pg_dump_ver := 12
 project_dir := $(shell pwd)
 # build_dir := $(project_dir)/$(shell stack path --dist-dir)/build

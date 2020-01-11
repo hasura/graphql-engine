@@ -2,6 +2,7 @@ import gqlPattern, { gqlSchemaErrorNotif } from '../Common/GraphQLValidation';
 import { showErrorNotification } from '../../Common/Notification';
 import { makeMigrationCall, fetchSchemaList } from '../DataActions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 
 const getDropSchemaSql = schemaName => `drop schema "${schemaName}" cascade;`;
 
@@ -19,23 +20,9 @@ export const createNewSchema = (schemaName, successCb, errorCb) => {
       );
     }
 
-    const migrationUp = [
-      {
-        type: 'run_sql',
-        args: {
-          sql: getCreateSchemaSql(schemaName),
-        },
-      },
-    ];
+    const migrationUp = [getRunSqlQuery(getCreateSchemaSql(schemaName))];
 
-    const migrationDown = [
-      {
-        type: 'run_sql',
-        args: {
-          sql: getDropSchemaSql(schemaName),
-        },
-      },
-    ];
+    const migrationDown = [getRunSqlQuery(getDropSchemaSql(schemaName))];
 
     const migrationName = `create_schema_${schemaName}`;
     const requestMsg = 'Creating schema';
@@ -86,14 +73,7 @@ export const deleteCurrentSchema = (successCb, errorCb) => {
       return;
     }
 
-    const migrationUp = [
-      {
-        type: 'run_sql',
-        args: {
-          sql: getDropSchemaSql(currentSchema),
-        },
-      },
-    ];
+    const migrationUp = [getRunSqlQuery(getDropSchemaSql(currentSchema))];
     const migrationName = `drop_schema_${currentSchema}`;
     const requestMsg = 'Dropping schema';
     const successMsg = 'Successfully dropped schema';
