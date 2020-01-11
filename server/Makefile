@@ -16,7 +16,8 @@ build_output := /build/_server_output
 # This glob is a pretty heavy hammer designed to work regardless of `cabal-install` version (see the
 # aforementioned link for why that’s tricky). If `cabal v2-*` ever gets a better way to do this,
 # please replace this with something less hacky.
-executables_glob := dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests}
+package_directory_glob := dist-newstyle/build/*/*/graphql-engine-*
+executables_glob := $(package_directory_glob)/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests}
 
 # assumes this is built in circleci
 ci-build:
@@ -24,7 +25,13 @@ ci-build:
 	# Since we have to rely on `executables_glob` to get the executables (see above), delete them all
 	# before building. This ensures that if `cabal-install` changes in the future, we don’t just copy
 	# the stale, cached build products, since that would be a nightmare to debug.
-	shopt -s nullglob globstar; for file in $(executables_glob); do rm "$$file"; done
+	shopt -s nullglob globstar && for file in $(executables_glob); do rm "$$file"; done
+	# Even though we did the above step to delete the executables, `cabal v2-build` won’t relink them
+	# if none of the sources changed. We can get around this by deleting the `cache` directories.
+	# (This has the convenient side-effect of ensuring files marked with `-fforce-recomp` get
+	# recompiled, which is important so that the right git SHA gets used as the executable version.)
+	shopt -s nullglob globstar && \
+		for directory in $(package_directory_glob)/**/opt/cache/; do rm -rf "$$directory"; done
 	## build
 	cp cabal.project.ci cabal.project.local
 	cabal v2-update
@@ -32,7 +39,7 @@ ci-build:
 	## install
 	mkdir -p '$(build_output)'
 	echo '$(VERSION)' > '$(build_output)/version.txt'
-	shopt -s failglob globstar; cp $(executables_glob) '$(build_output)/'
+	shopt -s failglob globstar && cp $(executables_glob) '$(build_output)/'
 
 # assumes this is built in circleci
 ci-image:

@@ -152,13 +152,13 @@ jobs:
     - *setup_remote_docker
     - restore_cache:
         keys:
-        - server-deps-cache-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
-        - server-deps-cache-{{ checksum "server/cabal.project" }}
-        - server-deps-cache
+        - cabal-store-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        - cabal-store-{{ checksum "server/cabal.project" }}
+        - cabal-store
     - restore_cache:
         keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
-        - server-app-cache-{{ .Branch }}
+        - server-build-{{ .Branch }}-{{ .Revision }}
+        - server-build-{{ .Branch }}
     - run:
         name: Install latest postgresql client tools
         command: |
@@ -189,13 +189,14 @@ jobs:
           make ci-image
           make ci-save-image
     - save_cache:
-        key: server-app-cache-{{ .Branch }}-{{ .Revision }}
+        key: server-build-{{ .Branch }}-{{ .Revision }}
         paths:
         - ./server/dist-newstyle
     - save_cache:
-        key: server-deps-cache-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        key: cabal-store-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
         paths:
-        - ~/.cabal
+        - ~/.cabal/packages
+        - ~/.cabal/store
     - store_artifacts:
         path: /build/_server_output
         destination: server
