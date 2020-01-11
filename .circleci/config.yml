@@ -79,6 +79,10 @@ refs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
+    - restore_cache:
+        keys:
+        # we need the dist-newstyle/ directory for the .mix files, which are used by hpc
+        - server-build-{{ .Branch }}-{{ .Revision }}
     - *wait_for_postgres
     - run:
         name: Install deps
@@ -184,9 +188,9 @@ jobs:
     - save_cache:
         key: server-build-{{ .Branch }}-{{ .Revision }}
         paths:
-        - ./server/dist-newstyle
+        - server/dist-newstyle
     - save_cache:
-        key: cabal-store-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        key: cabal-store-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}-{{ .Revision }}
         paths:
         - ~/.cabal/packages
         - ~/.cabal/store
@@ -196,7 +200,6 @@ jobs:
     - persist_to_workspace:
         root: /build
         paths:
-        - dist-newstyle # need .mix files for hpc
         - _server_output # binary is called graphql-engine
 
 
