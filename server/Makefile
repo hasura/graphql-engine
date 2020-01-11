@@ -48,7 +48,7 @@ ci-image:
 	docker cp '$(build_output)/graphql-engine' dummy:/root/
 	docker run --rm --volumes-from dummy '$(registry)/graphql-engine-packager:$(packager_ver)' /build.sh graphql-engine | tar -x -C packaging/build/rootfs
 	strip --strip-unneeded packaging/build/rootfs/bin/graphql-engine
-	cp '/usr/lib/postgresql/$(pg_dump_ver)/bin/pg_dump packaging/build/rootfs/bin/pg_dump'
+	cp '/usr/lib/postgresql/$(pg_dump_ver)/bin/pg_dump' packaging/build/rootfs/bin/pg_dump
 	upx packaging/build/rootfs/bin/graphql-engine
 	docker build -t '$(registry)/graphql-engine:$(VERSION)' packaging/build/
 
