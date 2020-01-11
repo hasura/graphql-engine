@@ -104,6 +104,7 @@ refs:
           HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
           HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
           GRAPHQL_ENGINE: /build/_server_output/graphql-engine
+          GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
         command: |
           OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
     - run:
@@ -201,8 +202,6 @@ jobs:
     - persist_to_workspace:
         root: /build
         paths:
-        - server/cabal.project.local
-        - server/dist-newstyle
         - _server_output # binary is called graphql-engine
 
 
@@ -277,7 +276,7 @@ jobs:
         name: Run unit tests
         environment:
           GHCRTS: -N2
-        command: cabal new-run graphql-engine-tests unit
+        command: /build/_server_output/graphql-engine-tests unit
 
   test_cli_with_last_release:
     docker:

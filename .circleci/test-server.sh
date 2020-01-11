@@ -206,7 +206,7 @@ run_pytest_parallel() {
 }
 
 echo -e "\n$(time_elapsed): <########## RUN GRAPHQL-ENGINE HASKELL TESTS ###########################################>\n"
-cabal new-run graphql-engine-tests postgres
+"${GRAPHQL_ENGINE_TESTS:?}" postgres
 
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
 TEST_TYPE="no-auth"

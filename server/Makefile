@@ -8,16 +8,31 @@ packager_ver := 20190731
 pg_dump_ver := 12
 build_output := /build/_server_output
 
+# Getting access to the built products with the `cabal v2-*` commands is really awkward; see
+# <https://www.haskell.org/cabal/users-guide/nix-local-build.html#where-are-my-build-products> for a
+# little more context. Ideally, we could use `cabal v2-install` for this, but `v2-install` does
+# strange and complicated things, and I could not get it to work.
+#
+# This glob is a pretty heavy hammer designed to work regardless of `cabal-install` version (see the
+# aforementioned link for why that’s tricky). If `cabal v2-*` ever gets a better way to do this,
+# please replace this with something less hacky.
+executables_glob := dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests}
+
 # assumes this is built in circleci
 ci-build:
-	# build
+	## clean
+	# Since we have to rely on `executables_glob` to get the executables (see above), delete them all
+	# before building. This ensures that if `cabal-install` changes in the future, we don’t just copy
+	# the stale, cached build products, since that would be a nightmare to debug.
+	shopt -s nullglob globstar; for file in $(executables_glob); do rm "$$file"; done
+	## build
 	cp cabal.project.ci cabal.project.local
 	cabal v2-update
 	cabal v2-build $(build_options)
-	# install
+	## install
 	mkdir -p '$(build_output)'
 	echo '$(VERSION)' > '$(build_output)/version.txt'
-	cp "$$(cabal new-exec -- bash -c 'type -P graphql-engine')" '$(build_output)/graphql-engine'
+	shopt -s failglob globstar; cp $(executables_glob) '$(build_output)/'
 
 # assumes this is built in circleci
 ci-image:
