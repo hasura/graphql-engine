@@ -152,8 +152,6 @@ jobs:
         - cabal-store-v1-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
         - cabal-store-v1-{{ checksum "server/cabal.project" }}-
         - cabal-store-v1-
-        # REMOVE ME
-        - cabal-store-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
     - restore_cache:
         keys:
         - server-build-v1-{{ .Branch }}-{{ .Revision }}

@@ -102,6 +102,7 @@ combine_all_hpc_reports() {
 generate_coverage_report() {
   combine_all_hpc_reports
   ( shopt -s failglob globstar
+    cd ~/graphql-engine/server
     # These are the directories where `cabal v2-build --enable-coverage` sticks .mix files. It would
     # be much better if cabal-install supported something like stack’s `stack hpc report`, which
     # passes the right `--hpcdir` options automatically.
