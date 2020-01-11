@@ -1,4 +1,4 @@
-FROM fpco/stack-build:lts-13.20
+FROM haskell:8.6.5
 
 # Install brotli dependencies
 RUN apt-get -y update \
