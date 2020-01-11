@@ -79,12 +79,6 @@ refs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - restore_cache:
-        keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
-    - restore_cache:
-        keys:
-        - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - *wait_for_postgres
     - run:
         name: Install deps
@@ -107,10 +101,9 @@ refs:
           # Setting default number of threads to 2
           # since circleci allocates 2 cpus per test container
           GHCRTS: -N2
-          HASURA_GRAPHQL_DATABASE_URL: 'postgresql://gql_test:@localhost:5432/gql_test'
-          HASURA_GRAPHQL_DATABASE_URL_2: 'postgresql://gql_test:@localhost:5432/gql_test2'
-          GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
-          GRAPHQL_ENGINE_TESTS: '/build/_server_output/graphql-engine-tests'
+          HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
+          HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
+          GRAPHQL_ENGINE: /build/_server_output/graphql-engine
         command: |
           OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
     - run:
@@ -119,7 +112,7 @@ refs:
         environment:
           LC_ALL: 'C.UTF-8'
         command: |
-          stack --system-ghc hpc report /build/_server_test_output/$PG_VERSION/graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
+          hpc report /build/_server_test_output/$PG_VERSION/graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
     - store_artifacts:
         path: /build/_server_test_output
         destination: server_test
@@ -147,7 +140,7 @@ jobs:
   # build the server binary, and package into docker image
   build_server:
     docker:
-    - image: hasura/graphql-engine-server-builder:20200110
+    - image: lexilambda/graphql-engine-server-builder:2020-01-10
     resource_class: large
     working_directory: ~/graphql-engine
     steps:
@@ -158,10 +151,13 @@ jobs:
     - *setup_remote_docker
     - restore_cache:
         keys:
-        - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
+        - server-deps-cache-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        - server-deps-cache-{{ checksum "server/cabal.project" }}
+        - server-deps-cache
     - restore_cache:
         keys:
         - server-app-cache-{{ .Branch }}-{{ .Revision }}
+        - server-app-cache-{{ .Branch }}
     - run:
         name: Install latest postgresql client tools
         command: |
@@ -174,10 +170,10 @@ jobs:
           # for PRs non-optimized build, else optimized build
           if [[ "$CIRCLE_BRANCH" =~ ^(dev|release) || "$CIRCLE_TAG" =~ ^v ]]; then
             echo "Branch starts with dev or release, or tagged commit starts with v. Optimized build"
-            make ci-binary
+            make ci-build
           else
             echo "Non-release branch, build with coverage"
-            make BUILD_FLAGS='--coverage' ci-binary
+            make build_options=--enable-coverage ci-build
           fi
     - run:
         name: Build the docker image
@@ -194,18 +190,20 @@ jobs:
     - save_cache:
         key: server-app-cache-{{ .Branch }}-{{ .Revision }}
         paths:
-        - ./server/.stack-work
+        - ./server/dist-newstyle
     - save_cache:
-        key: server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
+        key: server-deps-cache-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
         paths:
-        - ~/.stack
+        - ~/.cabal
     - store_artifacts:
         path: /build/_server_output
         destination: server
     - persist_to_workspace:
         root: /build
         paths:
-          - _server_output # binary is called graphql-engine
+        - server/cabal.project.local
+        - server/dist-newstyle
+        - _server_output # binary is called graphql-engine
 
 
   # job to execute when all server tests pass. later we can collect test
@@ -225,7 +223,7 @@ jobs:
       PG_VERSION: "12"
       POSTGIS_VERSION: "3.0.0"
     docker:
-    - image: hasura/graphql-engine-server-builder:20200110
+    - image: lexilambda/graphql-engine-server-builder:2020-01-10
     - image: hasura/postgres-12.0-alpine-postgis3:6cbd863d47c0
       <<: *test_pg_env
 
@@ -234,7 +232,7 @@ jobs:
     environment:
       PG_VERSION: "11"
     docker:
-    - image: hasura/graphql-engine-server-builder:20200110
+    - image: lexilambda/graphql-engine-server-builder:2020-01-10
     - image: circleci/postgres:11-alpine-postgis
       <<: *test_pg_env
 
@@ -243,7 +241,7 @@ jobs:
     environment:
       PG_VERSION: "10"
     docker:
-    - image: hasura/graphql-engine-server-builder:20200110
+    - image: lexilambda/graphql-engine-server-builder:2020-01-10
     - image: circleci/postgres:10-alpine-postgis
       <<: *test_pg_env
 
@@ -252,7 +250,7 @@ jobs:
     environment:
       PG_VERSION: "9_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:20200110
+    - image: lexilambda/graphql-engine-server-builder:2020-01-10
     - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
@@ -261,32 +259,25 @@ jobs:
     environment:
       PG_VERSION: "9_5"
     docker:
-    - image: hasura/graphql-engine-server-builder:20200110
+    - image: lexilambda/graphql-engine-server-builder:2020-01-10
     - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
   server_unit_tests:
     resource_class: large
     docker:
-    - image: hasura/graphql-engine-server-builder:20200110
+    - image: lexilambda/graphql-engine-server-builder:2020-01-10
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - restore_cache:
-        keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
-    - restore_cache:
-        keys:
-        - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - run:
         name: Run unit tests
         environment:
           GHCRTS: -N2
-        command: |
-          /build/_server_output/graphql-engine-tests unit
+        command: cabal new-run graphql-engine-tests unit
 
   test_cli_with_last_release:
     docker:

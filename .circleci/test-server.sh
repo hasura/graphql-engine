@@ -80,18 +80,19 @@ combine_all_hpc_reports() {
 	rm -f "$combined_file"
 	IFS=: tix_files_arr=($TIX_FILES)
 	unset IFS
-	for tix_file in "${tix_files_arr[@]}"
-	do
-		if ! [ -f "$tix_file" ] ; then
+	for tix_file in "${tix_files_arr[@]}"; do
+		if ! [ -f "$tix_file" ]; then
 			continue
 		fi
-		if [ -f "$combined_file" ]  ; then
-			GHCRTS_PREV="$GHCRTS"
-			# Unsetting GHCRTS as hpc combine fails if GCHRTS=-N2 is present
-			unset GHCRTS
-			(set -x && stack --allow-different-user exec -- hpc combine "$combined_file" "$tix_file" --union --output="$combined_file_intermediate" && set +x && mv "$combined_file_intermediate" "$combined_file" && rm "$tix_file" ) || true
-			# Restoring GHCRTS
-			export GHCRTS="$GHCRTS_PREV"
+		if [ -f "$combined_file" ]; then
+      # Unset GHCRTS as hpc combine fails if GCHRTS=-N2 is present
+			( unset GHCRTS
+        set -x
+        hpc combine "$combined_file" "$tix_file" --union --output="$combined_file_intermediate"
+        set +x
+        mv "$combined_file_intermediate" "$combined_file"
+        rm "$tix_file"
+      ) || true
 		else
 			mv "$tix_file" "$combined_file" || true
 		fi
@@ -134,11 +135,6 @@ if [ -z "${HASURA_GRAPHQL_DATABASE_URL_2:-}" ] ; then
 	exit 1
 fi
 
-if ! stack --allow-different-user exec which hpc ; then
-	echo "hpc not found; Install it with 'stack install hpc'"
-	exit 1
-fi
-
 CIRCLECI_FOLDER="${BASH_SOURCE[0]%/*}"
 cd $CIRCLECI_FOLDER
 CIRCLECI_FOLDER="$PWD"
@@ -165,15 +161,6 @@ TIX_FILES=""
 
 cd $PYTEST_ROOT
 
-if ! stack --allow-different-user exec -- which graphql-engine > /dev/null && [ -z "${GRAPHQL_ENGINE:-}" ] ; then
-	echo "Do 'stack build' before tests, or export the location of executable in the GRAPHQL_ENGINE envirnoment variable"
-	exit 1
-fi
-GRAPHQL_ENGINE=${GRAPHQL_ENGINE:-"$(stack --allow-different-user exec -- which graphql-engine)"}
-if ! [ -x "$GRAPHQL_ENGINE" ] ; then
-	echo "$GRAPHQL_ENGINE is not present or is not an executable"
-	exit 1
-fi
 RUN_WEBHOOK_TESTS=true
 
 for port in 8080 8081 9876 5592
@@ -219,7 +206,7 @@ run_pytest_parallel() {
 }
 
 echo -e "\n$(time_elapsed): <########## RUN GRAPHQL-ENGINE HASKELL TESTS ###########################################>\n"
-"${GRAPHQL_ENGINE_TESTS:?}" postgres
+cabal new-run graphql-engine-tests postgres
 
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
 TEST_TYPE="no-auth"
