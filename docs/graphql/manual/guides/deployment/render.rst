@@ -1,6 +1,4 @@
-.. _deploy_azure_ci_pg:
-
-Hasura GraphQL engine on Render using Web Services and Postgres
+Hasura GraphQL Engine on Render
 ====================================================================
 
 .. contents:: Table of contents
@@ -15,12 +13,57 @@ This guide talks about how to deploy the Hasura GraphQL engine on `Render
 Pre-requisites
 --------------
 
-- GitHub account
+- GitHub (or alternative) account
 - Render account associated with a Github account and with billing enabled
 
 
-Provision a PostgreSQL server
------------------------------
+Create a repository
+-------------------
+
+Create a new GitHub repository
+
+Within the new repository, create a new file named ``Dockerfile`` that 
+references the latest Hasura GraphQL Engine docker image by including the 
+following single line in the file:
+
+.. code-block:: bash
+
+   FROM hasura/graphql-engine:latest
+
+
+Using Render Infrastrcuture as Code (Fastest)
+---------------------------------------------
+
+In the same repository, create a second new file, this one named 
+``render.yaml``. Includes the following Render Infrastrcuture as 
+Code configuration:
+
+.. code-block:: yaml
+
+   services:
+   - type: web
+     name: hasura
+     env: docker
+     healthCheckPath: /
+     envVars:
+     - key: HASURA_GRAPHQL_DATABASE_URL
+       fromDatabase:
+         name: hasura
+         property: connectionString
+     - key: HASURA_GRAPHQL_ENABLE_CONSOLE
+       value: true
+   databases:
+   - name: hasura
+
+Within the Render Dashboard, find the YAML section and the New from 
+YAML button or `go directly there <https://dashboard.render.com/select-repo?type=iac>`_ 
+and select the repository you've created.
+
+This it! Skip to notes about the Hasura Console and debugging with logs below.
+
+
+Provision the Database and Web Service Manually (Alternate Method)
+------------------------------------------------------------------
 
 .. note::
 
@@ -30,19 +73,7 @@ Create a Postgres server by providing a name in Render's `New Database
 configuration page <https://dashboard.render.com/new/database>`__.
 
 Once created, you'll see an Internal Connection String which 
-is the database URL you will use in the next step.
-
-Create a Web Service
----------------------------
-
-Create a new GitHub repository
-
-Create a new file named ``Dockerfile`` in the new repository that references Hasura 
-by including the following single line in the file:
-
-.. code-block:: bash
-
-   FROM hasura/graphql-engine:latest
+is the database URL used in the next step.
 
 Create a web service by selecting the repository you just created in the `New Web 
 Service configuration page <https://dashboard.render.com/select-repo?type=web>`__. 
