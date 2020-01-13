@@ -4,6 +4,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   ( ScheduleType(..)
   , CreateScheduledTrigger(..)
   , RetryConfST(..)
+  , DeleteScheduledTrigger(..)
   , CancelScheduledEvent(..)
   , formatTime'
   ) where
@@ -94,6 +95,13 @@ instance FromJSON CreateScheduledTrigger where
       pure CreateScheduledTrigger {..}
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
+
+
+newtype DeleteScheduledTrigger
+  = DeleteScheduledTrigger { dst :: ET.TriggerName }
+  deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteScheduledTrigger)
 
 newtype CancelScheduledEvent
   = CancelScheduledEvent { cseId :: T.Text }

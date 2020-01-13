@@ -120,6 +120,7 @@ module Hasura.RQL.Types.SchemaCache
 
        , ScheduledTriggerInfo(..)
        , addScheduledTriggerToCache
+       , removeScheduledTriggerFromCache
        ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -690,7 +691,19 @@ delEventTriggerFromCache qt trn = do
 addScheduledTriggerToCache :: (QErrM m, CacheRWM m) => ScheduledTriggerInfo -> m ()
 addScheduledTriggerToCache stInfo = do
   sc <- askSchemaCache
+  onJust (M.lookup stName (scScheduledTriggers sc)) $ \_ ->
+    throw400 AlreadyExists $ "scheduled trigger " <> triggerNameToTxt stName <> " already exists"
   let scScheduledTriggers' = M.insert (stiName stInfo) stInfo $ scScheduledTriggers sc
+  writeSchemaCache $ sc {scScheduledTriggers = scScheduledTriggers'}
+  where
+    stName = stiName stInfo
+
+removeScheduledTriggerFromCache :: (QErrM m, CacheRWM m) => TriggerName -> m ()
+removeScheduledTriggerFromCache stName = do
+  sc <- askSchemaCache
+  void $ onNothing (M.lookup stName (scScheduledTriggers sc)) $
+    throw400 NotFound "scheduled trigger not found"
+  let scScheduledTriggers' = M.delete stName (scScheduledTriggers sc)
   writeSchemaCache $ sc {scScheduledTriggers = scScheduledTriggers'}
 
 addFunctionToCache

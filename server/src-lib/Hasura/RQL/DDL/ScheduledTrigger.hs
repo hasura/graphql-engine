@@ -1,5 +1,6 @@
 module Hasura.RQL.DDL.ScheduledTrigger
   ( runCreateScheduledTrigger
+  , runDeleteScheduledTrigger
   , runCancelScheduledEvent
   ) where
 
@@ -11,8 +12,10 @@ import           Hasura.RQL.DDL.EventTrigger ( getWebhookInfoFromConf
                                              , getHeaderInfosFromConf)
 import           Hasura.RQL.Types.Helpers
 import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.EventTrigger (TriggerName)
 import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types.SchemaCache ( addScheduledTriggerToCache
+                                              , removeScheduledTriggerFromCache
                                               , ScheduledTriggerInfo(..))
 
 import qualified Database.PG.Query     as Q
@@ -20,8 +23,8 @@ import qualified Database.PG.Query     as Q
 runCreateScheduledTrigger :: CacheBuildM m => CreateScheduledTrigger ->  m EncJSON
 runCreateScheduledTrigger q = do
   sti <- addScheduledTriggerSetup q
-  addScheduledTriggerToCatalog q
   addScheduledTriggerToCache sti
+  addScheduledTriggerToCatalog q
   return successMsg
 
 addScheduledTriggerToCatalog :: CacheBuildM m => CreateScheduledTrigger ->  m ()
@@ -49,12 +52,26 @@ addScheduledTriggerSetup CreateScheduledTrigger {..} = do
           headerInfo
   pure stInfo
 
+runDeleteScheduledTrigger :: CacheBuildM m => DeleteScheduledTrigger -> m EncJSON
+runDeleteScheduledTrigger (DeleteScheduledTrigger stName) = do
+  removeScheduledTriggerFromCache stName
+  deleteScheduledTriggerFromCatalog stName
+  return successMsg
+
+deleteScheduledTriggerFromCatalog :: CacheBuildM m => TriggerName -> m ()
+deleteScheduledTriggerFromCatalog stName = liftTx $ do
+  Q.unitQE defaultTxErrorHandler
+   [Q.sql|
+    DELETE FROM hdb_catalog.hdb_scheduled_trigger
+    WHERE name = $1
+   |] (Identity stName) False
+
 runCancelScheduledEvent :: CacheBuildM m => CancelScheduledEvent -> m EncJSON
 runCancelScheduledEvent se = do
   affectedRows <- deleteScheduledEventFromCatalog se
   if | affectedRows == 1 -> pure successMsg
      | affectedRows == 0 -> throw400 NotFound "scheduled event not found"
-     | otherwise -> throw500 "more than one scheduled events cancelled"
+     | otherwise -> throw500 "unexpected: more than one scheduled events cancelled"
 
 deleteScheduledEventFromCatalog :: CacheBuildM m => CancelScheduledEvent -> m Int
 deleteScheduledEventFromCatalog se = liftTx $ do
