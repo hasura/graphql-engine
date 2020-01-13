@@ -15,6 +15,7 @@ module Hasura.Db
   , commitTx
   , withUserInfo
   , sessionInfoJsonExp
+  , setHeadersTx
 
   , RespTx
   , LazyRespTx

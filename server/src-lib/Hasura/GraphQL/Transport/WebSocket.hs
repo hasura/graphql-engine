@@ -27,9 +27,9 @@ import qualified Hasura.GraphQL.Transport.WebSocket.Transaction.Handlers as WTH
 import qualified Hasura.Logging                                          as L
 
 onConn
-  :: (MonadIO m, UserAuthentication m)
-  => AuthMode -> WSServerEnv -> WS.OnConnH m ConnState
-onConn authMode serverEnv wsId requestHead = do
+  :: (MonadIO m)
+  => WSServerEnv -> WS.OnConnH m ConnState
+onConn serverEnv wsId requestHead = do
   let requestHeaders = WS.requestHeaders requestHead
   case find (\h -> fst h == "sec-websocket-protocol") requestHeaders of
     Nothing      -> queryConnHandler
@@ -45,9 +45,8 @@ onConn authMode serverEnv wsId requestHead = do
       logger = _wseLogger serverEnv
       corsPolicy = _wseCorsPolicy serverEnv
       pgExecCtx = _wseRunTx serverEnv
-      httpMgr = _wseHManager serverEnv
       queryConnHandler = WQH.onConnHandler logger corsPolicy wsId requestHead
-      txConnHandler = WTH.onConnHandler logger authMode httpMgr pgExecCtx wsId requestHead
+      txConnHandler = WTH.onConnHandler logger pgExecCtx wsId requestHead
       reject qErr = pure $ Left $ WS.RejectRequest
                     (H.statusCode $ qeStatus qErr)
                     (H.statusMessage $ qeStatus qErr) []
@@ -59,7 +58,7 @@ onMessage
 onMessage authMode serverEnv wsConn bytes =
   case WS.getData wsConn of
     CSQueries connData      -> WQH.onMessageHandler authMode serverEnv connData wsConn bytes
-    CSTransaction pgConnCtx -> WTH.onMessageHandler serverEnv pgConnCtx wsConn bytes
+    CSTransaction pgConnCtx -> WTH.onMessageHandler authMode serverEnv pgConnCtx wsConn bytes
 
 onClose :: MonadIO m => L.Logger L.Hasura -> LQ.LiveQueriesState -> WS.OnCloseH m ConnState
 onClose logger lqMap wsConn =
@@ -82,7 +81,7 @@ createWSServerApp authMode serverEnv =
   where
     handlers =
       WS.WSHandlers
-      (onConn authMode serverEnv)
+      (onConn serverEnv)
       (onMessage authMode serverEnv)
       (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)
 

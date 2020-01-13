@@ -8,12 +8,14 @@ import           Hasura.Server.Utils
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Time.Clock
 
 import qualified Hasura.GraphQL.Transport.WebSocket.Server as WS
 import qualified Hasura.Logging                            as L
 
 import qualified Control.Concurrent.STM                    as STM
 import qualified Database.PG.Query                         as PG
+import qualified Network.HTTP.Types                        as H
 
 data PGConnCtx
   = PGConnCtx
@@ -22,15 +24,17 @@ data PGConnCtx
   }
 
 data TxStatus
-  = TxBegin
+  = TxNotInitialised ![H.Header] -- ^ client headers
+  | TxBegin
+    !UserInfo -- ^ session user
+    !(Maybe UTCTime) -- ^ JWT expiry time
   | TxCommit
   | TxAbort
   deriving (Eq)
 
 data WSTxData
   = WSTxData
-  { _wtdUserInfo  :: !UserInfo
-  , _wtdErrorType :: !WS.ErrRespType
+  { _wtdErrorType :: !WS.ErrRespType
   , _wtdPgConn    :: !PGConnCtx
   , _wtdTxStatus  :: !(STM.TVar TxStatus)
   }
@@ -56,7 +60,8 @@ $(deriveToJSON
 data WSEvent
   = EAccepted
   | ERejected !QErr
-  | EConnErr !Text
+  | EInitErr !Text
+  | EInitialised
   | EOperation !Operation
   | EQueryError !QErr
   | EClosed

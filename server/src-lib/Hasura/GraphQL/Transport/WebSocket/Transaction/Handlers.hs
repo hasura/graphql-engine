@@ -16,7 +16,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth                                      (AuthMode,
                                                                           UserAuthentication,
                                                                           resolveUserInfo)
-import           Hasura.Server.Init                                      (readIsoLevel)
 import           Hasura.Server.Utils
 
 import           Control.Concurrent                                      (threadDelay)
@@ -28,55 +27,51 @@ import qualified Hasura.Logging                                          as L
 
 import qualified Control.Concurrent.STM                                  as STM
 import qualified Data.ByteString.Lazy                                    as BL
+import qualified Data.CaseInsensitive                                    as CI
+import qualified Data.HashMap.Strict                                     as Map
 import qualified Data.Text                                               as T
 import qualified Data.Time.Clock                                         as TC
 import qualified Database.PG.Query                                       as PG
-import qualified Network.HTTP.Client                                     as H
 import qualified Network.HTTP.Types                                      as H
 import qualified Network.WebSockets                                      as WS
 
 onConnHandler
-  :: (MonadIO m, UserAuthentication m)
+  :: (MonadIO m)
   => L.Logger L.Hasura
-  -> AuthMode
-  -> H.Manager
   -> PGExecCtx
   -> WS.OnConnH m ConnState
-onConnHandler lg@(L.Logger logger) authMode httpMgr pgExecCtx wsId requestHead = do
+onConnHandler (L.Logger logger) pgExecCtx wsId requestHead = do
   resE <- runExceptT resolveAll
   case resE of
     Left e -> reject e
-    Right (pgConn, localPool, userInfo, expTyM, errTy) -> do
-      txStatus <- liftIO $ STM.newTVarIO TxBegin
+    Right (pgConn, localPool, errTy) -> do
+      txStatus <- liftIO $ STM.newTVarIO $ TxNotInitialised $ WS.requestHeaders requestHead
       let acceptRequest = WS.defaultAcceptRequest
                       { WS.acceptSubprotocol = Just "graphql-tx"}
           pgConnCtx = PGConnCtx pgConn localPool
-          connData = WSTxData userInfo errTy pgConnCtx txStatus
+          connData = WSTxData errTy pgConnCtx txStatus
       logger $ mkInfoLog wsId EAccepted
-      pure $ Right $ WS.AcceptWith (CSTransaction connData) acceptRequest Nothing (jwtExpiryHandler <$> expTyM)
+      pure $ Right $ WS.AcceptWith (CSTransaction connData) acceptRequest Nothing (Just $ jwtExpiryHandler txStatus)
   where
-    PGExecCtx pool txIso = pgExecCtx
-    resolveIsolevelHeader headers = do
-      let isoLevelHeader = "x-hasura-tx-isolation"
-      case getRequestHeader isoLevelHeader headers of
-        Nothing  -> pure txIso
-        Just val -> either (throw404 . ((bsToTxt isoLevelHeader <> ": ") <>) . T.pack)
-                    pure $ readIsoLevel $ T.unpack $ bsToTxt val
-
-    jwtExpiryHandler expTime _ = do
+    PGExecCtx pool _ = pgExecCtx
+    jwtExpiryHandler txStatusTVar _ = do
+      expTime <- liftIO $ STM.atomically $ do
+        txStatus <- STM.readTVar txStatusTVar
+        case txStatus of
+          TxNotInitialised _ -> STM.retry
+          TxBegin _ expTimeM -> maybe STM.retry pure expTimeM
+          TxCommit           -> STM.retry
+          TxAbort            -> STM.retry
       currTime <- TC.getCurrentTime
       threadDelay $ diffTimeToMicro $ TC.diffUTCTime expTime currTime
 
     resolveAll = do
       errTy <- WS.checkPath requestHead
-      let headers = WS.requestHeaders requestHead
-      (userInfo, expTyM) <- liftEither =<< lift (resolveUserInfo lg httpMgr headers authMode)
       maybePGConn <- liftIO $ PG.getPGConnMaybe pool
-      (pgConn, localPool) <- maybe (throw404 "unable to acquire connection from pool, please try again") pure maybePGConn
-      -- Run begin transaction
-      txIsoLevel <- resolveIsolevelHeader headers
-      runLazyTxWithConn pgConn $ beginTx txIsoLevel
-      pure (pgConn, localPool, userInfo, expTyM, errTy)
+      (pgConn, localPool) <- maybe
+                             (throw404 "unable to acquire connection from pool, please try again")
+                             pure maybePGConn
+      pure (pgConn, localPool, errTy)
 
     reject qErr = do
       logger $ mkErrorLog wsId $ ERejected qErr
@@ -85,74 +80,139 @@ onConnHandler lg@(L.Logger logger) authMode httpMgr pgExecCtx wsId requestHead =
         (H.statusMessage $ qeStatus qErr) []
         (BL.toStrict $ encode $ encodeGQLErr False qErr)
 
-onMessageHandler :: forall m. (MonadIO m)
-                 => WSServerEnv -> WSTxData -> WSConn -> BL.ByteString -> m ()
-onMessageHandler serverEnv wsTxData wsConn rawMessage =
+onMessageHandler :: forall m. (MonadIO m, UserAuthentication m)
+                 => AuthMode -> WSServerEnv -> WSTxData -> WSConn -> BL.ByteString -> m ()
+onMessageHandler authMode serverEnv wsTxData wsConn rawMessage =
   case eitherDecode rawMessage of
     Left e -> do
-      let errMsg = ErrorMessage Nothing wsId $ errFn $ err400 BadRequest $
+      let errMsg = ErrorMessage Nothing wsId $ encodeQErr True $ err400 BadRequest $
                    "parsing ClientMessage failed: " <> T.pack e
       sendMsg wsConn $ SMError errMsg
     Right msg -> case msg of
-      CMExecute (ExecutePayload maybeReqId query) -> do
-        reqId <- liftIO $ maybe (RequestId <$> generateFingerprint) pure maybeReqId
-        handleError (Just reqId) $ execute reqId query
-      CMAbort           ->
-        handleError Nothing $ do
-          logOp OAbort
+      CMInit initPayload       -> onInit initPayload
+      CMExecute executePayload -> onExecute executePayload
+      CMAbort                  ->
+        runCommand do
+          lift $ logOp OAbort
           runLazyTxWithConn pgConn abortTx
           modifyTxStatus TxAbort
           pure $ SMClose wsId "Executed 'ABORT' command"
       CMCommit          ->
-        handleError Nothing $ do
-          logOp OCommit
+        runCommand do
+          lift $ logOp OCommit
           runLazyTxWithConn pgConn commitTx
           modifyTxStatus TxCommit
           pure $ SMClose wsId "Executed 'COMMIT' command"
   where
-    WSServerEnv (L.Logger logger) pgExecCtx _ getSchemaCache _ _ sqlGenCtx planCache _ enableAL = serverEnv
+    WSServerEnv lg@(L.Logger logger) pgExecCtx _ getSchemaCache manager _ sqlGenCtx planCache _ enableAL = serverEnv
     wsId = WS.getWSId wsConn
     pgConn = _pccConn $ _wtdPgConn wsTxData
-    userInfo = _wtdUserInfo wsTxData
     errTy = _wtdErrorType wsTxData
-    logOp op = logger $ mkInfoLog wsId $ EOperation op
-    modifyTxStatus status = liftIO $ STM.atomically $ STM.writeTVar (_wtdTxStatus wsTxData) status
+    txStatusTVar = _wtdTxStatus wsTxData
+    logOp op = liftIO $ logEvent $ EOperation op
+    logError ev = logger $ mkErrorLog wsId ev
+    logEvent ev = logger $ mkInfoLog wsId ev
+    modifyTxStatus status = liftIO $ STM.atomically $ STM.writeTVar txStatusTVar status
 
-    execute :: RequestId -> GQLReqUnparsed -> ExceptT QErr m ServerMessage
-    execute reqId query = do
-      (sc, scVer) <- liftIO getSchemaCache
-      execPlan <- E.getResolvedExecPlan pgExecCtx
-                   planCache userInfo sqlGenCtx enableAL sc scVer query
-      case execPlan of
-        E.GExPHasura resolvedOp -> do
-          logOp $ OExecute $ ExecuteQuery reqId query
-          (tx, genSql) <- case resolvedOp of
-            E.ExOpQuery queryTx genSql -> pure (queryTx, genSql)
-            E.ExOpMutation mutationTx -> pure (mutationTx, Nothing)
-            E.ExOpSubs _ -> throw400 NotSupported "Subscriptions are not allowed in graphql transactions"
-          logger $ QueryLog query genSql reqId
-          res <- runLazyTxWithConn pgConn tx
-          pure $ SMData $ DataMessage reqId wsId $ GRHasura $ GQSuccess $ encJToLBS res
-        E.GExPRemote _ _  ->
-          throw400 NotSupported "Remote server queries are not supported over graphql transactions"
-
-    handleError :: Maybe RequestId -> ExceptT QErr m ServerMessage -> m ()
-    handleError maybeReqId action = do
-      resE <- runExceptT action
-      case resE of
-        Right m -> do
-          sendMsg wsConn m
-          case m of
-            SMClose _ _ -> liftIO $ do
-              WS.closeConn wsConn "Closing connection after 'Commit' and 'Abort'"
-            _ -> pure ()
+    withUser maybeReqId f = do
+      userInfoE <- runExceptT getUserInfo
+      case userInfoE of
         Left e -> do
-          logger $ mkErrorLog wsId $ EQueryError e
-          sendMsg wsConn $ SMError $ ErrorMessage maybeReqId wsId $ errFn e
-          when (qeError e == "connection error") $ do
-            liftIO $ WS.closeConn wsConn "PG Connection error occured, closing the connection now"
+          logError $ EQueryError e
+          sendMsg wsConn $ SMError $ ErrorMessage maybeReqId wsId $ String $ qeError e
+        Right userInfo -> f userInfo
+      where
+        getUserInfo = do
+          txStatus <- liftIO $ STM.readTVarIO txStatusTVar
+          case txStatus of
+            TxNotInitialised _ -> throw500 "query received without transaction init"
+            TxBegin userInfo _ -> pure userInfo
+            TxCommit           -> throw500 "transaction already committed"
+            TxAbort            -> throw500 "transaction already aborted"
 
-    errFn =
+    onInit :: InitPayload -> m ()
+    onInit (InitPayload (TxIsolation txIso) paramHeaders) = do
+      txStatus <- liftIO $ STM.readTVarIO txStatusTVar
+
+      eitherResult <- runExceptT $ case txStatus of
+        TxNotInitialised clientHeaders -> do
+          let reqHeaders = (Map.toList . Map.fromList) $
+                           (map ((CI.mk . txtToBs) *** txtToBs) $ Map.toList paramHeaders)
+                           <> clientHeaders
+          userInfoE <- lift $ resolveUserInfo lg manager reqHeaders authMode
+          (userInfo, expTime) <- liftEither userInfoE
+          runLazyTxWithConn pgConn $ do
+            -- Run BEGIN command
+            beginTx txIso
+            -- Set session variables
+            liftTx $ setHeadersTx $ userVars userInfo
+          modifyTxStatus $ TxBegin userInfo expTime
+
+        _ -> throw500 "transaction cannot be initialised more than once in a single WebSocket session"
+
+      case eitherResult of
+        Left e -> do
+          let errMsg = qeError e
+          liftIO $ logEvent $ EInitErr errMsg
+          sendMsg wsConn $ SMInitErr errMsg
+        Right _ -> do
+          liftIO $ logEvent EInitialised
+          sendMsg wsConn SMInitialised
+
+    onExecute :: ExecutePayload -> m ()
+    onExecute (ExecutePayload maybeReqId query) = do
+      reqId <- liftIO $ maybe (RequestId <$> generateFingerprint) pure maybeReqId
+      withUser (Just reqId) $ \userInfo -> do
+        logOp $ OExecute $ ExecuteQuery reqId query
+        (sc, scVer) <- liftIO getSchemaCache
+        execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
+                     planCache userInfo sqlGenCtx enableAL sc scVer query
+        case execPlanE of
+          Left e -> do
+            logError $ EQueryError e
+            let err = case errTy of
+                  WS.ERTLegacy -> errFn userInfo e
+                  -- Pre execute GraphQL error format
+                  WS.ERTGraphqlCompliant -> object ["errors" .= [errFn userInfo e]]
+            sendMsg wsConn $ SMError $ ErrorMessage (Just reqId) wsId err
+
+          Right execPlan -> do
+            eitherResult <- runExceptT $ case execPlan of
+              E.GExPHasura resolvedOp -> do
+                (tx, genSql) <- case resolvedOp of
+                  E.ExOpQuery queryTx genSql -> pure (queryTx, genSql)
+                  E.ExOpMutation mutationTx -> pure (mutationTx, Nothing)
+                  E.ExOpSubs _ -> throw400 NotSupported "Subscriptions are not allowed in graphql transactions"
+                logger $ QueryLog query genSql reqId
+                res <- runLazyTxWithConn pgConn tx
+                pure $ SMData $ DataMessage reqId wsId $ GRHasura $ GQSuccess $ encJToLBS res
+              E.GExPRemote _ _  ->
+                throw400 NotSupported "Remote server queries are not supported over graphql transactions"
+
+            case eitherResult of
+              Left e -> handleError userInfo (Just reqId) e
+              Right r -> sendMsg wsConn r
+
+
+    runCommand :: ExceptT QErr m ServerMessage -> m ()
+    runCommand action =
+      withUser Nothing $ \userInfo -> do
+        eitherResult <- runExceptT action
+        case eitherResult of
+          Left e -> handleError userInfo Nothing e
+          Right sm -> do
+            sendMsg wsConn sm
+            liftIO $ WS.closeConn wsConn "Closing connection after 'commit' and 'abort'"
+
+
+    handleError :: UserInfo -> Maybe RequestId -> QErr -> m ()
+    handleError userInfo maybeReqId qErr = do
+      logError $ EQueryError qErr
+      sendMsg wsConn $ SMError $ ErrorMessage maybeReqId wsId $ errFn userInfo qErr
+      when (qeError qErr == "connection error") $ do
+        liftIO $ WS.closeConn wsConn "PG Connection error occured, closing the connection now"
+
+    errFn userInfo =
       let isAdmin' = isAdmin $ userRole userInfo
       in case errTy of
            WS.ERTLegacy           -> encodeQErr isAdmin'
@@ -166,10 +226,12 @@ onCloseHandler
   -> m ()
 onCloseHandler (L.Logger logger) wsId wsTxData = do
   txStatus <- liftIO $ STM.atomically $ STM.readTVar txStatusTVar
-  when (txStatus == TxBegin) $ do
-    -- If transaction is not committed or aborted, abort now
-    eRes <- runExceptT $ runLazyTxWithConn pgConn abortTx
-    either (logger . mkErrorLog wsId . EQueryError) pure eRes
+  case txStatus of
+    TxBegin _ _ -> do
+      -- If status is still 'Begin', abort now
+      eRes <- runExceptT $ runLazyTxWithConn pgConn abortTx
+      either (logger . mkErrorLog wsId . EQueryError) pure eRes
+    _ -> pure ()
   logger $ mkInfoLog wsId EClosed
   liftIO $ PG.returnPGConnToPool localPool pgConn
   where
