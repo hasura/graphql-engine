@@ -18,7 +18,6 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Use:               "codegen",
 		Short:             "",
 		SilenceUsage:      true,
-		Args:              cobra.ExactArgs(1),
 		PersistentPreRunE: ensureCLIExtension,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -32,7 +31,7 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.name = args[0]
+			opts.actions = args
 			return opts.run()
 		},
 	}
@@ -42,12 +41,35 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 type actionsCodegenOptions struct {
 	EC *cli.ExecutionContext
-	name               string
+	actions []string
 }
 
-func (o *actionsCodegenOptions) run() error {
+func (o *actionsCodegenOptions) run() (err error) {
+
 	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action, o.EC.CMDName)
-	derivePayload := actions.DerivePayload{
+	var derivePayload actions.DerivePayload
+
+	// if no actions are passed, perform codegen for all actions
+	var codegenActions []string
+	if len(o.actions) == 0 {
+		actionsFileContent, err := actions.GetActionsFileContent(o.EC.MetadataDir)
+		if err != nil {
+			return err
+		}
+		for _, action := range actionsFileContent.Actions {
+			codegenActions = append(codegenActions, action.Name)
+		}
+	} else {
+		codegenActions = o.actions			
 	}
-	return actionCfg.Codegen(o.name, derivePayload)
+
+	for _, actionName := range codegenActions {
+		err = actionCfg.Codegen(actionName, derivePayload)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+
 }

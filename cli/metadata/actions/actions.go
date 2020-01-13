@@ -99,16 +99,19 @@ func New(baseDir string, actionConfig ActionExecutionConfig, cmdName string) *Ac
 }
 
 func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMutation string) error {
-	graphByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, graphqlFileName))
+	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
 	if err != nil {
 		return err
 	}
+
 	doc, err := parser.Parse(parser.ParseParams{
-		Source: string(graphByt),
+		Source: graphqlFileContent,
 	})
+
 	if err != nil {
 		return err
 	}
+
 	for index, def := range doc.Definitions {
 		switch obj := def.(type) {
 		case *ast.ObjectDefinition:
@@ -121,6 +124,7 @@ func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMu
 			}
 		}
 	}
+
 	var defaultSDL string
 	if introSchema == nil {
 		defaultSDL = `
@@ -213,14 +217,14 @@ input SampleInput {
 }
 
 func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
-	graphByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, graphqlFileName))
+	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
 	if err != nil {
 		return err
 	}
 	data := actionsCodegenRequest{
 		ActionName: name,
 		SDL: sdlPayload{
-			Complete: string(graphByt),
+			Complete: graphqlFileContent,
 		},
 		CodegenConfig: a.ActionConfig.Codegen,
 		Derive:        derivePld,
@@ -244,13 +248,13 @@ func (a *ActionConfig) Validate() error {
 }
 
 func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
-	graphByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, graphqlFileName))
+	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
 	if err != nil {
 		return err
 	}
 	sdlFromReq := sdlFromRequest{
 		SDL: sdlPayload{
-			Complete: string(graphByt),
+			Complete: graphqlFileContent,
 		},
 	}
 
@@ -260,12 +264,7 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	}
 
 	// Read actions.yaml
-	commonByt, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, actionsFileName))
-	if err != nil {
-		return err
-	}
-	var oldAction types.Common
-	err = gyaml.Unmarshal(commonByt, &oldAction)
+	oldAction, err := GetActionsFileContent(a.MetadataDir) 
 	if err != nil {
 		return err
 	}
@@ -352,7 +351,7 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	common.Actions = sdlFromResp.Actions
 	common.CustomTypes = sdlFromResp.Types
 	// write actions.yaml and custom_types.yaml
-	commonByt, err = yaml.Marshal(common)
+	commonByt, err := yaml.Marshal(common)
 	if err != nil {
 		return err
 	}
@@ -401,4 +400,22 @@ func (a *ActionConfig) Export(metadata dbTypes.Metadata) error {
 		return err
 	}
 	return nil
+}
+
+func GetActionsFileContent(metadataDir string) (content types.Common, err error) {
+	commonByt, err := ioutil.ReadFile(filepath.Join(metadataDir, actionsFileName))
+	if err != nil {
+		return
+	}
+	err = gyaml.Unmarshal(commonByt, &content)
+	return
+}
+
+func GetActionsGraphQLFileContent(metadataDir string) (sdl string, err error) {
+	commonByt, err := ioutil.ReadFile(filepath.Join(metadataDir, graphqlFileName))
+	if err != nil {
+		return
+	}
+	sdl = string(commonByt)
+	return
 }
