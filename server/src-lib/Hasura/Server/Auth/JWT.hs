@@ -16,20 +16,18 @@ import           Control.Monad                   (when)
 import           Data.IORef                      (IORef, modifyIORef, readIORef)
 
 import           Data.List                       (find)
-import           Data.Time.Clock                 (NominalDiffTime, UTCTime,
-                                                  diffUTCTime, getCurrentTime)
+import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
+                                                  getCurrentTime)
 import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           Network.URI                     (URI)
 
 import           Hasura.HTTP
-import           Hasura.Logging                  (Hasura, LogLevel (..),
-                                                  Logger (..))
+import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (diffTimeToMicro, fmapL,
-                                                  userRoleHeader)
+import           Hasura.Server.Utils             (diffTimeToMicro, fmapL, userRoleHeader)
 
 import qualified Control.Concurrent              as C
 import qualified Crypto.JWT                      as Jose

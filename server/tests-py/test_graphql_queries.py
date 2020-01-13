@@ -305,9 +305,9 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
         check_query_f(hge_ctx, self.dir() + '/query_account_permission_fail.yaml', transport)
 
     # For each non-auto-incrementing column, we have two non-null value inserts (where the value in the first insert < that in second)
-    # A GraphQL top-level field each is made for the non-null inserts, with the non-null value as the input for comparison.
-    # The corresponding result functions take as input the list of non-null values of the columns,
-    # and returns what the expected filtered list will be for each of the above top-level fields for the given comparison operator.
+    # In the GraphQL query, a top-level field is made for every non-null insert, with the non-null value as the input for comparison.
+    # The corresponding set of result functions for a column take as input the list of non-null values for the column,
+    # and returns what the expected filtered list will be for the given comparison operator.
     def generic_various_types_test(self, hge_ctx, transport, oper, query_name, res_fns):
         def exclude_list():
             if oper == '_neq':
@@ -362,6 +362,8 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
         print(row_values)
         return row_values
 
+    def test_in_sql_identifier_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/in_sql_identifier_array.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -681,6 +683,9 @@ class TestGraphQLQueryComputedFields(DefaultTestSelectQueries):
 
     def test_locations(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/locations.yaml', transport)
+
+    def test_float_test(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/float_test.yaml', transport)
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 class TestGraphQLQueryCaching(DefaultTestSelectQueries):

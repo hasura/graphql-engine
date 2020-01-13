@@ -11,6 +11,7 @@ events on specified tables and invoke webhooks to carry out any custom logic.
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/database-event-triggers.png
    :class: no-shadow
+   :alt: Hasura event trigger architecture
 
 Events can be of the following types:
 

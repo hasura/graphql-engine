@@ -444,3 +444,15 @@ args:
       - c42_range_timestamp: "[\"2010-01-02 15:03:01\",\"2010-01-02 15:45:03\")"
       - c43_range_timestamptz: "(\"2014-04-05 12:05:00+00\",\"2014-04-06 16:45:04+00\"]"
       - c44_xml: "<bar>foo</bar>"
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE table_with_sql_identifier
+        ( id serial PRIMARY KEY
+        , sql_id information_schema.sql_identifier );
+      INSERT INTO table_with_sql_identifier (sql_id)
+        VALUES ('one'), ('one'), ('two'), ('three'), ('four'), ('one'), ('two');
+
+- type: track_table
+  args: table_with_sql_identifier
