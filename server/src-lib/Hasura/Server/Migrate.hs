@@ -23,18 +23,18 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                    as A
 import qualified Data.Text                     as T
-import qualified Data.Yaml.TH                  as Y
 import qualified Database.PG.Query             as Q
 import qualified Database.PG.Query.Connection  as Q
 import qualified Language.Haskell.TH.Lib       as TH
 import qualified Language.Haskell.TH.Syntax    as TH
+import qualified Data.HashMap.Strict               as HM
 
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
+import           Hasura.RQL.DDL.Relationship
 import           Hasura.Server.Logging         (StartupLog (..))
 import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
-import           Hasura.Server.Query
 import           Hasura.SQL.Types
 
 dropCatalog :: (MonadTx m) => m ()
@@ -69,7 +69,6 @@ migrateCatalog
    . ( MonadIO m
      , MonadTx m
      , MonadUnique m
-     , UserInfoM m
      , HasHttpManager m
      , HasSQLGenCtx m
      )
@@ -162,9 +161,7 @@ migrateCatalog migrationTime = do
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
       schemaCache <- buildRebuildableSchemaCache
-      snd <$> runCacheRWT schemaCache do
-        recreateSystemMetadata
-        buildSchemaCacheStrict
+      snd <$> runCacheRWT schemaCache recreateSystemMetadata
 
     -- the old 0.8 catalog version is non-integral, so we store it in the database as a string
     getCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
@@ -223,20 +220,77 @@ migrateCatalog migrationTime = do
                                              WHERE name = $2
                                              |] (Q.AltJ $ A.toJSON etc, name) True
 
-recreateSystemMetadata
-  :: ( MonadIO m
-     , MonadTx m
-     , CacheRWM m
-     , UserInfoM m
-     , HasHttpManager m
-     , HasSQLGenCtx m
-     )
-  => m ()
+recreateSystemMetadata :: (MonadTx m) => m ()
 recreateSystemMetadata = do
   runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
-  buildSchemaCache
-  void . runHasSystemDefinedT (SystemDefined True) $
-    runQueryM $$(Y.decodeFile "src-rsr/hdb_metadata.yaml")
+  runHasSystemDefinedT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
+    saveTableToCatalog tableName False emptyTableConfig
+    for_ tableRels \case
+      Left relDef -> insertRelationshipToCatalog tableName ObjRel relDef
+      Right relDef -> insertRelationshipToCatalog tableName ArrRel relDef
+  where
+    systemMetadata :: [(QualifiedTable, [Either ObjRelDef ArrRelDef])]
+    systemMetadata =
+      [ table "information_schema" "tables" []
+      , table "information_schema" "schemata" []
+      , table "information_schema" "views" []
+      , table "information_schema" "columns" []
+      , table "hdb_catalog" "hdb_table"
+        [ objectRel $$(nonEmptyText "detail") $
+          manualConfig "information_schema" "tables" tableNameMapping
+        , objectRel $$(nonEmptyText "primary_key") $
+          manualConfig "hdb_catalog" "hdb_primary_key" tableNameMapping
+        , arrayRel $$(nonEmptyText "columns") $
+          manualConfig "information_schema" "columns" tableNameMapping
+        , arrayRel $$(nonEmptyText "foreign_key_constraints") $
+          manualConfig "hdb_catalog" "hdb_foreign_key_constraint" tableNameMapping
+        , arrayRel $$(nonEmptyText "relationships") $
+          manualConfig "hdb_catalog" "hdb_relationship" tableNameMapping
+        , arrayRel $$(nonEmptyText "permissions") $
+          manualConfig "hdb_catalog" "hdb_permission_agg" tableNameMapping
+        , arrayRel $$(nonEmptyText "computed_fields") $
+          manualConfig "hdb_catalog" "hdb_computed_field" tableNameMapping
+        , arrayRel $$(nonEmptyText "check_constraints") $
+          manualConfig "hdb_catalog" "hdb_check_constraint" tableNameMapping
+        , arrayRel $$(nonEmptyText "unique_constraints") $
+          manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping ]
+      , table "hdb_catalog" "hdb_primary_key" []
+      , table "hdb_catalog" "hdb_foreign_key_constraint" []
+      , table "hdb_catalog" "hdb_relationship" []
+      , table "hdb_catalog" "hdb_permission_agg" []
+      , table "hdb_catalog" "hdb_computed_field" []
+      , table "hdb_catalog" "hdb_check_constraint" []
+      , table "hdb_catalog" "hdb_unique_constraint" []
+      , table "hdb_catalog" "event_triggers"
+        [ arrayRel $$(nonEmptyText "events") $
+          manualConfig "hdb_catalog" "event_log" [("name", "trigger_name")] ]
+      , table "hdb_catalog" "event_log"
+        [ objectRel $$(nonEmptyText "trigger") $
+          manualConfig "hdb_catalog" "event_triggers" [("trigger_name", "name")]
+        , arrayRel $$(nonEmptyText "logs") $ RUFKeyOn $
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "event_invocation_logs") "event_id" ]
+      , table "hdb_catalog" "event_invocation_logs"
+        [ objectRel $$(nonEmptyText "event") $ RUFKeyOn "event_id" ]
+      , table "hdb_catalog" "hdb_function" []
+      , table "hdb_catalog" "hdb_function_agg"
+        [ objectRel $$(nonEmptyText "return_table_info") $ manualConfig "hdb_catalog" "hdb_table"
+          [ ("return_type_schema", "table_schema")
+          , ("return_type_name", "table_name") ] ]
+      , table "hdb_catalog" "remote_schemas" []
+      , table "hdb_catalog" "hdb_version" []
+      , table "hdb_catalog" "hdb_query_collection" []
+      , table "hdb_catalog" "hdb_allowlist" []
+      ]
+
+    tableNameMapping =
+      [ ("table_schema", "table_schema")
+      , ("table_name", "table_name") ]
+
+    table schemaName tableName relationships = (QualifiedObject schemaName tableName, relationships)
+    objectRel name using = Left $ RelDef (RelName name) using Nothing
+    arrayRel name using = Right $ RelDef (RelName name) using Nothing
+    manualConfig schemaName tableName columns =
+      RUManual $ RelManualConfig (QualifiedObject schemaName tableName) (HM.fromList columns)
 
 runTx :: (MonadTx m) => Q.Query -> m ()
 runTx = liftTx . Q.multiQE defaultTxErrorHandler
