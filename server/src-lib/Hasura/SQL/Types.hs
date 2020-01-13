@@ -63,23 +63,26 @@ module Hasura.SQL.Types
   )
 where
 
-import qualified Database.PG.Query          as Q
-import qualified Database.PG.Query.PTI      as PTI
+import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query.PTI         as PTI
 
 import           Hasura.Prelude
 
 import           Data.Aeson
 import           Data.Aeson.Casing
-import           Data.Aeson.Encoding        (text)
+import           Data.Aeson.Encoding           (text)
 import           Data.Aeson.TH
-import           Data.Aeson.Types           (toJSONKeyText)
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Data.Aeson.Types              (toJSONKeyText)
+import           Instances.TH.Lift             ()
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.Text.Extended         as T
-import qualified Database.PostgreSQL.LibPQ  as PQ
-import qualified PostgreSQL.Binary.Decoding as PD
-import qualified Text.Builder               as TB
+import qualified Data.Text.Extended            as T
+import qualified Database.PostgreSQL.LibPQ     as PQ
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified PostgreSQL.Binary.Decoding    as PD
+import qualified Text.Builder                  as TB
+
+import           Hasura.Incremental            (Cacheable)
 
 class ToSQL a where
   toSQL :: a -> TB.Builder
@@ -99,7 +102,7 @@ infixr 6 <+>
 
 newtype Iden
   = Iden { getIdenTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Semigroup, Data)
+  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
 
 instance ToSQL Iden where
   toSQL (Iden t) =
@@ -117,6 +120,8 @@ class DQuote a where
 instance DQuote T.Text where
   dquoteTxt = id
   {-# INLINE dquoteTxt #-}
+
+deriving instance DQuote G.Name
 
 dquote :: (DQuote a) => a -> T.Text
 dquote = T.dquote . dquoteTxt
@@ -157,7 +162,8 @@ class ToTxt a where
 
 newtype TableName
   = TableName { getTableTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary)
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data
+           , Generic, Arbitrary, NFData, Cacheable )
 
 instance IsIden TableName where
   toIden (TableName t) = Iden t
@@ -201,7 +207,7 @@ isView _      = False
 
 newtype ConstraintName
   = ConstraintName { getConstraintTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+  deriving (Show, Eq, DQuote, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, NFData, Cacheable)
 
 instance IsIden ConstraintName where
   toIden (ConstraintName t) = Iden t
@@ -211,7 +217,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data, Generic, Arbitrary)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -227,7 +233,7 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -246,6 +252,8 @@ data QualifiedObject a
   { qSchema :: !SchemaName
   , qName   :: !a
   } deriving (Show, Eq, Functor, Ord, Generic, Lift, Data)
+instance (NFData a) => NFData (QualifiedObject a)
+instance (Cacheable a) => Cacheable (QualifiedObject a)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -295,11 +303,11 @@ type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGDescription
   = PGDescription { getPGDescription :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol)
+  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol, NFData, Cacheable)
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data, Generic, Arbitrary)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
 
 instance IsIden PGCol where
   toIden (PGCol t) = Iden t
@@ -337,8 +345,9 @@ data PGScalarType
   | PGRaster
   | PGUnknown !T.Text
   deriving (Show, Eq, Lift, Generic, Data)
-
+instance NFData PGScalarType
 instance Hashable PGScalarType
+instance Cacheable PGScalarType
 
 instance ToSQL PGScalarType where
   toSQL = \case
@@ -517,7 +526,9 @@ data WithScalarType a
 data PGType a
   = PGTypeScalar !a
   | PGTypeArray !a
-  deriving (Show, Eq, Data, Functor)
+  deriving (Show, Eq, Generic, Data, Functor)
+instance (NFData a) => NFData (PGType a)
+instance (Cacheable a) => Cacheable (PGType a)
 $(deriveJSON defaultOptions{constructorTagModifier = drop 6} ''PGType)
 
 instance (ToSQL a) => ToSQL (PGType a) where
@@ -534,7 +545,9 @@ data PGTypeKind
   | PGKindRange
   | PGKindPseudo
   | PGKindUnknown !T.Text
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+instance NFData PGTypeKind
+instance Cacheable PGTypeKind
 
 instance FromJSON PGTypeKind where
   parseJSON = withText "postgresTypeKind" $
@@ -562,7 +575,9 @@ data QualifiedPGType
   { _qptSchema :: !SchemaName
   , _qptName   :: !PGScalarType
   , _qptType   :: !PGTypeKind
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance NFData QualifiedPGType
+instance Cacheable QualifiedPGType
 $(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
 
 isBaseType :: QualifiedPGType -> Bool

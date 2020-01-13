@@ -130,7 +130,7 @@ jobs:
   # changes only contains files in .ciignore
   check_build_worthiness:
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.4
+    - image: hasura/graphql-engine-cli-builder:20191205
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -147,7 +147,8 @@ jobs:
   # build the server binary, and package into docker image
   build_server:
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:20200110
+    resource_class: large
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -176,7 +177,7 @@ jobs:
             make ci-binary
           else
             echo "Non-release branch, build with coverage"
-            BUILD_FLAGS="--coverage" make ci-binary
+            make BUILD_FLAGS='--coverage' ci-binary
           fi
     - run:
         name: Build the docker image
@@ -224,7 +225,7 @@ jobs:
       PG_VERSION: "12"
       POSTGIS_VERSION: "3.0.0"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:20200110
     - image: hasura/postgres-12.0-alpine-postgis3:6cbd863d47c0
       <<: *test_pg_env
 
@@ -233,7 +234,7 @@ jobs:
     environment:
       PG_VERSION: "11"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:20200110
     - image: circleci/postgres:11-alpine-postgis
       <<: *test_pg_env
 
@@ -242,7 +243,7 @@ jobs:
     environment:
       PG_VERSION: "10"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:20200110
     - image: circleci/postgres:10-alpine-postgis
       <<: *test_pg_env
 
@@ -251,7 +252,7 @@ jobs:
     environment:
       PG_VERSION: "9_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:20200110
     - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
@@ -260,14 +261,14 @@ jobs:
     environment:
       PG_VERSION: "9_5"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:20200110
     - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
-  server_property_tests:
+  server_unit_tests:
     resource_class: large
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:20200110
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -281,11 +282,11 @@ jobs:
         keys:
         - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - run:
-        name: Run property tests
+        name: Run unit tests
         environment:
           GHCRTS: -N2
         command: |
-          /build/_server_output/graphql-engine-tests property
+          /build/_server_output/graphql-engine-tests unit
 
   test_cli_with_last_release:
     docker:
@@ -418,7 +419,7 @@ jobs:
   # test console
   test_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:v0.4
+    - image: hasura/graphql-engine-console-builder:v0.3
       environment:
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
         GHCRTS: -N1
@@ -455,7 +456,7 @@ jobs:
   # test server upgrade from last version to current build
   test_server_upgrade:
     docker:
-    - image: hasura/graphql-engine-upgrade-tester:v0.5
+    - image: hasura/graphql-engine-upgrade-tester:v0.4
       environment:
         HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
     - image: circleci/postgres:10-alpine
@@ -522,7 +523,7 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - build_server
-    - server_property_tests:
+    - server_unit_tests:
         <<: *filter_only_vtags
         requires:
         - build_server
@@ -538,7 +539,7 @@ workflows:
         - test_server_pg_10
         - test_server_pg_9.6
         - test_server_pg_9.5
-        - server_property_tests
+        - server_unit_tests
         - test_server_upgrade
     - test_cli_with_last_release:
         <<: *filter_only_vtags

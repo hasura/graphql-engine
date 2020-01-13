@@ -139,6 +139,7 @@ we need to tell Hasura that this table represents an enum.
     ``Set table as enum`` section:
 
     .. thumbnail:: ../../../img/graphql/manual/schema/enum-set.png
+       :alt: Set table as enum
 
   .. tab:: API
 

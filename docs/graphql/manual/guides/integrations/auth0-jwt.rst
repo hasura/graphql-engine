@@ -19,6 +19,7 @@ Create an Auth0 Application
   (assuming your application is React/Angular/Vue etc).
 
 .. thumbnail:: ../../../../img/graphql/manual/guides/create-client-popup.png
+   :alt: Create an Auth0 application
 
 Configure Auth0 Rules & Callback URLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -69,6 +70,27 @@ For auth0-spa-js:
 
 .. _test-auth0:
 
+Create an Auth0 API
+^^^^^^^^^^^^^^^^^^^
+
+In case you are using auth0-spa-js, you also need to create an API so that the access token issued by Auth0 is following the JWT standard. Read more about this `here <https://auth0.com/docs/tokens/access-tokens#json-web-token-access-tokens>`__.
+
+- Navigate to the `Auth0 dashboard <https://manage.auth0.com>`__.
+- Click on the ``APIs`` menu option on the left sidebar and then click the ``+ Create API`` button.
+- In the ``New API`` window, set a name for your API and enter an ``identifier`` (e.g. ``hasura``)
+- In your application code, configure your API ``identifier`` as the ``audience`` when initializing Auth0, e.g.:
+
+.. code-block:: javascript
+
+    <Auth0Provider
+      domain={process.env.AUTH_DOMAIN}
+      client_id={process.env.AUTH_CLIENT_ID}
+      redirect_uri={window.location.origin}
+      onRedirectCallback={() => ..}
+      audience="hasura"
+    >
+
+
 Test auth0 login and generate sample JWTs for testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -88,6 +110,8 @@ You don't need to integrate your UI with auth0 for testing. You can follow the s
 
 .. note::
    In case the above method gives a callback error (with ``access_denied`` in log), try disabling OIDC Conformant setting (https://auth0.com/docs/api-auth/tutorials/adoption/oidc-conformant) under Advanced Settings -> OAuth.
+
+   Do note that this method of generating tokens doesn't work in case you are using ``auth0-spa-js`` with a custom API created.
 
 3. After successfully logging in, you will be redirected to ``https://localhost:3000/callback#xxxxxxxx&id_token=yyyyyyy``. This page may be a 404 if you don't have a UI running on localhost:3000.
 
@@ -163,7 +187,7 @@ escaping new lines.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
    :width: 75%
-
+   :alt: Generated JWT config
 
 Add Access Control Rules via Hasura Console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
