@@ -3,6 +3,9 @@ https://tools.ietf.org/html/rfc7234#section-5.2
 
 To get @max-age@/@s-maxage@ from @Cache-Control@ header, use 'parseMaxAge'. If you need to check
 other directives use 'parseCacheControl'.
+
+Rules which starts with @obs-@ is not required to implement because they are maked as "obsolete" as
+per https://tools.ietf.org/html/rfc7230#section-1.2
 -}
 
 module Data.Parser.CacheControl
@@ -14,6 +17,8 @@ module Data.Parser.CacheControl
   where
 
 import           Hasura.Prelude
+
+import           Hasura.Server.Utils  (fmapL)
 
 import qualified Data.Attoparsec.Text as AT
 import qualified Data.Text            as T
@@ -31,11 +36,12 @@ parseMaxAge :: Integral a => Text -> Either String a
 parseMaxAge t = do
   cc <- parseCacheControl t
   case find checkMaxAgeToken cc of
-    Nothing -> Left "could not find max-age/s-maxage"
+    Nothing -> Left parseErr
     Just d -> case d of
-      CCDOnlyToken _        -> Left "could not find max-age/s-maxage"
-      CCDTokenWithVal _ val -> AT.parseOnly AT.decimal val
+      CCDOnlyToken _        -> Left parseErr
+      CCDTokenWithVal _ val -> fmapL (const parseErr) $ AT.parseOnly AT.decimal val
   where
+    parseErr = "could not find max-age/s-maxage"
     checkMaxAgeToken = \case
       CCDOnlyToken token -> token == "max-age" || token == "s-maxage"
       CCDTokenWithVal token _ -> token == "max-age" || token == "s-maxage"
@@ -120,7 +126,7 @@ quotedStringParser =
 -- https://tools.ietf.org/html/rfc7230#section-3.2.6
 quotedPairParser :: AT.Parser Char
 quotedPairParser =
-  AT.string "\\" *> (AT.space <|> vcharParser <|> obsTextParser)
+  AT.string "\\" *> (AT.space <|> vcharParser)
 
 -- ABNF: qdtext = HTAB / SP / %x21 / %x23-5B / %x5D-7E / obs-text
 -- https://tools.ietf.org/html/rfc7230#section-3.2.6
@@ -160,11 +166,3 @@ qdTextParser = AT.space
            <|> AT.char '|'  -- %x7C
            <|> AT.char '}'  -- %x7D
            <|> AT.char '~'  -- %x7E
-           <|> obsTextParser
-
--- ABNF: obs-text =  %x80-FF
--- https://tools.ietf.org/html/rfc7230#section-3.2.6
--- this is the extended ASCII range -> does attoparsec have parser for this?
--- we are ignoring handling extended ASCII
-obsTextParser :: AT.Parser Char
-obsTextParser = AT.anyChar
