@@ -34,12 +34,11 @@ import {
   getSchemaTables,
   getUntrackedTables,
 } from '../../../Common/utils/pgUtils';
-import { SET_SQL } from '../RawSQL/Actions';
-import _push from '../push';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import RawSqlButton from '../Common/ReusableComponents/RawSqlButton';
 
 class Schema extends Component {
   constructor(props) {
@@ -83,13 +82,9 @@ class Schema extends Component {
       const trackedFuncNames = trackedFunctions.map(fn => getFunctionName(fn));
 
       // Assuming schema for both function and tables are same
-      // return function which are tracked && function name whose
-      // set of tables are tracked
+      // return function which are tracked
       const filterCondition = func => {
-        return (
-          !trackedFuncNames.includes(getFunctionName(func)) &&
-          !!func.return_table_info
-        );
+        return !trackedFuncNames.includes(getFunctionName(func));
       };
 
       return functionsList.filter(filterCondition);
@@ -454,7 +449,6 @@ class Schema extends Component {
         if (isEmpty(untrackedRelations)) {
           untrackedRelList.push(
             <div key="no-untracked-rel">There are no untracked relations</div>
-              .ne
           );
         } else {
           untrackedRelations.forEach((rel, i) => {
@@ -557,9 +551,7 @@ class Schema extends Component {
               };
 
               return (
-                <div
-                  className={`${styles.display_inline} ${styles.add_mar_right}`}
-                >
+                <div className={styles.display_inline}>
                   <Button
                     data-test={`add-track-function-${p.function_name}`}
                     className={`${
@@ -579,7 +571,23 @@ class Schema extends Component {
                 key={`untracked-function-${i}`}
               >
                 {getTrackBtn()}
-                <div className={styles.display_inline}>
+                <div
+                  className={`${styles.display_inline} ${
+                    styles.add_mar_left_mid
+                  }`}
+                >
+                  <RawSqlButton
+                    dataTestId={`view-function-${p.function_name}`}
+                    customStyles={styles.display_inline}
+                    sql={p.function_definition}
+                    dispatch={dispatch}
+                  >
+                    View
+                  </RawSqlButton>
+                </div>
+                <div
+                  className={`${styles.display_inline} ${styles.add_mar_left}`}
+                >
                   <span>{p.function_name}</span>
                 </div>
               </div>
@@ -634,24 +642,14 @@ class Schema extends Component {
                 <div
                   className={`${styles.display_inline} ${styles.add_mar_right}`}
                 >
-                  <Button
-                    data-test={`view-function-${p.function_name}`}
-                    className={`${
-                      styles.display_inline
-                    } btn btn-xs btn-default`}
-                    onClick={e => {
-                      e.preventDefault();
-
-                      dispatch(_push('/data/sql'));
-
-                      dispatch({
-                        type: SET_SQL,
-                        data: p.function_definition,
-                      });
-                    }}
+                  <RawSqlButton
+                    dataTestId={`view-function-${p.function_name}`}
+                    customStyles={styles.display_inline}
+                    sql={p.function_definition}
+                    dispatch={dispatch}
                   >
                     View
-                  </Button>
+                  </RawSqlButton>
                 </div>
                 <div className={styles.display_inline}>{p.function_name}</div>
               </div>

@@ -158,6 +158,26 @@ args:
 - type: add_existing_table_or_view
   args:
     schema: hdb_catalog
+    name: hdb_computed_field
+
+- type: create_array_relationship
+  args:
+    name: computed_fields
+    table:
+      schema: hdb_catalog
+      name: hdb_table
+    using:
+      manual_configuration:
+        remote_table:
+          schema: hdb_catalog
+          name: hdb_computed_field
+        column_mapping:
+          table_schema : table_schema
+          table_name : table_name
+
+- type: add_existing_table_or_view
+  args:
+    schema: hdb_catalog
     name: hdb_unique_constraint
 
 - type: create_array_relationship
