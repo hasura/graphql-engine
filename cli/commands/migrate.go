@@ -44,7 +44,7 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func newMigrate(ec *cli.ExecutionContext, isCmd bool) (*migrate.Migrate, error) {
-	dbURL := getDataPath(ec.Config.ParsedEndpoint, getAdminSecretHeaderName(ec.Version), ec.Config.AdminSecret)
+	dbURL := getDataPath(ec.Config.ServerConfig.ParsedEndpoint, getAdminSecretHeaderName(ec.Version), ec.Config.ServerConfig.AdminSecret)
 	fileURL := getFilePath(ec.MigrationDir)
 	t, err := migrate.New(fileURL.String(), dbURL.String(), isCmd, ec.Logger)
 	if err != nil {

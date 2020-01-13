@@ -41,13 +41,12 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 type actionsCodegenOptions struct {
-	EC *cli.ExecutionContext
-	name               string
+	EC   *cli.ExecutionContext
+	name string
 }
 
 func (o *actionsCodegenOptions) run() error {
 	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action, o.EC.CMDName)
-	derivePayload := actions.DerivePayload{
-	}
+	derivePayload := actions.DerivePayload{}
 	return actionCfg.Codegen(o.name, derivePayload)
 }

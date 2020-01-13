@@ -79,15 +79,15 @@ type CodegenExecutionConfig struct {
 }
 
 type ActionExecutionConfig struct {
-	Kind                  string                 `json:"kind"`
-	HandlerWebhookBaseURL string                 `json:"handler_webhook_baseurl"`
-	Codegen               *CodegenExecutionConfig `json:"codegen"`
+	Kind                  string                  `json:"kind"`
+	HandlerWebhookBaseURL string                  `json:"handler_webhook_baseurl"`
+	Codegen               *CodegenExecutionConfig `json:"codegen,omitempty"`
 }
 
 type ActionConfig struct {
-	MetadataDir   string
-	ActionConfig  ActionExecutionConfig
-	cmdName string
+	MetadataDir  string
+	ActionConfig ActionExecutionConfig
+	cmdName      string
 }
 
 func New(baseDir string, actionConfig ActionExecutionConfig, cmdName string) *ActionConfig {

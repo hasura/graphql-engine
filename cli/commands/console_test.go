@@ -25,7 +25,7 @@ func TestConsoleCmd(t *testing.T) {
 	ec.MetadataFile = []string{"metadata.yaml"}
 
 	ec.Version = version.New()
-	v, err := version.FetchServerVersion(ec.Config.Endpoint)
+	v, err := version.FetchServerVersion(ec.Config.ServerConfig.Endpoint)
 	if err != nil {
 		t.Fatalf("getting server version failed: %v", err)
 	}

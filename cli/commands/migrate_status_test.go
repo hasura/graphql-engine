@@ -33,7 +33,7 @@ func testMigrateStatus(t *testing.T, endpoint *url.URL, migrationsDir string, ex
 	}
 
 	opts.EC.Version = version.New()
-	v, err := version.FetchServerVersion(opts.EC.Config.Endpoint)
+	v, err := version.FetchServerVersion(opts.EC.Config.ServerConfig.Endpoint)
 	if err != nil {
 		t.Fatalf("getting server version failed: %v", err)
 	}
