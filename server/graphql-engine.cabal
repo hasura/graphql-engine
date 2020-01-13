@@ -416,10 +416,10 @@ test-suite graphql-engine-tests
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
+    Data.Parser.CacheControlSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec
-    Parser.CacheControl
 
 -- Benchmarks related to caching (e.g. the plan cache).
 --

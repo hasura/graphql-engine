@@ -1,6 +1,4 @@
-{-# LANGUAGE TypeApplications #-}
-
-module Parser.CacheControl (spec) where
+module Data.Parser.CacheControlSpec (spec) where
 
 import           Hasura.Prelude
 
