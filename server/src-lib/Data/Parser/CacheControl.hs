@@ -1,5 +1,8 @@
-{-| This module exposes functions related to parsing the @Cache-Control@ header as defined in
+{-| Functions related to parsing @Cache-Control@ header as defined in
 https://tools.ietf.org/html/rfc7234#section-5.2
+
+To get @max-age@/@s-maxage@ from @Cache-Control@ header, use 'parseMaxAge'. If you need to check
+other directives use 'parseCacheControl'.
 -}
 
 module Data.Parser.CacheControl
@@ -10,7 +13,6 @@ module Data.Parser.CacheControl
   )
   where
 
-import           Debug.Trace
 import           Hasura.Prelude
 
 import qualified Data.Attoparsec.Text as AT
@@ -24,6 +26,7 @@ data CacheControlDirective
   | CCDTokenWithVal !Text !Text
   deriving (Show, Eq)
 
+-- | Tries to parse the @max-age@ or @s-maxage@ present in the value of @Cache-Control@ header
 parseMaxAge :: Integral a => Text -> Either String a
 parseMaxAge t = do
   cc <- parseCacheControl t
@@ -38,6 +41,7 @@ parseMaxAge t = do
       CCDTokenWithVal token _ -> token == "max-age" || token == "s-maxage"
 
 
+-- | Parses a @Cache-Control@ header and returns a list of directives
 parseCacheControl :: Text -> Either String CacheControl
 parseCacheControl = AT.parseOnly cacheControlParser
 
@@ -74,8 +78,8 @@ cacheDirectiveParser = tokenWithValue <|> onlyToken
 tokenParser :: AT.Parser Text
 tokenParser = T.pack <$> AT.many1 tcharParser
 
--- ABNF: tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
---               / DIGIT / ALPHA ; any VCHAR, except delimiters
+-- ABNF: tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|"
+--               / "~" / DIGIT / ALPHA ; any VCHAR, except delimiters
 -- https://tools.ietf.org/html/rfc7230#section-3.2.6
 tcharParser :: AT.Parser Char
 tcharParser = AT.char '!'
@@ -161,6 +165,6 @@ qdTextParser = AT.space
 -- ABNF: obs-text =  %x80-FF
 -- https://tools.ietf.org/html/rfc7230#section-3.2.6
 -- this is the extended ASCII range -> does attoparsec have parser for this?
+-- we are ignoring handling extended ASCII
 obsTextParser :: AT.Parser Char
- -- FIXME: handle extended ascii set
 obsTextParser = AT.anyChar
