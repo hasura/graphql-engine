@@ -13,39 +13,72 @@ Let's create a sample table and query data from it using the Hasura console, a U
 Create a table
 --------------
 
-Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
-the following columns:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. code-block:: sql
+  .. tab:: Console
 
-  profile (
-    id INT PRIMARY KEY,
-    name TEXT
-  )
+    Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+    the following columns:
 
-.. thumbnail:: ../../../img/graphql/manual/getting-started/create-profile-table.png
-   :alt: Create a table
+    .. code-block:: sql
 
-Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
+      profile (
+        id INT PRIMARY KEY,
+        name TEXT
+      )
+
+    .. thumbnail:: ../../../img/graphql/manual/getting-started/create-profile-table.png
+       :alt: Create a table
+
+    Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
+
+  .. tab:: API
+
+    A table can be created via Metadata API:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+           "sql": "CREATE TABLE profile (id int, name TEXT, PRIMARY KEY (id));"
+        }
+      }
 
 Try out a query
 ---------------
 
-Head to the ``GraphiQL`` tab in the console and try running the following query:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. code-block:: graphql
+  .. tab:: Console
 
-    query {
-      profile {
-        id
-        name
-      }
-    }
+    Head to the ``GraphiQL`` tab in the console and try running the following query:
 
-You'll see that you get all the inserted data!
+    .. code-block:: graphql
 
-.. thumbnail:: ../../../img/graphql/manual/getting-started/profile-query.png
-   :alt: Try out a query
+        query {
+          profile {
+            id
+            name
+          }
+        }
+
+    You'll see that you get all the inserted data!
+
+    .. thumbnail:: ../../../img/graphql/manual/getting-started/profile-query.png
+      :alt: Try out a query
+
+  .. tab:: API
+
+    A query can be run via :doc:`GraphQL API
+    <../api-reference/graphql-api/query>`.
+
 
 Next steps
 ----------

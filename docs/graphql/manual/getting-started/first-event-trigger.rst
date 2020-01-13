@@ -12,18 +12,41 @@ Let's create a sample event trigger with https://httpbin.org as our simple webho
 
 Create a table
 --------------
-Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
-the following columns:
 
-.. code-block:: sql
+.. rst-class:: api_tabs
+.. tabs::
 
-  profile (
-    id INT PRIMARY KEY,
-    name TEXT
-  )
+  .. tab:: Console
 
-.. thumbnail:: ../../../img/graphql/manual/getting-started/create-profile-table.png
-   :alt: Create a table
+    Head to the Hasura console, navigate to ``Data -> Create table`` and create a sample table called ``profile`` with
+    the following columns:
+
+    .. code-block:: sql
+
+      profile (
+        id INT PRIMARY KEY,
+        name TEXT
+      )
+
+    .. thumbnail:: ../../../img/graphql/manual/getting-started/create-profile-table.png
+      :alt: Create a table
+
+  .. tab:: API
+
+    A table can be created via Metadata API:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+           "sql": "CREATE TABLE profile (id int, name TEXT, PRIMARY KEY (id));"
+        }
+      }
 
 Setup an event trigger
 ----------------------

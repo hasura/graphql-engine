@@ -25,12 +25,36 @@ Let us now connect these tables to enable nested queries using a foreign-key:
 Step 1: Add foreign-key constraint
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the console, navigate to the ``Modify`` tab of the ``article`` table. Click the ``Add`` button in
-the Foreign Keys section and configure the ``author_id`` column as a foreign-key for the ``id`` column in
-the ``author`` table:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/add-foreign-key.png
-   :alt: Add foreign-key constraint
+  .. tab:: Console
+
+    In the console, navigate to the ``Modify`` tab of the ``article`` table. Click the ``Add`` button in
+    the Foreign Keys section and configure the ``author_id`` column as a foreign-key for the ``id`` column in
+    the ``author`` table:
+
+    .. thumbnail:: ../../../../img/graphql/manual/schema/add-foreign-key.png
+      :alt: Add foreign-key constraint
+
+  .. tab:: API
+
+    A table can be created via Metadata API:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+           "sql": "ALTER TABLE article ADD FOREIGN KEY (author_id) REFERENCES author(id);"
+        }
+      }
+
+    
 
 Step 2: Create an object relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
