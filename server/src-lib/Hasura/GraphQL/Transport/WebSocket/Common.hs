@@ -3,7 +3,6 @@ module Hasura.GraphQL.Transport.WebSocket.Common where
 import           Hasura.Prelude
 
 import qualified Control.Concurrent.STM                               as STM
-import qualified Data.IORef                                           as IORef
 import qualified Network.HTTP.Client                                  as H
 import qualified Network.HTTP.Types                                   as H
 
@@ -30,7 +29,8 @@ data WSServerEnv
   { _wseLogger          :: !(L.Logger L.Hasura)
   , _wseRunTx           :: !PGExecCtx
   , _wseLiveQMap        :: !LQ.LiveQueriesState
-  , _wseGCtxMap         :: !(IORef.IORef (SchemaCache, SchemaCacheVer))
+  , _wseGCtxMap         :: !(IO (SchemaCache, SchemaCacheVer))
+  -- ^ an action that always returns the latest version of the schema cache
   , _wseHManager        :: !H.Manager
   , _wseCorsPolicy      :: !CorsPolicy
   , _wseSQLCtx          :: !SQLGenCtx
@@ -44,18 +44,18 @@ createWSServerEnv
   => L.Logger L.Hasura
   -> PGExecCtx
   -> LQ.LiveQueriesState
-  -> IORef.IORef (SchemaCache, SchemaCacheVer)
+  -> IO (SchemaCache, SchemaCacheVer)
   -> H.Manager
   -> CorsPolicy
   -> SQLGenCtx
   -> Bool
   -> E.PlanCache
   -> m WSServerEnv
-createWSServerEnv logger pgExecCtx lqState cacheRef httpManager
+createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
   corsPolicy sqlGenCtx enableAL planCache = do
   wsServer <- liftIO $ STM.atomically $ WS.createWSServer logger
   return $
-    WSServerEnv logger pgExecCtx lqState cacheRef httpManager corsPolicy
+    WSServerEnv logger pgExecCtx lqState getSchemaCache httpManager corsPolicy
     sqlGenCtx planCache wsServer enableAL
 
 filterWsHeaders :: [H.Header] -> [H.Header]

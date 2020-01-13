@@ -54,6 +54,12 @@ args:
 
       CREATE EXTENSION IF NOT EXISTS postgis;
       CREATE EXTENSION IF NOT EXISTS postgis_topology;
+      DO $$
+      BEGIN
+        IF PostGIS_lib_version() ~ '^3.*' THEN
+          CREATE EXTENSION IF NOT EXISTS postgis_raster;
+        END IF;
+      END$$;
 
       CREATE TABLE locations
       (
@@ -72,6 +78,19 @@ args:
                            , ST_GeomFromGeoJSON("from"::text)::geography
                            )::integer
        $$ LANGUAGE sql STABLE;
+
+      CREATE TABLE float_test(
+        id serial primary key,
+        first_int integer not null,
+        second_int integer not null
+      );
+
+      INSERT INTO float_test (first_int, second_int)
+      VALUES (1, 2), (3, 2), (4, 6);
+
+      CREATE FUNCTION get_sum(table_row float_test) returns float8 AS $$
+      SELECT table_row.first_int::float8 + table_row.second_int::float8
+      $$ LANGUAGE SQL STABLE;
 
 - type: track_table
   args:
@@ -128,3 +147,15 @@ args:
     definition:
       function: locations_distance
       table_argument: locations_row
+
+- type: track_table
+  args:
+    name: float_test
+    schema: public
+
+- type: add_computed_field
+  args:
+    table: float_test
+    name: sum_float
+    definition:
+      function: get_sum

@@ -13,11 +13,11 @@ packages:
     git: https://github.com/rakeshkky/pg-client-hs.git
     pantry-tree:
       size: 1107
-      sha256: 50cf438195e8bf109c24b99328a804772fff5db07a7b7e1146afd2738af55ffc
-    commit: 8c26ce5b64f7b10b350642c5ed47eaa51cb23ea3
+      sha256: df58ceff2754f960ba8666707a4642dc9611ecea269daa67fe9ef80ce034a494
+    commit: 52e8b6670bed06dbd672f67bdf04b417c4cc88eb
   original:
     git: https://github.com/rakeshkky/pg-client-hs.git
-    commit: 8c26ce5b64f7b10b350642c5ed47eaa51cb23ea3
+    commit: 52e8b6670bed06dbd672f67bdf04b417c4cc88eb
 - completed:
     cabal-file:
       size: 3364

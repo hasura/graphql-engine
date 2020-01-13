@@ -28,7 +28,6 @@ import qualified Hasura.Logging                                          as L
 
 import qualified Control.Concurrent.STM                                  as STM
 import qualified Data.ByteString.Lazy                                    as BL
-import qualified Data.IORef                                              as IORef
 import qualified Data.Text                                               as T
 import qualified Data.Time.Clock                                         as TC
 import qualified Database.PG.Query                                       as PG
@@ -111,7 +110,7 @@ onMessageHandler serverEnv wsTxData wsConn rawMessage =
           modifyTxStatus TxCommit
           pure $ SMClose wsId "Executed 'COMMIT' command"
   where
-    WSServerEnv lg@(L.Logger logger) pgExecCtx _ gCtxMapRef _ _ sqlGenCtx planCache _ enableAL = serverEnv
+    WSServerEnv (L.Logger logger) pgExecCtx _ getSchemaCache _ _ sqlGenCtx planCache _ enableAL = serverEnv
     wsId = WS.getWSId wsConn
     pgConn = _pccConn $ _wtdPgConn wsTxData
     userInfo = _wtdUserInfo wsTxData
@@ -121,7 +120,7 @@ onMessageHandler serverEnv wsTxData wsConn rawMessage =
 
     execute :: RequestId -> GQLReqUnparsed -> ExceptT QErr m ServerMessage
     execute reqId query = do
-      (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
+      (sc, scVer) <- liftIO getSchemaCache
       execPlan <- E.getResolvedExecPlan pgExecCtx
                    planCache userInfo sqlGenCtx enableAL sc scVer query
       case execPlan of
@@ -184,5 +183,5 @@ mkErrorLog :: WS.WSId -> WSEvent -> WSLog
 mkErrorLog wsId event = WSLog L.LevelError $ WSLogInfo wsId event
 
 sendMsg :: (MonadIO m) => WSConn -> ServerMessage -> m ()
-sendMsg wsConn =
-  liftIO . WS.sendMsg wsConn . encodeServerMessage
+sendMsg wsConn msg =
+  liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse (encodeServerMessage msg) Nothing

@@ -6,7 +6,6 @@ import qualified Data.Aeson                                          as J
 import qualified Data.ByteString.Lazy                                as BL
 import qualified Data.CaseInsensitive                                as CI
 import qualified Data.HashMap.Strict                                 as Map
-import qualified Data.IORef                                          as IORef
 import qualified Data.Text                                           as T
 import qualified Data.Text.Encoding                                  as TE
 import qualified Data.Time.Clock                                     as TC
@@ -38,6 +37,7 @@ import           Hasura.Server.Utils                                 (RequestId,
 
 import qualified Hasura.GraphQL.Execute                              as E
 import qualified Hasura.GraphQL.Execute.LiveQuery                    as LQ
+import qualified Hasura.GraphQL.Execute.LiveQuery.Poll               as LQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server           as WS
 import qualified Hasura.Logging                                      as L
 
@@ -188,7 +188,7 @@ onStart serverEnv wsConn connData (StartMsg opId q) = catchAndIgnore $ do
       withComplete $ sendStartErr e
 
   requestId <- getRequestId reqHdrs
-  (sc, scVer) <- liftIO $ IORef.readIORef gCtxMapRef
+  (sc, scVer) <- liftIO getSchemaCache
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
                planCache userInfo sqlGenCtx enableAL sc scVer q
   execPlan <- either (withComplete . preExecErr requestId) return execPlanE
@@ -210,12 +210,12 @@ onStart serverEnv wsConn connData (StartMsg opId q) = catchAndIgnore $ do
         execQueryOrMut reqId query Nothing $
           runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
-        -- log the graphql query
-        L.unLogger logger $ QueryLog query Nothing reqId
-        lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
-        liftIO $ STM.atomically $
-          STMMap.insert (lqId, _grOperationName q) opId opMap
-        logOpEv ODStarted (Just reqId)
+         -- log the graphql query
+         L.unLogger logger $ QueryLog query Nothing reqId
+         lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
+         liftIO $ STM.atomically $
+           STMMap.insert (lqId, _grOperationName q) opId opMap
+         logOpEv ODStarted (Just reqId)
 
     execQueryOrMut reqId query genSql action = do
       logOpEv ODStarted (Just reqId)
@@ -247,7 +247,7 @@ onStart serverEnv wsConn connData (StartMsg opId q) = catchAndIgnore $ do
     invalidGqlErr err = err500 Unexpected $
       "Failed parsing GraphQL response from remote: " <> err
 
-    WSServerEnv logger pgExecCtx lqMap gCtxMapRef httpMgr _ sqlGenCtx planCache
+    WSServerEnv logger pgExecCtx lqMap getSchemaCache httpMgr _ sqlGenCtx planCache
       _ enableAL = serverEnv
 
     WSConnData userInfoR opMap errRespTy = connData
@@ -302,9 +302,12 @@ onStart serverEnv wsConn connData (StartMsg opId q) = catchAndIgnore $ do
       throwError ()
 
     -- on change, send message on the websocket
-    liveQOnChange resp =
-      WS.sendMsg wsConn $ encodeServerMsg $ SMData $
-        DataMsg opId (GRHasura resp)
+    liveQOnChange :: LQ.OnChange
+    liveQOnChange (GQSuccess (LQ.LiveQueryResponse bs dTime)) =
+      sendMsgWithMetadata wsConn (SMData $ DataMsg opId $ GRHasura $ GQSuccess bs) $
+        LQ.LiveQueryMetadata dTime
+    liveQOnChange resp = sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
+      LQ._lqrPayload <$> resp
 
     catchAndIgnore :: ExceptT () IO () -> IO ()
     catchAndIgnore m = void $ runExceptT m
@@ -374,5 +377,15 @@ logWSEvent (L.Logger logger) wsConn connData wsEv = do
         ODStopped    -> False
 
 sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
-sendMsg wsConn =
-  liftIO . WS.sendMsg wsConn . encodeServerMsg
+sendMsg wsConn msg =
+  liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing
+
+sendMsgWithMetadata :: (MonadIO m) => WSConn -> ServerMsg -> LQ.LiveQueryMetadata -> m ()
+sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
+  liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
+  where
+    bs = encodeServerMsg msg
+    wsInfo = Just $ WS.WSEventInfo
+      { WS._wseiQueryExecutionTime = Just $ realToFrac execTime
+      , WS._wseiResponseSize = Just $ BL.length bs
+      }

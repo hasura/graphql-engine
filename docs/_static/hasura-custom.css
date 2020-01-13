@@ -27,7 +27,7 @@ h3 a:visited,
 h4 a:visited,
 h5 a:visited,
 h6 a:visited {
-  color: #FF993A !important;
+  color: #1CD3C6 !important;
 }
 
 h3 {
@@ -125,9 +125,10 @@ ul {
 }
 
 #docs-content a.reference {
-  /*color: #FEC53D !important;*/
-  /*color: #FF993A !important;*/
-  color: #d66700 !important;
+  /*color: #1CD3C6 !important;*/
+  /*color: #1CD3C6 !important;*/
+  /* color: #FF3264 !important; */
+  color: #DB0037 !important;
   background-color: transparent !important;
 }
 
@@ -306,7 +307,7 @@ article ol ol {
 
 #docs-header-actions .social_icons_wrapper .social_icons a {
   text-decoration: none;
-  color: #D66700;
+  color: #DB0037;
 }
 
 #docs-header-actions .social_icons_wrapper .social_icons iframe {
@@ -357,7 +358,7 @@ article ol ol {
 
 #nav_tree_icon .fa-bars {
   font-size: 18px;
-  color: #FEC53D;
+  color: #1CD3C6;
 }
 
 /*** Mobile only END ***/
@@ -374,7 +375,7 @@ article ol ol {
   top: 13px;
   left: 10px;
   font-size: 18px;
-  color: #FEC53D;
+  color: #1CD3C6;
   cursor: pointer;
   z-index: 1;
 }
@@ -394,7 +395,7 @@ article ol ol {
   -webkit-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
   transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
   border: 0;
-  border-bottom: 1px solid #FEC53D;
+  border-bottom: 1px solid #1CD3C6;
 
 }
 
@@ -495,10 +496,10 @@ article ol ol {
 .feedback_wrapper .feedback_btn {
   margin-top: 10px;
   padding: 5px 10px;
-  background-color: #FEC53D;
+  background-color: #1CD3C6;
   color: #000;
   border-radius: 5px;
-  border: 1px solid #FEC53D;
+  border: 1px solid #1CD3C6;
   font-size: 14px;
   font-weight: 600;
   font-family: 'Gudea';
@@ -536,7 +537,7 @@ article ol ol {
 /*** Sidebar ***/
 
 #sidebar {
-  background-color: #414859;
+  background-color: #001934;
   width: 24% !important;
   font-family: 'Gudea' !important;
   font-size: 16px;
@@ -590,7 +591,7 @@ article ol ol {
   position: -moz-sticky;
   position: -o-sticky;
   position: -ms-sticky;
-  background-color: #414859;
+  background-color: #001934;
   z-index: 10;
   border-bottom: 1px solid #4F5763;
 }
@@ -662,7 +663,7 @@ article ol ol {
 }
 
 #sidebar .sphinxsidebar .sphinxsidebarwrapper a.current.reference.internal {
-  color: #FF993A !important;
+  color: #1CD3C6 !important;
 }
 
 #sidebar .sphinxsidebar .sphinxsidebarwrapper a.reference.internal > code.docutils.literal {
@@ -771,7 +772,7 @@ article ol ol {
 }
 
 #input_search_box .algolia-autocomplete .algolia-docsearch-suggestion--highlight {
-  color: #FF993A;
+  color: #1CD3C6;
 }
 
 #input_search_box .algolia-autocomplete .algolia-docsearch-suggestion--subcategory-column {
@@ -781,7 +782,7 @@ article ol ol {
 #input_search_box .algolia-autocomplete .algolia-docsearch-suggestion--category-header .algolia-docsearch-suggestion--category-header-lvl0 .algolia-docsearch-suggestion--highlight,
 #input_search_box .algolia-autocomplete .algolia-docsearch-suggestion--category-header .algolia-docsearch-suggestion--category-header-lvl1 .algolia-docsearch-suggestion--highlight,
 #input_search_box .algolia-autocomplete .algolia-docsearch-suggestion--text .algolia-docsearch-suggestion--highlight {
-  box-shadow: inset 0 -2px 0 0 #FF993A;
+  box-shadow: inset 0 -2px 0 0 #1CD3C6;
 }
 
 #input_search_box .algolia-autocomplete .ds-dropdown-menu .ds-suggestion.ds-cursor .algolia-docsearch-suggestion.suggestion-layout-simple,

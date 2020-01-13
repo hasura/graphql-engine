@@ -67,7 +67,6 @@ onClose logger lqMap wsConn =
     CSQueries connData     -> WQH.onCloseHandler logger lqMap connData wsConn
     CSTransaction wsTxData -> WTH.onCloseHandler logger (WS.getWSId wsConn) wsTxData
 
-
 createWSServerApp
   :: ( MonadIO m
      , MC.MonadBaseControl IO m

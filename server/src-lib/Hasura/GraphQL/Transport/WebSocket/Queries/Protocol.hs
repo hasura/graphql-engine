@@ -63,7 +63,6 @@ instance J.FromJSON ClientMsg where
       _                      -> fail $ "unexpected type for ClientMessage: " <> t
 
 -- server to client messages
-
 data DataMsg
   = DataMsg
   { _dmId      :: !OperationId

@@ -21,7 +21,6 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict                as M
-import qualified Data.Map.Strict                    as Map
 import qualified Database.PG.Query                  as Q
 
 import           Data.Aeson
@@ -81,8 +80,8 @@ renameTableInCatalog newQT oldQT = do
 
 renameColInCatalog
   :: (MonadTx m, CacheRM m)
-  => PGCol -> PGCol -> QualifiedTable -> TableInfo PGColumnInfo -> m ()
-renameColInCatalog oCol nCol qt ti = do
+  => PGCol -> PGCol -> QualifiedTable -> FieldInfoMap FieldInfo -> m ()
+renameColInCatalog oCol nCol qt fieldInfo = do
   sc <- askSchemaCache
   -- Check if any relation exists with new column name
   assertFldNotExists
@@ -103,7 +102,7 @@ renameColInCatalog oCol nCol qt ti = do
   where
     errMsg = "cannot rename column " <> oCol <<> " to " <>> nCol
     assertFldNotExists =
-      case M.lookup (fromPGCol oCol) $ _tiFieldInfoMap ti of
+      case M.lookup (fromPGCol oCol) fieldInfo of
         Just (FIRelationship _) ->
           throw400 AlreadyExists $ "cannot rename column " <> oCol
           <<> " to " <> nCol <<> " in table " <> qt <<>
@@ -392,7 +391,7 @@ updateColInArrRel fromQT toQT rnCol = \case
     RUManual $ ArrRelManualConfig $
     updateRelManualConfig fromQT toQT rnCol manConfig
 
-type ColMap = Map.Map PGCol PGCol
+type ColMap = HashMap PGCol PGCol
 
 getNewCol
   :: RenameCol -> QualifiedTable -> PGCol -> PGCol
@@ -412,8 +411,8 @@ updateRelManualConfig fromQT toQT rnCol manConfig =
 updateColMap
   :: QualifiedTable -> QualifiedTable
   -> RenameCol -> ColMap -> ColMap
-updateColMap fromQT toQT rnCol colMap =
-  Map.fromList $ map (modCol fromQT *** modCol toQT) (Map.toList colMap)
+updateColMap fromQT toQT rnCol =
+  M.fromList . map (modCol fromQT *** modCol toQT) . M.toList
   where
     RenameItem qt oCol nCol = rnCol
     modCol colQt col = if colQt == qt && col == oCol then nCol else col

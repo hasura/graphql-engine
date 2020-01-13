@@ -91,7 +91,7 @@ instance ToEngineLog MetadataLog Hasura where
   toEngineLog ml =
     (mlLogLevel ml, ELTInternal ILTMetadata, toJSON ml)
 
-mkInconsMetadataLog :: [InconsistentMetadataObj] -> MetadataLog
+mkInconsMetadataLog :: [InconsistentMetadata] -> MetadataLog
 mkInconsMetadataLog objs =
   MetadataLog LevelWarn "Inconsistent Metadata!" $
     object [ "objects" .= objs]
@@ -147,6 +147,8 @@ class (Monad m) => HttpLog m where
     -- ^ request id of the request
     -> Wai.Request
     -- ^ the Wai.Request object
+    -> Maybe Value
+    -- ^ the actual request body, if present
     -> BL.ByteString
     -- ^ the response bytes
     -> BL.ByteString
