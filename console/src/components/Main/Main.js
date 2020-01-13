@@ -16,6 +16,7 @@ import {
   fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,
+  emitProClickedEvent,
 } from './Actions';
 
 import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
@@ -28,9 +29,11 @@ import {
 import {
   getLoveConsentState,
   setLoveConsentState,
-} from './loveConsentLocalStorage';
+  getProClickState,
+  setProClickState,
+} from './utils';
 
-import { versionGT, FT_JWT_ANALYZER } from '../../helpers/versionUtils';
+import { versionGT } from '../../helpers/versionUtils';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
 
 class Main extends React.Component {
@@ -40,11 +43,12 @@ class Main extends React.Component {
     this.state = {
       showUpdateNotification: false,
       loveConsentState: getLoveConsentState(),
+      proClickState: getProClickState(),
+      isPopUpOpen: false,
     };
 
     this.handleBodyClick = this.handleBodyClick.bind(this);
   }
-
   componentDidMount() {
     const { dispatch } = this.props;
 
@@ -58,31 +62,20 @@ class Main extends React.Component {
       dispatch(loadInconsistentObjects()).then(() => {
         this.handleMetadataRedirect();
       });
-
       dispatch(loadConsoleTelemetryOpts());
 
       dispatch(loadLatestServerVersion()).then(() => {
         this.setShowUpdateNotification();
       });
     });
+
+    dispatch(fetchServerConfig());
   }
-
-  componentWillReceiveProps(nextProps) {
-    const {
-      [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility,
-    } = this.props.featuresCompatibility;
-    const {
-      [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility,
-    } = nextProps.featuresCompatibility;
-
-    if (
-      currJwtAnalyzerCompatibility !== nextJwtAnalyzerCompatibility &&
-      nextJwtAnalyzerCompatibility
-    ) {
-      this.fetchServerConfig();
-    }
+  toggleProPopup() {
+    const { dispatch } = this.props;
+    dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
+    this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
   }
-
   setShowUpdateNotification() {
     const { latestServerVersion, serverVersion } = this.props;
 
@@ -103,12 +96,6 @@ class Main extends React.Component {
     } catch (e) {
       console.error(e);
     }
-  }
-
-  fetchServerConfig() {
-    const { dispatch } = this.props;
-
-    dispatch(fetchServerConfig());
   }
 
   handleBodyClick(e) {
@@ -145,7 +132,22 @@ class Main extends React.Component {
       loveConsentState: { ...getLoveConsentState() },
     });
   }
+  updateLocalStorageState() {
+    const s = getProClickState();
+    if (s && 'isProClicked' in s && !s.isProClicked) {
+      setProClickState({
+        isProClicked: !s.isProClicked,
+      });
+      this.setState({
+        proClickState: { ...getProClickState() },
+      });
+    }
+  }
 
+  clickProIcon() {
+    this.updateLocalStorageState();
+    this.toggleProPopup();
+  }
   closeUpdateBanner() {
     const { latestServerVersion } = this.props;
     window.localStorage.setItem(
@@ -166,6 +168,8 @@ class Main extends React.Component {
       metadata,
     } = this.props;
 
+    const { isProClicked } = this.state.proClickState;
+
     const styles = require('./Main.scss');
 
     const appPrefix = '';
@@ -177,7 +181,13 @@ class Main extends React.Component {
     const docs = require('./images/docs-logo.svg');
     const about = require('./images/console-logo.svg');
     const pixHeart = require('./images/pix-heart.svg');
-
+    const close = require('./images/x-circle.svg');
+    const monitoring = require('./images/monitoring.svg');
+    const rate = require('./images/rate.svg');
+    const regression = require('./images/regression.svg');
+    const management = require('./images/management.svg');
+    const allow = require('./images/allow.svg');
+    const arrowForwardRed = require('./images/arrow_forward-red.svg');
     const currentLocation = location.pathname;
     const currentActiveBlock = getPathRoot(currentLocation);
 
@@ -457,6 +467,109 @@ class Main extends React.Component {
       );
     };
 
+    const renderProPopup = () => {
+      const { isPopUpOpen } = this.state;
+      if (isPopUpOpen) {
+        return (
+          <div className={styles.proPopUpWrapper}>
+            <div className={styles.popUpHeader}>
+              Hasura <span>PRO</span>
+              <img
+                onClick={this.toggleProPopup.bind(this)}
+                className={styles.popUpClose}
+                src={close}
+                alt={'Close'}
+              />
+            </div>
+            <div className={styles.popUpBodyWrapper}>
+              <div className={styles.featuresDescription}>
+                Hasura Pro is an enterprise-ready version of Hasura that comes
+                with the following features:
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={monitoring} alt={'Monitoring'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>
+                    Monitoring/Analytics
+                  </div>
+                  <div className={styles.featuresDescription}>
+                    Complete observability to troubleshoot errors and drill-down
+                    into individual operations.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={rate} alt={'Rate'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Rate Limiting</div>
+                  <div className={styles.featuresDescription}>
+                    Prevent abuse with role-based rate limits.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={regression} alt={'Regression'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Regression Testing</div>
+                  <div className={styles.featuresDescription}>
+                    Automatically create regression suites to prevent breaking
+                    changes.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={management} alt={'Management'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Team Management</div>
+                  <div className={styles.featuresDescription}>
+                    Login to a Hasura project with granular privileges.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={allow} alt={'allow'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>
+                    Allow Listing Workflows
+                  </div>
+                  <div className={styles.featuresDescription}>
+                    Setup allow lists across dev, staging and production
+                    environments with easy workflows.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className={styles.popUpFooter}>
+              <a
+                href={
+                  'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'
+                }
+                target={'_blank'}
+              >
+                Set up a chat to learn more{' '}
+                <img
+                  className={styles.arrow}
+                  src={arrowForwardRed}
+                  alt={'Arrow'}
+                />
+              </a>
+            </div>
+          </div>
+        );
+      }
+      return null;
+    };
+
     return (
       <div className={styles.container}>
         <div className={styles.flexRow}>
@@ -504,7 +617,17 @@ class Main extends React.Component {
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
-
+              <div className={styles.helpSection + ' ' + styles.proWrapper}>
+                <span
+                  className={
+                    !isProClicked ? styles.proName : styles.proNameClicked
+                  }
+                  onClick={this.clickProIcon.bind(this)}
+                >
+                  PRO
+                </span>
+                {renderProPopup()}
+              </div>
               <Link to="/settings">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
                   {getMetadataStatusIcon()}
