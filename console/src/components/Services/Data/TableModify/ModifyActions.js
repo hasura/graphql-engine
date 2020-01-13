@@ -43,10 +43,14 @@ import {
   findTableCheckConstraint,
   getTableCustomRootFields,
   getTableCustomColumnNames,
+  getTableDef,
+  getComputedFieldName,
 } from '../../../Common/utils/pgUtils';
 import {
   getSetCustomRootFieldsQuery,
   getRunSqlQuery,
+  getDropComputedFieldQuery,
+  getAddComputedFieldQuery,
   getSetTableEnumQuery,
   getUntrackTableQuery,
   getTrackTableQuery,
@@ -166,6 +170,119 @@ const removePrimaryKey = pkIndex => ({
 const resetPrimaryKeys = () => ({
   type: RESET_PRIMARY_KEY,
 });
+
+export const saveComputedField = (
+  computedField,
+  table,
+  originalComputedField,
+  successCb
+) => (dispatch, getState) => {
+  const migrationUp = [];
+  const migrationDown = [];
+
+  const tableDef = getTableDef(table);
+
+  const computedFieldName = getComputedFieldName(computedField);
+
+  if (originalComputedField) {
+    migrationUp.push(
+      getDropComputedFieldQuery(
+        tableDef,
+        getComputedFieldName(originalComputedField)
+      )
+    );
+  }
+
+  migrationUp.push(
+    getAddComputedFieldQuery(
+      tableDef,
+      computedFieldName,
+      computedField.definition,
+      computedField.comment
+    )
+  );
+
+  migrationDown.push(getDropComputedFieldQuery(tableDef, computedFieldName));
+
+  if (originalComputedField) {
+    migrationDown.push(
+      getAddComputedFieldQuery(
+        tableDef,
+        getComputedFieldName(originalComputedField),
+        originalComputedField.definition,
+        originalComputedField.comment
+      )
+    );
+  }
+
+  const migrationName = `save_computed_field_${computedField.table_schema}_${
+    computedField.table_name
+  }_${computedFieldName}`;
+  const requestMsg = 'Saving computed field...';
+  const successMsg = 'Saving computed field successful';
+  const errorMsg = 'Saving computed field failed';
+  const customOnSuccess = () => {
+    successCb();
+  };
+  const customOnError = () => {};
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    migrationUp,
+    migrationDown,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+export const deleteComputedField = (computedField, table) => (
+  dispatch,
+  getState
+) => {
+  const migrationUp = [];
+  const migrationDown = [];
+
+  const tableDef = getTableDef(table);
+  const computedFieldName = getComputedFieldName(computedField);
+
+  migrationUp.push(getDropComputedFieldQuery(tableDef, computedFieldName));
+
+  migrationDown.push(
+    getAddComputedFieldQuery(
+      tableDef,
+      computedFieldName,
+      computedFieldName.definition,
+      computedField.comment
+    )
+  );
+
+  const migrationName = `delete_computed_field_${computedField.table_schema}_${
+    computedField.table_name
+  }_${computedFieldName}`;
+  const requestMsg = 'Deleting computed field...';
+  const successMsg = 'Deleting computed field successful';
+  const errorMsg = 'Deleting computed field failed';
+  const customOnSuccess = () => {};
+  const customOnError = () => {};
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    migrationUp,
+    migrationDown,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
 
 export const setCustomRootFields = successCb => (dispatch, getState) => {
   const {

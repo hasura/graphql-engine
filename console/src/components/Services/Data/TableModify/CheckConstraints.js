@@ -95,7 +95,6 @@ const CheckConstraints = ({
     };
 
     // expand button text "View"
-    // eslint-disable-next-line no-nested-ternary
     const expandButtonText = isLast
       ? constraints.length
         ? 'Add a new check constraint'
