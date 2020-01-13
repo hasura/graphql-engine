@@ -35,7 +35,7 @@ func testMigrateApply(t *testing.T, endpoint *url.URL, migrationsDir string, up 
 	}
 
 	opts.EC.Version = version.New()
-	v, err := version.FetchServerVersion(opts.EC.Config.Endpoint)
+	v, err := version.FetchServerVersion(opts.EC.Config.ServerConfig.Endpoint)
 	if err != nil {
 		t.Fatalf("getting server version failed: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestMigrateApplyWithInvalidEndpoint(t *testing.T) {
 	}
 
 	opts.EC.Version = version.New()
-	v, err := version.FetchServerVersion(opts.EC.Config.Endpoint)
+	v, err := version.FetchServerVersion(opts.EC.Config.ServerConfig.Endpoint)
 	if err == nil {
 		t.Fatalf("expected error to be not nil")
 	}

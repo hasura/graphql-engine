@@ -29,7 +29,7 @@ func testMetadataReload(t *testing.T, metadataFile string, endpoint *url.URL) {
 	}
 
 	opts.EC.Version = version.New()
-	v, err := version.FetchServerVersion(opts.EC.Config.Endpoint)
+	v, err := version.FetchServerVersion(opts.EC.Config.ServerConfig.Endpoint)
 	if err != nil {
 		t.Fatalf("getting server version failed: %v", err)
 	}

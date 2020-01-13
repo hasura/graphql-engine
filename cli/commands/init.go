@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
@@ -18,7 +19,8 @@ import (
 )
 
 const (
-	defaultDirectory = "hasura"
+	defaultDirectory string = "hasura"
+	initTemplatesURI        = "https://github.com/wawhal/graphql-engine-install-manifests.git"
 )
 
 // NewInitCmd is the definition for init command
@@ -53,9 +55,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
-
 	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "")
 	f.StringVar(&opts.ActionHandler, "action-handler", "http://localhost:3000", "")
+	f.StringVar(&opts.Template, "template", "", "")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	return initCmd
@@ -70,6 +72,8 @@ type initOptions struct {
 
 	ActionKind    string
 	ActionHandler string
+
+	Template string
 }
 
 func (o *initOptions) run() error {
@@ -121,6 +125,11 @@ func (o *initOptions) run() error {
 		return err
 	}
 
+	err = o.createTemplateFiles()
+	if err != nil {
+		return err
+	}
+
 	o.EC.Logger.Info(infoMsg)
 	return nil
 }
@@ -134,23 +143,21 @@ func (o *initOptions) createFiles() error {
 	}
 	// set config object
 	config := &cli.Config{
-		Version:           "2",
-		Endpoint:          "http://localhost:8080",
+		Version: "2",
+		ServerConfig: cli.ServerConfig{
+			Endpoint: "http://localhost:8080",
+		},
 		MetadataDirectory: "metadata",
 		Action: actions.ActionExecutionConfig{
 			Kind:                  o.ActionKind,
 			HandlerWebhookBaseURL: o.ActionHandler,
-			Codegen: &actions.CodegenExecutionConfig{
-				Framework: "nodejs-zeit",
-				OutputDir: "./",
-			},
 		},
 	}
 	if o.Endpoint != "" {
-		config.Endpoint = o.Endpoint
+		config.ServerConfig.Endpoint = o.Endpoint
 	}
 	if o.AdminSecret != "" {
-		config.AdminSecret = o.AdminSecret
+		config.ServerConfig.AdminSecret = o.AdminSecret
 	}
 
 	// write the config file
@@ -178,6 +185,41 @@ func (o *initOptions) createFiles() error {
 		return errors.Wrap(err, "cannot write migration directory")
 	}
 
+	return nil
+}
+
+func (o *initOptions) createTemplateFiles() error {
+	if o.Template == "" {
+		return nil
+	}
+	gitPath := filepath.Join(o.EC.GlobalConfigDir, "init-templates")
+	git := util.NewGitUtil(initTemplatesURI, gitPath, "")
+	err := git.EnsureUpdated()
+	if err != nil {
+		return err
+	}
+	templatePath := filepath.Join(gitPath, o.Template)
+	info, err := os.Stat(templatePath)
+	if err != nil {
+		return errors.Wrap(err, "template doesn't exists")
+	}
+	if !info.IsDir() {
+		return errors.Errorf("template should be a directory")
+	}
+	contents, err := ioutil.ReadDir(templatePath)
+	if err != nil {
+		return err
+	}
+	for _, content := range contents {
+		cs, cd := filepath.Join(templatePath, content.Name()), filepath.Join(o.EC.ExecutionDirectory, content.Name())
+		if strings.ToLower(filepath.Ext(cs)) == ".md" {
+			continue
+		}
+		err = util.CopyFile(cs, cd)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

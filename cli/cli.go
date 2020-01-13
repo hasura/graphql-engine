@@ -49,25 +49,8 @@ visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
 `
 )
 
-// Config has the config values required to contact the server.
-type Config struct {
-	// Version for the CLI config
-	Version string
-	// Endpoint for the GraphQL Engine
-	Endpoint string
-	// AdminSecret (optional) required to query the endpoint
-	AdminSecret string
-
-	MetadataDirectory string
-
-	Action actions.ActionExecutionConfig
-
-	ParsedEndpoint *url.URL
-}
-
-type rawConfig struct {
-	// Version for the CLI config
-	Version string `json:"version"`
+// ServerConfig has the config values required to contact the server
+type ServerConfig struct {
 	// Endpoint for the GraphQL Engine
 	Endpoint string `json:"endpoint"`
 	// AccessKey (deprecated) (optional) Admin secret key required to query the endpoint
@@ -75,11 +58,33 @@ type rawConfig struct {
 	// AdminSecret (optional) Admin secret required to query the endpoint
 	AdminSecret string `json:"admin_secret,omitempty"`
 
-	MetadataDirectory string `json:"metadata_directory"`
-
-	Action actions.ActionExecutionConfig `json:"action"`
-
 	ParsedEndpoint *url.URL `json:"-"`
+}
+
+// ParseEndpoint ensures the endpoint is valid.
+func (s *ServerConfig) ParseEndpoint() error {
+	nurl, err := url.Parse(s.Endpoint)
+	if err != nil {
+		return err
+	}
+	s.ParsedEndpoint = nurl
+	return nil
+}
+
+// Config has the config values required to contact the server.
+type Config struct {
+	Version string
+	ServerConfig
+	MetadataDirectory string
+	Action            actions.ActionExecutionConfig
+}
+
+type rawConfig struct {
+	// Version for the CLI config
+	Version string `json:"version"`
+	ServerConfig
+	MetadataDirectory string                        `json:"metadata_directory"`
+	Action            actions.ActionExecutionConfig `json:"actions"`
 }
 
 func (r rawConfig) toConfig() Config {
@@ -88,10 +93,12 @@ func (r rawConfig) toConfig() Config {
 		s = r.AccessKey
 	}
 	return Config{
-		Version:           r.Version,
-		Endpoint:          r.Endpoint,
-		AdminSecret:       s,
-		ParsedEndpoint:    r.ParsedEndpoint,
+		Version: r.Version,
+		ServerConfig: ServerConfig{
+			Endpoint:       r.ServerConfig.Endpoint,
+			AdminSecret:    r.ServerConfig.AdminSecret,
+			ParsedEndpoint: r.ServerConfig.ParsedEndpoint,
+		},
 		MetadataDirectory: r.MetadataDirectory,
 		Action:            r.Action,
 	}
@@ -99,11 +106,13 @@ func (r rawConfig) toConfig() Config {
 
 func (s Config) toRawConfig() rawConfig {
 	return rawConfig{
-		Version:           s.Version,
-		Endpoint:          s.Endpoint,
-		AccessKey:         "",
-		AdminSecret:       s.AdminSecret,
-		ParsedEndpoint:    s.ParsedEndpoint,
+		Version: s.Version,
+		ServerConfig: ServerConfig{
+			Endpoint:       s.ServerConfig.Endpoint,
+			AdminSecret:    s.ServerConfig.AdminSecret,
+			AccessKey:      "",
+			ParsedEndpoint: s.ServerConfig.ParsedEndpoint,
+		},
 		MetadataDirectory: s.MetadataDirectory,
 		Action:            s.Action,
 	}
@@ -123,21 +132,11 @@ func (s Config) UnmarshalJSON(b []byte) error {
 	}
 	sc := r.toConfig()
 	s.Version = sc.Version
-	s.Endpoint = sc.Endpoint
-	s.AdminSecret = sc.AdminSecret
-	s.ParsedEndpoint = sc.ParsedEndpoint
+	s.ServerConfig.Endpoint = sc.ServerConfig.Endpoint
+	s.ServerConfig.AdminSecret = sc.ServerConfig.AdminSecret
+	s.ServerConfig.ParsedEndpoint = sc.ServerConfig.ParsedEndpoint
 	s.MetadataDirectory = sc.MetadataDirectory
 	s.Action = sc.Action
-	return nil
-}
-
-// ParseEndpoint ensures the endpoint is valid.
-func (s *Config) ParseEndpoint() error {
-	nurl, err := url.Parse(s.Endpoint)
-	if err != nil {
-		return err
-	}
-	s.ParsedEndpoint = nurl
 	return nil
 }
 
@@ -336,8 +335,8 @@ func (ec *ExecutionContext) Validate() error {
 		}
 	}
 
-	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.Endpoint)
-	ec.Logger.Debug("graphql engine admin_secret: ", ec.Config.AdminSecret)
+	ec.Logger.Debug("graphql engine endpoint: ", ec.Config.ServerConfig.Endpoint)
+	ec.Logger.Debug("graphql engine admin_secret: ", ec.Config.ServerConfig.AdminSecret)
 
 	// get version from the server and match with the cli version
 	err = ec.checkServerVersion()
@@ -345,7 +344,7 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "version check")
 	}
 
-	state := util.GetServerState(ec.Config.Endpoint, ec.Config.AdminSecret, ec.Version.ServerSemver, ec.Logger)
+	state := util.GetServerState(ec.Config.ServerConfig.Endpoint, ec.Config.ServerConfig.AdminSecret, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
@@ -354,7 +353,7 @@ func (ec *ExecutionContext) Validate() error {
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	v, err := version.FetchServerVersion(ec.Config.Endpoint)
+	v, err := version.FetchServerVersion(ec.Config.ServerConfig.Endpoint)
 	if err != nil {
 		return errors.Wrap(err, "failed to get version from server")
 	}
@@ -383,11 +382,11 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
 	v.SetDefault("metadata_directory", "")
-	v.SetDefault("action.default_kind", "synchronous")
-	v.SetDefault("action.default_handler", "{{DEFAULT_HANDLER}}")
-	v.SetDefault("action.codegen.framework", "")
-	v.SetDefault("action.codegen.output_dir", ec.ExecutionDirectory)
-	v.SetDefault("action.codegen.uri", "")
+	v.SetDefault("actions.default_kind", "synchronous")
+	v.SetDefault("actions.default_handler", "{{DEFAULT_HANDLER}}")
+	v.SetDefault("actions.codegen.framework", "")
+	v.SetDefault("actions.codegen.output_dir", ec.ExecutionDirectory)
+	v.SetDefault("actions.codegen.uri", "")
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()
 	if err != nil {
@@ -398,21 +397,23 @@ func (ec *ExecutionContext) readConfig() error {
 		adminSecret = v.GetString("access_key")
 	}
 	ec.Config = &Config{
-		Version:           v.GetString("version"),
-		Endpoint:          v.GetString("endpoint"),
-		AdminSecret:       adminSecret,
+		Version: v.GetString("version"),
+		ServerConfig: ServerConfig{
+			Endpoint:    v.GetString("endpoint"),
+			AdminSecret: adminSecret,
+		},
 		MetadataDirectory: v.GetString("metadata_directory"),
 		Action: actions.ActionExecutionConfig{
-			Kind:                  v.GetString("action.kind"),
-			HandlerWebhookBaseURL: v.GetString("action.handler_webhook_baseurl"),
+			Kind:                  v.GetString("actions.kind"),
+			HandlerWebhookBaseURL: v.GetString("actions.handler_webhook_baseurl"),
 			Codegen: &actions.CodegenExecutionConfig{
-				Framework: v.GetString("action.codegen.framework"),
-				OutputDir: v.GetString("action.codegen.output_dir"),
-				URI:       v.GetString("action.codegen.uri"),
+				Framework: v.GetString("actions.codegen.framework"),
+				OutputDir: v.GetString("actions.codegen.output_dir"),
+				URI:       v.GetString("actions.codegen.uri"),
 			},
 		},
 	}
-	return ec.Config.ParseEndpoint()
+	return ec.Config.ServerConfig.ParseEndpoint()
 }
 
 // setupSpinner creates a default spinner if the context does not already have
