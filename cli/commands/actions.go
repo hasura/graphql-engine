@@ -13,6 +13,7 @@ func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	actionsCmd.AddCommand(
 		newActionsCreateCmd(ec),
+		newActionsCodegenCmd(ec),
 	)
 	return actionsCmd
 }
