@@ -249,7 +249,7 @@ convInsQ =
 
 insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 insertP2 strfyNum (u, p) =
-  runMutationWith id
+  runMutation
      $ Mutation (iqp1Table u) (insertCTE, p)
                 (iqp1MutFlds u) (iqp1AllCols u) strfyNum
   where
@@ -260,19 +260,14 @@ insertP2 strfyNum (u, p) =
 --
 -- The resulting SQL will look something like this:
 --
--- > WITH 
--- >   {tn}__inserted AS ( 
--- >     INSERT INTO 
--- >       ...
--- >     RETURNING 
--- >       *, 
--- >       CASE WHEN {cond} 
--- >         THEN NULL 
--- >         ELSE hdb_catalog.check_violation() 
--- >       END
--- >   )
--- > SELECT {tn}__inserted.*
--- > FROM {tn}__inserted;
+-- > INSERT INTO 
+-- >   ...
+-- > RETURNING 
+-- >   *, 
+-- >   CASE WHEN {cond} 
+-- >     THEN NULL 
+-- >     ELSE hdb_catalog.check_violation('insert check constraint failed') 
+-- >   END
 insertCheckExpr
   :: S.BoolExp
   -> S.Extractor
@@ -282,7 +277,7 @@ insertCheckExpr condExpr =
       (S.SEFunction 
         (S.FunctionExp 
           (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation")) 
-          (S.FunctionArgs [] mempty)
+          (S.FunctionArgs [S.SELit "insert check constraint failed"] mempty)
           Nothing)
       ))
     Nothing

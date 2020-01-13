@@ -413,7 +413,7 @@ insertObj strfyNum role tn singleObjIns addCols = do
   CTEExp cte insPArgs <-
     mkInsertQ tn onConflictM finalInsCols defVals role checkExpr
 
-  MutateResp affRows colVals <- mutateAndFetchCols id tn allCols (cte, insPArgs) strfyNum
+  MutateResp affRows colVals <- mutateAndFetchCols tn allCols (cte, insPArgs) strfyNum
   colValM <- asSingleObject colVals
   cteExp <- mkSelCTE tn allCols colValM
 

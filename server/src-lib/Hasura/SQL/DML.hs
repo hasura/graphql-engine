@@ -844,20 +844,3 @@ instance ToSQL SelectWith where
     "WITH " <> (", " <+> map f ctes) <-> toSQL sel
     where
       f (Alias al, q) = toSQL al <-> "AS" <-> paren (toSQL q)
-
--- | Chain together two CTEs, concatenating all of the intermediate
--- subexpressions and returning the rows from the second CTE.
--- The first argument provides an alias for the set of intermediate
--- rows.
-cteAndThen 
-  :: Alias
-  -> SelectWith
-  -> SelectWith
-  -> SelectWith
-cteAndThen alias sw1 sw2 = SelectWith
-  { swCTEs   = 
-      swCTEs sw1 <> 
-      [(alias, CTESelect (swSelect sw1))] <>
-      swCTEs sw2 
-  , swSelect = swSelect sw2
-  }

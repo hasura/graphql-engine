@@ -1,7 +1,6 @@
 module Hasura.RQL.DML.Mutation
   ( Mutation(..)
   , runMutation
-  , runMutationWith
   , mutateAndFetchCols
   , mkSelCTEFromColVals
   )
@@ -35,67 +34,52 @@ data Mutation
   } deriving (Show, Eq)
 
 runMutation :: Mutation -> Q.TxE QErr EncJSON
-runMutation = runMutationWith id
-    
-runMutationWith 
-  :: (S.SelectWith -> S.SelectWith) 
-  -> Mutation 
-  -> Q.TxE QErr EncJSON
-runMutationWith f mut =
-  (bool mutateAndReturn mutateAndSel)
-    (hasNestedFld (_mFields mut)) f mut
+runMutation mut =
+  bool (mutateAndReturn mut) (mutateAndSel mut) $
+    hasNestedFld $ _mFields mut
 
-mutateAndReturn 
-  :: (S.SelectWith -> S.SelectWith) 
-  -> Mutation 
-  -> Q.TxE QErr EncJSON
-mutateAndReturn f = mutateWith f (pure . _mQuery)
+mutateAndReturn :: Mutation -> Q.TxE QErr EncJSON
+mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
+  encJFromBS . runIdentity . Q.getRow
+    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith)
+        (toList p) True
+  where
+    selWith = mkSelWith qt cte mutFlds False strfyNum
 
-mutateAndSel 
-  :: (S.SelectWith -> S.SelectWith) 
-  -> Mutation 
-  -> Q.TxE QErr EncJSON
-mutateAndSel f = mutateWith id $ \(Mutation qt q _ allCols strfyNum) -> do
-    -- Perform mutation and fetch unique columns
-    MutateResp _ columnVals <- mutateAndFetchCols f qt allCols q strfyNum
-    (, mempty) <$> mkSelCTEFromColVals txtEncodedToSQLExp qt allCols columnVals
+mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
+mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
+  -- Perform mutation and fetch unique columns
+  MutateResp _ columnVals <- mutateAndFetchCols qt allCols q strfyNum
+  selCTE <- mkSelCTEFromColVals txtEncodedToSQLExp qt allCols columnVals
+  let selWith = mkSelWith qt selCTE mutFlds False strfyNum
+  -- Perform select query and fetch returning fields
+  encJFromBS . runIdentity . Q.getRow
+    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
   where
     txtEncodedToSQLExp colTy = pure . \case
       TENull          -> S.SENull
       TELit textValue ->
         S.withTyAnn (unsafePGColumnToRepresentation colTy) $ S.SELit textValue
 
-mutateWith 
-  :: (S.SelectWith -> S.SelectWith) 
-  -> (Mutation -> Q.TxE QErr (S.CTE, DS.Seq Q.PrepArg)) 
-  -> Mutation 
-  -> Q.TxE QErr EncJSON
-mutateWith f g m@(Mutation qt _ mutFlds _ strfyNum) = do
-  (cte, args) <- g m
-  let selWith = mkSelWith qt cte mutFlds False strfyNum
-  -- Perform select query and fetch returning fields
-  encJFromBS . runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder . toSQL $ f selWith) (toList args) True
 
 mutateAndFetchCols
   :: (FromJSON a)
-  => (S.SelectWith -> S.SelectWith) 
-  -> QualifiedTable
+  => QualifiedTable
   -> [PGColumnInfo]
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
   -> Q.TxE QErr (MutateResp a)
-mutateAndFetchCols f qt cols (cte, p) strfyNum =
+mutateAndFetchCols qt cols (cte, p) strfyNum =
   Q.getAltJ . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
   where
-    aliasIden = qualTableToAliasIden qt
+    aliasIden = Iden $ qualObjectToText qt <> "__mutation_result"
     tabFrom = FromIden aliasIden
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
               \ci -> (fromPGCol $ pgiColumn ci, mkAnnColFieldAsText ci)
 
-    sql = toSQL (f selectWith)
+    sql = toSQL selectWith
     selectWith = S.SelectWith [(S.Alias aliasIden, cte)] select
     select = S.mkSelect {S.selExtr = [S.Extractor extrExp Nothing]}
     extrExp = S.applyJsonBuildObj
