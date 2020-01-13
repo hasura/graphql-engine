@@ -465,10 +465,9 @@ class PermissionsSummary extends Component {
               <div className={styles.add_mar_bottom_small}>
                 <b>Columns</b> -{' '}
                 <i>
-                  {getPermissionColumnAccessSummary(
-                    actionPermission,
-                    table.columns
-                  )}
+                  {getPermissionColumnAccessSummary(actionPermission, {
+                    columns: table.columns,
+                  })}
                 </i>
                 {showDetails && getColumnsDetails()}
               </div>
