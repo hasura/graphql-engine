@@ -6,7 +6,7 @@ nproc    := $(shell nproc)
 
 # TODO: needs to be replaced with something like yq
 stack_resolver := $(shell awk '/^resolver:/ {print $$2;}' stack.yaml)
-packager_ver := 20190923
+packager_ver := 20190731
 pg_dump_ver := 12
 project_dir := $(shell pwd)
 build_dir := $(project_dir)/$(shell stack path --dist-dir)/build
