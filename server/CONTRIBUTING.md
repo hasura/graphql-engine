@@ -5,7 +5,7 @@ own machine and how to contribute.
 
 ## Pre-requisites
 
-- [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
+- [GHC](https://www.haskell.org/ghc/) 8.6.5 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
 - [Node.js](https://nodejs.org/en/) (>= v8.9)
 - npm >= 5.7
 - [gsutil](https://cloud.google.com/storage/docs/gsutil)
@@ -42,7 +42,9 @@ After making your changes
 ...and the server:
 
     $ cd server
-    $ stack build --fast
+    $ ln -s cabal.project.dev cabal.project.local
+    $ cabal new-update
+    $ cabal new-build
 
 ### Run and test via `dev.sh`
 
@@ -73,10 +75,10 @@ If you want, you can also run the server and test suite manually against a Postg
 
 #### Run
 
-After building the `graphql-engine` executable with `stack build`, the following command can be used to launch a local `graphql-engine` instance:
+The following command can be used to build and launch a local `graphql-engine` instance:
 
 ```
-stack exec -- graphql-engine \
+cabal new-run -- exe:graphql-engine \
   --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
   serve --enable-console --console-assets-dir=../console/static/dist
 ```
@@ -96,7 +98,8 @@ Both sets of tests require a running Postgres database.
 ##### Running the Haskell test suite
 
 ```
-stack test --fast --test-arguments='--database-url=postgres://<user>:<password>@<host>:<port>/<dbname>'
+cabal new-test --test-show-details=direct \
+  --test-option='--database-url=postgres://<user>:<password>@<host>:<port>/<dbname>'
 ```
 
 ##### Running the Python test suite
@@ -131,7 +134,7 @@ stack test --fast --test-arguments='--database-url=postgres://<user>:<password>@
    ```
    env EVENT_WEBHOOK_HEADER=MyEnvValue \
        WEBHOOK_FROM_ENV=http://localhost:5592/ \
-     stack exec -- graphql-engine \
+     cabal new-run -- exe:graphql-engine \
        --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
        serve --stringify-numeric-types
    ```
