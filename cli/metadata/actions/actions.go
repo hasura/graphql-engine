@@ -217,6 +217,11 @@ input SampleInput {
 }
 
 func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
+	// Do nothing if the codegen framework does not exist
+	if a.ActionConfig.Codegen.Framework == "" {
+		return nil	
+	}
+
 	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
 	if err != nil {
 		return err

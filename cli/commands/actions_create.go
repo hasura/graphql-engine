@@ -2,9 +2,11 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -89,5 +91,17 @@ func (o *actionsCreateOptions) run() error {
 			ActionName:   o.name,
 		},
 	}
-	return actionCfg.Codegen(o.name, derivePayload)
+
+	confirmation, err := util.GetYesNoPrompt("Do you want to generate " + o.EC.Config.Action.Codegen.Framework + " code for this action and the custom types?")
+	confirmation = strings.ToLower(confirmation)
+	if err != nil || confirmation == "n" {
+		infoMsg := fmt.Sprintf(`You skipped codegen. For getting codegen for this action, run:
+
+  hasura action codegen %s
+`, o.name)
+		o.EC.Logger.Info(infoMsg)
+		return nil
+	}
+	err = actionCfg.Codegen(o.name, derivePayload)
+	return err
 }
