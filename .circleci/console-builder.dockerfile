@@ -16,14 +16,9 @@ RUN apt-get update && apt-get install -y \
     libxss1 \
     libasound2 \
     xvfb \
-    git \
-    cmake \
-    pkgconf \
     && curl -Lo /tmp/gcloud-${gcloud_version}.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${gcloud_version}-linux-x86_64.tar.gz \
     && tar -xzf /tmp/gcloud-${gcloud_version}.tar.gz -C /usr/local \
     && /usr/local/google-cloud-sdk/install.sh \
-    && git clone https://github.com/google/brotli.git && cd brotli && mkdir out && cd out && ../configure-cmake \
-    && make && make test && make install && ldconfig \
     && apt-get -y auto-remove \
     && apt-get -y clean \
     && rm -rf /var/lib/apt/lists/* \

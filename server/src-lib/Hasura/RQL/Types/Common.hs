@@ -26,6 +26,7 @@ module Hasura.RQL.Types.Common
        , NonEmptyText
        , mkNonEmptyText
        , unNonEmptyText
+       , nonEmptyText
        , adminText
        , rootText
 
@@ -41,9 +42,8 @@ import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Aeson.Types
 import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax    (Q, TExp, Lift)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
@@ -52,7 +52,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Test.QuickCheck               as QC
 
-newtype NonEmptyText = NonEmptyText {unNonEmptyText :: T.Text}
+newtype NonEmptyText = NonEmptyText { unNonEmptyText :: T.Text }
   deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic, NFData, Cacheable)
 
 instance Arbitrary NonEmptyText where
@@ -62,10 +62,13 @@ mkNonEmptyText :: T.Text -> Maybe NonEmptyText
 mkNonEmptyText ""   = Nothing
 mkNonEmptyText text = Just $ NonEmptyText text
 
-parseNonEmptyText :: T.Text -> Parser NonEmptyText
+parseNonEmptyText :: MonadFail m => Text -> m NonEmptyText
 parseNonEmptyText text = case mkNonEmptyText text of
   Nothing     -> fail "empty string not allowed"
   Just neText -> return neText
+
+nonEmptyText :: Text -> Q (TExp NonEmptyText)
+nonEmptyText = parseNonEmptyText >=> \text -> [|| text ||]
 
 instance FromJSON NonEmptyText where
   parseJSON = withText "String" parseNonEmptyText

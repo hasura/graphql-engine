@@ -28,8 +28,8 @@ QualifiedTable
    :class: haskell-pre
 
    {
-           "name": String,
-           "schema": String
+       "name": String,
+       "schema": String
    }
 
 .. _FunctionName:
@@ -49,8 +49,8 @@ QualifiedFunction
    :class: haskell-pre
 
    {
-           "name": String,
-           "schema": String
+       "name": String,
+       "schema": String
    }
 
 .. _RoleName:
