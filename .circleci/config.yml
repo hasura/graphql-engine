@@ -132,7 +132,6 @@ jobs:
         paths:
         - ciignore
 
-  # build the server binary, and package into docker image
   build_server:
     docker:
     - image: lexilambda/graphql-engine-server-builder:2020-01-10
@@ -143,7 +142,6 @@ jobs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - *setup_remote_docker
     - restore_cache:
         keys:
         - cabal-store-v1-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
@@ -167,6 +165,28 @@ jobs:
             echo "Non-release branch, build with coverage"
             make enable_coverage=true ci-build
           fi
+    - save_cache:
+        key: cabal-store-v1-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        paths:
+        - ~/.cabal/packages
+        - ~/.cabal/store
+    - store_artifacts:
+        path: /build/_server_output
+        destination: server
+    - persist_to_workspace:
+        root: /build
+        paths: [_server_output]
+
+  build_server_image:
+    docker:
+    - image: lexilambda/graphql-engine-server-builder:2020-01-10
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - *setup_remote_docker
     - run:
         name: Build the docker image
         working_directory: ./server
@@ -179,19 +199,9 @@ jobs:
           # build and save the image
           make ci-image
           make ci-save-image
-    - save_cache:
-        key: cabal-store-v1-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
-        paths:
-        - ~/.cabal/packages
-        - ~/.cabal/store
-    - store_artifacts:
-        path: /build/_server_output
-        destination: server
     - persist_to_workspace:
         root: /build
-        paths:
-        - _server_output # binary is called graphql-engine
-
+        paths: [_server_output/image.tar]
 
   # job to execute when all server tests pass. later we can collect test
   # reports and publish them etc.
@@ -480,35 +490,40 @@ workflows:
     - build_server:
         <<: *filter_only_vtags
         requires:
+        - check_build_worthiness
+    - build_server_image:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
         - build_console
     - test_server_pg_12:
         <<: *filter_only_vtags
         requires:
-        - build_server
+        - build_server_image
     - test_server_pg_11:
         <<: *filter_only_vtags
         requires:
-        - build_server
+        - build_server_image
     - test_server_pg_10:
         <<: *filter_only_vtags
         requires:
-        - build_server
+        - build_server_image
     - test_server_pg_9.6:
         <<: *filter_only_vtags
         requires:
-        - build_server
+        - build_server_image
     - test_server_pg_9.5:
         <<: *filter_only_vtags
         requires:
-        - build_server
+        - build_server_image
     - server_unit_tests:
         <<: *filter_only_vtags
         requires:
-        - build_server
+        - build_server_image
     - test_server_upgrade:
         <<: *filter_only_vtags
         requires:
-        - build_server
+        - build_server_image
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
@@ -526,7 +541,7 @@ workflows:
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
-        - build_server
+        - build_server_image
     - test_console:
         <<: *filter_only_vtags
         requires:
