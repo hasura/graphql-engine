@@ -66,8 +66,3 @@ WHERE
         )
     )
 );
-
-UPDATE hdb_catalog.hdb_version
-  SET version = '12'
-WHERE version = '13';
-

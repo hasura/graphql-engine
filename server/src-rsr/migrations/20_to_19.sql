@@ -142,8 +142,3 @@ from
     AND tables.table_name = views.table_name
   )
 );
-
-UPDATE hdb_catalog.hdb_version
-  SET version = '19'
-WHERE version = '20';
-

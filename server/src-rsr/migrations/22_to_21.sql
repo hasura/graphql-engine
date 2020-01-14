@@ -109,8 +109,3 @@ CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
     FROM
         hdb_catalog.hdb_function_agg
 );
-
-UPDATE hdb_catalog.hdb_version
-  SET version = '21'
-WHERE version = '22';
-

@@ -157,11 +157,7 @@ migrateCatalog migrationTime = do
         recreateSystemMetadata
         buildSchemaCacheStrict
         
-    updateCatalogVersion = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
-        INSERT INTO hdb_catalog.hdb_version (version, upgraded_on) VALUES ($1, $2)
-        ON CONFLICT ((version IS NOT NULL))
-        DO UPDATE SET version = $1, upgraded_on = $2
-      |] (latestCatalogVersionString, migrationTime) False
+    updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
     doesSchemaExist schemaName =
       liftTx $ (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler [Q.sql|
@@ -184,8 +180,8 @@ migrateCatalog migrationTime = do
           WHERE name = $1
         ) |] (Identity schemaName) False
 
-downgradeCatalog :: forall m. (MonadIO m, MonadTx m) => DowngradeOptions -> m MigrationResult
-downgradeCatalog opts = do
+downgradeCatalog :: forall m. (MonadIO m, MonadTx m) => DowngradeOptions -> UTCTime -> m MigrationResult
+downgradeCatalog opts time = do
     downgradeFrom =<< getCatalogVersion
   where
     -- downgrades an existing catalog to the specified version
@@ -204,6 +200,7 @@ downgradeCatalog opts = do
                   <> reason
             Right path -> do
               sequence_ path 
+              setCatalogVersion (dgoTargetVersion opts) time
               pure (MRMigrated previousVersion)
       
       where
@@ -236,6 +233,13 @@ downgradeCatalog opts = do
 getCatalogVersion :: MonadTx m => m Text
 getCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
   [Q.sql| SELECT version FROM hdb_catalog.hdb_version |] () False
+
+setCatalogVersion :: MonadTx m => Text -> UTCTime -> m ()
+setCatalogVersion ver time = liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
+    INSERT INTO hdb_catalog.hdb_version (version, upgraded_on) VALUES ($1, $2)
+    ON CONFLICT ((version IS NOT NULL))
+    DO UPDATE SET version = $1, upgraded_on = $2
+  |] (ver, time) False
 
 migrations :: forall m. (MonadIO m, MonadTx m) => Bool -> [(T.Text, MigrationPair m)]
 migrations dryRun =

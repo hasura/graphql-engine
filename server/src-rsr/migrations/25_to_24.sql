@@ -32,8 +32,3 @@ LEFT JOIN primary_key_references AS pkey_refs
 LEFT JOIN pg_class ON pg_class.relname = columns.table_name
 LEFT JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
           AND pg_namespace.nspname = columns.table_schema;
-
-UPDATE hdb_catalog.hdb_version
-   SET version = '24'
- WHERE version = '25';
-

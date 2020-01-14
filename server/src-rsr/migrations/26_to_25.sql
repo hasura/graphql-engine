@@ -118,8 +118,3 @@ CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
 DROP VIEW hdb_catalog.hdb_computed_field_function;
 
 DROP TABLE hdb_catalog.hdb_computed_field;
-
-UPDATE hdb_catalog.hdb_version
-   SET version = '25'
- WHERE version = '26';
-

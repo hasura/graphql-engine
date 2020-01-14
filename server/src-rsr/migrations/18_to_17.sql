@@ -8,8 +8,3 @@ CREATE TABLE hdb_catalog.hdb_query_template
 
 INSERT INTO hdb_catalog.hdb_table (table_schema, table_name)
             VALUES ('hdb_catalog', 'hdb_query_template');
-
-UPDATE hdb_catalog.hdb_version
-  SET version = '17'
-WHERE version = '18';
-

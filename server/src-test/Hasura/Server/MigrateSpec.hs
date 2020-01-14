@@ -84,7 +84,7 @@ spec pgConnInfo = do
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
       time <- getCurrentTime
       transact (dropAndInit time) `shouldReturn` MRInitialized
-      downgradeResult <- (transact . lift) (downgradeTo "12")
+      downgradeResult <- (transact . lift) (downgradeTo "12" time)
       downgradeResult `shouldSatisfy` \case
         MRMigrated{} -> True
         _ -> False

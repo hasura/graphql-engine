@@ -49,9 +49,9 @@ runApp (HGEOptionsG rci hgeCmd) =
       either printErrJExit (liftIO . BLC.putStrLn) res
 
     HCDowngrade opts -> do
-      (InitCtx{..}, _) <- initialiseCtx hgeCmd rci
+      (InitCtx{..}, initTime) <- initialiseCtx hgeCmd rci
       let sqlGenCtx = SQLGenCtx False
-      res <- downgradeCatalog opts
+      res <- downgradeCatalog opts initTime
              & runAsAdmin _icPgPool sqlGenCtx _icHttpManager
       either printErrJExit (liftIO . print) res
 

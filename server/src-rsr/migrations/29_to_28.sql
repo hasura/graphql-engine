@@ -143,7 +143,3 @@ from
     AND tables.table_name = descriptions.table_name
   )
 );
-
-UPDATE hdb_catalog.hdb_version
-   SET version = '28'
- WHERE version = '29';

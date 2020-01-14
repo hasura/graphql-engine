@@ -7,8 +7,3 @@ CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT ON
 DROP INDEX hdb_catalog."hdb_schema_update_event_one_row";
 
 ALTER TABLE hdb_catalog.hdb_schema_update_event ADD COLUMN id SERIAL PRIMARY KEY;
-
-UPDATE hdb_catalog.hdb_version
-  SET version = '18'
-WHERE version = '19';
-
