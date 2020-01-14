@@ -1,3 +1,7 @@
+.. meta::
+   :description: Relationships modelling in Hasura
+   :keywords: hasura, docs, schema, database modelling
+
 Database modelling guides
 =========================
 
