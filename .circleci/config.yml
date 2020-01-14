@@ -134,7 +134,7 @@ jobs:
 
   build_server:
     docker:
-    - image: lexilambda/graphql-engine-server-builder:2020-01-10
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     resource_class: large
     working_directory: ~/graphql-engine
     steps:
@@ -179,7 +179,7 @@ jobs:
 
   build_image:
     docker:
-    - image: lexilambda/graphql-engine-server-builder:2020-01-10
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -223,7 +223,7 @@ jobs:
       PG_VERSION: "12"
       POSTGIS_VERSION: "3.0.0"
     docker:
-    - image: lexilambda/graphql-engine-server-builder:2020-01-10
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     - image: hasura/postgres-12.0-alpine-postgis3:6cbd863d47c0
       <<: *test_pg_env
 
@@ -232,7 +232,7 @@ jobs:
     environment:
       PG_VERSION: "11"
     docker:
-    - image: lexilambda/graphql-engine-server-builder:2020-01-10
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     - image: circleci/postgres:11-alpine-postgis
       <<: *test_pg_env
 
@@ -241,7 +241,7 @@ jobs:
     environment:
       PG_VERSION: "10"
     docker:
-    - image: lexilambda/graphql-engine-server-builder:2020-01-10
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     - image: circleci/postgres:10-alpine-postgis
       <<: *test_pg_env
 
@@ -250,7 +250,7 @@ jobs:
     environment:
       PG_VERSION: "9_6"
     docker:
-    - image: lexilambda/graphql-engine-server-builder:2020-01-10
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
@@ -259,14 +259,14 @@ jobs:
     environment:
       PG_VERSION: "9_5"
     docker:
-    - image: lexilambda/graphql-engine-server-builder:2020-01-10
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
   server_unit_tests:
     resource_class: large
     docker:
-    - image: lexilambda/graphql-engine-server-builder:2020-01-10
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
