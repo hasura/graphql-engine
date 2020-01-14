@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use HTTP compression with Hasura GraphQL engine
+   :keywords: hasura, docs, deployment, http compression
+
 .. _http-compression:
 
 HTTP Compression

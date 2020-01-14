@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use authenticaton with JWT in Hasura
+   :keywords: hasura, docs, authentication, auth, JWT
+
 Authentication using JWT
 ========================
 

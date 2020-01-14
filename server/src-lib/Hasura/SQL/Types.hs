@@ -162,7 +162,7 @@ class ToTxt a where
 newtype TableName
   = TableName { getTableTxt :: T.Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data
-           , Generic, Arbitrary, NFData, Cacheable )
+           , Generic, Arbitrary, NFData, Cacheable, IsString )
 
 instance IsIden TableName where
   toIden (TableName t) = Iden t
@@ -232,7 +232,8 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic
+           , Arbitrary, NFData, Cacheable, IsString )
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -303,7 +304,8 @@ newtype PGDescription
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey
+           , FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
 
 instance IsIden PGCol where
   toIden (PGCol t) = Iden t
