@@ -154,8 +154,7 @@ migrateCatalog downgradeOpts migrationTime = do
               pure (MRMigrated previousVersion, schemaCache)
         Just dg
           | previousVersion == dgoTargetVersion dg -> do
-              schemaCache <- buildRebuildableSchemaCache
-              pure (MRNothingToDo, schemaCache)
+              pure (MRNothingToDo, error "migrateCatalog: cannot rebuild the schema cache after a downgrade")
           | otherwise -> 
               case neededDownMigrations (dgoTargetVersion dg) of
                 Left reason -> 
@@ -167,8 +166,7 @@ migrateCatalog downgradeOpts migrationTime = do
                       <> reason
                 Right path -> do
                   sequence_ path 
-                  schemaCache <- buildCacheAndRecreateSystemMetadata
-                  pure (MRMigrated previousVersion, schemaCache)
+                  pure (MRMigrated previousVersion, error "migrateCatalog: cannot rebuild the schema cache after a downgrade")
       
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) migrations
