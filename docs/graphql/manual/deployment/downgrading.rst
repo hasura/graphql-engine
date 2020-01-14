@@ -1,6 +1,6 @@
 .. meta::
-   :description: Downgrade Hasura GraphQL engine image version
-   :keywords: hasura, docs, deployment, downgrade, image version
+   :description: Downgrade Hasura GraphQL engine version
+   :keywords: hasura, docs, deployment, downgrade, version
 
 Downgrading Hasura GraphQL engine
 =================================

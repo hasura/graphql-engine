@@ -1,6 +1,6 @@
 .. meta::
    :description: Use hasura console to open the Hasura console from the Hasura CLI
-   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura console
+   :keywords: hasura, docs, CLI, hasura console
 
 .. _hasura_console:
 

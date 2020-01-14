@@ -1,6 +1,6 @@
 .. meta::
-   :description: Update Hasura GraphQL engine
-   :keywords: hasura, docs, deployment, update
+   :description: Update Hasura GraphQL engine version
+   :keywords: hasura, docs, deployment, update, version
 
 Updating Hasura GraphQL engine
 ==============================

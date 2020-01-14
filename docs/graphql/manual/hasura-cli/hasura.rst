@@ -1,6 +1,6 @@
 .. meta::
-   :description: Use hasura for a manual of the Hasura CLI
-   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura 
+   :description: Hasura CLI commands reference
+   :keywords: hasura, docs, CLI
 
 .. _hasura:
 

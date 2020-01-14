@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use computed fields with the Hasura schema/metadata API
+   :description: Manage computed fields with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, computed field
 
 Schema/Metadata API Reference: Computed Fields

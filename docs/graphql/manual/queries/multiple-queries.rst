@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use multiple queries in a request in Hasura
+   :description: Run multiple queries in a request in Hasura
    :keywords: hasura, docs, query, multiple queries, request
 
 Multiple queries in a request

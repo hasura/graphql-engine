@@ -1,5 +1,5 @@
 .. meta::
-   :description: Guide for the use of Telemetry with Hasura
+   :description: Telemetry on Hasura
    :keywords: hasura, docs, guide, telemetry
 
 .. _telemetry:

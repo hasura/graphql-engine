@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use Hasura GraphQL engine server logs with Kubernetes deployment
+   :description: Get Hasura GraphQL engine server logs with Kubernetes deployment
    :keywords: hasura, docs, deployment, kubernetes, logs
 
 Hasura GraphQL engine server logs (Kubernetes)

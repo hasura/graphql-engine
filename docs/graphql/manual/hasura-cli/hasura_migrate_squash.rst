@@ -1,6 +1,6 @@
 .. meta::
    :description: Use hasura migrate squash to squash multiple migrations into one migration with the Hasura CLI
-   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura migrate squash
+   :keywords: hasura, docs, CLI, hasura migrate squash
 
 .. _hasura_migrate_squash:
 

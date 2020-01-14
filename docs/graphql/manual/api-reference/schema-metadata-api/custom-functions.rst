@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use custom functions with the Hasura schema/metadata API
+   :description: Manage custom functions with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, custom function
 
 Schema/Metadata API Reference: Custom Functions

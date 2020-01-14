@@ -1,6 +1,6 @@
 .. meta::
    :description: Use hasura metadata diff to show changes between two different sets of Hasura metadata with the Hasura CLI
-   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl, hasura metadata diff
+   :keywords: hasura, docs, CLI, hasura metadata diff
 
 .. _hasura_metadata_diff:
 

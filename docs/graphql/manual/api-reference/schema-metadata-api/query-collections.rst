@@ -1,5 +1,5 @@
 .. meta::
-   :description: Use query collections with the Hasura schema/metadata API
+   :description: Manage query collections with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, query collection
 
 Schema/Metadata API Reference: Query collections
