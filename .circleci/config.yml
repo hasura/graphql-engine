@@ -548,6 +548,7 @@ workflows:
     - test_console:
         <<: *filter_only_vtags
         requires:
+        - build_console
         - test_and_build_cli
         - test_cli_with_last_release
     - deploy:
