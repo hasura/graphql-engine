@@ -499,31 +499,31 @@ workflows:
     - test_server_pg_12:
         <<: *filter_only_vtags
         requires:
-        - build_server_image
+        - build_server
     - test_server_pg_11:
         <<: *filter_only_vtags
         requires:
-        - build_server_image
+        - build_server
     - test_server_pg_10:
         <<: *filter_only_vtags
         requires:
-        - build_server_image
+        - build_server
     - test_server_pg_9.6:
         <<: *filter_only_vtags
         requires:
-        - build_server_image
+        - build_server
     - test_server_pg_9.5:
         <<: *filter_only_vtags
         requires:
-        - build_server_image
+        - build_server
     - server_unit_tests:
         <<: *filter_only_vtags
         requires:
-        - build_server_image
+        - build_server
     - test_server_upgrade:
         <<: *filter_only_vtags
         requires:
-        - build_server_image
+        - build_server
     - all_server_tests_pass:
         <<: *filter_only_vtags
         requires:
@@ -541,7 +541,7 @@ workflows:
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
-        - build_server_image
+        - build_server
     - test_console:
         <<: *filter_only_vtags
         requires:
@@ -550,5 +550,6 @@ workflows:
     - deploy:
         <<: *filter_only_vtags_dev_release_branches
         requires:
+        - build_server_image
         - test_console
         - all_server_tests_pass
