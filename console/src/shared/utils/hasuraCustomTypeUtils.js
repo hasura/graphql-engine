@@ -4,7 +4,7 @@ export const inbuiltTypes = {
   Int: true,
   Boolean: true,
   String: true,
-  Float: true
+  Float: true,
 };
 
 const singularize = kind => {
@@ -99,12 +99,14 @@ export const parseCustomTypes = customTypesServer => {
   const customTypesClient = [];
   Object.keys(customTypesServer).forEach(tk => {
     const types = customTypesServer[tk];
-    types.forEach(t => {
-      customTypesClient.push({
-        ...t,
-        kind: singularize(tk),
+    if (types) {
+      types.forEach(t => {
+        customTypesClient.push({
+          ...t,
+          kind: singularize(tk),
+        });
       });
-    });
+    }
   });
   return customTypesClient;
 };
@@ -147,7 +149,7 @@ export const hydrateTypeRelationships = (newTypes, existingTypes) => {
     if (t.kind === 'object' && typeMap[t.name]) {
       return {
         ...t,
-        relationships: typeMap[t.name].relationships
+        relationships: typeMap[t.name].relationships,
       };
     }
 
