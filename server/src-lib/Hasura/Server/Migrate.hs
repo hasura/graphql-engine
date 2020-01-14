@@ -220,7 +220,34 @@ migrateCatalog migrationTime = do
                                              WHERE name = $2
                                              |] (Q.AltJ $ A.toJSON etc, name) True
 
-recreateSystemMetadata :: (MonadTx m) => m ()
+-- | Drops and recreates all “system-defined” metadata, aka metadata for tables and views in the
+-- @information_schema@ and @hdb_catalog@ schemas. These tables and views are tracked to expose them
+-- to the console, which allows us to reuse the same functionality we use to implement user-defined
+-- APIs to expose the catalog.
+--
+-- This process has a long and storied history.
+--
+-- In the past, we reused the same machinery we use for CLI migrations to define our own internal
+-- metadata migrations. This caused trouble, however, as we’d have to run those migrations in
+-- lockstep with our SQL migrations to ensure the two didn’t get out of sync. This in turn caused
+-- trouble because those migrations would hit code paths inside @graphql-engine@ to add or remove
+-- things from the @pg_catalog@ tables, and /that/ in turn would fail because we hadn’t finished
+-- running the SQL migrations, so we were running a new version of the code against an old version
+-- of the schema! That caused #2826.
+--
+-- To fix that, #2379 switched to the approach of just dropping and recreating all system metadata
+-- every time we run any SQL migrations. But /that/ in turn caused trouble due to the way we were
+-- constantly rebuilding the schema cache (#3354), causing us to switch to incremental schema cache
+-- construction (#3394). However, although that mostly resolved the problem, we still weren’t
+-- totally out of the woods, as the incremental construction was still too slow on slow Postgres
+-- instances (#3654).
+--
+-- To sidestep the whole issue, as of #3686 we now just create all the system metadata in code here,
+-- and we only rebuild the schema cache once, at the very end. This is a little unsatisfying, since
+-- it means our internal migrations are “blessed” compared to user-defined CLI migrations. If we
+-- improve CLI migrations further in the future, maybe we can switch back to using that approach,
+-- instead.
+recreateSystemMetadata :: (MonadTx m, CacheRWM m) => m ()
 recreateSystemMetadata = do
   runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
   runHasSystemDefinedT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
@@ -228,6 +255,7 @@ recreateSystemMetadata = do
     for_ tableRels \case
       Left relDef -> insertRelationshipToCatalog tableName ObjRel relDef
       Right relDef -> insertRelationshipToCatalog tableName ArrRel relDef
+  buildSchemaCacheStrict
   where
     systemMetadata :: [(QualifiedTable, [Either ObjRelDef ArrRelDef])]
     systemMetadata =
