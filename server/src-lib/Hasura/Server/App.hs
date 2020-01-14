@@ -5,6 +5,7 @@ module Hasura.Server.App where
 
 import           Control.Concurrent.MVar
 import           Control.Exception                      (IOException, try)
+import           Control.Lens                           ((^.), _3)
 import           Control.Monad.Stateless
 import           Data.Aeson                             hiding (json)
 import           Data.Either                            (isRight)
@@ -460,9 +461,9 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
     (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun runCtx pgExecCtxSer Q.ReadWrite $
         (,) <$> buildRebuildableSchemaCache <*> liftTx fetchLastUpdate
-      (schemaCache, time) <- liftIO $ either initErrExit return pgResp
+      (schemaCache, updateDataM) <- liftIO $ either initErrExit return pgResp
       scRef <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
-      return (scRef, snd <$> time)
+      return (scRef, (^. _3) <$> updateDataM)
 
     cacheLock <- liftIO $ newMVar ()
     planCache <- liftIO $ E.initPlanCache planCacheOptions

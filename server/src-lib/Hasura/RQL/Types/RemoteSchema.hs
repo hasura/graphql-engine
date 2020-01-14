@@ -1,5 +1,6 @@
 module Hasura.RQL.Types.RemoteSchema where
 
+import           Control.Lens               (makeLenses)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common    (NonEmptyText)
 import           Language.Haskell.TH.Syntax (Lift)
@@ -76,6 +77,7 @@ newtype RemoteSchemaNameQuery
   } deriving (Show, Eq, Lift)
 
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''RemoteSchemaNameQuery)
+$(makeLenses ''RemoteSchemaNameQuery)
 
 getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Text -> m N.URI
 getUrlFromEnv urlFromEnv = do

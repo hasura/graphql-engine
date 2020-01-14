@@ -115,6 +115,7 @@ data RQLQuery
   = RQV1 !RQLQueryV1
   | RQV2 !RQLQueryV2
   deriving (Show, Eq, Lift)
+$(makePrisms ''RQLQuery)
 
 instance FromJSON RQLQuery where
   parseJSON = withObject "Object" $ \o -> do
@@ -140,6 +141,7 @@ $(deriveJSON
                  , sumEncoding = TaggedObject "type" "args"
                  }
   ''RQLQueryV1)
+$(makePrisms ''RQLQueryV1)
 
 $(deriveJSON
   defaultOptions { constructorTagModifier = snakeCase . drop 4
@@ -148,24 +150,25 @@ $(deriveJSON
                  }
   ''RQLQueryV2
  )
+$(makePrisms ''RQLQueryV2)
 
-fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
+fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, Maybe RQLQuery, UTCTime))
 fetchLastUpdate = do
-  Q.withQE defaultTxErrorHandler
+  fmap (& _2 %~ (fmap Q.getAltJ)) <$> Q.withQE defaultTxErrorHandler
     [Q.sql|
-       SELECT instance_id::text, occurred_at
+       SELECT instance_id::text, payload::json, occurred_at
        FROM hdb_catalog.hdb_schema_update_event
        ORDER BY occurred_at DESC LIMIT 1
           |] () True
 
-recordSchemaUpdate :: InstanceId -> Q.TxE QErr ()
-recordSchemaUpdate instanceId =
+recordSchemaUpdate :: InstanceId -> RQLQuery -> Q.TxE QErr ()
+recordSchemaUpdate instanceId rqlQuery =
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
              INSERT INTO hdb_catalog.hdb_schema_update_event
-               (instance_id, occurred_at) VALUES ($1::uuid, DEFAULT)
+               (instance_id, payload, occurred_at) VALUES ($1::uuid, $2, DEFAULT)
              ON CONFLICT ((occurred_at IS NOT NULL))
-             DO UPDATE SET instance_id = $1::uuid, occurred_at = DEFAULT
-            |] (Identity instanceId) True
+             DO UPDATE SET instance_id = $1::uuid, payload = $2, occurred_at = DEFAULT
+            |] (instanceId, Q.AltJ rqlQuery) True
 
 runQuery
   :: (MonadIO m, MonadError QErr m)
@@ -186,7 +189,7 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = d
     withReload r = do
       when (queryModifiesSchemaCache query) $ do
         e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite
-             $ liftTx $ recordSchemaUpdate instanceId
+             $ liftTx $ recordSchemaUpdate instanceId query
         liftEither e
       return r
 

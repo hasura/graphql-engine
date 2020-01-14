@@ -17,6 +17,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.IORef
+import Control.Lens ((^?))
 
 import qualified Control.Concurrent        as C
 import qualified Control.Concurrent.STM    as STM
@@ -59,9 +60,15 @@ instance ToEngineLog SchemaSyncThreadLog Hasura where
 data EventPayload
   = EventPayload
   { _epInstanceId :: !InstanceId
+  , _epPayload    :: !(Maybe RQLQuery)
   , _epOccurredAt :: !UTC.UTCTime
   } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''EventPayload)
+$(deriveFromJSON (aesonDrop 3 snakeCase) ''EventPayload)
+
+instance ToJSON EventPayload where
+  -- Omitting payload to not to log
+  toJSON (EventPayload instanceId _ occurredAt) =
+    object ["instance_id" .= instanceId, "occurred_at" .= occurredAt]
 
 data ThreadError
   = TEJsonParse !T.Text
@@ -136,9 +143,9 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
         Just time -> (dbInstId /= instanceId) && accrdAt > time
 
     refreshCache Nothing = return ()
-    refreshCache (Just (dbInstId, accrdAt)) =
+    refreshCache (Just (dbInstId, rqlQueryM, accrdAt)) =
       when (shouldRefresh dbInstId accrdAt) $
-        refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef
+        refreshSchemaCache rqlQueryM sqlGenCtx pool logger httpMgr cacheRef
           threadType "schema cache reloaded after postgres listen init"
 
     notifyHandler = \case
@@ -179,7 +186,7 @@ processor sqlGenCtx pool logger httpMgr updateEventRef
     event <- STM.atomically getLatestEvent
     logInfo logger threadType $ object ["processed_event" .= event]
     when (shouldReload event) $
-      refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef
+      refreshSchemaCache (_epPayload event) sqlGenCtx pool logger httpMgr cacheRef
         threadType "schema cache reloaded"
   where
     -- checks if there is an event
@@ -197,20 +204,22 @@ processor sqlGenCtx pool logger httpMgr updateEventRef
     shouldReload payload = _epInstanceId payload /= instanceId
 
 refreshSchemaCache
-  :: SQLGenCtx
+  :: Maybe RQLQuery
+  -> SQLGenCtx
   -> PG.PGPool
   -> Logger Hasura
   -> HTTP.Manager
   -> SchemaCacheRef
   -> ThreadType
   -> T.Text -> IO ()
-refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = do
+refreshSchemaCache rqlQueryM sqlGenCtx pool logger httpManager cacheRef threadType msg = do
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
-    buildSchemaCacheWithOptions CatalogSync
-      & runCacheRWT rebuildableCache
-      & peelRun runCtx pgCtx PG.ReadWrite
+    peelRun runCtx pgCtx PG.ReadWrite $
+      runCacheRWT rebuildableCache $ do
+        mapM_ invalidateCachedRemoteSchema $ rqlQueryM >>= (^? _RQV1._RQReloadRemoteSchema.rsnqName)
+        buildSchemaCacheWithOptions CatalogSync
   case resE of
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
