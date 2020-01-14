@@ -1,3 +1,7 @@
+.. meta::
+   :description: Make aggregation queries with Hasura
+   :keywords: hasura, docs, query, aggregation query
+
 Aggregation queries
 ===================
 

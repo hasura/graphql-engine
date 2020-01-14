@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura migrate create to create migration files for Hasura migrations with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura migrate create
+
 .. _hasura_migrate_create:
 
 Hasura CLI: hasura migrate create

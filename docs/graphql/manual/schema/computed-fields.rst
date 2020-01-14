@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use computed fields in Hasura
+   :keywords: hasura, docs, schema, computed field
+
 Computed fields
 ===============
 
