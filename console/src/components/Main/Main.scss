@@ -83,7 +83,7 @@
 }
 
 .header_items {
-  width: 50%;
+  width: 45%;
 }
 
 .header_logo_wrapper {
@@ -145,7 +145,7 @@
 }
 
 .clusterInfoWrapper {
-  width: 30%;
+  width: 35%;
   display: flex;
   justify-content: flex-end;
   position: relative;
@@ -1202,4 +1202,108 @@
   top: 2px;
   left: 4px;
   z-index: -1;
+}
+/* PRO popup section */
+.proWrapper {
+  position: relative;
+  padding: 12px 15px;
+  .proName, .proNameClicked {
+    font-size: 15px;
+    font-weight: bold;
+    font-stretch: normal;
+    font-style: normal;
+    line-height: 1.6;
+    letter-spacing: 1px;
+    cursor: pointer;
+    &:hover {
+      opacity: .8;
+    }
+  }
+  .proName {
+    color: #1cd3c6;
+  }
+  .proNameClicked {
+    color: #fff;
+  }
+  .proPopUpWrapper {
+    position: absolute;
+    box-shadow: 0 3px 20px 0 rgba(0, 0, 0, 0.24);
+    background-color: #ffffff;
+    position: absolute;
+    width: 540px;
+    z-index: 1;
+    top: 60px;
+    right: -35px;
+    text-transform: none;
+    overflow: auto;
+    max-height: calc(100vh - 80px);
+    .popUpHeader {
+      font-size: 20px;
+      font-weight: bold;
+      color: #001934;
+      background-color: #f8f8f8;
+      padding: 20px 24px;
+      border-bottom: 1px solid #ddd;
+      span {
+        color: #1cd3c6;
+      }
+      .popUpClose {
+        position: absolute;
+        top: 28px;
+        right: 24px;
+        cursor: pointer;
+        &:hover {
+          opacity: .8;
+        }
+      }
+    }
+    .popUpBodyWrapper {
+      padding: 24px 24px;
+      padding-bottom: 0;
+      .featuresDescription {
+        padding-bottom: 24px;
+        font-size: 15px;
+        color: #303030;
+        font-weight: normal;
+      }
+      .proFeaturesList {
+        display: flex;
+        .featuresImg {
+          padding-right: 14px;
+        }
+        .featuresList {
+          .featuresTitle {
+            font-size: 15px;
+            font-weight: bold;
+            color: #303030;
+            padding-bottom: 8px;
+          }
+          .featuresDescription {
+            opacity: .6;
+          }
+        }
+      }
+    }
+    .popUpFooter {
+      border-top: 1px solid #ddd;
+      padding: 20px 24px;
+      color: #ff3264;
+      font-weight: normal;
+      font-size: 15px;
+      a {
+        color: #ff3264;
+        &:hover {
+          text-decoration: none;
+          border-bottom: 1px solid #ff3264;
+        }
+        &:focus {
+          outline: none;
+          text-decoration: none;
+        }
+      }
+      .arrow {
+        margin-left: 8px;
+      }
+    }
+  }
 }

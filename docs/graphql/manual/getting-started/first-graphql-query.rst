@@ -24,6 +24,7 @@ the following columns:
   )
 
 .. thumbnail:: ../../../img/graphql/manual/getting-started/create-profile-table.png
+   :alt: Create a table
 
 Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
 
@@ -44,6 +45,7 @@ Head to the ``GraphiQL`` tab in the console and try running the following query:
 You'll see that you get all the inserted data!
 
 .. thumbnail:: ../../../img/graphql/manual/getting-started/profile-query.png
+   :alt: Try out a query
 
 Next steps
 ----------

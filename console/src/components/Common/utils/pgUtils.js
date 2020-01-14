@@ -235,6 +235,22 @@ export const getFunctionName = pgFunction => {
   return pgFunction.function_name;
 };
 
+export const getFunctionDefinition = pgFunction => {
+  return pgFunction.function_definition;
+};
+
+export const getSchemaFunctions = (allFunctions, fnSchema) => {
+  return allFunctions.filter(fn => getFunctionSchema(fn) === fnSchema);
+};
+
+export const findFunction = (allFunctions, functionName, functionSchema) => {
+  return allFunctions.find(
+    f =>
+      getFunctionName(f) === functionName &&
+      getFunctionSchema(f) === functionSchema
+  );
+};
+
 /*** Schema utils ***/
 
 export const getSchemaName = schema => {
@@ -263,4 +279,35 @@ export const getTableCustomColumnNames = table => {
     return table.configuration.custom_column_names || {};
   }
   return {};
+};
+
+/*** Table/View Computed Field utils ***/
+
+export const getTableComputedFields = table => {
+  return table.computed_fields;
+};
+
+export const getComputedFieldName = computedField => {
+  return computedField.computed_field_name;
+};
+
+export const getGroupedTableComputedFields = (table, allFunctions) => {
+  const groupedComputedFields = { scalar: [], table: [] };
+
+  getTableComputedFields(table).forEach(computedField => {
+    const computedFieldFnDef = computedField.definition.function;
+    const computedFieldFn = findFunction(
+      allFunctions,
+      computedFieldFnDef.name,
+      computedFieldFnDef.schema
+    );
+
+    if (computedFieldFn && computedFieldFn.return_type_type === 'b') {
+      groupedComputedFields.scalar.push(computedField);
+    } else {
+      groupedComputedFields.table.push(computedField);
+    }
+  });
+
+  return groupedComputedFields;
 };

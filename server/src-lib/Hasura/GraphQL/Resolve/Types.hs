@@ -220,6 +220,8 @@ type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
 
 -- template haskell related
 $(makePrisms ''ResolveField)
+$(makeLenses ''ComputedField)
+$(makePrisms ''ComputedFieldType)
 
 data InputFunctionArgument
   = IFAKnown !FunctionArgName !UnresolvedVal -- ^ Known value
