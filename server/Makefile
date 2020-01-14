@@ -16,22 +16,15 @@ build_output := /build/_server_output
 # This glob is a pretty heavy hammer designed to work regardless of `cabal-install` version (see the
 # aforementioned link for why that’s tricky). If `cabal v2-*` ever gets a better way to do this,
 # please replace this with something less hacky.
-package_directory_glob := dist-newstyle/build/*/*/graphql-engine-*
-executables_glob := $(package_directory_glob)/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests}
+executables_glob := dist-newstyle/build/*/*/graphql-engine-*/**/opt/build/{graphql-engine/graphql-engine,graphql-engine-tests/graphql-engine-tests}
+
+# These are the directories where `cabal v2-build --enable-coverage` sticks .mix files. It would be
+# much better if cabal-install supported something like stack’s `stack hpc report`, which passes the
+# right `--hpcdir` options automatically.
+mix_dirs_glob := dist-newstyle/**/hpc/vanilla/mix/**/{graphql-engine-1.0.0,graphql-engine}/
 
 # assumes this is built in circleci
 ci-build:
-	## clean
-	# Since we have to rely on `executables_glob` to get the executables (see above), delete them all
-	# before building. This ensures that if `cabal-install` changes in the future, we don’t just copy
-	# the stale, cached build products, since that would be a nightmare to debug.
-	shopt -s nullglob globstar && for file in $(executables_glob); do rm "$$file"; done
-	# Even though we did the above step to delete the executables, `cabal v2-build` won’t relink them
-	# if none of the sources changed. We can get around this by deleting the `cache` directories.
-	# (This has the convenient side-effect of ensuring files marked with `-fforce-recomp` get
-	# recompiled, which is important so that the right git SHA gets used as the executable version.)
-	shopt -s nullglob globstar && \
-		for directory in $(package_directory_glob)/**/opt/cache/; do rm -rf "$$directory"; done
 	## configure
 	cp cabal.project.ci cabal.project.local
 	# Passing `--enable-coverage` to `cabal v2-build` appears to enable coverage for all packages, not
@@ -47,6 +40,10 @@ ci-build:
 	mkdir -p '$(build_output)'
 	echo '$(VERSION)' > '$(build_output)/version.txt'
 	shopt -s failglob globstar && cp $(executables_glob) '$(build_output)/'
+	# Copy the .mix files needed for `hpc` to generate code coverage reports into the build output
+	# directory.
+	mkdir -p '$(build_output)/mix/'
+	shopt -s failglob globstar && cp -R $(mix_dirs_glob) '$(build_output)/mix/'
 
 # assumes this is built in circleci
 ci-image:

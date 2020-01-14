@@ -79,9 +79,6 @@ refs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - restore_cache:
-        # we need the dist-newstyle/ directory for the .mix files, which are used by hpc
-        key: server-build-v1-{{ .Branch }}-{{ .Revision }}
     - *wait_for_postgres
     - run:
         name: Install deps
@@ -152,10 +149,6 @@ jobs:
         - cabal-store-v1-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
         - cabal-store-v1-{{ checksum "server/cabal.project" }}-
         - cabal-store-v1-
-    - restore_cache:
-        keys:
-        - server-build-v1-{{ .Branch }}-{{ .Revision }}
-        - server-build-v1-{{ .Branch }}-
     - run:
         name: Install latest postgresql client tools
         command: |
@@ -185,10 +178,6 @@ jobs:
           # build and save the image
           make ci-image
           make ci-save-image
-    - save_cache:
-        key: server-build-v1-{{ .Branch }}-{{ .Revision }}
-        paths:
-        - server/dist-newstyle
     - save_cache:
         key: cabal-store-v1-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
         paths:

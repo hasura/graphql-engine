@@ -101,19 +101,17 @@ combine_all_hpc_reports() {
 
 generate_coverage_report() {
   combine_all_hpc_reports
-  ( shopt -s failglob globstar
+  ( shopt -s failglob
     unset GHCRTS
     cd ~/graphql-engine/server
-    # These are the directories where `cabal v2-build --enable-coverage` sticks .mix files. It would
-    # be much better if cabal-install supported something like stack’s `stack hpc report`, which
-    # passes the right `--hpcdir` options automatically.
-    mix_dirs=(dist-newstyle/**/hpc/vanilla/mix/**/{graphql-engine-1.0.0,graphql-engine})
+    mix_dirs=("$OUTPUT_FOLDER"/mix/*)
     # This is the bash syntax to prepend `--hpcdir=` to each element of an array. Yeah, I don’t like
     # it, either.
     hpcdir_args=("${mix_dirs[@]/#/--hpcdir=}")
     hpc_args=("${hpcdir_args[@]}" --reset-hpcdirs "$OUTPUT_FOLDER/graphql-engine.tix")
     hpc report "${hpc_args[@]}"
-    hpc markup "${hpc_args[@]}" --destdir="$OUTPUT_FOLDER" )
+    mkdir -p "$OUTPUT_FOLDER/coverage"
+    hpc markup "${hpc_args[@]}" --destdir="$OUTPUT_FOLDER/coverage" )
 }
 
 kill_hge_servers() {
