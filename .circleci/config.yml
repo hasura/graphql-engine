@@ -105,8 +105,9 @@ refs:
           HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
           GRAPHQL_ENGINE: /build/_server_output/graphql-engine
           GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
-        command: |
-          OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
+          MIX_FILES_FOLDER: /build/_server_output/mix
+          OUTPUT_FOLDER: /build/_server_test_output/$PG_VERSION
+        command: .circleci/test-server.sh
     - store_artifacts:
         path: /build/_server_test_output
         destination: server_test

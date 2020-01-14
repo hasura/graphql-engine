@@ -104,7 +104,7 @@ generate_coverage_report() {
   ( shopt -s failglob
     unset GHCRTS
     cd ~/graphql-engine/server
-    mix_dirs=("$OUTPUT_FOLDER"/mix/*)
+    mix_dirs=("$MIX_FILES_FOLDER"/*)
     # This is the bash syntax to prepend `--hpcdir=` to each element of an array. Yeah, I don’t like
     # it, either.
     hpcdir_args=("${mix_dirs[@]/#/--hpcdir=}")
