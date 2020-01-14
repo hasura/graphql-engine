@@ -54,6 +54,8 @@ func ExecuteMigration(cmd string, t *migrate.Migrate, stepOrVersion int64) error
 		err = mig.UpCmd(t, stepOrVersion)
 	case "down":
 		err = mig.DownCmd(t, stepOrVersion)
+	case "gotoVersion":
+		err = mig.GotoVersionCmd(t, uint64(stepOrVersion))
 	case "version":
 		var direction string
 		if stepOrVersion >= 0 {

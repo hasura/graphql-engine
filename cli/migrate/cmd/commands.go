@@ -255,3 +255,42 @@ func SquashCmd(m *migrate.Migrate, from uint64, version int64, name, directory s
 
 	return
 }
+
+func GotoVersionCmd(m *migrate.Migrate, gotoVersion uint64) error {
+	currentVersion, dirty, err := m.Version()
+	if err != nil {
+		return errors.Wrap(err, "cannot determine the current version of migrations")
+	}
+	if dirty {
+		return errors.New("stopping now, database is in dirty state")
+	}
+
+	status, err := m.GetStatus()
+	if err != nil {
+		errors.Wrap(err, "cannot determine status of migrations")
+	}
+	var gotoStep, currentStep int
+	for index, migrationVersion := range status.Index {
+		if migrationVersion == gotoVersion {
+			gotoStep = index
+		}
+		if currentVersion == migrationVersion {
+			currentStep = index
+		}
+	}
+
+	if gotoStep < currentStep {
+		for step := currentStep; step >= gotoStep; step-- {
+			m.Migrate(status.Index[step], "down")
+
+		}
+	}
+	if gotoStep > currentStep {
+		for step := currentStep; step <= gotoStep; step++ {
+			m.Migrate(status.Index[step], "up")
+
+		}
+
+	}
+	return nil
+}
