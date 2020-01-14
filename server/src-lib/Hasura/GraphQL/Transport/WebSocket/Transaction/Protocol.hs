@@ -81,7 +81,6 @@ data ServerMessage
   = SMConnErr !Text
   | SMInitErr !Text
   | SMInitialised
-  | SMExecMessage !Text
   | SMData !DataMessage
   | SMError !ErrorMessage
   | SMClose !WS.WSId !Text
@@ -123,11 +122,6 @@ encodeServerMessage msg =
 
   SMInitialised ->
     [encTy SMT_GQL_TX_INITIALISED]
-
-  SMExecMessage message ->
-    [ encTy SMT_GQL_TX_DATA
-    , ("payload", encJFromJValue message)
-    ]
 
   SMData (DataMessage reqId wsId payload) ->
     [ encTy SMT_GQL_TX_DATA
