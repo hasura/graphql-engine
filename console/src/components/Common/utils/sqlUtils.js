@@ -67,3 +67,10 @@ export const getCreatePkSql = ({
 export const getDropPkSql = ({ schemaName, tableName, constraintName }) => {
   return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`;
 };
+
+export const terminateSql = sql => {
+  const sqlSanitised = sql.trim();
+  return sqlSanitised[sqlSanitised.length - 1] !== ';'
+    ? sqlSanitised + ';'
+    : sqlSanitised;
+};
