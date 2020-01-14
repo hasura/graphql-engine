@@ -63,11 +63,11 @@ spec
   => Q.ConnInfo -> SpecWithCache m
 spec pgConnInfo = do
   let dropAndInit time = CacheRefT $ flip modifyMVar \_ ->
-        dropCatalog *> (swap <$> migrateCatalog Nothing time)
+        dropCatalog *> (swap <$> migrateCatalog time)
       upgradeToLatest time = CacheRefT $ flip modifyMVar \_ ->
-        swap <$> migrateCatalog Nothing time
-      downgradeTo v time = CacheRefT $ flip modifyMVar \_ ->
-        swap <$> migrateCatalog (Just DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }) time
+        swap <$> migrateCatalog time
+      downgradeTo v = CacheRefT $ flip modifyMVar \_ ->
+        swap <$> downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
       dumpSchema = execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
 
   describe "migrateCatalog" $ do
@@ -85,7 +85,7 @@ spec pgConnInfo = do
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
       time <- getCurrentTime
       transact (dropAndInit time) `shouldReturn` MRInitialized
-      downgradeResult <- transact (downgradeTo "12" time)
+      downgradeResult <- transact (downgradeTo "12")
       downgradeResult `shouldSatisfy` \case
         MRMigrated{} -> True
         _ -> False

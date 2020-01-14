@@ -15,6 +15,7 @@ import {
   setTable,
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
+  fetchFunctionInit,
 } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
@@ -41,6 +42,8 @@ import {
   getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import ComputedFieldsEditor from './ComputedFieldsEditor';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -48,6 +51,7 @@ class ModifyTable extends React.Component {
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchColumnTypeInfo());
+    dispatch(fetchFunctionInit());
   }
 
   componentWillUnmount() {
@@ -60,6 +64,8 @@ class ModifyTable extends React.Component {
     const {
       tableName,
       allTables,
+      nonTrackableFunctions,
+      trackableFunctions,
       dispatch,
       migrationMode,
       readOnlyMode,
@@ -169,6 +175,30 @@ class ModifyTable extends React.Component {
       );
     };
 
+    const getComputedFieldsSection = () => {
+      const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
+
+      return (
+        <React.Fragment>
+          <h4 className={styles.subheading_text}>
+            Computed fields
+            <Tooltip
+              message={'Add a function as a virtual field in the GraphQL API'}
+            />
+            <KnowMoreLink href="https://docs.hasura.io/1.0/graphql/manual/schema/computed-fields.html" />
+          </h4>
+          <ComputedFieldsEditor
+            table={table}
+            currentSchema={currentSchema}
+            functions={allFunctions} // TODO: fix cross schema functions
+            schemaList={schemaList}
+            dispatch={dispatch}
+          />
+          <hr />
+        </React.Fragment>
+      );
+    };
+
     // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
@@ -216,6 +246,7 @@ class ModifyTable extends React.Component {
               columnDefaultFunctions={columnDefaultFunctions}
             />
             <hr />
+            {getComputedFieldsSection()}
             <h4 className={styles.subheading_text}>Primary Key</h4>
             <PrimaryKeyEditor
               tableSchema={table}
@@ -290,6 +321,8 @@ ModifyTable.propTypes = {
 const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   allTables: state.tables.allSchemas,
+  nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],
+  trackableFunctions: state.tables.postgresFunctions || [],
   migrationMode: state.main.migrationMode,
   readOnlyMode: state.main.readOnlyMode,
   serverVersion: state.main.serverVersion,

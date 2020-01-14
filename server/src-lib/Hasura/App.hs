@@ -183,7 +183,7 @@ initialiseCtx hgeCmd rci = do
     initialiseCatalog pool sqlGenCtx httpManager (Logger logger) = do
       currentTime <- liftIO getCurrentTime
       -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog Nothing currentTime
+      initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
       either printErrJExit (\(result, schemaCache) -> logger result $> schemaCache) initRes
 
 runHGEServer
