@@ -22,10 +22,32 @@ Step 1: Modify the table
 
 Edit the ``created_at`` field and set its default value as the SQL function ``now()``.
 
-Open the console and head to ``Data -> article -> Modify``:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/add-default-value.png
-   :alt: Modify the table in the console
+  .. tab:: Console
+
+    Open the console and head to ``Data -> article -> Modify``:
+
+    .. thumbnail:: ../../../../img/graphql/manual/schema/add-default-value.png
+      :alt: Modify the table in the console
+
+  .. tab:: API
+    
+    The default value of ``created_at`` field can be set to current timestamp via the Metadata API:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+           "sql": "ALTER TABLE article ALTER created_at SET DEFAULT now();"
+        }
+      }
 
 .. admonition:: To set an auto-incrementing default value
 

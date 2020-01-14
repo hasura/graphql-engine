@@ -31,10 +31,32 @@ Step 1: Modify the table
 
 Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 
-Open the console and head to ``Data -> sql_function_table -> Modify``:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/modify-sql-fn-table.png
-   :alt: Modify the table
+  .. tab:: Console
+
+    Open the console and head to ``Data -> sql_function_table -> Modify``:
+
+    .. thumbnail:: ../../../../img/graphql/manual/schema/modify-sql-fn-table.png
+      :alt: Modify the table
+
+  .. tab:: API
+
+    The output column in the sql_function_table can be modified via Metadata API:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+           "sql": "ALTER TABLE sql_function_table ALTER COLUMN output DROP NOT NULL;"
+        }
+      }
 
 Step 2: Create a trigger
 ------------------------
@@ -54,11 +76,41 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
      CREATE TRIGGER test_trigger BEFORE INSERT OR UPDATE ON sql_function_table
          FOR EACH ROW EXECUTE PROCEDURE test_func();
 
-Head to ``Data -> SQL`` and run the above SQL:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/create-trigger.png
-   :alt: Create a trigger with SQL
+  .. tab:: Console
 
+    Head to ``Data -> SQL`` and run the above SQL:
+
+    .. thumbnail:: ../../../../img/graphql/manual/schema/create-trigger.png
+      :alt: Create a trigger with SQL
+
+  .. tab:: API
+
+    A trigger can be created via Metadata API:
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+           "sql": "CREATE FUNCTION test_func() RETURNS trigger AS $emp_stamp$
+              BEGIN
+                NEW.output := UPPER(NEW.input);
+                RETURN NEW;
+              END;
+            $emp_stamp$ LANGUAGE plpgsql;
+
+            CREATE TRIGGER test_trigger BEFORE INSERT OR UPDATE ON sql_function_table
+              FOR EACH ROW EXECUTE PROCEDURE test_func();"
+        }
+      }
+      
 Step 3: Run an insert mutation
 ------------------------------
 
