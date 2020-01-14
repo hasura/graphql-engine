@@ -64,7 +64,7 @@ const renderOps = (opName, onChange, key) => (
     ) : null}
     {Operators.map((o, i) => (
       <option key={i} value={o.value}>
-        {o.value}
+        {`[${o.value}] ${o.name}`}
       </option>
     ))}
   </select>
@@ -187,7 +187,7 @@ class FilterQuery extends Component {
             dispatch(runQuery(tableSchema));
           }}
         >
-          <div className="">
+          <div>
             <div
               className={`${styles.queryBox} col-xs-6 ${
                 styles.padd_left_remove
