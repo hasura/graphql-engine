@@ -98,8 +98,8 @@ Both sets of tests require a running Postgres database.
 ##### Running the Haskell test suite
 
 ```
-cabal new-test --test-show-details=direct \
-  --test-option='--database-url=postgres://<user>:<password>@<host>:<port>/<dbname>'
+cabal new-run -- test:graphql-engine-tests \
+  --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>'
 ```
 
 ##### Running the Python test suite
