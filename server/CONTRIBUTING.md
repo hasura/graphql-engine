@@ -6,6 +6,7 @@ own machine and how to contribute.
 ## Pre-requisites
 
 - [GHC](https://www.haskell.org/ghc/) 8.6.5 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+  - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
 - [Node.js](https://nodejs.org/en/) (>= v8.9)
 - npm >= 5.7
 - [gsutil](https://cloud.google.com/storage/docs/gsutil)
@@ -157,9 +158,10 @@ Some other useful points of note:
 
   - You can pass the `-v` or `-vv` options to `pytest` to enable more verbose output while running the tests and in test failures. You can also pass the `-l` option to display the current values of Python local variables in test failures.
 
-
 ### Create Pull Request
+
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
+- If you changed the versions of any dependencies, run `cabal new-freeze` to update the freeze file.
 - Create a pull request from your forked repo to the main repo.
 - Every pull request will automatically build and run the tests.
 
