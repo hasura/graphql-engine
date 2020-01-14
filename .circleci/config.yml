@@ -199,6 +199,9 @@ jobs:
           # build and save the image
           make ci-image
           make ci-save-image
+    - store_artifacts:
+        path: /build/_server_output/image.tar
+        destination: server
     - persist_to_workspace:
         root: /build
         paths: [_server_output/image.tar]
