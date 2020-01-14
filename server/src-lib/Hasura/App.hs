@@ -231,8 +231,9 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   logInconsObjs logger inconsObjs
 
   -- start a background thread for schema sync
-  startSchemaSync sqlGenCtx _icPgPool logger _icHttpManager
-                  cacheRef _icInstanceId cacheInitTime
+  when (not soDisableSchemaSync) $
+    startSchemaSync sqlGenCtx _icPgPool logger _icHttpManager
+                    cacheRef _icInstanceId cacheInitTime
 
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost

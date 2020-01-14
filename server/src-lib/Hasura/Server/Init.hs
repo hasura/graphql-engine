@@ -71,50 +71,52 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
 data RawServeOptions impl
   = RawServeOptions
-  { rsoPort             :: !(Maybe Int)
-  , rsoHost             :: !(Maybe HostPreference)
-  , rsoConnParams       :: !RawConnParams
-  , rsoTxIso            :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret      :: !(Maybe AdminSecret)
-  , rsoAuthHook         :: !RawAuthHook
-  , rsoJwtSecret        :: !(Maybe JWTConfig)
-  , rsoUnAuthRole       :: !(Maybe RoleName)
-  , rsoCorsConfig       :: !(Maybe CorsConfig)
-  , rsoEnableConsole    :: !Bool
-  , rsoConsoleAssetsDir :: !(Maybe Text)
-  , rsoEnableTelemetry  :: !(Maybe Bool)
-  , rsoWsReadCookie     :: !Bool
-  , rsoStringifyNum     :: !Bool
-  , rsoEnabledAPIs      :: !(Maybe [API])
-  , rsoMxRefetchInt     :: !(Maybe LQ.RefetchInterval)
-  , rsoMxBatchSize      :: !(Maybe LQ.BatchSize)
-  , rsoEnableAllowlist  :: !Bool
-  , rsoEnabledLogTypes  :: !(Maybe [L.EngineLogType impl])
-  , rsoLogLevel         :: !(Maybe L.LogLevel)
-  , rsoPlanCacheSize    :: !(Maybe Cache.CacheSize)
+  { rsoPort              :: !(Maybe Int)
+  , rsoHost              :: !(Maybe HostPreference)
+  , rsoConnParams        :: !RawConnParams
+  , rsoTxIso             :: !(Maybe Q.TxIsolation)
+  , rsoAdminSecret       :: !(Maybe AdminSecret)
+  , rsoAuthHook          :: !RawAuthHook
+  , rsoJwtSecret         :: !(Maybe JWTConfig)
+  , rsoUnAuthRole        :: !(Maybe RoleName)
+  , rsoCorsConfig        :: !(Maybe CorsConfig)
+  , rsoEnableConsole     :: !Bool
+  , rsoConsoleAssetsDir  :: !(Maybe Text)
+  , rsoEnableTelemetry   :: !(Maybe Bool)
+  , rsoWsReadCookie      :: !Bool
+  , rsoStringifyNum      :: !Bool
+  , rsoEnabledAPIs       :: !(Maybe [API])
+  , rsoMxRefetchInt      :: !(Maybe LQ.RefetchInterval)
+  , rsoMxBatchSize       :: !(Maybe LQ.BatchSize)
+  , rsoEnableAllowlist   :: !Bool
+  , rsoEnabledLogTypes   :: !(Maybe [L.EngineLogType impl])
+  , rsoLogLevel          :: !(Maybe L.LogLevel)
+  , rsoPlanCacheSize     :: !(Maybe Cache.CacheSize)
+  , rsoDisableSchemaSync :: !Bool
   }
 
 data ServeOptions impl
   = ServeOptions
-  { soPort             :: !Int
-  , soHost             :: !HostPreference
-  , soConnParams       :: !Q.ConnParams
-  , soTxIso            :: !Q.TxIsolation
-  , soAdminSecret      :: !(Maybe AdminSecret)
-  , soAuthHook         :: !(Maybe AuthHook)
-  , soJwtSecret        :: !(Maybe JWTConfig)
-  , soUnAuthRole       :: !(Maybe RoleName)
-  , soCorsConfig       :: !CorsConfig
-  , soEnableConsole    :: !Bool
-  , soConsoleAssetsDir :: !(Maybe Text)
-  , soEnableTelemetry  :: !Bool
-  , soStringifyNum     :: !Bool
-  , soEnabledAPIs      :: !(Set.HashSet API)
-  , soLiveQueryOpts    :: !LQ.LiveQueriesOptions
-  , soEnableAllowlist  :: !Bool
-  , soEnabledLogTypes  :: !(Set.HashSet (L.EngineLogType impl))
-  , soLogLevel         :: !L.LogLevel
-  , soPlanCacheOptions :: !E.PlanCacheOptions
+  { soPort              :: !Int
+  , soHost              :: !HostPreference
+  , soConnParams        :: !Q.ConnParams
+  , soTxIso             :: !Q.TxIsolation
+  , soAdminSecret       :: !(Maybe AdminSecret)
+  , soAuthHook          :: !(Maybe AuthHook)
+  , soJwtSecret         :: !(Maybe JWTConfig)
+  , soUnAuthRole        :: !(Maybe RoleName)
+  , soCorsConfig        :: !CorsConfig
+  , soEnableConsole     :: !Bool
+  , soConsoleAssetsDir  :: !(Maybe Text)
+  , soEnableTelemetry   :: !Bool
+  , soStringifyNum      :: !Bool
+  , soEnabledAPIs       :: !(Set.HashSet API)
+  , soLiveQueryOpts     :: !LQ.LiveQueriesOptions
+  , soEnableAllowlist   :: !Bool
+  , soEnabledLogTypes   :: !(Set.HashSet (L.EngineLogType impl))
+  , soLogLevel          :: !L.LogLevel
+  , soPlanCacheOptions  :: !E.PlanCacheOptions
+  , soDisableSchemaSync :: !Bool
   }
 
 data RawConnInfo =
@@ -332,10 +334,11 @@ mkServeOptions rso = do
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
   planCacheOptions <- E.mkPlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
+  disableSchemaSync <- withEnvBool (rsoDisableSchemaSync rso) $ fst disableSchemaSyncEnv
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
-                        enabledLogs serverLogLevel planCacheOptions
+                        enabledLogs serverLogLevel planCacheOptions disableSchemaSync
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -464,7 +467,7 @@ serveCmdFooter =
       , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
-      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv
+      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, disableSchemaSyncEnv
       ]
 
     eventEnvs =
@@ -915,6 +918,12 @@ parseEnableAllowlist =
            help (snd enableAllowlistEnv)
          )
 
+parseDisableSchemaSync :: Parser Bool
+parseDisableSchemaSync =
+  switch ( long "disable-schema-sync" <>
+           help (snd disableSchemaSyncEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -941,6 +950,12 @@ planCacheSizeEnv =
   , "The maximum number of query plans that can be cached, allowed values: 0-65535, " <>
     "0 disables the cache. If this value is not set, there is no limit on the number " <>
     "of plans that are cached"
+  )
+
+disableSchemaSyncEnv :: (String, String)
+disableSchemaSyncEnv =
+  ( "HASURA_GRAPHQL_DISABLE_SCHEMA_SYNC"
+  , "Disable syncing metadata across multiple instances"
   )
 
 parsePlanCacheSize :: Parser (Maybe Cache.CacheSize)
@@ -1057,3 +1072,4 @@ serveOptionsParser =
   <*> parseEnabledLogs
   <*> parseLogLevel
   <*> parsePlanCacheSize
+  <*> parseDisableSchemaSync
