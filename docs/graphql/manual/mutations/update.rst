@@ -1,3 +1,7 @@
+.. meta::
+   :description: Update an object in the database using a mutation
+   :keywords: hasura, docs, mutation, update
+
 Update mutation
 ===============
 

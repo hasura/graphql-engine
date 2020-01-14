@@ -1,3 +1,7 @@
+.. meta::
+   :description: Set up a first event trigger with Hasura
+   :keywords: hasura, docs, start, event trigger
+
 Setting up your first event trigger
 ===================================
 
