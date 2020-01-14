@@ -177,7 +177,7 @@ jobs:
         root: /build
         paths: [_server_output]
 
-  build_server_image:
+  build_image:
     docker:
     - image: lexilambda/graphql-engine-server-builder:2020-01-10
     working_directory: ~/graphql-engine
@@ -491,7 +491,7 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - check_build_worthiness
-    - build_server_image:
+    - build_image:
         <<: *filter_only_vtags
         requires:
         - build_server
@@ -550,6 +550,6 @@ workflows:
     - deploy:
         <<: *filter_only_vtags_dev_release_branches
         requires:
-        - build_server_image
+        - build_image
         - test_console
         - all_server_tests_pass
