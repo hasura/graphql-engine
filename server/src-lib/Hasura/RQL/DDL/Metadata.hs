@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 module Hasura.RQL.DDL.Metadata
   ( runReplaceMetadata
   , runExportMetadata
@@ -126,18 +125,16 @@ applyQP2
   => ReplaceMetadata
   -> m EncJSON
 applyQP2 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) = do
-
   liftTx clearMetadata
   buildSchemaCacheStrict
 
-  systemDefined <- askSystemDefined
   withPathK "tables" $ do
     -- tables and views
     indexedForM_ tables $ \tableMeta -> do
       let tableName = tableMeta ^. tmTable
           isEnum = tableMeta ^. tmIsEnum
           config = tableMeta ^. tmConfiguration
-      void $ Schema.trackExistingTableOrViewP2 tableName systemDefined isEnum config
+      void $ Schema.trackExistingTableOrViewP2 tableName isEnum config
 
     indexedForM_ tables $ \table -> do
       -- Relationships
@@ -180,6 +177,7 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) 
         \(Schema.TrackFunctionV2 function config) -> void $ Schema.trackFunctionP2 function config
 
   -- query collections
+  systemDefined <- askSystemDefined
   withPathK "query_collections" $
     indexedForM_ collections $ \c -> liftTx $ Collection.addCollectionToCatalog c systemDefined
 
