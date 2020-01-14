@@ -36,6 +36,9 @@ func (a *QueryCollectionConfig) Build(metadata *dbTypes.Metadata) error {
 }
 
 func (a *QueryCollectionConfig) Export(metadata dbTypes.Metadata) error {
+	if metadata.QueryCollections == nil {
+		metadata.QueryCollections = make([]interface{}, 0)
+	}
 	data, err := yaml.Marshal(metadata.QueryCollections)
 	if err != nil {
 		return err

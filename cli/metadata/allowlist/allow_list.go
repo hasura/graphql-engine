@@ -36,6 +36,9 @@ func (a *AllowListConfig) Build(metadata *dbTypes.Metadata) error {
 }
 
 func (a *AllowListConfig) Export(metadata dbTypes.Metadata) error {
+	if metadata.AllowList == nil {
+		metadata.AllowList = make([]interface{}, 0)
+	}
 	data, err := yaml.Marshal(metadata.AllowList)
 	if err != nil {
 		return err

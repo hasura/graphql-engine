@@ -36,6 +36,9 @@ func (a *RemoteSchemaConfig) Build(metadata *dbTypes.Metadata) error {
 }
 
 func (a *RemoteSchemaConfig) Export(metadata dbTypes.Metadata) error {
+	if metadata.RemoteSchemas == nil {
+		metadata.RemoteSchemas = make([]interface{}, 0)
+	}
 	data, err := yaml.Marshal(metadata.RemoteSchemas)
 	if err != nil {
 		return err

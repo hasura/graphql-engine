@@ -36,6 +36,9 @@ func (a *FunctionConfig) Build(metadata *dbTypes.Metadata) error {
 }
 
 func (a *FunctionConfig) Export(metadata dbTypes.Metadata) error {
+	if metadata.Functions == nil {
+		metadata.Functions = make([]interface{}, 0)
+	}
 	data, err := yaml.Marshal(metadata.Functions)
 	if err != nil {
 		return err
