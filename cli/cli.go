@@ -15,6 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
+
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/plugins/paths"
 	"github.com/hasura/graphql-engine/cli/telemetry"
@@ -307,9 +309,14 @@ func (ec *ExecutionContext) setupPlugins() error {
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
 func (ec *ExecutionContext) Validate() error {
+	// ensure plugins index exists
+	err := gitutil.EnsureCloned(ec.PluginsPath.IndexPath())
+	if err != nil {
+		return errors.Wrap(err, "ensuring plugins index failed")
+	}
 
 	// validate execution directory
-	err := ec.validateDirectory()
+	err = ec.validateDirectory()
 	if err != nil {
 		return errors.Wrap(err, "validating current directory failed")
 	}

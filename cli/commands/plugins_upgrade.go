@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/plugins/index"
 	"github.com/hasura/graphql-engine/cli/plugins/installation"
@@ -17,33 +19,28 @@ func newPluginsUpgradeCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "",
 		Example:      ``,
 		SilenceUsage: true,
-		Args:         cobra.MinimumNArgs(1),
+		Args:         cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var nErrors int
-			for _, name := range args {
-				plugin, err := index.LoadPluginByName(ec.PluginsPath.IndexPluginsPath(), name)
-				if err != nil {
-					if os.IsNotExist(err) {
-						return errors.Errorf("plugin %q does not exist in the plugin index", name)
-					}
-					return errors.Wrapf(err, "failed to load the plugin manifest for plugin %s", name)
+			pluginName := args[0]
+			ec.Spin(fmt.Sprintf("Upgrading plugin %q...", pluginName))
+			defer ec.Spinner.Stop()
+			plugin, err := index.LoadPluginByName(ec.PluginsPath.IndexPluginsPath(), pluginName)
+			if err != nil {
+				if os.IsNotExist(err) {
+					return errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
 				}
-
-				err = installation.Upgrade(ec.PluginsPath, plugin)
-				if err == installation.ErrIsAlreadyUpgraded {
-					fmt.Fprintf(os.Stderr, "Skipping plugin %s, it is already on the newest version\n", plugin.Name)
-					continue
-				}
-
-				if err != nil {
-					nErrors++
-					return errors.Wrapf(err, "failed to upgrade plugin %q", plugin.Name)
-				}
-				fmt.Fprintf(os.Stderr, "Upgraded plugin: %s\n", plugin.Name)
+				return errors.Wrapf(err, "failed to load the plugin manifest for plugin %s", pluginName)
 			}
-			if nErrors > 0 {
-				fmt.Fprintf(os.Stderr, "WARNING: Some plugins failed to upgrade, check logs above.\n")
+
+			err = installation.Upgrade(ec.PluginsPath, plugin)
+			if err != nil && err != installation.ErrIsAlreadyUpgraded {
+				return errors.Wrapf(err, "failed to upgrade plugin %q", plugin.Name)
 			}
+			ec.Spinner.Stop()
+			ec.Logger.WithFields(logrus.Fields{
+				"name":    pluginName,
+				"version": plugin.Version,
+			}).Infoln("Upgraded plugin")
 			return nil
 		},
 	}

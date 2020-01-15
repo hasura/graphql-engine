@@ -35,6 +35,9 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if ec.Config.Version == "1" {
+				return fmt.Errorf("actions commands can be executed only when config version is greater than 1")
+			}
 			if ec.MetadataDir == "" {
 				return fmt.Errorf("actions commands can be executed only when metadata_dir is set in config")
 			}
