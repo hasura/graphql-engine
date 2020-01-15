@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 from urllib.parse import urlparse
-from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml 
+from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml
 import threading
 import http.server
 import json
@@ -30,6 +30,56 @@ class PytestConf():
 class HGECtxError(Exception):
     pass
 
+class GQLTxWsClient():
+
+    def __init__(self, hge_ctx, endpoint):
+        self.hge_ctx = hge_ctx
+        self.ws_queue = queue.Queue(maxsize=-1)
+        self.ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws',
+                                                         path=endpoint)
+        self.create_conn()
+
+    def create_conn(self):
+        self.ws_queue.queue.clear()
+        self.is_opened = False
+        self.is_closing = False
+        self.remote_closed = False
+        self.connected_event = threading.Event()
+
+        self._ws = websocket.WebSocketApp(self.ws_url.geturl(), subprotocols=["graphql-tx"],
+                                          on_open=self._on_open, on_message=self._on_message, on_close=self._on_close)
+        self.wst = threading.Thread(target=self._ws.run_forever)
+        self.wst.daemon = True
+        self.wst.start()
+
+    def send(self, message):
+        assert not self.remote_closed
+        self.connected_event.wait(timeout=10)
+        self._ws.send(json.dumps(message))
+
+    def receive(self, timeout=10):
+        return self.ws_queue.get(timeout=timeout)
+
+    def _on_open(self):
+        self.connected_event.set()
+        self.is_opened = True
+
+    def _on_message(self, message):
+        # NOTE: make sure we preserve key ordering so we can test the ordering
+        # properties in the graphql spec properly
+        json_msg = json.loads(message, object_pairs_hook=OrderedDict)
+        # Push message to queue
+        self.ws_queue.put(json_msg)
+
+    def _on_close(self):
+        self.remote_closed = True
+
+    def teardown(self):
+        self.is_closing = True
+        if not self.remote_closed:
+            self._ws.close()
+        self.wst.join()
+
 class GQLWsClient():
 
     def __init__(self, hge_ctx, endpoint):
@@ -49,7 +99,7 @@ class GQLWsClient():
         self.is_closing = False
         self.remote_closed = False
 
-        self._ws = websocket.WebSocketApp(self.ws_url.geturl(),
+        self._ws = websocket.WebSocketApp(self.ws_url.geturl(), subprotocols=["graphql-ws"],
             on_open=self._on_open, on_message=self._on_message, on_close=self._on_close)
         self.wst = threading.Thread(target=self._ws.run_forever)
         self.wst.daemon = True

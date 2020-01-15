@@ -1,4 +1,4 @@
-module Hasura.GraphQL.Transport.WebSocket.Protocol
+module Hasura.GraphQL.Transport.WebSocket.Queries.Protocol
   ( OperationId(..)
   , ConnParams(..)
   , StartMsg(..)

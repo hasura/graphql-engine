@@ -22,12 +22,23 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , closeAll
   , createServerApp
   , shutdown
+
+  , ErrRespType(..)
+  , checkPath
+  , getHeadersWithEnforceCors
   ) where
+
+import           Hasura.Prelude
+import           Hasura.RQL.Types.Error
+import           Hasura.Server.Cors
+
+import           Control.Exception.Lifted             (try)
+import           Data.Word                            (Word16)
+import           GHC.Int                              (Int64)
 
 import qualified Control.Concurrent.Async             as A
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Control.Concurrent.STM               as STM
-import           Control.Exception.Lifted             (try)
 import qualified Control.Monad.Trans.Control          as MC
 import qualified Data.Aeson                           as J
 import qualified Data.Aeson.Casing                    as J
@@ -36,10 +47,8 @@ import qualified Data.ByteString.Lazy                 as BL
 import qualified Data.TByteString                     as TBS
 import qualified Data.UUID                            as UUID
 import qualified Data.UUID.V4                         as UUID
-import           Data.Word                            (Word16)
-import           GHC.Int                              (Int64)
-import           Hasura.Prelude
 import qualified ListT
+import qualified Network.HTTP.Types                   as H
 import qualified Network.WebSockets                   as WS
 import qualified StmContainers.Map                    as STMMap
 
@@ -299,3 +308,51 @@ shutdown (WSServer (L.Logger writeLog) serverStatus) = do
     STM.writeTVar serverStatus ShuttingDown
     return conns
   closeAllWith (flip forceConnReconnect) "shutting server down" conns
+
+data ErrRespType
+  = ERTLegacy
+  | ERTGraphqlCompliant
+  deriving (Show)
+
+checkPath :: MonadError QErr m => WS.RequestHead -> m ErrRespType
+checkPath requestHead = case WS.requestPath requestHead of
+  "/v1alpha1/graphql" -> return ERTLegacy
+  "/v1/graphql"       -> return ERTGraphqlCompliant
+  _                   ->
+    throw404 "only '/v1/graphql', '/v1alpha1/graphql' are supported on websockets"
+
+getHeadersWithEnforceCors
+  :: MonadError QErr m
+  => (Text -> m ())
+  -> WS.RequestHead
+  -> CorsPolicy
+  -> m [H.Header]
+getHeadersWithEnforceCors logCorsNote requestHead corsPolicy =
+  maybe (pure reqHeaders) (enforceCors . snd) originM
+  where
+    reqHeaders = WS.requestHeaders requestHead
+    originM = find ((==) "Origin" . fst) reqHeaders
+
+    enforceCors origin = case cpConfig corsPolicy of
+      CCAllowAll -> return reqHeaders
+      CCDisabled readCookie ->
+        if readCookie
+        then return reqHeaders
+        else do
+          logCorsNote corsNote
+          pure $ filter (\h -> fst h /= "Cookie") reqHeaders
+      CCAllowedOrigins ds
+        -- if the origin is in our cors domains, no error
+        | bsToTxt origin `elem` dmFqdns ds   -> return reqHeaders
+        -- if current origin is part of wildcard domain list, no error
+        | inWildcardList ds (bsToTxt origin) -> return reqHeaders
+        -- otherwise error
+        | otherwise                          -> corsErr
+
+    corsErr = throw400 AccessDenied
+              "received origin header does not match configured CORS domains"
+
+    corsNote = "Cookie is not read when CORS is disabled, because it is a potential "
+            <> "security issue. If you're already handling CORS before Hasura and enforcing "
+            <> "CORS on websocket connections, then you can use the flag --ws-read-cookie or "
+            <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."

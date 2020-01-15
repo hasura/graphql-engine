@@ -319,7 +319,13 @@ library
 
                      , Hasura.GraphQL.Transport.HTTP.Protocol
                      , Hasura.GraphQL.Transport.HTTP
-                     , Hasura.GraphQL.Transport.WebSocket.Protocol
+                     , Hasura.GraphQL.Transport.WebSocket.Queries.Protocol
+                     , Hasura.GraphQL.Transport.WebSocket.Queries.Types
+                     , Hasura.GraphQL.Transport.WebSocket.Queries.Handlers
+                     , Hasura.GraphQL.Transport.WebSocket.Transaction.Protocol
+                     , Hasura.GraphQL.Transport.WebSocket.Transaction.Types
+                     , Hasura.GraphQL.Transport.WebSocket.Transaction.Handlers
+                     , Hasura.GraphQL.Transport.WebSocket.Common
                      , Hasura.GraphQL.Transport.WebSocket.Server
                      , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Schema.BoolExp

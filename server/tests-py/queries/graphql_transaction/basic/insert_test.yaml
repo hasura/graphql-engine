@@ -1,0 +1,11 @@
+query:
+  query: |
+    mutation {
+      insert_test(objects: [{name: "Clarke"}]){
+        affected_rows
+      }
+    }
+response:
+  data:
+    insert_test:
+      affected_rows: 1
