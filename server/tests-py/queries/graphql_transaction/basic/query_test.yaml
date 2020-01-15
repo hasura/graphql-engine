@@ -1,0 +1,13 @@
+query:
+  query: |
+    query {
+      test{
+        id
+        name
+      }
+    }
+response:
+  data:
+    test:
+    - id: 1
+      name: Clarke
