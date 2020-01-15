@@ -235,7 +235,6 @@ data UnresolvedVal
 
 type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
 
-
 data InputFunctionArgument
   = IFAKnown !FunctionArgName !UnresolvedVal -- ^ Known value
   | IFAUnknown !FunctionArgItem -- ^ Unknown value, need to be parsed
@@ -271,4 +270,6 @@ data InputFunctionArgument
 
 -- template haskell related
 $(makePrisms ''ResolveField)
+$(makeLenses ''ComputedField)
+$(makePrisms ''ComputedFieldType)
 $(makePrisms ''InputFunctionArgument)

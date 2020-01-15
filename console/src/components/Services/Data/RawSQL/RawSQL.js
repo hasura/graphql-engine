@@ -48,10 +48,11 @@ const RawSQL = ({
   // set SQL from localStorage on mount and write back to localStorage on unmount
   useEffect(() => {
     const LS_RAW_SQL_SQL = 'rawSql:sql';
-
-    const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
-    if (sqlFromLocalStorage) {
-      dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
+    if (!sql) {
+      const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
+      if (sqlFromLocalStorage) {
+        dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
+      }
     }
 
     return () => {

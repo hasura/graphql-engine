@@ -196,8 +196,7 @@ incSchemaCacheVer (SchemaCacheVer prev) =
 --   }
 
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
-type ActionCache =
-  M.HashMap ActionName ActionInfo
+type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 
 data SchemaCache
   = SchemaCache

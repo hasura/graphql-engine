@@ -14,6 +14,9 @@ module Hasura.RQL.Types.Action
   , ResolvedActionDefinition
 
   , ActionInfo(..)
+  , aiName
+  , aiDefinition
+  , aiPermissions
   , ActionPermissionInfo(..)
 
   , ActionPermissionMap
@@ -25,6 +28,7 @@ module Hasura.RQL.Types.Action
   ) where
 
 
+import           Control.Lens                  (makeLenses)
 import           Data.URL.Template
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
@@ -116,8 +120,7 @@ data ActionPermissionInfo
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionInfo)
 
-type ActionPermissionMap
-  = Map.HashMap RoleName ActionPermissionInfo
+type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
 
 -- data ActionMetadataField
 --   = ActionMetadataFieldId
@@ -142,6 +145,7 @@ data ActionInfo
   , _aiPermissions :: !ActionPermissionMap
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
+$(makeLenses ''ActionInfo)
 
 data InputWebhook
   = IWTemplate !URLTemplate

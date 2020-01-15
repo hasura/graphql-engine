@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage relationships between tables/views in Hasura
+   :keywords: hasura, docs, schema, relationship
+
 Relationships between tables/views
 ==================================
 

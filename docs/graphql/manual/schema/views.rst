@@ -1,3 +1,7 @@
+.. meta::
+   :description: Customise the Hasura GraphQL schema with views
+   :keywords: hasura, docs, schema, view
+
 .. _custom_views:
 
 Customise schema with views

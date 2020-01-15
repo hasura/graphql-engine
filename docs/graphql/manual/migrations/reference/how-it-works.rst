@@ -1,3 +1,7 @@
+.. meta::
+   :description: How Hasura migrations work
+   :keywords: hasura, docs, migration, how it works
+
 How Hasura migrations work
 ==========================
 

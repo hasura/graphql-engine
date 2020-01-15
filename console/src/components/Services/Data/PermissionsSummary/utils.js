@@ -71,18 +71,31 @@ export const getPermissionFilterString = (
   return filterString;
 };
 
-export const getPermissionColumnAccessSummary = (permission, tableColumns) => {
+export const getPermissionColumnAccessSummary = (permission, tableFields) => {
   let columnAccessStatus;
 
-  if (!permission || !permission.columns.length) {
+  if (!permission) {
     columnAccessStatus = 'no columns';
-  } else if (
-    permission.columns === '*' ||
-    permission.columns.length === tableColumns.length
-  ) {
-    columnAccessStatus = 'all columns';
   } else {
-    columnAccessStatus = 'partial columns';
+    let noFields = true;
+    let allFields = true;
+
+    Object.keys(tableFields).forEach(fieldType => {
+      noFields = noFields && !permission[fieldType].length;
+
+      allFields =
+        allFields &&
+        (permission[fieldType] === '*' ||
+          permission[fieldType].length === tableFields[fieldType].length);
+    });
+
+    if (noFields) {
+      columnAccessStatus = 'no columns';
+    } else if (allFields) {
+      columnAccessStatus = 'all columns';
+    } else {
+      columnAccessStatus = 'partial columns';
+    }
   }
 
   return columnAccessStatus;

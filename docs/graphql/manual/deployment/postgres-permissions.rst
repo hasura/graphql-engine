@@ -1,3 +1,7 @@
+.. meta::
+   :description: Required Postgres permissions for Hasura GraphQL engine
+   :keywords: hasura, docs, deployment, postgres, postgres permissions
+
 Postgres permissions
 ====================
 

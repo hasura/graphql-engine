@@ -4,8 +4,6 @@ import           Hasura.Prelude
 
 import           Data.Aeson
 import           Data.Has
-import           Hasura.Incremental            (Cacheable)
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
