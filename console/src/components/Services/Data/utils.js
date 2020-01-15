@@ -1,9 +1,8 @@
 import {
-  TABLE_ENUMS_SUPPORT,
-  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
   READ_ONLY_RUN_SQL_QUERIES,
   checkFeatureSupport,
 } from '../../../helpers/versionUtils';
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
@@ -216,6 +215,8 @@ export const fetchTrackedTableListQuery = options => {
       columns: [
         'table_schema',
         'table_name',
+        'is_enum',
+        'configuration',
         {
           name: 'primary_key',
           columns: ['*'],
@@ -240,18 +241,18 @@ export const fetchTrackedTableListQuery = options => {
             type: 'asc',
           },
         },
+        {
+          name: 'computed_fields',
+          columns: ['*'],
+          order_by: {
+            column: 'computed_field_name',
+            type: 'asc',
+          },
+        },
       ],
       order_by: [{ column: 'table_name', type: 'asc' }],
     },
   };
-
-  if (checkFeatureSupport(TABLE_ENUMS_SUPPORT)) {
-    query.args.columns.push('is_enum');
-  }
-
-  if (checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) {
-    query.args.columns.push('configuration');
-  }
 
   if (
     (options.schemas && options.schemas.length !== 0) ||
@@ -337,13 +338,11 @@ FROM
     ${whereQuery}
   ) as info
 `;
-  return {
-    type: 'run_sql',
-    args: {
-      sql: runSql,
-      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
-    },
-  };
+  return getRunSqlQuery(
+    runSql,
+    false,
+    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+  );
 };
 
 export const fetchTrackedTableReferencedFkQuery = options => {
@@ -373,13 +372,11 @@ FROM
     ${whereQuery}
   ) as info
 `;
-  return {
-    type: 'run_sql',
-    args: {
-      sql: runSql,
-      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
-    },
-  };
+  return getRunSqlQuery(
+    runSql,
+    false,
+    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+  );
 };
 
 export const fetchTableListQuery = options => {
@@ -452,13 +449,11 @@ FROM
       is_views.*
   ) AS info
 `;
-  return {
-    type: 'run_sql',
-    args: {
-      sql: runSql,
-      read_only: checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false,
-    },
-  };
+  return getRunSqlQuery(
+    runSql,
+    false,
+    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+  );
 };
 
 export const mergeLoadSchemaData = (
@@ -494,6 +489,7 @@ export const mergeLoadSchemaData = (
     let _isEnum = false;
     let _checkConstraints = [];
     let _configuration = {};
+    let _computed_fields = [];
 
     if (_isTableTracked) {
       _primaryKey = trackedTableInfo.primary_key;
@@ -503,6 +499,7 @@ export const mergeLoadSchemaData = (
       _isEnum = trackedTableInfo.is_enum;
       _checkConstraints = trackedTableInfo.check_constraints;
       _configuration = trackedTableInfo.configuration;
+      _computed_fields = trackedTableInfo.computed_fields;
 
       _fkConstraints = fkData.filter(
         fk => fk.table_schema === _tableSchema && fk.table_name === _tableName
@@ -533,6 +530,7 @@ export const mergeLoadSchemaData = (
       view_info: _viewInfo,
       is_enum: _isEnum,
       configuration: _configuration,
+      computed_fields: _computed_fields,
     };
 
     _mergedTableData.push(_mergedInfo);

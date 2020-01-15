@@ -1,6 +1,7 @@
 module Hasura.RQL.DDL.Headers where
 
 import           Data.Aeson
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Instances       ()
 import           Hasura.RQL.Types.Error
@@ -12,15 +13,17 @@ import qualified Data.Text                  as T
 
 data HeaderConf = HeaderConf HeaderName HeaderValue
    deriving (Show, Eq, Lift, Generic)
-
+instance NFData HeaderConf
 instance Hashable HeaderConf
+instance Cacheable HeaderConf
 
 type HeaderName  = T.Text
 
 data HeaderValue = HVValue T.Text | HVEnv T.Text
    deriving (Show, Eq, Lift, Generic)
-
+instance NFData HeaderValue
 instance Hashable HeaderValue
+instance Cacheable HeaderValue
 
 instance FromJSON HeaderConf where
   parseJSON (Object o) = do
@@ -36,7 +39,7 @@ instance FromJSON HeaderConf where
 
 instance ToJSON HeaderConf where
   toJSON (HeaderConf name (HVValue val)) = object ["name" .= name, "value" .= val]
-  toJSON (HeaderConf name (HVEnv val)) = object ["name" .= name, "value_from_env" .= val]
+  toJSON (HeaderConf name (HVEnv val))   = object ["name" .= name, "value_from_env" .= val]
 
 
 -- | This is used by schema stitching
@@ -49,5 +52,5 @@ getHeadersFromConf = mapM getHeader
       (HeaderConf name (HVEnv val))   -> do
         mEnv <- liftIO $ lookupEnv (T.unpack val)
         case mEnv of
-          Nothing -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
+          Nothing     -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
           Just envval -> return (name, T.pack envval)

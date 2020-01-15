@@ -16,6 +16,7 @@ const EventSubSidebar = ({
   // children,
   dispatch,
   location,
+  readOnlyMode,
 }) => {
   const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
@@ -92,7 +93,7 @@ const EventSubSidebar = ({
 
   return (
     <LeftSubSidebar
-      showAddBtn
+      showAddBtn={!readOnlyMode}
       searchInput={getSearchInput()}
       heading={`Event Triggers (${triggerList.length})`}
       addLink={'/events/manage/triggers/add'}
@@ -110,6 +111,7 @@ const mapStateToProps = state => {
     currentTrigger: state.triggers.currentTrigger,
     triggerList: state.triggers.triggerList,
     listingTrigger: state.triggers.listingTrigger,
+    readOnlyMode: state.main.readOnlyMode,
   };
 };
 

@@ -40,6 +40,7 @@ module Hasura.RQL.Types.DML
 
 import qualified Hasura.SQL.DML             as S
 
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
@@ -62,10 +63,12 @@ data ColExp
   = ColExp
   { ceCol :: !FieldName
   , ceVal :: !Value
-  } deriving (Show, Eq, Lift, Data)
+  } deriving (Show, Eq, Lift, Data, Generic)
+instance Cacheable ColExp
 
 newtype BoolExp
-  = BoolExp { unBoolExp :: GBoolExp ColExp } deriving (Show, Eq, Lift)
+  = BoolExp { unBoolExp :: GBoolExp ColExp }
+  deriving (Show, Eq, Lift, Generic, Cacheable)
 
 $(makeWrapped ''BoolExp)
 

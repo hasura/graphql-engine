@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
@@ -43,6 +43,33 @@ const RawSQL = ({
   allSchemas,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
+
+  /* hooks */
+
+  // set up sqlRef to use in unmount
+  const sqlRef = useRef(sql);
+
+  // set SQL from localStorage on mount and write back to localStorage on unmount
+  useEffect(() => {
+    const LS_RAW_SQL_SQL = 'rawSql:sql';
+    if (!sql) {
+      const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
+      if (sqlFromLocalStorage) {
+        dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
+      }
+    }
+
+    return () => {
+      localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
+    };
+  }, []);
+
+  // set SQL to sqlRef
+  useEffect(() => {
+    sqlRef.current = sql;
+  }, [sql]);
+
+  /* hooks - end */
 
   const cascadeTip = (
     <Tooltip id="tooltip-cascade">

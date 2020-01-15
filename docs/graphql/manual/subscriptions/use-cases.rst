@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use cases for Hasura subscriptions
+   :keywords: hasura, docs, subscription, use case
+
 Subscriptions sample use cases
 ==============================
 
@@ -157,8 +161,8 @@ Check this `sample app <https://realtime-chat.demo.hasura.app/>`__ for a working
 Subscribe to the latest value of some derived data
 --------------------------------------------------
 
-In case you are interested in the latest value of some derived data, you can :doc:`create a view to query the derived
-data <../queries/derived-data>` and then use subscriptions to fetch the derived value and get its latest value
+In case you are interested in the latest value of some derived data, you can :ref:`create a view to query the derived
+data <custom_views>` and then use subscriptions to fetch the derived value and get its latest value
 whenever it updates.
 
 Example: A poll dashboard

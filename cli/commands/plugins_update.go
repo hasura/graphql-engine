@@ -14,9 +14,13 @@ func newPluginsUpdateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Example:      ``,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ec.Spin("Updating plugins index...")
+			defer ec.Spinner.Stop()
 			if err := gitutil.EnsureUpdated(ec.PluginsPath.IndexPath()); err != nil {
 				return errors.Wrap(err, "failed to update the local index")
 			}
+			ec.Spinner.Stop()
+			ec.Logger.WithField("path", ec.PluginsPath.IndexPath()).Infoln("updated plugins index")
 			return nil
 		},
 	}

@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/plugins/installation"
@@ -16,14 +15,16 @@ func newPluginsUnInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "",
 		Example:      ``,
 		SilenceUsage: true,
-		Args:         cobra.MinimumNArgs(1),
+		Args:         cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			for _, name := range args {
-				if err := installation.Uninstall(ec.PluginsPath, name); err != nil {
-					return errors.Wrapf(err, "failed to uninstall plugin %s", name)
-				}
-				fmt.Fprintf(os.Stderr, "Uninstalled plugin %s\n", name)
+			pluginName := args[0]
+			ec.Spin(fmt.Sprintf("Uninstalling plugin %q", pluginName))
+			defer ec.Spinner.Stop()
+			if err := installation.Uninstall(ec.PluginsPath, pluginName); err != nil {
+				return errors.Wrapf(err, "failed to uninstall plugin %s", pluginName)
 			}
+			ec.Spinner.Stop()
+			ec.Logger.WithField("name", pluginName).Infoln("plugin uninstalled")
 			return nil
 		},
 	}

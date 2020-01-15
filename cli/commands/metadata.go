@@ -7,9 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewMetadataCmd returns the metadata command
 func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	metadataCmd := &cobra.Command{
 		Use:          "metadata",
+		Aliases:      []string{"md"},
 		Short:        "Manage Hasura GraphQL Engine metadata saved in the database",
 		SilenceUsage: true,
 	}
@@ -19,6 +21,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newMetadataClearCmd(ec),
 		newMetadataReloadCmd(ec),
 		newMetadataApplyCmd(ec),
+		newMetadataInconsistencyCmd(ec),
 	)
 	return metadataCmd
 }

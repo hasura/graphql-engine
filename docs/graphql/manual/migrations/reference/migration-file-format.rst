@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura Migration file format reference
+   :keywords: hasura, docs, migration, file format
+
 .. _migration_file_format:
 
 Migration file format reference

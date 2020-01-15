@@ -25,6 +25,8 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Example:      ``,
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ec.Spin("Fetching plugins list...")
+			defer ec.Spinner.Stop()
 			plugins, err := index.LoadPluginListFromFS(ec.PluginsPath.IndexPluginsPath())
 			if err != nil {
 				return errors.Wrap(err, "failed to load the list of plugins from the index")
@@ -63,6 +65,7 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 				rows = append(rows, []string{name, limitString(plugin.ShortDescription, 50), status})
 			}
 			rows = sortByFirstColumn(rows)
+			ec.Spinner.Stop()
 			return printTable(os.Stdout, cols, rows)
 		},
 	}

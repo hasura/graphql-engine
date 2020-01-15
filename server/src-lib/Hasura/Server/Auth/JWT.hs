@@ -14,29 +14,26 @@ import           Control.Exception               (try)
 import           Control.Lens
 import           Control.Monad                   (when)
 import           Data.IORef                      (IORef, modifyIORef, readIORef)
-
 import           Data.List                       (find)
-import           Data.Time.Clock                 (NominalDiffTime, UTCTime,
-                                                  diffUTCTime, getCurrentTime)
+import           Data.Parser.CacheControl        (parseMaxAge)
+import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
+                                                  getCurrentTime)
 import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           Network.URI                     (URI)
 
 import           Hasura.HTTP
-import           Hasura.Logging                  (Hasura, LogLevel (..),
-                                                  Logger (..))
+import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (diffTimeToMicro, fmapL,
-                                                  userRoleHeader)
+import           Hasura.Server.Utils             (diffTimeToMicro, fmapL, userRoleHeader)
 
 import qualified Control.Concurrent              as C
 import qualified Crypto.JWT                      as Jose
 import qualified Data.Aeson                      as A
 import qualified Data.Aeson.Casing               as A
 import qualified Data.Aeson.TH                   as A
-import qualified Data.Attoparsec.Text            as AT
 import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI
@@ -176,15 +173,11 @@ updateJwkRef (Logger logger) manager url jwkRef = do
       return $ diffUTCTime expires currTime
 
     getTimeFromCacheControlHeader header =
-      case parseCacheControlHeader $ bsToTxt header of
+      case parseCacheControlHeader (bsToTxt header) of
         Left e       -> logAndThrow e Nothing
         Right maxAge -> return $ Just $ fromInteger maxAge
 
-    parseCacheControlHeader =
-     fmapL (const parseCacheControlErr) . AT.parseOnly cacheControlHeaderParser
-
-    cacheControlHeaderParser :: AT.Parser Integer
-    cacheControlHeaderParser = ("s-maxage=" <|> "max-age=") *> AT.decimal
+    parseCacheControlHeader = fmapL (const parseCacheControlErr) . parseMaxAge
 
     parseCacheControlErr =
       "Failed parsing Cache-Control header from JWK response. Could not find max-age or s-maxage"

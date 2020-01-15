@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	sqldriver "database/sql/driver"
 	"fmt"
+	"github.com/hasura/graphql-engine/cli/migrate"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -13,8 +14,6 @@ import (
 	"testing"
 
 	"github.com/Masterminds/semver"
-
-	"github.com/hasura/graphql-engine/cli/migrate"
 	mt "github.com/hasura/graphql-engine/cli/migrate/testing"
 	"github.com/hasura/graphql-engine/cli/version"
 	_ "github.com/lib/pq"
@@ -31,72 +30,50 @@ var ravenVersions = []mt.Version{
 }
 
 var testMetadataPrev = map[string][]byte{
-	"metadata": []byte(`allowlist: []
-functions: []
-query_collections: []
+	"metadata": []byte(`functions: []
 remote_schemas: []
+query_collections: []
+allowlist: []
+version: 2
 tables:
-- array_relationships: []
-  computed_fields: []
+- table: test
+  is_enum: false
   configuration:
-    custom_column_names: {}
     custom_root_fields:
-      delete: null
-      insert: null
       select: null
-      select_aggregate: null
       select_by_pk: null
+      select_aggregate: null
+      insert: null
       update: null
+      delete: null
+    custom_column_names: {}
+  object_relationships: []
+  array_relationships: []
+  insert_permissions: []
+  select_permissions: []
+  update_permissions: []
   delete_permissions: []
   event_triggers: []
-  insert_permissions: []
-  is_enum: false
-  object_relationships: []
-  select_permissions: []
-  table: test
-  update_permissions: []
+  computed_fields: []
 `),
-	"empty-metadata": []byte(`allowlist: []
-functions: []
-query_collections: []
+	"empty-metadata": []byte(`functions: []
 remote_schemas: []
+query_collections: []
+allowlist: []
+version: 2
 tables: []
 `),
 }
 
 var testMetadataCurrent = map[string][]byte{
-	"metadata": []byte(`allowlist: []
-functions: []
-query_collections: []
-remote_schemas: []
+	"metadata": []byte(`version: 2
 tables:
-- array_relationships: []
-  computed_fields: []
-  configuration:
-    custom_column_names: {}
-    custom_root_fields:
-      delete: null
-      insert: null
-      select: null
-      select_aggregate: null
-      select_by_pk: null
-      update: null
-  delete_permissions: []
-  event_triggers: []
-  insert_permissions: []
-  is_enum: false
-  object_relationships: []
-  select_permissions: []
-  table: test
-  update_permissions: []
-version: 2
+- table:
+    schema: public
+    name: test
 `),
-	"empty-metadata": []byte(`allowlist: []
-functions: []
-query_collections: []
-remote_schemas: []
+	"empty-metadata": []byte(`version: 2
 tables: []
-version: 2
 `),
 }
 
@@ -284,6 +261,8 @@ func testMigrate(t *testing.T, endpoint *url.URL, migrationsDir string) {
 	testMetadataReset(t, metadataFile, endpoint)
 	testMetadataExport(t, metadataFile, endpoint)
 	compareMetadata(t, metadataFile, "empty-metadata", versionCtx.ServerSemver)
+
+	testMetadataInconsistencyDropCmd(t, migrationsDir, metadataFile, endpoint)
 }
 
 func mustWriteFile(t testing.TB, dir, file string, body string) {
@@ -294,7 +273,7 @@ func mustWriteFile(t testing.TB, dir, file string, body string) {
 
 func compareMetadata(t testing.TB, metadataFile string, actualType string, serverVersion *semver.Version) {
 	var actualData []byte
-	c, err := semver.NewConstraint("<= v1.0.0-beta.10")
+	c, err := semver.NewConstraint("<= v1.0.0")
 	if err != nil {
 		t.Fatal(err)
 	}

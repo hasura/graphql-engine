@@ -329,6 +329,14 @@ func (m *Migrate) ReloadMetadata() error {
 	return m.databaseDrv.ReloadMetadata()
 }
 
+func (m *Migrate) GetInconsistentMetadata() (bool, []database.InconsistentMetadataInterface, error) {
+	return m.databaseDrv.GetInconsistentMetadata()
+}
+
+func (m *Migrate) DropInconsistentMetadata() error {
+	return m.databaseDrv.DropInconsistentMetadata()
+}
+
 func (m *Migrate) ApplyMetadata() error {
 	return m.databaseDrv.ApplyMetadata()
 }
@@ -384,7 +392,7 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 	go m.squashMigrations(retUp, retDown, dataUp, dataDown, retVersions)
 
 	// make a chan for errors
-	errChn := make(chan error)
+	errChn := make(chan error, 2)
 
 	// create a waitgroup to wait for all goroutines to finish execution
 	var wg sync.WaitGroup
@@ -403,7 +411,8 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 			case error:
 				// it's an error, set error and return
 				// note: this return is returning the goroutine, not the current function
-				err = r.(error)
+				m.isGracefulStop = true
+				errChn <- r.(error)
 				return
 			case []byte:
 				// it's SQL, concat all of them
@@ -429,7 +438,8 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 			case error:
 				// it's an error, set error and return
 				// note: this return is returning the goroutine, not the current function
-				err = r.(error)
+				m.isGracefulStop = true
+				errChn <- r.(error)
 				return
 			case []byte:
 				// it's SQL, concat all of them
@@ -459,15 +469,16 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 	// wait until all tasks (3) in the workgroup are completed
 	wg.Wait()
 
+	// close the errChn
+	close(errChn)
+
 	// check for errors in the error channel
-	select {
-	// we got an error, set err and return
-	case err = <-errChn:
-		return
-	default:
-		// set nothing and return, all is well
+	for e := range errChn {
+		err = e
 		return
 	}
+
+	return
 }
 
 // Migrate looks at the currently active migration version,
@@ -714,6 +725,10 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			return
 		}
 
+		if from < version {
+			return
+		}
+
 		err = m.versionDownExists(from)
 		if err != nil {
 			ret <- err
@@ -737,10 +752,6 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			}
 			ret <- migr
 			go migr.Buffer()
-		}
-
-		if from == version {
-			return
 		}
 
 		migr, err := m.metanewMigration(from, int64(prev))
@@ -828,7 +839,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 		prev, err := m.sourceDrv.Prev(version)
 		if os.IsNotExist(err) {
 			// apply nil migration
-			migr, err := m.newMigration(version, -1)
+			migr, err := m.metanewMigration(version, -1)
 			if err != nil {
 				ret <- err
 				return
@@ -836,7 +847,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 			ret <- migr
 			go migr.Buffer()
 
-			migr, err = m.metanewMigration(version, -1)
+			migr, err = m.newMigration(version, -1)
 			if err != nil {
 				ret <- err
 				return
@@ -849,7 +860,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 			return
 		}
 
-		migr, err := m.newMigration(version, int64(prev))
+		migr, err := m.metanewMigration(version, int64(prev))
 		if err != nil {
 			ret <- err
 			return
@@ -858,7 +869,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.metanewMigration(version, int64(prev))
+		migr, err = m.newMigration(version, int64(prev))
 		if err != nil {
 			ret <- err
 			return
@@ -1143,11 +1154,17 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 		defer close(dataUp)
 		defer close(versions)
 
+		var err error
+
 		squashList := database.CustomList{
 			list.New(),
 		}
 
-		defer m.databaseDrv.Squash(&squashList, dataUp)
+		defer func() {
+			if err == nil {
+				m.databaseDrv.Squash(&squashList, dataUp)
+			}
+		}()
 
 		for r := range retUp {
 			if m.stop() {
@@ -1159,8 +1176,9 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 			case *Migration:
 				migr := r.(*Migration)
 				if migr.Body != nil {
-					if err := m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
+					if err = m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
 						dataUp <- err
+						return
 					}
 				}
 
@@ -1175,12 +1193,17 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 
 	go func() {
 		defer close(dataDown)
+		var err error
 
 		squashList := database.CustomList{
 			list.New(),
 		}
 
-		defer m.databaseDrv.Squash(&squashList, dataDown)
+		defer func() {
+			if err == nil {
+				m.databaseDrv.Squash(&squashList, dataDown)
+			}
+		}()
 
 		for r := range retDown {
 			if m.stop() {
@@ -1192,8 +1215,9 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 			case *Migration:
 				migr := r.(*Migration)
 				if migr.Body != nil {
-					if err := m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
+					if err = m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
 						dataDown <- err
+						return
 					}
 				}
 			}

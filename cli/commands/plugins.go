@@ -144,17 +144,6 @@ func HandlePluginCommand(pluginHandler PluginHandler, cmdArgs []string) error {
 	return nil
 }
 
-/*
-func checkIndex(_ *cobra.Command, _ []string) error {
-	if ok, err := gitutil.IsGitCloned(paths.IndexPath()); err != nil {
-		return errors.Wrap(err, "failed to check local index git repository")
-	} else if !ok {
-		return errors.New(`hasura local plugin index is not initialized (run "hasura plugins update")`)
-	}
-	return nil
-}
-*/
-
 func ensureDirs(paths ...string) error {
 	for _, p := range paths {
 		if err := os.MkdirAll(p, 0755); err != nil {
@@ -189,8 +178,8 @@ func ensureCLIExtension(_ *cobra.Command, _ []string) error {
 		return errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
 	}
 	err = installation.Install(ec.PluginsPath, plugin)
-	if err == installation.ErrIsAlreadyInstalled {
-		return nil
+	if err != nil && err != installation.ErrIsAlreadyInstalled {
+		return errors.Wrap(err, "cannot install cli-ext plugin")
 	}
-	return err
+	return nil
 }

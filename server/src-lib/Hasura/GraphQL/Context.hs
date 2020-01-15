@@ -6,6 +6,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
+import           Hasura.Incremental            (Cacheable)
 import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.HashMap.Strict           as Map
@@ -15,6 +16,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils           (duplicates)
 
@@ -87,8 +89,10 @@ data TableCustomRootFields
   , _tcrfInsert          :: !(Maybe G.Name)
   , _tcrfUpdate          :: !(Maybe G.Name)
   , _tcrfDelete          :: !(Maybe G.Name)
-  } deriving (Show, Eq, Lift)
-$(deriveToJSON (aesonDrop 5 snakeCase) ''TableCustomRootFields)
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData TableCustomRootFields
+instance Cacheable TableCustomRootFields
+$(deriveToJSON (aesonDrop 5 snakeCase){omitNothingFields=True} ''TableCustomRootFields)
 
 instance FromJSON TableCustomRootFields where
   parseJSON = withObject "Object" $ \obj -> do
@@ -109,7 +113,6 @@ instance FromJSON TableCustomRootFields where
 
     pure $ TableCustomRootFields select selectByPk selectAggregate
                                  insert update delete
-
 emptyCustomRootFields :: TableCustomRootFields
 emptyCustomRootFields =
   TableCustomRootFields

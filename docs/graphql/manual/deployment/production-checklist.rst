@@ -1,3 +1,7 @@
+.. meta::
+   :description: Checklist for deploying Hasura GraphQL engine to production
+   :keywords: hasura, docs, deployment, production, checklist
+
 .. _production-checklist:
 
 Production checklist
