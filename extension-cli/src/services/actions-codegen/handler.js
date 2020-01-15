@@ -4,13 +4,9 @@ const handler = async (payload) => {
 
   try {
     const codegen = await getActionsCodegen(payload);
-    return JSON.stringify({
-      codegen
-    });
+    return { codegen };
   } catch (e) {
-    return JSON.stringify({
-      error: e.message
-    });
+    return { error: e.message };
   }
 
 }

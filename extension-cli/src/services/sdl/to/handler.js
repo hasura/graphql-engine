@@ -94,7 +94,7 @@ const requestHandler = (payload) => {
     body, status
   } = handlePayload(payload)
 
-  return JSON.stringify(body);
+  return body;
 
 }
 

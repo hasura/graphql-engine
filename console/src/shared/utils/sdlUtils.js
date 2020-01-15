@@ -209,7 +209,7 @@ ${getFieldsSdl(type.fields)}
 };
 
 const getScalarTypeSdl = type => {
-  return `${getEntityDescriptionSdl}scalar ${type.name}\n\n`;
+  return `${getEntityDescriptionSdl(type)}scalar ${type.name}\n\n`;
 };
 
 const getEnumTypeSdl = type => {

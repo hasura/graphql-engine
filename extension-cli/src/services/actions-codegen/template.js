@@ -21,7 +21,7 @@ const resolveCodegeneratorFromUrl = async (url) => {
   try {
     const fetchResp = await fetch(url);
     if (fetchResp.status >= 300) {
-      throw Error(_NOT_FOUND);
+      throw Error(CODEGENERATOR_NOT_FOUND);
     }
     const codegeneratorText = await fetchResp.text()
     eval(`${codegeneratorText} codegenerator = templater`);
@@ -66,7 +66,7 @@ const resolveCodegenerator = async (codegenConfig) => {
   } catch (e) {
     throw e;
   }
-  
+
   return codegenerator;
 
 }

@@ -20,10 +20,8 @@ const logOutput = (log) => {
       }));
     });
   } catch (e) {
-    console.log(e);
-    console.error({
-      error: `could not write output to "${outputFilePath}"`
-    })
+    console.error(`could not write output to "${outputFilePath}"`);
+    process.exit(1);
   }
 };
 
@@ -46,17 +44,27 @@ const handleArgs = () => {
 
 try {
   let cliResponse = handleArgs();
+  if (cliResponse.error) {
+    throw Error(cliResponse.error)
+  }
   if (cliResponse.constructor.name === 'Promise') {
     cliResponse.then(r => {
-      logOutput(r);
+      if (r.error) {
+        throw Error(r.error)
+      }
+      logOutput(JSON.stringify(r));
     }).catch(e => {
       console.error(e);
       process.exit(1);
     })
   } else {
-    logOutput(cliResponse);
+    logOutput(JSON.stringify(cliResponse));
   }
 } catch (e) {
-  console.error(e);
+  if (e.error) {
+    console.error(e.error);
+  } else {
+    console.error(e)
+  }
   process.exit(1);
 }
