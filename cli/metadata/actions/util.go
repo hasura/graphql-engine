@@ -1,7 +1,9 @@
 package actions
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -10,6 +12,7 @@ import (
 func readCliExtOutput(filename string) ([]byte, error) {
 	fileBytes, err := ioutil.ReadFile(filename)
 	if err != nil {
+		fmt.Println("hererererere")
 		return nil, err
 	}
 	return fileBytes, nil
@@ -75,8 +78,12 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string) (codege
 	if err != nil {
 		return
 	}
-	_, err = exec.Command(cmdName, "cli-ext", "actions-codegen", string(fromByt), "--output-file", filename).Output()
+	actionsCodegenCmd := exec.Command(cmdName, "cli-ext", "actions-codegen", string(fromByt), "--output-file", filename)
+	var stderr bytes.Buffer
+	actionsCodegenCmd.Stderr = &stderr
+	err = actionsCodegenCmd.Run()
 	if err != nil {
+		fmt.Println(stderr.String())
 		return
 	}
 	tmpByt, err := readCliExtOutput(filename)
@@ -84,5 +91,9 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string) (codege
 		return
 	}
 	err = json.Unmarshal(tmpByt, &codegenResp)
+	fmt.Println(string(tmpByt))
+	if err != nil {
+		return
+	}
 	return
 }
