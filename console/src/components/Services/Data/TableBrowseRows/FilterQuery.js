@@ -64,7 +64,7 @@ const renderOps = (opName, onChange, key) => (
     ) : null}
     {Operators.map((o, i) => (
       <option key={i} value={o.value}>
-        {`[${o.value}] ${o.name}`}
+        {`[${o.graphqlOp}] ${o.name}`}
       </option>
     ))}
   </select>
@@ -93,6 +93,12 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
         />
       );
     }
+    const defaultValue = ['$like', '$nlike', '$ilike', '$nilike'].includes(
+      opName
+    )
+      ? '%%'
+      : '';
+
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-4">
@@ -103,7 +109,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
           <input
             className="form-control"
             placeholder="-- value --"
-            value={clause[colName][opName]}
+            value={clause[colName][opName] || defaultValue}
             onChange={e => {
               dispatch(setFilterVal(e.target.value, i));
               if (i + 1 === whereAnd.length) {
