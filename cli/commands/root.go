@@ -116,7 +116,7 @@ func Execute() error {
 	if err != nil {
 		return errors.Wrap(err, "preparing execution context failed")
 	}
-	err = rootCmd.Execute()
+	err = NewDefaultHasuraCommand().Execute()
 	if err != nil {
 		ec.Telemetry.IsError = true
 	}
