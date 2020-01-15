@@ -26,10 +26,9 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	actionsUseCodegenCmd := &cobra.Command{
-		Use:               "use-codegen",
-		Short:             "",
-		SilenceUsage:      true,
-		PersistentPreRunE: ensureCLIExtension,
+		Use:          "use-codegen",
+		Short:        "",
+		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
 			err := ec.Prepare()

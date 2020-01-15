@@ -17,11 +17,10 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	actionsCreateCmd := &cobra.Command{
-		Use:               "create",
-		Short:             "",
-		SilenceUsage:      true,
-		Args:              cobra.ExactArgs(1),
-		PersistentPreRunE: ensureCLIExtension,
+		Use:          "create",
+		Short:        "",
+		SilenceUsage: true,
+		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
 			err := ec.Prepare()
@@ -38,7 +37,7 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if ec.MetadataDir == "" {
 				return fmt.Errorf("actions commands can be executed only when metadata_dir is set in config")
 			}
-			return ensureCLIExtension(cmd, args)
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]

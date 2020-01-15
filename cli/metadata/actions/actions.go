@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/briandowns/spinner"
+	"github.com/pkg/errors"
 
 	"github.com/Masterminds/semver"
 	gyaml "github.com/ghodss/yaml"
@@ -15,6 +17,9 @@ import (
 	"github.com/graphql-go/graphql/language/parser"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/printer"
+	"github.com/hasura/graphql-engine/cli/plugins/index"
+	"github.com/hasura/graphql-engine/cli/plugins/installation"
+	"github.com/hasura/graphql-engine/cli/plugins/paths"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
@@ -32,6 +37,7 @@ const (
 
 var (
 	ActionsCodegenRepoURI = fmt.Sprintf("https://github.com/%s.git", actionsCodegenRepo)
+	pluginName            = "cli-ext"
 )
 
 type DeriveMutationPayload struct {
@@ -101,6 +107,19 @@ func New(ec *cli.ExecutionContext) *ActionConfig {
 			panic(err)
 		}
 		shouldSkip = !cons.Check(ec.Version.ServerSemver)
+	}
+	if !shouldSkip {
+		err := ensureCLIExtension(ec.PluginsPath)
+		if err != nil {
+			ec.Spinner.Stop()
+			ec.Logger.Errorln(err)
+			msg := fmt.Sprintf(`unable to install cli-ext plugin. execute the following commands to continue:
+
+  hasura plugins install %s
+`, pluginName)
+			ec.Logger.Fatalln(msg)
+			return nil
+		}
 	}
 	return &ActionConfig{
 		MetadataDir:  ec.MetadataDir,
@@ -477,4 +496,19 @@ func GetActionsGraphQLFileContent(metadataDir string) (sdl string, err error) {
 	}
 	sdl = string(commonByt)
 	return
+}
+
+func ensureCLIExtension(paths paths.Paths) error {
+	plugin, err := index.LoadPluginByName(paths.IndexPluginsPath(), pluginName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
+		}
+		return errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
+	}
+	err = installation.Install(paths, plugin)
+	if err != nil && err != installation.ErrIsAlreadyInstalled {
+		return errors.Wrap(err, "cannot install cli-ext plugin")
+	}
+	return nil
 }
