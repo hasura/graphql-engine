@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
@@ -77,6 +78,11 @@ type actionsUseCodegenOptions struct {
 
 func (o *actionsUseCodegenOptions) run() (err error) {
 	// ensure the the actions-codegen repo is cloned and updated
+
+	o.framework = strings.TrimSpace(o.framework)
+	o.outputDir = strings.TrimSpace(o.outputDir)
+
+	o.EC.Spin("Fetching codegen assets...")
 	actionsCodegenGit := util.NewGitUtil(
 		actionsCodegenRepoURI,
 		filepath.Join(o.EC.GlobalConfigDir, actionsCodegenDirName),
@@ -87,6 +93,7 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 		return
 	}
 	_ = actionsCodegenGit.EnsureUpdated()
+	o.EC.Spinner.Stop()
 
 	newCodegenExecutionConfig := o.EC.Config.Action.Codegen
 
@@ -137,6 +144,8 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 		return
 	}
 
+	o.EC.Logger.Info("Codegen configuration updated in config.yaml\n\n")
+
 	// if with-starter-kit flag is not provided, give an option to clone a starterkit
 	if !o.withStarterKit {
 		shouldCloneStarterKit, err := util.GetYesNoPrompt("Do you also want to clone a starter kit for " + newCodegenExecutionConfig.Framework + "?")
@@ -163,11 +172,18 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 		err = nil
 
 		// copy the starter kit
+		destinationDir := filepath.Join(o.EC.ExecutionDirectory, starterKitDirname)
 		err = util.FSCopyDir(
 			filepath.Join(o.EC.GlobalConfigDir, actionsCodegenDirName, newCodegenExecutionConfig.Framework, "starter-kit"),
-			filepath.Join(o.EC.ExecutionDirectory, starterKitDirname),
+			destinationDir,
 		)
+
+		if err != nil {
+			return err
+		}
+
+		o.EC.Logger.Info("Starter kit cloned at " + destinationDir)
 	}
 
-	return err
+	return nil
 }

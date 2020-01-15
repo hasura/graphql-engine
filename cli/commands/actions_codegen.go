@@ -73,6 +73,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 	}
 
 	// if no actions are passed, perform codegen for all actions
+	o.EC.Spin("Generating code...")
 	var codegenActions []string
 	if len(o.actions) == 0 {
 		actionsFileContent, err := actions.GetActionsFileContent(o.EC.MetadataDir)
@@ -92,6 +93,9 @@ func (o *actionsCodegenOptions) run() (err error) {
 			return err
 		}
 	}
+
+	o.EC.Spinner.Stop()
+	o.EC.Logger.Info("Codegen files generated at " + o.EC.Config.Action.Codegen.OutputDir)
 
 	return nil
 

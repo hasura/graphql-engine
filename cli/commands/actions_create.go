@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
@@ -43,7 +44,8 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := actionsCreateCmd.Flags()
 
-	f.StringVar(&opts.deriveFromMutation, "derive-from-mutation", "", "")
+	f.StringVar(&opts.deriveFromMutation, "derive-from-mutation", "", "derive action from a Hasura mutation")
+	f.BoolVar(&opts.withCodegen, "with-codegen", false, "create action along with codegen")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -63,6 +65,7 @@ type actionsCreateOptions struct {
 
 	name               string
 	deriveFromMutation string
+	withCodegen        bool
 }
 
 func (o *actionsCreateOptions) run() error {
@@ -70,38 +73,55 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return err
 	}
+
+	o.name = strings.TrimSpace(o.name)
+
+	// introspect Hasura schema if a mutation is being derived
 	var introSchema interface{}
 	if o.deriveFromMutation != "" {
+		o.deriveFromMutation = strings.TrimSpace(o.deriveFromMutation)
+		o.EC.Spin("Deriving a Hasura mutation...")
 		introSchema, err = migrateDrv.GetIntroSpectionSchema()
 		if err != nil {
 			return err
 		}
 	}
+
+	// create new action
 	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action, o.EC.CMDName)
 	err = actionCfg.Create(o.name, introSchema, o.deriveFromMutation)
 	if err != nil {
 		return err
 	}
+	o.EC.Spinner.Stop()
+	o.EC.Spin("Creating the action...")
 	err = migrateDrv.ApplyMetadata()
 	if err != nil {
 		return err
 	}
 
+	o.EC.Spinner.Stop()
+	o.EC.Logger.WithField("name", o.name).Infoln("action created")
+
+	// if codegen config not present, skip codegen
 	if o.EC.Config.Action.Codegen.Framework == "" {
+		if o.withCodegen {
+			infoMsg := fmt.Sprintf(`Could not find codegen config in config.yaml. For setting codegen config, run:
+
+  hasura actions use-codegen`)
+			o.EC.Logger.Error(infoMsg)
+			return nil
+		}
 		return nil
 	}
 
-	derivePayload := actions.DerivePayload{
-		IntrospectionSchema: introSchema,
-		Mutation: actions.DeriveMutationPayload{
-			MutationName: o.deriveFromMutation,
-			ActionName:   o.name,
-		},
-	}
-
-	confirmation, err := util.GetYesNoPrompt("Do you want to generate " + o.EC.Config.Action.Codegen.Framework + " code for this action and the custom types?")
-	if err != nil {
-		return err
+	// if with-codegen flag not present, ask them if they want to codegen
+	var confirmation string
+	if !o.withCodegen {
+		confirmation, err = util.GetYesNoPrompt("Do you want to generate " + o.EC.Config.Action.Codegen.Framework + " code for this action and the custom types?")
+		if err != nil {
+			return err
+		}
 	}
 
 	if confirmation == "n" {
@@ -112,6 +132,24 @@ func (o *actionsCreateOptions) run() error {
 		o.EC.Logger.Info(infoMsg)
 		return nil
 	}
+
+	// construct derive payload to send to codegenerator
+	derivePayload := actions.DerivePayload{
+		IntrospectionSchema: introSchema,
+		Mutation: actions.DeriveMutationPayload{
+			MutationName: o.deriveFromMutation,
+			ActionName:   o.name,
+		},
+	}
+
+	// Run codegen
+	o.EC.Spin(fmt.Sprintf(`Running "hasura actions codegen %s"...`, o.name))
 	err = actionCfg.Codegen(o.name, derivePayload)
-	return err
+	if err != nil {
+		return err
+	}
+	o.EC.Spinner.Stop()
+	o.EC.Logger.Info("Codegen files generated at " + o.EC.Config.Action.Codegen.OutputDir)
+	return nil
+
 }
