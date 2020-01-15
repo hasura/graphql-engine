@@ -56,6 +56,10 @@ By default, shows changes between exported metadata file and server metadata.`,
 		Args: cobra.MaximumNArgs(2),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

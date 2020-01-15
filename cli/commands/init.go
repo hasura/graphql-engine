@@ -50,8 +50,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
   # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = viper.New()
+			return ec.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 {
@@ -163,7 +164,7 @@ func (o *initOptions) createFiles() error {
 			Endpoint: "http://localhost:8080",
 		},
 		MetadataDirectory: o.MetadataDir,
-		Action: actions.ActionExecutionConfig{
+		Action: cli.ActionExecutionConfig{
 			Kind:                  o.ActionKind,
 			HandlerWebhookBaseURL: o.ActionHandler,
 		},
@@ -209,7 +210,7 @@ func (o *initOptions) createFiles() error {
 	plugins["query_collections"] = querycollections.New(ec.MetadataDir)
 	plugins["allow_list"] = allowlist.New(ec.MetadataDir)
 	plugins["remote_schemas"] = remoteschemas.New(ec.MetadataDir)
-	plugins["actions"] = actions.New(ec.MetadataDir, ec.Config.Action, ec.CMDName)
+	plugins["actions"] = actions.New(ec)
 	for _, plg := range plugins {
 		err := plg.CreateFiles()
 		if err != nil {

@@ -59,7 +59,7 @@ func newMigrate(ec *cli.ExecutionContext, isCmd bool) (*migrate.Migrate, error) 
 		plugins["query_collections"] = querycollections.New(ec.MetadataDir)
 		plugins["allow_list"] = allowlist.New(ec.MetadataDir)
 		plugins["remote_schemas"] = remoteschemas.New(ec.MetadataDir)
-		plugins["actions"] = actions.New(ec.MetadataDir, ec.Config.Action, ec.CMDName)
+		plugins["actions"] = actions.New(ec)
 	} else {
 		plugins["metadata"] = metadata.New(ec.MigrationDir)
 	}

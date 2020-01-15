@@ -6,11 +6,14 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/Masterminds/semver"
 	gyaml "github.com/ghodss/yaml"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/kinds"
 	"github.com/graphql-go/graphql/language/parser"
+	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/printer"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
@@ -60,10 +63,10 @@ type sdlFromResponse struct {
 }
 
 type actionsCodegenRequest struct {
-	ActionName    string                  `json:"action_name"`
-	SDL           sdlPayload              `json:"sdl"`
-	Derive        DerivePayload           `json:"derive,omitempty"`
-	CodegenConfig *CodegenExecutionConfig `json:"codegen_config"`
+	ActionName    string                      `json:"action_name"`
+	SDL           sdlPayload                  `json:"sdl"`
+	Derive        DerivePayload               `json:"derive,omitempty"`
+	CodegenConfig *cli.CodegenExecutionConfig `json:"codegen_config"`
 }
 
 type codegenFile struct {
@@ -75,29 +78,30 @@ type actionsCodegenResponse struct {
 	Files []codegenFile `json:"codegen"`
 }
 
-type CodegenExecutionConfig struct {
-	Framework string `json:"framework"`
-	OutputDir string `json:"output_dir"`
-	URI       string `json:"uri,omitempty"`
-}
-
-type ActionExecutionConfig struct {
-	Kind                  string                  `json:"kind"`
-	HandlerWebhookBaseURL string                  `json:"handler_webhook_baseurl"`
-	Codegen               *CodegenExecutionConfig `json:"codegen,omitempty"`
-}
-
 type ActionConfig struct {
 	MetadataDir  string
-	ActionConfig ActionExecutionConfig
+	ActionConfig cli.ActionExecutionConfig
 	cmdName      string
+	shouldSkip   bool
+
+	logger *logrus.Logger
 }
 
-func New(baseDir string, actionConfig ActionExecutionConfig, cmdName string) *ActionConfig {
+func New(ec *cli.ExecutionContext) *ActionConfig {
+	var shouldSkip bool
+	if ec.Version.ServerSemver != nil {
+		cons, err := semver.NewConstraint(">= v1.1.0")
+		if err != nil {
+			panic(err)
+		}
+		shouldSkip = !cons.Check(ec.Version.ServerSemver)
+	}
 	return &ActionConfig{
-		MetadataDir:  baseDir,
-		ActionConfig: actionConfig,
-		cmdName:      cmdName,
+		MetadataDir:  ec.MetadataDir,
+		ActionConfig: ec.Config.Action,
+		cmdName:      ec.CMDName,
+		shouldSkip:   shouldSkip,
+		logger:       ec.Logger,
 	}
 }
 
@@ -394,6 +398,10 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 }
 
 func (a *ActionConfig) Export(metadata dbTypes.Metadata) error {
+	if a.shouldSkip {
+		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
+		return nil
+	}
 	tmpByt, err := json.Marshal(metadata)
 	if err != nil {
 		return err

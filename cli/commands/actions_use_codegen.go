@@ -32,7 +32,11 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 		PersistentPreRunE: ensureCLIExtension,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
-			err := ec.Validate()
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
+			err = ec.Validate()
 			if err != nil {
 				return err
 			}

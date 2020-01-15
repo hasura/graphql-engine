@@ -24,7 +24,11 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		PersistentPreRunE: ensureCLIExtension,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
-			err := ec.Validate()
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
+			err = ec.Validate()
 			if err != nil {
 				return err
 			}
@@ -89,7 +93,7 @@ func (o *actionsCreateOptions) run() error {
 	o.EC.Spinner.Stop()
 
 	// create new action
-	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action, o.EC.CMDName)
+	actionCfg := actions.New(o.EC)
 	err = actionCfg.Create(o.name, introSchema, o.deriveFromMutation)
 	if err != nil {
 		return err

@@ -58,8 +58,8 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-// NewHasuraCommand creates the `hasura` command and its nested children.
-func NewHasuraCommand(in io.Reader, out, err io.Writer) *cobra.Command {
+func init() {
+	ec = cli.NewExecutionContext()
 	rootCmd.AddCommand(
 		NewInitCmd(ec),
 		NewConsoleCmd(ec),
@@ -79,11 +79,6 @@ func NewHasuraCommand(in io.Reader, out, err io.Writer) *cobra.Command {
 	f.StringVar(&ec.ExecutionDirectory, "project", "", "directory where commands are executed (default: current dir)")
 	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "Skip automatic update check on command execution")
 	f.BoolVar(&ec.NoColor, "no-color", false, "do not colorize output (default: false)")
-	return rootCmd
-}
-
-func init() {
-	ec = cli.NewExecutionContext()
 }
 
 // NewDefaultHasuraCommand creates the `hasura` command with default arguments
@@ -93,7 +88,7 @@ func NewDefaultHasuraCommand() *cobra.Command {
 
 // NewDefaultHasuraCommandWithArgs creates the `hasura` command with arguments
 func NewDefaultHasuraCommandWithArgs(pluginHandler PluginHandler, args []string, in io.Reader, out, errout io.Writer) *cobra.Command {
-	cmd := NewHasuraCommand(in, out, errout)
+	cmd := rootCmd
 
 	if pluginHandler == nil {
 		return cmd
@@ -121,7 +116,7 @@ func Execute() error {
 	if err != nil {
 		return errors.Wrap(err, "preparing execution context failed")
 	}
-	err = NewDefaultHasuraCommand().Execute()
+	err = rootCmd.Execute()
 	if err != nil {
 		ec.Telemetry.IsError = true
 	}

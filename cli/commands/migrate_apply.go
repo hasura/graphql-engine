@@ -17,8 +17,8 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	migrateApplyCmd := &cobra.Command{
-		Use:          "apply",
-		Short:        "Apply migrations on the database",
+		Use:   "apply",
+		Short: "Apply migrations on the database",
 		Example: `  # Apply all migrations
   hasura migrate apply
 
@@ -51,6 +51,10 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
