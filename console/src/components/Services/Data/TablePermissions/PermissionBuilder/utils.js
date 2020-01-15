@@ -27,6 +27,7 @@ export const PGTypes = {
     'double precision',
   ],
   uuid: ['uuid'],
+  user_defined: [], // default for all other types
 };
 
 const boolOperatorsInfo = {
@@ -44,40 +45,103 @@ const boolOperatorsInfo = {
 const columnOperatorsInfo = {
   _eq: {
     type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: [
+      'boolean',
+      'character',
+      'dateTime',
+      'numeric',
+      'uuid',
+      'user_defined',
+    ],
   },
   _ne: {
     type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: [
+      'boolean',
+      'character',
+      'dateTime',
+      'numeric',
+      'uuid',
+      'user_defined',
+    ],
   },
   _in: {
     type: 'array',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: [
+      'boolean',
+      'character',
+      'dateTime',
+      'numeric',
+      'uuid',
+      'user_defined',
+    ],
   },
   _nin: {
     type: 'array',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: [
+      'boolean',
+      'character',
+      'dateTime',
+      'numeric',
+      'uuid',
+      'user_defined',
+    ],
   },
   _gt: {
     type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: [
+      'boolean',
+      'character',
+      'dateTime',
+      'numeric',
+      'uuid',
+      'user_defined',
+    ],
   },
   _lt: {
     type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: [
+      'boolean',
+      'character',
+      'dateTime',
+      'numeric',
+      'uuid',
+      'user_defined',
+    ],
   },
   _gte: {
     type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: [
+      'boolean',
+      'character',
+      'dateTime',
+      'numeric',
+      'uuid',
+      'user_defined',
+    ],
   },
   _lte: {
     type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: [
+      'boolean',
+      'character',
+      'dateTime',
+      'numeric',
+      'uuid',
+      'user_defined',
+    ],
   },
   _is_null: {
     type: 'object',
     inputType: 'boolean',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: [
+      'boolean',
+      'character',
+      'dateTime',
+      'numeric',
+      'uuid',
+      'user_defined',
+    ],
   },
   _ceq: {
     type: 'object',
@@ -269,6 +333,10 @@ export const getRootPGType = type => {
       rootType = rType;
       break;
     }
+  }
+
+  if (!rootType) {
+    rootType = 'user_defined';
   }
 
   return rootType;
