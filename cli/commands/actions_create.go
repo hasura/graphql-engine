@@ -86,6 +86,7 @@ func (o *actionsCreateOptions) run() error {
 			return err
 		}
 	}
+	o.EC.Spinner.Stop()
 
 	// create new action
 	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action, o.EC.CMDName)
@@ -93,7 +94,6 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return err
 	}
-	o.EC.Spinner.Stop()
 	o.EC.Spin("Creating the action...")
 	err = migrateDrv.ApplyMetadata()
 	if err != nil {
