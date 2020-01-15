@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/briandowns/spinner"
+
 	"github.com/Masterminds/semver"
 	gyaml "github.com/ghodss/yaml"
 	"github.com/graphql-go/graphql/language/ast"
@@ -25,8 +27,11 @@ const (
 	actionsFileName       string = "actions.yaml"
 	graphqlFileName              = "actions.graphql"
 	actionsCodegenRepo           = "wawhal/actions-codegen"
-	ActionsCodegenRepoURI string = "https://github.com/" + actionsCodegenRepo + ".git"
-	ActionsCodegenDirName string = "actions-codegen-assets"
+	ActionsCodegenDirName        = "actions-codegen-assets"
+)
+
+var (
+	ActionsCodegenRepoURI = fmt.Sprintf("https://github.com/%s.git", actionsCodegenRepo)
 )
 
 type DeriveMutationPayload struct {
@@ -84,7 +89,8 @@ type ActionConfig struct {
 	cmdName      string
 	shouldSkip   bool
 
-	logger *logrus.Logger
+	spinner *spinner.Spinner
+	logger  *logrus.Logger
 }
 
 func New(ec *cli.ExecutionContext) *ActionConfig {
@@ -101,6 +107,7 @@ func New(ec *cli.ExecutionContext) *ActionConfig {
 		ActionConfig: ec.Config.Action,
 		cmdName:      ec.CMDName,
 		shouldSkip:   shouldSkip,
+		spinner:      ec.Spinner,
 		logger:       ec.Logger,
 	}
 }
@@ -281,6 +288,21 @@ func (a *ActionConfig) CreateFiles() error {
 }
 
 func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
+	if a.shouldSkip {
+		_, err := GetActionsFileContent(a.MetadataDir)
+		if err == nil {
+			a.spinner.Stop()
+			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", actionsFileName)
+			a.spinner.Start()
+		}
+		_, err = GetActionsGraphQLFileContent(a.MetadataDir)
+		if err == nil {
+			a.spinner.Stop()
+			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", graphqlFileName)
+			a.spinner.Start()
+		}
+		return nil
+	}
 	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
 	if err != nil {
 		return err
