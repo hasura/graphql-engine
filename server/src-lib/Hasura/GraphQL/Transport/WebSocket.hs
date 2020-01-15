@@ -46,7 +46,7 @@ onConn serverEnv wsId requestHead = do
       corsPolicy = _wseCorsPolicy serverEnv
       pgExecCtx = _wseRunTx serverEnv
       queryConnHandler = WQH.onConnHandler logger corsPolicy wsId requestHead
-      txConnHandler = WTH.onConnHandler logger pgExecCtx wsId requestHead
+      txConnHandler = WTH.onConnHandler logger pgExecCtx corsPolicy wsId requestHead
       reject qErr = pure $ Left $ WS.RejectRequest
                     (H.statusCode $ qeStatus qErr)
                     (H.statusMessage $ qeStatus qErr) []

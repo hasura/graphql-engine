@@ -43,6 +43,7 @@ data ExecuteQuery
   = ExecuteQuery
   { _eqRequestId :: !RequestId
   , _eqQuery     :: !GQLReqUnparsed
+  , _eqUserInfo  :: !UserInfo
   }
 $(deriveToJSON (aesonDrop 3 snakeCase) ''ExecuteQuery)
 
@@ -59,6 +60,7 @@ $(deriveToJSON
 
 data WSEvent
   = EAccepted
+  | ECorsNote !Text
   | ERejected !QErr
   | EInitErr !Text
   | EInitialised

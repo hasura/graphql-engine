@@ -6,6 +6,7 @@ module Hasura.GraphQL.Transport.WebSocket.Transaction.Handlers
 
 import           Hasura.Db
 import           Hasura.EncJSON
+import           Hasura.Server.Cors
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Common
@@ -39,13 +40,14 @@ onConnHandler
   :: (MonadIO m)
   => L.Logger L.Hasura
   -> PGExecCtx
+  -> CorsPolicy
   -> WS.OnConnH m ConnState
-onConnHandler (L.Logger logger) pgExecCtx wsId requestHead = do
+onConnHandler (L.Logger logger) pgExecCtx corsPolicy wsId requestHead = do
   resE <- runExceptT resolveAll
   case resE of
     Left e -> reject e
-    Right (pgConn, localPool, errTy) -> do
-      txStatus <- liftIO $ STM.newTVarIO $ TxNotInitialised $ WS.requestHeaders requestHead
+    Right (pgConn, localPool, errTy, headers) -> do
+      txStatus <- liftIO $ STM.newTVarIO $ TxNotInitialised headers
       let acceptRequest = WS.defaultAcceptRequest
                       { WS.acceptSubprotocol = Just "graphql-tx"}
           pgConnCtx = PGConnCtx pgConn localPool
@@ -66,12 +68,14 @@ onConnHandler (L.Logger logger) pgExecCtx wsId requestHead = do
       threadDelay $ diffTimeToMicro $ TC.diffUTCTime expTime currTime
 
     resolveAll = do
+      let logCorsNote corsNote = lift $ logger $ mkInfoLog wsId $ ECorsNote corsNote
+      headers <- WS.getHeadersWithEnforceCors logCorsNote requestHead corsPolicy
       errTy <- WS.checkPath requestHead
       maybePGConn <- liftIO $ PG.getPGConnMaybe pool
       (pgConn, localPool) <- maybe
                              (throw404 "unable to acquire connection from pool, please try again")
                              pure maybePGConn
-      pure (pgConn, localPool, errTy)
+      pure (pgConn, localPool, errTy, headers)
 
     reject qErr = do
       logger $ mkErrorLog wsId $ ERejected qErr
@@ -91,18 +95,16 @@ onMessageHandler authMode serverEnv wsTxData wsConn rawMessage =
     Right msg -> case msg of
       CMInit initPayload       -> onInit initPayload
       CMExecute executePayload -> onExecute executePayload
-      CMAbort                  ->
-        runCommand do
-          lift $ logOp OAbort
-          runLazyTxWithConn pgConn abortTx
-          modifyTxStatus TxAbort
-          pure $ SMClose wsId "Executed 'ABORT' command"
-      CMCommit          ->
-        runCommand do
-          lift $ logOp OCommit
-          runLazyTxWithConn pgConn commitTx
-          modifyTxStatus TxCommit
-          pure $ SMClose wsId "Executed 'COMMIT' command"
+      CMAbort                  -> runCommand do
+        lift $ logOp OAbort
+        runLazyTxWithConn pgConn abortTx
+        modifyTxStatus TxAbort
+        pure $ SMClose wsId "Executed 'ABORT' command"
+      CMCommit                 -> runCommand do
+        lift $ logOp OCommit
+        runLazyTxWithConn pgConn commitTx
+        modifyTxStatus TxCommit
+        pure $ SMClose wsId "Executed 'COMMIT' command"
   where
     WSServerEnv lg@(L.Logger logger) pgExecCtx _ getSchemaCache manager _ sqlGenCtx planCache _ enableAL = serverEnv
     wsId = WS.getWSId wsConn
@@ -163,7 +165,7 @@ onMessageHandler authMode serverEnv wsTxData wsConn rawMessage =
     onExecute (ExecutePayload maybeReqId query) = do
       reqId <- liftIO $ maybe (RequestId <$> generateFingerprint) pure maybeReqId
       withUser (Just reqId) $ \userInfo -> do
-        logOp $ OExecute $ ExecuteQuery reqId query
+        logOp $ OExecute $ ExecuteQuery reqId query userInfo
         (sc, scVer) <- liftIO getSchemaCache
         execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
                      planCache userInfo sqlGenCtx enableAL sc scVer query

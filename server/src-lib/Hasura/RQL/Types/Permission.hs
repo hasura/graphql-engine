@@ -34,6 +34,8 @@ import           Hasura.SQL.Types
 import qualified Database.PG.Query          as Q
 
 import           Data.Aeson
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Data.Hashable
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
@@ -94,6 +96,7 @@ data UserInfo
   { userRole :: !RoleName
   , userVars :: !UserVars
   } deriving (Show, Eq, Generic)
+$(deriveJSON (aesonDrop 4 snakeCase) ''UserInfo)
 
 mkUserInfo :: RoleName -> UserVars -> UserInfo
 mkUserInfo rn (UserVars v) =

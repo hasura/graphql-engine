@@ -46,8 +46,9 @@ onConnHandler :: (MonadIO m)
 onConnHandler (L.Logger logger) corsPolicy wsId requestHead = do
   res <- runExceptT $ do
     errType <- WS.checkPath requestHead
-    let reqHdrs = WS.requestHeaders requestHead
-    headers <- maybe (return reqHdrs) (flip enforceCors reqHdrs . snd) getOrigin
+    let logCorsNote corsNote = lift $ logger $
+          mkWsInfoLog Nothing (WsConnInfo wsId Nothing (Just corsNote)) EAccepted
+    headers <- WS.getHeadersWithEnforceCors logCorsNote requestHead corsPolicy
     return (WsHeaders $ filterWsHeaders headers, errType)
   either reject (uncurry accept) res
 
@@ -84,33 +85,6 @@ onConnHandler (L.Logger logger) corsPolicy wsId requestHead = do
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
         (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
-
-    getOrigin =
-      find ((==) "Origin" . fst) (WS.requestHeaders requestHead)
-
-    enforceCors origin reqHdrs = case cpConfig corsPolicy of
-      CCAllowAll -> return reqHdrs
-      CCDisabled readCookie ->
-        if readCookie
-        then return reqHdrs
-        else do
-          lift $ logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing (Just corsNote)) EAccepted
-          return $ filter (\h -> fst h /= "Cookie") reqHdrs
-      CCAllowedOrigins ds
-        -- if the origin is in our cors domains, no error
-        | bsToTxt origin `elem` dmFqdns ds   -> return reqHdrs
-        -- if current origin is part of wildcard domain list, no error
-        | inWildcardList ds (bsToTxt origin) -> return reqHdrs
-        -- otherwise error
-        | otherwise                          -> corsErr
-
-    corsErr = throw400 AccessDenied
-              "received origin header does not match configured CORS domains"
-
-    corsNote = "Cookie is not read when CORS is disabled, because it is a potential "
-            <> "security issue. If you're already handling CORS before Hasura and enforcing "
-            <> "CORS on websocket connections, then you can use the flag --ws-read-cookie or "
-            <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 onMessageHandler
   :: (MonadIO m, UserAuthentication m)
