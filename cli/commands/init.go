@@ -57,7 +57,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
 	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "")
 	f.StringVar(&opts.ActionHandler, "action-handler", "http://localhost:3000", "")
-	f.StringVar(&opts.Template, "template", "", "")
+	f.StringVar(&opts.Template, "install-manifest", "", "")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	return initCmd
@@ -119,13 +119,14 @@ func (o *initOptions) run() error {
   hasura console
 `, o.EC.ExecutionDirectory)
 
-	// create other required files, like config.yaml, migrations directory
-	err = o.createFiles()
+	// create template files
+	err = o.createTemplateFiles()
 	if err != nil {
 		return err
 	}
 
-	err = o.createTemplateFiles()
+	// create other required files, like config.yaml, migrations directory
+	err = o.createFiles()
 	if err != nil {
 		return err
 	}
@@ -211,7 +212,8 @@ func (o *initOptions) createTemplateFiles() error {
 		return err
 	}
 	for _, content := range contents {
-		cs, cd := filepath.Join(templatePath, content.Name()), filepath.Join(o.EC.ExecutionDirectory, content.Name())
+		cs, cd := filepath.Join(templatePath, content.Name()), filepath.Join(o.EC.ExecutionDirectory, "install-manifest", content.Name())
+		// TODO: do we need *.md files?
 		if strings.ToLower(filepath.Ext(cs)) == ".md" {
 			continue
 		}
