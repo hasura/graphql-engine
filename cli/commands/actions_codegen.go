@@ -35,24 +35,24 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return opts.run()
 		},
 	}
-  f := actionsCodegenCmd.Flags()
+	f := actionsCodegenCmd.Flags()
 
-  f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-  f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-  f.String("access-key", "", "access key for Hasura GraphQL Engine")
-  f.MarkDeprecated("access-key", "use --admin-secret instead")
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
-  // need to create a new viper because https://github.com/spf13/viper/issues/233
-  v.BindPFlag("endpoint", f.Lookup("endpoint"))
-  v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
-  v.BindPFlag("access_key", f.Lookup("access-key"))
+	// need to create a new viper because https://github.com/spf13/viper/issues/233
+	v.BindPFlag("endpoint", f.Lookup("endpoint"))
+	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
+	v.BindPFlag("access_key", f.Lookup("access-key"))
 
 	return actionsCodegenCmd
 
 }
 
 type actionsCodegenOptions struct {
-	EC *cli.ExecutionContext
+	EC      *cli.ExecutionContext
 	actions []string
 }
 
@@ -72,7 +72,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 			codegenActions = append(codegenActions, action.Name)
 		}
 	} else {
-		codegenActions = o.actions			
+		codegenActions = o.actions
 	}
 
 	for _, actionName := range codegenActions {
