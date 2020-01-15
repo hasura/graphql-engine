@@ -19,8 +19,11 @@ import (
 )
 
 const (
-	actionsFileName string = "actions.yaml"
-	graphqlFileName        = "actions.graphql"
+	actionsFileName       string = "actions.yaml"
+	graphqlFileName              = "actions.graphql"
+	actionsCodegenRepo           = "wawhal/actions-codegen"
+	ActionsCodegenRepoURI string = "https://github.com/" + actionsCodegenRepo + ".git"
+	ActionsCodegenDirName string = "actions-codegen-assets"
 )
 
 type DeriveMutationPayload struct {
@@ -129,7 +132,7 @@ func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMu
 	if introSchema == nil {
 		defaultSDL = `
 extend type Mutation {
-	""" Define your action as a mutation here """
+	# Define your action as a mutation here
 	` + name + ` (arg1: SampleInput!): SampleOutput
 }
 
@@ -233,6 +236,9 @@ func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
 		},
 		CodegenConfig: a.ActionConfig.Codegen,
 		Derive:        derivePld,
+	}
+	if a.ActionConfig.Codegen.URI == "" {
+		data.CodegenConfig.URI = getActionsCodegenURI(data.CodegenConfig.Framework)
 	}
 	resp, err := getActionsCodegen(data, a.cmdName)
 	if err != nil {

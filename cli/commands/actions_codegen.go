@@ -64,6 +64,14 @@ func (o *actionsCodegenOptions) run() (err error) {
 	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action, o.EC.CMDName)
 	var derivePayload actions.DerivePayload
 
+	if o.EC.Config.Action.Codegen.Framework == "" {
+		infoMsg := fmt.Sprintf(`Could not find codegen config in config.yaml. For setting codegen config, run:
+
+  hasura actions use-codegen`)
+		o.EC.Logger.Error(infoMsg)
+		return nil
+	}
+
 	// if no actions are passed, perform codegen for all actions
 	var codegenActions []string
 	if len(o.actions) == 0 {

@@ -48,7 +48,8 @@ type CustomTypes struct {
 type CustomTypeDef struct {
 	Name          string        `json:"name" yaml:"name"`
 	Description   *string       `json:"description" yaml:"description,omitempty"`
-	Fields        []interface{} `json:"fields" yaml:"fields,omitempty"`
+	Fields        []interface{} `json:"fields,omitempty" yaml:"fields,omitempty"`
+	Values        []interface{} `json:"values,omitempty" yaml:"values,omitempty"`
 	Relationships []interface{} `json:"relationships,omitempty" yaml:"relationships"`
 }
 

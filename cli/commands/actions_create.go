@@ -86,6 +86,11 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return err
 	}
+
+	if o.EC.Config.Action.Codegen.Framework == "" {
+		return nil
+	}
+
 	derivePayload := actions.DerivePayload{
 		IntrospectionSchema: introSchema,
 		Mutation: actions.DeriveMutationPayload{
@@ -102,7 +107,7 @@ func (o *actionsCreateOptions) run() error {
 	if confirmation == "n" {
 		infoMsg := fmt.Sprintf(`You skipped codegen. For getting codegen for this action, run:
 
-  hasura action codegen %s
+  hasura actions codegen %s
 `, o.name)
 		o.EC.Logger.Info(infoMsg)
 		return nil
