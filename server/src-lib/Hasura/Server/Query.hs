@@ -88,6 +88,7 @@ data RQLQueryV1
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
   | RQCreateScheduledTrigger !CreateScheduledTrigger
+  | RQUpdateScheduledTrigger !CreateScheduledTrigger
   | RQDeleteScheduledTrigger !DeleteScheduledTrigger
   | RQCancelScheduledEvent !CancelScheduledEvent
 
@@ -282,6 +283,7 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQInvokeEventTrigger _          -> False
 
   RQCreateScheduledTrigger _      -> True
+  RQUpdateScheduledTrigger _      -> True
   RQDeleteScheduledTrigger _      -> True
   RQCancelScheduledEvent _        -> False
 
@@ -409,6 +411,7 @@ runQueryM rq =
       RQInvokeEventTrigger q       -> runInvokeEventTrigger q
 
       RQCreateScheduledTrigger q       -> runCreateScheduledTrigger q
+      RQUpdateScheduledTrigger q       -> runUpdateScheduledTrigger q
       RQDeleteScheduledTrigger q       -> runDeleteScheduledTrigger q
       RQCancelScheduledEvent q         -> runCancelScheduledEvent q
 
@@ -486,6 +489,7 @@ requiresAdmin = \case
     RQInvokeEventTrigger _          -> True
 
     RQCreateScheduledTrigger _      -> True
+    RQUpdateScheduledTrigger _      -> True
     RQDeleteScheduledTrigger _      -> True
     RQCancelScheduledEvent _        -> True
 

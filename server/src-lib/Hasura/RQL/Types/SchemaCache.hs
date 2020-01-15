@@ -120,6 +120,7 @@ module Hasura.RQL.Types.SchemaCache
 
        , ScheduledTriggerInfo(..)
        , addScheduledTriggerToCache
+       , updateScheduledTriggerInCache
        , removeScheduledTriggerFromCache
        ) where
 
@@ -693,6 +694,16 @@ addScheduledTriggerToCache stInfo = do
   sc <- askSchemaCache
   onJust (M.lookup stName (scScheduledTriggers sc)) $ \_ ->
     throw400 AlreadyExists $ "scheduled trigger " <> triggerNameToTxt stName <> " already exists"
+  let scScheduledTriggers' = M.insert (stiName stInfo) stInfo $ scScheduledTriggers sc
+  writeSchemaCache $ sc {scScheduledTriggers = scScheduledTriggers'}
+  where
+    stName = stiName stInfo
+
+updateScheduledTriggerInCache :: (QErrM m, CacheRWM m) => ScheduledTriggerInfo -> m ()
+updateScheduledTriggerInCache stInfo = do
+  sc <- askSchemaCache
+  void $ onNothing (M.lookup stName (scScheduledTriggers sc)) $
+    throw400 NotFound "scheduled trigger not found"
   let scScheduledTriggers' = M.insert (stiName stInfo) stInfo $ scScheduledTriggers sc
   writeSchemaCache $ sc {scScheduledTriggers = scScheduledTriggers'}
   where
