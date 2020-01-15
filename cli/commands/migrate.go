@@ -52,7 +52,7 @@ func newMigrate(ec *cli.ExecutionContext, isCmd bool) (*migrate.Migrate, error) 
 	}
 	// Set Plugins
 	plugins := hasuradbTypes.MetadataPlugins{}
-	if ec.MetadataDir != "" {
+	if ec.Config.Version == "2" && ec.MetadataDir != "" {
 		plugins["version"] = metadataVersion.New(ec.MetadataDir)
 		plugins["tables"] = tables.New(ec.MetadataDir)
 		plugins["functions"] = functions.New(ec.MetadataDir)

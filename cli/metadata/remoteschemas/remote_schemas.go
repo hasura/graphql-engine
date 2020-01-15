@@ -23,24 +23,40 @@ func New(baseDir string) *RemoteSchemaConfig {
 	}
 }
 
-func (a *RemoteSchemaConfig) Validate() error {
+func (r *RemoteSchemaConfig) Validate() error {
 	return nil
 }
 
-func (a *RemoteSchemaConfig) Build(metadata *dbTypes.Metadata) error {
-	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, fileName))
+func (r *RemoteSchemaConfig) CreateFiles() error {
+	v := make([]interface{}, 0)
+	data, err := yaml.Marshal(v)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(r.MetadataDir, fileName), data, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *RemoteSchemaConfig) Build(metadata *dbTypes.Metadata) error {
+	data, err := ioutil.ReadFile(filepath.Join(r.MetadataDir, fileName))
 	if err != nil {
 		return err
 	}
 	return gyaml.Unmarshal(data, &metadata.RemoteSchemas)
 }
 
-func (a *RemoteSchemaConfig) Export(metadata dbTypes.Metadata) error {
+func (r *RemoteSchemaConfig) Export(metadata dbTypes.Metadata) error {
+	if metadata.RemoteSchemas == nil {
+		metadata.RemoteSchemas = make([]interface{}, 0)
+	}
 	data, err := yaml.Marshal(metadata.RemoteSchemas)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, fileName), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(r.MetadataDir, fileName), data, 0644)
 	if err != nil {
 		return err
 	}

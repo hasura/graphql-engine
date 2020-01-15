@@ -73,7 +73,6 @@ type actionsUseCodegenOptions struct {
 }
 
 func (o *actionsUseCodegenOptions) run() (err error) {
-
   // ensure the the actions-codegen repo is cloned and updated
   actionsCodegenGit := util.NewGitUtil(
     actionsCodegenRepoURI,
@@ -168,5 +167,4 @@ func (o *actionsUseCodegenOptions) run() (err error) {
   }
 
   return err
-
 }

@@ -219,7 +219,7 @@ input SampleInput {
 func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
 	// Do nothing if the codegen framework does not exist
 	if a.ActionConfig.Codegen.Framework == "" {
-		return nil	
+		return nil
 	}
 
 	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
@@ -252,6 +252,24 @@ func (a *ActionConfig) Validate() error {
 	return nil
 }
 
+func (a *ActionConfig) CreateFiles() error {
+	var common types.Common
+	data, err := yaml.Marshal(common)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), data, 0644)
+	if err != nil {
+		return err
+	}
+	graphqQLData := []byte(``)
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), graphqQLData, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
 	if err != nil {
@@ -269,7 +287,7 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	}
 
 	// Read actions.yaml
-	oldAction, err := GetActionsFileContent(a.MetadataDir) 
+	oldAction, err := GetActionsFileContent(a.MetadataDir)
 	if err != nil {
 		return err
 	}

@@ -324,14 +324,13 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "cannot read config")
 	}
 
-	if ec.Config.MetadataDirectory != "" {
+	if ec.Config.Version != "1" && ec.Config.MetadataDirectory != "" {
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
-	}
-
-	if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) {
-		err = os.MkdirAll(ec.MetadataDir, os.ModePerm)
-		if err != nil {
-			return errors.Wrap(err, "cannot write metadata directory")
+		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) {
+			err = os.MkdirAll(ec.MetadataDir, os.ModePerm)
+			if err != nil {
+				return errors.Wrap(err, "cannot create metadata directory")
+			}
 		}
 	}
 
@@ -382,10 +381,10 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
 	v.SetDefault("metadata_directory", "")
-	v.SetDefault("actions.default_kind", "synchronous")
-	v.SetDefault("actions.default_handler", "{{DEFAULT_HANDLER}}")
+	v.SetDefault("actions.kind", "synchronous")
+	v.SetDefault("actions.handler_webhook_baseurl", "http://localhost:3000")
 	v.SetDefault("actions.codegen.framework", "")
-	v.SetDefault("actions.codegen.output_dir", ec.ExecutionDirectory)
+	v.SetDefault("actions.codegen.output_dir", "")
 	v.SetDefault("actions.codegen.uri", "")
 	v.AddConfigPath(ec.ExecutionDirectory)
 	err := v.ReadInConfig()

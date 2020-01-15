@@ -17,4 +17,5 @@ type MetadataPluginsDriver interface {
 	Build(metadata *Metadata) error
 	//TODO: create a tmp dir with the files, and then move the data
 	Export(metadata Metadata) error
+	CreateFiles() error
 }

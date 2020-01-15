@@ -23,24 +23,40 @@ func New(baseDir string) *QueryCollectionConfig {
 	}
 }
 
-func (a *QueryCollectionConfig) Validate() error {
+func (q *QueryCollectionConfig) Validate() error {
 	return nil
 }
 
-func (a *QueryCollectionConfig) Build(metadata *dbTypes.Metadata) error {
-	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, fileName))
+func (q *QueryCollectionConfig) CreateFiles() error {
+	v := make([]interface{}, 0)
+	data, err := yaml.Marshal(v)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(q.MetadataDir, fileName), data, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (q *QueryCollectionConfig) Build(metadata *dbTypes.Metadata) error {
+	data, err := ioutil.ReadFile(filepath.Join(q.MetadataDir, fileName))
 	if err != nil {
 		return err
 	}
 	return gyaml.Unmarshal(data, &metadata.QueryCollections)
 }
 
-func (a *QueryCollectionConfig) Export(metadata dbTypes.Metadata) error {
+func (q *QueryCollectionConfig) Export(metadata dbTypes.Metadata) error {
+	if metadata.QueryCollections == nil {
+		metadata.QueryCollections = make([]interface{}, 0)
+	}
 	data, err := yaml.Marshal(metadata.QueryCollections)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, fileName), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(q.MetadataDir, fileName), data, 0644)
 	if err != nil {
 		return err
 	}

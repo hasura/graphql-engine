@@ -8,6 +8,13 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
+	"github.com/hasura/graphql-engine/cli/metadata/functions"
+	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
+	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
+	"github.com/hasura/graphql-engine/cli/metadata/tables"
+	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
+	hasuradbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/ghodss/yaml"
@@ -52,12 +59,13 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := initCmd.Flags()
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
+	f.StringVar(&opts.MetadataDir, "metadata-directory", "metadata", "name of directory where metadata files will be created")
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
 	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "")
 	f.StringVar(&opts.ActionHandler, "action-handler", "http://localhost:3000", "")
-	f.StringVar(&opts.Template, "template", "", "")
+	f.StringVar(&opts.Template, "install-manifest", "", "")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	return initCmd
@@ -69,6 +77,7 @@ type initOptions struct {
 	Endpoint    string
 	AdminSecret string
 	InitDir     string
+	MetadataDir string
 
 	ActionKind    string
 	ActionHandler string
@@ -119,13 +128,14 @@ func (o *initOptions) run() error {
   hasura console
 `, o.EC.ExecutionDirectory)
 
-	// create other required files, like config.yaml, migrations directory
-	err = o.createFiles()
+	// create template files
+	err = o.createTemplateFiles()
 	if err != nil {
 		return err
 	}
 
-	err = o.createTemplateFiles()
+	// create other required files, like config.yaml, migrations directory
+	err = o.createFiles()
 	if err != nil {
 		return err
 	}
@@ -147,7 +157,7 @@ func (o *initOptions) createFiles() error {
 		ServerConfig: cli.ServerConfig{
 			Endpoint: "http://localhost:8080",
 		},
-		MetadataDirectory: "metadata",
+		MetadataDirectory: o.MetadataDir,
 		Action: actions.ActionExecutionConfig{
 			Kind:                  o.ActionKind,
 			HandlerWebhookBaseURL: o.ActionHandler,
@@ -185,6 +195,22 @@ func (o *initOptions) createFiles() error {
 		return errors.Wrap(err, "cannot write migration directory")
 	}
 
+	// TODO: import the packages and do a init to register has metadata plugins
+	// create metadata files
+	plugins := hasuradbTypes.MetadataPlugins{}
+	plugins["version"] = metadataVersion.New(ec.MetadataDir)
+	plugins["tables"] = tables.New(ec.MetadataDir)
+	plugins["functions"] = functions.New(ec.MetadataDir)
+	plugins["query_collections"] = querycollections.New(ec.MetadataDir)
+	plugins["allow_list"] = allowlist.New(ec.MetadataDir)
+	plugins["remote_schemas"] = remoteschemas.New(ec.MetadataDir)
+	plugins["actions"] = actions.New(ec.MetadataDir, ec.Config.Action, ec.CMDName)
+	for _, plg := range plugins {
+		err := plg.CreateFiles()
+		if err != nil {
+			return errors.Wrap(err, "cannot create metadata files")
+		}
+	}
 	return nil
 }
 
@@ -211,7 +237,8 @@ func (o *initOptions) createTemplateFiles() error {
 		return err
 	}
 	for _, content := range contents {
-		cs, cd := filepath.Join(templatePath, content.Name()), filepath.Join(o.EC.ExecutionDirectory, content.Name())
+		cs, cd := filepath.Join(templatePath, content.Name()), filepath.Join(o.EC.ExecutionDirectory, "install-manifest", content.Name())
+		// TODO: do we need *.md files?
 		if strings.ToLower(filepath.Ext(cs)) == ".md" {
 			continue
 		}

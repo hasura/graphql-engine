@@ -67,6 +67,7 @@ func NewHasuraCommand(in io.Reader, out, err io.Writer) *cobra.Command {
 		NewActionsCmd(ec),
 		NewPluginsCmd(ec),
 		NewVersionCmd(ec),
+		NewScriptsCmd(ec),
 		NewDocsCmd(ec),
 		NewCompletionCmd(ec),
 		NewUpdateCLICmd(ec),

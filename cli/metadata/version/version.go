@@ -31,6 +31,21 @@ func (a *VersionConfig) Validate() error {
 	return nil
 }
 
+func (a *VersionConfig) CreateFiles() error {
+	v := Version{
+		Version: 2,
+	}
+	data, err := yaml.Marshal(v)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, fileName), data, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a *VersionConfig) Build(metadata *dbTypes.Metadata) error {
 	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, fileName))
 	if err != nil {
