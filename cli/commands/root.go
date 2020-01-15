@@ -9,6 +9,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/update"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -41,8 +42,8 @@ var rootCmd = &cobra.Command{
 					EC: ec,
 				}
 				err := u.run(true)
-				if err != nil {
-					ec.Logger.WithError(err).Error("auto-update failed, run 'hasura update-cli' to update manually")
+				if err != nil && u.EC.Version.GetCLIVersion() != version.DevVersion {
+					ec.Logger.WithError(err).Warn("auto-update failed, run 'hasura update-cli' to update manually")
 				}
 			}
 		}

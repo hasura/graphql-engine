@@ -1,3 +1,7 @@
+.. meta::
+   :description: Set default field values using Postgres defaults
+   :keywords: hasura, docs, schema, default value, Postgres default
+
 Setting default values for fields using Postgres defaults
 =========================================================
 
@@ -25,6 +29,7 @@ Edit the ``created_at`` field and set its default value as the SQL function ``no
 Open the console and head to ``Data -> article -> Modify``:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/add-default-value.png
+   :alt: Modify the table in the console
 
 .. admonition:: To set an auto-incrementing default value
 
@@ -50,6 +55,7 @@ Now if you do not pass the ``created_at`` field value while running an insert mu
 value will be set automatically by Postgres.
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/default-value-response.png
+   :alt: Run an insert mutation
 
 Also see
 --------

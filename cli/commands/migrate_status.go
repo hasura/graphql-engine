@@ -21,6 +21,11 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateStatusCmd := &cobra.Command{
 		Use:          "status",
 		Short:        "Display current status of migrations on a database",
+		Example: `  # Use with admin secret:
+  hasura migrate status --admin-secret "<your-admin-secret>"
+
+  # Check status on a different server:
+  hasura migrate status --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v

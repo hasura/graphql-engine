@@ -36,23 +36,27 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	initCmd := &cobra.Command{
-		Use:   "init",
+		Use:   "init [directory-name]",
 		Short: "Initialize directory for Hasura GraphQL Engine migrations",
 		Long:  "Create directories and files required for enabling migrations on Hasura GraphQL Engine",
 		Example: `  # Create a directory to store migrations
-  hasura init
+  hasura init [directory-name]
 
   # Now, edit <my-directory>/config.yaml to add endpoint and admin secret
 
   # Create a directory with endpoint and admin secret configured:
-  hasura init --directory <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
+  hasura init <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
   # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
+		Args:         cobra.MaximumNArgs(1),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			ec.Viper = viper.New()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 1 {
+				opts.InitDir = args[0]
+			}
 			return opts.run()
 		},
 	}
@@ -67,6 +71,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.ActionHandler, "action-handler", "http://localhost:3000", "")
 	f.StringVar(&opts.Template, "install-manifest", "", "")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	f.MarkDeprecated("directory", "use directory-name argument instead")
 
 	return initCmd
 }

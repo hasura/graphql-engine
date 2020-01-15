@@ -17,19 +17,19 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 
+	"github.com/briandowns/spinner"
+	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/plugins/paths"
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
-	homedir "github.com/mitchellh/go-homedir"
-
-	"github.com/briandowns/spinner"
-	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/mattn/go-colorable"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Other constants used in the package
@@ -210,6 +210,8 @@ type ExecutionContext struct {
 
 	// PluginsPath is the path used by the plugins
 	PluginsPath paths.Paths
+	// IsTerminal indicates whether the current session is a terminal or not
+	IsTerminal bool
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -230,6 +232,8 @@ func (ec *ExecutionContext) Prepare() error {
 		cmdName = "hasura"
 	}
 	ec.CMDName = cmdName
+
+	ec.IsTerminal = terminal.IsTerminal(int(os.Stdout.Fd()))
 
 	// set spinner
 	ec.setupSpinner()
@@ -434,9 +438,13 @@ func (ec *ExecutionContext) setupSpinner() {
 
 // Spin stops any existing spinner and starts a new one with the given message.
 func (ec *ExecutionContext) Spin(message string) {
-	ec.Spinner.Stop()
-	ec.Spinner.Prefix = message
-	ec.Spinner.Start()
+	if ec.IsTerminal {
+		ec.Spinner.Stop()
+		ec.Spinner.Prefix = message
+		ec.Spinner.Start()
+	} else {
+		ec.Logger.Println(message)
+	}
 }
 
 // setupLogger creates a default logger if context does not have one set.
@@ -444,19 +452,25 @@ func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
 
-		logger.Formatter = &logrus.TextFormatter{
-			ForceColors:      true,
-			DisableTimestamp: true,
+		if ec.IsTerminal {
+			if ec.NoColor {
+				logger.Formatter = &logrus.TextFormatter{
+					DisableColors:    true,
+					DisableTimestamp: true,
+				}
+			} else {
+				logger.Formatter = &logrus.TextFormatter{
+					ForceColors:      true,
+					DisableTimestamp: true,
+				}
+			}
+		} else {
+			logger.Formatter = &logrus.JSONFormatter{
+				PrettyPrint: false,
+			}
 		}
 		logger.Out = colorable.NewColorableStdout()
 		ec.Logger = logger
-	}
-
-	if ec.NoColor {
-		ec.Logger.Formatter = &logrus.TextFormatter{
-			DisableColors:    true,
-			DisableTimestamp: true,
-		}
 	}
 
 	if ec.LogLevel != "" {

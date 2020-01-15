@@ -194,7 +194,7 @@ func (h *HasuraDB) UnLock() error {
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 
 		// Handle migration version here
@@ -316,7 +316,7 @@ func (h *HasuraDB) getVersions() (err error) {
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 
 		return horror.Error(h.config.isCMD)
@@ -401,7 +401,7 @@ func (h *HasuraDB) Reset() error {
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 
 		return horror.Error(h.config.isCMD)
@@ -436,7 +436,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
 			h.logger.Debug(err)
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 		return horror.Error(h.config.isCMD)
 	}
@@ -473,7 +473,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 	if resp.StatusCode != http.StatusOK {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
 
 		return horror.Error(h.config.isCMD)

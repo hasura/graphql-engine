@@ -46,7 +46,13 @@ By default, shows changes between exported metadata file and server metadata.`,
   hasura metadata diff local_metadata.yaml
 
   # Show changes between metadata from metadata.yaml and metadata_old.yaml:
-  hasura metadata diff metadata.yaml metadata_old.yaml`,
+  hasura metadata diff metadata.yaml metadata_old.yaml
+
+  # Apply admin secret for Hasura GraphQL Engine:
+  hasura metadata diff --admin-secret "<admin-secret>"
+
+  # Diff metadata on a different Hasura instance:
+  hasura metadata diff --endpoint "<endpoint>"`,
 		Args: cobra.MaximumNArgs(2),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v

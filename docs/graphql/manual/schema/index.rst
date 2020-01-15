@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage GraphQL schema with Hasura
+   :keywords: hasura, docs, schema
+
 Schema
 ======
 
@@ -25,9 +29,10 @@ Postgres constructs.
   Basics <basics>
   Relationships <relationships/index>
   Customise with views <views>
+  Customise with SQL functions <custom-functions>
   Default field values <default-values/index>
   Enum type fields <enums>
   computed-fields
+  custom-field-names
   Using an existing database <using-existing-database>
-  Setting up soft deletes <soft-deletes>
   Export GraphQL schema <export-graphql-schema>
