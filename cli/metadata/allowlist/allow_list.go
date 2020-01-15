@@ -27,6 +27,19 @@ func (a *AllowListConfig) Validate() error {
 	return nil
 }
 
+func (a *AllowListConfig) CreateFiles() error {
+	v := make([]interface{}, 0)
+	data, err := yaml.Marshal(v)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, fileName), data, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (a *AllowListConfig) Build(metadata *dbTypes.Metadata) error {
 	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, fileName))
 	if err != nil {

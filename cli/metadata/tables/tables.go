@@ -23,24 +23,37 @@ func New(baseDir string) *TableConfig {
 	}
 }
 
-func (a *TableConfig) Validate() error {
+func (t *TableConfig) Validate() error {
 	return nil
 }
 
-func (a *TableConfig) Build(metadata *dbTypes.Metadata) error {
-	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, fileName))
+func (t *TableConfig) CreateFiles() error {
+	v := make([]interface{}, 0)
+	data, err := yaml.Marshal(v)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(t.MetadataDir, fileName), data, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *TableConfig) Build(metadata *dbTypes.Metadata) error {
+	data, err := ioutil.ReadFile(filepath.Join(t.MetadataDir, fileName))
 	if err != nil {
 		return err
 	}
 	return gyaml.Unmarshal(data, &metadata.Tables)
 }
 
-func (a *TableConfig) Export(metadata dbTypes.Metadata) error {
+func (t *TableConfig) Export(metadata dbTypes.Metadata) error {
 	data, err := yaml.Marshal(metadata.Tables)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, fileName), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(t.MetadataDir, fileName), data, 0644)
 	if err != nil {
 		return err
 	}

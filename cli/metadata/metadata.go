@@ -25,15 +25,19 @@ func New(baseDir string) *MetadataConfig {
 	}
 }
 
-func (a *MetadataConfig) Validate() error {
+func (m *MetadataConfig) Validate() error {
 	return nil
 }
 
-func (a *MetadataConfig) Build(metadata *dbTypes.Metadata) error {
+func (m *MetadataConfig) CreateFiles() error {
+	return nil
+}
+
+func (m *MetadataConfig) Build(metadata *dbTypes.Metadata) error {
 	// Read metadata.yaml or metadata.json and set to metadata
 	var metadataContent []byte
 	for _, format := range []string{"yaml", "json"} {
-		metadataPath, err := a.GetMetadataFilePath(format)
+		metadataPath, err := m.GetMetadataFilePath(format)
 		if err != nil {
 			return err
 		}
@@ -53,13 +57,13 @@ func (a *MetadataConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(metadataContent, &metadata)
 }
 
-func (a *MetadataConfig) Export(metadata dbTypes.Metadata) error {
+func (m *MetadataConfig) Export(metadata dbTypes.Metadata) error {
 	// create metadata.yaml file
 	metaByt, err := yaml.Marshal(metadata)
 	if err != nil {
 		return errors.Wrap(err, "cannot marshal metadata")
 	}
-	metadataPath, err := a.GetMetadataFilePath("yaml")
+	metadataPath, err := m.GetMetadataFilePath("yaml")
 	if err != nil {
 		return errors.Wrap(err, "cannot save metadata")
 	}
@@ -70,9 +74,9 @@ func (a *MetadataConfig) Export(metadata dbTypes.Metadata) error {
 	return nil
 }
 
-func (a *MetadataConfig) GetMetadataFilePath(format string) (string, error) {
+func (m *MetadataConfig) GetMetadataFilePath(format string) (string, error) {
 	ext := fmt.Sprintf(".%s", format)
-	for _, filePath := range a.MetadataFiles {
+	for _, filePath := range m.MetadataFiles {
 		switch p := filepath.Ext(filePath); p {
 		case ext:
 			return filePath, nil
@@ -83,10 +87,10 @@ func (a *MetadataConfig) GetMetadataFilePath(format string) (string, error) {
 
 // GetExistingMetadataFile returns the path to the default metadata file that
 // also exists, json or yaml
-func (a *MetadataConfig) GetExistingMetadataFile() (string, error) {
+func (m *MetadataConfig) GetExistingMetadataFile() (string, error) {
 	filename := ""
 	for _, format := range []string{"yaml", "json"} {
-		f, err := a.GetMetadataFilePath(format)
+		f, err := m.GetMetadataFilePath(format)
 		if err != nil {
 			return "", errors.Wrap(err, "cannot get metadata file")
 		}
