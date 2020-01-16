@@ -1,3 +1,5 @@
+{-# LANGUAGE Arrows #-}
+
 {-| Top-level functions concerned specifically with operations on the schema cache, such as
 rebuilding it from the catalog and incorporating schema changes. See the module documentation for
 "Hasura.RQL.DDL.Schema" for more details.
@@ -6,41 +8,42 @@ __Note__: this module is __mutually recursive__ with other @Hasura.RQL.DDL.Schem
 both define pieces of the implementation of building the schema cache and define handlers that
 trigger schema cache rebuilds. -}
 module Hasura.RQL.DDL.Schema.Cache
-  ( CacheBuildM
-  , buildSchemaCache
-  , buildSchemaCacheFor
-  , buildSchemaCacheStrict
-  , buildSchemaCacheWithoutSetup
+  ( RebuildableSchemaCache
+  , lastBuiltSchemaCache
+  , buildRebuildableSchemaCache
+  , CacheRWT
+  , runCacheRWT
 
-  , withNewInconsistentObjsCheck
   , withMetadataCheck
-  , purgeDependentObject
-
-  , withSchemaObject
-  , withSchemaObject_
   ) where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict                as M
-import qualified Data.HashSet                       as HS
-import qualified Data.Text                          as T
-import qualified Database.PG.Query                  as Q
+import qualified Data.HashMap.Strict.Extended             as M
+import qualified Data.HashSet                             as HS
+import qualified Data.Text                                as T
+import qualified Database.PG.Query                        as Q
 
+import           Control.Arrow.Extended
+import           Control.Lens                             hiding ((.=))
+import           Control.Monad.Unique
 import           Data.Aeson
+import           Data.List                                (nub)
 
-import qualified Hasura.GraphQL.Context             as GC
-import qualified Hasura.GraphQL.Schema              as GS
+import qualified Hasura.GraphQL.Context                   as GC
+import qualified Hasura.GraphQL.Schema                    as GS
+import qualified Hasura.Incremental                       as Inc
 
 import           Hasura.Db
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
-import           Hasura.RQL.DDL.Permission
-import           Hasura.RQL.DDL.Permission.Internal
-import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.RemoteSchema
+import           Hasura.RQL.DDL.Schema.Cache.Common
+import           Hasura.RQL.DDL.Schema.Cache.Dependencies
+import           Hasura.RQL.DDL.Schema.Cache.Fields
+import           Hasura.RQL.DDL.Schema.Cache.Permission
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
@@ -51,191 +54,241 @@ import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.SQL.Types
 
-type CacheBuildM m
-  = (CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+buildRebuildableSchemaCache
+  :: (MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
+  => m (RebuildableSchemaCache m)
+buildRebuildableSchemaCache = do
+  catalogMetadata <- liftTx fetchCatalogData
+  result <- flip runReaderT CatalogSync $ Inc.build buildSchemaCacheRule (catalogMetadata, M.empty)
+  pure $ RebuildableSchemaCache (Inc.result result) M.empty (Inc.rebuildRule result)
 
-buildSchemaCache :: (CacheBuildM m) => m ()
-buildSchemaCache = buildSchemaCacheWithOptions True
+newtype CacheRWT m a
+  = CacheRWT { unCacheRWT :: StateT (RebuildableSchemaCache m) m a }
+  deriving
+    ( Functor, Applicative, Monad, MonadIO, MonadReader r, MonadError e, MonadWriter w, MonadTx
+    , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined )
 
-buildSchemaCacheWithoutSetup :: (CacheBuildM m) => m ()
-buildSchemaCacheWithoutSetup = buildSchemaCacheWithOptions False
+runCacheRWT :: RebuildableSchemaCache m -> CacheRWT m a -> m (a, RebuildableSchemaCache m)
+runCacheRWT cache = flip runStateT cache . unCacheRWT
 
-buildSchemaCacheWithOptions :: (CacheBuildM m) => Bool -> m ()
-buildSchemaCacheWithOptions withSetup = do
-  -- clean hdb_views
-  when withSetup $ liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
-  -- reset the current schemacache
-  writeSchemaCache emptySchemaCache
-  sqlGenCtx <- askSQLGenCtx
+instance MonadTrans CacheRWT where
+  lift = CacheRWT . lift
 
-  -- fetch all catalog metadata
-  CatalogMetadata tables relationships permissions
-    eventTriggers remoteSchemas functions fkeys' allowlistDefs
-    computedFields
-    <- liftTx fetchCatalogData
+instance (Monad m) => TableCoreInfoRM (CacheRWT m)
+instance (Monad m) => CacheRM (CacheRWT m) where
+  askSchemaCache = CacheRWT $ gets lastBuiltSchemaCache
 
-  let fkeys = HS.fromList fkeys'
+instance (MonadIO m, MonadTx m, MonadUnique m) => CacheRWM (CacheRWT m) where
+  buildSchemaCacheWithOptions buildReason = CacheRWT do
+    RebuildableSchemaCache _ invalidationMap rule <- get
+    catalogMetadata <- liftTx fetchCatalogData
+    result <- lift $ flip runReaderT buildReason $ Inc.build rule (catalogMetadata, invalidationMap)
+    let schemaCache = Inc.result result
+        prunedInvalidationMap = pruneInvalidationMap schemaCache invalidationMap
+    put $! RebuildableSchemaCache schemaCache prunedInvalidationMap (Inc.rebuildRule result)
+    where
+      pruneInvalidationMap schemaCache = M.filterWithKey \name _ ->
+        M.member name (scRemoteSchemas schemaCache)
 
-  -- tables
-  modTableCache =<< buildTableCache tables
+  invalidateCachedRemoteSchema name = CacheRWT do
+    unique <- newUnique
+    assign (rscInvalidationMap . at name) (Just unique)
 
-  -- relationships
-  forM_ relationships $ \(CatalogRelation qt rn rt rDef cmnt) -> do
-    let objId = MOTableObj qt $ MTORel rn rt
-        def = toJSON $ WithTable qt $ RelDef rn rDef cmnt
-        mkInconsObj = InconsistentMetadataObj objId (MOTRel rt) def
-    modifyErr (\e -> "table " <> qt <<> "; rel " <> rn <<> "; " <> e) $
-      withSchemaObject_ mkInconsObj $
-      case rt of
-        ObjRel -> do
-          using <- decodeValue rDef
-          let relDef = RelDef rn using Nothing
-          validateObjRel qt relDef
-          objRelP2Setup qt fkeys relDef
-        ArrRel -> do
-          using <- decodeValue rDef
-          let relDef = RelDef rn using Nothing
-          validateArrRel qt relDef
-          arrRelP2Setup qt fkeys relDef
-
-  -- computedFields
-  forM_ computedFields $ \(CatalogComputedField column funcDefs) -> do
-    let AddComputedField qt name def comment = column
-        qf = _cfdFunction def
-        mkInconsObj =
-          InconsistentMetadataObj (MOTableObj qt $ MTOComputedField name)
-          MOTComputedField $ toJSON column
-    modifyErr (\e -> "computed field " <> name <<> "; " <> e) $
-      withSchemaObject_ mkInconsObj $ do
-      rawfi <- handleMultipleFunctions qf funcDefs
-      addComputedFieldP2Setup qt name def rawfi comment
-
-  -- permissions
-  forM_ permissions $ \(CatalogPermission qt rn pt pDef cmnt) -> do
-    let objId = MOTableObj qt $ MTOPerm rn pt
-        def = toJSON $ WithTable qt $ PermDef rn pDef cmnt
-        mkInconsObj = InconsistentMetadataObj objId (MOTPerm pt) def
-    modifyErr (\e -> "table " <> qt <<> "; role " <> rn <<> "; " <> e) $
-      withSchemaObject_ mkInconsObj $
-      case pt of
-          PTInsert -> permHelper withSetup sqlGenCtx qt rn pDef PAInsert
-          PTSelect -> permHelper withSetup sqlGenCtx qt rn pDef PASelect
-          PTUpdate -> permHelper withSetup sqlGenCtx qt rn pDef PAUpdate
-          PTDelete -> permHelper withSetup sqlGenCtx qt rn pDef PADelete
-
-  -- event triggers
-  forM_ eventTriggers $ \(CatalogEventTrigger qt trn configuration) -> do
-    let objId = MOTableObj qt $ MTOTrigger trn
-        def = object ["table" .= qt, "configuration" .= configuration]
-        mkInconsObj = InconsistentMetadataObj objId MOTEventTrigger def
-    withSchemaObject_ mkInconsObj $ do
-      etc <- decodeValue configuration
-      subTableP2Setup qt etc
-      allCols <- getCols . _tiFieldInfoMap <$> askTabInfo qt
-      when withSetup $ liftTx $
-        mkAllTriggersQ trn qt allCols (stringifyNum sqlGenCtx) (etcDefinition etc)
-
-  -- sql functions
-  forM_ functions $ \(CatalogFunction qf systemDefined config funcDefs) -> do
-    let def = toJSON $ TrackFunction qf
-        mkInconsObj =
-          InconsistentMetadataObj (MOFunction qf) MOTFunction def
-    modifyErr (\e -> "function " <> qf <<> "; " <> e) $
-      withSchemaObject_ mkInconsObj $ do
-      rawfi <- handleMultipleFunctions qf funcDefs
-      trackFunctionP2Setup qf systemDefined config rawfi
-
-  -- allow list
-  replaceAllowlist $ concatMap _cdQueries allowlistDefs
-
-  -- build GraphQL context with tables and functions
-  GS.buildGCtxMapPG
-
-  -- remote schemas
-  forM_ remoteSchemas resolveSingleRemoteSchema
-
-  -- validate tables' custom root fields
-  validateTablesCustomRootFields
-
+buildSchemaCacheRule
+  -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
+  -- what we want!
+  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+     , MonadIO m, MonadTx m, MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
+  => (CatalogMetadata, InvalidationMap) `arr` SchemaCache
+buildSchemaCacheRule = proc inputs -> do
+  (outputs, collectedInfo) <- runWriterA buildAndCollectInfo -< inputs
+  let (inconsistentObjects, unresolvedDependencies) = partitionCollectedInfo collectedInfo
+  (resolvedOutputs, extraInconsistentObjects, resolvedDependencies) <-
+    resolveDependencies -< (outputs, unresolvedDependencies)
+  returnA -< SchemaCache
+    { scTables = _boTables resolvedOutputs
+    , scFunctions = _boFunctions resolvedOutputs
+    , scRemoteSchemas = _boRemoteSchemas resolvedOutputs
+    , scAllowlist = _boAllowlist resolvedOutputs
+    , scGCtxMap = _boGCtxMap resolvedOutputs
+    , scDefaultRemoteGCtx = _boDefaultRemoteGCtx resolvedOutputs
+    , scDepMap = resolvedDependencies
+    , scInconsistentObjs = inconsistentObjects <> extraInconsistentObjects
+    }
   where
-    permHelper setup sqlGenCtx qt rn pDef pa = do
-      qCtx <- mkAdminQCtx sqlGenCtx <$> askSchemaCache
-      perm <- decodeValue pDef
-      let permDef = PermDef rn perm Nothing
-          createPerm = WithTable qt permDef
-      (permInfo, deps) <- liftP1WithQCtx qCtx $ createPermP1 createPerm
-      when setup $ addPermP2Setup qt permDef permInfo
-      addPermToCache qt rn pa permInfo deps
-      -- p2F qt rn p1Res
+    buildAndCollectInfo
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadTx m, MonadReader BuildReason m
+         , HasHttpManager m, HasSQLGenCtx m )
+      => (CatalogMetadata, InvalidationMap) `arr` BuildOutputs
+    buildAndCollectInfo = proc (catalogMetadata, invalidationMap) -> do
+      let CatalogMetadata tables relationships permissions
+            eventTriggers remoteSchemas functions allowlistDefs
+            computedFields = catalogMetadata
 
-    resolveSingleRemoteSchema rs = do
-      let AddRemoteSchemaQuery name _ _ = rs
-          mkInconsObj = InconsistentMetadataObj (MORemoteSchema name)
-                        MOTRemoteSchema (toJSON rs)
-      withSchemaObject_ mkInconsObj $ do
-        rsCtx <- addRemoteSchemaP2Setup rs
-        sc <- askSchemaCache
-        let gCtxMap = scGCtxMap sc
-            defGCtx = scDefaultRemoteGCtx sc
-            rGCtx = convRemoteGCtx $ rscGCtx rsCtx
-        mergedGCtxMap <- mergeRemoteSchema gCtxMap rGCtx
-        mergedDefGCtx <- mergeGCtx defGCtx rGCtx
-        writeSchemaCache sc { scGCtxMap = mergedGCtxMap
-                            , scDefaultRemoteGCtx = mergedDefGCtx
-                            }
+      -- tables
+      tableRawInfos <- buildTableCache -< tables
 
-    validateTablesCustomRootFields = do
-      sc <- askSchemaCache
-      let tables = M.elems $ scTables sc
-          defRemoteGCtx = scDefaultRemoteGCtx sc
-      forM_ tables $ \table -> do
-        let GC.TableCustomRootFields sel selByPk selAgg ins upd del =
-              _tcCustomRootFields $ _tiCustomConfig table
-            rootFldNames = catMaybes [sel, selByPk, selAgg, ins, upd, del]
-        forM_ rootFldNames $ GS.checkConflictingNode defRemoteGCtx
+      -- relationships and computed fields
+      let relationshipsByTable = M.groupOn _crTable relationships
+          computedFieldsByTable = M.groupOn (_afcTable . _cccComputedField) computedFields
+      tableCoreInfos <- (tableRawInfos >- returnA)
+        >-> (\info -> (info, relationshipsByTable) >- alignExtraTableInfo mkRelationshipMetadataObject)
+        >-> (\info -> (info, computedFieldsByTable) >- alignExtraTableInfo mkComputedFieldMetadataObject)
+        >-> (| Inc.keyed (\_ ((tableRawInfo, tableRelationships), tableComputedFields) -> do
+                 let columns = _tciFieldInfoMap tableRawInfo
+                 allFields <- addNonColumnFields -<
+                   (tableRawInfos, columns, tableRelationships, tableComputedFields)
+                 returnA -< tableRawInfo { _tciFieldInfoMap = allFields }) |)
 
--- | Rebuilds the schema cache. If an object with the given object id became newly inconsistent,
--- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.
-buildSchemaCacheFor :: (CacheBuildM m) => MetadataObjId -> m ()
-buildSchemaCacheFor objectId = do
-  oldSchemaCache <- askSchemaCache
-  buildSchemaCache
-  newSchemaCache <- askSchemaCache
+      -- permissions and event triggers
+      tableCoreInfosDep <- Inc.newDependency -< tableCoreInfos
+      tableCache <- (tableCoreInfos >- returnA)
+        >-> (\info -> (info, M.groupOn _cpTable permissions) >- alignExtraTableInfo mkPermissionMetadataObject)
+        >-> (\info -> (info, M.groupOn _cetTable eventTriggers) >- alignExtraTableInfo mkEventTriggerMetadataObject)
+        >-> (| Inc.keyed (\_ ((tableCoreInfo, tablePermissions), tableEventTriggers) -> do
+                 let tableName = _tciName tableCoreInfo
+                     tableFields = _tciFieldInfoMap tableCoreInfo
+                 permissionInfos <- buildTablePermissions -<
+                   (tableCoreInfosDep, tableName, tableFields, HS.fromList tablePermissions)
+                 eventTriggerInfos <- buildTableEventTriggers -< (tableCoreInfo, tableEventTriggers)
+                 returnA -< TableInfo
+                   { _tiCoreInfo = tableCoreInfo
+                   , _tiRolePermInfoMap = permissionInfos
+                   , _tiEventTriggerInfoMap = eventTriggerInfos
+                   }) |)
 
-  let diffInconsistentObjects = getDifference _moId `on` scInconsistentObjs
-      newInconsistentObjects = newSchemaCache `diffInconsistentObjects` oldSchemaCache
+      -- sql functions
+      functionCache <- (mapFromL _cfFunction functions >- returnA)
+        >-> (| Inc.keyed (\_ (CatalogFunction qf systemDefined config funcDefs) -> do
+                 let definition = toJSON $ TrackFunction qf
+                     metadataObject = MetadataObject (MOFunction qf) definition
+                     schemaObject = SOFunction qf
+                     addFunctionContext e = "in function " <> qf <<> ": " <> e
+                 (| withRecordInconsistency (
+                    (| modifyErrA (do
+                         rawfi <- bindErrorA -< handleMultipleFunctions qf funcDefs
+                         (fi, dep) <- bindErrorA -< mkFunctionInfo qf systemDefined config rawfi
+                         recordDependencies -< (metadataObject, schemaObject, [dep])
+                         returnA -< fi)
+                    |) addFunctionContext)
+                  |) metadataObject) |)
+        >-> (\infos -> M.catMaybes infos >- returnA)
 
-  for_ (find ((== objectId) . _moId) newInconsistentObjects) $ \matchingObject ->
-    throw400 ConstraintViolation (_moReason matchingObject)
+      -- allow list
+      let allowList = allowlistDefs
+            & concatMap _cdQueries
+            & map (queryWithoutTypeNames . getGQLQuery . _lqQuery)
+            & HS.fromList
 
-  unless (null newInconsistentObjects) $
-    throwError (err400 Unexpected "cannot continue due to new inconsistent metadata")
-      { qeInternal = Just $ toJSON newInconsistentObjects }
+      -- build GraphQL context with tables and functions
+      baseGQLSchema <- bindA -< GS.mkGCtxMap tableCache functionCache
 
--- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
-buildSchemaCacheStrict :: (CacheBuildM m) => m ()
-buildSchemaCacheStrict = do
-  buildSchemaCache
-  sc <- askSchemaCache
-  let inconsObjs = scInconsistentObjs sc
-  unless (null inconsObjs) $ do
-    let err = err400 Unexpected "cannot continue due to inconsistent metadata"
-    throwError err{qeInternal = Just $ toJSON inconsObjs}
+      -- remote schemas
+      let invalidatedRemoteSchemas = flip map remoteSchemas \remoteSchema ->
+            (M.lookup (_arsqName remoteSchema) invalidationMap, remoteSchema)
+      (remoteSchemaMap, gqlSchema, remoteGQLSchema) <-
+        (| foldlA' (\schemas schema -> (schemas, schema) >- addRemoteSchema)
+        |) (M.empty, baseGQLSchema, GC.emptyGCtx) invalidatedRemoteSchemas
 
--- | Executes the given action, and if any new 'InconsistentMetadataObj's are added to the schema
--- cache as a result of its execution, raises an error.
-withNewInconsistentObjsCheck :: (QErrM m, CacheRM m) => m a -> m a
-withNewInconsistentObjsCheck action = do
-  originalObjects <- scInconsistentObjs <$> askSchemaCache
-  result <- action
-  currentObjects <- scInconsistentObjs <$> askSchemaCache
-  checkNewInconsistentMeta originalObjects currentObjects
-  pure result
+      returnA -< BuildOutputs
+        { _boTables = tableCache
+        , _boFunctions = functionCache
+        , _boRemoteSchemas = remoteSchemaMap
+        , _boAllowlist = allowList
+        , _boGCtxMap = gqlSchema
+        , _boDefaultRemoteGCtx = remoteGQLSchema
+        }
+
+    mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =
+      let objectId = MOTableObj qt $ MTOTrigger trn
+          definition = object ["table" .= qt, "configuration" .= configuration]
+      in MetadataObject objectId definition
+
+    -- Given a map of table info, “folds in” another map of information, accumulating inconsistent
+    -- metadata objects for any entries in the second map that don’t appear in the first map. This
+    -- is used to “line up” the metadata for relationships, computed fields, permissions, etc. with
+    -- the tracked table info.
+    alignExtraTableInfo
+      :: forall a b arr
+       . (ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr)
+      => (b -> MetadataObject)
+      -> ( M.HashMap QualifiedTable a
+         , M.HashMap QualifiedTable [b]
+         ) `arr` M.HashMap QualifiedTable (a, [b])
+    alignExtraTableInfo mkMetadataObject = proc (baseInfo, extraInfo) -> do
+      combinedInfo <-
+        (| Inc.keyed (\tableName infos -> combine -< (tableName, infos))
+        |) (align baseInfo extraInfo)
+      returnA -< M.catMaybes combinedInfo
+      where
+        combine :: (QualifiedTable, These a [b]) `arr` Maybe (a, [b])
+        combine = proc (tableName, infos) -> case infos of
+          This  base        -> returnA -< Just (base, [])
+          These base extras -> returnA -< Just (base, extras)
+          That       extras -> do
+            let errorMessage = "table " <> tableName <<> " does not exist"
+            recordInconsistencies -< (map mkMetadataObject extras, errorMessage)
+            returnA -< Nothing
+
+    buildTableEventTriggers
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+         , Inc.ArrowCache m arr, MonadIO m, MonadTx m, MonadReader BuildReason m, HasSQLGenCtx m )
+      => (TableCoreInfo, [CatalogEventTrigger]) `arr` EventTriggerInfoMap
+    buildTableEventTriggers = proc (tableInfo, eventTriggers) ->
+      (\infos -> M.catMaybes infos >- returnA) <-<
+        (| Inc.keyed (\_ duplicateEventTriggers -> do
+             maybeEventTrigger <- noDuplicates mkEventTriggerMetadataObject -< duplicateEventTriggers
+             (\info -> join info >- returnA) <-<
+               (| traverseA (\eventTrigger -> buildEventTrigger -< (tableInfo, eventTrigger))
+               |) maybeEventTrigger)
+        |) (M.groupOn _cetName eventTriggers)
+      where
+        buildEventTrigger = proc (tableInfo, eventTrigger) -> do
+          let CatalogEventTrigger qt trn configuration = eventTrigger
+              metadataObject = mkEventTriggerMetadataObject eventTrigger
+              schemaObjectId = SOTableObj qt $ TOTrigger trn
+              addTriggerContext e = "in event trigger " <> trn <<> ": " <> e
+          (| withRecordInconsistency (
+             (| modifyErrA (do
+                  etc <- bindErrorA -< decodeValue configuration
+                  (info, dependencies) <- bindErrorA -< subTableP2Setup qt etc
+                  let tableColumns = M.mapMaybe (^? _FIColumn) (_tciFieldInfoMap tableInfo)
+                  recreateViewIfNeeded -< (qt, tableColumns, trn, etcDefinition etc)
+                  recordDependencies -< (metadataObject, schemaObjectId, dependencies)
+                  returnA -< info)
+             |) (addTableContext qt . addTriggerContext))
+           |) metadataObject
+
+        recreateViewIfNeeded = Inc.cache $
+          arrM \(tableName, tableColumns, triggerName, triggerDefinition) -> do
+            buildReason <- ask
+            when (buildReason == CatalogUpdate) $
+              mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
+
+    addRemoteSchema
+      :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, ArrowKleisli m arr
+         , MonadIO m, HasHttpManager m )
+      => ( (RemoteSchemaMap, GS.GCtxMap, GS.GCtx)
+         , (Maybe InvalidationKey, AddRemoteSchemaQuery)
+         ) `arr` (RemoteSchemaMap, GS.GCtxMap, GS.GCtx)
+    addRemoteSchema = proc ((remoteSchemas, gCtxMap, defGCtx), (_, remoteSchema)) -> do
+      let name = _arsqName remoteSchema
+      (| onNothingA (returnA -< (remoteSchemas, gCtxMap, defGCtx)) |) <-<
+         (| withRecordInconsistency (case M.lookup name remoteSchemas of
+              Just _ -> throwA -< err400 AlreadyExists "duplicate definition for remote schema"
+              Nothing -> liftEitherA <<< bindA -< runExceptT do
+                rsCtx <- addRemoteSchemaP2Setup remoteSchema
+                let rGCtx = convRemoteGCtx $ rscGCtx rsCtx
+                mergedGCtxMap <- mergeRemoteSchema gCtxMap rGCtx
+                mergedDefGCtx <- mergeGCtx defGCtx rGCtx
+                pure (M.insert name rsCtx remoteSchemas, mergedGCtxMap, mergedDefGCtx))
+         |) (MetadataObject (MORemoteSchema name) (toJSON remoteSchema))
 
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
 -- if not, incorporates them into the schema cache.
-withMetadataCheck :: (CacheBuildM m) => Bool -> m a -> m a
+withMetadataCheck :: (MonadTx m, CacheRWM m) => Bool -> m a -> m a
 withMetadataCheck cascade action = do
   -- Drop hdb_views so no interference is caused to the sql query
   liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
@@ -281,107 +334,46 @@ withMetadataCheck cascade action = do
 
   forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
     liftTx $ delFunctionFromCatalog qf
-    delFunctionFromCache qf
 
   -- Process altered functions
-  forM_ alteredFuncs $ \(qf, newTy, newDescM) -> do
+  forM_ alteredFuncs $ \(qf, newTy) -> do
     when (newTy == FTVOLATILE) $
       throw400 NotSupported $
       "type of function " <> qf <<> " is altered to \"VOLATILE\" which is not supported now"
 
-    updateFunctionDescription qf newDescM
-
   -- update the schema cache and hdb_catalog with the changes
-  reloadRequired <- processSchemaChanges schemaDiff
+  processSchemaChanges schemaDiff
 
-  let withReload = do -- in case of any rename
-        buildSchemaCache
-        currentInconsistentObjs <- scInconsistentObjs <$> askSchemaCache
-        checkNewInconsistentMeta existingInconsistentObjs currentInconsistentObjs
-
-      withoutReload = do
-        postSc <- askSchemaCache
-        -- recreate the insert permission infra
-        forM_ (M.elems $ scTables postSc) $ \ti -> do
-          let tn = _tiName ti
-          forM_ (M.elems $ _tiRolePermInfoMap ti) $ \rpi ->
-            maybe (return ()) (liftTx . buildInsInfra tn) $ _permIns rpi
-
-        strfyNum <- stringifyNum <$> askSQLGenCtx
-        --recreate triggers
-        forM_ (M.elems $ scTables postSc) $ \ti -> do
-          let tn = _tiName ti
-              cols = getCols $ _tiFieldInfoMap ti
-          forM_ (M.toList $ _tiEventTriggerInfoMap ti) $ \(trn, eti) -> do
-            let fullspec = etiOpsDef eti
-            liftTx $ mkAllTriggersQ trn tn cols strfyNum fullspec
-
-  bool withoutReload withReload reloadRequired
+  buildSchemaCache
+  currentInconsistentObjs <- scInconsistentObjs <$> askSchemaCache
+  checkNewInconsistentMeta existingInconsistentObjs currentInconsistentObjs
 
   return res
   where
     reportFuncs = T.intercalate ", " . map dquoteTxt
 
-    processSchemaChanges :: (MonadTx m, CacheRWM m) => SchemaDiff -> m Bool
+    processSchemaChanges :: (MonadTx m, CacheRM m) => SchemaDiff -> m ()
     processSchemaChanges schemaDiff = do
       -- Purge the dropped tables
       mapM_ delTableAndDirectDeps droppedTables
 
       sc <- askSchemaCache
-      fmap or $ forM alteredTables $ \(oldQtn, tableDiff) -> do
+      for_ alteredTables $ \(oldQtn, tableDiff) -> do
         ti <- case M.lookup oldQtn $ scTables sc of
           Just ti -> return ti
           Nothing -> throw500 $ "old table metadata not found in cache : " <>> oldQtn
-        processTableChanges ti tableDiff
+        processTableChanges (_tiCoreInfo ti) tableDiff
       where
         SchemaDiff droppedTables alteredTables = schemaDiff
 
-checkNewInconsistentMeta
-  :: (QErrM m)
-  => [InconsistentMetadataObj] -> [InconsistentMetadataObj] -> m ()
-checkNewInconsistentMeta originalInconsMeta currentInconsMeta =
-  unless (null newInconsMetaObjects) $
-    throwError (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
-      { qeInternal = Just $ toJSON newInconsMetaObjects }
-  where
-    newInconsMetaObjects = getDifference _moId currentInconsMeta originalInconsMeta
-
-purgeDependentObject :: (CacheRWM m, MonadTx m) => SchemaObjId -> m ()
-purgeDependentObject schemaObjId = case schemaObjId of
-  (SOTableObj tn (TOPerm rn pt)) -> do
-    liftTx $ dropPermFromCatalog tn rn pt
-    withPermType pt delPermFromCache rn tn
-
-  (SOTableObj qt (TORel rn)) -> do
-    liftTx $ delRelFromCatalog qt rn
-    delRelFromCache rn qt
-
-  (SOFunction qf) -> do
-    liftTx $ delFunctionFromCatalog qf
-    delFunctionFromCache qf
-
-  (SOTableObj qt (TOTrigger trn)) -> do
-    liftTx $ delEventTriggerFromCatalog trn
-    delEventTriggerFromCache qt trn
-
-  (SOTableObj qt (TOComputedField ccn)) -> do
-    deleteComputedFieldFromCache qt ccn
-    dropComputedFieldFromCatalog qt ccn
-
-  _ -> throw500 $
-    "unexpected dependent object : " <> reportSchemaObj schemaObjId
-
--- | @'withSchemaObject' f action@ runs @action@, and if it raises any errors, applies @f@ to the
--- error message to produce an 'InconsistentMetadataObj', then adds the object to the schema cache
--- and returns 'Nothing' instead of aborting.
-withSchemaObject :: (QErrM m, CacheRWM m) => (Text -> InconsistentMetadataObj) -> m a -> m (Maybe a)
-withSchemaObject f action =
-  (Just <$> action) `catchError` \err -> do
-    sc <- askSchemaCache
-    let inconsObj = f $ qeError err
-        allInconsObjs = inconsObj:scInconsistentObjs sc
-    writeSchemaCache sc { scInconsistentObjs = allInconsObjs }
-    pure Nothing
-
-withSchemaObject_ :: (QErrM m, CacheRWM m) => (Text -> InconsistentMetadataObj) -> m () -> m ()
-withSchemaObject_ f = void . withSchemaObject f
+    checkNewInconsistentMeta
+      :: (QErrM m)
+      => [InconsistentMetadata] -> [InconsistentMetadata] -> m ()
+    checkNewInconsistentMeta originalInconsMeta currentInconsMeta =
+      unless (null newInconsistentObjects) $
+        throwError (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
+          { qeInternal = Just $ toJSON newInconsistentObjects }
+      where
+        diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
+        newInconsistentObjects = nub $ concatMap toList $
+          M.elems (currentInconsMeta `diffInconsistentObjects` originalInconsMeta)

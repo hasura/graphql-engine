@@ -62,6 +62,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.CliExternalEndpoint, "cli-external-endpoint", "", "endpoint using which console can access the migrate api served by cli")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
+	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -88,6 +89,7 @@ type consoleOptions struct {
 	WG *sync.WaitGroup
 
 	StaticDir string
+	Browser   string
 }
 
 func (o *consoleOptions) run() error {
@@ -175,12 +177,21 @@ func (o *consoleOptions) run() error {
 	consoleURL := fmt.Sprintf("http://%s:%s/", o.Address, o.ConsolePort)
 
 	if !o.DontOpenBrowser {
-		o.EC.Spin(color.CyanString("Opening console using default browser..."))
-		defer o.EC.Spinner.Stop()
+		if o.Browser != "" {
+			o.EC.Spin(color.CyanString("Opening console on: %s", o.Browser))
+			defer o.EC.Spinner.Stop()
+			err = open.RunWith(consoleURL, o.Browser)
+			if err != nil {
+				o.EC.Logger.WithError(err).Warnf("failed opening console in '%s', try to open the url manually", o.Browser)
+			}
+		} else {
+			o.EC.Spin(color.CyanString("Opening console using default browser..."))
+			defer o.EC.Spinner.Stop()
 
-		err = open.Run(consoleURL)
-		if err != nil {
-			o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
+			err = open.Run(consoleURL)
+			if err != nil {
+				o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
+			}
 		}
 	}
 
@@ -272,6 +283,10 @@ func allowCors() gin.HandlerFunc {
 func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
+
+	if !util.DoAssetExist("assets/" + assetsVersion + "/console.html") {
+		assetsVersion = "latest"
+	}
 
 	// Template console.html
 	templateRender, err := util.LoadTemplates("assets/"+assetsVersion+"/", "console.html")

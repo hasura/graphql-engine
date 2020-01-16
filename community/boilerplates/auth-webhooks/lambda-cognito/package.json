@@ -1,0 +1,15 @@
+{
+  "name": "auth_webhook",
+  "version": "1.0.0",
+  "description": "This is the webhook code that Hasura will call to get headers.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "graphql-request": "*",
+    "node-jose": "^1.1.0"
+  }
+}

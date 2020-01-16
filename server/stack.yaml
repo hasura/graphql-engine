@@ -17,7 +17,7 @@ rebuild-ghc-options: true
 extra-deps:
 # use https URLs so that build systems can clone these repos
 - git: https://github.com/hasura/pg-client-hs.git
-  commit: bd21e66d8197af381a6c0b493e22d611ed1fa386
+  commit: 70a849d09bea9461e72c5a5bbde06df65aab61c0
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
 - git: https://github.com/hasura/ci-info-hs.git
@@ -58,7 +58,3 @@ extra-package-dbs: []
 
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
-
-docker:
-  enable: false
-  repo: 'hasura/stack-build'

@@ -14,7 +14,6 @@ import (
 	"testing"
 
 	"github.com/Masterminds/semver"
-
 	mt "github.com/hasura/graphql-engine/cli/migrate/testing"
 	"github.com/hasura/graphql-engine/cli/version"
 	_ "github.com/lib/pq"

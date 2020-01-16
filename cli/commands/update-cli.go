@@ -59,6 +59,8 @@ func (o *updateOptions) run(showPrompt bool) error {
 		return errors.Wrap(err, "command: check update")
 	}
 
+	ec.Logger.Debugln("hasUpdate: ", hasUpdate, "latestVersion: ", latestVersion, "currentVersion:", currentVersion)
+
 	if !hasUpdate {
 		o.EC.Logger.WithField("version", currentVersion).Info("hasura cli is up to date")
 		return nil

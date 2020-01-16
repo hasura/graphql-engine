@@ -1,3 +1,16 @@
+import { terminateSql } from './sqlUtils';
+
+export const getRunSqlQuery = (sql, shouldCascade, readOnly) => {
+  return {
+    type: 'run_sql',
+    args: {
+      sql: terminateSql(sql),
+      cascade: !!shouldCascade,
+      read_only: !!readOnly,
+    },
+  };
+};
+
 export const getCreatePermissionQuery = (
   action,
   tableDef,
@@ -40,12 +53,57 @@ export const getSetCustomRootFieldsQuery = (
   };
 };
 
-export const getRunSqlQuery = (sql, shouldCascade) => {
+export const getSetTableEnumQuery = (tableDef, isEnum) => {
   return {
-    type: 'run_sql',
+    type: 'set_table_is_enum',
     args: {
-      sql,
-      cascade: !!shouldCascade,
+      table: tableDef,
+      is_enum: isEnum,
+    },
+  };
+};
+
+export const getTrackTableQuery = tableDef => {
+  return {
+    type: 'add_existing_table_or_view',
+    args: tableDef,
+  };
+};
+
+export const getUntrackTableQuery = tableDef => {
+  return {
+    type: 'untrack_table',
+    args: {
+      table: tableDef,
+    },
+  };
+};
+
+export const getAddComputedFieldQuery = (
+  tableDef,
+  computedFieldName,
+  definition,
+  comment
+) => {
+  return {
+    type: 'add_computed_field',
+    args: {
+      table: tableDef,
+      name: computedFieldName,
+      definition: {
+        ...definition,
+      },
+      comment: comment,
+    },
+  };
+};
+
+export const getDropComputedFieldQuery = (tableDef, computedFieldName) => {
+  return {
+    type: 'drop_computed_field',
+    args: {
+      table: tableDef,
+      name: computedFieldName,
     },
   };
 };

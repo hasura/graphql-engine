@@ -1,17 +1,21 @@
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
-import Endpoints from '../../../Endpoints';
+import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 
 import globals from '../../../Globals';
 
 import styles from './About.scss';
+import requestAction from '../../../utils/requestAction';
+import { showErrorNotification } from '../Common/Notification';
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 
 class About extends Component {
   state = {
     serverVersion: null,
     latestServerVersion: null,
     consoleAssetVersion: globals.consoleAssetVersion,
+    pgVersion: null,
   };
 
   componentDidMount() {
@@ -30,6 +34,33 @@ class About extends Component {
           latestServerVersion: latest.latest,
         })
       );
+
+    const fetchPgVersion = () => {
+      const { dispatch, dataHeaders } = this.props;
+
+      const url = Endpoints.query;
+      const options = {
+        method: 'POST',
+        credentials: globalCookiePolicy,
+        headers: dataHeaders,
+        body: JSON.stringify(getRunSqlQuery('SELECT version();', false, true)),
+      };
+
+      dispatch(requestAction(url, options)).then(
+        data => {
+          this.setState({
+            pgVersion: data.result[1][0],
+          });
+        },
+        error => {
+          dispatch(
+            showErrorNotification('Failed fetching PG version', null, error)
+          );
+        }
+      );
+    };
+
+    fetchPgVersion();
   }
 
   render() {
@@ -37,6 +68,7 @@ class About extends Component {
       serverVersion,
       latestServerVersion,
       consoleAssetVersion,
+      pgVersion,
     } = this.state;
 
     const spinner = <i className="fa fa-spinner fa-spin" />;
@@ -110,6 +142,17 @@ class About extends Component {
       );
     };
 
+    const getPgVersionSection = () => {
+      return (
+        <div>
+          <b>Postgres version: </b>
+          <span className={styles.add_mar_left_mid}>
+            {pgVersion || spinner}
+          </span>
+        </div>
+      );
+    };
+
     return (
       <div className={`container-fluid ${styles.full_container}`}>
         <div className={styles.subHeader}>
@@ -125,6 +168,7 @@ class About extends Component {
             <div className={styles.add_mar_top}>
               {getConsoleAssetVersionSection()}
             </div>
+            <div className={styles.add_mar_top}>{getPgVersionSection()}</div>
           </div>
         </div>
       </div>
@@ -132,8 +176,10 @@ class About extends Component {
   }
 }
 
-const mapStateToProps = () => {
-  return {};
+const mapStateToProps = state => {
+  return {
+    dataHeaders: state.tables.dataHeaders,
+  };
 };
 
 const aboutConnector = connect => connect(mapStateToProps)(About);

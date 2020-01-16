@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage pagination with Hasura
+   :keywords: hasura, docs, query, pagination
+
 Paginate query results
 ======================
 
