@@ -275,6 +275,10 @@ func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, err
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
 
+	if !util.DoAssetExist("assets/" + assetsVersion + "/console.html") {
+		assetsVersion = "latest"
+	}
+
 	// Template console.html
 	templateRender, err := util.LoadTemplates("assets/"+assetsVersion+"/", "console.html")
 	if err != nil {
