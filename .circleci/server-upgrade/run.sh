@@ -27,6 +27,7 @@ log() { echo -e "--> $*"; }
 : ${HASURA_GRAPHQL_SERVER_PORT:=8080}
 : ${API_SERVER_PORT:=3000}
 : ${HASURA_PROJECT_DIR:=$ROOT/hasura}
+: ${PYTEST_ROOT:= $ROOT/../../server/tests-py}
 : ${API_SERVER_DIR:=$ROOT/api-server}
 : ${SERVER_OUTPUT_DIR:=/build/_server_output}
 : ${SERVER_BINARY:=/build/_server_output/graphql-engine}
@@ -86,11 +87,6 @@ log "graphql engine started"
 log "applying migrations"
 hasura --project $HASURA_PROJECT_DIR migrate apply --endpoint $HGE_ENDPOINT
 
-# make a test query
-log "executing the test query"
-node $ROOT/make_test_query.js $HGE_ENDPOINT/v1alpha1/graphql
-log
-
 # kill graphql engine
 log "kill the server"
 kill $LAST_REL_HGE_PID || true
@@ -104,9 +100,17 @@ CURR_HGE_PID=$!
 wait_for_port $HASURA_GRAPHQL_SERVER_PORT
 log "server started"
 
-# make a test query
-log "executing test query"
-node $ROOT/make_test_query.js $HGE_ENDPOINT/v1alpha1/graphql
+
+# run few tests
+if [ -z "${HASURA_GRAPHQL_DATABASE_URL:-}" ] ; then
+	  echo "Env var HASURA_GRAPHQL_DATABASE_URL is not set"
+	  exit 1
+fi
+
+log "running default tests"
+cd $PYTEST_ROOT
+pip3 install -r requirements.txt
+pytest -vv --hge-urls "$HGE_ENDPOINT" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" test_upgrade/test_basics.py
 log
 
 log "kill the server"

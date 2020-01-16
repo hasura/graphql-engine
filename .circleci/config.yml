@@ -456,7 +456,7 @@ jobs:
   # test server upgrade from last version to current build
   test_server_upgrade:
     docker:
-    - image: hasura/graphql-engine-upgrade-tester:v0.4
+    - image: tirumarai/graphql-engine-upgrade-tester
       environment:
         HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
     - image: circleci/postgres:10-alpine
@@ -472,6 +472,8 @@ jobs:
     - run:
         name: upgrade_test
         command: .circleci/server-upgrade/run.sh
+        environment:
+          HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
     - store_artifacts:
         path: /build/_server_output
         destination: server
