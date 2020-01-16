@@ -1,3 +1,7 @@
+.. meta::
+   :description: Sample apps and boilerplates using Hasura
+   :keywords: hasura, docs, sample app, boilerplate
+
 Sample apps & boilerplates
 ==========================
 

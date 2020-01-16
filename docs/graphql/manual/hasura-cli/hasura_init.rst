@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura init to initialise a directory for Hasura migrations on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura init
+
 .. _hasura_init:
 
 Hasura CLI: hasura init
