@@ -509,13 +509,13 @@ mkInsCtx role tableCache fields insPermInfo updPermM = do
       isInsertable insPermM viewInfoM && isValidRel relName remoteTable
 
   let relInfoMap = Map.fromList $ catMaybes relTupsM
-  return $ InsCtx iView gNamePGColMap setCols relInfoMap updPermForIns
+  return $ InsCtx gNamePGColMap checkCond setCols relInfoMap updPermForIns
   where
     gNamePGColMap = mkPGColGNameMap allCols
     allCols = getCols fields
     rels = getValidRels fields
-    iView = ipiView insPermInfo
     setCols = ipiSet insPermInfo
+    checkCond = ipiCheck insPermInfo
     updPermForIns = mkUpdPermForIns <$> updPermM
     mkUpdPermForIns upi = UpdPermForIns (toList $ upiCols upi)
                           (upiFilter upi) (upiSet upi)
@@ -525,11 +525,10 @@ mkInsCtx role tableCache fields insPermInfo updPermM = do
 
 mkAdminInsCtx
   :: MonadError QErr m
-  => QualifiedTable
-  -> TableCache
+  => TableCache
   -> FieldInfoMap FieldInfo
   -> m InsCtx
-mkAdminInsCtx tn tc fields = do
+mkAdminInsCtx tc fields = do
   relTupsM <- forM rels $ \relInfo -> do
     let remoteTable = riRTable relInfo
         relName = riName relInfo
@@ -541,7 +540,7 @@ mkAdminInsCtx tn tc fields = do
   let relInfoMap = Map.fromList $ catMaybes relTupsM
       updPerm = UpdPermForIns updCols noFilter Map.empty
 
-  return $ InsCtx tn colGNameMap Map.empty relInfoMap (Just updPerm)
+  return $ InsCtx colGNameMap noFilter Map.empty relInfoMap (Just updPerm)
   where
     allCols = getCols fields
     colGNameMap = mkPGColGNameMap allCols
@@ -667,7 +666,7 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
   m <- flip Map.traverseWithKey rolePerms $
        mkGCtxRole tableCache tn descM fields primaryKey validConstraints
                   tabFuncs viewInfo customConfig
-  adminInsCtx <- mkAdminInsCtx tn tableCache fields
+  adminInsCtx <- mkAdminInsCtx tableCache fields
   adminSelFlds <- mkAdminSelFlds fields tableCache
   let adminCtx = mkGCtxRole' tn descM (Just (cols, icRelations adminInsCtx))
                  (Just (True, adminSelFlds)) (Just cols) (Just ())

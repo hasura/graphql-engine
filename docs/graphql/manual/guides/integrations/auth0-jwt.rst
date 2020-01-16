@@ -1,3 +1,7 @@
+.. meta::
+   :description: Integrate Auth0 JWT with Hasura
+   :keywords: hasura, docs, guide, authentication, auth, jwt, integration
+
 .. _auth0_jwt:
 
 Auth0 JWT Integration with Hasura GraphQL engine

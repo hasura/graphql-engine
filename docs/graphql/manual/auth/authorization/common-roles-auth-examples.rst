@@ -1,3 +1,7 @@
+.. meta::
+   :description: Examples for managing access control with Hasura
+   :keywords: hasura, docs, authorization, access control, examples
+
 Access control examples
 =======================
 

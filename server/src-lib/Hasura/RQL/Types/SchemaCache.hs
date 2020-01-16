@@ -208,7 +208,6 @@ isPGColInfo _            = False
 data InsPermInfo
   = InsPermInfo
   { ipiCols            :: !(HS.HashSet PGCol)
-  , ipiView            :: !QualifiedTable
   , ipiCheck           :: !AnnBoolExpPartialSQL
   , ipiSet             :: !PreSetColsPartial
   , ipiRequiredHeaders :: ![T.Text]

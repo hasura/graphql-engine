@@ -101,13 +101,13 @@ trackExistingTableOrViewP1 qt = do
     throw400 NotSupported $ "function with name " <> qt <<> " already exists"
 
 trackExistingTableOrViewP2
-  :: (MonadTx m, CacheRWM m)
-  => QualifiedTable -> SystemDefined -> Bool -> TableConfig -> m EncJSON
-trackExistingTableOrViewP2 tableName systemDefined isEnum config = do
+  :: (MonadTx m, CacheRWM m, HasSystemDefined m)
+  => QualifiedTable -> Bool -> TableConfig -> m EncJSON
+trackExistingTableOrViewP2 tableName isEnum config = do
   sc <- askSchemaCache
   let defGCtx = scDefaultRemoteGCtx sc
   GS.checkConflictingNode defGCtx $ GS.qualObjectToName tableName
-  saveTableToCatalog tableName systemDefined isEnum config
+  saveTableToCatalog tableName isEnum config
   buildSchemaCacheFor (MOTable tableName)
   return successMsg
 
@@ -115,8 +115,7 @@ runTrackTableQ
   :: (MonadTx m, CacheRWM m, HasSystemDefined m) => TrackTable -> m EncJSON
 runTrackTableQ (TrackTable qt isEnum) = do
   trackExistingTableOrViewP1 qt
-  systemDefined <- askSystemDefined
-  trackExistingTableOrViewP2 qt systemDefined isEnum emptyTableConfig
+  trackExistingTableOrViewP2 qt isEnum emptyTableConfig
 
 data TrackTableV2
   = TrackTableV2
@@ -129,8 +128,7 @@ runTrackTableV2Q
   :: (MonadTx m, CacheRWM m, HasSystemDefined m) => TrackTableV2 -> m EncJSON
 runTrackTableV2Q (TrackTableV2 (TrackTable qt isEnum) config) = do
   trackExistingTableOrViewP1 qt
-  systemDefined <- askSystemDefined
-  trackExistingTableOrViewP2 qt systemDefined isEnum config
+  trackExistingTableOrViewP2 qt isEnum config
 
 runSetExistingTableIsEnumQ :: (MonadTx m, CacheRWM m) => SetTableIsEnum -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do

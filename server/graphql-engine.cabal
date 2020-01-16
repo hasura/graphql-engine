@@ -207,6 +207,9 @@ library
                      , Control.Monad.Stateless
                      , Control.Monad.Unique
 
+                     -- exposed for tests
+                     , Data.Parser.CacheControl
+
                      , Hasura.Prelude
                      , Hasura.App
                      , Hasura.Db
@@ -277,7 +280,6 @@ library
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
-                     , Hasura.RQL.DDL.Permission.Triggers
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.Relationship.Types
@@ -413,6 +415,7 @@ test-suite graphql-engine-tests
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
+    Data.Parser.CacheControlSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec

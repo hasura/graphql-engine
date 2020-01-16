@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage GraphQL schema with Hasura
+   :keywords: hasura, docs, schema
+
 Schema
 ======
 
