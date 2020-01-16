@@ -104,7 +104,7 @@ You can downgrade the catalogue from a particular version to its previous versio
   :depth: 1
   :local:
   
-From 29 to 28
+From 30 to 29
 """""""""""""
 .. code-block:: plpgsql
 
