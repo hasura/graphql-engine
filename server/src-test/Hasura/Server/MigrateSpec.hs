@@ -56,7 +56,6 @@ spec
      , MonadBaseControl IO m
      , MonadTx m
      , MonadUnique m
-     , UserInfoM m
      , HasHttpManager m
      , HasSQLGenCtx m
      )

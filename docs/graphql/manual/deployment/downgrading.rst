@@ -1,3 +1,7 @@
+.. meta::
+   :description: Downgrade Hasura GraphQL engine version
+   :keywords: hasura, docs, deployment, downgrade, version
+
 Downgrading Hasura GraphQL engine
 =================================
 
@@ -103,3 +107,4 @@ with the ``downgrade`` command, specifying the desired catalog version (from the
   :backlinks: none
   :depth: 1
   :local:
+

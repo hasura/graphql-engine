@@ -1,3 +1,7 @@
+.. meta::
+   :description: Update Hasura GraphQL engine with Kubernetes deployment
+   :keywords: hasura, docs, deployment, kubernetes, update
+
 Updating Hasura GraphQL engine running on Kubernetes
 ====================================================
 
