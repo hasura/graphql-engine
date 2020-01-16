@@ -201,7 +201,8 @@ mkSpockAction
   -> Spock.ActionT m ()
 mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     req <- Spock.request
-    reqBody <- liftIO $ Wai.strictRequestBody req
+    -- Bytes are actually read from the socket here. Time this.
+    (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
     let headers = Wai.requestHeaders req
         authMode = scAuthMode serverCtx
         manager = scManager serverCtx
@@ -215,9 +216,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     let handlerState = HandlerCtx serverCtx userInfo headers requestId
         curRole = userRole userInfo
 
-    t1 <- liftIO Clock.getCurrentTime -- for measuring response time purposes
-
-    (result, q) <- case apiHandler of
+    (serviceTime, (result, q)) <- withElapsedTime $ case apiHandler of
       AHGet handler -> do
         res <- lift $ runReaderT (runExceptT handler) handlerState
         return (res, Nothing)
