@@ -15,6 +15,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/metadata/tables"
 	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
 	hasuradbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
+	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/ghodss/yaml"
@@ -52,7 +53,11 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Args:         cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = viper.New()
-			return ec.Prepare()
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
+			return gitutil.EnsureCloned(ec.PluginsPath.IndexPath())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 {
