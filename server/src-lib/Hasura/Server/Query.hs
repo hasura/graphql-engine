@@ -61,10 +61,10 @@ data RQLQueryV1
   | RQCreateUpdatePermission !CreateUpdPerm
   | RQCreateDeletePermission !CreateDelPerm
 
-  | RQDropInsertPermission !DropInsPerm
-  | RQDropSelectPermission !DropSelPerm
-  | RQDropUpdatePermission !DropUpdPerm
-  | RQDropDeletePermission !DropDelPerm
+  | RQDropInsertPermission !(DropPerm InsPerm)
+  | RQDropSelectPermission !(DropPerm SelPerm)
+  | RQDropUpdatePermission !(DropPerm UpdPerm)
+  | RQDropDeletePermission !(DropPerm DelPerm)
   | RQSetPermissionComment !SetPermComment
 
   | RQGetInconsistentMetadata !GetInconsistentMetadata

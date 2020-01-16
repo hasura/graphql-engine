@@ -280,7 +280,6 @@ library
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
-                     , Hasura.RQL.DDL.Permission.Triggers
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.Relationship.Types
