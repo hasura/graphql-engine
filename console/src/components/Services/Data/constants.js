@@ -11,12 +11,12 @@ export const Operators = [
   { name: 'not like', value: '$nlike', graphqlOp: '_nlike' },
   { name: 'like (case-insensitive)', value: '$ilike', graphqlOp: '_ilike' },
   {
-    name: 'not ilike (case-insensitive)',
+    name: 'not like (case-insensitive)',
     value: '$nilike',
     graphqlOp: '_nilike',
   },
   { name: 'similar', value: '$similar', graphqlOp: '_similar' },
-  { name: 'not similar', value: '$nsimilar', graphqlOp: '_similar' },
+  { name: 'not similar', value: '$nsimilar', graphqlOp: '_nsimilar' },
 ];
 
 export const Integers = [

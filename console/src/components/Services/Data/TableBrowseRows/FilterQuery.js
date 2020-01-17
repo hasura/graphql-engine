@@ -70,6 +70,26 @@ const renderOps = (opName, onChange, key) => (
   </select>
 );
 
+const getDefaultValue = (possibleValue, opName) => {
+  if (possibleValue) {
+    if (Array.isArray(possibleValue)) return JSON.stringify(possibleValue);
+    return possibleValue;
+  }
+
+  switch (opName) {
+    case '$like':
+    case '$nlike':
+    case '$ilike':
+    case '$nilike':
+      return '%%';
+    case '$in':
+    case '$nin':
+      return '[]';
+    default:
+      return '';
+  }
+};
+
 const renderWheres = (whereAnd, tableSchema, dispatch) => {
   const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
   return whereAnd.map((clause, i) => {
@@ -93,11 +113,6 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
         />
       );
     }
-    const defaultValue = ['$like', '$nlike', '$ilike', '$nilike'].includes(
-      opName
-    )
-      ? '%%'
-      : '';
 
     return (
       <div key={i} className={`${styles.inputRow} row`}>
@@ -109,7 +124,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
           <input
             className="form-control"
             placeholder="-- value --"
-            value={clause[colName][opName] || defaultValue}
+            value={getDefaultValue(clause[colName][opName], opName)}
             onChange={e => {
               dispatch(setFilterVal(e.target.value, i));
               if (i + 1 === whereAnd.length) {
