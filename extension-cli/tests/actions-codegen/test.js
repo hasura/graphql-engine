@@ -5,7 +5,6 @@ const test = async () => {
 
   try {
     const codegenFiles = await getActionsCodegen(samplePayload);
-    console.log(codegenFiles);
     if (codegenFiles) {
       console.log('✓ Actions codegen test passed');
     } else {
