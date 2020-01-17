@@ -2,7 +2,7 @@
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
 # resolver: lts-10.8
-resolver: lts-14.18
+resolver: lts-14.20
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
@@ -17,7 +17,7 @@ rebuild-ghc-options: true
 extra-deps:
 # use https URLs so that build systems can clone these repos
 - git: https://github.com/hasura/pg-client-hs.git
-  commit: bd21e66d8197af381a6c0b493e22d611ed1fa386
+  commit: 70a849d09bea9461e72c5a5bbde06df65aab61c0
 - git: https://github.com/hasura/graphql-parser-hs.git
   commit: f3d9b645efd9adb143e2ad4c6b73bded1578a4e9
 - git: https://github.com/hasura/ci-info-hs.git
@@ -37,13 +37,14 @@ extra-deps:
 # needed for Text.Shakespeare.Text.stextFile; can be removed once the newer version is in stackage
 - shakespeare-2.0.22
 
-- brotli-0.0.0.0
-- aeson-1.4.6.0
+# needed for hasura/cron
 - time-1.9.3
 
+# needed for time
 - directory-1.3.5.0@sha256:a7d0f5e79a6bb31a75dfceb9656d2de119de9f91076ec18ad30e4496d0385cfa,2782
 - process-1.6.7.0@sha256:305bcf44c42a96425e77af1748183f505a701648f68cc299d5ad8ac1b866a6a1,2468
 - unix-2.7.2.2@sha256:e69269a17b9fa26cb77f3f55e86c39d0a4940ccfa0c4bc20826919d2572076ad,3496
+
 
 # Override default flag values for local packages and extra-deps
 flags: {}
@@ -68,7 +69,3 @@ extra-package-dbs: []
 
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
-
-docker:
-  enable: false
-  repo: 'hasura/stack-build'

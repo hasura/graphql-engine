@@ -1,3 +1,7 @@
+.. meta::
+   :description: Invoke event triggers on the Hasura console
+   :keywords: hasura, docs, event trigger, console, invoke
+
 Invoke event trigger via console
 ================================
 
@@ -14,10 +18,12 @@ you invoke "manual event triggers" configured on the table with that row as payl
 only if you have any triggers configured)*:
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/select-manual-trigger.png
+   :alt: Invoke event trigger on console
 
 Click on the event trigger you want to run and a modal will pop up with the request and response.
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/run-manual-trigger.png
+   :alt: Request and response of event trigger
 
 .. note::
 

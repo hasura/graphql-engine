@@ -13,11 +13,11 @@ packages:
     git: https://github.com/hasura/pg-client-hs.git
     pantry-tree:
       size: 1107
-      sha256: aaa78473e95368c73c4f6cd5d85f1016af5783090d804aeb7e0d244c02dd3354
-    commit: bd21e66d8197af381a6c0b493e22d611ed1fa386
+      sha256: 7dd16080034ac2a94763106ead8296105b538424533bed5ba3567824e2dfe4ea
+    commit: 70a849d09bea9461e72c5a5bbde06df65aab61c0
   original:
     git: https://github.com/hasura/pg-client-hs.git
-    commit: bd21e66d8197af381a6c0b493e22d611ed1fa386
+    commit: 70a849d09bea9461e72c5a5bbde06df65aab61c0
 - completed:
     cabal-file:
       size: 3364
@@ -117,20 +117,6 @@ packages:
   original:
     hackage: shakespeare-2.0.22
 - completed:
-    hackage: brotli-0.0.0.0@sha256:448061ceabdcaa752bbaf208f255bbb7e90bbcf8ea8a913d26ffa7887636823b,2887
-    pantry-tree:
-      size: 407
-      sha256: 5ad2a6b25c8145f58c43b10f1b60a1e1b5bf57f0e33e4a203f9671b361fb03c0
-  original:
-    hackage: brotli-0.0.0.0
-- completed:
-    hackage: aeson-1.4.6.0@sha256:560575b008a23960403a128331f0e59594786b5cd19a35be0cd74b9a7257958e,6980
-    pantry-tree:
-      size: 40193
-      sha256: 5769473440ae594ae8679dde9fe12b6d00a49264a9dd8962a53ff3ae5740d7a5
-  original:
-    hackage: aeson-1.4.6.0
-- completed:
     hackage: time-1.9.3@sha256:8f1b5448722a12a952248b356c9eb366e351226543d9086a2da71270522d5f45,5679
     pantry-tree:
       size: 6558
@@ -160,7 +146,7 @@ packages:
     hackage: unix-2.7.2.2@sha256:e69269a17b9fa26cb77f3f55e86c39d0a4940ccfa0c4bc20826919d2572076ad,3496
 snapshots:
 - completed:
-    size: 524789
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/18.yaml
-    sha256: 646be71223e08234131c6989912e6011e01b9767bc447b6d466a35e14360bdf2
-  original: lts-14.18
+    size: 524154
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/14/20.yaml
+    sha256: 2f5099f69ddb6abfe64400fe1e6a604e8e628f55e6837211cd70a81eb0a8fa4d
+  original: lts-14.20

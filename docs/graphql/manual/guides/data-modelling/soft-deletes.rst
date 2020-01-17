@@ -1,3 +1,7 @@
+.. meta::
+   :description: Set up soft deletes for data with Hasura
+   :keywords: hasura, docs, guide, soft deletes
+
 .. _soft_deletes:
 
 Setting up soft deletes for data
@@ -21,6 +25,7 @@ there is a timestamp value present, the record should be treated as deleted.
 the following:
 
 .. thumbnail:: ../../../../img/graphql/manual/guides/soft-deletes-example-data.png
+   :alt: Todo table of a todo application
 
 In this example we only have two todos, one has ``deleted_at`` with a timestamp value and the other contains a
 ``null`` value. The todo with the timestamp value in ``deleted_at`` represents a deleted todo and was deleted at
@@ -75,15 +80,17 @@ Here are some typical rules we should set:
 **Delete permissions** - remove all access
 
 .. thumbnail:: ../../../../img/graphql/manual/guides/soft-deletes-delete-perms.png
+   :alt: Delete permissions for role user
 
 **Insert permissions** - remove access for inserting into ``deleted_at`` column
 
 .. thumbnail:: ../../../../img/graphql/manual/guides/soft-deletes-insert-perms.png
+   :alt: Insert permissions for role user
 
 **Update permissions** - allow access for updating ``deleted_at`` column
 
 .. thumbnail:: ../../../../img/graphql/manual/guides/soft-deletes-update-perms.png
-
+   :alt: Update permissions for role user
 
 Step 4: Restrict access to soft-deleted records
 -----------------------------------------------
@@ -97,6 +104,7 @@ For example, let's say that a role ``user`` can only access non-deleted todos, w
 permission rule to ensure this:
 
 .. thumbnail:: ../../../../img/graphql/manual/guides/soft-deletes-select-perms.png
+   :alt: Restrict access to soft-deleted records
 
 Now the role ``user`` can only access non-deleted ``todos``:
 

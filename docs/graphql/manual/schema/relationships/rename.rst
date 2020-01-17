@@ -1,3 +1,7 @@
+.. meta::
+   :description: Rename relationships in Hasura
+   :keywords: hasura, docs, schema, relationship, rename
+
 Renaming relationships
 ======================
 
