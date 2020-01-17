@@ -3,7 +3,6 @@ module Hasura.RQL.DML.Insert where
 import           Data.Aeson.Types
 import           Instances.TH.Lift        ()
 
-import qualified Data.Aeson.Extended      as J
 import qualified Data.HashMap.Strict      as HM
 import qualified Data.HashSet             as HS
 import qualified Data.Sequence            as DS
@@ -33,22 +32,31 @@ data ConflictClauseP1
 
 data InsertQueryP1
   = InsertQueryP1
-  { iqp1Table    :: !QualifiedTable
-  , iqp1View     :: !QualifiedTable
-  , iqp1Cols     :: ![PGCol]
-  , iqp1Tuples   :: ![[S.SQLExp]]
-  , iqp1Conflict :: !(Maybe ConflictClauseP1)
-  , iqp1MutFlds  :: !MutFlds
-  , iqp1AllCols  :: ![PGColumnInfo]
+  { iqp1Table     :: !QualifiedTable
+  , iqp1Cols      :: ![PGCol]
+  , iqp1Tuples    :: ![[S.SQLExp]]
+  , iqp1Conflict  :: !(Maybe ConflictClauseP1)
+  , iqp1CheckCond :: !(Maybe AnnBoolExpSQL)
+  , iqp1MutFlds   :: !MutFlds
+  , iqp1AllCols   :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
-mkInsertCTE (InsertQueryP1 _ vn cols vals c _ _) =
-  S.CTEInsert insert
+mkInsertCTE (InsertQueryP1 tn cols vals c checkCond _ _) =
+    S.CTEInsert insert
   where
     tupVals = S.ValuesExp $ map S.TupleExp vals
     insert =
-      S.SQLInsert vn cols tupVals (toSQLConflict <$> c) $ Just S.returningStar
+      S.SQLInsert tn cols tupVals (toSQLConflict <$> c) 
+        . Just 
+        . S.RetExp 
+        $ maybe 
+            [S.selectStar] 
+            (\e -> 
+              [ S.selectStar
+              , insertCheckExpr (toSQLBoolExp (S.QualTable tn) e)
+              ]) 
+            checkCond
 
 toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
 toSQLConflict conflict = case conflict of
@@ -199,7 +207,6 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
                    map pgiColumn $ getCols fieldInfoMap
       allCols    = getCols fieldInfoMap
       insCols    = HM.keys defInsVals
-      insView    = ipiView insPerm
 
   resolvedPreSet <- mapM (convPartialSQLExp sessVarBldr) setInsVals
 
@@ -208,16 +215,17 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   let sqlExps = map snd insTuples
       inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 
+  checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting (ipiCheck insPerm)
+  
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
       roleName <- askCurRole
       unless (isTabUpdatable roleName tableInfo) $ throw400 PermissionDenied $
         "upsert is not allowed for role " <> roleName
         <<> " since update permissions are not defined"
       buildConflictClause sessVarBldr tableInfo inpCols c
-
-  return $ InsertQueryP1 tableName insView insCols sqlExps
-           conflictClause mutFlds allCols
-
+  
+  return $ InsertQueryP1 tableName insCols sqlExps
+           conflictClause (Just checkExpr) mutFlds allCols
   where
     selNecessaryMsg =
       "; \"returning\" can only be used if the role has "
@@ -241,53 +249,38 @@ convInsQ =
 
 insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 insertP2 strfyNum (u, p) =
-  runMutation $ Mutation (iqp1Table u) (insertCTE, p)
+  runMutation
+     $ Mutation (iqp1Table u) (insertCTE, p)
                 (iqp1MutFlds u) (iqp1AllCols u) strfyNum
   where
     insertCTE = mkInsertCTE u
 
-data ConflictCtx
-  = CCUpdate !ConstraintName ![PGCol] !PreSetCols !S.BoolExp
-  | CCDoNothing !(Maybe ConstraintName)
-  deriving (Show, Eq)
-
-nonAdminInsert :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
-nonAdminInsert strfyNum (insQueryP1, args) = do
-  conflictCtxM <- mapM extractConflictCtx conflictClauseP1
-  setConflictCtx conflictCtxM
-  insertP2 strfyNum (withoutConflictClause, args)
-  where
-    withoutConflictClause = insQueryP1{iqp1Conflict=Nothing}
-    conflictClauseP1 = iqp1Conflict insQueryP1
-
-extractConflictCtx :: (MonadError QErr m) => ConflictClauseP1 -> m ConflictCtx
-extractConflictCtx cp =
-  case cp of
-    (CP1DoNothing mConflictTar) -> do
-      mConstraintName <- mapM extractConstraintName mConflictTar
-      return $ CCDoNothing mConstraintName
-    (CP1Update conflictTar inpCols preSet filtr) -> do
-      constraintName <- extractConstraintName conflictTar
-      return $ CCUpdate constraintName inpCols preSet filtr
-  where
-    extractConstraintName (CTConstraint cn) = return cn
-    extractConstraintName _ = throw400 NotSupported
-      "\"constraint_on\" not supported for non admin insert. use \"constraint\" instead"
-
-setConflictCtx :: Maybe ConflictCtx -> Q.TxE QErr ()
-setConflictCtx conflictCtxM = do
-  let t = maybe "null" conflictCtxToJSON conflictCtxM
-      setVal = toSQL $ S.SELit t
-      setVar = "SET LOCAL hasura.conflict_clause = "
-      q = Q.fromBuilder $ setVar <> setVal
-  Q.unitQE defaultTxErrorHandler q () False
-  where
-    conflictCtxToJSON (CCDoNothing constrM) =
-        J.encodeToStrictText $ InsertTxConflictCtx CAIgnore constrM Nothing
-    conflictCtxToJSON (CCUpdate constr updCols preSet filtr) =
-        J.encodeToStrictText $ InsertTxConflictCtx CAUpdate (Just constr) $
-        Just $ toSQLTxt (S.buildUpsertSetExp updCols preSet)
-               <> " " <> toSQLTxt (S.WhereFrag filtr)
+-- | Create an expression which will fail with a check constraint violation error
+-- if the condition is not met on any of the inserted rows.
+--
+-- The resulting SQL will look something like this:
+--
+-- > INSERT INTO 
+-- >   ...
+-- > RETURNING 
+-- >   *, 
+-- >   CASE WHEN {cond} 
+-- >     THEN NULL 
+-- >     ELSE hdb_catalog.check_violation('insert check constraint failed') 
+-- >   END
+insertCheckExpr
+  :: S.BoolExp
+  -> S.Extractor
+insertCheckExpr condExpr = 
+  S.Extractor
+    (S.SECond condExpr S.SENull
+      (S.SEFunction 
+        (S.FunctionExp 
+          (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation")) 
+          (S.FunctionArgs [S.SELit "insert check constraint failed"] mempty)
+          Nothing)
+      ))
+    Nothing
 
 runInsert
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
@@ -295,6 +288,5 @@ runInsert
   -> m EncJSON
 runInsert q = do
   res <- convInsQ q
-  role <- userRole <$> askUserInfo
   strfyNum <- stringifyNum <$> askSQLGenCtx
-  liftTx $ bool (nonAdminInsert strfyNum res) (insertP2 strfyNum res) $ isAdmin role
+  liftTx $ insertP2 strfyNum res
