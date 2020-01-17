@@ -28,6 +28,7 @@ Get started from scratch
   host the Hasura GraphQL engine and Postgres on Heroku's free tier.
 - :doc:`Using Docker <docker-simple>`: Run a **local development** setup that sets up both the Hasura GraphQL
   engine and Postgres using Docker.
+- :doc:`Using Nhost <nhost-simple>`: Launch apps quickly with authentication and storage included on top of the Hasura GraphQL engine and Postgres.
 
 Get started using an existing database
 --------------------------------------
@@ -50,7 +51,7 @@ Get started using an existing database
 
    Heroku quickstart <heroku-simple>
    Docker quickstart <docker-simple>
+   Nhost quickstart <nhost-simple>
    Using an existing database <using-existing-database>
    first-graphql-query
    first-event-trigger
-
