@@ -1,5 +1,6 @@
 module Hasura.RQL.Types.Permission
        ( RoleName(..)
+       , roleNameToTxt
 
        , SessVar
        , SessVarVal
@@ -11,9 +12,7 @@ module Hasura.RQL.Types.Permission
        , getVarVal
        , roleFromVars
 
-       , UserInfo
-       , userRole
-       , userVars
+       , UserInfo(..)
        , mkUserInfo
        , userInfoToList
        , adminUserInfo
@@ -24,8 +23,12 @@ module Hasura.RQL.Types.Permission
        , PermId(..)
        ) where
 
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
-import           Hasura.Server.Utils        (adminSecretHeader, deprecatedAccessKeyHeader, userRoleHeader)
+import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
+                                             unNonEmptyText)
+import           Hasura.Server.Utils        (adminSecretHeader, deprecatedAccessKeyHeader,
+                                             userRoleHeader)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query          as Q
@@ -40,15 +43,18 @@ import qualified Data.Text                  as T
 import qualified PostgreSQL.Binary.Decoding as PD
 
 newtype RoleName
-  = RoleName {getRoleTxt :: T.Text}
-  deriving ( Show, Eq, Hashable, FromJSONKey, ToJSONKey, FromJSON
-           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift)
+  = RoleName {getRoleTxt :: NonEmptyText}
+  deriving ( Show, Eq, Ord, Hashable, FromJSONKey, ToJSONKey, FromJSON
+           , ToJSON, Q.FromCol, Q.ToPrepArg, Lift, Generic, Arbitrary, NFData, Cacheable )
 
 instance DQuote RoleName where
-  dquoteTxt (RoleName r) = r
+  dquoteTxt = roleNameToTxt
+
+roleNameToTxt :: RoleName -> Text
+roleNameToTxt = unNonEmptyText . getRoleTxt
 
 adminRole :: RoleName
-adminRole = RoleName "admin"
+adminRole = RoleName adminText
 
 isAdmin :: RoleName -> Bool
 isAdmin = (adminRole ==)
@@ -63,9 +69,10 @@ newtype UserVars
 isUserVar :: T.Text -> Bool
 isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
 
+-- returns Nothing if x-hasura-role is an empty string
 roleFromVars :: UserVars -> Maybe RoleName
-roleFromVars =
-  fmap RoleName . getVarVal userRoleHeader
+roleFromVars uv =
+  getVarVal userRoleHeader uv >>= fmap RoleName . mkNonEmptyText
 
 getVarVal :: SessVar -> UserVars -> Maybe SessVarVal
 getVarVal k =
@@ -90,7 +97,7 @@ data UserInfo
 
 mkUserInfo :: RoleName -> UserVars -> UserInfo
 mkUserInfo rn (UserVars v) =
-  UserInfo rn $ UserVars $ Map.insert userRoleHeader (getRoleTxt rn) $
+  UserInfo rn $ UserVars $ Map.insert userRoleHeader (roleNameToTxt rn) $
   foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
 
 instance Hashable UserInfo
@@ -102,7 +109,7 @@ instance Hashable UserInfo
 userInfoToList :: UserInfo -> [(Text, Text)]
 userInfoToList userInfo =
   let vars = Map.toList $ unUserVars . userVars $ userInfo
-      rn = getRoleTxt . userRole $ userInfo
+      rn = roleNameToTxt . userRole $ userInfo
   in (userRoleHeader, rn) : vars
 
 adminUserInfo :: UserInfo
@@ -114,7 +121,9 @@ data PermType
   | PTSelect
   | PTUpdate
   | PTDelete
-  deriving (Eq, Lift)
+  deriving (Eq, Lift, Generic)
+instance NFData PermType
+instance Cacheable PermType
 
 instance Q.FromCol PermType where
   fromCol bs = flip Q.fromColHelper bs $ PD.enum $ \case
@@ -162,7 +171,7 @@ instance Show PermId where
     show $ mconcat
     [ getTableTxt tn
     , "."
-    , getRoleTxt rn
+    , roleNameToTxt rn
     , "."
     , T.pack $ show pType
     ]

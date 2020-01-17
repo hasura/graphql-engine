@@ -6,7 +6,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory'
 
 const httpLink = new HttpLink({
   // You should use an absolute URL here
-  uri: 'https://myapp.herokuapp.com/v1alpha1/graphql'
+  uri: 'https://myapp.herokuapp.com/v1/graphql'
 })
 
 // Create the apollo client

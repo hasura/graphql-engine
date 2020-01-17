@@ -10,6 +10,10 @@ from webserver import RequestHandler, WebServer, MkHandlers, Response
 
 from enum import Enum
 
+import time
+
+HGE_URLS=[]
+
 def mkJSONResp(graphql_result):
     return Response(HTTPStatus.OK, graphql_result.to_dict(),
                     {'Content-Type': 'application/json'})
@@ -25,7 +29,13 @@ class HelloWorldHandler(RequestHandler):
 class Hello(graphene.ObjectType):
     hello = graphene.String(arg=graphene.String(default_value="world"))
 
+    delayedHello = graphene.String(arg=graphene.String(default_value="world"))
+
     def resolve_hello(self, info, arg):
+        return "Hello " + arg
+
+    def resolve_delayedHello(self, info, arg):
+        time.sleep(10)
         return "Hello " + arg
 
 hello_schema = graphene.Schema(query=Hello, subscription=Hello)
@@ -169,7 +179,30 @@ class PersonGraphQL(RequestHandler):
         res = person_schema.execute(req.json['query'])
         return mkJSONResp(res)
 
-#GraphQL server with interfaces
+# GraphQL server that returns Set-Cookie response header
+class SampleAuth(graphene.ObjectType):
+    hello = graphene.String(arg=graphene.String(default_value="world"))
+
+    def resolve_hello(self, info, arg):
+        return "Hello " + arg
+
+sample_auth_schema = graphene.Schema(query=SampleAuth,
+                                     subscription=SampleAuth)
+
+class SampleAuthGraphQL(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = sample_auth_schema.execute(request.json['query'])
+        resp = mkJSONResp(res)
+        resp.headers['Set-Cookie'] = 'abcd'
+        resp.headers['Custom-Header'] = 'custom-value'
+        return resp
+
+# GraphQL server with interfaces
 
 class Character(graphene.Interface):
     id = graphene.ID(required=True)
@@ -567,16 +600,48 @@ class EchoGraphQL(RequestHandler):
         if not req.json:
             return Response(HTTPStatus.BAD_REQUEST)
         res = echo_schema.execute(req.json['query'])
-        respDict = res.to_dict()
-        typesList = respDict.get('data',{}).get('__schema',{}).get('types',None)
+        resp_dict = res.to_dict()
+        types_list = resp_dict.get('data',{}).get('__schema',{}).get('types', None)
         #Hack around enum default_value serialization issue: https://github.com/graphql-python/graphql-core/issues/166
-        if typesList is not None:
-            for t in filter(lambda ty: ty['name'] == 'EchoQuery', typesList):
+        if types_list is not None:
+            for t in filter(lambda ty: ty['name'] == 'EchoQuery', types_list):
                 for f in filter(lambda fld: fld['name'] == 'echo', t['fields']):
                     for a in filter(lambda arg: arg['name'] == 'enumInput', f['args']):
                         a['defaultValue'] = 'RED'
-        return Response(HTTPStatus.OK, respDict,
+        return Response(HTTPStatus.OK, resp_dict,
                     {'Content-Type': 'application/json'})
+
+
+class HeaderTest(graphene.ObjectType):
+    wassup = graphene.String(arg=graphene.String(default_value='world'))
+
+    def resolve_wassup(self, info, arg):
+        headers = info.context
+        hosts = list(map(lambda o: urlparse(o).netloc, HGE_URLS))
+        if not (headers.get_all('x-hasura-test') == ['abcd'] and
+                headers.get_all('x-hasura-role') == ['user'] and
+                headers.get_all('x-hasura-user-id') == ['abcd1234'] and
+                headers.get_all('content-type') == ['application/json'] and
+                headers.get_all('Authorization') == ['Bearer abcdef'] and
+                len(headers.get_all('x-forwarded-host')) == 1 and
+                all(host in headers.get_all('x-forwarded-host') for host in hosts) and
+                headers.get_all('x-forwarded-user-agent') == ['python-requests/2.22.0']):
+            raise Exception('headers dont match. Received: ' + str(headers))
+
+        return "Hello " + arg
+
+header_test_schema = graphene.Schema(query=HeaderTest)
+
+class HeaderTestGraphQL(RequestHandler):
+    def get(self, request):
+        return Response(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    def post(self, request):
+        if not request.json:
+            return Response(HTTPStatus.BAD_REQUEST)
+        res = header_test_schema.execute(request.json['query'],
+                                         context=request.headers)
+        return mkJSONResp(res)
 
 handlers = MkHandlers({
     '/hello': HelloWorldHandler,
@@ -597,7 +662,9 @@ handlers = MkHandlers({
     '/union-graphql-err-no-member-types' : UnionGraphQLSchemaErrNoMemberTypes,
     '/union-graphql-err-wrapped-type' : UnionGraphQLSchemaErrWrappedType,
     '/default-value-echo-graphql' : EchoGraphQL,
-    '/person-graphql': PersonGraphQL
+    '/person-graphql': PersonGraphQL,
+    '/header-graphql': HeaderTestGraphQL,
+    '/auth-graphql': SampleAuthGraphQL,
 })
 
 
@@ -607,6 +674,10 @@ def create_server(host='127.0.0.1', port=5000):
 def stop_server(server):
     server.shutdown()
     server.server_close()
+
+def set_hge_urls(hge_urls = []):
+    global HGE_URLS
+    HGE_URLS=hge_urls
 
 if __name__ == '__main__':
     s = create_server(host='0.0.0.0')

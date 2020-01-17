@@ -4,7 +4,7 @@ import VueApollo from 'vue-apollo'
 import fetch from 'node-fetch'
 import { createHttpLink } from 'apollo-link-http'
 
-const httpLink = createHttpLink({ uri: 'https://myapp.herokuapp.com/v1alpha1/graphql', fetch: fetch })
+const httpLink = createHttpLink({ uri: 'https://myapp.herokuapp.com/v1/graphql', fetch: fetch })
 
 // Create the apollo client
 const apolloClient = new ApolloClient({

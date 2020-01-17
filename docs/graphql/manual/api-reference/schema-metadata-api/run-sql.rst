@@ -1,3 +1,7 @@
+.. meta::
+   :description: Execute SQL with the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, run_sql
+
 Schema/Metadata API Reference: Run SQL
 ======================================
 
@@ -20,11 +24,11 @@ returned.
 
   This is an admin-only query, i.e. the query can only be executed by a
   request having ``X-Hasura-Role: admin``. This can be set by passing
-  ``X-Hasura-Admin-Secret`` or by setting the right role in Webhook/JWT
+  ``X-Hasura-Admin-Secret`` or by setting the right role in webhook/JWT
   authorization mode.
 
   This is deliberate as it is hard to enforce any sort of permissions on arbitrary SQL. If
-  you find yourselves in the need of using ``run_sql`` to run custom DML queries,
+  you find yourself in the need of using ``run_sql`` to run custom DML queries,
   consider creating a view. You can now define permissions on that particular view
   for various roles.
 
@@ -50,12 +54,12 @@ An example:
    }
 
 While ``run_sql`` lets you run any SQL, it tries to ensure that the Hasura GraphQL engine's
-state (relationships, permissions etc.) is consistent. i.e., you
+state (relationships, permissions etc.) is consistent i.e. you
 cannot drop a column on which any metadata is dependent on (say a permission or
 a relationship). The effects, however, can be cascaded.
 
-For example, if we were to drop 'bio' column from the article table (let's say
-the column is used in some permission), you would see an error. 
+Example: If we were to drop the 'bio' column from the author table (let's say
+the column is used in some permission), you would see an error.
 
 .. code-block:: http
 
@@ -108,19 +112,78 @@ We can however, cascade these changes.
 
 With the above query, the dependent permission is also dropped.
 
+Example: If we were to drop a foreign key constraint from the article table
+(let's say the column involved in the foreign key is used to define a relationship),
+you would see an error.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type": "run_sql",
+       "args": {
+           "sql": "ALTER TABLE article DROP CONSTRAINT article_author_id_fkey"
+       }
+   }
+
+.. code-block:: http
+
+   HTTP/1.1 400 BAD REQUEST
+   Content-Type: application/json
+
+   {
+       "path": "$.args",
+       "error": "cannot drop due to the following dependent objects : constraint article.article_author_id_fkey"
+   }
+
+We can however, cascade these changes.
+
+.. code-block:: http
+   :emphasize-lines: 9
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type": "run_sql",
+       "args": {
+           "sql": "ALTER TABLE article DROP CONSTRAINT article_author_id_fkey",
+           "cascade" : true
+       }
+   }
+
+.. code-block:: http
+
+   HTTP/1.1 200 OK
+   Content-Type: application/json
+
+   {
+       "result_type": "CommandOk"
+   }
+
+With the above query, the dependent permission is also dropped.
+
 In general, the SQL operations that will affect Hasura metadata are:
 
 1. Dropping columns
 2. Dropping tables
-3. Altering types of columns
+3. Dropping foreign keys
+4. Altering types of columns
+5. Dropping SQL functions
+6. Overloading SQL functions
 
-In case of 1 and 2, the dependent objects (if any) can be dropped using
-``cascade``. However, when altering type, if any objects are affected, the
-change cannot be cascaded. So, those dependent objects have to be manually
-dropped before executing the SQL statement.
+In case of 1, 2 and 3 the dependent objects (if any) can be dropped using ``cascade``.
+However, when altering type of columns, if any objects are affected, the change
+cannot be cascaded. So, those dependent objects have to be manually dropped before
+executing the SQL statement. Dropping SQL functions will cascade the functions in
+metadata even without using ``cascade`` since no other objects depend on them.
+Overloading tracked SQL functions is not allowed.
 
-.. note::
-   Currently, renames of tables and columns are not supported in the SQL statement.
+Set ``check_metadata_consistency`` field to ``false`` to force the server to not consider metadata dependencies.
 
 .. _run_sql_syntax:
 
@@ -142,6 +205,14 @@ Args syntax
      - false
      - Boolean
      - When set to ``true``, the effect (if possible) is cascaded to any hasuradb dependent objects (relationships, permissions, templates).
+   * - check_metadata_consistency
+     - false
+     - Boolean
+     - When set to ``false``, the sql is executed without checking metadata dependencies.
+   * - read_only
+     - false
+     - Boolean
+     - When set to ``true``, the query will be run in ``READ ONLY`` transaction access mode which means only ``select`` queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant.
 
 Response
 ^^^^^^^^
@@ -220,7 +291,8 @@ A query to create a table:
    {
      "type":"run_sql",
      "args": {
-       "sql": "create table item ( id serial,  name text,  category text,  primary key (id))"
+       "sql": "create table item ( id serial,  name text,  category text,  primary key (id))",
+       "check_metadata_consistency": false
      }
    }
 

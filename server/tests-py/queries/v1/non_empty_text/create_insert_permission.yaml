@@ -1,0 +1,21 @@
+description: Create permission with role ""
+url: /v1/query
+status: 400
+response:
+  path: $.role
+  error: >-
+    empty string not allowed
+  code: parse-failed
+query:
+  type: create_insert_permission
+  args:
+    table: article
+    role: ""
+    permission:
+      check:
+        author_id: X-HASURA-USER-ID
+        "$or":
+        - category: editorial
+          is_reviewed: false
+        - category:
+            "$neq": editorial

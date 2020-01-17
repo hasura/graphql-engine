@@ -3,17 +3,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import QueryBuilderJson from '../../../../Common/QueryBuilderJson/QueryBuilderJson';
+
 import {
   addToPrefix,
-  getRefTable,
-  getTableColumnNames,
-  getTableRelationshipNames,
-  getTableRelationship,
-  getTableDef,
-  getTableSchema,
-  getColumnType,
-  isJsonString,
-  getAllJsonPaths,
   isArrayBoolOperator,
   isBoolOperator,
   isArrayColumnOperator,
@@ -23,23 +16,47 @@ import {
   boolOperators,
   PGTypes,
   PGTypesOperators,
+  existOperators,
+  isExistOperator,
+  TABLE_KEY,
+  WHERE_KEY,
 } from './utils';
 
-import QueryBuilderJson from '../../../../Common/QueryBuilderJson/QueryBuilderJson';
+import {
+  findTable,
+  generateTableDef,
+  getSchemaName,
+  getTrackedTables,
+  getColumnType,
+  getTableColumn,
+  getRelationshipRefTable,
+  getTableColumnNames,
+  getTableRelationshipNames,
+  getTableRelationship,
+  getTableSchema,
+  getQualifiedTableDef,
+  getSchemaTableNames,
+} from '../../../../Common/utils/pgUtils';
+
+import {
+  isJsonString,
+  getAllJsonPaths,
+  isObject,
+} from '../../../../Common/utils/jsUtils';
 
 class PermissionBuilder extends React.Component {
   static propTypes = {
     allTableSchemas: PropTypes.array.isRequired,
+    schemaList: PropTypes.array.isRequired,
     dispatch: PropTypes.func.isRequired,
     dispatchFuncSetFilter: PropTypes.func.isRequired,
-    dispatchFuncAddTableSchemas: PropTypes.func.isRequired,
+    loadSchemasFunc: PropTypes.func.isRequired,
     filter: PropTypes.string,
-    tableName: PropTypes.string,
-    schemaName: PropTypes.string,
+    tableDef: PropTypes.object.isRequired,
   };
 
   componentDidMount() {
-    this.fetchMissingSchemas();
+    this.loadMissingSchemas();
   }
 
   componentDidUpdate(prevProps) {
@@ -49,50 +66,79 @@ class PermissionBuilder extends React.Component {
       this.props.filter !== prevProps.filter ||
       this.props.allTableSchemas.length !== prevProps.allTableSchemas.length
     ) {
-      this.fetchMissingSchemas();
+      this.loadMissingSchemas();
     }
   }
 
-  fetchMissingSchemas() {
-    const {
-      dispatch,
-      tableName,
-      schemaName,
-      dispatchFuncAddTableSchemas,
-      filter,
-    } = this.props;
+  loadMissingSchemas(
+    tableDef = this.props.tableDef,
+    filter = this.props.filter
+  ) {
+    const { loadSchemasFunc } = this.props;
 
     const findMissingSchemas = (path, currTable) => {
       let _missingSchemas = [];
+
+      let value;
+      if (isObject(path)) {
+        value = Object.values(path)[0];
+        path = Object.keys(path)[0];
+      }
+
+      const getNewPath = newPath => {
+        return value ? { [newPath]: value } : newPath;
+      };
 
       const pathSplit = path.split('.');
 
       const operator = pathSplit[0];
 
       if (isArrayBoolOperator(operator)) {
-        const newPath = pathSplit.slice(2).join('.');
+        const newPath = getNewPath(pathSplit.slice(2).join('.'));
         _missingSchemas = findMissingSchemas(newPath, currTable);
       } else if (isBoolOperator(operator)) {
-        const newPath = pathSplit.slice(1).join('.');
+        const newPath = getNewPath(pathSplit.slice(1).join('.'));
         _missingSchemas = findMissingSchemas(newPath, currTable);
+      } else if (isExistOperator(operator)) {
+        const existTableDef = getQualifiedTableDef(value[TABLE_KEY]);
+        const existTableSchema = existTableDef.schema;
+
+        const existWhere = value[WHERE_KEY];
+
+        if (existTableSchema) {
+          const { allTableSchemas } = this.props;
+
+          const allSchemaNames = allTableSchemas.map(t => getTableSchema(t));
+
+          if (!allSchemaNames.includes(existTableSchema)) {
+            _missingSchemas.push(existTableSchema);
+          }
+        }
+
+        this.loadMissingSchemas(existTableDef, JSON.stringify(existWhere));
       } else if (isColumnOperator(operator)) {
         // no missing schemas
       } else {
         const { allTableSchemas } = this.props;
 
-        const tableSchema = getTableSchema(allTableSchemas, currTable);
-        const tableRelationships = getTableRelationshipNames(tableSchema);
+        let tableRelationshipNames = [];
 
-        if (tableRelationships.includes(operator)) {
-          const rel = getTableRelationship(tableSchema, operator);
-          const refTable = getRefTable(rel, tableSchema);
+        const tableSchema = findTable(allTableSchemas, currTable);
 
-          const refTableSchema = getTableSchema(allTableSchemas, refTable);
+        if (tableSchema) {
+          tableRelationshipNames = getTableRelationshipNames(tableSchema);
+        }
+
+        if (tableRelationshipNames.includes(operator)) {
+          const relationship = getTableRelationship(tableSchema, operator);
+          const refTable = getRelationshipRefTable(tableSchema, relationship);
+
+          const refTableSchema = findTable(allTableSchemas, refTable);
           if (!refTableSchema) {
             _missingSchemas.push(refTable.schema);
           }
 
-          const newPath = pathSplit.slice(1).join('.');
+          const newPath = getNewPath(pathSplit.slice(1).join('.'));
           _missingSchemas.push(...findMissingSchemas(newPath, refTable));
         } else {
           // no missing schemas
@@ -102,21 +148,17 @@ class PermissionBuilder extends React.Component {
       return _missingSchemas;
     };
 
-    const table = getTableDef(tableName, schemaName);
-
     const missingSchemas = [];
-    const paths = getAllJsonPaths(JSON.parse(filter || '{}'));
+    const paths = getAllJsonPaths(JSON.parse(filter || '{}'), existOperators);
 
-    for (let i = 0; i < paths.length; i++) {
-      const path = paths[i];
-
-      const subMissingSchemas = findMissingSchemas(path, table);
+    paths.forEach(path => {
+      const subMissingSchemas = findMissingSchemas(path, tableDef);
 
       missingSchemas.push(...subMissingSchemas);
-    }
+    });
 
     if (missingSchemas.length > 0) {
-      dispatch(dispatchFuncAddTableSchemas(missingSchemas));
+      loadSchemasFunc(missingSchemas);
     }
   }
 
@@ -135,8 +177,8 @@ class PermissionBuilder extends React.Component {
 
     /********************************/
 
-    const getFilter = (conditions, prefix, value = '') => {
-      let _where = {};
+    const getFilter = (defaultSchema, conditions, prefix, value = '') => {
+      let _boolExp = {};
 
       const getArrayBoolOperatorFilter = (
         operator,
@@ -157,6 +199,7 @@ class PermissionBuilder extends React.Component {
 
           _filter[operator] = opConditions;
           _filter[operator][position] = getFilter(
+            defaultSchema,
             opConditions[position],
             newPrefix,
             opValue
@@ -181,7 +224,12 @@ class PermissionBuilder extends React.Component {
         if (isLast) {
           _filter[operator] = {};
         } else {
-          _filter[operator] = getFilter(opConditions, opPrefix, opValue);
+          _filter[operator] = getFilter(
+            defaultSchema,
+            opConditions,
+            opPrefix,
+            opValue
+          );
         }
 
         return _filter;
@@ -221,6 +269,39 @@ class PermissionBuilder extends React.Component {
         return _filter;
       };
 
+      const getExistsOperatorFilter = (
+        operator,
+        opValue,
+        opConditions,
+        opPrefix,
+        isLast
+      ) => {
+        const _filter = {
+          [operator]: opConditions,
+        };
+
+        if (isLast) {
+          _filter[operator] = {
+            [TABLE_KEY]: generateTableDef('', defaultSchema),
+            [WHERE_KEY]: {},
+          };
+        } else if (opPrefix === TABLE_KEY) {
+          _filter[operator] = {
+            [TABLE_KEY]: opValue,
+            [WHERE_KEY]: {},
+          };
+        } else if (opPrefix === WHERE_KEY) {
+          _filter[operator][WHERE_KEY] = getFilter(
+            defaultSchema,
+            opConditions[opPrefix],
+            opValue.prefix,
+            opValue.value
+          );
+        }
+
+        return _filter;
+      };
+
       const getColumnFilter = (
         operator,
         opValue,
@@ -233,7 +314,12 @@ class PermissionBuilder extends React.Component {
         if (isLast) {
           _filter[operator] = {};
         } else {
-          _filter[operator] = getFilter(opConditions, opPrefix, opValue);
+          _filter[operator] = getFilter(
+            defaultSchema,
+            opConditions,
+            opPrefix,
+            opValue
+          );
         }
 
         return _filter;
@@ -249,9 +335,9 @@ class PermissionBuilder extends React.Component {
       const opConditions = isLast ? null : conditions[operator];
 
       if (operator === '') {
-        // blank where
+        // blank bool exp
       } else if (isArrayBoolOperator(operator)) {
-        _where = getArrayBoolOperatorFilter(
+        _boolExp = getArrayBoolOperatorFilter(
           operator,
           value,
           opConditions,
@@ -259,7 +345,7 @@ class PermissionBuilder extends React.Component {
           isLast
         );
       } else if (isBoolOperator(operator)) {
-        _where = getBoolOperatorFilter(
+        _boolExp = getBoolOperatorFilter(
           operator,
           value,
           opConditions,
@@ -267,7 +353,7 @@ class PermissionBuilder extends React.Component {
           isLast
         );
       } else if (isArrayColumnOperator(operator)) {
-        _where = getArrayColumnOperatorFilter(
+        _boolExp = getArrayColumnOperatorFilter(
           operator,
           value,
           opConditions,
@@ -275,9 +361,17 @@ class PermissionBuilder extends React.Component {
           isLast
         );
       } else if (isColumnOperator(operator)) {
-        _where = getColumnOperatorFilter(operator, value);
+        _boolExp = getColumnOperatorFilter(operator, value);
+      } else if (isExistOperator(operator)) {
+        _boolExp = getExistsOperatorFilter(
+          operator,
+          value,
+          opConditions,
+          newPrefix,
+          isLast
+        );
       } else {
-        _where = getColumnFilter(
+        _boolExp = getColumnFilter(
           operator,
           value,
           opConditions,
@@ -286,13 +380,14 @@ class PermissionBuilder extends React.Component {
         );
       }
 
-      return _where;
+      return _boolExp;
     };
 
     const _dispatchFunc = data => {
-      const { dispatch, filter, dispatchFuncSetFilter } = this.props;
+      const { dispatch, filter, dispatchFuncSetFilter, tableDef } = this.props;
 
       const newFilter = getFilter(
+        tableDef.schema,
         JSON.parse(filter || '{}'),
         data.prefix,
         data.value
@@ -406,7 +501,14 @@ class PermissionBuilder extends React.Component {
 
     /********************************/
 
-    const renderValue = (dispatchFunc, value, prefix, valueType) => {
+    const renderValue = (
+      dispatchFunc,
+      value,
+      prefix,
+      valueType,
+      tableColumns,
+      showSuggestion = true
+    ) => {
       const dispatchInput = val => {
         let _val = val;
 
@@ -447,6 +549,10 @@ class PermissionBuilder extends React.Component {
       } else if (PGTypes.json.includes(valueType)) {
         input = inputBox();
         suggestion = jsonSuggestion();
+      } else if (valueType === 'column') {
+        input = wrapDoubleQuotes(
+          renderSelect(dispatchInput, value, tableColumns)
+        );
       } else {
         input = wrapDoubleQuotes(inputBox());
         suggestion = sessionVariableSuggestion();
@@ -454,34 +560,65 @@ class PermissionBuilder extends React.Component {
 
       return (
         <span>
-          {input} {suggestion}
+          {input} {showSuggestion ? suggestion : ''}
         </span>
       );
     };
 
-    const renderValueArray = (dispatchFunc, values, prefix, valueType) => {
-      const _inputArray = [];
+    const renderValueArray = (
+      dispatchFunc,
+      values,
+      prefix,
+      valueType,
+      tableColumns
+    ) => {
+      const dispatchInput = val => {
+        dispatchFunc({ prefix: prefix, value: val });
+      };
+
+      const sessionVariableSuggestion = () => {
+        return renderSuggestion(dispatchInput, 'X-Hasura-Allowed-Ids');
+      };
+
+      const inputArray = [];
+
       (values || []).concat(['']).map((val, i) => {
         const input = renderValue(
           dispatchFunc,
           val,
           addToPrefix(prefix, i),
-          valueType
+          valueType,
+          tableColumns,
+          false
         );
-        _inputArray.push(input);
+        inputArray.push(input);
       });
 
       const unselectedElements = [(values || []).length];
 
-      return (
+      const _inputArray = (
         <QueryBuilderJson
-          element={_inputArray}
+          element={inputArray}
           unselectedElements={unselectedElements}
         />
       );
+
+      const _suggestion = sessionVariableSuggestion(dispatchInput);
+
+      return (
+        <span>
+          {_inputArray} {_suggestion}
+        </span>
+      );
     };
 
-    const renderOperatorExp = (dispatchFunc, expression, prefix, valueType) => {
+    const renderOperatorExp = (
+      dispatchFunc,
+      expression,
+      prefix,
+      valueType,
+      tableColumns
+    ) => {
       const dispatchColumnOperatorSelect = val => {
         dispatchFunc({ prefix: val });
       };
@@ -509,19 +646,24 @@ class PermissionBuilder extends React.Component {
       if (operator) {
         const operatorInputType = getOperatorInputType(operator) || valueType;
 
-        if (isArrayColumnOperator(operator)) {
+        if (
+          isArrayColumnOperator(operator) &&
+          operationValue instanceof Array
+        ) {
           _valueInput = renderValueArray(
             dispatchFunc,
             operationValue,
             addToPrefix(prefix, operator),
-            operatorInputType
+            operatorInputType,
+            tableColumns
           );
         } else {
           _valueInput = renderValue(
             dispatchFunc,
             operationValue,
             addToPrefix(prefix, operator),
-            operatorInputType
+            operatorInputType,
+            tableColumns
           );
         }
       }
@@ -543,50 +685,157 @@ class PermissionBuilder extends React.Component {
 
     const renderColumnExp = (
       dispatchFunc,
-      column,
+      columnName,
       expression,
-      table,
+      tableDef,
       tableSchemas,
+      schemaList,
       prefix
     ) => {
-      let tableRelationships = [];
+      let tableColumnNames = [];
+      let tableRelationshipNames = [];
       let tableSchema;
-      if (table) {
-        tableSchema = getTableSchema(tableSchemas, table);
-        tableRelationships = getTableRelationshipNames(tableSchema);
+      if (tableDef) {
+        tableSchema = findTable(tableSchemas, tableDef);
+        if (tableSchema) {
+          tableColumnNames = getTableColumnNames(tableSchema);
+          tableRelationshipNames = getTableRelationshipNames(tableSchema);
+        }
       }
 
       let _columnExp = '';
-      if (tableRelationships.includes(column)) {
-        const rel = getTableRelationship(tableSchema, column);
-        const refTable = getRefTable(rel, tableSchema);
+      if (tableRelationshipNames.includes(columnName)) {
+        const relationship = getTableRelationship(tableSchema, columnName);
+        const refTable = getRelationshipRefTable(tableSchema, relationship);
 
         _columnExp = renderBoolExp(
           dispatchFunc,
           expression,
           refTable,
           tableSchemas,
+          schemaList,
           prefix
-        ); // eslint-disable-line no-use-before-define
+        );
       } else {
-        const columnType = getColumnType(column, tableSchema);
+        let columnType = '';
+        if (tableSchema && columnName) {
+          const column = getTableColumn(tableSchema, columnName);
+          columnType = getColumnType(column);
+        }
 
         _columnExp = renderOperatorExp(
           dispatchFunc,
           expression,
           prefix,
-          columnType
+          columnType,
+          tableColumnNames
         );
       }
 
       return _columnExp;
     };
 
+    const renderTableSelect = (
+      dispatchFunc,
+      tableDef,
+      tableSchemas,
+      schemaList,
+      defaultSchema
+    ) => {
+      const selectedSchema = tableDef ? tableDef.schema : defaultSchema;
+      const selectedTable = tableDef ? tableDef.name : '';
+
+      const schemaSelectDispatchFunc = val => {
+        dispatchFunc(generateTableDef('', val));
+      };
+
+      const tableSelectDispatchFunc = val => {
+        dispatchFunc(generateTableDef(val, selectedSchema));
+      };
+
+      const tableNames = getSchemaTableNames(tableSchemas, selectedSchema);
+
+      const schemaNames = schemaList.map(s => getSchemaName(s));
+
+      const schemaSelect = wrapDoubleQuotes(
+        renderSelect(schemaSelectDispatchFunc, selectedSchema, schemaNames)
+      );
+
+      const tableSelect = wrapDoubleQuotes(
+        renderSelect(tableSelectDispatchFunc, selectedTable, tableNames)
+      );
+
+      const _tableExp = [
+        { key: 'schema', value: schemaSelect },
+        { key: 'table', value: tableSelect },
+      ];
+
+      return <QueryBuilderJson element={_tableExp} />;
+    };
+
+    const renderExistsExp = (
+      dispatchFunc,
+      operation,
+      expression,
+      tableDef,
+      tableSchemas,
+      schemaList,
+      prefix
+    ) => {
+      const dispatchTableSelect = val => {
+        dispatchFunc({ prefix: addToPrefix(prefix, TABLE_KEY), value: val });
+      };
+
+      const dispatchWhereOperatorSelect = val => {
+        dispatchFunc({ prefix: addToPrefix(prefix, WHERE_KEY), value: val });
+      };
+
+      const existsOpTable = getQualifiedTableDef(expression[TABLE_KEY]);
+      const existsOpWhere = expression[WHERE_KEY];
+
+      const tableSelect = renderTableSelect(
+        dispatchTableSelect,
+        existsOpTable,
+        tableSchemas,
+        schemaList,
+        tableDef.schema
+      );
+
+      let whereSelect = {};
+      if (existsOpTable) {
+        whereSelect = renderBoolExp(
+          dispatchWhereOperatorSelect,
+          existsOpWhere,
+          existsOpTable,
+          tableSchemas,
+          schemaList
+        );
+      }
+
+      const _existsArgsJsonObject = {
+        [TABLE_KEY]: tableSelect,
+        [WHERE_KEY]: whereSelect,
+      };
+
+      const unselectedElements = [];
+      if (!existsOpTable.name) {
+        unselectedElements.push(WHERE_KEY);
+      }
+
+      return (
+        <QueryBuilderJson
+          element={_existsArgsJsonObject}
+          unselectedElements={unselectedElements}
+        />
+      );
+    };
+
     const renderBoolExpArray = (
       dispatchFunc,
       expressions,
-      table,
+      tableDef,
       tableSchemas,
+      schemaList,
       prefix
     ) => {
       const _boolExpArray = [];
@@ -595,10 +844,11 @@ class PermissionBuilder extends React.Component {
         const _boolExp = renderBoolExp(
           dispatchFunc,
           expression,
-          table,
+          tableDef,
           tableSchemas,
+          schemaList,
           addToPrefix(prefix, i)
-        ); // eslint-disable-line no-use-before-define
+        );
         _boolExpArray.push(_boolExp);
       });
 
@@ -615,8 +865,9 @@ class PermissionBuilder extends React.Component {
     const renderBoolExp = (
       dispatchFunc,
       expression,
-      table,
+      tableDef,
       tableSchemas,
+      schemaList,
       prefix = ''
     ) => {
       const dispatchOperationSelect = val => {
@@ -628,19 +879,23 @@ class PermissionBuilder extends React.Component {
         operation = Object.keys(expression)[0];
       }
 
-      let tableColumns = [];
-      let tableRelationships = [];
-      if (table) {
-        const tableSchema = getTableSchema(tableSchemas, table);
-        tableColumns = getTableColumnNames(tableSchema);
-        tableRelationships = getTableRelationshipNames(tableSchema);
+      let tableColumnNames = [];
+      let tableRelationshipNames = [];
+      if (tableDef) {
+        const tableSchema = findTable(tableSchemas, tableDef);
+        if (tableSchema) {
+          tableColumnNames = getTableColumnNames(tableSchema);
+          tableRelationshipNames = getTableRelationshipNames(tableSchema);
+        }
       }
 
-      const columnOptions = tableColumns.concat(tableRelationships);
+      const columnOptions = tableColumnNames.concat(tableRelationshipNames);
 
-      const operatorOptions = columnOptions
+      const operatorOptions = boolOperators
         .concat(['---'])
-        .concat(boolOperators);
+        .concat(existOperators)
+        .concat(['---'])
+        .concat(columnOptions);
 
       const _boolExpKey = renderSelect(
         dispatchOperationSelect,
@@ -657,16 +912,28 @@ class PermissionBuilder extends React.Component {
           _boolExpValue = renderBoolExpArray(
             dispatchFunc,
             expression[operation],
-            table,
+            tableDef,
             tableSchemas,
+            schemaList,
             newPrefix
           );
         } else if (isBoolOperator(operation)) {
           _boolExpValue = renderBoolExp(
             dispatchFunc,
             expression[operation],
-            table,
+            tableDef,
             tableSchemas,
+            schemaList,
+            newPrefix
+          );
+        } else if (isExistOperator(operation)) {
+          _boolExpValue = renderExistsExp(
+            dispatchFunc,
+            operation,
+            expression[operation],
+            tableDef,
+            tableSchemas,
+            schemaList,
             newPrefix
           );
         } else {
@@ -674,8 +941,9 @@ class PermissionBuilder extends React.Component {
             dispatchFunc,
             operation,
             expression[operation],
-            table,
+            tableDef,
             tableSchemas,
+            schemaList,
             newPrefix
           );
         }
@@ -699,15 +967,16 @@ class PermissionBuilder extends React.Component {
     /********************************/
 
     const showPermissionBuilder = () => {
-      const { tableName, schemaName, filter, allTableSchemas } = this.props;
+      const { tableDef, filter, allTableSchemas, schemaList } = this.props;
 
-      const table = getTableDef(tableName, schemaName);
+      const trackedTables = getTrackedTables(allTableSchemas);
 
       return renderBoolExp(
         _dispatchFunc,
         JSON.parse(filter || '{}'),
-        table,
-        allTableSchemas
+        tableDef,
+        trackedTables,
+        schemaList
       );
     };
 

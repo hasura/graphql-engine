@@ -6,9 +6,15 @@ import {
 } from './ModifyActions';
 import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import { showSuccessNotification } from '../Notification';
+import { showSuccessNotification } from '../../Common/Notification';
+import {
+  getUkeyPkeyConfig,
+  getKeyDef,
+} from '../Common/ReusableComponents/utils';
 
 import styles from './ModifyTable.scss';
+
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const PrimaryKeyEditor = ({
   tableSchema,
@@ -39,29 +45,20 @@ const PrimaryKeyEditor = ({
     : '';
 
   // label next to the button when the editor is collapsed
-  let pkConfigText = tablePrimaryKeyColumns.join(', ');
-  if (tablePrimaryKeyColumns.length > 1) {
-    pkConfigText = `( ${pkConfigText} )`;
+  let pkConfigText;
+  if (tableSchema.primary_key) {
+    pkConfigText = getKeyDef(
+      getUkeyPkeyConfig(tablePrimaryKeyColumns),
+      pkConstraintName
+    );
   }
+
   const pkEditorCollapsedLabel = () => (
-    <div>
-      <div className="container-fluid">
-        <div className="row">
-          <h5 className={styles.padd_bottom}>
-            {pkConfigText ? <b> {pkConfigText} </b> : 'No primary key'}
-            &nbsp;
-          </h5>
-        </div>
-      </div>
-    </div>
+    <div>{pkConfigText ? pkConfigText : 'No primary key'}</div>
   );
 
   // label next to the button when the editor is expanded
-  const pkEditorExpandedLabel = () => (
-    <h5 className={styles.padd_bottom}>
-      <b> {pkConfigText && `${pkConfigText}`}</b>
-    </h5>
-  );
+  const pkEditorExpandedLabel = () => <div>{pkConfigText}</div>;
 
   // expanded editor content
   const pkEditorExpanded = () => (
@@ -90,7 +87,7 @@ const PrimaryKeyEditor = ({
   // save
   const onSave = (e, confirmed) => {
     if (pkConstraintName && pkModify.length === 1 && !confirmed) {
-      const isOk = window.confirm(DELETE_PK_WARNING);
+      const isOk = getConfirmation(DELETE_PK_WARNING);
       if (!isOk) {
         setPkEditState();
         return dispatch(showSuccessNotification('No changes'));
@@ -103,15 +100,13 @@ const PrimaryKeyEditor = ({
 
   // remove
   const onRemove = () => {
-    let isOk;
     if (pkConstraintName) {
-      isOk = window.confirm(DELETE_PK_WARNING);
-      if (!isOk) {
-        return dispatch(showSuccessNotification('No changes'));
+      const isOk = getConfirmation(DELETE_PK_WARNING);
+      if (isOk) {
+        dispatch(setPrimaryKeys(['']));
+        onSave(null, true);
       }
     }
-    dispatch(setPrimaryKeys(['']));
-    onSave(null, isOk);
   };
 
   // Toggle button text when the editor is expanded and collapsed

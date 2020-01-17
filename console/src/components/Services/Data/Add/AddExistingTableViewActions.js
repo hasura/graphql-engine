@@ -1,13 +1,18 @@
 import defaultState from './AddExistingTableViewState';
 import _push from '../push';
 import {
-  loadSchema,
-  LOAD_UNTRACKED_RELATIONS,
+  updateSchemaInfo,
   fetchTrackedFunctions,
   makeMigrationCall,
 } from '../DataActions';
-import { showSuccessNotification } from '../Notification';
-import { getAllUnTrackedRelations } from '../TableRelationships/Actions';
+import { showSuccessNotification } from '../../Common/Notification';
+import {
+  getSchemaBaseRoute,
+  getTableBrowseRoute,
+  getTableModifyRoute,
+  getFunctionModifyRoute,
+} from '../../../Common/utils/routesUtils';
+import { checkIfTable } from '../../../Common/utils/pgUtils';
 
 const SET_DEFAULTS = 'AddExistingTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddExistingTable/SET_TABLENAME';
@@ -24,11 +29,12 @@ const addExistingTableSql = () => {
     dispatch(showSuccessNotification('Adding an existing table...'));
     const state = getState().addTable.existingTableView;
     const currentSchema = getState().tables.currentSchema;
+    const tableName = state.tableName.trim();
 
     const requestBodyUp = {
       type: 'add_existing_table_or_view',
       args: {
-        name: state.tableName.trim(),
+        name: tableName,
         schema: currentSchema,
       },
     };
@@ -36,16 +42,13 @@ const addExistingTableSql = () => {
       type: 'untrack_table',
       args: {
         table: {
-          name: state.tableName.trim(),
+          name: tableName,
           schema: currentSchema,
         },
       },
     };
     const migrationName =
-      'add_existing_table_or_view_' +
-      currentSchema +
-      '_' +
-      state.tableName.trim();
+      'add_existing_table_or_view_' + currentSchema + '_' + tableName;
     const upQuery = {
       type: 'bulk',
       args: [requestBodyUp],
@@ -60,32 +63,15 @@ const addExistingTableSql = () => {
     const errorMsg = 'Adding existing table/view failed';
     const customOnSuccess = () => {
       dispatch({ type: REQUEST_SUCCESS });
-      dispatch(loadSchema()).then(() => {
+      dispatch(updateSchemaInfo()).then(() => {
         const newTable = getState().tables.allSchemas.find(
-          t => t.table_name === state.tableName.trim()
+          t => t.table_name === tableName && t.table_schema === currentSchema
         );
-        const isTable = newTable.detail.table_type === 'BASE TABLE';
-        if (isTable) {
-          dispatch(
-            _push(
-              '/schema/' +
-                currentSchema +
-                '/tables/' +
-                state.tableName.trim() +
-                '/modify'
-            )
-          );
-        } else {
-          dispatch(
-            _push(
-              '/schema/' +
-                currentSchema +
-                '/views/' +
-                state.tableName.trim() +
-                '/browse'
-            )
-          );
-        }
+        const isTable = checkIfTable(newTable);
+        const nextRoute = isTable
+          ? getTableModifyRoute(currentSchema, tableName, isTable)
+          : getTableBrowseRoute(currentSchema, tableName, isTable);
+        dispatch(_push(nextRoute));
       });
       return;
     };
@@ -145,9 +131,7 @@ const addExistingFunction = name => {
       dispatch({ type: REQUEST_SUCCESS });
       // Update the left side bar
       dispatch(fetchTrackedFunctions(currentSchema));
-      dispatch(
-        _push('/schema/' + currentSchema + '/functions/' + name + '/modify')
-      );
+      dispatch(_push(getFunctionModifyRoute(currentSchema, name)));
       return;
     };
     const customOnError = err => {
@@ -213,17 +197,8 @@ const addAllUntrackedTablesSql = tableList => {
     const customOnSuccess = () => {
       dispatch(showSuccessNotification('Existing table/view added!'));
       dispatch({ type: REQUEST_SUCCESS });
-      dispatch(loadSchema()).then(() => {
-        const allSchemas = getState().tables.allSchemas;
-        const untrackedRelations = getAllUnTrackedRelations(
-          allSchemas,
-          currentSchema
-        ).bulkRelTrack;
-        dispatch({
-          type: LOAD_UNTRACKED_RELATIONS,
-          untrackedRelations: untrackedRelations,
-        });
-        dispatch(_push('/schema/' + currentSchema));
+      dispatch(updateSchemaInfo()).then(() => {
+        dispatch(_push(getSchemaBaseRoute(currentSchema)));
       });
       return;
     };
@@ -241,7 +216,8 @@ const addAllUntrackedTablesSql = tableList => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };

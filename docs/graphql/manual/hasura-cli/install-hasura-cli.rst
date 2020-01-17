@@ -1,6 +1,6 @@
-.. .. meta::
-   :description: Installing the hasura CLI on Linux, Mac OS, Windows.
-   :keywords: hasura, hasura CLI, install, linux, mac, windows
+.. meta::
+   :description: Install the Hasura CLI on Linux, Mac OS, Windows
+   :keywords: hasura, hasura cli, install, linux, mac, windows
 
 .. _install_hasura_cli:
 
@@ -12,8 +12,8 @@ Installing the Hasura CLI
   :depth: 1
   :local:
 
-Install
--------
+Install a binary globally
+-------------------------
 
 .. global-tabs::
 
@@ -60,13 +60,28 @@ Install
      - id: windows
        content: |
 
-         Download the binary ``cli-hasura-windows-amd64.exe`` from GitHub release page: https://github.com/hasura/graphql-engine/releases
+         Download the binary ``cli-hasura-windows-amd64.exe`` available under ``Assets`` of the latest release
+         from the GitHub release page: https://github.com/hasura/graphql-engine/releases
 
-         Rename the downloaded file to ``hasura``.
+         Rename the downloaded file to ``hasura``. 
+         You can add the path to the environment variable ``PATH`` for making ``hasura`` accessible globally.
+
+Install through npm
+-------------------
+
+Hasura CLI is available as an npm package that is independently maintained by some members of the community.
+It can be beneficial to use the npm package if you want a version-fixed cli dedicated to your node project.
+You can find usage details in  the `original repository <https://github.com/jjangga0214/hasura-cli>`_.
+
+.. code-block:: bash
+   
+   # install as a devDependency of your project
+   npm install --save-dev hasura-cli
+   
+   # or install globally on your system
+   npm install --global hasura-cli
 
 (Optional) Add shell completion
 -------------------------------
 
-To add command auto completion in the shell
-
-Refer to :ref:`hasura completion <hasura_completion>`
+To add command auto completion in the shell, refer to :ref:`hasura completion <hasura_completion>`.

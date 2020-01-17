@@ -1,6 +1,10 @@
-.. title:: Hasura GraphQL Engine Documentation
+.. meta::
+   :description: Hasura GraphQL engine documentation
+   :keywords: hasura, docs, manual, graphql engine
 
-Hasura GraphQL Engine documentation
+.. title:: Hasura GraphQL engine Documentation
+
+Hasura GraphQL engine documentation
 ===================================
 
 .. contents:: Table of contents
@@ -8,7 +12,7 @@ Hasura GraphQL Engine documentation
   :depth: 1
   :local:
 
-The Hasura GraphQL engine lets you setup a GraphQL server and event triggers over a Postgres database in minutes.
+The Hasura GraphQL engine lets you set up a GraphQL server and event triggers over a Postgres database in minutes.
 
 
 .. toctree::
@@ -30,3 +34,4 @@ The Hasura GraphQL engine lets you setup a GraphQL server and event triggers ove
   How it works <how-it-works/index>
   Troubleshooting <troubleshooting/index>
   guides/index
+  Vulnerability reporting / disclosure <security-disclosure/index>

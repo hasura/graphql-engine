@@ -1,13 +1,25 @@
 description: Update mutation on author
-url: /v1alpha1/graphql
+url: /v1/graphql
 response:
   data:
-   update_author:
-     affected_rows: 1
-     returning:
-     - articles: []
-       id: 1
-       name: Jane
+    update_author:
+      affected_rows: 1
+      returning:
+      - id: 1
+        name: Jane
+        emails: []
+        info:
+          age: 23
+        location:
+          type: Point
+          crs:
+            type: name
+            properties:
+              name: urn:ogc:def:crs:EPSG::4326
+          coordinates:
+          - -118.4079
+          - 33.9434
+        articles: []
 status: 200
 query:
   query: |
@@ -20,6 +32,9 @@ query:
         returning{
           id
           name
+          emails
+          info
+          location
           articles{
             id
             title

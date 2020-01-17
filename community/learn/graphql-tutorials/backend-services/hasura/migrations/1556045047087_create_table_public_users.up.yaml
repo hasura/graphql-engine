@@ -1,9 +1,0 @@
-- args:
-    sql: CREATE TABLE "public"."users"("id" text NOT NULL, "name" text NOT NULL, "created_at"
-      timestamptz NOT NULL DEFAULT now(), "last_seen" timestamptz NOT NULL, PRIMARY
-      KEY ("id") );
-  type: run_sql
-- args:
-    name: users
-    schema: public
-  type: add_existing_table_or_view

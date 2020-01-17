@@ -127,25 +127,27 @@ Transform data in Postgres or run business logic on it to derive another dataset
 ## Demos
 
 Check out all the example applications in the
-[community/examples](community/examples) directory.
+
+[community/sample-apps](community/sample-apps) directory.
+
 
 ### Realtime applications
 
 - Group Chat application built with React, includes a typing indicator, online users & new
   message notifications.
   - [Try it out](https://realtime-chat.demo.hasura.app/)
-  - [Tutorial](community/examples/realtime-chat)
+  - [Tutorial](community/sample-apps/realtime-chat)
   - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
 
 - Live location tracking app that shows a running vehicle changing current GPS
   coordinates moving on a map.
   - [Try it out](https://realtime-location-tracking.demo.hasura.app/)
-  - [Tutorial](community/examples/realtime-location-tracking)
+  - [Tutorial](community/sample-apps/realtime-location-tracking)
   - [Browse APIs](https://realtime-location-tracking.demo.hasura.app/console)
 
 - A realtime dashboard for data aggregations on continuously changing data.
   - [Try it out](https://realtime-poll.demo.hasura.app/)
-  - [Tutorial](community/examples/realtime-poll)
+  - [Tutorial](community/sample-apps/realtime-poll)
   - [Browse APIs](https://realtime-poll.demo.hasura.app/console)
 
 ### Videos
@@ -181,14 +183,14 @@ application/website etc. We'd be thrilled if you add the "Powered by Hasura"
 badge to your applications built using Hasura. ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_black.svg" width="150px"/>
+  <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
   <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
 <!-- For light backgrounds -->
 <a href="https://hasura.io">
-  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" />
+  <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg" />
 </a>
 
 <!-- For dark backgrounds -->
@@ -212,5 +214,13 @@ This readme is available in the following translations:
 
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
+- [Bosnian :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
+- [Russian :ru:](translations/README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
+- [Greek 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [Spanish 🇲🇽](/translations/README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
+- [Indonesian :indonesia:](translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
+- [Brazilian Portuguese :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
+- [German 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
+- [Chinese :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
 
 Translations for other files can be found [here](translations).

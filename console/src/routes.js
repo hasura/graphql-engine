@@ -5,50 +5,57 @@ import { connect } from 'react-redux';
 
 import { App, Main, PageNotFound, UITest } from 'components';
 
+import globals from './Globals';
+
+import validateLogin from './utils/validateLogin';
+
+import { composeOnEnterHooks } from 'utils/router';
+
+import { loadMigrationStatus } from './components/Main/Actions';
+
 import { dataRouterUtils } from './components/Services/Data';
 
 import { eventRouterUtils } from './components/Services/EventTrigger';
 
-import { getCustomResolverRouter } from './components/Services/CustomResolver';
+import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
-import { loadMigrationStatus } from './components/Main/Actions';
+import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
 
-import { composeOnEnterHooks } from 'utils/router';
+import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
 
-import generatedApiExplorer from './components/ApiExplorer/ApiExplorerGenerator';
+import about from './components/Services/About/About';
 
 import generatedLoginConnector from './components/Login/Login';
 
-import metadataContainer from './components/Services/Data/Metadata/Container';
-import metadataOptionsContainer from './components/Services/Data/Metadata/MetadataOptions';
-import metadataStatusContainer from './components/Services/Data/Metadata/MetadataStatus';
-import globals from './Globals';
+import settingsContainer from './components/Services/Settings/Container';
+import metadataOptionsContainer from './components/Services/Settings/MetadataOptions/MetadataOptions';
+import metadataStatusContainer from './components/Services/Settings/MetadataStatus/MetadataStatus';
+import allowedQueriesContainer from './components/Services/Settings/AllowedQueries/AllowedQueries';
+import logoutContainer from './components/Services/Settings/Logout/Logout';
 
-import validateLogin from './components/Common/validateLogin';
+import { showErrorNotification } from './components/Services/Common/Notification';
+import { CLI_CONSOLE_MODE } from './constants';
 
 const routes = store => {
   // load hasuractl migration status
   const requireMigrationStatus = (nextState, replaceState, cb) => {
-    if (globals.consoleMode === 'cli') {
-      store.dispatch(loadMigrationStatus()).then(
+    const { dispatch } = store;
+
+    if (globals.consoleMode === CLI_CONSOLE_MODE) {
+      dispatch(loadMigrationStatus()).then(
         () => {
           cb();
         },
         r => {
           if (r.code === 'data_api_error') {
-            if (globals.adminSecret) {
-              alert('Hasura CLI: ' + r.message);
-            } else {
-              alert(
-                `Looks like CLI is not configured with the ${
-                  globals.adminSecretLabel
-                }. Please configure and try again`
-              );
-            }
+            dispatch(showErrorNotification('Error', null, r));
           } else {
-            alert(
-              'Hasura console is not able to reach your Hasura GraphQL engine instance. Please ensure that your ' +
-                'instance is running and the endpoint is configured correctly.'
+            dispatch(
+              showErrorNotification(
+                'Connection error',
+                'Hasura console is not able to reach your Hasura GraphQL engine instance. Please ensure that your ' +
+                  'instance is running and the endpoint is configured correctly.'
+              )
             );
           }
         }
@@ -71,7 +78,7 @@ const routes = store => {
   );
   const eventRouter = _eventRouterUtils.makeEventRouter;
 
-  const customResolverRouter = getCustomResolverRouter(
+  const remoteSchemaRouter = getRemoteSchemaRouter(
     connect,
     store,
     composeOnEnterHooks
@@ -91,17 +98,30 @@ const routes = store => {
             path="api-explorer"
             component={generatedApiExplorer(connect)}
           />
-          <Route path="metadata" component={metadataContainer(connect)}>
-            <IndexRedirect to="actions" />
-            <Route path="status" component={metadataStatusContainer(connect)} />
+          <Route
+            path="voyager-view"
+            component={generatedVoyagerConnector(connect)}
+          />
+          <Route path="about" component={about(connect)} />
+          <Route path="settings" component={settingsContainer(connect)}>
+            <IndexRedirect to="metadata-actions" />
             <Route
-              path="actions"
+              path="metadata-actions"
               component={metadataOptionsContainer(connect)}
             />
+            <Route
+              path="metadata-status"
+              component={metadataStatusContainer(connect)}
+            />
+            <Route
+              path="allowed-queries"
+              component={allowedQueriesContainer(connect)}
+            />
+            <Route path="logout" component={logoutContainer(connect)} />
           </Route>
           {dataRouter}
           {eventRouter}
-          {customResolverRouter}
+          {remoteSchemaRouter}
           <Route path="ui-test" component={UITest} />
         </Route>
       </Route>

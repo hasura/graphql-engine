@@ -4,7 +4,7 @@ import { Route, IndexRedirect } from 'react-router';
 import globals from '../../../Globals';
 
 import {
-  schemaConnector,
+  landingConnector,
   addTriggerConnector,
   modifyTriggerConnector,
   processedEventsConnector,
@@ -18,22 +18,17 @@ import { rightContainerConnector } from '../../Common/Layout';
 
 import {
   loadTriggers,
-  loadProcessedEvents,
   loadPendingEvents,
   loadRunningEvents,
 } from '../EventTrigger/EventActions';
-
-import { SERVER_CONSOLE_MODE } from '../../../constants';
 
 const makeEventRouter = (
   connect,
   store,
   composeOnEnterHooks,
   requireSchema,
-  requireProcessedEvents,
   requirePendingEvents,
-  requireRunningEvents,
-  migrationRedirects
+  requireRunningEvents
 ) => {
   return (
     <Route
@@ -44,11 +39,10 @@ const makeEventRouter = (
       <IndexRedirect to="manage" />
       <Route path="manage" component={rightContainerConnector(connect)}>
         <IndexRedirect to="triggers" />
-        <Route path="triggers" component={schemaConnector(connect)} />
+        <Route path="triggers" component={landingConnector(connect)} />
         <Route
           path="triggers/:trigger/processed"
           component={processedEventsConnector(connect)}
-          onEnter={composeOnEnterHooks([requireProcessedEvents])}
         />
         <Route
           path="triggers/:trigger/pending"
@@ -67,12 +61,10 @@ const makeEventRouter = (
       </Route>
       <Route
         path="manage/triggers/add"
-        onEnter={composeOnEnterHooks([migrationRedirects])}
         component={addTriggerConnector(connect)}
       />
       <Route
         path="manage/triggers/:trigger/modify"
-        onEnter={composeOnEnterHooks([migrationRedirects])}
         component={modifyTriggerConnector(connect)}
       />
     </Route>
@@ -95,29 +87,7 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
       return;
     }
 
-    Promise.all([store.dispatch(loadTriggers())]).then(
-      () => {
-        cb();
-      },
-      () => {
-        // alert('Could not load schema.');
-        replaceState(globals.urlPrefix);
-        cb();
-      }
-    );
-  };
-
-  const requireProcessedEvents = (nextState, replaceState, cb) => {
-    const {
-      triggers: { processedEvents },
-    } = store.getState();
-
-    if (processedEvents.length) {
-      cb();
-      return;
-    }
-
-    Promise.all([store.dispatch(loadProcessedEvents())]).then(
+    Promise.all([store.dispatch(loadTriggers([]))]).then(
       () => {
         cb();
       },
@@ -173,37 +143,16 @@ const eventRouterUtils = (connect, store, composeOnEnterHooks) => {
     );
   };
 
-  const migrationRedirects = (nextState, replaceState, cb) => {
-    const state = store.getState();
-    if (!state.main.migrationMode) {
-      replaceState(globals.urlPrefix + '/events/manage');
-      cb();
-    }
-    cb();
-  };
-
-  const consoleModeRedirects = (nextState, replaceState, cb) => {
-    if (globals.consoleMode === SERVER_CONSOLE_MODE) {
-      replaceState(globals.urlPrefix + '/events/manage');
-      cb();
-    }
-    cb();
-  };
-
   return {
     makeEventRouter: makeEventRouter(
       connect,
       store,
       composeOnEnterHooks,
       requireSchema,
-      requireProcessedEvents,
       requirePendingEvents,
-      requireRunningEvents,
-      migrationRedirects,
-      consoleModeRedirects
+      requireRunningEvents
     ),
     requireSchema,
-    migrationRedirects,
   };
 };
 

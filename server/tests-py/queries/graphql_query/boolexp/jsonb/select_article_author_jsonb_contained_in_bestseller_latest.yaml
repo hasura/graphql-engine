@@ -1,26 +1,26 @@
 description: Nested select on article
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:
     article:
-    - content: Sample article content 2
-      author:
-        name: Author 1
-        id: 1
-      id: 2
+    - id: 2
       title: Article 2
+      content: Sample article content 2
       tags:
       - bestseller
       - latest
-    - content: Sample article content 3
       author:
-        name: Author 2
-        id: 2
-      id: 3
+        id: 1
+        name: Author 1
+    - id: 3
       title: Article 3
+      content: Sample article content 3
       tags:
       - latest
+      author:
+        id: 2
+        name: Author 2
 query:
   variables:
     tags:

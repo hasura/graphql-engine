@@ -11,10 +11,8 @@
   url: /v1/query
   status: 200
   response:
-    functions: []
-    query_templates: []
+    version: 2
     tables: []
-    remote_schemas: []
   query:
     type: export_metadata
     args: {}

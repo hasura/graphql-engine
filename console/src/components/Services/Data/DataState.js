@@ -19,6 +19,9 @@ const defaultViewState = {
   ongoingRequest: false,
   lastError: {},
   lastSuccess: {},
+  manualTriggers: [],
+  triggeredRow: -1,
+  triggeredFunction: null,
 };
 
 const defaultPermissionsState = {
@@ -30,7 +33,7 @@ const defaultPermissionsState = {
   limitEnabled: true,
   bulkSelect: [],
   applySamePermissions: [],
-  tableSchemas: [],
+  isEditing: false,
 };
 
 const defaultPresetsState = {
@@ -57,6 +60,7 @@ const defaultQueryPermissions = {
   },
   select: {
     columns: [],
+    computed_fields: [],
     filter: {},
     limit: null,
     allow_aggregations: false,
@@ -87,31 +91,50 @@ const defaultModifyState = {
     rel: null,
     perm: '',
   },
+  tableEnum: {
+    loading: false,
+  },
   columnEdit: {},
   pkEdit: [''],
   pkModify: [''],
   fkModify: [
     {
+      refSchemaName: '',
       refTableName: '',
       colMappings: [{ '': '' }],
       onDelete: 'restrict',
       onUpdate: 'restrict',
     },
   ],
+  checkConstraintsModify: [],
+  uniqueKeyModify: [[]],
   relAdd: {
     isActive: true,
     name: '',
-    tableName: '',
+    lTable: null,
+    lSchema: null,
     isObjRel: null,
     lcol: [],
     rTable: null,
+    rSchema: null,
     rcol: [],
-    manualColumns: [],
-    isManualExpanded: false,
-    manualRelInfo: {
-      remoteSchema: '',
-      tables: [],
-    },
+    isUnique: false,
+  },
+  manualRelAdd: {
+    relName: '',
+    relType: '',
+    rSchema: '',
+    rTable: '',
+    colMappings: [{ column: '', refColumn: '' }],
+    isToggled: false,
+  },
+  rootFieldsEdit: {
+    select: '',
+    select_by_pk: '',
+    select_aggregate: '',
+    insert: '',
+    update: '',
+    delete: '',
   },
   permissionsState: { ...defaultPermissionsState },
   prevPermissionState: { ...defaultPermissionsState },
@@ -121,9 +144,15 @@ const defaultModifyState = {
   viewDefinition: null,
   viewDefinitionError: null,
   tableCommentEdit: { enabled: false, editedValue: null },
+  alterColumnOptions: [], // Store supported implicit column -> column casts
+  alterColumnOptionsFetchErr: null,
 };
 
 const defaultState = {
+  columnDataTypes: [], // To store list of column types supported by postgres
+  columnDataTypeInfoErr: null,
+  columnDefaultFunctions: {},
+  columnTypeCasts: {},
   currentTable: null,
   view: { ...defaultViewState },
   modify: { ...defaultModifyState },
@@ -145,13 +174,7 @@ const defaultState = {
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
   trackedFunctions: [],
-  listedFunctions: [],
-
   listingSchemas: [],
-  untrackedSchemas: [],
-  information_schema: [],
-  tableComment: null,
-  columnComments: {},
   untrackedRelations: [],
   schemaList: ['public'],
   currentSchema: 'public',

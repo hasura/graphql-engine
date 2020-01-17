@@ -15,16 +15,16 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/telemetry"
-	"github.com/hasura/graphql-engine/cli/util"
-
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
+	"github.com/hasura/graphql-engine/cli/telemetry"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
-	colorable "github.com/mattn/go-colorable"
+	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 // Other constants used in the package
@@ -171,6 +171,9 @@ type ExecutionContext struct {
 	// LogLevel indicates the logrus default logging level
 	LogLevel string
 
+	// NoColor indicates if the outputs shouldn't be colorized
+	NoColor bool
+
 	// Telemetry collects the telemetry data throughout the execution
 	Telemetry *telemetry.Data
 
@@ -179,6 +182,9 @@ type ExecutionContext struct {
 
 	// SkipUpdateCheck will skip the auto update check if set to true
 	SkipUpdateCheck bool
+
+	// IsTerminal indicates whether the current session is a terminal or not
+	IsTerminal bool
 }
 
 // NewExecutionContext returns a new instance of execution context
@@ -199,6 +205,8 @@ func (ec *ExecutionContext) Prepare() error {
 		cmdName = "hasura"
 	}
 	ec.CMDName = cmdName
+
+	ec.IsTerminal = terminal.IsTerminal(int(os.Stdout.Fd()))
 
 	// set spinner
 	ec.setupSpinner()
@@ -290,7 +298,7 @@ func (ec *ExecutionContext) checkServerVersion() error {
 	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
 	ec.Logger.Debugf("compatibility check: [%v] %v", isCompatible, reason)
 	if !isCompatible {
-		return errors.Errorf("[cli: %s] [server: %s] versions incompatible: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
+		ec.Logger.Warnf("[cli: %s] [server: %s] version mismatch: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
 	}
 	return nil
 }
@@ -334,18 +342,36 @@ func (ec *ExecutionContext) setupSpinner() {
 
 // Spin stops any existing spinner and starts a new one with the given message.
 func (ec *ExecutionContext) Spin(message string) {
-	ec.Spinner.Stop()
-	ec.Spinner.Prefix = message
-	ec.Spinner.Start()
+	if ec.IsTerminal {
+		ec.Spinner.Stop()
+		ec.Spinner.Prefix = message
+		ec.Spinner.Start()
+	} else {
+		ec.Logger.Println(message)
+	}
 }
 
 // setupLogger creates a default logger if context does not have one set.
 func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
-		logger.Formatter = &logrus.TextFormatter{
-			ForceColors:      true,
-			DisableTimestamp: true,
+
+		if ec.IsTerminal {
+			if ec.NoColor {
+				logger.Formatter = &logrus.TextFormatter{
+					DisableColors:    true,
+					DisableTimestamp: true,
+				}
+			} else {
+				logger.Formatter = &logrus.TextFormatter{
+					ForceColors:      true,
+					DisableTimestamp: true,
+				}
+			}
+		} else {
+			logger.Formatter = &logrus.JSONFormatter{
+				PrettyPrint: false,
+			}
 		}
 		logger.Out = colorable.NewColorableStdout()
 		ec.Logger = logger
@@ -374,7 +400,7 @@ func (ec *ExecutionContext) setVersion() {
 	}
 }
 
-// GetMetadataPath returns the file path based on the format.
+// GetMetadataFilePath returns the file path based on the format.
 func (ec *ExecutionContext) GetMetadataFilePath(format string) (string, error) {
 	ext := fmt.Sprintf(".%s", format)
 	for _, filePath := range ec.MetadataFile {
@@ -384,4 +410,24 @@ func (ec *ExecutionContext) GetMetadataFilePath(format string) (string, error) {
 		}
 	}
 	return "", errors.New("unsupported file type")
+}
+
+// GetExistingMetadataFile returns the path to the default metadata file that
+// also exists, json or yaml
+func (ec *ExecutionContext) GetExistingMetadataFile() (string, error) {
+	filename := ""
+	for _, format := range []string{"yaml", "json"} {
+		f, err := ec.GetMetadataFilePath(format)
+		if err != nil {
+			return "", errors.Wrap(err, "cannot get metadata file")
+		}
+
+		filename = f
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			continue
+		}
+		break
+	}
+
+	return filename, nil
 }

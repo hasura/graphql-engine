@@ -11,10 +11,17 @@ import {
 } from '../Common/ReusableComponents/utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
+import { updateSchemaInfo } from '../DataActions';
 
-import styles from './ModifyTable.scss';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
-const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
+const ForeignKeyEditor = ({
+  tableSchema,
+  allSchemas,
+  dispatch,
+  fkModify,
+  schemaList,
+}) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
 
   // columns in the right order with their indices
@@ -28,7 +35,12 @@ const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
     tableSchema,
     orderedColumns
   );
+  const schemasToBeFetched = {};
+  existingForeignKeys.forEach(efk => {
+    schemasToBeFetched[efk.refSchemaName] = true;
+  });
   existingForeignKeys.push({
+    refSchemaName: '',
     refTableName: '',
     onUpdate: 'restrict',
     onDelete: 'restrict',
@@ -36,13 +48,9 @@ const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
   });
   useEffect(() => {
     dispatch(setForeignKeys(existingForeignKeys));
+    dispatch(updateSchemaInfo({ schemas: Object.keys(schemasToBeFetched) }));
   }, []);
 
-  // Generate a list of reference tables and their columns
-  const refTables = {};
-  allSchemas.forEach(ts => {
-    refTables[ts.table_name] = ts.columns.map(c => c.column_name);
-  });
   const numFks = fkModify.length;
 
   // Map the foreign keys in the fkModify state and render
@@ -50,27 +58,44 @@ const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
     // FK config (example: (a, b) -> refTable(c, d))
     const fkConfig = getForeignKeyConfig(fk, orderedColumns);
 
+    fk.refSchemaName = fk.refSchemaName || tableSchema.table_schema;
+
+    // Generate a list of reference schemas and their columns
+    const refTables = {};
+    allSchemas.forEach(ts => {
+      if (ts.table_schema === fk.refSchemaName) {
+        refTables[ts.table_name] = ts.columns.map(c => c.column_name);
+      }
+    });
+
+    const orderedSchemaList = schemaList.map(s => s.schema_name).sort();
+
+    const getFkConfigLabel = config => {
+      let fkConfigLabel;
+      if (config) {
+        fkConfigLabel = (
+          <span>
+            <b>{config}</b> - <i>{fk.constraintName}</i>
+          </span>
+        );
+      }
+      return fkConfigLabel;
+    };
+
     const isLast = i + 1 === numFks;
 
     // Label to show next to the 'Edit' button (the FK configuration)
-    const collapsedLabelText =
-      isLast && numFks === 1 ? 'No foreign keys' : <b>{fkConfig}</b>;
-    const collapsedLabel = () => (
-      <div>
-        <div className="container-fluid">
-          <div className="row">
-            <h5 className={styles.padd_bottom}>
-              {collapsedLabelText}
-              &nbsp;
-            </h5>
-          </div>
-        </div>
-      </div>
-    );
+    const collapsedLabel = () => {
+      const collapsedLabelText =
+        isLast && numFks === 1 ? 'No foreign keys' : getFkConfigLabel(fkConfig);
+
+      return <div>{collapsedLabelText}</div>;
+    };
 
     // The content when the editor is expanded
     const expandedContent = () => (
       <ForeignKeySelector
+        schemaList={orderedSchemaList}
         refTables={refTables}
         foreignKey={fk}
         index={i}
@@ -90,16 +115,16 @@ const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
 
     // label next to the button when the editor is expanded
     const expandedLabel = () => {
-      if (isLast) return null;
+      if (isLast) {
+        return null;
+      }
+
       const existingFkConfig = getForeignKeyConfig(
         existingForeignKeys[i],
         orderedColumns
       );
-      return (
-        <h5 className={styles.padd_bottom}>
-          <b>{existingFkConfig}</b>
-        </h5>
-      );
+
+      return <div>{getFkConfigLabel(existingFkConfig)}</div>;
     };
 
     // If the user made some changes and collapses the editor, the changes are lost
@@ -115,7 +140,7 @@ const ForeignKeyEditor = ({ tableSchema, allSchemas, dispatch, fkModify }) => {
     let removeFk;
     if (!isLast) {
       removeFk = () => {
-        const isOk = window.confirm('Are you sure?');
+        const isOk = getConfirmation();
         if (isOk) {
           dispatch(removeForeignKey(i, tableSchema, orderedColumns));
         }

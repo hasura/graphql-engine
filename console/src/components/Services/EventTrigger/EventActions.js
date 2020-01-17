@@ -5,20 +5,21 @@ import processedEventsReducer from './ProcessedEvents/ViewActions';
 import pendingEventsReducer from './PendingEvents/ViewActions';
 import runningEventsReducer from './RunningEvents/ViewActions';
 import streamingLogsReducer from './StreamingLogs/LogActions';
-import { showErrorNotification, showSuccessNotification } from './Notification';
+import {
+  showSuccessNotification,
+  showErrorNotification,
+} from '../Common/Notification';
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
 import globals from '../../../Globals';
 import push from './push';
-import { initQueries } from '../Data/DataActions';
-import {
-  filterInconsistentMetadata,
-  loadInconsistentObjects,
-} from '../Data/Metadata/Actions';
+import { loadInconsistentObjects } from '../Settings/Actions';
+import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import { replace } from 'react-router-redux';
+import { getEventTriggersQuery } from './utils';
 
-import { SERVER_CONSOLE_MODE } from '../../../constants';
+import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
 import { REQUEST_COMPLETE, REQUEST_ONGOING } from './Modify/Actions';
 
 const SET_TRIGGER = 'Event/SET_TRIGGER';
@@ -30,7 +31,6 @@ const ADMIN_SECRET_ERROR = 'Event/ADMIN_SECRET_ERROR';
 const UPDATE_DATA_HEADERS = 'Event/UPDATE_DATA_HEADERS';
 const LISTING_TRIGGER = 'Event/LISTING_TRIGGER';
 const LOAD_EVENT_LOGS = 'Event/LOAD_EVENT_LOGS';
-const LOAD_EVENT_TABLE_SCHEMA = 'Event/LOAD_EVENT_TABLE_SCHEMA';
 const MODAL_OPEN = 'Event/MODAL_OPEN';
 const SET_REDELIVER_EVENT = 'Event/SET_REDELIVER_EVENT';
 const LOAD_EVENT_INVOCATIONS = 'Event/LOAD_EVENT_INVOCATIONS';
@@ -42,34 +42,9 @@ const REQUEST_SUCCESS = 'Event/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'Event/REQUEST_ERROR';
 
 /* ************ action creators *********************** */
-const loadTriggers = () => (dispatch, getState) => {
+const loadTriggers = triggerNames => (dispatch, getState) => {
   const url = Endpoints.getSchema;
-  const body = {
-    type: 'bulk',
-    args: [
-      {
-        type: 'select',
-        args: {
-          table: {
-            name: 'event_triggers',
-            schema: 'hdb_catalog',
-          },
-          columns: ['*'],
-          order_by: {
-            column: 'name',
-            type: 'asc',
-            nulls: 'last',
-          },
-        },
-      },
-      initQueries.loadSchema,
-    ],
-  };
-  body.args[1].args.where = {
-    table_schema: {
-      $nin: ['information_schema', 'pg_catalog', 'hdb_catalog', 'hdb_views'],
-    },
-  };
+  const body = getEventTriggersQuery(triggerNames);
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
@@ -78,71 +53,35 @@ const loadTriggers = () => (dispatch, getState) => {
   };
   return dispatch(requestAction(url, options)).then(
     data => {
+      if (data.result_type !== 'TuplesOk') {
+        console.error('Failed to event trigger info' + JSON.stringify(data[1]));
+        return;
+      }
+      let triggerData = JSON.parse(data.result[1]);
+      if (triggerNames.length !== 0) {
+        // getExisting state
+        const existingTriggers = getState().triggers.triggerList.filter(
+          trigger => triggerNames.some(item => item !== trigger.name)
+        );
+        const triggerLists = existingTriggers.concat(triggerData);
+        triggerData = triggerLists.sort((a, b) => {
+          return a.name === b.name ? 0 : +(a.name > b.name) || -1;
+        });
+      }
       const { inconsistentObjects } = getState().metadata;
-      let consistentSchemas;
       let consistentTriggers;
       if (inconsistentObjects.length > 1) {
-        consistentSchemas = filterInconsistentMetadata(
-          data[1],
-          inconsistentObjects,
-          'tables'
-        );
-        consistentTriggers = filterInconsistentMetadata(
-          data[0],
+        consistentTriggers = filterInconsistentMetadataObjects(
+          triggerData,
           inconsistentObjects,
           'events'
         );
       }
       dispatch({
-        type: LOAD_EVENT_TABLE_SCHEMA,
-        data: consistentSchemas || data[1],
-      });
-      dispatch({
         type: LOAD_TRIGGER_LIST,
-        triggerList: consistentTriggers || data[0],
+        triggerList: consistentTriggers || triggerData,
       });
-      dispatch(loadInconsistentObjects(null, false));
-    },
-    error => {
-      console.error('Failed to load triggers' + JSON.stringify(error));
-    }
-  );
-};
-
-const loadProcessedEvents = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: [
-          '*',
-          {
-            name: 'events',
-            columns: [
-              '*',
-              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-            ],
-            where: {
-              $or: [{ delivered: { $eq: true } }, { error: { $eq: true } }],
-            },
-            order_by: ['-created_at'],
-            limit: 10,
-          },
-        ],
-      },
-    }),
-  };
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      dispatch({ type: LOAD_PROCESSED_EVENTS, data: data });
+      dispatch(loadInconsistentObjects(false));
     },
     error => {
       console.error('Failed to load triggers' + JSON.stringify(error));
@@ -152,32 +91,34 @@ const loadProcessedEvents = () => (dispatch, getState) => {
 
 const loadPendingEvents = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const body = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'event_triggers',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        '*',
+        {
+          name: 'events',
+          columns: [
+            '*',
+            { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
+          ],
+          where: { delivered: false, error: false, tries: 0, archived: false },
+          order_by: ['-created_at'],
+          limit: 10,
+        },
+      ],
+    },
+  };
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: [
-          '*',
-          {
-            name: 'events',
-            columns: [
-              '*',
-              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-            ],
-            where: { delivered: false, error: false, tries: 0 },
-            order_by: ['-created_at'],
-            limit: 10,
-          },
-        ],
-      },
-    }),
+    body: JSON.stringify(body),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -191,32 +132,39 @@ const loadPendingEvents = () => (dispatch, getState) => {
 
 const loadRunningEvents = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
+  const body = {
+    type: 'select',
+    args: {
+      table: {
+        name: 'event_triggers',
+        schema: 'hdb_catalog',
+      },
+      columns: [
+        '*',
+        {
+          name: 'events',
+          columns: [
+            '*',
+            { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
+          ],
+          where: {
+            delivered: false,
+            error: false,
+            tries: { $gt: 0 },
+            archived: false,
+          },
+          order_by: ['-created_at'],
+          limit: 10,
+        },
+      ],
+    },
+  };
+
   const options = {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: [
-          '*',
-          {
-            name: 'events',
-            columns: [
-              '*',
-              { name: 'logs', columns: ['*'], order_by: ['-created_at'] },
-            ],
-            where: { delivered: false, error: false, tries: { $gt: 0 } },
-            order_by: ['-created_at'],
-            limit: 10,
-          },
-        ],
-      },
-    }),
+    body: JSON.stringify(body),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -268,13 +216,16 @@ const loadEventLogs = triggerName => (dispatch, getState) => {
                     columns: ['*'],
                   },
                 ],
-                where: { event: { trigger_name: triggerData[0].name } },
+                where: {
+                  event: { trigger_name: triggerData[0].name, archived: false },
+                },
                 order_by: ['-created_at'],
                 limit: 10,
               },
             },
           ],
         };
+
         const logOptions = {
           credentials: globalCookiePolicy,
           method: 'POST',
@@ -345,7 +296,7 @@ const redeliverEvent = eventId => (dispatch, getState) => {
     method: 'POST',
     headers: dataHeaders(getState),
     body: JSON.stringify({
-      type: 'deliver_event',
+      type: 'redeliver_event',
       args: {
         event_id: eventId,
       },
@@ -379,34 +330,23 @@ const setRedeliverEvent = eventId => dispatch => {
 /* **********Shared functions between table actions********* */
 
 const handleMigrationErrors = (title, errorMsg) => dispatch => {
-  const requestMsg = title;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     // handle errors for run_sql based workflow
-    dispatch(showErrorNotification(title, errorMsg.code, requestMsg, errorMsg));
+    dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
   } else if (errorMsg.code === 'migration_failed') {
-    dispatch(
-      showErrorNotification(title, 'Migration Failed', requestMsg, errorMsg)
-    );
+    dispatch(showErrorNotification(title, 'Migration Failed', errorMsg));
   } else if (errorMsg.code === 'data_api_error') {
     const parsedErrorMsg = errorMsg;
     parsedErrorMsg.message = JSON.parse(errorMsg.message);
     dispatch(
-      showErrorNotification(
-        title,
-        parsedErrorMsg.message.error,
-        requestMsg,
-        parsedErrorMsg
-      )
+      showErrorNotification(title, parsedErrorMsg.message.error, parsedErrorMsg)
     );
   } else {
     // any other unhandled codes
     const parsedErrorMsg = errorMsg;
     parsedErrorMsg.message = JSON.parse(errorMsg.message);
-    dispatch(
-      showErrorNotification(title, errorMsg.code, requestMsg, parsedErrorMsg)
-    );
+    dispatch(showErrorNotification(title, errorMsg.code, parsedErrorMsg));
   }
-  // dispatch(showErrorNotification(msg, firstDisplay, request, response));
 };
 
 const makeMigrationCall = (
@@ -444,7 +384,7 @@ const makeMigrationCall = (
   let finalReqBody;
   if (globals.consoleMode === SERVER_CONSOLE_MODE) {
     finalReqBody = upQuery;
-  } else if (globals.consoleMode === 'cli') {
+  } else if (globals.consoleMode === CLI_CONSOLE_MODE) {
     finalReqBody = migrationBody;
   }
   const url = migrateUrl;
@@ -456,10 +396,9 @@ const makeMigrationCall = (
   };
 
   const onSuccess = () => {
-    if (globals.consoleMode === 'cli') {
+    if (globals.consoleMode === CLI_CONSOLE_MODE) {
       dispatch(loadMigrationStatus()); // don't call for server mode
     }
-    dispatch(loadTriggers());
     customOnSuccess();
     if (successMsg) {
       dispatch(showSuccessNotification(successMsg));
@@ -499,7 +438,7 @@ const deleteTrigger = triggerName => {
         name: triggerName,
         table: {
           name: currentTriggerInfo.table_name,
-          schema: currentTriggerInfo.schema_name,
+          schema: currentTriggerInfo.table_schema,
         },
         retry_conf: { ...currentTriggerInfo.configuration.retry_conf },
         ...currentTriggerInfo.configuration.definition,
@@ -532,7 +471,15 @@ const deleteTrigger = triggerName => {
       // dispatch({ type: REQUEST_SUCCESS });
       dispatch({ type: REQUEST_COMPLETE }); // modify trigger action
       dispatch(showSuccessNotification('Trigger Deleted'));
-      dispatch(push('/manage/triggers')).then(() => dispatch(loadTriggers()));
+      dispatch(push('/manage/triggers'));
+      // remove this trigger from state
+      const existingTriggers = getState().triggers.triggerList.filter(
+        trigger => trigger.name !== triggerName
+      );
+      dispatch({
+        type: LOAD_TRIGGER_LIST,
+        triggerList: existingTriggers,
+      });
       return;
     };
     const customOnError = () => {
@@ -554,7 +501,8 @@ const deleteTrigger = triggerName => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
@@ -638,11 +586,6 @@ const eventReducer = (state = defaultState, action) => {
         ...state,
         log: { ...state.log, rows: action.data, count: action.data.length },
       };
-    case LOAD_EVENT_TABLE_SCHEMA:
-      return {
-        ...state,
-        tableSchemas: action.data,
-      };
     case SET_TRIGGER:
       return { ...state, currentTrigger: action.triggerName };
     case ADMIN_SECRET_ERROR:
@@ -684,7 +627,6 @@ export {
   setTrigger,
   loadTriggers,
   deleteTrigger,
-  loadProcessedEvents,
   loadPendingEvents,
   loadRunningEvents,
   loadEventLogs,

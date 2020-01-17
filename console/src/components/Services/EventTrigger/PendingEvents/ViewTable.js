@@ -4,7 +4,7 @@ import { vSetDefaults, vMakeRequest, vExpandHeading } from './ViewActions'; // e
 import { setTrigger } from '../EventActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
-import { replace } from 'react-router-redux';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 const genHeadings = headings => {
   if (headings.length === 0) {
@@ -122,20 +122,21 @@ class ViewTable extends Component {
       rows,
       count, // eslint-disable-line no-unused-vars
       activePath,
-      migrationMode,
       ongoingRequest,
       lastError,
       lastSuccess,
       dispatch,
       expandedRow,
+      readOnlyMode,
     } = this.props; // eslint-disable-line no-unused-vars
 
-    // check if table exists
+    // check if trigger exists
     const currentTrigger = triggerList.find(s => s.name === triggerName);
     if (!currentTrigger) {
-      // dispatch a 404 route
-      dispatch(replace('/404'));
+      // throw a 404 exception
+      throw new NotFoundError();
     }
+
     // Is this a view
     const isView = false;
 
@@ -168,13 +169,14 @@ class ViewTable extends Component {
         dispatch={dispatch}
         triggerName={triggerName}
         tabName="pending"
-        migrationMode={migrationMode}
+        readOnlyMode={readOnlyMode}
       />
     );
 
     return (
       <div>
         {header}
+        <br />
         <div>{viewRows}</div>
       </div>
     );
@@ -187,8 +189,8 @@ ViewTable.propTypes = {
   activePath: PropTypes.array.isRequired,
   query: PropTypes.object.isRequired,
   curFilter: PropTypes.object.isRequired,
-  migrationMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   rows: PropTypes.array.isRequired,
   expandedRow: PropTypes.string.isRequired,
   count: PropTypes.number,
@@ -201,7 +203,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     triggerName: ownProps.params.trigger,
     triggerList: state.triggers.pendingEvents,
-    migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
     ...state.triggers.view,
   };
 };

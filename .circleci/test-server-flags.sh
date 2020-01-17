@@ -24,7 +24,7 @@ fail_if_port_busy() {
 wait_for_port() {
     local PORT=$1
     echo "waiting for $PORT"
-    for _ in $(seq 1 30);
+    for _ in $(seq 1 60);
     do
       nc -z localhost $PORT && echo "port $PORT is ready" && return
       echo -n .
@@ -66,7 +66,7 @@ run_hge_with_flags() {
 }
 
 kill_hge() {
-  kill $HGE_PID || true
+  kill -s INT $HGE_PID || true
   wait $HGE_PID || true
 }
 

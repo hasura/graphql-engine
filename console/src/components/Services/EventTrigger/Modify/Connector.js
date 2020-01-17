@@ -7,10 +7,9 @@ const mapStateToProps = (state, ownProps) => {
     triggerList: state.triggers.triggerList,
     schemaList: state.tables.schemaList,
     allSchemas: state.tables.allSchemas,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
-    migrationMode: state.main.migrationMode,
+    serverVersion: state.main.serverVersion,
     currentSchema: state.tables.currentSchema,
-    tableSchemas: state.triggers.tableSchemas,
+    readOnlyMode: state.main.readOnlyMode,
   };
 };
 

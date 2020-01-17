@@ -1,6 +1,6 @@
 import pytest
 import time
-from context import HGECtx, HGECtxError, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient
+from context import HGECtx, HGECtxError, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf
 import threading
 import random
 from datetime import datetime
@@ -68,6 +68,36 @@ def pytest_addoption(parser):
         help="Run testcases for horizontal scaling"
     )
 
+    parser.addoption(
+        "--test-allowlist-queries", action="store_true",
+        help="Run Test cases with allowlist queries enabled"
+    )
+
+    parser.addoption(
+        "--test-logging",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Run testcases for logging"
+    )
+
+    parser.addoption(
+        "--test-jwk-url",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Run testcases for JWK url behaviour"
+    )
+
+    parser.addoption(
+        "--accept",
+        action="store_true",
+        default=False,
+        required=False,
+        help="Accept any failing test cases from YAML files as correct, and write the new files out to disk."
+    )
+
+
 #By default,
 #1) Set default parallelism to one
 #2) Set test grouping to by filename (--dist=loadfile)
@@ -79,14 +109,17 @@ def pytest_cmdline_preparse(config, args):
 
 
 def pytest_configure(config):
+    # Pytest has removed the global pytest.config
+    # As a solution we are going to store it in PytestConf.config
+    PytestConf.config = config
     if is_master(config):
-        config.hge_ctx_gql_server = HGECtxGQLServer()
         if not config.getoption('--hge-urls'):
             print("hge-urls should be specified")
         if not config.getoption('--pg-urls'):
             print("pg-urls should be specified")
         config.hge_url_list = config.getoption('--hge-urls')
         config.pg_url_list =  config.getoption('--pg-urls')
+        config.hge_ctx_gql_server = HGECtxGQLServer(config.hge_url_list)
         if config.getoption('-n', default=None):
             xdist_threads = config.getoption('-n')
             assert xdist_threads <= len(config.hge_url_list), "Not enough hge_urls specified, Required " + str(xdist_threads) + ", got " + str(len(config.hge_url_list))
@@ -135,9 +168,12 @@ def hge_ctx(request):
             hge_jwt_conf=hge_jwt_conf,
             ws_read_cookie=ws_read_cookie,
             metadata_disabled=metadata_disabled,
-            hge_scale_url=hge_scale_url
+            hge_scale_url=hge_scale_url,
         )
     except HGECtxError as e:
+        assert False, "Error from hge_cxt: " + str(e)
+        # TODO this breaks things (https://github.com/pytest-dev/pytest-xdist/issues/86)
+        #      so at least make sure the real error gets printed (above)
         pytest.exit(str(e))
 
     yield hge_ctx  # provide the fixture value
@@ -157,7 +193,7 @@ def evts_webhook(request):
 
 @pytest.fixture(scope='class')
 def ws_client(request, hge_ctx):
-    client = GQLWsClient(hge_ctx)
+    client = GQLWsClient(hge_ctx, '/v1/graphql')
     time.sleep(0.1)
     yield client
     client.teardown()

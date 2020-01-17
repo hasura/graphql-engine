@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura Metadata file format reference
+   :keywords: hasura, docs, metadata, file format
+
 .. _metadata_file_format:
 
 Metadata file format reference
@@ -9,7 +13,7 @@ Metadata file format reference
   :local:
 
 The metadata file that is exported from the server is a JSON/YAML representation
-of the Hausra metadata stored in ``hdb_catalog`` schema on the Postgres
+of the Hausra metadata stored in the ``hdb_catalog`` schema on the Postgres
 database.
 
 The top level keys will be the following arrays:
@@ -125,6 +129,5 @@ defined for each table. Here is an example metadata file:
        role: user
      update_permissions: []
 
-The schema for this file will mostly correspond to the table structure in
-``hdb_catalog`` Postgres schema which is described at
-:ref:`hasura_metadata_schema`.
+The schema for this file will mostly correspond to the table structure of the
+:doc:`metadata catalogue <../../how-it-works/metadata-schema>`

@@ -23,12 +23,29 @@ import {
 } from '../customFunctionReducer';
 
 import { SET_SQL } from '../../RawSQL/Actions';
+import { NotFoundError } from '../../../../Error/PageNotFound';
+import { getConfirmation } from '../../../../Common/utils/jsUtils';
+import {
+  getFunctionBaseRoute,
+  getSchemaBaseRoute,
+} from '../../../../Common/utils/routesUtils';
 
 class ModifyCustomFunction extends React.Component {
   constructor() {
     super();
-    this.state = {};
-    this.state.deleteConfirmationError = null;
+
+    this.state = {
+      deleteConfirmationError: null,
+      funcFetchCompleted: false,
+    };
+
+    this.loadRunSQLAndLoadPage = this.loadRunSQLAndLoadPage.bind(this);
+    this.handleUntrackCustomFunction = this.handleUntrackCustomFunction.bind(
+      this
+    );
+    this.handleDeleteCustomFunction = this.handleDeleteCustomFunction.bind(
+      this
+    );
   }
 
   componentDidMount() {
@@ -37,7 +54,11 @@ class ModifyCustomFunction extends React.Component {
       this.props.dispatch(push(prefixUrl));
     }
     Promise.all([
-      this.props.dispatch(fetchCustomFunction(functionName, schema)),
+      this.props
+        .dispatch(fetchCustomFunction(functionName, schema))
+        .then(() => {
+          this.setState({ funcFetchCompleted: true });
+        }),
     ]);
   }
 
@@ -48,12 +69,16 @@ class ModifyCustomFunction extends React.Component {
       schema !== nextProps.params.schema
     ) {
       Promise.all([
-        this.props.dispatch(
-          fetchCustomFunction(
-            nextProps.params.functionName,
-            nextProps.params.schema
+        this.props
+          .dispatch(
+            fetchCustomFunction(
+              nextProps.params.functionName,
+              nextProps.params.schema
+            )
           )
-        ),
+          .then(() => {
+            this.setState({ funcFetchCompleted: true });
+          }),
       ]);
     }
   }
@@ -62,7 +87,7 @@ class ModifyCustomFunction extends React.Component {
     const { functionDefinition } = this.props.functions;
     Promise.all([
       this.props.dispatch({ type: SET_SQL, data: functionDefinition }),
-      this.props.dispatch(_push('/sql')),
+      this.props.dispatch(_push('/data/sql')),
     ]);
   }
 
@@ -72,27 +97,31 @@ class ModifyCustomFunction extends React.Component {
 
   handleUntrackCustomFunction(e) {
     e.preventDefault();
-    this.props.dispatch(unTrackCustomFunction());
+
+    const functionName = this.props.functions.functionName;
+
+    const confirmMessage = `This will remove the function "${functionName}" from the GraphQL schema`;
+    const isOk = getConfirmation(confirmMessage);
+    if (isOk) {
+      this.props.dispatch(unTrackCustomFunction());
+    }
   }
 
   handleDeleteCustomFunction(e) {
     e.preventDefault();
 
-    const a = prompt(
-      'Are you absolutely sure?\nThis action cannot be undone. This will permanently delete function. Please type "DELETE" (in caps, without quotes) to confirm.\n'
-    );
+    const functionName = this.props.functions.functionName;
 
-    try {
-      if (a && typeof a === 'string' && a.trim() === 'DELETE') {
+    const confirmMessage = `This will permanently delete the function "${functionName}" from the database`;
+    const isOk = getConfirmation(confirmMessage, true, functionName);
+
+    if (isOk) {
+      try {
         this.updateDeleteConfirmationError(null);
         this.props.dispatch(deleteFunctionSql());
-      } else {
-        // Input didn't match
-        // Show an error message right next to the button
-        this.updateDeleteConfirmationError('user confirmation error!');
+      } catch (err) {
+        console.error('Delete custom function error: ', err);
       }
-    } catch (err) {
-      console.error(err);
     }
   }
 
@@ -108,9 +137,14 @@ class ModifyCustomFunction extends React.Component {
       isFetching,
     } = this.props.functions;
 
+    if (this.state.funcFetchCompleted && !functionName) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     const { migrationMode } = this.props;
 
-    const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
+    const functionBaseUrl = getFunctionBaseRoute(schema, functionName);
 
     const generateMigrateBtns = () => {
       return (
@@ -119,17 +153,14 @@ class ModifyCustomFunction extends React.Component {
             color="yellow"
             className={styles.add_mar_right}
             data-test={'custom-function-edit-modify-btn'}
-            onClick={this.loadRunSQLAndLoadPage.bind(this)}
+            onClick={this.loadRunSQLAndLoadPage}
           >
             Modify
           </Button>
           <Button
             color="white"
             className={styles.add_mar_right}
-            onClick={e => {
-              e.preventDefault();
-              this.handleUntrackCustomFunction(e);
-            }}
+            onClick={this.handleUntrackCustomFunction}
             disabled={isRequesting || isDeleting || isUntracking}
             data-test={'custom-function-edit-untrack-btn'}
           >
@@ -137,10 +168,7 @@ class ModifyCustomFunction extends React.Component {
           </Button>
           <Button
             color="red"
-            onClick={e => {
-              e.preventDefault();
-              this.handleDeleteCustomFunction(e);
-            }}
+            onClick={this.handleDeleteCustomFunction}
             data-test={'custom-function-edit-delete-btn'}
             disabled={isRequesting || isDeleting || isUntracking}
           >
@@ -168,20 +196,21 @@ class ModifyCustomFunction extends React.Component {
       },
       {
         title: schema,
-        url: appPrefix + '/schema/' + schema,
+        url: getSchemaBaseRoute(schema),
       },
     ];
 
     if (functionName) {
       breadCrumbs.push({
         title: functionName,
-        url: appPrefix + '/schema/' + schema + '/functions/' + functionName,
+        url: functionBaseUrl,
       });
       breadCrumbs.push({
         title: 'Modify',
         url: '',
       });
     }
+
     return (
       <div className={'col-xs-8' + ' ' + styles.modifyWrapper}>
         <Helmet
@@ -193,7 +222,7 @@ class ModifyCustomFunction extends React.Component {
           heading={functionName}
           tabsInfo={tabInfo}
           breadCrumbs={breadCrumbs}
-          baseUrl={baseUrl}
+          baseUrl={functionBaseUrl}
           showLoader={isFetching}
           testPrefix={'functions'}
         />
@@ -205,6 +234,7 @@ class ModifyCustomFunction extends React.Component {
           <TextAreaWithCopy
             copyText={functionDefinition}
             textLanguage={'sql'}
+            id={'copyCustomFunctionSQL'}
           />
         </div>
         {migrationMode

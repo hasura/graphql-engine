@@ -1,3 +1,7 @@
+.. meta::
+   :description: Set up GraphQL subscriptions with apollo-client
+   :keywords: hasura, docs, guide, GraphQL subscriptions, apollo, apollo-client
+
 Setting up GraphQL subscriptions using apollo-client
 ====================================================
 
@@ -9,7 +13,7 @@ Setting up GraphQL subscriptions using apollo-client
 Setup
 -----
 This guide assumes you have the basic apollo-client working as per
-https://www.apollographql.com/docs/react/essentials/get-started.html and now you want to enable subscriptions.
+https://www.apollographql.com/docs/react/get-started/ and now you want to enable subscriptions.
 
 Install packages
 ^^^^^^^^^^^^^^^^
@@ -33,17 +37,17 @@ Once these packages are installed, import them as follows in the file where you 
   import { InMemoryCache } from 'apollo-cache-inmemory';
 
 
-below these imports initialise your client to fetch subscriptions along with query and mutation.
+Below these imports initialise your client to fetch subscriptions along with query and mutation.
 
 .. code-block:: js
 
   const httpLink = new HttpLink({
-    uri: "https://<your-app>/v1alpha1/graphql",
+    uri: "http://<your-app>/v1/graphql", // use https for secure endpoint
   });
 
   // Create a WebSocket link:
   const wsLink = new WebSocketLink({
-    uri: "ws://<your-app>/v1alpha1/graphql",
+    uri: "ws://<your-app>/v1/graphql", // use wss for a secure endpoint
     options: {
       reconnect: true
     }
@@ -131,7 +135,7 @@ care of when switching to subscriptions.
 .. admonition:: Caveat
 
   If all the 3 changes are not made, **it works like a query instead of a subscription**
-  since, the code that sets up apollo-link doesn't work.
+  since the code that sets up apollo-link doesn't work.
 
   .. code-block:: js
 

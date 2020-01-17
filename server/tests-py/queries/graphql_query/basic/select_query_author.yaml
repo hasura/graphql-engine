@@ -1,13 +1,13 @@
 description: Simple GraphQL object query on author
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:
     author:
-      - name: Author 1
-        id: 1
-      - name: Author 2
-        id: 2
+    - id: 1
+      name: Author 1
+    - id: 2
+      name: Author 2
 query:
   query: |
     query {

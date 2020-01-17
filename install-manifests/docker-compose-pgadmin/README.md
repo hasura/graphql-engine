@@ -18,13 +18,13 @@ This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura
 - `docker-compose up -d`
 - Navigate to `http://localhost:5050`, login and add a new server with the following parameters:  
   General - Name: Hasura  
-  Connection - Host: `hasura`  
-  Username: `postgres`  
+  Connection - Host: `postgres`
+  Username: `postgres`
   Password: leave empty  
 
 ## Important endpoints
 
-- GraphQL endpoint will be `http://localhost:8080/v1alpha1/graphql`
+- GraphQL endpoint will be `http://localhost:8080/v1/graphql`
 - Hasura Console will be available on `http://localhost:8080/console`
 - pgAdmin will be available on `http://localhost:5050`
 

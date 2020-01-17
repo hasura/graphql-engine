@@ -17,4 +17,7 @@ args:
       drop table blog;
       drop table author;
       drop table "Company";
+      drop table computer;
+      drop table "user";
+      drop table account;
     cascade: true

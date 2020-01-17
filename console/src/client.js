@@ -34,7 +34,7 @@ if (telemetryEnabled) {
 }
 
 const onError = error => {
-  console.log('WebSocket Error for Events' + error);
+  console.error('WebSocket Error for Events' + error);
 };
 
 const onClose = () => {
@@ -105,7 +105,7 @@ if (__DEVELOPMENT__) {
     applyMiddleware(
       thunk,
       routerMiddleware(browserHistory),
-      createLogger(),
+      createLogger({ diff: true, duration: true }),
       analyticsLogger
     ),
     require('redux-devtools').persistState(

@@ -1,5 +1,5 @@
 - description: Insert landmarks
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   status: 200
   response:
     data:
@@ -7,30 +7,46 @@
         returning:
         - id: 1
           name: Baz
-          type: river
-          location: &loc1
-            coordinates: [43.75049, 11.03207]
-            type: Point
-            crs: &crs
+          location:
+            crs:
               type: name
               properties:
-                name: 'urn:ogc:def:crs:EPSG::4326'
+                name: urn:ogc:def:crs:EPSG::4326
+            type: Point
+            coordinates:
+            - 43.75049
+            - 11.03207
+          type: river
         - id: 2
           name: Foo Bar
-          type: park
-          location: &loc2
-            coordinates: [43.76417, 11.25869]
+          location:
+            crs:
+              type: name
+              properties:
+                name: urn:ogc:def:crs:EPSG::4326
             type: Point
-            crs: *crs
+            coordinates:
+            - 43.76417
+            - 11.25869
+          type: park
   query:
     variables:
       landmarks:
       - name: Baz
         type: river
-        location: *loc1
+        location:
+          coordinates: [43.75049, 11.03207]
+          type: Point
+          crs: &crs
+            type: name
+            properties:
+              name: urn:ogc:def:crs:EPSG::4326
       - name: Foo Bar
         type: park
-        location: *loc2
+        location:
+          coordinates: [43.76417, 11.25869]
+          type: Point
+          crs: *crs
     query: |
       mutation insertLandmark($landmarks: [landmark_insert_input!]!) {
         insert_landmark(objects: $landmarks) {

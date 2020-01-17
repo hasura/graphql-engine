@@ -1,6 +1,6 @@
 description: Fetch highest salaried employee from each department (fail)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 response:
   errors:
   - extensions:
@@ -13,7 +13,7 @@ query:
       employee(
         distinct_on: [department]
         order_by: [{salary: desc}]
-      ){
+      ) {
         id
         name
         department

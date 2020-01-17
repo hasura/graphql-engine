@@ -1,3 +1,7 @@
+.. meta::
+   :description: Required Postgres permissions for Hasura GraphQL engine
+   :keywords: hasura, docs, deployment, postgres, postgres permissions
+
 Postgres permissions
 ====================
 
@@ -6,17 +10,17 @@ Postgres permissions
   :depth: 1
   :local:
 
-If you're running in a controlled environment, you might need to configure Hasura GraphQL engine to use a
+If you're running in a controlled environment, you might need to configure the Hasura GraphQL engine to use a
 specific Postgres user that your DBA gives you.
 
-Hasura GraphQL engine needs access to your Postgres database with the following permissions:
+The Hasura GraphQL engine needs access to your Postgres database with the following permissions:
 
 - (required) Read & write access on 2 schemas: ``hdb_catalog`` and ``hdb_views``.
 - (required) Read access to the ``information_schema`` and ``pg_catalog`` schemas, to query for list of tables.
 - (required) Read access to the schemas (public or otherwise) if you only want to support queries.
-- (optional) Write access to the schemas if you want to support mutations as well
+- (optional) Write access to the schemas if you want to support mutations as well.
 - (optional) To create tables and views via the Hasura console (the admin UI) you'll need the privilege to create
-  tables/views. This might not be required when you're working with an existing database
+  tables/views. This might not be required when you're working with an existing database.
 
 
 Here's a sample SQL block that you can run on your database to create the right credentials:
@@ -57,6 +61,7 @@ Here's a sample SQL block that you can run on your database to create the right 
     -- grant all privileges on all tables in the public schema. This can be customised:
     -- For example, if you only want to use GraphQL regular queries and not mutations,
     -- then you can set: GRANT SELECT ON ALL TABLES...
+    GRANT USAGE ON SCHEMA public TO hasurauser;
     GRANT ALL ON ALL TABLES IN SCHEMA public TO hasurauser;
     GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO hasurauser;
 

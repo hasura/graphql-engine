@@ -1,21 +1,21 @@
 - description: Select author and their articles
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   status: 200
-  response: &response
+  response:
     data:
       author:
-      - name: Author 2
-        id: 2
+      - id: 2
+        name: Author 2
         articles:
-        - content: Sample article content 3
-          id: 3
+        - id: 3
           title: Article 3
-      - name: Author 3
-        id: 3
+          content: Sample article content 3
+      - id: 3
+        name: Author 3
         articles:
-        - content: Sample article content 4
-          id: 4
+        - id: 4
           title: Article 4
+          content: Sample article content 4
   query:
     query: |
       query {
@@ -26,18 +26,31 @@
           name
           articles{
             id
-            title 
+            title
             content
           }
         }
       }
 - description: Select author and their articles
-  url: /v1alpha1/graphql
+  url: /v1/graphql
   status: 200
   response:
-    <<: *response
+    data:
+      author:
+      - id: 2
+        name: Author 2
+        articles:
+        - id: 3
+          title: Article 3
+          content: Sample article content 3
+      - id: 3
+        name: Author 3
+        articles:
+        - id: 4
+          title: Article 4
+          content: Sample article content 4
   query:
-    query: |
+    query: |-
       query {
         author (
         where: {id: {_gte: 2}}
@@ -46,7 +59,7 @@
           name
           articles{
             id
-            title 
+            title
             content
           }
         }

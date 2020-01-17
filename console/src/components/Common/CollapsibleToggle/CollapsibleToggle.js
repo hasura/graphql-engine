@@ -43,7 +43,7 @@ class CollapsibleToggle extends React.Component {
       let _title;
 
       if (useDefaultTitleStyle) {
-        _title = <div className={styles.collapsibleTitle}>{title}</div>;
+        _title = <div className={styles.defaultCollapsibleTitle}>{title}</div>;
       } else {
         _title = title;
       }
@@ -52,23 +52,7 @@ class CollapsibleToggle extends React.Component {
     };
 
     const getChildren = () => {
-      let _children;
-
-      if (isOpen) {
-        _children = <div className={styles.collapsibleContent}>{children}</div>;
-      }
-
-      return _children;
-    };
-
-    const getIndicatorType = () => {
-      let _indicatorStateStyle;
-
-      if (isOpen) {
-        _indicatorStateStyle = styles.collapsibleIndicatorOpen;
-      }
-
-      return _indicatorStateStyle;
+      return <div className={styles.collapsibleContent}>{children}</div>;
     };
 
     return (
@@ -82,14 +66,14 @@ class CollapsibleToggle extends React.Component {
             <i
               className={`fa fa-chevron-right ${
                 styles.collapsibleIndicator
-              } ${getIndicatorType()}`}
+              } ${isOpen && styles.collapsibleIndicatorOpen}`}
             />
           </span>
 
           <span className={styles.titleWrapper}>{getTitle()}</span>
         </div>
 
-        {getChildren()}
+        {isOpen && getChildren()}
       </div>
     );
   }

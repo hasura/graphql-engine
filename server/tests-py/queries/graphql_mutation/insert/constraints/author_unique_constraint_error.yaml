@@ -1,6 +1,6 @@
 description: Insert into author table as user role (Unique Constraint Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 query:
   query: |
     mutation insert_author {

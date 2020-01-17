@@ -1,6 +1,5 @@
 <html lang="en-us">
   <head>
-    <link rel="icon" type="image/svg+xml" href="https://graphql-engine-cdn.hasura.io/img/hasura_icon_green.svg" />
     <script>
      window.__env = {
        consoleMode: "server",
@@ -8,8 +7,13 @@
        consolePath: "{{consolePath}}",
        isAccessKeySet: {{isAdminSecretSet}},
        isAdminSecretSet: {{isAdminSecretSet}},
-       enableTelemetry: {{enableTelemetry}}
+       enableTelemetry: {{enableTelemetry}},
+       assetsPath: "https://graphql-engine-cdn.hasura.io/console/assets",
+       assetsVersion: "{{assetsVersion}}",
+       cdnAssets: {{cdnAssets}},
+       serverVersion: "{{serverVersion}}",
      };
+     window.__env.versionedAssetsPath = window.__env.assetsPath;
     </script>
   </head>
   <body>
@@ -45,9 +49,54 @@
       </div>
     </div>
     <div id="content" class="mainContent"></div>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"/>
-    <link rel="stylesheet" href="{{consoleAssetsLoc}}/main.css" charset="UTF-8"/>
-    <script src="{{consoleAssetsLoc}}/vendor.js" charset="UTF-8"></script>
-    <script src="{{consoleAssetsLoc}}/main.js" charset="UTF-8"></script>
+
+    <script>
+     // helper functions
+     const loadIcon = (url) => {
+       linkElem = document.createElement('link');
+       linkElem.rel = 'icon';
+       linkElem.type = 'image/png';
+       linkElem.href = url;
+       document.head.append(linkElem);
+     };
+     const loadCSS = (url) => {
+       linkElem = document.createElement('link');
+       linkElem.rel = 'stylesheet';
+       linkElem.charset = 'UTF-8';
+       linkElem.href = url;
+       document.body.append(linkElem);
+     };
+     const loadScript = (url) => {
+       scriptElem = document.createElement('script');
+       scriptElem.charset = 'UTF-8';
+       scriptElem.src = url;
+       document.body.append(scriptElem);
+     };
+     const prependSlash = (str) => str === '' ? '' : '/' + str;
+     const loadAssets = () => {
+       loadCSS(window.__env.assetsPath + '/common/css/font-awesome.min.css.gz');
+       loadIcon(window.__env.assetsPath + '/common/img/favicon_green.png');
+       loadCSS(window.__env.versionedAssetsPath + '/main.css.gz');
+       loadScript(window.__env.versionedAssetsPath + '/main.js.gz');
+       loadScript(window.__env.versionedAssetsPath + '/vendor.js.gz');
+     };
+
+     // if cdnAssets is set to false, load assets from server instead of cdn
+     if (window.__env.cdnAssets === false) {
+       window.__env.assetsPath =
+         window.location.pathname.slice(
+           0, window.location.pathname.lastIndexOf(window.__env.consolePath)
+         ) + '/console/assets';
+       // set the path to get versioned assets from server
+       window.__env.versionedAssetsPath = window.__env.assetsPath + '/versioned';
+
+     // otherwise load from cdn itself
+     } else {
+       // set the path (cdn-based) to get assets from
+       window.__env.versionedAssetsPath = window.__env.assetsPath + prependSlash(window.__env.assetsVersion);
+     }
+     // load the assets now
+     loadAssets();
+    </script>
   </body>
 </html>

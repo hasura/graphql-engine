@@ -1,24 +1,14 @@
 module Hasura.GraphQL.Resolve.Context
-  ( FieldMap
-  , RelationInfoMap
-  , FuncArgItem(..)
-  , OrdByCtx
-  , OrdByItemMap
+  ( FunctionArgItem(..)
   , OrdByItem(..)
-  , FuncArgSeq
-  , PGColArgMap
   , UpdPermForIns(..)
   , InsCtx(..)
-  , InsCtxMap
   , RespTx
   , LazyRespTx
   , AnnPGVal(..)
-  , PrepFn
   , UnresolvedVal(..)
   , resolveValPrep
   , resolveValTxt
-  , AnnBoolExpUnresolved
-  , partialSQLExpToUnresolvedVal
   , InsertTxConflictCtx(..)
   , getFldInfo
   , getPGColInfo
@@ -36,72 +26,34 @@ module Hasura.GraphQL.Resolve.Context
 
   , withSelSet
   , fieldAsPath
+  , resolvePGCol
   , module Hasura.GraphQL.Utils
+  , module Hasura.GraphQL.Resolve.Types
   ) where
 
 import           Data.Has
 import           Hasura.Prelude
 
-import qualified Data.Aeson                          as J
-import qualified Data.Aeson.Casing                   as J
-import qualified Data.Aeson.TH                       as J
-import qualified Data.HashMap.Strict                 as Map
-import qualified Data.Sequence                       as Seq
-import qualified Database.PG.Query                   as Q
-import qualified Language.GraphQL.Draft.Syntax       as G
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.Sequence                 as Seq
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.GraphQL.Resolve.ContextTypes
-
+import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DML.Internal       (currentSession, sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import           Hasura.RQL.DML.Internal             (sessVarFromCurrentSetting)
-
-import qualified Hasura.SQL.DML                      as S
-
-data InsResp
-  = InsResp
-  { _irAffectedRows :: !Int
-  , _irResponse     :: !(Maybe J.Object)
-  } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''InsResp)
-
-data AnnPGVal
-  = AnnPGVal
-  { _apvVariable   :: !(Maybe G.Variable)
-  , _apvIsNullable :: !Bool
-  , _apvType       :: !PGColType
-  , _apvValue      :: !PGColValue
-  } deriving (Show, Eq)
-
-type PrepFn m = AnnPGVal -> m S.SQLExp
-
--- lifts PartialSQLExp to UnresolvedVal
-partialSQLExpToUnresolvedVal :: PartialSQLExp -> UnresolvedVal
-partialSQLExpToUnresolvedVal = \case
-  PSESessVar colTy sessVar -> UVSessVar colTy sessVar
-  PSESQLExp s -> UVSQL s
-
--- A value that will be converted to an sql expression eventually
-data UnresolvedVal
-  -- From a session variable
-  = UVSessVar !PGColType !SessVar
-  -- This is postgres
-  | UVPG !AnnPGVal
-  -- This is a full resolved sql expression
-  | UVSQL !S.SQLExp
-  deriving (Show, Eq)
-
-type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
+import qualified Hasura.SQL.DML                as S
 
 getFldInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
   => G.NamedType -> G.Name
-  -> m (Either PGColInfo (RelInfo, Bool, AnnBoolExpPartialSQL, Maybe Int))
+  -> m ResolveField
 getFldInfo nt n = do
   fldMap <- asks getter
   onNothing (Map.lookup (nt,n) fldMap) $
@@ -110,13 +62,16 @@ getFldInfo nt n = do
 
 getPGColInfo
   :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m PGColInfo
+  => G.NamedType -> G.Name -> m PGColumnInfo
 getPGColInfo nt n = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    Left pgColInfo -> return pgColInfo
-    Right _        -> throw500 $
-      "found relinfo when expecting pgcolinfo for "
+    RFPGColumn pgColInfo -> return pgColInfo
+    RFRelationship _     -> throw500 $ mkErrMsg "relation"
+    RFComputedField _    -> throw500 $ mkErrMsg "computed field"
+  where
+    mkErrMsg ty =
+      "found " <> ty <> " when expecting pgcolinfo for "
       <> showNamedTy nt <> ":" <> showName n
 
 getArg
@@ -148,23 +103,21 @@ withArg args arg f = prependArgsInPath $ nameAsPath arg $
   getArg args arg >>= f
 
 withArgM
-  :: (MonadError QErr m)
+  :: (MonadReusability m, MonadError QErr m)
   => ArgsMap
   -> G.Name
   -> (AnnInpVal -> m a)
   -> m (Maybe a)
-withArgM args arg f = prependArgsInPath $ nameAsPath arg $
-  mapM f $ handleNull =<< Map.lookup arg args
-  where
-    handleNull v = bool (Just v) Nothing $
-                   hasNullVal $ _aivValue v
+withArgM args argName f = do
+  wrappedArg <- for (Map.lookup argName args) $ \arg -> do
+    when (isJust (_aivVariable arg) && G.isNullable (_aivType arg)) markNotReusable
+    pure . bool (Just arg) Nothing $ hasNullVal (_aivValue arg)
+  prependArgsInPath . nameAsPath argName $ traverse f (join wrappedArg)
 
 type PrepArgs = Seq.Seq Q.PrepArg
 
-prepare
-  :: (MonadState PrepArgs m) => AnnPGVal -> m S.SQLExp
-prepare (AnnPGVal _ _ colTy colVal) =
-  prepareColVal colTy colVal
+prepare :: (MonadState PrepArgs m) => AnnPGVal -> m S.SQLExp
+prepare (AnnPGVal _ _ scalarValue) = prepareColVal scalarValue
 
 resolveValPrep
   :: (MonadState PrepArgs m)
@@ -172,28 +125,29 @@ resolveValPrep
 resolveValPrep = \case
   UVPG annPGVal -> prepare annPGVal
   UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
-  UVSQL sqlExp -> return sqlExp
+  UVSQL sqlExp -> pure sqlExp
+  UVSession -> pure currentSession
 
 resolveValTxt :: (Applicative f) => UnresolvedVal -> f S.SQLExp
 resolveValTxt = \case
   UVPG annPGVal -> txtConverter annPGVal
   UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
   UVSQL sqlExp -> pure sqlExp
+  UVSession -> pure currentSession
 
 withPrepArgs :: StateT PrepArgs m a -> m (a, PrepArgs)
 withPrepArgs m = runStateT m Seq.empty
 
 prepareColVal
   :: (MonadState PrepArgs m)
-  => PGColType -> PGColValue -> m S.SQLExp
-prepareColVal colTy colVal = do
+  => WithScalarType PGScalarValue -> m S.SQLExp
+prepareColVal (WithScalarType scalarType colVal) = do
   preparedArgs <- get
   put (preparedArgs Seq.|> binEncoder colVal)
-  return $ toPrepParam (Seq.length preparedArgs + 1) colTy
+  return $ toPrepParam (Seq.length preparedArgs + 1) scalarType
 
 txtConverter :: Applicative f => AnnPGVal -> f S.SQLExp
-txtConverter (AnnPGVal _ _ a b) =
-  pure $ toTxtValue a b
+txtConverter (AnnPGVal _ _ scalarValue) = pure $ toTxtValue scalarValue
 
 withSelSet :: (Monad m) => SelSet -> (Field -> m a) -> m [(Text, a)]
 withSelSet selSet f =
@@ -203,3 +157,9 @@ withSelSet selSet f =
 
 fieldAsPath :: (MonadError QErr m) => Field -> m a -> m a
 fieldAsPath = nameAsPath . _fName
+
+resolvePGCol :: (MonadError QErr m)
+             => PGColGNameMap -> G.Name -> m PGColumnInfo
+resolvePGCol colFldMap fldName =
+  onNothing (Map.lookup fldName colFldMap) $ throw500 $
+  "no column associated with name " <> G.unName fldName

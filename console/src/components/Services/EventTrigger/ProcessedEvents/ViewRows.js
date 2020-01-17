@@ -5,9 +5,7 @@ import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import 'brace/mode/json';
 import 'react-table/react-table.css';
-import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions'; // eslint-disable-line no-unused-vars
 import FilterQuery from './FilterQuery';
-import parseRowData from '../StreamingLogs/util';
 import {
   setOrderCol,
   setOrderType,
@@ -17,7 +15,12 @@ import {
   setLimit,
   addOrder,
 } from './FilterActions';
-import { ordinalColSort, convertDateTimeToLocale } from '../utils';
+import {
+  ordinalColSort,
+  convertDateTimeToLocale,
+  verifySuccessStatus,
+  parseRowData,
+} from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
 import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
@@ -30,14 +33,13 @@ const ViewRows = ({
   curPath,
   curDepth,
   activePath,
-  triggerList,
+  currentTrigger,
   dispatch,
   isView,
   count,
   expandedRow,
 }) => {
   const styles = require('../TableCommon/EventTable.scss');
-  const triggerSchema = triggerList.find(x => x.name === curTriggerName);
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
 
   // Am I a single row display
@@ -71,7 +73,7 @@ const ViewRows = ({
       if (!isView && hasPrimaryKeys) {
         pkClause.id = row.id;
       } else {
-        triggerSchema.map(k => {
+        currentTrigger.map(k => {
           pkClause[k] = row[k];
         });
       }
@@ -101,7 +103,7 @@ const ViewRows = ({
       // Insert cells corresponding to all rows
       sortedColumns.forEach(col => {
         const getCellContent = () => {
-          let conditionalClassname = styles.tableCellCenterAligned;
+          let conditionalClassname = styles.tableCellCenterAlignedOverflow;
           const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
           if (expandedRow === cellIndex) {
             conditionalClassname = styles.tableCellExpanded;
@@ -172,7 +174,7 @@ const ViewRows = ({
         <FilterQuery
           curQuery={curQuery}
           whereAnd={wheres}
-          triggerSchema={triggerSchema}
+          triggerSchema={currentTrigger}
           orderBy={orderBy}
           limit={limit}
           dispatch={dispatch}
@@ -221,6 +223,14 @@ const ViewRows = ({
       dispatch(runQuery());
     }
   };
+
+  const successIcon = (
+    <i className={styles.invocationSuccess + ' fa fa-check'} />
+  );
+
+  const failureIcon = (
+    <i className={styles.invocationFailure + ' fa fa-times'} />
+  );
 
   const renderTableBody = () => {
     if (newCurRows.length === 0) {
@@ -276,19 +286,17 @@ const ViewRows = ({
           const responseData = [];
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
-            const status =
-              r.status === 200 ? (
-                <i className={styles.invocationSuccess + ' fa fa-check'} />
-              ) : (
-                <i className={styles.invocationFailure + ' fa fa-times'} />
-              );
+            const status = verifySuccessStatus(r.status)
+              ? successIcon
+              : failureIcon;
 
             requestData.push(parseRowData(r, 'request'));
             responseData.push(parseRowData(r, 'response'));
             // Insert cells corresponding to all rows
             invocationColumns.forEach(col => {
               const getCellContent = () => {
-                let conditionalClassname = styles.tableCellCenterAligned;
+                let conditionalClassname =
+                  styles.tableCellCenterAlignedOverflow;
                 const cellIndex = `${curTriggerName}-${col}-${rowIndex}`;
                 if (expandedRow === cellIndex) {
                   conditionalClassname = styles.tableCellExpanded;
@@ -305,7 +313,9 @@ const ViewRows = ({
                 }
                 if (col === 'created_at') {
                   const formattedDate = convertDateTimeToLocale(r.created_at);
-                  return formattedDate;
+                  return (
+                    <div className={conditionalClassname}>{formattedDate}</div>
+                  );
                 }
                 const content =
                   r[col] === undefined ? 'NULL' : r[col].toString();
@@ -428,21 +438,11 @@ const ViewRows = ({
                                   {finalResponse.status_code
                                     ? [
                                       'Status Code: ',
-                                      finalResponse.status_code === 200 ? (
-                                        <i
-                                          className={
-                                            styles.invocationSuccess +
-                                              ' fa fa-check'
-                                          }
-                                        />
-                                      ) : (
-                                        <i
-                                          className={
-                                            styles.invocationFailure +
-                                              ' fa fa-times'
-                                          }
-                                        />
-                                      ),
+                                      verifySuccessStatus(
+                                        finalResponse.status_code
+                                      )
+                                        ? successIcon
+                                        : failureIcon,
                                       finalResponse.status_code,
                                       ' ',
                                       <OverlayTrigger

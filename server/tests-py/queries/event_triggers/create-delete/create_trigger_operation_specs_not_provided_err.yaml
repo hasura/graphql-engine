@@ -10,7 +10,7 @@
   url: /v1/query
   status: 400
   response:
-    error: at least one among the insert/update/delete operation specs must be provided
+    error: atleast one amongst insert/update/delete/enable_manual spec must be provided
     code: parse-failed
     path: $
   query:

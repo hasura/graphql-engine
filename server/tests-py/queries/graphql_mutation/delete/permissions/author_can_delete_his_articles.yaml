@@ -1,5 +1,5 @@
 description: A user can delete his articles
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 headers:
   X-Hasura-Role: user
@@ -9,10 +9,10 @@ response:
     delete_article:
       affected_rows: 1
       returning:
-      - author_id: 1
-        id: 1
+      - id: 1
         title: Article 1
         content: Sample article content 1
+        author_id: 1
 query:
   query: |
     mutation delete_article {

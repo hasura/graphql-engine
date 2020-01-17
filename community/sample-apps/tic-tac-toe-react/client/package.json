@@ -1,0 +1,39 @@
+{
+  "name": "tic-tac-toe",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "apollo-boost": "0.3.1",
+    "apollo-link-ws": "1.0.17",
+    "bootstrap": "4.3.1",
+    "graphql": "14.2.1",
+    "random-words": "1.1.0",
+    "react": "16.8.6",
+    "react-apollo": "2.5.5",
+    "react-bootstrap": "1.0.0-beta.8",
+    "react-dom": "16.8.6",
+    "react-scripts": "3.0.0",
+    "subscriptions-transport-ws": "0.9.16"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

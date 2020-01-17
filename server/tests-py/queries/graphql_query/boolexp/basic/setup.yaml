@@ -229,3 +229,60 @@ args:
     - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e5
     - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e6
     - uuid_col: 28d6d683-1317-49f7-b1cf-7d195242e4e7
+
+# Tables to test '_exist' field
+- type: run_sql
+  args:
+    sql: |
+      create table "user" (
+        id serial primary key,
+        name text not null unique,
+        is_admin boolean default false
+      );
+
+      insert into "user" (name, is_admin)
+        values ('user_1', false), ('user_2', true)
+      ;
+
+      create table account (
+        id serial primary key,
+        account_no integer not null unique
+      );
+
+      insert into account (account_no) values (1), (2) ;
+
+- type: track_table
+  args:
+    name: user
+    schema: public
+
+- type: track_table
+  args:
+    name: account
+    schema: public
+
+- type: create_select_permission
+  args:
+    table: account
+    role: user
+    permission:
+      columns:
+      - id
+      - account_no
+      filter:
+        _exists:
+          _table: user
+          _where:
+            id: X-Hasura-User-Id
+            is_admin: true
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE table_with_sql_identifier
+        ( id serial PRIMARY KEY
+        , sql_id information_schema.sql_identifier );
+      INSERT INTO table_with_sql_identifier (sql_id)
+        VALUES ('one'), ('one'), ('two'), ('three'), ('four'), ('one'), ('two');
+- type: track_table
+  args: table_with_sql_identifier

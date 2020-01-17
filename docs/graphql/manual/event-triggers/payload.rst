@@ -1,3 +1,7 @@
+.. meta::
+   :description: Event trigger payload in Hasura
+   :keywords: hasura, docs, event trigger, payload
+
 Event trigger payload
 =====================
 
@@ -50,10 +54,10 @@ JSON payload
      - Description
    * - session-variables
      - Object_ or NULL
-     - Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values. NULL if no session variables found.
+     - Key-value pairs of session variables (i.e. "x-hasura-\*" variables) and their values (NULL if no session variables found)
    * - op-name
      - OpName_
-     - Name of the operation. Can only be "INSERT", "UPDATE" or "DELETE"
+     - Name of the operation. Can only be "INSERT", "UPDATE", "DELETE", "MANUAL"
    * - column-values
      - Object_
      - Key-value pairs of column name and their values of the table
@@ -90,6 +94,18 @@ JSON payload
 
   - ``event.data.old`` will contain the row that is deleted
   - ``event.data.new`` will be ``null``
+
+- MANUAL
+
+  - ``event.data.old`` will be ``null``
+  - ``event.data.new`` will contain the current row
+
+.. note::
+
+   In case of ``UPDATE``, the events are delivered only if new data is distinct from
+   old data. The `composite type comparison <https://www.postgresql.org/docs/current/functions-comparisons.html#COMPOSITE-TYPE-COMPARISON>`__
+   is used to compare the old and new rows. If rows contain columns, which cannot be
+   compared using ``<>`` operator, then internal binary representation of rows by Postgres is compared.
 
 **For example**:
 
@@ -144,7 +160,7 @@ OpName
 
 .. parsed-literal::
 
-   "INSERT" | "UPDATE" | "DELETE"
+   "INSERT" | "UPDATE" | "DELETE" | "MANUAL"
 
 Webhook response structure
 --------------------------

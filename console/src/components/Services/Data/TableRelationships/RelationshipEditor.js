@@ -1,17 +1,25 @@
-/* eslint-disable jsx-a11y/no-autofocus */
 import React from 'react';
 import { getRelDef } from './utils';
 import Button from '../../../Common/Button/Button';
 import { deleteRelMigrate, saveRenameRelationship } from './Actions';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
+import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+
 import styles from '../TableModify/ModifyTable.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
+
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class RelationshipEditor extends React.Component {
-  state = {
-    isEditting: false,
-    text: this.props.relName,
-  };
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      isEditting: false,
+      text: this.props.relConfig.relName,
+    };
+  }
 
   handleTextChange = e => {
     this.setState({
@@ -34,76 +42,85 @@ class RelationshipEditor extends React.Component {
   };
 
   save = () => {
-    const { tableName, relName, dispatch } = this.props;
+    const { relConfig, dispatch } = this.props;
     const { text } = this.state;
-    if (text === relName) {
+    if (text === relConfig.relName) {
       return dispatch(
         showErrorNotification(
           'Renaming relationship failed',
-          `The relationship name is already ${relName}`
+          `The relationship name is already ${relConfig.relName}`
         )
       );
     }
     if (!gqlPattern.test(text)) {
       return dispatch(
         showErrorNotification(
-          gqlRelErrorNotif[4],
+          gqlRelErrorNotif[3],
           gqlRelErrorNotif[1],
-          gqlRelErrorNotif[2],
-          gqlRelErrorNotif[3]
+          gqlRelErrorNotif[2]
         )
       );
     }
     dispatch(
-      saveRenameRelationship(relName, text, tableName, this.toggleEditor)
+      saveRenameRelationship(
+        relConfig.relName,
+        text,
+        relConfig.lTable,
+        this.toggleEditor
+      )
     );
   };
 
   render() {
-    const {
-      dispatch,
-      tableName,
-      relName,
-      relConfig,
-      isObjRel,
-      allowRename,
-    } = this.props;
-
+    const { dispatch, relConfig, readOnlyMode } = this.props;
     const { text, isEditting } = this.state;
-    const { lcol, rtable, rcol } = relConfig;
 
-    const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
+    const { relName } = relConfig;
 
     const onDelete = e => {
       e.preventDefault();
-      const isOk = confirm('Are you sure?');
+
+      const confirmMessage = `This will delete the relationship "${relName}" from this table`;
+      const isOk = getConfirmation(confirmMessage);
       if (isOk) {
-        dispatch(
-          deleteRelMigrate(tableName, relName, lcol, rtable, rcol, isObjRel)
-        );
+        dispatch(deleteRelMigrate(relConfig));
       }
     };
-    const collapsed = () => (
-      <div>
-        <Button
-          color={allowRename ? 'white' : 'red'}
-          size={allowRename ? 'xs' : 'sm'}
-          onClick={allowRename ? this.toggleEditor : onDelete}
-          data-test={
-            allowRename
-              ? `relationship-toggle-editor-${relName}`
-              : `relationship-remove-${relName}`
-          }
-        >
-          {allowRename ? 'Edit' : 'Remove'}
-        </Button>
-        &nbsp;
-        <b>{relName}</b>
-        <div className={tableStyles.relationshipTopPadding}>
-          {getRelDef(isObjRel, lcol, rcol, tableName, rtable)}
+    const collapsed = () => {
+      const getEditBtn = () => {
+        if (readOnlyMode) {
+          return null;
+        }
+
+        return (
+          <React.Fragment>
+            <Button
+              color={'white'}
+              size={'xs'}
+              onClick={this.toggleEditor}
+              data-test={`relationship-toggle-editor-${relName}`}
+            >
+              Edit
+            </Button>
+            &nbsp;
+          </React.Fragment>
+        );
+      };
+
+      return (
+        <div>
+          {getEditBtn()}
+          <b>{relName}</b>
+          <GqlCompatibilityWarning
+            identifier={relName}
+            className={styles.add_mar_left_small}
+          />
+          <div className={tableStyles.relationshipTopPadding}>
+            {getRelDef(relConfig)}
+          </div>
         </div>
-      </div>
-    );
+      );
+    };
 
     const expanded = () => (
       <div className={styles.activeEdit}>
@@ -118,7 +135,7 @@ class RelationshipEditor extends React.Component {
           </Button>
         </div>
         <div className={tableStyles.relationshipTopPadding}>
-          <div>{getRelDef(isObjRel, lcol, rcol, tableName, rtable)}</div>
+          <div>{getRelDef(relConfig)}</div>
           <input
             onChange={this.handleTextChange}
             className={`form-control ${styles.add_mar_top_small}`}

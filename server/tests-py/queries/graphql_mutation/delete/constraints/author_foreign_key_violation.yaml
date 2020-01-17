@@ -1,6 +1,6 @@
 description: delete from author table (Foreign Key Violation Error)
-url: /v1alpha1/graphql
-status: 400
+url: /v1/graphql
+status: 200
 query:
   query: |
     mutation {

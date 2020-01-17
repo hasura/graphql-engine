@@ -1,20 +1,87 @@
-module Hasura.SQL.Types where
+module Hasura.SQL.Types
+  ( ToSQL(..)
+  , toSQLTxt
 
-import qualified Database.PG.Query          as Q
-import qualified Database.PG.Query.PTI      as PTI
+  , (<+>)
+  , (<<>)
+  , (<>>)
+
+  , pgFmtLit
+  , pgFmtIden
+  , isView
+
+  , QualifiedTable
+  , snakeCaseTable
+  , QualifiedFunction
+
+  , PGDescription(..)
+
+  , PGCol
+  , getPGColTxt
+  , showPGCols
+
+  , isIntegerType
+  , isNumType
+  , stringTypes
+  , isStringType
+  , isJSONType
+  , isComparableType
+  , isBigNum
+  , geoTypes
+  , isGeoType
+
+  , DQuote(..)
+  , dquote
+
+  , IsIden(..)
+  , Iden(..)
+
+  , ToTxt(..)
+
+  , SchemaName(..)
+  , publicSchema
+
+  , TableName(..)
+  , FunctionName(..)
+  , ConstraintName(..)
+
+  , QualifiedObject(..)
+  , qualObjectToText
+  , snakeCaseQualObject
+
+  , PGScalarType(..)
+  , WithScalarType(..)
+  , PGType(..)
+  , textToPGScalarType
+  , pgTypeOid
+
+  , PGTypeKind(..)
+  , QualifiedPGType(..)
+  , isBaseType
+  , typeToTable
+  )
+where
+
+import qualified Database.PG.Query             as Q
+import qualified Database.PG.Query.PTI         as PTI
 
 import           Hasura.Prelude
 
 import           Data.Aeson
-import           Data.Aeson.Encoding        (text)
-import           Data.String                (fromString)
-import           Instances.TH.Lift          ()
-import           Language.Haskell.TH.Syntax (Lift)
+import           Data.Aeson.Casing
+import           Data.Aeson.Encoding           (text)
+import           Data.Aeson.TH
+import           Data.Aeson.Types              (toJSONKeyText)
+import           Instances.TH.Lift             ()
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.Text.Extended         as T
-import qualified Database.PostgreSQL.LibPQ  as PQ
-import qualified PostgreSQL.Binary.Decoding as PD
-import qualified Text.Builder               as TB
+import qualified Data.Text.Extended            as T
+import qualified Database.PostgreSQL.LibPQ     as PQ
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified PostgreSQL.Binary.Decoding    as PD
+import qualified Text.Builder                  as TB
+
+import           Hasura.Incremental            (Cacheable)
 
 class ToSQL a where
   toSQL :: a -> TB.Builder
@@ -34,7 +101,7 @@ infixr 6 <+>
 
 newtype Iden
   = Iden { getIdenTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Semigroup)
+  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
 
 instance ToSQL Iden where
   toSQL (Iden t) =
@@ -51,6 +118,23 @@ class DQuote a where
 
 instance DQuote T.Text where
   dquoteTxt = id
+  {-# INLINE dquoteTxt #-}
+
+deriving instance DQuote G.Name
+
+dquote :: (DQuote a) => a -> T.Text
+dquote = T.dquote . dquoteTxt
+{-# INLINE dquote #-}
+
+infixr 6 <>>
+(<>>) :: (DQuote a) => T.Text -> a -> T.Text
+(<>>) lTxt a = lTxt <> dquote a
+{-# INLINE (<>>) #-}
+
+infixr 6 <<>
+(<<>) :: (DQuote a) => a -> T.Text -> T.Text
+(<<>) a rTxt = dquote a <> rTxt
+{-# INLINE (<<>) #-}
 
 pgFmtIden :: T.Text -> T.Text
 pgFmtIden x =
@@ -68,18 +152,6 @@ pgFmtLit x =
 trimNullChars :: T.Text -> T.Text
 trimNullChars = T.takeWhile (/= '\x0')
 
-infixr 6 <>>
-(<>>) :: (DQuote a) => T.Text -> a -> T.Text
-(<>>) lTxt a =
-  lTxt <> T.dquote (dquoteTxt a)
-{-# INLINE (<>>) #-}
-
-infixr 6 <<>
-(<<>) :: (DQuote a) => a -> T.Text -> T.Text
-(<<>) a rTxt =
-  T.dquote (dquoteTxt a) <> rTxt
-{-# INLINE (<<>) #-}
-
 instance (ToSQL a) => ToSQL (Maybe a) where
   toSQL (Just a) = toSQL a
   toSQL Nothing  = mempty
@@ -89,7 +161,8 @@ class ToTxt a where
 
 newtype TableName
   = TableName { getTableTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data
+           , Generic, Arbitrary, NFData, Cacheable, IsString )
 
 instance IsIden TableName where
   toIden (TableName t) = Iden t
@@ -133,7 +206,7 @@ isView _      = False
 
 newtype ConstraintName
   = ConstraintName { getConstraintTxt :: T.Text }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+  deriving (Show, Eq, DQuote, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, NFData, Cacheable)
 
 instance IsIden ConstraintName where
   toIden (ConstraintName t) = Iden t
@@ -143,7 +216,7 @@ instance ToSQL ConstraintName where
 
 newtype FunctionName
   = FunctionName { getFunctionTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
 
 instance IsIden FunctionName where
   toIden (FunctionName t) = Iden t
@@ -159,7 +232,8 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift)
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic
+           , Arbitrary, NFData, Cacheable, IsString )
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
@@ -174,7 +248,9 @@ data QualifiedObject a
   = QualifiedObject
   { qSchema :: !SchemaName
   , qName   :: !a
-  } deriving (Show, Eq, Ord, Generic, Lift)
+  } deriving (Show, Eq, Functor, Ord, Generic, Lift, Data)
+instance (NFData a) => NFData (QualifiedObject a)
+instance (Cacheable a) => Cacheable (QualifiedObject a)
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -187,7 +263,6 @@ instance (FromJSON a) => FromJSON (QualifiedObject a) where
     fail "expecting a string/object for QualifiedObject"
 
 instance (ToJSON a) => ToJSON (QualifiedObject a) where
-  toJSON (QualifiedObject (SchemaName "public") o) = toJSON o
   toJSON (QualifiedObject sn o) =
     object [ "schema" .= sn
            , "name"  .= o
@@ -223,9 +298,14 @@ snakeCaseTable (QualifiedObject sn tn) =
 
 type QualifiedFunction = QualifiedObject FunctionName
 
+newtype PGDescription
+  = PGDescription { getPGDescription :: T.Text }
+  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol, NFData, Cacheable)
+
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift)
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey
+           , FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
 
 instance IsIden PGCol where
   toIden (PGCol t) = Iden t
@@ -240,7 +320,7 @@ showPGCols :: (Foldable t) => t PGCol -> T.Text
 showPGCols cols =
   T.intercalate ", " $ map (T.dquote . getPGColTxt) $ toList cols
 
-data PGColType
+data PGScalarType
   = PGSmallInt
   | PGInteger
   | PGBigInt
@@ -260,42 +340,48 @@ data PGColType
   | PGJSONB
   | PGGeometry
   | PGGeography
+  | PGRaster
   | PGUnknown !T.Text
-  deriving (Eq, Lift, Generic)
+  deriving (Show, Eq, Lift, Generic, Data)
+instance NFData PGScalarType
+instance Hashable PGScalarType
+instance Cacheable PGScalarType
 
-instance Hashable PGColType
+instance ToSQL PGScalarType where
+  toSQL = \case
+    PGSmallInt    -> "smallint"
+    PGInteger     -> "integer"
+    PGBigInt      -> "bigint"
+    PGSerial      -> "serial"
+    PGBigSerial   -> "bigserial"
+    PGFloat       -> "real"
+    PGDouble      -> "float8"
+    PGNumeric     -> "numeric"
+    PGBoolean     -> "boolean"
+    PGChar        -> "character"
+    PGVarchar     -> "varchar"
+    PGText        -> "text"
+    PGDate        -> "date"
+    PGTimeStampTZ -> "timestamptz"
+    PGTimeTZ      -> "timetz"
+    PGJSON        -> "json"
+    PGJSONB       -> "jsonb"
+    PGGeometry    -> "geometry"
+    PGGeography   -> "geography"
+    PGRaster      -> "raster"
+    PGUnknown t   -> TB.text t
 
-instance Show PGColType where
-  show PGSmallInt    = "smallint"
-  show PGInteger     = "integer"
-  show PGBigInt      = "bigint"
-  show PGSerial      = "serial"
-  show PGBigSerial   = "bigserial"
-  show PGFloat       = "real"
-  show PGDouble      = "float8"
-  show PGNumeric     = "numeric"
-  show PGBoolean     = "boolean"
-  show PGChar        = "character"
-  show PGVarchar     = "varchar"
-  show PGText        = "text"
-  show PGDate        = "date"
-  show PGTimeStampTZ = "timestamptz"
-  show PGTimeTZ      = "timetz"
-  show PGJSON        = "json"
-  show PGJSONB       = "jsonb"
-  show PGGeometry    = "geometry"
-  show PGGeography   = "geography"
-  show (PGUnknown t) = T.unpack t
+instance ToJSON PGScalarType where
+  toJSON = String . toSQLTxt
 
-instance ToJSON PGColType where
-  toJSON pct = String $ T.pack $ show pct
+instance ToJSONKey PGScalarType where
+  toJSONKey = toJSONKeyText toSQLTxt
 
-instance ToSQL PGColType where
-  toSQL pct = fromString $ show pct
+instance DQuote PGScalarType where
+  dquoteTxt = toSQLTxt
 
-
-txtToPgColTy :: Text -> PGColType
-txtToPgColTy t = case t of
+textToPGScalarType :: Text -> PGScalarType
+textToPGScalarType t = case t of
   "serial"                   -> PGSerial
   "bigserial"                -> PGBigSerial
 
@@ -341,15 +427,16 @@ txtToPgColTy t = case t of
 
   "geometry"                 -> PGGeometry
   "geography"                -> PGGeography
+
+  "raster"                   -> PGRaster
   _                          -> PGUnknown t
 
 
-instance FromJSON PGColType where
-  parseJSON (String t) = return $ txtToPgColTy t
-  parseJSON _          = fail "Expecting a string for PGColType"
+instance FromJSON PGScalarType where
+  parseJSON (String t) = return $ textToPGScalarType t
+  parseJSON _          = fail "Expecting a string for PGScalarType"
 
-
-pgTypeOid :: PGColType -> PQ.Oid
+pgTypeOid :: PGScalarType -> PQ.Oid
 pgTypeOid PGSmallInt    = PTI.int2
 pgTypeOid PGInteger     = PTI.int4
 pgTypeOid PGBigInt      = PTI.int8
@@ -370,25 +457,34 @@ pgTypeOid PGJSONB       = PTI.jsonb
 -- we are using the ST_GeomFromGeoJSON($i) instead of $i
 pgTypeOid PGGeometry    = PTI.text
 pgTypeOid PGGeography   = PTI.text
+-- we are using the ST_RastFromHexWKB($i) instead of $i
+pgTypeOid PGRaster      = PTI.text
 pgTypeOid (PGUnknown _) = PTI.auto
 
-isIntegerType :: PGColType -> Bool
+isIntegerType :: PGScalarType -> Bool
 isIntegerType PGInteger  = True
 isIntegerType PGSmallInt = True
 isIntegerType PGBigInt   = True
 isIntegerType _          = False
 
-isNumType :: PGColType -> Bool
+isNumType :: PGScalarType -> Bool
 isNumType PGFloat   = True
 isNumType PGDouble  = True
 isNumType PGNumeric = True
 isNumType ty        = isIntegerType ty
 
-isJSONBType :: PGColType -> Bool
-isJSONBType PGJSONB = True
-isJSONBType _       = False
+stringTypes :: [PGScalarType]
+stringTypes = [PGVarchar, PGText]
+isStringType :: PGScalarType -> Bool
+isStringType = (`elem` stringTypes)
 
-isComparableType :: PGColType -> Bool
+jsonTypes :: [PGScalarType]
+jsonTypes = [PGJSON, PGJSONB]
+
+isJSONType :: PGScalarType -> Bool
+isJSONType = (`elem` jsonTypes)
+
+isComparableType :: PGScalarType -> Bool
 isComparableType PGJSON        = False
 isComparableType PGJSONB       = False
 isComparableType PGGeometry    = False
@@ -397,7 +493,7 @@ isComparableType PGBoolean     = False
 isComparableType (PGUnknown _) = False
 isComparableType _             = True
 
-isBigNum :: PGColType -> Bool
+isBigNum :: PGScalarType -> Bool
 isBigNum = \case
   PGBigInt    -> True
   PGBigSerial -> True
@@ -405,8 +501,91 @@ isBigNum = \case
   PGDouble    -> True
   _           -> False
 
-isGeoType :: PGColType -> Bool
-isGeoType = \case
-  PGGeometry  -> True
-  PGGeography -> True
-  _           -> False
+geoTypes :: [PGScalarType]
+geoTypes = [PGGeometry, PGGeography]
+
+isGeoType :: PGScalarType -> Bool
+isGeoType = (`elem` geoTypes)
+
+data WithScalarType a
+  = WithScalarType
+  { pstType  :: !PGScalarType
+  , pstValue :: !a
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+
+-- | The type of all Postgres types (i.e. scalars and arrays). This type is parameterized so that
+-- we can have both @'PGType' 'PGScalarType'@ and @'PGType' 'Hasura.RQL.Types.PGColumnType'@, for
+-- when we care about the distinction made by 'Hasura.RQL.Types.PGColumnType'. If we ever change
+-- 'Hasura.RQL.Types.PGColumnType' to handle arrays, not just scalars, then the parameterization can
+-- go away.
+--
+-- TODO: This is incorrect modeling, as 'PGScalarType' will capture anything (under 'PGUnknown').
+-- This should be fixed when support for all types is merged.
+data PGType a
+  = PGTypeScalar !a
+  | PGTypeArray !a
+  deriving (Show, Eq, Generic, Data, Functor)
+instance (NFData a) => NFData (PGType a)
+instance (Cacheable a) => Cacheable (PGType a)
+$(deriveJSON defaultOptions{constructorTagModifier = drop 6} ''PGType)
+
+instance (ToSQL a) => ToSQL (PGType a) where
+  toSQL = \case
+    PGTypeScalar ty -> toSQL ty
+    -- typename array is an sql standard way of declaring types
+    PGTypeArray ty -> toSQL ty <> " array"
+
+data PGTypeKind
+  = PGKindBase
+  | PGKindComposite
+  | PGKindDomain
+  | PGKindEnum
+  | PGKindRange
+  | PGKindPseudo
+  | PGKindUnknown !T.Text
+  deriving (Show, Eq, Generic)
+instance NFData PGTypeKind
+instance Cacheable PGTypeKind
+
+instance FromJSON PGTypeKind where
+  parseJSON = withText "postgresTypeKind" $
+    \t -> pure $ case t of
+      "b" -> PGKindBase
+      "c" -> PGKindComposite
+      "d" -> PGKindDomain
+      "e" -> PGKindEnum
+      "r" -> PGKindRange
+      "p" -> PGKindPseudo
+      _   -> PGKindUnknown t
+
+instance ToJSON PGTypeKind where
+  toJSON = \case
+    PGKindBase      -> "b"
+    PGKindComposite -> "c"
+    PGKindDomain    -> "d"
+    PGKindEnum      -> "e"
+    PGKindRange     -> "r"
+    PGKindPseudo    -> "p"
+    PGKindUnknown t -> String t
+
+data QualifiedPGType
+  = QualifiedPGType
+  { _qptSchema :: !SchemaName
+  , _qptName   :: !PGScalarType
+  , _qptType   :: !PGTypeKind
+  } deriving (Show, Eq, Generic)
+instance NFData QualifiedPGType
+instance Cacheable QualifiedPGType
+$(deriveJSON (aesonDrop 4 snakeCase) ''QualifiedPGType)
+
+isBaseType :: QualifiedPGType -> Bool
+isBaseType (QualifiedPGType _ n ty) =
+  notUnknown && (ty == PGKindBase)
+  where
+    notUnknown = case n of
+      PGUnknown _ -> False
+      _           -> True
+
+typeToTable :: QualifiedPGType -> QualifiedTable
+typeToTable (QualifiedPGType sch n _) =
+  QualifiedObject sch $ TableName $ toSQLTxt n

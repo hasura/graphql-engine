@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 from urllib.parse import urlparse
-# import socketserver
+from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml 
 import threading
 import http.server
 import json
@@ -10,11 +10,11 @@ import queue
 import socket
 import subprocess
 import time
-import uuid
 import string
 import random
+import os
 
-import yaml
+import ruamel.yaml as yaml
 import requests
 import websocket
 from sqlalchemy import create_engine
@@ -22,35 +22,46 @@ from sqlalchemy.schema import MetaData
 import graphql_server
 import graphql
 
+# pytest has removed the global pytest.config
+# As a solution to this we are going to store it in PyTestConf.config
+class PytestConf():
+    pass
 
 class HGECtxError(Exception):
     pass
 
-class GQLWsClient:
+class GQLWsClient():
 
-    def __init__(self, hge_ctx):
+    def __init__(self, hge_ctx, endpoint):
         self.hge_ctx = hge_ctx
         self.ws_queue = queue.Queue(maxsize=-1)
-        self.ws_url = urlparse(hge_ctx.hge_url)
-        self.ws_url = self.ws_url._replace(scheme='ws')
-        self.ws_url = self.ws_url._replace(path='/v1alpha1/graphql')
+        self.ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws',
+                                                         path=endpoint)
         self.create_conn()
 
     def create_conn(self):
         self.ws_queue.queue.clear()
         self.ws_id_query_queues = dict()
         self.ws_active_query_ids = set()
-        self._ws = websocket.WebSocketApp(self.ws_url.geturl(), on_message=self._on_message, on_close=self._on_close)
+
+        self.connected_event = threading.Event()
+        self.init_done = False
+        self.is_closing = False
+        self.remote_closed = False
+
+        self._ws = websocket.WebSocketApp(self.ws_url.geturl(),
+            on_open=self._on_open, on_message=self._on_message, on_close=self._on_close)
         self.wst = threading.Thread(target=self._ws.run_forever)
         self.wst.daemon = True
         self.wst.start()
-        self.remote_closed = False
-        self.connected = False
-        self.init_done = False
 
     def recreate_conn(self):
         self.teardown()
         self.create_conn()
+
+    def wait_for_connection(self, timeout=10):
+        assert not self.is_closing
+        assert self.connected_event.wait(timeout=timeout)
 
     def get_ws_event(self, timeout):
         return self.ws_queue.get(timeout=timeout)
@@ -62,9 +73,7 @@ class GQLWsClient:
         return self.ws_id_query_queues[query_id].get(timeout=timeout)
 
     def send(self, frame):
-        if not self.connected:
-            self.recreate_conn()
-            time.sleep(1)
+        self.wait_for_connection()
         if frame.get('type') == 'stop':
             self.ws_active_query_ids.discard( frame.get('id') )
         elif frame.get('type') == 'start' and 'id' in frame:
@@ -94,11 +103,10 @@ class GQLWsClient:
         self.ws_active_query_ids.discard(query_id)
 
     def gen_id(self, size=6, chars=string.ascii_letters + string.digits):
-        newId = ''.join(random.choice(chars) for _ in range(size))
-        if newId in self.ws_active_query_ids:
-            return gen_id(self,size,chars)
-        else:
-            return newId
+        new_id = ''.join(random.choice(chars) for _ in range(size))
+        if new_id in self.ws_active_query_ids:
+            return self.gen_id(size, chars)
+        return new_id
 
     def send_query(self, query, query_id=None, headers={}, timeout=60):
         graphql.parse(query['query'])
@@ -120,10 +128,13 @@ class GQLWsClient:
             yield self.get_ws_query_event(query_id, timeout)
 
     def _on_open(self):
-        self.connected = True
+        if not self.is_closing:
+            self.connected_event.set()
 
     def _on_message(self, message):
-        json_msg = json.loads(message)
+        # NOTE: make sure we preserve key ordering so we can test the ordering
+        # properties in the graphql spec properly
+        json_msg = json.loads(message, object_pairs_hook=OrderedDict)
         if 'id' in json_msg:
             query_id = json_msg['id']
             if json_msg.get('type') == 'stop':
@@ -133,18 +144,16 @@ class GQLWsClient:
                 self.ws_id_query_queues[json_msg['id']] = queue.Queue(maxsize=-1)
             #Put event in the correponding query_queue
             self.ws_id_query_queues[query_id].put(json_msg)
-        elif json_msg['type'] == 'ka':
-            self.connected = True
-        else:
+        elif json_msg['type'] != 'ka':
             #Put event in the main queue
             self.ws_queue.put(json_msg)
 
     def _on_close(self):
         self.remote_closed = True
-        self.connected = False
         self.init_done = False
 
     def teardown(self):
+        self.is_closing = True
         if not self.remote_closed:
             self._ws.close()
         self.wst.join()
@@ -216,9 +225,10 @@ class EvtsWebhookServer(http.server.HTTPServer):
         self.evt_trggr_web_server.join()
 
 class HGECtxGQLServer:
-    def __init__(self):
+    def __init__(self, hge_urls):
         # start the graphql server
         self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
+        self.hge_urls = graphql_server.set_hge_urls(hge_urls)
         self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
         self.gql_srvr_thread.start()
 
@@ -230,7 +240,8 @@ class HGECtxGQLServer:
 class HGECtx:
 
     def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure,
-                 hge_jwt_key_file, hge_jwt_conf, metadata_disabled, ws_read_cookie, hge_scale_url):
+                 hge_jwt_key_file, hge_jwt_conf, metadata_disabled,
+                 ws_read_cookie, hge_scale_url):
 
         self.http = requests.Session()
         self.hge_key = hge_key
@@ -254,10 +265,11 @@ class HGECtx:
 
         self.hge_scale_url = hge_scale_url
 
-        self.ws_client = GQLWsClient(self)
+        self.ws_client = GQLWsClient(self, '/v1/graphql')
 
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
-        self.version = result.stdout.decode('utf-8').strip()
+        env_version = os.getenv('VERSION')
+        self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
         if not self.metadata_disabled:
           try:
               st_code, resp = self.v1q_f('queries/clear_db.yaml')
@@ -275,7 +287,10 @@ class HGECtx:
             json=q,
             headers=h
         )
-        return resp.status_code, resp.json()
+        # NOTE: make sure we preserve key ordering so we can test the ordering
+        # properties in the graphql spec properly
+        # Returning response headers to get the request id from response
+        return resp.status_code, resp.json(object_pairs_hook=OrderedDict), resp.headers
 
     def sql(self, q):
         conn = self.engine.connect()
@@ -292,11 +307,15 @@ class HGECtx:
             json=q,
             headers=h
         )
-        return resp.status_code, resp.json()
+        # NOTE: make sure we preserve key ordering so we can test the ordering
+        # properties in the graphql spec properly
+        return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
 
     def v1q_f(self, fn):
         with open(fn) as f:
-            return self.v1q(yaml.safe_load(f))
+            # NOTE: preserve ordering with ruamel
+            yml = yaml.YAML()
+            return self.v1q(yml.load(f))
 
     def teardown(self):
         self.http.close()

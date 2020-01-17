@@ -19,7 +19,13 @@ func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Aliases: []string{"reset"},
 		Short:   "Clear Hasura GraphQL Engine metadata on the database",
 		Example: `  # Clear all the metadata information from database:
-  hasura metadata clear`,
+  hasura metadata clear
+
+  # Use with admin secret:
+  hasura metadata clear --admin-secret "<admin-secret>"
+
+  # Clear metadata on a different Hasura instance:
+  hasura metadata clear --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -61,7 +67,7 @@ type metadataClearOptions struct {
 }
 
 func (o *metadataClearOptions) run() error {
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
 	if err != nil {
 		return err
 	}

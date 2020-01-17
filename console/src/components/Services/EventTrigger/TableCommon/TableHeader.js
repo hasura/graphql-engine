@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 
-const TableHeader = ({ triggerName, tabName, count }) => {
+const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
   const styles = require('./EventTable.scss');
   let capitalised = tabName;
   capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
@@ -20,24 +21,39 @@ const TableHeader = ({ triggerName, tabName, count }) => {
   } else if (tabName === 'logs') {
     activeTab = 'Logs';
   }
+
+  const getBreadCrumbs = () => {
+    return [
+      {
+        title: 'Events',
+        url: '/events',
+      },
+      {
+        title: 'Manage',
+        url: '/events/manage',
+      },
+      {
+        title: 'Triggers',
+        url: '/events/manage/triggers/',
+      },
+      {
+        title: triggerName,
+        url: '/events/manage/triggers/' + triggerName + '/processed',
+      },
+      {
+        title: activeTab,
+        url: null,
+      },
+    ];
+  };
+
   return (
     <div>
       <Helmet
         title={capitalised + ' - ' + triggerName + ' - Event Triggers | Hasura'}
       />
       <div className={styles.subHeader}>
-        <div className={styles.dataBreadCrumb}>
-          You are here: <Link to={'/events'}>Events</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/events/manage'}>Manage</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/events/manage/triggers'}>Triggers</Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" />{' '}
-          <Link to={'/events/manage/triggers/' + triggerName + '/processed'}>
-            {triggerName}
-          </Link>{' '}
-          <i className="fa fa-angle-right" aria-hidden="true" /> {activeTab}
-        </div>
+        <BreadCrumb breadCrumbs={getBreadCrumbs()} />
         <h2 className={styles.heading_text}>{triggerName}</h2>
         <div className={styles.nav}>
           <ul className="nav nav-pills">
@@ -83,15 +99,17 @@ const TableHeader = ({ triggerName, tabName, count }) => {
                 Invocation Logs
               </Link>
             </li>
-            <li
-              role="presentation"
-              className={tabName === 'modify' ? styles.active : ''}
-              data-test="trigger-modify"
-            >
-              <Link to={'/events/manage/triggers/' + triggerName + '/modify'}>
-                Modify
-              </Link>
-            </li>
+            {!readOnlyMode && (
+              <li
+                role="presentation"
+                className={tabName === 'modify' ? styles.active : ''}
+                data-test="trigger-modify"
+              >
+                <Link to={'/events/manage/triggers/' + triggerName + '/modify'}>
+                  Modify
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
         <div className="clearfix" />

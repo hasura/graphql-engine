@@ -1,17 +1,51 @@
 import React from 'react';
 import Editor from '../../../Common/Layout/ExpandableEditor/Editor';
-import Tooltip from './Tooltip';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
-import { toggleQueryType, toggleColumn } from './Actions';
+import { toggleQueryType, toggleColumn, toggleManualType } from './Actions';
+
+import {
+  getTriggerOperations,
+  triggerOperationMap,
+  MANUAL_TRIGGER_VAR,
+} from './utils';
 
 class OperationEditor extends React.Component {
+  toggleOperation = upObj => {
+    if (upObj.query === MANUAL_TRIGGER_VAR) {
+      return toggleManualType(upObj);
+    }
+    return toggleQueryType(upObj);
+  };
+
   setValues = () => {
     const { dispatch, definition } = this.props;
+    /*
+     * Loop through the keys in definition,
+     * this object will have actual internal name.
+     * No need to transform from display to internal name
+     * */
     for (const queryType in definition) {
-      if (definition[queryType]) {
-        dispatch(
-          toggleQueryType(queryType, definition[queryType].columns, true)
-        );
+      /* If the definition[queryType] holds true
+       * This will be false or undefined if `queryType` doesn't exist in the object or definition[queryType] is false.
+       * */
+      if (queryType in definition) {
+        if (queryType !== MANUAL_TRIGGER_VAR) {
+          dispatch(
+            this.toggleOperation({
+              query: queryType,
+              columns: definition[queryType].columns,
+              value: true,
+            })
+          );
+        } else {
+          dispatch(
+            this.toggleOperation({
+              query: queryType,
+              value: definition[queryType],
+            })
+          );
+        }
       }
     }
   };
@@ -25,28 +59,36 @@ class OperationEditor extends React.Component {
       modifyTrigger,
       dispatch,
     } = this.props;
-    const queryTypes = ['insert', 'update', 'delete'];
+    /*
+     * Query types will have `CONSOLE_QUERY` only for version > 45
+     *
+     * */
+    const operationTypes = getTriggerOperations();
+    const renderOperation = (qt, i) => {
+      const isChecked = Boolean(definition[triggerOperationMap[qt]]);
+
+      return (
+        <div
+          className={
+            styles.opsCheckboxWrapper + ' col-md-2 ' + styles.padd_remove
+          }
+          key={i}
+        >
+          <input
+            type="checkbox"
+            className={styles.opsCheckboxDisabled}
+            checked={isChecked}
+            disabled
+          />
+          {qt}
+        </div>
+      );
+    };
     const collapsed = () => (
       <div className={styles.modifyOps}>
         <div className={styles.modifyOpsCollapsedContent}>
-          <div className={'col-md-12 ' + styles.padd_remove}>Operations:</div>
           <div className={'col-md-12 ' + styles.padd_remove}>
-            {queryTypes.map((qt, i) => (
-              <div
-                className={
-                  styles.opsCheckboxWrapper + ' col-md-4 ' + styles.padd_remove
-                }
-                key={i}
-              >
-                <input
-                  type="checkbox"
-                  className={styles.opsCheckboxDisabled}
-                  checked={Boolean(definition[qt])}
-                  disabled
-                />
-                {qt}
-              </div>
-            ))}
+            {operationTypes.map((qt, i) => renderOperation(qt, i))}
           </div>
         </div>
         <div className={styles.modifyOpsCollapsedContent}>
@@ -83,7 +125,7 @@ class OperationEditor extends React.Component {
                   styles.modifyOpsCollapsedtitle
                 }
               >
-                <i>(Applicable only for update operation)</i>
+                <i>Applicable only if update operation is selected.</i>
               </div>
             )}
           </div>
@@ -94,28 +136,29 @@ class OperationEditor extends React.Component {
     const expanded = () => (
       <div className={styles.modifyOpsPadLeft}>
         <div className={styles.modifyOpsCollapsedContent}>
-          <div className={'col-md-12 ' + styles.padd_remove}>Operations:</div>
           <div className={'col-md-12 ' + styles.padd_remove}>
-            {queryTypes.map((qt, i) => (
+            {operationTypes.map((qt, i) => (
               <div
-                className={`${styles.opsCheckboxWrapper} col-md-4 ${
+                className={`${styles.opsCheckboxWrapper} col-md-2 ${
                   styles.padd_remove
                 } ${styles.cursorPointer}`}
                 key={i}
                 onClick={() => {
                   dispatch(
-                    toggleQueryType(
-                      qt,
-                      allTableColumns.map(c => c.name),
-                      !modifyTrigger.definition[qt]
-                    )
+                    this.toggleOperation({
+                      query: triggerOperationMap[qt],
+                      columns: allTableColumns.map(c => c.name),
+                      value: !modifyTrigger.definition[triggerOperationMap[qt]],
+                    })
                   );
                 }}
               >
                 <input
                   type="checkbox"
                   className={`${styles.opsCheckbox} ${styles.cursorPointer}`}
-                  checked={Boolean(modifyTrigger.definition[qt])}
+                  checked={Boolean(
+                    modifyTrigger.definition[triggerOperationMap[qt]]
+                  )}
                 />
                 {qt}
               </div>
@@ -158,7 +201,7 @@ class OperationEditor extends React.Component {
                   styles.modifyOpsCollapsedtitle
                 }
               >
-                <i>(Applicable only for update operation)</i>
+                <i>Applicable only if update operation is selected.</i>
               </div>
             )}
           </div>
@@ -170,7 +213,8 @@ class OperationEditor extends React.Component {
       <div className={`${styles.container} ${styles.borderBottom}`}>
         <div className={styles.modifySection}>
           <h4 className={styles.modifySectionHeading}>
-            Operations <Tooltip message="Edit operations and related columns" />
+            Trigger Operations{' '}
+            <Tooltip message="Edit operations and related columns" />
           </h4>
           <Editor
             editorCollapsed={collapsed}

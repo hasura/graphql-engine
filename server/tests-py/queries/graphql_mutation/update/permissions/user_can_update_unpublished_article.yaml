@@ -1,18 +1,18 @@
 description: Update mutation on author
-url: /v1alpha1/graphql
+url: /v1/graphql
 response:
   data:
     update_article:
-      returning:
-      - content: Article content version 1.0.2
-        version: '1.0.2'
-        is_published: false
-        author:
-          name: Author 1
-          id: 1
-        id: 2
-        title: Article 1
       affected_rows: 1
+      returning:
+      - id: 2
+        version: 1.0.2
+        title: Article 1
+        content: Article content version 1.0.2
+        author:
+          id: 1
+          name: Author 1
+        is_published: false
 headers:
   X-Hasura-Role: user
   X-Hasura-User-Id: '1'

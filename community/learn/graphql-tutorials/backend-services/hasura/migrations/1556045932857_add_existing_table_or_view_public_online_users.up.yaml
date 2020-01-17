@@ -1,4 +1,0 @@
-- args:
-    name: online_users
-    schema: public
-  type: add_existing_table_or_view

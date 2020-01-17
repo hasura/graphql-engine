@@ -2,112 +2,127 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import Tooltip from 'react-bootstrap/lib/Tooltip';
+
+import * as tooltips from './Tooltips';
 import globals from '../../Globals';
-import * as tooltip from './Tooltips';
-import 'react-toggle/style.css';
+import { getPathRoot } from '../Common/utils/urlUtils';
+
 import Spinner from '../Common/Spinner/Spinner';
-import { loadServerVersion, checkServerUpdates } from './Actions';
-import { loadConsoleOpts } from '../../telemetry/Actions.js';
-import './NotificationOverrides.css';
-import semverCheck from '../../helpers/semver';
+import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
+
+import {
+  loadServerVersion,
+  fetchServerConfig,
+  loadLatestServerVersion,
+  featureCompatibilityInit,
+  emitProClickedEvent,
+} from './Actions';
+
+import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
+
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
-} from '../Services/Data/Metadata/Actions';
-
-const semver = require('semver');
+} from '../Services/Settings/Actions';
 
 import {
   getLoveConsentState,
   setLoveConsentState,
-} from './loveConsentLocalStorage';
+  getProClickState,
+  setProClickState,
+} from './utils';
+
+import { versionGT } from '../../helpers/versionUtils';
+import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
 
 class Main extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
-      showBannerNotification: false,
-      showEvents: false,
-      showSchemaStitch: false,
+      showUpdateNotification: false,
+      loveConsentState: getLoveConsentState(),
+      proClickState: getProClickState(),
+      isPopUpOpen: false,
     };
 
-    this.state.loveConsentState = getLoveConsentState();
     this.handleBodyClick = this.handleBodyClick.bind(this);
   }
   componentDidMount() {
     const { dispatch } = this.props;
+
     document
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
+
     dispatch(loadServerVersion()).then(() => {
-      dispatch(loadInconsistentObjects(this.props.serverVersion)).then(() => {
+      dispatch(featureCompatibilityInit());
+
+      dispatch(loadInconsistentObjects()).then(() => {
         this.handleMetadataRedirect();
       });
-      dispatch(loadConsoleOpts());
-      dispatch(checkServerUpdates()).then(() => {
-        let isUpdateAvailable = false;
-        try {
-          isUpdateAvailable = semver.gt(
-            this.props.latestServerVersion,
-            this.props.serverVersion
-          );
-          const isClosedBefore = window.localStorage.getItem(
-            this.props.latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
-          );
-          if (isClosedBefore === 'true') {
-            isUpdateAvailable = false;
-            this.setState({ showBannerNotification: false });
-          } else {
-            this.setState({
-              showBannerNotification: isUpdateAvailable,
-            });
-          }
-        } catch (e) {
-          console.error(e);
-        }
-      });
-      this.checkEventsTab().then(() => {
-        this.checkSchemaStitch();
+      dispatch(loadConsoleTelemetryOpts());
+
+      dispatch(loadLatestServerVersion()).then(() => {
+        this.setShowUpdateNotification();
       });
     });
+
+    dispatch(fetchServerConfig());
+  }
+  toggleProPopup() {
+    const { dispatch } = this.props;
+    dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
+    this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
+  }
+  setShowUpdateNotification() {
+    const { latestServerVersion, serverVersion } = this.props;
+
+    try {
+      const isClosedBefore = window.localStorage.getItem(
+        latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
+      );
+
+      if (isClosedBefore !== 'true') {
+        const isUpdateAvailable = versionGT(latestServerVersion, serverVersion);
+
+        if (isUpdateAvailable) {
+          this.setState({
+            showUpdateNotification: true,
+          });
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
-  checkSchemaStitch() {
-    const showSchemaStitch = semverCheck(
-      'schemaStitching',
-      this.props.serverVersion
-    );
-    if (showSchemaStitch) {
-      this.setState({ showSchemaStitch: true });
-    }
-    return Promise.resolve();
-  }
-  checkEventsTab() {
-    const showEvents = semverCheck('eventsTab', this.props.serverVersion);
-    if (showEvents) {
-      this.setState({ showEvents: true });
-    }
-    return Promise.resolve();
-  }
   handleBodyClick(e) {
+    const heartDropDown = document.getElementById('dropdown_wrapper');
     const heartDropDownOpen = document.querySelectorAll(
       '#dropdown_wrapper.open'
     );
+
     if (
-      !document.getElementById('dropdown_wrapper').contains(e.target) &&
+      heartDropDown &&
+      !heartDropDown.contains(e.target) &&
       heartDropDownOpen.length !== 0
     ) {
-      document.getElementById('dropdown_wrapper').classList.remove('open');
+      heartDropDown.classList.remove('open');
     }
   }
+
   handleDropdownToggle() {
     document.getElementById('dropdown_wrapper').classList.toggle('open');
   }
+
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
       this.props.dispatch(redirectToMetadataStatus());
     }
   }
+
   closeLoveIcon() {
     const s = {
       isDismissed: true,
@@ -117,13 +132,29 @@ class Main extends React.Component {
       loveConsentState: { ...getLoveConsentState() },
     });
   }
+  updateLocalStorageState() {
+    const s = getProClickState();
+    if (s && 'isProClicked' in s && !s.isProClicked) {
+      setProClickState({
+        isProClicked: !s.isProClicked,
+      });
+      this.setState({
+        proClickState: { ...getProClickState() },
+      });
+    }
+  }
+
+  clickProIcon() {
+    this.updateLocalStorageState();
+    this.toggleProPopup();
+  }
   closeUpdateBanner() {
     const { latestServerVersion } = this.props;
     window.localStorage.setItem(
       latestServerVersion + '_BANNER_NOTIFICATION_CLOSED',
       'true'
     );
-    this.setState({ showBannerNotification: false });
+    this.setState({ showUpdateNotification: false });
   }
 
   render() {
@@ -137,19 +168,28 @@ class Main extends React.Component {
       metadata,
     } = this.props;
 
+    const { isProClicked } = this.state.proClickState;
+
     const styles = require('./Main.scss');
 
     const appPrefix = '';
 
-    const logo = require('./white-logo.svg');
-    const github = require('./Github.svg');
-    const discord = require('./Discord.svg');
-    const mail = require('./mail.svg');
-    const docs = require('./logo.svg');
-    const pixHeart = require('./pix-heart.svg');
-
+    const logo = require('./images/white-logo.svg');
+    const github = require('./images/Github.svg');
+    const discord = require('./images/Discord.svg');
+    const mail = require('./images/mail.svg');
+    const docs = require('./images/docs-logo.svg');
+    const about = require('./images/console-logo.svg');
+    const pixHeart = require('./images/pix-heart.svg');
+    const close = require('./images/x-circle.svg');
+    const monitoring = require('./images/monitoring.svg');
+    const rate = require('./images/rate.svg');
+    const regression = require('./images/regression.svg');
+    const management = require('./images/management.svg');
+    const allow = require('./images/allow.svg');
+    const arrowForwardRed = require('./images/arrow_forward-red.svg');
     const currentLocation = location.pathname;
-    const currentActiveBlock = currentLocation.split('/')[1];
+    const currentActiveBlock = getPathRoot(currentLocation);
 
     const getMainContent = () => {
       let mainContent = null;
@@ -167,17 +207,17 @@ class Main extends React.Component {
       return mainContent;
     };
 
-    const getMetadataSelectedMarker = () => {
+    const getSettingsSelectedMarker = () => {
       let metadataSelectedMarker = null;
 
-      if (currentActiveBlock === 'metadata') {
+      if (currentActiveBlock === 'settings') {
         metadataSelectedMarker = <span className={styles.selected} />;
       }
 
       return metadataSelectedMarker;
     };
 
-    const getMetadataIcon = () => {
+    const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
         return <i className={styles.question + ' fa fa-cog'} />;
       }
@@ -197,33 +237,32 @@ class Main extends React.Component {
     const getAdminSecretSection = () => {
       let adminSecretHtml = null;
 
-      if (
-        !globals.isAdminSecretSet &&
-        (globals.adminSecret === '' || globals.adminSecret === null)
-      ) {
+      if (!globals.isAdminSecretSet) {
         adminSecretHtml = (
           <div className={styles.secureSection}>
-            <OverlayTrigger placement="left" overlay={tooltip.secureEndpoint}>
-              <a href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html">
-                <i
-                  className={
-                    styles.padd_small_right + ' fa fa-exclamation-triangle'
-                  }
-                />
-                Secure your endpoint
-              </a>
-            </OverlayTrigger>
+            <a
+              href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <WarningSymbol
+                tooltipText={tooltips.secureEndpoint}
+                tooltipPlacement={'left'}
+                customStyle={styles.secureSectionSymbol}
+              />
+              &nbsp;Secure your endpoint
+            </a>
           </div>
         );
       }
       return adminSecretHtml;
     };
 
-    const getBannerNotification = () => {
-      let bannerNotificationHtml = null;
+    const getUpdateNotification = () => {
+      let updateNotificationHtml = null;
 
-      if (this.state.showBannerNotification) {
-        bannerNotificationHtml = (
+      if (this.state.showUpdateNotification) {
+        updateNotificationHtml = (
           <div>
             <div className={styles.phantom} />{' '}
             {/* phantom div to prevent overlapping of banner with content. */}
@@ -266,7 +305,7 @@ class Main extends React.Component {
           </div>
         );
       }
-      return bannerNotificationHtml;
+      return updateNotificationHtml;
     };
 
     const getLoveSection = () => {
@@ -335,9 +374,7 @@ class Main extends React.Component {
                     <div className={styles.socialIcon}>
                       <img
                         className="img img-responsive"
-                        src={
-                          'https://storage.googleapis.com/hasura-graphql-engine/console/assets/githubicon.png'
-                        }
+                        src={`${globals.assetsPath}/common/img/githubicon.png`}
                         alt={'GitHub'}
                       />
                     </div>
@@ -368,9 +405,7 @@ class Main extends React.Component {
                     <div className={styles.socialIcon}>
                       <img
                         className="img img-responsive"
-                        src={
-                          'https://storage.googleapis.com/hasura-graphql-engine/console/assets/twittericon.png'
-                        }
+                        src={`${globals.assetsPath}/common/img/twittericon.png`}
                         alt={'Twitter'}
                       />
                     </div>
@@ -399,66 +434,140 @@ class Main extends React.Component {
       return helpDropdownPosStyle;
     };
 
-    const getRemoteSchemaLink = () => {
-      let remoteSchemaLink = null;
+    const getSidebarItem = (
+      title,
+      icon,
+      tooltipText,
+      path,
+      isDefault = false
+    ) => {
+      const itemTooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
 
-      if (this.state.showSchemaStitch) {
-        remoteSchemaLink = (
-          <OverlayTrigger placement="right" overlay={tooltip.customresolver}>
-            <li>
-              <Link
-                className={
-                  currentActiveBlock === 'remote-schemas'
-                    ? styles.navSideBarActive
-                    : ''
-                }
-                to={appPrefix + '/remote-schemas/manage/schemas'}
-              >
-                <div className={styles.iconCenter}>
-                  <i
-                    title="Remote Schemas"
-                    className="fa fa-plug"
-                    aria-hidden="true"
-                  />
-                </div>
-                <p>Remote Schemas</p>
-              </Link>
-            </li>
-          </OverlayTrigger>
-        );
-      }
+      const block = getPathRoot(path);
 
-      return remoteSchemaLink;
+      return (
+        <OverlayTrigger placement="right" overlay={itemTooltip}>
+          <li>
+            <Link
+              className={
+                currentActiveBlock === block ||
+                (isDefault && currentActiveBlock === '')
+                  ? styles.navSideBarActive
+                  : ''
+              }
+              to={appPrefix + path}
+            >
+              <div className={styles.iconCenter} data-test={block}>
+                <i className={`fa ${icon}`} aria-hidden="true" />
+              </div>
+              <p>{title}</p>
+            </Link>
+          </li>
+        </OverlayTrigger>
+      );
     };
 
-    const getEventsLink = () => {
-      let eventsLink = null;
-
-      if (this.state.showEvents) {
-        eventsLink = (
-          <OverlayTrigger placement="right" overlay={tooltip.events}>
-            <li>
-              <Link
-                className={
-                  currentActiveBlock === 'events' ? styles.navSideBarActive : ''
-                }
-                to={appPrefix + '/events/manage/triggers'}
-              >
-                <div className={styles.iconCenter}>
-                  <i
-                    title="Events"
-                    className="fa fa-cloud"
-                    aria-hidden="true"
-                  />
+    const renderProPopup = () => {
+      const { isPopUpOpen } = this.state;
+      if (isPopUpOpen) {
+        return (
+          <div className={styles.proPopUpWrapper}>
+            <div className={styles.popUpHeader}>
+              Hasura <span>PRO</span>
+              <img
+                onClick={this.toggleProPopup.bind(this)}
+                className={styles.popUpClose}
+                src={close}
+                alt={'Close'}
+              />
+            </div>
+            <div className={styles.popUpBodyWrapper}>
+              <div className={styles.featuresDescription}>
+                Hasura Pro is an enterprise-ready version of Hasura that comes
+                with the following features:
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={monitoring} alt={'Monitoring'} />
                 </div>
-                <p>Events</p>
-              </Link>
-            </li>
-          </OverlayTrigger>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>
+                    Monitoring/Analytics
+                  </div>
+                  <div className={styles.featuresDescription}>
+                    Complete observability to troubleshoot errors and drill-down
+                    into individual operations.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={rate} alt={'Rate'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Rate Limiting</div>
+                  <div className={styles.featuresDescription}>
+                    Prevent abuse with role-based rate limits.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={regression} alt={'Regression'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Regression Testing</div>
+                  <div className={styles.featuresDescription}>
+                    Automatically create regression suites to prevent breaking
+                    changes.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={management} alt={'Management'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>Team Management</div>
+                  <div className={styles.featuresDescription}>
+                    Login to a Hasura project with granular privileges.
+                  </div>
+                </div>
+              </div>
+              <div className={styles.proFeaturesList}>
+                <div className={styles.featuresImg}>
+                  <img src={allow} alt={'allow'} />
+                </div>
+                <div className={styles.featuresList}>
+                  <div className={styles.featuresTitle}>
+                    Allow Listing Workflows
+                  </div>
+                  <div className={styles.featuresDescription}>
+                    Setup allow lists across dev, staging and production
+                    environments with easy workflows.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className={styles.popUpFooter}>
+              <a
+                href={
+                  'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'
+                }
+                target={'_blank'}
+              >
+                Set up a chat to learn more{' '}
+                <img
+                  className={styles.arrow}
+                  src={arrowForwardRed}
+                  alt={'Arrow'}
+                />
+              </a>
+            </div>
+          </div>
         );
       }
-
-      return eventsLink;
+      return null;
     };
 
     return (
@@ -479,65 +588,50 @@ class Main extends React.Component {
             </div>
             <div className={styles.header_items}>
               <ul className={styles.sidebarItems}>
-                <OverlayTrigger placement="right" overlay={tooltip.apiexplorer}>
-                  <li>
-                    <Link
-                      className={
-                        currentActiveBlock === 'api-explorer' ||
-                        currentActiveBlock === ''
-                          ? styles.navSideBarActive
-                          : ''
-                      }
-                      to={appPrefix + '/api-explorer'}
-                    >
-                      <div
-                        className={styles.iconCenter}
-                        data-test="api-explorer"
-                      >
-                        <i
-                          title="API Explorer"
-                          className="fa fa-flask"
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <p>GraphiQL</p>
-                    </Link>
-                  </li>
-                </OverlayTrigger>
-                <OverlayTrigger placement="right" overlay={tooltip.data}>
-                  <li>
-                    <Link
-                      className={
-                        currentActiveBlock === 'data'
-                          ? styles.navSideBarActive
-                          : ''
-                      }
-                      to={appPrefix + '/data/schema/' + currentSchema}
-                    >
-                      <div className={styles.iconCenter}>
-                        <i
-                          title="Data Service"
-                          className="fa fa-database"
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <p>Data</p>
-                    </Link>
-                  </li>
-                </OverlayTrigger>
-
-                {getRemoteSchemaLink()}
-
-                {getEventsLink()}
+                {getSidebarItem(
+                  'GraphiQL',
+                  'fa-flask',
+                  tooltips.apiExplorer,
+                  '/api-explorer',
+                  true
+                )}
+                {getSidebarItem(
+                  'Data',
+                  'fa-database',
+                  tooltips.data,
+                  getSchemaBaseRoute(currentSchema)
+                )}
+                {getSidebarItem(
+                  'Remote Schemas',
+                  'fa-plug',
+                  tooltips.remoteSchema,
+                  '/remote-schemas/manage/schemas'
+                )}
+                {getSidebarItem(
+                  'Events',
+                  'fa-cloud',
+                  tooltips.events,
+                  '/events/manage/triggers'
+                )}
               </ul>
             </div>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
-
-              <Link to="/metadata">
+              <div className={styles.helpSection + ' ' + styles.proWrapper}>
+                <span
+                  className={
+                    !isProClicked ? styles.proName : styles.proNameClicked
+                  }
+                  onClick={this.clickProIcon.bind(this)}
+                >
+                  PRO
+                </span>
+                {renderProPopup()}
+              </div>
+              <Link to="/settings">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
-                  {getMetadataIcon()}
-                  {getMetadataSelectedMarker()}
+                  {getMetadataStatusIcon()}
+                  {getSettingsSelectedMarker()}
                 </div>
               </Link>
               <div className={styles.supportSection}>
@@ -612,6 +706,16 @@ class Main extends React.Component {
                         <span>Head to docs</span>
                       </a>
                     </li>
+                    <li className={'dropdown-item'}>
+                      <Link to="/about">
+                        <img
+                          className={'img-responsive'}
+                          src={about}
+                          alt={'about'}
+                        />
+                        <span>About</span>
+                      </Link>
+                    </li>
                   </div>
                 </ul>
               </div>
@@ -624,7 +728,7 @@ class Main extends React.Component {
             {getMainContent()}
           </div>
 
-          {getBannerNotification()}
+          {getUpdateNotification()}
         </div>
       </div>
     );

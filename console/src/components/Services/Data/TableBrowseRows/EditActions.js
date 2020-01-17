@@ -1,11 +1,17 @@
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
-import { Integers, Reals } from '../Types';
+import { Integers, Reals } from '../constants';
 import {
   showErrorNotification,
   showSuccessNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
+import {
+  findTable,
+  generateTableDef,
+  getColumnType,
+  getTableColumn,
+} from '../../../Common/utils/pgUtils';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';
@@ -20,58 +26,75 @@ const modalClose = () => ({ type: MODAL_CLOSE });
 /* ****************** edit action creators ************ */
 const editItem = (tableName, colValues) => {
   return (dispatch, getState) => {
-    /* Type all the values correctly */
-    const insertObject = {};
     const state = getState();
-    const columns = state.tables.allSchemas.find(
-      x => x.table_name === tableName
-    ).columns;
-    let error = false;
+
+    /* Type all the values correctly */
+    const { currentSchema, allSchemas } = state.tables;
+
+    const tableDef = generateTableDef(tableName, currentSchema);
+
+    const table = findTable(allSchemas, tableDef);
+
+    const _setObject = {};
+    const _defaultArray = [];
+
     let errorMessage = '';
+
+    if (!Object.keys(colValues).length) {
+      errorMessage = 'No fields modified';
+    }
+
     Object.keys(colValues).map(colName => {
-      const colSchema = columns.find(x => x.column_name === colName);
-      const colType = colSchema.data_type;
-      if (Integers.indexOf(colSchema.data_type) > 0) {
-        insertObject[colName] = parseInt(colValues[colName], 10);
-      } else if (Reals.indexOf(colSchema.data_type) > 0) {
-        insertObject[colName] = parseFloat(colValues[colName], 10);
-      } else if (colSchema.data_type === 'boolean') {
-        if (colValues[colName] === 'true') {
-          insertObject[colName] = true;
-        } else if (colValues[colName] === 'false') {
-          insertObject[colName] = false;
-        } else {
-          insertObject[colName] = null;
-        }
-      } else if (colType === 'json' || colType === 'jsonb') {
-        try {
-          const val = JSON.parse(colValues[colName]);
-          insertObject[colName] = val;
-        } catch (e) {
-          errorMessage =
-            colName +
-            ' :: could not read ' +
-            colValues[colName] +
-            ' as a valid JSON object/array';
-          error = true;
-        }
+      const colValue = colValues[colName];
+
+      const column = getTableColumn(table, colName);
+      const colType = getColumnType(column);
+
+      if (colValue && colValue.default === true) {
+        _defaultArray.push(colName);
       } else {
-        insertObject[colName] = colValues[colName];
+        if (Integers.indexOf(colType) > 0) {
+          _setObject[colName] = parseInt(colValue, 10);
+        } else if (Reals.indexOf(colType) > 0) {
+          _setObject[colName] = parseFloat(colValue);
+        } else if (colType === 'boolean') {
+          if (colValue === 'true') {
+            _setObject[colName] = true;
+          } else if (colValue === 'false') {
+            _setObject[colName] = false;
+          } else {
+            _setObject[colName] = null;
+          }
+        } else if (colType === 'json' || colType === 'jsonb') {
+          try {
+            _setObject[colName] = JSON.parse(colValue);
+          } catch (e) {
+            errorMessage =
+              colName +
+              ' :: could not read ' +
+              colValue +
+              ' as a valid JSON object/array';
+          }
+        } else {
+          _setObject[colName] = colValue;
+        }
       }
     });
-    if (error) {
+
+    if (errorMessage) {
       dispatch(showErrorNotification('Edit failed!', errorMessage));
       return dispatch({
         type: E_REQUEST_ERROR,
-        error: { message: 'Not valid JSON' },
+        error: { message: errorMessage },
       });
     }
 
     const reqBody = {
       type: 'update',
       args: {
-        table: { name: tableName, schema: getState().tables.currentSchema },
-        $set: insertObject,
+        table: tableDef,
+        $set: _setObject,
+        $default: _defaultArray,
         where: state.tables.update.pkClause,
       },
     };
@@ -82,6 +105,7 @@ const editItem = (tableName, colValues) => {
       body: JSON.stringify(reqBody),
     };
     const url = Endpoints.query;
+
     return dispatch(
       requestAction(url, options, E_REQUEST_SUCCESS, E_REQUEST_ERROR)
     ).then(
@@ -94,9 +118,7 @@ const editItem = (tableName, colValues) => {
         );
       },
       err => {
-        dispatch(
-          showErrorNotification('Edit failed!', err.error, reqBody, err)
-        );
+        dispatch(showErrorNotification('Edit failed!', err.error, err));
       }
     );
   };

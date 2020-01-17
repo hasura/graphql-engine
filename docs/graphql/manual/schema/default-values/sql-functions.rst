@@ -1,3 +1,7 @@
+.. meta::
+   :description: Set default field values using SQL functions
+   :keywords: hasura, docs, schema, default value, sql function, stored procedure
+
 Setting values of fields using SQL functions/stored procedures
 ==============================================================
 
@@ -7,7 +11,7 @@ Setting values of fields using SQL functions/stored procedures
   :local:
 
 Let's say you want to set the value of some fields as the output of some custom SQL functions or stored procedures.
-This is useful to set values of fields which depend on other fields passed in the input. e.g. set
+This is useful to set values of fields which depend on other fields passed in the input. E.g. set
 ``submission_time`` of an online quiz as 1 hour from the ``start_time``.
 
 This can be achieved by:
@@ -34,6 +38,7 @@ Modify the table ``sql_function_table`` and make its ``output`` column nullable.
 Open the console and head to ``Data -> sql_function_table -> Modify``:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/modify-sql-fn-table.png
+   :alt: Modify the table
 
 Step 2: Create a trigger
 ------------------------
@@ -56,6 +61,7 @@ the ``output`` field whenever an insert or update is made to the ``sql_function_
 Head to ``Data -> SQL`` and run the above SQL:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/create-trigger.png
+   :alt: Create a trigger with SQL
 
 Step 3: Run an insert mutation
 ------------------------------

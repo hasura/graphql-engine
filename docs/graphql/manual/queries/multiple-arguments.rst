@@ -1,9 +1,13 @@
+.. meta::
+   :description: Use multiple arguments in a query in Hasura
+   :keywords: hasura, docs, query, multiple arguments
+
 Using multiple arguments in a query
 ===================================
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Multiple arguments can be used together in the same query.

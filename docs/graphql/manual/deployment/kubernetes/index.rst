@@ -1,4 +1,8 @@
-Run Hasura GraphQL Engine on Kubernetes
+.. meta::
+   :description: Deploy Hasura GraphQL engine with Kubernetes
+   :keywords: hasura, docs, deployment, kubernetes
+
+Run Hasura GraphQL engine on Kubernetes
 =======================================
 
 .. contents:: Table of contents
@@ -49,8 +53,8 @@ Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
     You can check the :doc:`logs <logging>` to see if the database credentials are proper and if Hasura is able
     to connect to the database.
 
-  - Hasura GraphQL engine needs access permissions to your Postgres database as described in
-    :doc:`Postgres permissions <../postgres-permissions>`
+  - The Hasura GraphQL engine needs access permissions on your Postgres database as described in
+    :doc:`Postgres permissions <../postgres-permissions>`.
 
 
 Step 3: Create the Kubernetes deployment and service

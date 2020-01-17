@@ -9,7 +9,7 @@ import {
   setHeaderValue,
 } from './Actions';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
-import Tooltip from './Tooltip';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 class HeadersEditor extends React.Component {
   setValues = () => {

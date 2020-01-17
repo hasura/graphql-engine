@@ -9,23 +9,36 @@ import {
   resetColumnEdit,
   editColumn,
 } from '../TableModify/ModifyActions';
-import { fetchColumnComment } from '../DataActions';
 import { ordinalColSort } from '../utils';
+import { defaultDataTypeToCast } from '../constants';
+
+import {
+  getDefaultFunctionsOptions,
+  inferDefaultValues,
+} from '../Common/utils';
+
+import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 import styles from './ModifyTable.scss';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const ColumnEditorList = ({
   tableSchema,
   currentSchema,
-  allowRename,
   columnEdit,
   dispatch,
-  columnComments,
+  validTypeCasts,
+  dataTypeIndexMap,
+  columnDefaultFunctions,
+  customColumnNames,
 }) => {
   const tableName = tableSchema.table_name;
 
+  let pkLength = 0;
   const columnPKConstraints = {};
   if (tableSchema.primary_key) {
+    pkLength = tableSchema.primary_key.columns.length;
+
     tableSchema.primary_key.columns.forEach(col => {
       columnPKConstraints[col] = tableSchema.primary_key.constraint_name;
     });
@@ -40,6 +53,9 @@ const ColumnEditorList = ({
 
   const columns = tableSchema.columns.sort(ordinalColSort);
 
+  /*
+   * col.udt_name contains internal representation of the data type
+   * */
   return columns.map((col, i) => {
     const colName = col.column_name;
 
@@ -47,46 +63,65 @@ const ColumnEditorList = ({
       name: colName,
       tableName: col.table_name,
       schemaName: col.table_schema,
-      type: col.data_type !== 'USER-DEFINED' ? col.data_type : col.udt_name,
+      display_type_name:
+        col.data_type !== 'USER-DEFINED' ? col.data_type : col.udt_name,
+      type: col.udt_name,
       isNullable: col.is_nullable === 'YES',
+      isIdentity: col.is_identity === 'YES',
       pkConstraint: columnPKConstraints[colName],
-      uniqueConstraint: columnUniqueConstraints[colName],
+      isUnique:
+        (columnPKConstraints[colName] && pkLength === 1) ||
+        columnUniqueConstraints[colName]
+          ? true
+          : false,
+      // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
+      comment: col.comment || '',
+      customFieldName: customColumnNames[colName] || '',
     };
 
-    const onSubmit = () => {
-      dispatch(saveColumnChangesSql(colName, col, allowRename));
+    const onSubmit = toggleEditor => {
+      dispatch(saveColumnChangesSql(colName, col, toggleEditor));
     };
 
     const onDelete = () => {
-      const isOk = confirm('Are you sure you want to delete?');
-      if (isOk) {
-        dispatch(deleteColumnSql(tableName, colName, col));
-      }
-    };
-
-    const safeOnDelete = () => {
-      let confirmMessage = 'Are you sure you want to delete?';
+      let confirmMessage = `This will permanently delete the column "${colName}" from this table`;
       if (columnProperties.pkConstraint) {
         confirmMessage = DELETE_PK_WARNING;
       }
-      const isOk = window.confirm(confirmMessage);
+
+      const isOk = getConfirmation(confirmMessage, true, colName);
       if (isOk) {
-        dispatch(deleteColumnSql(tableName, colName, col));
+        dispatch(deleteColumnSql(col, tableSchema));
       }
     };
 
+    const gqlCompatibilityWarning = () => {
+      return (
+        <GqlCompatibilityWarning
+          identifier={colName}
+          className={styles.add_mar_left_small}
+        />
+      );
+    };
+
     const keyProperties = () => {
+      const propertiesDisplay = [];
+
       const propertiesList = [];
 
-      propertiesList.push(columnProperties.type);
+      propertiesList.push(columnProperties.display_type_name);
 
       if (columnProperties.pkConstraint) {
-        propertiesList.push(`primary key (${columnProperties.pkConstraint})`);
+        propertiesList.push('primary key');
       }
 
-      if (columnProperties.uniqueConstraint) {
-        propertiesList.push(`unique (${columnProperties.uniqueConstraint})`);
+      if (columnProperties.isUnique) {
+        propertiesList.push('unique');
+      }
+
+      if (columnProperties.isIdentity) {
+        propertiesList.push('identity');
       }
 
       if (columnProperties.isNullable) {
@@ -99,20 +134,30 @@ const ColumnEditorList = ({
 
       const keyPropertiesString = propertiesList.join(', ');
 
-      return <i>{keyPropertiesString && `- ${keyPropertiesString}`}</i>;
+      propertiesDisplay.push(<i key={'props'}>{keyPropertiesString}</i>);
+
+      propertiesDisplay.push(<br key={'br1'} />);
+
+      propertiesDisplay.push(
+        <span key={'comment'} className={styles.text_gray}>
+          {columnProperties.comment && `${columnProperties.comment}`}
+        </span>
+      );
+
+      return propertiesDisplay;
     };
 
     const collapsedLabel = () => {
       return (
         <div key={colName}>
-          <div className="container-fluid">
-            <div className="row">
-              <h5 className={styles.padd_bottom}>
-                <b>{colName}</b> {keyProperties()}
-                &nbsp;
-              </h5>
-            </div>
-          </div>
+          <b>
+            {colName}
+            <i>
+              {columnProperties.customFieldName &&
+                ` → ${columnProperties.customFieldName}`}
+            </i>
+          </b>{' '}
+          {gqlCompatibilityWarning()} - {keyProperties()}
         </div>
       );
     };
@@ -120,29 +165,65 @@ const ColumnEditorList = ({
     const expandedLabel = () => {
       return (
         <div key={colName}>
-          <div className="container-fluid">
-            <div className="row">
-              <h5 className={styles.padd_bottom}>
-                <b>{colName}</b>
-                &nbsp;
-              </h5>
-            </div>
-          </div>
+          <b>{colName}</b>
         </div>
       );
     };
 
+    /* If the dataTypeIndexMap is not loaded, then just load the current type information
+     * */
+
+    const getValidTypeCasts = udtName => {
+      const lowerUdtName = udtName.toLowerCase();
+      if (lowerUdtName in validTypeCasts) {
+        return validTypeCasts[lowerUdtName];
+      }
+      if (dataTypeIndexMap && dataTypeIndexMap[lowerUdtName]) {
+        return [
+          ...dataTypeIndexMap[lowerUdtName],
+          ...dataTypeIndexMap[defaultDataTypeToCast],
+        ];
+      }
+      return [lowerUdtName, lowerUdtName, ''];
+    };
+
+    const getValidDefaultTypes = udtName => {
+      const lowerUdtName = udtName.toLowerCase();
+      let defaultOptions = [];
+      if (lowerUdtName in columnDefaultFunctions) {
+        defaultOptions = columnDefaultFunctions[lowerUdtName];
+      } else {
+        defaultOptions = inferDefaultValues(
+          columnDefaultFunctions,
+          validTypeCasts
+        )(lowerUdtName);
+      }
+
+      return getDefaultFunctionsOptions(defaultOptions);
+    };
+
+    /*
+     * Alter type options contains a list of items and its valid castable types
+     * [
+     *  "Data type",
+     *  "User friendly name of the data type",
+     *  "Description of the data type",
+     *  "Comma separated castable data types",
+     *  "Comma separated user friendly names of the castable data types",
+     *  "Colon separated user friendly description of the castable data types"
+     *  ]
+     * */
+
     const colEditorExpanded = () => {
       return (
         <ColumnEditor
+          alterTypeOptions={getValidTypeCasts(col.udt_name)}
+          defaultOptions={getValidDefaultTypes(col.udt_name)}
           column={col}
           onSubmit={onSubmit}
-          onDelete={safeOnDelete}
           tableName={tableName}
           dispatch={dispatch}
           currentSchema={currentSchema}
-          columnComment={columnComments[col.column_name]}
-          allowRename={allowRename}
           columnProperties={columnProperties}
           selectedProperties={columnEdit}
           editColumn={editColumn}
@@ -152,7 +233,6 @@ const ColumnEditorList = ({
 
     const editorExpandCallback = () => {
       dispatch(setColumnEdit(columnProperties));
-      dispatch(fetchColumnComment(tableName, colName));
     };
 
     const editorCollapseCallback = () => {

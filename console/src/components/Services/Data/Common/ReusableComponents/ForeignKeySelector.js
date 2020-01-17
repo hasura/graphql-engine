@@ -2,6 +2,7 @@ import React from 'react';
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { fkViolationOnUpdate, fkViolationOnDelete } from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import { updateSchemaInfo } from '../../DataActions';
 
 const violiationActions = [
   'restrict',
@@ -12,7 +13,6 @@ const violiationActions = [
 ];
 
 const ForeignKeySelector = ({
-  refTables,
   foreignKey,
   index,
   foreignKeys,
@@ -20,10 +20,61 @@ const ForeignKeySelector = ({
   dispatch,
   setForeignKeys,
   service,
+  schemaList,
+  refTables,
 }) => {
-  const { refTableName, colMappings } = foreignKey;
+  const { refTableName, colMappings, refSchemaName } = foreignKey;
   const numOfFks = foreignKeys.length;
   const numColMappings = colMappings.length;
+
+  const refSchemaSelect = () => {
+    const dispatchSetRefSchema = event => {
+      const newFks = JSON.parse(JSON.stringify(foreignKeys));
+      if (newFks[index].refSchemaName !== event.target.value) {
+        newFks[index].refTableName = '';
+        newFks[index].colMappings = [{ column: '', refColumn: '' }];
+      }
+      newFks[index].refSchemaName = event.target.value;
+      dispatch(setForeignKeys(newFks));
+      dispatch(updateSchemaInfo({ schemas: [event.target.value] }));
+    };
+
+    const getRefSchemaOptions = () => {
+      const options = [];
+
+      options.push(
+        <option key={-1} value={''} disabled>
+          {'-- reference schema --'}
+        </option>
+      );
+
+      schemaList.forEach((rs, j) => {
+        options.push(
+          <option key={j} value={rs}>
+            {rs}
+          </option>
+        );
+      });
+
+      return options;
+    };
+
+    return (
+      <div className={`${styles.add_mar_bottom}`}>
+        <div className={`${styles.add_mar_bottom_mid}`}>
+          <b>Reference Schema:</b>
+        </div>
+        <select
+          value={refSchemaName || ''}
+          className={`${styles.select} form-control ${styles.add_pad_left}`}
+          data-test={`foreign-key-ref-schema-${index}`}
+          onChange={dispatchSetRefSchema}
+        >
+          {getRefSchemaOptions()}
+        </select>
+      </div>
+    );
+  };
 
   // html for ref table dropdown
   const refTableSelect = () => {
@@ -34,8 +85,9 @@ const ForeignKeySelector = ({
         newFks[index].colMappings = [{ column: '', refColumn: '' }];
       }
       newFks[index].refTableName = event.target.value;
-      if (index + 1 === numOfFks && service === 'add-table') {
+      if (service === 'add-table' && index + 1 === numOfFks) {
         newFks.push({
+          refSchemaName: '',
           refTableName: '',
           colMappings: [
             {
@@ -50,6 +102,29 @@ const ForeignKeySelector = ({
       dispatch(setForeignKeys(newFks));
     };
 
+    const getRefTableOptions = () => {
+      const options = [];
+
+      options.push(
+        <option key={-1} value={''} disabled>
+          {'-- reference table --'}
+        </option>
+      );
+
+      // all reference table options
+      Object.keys(refTables)
+        .sort()
+        .forEach((rt, i) => {
+          options.push(
+            <option key={i} value={rt}>
+              {rt}
+            </option>
+          );
+        });
+
+      return options;
+    };
+
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
@@ -60,19 +135,9 @@ const ForeignKeySelector = ({
           className={`${styles.select} form-control ${styles.add_pad_left}`}
           data-test={`foreign-key-ref-table-${index}`}
           onChange={dispatchSetRefTable}
+          disabled={!refSchemaName}
         >
-          {// default unselected option
-            refTableName === '' && (
-              <option value={''} disabled>
-                {'-- reference table --'}
-              </option>
-            )}
-          {// all reference table options
-            Object.keys(refTables).map((rt, j) => (
-              <option key={j} value={rt}>
-                {rt}
-              </option>
-            ))}
+          {getRefTableOptions()}
         </select>
       </div>
     );
@@ -259,10 +324,7 @@ const ForeignKeySelector = ({
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Update Violation:</b>&nbsp; &nbsp;
             <OverlayTrigger placement="right" overlay={fkViolationOnUpdate}>
-              <i
-                className={`fa fa-question-circle ${styles.iClickable}`}
-                aria-hidden="true"
-              />
+              <i className={'fa fa-question-circle'} aria-hidden="true" />
             </OverlayTrigger>{' '}
             &nbsp; &nbsp;
           </div>
@@ -272,10 +334,7 @@ const ForeignKeySelector = ({
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Delete Violation:</b>&nbsp; &nbsp;
             <OverlayTrigger placement="right" overlay={fkViolationOnDelete}>
-              <i
-                className={`fa fa-question-circle ${styles.iClickable}`}
-                aria-hidden="true"
-              />
+              <i className={'fa fa-question-circle'} aria-hidden="true" />
             </OverlayTrigger>{' '}
             &nbsp; &nbsp;
           </div>
@@ -287,6 +346,7 @@ const ForeignKeySelector = ({
 
   return (
     <div className="form-group">
+      {refSchemaSelect()}
       {refTableSelect()}
       {columnSelect()}
       {onViolation()}

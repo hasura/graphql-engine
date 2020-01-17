@@ -1,3 +1,7 @@
+.. meta::
+   :description: Secure Hasura GraphQL endpoint with Kubernetes deployment
+   :keywords: hasura, docs, deployment, kubernetes, secure
+
 Securing the GraphQL endpoint (Kubernetes)
 ==========================================
 
@@ -36,9 +40,9 @@ Update the ``deployment.yaml`` to set the ``HASURA_GRAPHQL_ADMIN_SECRET`` enviro
 
 .. note::
 
-  The ``HASURA_GRAPHQL_ADMIN_SECRET`` should never be passed from the client to Hasura GraphQL engine as it would
+  The ``HASURA_GRAPHQL_ADMIN_SECRET`` should never be passed from the client to the Hasura GraphQL engine as it would
   give the client full admin rights to your Hasura instance. See :doc:`../../auth/index` for information on
-  setting up Authentication.
+  setting up authentication.
 
 
 (optional) Use the admin secret key with the CLI

@@ -7,14 +7,14 @@ import {
 
 import styles from './ModifyTable.scss';
 
-const TableCommentEditor = ({ tableComment, tableCommentEdit, dispatch }) => {
+const TableCommentEditor = ({
+  tableComment,
+  tableCommentEdit,
+  isTable,
+  dispatch,
+}) => {
   const editCommentClicked = () => {
-    let commentText =
-      tableComment && tableComment.result[1] && tableComment.result[1][0]
-        ? tableComment.result[1][0]
-        : null;
-    commentText = commentText !== 'NULL' ? commentText : null;
-    dispatch(activateCommentEdit(true, commentText));
+    dispatch(activateCommentEdit(true, tableComment));
   };
 
   const commentEdited = e => {
@@ -22,19 +22,13 @@ const TableCommentEditor = ({ tableComment, tableCommentEdit, dispatch }) => {
   };
 
   const commentEditSave = () => {
-    dispatch(saveTableCommentSql(true));
+    dispatch(saveTableCommentSql(isTable));
   };
 
   const commentEditCancel = () => {
     dispatch(activateCommentEdit(false, ''));
   };
 
-  let commentText =
-    tableComment && tableComment.result[1] && tableComment.result[1][0]
-      ? tableComment.result[1][0]
-      : null;
-
-  commentText = commentText !== 'NULL' ? commentText : null;
   let commentHtml = (
     <div className={styles.add_pad_bottom}>
       <div className={styles.commentText}>Add a comment</div>
@@ -44,11 +38,11 @@ const TableCommentEditor = ({ tableComment, tableCommentEdit, dispatch }) => {
     </div>
   );
 
-  if (commentText && !tableCommentEdit.enabled) {
+  if (tableComment && !tableCommentEdit.enabled) {
     commentHtml = (
       <div className={styles.mar_bottom}>
         <div className={styles.commentText + ' alert alert-warning'}>
-          {commentText}
+          {tableComment}
         </div>
         <div onClick={editCommentClicked} className={styles.commentEdit}>
           <i className="fa fa-edit" />
@@ -63,7 +57,7 @@ const TableCommentEditor = ({ tableComment, tableCommentEdit, dispatch }) => {
           className={'form-control ' + styles.commentInput}
           type="text"
           value={tableCommentEdit.value}
-          defaultValue={commentText}
+          defaultValue={tableComment}
         />
         <div
           onClick={commentEditSave}

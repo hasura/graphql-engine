@@ -1,24 +1,18 @@
 import React from 'react';
 import { Link } from 'react-router';
-import _push from './push';
 import globals from '../../../Globals';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
+import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
-import {
-  loadSchema,
-  loadUntrackedSchema,
-  loadUntrackedRelations,
-  UPDATE_CURRENT_SCHEMA,
-  fetchFunctionInit,
-} from './DataActions';
-
-const sectionPrefix = '/data';
+import { updateCurrentSchema } from './DataActions';
+import { NotFoundError } from '../../Error/PageNotFound';
+import { CLI_CONSOLE_MODE } from '../../../constants';
+import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 
 const DataPageContainer = ({
-  schema,
   currentSchema,
   schemaList,
   children,
@@ -27,10 +21,17 @@ const DataPageContainer = ({
 }) => {
   const styles = require('../../Common/TableCommon/Table.scss');
 
+  if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
+    dispatch(updateCurrentSchema('public', false));
+
+    // throw a 404 exception
+    throw new NotFoundError();
+  }
+
   const currentLocation = location.pathname;
 
   let migrationTab = null;
-  if (globals.consoleMode === 'cli') {
+  if (globals.consoleMode === CLI_CONSOLE_MODE) {
     migrationTab = (
       <li
         role="presentation"
@@ -38,7 +39,7 @@ const DataPageContainer = ({
           currentLocation.includes('data/migrations') ? styles.active : ''
         }
       >
-        <Link className={styles.linkBorder} to={sectionPrefix + '/migrations'}>
+        <Link className={styles.linkBorder} to={'/data/migrations'}>
           Migrations
         </Link>
       </li>
@@ -46,15 +47,15 @@ const DataPageContainer = ({
   }
 
   const handleSchemaChange = e => {
-    const updatedSchema = e.target.value;
-    dispatch(_push(`/schema/${updatedSchema}`));
-    Promise.all([
-      dispatch({ type: UPDATE_CURRENT_SCHEMA, currentSchema: updatedSchema }),
-      dispatch(loadSchema()),
-      dispatch(loadUntrackedSchema()),
-      dispatch(loadUntrackedRelations()),
-      dispatch(fetchFunctionInit()),
-    ]);
+    dispatch(updateCurrentSchema(e.target.value));
+  };
+
+  const getSchemaOptions = () => {
+    return schemaList.map(s => (
+      <option key={s.schema_name} value={s.schema_name}>
+        {s.schema_name}
+      </option>
+    ));
   };
 
   const sidebarContent = (
@@ -65,7 +66,7 @@ const DataPageContainer = ({
       >
         <Link
           className={styles.linkBorder}
-          to={sectionPrefix + '/schema/' + currentSchema}
+          to={getSchemaBaseRoute(currentSchema)}
         >
           <div className={styles.schemaWrapper}>
             <div className={styles.schemaSidebarSection} data-test="schema">
@@ -75,21 +76,16 @@ const DataPageContainer = ({
                 value={currentSchema}
                 className={styles.changeSchema + ' form-control'}
               >
-                {schemaList.map(s => (
-                  <option key={s.schema_name} value={s.schema_name}>
-                    {s.schema_name}
-                  </option>
-                ))}
+                {getSchemaOptions()}
               </select>
+              <GqlCompatibilityWarning
+                identifier={currentSchema}
+                className={styles.add_mar_left_mid}
+              />
             </div>
           </div>
         </Link>
-        <DataSubSidebar
-          location={location}
-          schema={schema}
-          currentSchema={currentSchema}
-          dispatch={dispatch}
-        />
+        <DataSubSidebar location={location} />
       </li>
       <li
         role="presentation"
@@ -97,7 +93,7 @@ const DataPageContainer = ({
       >
         <Link
           className={styles.linkBorder}
-          to={sectionPrefix + '/sql'}
+          to={'/data/sql'}
           data-test="sql-link"
         >
           SQL
@@ -120,7 +116,6 @@ const DataPageContainer = ({
 
 const mapStateToProps = state => {
   return {
-    schema: state.tables.allSchemas,
     schemaList: state.tables.schemaList,
     currentSchema: state.tables.currentSchema,
   };

@@ -1,0 +1,17 @@
+description: Fetch raster values which intersects the input raster
+url: /v1/graphql
+status: 200
+response:
+  data:
+    dummy_rast: []
+
+query:
+  variables:
+    rast: '0100000100000000000000004000000000000000C00000000000002240000000000000264000000000000000000000000000000000E610000001000100440001'
+  query: |
+    query ($rast: raster){
+      dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
+        rid
+        rast
+      }
+    }

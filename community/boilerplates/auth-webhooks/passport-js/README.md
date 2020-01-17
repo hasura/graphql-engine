@@ -90,4 +90,4 @@ The client just need to add `Authorization: Bearer <token>` to the request sendi
 
 The endpoint (say `http://localhost:8080/webhook`) can be given as an environment variable `HASURA_GRAPHQL_AUTH_HOOK` to GraphQL Engine.
 
-[Read more about webhook here](https://docs.hasura.io/1.0/graphql/manual/auth/webhook.html).
+[Read more about webhook here](https://docs.hasura.io/1.0/graphql/manual/auth/authentication/webhook.html).

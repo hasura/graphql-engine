@@ -1,3 +1,7 @@
+.. meta::
+   :description: Supported PostgreSQL types in the Hasura API
+   :keywords: hasura, docs, PostgreSQL types, API reference
+
 API Reference - Supported PostgreSQL Types
 ==========================================
 
@@ -304,8 +308,8 @@ variables:
 
 Implicitly Supported types
 --------------------------
-All ``Implicit`` types in the :ref:`above table <types_table>` are implicitly supported by GraphQL Engine. You have to
-provide the value in **String**.
+All ``Implicit`` types in the :ref:`above table <types_table>` are implicitly supported by the GraphQL engine. You have to
+provide the value as a **String**.
 
 
 E.g. For time without time zone type
@@ -334,6 +338,6 @@ E.g. For macaddr type
 
 .. Note::
 
-   You can learn more about PostgreSQL data types `here <https://www.postgresql.org/docs/current/static/datatype.html>`__
+   You can learn more about PostgreSQL data types `here <https://www.postgresql.org/docs/current/static/datatype.html>`__.
 
 

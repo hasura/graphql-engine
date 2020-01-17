@@ -1,5 +1,5 @@
 description: Insert Company data as user role
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 headers:
   X-Hasura-Company-Id: '1'

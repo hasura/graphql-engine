@@ -30,7 +30,7 @@ wait_for_port 8080
 
 # test cli
 HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" make test
-kill $PID
+kill -s INT $PID
 
 # start graphql-engine with admin secret
 psql -U gql_test -h localhost -c 'CREATE DATABASE "gql_test_with_admin_secret";'
@@ -41,5 +41,5 @@ PID=$!
 wait_for_port 8080
 
 # test cli
-GOCACHE=off HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make test
-kill $PID
+HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" HASURA_GRAPHQL_TEST_ADMIN_SECRET="abcd" make test
+kill -s INT $PID

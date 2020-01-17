@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use relationships with the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, relationship
+
 Schema/Metadata API Reference: Relationships
 ============================================
 
@@ -125,7 +129,7 @@ Args syntax
    * - using
      - true
      - ObjRelUsing_
-     - Use one of the available ways to define object relationship
+     - Use one of the available ways to define an object relationship
    * - comment
      - false
      - text
@@ -155,7 +159,7 @@ ObjRelUsing
 .. note::
 
    There has to be at least one and only one of ``foreign_key_constraint_on``
-   and ``manual_mapping``. 
+   and ``manual_configuration``. 
 
 
 ObjRelUsingManualMapping
@@ -255,7 +259,7 @@ follows:
    It is easy to make mistakes while using ``manual_configuration``.
    One simple check is to ensure that foreign key constraint semantics are valid
    on the columns being used in ``column_mapping``. In the previous example, if
-   it was allowed, a foreign key constraint could have been defined on
+   it was allowed, a foreign key constraint could have been defined on the
    ``author`` table's ``id`` column to ``article_detail`` view's ``author_id``
    column.
 
@@ -282,7 +286,7 @@ Args syntax
    * - using
      - true
      - ArrRelUsing_
-     - Use one of the available ways to define array relationship
+     - Use one of the available ways to define an array relationship
    * - comment
      - false
      - text
@@ -304,7 +308,7 @@ ArrRelUsing
      - false
      - ArrRelUsingFKeyOn_
      - The column with foreign key constraint
-   * - manual_mapping
+   * - manual_configuration
      - false
      - ArrRelUsingManualMapping_
      - Manual mapping of table and columns
@@ -390,7 +394,7 @@ Args syntax
      - true
      - :ref:`TableName`
      - Name of the table
-   * - name
+   * - relationship
      - true
      - :ref:`RelationshipName`
      - Name of the relationship that needs to be dropped
@@ -445,11 +449,60 @@ Args syntax
      - true
      - :ref:`TableName`
      - Name of the table
-   * - name
+   * - relationship
      - true
      - :ref:`RelationshipName`
      - The relationship
    * - comment
      - false
      - Text
-     - comment
+     - Comment
+
+.. _rename_relationship:
+
+rename_relationship
+-------------------
+
+``rename_relationship`` is used to modify the name of an existing relationship.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type": "rename_relationship",
+       "args": {
+           "table": "article",
+           "name": "article_details",
+           "new_name": "article_detail"
+       }
+   }
+
+.. _rename_relationship_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the table
+   * - name
+     - true
+     - :ref:`RelationshipName`
+     - The relationship
+   * - new_name
+     - true
+     - :ref:`RelationshipName`
+     - New relationship name

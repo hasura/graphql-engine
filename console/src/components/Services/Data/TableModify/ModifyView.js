@@ -1,58 +1,36 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import AceEditor from 'react-ace';
-import ViewHeader from '../TableBrowseRows/ViewHeader';
-import {
-  activateCommentEdit,
-  updateCommentInput,
-  saveTableCommentSql,
-} from './ModifyActions';
+import TableHeader from '../TableCommon/TableHeader';
 import {
   fetchViewDefinition,
   deleteViewSql,
   untrackTableSql,
   RESET,
 } from './ModifyActions';
+import TableCommentEditor from './TableCommentEditor';
 import { ordinalColSort } from '../utils';
-import { setTable, fetchTableComment } from '../DataActions';
+import { setTable } from '../DataActions';
 import Button from '../../../Common/Button/Button';
-import semverCheck from '../../../../helpers/semver';
+import { NotFoundError } from '../../../Error/PageNotFound';
+
+import { getConfirmation } from '../../../Common/utils/jsUtils';
+import {
+  findTable,
+  generateTableDef,
+  getColumnName,
+  getTableCustomRootFields,
+} from '../../../Common/utils/pgUtils';
+import RootFields from './RootFields';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
 
 class ModifyView extends Component {
-  state = {
-    supportTableColumnRename: false,
-  };
   componentDidMount() {
-    const { dispatch, serverVersion } = this.props;
+    const { dispatch } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchViewDefinition(this.props.tableName, false));
-    dispatch(fetchTableComment(this.props.tableName));
-    if (serverVersion) {
-      this.checkTableColumnRenameSupport(serverVersion);
-    }
   }
-
-  componentWillReceiveProps(nextProps) {
-    if (
-      nextProps.serverVersion &&
-      nextProps.serverVersion !== this.props.serverVersion
-    ) {
-      this.checkTableColumnRenameSupport(nextProps.serverVersion);
-    }
-  }
-
-  checkTableColumnRenameSupport = serverVersion => {
-    try {
-      if (semverCheck('tableColumnRename', serverVersion)) {
-        this.setState({
-          supportTableColumnRename: true,
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   modifyViewDefinition = viewName => {
     // fetch the definition
@@ -70,14 +48,25 @@ class ModifyView extends Component {
       lastSuccess,
       dispatch,
       currentSchema,
-      tableComment,
       tableCommentEdit,
+      rootFieldsEdit,
       migrationMode,
+      readOnlyMode,
     } = this.props;
 
     const styles = require('./ModifyTable.scss');
 
-    const tableSchema = allSchemas.find(t => t.table_name === tableName); // eslint-disable-line no-unused-vars
+    const tableSchema = findTable(
+      allSchemas,
+      generateTableDef(tableName, currentSchema)
+    );
+
+    if (!tableSchema) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
+    const tableComment = tableSchema.comment;
 
     let alert = null;
     if (ongoingRequest) {
@@ -103,30 +92,53 @@ class ModifyView extends Component {
       );
     }
 
-    const columns = tableSchema.columns.sort(ordinalColSort);
-    const columnEditors = columns.map((c, i) => {
-      const bg = '';
-      return (
-        <div key={i} className={bg}>
-          <div className="container-fluid">
-            <div className={`row + ${styles.add_mar_bottom}`}>
-              <h5>
-                <Button disabled="disabled" size="xs">
-                  -
-                </Button>{' '}
-                &nbsp; <b>{c.column_name}</b>
-              </h5>
+    const getViewColumnsSection = () => {
+      const columns = tableSchema.columns.sort(ordinalColSort);
+
+      return columns.map((c, i) => {
+        return (
+          <div key={i}>
+            <div className="container-fluid">
+              <div className={`row + ${styles.add_mar_bottom}`}>
+                <h5>
+                  <Button disabled="disabled" size="xs">
+                    -
+                  </Button>{' '}
+                  &nbsp; <b>{getColumnName(c)}</b>
+                </h5>
+              </div>
             </div>
           </div>
-        </div>
+        );
+      });
+    };
+
+    const getViewRootFieldsSection = () => {
+      const existingRootFields = getTableCustomRootFields(tableSchema);
+
+      return (
+        <React.Fragment>
+          <h4 className={styles.subheading_text}>
+            Custom GraphQL Root Fields
+            <Tooltip
+              message={'Change the root fields for the view in the GraphQL API'}
+            />
+          </h4>
+          <RootFields
+            existingRootFields={existingRootFields}
+            rootFieldsEdit={rootFieldsEdit}
+            dispatch={dispatch}
+            tableName={tableName}
+          />
+          <hr />
+        </React.Fragment>
       );
-    });
+    };
 
     const modifyBtn = (
       <Button
         type="submit"
-        color="yellow"
-        size="sm"
+        size="xs"
         className={styles.add_mar_right}
         onClick={() => {
           this.modifyViewDefinition(tableName);
@@ -144,7 +156,8 @@ class ModifyView extends Component {
         color="white"
         size="sm"
         onClick={() => {
-          const isOk = confirm('Are you sure to untrack?');
+          const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
+          const isOk = getConfirmation(confirmMessage);
           if (isOk) {
             dispatch(untrackTableSql(tableName));
           }
@@ -161,7 +174,8 @@ class ModifyView extends Component {
         color="red"
         size="sm"
         onClick={() => {
-          const isOk = confirm('Are you sure');
+          const confirmMessage = `This will permanently delete the view "${tableName}" from the database`;
+          const isOk = getConfirmation(confirmMessage, true, tableName);
           if (isOk) {
             dispatch(deleteViewSql(tableName));
           }
@@ -172,94 +186,31 @@ class ModifyView extends Component {
       </Button>
     );
 
-    const editCommentClicked = () => {
-      dispatch(activateCommentEdit(true, tableComment));
-    };
-    const commentEdited = e => {
-      dispatch(updateCommentInput(e.target.value));
-    };
-    const commentEditSave = () => {
-      dispatch(saveTableCommentSql(false));
-    };
-    const commentEditCancel = () => {
-      dispatch(activateCommentEdit(false, null));
-    };
-    const commentText = tableComment ? tableComment.result[1] : null;
-    let commentHtml = (
-      <div className={styles.add_pad_bottom}>
-        <div className={styles.commentText}>Add a comment</div>
-        <div onClick={editCommentClicked} className={styles.commentEdit}>
-          <i className="fa fa-edit" />
-        </div>
-      </div>
-    );
-    if (commentText && !tableCommentEdit.enabled) {
-      commentHtml = (
-        <div>
-          <div className={styles.commentText + ' alert alert-warning'}>
-            {commentText}
-          </div>
-          <div onClick={editCommentClicked} className={styles.commentEdit}>
-            <i className="fa fa-edit" />
-          </div>
-        </div>
-      );
-    } else if (tableCommentEdit.enabled) {
-      commentHtml = (
-        <div className={styles.mar_bottom}>
-          <input
-            onChange={commentEdited}
-            className={'form-control ' + styles.commentInput}
-            type="text"
-            value={tableCommentEdit.value}
-            defaultValue={tableComment.result[1]}
-          />
-          <div
-            onClick={commentEditSave}
-            className={
-              styles.display_inline +
-              ' ' +
-              styles.add_pad_left +
-              ' ' +
-              styles.comment_action
-            }
-          >
-            Save
-          </div>
-          <div
-            onClick={commentEditCancel}
-            className={
-              styles.display_inline +
-              ' ' +
-              styles.add_pad_left +
-              ' ' +
-              styles.comment_action
-            }
-          >
-            Cancel
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div className={styles.container + ' container-fluid'}>
-        <ViewHeader
+        <TableHeader
           dispatch={dispatch}
-          tableName={tableName}
+          table={tableSchema}
           tabName="modify"
-          currentSchema={currentSchema}
           migrationMode={migrationMode}
-          allowRename={this.state.supportTableColumnRename}
+          readOnlyMode={readOnlyMode}
         />
         <br />
         <div className={'container-fluid ' + styles.padd_left_remove}>
           <div className={'col-xs-8 ' + styles.padd_left_remove}>
-            {commentHtml}
+            <TableCommentEditor
+              tableComment={tableComment}
+              tableCommentEdit={tableCommentEdit}
+              isTable={false}
+              dispatch={dispatch}
+            />
             <h4 className={styles.subheading_text}>Columns</h4>
-            {columnEditors}
+            {getViewColumnsSection()}
             <br />
-            <h4>View Definition:</h4>
+            <h4 className={styles.subheading_text}>
+              View Definition:
+              <span className={styles.add_mar_left}>{modifyBtn}</span>
+            </h4>
             <AceEditor
               mode="sql"
               theme="github"
@@ -272,7 +223,7 @@ class ModifyView extends Component {
               readOnly
             />
             <hr />
-            {modifyBtn}
+            {getViewRootFieldsSection()}
             {untrackBtn}
             {deleteBtn}
             <br />
@@ -290,9 +241,10 @@ ModifyView.propTypes = {
   tableName: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
   currentSchema: PropTypes.string.isRequired,
-  tableComment: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
+  migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
@@ -305,8 +257,8 @@ const mapStateToProps = (state, ownProps) => {
     allSchemas: state.tables.allSchemas,
     sql: state.rawSQL.sql,
     currentSchema: state.tables.currentSchema,
-    tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.modify,
   };

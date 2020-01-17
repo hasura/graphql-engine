@@ -1,23 +1,17 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import ViewHeader from '../TableBrowseRows/ViewHeader';
+import TableHeader from '../TableCommon/TableHeader';
 import { RESET } from '../TableModify/ModifyActions';
-import { addNewRelClicked } from './Actions';
 import { findAllFromRel } from '../utils';
 import { getObjArrRelList } from './utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
-
-import Button from '../../../Common/Button/Button';
 import AddManualRelationship from './AddManualRelationship';
 import RelationshipEditor from './RelationshipEditor';
-import semverCheck from '../../../../helpers/semver';
+import { NotFoundError } from '../../../Error/PageNotFound';
 
 class RelationshipsView extends Component {
-  state = {
-    supportRename: false,
-  };
   componentDidMount() {
-    const { dispatch, serverVersion, currentSchema, tableName } = this.props;
+    const { dispatch, currentSchema, tableName } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(tableName));
     // Sourcing the current schema into manual relationship
@@ -25,31 +19,8 @@ class RelationshipsView extends Component {
       type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
       data: currentSchema,
     });
-    if (serverVersion) {
-      this.checkRenameSupport(serverVersion);
-    }
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (
-      nextProps.serverVersion &&
-      nextProps.serverVersion !== this.props.serverVersion
-    ) {
-      this.checkRenameSupport(nextProps.serverVersion);
-    }
-  }
-
-  checkRenameSupport = serverVersion => {
-    try {
-      if (semverCheck('tableColumnRename', serverVersion)) {
-        this.setState({
-          supportRename: true,
-        });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
   render() {
     const {
       tableName,
@@ -59,15 +30,24 @@ class RelationshipsView extends Component {
       lastFormError,
       lastSuccess,
       dispatch,
-      relAdd,
+      manualRelAdd,
       currentSchema,
       migrationMode,
+      readOnlyMode,
       schemaList,
     } = this.props;
     const styles = require('../TableModify/ModifyTable.scss');
     const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
-    const tableSchema = allSchemas.find(t => t.table_name === tableName);
+    const tableSchema = allSchemas.find(
+      t => t.table_name === tableName && t.table_schema === currentSchema
+    );
+
+    if (!tableSchema) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
     let alert = null;
     if (ongoingRequest) {
       alert = (
@@ -118,16 +98,12 @@ class RelationshipsView extends Component {
                 const column1 = rel.objRel ? (
                   <RelationshipEditor
                     dispatch={dispatch}
-                    tableName={tableName}
                     key={rel.objRel.rel_name}
-                    relName={rel.objRel.rel_name}
                     relConfig={findAllFromRel(
                       allSchemas,
                       tableSchema,
                       rel.objRel
                     )}
-                    isObjRel
-                    allowRename={this.state.supportRename}
                   />
                 ) : (
                   <td />
@@ -136,15 +112,11 @@ class RelationshipsView extends Component {
                   <RelationshipEditor
                     key={rel.arrRel.rel_name}
                     dispatch={dispatch}
-                    tableName={tableName}
-                    relName={rel.arrRel.rel_name}
                     relConfig={findAllFromRel(
                       allSchemas,
                       tableSchema,
                       rel.arrRel
                     )}
-                    isObjRel={false}
-                    allowRename={this.state.supportRename}
                   />
                 ) : (
                   <td />
@@ -162,15 +134,14 @@ class RelationshipsView extends Component {
       );
     }
 
-    // if (tableSchema.primary_key.columns > 0) {}
     return (
       <div className={`${styles.container} container-fluid`}>
-        <ViewHeader
+        <TableHeader
           dispatch={dispatch}
-          tableName={tableName}
+          table={tableSchema}
           tabName="relationships"
-          currentSchema={currentSchema}
           migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
         />
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
@@ -178,37 +149,13 @@ class RelationshipsView extends Component {
             <h4 className={styles.subheading_text}>Relationships</h4>
             {addedRelationshipsView}
             <br />
-            {relAdd.isActive ? (
-              <div className={styles.activeEdit}>
-                <AddManualRelationship
-                  tableName={tableName}
-                  isObjRel={relAdd.isObjRel}
-                  rTable={relAdd.rTable}
-                  dispatch={dispatch}
-                  lcol={relAdd.lcol}
-                  rcol={relAdd.rcol}
-                  allSchemas={allSchemas}
-                  schemaList={schemaList}
-                  manualColumns={relAdd.manualColumns}
-                  manualRelInfo={relAdd.manualRelInfo}
-                  titleInfo={'Add new relationship'}
-                  currentSchema={currentSchema}
-                  showClose={false}
-                  dataTestVal={'view-add-relationship'}
-                />
-              </div>
-            ) : (
-              <Button
-                type="submit"
-                color="white"
-                size="sm"
-                onClick={() => {
-                  dispatch(addNewRelClicked());
-                }}
-              >
-                + Add relationship
-              </Button>
-            )}
+            <AddManualRelationship
+              tableSchema={tableSchema}
+              allSchemas={allSchemas}
+              schemaList={schemaList}
+              relAdd={manualRelAdd}
+              dispatch={dispatch}
+            />
             <hr />
           </div>
         </div>
@@ -223,9 +170,10 @@ RelationshipsView.propTypes = {
   allSchemas: PropTypes.array.isRequired,
   currentSchema: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
-  fkAdd: PropTypes.object.isRequired,
-  relAdd: PropTypes.object.isRequired,
+  manualRelAdd: PropTypes.object.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
+  migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,
   lastSuccess: PropTypes.bool,
@@ -238,6 +186,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
   migrationMode: state.main.migrationMode,
+  readOnlyMode: state.main.readOnlyMode,
   serverVersion: state.main.serverVersion,
   schemaList: state.tables.schemaList,
   ...state.tables.modify,

@@ -2,6 +2,8 @@
 
 This is the source code for a fully working group chat app that uses subscriptions in Hasura GraphQL Engine. It is built using Vue and Apollo.
 
+[![Edit chat-app](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/realtime-chat-vue?fontsize=14)
+
 - [Fully working app](https://realtime-chat-vue.hasura.app/)
 - [Backend](https://realtime-chat.demo.hasura.app/console)
 

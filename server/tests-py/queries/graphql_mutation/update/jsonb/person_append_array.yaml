@@ -1,11 +1,13 @@
 description: Updated person data using _append operator
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:
     update_person:
+      affected_rows: 1
       returning:
-      - details:
+      - id: 2
+        details:
         - address:
             country: Denmark
             city: Copenhagen
@@ -15,8 +17,6 @@ response:
         - address:
             country: Australia
             city: Sydney
-        id: 2
-      affected_rows: 1
 query:
   variables:
     value:

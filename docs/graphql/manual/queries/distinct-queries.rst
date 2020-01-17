@@ -1,10 +1,17 @@
+.. meta::
+   :description: Make distinct queries with Hasura
+   :keywords: hasura, docs, query, distinct query
+
 Distinct query results
 ======================
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
+
+The **distinct_on** argument
+----------------------------
 
 You can fetch rows with only distinct values of a column using the ``distinct_on`` argument.
 
@@ -31,7 +38,7 @@ You can see the complete specification of the ``distinct_on`` argument in the :r
 Fetch results with distinct values of a particular field
 --------------------------------------------------------
 
-**For example**, fetch highest salaried employee from each department:
+**For example**, fetch the employee with the highest salary from each department:
 
 .. graphiql::
    :view_only:

@@ -379,7 +379,7 @@ export const validateCTrigger = (triggerName, result) => {
           parseInt(getTimeoutSeconds(), 10)
       ).to.be.true;
       expect(trigger.schema_name === 'public').to.be.true;
-      expect(trigger.table_name === 'apic_test_table_ctr_0').to.be.true;
+      expect(trigger.table_name === 'Apic_test_table_ctr_0').to.be.true;
     } else {
       expect(response.body.length === 0).to.be.true;
     }

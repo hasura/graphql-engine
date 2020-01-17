@@ -1,5 +1,9 @@
-Schema/Metadata API reference: Syntax definitions
-=================================================
+.. meta::
+   :description: Common syntax definitions for the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, syntax definitions
+
+Schema/Metadata API Reference: Common syntax definitions
+========================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -24,8 +28,8 @@ QualifiedTable
    :class: haskell-pre
 
    {
-           "name": String,
-           "schema": String
+       "name": String,
+       "schema": String
    }
 
 .. _FunctionName:
@@ -45,14 +49,23 @@ QualifiedFunction
    :class: haskell-pre
 
    {
-           "name": String,
-           "schema": String
+       "name": String,
+       "schema": String
    }
 
 .. _RoleName:
 
 RoleName
 ^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _ComputedFieldName:
+
+ComputedFieldName
+^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
 
@@ -203,7 +216,7 @@ BoolExp
 .. parsed-literal::
    :class: haskell-pre
 
-   AndExp_ | OrExp_ | NotExp_ | TrueExp_ | ColumnExp_
+   AndExp_ | OrExp_ | NotExp_ | ExistsExp_ | TrueExp_ | ColumnExp_
 
 AndExp
 ^^^^^^
@@ -235,6 +248,18 @@ NotExp
        "$not" : BoolExp_
    }
 
+ExistsExp
+^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+       "$exists" : {
+            "_table": TableName_,
+            "_where": BoolExp_
+       }
+   }
 
 TrueExp
 ^^^^^^^
@@ -254,10 +279,12 @@ ColumnExp
        PGColumn_ : { Operator_ : Value }
    }
 
+.. _MetadataOperator:
+
 Operator
 ^^^^^^^^
 
-Generic operators (all column types except json, jsonb) :
+**Generic operators (all column types except json, jsonb) :**
 
 - ``"$eq"``
 - ``"$ne"``
@@ -268,7 +295,7 @@ Generic operators (all column types except json, jsonb) :
 - ``"$gte"``
 - ``"$lte"``
 
-Text related operators :
+**Text related operators :**
 
 - ``"$like"``
 - ``"$nlike"``
@@ -277,7 +304,7 @@ Text related operators :
 - ``"$similar"``
 - ``"$nsimilar"``
 
-Operators for comparing columns (all column types except json, jsonb):
+**Operators for comparing columns (all column types except json, jsonb):**
 
 - ``"$ceq"``
 - ``"$cne"``
@@ -286,11 +313,11 @@ Operators for comparing columns (all column types except json, jsonb):
 - ``"$cgte"``
 - ``"$clte"``
 
-Checking for NULL values :
+**Checking for NULL values :**
 
 - ``_is_null`` (takes true/false as values)
 
-JSONB operators :
+**JSONB operators :**
 
 .. list-table::
    :header-rows: 1
@@ -303,8 +330,14 @@ JSONB operators :
      - ``<@``
    * - ``_has_key``
      - ``?``
+   * - ``_has_keys_any``
+     - ``?|``
+   * - ``_has_keys_all``
+     - ``?&``
 
-PostGIS related operators on GEOMETRY columns: 
+(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
+
+**PostGIS related operators on GEOMETRY columns:**
 
 .. list-table::
    :header-rows: 1
@@ -328,12 +361,12 @@ PostGIS related operators on GEOMETRY columns:
    * - ``_st_d_within``
      - ``ST_DWithin``
 
-(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
+(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
 
 .. note::
 
    - All operators take a JSON representation of ``geometry/geography`` values as input value.
-   - Input value for ``_st_d_within`` operator is an object:
+   - The input value for ``_st_d_within`` operator is an object:
 
      .. parsed-literal::
 
@@ -375,7 +408,7 @@ An empty JSONObject_
 
 ColumnPresetsExp
 ^^^^^^^^^^^^^^^^
-A JSONObject_ of Postgres column name to value mapping, where value can be static or derived from a session variable.
+A JSONObject_ of a Postgres column name to value mapping, where the value can be static or derived from a session variable.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -386,15 +419,91 @@ A JSONObject_ of Postgres column name to value mapping, where value can be stati
       ..
    }
 
-E.g. where ``id`` is derived from session variable and ``city`` is a static value.
+E.g. where ``id`` is derived from a session variable and ``city`` is a static value.
 
 .. code-block:: json
 
    {
-      "id" : "x-hasura-User-Id", 
+      "id" : "x-hasura-User-Id",
       "city" : "San Francisco"
    }
 
 .. note::
 
    If the value of any key begins with "x-hasura-" (*case-insensitive*), the value of the column specified in the key will be derived from a session variable of the same name.
+
+.. _RemoteSchemaName:
+
+RemoteSchemaName
+^^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _RemoteSchemaDef:
+
+RemoteSchemaDef
+^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "url" : url-string,
+      "url_from_env" : env-var-string,
+      "headers": [
+           { "name": header-name-string,
+             "value": header-value-string,
+             "value_from_env": env-var-string
+           }
+      ],
+      "forward_client_headers": boolean,
+      "timeout_seconds": integer
+   }
+
+.. _CollectionName:
+
+CollectionName
+^^^^^^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _QueryName:
+
+QueryName
+^^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _CollectionQuery:
+
+CollectionQuery
+^^^^^^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+       "name": String,
+       "query": String
+   }
+
+.. _CustomColumnNames:
+
+CustomColumnNames
+^^^^^^^^^^^^^^^^^^
+A JSONObject_ of Postgres column name to GraphQL name mapping
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "column1" : String,
+      "column2" : String,
+      ..
+   }

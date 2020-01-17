@@ -1,225 +1,224 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-// import globals from '../../../Globals';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
+import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+import {
+  displayTableName,
+  getFunctionName,
+  getSchemaTables,
+  getTableName,
+  checkIfTable,
+  getFunctionSchema,
+} from '../../Common/utils/pgUtils';
+import {
+  getFunctionModifyRoute,
+  getSchemaAddTableRoute,
+  getTableBrowseRoute,
+} from '../../Common/utils/routesUtils';
 
-import { LISTING_SCHEMA, UPDATE_TRACKED_FUNCTIONS } from './DataActions';
-import semverCheck from '../../../helpers/semver';
+class DataSubSidebar extends React.Component {
+  constructor() {
+    super();
 
-const appPrefix = '/data';
+    this.state = {
+      searchInput: '',
+    };
 
-const DataSubSidebar = ({
-  schema,
-  listingSchema,
-  functionsList,
-  listedFunctions,
-  currentTable,
-  schemaName,
-  migrationMode,
-  // children,
-  dispatch,
-  location,
-  currentFunction,
-  serverVersion,
-  metadata,
-}) => {
-  const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
-  const functionSymbol = require('../../Common/Layout/LeftSubSidebar/function.svg');
-  const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_high.svg');
-
-  const handleFunc = semverCheck('customFunctionSection', serverVersion);
-
-  if (metadata.ongoingRequest) {
-    return null;
+    this.tableSearch = this.tableSearch.bind(this);
   }
 
-  function tableSearch(e) {
+  shouldComponentUpdate(nextProps) {
+    if (nextProps.metadata.ongoingRequest) {
+      return false;
+    }
+
+    return true;
+  }
+
+  tableSearch(e) {
     const searchTerm = e.target.value;
-    // form new schema
-    const matchedTables = [];
-    schema.map(table => {
-      if (table.table_name.indexOf(searchTerm) !== -1) {
-        matchedTables.push(table);
-      }
+
+    this.setState({
+      searchInput: searchTerm,
     });
-
-    const matchedFuncs = functionsList.filter(
-      f => f.function_name.indexOf(searchTerm) !== -1
-    );
-
-    // update schema with matchedTables
-    dispatch({ type: LISTING_SCHEMA, updatedSchemas: matchedTables });
-    dispatch({ type: UPDATE_TRACKED_FUNCTIONS, data: matchedFuncs });
   }
 
-  const getSearchInput = () => {
-    return (
-      <input
-        type="text"
-        onChange={tableSearch.bind(this)}
-        className="form-control"
-        placeholder={`search table/view${handleFunc ? '/function' : ''}`}
-        data-test="search-tables"
-      />
+  render() {
+    const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
+    const functionSymbol = require('../../Common/Layout/LeftSubSidebar/function.svg');
+    const functionSymbolActive = require('../../Common/Layout/LeftSubSidebar/function_active.svg');
+    const {
+      currentTable,
+      currentSchema,
+      migrationMode,
+      location,
+      currentFunction,
+      trackedFunctions,
+      allSchemas,
+    } = this.props;
+
+    const { searchInput } = this.state;
+
+    const trackedTablesInSchema = getSchemaTables(
+      allSchemas,
+      currentSchema
+    ).filter(table => table.is_table_tracked);
+
+    const filteredTableList = trackedTablesInSchema.filter(t =>
+      getTableName(t).includes(searchInput)
     );
-  };
 
-  const getChildList = () => {
-    let tableLinks = [
-      <li className={styles.noChildren} key="no-tables-1">
-        <i>No tables/views available</i>
-      </li>,
-    ];
+    const filteredFunctionsList = trackedFunctions.filter(f =>
+      getFunctionName(f).includes(searchInput)
+    );
 
-    const tables = {};
-    listingSchema.map(t => {
-      tables[t.table_name] = t;
-    });
+    const getSearchInput = () => {
+      return (
+        <input
+          type="text"
+          onChange={this.tableSearch}
+          className="form-control"
+          placeholder={'search table/view/function'}
+          data-test="search-tables"
+        />
+      );
+    };
 
-    const currentLocation = location.pathname;
+    const getChildList = () => {
+      let childList;
 
-    if (listingSchema && listingSchema.length) {
-      tableLinks = Object.keys(tables)
-        .sort()
-        .map((tableName, i) => {
-          let activeTableClass = '';
-          if (
-            tableName === currentTable &&
-            currentLocation.indexOf(currentTable) !== -1
-          ) {
-            activeTableClass = styles.activeTable;
-          }
-          if (tables[tableName].detail.table_type === 'BASE TABLE') {
-            return (
-              <li className={activeTableClass} key={i}>
-                <Link
-                  to={
-                    appPrefix +
-                    '/schema/' +
-                    schemaName +
-                    '/tables/' +
-                    tableName +
-                    '/browse'
-                  }
-                  data-test={tableName}
-                >
-                  <i
-                    className={styles.tableIcon + ' fa fa-table'}
-                    aria-hidden="true"
-                  />
-                  {tableName}
-                </Link>
-              </li>
-            );
-          }
+      const currentLocation = location.pathname;
+
+      let tableLinks;
+      if (filteredTableList && filteredTableList.length) {
+        const filteredTablesObject = {};
+        filteredTableList.forEach(t => {
+          filteredTablesObject[getTableName(t)] = t;
+        });
+
+        const sortedTableNames = Object.keys(filteredTablesObject).sort();
+
+        tableLinks = sortedTableNames.map((tableName, i) => {
+          const table = filteredTablesObject[tableName];
+
+          const isActive =
+            tableName === currentTable && currentLocation.includes(tableName);
 
           return (
-            <li className={activeTableClass} key={i}>
+            <li
+              className={isActive ? styles.activeLink : ''}
+              key={'table ' + i}
+            >
               <Link
-                to={
-                  appPrefix +
-                  '/schema/' +
-                  schemaName +
-                  '/views/' +
-                  tableName +
-                  '/browse'
-                }
+                to={getTableBrowseRoute(
+                  currentSchema,
+                  tableName,
+                  checkIfTable(table)
+                )}
                 data-test={tableName}
               >
                 <i
                   className={styles.tableIcon + ' fa fa-table'}
                   aria-hidden="true"
                 />
-                <i>{tableName}</i>
+                {displayTableName(table)}
+              </Link>
+              <GqlCompatibilityWarning
+                identifier={tableName}
+                className={styles.add_mar_left_mid}
+              />
+            </li>
+          );
+        });
+      } else {
+        tableLinks = [
+          <li className={styles.noChildren} key="no-tables-1">
+            <i>No tables/views available</i>
+          </li>,
+        ];
+      }
+
+      const dividerHr = [
+        <li key={'fn-divider-1'}>
+          <hr className={styles.tableFunctionDivider} />
+        </li>,
+      ];
+
+      if (filteredFunctionsList && filteredFunctionsList.length > 0) {
+        const filteredFunctionsObject = {};
+        filteredFunctionsList.forEach(f => {
+          filteredFunctionsObject[getFunctionName(f)] = f;
+        });
+
+        const sortedFunctionNames = Object.keys(filteredFunctionsObject).sort();
+
+        const functionLinks = sortedFunctionNames.map((funcName, i) => {
+          const func = filteredFunctionsObject[funcName];
+
+          const isActive =
+            funcName === currentFunction && currentLocation.includes(funcName);
+
+          return (
+            <li className={isActive ? styles.activeLink : ''} key={'fn ' + i}>
+              <Link
+                to={getFunctionModifyRoute(getFunctionSchema(func), funcName)}
+                data-test={funcName}
+              >
+                <img
+                  src={isActive ? functionSymbolActive : functionSymbol}
+                  className={styles.functionIcon}
+                />
+                <span>{funcName}</span>
               </Link>
             </li>
           );
         });
-    }
 
-    const dividerHr = [
-      <li key={'fn-divider-1'}>
-        <hr className={styles.tableFunctionDivider} />
-      </li>,
-    ];
+        childList = [...tableLinks, ...dividerHr, ...functionLinks];
+      } else if (
+        trackedFunctions.length > 0 &&
+        filteredFunctionsList.length === 0
+      ) {
+        const noFunctionsMsg = [
+          <li className={styles.noChildren} key="no-fns-1">
+            <i>No matching functions available</i>
+          </li>,
+        ];
 
-    // If the listedFunctions is non empty
-    if (listedFunctions.length > 0) {
-      const functionHtml = listedFunctions.map((f, i) => (
-        <li
-          className={
-            f.function_name === currentFunction ? styles.activeTable : ''
-          }
-          key={'fn ' + i}
-        >
-          <Link
-            to={
-              appPrefix +
-              '/schema/' +
-              schemaName +
-              '/functions/' +
-              f.function_name
-            }
-            data-test={f.function_name}
-          >
-            <div className={styles.display_inline + ' ' + styles.functionIcon}>
-              <img
-                src={
-                  f.function_name === currentFunction
-                    ? functionSymbolActive
-                    : functionSymbol
-                }
-              />
-            </div>
-            {f.function_name}
-          </Link>
-        </li>
-      ));
+        childList = [...tableLinks, ...dividerHr, ...noFunctionsMsg];
+      } else {
+        childList = [...tableLinks];
+      }
 
-      tableLinks = [...tableLinks, ...dividerHr, ...functionHtml];
-    } else if (
-      functionsList.length !== listedFunctions.length &&
-      listedFunctions.length === 0
-    ) {
-      const noFunctionResult = [
-        <li className={styles.noChildren}>
-          <i>No matching functions available</i>
-        </li>,
-      ];
+      return childList;
+    };
 
-      tableLinks = [...tableLinks, ...dividerHr, ...noFunctionResult];
-    }
-
-    return tableLinks;
-  };
-
-  return (
-    <LeftSubSidebar
-      migrationMode={migrationMode}
-      searchInput={getSearchInput()}
-      heading={`Tables (${schema.length})`}
-      addLink={'/data/schema/' + schemaName + '/table/add'}
-      addLabel={'Add Table'}
-      addTestString={'sidebar-add-table'}
-      childListTestString={'table-links'}
-    >
-      {getChildList()}
-    </LeftSubSidebar>
-  );
-};
+    return (
+      <LeftSubSidebar
+        showAddBtn={migrationMode}
+        searchInput={getSearchInput()}
+        heading={`Tables (${trackedTablesInSchema.length})`}
+        addLink={getSchemaAddTableRoute(currentSchema)}
+        addLabel={'Add Table'}
+        addTestString={'sidebar-add-table'}
+        childListTestString={'table-links'}
+      >
+        {getChildList()}
+      </LeftSubSidebar>
+    );
+  }
+}
 
 const mapStateToProps = state => {
   return {
-    schemaName: state.tables.currentSchema,
-    schema: state.tables.allSchemas,
-    listingSchema: state.tables.listingSchemas,
-    currentTable: state.tables.currentTable,
     migrationMode: state.main.migrationMode,
-    functionsList: state.tables.trackedFunctions,
-    listedFunctions: state.tables.listedFunctions,
+    trackedFunctions: state.tables.trackedFunctions,
     currentFunction: state.functions.functionName,
+    allSchemas: state.tables.allSchemas,
+    currentTable: state.tables.currentTable,
+    currentSchema: state.tables.currentSchema,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
     metadata: state.metadata,
   };

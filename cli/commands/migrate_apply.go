@@ -19,6 +19,35 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	migrateApplyCmd := &cobra.Command{
 		Use:          "apply",
 		Short:        "Apply migrations on the database",
+		Example: `  # Apply all migrations
+  hasura migrate apply
+
+  # Use with admin secret:
+  hasura migrate apply --admin-secret "<admin-secret>"
+
+  # Apply migrations on another Hasura instance:
+  hasura migrate apply --endpoint "<endpoint>"
+
+  # Mark migration as applied on the server and skip execution:
+  hasura migrate apply --skip-execution
+
+  # Apply a particular migration version only:
+  hasura migrate apply --version "<version>"
+
+  # Apply last 2 down migrations:
+  hasura migrate apply --down 2
+
+  # Apply only 2 up migrations:
+  hasura migrate apply --up 2
+
+  # Apply only a particular version
+  hasura migrate apply --type up --version "<version>"
+
+  # Rollback a particular version:
+  hasura migrate apply --type down --version "<version>"
+
+  # Rollback all migrations:
+  hasura migrate apply --down all`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -39,7 +68,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.StringVar(&opts.upMigration, "up", "", "apply all or N up migration steps")
 	f.StringVar(&opts.downMigration, "down", "", "apply all or N down migration steps")
-	f.StringVar(&opts.versionMigration, "version", "", "migrate the database to a specific version")
+	f.StringVar(&opts.versionMigration, "version", "", "only apply this particular migration")
 	f.StringVar(&opts.migrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 	f.BoolVar(&opts.skipExecution, "skip-execution", false, "skip executing the migration action, but mark them as applied")
 
@@ -71,7 +100,7 @@ func (o *migrateApplyOptions) run() error {
 		return errors.Wrap(err, "error validating flags")
 	}
 
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
 	if err != nil {
 		return err
 	}

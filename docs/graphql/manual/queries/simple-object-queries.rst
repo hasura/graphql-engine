@@ -1,9 +1,13 @@
+.. meta::
+   :description: Make simple object queries in Hasura
+   :keywords: hasura, docs, query, object query
+
 Simple object queries
 =====================
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 You can fetch a single node or multiple nodes of the same type using a simple object query.

@@ -10,18 +10,44 @@ import { pageTitle, appPrefix } from '../Modify/constants';
 import tabInfo from '../Modify/tabInfo';
 import globals from '../../../../../Globals';
 
+import { fetchCustomFunction } from '../customFunctionReducer';
+import {
+  updateSchemaInfo,
+  UPDATE_CURRENT_SCHEMA,
+  fetchFunctionInit,
+  setTable,
+} from '../../DataActions';
+import { NotFoundError } from '../../../../Error/PageNotFound';
+import {
+  getSchemaBaseRoute,
+  getFunctionBaseRoute,
+  getTablePermissionsRoute,
+} from '../../../../Common/utils/routesUtils';
+
 const prefixUrl = globals.urlPrefix + appPrefix;
 
-import { fetchCustomFunction } from '../customFunctionReducer';
-
 class Permission extends React.Component {
+  constructor() {
+    super();
+
+    this.state = {
+      funcFetchCompleted: false,
+    };
+  }
+
   componentDidMount() {
     const { functionName, schema } = this.props.params;
+
     if (!functionName) {
       this.props.dispatch(push(prefixUrl));
     }
+
     Promise.all([
-      this.props.dispatch(fetchCustomFunction(functionName, schema)),
+      this.props
+        .dispatch(fetchCustomFunction(functionName, schema))
+        .then(() => {
+          this.setState({ funcFetchCompleted: true });
+        }),
     ]);
   }
   render() {
@@ -33,8 +59,19 @@ class Permission extends React.Component {
       setOffTableSchema,
     } = this.props.functions;
 
-    const baseUrl = `${appPrefix}/schema/${schema}/functions/${functionName}`;
-    const permissionTableUrl = `${prefixUrl}/schema/${setOffTableSchema}/tables/${setOffTable}/permissions`;
+    if (this.state.funcFetchCompleted && !functionName) {
+      // throw a 404 exception
+      throw new NotFoundError();
+    }
+
+    const { dispatch } = this.props;
+
+    const functionBaseUrl = getFunctionBaseRoute(schema, functionName);
+    const permissionTableUrl = getTablePermissionsRoute(
+      setOffTableSchema,
+      setOffTable,
+      true
+    );
 
     const breadCrumbs = [
       {
@@ -47,14 +84,28 @@ class Permission extends React.Component {
       },
       {
         title: schema,
-        url: appPrefix + '/schema/' + schema,
+        url: getSchemaBaseRoute(schema),
       },
     ];
+
+    const onClickPerm = () => {
+      if (schema !== setOffTableSchema) {
+        Promise.all([
+          dispatch({
+            type: UPDATE_CURRENT_SCHEMA,
+            currentSchema: setOffTableSchema,
+          }),
+          dispatch(updateSchemaInfo()),
+          dispatch(fetchFunctionInit()),
+          dispatch(setTable(setOffTable)),
+        ]);
+      }
+    };
 
     if (functionName) {
       breadCrumbs.push({
         title: functionName,
-        url: appPrefix + '/schema/' + schema + '/functions/' + functionName,
+        url: functionBaseUrl,
       });
       breadCrumbs.push({
         title: 'Permission',
@@ -72,7 +123,7 @@ class Permission extends React.Component {
           heading={functionName}
           tabsInfo={tabInfo}
           breadCrumbs={breadCrumbs}
-          baseUrl={baseUrl}
+          baseUrl={functionBaseUrl}
           showLoader={false}
           testPrefix={'functions'}
         />
@@ -86,6 +137,7 @@ class Permission extends React.Component {
           <Link
             to={permissionTableUrl}
             data-test="custom-function-permission-link"
+            onClick={onClickPerm}
           >
             here
           </Link>

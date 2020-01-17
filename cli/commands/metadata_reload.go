@@ -18,7 +18,13 @@ func newMetadataReloadCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Use:   "reload",
 		Short: "Reload Hasura GraphQL Engine metadata on the database",
 		Example: `  # Reload all the metadata information from database:
-  hasura metadata reload`,
+  hasura metadata reload
+
+  # Use with admin secret:
+  hasura metadata reload --admin-secret "<admin-secret>"
+
+  # Reload metadata on a different instance:
+  hasura metadata export --endpoint "<endpoint>"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -57,7 +63,7 @@ type metadataReloadOptions struct {
 }
 
 func (o *metadataReloadOptions) run() error {
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version)
+	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
 	if err != nil {
 		return err
 	}

@@ -1,13 +1,10 @@
 module Hasura.RQL.DDL.RemoteSchema
   ( runAddRemoteSchema
-  , addRemoteSchemaToCache
-  , resolveRemoteSchemas
   , runRemoveRemoteSchema
-  , removeRemoteSchemaFromCache
   , removeRemoteSchemaFromCatalog
-  , refreshGCtxMapInSchema
-  , fetchRemoteSchemas
+  , runReloadRemoteSchema
   , addRemoteSchemaP1
+  , addRemoteSchemaP2Setup
   , addRemoteSchemaP2
   ) where
 
@@ -17,124 +14,79 @@ import           Hasura.Prelude
 import qualified Data.Aeson                  as J
 import qualified Data.HashMap.Strict         as Map
 import qualified Database.PG.Query           as Q
-import qualified Network.HTTP.Client         as HTTP
 
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.Types
-
-import qualified Hasura.GraphQL.Schema       as GS
+import           Hasura.SQL.Types
 
 runAddRemoteSchema
-  :: ( QErrM m, UserInfoM m
-     , CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m
-     )
-  => AddRemoteSchemaQuery -> m EncJSON
-runAddRemoteSchema q = do
-  addRemoteSchemaP1 q >>= addRemoteSchemaP2 q
-
-addRemoteSchemaP1
-  :: ( QErrM m, UserInfoM m
-     , MonadIO m, HasHttpManager m
-     )
-  => AddRemoteSchemaQuery -> m RemoteSchemaInfo
-addRemoteSchemaP1 q = do
-  adminOnly
-  httpMgr <- askHttpManager
-  rsi <- validateRemoteSchemaDef def
-  -- TODO:- Maintain a cache of remote schema with it's GCtx
-  void $ fetchRemoteSchema httpMgr name rsi
-  return rsi
-  where
-    AddRemoteSchemaQuery name def _ = q
-
-addRemoteSchemaP2
   :: ( QErrM m
      , CacheRWM m
      , MonadTx m
+     , MonadIO m
+     , HasHttpManager m
      )
-  => AddRemoteSchemaQuery
-  -> RemoteSchemaInfo
-  -> m EncJSON
-addRemoteSchemaP2 q rsi = do
-  addRemoteSchemaToCache name rsi
-  liftTx $ addRemoteSchemaToCatalog q
-  return successMsg
+  => AddRemoteSchemaQuery -> m EncJSON
+runAddRemoteSchema q = do
+  addRemoteSchemaP1 name
+  addRemoteSchemaP2 q
+  buildSchemaCacheFor $ MORemoteSchema name
+  pure successMsg
   where
     name = _arsqName q
 
-addRemoteSchemaToCache
-  :: CacheRWM m
-  => RemoteSchemaName
-  -> RemoteSchemaInfo
-  -> m ()
-addRemoteSchemaToCache name rmDef = do
-  sc <- askSchemaCache
-  let resolvers = scRemoteResolvers sc
-  writeSchemaCache sc
-    {scRemoteResolvers = Map.insert name rmDef resolvers}
+addRemoteSchemaP1
+  :: (QErrM m, CacheRM m)
+  => RemoteSchemaName -> m ()
+addRemoteSchemaP1 name = do
+  remoteSchemaMap <- scRemoteSchemas <$> askSchemaCache
+  onJust (Map.lookup name remoteSchemaMap) $ const $
+    throw400 AlreadyExists $ "remote schema with name "
+    <> name <<> " already exists"
 
-refreshGCtxMapInSchema
-  :: (CacheRWM m, MonadIO m, MonadError QErr m, HasHttpManager m)
-  => m ()
-refreshGCtxMapInSchema = do
-  sc <- askSchemaCache
-  gCtxMap <- GS.mkGCtxMap (scTables sc) (scFunctions sc)
+addRemoteSchemaP2Setup
+  :: (QErrM m, MonadIO m, HasHttpManager m)
+  => AddRemoteSchemaQuery -> m RemoteSchemaCtx
+addRemoteSchemaP2Setup (AddRemoteSchemaQuery name def _) = do
   httpMgr <- askHttpManager
-  (mergedGCtxMap, defGCtx) <-
-    mergeSchemas (scRemoteResolvers sc) gCtxMap httpMgr
-  writeSchemaCache sc { scGCtxMap = mergedGCtxMap
-                      , scDefaultRemoteGCtx = defGCtx }
+  rsi <- validateRemoteSchemaDef def
+  gCtx <- fetchRemoteSchema httpMgr name rsi
+  pure $ RemoteSchemaCtx name gCtx rsi
+
+addRemoteSchemaP2 :: (MonadTx m, MonadIO m, HasHttpManager m) => AddRemoteSchemaQuery -> m ()
+addRemoteSchemaP2 q = do
+  void $ addRemoteSchemaP2Setup q
+  liftTx $ addRemoteSchemaToCatalog q
 
 runRemoveRemoteSchema
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
-  => RemoveRemoteSchemaQuery -> m EncJSON
-runRemoveRemoteSchema (RemoveRemoteSchemaQuery rsn)= do
+  => RemoteSchemaNameQuery -> m EncJSON
+runRemoveRemoteSchema (RemoteSchemaNameQuery rsn) = do
   removeRemoteSchemaP1 rsn
-  removeRemoteSchemaP2 rsn
+  liftTx $ removeRemoteSchemaFromCatalog rsn
+  withNewInconsistentObjsCheck buildSchemaCache
+  pure successMsg
 
 removeRemoteSchemaP1
   :: (UserInfoM m, QErrM m, CacheRM m)
   => RemoteSchemaName -> m ()
 removeRemoteSchemaP1 rsn = do
-  adminOnly
   sc <- askSchemaCache
-  let resolvers = scRemoteResolvers sc
-  case Map.lookup rsn resolvers of
-    Just _  -> return ()
-    Nothing -> throw400 NotExists "no such remote schema"
+  let rmSchemas = scRemoteSchemas sc
+  void $ onNothing (Map.lookup rsn rmSchemas) $
+    throw400 NotExists "no such remote schema"
 
-removeRemoteSchemaP2
-  :: ( CacheRWM m
-     , MonadTx m
-     )
-  => RemoteSchemaName
-  -> m EncJSON
-removeRemoteSchemaP2 rsn = do
-  removeRemoteSchemaFromCache rsn
-  liftTx $ removeRemoteSchemaFromCatalog rsn
-  return successMsg
+runReloadRemoteSchema
+  :: (QErrM m, CacheRWM m)
+  => RemoteSchemaNameQuery -> m EncJSON
+runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
+  rmSchemas <- scRemoteSchemas <$> askSchemaCache
+  void $ onNothing (Map.lookup name rmSchemas) $
+    throw400 NotExists $ "remote schema with name " <> name <<> " does not exist"
 
-removeRemoteSchemaFromCache
-  :: CacheRWM m => RemoteSchemaName -> m ()
-removeRemoteSchemaFromCache rsn = do
-  sc <- askSchemaCache
-  let resolvers = scRemoteResolvers sc
-  writeSchemaCache sc {scRemoteResolvers = Map.delete rsn resolvers}
-
-resolveRemoteSchemas
-  :: ( MonadError QErr m
-     , MonadIO m
-     )
-  => SchemaCache -> HTTP.Manager -> m SchemaCache
-resolveRemoteSchemas sc httpMgr = do
-  (mergedGCtxMap, defGCtx) <-
-    mergeSchemas (scRemoteResolvers sc) gCtxMap httpMgr
-  return $ sc { scGCtxMap = mergedGCtxMap
-              , scDefaultRemoteGCtx = defGCtx
-              }
-  where
-    gCtxMap = scGCtxMap sc
+  invalidateCachedRemoteSchema name
+  withNewInconsistentObjsCheck buildSchemaCache
+  pure successMsg
 
 addRemoteSchemaToCatalog
   :: AddRemoteSchemaQuery
@@ -152,14 +104,3 @@ removeRemoteSchemaFromCatalog name =
     DELETE FROM hdb_catalog.remote_schemas
       WHERE name = $1
   |] (Identity name) True
-
-
-fetchRemoteSchemas :: Q.TxE QErr [AddRemoteSchemaQuery]
-fetchRemoteSchemas =
-  map fromRow <$> Q.listQE defaultTxErrorHandler
-    [Q.sql|
-     SELECT name, definition, comment
-       FROM hdb_catalog.remote_schemas
-     |] () True
-  where
-    fromRow (n, Q.AltJ def, comm) = AddRemoteSchemaQuery n def comm

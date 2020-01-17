@@ -1,0 +1,18 @@
+description: Test that casting between incompatible types is rejected
+url: /v1/query
+status: 400
+response:
+  code: unexpected-payload
+  error: cannot cast column of type "geography" to type "integer"
+  path: $.args.where.geog_col.$cast
+query:
+  type: select
+  args:
+    table: geog_table
+    columns:
+    - name
+    where:
+      geog_col:
+        $cast:
+          integer:
+            $eq: 0

@@ -1,21 +1,21 @@
 description: Select author and their articles
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 response:
   data:
     author:
-    - name: Author 2
-      id: 2
+    - id: 2
+      name: Author 2
       articles: []
-    - name: Author 3
-      id: 3
+    - id: 3
+      name: Author 3
       articles:
-      - content: Sample article content 4
-        id: 4
+      - id: 4
         title: Article 4
+        content: Sample article content 4
         is_published: true
 query:
-  query: |
+  query: |-
     query {
       author (where: {name: {_neq: "Author 1"}}) {
         id
@@ -24,7 +24,7 @@ query:
         where: {is_published: {_neq: false}}
         ) {
           id
-          title 
+          title
           content
           is_published
         }

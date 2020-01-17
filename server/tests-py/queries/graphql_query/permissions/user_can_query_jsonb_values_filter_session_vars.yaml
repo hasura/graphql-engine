@@ -1,5 +1,5 @@
 description: User can query geometry values which satisfies filter in select permission
-url: /v1alpha1/graphql
+url: /v1/graphql
 status: 200
 headers:
   X-Hasura-Role: user2

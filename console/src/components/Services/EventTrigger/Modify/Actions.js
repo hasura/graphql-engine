@@ -1,12 +1,9 @@
 import defaultState from './State';
-import {
-  loadTriggers,
-  makeMigrationCall,
-  setTrigger,
-  loadProcessedEvents,
-} from '../EventActions';
+import { loadTriggers, makeMigrationCall, setTrigger } from '../EventActions';
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
-import { showErrorNotification } from '../Notification';
+import { showErrorNotification } from '../../Common/Notification';
+
+import { MANUAL_TRIGGER_VAR } from './utils';
 
 const SET_DEFAULTS = 'ModifyTrigger/SET_DEFAULTS';
 export const setDefaults = () => ({ type: SET_DEFAULTS });
@@ -25,11 +22,18 @@ export const setRetryTimeout = data => ({ type: SET_RETRY_TIMEOUT, data });
 
 const TOGGLE_COLUMN = 'ModifyTrigger/TOGGLE_COLUMNS';
 const TOGGLE_QUERY_TYPE = 'ModifyTrigger/TOGGLE_QUERY_TYPE_SELECTED';
-export const toggleQueryType = (query, columns, value) => ({
+const TOGGLE_MANUAL_QUERY_TYPE = 'ModifyTrigger/TOGGLE_MANUAL_QUERY_SELECTED';
+export const RESET_MODIFY_STATE = 'ModifyTrigger/RESET_MODIFY_STATE';
+
+export const toggleQueryType = ({ query, columns, value }) => ({
   type: TOGGLE_QUERY_TYPE,
   query,
   columns,
   value,
+});
+export const toggleManualType = ({ value }) => ({
+  type: TOGGLE_MANUAL_QUERY_TYPE,
+  data: value,
 });
 export const toggleColumn = (query, column) => ({
   type: TOGGLE_COLUMN,
@@ -66,7 +70,7 @@ export const REQUEST_COMPLETE = 'ModifyTrigger/REQUEST_COMPLETE';
 export const showValidationError = message => {
   return dispatch => {
     dispatch(
-      showErrorNotification('Error modifying trigger!', 'Invalid input', '', {
+      showErrorNotification('Error modifying trigger!', 'Invalid input', {
         custom: message,
       })
     );
@@ -84,7 +88,7 @@ export const save = (property, triggerName) => {
       name: oldTrigger.name,
       table: {
         name: oldTrigger.table_name,
-        schema: oldTrigger.schema_name,
+        schema: oldTrigger.table_schema,
       },
       retry_conf: { ...oldTrigger.configuration.retry_conf },
       ...oldTrigger.configuration.definition,
@@ -113,6 +117,12 @@ export const save = (property, triggerName) => {
       upPayload.update = modifyTrigger.definition.update;
       upPayload.insert = modifyTrigger.definition.insert;
       upPayload.delete = modifyTrigger.definition.delete;
+      // Add only if the value is true
+      if (MANUAL_TRIGGER_VAR in modifyTrigger.definition) {
+        delete upPayload[MANUAL_TRIGGER_VAR];
+        upPayload[MANUAL_TRIGGER_VAR] =
+          modifyTrigger.definition[MANUAL_TRIGGER_VAR];
+      }
     } else if (property === 'retry') {
       upPayload.retry_conf = {
         num_retries: modifyTrigger.retryConf.numRetrys,
@@ -122,20 +132,22 @@ export const save = (property, triggerName) => {
     } else if (property === 'headers') {
       delete upPayload.headers;
       upPayload.headers = [];
-      modifyTrigger.headers.filter(h => Boolean(h.key.trim())).forEach(h => {
-        const { key, value, type } = h;
-        if (type === 'env') {
-          upPayload.headers.push({
-            name: key.trim(),
-            value_from_env: value.trim(),
-          });
-        } else {
-          upPayload.headers.push({
-            name: key.trim(),
-            value: value.trim(),
-          });
-        }
-      });
+      modifyTrigger.headers
+        .filter(h => Boolean(h.key.trim()))
+        .forEach(h => {
+          const { key, value, type } = h;
+          if (type === 'env') {
+            upPayload.headers.push({
+              name: key.trim(),
+              value_from_env: value.trim(),
+            });
+          } else {
+            upPayload.headers.push({
+              name: key.trim(),
+              value: value.trim(),
+            });
+          }
+        });
     }
     const upQuery = {
       type: 'bulk',
@@ -166,9 +178,7 @@ export const save = (property, triggerName) => {
     const customOnSuccess = () => {
       dispatch({ type: REQUEST_COMPLETE });
       dispatch(setTrigger(triggerName.trim()));
-      dispatch(loadTriggers()).then(() => {
-        dispatch(loadProcessedEvents());
-      });
+      dispatch(loadTriggers([triggerName]));
       return;
     };
     const customOnError = err => {
@@ -187,7 +197,8 @@ export const save = (property, triggerName) => {
       customOnError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 };
@@ -218,6 +229,14 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         definition: newDefinition,
+      };
+    case TOGGLE_MANUAL_QUERY_TYPE:
+      return {
+        ...state,
+        definition: {
+          ...state.definition,
+          [MANUAL_TRIGGER_VAR]: action.data,
+        },
       };
     case TOGGLE_COLUMN:
       const queryColumns = [...state.definition[action.query].columns];
@@ -303,6 +322,10 @@ const reducer = (state = defaultState, action) => {
       return {
         ...state,
         ongoingRequest: null,
+      };
+    case RESET_MODIFY_STATE:
+      return {
+        ...defaultState,
       };
     default:
       return {

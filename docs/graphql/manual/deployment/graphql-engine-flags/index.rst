@@ -1,3 +1,9 @@
+.. meta::
+   :description: Server configuration for Hasura GraphQL engine
+   :keywords: hasura, docs, deployment, flags, server, server configuration
+
+.. _hge_flags:
+
 GraphQL engine server configuration
 ===================================
 
@@ -21,6 +27,7 @@ The following are a few configuration use cases:
 - :ref:`add-admin-secret`
 - :ref:`cli-with-admin-secret`
 - :ref:`configure-cors`
+- :ref:`console-assets-on-server`
 
 .. toctree::
    :hidden:

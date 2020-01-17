@@ -1,7 +1,6 @@
 import defaultState from './State';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import {
-  // loadSchema,
   handleMigrationErrors,
   fetchTrackedFunctions,
   fetchDataInit,
@@ -9,7 +8,7 @@ import {
 import {
   showErrorNotification,
   showSuccessNotification,
-} from '../Notification';
+} from '../../Common/Notification';
 import {
   loadMigrationStatus,
   UPDATE_MIGRATION_STATUS_ERROR,
@@ -17,8 +16,7 @@ import {
 import { parseCreateSQL } from './utils';
 import dataHeaders from '../Common/Headers';
 import returnMigrateUrl from '../Common/getMigrateUrl';
-
-import semverCheck from '../../../../helpers/semver';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 
 const MAKING_REQUEST = 'RawSQL/MAKING_REQUEST';
 const SET_SQL = 'RawSQL/SET_SQL';
@@ -39,27 +37,18 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
   dispatch(showSuccessNotification('Executing the Query...'));
 
   const sql = getState().rawSQL.sql;
-  const serverVersion = getState().main.serverVersion;
   const currMigrationMode = getState().main.migrationMode;
-
-  const handleFunc = semverCheck('customFunctionSection', serverVersion)
-    ? true
-    : false;
+  const readOnlyMode = getState().main.readOnlyMode;
 
   const migrateUrl = returnMigrateUrl(currMigrationMode);
   const isCascadeChecked = getState().rawSQL.isCascadeChecked;
 
   let url = Endpoints.rawSQL;
-  const schemaChangesUp = [
-    {
-      type: 'run_sql',
-      args: { sql: sql, cascade: isCascadeChecked },
-    },
-  ];
+  const schemaChangesUp = [getRunSqlQuery(sql, isCascadeChecked, readOnlyMode)];
   // check if track view enabled
 
   if (getState().rawSQL.isTableTrackChecked) {
-    const objects = parseCreateSQL(sql, handleFunc);
+    const objects = parseCreateSQL(sql);
 
     objects.forEach(object => {
       const trackQuery = {
@@ -120,26 +109,29 @@ const executeSQL = (isMigration, migrationName) => (dispatch, getState) => {
             dispatch(
               showErrorNotification(
                 'SQL execution failed!',
-                'Something is wrong. Data sent back an invalid response json.',
-                requestBody,
+                'Something is wrong. Received an invalid response json.',
                 parsedErrorMsg
               )
             );
             dispatch({
               type: REQUEST_ERROR,
-              data:
-                'Something is wrong. Data sent back an invalid response json.',
+              data: 'Something is wrong. Received an invalid response json.',
             });
-            console.err('Error with response', err);
+            console.err('RunSQL error: ', err);
           }
         );
         return;
       }
       response.json().then(
         errorMsg => {
+          const title = 'SQL Execution Failed';
           dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: errorMsg });
           dispatch({ type: REQUEST_ERROR, data: errorMsg });
-          dispatch(handleMigrationErrors('SQL Execution Failed', errorMsg));
+          if (isMigration) {
+            dispatch(handleMigrationErrors(title, errorMsg));
+          } else {
+            dispatch(showErrorNotification(title, errorMsg.code, errorMsg));
+          }
         },
         () => {
           dispatch(
