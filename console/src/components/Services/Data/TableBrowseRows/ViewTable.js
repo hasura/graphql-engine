@@ -162,8 +162,6 @@ class ViewTable extends Component {
       location,
     } = this.props;
 
-    console.log({ props: this.props });
-
     // check if table exists
     const tableSchema = schemas.find(
       s => s.table_name === tableName && s.table_schema === currentSchema
