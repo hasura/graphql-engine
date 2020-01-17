@@ -210,6 +210,53 @@ const deleteItem = pkClause => {
   };
 };
 
+const deleteItems = pkClauses => {
+  return (dispatch, getState) => {
+    const confirmMessage = 'This will permanently delete rows from this table';
+    const isOk = getConfirmation(confirmMessage);
+    if (!isOk) {
+      return;
+    }
+
+    const state = getState();
+
+    const url = Endpoints.query;
+    const reqBody = {
+      type: 'bulk',
+      args: pkClauses.map(pkClause => ({
+        type: 'delete',
+        args: {
+          table: {
+            name: state.tables.currentTable,
+            schema: state.tables.currentSchema,
+          },
+          where: pkClause,
+        },
+      })),
+    };
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(reqBody),
+      headers: dataHeaders(getState),
+      credentials: globalCookiePolicy,
+    };
+    dispatch(requestAction(url, options)).then(
+      data => {
+        const affected = data.reduce((acc, d) => acc + d.affected_rows, 0);
+        dispatch(vMakeRequest());
+        dispatch(
+          showSuccessNotification('Rows deleted!', 'Affected rows: ' + affected)
+        );
+      },
+      err => {
+        dispatch(
+          showErrorNotification('Deleting rows failed!', err.error, err)
+        );
+      }
+    );
+  };
+};
+
 const vExpandRel = (path, relname, pk) => {
   return dispatch => {
     // Modify the query (UI will automatically change)
@@ -560,6 +607,7 @@ export {
   vCollapseRow,
   V_SET_ACTIVE,
   deleteItem,
+  deleteItems,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
 };
