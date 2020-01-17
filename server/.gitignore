@@ -19,7 +19,8 @@ Pipfile.lock
 .ghc.environment*
 cabal.sandbox.config
 cabal.config
-cabal.project.local
+# Configurable for local dev/experimentation:
+cabal.project.local*
 *.prof*
 *.aux
 *.hp

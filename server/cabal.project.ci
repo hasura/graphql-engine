@@ -1,0 +1,6 @@
+-- The project configuration used when building in CI.
+
+package graphql-engine
+  ghc-options: -j3 -Werror
+  tests: true
+  benchmarks: true
