@@ -243,20 +243,9 @@ func (o *initOptions) createTemplateFiles() error {
 	if !info.IsDir() {
 		return errors.Errorf("template should be a directory")
 	}
-	contents, err := ioutil.ReadDir(templatePath)
+	err = util.CopyDir(templatePath, filepath.Join(o.EC.ExecutionDirectory, "install-manifest"))
 	if err != nil {
 		return err
-	}
-	for _, content := range contents {
-		cs, cd := filepath.Join(templatePath, content.Name()), filepath.Join(o.EC.ExecutionDirectory, "install-manifest", content.Name())
-		// TODO: do we need *.md files?
-		if strings.ToLower(filepath.Ext(cs)) == ".md" {
-			continue
-		}
-		err = util.CopyFile(cs, cd)
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
