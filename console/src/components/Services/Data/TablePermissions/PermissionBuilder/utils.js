@@ -42,136 +42,82 @@ const boolOperatorsInfo = {
   },
 };
 
+const comparisionOperatorsPGTypes = [
+  'boolean',
+  'character',
+  'dateTime',
+  'numeric',
+  'uuid',
+  'user_defined',
+];
+
 const columnOperatorsInfo = {
   _eq: {
     type: 'object',
-    PGTypes: [
-      'boolean',
-      'character',
-      'dateTime',
-      'numeric',
-      'uuid',
-      'user_defined',
-    ],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _ne: {
     type: 'object',
-    PGTypes: [
-      'boolean',
-      'character',
-      'dateTime',
-      'numeric',
-      'uuid',
-      'user_defined',
-    ],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _in: {
     type: 'array',
-    PGTypes: [
-      'boolean',
-      'character',
-      'dateTime',
-      'numeric',
-      'uuid',
-      'user_defined',
-    ],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _nin: {
     type: 'array',
-    PGTypes: [
-      'boolean',
-      'character',
-      'dateTime',
-      'numeric',
-      'uuid',
-      'user_defined',
-    ],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _gt: {
     type: 'object',
-    PGTypes: [
-      'boolean',
-      'character',
-      'dateTime',
-      'numeric',
-      'uuid',
-      'user_defined',
-    ],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _lt: {
     type: 'object',
-    PGTypes: [
-      'boolean',
-      'character',
-      'dateTime',
-      'numeric',
-      'uuid',
-      'user_defined',
-    ],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _gte: {
     type: 'object',
-    PGTypes: [
-      'boolean',
-      'character',
-      'dateTime',
-      'numeric',
-      'uuid',
-      'user_defined',
-    ],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _lte: {
     type: 'object',
-    PGTypes: [
-      'boolean',
-      'character',
-      'dateTime',
-      'numeric',
-      'uuid',
-      'user_defined',
-    ],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _is_null: {
     type: 'object',
     inputType: 'boolean',
-    PGTypes: [
-      'boolean',
-      'character',
-      'dateTime',
-      'numeric',
-      'uuid',
-      'user_defined',
-    ],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _ceq: {
     type: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _cne: {
     type: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _cgt: {
     type: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _clt: {
     type: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _cgte: {
     type: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _clte: {
     type: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    PGTypes: comparisionOperatorsPGTypes,
   },
   _like: {
     type: 'object',
