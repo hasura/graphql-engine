@@ -76,18 +76,8 @@ const getDefaultValue = (possibleValue, opName) => {
     return possibleValue;
   }
 
-  switch (opName) {
-    case '$like':
-    case '$nlike':
-    case '$ilike':
-    case '$nilike':
-      return '%%';
-    case '$in':
-    case '$nin':
-      return '[]';
-    default:
-      return '';
-  }
+  const operator = Operators.find(op => op.value === opName);
+  return operator && operator.defaultValue ? operator.defaultValue : '';
 };
 
 const renderWheres = (whereAnd, tableSchema, dispatch) => {
