@@ -97,7 +97,7 @@ class Modify extends React.Component {
             dispatch={dispatch}
           />
           <HeadersEditor
-            headers={headers}
+            headers={headers || []}
             styles={styles}
             modifyTrigger={modifyTrigger}
             save={() => dispatch(save('headers', modifyTriggerName))}
