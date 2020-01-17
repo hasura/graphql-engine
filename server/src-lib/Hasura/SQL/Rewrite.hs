@@ -161,7 +161,7 @@ uSqlExp = restoringIdens . \case
   S.SELit t                     -> return $ S.SELit t
   S.SEUnsafe t                  -> return $ S.SEUnsafe t
   S.SESelect s                  -> S.SESelect <$> uSelect s
-  S.SEStar                      -> return S.SEStar
+  S.SEStar qual                 -> S.SEStar <$> traverse uQual qual
   -- this is for row expressions
   -- todo: check if this is always okay
   S.SEIden iden                 -> return $ S.SEIden iden
