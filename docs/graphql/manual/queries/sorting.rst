@@ -1,3 +1,7 @@
+.. meta::
+   :description: Sort query results in Hasura
+   :keywords: hasura, docs, query, sort
+
 Sort query results
 ==================
 

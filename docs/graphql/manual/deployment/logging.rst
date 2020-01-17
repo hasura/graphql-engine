@@ -1,3 +1,7 @@
+.. meta::
+   :description:  Hasura GraphQL engine server logs
+   :keywords: hasura, docs, deployment, logs, server logs
+
 .. _hge_logs:
 
 Hasura GraphQL engine logs

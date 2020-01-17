@@ -1,3 +1,7 @@
+.. meta::
+   :description: Get started with Hasura
+   :keywords: hasura, docs, start
+
 Getting started
 ===============
 

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage mutations with Hasura
+   :keywords: hasura, docs, mutation
+
 Mutations
 =========
 
