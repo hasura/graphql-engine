@@ -110,7 +110,7 @@ fi
 log "running default tests"
 cd $PYTEST_ROOT
 pip3 install -r requirements.txt
-pytest -vv --hge-urls "$HGE_ENDPOINT" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" test_upgrade/test_basics.py
+pytest -vv --hge-urls "$HGE_ENDPOINT" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" -- test_upgrade/
 log
 
 log "kill the server"
