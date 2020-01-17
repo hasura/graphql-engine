@@ -29,6 +29,9 @@ type MutFld = MutFldG S.SQLExp
 
 type MutFldsG v = [(T.Text, MutFldG v)]
 
+onlyReturningMutFld :: AnnFldsG v -> MutFldsG v
+onlyReturningMutFld annFlds = [("returning", MRet annFlds)]
+
 traverseMutFlds
   :: (Applicative f)
   => (a -> f b)

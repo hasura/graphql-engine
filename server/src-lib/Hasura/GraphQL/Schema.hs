@@ -165,6 +165,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
       [ TIInpObj <$> mutHelper viIsInsertable insInpObjM
       , TIInpObj <$> mutHelper viIsUpdatable updSetInpObjM
       , TIInpObj <$> mutHelper viIsUpdatable updIncInpObjM
+      , TIInpObj <$> mutHelper (\vi -> viIsDeletable vi || viIsUpdatable vi) primaryKeysInpObjM
       , TIObj <$> mutRespObjM
       , TIEnum <$> selColInpTyM
       ]
@@ -197,6 +198,9 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     updJSONOpInpObjTysM = map TIInpObj <$> updJSONOpInpObjsM
     -- fields used in set input object
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
+
+    -- primary key columns input object
+    primaryKeysInpObjM = mkPKeyColumnsInpObj tn <$> pkeyCols
 
     selFldsM = snd <$> selPermM
     selColNamesM = (map pgiName . getPGColumnFields) <$> selFldsM
@@ -343,16 +347,18 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
           ]
     , _rootMutationFields = makeFieldMap $ catMaybes
         [ mutHelper viIsInsertable getInsDet insM
+        , mutHelper viIsInsertable getInsOneDet insM
         , mutHelper viIsUpdatable getUpdDet updM
+        , mutHelper viIsUpdatable getUpdByPkDet $ (,) <$> updM <*> primaryKey
         , mutHelper viIsDeletable getDelDet delM
+        , mutHelper viIsDeletable getDelByPkDet $ (,) <$> delM <*> primaryKey
         ]
     }
   where
     makeFieldMap = mapFromL (_fiName . snd)
     customRootFields = _tcCustomRootFields tableConfig
-    colGNameMap = mkPGColGNameMap $ getValidCols fields
+    colGNameMap = mkPGColGNameMap $ getCols fields
 
-    allCols = getCols fields
     funcQueries = maybe [] getFuncQueryFlds selM
     funcAggQueries = maybe [] getFuncAggQueryFlds selM
 
@@ -369,16 +375,34 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
          , mkInsMutFld insCustName tn isUpsertable
          )
 
+    insOneCustName = getCustomNameWith _tcrfInsertOne
+    getInsOneDet (hdrs, upsertPerm) =
+      let isUpsertable = upsertable constraints upsertPerm $ isJust viM
+      in ( MCInsertOne $ InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
+         , mkInsertOneMutationField insOneCustName tn isUpsertable
+         )
+
     updCustName = getCustomNameWith _tcrfUpdate
     getUpdDet (updCols, preSetCols, updFltr, hdrs) =
       ( MCUpdate $ UpdOpCtx tn hdrs colGNameMap updFltr preSetCols
       , mkUpdMutFld updCustName tn updCols
       )
 
+    updByPkCustName = getCustomNameWith _tcrfUpdateByPk
+    getUpdByPkDet ((updCols, preSetCols, updFltr, hdrs), pKey) =
+      ( MCUpdateByPk $ UpdOpCtx tn hdrs colGNameMap updFltr preSetCols
+      , mkUpdateByPkMutationField updByPkCustName tn updCols pKey
+      )
+
     delCustName = getCustomNameWith _tcrfDelete
     getDelDet (delFltr, hdrs) =
-      ( MCDelete $ DelOpCtx tn hdrs delFltr allCols
+      ( MCDelete $ DelOpCtx tn hdrs colGNameMap delFltr
       , mkDelMutFld delCustName tn
+      )
+    delByPkCustName = getCustomNameWith _tcrfDeleteByPk
+    getDelByPkDet ((delFltr, hdrs), pKey) =
+      ( MCDeleteByPk $ DelOpCtx tn hdrs colGNameMap delFltr
+      , mkDeleteByPkMutationField delByPkCustName tn pKey
       )
 
 

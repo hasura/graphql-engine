@@ -37,8 +37,11 @@ data QueryCtx
 
 data MutationCtx
   = MCInsert !InsOpCtx
+  | MCInsertOne !InsOpCtx
   | MCUpdate !UpdOpCtx
+  | MCUpdateByPk !UpdOpCtx
   | MCDelete !DelOpCtx
+  | MCDeleteByPk !DelOpCtx
   | MCAction !ActionExecutionContext
   deriving (Show, Eq)
 
@@ -94,8 +97,8 @@ data DelOpCtx
   = DelOpCtx
   { _docTable   :: !QualifiedTable
   , _docHeaders :: ![T.Text]
+  , _docAllCols :: !PGColGNameMap
   , _docFilter  :: !AnnBoolExpPartialSQL
-  , _docAllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 data SyncReturnStrategy

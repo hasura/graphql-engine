@@ -108,8 +108,11 @@ data TableCustomRootFields
   , _tcrfSelectByPk      :: !(Maybe G.Name)
   , _tcrfSelectAggregate :: !(Maybe G.Name)
   , _tcrfInsert          :: !(Maybe G.Name)
+  , _tcrfInsertOne       :: !(Maybe G.Name)
   , _tcrfUpdate          :: !(Maybe G.Name)
+  , _tcrfUpdateByPk      :: !(Maybe G.Name)
   , _tcrfDelete          :: !(Maybe G.Name)
+  , _tcrfDeleteByPk      :: !(Maybe G.Name)
   } deriving (Show, Eq, Lift, Generic)
 instance NFData TableCustomRootFields
 instance Cacheable TableCustomRootFields
@@ -121,19 +124,24 @@ instance FromJSON TableCustomRootFields where
     selectByPk <- obj .:? "select_by_pk"
     selectAggregate <- obj .:? "select_aggregate"
     insert <- obj .:? "insert"
+    insertOne <- obj .:? "insert_one"
     update <- obj .:? "update"
+    updateByPk <- obj .:? "update_by_pk"
     delete <- obj .:? "delete"
+    deleteByPk <- obj .:? "delete_by_pk"
 
     let duplicateRootFields = duplicates $
                               catMaybes [ select, selectByPk, selectAggregate
-                                        , insert, update, delete
+                                        , insert, insertOne
+                                        , update, updateByPk
+                                        , delete, deleteByPk
                                         ]
     when (not $ null duplicateRootFields) $ fail $ T.unpack $
       "the following custom root field names are duplicated: "
       <> showNames duplicateRootFields
 
     pure $ TableCustomRootFields select selectByPk selectAggregate
-                                 insert update delete
+                                 insert insertOne update updateByPk delete deleteByPk
 emptyCustomRootFields :: TableCustomRootFields
 emptyCustomRootFields =
   TableCustomRootFields
@@ -141,8 +149,11 @@ emptyCustomRootFields =
   , _tcrfSelectByPk      = Nothing
   , _tcrfSelectAggregate = Nothing
   , _tcrfInsert          = Nothing
+  , _tcrfInsertOne       = Nothing
   , _tcrfUpdate          = Nothing
+  , _tcrfUpdateByPk      = Nothing
   , _tcrfDelete          = Nothing
+  , _tcrfDeleteByPk      = Nothing
   }
 
 data FieldInfo

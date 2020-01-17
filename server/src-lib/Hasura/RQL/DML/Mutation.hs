@@ -3,14 +3,17 @@ module Hasura.RQL.DML.Mutation
   , runMutation
   , mutateAndFetchCols
   , mkSelCTEFromColVals
+  , withSingleTableRow
   )
 where
 
 import           Data.Aeson
 import           Hasura.Prelude
 
+import qualified Data.Aeson.Ordered       as AO
 import qualified Data.HashMap.Strict      as Map
 import qualified Data.Sequence            as DS
+import qualified Data.Text                as T
 import qualified Database.PG.Query        as Q
 
 import qualified Hasura.SQL.DML           as S
@@ -124,3 +127,27 @@ mkSelCTEFromColVals parseFn qt allCols colVals =
                  , S.selFrom = Just $ S.mkSimpleFromExp qt
                  , S.selWhere = Just $ S.WhereFrag $ S.BELit False
                  }
+
+
+-- | Note: Expecting '{"returning": [{<table-row>}]}' encoded JSON
+withSingleTableRow
+  :: MonadError QErr m => EncJSON -> m EncJSON
+withSingleTableRow response =
+  case AO.eitherDecode $ encJToLBS response of
+    Left e  -> throw500 $ "error occurred while parsing mutation result: " <> T.pack e
+    Right val -> do
+      obj <- asObject val
+      rowsVal <- onNothing (AO.lookup "returning" obj) $
+                 throw500 "returning field not found in mutation result"
+      rows <- asArray rowsVal
+      pure $ AO.toEncJSON $ case rows of
+                              []  -> AO.Null
+                              r:_ -> r
+  where
+    asObject = \case
+      AO.Object o -> pure o
+      _           -> throw500 "expecting ordered Object"
+
+    asArray = \case
+      AO.Array arr -> pure $ toList arr
+      _            -> throw500 "expecting ordered Array"

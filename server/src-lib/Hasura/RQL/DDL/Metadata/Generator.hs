@@ -61,9 +61,9 @@ instance Arbitrary TableCustomRootFields where
   arbitrary = uniqueRootFields
     where
       uniqueRootFields = do
-        (a, b, c, d, e, f) <- arbitrary
-        if null $ duplicates [a, b, c, d, e, f] then
-          pure $ TableCustomRootFields a b c d e f
+        (a, b, c, d, e, f, g, h, i) <- arbitrary
+        if null $ duplicates [a, b, c, d, e, f, g, h, i] then
+          pure $ TableCustomRootFields a b c d e f g h i
         else uniqueRootFields
 
 instance Arbitrary TableConfig where

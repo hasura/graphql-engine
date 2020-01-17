@@ -1,5 +1,7 @@
 module Hasura.GraphQL.Resolve.Insert
-  (convertInsert)
+  ( convertInsert
+  , convertInsertOne
+  )
 where
 
 import           Control.Arrow                     ((>>>))
@@ -529,6 +531,33 @@ convertInsert role tn fld = prefixErrPath fld $ do
       return $ return $ buildEmptyMutResp mutFlds
     arguments = _fArguments fld
     onConflictM = Map.lookup "on_conflict" arguments
+
+convertInsertOne
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
+     )
+  => RoleName
+  -> QualifiedTable -- table
+  -> Field -- the mutation field
+  -> m RespTx
+convertInsertOne role qt field = prefixErrPath field $ do
+  tableSelFields <- processTableSelectionSet (_fType field) $ _fSelSet field
+  let mutationFieldsUnResolved = RR.onlyReturningMutFld tableSelFields
+  mutationFieldsResolved <- RR.traverseMutFlds resolveValTxt mutationFieldsUnResolved
+  annInputObj <- withArg arguments "object" asObject
+  InsCtx vn tableColMap defValMap relInfoMap updPerm <- getInsCtx qt
+  annInsertObj <- mkAnnInsObj relInfoMap tableColMap annInputObj
+  conflictClauseM <- forM (Map.lookup "on_conflict" arguments) $ parseOnConflict qt updPerm tableColMap
+  defValMapRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting) defValMap
+  let multiObjIns = AnnIns [annInsertObj] conflictClauseM vn tableCols defValMapRes
+      tableCols = Map.elems tableColMap
+  strfyNum <- stringifyNum <$> asks getter
+  pure $ do
+    response <- prefixErrPath field $ insertMultipleObjects strfyNum role qt
+                multiObjIns [] mutationFieldsResolved "object"
+    withSingleTableRow response
+  where
+    arguments = _fArguments field
 
 -- helper functions
 getInsCtx
