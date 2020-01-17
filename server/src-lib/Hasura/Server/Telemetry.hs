@@ -9,9 +9,10 @@ module Hasura.Server.Telemetry
   )
   where
 
-import           Control.Exception       (try)
+import           Control.Exception     (try)
 import           Control.Lens
 import           Data.List
+import           Data.Text.Conversions (UTF8 (..), decodeText)
 
 import           Hasura.HTTP
 import           Hasura.Logging
@@ -21,17 +22,16 @@ import           Hasura.Server.Init
 import           Hasura.Server.Version
 
 import qualified CI
-import qualified Control.Concurrent      as C
-import qualified Data.Aeson              as A
-import qualified Data.Aeson.Casing       as A
-import qualified Data.Aeson.TH           as A
-import qualified Data.ByteString.Lazy    as BL
-import qualified Data.HashMap.Strict     as Map
-import qualified Data.String.Conversions as CS
-import qualified Data.Text               as T
-import qualified Network.HTTP.Client     as HTTP
-import qualified Network.HTTP.Types      as HTTP
-import qualified Network.Wreq            as Wreq
+import qualified Control.Concurrent    as C
+import qualified Data.Aeson            as A
+import qualified Data.Aeson.Casing     as A
+import qualified Data.Aeson.TH         as A
+import qualified Data.ByteString.Lazy  as BL
+import qualified Data.HashMap.Strict   as Map
+import qualified Data.Text             as T
+import qualified Network.HTTP.Client   as HTTP
+import qualified Network.HTTP.Types    as HTTP
+import qualified Network.Wreq          as Wreq
 
 
 data RelationshipMetric
@@ -39,7 +39,7 @@ data RelationshipMetric
   { _rmManual :: !Int
   , _rmAuto   :: !Int
   } deriving (Show, Eq)
-$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''RelationshipMetric)
+$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''RelationshipMetric)
 
 data PermissionMetric
   = PermissionMetric
@@ -49,7 +49,7 @@ data PermissionMetric
   , _pmDelete :: !Int
   , _pmRoles  :: !Int
   } deriving (Show, Eq)
-$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''PermissionMetric)
+$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''PermissionMetric)
 
 data Metrics
   = Metrics
@@ -62,37 +62,39 @@ data Metrics
   , _mtRemoteSchemas :: !Int
   , _mtFunctions     :: !Int
   } deriving (Show, Eq)
-$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
+$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
 
 data HasuraTelemetry
   = HasuraTelemetry
   { _htDbUid       :: !Text
   , _htInstanceUid :: !InstanceId
-  , _htVersion     :: !Text
+  , _htVersion     :: !Version
   , _htCi          :: !(Maybe CI.CI)
   , _htMetrics     :: !Metrics
-  } deriving (Show, Eq)
-$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''HasuraTelemetry)
+  } deriving (Show)
+$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''HasuraTelemetry)
 
 data TelemetryPayload
   = TelemetryPayload
   { _tpTopic :: !Text
   , _tpData  :: !HasuraTelemetry
-  } deriving (Show, Eq)
-$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
+  } deriving (Show)
+$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
 
 telemetryUrl :: Text
 telemetryUrl = "https://telemetry.hasura.io/v1/http"
 
-mkPayload :: Text -> InstanceId -> Text -> Metrics -> IO TelemetryPayload
+mkPayload :: Text -> InstanceId -> Version -> Metrics -> IO TelemetryPayload
 mkPayload dbId instanceId version metrics = do
   ci <- CI.getCI
-  return $ TelemetryPayload topic $
-    HasuraTelemetry dbId instanceId version ci metrics
-  where topic = bool "server" "server_test" isDevVersion
+  let topic = case version of
+        VersionDev _     -> "server_test"
+        VersionRelease _ -> "server"
+  pure $ TelemetryPayload topic $ HasuraTelemetry dbId instanceId version ci metrics
 
 runTelemetry
-  :: Logger Hasura
+  :: (HasVersion)
+  => Logger Hasura
   -> HTTP.Manager
   -> IO SchemaCache
   -- ^ an action that always returns the latest schema cache
@@ -207,8 +209,8 @@ mkHttpError url mResp httpEx =
     Nothing   -> TelemetryHttpError Nothing url httpEx Nothing
     Just resp ->
       let status = resp ^. Wreq.responseStatus
-          body = CS.cs $ resp ^. Wreq.responseBody
-      in TelemetryHttpError (Just status) url httpEx (Just body)
+          body = decodeText $ UTF8 (resp ^. Wreq.responseBody)
+      in TelemetryHttpError (Just status) url httpEx body
 
 mkTelemetryLog :: Text -> Text -> Maybe TelemetryHttpError -> TelemetryLog
 mkTelemetryLog = TelemetryLog LevelInfo

@@ -191,7 +191,7 @@ class MetadataApiAuthorization m where
   authorizeMetadataApi :: RQLQuery -> UserInfo -> Handler m ()
 
 mkSpockAction
-  :: (MonadIO m, FromJSON a, ToJSON a, UserAuthentication m, HttpLog m)
+  :: (HasVersion, MonadIO m, FromJSON a, ToJSON a, UserAuthentication m, HttpLog m)
   => ServerCtx
   -> (Bool -> QErr -> Value)
   -- ^ `QErr` JSON encoder function
@@ -277,7 +277,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
       mkHeaders = maybe [] (map unHeader)
 
-v1QueryHandler :: (MonadIO m, MetadataApiAuthorization m) => RQLQuery -> Handler m (HttpResponse EncJSON)
+v1QueryHandler :: (HasVersion, MonadIO m, MetadataApiAuthorization m) => RQLQuery -> Handler m (HttpResponse EncJSON)
 v1QueryHandler query = do
   userInfo <- asks hcUser
   authorizeMetadataApi query userInfo
@@ -298,7 +298,7 @@ v1QueryHandler query = do
       instanceId <- scInstanceId . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
-v1Alpha1GQHandler :: (MonadIO m) => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
+v1Alpha1GQHandler :: (HasVersion, MonadIO m) => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
@@ -316,7 +316,7 @@ v1Alpha1GQHandler query = do
   flip runReaderT execCtx $ GH.runGQBatched requestId userInfo reqHeaders query
 
 v1GQHandler
-  :: (MonadIO m)
+  :: (HasVersion, MonadIO m)
   => GH.GQLBatchedReqs GH.GQLQueryText
   -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
@@ -368,7 +368,7 @@ consoleAssetsHandler logger dir path = do
     headers = ("Content-Type", mimeType) : encHeader
 
 class (Monad m) => ConsoleRenderer m where
-  renderConsole :: T.Text -> AuthMode -> Bool -> Maybe Text -> m (Either String Text)
+  renderConsole :: HasVersion => T.Text -> AuthMode -> Bool -> Maybe Text -> m (Either String Text)
 
 renderHtmlTemplate :: M.Template -> Value -> Either String Text
 renderHtmlTemplate template jVal =
@@ -398,7 +398,7 @@ queryParsers =
       return $ f q
 
 legacyQueryHandler
-  :: (MonadIO m, MetadataApiAuthorization m)
+  :: (HasVersion, MonadIO m, MetadataApiAuthorization m)
   => TableName -> T.Text -> Object
   -> Handler m (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
@@ -425,7 +425,8 @@ data HasuraApp
 
 mkWaiApp
   :: forall m.
-     ( MonadIO m
+     ( HasVersion
+     , MonadIO m
      , MonadStateless IO m
      , ConsoleRenderer m
      , HttpLog m
@@ -513,7 +514,7 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
 
 
 httpApp
-  :: (MonadIO m, ConsoleRenderer m, HttpLog m, UserAuthentication m, MetadataApiAuthorization m)
+  :: (HasVersion, MonadIO m, ConsoleRenderer m, HttpLog m, UserAuthentication m, MetadataApiAuthorization m)
   => CorsConfig
   -> ServerCtx
   -> Bool

@@ -23,6 +23,7 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.IORef             (newIORef)
 import           Data.Time.Clock        (UTCTime)
+import           Hasura.Server.Version  (HasVersion)
 
 import qualified Data.Aeson             as J
 import qualified Data.ByteString.Lazy   as BL
@@ -43,7 +44,8 @@ import           Hasura.Server.Utils
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
   resolveUserInfo
-    :: Logger Hasura
+    :: (HasVersion)
+    => Logger Hasura
     -> H.Manager
     -> [N.Header]
     -- ^ request headers
@@ -79,7 +81,8 @@ data AuthMode
   deriving (Show, Eq)
 
 mkAuthMode
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadError T.Text m
      )
   => Maybe AdminSecret
@@ -117,7 +120,8 @@ mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager logger =
         <> " when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
 
 mkJwtCtx
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadError T.Text m
      )
   => JWTConfig
@@ -180,7 +184,7 @@ mkUserInfoFromResp logger url method statusCode respBody
         url method Nothing $ fmap (bsToTxt . BL.toStrict) mResp
 
 userInfoFromAuthHook
-  :: (MonadIO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError QErr m)
   => Logger Hasura
   -> H.Manager
   -> AuthHook
@@ -219,7 +223,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
       n `notElem` commonClientHeadersIgnored
 
 getUserInfo
-  :: (MonadIO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError QErr m)
   => Logger Hasura
   -> H.Manager
   -> [N.Header]
@@ -228,7 +232,7 @@ getUserInfo
 getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
 
 getUserInfoWithExpTime
-  :: (MonadIO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError QErr m)
   => Logger Hasura
   -> H.Manager
   -> [N.Header]
