@@ -92,7 +92,7 @@ export const save = (property, triggerName) => {
       },
       retry_conf: { ...oldTrigger.configuration.retry_conf },
       ...oldTrigger.configuration.definition,
-      headers: [...(oldTrigger.configuration.headers || [])],
+      headers: [...oldTrigger.configuration.headers],
     };
     if (oldTrigger.configuration.webhook_from_env) {
       downPayload.webhook_from_env = oldTrigger.configuration.webhook_from_env;
@@ -132,7 +132,7 @@ export const save = (property, triggerName) => {
     } else if (property === 'headers') {
       delete upPayload.headers;
       upPayload.headers = [];
-      (modifyTrigger.headers || [])
+      modifyTrigger.headers
         .filter(h => Boolean(h.key.trim()))
         .forEach(h => {
           const { key, value, type } = h;
