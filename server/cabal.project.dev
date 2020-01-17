@@ -12,3 +12,4 @@ package *
 package graphql-engine
   optimization: 0
   documentation: false
+  flags: +developer
