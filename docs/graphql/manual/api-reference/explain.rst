@@ -118,4 +118,4 @@ Sample response for a subscription
 Disabling Explain API
 ---------------------
 
-The Explain API endpoint cannot be disabled as it's part of the :doc:`GraphQL API <graphql-api/index>`.
+This section needs to be added.
