@@ -3,33 +3,26 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runUpdateScheduledTrigger
   , runDeleteScheduledTrigger
   , runCancelScheduledEvent
+  , resolveScheduledTrigger
+  , deleteScheduledTriggerFromCatalog
   ) where
 
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema.Cache       (CacheBuildM)
 import           Hasura.RQL.DDL.EventTrigger ( getWebhookInfoFromConf
                                              , getHeaderInfosFromConf)
-import           Hasura.RQL.Types.Helpers
-import           Hasura.RQL.Types.Error
-import           Hasura.RQL.Types.EventTrigger (TriggerName)
-import           Hasura.RQL.Types.ScheduledTrigger
-import           Hasura.RQL.Types.SchemaCache ( addScheduledTriggerToCache
-                                              , updateScheduledTriggerInCache
-                                              , removeScheduledTriggerFromCache
-                                              , ScheduledTriggerInfo(..))
+import           Hasura.RQL.Types
 
 import qualified Database.PG.Query     as Q
 
-runCreateScheduledTrigger :: CacheBuildM m => CreateScheduledTrigger ->  m EncJSON
+runCreateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger ->  m EncJSON
 runCreateScheduledTrigger q = do
-  sti <- scheduledTriggerSetup q
-  addScheduledTriggerToCache sti
   addScheduledTriggerToCatalog q
+  buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
 
-addScheduledTriggerToCatalog :: CacheBuildM m => CreateScheduledTrigger ->  m ()
+addScheduledTriggerToCatalog :: (MonadTx m) => CreateScheduledTrigger ->  m ()
 addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $
   Q.unitQE defaultTxErrorHandler
   [Q.sql|
@@ -38,9 +31,10 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $
     VALUES ($1, $2, $3, $4, $5)
   |] (stName, Q.AltJ stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf) False
 
-scheduledTriggerSetup ::
-     (CacheBuildM m) => CreateScheduledTrigger -> m ScheduledTriggerInfo
-scheduledTriggerSetup CreateScheduledTrigger {..} = do
+resolveScheduledTrigger
+  :: (QErrM m, MonadIO m)
+  => CreateScheduledTrigger -> m ScheduledTriggerInfo
+resolveScheduledTrigger CreateScheduledTrigger {..} = do
   let headerConfs = fromMaybe [] stHeaders
   webhookInfo <- getWebhookInfoFromConf stWebhookConf
   headerInfo <- getHeaderInfosFromConf headerConfs
@@ -54,14 +48,13 @@ scheduledTriggerSetup CreateScheduledTrigger {..} = do
           headerInfo
   pure stInfo
 
-runUpdateScheduledTrigger :: CacheBuildM m => CreateScheduledTrigger ->  m EncJSON
+runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger ->  m EncJSON
 runUpdateScheduledTrigger q = do
-  sti <- scheduledTriggerSetup q
-  updateScheduledTriggerInCache sti
   updateScheduledTriggerInCatalog q
+  buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
 
-updateScheduledTriggerInCatalog :: CacheBuildM m => CreateScheduledTrigger -> m ()
+updateScheduledTriggerInCatalog :: (MonadTx m) => CreateScheduledTrigger -> m ()
 updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
   Q.unitQE defaultTxErrorHandler
    [Q.sql|
@@ -79,13 +72,12 @@ updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
     WHERE name = $1 AND scheduled_time > now() AND tries = 0
    |] (Identity stName) False
 
-runDeleteScheduledTrigger :: CacheBuildM m => DeleteScheduledTrigger -> m EncJSON
+runDeleteScheduledTrigger :: (CacheRWM m, MonadTx m) => DeleteScheduledTrigger -> m EncJSON
 runDeleteScheduledTrigger (DeleteScheduledTrigger stName) = do
-  removeScheduledTriggerFromCache stName
   deleteScheduledTriggerFromCatalog stName
   return successMsg
 
-deleteScheduledTriggerFromCatalog :: CacheBuildM m => TriggerName -> m ()
+deleteScheduledTriggerFromCatalog :: (MonadTx m) => TriggerName -> m ()
 deleteScheduledTriggerFromCatalog stName = liftTx $ do
   Q.unitQE defaultTxErrorHandler
    [Q.sql|
@@ -93,14 +85,14 @@ deleteScheduledTriggerFromCatalog stName = liftTx $ do
     WHERE name = $1
    |] (Identity stName) False
 
-runCancelScheduledEvent :: CacheBuildM m => CancelScheduledEvent -> m EncJSON
+runCancelScheduledEvent :: (MonadTx m) => CancelScheduledEvent -> m EncJSON
 runCancelScheduledEvent se = do
   affectedRows <- deleteScheduledEventFromCatalog se
   if | affectedRows == 1 -> pure successMsg
      | affectedRows == 0 -> throw400 NotFound "scheduled event not found"
      | otherwise -> throw500 "unexpected: more than one scheduled events cancelled"
 
-deleteScheduledEventFromCatalog :: CacheBuildM m => CancelScheduledEvent -> m Int
+deleteScheduledEventFromCatalog :: (MonadTx m) => CancelScheduledEvent -> m Int
 deleteScheduledEventFromCatalog se = liftTx $ do
   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
    [Q.sql|

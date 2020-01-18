@@ -110,6 +110,7 @@ module Hasura.RQL.Types.SchemaCache
   , askFunctionInfo
 
   , ScheduledTriggerInfo(..)
+  , ScheduledTriggerInfoMap
   ) where
 
 import qualified Hasura.GraphQL.Context            as GC
@@ -211,7 +212,6 @@ isPGColInfo _            = False
 data InsPermInfo
   = InsPermInfo
   { ipiCols            :: !(HS.HashSet PGCol)
-  , ipiView            :: !QualifiedTable
   , ipiCheck           :: !AnnBoolExpPartialSQL
   , ipiSet             :: !PreSetColsPartial
   , ipiRequiredHeaders :: ![T.Text]
@@ -431,7 +431,7 @@ data SchemaCache
   , scGCtxMap           :: !GC.GCtxMap
   , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
-  , scInconsistentObjs  :: ![InconsistentMetadataObj]
+  , scInconsistentObjs  :: ![InconsistentMetadata]
   , scScheduledTriggers :: !ScheduledTriggerInfoMap
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)

@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Catalog
   , CatalogPermission(..)
   , CatalogEventTrigger(..)
   , CatalogFunction(..)
+  , CatalogScheduledTrigger(..)
   ) where
 
 import           Hasura.Prelude
@@ -32,6 +33,7 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
+import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.SQL.Types
 
 newtype CatalogForeignKey
@@ -137,6 +139,20 @@ instance NFData CatalogFunction
 instance Cacheable CatalogFunction
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
+
+data CatalogScheduledTrigger
+  = CatalogScheduledTrigger
+  { _cstName           :: !TriggerName
+  , _cstWebhookConf    :: !WebhookConf
+  , _cstSchedule       :: !ScheduleType
+  , _cstPayload        :: !(Maybe Value)
+  , _cstRetryConf      :: !RetryConfST
+  , _cstHeaders        :: !(Maybe [HeaderConf])
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogScheduledTrigger
+instance Cacheable CatalogScheduledTrigger
+$(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogScheduledTrigger)
+
 data CatalogMetadata
   = CatalogMetadata
   { _cmTables               :: ![CatalogTable]
@@ -147,6 +163,7 @@ data CatalogMetadata
   , _cmFunctions            :: ![CatalogFunction]
   , _cmAllowlistCollections :: ![CollectionDef]
   , _cmComputedFields       :: ![CatalogComputedField]
+  , _cmScheduledTriggers    :: ![CatalogScheduledTrigger]
   } deriving (Show, Eq, Generic)
 instance NFData CatalogMetadata
 instance Cacheable CatalogMetadata

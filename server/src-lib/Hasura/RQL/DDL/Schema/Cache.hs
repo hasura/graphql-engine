@@ -39,6 +39,7 @@ import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Deps
 import           Hasura.RQL.DDL.EventTrigger
+import           Hasura.RQL.DDL.ScheduledTrigger
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Cache.Dependencies
@@ -51,7 +52,6 @@ import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.RQL.Types.QueryCollection
 import           Hasura.SQL.Types
 
 buildRebuildableSchemaCache
@@ -114,6 +114,7 @@ buildSchemaCacheRule = proc inputs -> do
     , scDefaultRemoteGCtx = _boDefaultRemoteGCtx resolvedOutputs
     , scDepMap = resolvedDependencies
     , scInconsistentObjs = inconsistentObjects <> extraInconsistentObjects
+    , scScheduledTriggers = _boScheduledTriggers resolvedOutputs
     }
   where
     buildAndCollectInfo
@@ -124,7 +125,7 @@ buildSchemaCacheRule = proc inputs -> do
     buildAndCollectInfo = proc (catalogMetadata, invalidationMap) -> do
       let CatalogMetadata tables relationships permissions
             eventTriggers remoteSchemas functions allowlistDefs
-            computedFields = catalogMetadata
+            computedFields scheduledTriggers = catalogMetadata
 
       -- tables
       tableRawInfos <- buildTableCache -< tables
@@ -181,6 +182,24 @@ buildSchemaCacheRule = proc inputs -> do
             & map (queryWithoutTypeNames . getGQLQuery . _lqQuery)
             & HS.fromList
 
+      -- scheduled triggers
+      scheduledTriggersMap <- (mapFromL _cstName scheduledTriggers >- returnA)
+        >-> (| Inc.keyed (\_ (CatalogScheduledTrigger n wc s p rc h ) -> do
+              let q = CreateScheduledTrigger n wc s p rc h
+                  definition = toJSON q
+                  triggerName = triggerNameToTxt n
+                  metadataObject = MetadataObject (MOScheduledTrigger n) definition
+                  addScheduledTriggerContext e = "in scheduled trigger " <> triggerName <> ": " <> e
+              (| withRecordInconsistency (
+                 (| modifyErrA ( do
+                      scheduledTriggerInfo <- bindErrorA -< resolveScheduledTrigger q
+                      returnA -< scheduledTriggerInfo
+                    )
+                  |) addScheduledTriggerContext)
+               |) metadataObject)
+           |)
+        >-> (\infos -> M.catMaybes infos >- returnA)
+
       -- build GraphQL context with tables and functions
       baseGQLSchema <- bindA -< GS.mkGCtxMap tableCache functionCache
 
@@ -198,6 +217,7 @@ buildSchemaCacheRule = proc inputs -> do
         , _boAllowlist = allowList
         , _boGCtxMap = gqlSchema
         , _boDefaultRemoteGCtx = remoteGQLSchema
+        , _boScheduledTriggers = scheduledTriggersMap
         }
 
     mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =

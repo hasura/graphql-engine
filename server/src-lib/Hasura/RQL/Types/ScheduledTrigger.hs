@@ -14,27 +14,48 @@ import           Data.Time.Format
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Fixed
 import           Hasura.Prelude
-import           Language.Haskell.TH.Syntax as TH
 import           System.Cron.Types
 import           System.Cron.Parser
+import           Hasura.Incremental
 
 import qualified Data.Text                     as T
 import qualified Data.Aeson                    as J
 import qualified Hasura.RQL.Types.EventTrigger as ET
 
-instance TH.Lift (Fixed E12) where
-  lift x = [| MkFixed x' |]
-    where
-      x' = resolution x
+-- instance TH.Lift (Fixed E12) where
+--   lift x = [| MkFixed x' |]
+--     where
+--       x' = resolution x
 
-instance TH.Lift NominalDiffTime where
-  lift x = [| secondsToNominalDiffTime x'|]
-    where
-      x' =  nominalDiffTimeToSeconds x
+-- instance TH.Lift NominalDiffTime where
+--   lift x = [| secondsToNominalDiffTime x'|]
+--     where
+--       x' =  nominalDiffTimeToSeconds x
 
-instance TH.Lift UTCTime
+instance NFData StepField
+instance NFData RangeField
+instance NFData SpecificField
+instance NFData BaseField
+instance NFData CronField
+instance NFData MonthSpec
+instance NFData DayOfMonthSpec
+instance NFData DayOfWeekSpec
+instance NFData HourSpec
+instance NFData MinuteSpec
+instance NFData CronSchedule
+
+instance Cacheable StepField
+instance Cacheable RangeField
+instance Cacheable SpecificField
+instance Cacheable BaseField
+instance Cacheable CronField
+instance Cacheable MonthSpec
+instance Cacheable DayOfMonthSpec
+instance Cacheable DayOfWeekSpec
+instance Cacheable HourSpec
+instance Cacheable MinuteSpec
+instance Cacheable CronSchedule
 
 data RetryConfST
   = RetryConfST
@@ -42,7 +63,10 @@ data RetryConfST
   , rcstIntervalSec :: !Int
   , rcstTimeoutSec  :: !Int
   , rcstTolerance   :: !NominalDiffTime
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Generic)
+
+instance NFData RetryConfST
+instance Cacheable RetryConfST
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConfST)
 
@@ -56,7 +80,10 @@ defaultRetryConf =
   }
 
 data ScheduleType = OneOff UTCTime | Cron CronSchedule
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Generic)
+
+instance NFData ScheduleType
+instance Cacheable ScheduleType
 
 $(deriveJSON defaultOptions{sumEncoding=TaggedObject "type" "value"} ''ScheduleType)
 
@@ -68,7 +95,10 @@ data CreateScheduledTrigger
   , stPayload        :: !(Maybe J.Value)
   , stRetryConf      :: !RetryConfST
   , stHeaders        :: !(Maybe [ET.HeaderConf])
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Generic)
+
+instance NFData CreateScheduledTrigger
+instance Cacheable CreateScheduledTrigger
 
 instance FromJSON CronSchedule where
   parseJSON = withText "CronSchedule" $ \t ->
@@ -94,18 +124,17 @@ instance FromJSON CreateScheduledTrigger where
         (Nothing, Nothing) ->   fail "must provide webhook or webhook_from_env"
       pure CreateScheduledTrigger {..}
 
-$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
-
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
 
 newtype DeleteScheduledTrigger
   = DeleteScheduledTrigger { dst :: ET.TriggerName }
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteScheduledTrigger)
 
 newtype CancelScheduledEvent
   = CancelScheduledEvent { cseId :: T.Text }
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CancelScheduledEvent)
 

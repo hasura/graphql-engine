@@ -23,11 +23,12 @@ import qualified Data.Text                          as T
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalog)
-import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
+import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2,
                                                      removeRemoteSchemaFromCatalog)
+import           Hasura.RQL.DDL.ScheduledTrigger    (deleteScheduledTriggerFromCatalog)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -420,3 +421,4 @@ purgeMetadataObj = liftTx . \case
   MOTableObj qt (MTOPerm rn pt)         -> dropPermFromCatalog qt rn pt
   MOTableObj _ (MTOTrigger trn)         -> delEventTriggerFromCatalog trn
   MOTableObj qt (MTOComputedField ccn)  -> dropComputedFieldFromCatalog qt ccn
+  MOScheduledTrigger stName             -> deleteScheduledTriggerFromCatalog stName

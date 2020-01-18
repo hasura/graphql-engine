@@ -18,7 +18,6 @@ import qualified Hasura.Incremental               as Inc
 
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
-import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 
@@ -47,6 +46,7 @@ data BuildOutputs
   , _boAllowlist         :: !(HS.HashSet GQLQuery)
   , _boGCtxMap           :: !GC.GCtxMap
   , _boDefaultRemoteGCtx :: !GC.GCtx
+  , _boScheduledTriggers :: !ScheduledTriggerInfoMap
   } deriving (Show, Eq)
 $(makeLenses ''BuildOutputs)
 

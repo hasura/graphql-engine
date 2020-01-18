@@ -16,7 +16,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
-import           Data.IORef                    (IORef, readIORef)
 import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
@@ -35,12 +34,8 @@ import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
-
 invocationVersion :: Version
 invocationVersion = "2"
-
-newtype CacheRef
-  = CacheRef { unCacheRef :: IORef (SchemaCache, SchemaCacheVer) }
 
 data Event
   = Event

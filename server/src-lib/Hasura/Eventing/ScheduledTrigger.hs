@@ -10,7 +10,6 @@ module Hasura.Eventing.ScheduledTrigger
 import           Control.Concurrent              (threadDelay)
 import           Control.Exception               (try)
 import           Data.Has
-import           Data.IORef                      (IORef, readIORef)
 import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
@@ -100,12 +99,12 @@ instance ( J.ToJSON (Param p T.Text)
 runScheduledEventsGenerator ::
      L.Logger L.Hasura
   -> Q.PGPool
-  -> IORef (SchemaCache, SchemaCacheVer)
+  -> IO SchemaCache
   -> IO ()
-runScheduledEventsGenerator logger pgpool scRef = do
+runScheduledEventsGenerator logger pgpool getSC = do
   forever $ do
     traceM "entering scheduled events generator"
-    (sc, _) <- liftIO $ readIORef scRef
+    sc <- getSC
     let scheduledTriggers = Map.elems $ scScheduledTriggers sc
     runExceptT
       (Q.runTx
@@ -115,7 +114,7 @@ runScheduledEventsGenerator logger pgpool scRef = do
       Right _ -> pure ()
       Left err ->
         L.unLogger logger $ EventInternalErr $ err500 Unexpected (T.pack $ show err)
-    threadDelay (10 * oneSecond)
+    threadDelay oneHour
 
 insertScheduledEventsFor :: [ScheduledTriggerInfo] -> Q.TxE QErr ()
 insertScheduledEventsFor scheduledTriggers = do
@@ -162,12 +161,12 @@ processScheduledQueue ::
      L.Logger L.Hasura
   -> Q.PGPool
   -> HTTP.Manager
-  -> IORef (SchemaCache, SchemaCacheVer)
+  -> IO SchemaCache
   -> IO ()
-processScheduledQueue logger pgpool httpMgr scRef =
+processScheduledQueue logger pgpool httpMgr getSC =
   forever $ do
     traceM "entering processor queue"
-    (sc, _) <- liftIO $ readIORef scRef
+    sc <- getSC
     let scheduledTriggersInfo = scScheduledTriggers sc
     scheduledEventsE <-
       runExceptT $
@@ -186,7 +185,7 @@ processScheduledQueue logger pgpool httpMgr scRef =
                   se = ScheduledEvent id' name st tries webhook payload retryConf
               runReaderT (processScheduledEvent pgpool httpMgr sti se) logger
       Left err -> traceShowM err
-    threadDelay (10 * oneSecond)
+    threadDelay oneMinute
 
 processScheduledEvent ::
      (MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m)

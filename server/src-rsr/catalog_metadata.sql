@@ -7,7 +7,8 @@ select
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
     'allowlist_collections', allowlist.item,
-    'computed_fields', computed_field.items
+    'computed_fields', computed_field.items,
+    'scheduled_triggers', scheduled_triggers.items
   )
 from
   (
@@ -170,4 +171,21 @@ from
         from hdb_catalog.hdb_function_info_agg
         where function_name = cc.function_name and function_schema = cc.function_schema
       ) fi on 'true'
-  ) as computed_field
+  ) as computed_field,
+  (
+    select
+      coalesce(
+        json_agg(
+          json_build_object(
+            'name', name,
+            'webhook_conf', webhook_conf :: json,
+            'schedule', schedule :: json,
+            'payload', payload :: json,
+            'retry_conf', retry_conf :: json
+          )
+        ),
+        '[]'
+      ) as items
+      from
+          hdb_catalog.hdb_scheduled_trigger
+  ) as scheduled_triggers

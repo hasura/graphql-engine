@@ -39,7 +39,6 @@ module Hasura.SQL.Types
 
   , SchemaName(..)
   , publicSchema
-  , hdbViewsSchema
   , hdbCatalogSchema
 
   , TableName(..)
@@ -238,9 +237,6 @@ newtype SchemaName
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
-
-hdbViewsSchema :: SchemaName
-hdbViewsSchema = SchemaName "hdb_views"
 
 hdbCatalogSchema :: SchemaName
 hdbCatalogSchema = SchemaName "hdb_catalog"

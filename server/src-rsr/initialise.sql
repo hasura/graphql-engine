@@ -657,6 +657,13 @@ CREATE VIEW hdb_catalog.hdb_computed_field_function AS
   FROM hdb_catalog.hdb_computed_field
 );
 
+CREATE OR REPLACE FUNCTION hdb_catalog.check_violation(msg text) RETURNS bool AS 
+$$
+  BEGIN
+    RAISE check_violation USING message=msg;
+  END;
+$$ LANGUAGE plpgsql;
+
 CREATE TABLE hdb_catalog.hdb_scheduled_trigger
 (
   name TEXT PRIMARY KEY,

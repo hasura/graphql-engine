@@ -7,7 +7,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Time                          (UTCTime)
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.Text                          as T
@@ -62,10 +61,10 @@ data RQLQueryV1
   | RQCreateUpdatePermission !CreateUpdPerm
   | RQCreateDeletePermission !CreateDelPerm
 
-  | RQDropInsertPermission !DropInsPerm
-  | RQDropSelectPermission !DropSelPerm
-  | RQDropUpdatePermission !DropUpdPerm
-  | RQDropDeletePermission !DropDelPerm
+  | RQDropInsertPermission !(DropPerm InsPerm)
+  | RQDropSelectPermission !(DropPerm SelPerm)
+  | RQDropUpdatePermission !(DropPerm UpdPerm)
+  | RQDropDeletePermission !(DropPerm DelPerm)
   | RQSetPermissionComment !SetPermComment
 
   | RQGetInconsistentMetadata !GetInconsistentMetadata
@@ -109,18 +108,18 @@ data RQLQueryV1
   | RQReloadMetadata !ReloadMetadata
 
   | RQDumpInternalState !DumpInternalState
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
   | RQV2SetTableCustomFields !SetTableCustomFields
   | RQV2TrackFunction !TrackFunctionV2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 data RQLQuery
   = RQV1 !RQLQueryV1
   | RQV2 !RQLQueryV2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 instance FromJSON RQLQuery where
   parseJSON = withObject "Object" $ \o -> do

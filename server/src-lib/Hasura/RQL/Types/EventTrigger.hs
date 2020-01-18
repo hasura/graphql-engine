@@ -106,10 +106,21 @@ $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventHeaderInfo
 data WebhookConf = WCValue T.Text | WCEnv T.Text
   deriving (Show, Eq, Generic, Lift)
 instance NFData WebhookConf
+instance Cacheable WebhookConf
 
 instance ToJSON WebhookConf where
-  toJSON (WCValue w)  = object ["type" .= String "static", "value" .= w ]
-  toJSON (WCEnv wEnv) = object ["type" .= String "env", "value" .= wEnv ]
+  toJSON (WCValue w)  = object ["webhook" .= w ]
+  toJSON (WCEnv wEnv) = object ["webhook_from_env" .= wEnv ]
+
+instance FromJSON WebhookConf where
+  parseJSON = withObject "WebhookConf" \o -> do
+    webhook <- o .:? "webhook"
+    webhookFromEnv <- o .:? "webhook_from_env"
+    case (webhook, webhookFromEnv) of
+      (Just value, Nothing) -> pure $ WCValue value
+      (Nothing, Just env) -> pure $ WCEnv env
+      (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
+      (Nothing, Nothing) ->   fail "must provide webhook or webhook_from_env"
 
 data WebhookConfInfo
   = WebhookConfInfo

@@ -31,7 +31,6 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.Types
-import           Hasura.RQL.Types.QueryCollection
 
 data QueryParts
   = QueryParts

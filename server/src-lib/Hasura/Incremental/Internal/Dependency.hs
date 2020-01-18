@@ -16,6 +16,7 @@ import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
 import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)
+import           Data.Time.Clock
 import           Data.Vector                   (Vector)
 import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
                                                 M1 (..), U1 (..), V1)
@@ -160,6 +161,8 @@ instance Cacheable Integer where unchanged _ = (==)
 instance Cacheable Scientific where unchanged _ = (==)
 instance Cacheable Text where unchanged _ = (==)
 instance Cacheable N.URIAuth where unchanged _ = (==)
+instance Cacheable NominalDiffTime where unchanged _ = (==)
+instance Cacheable UTCTime where unchanged _ = (==)
 
 instance (Cacheable a) => Cacheable (Seq a) where
   unchanged = liftEq . unchanged
