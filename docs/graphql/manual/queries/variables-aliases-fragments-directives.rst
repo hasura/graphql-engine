@@ -52,7 +52,7 @@ Variables and performance
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To optimise for performance, it's essential that the query consists of non-nullable variables only.
-Variables are non-nullable when they have a ``!`` after the type, e.g.: ``query getArticles($author_id: Int!)``.
+Variables are non-nullable when they have a ``!`` after the type, e.g. ``query getArticles($author_id: Int!)``.
 If this condition is met, the query caching plan kicks in, and the performance will increase significantly.
 
 
