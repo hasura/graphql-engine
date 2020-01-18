@@ -155,9 +155,9 @@ updateObjRelDef qt rn (oldQT, newQT) = do
   oldDef :: ObjRelUsing <- decodeValue oldDefV
   let newDef = case oldDef of
         RUFKeyOn _ -> oldDef
-        RUManual (ObjRelManualConfig (RelManualConfig dbQT rmCols)) ->
+        RUManual (RelManualConfig dbQT rmCols) ->
           let updQT = bool oldQT newQT $ oldQT == dbQT
-          in RUManual $ ObjRelManualConfig $ RelManualConfig updQT rmCols
+          in RUManual $ RelManualConfig updQT rmCols
   liftTx $ updateRel qt rn $ toJSON newDef
 
 updateArrRelDef
@@ -170,9 +170,9 @@ updateArrRelDef qt rn (oldQT, newQT) = do
         RUFKeyOn (ArrRelUsingFKeyOn dbQT c) ->
           let updQT = getUpdQT dbQT
           in RUFKeyOn $ ArrRelUsingFKeyOn updQT c
-        RUManual (ArrRelManualConfig (RelManualConfig dbQT rmCols)) ->
+        RUManual (RelManualConfig dbQT rmCols) ->
           let updQT = getUpdQT dbQT
-          in RUManual $ ArrRelManualConfig $ RelManualConfig updQT rmCols
+          in RUManual $ RelManualConfig updQT rmCols
   liftTx $ updateRel qt rn $ toJSON newDef
   where
     getUpdQT dbQT = bool oldQT newQT $ oldQT == dbQT
@@ -376,9 +376,7 @@ updateColInObjRel
   -> RenameCol -> ObjRelUsing -> ObjRelUsing
 updateColInObjRel fromQT toQT rnCol = \case
   RUFKeyOn col -> RUFKeyOn $ getNewCol rnCol fromQT col
-  RUManual (ObjRelManualConfig manConfig) ->
-    RUManual $ ObjRelManualConfig $
-    updateRelManualConfig fromQT toQT rnCol manConfig
+  RUManual manConfig -> RUManual $ updateRelManualConfig fromQT toQT rnCol manConfig
 
 updateColInArrRel
   :: QualifiedTable -> QualifiedTable
@@ -387,9 +385,7 @@ updateColInArrRel fromQT toQT rnCol = \case
   RUFKeyOn (ArrRelUsingFKeyOn t c) ->
     let updCol = getNewCol rnCol toQT c
     in RUFKeyOn $ ArrRelUsingFKeyOn t updCol
-  RUManual (ArrRelManualConfig manConfig) ->
-    RUManual $ ArrRelManualConfig $
-    updateRelManualConfig fromQT toQT rnCol manConfig
+  RUManual manConfig -> RUManual $ updateRelManualConfig fromQT toQT rnCol manConfig
 
 type ColMap = HashMap PGCol PGCol
 

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura GraphQL API mutations API reference
+   :keywords: hasura, docs, GraphQL API, API reference, mutation
+
 API Reference - Mutation
 ========================
 

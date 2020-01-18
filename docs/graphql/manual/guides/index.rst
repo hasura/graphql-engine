@@ -1,3 +1,7 @@
+.. meta::
+   :description: Guides, Tutorials and Resources around using Hasura
+   :keywords: hasura, docs, guide, tutorial, resource
+
 Guides / Tutorials / Resources
 ==============================
 

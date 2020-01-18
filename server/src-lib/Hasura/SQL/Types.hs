@@ -40,7 +40,6 @@ module Hasura.SQL.Types
 
   , SchemaName(..)
   , publicSchema
-  , hdbViewsSchema
 
   , TableName(..)
   , FunctionName(..)
@@ -163,7 +162,7 @@ class ToTxt a where
 newtype TableName
   = TableName { getTableTxt :: T.Text }
   deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data
-           , Generic, Arbitrary, NFData, Cacheable )
+           , Generic, Arbitrary, NFData, Cacheable, IsString )
 
 instance IsIden TableName where
   toIden (TableName t) = Iden t
@@ -233,13 +232,11 @@ instance ToTxt FunctionName where
 
 newtype SchemaName
   = SchemaName { getSchemaTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, Lift, Data, Generic
+           , Arbitrary, NFData, Cacheable, IsString )
 
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
-
-hdbViewsSchema :: SchemaName
-hdbViewsSchema = SchemaName "hdb_views"
 
 instance IsIden SchemaName where
   toIden (SchemaName t) = Iden t
@@ -307,7 +304,8 @@ newtype PGDescription
 
 newtype PGCol
   = PGCol { getPGColTxt :: T.Text }
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey, FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
+  deriving ( Show, Eq, Ord, FromJSON, ToJSON, Hashable, Q.ToPrepArg, Q.FromCol, ToJSONKey
+           , FromJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable, IsString )
 
 instance IsIden PGCol where
   toIden (PGCol t) = Iden t
