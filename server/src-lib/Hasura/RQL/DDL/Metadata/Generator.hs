@@ -66,19 +66,13 @@ instance Arbitrary GC.TableCustomRootFields where
 instance Arbitrary TableConfig where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a, Arbitrary b) => Arbitrary (Relationship.RelUsing a b) where
+instance (Arbitrary a) => Arbitrary (Relationship.RelUsing a) where
   arbitrary = genericArbitrary
 
 instance (Arbitrary a) => Arbitrary (Relationship.RelDef a) where
   arbitrary = genericArbitrary
 
 instance Arbitrary Relationship.RelManualConfig where
-  arbitrary = genericArbitrary
-
-instance Arbitrary Relationship.ObjRelManualConfig where
-  arbitrary = genericArbitrary
-
-instance Arbitrary Relationship.ArrRelManualConfig where
   arbitrary = genericArbitrary
 
 instance Arbitrary Relationship.ArrRelUsingFKeyOn where

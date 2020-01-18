@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use upsert mutations with Hasura
+   :keywords: hasura, docs, mutation, upsert
+
 Upsert mutation
 ===============
 

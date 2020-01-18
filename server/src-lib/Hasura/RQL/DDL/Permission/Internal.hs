@@ -239,8 +239,6 @@ type family PermInfo a = r | r -> a
 
 class (ToJSON a) => IsPerm a where
 
-  type DropPermP1Res a
-
   permAccessor
     :: PermAccessor (PermInfo a)
 
@@ -251,16 +249,6 @@ class (ToJSON a) => IsPerm a where
     -> PermDef a
     -> m (WithDeps (PermInfo a))
 
-  addPermP2Setup
-    :: (MonadTx m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
-
-  buildDropPermP1Res
-    :: (QErrM m, CacheRM m, UserInfoM m)
-    => DropPerm a
-    -> m (DropPermP1Res a)
-
-  dropPermP2Setup :: (MonadTx m) => DropPerm a -> DropPermP1Res a -> m ()
-
   getPermAcc1
     :: PermDef a -> PermAccessor (PermInfo a)
   getPermAcc1 _ = permAccessor
@@ -268,7 +256,7 @@ class (ToJSON a) => IsPerm a where
   getPermAcc2
     :: DropPerm a -> PermAccessor (PermInfo a)
   getPermAcc2 _ = permAccessor
-
+  
 addPermP2 :: (IsPerm a, MonadTx m, HasSystemDefined m) => QualifiedTable -> PermDef a -> m ()
 addPermP2 tn pd = do
   let pt = permAccToType $ getPermAcc1 pd
@@ -291,9 +279,8 @@ dropPermP1 dp@(DropPerm tn rn) = do
   tabInfo <- askTabInfo tn
   askPermInfo tabInfo rn $ getPermAcc2 dp
 
-dropPermP2 :: (MonadTx m, IsPerm a) => DropPerm a -> DropPermP1Res a -> m ()
-dropPermP2 dp@(DropPerm tn rn) p1Res = do
-  dropPermP2Setup dp p1Res
+dropPermP2 :: forall a m. (MonadTx m, IsPerm a) => DropPerm a -> m ()
+dropPermP2 dp@(DropPerm tn rn) = do
   liftTx $ dropPermFromCatalog tn rn pt
   where
     pa = getPermAcc2 dp
@@ -303,7 +290,7 @@ runDropPerm
   :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
   => DropPerm a -> m EncJSON
 runDropPerm defn = do
-  permInfo <- buildDropPermP1Res defn
-  dropPermP2 defn permInfo
+  dropPermP1 defn
+  dropPermP2 defn
   withNewInconsistentObjsCheck buildSchemaCache
   return successMsg
