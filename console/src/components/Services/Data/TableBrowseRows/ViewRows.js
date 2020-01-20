@@ -726,6 +726,7 @@ const ViewRows = ({
       getPKClause(row, hasPrimaryKey, tableSchema)
     );
     dispatch(deleteItems(pkClauses));
+    setSelectedRows([]);
   };
 
   // If query object has expanded columns
