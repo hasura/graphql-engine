@@ -41,6 +41,11 @@ const deriveMutationString = (mutationString, introspectionSchema, actionName=nu
   // get the mutation variables
   const variables = mutationAst.definitions[0].variableDefinitions;
 
+  // throw error if the mutation does not have variables
+  if(!variables.length) {
+    throw Error('only mutations using variables can be derived')
+  }
+
   // get mutation name
   const mutationDefinition = mutationAst.definitions[0].selectionSet.selections[0];
   const mutationName = mutationDefinition.name.value;
@@ -92,23 +97,12 @@ const deriveMutationString = (mutationString, introspectionSchema, actionName=nu
         const _tf = { name: tf.name };
         const { type: underLyingType, wraps: fieldTypeWraps } = getUnderlyingType(tf.type);
         const subFields = getTypeFields(underLyingType);
-        if (
-          Object.keys(subFields).length === 2 &&
-          Object.keys(subFields)[0] === 'data' &&
-          Object.keys(subFields)[1] === 'on_conflict'
-        ) {
-          const { type: relType, wraps } = getUnderlyingType(Object.values(subFields)[0].type);
-          _tf.type = wrapTypename(prefixTypename(relType), wraps);
-          handleType(relType, prefixTypename(relType.name));
+        if (inbuiltTypes[underLyingType.name]) {
+          _tf.type = wrapTypename(underLyingType.name, fieldTypeWraps);
         } else {
-          if (inbuiltTypes[underLyingType.name]) {
-            _tf.type = wrapTypename(underLyingType.name, fieldTypeWraps);
-          } else {
-            _tf.type = wrapTypename(prefixTypename(underLyingType.name), fieldTypeWraps);
-          }
-
-          handleType(underLyingType, prefixTypename(underLyingType.name))
+          _tf.type = wrapTypename(prefixTypename(underLyingType.name), fieldTypeWraps);
         }
+        handleType(underLyingType, prefixTypename(underLyingType.name))
         newType.fields.push(_tf);
       })
       newTypes[typename] = newType;
@@ -121,12 +115,13 @@ const deriveMutationString = (mutationString, introspectionSchema, actionName=nu
       name: v.variable.name.value,
     }
     const argTypeMetadata = getAstTypeMetadata(v.type);
-    generatedArg.typename = argTypeMetadata.typename;
-    if (!inbuiltTypes[generatedArg.typename]) {
+    if (!inbuiltTypes[argTypeMetadata.typename]) {
       const argTypename = prefixTypename(argTypeMetadata.typename);
       generatedArg.type = wrapTypename(argTypename, argTypeMetadata.stack);
       const typeInSchema = allHasuraTypes[argTypeMetadata.typename];
       handleType(typeInSchema, argTypename)
+    } else {
+      generatedArg.type = wrapTypename(argTypeMetadata.typename, argTypeMetadata.stack)
     }
     actionArguments.push(generatedArg)
   })
