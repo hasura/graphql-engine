@@ -74,5 +74,4 @@ mkPKeyColumnsInpObj qt primaryKey =
 
 primaryKeyColumnsInp :: QualifiedTable -> InpValInfo
 primaryKeyColumnsInp qt =
-  InpValInfo Nothing "pk_columns" Nothing $ G.toGT $ G.toNT $
-  mkPKeyColumnsInpTy qt
+  InpValInfo Nothing "columns" Nothing $ G.toGT $ G.toNT $ mkPKeyColumnsInpTy qt

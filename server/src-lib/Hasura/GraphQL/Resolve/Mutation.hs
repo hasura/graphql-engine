@@ -229,7 +229,7 @@ convertUpdateByPk
   -> Field -- the mutation field
   -> m RespTx
 convertUpdateByPk opCtx field = do
-  responseTx <- convertUpdateGeneric opCtx boolExpParser tableSelAsMutationFields field
+  responseTx <- convertUpdateGeneric opCtx boolExpParser tableSelectionAsMutationFields field
   pure $ do
     response <- responseTx
     RM.withSingleTableRow response
@@ -282,7 +282,7 @@ convertDeleteByPk
   -> Field -- the mutation field
   -> m RespTx
 convertDeleteByPk opCtx field = do
-  responseTx <- convertDeleteGeneric opCtx boolExpParser tableSelAsMutationFields field
+  responseTx <- convertDeleteGeneric opCtx boolExpParser tableSelectionAsMutationFields field
   pure $ do
     response <- responseTx
     RM.withSingleTableRow response
@@ -299,7 +299,7 @@ whereExpressionParser args = withArg args "where" parseBoolExp
 primaryKeyColumnsToBoolExp
   :: (MonadReusability m, MonadError QErr m)
   => PGColGNameMap -> ArgsMap -> m AnnBoolExpUnresolved
-primaryKeyColumnsToBoolExp colGNameMap args = withArg args "pk_columns" $ \inpVal -> do
+primaryKeyColumnsToBoolExp colGNameMap args = withArg args "columns" $ \inpVal -> do
   obj <- asObject inpVal
   pgColValToBoolExp colGNameMap $ Map.fromList $ OMap.toList obj
 
@@ -311,13 +311,13 @@ mutationFieldsResolver
   => Field -> m (RR.MutFldsG UnresolvedVal)
 mutationFieldsResolver field = convertMutResp (_fType field) $ _fSelSet field
 
-tableSelAsMutationFields
+tableSelectionAsMutationFields
   :: ( MonadReusability m, MonadError QErr m
      , MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
   => Field -> m (RR.MutFldsG UnresolvedVal)
-tableSelAsMutationFields field = do
+tableSelectionAsMutationFields field = do
   annFlds <- processTableSelectionSet (_fType field) $ _fSelSet field
   pure $ RR.onlyReturningMutFld annFlds
 
