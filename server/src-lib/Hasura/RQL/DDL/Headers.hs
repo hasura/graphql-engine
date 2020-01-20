@@ -1,6 +1,7 @@
 module Hasura.RQL.DDL.Headers where
 
 import           Data.Aeson
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Instances       ()
 import           Hasura.RQL.Types.Error
@@ -14,15 +15,17 @@ import qualified Network.HTTP.Types         as HTTP
 
 data HeaderConf = HeaderConf HeaderName HeaderValue
    deriving (Show, Eq, Lift, Generic)
-
+instance NFData HeaderConf
 instance Hashable HeaderConf
+instance Cacheable HeaderConf
 
 type HeaderName  = T.Text
 
 data HeaderValue = HVValue T.Text | HVEnv T.Text
    deriving (Show, Eq, Lift, Generic)
-
+instance NFData HeaderValue
 instance Hashable HeaderValue
+instance Cacheable HeaderValue
 
 instance FromJSON HeaderConf where
   parseJSON (Object o) = do

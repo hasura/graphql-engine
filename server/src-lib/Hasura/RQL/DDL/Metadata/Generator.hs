@@ -61,27 +61,21 @@ instance Arbitrary TableCustomRootFields where
   arbitrary = uniqueRootFields
     where
       uniqueRootFields = do
-        (a, b, c, d, e, f) <- arbitrary
-        if null $ duplicates [a, b, c, d, e, f] then
-          pure $ TableCustomRootFields a b c d e f
+        (a, b, c, d, e, f, g, h, i) <- arbitrary
+        if null $ duplicates [a, b, c, d, e, f, g, h, i] then
+          pure $ TableCustomRootFields a b c d e f g h i
         else uniqueRootFields
 
 instance Arbitrary TableConfig where
   arbitrary = genericArbitrary
 
-instance (Arbitrary a, Arbitrary b) => Arbitrary (Relationship.RelUsing a b) where
+instance (Arbitrary a) => Arbitrary (Relationship.RelUsing a) where
   arbitrary = genericArbitrary
 
 instance (Arbitrary a) => Arbitrary (Relationship.RelDef a) where
   arbitrary = genericArbitrary
 
 instance Arbitrary Relationship.RelManualConfig where
-  arbitrary = genericArbitrary
-
-instance Arbitrary Relationship.ObjRelManualConfig where
-  arbitrary = genericArbitrary
-
-instance Arbitrary Relationship.ArrRelManualConfig where
   arbitrary = genericArbitrary
 
 instance Arbitrary Relationship.ArrRelUsingFKeyOn where

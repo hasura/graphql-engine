@@ -44,8 +44,10 @@ import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
 import           Hasura.RQL.DDL.Headers            (HeaderConf, makeHeadersFromConf)
+import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.Utils               (mkClientHeadersForward)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
@@ -349,13 +351,13 @@ data ActionLogItem
   } deriving (Show, Eq)
 
 asyncActionsProcessor
-  :: IORef (SchemaCache, SchemaCacheVer)
+  :: IORef (RebuildableSchemaCache Run, SchemaCacheVer)
   -> Q.PGPool
   -> HTTP.Manager
   -> IO ()
 asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
   asyncInvocations <- getUndeliveredEvents
-  actionCache <- scActions . fst <$> readIORef cacheRef
+  actionCache <- scActions . lastBuiltSchemaCache . fst <$> readIORef cacheRef
   A.mapConcurrently_ (callHandler actionCache) asyncInvocations
   threadDelay (1 * 1000 * 1000)
   where
@@ -565,7 +567,7 @@ resolveAsyncResponse selectContext field = do
               RS.AEInput $ UVSQL $ S.mkQIdenExp (Iden "_0_root.base") (Iden "response_payload")
         outputSelect <- processOutputSelectionSet relationshipFromExp (_fType fld)
                         (_fSelSet fld)
-        return $ RS.FObj $ RS.AnnRelG outputRelName [] outputSelect
+        return $ RS.FObj $ RS.AnnRelG outputRelName mempty outputSelect
       -- the metadata columns
       "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
       "created_at" -> return $ mkAnnFldFromPGCol "created_at" PGTimeStampTZ

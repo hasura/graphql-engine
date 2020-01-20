@@ -292,8 +292,8 @@ def equal_CommentedMap(m1, m2):
         else:
             m1_l = sorted(list(m1.items()))
             m2_l = sorted(list(m2.items()))
-        return (len(m1_l) == len(m2_l) and 
-                all(k1 == k2 and equal_CommentedMap(v1,v2) 
+        return (len(m1_l) == len(m2_l) and
+                all(k1 == k2 and equal_CommentedMap(v1,v2)
                     for (k1,v1),(k2,v2) in zip(m1_l,m2_l)))
     # else this is a scalar:
     else:
@@ -338,7 +338,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
                 "\n   NOTE: if this case was marked 'xfail' this won't be correct!"
             )
             c.seek(0)
-            c.write(yml.dump(conf))
+            yml.dump(conf, stream=c)
             c.truncate()
 
 
@@ -390,7 +390,7 @@ def collapse_order_not_selset(result_inp, query):
 
 # Use this since jsondiff seems to produce object/dict structures that can't
 # always be serialized to json.
-# Copy-pasta from: https://stackoverflow.com/q/12734517/176841 
+# Copy-pasta from: https://stackoverflow.com/q/12734517/176841
 def stringify_keys(d):
  """Convert a dict's keys to strings if they are not."""
  if isinstance(d, dict):

@@ -142,15 +142,23 @@ mutFldToTx fld = do
   opCtx <- getOpCtx $ V._fName fld
   case opCtx of
     MCInsert ctx -> do
-      let roleName = userRole userInfo
       validateHdrs userInfo (_iocHeaders ctx)
-      RI.convertInsert roleName (_iocTable ctx) fld
+      RI.convertInsert (userRole userInfo) (_iocTable ctx) fld
+    MCInsertOne ctx -> do
+      validateHdrs userInfo (_iocHeaders ctx)
+      RI.convertInsertOne (userRole userInfo) (_iocTable ctx) fld
     MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
       RM.convertUpdate ctx fld
+    MCUpdateByPk ctx -> do
+      validateHdrs userInfo (_uocHeaders ctx)
+      RM.convertUpdateByPk ctx fld
     MCDelete ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
       RM.convertDelete ctx fld
+    MCDeleteByPk ctx -> do
+      validateHdrs userInfo (_docHeaders ctx)
+      RM.convertDeleteByPk ctx fld
     MCAction ctx ->
       RA.resolveActionInsert fld ctx (userVars userInfo)
 

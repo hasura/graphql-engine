@@ -1,8 +1,8 @@
 module Hasura.RQL.DDL.CustomTypes
   ( runSetCustomTypes
-  , runSetCustomTypes_
+  , persistCustomTypes
   , clearCustomTypes
-  , validateCustomTypesAndAddToCache
+  , resolveCustomTypes
   ) where
 
 import           Control.Monad.Validate
@@ -22,9 +22,9 @@ import           Hasura.SQL.Types
 import           Hasura.GraphQL.Schema.CustomTypes (buildCustomTypesSchemaPartial)
 
 validateCustomTypeDefinitions
-  :: (MonadValidate [CustomTypeValidationError] m, CacheRM m)
-  => CustomTypes -> m ()
-validateCustomTypeDefinitions customTypes = do
+  :: (MonadValidate [CustomTypeValidationError] m)
+  => TableCache -> CustomTypes -> m ()
+validateCustomTypeDefinitions tableCache customTypes = do
   unless (null duplicateTypes) $ dispute $ pure $ DuplicateTypeNames duplicateTypes
   traverse_ validateEnum enumDefinitions
   traverse_ validateInputObject inputObjectDefinitions
@@ -92,7 +92,7 @@ validateCustomTypeDefinitions customTypes = do
           (_iofdName inputObjectField) fieldBaseType
 
     validateObject
-      :: (MonadValidate [CustomTypeValidationError] m, CacheRM m)
+      :: (MonadValidate [CustomTypeValidationError] m)
       => ObjectTypeDefinition -> m ()
     validateObject objectDefinition = do
       let objectTypeName = _otdName objectDefinition
@@ -143,8 +143,7 @@ validateCustomTypeDefinitions customTypes = do
             fieldMapping = _trFieldMapping relationshipField
 
         --check that the table exists
-        remoteTableInfoM <- askTabInfoM remoteTable
-        remoteTableInfo <- onNothing remoteTableInfoM $
+        remoteTableInfo <- onNothing (Map.lookup remoteTable tableCache) $
           refute $ pure $ ObjectRelationshipTableDoesNotExist
           objectTypeName relationshipName remoteTable
 
@@ -206,28 +205,17 @@ showCustomTypeValidationError =
 
 runSetCustomTypes
   :: ( MonadError QErr m
-     , UserInfoM m
      , CacheRWM m
      , MonadTx m
      )
   => CustomTypes -> m EncJSON
 runSetCustomTypes customTypes = do
-  adminOnly
-  runSetCustomTypes_ customTypes
+  persistCustomTypes customTypes
+  buildSchemaCacheFor MOCustomTypes
   return successMsg
 
-runSetCustomTypes_
-  :: ( MonadError QErr m
-     , CacheRWM m
-     , MonadTx m
-     )
-  => CustomTypes -> m ()
-runSetCustomTypes_ customTypes = do
-  validateCustomTypesAndAddToCache customTypes
-  liftTx $ persistCustomTypes customTypes
-
-persistCustomTypes :: CustomTypes -> Q.TxE QErr ()
-persistCustomTypes customTypes = do
+persistCustomTypes :: MonadTx m => CustomTypes -> m ()
+persistCustomTypes customTypes = liftTx do
   clearCustomTypes
   Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT into hdb_catalog.hdb_custom_types
@@ -241,17 +229,13 @@ clearCustomTypes = do
     DELETE FROM hdb_catalog.hdb_custom_types
   |] () False
 
-validateCustomTypesAndAddToCache
-  :: ( MonadError QErr m
-     , CacheRWM m
-     )
-  => CustomTypes -> m ()
-validateCustomTypesAndAddToCache customTypes = do
-  schemaCache <- askSchemaCache
+resolveCustomTypes
+  :: (MonadError QErr m)
+  => TableCache -> CustomTypes -> m (NonObjectTypeMap, AnnotatedObjects)
+resolveCustomTypes tableCache customTypes = do
   either (throw400 ConstraintViolation . showErrors) pure
-    =<< runValidateT ( flip runReaderT schemaCache $
-                       validateCustomTypeDefinitions customTypes)
-  buildCustomTypesSchemaPartial customTypes >>= setCustomTypesInCache
+    =<< runValidateT (validateCustomTypeDefinitions tableCache customTypes)
+  buildCustomTypesSchemaPartial tableCache customTypes
   where
     showErrors :: [CustomTypeValidationError] -> T.Text
     showErrors allErrors =

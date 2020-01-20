@@ -37,8 +37,11 @@ data QueryCtx
 
 data MutationCtx
   = MCInsert !InsOpCtx
+  | MCInsertOne !InsOpCtx
   | MCUpdate !UpdOpCtx
+  | MCUpdateByPk !UpdOpCtx
   | MCDelete !DelOpCtx
+  | MCDeleteByPk !DelOpCtx
   | MCAction !ActionExecutionContext
   deriving (Show, Eq)
 
@@ -94,8 +97,8 @@ data DelOpCtx
   = DelOpCtx
   { _docTable   :: !QualifiedTable
   , _docHeaders :: ![T.Text]
+  , _docAllCols :: !PGColGNameMap
   , _docFilter  :: !AnnBoolExpPartialSQL
-  , _docAllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 data SyncReturnStrategy
@@ -235,7 +238,6 @@ data UnresolvedVal
 
 type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
 
-
 data InputFunctionArgument
   = IFAKnown !FunctionArgName !UnresolvedVal -- ^ Known value
   | IFAUnknown !FunctionArgItem -- ^ Unknown value, need to be parsed
@@ -271,4 +273,6 @@ data InputFunctionArgument
 
 -- template haskell related
 $(makePrisms ''ResolveField)
+$(makeLenses ''ComputedField)
+$(makePrisms ''ComputedFieldType)
 $(makePrisms ''InputFunctionArgument)

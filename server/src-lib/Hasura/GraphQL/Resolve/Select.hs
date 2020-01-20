@@ -297,22 +297,6 @@ parseLimit v = do
 
 type AnnSimpleSel = RS.AnnSimpleSelG UnresolvedVal
 
-type PGColValMap = Map.HashMap G.Name AnnInpVal
-
-pgColValToBoolExp
-  :: (MonadReusability m, MonadError QErr m) => PGColArgMap -> PGColValMap -> m AnnBoolExpUnresolved
-pgColValToBoolExp colArgMap colValMap = do
-  colExps <- forM colVals $ \(name, val) ->
-    BoolFld <$> do
-      opExp <- AEQ True . mkParameterizablePGValue <$> asPGColumnValue val
-      colInfo <- onNothing (Map.lookup name colArgMap) $
-        throw500 $ "column name " <> showName name
-        <> " not found in column arguments map"
-      return $ AVCol colInfo [opExp]
-  return $ BoolAnd colExps
-  where
-    colVals = Map.toList colValMap
-
 fromFieldByPKey
   :: ( MonadReusability m
      , MonadError QErr m

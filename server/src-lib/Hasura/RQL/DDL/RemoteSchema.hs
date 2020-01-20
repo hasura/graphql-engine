@@ -29,7 +29,10 @@ runAddRemoteSchema
      )
   => AddRemoteSchemaQuery -> m EncJSON
 runAddRemoteSchema q = do
-  addRemoteSchemaP1 name >> addRemoteSchemaP2 q
+  addRemoteSchemaP1 name
+  addRemoteSchemaP2 q
+  buildSchemaCacheFor $ MORemoteSchema name
+  pure successMsg
   where
     name = _arsqName q
 
@@ -43,37 +46,27 @@ addRemoteSchemaP1 name = do
     <> name <<> " already exists"
 
 addRemoteSchemaP2Setup
-  :: (QErrM m, CacheRWM m, MonadIO m, HasHttpManager m)
+  :: (QErrM m, MonadIO m, HasHttpManager m)
   => AddRemoteSchemaQuery -> m RemoteSchemaCtx
-addRemoteSchemaP2Setup q = do
+addRemoteSchemaP2Setup (AddRemoteSchemaQuery name def _) = do
   httpMgr <- askHttpManager
   rsi <- validateRemoteSchemaDef def
   gCtx <- fetchRemoteSchema httpMgr name rsi
-  let rsCtx = RemoteSchemaCtx name gCtx rsi
-  addRemoteSchemaToCache rsCtx
-  return rsCtx
-  where
-    AddRemoteSchemaQuery name def _ = q
+  pure $ RemoteSchemaCtx name gCtx rsi
 
-addRemoteSchemaP2
-  :: ( QErrM m
-     , CacheRWM m
-     , MonadTx m
-     , MonadIO m, HasHttpManager m
-     )
-  => AddRemoteSchemaQuery
-  -> m EncJSON
+addRemoteSchemaP2 :: (MonadTx m, MonadIO m, HasHttpManager m) => AddRemoteSchemaQuery -> m ()
 addRemoteSchemaP2 q = do
   void $ addRemoteSchemaP2Setup q
   liftTx $ addRemoteSchemaToCatalog q
-  return successMsg
 
 runRemoveRemoteSchema
   :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m)
   => RemoteSchemaNameQuery -> m EncJSON
-runRemoveRemoteSchema (RemoteSchemaNameQuery rsn)= do
+runRemoveRemoteSchema (RemoteSchemaNameQuery rsn) = do
   removeRemoteSchemaP1 rsn
-  removeRemoteSchemaP2 rsn
+  liftTx $ removeRemoteSchemaFromCatalog rsn
+  withNewInconsistentObjsCheck buildSchemaCache
+  pure successMsg
 
 removeRemoteSchemaP1
   :: (UserInfoM m, QErrM m, CacheRM m)
@@ -84,32 +77,17 @@ removeRemoteSchemaP1 rsn = do
   void $ onNothing (Map.lookup rsn rmSchemas) $
     throw400 NotExists "no such remote schema"
 
-removeRemoteSchemaP2
-  :: ( CacheRWM m
-     , MonadTx m
-     )
-  => RemoteSchemaName
-  -> m EncJSON
-removeRemoteSchemaP2 rsn = do
-  delRemoteSchemaFromCache rsn
-  liftTx $ removeRemoteSchemaFromCatalog rsn
-  return successMsg
-
 runReloadRemoteSchema
-  :: ( QErrM m, CacheRWM m
-     , MonadIO m, HasHttpManager m
-     )
+  :: (QErrM m, CacheRWM m)
   => RemoteSchemaNameQuery -> m EncJSON
 runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   rmSchemas <- scRemoteSchemas <$> askSchemaCache
-  rsi <- fmap rscInfo $ onNothing (Map.lookup name rmSchemas) $
-         throw400 NotExists $ "remote schema with name "
-         <> name <<> " does not exist"
-  httpMgr <- askHttpManager
-  gCtx <- fetchRemoteSchema httpMgr name rsi
-  delRemoteSchemaFromCache name
-  addRemoteSchemaToCache $ RemoteSchemaCtx name gCtx rsi
-  return successMsg
+  void $ onNothing (Map.lookup name rmSchemas) $
+    throw400 NotExists $ "remote schema with name " <> name <<> " does not exist"
+
+  invalidateCachedRemoteSchema name
+  withNewInconsistentObjsCheck buildSchemaCache
+  pure successMsg
 
 addRemoteSchemaToCatalog
   :: AddRemoteSchemaQuery

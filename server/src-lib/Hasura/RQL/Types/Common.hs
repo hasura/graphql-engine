@@ -14,6 +14,12 @@ module Hasura.RQL.Types.Common
        , WithTable(..)
        , ColumnValues
        , MutateResp(..)
+
+       , OID(..)
+       , Constraint(..)
+       , PrimaryKey(..)
+       , pkConstraint
+       , pkColumns
        , ForeignKey(..)
        , CustomColumnNames
 
@@ -21,6 +27,7 @@ module Hasura.RQL.Types.Common
        , mkNonEmptyTextUnsafe
        , mkNonEmptyText
        , unNonEmptyText
+       , nonEmptyText
        , adminText
        , rootText
 
@@ -28,15 +35,16 @@ module Hasura.RQL.Types.Common
        , isSystemDefined
        ) where
 
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
 
+import           Control.Lens                  (makeLenses)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Data.Aeson.Types
 import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Lift)
+import           Language.Haskell.TH.Syntax    (Q, TExp, Lift)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
@@ -45,8 +53,8 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified PostgreSQL.Binary.Decoding    as PD
 import qualified Test.QuickCheck               as QC
 
-newtype NonEmptyText = NonEmptyText {unNonEmptyText :: T.Text}
-  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic)
+newtype NonEmptyText = NonEmptyText { unNonEmptyText :: T.Text }
+  deriving (Show, Eq, Ord, Hashable, ToJSON, ToJSONKey, Lift, Q.ToPrepArg, DQuote, Generic, NFData, Cacheable)
 
 instance Arbitrary NonEmptyText where
   arbitrary = NonEmptyText . T.pack <$> QC.listOf1 (QC.elements alphaNumerics)
@@ -58,10 +66,13 @@ mkNonEmptyText text = Just $ NonEmptyText text
 mkNonEmptyTextUnsafe :: T.Text -> NonEmptyText
 mkNonEmptyTextUnsafe = NonEmptyText
 
-parseNonEmptyText :: T.Text -> Parser NonEmptyText
+parseNonEmptyText :: MonadFail m => Text -> m NonEmptyText
 parseNonEmptyText text = case mkNonEmptyText text of
   Nothing     -> fail "empty string not allowed"
   Just neText -> return neText
+
+nonEmptyText :: Text -> Q (TExp NonEmptyText)
+nonEmptyText = parseNonEmptyText >=> \text -> [|| text ||]
 
 instance FromJSON NonEmptyText where
   parseJSON = withText "String" parseNonEmptyText
@@ -80,8 +91,8 @@ rootText :: NonEmptyText
 rootText = NonEmptyText "root"
 
 newtype RelName
-  = RelName {getRelTxt :: NonEmptyText}
-  deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary)
+  = RelName { getRelTxt :: NonEmptyText }
+  deriving (Show, Eq, Hashable, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Lift, Generic, Arbitrary, NFData, Cacheable)
 
 instance IsIden RelName where
   toIden rn = Iden $ relNameToTxt rn
@@ -103,8 +114,9 @@ data RelType
   = ObjRel
   | ArrRel
   deriving (Show, Eq, Lift, Generic)
-
+instance NFData RelType
 instance Hashable RelType
+instance Cacheable RelType
 
 instance ToJSON RelType where
   toJSON = String . relTypeToTxt
@@ -124,16 +136,17 @@ data RelInfo
   = RelInfo
   { riName     :: !RelName
   , riType     :: !RelType
-  , riMapping  :: ![(PGCol, PGCol)]
+  , riMapping  :: !(HashMap PGCol PGCol)
   , riRTable   :: !QualifiedTable
   , riIsManual :: !Bool
-  } deriving (Show, Eq)
-
+  } deriving (Show, Eq, Generic)
+instance NFData RelInfo
+instance Cacheable RelInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift, Data, Generic, Arbitrary)
+  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
 
 instance IsIden FieldName where
   toIden (FieldName f) = Iden f
@@ -177,22 +190,45 @@ $(deriveJSON (aesonDrop 3 snakeCase) ''MutateResp)
 
 type ColMapping = HM.HashMap PGCol PGCol
 
+-- | Postgres OIDs. <https://www.postgresql.org/docs/12/datatype-oid.html>
+newtype OID = OID { unOID :: Int }
+  deriving (Show, Eq, NFData, Hashable, ToJSON, FromJSON, Q.FromCol, Cacheable)
+
+data Constraint
+  = Constraint
+  { _cName :: !ConstraintName
+  , _cOid  :: !OID
+  } deriving (Show, Eq, Generic)
+instance NFData Constraint
+instance Hashable Constraint
+instance Cacheable Constraint
+$(deriveJSON (aesonDrop 2 snakeCase) ''Constraint)
+
+data PrimaryKey a
+  = PrimaryKey
+  { _pkConstraint :: !Constraint
+  , _pkColumns    :: !(NonEmpty a)
+  } deriving (Show, Eq, Generic)
+instance (NFData a) => NFData (PrimaryKey a)
+instance (Cacheable a) => Cacheable (PrimaryKey a)
+$(makeLenses ''PrimaryKey)
+$(deriveJSON (aesonDrop 3 snakeCase) ''PrimaryKey)
+
 data ForeignKey
   = ForeignKey
-  { _fkTable         :: !QualifiedTable
-  , _fkRefTable      :: !QualifiedTable
-  , _fkOid           :: !Int
-  , _fkConstraint    :: !ConstraintName
+  { _fkConstraint    :: !Constraint
+  , _fkForeignTable  :: !QualifiedTable
   , _fkColumnMapping :: !ColMapping
   } deriving (Show, Eq, Generic)
-$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
-
+instance NFData ForeignKey
 instance Hashable ForeignKey
+instance Cacheable ForeignKey
+$(deriveJSON (aesonDrop 3 snakeCase) ''ForeignKey)
 
 type CustomColumnNames = HM.HashMap PGCol G.Name
 
 newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
-  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg)
+  deriving (Show, Eq, FromJSON, ToJSON, Q.ToPrepArg, NFData, Cacheable)
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined

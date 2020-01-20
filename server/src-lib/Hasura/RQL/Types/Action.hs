@@ -14,6 +14,9 @@ module Hasura.RQL.Types.Action
   , ResolvedActionDefinition
 
   , ActionInfo(..)
+  , aiName
+  , aiDefinition
+  , aiPermissions
   , ActionPermissionInfo(..)
 
   , ActionPermissionMap
@@ -25,7 +28,9 @@ module Hasura.RQL.Types.Action
   ) where
 
 
+import           Control.Lens                  (makeLenses)
 import           Data.URL.Template
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.BoolExp
@@ -46,7 +51,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 newtype ActionName
   = ActionName { unActionName :: G.Name }
   deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
-           , Hashable, DQuote, Lift, Generic)
+           , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
 
 instance Q.FromCol ActionName where
   fromCol bs = ActionName . G.Name <$> Q.fromCol bs
@@ -62,6 +67,8 @@ data ActionKind
   = ActionSynchronous
   | ActionAsynchronous
   deriving (Show, Eq, Lift, Generic)
+instance NFData ActionKind
+instance Cacheable ActionKind
 $(J.deriveJSON
   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 6}
   ''ActionKind)
@@ -69,7 +76,7 @@ $(J.deriveJSON
 newtype ArgumentName
   = ArgumentName { unArgumentName :: G.Name }
   deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
-           , Hashable, DQuote, Lift, Generic)
+           , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
 
 data ArgumentDefinition
   = ArgumentDefinition
@@ -77,6 +84,8 @@ data ArgumentDefinition
   , _argType        :: !GraphQLType
   , _argDescription :: !(Maybe G.Description)
   } deriving (Show, Eq, Lift, Generic)
+instance NFData ArgumentDefinition
+instance Cacheable ArgumentDefinition
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ArgumentDefinition)
 
 data ActionDefinition a
@@ -88,6 +97,8 @@ data ActionDefinition a
   , _adForwardClientHeaders :: !Bool
   , _adHandler              :: !a
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
+instance (NFData a) => NFData (ActionDefinition a)
+instance (Cacheable a) => Cacheable (ActionDefinition a)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionDefinition)
 
 instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
@@ -109,8 +120,7 @@ data ActionPermissionInfo
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionInfo)
 
-type ActionPermissionMap
-  = Map.HashMap RoleName ActionPermissionInfo
+type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
 
 -- data ActionMetadataField
 --   = ActionMetadataFieldId
@@ -135,11 +145,14 @@ data ActionInfo
   , _aiPermissions :: !ActionPermissionMap
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
+$(makeLenses ''ActionInfo)
 
 data InputWebhook
   = IWTemplate !URLTemplate
   | IWPlain !Text
   deriving (Show, Eq, Lift, Generic)
+instance NFData InputWebhook
+instance Cacheable InputWebhook
 
 instance J.ToJSON InputWebhook where
   toJSON = \case
@@ -161,7 +174,9 @@ data CreateAction
   { _caName       :: !ActionName
   , _caDefinition :: !ActionDefinitionInput
   , _caComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData CreateAction
+instance Cacheable CreateAction
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''CreateAction)
 
 data UpdateAction
@@ -175,12 +190,16 @@ newtype ActionPermissionSelect
   = ActionPermissionSelect
   { _apsFilter :: BoolExp
   } deriving (Show, Eq, Lift, Generic)
+instance NFData ActionPermissionSelect
+instance Cacheable ActionPermissionSelect
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionSelect)
 
 newtype ActionPermissionDefinition
   = ActionPermissionDefinition
   { _apdSelect :: ActionPermissionSelect
   } deriving (Show, Eq, Lift, Generic)
+instance NFData ActionPermissionDefinition
+instance Cacheable ActionPermissionDefinition
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionDefinition)
 
 data CreateActionPermission
@@ -189,5 +208,7 @@ data CreateActionPermission
   , _capRole       :: !RoleName
   , _capDefinition :: !ActionPermissionDefinition
   , _capComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData CreateActionPermission
+instance Cacheable CreateActionPermission
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''CreateActionPermission)
