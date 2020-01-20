@@ -103,6 +103,12 @@ You can downgrade the catalogue from a particular version to its previous versio
   :backlinks: none
   :depth: 1
   :local:
+  
+From 30 to 29
+"""""""""""""
+.. code-block:: plpgsql
+
+   DROP FUNCTION hdb_catalog.check_violation();
 
 From 27 to 26
 """""""""""""

@@ -25,10 +25,8 @@ Usage:   $0 <COMMAND>
 
 Available COMMANDs:
 
-  graphql-engine [--no-rebuild]
-    Launch graphql-engine, connecting to a database launched with '$0 postgres'
-    You can pass --no-rebuild if you want to launch an instance from source you
-    previously built if you have a dirty tree.
+  graphql-engine
+    Launch graphql-engine, connecting to a database launched with '$0 postgres'.
 
   postgres
     Launch a postgres container suitable for use with graphql-engine, watch its logs,
@@ -46,6 +44,15 @@ EOL
 exit 1
 }
 
+# Prettify JSON output, if possible
+try_jq() {
+  if command -v jq >/dev/null; then
+    command jq --unbuffered -R -r '. as $line | try fromjson catch $line'
+  else
+    cat
+  fi
+}
+
 # Bump this to:
 #  - force a reinstall of dependencies
 DEVSH_VERSION=1.2
@@ -54,10 +61,10 @@ case "${1-}" in
   graphql-engine)
     case "${2-}" in
       --no-rebuild)
-      REBUILD=false
+      echo_error 'The --no-rebuild option is no longer supported.'
+      die_usage
       ;;
       "")
-      REBUILD=true
       ;;
       *)
       die_usage
@@ -143,10 +150,6 @@ function wait_docker_postgres {
   echo " Ok"
 }
 
-# Starts EKG, fast build without optimizations
-TEST_INVOCATION="stack build --test --fast --flag graphql-engine:developer --ghc-options=-j"
-BUILD_INVOCATION="$TEST_INVOCATION --no-run-tests"
-
 #################################
 ###     Graphql-engine        ###
 #################################
@@ -155,34 +158,30 @@ if [ "$MODE" = "graphql-engine" ]; then
 
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
 
-  # Prettify JSON output if possible:
-  if command -v jq >/dev/null; then
-    PIPE_JQ="| jq --unbuffered -R -r '. as \$line | try fromjson catch \$line'"
-  fi
-
   echo_pretty "We will connect to postgres container '$PG_CONTAINER_NAME'"
   echo_pretty "If you haven't yet, please launch a postgres container in a separate terminal with:"
   echo_pretty "    $ $0 postgres"
   echo_pretty "or press CTRL-C and invoke graphql-engine manually"
-
-  RUN_INVOCATION="stack exec graphql-engine -- --database-url='$DB_URL' serve --enable-console --console-assets-dir \'$PROJECT_ROOT/console/static/dist\' +RTS -N -T -RTS ${PIPE_JQ-}"
-
-  echo_pretty "About to do:"
-  echo_pretty "    $ $BUILD_INVOCATION"
-  echo_pretty "    $ $RUN_INVOCATION"
   echo_pretty ""
 
-  # `stack exec` is a footgun, as it will happily execute a graphql-engine elsewhere in user's path:
-  if [ "$REBUILD" = false ]; then
-    if [[ ! -x "$(stack path --local-install-root)/bin/graphql-engine" ]]; then
-      echo "You requested --no-rebuild but graphql-engine hasn't been built."
-      echo "Please do e.g."
-      echo "   $ $BUILD_INVOCATION"  # Naughty and dangerous!
-      exit 3
-    fi
-  else
-    $BUILD_INVOCATION
+  if [[ ! -e cabal.project.local ]]; then
+    echo_pretty 'No cabal.project.local file exists. Running'
+    echo_pretty '    $ ln -s cabal.project.dev cabal.project.local'
+    echo_pretty 'to use the default.'
+    echo_pretty ''
+    ln -s cabal.project.dev cabal.project.local
   fi
+
+  RUN_INVOCATION=(cabal new-run --RTS -- exe:graphql-engine +RTS -N -T -RTS
+    --database-url="$DB_URL" serve
+    --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist")
+
+  echo_pretty 'About to do:'
+  echo_pretty '    $ cabal new-build exe:graphql-engine'
+  echo_pretty "    $ ${RUN_INVOCATION[*]}"
+  echo_pretty ''
+
+  cabal new-build exe:graphql-engine
   wait_docker_postgres
 
   # Print helpful info after startup logs so it's visible:
@@ -216,7 +215,7 @@ if [ "$MODE" = "graphql-engine" ]; then
   } &
 
   # Logs printed until CTRL-C:
-  eval "$RUN_INVOCATION"  # Naughty and dangerous!
+  ${RUN_INVOCATION[@]} | try_jq
   exit 0
   ### END SCRIPT ###
 fi
@@ -325,26 +324,25 @@ elif [ "$MODE" = "test" ]; then
   export EVENT_WEBHOOK_HEADER="MyEnvValue"
   export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 
-  echo_pretty "Rebuilding for code coverage"
-  $BUILD_INVOCATION --coverage
-
   # It's better UX to build first (possibly failing) before trying to launch PG:
+  cabal new-build exe:graphql-engine test:graphql-engine-tests
   launch_postgres_container
   wait_docker_postgres
 
   # These also depend on a running DB:
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
-    HASURA_GRAPHQL_DATABASE_URL="$DB_URL" $TEST_INVOCATION --coverage
+    HASURA_GRAPHQL_DATABASE_URL="$DB_URL" cabal new-run -- test:graphql-engine-tests
   fi
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
     echo_pretty "Starting graphql-engine"
     GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
     export HASURA_GRAPHQL_SERVER_PORT=8088
-    # stopped in cleanup()
-    stack exec graphql-engine -- --database-url="$DB_URL" serve --enable-console --stringify-numeric-types \
-      --console-assets-dir ../console/static/dist  &>  $GRAPHQL_ENGINE_TEST_LOG  & GRAPHQL_ENGINE_PID=$!
+    cabal new-run -- exe:graphql-engine --database-url="$DB_URL" serve --stringify-numeric-types \
+      --enable-console --console-assets-dir ../console/static/dist \
+      &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
+
     echo -n "Waiting for graphql-engine"
     until curl -s "http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/query" &>/dev/null; do
       echo -n '.' && sleep 0.2
@@ -398,20 +396,10 @@ elif [ "$MODE" = "test" ]; then
     set -u
 
     cd "$PROJECT_ROOT/server"
-    # INT so we get hpc report
     kill -INT "$GRAPHQL_ENGINE_PID"
     wait "$GRAPHQL_ENGINE_PID" || true
     echo
-    # Combine any tix from haskell/unit tests:
-    if [ "$RUN_UNIT_TESTS" = true ]; then
-      stack exec hpc -- combine "$(stack path --local-hpc-root)/graphql-engine/graphql-engine-tests/graphql-engine-tests.tix" graphql-engine.tix --union > graphql-engine-combined.tix
-      stack hpc report graphql-engine-combined.tix
-    else
-      stack hpc report graphql-engine.tix
-    fi
   fi
-  rm -f graphql-engine.tix graphql-engine-combined.tix
-
 else
   echo "impossible; fix script."
 fi

@@ -283,7 +283,8 @@ data SQLExp
   | SELit !T.Text
   | SEUnsafe !T.Text
   | SESelect !Select
-  | SEStar
+  | SEStar !(Maybe Qual)
+  -- ^ all fields (@*@) or all fields from relation (@iden.*@)
   | SEIden !Iden
   -- iden and row identifier are distinguished for easier rewrite rules
   | SERowIden !Iden
@@ -336,8 +337,10 @@ instance ToSQL SQLExp where
     TB.text t
   toSQL (SESelect se) =
     paren $ toSQL se
-  toSQL SEStar =
+  toSQL (SEStar Nothing) =
     TB.char '*'
+  toSQL (SEStar (Just qual)) =
+    mconcat [toSQL qual, TB.char '.', TB.char '*']
   toSQL (SEIden iden) =
     toSQL iden
   toSQL (SERowIden iden) =
@@ -725,7 +728,10 @@ newtype RetExp = RetExp [Extractor]
                   deriving (Show, Eq)
 
 selectStar :: Extractor
-selectStar = Extractor SEStar Nothing
+selectStar = Extractor (SEStar Nothing) Nothing
+
+selectStar' :: Qual -> Extractor
+selectStar' q = Extractor (SEStar (Just q)) Nothing
 
 returningStar :: RetExp
 returningStar = RetExp [selectStar]
@@ -804,15 +810,14 @@ data SQLInsert = SQLInsert
 
 instance ToSQL SQLInsert where
   toSQL si =
-    let insConflict = maybe "" toSQL
-    in "INSERT INTO"
-       <-> toSQL (siTable si)
-       <-> "("
-       <-> (", " <+> siCols si)
-       <-> ")"
-       <-> toSQL (siValues si)
-       <-> insConflict (siConflict si)
-       <-> toSQL (siRet si)
+    "INSERT INTO"
+    <-> toSQL (siTable si)
+    <-> "("
+    <-> (", " <+> siCols si)
+    <-> ")"
+    <-> toSQL (siValues si)
+    <-> maybe "" toSQL (siConflict si)
+    <-> toSQL (siRet si)
 
 data CTE
   = CTESelect !Select

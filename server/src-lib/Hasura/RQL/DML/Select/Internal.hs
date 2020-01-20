@@ -705,7 +705,7 @@ baseNodeToSel joinCond baseNode =
              = baseNode
     -- this is the table which is aliased as "pfx.base"
     baseSel = S.mkSelect
-      { S.selExtr  = [S.Extractor S.SEStar Nothing]
+      { S.selExtr  = [S.Extractor (S.SEStar Nothing) Nothing]
       , S.selFrom  = Just $ S.FromExp [fromItem]
       , S.selWhere = Just $ injectJoinCond joinCond whr
       }
