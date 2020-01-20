@@ -2,8 +2,6 @@ module Hasura.GraphQL.Schema.Mutation.Common
   ( mkPGColInp
   , mkMutRespTy
   , mkMutRespObj
-  , mkPKeyColumnsInpObj
-  , primaryKeyColumnsInp
   ) where
 
 import qualified Data.HashMap.Strict           as Map
@@ -51,27 +49,3 @@ mkMutRespObj tn sel =
         G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
       where
         desc = "data of the affected rows by the mutation"
-
-{-
-input table_pk_columns_input {
-  col1: col-ty1!
-  col2: col-ty2!
-}
-
-where col1, col2 are primary key columns
--}
-
-mkPKeyColumnsInpTy :: QualifiedTable -> G.NamedType
-mkPKeyColumnsInpTy qt =
-  G.NamedType $ qualObjectToName qt <> "_pk_columns_input"
-
-mkPKeyColumnsInpObj :: QualifiedTable -> PrimaryKey PGColumnInfo -> InpObjTyInfo
-mkPKeyColumnsInpObj qt primaryKey =
-  mkHsraInpTyInfo (Just description) (mkPKeyColumnsInpTy qt) $
-  fromInpValL $ map mkColumnInputVal $ toList $ _pkColumns primaryKey
-  where
-    description = G.Description $ "primary key columns input for table: " <>> qt
-
-primaryKeyColumnsInp :: QualifiedTable -> InpValInfo
-primaryKeyColumnsInp qt =
-  InpValInfo Nothing "columns" Nothing $ G.toGT $ G.toNT $ mkPKeyColumnsInpTy qt

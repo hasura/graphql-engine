@@ -165,7 +165,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
       [ TIInpObj <$> mutHelper viIsInsertable insInpObjM
       , TIInpObj <$> mutHelper viIsUpdatable updSetInpObjM
       , TIInpObj <$> mutHelper viIsUpdatable updIncInpObjM
-      , TIInpObj <$> mutHelper (\vi -> viIsDeletable vi || viIsUpdatable vi) primaryKeysInpObjM
+      , TIInpObj <$> mutHelper viIsUpdatable primaryKeysInpObjM
       , TIObj <$> mutRespObjM
       , TIEnum <$> selColInpTyM
       ]
@@ -199,8 +199,8 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     -- fields used in set input object
     updSetInpObjFldsM = mkColFldMap (mkUpdSetTy tn) <$> updColsM
 
-    -- primary key columns input object
-    primaryKeysInpObjM = mkPKeyColumnsInpObj tn <$> pkeyCols
+    -- primary key columns input object for update_by_pk
+    primaryKeysInpObjM = guard (isJust selPermM) *> (mkPKeyColumnsInpObj tn <$> pkeyCols)
 
     selFldsM = snd <$> selPermM
     selColNamesM = (map pgiName . getPGColumnFields) <$> selFldsM
@@ -347,11 +347,11 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
           ]
     , _rootMutationFields = makeFieldMap $ catMaybes
         [ mutHelper viIsInsertable getInsDet insM
-        , mutHelper viIsInsertable getInsOneDet insM
+        , onlyIfSelectPermExist $ mutHelper viIsInsertable getInsOneDet insM
         , mutHelper viIsUpdatable getUpdDet updM
-        , mutHelper viIsUpdatable getUpdByPkDet $ (,) <$> updM <*> primaryKey
+        , onlyIfSelectPermExist $ mutHelper viIsUpdatable getUpdByPkDet $ (,) <$> updM <*> primaryKey
         , mutHelper viIsDeletable getDelDet delM
-        , mutHelper viIsDeletable getDelByPkDet $ (,) <$> delM <*> primaryKey
+        , onlyIfSelectPermExist $ mutHelper viIsDeletable getDelByPkDet $ (,) <$> delM <*> primaryKey
         ]
     }
   where
@@ -365,6 +365,8 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
     mutHelper :: (ViewInfo -> Bool) -> (a -> b) -> Maybe a -> Maybe b
     mutHelper f getDet mutM =
       bool Nothing (getDet <$> mutM) $ isMutable f viM
+
+    onlyIfSelectPermExist v = guard (isJust selM) *> v
 
     getCustomNameWith f = f customRootFields
 

@@ -47,10 +47,10 @@ mkDeleteByPkMutationField
   -> QualifiedTable
   -> PrimaryKey PGColumnInfo
   -> ObjFldInfo
-mkDeleteByPkMutationField mCustomName qt _ =
+mkDeleteByPkMutationField mCustomName qt primaryKey =
   mkHsraObjFldInfo (Just description) fieldName (fromInpValL inputArgs) $
   G.toGT $ mkTableTy qt
   where
     description = G.Description $ "delete single row from the table: " <>> qt
     fieldName = flip fromMaybe mCustomName $ "delete_" <> qualObjectToName qt <> "_by_pk"
-    inputArgs = pure $ primaryKeyColumnsInp qt
+    inputArgs = map mkColumnInputVal $ toList $ _pkColumns primaryKey

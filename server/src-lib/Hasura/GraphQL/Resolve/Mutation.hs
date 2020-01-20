@@ -234,7 +234,9 @@ convertUpdateByPk opCtx field = do
     response <- responseTx
     RM.withSingleTableRow response
   where
-    boolExpParser = primaryKeyColumnsToBoolExp (_uocAllCols opCtx)
+    boolExpParser args =  withArg args "columns" $ \inpVal -> do
+      obj <- asObject inpVal
+      pgColValToBoolExp (_uocAllCols opCtx) $ Map.fromList $ OMap.toList obj
 
 
 convertDeleteGeneric
@@ -287,7 +289,7 @@ convertDeleteByPk opCtx field = do
     response <- responseTx
     RM.withSingleTableRow response
   where
-    boolExpParser = primaryKeyColumnsToBoolExp (_docAllCols opCtx)
+    boolExpParser =  pgColValToBoolExp (_docAllCols opCtx)
 
 whereExpressionParser
   :: ( MonadReusability m, MonadError QErr m
@@ -295,13 +297,6 @@ whereExpressionParser
      )
   => ArgsMap -> m AnnBoolExpUnresolved
 whereExpressionParser args = withArg args "where" parseBoolExp
-
-primaryKeyColumnsToBoolExp
-  :: (MonadReusability m, MonadError QErr m)
-  => PGColGNameMap -> ArgsMap -> m AnnBoolExpUnresolved
-primaryKeyColumnsToBoolExp colGNameMap args = withArg args "columns" $ \inpVal -> do
-  obj <- asObject inpVal
-  pgColValToBoolExp colGNameMap $ Map.fromList $ OMap.toList obj
 
 mutationFieldsResolver
   :: ( MonadReusability m, MonadError QErr m
