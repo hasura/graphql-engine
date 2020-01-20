@@ -1,7 +1,12 @@
 Backup and Restore Postgres data running on a Docker Container
 ===============================================================
 
-Postgres comes with handy tools such as pg_dump and psql which lets us take backups and restore them with ease.
+.. contents:: Table of contents
+  :backlinks: none
+  :depth: 0
+  :local:
+
+Postgres comes with handy tools such as **pg_dump** and **psql** which lets us take backups and restore them with ease.
 
 To backup data, we use the pg_dump tool:
 
