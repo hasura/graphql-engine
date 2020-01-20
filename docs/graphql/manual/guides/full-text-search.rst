@@ -31,7 +31,7 @@ PostgreSQL has two functions that do exactly what we intend to do:
 -  ``to_tsvector``: This will create a list of tokens.
 -  ``to_tsquery``: To query the vector for occurences of certain words.
 
-``to_tsvector()``
+**to_tsvector()**
 
 Example: To create a vector for the sentence "The quick brown fox jumped
 over the lazy dog"
@@ -68,7 +68,7 @@ It would return a vector normalized according to the French language.
    -------------------------------------------------------------------------
     'brun':4 'chien':9 'dessus':7 'paress':10 'rapid':2 'renard':3 'saut':5
 
-``to_tsquery()``
+**to_tsquery()**
 
 This function will accept a list of words that will be checked against
 the normalized vector we created with ``to_tsvector()``
@@ -88,7 +88,7 @@ Example:
 The ``@@`` operator is used to check if the ``tsquery`` matches
 ``tsvector``.
 
-``tsquery`` also provides a set of operators such as:
+**tsquery** also provides a set of operators such as:
 
 -  AND operator (&)
 
