@@ -18,6 +18,7 @@ Guides / Tutorials / Resources
    Auditing tables <auditing-tables>
    Telemetry <telemetry>
    Code Editor Integrations <code-editor-integrations/index>
+   Postgres Full text search <full-text-search>
 
 
 
