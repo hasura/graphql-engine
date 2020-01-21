@@ -137,10 +137,19 @@ const deriveMutationString = (mutationString, introspectionSchema, actionName=nu
   Object.values(getTypeFields(refMutationOutputType)).forEach(outputTypeField => {
     const fieldTypeMetadata = getUnderlyingType(outputTypeField.type);
     if (isScalarType(fieldTypeMetadata.type)) {
-      actionOutputType.fields.push({
-        name: outputTypeField.name,
-        type: wrapTypename(fieldTypeMetadata.type.name, fieldTypeMetadata.wraps)
-      })
+      if (inbuiltTypes[fieldTypeMetadata.type.name]) {
+        actionOutputType.fields.push({
+          name: outputTypeField.name,
+          type: wrapTypename(fieldTypeMetadata.type.name, fieldTypeMetadata.wraps)
+        })
+      } else {
+        const fieldTypename = prefixTypename(fieldTypeMetadata.type.name);
+        actionOutputType.fields.push({
+          name: outputTypeField.name,
+          type: wrapTypename(fieldTypename, fieldTypeMetadata.wraps)
+        })
+        handleType(fieldTypeMetadata.type, fieldTypename)
+      }
     }
   })
 
