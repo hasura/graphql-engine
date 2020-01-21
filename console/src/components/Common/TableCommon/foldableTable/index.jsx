@@ -49,9 +49,7 @@ export default ReactTable => {
 
     componentWillReceiveProps(newProps) {
       if (this.state.resized !== newProps.resized) {
-        this.setState(p => {
-          return { resized: newProps.resized };
-        });
+        this.setState({ resized: newProps.resized });
       }
     }
 
@@ -59,14 +57,12 @@ export default ReactTable => {
       const { onResizedChange } = this.props;
       if (onResizedChange) {
         onResizedChange(resized);
-      } else
-        this.setState(p => {
-          return { resized };
-        });
+      } else {
+        this.setState({ resized });
+      }
     };
 
-    removeResized = column => {
-      const { id } = column;
+    removeResized = ({ id }) => {
       if (!id) return;
 
       const { resized } = this.state;
@@ -81,10 +77,12 @@ export default ReactTable => {
 
     // this is so we can expose the underlying ReactTable.
     getWrappedInstance = () => {
-      if (!this.wrappedInstance)
+      if (!this.wrappedInstance) {
         console.warn('RTFoldableTable - No wrapped instance');
-      if (this.wrappedInstance.getWrappedInstance)
+      }
+      if (this.wrappedInstance.getWrappedInstance) {
         return this.wrappedInstance.getWrappedInstance();
+      }
       return this.wrappedInstance;
     };
 
@@ -134,11 +132,12 @@ export default ReactTable => {
       }
     };
 
-    getState = () =>
-      this.props.onFoldChange ? this.props.folded : this.state.folded;
+    getFoldedState = () => {
+      return this.props.onFoldChange ? this.props.folded : this.state.folded;
+    };
 
     isFolded = col => {
-      const folded = this.getState();
+      const folded = this.getFoldedState();
       return folded[col.id] === true;
     };
 
@@ -146,7 +145,7 @@ export default ReactTable => {
       if (!col || !col.id) return;
 
       const { onFoldChange } = this.props;
-      const folded = this.getState();
+      const folded = this.getFoldedState();
       const { id } = col;
 
       const newFold = Object.assign({}, folded);
@@ -157,12 +156,11 @@ export default ReactTable => {
 
       if (onFoldChange) {
         onFoldChange(newFold);
-      } else this.setState(() => ({ folded: newFold }));
+      } else this.setState({ folded: newFold });
     };
 
-    foldableHeaderRender = cell => {
+    foldableHeaderRender = ({ column }) => {
       const { FoldButtonComponent, FoldIconComponent } = this.props;
-      const { column } = cell;
       const collapsed = this.isFolded(column);
       const icon = React.createElement(FoldIconComponent, { collapsed });
       const onClick = e => {
@@ -183,6 +181,7 @@ export default ReactTable => {
       const { FoldedColumn } = this.props;
 
       //Handle Column Header
+      // TODO: refactor (?) ⬇️
       if (column.columns) {
         if (collapsed) {
           column.columns = [FoldedColumn];
