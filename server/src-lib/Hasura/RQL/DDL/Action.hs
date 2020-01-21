@@ -238,7 +238,7 @@ buildActionFilter
   :: (QErrM m)
   => ActionPermissionSelect
   -> m AnnBoolExpPartialSQL
-buildActionFilter permission =
+buildActionFilter _ =
   return annBoolExpTrue
 
 runCreateActionPermission
