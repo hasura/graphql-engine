@@ -338,12 +338,12 @@ convColRhs tableQual = \case
     put $ curVarNum + 1
     let newIden  = Iden $ "_be_" <> T.pack (show curVarNum) <> "_"
                    <> snakeCaseTable relTN
-        newIdenQ = S.QualIden newIden
+        newIdenQ = S.QualIden newIden Nothing
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
     let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
           flip map (M.toList colMapping) $ \(lCol, rCol) ->
             S.BECompare S.SEQ
-            (mkQCol (S.QualIden newIden) rCol)
+            (mkQCol (S.QualIden newIden Nothing) rCol)
             (mkQCol tableQual lCol)
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
     return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp

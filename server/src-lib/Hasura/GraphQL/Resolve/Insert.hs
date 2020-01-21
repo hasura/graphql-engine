@@ -31,10 +31,8 @@ import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Insert             (insertCheckExpr)
-import           Hasura.RQL.DML.Internal           (convPartialSQLExp,
-                                                    convAnnBoolExpPartialSQL, 
-                                                    dmlTxErrorHandler,
-                                                    sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Internal           (convAnnBoolExpPartialSQL, convPartialSQLExp,
+                                                    dmlTxErrorHandler, sessVarFromCurrentSetting)
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
 import           Hasura.RQL.Types
@@ -236,13 +234,13 @@ mkInsertQ tn onConflictM insCols defVals role checkCond = do
       valueExp = S.ValuesExp [S.TupleExp sqlExps]
       tableCols = Map.keys defVals
       sqlInsert =
-        S.SQLInsert tn tableCols valueExp sqlConflict 
+        S.SQLInsert tn tableCols valueExp sqlConflict
           . Just
           $ S.RetExp
             [ S.selectStar
             , insertCheckExpr (toSQLBoolExp (S.QualTable tn) checkCond)
             ]
-              
+
       adminIns = return (CTEExp (S.CTEInsert sqlInsert) args)
       nonAdminInsert = do
         let cteIns = S.CTEInsert sqlInsert
@@ -288,7 +286,7 @@ execCTEExp strfyNum tn (CTEExp cteExp args) flds = do
       JO.Object o -> pure o
       _           -> throw500 "expecting ordered object"
   where
-    sqlBuilder = toSQL $ RR.mkSelWith tn cteExp flds True strfyNum
+    sqlBuilder = toSQL $ RR.mkMutationOutputExp tn cteExp flds True strfyNum
 
 -- | validate an insert object based on insert columns,
 -- | insert object relations and additional columns from parent
@@ -404,7 +402,7 @@ insertObj strfyNum role tn singleObjIns addCols = do
 
   -- prepare insert query as with expression
   checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting checkCond
-      
+
   CTEExp cte insPArgs <-
     mkInsertQ tn onConflictM finalInsCols defVals role checkExpr
 
@@ -469,10 +467,10 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
       (sqlRows, prepArgs) <- flip runStateT Seq.Empty $ do
         rowsWithCol <- mapM toSQLExps withAddCols
         return $ map (mkSQLRow defVals) rowsWithCol
-        
+
       checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting checkCond
-      
-      let insQP1 = RI.InsertQueryP1 tn tableCols sqlRows onConflictM 
+
+      let insQP1 = RI.InsertQueryP1 tn tableCols sqlRows onConflictM
                      (Just checkExpr) mutFlds tableColInfos
           p1 = (insQP1, prepArgs)
       RI.insertP2 strfyNum p1

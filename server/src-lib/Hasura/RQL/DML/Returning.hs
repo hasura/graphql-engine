@@ -95,9 +95,9 @@ mkMutFldExp qt singleObj strfyNum = \case
   where
     frmItem = S.FIIden $ qualTableToAliasIden qt
 
-mkSelWith
+mkMutationOutputExp
   :: QualifiedTable -> S.CTE -> MutFlds -> Bool -> Bool -> S.SelectWith
-mkSelWith qt cte mutFlds singleObj strfyNum =
+mkMutationOutputExp qt cte mutFlds singleObj strfyNum =
   S.SelectWith [(alias, cte)] sel
   where
     alias = S.Alias $ qualTableToAliasIden qt
