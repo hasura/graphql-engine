@@ -4,6 +4,7 @@ module Hasura.GraphQL.Schema.Mutation.Update
   , mkUpdJSONOpInp
   , mkUpdSetTy
   , mkUpdMutFld
+  , mkPKeyColumnsInpObj
   , mkUpdateByPkMutationField
   ) where
 
@@ -252,7 +253,7 @@ mkUpdMutFld mCustomName tn cols =
 {-
 
 update_table_by_pk(
-  pk_columns: table_pk_columns_input!
+  columns: table_pk_columns_input!
   _set  : table_set_input
   _inc  : table_inc_input
   _concat: table_concat_input
@@ -261,6 +262,30 @@ update_table_by_pk(
   _delete_path_at: table_delete_path_at_input
 )
 -}
+
+{-
+input table_pk_columns_input {
+  col1: col-ty1!
+  col2: col-ty2!
+}
+
+where col1, col2 are primary key columns
+-}
+
+mkPKeyColumnsInpTy :: QualifiedTable -> G.NamedType
+mkPKeyColumnsInpTy qt =
+  G.NamedType $ qualObjectToName qt <> "_pk_columns_input"
+
+mkPKeyColumnsInpObj :: QualifiedTable -> PrimaryKey PGColumnInfo -> InpObjTyInfo
+mkPKeyColumnsInpObj qt primaryKey =
+  mkHsraInpTyInfo (Just description) (mkPKeyColumnsInpTy qt) $
+  fromInpValL $ map mkColumnInputVal $ toList $ _pkColumns primaryKey
+  where
+    description = G.Description $ "primary key columns input for table: " <>> qt
+
+primaryKeyColumnsInp :: QualifiedTable -> InpValInfo
+primaryKeyColumnsInp qt =
+  InpValInfo Nothing "columns" Nothing $ G.toGT $ G.toNT $ mkPKeyColumnsInpTy qt
 
 mkUpdateByPkMutationField
   :: Maybe G.Name

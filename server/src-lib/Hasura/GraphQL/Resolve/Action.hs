@@ -206,23 +206,12 @@ data ActionWebhookPayload
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
 
-newtype ActionWebhookSuccess
-  = ActionWebhookSuccess {_awsData :: Maybe J.Value}
-  deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookSuccess)
-
 data ActionWebhookErrorResponse
   = ActionWebhookErrorResponse
   { _awerMessage :: !Text
   , _awerCode    :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
-
-newtype ActionWebhookError
-  = ActionWebhookError {_aweErrors :: Maybe ActionWebhookErrorResponse}
-  deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookError)
-
 
 data ResolvePlan
   = ResolveReturn
@@ -323,16 +312,11 @@ callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook 
       let responseValue = responseWreq ^. Wreq.responseBody
           responseStatus = responseWreq ^. Wreq.responseStatus
 
-      if | HTTP.statusIsSuccessful responseStatus  -> do
-             maybeData <- _awsData <$> decodeValue responseValue
-             onNothing maybeData $ throw500WithDetail "internal error" $
-               "webhook response does not have 'data' key for 2xx response status"
+      if | HTTP.statusIsSuccessful responseStatus  -> pure responseValue
 
          | HTTP.statusIsClientError responseStatus -> do
-             maybeError <- _aweErrors <$> decodeValue responseValue
              ActionWebhookErrorResponse message maybeCode <-
-               onNothing maybeError $ throw500WithDetail "internal error" $
-               "webhook response does not have 'errors' key for 4xx response status"
+               modifyErr ("webhook response: " <>) $ decodeValue responseValue
              let code = maybe Unexpected ActionWebhookCode maybeCode
                  qErr = QErr [] responseStatus message code Nothing
              throwError qErr
