@@ -22,7 +22,7 @@ Nhost is a managed backend service which includes the following:
 
 -	File storage
 
-It is the a fast way to get Hasura-based apps into production.
+It is a fast way to get Hasura-based apps into production.
 
 .. note::
    Nhost is a paid service. You can sign up for a 30-day trial without a credit card, but after that there is a monthly fee. You can also self-host using the open-source version, available on GitHub: `Hasura Backend Plus <https://www.nhost.io/pricing>`_.
