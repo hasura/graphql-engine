@@ -121,7 +121,7 @@ const ViewRows = ({
 
     const getColWidth = (header, contentRows = []) => {
       const MAX_WIDTH = 600;
-      const HEADER_PADDING = 42;
+      const HEADER_PADDING = 82;
       const CONTENT_PADDING = 18;
       const HEADER_FONT = 'bold 16px Gudea';
       const CONTENT_FONT = '14px Gudea';

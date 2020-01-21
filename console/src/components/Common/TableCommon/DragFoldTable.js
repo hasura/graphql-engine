@@ -1,14 +1,9 @@
 /* eslint-disable */
 
-import React, { Component } from 'react';
-import ReactTable, { ReactTableDefaults } from 'react-table';
+import React, { Component, Fragment } from 'react';
+import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 import FoldableHoc from './foldableTable';
-
-Object.assign(ReactTableDefaults, {
-  defaultPageSize: 10,
-  minRows: 3,
-});
 
 class DragFoldTable extends Component {
   constructor(props) {
@@ -66,7 +61,23 @@ class DragFoldTable extends Component {
 
     const cols = columns.map(col => ({
       ...col,
-      Header: <div className="draggable-header">{col.Header}</div>,
+      Header: (
+        <div
+          className="draggable-header"
+          style={{ display: 'flex', justifyContent: 'space-between' }}
+        >
+          {col.Header && (
+            <Fragment>
+              {col.Header}
+              <i
+                className="fa fa-bars"
+                style={{ paddingTop: '2px' }}
+                title="Drag column"
+              />
+            </Fragment>
+          )}
+        </div>
+      ),
     }));
 
     //run all reorder events
