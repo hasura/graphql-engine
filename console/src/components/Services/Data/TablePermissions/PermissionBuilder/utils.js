@@ -27,173 +27,192 @@ export const PGTypes = {
     'double precision',
   ],
   uuid: ['uuid'],
+  user_defined: [], // default for all other types
+};
+
+const operatorTypePGTypesMap = {
+  comparision: [
+    'boolean',
+    'character',
+    'dateTime',
+    'numeric',
+    'uuid',
+    'user_defined',
+  ],
+  pattern_match: ['character'],
+  json: ['json'],
+  geometric: ['geometry'],
+  geometric_geographic: ['geometry', 'geography'],
 };
 
 const boolOperatorsInfo = {
   _and: {
-    type: 'array',
+    type: 'bool',
+    inputStructure: 'array',
   },
   _or: {
-    type: 'array',
+    type: 'bool',
+    inputStructure: 'array',
   },
   _not: {
-    type: 'object',
+    type: 'bool',
+    inputStructure: 'object',
   },
 };
 
 const columnOperatorsInfo = {
   _eq: {
-    type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    type: 'comparision',
+    inputStructure: 'object',
   },
   _ne: {
-    type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    type: 'comparision',
+    inputStructure: 'object',
   },
   _in: {
-    type: 'array',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    type: 'comparision',
+    inputStructure: 'array',
   },
   _nin: {
-    type: 'array',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    type: 'comparision',
+    inputStructure: 'array',
   },
   _gt: {
-    type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    type: 'comparision',
+    inputStructure: 'object',
   },
   _lt: {
-    type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    type: 'comparision',
+    inputStructure: 'object',
   },
   _gte: {
-    type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    type: 'comparision',
+    inputStructure: 'object',
   },
   _lte: {
-    type: 'object',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
+    type: 'comparision',
+    inputStructure: 'object',
   },
   _is_null: {
-    type: 'object',
+    type: 'comparision',
+    inputStructure: 'object',
     inputType: 'boolean',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
   },
   _ceq: {
-    type: 'object',
+    type: 'comparision',
+    inputStructure: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
   },
   _cne: {
-    type: 'object',
+    type: 'comparision',
+    inputStructure: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
   },
   _cgt: {
-    type: 'object',
+    type: 'comparision',
+    inputStructure: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
   },
   _clt: {
-    type: 'object',
+    type: 'comparision',
+    inputStructure: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
   },
   _cgte: {
-    type: 'object',
+    type: 'comparision',
+    inputStructure: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
   },
   _clte: {
-    type: 'object',
+    type: 'comparision',
+    inputStructure: 'object',
     inputType: 'column',
-    PGTypes: ['boolean', 'character', 'dateTime', 'numeric', 'uuid'],
   },
   _like: {
-    type: 'object',
-    PGTypes: ['character'],
+    type: 'pattern_match',
+    inputStructure: 'object',
   },
   _nlike: {
-    type: 'object',
-    PGTypes: ['character'],
+    type: 'pattern_match',
+    inputStructure: 'object',
   },
   _ilike: {
-    type: 'object',
-    PGTypes: ['character'],
+    type: 'pattern_match',
+    inputStructure: 'object',
   },
   _nilike: {
-    type: 'object',
-    PGTypes: ['character'],
+    type: 'pattern_match',
+    inputStructure: 'object',
   },
   _similar: {
-    type: 'object',
-    PGTypes: ['character'],
+    type: 'pattern_match',
+    inputStructure: 'object',
   },
   _nsimilar: {
-    type: 'object',
-    PGTypes: ['character'],
+    type: 'pattern_match',
+    inputStructure: 'object',
   },
   _contains: {
-    type: 'object',
-    PGTypes: ['json'],
+    type: 'json',
+    inputStructure: 'object',
   },
   _contained_in: {
-    type: 'object',
-    PGTypes: ['json'],
+    type: 'json',
+    inputStructure: 'object',
   },
   _has_key: {
-    type: 'object',
+    type: 'json',
+    inputStructure: 'object',
     inputType: 'character',
-    PGTypes: ['json'],
   },
   _has_keys_any: {
-    type: 'array',
+    type: 'json',
+    inputStructure: 'array',
     inputType: 'character',
-    PGTypes: ['json'],
   },
   _has_keys_all: {
-    type: 'array',
+    type: 'json',
+    inputStructure: 'array',
     inputType: 'character',
-    PGTypes: ['json'],
   },
   _st_contains: {
-    type: 'object',
-    PGTypes: ['geometry'],
+    type: 'geometric',
+    inputStructure: 'object',
   },
   _st_crosses: {
-    type: 'object',
+    type: 'geometric',
+    inputStructure: 'object',
     inputType: 'json',
-    PGTypes: ['geometry'],
   },
   _st_equals: {
-    type: 'object',
+    type: 'geometric',
+    inputStructure: 'object',
     inputType: 'json',
-    PGTypes: ['geometry'],
   },
   _st_overlaps: {
-    type: 'object',
+    type: 'geometric',
+    inputStructure: 'object',
     inputType: 'json',
-    PGTypes: ['geometry'],
   },
   _st_touches: {
-    type: 'object',
+    type: 'geometric',
+    inputStructure: 'object',
     inputType: 'json',
-    PGTypes: ['geometry'],
   },
   _st_within: {
-    type: 'object',
+    type: 'geometric',
+    inputStructure: 'object',
     inputType: 'json',
-    PGTypes: ['geometry'],
   },
   _st_d_within: {
-    type: 'object',
+    type: 'geometric_geographic',
+    inputStructure: 'object',
     inputType: 'json',
-    PGTypes: ['geometry', 'geography'],
   },
   _st_intersects: {
-    type: 'object',
+    type: 'geometric_geographic',
+    inputStructure: 'object',
     inputType: 'json',
-    PGTypes: ['geometry', 'geography'],
   },
 };
 
@@ -201,7 +220,7 @@ const getPGTypesOperators = () => {
   const _PGTypesOperators = {};
 
   Object.keys(columnOperatorsInfo).forEach(op => {
-    columnOperatorsInfo[op].PGTypes.forEach(type => {
+    operatorTypePGTypesMap[columnOperatorsInfo[op].type].forEach(type => {
       _PGTypesOperators[type] = _PGTypesOperators[type] || [];
       _PGTypesOperators[type].push(op);
     });
@@ -237,7 +256,7 @@ export const isExistOperator = operator => {
 
 export const isArrayBoolOperator = operator => {
   const arrayBoolOperators = Object.keys(boolOperatorsInfo).filter(
-    op => boolOperatorsInfo[op].type === 'array'
+    op => boolOperatorsInfo[op].inputStructure === 'array'
   );
 
   return arrayBoolOperators.includes(operator);
@@ -249,7 +268,7 @@ export const isColumnOperator = operator => {
 
 export const isArrayColumnOperator = operator => {
   const arrayColumnOperators = Object.keys(columnOperatorsInfo).filter(
-    op => columnOperatorsInfo[op].type === 'array'
+    op => columnOperatorsInfo[op].inputStructure === 'array'
   );
 
   return arrayColumnOperators.includes(operator);
@@ -269,6 +288,10 @@ export const getRootPGType = type => {
       rootType = rType;
       break;
     }
+  }
+
+  if (!rootType) {
+    rootType = 'user_defined';
   }
 
   return rootType;
