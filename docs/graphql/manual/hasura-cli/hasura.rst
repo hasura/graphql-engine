@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura CLI commands reference
+   :keywords: hasura, docs, CLI
+
 .. _hasura:
 
 Hasura CLI: hasura

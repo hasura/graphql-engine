@@ -1,3 +1,7 @@
+.. meta::
+   :description: Common syntax definitions for the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, syntax definitions
+
 Schema/Metadata API Reference: Common syntax definitions
 ========================================================
 

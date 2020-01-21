@@ -44,17 +44,6 @@ if [ -z "${HASURA_GRAPHQL_DATABASE_URL:-}" ] ; then
 	exit 1
 fi
 
-if ! stack --allow-different-user exec -- which graphql-engine > /dev/null && [ -z "${GRAPHQL_ENGINE:-}" ] ; then
-	echo "Do 'stack build' before tests, or export the location of executable in the GRAPHQL_ENGINE envirnoment variable"
-	exit 1
-fi
-
-GRAPHQL_ENGINE=${GRAPHQL_ENGINE:-"$(stack --allow-different-user exec -- which graphql-engine)"}
-if ! [ -x "$GRAPHQL_ENGINE" ] ; then
-	echo "$GRAPHQL_ENGINE is not present or is not an executable"
-	exit 1
-fi
-
 HGE_PID=""
 
 run_hge_with_flags() {
