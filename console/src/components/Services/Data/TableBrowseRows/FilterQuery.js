@@ -64,11 +64,21 @@ const renderOps = (opName, onChange, key) => (
     ) : null}
     {Operators.map((o, i) => (
       <option key={i} value={o.value}>
-        {o.value}
+        {`[${o.graphqlOp}] ${o.name}`}
       </option>
     ))}
   </select>
 );
+
+const getDefaultValue = (possibleValue, opName) => {
+  if (possibleValue) {
+    if (Array.isArray(possibleValue)) return JSON.stringify(possibleValue);
+    return possibleValue;
+  }
+
+  const operator = Operators.find(op => op.value === opName);
+  return operator && operator.defaultValue ? operator.defaultValue : '';
+};
 
 const renderWheres = (whereAnd, tableSchema, dispatch) => {
   const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
@@ -93,6 +103,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
         />
       );
     }
+
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-4">
@@ -103,7 +114,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
           <input
             className="form-control"
             placeholder="-- value --"
-            value={clause[colName][opName]}
+            value={getDefaultValue(clause[colName][opName], opName)}
             onChange={e => {
               dispatch(setFilterVal(e.target.value, i));
               if (i + 1 === whereAnd.length) {
@@ -187,7 +198,7 @@ class FilterQuery extends Component {
             dispatch(runQuery(tableSchema));
           }}
         >
-          <div className="">
+          <div>
             <div
               className={`${styles.queryBox} col-xs-6 ${
                 styles.padd_left_remove
