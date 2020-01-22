@@ -6,7 +6,7 @@ module Hasura.Server.Version
 
   , HasVersion
   , currentVersion
-  , consoleVersion
+  , consoleAssetsVersion
   , withVersion
   )
 where
@@ -70,11 +70,12 @@ currentVersion = ?version
 withVersion :: Version -> (HasVersion => r) -> r
 withVersion version x = let ?version = version in x
 
-consoleVersion :: HasVersion => Text
-consoleVersion = case currentVersion of
-  VersionDev txt -> txt
+-- | A version-based string used to form the CDN URL for fetching console assets.
+consoleAssetsVersion :: HasVersion => Text
+consoleAssetsVersion = case currentVersion of
+  VersionDev txt -> "versioned/" <> txt
   VersionRelease v -> case getReleaseChannel v of
-    Nothing -> vMajMin
+    Nothing -> "versioned/" <> vMajMin
     Just c  -> "channel/" <> c <> "/" <> vMajMin
     where
       vMajMin = T.pack ("v" <> show (v ^. V.major) <> "." <> show (v ^. V.minor))
