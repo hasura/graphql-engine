@@ -11,7 +11,7 @@ import { telemetryNotificationShown } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
 
 // Current console theme.
-import { theme } from '../../styles/theme';
+import { theme } from '../UIKit/theme';
 
 class App extends Component {
   componentDidMount() {

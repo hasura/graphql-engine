@@ -3,7 +3,7 @@ import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
-import { App, Main, PageNotFound, UITest } from 'components';
+import { App, Main, PageNotFound, UITest, UIKit } from 'components';
 
 import globals from './Globals';
 
@@ -123,6 +123,8 @@ const routes = store => {
           {eventRouter}
           {remoteSchemaRouter}
           <Route path="ui-test" component={UITest} />
+          {/* Demo ~ Reusable UI Components */}
+          <Route path="ui-components" component={UIKit} />
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />
