@@ -234,7 +234,7 @@ convertUpdateByPk opCtx field = do
     response <- responseTx
     RM.withSingleTableRow response
   where
-    boolExpParser args =  withArg args "columns" $ \inpVal -> do
+    boolExpParser args =  withArg args "pk_columns" $ \inpVal -> do
       obj <- asObject inpVal
       pgColValToBoolExp (_uocAllCols opCtx) $ Map.fromList $ OMap.toList obj
 

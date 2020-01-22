@@ -283,10 +283,6 @@ mkPKeyColumnsInpObj qt primaryKey =
   where
     description = G.Description $ "primary key columns input for table: " <>> qt
 
-primaryKeyColumnsInp :: QualifiedTable -> InpValInfo
-primaryKeyColumnsInp qt =
-  InpValInfo Nothing "columns" Nothing $ G.toGT $ G.toNT $ mkPKeyColumnsInpTy qt
-
 mkUpdateByPkMutationField
   :: Maybe G.Name
   -> QualifiedTable
@@ -300,4 +296,6 @@ mkUpdateByPkMutationField mCustomName qt cols _ =
     description = G.Description $ "update single row of the table: " <>> qt
     fieldName = flip fromMaybe mCustomName $ "update_" <> qualObjectToName qt <> "_by_pk"
 
-    inputArgs = pure (primaryKeyColumnsInp qt) <> mkUpdateOpInputs qt cols
+    inputArgs = pure primaryKeyColumnsInp <> mkUpdateOpInputs qt cols
+    primaryKeyColumnsInp =
+      InpValInfo Nothing "pk_columns" Nothing $ G.toGT $ G.toNT $ mkPKeyColumnsInpTy qt
