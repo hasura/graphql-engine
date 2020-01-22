@@ -44,6 +44,9 @@ const RawSQL = ({
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
+  // local storage key for SQL
+  const LS_RAW_SQL_SQL = 'rawSql:sql';
+
   /* hooks */
 
   // set up sqlRef to use in unmount
@@ -51,7 +54,6 @@ const RawSQL = ({
 
   // set SQL from localStorage on mount and write back to localStorage on unmount
   useEffect(() => {
-    const LS_RAW_SQL_SQL = 'rawSql:sql';
     if (!sql) {
       const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
       if (sqlFromLocalStorage) {
@@ -95,6 +97,9 @@ const RawSQL = ({
   );
 
   const submitSQL = () => {
+    // set SQL to LS
+    localStorage.setItem(LS_RAW_SQL_SQL, sql);
+
     // check migration mode global
     if (migrationMode) {
       const checkboxElem = document.getElementById('migration-checkbox');
