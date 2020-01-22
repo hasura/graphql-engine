@@ -16,26 +16,25 @@ module Hasura.Server.Migrate
   , dropCatalog
   ) where
 
+import           Control.Monad.Unique
 import           Data.Time.Clock               (UTCTime)
 
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as A
 import qualified Data.Text                     as T
-import qualified Data.Yaml.TH                  as Y
 import qualified Database.PG.Query             as Q
 import qualified Database.PG.Query.Connection  as Q
 import qualified Language.Haskell.TH.Lib       as TH
 import qualified Language.Haskell.TH.Syntax    as TH
+import qualified Data.HashMap.Strict               as HM
 
-import           Hasura.Logging                (Hasura, LogLevel (..),
-                                                ToEngineLog (..))
+import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
+import           Hasura.RQL.DDL.Relationship
 import           Hasura.Server.Logging         (StartupLog (..))
-import           Hasura.Server.Migrate.Version (latestCatalogVersion,
-                                                latestCatalogVersionString)
-import           Hasura.Server.Query
+import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
 import           Hasura.SQL.Types
 
 dropCatalog :: (MonadTx m) => m ()
@@ -66,15 +65,14 @@ instance ToEngineLog MigrationResult Hasura where
     }
 
 migrateCatalog
-  :: forall m.
-  ( MonadTx m
-  , HasHttpManager m
-  , CacheRWM m
-  , UserInfoM m
-  , MonadIO m
-  , HasSQLGenCtx m
-  )
-  => UTCTime -> m MigrationResult
+  :: forall m
+   . ( MonadIO m
+     , MonadTx m
+     , MonadUnique m
+     , HasHttpManager m
+     , HasSQLGenCtx m
+     )
+  => UTCTime -> m (MigrationResult, RebuildableSchemaCache m)
 migrateCatalog migrationTime = do
   doesSchemaExist (SchemaName "hdb_catalog") >>= \case
     False -> initialize True
@@ -83,7 +81,7 @@ migrateCatalog migrationTime = do
       True  -> migrateFrom =<< getCatalogVersion
   where
     -- initializes the catalog, creating the schema if necessary
-    initialize :: Bool -> m MigrationResult
+    initialize :: Bool -> m (MigrationResult, RebuildableSchemaCache m)
     initialize createSchema =  do
       liftTx $ Q.catchE defaultTxErrorHandler $
         when createSchema $ do
@@ -100,9 +98,9 @@ migrateCatalog migrationTime = do
           <> "PostgreSQL server. Please make sure this extension is available."
 
       runTx $(Q.sqlFromFile "src-rsr/initialise.sql")
-      recreateSystemMetadata
+      schemaCache <- buildCacheAndRecreateSystemMetadata
       updateCatalogVersion
-      pure MRInitialized
+      pure (MRInitialized, schemaCache)
       where
         needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
           case err of
@@ -122,18 +120,22 @@ migrateCatalog migrationTime = do
               <> " https://docs.hasura.io/1.0/graphql/manual/deployment/postgres-permissions.html"
 
     -- migrates an existing catalog to the latest version from an existing verion
-    migrateFrom :: T.Text -> m MigrationResult
+    migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
     migrateFrom previousVersion
-      | previousVersion == latestCatalogVersionString = pure MRNothingToDo
+      | previousVersion == latestCatalogVersionString = do
+          schemaCache <- buildRebuildableSchemaCache
+          pure (MRNothingToDo, schemaCache)
       | [] <- neededMigrations = throw400 NotSupported $
           "Cannot use database previously used with a newer version of graphql-engine (expected"
             <> " a catalog version <=" <> latestCatalogVersionString <> ", but the current version"
             <> " is " <> previousVersion <> ")."
-      | otherwise =
-          traverse_ snd neededMigrations *> postMigrate $> MRMigrated previousVersion
+      | otherwise = do
+          traverse_ snd neededMigrations
+          schemaCache <- buildCacheAndRecreateSystemMetadata
+          updateCatalogVersion
+          pure (MRMigrated previousVersion, schemaCache)
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) migrations
-        postMigrate = updateCatalogVersion *> recreateSystemMetadata *> buildSchemaCacheStrict
 
         migrations :: [(T.Text, m ())]
         migrations =
@@ -155,6 +157,11 @@ migrateCatalog migrationTime = do
               :  migrationsFromFile [2..3]
               ++ [| ("3", from3To4) |]
               :  migrationsFromFile [5..latestCatalogVersion])
+
+    buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
+    buildCacheAndRecreateSystemMetadata = do
+      schemaCache <- buildRebuildableSchemaCache
+      snd <$> runCacheRWT schemaCache recreateSystemMetadata
 
     -- the old 0.8 catalog version is non-integral, so we store it in the database as a string
     getCatalogVersion = liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
@@ -213,19 +220,105 @@ migrateCatalog migrationTime = do
                                              WHERE name = $2
                                              |] (Q.AltJ $ A.toJSON etc, name) True
 
-recreateSystemMetadata
-  :: ( MonadTx m
-     , HasHttpManager m
-     , CacheRWM m
-     , UserInfoM m
-     , MonadIO m
-     , HasSQLGenCtx m
-     )
-  => m ()
+-- | Drops and recreates all “system-defined” metadata, aka metadata for tables and views in the
+-- @information_schema@ and @hdb_catalog@ schemas. These tables and views are tracked to expose them
+-- to the console, which allows us to reuse the same functionality we use to implement user-defined
+-- APIs to expose the catalog.
+--
+-- This process has a long and storied history.
+--
+-- In the past, we reused the same machinery we use for CLI migrations to define our own internal
+-- metadata migrations. This caused trouble, however, as we’d have to run those migrations in
+-- lockstep with our SQL migrations to ensure the two didn’t get out of sync. This in turn caused
+-- trouble because those migrations would hit code paths inside @graphql-engine@ to add or remove
+-- things from the @pg_catalog@ tables, and /that/ in turn would fail because we hadn’t finished
+-- running the SQL migrations, so we were running a new version of the code against an old version
+-- of the schema! That caused #2826.
+--
+-- To fix that, #2379 switched to the approach of just dropping and recreating all system metadata
+-- every time we run any SQL migrations. But /that/ in turn caused trouble due to the way we were
+-- constantly rebuilding the schema cache (#3354), causing us to switch to incremental schema cache
+-- construction (#3394). However, although that mostly resolved the problem, we still weren’t
+-- totally out of the woods, as the incremental construction was still too slow on slow Postgres
+-- instances (#3654).
+--
+-- To sidestep the whole issue, as of #3686 we now just create all the system metadata in code here,
+-- and we only rebuild the schema cache once, at the very end. This is a little unsatisfying, since
+-- it means our internal migrations are “blessed” compared to user-defined CLI migrations. If we
+-- improve CLI migrations further in the future, maybe we can switch back to using that approach,
+-- instead.
+recreateSystemMetadata :: (MonadTx m, CacheRWM m) => m ()
 recreateSystemMetadata = do
   runTx $(Q.sqlFromFile "src-rsr/clear_system_metadata.sql")
-  void . runHasSystemDefinedT (SystemDefined True) $
-    runQueryM $$(Y.decodeFile "src-rsr/hdb_metadata.yaml")
+  runHasSystemDefinedT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
+    saveTableToCatalog tableName False emptyTableConfig
+    for_ tableRels \case
+      Left relDef -> insertRelationshipToCatalog tableName ObjRel relDef
+      Right relDef -> insertRelationshipToCatalog tableName ArrRel relDef
+  buildSchemaCacheStrict
+  where
+    systemMetadata :: [(QualifiedTable, [Either ObjRelDef ArrRelDef])]
+    systemMetadata =
+      [ table "information_schema" "tables" []
+      , table "information_schema" "schemata" []
+      , table "information_schema" "views" []
+      , table "information_schema" "columns" []
+      , table "hdb_catalog" "hdb_table"
+        [ objectRel $$(nonEmptyText "detail") $
+          manualConfig "information_schema" "tables" tableNameMapping
+        , objectRel $$(nonEmptyText "primary_key") $
+          manualConfig "hdb_catalog" "hdb_primary_key" tableNameMapping
+        , arrayRel $$(nonEmptyText "columns") $
+          manualConfig "information_schema" "columns" tableNameMapping
+        , arrayRel $$(nonEmptyText "foreign_key_constraints") $
+          manualConfig "hdb_catalog" "hdb_foreign_key_constraint" tableNameMapping
+        , arrayRel $$(nonEmptyText "relationships") $
+          manualConfig "hdb_catalog" "hdb_relationship" tableNameMapping
+        , arrayRel $$(nonEmptyText "permissions") $
+          manualConfig "hdb_catalog" "hdb_permission_agg" tableNameMapping
+        , arrayRel $$(nonEmptyText "computed_fields") $
+          manualConfig "hdb_catalog" "hdb_computed_field" tableNameMapping
+        , arrayRel $$(nonEmptyText "check_constraints") $
+          manualConfig "hdb_catalog" "hdb_check_constraint" tableNameMapping
+        , arrayRel $$(nonEmptyText "unique_constraints") $
+          manualConfig "hdb_catalog" "hdb_unique_constraint" tableNameMapping ]
+      , table "hdb_catalog" "hdb_primary_key" []
+      , table "hdb_catalog" "hdb_foreign_key_constraint" []
+      , table "hdb_catalog" "hdb_relationship" []
+      , table "hdb_catalog" "hdb_permission_agg" []
+      , table "hdb_catalog" "hdb_computed_field" []
+      , table "hdb_catalog" "hdb_check_constraint" []
+      , table "hdb_catalog" "hdb_unique_constraint" []
+      , table "hdb_catalog" "event_triggers"
+        [ arrayRel $$(nonEmptyText "events") $
+          manualConfig "hdb_catalog" "event_log" [("name", "trigger_name")] ]
+      , table "hdb_catalog" "event_log"
+        [ objectRel $$(nonEmptyText "trigger") $
+          manualConfig "hdb_catalog" "event_triggers" [("trigger_name", "name")]
+        , arrayRel $$(nonEmptyText "logs") $ RUFKeyOn $
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "event_invocation_logs") "event_id" ]
+      , table "hdb_catalog" "event_invocation_logs"
+        [ objectRel $$(nonEmptyText "event") $ RUFKeyOn "event_id" ]
+      , table "hdb_catalog" "hdb_function" []
+      , table "hdb_catalog" "hdb_function_agg"
+        [ objectRel $$(nonEmptyText "return_table_info") $ manualConfig "hdb_catalog" "hdb_table"
+          [ ("return_type_schema", "table_schema")
+          , ("return_type_name", "table_name") ] ]
+      , table "hdb_catalog" "remote_schemas" []
+      , table "hdb_catalog" "hdb_version" []
+      , table "hdb_catalog" "hdb_query_collection" []
+      , table "hdb_catalog" "hdb_allowlist" []
+      ]
+
+    tableNameMapping =
+      [ ("table_schema", "table_schema")
+      , ("table_name", "table_name") ]
+
+    table schemaName tableName relationships = (QualifiedObject schemaName tableName, relationships)
+    objectRel name using = Left $ RelDef (RelName name) using Nothing
+    arrayRel name using = Right $ RelDef (RelName name) using Nothing
+    manualConfig schemaName tableName columns =
+      RUManual $ RelManualConfig (QualifiedObject schemaName tableName) (HM.fromList columns)
 
 runTx :: (MonadTx m) => Q.Query -> m ()
 runTx = liftTx . Q.multiQE defaultTxErrorHandler

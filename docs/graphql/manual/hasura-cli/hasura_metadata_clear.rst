@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura metadata clear to clear Hasura metadata on the database with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura metadata clear
+
 .. _hasura_metadata_clear:
 
 Hasura CLI: hasura metadata clear

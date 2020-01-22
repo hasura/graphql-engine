@@ -90,7 +90,7 @@ class TestRemoteSchemaBasic:
         q = mk_add_remote_q('simple 2', 'http://localhost:5000/hello-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 400
-        assert resp['code'] == 'remote-schema-conflicts'
+        assert resp['code'] == 'constraint-violation'
 
     def test_remove_schema_error(self, hge_ctx):
         """remove remote schema which is not added"""
@@ -211,7 +211,7 @@ class TestAddRemoteSchemaTbls:
         q = mk_add_remote_q('simple2', 'http://localhost:5000/hello-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 400
-        assert resp['code'] == 'remote-schema-conflicts'
+        assert resp['code'] == 'constraint-violation'
 
     def test_add_second_remote_schema(self, hge_ctx):
         """add 2 remote schemas with different node and types"""

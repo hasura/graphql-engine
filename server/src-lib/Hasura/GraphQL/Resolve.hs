@@ -23,8 +23,7 @@ import qualified Language.GraphQL.Draft.Syntax     as G
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Internal           (currentSession,
-                                                    sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Internal           (currentSession, sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 

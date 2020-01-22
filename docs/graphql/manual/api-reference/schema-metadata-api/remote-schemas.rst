@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage remote schemas with the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, remote schema
+
 Schema/Metadata API Reference: Remote schemas
 =============================================
 

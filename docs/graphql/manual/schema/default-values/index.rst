@@ -1,3 +1,7 @@
+.. meta::
+   :description: Set default field values in Hasura
+   :keywords: hasura, docs, schema, default value
+
 Setting default values for fields
 =================================
 

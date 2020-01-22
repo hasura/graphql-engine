@@ -15,11 +15,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/telemetry"
-	"github.com/hasura/graphql-engine/cli/util"
-
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
+	"github.com/hasura/graphql-engine/cli/telemetry"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/mattn/go-colorable"
 	"github.com/pkg/errors"
@@ -299,7 +298,7 @@ func (ec *ExecutionContext) checkServerVersion() error {
 	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
 	ec.Logger.Debugf("compatibility check: [%v] %v", isCompatible, reason)
 	if !isCompatible {
-		return errors.Errorf("[cli: %s] [server: %s] versions incompatible: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
+		ec.Logger.Warnf("[cli: %s] [server: %s] version mismatch: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
 	}
 	return nil
 }

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Secure the Hasura GraphQL endpoint
+   :keywords: hasura, docs, deployment, secure
+
 .. _securing-graphql-endpoint:
 
 Securing the GraphQL endpoint

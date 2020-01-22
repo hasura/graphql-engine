@@ -1,3 +1,7 @@
+.. meta::
+   :description: Schema design basics in Hasura
+   :keywords: hasura, docs, schema, basics
+
 Schema design basics
 ====================
 
@@ -43,6 +47,7 @@ automatically generated.
 For example, here is the schema for the ``article`` table in this interface:
 
 .. thumbnail:: ../../../img/graphql/manual/schema/create-table-graphql.png
+   :alt: Schema for an article table
 
 The following object type and query/mutation fields are generated for the ``article`` table we just created:
 

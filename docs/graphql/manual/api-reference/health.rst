@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura health API reference
+   :keywords: hasura, docs, health API, API reference
+
 .. _health_api_reference:
 
 Health check API Reference
