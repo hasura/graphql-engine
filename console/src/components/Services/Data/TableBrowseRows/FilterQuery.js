@@ -1,13 +1,13 @@
 /*
-  Use state exactly the way columns in create table do.
-  dispatch actions using a given function,
-  but don't listen to state.
-  derive everything through viewtable as much as possible.
+Use state exactly the way columns in create table do.
+dispatch actions using a given function,
+but don't listen to state.
+derive everything through viewtable as much as possible.
 */
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { createHistory } from 'history';
 
-import React, { Component } from 'react';
 import { Operators } from '../constants';
 import {
   setFilterCol,
@@ -25,6 +25,20 @@ import {
 import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
+import styles from '../../../Common/FilterQuery/FilterQuery.scss';
+
+const renderCols = (
+  colName,
+  tableSchema,
+  onChange,
+  usage,
+  key,
+  skipColumns
+) => {
+  let columns = tableSchema.columns.map(c => c.column_name);
+  if (skipColumns) {
+    columns = columns.filter(n => !skipColumns.includes(n) || n === colName);
+  }
 
 const history = createHistory();
 
@@ -84,7 +98,6 @@ const getDefaultValue = (possibleValue, opName) => {
 };
 
 const renderWheres = (whereAnd, tableSchema, dispatch) => {
-  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
   return whereAnd.map((clause, i) => {
     const colName = Object.keys(clause)[0];
     const opName = Object.keys(clause[colName])[0];
@@ -110,7 +123,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-4">
-          {renderCols(colName, tableSchema, dSetFilterCol, 'filter', i)}
+          {renderCols(colName, tableSchema, dSetFilterCol, 'filter', i, [])}
         </div>
         <div className="col-xs-3">{renderOps(opName, dSetFilterOp, i)}</div>
         <div className="col-xs-4">
@@ -134,7 +147,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
 };
 
 const renderSorts = (orderBy, tableSchema, dispatch) => {
-  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
+  const currentOrderBy = orderBy.map(o => o.column);
   return orderBy.map((c, i) => {
     const dSetOrderCol = e => {
       dispatch(setOrderCol(e.target.value, i));
@@ -158,7 +171,14 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-6">
-          {renderCols(c.column, tableSchema, dSetOrderCol, 'sort', i)}
+          {renderCols(
+            c.column,
+            tableSchema,
+            dSetOrderCol,
+            'sort',
+            i,
+            currentOrderBy
+          )}
         </div>
         <div className="col-xs-5">
           <select
@@ -255,7 +275,6 @@ class FilterQuery extends Component {
 
   render() {
     const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
-    const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
 
     return (
       <div className={styles.add_mar_top}>

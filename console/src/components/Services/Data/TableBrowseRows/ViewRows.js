@@ -189,8 +189,6 @@ const ViewRows = ({
 
       let sortIcon = 'fa-sort';
       if (curQuery.order_by && curQuery.order_by.length) {
-        sortIcon = '';
-
         curQuery.order_by.forEach(orderBy => {
           if (orderBy.column === columnName) {
             sortIcon = orderBy.type === 'asc' ? 'fa-caret-up' : 'fa-caret-down';
@@ -749,6 +747,7 @@ const ViewRows = ({
       }
 
       const numOfOrderBys = curFilter.order_by.length;
+      console.log({ cur: curFilter.order_by, col });
 
       let orderByCol = col;
       let orderByPos = numOfOrderBys - 1;

@@ -74,8 +74,8 @@ class DragFoldTable extends Component {
               {col.Header}
               <i
                 className="fa fa-bars"
-                style={{ paddingTop: '2px' }}
                 title="Drag column"
+                style={{ paddingTop: '2px' }}
               />
             </Fragment>
           )}
