@@ -72,9 +72,16 @@ runCreateAction
   :: (QErrM m , CacheRWM m, MonadTx m)
   => CreateAction -> m EncJSON
 runCreateAction createAction = do
+  -- check if action with same name exists already
+  actionMap <- scActions <$> askSchemaCache
+  void $ onJust (Map.lookup actionName actionMap) $ const $
+    throw400 AlreadyExists $
+      "action with name " <> actionName <<> " already exists"
   persistCreateAction createAction
-  buildSchemaCacheFor $ MOAction $ _caName createAction
+  buildSchemaCacheFor $ MOAction actionName
   pure successMsg
+  where
+    actionName = _caName createAction
 
 persistCreateAction :: (MonadTx m) =>  CreateAction -> m ()
 persistCreateAction (CreateAction actionName actionDefinition comment) = do
@@ -144,7 +151,6 @@ runUpdateAction
   :: forall m. ( QErrM m , CacheRWM m, MonadTx m)
   => UpdateAction -> m EncJSON
 runUpdateAction (UpdateAction actionName actionDefinition) = do
-  -- adminOnly
   sc <- askSchemaCache
   let actionsMap = scActions sc
   void $ onNothing (Map.lookup actionName actionsMap) $
@@ -245,6 +251,10 @@ runCreateActionPermission
   :: (QErrM m , CacheRWM m, MonadTx m)
   => CreateActionPermission -> m EncJSON
 runCreateActionPermission createActionPermission = do
+  actionInfo <- getActionInfo actionName
+  void $ onJust (Map.lookup role $ _aiPermissions actionInfo) $ const $
+    throw400 AlreadyExists $ "permission for role: " <> role
+    <<> "is already defined on " <>> actionName
   persistCreateActionPermission createActionPermission
   buildSchemaCacheFor $ MOActionPermission actionName role
   pure successMsg

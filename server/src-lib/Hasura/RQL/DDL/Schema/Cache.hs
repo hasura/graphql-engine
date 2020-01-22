@@ -229,39 +229,23 @@ buildSchemaCacheRule = proc inputs -> do
 
       -- custom types
       resolvedCustomTypes <- bindA -< resolveCustomTypes tableCache customTypes
-      actionCache <- (\infos -> (M.catMaybes . M.catMaybes) infos >- returnA) <-<
-        (| Inc.keyed (\_ duplicateActions -> do
-             maybeAction <- noDuplicates mkActionMetadataObj -< duplicateActions
-             (| traverseA (\action -> do
-                  let CreateAction name def _ = action
-                      metadataObj = mkActionMetadataObj action
-                      addActionContext e = "in action " <> name <<> "; " <> e
 
-                  (| withRecordInconsistency (
-                      (| modifyErrA (do
-                           resolvedDef <- bindErrorA -< resolveAction resolvedCustomTypes def
-                           returnA -< resolvedDef)
-                       |) addActionContext)
-                   |) metadataObj
-                   >-> (\maybeResolvedDef ->
-                        (| traverseA (\resolvedDef -> do
-                            actionPerms <- (\info -> M.catMaybes info >- returnA) <-<
-                              (| Inc.keyed (\_ duplicatePerms -> do
-                                   maybePerm <- noDuplicates mkActionPermissionObj -< duplicatePerms
-                                   (| traverseA (\perm -> do
-                                        let role = _capRole perm
-                                            permDef = _capDefinition perm
-                                        selFilter <- bindA -< buildActionFilter (_apdSelect permDef)
-                                        returnA -< ActionPermissionInfo role selFilter)
-                                    |) maybePerm)
-                               |) (M.groupOn _capRole $ filter (\perm -> _capAction perm == name) actionPermissions)
-                            returnA -< ActionInfo name resolvedDef actionPerms
-                            )
-                         |) maybeResolvedDef
-                        ))
-              |) maybeAction)
-        |) (M.groupOn _caName actions)
+      -- actions
+      resolvedActionDefs <- (mapFromL _caName actions >- returnA)
+        >-> (| Inc.keyed (\_ action -> do
+               let CreateAction name def _ = action
+                   metadataObj = mkActionMetadataObj action
+                   addActionContext e = "in action " <> name <<> "; " <> e
+               (| withRecordInconsistency (
+                  (| modifyErrA ( do
+                       resolvedDef <- bindErrorA -< resolveAction resolvedCustomTypes def
+                       returnA -< resolvedDef)
+                   |) addActionContext)
+                |) metadataObj)
+             |)
+        >-> (\actionMap -> returnA -< M.catMaybes actionMap)
 
+      actionCache <- buildActionCache -< (resolvedActionDefs, M.groupOn _capAction actionPermissions)
 
       -- build GraphQL context with tables and functions
       baseGQLSchema <- bindA -< GS.mkGCtxMap (snd resolvedCustomTypes) tableCache functionCache actionCache
@@ -293,11 +277,6 @@ buildSchemaCacheRule = proc inputs -> do
       in MetadataObject objectId definition
 
     mkActionMetadataObj ca = MetadataObject (MOAction $ _caName ca) $ toJSON ca
-
-    mkActionPermissionObj p =
-      let role = _capRole p
-          name = _capAction p
-      in MetadataObject (MOActionPermission name role) $ toJSON p
 
     -- Given a map of table info, “folds in” another map of information, accumulating inconsistent
     -- metadata objects for any entries in the second map that don’t appear in the first map. This
@@ -378,6 +357,34 @@ buildSchemaCacheRule = proc inputs -> do
                 mergedDefGCtx <- mergeGCtx defGCtx rGCtx
                 pure (M.insert name rsCtx remoteSchemas, mergedGCtxMap, mergedDefGCtx))
          |) (MetadataObject (MORemoteSchema name) (toJSON remoteSchema))
+
+    buildActionCache
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+         , Inc.ArrowCache m arr, MonadError QErr m
+         )
+      => ( M.HashMap ActionName ResolvedActionDefinition
+         , M.HashMap ActionName [CreateActionPermission]
+         ) `arr` M.HashMap ActionName ActionInfo
+    buildActionCache = proc (definitions, permissions) -> do
+      let combinedMap = M.fromList $ flip map (M.toList definitions) $
+            \(name, def) -> (name, (def, M.lookupDefault [] name permissions))
+      (| Inc.keyed (\actionName (def, perms) -> do
+          permissionInfo <- (\maybeMap -> returnA -< M.catMaybes maybeMap) <-<
+            (| Inc.keyed (\role perm ->
+                 (| withRecordInconsistency (do
+                      selectFilter <- bindA -< buildActionFilter (_apdSelect $ _capDefinition perm)
+                      returnA -< ActionPermissionInfo role selectFilter
+                    )
+                  |) (mkActionPermMetaObj actionName perm)
+               )
+             |) (mapFromL _capRole perms)
+          returnA -< ActionInfo actionName def permissionInfo
+          )
+       |) combinedMap
+      where
+        mkActionPermMetaObj actionName perm =
+          let objId = MOActionPermission actionName $ _capRole perm
+          in MetadataObject objId $ toJSON perm
 
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
