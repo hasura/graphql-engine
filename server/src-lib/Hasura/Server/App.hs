@@ -546,6 +546,10 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
     when enableMetadata $ do
 
+      Spock.post "v1/graphql/explain" gqlExplainAction
+
+      Spock.post "v1alpha1/graphql/explain" gqlExplainAction
+
       Spock.post "v1/query" $ spockAction encodeQErr id $
         mkPostHandler $ mkAPIRespHandler v1QueryHandler
 
@@ -554,6 +558,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
           mkAPIRespHandler $ legacyQueryHandler (TableName tableName) queryType
 
     when enablePGDump $
+
       Spock.post "v1alpha1/pg_dump" $ spockAction encodeQErr id $
         mkPostHandler v1Alpha1PGDumpHandler
 
@@ -565,12 +570,8 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
           return $ JSONResp $ HttpResponse res Nothing
 
     when enableGraphQL $ do
-      Spock.post "v1alpha1/graphql/explain" gqlExplainAction
-
       Spock.post "v1alpha1/graphql" $ spockAction GH.encodeGQErr id $
         mkPostHandler $ mkAPIRespHandler v1Alpha1GQHandler
-
-      Spock.post "v1/graphql/explain" gqlExplainAction
 
       Spock.post "v1/graphql" $ spockAction GH.encodeGQErr allMod200 $
         mkPostHandler $ mkAPIRespHandler v1GQHandler
