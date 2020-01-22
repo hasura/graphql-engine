@@ -20,6 +20,7 @@ import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
 import           Hasura.Server.Migrate
 import           Hasura.Server.PGDump
+import           Hasura.Server.Version          (HasVersion)
 
 newtype CacheRefT m a
   = CacheRefT { runCacheRefT :: MVar (RebuildableSchemaCache m) -> m a }
@@ -51,7 +52,8 @@ singleTransaction :: CacheRefT m () -> CacheRefT m ()
 singleTransaction = id
 
 spec
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadBaseControl IO m
      , MonadTx m
      , MonadUnique m

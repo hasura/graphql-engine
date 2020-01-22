@@ -74,15 +74,15 @@ getRequestId headers =
     Just reqId -> return $ RequestId $ bsToTxt reqId
 
 -- Get an env var during compile time
-getValFromEnvOrScript :: String -> String -> TH.Q TH.Exp
+getValFromEnvOrScript :: String -> String -> TH.Q (TH.TExp String)
 getValFromEnvOrScript n s = do
   maybeVal <- TH.runIO $ lookupEnv n
   case maybeVal of
-    Just val -> TH.lift val
+    Just val -> [|| val ||]
     Nothing  -> runScript s
 
 -- Run a shell script during compile time
-runScript :: FilePath -> TH.Q TH.Exp
+runScript :: FilePath -> TH.Q (TH.TExp String)
 runScript fp = do
   TH.addDependentFile fp
   fileContent <- TH.runIO $ TI.readFile fp
@@ -91,7 +91,7 @@ runScript fp = do
   when (exitCode /= ExitSuccess) $ fail $
     "Running shell script " ++ fp ++ " failed with exit code : "
     ++ show exitCode ++ " and with error : " ++ stdErr
-  TH.lift stdOut
+  [|| stdOut ||]
 
 -- find duplicates
 duplicates :: Ord a => [a] -> [a]
