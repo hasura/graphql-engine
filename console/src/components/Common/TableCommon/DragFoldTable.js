@@ -9,7 +9,7 @@ class DragFoldTable extends Component {
   constructor(props) {
     super(props);
     this.dragged = null;
-    this.reorder = [];
+    this.reorders = [];
     this.state = {
       trigger: 0,
       folded: {},
@@ -43,7 +43,10 @@ class DragFoldTable extends Component {
       header.ondrop = e => {
         e.preventDefault();
         if (this.dragged) {
-          this.reorder.push({ a: i, b: this.dragged });
+          this.reorders.push({
+            newOrder: i,
+            defaultOrder: this.dragged,
+          });
         }
         this.setState({ trigger: Math.random() });
       };
@@ -81,7 +84,9 @@ class DragFoldTable extends Component {
     }));
 
     //run all reorder events
-    this.reorder.forEach(o => cols.splice(o.a, 0, cols.splice(o.b, 1)[0]));
+    this.reorders.forEach(o =>
+      cols.splice(o.newOrder, 0, cols.splice(o.defaultOrder, 1)[0])
+    );
 
     const FoldableTable = FoldableHoc(ReactTable);
 
