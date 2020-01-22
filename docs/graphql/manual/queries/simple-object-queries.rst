@@ -48,3 +48,27 @@ Fetch list of objects
         ]
       }
     }
+
+
+Fetch an object using its primary key
+-------------------------------------
+**Example:** Fetch an author using their primary key:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author_by_pk(id: 1) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author_by_pk": {
+          "id": 1,
+          "name": "Justin"
+        }
+      }
+    }
