@@ -46,8 +46,8 @@ parseURLTemplate = parseOnly parseTemplate
 renderURLTemplate :: MonadIO m => URLTemplate -> m (Either String Text)
 renderURLTemplate (URLTemplate preVar var postVar) = do
   maybeEnvValue <- liftIO $ lookupEnv variableString
-  case maybeEnvValue of
-    Nothing -> pure $ Left $ "Value for environment variable " <> variableString <> " not found"
-    Just value -> pure $ Right $ preVar <> T.pack value <> postVar
+  pure $ case maybeEnvValue of
+    Nothing    -> Left $ "Value for environment variable " <> variableString <> " not found"
+    Just value -> Right $ preVar <> T.pack value <> postVar
   where
     variableString = T.unpack $ unVariable var
