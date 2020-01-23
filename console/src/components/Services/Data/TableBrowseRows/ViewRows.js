@@ -45,6 +45,7 @@ import {
   getTableSchema,
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
+import { handleCollapseChange, getCollapsedColumns } from './utils';
 
 const ViewRows = ({
   curTableName,
@@ -296,8 +297,12 @@ const ViewRows = ({
           let title;
           let handleClick;
 
-          const handleExpand = () => dispatch(vExpandRow(rowCellIndex));
-          const handleCollapse = () => dispatch(vCollapseRow());
+          const handleExpand = () => {
+            dispatch(vExpandRow(rowCellIndex));
+          };
+          const handleCollapse = () => {
+            dispatch(vCollapseRow());
+          };
 
           if (isExpanded) {
             icon = 'fa-compress';
@@ -738,6 +743,8 @@ const ViewRows = ({
       );
     }
 
+    const collapsedColumns = getCollapsedColumns(curTableName);
+
     let disableSortColumn = false;
 
     const sortByColumn = (col, clearExisting = true) => {
@@ -747,7 +754,6 @@ const ViewRows = ({
       }
 
       const numOfOrderBys = curFilter.order_by.length;
-      console.log({ cur: curFilter.order_by, col });
 
       let orderByCol = col;
       let orderByPos = numOfOrderBys - 1;
@@ -856,6 +862,10 @@ const ViewRows = ({
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         page={Math.floor(curFilter.offset / curFilter.limit)}
+        onCollapseChange={collapsedData =>
+          handleCollapseChange(curTableName, collapsedData)
+        }
+        defaultCollapsed={collapsedColumns}
       />
     );
   };

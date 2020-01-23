@@ -12,7 +12,7 @@ class DragFoldTable extends Component {
     this.reorders = [];
     this.state = {
       trigger: 0,
-      folded: {},
+      folded: props.defaultCollapsed || {},
     };
   }
   mountEvents() {
@@ -97,11 +97,12 @@ class DragFoldTable extends Component {
           {...this.props}
           data={data}
           columns={cols}
-          onFoldChange={newFolded =>
-            this.setState(p => {
-              return { folded: newFolded };
-            })
-          }
+          onFoldChange={newFolded => {
+            if (this.props.onCollapseChange) {
+              this.props.onCollapseChange(newFolded);
+            }
+            this.setState({ folded: newFolded });
+          }}
           folded={this.state.folded}
         />
       </div>
