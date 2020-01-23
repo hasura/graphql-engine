@@ -5,6 +5,7 @@ module Hasura.Server.CheckUpdates
 import           Control.Exception     (try)
 import           Control.Lens
 import           Control.Monad         (forever)
+import           Data.Text.Conversions (toText)
 
 import qualified CI
 import qualified Control.Concurrent    as C
@@ -13,23 +14,24 @@ import qualified Data.Aeson.Casing     as A
 import qualified Data.Aeson.TH         as A
 import qualified Data.Text             as T
 import qualified Network.HTTP.Client   as H
+import qualified Network.URI.Encode    as URI
 import qualified Network.Wreq          as Wreq
 import qualified System.Log.FastLogger as FL
 
 import           Hasura.HTTP
 import           Hasura.Logging        (LoggerCtx (..))
 import           Hasura.Prelude
-import           Hasura.Server.Version (currentVersion)
+import           Hasura.Server.Version (HasVersion, Version, currentVersion)
 
 
 newtype UpdateInfo
   = UpdateInfo
-  { _uiLatest :: T.Text
-  } deriving (Show, Eq)
+  { _uiLatest :: Version
+  } deriving (Show)
 
 $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)
 
-checkForUpdates :: LoggerCtx a -> H.Manager -> IO ()
+checkForUpdates :: (HasVersion) => LoggerCtx a -> H.Manager -> IO ()
 checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
   let options = wreqOptions manager []
   url <- getUrl
@@ -45,10 +47,10 @@ checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
     C.threadDelay aDay
 
   where
-    updateMsg v = "Update: A new version is available: " <> v
+    updateMsg v = "Update: A new version is available: " <> toText v
     getUrl = do
       let buildUrl agent = "https://releases.hasura.io/graphql-engine?agent=" <>
-                           agent <> "&version=" <> currentVersion
+                           agent <> "&version=" <> URI.encodeText (toText currentVersion)
       ciM <- CI.getCI
       return . buildUrl $ case ciM of
         Nothing -> "server"

@@ -48,6 +48,7 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId, filterRequestHeaders)
+import           Hasura.Server.Version                  (HasVersion)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -345,7 +346,8 @@ getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld =
   runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld
 
 execRemoteGQ
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadError QErr m
      , MonadReader ExecutionCtx m
      )
