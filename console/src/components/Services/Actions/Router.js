@@ -8,6 +8,7 @@ import ActionDetails from './Details';
 import ActionsLandingPage from './Landing';
 import ActionRelationships from './Relationships';
 import ActionPermissions from './Permissions';
+import ActionsCodegen from './Codegen';
 import ModifyAction from './Modify';
 import AddAction from './Add';
 import TypesManage from './Types/Manage';
@@ -46,6 +47,7 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
           path=":actionName/relationships"
           component={ActionRelationships(connect)}
         />
+        <Route path=":actionName/codegen" component={ActionsCodegen(connect)} />
         <Route
           path=":actionName/permissions"
           component={ActionPermissions(connect)}
