@@ -180,21 +180,15 @@ export default ReactTable => {
       const collapsed = this.isFolded(column);
       const { FoldedColumn } = this.props;
 
-      //Handle Column Header
-      // TODO: refactor (?) ⬇️
-      if (column.columns) {
-        if (collapsed) {
+      if (collapsed) {
+        if (column.columns) {
           column.columns = [FoldedColumn];
           column.width = FoldedColumn.width;
           column.style = FoldedColumn.style;
-        } else this.restoreToOriginal(column);
-      }
-      //Handle Normal Column.
-      else if (collapsed) {
-        column = Object.assign(column, FoldedColumn);
-      } else {
-        this.restoreToOriginal(column);
-      }
+        } else {
+          column = Object.assign(column, FoldedColumn);
+        }
+      } else this.restoreToOriginal(column);
     };
 
     applyFoldableForColumns = columns => {
