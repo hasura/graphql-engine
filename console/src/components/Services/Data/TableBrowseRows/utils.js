@@ -33,7 +33,6 @@ const getColumnsCollapsedState = () => {
 };
 
 /**
- *
  * @param {string} tableName
  * @param {{[colName: string]: boolean}} newCollapsedData
  *
@@ -64,7 +63,7 @@ const defaultColumnsOrderState = {};
 
 /**
  * @param {{
- *  [tableName: string]: {[colName: string]: boolean}
+ *  [tableName: string]: {newOrder: number, defaultOrder: number}[]
  * }} data
  */
 const setColumnsOrderState = data => {
@@ -75,7 +74,7 @@ const setColumnsOrderState = data => {
  * @param {string} tableName
  *
  * @returns {{
- *  [tableName: string]: {[colName: string]: boolean}
+ *  [tableName: string]: {newOrder: number, defaultOrder: number}[]
  * }}
  */
 const getColumnsOrderState = () => {
@@ -101,7 +100,7 @@ const compareReorderItems = item1 => item2 =>
 
 /**
  * @param {string} tableName
- * @param {any} orderData
+ * @param {{newOrder: number, defaultOrder: number}[]} orderData
  */
 export const handleOrderChange = (tableName, orderData) => {
   const currentOrders = getColumnsOrderState();
@@ -129,6 +128,11 @@ export const handleOrderChange = (tableName, orderData) => {
   });
 };
 
+/**
+ * @param {string} tableName
+ *
+ * @returns {{newOrder: number, defaultOrder: number}[]}
+ */
 export const getColumnsOrder = tableName => {
   const orderData = getColumnsOrderState();
   return orderData[tableName];
