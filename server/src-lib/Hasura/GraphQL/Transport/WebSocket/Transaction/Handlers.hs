@@ -18,6 +18,7 @@ import           Hasura.Server.Auth                                      (AuthMo
                                                                           UserAuthentication,
                                                                           resolveUserInfo)
 import           Hasura.Server.Utils
+import           Hasura.Server.Version
 
 import           Control.Concurrent                                      (threadDelay)
 import           Data.Aeson
@@ -84,7 +85,7 @@ onConnHandler (L.Logger logger) pgExecCtx corsPolicy wsId requestHead = do
         (H.statusMessage $ qeStatus qErr) []
         (BL.toStrict $ encode $ encodeGQLErr False qErr)
 
-onMessageHandler :: forall m. (MonadIO m, UserAuthentication m)
+onMessageHandler :: forall m. (HasVersion, MonadIO m, UserAuthentication m)
                  => AuthMode -> WSServerEnv -> WSTxData -> WSConn -> BL.ByteString -> m ()
 onMessageHandler authMode serverEnv wsTxData wsConn rawMessage =
   case eitherDecode rawMessage of

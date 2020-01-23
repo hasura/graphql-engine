@@ -34,6 +34,7 @@ import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                                 (RequestId, diffTimeToMicro,
                                                                       getRequestId)
+import           Hasura.Server.Version
 
 import qualified Hasura.GraphQL.Execute                              as E
 import qualified Hasura.GraphQL.Execute.LiveQuery                    as LQ
@@ -87,7 +88,7 @@ onConnHandler (L.Logger logger) corsPolicy wsId requestHead = do
         (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
 
 onMessageHandler
-  :: (MonadIO m, UserAuthentication m)
+  :: (HasVersion, MonadIO m, UserAuthentication m)
   => AuthMode
   -> WSServerEnv
   -> WSConnData
@@ -111,7 +112,7 @@ onMessageHandler authMode serverEnv connData wsConn msgRaw =
     logger = _wseLogger serverEnv
 
 onConnInit
-  :: (MonadIO m, UserAuthentication m)
+  :: (HasVersion, MonadIO m, UserAuthentication m)
   => L.Logger L.Hasura -> H.Manager -> WSConn -> WSConnData -> AuthMode -> Maybe ConnParams -> m ()
 onConnInit logger manager wsConn connData authMode connParamsM = do
   headers <- mkHeaders <$> liftIO (STM.readTVarIO (_wscUser connData))
@@ -143,7 +144,7 @@ onConnInit logger manager wsConn connData authMode connParamsM = do
       CSNotInitialised h -> unWsHeaders h
       _                  -> []
 
-onStart :: WSServerEnv -> WSConn -> WSConnData -> StartMsg -> IO ()
+onStart :: HasVersion => WSServerEnv -> WSConn -> WSConnData -> StartMsg -> IO ()
 onStart serverEnv wsConn connData (StartMsg opId q) = catchAndIgnore $ do
 
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap

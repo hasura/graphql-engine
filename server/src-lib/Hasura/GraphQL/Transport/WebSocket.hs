@@ -19,6 +19,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth                                      (AuthMode,
                                                                           UserAuthentication)
+import           Hasura.Server.Version                                   (HasVersion)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery                        as LQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Queries.Handlers     as WQH
@@ -53,7 +54,7 @@ onConn serverEnv wsId requestHead = do
                     (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
 
 onMessage
-  :: (MonadIO m, UserAuthentication m)
+  :: (HasVersion, MonadIO m, UserAuthentication m)
   => AuthMode -> WSServerEnv -> WS.OnMessageH m ConnState
 onMessage authMode serverEnv wsConn bytes =
   case WS.getData wsConn of
@@ -67,7 +68,8 @@ onClose logger lqMap wsConn =
     CSTransaction wsTxData -> WTH.onCloseHandler logger (WS.getWSId wsConn) wsTxData
 
 createWSServerApp
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MC.MonadBaseControl IO m
      , LA.Forall (LA.Pure m)
      , UserAuthentication m
