@@ -4,15 +4,15 @@
   "author": "Praveen <praveen@hasura.io>",
   "devDependencies": {
     "npm-run-all": "^4.1.5",
-    "rollup": "^1.10.1",
-    "rollup-plugin-commonjs": "^9.3.4",
-    "rollup-plugin-livereload": "^1.0.0",
-    "rollup-plugin-node-resolve": "^4.2.3",
+    "rollup": "^1.29.1",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-livereload": "^1.0.4",
+    "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-replace": "^2.2.0",
-    "rollup-plugin-svelte": "^5.0.3",
-    "rollup-plugin-terser": "^4.0.4",
-    "sirv-cli": "^0.4.0",
-    "svelte": "^3.0.0"
+    "rollup-plugin-svelte": "^5.1.1",
+    "rollup-plugin-terser": "^5.2.0",
+    "sirv-cli": "^0.4.5",
+    "svelte": "^3.17.2"
   },
   "scripts": {
     "build": "rollup -c",
@@ -23,11 +23,11 @@
     "start:dev": "sirv public --dev"
   },
   "dependencies": {
-    "apollo-cache-inmemory": "^1.6.0",
-    "apollo-client": "^2.6.0",
-    "apollo-link-http": "^1.5.14",
-    "apollo-link-ws": "^1.0.17",
-    "graphql": "^14.3.0",
+    "apollo-cache-inmemory": "^1.6.5",
+    "apollo-client": "^2.6.8",
+    "apollo-link-http": "^1.5.16",
+    "apollo-link-ws": "^1.0.19",
+    "graphql": "^14.5.8",
     "graphql-tag": "^2.10.1",
     "subscriptions-transport-ws": "^0.9.16",
     "svelte-apollo": "^0.3.0"
