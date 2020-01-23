@@ -101,9 +101,20 @@ const getColumnsOrderState = () => {
  */
 export const handleOrderChange = (tableName, orderData) => {
   const currentOrders = getColumnsOrderState();
+
+  const noDuplicatesOrdersData = orderData.filter(
+    (item, pos) =>
+      !orderData.some(
+        (mapItem, idx) =>
+          mapItem.newOrder === item.newOrder &&
+          mapItem.defaultOrder === item.defaultOrder &&
+          pos !== idx
+      )
+  );
+
   const newOrders = {
     ...currentOrders,
-    [tableName]: orderData,
+    [tableName]: noDuplicatesOrdersData,
   };
 
   setColumnsOrderState(newOrders);
