@@ -42,6 +42,7 @@
 
 .ReactTable .rt-thead.-header {
   box-shadow: none;
+  min-height: 32px;
 }
 
 .ReactTable .-pagination {
