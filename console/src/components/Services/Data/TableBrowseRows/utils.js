@@ -95,6 +95,10 @@ const getColumnsOrderState = () => {
   }
 };
 
+const compareReorderItems = item1 => item2 =>
+  item1.newOrder === item2.newOrder &&
+  item1.defaultOrder === item2.defaultOrder;
+
 /**
  * @param {string} tableName
  * @param {any} orderData
@@ -102,22 +106,27 @@ const getColumnsOrderState = () => {
 export const handleOrderChange = (tableName, orderData) => {
   const currentOrders = getColumnsOrderState();
 
-  const noDuplicatesOrdersData = orderData.filter(
-    (item, pos) =>
-      !orderData.some(
-        (mapItem, idx) =>
-          mapItem.newOrder === item.newOrder &&
-          mapItem.defaultOrder === item.defaultOrder &&
-          pos !== idx
-      )
-  );
+  // remove duplicates
+  const newOrders = [];
+  orderData.forEach(item => {
+    const sameElements = orderData.filter(compareReorderItems(item));
+    const alreadyAdded = newOrders.some(compareReorderItems(item));
 
-  const newOrders = {
+    if (sameElements.length % 2 && !alreadyAdded) {
+      newOrders.push(item);
+    }
+  });
+
+  if (!newOrders.length) {
+    delete currentOrders[tableName];
+    setColumnsOrderState(currentOrders);
+    return;
+  }
+
+  setColumnsOrderState({
     ...currentOrders,
-    [tableName]: noDuplicatesOrdersData,
-  };
-
-  setColumnsOrderState(newOrders);
+    [tableName]: newOrders,
+  });
 };
 
 export const getColumnsOrder = tableName => {
