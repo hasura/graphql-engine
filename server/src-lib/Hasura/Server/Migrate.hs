@@ -22,19 +22,20 @@ import           Data.Time.Clock               (UTCTime)
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as A
+import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Database.PG.Query.Connection  as Q
 import qualified Language.Haskell.TH.Lib       as TH
 import qualified Language.Haskell.TH.Syntax    as TH
-import qualified Data.HashMap.Strict               as HM
 
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
+import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
-import           Hasura.RQL.DDL.Relationship
 import           Hasura.Server.Logging         (StartupLog (..))
 import           Hasura.Server.Migrate.Version (latestCatalogVersion, latestCatalogVersionString)
+import           Hasura.Server.Version         (HasVersion)
 import           Hasura.SQL.Types
 
 dropCatalog :: (MonadTx m) => m ()
@@ -66,7 +67,8 @@ instance ToEngineLog MigrationResult Hasura where
 
 migrateCatalog
   :: forall m
-   . ( MonadIO m
+   . ( HasVersion
+     , MonadIO m
      , MonadTx m
      , MonadUnique m
      , HasHttpManager m

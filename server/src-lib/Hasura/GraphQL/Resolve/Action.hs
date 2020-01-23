@@ -49,6 +49,7 @@ import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Utils               (mkClientHeadersForward)
+import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
                                                     toTxtValue)
@@ -234,7 +235,8 @@ processOutputSelectionSet selectFrom fldTy flds = do
   return selectAst
 
 resolveActionInsertSync
-  :: ( MonadReusability m
+  :: ( HasVersion
+     , MonadReusability m
      , MonadError QErr m
      , MonadReader r m
      , MonadIO m
@@ -280,7 +282,7 @@ resolveActionInsertSync field executionContext sessionVariables = do
             (Just definitionList)
 
 callWebhook
-  :: (MonadIO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> [HTTP.Header]
   -> [HeaderConf]
@@ -334,7 +336,8 @@ data ActionLogItem
   } deriving (Show, Eq)
 
 asyncActionsProcessor
-  :: IORef (RebuildableSchemaCache Run, SchemaCacheVer)
+  :: HasVersion
+  => IORef (RebuildableSchemaCache Run, SchemaCacheVer)
   -> Q.PGPool
   -> HTTP.Manager
   -> IO ()
@@ -433,7 +436,8 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
 
 
 resolveActionInsert
-  :: ( MonadReusability m
+  :: ( HasVersion
+     , MonadReusability m
      , MonadError QErr m
      , MonadReader r m
      , MonadIO m

@@ -48,6 +48,7 @@ import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward)
+import           Hasura.Server.Version                  (HasVersion)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -176,7 +177,7 @@ type ExecPlanResolved
   = GQExecPlan ExecOp
 
 getResolvedExecPlan
-  :: (MonadError QErr m, MonadIO m)
+  :: (HasVersion, MonadError QErr m, MonadIO m)
   => PGExecCtx
   -> EP.PlanCache
   -> UserInfo
@@ -270,7 +271,8 @@ mutationRootName :: Text
 mutationRootName = "mutation_root"
 
 resolveMutSelSet
-  :: ( MonadError QErr m
+  :: ( HasVersion
+     , MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
      , Has MutationCtxMap r
@@ -304,7 +306,7 @@ resolveMutSelSet fields = do
       forM aliasedTxs $ \(al, tx) -> (,) al <$> tx
 
 getMutOp
-  :: (MonadError QErr m, MonadIO m)
+  :: (HasVersion, MonadError QErr m, MonadIO m)
   => GCtx
   -> SQLGenCtx
   -> UserInfo
@@ -369,7 +371,8 @@ getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld =
   runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld
 
 execRemoteGQ
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadError QErr m
      , MonadReader ExecutionCtx m
      )

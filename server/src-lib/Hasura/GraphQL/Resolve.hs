@@ -27,6 +27,7 @@ import qualified Network.HTTP.Types                as HTTP
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 
 import qualified Hasura.GraphQL.Resolve.Action     as RA
@@ -104,7 +105,8 @@ queryFldToPGAST fld = do
       QRFActionSelect <$> RA.resolveAsyncResponse ctx fld
 
 mutFldToTx
-  :: ( MonadReusability m
+  :: ( HasVersion
+     , MonadReusability m
      , MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
