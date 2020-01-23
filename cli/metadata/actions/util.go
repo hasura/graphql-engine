@@ -7,12 +7,13 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+
+	"github.com/pkg/errors"
 )
 
 func readCliExtOutput(filename string) ([]byte, error) {
 	fileBytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		fmt.Println("hererererere")
 		return nil, err
 	}
 	return fileBytes, nil
@@ -30,7 +31,17 @@ func convertMetadataToSDL(toPayload sdlToRequest, cmdName string) (toResponse sd
 	if err != nil {
 		return
 	}
-	_, err = exec.Command(cmdName, "cli-ext", "sdl", "to", string(fromByt), "--output-file", filename).Output()
+	sdlToCmd := exec.Command(cmdName, "cli-ext", "sdl", "to", string(fromByt), "--output-file", filename)
+	var stderr bytes.Buffer
+	sdlToCmd.Stderr = &stderr
+	err = sdlToCmd.Run()
+	if err != nil {
+		err = errors.Wrap(
+			fmt.Errorf(stderr.String()),
+			err.Error(),
+		)
+		return
+	}
 	if err != nil {
 		return
 	}
@@ -54,7 +65,17 @@ func convertSDLToMetadata(fromPayload sdlFromRequest, cmdName string) (fromRespo
 	if err != nil {
 		return
 	}
-	_, err = exec.Command(cmdName, "cli-ext", "sdl", "from", string(fromByt), "--output-file", filename).CombinedOutput()
+	sdlFromCmd := exec.Command(cmdName, "cli-ext", "sdl", "from", string(fromByt), "--output-file", filename)
+	var stderr bytes.Buffer
+	sdlFromCmd.Stderr = &stderr
+	err = sdlFromCmd.Run()
+	if err != nil {
+		err = errors.Wrap(
+			fmt.Errorf(stderr.String()),
+			err.Error(),
+		)
+		return
+	}
 	if err != nil {
 		return
 	}
@@ -83,7 +104,10 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string) (codege
 	actionsCodegenCmd.Stderr = &stderr
 	err = actionsCodegenCmd.Run()
 	if err != nil {
-		fmt.Println(stderr.String())
+		err = errors.Wrap(
+			fmt.Errorf(stderr.String()),
+			err.Error(),
+		)
 		return
 	}
 	tmpByt, err := readCliExtOutput(filename)
@@ -91,10 +115,12 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string) (codege
 		return
 	}
 	err = json.Unmarshal(tmpByt, &codegenResp)
-	fmt.Println(string(tmpByt))
 	if err != nil {
 		return
 	}
 	return
 }
 
+func getActionsCodegenURI(framework string) string {
+	return fmt.Sprintf(`https://raw.githubusercontent.com/%s/master/%s/codegen.js`, actionsCodegenRepo, framework)
+}

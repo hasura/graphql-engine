@@ -9,6 +9,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
+	"github.com/pkg/errors"
 
 	"github.com/oliveagle/jsonpath"
 )
@@ -47,10 +48,10 @@ func (h *HasuraDB) ExportMetadata() error {
 		return err
 	}
 
-	for _, plg := range h.config.Plugins {
+	for plgName, plg := range h.config.Plugins {
 		err = plg.Export(data)
 		if err != nil {
-			return err
+			return errors.Wrap(err, fmt.Sprintf("cannot export %s from metadata", plgName))
 		}
 	}
 	return nil
@@ -169,10 +170,10 @@ func (h *HasuraDB) DropInconsistentMetadata() error {
 
 func (h *HasuraDB) ApplyMetadata() error {
 	var tmpMeta types.Metadata
-	for _, plg := range h.config.Plugins {
+	for plgName, plg := range h.config.Plugins {
 		err := plg.Build(&tmpMeta)
 		if err != nil {
-			return err
+			return errors.Wrap(err, fmt.Sprintf("cannot build %s from metadata", plgName))
 		}
 	}
 	query := HasuraInterfaceBulk{

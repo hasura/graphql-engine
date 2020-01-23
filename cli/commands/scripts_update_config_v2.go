@@ -6,7 +6,6 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 	"github.com/hasura/graphql-engine/cli/plugins/index"
 	"github.com/hasura/graphql-engine/cli/plugins/installation"
@@ -25,9 +24,15 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			ec.Spin("Updating current config to version 2...")
+			defer ec.Spinner.Stop()
 			if ec.Config.Version != "1" {
 				return fmt.Errorf("this script can be executed only when the current version is 1")
 			}
@@ -39,7 +44,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			// update current config to v2
 			ec.Config.Version = "2"
 			ec.Config.MetadataDirectory = metadataDir
-			ec.Config.Action = actions.ActionExecutionConfig{
+			ec.Config.Action = cli.ActionExecutionConfig{
 				Kind:                  ec.Viper.GetString("actions.kind"),
 				HandlerWebhookBaseURL: ec.Viper.GetString("actions.handler_webhook_baseurl"),
 			}
@@ -52,7 +57,10 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return errors.Wrap(err, "cannot write config file")
 			}
+			ec.Spinner.Stop()
+			ec.Logger.Infoln("Updated config version to 2")
 			// install the plugin
+			ec.Spin("Installing cli-ext plugin...")
 			plugin, err := index.LoadPluginByName(ec.PluginsPath.IndexPluginsPath(), "cli-ext")
 			if err != nil {
 				return errors.Wrap(err, "cannot load plugin manifest")
@@ -62,11 +70,13 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				return errors.Wrap(err, "cannot install plugin")
 			}
 			// reload the config
+			ec.Spin("Reloading config file...")
 			err = ec.Validate()
 			if err != nil {
 				return errors.Wrap(err, "cannot validate new config")
 			}
 			// run metadata export
+			ec.Spin("Exporting metadata...")
 			migrateDrv, err := newMigrate(ec, true)
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")

@@ -19,7 +19,6 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
-	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/plugins/paths"
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
@@ -73,20 +72,32 @@ func (s *ServerConfig) ParseEndpoint() error {
 	return nil
 }
 
+type CodegenExecutionConfig struct {
+	Framework string `json:"framework"`
+	OutputDir string `json:"output_dir"`
+	URI       string `json:"uri,omitempty"`
+}
+
+type ActionExecutionConfig struct {
+	Kind                  string                  `json:"kind"`
+	HandlerWebhookBaseURL string                  `json:"handler_webhook_baseurl"`
+	Codegen               *CodegenExecutionConfig `json:"codegen,omitempty"`
+}
+
 // Config has the config values required to contact the server.
 type Config struct {
 	Version string
 	ServerConfig
 	MetadataDirectory string
-	Action            actions.ActionExecutionConfig
+	Action            ActionExecutionConfig
 }
 
 type rawConfig struct {
 	// Version for the CLI config
 	Version string `json:"version"`
 	ServerConfig
-	MetadataDirectory string                        `json:"metadata_directory"`
-	Action            actions.ActionExecutionConfig `json:"actions"`
+	MetadataDirectory string                `json:"metadata_directory"`
+	Action            ActionExecutionConfig `json:"actions"`
 }
 
 func (r rawConfig) toConfig() Config {
@@ -373,7 +384,7 @@ func (ec *ExecutionContext) checkServerVersion() error {
 	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
 	ec.Logger.Debugf("compatibility check: [%v] %v", isCompatible, reason)
 	if !isCompatible {
-		return errors.Errorf("[cli: %s] [server: %s] versions incompatible: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
+		ec.Logger.Warnf("[cli: %s] [server: %s] version mismatch: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
 	}
 	return nil
 }
@@ -413,10 +424,10 @@ func (ec *ExecutionContext) readConfig() error {
 			AdminSecret: adminSecret,
 		},
 		MetadataDirectory: v.GetString("metadata_directory"),
-		Action: actions.ActionExecutionConfig{
+		Action: ActionExecutionConfig{
 			Kind:                  v.GetString("actions.kind"),
 			HandlerWebhookBaseURL: v.GetString("actions.handler_webhook_baseurl"),
-			Codegen: &actions.CodegenExecutionConfig{
+			Codegen: &CodegenExecutionConfig{
 				Framework: v.GetString("actions.codegen.framework"),
 				OutputDir: v.GetString("actions.codegen.output_dir"),
 				URI:       v.GetString("actions.codegen.uri"),

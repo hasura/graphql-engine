@@ -4,13 +4,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 
+	"github.com/briandowns/spinner"
+	"github.com/pkg/errors"
+
+	"github.com/Masterminds/semver"
 	gyaml "github.com/ghodss/yaml"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/kinds"
 	"github.com/graphql-go/graphql/language/parser"
+	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/printer"
+	"github.com/hasura/graphql-engine/cli/plugins/index"
+	"github.com/hasura/graphql-engine/cli/plugins/installation"
+	"github.com/hasura/graphql-engine/cli/plugins/paths"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
@@ -19,8 +29,15 @@ import (
 )
 
 const (
-	actionsFileName string = "actions.yaml"
-	graphqlFileName        = "actions.graphql"
+	actionsFileName       string = "actions.yaml"
+	graphqlFileName              = "actions.graphql"
+	actionsCodegenRepo           = "wawhal/actions-codegen"
+	ActionsCodegenDirName        = "actions-codegen-assets"
+)
+
+var (
+	ActionsCodegenRepoURI = fmt.Sprintf("https://github.com/%s.git", actionsCodegenRepo)
+	pluginName            = "cli-ext"
 )
 
 type DeriveMutationPayload struct {
@@ -57,10 +74,10 @@ type sdlFromResponse struct {
 }
 
 type actionsCodegenRequest struct {
-	ActionName    string                  `json:"action_name"`
-	SDL           sdlPayload              `json:"sdl"`
-	Derive        DerivePayload           `json:"derive,omitempty"`
-	CodegenConfig *CodegenExecutionConfig `json:"codegen_config"`
+	ActionName    string                      `json:"action_name"`
+	SDL           sdlPayload                  `json:"sdl"`
+	Derive        DerivePayload               `json:"derive,omitempty"`
+	CodegenConfig *cli.CodegenExecutionConfig `json:"codegen_config"`
 }
 
 type codegenFile struct {
@@ -72,29 +89,45 @@ type actionsCodegenResponse struct {
 	Files []codegenFile `json:"codegen"`
 }
 
-type CodegenExecutionConfig struct {
-	Framework string `json:"framework"`
-	OutputDir string `json:"output_dir"`
-	URI       string `json:"uri,omitempty"`
-}
-
-type ActionExecutionConfig struct {
-	Kind                  string                  `json:"kind"`
-	HandlerWebhookBaseURL string                  `json:"handler_webhook_baseurl"`
-	Codegen               *CodegenExecutionConfig `json:"codegen,omitempty"`
-}
-
 type ActionConfig struct {
 	MetadataDir  string
-	ActionConfig ActionExecutionConfig
+	ActionConfig cli.ActionExecutionConfig
 	cmdName      string
+	shouldSkip   bool
+
+	spinner *spinner.Spinner
+	logger  *logrus.Logger
 }
 
-func New(baseDir string, actionConfig ActionExecutionConfig, cmdName string) *ActionConfig {
+func New(ec *cli.ExecutionContext) *ActionConfig {
+	var shouldSkip bool
+	if ec.Version.ServerSemver != nil {
+		cons, err := semver.NewConstraint(">= v1.1.0")
+		if err != nil {
+			panic(err)
+		}
+		shouldSkip = !cons.Check(ec.Version.ServerSemver)
+	}
+	if !shouldSkip {
+		err := ensureCLIExtension(ec.PluginsPath)
+		if err != nil {
+			ec.Spinner.Stop()
+			ec.Logger.Errorln(err)
+			msg := fmt.Sprintf(`unable to install cli-ext plugin. execute the following commands to continue:
+
+  hasura plugins install %s
+`, pluginName)
+			ec.Logger.Fatalln(msg)
+			return nil
+		}
+	}
 	return &ActionConfig{
-		MetadataDir:  baseDir,
-		ActionConfig: actionConfig,
-		cmdName:      cmdName,
+		MetadataDir:  ec.MetadataDir,
+		ActionConfig: ec.Config.Action,
+		cmdName:      ec.CMDName,
+		shouldSkip:   shouldSkip,
+		spinner:      ec.Spinner,
+		logger:       ec.Logger,
 	}
 }
 
@@ -129,7 +162,7 @@ func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMu
 	if introSchema == nil {
 		defaultSDL = `
 extend type Mutation {
-	""" Define your action as a mutation here """
+	# Define your action as a mutation here
 	` + name + ` (arg1: SampleInput!): SampleOutput
 }
 
@@ -234,6 +267,9 @@ func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
 		CodegenConfig: a.ActionConfig.Codegen,
 		Derive:        derivePld,
 	}
+	if a.ActionConfig.Codegen.URI == "" {
+		data.CodegenConfig.URI = getActionsCodegenURI(data.CodegenConfig.Framework)
+	}
 	resp, err := getActionsCodegen(data, a.cmdName)
 	if err != nil {
 		return err
@@ -271,6 +307,21 @@ func (a *ActionConfig) CreateFiles() error {
 }
 
 func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
+	if a.shouldSkip {
+		_, err := GetActionsFileContent(a.MetadataDir)
+		if err == nil {
+			a.spinner.Stop()
+			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", actionsFileName)
+			a.spinner.Start()
+		}
+		_, err = GetActionsGraphQLFileContent(a.MetadataDir)
+		if err == nil {
+			a.spinner.Stop()
+			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", graphqlFileName)
+			a.spinner.Start()
+		}
+		return nil
+	}
 	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
 	if err != nil {
 		return err
@@ -388,6 +439,10 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 }
 
 func (a *ActionConfig) Export(metadata dbTypes.Metadata) error {
+	if a.shouldSkip {
+		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
+		return nil
+	}
 	tmpByt, err := json.Marshal(metadata)
 	if err != nil {
 		return err
@@ -441,4 +496,19 @@ func GetActionsGraphQLFileContent(metadataDir string) (sdl string, err error) {
 	}
 	sdl = string(commonByt)
 	return
+}
+
+func ensureCLIExtension(paths paths.Paths) error {
+	plugin, err := index.LoadPluginByName(paths.IndexPluginsPath(), pluginName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
+		}
+		return errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
+	}
+	err = installation.Install(paths, plugin)
+	if err != nil && err != installation.ErrIsAlreadyInstalled {
+		return errors.Wrap(err, "cannot install cli-ext plugin")
+	}
+	return nil
 }

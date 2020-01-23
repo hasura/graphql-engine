@@ -656,3 +656,10 @@ CREATE VIEW hdb_catalog.hdb_computed_field_function AS
     END AS function_schema
   FROM hdb_catalog.hdb_computed_field
 );
+
+CREATE OR REPLACE FUNCTION hdb_catalog.check_violation(msg text) RETURNS bool AS 
+$$
+  BEGIN
+    RAISE check_violation USING message=msg;
+  END;
+$$ LANGUAGE plpgsql;

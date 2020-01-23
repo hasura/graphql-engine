@@ -15,13 +15,16 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	actionsCodegenCmd := &cobra.Command{
-		Use:               "codegen",
-		Short:             "",
-		SilenceUsage:      true,
-		PersistentPreRunE: ensureCLIExtension,
+		Use:          "codegen",
+		Short:        "",
+		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
-			err := ec.Validate()
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
+			err = ec.Validate()
 			if err != nil {
 				return err
 			}
@@ -31,7 +34,7 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if ec.MetadataDir == "" {
 				return fmt.Errorf("actions commands can be executed only when metadata_dir is set in config")
 			}
-			return ensureCLIExtension(cmd, args)
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.actions = args
@@ -61,10 +64,19 @@ type actionsCodegenOptions struct {
 
 func (o *actionsCodegenOptions) run() (err error) {
 
-	actionCfg := actions.New(o.EC.MetadataDir, o.EC.Config.Action, o.EC.CMDName)
+	actionCfg := actions.New(o.EC)
 	var derivePayload actions.DerivePayload
 
+	if o.EC.Config.Action.Codegen.Framework == "" {
+		infoMsg := fmt.Sprintf(`Could not find codegen config in config.yaml. For setting codegen config, run:
+
+  hasura actions use-codegen`)
+		o.EC.Logger.Error(infoMsg)
+		return nil
+	}
+
 	// if no actions are passed, perform codegen for all actions
+	o.EC.Spin("Generating code...")
 	var codegenActions []string
 	if len(o.actions) == 0 {
 		actionsFileContent, err := actions.GetActionsFileContent(o.EC.MetadataDir)
@@ -84,6 +96,9 @@ func (o *actionsCodegenOptions) run() (err error) {
 			return err
 		}
 	}
+
+	o.EC.Spinner.Stop()
+	o.EC.Logger.Info("Codegen files generated at " + o.EC.Config.Action.Codegen.OutputDir)
 
 	return nil
 

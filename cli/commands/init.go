@@ -15,6 +15,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/metadata/tables"
 	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
 	hasuradbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
+	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/ghodss/yaml"
@@ -50,8 +51,13 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
   # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(1),
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = viper.New()
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
+			return gitutil.EnsureCloned(ec.PluginsPath.IndexPath())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 {
@@ -163,7 +169,7 @@ func (o *initOptions) createFiles() error {
 			Endpoint: "http://localhost:8080",
 		},
 		MetadataDirectory: o.MetadataDir,
-		Action: actions.ActionExecutionConfig{
+		Action: cli.ActionExecutionConfig{
 			Kind:                  o.ActionKind,
 			HandlerWebhookBaseURL: o.ActionHandler,
 		},
@@ -209,7 +215,7 @@ func (o *initOptions) createFiles() error {
 	plugins["query_collections"] = querycollections.New(ec.MetadataDir)
 	plugins["allow_list"] = allowlist.New(ec.MetadataDir)
 	plugins["remote_schemas"] = remoteschemas.New(ec.MetadataDir)
-	plugins["actions"] = actions.New(ec.MetadataDir, ec.Config.Action, ec.CMDName)
+	plugins["actions"] = actions.New(ec)
 	for _, plg := range plugins {
 		err := plg.CreateFiles()
 		if err != nil {
@@ -237,20 +243,9 @@ func (o *initOptions) createTemplateFiles() error {
 	if !info.IsDir() {
 		return errors.Errorf("template should be a directory")
 	}
-	contents, err := ioutil.ReadDir(templatePath)
+	err = util.CopyDir(templatePath, filepath.Join(o.EC.ExecutionDirectory, "install-manifest"))
 	if err != nil {
 		return err
-	}
-	for _, content := range contents {
-		cs, cd := filepath.Join(templatePath, content.Name()), filepath.Join(o.EC.ExecutionDirectory, "install-manifest", content.Name())
-		// TODO: do we need *.md files?
-		if strings.ToLower(filepath.Ext(cs)) == ".md" {
-			continue
-		}
-		err = util.CopyFile(cs, cd)
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }

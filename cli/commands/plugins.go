@@ -14,8 +14,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/plugins/index"
-	"github.com/hasura/graphql-engine/cli/plugins/installation"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -166,20 +164,4 @@ func limitString(s string, length int) string {
 		s = s[:length-3] + "..."
 	}
 	return s
-}
-
-func ensureCLIExtension(_ *cobra.Command, _ []string) error {
-	pluginName := "cli-ext"
-	plugin, err := index.LoadPluginByName(ec.PluginsPath.IndexPluginsPath(), pluginName)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
-		}
-		return errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
-	}
-	err = installation.Install(ec.PluginsPath, plugin)
-	if err != nil && err != installation.ErrIsAlreadyInstalled {
-		return errors.Wrap(err, "cannot install cli-ext plugin")
-	}
-	return nil
 }
