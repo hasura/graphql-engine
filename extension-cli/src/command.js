@@ -3,7 +3,6 @@ import {
   sdl,
   actionsCodegen
 } from './services';
-import version from './utils/version';
 import fs from 'fs';
 import { getFlagValue, OUTPUT_FILE_FLAG } from './utils/commandUtils';
 import { importDeps } from './utils/dependencies'
@@ -34,9 +33,6 @@ const handleArgs = () => {
     case 'actions-codegen':
       const actionCodegenSubCommands = commandArgs.slice(3);
       return actionsCodegen(actionCodegenSubCommands);
-    case 'version':
-      const versionSubCommands = commandArgs.slice(3);
-      return version(versionSubCommands);
     default:
       return;
   }

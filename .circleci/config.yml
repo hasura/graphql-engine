@@ -353,6 +353,45 @@ jobs:
         root: /build
         paths:
           - _cli_output
+  
+  test_and_build_cli_ext:
+    docker:
+    - image: hasura/graphql-engine-console-builder:20190515
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - restore_cache:
+        key:
+          cli-ext-npm-cache-{{ checksum "extension-cli/package.json" }}-{{ checksum "extension-cli/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: extension-cli
+        command: make ci-deps
+    - save_cache:
+        key:
+          cli-ext-npm-cache-{{ checksum "extension-cli/package.json" }}-{{ checksum "extension-cli/package-lock.json" }}
+        paths:
+        - extension-cli/node_modules
+        - ~/.npm
+        - ~/.
+    - run:
+        name: build extension cli
+        working_directory: extension-cli
+        command: |
+          npm install -g pkg
+          npm run build
+          make deploy
+          make ci-copy-assets
+    - store_artifacts:
+        path: /build/_cli_ext_output
+        destination: cli_ext
+    - persist_to_workspace:
+        root: /build
+        paths:
+          - _cli_ext_output
 
   # build console assets
   build_console:
@@ -544,6 +583,10 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - build_server
+    - test_and_build_cli_ext:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_cli
     - test_console:
         <<: *filter_only_vtags
         requires:

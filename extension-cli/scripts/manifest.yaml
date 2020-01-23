@@ -1,0 +1,27 @@
+name: cli-ext
+version: "${VERSION}"
+shortDescription: "Hasura CLI extension"
+homepage: https://github.com/hasura/graphql-engine
+hidden: true
+platforms:
+  - uri: "${BUCKET_URL}/command-linux.tar.gz"
+    sha256: "${LINUX_SHA256}"
+    bin: command-linux
+    files:
+      - from: ./command-linux
+        to: command-linux
+    selector: linux-amd64
+  - uri: "${BUCKET_URL}/command-macos.tar.gz"
+    sha256: "${MACOS_SHA256}"
+    bin: command-macos
+    files:
+      - from: ./command-macos
+        to: command-macos
+    selector: darwin-amd64
+  - uri: "${BUCKET_URL}/command-win.zip"
+    sha256: "${WINDOWS_SHA256}"
+    bin: command-win.exe
+    files:
+      - from: ./command-win.exe
+        to: command-win.exe
+    selector: windows-amd64
