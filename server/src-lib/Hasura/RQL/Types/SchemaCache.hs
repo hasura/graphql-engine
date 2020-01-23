@@ -162,8 +162,6 @@ mkComputedFieldDep reason tn computedField =
 
 type WithDeps a = (a, [SchemaDependency])
 
-
-
 data RemoteSchemaCtx
   = RemoteSchemaCtx
   { rscName :: !RemoteSchemaName

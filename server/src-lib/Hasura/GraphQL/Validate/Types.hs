@@ -406,10 +406,10 @@ data TypeInfo
   deriving (Show, Eq, TH.Lift)
 
 instance J.ToJSON TypeInfo where
-  toJSON typeInfo = J.String "toJSON not implemented for TypeInfo"
+  toJSON _ = J.String "toJSON not implemented for TypeInfo"
 
 instance J.FromJSON TypeInfo where
-  parseJSON value = fail "FromJSON not implemented for TypeInfo"
+  parseJSON _ = fail "FromJSON not implemented for TypeInfo"
 
 -- $(J.deriveJSON
 --   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2

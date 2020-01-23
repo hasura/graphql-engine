@@ -26,7 +26,6 @@ import qualified Network.HTTP.Types                as HTTP
 
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.Prelude
-import           Hasura.RQL.DML.Internal           (currentSession, sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
@@ -103,23 +102,6 @@ queryFldToPGAST fld = do
       QRFAgg <$> RS.convertFuncQueryAgg ctx fld
     QCActionFetch ctx ->
       QRFActionSelect <$> RA.resolveAsyncResponse ctx fld
-
-queryFldToSQL
-  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
-     , Has QueryCtxMap r
-     )
-  => PrepFn m
-  -> V.Field
-  -> m Q.Query
-queryFldToSQL fn fld = do
-  pgAST <- queryFldToPGAST fld
-  resolvedAST <- flip traverseQueryRootFldAST pgAST $ \case
-    UVPG annPGVal -> fn annPGVal
-    UVSQL sqlExp  -> return sqlExp
-    UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
-    UVSession -> pure currentSession
-  return $ toPGQuery resolvedAST
 
 mutFldToTx
   :: ( MonadReusability m

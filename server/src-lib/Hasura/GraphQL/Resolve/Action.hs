@@ -71,9 +71,7 @@ data ResponseFieldResolved
   deriving (Show, Eq)
 
 resolveOutputSelectionSet
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r
-     )
+  :: (MonadError QErr m)
   => G.NamedType
   -> SelSet
   -> m [(Text, OutputFieldResolved)]
@@ -83,9 +81,7 @@ resolveOutputSelectionSet ty selSet =
     G.Name t     -> return $ OutputFieldSimple t
 
 resolveResponseSelectionSet
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r
-     )
+  :: (MonadError QErr m)
   => G.NamedType
   -> SelSet
   -> m [(Text, ResponseFieldResolved)]
@@ -128,7 +124,7 @@ type ActionSelectResolved = ActionSelect S.SQLExp
 type ActionSelectUnresolved = ActionSelect UnresolvedVal
 
 actionSelectToSql :: ActionSelectResolved -> Q.Query
-actionSelectToSql (ActionSelect actionIdExp selection actionFilter) =
+actionSelectToSql (ActionSelect actionIdExp selection _) =
   Q.fromBuilder $ toSQL selectAST
   where
     selectAST =
@@ -175,10 +171,6 @@ actionSelectToSql (ActionSelect actionIdExp selection actionFilter) =
 resolveActionSelect
   :: ( MonadReusability m
      , MonadError QErr m
-     , MonadReader r m
-     , Has FieldMap r
-     , Has OrdByCtx r
-     , Has SQLGenCtx r
      )
   => ActionSelectOpContext
   -> Field
@@ -456,15 +448,15 @@ resolveActionInsert field executionContext sessionVariables =
       resolveActionInsertAsync field actionFilter sessionVariables
 
 resolveActionInsertAsync
-  :: ( MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, Has [HTTP.Header] r
+  :: ( MonadError QErr m, MonadReader r m
+     , Has [HTTP.Header] r
      )
   => Field
   -> AnnBoolExpPartialSQL
   -- We need the sesion variables for column presets
   -> UserVars
   -> m RespTx
-resolveActionInsertAsync field actionFilter sessionVariables = do
+resolveActionInsertAsync field _ sessionVariables = do
 
   responseSelectionSet <- resolveResponseSelectionSet (_fType field) $ _fSelSet field
   reqHeaders <- asks getter
