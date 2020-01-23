@@ -191,9 +191,15 @@ actionSelectToTx :: ActionSelectResolved -> RespTx
 actionSelectToTx actionSelect =
   asSingleRowJsonResp (actionSelectToSql actionSelect) []
 
+newtype ActionContext
+  = ActionContext {_acName :: ActionName}
+  deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ActionContext)
+
 data ActionWebhookPayload
   = ActionWebhookPayload
-  { _awpSessionVariables :: !UserVars
+  { _awpAction           :: !ActionContext
+  , _awpSessionVariables :: !UserVars
   , _awpInput            :: !J.Value
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
@@ -244,7 +250,8 @@ resolveActionInsertSync
   -> m RespTx
 resolveActionInsertSync field executionContext sessionVariables = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
-      handlerPayload = ActionWebhookPayload sessionVariables inputArgs
+      actionContext = ActionContext actionName
+      handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
   manager <- asks getter
   reqHeaders <- asks getter
   webhookRes <- callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook handlerPayload
@@ -260,7 +267,7 @@ resolveActionInsertSync field executionContext sessionVariables = do
       astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
       return $ asSingleRowJsonResp (RS.selectQuerySQL True astResolved) []
   where
-    SyncActionExecutionContext returnStrategy resolvedWebhook confHeaders
+    SyncActionExecutionContext actionName returnStrategy resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
     mkJsonToRecordFromExpression definitionList webhookResponseExpression =
@@ -355,8 +362,9 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
           let webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition
+              actionContext = ActionContext actionName
           res <- runExceptT $ callWebhook httpManager reqHeaders confHeaders forwardClientHeaders webhookUrl $
-            ActionWebhookPayload sessionVariables inputPayload
+            ActionWebhookPayload actionContext sessionVariables inputPayload
           case res of
             Left e                -> setError actionId e
             Right responsePayload -> setCompleted actionId responsePayload

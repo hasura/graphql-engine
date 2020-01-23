@@ -69,7 +69,7 @@ mkMutationField actionName actionInfo permission definitionList =
     actionExecutionContext =
       case _adKind definition of
         ActionSynchronous  ->
-          ActionExecutionSyncWebhook $ SyncActionExecutionContext
+          ActionExecutionSyncWebhook $ SyncActionExecutionContext actionName
   -- TODO: only covers object types
           (ExecOnPostgres definitionList)
           (_adHandler definition)
