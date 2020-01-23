@@ -29,10 +29,49 @@
   <div id="custom-doc" class="{% block bodyclass %}{{ 'yui-t6' if not is_landing_page else '' }}{% endblock %}">
     <div class="main_container_wrapper">
       {% include 'pages/loading.html' %}
+      <div class="header_wrapper">
+        <div class="brand">
+          <a href="https://{{ BASE_DOMAIN }}/" target="_blank" rel="noopener">
+            <div class="img_wrapper inline-block">
+              <img class="responsive logo_img" src="{{ pathto('_images/layout/logo-lite.svg', 1) }}" alt="Hasura Logo Light" />
+            </div>
+          </a>
+          <a class="docs_label" href="{{ pathto('', 1) }}">
+            <img class="responsive log_docs_img" src="{{ pathto('_images/layout/docs.svg', 1) }}" alt="Hasura Logo Light" />
+          </a>
+          <a class="version_txt">
+            <select value="{{ version }}" onchange="location = this.value;" class="selected" aria-label="Select Version">
+              {%- if version == '1.0' %}
+                <option class="option_val" value="https://docs.{{ BASE_DOMAIN }}/1.0" selected="selected">v1.0</option>
+              {%- else -%}
+                <option class="option_val" value="https://docs.{{ BASE_DOMAIN }}/1.0">v1.0</option>
+              {% endif %}
+            </select>
+          </a>
+        </div>
+        <div class="search_wrapper mobile-hide" id="input_search_box">
+          <img class="search_icon" src="{{ pathto('_images/layout/search-icon.svg', 1) }}" alt="Search icon"/>
+          <input type="text" id="search_element" placeholder="Search docs..." />
+        </div>
+        <a class="discordBtn" href="https://discordapp.com/invite/hasura" target="_blank" rel="noopener noreferrer" aria-label="Discord">
+          <img src="{{ pathto('_images/layout/discord-brands-block.svg', 1) }}" alt="Discord"/>
+        </a>
+        <a class="twitterBtn" href="https://twitter.com/hasurahq" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
+          <img src="{{ pathto('_images/layout/twitter-brands-block.svg', 1) }}" alt="Twitter"/>
+        </a>
+        <div class="gitHubBtn">
+          <iframe src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true" frameBorder="0" scrolling="0" width="100px" height="20px" title="github button"></iframe>
+        </div>
+        <div class="buttonWrapper mobile-hide">
+          <a href="https://learn.hasura.io/" target="_blank" rel="noopener noreferrer">
+            <button class="commonBtn navBtn">Tutorials</button>
+          </a>
+        </div>
+      </div>
       <div id="" class="content_wrapper">
-        {%- if is_landing_page %}
-          {% include 'pages/landing.html' %}
-        {%- else %}
+          {%- if is_landing_page %}
+            {% include 'pages/landing.html' %}
+          {%- else %}
           {% set rootpage = 'common' %}
           {% set pagenameSplit = pagename.split('/') %}
 
@@ -46,6 +85,7 @@
             <div role="main" parent={{ rootpage }}>
 
               <div id="docs-header">
+                <!--
                 <div class="mobile-only" id="mobile-logo">
                   <a href="https://{{ BASE_DOMAIN }}/" target="_blank" rel="noopener">
                     <div class="img_wrapper inline-block">
@@ -54,10 +94,16 @@
                   </a>
                   <a href="https://docs.{{ BASE_DOMAIN }}" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
+                -->
                 <div id="docs-header-actions">
                   <div class="inline-block mobile-only" id="nav_tree_icon">
-                    <span class="fa fa-bars"></span>
+                    <img class="responsive" src="{{ pathto('_images/layout/menu-bar.svg', 1) }}" alt="Menu bar" />
                   </div>
+                  <div class="search_wrapper mobile-only" id="input_search_box">
+                    <img class="search_icon" src="{{ pathto('_images/layout/search-icon-mobile.svg', 1) }}" alt="Search icon"/>
+                    <input type="text" id="search_element" placeholder="Search docs..." />
+                  </div>
+                  <!--
                   <div class="inline-block" id="input_search_box">
                     <span class="fa fa-search search_icon"></span>
                     <input type="text" id="search_element" placeholder="Search docs..." />
@@ -85,7 +131,14 @@
                       </div>
                     </div>
                   </div>
+                  -->
+                  <div class="buttonWrapper mobile-only">
+                    <a href="https://learn.hasura.io/" target="_blank" rel="noopener noreferrer">
+                      <button class="commonBtn navBtnMobile">Tutorials</button>
+                    </a>
+                  </div>
                 </div>
+
               </div>
 
               <div id="docs-content">
