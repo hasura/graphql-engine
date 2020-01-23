@@ -1,5 +1,5 @@
 const { getTypesSdl, getActionDefinitionSdl } = require('../../../shared/utils/sdlUtils');
-const { deriveMutation } = require('../../derive/derive')
+const { deriveMutationString } = require('../../derive/derive')
 
 const handlePayload = (payload) => {
 
@@ -45,7 +45,7 @@ const handlePayload = (payload) => {
 
   if (deriveMutationName) {
     try {
-      const derivation = deriveMutation(deriveMutationName, introspectionSchema, actionName);
+      const derivation = deriveMutationString(deriveMutationName, introspectionSchema, actionName);
       const derivedActionSdl = getActionDefinitionSdl(derivation.action.name, derivation.action.arguments, derivation.action.output_type);
       const derivedTypesSdl = getTypesSdl(derivation.types);
       sdl = `${derivedActionSdl}\n\n${derivedTypesSdl}\n\n${sdl}`

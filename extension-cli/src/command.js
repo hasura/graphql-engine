@@ -5,7 +5,6 @@ import {
 } from './services';
 import fs from 'fs';
 import { getFlagValue, OUTPUT_FILE_FLAG } from './utils/commandUtils';
-import { importDeps } from './utils/dependencies'
 
 const commandArgs = process.argv;
 const outputFilePath = getFlagValue(commandArgs, OUTPUT_FILE_FLAG);

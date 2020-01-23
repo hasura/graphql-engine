@@ -1,4 +1,5 @@
 const { getAllActionsFromSdl, getAllTypesFromSdl } = require('../../../shared/utils/sdlUtils');
+const { reformCustomTypes } = require('../../../shared/utils/hasuraCustomTypeUtils')
 
 const handlePayload = (payload) => {
 
@@ -10,6 +11,15 @@ const handlePayload = (payload) => {
   const { sdl } = payload;
 
   let customTypes, typesParseError;
+
+  if (!sdl.complete.trim()) {
+    response.body = {
+      actions: [],
+      types: reformCustomTypes([])
+    }
+    return response
+  }
+
   try {
     customTypes = getAllTypesFromSdl(sdl.complete);
   } catch (e) {
