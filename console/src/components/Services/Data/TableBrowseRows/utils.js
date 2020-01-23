@@ -11,8 +11,6 @@ const setColumnsCollapsedState = data => {
 };
 
 /**
- * @param {string} tableName
- *
  * @returns {{
  *  [tableName: string]: {[colName: string]: boolean}
  * }}
@@ -59,4 +57,59 @@ export const handleCollapseChange = (tableName, collapsedData) => {
 export const getCollapsedColumns = tableName => {
   const collapsedData = getColumnsCollapsedState();
   return collapsedData[tableName];
+};
+
+const columnsOrderState = 'data:order';
+const defaultColumnsOrderState = {};
+
+/**
+ * @param {{
+ *  [tableName: string]: {[colName: string]: boolean}
+ * }} data
+ */
+const setColumnsOrderState = data => {
+  window.localStorage.setItem(columnsOrderState, JSON.stringify(data));
+};
+
+/**
+ * @param {string} tableName
+ *
+ * @returns {{
+ *  [tableName: string]: {[colName: string]: boolean}
+ * }}
+ */
+const getColumnsOrderState = () => {
+  try {
+    const p = window.localStorage.getItem(columnsOrderState);
+    if (p) {
+      return JSON.parse(p);
+    }
+    window.localStorage.setItem(
+      columnsOrderState,
+      JSON.stringify(defaultColumnsOrderState)
+    );
+    return defaultColumnsOrderState;
+  } catch (e) {
+    console.error(e);
+    return defaultColumnsOrderState;
+  }
+};
+
+/**
+ * @param {string} tableName
+ * @param {any} orderData
+ */
+export const handleOrderChange = (tableName, orderData) => {
+  const currentOrders = getColumnsOrderState();
+  const newOrders = {
+    ...currentOrders,
+    [tableName]: orderData,
+  };
+
+  setColumnsOrderState(newOrders);
+};
+
+export const getColumnsOrder = tableName => {
+  const orderData = getColumnsOrderState();
+  return orderData[tableName];
 };

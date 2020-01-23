@@ -45,7 +45,12 @@ import {
   getTableSchema,
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
-import { handleCollapseChange, getCollapsedColumns } from './utils';
+import {
+  handleCollapseChange,
+  getCollapsedColumns,
+  handleOrderChange,
+  getColumnsOrder,
+} from './utils';
 
 const ViewRows = ({
   curTableName,
@@ -744,6 +749,7 @@ const ViewRows = ({
     }
 
     const collapsedColumns = getCollapsedColumns(curTableName);
+    const columnsOrder = getColumnsOrder(curTableName);
 
     let disableSortColumn = false;
 
@@ -866,6 +872,10 @@ const ViewRows = ({
           handleCollapseChange(curTableName, collapsedData)
         }
         defaultCollapsed={collapsedColumns}
+        onOrderChange={reorderData =>
+          handleOrderChange(curTableName, reorderData)
+        }
+        defaultReorders={columnsOrder}
       />
     );
   };

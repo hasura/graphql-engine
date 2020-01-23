@@ -9,7 +9,7 @@ class DragFoldTable extends Component {
   constructor(props) {
     super(props);
     this.dragged = null;
-    this.reorders = [];
+    this.reorders = props.defaultReorders || [];
     this.state = {
       trigger: 0,
       folded: props.defaultCollapsed || {},
@@ -47,6 +47,9 @@ class DragFoldTable extends Component {
             newOrder: i,
             defaultOrder: this.dragged,
           });
+        }
+        if (this.props.onOrderChange) {
+          this.props.onOrderChange(this.reorders);
         }
         this.setState({ trigger: Math.random() });
       };
