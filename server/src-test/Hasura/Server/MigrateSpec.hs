@@ -63,16 +63,13 @@ spec
 spec pgConnInfo = do
   let dropAndInit time = CacheRefT $ flip modifyMVar \_ ->
         dropCatalog *> (swap <$> migrateCatalog time)
-      upgradeToLatest time = CacheRefT $ flip modifyMVar \_ ->
-        swap <$> migrateCatalog time
-      downgradeTo v = downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
-      dumpSchema = execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
-
+      
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
       (dropAndInit =<< liftIO getCurrentTime) `shouldReturn` MRInitialized
 
     it "is idempotent" \(NT transact) -> do
+      let dumpSchema = execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
       time <- getCurrentTime
       transact (dropAndInit time) `shouldReturn` MRInitialized
       firstDump <- transact dumpSchema
@@ -81,6 +78,9 @@ spec pgConnInfo = do
       secondDump `shouldBe` firstDump
       
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
+      let downgradeTo v = downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
+          upgradeToLatest time = CacheRefT $ flip modifyMVar \_ ->
+            swap <$> migrateCatalog time
       time <- getCurrentTime
       transact (dropAndInit time) `shouldReturn` MRInitialized
       downgradeResult <- (transact . lift) (downgradeTo "12" time)

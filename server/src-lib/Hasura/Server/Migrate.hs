@@ -5,6 +5,10 @@
 --   1. Bump the catalog version number in "Hasura.Server.Migrate.Version".
 --   2. Add a migration script in the @src-rsr/migrations/@ directory with the name
 --      @<old version>_to_<new version>.sql@.
+--   3. Create a downgrade script in the @src-rsr/migrations/@ directory with the name
+--      @<new version>_to_<old version>.sql@.
+--   4. If making a new release, add the mapping from application version to catalog
+--      schema version in @src-lib/Hasura/Server/Init.hs@.
 --
 -- The Template Haskell code in this module will automatically compile the new migration script into
 -- the @graphql-engine@ executable.
@@ -69,6 +73,8 @@ instance ToEngineLog MigrationResult Hasura where
     }
 
 -- A migration and (hopefully) also its inverse if we have it.
+-- Polymorphic because `m` can be any `MonadTx`, `MonadIO` when 
+-- used in the `migrations` function below.
 data MigrationPair m = MigrationPair
   { mpMigrate :: m ()
   , mpDown :: Maybe (m ())
@@ -184,26 +190,21 @@ downgradeCatalog opts time = do
     -- downgrades an existing catalog to the specified version
     downgradeFrom :: T.Text -> m MigrationResult
     downgradeFrom previousVersion
-      | previousVersion == dgoTargetVersion opts = do
-          pure MRNothingToDo
-      | previousVersion /= latestCatalogVersionString = do
-          throw400 NotSupported $
-            "In order to downgrade the catalog schema using this executable, you must be running catalog version "
-            <> latestCatalogVersionString
-            <> "."
-      | otherwise = 
-          case neededDownMigrations (dgoTargetVersion opts) of
-            Left reason -> 
-              throw400 NotSupported $
-                "This downgrade path (from "
-                  <> previousVersion <> " to " 
-                  <> dgoTargetVersion opts <> 
-                  ") is not supported, because "
-                  <> reason
-            Right path -> do
-              sequence_ path 
-              setCatalogVersion (dgoTargetVersion opts) time
-              pure (MRMigrated previousVersion)
+        | previousVersion == dgoTargetVersion opts = do
+            pure MRNothingToDo
+        | otherwise = 
+            case neededDownMigrations (dgoTargetVersion opts) of
+              Left reason -> 
+                throw400 NotSupported $
+                  "This downgrade path (from "
+                    <> previousVersion <> " to " 
+                    <> dgoTargetVersion opts <> 
+                    ") is not supported, because "
+                    <> reason
+              Right path -> do
+                sequence_ path 
+                setCatalogVersion (dgoTargetVersion opts) time
+                pure (MRMigrated previousVersion)
       
       where
         neededDownMigrations newVersion = 
@@ -215,20 +216,26 @@ downgradeCatalog opts time = do
           -> T.Text 
           -> [(T.Text, MigrationPair m)]
           -> Either T.Text [m ()]
-        downgrade from to = step1 where
-          step1, step2 :: [(T.Text, MigrationPair m)] -> Either T.Text [m ()]
-          step1 xs | previousVersion == from = step2 xs
-          step1 [] = Left "the starting version is unrecognized."
-          step1 ((x, _):xs)
-            | x == from = step2 xs
-            | otherwise = step1 xs
-            
-          step2 [] = Left "the target version is unrecognized."
-          step2 ((x, MigrationPair{ mpDown = Nothing }):_) = 
+        downgrade lower upper = skipFutureDowngrades where
+          -- We find the list of downgrade scripts to run by first
+          -- dropping any downgrades which correspond to newer versions
+          -- of the schema than the one we're running currently.
+          -- Then we take migrations as needed until we reach the target
+          -- version, dropping any remaining migrations from the end of the
+          -- (reversed) list.
+          skipFutureDowngrades, dropOlderDowngrades :: [(T.Text, MigrationPair m)] -> Either T.Text [m ()]
+          skipFutureDowngrades xs | previousVersion == lower = dropOlderDowngrades xs
+          skipFutureDowngrades [] = Left "the starting version is unrecognized."
+          skipFutureDowngrades ((x, _):xs)
+            | x == lower = dropOlderDowngrades xs
+            | otherwise = skipFutureDowngrades xs
+
+          dropOlderDowngrades [] = Left "the target version is unrecognized."
+          dropOlderDowngrades ((x, MigrationPair{ mpDown = Nothing }):_) = 
             Left $ "there is no available migration back to version " <> x <> "."
-          step2 ((x, MigrationPair{ mpDown = Just y }):xs)
-            | x == to = Right [y]
-            | otherwise = (y:) <$> step2 xs
+          dropOlderDowngrades ((x, MigrationPair{ mpDown = Just y }):xs)
+            | x == upper = Right [y]
+            | otherwise = (y:) <$> dropOlderDowngrades xs
 
 -- | The old 0.8 catalog version is non-integral, so we store it in the database as a
 -- string.
