@@ -123,6 +123,15 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 		newCodegenExecutionConfig.Framework = o.framework
 	}
 
+	// if with-starter-kit flag is not provided, give an option to clone a starterkit
+	if !o.withStarterKit {
+		shouldCloneStarterKit, err := util.GetYesNoPrompt("Do you also want to clone a starter kit for " + newCodegenExecutionConfig.Framework + "?")
+		if err != nil {
+			return err
+		}
+		o.withStarterKit = shouldCloneStarterKit == "y"
+	}
+
 	// if output directory is not provided, make them enter it
 	if o.outputDir == "" {
 		outputDir, err := util.GetFSPathPrompt("Where do you want to place the codegen files?", o.EC.Config.Action.Codegen.OutputDir)
@@ -148,15 +157,6 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 	}
 
 	o.EC.Logger.Info("Codegen configuration updated in config.yaml\n\n")
-
-	// if with-starter-kit flag is not provided, give an option to clone a starterkit
-	if !o.withStarterKit {
-		shouldCloneStarterKit, err := util.GetYesNoPrompt("Do you also want to clone a starter kit for " + newCodegenExecutionConfig.Framework + "?")
-		if err != nil {
-			return err
-		}
-		o.withStarterKit = shouldCloneStarterKit == "y"
-	}
 
 	// clone the starter kit
 	if o.withStarterKit {
