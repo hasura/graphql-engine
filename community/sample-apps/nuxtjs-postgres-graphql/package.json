@@ -12,13 +12,13 @@
   },
   "dependencies": {
     "@nuxtjs/apollo": "^4.0.0-rc2.3",
-    "apollo-cache-inmemory": "^1.4.2",
-    "core-js": "^2.6.3",
-    "cross-env": "^5.2.0",
+    "apollo-cache-inmemory": "^1.6.5",
+    "core-js": "^2.6.6",
+    "cross-env": "^6.0.3",
     "graphql-tag": "^2.10.1",
-    "nuxt": "^2.3.4"
+    "nuxt": "^2.11.0"
   },
   "devDependencies": {
-    "nodemon": "^1.18.9"
+    "nodemon": "^2.0.2"
   }
 }

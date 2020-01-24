@@ -130,7 +130,7 @@ newtype AppM a = AppM { unAppM :: IO a }
 -- this exists as a separate function because the context (logger, http manager, pg pool) can be
 -- used by other functions as well
 initialiseCtx
-  :: (MonadIO m)
+  :: (HasVersion, MonadIO m)
   => HGECommand Hasura
   -> RawConnInfo
   -> m (InitCtx, UTCTime)
@@ -187,7 +187,8 @@ initialiseCtx hgeCmd rci = do
 
 
 runHGEServer
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadStateless IO m
      , UserAuthentication m
      , MetadataApiAuthorization m
@@ -317,7 +318,8 @@ runAsAdmin pool sqlGenCtx httpManager m = do
   runExceptT $ peelRun runCtx pgCtx Q.ReadWrite m
 
 execQuery
-  :: ( CacheRWM m
+  :: ( HasVersion
+     , CacheRWM m
      , MonadTx m
      , MonadIO m
      , HasHttpManager m
@@ -360,7 +362,7 @@ instance ConsoleRenderer AppM where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
 
-mkConsoleHTML :: Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
+mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   renderHtmlTemplate consoleTmplt $
       -- variables required to render the template
@@ -368,7 +370,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
                , "consolePath" .= consolePath
                , "enableTelemetry" .= boolToText enableTelemetry
                , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
-               , "assetsVersion" .= consoleVersion
+               , "assetsVersion" .= consoleAssetsVersion
                , "serverVersion" .= currentVersion
                ]
     where

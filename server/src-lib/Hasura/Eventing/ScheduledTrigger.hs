@@ -20,6 +20,7 @@ import           Hasura.SQL.DML
 import           Hasura.SQL.Types
 import           System.Cron
 import           Hasura.HTTP
+import           Hasura.Server.Version         (HasVersion)
 
 import qualified Data.Aeson                      as J
 import qualified Data.Aeson.Casing               as J
@@ -157,8 +158,9 @@ generateSchedulesBetween from till cron = takeWhile ((>=) till) $ go from
         Nothing   -> []
         Just next -> next : (go next)
 
-processScheduledQueue ::
-     L.Logger L.Hasura
+processScheduledQueue
+  :: HasVersion
+  => L.Logger L.Hasura
   -> Q.PGPool
   -> HTTP.Manager
   -> IO SchemaCache
@@ -188,7 +190,7 @@ processScheduledQueue logger pgpool httpMgr getSC =
     threadDelay oneMinute
 
 processScheduledEvent ::
-     (MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m)
+     (MonadReader r m, Has (L.Logger L.Hasura) r, HasVersion, MonadIO m)
   => Q.PGPool
   -> HTTP.Manager
   -> ScheduledTriggerInfo
