@@ -50,7 +50,7 @@ import {
   getCollapsedColumns,
   handleOrderChange,
   getColumnsOrder,
-} from './utils';
+} from './localStorageUtils';
 
 const ViewRows = ({
   curTableName,
