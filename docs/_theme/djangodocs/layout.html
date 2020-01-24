@@ -180,18 +180,39 @@
   </script>
 
   <!-- intercom -->
-  <script>
-    window.intercomSettings = {
-      app_id: "rucirpb3"
-    };
-  </script>
-  <script>(function(){var w=window;var ic=w.Intercom;if(typeof ic==="function"){ic('reattach_activator');ic('update',intercomSettings);}else{var d=document;var i=function(){i.c(arguments)};i.q=[];i.c=function(args){i.q.push(args)};w.Intercom=i;function l(){var s=d.createElement('script');s.type='text/javascript';s.async=true;s.src='https://widget.intercom.io/widget/rucirpb3';var
-    x=d.getElementsByTagName('script')[0];x.parentNode.insertBefore(s,x);}if(w.attachEvent){w.attachEvent('onload',l);}else{w.addEventListener('load',l,false);}}})()
-  </script>
-
   <!-- support button -->
-  <script type="text/javascript">
+  <script defer type="text/javascript">
     $(document).ready( function() {
+      setTimeout(function(){
+        window.intercomSettings = {
+          app_id: "rucirpb3"
+        };
+        var w = window;
+        var ic = w.Intercom;
+        if (typeof ic === "function") {
+          ic('reattach_activator');
+          ic('update', w.intercomSettings);
+        } else {
+          var d = document;
+          var i = function() {
+            i.c(arguments);
+          };
+          i.q = [];
+          i.c = function(args) {
+            i.q.push(args);
+          };
+          w.Intercom = i;
+          var l = function() {
+            var s = d.createElement('script');
+            s.type = 'text/javascript';
+            s.async = true;
+            s.src = 'https://widget.intercom.io/widget/rucirpb3';
+            var x = d.getElementsByTagName('script')[0];
+            x.parentNode.insertBefore(s, x);
+          };
+          l();
+        }
+      }, 2000);
       const supportBtnHandler = function() {
         if ( window.Intercom ) {
           window.Intercom('show');
@@ -322,7 +343,7 @@
   </script>
 
   <!-- feedback -->
-  <script type="text/javascript">
+  <script defer type="text/javascript">
     $(document).ready( function() {
       var baseDomain = "{{ BASE_DOMAIN }}";
       const feedbackUrl = baseDomain ? 'https://data.' + baseDomain + '/v1/query' : 'https://data.hasura-stg.hasura-app.io/v1/query';
@@ -493,19 +514,15 @@
     });
   </script>
 
-  <!-- global_tabs -->
   <script type="text/javascript">
     $(document).ready( function() {
+      // global_tabs
       if ($('.global-tabs').length > 0) {
         loadCss("{{ pathto('_static/global_tabs/global_tabs.css', 1) }}", function(){});
         loadScript("{{ pathto('_static/global_tabs/global_tabs.js', 1) }}", function(){});
       }
-    });
-  </script>
 
-  <!-- replace latest release tag -->
-  <script type="text/javascript">
-    $(document).ready( function() {
+      // replace latest release tag
       // if latest release tag elements present, replace with latest release tag
       if ($('.latest-release-tag').length > 0) {
         const releaseUrl = 'https://releases.hasura.io/graphql-engine?agent=docs.hasura.io';
@@ -526,12 +543,8 @@
             console.log(err);
           });
       }
-    });
-  </script>
 
-  <!-- open external links in new tab -->
-  <script type="text/javascript">
-    $(document).ready( function() {
+      // open external links in new tab
       const externalLinks = $('a.reference.external');
       for (let i = 0; i < externalLinks.length; i++) {
         externalLinks[i].setAttribute('target', '_blank');
@@ -543,7 +556,6 @@
   {% block extrahead %}
     <!--<meta name="viewport" content="user-scalable=no">-->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css" />
   {% endblock %}
 
