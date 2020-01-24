@@ -1,7 +1,6 @@
 module Hasura.RQL.DML.Select.Internal
   ( mkSQLSelect
   , mkAggSelect
-  , mkFuncSelectWith
   , module Hasura.RQL.DML.Select.Types
   )
 where
@@ -685,10 +684,9 @@ injectJoinCond :: S.BoolExp       -- ^ Join condition
 injectJoinCond joinCond whereCond =
   S.WhereFrag $ S.simplifyBoolExp $ S.BEBin S.AndOp joinCond whereCond
 
-mkJoinCond :: S.Alias -> [(PGCol, PGCol)] -> S.BoolExp
+mkJoinCond :: S.Alias -> HashMap PGCol PGCol -> S.BoolExp
 mkJoinCond baseTablepfx colMapn =
-  foldl' (S.BEBin S.AndOp) (S.BELit True) $ flip map colMapn $
-  \(lCol, rCol) ->
+  foldl' (S.BEBin S.AndOp) (S.BELit True) $ flip map (HM.toList colMapn) $ \(lCol, rCol) ->
     S.BECompare S.SEQ (S.mkQIdenExp baseTablepfx lCol) (S.mkSIdenExp rCol)
 
 baseNodeToSel :: S.BoolExp -> BaseNode -> S.Select
@@ -707,7 +705,7 @@ baseNodeToSel joinCond baseNode =
              = baseNode
     -- this is the table which is aliased as "pfx.base"
     baseSel = S.mkSelect
-      { S.selExtr  = [S.Extractor S.SEStar Nothing]
+      { S.selExtr  = [S.Extractor (S.SEStar Nothing) Nothing]
       , S.selFrom  = Just $ S.FromExp [fromItem]
       , S.selWhere = Just $ injectJoinCond joinCond whr
       }
@@ -755,7 +753,7 @@ mkAggSelect :: AnnAggSel -> S.Select
 mkAggSelect annAggSel =
   prefixNumToAliases $ arrNodeToSelect bn extr $ S.BELit True
   where
-    aggSel = AnnRelG rootRelName [] annAggSel
+    aggSel = AnnRelG rootRelName HM.empty annAggSel
     rootIden = Iden "root"
     rootPrefix = Prefixes rootIden rootIden
     ArrNode extr _ bn =
@@ -773,30 +771,3 @@ mkSQLSelect isSingleObject annSel =
     baseNode = annSelToBaseNode False rootPrefix rootFldName annSel
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
-
-mkFuncSelectWith
-  :: (AnnSelG a S.SQLExp -> S.Select)
-  -> AnnFnSelG (AnnSelG a S.SQLExp) S.SQLExp
-  -> S.SelectWith
-mkFuncSelectWith f annFn =
-  S.SelectWith [(funcAls, S.CTESelect funcSel)] $
-  -- we'll need to modify the table from of the underlying
-  -- select to the alias of the select from function
-  f annSel { _asnFrom = newSelFrom }
-  where
-    AnnFnSel qf fnArgs annSel = annFn
-
-    -- SELECT * FROM function_name(args)
-    funcSel = S.mkSelect { S.selFrom = Just $ S.FromExp [frmItem]
-                         , S.selExtr = [S.Extractor S.SEStar Nothing]
-                         }
-    frmItem = S.mkFuncFromItem qf $ mkSQLFunctionArgs fnArgs
-
-    mkSQLFunctionArgs (FunctionArgsExp positional named) =
-      S.FunctionArgs positional named
-
-    newSelFrom = FromIden $ toIden funcAls
-
-    QualifiedObject sn fn = qf
-    funcAls = S.Alias $ Iden $
-      getSchemaTxt sn <> "_" <> getFunctionTxt fn <> "__result"

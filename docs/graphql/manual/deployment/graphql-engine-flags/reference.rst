@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura GraphQL engine server flags reference
+   :keywords: hasura, docs, deployment, server, flags
+
 GraphQL engine server flags reference
 =====================================
 
@@ -132,11 +136,14 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
-     - Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1)
+     - Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1).
+       New connections will be taken from a particular stripe pseudo-randomly.
 
    * - ``-c, --connections <NO_OF_CONNS>``
      - ``HASURA_GRAPHQL_PG_CONNECTIONS``
-     - Number of connections per stripe that need to be opened to Postgres (default: 50)
+     - Maximum number of Postgres connections that can be opened per stripe (default: 50). 
+       When the maximum is reached we will block until a new connection becomes available, 
+       even if there is capacity in other stripes.
 
    * - ``--timeout <SECONDS>``
      - ``HASURA_GRAPHQL_PG_TIMEOUT``

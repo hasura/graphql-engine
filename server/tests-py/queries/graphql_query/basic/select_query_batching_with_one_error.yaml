@@ -1,0 +1,26 @@
+description: GraphQL query to test error reporting when batching requests
+url: /v1/graphql
+status: 200
+response:
+  - errors:
+    - extensions:
+        path: $.selectionSet.does_not_exist
+        code: validation-failed
+      message: "field \"does_not_exist\" not found in type: 'query_root'"
+  - data:
+      author:
+      - id: 1
+      - id: 2
+query:
+  - query: |
+      query {
+        does_not_exist {
+          id
+        }
+      }
+  - query: |
+      query {
+        author {
+          id
+        }
+      }

@@ -7,7 +7,6 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Time                          (UTCTime)
-import           Language.Haskell.TH.Syntax         (Lift)
 
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.Text                          as T
@@ -32,8 +31,10 @@ import           Hasura.RQL.DML.Insert
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
+import           Hasura.Server.Version              (HasVersion)
 
 
 data RQLQueryV1
@@ -61,10 +62,10 @@ data RQLQueryV1
   | RQCreateUpdatePermission !CreateUpdPerm
   | RQCreateDeletePermission !CreateDelPerm
 
-  | RQDropInsertPermission !DropInsPerm
-  | RQDropSelectPermission !DropSelPerm
-  | RQDropUpdatePermission !DropUpdPerm
-  | RQDropDeletePermission !DropDelPerm
+  | RQDropInsertPermission !(DropPerm InsPerm)
+  | RQDropSelectPermission !(DropPerm SelPerm)
+  | RQDropUpdatePermission !(DropPerm UpdPerm)
+  | RQDropDeletePermission !(DropPerm DelPerm)
   | RQSetPermissionComment !SetPermComment
 
   | RQGetInconsistentMetadata !GetInconsistentMetadata
@@ -87,7 +88,10 @@ data RQLQueryV1
   | RQRedeliverEvent     !RedeliverEventQuery
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
-  | RQCreateScheduledTrigger !ScheduledTriggerQuery
+  | RQCreateScheduledTrigger !CreateScheduledTrigger
+  | RQUpdateScheduledTrigger !CreateScheduledTrigger
+  | RQDeleteScheduledTrigger !DeleteScheduledTrigger
+  | RQCancelScheduledEvent !CancelScheduledEvent
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
@@ -105,18 +109,18 @@ data RQLQueryV1
   | RQReloadMetadata !ReloadMetadata
 
   | RQDumpInternalState !DumpInternalState
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 data RQLQueryV2
   = RQV2TrackTable !TrackTableV2
   | RQV2SetTableCustomFields !SetTableCustomFields
   | RQV2TrackFunction !TrackFunctionV2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 data RQLQuery
   = RQV1 !RQLQueryV1
   | RQV2 !RQLQueryV2
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq)
 
 instance FromJSON RQLQuery where
   parseJSON = withObject "Object" $ \o -> do
@@ -151,34 +155,6 @@ $(deriveJSON
   ''RQLQueryV2
  )
 
-data RunCtx
-  = RunCtx
-  { _rcUserInfo  :: !UserInfo
-  , _rcHttpMgr   :: !HTTP.Manager
-  , _rcSqlGenCtx :: !SQLGenCtx
-  }
-
-newtype Run a
-  = Run {unRun :: StateT SchemaCache (ReaderT RunCtx (LazyTx QErr)) a}
-  deriving ( Functor, Applicative, Monad
-           , MonadError QErr
-           , MonadState SchemaCache
-           , MonadReader RunCtx
-           , CacheRM
-           , CacheRWM
-           , MonadTx
-           , MonadIO
-           )
-
-instance UserInfoM Run where
-  askUserInfo = asks _rcUserInfo
-
-instance HasHttpManager Run where
-  askHttpManager = asks _rcHttpMgr
-
-instance HasSQLGenCtx Run where
-  askSQLGenCtx = asks _rcSqlGenCtx
-
 fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
 fetchLastUpdate = do
   Q.withQE defaultTxErrorHandler
@@ -197,43 +173,38 @@ recordSchemaUpdate instanceId =
              DO UPDATE SET instance_id = $1::uuid, occurred_at = DEFAULT
             |] (Identity instanceId) True
 
-peelRun
-  :: (MonadIO m)
-  => SchemaCache
-  -> RunCtx
-  -> PGExecCtx
-  -> Q.TxAccess
-  -> Run a
-  -> ExceptT QErr m (a, SchemaCache)
-peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
-  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo lazyTx
-  where
-    lazyTx = runReaderT (runStateT m sc) runCtx
-
 runQuery
-  :: (MonadIO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError QErr m)
   => PGExecCtx -> InstanceId
-  -> UserInfo -> SchemaCache -> HTTP.Manager
-  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, SchemaCache)
+  -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
+  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
 runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
   accessMode <- getQueryAccessMode query
   resE <- runQueryM query
     & runHasSystemDefinedT systemDefined
-    & peelRun sc runCtx pgExecCtx accessMode
+    & runCacheRWT sc
+    & peelRun runCtx pgExecCtx accessMode
     & runExceptT
     & liftIO
   either throwError withReload resE
   where
     runCtx = RunCtx userInfo hMgr sqlGenCtx
     withReload r = do
-      when (queryNeedsReload query) $ do
+      when (queryModifiesSchemaCache query) $ do
         e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite
              $ liftTx $ recordSchemaUpdate instanceId
         liftEither e
       return r
 
-queryNeedsReload :: RQLQuery -> Bool
-queryNeedsReload (RQV1 qi) = case qi of
+-- | A predicate that determines whether the given query might modify/rebuild the schema cache. If
+-- so, it needs to acquire the global lock on the schema cache so that other queries do not modify
+-- it concurrently.
+--
+-- Ideally, we would enforce this using the type system — queries for which this function returns
+-- 'False' should not be allowed to modify the schema cache. But for now we just ensure consistency
+-- by hand.
+queryModifiesSchemaCache :: RQLQuery -> Bool
+queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQAddExistingTableOrView _      -> True
   RQTrackTable _                  -> True
   RQUntrackTable _                -> True
@@ -278,7 +249,11 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQDeleteEventTrigger _          -> True
   RQRedeliverEvent _              -> False
   RQInvokeEventTrigger _          -> False
-  RQCreateScheduledTrigger _          -> False
+
+  RQCreateScheduledTrigger _      -> True
+  RQUpdateScheduledTrigger _      -> True
+  RQDeleteScheduledTrigger _      -> True
+  RQCancelScheduledEvent _        -> False
 
   RQCreateQueryCollection _       -> True
   RQDropQueryCollection _         -> True
@@ -299,8 +274,8 @@ queryNeedsReload (RQV1 qi) = case qi of
 
   RQDumpInternalState _           -> False
 
-  RQBulk qs                       -> any queryNeedsReload qs
-queryNeedsReload (RQV2 qi) = case qi of
+  RQBulk qs                       -> any queryModifiesSchemaCache qs
+queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
   RQV2TrackFunction _        -> True
@@ -341,21 +316,16 @@ reconcileAccessModes (Just mode1) (Just mode2)
   | otherwise = Left mode2
 
 runQueryM
-  :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
+  :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      , HasSystemDefined m
      )
   => RQLQuery
   -> m EncJSON
-runQueryM rq =
-  withPathK "args" $ runQueryM' <* rebuildGCtx
+runQueryM rq = withPathK "args" $ case rq of
+  RQV1 q -> runQueryV1M q
+  RQV2 q -> runQueryV2M q
   where
-    rebuildGCtx = when (queryNeedsReload rq) buildGCtxMap
-
-    runQueryM' = case rq of
-      RQV1 q -> runQueryV1M q
-      RQV2 q -> runQueryV2M q
-
     runQueryV1M = \case
       RQAddExistingTableOrView q   -> runTrackTableQ q
       RQTrackTable q               -> runTrackTableQ q
@@ -365,8 +335,8 @@ runQueryM rq =
       RQTrackFunction q            -> runTrackFunc q
       RQUntrackFunction q          -> runUntrackFunc q
 
-      RQCreateObjectRelationship q -> runCreateObjRel q
-      RQCreateArrayRelationship  q -> runCreateArrRel q
+      RQCreateObjectRelationship q -> runCreateRelationship ObjRel q
+      RQCreateArrayRelationship  q -> runCreateRelationship ArrRel q
       RQDropRelationship  q        -> runDropRel q
       RQSetRelationshipComment  q  -> runSetRelComment q
       RQRenameRelationship q       -> runRenameRel q
@@ -402,7 +372,11 @@ runQueryM rq =
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
       RQRedeliverEvent q           -> runRedeliverEvent q
       RQInvokeEventTrigger q       -> runInvokeEventTrigger q
+
       RQCreateScheduledTrigger q       -> runCreateScheduledTrigger q
+      RQUpdateScheduledTrigger q       -> runUpdateScheduledTrigger q
+      RQDeleteScheduledTrigger q       -> runDeleteScheduledTrigger q
+      RQCancelScheduledEvent q         -> runCancelScheduledEvent q
 
       RQCreateQueryCollection q        -> runCreateCollection q
       RQDropQueryCollection q          -> runDropCollection q
@@ -476,7 +450,11 @@ requiresAdmin = \case
     RQDeleteEventTrigger _          -> True
     RQRedeliverEvent _              -> True
     RQInvokeEventTrigger _          -> True
+
     RQCreateScheduledTrigger _      -> True
+    RQUpdateScheduledTrigger _      -> True
+    RQDeleteScheduledTrigger _      -> True
+    RQCancelScheduledEvent _        -> True
 
     RQCreateQueryCollection _       -> True
     RQDropQueryCollection _         -> True

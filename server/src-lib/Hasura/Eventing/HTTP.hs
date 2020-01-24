@@ -22,12 +22,19 @@ module Hasura.Eventing.HTTP
   , mkWebhookReq
   , mkResp
   , toInt64
+  , LogEnvHeaders
+  , encodeHeader
+  , decodeHeader
+  , getRetryAfterHeaderFromHTTPErr
+  , getRetryAfterHeaderFromResp
+  , parseRetryHeaderValue
   ) where
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
-import qualified Data.ByteString.Lazy          as B
+import qualified Data.ByteString               as BS
+import qualified Data.ByteString.Lazy          as LBS
 import qualified Data.CaseInsensitive          as CI
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
@@ -49,6 +56,11 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.Error        (QErr)
 import           Hasura.RQL.Types.EventTrigger
+
+type LogEnvHeaders = Bool
+
+retryAfterHeader :: CI.CI T.Text
+retryAfterHeader = "Retry-After"
 
 data WebhookRequest
   = WebhookRequest
@@ -111,7 +123,7 @@ $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''HTTPRes
 instance ToEngineLog HTTPResp Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
 
-mkHTTPResp :: HTTP.Response B.ByteString -> HTTPResp
+mkHTTPResp :: HTTP.Response LBS.ByteString -> HTTPResp
 mkHTTPResp resp =
   HTTPResp
   { hrsStatus = HTTP.statusCode $ HTTP.responseStatus resp
@@ -171,7 +183,7 @@ isNetworkErrorHC = \case
   HTTP.HttpExceptionRequest _ HTTP.ResponseTimeout -> True
   _ -> False
 
-anyBodyParser :: HTTP.Response B.ByteString -> Either HTTPErr HTTPResp
+anyBodyParser :: HTTP.Response LBS.ByteString -> Either HTTPErr HTTPResp
 anyBodyParser resp = do
   let httpResp = mkHTTPResp resp
   if respCode >= HTTP.status200 && respCode < HTTP.status300
@@ -240,7 +252,7 @@ mkClientErr message =
   in ResponseType2 cerr
 
 mkWebhookReq :: J.Value -> [HeaderConf] -> Version -> WebhookRequest
-mkWebhookReq payload headers version = WebhookRequest payload (mkMaybe headers) version
+mkWebhookReq payload headers = WebhookRequest payload (mkMaybe headers)
 
 isClientError :: Int -> Bool
 isClientError status = status >= 1000
@@ -266,3 +278,50 @@ logHTTPErr err = do
 
 toInt64 :: (Integral a) => a -> Int64
 toInt64 = fromIntegral
+
+encodeHeader :: EventHeaderInfo -> HTTP.Header
+encodeHeader (EventHeaderInfo hconf cache) =
+  let (HeaderConf name _) = hconf
+      ciname = CI.mk $ TE.encodeUtf8 name
+      value = TE.encodeUtf8 cache
+   in (ciname, value)
+
+decodeHeader
+  :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
+  -> HeaderConf
+decodeHeader logenv headerInfos (hdrName, hdrVal)
+  = let name = decodeBS $ CI.original hdrName
+        getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
+                      in name'
+        mehi = find (\hi -> getName hi == name) headerInfos
+    in case mehi of
+         Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
+         Just ehi -> if logenv
+                     then HeaderConf name (HVValue (ehiCachedValue ehi))
+                     else ehiHeaderConf ehi
+   where
+     decodeBS = TE.decodeUtf8With TE.lenientDecode
+
+getRetryAfterHeaderFromHTTPErr :: HTTPErr -> Maybe Text
+getRetryAfterHeaderFromHTTPErr (HStatus resp) = getRetryAfterHeaderFromResp resp
+getRetryAfterHeaderFromHTTPErr _              = Nothing
+
+getRetryAfterHeaderFromResp :: HTTPResp -> Maybe Text
+getRetryAfterHeaderFromResp resp =
+  let mHeader =
+        find
+          (\(HeaderConf name _) -> CI.mk name == retryAfterHeader)
+          (hrsHeaders resp)
+   in case mHeader of
+        Just (HeaderConf _ (HVValue value)) -> Just value
+        _                                   -> Nothing
+
+parseRetryHeaderValue :: T.Text -> Maybe Int
+parseRetryHeaderValue hValue =
+  let seconds = readMaybe $ T.unpack hValue
+   in case seconds of
+        Nothing -> Nothing
+        Just sec ->
+          if sec > 0
+            then Just sec
+            else Nothing

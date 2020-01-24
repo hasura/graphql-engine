@@ -1,3 +1,9 @@
+.. meta::
+   :description: Model one-to-many relationships in Hasura
+   :keywords: hasura, docs, schema, relationship, one-to-many, 1-n
+
+.. _one_to_many_modelling:
+
 Modelling one-to-many table relationships
 =========================================
 

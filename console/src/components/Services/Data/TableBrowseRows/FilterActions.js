@@ -43,6 +43,15 @@ const setOffset = offset => ({ type: SET_OFFSET, offset });
 const setNextPage = () => ({ type: SET_NEXTPAGE });
 const setPrevPage = () => ({ type: SET_PREVPAGE });
 
+const parseArray = val => {
+  if (Array.isArray(val)) return val;
+  try {
+    return JSON.parse(val);
+  } catch (err) {
+    return '';
+  }
+};
+
 const runQuery = tableSchema => {
   return (dispatch, getState) => {
     const state = getState().tables.view.curFilter;
@@ -61,6 +70,12 @@ const runQuery = tableSchema => {
       const colName = Object.keys(w)[0];
       const opName = Object.keys(w[colName])[0];
       const val = w[colName][opName];
+
+      if (['$in', '$nin'].includes(opName)) {
+        w[colName][opName] = parseArray(val);
+        return w;
+      }
+
       const colType = tableSchema.columns.find(c => c.column_name === colName)
         .data_type;
       if (Integers.indexOf(colType) > 0) {

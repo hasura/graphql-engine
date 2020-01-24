@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
@@ -40,6 +40,35 @@ const RawSQL = ({
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
+  // local storage key for SQL
+  const LS_RAW_SQL_SQL = 'rawSql:sql';
+
+  /* hooks */
+
+  // set up sqlRef to use in unmount
+  const sqlRef = useRef(sql);
+
+  // set SQL from localStorage on mount and write back to localStorage on unmount
+  useEffect(() => {
+    if (!sql) {
+      const sqlFromLocalStorage = localStorage.getItem(LS_RAW_SQL_SQL);
+      if (sqlFromLocalStorage) {
+        dispatch({ type: SET_SQL, data: sqlFromLocalStorage });
+      }
+    }
+
+    return () => {
+      localStorage.setItem(LS_RAW_SQL_SQL, sqlRef.current);
+    };
+  }, []);
+
+  // set SQL to sqlRef
+  useEffect(() => {
+    sqlRef.current = sql;
+  }, [sql]);
+
+  /* hooks - end */
+
   const cascadeTip = (
     <Tooltip id="tooltip-cascade">
       Cascade actions on all dependent metadata references, like relationships
@@ -64,6 +93,9 @@ const RawSQL = ({
   );
 
   const submitSQL = () => {
+    // set SQL to LS
+    localStorage.setItem(LS_RAW_SQL_SQL, sql);
+
     // check migration mode global
     if (migrationMode) {
       const checkboxElem = document.getElementById('migration-checkbox');
@@ -252,7 +284,9 @@ const RawSQL = ({
           <h4 className={styles.subheading_text}>SQL Result:</h4>
           <div className={styles.tableContainer}>
             <table
-              className={`table table-bordered table-striped table-hover ${styles.table} `}
+              className={`table table-bordered table-striped table-hover ${
+                styles.table
+              } `}
             >
               <thead>
                 <tr>{getTableHeadings()}</tr>
@@ -474,7 +508,9 @@ const RawSQL = ({
           </div>
 
           <div
-            className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
+            className={`${styles.padd_left_remove} ${
+              styles.add_mar_bottom
+            } col-xs-8`}
           >
             {getTrackThisSection()}
             {getMetadataCascadeSection()}

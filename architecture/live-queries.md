@@ -6,6 +6,16 @@ Hasura allows 'live queries' for clients (over GraphQL subscriptions). For examp
 
 This document describes Hasura's architecture which lets you scale to handle a million active live queries.
 
+##### Table of Contents  
+- [TL;DR](#tldr)
+- [GraphQL and subscriptions](#graphql-and-subscriptions)  
+- [Implementing GraphQL live-queries](#implementing-graphql-live-queries)  
+  - [Refetching results for a GraphQL query](#refetching-results-for-a-graphql-query)  
+  - [Hasura approach](#hasura-approach)  
+- [Testing](#testing)  
+- [Benefits of this approach](#benefits-of-this-approach)  
+
+
 ## TL;DR:
 **The setup:** Each client (a web/mobile app) subscribes to data or a live-result with an auth token. The data is in Postgres. 1 million rows are updated in Postgres every second (ensuring a new result pushed per client). Hasura is the GraphQL API provider (with authorization).
 

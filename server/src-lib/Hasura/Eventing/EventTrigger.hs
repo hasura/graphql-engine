@@ -16,38 +16,27 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
-import           Data.IORef                    (IORef, readIORef)
 import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Server.Version         (HasVersion)
 import           Hasura.SQL.Types
 
 import qualified Control.Concurrent.STM.TQueue as TQ
-import qualified Data.ByteString               as BS
-import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as M
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as T
-import qualified Data.Text.Encoding            as TE
-import qualified Data.Text.Encoding.Error      as TE
 import qualified Data.Time.Clock               as Time
 import qualified Database.PG.Query             as Q
 import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
 
-
 invocationVersion :: Version
 invocationVersion = "2"
-
-type LogEnvHeaders = Bool
-
-newtype CacheRef
-  = CacheRef { unCacheRef :: IORef (SchemaCache, SchemaCacheVer) }
 
 data Event
   = Event
@@ -97,9 +86,6 @@ defaultMaxEventThreads = 100
 defaultFetchIntervalMilliSec :: Int
 defaultFetchIntervalMilliSec = 1000
 
-retryAfterHeader :: CI.CI T.Text
-retryAfterHeader = "Retry-After"
-
 initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
 initEventEngineCtx maxT fetchI = do
   q <- TQ.newTQueue
@@ -107,15 +93,14 @@ initEventEngineCtx maxT fetchI = do
   return $ EventEngineCtx q c maxT fetchI
 
 processEventQueue
-  :: L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
-  -> IORef (SchemaCache, SchemaCacheVer) -> EventEngineCtx
-  -> IO ()
-processEventQueue logger logenv httpMgr pool cacheRef eectx = do
+  :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
+  -> IO SchemaCache -> EventEngineCtx -> IO ()
+processEventQueue logger logenv httpMgr pool getSchemaCache eectx = do
   threads <- mapM async [fetchThread, consumeThread]
   void $ waitAny threads
   where
     fetchThread = pushEvents logger pool eectx
-    consumeThread = consumeEvents logger logenv httpMgr pool (CacheRef cacheRef) eectx
+    consumeThread = consumeEvents logger logenv httpMgr pool getSchemaCache eectx
 
 pushEvents
   :: L.Logger L.Hasura -> Q.PGPool -> EventEngineCtx -> IO ()
@@ -128,26 +113,25 @@ pushEvents logger pool eectx  = forever $ do
   threadDelay (fetchI * 1000)
 
 consumeEvents
-  :: L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> CacheRef -> EventEngineCtx
-  -> IO ()
-consumeEvents logger logenv httpMgr pool cacheRef eectx  = forever $ do
+  :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> IO SchemaCache
+  -> EventEngineCtx -> IO ()
+consumeEvents logger logenv httpMgr pool getSchemaCache eectx  = forever $ do
   event <- atomically $ do
     let EventEngineCtx q _ _ _ = eectx
     TQ.readTQueue q
-  async $ runReaderT  (processEvent logenv pool event) (logger, httpMgr, cacheRef, eectx)
+  async $ runReaderT (processEvent logenv pool getSchemaCache event) (logger, httpMgr, eectx)
 
 processEvent
-  :: ( MonadReader r m
+  :: ( HasVersion
+     , MonadReader r m
      , Has HTTP.Manager r
      , Has (L.Logger L.Hasura) r
-     , Has CacheRef r
      , Has EventEngineCtx r
      , MonadIO m
      )
-  => LogEnvHeaders -> Q.PGPool -> Event -> m ()
-processEvent logenv pool e = do
-  cacheRef <- asks getter
-  cache <- fmap fst $ liftIO $ readIORef $ unCacheRef cacheRef
+  => LogEnvHeaders -> Q.PGPool -> IO SchemaCache -> Event -> m ()
+processEvent logenv pool getSchemaCache e = do
+  cache <- liftIO getSchemaCache
   let meti = getEventTriggerInfoFromEvent cache e
   case meti of
     Nothing -> do
@@ -224,9 +208,9 @@ processError pool e retryConf decodedHeaders ep err = do
 
 retryOrSetError :: Event -> RetryConf -> HTTPErr -> Q.TxE QErr ()
 retryOrSetError e retryConf err = do
-  let mretryHeader = getRetryAfterHeaderFromError err
+  let mretryHeader = getRetryAfterHeaderFromHTTPErr err
       tries = eTries e
-      mretryHeaderSeconds = parseRetryHeader mretryHeader
+      mretryHeaderSeconds = join $ parseRetryHeaderValue <$> mretryHeader
       triesExhausted = tries >= rcNumRetries retryConf
       noRetryHeader = isNothing mretryHeaderSeconds
   -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
@@ -239,45 +223,6 @@ retryOrSetError e retryConf err = do
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
       setRetry e retryTime
-  where
-    getRetryAfterHeaderFromError (HStatus resp) = getRetryAfterHeaderFromResp resp
-    getRetryAfterHeaderFromError _              = Nothing
-
-    getRetryAfterHeaderFromResp resp
-      = let mHeader = find (\(HeaderConf name _)
-                            -> CI.mk name == retryAfterHeader) (hrsHeaders resp)
-        in case mHeader of
-             Just (HeaderConf _ (HVValue value)) -> Just value
-             _                                   -> Nothing
-    parseRetryHeader Nothing = Nothing
-    parseRetryHeader (Just hValue)
-      = let seconds = readMaybe $ T.unpack hValue
-        in case seconds of
-             Nothing  -> Nothing
-             Just sec -> if sec > 0 then Just sec else Nothing
-
-encodeHeader :: EventHeaderInfo -> HTTP.Header
-encodeHeader (EventHeaderInfo hconf cache) =
-  let (HeaderConf name _) = hconf
-      ciname = CI.mk $ T.encodeUtf8 name
-      value = T.encodeUtf8 cache
-  in  (ciname, value)
-
-decodeHeader
-  :: LogEnvHeaders -> [EventHeaderInfo] -> (HTTP.HeaderName, BS.ByteString)
-  -> HeaderConf
-decodeHeader logenv headerInfos (hdrName, hdrVal)
-  = let name = decodeBS $ CI.original hdrName
-        getName ehi = let (HeaderConf name' _) = ehiHeaderConf ehi
-                      in name'
-        mehi = find (\hi -> getName hi == name) headerInfos
-    in case mehi of
-         Nothing -> HeaderConf name (HVValue (decodeBS hdrVal))
-         Just ehi -> if logenv
-                     then HeaderConf name (HVValue (ehiCachedValue ehi))
-                     else ehiHeaderConf ehi
-   where
-     decodeBS = TE.decodeUtf8With TE.lenientDecode
 
 mkInvo
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
