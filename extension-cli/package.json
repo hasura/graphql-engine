@@ -27,6 +27,7 @@
     "@babel/cli": "^7.0.0",
     "@babel/core": "^7.0.0",
     "@babel/plugin-transform-async-to-generator": "^7.7.4",
-    "@babel/preset-env": "^7.7.6"
+    "@babel/preset-env": "^7.7.6",
+    "pkg": "^4.4.2"
   }
 }
