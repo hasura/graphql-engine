@@ -47,7 +47,7 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := actionsCreateCmd.Flags()
 
-	f.StringVar(&opts.deriveFromMutation, "derive-from-mutation", "", "derive action from a Hasura mutation")
+	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a Hasura mutation")
 	f.BoolVar(&opts.withCodegen, "with-codegen", false, "create action along with codegen")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
@@ -66,9 +66,9 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 type actionsCreateOptions struct {
 	EC *cli.ExecutionContext
 
-	name               string
-	deriveFromMutation string
-	withCodegen        bool
+	name        string
+	deriveFrom  string
+	withCodegen bool
 }
 
 func (o *actionsCreateOptions) run() error {
@@ -81,8 +81,8 @@ func (o *actionsCreateOptions) run() error {
 
 	// introspect Hasura schema if a mutation is being derived
 	var introSchema interface{}
-	if o.deriveFromMutation != "" {
-		o.deriveFromMutation = strings.TrimSpace(o.deriveFromMutation)
+	if o.deriveFrom != "" {
+		o.deriveFrom = strings.TrimSpace(o.deriveFrom)
 		o.EC.Spin("Deriving a Hasura mutation...")
 		introSchema, err = migrateDrv.GetIntroSpectionSchema()
 		if err != nil {
@@ -93,7 +93,7 @@ func (o *actionsCreateOptions) run() error {
 
 	// create new action
 	actionCfg := actions.New(o.EC)
-	err = actionCfg.Create(o.name, introSchema, o.deriveFromMutation)
+	err = actionCfg.Create(o.name, introSchema, o.deriveFrom)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (o *actionsCreateOptions) run() error {
 	derivePayload := actions.DerivePayload{
 		IntrospectionSchema: introSchema,
 		Mutation: actions.DeriveMutationPayload{
-			MutationName: o.deriveFromMutation,
+			MutationName: o.deriveFrom,
 			ActionName:   o.name,
 		},
 	}
