@@ -107,11 +107,12 @@ def pytest_cmdline_preparse(config, args):
         num = 1
         args[:] = ["-n" + str(num),"--dist=loadfile"] + args
 
-
 def pytest_configure(config):
     # Pytest has removed the global pytest.config
     # As a solution we are going to store it in PytestConf.config
     PytestConf.config = config
+    if is_help_option_present(config):
+        return
     if is_master(config):
         if not config.getoption('--hge-urls'):
             print("hge-urls should be specified")
@@ -127,13 +128,24 @@ def pytest_configure(config):
 
     random.seed(datetime.now())
 
+def is_help_option_present(config):
+    return any([
+        config.getoption(x)
+        for x in ['--fixtures','--help']
+    ])
+
 @pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node):
+    if is_help_option_present(node.config):
+        return
+    # Pytest has removed the global pytest.config
     node.slaveinput["hge-url"] = node.config.hge_url_list.pop()
     node.slaveinput["pg-url"] = node.config.pg_url_list.pop()
 
 def pytest_unconfigure(config):
-        config.hge_ctx_gql_server.teardown()
+    if is_help_option_present(config):
+        return
+    config.hge_ctx_gql_server.teardown()
 
 @pytest.fixture(scope='module')
 def hge_ctx(request):
@@ -192,22 +204,91 @@ def evts_webhook(request):
     web_server.join()
 
 @pytest.fixture(scope='class')
+def per_class_tests_db_state(request, hge_ctx):
+    """
+    Set up the database state for select queries.
+    Has a class level scope, since select queries does not change database state
+    Expects either `dir()` method which provides the directory
+    with `setup.yaml` and `teardown.yaml` files
+    Or class variables `setup_files` and `teardown_files` that provides
+    the list of setup and teardown files respectively
+    """
+    yield from db_state(request, hge_ctx)
+
+@pytest.fixture(scope='function')
+def per_method_tests_db_state(request, hge_ctx):
+    """
+    This fixture sets up the database state for metadata operations
+    Has a function level scope, since metadata operations may change both the schema and data
+    Class method/variable requirements are similar to that of per_class_tests_db_state fixture
+    """
+    yield from db_state(request, hge_ctx)
+
+@pytest.fixture(scope='class')
+def per_class_db_schema_for_mutation_tests(request, hge_ctx):
+    """
+    This fixture sets up the database schema for mutations
+    Has a class level scope, since mutations does not change schema
+    Expects either `dir()` class method which provides the directory with `schema_setup.yaml` and `schema_teardown.yaml` files
+    Or variables `schema_setup_files` and `schema_teardown_files` that provides
+    the list of setup and teardown files respectively
+    """
+    yield from db_context_common(request, hge_ctx, 'schema_setup_files', 'schema_setup.yaml', 'schema_teardown_files', 'schema_teardown.yaml', True)
+
+@pytest.fixture(scope='function')
+def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_for_mutation_tests):
+    """
+    This fixture sets up the data for mutations
+    Has a function level scope, since mutations may change data
+    Having just the setup file(s), or the teardown file(s) is allowed
+    Expects either `dir()` class method which provides the directory with `values_setup.yaml` and / or `values_teardown.yaml` files
+    The class may provide `values_setup_files` variables which contains the list of data setup files
+    Or the `values_teardown_files` variable which provides the list of data teardown files
+    """
+    yield from db_context_common(request, hge_ctx, 'values_setup_files', 'values_setup.yaml', 'values_teardown_files', 'values_teardown.yaml', False)
+
+def db_state(request, hge_ctx):
+    yield from db_context_common(request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files', 'teardown.yaml', True)
+
+def db_context_common(request, hge_ctx, setup_files_attr, setup_default_file, teardown_files_attr, teardown_default_file, check_file_exists=True):
+    def get_files(attr, default_file):
+        files = getattr(request.cls, attr, None)
+        if not files:
+            files = os.path.join(request.cls.dir(), default_file)
+        return files
+    setup = get_files(setup_files_attr, setup_default_file)
+    teardown = get_files(teardown_files_attr, teardown_default_file)
+    yield from setup_and_teardown(hge_ctx, setup, teardown, check_file_exists)
+
+def setup_and_teardown(hge_ctx, setup_files, teardown_files, check_file_exists=True):
+    def assert_file_exists(f):
+        assert os.path.isfile(f), 'Could not find file ' + f
+    if check_file_exists:
+        for o in [setup_files, teardown_files]:
+            run_on_elem_or_list(assert_file_exists, o)
+    def v1q_f(f):
+        if os.path.isfile(f):
+            st_code, resp = hge_ctx.v1q_f(f)
+            assert st_code == 200, resp
+    run_on_elem_or_list(v1q_f, setup_files)
+    yield
+    run_on_elem_or_list(v1q_f, teardown_files)
+
+def run_on_elem_or_list(f, x):
+    if isinstance(x, str):
+        return [f(x)]
+    elif isinstance(x, list):
+        return [f(e) for e in x]
+
+@pytest.fixture(scope='class')
 def ws_client(request, hge_ctx):
+    """
+    This fixture provides an Apollo GraphQL websockets client
+    """
     client = GQLWsClient(hge_ctx, '/v1/graphql')
     time.sleep(0.1)
     yield client
     client.teardown()
-
-@pytest.fixture(scope='class')
-def setup_ctrl(request, hge_ctx):
-    """
-    This fixure is used to store the state of test setup in some test classes.
-    Used primarily when teardown is skipped in some test cases in the class where the test is not expected to change the database state.
-    """
-    setup_ctrl = { "setupDone" : False }
-    yield setup_ctrl
-    hge_ctx.may_skip_test_teardown = False
-    request.cls().do_teardown(setup_ctrl, hge_ctx)
 
 def is_master(config):
     """True if the code running the given pytest.config object is running in a xdist master

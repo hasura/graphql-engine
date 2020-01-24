@@ -1,10 +1,12 @@
 import ruamel.yaml as yaml
 import pytest
 from validate import check_query_f
+from test_graphql_queries import TestGraphQLQueryBasic
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphQLQueryBasic():
+@usefixtures('per_class_tests_db_state')
+class TestUpgradeGraphQLQueryBasic(TestGraphQLQueryBasic):
 
     def test_select_query_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author.yaml', transport)

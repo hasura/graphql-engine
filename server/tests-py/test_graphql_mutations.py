@@ -1,11 +1,16 @@
 import pytest
-import ruamel.yaml as yaml
 from validate import check_query_f
-from super_classes import DefaultTestQueries, DefaultTestMutations
 
+usefixtures = pytest.mark.usefixtures
+
+use_mutation_fixtures = usefixtures(
+    'per_class_db_schema_for_mutation_tests',
+    'per_method_db_data_for_mutation_tests'
+)
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphQLInsert(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphQLInsert:
 
     def test_inserts_author_article(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_article.yaml", transport)
@@ -38,7 +43,8 @@ class TestGraphQLInsert(DefaultTestMutations):
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlInsertOnConflict(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlInsertOnConflict:
 
     def test_on_conflict_update(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_update.yaml")
@@ -67,7 +73,8 @@ class TestGraphqlInsertOnConflict(DefaultTestMutations):
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlInsertPermission(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlInsertPermission:
 
     def test_user_role_on_conflict_update(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_user_role.yaml")
@@ -159,7 +166,8 @@ class TestGraphqlInsertPermission(DefaultTestMutations):
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlInsertConstraints(DefaultTestQueries):
+@usefixtures('per_method_tests_db_state')
+class TestGraphqlInsertConstraints:
 
     def test_address_not_null_constraint_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/address_not_null_constraint_error.yaml")
@@ -173,7 +181,8 @@ class TestGraphqlInsertConstraints(DefaultTestQueries):
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlInsertGeoJson(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlInsertGeoJson:
 
     def test_insert_point_landmark(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/insert_landmark.yaml")
@@ -219,7 +228,8 @@ class TestGraphqlInsertGeoJson(DefaultTestMutations):
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlNestedInserts(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlNestedInserts:
 
     @pytest.mark.xfail(reason="Incorrect ordering. Refer https://github.com/hasura/graphql-engine/issues/3271")
     def test_author_with_articles(self, hge_ctx, transport):
@@ -256,7 +266,8 @@ class TestGraphqlNestedInserts(DefaultTestMutations):
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlInsertViews(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlInsertViews:
 
     def test_insert_view_author_simple(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/insert_view_author_simple.yaml")
@@ -276,7 +287,8 @@ class TestGraphqlInsertViews(DefaultTestMutations):
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlUpdateBasic(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlUpdateBasic:
 
     def test_set_author_name(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
@@ -303,7 +315,8 @@ class TestGraphqlUpdateBasic(DefaultTestMutations):
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlUpdateJsonB(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlUpdateJsonB:
 
     def test_jsonb_append_object(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/person_append_object.yaml")
@@ -329,7 +342,8 @@ class TestGraphqlUpdateJsonB(DefaultTestMutations):
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlUpdatePermissions(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlUpdatePermissions:
 
     def test_user_can_update_unpublished_article(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article.yaml")
@@ -360,7 +374,8 @@ class TestGraphqlUpdatePermissions(DefaultTestMutations):
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlDeleteBasic(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlDeleteBasic:
 
     def test_article_delete(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/article.yaml", transport)
@@ -379,7 +394,8 @@ class TestGraphqlDeleteBasic(DefaultTestMutations):
         return "queries/graphql_mutation/delete/basic"
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlDeleteConstraints(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlDeleteConstraints:
 
     def test_author_delete_foreign_key_violation(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_foreign_key_violation.yaml")
@@ -390,7 +406,8 @@ class TestGraphqlDeleteConstraints(DefaultTestMutations):
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlDeletePermissions(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlDeletePermissions:
 
     def test_author_can_delete_his_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_can_delete_his_articles.yaml")
@@ -417,7 +434,8 @@ class TestGraphqlDeletePermissions(DefaultTestMutations):
         return "queries/graphql_mutation/delete/permissions"
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestGraphqlMutationCustomSchema(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphqlMutationCustomSchema:
 
     def test_insert_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_author.yaml', transport)
@@ -436,7 +454,8 @@ class TestGraphqlMutationCustomSchema(DefaultTestMutations):
         return "queries/graphql_mutation/custom_schema"
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-class TestGraphQLMutateEnums(DefaultTestMutations):
+@use_mutation_fixtures
+class TestGraphQLMutateEnums:
     @classmethod
     def dir(cls):
         return 'queries/graphql_mutation/enums'
@@ -444,7 +463,7 @@ class TestGraphQLMutateEnums(DefaultTestMutations):
     def test_insert_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_enum_field.yaml', transport)
 
-    def test_insert_enum_field(self, hge_ctx, transport):
+    def test_insert_nullable_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_nullable_enum_field.yaml', transport)
 
     def test_insert_enum_field_bad_value(self, hge_ctx, transport):
