@@ -91,12 +91,11 @@
         SOURCELINK_SUFFIX: '{{ sourcelink_suffix }}'
       };
     </script>
-    <script type="text/javascript" src="../../../../_static/vendor.js"></script>
+    <script async type="text/javascript" src="../../../../_static/vendor.js"></script>
 {%- endmacro %}
 
 {%- macro css() %}
     <link rel="stylesheet" href="{{ pathto('_static/' + style, 1) }}" type="text/css" />
-    <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}" type="text/css" />
     {%- for css in css_files %}
       {%- if css|attr("rel") %}
       {%- else %}

@@ -4,8 +4,6 @@
   {% set is_landing_page = true %}
 {%- endif %}
 
-{% set css_files = css_files + ['_static/hasura-custom.css', '_static/djangosite.css'] %}
-
 {%- if is_landing_page %}
   {% set css_files = css_files + ['_static/landing.css'] %}
 {%- endif %}
@@ -293,33 +291,6 @@
     };
   </script>
 
-  <!-- search -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js"></script>
-  <script type="text/javascript">
-    docsearch({
-      apiKey: 'c59018461c19e20fe11459136e57900c',
-      indexName: 'hasura',
-      inputSelector: '#search_element',
-      transformData: function(suggestions) {
-        if (window.location.origin !== 'https://docs.hasura.io') {
-          suggestions.forEach(suggestion => {
-            if (window.location.origin === 'http://localhost:8000') {
-              suggestion.url = suggestion.url.replace(/https:\/\/docs.hasura.io\/[^\/]*/, window.location.origin)
-            } else {
-              suggestion.url = suggestion.url.replace('https://docs.hasura.io', window.location.origin);
-            }
-          });
-        }
-
-        return suggestions;
-      },
-      // algoliaOptions: {
-      //   hitsPerPage: 10
-      // },
-      debug: false
-    });
-  </script>
-
   <!-- mobile sidebar -->
   <script type="text/javascript">
     $(document).ready( function() {
@@ -556,7 +527,34 @@
   {% block extrahead %}
     <!--<meta name="viewport" content="user-scalable=no">-->
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css" />
   {% endblock %}
+
+  <!-- search -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js"></script>
+  <script defer type="text/javascript">
+    docsearch({
+      apiKey: 'c59018461c19e20fe11459136e57900c',
+      indexName: 'hasura',
+      inputSelector: '#search_element',
+      transformData: function(suggestions) {
+        if (window.location.origin !== 'https://docs.hasura.io') {
+          suggestions.forEach(suggestion => {
+            if (window.location.origin === 'http://localhost:8000') {
+              suggestion.url = suggestion.url.replace(/https:\/\/docs.hasura.io\/[^\/]*/, window.location.origin)
+            } else {
+              suggestion.url = suggestion.url.replace('https://docs.hasura.io', window.location.origin);
+            }
+          });
+        }
+
+        return suggestions;
+      },
+      // algoliaOptions: {
+      //   hitsPerPage: 10
+      // },
+      debug: false
+    });
+  </script>
+
 
 {% endblock %}
