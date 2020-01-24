@@ -108,7 +108,8 @@ data SyncReturnStrategy
 
 data SyncActionExecutionContext
   = SyncActionExecutionContext
-  { _saecStrategy             :: !SyncReturnStrategy
+  { _saecName                 :: !ActionName
+  , _saecStrategy             :: !SyncReturnStrategy
   , _saecWebhook              :: !ResolvedWebhook
   , _saecHeaders              :: ![HeaderConf]
   , _saecForwardClientHeaders :: !Bool
