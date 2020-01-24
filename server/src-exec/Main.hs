@@ -2,6 +2,8 @@
 
 module Main where
 
+import           Data.Text.Conversions      (convertText)
+
 import           Hasura.App
 import           Hasura.Logging             (Hasura)
 import           Hasura.Prelude
@@ -14,7 +16,6 @@ import           Hasura.Server.Version
 
 import qualified Data.ByteString.Lazy       as BL
 import qualified Data.ByteString.Lazy.Char8 as BLC
-import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 
 main :: IO ()
@@ -22,7 +23,7 @@ main = parseArgs >>= unAppM . runApp
 
 runApp :: HGEOptions Hasura -> AppM ()
 runApp (HGEOptionsG rci hgeCmd) =
-  case hgeCmd of
+  withVersion $$(getVersionFromEnvironment) case hgeCmd of
     HCServe serveOptions -> do
       (initCtx, initTime) <- initialiseCtx hgeCmd rci
       runHGEServer serveOptions initCtx initTime
@@ -55,7 +56,7 @@ runApp (HGEOptionsG rci hgeCmd) =
              & runAsAdmin _icPgPool sqlGenCtx _icHttpManager
       either printErrJExit (liftIO . print) res
 
-    HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ T.unpack currentVersion
+    HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where
     runTx' initCtx tx =
       liftIO $ runExceptT $ Q.runTx (_icPgPool initCtx) (Q.Serializable, Nothing) tx

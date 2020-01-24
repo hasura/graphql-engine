@@ -122,6 +122,7 @@ library
 
                      -- URL parser related
                      , network-uri
+                     , uri-encode
 
                      -- String related
                      , case-insensitive
@@ -372,13 +373,14 @@ library
 
 executable graphql-engine
   import: common-all, common-exe
-  main-is:           Main.hs
   hs-source-dirs:    src-exec
+  main-is:           Main.hs
   build-depends:     base
                    , graphql-engine
+                   , bytestring
                    , pg-client
                    , text
-                   , bytestring
+                   , text-conversions
 
 test-suite graphql-engine-tests
   import: common-all, common-exe
