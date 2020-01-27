@@ -299,3 +299,17 @@ export const getAllTypesFromSdl = sdl => {
   });
   return reformCustomTypes(types);
 };
+
+export const getSdlComplete = (allActions, allTypes) => {
+  let sdl = '';
+  allActions.forEach(a => {
+    sdl += `extend ${getActionDefinitionSdl(
+      a.action_name,
+      a.action_defn.arguments,
+      a.action_defn.output_type
+    )}`;
+  });
+
+  sdl += getTypesSdl(allTypes);
+  return sdl;
+};
