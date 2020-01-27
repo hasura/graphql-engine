@@ -91,7 +91,7 @@ class GraphiQLWrapper extends Component {
       const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';
       let analyzerProps = {};
       if (graphiqlContext) {
-        analyzerProps = { ...graphiqlContext.state };
+        analyzerProps = graphiqlContext.state;
       }
 
       // get toolbar buttons

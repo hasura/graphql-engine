@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import QueryAnalyzer from './QueryAnalyzer';
 import { Button } from 'graphiql';
 import { print, parse } from 'graphql';
+import { isValidGraphQLOperation } from '../utils';
 
 export default class AnalyseButton extends React.Component {
   constructor(props) {
@@ -23,18 +24,10 @@ export default class AnalyseButton extends React.Component {
     const optionsOpen = this.state.optionsOpen;
     const hasOptions = operations && operations.length > 1;
 
-    const isValidOperation = operation => {
-      return (
-        operation.name &&
-        operation.name.value &&
-        operation.operation === 'query'
-      );
-    };
-
     let options = null;
     if (hasOptions && optionsOpen) {
       const highlight = this.state.highlight;
-      const validOperations = operations.filter(isValidOperation);
+      const validOperations = operations.filter(isValidGraphQLOperation);
       if (validOperations.length) {
         options = (
           <ul className="execute-options">
