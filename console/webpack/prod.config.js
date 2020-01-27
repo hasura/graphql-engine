@@ -34,6 +34,12 @@ module.exports = {
     chunkFilename: '[name].js',
     publicPath: hasuraConfig.webpackPrefix,
   },
+  node: {
+    module: 'empty',
+    fs: 'empty',
+    net: 'empty',
+    child_process: 'empty',
+  },
   module: {
     rules: [
       {

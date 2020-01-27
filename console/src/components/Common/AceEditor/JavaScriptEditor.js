@@ -22,7 +22,7 @@ const Editor = ({ value, onChange, ...props }) => {
         enableSnippets: true,
         behavioursEnabled: true,
       }}
-      value={value}
+      value={value.trim()}
       {...props}
     />
   );

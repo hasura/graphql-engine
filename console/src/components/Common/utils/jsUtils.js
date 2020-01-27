@@ -18,6 +18,11 @@ export const isString = value => {
   return typeof value === 'string';
 };
 
+export const isPromise = value => {
+  if (!value) return false;
+  return value.constructor.name === 'Promise';
+};
+
 export const isEmpty = value => {
   let _isEmpty = false;
 
@@ -228,4 +233,8 @@ export const downloadObjectAsJsonFile = (fileName, object) => {
     'data:' + contentType + ',' + encodeURIComponent(JSON.stringify(object));
 
   downloadFile(fileNameWithSuffix, dataString);
+};
+
+export const getFileExtensionFromFilename = filename => {
+  return filename.match(/\.[0-9a-z]+$/i)[0];
 };

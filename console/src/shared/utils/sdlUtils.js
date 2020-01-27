@@ -306,7 +306,7 @@ export const getSdlComplete = (allActions, allTypes) => {
     sdl += `extend ${getActionDefinitionSdl(
       a.action_name,
       a.action_defn.arguments,
-      a.action_defn.outputType
+      a.action_defn.output_type
     )}`;
   });
 
