@@ -238,3 +238,13 @@ export const downloadObjectAsJsonFile = (fileName, object) => {
 export const getFileExtensionFromFilename = filename => {
   return filename.match(/\.[0-9a-z]+$/i)[0];
 };
+
+export const isValidTemplateLiteral = literal_ => {
+  const literal = literal_.trim();
+  if (!literal) return false;
+  const templateStartIndex = literal.indexOf('{{');
+  const templateEndEdex = literal.indexOf('}}');
+  return (
+    templateStartIndex !== '-1' && templateEndEdex > templateStartIndex + 2
+  );
+};

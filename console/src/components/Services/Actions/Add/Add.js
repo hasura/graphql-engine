@@ -65,20 +65,6 @@ const AddAction = ({
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
       <div className={styles.heading_text}>Add a new action</div>
-      <HandlerEditor
-        value={handler}
-        onChange={handlerOnChange}
-        placeholder="action handler"
-        className={styles.add_mar_bottom_mid}
-        service="create-action"
-      />
-      <hr />
-      <KindEditor
-        value={kind}
-        onChange={kindOnChange}
-        className={styles.add_mar_bottom_mid}
-      />
-      <hr />
       <ActionDefinitionEditor
         value={actionDefinitionSdl}
         error={actionDefinitionError}
@@ -93,6 +79,20 @@ const AddAction = ({
         timer={typedefParseTimer}
         onChange={typeDefinitionOnChange}
         placeholder={''}
+      />
+      <hr />
+      <HandlerEditor
+        value={handler}
+        onChange={handlerOnChange}
+        placeholder="action handler"
+        className={styles.add_mar_bottom_mid}
+        service="create-action"
+      />
+      <hr />
+      <KindEditor
+        value={kind}
+        onChange={kindOnChange}
+        className={styles.add_mar_bottom_mid}
       />
       <hr />
       <Button

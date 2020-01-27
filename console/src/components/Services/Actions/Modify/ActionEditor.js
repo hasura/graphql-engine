@@ -74,16 +74,6 @@ const ActionEditor = ({
   return (
     <div>
       <Helmet title={`Modify Action - ${actionName} Actions | Hasura`} />
-      <HandlerEditor
-        value={handler}
-        onChange={handlerOnChange}
-        placeholder="action handler"
-        className={styles.add_mar_bottom_mid}
-        service="create-action"
-      />
-      <hr />
-      <KindEditor value={kind} onChange={kindOnChange} />
-      <hr />
       <ActionDefinitionEditor
         value={actionDefinitionSdl}
         error={actionDefinitionError}
@@ -99,6 +89,16 @@ const ActionEditor = ({
         timer={typeDefinitionTimer}
         placeholder={''}
       />
+      <hr />
+      <HandlerEditor
+        value={handler}
+        onChange={handlerOnChange}
+        placeholder="action handler"
+        className={styles.add_mar_bottom_mid}
+        service="create-action"
+      />
+      <hr />
+      <KindEditor value={kind} onChange={kindOnChange} />
       <hr />
       <div className={styles.display_flex}>
         <Button

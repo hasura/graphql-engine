@@ -16,7 +16,10 @@ import {
 
 import { gqlInbuiltTypes } from './stateDefaults';
 import { getActionArguments, getActionOutputType, findType } from '../utils';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
+import {
+  getConfirmation,
+  isValidTemplateLiteral,
+} from '../../../Common/utils/jsUtils';
 
 export const isInbuiltType = typename => {
   return !!gqlInbuiltTypes.find(t => t.name === typename);
@@ -38,10 +41,11 @@ export const generateActionDefinition = ({
 
 export const getStateValidationError = ({ handler }) => {
   if (!handler) return 'Handler cannot be empty';
+  if (isValidTemplateLiteral(handler)) return null;
   try {
     new URL(handler); // eslint-disable-line
   } catch (e) {
-    return 'Handler must be a valid URL';
+    return 'Handler must be a valid URL or a template';
   }
   return null;
 };
