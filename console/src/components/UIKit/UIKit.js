@@ -4,7 +4,7 @@ import { color, border, shadow } from 'styled-system';
 // ******************************** //
 
 export const UIKitDiv = styled.div`
-  padding: 3rem 5rem;
+  padding: 3rem 5rem 10rem;
 
   h3 {
     margin: 2.5rem 0;
@@ -22,8 +22,8 @@ export const ColorSchemeDivWrapper = styled.div`
 // ******************************** //
 
 export const ColorSchemeDiv = styled.div`
-  width: 15rem;
-  height: 15rem;
+  width: 12rem;
+  height: 12rem;
   margin-right: 3rem;
 
   ${color}
@@ -57,6 +57,8 @@ export const BoxShadowDiv = styled.div`
 
   background: ${props => props.theme.colors.white};
 
-  /* box-shadow ~  */
+  /* box-shadow ~ styled-system */
   ${shadow}
+  /* border-radius ~ styled-system */
+  ${border}
 `;

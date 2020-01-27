@@ -1,10 +1,13 @@
 import React from 'react';
-import styles from './Alert.scss';
+
 const closeIcon = require('./images/x-circle.svg');
 const success = require('./images/check.svg');
 const info = require('./images/info.svg');
 const warning = require('./images/warning.svg');
 const error = require('./images/error.svg');
+
+import styles from './Alert.scss';
+
 const Alert = props => {
   const { children, type } = props;
 
@@ -12,25 +15,25 @@ const Alert = props => {
   let alertText;
   let alertIcon;
   switch (type) {
-      case 'alertSuccess':
-        alertTypeStyle = styles.alertSuccess;
-        alertText = 'Success';
-        alertIcon = success;
+    case 'alertSuccess':
+      alertTypeStyle = styles.alertSuccess;
+      alertText = 'Success';
+      alertIcon = success;
       break;
-      case 'alertInfo':
-        alertTypeStyle = styles.alertInfo;
-        alertText = 'Information';
-        alertIcon = info;
+    case 'alertInfo':
+      alertTypeStyle = styles.alertInfo;
+      alertText = 'Information';
+      alertIcon = info;
       break;
-      case 'alertWarning':
-        alertTypeStyle = styles.alertWarning;
-        alertText = 'Warning';
-        alertIcon = warning;
+    case 'alertWarning':
+      alertTypeStyle = styles.alertWarning;
+      alertText = 'Warning';
+      alertIcon = warning;
       break;
-      case 'alertDanger':
-        alertTypeStyle = styles.alertDanger;
-        alertText = 'Error';
-        alertIcon = error;
+    case 'alertDanger':
+      alertTypeStyle = styles.alertDanger;
+      alertText = 'Error';
+      alertIcon = error;
       break;
     default:
       alertTypeStyle = styles.alertSuccess;

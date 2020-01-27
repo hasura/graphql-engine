@@ -11,8 +11,9 @@ import {
   BoxShadowDiv,
 } from './UIKit';
 import { Button } from './Button';
+import { AlertMessageBox } from './Alert';
 
-// Color Scheme ************************************ //
+// Color Scheme ******************************** //
 
 const ColorScheme = () => (
   <ColorSchemeDivWrapper>
@@ -129,13 +130,77 @@ const Buttons = () => (
 
 const BoxShadows = () => (
   <BoxShadowDivWrapper>
-    <BoxShadowDiv boxShadow={0} />
-    <BoxShadowDiv boxShadow={1} />
-    <BoxShadowDiv boxShadow={2} />
+    <BoxShadowDiv
+      boxShadow={0} // box-shadow ~ theme.shadows[0]
+      borderRadius={1} // ~ theme.radii[1]
+    />
+    <BoxShadowDiv
+      boxShadow={1} // box-shadow ~ theme.shadows[1]
+      borderRadius={1} // ~ theme.radii[1]
+    />
+    <BoxShadowDiv
+      boxShadow={2} // box-shadow ~ theme.shadows[2]
+      borderRadius={1} // ~ theme.radii[1]
+    />
+    <BoxShadowDiv
+      boxShadow={3} // box-shadow ~ theme.shadows[3]
+      borderRadius={1} // ~ theme.radii[1]
+    />
   </BoxShadowDivWrapper>
 );
 
-// UIKit(Parent) demo component *********** //
+// Alerts ***************************** //
+
+const Alerts = () => (
+  <React.Fragment>
+    <AlertMessageBox
+      minWidth={1 / 2}
+      height={1}
+      bg="greens.3"
+      maxWidth={866}
+      borderLeft={4}
+      borderColor="greens.1"
+      borderRadius={1}
+      boxShadow={1}
+      my={4}
+    />
+    <AlertMessageBox
+      minWidth={1 / 2}
+      height={1}
+      bg="blues.3"
+      maxWidth={866}
+      borderLeft={4}
+      borderColor="blues.1"
+      borderRadius={1}
+      boxShadow={1}
+      my={4}
+    />
+    <AlertMessageBox
+      minWidth={1 / 2}
+      height={1}
+      bg="oranges.3"
+      maxWidth={866}
+      borderLeft={4}
+      borderColor="oranges.1"
+      borderRadius={1}
+      boxShadow={1}
+      my={4}
+    />
+    <AlertMessageBox
+      minWidth={1 / 2}
+      height={1}
+      bg="reds.3"
+      maxWidth={866}
+      borderLeft={4}
+      borderColor="reds.1"
+      borderRadius={1}
+      boxShadow={1}
+      my={4}
+    />
+  </React.Fragment>
+);
+
+// UIKit(Parent) Demo component *********** //
 
 const UIKit = () => (
   <UIKitDiv>
@@ -146,6 +211,8 @@ const UIKit = () => (
     <Buttons />
     <h3>Shadows</h3>
     <BoxShadows />
+    <h3>Alerts</h3>
+    <Alerts />
   </UIKitDiv>
 );
 

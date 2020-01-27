@@ -6,18 +6,15 @@
   font-size: 16px;
   display: flex;
   align-items: center;
-  .alertImg
-  {
+  .alertImg {
     width: 24px;
     display: inline-block;
   }
-  span
-  {
+  span {
     font-weight: 600;
-    margin:0 16px;
+    margin: 0 16px;
   }
-  .close
-  {
+  .close {
     width: 10px;
     position: absolute;
     right: 15px;
@@ -25,26 +22,22 @@
   }
 }
 
-.alertSuccess
-{
+.alertSuccess {
   background-color: #f0f8e7;
   color: #292822;
   border-left: 4px solid #69cb43;
 }
-.alertInfo
-{
+.alertInfo {
   background-color: #f0f8ff;
   color: #292822;
   border-left: 4px solid #1f88e5;
 }
-.alertWarning
-{
+.alertWarning {
   background-color: #fff8ed;
   color: #292822;
   border-left: 4px solid #fdb02c;
 }
-.alertDanger
-{
+.alertDanger {
   background-color: #f7e9e9;
   color: #292822;
   border-left: 4px solid #e53935;
