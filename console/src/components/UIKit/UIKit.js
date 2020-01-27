@@ -1,13 +1,13 @@
 import styled from 'styled-components';
-import { color, border } from 'styled-system';
+import { color, border, shadow } from 'styled-system';
 
 // ******************************** //
 
 export const UIKitDiv = styled.div`
-  padding: 3rem;
+  padding: 3rem 5rem;
 
   h3 {
-    margin: 2rem 0;
+    margin: 2.5rem 0;
     font-weight: ${props => props.theme.fontWeights[5]};
   }
 `;
@@ -24,7 +24,7 @@ export const ColorSchemeDivWrapper = styled.div`
 export const ColorSchemeDiv = styled.div`
   width: 15rem;
   height: 15rem;
-  margin-right: 2.5rem;
+  margin-right: 3rem;
 
   ${color}
   ${border}
@@ -33,11 +33,30 @@ export const ColorSchemeDiv = styled.div`
 // Extended wrapper div for buttons *********** //
 
 export const ButtonsWrapper = styled(ColorSchemeDivWrapper)`
-  margin-bottom: 2.5rem;
+  margin-bottom: 4rem;
 
   /* Demo ~ Inline buttons separation */
 
   button {
-    margin-right: 2.5rem;
+    margin-right: 3rem;
   }
+`;
+
+// ShadowDiv wrapper for box-shadows ********** //
+
+export const BoxShadowDivWrapper = styled(ColorSchemeDivWrapper)``;
+
+// Shadow Div ********************************* //
+
+export const BoxShadowDiv = styled.div`
+  width: 22.5rem;
+  height: 12.5rem;
+  margin-right: 4rem;
+
+  /* importing background color from theme */
+
+  background: ${props => props.theme.colors.white};
+
+  /* box-shadow ~  */
+  ${shadow}
 `;

@@ -20,4 +20,9 @@ export const theme = {
   radii: [0, 2, 4, 8, 16],
   sizes: [40, 48],
   space: [0, 4, 8, 16, 32, 64],
+  shadows: [
+    '0 0 3px 0 rgba(0, 0, 0, 0.16)',
+    '0 3px 10px 0 rgba(0, 0, 0, 0.16)',
+    '0 7px 24px 0 rgba(0, 0, 0, 0.32)',
+  ],
 };
