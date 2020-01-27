@@ -269,83 +269,56 @@ input SampleInput {
 	if err != nil {
 		return err
 	}
-	for actionIndex, action := range oldAction.Actions {
-		var isFound bool
-		for newActionIndex, newActionObj := range sdlFromResp.Actions {
-			if action.Name == newActionObj.Name {
-				isFound = true
-				sdlFromResp.Actions[newActionIndex].Permissions = oldAction.Actions[actionIndex].Permissions
-				sdlFromResp.Actions[newActionIndex].Definition.Kind = oldAction.Actions[actionIndex].Definition.Kind
-				sdlFromResp.Actions[newActionIndex].Definition.Handler = oldAction.Actions[actionIndex].Definition.Handler
+	for actionIndex, action := range sdlFromResp.Actions {
+		for oldActionIndex, oldActionObj := range oldAction.Actions {
+			if action.Name == oldActionObj.Name {
+				sdlFromResp.Actions[actionIndex].Permissions = oldAction.Actions[oldActionIndex].Permissions
+				sdlFromResp.Actions[actionIndex].Definition.Kind = oldAction.Actions[oldActionIndex].Definition.Kind
+				sdlFromResp.Actions[actionIndex].Definition.Handler = oldAction.Actions[oldActionIndex].Definition.Handler
 				break
 			}
 		}
-		if !isFound {
-			return fmt.Errorf("action %s is not present in %s", action.Name, graphqlFileName)
-		}
-	}
-	for customTypeIndex, customType := range oldAction.CustomTypes.Enums {
-		var isFound bool
-		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Enums {
-			if customType.Name == newTypeObj.Name {
-				isFound = true
-				sdlFromResp.Types.Enums[newTypeObjIndex].Description = oldAction.CustomTypes.Enums[customTypeIndex].Description
-				sdlFromResp.Types.Enums[newTypeObjIndex].Relationships = oldAction.CustomTypes.Enums[customTypeIndex].Relationships
-				break
-			}
-		}
-		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
-		}
-	}
-	for customTypeIndex, customType := range oldAction.CustomTypes.InputObjects {
-		var isFound bool
-		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.InputObjects {
-			if customType.Name == newTypeObj.Name {
-				isFound = true
-				sdlFromResp.Types.InputObjects[newTypeObjIndex].Description = oldAction.CustomTypes.InputObjects[customTypeIndex].Description
-				sdlFromResp.Types.InputObjects[newTypeObjIndex].Relationships = oldAction.CustomTypes.InputObjects[customTypeIndex].Relationships
-				break
-			}
-		}
-		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
-		}
-	}
-	for customTypeIndex, customType := range oldAction.CustomTypes.Objects {
-		var isFound bool
-		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Objects {
-			if customType.Name == newTypeObj.Name {
-				isFound = true
-				sdlFromResp.Types.Objects[newTypeObjIndex].Description = oldAction.CustomTypes.Objects[customTypeIndex].Description
-				sdlFromResp.Types.Objects[newTypeObjIndex].Relationships = oldAction.CustomTypes.Objects[customTypeIndex].Relationships
-				break
-			}
-		}
-		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
-		}
-	}
-	for customTypeIndex, customType := range oldAction.CustomTypes.Scalars {
-		var isFound bool
-		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Scalars {
-			if customType.Name == newTypeObj.Name {
-				isFound = true
-				sdlFromResp.Types.Scalars[newTypeObjIndex].Description = oldAction.CustomTypes.Scalars[customTypeIndex].Description
-				sdlFromResp.Types.Scalars[newTypeObjIndex].Relationships = oldAction.CustomTypes.Scalars[customTypeIndex].Relationships
-				break
-			}
-		}
-		if !isFound {
-			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
-		}
-	}
-	for index, action := range sdlFromResp.Actions {
 		if action.Definition.Kind == "" {
-			sdlFromResp.Actions[index].Definition.Kind = a.ActionConfig.Kind
+			sdlFromResp.Actions[actionIndex].Definition.Kind = a.ActionConfig.Kind
 		}
 		if action.Definition.Handler == "" {
-			sdlFromResp.Actions[index].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
+			sdlFromResp.Actions[actionIndex].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
+		}
+	}
+	for customTypeIndex, customType := range sdlFromResp.Types.Enums {
+		for oldTypeObjIndex, oldTypeObj := range oldAction.CustomTypes.Enums {
+			if customType.Name == oldTypeObj.Name {
+				sdlFromResp.Types.Enums[customTypeIndex].Description = oldAction.CustomTypes.Enums[oldTypeObjIndex].Description
+				sdlFromResp.Types.Enums[customTypeIndex].Relationships = oldAction.CustomTypes.Enums[oldTypeObjIndex].Relationships
+				break
+			}
+		}
+	}
+	for customTypeIndex, customType := range sdlFromResp.Types.InputObjects {
+		for oldTypeObjIndex, oldTypeObj := range oldAction.CustomTypes.InputObjects {
+			if customType.Name == oldTypeObj.Name {
+				sdlFromResp.Types.InputObjects[customTypeIndex].Description = oldAction.CustomTypes.InputObjects[oldTypeObjIndex].Description
+				sdlFromResp.Types.InputObjects[customTypeIndex].Relationships = oldAction.CustomTypes.InputObjects[oldTypeObjIndex].Relationships
+				break
+			}
+		}
+	}
+	for customTypeIndex, customType := range sdlFromResp.Types.Objects {
+		for oldTypeObjIndex, oldTypeObj := range oldAction.CustomTypes.Objects {
+			if customType.Name == oldTypeObj.Name {
+				sdlFromResp.Types.Objects[customTypeIndex].Description = oldAction.CustomTypes.Objects[oldTypeObjIndex].Description
+				sdlFromResp.Types.Objects[customTypeIndex].Relationships = oldAction.CustomTypes.Objects[oldTypeObjIndex].Relationships
+				break
+			}
+		}
+	}
+	for customTypeIndex, customType := range sdlFromResp.Types.Scalars {
+		for oldTypeObjIndex, oldTypeObj := range oldAction.CustomTypes.Scalars {
+			if customType.Name == oldTypeObj.Name {
+				sdlFromResp.Types.Scalars[customTypeIndex].Description = oldAction.CustomTypes.Scalars[oldTypeObjIndex].Description
+				sdlFromResp.Types.Scalars[customTypeIndex].Relationships = oldAction.CustomTypes.Scalars[oldTypeObjIndex].Relationships
+				break
+			}
 		}
 	}
 	var common types.Common
