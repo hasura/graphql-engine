@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura CLI commands reference
+   :keywords: hasura, docs, CLI
+
 .. _hasura:
 
 Hasura CLI: hasura
@@ -28,9 +32,11 @@ Options
 
 ::
 
-  -h, --help               help for hasura
-      --log-level string   log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --project string     directory where commands are executed. (default: current dir)
+  -h, --help                help for hasura
+      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color            do not colorize output (default: false)
+      --project string      directory where commands are executed (default: current dir)
+      --skip-update-check   Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

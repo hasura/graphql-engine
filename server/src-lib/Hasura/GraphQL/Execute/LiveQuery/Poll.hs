@@ -26,6 +26,9 @@ module Hasura.GraphQL.Execute.LiveQuery.Poll (
   , newSinkId
   , SubscriberMap
   , OnChange
+  , LGQResponse
+  , LiveQueryResponse(..)
+  , LiveQueryMetadata(..)
   ) where
 
 import           Hasura.Prelude
@@ -35,6 +38,7 @@ import qualified Control.Concurrent.STM                   as STM
 import qualified Crypto.Hash                              as CH
 import qualified Data.Aeson.Extended                      as J
 import qualified Data.ByteString                          as BS
+import qualified Data.ByteString.Lazy                     as BL
 import qualified Data.HashMap.Strict                      as Map
 import qualified Data.Time.Clock                          as Clock
 import qualified Data.UUID                                as UUID
@@ -64,7 +68,21 @@ data Subscriber
   , _sOnChangeCallback :: !OnChange
   }
 
-type OnChange = GQResponse -> IO ()
+-- | live query onChange metadata, used for adding more extra analytics data
+data LiveQueryMetadata
+  = LiveQueryMetadata
+  { _lqmExecutionTime :: !Clock.NominalDiffTime
+  }
+
+data LiveQueryResponse
+  = LiveQueryResponse
+  { _lqrPayload       :: !BL.ByteString
+  , _lqrExecutionTime :: !Clock.NominalDiffTime
+  }
+
+type LGQResponse = GQResult LiveQueryResponse
+
+type OnChange = LGQResponse -> IO ()
 
 newtype SubscriberId = SubscriberId { _unSinkId :: UUID.UUID }
   deriving (Show, Eq, Hashable, J.ToJSON)
@@ -98,10 +116,17 @@ data Cohort
   -- result changed, then merge them in the map of existing subscribers
   }
 
+{- Note [Blake2b faster than SHA-256]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+At the time of writing, from https://blake2.net, it is stated,
+"BLAKE2 is a cryptographic hash function faster than MD5, SHA-1, SHA-2, and SHA-3,
+yet is at least as secure as the latest standard SHA-3".
+-}
+
 -- | A hash used to determine if the result changed without having to keep the entire result in
 -- memory. Using a cryptographic hash ensures that a hash collision is almost impossible: with 256
 -- bits, even if a subscription changes once per second for an entire year, the probability of a
--- hash collision is ~4.294417×10-63. We use Blake2b because it is faster than SHA-256
+-- hash collision is ~4.294417×10-63. See Note [Blake2b faster than SHA-256].
 newtype ResponseHash = ResponseHash { unResponseHash :: CH.Digest CH.Blake2b_256 }
   deriving (Show, Eq)
 
@@ -152,9 +177,10 @@ pushResultToCohort
   :: GQResult EncJSON
   -- ^ a response that still needs to be wrapped with each 'Subscriber'’s root 'G.Alias'
   -> Maybe ResponseHash
+  -> LiveQueryMetadata
   -> CohortSnapshot
   -> IO ()
-pushResultToCohort result respHashM cohortSnapshot = do
+pushResultToCohort result respHashM (LiveQueryMetadata dTime) cohortSnapshot = do
   prevRespHashM <- STM.readTVarIO respRef
   -- write to the current websockets if needed
   sinks <-
@@ -169,8 +195,10 @@ pushResultToCohort result respHashM cohortSnapshot = do
     CohortSnapshot _ respRef curSinks newSinks = cohortSnapshot
     pushResultToSubscribers = A.mapConcurrently_ $ \(Subscriber alias action) ->
       let aliasText = G.unName $ G.unAlias alias
-          wrapWithAlias response =
-            encJToLBS $ encJFromAssocList [(aliasText, response)]
+          wrapWithAlias response = LiveQueryResponse
+            { _lqrPayload = encJToLBS $ encJFromAssocList [(aliasText, response)]
+            , _lqrExecutionTime = dTime
+            }
       in action (wrapWithAlias <$> result)
 
 -- -------------------------------------------------------------------------------------------------
@@ -294,11 +322,14 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
     queryInit <- Clock.getCurrentTime
     mxRes <- runExceptT . runLazyTx' pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
     queryFinish <- Clock.getCurrentTime
-    Metrics.add (_rmQuery metrics) $
-      realToFrac $ Clock.diffUTCTime queryFinish queryInit
-    let operations = getCohortOperations cohortSnapshotMap mxRes
+    let dt = Clock.diffUTCTime queryFinish queryInit
+        queryTime = realToFrac dt
+        lqMeta = LiveQueryMetadata dt
+        operations = getCohortOperations cohortSnapshotMap lqMeta mxRes
+    Metrics.add (_rmQuery metrics) queryTime
+
     -- concurrently push each unique result
-    A.mapConcurrently_ (uncurry3 pushResultToCohort) operations
+    A.mapConcurrently_ (uncurry4 pushResultToCohort) operations
     pushFinish <- Clock.getCurrentTime
     Metrics.add (_rmPush metrics) $
       realToFrac $ Clock.diffUTCTime pushFinish queryFinish
@@ -309,8 +340,8 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
   where
     Poller cohortMap _ = handler
 
-    uncurry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
-    uncurry3 f (a, b, c) = f a b c
+    uncurry4 :: (a -> b -> c -> d -> e) -> (a, b, c, d) -> e
+    uncurry4 f (a, b, c, d) = f a b c d
 
     getCohortSnapshot (cohortVars, handlerC) = do
       let Cohort resId respRef curOpsTV newOpsTV = handlerC
@@ -324,11 +355,11 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
     getQueryVars cohortSnapshotMap =
       Map.toList $ fmap _csVariables cohortSnapshotMap
 
-    getCohortOperations cohortSnapshotMap = \case
+    getCohortOperations cohortSnapshotMap actionMeta = \case
       Left e ->
         -- TODO: this is internal error
         let resp = GQExecError [encodeGQErr False e]
-        in [ (resp, Nothing, snapshot)
+        in [ (resp, Nothing, actionMeta, snapshot)
            | (_, snapshot) <- Map.toList cohortSnapshotMap
            ]
       Right responses ->
@@ -338,4 +369,4 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
               -- from Postgres strictly and (2) even if we didn’t, hashing will have to force the
               -- whole thing anyway.
               respHash = mkRespHash (encJToBS result)
-          in (GQSuccess result, Just respHash,) <$> Map.lookup respId cohortSnapshotMap
+          in (GQSuccess result, Just respHash, actionMeta,) <$> Map.lookup respId cohortSnapshotMap

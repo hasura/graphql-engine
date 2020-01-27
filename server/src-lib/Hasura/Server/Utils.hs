@@ -13,6 +13,7 @@ import           System.Process
 import qualified Data.ByteString            as B
 import qualified Data.CaseInsensitive       as CI
 import qualified Data.HashSet               as Set
+import qualified Data.List.NonEmpty         as NE
 import qualified Data.Text                  as T
 import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.IO               as TI
@@ -73,15 +74,15 @@ getRequestId headers =
     Just reqId -> return $ RequestId $ bsToTxt reqId
 
 -- Get an env var during compile time
-getValFromEnvOrScript :: String -> String -> TH.Q TH.Exp
+getValFromEnvOrScript :: String -> String -> TH.Q (TH.TExp String)
 getValFromEnvOrScript n s = do
   maybeVal <- TH.runIO $ lookupEnv n
   case maybeVal of
-    Just val -> TH.lift val
+    Just val -> [|| val ||]
     Nothing  -> runScript s
 
 -- Run a shell script during compile time
-runScript :: FilePath -> TH.Q TH.Exp
+runScript :: FilePath -> TH.Q (TH.TExp String)
 runScript fp = do
   TH.addDependentFile fp
   fileContent <- TH.runIO $ TI.readFile fp
@@ -90,7 +91,7 @@ runScript fp = do
   when (exitCode /= ExitSuccess) $ fail $
     "Running shell script " ++ fp ++ " failed with exit code : "
     ++ show exitCode ++ " and with error : " ++ stdErr
-  TH.lift stdOut
+  [|| stdOut ||]
 
 -- find duplicates
 duplicates :: Ord a => [a] -> [a]
@@ -207,3 +208,25 @@ instance FromJSON APIVersion where
       1 -> return VIVersion1
       2 -> return VIVersion2
       i -> fail $ "expected 1 or 2, encountered " ++ show i
+
+englishList :: NonEmpty Text -> Text
+englishList = \case
+  one :| []    -> one
+  one :| [two] -> one <> " and " <> two
+  several      ->
+    let final :| initials = NE.reverse several
+    in T.intercalate ", " (reverse initials) <> ", and " <> final
+
+makeReasonMessage :: [a] -> (a -> Text) -> Text
+makeReasonMessage errors showError =
+  case errors of
+    [singleError] -> "because " <> showError singleError
+    _ -> "for the following reasons:\n" <> T.unlines
+         (map (("  • " <>) . showError) errors)
+
+withElapsedTime :: MonadIO m => m a -> m (NominalDiffTime, a)
+withElapsedTime ma = do
+  t1 <- liftIO getCurrentTime
+  a <- ma
+  t2 <- liftIO getCurrentTime
+  return (diffUTCTime t2 t1, a)

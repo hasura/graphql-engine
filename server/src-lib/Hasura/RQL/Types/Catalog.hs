@@ -5,6 +5,7 @@ module Hasura.RQL.Types.Catalog
 
   , CatalogTable(..)
   , CatalogTableInfo(..)
+  , CatalogForeignKey(..)
 
   , CatalogRelation(..)
   , CatalogComputedField(..)
@@ -15,10 +16,13 @@ module Hasura.RQL.Types.Catalog
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict              as M
+
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 
+import           Hasura.Incremental               (Cacheable)
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types.Column
@@ -30,15 +34,41 @@ import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
 import           Hasura.SQL.Types
 
+newtype CatalogForeignKey
+  = CatalogForeignKey
+  { unCatalogForeignKey :: ForeignKey
+  } deriving (Show, Eq, NFData, Hashable, Cacheable)
+
+instance FromJSON CatalogForeignKey where
+  parseJSON = withObject "CatalogForeignKey" \o -> do
+    constraint <- o .: "constraint"
+    foreignTable <- o .: "foreign_table"
+
+    columns <- o .: "columns"
+    foreignColumns <- o .: "foreign_columns"
+    unless (length columns == length foreignColumns) $
+      fail "columns and foreign_columns differ in length"
+
+    pure $ CatalogForeignKey ForeignKey
+      { _fkConstraint = constraint
+      , _fkForeignTable = foreignTable
+      , _fkColumnMapping = M.fromList $ zip columns foreignColumns
+      }
+
 data CatalogTableInfo
   = CatalogTableInfo
-  { _ctiColumns           :: ![PGRawColumnInfo]
-  , _ctiConstraints       :: ![ConstraintName]
-  , _ctiPrimaryKeyColumns :: ![PGCol]
+  { _ctiOid               :: !OID
+  , _ctiColumns           :: ![PGRawColumnInfo]
+  , _ctiPrimaryKey        :: !(Maybe (PrimaryKey PGCol))
+  , _ctiUniqueConstraints :: !(HashSet Constraint)
+  -- ^ Does /not/ include the primary key!
+  , _ctiForeignKeys       :: !(HashSet CatalogForeignKey)
   , _ctiViewInfo          :: !(Maybe ViewInfo)
   , _ctiDescription       :: !(Maybe PGDescription)
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogTableInfo)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogTableInfo
+instance Cacheable CatalogTableInfo
+$(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogTableInfo)
 
 data CatalogTable
   = CatalogTable
@@ -47,8 +77,10 @@ data CatalogTable
   , _ctIsEnum          :: !Bool
   , _ctConfiguration   :: !TableConfig
   , _ctInfo            :: !(Maybe CatalogTableInfo)
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''CatalogTable)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogTable
+instance Cacheable CatalogTable
+$(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogTable)
 
 data CatalogRelation
   = CatalogRelation
@@ -57,8 +89,10 @@ data CatalogRelation
   , _crRelType :: !RelType
   , _crDef     :: !Value
   , _crComment :: !(Maybe Text)
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''CatalogRelation)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogRelation
+instance Cacheable CatalogRelation
+$(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogRelation)
 
 data CatalogPermission
   = CatalogPermission
@@ -67,31 +101,41 @@ data CatalogPermission
   , _cpPermType :: !PermType
   , _cpDef      :: !Value
   , _cpComment  :: !(Maybe Text)
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''CatalogPermission)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogPermission
+instance Hashable CatalogPermission
+instance Cacheable CatalogPermission
+$(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogPermission)
 
 data CatalogComputedField
   = CatalogComputedField
   { _cccComputedField :: !AddComputedField
-  , _cccFunctionInfo  :: ![RawFunctionInfo] -- multiple functions with same name
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogComputedField)
+  , _cccFunctionInfo  :: ![RawFunctionInfo] -- ^ multiple functions with same name
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogComputedField
+instance Cacheable CatalogComputedField
+$(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogComputedField)
 
 data CatalogEventTrigger
   = CatalogEventTrigger
   { _cetTable :: !QualifiedTable
   , _cetName  :: !TriggerName
   , _cetDef   :: !Value
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 4 snakeCase) ''CatalogEventTrigger)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogEventTrigger
+instance Cacheable CatalogEventTrigger
+$(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogEventTrigger)
 
 data CatalogFunction
   = CatalogFunction
   { _cfFunction        :: !QualifiedFunction
   , _cfIsSystemDefined :: !SystemDefined
+  , _cfConfiguration   :: !FunctionConfig
   , _cfInfo            :: ![RawFunctionInfo] -- ^ multiple functions with same name
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogFunction
+instance Cacheable CatalogFunction
+$(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
 data CatalogMetadata
   = CatalogMetadata
@@ -101,8 +145,9 @@ data CatalogMetadata
   , _cmEventTriggers        :: ![CatalogEventTrigger]
   , _cmRemoteSchemas        :: ![AddRemoteSchemaQuery]
   , _cmFunctions            :: ![CatalogFunction]
-  , _cmForeignKeys          :: ![ForeignKey]
   , _cmAllowlistCollections :: ![CollectionDef]
   , _cmComputedFields       :: ![CatalogComputedField]
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogMetadata
+instance Cacheable CatalogMetadata
+$(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogMetadata)

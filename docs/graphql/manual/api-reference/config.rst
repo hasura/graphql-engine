@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura config API reference
+   :keywords: hasura, docs, config API, API reference
+
 .. _config_api_reference:
 
 Config API Reference

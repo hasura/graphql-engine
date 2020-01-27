@@ -1,21 +1,20 @@
 select
   json_build_object(
-    'tables', tables.items,
+    'tables', tables.items :: json,
     'relations', relations.items,
     'permissions', permissions.items,
     'event_triggers', event_triggers.items,
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
-    'foreign_keys', foreign_keys.items,
     'allowlist_collections', allowlist.item,
     'computed_fields', computed_field.items
   )
 from
   (
     select
-      coalesce(json_agg(
-        json_build_object(
-          'name', json_build_object(
+      coalesce(jsonb_agg(
+        jsonb_build_object(
+          'name', jsonb_build_object(
             'name', ht.table_name,
             'schema', ht.table_schema
           ),
@@ -25,20 +24,8 @@ from
           'info', t.info
         )
       ), '[]') as items
-    from hdb_catalog.hdb_table as ht
-    left outer join (
-      select
-        table_schema,
-        table_name,
-        jsonb_build_object(
-          'description', description,
-          'columns', columns,
-          'primary_key_columns', primary_key_columns,
-          'constraints', constraints,
-          'view_info', view_info
-        ) as info
-      from hdb_catalog.hdb_table_info_agg
-    ) as t using (table_schema, table_name)
+    from hdb_catalog.hdb_table ht
+    left join hdb_catalog.hdb_table_info_agg t using (table_schema, table_name)
   ) as tables,
   (
     select
@@ -129,6 +116,7 @@ from
               'schema', hf.function_schema,
               'name', hf.function_name
             ),
+            'configuration', hf.configuration,
             'is_system_defined', hf.is_system_defined,
             'info', hf_agg.function_info
           ) as info
@@ -143,35 +131,6 @@ from
             ) hf_agg on 'true'
       ) as q
    ) as functions,
-  (
-    select
-      coalesce(json_agg(foreign_key.info), '[]') as items
-    from
-      (
-        select
-          json_build_object(
-            'table',
-            json_build_object(
-              'schema', f.table_schema,
-              'name', f.table_name
-            ),
-            'ref_table',
-            json_build_object(
-              'schema', f.ref_table_table_schema,
-              'name', f.ref_table
-            ),
-            'oid', f.constraint_oid,
-            'constraint', f.constraint_name,
-            'column_mapping', f.column_mapping
-          ) as info
-        from
-         hdb_catalog.hdb_foreign_key_constraint f
-         left outer join hdb_catalog.hdb_table ht
-         on ( ht.table_schema = f.table_schema
-              and ht.table_name = f.table_name
-            )
-      ) as foreign_key
-  ) as foreign_keys,
   (
     select
       coalesce(json_agg(hqc.collection_defn), '[]') as item

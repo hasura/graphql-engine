@@ -1,6 +1,8 @@
 module Hasura.GraphQL.Execute.Plan
   ( ReusablePlan(..)
   , PlanCache
+  , PlanCacheOptions
+  , mkPlanCacheOptions
   , getPlan
   , addPlan
   , initPlanCache
@@ -8,11 +10,13 @@ module Hasura.GraphQL.Execute.Plan
   , dumpPlanCache
   ) where
 
-import qualified Hasura.Cache                           as Cache
 import           Hasura.Prelude
 
 import qualified Data.Aeson                             as J
+import qualified Data.Aeson.Casing                      as J
+import qualified Data.Aeson.TH                          as J
 
+import qualified Hasura.Cache                           as Cache
 import qualified Hasura.GraphQL.Execute.LiveQuery       as LQ
 import qualified Hasura.GraphQL.Execute.Query           as EQ
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
@@ -24,7 +28,7 @@ data PlanId
   , _piRole               :: !RoleName
   , _piOperationName      :: !(Maybe GH.OperationName)
   , _piQuery              :: !GH.GQLQueryText
-  } deriving (Show, Eq, Generic)
+  } deriving (Show, Eq, Ord, Generic)
 
 instance Hashable PlanId
 
@@ -38,9 +42,7 @@ instance J.ToJSON PlanId where
     ]
 
 newtype PlanCache
-  = PlanCache
-  { _unPlanCache :: Cache.UnboundedCache PlanId ReusablePlan
-  }
+  = PlanCache {_unPlanCache :: Cache.Cache PlanId ReusablePlan}
 
 data ReusablePlan
   = RPQuery !EQ.ReusableQueryPlan
@@ -51,14 +53,24 @@ instance J.ToJSON ReusablePlan where
     RPQuery queryPlan -> J.toJSON queryPlan
     RPSubs subsPlan -> J.toJSON subsPlan
 
-initPlanCache :: IO PlanCache
-initPlanCache = PlanCache <$> Cache.initCache
+newtype PlanCacheOptions
+  = PlanCacheOptions { unPlanCacheSize :: Maybe Cache.CacheSize }
+  deriving (Show, Eq)
+$(J.deriveJSON (J.aesonDrop 2 J.snakeCase) ''PlanCacheOptions)
+
+mkPlanCacheOptions :: Maybe Cache.CacheSize -> PlanCacheOptions
+mkPlanCacheOptions = PlanCacheOptions
+
+initPlanCache :: PlanCacheOptions -> IO PlanCache
+initPlanCache options =
+  PlanCache <$>
+  Cache.initialise (Cache.mkCacheOptions $ unPlanCacheSize options)
 
 getPlan
   :: SchemaCacheVer -> RoleName -> Maybe GH.OperationName -> GH.GQLQueryText
   -> PlanCache -> IO (Maybe ReusablePlan)
 getPlan schemaVer rn opNameM q (PlanCache planCache) =
-  Cache.lookup planCache planId
+  Cache.lookup planId planCache
   where
     planId = PlanId schemaVer rn opNameM q
 
@@ -66,17 +78,17 @@ addPlan
   :: SchemaCacheVer -> RoleName -> Maybe GH.OperationName -> GH.GQLQueryText
   -> ReusablePlan -> PlanCache -> IO ()
 addPlan schemaVer rn opNameM q queryPlan (PlanCache planCache) =
-  Cache.insert planCache planId queryPlan
+  Cache.insert planId queryPlan planCache
   where
     planId = PlanId schemaVer rn opNameM q
 
 clearPlanCache :: PlanCache -> IO ()
 clearPlanCache (PlanCache planCache) =
-  Cache.clearCache planCache
+  Cache.clear planCache
 
 dumpPlanCache :: PlanCache -> IO J.Value
 dumpPlanCache (PlanCache cache) =
-  J.toJSON <$> Cache.mapCache dumpEntry cache
+  J.toJSON . map (map dumpEntry) <$> Cache.getEntries cache
   where
     dumpEntry (planId, plan) =
       J.object

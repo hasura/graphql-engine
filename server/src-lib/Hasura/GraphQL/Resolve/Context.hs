@@ -1,5 +1,5 @@
 module Hasura.GraphQL.Resolve.Context
-  ( FuncArgItem(..)
+  ( FunctionArgItem(..)
   , OrdByItem(..)
   , UpdPermForIns(..)
   , InsCtx(..)
@@ -43,7 +43,7 @@ import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Utils
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Internal       (sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Internal       (currentSession, sessVarFromCurrentSetting)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -125,13 +125,15 @@ resolveValPrep
 resolveValPrep = \case
   UVPG annPGVal -> prepare annPGVal
   UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
-  UVSQL sqlExp -> return sqlExp
+  UVSQL sqlExp -> pure sqlExp
+  UVSession -> pure currentSession
 
 resolveValTxt :: (Applicative f) => UnresolvedVal -> f S.SQLExp
 resolveValTxt = \case
   UVPG annPGVal -> txtConverter annPGVal
   UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
   UVSQL sqlExp -> pure sqlExp
+  UVSession -> pure currentSession
 
 withPrepArgs :: StateT PrepArgs m a -> m (a, PrepArgs)
 withPrepArgs m = runStateT m Seq.empty

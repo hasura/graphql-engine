@@ -1,0 +1,71 @@
+- description: setup a custom SQL function
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        CREATE FUNCTION get_session_var_value(hasura_session json, session_var text)
+        RETURNS SETOF text_result AS $$
+            SELECT q.* FROM (VALUES (hasura_session ->> session_var)) q
+        $$ LANGUAGE sql STABLE;
+
+- description: Track function v2 with invalid session argument
+  url: /v1/query
+  status: 400
+  response:
+    internal:
+    - definition:
+        schema: public
+        name: get_session_var_value
+      reason: 'in function "get_session_var_value": the function "get_session_var_value"
+        cannot be tracked because given session argument "random" not the input argument
+        of the function'
+      type: function
+    path: $.args
+    error: 'in function "get_session_var_value": the function "get_session_var_value"
+      cannot be tracked because given session argument "random" not the input argument
+      of the function'
+    code: constraint-violation
+  query:
+    version: 2
+    type: track_function
+    args:
+      function: get_session_var_value
+      configuration:
+        session_argument: random
+
+- description: Track function v2 with non json session argument
+  url: /v1/query
+  status: 400
+  response:
+    internal:
+    - definition:
+        schema: public
+        name: get_session_var_value
+      reason: 'in function "get_session_var_value": the function "get_session_var_value"
+        cannot be tracked because given session argument "session_var" is not of type
+        json'
+      type: function
+    path: $.args
+    error: 'in function "get_session_var_value": the function "get_session_var_value"
+      cannot be tracked because given session argument "session_var" is not of type
+      json'
+    code: constraint-violation
+  query:
+    version: 2
+    type: track_function
+    args:
+      function: get_session_var_value
+      configuration:
+        session_argument: session_var
+
+- description: teardown function
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        DROP FUNCTION get_session_var_value(json, text);
+      cascade: true

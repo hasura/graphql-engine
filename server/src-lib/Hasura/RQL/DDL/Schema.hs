@@ -20,6 +20,9 @@ load and modify the Hasura catalog and schema cache.
     cache, but to avoid rebuilding the entire schema cache on every change to the catalog, various
     functions incrementally update the cache when they modify the catalog.
 -}
+
+{-# LANGUAGE RecordWildCards #-}
+
 module Hasura.RQL.DDL.Schema
  ( module Hasura.RQL.DDL.Schema.Cache
  , module Hasura.RQL.DDL.Schema.Catalog
@@ -56,16 +59,36 @@ import           Hasura.Server.Utils            (matchRegex)
 data RunSQL
   = RunSQL
   { rSql                      :: Text
-  , rCascade                  :: !(Maybe Bool)
+  , rCascade                  :: !Bool
   , rCheckMetadataConsistency :: !(Maybe Bool)
+  , rTxAccessMode             :: !Q.TxAccess
   } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''RunSQL)
 
-runRunSQL :: (CacheBuildM m, UserInfoM m) => RunSQL -> m EncJSON
-runRunSQL (RunSQL t cascade mChkMDCnstcy) = do
-  adminOnly
-  isMDChkNeeded <- maybe (isAltrDropReplace t) return mChkMDCnstcy
-  bool (execRawSQL t) (withMetadataCheck (or cascade) $ execRawSQL t) isMDChkNeeded
+instance FromJSON RunSQL where
+  parseJSON = withObject "RunSQL" $ \o -> do
+    rSql <- o .: "sql"
+    rCascade <- o .:? "cascade" .!= False
+    rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
+    isReadOnly <- o .:? "read_only" .!= False
+    let rTxAccessMode = if isReadOnly then Q.ReadOnly else Q.ReadWrite
+    pure RunSQL{..}
+
+instance ToJSON RunSQL where
+  toJSON RunSQL {..} =
+    object
+      [ "sql" .= rSql
+      , "cascade" .= rCascade
+      , "check_metadata_consistency" .= rCheckMetadataConsistency
+      , "read_only" .=
+        case rTxAccessMode of
+          Q.ReadOnly  -> True
+          Q.ReadWrite -> False
+      ]
+
+runRunSQL :: (MonadTx m, CacheRWM m) => RunSQL -> m EncJSON
+runRunSQL RunSQL {..} = do
+  metadataCheckNeeded <- onNothing rCheckMetadataConsistency $ isAltrDropReplace rSql
+  bool (execRawSQL rSql) (withMetadataCheck rCascade $ execRawSQL rSql) metadataCheckNeeded
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =
@@ -73,7 +96,7 @@ runRunSQL (RunSQL t cascade mChkMDCnstcy) = do
       where
         rawSqlErrHandler txe =
           let e = err400 PostgresError "query execution failed"
-          in e {qeInternal = Just $ toJSON txe}
+           in e {qeInternal = Just $ toJSON txe}
 
     isAltrDropReplace :: QErrM m => T.Text -> m Bool
     isAltrDropReplace = either throwErr return . matchRegex regex False

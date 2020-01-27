@@ -5,15 +5,14 @@
 
 module Hasura.Server.Telemetry
   ( runTelemetry
-  , getDbId
   , mkTelemetryLog
   )
   where
 
-import           Control.Exception       (try)
+import           Control.Exception     (try)
 import           Control.Lens
-import           Data.IORef
 import           Data.List
+import           Data.Text.Conversions (UTF8 (..), decodeText)
 
 import           Hasura.HTTP
 import           Hasura.Logging
@@ -23,18 +22,16 @@ import           Hasura.Server.Init
 import           Hasura.Server.Version
 
 import qualified CI
-import qualified Control.Concurrent      as C
-import qualified Data.Aeson              as A
-import qualified Data.Aeson.Casing       as A
-import qualified Data.Aeson.TH           as A
-import qualified Data.ByteString.Lazy    as BL
-import qualified Data.HashMap.Strict     as Map
-import qualified Data.String.Conversions as CS
-import qualified Data.Text               as T
-import qualified Database.PG.Query       as Q
-import qualified Network.HTTP.Client     as HTTP
-import qualified Network.HTTP.Types      as HTTP
-import qualified Network.Wreq            as Wreq
+import qualified Control.Concurrent    as C
+import qualified Data.Aeson            as A
+import qualified Data.Aeson.Casing     as A
+import qualified Data.Aeson.TH         as A
+import qualified Data.ByteString.Lazy  as BL
+import qualified Data.HashMap.Strict   as Map
+import qualified Data.Text             as T
+import qualified Network.HTTP.Client   as HTTP
+import qualified Network.HTTP.Types    as HTTP
+import qualified Network.Wreq          as Wreq
 
 
 data RelationshipMetric
@@ -42,7 +39,7 @@ data RelationshipMetric
   { _rmManual :: !Int
   , _rmAuto   :: !Int
   } deriving (Show, Eq)
-$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''RelationshipMetric)
+$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''RelationshipMetric)
 
 data PermissionMetric
   = PermissionMetric
@@ -52,7 +49,7 @@ data PermissionMetric
   , _pmDelete :: !Int
   , _pmRoles  :: !Int
   } deriving (Show, Eq)
-$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''PermissionMetric)
+$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''PermissionMetric)
 
 data Metrics
   = Metrics
@@ -65,46 +62,49 @@ data Metrics
   , _mtRemoteSchemas :: !Int
   , _mtFunctions     :: !Int
   } deriving (Show, Eq)
-$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
+$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
 
 data HasuraTelemetry
   = HasuraTelemetry
   { _htDbUid       :: !Text
   , _htInstanceUid :: !InstanceId
-  , _htVersion     :: !Text
+  , _htVersion     :: !Version
   , _htCi          :: !(Maybe CI.CI)
   , _htMetrics     :: !Metrics
-  } deriving (Show, Eq)
-$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''HasuraTelemetry)
+  } deriving (Show)
+$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''HasuraTelemetry)
 
 data TelemetryPayload
   = TelemetryPayload
   { _tpTopic :: !Text
   , _tpData  :: !HasuraTelemetry
-  } deriving (Show, Eq)
-$(A.deriveJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
+  } deriving (Show)
+$(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''TelemetryPayload)
 
 telemetryUrl :: Text
 telemetryUrl = "https://telemetry.hasura.io/v1/http"
 
-mkPayload :: Text -> InstanceId -> Text -> Metrics -> IO TelemetryPayload
+mkPayload :: Text -> InstanceId -> Version -> Metrics -> IO TelemetryPayload
 mkPayload dbId instanceId version metrics = do
   ci <- CI.getCI
-  return $ TelemetryPayload topic $
-    HasuraTelemetry dbId instanceId version ci metrics
-  where topic = bool "server" "server_test" isDevVersion
+  let topic = case version of
+        VersionDev _     -> "server_test"
+        VersionRelease _ -> "server"
+  pure $ TelemetryPayload topic $ HasuraTelemetry dbId instanceId version ci metrics
 
 runTelemetry
-  :: Logger
+  :: (HasVersion)
+  => Logger Hasura
   -> HTTP.Manager
-  -> IORef (SchemaCache, SchemaCacheVer)
+  -> IO SchemaCache
+  -- ^ an action that always returns the latest schema cache
   -> Text
   -> InstanceId
   -> IO ()
-runTelemetry (Logger logger) manager cacheRef dbId instanceId = do
+runTelemetry (Logger logger) manager getSchemaCache dbId instanceId = do
   let options = wreqOptions manager []
   forever $ do
-    schemaCache <- fmap fst $ readIORef cacheRef
+    schemaCache <- getSchemaCache
     let metrics = computeMetrics schemaCache
     payload <- A.encode <$> mkPayload dbId instanceId currentVersion metrics
     logger $ debugLBS $ "metrics_info: " <> payload
@@ -129,10 +129,10 @@ runTelemetry (Logger logger) manager cacheRef dbId instanceId = do
 
 computeMetrics :: SchemaCache -> Metrics
 computeMetrics sc =
-  let nTables = countUserTables (isNothing . _tiViewInfo)
-      nViews = countUserTables (isJust . _tiViewInfo)
-      nEnumTables = countUserTables (isJust . _tiEnumValues)
-      allRels = join $ Map.elems $ Map.map (getRels . _tiFieldInfoMap) userTables
+  let nTables = countUserTables (isNothing . _tciViewInfo . _tiCoreInfo)
+      nViews = countUserTables (isJust . _tciViewInfo . _tiCoreInfo)
+      nEnumTables = countUserTables (isJust . _tciEnumValues . _tiCoreInfo)
+      allRels = join $ Map.elems $ Map.map (getRels . _tciFieldInfoMap . _tiCoreInfo) userTables
       (manualRels, autoRels) = partition riIsManual allRels
       relMetrics = RelationshipMetric (length manualRels) (length autoRels)
       rolePerms = join $ Map.elems $ Map.map permsOfTbl userTables
@@ -152,23 +152,14 @@ computeMetrics sc =
   in Metrics nTables nViews nEnumTables relMetrics permMetrics evtTriggers rmSchemas funcs
 
   where
-    userTables = Map.filter (not . isSystemDefined . _tiSystemDefined) $ scTables sc
+    userTables = Map.filter (not . isSystemDefined . _tciSystemDefined . _tiCoreInfo) $ scTables sc
     countUserTables predicate = length . filter predicate $ Map.elems userTables
 
     calcPerms :: (RolePermInfo -> Maybe a) -> [RolePermInfo] -> Int
     calcPerms fn perms = length $ catMaybes $ map fn perms
 
-    permsOfTbl :: TableInfo PGColumnInfo -> [(RoleName, RolePermInfo)]
+    permsOfTbl :: TableInfo -> [(RoleName, RolePermInfo)]
     permsOfTbl = Map.toList . _tiRolePermInfoMap
-
-
-getDbId :: Q.TxE QErr Text
-getDbId =
-  (runIdentity . Q.getRow) <$>
-  Q.withQE defaultTxErrorHandler
-  [Q.sql|
-    SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
-  |] () False
 
 
 -- | Logging related
@@ -205,8 +196,8 @@ instance A.ToJSON TelemetryHttpError where
              ]
 
 
-instance ToEngineLog TelemetryLog where
-  toEngineLog tl = (_tlLogLevel tl, ELTTelemetryLog, A.toJSON tl)
+instance ToEngineLog TelemetryLog Hasura where
+  toEngineLog tl = (_tlLogLevel tl, ELTInternal ILTTelemetry, A.toJSON tl)
 
 mkHttpError
   :: Text
@@ -218,8 +209,8 @@ mkHttpError url mResp httpEx =
     Nothing   -> TelemetryHttpError Nothing url httpEx Nothing
     Just resp ->
       let status = resp ^. Wreq.responseStatus
-          body = CS.cs $ resp ^. Wreq.responseBody
-      in TelemetryHttpError (Just status) url httpEx (Just body)
+          body = decodeText $ UTF8 (resp ^. Wreq.responseBody)
+      in TelemetryHttpError (Just status) url httpEx body
 
 mkTelemetryLog :: Text -> Text -> Maybe TelemetryHttpError -> TelemetryLog
 mkTelemetryLog = TelemetryLog LevelInfo

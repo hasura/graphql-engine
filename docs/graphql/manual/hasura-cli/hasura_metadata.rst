@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura metadata to manage Hasura metadata with Hasura CLI
+   :keywords: hasura, docs, CLI, hasura metadata
+
 .. _hasura_metadata:
 
 Hasura CLI: hasura metadata
@@ -24,6 +28,7 @@ Options inherited from parent commands
 ::
 
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
       --skip-update-check   Skip automatic update check on command execution
 
@@ -33,6 +38,7 @@ SEE ALSO
 * :ref:`hasura <hasura>` 	 - Hasura GraphQL engine command line tool
 * :ref:`hasura metadata apply <hasura_metadata_apply>` 	 - Apply Hasura metadata on a database
 * :ref:`hasura metadata clear <hasura_metadata_clear>` 	 - Clear Hasura GraphQL engine metadata on the database
+* :ref:`hasura metadata diff <hasura_metadata_diff>` 	 - (PREVIEW) Show a highlighted diff of Hasura metadata
 * :ref:`hasura metadata export <hasura_metadata_export>` 	 - Export Hasura GraphQL engine metadata from the database
 * :ref:`hasura metadata reload <hasura_metadata_reload>` 	 - Reload Hasura GraphQL engine metadata on the database
 

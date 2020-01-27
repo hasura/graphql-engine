@@ -1,3 +1,7 @@
+.. meta::
+   :description: Execute SQL with the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, run_sql
+
 Schema/Metadata API Reference: Run SQL
 ======================================
 
@@ -205,6 +209,10 @@ Args syntax
      - false
      - Boolean
      - When set to ``false``, the sql is executed without checking metadata dependencies.
+   * - read_only
+     - false
+     - Boolean
+     - When set to ``true``, the query will be run in ``READ ONLY`` transaction access mode which means only ``select`` queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant.
 
 Response
 ^^^^^^^^

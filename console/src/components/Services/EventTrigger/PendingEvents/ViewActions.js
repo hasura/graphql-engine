@@ -56,6 +56,7 @@ const vMakeRequest = () => {
         currentQuery.columns[1].where = {
           delivered: false,
           error: false,
+          archived: false,
         };
       }
       currentQuery.where = { name: state.triggers.currentTrigger };
@@ -63,6 +64,7 @@ const vMakeRequest = () => {
         trigger_name: state.triggers.currentTrigger,
         delivered: false,
         error: false,
+        archived: false,
       };
     }
 

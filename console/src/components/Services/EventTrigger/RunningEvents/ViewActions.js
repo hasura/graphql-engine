@@ -61,6 +61,7 @@ const vMakeRequest = () => {
           delivered: false,
           error: false,
           tries: { $gt: 0 },
+          archived: false,
         };
       }
       currentQuery.where = { name: state.triggers.currentTrigger };
@@ -69,6 +70,7 @@ const vMakeRequest = () => {
         delivered: false,
         error: false,
         tries: { $gt: 0 },
+        archived: false,
       };
     }
 

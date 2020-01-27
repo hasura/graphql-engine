@@ -25,6 +25,8 @@ import {
   TOGGLE_ENUM,
   TOGGLE_ENUM_SUCCESS,
   TOGGLE_ENUM_FAILURE,
+  MODIFY_ROOT_FIELD,
+  SET_CHECK_CONSTRAINTS,
 } from '../TableModify/ModifyActions';
 
 // TABLE RELATIONSHIPS
@@ -49,7 +51,7 @@ import {
   PERM_SET_FILTER,
   PERM_SET_FILTER_SAME_AS,
   PERM_TOGGLE_COLUMN,
-  PERM_TOGGLE_ALL_COLUMNS,
+  PERM_TOGGLE_ALL_FIELDS,
   PERM_ALLOW_ALL,
   PERM_TOGGLE_MODIFY_LIMIT,
   PERM_TOGGLE_ALLOW_UPSERT,
@@ -66,7 +68,7 @@ import {
   PERM_SET_APPLY_SAME_PERM,
   PERM_DEL_APPLY_SAME_PERM,
   toggleColumn,
-  toggleAllColumns,
+  toggleAllFields,
   getFilterKey,
   getBasePermissionsState,
   updatePermissionsState,
@@ -76,6 +78,7 @@ import {
   CREATE_NEW_PRESET,
   DELETE_PRESET,
   SET_PRESET_VALUE,
+  PERM_TOGGLE_COMPUTED_FIELD,
 } from '../TablePermissions/Actions';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
@@ -360,20 +363,31 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         },
       };
 
-    case PERM_TOGGLE_ALL_COLUMNS:
-      return {
+    case PERM_TOGGLE_ALL_FIELDS:
+      let returnState = {
         ...modifyState,
-        permissionsState: {
-          ...updatePermissionsState(
-            modifyState.permissionsState,
-            'columns',
-            toggleAllColumns(
-              modifyState.permissionsState[modifyState.permissionsState.query],
-              action.allColumns
-            )
-          ),
-        },
       };
+
+      Object.keys(action.allFields).forEach(fieldType => {
+        returnState = {
+          ...returnState,
+          permissionsState: {
+            ...updatePermissionsState(
+              returnState.permissionsState,
+              fieldType,
+              toggleAllFields(
+                modifyState.permissionsState[
+                  modifyState.permissionsState.query
+                ],
+                action.allFields,
+                fieldType
+              )
+            ),
+          },
+        };
+      });
+
+      return returnState;
 
     case PERM_TOGGLE_COLUMN:
       return {
@@ -384,7 +398,24 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
             'columns',
             toggleColumn(
               modifyState.permissionsState[modifyState.permissionsState.query],
-              action.column
+              action.column,
+              'columns'
+            )
+          ),
+        },
+      };
+
+    case PERM_TOGGLE_COMPUTED_FIELD:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...updatePermissionsState(
+            modifyState.permissionsState,
+            'computed_fields',
+            toggleColumn(
+              modifyState.permissionsState[modifyState.permissionsState.query],
+              action.computedField,
+              'computed_fields'
             )
           ),
         },
@@ -605,6 +636,16 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         tableEnum: {
           loading: false,
         },
+      };
+    case MODIFY_ROOT_FIELD:
+      return {
+        ...modifyState,
+        rootFieldsEdit: action.data,
+      };
+    case SET_CHECK_CONSTRAINTS:
+      return {
+        ...modifyState,
+        checkConstraintsModify: action.constraints,
       };
     default:
       return modifyState;

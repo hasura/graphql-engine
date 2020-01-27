@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage Hasura migrations
+   :keywords: hasura, docs, migration
+
 .. _postgres_schema_metadata:
 
 Managing Postgres schema and Hasura metadata

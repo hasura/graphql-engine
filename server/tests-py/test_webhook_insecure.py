@@ -1,8 +1,9 @@
 import pytest
 from validate import check_query_f
 from super_classes import DefaultTestSelectQueries
+from context import PytestConf
 
-if not pytest.config.getoption("--test-webhook-insecure"):
+if not PytestConf.config.getoption("--test-webhook-insecure"):
     pytest.skip("--test-webhook-https-insecure flag is missing, skipping tests", allow_module_level=True)
 
 class TestHTTPSWebhookInsecure(DefaultTestSelectQueries):

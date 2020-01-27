@@ -1,6 +1,6 @@
-.. .. meta::
-   :description: User's manual for using Hasura's command line tooling, hasuractl
-   :keywords: hasura, docs, CLI, HasuraCTL, hasuractl
+.. meta::
+   :description: Use Hasura's command line tooling
+   :keywords: hasura, docs, CLI
 
 .. _hasuracli-manual:
 
@@ -36,9 +36,11 @@ Commands
 - :doc:`hasura metadata export <hasura_metadata_export>`
 - :doc:`hasura metadata reload <hasura_metadata_reload>`
 - :doc:`hasura metadata clear <hasura_metadata_clear>`
+- :doc:`hasura metadata diff <hasura_metadata_diff>`
 - :doc:`hasura migrate <hasura_migrate>`
 - :doc:`hasura migrate apply <hasura_migrate_apply>`
 - :doc:`hasura migrate create <hasura_migrate_create>`
+- :doc:`hasura migrate squash <hasura_migrate_squash>`
 - :doc:`hasura migrate status <hasura_migrate_status>`
 - :doc:`hasura update-cli <hasura_update-cli>`
 - :doc:`hasura version <hasura_version>`
@@ -63,9 +65,11 @@ Refer to :doc:`uninstall-hasura-cli`.
    hasura metadata export <hasura_metadata_export>
    hasura metadata reload <hasura_metadata_reload>
    hasura metadata clear <hasura_metadata_clear>
+   hasura metadata diff <hasura_metadata_diff>
    hasura migrate <hasura_migrate>
    hasura migrate apply <hasura_migrate_apply>
    hasura migrate create <hasura_migrate_create>
+   hasura migrate squash <hasura_migrate_squash>
    hasura migrate status <hasura_migrate_status>
    hasura update-cli <hasura_update-cli>
    hasura version <hasura_version>

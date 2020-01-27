@@ -17,6 +17,7 @@ import {
   getTableDef,
   getSchemaTables,
   getTrackedTables,
+  checkIfTable,
 } from '../../../Common/utils/pgUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
@@ -229,7 +230,15 @@ class PermissionsSummary extends Component {
 
     const getCellOnClick = (table, role, action) => {
       return () => {
-        dispatch(push(getTablePermissionsRoute(table)));
+        dispatch(
+          push(
+            getTablePermissionsRoute(
+              getTableSchema(table),
+              getTableName(table),
+              checkIfTable(table)
+            )
+          )
+        );
 
         if (role && action) {
           // TODO: fix this. above redirect clears state set by this
@@ -456,10 +465,9 @@ class PermissionsSummary extends Component {
               <div className={styles.add_mar_bottom_small}>
                 <b>Columns</b> -{' '}
                 <i>
-                  {getPermissionColumnAccessSummary(
-                    actionPermission,
-                    table.columns
-                  )}
+                  {getPermissionColumnAccessSummary(actionPermission, {
+                    columns: table.columns,
+                  })}
                 </i>
                 {showDetails && getColumnsDetails()}
               </div>
@@ -488,9 +496,7 @@ class PermissionsSummary extends Component {
       const getTablesColumnTable = () => {
         return (
           <table
-            className={`table table-bordered ${styles.rolesTable} ${
-              styles.remove_margin
-            }`}
+            className={`table table-bordered ${styles.rolesTable} ${styles.remove_margin}`}
           >
             <thead>
               <tr>{getBackBtn('currTable')}</tr>
@@ -620,9 +626,7 @@ class PermissionsSummary extends Component {
 
         return (
           <table
-            className={`table table-bordered ${styles.rolesTable} ${
-              styles.remove_margin
-            }`}
+            className={`table table-bordered ${styles.rolesTable} ${styles.remove_margin}`}
           >
             <thead>
               <tr>
@@ -659,9 +663,7 @@ class PermissionsSummary extends Component {
 
         return (
           <table
-            className={`table table-bordered ${styles.rolesTable} ${
-              styles.remove_margin
-            }`}
+            className={`table table-bordered ${styles.rolesTable} ${styles.remove_margin}`}
           >
             <thead>{getRolesHeaderRow()}</thead>
           </table>
@@ -692,9 +694,7 @@ class PermissionsSummary extends Component {
 
         return (
           <table
-            className={`table table-bordered ${styles.rolesTable} ${
-              styles.remove_margin
-            }`}
+            className={`table table-bordered ${styles.rolesTable} ${styles.remove_margin}`}
           >
             <thead>{getActionsHeaderRow()}</thead>
             <tbody>{getRoleAllTablesAllActionsRows()}</tbody>
@@ -1037,9 +1037,7 @@ class PermissionsSummary extends Component {
 
     return (
       <div
-        className={`${styles.clear_fix} ${styles.padd_left} ${
-          styles.fit_content
-        }`}
+        className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
       >
         <Helmet title="Permissions Summary | Hasura" />
         <div className={styles.add_mar_bottom}>

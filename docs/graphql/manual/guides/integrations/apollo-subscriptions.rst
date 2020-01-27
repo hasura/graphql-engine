@@ -1,3 +1,7 @@
+.. meta::
+   :description: Set up GraphQL subscriptions with apollo-client
+   :keywords: hasura, docs, guide, GraphQL subscriptions, apollo, apollo-client
+
 Setting up GraphQL subscriptions using apollo-client
 ====================================================
 

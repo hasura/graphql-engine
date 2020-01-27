@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use enums in Hasura
+   :keywords: hasura, docs, schema, enum
+
 Enum type fields
 ================
 
@@ -139,6 +143,7 @@ we need to tell Hasura that this table represents an enum.
     ``Set table as enum`` section:
 
     .. thumbnail:: ../../../img/graphql/manual/schema/enum-set.png
+       :alt: Set table as enum
 
   .. tab:: API
 
@@ -239,4 +244,4 @@ Current limitations
 ^^^^^^^^^^^^^^^^^^^
 
 Currently, Hasura does not automatically detect changes to the contents of enum tables, so the GraphQL schema will
-only be updated after manually reloading metadata after inserting, updating, or deleting rows from an enum table.
+only be updated after :ref:`manually reloading metadata <reload_metadata_manual>` after inserting, updating, or deleting rows from an enum table.

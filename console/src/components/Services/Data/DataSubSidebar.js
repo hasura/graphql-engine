@@ -3,13 +3,14 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
-import gqlPattern from './Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 import {
   displayTableName,
   getFunctionName,
   getSchemaTables,
   getTableName,
+  checkIfTable,
+  getFunctionSchema,
 } from '../../Common/utils/pgUtils';
 import {
   getFunctionModifyRoute,
@@ -105,28 +106,29 @@ class DataSubSidebar extends React.Component {
           const isActive =
             tableName === currentTable && currentLocation.includes(tableName);
 
-          let gqlCompatibilityWarning = null;
-          if (!gqlPattern.test(tableName)) {
-            gqlCompatibilityWarning = (
-              <span className={styles.add_mar_left_mid}>
-                <GqlCompatibilityWarning />
-              </span>
-            );
-          }
-
           return (
             <li
               className={isActive ? styles.activeLink : ''}
               key={'table ' + i}
             >
-              <Link to={getTableBrowseRoute(table)} data-test={tableName}>
+              <Link
+                to={getTableBrowseRoute(
+                  currentSchema,
+                  tableName,
+                  checkIfTable(table)
+                )}
+                data-test={tableName}
+              >
                 <i
                   className={styles.tableIcon + ' fa fa-table'}
                   aria-hidden="true"
                 />
                 {displayTableName(table)}
               </Link>
-              {gqlCompatibilityWarning}
+              <GqlCompatibilityWarning
+                identifier={tableName}
+                className={styles.add_mar_left_mid}
+              />
             </li>
           );
         });
@@ -160,7 +162,10 @@ class DataSubSidebar extends React.Component {
 
           return (
             <li className={isActive ? styles.activeLink : ''} key={'fn ' + i}>
-              <Link to={getFunctionModifyRoute(func)} data-test={funcName}>
+              <Link
+                to={getFunctionModifyRoute(getFunctionSchema(func), funcName)}
+                data-test={funcName}
+              >
                 <img
                   src={isActive ? functionSymbolActive : functionSymbol}
                   className={styles.functionIcon}
