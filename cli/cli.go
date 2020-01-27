@@ -88,16 +88,18 @@ type ActionExecutionConfig struct {
 type Config struct {
 	Version string
 	ServerConfig
-	MetadataDirectory string
-	Action            ActionExecutionConfig
+	MetadataDirectory   string
+	MigrationsDirectory string
+	Action              ActionExecutionConfig
 }
 
 type rawConfig struct {
 	// Version for the CLI config
 	Version string `json:"version"`
 	ServerConfig
-	MetadataDirectory string                `json:"metadata_directory"`
-	Action            ActionExecutionConfig `json:"actions"`
+	MetadataDirectory   string                `json:"metadata_directory"`
+	MigrationsDirectory string                `json:"migrations_directory,omitempty"`
+	Action              ActionExecutionConfig `json:"actions"`
 }
 
 func (r rawConfig) toConfig() Config {
@@ -112,8 +114,9 @@ func (r rawConfig) toConfig() Config {
 			AdminSecret:    r.ServerConfig.AdminSecret,
 			ParsedEndpoint: r.ServerConfig.ParsedEndpoint,
 		},
-		MetadataDirectory: r.MetadataDirectory,
-		Action:            r.Action,
+		MetadataDirectory:   r.MetadataDirectory,
+		MigrationsDirectory: r.MigrationsDirectory,
+		Action:              r.Action,
 	}
 }
 
@@ -126,8 +129,9 @@ func (s Config) toRawConfig() rawConfig {
 			AccessKey:      "",
 			ParsedEndpoint: s.ServerConfig.ParsedEndpoint,
 		},
-		MetadataDirectory: s.MetadataDirectory,
-		Action:            s.Action,
+		MetadataDirectory:   s.MetadataDirectory,
+		MigrationsDirectory: s.MigrationsDirectory,
+		Action:              s.Action,
 	}
 }
 
@@ -149,6 +153,7 @@ func (s Config) UnmarshalJSON(b []byte) error {
 	s.ServerConfig.AdminSecret = sc.ServerConfig.AdminSecret
 	s.ServerConfig.ParsedEndpoint = sc.ServerConfig.ParsedEndpoint
 	s.MetadataDirectory = sc.MetadataDirectory
+	s.MigrationsDirectory = sc.MigrationsDirectory
 	s.Action = sc.Action
 	return nil
 }
@@ -324,7 +329,6 @@ func (ec *ExecutionContext) Validate() error {
 	}
 
 	// set names of files and directories
-	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, "migrations")
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
 
 	// read config and parse the values into Config
@@ -332,6 +336,8 @@ func (ec *ExecutionContext) Validate() error {
 	if err != nil {
 		return errors.Wrap(err, "cannot read config")
 	}
+
+	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MigrationsDirectory)
 
 	if ec.Config.Version != "1" && ec.Config.MetadataDirectory != "" {
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
@@ -389,7 +395,8 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("endpoint", "http://localhost:8080")
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
-	v.SetDefault("metadata_directory", "")
+	v.SetDefault("metadata_directory", "metadata")
+	v.SetDefault("migrations_directory", "migrations")
 	v.SetDefault("actions.kind", "synchronous")
 	v.SetDefault("actions.handler_webhook_baseurl", "http://localhost:3000")
 	v.SetDefault("actions.codegen.framework", "")
@@ -410,7 +417,8 @@ func (ec *ExecutionContext) readConfig() error {
 			Endpoint:    v.GetString("endpoint"),
 			AdminSecret: adminSecret,
 		},
-		MetadataDirectory: v.GetString("metadata_directory"),
+		MetadataDirectory:   v.GetString("metadata_directory"),
+		MigrationsDirectory: v.GetString("migrations_directory"),
 		Action: ActionExecutionConfig{
 			Kind:                  v.GetString("actions.kind"),
 			HandlerWebhookBaseURL: v.GetString("actions.handler_webhook_baseurl"),

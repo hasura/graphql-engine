@@ -19,6 +19,7 @@ import (
 func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsListCmd := &cobra.Command{
 		Use:          "list",
+		Aliases:      []string{"ls"},
 		Short:        "",
 		Example:      ``,
 		SilenceUsage: true,
