@@ -239,101 +239,16 @@ input SampleInput {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), data, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
-	// Do nothing if the codegen framework does not exist
-	if a.ActionConfig.Codegen.Framework == "" {
-		return nil
-	}
-
-	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
-	if err != nil {
-		return err
-	}
-	data := actionsCodegenRequest{
-		ActionName: name,
-		SDL: sdlPayload{
-			Complete: graphqlFileContent,
-		},
-		CodegenConfig: a.ActionConfig.Codegen,
-		Derive:        derivePld,
-	}
-	if a.ActionConfig.Codegen.URI == "" {
-		data.CodegenConfig.URI = getActionsCodegenURI(data.CodegenConfig.Framework)
-	}
-	resp, err := getActionsCodegen(data, a.cmdName)
-	if err != nil {
-		return err
-	}
-
-	for _, file := range resp.Files {
-		err = ioutil.WriteFile(filepath.Join(a.ActionConfig.Codegen.OutputDir, file.Name), []byte(file.Content), 0644)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (a *ActionConfig) Validate() error {
-	return nil
-}
-
-func (a *ActionConfig) CreateFiles() error {
-	var common types.Common
-	data, err := yaml.Marshal(common)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), data, 0644)
-	if err != nil {
-		return err
-	}
-	graphqQLData := []byte(``)
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), graphqQLData, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
-	if a.shouldSkip {
-		_, err := GetActionsFileContent(a.MetadataDir)
-		if err == nil {
-			a.spinner.Stop()
-			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", actionsFileName)
-			a.spinner.Start()
-		}
-		_, err = GetActionsGraphQLFileContent(a.MetadataDir)
-		if err == nil {
-			a.spinner.Stop()
-			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", graphqlFileName)
-			a.spinner.Start()
-		}
-		return nil
-	}
-	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
-	if err != nil {
-		return err
-	}
+	// TODO: Remove any custom_types or actions in actions.yaml if not present in actions.graphql
 	sdlFromReq := sdlFromRequest{
 		SDL: sdlPayload{
-			Complete: graphqlFileContent,
+			Complete: string(data),
 		},
 	}
-
 	sdlFromResp, err := convertSDLToMetadata(sdlFromReq, a.cmdName)
 	if err != nil {
 		return err
 	}
-
 	// Read actions.yaml
 	oldAction, err := GetActionsFileContent(a.MetadataDir)
 	if err != nil {
@@ -421,7 +336,7 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	var common types.Common
 	common.Actions = sdlFromResp.Actions
 	common.CustomTypes = sdlFromResp.Types
-	// write actions.yaml and custom_types.yaml
+	// write actions.yaml
 	commonByt, err := yaml.Marshal(common)
 	if err != nil {
 		return err
@@ -430,8 +345,173 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	if err != nil {
 		return err
 	}
-	metadata.Actions = common.Actions
-	metadata.CustomTypes = common.CustomTypes
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), data, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
+	// Do nothing if the codegen framework does not exist
+	if a.ActionConfig.Codegen.Framework == "" {
+		return nil
+	}
+
+	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
+	if err != nil {
+		return err
+	}
+	data := actionsCodegenRequest{
+		ActionName: name,
+		SDL: sdlPayload{
+			Complete: graphqlFileContent,
+		},
+		CodegenConfig: a.ActionConfig.Codegen,
+		Derive:        derivePld,
+	}
+	if a.ActionConfig.Codegen.URI == "" {
+		data.CodegenConfig.URI = getActionsCodegenURI(data.CodegenConfig.Framework)
+	}
+	resp, err := getActionsCodegen(data, a.cmdName)
+	if err != nil {
+		return err
+	}
+
+	for _, file := range resp.Files {
+		err = ioutil.WriteFile(filepath.Join(a.ActionConfig.Codegen.OutputDir, file.Name), []byte(file.Content), 0644)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *ActionConfig) Validate() error {
+	return nil
+}
+
+func (a *ActionConfig) CreateFiles() error {
+	var common types.Common
+	data, err := yaml.Marshal(common)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), data, 0644)
+	if err != nil {
+		return err
+	}
+	graphqQLData := []byte(``)
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), graphqQLData, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
+	if a.shouldSkip {
+		_, err := GetActionsFileContent(a.MetadataDir)
+		if err == nil {
+			a.spinner.Stop()
+			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", actionsFileName)
+			a.spinner.Start()
+		}
+		_, err = GetActionsGraphQLFileContent(a.MetadataDir)
+		if err == nil {
+			a.spinner.Stop()
+			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", graphqlFileName)
+			a.spinner.Start()
+		}
+		return nil
+	}
+	// Read actions.graphql
+	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
+	if err != nil {
+		return err
+	}
+	sdlFromReq := sdlFromRequest{
+		SDL: sdlPayload{
+			Complete: graphqlFileContent,
+		},
+	}
+
+	sdlFromResp, err := convertSDLToMetadata(sdlFromReq, a.cmdName)
+	if err != nil {
+		return err
+	}
+
+	// Read actions.yaml
+	oldAction, err := GetActionsFileContent(a.MetadataDir)
+	if err != nil {
+		return err
+	}
+	for _, action := range oldAction.Actions {
+		var isFound bool
+		for _, newActionObj := range sdlFromResp.Actions {
+			if action.Name == newActionObj.Name {
+				isFound = true
+				break
+			}
+		}
+		if !isFound {
+			return fmt.Errorf("action %s is not present in %s", action.Name, graphqlFileName)
+		}
+	}
+	for _, customType := range oldAction.CustomTypes.Enums {
+		var isFound bool
+		for _, newTypeObj := range sdlFromResp.Types.Enums {
+			if customType.Name == newTypeObj.Name {
+				isFound = true
+				break
+			}
+		}
+		if !isFound {
+			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
+		}
+	}
+	for _, customType := range oldAction.CustomTypes.InputObjects {
+		var isFound bool
+		for _, newTypeObj := range sdlFromResp.Types.InputObjects {
+			if customType.Name == newTypeObj.Name {
+				isFound = true
+				break
+			}
+		}
+		if !isFound {
+			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
+		}
+	}
+	for _, customType := range oldAction.CustomTypes.Objects {
+		var isFound bool
+		for _, newTypeObj := range sdlFromResp.Types.Objects {
+			if customType.Name == newTypeObj.Name {
+				isFound = true
+				break
+			}
+		}
+		if !isFound {
+			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
+		}
+	}
+	for _, customType := range oldAction.CustomTypes.Scalars {
+		var isFound bool
+		for _, newTypeObj := range sdlFromResp.Types.Scalars {
+			if customType.Name == newTypeObj.Name {
+				isFound = true
+				break
+			}
+		}
+		if !isFound {
+			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
+		}
+	}
+	for index, action := range sdlFromResp.Actions {
+		sdlFromResp.Actions[index].Definition.Kind = a.ActionConfig.Kind
+		sdlFromResp.Actions[index].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
+	}
+	metadata.Actions = sdlFromResp.Actions
+	metadata.CustomTypes = sdlFromResp.Types
 	return nil
 }
 
