@@ -1,8 +1,9 @@
 const handler = require('./handler');
+const { getInputPayload } = require('../../../utils/commandUtils')
 
 const command = (subCommands) => {
   const rootInput = subCommands[0];
-  const payload = JSON.parse(rootInput);
+  const payload = getInputPayload(subCommands);
   return handler(payload);
 };
 
