@@ -52,7 +52,7 @@ const deriveMutationString = (mutationString, introspectionSchema, actionName=nu
 
   // get action name if not provided
   if (!actionName) {
-    actionName = mutationAst.definitions[0].name.value || camelize(`${mutationName}_${derived}`)
+    actionName = mutationAst.definitions[0].name.value || camelize(`${mutationName}_derived`)
   }
 
   // function to prefix typename with the action name
