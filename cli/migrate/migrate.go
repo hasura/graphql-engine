@@ -1505,8 +1505,41 @@ func (m *Migrate) GotoVersion(gotoVersion uint64) error {
 		}
 	}
 	if gotoStep > currentStep {
-		for step := currentStep; step <= gotoStep; step++ {
-			m.Migrate(status.Index[step], "up")
+		/* When applying up migration make sure that all previous steps are applied
+		If we have the following state,
+
+		1580104374862  create_table_public_T1  Present        Present
+		1580104397702  create_table_public_T2  Present        Not Present
+		1580104421111  create_table_public_T3  Present        Present
+		1580104557536  create_table_public_T4  Present        Not Present
+		1580104573373  create_table_public_T5  Present        Not Present
+
+		and on running a
+		$ hasura migrate apply --goto 1580104573373
+
+		It SHOULD NOT yield the following output
+
+		VERSION        NAME                    SOURCE STATUS  DATABASE STATUS
+		1580104374862  create_table_public_T1  Present        Present
+		1580104397702  create_table_public_T2  Present        Not Present
+		1580104421111  create_table_public_T3  Present        Present
+		1580104557536  create_table_public_T4  Present        Present
+		1580104573373  create_table_public_T5  Present        Present
+
+		It SHOULD result in the following state
+
+		VERSION        NAME                    SOURCE STATUS  DATABASE STATUS
+		1580104374862  create_table_public_T1  Present        Present
+		1580104397702  create_table_public_T2  Present        Present
+		1580104421111  create_table_public_T3  Present        Present
+		1580104557536  create_table_public_T4  Present        Present
+		1580104573373  create_table_public_T5  Present        Present
+
+		*/
+		for step := 0; step <= gotoStep; step++ {
+			if applied := status.Migrations[status.Index[step]].IsApplied; !applied {
+				m.Migrate(status.Index[step], "up")
+			}
 		}
 
 	}
