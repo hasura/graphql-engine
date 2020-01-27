@@ -18,20 +18,16 @@ export default class QueryAnalyser extends React.Component {
         if (r.ok) {
           return r.json();
         }
-        return r.text().then(rText => {
-          return Promise.reject(new Error(rText));
-        });
+        return r.text().then(rText => Promise.reject(new Error(rText)));
       })
       .then(data => {
         this.setState({
-          ...this.state,
           analyseData: data,
           activeNode: 0,
         });
       })
       .catch(e => {
-        const errorMessage = `Unable to fetch: ${e.message}.`;
-        alert(errorMessage);
+        alert(`Unable to fetch: ${e.message}.`);
         this.props.clearAnalyse();
       });
   }
@@ -57,29 +53,29 @@ export default class QueryAnalyser extends React.Component {
         isOpen={show && this.state.analyseData.length > 0}
       >
         <div className="modalHeader">
-          <div className="modalTitle">{'Query Analysis'}</div>
+          <div className="modalTitle">Query Analysis</div>
           <div className="modalClose">
             <button onClick={clearAnalyse} className="form-control">
-              {'x'}
+              x
             </button>
           </div>
         </div>
         <div className="modalBody">
           <div className="wd25">
             <div className="topLevelNodesWrapper">
-              <div className="title">{'Top level nodes'}</div>
+              <div className="title">Top level nodes</div>
               <ul>{analysisList}</ul>
             </div>
           </div>
           <div className="wd75">
             <div className="analysisWrapper">
               <div className="plansWrapper">
-                <div className="plansTitle">{'Generated SQL'}</div>
+                <div className="plansTitle">Generated SQL</div>
                 <div className="codeBlock">
                   <div className="copyGenerated">
                     <div className="copyTooltip">
                       <span className="tooltiptext" id="copySql">
-                        {'Copy'}
+                        Copy
                       </span>
                       <i
                         className={'fa fa-copy'}
@@ -117,12 +113,12 @@ export default class QueryAnalyser extends React.Component {
                 </div>
               </div>
               <div className="plansWrapper">
-                <div className="plansTitle">{'Execution Plan'}</div>
+                <div className="plansTitle">Execution Plan</div>
                 <div className="codeBlock">
                   <div className="copyGenerated">
                     <div className="copyTooltip">
                       <span className="tooltiptext" id="copyPlan">
-                        {'Copy'}
+                        Copy
                       </span>
                       <i
                         className={'fa fa-copy'}
@@ -179,7 +175,7 @@ export default class QueryAnalyser extends React.Component {
     let nodeKey = e.target.getAttribute('data-key');
     if (nodeKey) {
       nodeKey = parseInt(nodeKey, 10);
-      this.setState({ ...this.state, activeNode: nodeKey });
+      this.setState({ activeNode: nodeKey });
     }
   }
   copyToClip(type, id) {

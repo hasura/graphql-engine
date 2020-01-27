@@ -23,23 +23,26 @@ export default class AnalyseButton extends React.Component {
     const optionsOpen = this.state.optionsOpen;
     const hasOptions = operations && operations.length > 1;
 
+    const isValidOperation = operation => {
+      return (
+        operation.name &&
+        operation.name.value &&
+        operation.operation === 'query'
+      );
+    };
+
     let options = null;
     if (hasOptions && optionsOpen) {
       const highlight = this.state.highlight;
-      let isOptions = false;
-      options = (
-        <ul className="execute-options">
-          {operations
-            .filter(
-              o =>
-                o.name && o.name.value && o.operation && o.operation === 'query'
-            )
-            .map(operation => {
-              isOptions = true;
+      const validOperations = operations.filter(isValidOperation);
+      if (validOperations.length) {
+        options = (
+          <ul className="execute-options">
+            {validOperations.map(operation => {
               return (
                 <li
                   key={operation.name ? operation.name.value : '*'}
-                  className={(operation === highlight && 'selected') || null}
+                  className={operation === highlight ? 'selected' : null}
                   onMouseOver={() => this.setState({ highlight: operation })}
                   onFocus={() => this.setState({ highlight: operation })}
                   onMouseOut={() => this.setState({ highlight: null })}
@@ -50,9 +53,9 @@ export default class AnalyseButton extends React.Component {
                 </li>
               );
             })}
-        </ul>
-      );
-      options = isOptions ? options : null;
+          </ul>
+        );
+      }
     }
     let onMouseDown;
     if (!this.state.isAnalysing && hasOptions && !optionsOpen) {
@@ -68,23 +71,20 @@ export default class AnalyseButton extends React.Component {
           label={this.state.isAnalysing ? 'Analyzing' : 'Analyze'}
         />
         {options}
-        {this.state.analyseQuery ? (
+        {this.state.analyseQuery && (
           <QueryAnalyzer
             show={this.state.isAnalysing}
             analyseQuery={this.state.analyseQuery}
             clearAnalyse={this.clearAnalyse.bind(this)}
             {...this.props}
           />
-        ) : (
-          ''
         )}
       </span>
     );
   }
   handleAnalyseClick = () => {
-    let parsedQuery = '';
     try {
-      parsedQuery = (this.props.query && parse(this.props.query)) || '';
+      const parsedQuery = this.props.query ? parse(this.props.query) : '';
       if (!parsedQuery) {
         // Don't do anything and return
         throw new Error('No valid query');
@@ -93,7 +93,7 @@ export default class AnalyseButton extends React.Component {
       throw new Error(`Error analysing query: ${e.message}`);
     }
     if (this.props.operations && this.props.operations.length > 1) {
-      this.setState({ ...this.state, optionsOpen: !this.state.optionsOpen });
+      this.setState({ optionsOpen: !this.state.optionsOpen });
       return;
     }
     if (this.props.operations.length === 1) {
@@ -143,7 +143,6 @@ export default class AnalyseButton extends React.Component {
       query,
     };
     this.setState({
-      ...this.state,
       analyseQuery,
       isAnalysing: true,
       optionsOpen: false,

@@ -11,6 +11,7 @@ import {
   copyToClipboard,
 } from './utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
+import { parse, print } from 'graphql';
 
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
@@ -23,7 +24,7 @@ class GraphiQLWrapper extends Component {
       error: false,
       noSchema: false,
       onBoardingEnabled: false,
-      copyButtonText: 'Copy'
+      copyButtonText: 'Copy',
     };
   }
 
@@ -59,16 +60,13 @@ class GraphiQLWrapper extends Component {
 
     let graphiqlContext;
 
-    // handle prettify
     const handleClickPrettifyButton = () => {
       const editor = graphiqlContext.getQueryEditor();
       const currentText = editor.getValue();
-      const { parse, print } = require('graphql');
       const prettyText = print(parse(currentText));
       editor.setValue(prettyText);
     };
 
-    // handle copy
     const handleCopyQuery = () => {
       const editor = graphiqlContext.getQueryEditor();
       const query = editor.getValue();
@@ -78,17 +76,15 @@ class GraphiQLWrapper extends Component {
       }
       copyToClipboard(query);
       this.setState({ copyButtonText: 'Copied' });
-      setTimeout(
-        () => { this.setState({ copyButtonText: 'Copy' }); },
-        1500
-      );
+      setTimeout(() => {
+        this.setState({ copyButtonText: 'Copy' });
+      }, 1500);
     };
 
-    // handle history toggle
     const handleToggleHistory = () => {
-      graphiqlContext.setState({
-        historyPaneOpen: !graphiqlContext.state.historyPaneOpen,
-      });
+      graphiqlContext.setState(prevState => ({
+        historyPaneOpen: !prevState.historyPaneOpen,
+      }));
     };
 
     const renderGraphiql = graphiqlProps => {
