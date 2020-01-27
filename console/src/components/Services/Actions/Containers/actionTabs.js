@@ -8,9 +8,6 @@ const tabInfo = {
   permissions: {
     display_text: 'Permissions',
   },
-  codegen: {
-    display_text: 'Codegen',
-  },
 };
 
 export default tabInfo;
