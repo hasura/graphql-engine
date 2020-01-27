@@ -6,9 +6,8 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
-	"github.com/hasura/graphql-engine/cli/plugins/index"
-	"github.com/hasura/graphql-engine/cli/plugins/installation"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -37,7 +36,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				return fmt.Errorf("this script can be executed only when the current version is 1")
 			}
 			// update the plugin index
-			err := gitutil.EnsureCloned(ec.PluginsPath.IndexPath())
+			err := gitutil.EnsureCloned(ec.Plugins.Paths.IndexPath())
 			if err != nil {
 				return errors.Wrap(err, "cannot update plugin index")
 			}
@@ -61,12 +60,8 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Logger.Infoln("Updated config version to 2")
 			// install the plugin
 			ec.Spin("Installing cli-ext plugin...")
-			plugin, err := index.LoadPluginByName(ec.PluginsPath.IndexPluginsPath(), "cli-ext")
-			if err != nil {
-				return errors.Wrap(err, "cannot load plugin manifest")
-			}
-			err = installation.Install(ec.PluginsPath, plugin)
-			if err != nil && err != installation.ErrIsAlreadyInstalled {
+			err = ec.Plugins.Install("cli-ext")
+			if err != nil && err != plugins.ErrIsAlreadyInstalled {
 				return errors.Wrap(err, "cannot install plugin")
 			}
 			// reload the config

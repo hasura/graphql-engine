@@ -15,11 +15,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
-	"github.com/hasura/graphql-engine/cli/plugins/paths"
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
@@ -220,7 +220,7 @@ type ExecutionContext struct {
 	SkipUpdateCheck bool
 
 	// PluginsPath is the path used by the plugins
-	PluginsPath paths.Paths
+	Plugins *plugins.Config
 	// IsTerminal indicates whether the current session is a terminal or not
 	IsTerminal bool
 }
@@ -303,21 +303,8 @@ func (ec *ExecutionContext) setupPlugins() error {
 	if err != nil {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
-	ec.PluginsPath = paths.NewPaths(base)
-	ensureDirs := func(paths ...string) error {
-		for _, p := range paths {
-			if err := os.MkdirAll(p, 0755); err != nil {
-				return errors.Wrapf(err, "failed to ensure create directory %q", p)
-			}
-		}
-		return nil
-	}
-	return ensureDirs(ec.PluginsPath.BasePath(),
-		ec.PluginsPath.DownloadPath(),
-		ec.PluginsPath.InstallPath(),
-		ec.PluginsPath.BinPath(),
-		ec.PluginsPath.InstallReceiptsPath(),
-	)
+	ec.Plugins = plugins.New(base)
+	return ec.Plugins.Prepare()
 }
 
 // Validate prepares the ExecutionContext ec and then validates the
@@ -325,7 +312,7 @@ func (ec *ExecutionContext) setupPlugins() error {
 // place.
 func (ec *ExecutionContext) Validate() error {
 	// ensure plugins index exists
-	err := gitutil.EnsureCloned(ec.PluginsPath.IndexPath())
+	err := gitutil.EnsureCloned(ec.Plugins.Paths.IndexPath())
 	if err != nil {
 		return errors.Wrap(err, "ensuring plugins index failed")
 	}

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 
 	"github.com/briandowns/spinner"
@@ -17,9 +16,7 @@ import (
 	"github.com/graphql-go/graphql/language/parser"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/printer"
-	"github.com/hasura/graphql-engine/cli/plugins/index"
-	"github.com/hasura/graphql-engine/cli/plugins/installation"
-	"github.com/hasura/graphql-engine/cli/plugins/paths"
+	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
@@ -109,7 +106,7 @@ func New(ec *cli.ExecutionContext) *ActionConfig {
 		shouldSkip = !cons.Check(ec.Version.ServerSemver)
 	}
 	if !shouldSkip {
-		err := ensureCLIExtension(ec.PluginsPath)
+		err := ensureCLIExtension(ec.Plugins)
 		if err != nil {
 			ec.Spinner.Stop()
 			ec.Logger.Errorln(err)
@@ -498,16 +495,9 @@ func GetActionsGraphQLFileContent(metadataDir string) (sdl string, err error) {
 	return
 }
 
-func ensureCLIExtension(paths paths.Paths) error {
-	plugin, err := index.LoadPluginByName(paths.IndexPluginsPath(), pluginName)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
-		}
-		return errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
-	}
-	err = installation.Install(paths, plugin)
-	if err != nil && err != installation.ErrIsAlreadyInstalled {
+func ensureCLIExtension(pluginCfg *plugins.Config) error {
+	err := pluginCfg.Install(pluginName)
+	if err != nil && err != plugins.ErrIsAlreadyInstalled {
 		return errors.Wrap(err, "cannot install cli-ext plugin")
 	}
 	return nil

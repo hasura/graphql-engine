@@ -57,7 +57,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return gitutil.EnsureCloned(ec.PluginsPath.IndexPath())
+			return gitutil.EnsureCloned(ec.Plugins.Paths.IndexPath())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/plugins/installation"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +19,7 @@ func newPluginsUnInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 			pluginName := args[0]
 			ec.Spin(fmt.Sprintf("Uninstalling plugin %q", pluginName))
 			defer ec.Spinner.Stop()
-			if err := installation.Uninstall(ec.PluginsPath, pluginName); err != nil {
+			if err := ec.Plugins.Uninstall(pluginName); err != nil {
 				return errors.Wrapf(err, "failed to uninstall plugin %s", pluginName)
 			}
 			ec.Spinner.Stop()

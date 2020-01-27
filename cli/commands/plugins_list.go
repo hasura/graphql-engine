@@ -13,9 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/plugins/index"
-	"github.com/hasura/graphql-engine/cli/plugins/installation"
-	"github.com/hasura/graphql-engine/cli/plugins/types"
+	"github.com/hasura/graphql-engine/cli/plugins"
 )
 
 func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -27,18 +25,18 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ec.Spin("Fetching plugins list...")
 			defer ec.Spinner.Stop()
-			plugins, err := index.LoadPluginListFromFS(ec.PluginsPath.IndexPluginsPath())
+			availablePlugins, err := ec.Plugins.ListPlugins()
 			if err != nil {
 				return errors.Wrap(err, "failed to load the list of plugins from the index")
 			}
-			names := make([]string, len(plugins))
-			pluginMap := make(map[string]types.Plugin, len(plugins))
-			for i, p := range plugins {
+			names := make([]string, len(availablePlugins))
+			pluginMap := make(map[string]plugins.Plugin, len(availablePlugins))
+			for i, p := range availablePlugins {
 				names[i] = p.Name
 				pluginMap[p.Name] = p
 			}
 
-			installed, err := installation.ListInstalledPlugins(ec.PluginsPath.InstallReceiptsPath())
+			installed, err := ec.Plugins.ListInstalledPlugins()
 			if err != nil {
 				return errors.Wrap(err, "failed to load installed plugins")
 			}
@@ -55,7 +53,7 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 				var status string
 				if _, ok := installed[name]; ok {
 					status = "yes"
-				} else if _, ok, err := installation.GetMatchingPlatform(plugin.Platforms); err != nil {
+				} else if _, ok, err := plugins.MatchPlatform(plugin.Platforms); err != nil {
 					return errors.Wrapf(err, "failed to get the matching platform for plugin %s", name)
 				} else if ok {
 					status = "no"
