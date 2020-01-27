@@ -31,13 +31,11 @@ export const getCodegenFunc = framework => {
   return fetch(getCodegenFilePath(framework))
     .then(r => r.text())
     .then(rawJsString => {
-      return import('@graphql-codegen/core').then(({ codegen }) => {
-        return import('@graphql-codegen/typescript').then(typescriptPlugin => {
-          let codegenerator;
-          eval(`${rawJsString}\ncodegenerator = templater;`);
-          return codegenerator;
-        });
-      });
+      const { codegen } = require('@graphql-codegen/core');
+      const typescriptPlugin = require('@graphql-codegen/typescript');
+      let codegenerator;
+      eval(`${rawJsString}\ncodegenerator = templater;`);
+      return codegenerator;
     })
     .catch(e => {
       throw e;

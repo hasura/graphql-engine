@@ -29,6 +29,10 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
 
   React.useEffect(init, []);
 
+  if (loading) {
+    return <Spinner />;
+  }
+
   if (error || !allFrameworks.length) {
     return (
       <div>
@@ -36,10 +40,6 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
         <a onClick={init}>Try again</a>
       </div>
     );
-  }
-
-  if (loading) {
-    return <Spinner />;
   }
 
   const getFrameworkDropDown = () => {

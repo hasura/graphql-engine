@@ -26,6 +26,10 @@ const CodeTabs = ({ framework, actionsSdl, currentAction }) => {
 
   React.useEffect(init, [framework]);
 
+  if (loading) {
+    return <Spinner />;
+  }
+
   if (error) {
     return (
       <div>
@@ -33,10 +37,6 @@ const CodeTabs = ({ framework, actionsSdl, currentAction }) => {
         <a onClick={init}>Try again</a>
       </div>
     );
-  }
-
-  if (loading) {
-    return <Spinner />;
   }
 
   const files = codegenFiles.map(({ name, content }) => {
