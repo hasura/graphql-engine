@@ -26,7 +26,7 @@ data JwkFetchError
   -- ^ Non-2xx HTTP errors from the upstream server. Url, status, body and error message
   | JFEJwkParseError !Text !Text
   -- ^ Error parsing the JWK response itself. Text: Actual parse error and friendly error message
-  | JFEExpiryParseError !Text !Text
+  | JFEExpiryParseError !(Maybe Text) !Text
   -- ^ Error parsing the expiry of the JWK. Text: Actual parse error and friendly error message
   deriving (Show)
 

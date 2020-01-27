@@ -97,13 +97,6 @@ defaultRoleClaim = "x-hasura-default-role"
 defaultClaimNs :: T.Text
 defaultClaimNs = "https://hasura.io/jwt/claims"
 
--- | if the time is greater than 100 seconds, should refresh the JWK 10 seonds
--- before the expiry, else refresh at given seconds
-computeDiffTime :: NominalDiffTime -> Int
-computeDiffTime t =
-  let intTime = diffTimeToMicro t
-  in if intTime > 100 then intTime - 10 else intTime
-
 -- | create a background thread to refresh the JWK
 jwkRefreshCtrl
   :: (HasVersion, MonadIO m)
@@ -120,7 +113,7 @@ jwkRefreshCtrl logger manager url ref time =
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
-      let delay = maybe (60 * aSecond) computeDiffTime mTime
+      let delay = maybe (60 * aSecond) diffTimeToMicro mTime
       C.threadDelay delay
   where
     logNotice = do
@@ -167,8 +160,8 @@ updateJwkRef (Logger logger) manager url jwkRef = do
 
   where
     getTimeFromExpiresHeader header = do
-      let maybeExpires = parseTimeM True defaultTimeLocale timeFmt $ CS.cs header
-      expires  <- either (logAndThrowInfo . parseTimeErr . T.pack) return maybeExpires
+      let maybeExpiry = parseTimeM True defaultTimeLocale timeFmt (CS.cs header)
+      expires  <- maybe (logAndThrowInfo parseTimeErr) return maybeExpiry
       currTime <- liftIO getCurrentTime
       return $ diffUTCTime expires currTime
 
@@ -180,9 +173,9 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     parseCacheControlHeader = fmapL (parseCacheControlErr . T.pack) . parseMaxAge
 
     parseCacheControlErr e =
-      JFEExpiryParseError e "Failed parsing Cache-Control header from JWK response. Could not find max-age or s-maxage"
-    parseTimeErr e =
-      JFEExpiryParseError e "Failed parsing Expires header from JWK response. Value of header is not a valid timestamp"
+      JFEExpiryParseError (Just e) "Failed parsing Cache-Control header from JWK response. Could not find max-age or s-maxage"
+    parseTimeErr =
+      JFEExpiryParseError Nothing  "Failed parsing Expires header from JWK response. Value of header is not a valid timestamp"
 
     timeFmt = "%a, %d %b %Y %T GMT"
 
