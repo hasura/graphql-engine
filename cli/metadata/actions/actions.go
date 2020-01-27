@@ -157,6 +157,31 @@ func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMu
 		return err
 	}
 
+	currentActionNames := make([]string, 0)
+	// Check if the action already exists, if yes throw error
+	for _, def := range doc.Definitions {
+		switch obj := def.(type) {
+		case *ast.ObjectDefinition:
+			if obj.Kind == kinds.ObjectDefinition && obj.Name.Kind == kinds.Name && obj.Name.Value == "Mutation" {
+				for _, field := range obj.Fields {
+					currentActionNames = append(currentActionNames, field.Name.Value)
+				}
+			}
+		case *ast.TypeExtensionDefinition:
+			if obj.Kind == kinds.TypeExtensionDefinition && obj.Definition.Name.Kind == kinds.Name && obj.Definition.Name.Value == "Mutation" {
+				for _, field := range obj.Definition.Fields {
+					currentActionNames = append(currentActionNames, field.Name.Value)
+				}
+			}
+		}
+	}
+	for _, currAction := range currentActionNames {
+		if currAction == name {
+			return fmt.Errorf("action %s already exists in %s", name, graphqlFileName)
+		}
+	}
+
+	// add extend type mutation
 	for index, def := range doc.Definitions {
 		switch obj := def.(type) {
 		case *ast.ObjectDefinition:
@@ -254,7 +279,6 @@ input SampleInput {
 	if err != nil {
 		return err
 	}
-	// TODO: Remove any custom_types or actions in actions.yaml if not present in actions.graphql
 	sdlFromReq := sdlFromRequest{
 		SDL: sdlPayload{
 			Complete: string(data),
@@ -269,7 +293,14 @@ input SampleInput {
 	if err != nil {
 		return err
 	}
+	currentActionNames = make([]string, 0)
 	for actionIndex, action := range sdlFromResp.Actions {
+		for _, currAction := range currentActionNames {
+			if currAction == action.Name {
+				return fmt.Errorf("action %s already exists in %s", action.Name, graphqlFileName)
+			}
+		}
+		currentActionNames = append(currentActionNames, action.Name)
 		for oldActionIndex, oldActionObj := range oldAction.Actions {
 			if action.Name == oldActionObj.Name {
 				sdlFromResp.Actions[actionIndex].Permissions = oldAction.Actions[oldActionIndex].Permissions
