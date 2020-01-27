@@ -23,6 +23,7 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Server.Version         (HasVersion)
 import           Hasura.SQL.Types
 
 import qualified Control.Concurrent.STM.TQueue as TQ
@@ -167,9 +168,8 @@ initEventEngineCtx maxT fetchI = do
   return $ EventEngineCtx q c maxT fetchI
 
 processEventQueue
-  :: L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
-  -> IO SchemaCache -> EventEngineCtx
-  -> IO ()
+  :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
+  -> IO SchemaCache -> EventEngineCtx -> IO ()
 processEventQueue logger logenv httpMgr pool getSchemaCache eectx = do
   threads <- mapM async [fetchThread, consumeThread]
   void $ waitAny threads
@@ -188,16 +188,17 @@ pushEvents logger pool eectx  = forever $ do
   threadDelay (fetchI * 1000)
 
 consumeEvents
-  :: L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> IO SchemaCache -> EventEngineCtx
-  -> IO ()
+  :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> IO SchemaCache
+  -> EventEngineCtx -> IO ()
 consumeEvents logger logenv httpMgr pool getSchemaCache eectx  = forever $ do
   event <- atomically $ do
     let EventEngineCtx q _ _ _ = eectx
     TQ.readTQueue q
-  async $ runReaderT  (processEvent logenv pool getSchemaCache event) (logger, httpMgr, eectx)
+  async $ runReaderT (processEvent logenv pool getSchemaCache event) (logger, httpMgr, eectx)
 
 processEvent
-  :: ( MonadReader r m
+  :: ( HasVersion
+     , MonadReader r m
      , Has HTTP.Manager r
      , Has (L.Logger L.Hasura) r
      , Has EventEngineCtx r

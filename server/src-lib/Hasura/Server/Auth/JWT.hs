@@ -28,6 +28,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
 import           Hasura.Server.Utils             (diffTimeToMicro, fmapL, userRoleHeader)
+import           Hasura.Server.Version           (HasVersion)
 
 import qualified Control.Concurrent              as C
 import qualified Crypto.JWT                      as Jose
@@ -105,7 +106,7 @@ computeDiffTime t =
 
 -- | create a background thread to refresh the JWK
 jwkRefreshCtrl
-  :: (MonadIO m)
+  :: (HasVersion, MonadIO m)
   => Logger Hasura
   -> HTTP.Manager
   -> URI
@@ -130,7 +131,8 @@ jwkRefreshCtrl logger manager url ref time =
 
 -- | Given a JWK url, fetch JWK from it and update the IORef
 updateJwkRef
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadError T.Text m
      )
   => Logger Hasura
@@ -430,4 +432,3 @@ instance A.FromJSON JWTConfig where
 
       runEither = either (invalidJwk . T.unpack) return
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
-

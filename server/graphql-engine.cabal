@@ -16,23 +16,15 @@ source-repository head
   location: https://github.com/hasura/graphql-engine
 
 flag developer
-  description: operate in developer mode
-  default: False
-  manual: True
-
-flag profile
-  description: compile with profile options set
+  description: Enable support for development-only APIs
   default: False
   manual: True
 
 common common-all
   ghc-options:
-    -O2 -fmax-simplifier-iterations=20 -foptimal-applicative-do
+    -fmax-simplifier-iterations=20 -foptimal-applicative-do
     -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
-    -fdefer-typed-holes
 
-  if flag(profile)
-    ghc-prof-options: -fprof-auto -fno-prof-count-entries
   if flag(developer)
     cpp-options: -DDeveloperAPIs
 
@@ -56,9 +48,6 @@ common common-exe
     -- than that is highly unlikely to ever be helpful. More benchmarking would be useful to know if
     -- this is the right decision. It’s possible it would better to just turn it off completely.
     "-with-rtsopts=-N -I2 -qn2"
-
-  if flag(profile)
-    ghc-prof-options: -rtsopts
 
 library
   import: common-all
@@ -133,6 +122,7 @@ library
 
                      -- URL parser related
                      , network-uri
+                     , uri-encode
 
                      -- String related
                      , case-insensitive
@@ -381,13 +371,14 @@ library
 
 executable graphql-engine
   import: common-all, common-exe
-  main-is:           Main.hs
   hs-source-dirs:    src-exec
+  main-is:           Main.hs
   build-depends:     base
                    , graphql-engine
+                   , bytestring
                    , pg-client
                    , text
-                   , bytestring
+                   , text-conversions
 
 test-suite graphql-engine-tests
   import: common-all, common-exe
