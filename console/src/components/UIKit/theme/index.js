@@ -12,7 +12,12 @@ export const theme = {
     transparent: 'transparent',
   },
   fontWeights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
+  fontSizes: [12, 14, 16, 20, 24, 36, 48, 80, 96],
   transition: {
     true: 'all .2s ease-out',
   },
+  borders: [0, '1px solid', '2px solid', '4px solid', '5px solid'],
+  radii: [0, 2, 4, 8, 16],
+  sizes: [40, 48],
+  space: [0, 4, 8, 16, 32, 64],
 };

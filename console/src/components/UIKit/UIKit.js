@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { color } from 'styled-system';
+import { color, border } from 'styled-system';
 
 // ******************************** //
 
@@ -14,17 +14,30 @@ export const UIKitDiv = styled.div`
 
 // ******************************** //
 
-export const ColorSchemeWrapper = styled.div`
+export const ColorSchemeDivWrapper = styled.div`
   display: flex;
   justify-content: flex-start;
 `;
 
 // ******************************** //
 
-export const ColorScheme = styled.div`
+export const ColorSchemeDiv = styled.div`
   width: 15rem;
   height: 15rem;
   margin-right: 2.5rem;
 
   ${color}
+  ${border}
+`;
+
+// Extended wrapper div for buttons *********** //
+
+export const ButtonsWrapper = styled(ColorSchemeDivWrapper)`
+  margin-bottom: 2.5rem;
+
+  /* Demo ~ Inline buttons separation */
+
+  button {
+    margin-right: 2.5rem;
+  }
 `;
