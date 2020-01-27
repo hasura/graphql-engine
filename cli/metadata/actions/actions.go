@@ -96,7 +96,12 @@ type ActionConfig struct {
 	logger  *logrus.Logger
 }
 
-func New(ec *cli.ExecutionContext) *ActionConfig {
+type OverrideOptions struct {
+	Kind    string
+	Webhook string
+}
+
+func New(ec *cli.ExecutionContext, opts *OverrideOptions) *ActionConfig {
 	var shouldSkip bool
 	if ec.Version.ServerSemver != nil {
 		cons, err := semver.NewConstraint(">= v1.1.0")
@@ -118,7 +123,7 @@ func New(ec *cli.ExecutionContext) *ActionConfig {
 			return nil
 		}
 	}
-	return &ActionConfig{
+	cfg := &ActionConfig{
 		MetadataDir:  ec.MetadataDir,
 		ActionConfig: ec.Config.Action,
 		cmdName:      ec.CMDName,
@@ -126,6 +131,16 @@ func New(ec *cli.ExecutionContext) *ActionConfig {
 		spinner:      ec.Spinner,
 		logger:       ec.Logger,
 	}
+	if opts != nil {
+		if opts.Kind != "" {
+			cfg.ActionConfig.Kind = opts.Kind
+		}
+
+		if opts.Webhook != "" {
+			cfg.ActionConfig.HandlerWebhookBaseURL = opts.Webhook
+		}
+	}
+	return cfg
 }
 
 func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMutation string) error {

@@ -215,7 +215,7 @@ func (o *initOptions) createFiles() error {
 	plugins["query_collections"] = querycollections.New(ec.MetadataDir)
 	plugins["allow_list"] = allowlist.New(ec.MetadataDir)
 	plugins["remote_schemas"] = remoteschemas.New(ec.MetadataDir)
-	plugins["actions"] = actions.New(ec)
+	plugins["actions"] = actions.New(ec, nil)
 	for _, plg := range plugins {
 		err := plg.CreateFiles()
 		if err != nil {
