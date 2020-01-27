@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
@@ -30,46 +31,47 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ec.Spin("Updating current config to version 2...")
-			defer ec.Spinner.Stop()
 			if ec.Config.Version != "1" {
-				return fmt.Errorf("this script can be executed only when the current version is 1")
+				return fmt.Errorf("this script can be executed only when the current config version is 1")
 			}
 			// update the plugin index
-			err := gitutil.EnsureCloned(ec.Plugins.Paths.IndexPath())
+			ec.Spin("Updating the plugin index...")
+			defer ec.Spinner.Stop()
+			err := gitutil.EnsureUpdated(ec.Plugins.Paths.IndexPath())
 			if err != nil {
 				return errors.Wrap(err, "cannot update plugin index")
 			}
-			// update current config to v2
-			ec.Config.Version = "2"
-			ec.Config.MetadataDirectory = metadataDir
-			ec.Config.Action = cli.ActionExecutionConfig{
-				Kind:                  ec.Viper.GetString("actions.kind"),
-				HandlerWebhookBaseURL: ec.Viper.GetString("actions.handler_webhook_baseurl"),
-			}
-			// save the config.yaml file
-			data, err := yaml.Marshal(ec.Config)
-			if err != nil {
-				return errors.Wrap(err, "cannot convert to yaml")
-			}
-			err = ioutil.WriteFile(ec.ConfigFile, data, 0644)
-			if err != nil {
-				return errors.Wrap(err, "cannot write config file")
-			}
-			ec.Spinner.Stop()
-			ec.Logger.Infoln("Updated config version to 2")
 			// install the plugin
 			ec.Spin("Installing cli-ext plugin...")
 			err = ec.Plugins.Install("cli-ext")
 			if err != nil && err != plugins.ErrIsAlreadyInstalled {
 				return errors.Wrap(err, "cannot install plugin")
 			}
-			// reload the config
+			// update current config to v2
+			ec.Spin("Updating current config to 2")
+			os.Setenv("HASURA_GRAPHQL_VERSION", "2")
+			os.Setenv("HASURA_GRAPHQL_METADATA_DIRECTORY", metadataDir)
+			os.Setenv("HASURA_GRAPHQL_ACTION_KIND", ec.Viper.GetString("actions.kind"))
+			os.Setenv("HASURA_GRAPHQL_ACTION_HANDLER_WEBHOOK_BASEURL", ec.Viper.GetString("actions.handler_webhook_baseurl"))
+			defer func() {
+				// unset env
+				os.Unsetenv("HASURA_GRAPHQL_VERSION")
+				os.Unsetenv("HASURA_GRAPHQL_METADATA_DIRECTORY")
+				os.Unsetenv("HASURA_GRAPHQL_ACTION_KIND")
+				os.Unsetenv("HASURA_GRAPHQL_ACTION_HANDLER_WEBHOOK_BASEURL")
+			}()
 			ec.Spin("Reloading config file...")
 			err = ec.Validate()
 			if err != nil {
 				return errors.Wrap(err, "cannot validate new config")
 			}
+			defer func() {
+				if err != nil {
+					os.RemoveAll(ec.MetadataDir)
+				}
+			}()
+			// set codegen to nil, so that it is not exported in yaml
+			ec.Config.Action.Codegen = nil
 			// run metadata export
 			ec.Spin("Exporting metadata...")
 			migrateDrv, err := newMigrate(ec, true)
@@ -80,6 +82,17 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return errors.Wrap(err, "cannot export metadata")
 			}
+			ec.Spin("Writing new config file...")
+			data, err := yaml.Marshal(ec.Config)
+			if err != nil {
+				return errors.Wrap(err, "cannot convert to yaml")
+			}
+			err = ioutil.WriteFile(ec.ConfigFile, data, 0644)
+			if err != nil {
+				return errors.Wrap(err, "cannot write config file")
+			}
+			ec.Spinner.Stop()
+			ec.Logger.Infoln("Updated config to version 2")
 			return nil
 		},
 	}

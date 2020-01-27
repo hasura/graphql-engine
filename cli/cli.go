@@ -328,7 +328,7 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "validating current directory failed")
 	}
 
-	// set names of files and directories
+	// set names of config file
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
 
 	// read config and parse the values into Config
@@ -337,9 +337,11 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "cannot read config")
 	}
 
+	// set name of migration directory
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MigrationsDirectory)
 
 	if ec.Config.Version != "1" && ec.Config.MetadataDirectory != "" {
+		// set name of metadata directory
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
 		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) {
 			err = os.MkdirAll(ec.MetadataDir, os.ModePerm)
