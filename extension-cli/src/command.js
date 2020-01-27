@@ -1,10 +1,10 @@
 import "regenerator-runtime/runtime";
-import {
+const {
   sdl,
   actionsCodegen
-} from './services';
-import fs from 'fs';
-import { getFlagValue, OUTPUT_FILE_FLAG } from './utils/commandUtils';
+} = require('./services');
+const fs = require('fs');
+const { getFlagValue, OUTPUT_FILE_FLAG } = require('./utils/commandUtils');
 
 const commandArgs = process.argv;
 const outputFilePath = getFlagValue(commandArgs, OUTPUT_FILE_FLAG);
