@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 
@@ -1469,4 +1471,44 @@ func (m *Migrate) unlockErr(prevErr error) error {
 		return NewMultiError(prevErr, err)
 	}
 	return prevErr
+}
+
+// GotoVersion will apply a version also applying the migration chain
+// leading to it
+func (m *Migrate) GotoVersion(gotoVersion uint64) error {
+	currentVersion, dirty, err := m.Version()
+	if err != nil && err != ErrNilVersion {
+		return errors.Wrap(err, "cannot determine the current version of migrations")
+	}
+	if dirty {
+		return errors.New("stopping now, database is in dirty state")
+	}
+
+	status, err := m.GetStatus()
+	if err != nil {
+		errors.Wrap(err, "cannot determine status of migrations")
+	}
+	var gotoStep, currentStep int
+	for index, migrationVersion := range status.Index {
+		if migrationVersion == gotoVersion {
+			gotoStep = index
+		}
+		if currentVersion == migrationVersion {
+			currentStep = index
+		}
+	}
+
+	if gotoStep < currentStep {
+		for step := currentStep; step > gotoStep; step-- {
+			m.Migrate(status.Index[step], "down")
+
+		}
+	}
+	if gotoStep > currentStep {
+		for step := currentStep; step <= gotoStep; step++ {
+			m.Migrate(status.Index[step], "up")
+		}
+
+	}
+	return nil
 }
