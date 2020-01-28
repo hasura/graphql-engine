@@ -1,10 +1,11 @@
 module Hasura.Eventing.HTTP
   ( HTTPErr(..)
   , HTTPResp(..)
+  , tryWebhook
   , runHTTP
   , isNetworkError
   , isNetworkErrorHC
-  , ExtraContext(..)
+  , ExtraLogContext(..)
   , EventId
   , Invocation(..)
   , Version
@@ -40,7 +41,6 @@ import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as TE
 import qualified Data.Text.Encoding.Error      as TE
-import qualified Data.Time.Clock               as Time
 import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
@@ -103,13 +103,12 @@ data Invocation
   , iResponse :: Response
   }
 
-data ExtraContext
-  = ExtraContext
-  { elEventCreatedAt :: Time.UTCTime
-  , elEventId        :: EventId
+data ExtraLogContext
+  = ExtraLogContext
+  { elcEventId        :: EventId
   } deriving (Show, Eq)
 
-$(J.deriveJSON (J.aesonDrop 2 J.snakeCase){J.omitNothingFields=True} ''ExtraContext)
+$(J.deriveJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''ExtraLogContext)
 
 data HTTPResp
    = HTTPResp
@@ -121,29 +120,6 @@ data HTTPResp
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''HTTPResp)
 
 instance ToEngineLog HTTPResp Hasura where
-  toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
-
-mkHTTPResp :: HTTP.Response LBS.ByteString -> HTTPResp
-mkHTTPResp resp =
-  HTTPResp
-  { hrsStatus = HTTP.statusCode $ HTTP.responseStatus resp
-  , hrsHeaders = map decodeHeader $ HTTP.responseHeaders resp
-  , hrsBody = TBS.fromLBS $ HTTP.responseBody resp
-  }
-  where
-    decodeBS = TE.decodeUtf8With TE.lenientDecode
-    decodeHeader (hdrName, hdrVal)
-      = HeaderConf (decodeBS $ CI.original hdrName) (HVValue (decodeBS hdrVal))
-
-data HTTPRespExtra
-  = HTTPRespExtra
-  { _hreResponse :: HTTPResp
-  , _hreContext  :: Maybe ExtraContext
-  }
-
-$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPRespExtra)
-
-instance ToEngineLog HTTPRespExtra Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
 
 data HTTPErr
@@ -170,6 +146,29 @@ instance J.ToJSON HTTPErr where
 -- encapsulates a http operation
 instance ToEngineLog HTTPErr Hasura where
   toEngineLog err = (LevelError, eventTriggerLogType, J.toJSON err)
+
+mkHTTPResp :: HTTP.Response LBS.ByteString -> HTTPResp
+mkHTTPResp resp =
+  HTTPResp
+  { hrsStatus = HTTP.statusCode $ HTTP.responseStatus resp
+  , hrsHeaders = map decodeHeader $ HTTP.responseHeaders resp
+  , hrsBody = TBS.fromLBS $ HTTP.responseBody resp
+  }
+  where
+    decodeBS = TE.decodeUtf8With TE.lenientDecode
+    decodeHeader (hdrName, hdrVal)
+      = HeaderConf (decodeBS $ CI.original hdrName) (HVValue (decodeBS hdrVal))
+
+data HTTPRespExtra
+  = HTTPRespExtra
+  { _hreResponse :: HTTPResp
+  , _hreContext  :: Maybe ExtraLogContext
+  }
+
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPRespExtra)
+
+instance ToEngineLog HTTPRespExtra Hasura where
+  toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
 
 isNetworkError :: HTTPErr -> Bool
 isNetworkError = \case
@@ -211,7 +210,7 @@ runHTTP
      , Has (Logger Hasura) r
      , MonadIO m
      )
-  => HTTP.Manager -> HTTP.Request -> Maybe ExtraContext -> m (Either HTTPErr HTTPResp)
+  => HTTP.Manager -> HTTP.Request -> Maybe ExtraLogContext -> m (Either HTTPErr HTTPResp)
 runHTTP manager req exLog = do
   logger :: Logger Hasura <- asks getter
   res <- liftIO $ try $ HTTP.httpLbs req manager
@@ -219,6 +218,35 @@ runHTTP manager req exLog = do
     Left e     -> unLogger logger $ HClient e
     Right resp -> unLogger logger $ HTTPRespExtra (mkHTTPResp resp) exLog
   return $ either (Left . HClient) anyBodyParser res
+
+tryWebhook ::
+  ( MonadReader r m
+  , Has HTTP.Manager r
+  , Has (L.Logger L.Hasura) r
+  , MonadIO m
+  , MonadError HTTPErr m
+  )
+  => [HTTP.Header]
+  -> HTTP.ResponseTimeout
+  -> J.Value
+  -> String
+  -> Maybe ExtraLogContext
+  -> m HTTPResp
+tryWebhook headers timeout payload webhook extraLogCtx = do
+  initReqE <- liftIO $ try $ HTTP.parseRequest webhook
+  manager <- asks getter
+  case initReqE of
+    Left excp -> throwError $ HClient excp
+    Right initReq -> do
+      let req =
+            initReq
+              { HTTP.method = "POST"
+              , HTTP.requestHeaders = headers
+              , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode payload)
+              , HTTP.responseTimeout = timeout
+              }
+      eitherResp <- runHTTP manager req extraLogCtx
+      onLeft eitherResp throwError
 
 newtype EventInternalErr
   = EventInternalErr QErr

@@ -12,6 +12,7 @@ import qualified Language.Haskell.TH.Syntax    as TH
 import           Data.Functor.Product
 import           Data.GADT.Compare
 import           Instances.TH.Lift             ()
+import           System.Cron.Types
 
 instance NFData G.Argument
 instance NFData G.Directive
@@ -41,6 +42,19 @@ deriving instance NFData G.StringValue
 deriving instance NFData G.Variable
 deriving instance (NFData a) => NFData (G.ListValueG a)
 deriving instance (NFData a) => NFData (G.ObjectValueG a)
+
+-- instances for CronSchedule from package `cron`
+instance NFData StepField
+instance NFData RangeField
+instance NFData SpecificField
+instance NFData BaseField
+instance NFData CronField
+instance NFData MonthSpec
+instance NFData DayOfMonthSpec
+instance NFData DayOfWeekSpec
+instance NFData HourSpec
+instance NFData MinuteSpec
+instance NFData CronSchedule
 
 instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
   lift m = [| M.fromList $(TH.lift $ M.toList m) |]

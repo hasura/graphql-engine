@@ -37,6 +37,7 @@ module Data.Time.Clock.Units
   , Milliseconds(..)
   , Microseconds(..)
   , Nanoseconds(..)
+  , diffTimeToSeconds
   ) where
 
 import           Prelude
@@ -49,6 +50,9 @@ type Seconds = DiffTime
 
 seconds :: DiffTime -> DiffTime
 seconds = id
+
+diffTimeToSeconds :: DiffTime -> Integer
+diffTimeToSeconds = (1000000000000 *) . diffTimeToPicoseconds
 
 newtype Days = Days { days :: DiffTime }
   deriving (Show, Eq, Ord)

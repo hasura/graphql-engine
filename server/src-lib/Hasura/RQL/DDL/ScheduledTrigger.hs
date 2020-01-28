@@ -35,9 +35,8 @@ resolveScheduledTrigger
   :: (QErrM m, MonadIO m)
   => CreateScheduledTrigger -> m ScheduledTriggerInfo
 resolveScheduledTrigger CreateScheduledTrigger {..} = do
-  let headerConfs = fromMaybe [] stHeaders
   webhookInfo <- getWebhookInfoFromConf stWebhookConf
-  headerInfo <- getHeaderInfosFromConf headerConfs
+  headerInfo <- getHeaderInfosFromConf stHeaders
   let stInfo =
         ScheduledTriggerInfo
           stName
@@ -72,8 +71,8 @@ updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
     WHERE name = $1 AND scheduled_time > now() AND tries = 0
    |] (Identity stName) False
 
-runDeleteScheduledTrigger :: (CacheRWM m, MonadTx m) => DeleteScheduledTrigger -> m EncJSON
-runDeleteScheduledTrigger (DeleteScheduledTrigger stName) = do
+runDeleteScheduledTrigger :: (CacheRWM m, MonadTx m) => TriggerName -> m EncJSON
+runDeleteScheduledTrigger stName = do
   deleteScheduledTriggerFromCatalog stName
   return successMsg
 
@@ -85,18 +84,18 @@ deleteScheduledTriggerFromCatalog stName = liftTx $ do
     WHERE name = $1
    |] (Identity stName) False
 
-runCancelScheduledEvent :: (MonadTx m) => CancelScheduledEvent -> m EncJSON
+runCancelScheduledEvent :: (MonadTx m) => EventId -> m EncJSON
 runCancelScheduledEvent se = do
   affectedRows <- deleteScheduledEventFromCatalog se
   if | affectedRows == 1 -> pure successMsg
      | affectedRows == 0 -> throw400 NotFound "scheduled event not found"
      | otherwise -> throw500 "unexpected: more than one scheduled events cancelled"
 
-deleteScheduledEventFromCatalog :: (MonadTx m) => CancelScheduledEvent -> m Int
-deleteScheduledEventFromCatalog se = liftTx $ do
+deleteScheduledEventFromCatalog :: (MonadTx m) => EventId -> m Int
+deleteScheduledEventFromCatalog seId = liftTx $ do
   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
     DELETE FROM hdb_catalog.hdb_scheduled_events
     WHERE id = $1
     RETURNING count(*)
-   |] (Identity (cseId se)) False
+   |] (Identity seId) False

@@ -8,9 +8,9 @@ module Hasura.Eventing.ScheduledTrigger
   ) where
 
 import           Control.Concurrent              (threadDelay)
-import           Control.Exception               (try)
 import           Data.Has
 import           Data.Time.Clock
+import           Data.Time.Clock.Units
 import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
@@ -30,7 +30,6 @@ import qualified Data.Text                       as T
 import qualified Database.PG.Query               as Q
 import qualified Hasura.Logging                  as L
 import qualified Network.HTTP.Client             as HTTP
-import qualified Network.HTTP.Types              as HTTP
 import qualified Text.Builder                    as TB (run)
 import qualified Data.HashMap.Strict             as Map
 
@@ -47,8 +46,6 @@ oneMinute = 60 * oneSecond
 
 oneHour :: Int
 oneHour = 60 * oneMinute
-
-type ScheduledEventPayload = J.Value
 
 scheduledEventsTable :: QualifiedTable
 scheduledEventsTable =
@@ -143,15 +140,15 @@ generateScheduledEventsFrom time ScheduledTriggerInfo{..} =
         case stiSchedule of
           OneOff _ -> empty -- one-off scheduled events are generated during creation
           Cron cron ->
-            generateSchedulesBetween
+            generateScheduleTimesBetween
               time
               (addUTCTime nominalDay time)
               cron
    in map (ScheduledEventSeed stiName) events
 
--- generates events (from, till] according to CronSchedule
-generateSchedulesBetween :: UTCTime -> UTCTime -> CronSchedule -> [UTCTime]
-generateSchedulesBetween from till cron = takeWhile ((>=) till) $ go from
+-- | Generates events @(from, till]@ according to 'CronSchedule'
+generateScheduleTimesBetween :: UTCTime -> UTCTime -> CronSchedule -> [UTCTime]
+generateScheduleTimesBetween from till cron = takeWhile (<= till) $ go from
   where
     go init =
       case nextMatch cron init of
@@ -161,15 +158,15 @@ generateSchedulesBetween from till cron = takeWhile ((>=) till) $ go from
 processScheduledQueue
   :: HasVersion
   => L.Logger L.Hasura
-  -> Q.PGPool
+  -> LogEnvHeaders
   -> HTTP.Manager
+  -> Q.PGPool
   -> IO SchemaCache
   -> IO ()
-processScheduledQueue logger pgpool httpMgr getSC =
+processScheduledQueue logger logEnv httpMgr pgpool getSC =
   forever $ do
     traceM "entering processor queue"
-    sc <- getSC
-    let scheduledTriggersInfo = scScheduledTriggers sc
+    scheduledTriggersInfo <- scScheduledTriggers <$> getSC
     scheduledEventsE <-
       runExceptT $
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getScheduledEvents
@@ -185,31 +182,40 @@ processScheduledQueue logger pgpool httpMgr getSC =
                   payload = fromMaybe J.Null $ stiPayload sti
                   retryConf = stiRetryConf sti
                   se = ScheduledEvent id' name st tries webhook payload retryConf
-              runReaderT (processScheduledEvent pgpool httpMgr sti se) logger
+              runReaderT (processScheduledEvent logEnv pgpool sti se) (logger, httpMgr)
       Left err -> traceShowM err
     threadDelay oneMinute
 
 processScheduledEvent ::
-     (MonadReader r m, Has (L.Logger L.Hasura) r, HasVersion, MonadIO m)
-  => Q.PGPool
-  -> HTTP.Manager
+  ( MonadReader r m
+  , Has HTTP.Manager r
+  , Has (L.Logger L.Hasura) r
+  , HasVersion
+  , MonadIO m
+  )
+  => LogEnvHeaders
+  -> Q.PGPool
   -> ScheduledTriggerInfo
   -> ScheduledEvent 'SE_FULL
   -> m ()
-processScheduledEvent pgpool httpMgr ScheduledTriggerInfo {..} se@ScheduledEvent {..} = do
+processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEvent {..} = do
   currentTime <- liftIO getCurrentTime
-  if diffUTCTime currentTime seScheduledTime > rcstTolerance stiRetryConf
+  if (toRational $ diffUTCTime currentTime seScheduledTime) > (toRational $ rcstTolerance stiRetryConf)
     then processDead'
     else do
-      let timeoutSeconds = rcstTimeoutSec stiRetryConf
-          responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
+      let timeoutSeconds = fromInteger . diffTimeToSeconds $ rcstTimeoutSec stiRetryConf
+          httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
           headers = map encodeHeader stiHeaders
           headers' = addDefaultHeaders headers
+          extraLogCtx = ExtraLogContext seId
       res <-
         runExceptT $
-        tryWebhook httpMgr responseTimeout headers' sePayload seWebhook
-    -- let decodedHeaders = map (decodeHeader logenv headerInfos) headers
-      finally <- either (processError pgpool se) (processSuccess pgpool se) res
+        tryWebhook headers' httpTimeout sePayload (T.unpack seWebhook) (Just extraLogCtx)
+      let decodedHeaders = map (decodeHeader logEnv stiHeaders) headers'
+      finally <- either
+                 (processError pgpool se decodedHeaders)
+                 (processSuccess pgpool se decodedHeaders)
+                 res
       either logQErr return finally
   where
     processDead' =
@@ -217,51 +223,23 @@ processScheduledEvent pgpool httpMgr ScheduledTriggerInfo {..} se@ScheduledEvent
         Left err -> logQErr err
         Right _ -> pure ()
 
-tryWebhook ::
-     ( MonadReader r m
-     , Has (L.Logger L.Hasura) r
-     , MonadIO m
-     , MonadError HTTPErr m
-     )
-  => HTTP.Manager
-  -> HTTP.ResponseTimeout
-  -> [HTTP.Header]
-  -> ScheduledEventPayload
-  -> T.Text
-  -> m HTTPResp
-tryWebhook httpMgr timeout headers payload webhook = do
-  initReqE <- liftIO $ try $ HTTP.parseRequest (T.unpack webhook)
-  case initReqE of
-    Left excp -> throwError $ HClient excp
-    Right initReq -> do
-      let req =
-            initReq
-              { HTTP.method = "POST"
-              , HTTP.requestHeaders = headers
-              , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode payload)
-              , HTTP.responseTimeout = timeout
-              }
-      eitherResp <- runHTTP httpMgr req Nothing
-      onLeft eitherResp throwError
-
-processError :: (MonadIO m) => Q.PGPool -> ScheduledEvent 'SE_FULL -> HTTPErr -> m (Either QErr ())
-processError pgpool se err = do
-  let decodedHeaders = []
-      invocation = case err of
-       HClient excp -> do
-         let errMsg = TBS.fromLBS $ J.encode $ show excp
-         mkInvo se 1000 decodedHeaders errMsg []
-       HParse _ detail -> do
-         let errMsg = TBS.fromLBS $ J.encode detail
-         mkInvo se 1001 decodedHeaders errMsg []
-       HStatus errResp -> do
-         let respPayload = hrsBody errResp
-             respHeaders = hrsHeaders errResp
-             respStatus = hrsStatus errResp
-         mkInvo se respStatus decodedHeaders respPayload respHeaders
-       HOther detail -> do
-         let errMsg = (TBS.fromLBS $ J.encode detail)
-         mkInvo se 500 decodedHeaders errMsg []
+processError :: (MonadIO m) => Q.PGPool -> ScheduledEvent 'SE_FULL -> [HeaderConf] -> HTTPErr -> m (Either QErr ())
+processError pgpool se decodedHeaders err = do
+  let invocation = case err of
+        HClient excp -> do
+          let errMsg = TBS.fromLBS $ J.encode $ show excp
+          mkInvocation se 1000 decodedHeaders errMsg []
+        HParse _ detail -> do
+          let errMsg = TBS.fromLBS $ J.encode detail
+          mkInvocation se 1001 decodedHeaders errMsg []
+        HStatus errResp -> do
+          let respPayload = hrsBody errResp
+              respHeaders = hrsHeaders errResp
+              respStatus = hrsStatus errResp
+          mkInvocation se respStatus decodedHeaders respPayload respHeaders
+        HOther detail -> do
+          let errMsg = (TBS.fromLBS $ J.encode detail)
+          mkInvocation se 500 decodedHeaders errMsg []
   liftIO $
     runExceptT $
     Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
@@ -270,17 +248,17 @@ processError pgpool se err = do
 
 retryOrMarkError :: ScheduledEvent 'SE_FULL -> HTTPErr -> Q.TxE QErr ()
 retryOrMarkError se@ScheduledEvent{..} err = do
-  let mretryHeader = getRetryAfterHeaderFromHTTPErr err
-      mretryHeaderSeconds = join $ parseRetryHeaderValue <$> mretryHeader
+  let mRetryHeader = getRetryAfterHeaderFromHTTPErr err
+      mRetryHeaderSeconds = join $ parseRetryHeaderValue <$> mRetryHeader
       triesExhausted = seTries >= rcstNumRetries seRetryConf
-      noRetryHeader = isNothing mretryHeaderSeconds
+      noRetryHeader = isNothing mRetryHeaderSeconds
   -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
   if triesExhausted && noRetryHeader
     then do
       markError
     else do
       currentTime <- liftIO getCurrentTime
-      let delay = fromMaybe (rcstIntervalSec seRetryConf) mretryHeaderSeconds
+      let delay = fromMaybe (fromInteger . diffTimeToSeconds $ rcstIntervalSec seRetryConf) mRetryHeaderSeconds
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
       setRetry se retryTime
@@ -294,13 +272,12 @@ retryOrMarkError se@ScheduledEvent{..} err = do
         WHERE id = $1
       |] (Identity seId) True
 
-processSuccess :: (MonadIO m) => Q.PGPool -> ScheduledEvent 'SE_FULL -> HTTPResp -> m (Either QErr ())
-processSuccess pgpool se resp = do
+processSuccess :: (MonadIO m) => Q.PGPool -> ScheduledEvent 'SE_FULL -> [HeaderConf] -> HTTPResp -> m (Either QErr ())
+processSuccess pgpool se decodedHeaders resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
-      decodedHeaders = []
-      invocation = mkInvo se respStatus decodedHeaders respBody respHeaders
+      invocation = mkInvocation se respStatus decodedHeaders respBody respHeaders
   liftIO $
     runExceptT $
     Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
@@ -338,10 +315,10 @@ setRetry se time =
           WHERE id = $2
           |] (time, seId se) True
 
-mkInvo
+mkInvocation
   :: ScheduledEvent 'SE_FULL -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
   -> Invocation
-mkInvo se status reqHeaders respBody respHeaders
+mkInvocation se status reqHeaders respBody respHeaders
   = let resp = if isClientError status
           then mkClientErr respBody
           else mkResp status respBody respHeaders
