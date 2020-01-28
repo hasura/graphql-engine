@@ -1481,7 +1481,7 @@ func (m *Migrate) GotoVersion(gotoVersion uint64) error {
 	}
 
 	if dirty {
-		return ErrDirty{}
+		return ErrDirty{int64(currentVersion)}
 	}
 
 	if currentVersion == gotoVersion {
@@ -1509,19 +1509,15 @@ func (m *Migrate) GotoVersion(gotoVersion uint64) error {
 // Once readUpFromVersion is done reading it will close the ret channel.
 func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}) {
 	defer close(ret)
-	if from == to {
-		ret <- ErrNoChange
-		return
-	}
 	var noOfAppliedMigrations int
 	for {
+		if m.stop() {
+			return
+		}
 		if from == to {
 			if noOfAppliedMigrations == 0 {
 				ret <- ErrNoChange
 			}
-			return
-		}
-		if m.stop() {
 			return
 		}
 
@@ -1560,10 +1556,9 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 			}
 			ret <- migr
 
-			noOfAppliedMigrations++
-
 			go migr.Buffer()
 			from = int64(firstVersion)
+			noOfAppliedMigrations++
 			continue
 		}
 
@@ -1604,8 +1599,8 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 
 		ret <- migr
 		go migr.Buffer()
-		noOfAppliedMigrations++
 		from = int64(next)
+		noOfAppliedMigrations++
 	}
 }
 
@@ -1617,20 +1612,16 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface{}) {
 	defer close(ret)
 	var err error
-	// no change if already at nil version
-	if from == to {
-		ret <- ErrNoChange
-		return
-	}
 	var noOfAppliedMigrations int
 	for {
+		if m.stop() {
+			return
+		}
+
 		if from == to {
 			if noOfAppliedMigrations == 0 {
 				ret <- ErrNoChange
 			}
-			return
-		}
-		if m.stop() {
 			return
 		}
 
@@ -1661,8 +1652,8 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 		}
 
 		ret <- migr
-		noOfAppliedMigrations++
 		go migr.Buffer()
 		from = int64(prev)
+		noOfAppliedMigrations++
 	}
 }
