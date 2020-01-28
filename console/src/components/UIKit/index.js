@@ -207,8 +207,79 @@ const Alerts = () => (
 
 const TextLinks = () => (
   <React.Fragment>
+    <TextLinksWrapper
+      mb={2} // ~ margin-bottom: theme.space[3]
+    >
+      <Text
+        fontSize={2} // ~ theme.fontSizes[2]
+        fontWeight={4} // ~ theme.fontWeights[4]
+        mr={4} // ~ theme.space[4]
+        color="blacks.2" // ~theme.colors.blacks[2]
+      >
+        Check it out
+      </Text>
+      <Text fontSize={2} fontWeight={4} mr={4} color="greens.1">
+        Check it out
+      </Text>
+      <Text fontSize={2} fontWeight={4} mr={4} color="blues.1">
+        Check it out
+      </Text>
+      <Text fontSize={2} fontWeight={4} mr={4} color="oranges.1">
+        Check it out
+      </Text>
+      <Text fontSize={2} fontWeight={4} color="reds.1">
+        Check it out
+      </Text>
+    </TextLinksWrapper>
+    {/* Underlined Text */}
     <TextLinksWrapper>
-      <Text fontSize={2} fontWeight={4}>
+      <Text
+        fontSize={2} // ~ theme.fontSizes[2]
+        fontWeight={4} // ~ theme.fontWeights[4]
+        mr={4} // ~ theme.space[4]
+        color="blacks.2" // ~theme.colors.blacks[2]
+        borderBottom={2} // ~ theme.borders[2]
+        borderColor="yellows.1" // ~ theme.colors.yellow[1]
+      >
+        Check it out
+      </Text>
+      <Text
+        fontSize={2}
+        fontWeight={4}
+        mr={4}
+        color="greens.1"
+        borderBottom={2}
+        borderColor="greens.1"
+      >
+        Check it out
+      </Text>
+      <Text
+        fontSize={2}
+        fontWeight={4}
+        mr={4}
+        color="blues.1"
+        borderBottom={2}
+        borderColor="blues.1"
+      >
+        Check it out
+      </Text>
+      <Text
+        fontSize={2}
+        fontWeight={4}
+        mr={4}
+        color="oranges.1"
+        borderBottom={2}
+        borderColor="oranges.1"
+      >
+        Check it out
+      </Text>
+      <Text
+        fontSize={2}
+        fontWeight={4}
+        color="reds.1"
+        borderBottom={2}
+        borderColor="reds.1"
+      >
         Check it out
       </Text>
     </TextLinksWrapper>
@@ -218,7 +289,11 @@ const TextLinks = () => (
 // UIKit(Parent) Demo component *********** //
 
 const UIKit = () => (
-  <UIKitDiv fontFamily="roboto">
+  <UIKitDiv
+    fontFamily="roboto" // ~ theme.fonts.roboto
+    p={4} // ~ padding: theme.space[4]
+    mb={5} // ~ margin-bottom: theme.space[5]
+  >
     <h1>UI Elements</h1>
     <h3>Colors</h3>
     <ColorScheme />

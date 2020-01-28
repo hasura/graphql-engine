@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { typography, color, border, shadow } from 'styled-system';
+import { typography, space, color, border, shadow } from 'styled-system';
 
 // Base Div ********************* //
 
@@ -11,17 +11,16 @@ export const BaseDiv = styled.div`
 // ******************************** //
 
 export const UIKitDiv = styled.div`
-  padding: 3rem 5rem 10rem;
-
-  h3 {
-    margin: 2.5rem 0;
-  }
-
   /* Roboto Font */
 
   @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900');
 
   ${typography}
+  ${space}
+
+  h3 {
+    margin: 2.5rem 0;
+  }
 `;
 
 // ******************************** //
@@ -74,4 +73,6 @@ export const BoxShadowDiv = styled.div`
 
 // Text Links *********************************** //
 
-export const TextLinksWrapper = styled(BaseDiv)``;
+export const TextLinksWrapper = styled(BaseDiv)`
+  ${space}
+`;
