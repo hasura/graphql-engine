@@ -1563,9 +1563,6 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 
 		// apply next migration
 		next, err := m.sourceDrv.Next(suint64(from))
-		if os.IsNotExist(err) {
-		}
-
 		if err != nil {
 			ret <- err
 			return
