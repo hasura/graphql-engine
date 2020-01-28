@@ -534,46 +534,47 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	return nil
 }
 
-func (a *ActionConfig) Export(metadata dbTypes.Metadata) error {
+func (a *ActionConfig) Export(metadata dbTypes.Metadata) (dbTypes.MetadataFiles, error) {
 	if a.shouldSkip {
 		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
-		return nil
+		return dbTypes.MetadataFiles{}, nil
 	}
 	tmpByt, err := json.Marshal(metadata)
 	if err != nil {
-		return err
+		return dbTypes.MetadataFiles{}, err
 	}
 	var common types.Common
 	err = json.Unmarshal(tmpByt, &common)
 	if err != nil {
-		return err
+		return dbTypes.MetadataFiles{}, err
 	}
 	var sdlToReq sdlToRequest
 	sdlToReq.Types = common.CustomTypes
 	sdlToReq.Actions = common.Actions
 	sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName)
 	if err != nil {
-		return err
+		return dbTypes.MetadataFiles{}, err
 	}
 	doc, err := parser.Parse(parser.ParseParams{
 		Source: sdlToResp.SDL.Complete,
 	})
 	if err != nil {
-		return err
+		return dbTypes.MetadataFiles{}, err
 	}
 	commonByt, err := yaml.Marshal(common)
 	if err != nil {
-		return err
+		return dbTypes.MetadataFiles{}, err
 	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), commonByt, 0644)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), []byte(printer.Print(doc).(string)), 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	return dbTypes.MetadataFiles{
+		{
+			Path:    filepath.Join(a.MetadataDir, actionsFileName),
+			Content: commonByt,
+		},
+		{
+			Path:    filepath.Join(a.MetadataDir, graphqlFileName),
+			Content: []byte(printer.Print(doc).(string)),
+		},
+	}, nil
 }
 
 func GetActionsFileContent(metadataDir string) (content types.Common, err error) {
@@ -595,7 +596,7 @@ func GetActionsGraphQLFileContent(metadataDir string) (sdl string, err error) {
 }
 
 func ensureCLIExtension(pluginCfg *plugins.Config) error {
-	err := pluginCfg.Install(pluginName, nil)
+	err := pluginCfg.Install(pluginName, "")
 	if err != nil && err != plugins.ErrIsAlreadyInstalled {
 		return errors.Wrap(err, "cannot install cli-ext plugin")
 	}

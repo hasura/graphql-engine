@@ -68,10 +68,10 @@ func (c *Config) ListPlugins() ([]Plugin, error) {
 	return c.LoadPluginListFromFS(c.Paths.IndexPluginsPath())
 }
 
-func (c *Config) Install(pluginName string, mainfestFile *string) error {
+func (c *Config) Install(pluginName string, mainfestFile string) error {
 	var plugin Plugin
 	var err error
-	if mainfestFile == nil {
+	if mainfestFile == "" {
 		// Load the plugin index by name
 		plugin, err = c.LoadPluginByName(c.Paths.IndexPluginsPath(), pluginName)
 		if err != nil {
@@ -86,15 +86,16 @@ func (c *Config) Install(pluginName string, mainfestFile *string) error {
 		if err == nil {
 			return ErrIsAlreadyInstalled
 		} else if !os.IsNotExist(err) {
+			fmt.Println("asdasd")
 			return errors.Wrap(err, "failed to look up plugin receipt")
 		}
 	} else {
-		plugin, err = c.ReadPluginFromFile(*mainfestFile)
+		plugin, err = c.ReadPluginFromFile(mainfestFile)
 		if err != nil {
 			return errors.Wrap(err, "failed to load plugin manifest from file")
 		}
 		if plugin.Name != pluginName {
-			return fmt.Errorf("plugin name %s doesn't match with plugin in the manifest file %s", pluginName, *mainfestFile)
+			return fmt.Errorf("plugin name %s doesn't match with plugin in the manifest file %s", pluginName, mainfestFile)
 		}
 	}
 
@@ -236,11 +237,7 @@ func (c *Config) Upgrade(pluginName string) (Plugin, error) {
 }
 
 func (c *Config) LoadManifest(path string) (Plugin, error) {
-	plugin, err := c.ReadPluginFromFile(path)
-	if err != nil {
-		return plugin, errors.Wrap(err, "failed to load plugin manifest from file")
-	}
-	return plugin, nil
+	return c.ReadPluginFromFile(path)
 }
 
 func (c *Config) StoreManifest(plugin Plugin, dest string) error {

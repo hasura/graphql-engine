@@ -3,6 +3,7 @@ package hasuradb
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	gyaml "github.com/ghodss/yaml"
@@ -48,10 +49,20 @@ func (h *HasuraDB) ExportMetadata() error {
 		return err
 	}
 
+	var metadataFiles types.MetadataFiles
 	for plgName, plg := range h.config.Plugins {
-		err = plg.Export(data)
+		files, err := plg.Export(data)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("cannot export %s from metadata", plgName))
+		}
+		metadataFiles = append(metadataFiles, files...)
+	}
+
+	// create files
+	for _, file := range metadataFiles {
+		err = ioutil.WriteFile(file.Path, file.Content, 0644)
+		if err != nil {
+			return errors.Wrap(err, "creating metadata file failed")
 		}
 	}
 	return nil

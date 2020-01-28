@@ -21,7 +21,7 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 			pluginName := args[0]
 			ec.Spin(fmt.Sprintf("Installing plugin %q...", pluginName))
 			defer ec.Spinner.Stop()
-			err := ec.Plugins.Install(pluginName, manifestFile)
+			err := ec.Plugins.Install(pluginName, *manifestFile)
 			if err == plugins.ErrIsAlreadyInstalled {
 				ec.Spinner.Stop()
 				ec.Logger.WithField("name", pluginName).Infof("%q", err)

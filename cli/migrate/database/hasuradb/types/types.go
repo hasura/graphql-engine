@@ -11,11 +11,18 @@ type Metadata struct {
 	CustomTypes      interface{} `json:"custom_types" yaml:"custom_types"`
 }
 
+type MetadataFile struct {
+	Path    string
+	Content []byte
+}
+
+type MetadataFiles []MetadataFile
+
 type MetadataPlugins map[string]MetadataPluginsDriver
 
 type MetadataPluginsDriver interface {
 	Build(metadata *Metadata) error
 	//TODO: create a tmp dir with the files, and then move the data
-	Export(metadata Metadata) error
+	Export(metadata Metadata) (MetadataFiles, error)
 	CreateFiles() error
 }

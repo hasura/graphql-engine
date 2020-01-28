@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	gyaml "github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"gopkg.in/yaml.v2"
 )
@@ -48,17 +49,18 @@ func (r *RemoteSchemaConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(data, &metadata.RemoteSchemas)
 }
 
-func (r *RemoteSchemaConfig) Export(metadata dbTypes.Metadata) error {
+func (r *RemoteSchemaConfig) Export(metadata dbTypes.Metadata) (types.MetadataFiles, error) {
 	if metadata.RemoteSchemas == nil {
 		metadata.RemoteSchemas = make([]interface{}, 0)
 	}
 	data, err := yaml.Marshal(metadata.RemoteSchemas)
 	if err != nil {
-		return err
+		return types.MetadataFiles{}, err
 	}
-	err = ioutil.WriteFile(filepath.Join(r.MetadataDir, fileName), data, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	return types.MetadataFiles{
+		{
+			Path:    filepath.Join(r.MetadataDir, fileName),
+			Content: data,
+		},
+	}, nil
 }
