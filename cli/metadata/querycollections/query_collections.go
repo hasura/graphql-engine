@@ -49,11 +49,19 @@ func (q *QueryCollectionConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(data, &metadata.QueryCollections)
 }
 
-func (q *QueryCollectionConfig) Export(metadata dbTypes.Metadata) (types.MetadataFiles, error) {
-	if metadata.QueryCollections == nil {
-		metadata.QueryCollections = make([]interface{}, 0)
+func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, error) {
+	var queryCollections interface{}
+	for _, item := range metadata {
+		k, ok := item.Key.(string)
+		if !ok || k != "query_collections" {
+			continue
+		}
+		queryCollections = item.Value
 	}
-	data, err := yaml.Marshal(metadata.QueryCollections)
+	if queryCollections == nil {
+		queryCollections = make([]interface{}, 0)
+	}
+	data, err := yaml.Marshal(queryCollections)
 	if err != nil {
 		return types.MetadataFiles{}, err
 	}

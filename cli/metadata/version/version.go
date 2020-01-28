@@ -61,9 +61,17 @@ func (a *VersionConfig) Build(metadata *dbTypes.Metadata) error {
 	return nil
 }
 
-func (a *VersionConfig) Export(metadata dbTypes.Metadata) (types.MetadataFiles, error) {
+func (a *VersionConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, error) {
+	var version int
+	for _, item := range metadata {
+		k, ok := item.Key.(string)
+		if !ok || k != "version" {
+			continue
+		}
+		version = item.Value.(int)
+	}
 	v := Version{
-		Version: metadata.Version,
+		Version: version,
 	}
 	data, err := yaml.Marshal(v)
 	if err != nil {
@@ -75,11 +83,4 @@ func (a *VersionConfig) Export(metadata dbTypes.Metadata) (types.MetadataFiles, 
 			Content: data,
 		},
 	}, nil
-	/*
-		err = ioutil.WriteFile(filepath.Join(a.MetadataDir, fileName), data, 0644)
-		if err != nil {
-			return err
-		}
-		return nil
-	*/
 }

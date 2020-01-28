@@ -49,11 +49,19 @@ func (f *FunctionConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(data, &metadata.Functions)
 }
 
-func (f *FunctionConfig) Export(metadata dbTypes.Metadata) (types.MetadataFiles, error) {
-	if metadata.Functions == nil {
-		metadata.Functions = make([]interface{}, 0)
+func (f *FunctionConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, error) {
+	var functions interface{}
+	for _, item := range metadata {
+		k, ok := item.Key.(string)
+		if !ok || k != "functions" {
+			continue
+		}
+		functions = item.Value
 	}
-	data, err := yaml.Marshal(metadata.Functions)
+	if functions == nil {
+		functions = make([]interface{}, 0)
+	}
+	data, err := yaml.Marshal(functions)
 	if err != nil {
 		return types.MetadataFiles{}, err
 	}

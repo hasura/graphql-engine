@@ -49,8 +49,19 @@ func (t *TableConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(data, &metadata.Tables)
 }
 
-func (t *TableConfig) Export(metadata dbTypes.Metadata) (types.MetadataFiles, error) {
-	data, err := yaml.Marshal(metadata.Tables)
+func (t *TableConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, error) {
+	var tables interface{}
+	for _, item := range metadata {
+		k, ok := item.Key.(string)
+		if !ok || k != "tables" {
+			continue
+		}
+		tables = item.Value
+	}
+	if tables == nil {
+		tables = make([]interface{}, 0)
+	}
+	data, err := yaml.Marshal(tables)
 	if err != nil {
 		return types.MetadataFiles{}, err
 	}

@@ -49,11 +49,19 @@ func (r *RemoteSchemaConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(data, &metadata.RemoteSchemas)
 }
 
-func (r *RemoteSchemaConfig) Export(metadata dbTypes.Metadata) (types.MetadataFiles, error) {
-	if metadata.RemoteSchemas == nil {
-		metadata.RemoteSchemas = make([]interface{}, 0)
+func (r *RemoteSchemaConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, error) {
+	var remoteSchemas interface{}
+	for _, item := range metadata {
+		k, ok := item.Key.(string)
+		if !ok || k != "allowlist" {
+			continue
+		}
+		remoteSchemas = item.Value
 	}
-	data, err := yaml.Marshal(metadata.RemoteSchemas)
+	if remoteSchemas == nil {
+		remoteSchemas = make([]interface{}, 0)
+	}
+	data, err := yaml.Marshal(remoteSchemas)
 	if err != nil {
 		return types.MetadataFiles{}, err
 	}

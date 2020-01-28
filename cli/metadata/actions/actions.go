@@ -534,17 +534,29 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	return nil
 }
 
-func (a *ActionConfig) Export(metadata dbTypes.Metadata) (dbTypes.MetadataFiles, error) {
+func (a *ActionConfig) Export(metadata yaml.MapSlice) (dbTypes.MetadataFiles, error) {
 	if a.shouldSkip {
 		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
 		return dbTypes.MetadataFiles{}, nil
 	}
-	tmpByt, err := json.Marshal(metadata)
+	var actions yaml.MapSlice
+	for _, item := range metadata {
+		k, ok := item.Key.(string)
+		if !ok || (k != "actions" && k != "custom_types") {
+			continue
+		}
+		actions = append(actions, item)
+	}
+	ymlByt, err := yaml.Marshal(metadata)
+	if err != nil {
+		return dbTypes.MetadataFiles{}, err
+	}
+	jsonByt, err := gyaml.YAMLToJSON(ymlByt)
 	if err != nil {
 		return dbTypes.MetadataFiles{}, err
 	}
 	var common types.Common
-	err = json.Unmarshal(tmpByt, &common)
+	err = json.Unmarshal(jsonByt, &common)
 	if err != nil {
 		return dbTypes.MetadataFiles{}, err
 	}

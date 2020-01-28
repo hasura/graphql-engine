@@ -57,7 +57,7 @@ func (m *MetadataConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(metadataContent, &metadata)
 }
 
-func (m *MetadataConfig) Export(metadata dbTypes.Metadata) (dbTypes.MetadataFiles, error) {
+func (m *MetadataConfig) Export(metadata yaml.MapSlice) (dbTypes.MetadataFiles, error) {
 	// create metadata.yaml file
 	metaByt, err := yaml.Marshal(metadata)
 	if err != nil {
