@@ -1073,11 +1073,45 @@ serveOptionsParser =
 downgradeOptionsParser :: Parser DowngradeOptions
 downgradeOptionsParser = 
     DowngradeOptions
-    <$> option (maybeReader readVersion)
-        ( long "to" <>
-          metavar "<VERSION>" <>
-          help "The target schema version (e.g. v1.0.0-beta.1)"
-        )
+    <$> choice
+        [ shortcut "v1.0.0-alpha0" "1"
+        , shortcut "v1.0.0-alpha15" "1"
+        , shortcut "v1.0.0-alpha16" "2"
+        , shortcut "v1.0.0-alpha20" "2"
+        , shortcut "v1.0.0-alpha21" "3"
+        , shortcut "v1.0.0-alpha28" "3"
+        , shortcut "v1.0.0-alpha29" "4"
+        , shortcut "v1.0.0-alpha30" "5"
+        , shortcut "v1.0.0-alpha31" "6"
+        , shortcut "v1.0.0-alpha33" "6"
+        , shortcut "v1.0.0-alpha34" "7"
+        , shortcut "v1.0.0-alpha35" "7"
+        , shortcut "v1.0.0-alpha36" "9"
+        , shortcut "v1.0.0-alpha38" "9"
+        , shortcut "v1.0.0-alpha39" "10"
+        , shortcut "v1.0.0-alpha40" "11"
+        , shortcut "v1.0.0-alpha41" "12"
+        , shortcut "v1.0.0-alpha42" "13"
+        , shortcut "v1.0.0-alpha45" "13"
+        , shortcut "v1.0.0-beta.1" "16"
+        , shortcut "v1.0.0-beta.2" "17"
+        , shortcut "v1.0.0-beta.3" "17"
+        , shortcut "v1.0.0-beta.4" "19"
+        , shortcut "v1.0.0-beta.5" "19"
+        , shortcut "v1.0.0-beta.6" "22"
+        , shortcut "v1.0.0-beta.7" "24"
+        , shortcut "v1.0.0-beta.8" "26"
+        , shortcut "v1.0.0-beta.9" "26"
+        , shortcut "v1.0.0-beta.10" "27"
+        , shortcut "v1.0.0" "28"
+        , shortcut "v1.1.0-beta.1" "29"
+        , shortcut "v1.1.0-beta.2" "30"
+        , strOption
+          ( long "to-catalog-version" <>
+            metavar "<VERSION>" <>
+            help "The target catalog schema version (e.g. 31)"
+          )
+        ]
     <*> switch
         ( long "dryRun" <>
           help "Don't run any migrations, just print out the SQL."
@@ -1085,36 +1119,8 @@ downgradeOptionsParser =
   where
     -- This implements the mapping between application versions
     -- and catalog schema versions.
-    readVersion "v1.0.0-alpha0"  = Just "1"
-    readVersion "v1.0.0-alpha15" = Just "1"
-    readVersion "v1.0.0-alpha16" = Just "2"
-    readVersion "v1.0.0-alpha20" = Just "2"
-    readVersion "v1.0.0-alpha21" = Just "3"
-    readVersion "v1.0.0-alpha28" = Just "3"
-    readVersion "v1.0.0-alpha29" = Just "4"
-    readVersion "v1.0.0-alpha30" = Just "5"
-    readVersion "v1.0.0-alpha31" = Just "6"
-    readVersion "v1.0.0-alpha33" = Just "6"
-    readVersion "v1.0.0-alpha34" = Just "7"
-    readVersion "v1.0.0-alpha35" = Just "7"
-    readVersion "v1.0.0-alpha36" = Just "9"
-    readVersion "v1.0.0-alpha38" = Just "9"
-    readVersion "v1.0.0-alpha39" = Just "10"
-    readVersion "v1.0.0-alpha40" = Just "11"
-    readVersion "v1.0.0-alpha41" = Just "12"
-    readVersion "v1.0.0-alpha42" = Just "13"
-    readVersion "v1.0.0-alpha45" = Just "13"
-    readVersion "v1.0.0-beta.1"  = Just "16"
-    readVersion "v1.0.0-beta.2"  = Just "17"
-    readVersion "v1.0.0-beta.3"  = Just "17"
-    readVersion "v1.0.0-beta.4"  = Just "19"
-    readVersion "v1.0.0-beta.5"  = Just "19"
-    readVersion "v1.0.0-beta.6"  = Just "22"
-    readVersion "v1.0.0-beta.7"  = Just "24"
-    readVersion "v1.0.0-beta.8"  = Just "26"
-    readVersion "v1.0.0-beta.9"  = Just "26"
-    readVersion "v1.0.0-beta.10" = Just "27"
-    readVersion "v1.0.0"         = Just "28"
-    readVersion "v1.1.0-beta.1"  = Just "29"
-    readVersion "v1.1.0-beta.2"  = Just "30"
-    readVersion _ = Nothing
+    shortcut v catalogVersion = 
+      flag' (DataString.fromString catalogVersion)
+        ( long ("to-" <> v) <>
+          help ("Downgrade to graphql-engine version " <> v <> " (equivalent to --to-catalog-version " <> catalogVersion <> ")")
+        )
