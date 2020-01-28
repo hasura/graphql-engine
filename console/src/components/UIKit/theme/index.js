@@ -11,6 +11,9 @@ export const theme = {
     white: '#fff',
     transparent: 'transparent',
   },
+  fonts: {
+    roboto: 'Roboto',
+  },
   fontWeights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
   fontSizes: [12, 14, 16, 20, 24, 36, 48, 80, 96],
   transition: {

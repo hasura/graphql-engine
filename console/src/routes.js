@@ -124,7 +124,7 @@ const routes = store => {
           {remoteSchemaRouter}
           <Route path="ui-test" component={UITest} />
           {/* Demo ~ Reusable UI Components */}
-          <Route path="ui-components" component={UIKit} />
+          <Route path="ui-elements" component={UIKit} />
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />

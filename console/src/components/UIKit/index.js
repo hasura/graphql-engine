@@ -9,9 +9,12 @@ import {
   ButtonsWrapper,
   BoxShadowDivWrapper,
   BoxShadowDiv,
+  TextLinksWrapper,
 } from './UIKit';
+
 import { Button } from './Button';
 import { AlertMessageBox } from './Alert';
+import { Text } from './Text';
 
 // Color Scheme ******************************** //
 
@@ -154,15 +157,15 @@ const BoxShadows = () => (
 const Alerts = () => (
   <React.Fragment>
     <AlertMessageBox
-      minWidth={1 / 2}
-      height={1}
-      bg="greens.3"
-      maxWidth={866}
-      borderLeft={4}
-      borderColor="greens.1"
-      borderRadius={1}
-      boxShadow={1}
-      my={4}
+      minWidth={1 / 2} // width ~ 50%
+      height={1} // ~ theme.sizes[1]
+      bg="greens.3" // ~ theme.colors.greens[3]
+      maxWidth={866} // ~ max-width: 866px
+      borderLeft={4} // ~ theme.borders[4]
+      borderColor="greens.1" // ~ theme.colors.greens[1]
+      borderRadius={1} // ~ theme.radii[1]
+      boxShadow={1} // ~ theme.shadows[1]
+      my={4} // margin-y-axis ~ theme.space[4])
     />
     <AlertMessageBox
       minWidth={1 / 2}
@@ -200,10 +203,22 @@ const Alerts = () => (
   </React.Fragment>
 );
 
+// Text Links ***************************** //
+
+const TextLinks = () => (
+  <React.Fragment>
+    <TextLinksWrapper>
+      <Text fontSize={2} fontWeight={4}>
+        Check it out
+      </Text>
+    </TextLinksWrapper>
+  </React.Fragment>
+);
+
 // UIKit(Parent) Demo component *********** //
 
 const UIKit = () => (
-  <UIKitDiv>
+  <UIKitDiv fontFamily="roboto">
     <h1>UI Elements</h1>
     <h3>Colors</h3>
     <ColorScheme />
@@ -213,6 +228,8 @@ const UIKit = () => (
     <BoxShadows />
     <h3>Alerts</h3>
     <Alerts />
+    <h3>Text Links</h3>
+    <TextLinks />
   </UIKitDiv>
 );
 
