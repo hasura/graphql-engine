@@ -124,6 +124,69 @@ response:
           content_min: Sample article content 2
           author_id: 1
           author_id_min: 1
+        array_agg:
+          id:
+          - 2
+          - 3
+          id_array_agg:
+          - 2
+          - 3
+          title:
+          - Article 2
+          - Article 3
+          title_array_agg:
+          - Article 2
+          - Article 3
+          content:
+          - Sample article content 2
+          - Sample article content 3
+          content_array_agg:
+          - Sample article content 2
+          - Sample article content 3
+          is_published:
+          - true
+          - true
+          is_published_array_agg:
+          - true
+          - true
+        array_agg_fields:
+          id:
+          - 2
+          - 3
+          id_array_agg:
+          - 2
+          - 3
+          title:
+          - Article 2
+          - Article 3
+          title_array_agg:
+          - Article 2
+          - Article 3
+          content:
+          - Sample article content 2
+          - Sample article content 3
+          content_array_agg:
+          - Sample article content 2
+          - Sample article content 3
+          is_published:
+          - true
+          - true
+          is_published_array_agg:
+          - true
+          - true
+        bool_or:
+          is_published: true
+          is_published_bool_or: true
+        bool_or_fields:
+          is_published: true
+          is_published_bool_or: true
+        bool_and:
+          is_published: true
+          is_published_bool_and: true
+        bool_and_fields:
+          is_published: true
+          is_published_bool_and: true
+
       nodes:
       - id: 2
         title: Article 2
@@ -298,6 +361,42 @@ query:
             content_min: content
             author_id
             author_id_min: author_id
+          }
+          array_agg{
+            id
+            id_array_agg: id
+            title
+            title_array_agg: title
+            content
+            content_array_agg: content
+            is_published
+            is_published_array_agg: is_published
+          }
+          array_agg_fields: array_agg{
+            id
+            id_array_agg: id
+            title
+            title_array_agg: title
+            content
+            content_array_agg: content
+            is_published
+            is_published_array_agg: is_published
+          }
+          bool_or{
+            is_published
+            is_published_bool_or: is_published
+          }
+          bool_or_fields: bool_or{
+            is_published
+            is_published_bool_or: is_published
+          }
+          bool_and{
+            is_published
+            is_published_bool_and: is_published
+          }
+          bool_and_fields: bool_and{
+            is_published
+            is_published_bool_and: is_published
           }
         }
         nodes {

@@ -24,9 +24,18 @@ module Hasura.GraphQL.Schema.Common
   , mkDescription
 
   , mkFuncArgsTy
+
+  , AggregateOp(..)
+  , AggregateOpName(..)
+  , aggregateOpReturnTypeToGType
+  , allAggregateOps
+  , aggregateOpRequiredScalars
+  , aggregateOpToName
+  , isAggField
   ) where
 
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -117,3 +126,58 @@ mkFuncArgsName fn =
 mkFuncArgsTy :: QualifiedFunction -> G.NamedType
 mkFuncArgsTy =
   G.NamedType . mkFuncArgsName
+
+newtype AggregateOpName = AggregateOpName {unAggregateOpName :: Text}
+  deriving (Show, Eq, IsString)
+
+data AggregateOpReturnType
+  = AORTFromArgumentType !(PGColumnType -> G.GType)
+  | AORTStatic !PGScalarType
+
+aggregateOpReturnTypeToGType :: AggregateOpReturnType -> PGColumnType -> G.GType
+aggregateOpReturnTypeToGType = \case
+  AORTFromArgumentType fn -> fn
+  AORTStatic ty           -> const $ G.toGT $ mkScalarTy ty
+
+data AggregateOp
+  = AggregateOp
+    { _aoOpName             :: !AggregateOpName
+    , _aoArgumentTypeFilter :: !(PGScalarType -> Bool)
+    , _aoReturnType         :: !AggregateOpReturnType
+    }
+
+aggregateOpToName :: AggregateOp -> G.Name
+aggregateOpToName = G.Name . unAggregateOpName . _aoOpName
+
+allAggregateOps :: [AggregateOp]
+allAggregateOps = numericAggOps <> compareAggOps <> boolOps <> [arrayAggOp]
+  where
+    sameAsArgType = AORTFromArgumentType (G.toGT . mkColumnType)
+    numericAggOps = sumOp:otherOps
+      where
+        sumOp = AggregateOp "sum" isNumType sameAsArgType
+        alwaysFloat = AORTStatic PGFloat
+        otherOps = flip map otherOpNames $ \name ->
+                     AggregateOp name isNumType alwaysFloat
+        otherOpNames = [ "avg", "stddev", "stddev_samp", "stddev_pop"
+                       , "variance", "var_samp", "var_pop"
+                       ]
+
+    compareAggOps = flip map ["max", "min"] $ \name ->
+                    AggregateOp name isComparableType sameAsArgType
+
+    arrayAggOp = AggregateOp "array_agg" (const True) $
+                 AORTFromArgumentType (G.toGT . G.toLT . G.toGT . mkColumnType)
+
+    boolOps = flip map ["bool_and", "bool_or"] $ \name ->
+              AggregateOp name (== PGBoolean) $ AORTStatic PGBoolean
+
+aggregateOpRequiredScalars :: Set.HashSet PGScalarType
+aggregateOpRequiredScalars = Set.fromList $ flip concatMap allAggregateOps $
+  \aggOp -> case _aoReturnType aggOp of
+           AORTFromArgumentType _ -> []
+           AORTStatic scalarTy    -> [scalarTy]
+
+isAggField :: G.Name -> Bool
+isAggField =
+  flip elem (map _aoOpName allAggregateOps) . AggregateOpName . G.unName

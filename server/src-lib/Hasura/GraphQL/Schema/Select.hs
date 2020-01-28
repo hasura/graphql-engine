@@ -42,9 +42,9 @@ mkSelColumnInpTy tn =
 mkTableAggFldsTy :: QualifiedTable -> G.NamedType
 mkTableAggFldsTy = addTypeSuffix "_aggregate_fields" . mkTableTy
 
-mkTableColAggFldsTy :: G.Name -> QualifiedTable -> G.NamedType
+mkTableColAggFldsTy :: AggregateOp -> QualifiedTable -> G.NamedType
 mkTableColAggFldsTy op tn =
-  G.NamedType $ qualObjectToName tn <> "_" <> op <> "_fields"
+  G.NamedType $ qualObjectToName tn <> "_" <> aggregateOpToName op <> "_fields"
 
 mkTableByPkName :: QualifiedTable -> G.Name
 mkTableByPkName tn = qualObjectToName tn <> "_by_pk"
@@ -214,12 +214,11 @@ type table_aggregate_fields{
 -}
 mkTableAggFldsObj
   :: QualifiedTable
-  -> ([PGColumnInfo], [G.Name])
-  -> ([PGColumnInfo], [G.Name])
+  -> [(AggregateOp, [PGColumnInfo])] -- ^ operator and applicable columns
   -> ObjTyInfo
-mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
+mkTableAggFldsObj tn opWithColumns =
   mkHsraObjTyInfo (Just desc) (mkTableAggFldsTy tn) Set.empty $ mapFromL _fiName $
-  countFld : (numFlds <> compFlds)
+  countFld : opFlds
   where
     desc = G.Description $
       "aggregate fields of " <>> tn
@@ -234,10 +233,10 @@ mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps) =
     distinctInpVal = InpValInfo Nothing "distinct" Nothing $ G.toGT $
                      mkScalarTy PGBoolean
 
-    numFlds = bool (map mkColOpFld numAggOps) [] $ null numCols
-    compFlds = bool (map mkColOpFld compAggOps) [] $ null compCols
+    opFlds = flip mapMaybe opWithColumns $ \(op, cols) ->
+             bool (Just $ mkColOpFld op) Nothing $ null cols
 
-    mkColOpFld op = mkHsraObjFldInfo Nothing op Map.empty $ G.toGT $
+    mkColOpFld op = mkHsraObjFldInfo Nothing (aggregateOpToName op) Map.empty $ G.toGT $
                     mkTableColAggFldsTy op tn
 
 {-
@@ -249,18 +248,19 @@ type table_<agg-op>_fields{
 -}
 mkTableColAggFldsObj
   :: QualifiedTable
-  -> G.Name
-  -> (PGColumnType -> G.NamedType)
+  -> AggregateOp
+  -> (PGColumnType -> G.GType)
   -> [PGColumnInfo]
-  -> ObjTyInfo
+  -> Maybe ObjTyInfo
 mkTableColAggFldsObj tn op f cols =
-  mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $ mapFromL _fiName $
-  map mkColObjFld cols
+  if null cols then Nothing
+  else Just $ mkHsraObjTyInfo (Just desc) (mkTableColAggFldsTy op tn) Set.empty $
+       mapFromL _fiName $ map mkColObjFld cols
   where
-    desc = G.Description $ "aggregate " <> G.unName op <> " on columns"
+    desc = G.Description $ "aggregate " <> unAggregateOpName (_aoOpName op) <> " on columns"
 
     mkColObjFld ci = mkHsraObjFldInfo Nothing (pgiName ci) Map.empty $
-                     G.toGT $ f $ pgiType ci
+                     f $ pgiType ci
 
 {-
 

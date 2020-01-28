@@ -8,7 +8,6 @@ module Hasura.GraphQL.Schema
   , InsCtx(..)
   , InsCtxMap
   , RelationInfoMap
-  , isAggFld
   , qualObjectToName
   , ppGCtx
 
@@ -98,17 +97,6 @@ mkPGColGNameMap :: [PGColumnInfo] -> PGColGNameMap
 mkPGColGNameMap cols = Map.fromList $
   flip map cols $ \ci -> (pgiName ci, ci)
 
-numAggOps :: [G.Name]
-numAggOps = [ "sum", "avg", "stddev", "stddev_samp", "stddev_pop"
-            , "variance", "var_samp", "var_pop"
-            ]
-
-compAggOps :: [G.Name]
-compAggOps = ["max", "min"]
-
-isAggFld :: G.Name -> Bool
-isAggFld = flip elem (numAggOps <> compAggOps)
-
 mkComputedFieldFunctionArgSeq :: Seq.Seq FunctionArg -> ComputedFieldFunctionArgSeq
 mkComputedFieldFunctionArgSeq inputArgs =
     Seq.fromList $ procFuncArgs inputArgs faName $
@@ -175,6 +163,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
                , boolExpInpObjFldsM , selObjFldsM
                ]
     scalars = selByPkScalarSet <> funcArgScalarSet <> computedFieldFuncArgScalars
+              <> aggregateOpRequiredScalars
 
     -- helper
     mkColFldMap ty cols = Map.fromList $ flip map cols $
@@ -254,31 +243,24 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     (aggObjs, aggOrdByInps) = case selPermM of
       Just (True, selFlds) ->
         let cols = getPGColumnFields selFlds
-            numCols = onlyNumCols cols
-            compCols = onlyComparableCols cols
+            opWithCols = flip map allAggregateOps $ \op ->
+                         ( op
+                         , filter (isScalarColumnWhere (_aoArgumentTypeFilter op) . pgiType) cols
+                         )
             objs = [ mkTableAggObj tn
-                   , mkTableAggFldsObj tn (numCols, numAggOps) (compCols, compAggOps)
-                   ] <> mkColAggFldsObjs selFlds
-            ordByInps = mkTabAggOrdByInpObj tn (numCols, numAggOps) (compCols, compAggOps)
-                        : mkTabAggOpOrdByInpObjs tn (numCols, numAggOps) (compCols, compAggOps)
+                   , mkTableAggFldsObj tn opWithCols
+                   ] <> mkColAggFldsObjs cols
+            ordByInps = mkTabAggOrdByInpObj tn opWithCols
+                        : mkTabAggOpOrdByInpObjs tn opWithCols
         in (objs, ordByInps)
       _ -> ([], [])
 
-    getNumericCols = onlyNumCols . getPGColumnFields
-    getComparableCols = onlyComparableCols . getPGColumnFields
-    onlyFloat = const $ mkScalarTy PGFloat
+    mkColAggFldsObjs cols =
+      let mkObjField op = mkTableColAggFldsObj tn op
+                          ( aggregateOpReturnTypeToGType $ _aoReturnType op) $
+                          filter (isScalarColumnWhere (_aoArgumentTypeFilter op) . pgiType) cols
+      in mapMaybe mkObjField allAggregateOps
 
-    mkTypeMaker "sum" = mkColumnType
-    mkTypeMaker _     = onlyFloat
-
-    mkColAggFldsObjs flds =
-      let numCols = getNumericCols flds
-          compCols = getComparableCols flds
-          mkNumObjFld n = mkTableColAggFldsObj tn n (mkTypeMaker n) numCols
-          mkCompObjFld n = mkTableColAggFldsObj tn n mkColumnType compCols
-          numFldsObjs = bool (map mkNumObjFld numAggOps) [] $ null numCols
-          compFldsObjs = bool (map mkCompObjFld compAggOps) [] $ null compCols
-      in numFldsObjs <> compFldsObjs
     -- the fields used in table object
     selObjFldsM = mkFldMap (mkTableTy tn) <$> selFldsM
     -- the scalar set for table_by_pk arguments
@@ -363,7 +345,7 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
     insCustName = getCustomNameWith _tcrfInsert
     getInsDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
-      in ( MCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
+      in ( MCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (^. _4) updM
          , mkInsMutFld insCustName tn isUpsertable
          )
 
