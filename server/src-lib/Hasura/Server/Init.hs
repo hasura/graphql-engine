@@ -467,7 +467,7 @@ serveCmdFooter =
       [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv
       , pgStripesEnv, pgConnsEnv, pgTimeoutEnv, pgUsePrepareEnv, txIsoEnv
       , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
-      , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
+      , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       , enableAllowlistEnv, enabledLogsEnv, logLevelEnv
       ]
