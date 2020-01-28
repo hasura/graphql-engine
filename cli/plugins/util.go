@@ -2,6 +2,7 @@ package plugins
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -109,9 +110,18 @@ func MatchPlatform(platforms []Platform) (Platform, bool, error) {
 // while validating its checksum with the provided sha256sum, and extracts its contents to extractDir that must be.
 // created.
 func downloadAndExtract(extractDir, uri, sha256sum string) error {
-	var fetcher download.Fetcher = download.HTTPFetcher{}
+	nurl, err := url.Parse(uri)
+	if err != nil {
+		return errors.Wrap(err, "unable to parse uri")
+	}
+	var fetcher download.Fetcher
+	if nurl.Scheme == "file" {
+		fetcher = download.NewFileFetcher(nurl.Path)
+	} else {
+		fetcher = download.HTTPFetcher{}
+	}
 	verifier := download.NewSha256Verifier(sha256sum)
-	err := download.NewDownloader(verifier, fetcher).Get(uri, extractDir)
+	err = download.NewDownloader(verifier, fetcher).Get(uri, extractDir)
 	return errors.Wrap(err, "failed to unpack the plugin archive")
 }
 

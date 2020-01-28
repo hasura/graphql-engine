@@ -309,6 +309,7 @@ func (ec *ExecutionContext) setupPlugins() error {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
 	ec.Plugins = plugins.New(base)
+	ec.Plugins.Logger = ec.Logger
 	return ec.Plugins.Prepare()
 }
 

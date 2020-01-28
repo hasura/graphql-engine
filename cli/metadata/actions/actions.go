@@ -595,7 +595,7 @@ func GetActionsGraphQLFileContent(metadataDir string) (sdl string, err error) {
 }
 
 func ensureCLIExtension(pluginCfg *plugins.Config) error {
-	err := pluginCfg.Install(pluginName)
+	err := pluginCfg.Install(pluginName, nil)
 	if err != nil && err != plugins.ErrIsAlreadyInstalled {
 		return errors.Wrap(err, "cannot install cli-ext plugin")
 	}

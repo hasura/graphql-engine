@@ -3,7 +3,6 @@ package plugins
 import (
 	"strings"
 
-	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 )
 
@@ -37,9 +36,6 @@ func (p Plugin) ValidatePlugin(name string) error {
 	}
 	if p.Version == "" {
 		return errors.New("should have a version specified")
-	}
-	if _, err := semver.NewVersion(p.Version); err != nil {
-		return errors.Wrap(err, "failed to parse plugin version")
 	}
 	for _, pl := range p.Platforms {
 		if err := validatePlatform(pl); err != nil {

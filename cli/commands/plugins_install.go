@@ -10,6 +10,7 @@ import (
 )
 
 func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
+	var manifestFile *string
 	pluginsInstallCmd := &cobra.Command{
 		Use:          "install",
 		Short:        "",
@@ -20,7 +21,12 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 			pluginName := args[0]
 			ec.Spin(fmt.Sprintf("Installing plugin %q...", pluginName))
 			defer ec.Spinner.Stop()
-			err := ec.Plugins.Install(pluginName)
+			err := ec.Plugins.Install(pluginName, manifestFile)
+			if err == plugins.ErrIsAlreadyInstalled {
+				ec.Spinner.Stop()
+				ec.Logger.WithField("name", pluginName).Infof("%q", err)
+				return nil
+			}
 			if err != nil && err != plugins.ErrIsAlreadyInstalled {
 				return errors.Wrapf(err, "failed to install plugin %q", pluginName)
 			}
@@ -29,5 +35,9 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return nil
 		},
 	}
+
+	f := pluginsInstallCmd.Flags()
+
+	manifestFile = f.String("manifest-file", "", "(dev) speficy local manifest file")
 	return pluginsInstallCmd
 }

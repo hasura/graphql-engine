@@ -48,7 +48,7 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 
 			var rows [][]string
-			cols := []string{"NAME", "DESCRIPTION", "INSTALLED"}
+			cols := []string{"NAME", "DESCRIPTION", "VERSION", "INSTALLED"}
 			for _, name := range names {
 				plugin := pluginMap[name]
 				var status string
@@ -61,7 +61,7 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 				} else {
 					status = "unavailable on " + runtime.GOOS
 				}
-				rows = append(rows, []string{name, limitString(plugin.ShortDescription, 50), status})
+				rows = append(rows, []string{name, limitString(plugin.ShortDescription, 50), plugin.Version, status})
 			}
 			rows = sortByFirstColumn(rows)
 			ec.Spinner.Stop()

@@ -43,7 +43,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 			// install the plugin
 			ec.Spin("Installing cli-ext plugin...")
-			err = ec.Plugins.Install("cli-ext")
+			err = ec.Plugins.Install("cli-ext", nil)
 			if err != nil && err != plugins.ErrIsAlreadyInstalled {
 				return errors.Wrap(err, "cannot install plugin")
 			}
@@ -67,6 +67,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 			defer func() {
 				if err != nil {
+					// TODO: add debug log
 					os.RemoveAll(ec.MetadataDir)
 				}
 			}()
