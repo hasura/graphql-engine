@@ -52,8 +52,10 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 			for _, name := range names {
 				plugin := pluginMap[name]
 				var status string
+				var version string
 				if _, ok := installed[name]; ok {
 					status = "yes"
+					version = installed[name]
 				} else if _, ok, err := plugins.MatchPlatform(plugin.Platforms); err != nil {
 					return errors.Wrapf(err, "failed to get the matching platform for plugin %s", name)
 				} else if ok {
@@ -61,7 +63,12 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 				} else {
 					status = "unavailable on " + runtime.GOOS
 				}
-				rows = append(rows, []string{name, limitString(plugin.ShortDescription, 50), plugin.Version, status})
+				if status == "yes" {
+					version = installed[name]
+				} else {
+					version = plugin.Version
+				}
+				rows = append(rows, []string{name, limitString(plugin.ShortDescription, 50), version, status})
 			}
 			rows = sortByFirstColumn(rows)
 			ec.Spinner.Stop()

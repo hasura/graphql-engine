@@ -479,6 +479,7 @@ func (ec *ExecutionContext) setupLogger() {
 			}
 		}
 		logger.Out = colorable.NewColorableStdout()
+		// TODO: add hook or custom textFormatter to stop and start in case of new log
 		ec.Logger = logger
 	}
 
