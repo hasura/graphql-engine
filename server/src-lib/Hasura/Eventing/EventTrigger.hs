@@ -10,7 +10,7 @@ module Hasura.Eventing.EventTrigger
 import           Control.Concurrent            (threadDelay)
 import           Control.Concurrent.Async      (async, waitAny)
 import           Control.Concurrent.STM.TVar
-import           Control.Exception             (try)
+import           Control.Exception             (bracket_, try)
 import           Control.Monad.STM             (STM, atomically, retry)
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -115,11 +115,11 @@ pushEvents logger pool eectx  = forever $ do
 consumeEvents
   :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> IO SchemaCache
   -> EventEngineCtx -> IO ()
-consumeEvents logger logenv httpMgr pool getSchemaCache eectx  = forever $ do
+consumeEvents logger logenv httpMgr pool getSC eectx  = forever $ do
   event <- atomically $ do
     let EventEngineCtx q _ _ _ = eectx
     TQ.readTQueue q
-  async $ runReaderT (processEvent logenv pool getSchemaCache event) (logger, httpMgr, eectx)
+  async $ runReaderT (processEvent logenv pool getSC event) (logger, httpMgr, eectx)
 
 processEvent
   :: ( HasVersion
@@ -132,6 +132,7 @@ processEvent
   => LogEnvHeaders -> Q.PGPool -> IO SchemaCache -> Event -> m ()
 processEvent logenv pool getSchemaCache e = do
   cache <- liftIO getSchemaCache
+  eventEngineCtx <- asks getter
   let meti = getEventTriggerInfoFromEvent cache e
   case meti of
     Nothing -> do
@@ -140,17 +141,41 @@ processEvent logenv pool getSchemaCache e = do
       let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
           retryConf = etiRetryConf eti
           timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
-          responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
+          respTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
           headerInfos = etiHeaders eti
           etHeaders = map encodeHeader headerInfos
           headers = addDefaultHeaders etHeaders
           ep = createEventPayload retryConf e
-      res <- runExceptT $ tryWebhook headers responseTimeout ep webhook
+          extraLogCtx = ExtraLogContext (epId ep)
+      res <- runExceptT $ withEventEngineCtx eventEngineCtx $
+        tryWebhook headers respTimeout (toJSON ep) webhook (Just extraLogCtx)
       let decodedHeaders = map (decodeHeader logenv headerInfos) headers
       finally <- either
         (processError pool e retryConf decodedHeaders ep)
         (processSuccess pool e decodedHeaders ep) res
       either logQErr return finally
+
+withEventEngineCtx ::
+  ( MonadReader r m
+  , Has HTTP.Manager r
+  , Has (L.Logger L.Hasura) r
+  , MonadIO m
+  , MonadError HTTPErr m
+  )
+  => EventEngineCtx
+  -> m HTTPResp
+  -> m HTTPResp
+withEventEngineCtx eeCtx = bracket_ (incrementThreadCount eeCtx) (decrementThreadCount eeCtx)
+
+incrementThreadCount :: EventEngineCtx -> IO ()
+incrementThreadCount (EventEngineCtx _ c maxT _ ) = atomically $ do
+  countThreads <- readTVar c
+  if countThreads >= maxT
+    then retry
+    else modifyTVar' c (+1)
+
+decrementThreadCount :: EventEngineCtx -> IO ()
+decrementThreadCount (EventEngineCtx _ c _ _) = atomically $ modifyTVar' c (\v -> v - 1)
 
 createEventPayload :: RetryConf -> Event ->  EventPayload
 createEventPayload retryConf e = EventPayload
@@ -159,9 +184,9 @@ createEventPayload retryConf e = EventPayload
     , epTrigger      = eTrigger e
     , epEvent        = eEvent e
     , epDeliveryInfo =  DeliveryInfo
-      { diCurrentRetry = eTries e
-      , diMaxRetries   = rcNumRetries retryConf
-      }
+                        { diCurrentRetry = eTries e
+                        , diMaxRetries   = rcNumRetries retryConf
+                        }
     , epCreatedAt    = eCreatedAt e
     }
 
@@ -173,7 +198,7 @@ processSuccess pool e decodedHeaders ep resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
-      invocation = mkInvo ep respStatus decodedHeaders respBody respHeaders
+      invocation = mkInvocation ep respStatus decodedHeaders respBody respHeaders
   liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation
     setSuccess e
@@ -190,18 +215,18 @@ processError pool e retryConf decodedHeaders ep err = do
   let invocation = case err of
         HClient excp -> do
           let errMsg = TBS.fromLBS $ encode $ show excp
-          mkInvo ep 1000 decodedHeaders errMsg []
+          mkInvocation ep 1000 decodedHeaders errMsg []
         HParse _ detail -> do
           let errMsg = TBS.fromLBS $ encode detail
-          mkInvo ep 1001 decodedHeaders errMsg []
+          mkInvocation ep 1001 decodedHeaders errMsg []
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
               respStatus = hrsStatus errResp
-          mkInvo ep respStatus decodedHeaders respPayload respHeaders
+          mkInvocation ep respStatus decodedHeaders respPayload respHeaders
         HOther detail -> do
           let errMsg = (TBS.fromLBS $ encode detail)
-          mkInvo ep 500 decodedHeaders errMsg []
+          mkInvocation ep 500 decodedHeaders errMsg []
   liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation
     retryOrSetError e retryConf err
@@ -224,10 +249,10 @@ retryOrSetError e retryConf err = do
           retryTime = addUTCTime diff currentTime
       setRetry e retryTime
 
-mkInvo
+mkInvocation
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
   -> Invocation
-mkInvo ep status reqHeaders respBody respHeaders
+mkInvocation ep status reqHeaders respBody respHeaders
   = let resp = if isClientError status
           then mkClientErr respBody
           else mkResp status respBody respHeaders
@@ -237,48 +262,6 @@ mkInvo ep status reqHeaders respBody respHeaders
       status
       (mkWebhookReq (toJSON ep) reqHeaders invocationVersion)
       resp
-
-tryWebhook
-  :: ( Has (L.Logger L.Hasura) r
-     , Has HTTP.Manager r
-     , Has EventEngineCtx r
-     , MonadReader r m
-     , MonadIO m
-     , MonadError HTTPErr m
-     )
-  => [HTTP.Header] -> HTTP.ResponseTimeout -> EventPayload -> String
-  -> m HTTPResp
-tryWebhook headers responseTimeout ep webhook = do
-  let createdAt = epCreatedAt ep
-      eventId =  epId ep
-  initReqE <- liftIO $ try $ HTTP.parseRequest webhook
-  manager <- asks getter
-  case initReqE of
-    Left excp -> throwError $ HClient excp
-    Right initReq -> do
-      let req = initReq
-                { HTTP.method = "POST"
-                , HTTP.requestHeaders = headers
-                , HTTP.requestBody = HTTP.RequestBodyLBS (encode ep)
-                , HTTP.responseTimeout = responseTimeout
-                }
-      eeCtx <- asks getter
-      -- wait for counter and then increment beforing making http
-      liftIO $ atomically $ do
-        let EventEngineCtx _ c maxT _ = eeCtx
-        countThreads <- readTVar c
-        if countThreads >= maxT
-          then retry
-          else modifyTVar' c (+1)
-
-      eitherResp <- runHTTP manager req (Just (ExtraContext createdAt eventId))
-
-      -- decrement counter once http is done
-      liftIO $ atomically $ do
-        let EventEngineCtx _ c _ _ = eeCtx
-        modifyTVar' c (\v -> v - 1)
-
-      onLeft eitherResp throwError
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e

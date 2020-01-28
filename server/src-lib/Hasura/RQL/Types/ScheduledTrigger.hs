@@ -4,12 +4,11 @@ module Hasura.RQL.Types.ScheduledTrigger
   ( ScheduleType(..)
   , CreateScheduledTrigger(..)
   , RetryConfST(..)
-  , DeleteScheduledTrigger(..)
-  , CancelScheduledEvent(..)
   , formatTime'
   ) where
 
 import           Data.Time.Clock
+import           Data.Time.Clock.Units
 import           Data.Time.Format
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -23,46 +22,12 @@ import qualified Data.Text                     as T
 import qualified Data.Aeson                    as J
 import qualified Hasura.RQL.Types.EventTrigger as ET
 
--- instance TH.Lift (Fixed E12) where
---   lift x = [| MkFixed x' |]
---     where
---       x' = resolution x
-
--- instance TH.Lift NominalDiffTime where
---   lift x = [| secondsToNominalDiffTime x'|]
---     where
---       x' =  nominalDiffTimeToSeconds x
-
-instance NFData StepField
-instance NFData RangeField
-instance NFData SpecificField
-instance NFData BaseField
-instance NFData CronField
-instance NFData MonthSpec
-instance NFData DayOfMonthSpec
-instance NFData DayOfWeekSpec
-instance NFData HourSpec
-instance NFData MinuteSpec
-instance NFData CronSchedule
-
-instance Cacheable StepField
-instance Cacheable RangeField
-instance Cacheable SpecificField
-instance Cacheable BaseField
-instance Cacheable CronField
-instance Cacheable MonthSpec
-instance Cacheable DayOfMonthSpec
-instance Cacheable DayOfWeekSpec
-instance Cacheable HourSpec
-instance Cacheable MinuteSpec
-instance Cacheable CronSchedule
-
 data RetryConfST
   = RetryConfST
   { rcstNumRetries  :: !Int
-  , rcstIntervalSec :: !Int
-  , rcstTimeoutSec  :: !Int
-  , rcstTolerance   :: !NominalDiffTime
+  , rcstIntervalSec :: !Seconds
+  , rcstTimeoutSec  :: !Seconds
+  , rcstTolerance   :: !Seconds
   } deriving (Show, Eq, Generic)
 
 instance NFData RetryConfST
@@ -74,9 +39,9 @@ defaultRetryConf :: RetryConfST
 defaultRetryConf =
   RetryConfST
   { rcstNumRetries = 1
-  , rcstIntervalSec = 10
-  , rcstTimeoutSec = 60
-  , rcstTolerance = 21600 -- 6 hours
+  , rcstIntervalSec = seconds 10
+  , rcstTimeoutSec = seconds 60
+  , rcstTolerance = hours 6
   }
 
 data ScheduleType = OneOff UTCTime | Cron CronSchedule
@@ -94,7 +59,7 @@ data CreateScheduledTrigger
   , stSchedule       :: !ScheduleType
   , stPayload        :: !(Maybe J.Value)
   , stRetryConf      :: !RetryConfST
-  , stHeaders        :: !(Maybe [ET.HeaderConf])
+  , stHeaders        :: ![ET.HeaderConf]
   } deriving (Show, Eq, Generic)
 
 instance NFData CreateScheduledTrigger
@@ -116,7 +81,7 @@ instance FromJSON CreateScheduledTrigger where
       stPayload <- o .:? "payload"
       stSchedule <- o .: "schedule"
       stRetryConf <- o .:? "retry_conf" .!= defaultRetryConf
-      stHeaders <- o .:? "headers"
+      stHeaders <- o .:? "headers" .!= []
       stWebhookConf <- case (stWebhook, stWebhookFromEnv) of
         (Just value, Nothing) -> pure $ ET.WCValue value
         (Nothing, Just env) -> pure $ ET.WCEnv env
@@ -125,18 +90,6 @@ instance FromJSON CreateScheduledTrigger where
       pure CreateScheduledTrigger {..}
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
-
-newtype DeleteScheduledTrigger
-  = DeleteScheduledTrigger { dst :: ET.TriggerName }
-  deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteScheduledTrigger)
-
-newtype CancelScheduledEvent
-  = CancelScheduledEvent { cseId :: T.Text }
-  deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CancelScheduledEvent)
 
 -- Supported time string formats for the API:
 -- (see FromJSON for ZonedTime: https://hackage.haskell.org/package/aeson-1.4.6.0/docs/src/Data.Aeson.Types.FromJSON.html#line-2050)
