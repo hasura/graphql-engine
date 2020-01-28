@@ -398,7 +398,7 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("endpoint", "http://localhost:8080")
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
-	v.SetDefault("metadata_directory", "metadata")
+	v.SetDefault("metadata_directory", "")
 	v.SetDefault("migrations_directory", "migrations")
 	v.SetDefault("actions.kind", "synchronous")
 	v.SetDefault("actions.handler_webhook_baseurl", "http://localhost:3000")

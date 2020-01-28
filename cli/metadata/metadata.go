@@ -58,7 +58,6 @@ func (m *MetadataConfig) Build(metadata *dbTypes.Metadata) error {
 }
 
 func (m *MetadataConfig) Export(metadata yaml.MapSlice) (dbTypes.MetadataFiles, error) {
-	// create metadata.yaml file
 	metaByt, err := yaml.Marshal(metadata)
 	if err != nil {
 		return dbTypes.MetadataFiles{}, errors.Wrap(err, "cannot marshal metadata")
