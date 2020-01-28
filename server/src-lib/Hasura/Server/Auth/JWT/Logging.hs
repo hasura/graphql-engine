@@ -17,17 +17,17 @@ import qualified Data.ByteString.Lazy  as BL
 import qualified Data.Text             as T
 import qualified Network.HTTP.Types    as HTTP
 
-
 -- | Possible errors during fetching and parsing JWK
+-- (the 'Text' type at the end is a friendly error message)
 data JwkFetchError
   = JFEHttpException !HttpException !Text
-  -- ^ Exception while making the HTTP request. Text is the error message
+  -- ^ Exception while making the HTTP request
   | JFEHttpError !URI !HTTP.Status !BL.ByteString !Text
-  -- ^ Non-2xx HTTP errors from the upstream server. Url, status, body and error message
+  -- ^ Non-2xx HTTP errors from the upstream server
   | JFEJwkParseError !Text !Text
-  -- ^ Error parsing the JWK response itself. Text: Actual parse error and friendly error message
-  | JFEExpiryParseError !(Maybe Text) !Text
-  -- ^ Error parsing the expiry of the JWK. Text: Actual parse error and friendly error message
+  -- ^ Error parsing the JWK response itself
+  | JFEExpiryParseError !(Maybe Text) Text
+  -- ^ Error parsing the expiry of the JWK
   deriving (Show)
 
 instance ToJSON JwkFetchError where
@@ -42,27 +42,10 @@ instance ToJSON JwkFetchError where
              ]
 
     JFEJwkParseError e msg ->
-      object [ "parse_error" .= e, "message" .= msg ]
+      object [ "error" .= e, "message" .= msg ]
 
     JFEExpiryParseError e msg ->
-      object [ "parse_error" .= e, "message" .= msg ]
-
-
--- data JwkRefreshHttpError
---   = JwkRefreshHttpError
---   { jrheStatus        :: !(Maybe HTTP.Status)
---   , jrheUrl           :: !T.Text
---   , jrheHttpException :: !(Maybe HttpException)
---   , jrheResponse      :: !(Maybe T.Text)
---   } deriving (Show)
-
--- instance ToJSON JwkRefreshHttpError where
---   toJSON jhe =
---     object [ "status_code" .= (HTTP.statusCode <$> jrheStatus jhe)
---            , "url" .= jrheUrl jhe
---            , "response" .= jrheResponse jhe
---            , "http_exception" .= (httpExceptToJSON . unHttpException <$> jrheHttpException jhe)
---            ]
+      object [ "error" .= e, "message" .= msg ]
 
 data JwkRefreshLog
   = JwkRefreshLog

@@ -141,9 +141,10 @@ updateJwkRef (Logger logger) manager url jwkRef = do
   resp <- either logAndThrowHttp return res
   let status = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
+      statusCode = status ^. Wreq.statusCode
 
-  when (status ^. Wreq.statusCode /= 200) $ do
-    let errMsg = "Non-200 response on fetching JWK from: " <> urlT
+  unless (statusCode >= 200 && statusCode < 300) $ do
+    let errMsg = "Non-2xx response on fetching JWK from: " <> urlT
         err = JFEHttpError url status respBody errMsg
     logAndThrow err
 
@@ -173,9 +174,11 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     parseCacheControlHeader = fmapL (parseCacheControlErr . T.pack) . parseMaxAge
 
     parseCacheControlErr e =
-      JFEExpiryParseError (Just e) "Failed parsing Cache-Control header from JWK response. Could not find max-age or s-maxage"
+      JFEExpiryParseError (Just e)
+      "Failed parsing Cache-Control header from JWK response. Could not find max-age or s-maxage"
     parseTimeErr =
-      JFEExpiryParseError Nothing  "Failed parsing Expires header from JWK response. Value of header is not a valid timestamp"
+      JFEExpiryParseError Nothing
+      "Failed parsing Expires header from JWK response. Value of header is not a valid timestamp"
 
     timeFmt = "%a, %d %b %Y %T GMT"
 
