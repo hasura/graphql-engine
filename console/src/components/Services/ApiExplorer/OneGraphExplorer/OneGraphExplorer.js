@@ -1,6 +1,11 @@
 import React from 'react';
+import { push } from 'react-router-redux';
 
-import { getIntrospectionQuery, buildClientSchema } from 'graphql';
+import {
+  getIntrospectionQuery,
+  buildClientSchema,
+  parse as sdlParse,
+} from 'graphql';
 import GraphiQLExplorer from 'graphiql-explorer';
 
 import {
@@ -14,6 +19,16 @@ import {
 import { getGraphiQLQueryFromLocalStorage } from '../GraphiQLWrapper/utils';
 import { getRemoteQueries } from '../Actions';
 import { getHeadersAsJSON } from '../utils';
+import deriveMutation from '../../../../shared/utils/deriveMutation';
+import {
+  getActionDefinitionSdl,
+  getTypesSdl,
+} from '../../../../shared/utils/sdlUtils';
+import {
+  setActionDefinition,
+  setTypeDefinition,
+} from '../../Actions/Add/reducer';
+import { getActionsCreateRoute } from '../../../Common/utils/routesUtils';
 
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
@@ -163,7 +178,7 @@ class OneGraphExplorer extends React.Component {
       isResizing,
     } = this.state;
 
-    const { renderGraphiql } = this.props;
+    const { renderGraphiql, dispatch } = this.props;
 
     const explorer = (
       <GraphiQLExplorer
@@ -189,11 +204,49 @@ class OneGraphExplorer extends React.Component {
       );
     }
 
+    const deriveActionFromMutation = () => {
+      if (!schema) return;
+      if (!query) return;
+      let derivedMutationMetadata;
+      try {
+        console.log(query);
+        derivedMutationMetadata = deriveMutation(query.trim(), schema);
+      } catch (e) {
+        console.error(e);
+        return;
+      }
+      const { action, types } = derivedMutationMetadata;
+      const actionsSdl = getActionDefinitionSdl(
+        action.name,
+        action.arguments,
+        action.output_type
+      );
+      const typesSdl = getTypesSdl(types);
+      dispatch(
+        setActionDefinition(actionsSdl, null, null, sdlParse(actionsSdl))
+      );
+      dispatch(setTypeDefinition(typesSdl, null, null, sdlParse(typesSdl)));
+      let persistedDerivedMutations = window.localStorage.getItem(
+        'HASURA_CONSOLE_DERIVED_MUTATIONS'
+      );
+      if (!persistedDerivedMutations) {
+        persistedDerivedMutations = {};
+      } else {
+        persistedDerivedMutations = JSON.parse(persistedDerivedMutations);
+      }
+      persistedDerivedMutations[action.name] = query;
+      window.localStorage.setItem(
+        'HASURA_CONSOLE_DERIVED_MUTATIONS',
+        JSON.stringify(persistedDerivedMutations)
+      );
+      dispatch(push(getActionsCreateRoute(true)));
+    };
+
     const graphiql = renderGraphiql({
       query: query,
       onEditQuery: this.editQuery,
       schema: schema,
-      toggleExplorer: this.handleToggle,
+      toggleExplorer: deriveActionFromMutation,
     });
 
     return (

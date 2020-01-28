@@ -16,8 +16,18 @@ input SampleInput {
 
 `;
 
+let defaultHandler = '';
+if (typeof navigator !== 'undefined') {
+  const isLinux = navigator.appVersion.toLowerCase().includes('linux');
+  if (isLinux) {
+    defaultHandler = 'http://localhost:3000';
+  } else {
+    defaultHandler = 'http://host.docker.internal';
+  }
+}
+
 const state = {
-  handler: '',
+  handler: defaultHandler,
   actionDefinition: {
     sdl: defaultActionDefSdl,
     error: '',

@@ -45,7 +45,21 @@ export const getCodegenFunc = framework => {
 export const getFrameworkCodegen = (framework, actionName, actionsSdl) => {
   return getCodegenFunc(framework)
     .then(codegenerator => {
-      const codegenFiles = codegenerator(actionName, actionsSdl);
+      let derive;
+      let allDerivedMutations = window.localStorage.getItem(
+        'HASURA_CONSOLE_DERIVED_MUTATIONS'
+      );
+      if (allDerivedMutations) {
+        allDerivedMutations = JSON.parse(allDerivedMutations);
+        if (allDerivedMutations[actionName]) {
+          derive = {
+            mutation: {
+              name: allDerivedMutations[actionName],
+            },
+          };
+        }
+      }
+      const codegenFiles = codegenerator(actionName, actionsSdl, derive);
       return codegenFiles;
     })
     .catch(e => {

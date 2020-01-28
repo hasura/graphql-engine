@@ -14,6 +14,7 @@ import {
   setTypeDefinition,
 } from './reducer';
 import { createAction } from '../ServerIO';
+import { getUrlSearchParamValue } from '../../../Common/utils/jsUtils';
 
 const AddAction = ({
   handler,
@@ -24,7 +25,10 @@ const AddAction = ({
   isFetching,
 }) => {
   React.useEffect(() => {
-    dispatch(setDefaults());
+    if (getUrlSearchParamValue('is_derived') != 'true') {
+      console.log(getUrlSearchParamValue('is_derived'));
+      dispatch(setDefaults());
+    }
   }, []);
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));

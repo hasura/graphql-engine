@@ -31,7 +31,7 @@ class GraphiQLWrapper extends Component {
   render() {
     const styles = require('../../../Common/Common.scss');
 
-    const { numberOfTables, urlParams, headerFocus } = this.props;
+    const { numberOfTables, urlParams, headerFocus, dispatch } = this.props;
     const graphqlNetworkData = this.props.data;
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
@@ -81,6 +81,7 @@ class GraphiQLWrapper extends Component {
             headerFocus={headerFocus}
             urlParams={urlParams}
             numberOfTables={numberOfTables}
+            dispatch={dispatch}
           />
         </div>
       </GraphiQLErrorBoundary>

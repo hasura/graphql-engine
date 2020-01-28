@@ -248,3 +248,8 @@ export const isValidTemplateLiteral = literal_ => {
     templateStartIndex !== '-1' && templateEndEdex > templateStartIndex + 2
   );
 };
+
+export const getUrlSearchParamValue = param => {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  return urlSearchParams.get(param);
+};
