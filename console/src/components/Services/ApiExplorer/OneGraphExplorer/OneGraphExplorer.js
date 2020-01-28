@@ -1,6 +1,5 @@
 import React from 'react';
 import { push } from 'react-router-redux';
-
 import {
   getIntrospectionQuery,
   buildClientSchema,
@@ -246,7 +245,8 @@ class OneGraphExplorer extends React.Component {
       query: query,
       onEditQuery: this.editQuery,
       schema: schema,
-      toggleExplorer: deriveActionFromMutation,
+      toggleExplorer: this.handleToggle,
+      deriveMutation: deriveActionFromMutation,
     });
 
     return (

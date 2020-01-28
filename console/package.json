@@ -64,6 +64,7 @@
     "graphql-tag": "^2.10.1",
     "graphql-voyager": "^1.0.0-rc.27",
     "hasura-console-graphiql": "0.0.11",
+    "hasura-console-graphiql-derive": "0.1.0-alpha.1",
     "history": "^3.0.0",
     "hoist-non-react-statics": "^1.0.3",
     "inflection": "^1.12.0",

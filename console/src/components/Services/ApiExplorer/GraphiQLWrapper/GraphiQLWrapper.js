@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import GraphiQL from 'hasura-console-graphiql';
+import GraphiQL from 'hasura-console-graphiql-derive';
 import PropTypes from 'prop-types';
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
