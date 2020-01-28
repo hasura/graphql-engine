@@ -1488,60 +1488,241 @@ func (m *Migrate) GotoVersion(gotoVersion uint64) error {
 	if err != nil {
 		errors.Wrap(err, "cannot determine status of migrations")
 	}
-	var gotoStep, currentStep int
+	var gotoStep, currentStep int64
 	for index, migrationVersion := range status.Index {
 		if migrationVersion == gotoVersion {
-			gotoStep = index
+			gotoStep = int64(index)
 		}
 		if currentVersion == migrationVersion {
-			currentStep = index
+			currentStep = int64(index)
 		}
 	}
 
-	if gotoStep < currentStep {
-		for step := currentStep; step > gotoStep; step-- {
-			m.Migrate(status.Index[step], "down")
-
-		}
+	if err := m.lock(); err != nil {
+		return err
 	}
+	ret := make(chan interface{})
 	if gotoStep > currentStep {
-		/* When applying up migration make sure that all previous steps are applied
-		If we have the following state,
+		go m.readUpFromVersion(-1, gotoStep, ret)
+	} else if gotoStep < currentStep {
+		go m.readDownFromVersion(int64(currentVersion), currentStep-gotoStep, ret)
+	}
 
-		1580104374862  create_table_public_T1  Present        Present
-		1580104397702  create_table_public_T2  Present        Not Present
-		1580104421111  create_table_public_T3  Present        Present
-		1580104557536  create_table_public_T4  Present        Not Present
-		1580104573373  create_table_public_T5  Present        Not Present
+	return m.unlockErr(m.runMigrations(ret))
 
-		and on running a
-		$ hasura migrate apply --goto 1580104573373
+}
 
-		It SHOULD NOT yield the following output
+// readUpFromVersion reads up migrations from `from` limitted by `limit`. (is a modified version of readUp)
+// limit can be -1, implying no limit and reading until there are no more migrations.
+// Each migration is then written to the ret channel.
+// If an error occurs during reading, that error is written to the ret channel, too.
+// Once readUpFromVersion is done reading it will close the ret channel.
+func (m *Migrate) readUpFromVersion(from int64, limit int64, ret chan<- interface{}) {
+	defer close(ret)
+	if limit == 0 {
+		ret <- ErrNoChange
+		return
+	}
 
-		VERSION        NAME                    SOURCE STATUS  DATABASE STATUS
-		1580104374862  create_table_public_T1  Present        Present
-		1580104397702  create_table_public_T2  Present        Not Present
-		1580104421111  create_table_public_T3  Present        Present
-		1580104557536  create_table_public_T4  Present        Present
-		1580104573373  create_table_public_T5  Present        Present
+	count := int64(0)
+	for count < limit || limit == -1 {
+		if m.stop() {
+			return
+		}
 
-		It SHOULD result in the following state
+		if from == -1 {
+			firstVersion, err := m.sourceDrv.First()
+			if err != nil {
+				ret <- err
+				return
+			}
 
-		VERSION        NAME                    SOURCE STATUS  DATABASE STATUS
-		1580104374862  create_table_public_T1  Present        Present
-		1580104397702  create_table_public_T2  Present        Present
-		1580104421111  create_table_public_T3  Present        Present
-		1580104557536  create_table_public_T4  Present        Present
-		1580104573373  create_table_public_T5  Present        Present
+			// Check if this version present in DB
+			ok := m.databaseDrv.Read(firstVersion)
+			if ok {
+				from = int64(firstVersion)
+				continue
+			}
 
-		*/
-		for step := 0; step <= gotoStep; step++ {
-			if applied := status.Migrations[status.Index[step]].IsApplied; !applied {
-				m.Migrate(status.Index[step], "up")
+			// Check if firstVersion files exists (yaml or sql)
+			if err = m.versionUpExists(firstVersion); err != nil {
+				ret <- err
+				return
+			}
+
+			migr, err := m.newMigration(firstVersion, int64(firstVersion))
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+
+			migr, err = m.metanewMigration(firstVersion, int64(firstVersion))
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+			from = int64(firstVersion)
+			count++
+			continue
+		}
+
+		// apply next migration
+		next, err := m.sourceDrv.Next(suint64(from))
+		if os.IsNotExist(err) {
+			// no limit, but no migrations applied?
+			if limit == -1 && count == 0 {
+				ret <- ErrNoChange
+				return
+			}
+
+			// no limit, reached end
+			if limit == -1 {
+				return
+			}
+
+			// reached end, and didn't apply any migrations
+			if limit > 0 && count == 0 {
+				ret <- ErrNoChange
+				return
+			}
+
+			// applied less migrations than limit?
+			if count < limit {
+				// This case is normal when comaparting to the actual original readUp function
+				// ret <- ErrShortLimit{suint64(limit - count)}
+				return
 			}
 		}
 
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		// Check if this version present in DB
+		ok := m.databaseDrv.Read(next)
+		if ok {
+			from = int64(next)
+			// we have to increment the count even if we are not applying any migrations
+			count++
+			continue
+		}
+
+		// Check if next files exists (yaml or sql)
+		if err = m.versionUpExists(next); err != nil {
+			ret <- err
+			return
+		}
+
+		migr, err := m.newMigration(next, int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+
+		migr, err = m.metanewMigration(next, int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+		from = int64(next)
+		count++
 	}
-	return nil
+}
+
+// readDownFromVersion reads down migrations from `from` limitted by `limit`. (modified version of readDown)
+// limit can be -1, implying no limit and reading until there are no more migrations.
+// Each migration is then written to the ret channel.
+// If an error occurs during reading, that error is written to the ret channel, too.
+// Once readDownFromVersion is done reading it will close the ret channel.
+func (m *Migrate) readDownFromVersion(from int64, limit int64, ret chan<- interface{}) {
+	defer close(ret)
+	var err error
+	if limit == 0 {
+		ret <- ErrNoChange
+		return
+	}
+
+	// no change if already at nil version
+	if from == -1 && limit == -1 {
+		ret <- ErrNoChange
+		return
+	}
+
+	// can't go over limit if already at nil version
+	if from == -1 && limit > 0 {
+		ret <- ErrNoChange
+		return
+	}
+
+	count := int64(0)
+	for count < limit || limit == -1 {
+		if m.stop() {
+			return
+		}
+
+		err = m.versionDownExists(suint64(from))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		prev, ok := m.databaseDrv.Prev(suint64(from))
+		if !ok {
+			// no limit or haven't reached limit, apply "first" migration
+			if limit == -1 || limit-count > 0 {
+				migr, err := m.metanewMigration(suint64(from), -1)
+				if err != nil {
+					ret <- err
+					return
+				}
+				ret <- migr
+				go migr.Buffer()
+
+				migr, err = m.newMigration(suint64(from), -1)
+				if err != nil {
+					ret <- err
+					return
+				}
+				ret <- migr
+				go migr.Buffer()
+				count++
+			}
+
+			if count < limit {
+				// ret <- ErrShortLimit{suint64(limit - count)}
+			}
+			return
+		}
+
+		migr, err := m.metanewMigration(suint64(from), int64(prev))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+
+		migr, err = m.newMigration(suint64(from), int64(prev))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+		from = int64(prev)
+		count++
+	}
 }
