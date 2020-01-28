@@ -1513,9 +1513,12 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 		ret <- ErrNoChange
 		return
 	}
-
+	var noOfAppliedMigrations int
 	for {
 		if from == to {
+			if noOfAppliedMigrations == 0 {
+				ret <- ErrNoChange
+			}
 			return
 		}
 		if m.stop() {
@@ -1556,6 +1559,9 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 				return
 			}
 			ret <- migr
+
+			noOfAppliedMigrations++
+
 			go migr.Buffer()
 			from = int64(firstVersion)
 			continue
@@ -1598,6 +1604,7 @@ func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}
 
 		ret <- migr
 		go migr.Buffer()
+		noOfAppliedMigrations++
 		from = int64(next)
 	}
 }
@@ -1615,9 +1622,12 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 		ret <- ErrNoChange
 		return
 	}
-
+	var noOfAppliedMigrations int
 	for {
 		if from == to {
+			if noOfAppliedMigrations == 0 {
+				ret <- ErrNoChange
+			}
 			return
 		}
 		if m.stop() {
@@ -1651,6 +1661,7 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 		}
 
 		ret <- migr
+		noOfAppliedMigrations++
 		go migr.Buffer()
 		from = int64(prev)
 	}
