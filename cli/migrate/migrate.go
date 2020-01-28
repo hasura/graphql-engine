@@ -9,11 +9,10 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"sync"
 	"time"
-
-	"github.com/pkg/errors"
 
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
@@ -1477,35 +1476,26 @@ func (m *Migrate) unlockErr(prevErr error) error {
 // leading to it
 func (m *Migrate) GotoVersion(gotoVersion uint64) error {
 	currentVersion, dirty, err := m.Version()
-	if err != nil && err != ErrNilVersion {
-		return errors.Wrap(err, "cannot determine the current version of migrations")
-	}
-	if dirty {
-		return errors.New("stopping now, database is in dirty state")
+	if err != nil {
+		return errors.Wrap(err, "cannot determine version")
 	}
 
-	status, err := m.GetStatus()
-	if err != nil {
-		errors.Wrap(err, "cannot determine status of migrations")
+	if dirty {
+		return ErrDirty{}
 	}
-	var gotoStep, currentStep int64
-	for index, migrationVersion := range status.Index {
-		if migrationVersion == gotoVersion {
-			gotoStep = int64(index)
-		}
-		if currentVersion == migrationVersion {
-			currentStep = int64(index)
-		}
+
+	if currentVersion == gotoVersion {
+		return ErrNoChange
 	}
 
 	if err := m.lock(); err != nil {
 		return err
 	}
 	ret := make(chan interface{})
-	if gotoStep > currentStep {
-		go m.readUpFromVersion(-1, gotoStep, ret)
-	} else if gotoStep < currentStep {
-		go m.readDownFromVersion(int64(currentVersion), currentStep-gotoStep, ret)
+	if currentVersion < gotoVersion {
+		go m.readUpFromVersion(-1, int64(gotoVersion), ret)
+	} else if currentVersion > gotoVersion {
+		go m.readDownFromVersion(int64(currentVersion), int64(gotoVersion), ret)
 	}
 
 	return m.unlockErr(m.runMigrations(ret))
@@ -1517,15 +1507,17 @@ func (m *Migrate) GotoVersion(gotoVersion uint64) error {
 // Each migration is then written to the ret channel.
 // If an error occurs during reading, that error is written to the ret channel, too.
 // Once readUpFromVersion is done reading it will close the ret channel.
-func (m *Migrate) readUpFromVersion(from int64, limit int64, ret chan<- interface{}) {
+func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}) {
 	defer close(ret)
-	if limit == 0 {
+	if from == to {
 		ret <- ErrNoChange
 		return
 	}
 
-	count := int64(0)
-	for count < limit || limit == -1 {
+	for {
+		if from == to {
+			return
+		}
 		if m.stop() {
 			return
 		}
@@ -1566,36 +1558,12 @@ func (m *Migrate) readUpFromVersion(from int64, limit int64, ret chan<- interfac
 			ret <- migr
 			go migr.Buffer()
 			from = int64(firstVersion)
-			count++
 			continue
 		}
 
 		// apply next migration
 		next, err := m.sourceDrv.Next(suint64(from))
 		if os.IsNotExist(err) {
-			// no limit, but no migrations applied?
-			if limit == -1 && count == 0 {
-				ret <- ErrNoChange
-				return
-			}
-
-			// no limit, reached end
-			if limit == -1 {
-				return
-			}
-
-			// reached end, and didn't apply any migrations
-			if limit > 0 && count == 0 {
-				ret <- ErrNoChange
-				return
-			}
-
-			// applied less migrations than limit?
-			if count < limit {
-				// This case is normal when comaparting to the actual original readUp function
-				// ret <- ErrShortLimit{suint64(limit - count)}
-				return
-			}
 		}
 
 		if err != nil {
@@ -1607,8 +1575,6 @@ func (m *Migrate) readUpFromVersion(from int64, limit int64, ret chan<- interfac
 		ok := m.databaseDrv.Read(next)
 		if ok {
 			from = int64(next)
-			// we have to increment the count even if we are not applying any migrations
-			count++
 			continue
 		}
 
@@ -1636,7 +1602,6 @@ func (m *Migrate) readUpFromVersion(from int64, limit int64, ret chan<- interfac
 		ret <- migr
 		go migr.Buffer()
 		from = int64(next)
-		count++
 	}
 }
 
@@ -1645,28 +1610,19 @@ func (m *Migrate) readUpFromVersion(from int64, limit int64, ret chan<- interfac
 // Each migration is then written to the ret channel.
 // If an error occurs during reading, that error is written to the ret channel, too.
 // Once readDownFromVersion is done reading it will close the ret channel.
-func (m *Migrate) readDownFromVersion(from int64, limit int64, ret chan<- interface{}) {
+func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface{}) {
 	defer close(ret)
 	var err error
-	if limit == 0 {
-		ret <- ErrNoChange
-		return
-	}
-
 	// no change if already at nil version
-	if from == -1 && limit == -1 {
+	if from == to {
 		ret <- ErrNoChange
 		return
 	}
 
-	// can't go over limit if already at nil version
-	if from == -1 && limit > 0 {
-		ret <- ErrNoChange
-		return
-	}
-
-	count := int64(0)
-	for count < limit || limit == -1 {
+	for {
+		if from == to {
+			return
+		}
 		if m.stop() {
 			return
 		}
@@ -1679,29 +1635,6 @@ func (m *Migrate) readDownFromVersion(from int64, limit int64, ret chan<- interf
 
 		prev, ok := m.databaseDrv.Prev(suint64(from))
 		if !ok {
-			// no limit or haven't reached limit, apply "first" migration
-			if limit == -1 || limit-count > 0 {
-				migr, err := m.metanewMigration(suint64(from), -1)
-				if err != nil {
-					ret <- err
-					return
-				}
-				ret <- migr
-				go migr.Buffer()
-
-				migr, err = m.newMigration(suint64(from), -1)
-				if err != nil {
-					ret <- err
-					return
-				}
-				ret <- migr
-				go migr.Buffer()
-				count++
-			}
-
-			if count < limit {
-				// ret <- ErrShortLimit{suint64(limit - count)}
-			}
 			return
 		}
 
@@ -1723,6 +1656,5 @@ func (m *Migrate) readDownFromVersion(from int64, limit int64, ret chan<- interf
 		ret <- migr
 		go migr.Buffer()
 		from = int64(prev)
-		count++
 	}
 }
