@@ -86,7 +86,6 @@ func (c *Config) Install(pluginName string, mainfestFile string) error {
 		if err == nil {
 			return ErrIsAlreadyInstalled
 		} else if !os.IsNotExist(err) {
-			fmt.Println("asdasd")
 			return errors.Wrap(err, "failed to look up plugin receipt")
 		}
 	} else {
@@ -148,9 +147,9 @@ func (c *Config) installPlugin(plugin Plugin, platform Platform) error {
 		return errors.Wrapf(err, "could not create staging dir %q", downloadStagingDir)
 	}
 	defer func() {
+		c.Logger.Debugf("Deleting the download staging directory %s", downloadStagingDir)
 		if err := os.RemoveAll(downloadStagingDir); err != nil {
-			// TODO: print log
-			c.Logger.Debugln("")
+			c.Logger.Debugf("failed to clean up download staging directory: %s", err)
 		}
 	}()
 

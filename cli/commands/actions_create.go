@@ -92,10 +92,12 @@ func (o *actionsCreateOptions) run() error {
 		if err != nil {
 			return err
 		}
+		o.EC.Spinner.Stop()
 	}
-	o.EC.Spinner.Stop()
 
 	// create new action
+	o.EC.Spin("Creating the action...")
+	defer o.EC.Spinner.Stop()
 	opts := &actions.OverrideOptions{
 		Kind:    o.kind,
 		Webhook: o.webhook,
@@ -105,7 +107,6 @@ func (o *actionsCreateOptions) run() error {
 	if err != nil {
 		return err
 	}
-	o.EC.Spin("Creating the action...")
 	err = migrateDrv.ApplyMetadata()
 	if err != nil {
 		return err

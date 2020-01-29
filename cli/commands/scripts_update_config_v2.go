@@ -67,7 +67,6 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 			defer func() {
 				if err != nil {
-					// TODO: add debug log
 					os.RemoveAll(ec.MetadataDir)
 				}
 			}()

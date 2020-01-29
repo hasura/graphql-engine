@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/briandowns/spinner"
 	"github.com/pkg/errors"
 
 	"github.com/Masterminds/semver"
@@ -92,8 +91,7 @@ type ActionConfig struct {
 	cmdName      string
 	shouldSkip   bool
 
-	spinner *spinner.Spinner
-	logger  *logrus.Logger
+	logger *logrus.Logger
 }
 
 type OverrideOptions struct {
@@ -128,7 +126,6 @@ func New(ec *cli.ExecutionContext, opts *OverrideOptions) *ActionConfig {
 		ActionConfig: ec.Config.Action,
 		cmdName:      ec.CMDName,
 		shouldSkip:   shouldSkip,
-		spinner:      ec.Spinner,
 		logger:       ec.Logger,
 	}
 	if opts != nil {
@@ -432,15 +429,11 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	if a.shouldSkip {
 		_, err := GetActionsFileContent(a.MetadataDir)
 		if err == nil {
-			a.spinner.Stop()
 			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", actionsFileName)
-			a.spinner.Start()
 		}
 		_, err = GetActionsGraphQLFileContent(a.MetadataDir)
 		if err == nil {
-			a.spinner.Stop()
 			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", graphqlFileName)
-			a.spinner.Start()
 		}
 		return nil
 	}
