@@ -36,14 +36,10 @@ var (
 	pluginName            = "cli-ext"
 )
 
-type DeriveMutationPayload struct {
-	MutationName string `json:"name"`
-	ActionName   string `json:"action_name"`
-}
-
 type DerivePayload struct {
-	IntrospectionSchema interface{}           `json:"introspection_schema"`
-	Mutation            DeriveMutationPayload `json:"mutation"`
+	IntrospectionSchema interface{} `json:"introspection_schema"`
+	Mutation            string      `json:"mutation"`
+	ActionName          string      `json:"action_name"`
 }
 
 type sdlPayload struct {
@@ -213,10 +209,8 @@ input SampleInput {
 		sdlToReq := sdlToRequest{
 			Derive: DerivePayload{
 				IntrospectionSchema: introSchema,
-				Mutation: DeriveMutationPayload{
-					MutationName: deriveFromMutation,
-					ActionName:   name,
-				},
+				Mutation:            deriveFromMutation,
+				ActionName:          name,
 			},
 		}
 		sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName)

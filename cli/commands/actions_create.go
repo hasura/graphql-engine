@@ -148,10 +148,8 @@ func (o *actionsCreateOptions) run() error {
 	// construct derive payload to send to codegenerator
 	derivePayload := actions.DerivePayload{
 		IntrospectionSchema: introSchema,
-		Mutation: actions.DeriveMutationPayload{
-			MutationName: o.deriveFrom,
-			ActionName:   o.name,
-		},
+		Mutation:            o.deriveFrom,
+		ActionName:          o.name,
 	}
 
 	// Run codegen
