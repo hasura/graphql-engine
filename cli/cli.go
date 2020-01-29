@@ -23,7 +23,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
-	"github.com/mattn/go-colorable"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -460,26 +459,6 @@ func (ec *ExecutionContext) Spin(message string) {
 func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
-
-		if ec.IsTerminal {
-			if ec.NoColor {
-				logger.Formatter = &logrus.TextFormatter{
-					DisableColors:    true,
-					DisableTimestamp: true,
-				}
-			} else {
-				logger.Formatter = &logrus.TextFormatter{
-					ForceColors:      true,
-					DisableTimestamp: true,
-				}
-			}
-		} else {
-			logger.Formatter = &logrus.JSONFormatter{
-				PrettyPrint: false,
-			}
-		}
-		logger.Out = colorable.NewColorableStdout()
-		// TODO: add hook or custom textFormatter to stop and start in case of new log
 		ec.Logger = logger
 	}
 
@@ -491,6 +470,9 @@ func (ec *ExecutionContext) setupLogger() {
 		}
 		ec.Logger.SetLevel(level)
 	}
+
+	ec.Logger.Hooks = make(logrus.LevelHooks)
+	ec.Logger.AddHook(newLoggerHook(ec.Logger, ec.Spinner, ec.IsTerminal, ec.NoColor))
 
 	// set the logger for telemetry
 	if ec.Telemetry.Logger == nil {

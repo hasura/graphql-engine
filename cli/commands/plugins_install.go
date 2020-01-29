@@ -17,6 +17,9 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Example:      ``,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return ec.Prepare()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			pluginName := args[0]
 			ec.Spin(fmt.Sprintf("Installing plugin %q...", pluginName))

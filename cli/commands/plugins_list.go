@@ -23,6 +23,9 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "",
 		Example:      ``,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return ec.Prepare()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ec.Spin("Fetching plugins list...")
 			defer ec.Spinner.Stop()
