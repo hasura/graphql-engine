@@ -1,5 +1,12 @@
 import styled from 'styled-components';
-import { typography, space, color, border, shadow } from 'styled-system';
+import {
+  typography,
+  space,
+  color,
+  border,
+  shadow,
+  layout,
+} from 'styled-system';
 
 // Parent Div ~ Global Styles ****************** //
 
@@ -10,6 +17,7 @@ export const UIKitWrapperDiv = styled.div`
 
   ${typography}
   ${space}
+  ${color}
 `;
 
 // Base Div ********************* //
@@ -65,4 +73,17 @@ export const BoxShadowDiv = styled.div`
 
 export const TextLinksWrapper = styled(BaseDiv)`
   ${space}
+`;
+
+// Color Shades ********************************* //
+
+export const BrushWrapper = styled(BaseDiv)`
+  ${space}
+`;
+
+export const Brush = styled.div`
+  ${color}
+  ${border}
+  ${space}
+  ${layout}
 `;

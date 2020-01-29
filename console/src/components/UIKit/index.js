@@ -12,6 +12,8 @@ import {
   BoxShadowDivWrapper,
   BoxShadowDiv,
   TextLinksWrapper,
+  BrushWrapper,
+  Brush,
 } from './UIKit';
 
 import { Button } from './Button';
@@ -320,6 +322,167 @@ const Headings = () => (
   </React.Fragment>
 );
 
+// Shades ******************************** //
+
+const Shades = () => (
+  <React.Fragment>
+    <BrushWrapper my={4}>
+      <Brush
+        bg="yellow.original"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="yellow.active"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="yellow.hover"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+    </BrushWrapper>
+    <BrushWrapper my={4}>
+      <Brush
+        bg="black.original"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="black.active"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="black.text"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+    </BrushWrapper>
+    <BrushWrapper my={4}>
+      <Brush
+        bg="green.original"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="green.active"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="green.hover"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="green.light"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+    </BrushWrapper>
+    <BrushWrapper my={4}>
+      <Brush
+        bg="red.original"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="red.active"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush bg="red.hover" borderRadius="circle" width={1} height={1} mr={3} />
+      <Brush bg="red.light" borderRadius="circle" width={1} height={1} mr={3} />
+    </BrushWrapper>
+    <BrushWrapper my={4}>
+      <Brush
+        bg="blue.original"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="blue.active"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="blue.hover"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="blue.light"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+    </BrushWrapper>
+    <BrushWrapper my={4}>
+      <Brush
+        bg="orange.original"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="orange.active"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="orange.hover"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+      <Brush
+        bg="orange.light"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr={3}
+      />
+    </BrushWrapper>
+  </React.Fragment>
+);
+
 // UIKit(Parent) Demo component *********** //
 
 const UIKit = () => (
@@ -327,12 +490,14 @@ const UIKit = () => (
     fontFamily="roboto" // ~ theme.fonts.roboto
     p={4} // ~ padding: theme.space[4]
     mb={5} // ~ margin-bottom: theme.space[5]
+    bg="white" // ~ theme.colors.white
   >
     {/* Base styling */}
     <BaseStyles />
     <h1>UI Elements</h1>
     <h3>Colors</h3>
     <ColorScheme />
+    <Shades />
     <h3>Buttons</h3>
     <Buttons />
     <h3>Shadows</h3>

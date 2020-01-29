@@ -61,7 +61,7 @@ export const theme = {
   // border-radius values
   radii: [0, 2, 4, 8, 12, 16],
 
-  // height
+  // width & height
   sizes: [40, 48],
 
   // margins & paddings
