@@ -11,9 +11,7 @@ import qualified Data.Sequence                    as Seq
 
 import           Control.Arrow.Extended
 import           Control.Lens
-import           Control.Monad.Unique
 
-import qualified Hasura.GraphQL.Context           as GC
 import qualified Hasura.Incremental               as Inc
 
 import           Hasura.RQL.Types
@@ -22,18 +20,24 @@ import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 
--- | A map used to explicitly invalidate part of the build cache, which is most useful for external
--- resources (currently only remote schemas). The 'InvalidationKey' values it contains are used as
--- inputs to build rules, so setting an entry to a fresh 'InvalidationKey' forces it to be
--- re-executed.
-type InvalidationMap = HashMap RemoteSchemaName InvalidationKey
-type InvalidationKey = Unique
+data InvalidationKeys = InvalidationKeys
+  { _ikMetadata      :: !Inc.InvalidationKey
+  -- ^ Invalidated by the @reload_metadata@ API.
+  , _ikRemoteSchemas :: !(HashMap RemoteSchemaName Inc.InvalidationKey)
+  -- ^ Invalidated by the @reload_remote_schema@ API.
+  } deriving (Eq, Generic)
+instance Inc.Cacheable InvalidationKeys
+instance Inc.Select InvalidationKeys
+$(makeLenses ''InvalidationKeys)
+
+initialInvalidationKeys :: InvalidationKeys
+initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty
 
 data BuildInputs
   = BuildInputs
   { _biReason          :: !BuildReason
   , _biCatalogMetadata :: !CatalogMetadata
-  , _biInvalidationMap :: !InvalidationMap
+  , _biInvalidationMap :: !InvalidationKeys
   } deriving (Eq)
 
 -- | The direct output of 'buildSchemaCacheRule'. Contains most of the things necessary to build a
@@ -41,20 +45,21 @@ data BuildInputs
 -- 'MonadWriter' side channel.
 data BuildOutputs
   = BuildOutputs
-  { _boTables            :: !TableCache
-  , _boFunctions         :: !FunctionCache
-  , _boRemoteSchemas     :: !RemoteSchemaMap
-  , _boAllowlist         :: !(HS.HashSet GQLQuery)
-  , _boGCtxMap           :: !GC.GCtxMap
-  , _boDefaultRemoteGCtx :: !GC.GCtx
+  { _boTables        :: !TableCache
+  , _boFunctions     :: !FunctionCache
+  , _boRemoteSchemas :: !(HashMap RemoteSchemaName (AddRemoteSchemaQuery, RemoteSchemaCtx))
+  -- ^ We preserve the 'AddRemoteSchemaQuery' from the original catalog metadata in the output so we
+  -- can reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
+  -- generation (because of field conflicts).
+  , _boAllowlist     :: !(HS.HashSet GQLQuery)
   } deriving (Show, Eq)
 $(makeLenses ''BuildOutputs)
 
 data RebuildableSchemaCache m
   = RebuildableSchemaCache
   { lastBuiltSchemaCache :: !SchemaCache
-  , _rscInvalidationMap :: !InvalidationMap
-  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (CatalogMetadata, InvalidationMap) SchemaCache)
+  , _rscInvalidationMap :: !InvalidationKeys
+  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (CatalogMetadata, InvalidationKeys) SchemaCache)
   }
 $(makeLenses ''RebuildableSchemaCache)
 

@@ -1,4 +1,5 @@
-{-# LANGUAGE Arrows #-}
+{-# LANGUAGE Arrows           #-}
+{-# LANGUAGE OverloadedLabels #-}
 
 {-| Top-level functions concerned specifically with operations on the schema cache, such as
 rebuilding it from the catalog and incorporating schema changes. See the module documentation for
@@ -60,8 +61,9 @@ buildRebuildableSchemaCache
   => m (RebuildableSchemaCache m)
 buildRebuildableSchemaCache = do
   catalogMetadata <- liftTx fetchCatalogData
-  result <- flip runReaderT CatalogSync $ Inc.build buildSchemaCacheRule (catalogMetadata, M.empty)
-  pure $ RebuildableSchemaCache (Inc.result result) M.empty (Inc.rebuildRule result)
+  result <- flip runReaderT CatalogSync $
+    Inc.build buildSchemaCacheRule (catalogMetadata, initialInvalidationKeys)
+  pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
 newtype CacheRWT m a
   = CacheRWT { unCacheRWT :: StateT (RebuildableSchemaCache m) m a }
@@ -79,50 +81,65 @@ instance (Monad m) => TableCoreInfoRM (CacheRWT m)
 instance (Monad m) => CacheRM (CacheRWT m) where
   askSchemaCache = CacheRWT $ gets lastBuiltSchemaCache
 
-instance (MonadIO m, MonadTx m, MonadUnique m) => CacheRWM (CacheRWT m) where
+instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
   buildSchemaCacheWithOptions buildReason = CacheRWT do
-    RebuildableSchemaCache _ invalidationMap rule <- get
+    RebuildableSchemaCache _ invalidationKeys rule <- get
     catalogMetadata <- liftTx fetchCatalogData
-    result <- lift $ flip runReaderT buildReason $ Inc.build rule (catalogMetadata, invalidationMap)
+    result <- lift $ flip runReaderT buildReason $ Inc.build rule (catalogMetadata, invalidationKeys)
     let schemaCache = Inc.result result
-        prunedInvalidationMap = pruneInvalidationMap schemaCache invalidationMap
-    put $! RebuildableSchemaCache schemaCache prunedInvalidationMap (Inc.rebuildRule result)
+        prunedInvalidationKeys = pruneInvalidationKeys schemaCache invalidationKeys
+    put $! RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
     where
-      pruneInvalidationMap schemaCache = M.filterWithKey \name _ ->
+      -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
+      -- hanging onto unnecessary keys.
+      pruneInvalidationKeys schemaCache = over ikRemoteSchemas $ M.filterWithKey \name _ ->
         M.member name (scRemoteSchemas schemaCache)
 
-  invalidateCachedRemoteSchema name = CacheRWT do
-    unique <- newUnique
-    assign (rscInvalidationMap . at name) (Just unique)
+  invalidateCachedRemoteSchema name =
+    CacheRWT $ modifying (rscInvalidationMap . ikRemoteSchemas . at name) $
+      Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
   :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadTx m, MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
-  => (CatalogMetadata, InvalidationMap) `arr` SchemaCache
-buildSchemaCacheRule = proc inputs -> do
-  (outputs, collectedInfo) <- runWriterA buildAndCollectInfo -< inputs
+  => (CatalogMetadata, InvalidationKeys) `arr` SchemaCache
+buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
+  invalidationKeysDep <- Inc.newDependency -< invalidationKeys
+
+  -- Step 1: Process metadata and collect dependency information.
+  (outputs, collectedInfo) <-
+    runWriterA buildAndCollectInfo -< (catalogMetadata, invalidationKeysDep)
   let (inconsistentObjects, unresolvedDependencies) = partitionCollectedInfo collectedInfo
-  (resolvedOutputs, extraInconsistentObjects, resolvedDependencies) <-
+
+  -- Step 2: Resolve dependency information and drop dangling dependents.
+  (resolvedOutputs, dependencyInconsistentObjects, resolvedDependencies) <-
     resolveDependencies -< (outputs, unresolvedDependencies)
+
+  -- Step 3: Build the GraphQL schema.
+  ((remoteSchemaMap, gqlSchema, remoteGQLSchema), gqlSchemaInconsistentObjects)
+    <- runWriterA buildGQLSchema
+    -< (_boTables resolvedOutputs, _boFunctions resolvedOutputs, _boRemoteSchemas resolvedOutputs)
+
   returnA -< SchemaCache
     { scTables = _boTables resolvedOutputs
     , scFunctions = _boFunctions resolvedOutputs
-    , scRemoteSchemas = _boRemoteSchemas resolvedOutputs
+    , scRemoteSchemas = remoteSchemaMap
     , scAllowlist = _boAllowlist resolvedOutputs
-    , scGCtxMap = _boGCtxMap resolvedOutputs
-    , scDefaultRemoteGCtx = _boDefaultRemoteGCtx resolvedOutputs
+    , scGCtxMap = gqlSchema
+    , scDefaultRemoteGCtx = remoteGQLSchema
     , scDepMap = resolvedDependencies
-    , scInconsistentObjs = inconsistentObjects <> extraInconsistentObjects
+    , scInconsistentObjs =
+        inconsistentObjects <> dependencyInconsistentObjects <> toList gqlSchemaInconsistentObjects
     }
   where
     buildAndCollectInfo
-      :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadTx m, MonadReader BuildReason m
          , HasHttpManager m, HasSQLGenCtx m )
-      => (CatalogMetadata, InvalidationMap) `arr` BuildOutputs
-    buildAndCollectInfo = proc (catalogMetadata, invalidationMap) -> do
+      => (CatalogMetadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
+    buildAndCollectInfo = proc (catalogMetadata, invalidationKeys) -> do
       let CatalogMetadata tables relationships permissions
             eventTriggers remoteSchemas functions allowlistDefs
             computedFields = catalogMetadata
@@ -182,29 +199,24 @@ buildSchemaCacheRule = proc inputs -> do
             & map (queryWithoutTypeNames . getGQLQuery . _lqQuery)
             & HS.fromList
 
-      -- build GraphQL context with tables and functions
-      baseGQLSchema <- bindA -< GS.mkGCtxMap tableCache functionCache
-
       -- remote schemas
-      let invalidatedRemoteSchemas = flip map remoteSchemas \remoteSchema ->
-            (M.lookup (_arsqName remoteSchema) invalidationMap, remoteSchema)
-      (remoteSchemaMap, gqlSchema, remoteGQLSchema) <-
-        (| foldlA' (\schemas schema -> (schemas, schema) >- addRemoteSchema)
-        |) (M.empty, baseGQLSchema, GC.emptyGCtx) invalidatedRemoteSchemas
+      let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
+      remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemas, remoteSchemaInvalidationKeys)
 
       returnA -< BuildOutputs
         { _boTables = tableCache
         , _boFunctions = functionCache
         , _boRemoteSchemas = remoteSchemaMap
         , _boAllowlist = allowList
-        , _boGCtxMap = gqlSchema
-        , _boDefaultRemoteGCtx = remoteGQLSchema
         }
 
     mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =
       let objectId = MOTableObj qt $ MTOTrigger trn
           definition = object ["table" .= qt, "configuration" .= configuration]
       in MetadataObject objectId definition
+
+    mkRemoteSchemaMetadataObject remoteSchema =
+      MetadataObject (MORemoteSchema (_arsqName remoteSchema)) (toJSON remoteSchema)
 
     -- Given a map of table info, “folds in” another map of information, accumulating inconsistent
     -- metadata objects for any entries in the second map that don’t appear in the first map. This
@@ -267,24 +279,57 @@ buildSchemaCacheRule = proc inputs -> do
             when (buildReason == CatalogUpdate) $
               mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
 
-    addRemoteSchema
-      :: ( HasVersion, ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, ArrowKleisli m arr
-         , MonadIO m, HasHttpManager m )
-      => ( (RemoteSchemaMap, GS.GCtxMap, GS.GCtx)
-         , (Maybe InvalidationKey, AddRemoteSchemaQuery)
+    buildRemoteSchemas
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+         , Inc.ArrowCache m arr , MonadIO m, HasHttpManager m )
+      => ( [AddRemoteSchemaQuery]
+         , Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey)
+         ) `arr` HashMap RemoteSchemaName (AddRemoteSchemaQuery, RemoteSchemaCtx)
+    buildRemoteSchemas = proc (remoteSchemas, invalidationKeys) ->
+      -- TODO: Extract common code between this and buildTableEventTriggers
+      (\infos -> returnA -< M.catMaybes infos) <-<
+        (| Inc.keyed (\_ duplicateRemoteSchemas -> do
+             maybeRemoteSchema <- noDuplicates mkRemoteSchemaMetadataObject -< duplicateRemoteSchemas
+             (\info -> returnA -< join info) <-<
+               (| traverseA (\remoteSchema -> buildRemoteSchema -< (remoteSchema, invalidationKeys))
+               |) maybeRemoteSchema)
+        |) (M.groupOn _arsqName remoteSchemas)
+      where
+        -- We want to cache this call because it fetches the remote schema over HTTP, and we don’t
+        -- want to re-run that if the remote schema definition hasn’t changed.
+        buildRemoteSchema = Inc.cache proc (remoteSchema, invalidationKeys) -> do
+          Inc.dependOn -< Inc.selectKeyD (_arsqName remoteSchema) invalidationKeys
+          (| withRecordInconsistency (do
+               remoteGQLSchema <- liftEitherA <<< bindA -<
+                 runExceptT $ addRemoteSchemaP2Setup remoteSchema
+               returnA -< (remoteSchema, remoteGQLSchema))
+           |) (mkRemoteSchemaMetadataObject remoteSchema)
+
+    -- Builds the GraphQL schema and merges in remote schemas. This function is kind of gross, as
+    -- it’s possible for the remote schema merging to fail, at which point we have to mark them
+    -- inconsistent. This means we have to accumulate the consistent remote schemas as we go, in
+    -- addition to the build GraphQL context.
+    buildGQLSchema
+      :: ( ArrowChoice arr, ArrowWriter (Seq InconsistentMetadata) arr, ArrowKleisli m arr
+         , MonadError QErr m )
+      => ( TableCache
+         , FunctionCache
+         , HashMap RemoteSchemaName (AddRemoteSchemaQuery, RemoteSchemaCtx)
          ) `arr` (RemoteSchemaMap, GS.GCtxMap, GS.GCtx)
-    addRemoteSchema = proc ((remoteSchemas, gCtxMap, defGCtx), (_, remoteSchema)) -> do
-      let name = _arsqName remoteSchema
-      (| onNothingA (returnA -< (remoteSchemas, gCtxMap, defGCtx)) |) <-<
-         (| withRecordInconsistency (case M.lookup name remoteSchemas of
-              Just _ -> throwA -< err400 AlreadyExists "duplicate definition for remote schema"
-              Nothing -> liftEitherA <<< bindA -< runExceptT do
-                rsCtx <- addRemoteSchemaP2Setup remoteSchema
-                let rGCtx = convRemoteGCtx $ rscGCtx rsCtx
-                mergedGCtxMap <- mergeRemoteSchema gCtxMap rGCtx
-                mergedDefGCtx <- mergeGCtx defGCtx rGCtx
-                pure (M.insert name rsCtx remoteSchemas, mergedGCtxMap, mergedDefGCtx))
-         |) (MetadataObject (MORemoteSchema name) (toJSON remoteSchema))
+    buildGQLSchema = proc (tableCache, functionCache, remoteSchemas) -> do
+      baseGQLSchema <- bindA -< GS.mkGCtxMap tableCache functionCache
+      (| foldlA' (\(remoteSchemaMap, gqlSchemas, remoteGQLSchemas) (remoteSchema, remoteGQLSchema) ->
+           (| withRecordInconsistency (do
+                let gqlSchema = convRemoteGCtx $ rscGCtx remoteGQLSchema
+                mergedGQLSchemas <- bindErrorA -< mergeRemoteSchema gqlSchemas gqlSchema
+                mergedRemoteGQLSchemas <- bindErrorA -< mergeGCtx remoteGQLSchemas gqlSchema
+                let mergedRemoteSchemaMap =
+                      M.insert (_arsqName remoteSchema) remoteGQLSchema remoteSchemaMap
+                returnA -< (mergedRemoteSchemaMap, mergedGQLSchemas, mergedRemoteGQLSchemas))
+           |) (mkRemoteSchemaMetadataObject remoteSchema)
+           >-> (| onNothingA ((remoteSchemaMap, gqlSchemas, remoteGQLSchemas) >- returnA) |))
+       |) (M.empty, baseGQLSchema, GC.emptyGCtx) (M.elems remoteSchemas)
+
 
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and

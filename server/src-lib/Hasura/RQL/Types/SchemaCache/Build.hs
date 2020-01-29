@@ -26,6 +26,7 @@ import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 
 import           Control.Arrow.Extended
+import           Control.Lens
 import           Data.Aeson                    (toJSON)
 import           Data.List                     (nub)
 
@@ -44,6 +45,14 @@ data CollectedInfo
     !SchemaObjId
     !SchemaDependency
   deriving (Show, Eq)
+$(makePrisms ''CollectedInfo)
+
+class AsInconsistentMetadata s where
+  _InconsistentMetadata :: Prism' s InconsistentMetadata
+instance AsInconsistentMetadata InconsistentMetadata where
+  _InconsistentMetadata = id
+instance AsInconsistentMetadata CollectedInfo where
+  _InconsistentMetadata = _CIInconsistency
 
 partitionCollectedInfo
   :: Seq CollectedInfo
@@ -55,12 +64,14 @@ partitionCollectedInfo =
       let dependency = (metadataObject, objectId, schemaDependency)
       in (inconsistencies, dependency:dependencies)
 
-recordInconsistency :: (ArrowWriter (Seq CollectedInfo) arr) => (MetadataObject, Text) `arr` ()
+recordInconsistency
+  :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => (MetadataObject, Text) `arr` ()
 recordInconsistency = first (arr (:[])) >>> recordInconsistencies
 
-recordInconsistencies :: (ArrowWriter (Seq CollectedInfo) arr) => ([MetadataObject], Text) `arr` ()
+recordInconsistencies
+  :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([MetadataObject], Text) `arr` ()
 recordInconsistencies = proc (metadataObjects, reason) ->
-  tellA -< Seq.fromList $ map (CIInconsistency . InconsistentObject reason) metadataObjects
+  tellA -< Seq.fromList $ map (review _InconsistentMetadata . InconsistentObject reason) metadataObjects
 
 recordDependencies
   :: (ArrowWriter (Seq CollectedInfo) arr)
@@ -69,7 +80,7 @@ recordDependencies = proc (metadataObject, schemaObjectId, dependencies) ->
   tellA -< Seq.fromList $ map (CIDependency metadataObject schemaObjectId) dependencies
 
 withRecordInconsistency
-  :: (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr)
+  :: (ArrowChoice arr, ArrowWriter (Seq w) arr, AsInconsistentMetadata w)
   => ErrorA QErr arr (e, s) a
   -> arr (e, (MetadataObject, s)) (Maybe a)
 withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
