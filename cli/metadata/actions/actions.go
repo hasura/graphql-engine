@@ -346,6 +346,7 @@ input SampleInput {
 	var common types.Common
 	common.Actions = sdlFromResp.Actions
 	common.CustomTypes = sdlFromResp.Types
+	common.SetExportDefault()
 	// write actions.yaml
 	commonByt, err := yaml.Marshal(common)
 	if err != nil {
@@ -452,11 +453,14 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	if err != nil {
 		return err
 	}
-	for _, action := range oldAction.Actions {
+	for actionIndex, action := range oldAction.Actions {
 		var isFound bool
-		for _, newActionObj := range sdlFromResp.Actions {
+		for newActionIndex, newActionObj := range sdlFromResp.Actions {
 			if action.Name == newActionObj.Name {
 				isFound = true
+				sdlFromResp.Actions[newActionIndex].Permissions = oldAction.Actions[actionIndex].Permissions
+				sdlFromResp.Actions[newActionIndex].Definition.Kind = oldAction.Actions[actionIndex].Definition.Kind
+				sdlFromResp.Actions[newActionIndex].Definition.Handler = oldAction.Actions[actionIndex].Definition.Handler
 				break
 			}
 		}
@@ -464,11 +468,13 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 			return fmt.Errorf("action %s is not present in %s", action.Name, graphqlFileName)
 		}
 	}
-	for _, customType := range oldAction.CustomTypes.Enums {
+	for customTypeIndex, customType := range oldAction.CustomTypes.Enums {
 		var isFound bool
-		for _, newTypeObj := range sdlFromResp.Types.Enums {
+		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Enums {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
+				sdlFromResp.Types.Enums[newTypeObjIndex].Description = oldAction.CustomTypes.Enums[customTypeIndex].Description
+				sdlFromResp.Types.Enums[newTypeObjIndex].Relationships = oldAction.CustomTypes.Enums[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -476,11 +482,13 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
 	}
-	for _, customType := range oldAction.CustomTypes.InputObjects {
+	for customTypeIndex, customType := range oldAction.CustomTypes.InputObjects {
 		var isFound bool
-		for _, newTypeObj := range sdlFromResp.Types.InputObjects {
+		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.InputObjects {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
+				sdlFromResp.Types.InputObjects[newTypeObjIndex].Description = oldAction.CustomTypes.InputObjects[customTypeIndex].Description
+				sdlFromResp.Types.InputObjects[newTypeObjIndex].Relationships = oldAction.CustomTypes.InputObjects[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -488,11 +496,13 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
 	}
-	for _, customType := range oldAction.CustomTypes.Objects {
+	for customTypeIndex, customType := range oldAction.CustomTypes.Objects {
 		var isFound bool
-		for _, newTypeObj := range sdlFromResp.Types.Objects {
+		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Objects {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
+				sdlFromResp.Types.Objects[newTypeObjIndex].Description = oldAction.CustomTypes.Objects[customTypeIndex].Description
+				sdlFromResp.Types.Objects[newTypeObjIndex].Relationships = oldAction.CustomTypes.Objects[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -500,11 +510,13 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
 	}
-	for _, customType := range oldAction.CustomTypes.Scalars {
+	for customTypeIndex, customType := range oldAction.CustomTypes.Scalars {
 		var isFound bool
-		for _, newTypeObj := range sdlFromResp.Types.Scalars {
+		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Scalars {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
+				sdlFromResp.Types.Objects[newTypeObjIndex].Description = oldAction.CustomTypes.Objects[customTypeIndex].Description
+				sdlFromResp.Types.Objects[newTypeObjIndex].Relationships = oldAction.CustomTypes.Objects[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -560,6 +572,7 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (dbTypes.MetadataFiles, er
 	if err != nil {
 		return dbTypes.MetadataFiles{}, err
 	}
+	common.SetExportDefault()
 	commonByt, err := yaml.Marshal(common)
 	if err != nil {
 		return dbTypes.MetadataFiles{}, err

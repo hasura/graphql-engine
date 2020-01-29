@@ -7,6 +7,29 @@ type Common struct {
 	CustomTypes CustomTypes `json:"custom_types" yaml:"custom_types"`
 }
 
+func (c *Common) SetExportDefault() {
+	for index := range c.Actions {
+		c.Actions[index].Definition.Arguments = nil
+		c.Actions[index].Definition.OutputType = ""
+	}
+
+	for index := range c.CustomTypes.Enums {
+		c.CustomTypes.Enums[index].Fields = nil
+	}
+
+	for index := range c.CustomTypes.InputObjects {
+		c.CustomTypes.InputObjects[index].Fields = nil
+	}
+
+	for index := range c.CustomTypes.Objects {
+		c.CustomTypes.Objects[index].Fields = nil
+	}
+
+	for index := range c.CustomTypes.Scalars {
+		c.CustomTypes.Scalars[index].Fields = nil
+	}
+}
+
 type Action struct {
 	Name        string        `json:"name" yaml:"name"`
 	Definition  ActionDef     `json:"definition" yaml:"definition"`
@@ -32,11 +55,13 @@ type ActionDef struct {
 	Handler    string        `json:"handler" yaml:"handler"`
 }
 
+/*
 func (a ActionDef) MarshalYAML() (interface{}, error) {
 	a.Arguments = nil
 	a.OutputType = ""
 	return a, nil
 }
+*/
 
 type CustomTypes struct {
 	Enums        []CustomTypeDef `json:"enums" yaml:"enums"`
@@ -65,7 +90,9 @@ func (c *CustomTypeDef) MarshalJSON() ([]byte, error) {
 	})
 }
 
+/*
 func (c CustomTypeDef) MarshalYAML() (interface{}, error) {
 	c.Fields = nil
 	return c, nil
 }
+*/

@@ -123,8 +123,8 @@ func MigrateAPI(c *gin.Context) {
 					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
 					return
 				}
-				sqlUp.WriteString(to.SQL)
-				sqlUp.WriteString("\n")
+				sqlDown.WriteString(to.SQL)
+				sqlDown.WriteString("\n")
 			}
 		}
 
@@ -137,7 +137,7 @@ func MigrateAPI(c *gin.Context) {
 			}
 		}
 		if sqlDown.String() != "" {
-			err := createOptions.SetSQLUp(sqlDown.String())
+			err := createOptions.SetSQLDown(sqlDown.String())
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 				return

@@ -97,7 +97,7 @@ func (o *actionsCreateOptions) run() error {
 
 	// create new action
 	o.EC.Spin("Creating the action...")
-	defer o.EC.Spinner.Stop()
+	o.EC.Spinner.Stop()
 	opts := &actions.OverrideOptions{
 		Kind:    o.kind,
 		Webhook: o.webhook,
