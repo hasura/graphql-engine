@@ -26,13 +26,13 @@ const ColorScheme = () => (
       // ~ background: theme.colors.yellow.active
       bg="yellow.active"
       // ~ border-radius: theme.raddi[2]
-      borderRadius={2}
+      borderRadius="sm" // ~ theme.raddi.md
     />
-    <ColorSchemeDiv bg="black.active" borderRadius={2} />
-    <ColorSchemeDiv bg="green.active" borderRadius={2} />
-    <ColorSchemeDiv bg="red.active" borderRadius={2} />
-    <ColorSchemeDiv bg="blue.active" borderRadius={2} />
-    <ColorSchemeDiv bg="orange.active" borderRadius={2} />
+    <ColorSchemeDiv bg="black.active" borderRadius="sm" />
+    <ColorSchemeDiv bg="green.active" borderRadius="sm" />
+    <ColorSchemeDiv bg="red.active" borderRadius="sm" />
+    <ColorSchemeDiv bg="blue.active" borderRadius="sm" />
+    <ColorSchemeDiv bg="orange.active" borderRadius="sm" />
   </ColorSchemeDivWrapper>
 );
 
@@ -53,7 +53,7 @@ const Buttons = () => (
         borderColor="yellow.active" // ~ theme.colors.yellow.active
         fontWeight={6} // ~ theme.fontWeights[6]
         fontSize={1} // ~ theme.fontSizes[1]
-        borderRadius={1} // ~ theme.raddi[1]
+        borderRadius="xs" // ~ theme.raddi.xs
         mr={4} // ~ margin-right: theme.space[4]
       >
         Primary button
@@ -68,7 +68,7 @@ const Buttons = () => (
         borderColor="black.active"
         fontWeight={6}
         fontSize={1}
-        borderRadius={1}
+        borderRadius="xs"
       >
         Secondary button
       </Button>
@@ -83,7 +83,7 @@ const Buttons = () => (
         border={1}
         fontWeight={5}
         borderColor="yellow.active"
-        borderRadius={1}
+        borderRadius="xs"
         mr={4}
       >
         Primary button
@@ -96,7 +96,7 @@ const Buttons = () => (
         border={1}
         fontWeight={6}
         borderColor="green.active"
-        borderRadius={1}
+        borderRadius="xs"
         mr={4}
       >
         Primary button
@@ -109,7 +109,7 @@ const Buttons = () => (
         border={1}
         fontWeight={5}
         borderColor="red.active"
-        borderRadius={1}
+        borderRadius="xs"
         mr={4}
       >
         Primary button
@@ -122,7 +122,7 @@ const Buttons = () => (
         border={1}
         fontWeight={5}
         borderColor="orange.active"
-        borderRadius={1}
+        borderRadius="xs"
         mr={4}
       >
         Primary button
@@ -135,7 +135,7 @@ const Buttons = () => (
         border={1}
         fontWeight={5}
         borderColor="blue.active"
-        borderRadius={1}
+        borderRadius="xs"
       >
         Primary button
       </Button>
@@ -149,20 +149,11 @@ const BoxShadows = () => (
   <BoxShadowDivWrapper>
     <BoxShadowDiv
       boxShadow={0} // box-shadow ~ theme.shadows[0]
-      borderRadius={1} // ~ theme.radii[1]
+      borderRadius="xs" // ~ theme.radii.xs
     />
-    <BoxShadowDiv
-      boxShadow={1} // box-shadow ~ theme.shadows[1]
-      borderRadius={1} // ~ theme.radii[1]
-    />
-    <BoxShadowDiv
-      boxShadow={2} // box-shadow ~ theme.shadows[2]
-      borderRadius={1} // ~ theme.radii[1]
-    />
-    <BoxShadowDiv
-      boxShadow={3} // box-shadow ~ theme.shadows[3]
-      borderRadius={1} // ~ theme.radii[1]
-    />
+    <BoxShadowDiv boxShadow={1} borderRadius="xs" />
+    <BoxShadowDiv boxShadow={2} borderRadius="xs" />
+    <BoxShadowDiv boxShadow={3} borderRadius="xs" />
   </BoxShadowDivWrapper>
 );
 
@@ -177,7 +168,7 @@ const Alerts = () => (
       maxWidth={866} // ~ max-width: 866px
       borderLeft={4} // ~ theme.borders[4]
       borderColor="green.active" // ~ theme.colors.green.active
-      borderRadius={1} // ~ theme.radii[1]
+      borderRadius="xs" // ~ theme.radii.xs
       boxShadow={1} // ~ theme.shadows[1]
       my={4} // margin-y-axis ~ theme.space[4])
     />
@@ -188,7 +179,7 @@ const Alerts = () => (
       maxWidth={866}
       borderLeft={4}
       borderColor="blue.active"
-      borderRadius={1}
+      borderRadius="xs"
       boxShadow={1}
       my={4}
     />
@@ -199,7 +190,7 @@ const Alerts = () => (
       maxWidth={866}
       borderLeft={4}
       borderColor="orange.active"
-      borderRadius={1}
+      borderRadius="xs"
       boxShadow={1}
       my={4}
     />
@@ -210,7 +201,7 @@ const Alerts = () => (
       maxWidth={866}
       borderLeft={4}
       borderColor="red.active"
-      borderRadius={1}
+      borderRadius="xs"
       boxShadow={1}
       my={4}
     />
