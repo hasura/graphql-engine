@@ -67,6 +67,7 @@ class ApiRequest extends Component {
         error: null,
         serverResp: {},
       },
+      hasuraConsoleHeaders: {},
     };
 
     if (this.props.numberOfTables !== 0) {
@@ -81,9 +82,11 @@ class ApiRequest extends Component {
   }
 
   componentDidMount() {
+    const { hasuraConsoleHeaders } = this.state;
     const handleHeaderInit = () => {
       const graphiqlHeaders =
-        getPersistedGraphiQLHeaders() || getDefaultGraphiqlHeaders();
+        getPersistedGraphiQLHeaders(hasuraConsoleHeaders) ||
+        getDefaultGraphiqlHeaders();
 
       // if admin secret is set and admin secret header was ever added to headers, add admin secret header if not already present
       const adminSecret = getAdminSecret();
@@ -132,7 +135,7 @@ class ApiRequest extends Component {
       });
 
       // persist headers to local storage
-      persistGraphiQLHeaders(graphiqlHeaders);
+      persistGraphiQLHeaders(graphiqlHeaders, this.setConsoleHeaders);
 
       // set headers in redux
       this.props.dispatch(setHeadersBulk(graphiqlHeaders));
@@ -205,6 +208,10 @@ class ApiRequest extends Component {
         });
     }
   }
+
+  setConsoleHeaders = headers => {
+    this.setState({ hasuraConsoleHeaders: headers });
+  };
 
   render() {
     const { isAnalyzingToken, tokenInfo, analyzingHeaderRow } = this.state;
@@ -290,7 +297,7 @@ class ApiRequest extends Component {
           const index = parseInt(e.target.getAttribute('data-header-id'), 10);
           this.props
             .dispatch(removeRequestHeader(index))
-            .then(r => persistGraphiQLHeaders(r));
+            .then(r => persistGraphiQLHeaders(r, this.setConsoleHeaders));
         };
 
         const onHeaderValueChanged = e => {
@@ -299,7 +306,7 @@ class ApiRequest extends Component {
           const newValue = e.target.value;
           this.props
             .dispatch(changeRequestHeader(index, key, newValue, false))
-            .then(r => persistGraphiQLHeaders(r));
+            .then(r => persistGraphiQLHeaders(r, this.setConsoleHeaders));
         };
 
         const onShowAdminSecretClicked = () => {

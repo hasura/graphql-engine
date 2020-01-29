@@ -69,7 +69,7 @@ export const getPersistedAdminSecretHeaderWasAdded = () => {
   return lsValue ? lsValue === 'true' : false;
 };
 
-export const persistGraphiQLHeaders = headers => {
+export const persistGraphiQLHeaders = (headers, setHeaders) => {
   // filter empty headers
   const validHeaders = headers.filter(h => h.key);
 
@@ -84,16 +84,11 @@ export const persistGraphiQLHeaders = headers => {
     return maskedHeader;
   });
 
-  window.localStorage.setItem(
-    'HASURA_CONSOLE_GRAPHIQL_HEADERS',
-    JSON.stringify(maskedHeaders)
-  );
+  setHeaders(maskedHeaders);
 };
 
-export const getPersistedGraphiQLHeaders = () => {
-  const headersString = window.localStorage.getItem(
-    'HASURA_CONSOLE_GRAPHIQL_HEADERS'
-  );
+export const getPersistedGraphiQLHeaders = consoleHeaders => {
+  const headersString = consoleHeaders;
 
   let headers = null;
   if (headersString) {
