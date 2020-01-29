@@ -1,9 +1,7 @@
 const toPayload = {
   "derive": {
-    "mutation": {
-      "name": "mutation ($objects: user_insert_input!) { insert_user ( objects: [$objects] ) { affected_rows } }",
-      "action_name": "actionName"
-    },
+    "mutation": "mutation ($objects: user_insert_input!) { insert_user ( objects: [$objects] ) { affected_rows } }",
+    "action_name": "actionName",
     "introspection_schema": {
       "__schema": {
         "directives": [{
