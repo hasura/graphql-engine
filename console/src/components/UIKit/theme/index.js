@@ -2,12 +2,40 @@
 
 export const theme = {
   colors: {
-    yellows: ['#ffff00', '#f8d721', 'rgba(204, 177, 25, 0.4)'],
-    blacks: ['#000', '#484538', '#292822'],
-    greens: ['##008000', '#69cb43', 'rgba(123, 179, 66, 0.4)', '#f0f8e7'],
-    reds: ['#ff0000', '#e53935', 'rgba(229, 57, 53, 0.4)', '#f7e9e9'],
-    blues: ['#0000ff', '#1f88e5', 'rgba(31, 136, 229, 0.4)', '#f0f8ff'],
-    oranges: ['#ffa500', '#fdb02c', 'rgba(253, 176, 44, 0.4)', '#fff8ed'],
+    red: {
+      original: '#ff0000',
+      active: '#e53935',
+      hover: 'rgba(229, 57, 53, 0.4)',
+      light: '#f7e9e9',
+    },
+    green: {
+      original: '#008000',
+      active: '#69cb43',
+      hover: 'rgba(123, 179, 66, 0.4)',
+      light: '#f0f8e7',
+    },
+    blue: {
+      original: '#0000ff',
+      active: '#1f88e5',
+      hover: 'rgba(31, 136, 229, 0.4)',
+      light: '#f0f8ff',
+    },
+    orange: {
+      original: '#ffa500',
+      active: '#fdb02c',
+      hover: 'rgba(253, 176, 44, 0.4)',
+      light: '#fff8ed',
+    },
+    yellow: {
+      original: '#ffff00',
+      active: '#f8d721',
+      hover: 'rgba(204, 177, 25, 0.4)',
+    },
+    black: {
+      original: '#000',
+      active: '#484538',
+      text: '#292822',
+    },
     white: '#fff',
     transparent: 'transparent',
   },
