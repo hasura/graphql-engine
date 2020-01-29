@@ -15,18 +15,23 @@ export const theme = {
     roboto: 'Roboto',
   },
   fontWeights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
-  fontSizes: [12, 14, 16, 20, 24, 36, 48, 80, 96],
-  transition: {
-    true: 'all .2s ease-out',
-  },
+  fontSizes: [12, 14, 16, 18, 20, 24, 30, 36, 48, 80, 96],
+  // border
   borders: [0, '1px solid', '2px solid', '4px solid', '5px solid'],
+  // border radius
   radii: [0, 2, 4, 8, 16],
+  // height
   sizes: [40, 48],
+  // margins & paddings
   space: [0, 4, 8, 16, 32, 64],
+  // Text / box-shadows
   shadows: [
     '0 0 3px 0 rgba(0, 0, 0, 0.16)',
     '0 3px 6px 0 rgba(0, 0, 0, 0.16)',
     '0 3px 10px 0 rgba(0, 0, 0, 0.16)',
     '0 7px 24px 0 rgba(0, 0, 0, 0.32)',
   ],
+  transition: {
+    true: 'all .2s ease-out',
+  },
 };

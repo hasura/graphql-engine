@@ -2,8 +2,10 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 
+import BaseStyles from './BaseStyles';
+
 import {
-  UIKitDiv,
+  UIKitWrapperDiv,
   ColorSchemeDivWrapper,
   ColorSchemeDiv,
   ButtonsWrapper,
@@ -14,7 +16,7 @@ import {
 
 import { Button } from './Button';
 import { AlertMessageBox } from './Alert';
-import { Text } from './Text';
+import { Text, Heading } from './Text';
 
 // Color Scheme ******************************** //
 
@@ -33,7 +35,9 @@ const ColorScheme = () => (
 
 const Buttons = () => (
   <React.Fragment>
-    <ButtonsWrapper>
+    <ButtonsWrapper
+      mb={4} // ~ margin-bottom: theme.space[4]
+    >
       {/* Primary button */}
       <Button
         bg="yellows.1" // background-color ~ theme.colors.yellows[1]
@@ -45,6 +49,7 @@ const Buttons = () => (
         fontWeight={6} // ~ theme.fontWeights[6]
         fontSize={1} // ~ theme.fontSizes[1]
         borderRadius={1} // ~ theme.raddi[1]
+        mr={4} // ~ margin-right: theme.space[4]
       >
         Primary button
       </Button>
@@ -55,7 +60,7 @@ const Buttons = () => (
         height={1}
         px={4}
         border={1}
-        // borderColor='yellows.1'
+        borderColor="blacks.1"
         fontWeight={6}
         fontSize={1}
         borderRadius={1}
@@ -74,6 +79,7 @@ const Buttons = () => (
         fontWeight={5}
         borderColor="yellows.1"
         borderRadius={1}
+        mr={4}
       >
         Primary button
       </Button>
@@ -86,6 +92,7 @@ const Buttons = () => (
         fontWeight={6}
         borderColor="greens.1"
         borderRadius={1}
+        mr={4}
       >
         Primary button
       </Button>
@@ -98,6 +105,7 @@ const Buttons = () => (
         fontWeight={5}
         borderColor="reds.1"
         borderRadius={1}
+        mr={4}
       >
         Primary button
       </Button>
@@ -110,6 +118,7 @@ const Buttons = () => (
         fontWeight={5}
         borderColor="oranges.1"
         borderRadius={1}
+        mr={4}
       >
         Primary button
       </Button>
@@ -286,14 +295,45 @@ const TextLinks = () => (
   </React.Fragment>
 );
 
+// Headings ***************************** //
+
+const Headings = () => (
+  <React.Fragment>
+    <Heading
+      mb={3} // margin-bottom: theme.space[3]
+      color="blacks.2" // ~ theme.colors.blacks[2]
+      fontSize={6} // ~ theme.fontSizes[6]
+    >
+      Main Heading
+    </Heading>
+    <Heading as="h2" mb={3} color="blacks.2" fontSize={5}>
+      Subpage title
+    </Heading>
+    <Heading
+      as="h3"
+      mb={3}
+      color="blacks.2"
+      fontSize={4}
+      mt={0} // ~ Overriding base styling.
+    >
+      Section Header
+    </Heading>
+    <Heading as="h4" color="blacks.2" fontSize={3}>
+      Sub section Heading
+    </Heading>
+  </React.Fragment>
+);
+
 // UIKit(Parent) Demo component *********** //
 
 const UIKit = () => (
-  <UIKitDiv
+  <UIKitWrapperDiv
     fontFamily="roboto" // ~ theme.fonts.roboto
     p={4} // ~ padding: theme.space[4]
     mb={5} // ~ margin-bottom: theme.space[5]
   >
+    {/* Base styling */}
+    <BaseStyles />
     <h1>UI Elements</h1>
     <h3>Colors</h3>
     <ColorScheme />
@@ -305,7 +345,9 @@ const UIKit = () => (
     <Alerts />
     <h3>Text Links</h3>
     <TextLinks />
-  </UIKitDiv>
+    <h3>Headings</h3>
+    <Headings />
+  </UIKitWrapperDiv>
 );
 
 // ************************************ //

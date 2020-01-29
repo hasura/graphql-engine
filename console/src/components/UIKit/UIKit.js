@@ -1,26 +1,22 @@
 import styled from 'styled-components';
 import { typography, space, color, border, shadow } from 'styled-system';
 
-// Base Div ********************* //
+// Parent Div ~ Global Styles ****************** //
 
-export const BaseDiv = styled.div`
-  display: flex;
-  justify-content: flex-start;
-`;
-
-// ******************************** //
-
-export const UIKitDiv = styled.div`
+export const UIKitWrapperDiv = styled.div`
   /* Roboto Font */
 
   @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900');
 
   ${typography}
   ${space}
+`;
 
-  h3 {
-    margin: 2.5rem 0;
-  }
+// Base Div ********************* //
+
+export const BaseDiv = styled.div`
+  display: flex;
+  justify-content: flex-start;
 `;
 
 // ******************************** //
@@ -41,13 +37,7 @@ export const ColorSchemeDiv = styled.div`
 // Extended wrapper div for buttons *********** //
 
 export const ButtonsWrapper = styled(BaseDiv)`
-  margin-bottom: 4rem;
-
-  /* Demo ~ Inline buttons separation */
-
-  button {
-    margin-right: 3rem;
-  }
+  ${space}
 `;
 
 // ShadowDiv wrapper for box-shadows ********** //
