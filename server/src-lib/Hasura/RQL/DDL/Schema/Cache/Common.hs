@@ -1,4 +1,5 @@
-{-# LANGUAGE Arrows #-}
+{-# LANGUAGE Arrows          #-}
+{-# LANGUAGE RecordWildCards #-}
 
 -- | Types/functions shared between modules that implement "Hasura.RQL.DDL.Schema.Cache". Other
 -- modules should not import this module directly.
@@ -6,6 +7,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common where
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict              as M
 import qualified Data.HashSet                     as HS
 import qualified Data.Sequence                    as Seq
 
@@ -20,11 +22,10 @@ import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.Run
 import           Hasura.SQL.Types
 
+-- | 'InvalidationKeys' used to apply requested 'CacheInvalidations'.
 data InvalidationKeys = InvalidationKeys
   { _ikMetadata      :: !Inc.InvalidationKey
-  -- ^ Invalidated by the @reload_metadata@ API.
   , _ikRemoteSchemas :: !(HashMap RemoteSchemaName Inc.InvalidationKey)
-  -- ^ Invalidated by the @reload_remote_schema@ API.
   } deriving (Eq, Generic)
 instance Inc.Cacheable InvalidationKeys
 instance Inc.Select InvalidationKeys
@@ -32,6 +33,13 @@ $(makeLenses ''InvalidationKeys)
 
 initialInvalidationKeys :: InvalidationKeys
 initialInvalidationKeys = InvalidationKeys Inc.initialInvalidationKey mempty
+
+invalidateKeys :: CacheInvalidations -> InvalidationKeys -> InvalidationKeys
+invalidateKeys CacheInvalidations{..} InvalidationKeys{..} = InvalidationKeys
+  { _ikMetadata = if ciMetadata then Inc.invalidate _ikMetadata else _ikMetadata
+  , _ikRemoteSchemas = foldl' (flip invalidateRemoteSchema) _ikRemoteSchemas ciRemoteSchemas }
+  where
+    invalidateRemoteSchema = M.alter $ Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
 data BuildInputs
   = BuildInputs

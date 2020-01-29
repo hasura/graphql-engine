@@ -13,6 +13,7 @@ module Hasura.RQL.Types.SchemaCache.Build
 
   , CacheRWM(..)
   , BuildReason(..)
+  , CacheInvalidations(..)
   , buildSchemaCache
   , buildSchemaCacheFor
   , buildSchemaCacheStrict
@@ -28,6 +29,8 @@ import qualified Data.Text                     as T
 import           Control.Arrow.Extended
 import           Control.Lens
 import           Data.Aeson                    (toJSON)
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Data.List                     (nub)
 
 import           Hasura.RQL.Types.Error
@@ -96,8 +99,7 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
 -- operations for triggering a schema cache rebuild
 
 class (CacheRM m) => CacheRWM m where
-  buildSchemaCacheWithOptions :: BuildReason -> m ()
-  invalidateCachedRemoteSchema :: RemoteSchemaName -> m ()
+  buildSchemaCacheWithOptions :: BuildReason -> CacheInvalidations -> m ()
 
 data BuildReason
   -- | The build was triggered by an update this instance made to the catalog (in the
@@ -110,12 +112,26 @@ data BuildReason
   | CatalogSync
   deriving (Show, Eq)
 
+data CacheInvalidations = CacheInvalidations
+  { ciMetadata      :: !Bool
+  -- ^ Force reloading of all database information, including information not technically stored in
+  -- metadata (currently just enum values). Set by the @reload_metadata@ API.
+  , ciRemoteSchemas :: !(HashSet RemoteSchemaName)
+  -- ^ Force refetching of the given remote schemas, even if their definition has not changed. Set
+  -- by the @reload_remote_schema@ API.
+  }
+$(deriveJSON (aesonDrop 2 snakeCase) ''CacheInvalidations)
+
+instance Semigroup CacheInvalidations where
+  CacheInvalidations a1 b1 <> CacheInvalidations a2 b2 = CacheInvalidations (a1 || a2) (b1 <> b2)
+instance Monoid CacheInvalidations where
+  mempty = CacheInvalidations False mempty
+
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
-  buildSchemaCacheWithOptions = lift . buildSchemaCacheWithOptions
-  invalidateCachedRemoteSchema = lift . invalidateCachedRemoteSchema
+  buildSchemaCacheWithOptions a b = lift $ buildSchemaCacheWithOptions a b
 
 buildSchemaCache :: (CacheRWM m) => m ()
-buildSchemaCache = buildSchemaCacheWithOptions CatalogUpdate
+buildSchemaCache = buildSchemaCacheWithOptions CatalogUpdate mempty
 
 -- | Rebuilds the schema cache. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.

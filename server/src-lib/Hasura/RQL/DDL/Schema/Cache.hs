@@ -66,38 +66,44 @@ buildRebuildableSchemaCache = do
   pure $ RebuildableSchemaCache (Inc.result result) initialInvalidationKeys (Inc.rebuildRule result)
 
 newtype CacheRWT m a
-  = CacheRWT { unCacheRWT :: StateT (RebuildableSchemaCache m) m a }
+  -- The CacheInvalidations component of the state could actually be collected using WriterT, but
+  -- WriterT implementations prior to transformers-0.5.6.0 (which added
+  -- Control.Monad.Trans.Writer.CPS) are leaky, and we don’t have that yet.
+  = CacheRWT (StateT (RebuildableSchemaCache m, CacheInvalidations) m a)
   deriving
-    ( Functor, Applicative, Monad, MonadIO, MonadReader r, MonadError e, MonadWriter w, MonadTx
+    ( Functor, Applicative, Monad, MonadIO, MonadReader r, MonadError e, MonadTx
     , UserInfoM, HasHttpManager, HasSQLGenCtx, HasSystemDefined )
 
-runCacheRWT :: RebuildableSchemaCache m -> CacheRWT m a -> m (a, RebuildableSchemaCache m)
-runCacheRWT cache = flip runStateT cache . unCacheRWT
+runCacheRWT
+  :: Functor m
+  => RebuildableSchemaCache m -> CacheRWT m a -> m (a, RebuildableSchemaCache m, CacheInvalidations)
+runCacheRWT cache (CacheRWT m) =
+  runStateT m (cache, mempty) <&> \(v, (newCache, invalidations)) -> (v, newCache, invalidations)
 
 instance MonadTrans CacheRWT where
   lift = CacheRWT . lift
 
 instance (Monad m) => TableCoreInfoRM (CacheRWT m)
 instance (Monad m) => CacheRM (CacheRWT m) where
-  askSchemaCache = CacheRWT $ gets lastBuiltSchemaCache
+  askSchemaCache = CacheRWT $ gets (lastBuiltSchemaCache . fst)
 
 instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
-  buildSchemaCacheWithOptions buildReason = CacheRWT do
-    RebuildableSchemaCache _ invalidationKeys rule <- get
+  buildSchemaCacheWithOptions buildReason invalidations = CacheRWT do
+    (RebuildableSchemaCache _ invalidationKeys rule, oldInvalidations) <- get
+    let newInvalidationKeys = invalidateKeys invalidations invalidationKeys
     catalogMetadata <- liftTx fetchCatalogData
-    result <- lift $ flip runReaderT buildReason $ Inc.build rule (catalogMetadata, invalidationKeys)
+    result <- lift $ flip runReaderT buildReason $
+      Inc.build rule (catalogMetadata, newInvalidationKeys)
     let schemaCache = Inc.result result
-        prunedInvalidationKeys = pruneInvalidationKeys schemaCache invalidationKeys
-    put $! RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
+        prunedInvalidationKeys = pruneInvalidationKeys schemaCache newInvalidationKeys
+        !newCache = RebuildableSchemaCache schemaCache prunedInvalidationKeys (Inc.rebuildRule result)
+        !newInvalidations = oldInvalidations <> invalidations
+    put (newCache, newInvalidations)
     where
       -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
       -- hanging onto unnecessary keys.
       pruneInvalidationKeys schemaCache = over ikRemoteSchemas $ M.filterWithKey \name _ ->
         M.member name (scRemoteSchemas schemaCache)
-
-  invalidateCachedRemoteSchema name =
-    CacheRWT $ modifying (rscInvalidationMap . ikRemoteSchemas . at name) $
-      Just . maybe Inc.initialInvalidationKey Inc.invalidate
 
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
@@ -145,7 +151,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
             computedFields = catalogMetadata
 
       -- tables
-      tableRawInfos <- buildTableCache -< tables
+      tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
 
       -- relationships and computed fields
       let relationshipsByTable = M.groupOn _crTable relationships

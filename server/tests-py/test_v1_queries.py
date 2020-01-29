@@ -679,6 +679,9 @@ class TestSetTableIsEnum(DefaultTestQueries):
     def test_add_test_schema_enum_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/add_test_schema_enum_table.yaml')
 
+    def test_relationship_with_inconsistent_enum_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/relationship_with_inconsistent_enum_table.yaml')
+
 class TestSetTableCustomFields(DefaultTestQueries):
     @classmethod
     def dir(cls):
@@ -735,5 +738,3 @@ class TestBulkQuery(DefaultTestQueries):
 
     def test_run_bulk_with_select_and_reads(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_with_reads.yaml')
-
-  

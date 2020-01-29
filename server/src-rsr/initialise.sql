@@ -411,7 +411,8 @@ CREATE TABLE hdb_catalog.remote_schemas (
 
 CREATE TABLE hdb_catalog.hdb_schema_update_event (
   instance_id uuid NOT NULL,
-  occurred_at timestamptz NOT NULL DEFAULT NOW()
+  occurred_at timestamptz NOT NULL DEFAULT NOW(),
+  invalidations json NOT NULL
 );
 
 CREATE UNIQUE INDEX hdb_schema_update_event_one_row
@@ -422,13 +423,16 @@ $function$
   DECLARE
     instance_id uuid;
     occurred_at timestamptz;
+    invalidations json;
     curr_rec record;
   BEGIN
     instance_id = NEW.instance_id;
     occurred_at = NEW.occurred_at;
+    invalidations = NEW.invalidations;
     PERFORM pg_notify('hasura_schema_update', json_build_object(
       'instance_id', instance_id,
-      'occurred_at', occurred_at
+      'occurred_at', occurred_at,
+      'invalidations', invalidations
       )::text);
     RETURN curr_rec;
   END;
@@ -657,7 +661,7 @@ CREATE VIEW hdb_catalog.hdb_computed_field_function AS
   FROM hdb_catalog.hdb_computed_field
 );
 
-CREATE OR REPLACE FUNCTION hdb_catalog.check_violation(msg text) RETURNS bool AS 
+CREATE OR REPLACE FUNCTION hdb_catalog.check_violation(msg text) RETURNS bool AS
 $$
   BEGIN
     RAISE check_violation USING message=msg;
