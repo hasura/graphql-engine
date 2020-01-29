@@ -39,12 +39,12 @@ Downgrading across catalogue versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can downgrade the catalogue from a particular version to a previous version by executing the ``graphql-engine`` executable on the command line,
-with the ``downgrade`` command, specifying the desired catalog version (from the table above) using the ``--to`` option.
+with the ``downgrade`` command, specifying the desired catalog version using one of the ``--to-`` flags.
 
 .. note::
 
   - The ``downgrade`` command is not part of the Hasura CLI but rather a command on ``graphql-engine`` itself. The way to execute this command is to 
-    run ``docker run hasura/graphql-engine:<VERSION> graphql-engine downgrade --to <NEW-VERSION>``.
+    run ``docker run hasura/graphql-engine:<VERSION> graphql-engine downgrade --to-<NEW-VERSION>``.
 
   - You need to use a newer version of ``graphql-engine`` to downgrade to an older version, since only the newer version knows how to downgrade from that point in time. After you’ve executed the ``downgrade`` command using the newer 
     version, you should switch to the older version and run ``graphql-engine serve`` as normal.
