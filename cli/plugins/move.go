@@ -1,18 +1,4 @@
-// Copyright 2019 The Kubernetes Authors.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-package installation
+package plugins
 
 import (
 	"io"
@@ -21,8 +7,6 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/hasura/graphql-engine/cli/plugins/pathutil"
-	"github.com/hasura/graphql-engine/cli/plugins/types"
 	"github.com/pkg/errors"
 )
 
@@ -30,7 +14,7 @@ type move struct {
 	from, to string
 }
 
-func findMoveTargets(fromDir, toDir string, fo types.FileOperation) ([]move, error) {
+func findMoveTargets(fromDir, toDir string, fo FileOperation) ([]move, error) {
 	if fo.To != filepath.Clean(fo.To) {
 		return nil, errors.Errorf("the provided path is not clean, %q should be %q", fo.To, filepath.Clean(fo.To))
 	}
@@ -71,7 +55,7 @@ func findMoveTargets(fromDir, toDir string, fo types.FileOperation) ([]move, err
 	return moves, nil
 }
 
-func getDirectMove(fromDir, toDir string, fo types.FileOperation) (move, bool, error) {
+func getDirectMove(fromDir, toDir string, fo FileOperation) (move, bool, error) {
 	var m move
 	fromDir, err := filepath.Abs(fromDir)
 	if err != nil {
@@ -111,12 +95,12 @@ func getDirectMove(fromDir, toDir string, fo types.FileOperation) (move, bool, e
 }
 
 func isMoveAllowed(fromBase, toBase string, m move) bool {
-	_, okFrom := pathutil.IsSubPath(fromBase, m.from)
-	_, okTo := pathutil.IsSubPath(toBase, m.to)
+	_, okFrom := IsSubPath(fromBase, m.from)
+	_, okTo := IsSubPath(toBase, m.to)
 	return okFrom && okTo
 }
 
-func moveFiles(fromDir, toDir string, fo types.FileOperation) error {
+func moveFiles(fromDir, toDir string, fo FileOperation) error {
 	moves, err := findMoveTargets(fromDir, toDir, fo)
 	if err != nil {
 		return errors.Wrap(err, "could not find move targets")
@@ -134,7 +118,7 @@ func moveFiles(fromDir, toDir string, fo types.FileOperation) error {
 	return nil
 }
 
-func moveAllFiles(fromDir, toDir string, fos []types.FileOperation) error {
+func moveAllFiles(fromDir, toDir string, fos []FileOperation) error {
 	for _, fo := range fos {
 		if err := moveFiles(fromDir, toDir, fo); err != nil {
 			return errors.Wrap(err, "failed moving files")
@@ -144,7 +128,7 @@ func moveAllFiles(fromDir, toDir string, fos []types.FileOperation) error {
 }
 
 // moveToInstallDir moves plugins from srcDir to dstDir (created in this method) with given FileOperation.
-func moveToInstallDir(srcDir, installDir string, fos []types.FileOperation) error {
+func moveToInstallDir(srcDir, installDir string, fos []FileOperation) error {
 	installationDir := filepath.Dir(installDir)
 	if err := os.MkdirAll(installationDir, 0755); err != nil {
 		return errors.Wrapf(err, "error creating directory at %q", installationDir)
@@ -196,7 +180,7 @@ func copyTree(from, to string) (err error) {
 		if err != nil {
 			return err
 		}
-		newPath, _ := pathutil.ReplaceBase(path, from, to)
+		newPath, _ := ReplaceBase(path, from, to)
 		if info.IsDir() {
 			err = os.MkdirAll(newPath, info.Mode())
 		} else {

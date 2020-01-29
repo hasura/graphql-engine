@@ -1,4 +1,10 @@
-package types
+package plugins
+
+import (
+	"strings"
+
+	"github.com/pkg/errors"
+)
 
 // Plugin describes a plugin manifest file.
 type Plugin struct {
@@ -8,6 +14,35 @@ type Plugin struct {
 	Homepage         string     `json:"homepage,omitempty"`
 	Hidden           bool       `json:"hidden,omitempty"`
 	Platforms        []Platform `json:"platforms,omitempty"`
+}
+
+// ValidatePlugin checks for structural validity of the Plugin object with given
+// name.
+func (p Plugin) ValidatePlugin(name string) error {
+	if !IsSafePluginName(name) {
+		return errors.Errorf("the plugin name %q is not allowed, must match %q", name, safePluginRegexp.String())
+	}
+	if p.Name != name {
+		return errors.Errorf("plugin should be named %q, not %q", name, p.Name)
+	}
+	if p.ShortDescription == "" {
+		return errors.New("should have a short description")
+	}
+	if strings.ContainsAny(p.ShortDescription, "\r\n") {
+		return errors.New("should not have line breaks in short description")
+	}
+	if len(p.Platforms) == 0 {
+		return errors.New("should have a platform specified")
+	}
+	if p.Version == "" {
+		return errors.New("should have a version specified")
+	}
+	for _, pl := range p.Platforms {
+		if err := validatePlatform(pl); err != nil {
+			return errors.Wrapf(err, "platform (%+v) is badly constructed", pl)
+		}
+	}
+	return nil
 }
 
 // Platform describes how to perform an installation on a specific platform

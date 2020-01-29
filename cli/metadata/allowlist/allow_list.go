@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	gyaml "github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"gopkg.in/yaml.v2"
 )
@@ -48,17 +49,26 @@ func (a *AllowListConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(data, &metadata.AllowList)
 }
 
-func (a *AllowListConfig) Export(metadata dbTypes.Metadata) error {
-	if metadata.AllowList == nil {
-		metadata.AllowList = make([]interface{}, 0)
+func (a *AllowListConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, error) {
+	var allowList interface{}
+	for _, item := range metadata {
+		k, ok := item.Key.(string)
+		if !ok || k != "remote_schemas" {
+			continue
+		}
+		allowList = item.Value
 	}
-	data, err := yaml.Marshal(metadata.AllowList)
+	if allowList == nil {
+		allowList = make([]interface{}, 0)
+	}
+	data, err := yaml.Marshal(allowList)
 	if err != nil {
-		return err
+		return types.MetadataFiles{}, err
 	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, fileName), data, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	return types.MetadataFiles{
+		{
+			Path:    filepath.Join(a.MetadataDir, fileName),
+			Content: data,
+		},
+	}, nil
 }

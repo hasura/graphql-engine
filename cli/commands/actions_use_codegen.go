@@ -86,6 +86,7 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 	o.outputDir = strings.TrimSpace(o.outputDir)
 
 	o.EC.Spin("Fetching codegen assets...")
+	defer o.EC.Spinner.Stop()
 	actionsCodegenGit := util.NewGitUtil(
 		actionsCodegenRepoURI,
 		filepath.Join(o.EC.GlobalConfigDir, actionsCodegenDirName),
@@ -96,9 +97,8 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 		return
 	}
 	_ = actionsCodegenGit.EnsureUpdated()
-	o.EC.Spinner.Stop()
-
 	newCodegenExecutionConfig := o.EC.Config.Action.Codegen
+	o.EC.Spinner.Stop()
 
 	// if framework flag is not provided, display a list and allow them to choose
 	if o.framework == "" {

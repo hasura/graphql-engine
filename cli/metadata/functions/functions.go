@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	gyaml "github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"gopkg.in/yaml.v2"
 )
@@ -48,17 +49,26 @@ func (f *FunctionConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(data, &metadata.Functions)
 }
 
-func (f *FunctionConfig) Export(metadata dbTypes.Metadata) error {
-	if metadata.Functions == nil {
-		metadata.Functions = make([]interface{}, 0)
+func (f *FunctionConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, error) {
+	var functions interface{}
+	for _, item := range metadata {
+		k, ok := item.Key.(string)
+		if !ok || k != "functions" {
+			continue
+		}
+		functions = item.Value
 	}
-	data, err := yaml.Marshal(metadata.Functions)
+	if functions == nil {
+		functions = make([]interface{}, 0)
+	}
+	data, err := yaml.Marshal(functions)
 	if err != nil {
-		return err
+		return types.MetadataFiles{}, err
 	}
-	err = ioutil.WriteFile(filepath.Join(f.MetadataDir, fileName), data, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	return types.MetadataFiles{
+		{
+			Path:    filepath.Join(f.MetadataDir, fileName),
+			Content: data,
+		},
+	}, nil
 }

@@ -13,32 +13,34 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/plugins/index"
-	"github.com/hasura/graphql-engine/cli/plugins/installation"
-	"github.com/hasura/graphql-engine/cli/plugins/types"
+	"github.com/hasura/graphql-engine/cli/plugins"
 )
 
 func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsListCmd := &cobra.Command{
 		Use:          "list",
+		Aliases:      []string{"ls"},
 		Short:        "",
 		Example:      ``,
 		SilenceUsage: true,
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return ec.Prepare()
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ec.Spin("Fetching plugins list...")
 			defer ec.Spinner.Stop()
-			plugins, err := index.LoadPluginListFromFS(ec.PluginsPath.IndexPluginsPath())
+			availablePlugins, err := ec.Plugins.ListPlugins()
 			if err != nil {
 				return errors.Wrap(err, "failed to load the list of plugins from the index")
 			}
-			names := make([]string, len(plugins))
-			pluginMap := make(map[string]types.Plugin, len(plugins))
-			for i, p := range plugins {
+			names := make([]string, len(availablePlugins))
+			pluginMap := make(map[string]plugins.Plugin, len(availablePlugins))
+			for i, p := range availablePlugins {
 				names[i] = p.Name
 				pluginMap[p.Name] = p
 			}
 
-			installed, err := installation.ListInstalledPlugins(ec.PluginsPath.InstallReceiptsPath())
+			installed, err := ec.Plugins.ListInstalledPlugins()
 			if err != nil {
 				return errors.Wrap(err, "failed to load installed plugins")
 			}
@@ -49,20 +51,27 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 
 			var rows [][]string
-			cols := []string{"NAME", "DESCRIPTION", "INSTALLED"}
+			cols := []string{"NAME", "DESCRIPTION", "VERSION", "INSTALLED"}
 			for _, name := range names {
 				plugin := pluginMap[name]
 				var status string
+				var version string
 				if _, ok := installed[name]; ok {
 					status = "yes"
-				} else if _, ok, err := installation.GetMatchingPlatform(plugin.Platforms); err != nil {
+					version = installed[name]
+				} else if _, ok, err := plugins.MatchPlatform(plugin.Platforms); err != nil {
 					return errors.Wrapf(err, "failed to get the matching platform for plugin %s", name)
 				} else if ok {
 					status = "no"
 				} else {
 					status = "unavailable on " + runtime.GOOS
 				}
-				rows = append(rows, []string{name, limitString(plugin.ShortDescription, 50), status})
+				if status == "yes" {
+					version = installed[name]
+				} else {
+					version = plugin.Version
+				}
+				rows = append(rows, []string{name, limitString(plugin.ShortDescription, 50), version, status})
 			}
 			rows = sortByFirstColumn(rows)
 			ec.Spinner.Stop()

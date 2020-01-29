@@ -15,15 +15,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
-	"github.com/hasura/graphql-engine/cli/plugins/paths"
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
-	"github.com/mattn/go-colorable"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -88,16 +87,18 @@ type ActionExecutionConfig struct {
 type Config struct {
 	Version string
 	ServerConfig
-	MetadataDirectory string
-	Action            ActionExecutionConfig
+	MetadataDirectory   string
+	MigrationsDirectory string
+	Action              ActionExecutionConfig
 }
 
 type rawConfig struct {
 	// Version for the CLI config
 	Version string `json:"version"`
 	ServerConfig
-	MetadataDirectory string                `json:"metadata_directory"`
-	Action            ActionExecutionConfig `json:"actions"`
+	MetadataDirectory   string                `json:"metadata_directory"`
+	MigrationsDirectory string                `json:"migrations_directory,omitempty"`
+	Action              ActionExecutionConfig `json:"actions"`
 }
 
 func (r rawConfig) toConfig() Config {
@@ -112,8 +113,9 @@ func (r rawConfig) toConfig() Config {
 			AdminSecret:    r.ServerConfig.AdminSecret,
 			ParsedEndpoint: r.ServerConfig.ParsedEndpoint,
 		},
-		MetadataDirectory: r.MetadataDirectory,
-		Action:            r.Action,
+		MetadataDirectory:   r.MetadataDirectory,
+		MigrationsDirectory: r.MigrationsDirectory,
+		Action:              r.Action,
 	}
 }
 
@@ -126,8 +128,9 @@ func (s Config) toRawConfig() rawConfig {
 			AccessKey:      "",
 			ParsedEndpoint: s.ServerConfig.ParsedEndpoint,
 		},
-		MetadataDirectory: s.MetadataDirectory,
-		Action:            s.Action,
+		MetadataDirectory:   s.MetadataDirectory,
+		MigrationsDirectory: s.MigrationsDirectory,
+		Action:              s.Action,
 	}
 }
 
@@ -149,6 +152,7 @@ func (s Config) UnmarshalJSON(b []byte) error {
 	s.ServerConfig.AdminSecret = sc.ServerConfig.AdminSecret
 	s.ServerConfig.ParsedEndpoint = sc.ServerConfig.ParsedEndpoint
 	s.MetadataDirectory = sc.MetadataDirectory
+	s.MigrationsDirectory = sc.MigrationsDirectory
 	s.Action = sc.Action
 	return nil
 }
@@ -220,7 +224,7 @@ type ExecutionContext struct {
 	SkipUpdateCheck bool
 
 	// PluginsPath is the path used by the plugins
-	PluginsPath paths.Paths
+	Plugins *plugins.Config
 	// IsTerminal indicates whether the current session is a terminal or not
 	IsTerminal bool
 }
@@ -303,21 +307,9 @@ func (ec *ExecutionContext) setupPlugins() error {
 	if err != nil {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
-	ec.PluginsPath = paths.NewPaths(base)
-	ensureDirs := func(paths ...string) error {
-		for _, p := range paths {
-			if err := os.MkdirAll(p, 0755); err != nil {
-				return errors.Wrapf(err, "failed to ensure create directory %q", p)
-			}
-		}
-		return nil
-	}
-	return ensureDirs(ec.PluginsPath.BasePath(),
-		ec.PluginsPath.DownloadPath(),
-		ec.PluginsPath.InstallPath(),
-		ec.PluginsPath.BinPath(),
-		ec.PluginsPath.InstallReceiptsPath(),
-	)
+	ec.Plugins = plugins.New(base)
+	ec.Plugins.Logger = ec.Logger
+	return ec.Plugins.Prepare()
 }
 
 // Validate prepares the ExecutionContext ec and then validates the
@@ -325,7 +317,7 @@ func (ec *ExecutionContext) setupPlugins() error {
 // place.
 func (ec *ExecutionContext) Validate() error {
 	// ensure plugins index exists
-	err := gitutil.EnsureCloned(ec.PluginsPath.IndexPath())
+	err := gitutil.EnsureCloned(ec.Plugins.Paths.IndexPath())
 	if err != nil {
 		return errors.Wrap(err, "ensuring plugins index failed")
 	}
@@ -336,8 +328,7 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "validating current directory failed")
 	}
 
-	// set names of files and directories
-	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, "migrations")
+	// set names of config file
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
 
 	// read config and parse the values into Config
@@ -346,7 +337,11 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "cannot read config")
 	}
 
+	// set name of migration directory
+	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MigrationsDirectory)
+
 	if ec.Config.Version != "1" && ec.Config.MetadataDirectory != "" {
+		// set name of metadata directory
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
 		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) {
 			err = os.MkdirAll(ec.MetadataDir, os.ModePerm)
@@ -403,6 +398,7 @@ func (ec *ExecutionContext) readConfig() error {
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
 	v.SetDefault("metadata_directory", "")
+	v.SetDefault("migrations_directory", "migrations")
 	v.SetDefault("actions.kind", "synchronous")
 	v.SetDefault("actions.handler_webhook_baseurl", "http://localhost:3000")
 	v.SetDefault("actions.codegen.framework", "")
@@ -423,7 +419,8 @@ func (ec *ExecutionContext) readConfig() error {
 			Endpoint:    v.GetString("endpoint"),
 			AdminSecret: adminSecret,
 		},
-		MetadataDirectory: v.GetString("metadata_directory"),
+		MetadataDirectory:   v.GetString("metadata_directory"),
+		MigrationsDirectory: v.GetString("migrations_directory"),
 		Action: ActionExecutionConfig{
 			Kind:                  v.GetString("actions.kind"),
 			HandlerWebhookBaseURL: v.GetString("actions.handler_webhook_baseurl"),
@@ -462,25 +459,6 @@ func (ec *ExecutionContext) Spin(message string) {
 func (ec *ExecutionContext) setupLogger() {
 	if ec.Logger == nil {
 		logger := logrus.New()
-
-		if ec.IsTerminal {
-			if ec.NoColor {
-				logger.Formatter = &logrus.TextFormatter{
-					DisableColors:    true,
-					DisableTimestamp: true,
-				}
-			} else {
-				logger.Formatter = &logrus.TextFormatter{
-					ForceColors:      true,
-					DisableTimestamp: true,
-				}
-			}
-		} else {
-			logger.Formatter = &logrus.JSONFormatter{
-				PrettyPrint: false,
-			}
-		}
-		logger.Out = colorable.NewColorableStdout()
 		ec.Logger = logger
 	}
 
@@ -492,6 +470,9 @@ func (ec *ExecutionContext) setupLogger() {
 		}
 		ec.Logger.SetLevel(level)
 	}
+
+	ec.Logger.Hooks = make(logrus.LevelHooks)
+	ec.Logger.AddHook(newLoggerHook(ec.Logger, ec.Spinner, ec.IsTerminal, ec.NoColor))
 
 	// set the logger for telemetry
 	if ec.Telemetry.Logger == nil {

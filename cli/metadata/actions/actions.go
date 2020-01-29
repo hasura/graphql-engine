@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 
-	"github.com/briandowns/spinner"
 	"github.com/pkg/errors"
 
 	"github.com/Masterminds/semver"
@@ -17,9 +15,7 @@ import (
 	"github.com/graphql-go/graphql/language/parser"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/printer"
-	"github.com/hasura/graphql-engine/cli/plugins/index"
-	"github.com/hasura/graphql-engine/cli/plugins/installation"
-	"github.com/hasura/graphql-engine/cli/plugins/paths"
+	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
@@ -95,11 +91,15 @@ type ActionConfig struct {
 	cmdName      string
 	shouldSkip   bool
 
-	spinner *spinner.Spinner
-	logger  *logrus.Logger
+	logger *logrus.Logger
 }
 
-func New(ec *cli.ExecutionContext) *ActionConfig {
+type OverrideOptions struct {
+	Kind    string
+	Webhook string
+}
+
+func New(ec *cli.ExecutionContext, opts *OverrideOptions) *ActionConfig {
 	var shouldSkip bool
 	if ec.Version.ServerSemver != nil {
 		cons, err := semver.NewConstraint(">= v1.1.0")
@@ -109,7 +109,7 @@ func New(ec *cli.ExecutionContext) *ActionConfig {
 		shouldSkip = !cons.Check(ec.Version.ServerSemver)
 	}
 	if !shouldSkip {
-		err := ensureCLIExtension(ec.PluginsPath)
+		err := ensureCLIExtension(ec.Plugins)
 		if err != nil {
 			ec.Spinner.Stop()
 			ec.Logger.Errorln(err)
@@ -121,14 +121,23 @@ func New(ec *cli.ExecutionContext) *ActionConfig {
 			return nil
 		}
 	}
-	return &ActionConfig{
+	cfg := &ActionConfig{
 		MetadataDir:  ec.MetadataDir,
 		ActionConfig: ec.Config.Action,
 		cmdName:      ec.CMDName,
 		shouldSkip:   shouldSkip,
-		spinner:      ec.Spinner,
 		logger:       ec.Logger,
 	}
+	if opts != nil {
+		if opts.Kind != "" {
+			cfg.ActionConfig.Kind = opts.Kind
+		}
+
+		if opts.Webhook != "" {
+			cfg.ActionConfig.HandlerWebhookBaseURL = opts.Webhook
+		}
+	}
+	return cfg
 }
 
 func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMutation string) error {
@@ -145,6 +154,31 @@ func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMu
 		return err
 	}
 
+	currentActionNames := make([]string, 0)
+	// Check if the action already exists, if yes throw error
+	for _, def := range doc.Definitions {
+		switch obj := def.(type) {
+		case *ast.ObjectDefinition:
+			if obj.Kind == kinds.ObjectDefinition && obj.Name.Kind == kinds.Name && obj.Name.Value == "Mutation" {
+				for _, field := range obj.Fields {
+					currentActionNames = append(currentActionNames, field.Name.Value)
+				}
+			}
+		case *ast.TypeExtensionDefinition:
+			if obj.Kind == kinds.TypeExtensionDefinition && obj.Definition.Name.Kind == kinds.Name && obj.Definition.Name.Value == "Mutation" {
+				for _, field := range obj.Definition.Fields {
+					currentActionNames = append(currentActionNames, field.Name.Value)
+				}
+			}
+		}
+	}
+	for _, currAction := range currentActionNames {
+		if currAction == name {
+			return fmt.Errorf("action %s already exists in %s", name, graphqlFileName)
+		}
+	}
+
+	// add extend type mutation
 	for index, def := range doc.Definitions {
 		switch obj := def.(type) {
 		case *ast.ObjectDefinition:
@@ -242,6 +276,91 @@ input SampleInput {
 	if err != nil {
 		return err
 	}
+	sdlFromReq := sdlFromRequest{
+		SDL: sdlPayload{
+			Complete: string(data),
+		},
+	}
+	sdlFromResp, err := convertSDLToMetadata(sdlFromReq, a.cmdName)
+	if err != nil {
+		return err
+	}
+	// Read actions.yaml
+	oldAction, err := GetActionsFileContent(a.MetadataDir)
+	if err != nil {
+		return err
+	}
+	currentActionNames = make([]string, 0)
+	for actionIndex, action := range sdlFromResp.Actions {
+		for _, currAction := range currentActionNames {
+			if currAction == action.Name {
+				return fmt.Errorf("action %s already exists in %s", action.Name, graphqlFileName)
+			}
+		}
+		currentActionNames = append(currentActionNames, action.Name)
+		for oldActionIndex, oldActionObj := range oldAction.Actions {
+			if action.Name == oldActionObj.Name {
+				sdlFromResp.Actions[actionIndex].Permissions = oldAction.Actions[oldActionIndex].Permissions
+				sdlFromResp.Actions[actionIndex].Definition.Kind = oldAction.Actions[oldActionIndex].Definition.Kind
+				sdlFromResp.Actions[actionIndex].Definition.Handler = oldAction.Actions[oldActionIndex].Definition.Handler
+				break
+			}
+		}
+		if action.Definition.Kind == "" {
+			sdlFromResp.Actions[actionIndex].Definition.Kind = a.ActionConfig.Kind
+		}
+		if action.Definition.Handler == "" {
+			sdlFromResp.Actions[actionIndex].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
+		}
+	}
+	for customTypeIndex, customType := range sdlFromResp.Types.Enums {
+		for oldTypeObjIndex, oldTypeObj := range oldAction.CustomTypes.Enums {
+			if customType.Name == oldTypeObj.Name {
+				sdlFromResp.Types.Enums[customTypeIndex].Description = oldAction.CustomTypes.Enums[oldTypeObjIndex].Description
+				sdlFromResp.Types.Enums[customTypeIndex].Relationships = oldAction.CustomTypes.Enums[oldTypeObjIndex].Relationships
+				break
+			}
+		}
+	}
+	for customTypeIndex, customType := range sdlFromResp.Types.InputObjects {
+		for oldTypeObjIndex, oldTypeObj := range oldAction.CustomTypes.InputObjects {
+			if customType.Name == oldTypeObj.Name {
+				sdlFromResp.Types.InputObjects[customTypeIndex].Description = oldAction.CustomTypes.InputObjects[oldTypeObjIndex].Description
+				sdlFromResp.Types.InputObjects[customTypeIndex].Relationships = oldAction.CustomTypes.InputObjects[oldTypeObjIndex].Relationships
+				break
+			}
+		}
+	}
+	for customTypeIndex, customType := range sdlFromResp.Types.Objects {
+		for oldTypeObjIndex, oldTypeObj := range oldAction.CustomTypes.Objects {
+			if customType.Name == oldTypeObj.Name {
+				sdlFromResp.Types.Objects[customTypeIndex].Description = oldAction.CustomTypes.Objects[oldTypeObjIndex].Description
+				sdlFromResp.Types.Objects[customTypeIndex].Relationships = oldAction.CustomTypes.Objects[oldTypeObjIndex].Relationships
+				break
+			}
+		}
+	}
+	for customTypeIndex, customType := range sdlFromResp.Types.Scalars {
+		for oldTypeObjIndex, oldTypeObj := range oldAction.CustomTypes.Scalars {
+			if customType.Name == oldTypeObj.Name {
+				sdlFromResp.Types.Scalars[customTypeIndex].Description = oldAction.CustomTypes.Scalars[oldTypeObjIndex].Description
+				sdlFromResp.Types.Scalars[customTypeIndex].Relationships = oldAction.CustomTypes.Scalars[oldTypeObjIndex].Relationships
+				break
+			}
+		}
+	}
+	var common types.Common
+	common.Actions = sdlFromResp.Actions
+	common.CustomTypes = sdlFromResp.Types
+	// write actions.yaml
+	commonByt, err := yaml.Marshal(common)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), commonByt, 0644)
+	if err != nil {
+		return err
+	}
 	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), data, 0644)
 	if err != nil {
 		return err
@@ -310,18 +429,15 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	if a.shouldSkip {
 		_, err := GetActionsFileContent(a.MetadataDir)
 		if err == nil {
-			a.spinner.Stop()
 			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", actionsFileName)
-			a.spinner.Start()
 		}
 		_, err = GetActionsGraphQLFileContent(a.MetadataDir)
 		if err == nil {
-			a.spinner.Stop()
 			a.logger.WithField("metadata_plugin", "actions").Warnf("Skipping building %s", graphqlFileName)
-			a.spinner.Start()
 		}
 		return nil
 	}
+	// Read actions.graphql
 	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
 	if err != nil {
 		return err
@@ -342,14 +458,11 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	if err != nil {
 		return err
 	}
-	for actionIndex, action := range oldAction.Actions {
+	for _, action := range oldAction.Actions {
 		var isFound bool
-		for newActionIndex, newActionObj := range sdlFromResp.Actions {
+		for _, newActionObj := range sdlFromResp.Actions {
 			if action.Name == newActionObj.Name {
 				isFound = true
-				sdlFromResp.Actions[newActionIndex].Permissions = oldAction.Actions[actionIndex].Permissions
-				sdlFromResp.Actions[newActionIndex].Definition.Kind = oldAction.Actions[actionIndex].Definition.Kind
-				sdlFromResp.Actions[newActionIndex].Definition.Handler = oldAction.Actions[actionIndex].Definition.Handler
 				break
 			}
 		}
@@ -357,13 +470,11 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 			return fmt.Errorf("action %s is not present in %s", action.Name, graphqlFileName)
 		}
 	}
-	for customTypeIndex, customType := range oldAction.CustomTypes.Enums {
+	for _, customType := range oldAction.CustomTypes.Enums {
 		var isFound bool
-		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Enums {
+		for _, newTypeObj := range sdlFromResp.Types.Enums {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				sdlFromResp.Types.Enums[newTypeObjIndex].Description = oldAction.CustomTypes.Enums[customTypeIndex].Description
-				sdlFromResp.Types.Enums[newTypeObjIndex].Relationships = oldAction.CustomTypes.Enums[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -371,13 +482,11 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
 	}
-	for customTypeIndex, customType := range oldAction.CustomTypes.InputObjects {
+	for _, customType := range oldAction.CustomTypes.InputObjects {
 		var isFound bool
-		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.InputObjects {
+		for _, newTypeObj := range sdlFromResp.Types.InputObjects {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				sdlFromResp.Types.InputObjects[newTypeObjIndex].Description = oldAction.CustomTypes.InputObjects[customTypeIndex].Description
-				sdlFromResp.Types.InputObjects[newTypeObjIndex].Relationships = oldAction.CustomTypes.InputObjects[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -385,13 +494,11 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
 	}
-	for customTypeIndex, customType := range oldAction.CustomTypes.Objects {
+	for _, customType := range oldAction.CustomTypes.Objects {
 		var isFound bool
-		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Objects {
+		for _, newTypeObj := range sdlFromResp.Types.Objects {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				sdlFromResp.Types.Objects[newTypeObjIndex].Description = oldAction.CustomTypes.Objects[customTypeIndex].Description
-				sdlFromResp.Types.Objects[newTypeObjIndex].Relationships = oldAction.CustomTypes.Objects[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -399,13 +506,11 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
 	}
-	for customTypeIndex, customType := range oldAction.CustomTypes.Scalars {
+	for _, customType := range oldAction.CustomTypes.Scalars {
 		var isFound bool
-		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Scalars {
+		for _, newTypeObj := range sdlFromResp.Types.Scalars {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				sdlFromResp.Types.Scalars[newTypeObjIndex].Description = oldAction.CustomTypes.Scalars[customTypeIndex].Description
-				sdlFromResp.Types.Scalars[newTypeObjIndex].Relationships = oldAction.CustomTypes.Scalars[customTypeIndex].Relationships
 				break
 			}
 		}
@@ -414,70 +519,67 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 		}
 	}
 	for index, action := range sdlFromResp.Actions {
-		if action.Definition.Kind == "" {
-			sdlFromResp.Actions[index].Definition.Kind = a.ActionConfig.Kind
-		}
-		if action.Definition.Handler == "" {
-			sdlFromResp.Actions[index].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
-		}
+		sdlFromResp.Actions[index].Definition.Kind = a.ActionConfig.Kind
+		sdlFromResp.Actions[index].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
 	}
-	var common types.Common
-	common.Actions = sdlFromResp.Actions
-	common.CustomTypes = sdlFromResp.Types
-	// write actions.yaml and custom_types.yaml
-	commonByt, err := yaml.Marshal(common)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), commonByt, 0644)
-	if err != nil {
-		return err
-	}
-	metadata.Actions = common.Actions
-	metadata.CustomTypes = common.CustomTypes
+	metadata.Actions = sdlFromResp.Actions
+	metadata.CustomTypes = sdlFromResp.Types
 	return nil
 }
 
-func (a *ActionConfig) Export(metadata dbTypes.Metadata) error {
+func (a *ActionConfig) Export(metadata yaml.MapSlice) (dbTypes.MetadataFiles, error) {
 	if a.shouldSkip {
 		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
-		return nil
+		return dbTypes.MetadataFiles{}, nil
 	}
-	tmpByt, err := json.Marshal(metadata)
+	var actions yaml.MapSlice
+	for _, item := range metadata {
+		k, ok := item.Key.(string)
+		if !ok || (k != "actions" && k != "custom_types") {
+			continue
+		}
+		actions = append(actions, item)
+	}
+	ymlByt, err := yaml.Marshal(metadata)
 	if err != nil {
-		return err
+		return dbTypes.MetadataFiles{}, err
+	}
+	jsonByt, err := gyaml.YAMLToJSON(ymlByt)
+	if err != nil {
+		return dbTypes.MetadataFiles{}, err
 	}
 	var common types.Common
-	err = json.Unmarshal(tmpByt, &common)
+	err = json.Unmarshal(jsonByt, &common)
 	if err != nil {
-		return err
+		return dbTypes.MetadataFiles{}, err
 	}
 	var sdlToReq sdlToRequest
 	sdlToReq.Types = common.CustomTypes
 	sdlToReq.Actions = common.Actions
 	sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName)
 	if err != nil {
-		return err
+		return dbTypes.MetadataFiles{}, err
 	}
 	doc, err := parser.Parse(parser.ParseParams{
 		Source: sdlToResp.SDL.Complete,
 	})
 	if err != nil {
-		return err
+		return dbTypes.MetadataFiles{}, err
 	}
 	commonByt, err := yaml.Marshal(common)
 	if err != nil {
-		return err
+		return dbTypes.MetadataFiles{}, err
 	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, actionsFileName), commonByt, 0644)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(filepath.Join(a.MetadataDir, graphqlFileName), []byte(printer.Print(doc).(string)), 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	return dbTypes.MetadataFiles{
+		{
+			Path:    filepath.Join(a.MetadataDir, actionsFileName),
+			Content: commonByt,
+		},
+		{
+			Path:    filepath.Join(a.MetadataDir, graphqlFileName),
+			Content: []byte(printer.Print(doc).(string)),
+		},
+	}, nil
 }
 
 func GetActionsFileContent(metadataDir string) (content types.Common, err error) {
@@ -498,16 +600,9 @@ func GetActionsGraphQLFileContent(metadataDir string) (sdl string, err error) {
 	return
 }
 
-func ensureCLIExtension(paths paths.Paths) error {
-	plugin, err := index.LoadPluginByName(paths.IndexPluginsPath(), pluginName)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
-		}
-		return errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
-	}
-	err = installation.Install(paths, plugin)
-	if err != nil && err != installation.ErrIsAlreadyInstalled {
+func ensureCLIExtension(pluginCfg *plugins.Config) error {
+	err := pluginCfg.Install(pluginName, "")
+	if err != nil && err != plugins.ErrIsAlreadyInstalled {
 		return errors.Wrap(err, "cannot install cli-ext plugin")
 	}
 	return nil

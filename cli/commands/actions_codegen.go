@@ -64,7 +64,7 @@ type actionsCodegenOptions struct {
 
 func (o *actionsCodegenOptions) run() (err error) {
 
-	actionCfg := actions.New(o.EC)
+	actionCfg := actions.New(o.EC, nil)
 	var derivePayload actions.DerivePayload
 
 	if o.EC.Config.Action.Codegen.Framework == "" {

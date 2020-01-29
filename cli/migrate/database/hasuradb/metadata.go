@@ -3,13 +3,13 @@ package hasuradb
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
-	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
-	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 
 	"github.com/oliveagle/jsonpath"
 )
@@ -41,17 +41,27 @@ func (h *HasuraDB) ExportMetadata() error {
 		return horror.Error(h.config.isCMD)
 	}
 
-	var data dbTypes.Metadata
-	err = gyaml.Unmarshal(body, &data)
+	var c yaml.MapSlice
+	err = yaml.Unmarshal(body, &c)
 	if err != nil {
 		h.logger.Debug(err)
 		return err
 	}
 
+	var metadataFiles types.MetadataFiles
 	for plgName, plg := range h.config.Plugins {
-		err = plg.Export(data)
+		files, err := plg.Export(c)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("cannot export %s from metadata", plgName))
+		}
+		metadataFiles = append(metadataFiles, files...)
+	}
+
+	// create files
+	for _, file := range metadataFiles {
+		err = ioutil.WriteFile(file.Path, file.Content, 0644)
+		if err != nil {
+			return errors.Wrap(err, "creating metadata file failed")
 		}
 	}
 	return nil

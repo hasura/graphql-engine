@@ -1,7 +1,6 @@
-package index
+package plugins
 
 import (
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -9,12 +8,10 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/plugins/paths"
-	"github.com/hasura/graphql-engine/cli/plugins/types"
-	"github.com/hasura/graphql-engine/cli/plugins/validation"
 	"github.com/pkg/errors"
 )
 
-func findPluginManifestFiles(indexDir string) ([]string, error) {
+func (c *Config) findPluginManifestFiles(indexDir string) ([]string, error) {
 	var out []string
 	files, err := ioutil.ReadDir(indexDir)
 	if err != nil {
@@ -29,21 +26,21 @@ func findPluginManifestFiles(indexDir string) ([]string, error) {
 }
 
 // LoadPluginListFromFS will parse and retrieve all plugin files.
-func LoadPluginListFromFS(indexDir string) ([]types.Plugin, error) {
+func (c *Config) LoadPluginListFromFS(indexDir string) ([]Plugin, error) {
 	indexDir, err := filepath.EvalSymlinks(indexDir)
 	if err != nil {
 		return nil, err
 	}
 
-	files, err := findPluginManifestFiles(indexDir)
+	files, err := c.findPluginManifestFiles(indexDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to scan plugins in index directory")
 	}
 
-	list := make([]types.Plugin, 0, len(files))
+	list := make([]Plugin, 0, len(files))
 	for _, file := range files {
 		pluginName := strings.TrimSuffix(file, filepath.Ext(file))
-		p, err := LoadPluginByName(indexDir, pluginName)
+		p, err := c.LoadPluginByName(indexDir, pluginName)
 		if err != nil {
 			continue
 		}
@@ -54,42 +51,32 @@ func LoadPluginListFromFS(indexDir string) ([]types.Plugin, error) {
 
 // LoadPluginByName loads a plugins index file by its name. When plugin
 // file not found, it returns an error that can be checked with os.IsNotExist.
-func LoadPluginByName(pluginsDir, pluginName string) (types.Plugin, error) {
-	if !validation.IsSafePluginName(pluginName) {
-		return types.Plugin{}, errors.Errorf("plugin name %q not allowed", pluginName)
+func (c *Config) LoadPluginByName(pluginsDir, pluginName string) (Plugin, error) {
+	if !IsSafePluginName(pluginName) {
+		return Plugin{}, errors.Errorf("plugin name %q not allowed", pluginName)
 	}
 
-	return ReadPluginFromFile(filepath.Join(pluginsDir, pluginName+paths.ManifestExtension))
+	return c.ReadPluginFromFile(filepath.Join(pluginsDir, pluginName+paths.ManifestExtension))
 }
 
 // ReadPluginFromFile loads a file from the FS. When plugin file not found, it
 // returns an error that can be checked with os.IsNotExist.
-func ReadPluginFromFile(path string) (types.Plugin, error) {
+func (c *Config) ReadPluginFromFile(path string) (Plugin, error) {
 	f, err := os.Open(path)
 	if os.IsNotExist(err) {
-		return types.Plugin{}, err
+		return Plugin{}, err
 	} else if err != nil {
-		return types.Plugin{}, errors.Wrap(err, "failed to open index file")
+		return Plugin{}, errors.Wrap(err, "failed to open index file")
 	}
-	return ReadPlugin(f)
-}
-
-func ReadPlugin(f io.ReadCloser) (types.Plugin, error) {
 	defer f.Close()
-	p, err := DecodePluginFile(f)
-	if err != nil {
-		return p, errors.Wrap(err, "failed to decode plugin manifest")
-	}
-	return p, errors.Wrap(validation.ValidatePlugin(p.Name, p), "plugin manifest validation error")
-}
-
-// DecodePluginFile tries to decodes a plugin manifest from r.
-func DecodePluginFile(r io.Reader) (types.Plugin, error) {
-	var plugin types.Plugin
-	b, err := ioutil.ReadAll(r)
+	var plugin Plugin
+	b, err := ioutil.ReadAll(f)
 	if err != nil {
 		return plugin, err
 	}
 	err = yaml.Unmarshal(b, &plugin)
-	return plugin, err
+	if err != nil {
+		return plugin, errors.Wrap(err, "failed to decode plugin manifest")
+	}
+	return plugin, errors.Wrap(plugin.ValidatePlugin(plugin.Name), "plugin manifest validation error")
 }

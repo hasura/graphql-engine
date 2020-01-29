@@ -47,6 +47,8 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := actionsCreateCmd.Flags()
 
+	f.StringVar(&opts.kind, "kind", "", "kind to use in action")
+	f.StringVar(&opts.webhook, "webhook", "", "webhook to use in action")
 	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a Hasura mutation")
 	f.BoolVar(&opts.withCodegen, "with-codegen", false, "create action along with codegen")
 
@@ -67,6 +69,8 @@ type actionsCreateOptions struct {
 	EC *cli.ExecutionContext
 
 	name        string
+	kind        string
+	webhook     string
 	deriveFrom  string
 	withCodegen bool
 }
@@ -88,16 +92,21 @@ func (o *actionsCreateOptions) run() error {
 		if err != nil {
 			return err
 		}
+		o.EC.Spinner.Stop()
 	}
-	o.EC.Spinner.Stop()
 
 	// create new action
-	actionCfg := actions.New(o.EC)
+	o.EC.Spin("Creating the action...")
+	defer o.EC.Spinner.Stop()
+	opts := &actions.OverrideOptions{
+		Kind:    o.kind,
+		Webhook: o.webhook,
+	}
+	actionCfg := actions.New(o.EC, opts)
 	err = actionCfg.Create(o.name, introSchema, o.deriveFrom)
 	if err != nil {
 		return err
 	}
-	o.EC.Spin("Creating the action...")
 	err = migrateDrv.ApplyMetadata()
 	if err != nil {
 		return err

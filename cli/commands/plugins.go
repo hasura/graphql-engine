@@ -26,7 +26,7 @@ func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return gitutil.EnsureCloned(ec.PluginsPath.IndexPath())
+			return gitutil.EnsureCloned(ec.Plugins.Paths.IndexPath())
 		},
 	}
 	pluginsCmd.AddCommand(
@@ -71,7 +71,7 @@ func NewDefaultPluginHandler(validPrefixes []string) *DefaultPluginHandler {
 // Lookup implements PluginHandler
 func (h *DefaultPluginHandler) Lookup(filename string) (string, bool) {
 	for _, prefix := range h.ValidPrefixes {
-		filename := filepath.Join(ec.PluginsPath.BinPath(), fmt.Sprintf("%s-%s", prefix, filename))
+		filename := filepath.Join(ec.Plugins.Paths.BinPath(), fmt.Sprintf("%s-%s", prefix, filename))
 		path, err := exec.LookPath(filename)
 		if err != nil || len(path) == 0 {
 			continue
