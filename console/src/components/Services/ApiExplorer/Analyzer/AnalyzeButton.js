@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import QueryAnalyzer from './QueryAnalyzer';
-import { Button } from 'graphiql';
+import GraphiQL from 'graphiql';
 import { print, parse } from 'graphql';
 import { isValidGraphQLOperation } from '../utils';
 
@@ -57,7 +57,7 @@ export default class AnalyseButton extends React.Component {
 
     return (
       <span className="analyse-button-wrap">
-        <Button
+        <GraphiQL.Button
           onClick={this.handleAnalyseClick.bind(this)}
           onMouseDown={onMouseDown}
           title="Analyze Query"
