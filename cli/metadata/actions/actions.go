@@ -107,7 +107,6 @@ func New(ec *cli.ExecutionContext, opts *OverrideOptions) *ActionConfig {
 	if !shouldSkip {
 		err := ensureCLIExtension(ec.Plugins)
 		if err != nil {
-			ec.Spinner.Stop()
 			ec.Logger.Errorln(err)
 			msg := fmt.Sprintf(`unable to install cli-ext plugin. execute the following commands to continue:
 
@@ -213,7 +212,7 @@ input SampleInput {
 				ActionName:          name,
 			},
 		}
-		sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName)
+		sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName, a.logger)
 		if err != nil {
 			return err
 		}
@@ -275,7 +274,7 @@ input SampleInput {
 			Complete: string(data),
 		},
 	}
-	sdlFromResp, err := convertSDLToMetadata(sdlFromReq, a.cmdName)
+	sdlFromResp, err := convertSDLToMetadata(sdlFromReq, a.cmdName, a.logger)
 	if err != nil {
 		return err
 	}
@@ -384,7 +383,7 @@ func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
 	if a.ActionConfig.Codegen.URI == "" {
 		data.CodegenConfig.URI = getActionsCodegenURI(data.CodegenConfig.Framework)
 	}
-	resp, err := getActionsCodegen(data, a.cmdName)
+	resp, err := getActionsCodegen(data, a.cmdName, a.logger)
 	if err != nil {
 		return err
 	}
@@ -443,7 +442,7 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 		},
 	}
 
-	sdlFromResp, err := convertSDLToMetadata(sdlFromReq, a.cmdName)
+	sdlFromResp, err := convertSDLToMetadata(sdlFromReq, a.cmdName, a.logger)
 	if err != nil {
 		return err
 	}
@@ -562,7 +561,7 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (dbTypes.MetadataFiles, er
 	var sdlToReq sdlToRequest
 	sdlToReq.Types = common.CustomTypes
 	sdlToReq.Actions = common.Actions
-	sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName)
+	sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName, a.logger)
 	if err != nil {
 		return dbTypes.MetadataFiles{}, err
 	}
