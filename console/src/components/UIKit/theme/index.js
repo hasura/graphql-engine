@@ -51,7 +51,7 @@ export const theme = {
     roboto: 'Roboto',
   },
 
-  fontWeights: [100, 200, 300, 400, 500, 600, 700, 800, 900],
+  fontWeights: [0, 100, 200, 300, 400, 500, 600, 700, 800, 900],
 
   fontSizes: [12, 14, 16, 18, 20, 24, 30, 36, 48, 80, 96],
 
@@ -63,6 +63,7 @@ export const theme = {
 
   // Text / box-shadows
   shadows: [
+    0,
     '0 0 3px 0 rgba(0, 0, 0, 0.16)',
     '0 3px 6px 0 rgba(0, 0, 0, 0.16)',
     '0 3px 10px 0 rgba(0, 0, 0, 0.16)',
@@ -103,7 +104,7 @@ theme.radii.xl = theme.radii[5];
 
 theme.radii.circle = 1000;
 
-// *********************************** //
+// ********************************* //
 
 /* font-weight
   - normal: 400
@@ -111,8 +112,36 @@ theme.radii.circle = 1000;
   - bold: 700
 */
 
-theme.fontWeights.normal = theme.fontWeights[3];
+theme.fontWeights.normal = theme.fontWeights[4];
 
-theme.fontWeights.medium = theme.fontWeights[4];
+theme.fontWeights.medium = theme.fontWeights[5];
 
-theme.fontWeights.bold = theme.fontWeights[6];
+theme.fontWeights.bold = theme.fontWeights[7];
+
+// ********************************* //
+
+/* font-sizes
+  - h1: 30px
+  - h2: 24px
+  - h3: 20px
+  - h4: 18px
+  - p: 16px
+  - button: 14px
+  - ex (Explainer Text): 12px
+*/
+
+theme.fontSizes.h1 = theme.fontSizes[6];
+
+theme.fontSizes.h2 = theme.fontSizes[5];
+
+theme.fontSizes.h3 = theme.fontSizes[4];
+
+theme.fontSizes.h4 = theme.fontSizes[3];
+
+theme.fontSizes.p = theme.fontSizes[2];
+
+theme.fontSizes.button = theme.fontSizes[1];
+
+theme.fontSizes.ex = theme.fontSizes[0];
+
+// ********************************* //

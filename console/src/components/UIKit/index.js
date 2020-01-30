@@ -215,7 +215,7 @@ const Buttons = () => (
         border={1} // border ~ theme.borders[1]
         borderColor="yellow.primary" // ~ theme.colors.yellow.primary
         fontWeight="bold" // ~ theme.fontWeights.bold
-        fontSize={1} // ~ theme.fontSizes[1]
+        fontSize="button" // ~ theme.fontSizes.button
         borderRadius="xs" // ~ theme.raddi.xs
         mr={4} // ~ margin-right: theme.space[4]
       >
@@ -230,7 +230,7 @@ const Buttons = () => (
         border={1}
         borderColor="black.secondary"
         fontWeight="bold"
-        fontSize={1}
+        fontSize="button"
         borderRadius="xs"
       >
         Secondary button
@@ -244,6 +244,7 @@ const Buttons = () => (
         height={0}
         px={3}
         border={1}
+        fontSize="button"
         fontWeight="medium"
         borderColor="yellow.primary"
         borderRadius="xs"
@@ -257,6 +258,7 @@ const Buttons = () => (
         height={0}
         px={3}
         border={1}
+        fontSize="button"
         fontWeight="medium"
         borderColor="green.primary"
         borderRadius="xs"
@@ -270,6 +272,7 @@ const Buttons = () => (
         height={0}
         px={3}
         border={1}
+        fontSize="button"
         fontWeight="medium"
         borderColor="red.primary"
         borderRadius="xs"
@@ -283,6 +286,7 @@ const Buttons = () => (
         height={0}
         px={3}
         border={1}
+        fontSize="button"
         fontWeight="medium"
         borderColor="orange.primary"
         borderRadius="xs"
@@ -296,6 +300,7 @@ const Buttons = () => (
         height={0}
         px={3}
         border={1}
+        fontSize="button"
         fontWeight="medium"
         borderColor="blue.primary"
         borderRadius="xs"
@@ -311,12 +316,12 @@ const Buttons = () => (
 const BoxShadows = () => (
   <BoxShadowDivWrapper>
     <BoxShadowDiv
-      boxShadow={0} // box-shadow ~ theme.shadows[0]
+      boxShadow={1} // box-shadow ~ theme.shadows[1]
       borderRadius="xs" // ~ theme.radii.xs
     />
-    <BoxShadowDiv boxShadow={1} borderRadius="xs" />
     <BoxShadowDiv boxShadow={2} borderRadius="xs" />
     <BoxShadowDiv boxShadow={3} borderRadius="xs" />
+    <BoxShadowDiv boxShadow={4} borderRadius="xs" />
   </BoxShadowDivWrapper>
 );
 
@@ -332,7 +337,7 @@ const Alerts = () => (
       borderLeft={4} // ~ theme.borders[4]
       borderColor="green.primary" // ~ theme.colors.green.primary
       borderRadius="xs" // ~ theme.radii.xs
-      boxShadow={1} // ~ theme.shadows[1]
+      boxShadow={2} // ~ theme.shadows[2]
       my={4} // margin-y-axis ~ theme.space[4])
     />
     <AlertMessageBox
@@ -343,7 +348,7 @@ const Alerts = () => (
       borderLeft={4}
       borderColor="blue.primary"
       borderRadius="xs"
-      boxShadow={1}
+      boxShadow={2}
       my={4}
     />
     <AlertMessageBox
@@ -354,7 +359,7 @@ const Alerts = () => (
       borderLeft={4}
       borderColor="orange.primary"
       borderRadius="xs"
-      boxShadow={1}
+      boxShadow={2}
       my={4}
     />
     <AlertMessageBox
@@ -365,7 +370,7 @@ const Alerts = () => (
       borderLeft={4}
       borderColor="red.primary"
       borderRadius="xs"
-      boxShadow={1}
+      boxShadow={2}
       my={4}
     />
   </React.Fragment>
@@ -379,30 +384,30 @@ const TextLinks = () => (
       mb={2} // ~ margin-bottom: theme.space[3]
     >
       <Text
-        fontSize={2} // ~ theme.fontSizes[2]
+        fontSize="p" // ~ theme.fontSizes.p
         fontWeight="medium" // ~ theme.fontWeights.medium
         mr={4} // ~ theme.space[4]
         color="black.text" // ~theme.colors.black.text
       >
         Check it out
       </Text>
-      <Text fontSize={2} fontWeight="medium" mr={4} color="green.primary">
+      <Text fontSize="p" fontWeight="medium" mr={4} color="green.primary">
         Check it out
       </Text>
-      <Text fontSize={2} fontWeight="medium" mr={4} color="blue.primary">
+      <Text fontSize="p" fontWeight="medium" mr={4} color="blue.primary">
         Check it out
       </Text>
-      <Text fontSize={2} fontWeight="medium" mr={4} color="orange.primary">
+      <Text fontSize="p" fontWeight="medium" mr={4} color="orange.primary">
         Check it out
       </Text>
-      <Text fontSize={2} fontWeight="medium" color="red.primary">
+      <Text fontSize="p" fontWeight="medium" color="red.primary">
         Check it out
       </Text>
     </TextLinksWrapper>
     {/* Underlined Text */}
     <TextLinksWrapper>
       <Text
-        fontSize={2} // ~ theme.fontSizes[2]
+        fontSize="p" // ~ theme.fontSizes.p
         fontWeight="medium" // ~ theme.fontWeights.medium
         mr={4} // ~ theme.space[4]
         color="black.text" // ~theme.colors.black.text
@@ -412,7 +417,7 @@ const TextLinks = () => (
         Check it out
       </Text>
       <Text
-        fontSize={2}
+        fontSize="p"
         fontWeight="medium"
         mr={4}
         color="green.primary"
@@ -422,7 +427,7 @@ const TextLinks = () => (
         Check it out
       </Text>
       <Text
-        fontSize={2}
+        fontSize="p"
         fontWeight="medium"
         mr={4}
         color="blue.primary"
@@ -432,7 +437,7 @@ const TextLinks = () => (
         Check it out
       </Text>
       <Text
-        fontSize={2}
+        fontSize="p"
         fontWeight="medium"
         mr={4}
         color="orange.primary"
@@ -442,7 +447,7 @@ const TextLinks = () => (
         Check it out
       </Text>
       <Text
-        fontSize={2}
+        fontSize="p"
         fontWeight="medium"
         color="red.primary"
         borderBottom={2}
@@ -461,7 +466,7 @@ const Headings = () => (
     <Heading
       mb={3} // margin-bottom: theme.space[3]
       color="black.text" // ~ theme.colors.black.text
-      fontSize={6} // ~ theme.fontSizes[6]
+      fontSize="h1" // ~ theme.fontSizes[6]
     >
       Main Heading
     </Heading>
@@ -469,7 +474,7 @@ const Headings = () => (
       as="h2" // render as <h2> element
       mb={3}
       color="black.text"
-      fontSize={5}
+      fontSize="h2"
     >
       Subpage title
     </Heading>
@@ -477,7 +482,7 @@ const Headings = () => (
       as="h3" // render as <h3> element
       mb={3}
       color="black.text"
-      fontSize={4}
+      fontSize="h3"
       mt={0} // ~ Overriding base styling.
     >
       Section Header
@@ -485,7 +490,7 @@ const Headings = () => (
     <Heading
       as="h4" // render as <h4> element
       color="black.text"
-      fontSize={3}
+      fontSize="h4"
     >
       Sub section Heading
     </Heading>
