@@ -49,8 +49,9 @@
             </select>
           </a>
         </div>
-        <div class="search_wrapper mobile-hide" id="input_search_box">
-          <img class="search_icon" src="{{ pathto('_images/layout/search-icon.svg', 1) }}" alt="Search icon"/>
+        <div class="search_wrapper" id="input_search_box">
+          <img class="search_icon mobile-hide" src="{{ pathto('_images/layout/search-icon.svg', 1) }}" alt="Search icon"/>
+          <img class="search_icon mobile-only" src="{{ pathto('_images/layout/search-icon-mobile.svg', 1) }}" alt="Search icon"/>
           <input type="text" id="search_element" placeholder="Search docs..." />
         </div>
         <a class="discordBtn" href="https://discordapp.com/invite/hasura" target="_blank" rel="noopener noreferrer" aria-label="Discord">
@@ -98,10 +99,6 @@
                 <div id="docs-header-actions">
                   <div class="inline-block mobile-only" id="nav_tree_icon">
                     <img class="responsive" src="{{ pathto('_images/layout/menu-bar.svg', 1) }}" alt="Menu bar" />
-                  </div>
-                  <div class="search_wrapper mobile-only" id="input_search_box">
-                    <img class="search_icon" src="{{ pathto('_images/layout/search-icon-mobile.svg', 1) }}" alt="Search icon"/>
-                    <input type="text" id="search_element" placeholder="Search docs..." />
                   </div>
                   <!--
                   <div class="inline-block" id="input_search_box">

@@ -685,6 +685,7 @@ article ol ol {
   align-items: center;
   padding: 0 15px;
   box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.16);
+  position: relative;
 }
 .header_wrapper .brand {
   width: 24%;
@@ -995,11 +996,17 @@ article ol ol {
     max-width: 100%;
     min-width: 0px !important;
   }
-
+  .search_wrapper {
+    position: absolute;
+    top: 89px;
+    left: 10%;
+  }
   .main_container_wrapper {
     min-width: 0px !important;
   }
-
+  .buttonWrapper {
+    margin-left: auto;
+  }
   #sidebar {
     position: absolute;
     z-index: 10;
@@ -1027,6 +1034,7 @@ article ol ol {
     background-color: transparent;
     color: #001934;
     opacity: 1;
+    text-indent: 24px;
   }
   #input_search_box .search_icon {
     top: 9px;
@@ -1061,15 +1069,16 @@ article ol ol {
   }
 
   #input_search_box {
-    width: 60%;
+    width: 64%;
     margin-left: 10px;
+    position: absolute !important;
   }
 
   #input_search_box .algolia-autocomplete.algolia-autocomplete-left .ds-dropdown-menu,
   #input_search_box .algolia-autocomplete.algolia-autocomplete-right .ds-dropdown-menu {
     left: -34px !important;
-    max-width: calc(166% + 10px);
-    min-width: calc(166% + 10px);  /* 1 / width(input_search_box) + 10px */
+    max-width: calc(116% + 10px);
+    min-width: calc(116% + 10px);  /* 1 / width(input_search_box) + 10px */
   }
   .header_wrapper .brand {
     flex: 1;
@@ -1087,15 +1096,15 @@ article ol ol {
   }
 
   #input_search_box {
-    width: 90%;
+    width: auto;
     margin-left: 10px;
   }
 
   #input_search_box .algolia-autocomplete.algolia-autocomplete-right .ds-dropdown-menu,
   #input_search_box .algolia-autocomplete.algolia-autocomplete-left .ds-dropdown-menu {
     left: -34px !important;
-    max-width: calc(111% + 10px);
-    min-width: calc(111% + 10px);  /* 1 / width(input_search_box) + 10px */
+    max-width: calc(161% + 10px);
+    min-width: calc(161% + 10px);  /* 1 / width(input_search_box) + 10px */
   }
 
   #docs-header-actions .header_links {
@@ -1117,5 +1126,10 @@ article ol ol {
 
   .footer-hasura-custom .footer_logo {
     margin-right: 0;
+  }
+}
+@media (max-width: 405px) {
+  .gitHubBtn {
+    display: none;
   }
 }
