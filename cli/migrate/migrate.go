@@ -1233,7 +1233,7 @@ func (m *Migrate) versionUpExists(version uint64) error {
 // versionDownExists checks the source if either the up or down migration for
 // the specified migration version exists.
 func (m *Migrate) versionDownExists(version uint64) error {
-	// try up migration first
+	// try down migration first
 	directions := m.sourceDrv.GetDirections(version)
 	if !directions[source.Down] && !directions[source.MetaDown] {
 		return fmt.Errorf("%d down migration not found", version)
@@ -1475,24 +1475,37 @@ func (m *Migrate) unlockErr(prevErr error) error {
 
 // GotoVersion will apply a version also applying the migration chain
 // leading to it
-func (m *Migrate) GotoVersion(gotoVersion uint64) error {
-	currentVersion, dirty, err := m.Version()
+func (m *Migrate) GotoVersion(gotoVersion int64) error {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
-		return errors.Wrap(err, "cannot determine version")
+		return err
+	}
+	if mode != "true" {
+		return ErrNoMigrationMode
 	}
 
+	currentVersion, dirty, err := m.Version()
+	currVersion := int64(currentVersion)
+	if err != nil {
+		if err == ErrNilVersion {
+			currVersion = database.NilVersion
+		} else {
+			return errors.Wrap(err, "cannot determine version")
+		}
+	}
 	if dirty {
-		return ErrDirty{int64(currentVersion)}
+		return ErrDirty{currVersion}
 	}
 
 	if err := m.lock(); err != nil {
 		return err
 	}
+
 	ret := make(chan interface{})
-	if currentVersion <= gotoVersion {
-		go m.readUpFromVersion(-1, int64(gotoVersion), ret)
-	} else if currentVersion > gotoVersion {
-		go m.readDownFromVersion(int64(currentVersion), int64(gotoVersion), ret)
+	if currVersion <= gotoVersion {
+		go m.readUpFromVersion(-1, gotoVersion, ret)
+	} else if currVersion > gotoVersion {
+		go m.readDownFromVersion(currVersion, gotoVersion, ret)
 	}
 
 	return m.unlockErr(m.runMigrations(ret))
@@ -1630,6 +1643,36 @@ func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface
 
 		prev, ok := m.databaseDrv.Prev(suint64(from))
 		if !ok {
+			// Check if any prev version available in source
+			prev, err = m.sourceDrv.Prev(suint64(from))
+			if os.IsNotExist(err) && to == -1 {
+				// apply nil migration
+				migr, err := m.metanewMigration(suint64(from), -1)
+				if err != nil {
+					ret <- err
+					return
+				}
+
+				ret <- migr
+				go migr.Buffer()
+
+				migr, err = m.newMigration(suint64(from), -1)
+				if err != nil {
+					ret <- err
+					return
+				}
+
+				ret <- migr
+				go migr.Buffer()
+
+				from = database.NilVersion
+				noOfAppliedMigrations++
+				continue
+			} else if err != nil {
+				ret <- err
+				return
+			}
+			ret <- fmt.Errorf("%v not applied on database", prev)
 			return
 		}
 

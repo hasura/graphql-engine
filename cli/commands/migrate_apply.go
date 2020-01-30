@@ -58,7 +58,18 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			err := opts.run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
-				return err
+				if err == migrate.ErrNoChange {
+					opts.EC.Logger.Info("nothing to apply")
+					return nil
+				}
+				if e, ok := err.(*os.PathError); ok {
+					// If Op is first, then log No migrations to apply
+					if e.Op == "first" {
+						opts.EC.Logger.Info("nothing to apply")
+						return nil
+					}
+				}
+				return errors.Wrap(err, "apply failed")
 			}
 			opts.EC.Logger.Info("migrations applied")
 			return nil
@@ -111,22 +122,7 @@ func (o *migrateApplyOptions) run() error {
 	}
 	migrateDrv.SkipExecution = o.skipExecution
 
-	err = ExecuteMigration(migrationType, migrateDrv, step)
-	if err != nil {
-		if err == migrate.ErrNoChange {
-			o.EC.Logger.Info("nothing to apply")
-			return nil
-		}
-		if e, ok := err.(*os.PathError); ok {
-			// If Op is first, then log No migrations to apply
-			if e.Op == "first" {
-				o.EC.Logger.Info("No migrations to apply")
-				return nil
-			}
-		}
-		return errors.Wrap(err, "apply failed")
-	}
-	return nil
+	return ExecuteMigration(migrationType, migrateDrv, step)
 }
 
 // Only one flag out of up, down and version can be set at a time. This function
@@ -172,7 +168,7 @@ func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migra
 
 	step, err := strconv.ParseInt(stepString, 10, 64)
 	if err != nil {
-		return "", 0, errors.Wrap(err, "not a valid input for steps")
+		return "", 0, errors.Wrap(err, "not a valid input for steps/version")
 	}
 	return migrationName, step, nil
 }

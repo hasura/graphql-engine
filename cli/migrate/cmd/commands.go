@@ -256,6 +256,6 @@ func SquashCmd(m *migrate.Migrate, from uint64, version int64, name, directory s
 	return
 }
 
-func GotoVersionCmd(m *migrate.Migrate, gotoVersion uint64) error {
+func GotoVersionCmd(m *migrate.Migrate, gotoVersion int64) error {
 	return m.GotoVersion(gotoVersion)
 }
