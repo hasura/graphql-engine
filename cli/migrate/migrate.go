@@ -9,10 +9,11 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
@@ -1484,15 +1485,11 @@ func (m *Migrate) GotoVersion(gotoVersion uint64) error {
 		return ErrDirty{int64(currentVersion)}
 	}
 
-	if currentVersion == gotoVersion {
-		return ErrNoChange
-	}
-
 	if err := m.lock(); err != nil {
 		return err
 	}
 	ret := make(chan interface{})
-	if currentVersion < gotoVersion {
+	if currentVersion <= gotoVersion {
 		go m.readUpFromVersion(-1, int64(gotoVersion), ret)
 	} else if currentVersion > gotoVersion {
 		go m.readDownFromVersion(int64(currentVersion), int64(gotoVersion), ret)
