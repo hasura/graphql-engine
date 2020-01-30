@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import pytest
 import ruamel.yaml as yaml
 from ruamel.yaml.compat import ordereddict, StringIO
 from ruamel.yaml.comments import CommentedMap
@@ -9,11 +8,9 @@ import copy
 import graphql
 import os
 import base64
-import json
 import jsondiff
 import jwt
 import random
-import time
 import warnings
 
 from context import GQLWsClient, PytestConf
@@ -129,6 +126,7 @@ def test_forbidden_webhook(hge_ctx, conf):
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
 def check_query(hge_ctx, conf, transport='http', add_auth=True):
+    hge_ctx.tests_passed = True
     headers = {}
     if 'headers' in conf:
         headers = conf['headers']
@@ -231,7 +229,7 @@ def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retr
     resp_done = next(query_resp)
     assert resp_done['type'] == 'complete'
 
-    return assert_graphql_resp_expected(resp['payload'], exp_http_response, query)
+    return assert_graphql_resp_expected(resp['payload'], exp_http_response, query, skip_if_err_msg=hge_ctx.avoid_err_msg_checks)
 
 
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
@@ -240,7 +238,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
     assert code == exp_code, resp
     print('http resp: ', resp)
     if exp_response:
-        return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs)
+        return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks)
     else:
         return resp, True
 
@@ -250,12 +248,13 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
 #
 # Returns 'resp' and a bool indicating whether the test passed or not (this
 # will always be True unless we are `--accepting`)
-def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}):
+def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_if_err_msg=False):
     # Prepare actual and respected responses so comparison takes into
     # consideration only the ordering that we care about:
     resp         = collapse_order_not_selset(resp_orig,         query)
     exp_response = collapse_order_not_selset(exp_response_orig, query)
     matched = equal_CommentedMap(resp, exp_response)
+    is_err_msg = any(exp_response_orig.get(x) for x in ['error','errors'])
 
     if PytestConf.config.getoption("--accept"):
         print('skipping assertion since we chose to --accept new output')
@@ -275,7 +274,10 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
         if 'x-request-id' in resp_hdrs:
             test_output['request id'] = resp_hdrs['x-request-id']
         yml.dump(test_output, stream=dump_str)
-        assert matched, '\n' + dump_str.getvalue()
+        if not matched and is_err_msg and skip_if_err_msg:
+            warnings.warn("Response does not have the expected error message\n" + dump_str.getvalue())
+        else:
+            assert matched, '\n' + dump_str.getvalue()
     return resp, matched  # matched always True unless --accept
 
 # This really sucks; newer ruamel made __eq__ ignore ordering:
@@ -345,7 +347,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
 # Return a new dict that discards the object key ordering properties of
 # 'result' where the key is not part of the selection set. This lets us compare
 # expected and actual results properly with respect to the graphql spec's
-# ordering requirements.
+# ordering requirements.'\n' + dump_str.getvalue()
 def collapse_order_not_selset(result_inp, query):
   # Collapse to unordered dict recursively by roundtripping through json
   def collapse(x):

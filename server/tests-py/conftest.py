@@ -96,7 +96,37 @@ def pytest_addoption(parser):
         required=False,
         help="Accept any failing test cases from YAML files as correct, and write the new files out to disk."
     )
+    parser.addoption(
+        "--skip-schema-teardown",
+        action="store_true",
+        default=False,
+        required=False,
+        help="""
+Skip tearing down the schema/Hasura metadata after tests. This option may result in test failures if the schema
+has to change between the list of tests to be run
+"""
+    )
+    parser.addoption(
+        "--skip-schema-setup",
+        action="store_true",
+        default=False,
+        required=False,
+        help="""
+Skip setting up schema/Hasura metadata before tests.
+This option may result in test failures if the schema has to change between the list of tests to be run
+"""
+    )
 
+    parser.addoption(
+        "--avoid-error-message-checks",
+        action="store_true",
+        default=False,
+        required=False,
+        help="""
+    This option when set will ignore disparity in error messages between expected and response outputs.
+    Used basically in version upgrade/downgrade tests where the error messages may change
+    """
+    )
 
 #By default,
 #1) Set default parallelism to one
@@ -131,7 +161,7 @@ def pytest_configure(config):
 def is_help_option_present(config):
     return any([
         config.getoption(x)
-        for x in ['--fixtures','--help']
+        for x in ['--fixtures','--help', '--collect-only']
     ])
 
 @pytest.hookimpl(optionalhook=True)
@@ -161,27 +191,8 @@ def hge_ctx(request):
     else:
         pg_url = config.slaveinput["pg-url"]
 
-    hge_key = config.getoption('--hge-key')
-    hge_webhook = config.getoption('--hge-webhook')
-    webhook_insecure = config.getoption('--test-webhook-insecure')
-    hge_jwt_key_file = config.getoption('--hge-jwt-key-file')
-    hge_jwt_conf = config.getoption('--hge-jwt-conf')
-    ws_read_cookie = config.getoption('--test-ws-init-cookie')
-    metadata_disabled = config.getoption('--test-metadata-disabled')
-    hge_scale_url = config.getoption('--test-hge-scale-url')
     try:
-        hge_ctx = HGECtx(
-            hge_url=hge_url,
-            pg_url=pg_url,
-            hge_key=hge_key,
-            hge_webhook=hge_webhook,
-            webhook_insecure=webhook_insecure,
-            hge_jwt_key_file=hge_jwt_key_file,
-            hge_jwt_conf=hge_jwt_conf,
-            ws_read_cookie=ws_read_cookie,
-            metadata_disabled=metadata_disabled,
-            hge_scale_url=hge_scale_url,
-        )
+        hge_ctx = HGECtx(hge_url, pg_url, config)
     except HGECtxError as e:
         assert False, "Error from hge_cxt: " + str(e)
         # TODO this breaks things (https://github.com/pytest-dev/pytest-xdist/issues/86)
@@ -213,7 +224,7 @@ def per_class_tests_db_state(request, hge_ctx):
     Or class variables `setup_files` and `teardown_files` that provides
     the list of setup and teardown files respectively
     """
-    yield from db_state(request, hge_ctx)
+    yield from db_state_context(request, hge_ctx)
 
 @pytest.fixture(scope='function')
 def per_method_tests_db_state(request, hge_ctx):
@@ -222,35 +233,60 @@ def per_method_tests_db_state(request, hge_ctx):
     Has a function level scope, since metadata operations may change both the schema and data
     Class method/variable requirements are similar to that of per_class_tests_db_state fixture
     """
-    yield from db_state(request, hge_ctx)
+    yield from db_state_context(request, hge_ctx)
 
 @pytest.fixture(scope='class')
 def per_class_db_schema_for_mutation_tests(request, hge_ctx):
     """
-    This fixture sets up the database schema for mutations
-    Has a class level scope, since mutations does not change schema
-    Expects either `dir()` class method which provides the directory with `schema_setup.yaml` and `schema_teardown.yaml` files
-    Or variables `schema_setup_files` and `schema_teardown_files` that provides
-    the list of setup and teardown files respectively
+    This fixture sets up the database schema for mutations.
+    It has a class level scope, since mutations does not change schema.
+    Expects either `dir()` class method which provides the directory with `schema_setup.yaml` and `schema_teardown.yaml` files,
+    or variables `schema_setup_files` and `schema_teardown_files`
+    that provides the list of setup and teardown files respectively
     """
-    yield from db_context_common(request, hge_ctx, 'schema_setup_files', 'schema_setup.yaml', 'schema_teardown_files', 'schema_teardown.yaml', True)
+    yield from db_context_with_schema_common(
+        request, hge_ctx, 'schema_setup_files', 'schema_setup.yaml', 'schema_teardown_files', 'schema_teardown.yaml', True
+    )
 
 @pytest.fixture(scope='function')
 def per_method_db_data_for_mutation_tests(request, hge_ctx, per_class_db_schema_for_mutation_tests):
     """
-    This fixture sets up the data for mutations
-    Has a function level scope, since mutations may change data
-    Having just the setup file(s), or the teardown file(s) is allowed
-    Expects either `dir()` class method which provides the directory with `values_setup.yaml` and / or `values_teardown.yaml` files
-    The class may provide `values_setup_files` variables which contains the list of data setup files
-    Or the `values_teardown_files` variable which provides the list of data teardown files
+    This fixture sets up the data for mutations.
+    Has a function level scope, since mutations may change data.
+    Having just the setup file(s), or the teardown file(s) is allowed.
+    Expects either `dir()` class method which provides the directory with `values_setup.yaml` and / or `values_teardown.yaml` files.
+    The class may provide `values_setup_files` variables which contains the list of data setup files,
+    Or the `values_teardown_files` variable which provides the list of data teardown files.
     """
-    yield from db_context_common(request, hge_ctx, 'values_setup_files', 'values_setup.yaml', 'values_teardown_files', 'values_teardown.yaml', False)
+    yield from db_context_common(
+        request, hge_ctx, 'values_setup_files', 'values_setup.yaml',
+        'values_teardown_files', 'values_teardown.yaml',
+        False, False, False
+    )
 
-def db_state(request, hge_ctx):
-    yield from db_context_common(request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files', 'teardown.yaml', True)
+def db_state_context(request, hge_ctx):
+    yield from db_context_with_schema_common(
+        request, hge_ctx, 'setup_files', 'setup.yaml', 'teardown_files',
+        'teardown.yaml', True
+    )
 
-def db_context_common(request, hge_ctx, setup_files_attr, setup_default_file, teardown_files_attr, teardown_default_file, check_file_exists=True):
+def db_context_with_schema_common(
+    request, hge_ctx, setup_files_attr, setup_default_file,
+    teardown_files_attr, teardown_default_file, check_file_exists=True):
+    (skip_setup, skip_teardown) = [
+        request.config.getoption('--' + x)
+        for x in ['skip-schema-setup', 'skip-schema-teardown']
+    ]
+    yield from db_context_common(
+        request, hge_ctx, setup_files_attr, setup_default_file,
+        teardown_files_attr, teardown_default_file,
+        check_file_exists, skip_setup, skip_teardown
+    )
+
+def db_context_common(
+        request, hge_ctx, setup_files_attr, setup_default_file,
+        teardown_files_attr, teardown_default_file,
+        check_file_exists=True, skip_setup=True, skip_teardown=True ):
     def get_files(attr, default_file):
         files = getattr(request.cls, attr, None)
         if not files:
@@ -258,9 +294,9 @@ def db_context_common(request, hge_ctx, setup_files_attr, setup_default_file, te
         return files
     setup = get_files(setup_files_attr, setup_default_file)
     teardown = get_files(teardown_files_attr, teardown_default_file)
-    yield from setup_and_teardown(hge_ctx, setup, teardown, check_file_exists)
+    yield from setup_and_teardown(request, hge_ctx, setup, teardown, check_file_exists, skip_setup, skip_teardown)
 
-def setup_and_teardown(hge_ctx, setup_files, teardown_files, check_file_exists=True):
+def setup_and_teardown(request, hge_ctx, setup_files, teardown_files, check_file_exists=True, skip_setup=False, skip_teardown=False):
     def assert_file_exists(f):
         assert os.path.isfile(f), 'Could not find file ' + f
     if check_file_exists:
@@ -270,9 +306,12 @@ def setup_and_teardown(hge_ctx, setup_files, teardown_files, check_file_exists=T
         if os.path.isfile(f):
             st_code, resp = hge_ctx.v1q_f(f)
             assert st_code == 200, resp
-    run_on_elem_or_list(v1q_f, setup_files)
+    if not skip_setup:
+        run_on_elem_or_list(v1q_f, setup_files)
     yield
-    run_on_elem_or_list(v1q_f, teardown_files)
+    # Teardown anyway if any of the tests have failed
+    if request.session.testsfailed > 0 or not skip_teardown:
+        run_on_elem_or_list(v1q_f, teardown_files)
 
 def run_on_elem_or_list(f, x):
     if isinstance(x, str):

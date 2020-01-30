@@ -166,7 +166,7 @@ class TestGraphqlInsertPermission:
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-@usefixtures('per_method_tests_db_state')
+@usefixtures('per_class_tests_db_state')
 class TestGraphqlInsertConstraints:
 
     def test_address_not_null_constraint_err(self, hge_ctx, transport):
