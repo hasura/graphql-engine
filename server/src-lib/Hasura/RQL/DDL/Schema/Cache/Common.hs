@@ -7,7 +7,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict              as M
+import qualified Data.HashMap.Strict.Extended     as M
 import qualified Data.HashSet                     as HS
 import qualified Data.Sequence                    as Seq
 
@@ -55,9 +55,9 @@ data BuildOutputs
   = BuildOutputs
   { _boTables        :: !TableCache
   , _boFunctions     :: !FunctionCache
-  , _boRemoteSchemas :: !(HashMap RemoteSchemaName (AddRemoteSchemaQuery, RemoteSchemaCtx))
-  -- ^ We preserve the 'AddRemoteSchemaQuery' from the original catalog metadata in the output so we
-  -- can reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
+  , _boRemoteSchemas :: !(HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject))
+  -- ^ We preserve the 'MetadataObject' from the original catalog metadata in the output so we can
+  -- reuse it later if we need to mark the remote schema inconsistent during GraphQL schema
   -- generation (because of field conflicts).
   , _boAllowlist     :: !(HS.HashSet GQLQuery)
   } deriving (Show, Eq)
@@ -103,6 +103,39 @@ noDuplicates mkMetadataObject = proc values -> case values of
     tellA -< Seq.singleton $ CIInconsistency (DuplicateObjects objectId definitions)
     returnA -< Nothing
 {-# INLINABLE noDuplicates #-}
+
+-- | Processes a list of catalog metadata into a map of processed information, marking any duplicate
+-- entries inconsistent.
+buildInfoMap
+  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+     , Eq k, Hashable k )
+  => (a -> k)
+  -> (a -> MetadataObject)
+  -> (e, a) `arr` Maybe b
+  -> (e, [a]) `arr` HashMap k b
+buildInfoMap extractKey mkMetadataObject buildInfo = proc (e, infos) ->
+      (M.groupOn extractKey infos >- returnA)
+  >-> (| Inc.keyed (\_ duplicateInfos ->
+               (duplicateInfos >- noDuplicates mkMetadataObject)
+           >-> (| traverseA (\info -> (e, info) >- buildInfo) |)
+           >-> (\info -> join info >- returnA)) |)
+  >-> (\infoMap -> M.catMaybes infoMap >- returnA)
+{-# INLINABLE buildInfoMap #-}
+
+-- | Like 'buildInfo', but includes each processed info’s associated 'MetadataObject' in the result.
+-- This is useful if the results will be further processed, and the 'MetadataObject' is still needed
+-- to mark the object inconsistent.
+buildInfoMapPreservingMetadata
+  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
+     , Eq k, Hashable k )
+  => (a -> k)
+  -> (a -> MetadataObject)
+  -> (e, a) `arr` Maybe b
+  -> (e, [a]) `arr` HashMap k (b, MetadataObject)
+buildInfoMapPreservingMetadata extractKey mkMetadataObject buildInfo =
+  buildInfoMap extractKey mkMetadataObject proc (e, info) ->
+    ((e, info) >- buildInfo) >-> \result -> result <&> (, mkMetadataObject info) >- returnA
+{-# INLINABLE buildInfoMapPreservingMetadata #-}
 
 addTableContext :: QualifiedTable -> Text -> Text
 addTableContext tableName e = "in table " <> tableName <<> ": " <> e
