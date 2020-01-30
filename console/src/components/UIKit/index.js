@@ -25,16 +25,16 @@ import { Text, Heading } from './Text';
 const ColorScheme = () => (
   <ColorSchemeDivWrapper>
     <ColorSchemeDiv
-      // ~ background: theme.colors.yellow.active
-      bg="yellow.active"
+      // ~ background: theme.colors.yellow.primary
+      bg="yellow.primary"
       // ~ border-radius: theme.raddi[2]
       borderRadius="sm" // ~ theme.raddi.md
     />
-    <ColorSchemeDiv bg="black.active" borderRadius="sm" />
-    <ColorSchemeDiv bg="green.active" borderRadius="sm" />
-    <ColorSchemeDiv bg="red.active" borderRadius="sm" />
-    <ColorSchemeDiv bg="blue.active" borderRadius="sm" />
-    <ColorSchemeDiv bg="orange.active" borderRadius="sm" />
+    <ColorSchemeDiv bg="black.secondary" borderRadius="sm" />
+    <ColorSchemeDiv bg="green.primary" borderRadius="sm" />
+    <ColorSchemeDiv bg="red.primary" borderRadius="sm" />
+    <ColorSchemeDiv bg="blue.primary" borderRadius="sm" />
+    <ColorSchemeDiv bg="orange.primary" borderRadius="sm" />
   </ColorSchemeDivWrapper>
 );
 
@@ -51,7 +51,7 @@ const Shades = () => (
         mr={3}
       />
       <Brush
-        bg="yellow.active"
+        bg="yellow.primary"
         borderRadius="circle"
         width={1}
         height={1}
@@ -74,7 +74,7 @@ const Shades = () => (
         mr={3}
       />
       <Brush
-        bg="black.active"
+        bg="black.secondary"
         borderRadius="circle"
         width={1}
         height={1}
@@ -97,7 +97,7 @@ const Shades = () => (
         mr={3}
       />
       <Brush
-        bg="green.active"
+        bg="green.primary"
         borderRadius="circle"
         width={1}
         height={1}
@@ -127,7 +127,7 @@ const Shades = () => (
         mr={3}
       />
       <Brush
-        bg="red.active"
+        bg="red.primary"
         borderRadius="circle"
         width={1}
         height={1}
@@ -145,7 +145,7 @@ const Shades = () => (
         mr={3}
       />
       <Brush
-        bg="blue.active"
+        bg="blue.primary"
         borderRadius="circle"
         width={1}
         height={1}
@@ -175,7 +175,7 @@ const Shades = () => (
         mr={3}
       />
       <Brush
-        bg="orange.active"
+        bg="orange.primary"
         borderRadius="circle"
         width={1}
         height={1}
@@ -208,12 +208,12 @@ const Buttons = () => (
     >
       {/* Primary button */}
       <Button
-        bg="yellow.active" // ~ background-color: theme.colors.yellow.active
-        color="black.active" // ~ theme.colors.black.active
+        bg="yellow.primary" // ~ background-color: theme.colors.yellow.primary
+        color="black.text" // ~ theme.colors.black.text
         height={1} // button height ~ theme.sizes[1]
         px={4} // padding(X-axis) ~ theme.space[4]
         border={1} // border ~ theme.borders[1]
-        borderColor="yellow.active" // ~ theme.colors.yellow.active
+        borderColor="yellow.primary" // ~ theme.colors.yellow.primary
         fontWeight="bold" // ~ theme.fontWeights.bold
         fontSize={1} // ~ theme.fontSizes[1]
         borderRadius="xs" // ~ theme.raddi.xs
@@ -224,11 +224,11 @@ const Buttons = () => (
       {/* Secondary button */}
       <Button
         bg="white"
-        color="black.active"
+        color="black.text"
         height={1}
         px={4}
         border={1}
-        borderColor="black.active"
+        borderColor="black.secondary"
         fontWeight="bold"
         fontSize={1}
         borderRadius="xs"
@@ -239,65 +239,65 @@ const Buttons = () => (
     {/* Second row ~ small primary buttons */}
     <ButtonsWrapper>
       <Button
-        bg="yellow.active"
+        bg="yellow.primary"
         color="white"
         height={0}
         px={3}
         border={1}
         fontWeight="medium"
-        borderColor="yellow.active"
+        borderColor="yellow.primary"
         borderRadius="xs"
         mr={4}
       >
         Primary button
       </Button>
       <Button
-        bg="green.active"
+        bg="green.primary"
         color="white"
         height={0}
         px={3}
         border={1}
         fontWeight="medium"
-        borderColor="green.active"
+        borderColor="green.primary"
         borderRadius="xs"
         mr={4}
       >
         Primary button
       </Button>
       <Button
-        bg="red.active"
+        bg="red.primary"
         color="white"
         height={0}
         px={3}
         border={1}
         fontWeight="medium"
-        borderColor="red.active"
+        borderColor="red.primary"
         borderRadius="xs"
         mr={4}
       >
         Primary button
       </Button>
       <Button
-        bg="orange.active"
+        bg="orange.primary"
         color="white"
         height={0}
         px={3}
         border={1}
         fontWeight="medium"
-        borderColor="orange.active"
+        borderColor="orange.primary"
         borderRadius="xs"
         mr={4}
       >
         Primary button
       </Button>
       <Button
-        bg="blue.active"
+        bg="blue.primary"
         color="white"
         height={0}
         px={3}
         border={1}
         fontWeight="medium"
-        borderColor="blue.active"
+        borderColor="blue.primary"
         borderRadius="xs"
       >
         Primary button
@@ -330,7 +330,7 @@ const Alerts = () => (
       bg="green.light" // ~ theme.colors.green.light
       maxWidth={866} // ~ max-width: 866px
       borderLeft={4} // ~ theme.borders[4]
-      borderColor="green.active" // ~ theme.colors.green.active
+      borderColor="green.primary" // ~ theme.colors.green.primary
       borderRadius="xs" // ~ theme.radii.xs
       boxShadow={1} // ~ theme.shadows[1]
       my={4} // margin-y-axis ~ theme.space[4])
@@ -341,7 +341,7 @@ const Alerts = () => (
       bg="blue.light"
       maxWidth={866}
       borderLeft={4}
-      borderColor="blue.active"
+      borderColor="blue.primary"
       borderRadius="xs"
       boxShadow={1}
       my={4}
@@ -352,7 +352,7 @@ const Alerts = () => (
       bg="orange.light"
       maxWidth={866}
       borderLeft={4}
-      borderColor="orange.active"
+      borderColor="orange.primary"
       borderRadius="xs"
       boxShadow={1}
       my={4}
@@ -363,7 +363,7 @@ const Alerts = () => (
       bg="red.light"
       maxWidth={866}
       borderLeft={4}
-      borderColor="red.active"
+      borderColor="red.primary"
       borderRadius="xs"
       boxShadow={1}
       my={4}
@@ -386,16 +386,16 @@ const TextLinks = () => (
       >
         Check it out
       </Text>
-      <Text fontSize={2} fontWeight="medium" mr={4} color="green.active">
+      <Text fontSize={2} fontWeight="medium" mr={4} color="green.primary">
         Check it out
       </Text>
-      <Text fontSize={2} fontWeight="medium" mr={4} color="blue.active">
+      <Text fontSize={2} fontWeight="medium" mr={4} color="blue.primary">
         Check it out
       </Text>
-      <Text fontSize={2} fontWeight="medium" mr={4} color="orange.active">
+      <Text fontSize={2} fontWeight="medium" mr={4} color="orange.primary">
         Check it out
       </Text>
-      <Text fontSize={2} fontWeight="medium" color="red.active">
+      <Text fontSize={2} fontWeight="medium" color="red.primary">
         Check it out
       </Text>
     </TextLinksWrapper>
@@ -407,7 +407,7 @@ const TextLinks = () => (
         mr={4} // ~ theme.space[4]
         color="black.text" // ~theme.colors.black.text
         borderBottom={2} // ~ theme.borders[2]
-        borderColor="yellow.active" // ~ theme.colors.yellow.active
+        borderColor="yellow.primary" // ~ theme.colors.yellow.primary
       >
         Check it out
       </Text>
@@ -415,9 +415,9 @@ const TextLinks = () => (
         fontSize={2}
         fontWeight="medium"
         mr={4}
-        color="green.active"
+        color="green.primary"
         borderBottom={2}
-        borderColor="green.active"
+        borderColor="green.primary"
       >
         Check it out
       </Text>
@@ -425,9 +425,9 @@ const TextLinks = () => (
         fontSize={2}
         fontWeight="medium"
         mr={4}
-        color="blue.active"
+        color="blue.primary"
         borderBottom={2}
-        borderColor="blue.active"
+        borderColor="blue.primary"
       >
         Check it out
       </Text>
@@ -435,18 +435,18 @@ const TextLinks = () => (
         fontSize={2}
         fontWeight="medium"
         mr={4}
-        color="orange.active"
+        color="orange.primary"
         borderBottom={2}
-        borderColor="orange.active"
+        borderColor="orange.primary"
       >
         Check it out
       </Text>
       <Text
         fontSize={2}
         fontWeight="medium"
-        color="red.active"
+        color="red.primary"
         borderBottom={2}
-        borderColor="red.active"
+        borderColor="red.primary"
       >
         Check it out
       </Text>

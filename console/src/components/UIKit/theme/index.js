@@ -4,41 +4,41 @@ export const theme = {
   colors: {
     red: {
       original: '#ff0000',
-      active: '#e53935',
+      primary: '#e53935',
       hover: 'rgba(229, 57, 53, 0.4)',
       light: '#f7e9e9',
     },
 
     green: {
       original: '#008000',
-      active: '#69cb43',
+      primary: '#69cb43',
       hover: 'rgba(123, 179, 66, 0.4)',
       light: '#f0f8e7',
     },
 
     blue: {
       original: '#0000ff',
-      active: '#1f88e5',
+      primary: '#1f88e5',
       hover: 'rgba(31, 136, 229, 0.4)',
       light: '#f0f8ff',
     },
 
     orange: {
       original: '#ffa500',
-      active: '#fdb02c',
+      primary: '#fdb02c',
       hover: 'rgba(253, 176, 44, 0.4)',
       light: '#fff8ed',
     },
 
     yellow: {
       original: '#ffff00',
-      active: '#f8d721',
+      primary: '#f8d721',
       hover: 'rgba(204, 177, 25, 0.4)',
     },
 
     black: {
       original: '#000',
-      active: '#484538',
+      secondary: '#484538',
       text: '#292822',
     },
 
