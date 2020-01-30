@@ -27,8 +27,8 @@ const ColorScheme = () => (
     <ColorSchemeDiv
       // ~ background: theme.colors.yellow.primary
       bg="yellow.primary"
-      // ~ border-radius: theme.raddi[2]
-      borderRadius="sm" // ~ theme.raddi.md
+      // ~ border-radius: theme.raddi.md
+      borderRadius="sm"
     />
     <ColorSchemeDiv bg="black.secondary" borderRadius="sm" />
     <ColorSchemeDiv bg="green.primary" borderRadius="sm" />
@@ -42,158 +42,170 @@ const ColorScheme = () => (
 
 const Shades = () => (
   <React.Fragment>
-    <BrushWrapper my={4}>
+    <BrushWrapper my="lg">
       <Brush
         bg="yellow.original"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="yellow.primary"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="yellow.hover"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
     </BrushWrapper>
-    <BrushWrapper my={4}>
+    <BrushWrapper my="lg">
       <Brush
         bg="black.original"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="black.secondary"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="black.text"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
     </BrushWrapper>
-    <BrushWrapper my={4}>
+    <BrushWrapper my="lg">
       <Brush
         bg="green.original"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="green.primary"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="green.hover"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="green.light"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
     </BrushWrapper>
-    <BrushWrapper my={4}>
+    <BrushWrapper my="lg">
       <Brush
         bg="red.original"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="red.primary"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
-      <Brush bg="red.hover" borderRadius="circle" width={1} height={1} mr={3} />
-      <Brush bg="red.light" borderRadius="circle" width={1} height={1} mr={3} />
+      <Brush
+        bg="red.hover"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr="md"
+      />
+      <Brush
+        bg="red.light"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr="md"
+      />
     </BrushWrapper>
-    <BrushWrapper my={4}>
+    <BrushWrapper my="lg">
       <Brush
         bg="blue.original"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="blue.primary"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="blue.hover"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="blue.light"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
     </BrushWrapper>
-    <BrushWrapper my={4}>
+    <BrushWrapper my="lg">
       <Brush
         bg="orange.original"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="orange.primary"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="orange.hover"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
       <Brush
         bg="orange.light"
         borderRadius="circle"
         width={1}
         height={1}
-        mr={3}
+        mr="md"
       />
     </BrushWrapper>
   </React.Fragment>
@@ -204,20 +216,20 @@ const Shades = () => (
 const Buttons = () => (
   <React.Fragment>
     <ButtonsWrapper
-      mb={4} // ~ margin-bottom: theme.space[4]
+      mb="lg" // ~ margin-bottom: theme.space.lg
     >
       {/* Primary button */}
       <Button
         bg="yellow.primary" // ~ background-color: theme.colors.yellow.primary
         color="black.text" // ~ theme.colors.black.text
         height={1} // button height ~ theme.sizes[1]
-        px={4} // padding(X-axis) ~ theme.space[4]
+        px="lg" // padding(X-axis) ~ theme.space.lg
         border={1} // border ~ theme.borders[1]
         borderColor="yellow.primary" // ~ theme.colors.yellow.primary
         fontWeight="bold" // ~ theme.fontWeights.bold
         fontSize="button" // ~ theme.fontSizes.button
         borderRadius="xs" // ~ theme.raddi.xs
-        mr={4} // ~ margin-right: theme.space[4]
+        mr="lg" // ~ margin-right: theme.space.lg
       >
         Primary button
       </Button>
@@ -226,7 +238,7 @@ const Buttons = () => (
         bg="white"
         color="black.text"
         height={1}
-        px={4}
+        px="lg"
         border={1}
         borderColor="black.secondary"
         fontWeight="bold"
@@ -242,13 +254,13 @@ const Buttons = () => (
         bg="yellow.primary"
         color="white"
         height={0}
-        px={3}
+        px="md"
         border={1}
         fontSize="button"
         fontWeight="medium"
         borderColor="yellow.primary"
         borderRadius="xs"
-        mr={4}
+        mr="lg"
       >
         Primary button
       </Button>
@@ -256,13 +268,13 @@ const Buttons = () => (
         bg="green.primary"
         color="white"
         height={0}
-        px={3}
+        px="md"
         border={1}
         fontSize="button"
         fontWeight="medium"
         borderColor="green.primary"
         borderRadius="xs"
-        mr={4}
+        mr="lg"
       >
         Primary button
       </Button>
@@ -270,13 +282,13 @@ const Buttons = () => (
         bg="red.primary"
         color="white"
         height={0}
-        px={3}
+        px="md"
         border={1}
         fontSize="button"
         fontWeight="medium"
         borderColor="red.primary"
         borderRadius="xs"
-        mr={4}
+        mr="lg"
       >
         Primary button
       </Button>
@@ -284,13 +296,13 @@ const Buttons = () => (
         bg="orange.primary"
         color="white"
         height={0}
-        px={3}
+        px="md"
         border={1}
         fontSize="button"
         fontWeight="medium"
         borderColor="orange.primary"
         borderRadius="xs"
-        mr={4}
+        mr="lg"
       >
         Primary button
       </Button>
@@ -298,7 +310,7 @@ const Buttons = () => (
         bg="blue.primary"
         color="white"
         height={0}
-        px={3}
+        px="md"
         border={1}
         fontSize="button"
         fontWeight="medium"
@@ -338,7 +350,7 @@ const Alerts = () => (
       borderColor="green.primary" // ~ theme.colors.green.primary
       borderRadius="xs" // ~ theme.radii.xs
       boxShadow={2} // ~ theme.shadows[2]
-      my={4} // margin-y-axis ~ theme.space[4])
+      my="lg" // margin-y-axis ~ theme.space.lg
     />
     <AlertMessageBox
       minWidth={1 / 2}
@@ -349,7 +361,7 @@ const Alerts = () => (
       borderColor="blue.primary"
       borderRadius="xs"
       boxShadow={2}
-      my={4}
+      my="lg"
     />
     <AlertMessageBox
       minWidth={1 / 2}
@@ -360,7 +372,7 @@ const Alerts = () => (
       borderColor="orange.primary"
       borderRadius="xs"
       boxShadow={2}
-      my={4}
+      my="lg"
     />
     <AlertMessageBox
       minWidth={1 / 2}
@@ -371,7 +383,7 @@ const Alerts = () => (
       borderColor="red.primary"
       borderRadius="xs"
       boxShadow={2}
-      my={4}
+      my="lg"
     />
   </React.Fragment>
 );
@@ -381,23 +393,23 @@ const Alerts = () => (
 const TextLinks = () => (
   <React.Fragment>
     <TextLinksWrapper
-      mb={2} // ~ margin-bottom: theme.space[3]
+      mb="xs" // ~ margin-bottom: theme.space.xs
     >
       <Text
         fontSize="p" // ~ theme.fontSizes.p
         fontWeight="medium" // ~ theme.fontWeights.medium
-        mr={4} // ~ theme.space[4]
+        mr="lg" // ~ theme.space.lg
         color="black.text" // ~theme.colors.black.text
       >
         Check it out
       </Text>
-      <Text fontSize="p" fontWeight="medium" mr={4} color="green.primary">
+      <Text fontSize="p" fontWeight="medium" mr="lg" color="green.primary">
         Check it out
       </Text>
-      <Text fontSize="p" fontWeight="medium" mr={4} color="blue.primary">
+      <Text fontSize="p" fontWeight="medium" mr="lg" color="blue.primary">
         Check it out
       </Text>
-      <Text fontSize="p" fontWeight="medium" mr={4} color="orange.primary">
+      <Text fontSize="p" fontWeight="medium" mr="lg" color="orange.primary">
         Check it out
       </Text>
       <Text fontSize="p" fontWeight="medium" color="red.primary">
@@ -409,7 +421,7 @@ const TextLinks = () => (
       <Text
         fontSize="p" // ~ theme.fontSizes.p
         fontWeight="medium" // ~ theme.fontWeights.medium
-        mr={4} // ~ theme.space[4]
+        mr="lg" // ~ theme.space.lg
         color="black.text" // ~theme.colors.black.text
         borderBottom={2} // ~ theme.borders[2]
         borderColor="yellow.primary" // ~ theme.colors.yellow.primary
@@ -419,7 +431,7 @@ const TextLinks = () => (
       <Text
         fontSize="p"
         fontWeight="medium"
-        mr={4}
+        mr="lg"
         color="green.primary"
         borderBottom={2}
         borderColor="green.primary"
@@ -429,7 +441,7 @@ const TextLinks = () => (
       <Text
         fontSize="p"
         fontWeight="medium"
-        mr={4}
+        mr="lg"
         color="blue.primary"
         borderBottom={2}
         borderColor="blue.primary"
@@ -439,7 +451,7 @@ const TextLinks = () => (
       <Text
         fontSize="p"
         fontWeight="medium"
-        mr={4}
+        mr="lg"
         color="orange.primary"
         borderBottom={2}
         borderColor="orange.primary"
@@ -464,7 +476,7 @@ const TextLinks = () => (
 const Headings = () => (
   <React.Fragment>
     <Heading
-      mb={3} // margin-bottom: theme.space[3]
+      mb="md" // margin-bottom: theme.space.md
       color="black.text" // ~ theme.colors.black.text
       fontSize="h1" // ~ theme.fontSizes[6]
     >
@@ -472,7 +484,7 @@ const Headings = () => (
     </Heading>
     <Heading
       as="h2" // render as <h2> element
-      mb={3}
+      mb="md"
       color="black.text"
       fontSize="h2"
     >
@@ -480,7 +492,7 @@ const Headings = () => (
     </Heading>
     <Heading
       as="h3" // render as <h3> element
-      mb={3}
+      mb="md"
       color="black.text"
       fontSize="h3"
       mt={0} // ~ Overriding base styling.
@@ -502,8 +514,8 @@ const Headings = () => (
 const UIKit = () => (
   <UIKitWrapperDiv
     fontFamily="roboto" // ~ theme.fonts.roboto
-    p={4} // ~ padding: theme.space[4]
-    mb={5} // ~ margin-bottom: theme.space[5]
+    p="lg" // ~ padding: theme.space.lg
+    mb="xl" // ~ margin-bottom: theme.space.xl
     bg="white" // ~ theme.colors.white
   >
     {/* Base styling */}

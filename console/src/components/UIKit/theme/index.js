@@ -59,7 +59,7 @@ export const theme = {
   sizes: [40, 48],
 
   // margins & paddings
-  space: [0, 4, 8, 16, 32, 64],
+  space: [0, 4, 6, 8, 10, 12, 14, 16, 18, 20, 32, 64],
 
   // Text / box-shadows
   shadows: [
@@ -75,7 +75,7 @@ export const theme = {
   },
 
   // border
-  borders: [0, '1px solid', '2px solid', '4px solid', '5px solid'],
+  borders: [0, '1px solid', '2px solid', '1px solid', '4px solid', '5px solid'],
 
   // border-radius values
   radii: [0, 2, 4, 8, 12, 16],
@@ -84,13 +84,13 @@ export const theme = {
 // aliases **************************** //
 
 /* border-radius
-  - xs: extra small (2px)
-  - sm: small (4px)
-  - md: medium (8px)
-  - lg: large (12px)
-  - xl: extra large (16px)
-  - circle: '1000px;
-*/
+ * xs: 2px (extra small)
+ * sm: 4px (small)
+ * md: 8px (medium)
+ * lg: 12px (large)
+ * xl: 16px (extra large)
+ * circle: 1000px
+ */
 
 theme.radii.xs = theme.radii[1];
 
@@ -107,10 +107,10 @@ theme.radii.circle = 1000;
 // ********************************* //
 
 /* font-weight
-  - normal: 400
-  - medium: 500
-  - bold: 700
-*/
+ * normal: 400
+ * medium: 500
+ * bold: 700
+ */
 
 theme.fontWeights.normal = theme.fontWeights[4];
 
@@ -121,14 +121,14 @@ theme.fontWeights.bold = theme.fontWeights[7];
 // ********************************* //
 
 /* font-sizes
-  - h1: 30px
-  - h2: 24px
-  - h3: 20px
-  - h4: 18px
-  - p: 16px
-  - button: 14px
-  - ex (Explainer Text): 12px
-*/
+ * h1: 30px
+ * h2: 24px
+ * h3: 20px
+ * h4: 18px
+ * p: 16px
+ * button: 14px
+ * ex (Explainer Text): 12px
+ */
 
 theme.fontSizes.h1 = theme.fontSizes[6];
 
@@ -143,5 +143,25 @@ theme.fontSizes.p = theme.fontSizes[2];
 theme.fontSizes.button = theme.fontSizes[1];
 
 theme.fontSizes.ex = theme.fontSizes[0];
+
+// ********************************* //
+
+/* space ~ margin / padding
+ * xs: 4px (extra small)
+ * sm: 8px (small)
+ * md: 16px (medium)
+ * lg: 32px (large)
+ * xl: 64px (extra large)
+ */
+
+theme.space.xs = theme.space[1];
+
+theme.space.sm = theme.space[3];
+
+theme.space.md = theme.space[7];
+
+theme.space.lg = theme.space[10];
+
+theme.space.xl = theme.space[11];
 
 // ********************************* //
