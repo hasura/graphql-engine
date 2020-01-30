@@ -8,7 +8,7 @@ import {
   layout,
 } from 'styled-system';
 
-// Parent Div ~ Global Styles ****************** //
+// Parent Div ~ Global Styles ************* //
 
 export const UIKitWrapperDiv = styled.div`
   /* Roboto Font */

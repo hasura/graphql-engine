@@ -55,12 +55,6 @@ export const theme = {
 
   fontSizes: [12, 14, 16, 18, 20, 24, 30, 36, 48, 80, 96],
 
-  // border
-  borders: [0, '1px solid', '2px solid', '4px solid', '5px solid'],
-
-  // border-radius values
-  radii: [0, 2, 4, 8, 12, 16],
-
   // width & height
   sizes: [40, 48],
 
@@ -78,9 +72,15 @@ export const theme = {
   transition: {
     true: 'all .2s ease-out',
   },
+
+  // border
+  borders: [0, '1px solid', '2px solid', '4px solid', '5px solid'],
+
+  // border-radius values
+  radii: [0, 2, 4, 8, 12, 16],
 };
 
-// aliases ******************************* //
+// aliases **************************** //
 
 /* border-radius
   - xs: extra small (2px)
@@ -102,3 +102,17 @@ theme.radii.lg = theme.radii[4];
 theme.radii.xl = theme.radii[5];
 
 theme.radii.circle = 1000;
+
+// *********************************** //
+
+/* font-weight
+  - normal: 400
+  - medium: 500
+  - bold: 700
+*/
+
+theme.fontWeights.normal = theme.fontWeights[3];
+
+theme.fontWeights.medium = theme.fontWeights[4];
+
+theme.fontWeights.bold = theme.fontWeights[6];
