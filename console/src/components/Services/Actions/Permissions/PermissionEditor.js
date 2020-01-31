@@ -12,16 +12,18 @@ const PermissionEditor = ({
 }) => {
   if (!isEditing) return null;
 
-  const permRole = permissionEdit.newRole || permissionEdit.role;
+  const { newRole, role, isNewRole, isNewPerm } = permissionEdit;
+
+  const permRole = newRole || role;
 
   let permText = (
     <div>
       This action is allowed for role: <b>{permRole}</b>
       <br />
-      Remove the permission for this role if you want to disallow it
+      Click "Remove" if you wish to disallow it.
     </div>
   );
-  if (permissionEdit.isNewPerm) {
+  if (isNewPerm) {
     permText = (
       <div>
         Click save to allow this action for role: <b>{permRole}</b>
@@ -36,6 +38,7 @@ const PermissionEditor = ({
   };
 
   const getSaveButton = () => {
+    if (!isNewPerm && !isNewRole) return null;
     const saveFunc = () => {
       dispatch(saveActionPermission(closeEditor));
     };
@@ -52,7 +55,7 @@ const PermissionEditor = ({
   };
 
   const getRemoveButton = () => {
-    if (permissionEdit.isNewRole || permissionEdit.isNewPerm) return;
+    if (isNewRole || isNewPerm) return;
     const removeFunc = () => {
       dispatch(removeActionPermission(closeEditor));
     };
