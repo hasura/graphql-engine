@@ -55,9 +55,9 @@ const showErrorNotification = (title, message, error) => {
           } else {
             notificationMessage = error.message;
           }
-        } else if (error && error.message && isString(error.message)) {
+        } else if (error.message && isString(error.message)) {
           notificationMessage = error.message;
-        } else if (error && error.message && 'code' in error.message) {
+        } else if (error.message && 'code' in error.message) {
           notificationMessage = error.message.code + ' : ' + message;
         } else {
           notificationMessage = error.code;
@@ -66,11 +66,7 @@ const showErrorNotification = (title, message, error) => {
         notificationMessage = error.code + ' : ' + error.internal.error.message;
       } else if ('custom' in error) {
         notificationMessage = error.custom;
-      } else if (
-        'code' in error &&
-        'error' in error &&
-        'path' in error
-      ) {
+      } else if ('code' in error && 'error' in error && 'path' in error) {
         // Data API error
         notificationMessage = error.error;
       }

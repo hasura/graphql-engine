@@ -891,7 +891,7 @@ class Permissions extends Component {
           };
 
           const getFieldCheckbox = (fieldType, fieldName) => {
-            let checked;
+            let checked = false;
             if (permissionsState[query]) {
               const permittedFields = permissionsState[query][fieldType] || [];
 
@@ -900,8 +900,6 @@ class Permissions extends Component {
               } else {
                 checked = permittedFields.includes(fieldName);
               }
-            } else {
-              checked = false;
             }
 
             return (
