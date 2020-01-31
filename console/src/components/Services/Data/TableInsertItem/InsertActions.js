@@ -15,6 +15,8 @@ const I_REQUEST_SUCCESS = 'InsertItem/I_REQUEST_SUCCESS';
 const I_REQUEST_ERROR = 'InsertItem/I_REQUEST_ERROR';
 const _CLOSE = 'InsertItem/_CLOSE';
 const _OPEN = 'InsertItem/_OPEN';
+const I_FETCH_ENUM_OPTIONS_SUCCESS = 'InsertItem/I_FETCH_ENUM_SUCCESS';
+const I_FETCH_ENUM_OPTIONS_ERROR = 'InsertItem/I_FETCH_ENUM_ERROR';
 
 const Open = () => ({ type: _OPEN });
 const Close = () => ({ type: _CLOSE });
@@ -106,6 +108,86 @@ const insertItem = (tableName, colValues) => {
   };
 };
 
+const fetchEnumOptions = () => {
+  return (dispatch, getState) => {
+    const {
+      tables: { allSchemas, currentTable, currentSchema },
+    } = getState();
+    const currentTableSchema =
+      allSchemas &&
+      allSchemas.find(
+        s => s.table_name === currentTable && s.table_schema === currentSchema
+      );
+
+    if (
+      !currentTableSchema ||
+      !currentTableSchema.relationships ||
+      !currentTableSchema.relationships.length
+    ) {
+      return;
+    }
+
+    const requests = [];
+    currentTableSchema.relationships.forEach(rel => {
+      const manualConf = rel.rel_def.manual_configuration;
+      const schema = allSchemas.find(
+        s => s.table_name === manualConf.remote_table.name
+      );
+
+      if (!schema || !schema.is_enum) {
+        return;
+      }
+
+      const newReq = {
+        columnName: Object.keys(manualConf.column_mapping)[0],
+        enumTableName: manualConf.remote_table.name,
+        enumTableColumn: Object.values(manualConf.column_mapping)[0],
+      };
+
+      requests.push(newReq);
+    });
+
+    const options = {
+      method: 'POST',
+      credentials: globalCookiePolicy,
+      headers: dataHeaders(getState),
+    };
+    const url = Endpoints.query;
+
+    requests.forEach(request => {
+      const req = {
+        type: 'select',
+        args: {
+          table: {
+            name: request.enumTableName,
+            schema: currentSchema,
+          },
+          columns: [request.enumTableColumn],
+        },
+      };
+      return dispatch(
+        requestAction(url, {
+          ...options,
+          body: JSON.stringify(req),
+        })
+      ).then(
+        data =>
+          dispatch({
+            type: I_FETCH_ENUM_OPTIONS_SUCCESS,
+            data: {
+              columnName: request.columnName,
+              options: data.reduce(
+                (acc, d) => [...acc, ...Object.values(d)],
+                []
+              ),
+            },
+          }),
+        () => dispatch({ type: I_FETCH_ENUM_OPTIONS_ERROR })
+      );
+    });
+  };
+};
+
 /* ************ reducers *********************** */
 const insertReducer = (tableName, state, action) => {
   switch (action.type) {
@@ -115,6 +197,7 @@ const insertReducer = (tableName, state, action) => {
         ongoingRequest: false,
         lastError: null,
         lastSuccess: null,
+        enumOptions: null,
       };
     case I_SET_CLONE:
       return {
@@ -122,6 +205,7 @@ const insertReducer = (tableName, state, action) => {
         ongoingRequest: false,
         lastError: null,
         lastSuccess: null,
+        enumOptions: null,
       };
     case I_ONGOING_REQ:
       return {
@@ -157,10 +241,20 @@ const insertReducer = (tableName, state, action) => {
       return { ...state, isOpen: true };
     case _CLOSE:
       return { ...state, isOpen: false };
+    case I_FETCH_ENUM_OPTIONS_SUCCESS:
+      return {
+        ...state,
+        enumOptions: {
+          ...state.enumOptions,
+          [action.data.columnName]: action.data.options,
+        },
+      };
+    case I_FETCH_ENUM_OPTIONS_ERROR:
+      return { ...state, enumOptions: null };
     default:
       return state;
   }
 };
 
 export default insertReducer;
-export { insertItem, I_SET_CLONE, I_RESET, Open, Close };
+export { fetchEnumOptions, insertItem, I_SET_CLONE, I_RESET, Open, Close };

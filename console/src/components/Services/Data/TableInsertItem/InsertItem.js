@@ -8,7 +8,7 @@ import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValue
 import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE, TEXT } from '../utils';
 import { ordinalColSort } from '../utils';
 
-import { insertItem, I_RESET } from './InsertActions';
+import { insertItem, I_RESET, fetchEnumOptions } from './InsertActions';
 import { setTable } from '../DataActions';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import {
@@ -25,6 +25,7 @@ class InsertItem extends Component {
 
   componentDidMount() {
     this.props.dispatch(setTable(this.props.tableName));
+    this.props.dispatch(fetchEnumOptions());
   }
 
   componentWillUnmount() {
@@ -35,9 +36,9 @@ class InsertItem extends Component {
     // when use state object remember to do it inside a class method.
     // Since the state variable lifecycle is tied to the instance of the class
     // and making this change using an anonymous function will cause errors.
-    this.setState({
-      insertedRows: this.state.insertedRows + 1,
-    });
+    this.setState(prev => ({
+      insertedRows: prev.insertedRows + 1,
+    }));
   }
 
   render() {
@@ -53,6 +54,7 @@ class InsertItem extends Component {
       lastSuccess,
       count,
       dispatch,
+      enumOptions,
     } = this.props;
 
     const styles = require('../../../Common/TableCommon/Table.scss');
@@ -175,6 +177,25 @@ class InsertItem extends Component {
           break;
         default:
           break;
+      }
+
+      if (enumOptions && enumOptions[colName]) {
+        typedInput = (
+          <select
+            {...standardInputProps}
+            className={`form-control ${styles.insertBox}`}
+            defaultValue=""
+          >
+            <option disabled value="">
+              -- enum value --
+            </option>
+            {enumOptions[colName].map(option => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        );
       }
 
       return (
@@ -350,6 +371,7 @@ InsertItem.propTypes = {
   readOnlyMode: PropTypes.bool.isRequired,
   count: PropTypes.number,
   dispatch: PropTypes.func.isRequired,
+  enumOptions: PropTypes.object,
 };
 
 const mapStateToProps = (state, ownProps) => {
