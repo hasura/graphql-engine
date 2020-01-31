@@ -1,11 +1,10 @@
 import styled from 'styled-components';
-import { fontSize, fontWeight, color, border, space } from 'styled-system';
+import { typography, color, border, space } from 'styled-system';
 
 // Paragraph ************************* //
 
 export const Text = styled.p`
-    ${fontSize}
-    ${fontWeight}
+    ${typography}
     ${color}
     ${space}
     ${border}  
@@ -14,8 +13,7 @@ export const Text = styled.p`
 // Heading ************************* //
 
 export const Heading = styled.h1`
-    ${fontSize}
-    ${fontWeight}
+    ${typography}
     ${color}
     ${space}
 `;

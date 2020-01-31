@@ -2,8 +2,6 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 
-import BaseStyles from './BaseStyles';
-
 import {
   UIKitWrapperDiv,
   ColorSchemeDivWrapper,
@@ -471,9 +469,9 @@ const TextLinks = () => (
   </React.Fragment>
 );
 
-// Headings ***************************** //
+// Typography ***************************** //
 
-const Headings = () => (
+const Typography = () => (
   <React.Fragment>
     <Heading
       mb="md" // margin-bottom: theme.space.md
@@ -506,6 +504,44 @@ const Headings = () => (
     >
       Sub section Heading
     </Heading>
+    {/* Paragraph */}
+    <Text
+      my="md" // margin (y-axis): theme.space.md
+      fontSize="p" // font-size: theme.space.fontSizes.p
+      // line-height: theme.lineHeights.body
+      lineHeight="body"
+    >
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+      tempor incididunt ut labore et dolore magna aliqua. Semper quis lectus
+      nulla at volutpat diam ut venenatis. Sed viverra tellus in hac habitasse
+      platea dictumst. Id porta nibh venenatis cras. Velit dignissim sodales ut
+      eu sem. Turpis cursus in hac habitasse platea dictumst quisque. Integer
+      feugiat scelerisque varius morbi enim. Dui accumsan sit amet nulla. Donec
+      et odio pellentesque diam volutpat commodo sed. Augue eget arcu dictum
+      varius duis at. Nullam vehicula ipsum a arcu cursus vitae. Sapien et
+      ligula ullamcorper malesuada proin libero nunc. Nunc congue nisi vitae
+      suscipit tellus mauris a diam maecenas.
+    </Text>
+    {/* Explainer Text */}
+    <Text
+      my="md"
+      // font-size: theme.fontSizes.explain
+      fontSize="explain"
+      fontWeight="bold"
+      // line-height: theme.lineHeights.explain
+      lineHeight="explain"
+    >
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+      tempor incididunt ut labore et dolore magna aliqua. Semper quis lectus
+      nulla at volutpat diam ut venenatis. Sed viverra tellus in hac habitasse
+      platea dictumst. Id porta nibh venenatis cras. Velit dignissim sodales ut
+      eu sem. Turpis cursus in hac habitasse platea dictumst quisque. Integer
+      feugiat scelerisque varius morbi enim. Dui accumsan sit amet nulla. Donec
+      et odio pellentesque diam volutpat commodo sed. Augue eget arcu dictum
+      varius duis at. Nullam vehicula ipsum a arcu cursus vitae. Sapien et
+      ligula ullamcorper malesuada proin libero nunc. Nunc congue nisi vitae
+      suscipit tellus mauris a diam maecenas.
+    </Text>
   </React.Fragment>
 );
 
@@ -518,22 +554,32 @@ const UIKit = () => (
     mb="xl" // ~ margin-bottom: theme.space.xl
     bg="white" // ~ theme.colors.white
   >
-    {/* Base styling */}
-    <BaseStyles />
-    <h1>UI Elements</h1>
-    <h3>Colors</h3>
+    <Heading color="black.text">UI Elements</Heading>
+    <Heading as="h3" color="black.text" my="lg">
+      Colors
+    </Heading>
     <ColorScheme />
     <Shades />
-    <h3>Buttons</h3>
+    <Heading as="h3" color="black.text" my="lg">
+      Buttons
+    </Heading>
     <Buttons />
-    <h3>Shadows</h3>
+    <Heading as="h3" color="black.text" my="lg">
+      Shadows
+    </Heading>
     <BoxShadows />
-    <h3>Alerts</h3>
+    <Heading as="h3" color="black.text" my="lg">
+      Alerts
+    </Heading>
     <Alerts />
-    <h3>Text Links</h3>
+    <Heading as="h3" color="black.text" my="lg">
+      Text Links
+    </Heading>
     <TextLinks />
-    <h3>Headings</h3>
-    <Headings />
+    <Heading as="h3" color="black.text" my="lg">
+      Typography
+    </Heading>
+    <Typography />
   </UIKitWrapperDiv>
 );
 

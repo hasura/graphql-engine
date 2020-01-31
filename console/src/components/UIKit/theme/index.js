@@ -79,6 +79,9 @@ export const theme = {
 
   // border-radius values
   radii: [0, 2, 4, 8, 12, 16],
+
+  // line-height values
+  lineHeights: [1.33, 1.5],
 };
 
 // aliases **************************** //
@@ -127,7 +130,7 @@ theme.fontWeights.bold = theme.fontWeights[7];
  * h4: 18px
  * p: 16px
  * button: 14px
- * ex (Explainer Text): 12px
+ * explain (Explainer Text): 12px
  */
 
 theme.fontSizes.h1 = theme.fontSizes[6];
@@ -142,7 +145,7 @@ theme.fontSizes.p = theme.fontSizes[2];
 
 theme.fontSizes.button = theme.fontSizes[1];
 
-theme.fontSizes.ex = theme.fontSizes[0];
+theme.fontSizes.explain = theme.fontSizes[0];
 
 // ********************************* //
 
@@ -165,3 +168,12 @@ theme.space.lg = theme.space[10];
 theme.space.xl = theme.space[11];
 
 // ********************************* //
+
+/* line-height
+ * body: 1.5
+ * explain: 1.3
+ */
+
+theme.lineHeights.body = theme.lineHeights[1];
+
+theme.lineHeights.explain = theme.lineHeights[0];
