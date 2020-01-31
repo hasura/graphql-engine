@@ -69,6 +69,7 @@ const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
 const SET_FILTER_SCHEMA = 'Data/SET_FILTER_SCHEMA';
+const SET_FILTER_TABLES = 'Data/SET_FILTER_TABLES';
 
 const SET_ADDITIONAL_COLUMNS_INFO = 'Data/SET_ADDITIONAL_COLUMNS_INFO';
 
@@ -1147,6 +1148,13 @@ const dataReducer = (state = defaultState, action) => {
         ...state,
         schemaFilter: [...action.data],
       };
+    case SET_FILTER_TABLES:
+      return {
+        ...state,
+        tableFilter: {
+          ...action.data,
+        },
+      };
     default:
       return state;
   }
@@ -1158,6 +1166,7 @@ export {
   REQUEST_SUCCESS,
   REQUEST_ERROR,
   SET_FILTER_SCHEMA,
+  SET_FILTER_TABLES,
   setTable,
   updateSchemaInfo,
   handleMigrationErrors,

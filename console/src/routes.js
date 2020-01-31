@@ -79,7 +79,12 @@ const routes = store => {
     connect,
     store,
     composeOnEnterHooks,
-    () => {}
+    () => {
+      return {};
+    },
+    () => {
+      return { public: ['test_table_1'], personal: ['author'] };
+    }
   );
   const requireSchema = _dataRouterUtils.requireSchema;
   const dataRouter = _dataRouterUtils.makeDataRouter;
