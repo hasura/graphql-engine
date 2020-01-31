@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import {
+  flexbox,
   typography,
   space,
   color,
@@ -20,16 +21,13 @@ export const UIKitWrapperDiv = styled.div`
   ${color}
 `;
 
-// Base Div ********************* //
+// Flexbox Div ********************** //
 
-export const BaseDiv = styled.div`
-  display: flex;
-  justify-content: flex-start;
+export const Flex = styled.div`
+  ${flexbox}
+  ${layout}
+  ${space}
 `;
-
-// ******************************** //
-
-export const ColorSchemeDivWrapper = styled(BaseDiv)``;
 
 // ******************************** //
 
@@ -42,16 +40,6 @@ export const ColorSchemeDiv = styled.div`
   ${border}
 `;
 
-// Extended wrapper div for buttons *********** //
-
-export const ButtonsWrapper = styled(BaseDiv)`
-  ${space}
-`;
-
-// ShadowDiv wrapper for box-shadows ********** //
-
-export const BoxShadowDivWrapper = styled(BaseDiv)``;
-
 // Shadow Div ********************************* //
 
 export const BoxShadowDiv = styled.div`
@@ -59,27 +47,12 @@ export const BoxShadowDiv = styled.div`
   height: 12.5rem;
   margin-right: 4rem;
 
-  /* importing background color from theme */
-
-  background: ${props => props.theme.colors.white};
-
-  /* box-shadow ~ styled-system */
   ${shadow}
-  /* border-radius ~ styled-system */
   ${border}
+  ${color}
 `;
 
-// Text Links *********************************** //
-
-export const TextLinksWrapper = styled(BaseDiv)`
-  ${space}
-`;
-
-// Color Shades ********************************* //
-
-export const BrushWrapper = styled(BaseDiv)`
-  ${space}
-`;
+// Color Shades *************************** //
 
 export const Brush = styled.div`
   ${color}

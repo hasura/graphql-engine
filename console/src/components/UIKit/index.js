@@ -3,14 +3,10 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import {
+  Flex,
   UIKitWrapperDiv,
-  ColorSchemeDivWrapper,
   ColorSchemeDiv,
-  ButtonsWrapper,
-  BoxShadowDivWrapper,
   BoxShadowDiv,
-  TextLinksWrapper,
-  BrushWrapper,
   Brush,
 } from './UIKit';
 
@@ -21,7 +17,7 @@ import { Text, Heading } from './Text';
 // Color Scheme ******************************** //
 
 const ColorScheme = () => (
-  <ColorSchemeDivWrapper>
+  <Flex display="flex" justifyContent="flex-start">
     <ColorSchemeDiv
       // ~ background: theme.colors.yellow.primary
       bg="yellow.primary"
@@ -33,14 +29,14 @@ const ColorScheme = () => (
     <ColorSchemeDiv bg="red.primary" borderRadius="sm" />
     <ColorSchemeDiv bg="blue.primary" borderRadius="sm" />
     <ColorSchemeDiv bg="orange.primary" borderRadius="sm" />
-  </ColorSchemeDivWrapper>
+  </Flex>
 );
 
 // Shades ******************************** //
 
 const Shades = () => (
   <React.Fragment>
-    <BrushWrapper my="lg">
+    <Flex display="flex" justifyContent="flex-start" my="lg">
       <Brush
         bg="yellow.original"
         borderRadius="circle"
@@ -62,8 +58,8 @@ const Shades = () => (
         height={1}
         mr="md"
       />
-    </BrushWrapper>
-    <BrushWrapper my="lg">
+    </Flex>
+    <Flex display="flex" justifyContent="flex-start" my="lg">
       <Brush
         bg="black.original"
         borderRadius="circle"
@@ -85,8 +81,8 @@ const Shades = () => (
         height={1}
         mr="md"
       />
-    </BrushWrapper>
-    <BrushWrapper my="lg">
+    </Flex>
+    <Flex display="flex" justifyContent="flex-start" my="lg">
       <Brush
         bg="green.original"
         borderRadius="circle"
@@ -115,8 +111,8 @@ const Shades = () => (
         height={1}
         mr="md"
       />
-    </BrushWrapper>
-    <BrushWrapper my="lg">
+    </Flex>
+    <Flex display="flex" justifyContent="flex-start" my="lg">
       <Brush
         bg="red.original"
         borderRadius="circle"
@@ -145,8 +141,9 @@ const Shades = () => (
         height={1}
         mr="md"
       />
-    </BrushWrapper>
-    <BrushWrapper my="lg">
+    </Flex>
+
+    <Flex display="flex" justifyContent="flex-start" my="lg">
       <Brush
         bg="blue.original"
         borderRadius="circle"
@@ -175,8 +172,9 @@ const Shades = () => (
         height={1}
         mr="md"
       />
-    </BrushWrapper>
-    <BrushWrapper my="lg">
+    </Flex>
+
+    <Flex display="flex" justifyContent="flex-start" my="lg">
       <Brush
         bg="orange.original"
         borderRadius="circle"
@@ -205,7 +203,7 @@ const Shades = () => (
         height={1}
         mr="md"
       />
-    </BrushWrapper>
+    </Flex>
   </React.Fragment>
 );
 
@@ -213,7 +211,9 @@ const Shades = () => (
 
 const Buttons = () => (
   <React.Fragment>
-    <ButtonsWrapper
+    <Flex
+      display="flex"
+      justifyContent="flex-start"
       mb="lg" // ~ margin-bottom: theme.space.lg
     >
       {/* Primary button */}
@@ -245,9 +245,9 @@ const Buttons = () => (
       >
         Secondary button
       </Button>
-    </ButtonsWrapper>
+    </Flex>
     {/* Second row ~ small primary buttons */}
-    <ButtonsWrapper>
+    <Flex display="flex" justifyContent="flex-start">
       <Button
         bg="yellow.primary"
         color="white"
@@ -317,22 +317,23 @@ const Buttons = () => (
       >
         Primary button
       </Button>
-    </ButtonsWrapper>
+    </Flex>
   </React.Fragment>
 );
 
 // Box Shadows ***************************** //
 
 const BoxShadows = () => (
-  <BoxShadowDivWrapper>
+  <Flex display="flex" justifyContent="flex-start">
     <BoxShadowDiv
       boxShadow={1} // box-shadow ~ theme.shadows[1]
       borderRadius="xs" // ~ theme.radii.xs
+      bg="white" // ~ background: theme.colors.white
     />
-    <BoxShadowDiv boxShadow={2} borderRadius="xs" />
-    <BoxShadowDiv boxShadow={3} borderRadius="xs" />
-    <BoxShadowDiv boxShadow={4} borderRadius="xs" />
-  </BoxShadowDivWrapper>
+    <BoxShadowDiv boxShadow={2} borderRadius="xs" bg="white" />
+    <BoxShadowDiv boxShadow={3} borderRadius="xs" bg="white" />
+    <BoxShadowDiv boxShadow={4} borderRadius="xs" bg="white" />
+  </Flex>
 );
 
 // Alerts ***************************** //
@@ -390,7 +391,9 @@ const Alerts = () => (
 
 const TextLinks = () => (
   <React.Fragment>
-    <TextLinksWrapper
+    <Flex
+      display="flex"
+      justifyContent="flex-start"
       mb="xs" // ~ margin-bottom: theme.space.xs
     >
       <Text
@@ -413,9 +416,13 @@ const TextLinks = () => (
       <Text fontSize="p" fontWeight="medium" color="red.primary">
         Check it out
       </Text>
-    </TextLinksWrapper>
+    </Flex>
     {/* Underlined Text */}
-    <TextLinksWrapper>
+    <Flex
+      display="flex"
+      justifyContent="flex-start"
+      mb="xs" // ~ margin-bottom: theme.space.xs
+    >
       <Text
         fontSize="p" // ~ theme.fontSizes.p
         fontWeight="medium" // ~ theme.fontWeights.medium
@@ -465,7 +472,7 @@ const TextLinks = () => (
       >
         Check it out
       </Text>
-    </TextLinksWrapper>
+    </Flex>
   </React.Fragment>
 );
 
@@ -510,6 +517,7 @@ const Typography = () => (
       fontSize="p" // font-size: theme.space.fontSizes.p
       // line-height: theme.lineHeights.body
       lineHeight="body"
+      color="black.text" // color: theme.colors.black.text
     >
       Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
       tempor incididunt ut labore et dolore magna aliqua. Semper quis lectus
@@ -530,6 +538,7 @@ const Typography = () => (
       fontWeight="bold"
       // line-height: theme.lineHeights.explain
       lineHeight="explain"
+      color="black.text" // color: theme.colors.black.text
     >
       Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
       tempor incididunt ut labore et dolore magna aliqua. Semper quis lectus

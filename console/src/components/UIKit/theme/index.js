@@ -171,7 +171,7 @@ theme.space.xl = theme.space[11];
 
 /* line-height
  * body: 1.5
- * explain: 1.3
+ * explain: 1.3 ~ Explainer Text
  */
 
 theme.lineHeights.body = theme.lineHeights[1];
