@@ -1,3 +1,7 @@
+.. meta::
+   :description: Deploy Hasura GraphQL engine
+   :keywords: hasura, docs, deployment
+
 Deploying Hasura GraphQL engine
 ===============================
 

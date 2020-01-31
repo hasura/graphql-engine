@@ -29,6 +29,7 @@ func (b *binaryFileSystem) Exists(prefix string, filepath string) bool {
 	return false
 }
 
+// BinaryFileSystem creates a binary file system at root from the assets
 func BinaryFileSystem(root string) *binaryFileSystem {
 	fs := &assetfs.AssetFS{assets.Asset, assets.AssetDir, assets.AssetInfo, root}
 	return &binaryFileSystem{
@@ -36,6 +37,7 @@ func BinaryFileSystem(root string) *binaryFileSystem {
 	}
 }
 
+// LoadTemplates loads templates from path for the given list
 func LoadTemplates(path string, list ...string) (multitemplate.Render, error) {
 	r := multitemplate.New()
 
@@ -54,4 +56,13 @@ func LoadTemplates(path string, list ...string) (multitemplate.Render, error) {
 	}
 
 	return r, nil
+}
+
+// DoAssetExist returns true if an asset exists at pathk
+func DoAssetExist(path string) bool {
+	_, err := assets.AssetInfo(path)
+	if err != nil {
+		return false
+	}
+	return true
 }

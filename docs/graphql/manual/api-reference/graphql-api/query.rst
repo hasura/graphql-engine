@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura GraphQL API queries and subscriptions API reference
+   :keywords: hasura, docs, GraphQL API, API reference, query, subscription
+
 API Reference - Query / Subscription
 ====================================
 

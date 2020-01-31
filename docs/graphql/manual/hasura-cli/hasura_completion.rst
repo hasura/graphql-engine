@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura completion to output shell completion code for the specified shell on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura completion
+
 .. _hasura_completion:
 
 Hasura CLI: hasura completion

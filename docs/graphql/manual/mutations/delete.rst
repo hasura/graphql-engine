@@ -1,3 +1,7 @@
+.. meta::
+   :description: Delete an object from the database using a mutation
+   :keywords: hasura, docs, mutation, delete
+
 Delete mutation
 ===============
 

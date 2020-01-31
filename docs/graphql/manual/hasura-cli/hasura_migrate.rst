@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura migrate to manage Hasura migrations on the database with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura migrate
+
 .. _hasura_migrate:
 
 Hasura CLI: hasura migrate

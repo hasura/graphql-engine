@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use enums in Hasura
+   :keywords: hasura, docs, schema, enum
+
 Enum type fields
 ================
 
