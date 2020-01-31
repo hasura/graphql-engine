@@ -12,6 +12,7 @@ const {
   isScalarType,
 } = require('graphql');
 const { camelize } = require('inflection');
+import { getPersistedDerivedMutation } from '../lsUtils';
 
 export const getCodegenFilePath = framework => {
   return `https://raw.githubusercontent.com/${CODEGEN_REPO}/master/${framework}/codegen.js`;
@@ -45,20 +46,9 @@ export const getCodegenFunc = framework => {
 export const getFrameworkCodegen = (framework, actionName, actionsSdl) => {
   return getCodegenFunc(framework)
     .then(codegenerator => {
-      let derive;
-      let allDerivedMutations = window.localStorage.getItem(
-        'HASURA_CONSOLE_DERIVED_MUTATIONS'
-      );
-      if (allDerivedMutations) {
-        allDerivedMutations = JSON.parse(allDerivedMutations);
-        if (allDerivedMutations[actionName]) {
-          derive = {
-            mutation: {
-              name: allDerivedMutations[actionName],
-            },
-          };
-        }
-      }
+      const derive = {
+        mutation: getPersistedDerivedMutation(actionName) || null,
+      };
       const codegenFiles = codegenerator(actionName, actionsSdl, derive);
       return codegenFiles;
     })

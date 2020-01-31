@@ -1,10 +1,10 @@
 import React from 'react';
 import styles from './Styles.scss';
 import Helmet from 'react-helmet';
-import HandlerEditor from '../Common/UIComponents/HandlerEditor';
-import KindEditor from '../Common/UIComponents/KindEditor';
-import ActionDefinitionEditor from '../Common/UIComponents/ActionDefinitionEditor';
-import TypeDefinitionEditor from '../Common/UIComponents/TypeDefinitionEditor';
+import HandlerEditor from '../Common/components/HandlerEditor';
+import KindEditor from '../Common/components/KindEditor';
+import ActionDefinitionEditor from '../Common/components/ActionDefinitionEditor';
+import TypeDefinitionEditor from '../Common/components/TypeDefinitionEditor';
 import Button from '../../../Common/Button';
 import {
   setActionHandler,

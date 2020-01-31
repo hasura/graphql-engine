@@ -26,6 +26,7 @@ import {
   getOverlappingTypeConfirmation,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
+import { removePersistedDerivedMutation } from './lsUtils';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
 import {
@@ -369,6 +370,7 @@ export const deleteAction = currentAction => (dispatch, getState) => {
     dispatch(modifyActionRequestComplete());
     dispatch(push(`${globals.urlPrefix}${appPrefix}/manage`));
     dispatch(fetchActions());
+    removePersistedDerivedMutation(currentAction.action_name);
   };
   const customOnError = () => {
     dispatch(modifyActionRequestComplete());

@@ -50,7 +50,7 @@ const CodeTabs = ({ framework, actionsSdl, currentAction }) => {
 
     const editorProps = {
       width: '700px',
-      value: content,
+      value: content.trim(),
       readOnly: true,
     };
 

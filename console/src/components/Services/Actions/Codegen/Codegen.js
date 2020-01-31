@@ -2,7 +2,7 @@ import React from 'react';
 import { getSdlComplete } from '../../../../shared/utils/sdlUtils';
 import { getAllCodegenFrameworks } from './utils';
 import Spinner from '../../../Common/Spinner/Spinner';
-import styles from '../Common/UIComponents/Styles.scss';
+import styles from '../Common/components/Styles.scss';
 import CodeTabs from './CodeTabs';
 
 const Codegen = ({ allActions, allTypes, currentAction }) => {
@@ -12,7 +12,6 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   const [error, setError] = React.useState(null);
 
   const init = () => {
-    console.log('initializing');
     setLoading(true);
     getAllCodegenFrameworks()
       .then(frameworks => {

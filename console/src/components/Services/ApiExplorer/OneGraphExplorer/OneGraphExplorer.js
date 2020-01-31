@@ -18,7 +18,9 @@ import {
 import { getGraphiQLQueryFromLocalStorage } from '../GraphiQLWrapper/utils';
 import { getRemoteQueries } from '../Actions';
 import { getHeadersAsJSON } from '../utils';
-import deriveMutation from '../../../../shared/utils/deriveMutation';
+import deriveMutation, {
+  validateMutation,
+} from '../../../../shared/utils/deriveMutation';
 import {
   getActionDefinitionSdl,
   getTypesSdl,
@@ -27,6 +29,7 @@ import {
   setActionDefinition,
   setTypeDefinition,
 } from '../../Actions/Add/reducer';
+import { persistDerivedMutation } from '../../Actions/lsUtils';
 import { getActionsCreateRoute } from '../../../Common/utils/routesUtils';
 
 import '../GraphiQLWrapper/GraphiQL.css';
@@ -42,6 +45,7 @@ class OneGraphExplorer extends React.Component {
     isResizing: false,
     loading: false,
     previousIntrospectionHeaders: [],
+    isMutationDerivable: false,
   };
 
   componentDidMount() {
@@ -50,10 +54,11 @@ class OneGraphExplorer extends React.Component {
   }
 
   componentDidUpdate() {
-    if (!this.props.headerFocus && !this.state.loading) {
+    const { headerFocus, headers } = this.props;
+    const { loading, previousIntrospectionHeaders } = this.state;
+    if (!headerFocus && !loading) {
       if (
-        JSON.stringify(this.props.headers) !==
-        JSON.stringify(this.state.previousIntrospectionHeaders)
+        JSON.stringify(headers) !== JSON.stringify(previousIntrospectionHeaders)
       ) {
         this.introspect();
       }
@@ -92,11 +97,11 @@ class OneGraphExplorer extends React.Component {
   }
 
   introspect() {
-    const { endpoint, headersInitialised } = this.props;
+    const { endpoint, headersInitialised, headers: headers_ } = this.props;
     if (!headersInitialised) {
       return;
     }
-    const headers = JSON.parse(JSON.stringify(this.props.headers));
+    const headers = JSON.parse(JSON.stringify(headers_));
     this.setState({ loading: true });
     fetch(endpoint, {
       method: 'POST',
@@ -142,6 +147,16 @@ class OneGraphExplorer extends React.Component {
 
   editQuery = query => {
     this.setState({ query });
+    try {
+      validateMutation(query);
+      this.setState({
+        isMutationDerivable: true,
+      });
+    } catch (_) {
+      this.setState({
+        isMutationDerivable: false,
+      });
+    }
   };
 
   handleToggle = () => {
@@ -175,6 +190,7 @@ class OneGraphExplorer extends React.Component {
       query,
       explorerWidth,
       isResizing,
+      isMutationDerivable,
     } = this.state;
 
     const { renderGraphiql, dispatch } = this.props;
@@ -225,19 +241,7 @@ class OneGraphExplorer extends React.Component {
         setActionDefinition(actionsSdl, null, null, sdlParse(actionsSdl))
       );
       dispatch(setTypeDefinition(typesSdl, null, null, sdlParse(typesSdl)));
-      let persistedDerivedMutations = window.localStorage.getItem(
-        'HASURA_CONSOLE_DERIVED_MUTATIONS'
-      );
-      if (!persistedDerivedMutations) {
-        persistedDerivedMutations = {};
-      } else {
-        persistedDerivedMutations = JSON.parse(persistedDerivedMutations);
-      }
-      persistedDerivedMutations[action.name] = query;
-      window.localStorage.setItem(
-        'HASURA_CONSOLE_DERIVED_MUTATIONS',
-        JSON.stringify(persistedDerivedMutations)
-      );
+      persistDerivedMutation(action.name, query.trim());
       dispatch(push(getActionsCreateRoute(true)));
     };
 
@@ -246,7 +250,7 @@ class OneGraphExplorer extends React.Component {
       onEditQuery: this.editQuery,
       schema: schema,
       toggleExplorer: this.handleToggle,
-      deriveMutation: deriveActionFromMutation,
+      deriveMutation: isMutationDerivable ? deriveActionFromMutation : null,
     });
 
     return (
