@@ -1,4 +1,4 @@
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
+const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
 
 const createSQLRegexNoFunction = /create\s*(?:|or\s*replace)\s*(view|table)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
 
@@ -52,4 +52,8 @@ const parseCreateSQL = sql => {
   return _objects;
 };
 
-export { createSQLRegex, createSQLRegexNoFunction, parseCreateSQL };
+export {
+  createSQLRegex,
+  createSQLRegexNoFunction,
+  parseCreateSQL
+};
