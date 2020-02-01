@@ -27,14 +27,14 @@ Hasura는 Postgres를 지원하는 GraphQL 앱을 만들거나 Postgres를 사�
 ## 특징들
 
 * **강력한 쿼리를 만들기**: 내장 필터링, pagination, 패턴 서칭, 대량 insert, update , delete 뮤테이션 지원
-* **실시간**: subscription을 사용하여 GraphQL 쿼리를 라이브 쿼리로 변환
-* **원격 스키마 머지(병합)**: 비즈니스 로직을 잇는 단일 GraphQL 엔진 엔드포인트를 위한 커스텀 graphQL 스키마 액세스  [**더 많은 정보는 여기를 보세요**](remote-schemas.md).
-* **웹훅 또는 서버리스 function 트리거**: Postgres 에서 insert/update/delete 이벤트들을 지원 ([더 많은 정보는 여기를 보세요](event-triggers.md))
+* **실시간**: subscription을 사용하여 GraphQL 쿼리를 라이브 쿼리로 변환 가능
+* **원격 스키마 머지(병합)**: 비즈니스 로직을 잇는 단일 GraphQL 엔진 엔드포인트를 위한 커스텀 graphQL 스키마 액세스 가능 [**더 많은 정보는 여기로**](remote-schemas.md).
+* **웹훅 또는 서버리스 function 트리거**: Postgres 에서 insert/update/delete 이벤트들을 지원 ([더 많은 정보는 여기로](event-triggers.md))
 * **실체적이고 라이브 데이터베이스와 작업**: 즉시 사용 가능한 GraphQL API 얻기 위한 Postgres database 포인팅 
 * **세분화된 엑세스 제어**: 인증 시스템과 통합된 동적 액세스 제어(예: auth0, firebase-auth)
 * **고성능& 낮은 footprint**: 최대 15MB 도커 이미지와 50MB 메모리 그리고 1000 req/s와 멀티코어 지원
 * **어드민 UI 제공& 마이그레이션**: 어드민 UI와 Rails-inspired 스키마 마이그레이션 지원
-* **Postgres** ❤️: Postgres 타입 지원 (PostGIS/geo-location, 등등..), 뷰를 *그래프*로 변환, mutation이 있는 저장된 function 또는 프로시저 trigger 를 지원합니다.
+* **Postgres** ❤️: Postgres 타입 지원 (PostGIS/geo-location, 등등..), 뷰를 *그래프*로 변환, mutation이 있는 저장된 function 또는 프로시저 trigger 를 지원
 
 자세한 내용은 [hasura.io](https://hasura.io)에서 읽어보거나 [도큐먼트](https://docs.hasura.io)를 참고하세요.
 
@@ -206,7 +206,7 @@ GraphQL Engine core 는 [아파치 라이선스 2.0](https://www.apache.org/lice
 
 이 readme 는 다른 번역으로 제공됩니다. :
 
-- [Korea :kr:](translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
+- [Korea :kr:](translations/README.korean.md) (:pray: [@라스](https://github.com/laskdjlaskdj12))
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
 - [Bosnian :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
