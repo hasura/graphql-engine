@@ -16,6 +16,17 @@ own machine and how to contribute.
 The last two prerequisites can be installed on Debian with:
 
     $ sudo apt install libpq-dev python3 python3-pip python3-venv
+    
+### Haskell + HIE Devcontainer 
+
+VS Code provides the ability to develop applications inside of a Docker container (called _Devcontainers_)
+https://code.visualstudio.com/docs/remote/containers
+
+There is a community Devcontainer setup which installs and configures GHC + HIE 8.6.5 and the necessary VS Code extensions to integrate them into the editor.
+
+You can use this to create a base environment for development on the server, though you will still need to manually install the other dependencies (Node + npm) inside of the container.
+
+https://github.com/hmemcpy/haskell-hie-devcontainer
 
 ### Upgrading npm
 
@@ -70,6 +81,8 @@ You can run the test suite with:
 
 This should run in isolation.
 
+### 
+
 ### Installing and configuring Haskell IDE Engine (HIE) integration 
 
 Haskell IDE Engine (HIE) is an editor integration that includes diagnostics, `hlint` refactor suggestions, documentation-on-hover, GHC warnings and errors, and many other features.
@@ -78,6 +91,7 @@ https://github.com/haskell/haskell-ide-engine
 
 > This project aims to be the universal interface to a growing number of Haskell tools, providing a fully-featured Language Server Protocol server for editors and IDEs that require Haskell-specific functionality.
 
+You can install HIE and its dependencies locally, or you 
 
 HIE has a couple of requirements, namely that you have `stack` installed and in your path, and, depending on your OS, a few build tool libs that must be installed in order to compile correctly. You can follow the guide under `Installation from source` on the HIE repository page, or if you are on Arch, you can install it from the AUR:
 
