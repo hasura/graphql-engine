@@ -47,17 +47,17 @@ Hasura는 Postgres를 지원하는 GraphQL 앱을 만들거나 Postgres를 사�
     - [다른 배포 방법들](#다른_배포_방법들)
 - [구조](#구조)
 - [클라이언트 툴](#클라이언트_툴)
-- [비즈니스 로직 추가하기](#add-business-logic)
-    - [원격 스키마](#remote-schemas)
+- [비즈니스 로직 추가하기](#비즈니스_로직_추가하기)
+    - [원격 스키마](#원격_스키마)
     - [데이터 베이스 이벤트에서 웹훅 트리거](#데이터베이스_이벤트에서_웹훅_트리거)
-- [데모](#demos)
-    - [실시간 어플리케이션](#realtime-applications)
-    - [영상](#videos)
-- [지원 및 트러뷸 슈팅](#support--troubleshooting)
-- [컨트리뷰트](#contributing)
-- [브랜드 자산들](#brand-assets)
-- [라이선](#license)
-- [번역](#translations)
+- [데모](#데모)
+    - [실시간 어플리케이션](#리얼타임_어플리케이션)
+    - [영상](#영상)
+- [지원 및 트러뷸 슈팅](#지원_&_트러뷸슈팅)
+- [컨트리뷰트](#기여)
+- [브랜드 자산들](#브랜드_자산)
+- [라이선](#라이선스)
+- [번역](#번역)
 
 <!-- markdown-toc end -->
 
@@ -100,7 +100,7 @@ Hasura GraphQL Engine은 Postgres 데이터베이스 인스턴스를 전송하�
 
 또한 원격 GraphQL 스키마를 머지(병합) 할수있으며 통합된 GraphQL API를 제공할수있어요.
 
-![Hasura GraphQL 엔진 구조](assets/hasura-arch.svg)
+![Hasura GraphQL 엔진 구조](../assets/hasura-arch.svg)
 
 ## GraphQL_클라이언트
 
@@ -119,7 +119,7 @@ GraphQL 엔진은 easy-to-reason, 확장성와 백엔드에 사용자 정의 비
 데이터베이스 이벤트 기반으로 트리거 되는 비동기 로직을 추가하세요
 알림이나 notification, Postgres의 데이터 파이프라인 혹은 비동기 프로세싱에 이상적이에요. - [더 많은 정보](event-triggers.md).
 
-### 파생 데이터 혹은 데이터 변환
+### 파생_데이터_혹은_데이터 변환
 
 Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [read more](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
 Postrgres에서 데이터를 변환하거나 GraphQL Engine 에 쿼리를 요청할수있는 파생된 다른 데이터 셋을 이용한 비즈니스 로직을 돌릴수있어요. - [더 많은 정보](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
@@ -129,7 +129,7 @@ Postrgres에서 데이터를 변환하거나 GraphQL Engine 에 쿼리를 요청
 모든 예시 어플리케이션 보고싶으시다면 [community/sample-apps](community/sample-apps) 디렉토리에서 확인하세요.
 
 
-### 리얼타임 어플리케이션
+### 리얼타임_어플리케이션
 
 - React 기반으로 만든 그룹챗 어플리케이션, typing indicator를 포함한, 온라인 유저 & 메세지 수신 알람
   - [Try it out](https://realtime-chat.demo.hasura.app/)
@@ -154,7 +154,7 @@ Postrgres에서 데이터를 변환하거나 GraphQL Engine 에 쿼리를 요청
 * [천만대의 탈것와 위치기반(PostGIS, Timescale) 을 위한 대시보드](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 분*)
 
 
-## 지원 & 트러뷸슈팅
+## 지원_&_트러뷸슈팅
 
 문서와 커뮤니티는 대부분의 트러뷸 슈팅을 해결하는데 도움을 줄겁니다. 만약 버그를 발견했거나 저희의 도움이 필요하다면 아래 첨부된 채널중 하나로 연락 해주세요
 
@@ -174,7 +174,7 @@ Postrgres에서 데이터를 변환하거나 GraphQL Engine 에 쿼리를 요청
 
 ## 브랜드_자산
 
-Hasura 브랜드 자산 (로고, 하수라 마스코트, 뱃지 등등.) 은 [애셋/브랜드](assets/brand) 폴더에서 찾을수있어요.
+Hasura 브랜드 자산 (로고, 하수라 마스코트, 뱃지 등등.) 은 [애셋/브랜드](../assets/brand) 폴더에서 찾을수있어요.
 이것들을 당신의 어플리케이션, 웹사이트에 마음껏 쓰세요. 
 만약 Hasura로 만든 어플리케이션에 "Powered by Hasura" 배지를 넣어주신다면 저희는 더 감격에 북밭힐 것같아요 ❤️
 
@@ -218,4 +218,4 @@ GraphQL Engine core 는 [아파치 라이선스 2.0](https://www.apache.org/lice
 - [German 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
 - [Chinese :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
 
-Translations for other files can be found [here](translations).
+다른파일들로 번역된것들은 [여기](translations)에 있습니다.
