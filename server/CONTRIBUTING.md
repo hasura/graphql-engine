@@ -70,6 +70,51 @@ You can run the test suite with:
 
 This should run in isolation.
 
+### Installing and configuring Haskell IDE Engine (HIE) integration 
+
+Haskell IDE Engine (HIE) is an editor integration that includes diagnostics, `hlint` refactor suggestions, documentation-on-hover, GHC warnings and errors, and many other features.
+
+https://github.com/haskell/haskell-ide-engine
+
+> This project aims to be the universal interface to a growing number of Haskell tools, providing a fully-featured Language Server Protocol server for editors and IDEs that require Haskell-specific functionality.
+
+
+HIE has a couple of requirements, namely that you have `stack` installed and in your path, and, depending on your OS, a few build tool libs that must be installed in order to compile correctly. You can follow the guide under `Installation from source` on the HIE repository page, or if you are on Arch, you can install it from the AUR:
+
+`aura -A haskell-ide-engine`
+
+**Do not install using** `nix` as this will cause fatal errors once `hie` attempts to build symbols & documentation for Hasura. You can build from source by doing:
+
+_(Note: this will take several minutes and is resource-intensive)_
+```bash
+git clone https://github.com/haskell/haskell-ide-engine --recurse-submodules
+cd haskell-ide-engine
+
+./cabal-hie-install hie-8.6.5
+./cabal-hie-install data
+```
+
+Once this is done, you will need to configure a `hie.yaml` in the root of `graphql-engine/server` so that HIE understands how to interface with the project symbols:
+
+```yaml
+# graphql-engine/server/hie.yaml
+
+cradle:
+  cabal:
+    - path: './src-lib'
+      component: 'lib:graphql-engine'
+    - path: './src-exec'
+      component: 'exe:graphql-engine'
+    - path: './src-test'
+      component: 'test:graphql-engine-tests'
+    - path: './src-bench-cache'
+      component: 'bench:cache'
+```
+
+After this, everything should now be properly configured and you can continue to the editor-specific configurations for HIE, located here:
+
+https://github.com/haskell/haskell-ide-engine#editor-integration
+
 ### Run and test manually
 
 If you want, you can also run the server and test suite manually against a Postgres instance of your choosing.
