@@ -43,6 +43,7 @@ const operatorTypePGTypesMap = {
   json: ['json'],
   geometric: ['geometry'],
   geometric_geographic: ['geometry', 'geography'],
+  is_null: Object.keys(PGTypes), // all types
 };
 
 const boolOperatorsInfo = {
@@ -93,11 +94,6 @@ const columnOperatorsInfo = {
     type: 'comparision',
     inputStructure: 'object',
   },
-  _is_null: {
-    type: 'comparision',
-    inputStructure: 'object',
-    inputType: 'boolean',
-  },
   _ceq: {
     type: 'comparision',
     inputStructure: 'object',
@@ -127,6 +123,11 @@ const columnOperatorsInfo = {
     type: 'comparision',
     inputStructure: 'object',
     inputType: 'column',
+  },
+  _is_null: {
+    type: 'is_null',
+    inputStructure: 'object',
+    inputType: 'boolean',
   },
   _like: {
     type: 'pattern_match',
