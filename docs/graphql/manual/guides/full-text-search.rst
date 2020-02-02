@@ -116,7 +116,7 @@ We will store the vectors in the same table instead of vectorizing the documents
    update article
    set document = to_tsvector(title || ' ' || content);
 
-We can take this up another notch up by adding index to the pre computed tsvector column.
+We can go a step further and add an index to the pre-computed ``tsvector`` column.
 
 .. code:: sql
 
