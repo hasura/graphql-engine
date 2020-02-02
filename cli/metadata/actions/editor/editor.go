@@ -26,11 +26,7 @@ type PreferredEditorResolver func() ([]string, bool)
 func GetPreferredEditorFromEnvironment() ([]string, bool) {
 	editor := os.Getenv("EDITOR")
 	if len(editor) == 0 {
-		if runtime.GOOS == "windows" {
-			editor = windowsEditor
-		} else {
-			editor = defaultEditor
-		}
+		editor = platformize(defaultEditor, windowsEditor)
 	}
 
 	if !strings.Contains(editor, " ") {

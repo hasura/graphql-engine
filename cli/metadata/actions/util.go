@@ -55,13 +55,13 @@ func convertMetadataToSDL(toPayload sdlToRequest, cmdName string, logger *logrus
 	sdlToCmd.Stdout = &stdout
 	sdlToCmd.Stderr = &stderr
 	err = sdlToCmd.Run()
+	logger.WithField("command", "sdl to").Debugln(fmt.Sprintf("output: %s", stdout.String()))
 	if err != nil {
 		return toResponse, errors.Wrap(
 			fmt.Errorf(stderr.String()),
 			err.Error(),
 		)
 	}
-	logger.WithField("output", stdout.String()).Debugln("stdout from sdl to")
 	tmpByt, err := readCliExtOutput(outputFileName)
 	if err != nil {
 		return
@@ -92,6 +92,7 @@ func convertSDLToMetadata(fromPayload sdlFromRequest, cmdName string, logger *lo
 	sdlFromCmd.Stdout = &stdout
 	sdlFromCmd.Stderr = &stderr
 	err = sdlFromCmd.Run()
+	logger.WithField("command", "sdl from").Debugln(fmt.Sprintf("output: %s", stdout.String()))
 	if err != nil {
 		err = errors.Wrap(
 			fmt.Errorf(stderr.String()),
@@ -99,7 +100,6 @@ func convertSDLToMetadata(fromPayload sdlFromRequest, cmdName string, logger *lo
 		)
 		return
 	}
-	logger.WithField("output", stdout.String()).Debugln("stdout from sdl from")
 	tmpByt, err := readCliExtOutput(outputFileName)
 	if err != nil {
 		return
@@ -130,6 +130,7 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string, logger 
 	actionsCodegenCmd.Stdout = &stdout
 	actionsCodegenCmd.Stderr = &stderr
 	err = actionsCodegenCmd.Run()
+	logger.WithField("command", "actions-codegen").Debugln(fmt.Sprintf("output: %s", stdout.String()))
 	if err != nil {
 		err = errors.Wrap(
 			fmt.Errorf(stderr.String()),
@@ -137,7 +138,6 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string, logger 
 		)
 		return
 	}
-	logger.WithField("output", stdout.String()).Debugln("stdout from actions codegen")
 	tmpByt, err := readCliExtOutput(outputFileName)
 	if err != nil {
 		return
