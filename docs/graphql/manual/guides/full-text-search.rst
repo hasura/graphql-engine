@@ -157,7 +157,7 @@ This function filters the rows on the ``article`` table based on the input text 
 * Select the ``track this`` checkbox to expose the new function over the GraphQL API
 * Hit the ``Run`` button
 
-You can use the custom function as follows:
+You can use the custom function in the console as follows:
 
 .. graphiql::
   :view_only:
