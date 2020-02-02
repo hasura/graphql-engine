@@ -106,7 +106,6 @@ Creating and storing the ``tsvector`` data type
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let’s say we have a table ``article`` and a table ``author``.
-don't have the tables have a look at this `guide`_.
 
 We will store the vectors in the same table instead of vectorizing the documents on the fly because the execution time is faster.
 
