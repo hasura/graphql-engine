@@ -102,7 +102,7 @@ The ``@@`` operator is used to check if the ``tsquery`` matches
 
    SELECT to_tsvector('The quick brown fox jumped over the lazy dog') @@ to_tsquery('!clown');
 
-Creating and Storing the tsvector Data Type
+Creating and storing the ``tsvector`` data type
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Let’s say we have two simple tables for an article/author schema, if you
