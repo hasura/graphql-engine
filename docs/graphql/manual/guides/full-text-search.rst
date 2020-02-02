@@ -66,7 +66,7 @@ It will return a vector normalized according to the French language.
     'brun':4 'chien':9 'dessus':7 'paress':10 'rapid':2 'renard':3 'saut':5
 **to_tsquery()**
 
-This function will accept a list of words that will be checked against
+This function will accept a list of words as an argument. These words will be checked against
 the normalized vector we created with ``to_tsvector()``
 
 Example:
