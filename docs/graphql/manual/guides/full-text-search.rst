@@ -19,7 +19,7 @@ them or not.
 
 The way full text search is implemented in Postgres is by getting a semantic vector
 for all of the words contained in the document. So, when we search for
-words like "jump", we will match all instances of the word like
+words like "jump", we will match all variants of the word, such as
 "jumping", "jumped". So in essence we will be searching just the vector
 and not the document which is fast.
 
