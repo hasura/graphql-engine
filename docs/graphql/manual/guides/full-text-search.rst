@@ -26,7 +26,7 @@ and not the document which makes it more performant.
 Functions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-PostgreSQL has two functions that do exactly what we intend to do:
+PostgreSQL provides two functions that will help us with what we intend to do:
 
 -  ``to_tsvector``: This will create a list of tokens.
 -  ``to_tsquery``: To query the vector for occurences of certain words.
