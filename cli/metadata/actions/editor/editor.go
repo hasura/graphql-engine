@@ -1,43 +1,76 @@
 package editor
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
 )
 
-// DefaultEditor is vim
-const DefaultEditor = "vim"
+const (
+	defaultEditor = "vi"
+	defaultShell  = "/bin/bash"
+	windowsEditor = "notepad"
+	windowsShell  = "cmd"
+)
 
 // PreferredEditorResolver is a function that returns an editor that the user
 // prefers to use, such as the configured `$EDITOR` environment variable.
-type PreferredEditorResolver func() string
+type PreferredEditorResolver func() ([]string, bool)
 
 // GetPreferredEditorFromEnvironment returns the user's editor as defined by the
 // `$EDITOR` environment variable, or the `DefaultEditor` if it is not set.
-func GetPreferredEditorFromEnvironment() string {
+func GetPreferredEditorFromEnvironment() ([]string, bool) {
 	editor := os.Getenv("EDITOR")
-
-	if editor == "" {
-		return DefaultEditor
+	if len(editor) == 0 {
+		if runtime.GOOS == "windows" {
+			editor = windowsEditor
+		} else {
+			editor = defaultEditor
+		}
 	}
 
-	return editor
+	if !strings.Contains(editor, " ") {
+		return []string{editor}, false
+	}
+
+	if !strings.ContainsAny(editor, "\"'\\") {
+		return strings.Split(editor, " "), false
+	}
+
+	shell := defaultEnvShell()
+	return append(shell, editor), true
 }
 
 // OpenFileInEditor opens filename in a text editor.
 func OpenFileInEditor(filename string, resolveEditor PreferredEditorResolver) error {
 	// Get the full executable path for the editor.
-	executable, err := exec.LookPath(resolveEditor())
+	args, shell := resolveEditor()
+	if len(args) == 0 {
+		return fmt.Errorf("no editor defined, can't open %s", filename)
+	}
+
+	abs, err := filepath.Abs(filename)
 	if err != nil {
 		return err
 	}
 
-	cmd := exec.Command(executable, filename)
+	cmdArgs := make([]string, len(args))
+	copy(cmdArgs, args)
+	if shell {
+		last := cmdArgs[len(cmdArgs)-1]
+		cmdArgs[len(cmdArgs)-1] = fmt.Sprintf("%s %q", last, abs)
+	} else {
+		cmdArgs = append(cmdArgs, abs)
+	}
+
+	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-
 	return cmd.Run()
 }
 
@@ -74,4 +107,23 @@ func CaptureInputFromEditor(resolveEditor PreferredEditorResolver, text string) 
 	}
 
 	return bytes, nil
+}
+
+func defaultEnvShell() []string {
+	shell := os.Getenv("SHELL")
+	if len(shell) == 0 {
+		shell = platformize(defaultShell, windowsShell)
+	}
+	flag := "-c"
+	if shell == windowsShell {
+		flag = "/C"
+	}
+	return []string{shell, flag}
+}
+
+func platformize(linux, windows string) string {
+	if runtime.GOOS == "windows" {
+		return windows
+	}
+	return linux
 }
