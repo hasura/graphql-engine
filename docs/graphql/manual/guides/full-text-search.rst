@@ -49,7 +49,7 @@ returns:
 Every word is normalized into a lexeme.
 
 .. note::
-   Sometimes the word won't be normalized depending on the
+   Sometimes the word will not be normalized depending on the
    localization settings of your postgres installation. Default language
    is English but this can be changed by passing the language of you are
    working with as an argument.
