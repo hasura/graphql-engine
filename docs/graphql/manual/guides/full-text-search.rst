@@ -139,7 +139,7 @@ And it can be queried like this
 Creating SQL functions
 ^^^^^^^^^^^^^^^^^^^^^^
 
-We can now make a custom sql function out of the above implementation expose it over the GraphQL API in the Hasura console.
+We can now create a custom SQL function out of the above implementation and expose it over the GraphQL API in the Hasura console.
 
 .. code:: sql
 
