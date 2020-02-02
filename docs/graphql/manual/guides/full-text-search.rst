@@ -67,7 +67,7 @@ It will return a vector normalized according to the French language.
 **to_tsquery()**
 
 This function will accept a list of words as an argument. These words will be checked against
-the normalized vector we created with ``to_tsvector()``
+the normalized vector we created with ``to_tsvector()``.
 
 Example:
 
