@@ -150,7 +150,7 @@ We can now create a custom SQL function out of the above implementation and expo
    $$ LANGUAGE sql STABLE;
 
 
-This function filters rows from the ``article`` table based on the input text argument, ``search``
+This function filters the rows on the ``article`` table based on the input text argument called ``search``.
 
 * Head to the ``Data -> SQL`` section of the Hasura console
 * Enter the above function
