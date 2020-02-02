@@ -17,7 +17,7 @@ documents could be an abstract of certain text article or the entire
 article itself. We now want to find out if certain words are present in
 them or not.
 
-The way FTS is implemented in Postgres is by getting a semantic vector
+The way full text search is implemented in Postgres is by getting a semantic vector
 for all of the words contained in the document. So, when we search for
 words like "jump", we will match all instances of the word like
 "jumping", "jumped". So in essence we will be searching just the vector
