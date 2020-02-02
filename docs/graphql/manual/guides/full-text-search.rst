@@ -14,7 +14,7 @@ What is full text search?
 
 Imagine we have a set of text documents stored in a database. These
 documents could be an abstract of certain text article or the entire
-article itself and we want to find out if certain words are present in
+article itself. We now want to find out if certain words are present in
 them or not.
 
 The way FTS is implemented in Postgres is by getting a semantic vector
