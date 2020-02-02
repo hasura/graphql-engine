@@ -50,7 +50,7 @@ import {
   PERM_OPEN_EDIT,
   PERM_SET_FILTER,
   PERM_SET_FILTER_SAME_AS,
-  PERM_TOGGLE_COLUMN,
+  PERM_TOGGLE_FIELD,
   PERM_TOGGLE_ALL_FIELDS,
   PERM_ALLOW_ALL,
   PERM_TOGGLE_MODIFY_LIMIT,
@@ -67,7 +67,7 @@ import {
   PERM_RESET_APPLY_SAME,
   PERM_SET_APPLY_SAME_PERM,
   PERM_DEL_APPLY_SAME_PERM,
-  toggleColumn,
+  toggleField,
   toggleAllFields,
   getFilterKey,
   getBasePermissionsState,
@@ -78,7 +78,6 @@ import {
   CREATE_NEW_PRESET,
   DELETE_PRESET,
   SET_PRESET_VALUE,
-  PERM_TOGGLE_COMPUTED_FIELD,
 } from '../TablePermissions/Actions';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
@@ -389,33 +388,17 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
 
       return returnState;
 
-    case PERM_TOGGLE_COLUMN:
+    case PERM_TOGGLE_FIELD:
       return {
         ...modifyState,
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            'columns',
-            toggleColumn(
+            action.fieldType,
+            toggleField(
               modifyState.permissionsState[modifyState.permissionsState.query],
-              action.column,
-              'columns'
-            )
-          ),
-        },
-      };
-
-    case PERM_TOGGLE_COMPUTED_FIELD:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...updatePermissionsState(
-            modifyState.permissionsState,
-            'computed_fields',
-            toggleColumn(
-              modifyState.permissionsState[modifyState.permissionsState.query],
-              action.computedField,
-              'computed_fields'
+              action.fieldName,
+              action.fieldType
             )
           ),
         },
