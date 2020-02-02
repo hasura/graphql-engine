@@ -176,11 +176,11 @@ Postrgres에서 데이터를 변환하거나 GraphQL Engine 에 쿼리를 요청
 
 Hasura 브랜드 자산 (로고, 하수라 마스코트, 뱃지 등등.) 은 [애셋/브랜드](../assets/brand) 폴더에서 찾을수있어요.
 이것들을 당신의 어플리케이션, 웹사이트에 마음껏 쓰세요. 
-만약 Hasura로 만든 어플리케이션에 "Powered by Hasura" 배지를 넣어주신다면 저희는 더 감격에 북밭힐 것같아요 ❤️
+만약 Hasura로 만든 어플리케이션에 "Powered by Hasura" 배지를 넣어주신다면 저희는 더 감격스러울것 같아요 ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
@@ -206,7 +206,7 @@ GraphQL Engine core 는 [아파치 라이선스 2.0](https://www.apache.org/lice
 
 이 readme 는 다른 번역으로 제공됩니다. :
 
-- [Korea :kr:](translations/README.korean.md) (:pray: [@라스](https://github.com/laskdjlaskdj12))
+- [Korea :kr:](translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
 - [Bosnian :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
