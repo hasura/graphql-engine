@@ -9,7 +9,7 @@ Postgres full text search
 In this guide we will walk through how to implement a full text search in
 Postgres by creating a custom SQL function and exposing it on the GraphQL API.
 
-What is FTS?
+What is full text search?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Imagine we have a set of text documents stored in a database. These
