@@ -7,7 +7,7 @@ Postgres full text search
   :local:
 
 In this guide we will walk through how to implement a full text search in
-Postgres to create a custom SQL function and expose it to the GraphQL API.
+Postgres by creating a custom SQL function and exposing it on the GraphQL API.
 
 What is FTS?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
