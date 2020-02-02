@@ -36,6 +36,11 @@ export const theme = {
       hover: 'rgba(204, 177, 25, 0.4)',
     },
 
+    grey: {
+      original: '#888888',
+      tab: '#939390',
+    },
+
     black: {
       original: '#000',
       secondary: '#484538',
@@ -84,7 +89,7 @@ export const theme = {
   lineHeights: [1.33, 1.5],
 };
 
-// aliases **************************** //
+// aliases ~ Theme References //
 
 /* border-radius
  * xs: 2px (extra small)
@@ -107,7 +112,7 @@ theme.radii.xl = theme.radii[5];
 
 theme.radii.circle = 1000;
 
-// ********************************* //
+// ***************************** //
 
 /* font-weight
  * normal: 400
@@ -121,7 +126,7 @@ theme.fontWeights.medium = theme.fontWeights[5];
 
 theme.fontWeights.bold = theme.fontWeights[7];
 
-// ********************************* //
+// ***************************** //
 
 /* font-sizes
  * h1: 30px
@@ -147,7 +152,7 @@ theme.fontSizes.button = theme.fontSizes[1];
 
 theme.fontSizes.explain = theme.fontSizes[0];
 
-// ********************************* //
+// ****************************** //
 
 /* space ~ margin / padding
  * xs: 4px (extra small)
@@ -167,7 +172,7 @@ theme.space.lg = theme.space[10];
 
 theme.space.xl = theme.space[11];
 
-// ********************************* //
+// **************************** //
 
 /* line-height
  * body: 1.5
