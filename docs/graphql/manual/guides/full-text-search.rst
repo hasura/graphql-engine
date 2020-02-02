@@ -58,7 +58,7 @@ Every word is normalized into a lexeme.
 
    SELECT to_tsvector('French', 'Le rapide renard brun sauta par dessus le chien paresseux');
 
-It would return a vector normalized according to the French language.
+It will return a vector normalized according to the French language.
 
 .. code:: bash
                          to_tsvector
