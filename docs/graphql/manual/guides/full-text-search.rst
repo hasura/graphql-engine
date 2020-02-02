@@ -29,7 +29,7 @@ Functions
 PostgreSQL provides two functions that will help us with what we intend to do:
 
 -  ``to_tsvector``: This function will create a list of tokens.
--  ``to_tsquery``: To query the vector for occurences of certain words.
+-  ``to_tsquery``: This function will query the vector for occurrences of certain words.
 
 **to_tsvector()**
 
