@@ -128,7 +128,7 @@ We can go a step further and add an index to the pre-computed ``tsvector`` colum
    ON card
    USING GIN (document_with_idx);
 
-And it can be queried like this
+It can then be queried like this:
 
 .. code:: sql
 
