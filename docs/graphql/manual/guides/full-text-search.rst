@@ -50,7 +50,7 @@ Every word is normalized into a lexeme.
 
 .. note::
    Sometimes the word will not be normalized depending on the
-   localization settings of your postgres installation. Default language
+   localization settings of your Postgres installation. The default language
    is English but this can be changed by passing the language of you are
    working with as an argument.
 
