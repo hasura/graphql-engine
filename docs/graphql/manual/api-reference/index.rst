@@ -32,7 +32,7 @@ Available APIs
 +-----------------+-----------------------------------------+------------------+
 | Config          | :ref:`/v1alpha1/config <config_api>`    | Admin only       |
 +-----------------+-----------------------------------------+------------------+
-| Explain         | :ref:`/v1/graphql/explain <explain_api>`| Permission rules |
+| Explain         | :ref:`/v1/graphql/explain <explain_api>`| Admin only       |
 +-----------------+-----------------------------------------+------------------+
 
 .. _graphql_api:
@@ -104,7 +104,7 @@ Explain API
 ``v1/graphql/explain`` returns the Postgres plan for a query or subscription based
 on the defined permissions.
 
-See details at at :doc:`explain`.
+See details at :doc:`explain`.
 
 Supported PostgreSQL types
 --------------------------
