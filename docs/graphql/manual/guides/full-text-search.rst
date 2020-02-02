@@ -1,4 +1,4 @@
-Postgres Full Text Search
+Postgres full text search
 ================================================
 
 .. contents:: Table of contents
