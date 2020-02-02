@@ -135,7 +135,7 @@ It can then be queried like this:
    SELECT name, artist, text from card
    WHERE document_with_idx @@ to_tsquery('hasura');
 
-Creating SQL functions
+Creating an SQL function
 ^^^^^^^^^^^^^^^^^^^^^^
 
 We can now create a custom SQL function out of the above implementation and expose it over the GraphQL API in the Hasura console.
