@@ -45,6 +45,7 @@ export const theme = {
       original: '#000',
       secondary: '#484538',
       text: '#292822',
+      hover: 'rgba(0, 0, 0, 0.16)',
     },
 
     white: '#fff',
@@ -89,7 +90,11 @@ export const theme = {
   lineHeights: [1.33, 1.5],
 };
 
+// **************************** //
+
 // aliases ~ Theme References //
+
+// **************************** //
 
 /* border-radius
  * xs: 2px (extra small)
@@ -182,3 +187,14 @@ theme.space.xl = theme.space[11];
 theme.lineHeights.body = theme.lineHeights[1];
 
 theme.lineHeights.explain = theme.lineHeights[0];
+
+// **************************** //
+
+/* sizes ~ width & height
+ * sm: 40px
+ * lg: 48px
+ */
+
+theme.sizes.sm = theme.sizes[0];
+
+theme.sizes.lg = theme.sizes[1];

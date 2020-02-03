@@ -8,7 +8,9 @@ import { TextLinks, Typography } from './demo/Typography';
 import { Alerts } from './demo/Alerts';
 import { BoxShadows } from './demo/Shadows';
 
-import { UIKitWrapperDiv, Heading } from './demo/styles';
+import Button from './atoms/Button';
+
+import { Flex, UIKitWrapperDiv, Heading } from './demo/styles';
 
 // UIKit(Parent) Demo component ************* //
 
@@ -19,6 +21,38 @@ const UIKit = () => (
     mb="xl" // ~ margin-bottom: theme.space.xl
     bg="white" // ~ theme.colors.white
   >
+    {/* UI Components ***************************/}
+    {/* Buttons ~ large size */}
+    <Flex mb="lg">
+      <Button type="primary" size="large" mr="lg">
+        Primary Button
+      </Button>
+      <Button type="secondary" size="large" mr="lg">
+        Secondary Button
+      </Button>
+      <Button type="success" size="large" mr="lg">
+        Success Button
+      </Button>
+      <Button type="danger" size="large" mr="lg">
+        Danger Button
+      </Button>
+      <Button type="warning" size="large" mr="lg">
+        Warning Button
+      </Button>
+      <Button type="info" size="large" mr="lg">
+        Info Button
+      </Button>
+    </Flex>
+    {/* Buttons ~ small size */}
+    <Flex mb="lg">
+      <Button type="primary" mr="lg">
+        Primary Button
+      </Button>
+      <Button type="outOfRange" mr="lg">
+        Default Type
+      </Button>
+    </Flex>
+    {/* UI Elements *****************************/}
     <Heading color="black.text">UI Elements</Heading>
     <Heading as="h3" color="black.text" my="lg">
       Colors

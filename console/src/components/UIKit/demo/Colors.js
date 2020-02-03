@@ -98,6 +98,13 @@ export const Shades = () => (
         mr="md"
       />
       <Brush
+        bg="black.hover"
+        borderRadius="circle"
+        width={1}
+        height={1}
+        mr="md"
+      />
+      <Brush
         bg="black.text"
         borderRadius="circle"
         width={1}
