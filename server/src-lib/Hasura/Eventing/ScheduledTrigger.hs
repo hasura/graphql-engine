@@ -200,10 +200,10 @@ processScheduledEvent ::
   -> m ()
 processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEvent {..} = do
   currentTime <- liftIO getCurrentTime
-  if (toRational $ diffUTCTime currentTime seScheduledTime) > (toRational $ rcstTolerance stiRetryConf)
+  if diffUTCTime currentTime seScheduledTime > rcstTolerance stiRetryConf
     then processDead'
     else do
-      let timeoutSeconds = fromInteger . diffTimeToSeconds $ rcstTimeoutSec stiRetryConf
+      let timeoutSeconds = diffTimeToSeconds $ rcstTimeoutSec stiRetryConf
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
           headers = map encodeHeader stiHeaders
           headers' = addDefaultHeaders headers
@@ -258,7 +258,7 @@ retryOrMarkError se@ScheduledEvent{..} err = do
       markError
     else do
       currentTime <- liftIO getCurrentTime
-      let delay = fromMaybe (fromInteger . diffTimeToSeconds $ rcstIntervalSec seRetryConf) mRetryHeaderSeconds
+      let delay = fromMaybe (diffTimeToSeconds $ rcstIntervalSec seRetryConf) mRetryHeaderSeconds
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
       setRetry se retryTime

@@ -10,7 +10,7 @@ module Hasura.Eventing.EventTrigger
 import           Control.Concurrent            (threadDelay)
 import           Control.Concurrent.Async      (async, waitAny)
 import           Control.Concurrent.STM.TVar
-import           Control.Exception             (bracket_, try)
+import           Control.Monad.Catch           (MonadMask, bracket_)
 import           Control.Monad.STM             (STM, atomically, retry)
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -33,7 +33,6 @@ import qualified Data.Time.Clock               as Time
 import qualified Database.PG.Query             as Q
 import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Client           as HTTP
-import qualified Network.HTTP.Types            as HTTP
 
 invocationVersion :: Version
 invocationVersion = "2"
@@ -128,6 +127,7 @@ processEvent
      , Has (L.Logger L.Hasura) r
      , Has EventEngineCtx r
      , MonadIO m
+     , MonadMask m
      )
   => LogEnvHeaders -> Q.PGPool -> IO SchemaCache -> Event -> m ()
 processEvent logenv pool getSchemaCache e = do
@@ -156,26 +156,23 @@ processEvent logenv pool getSchemaCache e = do
       either logQErr return finally
 
 withEventEngineCtx ::
-  ( MonadReader r m
-  , Has HTTP.Manager r
-  , Has (L.Logger L.Hasura) r
-  , MonadIO m
-  , MonadError HTTPErr m
+  ( MonadIO m
+  , MonadMask m
   )
   => EventEngineCtx
   -> m HTTPResp
   -> m HTTPResp
 withEventEngineCtx eeCtx = bracket_ (incrementThreadCount eeCtx) (decrementThreadCount eeCtx)
 
-incrementThreadCount :: EventEngineCtx -> IO ()
-incrementThreadCount (EventEngineCtx _ c maxT _ ) = atomically $ do
+incrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
+incrementThreadCount (EventEngineCtx _ c maxT _ ) = liftIO $ atomically $ do
   countThreads <- readTVar c
   if countThreads >= maxT
     then retry
     else modifyTVar' c (+1)
 
-decrementThreadCount :: EventEngineCtx -> IO ()
-decrementThreadCount (EventEngineCtx _ c _ _) = atomically $ modifyTVar' c (\v -> v - 1)
+decrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
+decrementThreadCount (EventEngineCtx _ c _ _) = liftIO $ atomically $ modifyTVar' c (\v -> v - 1)
 
 createEventPayload :: RetryConf -> Event ->  EventPayload
 createEventPayload retryConf e = EventPayload
@@ -252,21 +249,22 @@ retryOrSetError e retryConf err = do
 mkInvocation
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
   -> Invocation
-mkInvocation ep status reqHeaders respBody respHeaders
-  = let resp = if isClientError status
-          then mkClientErr respBody
-          else mkResp status respBody respHeaders
-    in
-      Invocation
-      (epId ep)
-      status
-      (mkWebhookReq (toJSON ep) reqHeaders invocationVersion)
-      resp
+mkInvocation ep status reqHeaders respBody respHeaders =
+  let resp = if isClientError status
+        then mkClientErr respBody
+        else mkResp status respBody respHeaders
+  in
+    Invocation
+    (epId ep)
+    status
+    (mkWebhookReq (toJSON ep) reqHeaders invocationVersion)
+    resp
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
-getEventTriggerInfoFromEvent sc e = let table = eTable e
-                                        tableInfo = M.lookup table $ scTables sc
-                                    in M.lookup ( tmName $ eTrigger e) =<< (_tiEventTriggerInfoMap <$> tableInfo)
+getEventTriggerInfoFromEvent sc e =
+  let table = eTable e
+      tableInfo = M.lookup table $ scTables sc
+  in M.lookup ( tmName $ eTrigger e) =<< (_tiEventTriggerInfoMap <$> tableInfo)
 
 fetchEvents :: Q.TxE QErr [Event]
 fetchEvents =

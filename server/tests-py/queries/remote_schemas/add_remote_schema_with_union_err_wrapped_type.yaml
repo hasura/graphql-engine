@@ -3,8 +3,7 @@ url: /v1/query
 status: 400
 response:
   path: $.args
-  error: |-
-    Error in $.types[1].possibleTypes[0].name: expected Text, encountered Null
+  error: 'Error in $.types[1].possibleTypes[0].name: parsing Text failed, expected String, but encountered Null'
   code: remote-schema-error
 query:
   type: add_remote_schema

@@ -27,7 +27,7 @@ data RetryConfST
   { rcstNumRetries  :: !Int
   , rcstIntervalSec :: !Seconds
   , rcstTimeoutSec  :: !Seconds
-  , rcstTolerance   :: !Seconds
+  , rcstTolerance   :: !NominalDiffTime
   } deriving (Show, Eq, Generic)
 
 instance NFData RetryConfST
@@ -41,7 +41,7 @@ defaultRetryConf =
   { rcstNumRetries = 1
   , rcstIntervalSec = seconds 10
   , rcstTimeoutSec = seconds 60
-  , rcstTolerance = hours 6
+  , rcstTolerance = 21600 -- 6 hours
   }
 
 data ScheduleType = OneOff UTCTime | Cron CronSchedule
