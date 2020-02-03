@@ -23,6 +23,7 @@ import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawConnInfo,
                                                parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
+import           Hasura.Server.Version
 
 import qualified Data.Parser.CacheControlSpec as CacheControlParser
 import qualified Hasura.IncrementalSpec       as IncrementalSpec
@@ -41,7 +42,7 @@ data TestSuite
   | PostgresSuite !RawConnInfo
 
 main :: IO ()
-main = parseArgs >>= \case
+main = withVersion $$(getVersionFromEnvironment) $ parseArgs >>= \case
   AllSuites pgConnOptions -> do
     postgresSpecs <- buildPostgresSpecs pgConnOptions
     runHspec [] (unitSpecs *> postgresSpecs)
@@ -55,7 +56,7 @@ unitSpecs = do
   describe "Hasura.Incremental" IncrementalSpec.spec
   describe "Hasura.RQL.Metadata" MetadataSpec.spec
 
-buildPostgresSpecs :: RawConnInfo -> IO Spec
+buildPostgresSpecs :: (HasVersion) => RawConnInfo -> IO Spec
 buildPostgresSpecs pgConnOptions = do
   env <- getEnvironment
 
