@@ -1,3 +1,7 @@
+.. meta::
+   :description: Integrate Auth0 JWT with Hasura
+   :keywords: hasura, docs, guide, authentication, auth, jwt, integration
+
 .. _auth0_jwt:
 
 Auth0 JWT Integration with Hasura GraphQL engine
@@ -19,6 +23,7 @@ Create an Auth0 Application
   (assuming your application is React/Angular/Vue etc).
 
 .. thumbnail:: ../../../../img/graphql/manual/guides/create-client-popup.png
+   :alt: Create an Auth0 application
 
 Configure Auth0 Rules & Callback URLs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -186,7 +191,7 @@ escaping new lines.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
    :width: 75%
-
+   :alt: Generated JWT config
 
 Add Access Control Rules via Hasura Console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,10 +1,5 @@
 import React from 'react';
-import { push } from 'react-router-redux';
-import {
-  getIntrospectionQuery,
-  buildClientSchema,
-  parse as sdlParse,
-} from 'graphql';
+import { getIntrospectionQuery, buildClientSchema } from 'graphql';
 import GraphiQLExplorer from 'graphiql-explorer';
 
 import {
@@ -18,19 +13,6 @@ import {
 import { getGraphiQLQueryFromLocalStorage } from '../GraphiQLWrapper/utils';
 import { getRemoteQueries } from '../Actions';
 import { getHeadersAsJSON } from '../utils';
-import deriveMutation, {
-  validateMutation,
-} from '../../../../shared/utils/deriveMutation';
-import {
-  getActionDefinitionSdl,
-  getTypesSdl,
-} from '../../../../shared/utils/sdlUtils';
-import {
-  setActionDefinition,
-  setTypeDefinition,
-} from '../../Actions/Add/reducer';
-import { persistDerivedMutation } from '../../Actions/lsUtils';
-import { getActionsCreateRoute } from '../../../Common/utils/routesUtils';
 
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
@@ -45,7 +27,6 @@ class OneGraphExplorer extends React.Component {
     isResizing: false,
     loading: false,
     previousIntrospectionHeaders: [],
-    isMutationDerivable: false,
   };
 
   componentDidMount() {
@@ -147,16 +128,6 @@ class OneGraphExplorer extends React.Component {
 
   editQuery = query => {
     this.setState({ query });
-    try {
-      validateMutation(query);
-      this.setState({
-        isMutationDerivable: true,
-      });
-    } catch (_) {
-      this.setState({
-        isMutationDerivable: false,
-      });
-    }
   };
 
   handleToggle = () => {
@@ -190,10 +161,9 @@ class OneGraphExplorer extends React.Component {
       query,
       explorerWidth,
       isResizing,
-      isMutationDerivable,
     } = this.state;
 
-    const { renderGraphiql, dispatch } = this.props;
+    const { renderGraphiql } = this.props;
 
     const explorer = (
       <GraphiQLExplorer
@@ -219,38 +189,11 @@ class OneGraphExplorer extends React.Component {
       );
     }
 
-    const deriveActionFromMutation = () => {
-      if (!schema) return;
-      if (!query) return;
-      let derivedMutationMetadata;
-      try {
-        console.log(query);
-        derivedMutationMetadata = deriveMutation(query.trim(), schema);
-      } catch (e) {
-        console.error(e);
-        return;
-      }
-      const { action, types } = derivedMutationMetadata;
-      const actionsSdl = getActionDefinitionSdl(
-        action.name,
-        action.arguments,
-        action.output_type
-      );
-      const typesSdl = getTypesSdl(types);
-      dispatch(
-        setActionDefinition(actionsSdl, null, null, sdlParse(actionsSdl))
-      );
-      dispatch(setTypeDefinition(typesSdl, null, null, sdlParse(typesSdl)));
-      persistDerivedMutation(action.name, query.trim());
-      dispatch(push(getActionsCreateRoute(true)));
-    };
-
     const graphiql = renderGraphiql({
       query: query,
       onEditQuery: this.editQuery,
       schema: schema,
       toggleExplorer: this.handleToggle,
-      deriveMutation: isMutationDerivable ? deriveActionFromMutation : null,
     });
 
     return (

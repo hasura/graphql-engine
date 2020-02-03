@@ -1,6 +1,7 @@
 import sanitize from 'sanitize-filename';
 
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
@@ -130,6 +131,7 @@ const initQueries = {
         has_variadic: false,
         returns_set: true,
         return_type_type: 'c', // COMPOSITE type
+        return_table_info: {},
         $or: [
           {
             function_type: {
@@ -174,6 +176,7 @@ const initQueries = {
           has_variadic: false,
           returns_set: true,
           return_type_type: 'c', // COMPOSITE type
+          return_table_info: {},
           $or: [
             {
               function_type: {
@@ -378,7 +381,7 @@ const fetchDataInit = () => (dispatch, getState) => {
   );
 };
 
-const fetchFunctionInit = () => (dispatch, getState) => {
+const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const body = {
     type: 'bulk',
@@ -390,10 +393,10 @@ const fetchFunctionInit = () => (dispatch, getState) => {
   };
 
   // set schema in queries
-  const currentSchema = getState().tables.currentSchema;
-  body.args[0].args.where.function_schema = currentSchema;
-  body.args[1].args.where.function_schema = currentSchema;
-  body.args[2].args.where.function_schema = currentSchema;
+  const fnSchema = schema || getState().tables.currentSchema;
+  body.args[0].args.where.function_schema = fnSchema;
+  body.args[1].args.where.function_schema = fnSchema;
+  body.args[2].args.where.function_schema = fnSchema;
 
   const options = {
     credentials: globalCookiePolicy,
@@ -554,28 +557,17 @@ const makeMigrationCall = (
 };
 
 const getBulkColumnInfoFetchQuery = schema => {
-  const fetchColumnTypes = {
-    type: 'run_sql',
-    args: {
-      sql: fetchColumnTypesQuery,
-      read_only: true,
-    },
-  };
-  const fetchTypeDefaultValues = {
-    type: 'run_sql',
-    args: {
-      sql: fetchColumnDefaultFunctions(schema),
-      read_only: true,
-    },
-  };
-
-  const fetchValidTypeCasts = {
-    type: 'run_sql',
-    args: {
-      sql: fetchColumnCastsQuery,
-      read_only: true,
-    },
-  };
+  const fetchColumnTypes = getRunSqlQuery(fetchColumnTypesQuery, false, true);
+  const fetchTypeDefaultValues = getRunSqlQuery(
+    fetchColumnDefaultFunctions(schema),
+    false,
+    true
+  );
+  const fetchValidTypeCasts = getRunSqlQuery(
+    fetchColumnCastsQuery,
+    false,
+    true
+  );
 
   return {
     type: 'bulk',

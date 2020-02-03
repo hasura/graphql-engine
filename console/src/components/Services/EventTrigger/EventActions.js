@@ -68,8 +68,16 @@ const loadTriggers = triggerNames => (dispatch, getState) => {
           return a.name === b.name ? 0 : +(a.name > b.name) || -1;
         });
       }
+
+      // hydrate undefined config values
+      triggerData.forEach(trigger => {
+        if (!trigger.configuration.headers) {
+          trigger.configuration.headers = [];
+        }
+      });
+
       const { inconsistentObjects } = getState().metadata;
-      let consistentTriggers;
+      let consistentTriggers = triggerData;
       if (inconsistentObjects.length > 1) {
         consistentTriggers = filterInconsistentMetadataObjects(
           triggerData,
@@ -79,7 +87,7 @@ const loadTriggers = triggerNames => (dispatch, getState) => {
       }
       dispatch({
         type: LOAD_TRIGGER_LIST,
-        triggerList: consistentTriggers || triggerData,
+        triggerList: consistentTriggers,
       });
       dispatch(loadInconsistentObjects(false));
     },

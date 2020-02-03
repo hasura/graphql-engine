@@ -13,8 +13,8 @@ import {
   permOpenEdit,
   permSetFilter,
   permSetFilterSameAs,
-  permToggleColumn,
-  permToggleAllColumns,
+  permToggleField,
+  permToggleAllFields,
   permAllowAll,
   permCloseEdit,
   permSetRoleName,
@@ -44,8 +44,12 @@ import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
-
-import { setTable, updateSchemaInfo, fetchRoleList } from '../DataActions';
+import {
+  fetchFunctionInit,
+  setTable,
+  updateSchemaInfo,
+  fetchRoleList,
+} from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import {
@@ -59,7 +63,14 @@ import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import { generateTableDef } from '../../../Common/utils/pgUtils';
+import {
+  findTable,
+  generateTableDef,
+  getColumnName,
+  getComputedFieldName,
+  getTableColumns,
+  getGroupedTableComputedFields,
+} from '../../../Common/utils/pgUtils';
 
 class Permissions extends Component {
   constructor() {
@@ -78,9 +89,11 @@ class Permissions extends Component {
   }
 
   componentDidMount() {
-    this.props.dispatch({ type: RESET });
-    this.props.dispatch(setTable(this.props.tableName));
-    this.props.dispatch(fetchRoleList());
+    const { dispatch } = this.props;
+    dispatch({ type: RESET });
+    dispatch(setTable(this.props.tableName));
+    dispatch(fetchRoleList());
+    dispatch(fetchFunctionInit());
   }
 
   componentDidUpdate(prevProps) {
@@ -124,18 +137,25 @@ class Permissions extends Component {
       migrationMode,
       readOnlyMode,
       currentSchema,
+      nonTrackableFunctions,
+      trackableFunctions,
     } = this.props;
 
-    const currentTableSchema = this.props.allSchemas.find(
-      t =>
-        t.table_name === this.props.tableName &&
-        t.table_schema === this.props.currentSchema
+    const currentTableSchema = findTable(
+      allSchemas,
+      generateTableDef(tableName, currentSchema)
     );
 
     if (!currentTableSchema) {
       // throw a 404 exception
       throw new NotFoundError();
     }
+
+    const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
+    const groupedComputedFields = getGroupedTableComputedFields(
+      currentTableSchema,
+      allFunctions
+    );
 
     const addTooltip = (text, tooltip) => {
       return (
@@ -303,26 +323,39 @@ class Permissions extends Component {
 
               if (permissions) {
                 let checkColumns;
+                let checkComputedFields;
                 let filterKey;
 
-                if (queryType === 'select' || queryType === 'update') {
+                if (queryType === 'select') {
                   checkColumns = true;
+                  checkComputedFields = true;
+                  filterKey = 'filter';
+                } else if (queryType === 'update') {
+                  checkColumns = true;
+                  checkComputedFields = false;
                   filterKey = 'filter';
                 } else if (queryType === 'insert') {
                   checkColumns = true;
+                  checkComputedFields = false;
                   filterKey = 'check';
                 } else if (queryType === 'delete') {
                   checkColumns = false;
+                  checkComputedFields = false;
                   filterKey = 'filter';
                 }
 
                 if (JSON.stringify(permissions[filterKey]) === '{}') {
                   if (
-                    checkColumns &&
-                    (!permissions.columns ||
-                      (!permissions.columns.includes('*') &&
-                        permissions.columns.length !==
-                          tableSchema.columns.length))
+                    (checkColumns &&
+                      (!permissions.columns ||
+                        (!permissions.columns.includes('*') &&
+                          permissions.columns.length !==
+                            tableSchema.columns.length))) ||
+                    (checkComputedFields &&
+                      (!permissions.computed_fields ||
+                        (!permissions.computed_fields.includes('*') &&
+                          permissions.computed_fields.length !==
+                            groupedComputedFields.scalar.length)))
                   ) {
                     _permission = permissionsSymbols.partialAccess;
                   } else {
@@ -795,73 +828,106 @@ class Permissions extends Component {
         const getColumnList = () => {
           const _columnList = [];
 
-          const dispatchToggleColumn = e => {
-            const column = e.target.value;
-            dispatch(permToggleColumn(column));
+          const dispatchToggleField = fieldType => e => {
+            const fieldName = e.target.value;
+            dispatch(permToggleField(fieldType, fieldName));
           };
 
-          tableSchema.columns.forEach((colObj, i) => {
-            const column = colObj.column_name;
-
-            let checked;
+          const getFieldCheckbox = (fieldType, fieldName) => {
+            let checked = false;
             if (permissionsState[query]) {
-              if (permissionsState[query].columns === '*') {
+              const permittedFields = permissionsState[query][fieldType] || [];
+
+              if (permittedFields === '*') {
                 checked = true;
               } else {
-                checked = permissionsState[query].columns.includes(column);
+                checked = permittedFields.includes(fieldName);
               }
-            } else {
-              checked = false;
             }
 
-            _columnList.push(
-              <div key={i} className={styles.columnListElement}>
+            return (
+              <div key={fieldName} className={styles.columnListElement}>
                 <div className="checkbox">
                   <label>
                     <input
                       type="checkbox"
                       checked={checked}
-                      value={column}
-                      onChange={dispatchToggleColumn}
+                      value={fieldName}
+                      onChange={dispatchToggleField(fieldType)}
                       disabled={noPermissions}
                       title={noPermissions ? noPermissionsMsg : ''}
                     />
-                    {column}
+                    {fieldType === 'columns' ? fieldName : <i>{fieldName}</i>}
                   </label>
                 </div>
               </div>
             );
+          };
+
+          tableSchema.columns.forEach(colObj => {
+            const columnName = colObj.column_name;
+
+            _columnList.push(getFieldCheckbox('columns', columnName));
           });
+
+          if (query === 'select') {
+            groupedComputedFields.scalar.forEach(scalarComputedField => {
+              const computedFieldName = getComputedFieldName(
+                scalarComputedField
+              );
+
+              _columnList.push(
+                getFieldCheckbox('computed_fields', computedFieldName)
+              );
+            });
+          }
 
           _columnList.push(<div key={-1} className={styles.clear_fix} />);
 
           return _columnList;
         };
 
-        const getRelationshipsMsg = () => {
-          let _relationshipsMsg = '';
+        const getExternalTablePermissionsMsg = () => {
+          let _externalPermissionsMsg = '';
 
-          const relationships = tableSchema.relationships.map(
-            relObj => relObj.rel_name
-          );
+          // eg. relationships, table computed fields
+          const externalObjects = [];
 
-          if (relationships.length) {
-            _relationshipsMsg = (
+          if (tableSchema.relationships.length) {
+            externalObjects.push('relationships');
+          }
+
+          if (query === 'select' && groupedComputedFields.table.length) {
+            externalObjects.push('table computed fields');
+          }
+
+          if (externalObjects.length) {
+            _externalPermissionsMsg = (
               <div className={styles.add_mar_top_small}>
-                For <b>relationships</b>, set permissions for the corresponding
-                tables/views.
+                For <b>{externalObjects.join(', ')}</b>, set permissions for the
+                corresponding tables/views.
               </div>
             );
           }
 
-          return _relationshipsMsg;
+          return _externalPermissionsMsg;
         };
 
         const getToggleAllBtn = () => {
           const dispatchToggleAllColumns = () => {
-            const allColumns = tableSchema.columns.map(c => c.column_name);
+            const allFields = {};
 
-            dispatch(permToggleAllColumns(allColumns));
+            allFields.columns = getTableColumns(tableSchema).map(c =>
+              getColumnName(c)
+            );
+
+            if (query === 'select') {
+              allFields.computed_fields = groupedComputedFields.scalar.map(cf =>
+                getComputedFieldName(cf)
+              );
+            }
+
+            dispatch(permToggleAllFields(allFields));
           };
 
           return (
@@ -902,9 +968,15 @@ class Permissions extends Component {
 
           const colSectionTitle = 'Column ' + query + ' permissions';
 
+          const tableFields = {};
+          tableFields.columns = getTableColumns(tableSchema);
+          if (query === 'select') {
+            tableFields.computed_fields = groupedComputedFields.scalar;
+          }
+
           const colSectionStatus = getPermissionColumnAccessSummary(
             permissionsState[query],
-            tableSchema.columns
+            tableFields
           );
 
           _columnSection = (
@@ -933,7 +1005,7 @@ class Permissions extends Component {
 
                 {getColumnList()}
 
-                {getRelationshipsMsg()}
+                {getExternalTablePermissionsMsg()}
               </div>
             </CollapsibleToggle>
           );
@@ -1308,8 +1380,8 @@ class Permissions extends Component {
 
         const presetTooltip = (
           <Tooltip id="tooltip-insert-set-operations">
-            Set static values or session variables as default values for columns
-            while {getIngForm(query)}
+            Set static values or session variables as pre-determined values for
+            columns while {getIngForm(query)}
           </Tooltip>
         );
 
@@ -1768,6 +1840,8 @@ const mapStateToProps = (state, ownProps) => ({
   allRoles: state.tables.allRoles,
   schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
+  nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],
+  trackableFunctions: state.tables.postgresFunctions || [],
   readOnlyMode: state.main.readOnlyMode,
   currentSchema: state.tables.currentSchema,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
