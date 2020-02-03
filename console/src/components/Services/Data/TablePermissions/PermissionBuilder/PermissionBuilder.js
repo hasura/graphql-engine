@@ -521,7 +521,7 @@ class PermissionBuilder extends React.Component {
             val.substr(-1) !== '.'
           ) {
             _val = Number(val);
-          } else if (PGTypes.json.includes(valueType) && isJsonString(val)) {
+          } else if (PGTypes.jsonb.includes(valueType) && isJsonString(val)) {
             _val = JSON.parse(val);
           }
         }
@@ -546,7 +546,7 @@ class PermissionBuilder extends React.Component {
 
       if (PGTypes.boolean.includes(valueType)) {
         input = renderBoolSelect(dispatchInput, value);
-      } else if (PGTypes.json.includes(valueType)) {
+      } else if (PGTypes.jsonb.includes(valueType)) {
         input = inputBox();
         suggestion = jsonSuggestion();
       } else if (valueType === 'column') {
