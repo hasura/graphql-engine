@@ -43,7 +43,6 @@ export const TypedInput = ({
     type: 'text',
     placeholder: 'text',
   };
-
   if (enumOptions && enumOptions[colName]) {
     return (
       <select

@@ -14,6 +14,7 @@ import {
   isColumnAutoIncrement,
 } from '../../../Common/utils/pgUtils';
 import { TypedInput } from './TypedInput';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 class InsertItem extends Component {
   constructor() {
@@ -54,8 +55,6 @@ class InsertItem extends Component {
       dispatch,
       enumOptions,
     } = this.props;
-
-    const styles = require('../../../Common/TableCommon/Table.scss');
 
     const currentTable = findTable(
       schemas,
