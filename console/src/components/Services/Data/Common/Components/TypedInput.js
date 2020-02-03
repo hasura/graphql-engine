@@ -54,7 +54,7 @@ export const TypedInput = ({
       <select
         {...standardInputProps}
         className={`form-control ${styles.insertBox}`}
-        defaultValue=""
+        defaultValue={prevValue || ''}
       >
         <option disabled value="">
           -- enum value --

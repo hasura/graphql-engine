@@ -7,6 +7,7 @@ import {
   showSuccessNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
+import { buildFetchEnumRequests } from '../utils';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
@@ -113,43 +114,14 @@ const fetchEnumOptions = () => {
     const {
       tables: { allSchemas, currentTable, currentSchema },
     } = getState();
-    const currentTableSchema =
-      allSchemas &&
-      allSchemas.find(
-        s => s.table_name === currentTable && s.table_schema === currentSchema
-      );
 
-    if (
-      !currentTableSchema ||
-      !currentTableSchema.relationships ||
-      !currentTableSchema.relationships.length
-    ) {
-      return;
-    }
+    const requests = buildFetchEnumRequests(
+      allSchemas,
+      currentTable,
+      currentSchema
+    );
 
-    const requests = [];
-    currentTableSchema.relationships.forEach(rel => {
-      const manualConf = rel.rel_def.manual_configuration;
-      if (!manualConf) {
-        return;
-      }
-
-      const schema = allSchemas.find(
-        s => s.table_name === manualConf.remote_table.name
-      );
-
-      if (!schema || !schema.is_enum) {
-        return;
-      }
-
-      const newReq = {
-        columnName: Object.keys(manualConf.column_mapping)[0],
-        enumTableName: manualConf.remote_table.name,
-        enumTableColumn: Object.values(manualConf.column_mapping)[0],
-      };
-
-      requests.push(newReq);
-    });
+    if (!requests) return;
 
     const options = {
       method: 'POST',

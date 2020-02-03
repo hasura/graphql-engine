@@ -12,11 +12,16 @@ import { E_ONGOING_REQ, editItem } from './EditActions';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 import { TypedInput } from '../Common/Components/TypedInput';
+import { fetchEnumOptions } from './EditActions';
 
 class EditItem extends Component {
   constructor() {
     super();
     this.state = { insertedRows: 0, editorColumnMap: {}, currentColumn: null };
+  }
+
+  componentDidMount() {
+    this.props.dispatch(fetchEnumOptions());
   }
 
   render() {
@@ -32,6 +37,7 @@ class EditItem extends Component {
       lastSuccess,
       count,
       dispatch,
+      enumOptions,
     } = this.props;
 
     // check if item exists
@@ -96,8 +102,7 @@ class EditItem extends Component {
                 refs[colName].valueInput = node;
               }}
               prevValue={prevValue}
-              // todo
-              enumOptions={null}
+              enumOptions={enumOptions}
               col={col}
               index={i}
             />
@@ -230,6 +235,7 @@ EditItem.propTypes = {
   readOnlyMode: PropTypes.bool.isRequired,
   count: PropTypes.number,
   dispatch: PropTypes.func.isRequired,
+  enumOptions: PropTypes.object,
 };
 
 const mapStateToProps = (state, ownProps) => {

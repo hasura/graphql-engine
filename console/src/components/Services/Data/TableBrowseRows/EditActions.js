@@ -12,11 +12,14 @@ import {
   getColumnType,
   getTableColumn,
 } from '../../../Common/utils/pgUtils';
+import { buildFetchEnumRequests } from '../utils';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';
 const E_REQUEST_SUCCESS = 'EditItem/E_REQUEST_SUCCESS';
 const E_REQUEST_ERROR = 'EditItem/E_REQUEST_ERROR';
+const E_FETCH_ENUM_OPTIONS_SUCCESS = 'EditItem/E_FETCH_ENUM_SUCCESS';
+const E_FETCH_ENUM_OPTIONS_ERROR = 'EditItem/E_FETCH_ENUM_ERROR';
 const MODAL_CLOSE = 'EditItem/MODAL_CLOSE';
 const MODAL_OPEN = 'EditItem/MODAL_OPEN';
 
@@ -124,6 +127,61 @@ const editItem = (tableName, colValues) => {
   };
 };
 
+const fetchEnumOptions = () => {
+  return (dispatch, getState) => {
+    const {
+      tables: { allSchemas, currentTable, currentSchema },
+    } = getState();
+
+    const requests = buildFetchEnumRequests(
+      allSchemas,
+      currentTable,
+      currentSchema
+    );
+
+    if (!requests) return;
+
+    const options = {
+      method: 'POST',
+      credentials: globalCookiePolicy,
+      headers: dataHeaders(getState),
+    };
+    const url = Endpoints.query;
+
+    requests.forEach(request => {
+      const req = {
+        type: 'select',
+        args: {
+          table: {
+            name: request.enumTableName,
+            schema: currentSchema,
+          },
+          columns: [request.enumTableColumn],
+        },
+      };
+      return dispatch(
+        requestAction(url, {
+          ...options,
+          body: JSON.stringify(req),
+        })
+      ).then(
+        data =>
+          dispatch({
+            type: E_FETCH_ENUM_OPTIONS_SUCCESS,
+            data: {
+              columnName: request.columnName,
+              options: data.reduce(
+                (acc, d) => [...acc, ...Object.values(d)],
+                []
+              ),
+            },
+          }),
+        () => dispatch({ type: E_FETCH_ENUM_OPTIONS_ERROR })
+      );
+    });
+  };
+};
+
 /* ************ reducers *********************** */
 const editReducer = (tableName, state, action) => {
   switch (action.type) {
@@ -164,6 +222,16 @@ const editReducer = (tableName, state, action) => {
         lastError: 'server-failure',
         lastSuccess: null,
       };
+    case E_FETCH_ENUM_OPTIONS_SUCCESS:
+      return {
+        ...state,
+        enumOptions: {
+          ...state.enumOptions,
+          [action.data.columnName]: action.data.options,
+        },
+      };
+    case E_FETCH_ENUM_OPTIONS_ERROR:
+      return { ...state, enumOptions: null };
     case MODAL_OPEN:
       return { ...state, isModalOpen: true };
     case MODAL_CLOSE:
@@ -174,4 +242,11 @@ const editReducer = (tableName, state, action) => {
 };
 
 export default editReducer;
-export { editItem, modalOpen, modalClose, E_SET_EDITITEM, E_ONGOING_REQ };
+export {
+  editItem,
+  fetchEnumOptions,
+  modalOpen,
+  modalClose,
+  E_SET_EDITITEM,
+  E_ONGOING_REQ,
+};

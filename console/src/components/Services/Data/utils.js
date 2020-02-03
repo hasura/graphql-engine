@@ -657,3 +657,59 @@ const postgresFunctionTester = /.*\(\)$/gm;
 
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
+
+/**
+ * @param {string} currentSchema
+ * @param {string} currentTable
+ * @param {any[]} allSchemas
+ *
+ * @returns {Array<{
+ *   columnName: string,
+ *   enumTableName: string,
+ *   enumTableColumn: string,
+ * }> | void}
+ */
+export const buildFetchEnumRequests = (
+  allSchemas,
+  currentTable,
+  currentSchema
+) => {
+  const currentTableSchema =
+    allSchemas &&
+    allSchemas.find(
+      s => s.table_name === currentTable && s.table_schema === currentSchema
+    );
+
+  if (
+    !currentTableSchema ||
+    !currentTableSchema.relationships ||
+    !currentTableSchema.relationships.length
+  ) {
+    return;
+  }
+
+  const requests = [];
+  currentTableSchema.relationships.forEach(rel => {
+    const manualConf = rel.rel_def.manual_configuration;
+    if (!manualConf) {
+      return;
+    }
+
+    const schema = allSchemas.find(
+      s => s.table_name === manualConf.remote_table.name
+    );
+
+    if (!schema || !schema.is_enum) {
+      return;
+    }
+
+    const newReq = {
+      columnName: Object.keys(manualConf.column_mapping)[0],
+      enumTableName: manualConf.remote_table.name,
+      enumTableColumn: Object.values(manualConf.column_mapping)[0],
+    };
+
+    requests.push(newReq);
+  });
+  return requests;
+};
