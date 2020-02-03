@@ -1,5 +1,5 @@
-Postgres full text search
-================================================
+Postgres Full Text Search
+=========================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -9,7 +9,7 @@ Postgres full text search
 In this guide we will walk through how to implement a full text search in
 Postgres by creating a custom SQL function and exposing it on the GraphQL API.
 
-What is full text search?
+What is a full text search?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Imagine we have a set of text documents stored in a database. These
@@ -23,8 +23,8 @@ words like "jump", we will match all variants of the word, such as
 "jumping" or "jumped". This means we will be searching just for the vector
 and not the document which makes it more performant.
 
-Functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Built in helper functions
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 PostgreSQL provides two functions that will help us with what we intend to do:
 
@@ -43,16 +43,14 @@ over the lazy dog"
 returns:
 
 .. code:: bash
+
                          to_tsvector
    -------------------------------------------------------
     'brown':3 'dog':9 'fox':4 'jump':5 'lazi':8 'quick':2
+
 Every word is normalized into a lexeme.
 
-.. note::
-   Sometimes the word will not be normalized depending on the
-   localization settings of your Postgres installation. The default language
-   is English. This can be changed by passing your preferred language
-   as an argument.
+Sometimes the word won't be normalized depending on the localization settings of your postgres installation. Default language is English but this can be changed by passing the language of you are working with as an argument.
 
 .. code:: sql
 
@@ -61,9 +59,11 @@ Every word is normalized into a lexeme.
 It will return a vector normalized according to the French language.
 
 .. code:: bash
+
                          to_tsvector
    -------------------------------------------------------------------------
     'brun':4 'chien':9 'dessus':7 'paress':10 'rapid':2 'renard':3 'saut':5
+
 **to_tsquery()**
 
 This function will accept a list of words as an argument. These words will be checked against
@@ -76,9 +76,11 @@ Example:
    SELECT to_tsvector('The quick brown fox jumped over the lazy dog') @@ to_tsquery('fox');
 
 .. code:: bash
+
     ?column?
    ----------
     t
+
 The ``@@`` operator is used to check if the ``tsquery`` matches
 ``tsvector``.
 
@@ -107,7 +109,7 @@ Creating and storing the ``tsvector`` data type
 
 Let’s say we have a table ``article`` and a table ``author``.
 
-We will store the vectors in the same table instead of vectorizing the documents on the fly because the execution time is faster.
+We will store the vectors in the same table instead of vectorizing the documents with each query because the execution time is much faster.
 
 .. code:: sql
 
@@ -136,9 +138,9 @@ It can then be queried like this:
    WHERE document_with_idx @@ to_tsquery('hasura');
 
 Creating an SQL function
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-We can now create a custom SQL function out of the above implementation and expose it over the GraphQL API in the Hasura console.
+We can now create a `custom sql function`_. from the above implementation expose it over the GraphQL API in the Hasura console.
 
 .. code:: sql
 
@@ -152,12 +154,8 @@ We can now create a custom SQL function out of the above implementation and expo
 
 This function filters the rows on the ``article`` table based on the input text argument called ``search``.
 
-* Head to the ``Data -> SQL`` section of the Hasura console
-* Enter the above function
-* Select the ``track this`` checkbox to expose the new function over the GraphQL API
-* Hit the ``Run`` button
+We can now use the custom function as follows:
 
-You can use the custom function in the console as follows:
 
 .. graphiql::
   :view_only:
@@ -191,3 +189,4 @@ You can use the custom function in the console as follows:
 
 
 .. _guide: https://docs.hasura.io/1.0/graphql/manual/schema/basics.html
+.. _custom sql function: https://docs.hasura.io/1.0/graphql/manual/schema/custom-functions.html#creating-exposing-sql-functions
