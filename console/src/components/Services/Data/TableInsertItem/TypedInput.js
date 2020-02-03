@@ -9,6 +9,7 @@ import { isColumnAutoIncrement } from '../../../Common/utils/pgUtils';
 export const TypedInput = ({
   enumOptions,
   col,
+  index,
   clone,
   inputRef,
   onChange,
@@ -36,6 +37,7 @@ export const TypedInput = ({
     onFocus,
     onClick,
     ref: inputRef,
+    'data-test': `typed-input-${index}`,
     className: `form-control ${styles.insertBox}`,
     defaultValue: clone && colName in clone ? clone[colName] : '',
     type: 'text',

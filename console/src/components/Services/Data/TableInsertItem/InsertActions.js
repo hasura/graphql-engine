@@ -131,7 +131,7 @@ const fetchEnumOptions = () => {
     currentTableSchema.relationships.forEach(rel => {
       const manualConf = rel.rel_def.manual_configuration;
       const schema = allSchemas.find(
-        s => s.table_name === manualConf.remote_table.name
+        s => s.table_name === manualConf && manualConf.remote_table.name
       );
 
       if (!schema || !schema.is_enum) {

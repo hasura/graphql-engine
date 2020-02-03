@@ -140,6 +140,7 @@ class InsertItem extends Component {
               clone={clone}
               onChange={onChange}
               onFocus={onFocus}
+              index={i}
             />
           </label>
           <label className={styles.radioLabel + ' radio-inline'}>
