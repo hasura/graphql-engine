@@ -1,7 +1,5 @@
 const createSQLRegex = /create\s*(?:|or\s*replace)\s*(view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
 
-const createSQLRegexNoFunction = /create\s*(?:|or\s*replace)\s*(view|table)\s*((\"?\w+\"?)\.(\"?\w+\"?)|(\"?\w+\"?))/; // eslint-disable-line
-
 const getSQLValue = value => {
   const quotedStringRegex = /^".*"$/;
 
@@ -54,6 +52,5 @@ const parseCreateSQL = sql => {
 
 export {
   createSQLRegex,
-  createSQLRegexNoFunction,
   parseCreateSQL
 };
