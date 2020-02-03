@@ -15,8 +15,18 @@ const { camelize } = require('inflection');
 import { getPersistedDerivedMutation } from '../lsUtils';
 
 export const getCodegenFilePath = framework => {
-  return `https://raw.githubusercontent.com/${CODEGEN_REPO}/master/${framework}/codegen.js`;
+  return `https://raw.githubusercontent.com/${CODEGEN_REPO}/master/${framework}/actions-codegen.js`;
 };
+
+export const getStarterKitPath = framework => {
+  return `https://github.com/${CODEGEN_REPO}/tree/master/${framework}/starter-kit/`;
+};
+
+export const getGlitchProjectURL = () => {
+  return 'https://glitch.com/edit/?utm_content=project_hasura-actions-starter-kit&utm_source=remix_this&utm_medium=button&utm_campaign=glitchButton#!/remix/hasura-actions-starter-kit';
+};
+
+export const GLITCH_PROJECT_URL = '';
 
 export const getAllCodegenFrameworks = () => {
   return fetch(ALL_FRAMEWORKS_FILE_PATH)
