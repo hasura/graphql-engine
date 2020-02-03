@@ -61,9 +61,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
         <div key={i} className={`form-group ${styles.pkEditorWrapper}`}>
           <select
             value={pk || ''}
-            className={`${styles.select} ${styles.sample} form-control ${
-              styles.add_pad_left
-            }`}
+            className={`${styles.select} ${styles.sample} form-control ${styles.add_pad_left}`}
             onChange={dispatchSet}
             data-test={`primary-key-select-${i}`}
           >

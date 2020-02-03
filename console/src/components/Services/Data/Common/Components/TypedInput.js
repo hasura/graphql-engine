@@ -1,10 +1,10 @@
 import React from 'react';
 
-import { JSONB, JSONDTYPE, TEXT, BOOLEAN, getPlaceholder } from '../utils';
-import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
-import TextInput from '../../../Common/CustomInputTypes/TextInput';
-import styles from '../../../Common/TableCommon/Table.scss';
-import { isColumnAutoIncrement } from '../../../Common/utils/pgUtils';
+import { JSONB, JSONDTYPE, TEXT, BOOLEAN, getPlaceholder } from '../../utils';
+import JsonInput from '../../../../Common/CustomInputTypes/JsonInput';
+import TextInput from '../../../../Common/CustomInputTypes/TextInput';
+import styles from '../../../../Common/TableCommon/Table.scss';
+import { isColumnAutoIncrement } from '../../../../Common/utils/pgUtils';
 
 export const TypedInput = ({
   enumOptions,
@@ -14,6 +14,7 @@ export const TypedInput = ({
   inputRef,
   onChange,
   onFocus,
+  prevValue,
 }) => {
   const {
     column_name: colName,
@@ -24,6 +25,11 @@ export const TypedInput = ({
   const isAutoIncrement = isColumnAutoIncrement(col);
   const hasDefault = colDefault && colDefault.trim() !== '';
   const placeHolder = hasDefault ? colDefault : getPlaceholder(colType);
+  const getDefaultValue = () => {
+    if (prevValue) return prevValue;
+    if (clone && colName in clone) return clone[colName];
+    return '';
+  };
 
   const onClick = e => {
     e.target
@@ -39,7 +45,7 @@ export const TypedInput = ({
     ref: inputRef,
     'data-test': `typed-input-${index}`,
     className: `form-control ${styles.insertBox}`,
-    defaultValue: clone && colName in clone ? clone[colName] : '',
+    defaultValue: getDefaultValue(),
     type: 'text',
     placeholder: 'text',
   };
@@ -66,11 +72,29 @@ export const TypedInput = ({
     return <input {...standardInputProps} readOnly placeholder={placeHolder} />;
   }
 
+  if (prevValue && typeof prevValue === 'object') {
+    return (
+      <JsonInput
+        standardProps={{
+          ...standardInputProps,
+          defaultValue: JSON.stringify(prevValue),
+        }}
+        placeholderProp={getPlaceholder(colType)}
+      />
+    );
+  }
+
   switch (colType) {
     case JSONB:
     case JSONDTYPE:
       return (
-        <JsonInput {...standardInputProps} placeholderProp={placeHolder} />
+        <JsonInput
+          {...standardInputProps}
+          defaultValue={
+            prevValue ? JSON.stringify(prevValue) : getDefaultValue()
+          }
+          placeholderProp={placeHolder}
+        />
       );
 
     case TEXT:

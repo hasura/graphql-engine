@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import TableHeader from '../TableCommon/TableHeader';
 import Button from '../../../Common/Button/Button';
-import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
+import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import { ordinalColSort } from '../utils';
 
 import { insertItem, I_RESET, fetchEnumOptions } from './InsertActions';
@@ -13,7 +13,7 @@ import {
   generateTableDef,
   isColumnAutoIncrement,
 } from '../../../Common/utils/pgUtils';
-import { TypedInput } from './TypedInput';
+import { TypedInput } from '../Common/Components/TypedInput';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 class InsertItem extends Component {

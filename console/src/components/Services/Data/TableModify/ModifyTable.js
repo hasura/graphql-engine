@@ -24,7 +24,7 @@ import PrimaryKeyEditor from './PrimaryKeyEditor';
 import TableCommentEditor from './TableCommentEditor';
 import EnumsSection, {
   EnumTableModifyWarning,
-} from '../Common/ReusableComponents/EnumsSection';
+} from '../Common/Components/EnumsSection';
 import ForeignKeyEditor from './ForeignKeyEditor';
 import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';

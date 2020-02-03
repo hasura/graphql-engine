@@ -45,14 +45,14 @@ const ForeignKeySelector = ({
       options.push(
         <option key={-1} value={''} disabled>
           {'-- reference schema --'}
-        </option>
+        </option>,
       );
 
       schemaList.forEach((rs, j) => {
         options.push(
           <option key={j} value={rs}>
             {rs}
-          </option>
+          </option>,
         );
       });
 
@@ -108,7 +108,7 @@ const ForeignKeySelector = ({
       options.push(
         <option key={-1} value={''} disabled>
           {'-- reference table --'}
-        </option>
+        </option>,
       );
 
       // all reference table options
@@ -118,7 +118,7 @@ const ForeignKeySelector = ({
           options.push(
             <option key={i} value={rt}>
               {rt}
-            </option>
+            </option>,
           );
         });
 
@@ -215,16 +215,12 @@ const ForeignKeySelector = ({
 
           return (
             <div
-              className={`row ${styles.add_mar_bottom_mid} ${
-                styles.display_flex
-              }`}
+              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
               key={`fk-col-${index}-${_i}`}
             >
               <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={lc}
                   onChange={dispatchSetLcol}
                   data-test={`foreign-key-${index}-lcol-${_i}`}
@@ -247,9 +243,7 @@ const ForeignKeySelector = ({
               </div>
               <div className={'col-sm-4'}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={rc}
                   onChange={dispatchSetRcol}
                   disabled={!refTableName}
