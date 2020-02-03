@@ -42,6 +42,12 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 
   # Apply only a particular version
   hasura migrate apply --type up --version "<version>"
+  
+  # Apply all up migrations upto version 125, last applied is 100
+  hasura migrate apply --goto 125
+  
+  # Apply all down migrations upto version 125, last applied is 150
+  hasura migrate apply --goto 125
 
   # Rollback a particular version:
   hasura migrate apply --type down --version "<version>"
