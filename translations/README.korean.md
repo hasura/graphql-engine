@@ -206,7 +206,6 @@ GraphQL Engine core 는 [아파치 라이선스 2.0](https://www.apache.org/lice
 
 이 readme 는 다른 번역으로 제공됩니다. :
 
-- [Korea :kr:](translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
 - [Bosnian :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
@@ -217,5 +216,6 @@ GraphQL Engine core 는 [아파치 라이선스 2.0](https://www.apache.org/lice
 - [Brazilian Portuguese :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
 - [German 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
 - [Chinese :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
+- [Korean :kr:](translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
 
-Translations for other files can be found [here](translations).
+이문서의 다른 번역을 보고 싶다면 [여기](translations) 를 참고하세요.
