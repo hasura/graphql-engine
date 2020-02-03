@@ -11,7 +11,7 @@ export const isArray = value => {
 };
 
 export const isObject = value => {
-  return typeof value === 'object';
+  return typeof value === 'object' && value !== null;
 };
 
 export const isString = value => {
@@ -96,7 +96,7 @@ export function getAllJsonPaths(json, leafKeys = [], prefix = '') {
     json.forEach((subJson, i) => {
       handleSubJson(subJson, addPrefix(i.toString()));
     });
-  } else if (isObject(json) && json !== null) {
+  } else if (isObject(json)) {
     Object.keys(json).forEach(key => {
       if (leafKeys.includes(key)) {
         _paths.push({ [addPrefix(key)]: json[key] });
