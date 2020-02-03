@@ -5,6 +5,7 @@ import HandlerEditor from '../Common/components/HandlerEditor';
 import KindEditor from '../Common/components/KindEditor';
 import ActionDefinitionEditor from '../Common/components/ActionDefinitionEditor';
 import TypeDefinitionEditor from '../Common/components/TypeDefinitionEditor';
+import HeadersConfEditor from '../Common/components/HeaderConfEditor';
 import Button from '../../../Common/Button';
 import {
   setActionHandler,
@@ -12,6 +13,8 @@ import {
   setDefaults,
   setActionDefinition,
   setTypeDefinition,
+  setHeaders as dispatchNewHeaders,
+  toggleForwardClientHeaders as toggleFCH,
 } from './reducer';
 import { createAction } from '../ServerIO';
 import { getUrlSearchParamValue } from '../../../Common/utils/jsUtils';
@@ -23,6 +26,8 @@ const AddAction = ({
   actionDefinition,
   typeDefinition,
   isFetching,
+  headers,
+  forwardClientHeaders,
 }) => {
   React.useEffect(() => {
     if (getUrlSearchParamValue('is_derived') != 'true') {
@@ -48,6 +53,14 @@ const AddAction = ({
 
   const onSubmit = () => {
     dispatch(createAction());
+  };
+
+  const setHeaders = hs => {
+    dispatch(dispatchNewHeaders(hs));
+  };
+
+  const toggleForwardClientHeaders = () => {
+    dispatch(toggleFCH());
   };
 
   const actionDefinitionOnChange = (value, error, timer, ast) => {
@@ -97,6 +110,13 @@ const AddAction = ({
         value={kind}
         onChange={kindOnChange}
         className={styles.add_mar_bottom_mid}
+      />
+      <hr />
+      <HeadersConfEditor
+        forwardClientHeaders={forwardClientHeaders}
+        toggleForwardClientHeaders={toggleForwardClientHeaders}
+        headers={headers}
+        setHeaders={setHeaders}
       />
       <hr />
       <Button

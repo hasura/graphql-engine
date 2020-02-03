@@ -20,6 +20,7 @@ import {
   getConfirmation,
   isValidTemplateLiteral,
 } from '../../../Common/utils/jsUtils';
+import { transformHeaders } from '../../../Common/Headers/utils';
 
 export const isInbuiltType = typename => {
   return !!gqlInbuiltTypes.find(t => t.name === typename);
@@ -30,12 +31,16 @@ export const generateActionDefinition = ({
   outputType,
   kind = 'synchronous',
   handler,
+  headers,
+  forwardClientHeaders,
 }) => {
   return {
     arguments: filterNameLessTypeLess(args),
     kind,
     output_type: outputType,
     handler,
+    headers: transformHeaders(headers),
+    forward_client_headers: forwardClientHeaders,
   };
 };
 

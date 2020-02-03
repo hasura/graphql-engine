@@ -58,12 +58,24 @@ export const gqlInbuiltTypes = [
   },
 ];
 
-export const sdlDefault = `
-type Mutation {
-  ## define your mutation here
-  ## this will be available in mutation_root of Hasura schema
-  userSignup (
-    login: LoginInfo!
-  ): UserInfo
+export const defaultActionDefSdl = `type Mutation {
+  ## Define your action as a mutation here
+  actionName (arg1: SampleInput!): SampleOutput
 }
 `;
+
+export const defaultTypesDefSdl = `type SampleOutput {
+  accessToken: String!
+}
+
+input SampleInput {
+  username: String!
+  password: String!
+}
+`;
+
+export const defaultHeader = {
+  name: '',
+  value: '',
+  type: 'static',
+};

@@ -4,6 +4,7 @@ import Helmet from 'react-helmet';
 import HandlerEditor from '../Common/components/HandlerEditor';
 import KindEditor from '../Common/components/KindEditor';
 import ActionDefinitionEditor from '../Common/components/ActionDefinitionEditor';
+import HeadersConfEditor from '../Common/components/HeaderConfEditor';
 import TypeDefinitionEditor from '../Common/components/TypeDefinitionEditor';
 import Button from '../../../Common/Button';
 import { getModifyState } from './utils';
@@ -13,6 +14,8 @@ import {
   setActionKind,
   setActionDefinition,
   setTypeDefinition,
+  setHeaders as dispatchNewHeaders,
+  toggleForwardClientHeaders as toggleFCH,
 } from './reducer';
 import { saveAction, deleteAction } from '../ServerIO';
 
@@ -22,6 +25,8 @@ const ActionEditor = ({
   allTypes,
   dispatch,
   isFetching,
+  headers,
+  forwardClientHeaders,
   ...modifyProps
 }) => {
   const { handler, kind, actionDefinition, typeDefinition } = modifyProps;
@@ -64,6 +69,14 @@ const ActionEditor = ({
     dispatch(deleteAction(currentAction));
   };
 
+  const setHeaders = hs => {
+    dispatch(dispatchNewHeaders(hs));
+  };
+
+  const toggleForwardClientHeaders = () => {
+    dispatch(toggleFCH());
+  };
+
   const allowSave =
     !isFetching &&
     !typesDefinitionError &&
@@ -99,6 +112,13 @@ const ActionEditor = ({
       />
       <hr />
       <KindEditor value={kind} onChange={kindOnChange} />
+      <hr />
+      <HeadersConfEditor
+        forwardClientHeaders={forwardClientHeaders}
+        toggleForwardClientHeaders={toggleForwardClientHeaders}
+        headers={headers}
+        setHeaders={setHeaders}
+      />
       <hr />
       <div className={styles.display_flex}>
         <Button

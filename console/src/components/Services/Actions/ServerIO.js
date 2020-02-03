@@ -132,6 +132,8 @@ export const createAction = () => (dispatch, getState) => {
     name: actionName,
     arguments: args,
     outputType,
+    headers: rawState.headers,
+    forwardClientHeaders: rawState.forwardClientHeaders,
   };
 
   const validationError = getStateValidationError(state, existingTypesList);
@@ -241,6 +243,8 @@ export const saveAction = currentAction => (dispatch, getState) => {
     name: actionName,
     arguments: args,
     outputType,
+    headers: rawState.headers,
+    forwardClientHeaders: rawState.forwardClientHeaders,
   };
 
   const validationError = getStateValidationError(state);

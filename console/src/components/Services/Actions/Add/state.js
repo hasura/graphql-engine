@@ -1,20 +1,8 @@
-const defaultActionDefSdl = `
-type Mutation {
-  ## Define your action as a mutation here
-  actionName (arg1: SampleInput!): SampleOutput
-}`;
-
-const defaultTypesDefSdl = `
-type SampleOutput {
-  accessToken: String!
-}
-
-input SampleInput {
-  username: String!
-  password: String!
-}
-
-`;
+import {
+  defaultActionDefSdl,
+  defaultTypesDefSdl,
+  defaultHeader,
+} from '../Common/stateDefaults';
 
 let defaultHandler = '';
 if (typeof navigator !== 'undefined') {
@@ -40,6 +28,8 @@ const state = {
     timer: null,
     ast: null,
   },
+  headers: [defaultHeader],
+  forwardClientHeaders: false,
   kind: 'synchronous',
   isFetching: false,
 };

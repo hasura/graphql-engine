@@ -2,6 +2,7 @@ import {
   getActionDefinitionSdl,
   getTypesSdl,
 } from '../../../../shared/utils/sdlUtils';
+import { parseServerHeaders } from '../../../Common/Headers/utils';
 import {
   getActionArguments,
   getActionName,
@@ -27,6 +28,8 @@ export const getModifyState = (currentAction, allTypes) => {
     },
     handler: actionDef.handler,
     kind: actionDef.kind,
+    headers: parseServerHeaders(actionDef.headers),
+    forwardClientHeaders: actionDef.forward_client_headers,
   };
   return modifyState;
 };

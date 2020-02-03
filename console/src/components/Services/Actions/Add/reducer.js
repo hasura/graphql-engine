@@ -32,6 +32,18 @@ export const setFetching = () => ({ type: SET_FETCHING });
 const UNSET_FETCHING = 'Actions/Add/UNSET_FETCHING';
 export const unsetFetching = () => ({ type: UNSET_FETCHING });
 
+const SET_HEADERS = 'Actions/Add/SET_HEADERS';
+export const setHeaders = headers => ({
+  type: SET_HEADERS,
+  headers,
+});
+
+const TOGGLE_FORWARD_CLIENT_HEADERS =
+  'Actions/Add/TOGGLE_FORWARD_CLIENT_HEADERS';
+export const toggleForwardClientHeaders = () => ({
+  type: TOGGLE_FORWARD_CLIENT_HEADERS,
+});
+
 const reducer = (state = defaultState, action) => {
   switch (action.type) {
     case SET_DEFAULTS:
@@ -80,6 +92,16 @@ const reducer = (state = defaultState, action) => {
               ? action.definition.sdl
               : state.typeDefinition.sdl,
         },
+      };
+    case SET_HEADERS:
+      return {
+        ...state,
+        headers: action.headers,
+      };
+    case TOGGLE_FORWARD_CLIENT_HEADERS:
+      return {
+        ...state,
+        forwardClientHeaders: !state.forwardClientHeaders,
       };
     default:
       return state;
