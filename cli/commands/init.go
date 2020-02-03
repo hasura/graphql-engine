@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,7 +17,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 	"github.com/hasura/graphql-engine/cli/util"
 
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
@@ -181,13 +179,10 @@ func (o *initOptions) createFiles() error {
 		config.ServerConfig.AdminSecret = o.AdminSecret
 	}
 
+	o.EC.Config = config
 	// write the config file
-	data, err := yaml.Marshal(config)
-	if err != nil {
-		return errors.Wrap(err, "cannot convert to yaml")
-	}
 	o.EC.ConfigFile = filepath.Join(o.EC.ExecutionDirectory, "config.yaml")
-	err = ioutil.WriteFile(o.EC.ConfigFile, data, 0644)
+	err = o.EC.WriteConfig()
 	if err != nil {
 		return errors.Wrap(err, "cannot write config file")
 	}

@@ -9,11 +9,14 @@ package cli
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
@@ -382,6 +385,27 @@ func (ec *ExecutionContext) checkServerVersion() error {
 		ec.Logger.Warnf("[cli: %s] [server: %s] version mismatch: %s", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion(), reason)
 	}
 	return nil
+}
+
+// WriteConfig writes the configuration from ec.Config
+func (ec *ExecutionContext) WriteConfig() error {
+	j, err := json.Marshal(ec.Config)
+	if err != nil {
+		return err
+	}
+
+	var jsonObj yaml.MapSlice
+	err = yaml.Unmarshal(j, &jsonObj)
+	if err != nil {
+		return err
+	}
+
+	y, err := yaml.Marshal(jsonObj)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(ec.ConfigFile, y, 0644)
 }
 
 // readConfig reads the configuration from config file, flags and env vars,

@@ -2,10 +2,8 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
@@ -83,11 +81,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				return errors.Wrap(err, "cannot export metadata")
 			}
 			ec.Spin("Writing new config file...")
-			data, err := yaml.Marshal(ec.Config)
-			if err != nil {
-				return errors.Wrap(err, "cannot convert to yaml")
-			}
-			err = ioutil.WriteFile(ec.ConfigFile, data, 0644)
+			err = ec.WriteConfig()
 			if err != nil {
 				return errors.Wrap(err, "cannot write config file")
 			}
