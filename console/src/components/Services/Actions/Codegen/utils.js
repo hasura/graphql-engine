@@ -53,11 +53,16 @@ export const getCodegenFunc = framework => {
     });
 };
 
-export const getFrameworkCodegen = (framework, actionName, actionsSdl) => {
+export const getFrameworkCodegen = (
+  framework,
+  actionName,
+  actionsSdl,
+  parentMutation
+) => {
   return getCodegenFunc(framework)
     .then(codegenerator => {
       const derive = {
-        mutation: getPersistedDerivedMutation(actionName) || null,
+        mutation: parentMutation,
       };
       const codegenFiles = codegenerator(actionName, actionsSdl, derive);
       return codegenFiles;

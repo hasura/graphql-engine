@@ -6,14 +6,25 @@ import { getFrameworkCodegen } from './utils';
 import { getFileExtensionFromFilename } from '../../../Common/utils/jsUtils';
 import { Tabs, Tab } from 'react-bootstrap';
 
-const CodeTabs = ({ framework, actionsSdl, currentAction }) => {
+const CodeTabs = ({
+  framework,
+  actionsSdl,
+  currentAction,
+  parentMutation,
+  shouldDerive,
+}) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
   const [codegenFiles, setCodegenFiles] = React.useState([]);
 
   const init = () => {
     setLoading(true);
-    getFrameworkCodegen(framework, currentAction.action_name, actionsSdl)
+    getFrameworkCodegen(
+      framework,
+      currentAction.action_name,
+      actionsSdl,
+      shouldDerive ? parentMutation : null
+    )
       .then(codeFiles => {
         setCodegenFiles(codeFiles);
         setLoading(false);
@@ -24,7 +35,7 @@ const CodeTabs = ({ framework, actionsSdl, currentAction }) => {
       });
   };
 
-  React.useEffect(init, [framework]);
+  React.useEffect(init, [framework, parentMutation, shouldDerive]);
 
   if (loading) {
     return <Spinner />;

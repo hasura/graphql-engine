@@ -5,16 +5,28 @@ import {
   getStarterKitPath,
   getGlitchProjectURL,
 } from './utils';
+import { getPersistedDerivedMutation } from '../lsUtils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import styles from '../Common/components/Styles.scss';
 import Button from '../../../Common/Button/Button';
 import CodeTabs from './CodeTabs';
+import DerivedFrom from './DerivedFrom';
 
 const Codegen = ({ allActions, allTypes, currentAction }) => {
   const [allFrameworks, setAllFrameworks] = React.useState([]);
   const [selectedFramework, selectFramework] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
+
+  const [parentMutation] = React.useState(
+    getPersistedDerivedMutation(currentAction.action_name)
+  );
+  const [shouldDerive, setShouldDerive] = React.useState(true);
+
+  const toggleDerivation = e => {
+    e.preventDefault();
+    setShouldDerive(!shouldDerive);
+  };
 
   const init = () => {
     setLoading(true);
@@ -79,7 +91,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
         >
           <Button
             color="white"
-            className={`${styles.default_button} ${styles.add_mar_right_mid}`}
+            className={`${styles.add_mar_right_mid} ${styles.default_button}`}
           >
             Try on glitch
           </Button>
@@ -110,14 +122,30 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     );
   };
 
+  const getDerivationInfo = () => {
+    return (
+      <DerivedFrom
+        parentMutation={parentMutation}
+        shouldDerive={shouldDerive}
+        toggleDerivation={toggleDerivation}
+      />
+    );
+  };
+
   return (
     <div>
       {getFrameworkActions()}
-      <CodeTabs
-        framework={selectedFramework}
-        actionsSdl={getSdlComplete(allActions, allTypes)}
-        currentAction={currentAction}
-      />
+      <div className={`${styles.add_mar_bottom}`}>
+        <CodeTabs
+          framework={selectedFramework}
+          actionsSdl={getSdlComplete(allActions, allTypes)}
+          currentAction={currentAction}
+          shouldDerive={shouldDerive}
+          parentMutation={parentMutation}
+        />
+      </div>
+      <hr />
+      {getDerivationInfo()}
     </div>
   );
 };

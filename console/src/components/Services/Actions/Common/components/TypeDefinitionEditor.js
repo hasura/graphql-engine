@@ -80,7 +80,7 @@ const ActionDefinitionEditor = ({
             </div>
           )}
           <a
-            className={`${styles.cloneTypeText} ${styles.cursorPointer}`}
+            className={`${styles.cloneTypeText} ${styles.cursorPointer} ${styles.add_mar_right}`}
             onClick={toggleModal}
           >
             <CopyIcon className={styles.add_mar_right_small} />
