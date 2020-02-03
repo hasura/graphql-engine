@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { ButtonStyles } from './Button.style';
 
 const Button = props => {
-  const { children, type, size } = props;
+  const { children, type, size, disabled } = props;
 
   // ************************* //
 
@@ -53,6 +53,8 @@ const Button = props => {
       bg={backgroundColor}
       // secondary button ~ black border
       borderColor={type === 'secondary' ? 'black.secondary' : backgroundColor}
+      // **** Disabled State **** //
+      opacity={disabled && '0.5'}
     >
       {children}
     </ButtonStyles>
@@ -68,6 +70,7 @@ Button.propTypes = {
   border: PropTypes.number,
   fontSize: PropTypes.string,
   fontWeight: PropTypes.string,
+  disabled: PropTypes.bool,
 };
 
 // Default props for button ********** //
@@ -79,6 +82,7 @@ Button.defaultProps = {
   size: 'small',
   borderRadius: 'xs',
   border: 1,
+  disabled: false,
 };
 
 // ***************************** //

@@ -52,6 +52,27 @@ const UIKit = () => (
         Default Type
       </Button>
     </Flex>
+    {/* Disabled State */}
+    <Flex mb="lg">
+      <Button type="primary" mr="lg" disabled>
+        Primary Button
+      </Button>
+      <Button type="secondary" mr="lg" disabled>
+        Secondary Button
+      </Button>
+      <Button type="success" mr="lg" disabled>
+        Success Button
+      </Button>
+      <Button type="danger" mr="lg" disabled>
+        Danger Button
+      </Button>
+      <Button type="warning" mr="lg" disabled>
+        Warning Button
+      </Button>
+      <Button type="info" mr="lg" disabled>
+        Info Button
+      </Button>
+    </Flex>
     {/* UI Elements *****************************/}
     <Heading color="black.text">UI Elements</Heading>
     <Heading as="h3" color="black.text" my="lg">

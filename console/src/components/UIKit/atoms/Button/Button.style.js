@@ -2,7 +2,7 @@ import styled, { css } from 'styled-components';
 import { layout, space, color, border, typography } from 'styled-system';
 
 export const ButtonStyles = styled.button`
-  cursor: pointer;
+  cursor: ${({ disabled }) => !disabled && 'pointer'};
   appearance: button;
 
   /* Base font color values */
@@ -18,9 +18,9 @@ export const ButtonStyles = styled.button`
     return theme.colors.white;
   }};
 
-  /* Hover effects */
+  /* Hover effects when button is not disabled */
 
-  ${({ type, theme: { colors } }) => {
+  ${({ type, theme: { colors }, disabled }) => {
     const boxShadowColorsObject = {
       primary: colors.yellow.hover,
       secondary: colors.black.hover,
@@ -36,9 +36,9 @@ export const ButtonStyles = styled.button`
       ? boxShadowColorsObject[type]
       : colors.black.hover;
 
-    // In case of Secondary Button
+    // In case of Secondary Button when it's not disabled
 
-    if (type === 'secondary') {
+    if (type === 'secondary' && !disabled) {
       return css`
         &:hover {
           box-shadow: ${`0 2px 8px 0 ${boxShadowColor}`};
@@ -46,17 +46,20 @@ export const ButtonStyles = styled.button`
           color: ${colors.white};
         }
       `;
+    } else if (!disabled) {
+      // Hover effect for the reset of buttons except secondary in case of when button is not disabled.
+      return css`
+        &:hover {
+          box-shadow: ${`0 2px 8px 0 ${boxShadowColor}`};
+        }
+      `;
     }
     // No else clause here.
-
-    // Hover effect for the reset of buttons except secondary.
-
-    return css`
-      &:hover {
-        box-shadow: ${`0 2px 8px 0 ${boxShadowColor}`};
-      }
-    `;
   }}
+   
+   &:disabled {
+       cursor: not-allowed;
+   }
 
   /* Styled-System ********************/
     ${layout}
