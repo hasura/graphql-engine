@@ -1,5 +1,6 @@
 Package history
 
+0.0.4-2 - Merges schema/table filtering changes from cisco branch and merges with main (ex-bundle)
 0.0.4-ros3 - Add ability to filter by table based on the input
 0.0.4-ros2 - Remove console.log
 0.0.4-ros1 - update dataRouter allowSchemas param to function argument
