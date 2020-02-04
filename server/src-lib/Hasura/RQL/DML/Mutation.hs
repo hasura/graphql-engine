@@ -6,7 +6,6 @@ module Hasura.RQL.DML.Mutation
   )
 where
 
-import           Data.Aeson
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict      as Map
@@ -44,31 +43,25 @@ mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith)
         (toList p) True
   where
-    selWith = mkSelWith qt cte mutFlds False strfyNum
+    selWith = mkMutationOutputExp qt Nothing cte mutFlds strfyNum
 
 mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
 mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
   -- Perform mutation and fetch unique columns
   MutateResp _ columnVals <- mutateAndFetchCols qt allCols q strfyNum
-  selCTE <- mkSelCTEFromColVals txtEncodedToSQLExp qt allCols columnVals
-  let selWith = mkSelWith qt selCTE mutFlds False strfyNum
+  selCTE <- mkSelCTEFromColVals qt allCols columnVals
+  let selWith = mkMutationOutputExp qt Nothing selCTE mutFlds strfyNum
   -- Perform select query and fetch returning fields
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
-  where
-    txtEncodedToSQLExp colTy = pure . \case
-      TENull          -> S.SENull
-      TELit textValue ->
-        S.withTyAnn (unsafePGColumnToRepresentation colTy) $ S.SELit textValue
 
 
 mutateAndFetchCols
-  :: (FromJSON a)
-  => QualifiedTable
+  :: QualifiedTable
   -> [PGColumnInfo]
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
-  -> Q.TxE QErr (MutateResp a)
+  -> Q.TxE QErr (MutateResp TxtEncodedPGVal)
 mutateAndFetchCols qt cols (cte, p) strfyNum =
   Q.getAltJ . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
@@ -95,32 +88,42 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     colSel = S.SESelect $ mkSQLSelect False $
              AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
 
+-- | Note:- Using sorted columns is necessary to enable casting the rows returned by VALUES expression to table type.
+-- For example, let's consider the table, `CREATE TABLE test (id serial primary key, name text not null, age int)`.
+-- The generated values expression should be in order of columns;
+-- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
 mkSelCTEFromColVals
   :: (MonadError QErr m)
-  => (PGColumnType -> a -> m S.SQLExp)
-  -> QualifiedTable -> [PGColumnInfo] -> [ColumnValues a] -> m S.CTE
-mkSelCTEFromColVals parseFn qt allCols colVals =
+  => QualifiedTable -> [PGColumnInfo] -> [ColumnValues TxtEncodedPGVal] -> m S.CTE
+mkSelCTEFromColVals qt allCols colVals =
   S.CTESelect <$> case colVals of
     [] -> return selNoRows
     _  -> do
       tuples <- mapM mkTupsFromColVal colVals
-      let fromItem = S.FIValues (S.ValuesExp tuples) tableAls $ Just colNames
+      let fromItem = S.FIValues (S.ValuesExp tuples) (S.Alias rowAlias) Nothing
       return S.mkSelect
-        { S.selExtr = [S.selectStar]
+        { S.selExtr = [extractor]
         , S.selFrom = Just $ S.FromExp [fromItem]
         }
   where
-    tableAls = S.Alias $ Iden $ snakeCaseQualObject qt
-    colNames = map pgiColumn allCols
+    rowAlias = Iden "row"
+    extractor = S.selectStar' $ S.QualIden rowAlias $ Just $ S.TypeAnn $ toSQLTxt qt
+    sortedCols = flip sortBy allCols $ \lCol rCol ->
+                 compare (pgiPosition lCol) (pgiPosition rCol)
     mkTupsFromColVal colVal =
-      fmap S.TupleExp $ forM allCols $ \ci -> do
+      fmap S.TupleExp $ forM sortedCols $ \ci -> do
         let pgCol = pgiColumn ci
         val <- onNothing (Map.lookup pgCol colVal) $
           throw500 $ "column " <> pgCol <<> " not found in returning values"
-        parseFn (pgiType ci) val
+        pure $ txtEncodedToSQLExp (pgiType ci) val
 
     selNoRows =
       S.mkSelect { S.selExtr = [S.selectStar]
                  , S.selFrom = Just $ S.mkSimpleFromExp qt
                  , S.selWhere = Just $ S.WhereFrag $ S.BELit False
                  }
+
+    txtEncodedToSQLExp colTy = \case
+      TENull          -> S.SENull
+      TELit textValue ->
+        S.withTyAnn (unsafePGColumnToRepresentation colTy) $ S.SELit textValue
