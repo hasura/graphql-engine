@@ -1,0 +1,23 @@
+-- This is the local cabal configuration file used by the 'scripts/dev.sh'
+-- development script, which uses `... --project-file=cabal.project.dev-sh`
+-- which in turn consults this file.
+--
+-- You can temporarily override values here rather than modifying 'dev.sh'
+-- during development (although that might break certain things)values here 
+-- rather than modifying 'dev.sh' during development (although that might
+-- break certain things).
+
+package *
+  documentation: true
+
+package graphql-engine
+  -- NOTE: this seems to work so long as there is no 'ghc-options: -O2' in the cabal file,
+  -- but new-build will report 'Build profile: -O1' for some reason. 
+  -- See:https://github.com/haskell/cabal/issues/6221 
+  optimization: 0
+  documentation: false
+  flags: +developer
+  -- NOTE: 'cabal new-build --enable-coverage' seems to rebuild all deps with coverage
+  -- which is not what we originally wanted. But building the test modules
+  -- themselves with coverage is actually nice for validation.
+  coverage: true
