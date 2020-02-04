@@ -26,6 +26,7 @@ import {
   getOverlappingTypeConfirmation,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
+import { removePersistedDerivedMutation } from './lsUtils';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
 import {
@@ -131,6 +132,8 @@ export const createAction = () => (dispatch, getState) => {
     name: actionName,
     arguments: args,
     outputType,
+    headers: rawState.headers,
+    forwardClientHeaders: rawState.forwardClientHeaders,
   };
 
   const validationError = getStateValidationError(state, existingTypesList);
@@ -240,6 +243,8 @@ export const saveAction = currentAction => (dispatch, getState) => {
     name: actionName,
     arguments: args,
     outputType,
+    headers: rawState.headers,
+    forwardClientHeaders: rawState.forwardClientHeaders,
   };
 
   const validationError = getStateValidationError(state);
@@ -369,6 +374,7 @@ export const deleteAction = currentAction => (dispatch, getState) => {
     dispatch(modifyActionRequestComplete());
     dispatch(push(`${globals.urlPrefix}${appPrefix}/manage`));
     dispatch(fetchActions());
+    removePersistedDerivedMutation(currentAction.action_name);
   };
   const customOnError = () => {
     dispatch(modifyActionRequestComplete());

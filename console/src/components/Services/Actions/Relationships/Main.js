@@ -25,7 +25,13 @@ const Relationships = ({
 
   const actionOutputType = allTypes.find(t => t.name === actionOutputTypeName);
 
-  const setRelTypes = (relName, refSchema, refTable, fieldMappings) => {
+  const setRelTypes = (
+    relName,
+    relType,
+    refSchema,
+    refTable,
+    fieldMappings
+  ) => {
     const types = [...allTypes];
 
     for (let i = 0; i < types.length; i++) {
@@ -38,6 +44,7 @@ const Relationships = ({
             {
               remote_table: generateTableDef(refTable, refSchema),
               name: relName,
+              type: relType,
               field_mapping: fieldMappings.reduce((fm, f) => {
                 return f.field ? { ...fm, [f.field]: f.refColumn } : fm;
               }, {}),

@@ -5,11 +5,11 @@ import { isInputObjectType, isObjectType, isEnumType } from 'graphql';
 import { deriveExistingType } from '../utils';
 import Tooltip from './Tooltip';
 import styles from './Styles.scss';
-import { useIntrospectionSchema } from '../introspection';
+import { useIntrospectionSchema } from '../../../../Common/utils/graphqlUtils';
 
 const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
-  const [nameSpace, setNamespace] = React.useState('_');
-  const namespaceOnChange = e => setNamespace(e.target.value);
+  const [prefix, setPrefix] = React.useState('_');
+  const prefixOnChange = e => setPrefix(e.target.value);
 
   const { schema, loading, error, introspect } = useIntrospectionSchema(
     headers
@@ -49,16 +49,16 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
     const newTypes = deriveExistingType(
       selectedType,
       schema._typeMap,
-      nameSpace
+      prefix
     );
     handleClonedTypes(newTypes);
     toggleModal();
   };
 
-  const dropdownTitle = nameSpace ? null : 'Please provide a namespace first.';
+  const dropdownTitle = prefix ? null : 'Please provide a prefix first.';
 
-  const namespaceTooltipText =
-    'Namespace is required so that the type you are cloning does not collide with the existing type in Hasura.';
+  const prefixTooltipText =
+    'Prefix is required so that the type you are cloning does not collide with the existing type in Hasura.';
 
   return (
     <div>
@@ -66,12 +66,12 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
         className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
       >
         <div className={'col-md-3'}>
-          Namespace <Tooltip text={namespaceTooltipText} id="clone-namespace" />
+          Prefix <Tooltip text={prefixTooltipText} id="clone-prefix" />
         </div>
         <input
           type="text"
-          value={nameSpace}
-          onChange={namespaceOnChange}
+          value={prefix}
+          onChange={prefixOnChange}
           className={`form-control col-md-3 ${styles.inputWidth}`}
         />
       </div>
@@ -83,7 +83,7 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
           value=""
           className={`form-control col-md-3 ${styles.inputWidth}`}
           onChange={onSelection}
-          disabled={nameSpace === ''}
+          disabled={prefix === ''}
           title={dropdownTitle}
         >
           <option value="">---select an existing type---</option>

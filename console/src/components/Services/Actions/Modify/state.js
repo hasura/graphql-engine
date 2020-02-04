@@ -1,3 +1,5 @@
+import { defaultHeader } from '../Common/stateDefaults';
+
 const state = {
   handler: '',
   kind: 'synchronous',
@@ -10,6 +12,8 @@ const state = {
     error: null,
   },
   isFetching: false,
+  headers: [defaultHeader],
+  forwardClientHeaders: false,
 };
 
 export default state;

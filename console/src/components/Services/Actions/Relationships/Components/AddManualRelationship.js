@@ -12,7 +12,7 @@ const AddManualRelationship = ({
 }) => {
   const styles = require('../../Actions.scss');
 
-  const saveFk = toggleEditor => {
+  const saveFunc = toggleEditor => {
     dispatch(addActionRel(objectType, toggleEditor));
   };
 
@@ -39,7 +39,7 @@ const AddManualRelationship = ({
         editorExpanded={expandedContent}
         expandedLabel={expandedLabel}
         expandButtonText="Configure"
-        saveFunc={saveFk}
+        saveFunc={saveFunc}
         service="create"
         property="manual-rel"
       />

@@ -16,7 +16,11 @@ import {
 
 import { gqlInbuiltTypes } from './stateDefaults';
 import { getActionArguments, getActionOutputType, findType } from '../utils';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
+import {
+  getConfirmation,
+  isValidTemplateLiteral,
+} from '../../../Common/utils/jsUtils';
+import { transformHeaders } from '../../../Common/Headers/utils';
 
 export const isInbuiltType = typename => {
   return !!gqlInbuiltTypes.find(t => t.name === typename);
@@ -27,21 +31,26 @@ export const generateActionDefinition = ({
   outputType,
   kind = 'synchronous',
   handler,
+  headers,
+  forwardClientHeaders,
 }) => {
   return {
     arguments: filterNameLessTypeLess(args),
     kind,
     output_type: outputType,
     handler,
+    headers: transformHeaders(headers),
+    forward_client_headers: forwardClientHeaders,
   };
 };
 
 export const getStateValidationError = ({ handler }) => {
   if (!handler) return 'Handler cannot be empty';
+  if (isValidTemplateLiteral(handler)) return null;
   try {
     new URL(handler); // eslint-disable-line
   } catch (e) {
-    return 'Handler must be a valid URL';
+    return 'Handler must be a valid URL or a template';
   }
   return null;
 };
@@ -49,21 +58,28 @@ export const getStateValidationError = ({ handler }) => {
 export const deriveExistingType = (
   selectedExistingType,
   existingTypemap,
-  namespace
+  prefix
 ) => {
-  const namespaceTypename = name => {
-    if (namespace === '_') {
+  const prefixTypename = name => {
+    if (prefix === '_') {
       return `_${name}`;
     }
-    return camelize(`${namespace}_${name}`);
+    return camelize(`${prefix}_${name}`);
   };
 
   const types = {};
+
+  const getEntityDescription = type => {
+    return type.description
+      ? type.description.replace('"', '"')
+      : type.description;
+  };
 
   const handleScalarType = (type, typename) => {
     types[type.name] = {
       name: typename,
       kind: 'scalar',
+      description: getEntityDescription(type),
     };
   };
 
@@ -73,8 +89,9 @@ export const deriveExistingType = (
       kind: 'enum',
       values: type._values.map(v => ({
         value: v.value,
-        description: v.description,
+        description: getEntityDescription(v),
       })),
+      description: getEntityDescription(type),
     };
   };
 
@@ -83,6 +100,7 @@ export const deriveExistingType = (
       name: typename,
       kind: 'object',
       fields: [],
+      description: getEntityDescription(type),
     };
 
     const parentTypes = [];
@@ -90,7 +108,7 @@ export const deriveExistingType = (
     Object.values(type._fields).forEach(f => {
       const _f = {
         name: f.name,
-        description: f.description,
+        description: getEntityDescription(f),
         arguments: [],
       };
 
@@ -98,32 +116,27 @@ export const deriveExistingType = (
       if (!isScalarType(existingTypemap[fieldTypeMetadata.typename])) {
         return;
       }
-      let namespacedTypename = fieldTypeMetadata.typename;
+      let prefixdTypename = fieldTypeMetadata.typename;
       if (!isInbuiltType(fieldTypeMetadata.typename)) {
-        namespacedTypename = namespaceTypename(fieldTypeMetadata.typename);
+        prefixdTypename = prefixTypename(fieldTypeMetadata.typename);
         parentTypes.push(fieldTypeMetadata.typename);
       }
 
-      _f.type = wrapTypename(namespacedTypename, fieldTypeMetadata.stack);
+      _f.type = wrapTypename(prefixdTypename, fieldTypeMetadata.stack);
       _f.arguments = f.arguments
         ? f.arguments.map(a => {
           const _a = {
             name: a.name,
-            description: a.description,
+            description: getEntityDescription(a),
           };
 
           const argTypeMetadata = getSchemaTypeMetadata(a.type);
-          let namespacedArgTypename = argTypeMetadata.typename;
+          let prefixdArgTypename = argTypeMetadata.typename;
           if (!isInbuiltType(argTypeMetadata.typename)) {
-            namespacedArgTypename = namespaceTypename(
-              argTypeMetadata.typename
-            );
+            prefixdArgTypename = prefixTypename(argTypeMetadata.typename);
             parentTypes.push(argTypeMetadata.typename);
           }
-          _a.type = wrapTypename(
-            namespacedArgTypename,
-            argTypeMetadata.stack
-          );
+          _a.type = wrapTypename(prefixdArgTypename, argTypeMetadata.stack);
           return _a;
         })
         : [];
@@ -132,7 +145,7 @@ export const deriveExistingType = (
     });
 
     parentTypes.forEach(t => {
-      handleType(existingTypemap[t], namespaceTypename(t));
+      handleType(existingTypemap[t], prefixTypename(t));
     });
   };
 
@@ -141,6 +154,7 @@ export const deriveExistingType = (
       name: typename,
       kind: 'input_object',
       fields: [],
+      description: getEntityDescription(type),
     };
 
     const parentTypes = [];
@@ -148,24 +162,24 @@ export const deriveExistingType = (
     Object.values(type._fields).forEach(f => {
       const _f = {
         name: f.name,
-        description: f.description,
+        description: getEntityDescription(f),
       };
 
       const fieldTypeMetadata = getSchemaTypeMetadata(f.type);
-      let namespacedTypename = fieldTypeMetadata.typename;
+      let prefixdTypename = fieldTypeMetadata.typename;
       if (!isInbuiltType(fieldTypeMetadata.typename)) {
-        namespacedTypename = namespaceTypename(fieldTypeMetadata.typename);
+        prefixdTypename = prefixTypename(fieldTypeMetadata.typename);
         parentTypes.push(fieldTypeMetadata.typename);
       }
 
-      _f.type = wrapTypename(namespacedTypename, fieldTypeMetadata.stack);
+      _f.type = wrapTypename(prefixdTypename, fieldTypeMetadata.stack);
       _type.fields.push(_f);
     });
 
     types[typename] = _type;
 
     parentTypes.forEach(t => {
-      handleType(existingTypemap[t], namespaceTypename(t));
+      handleType(existingTypemap[t], prefixTypename(t));
     });
   };
 
@@ -196,7 +210,7 @@ export const deriveExistingType = (
 
   handleType(
     existingTypemap[selectedExistingType],
-    namespaceTypename(selectedExistingType)
+    prefixTypename(selectedExistingType)
   );
 
   return Object.values(types);
