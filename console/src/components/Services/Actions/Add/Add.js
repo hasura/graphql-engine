@@ -59,7 +59,8 @@ const AddAction = ({
     dispatch(dispatchNewHeaders(hs));
   };
 
-  const toggleForwardClientHeaders = () => {
+  const toggleForwardClientHeaders = e => {
+    e.preventDefault();
     dispatch(toggleFCH());
   };
 
