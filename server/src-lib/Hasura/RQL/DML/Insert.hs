@@ -36,13 +36,13 @@ data InsertQueryP1
   , iqp1Cols      :: ![PGCol]
   , iqp1Tuples    :: ![[S.SQLExp]]
   , iqp1Conflict  :: !(Maybe ConflictClauseP1)
-  , iqp1CheckCond :: !(Maybe AnnBoolExpSQL)
+  , iqp1CheckCond :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
   , iqp1MutFlds   :: !MutFlds
   , iqp1AllCols   :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
-mkInsertCTE (InsertQueryP1 tn cols vals c checkCond _ _) =
+mkInsertCTE (InsertQueryP1 tn cols vals c (insCheck, updCheck) _ _) =
     S.CTEInsert insert
   where
     tupVals = S.ValuesExp $ map S.TupleExp vals
@@ -50,13 +50,13 @@ mkInsertCTE (InsertQueryP1 tn cols vals c checkCond _ _) =
       S.SQLInsert tn cols tupVals (toSQLConflict <$> c) 
         . Just 
         . S.RetExp 
-        $ maybe 
-            [S.selectStar] 
-            (\e -> 
-              [ S.selectStar
-              , insertCheckExpr (toSQLBoolExp (S.QualTable tn) e)
-              ]) 
-            checkCond
+        $ [ S.selectStar
+          , S.Extractor 
+              (insertOrUpdateCheckExpr 
+                (toSQLBoolExp (S.QualTable tn) insCheck) 
+                (fmap (toSQLBoolExp (S.QualTable tn)) updCheck))
+              Nothing
+          ]
 
 toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
 toSQLConflict conflict = case conflict of
@@ -186,6 +186,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
+  updPerm   <- askUpdPermInfo tableInfo
 
   -- Check if all dependent headers are present
   validateHeaders $ ipiRequiredHeaders insPerm
@@ -215,7 +216,8 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   let sqlExps = map snd insTuples
       inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 
-  checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting (ipiCheck insPerm)
+  insCheck <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting (ipiCheck insPerm)
+  updCheck <- traverse (convAnnBoolExpPartialSQL sessVarFromCurrentSetting) (upiCheck updPerm)
   
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
       roleName <- askCurRole
@@ -225,7 +227,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
       buildConflictClause sessVarBldr tableInfo inpCols c
   
   return $ InsertQueryP1 tableName insCols sqlExps
-           conflictClause (Just checkExpr) mutFlds allCols
+           conflictClause (insCheck, updCheck) mutFlds allCols
   where
     selNecessaryMsg =
       "; \"returning\" can only be used if the role has "
@@ -268,19 +270,50 @@ insertP2 strfyNum (u, p) =
 -- >     THEN NULL 
 -- >     ELSE hdb_catalog.check_violation('insert check constraint failed') 
 -- >   END
-insertCheckExpr
-  :: S.BoolExp
-  -> S.Extractor
+insertCheckExpr :: S.BoolExp -> S.SQLExp
 insertCheckExpr condExpr = 
-  S.Extractor
-    (S.SECond condExpr S.SENull
-      (S.SEFunction 
-        (S.FunctionExp 
-          (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation")) 
-          (S.FunctionArgs [S.SELit "insert check constraint failed"] mempty)
-          Nothing)
-      ))
-    Nothing
+  S.SECond condExpr S.SENull
+    (S.SEFunction 
+      (S.FunctionExp 
+        (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation")) 
+        (S.FunctionArgs [S.SELit "insert check constraint failed"] mempty)
+        Nothing)
+    )
+    
+-- | When inserting data, we might need to also enforce the update
+-- check condition, because we might fall back to an update via an
+-- @ON CONFLICT@ clause.
+-- 
+-- We generate something which looks like
+--
+-- > INSERT INTO 
+-- >   ...
+-- > ON CONFLICT DO UPDATE SET 
+-- >   ...
+-- > RETURNING 
+-- >   *, 
+-- >   CASE WHEN xmax = 0
+-- >     THEN CASE WHEN {insert_cond} 
+-- >            THEN NULL 
+-- >            ELSE hdb_catalog.check_violation('insert check constraint failed') 
+-- >          END
+-- >     ELSE CASE WHEN {update_cond} 
+-- >            THEN NULL 
+-- >            ELSE hdb_catalog.check_violation('insert check constraint failed') 
+-- >          END
+-- >   END
+-- 
+-- See @https://stackoverflow.com/q/34762732@ for more information on the use of
+-- the @xmax@ system column.
+insertOrUpdateCheckExpr :: S.BoolExp -> Maybe S.BoolExp -> S.SQLExp
+insertOrUpdateCheckExpr insCheck updCheck = 
+  S.SECond 
+    (S.BECompare 
+      S.SEQ 
+      (S.SEUnsafe "xmax")
+      (S.SEUnsafe "0"))
+    (insertCheckExpr insCheck)
+    (maybe S.SENull insertCheckExpr updCheck)
 
 runInsert
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)

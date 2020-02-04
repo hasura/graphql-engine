@@ -517,7 +517,7 @@ mkInsCtx role tableCache fields insPermInfo updPermM = do
     setCols = ipiSet insPermInfo
     checkCond = ipiCheck insPermInfo
     updPermForIns = mkUpdPermForIns <$> updPermM
-    mkUpdPermForIns upi = UpdPermForIns (toList $ upiCols upi)
+    mkUpdPermForIns upi = UpdPermForIns (toList $ upiCols upi) (upiCheck upi)
                           (upiFilter upi) (upiSet upi)
 
     isInsertable Nothing _          = False
@@ -538,7 +538,7 @@ mkAdminInsCtx tc fields = do
       isMutable viIsInsertable viewInfoM && isValidRel relName remoteTable
 
   let relInfoMap = Map.fromList $ catMaybes relTupsM
-      updPerm = UpdPermForIns updCols noFilter Map.empty
+      updPerm = UpdPermForIns updCols Nothing noFilter Map.empty
 
   return $ InsCtx colGNameMap noFilter Map.empty relInfoMap (Just updPerm)
   where

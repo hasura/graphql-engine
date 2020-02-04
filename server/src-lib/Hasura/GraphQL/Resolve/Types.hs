@@ -174,6 +174,7 @@ type RelationInfoMap = Map.HashMap RelName RelInfo
 data UpdPermForIns
   = UpdPermForIns
   { upfiCols   :: ![PGCol]
+  , upfiCheck  :: !(Maybe AnnBoolExpPartialSQL)
   , upfiFilter :: !AnnBoolExpPartialSQL
   , upfiSet    :: !PreSetColsPartial
   } deriving (Show, Eq)

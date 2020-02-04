@@ -68,7 +68,7 @@ mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) chk _ _) =
         . Just 
         . S.RetExp 
         $ [ S.selectStar 
-          , insertCheckExpr checkExpr
+          , S.Extractor (insertCheckExpr checkExpr) Nothing
           ]
     setExp    = S.SetExp $ map S.SetExpItem setExps
     tableFltr = Just $ S.WhereFrag tableFltrExpr

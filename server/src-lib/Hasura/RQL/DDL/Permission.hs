@@ -96,13 +96,13 @@ buildInsPermInfo
   -> FieldInfoMap FieldInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
-buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm chk set mCols) _) =
+buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols) _) =
   withPathK "permission" $ do
-    (be, beDeps) <- withPathK "check" $ procBoolExp tn fieldInfoMap chk
+    (be, beDeps) <- withPathK "check" $ procBoolExp tn fieldInfoMap checkCond
     (setColsSQL, setHdrs, setColDeps) <- procSetObj tn fieldInfoMap set
     void $ withPathK "columns" $ indexedForM insCols $ \col ->
            askPGType fieldInfoMap col ""
-    let fltrHeaders = getDependentHeaders chk
+    let fltrHeaders = getDependentHeaders checkCond
         reqHdrs = fltrHeaders `union` setHdrs
         insColDeps = map (mkColDep DRUntyped tn) insCols
         deps = mkParentDep tn : beDeps ++ setColDeps ++ insColDeps
