@@ -401,6 +401,7 @@ test-suite graphql-engine-tests
     , natural-transformation >=0.4 && <0.5
     , optparse-applicative
     , pg-client
+    , process
     , QuickCheck
     , time
     , transformers-base

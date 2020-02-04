@@ -8,8 +8,10 @@ import           Control.Concurrent.MVar.Lifted
 import           Control.Monad.Trans.Control    (MonadBaseControl)
 import           Control.Monad.Unique
 import           Control.Natural                ((:~>) (..))
+import           Data.List                      (isPrefixOf)
 import           Data.Time.Clock                (getCurrentTime)
 import           Data.Tuple                     (swap)
+import           System.Process                 (readProcess)
 import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
 
@@ -18,7 +20,7 @@ import qualified Database.PG.Query              as Q
 import           Hasura.RQL.DDL.Metadata        (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
-import           Hasura.Server.Init             (DowngradeOptions (..))
+import           Hasura.Server.Init             (DowngradeOptions (..), downgradeShortcuts)
 import           Hasura.Server.Migrate
 import           Hasura.Server.PGDump
 import           Hasura.Server.Version          (HasVersion)
@@ -90,6 +92,12 @@ spec pgConnInfo = do
         MRMigrated{} -> True
         _ -> False
       transact (upgradeToLatest time) `shouldReturn` MRMigrated "12"
+      
+    it "supports downgrades for every Git tag" $ singleTransaction do
+      let filterOldest = filter (not . isPrefixOf "v1.0.0-alpha")
+          supportedDowngrades = sort (map fst downgradeShortcuts)
+      (fmap (sort . filterOldest . lines) . liftIO) (readProcess "git" ["tag"] "")
+        `shouldReturn` supportedDowngrades
 
   describe "recreateSystemMetadata" $ do
     let dumpMetadata = execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo

@@ -1070,55 +1070,42 @@ serveOptionsParser =
   <*> parseLogLevel
   <*> parsePlanCacheSize
 
+-- | This implements the mapping between application versions
+-- and catalog schema versions.
+downgradeShortcuts :: [(String, String)]
+downgradeShortcuts = 
+  [ ("v1.0.0-beta.1", "16")
+  , ("v1.0.0-beta.2", "17")
+  , ("v1.0.0-beta.3", "17")
+  , ("v1.0.0-beta.4", "19")
+  , ("v1.0.0-beta.5", "19")
+  , ("v1.0.0-beta.6", "22")
+  , ("v1.0.0-beta.7", "24")
+  , ("v1.0.0-beta.8", "26")
+  , ("v1.0.0-beta.9", "26")
+  , ("v1.0.0-beta.10", "27")
+  , ("v1.0.0-rc.1", "28")
+  , ("v1.0.0", "28")
+  , ("v1.1.0-beta.1", "29")
+  , ("v1.1.0-beta.2", "30")
+  ]
+
 downgradeOptionsParser :: Parser DowngradeOptions
 downgradeOptionsParser = 
     DowngradeOptions
     <$> choice
-        [ shortcut "v1.0.0-alpha0" "1"
-        , shortcut "v1.0.0-alpha15" "1"
-        , shortcut "v1.0.0-alpha16" "2"
-        , shortcut "v1.0.0-alpha20" "2"
-        , shortcut "v1.0.0-alpha21" "3"
-        , shortcut "v1.0.0-alpha28" "3"
-        , shortcut "v1.0.0-alpha29" "4"
-        , shortcut "v1.0.0-alpha30" "5"
-        , shortcut "v1.0.0-alpha31" "6"
-        , shortcut "v1.0.0-alpha33" "6"
-        , shortcut "v1.0.0-alpha34" "7"
-        , shortcut "v1.0.0-alpha35" "7"
-        , shortcut "v1.0.0-alpha36" "9"
-        , shortcut "v1.0.0-alpha38" "9"
-        , shortcut "v1.0.0-alpha39" "10"
-        , shortcut "v1.0.0-alpha40" "11"
-        , shortcut "v1.0.0-alpha41" "12"
-        , shortcut "v1.0.0-alpha42" "13"
-        , shortcut "v1.0.0-alpha45" "13"
-        , shortcut "v1.0.0-beta.1" "16"
-        , shortcut "v1.0.0-beta.2" "17"
-        , shortcut "v1.0.0-beta.3" "17"
-        , shortcut "v1.0.0-beta.4" "19"
-        , shortcut "v1.0.0-beta.5" "19"
-        , shortcut "v1.0.0-beta.6" "22"
-        , shortcut "v1.0.0-beta.7" "24"
-        , shortcut "v1.0.0-beta.8" "26"
-        , shortcut "v1.0.0-beta.9" "26"
-        , shortcut "v1.0.0-beta.10" "27"
-        , shortcut "v1.0.0" "28"
-        , shortcut "v1.1.0-beta.1" "29"
-        , shortcut "v1.1.0-beta.2" "30"
-        , strOption
+        (strOption
           ( long "to-catalog-version" <>
             metavar "<VERSION>" <>
             help "The target catalog schema version (e.g. 31)"
           )
-        ]
+        : map (uncurry shortcut) downgradeShortcuts
+        )
     <*> switch
         ( long "dryRun" <>
           help "Don't run any migrations, just print out the SQL."
         )
   where
-    -- This implements the mapping between application versions
-    -- and catalog schema versions.
     shortcut v catalogVersion = 
       flag' (DataString.fromString catalogVersion)
         ( long ("to-" <> v) <>
