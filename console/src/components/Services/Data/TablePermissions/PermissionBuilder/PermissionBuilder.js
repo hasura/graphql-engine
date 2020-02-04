@@ -384,7 +384,7 @@ class PermissionBuilder extends React.Component {
     };
 
     const _dispatchFunc = data => {
-      const { dispatch, filter, dispatchFuncSetFilter, tableDef } = this.props;
+      const { filter, dispatchFuncSetFilter, tableDef } = this.props;
 
       const newFilter = getFilter(
         tableDef.schema,
@@ -393,8 +393,8 @@ class PermissionBuilder extends React.Component {
         data.value
       );
 
-      // dispatch(dispatchFuncSetFilter(JSON.stringify(newFilter, null, 4)));
-      dispatch(dispatchFuncSetFilter(JSON.stringify(newFilter)));
+      // dispatchFuncSetFilter(JSON.stringify(newFilter, null, 4));
+      dispatchFuncSetFilter(JSON.stringify(newFilter));
     };
 
     /********************************/
