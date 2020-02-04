@@ -9,7 +9,6 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                        as J
 import qualified Data.Aeson.Casing                 as J
-import qualified Data.Aeson.Ordered                as JO
 import qualified Data.Aeson.TH                     as J
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.HashMap.Strict.InsOrd        as OMap
@@ -39,6 +38,8 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
+type ColumnValuesText = ColumnValues TxtEncodedPGVal
+
 newtype InsResp
   = InsResp
   { _irResponse     :: Maybe J.Object
@@ -56,9 +57,6 @@ data AnnIns a
 
 type SingleObjIns = AnnIns AnnInsObj
 type MultiObjIns = AnnIns [AnnInsObj]
-
-singleToMulti :: SingleObjIns -> MultiObjIns
-singleToMulti = fmap pure
 
 multiToSingles :: MultiObjIns -> [SingleObjIns]
 multiToSingles = sequenceA
@@ -248,45 +246,18 @@ mkInsertQ tn onConflictM insCols defVals role checkCond = do
 
   bool nonAdminInsert adminIns $ isAdmin role
 
-asSingleObject
-  :: MonadError QErr m
-  => [ColumnValues a] -> m (Maybe (ColumnValues a))
-asSingleObject = \case
-  []  -> return Nothing
-  [a] -> return $ Just a
-  _   -> throw500 "more than one row returned"
-
 fetchFromColVals
   :: MonadError QErr m
-  => ColumnValues v
-  -> (PGColumnType -> v -> m (WithScalarType PGScalarValue))
+  => ColumnValuesText
   -> [PGColumnInfo]
-  -> (PGColumnInfo -> a)
-  -> m [(a, WithScalarType PGScalarValue)]
-fetchFromColVals colVal parseFn reqCols f =
+  -> m [(PGCol, WithScalarType PGScalarValue)]
+fetchFromColVals colVal reqCols =
   forM reqCols $ \ci -> do
     let valM = Map.lookup (pgiColumn ci) colVal
     val <- onNothing valM $ throw500 $ "column "
            <> pgiColumn ci <<> " not found in given colVal"
-    pgColVal <- parseFn (pgiType ci) val
-    return (f ci, pgColVal)
-
-execCTEExp
-  :: Bool
-  -> QualifiedTable
-  -> CTEExp
-  -> RR.MutFlds
-  -> Q.TxE QErr JO.Object
-execCTEExp strfyNum tn (CTEExp cteExp args) flds = do
-  lazyBytes <- runIdentity . Q.getRow
-               <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sqlBuilder) (toList args) True
-  case JO.eitherDecode lazyBytes of
-    Left e  -> throw500 $ "cannot parse as JSON; " <> T.pack e
-    Right v -> case v of
-      JO.Object o -> pure o
-      _           -> throw500 "expecting ordered object"
-  where
-    sqlBuilder = toSQL $ RR.mkMutationOutputExp tn cteExp flds True strfyNum
+    pgColVal <- parseTxtEncodedPGValue (pgiType ci) val
+    return (pgiColumn ci, pgColVal)
 
 -- | validate an insert object based on insert columns,
 -- | insert object relations and additional columns from parent
@@ -323,18 +294,16 @@ insertObjRel
   -> Q.TxE QErr (Int, [PGColWithValue])
 insertObjRel strfyNum role objRelIns =
   withPathK relNameTxt $ do
-    resp <- insertMultipleObjects strfyNum role tn multiObjIns [] mutFlds "data"
-    MutateResp aRows colVals <- decodeEncJSON resp
-    colValM <- asSingleObject colVals
+    (affRows, colValM) <- withPathK "data" $ insertObj strfyNum role tn singleObjIns []
     colVal <- onNothing colValM $ throw400 NotSupported errMsg
-    retColsWithVals <- fetchFromColVals colVal parsePGScalarValue rColInfos pgiColumn
+    retColsWithVals <- fetchFromColVals colVal rColInfos
     let c = mergeListsWith (Map.toList mapCols) retColsWithVals
           (\(_, rCol) (col, _) -> rCol == col)
           (\(lCol, _) (_, cVal) -> (lCol, cVal))
-    return (aRows, c)
+    return (affRows, c)
   where
     RelIns singleObjIns relInfo = objRelIns
-    multiObjIns = singleToMulti singleObjIns
+    -- multiObjIns = singleToMulti singleObjIns
     relName = riName relInfo
     relNameTxt = relNameToTxt relName
     mapCols = riMapping relInfo
@@ -345,11 +314,6 @@ insertObjRel strfyNum role objRelIns =
     errMsg = "cannot proceed to insert object relation "
              <> relName <<> " since insert to table "
              <> tn <<> " affects zero rows"
-    mutFlds = [ ("affected_rows", RR.MCount)
-              , ( "returning_columns"
-                , RR.MRet $ RR.pgColsToSelFlds rColInfos
-                )
-              ]
 
 decodeEncJSON :: (J.FromJSON a, QErrM m) => EncJSON -> m a
 decodeEncJSON =
@@ -387,7 +351,7 @@ insertObj
   -> QualifiedTable
   -> SingleObjIns
   -> [PGColWithValue] -- ^ additional fields
-  -> Q.TxE QErr (Int, CTEExp)
+  -> Q.TxE QErr (Int, Maybe ColumnValuesText)
 insertObj strfyNum role tn singleObjIns addCols = do
   -- validate insert
   validateInsert (map fst cols) (map _riRelInfo objRels) $ map fst addCols
@@ -403,17 +367,15 @@ insertObj strfyNum role tn singleObjIns addCols = do
   -- prepare insert query as with expression
   checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting checkCond
 
-  CTEExp cte insPArgs <-
-    mkInsertQ tn onConflictM finalInsCols defVals role checkExpr
+  CTEExp cte insPArgs <- mkInsertQ tn onConflictM finalInsCols defVals role checkExpr
 
   MutateResp affRows colVals <- mutateAndFetchCols tn allCols (cte, insPArgs) strfyNum
   colValM <- asSingleObject colVals
-  cteExp <- flip CTEExp Seq.empty <$> mkSelCTEFromColVals tn allCols (maybe [] pure colValM)
 
   arrRelAffRows <- bool (withArrRels colValM) (return 0) $ null arrRels
   let totAffRows = objRelAffRows + affRows + arrRelAffRows
 
-  return (totAffRows, cteExp)
+  return (totAffRows, colValM)
   where
     AnnIns annObj onConflictM checkCond allCols defVals = singleObjIns
     AnnInsObj cols objRels arrRels = annObj
@@ -423,11 +385,14 @@ insertObj strfyNum role tn singleObjIns addCols = do
 
     withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
-      arrDepColsWithVal <- fetchFromColVals colVal parseTxtEncodedPGValue arrRelDepCols pgiColumn
-
+      arrDepColsWithVal <- fetchFromColVals colVal arrRelDepCols
       arrInsARows <- forM arrRels $ insertArrRel strfyNum role arrDepColsWithVal
-
       return $ sum arrInsARows
+
+    asSingleObject = \case
+      [] -> pure Nothing
+      [r] -> pure $ Just r
+      _ -> throw500 "more than one row returned"
 
     cannotInsArrRelErr =
       "cannot proceed to insert array relations since insert to table "
@@ -481,23 +446,11 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
           insertObj strfyNum role tn objIns addCols
 
       let affRows = sum $ map fst insResps
-          cteExps = map snd insResps
-          retFlds = mapMaybe getRet mutFlds
-      respVals <- forM cteExps $ \cteExp -> execCTEExp strfyNum tn cteExp retFlds
-      respTups <- forM mutFlds $ \(t, mutFld) -> do
-        jsonVal <- case mutFld of
-          RR.MCount   -> pure $ JO.Number $ fromIntegral affRows
-          RR.MExp txt -> pure $ JO.String txt
-          RR.MRet _   -> JO.array <$> mapM (fetchVal t) respVals
-        pure (t, jsonVal)
-      pure $ JO.toEncJSON $ JO.object respTups
-
-    getRet (t, r@(RR.MRet _)) = Just (t, r)
-    getRet _                  = Nothing
-
-    fetchVal t obj =
-      onNothing (JO.lookup t obj) $
-      throw500 $ "key " <> t <> " not found in ordered hashmap"
+          columnValues = catMaybes $ map snd insResps
+      cteExp <- mkSelCTEFromColVals tn tableColInfos columnValues
+      let sql = toSQL $ RR.mkMutationOutputExp tn (Just affRows) cteExp mutFlds strfyNum
+      runIdentity . Q.getRow
+               <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) [] False
 
 prefixErrPath :: (MonadError QErr m) => Field -> m a -> m a
 prefixErrPath fld =

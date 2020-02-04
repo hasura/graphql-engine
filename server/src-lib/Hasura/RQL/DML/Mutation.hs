@@ -43,14 +43,14 @@ mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith)
         (toList p) True
   where
-    selWith = mkMutationOutputExp qt cte mutFlds False strfyNum
+    selWith = mkMutationOutputExp qt Nothing cte mutFlds strfyNum
 
 mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
 mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
   -- Perform mutation and fetch unique columns
   MutateResp _ columnVals <- mutateAndFetchCols qt allCols q strfyNum
   selCTE <- mkSelCTEFromColVals qt allCols columnVals
-  let selWith = mkMutationOutputExp qt selCTE mutFlds False strfyNum
+  let selWith = mkMutationOutputExp qt Nothing selCTE mutFlds strfyNum
   -- Perform select query and fetch returning fields
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
