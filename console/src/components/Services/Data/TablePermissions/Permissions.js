@@ -80,6 +80,7 @@ class Permissions extends Component {
         },
       },
       filterString: '',
+      prevPermissionsState: {},
     };
   }
 
@@ -91,17 +92,22 @@ class Permissions extends Component {
     dispatch(fetchFunctionInit());
   }
 
-  componentWillReceiveProps(nextProps) {
-    const currPermissionsState = this.props.permissionsState;
+  static getDerivedStateFromProps(nextProps, prevState) {
+    const prevPermissionsState = prevState.prevPermissionsState;
     const nextPermissionsState = nextProps.permissionsState;
 
-    // clear local filterString
+    const newState = {
+      prevPermissionsState: nextPermissionsState,
+    };
+
     if (
-      currPermissionsState.role !== nextPermissionsState.role ||
-      currPermissionsState.query !== nextPermissionsState.query
+      prevPermissionsState.role !== nextPermissionsState.role ||
+      prevPermissionsState.query !== nextPermissionsState.query
     ) {
-      this.setState({ filterString: '' });
+      newState.filterString = '';
     }
+
+    return newState;
   }
 
   componentDidUpdate(prevProps) {
