@@ -7,7 +7,7 @@ module Hasura.Events.Lib
   , Event(..)
   ) where
 
-import           Control.Concurrent            (threadDelay)
+import           Control.Concurrent.Extended   (sleep)
 import           Control.Concurrent.Async      (async, waitAny)
 import           Control.Concurrent.STM.TVar
 import           Control.Exception             (try)
@@ -149,19 +149,19 @@ data EventEngineCtx
   { _eeCtxEventQueue            :: TQ.TQueue Event
   , _eeCtxEventThreads          :: TVar Int
   , _eeCtxMaxEventThreads       :: Int
-  , _eeCtxFetchIntervalMilliSec :: Int
+  , _eeCtxFetchInterval         :: DiffTime
   }
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
 
-defaultFetchIntervalMilliSec :: Int
+defaultFetchIntervalMilliSec :: Milliseconds
 defaultFetchIntervalMilliSec = 1000
 
 retryAfterHeader :: CI.CI T.Text
 retryAfterHeader = "Retry-After"
 
-initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
+initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT fetchI = do
   q <- TQ.newTQueue
   c <- newTVar 0
@@ -185,7 +185,7 @@ pushEvents logger pool eectx  = forever $ do
   case eventsOrError of
     Left err     -> L.unLogger logger $ EventInternalErr err
     Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
-  threadDelay (fetchI * 1000)
+  sleep fetchI
 
 consumeEvents
   :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> IO SchemaCache
@@ -285,7 +285,7 @@ retryOrSetError :: Event -> RetryConf -> HTTPErr -> Q.TxE QErr ()
 retryOrSetError e retryConf err = do
   let mretryHeader = getRetryAfterHeaderFromError err
       tries = eTries e
-      mretryHeaderSeconds = parseRetryHeader mretryHeader
+      mretryHeaderSeconds = mretryHeader >>= parseRetryHeader
       triesExhausted = tries >= rcNumRetries retryConf
       noRetryHeader = isNothing mretryHeaderSeconds
   -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
@@ -308,12 +308,8 @@ retryOrSetError e retryConf err = do
         in case mHeader of
              Just (HeaderConf _ (HVValue value)) -> Just value
              _                                   -> Nothing
-    parseRetryHeader Nothing = Nothing
-    parseRetryHeader (Just hValue)
-      = let seconds = readMaybe $ T.unpack hValue
-        in case seconds of
-             Nothing  -> Nothing
-             Just sec -> if sec > 0 then Just sec else Nothing
+
+    parseRetryHeader = mfilter (> 0) . readMaybe . T.unpack
 
 encodeHeader :: EventHeaderInfo -> HTTP.Header
 encodeHeader (EventHeaderInfo hconf cache) =
