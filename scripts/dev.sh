@@ -339,8 +339,8 @@ elif [ "$MODE" = "test" ]; then
   fi
 
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
-    echo_pretty "Starting graphql-engine"
     GRAPHQL_ENGINE_TEST_LOG=/tmp/hasura-dev-test-engine.log
+    echo_pretty "Starting graphql-engine, logging to $GRAPHQL_ENGINE_TEST_LOG"
     export HASURA_GRAPHQL_SERVER_PORT=8088
     cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine --database-url="$DB_URL" serve --stringify-numeric-types \
       --enable-console --console-assets-dir ../console/static/dist \
@@ -349,6 +349,11 @@ elif [ "$MODE" = "test" ]; then
     echo -n "Waiting for graphql-engine"
     until curl -s "http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/query" &>/dev/null; do
       echo -n '.' && sleep 0.2
+      # If the server stopped abort immediately
+      if ! kill -0 $GRAPHQL_ENGINE_PID ; then
+        echo_error "The server crashed or failed to start!!"
+        exit 666
+      fi
     done
     echo " Ok"
 
@@ -393,7 +398,7 @@ elif [ "$MODE" = "test" ]; then
       PASSED=true
     else
       PASSED=false
-      echo_pretty "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
+      echo_error "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
     fi
     deactivate  # python venv
     set -u

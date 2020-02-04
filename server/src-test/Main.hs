@@ -20,8 +20,9 @@ import qualified Test.Hspec.Runner            as Hspec
 import           Hasura.Db                    (PGExecCtx (..))
 import           Hasura.RQL.Types             (SQLGenCtx (..), adminUserInfo)
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawConnInfo,
-                                               parseRawConnInfo, runWithEnv)
+import           Hasura.Server.Init          (RawConnInfo, mkConnInfo,
+                                              mkRawConnInfo, parseRawConnInfo,
+                                              runWithEnv)
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version
 
@@ -29,6 +30,8 @@ import qualified Data.Parser.CacheControlSpec as CacheControlParser
 import qualified Hasura.IncrementalSpec       as IncrementalSpec
 import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
 import qualified Hasura.Server.MigrateSpec    as MigrateSpec
+import qualified Data.TimeSpec               as TimeSpec
+import qualified Hasura.Server.TelemetrySpec as TelemetrySpec
 
 data TestSuites
   = AllSuites !RawConnInfo
@@ -55,6 +58,8 @@ unitSpecs = do
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
   describe "Hasura.RQL.Metadata" MetadataSpec.spec
+  describe "Data.Time" TimeSpec.spec
+  describe "Hasura.Server.Telemetry" TelemetrySpec.spec
 
 buildPostgresSpecs :: (HasVersion) => RawConnInfo -> IO Spec
 buildPostgresSpecs pgConnOptions = do
