@@ -1,3 +1,17 @@
+-- Global project configuration.
+--
+-- This file can be overridden with cabal.project.local (see e.g. cabal.project.dev)
+--
+-- If you need to switch between several local configurations you can also
+-- create a symlink to this file with a different name, e.g.:
+--     $ ln -s cabal.project cabal.project.myconfig
+--     $ ln -s cabal.project.freeze cabal.project.myconfig.freeze
+-- ...and then create a new set of overrides in:
+--     cabal.project.myconfig.local
+-- ...and then invoke cabal with
+--     $ cabal new-build --project-file=cabal.project.myconfig
+--
+-- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project 
 packages: .
 
 package *
