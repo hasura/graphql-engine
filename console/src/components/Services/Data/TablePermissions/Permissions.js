@@ -91,16 +91,14 @@ class Permissions extends Component {
     dispatch(fetchFunctionInit());
   }
 
-  componentWillReceiveProps(prevProps) {
+  componentWillReceiveProps(nextProps) {
     const currPermissionsState = this.props.permissionsState;
-    const prevPermissionsState = prevProps.permissionsState;
+    const nextPermissionsState = nextProps.permissionsState;
 
     // clear local filterString
     if (
-      (currPermissionsState.role &&
-        currPermissionsState.role !== prevPermissionsState.role) ||
-      (currPermissionsState.query &&
-        currPermissionsState.query !== prevPermissionsState.query)
+      currPermissionsState.role !== nextPermissionsState.role ||
+      currPermissionsState.query !== nextPermissionsState.query
     ) {
       this.setState({ filterString: '' });
     }
