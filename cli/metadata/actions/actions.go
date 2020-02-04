@@ -27,7 +27,7 @@ import (
 const (
 	actionsFileName       string = "actions.yaml"
 	graphqlFileName              = "actions.graphql"
-	actionsCodegenRepo           = "wawhal/actions-codegen"
+	actionsCodegenRepo           = "hasura/codegen-assets"
 	ActionsCodegenDirName        = "actions-codegen-assets"
 )
 
