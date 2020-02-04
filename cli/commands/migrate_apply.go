@@ -17,8 +17,8 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	migrateApplyCmd := &cobra.Command{
-		Use:          "apply",
-		Short:        "Apply migrations on the database",
+		Use:   "apply",
+		Short: "Apply migrations on the database",
 		Example: `  # Apply all migrations
   hasura migrate apply
 
@@ -42,6 +42,12 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 
   # Apply only a particular version
   hasura migrate apply --type up --version "<version>"
+  
+  # Apply all up migrations upto version 125, last applied is 100
+  hasura migrate apply --goto 125
+  
+  # Apply all down migrations upto version 125, last applied is 150
+  hasura migrate apply --goto 125
 
   # Rollback a particular version:
   hasura migrate apply --type down --version "<version>"
@@ -58,19 +64,33 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 			err := opts.run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
-				return err
+				if err == migrate.ErrNoChange {
+					opts.EC.Logger.Info("nothing to apply")
+					return nil
+				}
+				if e, ok := err.(*os.PathError); ok {
+					// If Op is first, then log No migrations to apply
+					if e.Op == "first" {
+						opts.EC.Logger.Info("nothing to apply")
+						return nil
+					}
+				}
+				return errors.Wrap(err, "apply failed")
 			}
 			opts.EC.Logger.Info("migrations applied")
 			return nil
 		},
 	}
 	f := migrateApplyCmd.Flags()
+	f.SortFlags = false
 
 	f.StringVar(&opts.upMigration, "up", "", "apply all or N up migration steps")
 	f.StringVar(&opts.downMigration, "down", "", "apply all or N down migration steps")
+	f.StringVar(&opts.gotoVersion, "goto", "", "apply migration chain up to to the version specified")
+
 	f.StringVar(&opts.versionMigration, "version", "", "only apply this particular migration")
-	f.StringVar(&opts.migrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 	f.BoolVar(&opts.skipExecution, "skip-execution", false, "skip executing the migration action, but mark them as applied")
+	f.StringVar(&opts.migrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -91,11 +111,13 @@ type migrateApplyOptions struct {
 	downMigration    string
 	versionMigration string
 	migrationType    string
-	skipExecution    bool
+	// version up to which migration chain has to be applied
+	gotoVersion   string
+	skipExecution bool
 }
 
 func (o *migrateApplyOptions) run() error {
-	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.migrationType, o.skipExecution)
+	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.migrationType, o.gotoVersion, o.skipExecution)
 	if err != nil {
 		return errors.Wrap(err, "error validating flags")
 	}
@@ -106,27 +128,12 @@ func (o *migrateApplyOptions) run() error {
 	}
 	migrateDrv.SkipExecution = o.skipExecution
 
-	err = ExecuteMigration(migrationType, migrateDrv, step)
-	if err != nil {
-		if err == migrate.ErrNoChange {
-			o.EC.Logger.Info("nothing to apply")
-			return nil
-		}
-		if e, ok := err.(*os.PathError); ok {
-			// If Op is first, then log No migrations to apply
-			if e.Op == "first" {
-				o.EC.Logger.Info("No migrations to apply")
-				return nil
-			}
-		}
-		return errors.Wrap(err, "apply failed")
-	}
-	return nil
+	return ExecuteMigration(migrationType, migrateDrv, step)
 }
 
 // Only one flag out of up, down and version can be set at a time. This function
 // checks whether that is the case and returns an error is not
-func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType string, skipExecution bool) (string, int64, error) {
+func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migrationType, gotoVersion string, skipExecution bool) (string, int64, error) {
 	var flagCount = 0
 	var stepString = "all"
 	var migrationName = "up"
@@ -147,6 +154,11 @@ func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migra
 		}
 		flagCount++
 	}
+	if gotoVersion != "" {
+		migrationName = "gotoVersion"
+		stepString = gotoVersion
+		flagCount++
+	}
 
 	if flagCount > 1 {
 		return "", 0, errors.New("Only one migration type can be applied at a time (--up, --down or --goto)")
@@ -162,7 +174,7 @@ func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migra
 
 	step, err := strconv.ParseInt(stepString, 10, 64)
 	if err != nil {
-		return "", 0, errors.Wrap(err, "not a valid input for steps")
+		return "", 0, errors.Wrap(err, "not a valid input for steps/version")
 	}
 	return migrationName, step, nil
 }

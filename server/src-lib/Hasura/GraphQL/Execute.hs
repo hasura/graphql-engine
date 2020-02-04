@@ -57,6 +57,7 @@ import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.Logging                         as L
+import qualified Hasura.Server.Telemetry.Counters       as Telem
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
@@ -184,7 +185,7 @@ getResolvedExecPlan
   -> SchemaCache
   -> SchemaCacheVer
   -> GQLReqUnparsed
-  -> m ExecPlanResolved
+  -> m (Telem.CacheHit, ExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
@@ -192,13 +193,13 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   let usrVars = userVars userInfo
   case planM of
     -- plans are only for queries and subscriptions
-    Just plan -> GExPHasura <$> case plan of
+    Just plan -> (Telem.Hit,) . GExPHasura <$> case plan of
       EP.RPQuery queryPlan -> do
         (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
         return $ ExOpQuery tx (Just genSql)
       EP.RPSubs subsPlan ->
         ExOpSubs <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
-    Nothing -> noExistingPlan
+    Nothing -> (Telem.Miss,) <$> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
@@ -357,7 +358,8 @@ execRemoteGQ
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
-  -> m (HttpResponse EncJSON)
+  -> m (DiffTime, HttpResponse EncJSON)
+  -- ^ Also returns time spent in http request, for telemetry.
 execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   execCtx <- ask
   let logger  = _ecxLogger execCtx
@@ -387,11 +389,12 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
            }
 
   L.unLogger logger $ QueryLog q Nothing reqId
-  res  <- liftIO $ try $ HTTP.httpLbs req manager
+  (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
   let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
       respHdrs  = Just $ mkRespHeaders cookieHdrs
-  return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
+      !httpResp = HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
+  return (time, httpResp)
 
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
