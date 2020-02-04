@@ -56,8 +56,8 @@ pgColsFromMutFld = \case
   MExp _ -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    FCol (AnnColField (PGColumnInfo col _ colTy _ _) _ _) -> Just (col, colTy)
-    _                                                     -> Nothing
+    FCol (AnnColField (PGColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
+    _                                                       -> Nothing
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColumnType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
@@ -78,26 +78,28 @@ qualTableToAliasIden :: QualifiedTable -> Iden
 qualTableToAliasIden qt =
   Iden $ snakeCaseTable qt <> "__mutation_result_alias"
 
-mkMutFldExp :: QualifiedTable -> Bool -> Bool -> MutFld -> S.SQLExp
-mkMutFldExp qt singleObj strfyNum = \case
-  MCount -> S.SESelect $
-    S.mkSelect
-    { S.selExtr = [S.Extractor S.countStar Nothing]
-    , S.selFrom = Just $ S.FromExp $ pure frmItem
-    }
+mkMutFldExp :: QualifiedTable -> Maybe Int -> Bool -> MutFld -> S.SQLExp
+mkMutFldExp qt preCalAffRows strfyNum = \case
+  MCount ->
+    let countExp = S.SESelect $
+          S.mkSelect
+          { S.selExtr = [S.Extractor S.countStar Nothing]
+          , S.selFrom = Just $ S.FromExp $ pure frmItem
+          }
+    in maybe countExp (S.SEUnsafe . T.pack . show) preCalAffRows
   MExp t -> S.SELit t
   MRet selFlds ->
     -- let tabFrom = TableFrom qt $ Just frmItem
     let tabFrom = FromIden $ qualTableToAliasIden qt
         tabPerm = TablePerm annBoolExpTrue Nothing
-    in S.SESelect $ mkSQLSelect singleObj $
+    in S.SESelect $ mkSQLSelect False $
        AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
   where
     frmItem = S.FIIden $ qualTableToAliasIden qt
 
-mkSelWith
-  :: QualifiedTable -> S.CTE -> MutFlds -> Bool -> Bool -> S.SelectWith
-mkSelWith qt cte mutFlds singleObj strfyNum =
+mkMutationOutputExp
+  :: QualifiedTable -> Maybe Int -> S.CTE -> MutFlds -> Bool -> S.SelectWith
+mkMutationOutputExp qt preCalAffRows cte mutFlds strfyNum =
   S.SelectWith [(alias, cte)] sel
   where
     alias = S.Alias $ qualTableToAliasIden qt
@@ -107,7 +109,7 @@ mkSelWith qt cte mutFlds singleObj strfyNum =
 
     jsonBuildObjArgs =
       flip concatMap mutFlds $
-      \(k, mutFld) -> [S.SELit k, mkMutFldExp qt singleObj strfyNum mutFld]
+      \(k, mutFld) -> [S.SELit k, mkMutFldExp qt preCalAffRows strfyNum mutFld]
 
 checkRetCols
   :: (UserInfoM m, QErrM m)
