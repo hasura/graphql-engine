@@ -71,13 +71,14 @@ data Subscriber
 -- | live query onChange metadata, used for adding more extra analytics data
 data LiveQueryMetadata
   = LiveQueryMetadata
-  { _lqmExecutionTime :: !Clock.NominalDiffTime
+  { _lqmExecutionTime :: !Clock.DiffTime
+  -- ^ Time spent waiting on the generated query to execute on postgres or the remote.
   }
 
 data LiveQueryResponse
   = LiveQueryResponse
   { _lqrPayload       :: !BL.ByteString
-  , _lqrExecutionTime :: !Clock.NominalDiffTime
+  , _lqrExecutionTime :: !Clock.DiffTime
   }
 
 type LGQResponse = GQResult LiveQueryResponse
@@ -324,7 +325,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
     queryFinish <- Clock.getCurrentTime
     let dt = Clock.diffUTCTime queryFinish queryInit
         queryTime = realToFrac dt
-        lqMeta = LiveQueryMetadata dt
+        lqMeta = LiveQueryMetadata $ fromUnits dt
         operations = getCohortOperations cohortSnapshotMap lqMeta mxRes
     Metrics.add (_rmQuery metrics) queryTime
 

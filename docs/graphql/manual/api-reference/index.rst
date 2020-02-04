@@ -15,23 +15,25 @@ API Reference
 Available APIs
 --------------
 
-+-----------------+----------------------------------------+------------------+
-| API             | Endpoint                               | Access           |
-+=================+========================================+==================+
-| GraphQL         | :ref:`/v1/graphql <graphql_api>`       | Permission rules |
-+-----------------+----------------------------------------+------------------+
-| Legacy GraphQL  | :ref:`/v1alpha1/graphql <graphql_api>` | Permission rules |
-+-----------------+----------------------------------------+------------------+
-| Schema/Metadata | :ref:`/v1/query <schema_metadata_api>` | Admin only       |
-+-----------------+----------------------------------------+------------------+
-| Version         | :ref:`/v1/version <version_api>`       | Public           |
-+-----------------+----------------------------------------+------------------+
-| Health          | :ref:`/healthz <health_api>`           | Public           |
-+-----------------+----------------------------------------+------------------+
-| PG Dump         | :ref:`/v1alpha1/pg_dump <pg_dump_api>` | Admin only       |
-+-----------------+----------------------------------------+------------------+
-| Config          | :ref:`/v1alpha1/config <config_api>`   | Admin only       |
-+-----------------+----------------------------------------+------------------+
++-----------------+-----------------------------------------+------------------+
+| API             | Endpoint                                | Access           |
++=================+=========================================+==================+
+| GraphQL         | :ref:`/v1/graphql <graphql_api>`        | Permission rules |
++-----------------+-----------------------------------------+------------------+
+| Legacy GraphQL  | :ref:`/v1alpha1/graphql <graphql_api>`  | Permission rules |
++-----------------+-----------------------------------------+------------------+
+| Schema/Metadata | :ref:`/v1/query <schema_metadata_api>`  | Admin only       |
++-----------------+-----------------------------------------+------------------+
+| Version         | :ref:`/v1/version <version_api>`        | Public           |
++-----------------+-----------------------------------------+------------------+
+| Health          | :ref:`/healthz <health_api>`            | Public           |
++-----------------+-----------------------------------------+------------------+
+| PG Dump         | :ref:`/v1alpha1/pg_dump <pg_dump_api>`  | Admin only       |
++-----------------+-----------------------------------------+------------------+
+| Config          | :ref:`/v1alpha1/config <config_api>`    | Admin only       |
++-----------------+-----------------------------------------+------------------+
+| Explain         | :ref:`/v1/graphql/explain <explain_api>`| Admin only       |
++-----------------+-----------------------------------------+------------------+
 
 .. _graphql_api:
 
@@ -94,6 +96,16 @@ configuration.
 
 See details at :doc:`config`.
 
+.. _explain_api:
+
+Explain API
+^^^^^^^^^^^
+
+``v1/graphql/explain`` returns the Postgres plan for a query or subscription based
+on the defined permissions.
+
+See details at :doc:`explain`.
+
 Supported PostgreSQL types
 --------------------------
 You can refer to the following to know about all PostgreSQL types supported by the Hasura GraphQL engine:
@@ -110,4 +122,5 @@ You can refer to the following to know about all PostgreSQL types supported by t
   Health check API <health>
   PG Dump API <pgdump>
   Config API <config>
+  Explain API <explain>
   Supported PostgreSQL types <postgresql-types>
