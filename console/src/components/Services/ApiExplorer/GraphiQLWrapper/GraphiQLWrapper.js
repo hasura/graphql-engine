@@ -110,7 +110,6 @@ class GraphiQLWrapper extends Component {
       } catch (e) {
         dispatch(showErrorNotification('Unable to derive mutation', e.message));
         console.error(e);
-
         return;
       }
       const { action, types } = derivedMutationMetadata;
