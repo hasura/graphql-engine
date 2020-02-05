@@ -408,6 +408,7 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
       pure PGColumnInfo
         { pgiColumn = pgCol
         , pgiName = name
+        , pgiPosition = prciPosition rawInfo
         , pgiType = resolvedType
         , pgiIsNullable = prciIsNullable rawInfo
         , pgiDescription = prciDescription rawInfo

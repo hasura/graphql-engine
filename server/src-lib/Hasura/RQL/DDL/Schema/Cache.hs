@@ -275,7 +275,8 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
         recreateViewIfNeeded = Inc.cache $
           arrM \(tableName, tableColumns, triggerName, triggerDefinition) -> do
             buildReason <- ask
-            when (buildReason == CatalogUpdate) $
+            when (buildReason == CatalogUpdate) $ do
+              liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
               mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
 
     buildRemoteSchemas
@@ -324,7 +325,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and
 -- if not, incorporates them into the schema cache.
-withMetadataCheck :: (MonadTx m, CacheRWM m) => Bool -> m a -> m a
+withMetadataCheck :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => Bool -> m a -> m a
 withMetadataCheck cascade action = do
   -- Drop hdb_views so no interference is caused to the sql query
   liftTx $ Q.catchE defaultTxErrorHandler clearHdbViews
@@ -381,7 +382,17 @@ withMetadataCheck cascade action = do
   processSchemaChanges schemaDiff
 
   buildSchemaCache
-  currentInconsistentObjs <- scInconsistentObjs <$> askSchemaCache
+  postSc <- askSchemaCache
+
+  -- Recreate event triggers in hdb_views
+  forM_ (M.elems $ scTables postSc) $ \(TableInfo coreInfo _ eventTriggers) -> do
+          let table = _tciName coreInfo
+              columns = getCols $ _tciFieldInfoMap coreInfo
+          forM_ (M.toList eventTriggers) $ \(triggerName, eti) -> do
+            let opsDefinition = etiOpsDef eti
+            mkAllTriggersQ triggerName table columns opsDefinition
+
+  let currentInconsistentObjs = scInconsistentObjs postSc
   checkNewInconsistentMeta existingInconsistentObjs currentInconsistentObjs
 
   return res

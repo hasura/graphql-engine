@@ -9,7 +9,7 @@ import           Hasura.RQL.DDL.Schema             (renameRelInCatalog)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import qualified Data.HashMap.Strict               as HM
+import qualified Data.HashMap.Strict               as Map
 
 renameRelP2
   :: (QErrM m, MonadTx m, CacheRM m)
@@ -17,7 +17,7 @@ renameRelP2
 renameRelP2 qt newRN relInfo = withNewInconsistentObjsCheck $ do
   tabInfo <- askTableCoreInfo qt
   -- check for conflicts in fieldInfoMap
-  case HM.lookup (fromRel newRN) $ _tciFieldInfoMap tabInfo of
+  case Map.lookup (fromRel newRN) $ _tciFieldInfoMap tabInfo of
     Nothing -> return ()
     Just _  ->
       throw400 AlreadyExists $ "cannot rename relationship " <> oldRN

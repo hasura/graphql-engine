@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Hasura.Server.Auth
   ( getUserInfo
   , getUserInfoWithExpTime
@@ -119,6 +120,7 @@ mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager logger =
         "Fatal Error: --unauthorized-role (HASURA_GRAPHQL_UNAUTHORIZED_ROLE) is not allowed"
         <> " when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
 
+-- | Given the 'JWTConfig' (the user input of JWT configuration), create the 'JWTCtx' (the runtime JWT config used)
 mkJwtCtx
   :: ( HasVersion
      , MonadIO m
@@ -128,20 +130,37 @@ mkJwtCtx
   -> H.Manager
   -> Logger Hasura
   -> m JWTCtx
-mkJwtCtx conf httpManager logger = do
-  jwkRef <- case jcKeyOrUrl conf of
+mkJwtCtx JWTConfig{..} httpManager logger = do
+  jwkRef <- case jcKeyOrUrl of
     Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
-    Right url -> do
+    Right url -> getJwkFromUrl url
+  let claimsFmt = fromMaybe JCFJson jcClaimsFormat
+  return $ JWTCtx jwkRef jcClaimNs jcAudience claimsFmt jcIssuer
+  where
+    -- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@
+    -- header), do not start a background thread for refreshing the JWK
+    getJwkFromUrl url = do
       ref <- liftIO $ newIORef $ JWKSet []
-      mTime <- updateJwkRef logger httpManager url ref
-      case mTime of
-        Nothing -> return ref
-        Just t -> do
-          jwkRefreshCtrl logger httpManager url ref t
+      maybeExpiry <- withJwkError $ updateJwkRef logger httpManager url ref
+      case maybeExpiry of
+        Nothing   -> return ref
+        Just time -> do
+          jwkRefreshCtrl logger httpManager url ref (fromUnits time)
           return ref
-  let claimsFmt = fromMaybe JCFJson (jcClaimsFormat conf)
-  return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf) claimsFmt (jcIssuer conf)
 
+    withJwkError act = do
+      res <- runExceptT act
+      case res of
+        Right r -> return r
+        Left err  -> case err of
+          -- when fetching JWK initially, except expiry parsing error, all errors are critical
+          JFEHttpException _ msg  -> throwError msg
+          JFEHttpError _ _ _ e    -> throwError e
+          JFEJwkParseError _ e    -> throwError e
+          JFEExpiryParseError _ _ -> return Nothing
+
+
+-- | Form the 'UserInfo' from the response from webhook
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
   => Logger Hasura
