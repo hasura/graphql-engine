@@ -196,7 +196,7 @@ const AddScheduledTrigger = props => {
               Schedule &nbsp; &nbsp;
               <OverlayTrigger
                 placement="right"
-                overlay={tooltip.scheduledTriggerWebhook}
+                overlay={tooltip.scheduledTriggerSchedule}
               >
                 <i className="fa fa-question-circle" aria-hidden="true" />
               </OverlayTrigger>{' '}

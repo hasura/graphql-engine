@@ -24,7 +24,7 @@ export const fetchScheduledTriggers = () => {
     type: 'run_sql',
     args: {
       sql:
-        'select name, webhook, schedule, payload from hdb_catalog.hdb_scheduled_trigger',
+        'select name, webhook_conf, schedule, payload from hdb_catalog.hdb_scheduled_trigger',
     },
   };
   return query;
@@ -46,7 +46,7 @@ export const fetchUpcomingEvents = () => {
     type: 'run_sql',
     args: {
       sql:
-        'select name, webhook, scheduled_time, id from hdb_catalog.hdb_scheduled_events where delivered=false and error=false and scheduled_time > now() order by scheduled_time asc limit 30;',
+        'select name, scheduled_time, id from hdb_catalog.hdb_scheduled_events where delivered=false and error=false and scheduled_time > now() order by scheduled_time asc limit 30;',
     },
   };
   return query;
