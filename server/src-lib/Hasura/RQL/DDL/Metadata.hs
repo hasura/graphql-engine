@@ -380,7 +380,7 @@ runExportMetadata _ =
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
 runReloadMetadata ReloadMetadata = do
-  buildSchemaCache
+  buildSchemaCacheWithOptions CatalogUpdate mempty { ciMetadata = True }
   return successMsg
 
 runDumpInternalState
