@@ -7,8 +7,6 @@ Actions
   :local:
 
 
-WORK IN PROGRESS
-
 Actions are user defined mutations with custom business logic. Actions can be added to Hasura to handle various use cases such as data validation, data enrichment and other complex business logic.
 
 When the permissions system isn't enough to specify the required constraints, you would typically add such mutation through a remote schema. However actions can handle these use cases better because of the following reasons:
