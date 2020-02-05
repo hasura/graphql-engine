@@ -952,18 +952,23 @@ const ViewRows = ({
   return (
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
-      {selectedRows.length > 0 && (
-        <button
-          className={`add_mar_right_small___3slZA btn btn-xs btn-default ${
-            styles.bulkDeleteButton
-          }`}
-          title="Delete row"
-          onClick={handleDeleteItems}
-        >
-          <i className="fa fa-trash" />
-        </button>
-      )}
       <div className={`row ${styles.add_mar_top}`}>
+        {selectedRows.length > 0 && (
+          <div
+            className={`${styles.display_flex}`}
+            style={{ paddingLeft: '18px' }}
+          >
+            <b className={styles.padd_small_right}>Selected:</b>
+            {selectedRows.length}
+            <button
+              className={`add_mar_right_small___3slZA btn btn-xs btn-default ${styles.bulkDeleteButton}`}
+              title="Delete row"
+              onClick={handleDeleteItems}
+            >
+              <i className="fa fa-trash" />
+            </button>
+          </div>
+        )}
         <div className="col-xs-12">
           <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />
