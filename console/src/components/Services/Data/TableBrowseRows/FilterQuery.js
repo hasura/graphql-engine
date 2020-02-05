@@ -191,7 +191,7 @@ class FilterQuery extends Component {
     } else if (Array.isArray(this.props.urlQuery.filter)) {
       urlFilters = this.props.urlQuery.filter;
     }
-    this.props.curQuery.where = {
+    const where = {
       $and: urlFilters.map(filter => {
         const parts = filter.split(';');
         const col = parts[0];
@@ -207,7 +207,8 @@ class FilterQuery extends Component {
     } else if (Array.isArray(this.props.urlQuery.sort)) {
       urlSorts = this.props.urlQuery.sort;
     }
-    this.props.curQuery.order_by = urlSorts.map(sort => {
+
+    const order_by = urlSorts.map(sort => {
       const parts = sort.split(';');
       const column = parts[0];
       const type = parts[1];
@@ -215,7 +216,7 @@ class FilterQuery extends Component {
       return { column, type, nulls };
     });
 
-    dispatch(setDefaultQuery(this.props.curQuery));
+    dispatch(setDefaultQuery({ where, order_by }));
   }
 
   setParams(query = { filters: [], sorts: [] }) {
@@ -226,8 +227,13 @@ class FilterQuery extends Component {
   }
 
   setUrlParams(whereAnd, orderBy) {
-    const sorts = orderBy.filter(order => order.column).map(order => `${order.column};${order.type}`);
-    const filters = whereAnd.filter(where => Object.keys(where).length === 1 && Object.keys(where)[0] !== '')
+    const sorts = orderBy
+      .filter(order => order.column)
+      .map(order => `${order.column};${order.type}`);
+    const filters = whereAnd
+      .filter(
+        where => Object.keys(where).length === 1 && Object.keys(where)[0] !== ''
+      )
       .map(where => {
         const col = Object.keys(where)[0];
         const op = Object.keys(where[col])[0];
@@ -235,7 +241,10 @@ class FilterQuery extends Component {
         return `${col};${op};${value}`;
       });
     const url = this.setParams({ filters, sorts });
-    history.push({ pathname: history.getCurrentLocation().pathname, search: `?${url}` });
+    history.push({
+      pathname: history.getCurrentLocation().pathname,
+      search: `?${url}`,
+    });
   }
 
   render() {
@@ -254,17 +263,13 @@ class FilterQuery extends Component {
         >
           <div>
             <div
-              className={`${styles.queryBox} col-xs-6 ${
-                styles.padd_left_remove
-              }`}
+              className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
               <span className={styles.subheading_text}>Filter</span>
               {renderWheres(whereAnd, tableSchema, dispatch)}
             </div>
             <div
-              className={`${styles.queryBox} col-xs-6 ${
-                styles.padd_left_remove
-              }`}
+              className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
               <b className={styles.subheading_text}>Sort</b>
               {renderSorts(orderBy, tableSchema, dispatch)}

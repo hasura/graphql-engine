@@ -159,6 +159,7 @@ class ViewTable extends Component {
       manualTriggers = [],
       triggeredRow,
       triggeredFunction,
+      location,
     } = this.props;
 
     // check if table exists
@@ -202,7 +203,7 @@ class ViewTable extends Component {
         updateInvocationFunction={this.updateInvocationFunction.bind(this)}
         triggeredRow={triggeredRow}
         triggeredFunction={triggeredFunction}
-        location={this.props.location}
+        location={location}
         readOnlyMode={readOnlyMode}
       />
     );
