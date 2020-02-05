@@ -148,6 +148,7 @@ class ViewTable extends Component {
       count,
       activePath,
       migrationMode,
+      readOnlyMode,
       ongoingRequest,
       isProgressing,
       lastError,
@@ -202,6 +203,7 @@ class ViewTable extends Component {
         triggeredRow={triggeredRow}
         triggeredFunction={triggeredFunction}
         location={this.props.location}
+        readOnlyMode={readOnlyMode}
       />
     );
 
@@ -213,6 +215,7 @@ class ViewTable extends Component {
         table={tableSchema}
         tabName="browse"
         migrationMode={migrationMode}
+        readOnlyMode={readOnlyMode}
       />
     );
 
@@ -246,6 +249,7 @@ ViewTable.propTypes = {
   query: PropTypes.object.isRequired,
   curFilter: PropTypes.object.isRequired,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   isProgressing: PropTypes.bool.isRequired,
   rows: PropTypes.array.isRequired,
@@ -263,6 +267,7 @@ const mapStateToProps = (state, ownProps) => {
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.view,
   };

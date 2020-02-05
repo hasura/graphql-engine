@@ -1,3 +1,7 @@
+.. meta::
+   :description: Common syntax definitions for the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, syntax definitions
+
 Schema/Metadata API Reference: Common syntax definitions
 ========================================================
 
@@ -24,8 +28,8 @@ QualifiedTable
    :class: haskell-pre
 
    {
-           "name": String,
-           "schema": String
+       "name": String,
+       "schema": String
    }
 
 .. _FunctionName:
@@ -45,14 +49,23 @@ QualifiedFunction
    :class: haskell-pre
 
    {
-           "name": String,
-           "schema": String
+       "name": String,
+       "schema": String
    }
 
 .. _RoleName:
 
 RoleName
 ^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _ComputedFieldName:
+
+ComputedFieldName
+^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
 

@@ -42,7 +42,7 @@ parseOperationsExpression
   :: forall m v
    . (MonadError QErr m)
   => OpRhsParser m v
-  -> FieldInfoMap PGColumnInfo
+  -> FieldInfoMap FieldInfo
   -> PGColumnInfo
   -> Value
   -> m [OpExpG v]
@@ -194,7 +194,7 @@ parseOperationsExpression rhsParser fim columnInfo =
           castOperations <- parseVal
           parsedCastOperations <-
             forM (M.toList castOperations) $ \(targetTypeName, castedComparisons) -> do
-              let targetType = txtToPgColTy targetTypeName
+              let targetType = textToPGScalarType targetTypeName
                   castedColumn = ColumnReferenceCast column (PGColumnScalar targetType)
               checkValidCast targetType
               parsedCastedComparisons <- withPathK targetTypeName $
@@ -272,9 +272,9 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
       (S.BENull rhsExp))
 
 annBoolExp
-  :: (QErrM m, CacheRM m)
+  :: (QErrM m, TableCoreInfoRM m)
   => OpRhsParser m v
-  -> FieldInfoMap PGColumnInfo
+  -> FieldInfoMap FieldInfo
   -> GBoolExp ColExp
   -> m (AnnBoolExp v)
 annBoolExp rhsParser fim boolExp =
@@ -293,15 +293,15 @@ annBoolExp rhsParser fim boolExp =
     procExps = mapM (annBoolExp rhsParser fim)
 
 annColExp
-  :: (QErrM m, CacheRM m)
+  :: (QErrM m, TableCoreInfoRM m)
   => OpRhsParser m v
-  -> FieldInfoMap PGColumnInfo
+  -> FieldInfoMap FieldInfo
   -> ColExp
   -> m (AnnBoolExpFld v)
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (PGColumnInfo _ _ (PGColumnScalar PGJSON) _ _) ->
+    FIColumn (PGColumnInfo _ _ _ (PGColumnScalar PGJSON) _ _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
@@ -311,6 +311,8 @@ annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
       annRelBoolExp   <- annBoolExp rhsParser relFieldInfoMap $
                          unBoolExp relBoolExp
       return $ AVRel relInfo annRelBoolExp
+    FIComputedField _ ->
+      throw400 UnexpectedPayload "Computed columns can not be part of the where clause"
 
 toSQLBoolExp
   :: S.Qual -> AnnBoolExpSQL -> S.BoolExp
@@ -326,8 +328,8 @@ convColRhs
   :: S.Qual -> AnnBoolExpFldSQL -> State Word64 S.BoolExp
 convColRhs tableQual = \case
   AVCol colInfo opExps -> do
-    let cn = pgiColumn colInfo
-        bExps = map (mkColCompExp tableQual cn) opExps
+    let colFld = fromPGCol $ pgiColumn colInfo
+        bExps = map (mkFieldCompExp tableQual colFld) opExps
     return $ foldr (S.BEBin S.AndOp) (S.BELit True) bExps
 
   AVRel (RelInfo _ _ colMapping relTN _) nesAnn -> do
@@ -336,13 +338,13 @@ convColRhs tableQual = \case
     put $ curVarNum + 1
     let newIden  = Iden $ "_be_" <> T.pack (show curVarNum) <> "_"
                    <> snakeCaseTable relTN
-        newIdenQ = S.QualIden newIden
+        newIdenQ = S.QualIden newIden Nothing
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
     let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
-          flip map colMapping $ \(lCol, rCol) ->
-          S.BECompare S.SEQ
-          (mkQCol (S.QualIden newIden) rCol)
-          (mkQCol tableQual lCol)
+          flip map (M.toList colMapping) $ \(lCol, rCol) ->
+            S.BECompare S.SEQ
+            (mkQCol (S.QualIden newIden Nothing) rCol)
+            (mkQCol tableQual lCol)
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
     return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
   where
@@ -370,11 +372,12 @@ foldBoolExp f = \case
   BoolExists existsExp -> foldExists existsExp
   BoolFld ce           -> f ce
 
-mkColCompExp
-  :: S.Qual -> PGCol -> OpExpG S.SQLExp -> S.BoolExp
-mkColCompExp qual lhsCol = mkCompExp (mkQCol lhsCol)
+mkFieldCompExp
+  :: S.Qual -> FieldName -> OpExpG S.SQLExp -> S.BoolExp
+mkFieldCompExp qual lhsField = mkCompExp (mkQField lhsField)
   where
     mkQCol = S.SEQIden . S.QIden qual . toIden
+    mkQField = S.SEQIden . S.QIden qual . Iden . getFieldNameTxt
 
     mkCompExp :: S.SQLExp -> OpExpG S.SQLExp -> S.BoolExp
     mkCompExp lhs = \case

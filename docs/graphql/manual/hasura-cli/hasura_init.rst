@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura init to initialise a directory for Hasura migrations on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura init
+
 .. _hasura_init:
 
 Hasura CLI: hasura init
@@ -46,6 +50,7 @@ Options inherited from parent commands
 ::
 
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
       --skip-update-check   Skip automatic update check on command execution
 

@@ -69,6 +69,18 @@ export const getTrackedTables = tables => {
   return tables.filter(t => t.is_table_tracked);
 };
 
+export const getUntrackedTables = tables => {
+  return tables.filter(t => !t.is_table_tracked);
+};
+
+export const getOnlyTables = tablesOrViews => {
+  return tablesOrViews.filter(t => checkIfTable(t));
+};
+
+export const getOnlyViews = tablesOrViews => {
+  return tablesOrViews.filter(t => !checkIfTable(t));
+};
+
 /*** Table/View column utils ***/
 
 export const getTableColumns = table => {
@@ -197,6 +209,22 @@ export const getTablePermissions = (table, role = null, action = null) => {
   return tablePermissions;
 };
 
+/*** Table/View Check Constraints utils ***/
+
+export const getTableCheckConstraints = table => {
+  return table.check_constraints;
+};
+
+export const getCheckConstraintName = constraint => {
+  return constraint.constraint_name;
+};
+
+export const findTableCheckConstraint = (checkConstraints, constraintName) => {
+  return checkConstraints.find(
+    c => getCheckConstraintName(c) === constraintName
+  );
+};
+
 /*** Function utils ***/
 
 export const getFunctionSchema = pgFunction => {
@@ -205,6 +233,22 @@ export const getFunctionSchema = pgFunction => {
 
 export const getFunctionName = pgFunction => {
   return pgFunction.function_name;
+};
+
+export const getFunctionDefinition = pgFunction => {
+  return pgFunction.function_definition;
+};
+
+export const getSchemaFunctions = (allFunctions, fnSchema) => {
+  return allFunctions.filter(fn => getFunctionSchema(fn) === fnSchema);
+};
+
+export const findFunction = (allFunctions, functionName, functionSchema) => {
+  return allFunctions.find(
+    f =>
+      getFunctionName(f) === functionName &&
+      getFunctionSchema(f) === functionSchema
+  );
 };
 
 /*** Schema utils ***/
@@ -219,4 +263,51 @@ export const getSchemaTables = (allTables, tableSchema) => {
 
 export const getSchemaTableNames = (allTables, tableSchema) => {
   return getSchemaTables(allTables, tableSchema).map(t => getTableName(t));
+};
+
+/*** Custom table fields utils ***/
+
+export const getTableCustomRootFields = table => {
+  if (table.configuration) {
+    return table.configuration.custom_root_fields || {};
+  }
+  return {};
+};
+
+export const getTableCustomColumnNames = table => {
+  if (table.configuration) {
+    return table.configuration.custom_column_names || {};
+  }
+  return {};
+};
+
+/*** Table/View Computed Field utils ***/
+
+export const getTableComputedFields = table => {
+  return table.computed_fields;
+};
+
+export const getComputedFieldName = computedField => {
+  return computedField.computed_field_name;
+};
+
+export const getGroupedTableComputedFields = (table, allFunctions) => {
+  const groupedComputedFields = { scalar: [], table: [] };
+
+  getTableComputedFields(table).forEach(computedField => {
+    const computedFieldFnDef = computedField.definition.function;
+    const computedFieldFn = findFunction(
+      allFunctions,
+      computedFieldFnDef.name,
+      computedFieldFnDef.schema
+    );
+
+    if (computedFieldFn && computedFieldFn.return_type_type === 'b') {
+      groupedComputedFields.scalar.push(computedField);
+    } else {
+      groupedComputedFields.table.push(computedField);
+    }
+  });
+
+  return groupedComputedFields;
 };

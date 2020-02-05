@@ -1,3 +1,7 @@
+.. meta::
+   :description: Set up GraphQL subscriptions with apollo-client
+   :keywords: hasura, docs, guide, GraphQL subscriptions, apollo, apollo-client
+
 Setting up GraphQL subscriptions using apollo-client
 ====================================================
 
@@ -9,7 +13,7 @@ Setting up GraphQL subscriptions using apollo-client
 Setup
 -----
 This guide assumes you have the basic apollo-client working as per
-https://www.apollographql.com/docs/react/essentials/get-started.html and now you want to enable subscriptions.
+https://www.apollographql.com/docs/react/get-started/ and now you want to enable subscriptions.
 
 Install packages
 ^^^^^^^^^^^^^^^^

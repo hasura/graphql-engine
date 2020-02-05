@@ -2,6 +2,8 @@ import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import requestAction from '../utils/requestAction';
 import dataHeaders from '../components/Services/Data/Common/Headers';
 import defaultTelemetryState from './State';
+import globals from '../Globals';
+import { getRunSqlQuery } from '../components/Common/utils/v1QueryUtils';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -19,12 +21,11 @@ const setNotificationShownInDB = () => (dispatch, getState) => {
     credentials: globalCookiePolicy,
     method: 'POST',
     headers: dataHeaders(getState),
-    body: JSON.stringify({
-      type: 'run_sql',
-      args: {
-        sql: `update hdb_catalog.hdb_version set console_state = console_state || jsonb_build_object('telemetryNotificationShown', true) where hasura_uuid='${uuid}';`,
-      },
-    }),
+    body: JSON.stringify(
+      getRunSqlQuery(
+        `update hdb_catalog.hdb_version set console_state = console_state || jsonb_build_object('telemetryNotificationShown', true) where hasura_uuid='${uuid}';`
+      )
+    ),
   };
   return dispatch(requestAction(url, options)).then(
     data => {
@@ -43,7 +44,7 @@ const setNotificationShownInDB = () => (dispatch, getState) => {
 
 const loadConsoleTelemetryOpts = () => {
   return (dispatch, getState) => {
-    if (window.__env.enableTelemetry === undefined) {
+    if (globals.enableTelemetry === undefined) {
       return dispatch({ type: SET_TELEMETRY_DISABLED });
     }
 

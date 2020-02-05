@@ -333,7 +333,7 @@ schemaR fld =
     _              -> return J.Null
 
 typeR
-  :: (MonadResolve m, MonadReader r m, Has TypeMap r)
+  :: (MonadReusability m, MonadError QErr m, MonadReader r m, Has TypeMap r)
   => Field -> m J.Value
 typeR fld = do
   name <- asPGColText =<< getArg args "name"

@@ -1,5 +1,5 @@
 import pytest
-import yaml
+import ruamel.yaml as yaml
 from validate import check_query_f
 from super_classes import DefaultTestQueries, DefaultTestMutations
 
@@ -57,6 +57,9 @@ class TestGraphqlInsertOnConflict(DefaultTestMutations):
 
     def test_err_unexpected_constraint(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/article_unexpected_on_conflict_constraint_error.yaml")
+
+    def test_order_on_conflict_where(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/order_on_conflict_where.yaml')
 
     @classmethod
     def dir(cls):
@@ -119,6 +122,9 @@ class TestGraphqlInsertPermission(DefaultTestMutations):
 
     def test_resident_5_modifies_resident_6_upsert(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/resident_5_modifies_resident_6_upsert.yaml")
+
+    def test_resident_on_conflict_where(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/resident_on_conflict_where.yaml")
 
     def test_blog_on_conflict_update_preset(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/blog_on_conflict_update_preset.yaml")
@@ -286,6 +292,9 @@ class TestGraphqlUpdateBasic(DefaultTestMutations):
     def test_no_operator_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/person_error_no_operator.yaml")
 
+    def test_column_in_multiple_operators(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/update/basic"
@@ -360,6 +369,9 @@ class TestGraphqlDeleteBasic(DefaultTestMutations):
     def test_article_delete_returning_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/article_returning_author.yaml", transport)
 
+    def test_author_returning_empty_articles(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/author_returning_empty_articles.yaml", transport)
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/delete/basic"
@@ -429,6 +441,9 @@ class TestGraphQLMutateEnums(DefaultTestMutations):
 
     def test_insert_enum_field(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_enum_field.yaml', transport)
+
+    def test_insert_enum_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/insert_nullable_enum_field.yaml', transport)
 
     def test_insert_enum_field_bad_value(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_enum_field_bad_value.yaml', transport)

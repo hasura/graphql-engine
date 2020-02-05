@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura migrate status to display the current status of Hasura migrations on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura migrate status
+
 .. _hasura_migrate_status:
 
 Hasura CLI: hasura migrate status
@@ -30,6 +34,7 @@ Options inherited from parent commands
 ::
 
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
       --skip-update-check   Skip automatic update check on command execution
 

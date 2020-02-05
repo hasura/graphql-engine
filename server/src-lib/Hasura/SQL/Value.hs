@@ -4,7 +4,7 @@ module Hasura.SQL.Value
   , withConstructorFn
   , parsePGValue
 
-  , TxtEncodedPGVal
+  , TxtEncodedPGVal(..)
   , txtEncodedPGVal
 
   , binEncoder
@@ -130,6 +130,11 @@ instance ToJSON TxtEncodedPGVal where
     TENull  -> Null
     TELit t -> String t
 
+instance FromJSON TxtEncodedPGVal where
+  parseJSON Null       = pure TENull
+  parseJSON (String t) = pure $ TELit t
+  parseJSON v          = AT.typeMismatch "String" v
+
 txtEncodedPGVal :: PGScalarValue -> TxtEncodedPGVal
 txtEncodedPGVal colVal = case colVal of
   PGValInteger i  -> TELit $ T.pack $ show i
@@ -160,25 +165,25 @@ txtEncodedPGVal colVal = case colVal of
 
 binEncoder :: PGScalarValue -> Q.PrepArg
 binEncoder colVal = case colVal of
-  PGValInteger i -> Q.toPrepVal i
-  PGValSmallInt i -> Q.toPrepVal i
-  PGValBigInt i -> Q.toPrepVal i
-  PGValFloat f -> Q.toPrepVal f
-  PGValDouble d -> Q.toPrepVal d
-  PGValNumeric sc -> Q.toPrepVal sc
-  PGValBoolean b -> Q.toPrepVal b
-  PGValChar t -> Q.toPrepVal t
-  PGValVarchar t -> Q.toPrepVal t
-  PGValText t -> Q.toPrepVal t
-  PGValDate d -> Q.toPrepVal d
-  PGValTimeStampTZ u -> Q.toPrepVal u
+  PGValInteger i                   -> Q.toPrepVal i
+  PGValSmallInt i                  -> Q.toPrepVal i
+  PGValBigInt i                    -> Q.toPrepVal i
+  PGValFloat f                     -> Q.toPrepVal f
+  PGValDouble d                    -> Q.toPrepVal d
+  PGValNumeric sc                  -> Q.toPrepVal sc
+  PGValBoolean b                   -> Q.toPrepVal b
+  PGValChar t                      -> Q.toPrepVal t
+  PGValVarchar t                   -> Q.toPrepVal t
+  PGValText t                      -> Q.toPrepVal t
+  PGValDate d                      -> Q.toPrepVal d
+  PGValTimeStampTZ u               -> Q.toPrepVal u
   PGValTimeTZ (ZonedTimeOfDay t z) -> Q.toPrepValHelper PTI.timetz PE.timetz_int (t, z)
-  PGNull ty -> (pgTypeOid ty, Nothing)
-  PGValJSON u -> Q.toPrepVal u
-  PGValJSONB u -> Q.toPrepVal u
-  PGValGeo o -> Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
-  PGValRaster r -> Q.toPrepVal $ TC.toText $ getRasterWKB r
-  PGValUnknown t -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
+  PGNull ty                        -> (pgTypeOid ty, Nothing)
+  PGValJSON u                      -> Q.toPrepVal u
+  PGValJSONB u                     -> Q.toPrepVal u
+  PGValGeo o                       -> Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
+  PGValRaster r                    -> Q.toPrepVal $ TC.toText $ getRasterWKB r
+  PGValUnknown t                   -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
 
 txtEncoder :: PGScalarValue -> S.SQLExp
 txtEncoder colVal = case txtEncodedPGVal colVal of

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Update an object in the database using a mutation
+   :keywords: hasura, docs, mutation, update
+
 Update mutation
 ===============
 
@@ -229,7 +233,6 @@ evaluates to ``true`` for all objects.
         }
       }
     }
-
 
 Increment **int** columns
 -------------------------
@@ -496,4 +499,55 @@ The input value should be a ``String Array``.
         }
       }
     }
+
+Replace all nested array objects of an object
+---------------------------------------------
+
+In order to replace all existing nested array objects of an object, currently it's required to use two mutations:
+one to delete all the existing objects and one to add a list of new nested objects.
+
+**Example:** Replace all articles of an author with a new list:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation updateAuthorArticles($author_id: Int!) {
+      delete_articles(
+        where: {author_id: {_eq: $author_id}}
+      ) {
+        affected_rows
+      }
+      insert_articles(
+        objects: [
+          {
+            author_id: $author_id,
+            title: "title",
+            content: "some content"
+          },
+          {
+            author_id: $author_id,
+            title: "another title",
+            content: "some other content"
+          }
+        ]
+      ) {
+        affected_rows
+      }
+    }
+  :response:
+    {
+      "data": {
+        "delete_article_tags": {
+          "affected_rows": 3
+        },
+        "insert_article_tags": {
+          "affected_rows": 2
+        }
+      }
+    }
+  :variables:
+    {
+      "author_id": 21
+    }
+
 

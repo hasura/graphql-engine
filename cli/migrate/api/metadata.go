@@ -1,14 +1,13 @@
 package api
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli/migrate"
+	v2yaml "gopkg.in/yaml.v2"
 )
 
 func MetadataAPI(c *gin.Context) {
@@ -49,13 +48,7 @@ func MetadataAPI(c *gin.Context) {
 		queryValues := c.Request.URL.Query()
 		export := queryValues.Get("export")
 		if export == "true" {
-			t, err := json.Marshal(metaData)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-				return
-			}
-
-			data, err := yaml.JSONToYAML(t)
+			data, err := v2yaml.Marshal(metaData)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 				return
@@ -103,13 +96,7 @@ func MetadataAPI(c *gin.Context) {
 			return
 		}
 
-		t, err := json.Marshal(metaData)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
-			return
-		}
-
-		data, err := yaml.JSONToYAML(t)
+		data, err := v2yaml.Marshal(metaData)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return

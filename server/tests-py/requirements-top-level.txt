@@ -1,6 +1,6 @@
 psycopg2-binary
 sqlalchemy
-pytest
+pytest==4.5.0
 pytest-xdist
 requests
 pyyaml
@@ -9,4 +9,5 @@ pyjwt >= 1.5.3
 jsondiff
 cryptography
 graphene
-brotlipy
+ruamel.yaml > 0.15
+graphql-core

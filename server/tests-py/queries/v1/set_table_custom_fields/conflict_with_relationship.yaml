@@ -1,0 +1,32 @@
+description: Set custom column names conflicting with existing relationship
+url: /v1/query
+status: 400
+response:
+  internal:
+  - definition:
+      using:
+        foreign_key_constraint_on:
+          column: author_id
+          table:
+            schema: public
+            name: article
+      name: articles
+      comment:
+      table:
+        schema: public
+        name: author
+    reason: field definition conflicts with custom field name for postgres column
+      "name"
+    type: array_relation
+  path: $.args
+  error: cannot continue due to new inconsistent metadata
+  code: unexpected
+query:
+  type: set_table_custom_fields
+  version: 2
+  args:
+    table: author
+    custom_root_fields: {}
+    custom_column_names:
+      name: articles
+      age: articles_aggregate
