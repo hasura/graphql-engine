@@ -137,7 +137,7 @@ mkJwtCtx conf httpManager logger = do
       case mTime of
         Nothing -> return ref
         Just t -> do
-          jwkRefreshCtrl logger httpManager url ref t
+          jwkRefreshCtrl logger httpManager url ref (fromUnits t)
           return ref
   let claimsFmt = fromMaybe JCFJson (jcClaimsFormat conf)
   return $ JWTCtx jwkRef (jcClaimNs conf) (jcAudience conf) claimsFmt (jcIssuer conf)
