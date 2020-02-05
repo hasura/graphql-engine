@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
@@ -522,16 +523,53 @@ const ViewRows = ({
       _tableSchema.relationships.forEach(rel => {
         const relName = rel.rel_name;
 
+        // const handleAddClick = () => {
+        //   const childTableDef = getRelationshipRefTable(_tableSchema, rel);
+
+        //   if (childTableDef.schema !== currentSchema) {
+        //     dispatch(
+        //       updateSchemaInfo({ schemas: [childTableDef.schema] }),
+        //     ).then(() => {
+        //       dispatch(vExpandRel(curPath, rel.rel_name, pkClause));
+        //     });
+        //   } else {
+        //     dispatch(vExpandRel(curPath, rel.rel_name, pkClause));
+        //   }
+        // };
+
         const getRelCellContent = () => {
           let cellValue = '';
 
-          const getRelExpander = (value, className, clickHandler) => {
+          const getAddButton = () => {
+            const childTableDef = getRelationshipRefTable(_tableSchema, rel);
+            const relSchema = schemas.find(
+              s =>
+                s.table_schema === childTableDef.schema &&
+                s.table_name === childTableDef.name
+            );
+            if (!relSchema || relSchema.is_enum) return null;
+
+            // TO DO
+            // const onCLick = () => dispatch({
+            //  type: I_SET_FK_VALUE,
+            //  data: { colName: value },
+            //});
+
             return (
-              <a href="#" className={className} onClick={clickHandler}>
-                {value}
-              </a>
+              <Link
+                to={`/data/schema/${childTableDef.schema}/tables/${childTableDef.name}/insert`}
+                className={styles.add_mar_left}
+              >
+                Add
+              </Link>
             );
           };
+
+          const getRelExpander = (label, className, clickHandler) => (
+            <a href="#" className={className} onClick={clickHandler}>
+              {label}
+            </a>
+          );
 
           const isRelExpanded =
             curQuery.columns.find(c => c.name === rel.rel_name) !== undefined;
@@ -580,7 +618,12 @@ const ViewRows = ({
             }
           }
 
-          return <div>{cellValue}</div>;
+          return (
+            <div className={styles.flex_center_horizontally}>
+              {cellValue}
+              {getAddButton()}
+            </div>
+          );
         };
 
         newRow[relName] = getRelCellContent();

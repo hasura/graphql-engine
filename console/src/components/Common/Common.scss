@@ -177,6 +177,11 @@ table tbody tr th {
   align-items: center;
 }
 
+.flex_center_horizontally {
+  display: flex;
+  justify-content: center;
+}
+
 .displayFlexContainer {
   display: flex;
 }

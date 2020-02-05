@@ -15,6 +15,7 @@ const I_REQUEST_SUCCESS = 'InsertItem/I_REQUEST_SUCCESS';
 const I_REQUEST_ERROR = 'InsertItem/I_REQUEST_ERROR';
 const _CLOSE = 'InsertItem/_CLOSE';
 const _OPEN = 'InsertItem/_OPEN';
+const I_SET_FK_VALUE = 'InsertItem/I_SET_FK_VALUE';
 
 const Open = () => ({ type: _OPEN });
 const Close = () => ({ type: _CLOSE });
@@ -115,6 +116,7 @@ const insertReducer = (tableName, state, action) => {
         ongoingRequest: false,
         lastError: null,
         lastSuccess: null,
+        fkValue: null,
       };
     case I_SET_CLONE:
       return {
@@ -153,6 +155,8 @@ const insertReducer = (tableName, state, action) => {
         lastError: 'server-failure',
         lastSuccess: null,
       };
+    case I_SET_FK_VALUE:
+      return { ...state, fkValue: action.data };
     case _OPEN:
       return { ...state, isOpen: true };
     case _CLOSE:
