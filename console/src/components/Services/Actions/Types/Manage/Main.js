@@ -1,8 +1,8 @@
 import React from 'react';
 import CustomTypesContainer from '../../Containers/CustomTypesContainer';
-import TypesEditor from '../../Common/UIComponents/TypeDefinitionEditor';
+import TypesEditor from '../../Common/components/TypeDefinitionEditor';
 import Button from '../../../../Common/Button/Button';
-import styles from '../../Common/UIComponents/Styles.scss';
+import styles from '../../Common/components/Styles.scss';
 import {
   getTypesSdl,
   getTypesFromSdl,

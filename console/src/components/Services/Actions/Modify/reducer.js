@@ -18,13 +18,13 @@ export const setActionKind = kind => ({
   kind,
 });
 
-const SET_ACTION_DEFINITION = 'Actions/Add/SET_ACTION_DEFINITION';
+const SET_ACTION_DEFINITION = 'Actions/Modify/SET_ACTION_DEFINITION';
 export const setActionDefinition = (sdl, error, timer, ast) => ({
   type: SET_ACTION_DEFINITION,
   definition: { sdl, error, timer, ast },
 });
 
-const SET_TYPE_DEFINITION = 'Actions/Add/SET_TYPE_DEFINITION';
+const SET_TYPE_DEFINITION = 'Actions/Modify/SET_TYPE_DEFINITION';
 export const setTypeDefinition = (sdl, error = null, timer, ast) => ({
   type: SET_TYPE_DEFINITION,
   definition: { sdl, error, timer, ast },
@@ -34,6 +34,18 @@ const SET_FETCHING = 'Actions/Modify/SET_FETCHING';
 export const setFetching = () => ({ type: SET_FETCHING });
 const UNSET_FETCHING = 'Actions/Modify/UNSET_FETCHING';
 export const unsetFetching = () => ({ type: UNSET_FETCHING });
+
+const SET_HEADERS = 'Actions/Modify/SET_HEADERS';
+export const setHeaders = headers => ({
+  type: SET_HEADERS,
+  headers,
+});
+
+const TOGGLE_FORWARD_CLIENT_HEADERS =
+  'Actions/Modify/TOGGLE_FORWARD_CLIENT_HEADERS';
+export const toggleForwardClientHeaders = () => ({
+  type: TOGGLE_FORWARD_CLIENT_HEADERS,
+});
 
 const reducer = (state = defaultState, action) => {
   switch (action.type) {
@@ -82,6 +94,16 @@ const reducer = (state = defaultState, action) => {
               ? action.definition.sdl
               : state.typeDefinition.sdl,
         },
+      };
+    case SET_HEADERS:
+      return {
+        ...state,
+        headers: action.headers,
+      };
+    case TOGGLE_FORWARD_CLIENT_HEADERS:
+      return {
+        ...state,
+        forwardClientHeaders: !state.forwardClientHeaders,
       };
     default:
       return state;

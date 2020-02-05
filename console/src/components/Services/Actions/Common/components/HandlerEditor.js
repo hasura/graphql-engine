@@ -4,7 +4,7 @@ import Tooltip from './Tooltip';
 
 const editorLabel = 'Handler';
 const editorTooltip =
-  'Set a handler. This handler will be called with mutation payload';
+  'Set a handler. This handler will be called with mutation payload. This could be an HTTP endpoint or a template using an environment variable.';
 
 const HandlerEditor = ({ value, onChange, className, placeholder }) => {
   return (

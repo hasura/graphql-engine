@@ -1,8 +1,8 @@
 import React from 'react';
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
-import endpoints from '../../../../Endpoints';
+import endpoints from '../../../Endpoints';
 
-export const useIntrospectionSchema = headers => {
+export const useIntrospectionSchema = (headers={}) => {
   const [schema, setSchema] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);

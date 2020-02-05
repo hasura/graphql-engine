@@ -57,12 +57,14 @@ export const getPermissionColumnAccessSummary = (permission, tableFields) => {
     let allFields = true;
 
     Object.keys(tableFields).forEach(fieldType => {
-      noFields = noFields && !permission[fieldType].length;
+      const permissionFields = permission[fieldType] || [];
+
+      noFields = noFields && !permissionFields.length;
 
       allFields =
         allFields &&
-        (permission[fieldType] === '*' ||
-          permission[fieldType].length === tableFields[fieldType].length);
+        (permissionFields === '*' ||
+          permissionFields.length === tableFields[fieldType].length);
     });
 
     if (noFields) {

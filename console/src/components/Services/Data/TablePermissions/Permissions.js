@@ -13,8 +13,7 @@ import {
   permOpenEdit,
   permSetFilter,
   permSetFilterSameAs,
-  permToggleColumn,
-  permToggleComputedField,
+  permToggleField,
   permToggleAllFields,
   permAllowAll,
   permCloseEdit,
@@ -39,12 +38,12 @@ import {
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
-
 import {
   fetchFunctionInit,
   setTable,
@@ -91,11 +90,10 @@ class Permissions extends Component {
 
   componentDidMount() {
     const { dispatch } = this.props;
-
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
-    dispatch(fetchFunctionInit());
     dispatch(fetchRoleList());
+    dispatch(fetchFunctionInit());
   }
 
   componentDidUpdate(prevProps) {
@@ -152,8 +150,6 @@ class Permissions extends Component {
       // throw a 404 exception
       throw new NotFoundError();
     }
-
-    const styles = require('./Permissions.scss');
 
     const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
     const groupedComputedFields = getGroupedTableComputedFields(
@@ -832,87 +828,56 @@ class Permissions extends Component {
         const getColumnList = () => {
           const _columnList = [];
 
-          const dispatchToggleColumn = e => {
-            const column = e.target.value;
-            dispatch(permToggleColumn(column));
+          const dispatchToggleField = fieldType => e => {
+            const fieldName = e.target.value;
+            dispatch(permToggleField(fieldType, fieldName));
           };
 
-          const dispatchToggleComputedField = e => {
-            const computedField = e.target.value;
-            dispatch(permToggleComputedField(computedField));
-          };
-
-          tableSchema.columns.forEach((colObj, i) => {
-            const column = colObj.column_name;
-
-            let checked;
+          const getFieldCheckbox = (fieldType, fieldName) => {
+            let checked = false;
             if (permissionsState[query]) {
-              if (permissionsState[query].columns === '*') {
+              const permittedFields = permissionsState[query][fieldType] || [];
+
+              if (permittedFields === '*') {
                 checked = true;
               } else {
-                checked = permissionsState[query].columns.includes(column);
+                checked = permittedFields.includes(fieldName);
               }
-            } else {
-              checked = false;
             }
 
-            _columnList.push(
-              <div key={'column_' + i} className={styles.columnListElement}>
+            return (
+              <div key={fieldName} className={styles.columnListElement}>
                 <div className="checkbox">
                   <label>
                     <input
                       type="checkbox"
                       checked={checked}
-                      value={column}
-                      onChange={dispatchToggleColumn}
+                      value={fieldName}
+                      onChange={dispatchToggleField(fieldType)}
                       disabled={noPermissions}
                       title={noPermissions ? noPermissionsMsg : ''}
                     />
-                    {column}
+                    {fieldType === 'columns' ? fieldName : <i>{fieldName}</i>}
                   </label>
                 </div>
               </div>
             );
+          };
+
+          tableSchema.columns.forEach(colObj => {
+            const columnName = colObj.column_name;
+
+            _columnList.push(getFieldCheckbox('columns', columnName));
           });
 
           if (query === 'select') {
-            groupedComputedFields.scalar.forEach((scalarComputedField, i) => {
+            groupedComputedFields.scalar.forEach(scalarComputedField => {
               const computedFieldName = getComputedFieldName(
                 scalarComputedField
               );
 
-              let checked;
-              if (permissionsState[query]) {
-                if (permissionsState[query].computed_fields === '*') {
-                  checked = true;
-                } else {
-                  checked = permissionsState[query].computed_fields.includes(
-                    computedFieldName
-                  );
-                }
-              } else {
-                checked = false;
-              }
-
               _columnList.push(
-                <div
-                  key={'computed_field_' + i}
-                  className={styles.columnListElement}
-                >
-                  <div className="checkbox">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        value={computedFieldName}
-                        onChange={dispatchToggleComputedField}
-                        disabled={noPermissions}
-                        title={noPermissions ? noPermissionsMsg : ''}
-                      />
-                      <i>{computedFieldName}</i>
-                    </label>
-                  </div>
-                </div>
+                getFieldCheckbox('computed_fields', computedFieldName)
               );
             });
           }

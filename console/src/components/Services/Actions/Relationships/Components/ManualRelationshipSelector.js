@@ -20,7 +20,7 @@ const ManualRelationshipSelector = ({
   const baseFieldMap = { field: '', refColumn: '' };
 
   const [relName, setRelName] = useState('');
-  // const [relType, setRelType] = useState('');
+  const [relType, setRelType] = useState('');
   const [refSchema, setRefSchema] = useState('');
   const [refTable, setRefTable] = useState('');
   const [fieldMappings, setFieldMappings] = useState([baseFieldMap]);
@@ -34,40 +34,40 @@ const ManualRelationshipSelector = ({
 
     setFieldMappings(newFieldMappings);
 
-    stateCb(relName, refSchema, refTable, newFieldMappings);
+    stateCb(relName, relType, refSchema, refTable, newFieldMappings);
   };
 
-  // const relTypeSelect = () => {
-  //   const handleRelTypeChange = e => {
-  //     setRelType(e.target.value);
-  //   };
-  //
-  //   return (
-  //     <div className={`${styles.add_mar_bottom}`}>
-  //       <div className={`${styles.add_mar_bottom_mid}`}>
-  //         <b>Relationship Type:</b>
-  //       </div>
-  //       <select
-  //         value={relType || ''}
-  //         className={`${styles.select} form-control ${styles.add_pad_left}`}
-  //         data-test={'manual-relationship-type'}
-  //         onChange={handleRelTypeChange}
-  //       >
-  //         {relType === '' && (
-  //           <option value={''} disabled>
-  //             {'-- relationship type --'}
-  //           </option>
-  //         )}
-  //         <option key="object" value="object">
-  //           Object Relationship
-  //         </option>
-  //         <option key="array" value="array">
-  //           Array Relationship
-  //         </option>
-  //       </select>
-  //     </div>
-  //   );
-  // };
+  const relTypeSelect = () => {
+    const handleRelTypeChange = e => {
+      setRelType(e.target.value);
+    };
+
+    return (
+      <div className={`${styles.add_mar_bottom}`}>
+        <div className={`${styles.add_mar_bottom_mid}`}>
+          <b>Relationship Type:</b>
+        </div>
+        <select
+          value={relType || ''}
+          className={`${styles.select} form-control ${styles.add_pad_left}`}
+          data-test={'manual-relationship-type'}
+          onChange={handleRelTypeChange}
+        >
+          {relType === '' && (
+            <option value={''} disabled>
+              {'-- relationship type --'}
+            </option>
+          )}
+          <option key="object" value="object">
+            Object Relationship
+          </option>
+          <option key="array" value="array">
+            Array Relationship
+          </option>
+        </select>
+      </div>
+    );
+  };
 
   const relNameInput = () => {
     const handleRelNameChange = e => {
@@ -320,7 +320,7 @@ const ManualRelationshipSelector = ({
 
   return (
     <div className="form-group">
-      {/*{relTypeSelect()}*/}
+      {relTypeSelect()}
       {relNameInput()}
       {refSchemaSelect()}
       {refTableSelect()}

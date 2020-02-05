@@ -1,23 +1,21 @@
-const defaultActionDefSdl = `
-type Mutation {
-  ## Define your action as a mutation here
-  actionName (arg1: SampleInput!): SampleOutput
-}`;
+import {
+  defaultActionDefSdl,
+  defaultTypesDefSdl,
+  defaultHeader,
+} from '../Common/stateDefaults';
 
-const defaultTypesDefSdl = `
-type SampleOutput {
-  accessToken: String!
+let defaultHandler = '';
+if (typeof navigator !== 'undefined') {
+  const isLinux = navigator.appVersion.toLowerCase().includes('linux');
+  if (isLinux) {
+    defaultHandler = 'http://localhost:3000';
+  } else {
+    defaultHandler = 'http://host.docker.internal';
+  }
 }
-
-input SampleInput {
-  username: String!
-  password: String!
-}
-
-`;
 
 const state = {
-  handler: '',
+  handler: defaultHandler,
   actionDefinition: {
     sdl: defaultActionDefSdl,
     error: '',
@@ -30,6 +28,8 @@ const state = {
     timer: null,
     ast: null,
   },
+  headers: [defaultHeader],
+  forwardClientHeaders: false,
   kind: 'synchronous',
   isFetching: false,
 };

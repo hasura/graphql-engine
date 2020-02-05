@@ -555,6 +555,7 @@ class Main extends React.Component {
                   'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'
                 }
                 target={'_blank'}
+                rel="noopener noreferrer"
               >
                 Set up a chat to learn more{' '}
                 <img

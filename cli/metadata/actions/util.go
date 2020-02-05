@@ -150,5 +150,5 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string, logger 
 }
 
 func getActionsCodegenURI(framework string) string {
-	return fmt.Sprintf(`https://raw.githubusercontent.com/%s/master/%s/codegen.js`, actionsCodegenRepo, framework)
+	return fmt.Sprintf(`https://raw.githubusercontent.com/%s/master/%s/actions-codegen.js`, actionsCodegenRepo, framework)
 }

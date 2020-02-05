@@ -1,10 +1,11 @@
 import React from 'react';
 import styles from './Styles.scss';
 import Helmet from 'react-helmet';
-import HandlerEditor from '../Common/UIComponents/HandlerEditor';
-import KindEditor from '../Common/UIComponents/KindEditor';
-import ActionDefinitionEditor from '../Common/UIComponents/ActionDefinitionEditor';
-import TypeDefinitionEditor from '../Common/UIComponents/TypeDefinitionEditor';
+import HandlerEditor from '../Common/components/HandlerEditor';
+import KindEditor from '../Common/components/KindEditor';
+import ActionDefinitionEditor from '../Common/components/ActionDefinitionEditor';
+import HeadersConfEditor from '../Common/components/HeaderConfEditor';
+import TypeDefinitionEditor from '../Common/components/TypeDefinitionEditor';
 import Button from '../../../Common/Button';
 import { getModifyState } from './utils';
 import {
@@ -13,6 +14,8 @@ import {
   setActionKind,
   setActionDefinition,
   setTypeDefinition,
+  setHeaders as dispatchNewHeaders,
+  toggleForwardClientHeaders as toggleFCH,
 } from './reducer';
 import { saveAction, deleteAction } from '../ServerIO';
 
@@ -22,6 +25,8 @@ const ActionEditor = ({
   allTypes,
   dispatch,
   isFetching,
+  headers,
+  forwardClientHeaders,
   ...modifyProps
 }) => {
   const { handler, kind, actionDefinition, typeDefinition } = modifyProps;
@@ -64,6 +69,15 @@ const ActionEditor = ({
     dispatch(deleteAction(currentAction));
   };
 
+  const setHeaders = hs => {
+    dispatch(dispatchNewHeaders(hs));
+  };
+
+  const toggleForwardClientHeaders = e => {
+    e.preventDefault();
+    dispatch(toggleFCH());
+  };
+
   const allowSave =
     !isFetching &&
     !typesDefinitionError &&
@@ -74,16 +88,6 @@ const ActionEditor = ({
   return (
     <div>
       <Helmet title={`Modify Action - ${actionName} Actions | Hasura`} />
-      <HandlerEditor
-        value={handler}
-        onChange={handlerOnChange}
-        placeholder="action handler"
-        className={styles.add_mar_bottom_mid}
-        service="create-action"
-      />
-      <hr />
-      <KindEditor value={kind} onChange={kindOnChange} />
-      <hr />
       <ActionDefinitionEditor
         value={actionDefinitionSdl}
         error={actionDefinitionError}
@@ -98,6 +102,23 @@ const ActionEditor = ({
         onChange={typeDefinitionOnChange}
         timer={typeDefinitionTimer}
         placeholder={''}
+      />
+      <hr />
+      <HandlerEditor
+        value={handler}
+        onChange={handlerOnChange}
+        placeholder="action handler"
+        className={styles.add_mar_bottom_mid}
+        service="create-action"
+      />
+      <hr />
+      <KindEditor value={kind} onChange={kindOnChange} />
+      <hr />
+      <HeadersConfEditor
+        forwardClientHeaders={forwardClientHeaders}
+        toggleForwardClientHeaders={toggleForwardClientHeaders}
+        headers={headers}
+        setHeaders={setHeaders}
       />
       <hr />
       <div className={styles.display_flex}>

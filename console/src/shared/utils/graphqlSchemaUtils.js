@@ -1,10 +1,10 @@
 import { isWrappingType, isListType, isNonNullType } from 'graphql';
 
-export const getMutationType = (schema) => {
+export const getMutationType = schema => {
   return schema._mutationType;
 };
 
-export const getUnderlyingType = (_type) => {
+export const getUnderlyingType = _type => {
   let type = Object.assign(Object.create(_type), _type);
   const wraps = [];
   while (isWrappingType(type)) {
@@ -14,7 +14,7 @@ export const getUnderlyingType = (_type) => {
   }
   return {
     wraps,
-    type
+    type,
   };
 };
 
@@ -22,11 +22,11 @@ export const getTypeFields = _type => {
   return _type._fields || [];
 };
 
-export const getFieldArgs = (field) => {
+export const getFieldArgs = field => {
   return field.args || [];
 };
 
-export const getHasuraMutationMetadata = (field) => {
+export const getHasuraMutationMetadata = field => {
   if (
     field.args.length === 2 &&
     field.args[0].name === 'objects' &&
@@ -43,16 +43,13 @@ export const getHasuraMutationMetadata = (field) => {
     !!field.args.find(a => a.name === 'where')
   ) {
     return {
-      kind: 'update'
+      kind: 'update',
     };
   }
 
-  if (
-    field.args.length === 1 &&
-    field.args[0].name === 'where'
-  ) {
+  if (field.args.length === 1 && field.args[0].name === 'where') {
     return {
-      kind: 'delete'
+      kind: 'delete',
     };
   }
 
