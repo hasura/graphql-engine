@@ -145,7 +145,7 @@ mkJwtCtx JWTConfig{..} httpManager logger = do
       case maybeExpiry of
         Nothing   -> return ref
         Just time -> do
-          jwkRefreshCtrl logger httpManager url ref time
+          jwkRefreshCtrl logger httpManager url ref (fromUnits time)
           return ref
 
     withJwkError act = do

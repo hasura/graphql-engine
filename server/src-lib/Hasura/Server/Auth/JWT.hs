@@ -28,10 +28,10 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (diffTimeToMicro, fmapL, userRoleHeader)
+import           Hasura.Server.Utils             (fmapL, userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 
-import qualified Control.Concurrent              as C
+import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
 import qualified Data.Aeson                      as J
 import qualified Data.Aeson.Casing               as J
@@ -104,22 +104,21 @@ jwkRefreshCtrl
   -> HTTP.Manager
   -> URI
   -> IORef Jose.JWKSet
-  -> NominalDiffTime
+  -> DiffTime
   -> m ()
 jwkRefreshCtrl logger manager url ref time =
   void $ liftIO $ C.forkIO $ do
-    C.threadDelay $ diffTimeToMicro time
+    C.sleep time
     forever $ do
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
-      let delay = maybe (60 * aSecond) diffTimeToMicro mTime
-      C.threadDelay delay
+      let delay = maybe (minutes 1) (fromUnits) mTime
+      C.sleep delay
   where
     logNotice = do
       let err = JwkRefreshLog LevelInfo (Just "retrying again in 60 secs") Nothing
       liftIO $ unLogger logger err
-    aSecond = 1000 * 1000
 
 -- | Given a JWK url, fetch JWK from it and update the IORef
 updateJwkRef
