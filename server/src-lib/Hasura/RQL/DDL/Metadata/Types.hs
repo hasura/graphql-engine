@@ -42,6 +42,7 @@ import           Language.Haskell.TH.Syntax     (Lift)
 import qualified Data.Aeson.Ordered             as AO
 import qualified Data.HashMap.Strict            as HM
 import qualified Data.HashSet                   as HS
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
@@ -282,8 +283,8 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                            , remoteSchemasPair
                                            , queryCollectionsPair
                                            , allowlistPair
-                                           , customTypesPair
                                            , actionsPair
+                                           , customTypesPair
                                            ]
   where
     versionPair = ("version", AO.toOrdered version)
@@ -447,21 +448,84 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
 
     customTypesToOrdJSON :: CustomTypes -> AO.Value
     customTypesToOrdJSON (CustomTypes inpObjs objs scalars enums) =
-      AO.object . catMaybes $ [ listToMaybeOrdPair "input_objects" AO.toOrdered =<< inpObjs
-                              , listToMaybeOrdPair "objects" AO.toOrdered =<< objs
-                              , listToMaybeOrdPair "scalars" AO.toOrdered =<< scalars
-                              , listToMaybeOrdPair "enums" AO.toOrdered =<< enums]
+      AO.object . catMaybes $ [ listToMaybeOrdPair "input_objects" inputObjectToOrdJSON =<< inpObjs
+                              , listToMaybeOrdPair "objects" objectTypeToOrdJSON =<< objs
+                              , listToMaybeOrdPair "scalars" scalarTypeToOrdJSON =<< scalars
+                              , listToMaybeOrdPair "enums" enumTypeToOrdJSON =<< enums
+                              ]
+      where
+        inputObjectToOrdJSON :: InputObjectTypeDefinition -> AO.Value
+        inputObjectToOrdJSON (InputObjectTypeDefinition tyName descM fields) =
+          AO.object $ [ ("name", AO.toOrdered tyName)
+                      , ("fields", AO.array $ map fieldDefinitionToOrdJSON $ toList fields)
+                      ]
+          <> catMaybes [maybeDescriptionToMaybeOrdPair descM]
+          where
+            fieldDefinitionToOrdJSON :: InputObjectFieldDefinition -> AO.Value
+            fieldDefinitionToOrdJSON (InputObjectFieldDefinition fieldName fieldDescM ty) =
+              AO.object $ [ ("name", AO.toOrdered fieldName)
+                          , ("type", AO.toOrdered ty)
+                          ]
+              <> catMaybes [maybeDescriptionToMaybeOrdPair fieldDescM]
+
+        objectTypeToOrdJSON :: ObjectTypeDefinition -> AO.Value
+        objectTypeToOrdJSON (ObjectTypeDefinition tyName descM fields rels) =
+          AO.object $ [ ("name", AO.toOrdered tyName)
+                      , ("fields", AO.array $ map fieldDefinitionToOrdJSON $ toList fields)
+                      ]
+          <> catMaybes [ maybeDescriptionToMaybeOrdPair descM
+                       , listToMaybeOrdPair "relationships" AO.toOrdered =<< rels
+                       ]
+          where
+            fieldDefinitionToOrdJSON :: ObjectFieldDefinition -> AO.Value
+            fieldDefinitionToOrdJSON (ObjectFieldDefinition fieldName argsValM fieldDescM ty) =
+              AO.object $ [ ("name", AO.toOrdered fieldName)
+                          , ("type", AO.toOrdered ty)
+                          ]
+              <> catMaybes [ (("arguments", ) . AO.toOrdered) <$> argsValM
+                           , maybeDescriptionToMaybeOrdPair fieldDescM
+                           ]
+
+        scalarTypeToOrdJSON :: ScalarTypeDefinition -> AO.Value
+        scalarTypeToOrdJSON (ScalarTypeDefinition tyName descM) =
+          AO.object $ [("name", AO.toOrdered tyName)]
+          <> catMaybes [maybeDescriptionToMaybeOrdPair descM]
+
+        enumTypeToOrdJSON :: EnumTypeDefinition -> AO.Value
+        enumTypeToOrdJSON (EnumTypeDefinition tyName descM values) =
+          AO.object $ [ ("name", AO.toOrdered tyName)
+                      , ("values", AO.toOrdered values)
+                      ]
+          <> catMaybes [maybeDescriptionToMaybeOrdPair descM]
 
 
     actionMetadataToOrdJSON :: ActionMetadata -> AO.Value
     actionMetadataToOrdJSON (ActionMetadata name comment definition permissions) =
       AO.object $ [ ("name", AO.toOrdered name)
-                  , ("definition", AO.toOrdered definition)
+                  , ("definition", actionDefinitionToOrdJSON definition)
                   ]
       <> catMaybes [ maybeCommentToMaybeOrdPair comment
                    , listToMaybeOrdPair "permissions" permToOrdJSON permissions
                    ]
       where
+        actionDefinitionToOrdJSON :: ActionDefinitionInput -> AO.Value
+        actionDefinitionToOrdJSON (ActionDefinition args outputType kind headers frwrdClientHdrs handler) =
+          AO.object $ [ ("kind", AO.toOrdered kind)
+                      , ("handler", AO.toOrdered handler)
+                      , ("arguments", AO.array $ map argDefinitionToOrdJSON args)
+                      , ("output_type", AO.toOrdered outputType)
+                      ]
+          <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
+          <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
+                       ]
+          where
+            argDefinitionToOrdJSON :: ArgumentDefinition -> AO.Value
+            argDefinitionToOrdJSON (ArgumentDefinition argName ty descM) =
+              AO.object $  [ ("name", AO.toOrdered argName)
+                           , ("type", AO.toOrdered ty)
+                           ]
+              <> catMaybes [maybeAnyToMaybeOrdPair "description" AO.toOrdered descM]
+
         permToOrdJSON :: ActionPermissionMetadata -> AO.Value
         permToOrdJSON (ActionPermissionMetadata role permComment permDef) =
           AO.object $ [ ("role", AO.toOrdered role)
@@ -478,6 +542,10 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
     maybeSetToMaybeOrdPair :: Maybe (ColumnValues Value) -> Maybe (Text, AO.Value)
     maybeSetToMaybeOrdPair set = set >>= \colVals -> if colVals == HM.empty then Nothing
                                       else Just ("set", AO.toOrdered colVals)
+
+
+    maybeDescriptionToMaybeOrdPair :: Maybe G.Description -> Maybe (Text, AO.Value)
+    maybeDescriptionToMaybeOrdPair = maybeAnyToMaybeOrdPair "description" AO.toOrdered
 
     maybeCommentToMaybeOrdPair :: Maybe Text -> Maybe (Text, AO.Value)
     maybeCommentToMaybeOrdPair = maybeAnyToMaybeOrdPair "comment" AO.toOrdered

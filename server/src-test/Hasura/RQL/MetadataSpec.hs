@@ -15,7 +15,7 @@ import           Hasura.RQL.DDL.Metadata.Types     (ReplaceMetadata, replaceMeta
 spec :: Spec
 spec = describe "replaceMetadataToOrdJSON" $ do
   it "produces JSON that can be parsed by the ToJSON instance for ReplaceMetadata" $
-    withMaxSuccess 50 $
+    withMaxSuccess 30 $
     forAll (resize 3 genReplaceMetadata) $ \metadata ->
       let encodedString = encJToBS $ AO.toEncJSON $ replaceMetadataToOrdJSON metadata
       in case eitherDecodeStrict @ReplaceMetadata encodedString of
