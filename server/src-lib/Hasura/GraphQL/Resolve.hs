@@ -102,7 +102,7 @@ queryFldToPGAST fld = do
       validateHdrs userInfo (_fqocHeaders ctx)
       QRFAgg <$> RS.convertFuncQueryAgg ctx fld
     QCActionFetch ctx ->
-      QRFActionSelect <$> RA.resolveAsyncResponse ctx fld
+      QRFActionSelect <$> RA.resolveAsyncResponse userInfo ctx fld
 
 mutFldToTx
   :: ( HasVersion

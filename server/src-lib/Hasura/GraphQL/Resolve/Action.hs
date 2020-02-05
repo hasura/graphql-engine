@@ -61,7 +61,6 @@ data InputFieldResolved
 
 data OutputFieldResolved
   = OutputFieldSimple !Text
-  | OutputFieldRelationship
   | OutputFieldTypename !G.NamedType
   deriving (Show, Eq)
 
@@ -158,7 +157,6 @@ actionSelectToSql (ActionSelect actionIdExp selection _) =
     outputFieldToSQLExp = \case
       OutputFieldSimple fieldName ->
         S.SEOpApp (S.SQLOp "->>") [outputColumn, S.SELit fieldName]
-      OutputFieldRelationship     -> undefined
       OutputFieldTypename ty      -> S.SELit $ G.unName $ G.unNamedType ty
       where
         outputColumn = S.SEIden $ toIden $ unsafePGCol "response_payload"
@@ -225,14 +223,19 @@ processOutputSelectionSet
      , Has OrdByCtx r
      , Has SQLGenCtx r
      )
-  => RS.SelectFromG UnresolvedVal
+  => RS.ArgumentExp UnresolvedVal
+  -> [(PGCol, PGScalarType)]
   -> G.NamedType -> SelSet -> m GRS.AnnSimpleSelect
-processOutputSelectionSet selectFrom fldTy flds = do
+processOutputSelectionSet tableRowInput definitionList fldTy flds = do
   stringifyNumerics <- stringifyNum <$> asks getter
   annotatedFields <- processTableSelectionSet fldTy flds
-  let selectAst = RS.AnnSelG annotatedFields selectFrom
+  let annSel = RS.AnnSelG annotatedFields selectFrom
                   RS.noTablePermissions RS.noTableArgs stringifyNumerics
-  return selectAst
+  pure annSel
+  where
+    jsonbToRecordFunction = QualifiedObject (SchemaName "pg_catalog") $ FunctionName "jsonb_to_record"
+    functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
+    selectFrom = RS.FromFunction jsonbToRecordFunction functionArgs $ Just definitionList
 
 resolveActionInsertSync
   :: ( HasVersion
@@ -260,26 +263,16 @@ resolveActionInsertSync field executionContext sessionVariables = do
   case returnStrategy of
     ReturnJson -> return $ return $ encJFromJValue webhookRes
     ExecOnPostgres definitionList -> do
-      let webhookResponseExpression =
-            toTxtValue $ WithScalarType PGJSON $ PGValJSON $ Q.JSON webhookRes
+      let webhookResponseExpression = RS.AEInput $ UVSQL $
+            toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB webhookRes
       selectAstUnresolved <-
-        processOutputSelectionSet
-        (mkJsonToRecordFromExpression definitionList webhookResponseExpression)
+        processOutputSelectionSet webhookResponseExpression definitionList
         (_fType field) $ _fSelSet field
       astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
       return $ asSingleRowJsonResp (RS.selectQuerySQL True astResolved) []
   where
     SyncActionExecutionContext actionName returnStrategy resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
-
-    mkJsonToRecordFromExpression definitionList webhookResponseExpression =
-      let functionName = QualifiedObject (SchemaName "pg_catalog") $
-                         FunctionName "json_to_record"
-          functionArgs = RS.FunctionArgsExp
-                         (pure $ UVSQL webhookResponseExpression)
-                         mempty
-      in RS.FromFunction functionName (RS.AEInput <$> functionArgs)
-            (Just definitionList)
 
 callWebhook
   :: (HasVersion, MonadIO m, MonadError QErr m)
@@ -537,31 +530,29 @@ resolveAsyncResponse
      , Has OrdByCtx r
      , Has SQLGenCtx r
      )
-  => ActionSelectOpContext
+  => UserInfo
+  -> ActionSelectOpContext
   -> Field
   -> m GRS.AnnSimpleSelect
-resolveAsyncResponse selectContext field = do
+resolveAsyncResponse userInfo selectContext field = do
   actionId <- withArg (_fArguments field) "id" parseActionId
   stringifyNumerics <- stringifyNum <$> asks getter
-  annotatedFields <- forM (toList $ _fSelSet field) $ \fld -> do
-    let fldName = _fName fld
-    let rqlFldName = FieldName $ G.unName $ G.unAlias $ _fAlias fld
-    (rqlFldName,) <$> case fldName of
-      "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType field
+
+  annotatedFields <- fmap (map (first FieldName)) $ withSelSet (_fSelSet field) $ \fld ->
+    case _fName fld of
+      "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType fld
       "output"     -> do
-        let relationshipFromExp =
-              mkJsonToRecordFromExpression (_asocDefinitionList selectContext) $
-              -- TODO: An absolute hack, please fix this
-              RS.AEInput $ UVSQL $ S.mkQIdenExp (Iden "_0_root.base") (Iden "response_payload")
-        outputSelect <- processOutputSelectionSet relationshipFromExp (_fType fld)
-                        (_fSelSet fld)
-        return $ RS.FObj $ RS.AnnRelG outputRelName mempty outputSelect
+        -- Treating "output" as a computed field to "hdb_action_log" table with "jsonb_to_record" SQL function
+        let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
+            definitionList = _asocDefinitionList selectContext
+        (RS.FComputedField . RS.CFSTable) <$> processOutputSelectionSet inputTableArgument definitionList (_fType fld) (_fSelSet fld)
       -- the metadata columns
       "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
       "created_at" -> return $ mkAnnFldFromPGCol "created_at" PGTimeStampTZ
-      -- "status"     -> return $ mkAnnFldFromPGCol "status"
       "errors"     -> return $ mkAnnFldFromPGCol "errors" PGJSONB
+      -- "status"     -> return $ mkAnnFldFromPGCol "status"
       G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
+
   let tableFromExp = RS.FromTable actionLogTable
       tableArguments = RS.noTableArgs
                        { RS._taWhere = Just $ mkTableBoolExpression actionId}
@@ -573,7 +564,7 @@ resolveAsyncResponse selectContext field = do
   -- astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
   -- return $ asSingleRowJsonResp (RS.selectQuerySQL True astResolved) []
   where
-    outputRelName = RelName $ mkNonEmptyTextUnsafe "output"
+    -- outputRelName = RelName $ mkNonEmptyTextUnsafe "output"
     actionLogTable =
       QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
     mkAnnFldFromPGCol column columnType =
@@ -585,14 +576,14 @@ resolveAsyncResponse selectContext field = do
     parseActionId annInpValue = do
       mkParameterizablePGValue <$> asPGColumnValue annInpValue
     mkTableBoolExpression actionId =
-      BoolFld $ AVCol
-      (PGColumnInfo (unsafePGCol "id") "id" (PGColumnScalar PGUUID) False Nothing) $
-      pure $ AEQ True actionId
-    mkJsonToRecordFromExpression definitionList webhookResponseExpression =
-      let functionName = QualifiedObject (SchemaName "pg_catalog") $
-                         FunctionName "jsonb_to_record"
-          functionArgs = RS.FunctionArgsExp
-                         (pure webhookResponseExpression)
-                         mempty
-      in RS.FromFunction functionName functionArgs
-            (Just definitionList)
+      let actionIdColumnInfo = PGColumnInfo (unsafePGCol "id") "id" (PGColumnScalar PGUUID) False Nothing
+          actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True actionId]
+          sessionVarsColumnInfo = PGColumnInfo (unsafePGCol "session_variables") "session_variables"
+                                  (PGColumnScalar PGJSONB) False Nothing
+          sessionVarValue = UVPG $ AnnPGVal Nothing False $ WithScalarType PGJSONB
+                            $ PGValJSONB $ Q.JSONB $ J.toJSON $ userVars userInfo
+          sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
+      in if isAdmin (userRole userInfo) then actionIdColumnEq
+         -- For non-admin roles, the async result is accessible only if the request session variables
+         -- equals to action's session variables
+         else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]

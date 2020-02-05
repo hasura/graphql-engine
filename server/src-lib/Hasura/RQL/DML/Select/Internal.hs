@@ -190,8 +190,9 @@ fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =
       S.FunctionArgs positional named
-    toSQLExp AETableRow  = S.SERowIden $ mkBaseTableAls pfx
-    toSQLExp (AEInput s) = s
+    toSQLExp (AETableRow Nothing)    = S.SERowIden $ mkBaseTableAls pfx
+    toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAls pfx) acc
+    toSQLExp (AEInput s)             = s
 
 -- posttgres ignores anything beyond 63 chars for an iden
 -- in this case, we'll need to use json_build_object function
