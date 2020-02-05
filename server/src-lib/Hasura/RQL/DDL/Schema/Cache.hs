@@ -52,10 +52,11 @@ import           Hasura.RQL.DDL.Utils
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
+import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.SQL.Types
 
 buildRebuildableSchemaCache
-  :: (MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
+  :: (HasVersion, MonadIO m, MonadUnique m, MonadTx m, HasHttpManager m, HasSQLGenCtx m)
   => m (RebuildableSchemaCache m)
 buildRebuildableSchemaCache = do
   catalogMetadata <- liftTx fetchCatalogData
@@ -97,7 +98,7 @@ instance (MonadIO m, MonadTx m, MonadUnique m) => CacheRWM (CacheRWT m) where
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
   -- what we want!
-  :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+  :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
      , MonadIO m, MonadTx m, MonadReader BuildReason m, HasHttpManager m, HasSQLGenCtx m )
   => (CatalogMetadata, InvalidationMap) `arr` SchemaCache
 buildSchemaCacheRule = proc inputs -> do
@@ -117,7 +118,7 @@ buildSchemaCacheRule = proc inputs -> do
     }
   where
     buildAndCollectInfo
-      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+      :: ( HasVersion, ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m, MonadTx m, MonadReader BuildReason m
          , HasHttpManager m, HasSQLGenCtx m )
       => (CatalogMetadata, InvalidationMap) `arr` BuildOutputs
@@ -267,7 +268,7 @@ buildSchemaCacheRule = proc inputs -> do
               mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
 
     addRemoteSchema
-      :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, ArrowKleisli m arr
+      :: ( HasVersion, ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr, ArrowKleisli m arr
          , MonadIO m, HasHttpManager m )
       => ( (RemoteSchemaMap, GS.GCtxMap, GS.GCtx)
          , (Maybe InvalidationKey, AddRemoteSchemaQuery)

@@ -20,9 +20,7 @@ import {
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
 export const PERM_SET_FILTER = 'ModifyTable/PERM_SET_FILTER';
 export const PERM_SET_FILTER_SAME_AS = 'ModifyTable/PERM_SET_FILTER_SAME_AS';
-export const PERM_TOGGLE_COLUMN = 'ModifyTable/PERM_TOGGLE_COLUMN';
-export const PERM_TOGGLE_COMPUTED_FIELD =
-  'ModifyTable/PERM_TOGGLE_COMPUTED_FIELD';
+export const PERM_TOGGLE_FIELD = 'ModifyTable/PERM_TOGGLE_FIELD';
 export const PERM_TOGGLE_ALL_FIELDS = 'ModifyTable/PERM_TOGGLE_ALL_FIELDS';
 export const PERM_ALLOW_ALL = 'ModifyTable/PERM_ALLOW_ALL';
 export const PERM_TOGGLE_ENABLE_LIMIT = 'ModifyTable/PERM_TOGGLE_ENABLE_LIMIT';
@@ -70,10 +68,10 @@ const permSetFilterSameAs = filter => ({
   type: PERM_SET_FILTER_SAME_AS,
   filter,
 });
-const permToggleColumn = column => ({ type: PERM_TOGGLE_COLUMN, column });
-const permToggleComputedField = computedField => ({
-  type: PERM_TOGGLE_COMPUTED_FIELD,
-  computedField,
+const permToggleField = (fieldType, fieldName) => ({
+  type: PERM_TOGGLE_FIELD,
+  fieldType,
+  fieldName,
 });
 const permToggleAllFields = allFields => ({
   type: PERM_TOGGLE_ALL_FIELDS,
@@ -250,20 +248,20 @@ const toggleAllFields = (permissions, allFields, fieldType) => {
 };
 
 // fieldType: columns / computed_fields
-const toggleColumn = (permissions, column, fieldType) => {
-  const currColumns = permissions ? permissions[fieldType] : [];
-  let _newColumns = currColumns;
+const toggleField = (permissions, fieldName, fieldType) => {
+  const currFields = permissions ? permissions[fieldType] : [];
+  let _newFields = currFields;
 
-  const columnIndex = currColumns.indexOf(column);
-  if (columnIndex === -1) {
-    _newColumns.push(column);
+  const fieldIndex = currFields.indexOf(fieldName);
+  if (fieldIndex === -1) {
+    _newFields.push(fieldName);
   } else {
-    _newColumns.splice(columnIndex, 1);
+    _newFields.splice(fieldIndex, 1);
   }
 
-  _newColumns = _newColumns.sort();
+  _newFields = _newFields.sort();
 
-  return _newColumns;
+  return _newFields;
 };
 
 const permRemoveRole = (tableSchema, roleName) => {
@@ -778,8 +776,7 @@ export {
   permOpenEdit,
   permSetFilter,
   permSetFilterSameAs,
-  permToggleColumn,
-  permToggleComputedField,
+  permToggleField,
   permToggleAllFields,
   permCloseEdit,
   permSetRoleName,
@@ -791,7 +788,7 @@ export {
   permCustomChecked,
   permRemoveRole,
   permSetBulkSelect,
-  toggleColumn,
+  toggleField,
   toggleAllFields,
   getFilterKey,
   getBasePermissionsState,

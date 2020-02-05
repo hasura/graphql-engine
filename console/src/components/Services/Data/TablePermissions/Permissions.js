@@ -13,8 +13,7 @@ import {
   permOpenEdit,
   permSetFilter,
   permSetFilterSameAs,
-  permToggleColumn,
-  permToggleComputedField,
+  permToggleField,
   permToggleAllFields,
   permAllowAll,
   permCloseEdit,
@@ -56,7 +55,7 @@ import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { getConfirmation, isJsonString } from '../../../Common/utils/jsUtils';
 import {
   findTable,
   generateTableDef,
@@ -65,6 +64,7 @@ import {
   getTableColumns,
   getGroupedTableComputedFields,
 } from '../../../Common/utils/pgUtils';
+import { showErrorNotification } from '../../Common/Notification';
 
 class Permissions extends Component {
   constructor() {
@@ -79,6 +79,8 @@ class Permissions extends Component {
           columnTypeMap: {},
         },
       },
+      filterString: '',
+      prevPermissionsState: {},
     };
   }
 
@@ -88,6 +90,24 @@ class Permissions extends Component {
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchFunctionInit());
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    const prevPermissionsState = prevState.prevPermissionsState;
+    const nextPermissionsState = nextProps.permissionsState;
+
+    const newState = {
+      prevPermissionsState: nextPermissionsState,
+    };
+
+    if (
+      prevPermissionsState.role !== nextPermissionsState.role ||
+      prevPermissionsState.query !== nextPermissionsState.query
+    ) {
+      newState.filterString = '';
+    }
+
+    return newState;
   }
 
   componentDidUpdate(prevProps) {
@@ -134,6 +154,8 @@ class Permissions extends Component {
       nonTrackableFunctions,
       trackableFunctions,
     } = this.props;
+
+    const localFilterString = this.state.filterString;
 
     const currentTableSchema = findTable(
       allSchemas,
@@ -604,6 +626,14 @@ class Permissions extends Component {
             dispatch(permAllowAll());
           };
 
+          const dispatchFuncSetFilter = filter => {
+            this.setState({ filterString: filter });
+
+            if (isJsonString(filter)) {
+              dispatch(permSetFilter(JSON.parse(filter)));
+            }
+          };
+
           const dispatchSetFilterSameAs = filter => () => {
             dispatch(permSetFilterSameAs(JSON.parse(filter)));
           };
@@ -645,11 +675,11 @@ class Permissions extends Component {
           const selectedValue = (
             <AceEditor
               mode="json"
-              value={filterString}
-              readOnly
+              value={localFilterString || filterString}
+              onChange={dispatchFuncSetFilter}
               theme="github"
               height="5em"
-              maxLines={5}
+              maxLines={15}
               width="100%"
               showPrintMargin={false}
               key={-3}
@@ -742,9 +772,6 @@ class Permissions extends Component {
           };
 
           const addCustomCheckOption = () => {
-            const dispatchFuncSetFilter = filter =>
-              permSetFilter(JSON.parse(filter));
-
             const loadSchemasFunc = schemaNames => {
               dispatch(updateSchemaInfo({ schemas: schemaNames }));
             };
@@ -793,7 +820,6 @@ class Permissions extends Component {
                   allTableSchemas={allSchemas}
                   schemaList={schemaList}
                   filter={filterString}
-                  dispatch={dispatch}
                   key={-4}
                 />
               );
@@ -886,87 +912,56 @@ class Permissions extends Component {
         const getColumnList = () => {
           const _columnList = [];
 
-          const dispatchToggleColumn = e => {
-            const column = e.target.value;
-            dispatch(permToggleColumn(column));
+          const dispatchToggleField = fieldType => e => {
+            const fieldName = e.target.value;
+            dispatch(permToggleField(fieldType, fieldName));
           };
 
-          const dispatchToggleComputedField = e => {
-            const computedField = e.target.value;
-            dispatch(permToggleComputedField(computedField));
-          };
-
-          tableSchema.columns.forEach((colObj, i) => {
-            const column = colObj.column_name;
-
-            let checked;
+          const getFieldCheckbox = (fieldType, fieldName) => {
+            let checked = false;
             if (permissionsState[query]) {
-              if (permissionsState[query].columns === '*') {
+              const permittedFields = permissionsState[query][fieldType] || [];
+
+              if (permittedFields === '*') {
                 checked = true;
               } else {
-                checked = permissionsState[query].columns.includes(column);
+                checked = permittedFields.includes(fieldName);
               }
-            } else {
-              checked = false;
             }
 
-            _columnList.push(
-              <div key={'column_' + i} className={styles.columnListElement}>
+            return (
+              <div key={fieldName} className={styles.columnListElement}>
                 <div className="checkbox">
                   <label>
                     <input
                       type="checkbox"
                       checked={checked}
-                      value={column}
-                      onChange={dispatchToggleColumn}
+                      value={fieldName}
+                      onChange={dispatchToggleField(fieldType)}
                       disabled={noPermissions}
                       title={noPermissions ? noPermissionsMsg : ''}
                     />
-                    {column}
+                    {fieldType === 'columns' ? fieldName : <i>{fieldName}</i>}
                   </label>
                 </div>
               </div>
             );
+          };
+
+          tableSchema.columns.forEach(colObj => {
+            const columnName = colObj.column_name;
+
+            _columnList.push(getFieldCheckbox('columns', columnName));
           });
 
           if (query === 'select') {
-            groupedComputedFields.scalar.forEach((scalarComputedField, i) => {
+            groupedComputedFields.scalar.forEach(scalarComputedField => {
               const computedFieldName = getComputedFieldName(
                 scalarComputedField
               );
 
-              let checked;
-              if (permissionsState[query]) {
-                if (permissionsState[query].computed_fields === '*') {
-                  checked = true;
-                } else {
-                  checked = permissionsState[query].computed_fields.includes(
-                    computedFieldName
-                  );
-                }
-              } else {
-                checked = false;
-              }
-
               _columnList.push(
-                <div
-                  key={'computed_field_' + i}
-                  className={styles.columnListElement}
-                >
-                  <div className="checkbox">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        value={computedFieldName}
-                        onChange={dispatchToggleComputedField}
-                        disabled={noPermissions}
-                        title={noPermissions ? noPermissionsMsg : ''}
-                      />
-                      <i>{computedFieldName}</i>
-                    </label>
-                  </div>
-                </div>
+                getFieldCheckbox('computed_fields', computedFieldName)
               );
             });
           }
@@ -1732,6 +1727,16 @@ class Permissions extends Component {
         }
 
         const dispatchSavePermissions = () => {
+          if (localFilterString && !isJsonString(localFilterString)) {
+            dispatch(
+              showErrorNotification(
+                'Saving permissions failed',
+                'Row permission is not a valid JSON'
+              )
+            );
+            return;
+          }
+
           dispatch(permChangePermissions(permChangeTypes.save));
         };
 

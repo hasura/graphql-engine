@@ -41,8 +41,8 @@ selFromToFromItem pfx = \case
 selFromToQual :: SelectFrom -> S.Qual
 selFromToQual = \case
   FromTable tn         -> S.QualTable tn
-  FromIden i           -> S.QualIden i
-  FromFunction qf _    -> S.QualIden $ functionToIden qf
+  FromIden i           -> S.QualIden i Nothing
+  FromFunction qf _    -> S.QualIden (functionToIden qf) Nothing
 
 aggFldToExp :: AggFlds -> S.SQLExp
 aggFldToExp aggFlds = jsonRow

@@ -11,8 +11,10 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table article
+      drop table article cascade
+    cascade: true
 - type: run_sql
   args:
     sql: |
       drop table author
+    cascade: true

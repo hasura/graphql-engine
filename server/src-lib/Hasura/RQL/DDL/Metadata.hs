@@ -23,12 +23,13 @@ import qualified Data.Text                          as T
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalog)
-import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
+import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2,
                                                      removeRemoteSchemaFromCatalog)
 import           Hasura.RQL.Types
+import           Hasura.Server.Version              (HasVersion)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
@@ -116,7 +117,8 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) 
       l L.\\ HS.toList (HS.fromList l)
 
 applyQP2
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadTx m
      , CacheRWM m
      , HasSystemDefined m
@@ -197,7 +199,8 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) 
     processPerms tabInfo perms = indexedForM_ perms $ Permission.addPermP2 (_tciName tabInfo)
 
 runReplaceMetadata
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadTx m
      , CacheRWM m
      , HasSystemDefined m
