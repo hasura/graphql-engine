@@ -496,7 +496,9 @@ class PermissionsSummary extends Component {
       const getTablesColumnTable = () => {
         return (
           <table
-            className={`table table-bordered ${styles.rolesTable} ${styles.remove_margin}`}
+            className={`table table-bordered ${styles.rolesTable} ${
+              styles.remove_margin
+            }`}
           >
             <thead>
               <tr>{getBackBtn('currTable')}</tr>
@@ -626,7 +628,9 @@ class PermissionsSummary extends Component {
 
         return (
           <table
-            className={`table table-bordered ${styles.rolesTable} ${styles.remove_margin}`}
+            className={`table table-bordered ${styles.rolesTable} ${
+              styles.remove_margin
+            }`}
           >
             <thead>
               <tr>
@@ -663,7 +667,9 @@ class PermissionsSummary extends Component {
 
         return (
           <table
-            className={`table table-bordered ${styles.rolesTable} ${styles.remove_margin}`}
+            className={`table table-bordered ${styles.rolesTable} ${
+              styles.remove_margin
+            }`}
           >
             <thead>{getRolesHeaderRow()}</thead>
           </table>
@@ -694,7 +700,9 @@ class PermissionsSummary extends Component {
 
         return (
           <table
-            className={`table table-bordered ${styles.rolesTable} ${styles.remove_margin}`}
+            className={`table table-bordered ${styles.rolesTable} ${
+              styles.remove_margin
+            }`}
           >
             <thead>{getActionsHeaderRow()}</thead>
             <tbody>{getRoleAllTablesAllActionsRows()}</tbody>
@@ -1037,7 +1045,9 @@ class PermissionsSummary extends Component {
 
     return (
       <div
-        className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
+        className={`${styles.clear_fix} ${styles.padd_left} ${
+          styles.fit_content
+        }`}
       >
         <Helmet title="Permissions Summary | Hasura" />
         <div className={styles.add_mar_bottom}>

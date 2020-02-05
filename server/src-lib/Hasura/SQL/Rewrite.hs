@@ -199,6 +199,6 @@ uSqlExp = restoringIdens . \case
   S.SEFunction funcExp          -> S.SEFunction <$> uFunctionExp funcExp
   where
     uQual = \case
-      S.QualIden iden -> S.QualIden <$> getIden iden
+      S.QualIden iden ty -> S.QualIden <$> getIden iden <*> pure ty
       S.QualTable t   -> return $ S.QualTable t
       S.QualVar t     -> return $ S.QualVar t

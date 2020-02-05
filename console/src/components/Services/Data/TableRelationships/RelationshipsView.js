@@ -82,7 +82,9 @@ class RelationshipsView extends Component {
       addedRelationshipsView = (
         <div className={tableStyles.tableContainer}>
           <table
-            className={`${tableStyles.table} table table-bordered table-striped table-hover`}
+            className={`${
+              tableStyles.table
+            } table table-bordered table-striped table-hover`}
           >
             <thead>
               <tr>

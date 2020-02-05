@@ -13,6 +13,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                  as J
 import qualified Data.HashMap.Strict         as Map
+import qualified Data.HashSet                as S
 import qualified Database.PG.Query           as Q
 
 import           Hasura.GraphQL.RemoteServer
@@ -87,8 +88,8 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   void $ onNothing (Map.lookup name rmSchemas) $
     throw400 NotExists $ "remote schema with name " <> name <<> " does not exist"
 
-  invalidateCachedRemoteSchema name
-  withNewInconsistentObjsCheck buildSchemaCache
+  let invalidations = mempty { ciRemoteSchemas = S.singleton name }
+  withNewInconsistentObjsCheck $ buildSchemaCacheWithOptions CatalogUpdate invalidations
   pure successMsg
 
 addRemoteSchemaToCatalog

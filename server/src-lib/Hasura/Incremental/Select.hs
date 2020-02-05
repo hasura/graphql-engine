@@ -6,6 +6,7 @@ module Hasura.Incremental.Select
   ( Select(..)
   , ConstS(..)
   , selectKey
+  , FieldS(..)
   , UniqueS
   , newUniqueS
   , DMapS(..)
@@ -25,6 +26,10 @@ import qualified Data.HashMap.Strict  as M
 import           Control.Monad.Unique
 import           Data.GADT.Compare
 import           Data.Kind
+import           Data.Proxy           (Proxy (..))
+import           GHC.OverloadedLabels (IsLabel (..))
+import           GHC.Records          (HasField (..))
+import           GHC.TypeLits         (KnownSymbol, sameSymbol, symbolVal)
 import           Unsafe.Coerce        (unsafeCoerce)
 
 -- | The 'Select' class provides a way to access subparts of a product type using a reified
@@ -34,9 +39,17 @@ import           Unsafe.Coerce        (unsafeCoerce)
 --
 -- This is useful to implement dependency tracking, since it’s possible to track in a reified form
 -- exactly which parts of a data structure are used.
+--
+-- Instances of 'Select' can be automatically derived for record types (just define an empty
+-- instance). The instance uses the magical 'HasField' constraints, and 'Selector's for the type can
+-- be written using @OverloadedLabels@.
 class (GCompare (Selector a)) => Select a where
   type Selector a :: Type -> Type
   select :: Selector a b -> a -> b
+
+  type Selector r = FieldS r
+  default select :: Selector a ~ FieldS a => Selector a b -> a -> b
+  select (FieldS (_ :: Proxy s)) = getField @s
 
 instance (Eq k, Ord k, Hashable k) => Select (HashMap k v) where
   type Selector (HashMap k v) = ConstS k (Maybe v)
@@ -65,6 +78,29 @@ instance (Ord k) => GCompare (ConstS k a) where
     LT -> GLT
     EQ -> GEQ
     GT -> GGT
+
+data FieldS r a where
+  FieldS :: (KnownSymbol s, HasField s r a) => !(Proxy s) -> FieldS r a
+
+instance (KnownSymbol s, HasField s r a) => IsLabel s (FieldS r a) where
+  fromLabel = FieldS (Proxy @s)
+
+instance GEq (FieldS r) where
+  FieldS a `geq` FieldS b = case sameSymbol a b of
+    -- If two fields of the same record have the same name, then their fields fundamentally must
+    -- have the same type! However, unfortunately, `HasField` constraints use a functional
+    -- dependency to enforce this rather than a type family, and functional dependencies don’t
+    -- provide evidence, so we have to use `unsafeCoerce` here. Yuck!
+    Just Refl -> Just (unsafeCoerce Refl)
+    Nothing   -> Nothing
+
+instance GCompare (FieldS r) where
+  FieldS a `gcompare` FieldS b = case sameSymbol a b of
+    -- See note about `HasField` and `unsafeCoerce` above.
+    Just Refl -> unsafeCoerce GEQ
+    Nothing
+      | symbolVal a < symbolVal b -> GLT
+      | otherwise -> GGT
 
 -- | A 'UniqueS' is, as the name implies, a globally-unique 'Selector', which can be created using
 -- 'newUniqueS'. If a value of type @'UniqueS' a@ is found to be equal (via 'geq') with another

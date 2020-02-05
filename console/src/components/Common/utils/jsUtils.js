@@ -11,7 +11,7 @@ export const isArray = value => {
 };
 
 export const isObject = value => {
-  return typeof value === 'object';
+  return typeof value === 'object' && value !== null;
 };
 
 export const isString = value => {

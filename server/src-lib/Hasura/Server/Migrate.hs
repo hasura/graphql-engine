@@ -21,9 +21,6 @@ module Hasura.Server.Migrate
   , downgradeCatalog
   ) where
 
-import           Control.Monad.Unique
-import           Data.Time.Clock               (UTCTime)
-
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as A
@@ -34,6 +31,10 @@ import qualified Database.PG.Query             as Q
 import qualified Database.PG.Query.Connection  as Q
 import qualified Language.Haskell.TH.Lib       as TH
 import qualified Language.Haskell.TH.Syntax    as TH
+
+import           Control.Lens                  (view, _2)
+import           Control.Monad.Unique
+import           Data.Time.Clock               (UTCTime)
 
 import           Hasura.Logging                (Hasura, LogLevel (..), ToEngineLog (..))
 import           Hasura.RQL.DDL.Relationship
@@ -160,7 +161,7 @@ migrateCatalog migrationTime = do
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
       schemaCache <- buildRebuildableSchemaCache
-      snd <$> runCacheRWT schemaCache recreateSystemMetadata
+      view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
       
     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
