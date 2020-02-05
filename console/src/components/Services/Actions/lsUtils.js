@@ -12,9 +12,13 @@ export const persistAllDerivedMutations = allMutations => {
 
 export const getAllPersistedDerivedMutations = () => {
   let allMutations = window.localStorage.getItem(LS_DERIVED_MUTATIONS);
-  try {
-    allMutations = JSON.parse(allMutations);
-  } catch (_) {
+  if (allMutations) {
+    try {
+      allMutations = JSON.parse(allMutations);
+    } catch (_) {
+      allMutations = {};
+    }
+  } else {
     allMutations = {};
   }
   return allMutations;
@@ -27,10 +31,7 @@ export const getPersistedDerivedMutation = actionName => {
 export const persistDerivedMutation = (actionName, parentMutation) => {
   const allMutations = getAllPersistedDerivedMutations();
   allMutations[actionName] = parentMutation;
-  window.localStorage.setItem(
-    LS_DERIVED_MUTATIONS,
-    JSON.stringify(allMutations)
-  );
+  persistAllDerivedMutations(allMutations);
 };
 
 export const removePersistedDerivedMutation = actionName => {
