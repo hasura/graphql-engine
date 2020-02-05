@@ -12,8 +12,8 @@ import (
 	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
 	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
 	"github.com/hasura/graphql-engine/cli/metadata/tables"
+	metadataTypes "github.com/hasura/graphql-engine/cli/metadata/types"
 	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
-	hasuradbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 	"github.com/hasura/graphql-engine/cli/util"
 
@@ -201,16 +201,15 @@ func (o *initOptions) createFiles() error {
 		return errors.Wrap(err, "cannot write migration directory")
 	}
 
-	// TODO: import the packages and do a init to register has metadata plugins
 	// create metadata files
-	plugins := hasuradbTypes.MetadataPlugins{}
-	plugins["version"] = metadataVersion.New(ec.MetadataDir)
-	plugins["tables"] = tables.New(ec.MetadataDir)
-	plugins["functions"] = functions.New(ec.MetadataDir)
-	plugins["query_collections"] = querycollections.New(ec.MetadataDir)
-	plugins["allow_list"] = allowlist.New(ec.MetadataDir)
-	plugins["remote_schemas"] = remoteschemas.New(ec.MetadataDir)
-	plugins["actions"] = actions.New(ec, nil)
+	plugins := metadataTypes.MetadataPlugins{}
+	plugins["version"] = metadataVersion.New(ec, ec.MetadataDir)
+	plugins["tables"] = tables.New(ec, ec.MetadataDir)
+	plugins["functions"] = functions.New(ec, ec.MetadataDir)
+	plugins["query_collections"] = querycollections.New(ec, ec.MetadataDir)
+	plugins["allow_list"] = allowlist.New(ec, ec.MetadataDir)
+	plugins["remote_schemas"] = remoteschemas.New(ec, ec.MetadataDir)
+	plugins["actions"] = actions.New(ec, ec.MetadataDir)
 	for _, plg := range plugins {
 		err := plg.CreateFiles()
 		if err != nil {

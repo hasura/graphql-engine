@@ -6,22 +6,28 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
+
 	"gopkg.in/yaml.v2"
 
 	gyaml "github.com/ghodss/yaml"
-	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
+	"github.com/hasura/graphql-engine/cli"
+	dbTypes "github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/pkg/errors"
 )
 
 type MetadataConfig struct {
 	MigrationsDirectory string
 	MetadataFiles       []string
+
+	logger *logrus.Logger
 }
 
-func New(baseDir string) *MetadataConfig {
+func New(ec *cli.ExecutionContext, baseDir string) *MetadataConfig {
 	return &MetadataConfig{
 		MigrationsDirectory: baseDir,
 		MetadataFiles:       []string{filepath.Join(baseDir, "metadata.yaml"), filepath.Join(baseDir, "metadata.json")},
+		logger:              ec.Logger,
 	}
 }
 
@@ -57,20 +63,17 @@ func (m *MetadataConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(metadataContent, &metadata)
 }
 
-func (m *MetadataConfig) Export(metadata yaml.MapSlice) (dbTypes.MetadataFiles, error) {
+func (m *MetadataConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
 	metaByt, err := yaml.Marshal(metadata)
 	if err != nil {
-		return dbTypes.MetadataFiles{}, errors.Wrap(err, "cannot marshal metadata")
+		return nil, errors.Wrap(err, "cannot marshal metadata")
 	}
 	metadataPath, err := m.GetMetadataFilePath("yaml")
 	if err != nil {
-		return dbTypes.MetadataFiles{}, errors.Wrap(err, "cannot save metadata")
+		return nil, errors.Wrap(err, "cannot save metadata")
 	}
-	return dbTypes.MetadataFiles{
-		{
-			Path:    metadataPath,
-			Content: metaByt,
-		},
+	return map[string][]byte{
+		metadataPath: metaByt,
 	}, nil
 }
 

@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 
@@ -316,8 +317,12 @@ func (m *Migrate) SetMetadataPlugins(plugins interface{}) {
 	m.databaseDrv.SetMetadataPlugins(plugins)
 }
 
-func (m *Migrate) ExportMetadata() error {
+func (m *Migrate) ExportMetadata() (map[string][]byte, error) {
 	return m.databaseDrv.ExportMetadata()
+}
+
+func (m *Migrate) WriteMetadata(files map[string][]byte) error {
+	return m.sourceDrv.WriteMetadata(files)
 }
 
 func (m *Migrate) ResetMetadata() error {
@@ -335,6 +340,10 @@ func (m *Migrate) GetInconsistentMetadata() (bool, []database.InconsistentMetada
 
 func (m *Migrate) DropInconsistentMetadata() error {
 	return m.databaseDrv.DropInconsistentMetadata()
+}
+
+func (m *Migrate) BuildMetadata() (types.Metadata, error) {
+	return m.databaseDrv.BuildMetadata()
 }
 
 func (m *Migrate) ApplyMetadata() error {

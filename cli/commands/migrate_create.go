@@ -3,16 +3,16 @@ package commands
 import (
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata"
+	metadataTypes "github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	v2yaml "gopkg.in/yaml.v2"
 
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	log "github.com/sirupsen/logrus"
@@ -150,37 +150,30 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	}
 
 	if o.metaDataServer {
+		// To create metadata.yaml, set metadata plugin
+		tmpDirName, err := ioutil.TempDir("", "*")
+		if err != nil {
+			return 0, errors.Wrap(err, "cannot create temp directory to fetch metadata")
+		}
+		defer os.RemoveAll(tmpDirName)
+		plugins := metadataTypes.MetadataPlugins{}
+		plugins["metadata"] = metadata.New(o.EC, tmpDirName)
+		migrateDrv.SetMetadataPlugins(plugins)
 		// fetch metadata from server
-		err := migrateDrv.ExportMetadata()
+		files, err := migrateDrv.ExportMetadata()
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot fetch metadata from server")
 		}
-
-		metaData, err := ioutil.ReadFile(filepath.Join(o.EC.MigrationDir, "metadata.yaml"))
+		err = migrateDrv.WriteMetadata(files)
 		if err != nil {
-			return 0, err
-		}
-
-		tmpfile, err := ioutil.TempFile("", "metadata")
-		if err != nil {
-			return 0, errors.Wrap(err, "cannot create tempfile")
-		}
-		defer os.Remove(tmpfile.Name())
-
-		t, err := v2yaml.Marshal(metaData)
-		if err != nil {
-			return 0, errors.Wrap(err, "cannot marshal metadata")
-		}
-		if _, err := tmpfile.Write(t); err != nil {
-			return 0, errors.Wrap(err, "cannot write to temp file")
-		}
-		if err := tmpfile.Close(); err != nil {
-			return 0, errors.Wrap(err, "cannot close tmp file")
+			return 0, errors.Wrap(err, "cannot write to tmp file")
 		}
 
-		err = createOptions.SetMetaUpFromFile(tmpfile.Name())
-		if err != nil {
-			return 0, errors.Wrap(err, "cannot parse metadata from the server")
+		for name := range files {
+			err = createOptions.SetMetaUpFromFile(name)
+			if err != nil {
+				return 0, errors.Wrap(err, "cannot parse metadata from the server")
+			}
 		}
 	}
 

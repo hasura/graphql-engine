@@ -191,9 +191,15 @@ func MigrateAPI(c *gin.Context) {
 			return
 		}
 		defer func() {
-			err := t.ExportMetadata()
+			files, err := t.ExportMetadata()
 			if err != nil {
 				logger.Debug(err)
+				return
+			}
+			err = t.WriteMetadata(files)
+			if err != nil {
+				logger.Debug(err)
+				return
 			}
 		}()
 		c.JSON(http.StatusOK, &Response{Name: fmt.Sprintf("%d_%s", timestamp, request.Name)})

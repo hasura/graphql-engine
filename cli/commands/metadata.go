@@ -29,9 +29,13 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) error {
 	switch cmd {
 	case "export":
-		err := t.ExportMetadata()
+		files, err := t.ExportMetadata()
 		if err != nil {
-			return errors.Wrap(err, "cannot export metadata")
+			return errors.Wrap(err, "cannot export metadata from server")
+		}
+		err = t.WriteMetadata(files)
+		if err != nil {
+			return errors.Wrap(err, "cannot write metadata")
 		}
 	case "clear":
 		err := t.ResetMetadata()

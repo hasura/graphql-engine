@@ -14,10 +14,10 @@ import (
 	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
 	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
 	"github.com/hasura/graphql-engine/cli/metadata/tables"
+	metadataTypes "github.com/hasura/graphql-engine/cli/metadata/types"
 	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
-	hasuradbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -51,19 +51,7 @@ func newMigrate(ec *cli.ExecutionContext, isCmd bool) (*migrate.Migrate, error) 
 		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}
 	// Set Plugins
-	plugins := hasuradbTypes.MetadataPlugins{}
-	if ec.Config.Version == "2" && ec.MetadataDir != "" {
-		plugins["version"] = metadataVersion.New(ec.MetadataDir)
-		plugins["tables"] = tables.New(ec.MetadataDir)
-		plugins["functions"] = functions.New(ec.MetadataDir)
-		plugins["query_collections"] = querycollections.New(ec.MetadataDir)
-		plugins["allow_list"] = allowlist.New(ec.MetadataDir)
-		plugins["remote_schemas"] = remoteschemas.New(ec.MetadataDir)
-		plugins["actions"] = actions.New(ec, nil)
-	} else {
-		plugins["metadata"] = metadata.New(ec.MigrationDir)
-	}
-	t.SetMetadataPlugins(plugins)
+	setMetadataPlugins(t)
 	return t, nil
 }
 
@@ -151,4 +139,27 @@ func getAdminSecretHeaderName(v *version.Version) string {
 		return XHasuraAccessKey
 	}
 	return XHasuraAdminSecret
+}
+
+// dir is optional
+func setMetadataPlugins(drv *migrate.Migrate, dir ...string) {
+	var metadataDir string
+	if len(dir) == 0 {
+		metadataDir = ec.MetadataDir
+	} else {
+		metadataDir = dir[0]
+	}
+	plugins := metadataTypes.MetadataPlugins{}
+	if ec.Config.Version == "2" && metadataDir != "" {
+		plugins["version"] = metadataVersion.New(ec, metadataDir)
+		plugins["tables"] = tables.New(ec, metadataDir)
+		plugins["functions"] = functions.New(ec, metadataDir)
+		plugins["query_collections"] = querycollections.New(ec, metadataDir)
+		plugins["allow_list"] = allowlist.New(ec, metadataDir)
+		plugins["remote_schemas"] = remoteschemas.New(ec, metadataDir)
+		plugins["actions"] = actions.New(ec, metadataDir)
+	} else {
+		plugins["metadata"] = metadata.New(ec, ec.MigrationDir)
+	}
+	drv.SetMetadataPlugins(plugins)
 }

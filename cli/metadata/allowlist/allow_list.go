@@ -5,8 +5,9 @@ import (
 	"path/filepath"
 
 	gyaml "github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
-	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
+	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata/types"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -16,11 +17,14 @@ const (
 
 type AllowListConfig struct {
 	MetadataDir string
+
+	logger *logrus.Logger
 }
 
-func New(baseDir string) *AllowListConfig {
+func New(ec *cli.ExecutionContext, baseDir string) *AllowListConfig {
 	return &AllowListConfig{
 		MetadataDir: baseDir,
+		logger:      ec.Logger,
 	}
 }
 
@@ -41,7 +45,7 @@ func (a *AllowListConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *AllowListConfig) Build(metadata *dbTypes.Metadata) error {
+func (a *AllowListConfig) Build(metadata *types.Metadata) error {
 	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, fileName))
 	if err != nil {
 		return err
@@ -49,7 +53,7 @@ func (a *AllowListConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(data, &metadata.AllowList)
 }
 
-func (a *AllowListConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, error) {
+func (a *AllowListConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
 	var allowList interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -63,12 +67,9 @@ func (a *AllowListConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, e
 	}
 	data, err := yaml.Marshal(allowList)
 	if err != nil {
-		return types.MetadataFiles{}, err
+		return nil, err
 	}
-	return types.MetadataFiles{
-		{
-			Path:    filepath.Join(a.MetadataDir, fileName),
-			Content: data,
-		},
+	return map[string][]byte{
+		filepath.Join(a.MetadataDir, fileName): data,
 	}, nil
 }

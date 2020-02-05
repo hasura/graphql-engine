@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -43,13 +42,7 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 					EC:     ec,
 					output: os.Stdout,
 				}
-				m := metadata.New(o.EC.MigrationDir)
-				filename, err := m.GetExistingMetadataFile()
-				if err != nil {
-					return errors.Wrap(err, "failed getting metadata file")
-				}
-				o.metadata[0] = filename
-				return o.run()
+				return o.run([]string{})
 			}
 			opts.EC.Spin("Applying metadata...")
 			err := opts.run()

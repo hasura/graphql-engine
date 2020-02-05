@@ -13,8 +13,8 @@ import (
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"github.com/oliveagle/jsonpath"
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"

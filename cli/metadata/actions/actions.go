@@ -21,7 +21,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
-	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
+	dbTypes "github.com/hasura/graphql-engine/cli/metadata/types"
 )
 
 const (
@@ -95,7 +95,7 @@ type OverrideOptions struct {
 	Webhook string
 }
 
-func New(ec *cli.ExecutionContext, opts *OverrideOptions) *ActionConfig {
+func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 	var shouldSkip bool
 	if ec.Version.ServerSemver != nil {
 		cons, err := semver.NewConstraint(">= v1.1.0")
@@ -117,25 +117,16 @@ func New(ec *cli.ExecutionContext, opts *OverrideOptions) *ActionConfig {
 		}
 	}
 	cfg := &ActionConfig{
-		MetadataDir:  ec.MetadataDir,
+		MetadataDir:  baseDir,
 		ActionConfig: ec.Config.Action,
 		cmdName:      ec.CMDName,
 		shouldSkip:   shouldSkip,
 		logger:       ec.Logger,
 	}
-	if opts != nil {
-		if opts.Kind != "" {
-			cfg.ActionConfig.Kind = opts.Kind
-		}
-
-		if opts.Webhook != "" {
-			cfg.ActionConfig.HandlerWebhookBaseURL = opts.Webhook
-		}
-	}
 	return cfg
 }
 
-func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMutation string) error {
+func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMutation string, opts *OverrideOptions) error {
 	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
 	if err != nil {
 		return err
@@ -299,11 +290,23 @@ input SampleInput {
 				break
 			}
 		}
+		// Set kind and handler for action definition
+		kind := a.ActionConfig.Kind
+		handler := a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
+		if opts != nil {
+			if opts.Kind != "" {
+				kind = opts.Kind
+			}
+
+			if opts.Webhook != "" {
+				handler = opts.Webhook
+			}
+		}
 		if action.Definition.Kind == "" {
-			sdlFromResp.Actions[actionIndex].Definition.Kind = a.ActionConfig.Kind
+			sdlFromResp.Actions[actionIndex].Definition.Kind = kind
 		}
 		if action.Definition.Handler == "" {
-			sdlFromResp.Actions[actionIndex].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
+			sdlFromResp.Actions[actionIndex].Definition.Handler = handler
 		}
 	}
 	for customTypeIndex, customType := range sdlFromResp.Types.Enums {
@@ -532,10 +535,10 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 	return nil
 }
 
-func (a *ActionConfig) Export(metadata yaml.MapSlice) (dbTypes.MetadataFiles, error) {
+func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
 	if a.shouldSkip {
 		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
-		return dbTypes.MetadataFiles{}, nil
+		return make(map[string][]byte), nil
 	}
 	var actions yaml.MapSlice
 	for _, item := range metadata {
@@ -547,44 +550,38 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (dbTypes.MetadataFiles, er
 	}
 	ymlByt, err := yaml.Marshal(metadata)
 	if err != nil {
-		return dbTypes.MetadataFiles{}, err
+		return nil, err
 	}
 	jsonByt, err := gyaml.YAMLToJSON(ymlByt)
 	if err != nil {
-		return dbTypes.MetadataFiles{}, err
+		return nil, err
 	}
 	var common types.Common
 	err = json.Unmarshal(jsonByt, &common)
 	if err != nil {
-		return dbTypes.MetadataFiles{}, err
+		return nil, err
 	}
 	var sdlToReq sdlToRequest
 	sdlToReq.Types = common.CustomTypes
 	sdlToReq.Actions = common.Actions
 	sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName, a.logger)
 	if err != nil {
-		return dbTypes.MetadataFiles{}, err
+		return nil, err
 	}
 	doc, err := parser.Parse(parser.ParseParams{
 		Source: sdlToResp.SDL.Complete,
 	})
 	if err != nil {
-		return dbTypes.MetadataFiles{}, err
+		return nil, err
 	}
 	common.SetExportDefault()
 	commonByt, err := yaml.Marshal(common)
 	if err != nil {
-		return dbTypes.MetadataFiles{}, err
+		return nil, err
 	}
-	return dbTypes.MetadataFiles{
-		{
-			Path:    filepath.Join(a.MetadataDir, actionsFileName),
-			Content: commonByt,
-		},
-		{
-			Path:    filepath.Join(a.MetadataDir, graphqlFileName),
-			Content: []byte(printer.Print(doc).(string)),
-		},
+	return map[string][]byte{
+		filepath.Join(a.MetadataDir, actionsFileName): commonByt,
+		filepath.Join(a.MetadataDir, graphqlFileName): []byte(printer.Print(doc).(string)),
 	}, nil
 }
 

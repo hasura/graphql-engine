@@ -102,8 +102,8 @@ func (o *actionsCreateOptions) run() error {
 		Kind:    o.kind,
 		Webhook: o.webhook,
 	}
-	actionCfg := actions.New(o.EC, opts)
-	err = actionCfg.Create(o.name, introSchema, o.deriveFrom)
+	actionCfg := actions.New(o.EC, o.EC.MetadataDir)
+	err = actionCfg.Create(o.name, introSchema, o.deriveFrom, opts)
 	if err != nil {
 		return err
 	}

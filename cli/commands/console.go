@@ -10,7 +10,6 @@ import (
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/util"
@@ -108,12 +107,6 @@ func (o *consoleOptions) run() error {
 		return errors.New("cannot validate version, object is nil")
 	}
 
-	m := metadata.New(o.EC.MigrationDir)
-	metadataPath, err := m.GetMetadataFilePath("yaml")
-	if err != nil {
-		return err
-	}
-
 	t, err := newMigrate(o.EC, false)
 	if err != nil {
 		return err
@@ -125,7 +118,7 @@ func (o *consoleOptions) run() error {
 		t,
 	}
 
-	r.setRoutes(o.EC.MigrationDir, metadataPath, o.EC.Logger)
+	r.setRoutes(o.EC.MigrationDir, o.EC.Logger)
 
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
@@ -206,7 +199,7 @@ type cRouter struct {
 	migrate *migrate.Migrate
 }
 
-func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Logger) {
+func (r *cRouter) setRoutes(migrationDir string, logger *logrus.Logger) {
 	apis := r.router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
@@ -229,7 +222,6 @@ func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Lo
 		// Migrate api endpoints and middleware
 		metadataAPIs := apis.Group("/metadata")
 		{
-			metadataAPIs.Use(setMetadataFile(metadataFile))
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
 	}

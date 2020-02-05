@@ -3,11 +3,10 @@ package hasuradb
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
+	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 
@@ -18,7 +17,7 @@ func (h *HasuraDB) SetMetadataPlugins(plugins interface{}) {
 	h.config.Plugins = plugins.(types.MetadataPlugins)
 }
 
-func (h *HasuraDB) ExportMetadata() error {
+func (h *HasuraDB) ExportMetadata() (map[string][]byte, error) {
 	query := HasuraQuery{
 		Type: "export_metadata",
 		Args: HasuraArgs{},
@@ -27,7 +26,7 @@ func (h *HasuraDB) ExportMetadata() error {
 	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		h.logger.Debug(err)
-		return err
+		return nil, err
 	}
 	h.logger.Debug("response: ", string(body))
 
@@ -36,35 +35,29 @@ func (h *HasuraDB) ExportMetadata() error {
 		err = json.Unmarshal(body, &horror)
 		if err != nil {
 			h.logger.Debug(err)
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
+			return nil, fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
 		}
-		return horror.Error(h.config.isCMD)
+		return nil, horror.Error(h.config.isCMD)
 	}
 
 	var c yaml.MapSlice
 	err = yaml.Unmarshal(body, &c)
 	if err != nil {
 		h.logger.Debug(err)
-		return err
+		return nil, err
 	}
 
-	var metadataFiles types.MetadataFiles
+	metadataFiles := make(map[string][]byte)
 	for plgName, plg := range h.config.Plugins {
 		files, err := plg.Export(c)
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("cannot export %s from metadata", plgName))
+			return nil, errors.Wrap(err, fmt.Sprintf("cannot export %s from metadata", plgName))
 		}
-		metadataFiles = append(metadataFiles, files...)
-	}
-
-	// create files
-	for _, file := range metadataFiles {
-		err = ioutil.WriteFile(file.Path, file.Content, 0644)
-		if err != nil {
-			return errors.Wrap(err, "creating metadata file failed")
+		for fileName, content := range files {
+			metadataFiles[fileName] = content
 		}
 	}
-	return nil
+	return metadataFiles, nil
 }
 
 func (h *HasuraDB) ResetMetadata() error {
@@ -178,13 +171,21 @@ func (h *HasuraDB) DropInconsistentMetadata() error {
 	return nil
 }
 
-func (h *HasuraDB) ApplyMetadata() error {
+func (h *HasuraDB) BuildMetadata() (types.Metadata, error) {
 	var tmpMeta types.Metadata
 	for plgName, plg := range h.config.Plugins {
 		err := plg.Build(&tmpMeta)
 		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("cannot build %s from metadata", plgName))
+			return tmpMeta, errors.Wrap(err, fmt.Sprintf("cannot build %s from metadata", plgName))
 		}
+	}
+	return tmpMeta, nil
+}
+
+func (h *HasuraDB) ApplyMetadata() error {
+	tmpMeta, err := h.BuildMetadata()
+	if err != nil {
+		return err
 	}
 	query := HasuraInterfaceBulk{
 		Type: "bulk",

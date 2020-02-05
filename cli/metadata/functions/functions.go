@@ -5,8 +5,9 @@ import (
 	"path/filepath"
 
 	gyaml "github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
-	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
+	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata/types"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -16,11 +17,14 @@ const (
 
 type FunctionConfig struct {
 	MetadataDir string
+
+	logger *logrus.Logger
 }
 
-func New(baseDir string) *FunctionConfig {
+func New(ec *cli.ExecutionContext, baseDir string) *FunctionConfig {
 	return &FunctionConfig{
 		MetadataDir: baseDir,
+		logger:      ec.Logger,
 	}
 }
 
@@ -41,7 +45,7 @@ func (f *FunctionConfig) CreateFiles() error {
 	return nil
 }
 
-func (f *FunctionConfig) Build(metadata *dbTypes.Metadata) error {
+func (f *FunctionConfig) Build(metadata *types.Metadata) error {
 	data, err := ioutil.ReadFile(filepath.Join(f.MetadataDir, fileName))
 	if err != nil {
 		return err
@@ -49,7 +53,7 @@ func (f *FunctionConfig) Build(metadata *dbTypes.Metadata) error {
 	return gyaml.Unmarshal(data, &metadata.Functions)
 }
 
-func (f *FunctionConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, error) {
+func (f *FunctionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
 	var functions interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -63,12 +67,9 @@ func (f *FunctionConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, er
 	}
 	data, err := yaml.Marshal(functions)
 	if err != nil {
-		return types.MetadataFiles{}, err
+		return nil, err
 	}
-	return types.MetadataFiles{
-		{
-			Path:    filepath.Join(f.MetadataDir, fileName),
-			Content: data,
-		},
+	return map[string][]byte{
+		filepath.Join(f.MetadataDir, fileName): data,
 	}, nil
 }

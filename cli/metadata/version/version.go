@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 
 	gyaml "github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
-	dbTypes "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb/types"
+	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -22,7 +22,7 @@ type VersionConfig struct {
 	MetadataDir string
 }
 
-func New(baseDir string) *VersionConfig {
+func New(ec *cli.ExecutionContext, baseDir string) *VersionConfig {
 	return &VersionConfig{
 		MetadataDir: baseDir,
 	}
@@ -47,7 +47,7 @@ func (a *VersionConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *VersionConfig) Build(metadata *dbTypes.Metadata) error {
+func (a *VersionConfig) Build(metadata *types.Metadata) error {
 	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, fileName))
 	if err != nil {
 		return err
@@ -61,7 +61,7 @@ func (a *VersionConfig) Build(metadata *dbTypes.Metadata) error {
 	return nil
 }
 
-func (a *VersionConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, error) {
+func (a *VersionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
 	var version int
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
@@ -75,12 +75,9 @@ func (a *VersionConfig) Export(metadata yaml.MapSlice) (types.MetadataFiles, err
 	}
 	data, err := yaml.Marshal(v)
 	if err != nil {
-		return types.MetadataFiles{}, err
+		return nil, err
 	}
-	return types.MetadataFiles{
-		{
-			Path:    filepath.Join(a.MetadataDir, fileName),
-			Content: data,
-		},
+	return map[string][]byte{
+		filepath.Join(a.MetadataDir, fileName): data,
 	}, nil
 }

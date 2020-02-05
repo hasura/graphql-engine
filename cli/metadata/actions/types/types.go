@@ -55,14 +55,6 @@ type ActionDef struct {
 	Handler    string        `json:"handler" yaml:"handler"`
 }
 
-/*
-func (a ActionDef) MarshalYAML() (interface{}, error) {
-	a.Arguments = nil
-	a.OutputType = ""
-	return a, nil
-}
-*/
-
 type CustomTypes struct {
 	Enums        []CustomTypeDef `json:"enums" yaml:"enums"`
 	InputObjects []CustomTypeDef `json:"input_objects" yaml:"input_objects"`
@@ -89,10 +81,3 @@ func (c *CustomTypeDef) MarshalJSON() ([]byte, error) {
 		t: (*t)(c),
 	})
 }
-
-/*
-func (c CustomTypeDef) MarshalYAML() (interface{}, error) {
-	c.Fields = nil
-	return c, nil
-}
-*/

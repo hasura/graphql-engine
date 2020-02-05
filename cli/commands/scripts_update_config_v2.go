@@ -76,9 +76,14 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
-			err = migrateDrv.ExportMetadata()
+			files, err := migrateDrv.ExportMetadata()
 			if err != nil {
-				return errors.Wrap(err, "cannot export metadata")
+				return errors.Wrap(err, "cannot export metadata from server")
+			}
+			ec.Spin("Writing metadata...")
+			err = migrateDrv.WriteMetadata(files)
+			if err != nil {
+				return errors.Wrap(err, "cannot write metadata")
 			}
 			ec.Spin("Writing new config file...")
 			err = ec.WriteConfig()
