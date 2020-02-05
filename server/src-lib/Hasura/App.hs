@@ -241,7 +241,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
                      $ Warp.defaultSettings
 
   maxEvThrds <- liftIO $ getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-  fetchI  <- fmap milliseconds $ liftIO $ 
+  fetchI  <- fmap milliseconds $ liftIO $
     getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 

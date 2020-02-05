@@ -349,7 +349,7 @@ updateColInEventTriggerDef
   => TriggerName -> RenameCol -> m ()
 updateColInEventTriggerDef trigName rnCol = do
   (trigTab, trigDef) <- liftTx $ DS.getEventTriggerDef trigName
-  void $ liftTx $ DS.updateEventTriggerDef trigName $
+  void $ liftTx $ DS.updateEventTriggerInCatalog $
     rewriteEventTriggerConf trigTab trigDef
   where
     rewriteSubsCols trigTab = \case
