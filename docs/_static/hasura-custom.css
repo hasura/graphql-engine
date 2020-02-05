@@ -1021,6 +1021,7 @@ article ol ol {
 
   .content_inner_wrapper {
     width: 100% !important;
+    height: auto;
   }
 
   [role="main"] {
