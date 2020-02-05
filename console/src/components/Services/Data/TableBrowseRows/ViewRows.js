@@ -626,7 +626,6 @@ const ViewRows = ({
         }
         const limit = 'limit' in curFilter ? curFilter.limit : 10;
         const offset = 'offset' in curFilter ? curFilter.offset : 0;
-        console.log({ location });
 
         _filterQuery = (
           <FilterQuery
