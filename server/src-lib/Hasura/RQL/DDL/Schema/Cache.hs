@@ -238,9 +238,7 @@ buildSchemaCacheRule = proc inputs -> do
                    metadataObj = mkActionMetadataObj action
                    addActionContext e = "in action " <> name <<> "; " <> e
                (| withRecordInconsistency (
-                  (| modifyErrA ( do
-                       resolvedDef <- bindErrorA -< resolveAction resolvedCustomTypes def
-                       returnA -< resolvedDef)
+                  (| modifyErrA (bindErrorA -< resolveAction resolvedCustomTypes def)
                    |) addActionContext)
                 |) metadataObj)
              |)
@@ -248,18 +246,20 @@ buildSchemaCacheRule = proc inputs -> do
 
       actionCache <- buildActionCache -< (resolvedActionDefs, M.groupOn _capAction actionPermissions)
 
-      -- build GraphQL context with tables and functions
+      -- build GraphQL context with tables, functions and actions
       baseGQLSchema <- bindA -< GS.mkGCtxMap (snd resolvedCustomTypes) tableCache functionCache actionCache
 
       -- remote schemas
       let invalidatedRemoteSchemas = flip map remoteSchemas \remoteSchema ->
             (M.lookup (_arsqName remoteSchema) invalidationMap, remoteSchema)
+
       (remoteSchemaMap, gqlSchema, remoteGQLSchema) <-
         (| foldlA' (\schemas schema -> (schemas, schema) >- addRemoteSchema)
         |) (M.empty, baseGQLSchema, GC.emptyGCtx) invalidatedRemoteSchemas
-        >-> (\(remoteSchemaMap, gqlSchema, remoteGQLSchema) -> do
-                 (gqlSchema', defGqlSchema') <- bindA -< mergeCustomTypes gqlSchema remoteGQLSchema resolvedCustomTypes
-                 returnA -< (remoteSchemaMap, gqlSchema', defGqlSchema'))
+
+      -- merge custom types
+      (finalGQLSchema, finalRemoteGQLSchema) <-
+        bindA -< mergeCustomTypes gqlSchema remoteGQLSchema resolvedCustomTypes
 
       returnA -< BuildOutputs
         { _boTables = tableCache
@@ -268,8 +268,8 @@ buildSchemaCacheRule = proc inputs -> do
         , _boRemoteSchemas = remoteSchemaMap
         , _boAllowlist = allowList
         , _boCustomTypes = resolvedCustomTypes
-        , _boGCtxMap = gqlSchema
-        , _boDefaultRemoteGCtx = remoteGQLSchema
+        , _boGCtxMap = finalGQLSchema
+        , _boDefaultRemoteGCtx = finalRemoteGQLSchema
         }
 
     mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =
@@ -373,7 +373,7 @@ buildSchemaCacheRule = proc inputs -> do
           permissionInfo <- (\maybeMap -> returnA -< M.catMaybes maybeMap) <-<
             (| Inc.keyed (\role perm ->
                  (| withRecordInconsistency (do
-                      selectFilter <- bindA -< buildActionFilter (_apdSelect $ _capDefinition perm)
+                      selectFilter <- bindErrorA -< buildActionFilter (_apdSelect $ _capDefinition perm)
                       returnA -< ActionPermissionInfo role selectFilter
                     )
                   |) (mkActionPermMetaObj actionName perm)
