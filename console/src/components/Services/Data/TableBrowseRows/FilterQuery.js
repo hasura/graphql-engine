@@ -217,6 +217,7 @@ class FilterQuery extends Component {
     });
 
     dispatch(setDefaultQuery({ where, order_by }));
+    dispatch(runQuery(this.props.tableSchema));
   }
 
   setParams(query = { filters: [], sorts: [] }) {
