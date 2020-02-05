@@ -184,6 +184,8 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
 
 class FilterQuery extends Component {
   componentDidMount() {
+    if (!this.props.urlQuery) return;
+
     const dispatch = this.props.dispatch;
     let urlFilters = [];
     if (typeof this.props.urlQuery.filter === 'string') {

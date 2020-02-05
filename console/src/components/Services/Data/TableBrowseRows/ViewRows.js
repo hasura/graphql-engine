@@ -626,6 +626,7 @@ const ViewRows = ({
         }
         const limit = 'limit' in curFilter ? curFilter.limit : 10;
         const offset = 'offset' in curFilter ? curFilter.offset : 0;
+        console.log({ location });
 
         _filterQuery = (
           <FilterQuery
@@ -638,7 +639,7 @@ const ViewRows = ({
             count={count}
             tableName={curTableName}
             offset={offset}
-            urlQuery={location.query}
+            urlQuery={location && location.query}
           />
         );
       }
