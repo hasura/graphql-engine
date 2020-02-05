@@ -18,13 +18,13 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.IORef
 
-import qualified Control.Concurrent        as C
-import qualified Control.Concurrent.STM    as STM
-import qualified Data.Text                 as T
-import qualified Data.Time                 as UTC
-import qualified Database.PG.Query         as PG
-import qualified Database.PostgreSQL.LibPQ as PQ
-import qualified Network.HTTP.Client       as HTTP
+import qualified Control.Concurrent.Extended as C
+import qualified Control.Concurrent.STM      as STM
+import qualified Data.Text                   as T
+import qualified Data.Time                   as UTC
+import qualified Database.PG.Query           as PG
+import qualified Database.PostgreSQL.LibPQ   as PQ
+import qualified Network.HTTP.Client         as HTTP
 
 pgChannel :: PG.PGChannel
 pgChannel = "hasura_schema_update"
@@ -126,7 +126,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
       liftIO $ runExceptT $ PG.listen pool pgChannel notifyHandler
     either onError return listenResE
     logWarn
-    C.threadDelay $ 1 * 1000 * 1000 -- 1 second
+    C.sleep $ seconds 1
   where
     threadType = TTListener
 

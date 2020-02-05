@@ -27,10 +27,10 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (diffTimeToMicro, fmapL, userRoleHeader)
+import           Hasura.Server.Utils             (fmapL, userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 
-import qualified Control.Concurrent              as C
+import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
 import qualified Data.Aeson                      as A
 import qualified Data.Aeson.Casing               as A
@@ -98,11 +98,15 @@ defaultClaimNs :: T.Text
 defaultClaimNs = "https://hasura.io/jwt/claims"
 
 -- | if the time is greater than 100 seconds, should refresh the JWK 10 seonds
--- before the expiry, else refresh at given seconds
-computeDiffTime :: NominalDiffTime -> Int
+-- before the expiry, else refresh at given interval.
+--
+-- Apparently we want to make sure to refresh the JWKs preemptively so we're
+-- not verifying the signature of JWTs with a too old JWK, while the other case
+-- (interval <= 100 sec) is useful for development but someone who knows needs
+-- TODO a proper job documenting this.
+computeDiffTime :: DiffTime -> DiffTime
 computeDiffTime t =
-  let intTime = diffTimeToMicro t
-  in if intTime > 100 then intTime - 10 else intTime
+  if t > seconds 100 then t - seconds 10 else t
 
 -- | create a background thread to refresh the JWK
 jwkRefreshCtrl
@@ -111,22 +115,21 @@ jwkRefreshCtrl
   -> HTTP.Manager
   -> URI
   -> IORef Jose.JWKSet
-  -> NominalDiffTime
+  -> DiffTime
   -> m ()
 jwkRefreshCtrl logger manager url ref time =
   void $ liftIO $ C.forkIO $ do
-    C.threadDelay $ diffTimeToMicro time
+    C.sleep time
     forever $ do
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
-      let delay = maybe (60 * aSecond) computeDiffTime mTime
-      C.threadDelay delay
+      let delay = maybe (minutes 1) (computeDiffTime . fromUnits) mTime
+      C.sleep delay
   where
     logNotice = do
       let err = JwkRefreshLog LevelInfo (JLNInfo "retrying again in 60 secs") Nothing
       liftIO $ unLogger logger err
-    aSecond = 1000 * 1000
 
 
 -- | Given a JWK url, fetch JWK from it and update the IORef
