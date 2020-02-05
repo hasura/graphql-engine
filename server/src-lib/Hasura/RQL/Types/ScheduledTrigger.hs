@@ -38,7 +38,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConfST)
 defaultRetryConf :: RetryConfST
 defaultRetryConf =
   RetryConfST
-  { rcstNumRetries = 1
+  { rcstNumRetries = 0
   , rcstIntervalSec = seconds 10
   , rcstTimeoutSec = seconds 60
   , rcstTolerance = 21600 -- 6 hours
