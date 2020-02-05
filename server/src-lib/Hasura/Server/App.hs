@@ -22,7 +22,6 @@ import qualified Data.ByteString.Lazy                   as BL
 import qualified Data.HashMap.Strict                    as M
 import qualified Data.HashSet                           as S
 import qualified Data.Text                              as T
-import qualified Data.Time.Clock                        as Clock
 import qualified Database.PG.Query                      as Q
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as HTTP
@@ -201,7 +200,8 @@ mkSpockAction
   -> Spock.ActionT m ()
 mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     req <- Spock.request
-    reqBody <- liftIO $ Wai.strictRequestBody req
+    -- Bytes are actually read from the socket here. Time this.
+    (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
     let headers = Wai.requestHeaders req
         authMode = scAuthMode serverCtx
         manager = scManager serverCtx
@@ -215,9 +215,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     let handlerState = HandlerCtx serverCtx userInfo headers requestId
         curRole = userRole userInfo
 
-    t1 <- liftIO Clock.getCurrentTime -- for measuring response time purposes
-
-    (result, q) <- case apiHandler of
+    (serviceTime, (result, q)) <- withElapsedTime $ case apiHandler of
       AHGet handler -> do
         res <- lift $ runReaderT (runExceptT handler) handlerState
         return (res, Nothing)
@@ -228,8 +226,6 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         res <- lift $ runReaderT (runExceptT $ handler parsedReq) handlerState
         return (res, Just parsedReq)
 
-    t2 <- liftIO Clock.getCurrentTime -- for measuring response time purposes
-
     -- apply the error modifier
     let modResult = fmapL qErrModifier result
 
@@ -237,7 +233,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
     case modResult of
       Left err  -> let jErr = maybe (Left reqBody) (Right . toJSON) q
                    in logErrorAndResp (Just userInfo) requestId req jErr (isAdmin curRole) headers err
-      Right res -> logSuccessAndResp (Just userInfo) requestId req (fmap toJSON q) res (Just (t1, t2)) headers
+      Right res -> logSuccessAndResp (Just userInfo) requestId req (fmap toJSON q) res (Just (ioWaitTime, serviceTime)) headers
 
     where
       logger = scLogger serverCtx

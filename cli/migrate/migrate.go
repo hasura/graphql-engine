@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 
@@ -1231,7 +1233,7 @@ func (m *Migrate) versionUpExists(version uint64) error {
 // versionDownExists checks the source if either the up or down migration for
 // the specified migration version exists.
 func (m *Migrate) versionDownExists(version uint64) error {
-	// try up migration first
+	// try down migration first
 	directions := m.sourceDrv.GetDirections(version)
 	if !directions[source.Down] && !directions[source.MetaDown] {
 		return fmt.Errorf("%d down migration not found", version)
@@ -1469,4 +1471,229 @@ func (m *Migrate) unlockErr(prevErr error) error {
 		return NewMultiError(prevErr, err)
 	}
 	return prevErr
+}
+
+// GotoVersion will apply a version also applying the migration chain
+// leading to it
+func (m *Migrate) GotoVersion(gotoVersion int64) error {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return err
+	}
+	if mode != "true" {
+		return ErrNoMigrationMode
+	}
+
+	currentVersion, dirty, err := m.Version()
+	currVersion := int64(currentVersion)
+	if err != nil {
+		if err == ErrNilVersion {
+			currVersion = database.NilVersion
+		} else {
+			return errors.Wrap(err, "cannot determine version")
+		}
+	}
+	if dirty {
+		return ErrDirty{currVersion}
+	}
+
+	if err := m.lock(); err != nil {
+		return err
+	}
+
+	ret := make(chan interface{})
+	if currVersion <= gotoVersion {
+		go m.readUpFromVersion(-1, gotoVersion, ret)
+	} else if currVersion > gotoVersion {
+		go m.readDownFromVersion(currVersion, gotoVersion, ret)
+	}
+
+	return m.unlockErr(m.runMigrations(ret))
+
+}
+
+// readUpFromVersion reads up migrations from `from` limitted by `limit`. (is a modified version of readUp)
+// limit can be -1, implying no limit and reading until there are no more migrations.
+// Each migration is then written to the ret channel.
+// If an error occurs during reading, that error is written to the ret channel, too.
+// Once readUpFromVersion is done reading it will close the ret channel.
+func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}) {
+	defer close(ret)
+	var noOfAppliedMigrations int
+	for {
+		if m.stop() {
+			return
+		}
+		if from == to {
+			if noOfAppliedMigrations == 0 {
+				ret <- ErrNoChange
+			}
+			return
+		}
+
+		if from == -1 {
+			firstVersion, err := m.sourceDrv.First()
+			if err != nil {
+				ret <- err
+				return
+			}
+
+			// Check if this version present in DB
+			ok := m.databaseDrv.Read(firstVersion)
+			if ok {
+				from = int64(firstVersion)
+				continue
+			}
+
+			// Check if firstVersion files exists (yaml or sql)
+			if err = m.versionUpExists(firstVersion); err != nil {
+				ret <- err
+				return
+			}
+
+			migr, err := m.newMigration(firstVersion, int64(firstVersion))
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+
+			migr, err = m.metanewMigration(firstVersion, int64(firstVersion))
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+
+			go migr.Buffer()
+			from = int64(firstVersion)
+			noOfAppliedMigrations++
+			continue
+		}
+
+		// apply next migration
+		next, err := m.sourceDrv.Next(suint64(from))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		// Check if this version present in DB
+		ok := m.databaseDrv.Read(next)
+		if ok {
+			from = int64(next)
+			continue
+		}
+
+		// Check if next files exists (yaml or sql)
+		if err = m.versionUpExists(next); err != nil {
+			ret <- err
+			return
+		}
+
+		migr, err := m.newMigration(next, int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+
+		migr, err = m.metanewMigration(next, int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+		from = int64(next)
+		noOfAppliedMigrations++
+	}
+}
+
+// readDownFromVersion reads down migrations from `from` limitted by `limit`. (modified version of readDown)
+// limit can be -1, implying no limit and reading until there are no more migrations.
+// Each migration is then written to the ret channel.
+// If an error occurs during reading, that error is written to the ret channel, too.
+// Once readDownFromVersion is done reading it will close the ret channel.
+func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface{}) {
+	defer close(ret)
+	var err error
+	var noOfAppliedMigrations int
+	for {
+		if m.stop() {
+			return
+		}
+
+		if from == to {
+			if noOfAppliedMigrations == 0 {
+				ret <- ErrNoChange
+			}
+			return
+		}
+
+		err = m.versionDownExists(suint64(from))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		prev, ok := m.databaseDrv.Prev(suint64(from))
+		if !ok {
+			// Check if any prev version available in source
+			prev, err = m.sourceDrv.Prev(suint64(from))
+			if os.IsNotExist(err) && to == -1 {
+				// apply nil migration
+				migr, err := m.metanewMigration(suint64(from), -1)
+				if err != nil {
+					ret <- err
+					return
+				}
+
+				ret <- migr
+				go migr.Buffer()
+
+				migr, err = m.newMigration(suint64(from), -1)
+				if err != nil {
+					ret <- err
+					return
+				}
+
+				ret <- migr
+				go migr.Buffer()
+
+				from = database.NilVersion
+				noOfAppliedMigrations++
+				continue
+			} else if err != nil {
+				ret <- err
+				return
+			}
+			ret <- fmt.Errorf("%v not applied on database", prev)
+			return
+		}
+
+		migr, err := m.metanewMigration(suint64(from), int64(prev))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+
+		migr, err = m.newMigration(suint64(from), int64(prev))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+		from = int64(prev)
+		noOfAppliedMigrations++
+	}
 }

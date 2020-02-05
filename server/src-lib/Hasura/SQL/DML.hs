@@ -182,7 +182,7 @@ mkQIdenExp :: (IsIden a, IsIden b) => a -> b -> SQLExp
 mkQIdenExp q t = SEQIden $ mkQIden q t
 
 data Qual
-  = QualIden !Iden
+  = QualIden !Iden !(Maybe TypeAnn)
   | QualTable !QualifiedTable
   | QualVar !T.Text
   deriving (Show, Eq, Generic, Data)
@@ -193,12 +193,12 @@ mkQual :: QualifiedTable -> Qual
 mkQual = QualTable
 
 instance ToSQL Qual where
-  toSQL (QualIden i)   = toSQL i
-  toSQL (QualTable qt) = toSQL qt
-  toSQL (QualVar v)    = TB.text v
+  toSQL (QualIden i tyM) = toSQL i <> toSQL tyM
+  toSQL (QualTable qt)   = toSQL qt
+  toSQL (QualVar v)      = TB.text v
 
 mkQIden :: (IsIden a, IsIden b) => a -> b -> QIden
-mkQIden q t = QIden (QualIden (toIden q)) (toIden t)
+mkQIden q t = QIden (QualIden (toIden q) Nothing) (toIden t)
 
 data QIden
   = QIden !Qual !Iden
@@ -235,6 +235,9 @@ jsonbDeleteAtPathOp = SQLOp "#-"
 newtype TypeAnn
   = TypeAnn { unTypeAnn :: T.Text }
   deriving (Show, Eq, NFData, Data, Cacheable)
+
+instance ToSQL TypeAnn where
+  toSQL (TypeAnn ty) = "::" <> TB.text ty
 
 mkTypeAnn :: PGType PGScalarType -> TypeAnn
 mkTypeAnn = TypeAnn . toSQLTxt
@@ -340,7 +343,7 @@ instance ToSQL SQLExp where
   toSQL (SEStar Nothing) =
     TB.char '*'
   toSQL (SEStar (Just qual)) =
-    mconcat [toSQL qual, TB.char '.', TB.char '*']
+    mconcat [paren (toSQL qual), TB.char '.', TB.char '*']
   toSQL (SEIden iden) =
     toSQL iden
   toSQL (SERowIden iden) =
@@ -353,7 +356,7 @@ instance ToSQL SQLExp where
   toSQL (SEOpApp op args) =
      paren (sqlOpTxt op <+> args)
   toSQL (SETyAnn e ty) =
-     paren (toSQL e) <> "::" <> TB.text (unTypeAnn ty)
+     paren (toSQL e) <> toSQL ty
   toSQL (SECond cond te fe) =
     "CASE WHEN" <-> toSQL cond <->
     "THEN" <-> toSQL te <->

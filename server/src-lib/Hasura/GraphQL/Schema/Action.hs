@@ -185,6 +185,7 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
             , RFPGColumn $ PGColumnInfo
               (unsafePGCol $ coerce fieldName)
               (coerce fieldName)
+              0
               (PGColumnScalar $ mkPGFieldType fieldName (fieldType, fieldTypeInfo))
               (G.isNullable fieldType)
               Nothing

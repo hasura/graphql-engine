@@ -66,7 +66,7 @@ data OutputFieldResolved
 
 data ResponseFieldResolved
   = ResponseFieldOutput ![(Text, OutputFieldResolved)]
-  | ResponseFieldMetadata !PGCol
+  | ResponseFieldMetadata !FieldName
   | ResponseFieldTypename !G.NamedType
   deriving (Show, Eq)
 
@@ -102,7 +102,7 @@ resolveResponseSelectionSet ty selSet =
     G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
 
   where
-    mkMetadataField = ResponseFieldMetadata . unsafePGCol
+    mkMetadataField = ResponseFieldMetadata . FieldName
 
 
 data ActionSelect v
@@ -139,12 +139,10 @@ actionSelectToSql (ActionSelect actionIdExp selection _) =
       }
 
     whereExpression =
-      S.BECompare S.SEQ (S.mkSIdenExp actionIdColumn) actionIdExp
+      S.BECompare S.SEQ (S.mkSIdenExp $ Iden "id") actionIdExp
       -- we need this annotation because ID is mapped to text
       -- and hence the prepared value will be a PGText
       -- S.SETyAnn actionIdExp $ S.TypeAnn "uuid"
-      where
-        actionIdColumn = unsafePGCol "id"
 
     actionLogTable =
       QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
@@ -159,7 +157,7 @@ actionSelectToSql (ActionSelect actionIdExp selection _) =
         S.SEOpApp (S.SQLOp "->>") [outputColumn, S.SELit fieldName]
       OutputFieldTypename ty      -> S.SELit $ G.unName $ G.unNamedType ty
       where
-        outputColumn = S.SEIden $ toIden $ unsafePGCol "response_payload"
+        outputColumn = S.SEIden $ Iden "response_payload"
 
     usingJsonBuildObj :: [(Text, a)] -> (a -> S.SQLExp) -> S.SQLExp
     usingJsonBuildObj l f =
@@ -565,21 +563,21 @@ resolveAsyncResponse userInfo selectContext field = do
   -- return $ asSingleRowJsonResp (RS.selectQuerySQL True astResolved) []
   where
     -- outputRelName = RelName $ mkNonEmptyTextUnsafe "output"
-    actionLogTable =
-      QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
+    actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
+
     mkAnnFldFromPGCol column columnType =
       flip RS.mkAnnColField Nothing $
-      PGColumnInfo (unsafePGCol column) (G.Name column) (PGColumnScalar columnType) True Nothing
-    unresolvedFilter =
-      fmapAnnBoolExp partialSQLExpToUnresolvedVal $
-      _asocFilter selectContext
-    parseActionId annInpValue = do
-      mkParameterizablePGValue <$> asPGColumnValue annInpValue
+      PGColumnInfo (unsafePGCol column) (G.Name column) 0 (PGColumnScalar columnType) True Nothing
+
+    unresolvedFilter = fmapAnnBoolExp partialSQLExpToUnresolvedVal $ _asocFilter selectContext
+
+    parseActionId annInpValue = mkParameterizablePGValue <$> asPGColumnValue annInpValue
+
     mkTableBoolExpression actionId =
-      let actionIdColumnInfo = PGColumnInfo (unsafePGCol "id") "id" (PGColumnScalar PGUUID) False Nothing
+      let actionIdColumnInfo = PGColumnInfo (unsafePGCol "id") "id" 0 (PGColumnScalar PGUUID) False Nothing
           actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True actionId]
           sessionVarsColumnInfo = PGColumnInfo (unsafePGCol "session_variables") "session_variables"
-                                  (PGColumnScalar PGJSONB) False Nothing
+                                  0 (PGColumnScalar PGJSONB) False Nothing
           sessionVarValue = UVPG $ AnnPGVal Nothing False $ WithScalarType PGJSONB
                             $ PGValJSONB $ Q.JSONB $ J.toJSON $ userVars userInfo
           sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
