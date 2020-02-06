@@ -529,16 +529,21 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 		sdlFromResp.Actions[index].Definition.Kind = a.ActionConfig.Kind
 		sdlFromResp.Actions[index].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
 	}
-	actionItem := yaml.MapItem{
-		Key:   "actions",
-		Value: sdlFromResp.Actions,
+	if len(sdlFromResp.Actions) != 0 {
+		actionItem := yaml.MapItem{
+			Key:   "actions",
+			Value: sdlFromResp.Actions,
+		}
+		*metadata = append(*metadata, actionItem)
 	}
-	*metadata = append(*metadata, actionItem)
-	customTypeItem := yaml.MapItem{
-		Key:   "custom_types",
-		Value: sdlFromResp.Types,
+	customTypesLen := len(sdlFromResp.Types.Enums) + len(sdlFromResp.Types.InputObjects) + len(sdlFromResp.Types.Objects) + len(sdlFromResp.Types.Scalars)
+	if customTypesLen != 0 {
+		customTypeItem := yaml.MapItem{
+			Key:   "custom_types",
+			Value: sdlFromResp.Types,
+		}
+		*metadata = append(*metadata, customTypeItem)
 	}
-	*metadata = append(*metadata, customTypeItem)
 	return nil
 }
 
