@@ -27,6 +27,8 @@ import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
+const history = createHistory();
+
 const renderCols = (
   colName,
   tableSchema,
@@ -40,10 +42,6 @@ const renderCols = (
     columns = columns.filter(n => !skipColumns.includes(n) || n === colName);
   }
 
-const history = createHistory();
-
-const renderCols = (colName, tableSchema, onChange, usage, key) => {
-  const columns = tableSchema.columns.map(c => c.column_name);
   return (
     <select
       className="form-control"
