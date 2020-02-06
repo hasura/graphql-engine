@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
@@ -43,6 +44,8 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	f := actionsCodegenCmd.Flags()
 
+	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a Hasura mutation")
+
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
@@ -58,14 +61,30 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 type actionsCodegenOptions struct {
-	EC      *cli.ExecutionContext
-	actions []string
+	EC         *cli.ExecutionContext
+	actions    []string
+	deriveFrom string
 }
 
 func (o *actionsCodegenOptions) run() (err error) {
+	migrateDrv, err := newMigrate(o.EC, true)
+	if err != nil {
+		return err
+	}
 
 	actionCfg := actions.New(o.EC, o.EC.MetadataDir)
+
 	var derivePayload actions.DerivePayload
+	if o.deriveFrom != "" {
+		derivePayload.Mutation = strings.TrimSpace(o.deriveFrom)
+		o.EC.Spin("Deriving a Hasura mutation...")
+		introSchema, err := migrateDrv.GetIntroSpectionSchema()
+		if err != nil {
+			return err
+		}
+		derivePayload.IntrospectionSchema = introSchema
+		o.EC.Spinner.Stop()
+	}
 
 	if o.EC.Config.Action.Codegen.Framework == "" {
 		infoMsg := fmt.Sprintf(`Could not find codegen config in config.yaml. For setting codegen config, run:
