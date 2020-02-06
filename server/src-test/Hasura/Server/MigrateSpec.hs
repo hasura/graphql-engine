@@ -36,11 +36,10 @@ instance (MonadBase IO m) => TableCoreInfoRM (CacheRefT m)
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
-instance (MonadIO m, MonadBaseControl IO m, MonadTx m, MonadUnique m) => CacheRWM (CacheRefT m) where
-  buildSchemaCacheWithOptions options = CacheRefT $ flip modifyMVar \schemaCache ->
-    swap <$> runCacheRWT schemaCache (buildSchemaCacheWithOptions options)
-  invalidateCachedRemoteSchema name = CacheRefT $ flip modifyMVar \schemaCache ->
-    swap <$> runCacheRWT schemaCache (invalidateCachedRemoteSchema name)
+instance (MonadIO m, MonadBaseControl IO m, MonadTx m) => CacheRWM (CacheRefT m) where
+  buildSchemaCacheWithOptions reason invalidations = CacheRefT $ flip modifyMVar \schemaCache -> do
+    ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations)
+    pure (cache, ())
 
 instance Example (CacheRefT m ()) where
   type Arg (CacheRefT m ()) = CacheRefT m :~> IO
