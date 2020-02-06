@@ -149,17 +149,17 @@ func setMetadataPlugins(drv *migrate.Migrate, dir ...string) {
 	} else {
 		metadataDir = dir[0]
 	}
-	plugins := metadataTypes.MetadataPlugins{}
+	plugins := make(metadataTypes.MetadataPlugins, 0)
 	if ec.Config.Version == "2" && metadataDir != "" {
-		plugins["version"] = metadataVersion.New(ec, metadataDir)
-		plugins["tables"] = tables.New(ec, metadataDir)
-		plugins["functions"] = functions.New(ec, metadataDir)
-		plugins["query_collections"] = querycollections.New(ec, metadataDir)
-		plugins["allow_list"] = allowlist.New(ec, metadataDir)
-		plugins["remote_schemas"] = remoteschemas.New(ec, metadataDir)
-		plugins["actions"] = actions.New(ec, metadataDir)
+		plugins = append(plugins, metadataVersion.New(ec, metadataDir))
+		plugins = append(plugins, tables.New(ec, metadataDir))
+		plugins = append(plugins, functions.New(ec, metadataDir))
+		plugins = append(plugins, querycollections.New(ec, metadataDir))
+		plugins = append(plugins, allowlist.New(ec, metadataDir))
+		plugins = append(plugins, remoteschemas.New(ec, metadataDir))
+		plugins = append(plugins, actions.New(ec, metadataDir))
 	} else {
-		plugins["metadata"] = metadata.New(ec, ec.MigrationDir)
+		plugins = append(plugins, metadata.New(ec, ec.MigrationDir))
 	}
 	drv.SetMetadataPlugins(plugins)
 }

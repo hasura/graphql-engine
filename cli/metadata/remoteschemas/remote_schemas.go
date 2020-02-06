@@ -4,9 +4,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -45,19 +43,28 @@ func (r *RemoteSchemaConfig) CreateFiles() error {
 	return nil
 }
 
-func (r *RemoteSchemaConfig) Build(metadata *types.Metadata) error {
+func (r *RemoteSchemaConfig) Build(metadata *yaml.MapSlice) error {
 	data, err := ioutil.ReadFile(filepath.Join(r.MetadataDir, fileName))
 	if err != nil {
 		return err
 	}
-	return gyaml.Unmarshal(data, &metadata.RemoteSchemas)
+	item := yaml.MapItem{
+		Key:   "remote_schemas",
+		Value: yaml.MapSlice{},
+	}
+	err = yaml.Unmarshal(data, &item.Value)
+	if err != nil {
+		return err
+	}
+	*metadata = append(*metadata, item)
+	return nil
 }
 
 func (r *RemoteSchemaConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
 	var remoteSchemas interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
-		if !ok || k != "allowlist" {
+		if !ok || k != "remote_schemas" {
 			continue
 		}
 		remoteSchemas = item.Value
@@ -72,4 +79,8 @@ func (r *RemoteSchemaConfig) Export(metadata yaml.MapSlice) (map[string][]byte, 
 	return map[string][]byte{
 		filepath.Join(r.MetadataDir, fileName): data,
 	}, nil
+}
+
+func (r *RemoteSchemaConfig) Name() string {
+	return "remote_schemas"
 }

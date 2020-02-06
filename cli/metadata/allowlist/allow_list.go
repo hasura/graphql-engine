@@ -4,9 +4,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -45,19 +43,28 @@ func (a *AllowListConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *AllowListConfig) Build(metadata *types.Metadata) error {
+func (a *AllowListConfig) Build(metadata *yaml.MapSlice) error {
 	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, fileName))
 	if err != nil {
 		return err
 	}
-	return gyaml.Unmarshal(data, &metadata.AllowList)
+	item := yaml.MapItem{
+		Key:   "allowlist",
+		Value: yaml.MapSlice{},
+	}
+	err = yaml.Unmarshal(data, &item.Value)
+	if err != nil {
+		return err
+	}
+	*metadata = append(*metadata, item)
+	return nil
 }
 
 func (a *AllowListConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
 	var allowList interface{}
 	for _, item := range metadata {
 		k, ok := item.Key.(string)
-		if !ok || k != "remote_schemas" {
+		if !ok || k != "allowlist" {
 			continue
 		}
 		allowList = item.Value
@@ -72,4 +79,8 @@ func (a *AllowListConfig) Export(metadata yaml.MapSlice) (map[string][]byte, err
 	return map[string][]byte{
 		filepath.Join(a.MetadataDir, fileName): data,
 	}, nil
+}
+
+func (a *AllowListConfig) Name() string {
+	return "allowlist"
 }

@@ -4,9 +4,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -45,12 +43,21 @@ func (f *FunctionConfig) CreateFiles() error {
 	return nil
 }
 
-func (f *FunctionConfig) Build(metadata *types.Metadata) error {
+func (f *FunctionConfig) Build(metadata *yaml.MapSlice) error {
 	data, err := ioutil.ReadFile(filepath.Join(f.MetadataDir, fileName))
 	if err != nil {
 		return err
 	}
-	return gyaml.Unmarshal(data, &metadata.Functions)
+	item := yaml.MapItem{
+		Key:   "functions",
+		Value: yaml.MapSlice{},
+	}
+	err = yaml.Unmarshal(data, &item.Value)
+	if err != nil {
+		return err
+	}
+	*metadata = append(*metadata, item)
+	return nil
 }
 
 func (f *FunctionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
@@ -72,4 +79,8 @@ func (f *FunctionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, erro
 	return map[string][]byte{
 		filepath.Join(f.MetadataDir, fileName): data,
 	}, nil
+}
+
+func (f *FunctionConfig) Name() string {
+	return "functions"
 }

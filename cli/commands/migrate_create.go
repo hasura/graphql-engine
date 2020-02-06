@@ -156,8 +156,8 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 			return 0, errors.Wrap(err, "cannot create temp directory to fetch metadata")
 		}
 		defer os.RemoveAll(tmpDirName)
-		plugins := metadataTypes.MetadataPlugins{}
-		plugins["metadata"] = metadata.New(o.EC, tmpDirName)
+		plugins := make(metadataTypes.MetadataPlugins, 0)
+		plugins = append(plugins, metadata.New(o.EC, tmpDirName))
 		migrateDrv.SetMetadataPlugins(plugins)
 		// fetch metadata from server
 		files, err := migrateDrv.ExportMetadata()

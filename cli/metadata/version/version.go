@@ -4,9 +4,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -47,17 +45,21 @@ func (a *VersionConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *VersionConfig) Build(metadata *types.Metadata) error {
+func (a *VersionConfig) Build(metadata *yaml.MapSlice) error {
 	data, err := ioutil.ReadFile(filepath.Join(a.MetadataDir, fileName))
 	if err != nil {
 		return err
 	}
 	var v Version
-	err = gyaml.Unmarshal(data, &v)
+	err = yaml.Unmarshal(data, &v)
 	if err != nil {
 		return err
 	}
-	metadata.Version = v.Version
+	item := yaml.MapItem{
+		Key:   "version",
+		Value: v.Version,
+	}
+	*metadata = append(*metadata, item)
 	return nil
 }
 
@@ -80,4 +82,8 @@ func (a *VersionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error
 	return map[string][]byte{
 		filepath.Join(a.MetadataDir, fileName): data,
 	}, nil
+}
+
+func (a *VersionConfig) Name() string {
+	return "version"
 }

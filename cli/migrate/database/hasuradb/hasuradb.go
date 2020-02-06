@@ -138,7 +138,7 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		},
 		isCMD:   isCMD,
 		Headers: headers,
-		Plugins: make(types.MetadataPlugins),
+		Plugins: make(types.MetadataPlugins, 0),
 	}
 	hx, err := WithInstance(config, logger)
 	if err != nil {

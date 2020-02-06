@@ -6,9 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -46,12 +44,21 @@ func (t *TableConfig) CreateFiles() error {
 	return nil
 }
 
-func (t *TableConfig) Build(metadata *types.Metadata) error {
+func (t *TableConfig) Build(metadata *yaml.MapSlice) error {
 	data, err := ioutil.ReadFile(filepath.Join(t.MetadataDir, fileName))
 	if err != nil {
 		return err
 	}
-	return gyaml.Unmarshal(data, &metadata.Tables)
+	item := yaml.MapItem{
+		Key:   "tables",
+		Value: yaml.MapSlice{},
+	}
+	err = yaml.Unmarshal(data, &item.Value)
+	if err != nil {
+		return err
+	}
+	*metadata = append(*metadata, item)
+	return nil
 }
 
 func (t *TableConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
@@ -73,4 +80,8 @@ func (t *TableConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) 
 	return map[string][]byte{
 		filepath.Join(t.MetadataDir, fileName): data,
 	}, nil
+}
+
+func (t *TableConfig) Name() string {
+	return "tables"
 }

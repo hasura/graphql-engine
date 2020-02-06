@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
@@ -313,7 +315,7 @@ func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
 	return m.databaseDrv.GetIntroSpectionSchema()
 }
 
-func (m *Migrate) SetMetadataPlugins(plugins interface{}) {
+func (m *Migrate) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	m.databaseDrv.SetMetadataPlugins(plugins)
 }
 
@@ -342,7 +344,7 @@ func (m *Migrate) DropInconsistentMetadata() error {
 	return m.databaseDrv.DropInconsistentMetadata()
 }
 
-func (m *Migrate) BuildMetadata() (types.Metadata, error) {
+func (m *Migrate) BuildMetadata() (yaml.MapSlice, error) {
 	return m.databaseDrv.BuildMetadata()
 }
 

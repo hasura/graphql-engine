@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -9,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/Masterminds/semver"
-	gyaml "github.com/ghodss/yaml"
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/kinds"
 	"github.com/graphql-go/graphql/language/parser"
@@ -21,7 +19,6 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
-	dbTypes "github.com/hasura/graphql-engine/cli/metadata/types"
 )
 
 const (
@@ -47,9 +44,9 @@ type sdlPayload struct {
 }
 
 type sdlToRequest struct {
-	Types   types.CustomTypes `json:"types,omitempty"`
-	Actions []types.Action    `json:"actions,omitempty"`
-	Derive  DerivePayload     `json:"derive,omitempty"`
+	Types   types.CustomTypes `json:"types,omitempty" yaml:"types,omitempty"`
+	Actions []types.Action    `json:"actions,omitempty" yaml:"actions,omitempty"`
+	Derive  DerivePayload     `json:"derive,omitempty" yaml:"derive,omitempty"`
 }
 
 type sdlToResponse struct {
@@ -422,7 +419,7 @@ func (a *ActionConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
+func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 	if a.shouldSkip {
 		_, err := GetActionsFileContent(a.MetadataDir)
 		if err == nil {
@@ -463,6 +460,8 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 				sdlFromResp.Actions[newActionIndex].Permissions = oldAction.Actions[actionIndex].Permissions
 				sdlFromResp.Actions[newActionIndex].Definition.Kind = oldAction.Actions[actionIndex].Definition.Kind
 				sdlFromResp.Actions[newActionIndex].Definition.Handler = oldAction.Actions[actionIndex].Definition.Handler
+				sdlFromResp.Actions[newActionIndex].Definition.ForwardClientHeaders = oldAction.Actions[actionIndex].Definition.ForwardClientHeaders
+				sdlFromResp.Actions[newActionIndex].Definition.Headers = oldAction.Actions[actionIndex].Definition.Headers
 				break
 			}
 		}
@@ -530,8 +529,16 @@ func (a *ActionConfig) Build(metadata *dbTypes.Metadata) error {
 		sdlFromResp.Actions[index].Definition.Kind = a.ActionConfig.Kind
 		sdlFromResp.Actions[index].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
 	}
-	metadata.Actions = sdlFromResp.Actions
-	metadata.CustomTypes = sdlFromResp.Types
+	actionItem := yaml.MapItem{
+		Key:   "actions",
+		Value: sdlFromResp.Actions,
+	}
+	*metadata = append(*metadata, actionItem)
+	customTypeItem := yaml.MapItem{
+		Key:   "custom_types",
+		Value: sdlFromResp.Types,
+	}
+	*metadata = append(*metadata, customTypeItem)
 	return nil
 }
 
@@ -548,16 +555,12 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 		}
 		actions = append(actions, item)
 	}
-	ymlByt, err := yaml.Marshal(metadata)
-	if err != nil {
-		return nil, err
-	}
-	jsonByt, err := gyaml.YAMLToJSON(ymlByt)
+	ymlByt, err := yaml.Marshal(actions)
 	if err != nil {
 		return nil, err
 	}
 	var common types.Common
-	err = json.Unmarshal(jsonByt, &common)
+	err = yaml.Unmarshal(ymlByt, &common)
 	if err != nil {
 		return nil, err
 	}
@@ -585,12 +588,16 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 	}, nil
 }
 
+func (a *ActionConfig) Name() string {
+	return "actions"
+}
+
 func GetActionsFileContent(metadataDir string) (content types.Common, err error) {
 	commonByt, err := ioutil.ReadFile(filepath.Join(metadataDir, actionsFileName))
 	if err != nil {
 		return
 	}
-	err = gyaml.Unmarshal(commonByt, &content)
+	err = yaml.Unmarshal(commonByt, &content)
 	return
 }
 

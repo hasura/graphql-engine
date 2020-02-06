@@ -202,14 +202,15 @@ func (o *initOptions) createFiles() error {
 	}
 
 	// create metadata files
-	plugins := metadataTypes.MetadataPlugins{}
-	plugins["version"] = metadataVersion.New(ec, ec.MetadataDir)
-	plugins["tables"] = tables.New(ec, ec.MetadataDir)
-	plugins["functions"] = functions.New(ec, ec.MetadataDir)
-	plugins["query_collections"] = querycollections.New(ec, ec.MetadataDir)
-	plugins["allow_list"] = allowlist.New(ec, ec.MetadataDir)
-	plugins["remote_schemas"] = remoteschemas.New(ec, ec.MetadataDir)
-	plugins["actions"] = actions.New(ec, ec.MetadataDir)
+	// TODO: move plugins in init method
+	plugins := make(metadataTypes.MetadataPlugins, 0)
+	plugins = append(plugins, metadataVersion.New(ec, ec.MetadataDir))
+	plugins = append(plugins, tables.New(ec, ec.MetadataDir))
+	plugins = append(plugins, functions.New(ec, ec.MetadataDir))
+	plugins = append(plugins, querycollections.New(ec, ec.MetadataDir))
+	plugins = append(plugins, allowlist.New(ec, ec.MetadataDir))
+	plugins = append(plugins, remoteschemas.New(ec, ec.MetadataDir))
+	plugins = append(plugins, actions.New(ec, ec.MetadataDir))
 	for _, plg := range plugins {
 		err := plg.CreateFiles()
 		if err != nil {

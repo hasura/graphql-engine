@@ -8,7 +8,9 @@ import (
 	"os"
 	"os/exec"
 
+	gyaml "github.com/ghodss/yaml"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 
 	"github.com/pkg/errors"
 )
@@ -41,7 +43,11 @@ func convertMetadataToSDL(toPayload sdlToRequest, cmdName string, logger *logrus
 	outputFileName := outputFile.Name()
 	// Defer removal of the temporary file in case any of the next steps fail.
 	defer os.Remove(outputFileName)
-	fromByt, err := json.Marshal(toPayload)
+	ybyt, err := yaml.Marshal(toPayload)
+	if err != nil {
+		return
+	}
+	fromByt, err := gyaml.YAMLToJSON(ybyt)
 	if err != nil {
 		return
 	}
@@ -66,7 +72,7 @@ func convertMetadataToSDL(toPayload sdlToRequest, cmdName string, logger *logrus
 	if err != nil {
 		return
 	}
-	err = json.Unmarshal(tmpByt, &toResponse)
+	err = yaml.Unmarshal(tmpByt, &toResponse)
 	return
 }
 
@@ -104,7 +110,7 @@ func convertSDLToMetadata(fromPayload sdlFromRequest, cmdName string, logger *lo
 	if err != nil {
 		return
 	}
-	err = json.Unmarshal(tmpByt, &fromResponse)
+	err = yaml.Unmarshal(tmpByt, &fromResponse)
 	return
 }
 

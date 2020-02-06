@@ -10,9 +10,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
-	dbTypes "github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/pkg/errors"
 )
 
@@ -39,8 +37,7 @@ func (m *MetadataConfig) CreateFiles() error {
 	return nil
 }
 
-func (m *MetadataConfig) Build(metadata *dbTypes.Metadata) error {
-	// Read metadata.yaml or metadata.json and set to metadata
+func (m *MetadataConfig) Build(metadata *yaml.MapSlice) error {
 	var metadataContent []byte
 	for _, format := range []string{"yaml", "json"} {
 		metadataPath, err := m.GetMetadataFilePath(format)
@@ -60,7 +57,13 @@ func (m *MetadataConfig) Build(metadata *dbTypes.Metadata) error {
 	if metadataContent == nil {
 		return errors.New("Unable to locate metadata.[yaml|json] file under migrations directory")
 	}
-	return gyaml.Unmarshal(metadataContent, &metadata)
+	var item yaml.MapSlice
+	err := yaml.Unmarshal(metadataContent, &item)
+	if err != nil {
+		return err
+	}
+	metadata = &item
+	return nil
 }
 
 func (m *MetadataConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
@@ -86,6 +89,10 @@ func (m *MetadataConfig) GetMetadataFilePath(format string) (string, error) {
 		}
 	}
 	return "", errors.New("unsupported file type")
+}
+
+func (m *MetadataConfig) Name() string {
+	return "metadata"
 }
 
 // GetExistingMetadataFile returns the path to the default metadata file that

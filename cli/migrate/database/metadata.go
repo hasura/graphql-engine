@@ -1,9 +1,12 @@
 package database
 
-import "github.com/hasura/graphql-engine/cli/metadata/types"
+import (
+	"github.com/hasura/graphql-engine/cli/metadata/types"
+	"gopkg.in/yaml.v2"
+)
 
 type MetadataDriver interface {
-	SetMetadataPlugins(plugins interface{})
+	SetMetadataPlugins(types.MetadataPlugins)
 
 	ExportMetadata() (map[string][]byte, error)
 
@@ -15,7 +18,7 @@ type MetadataDriver interface {
 
 	DropInconsistentMetadata() error
 
-	BuildMetadata() (types.Metadata, error)
+	BuildMetadata() (yaml.MapSlice, error)
 
 	ApplyMetadata() error
 

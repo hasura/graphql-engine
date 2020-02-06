@@ -6,9 +6,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	gyaml "github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -46,12 +44,21 @@ func (q *QueryCollectionConfig) CreateFiles() error {
 	return nil
 }
 
-func (q *QueryCollectionConfig) Build(metadata *types.Metadata) error {
+func (q *QueryCollectionConfig) Build(metadata *yaml.MapSlice) error {
 	data, err := ioutil.ReadFile(filepath.Join(q.MetadataDir, fileName))
 	if err != nil {
 		return err
 	}
-	return gyaml.Unmarshal(data, &metadata.QueryCollections)
+	item := yaml.MapItem{
+		Key:   "query_collections",
+		Value: yaml.MapSlice{},
+	}
+	err = yaml.Unmarshal(data, &item.Value)
+	if err != nil {
+		return err
+	}
+	*metadata = append(*metadata, item)
+	return nil
 }
 
 func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
@@ -73,4 +80,8 @@ func (q *QueryCollectionConfig) Export(metadata yaml.MapSlice) (map[string][]byt
 	return map[string][]byte{
 		filepath.Join(q.MetadataDir, fileName): data,
 	}, nil
+}
+
+func (q *QueryCollectionConfig) Name() string {
+	return "query_collections"
 }
