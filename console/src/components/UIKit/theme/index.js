@@ -1,6 +1,6 @@
 // Console ~ Theme object
 
-export const theme = {
+const baseTheme = {
   colors: {
     red: {
       original: '#ff0000',
@@ -90,7 +90,35 @@ export const theme = {
   lineHeights: [1.33, 1.5],
 };
 
-// **************************** //
+// ********************************* //
+
+export const theme = {
+  ...baseTheme,
+  alertBoxes: {
+    success: {
+      backgroundColor: baseTheme.colors.green.light,
+      borderColor: baseTheme.colors.green.primary,
+    },
+    info: {
+      backgroundColor: baseTheme.colors.blue.light,
+      borderColor: baseTheme.colors.blue.primary,
+    },
+    warning: {
+      backgroundColor: baseTheme.colors.orange.light,
+      borderColor: baseTheme.colors.orange.primary,
+    },
+    error: {
+      backgroundColor: baseTheme.colors.red.light,
+      borderColor: baseTheme.colors.red.primary,
+    },
+    default: {
+      backgroundColor: baseTheme.colors.green.light,
+      borderColor: baseTheme.colors.green.primary,
+    },
+  },
+};
+
+// ********************************* //
 
 // aliases ~ Theme References //
 

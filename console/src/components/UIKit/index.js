@@ -9,6 +9,7 @@ import { Alerts } from './demo/Alerts';
 import { BoxShadows } from './demo/Shadows';
 
 import Button from './atoms/Button';
+import AlertBox from './atoms/AlertBox';
 
 import { Flex, UIKitWrapperDiv, Heading } from './demo/styles';
 
@@ -73,6 +74,12 @@ const UIKit = () => (
         Info Button
       </Button>
     </Flex>
+    {/* AlertBox  *******************************/}
+    <AlertBox type="success" my="lg" />
+    <AlertBox type="info" my="lg" />
+    <AlertBox type="warning" my="lg" />
+    <AlertBox type="error" my="lg" />
+    <AlertBox type="default" my="lg" />
     {/* UI Elements *****************************/}
     <Heading color="black.text">UI Elements</Heading>
     <Heading as="h3" color="black.text" my="lg">
