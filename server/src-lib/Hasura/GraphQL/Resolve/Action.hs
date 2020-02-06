@@ -184,9 +184,9 @@ resolveActionSelect selectContext field = do
     parseActionId annInpValue = do
       mkParameterizablePGValue <$> asPGColumnValue annInpValue
 
-actionSelectToTx :: ActionSelectResolved -> RespTx
-actionSelectToTx actionSelect =
-  asSingleRowJsonResp (actionSelectToSql actionSelect) []
+-- actionSelectToTx :: ActionSelectResolved -> RespTx
+-- actionSelectToTx actionSelect =
+--   asSingleRowJsonResp (actionSelectToSql actionSelect) []
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -450,6 +450,7 @@ resolveActionInsert field executionContext sessionVariables =
     ActionExecutionAsync actionFilter ->
       resolveActionInsertAsync field actionFilter sessionVariables
 
+-- | Resolve asynchronous action mutation which returns only the action uuid
 resolveActionInsertAsync
   :: ( MonadError QErr m, MonadReader r m
      , Has [HTTP.Header] r
@@ -461,7 +462,7 @@ resolveActionInsertAsync
   -> m RespTx
 resolveActionInsertAsync field _ sessionVariables = do
 
-  responseSelectionSet <- resolveResponseSelectionSet (_fType field) $ _fSelSet field
+  -- responseSelectionSet <- resolveResponseSelectionSet (_fType field) $ _fSelSet field
   reqHeaders <- asks getter
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
 
@@ -472,9 +473,9 @@ resolveActionInsertAsync field _ sessionVariables = do
   -- let actionInput = OMap.union inputArgs resolvedPresetFields
 
   -- resolvedFilter <- resolveFilter
-  let resolvedFilter = annBoolExpTrue
+  -- let resolvedFilter = annBoolExpTrue
 
-  return $ do
+  pure $ do
     actionId <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
       INSERT INTO
           "hdb_catalog"."hdb_action_log"
@@ -485,9 +486,10 @@ resolveActionInsertAsync field _ sessionVariables = do
               |]
       (actionName, Q.AltJ sessionVariables, Q.AltJ $ toHeadersMap reqHeaders, Q.AltJ inputArgs, "created"::Text) False
 
-    actionSelectToTx $
-      ActionSelect (S.SELit $ UUID.toText actionId)
-      responseSelectionSet resolvedFilter
+    pure $ encJFromJValue $ UUID.toText actionId
+    -- actionSelectToTx $
+    --   ActionSelect (S.SELit $ UUID.toText actionId)
+    --   responseSelectionSet resolvedFilter
   where
     actionName = G.unName $ _fName field
     toHeadersMap = Map.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
