@@ -1,4 +1,4 @@
--- | Simple URL templating language enables interpolating environment variables
+-- | A simple URL templating that enables interpolating an environment variable
 
 module Data.URL.Template
   ( URLTemplate
@@ -6,6 +6,7 @@ module Data.URL.Template
   , printURLTemplate
   , parseURLTemplate
   , renderURLTemplate
+  , genURLTemplate
   )
 where
 
@@ -17,6 +18,7 @@ import           Data.Attoparsec.Text
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment         (lookupEnv)
+import           Test.QuickCheck
 
 newtype Variable = Variable {unVariable :: Text}
   deriving (Show, Eq, Lift, Generic)
@@ -51,3 +53,14 @@ renderURLTemplate (URLTemplate preVar var postVar) = do
     Just value -> Right $ preVar <> T.pack value <> postVar
   where
     variableString = T.unpack $ unVariable var
+
+-- | QuickCheck generator
+genURLTemplate :: Gen URLTemplate
+genURLTemplate =
+  URLTemplate <$> genText <*> genVariable <*> genText
+  where
+    genText :: Gen Text
+    genText = T.pack <$> listOf (elements $ alphaNumerics <> "://")
+
+    genVariable :: Gen Variable
+    genVariable = (Variable . T.pack) <$> listOf1 (elements $ alphaNumerics <> "-_")

@@ -15,20 +15,19 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-mkActionSelectionType :: ActionName -> G.NamedType
-mkActionSelectionType =
-  G.NamedType . unActionName
+mkAsyncActionSelectionType :: ActionName -> G.NamedType
+mkAsyncActionSelectionType = G.NamedType . unActionName
 
-mkActionResponseTypeInfo
+mkAsyncActionQueryResponseObj
   :: ActionName
   -- Name of the action
   -> GraphQLType
   -- output type
   -> ObjTyInfo
-mkActionResponseTypeInfo actionName outputType =
+mkAsyncActionQueryResponseObj actionName outputType =
   mkHsraObjTyInfo
   (Just description)
-  (mkActionSelectionType actionName) -- "(action_name)_input"
+  (mkAsyncActionSelectionType actionName) -- "(action_name)"
   mempty -- no arguments
   (mapFromL _fiName fieldDefinitions)
   where
@@ -85,18 +84,17 @@ mkMutationField actionName actionInfo permission definitionList =
       mkHsraObjFldInfo
       (Just description)
       (unActionName actionName)
-      (mapFromL _iviName $ map mkActionArgument $ _adArguments definition) $
-      actionFieldResponseType actionName definition
+      (mapFromL _iviName $ map mkActionArgument $ _adArguments definition)
+      actionFieldResponseType
 
     mkActionArgument argument =
       InpValInfo (_argDescription argument) (unArgumentName $ _argName argument)
       Nothing $ unGraphQLType $ _argType argument
 
-actionFieldResponseType :: ActionName -> ActionDefinition a -> G.GType
-actionFieldResponseType actionName definition =
-  case _adKind definition of
-    ActionSynchronous  -> unGraphQLType $ _adOutputType definition
-    ActionAsynchronous -> G.toGT $ G.toGT $ mkActionSelectionType actionName
+    actionFieldResponseType =
+      case _adKind definition of
+        ActionSynchronous  -> unGraphQLType $ _adOutputType definition
+        ActionAsynchronous -> G.toGT $ G.toNT $ mkScalarTy PGUUID
 
 mkQueryField
   :: ActionName
@@ -108,8 +106,12 @@ mkQueryField actionName definition permission definitionList =
   case _adKind definition of
     ActionAsynchronous ->
       Just ( ActionSelectOpContext (_apiFilter permission) definitionList
-           , fieldInfo
-           , TIObj $ mkActionResponseTypeInfo actionName $
+
+           , mkHsraObjFldInfo (Just description) (unActionName actionName)
+             (mapFromL _iviName [idArgument])
+             (G.toGT $ G.toGT $ mkAsyncActionSelectionType actionName)
+
+           , TIObj $ mkAsyncActionQueryResponseObj actionName $
              _adOutputType definition
            )
     ActionSynchronous -> Nothing
@@ -122,13 +124,6 @@ mkQueryField actionName definition permission definitionList =
       InpValInfo (Just idDescription) "id" Nothing $ G.toNT $ mkScalarTy PGUUID
       where
         idDescription = G.Description $ "id of the action: " <>> actionName
-
-    fieldInfo =
-      mkHsraObjFldInfo
-      (Just description)
-      (unActionName actionName)
-      (mapFromL _iviName [idArgument])
-      (actionFieldResponseType actionName definition)
 
 mkActionFieldsAndTypes
   :: (QErrM m)
@@ -185,6 +180,7 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
             , RFPGColumn $ PGColumnInfo
               (unsafePGCol $ coerce fieldName)
               (coerce fieldName)
+              0
               (PGColumnScalar $ mkPGFieldType fieldName (fieldType, fieldTypeInfo))
               (G.isNullable fieldType)
               Nothing

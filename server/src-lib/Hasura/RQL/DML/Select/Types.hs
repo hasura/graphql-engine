@@ -50,7 +50,7 @@ data AnnAggOrdBy
   deriving (Show, Eq)
 
 data AnnObColG v
-  = AOCPG !PGColumnInfo
+  = AOCPG !PGCol
   | AOCObj !RelInfo !(AnnBoolExp v) !(AnnObColG v)
   | AOCAgg !RelInfo !(AnnBoolExp v) !AnnAggOrdBy
   deriving (Show, Eq)
@@ -84,7 +84,7 @@ type AnnOrderByItem = AnnOrderByItemG S.SQLExp
 data AnnRelG a
   = AnnRelG
   { aarName    :: !RelName -- Relationship name
-  , aarMapping :: ![(PGCol, PGCol)] -- Column of left table to join with
+  , aarMapping :: !(HashMap PGCol PGCol) -- Column of left table to join with
   , aarAnnSel  :: !a -- Current table. Almost ~ to SQL Select
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 
@@ -250,7 +250,7 @@ type TableAggFldsG v = Fields (TableAggFldG v)
 type TableAggFlds = TableAggFldsG S.SQLExp
 
 data ArgumentExp a
-  = AETableRow
+  = AETableRow !(Maybe Iden) -- ^ table row accessor
   | AEInput !a
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
@@ -259,7 +259,9 @@ type FunctionArgsExpTableRow v = FunctionArgsExpG (ArgumentExp v)
 data SelectFromG v
   = FromTable !QualifiedTable
   | FromIden !Iden
-  | FromFunction !QualifiedFunction !(FunctionArgsExpTableRow v)
+  | FromFunction !QualifiedFunction
+                 !(FunctionArgsExpTableRow v)
+                 !(Maybe [(PGCol, PGScalarType)])
   deriving (Show, Eq, Functor, Foldable, Traversable)
 
 type SelectFrom = SelectFromG S.SQLExp
@@ -279,6 +281,10 @@ traverseTablePerm f (TablePerm boolExp limit) =
   TablePerm
   <$> traverseAnnBoolExp f boolExp
   <*> pure limit
+
+noTablePermissions :: TablePermG v
+noTablePermissions =
+  TablePerm annBoolExpTrue Nothing
 
 type TablePerm = TablePermG S.SQLExp
 
@@ -353,40 +359,6 @@ insertFunctionArg argName index value (FunctionArgsExp positional named) =
   where
     insertAt i a = toList . Seq.insertAt i a . Seq.fromList
 
-data AnnFnSelG s v
-  = AnnFnSel
-  { _afFn     :: !QualifiedFunction
-  , _afFnArgs :: !(FunctionArgsExpG v)
-  , _afSelect :: !s
-  } deriving (Show, Eq)
-
-traverseAnnFnSel
-  :: (Applicative f)
-  => (a -> f b) -> (v -> f w)
-  -> AnnFnSelG a v -> f (AnnFnSelG b w)
-traverseAnnFnSel fs fv (AnnFnSel fn fnArgs s) =
-  AnnFnSel fn <$> traverse fv fnArgs <*> fs s
-
-type AnnFnSelSimpleG v = AnnFnSelG (AnnSimpleSelG v) v
-type AnnFnSelSimple = AnnFnSelSimpleG S.SQLExp
-
-traverseAnnFnSimple
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnFnSelSimpleG a -> f (AnnFnSelSimpleG b)
-traverseAnnFnSimple f =
-  traverseAnnFnSel (traverseAnnSimpleSel f) f
-
-type AnnFnSelAggG v = AnnFnSelG (AnnAggSelG v) v
-type AnnFnSelAgg = AnnFnSelAggG S.SQLExp
-
-traverseAnnFnAgg
-  :: (Applicative f)
-  => (a -> f b)
-  -> AnnFnSelAggG a -> f (AnnFnSelAggG b)
-traverseAnnFnAgg f =
-  traverseAnnFnSel (traverseAnnAggSel f) f
-
 data BaseNode
   = BaseNode
   { _bnPrefix              :: !Iden
@@ -442,7 +414,7 @@ type ArrNodeItem = ArrNodeItemG S.SQLExp
 
 data ObjNode
   = ObjNode
-  { _rnRelMapping :: ![(PGCol, PGCol)]
+  { _rnRelMapping :: !(HashMap PGCol PGCol)
   , _rnNodeDet    :: !BaseNode
   } deriving (Show, Eq)
 
@@ -458,7 +430,7 @@ mergeObjNodes lNode rNode =
 data ArrNode
   = ArrNode
   { _anExtr       :: ![S.Extractor]
-  , _anRelMapping :: ![(PGCol, PGCol)]
+  , _anRelMapping :: !(HashMap PGCol PGCol)
   , _anNodeDet    :: !BaseNode
   } deriving (Show, Eq)
 

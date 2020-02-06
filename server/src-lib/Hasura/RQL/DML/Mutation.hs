@@ -3,13 +3,16 @@ module Hasura.RQL.DML.Mutation
   , runMutation
   , mutateAndFetchCols
   , mkSelCTEFromColVals
+  , withSingleTableRow
   )
 where
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson.Ordered       as AO
 import qualified Data.HashMap.Strict      as Map
 import qualified Data.Sequence            as DS
+import qualified Data.Text                as T
 import qualified Database.PG.Query        as Q
 
 import qualified Hasura.SQL.DML           as S
@@ -43,14 +46,14 @@ mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith)
         (toList p) True
   where
-    selWith = mkSelWith qt cte mutFlds False strfyNum
+    selWith = mkMutationOutputExp qt Nothing cte mutFlds strfyNum
 
 mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
 mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
   -- Perform mutation and fetch unique columns
-  MutateResp _ colVals <- mutateAndFetchCols qt allCols q strfyNum
-  selCTE <- mkSelCTEFromColVals qt allCols colVals
-  let selWith = mkSelWith qt selCTE mutFlds False strfyNum
+  MutateResp _ columnVals <- mutateAndFetchCols qt allCols q strfyNum
+  selCTE <- mkSelCTEFromColVals qt allCols columnVals
+  let selWith = mkMutationOutputExp qt Nothing selCTE mutFlds strfyNum
   -- Perform select query and fetch returning fields
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
@@ -61,7 +64,7 @@ mutateAndFetchCols
   -> [PGColumnInfo]
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
-  -> Q.TxE QErr MutateResp
+  -> Q.TxE QErr (MutateResp TxtEncodedPGVal)
 mutateAndFetchCols qt cols (cte, p) strfyNum =
   Q.getAltJ . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
@@ -88,31 +91,65 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
     colSel = S.SESelect $ mkSQLSelect False $
              AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
 
+-- | Note:- Using sorted columns is necessary to enable casting the rows returned by VALUES expression to table type.
+-- For example, let's consider the table, `CREATE TABLE test (id serial primary key, name text not null, age int)`.
+-- The generated values expression should be in order of columns;
+-- `SELECT ("row"::table).* VALUES (1, 'Robert', 23) AS "row"`.
 mkSelCTEFromColVals
   :: (MonadError QErr m)
-  => QualifiedTable -> [PGColumnInfo] -> [ColVals] -> m S.CTE
+  => QualifiedTable -> [PGColumnInfo] -> [ColumnValues TxtEncodedPGVal] -> m S.CTE
 mkSelCTEFromColVals qt allCols colVals =
   S.CTESelect <$> case colVals of
     [] -> return selNoRows
     _  -> do
       tuples <- mapM mkTupsFromColVal colVals
-      let fromItem = S.FIValues (S.ValuesExp tuples) tableAls $ Just colNames
+      let fromItem = S.FIValues (S.ValuesExp tuples) (S.Alias rowAlias) Nothing
       return S.mkSelect
-        { S.selExtr = [S.selectStar]
+        { S.selExtr = [extractor]
         , S.selFrom = Just $ S.FromExp [fromItem]
         }
   where
-    tableAls = S.Alias $ Iden $ snakeCaseQualObject qt
-    colNames = map pgiColumn allCols
+    rowAlias = Iden "row"
+    extractor = S.selectStar' $ S.QualIden rowAlias $ Just $ S.TypeAnn $ toSQLTxt qt
+    sortedCols = flip sortBy allCols $ \lCol rCol ->
+                 compare (pgiPosition lCol) (pgiPosition rCol)
     mkTupsFromColVal colVal =
-      fmap S.TupleExp $ forM allCols $ \ci -> do
+      fmap S.TupleExp $ forM sortedCols $ \ci -> do
         let pgCol = pgiColumn ci
         val <- onNothing (Map.lookup pgCol colVal) $
           throw500 $ "column " <> pgCol <<> " not found in returning values"
-        toTxtValue <$> parsePGScalarValue (pgiType ci) val
+        pure $ txtEncodedToSQLExp (pgiType ci) val
 
     selNoRows =
       S.mkSelect { S.selExtr = [S.selectStar]
                  , S.selFrom = Just $ S.mkSimpleFromExp qt
                  , S.selWhere = Just $ S.WhereFrag $ S.BELit False
                  }
+
+    txtEncodedToSQLExp colTy = \case
+      TENull          -> S.SENull
+      TELit textValue ->
+        S.withTyAnn (unsafePGColumnToRepresentation colTy) $ S.SELit textValue
+
+-- | Note: Expecting '{"returning": [{<table-row>}]}' encoded JSON
+withSingleTableRow
+  :: MonadError QErr m => EncJSON -> m EncJSON
+withSingleTableRow response =
+  case AO.eitherDecode $ encJToLBS response of
+    Left e  -> throw500 $ "error occurred while parsing mutation result: " <> T.pack e
+    Right val -> do
+      obj <- asObject val
+      rowsVal <- onNothing (AO.lookup "returning" obj) $
+                 throw500 "returning field not found in mutation result"
+      rows <- asArray rowsVal
+      pure $ AO.toEncJSON $ case rows of
+                              []  -> AO.Null
+                              r:_ -> r
+  where
+    asObject = \case
+      AO.Object o -> pure o
+      _           -> throw500 "expecting ordered Object"
+
+    asArray = \case
+      AO.Array arr -> pure $ toList arr
+      _            -> throw500 "expecting ordered Array"

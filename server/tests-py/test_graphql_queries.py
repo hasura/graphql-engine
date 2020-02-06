@@ -60,6 +60,18 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
 
+    def test_select_query_batching(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_batching.yaml", transport)
+
+    def test_select_query_batching_with_mutation(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_mutation.yaml", transport)
+
+    def test_select_query_batching_with_one_error(self, hge_ctx, transport):
+        transport = 'http'
+        check_query_f(hge_ctx, self.dir() + "/select_query_batching_with_one_error.yaml", transport)
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/basic'
@@ -234,6 +246,9 @@ class TestGraphQLQueryBoolExpBasic(DefaultTestSelectQueries):
 
     def test_query_account_permission_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_account_permission_fail.yaml', transport)
+
+    def test_in_sql_identifier_array(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/in_sql_identifier_array.yaml', transport)
 
     @classmethod
     def dir(cls):
@@ -489,6 +504,10 @@ class TestGraphQLQueryFunctions(DefaultTestSelectQueries):
     def test_track_function_v2_errors(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_function_v2_errors.yaml')
 
+    @pytest.mark.parametrize("transport", ['http', 'websocket'])
+    def test_query_get_test_session_id(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/query_get_test_session_id.yaml')
+
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions'
@@ -550,6 +569,9 @@ class TestGraphQLQueryComputedFields(DefaultTestSelectQueries):
 
     def test_locations(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/locations.yaml', transport)
+
+    def test_float_test(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/float_test.yaml', transport)
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 class TestGraphQLQueryCaching(DefaultTestSelectQueries):

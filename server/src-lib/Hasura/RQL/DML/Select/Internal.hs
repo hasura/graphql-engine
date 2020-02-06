@@ -1,7 +1,6 @@
 module Hasura.RQL.DML.Select.Internal
   ( mkSQLSelect
   , mkAggSelect
-  , mkFuncSelectWith
   , module Hasura.RQL.DML.Select.Types
   )
 where
@@ -35,15 +34,20 @@ selFromToFromItem :: Iden -> SelectFrom -> S.FromItem
 selFromToFromItem pfx = \case
   FromTable tn -> S.FISimple tn Nothing
   FromIden i   -> S.FIIden i
-  FromFunction qf args ->
+  FromFunction qf args defListM ->
     S.FIFunc $ S.FunctionExp qf (fromTableRowArgs pfx args) $
-    Just $ S.toAlias $ functionToIden qf
+    Just $ S.mkFunctionAlias (functionToIden qf) defListM
 
+-- This function shouldn't be present ideally
+-- You should be able to retrieve this information
+-- from the FromItem generated with selFromToFromItem
+-- however given from S.FromItem is modelled, it is not
+-- possible currently
 selFromToQual :: SelectFrom -> S.Qual
 selFromToQual = \case
   FromTable tn         -> S.QualTable tn
-  FromIden i           -> S.QualIden i
-  FromFunction qf _    -> S.QualIden $ functionToIden qf
+  FromIden i           -> S.QualIden i Nothing
+  FromFunction qf _ _  -> S.QualIden (functionToIden qf) Nothing
 
 aggFldToExp :: AggFlds -> S.SQLExp
 aggFldToExp aggFlds = jsonRow
@@ -173,8 +177,8 @@ mkBaseTableAls pfx =
   pfx <> Iden ".base"
 
 mkBaseTableColAls :: Iden -> PGCol -> Iden
-mkBaseTableColAls pfx pgCol =
-  pfx <> Iden ".pg." <> toIden pgCol
+mkBaseTableColAls pfx pgColumn =
+  pfx <> Iden ".pg." <> toIden pgColumn
 
 mkOrderByFieldName :: RelName -> FieldName
 mkOrderByFieldName relName =
@@ -186,8 +190,9 @@ fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =
       S.FunctionArgs positional named
-    toSQLExp AETableRow  = S.SERowIden $ mkBaseTableAls pfx
-    toSQLExp (AEInput s) = s
+    toSQLExp (AETableRow Nothing)    = S.SERowIden $ mkBaseTableAls pfx
+    toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAls pfx) acc
+    toSQLExp (AEInput s)             = s
 
 -- posttgres ignores anything beyond 63 chars for an iden
 -- in this case, we'll need to use json_build_object function
@@ -272,9 +277,9 @@ mkAggObExtrAndFlds annAggOb = case annAggOb of
     ( S.Extractor S.countStar als
     , [(FieldName "count", AFCount S.CTStar)]
     )
-  AAOOp op pgCol ->
-    ( S.Extractor (S.SEFnApp op [S.SEIden $ toIden pgCol] Nothing) als
-    , [(FieldName op, AFOp $ AggOp op [(fromPGCol pgCol, PCFCol pgCol)])]
+  AAOOp op pgColumn ->
+    ( S.Extractor (S.SEFnApp op [S.SEIden $ toIden pgColumn] Nothing) als
+    , [(FieldName op, AFOp $ AggOp op [(fromPGCol pgColumn, PCFCol pgColumn)])]
     )
   where
     als = Just $ S.toAlias $ mkAggObFld annAggOb
@@ -318,10 +323,10 @@ processAnnOrderByCol
      , OrderByNode
      )
 processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
-  AOCPG colInfo ->
+  AOCPG pgColumn ->
     let
-      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiColumn colInfo)
-      obColAls = mkBaseTableColAls pfx $ pgiColumn colInfo
+      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden pgColumn)
+      obColAls = mkBaseTableColAls pfx pgColumn
     in ( (S.Alias obColAls, qualCol)
        , OBNNothing
        )
@@ -624,7 +629,7 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
 
     distItemsM = processDistinctOnCol thisPfx <$> distM
     distExprM = fst <$> distItemsM
-    distExtrs = fromMaybe [] (snd <$> distItemsM)
+    distExtrs = maybe [] snd distItemsM
 
     -- process an object relationship
     mkObjItem (fld, objSel) =
@@ -685,10 +690,9 @@ injectJoinCond :: S.BoolExp       -- ^ Join condition
 injectJoinCond joinCond whereCond =
   S.WhereFrag $ S.simplifyBoolExp $ S.BEBin S.AndOp joinCond whereCond
 
-mkJoinCond :: S.Alias -> [(PGCol, PGCol)] -> S.BoolExp
+mkJoinCond :: S.Alias -> HashMap PGCol PGCol -> S.BoolExp
 mkJoinCond baseTablepfx colMapn =
-  foldl' (S.BEBin S.AndOp) (S.BELit True) $ flip map colMapn $
-  \(lCol, rCol) ->
+  foldl' (S.BEBin S.AndOp) (S.BELit True) $ flip map (HM.toList colMapn) $ \(lCol, rCol) ->
     S.BECompare S.SEQ (S.mkQIdenExp baseTablepfx lCol) (S.mkSIdenExp rCol)
 
 baseNodeToSel :: S.BoolExp -> BaseNode -> S.Select
@@ -707,7 +711,7 @@ baseNodeToSel joinCond baseNode =
              = baseNode
     -- this is the table which is aliased as "pfx.base"
     baseSel = S.mkSelect
-      { S.selExtr  = [S.Extractor S.SEStar Nothing]
+      { S.selExtr  = [S.Extractor (S.SEStar Nothing) Nothing]
       , S.selFrom  = Just $ S.FromExp [fromItem]
       , S.selWhere = Just $ injectJoinCond joinCond whr
       }
@@ -755,7 +759,7 @@ mkAggSelect :: AnnAggSel -> S.Select
 mkAggSelect annAggSel =
   prefixNumToAliases $ arrNodeToSelect bn extr $ S.BELit True
   where
-    aggSel = AnnRelG rootRelName [] annAggSel
+    aggSel = AnnRelG rootRelName HM.empty annAggSel
     rootIden = Iden "root"
     rootPrefix = Prefixes rootIden rootIden
     ArrNode extr _ bn =
@@ -773,30 +777,3 @@ mkSQLSelect isSingleObject annSel =
     baseNode = annSelToBaseNode False rootPrefix rootFldName annSel
     rootFldName = FieldName "root"
     rootFldAls  = S.Alias $ toIden rootFldName
-
-mkFuncSelectWith
-  :: (AnnSelG a S.SQLExp -> S.Select)
-  -> AnnFnSelG (AnnSelG a S.SQLExp) S.SQLExp
-  -> S.SelectWith
-mkFuncSelectWith f annFn =
-  S.SelectWith [(funcAls, S.CTESelect funcSel)] $
-  -- we'll need to modify the table from of the underlying
-  -- select to the alias of the select from function
-  f annSel { _asnFrom = newSelFrom }
-  where
-    AnnFnSel qf fnArgs annSel = annFn
-
-    -- SELECT * FROM function_name(args)
-    funcSel = S.mkSelect { S.selFrom = Just $ S.FromExp [frmItem]
-                         , S.selExtr = [S.Extractor S.SEStar Nothing]
-                         }
-    frmItem = S.mkFuncFromItem qf $ mkSQLFunctionArgs fnArgs
-
-    mkSQLFunctionArgs (FunctionArgsExp positional named) =
-      S.FunctionArgs positional named
-
-    newSelFrom = FromIden $ toIden funcAls
-
-    QualifiedObject sn fn = qf
-    funcAls = S.Alias $ Iden $
-      getSchemaTxt sn <> "_" <> getFunctionTxt fn <> "__result"

@@ -5,50 +5,49 @@ module Hasura.App where
 
 import           Control.Monad.Base
 import           Control.Monad.Stateless
-import           Control.Monad.STM           (atomically)
-import           Control.Monad.Trans.Control (MonadBaseControl (..))
-import           Data.Aeson                  ((.=))
-import           Data.Time.Clock             (UTCTime, getCurrentTime)
+import           Control.Monad.STM                    (atomically)
+import           Control.Monad.Trans.Control          (MonadBaseControl (..))
+import           Data.Aeson                           ((.=))
+import           Data.Time.Clock                      (UTCTime, getCurrentTime)
 import           Options.Applicative
-import           System.Environment          (getEnvironment, lookupEnv)
-import           System.Exit                 (exitFailure)
+import           System.Environment                   (getEnvironment, lookupEnv)
+import           System.Exit                          (exitFailure)
 
-import qualified Control.Concurrent          as C
-import qualified Data.Aeson                  as A
-import qualified Data.ByteString.Char8       as BC
-import qualified Data.ByteString.Lazy.Char8  as BLC
-import qualified Data.Text                   as T
-import qualified Data.Time.Clock             as Clock
-import qualified Data.Yaml                   as Y
-import qualified Database.PG.Query           as Q
-import qualified Network.HTTP.Client         as HTTP
-import qualified Network.HTTP.Client.TLS     as HTTP
-import qualified Network.Wai.Handler.Warp    as Warp
-import qualified System.Posix.Signals        as Signals
-import qualified Text.Mustache.Compile       as M
+import qualified Control.Concurrent                   as C
+import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Data.Aeson                           as A
+import qualified Data.ByteString.Char8                as BC
+import qualified Data.ByteString.Lazy.Char8           as BLC
+import qualified Data.Text                            as T
+import qualified Data.Time.Clock                      as Clock
+import qualified Data.Yaml                            as Y
+import qualified Database.PG.Query                    as Q
+import qualified Network.HTTP.Client                  as HTTP
+import qualified Network.HTTP.Client.TLS              as HTTP
+import qualified Network.Wai.Handler.Warp             as Warp
+import qualified System.Posix.Signals                 as Signals
+import qualified Text.Mustache.Compile                as M
 
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Events.Lib
+import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.Types            (CacheRWM, Code (..),
-                                              HasHttpManager, HasSQLGenCtx,
-                                              HasSystemDefined, QErr (..),
-                                              SQLGenCtx (..), SchemaCache (..),
-                                              UserInfoM, adminRole,
-                                              adminUserInfo, decodeValue,
-                                              emptySchemaCache, throw400,
-                                              userRole, withPathK)
+import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
+                                                       HasSQLGenCtx, HasSystemDefined, QErr (..),
+                                                       SQLGenCtx (..), SchemaCache (..), UserInfoM,
+                                                       adminRole, adminUserInfo,
+                                                       buildSchemaCacheStrict, decodeValue,
+                                                       throw400, userRole, withPathK)
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.App
 import           Hasura.Server.Auth
-import           Hasura.Server.CheckUpdates  (checkForUpdates)
+import           Hasura.Server.CheckUpdates           (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Migrate       (migrateCatalog)
-import           Hasura.Server.Query         (Run, RunCtx (..), peelRun,
-                                              requiresAdmin, runQueryM)
+import           Hasura.Server.Migrate                (migrateCatalog)
+import           Hasura.Server.Query                  (requiresAdmin, runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
@@ -131,7 +130,7 @@ newtype AppM a = AppM { unAppM :: IO a }
 -- this exists as a separate function because the context (logger, http manager, pg pool) can be
 -- used by other functions as well
 initialiseCtx
-  :: (MonadIO m)
+  :: (HasVersion, MonadIO m)
   => HGECommand Hasura
   -> RawConnInfo
   -> m (InitCtx, UTCTime)
@@ -184,16 +183,18 @@ initialiseCtx hgeCmd rci = do
       currentTime <- liftIO getCurrentTime
       -- initialise the catalog
       initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
-      either printErrJExit logger initRes
+      either printErrJExit (\(result, schemaCache) -> logger result $> schemaCache) initRes
 
 
 runHGEServer
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadStateless IO m
      , UserAuthentication m
      , MetadataApiAuthorization m
      , HttpLog m
      , ConsoleRenderer m
+     , LA.Forall (LA.Pure m)
      )
   => ServeOptions impl
   -> InitCtx
@@ -228,7 +229,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
-  logInconsObjs logger inconsObjs
+  liftIO $ logInconsObjs logger inconsObjs
 
   -- start a background thread for schema sync
   startSchemaSync sqlGenCtx _icPgPool logger _icHttpManager
@@ -241,24 +242,28 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
                      $ Warp.defaultSettings
 
   maxEvThrds <- liftIO $ getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-  evFetchMilliSec  <- liftIO $ getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+  fetchI  <- fmap milliseconds $ liftIO $
+    getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 
   -- prepare event triggers data
   prepareEvents _icPgPool logger
-  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
-  let scRef = _scrCache cacheRef
+  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
   void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool scRef eventEngineCtx
+    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx
+
+  -- start a backgroud thread to handle async actions
+  void $ liftIO $ C.forkIO $ asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
 
   -- start a background thread to check for updates
   void $ liftIO $ C.forkIO $ checkForUpdates loggerCtx _icHttpManager
 
+  -- TODO async/immortal:
   -- start a background thread for telemetry
   when soEnableTelemetry $ do
     unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-    void $ liftIO $ C.forkIO $ runTelemetry logger _icHttpManager scRef _icDbUid _icInstanceId
+    void $ liftIO $ C.forkIO $ runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
@@ -310,13 +315,13 @@ runAsAdmin
   -> Run a
   -> m (Either QErr a)
 runAsAdmin pool sqlGenCtx httpManager m = do
-  res <- runExceptT $ peelRun emptySchemaCache
-   (RunCtx adminUserInfo httpManager sqlGenCtx)
-   (PGExecCtx pool Q.Serializable) Q.ReadWrite m
-  return $ fmap fst res
+  let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+      pgCtx = PGExecCtx pool Q.Serializable
+  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite m
 
 execQuery
-  :: ( CacheRWM m
+  :: ( HasVersion
+     , CacheRWM m
      , MonadTx m
      , MonadIO m
      , HasHttpManager m
@@ -339,13 +344,13 @@ instance HttpLog AppM where
     unLogger logger $ mkHttpLog $
       mkHttpErrorLogContext userInfoM reqId httpReq qErr req Nothing Nothing headers
 
-  logHttpSuccess logger userInfoM reqId httpReq _ compressedResponse qTime cType headers =
+  logHttpSuccess logger userInfoM reqId httpReq _ _ compressedResponse qTime cType headers =
     unLogger logger $ mkHttpLog $
       mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
 
 instance UserAuthentication AppM where
   resolveUserInfo logger manager headers authMode =
-    runExceptT $ getUserInfo logger manager headers authMode
+    runExceptT $ getUserInfoWithExpTime logger manager headers authMode
 
 instance MetadataApiAuthorization AppM where
   authorizeMetadataApi query userInfo = do
@@ -359,7 +364,7 @@ instance ConsoleRenderer AppM where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
 
-mkConsoleHTML :: Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
+mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   renderHtmlTemplate consoleTmplt $
       -- variables required to render the template
@@ -367,7 +372,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
                , "consolePath" .= consolePath
                , "enableTelemetry" .= boolToText enableTelemetry
                , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
-               , "assetsVersion" .= consoleVersion
+               , "assetsVersion" .= consoleAssetsVersion
                , "serverVersion" .= currentVersion
                ]
     where
