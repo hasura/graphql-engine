@@ -200,6 +200,7 @@ library
 
                      -- exposed for tests
                      , Data.Parser.CacheControl
+                     , Data.URL.Template
 
                      , Hasura.Prelude
                      , Hasura.App
@@ -364,7 +365,6 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
-                     , Data.URL.Template
                      , Data.List.Extended
                      , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
@@ -420,6 +420,7 @@ test-suite graphql-engine-tests
   main-is: Main.hs
   other-modules:
     Data.Parser.CacheControlSpec
+    Data.Parser.URLTemplate
     Data.TimeSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
