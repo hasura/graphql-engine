@@ -24,7 +24,7 @@ fail_if_port_busy() {
 wait_for_port() {
     local PORT=$1
     echo "waiting for $PORT"
-    for _ in $(seq 1 240);
+    for _ in $(seq 1 60);
     do
       nc -z localhost $PORT && echo "port $PORT is ready" && return
       echo -n .
@@ -80,22 +80,38 @@ combine_all_hpc_reports() {
 	rm -f "$combined_file"
 	IFS=: tix_files_arr=($TIX_FILES)
 	unset IFS
-	for tix_file in "${tix_files_arr[@]}"
-	do
-		if ! [ -f "$tix_file" ] ; then
+	for tix_file in "${tix_files_arr[@]}"; do
+		if ! [ -f "$tix_file" ]; then
 			continue
 		fi
-		if [ -f "$combined_file" ]  ; then
-			GHCRTS_PREV="$GHCRTS"
-			# Unsetting GHCRTS as hpc combine fails if GCHRTS=-N2 is present
-			unset GHCRTS
-			(set -x && stack --allow-different-user exec -- hpc combine "$combined_file" "$tix_file" --union --output="$combined_file_intermediate" && set +x && mv "$combined_file_intermediate" "$combined_file" && rm "$tix_file" ) || true
-			# Restoring GHCRTS
-			export GHCRTS="$GHCRTS_PREV"
+		if [ -f "$combined_file" ]; then
+      # Unset GHCRTS as hpc combine fails if GCHRTS=-N2 is present
+			( unset GHCRTS
+        set -x
+        hpc combine "$combined_file" "$tix_file" --union --output="$combined_file_intermediate"
+        set +x
+        mv "$combined_file_intermediate" "$combined_file"
+        rm "$tix_file"
+      ) || true
 		else
 			mv "$tix_file" "$combined_file" || true
 		fi
 	done
+}
+
+generate_coverage_report() {
+  combine_all_hpc_reports
+  ( shopt -s failglob
+    unset GHCRTS
+    cd ~/graphql-engine/server
+    mix_dirs=("$MIX_FILES_FOLDER"/*)
+    # This is the bash syntax to prepend `--hpcdir=` to each element of an array. Yeah, I don’t like
+    # it, either.
+    hpcdir_args=("${mix_dirs[@]/#/--hpcdir=}")
+    hpc_args=("${hpcdir_args[@]}" --reset-hpcdirs "$OUTPUT_FOLDER/graphql-engine.tix")
+    hpc report "${hpc_args[@]}"
+    mkdir -p "$OUTPUT_FOLDER/coverage"
+    hpc markup "${hpc_args[@]}" --destdir="$OUTPUT_FOLDER/coverage" )
 }
 
 kill_hge_servers() {
@@ -134,11 +150,6 @@ if [ -z "${HASURA_GRAPHQL_DATABASE_URL_2:-}" ] ; then
 	exit 1
 fi
 
-if ! stack --allow-different-user exec which hpc ; then
-	echo "hpc not found; Install it with 'stack install hpc'"
-	exit 1
-fi
-
 CIRCLECI_FOLDER="${BASH_SOURCE[0]%/*}"
 cd $CIRCLECI_FOLDER
 CIRCLECI_FOLDER="$PWD"
@@ -165,15 +176,6 @@ TIX_FILES=""
 
 cd $PYTEST_ROOT
 
-if ! stack --allow-different-user exec -- which graphql-engine > /dev/null && [ -z "${GRAPHQL_ENGINE:-}" ] ; then
-	echo "Do 'stack build' before tests, or export the location of executable in the GRAPHQL_ENGINE envirnoment variable"
-	exit 1
-fi
-GRAPHQL_ENGINE=${GRAPHQL_ENGINE:-"$(stack --allow-different-user exec -- which graphql-engine)"}
-if ! [ -x "$GRAPHQL_ENGINE" ] ; then
-	echo "$GRAPHQL_ENGINE is not present or is not an executable"
-	exit 1
-fi
 RUN_WEBHOOK_TESTS=true
 
 for port in 8080 8081 9876 5592
@@ -219,7 +221,7 @@ run_pytest_parallel() {
 }
 
 echo -e "\n$(time_elapsed): <########## RUN GRAPHQL-ENGINE HASKELL TESTS ###########################################>\n"
-"${GRAPHQL_ENGINE_TESTS:?}"
+"${GRAPHQL_ENGINE_TESTS:?}" postgres
 
 echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITHOUT ADMIN SECRET ###########################################>\n"
 TEST_TYPE="no-auth"
@@ -545,6 +547,81 @@ kill_hge_servers
 
 # end allowlist queries test
 
+# jwk test
+unset HASURA_GRAPHQL_AUTH_HOOK
+unset HASURA_GRAPHQL_AUTH_HOOK_MODE
+unset HASURA_GRAPHQL_JWT_SECRET
+
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH JWK URL ########> \n"
+TEST_TYPE="jwk-url"
+
+# start the JWK server
+python3 jwk_server.py > "$OUTPUT_FOLDER/jwk_server.log" 2>&1  & JWKS_PID=$!
+wait_for_port 5001
+
+cache_control_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-cache-control"}'
+expires_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-expires"}'
+cc_nomaxage_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-cache-control?nomaxage"}'
+cc_nocache_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-cache-control?nocache"}'
+
+# start HGE with cache control JWK URL
+export HASURA_GRAPHQL_JWT_SECRET=$cache_control_jwk_url
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
+
+kill_hge_servers
+unset HASURA_GRAPHQL_JWT_SECRET
+
+run_hge_with_args serve --jwt-secret "$cache_control_jwk_url"
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
+
+kill_hge_servers
+
+# start HGE with expires JWK URL
+export HASURA_GRAPHQL_JWT_SECRET=$expires_jwk_url
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_expires_header'
+
+kill_hge_servers
+unset HASURA_GRAPHQL_JWT_SECRET
+
+run_hge_with_args serve --jwt-secret "$expires_jwk_url"
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_expires_header'
+
+kill_hge_servers
+
+# start HGE with nomaxage JWK URL
+export HASURA_GRAPHQL_JWT_SECRET=$cc_nomaxage_jwk_url
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
+
+kill_hge_servers
+unset HASURA_GRAPHQL_JWT_SECRET
+
+# start HGE with nocache JWK URL
+export HASURA_GRAPHQL_JWT_SECRET=$cc_nocache_jwk_url
+run_hge_with_args serve
+wait_for_port 8080
+
+pytest -n 1 -vv --hge-urls "$HGE_URL" --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --test-jwk-url test_jwk.py -k 'test_cache_control_header'
+
+kill_hge_servers
+unset HASURA_GRAPHQL_JWT_SECRET
+
+kill $JWKS_PID
+
+# end jwk url test
+
 # horizontal scale test
 unset HASURA_GRAPHQL_AUTH_HOOK
 unset HASURA_GRAPHQL_AUTH_HOOK_MODE
@@ -635,6 +712,6 @@ unset HASURA_HS_TEST_DB
 # end horizontal scale test
 
 echo -e "\n$(time_elapsed): <########## COMBINE ALL HPC REPORTS ########>\n"
-combine_all_hpc_reports || true
+generate_coverage_report || true
 
 echo -e "\n$(time_elapsed): <########## DONE ########>\n"
