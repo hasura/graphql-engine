@@ -6,10 +6,6 @@ response:
   type: point
   geom_col:
     type: Point
-    crs:
-      type: name
-      properties:
-        name: urn:ogc:def:crs:EPSG::4326
     coordinates:
     - 1
     - 2
@@ -21,10 +17,6 @@ query:
       geom_col:
         $st_equals:
           type: Point
-          crs:
-            type: name
-            properties:
-              name: urn:ogc:def:crs:EPSG::4326
           coordinates:
           - 1
           - 2

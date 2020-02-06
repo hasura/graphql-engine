@@ -3,6 +3,8 @@
 from http import HTTPStatus
 from urllib.parse import urlparse
 from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml 
+# from collections import OrderedDict
+# import socketserver
 import threading
 import http.server
 import json
@@ -10,6 +12,7 @@ import queue
 import socket
 import subprocess
 import time
+import uuid
 import string
 import random
 import os
@@ -289,8 +292,7 @@ class HGECtx:
         )
         # NOTE: make sure we preserve key ordering so we can test the ordering
         # properties in the graphql spec properly
-        # Returning response headers to get the request id from response
-        return resp.status_code, resp.json(object_pairs_hook=OrderedDict), resp.headers
+        return resp.status_code, resp.json(object_pairs_hook=OrderedDict)
 
     def sql(self, q):
         conn = self.engine.connect()

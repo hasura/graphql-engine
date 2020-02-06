@@ -42,7 +42,7 @@ parseOperationsExpression
   :: forall m v
    . (MonadError QErr m)
   => OpRhsParser m v
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap PGColumnInfo
   -> PGColumnInfo
   -> Value
   -> m [OpExpG v]
@@ -272,9 +272,9 @@ notEqualsBoolExpBuilder qualColExp rhsExp =
       (S.BENull rhsExp))
 
 annBoolExp
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, CacheRM m)
   => OpRhsParser m v
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap PGColumnInfo
   -> GBoolExp ColExp
   -> m (AnnBoolExp v)
 annBoolExp rhsParser fim boolExp =
@@ -293,9 +293,9 @@ annBoolExp rhsParser fim boolExp =
     procExps = mapM (annBoolExp rhsParser fim)
 
 annColExp
-  :: (QErrM m, TableCoreInfoRM m)
+  :: (QErrM m, CacheRM m)
   => OpRhsParser m v
-  -> FieldInfoMap FieldInfo
+  -> FieldInfoMap PGColumnInfo
   -> ColExp
   -> m (AnnBoolExpFld v)
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
@@ -341,10 +341,10 @@ convColRhs tableQual = \case
         newIdenQ = S.QualIden newIden
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
     let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
-          flip map (M.toList colMapping) $ \(lCol, rCol) ->
-            S.BECompare S.SEQ
-            (mkQCol (S.QualIden newIden) rCol)
-            (mkQCol tableQual lCol)
+          flip map colMapping $ \(lCol, rCol) ->
+          S.BECompare S.SEQ
+          (mkQCol (S.QualIden newIden) rCol)
+          (mkQCol tableQual lCol)
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
     return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
   where

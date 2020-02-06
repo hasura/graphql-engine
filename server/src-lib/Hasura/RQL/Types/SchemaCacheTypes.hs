@@ -17,18 +17,19 @@ import           Hasura.SQL.Types
 data TableObjId
   = TOCol !PGCol
   | TORel !RelName
-  | TOComputedField !ComputedFieldName
-  | TOForeignKey !ConstraintName
+  | TOCons !ConstraintName
   | TOPerm !RoleName !PermType
   | TOTrigger !TriggerName
+  | TOComputedField !ComputedFieldName
   deriving (Show, Eq, Generic)
+
 instance Hashable TableObjId
 
 data SchemaObjId
   = SOTable !QualifiedTable
   | SOTableObj !QualifiedTable !TableObjId
   | SOFunction !QualifiedFunction
-  deriving (Eq, Generic)
+   deriving (Eq, Generic)
 
 instance Hashable SchemaObjId
 
@@ -39,7 +40,7 @@ reportSchemaObj (SOTableObj tn (TOCol cn)) =
   "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
 reportSchemaObj (SOTableObj tn (TORel cn)) =
   "relationship " <> qualObjectToText tn <> "." <> relNameToTxt cn
-reportSchemaObj (SOTableObj tn (TOForeignKey cn)) =
+reportSchemaObj (SOTableObj tn (TOCons cn)) =
   "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
 reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
   "permission " <> qualObjectToText tn <> "." <> roleNameToTxt rn

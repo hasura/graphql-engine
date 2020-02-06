@@ -14,19 +14,9 @@
   url: /v1/query
   status: 400
   response:
-    internal:
-    - definition:
-        schema: public
-        name: get_session_var_value
-      reason: 'in function "get_session_var_value": the function "get_session_var_value"
-        cannot be tracked because given session argument "random" not the input argument
-        of the function'
-      type: function
-    path: $.args
-    error: 'in function "get_session_var_value": the function "get_session_var_value"
-      cannot be tracked because given session argument "random" not the input argument
-      of the function'
-    code: constraint-violation
+    path: "$.args"
+    error: the function "get_session_var_value" cannot be tracked because given session argument "random" not the input argument of the function
+    code: not-supported
   query:
     version: 2
     type: track_function
@@ -39,19 +29,9 @@
   url: /v1/query
   status: 400
   response:
-    internal:
-    - definition:
-        schema: public
-        name: get_session_var_value
-      reason: 'in function "get_session_var_value": the function "get_session_var_value"
-        cannot be tracked because given session argument "session_var" is not of type
-        json'
-      type: function
-    path: $.args
-    error: 'in function "get_session_var_value": the function "get_session_var_value"
-      cannot be tracked because given session argument "session_var" is not of type
-      json'
-    code: constraint-violation
+    path: "$.args"
+    error: the function "get_session_var_value" cannot be tracked because given session argument "session_var" is not of type json
+    code: not-supported
   query:
     version: 2
     type: track_function

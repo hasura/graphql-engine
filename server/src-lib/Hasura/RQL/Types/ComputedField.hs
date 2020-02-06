@@ -4,7 +4,6 @@ Description: Schema cache types related to computed field
 
 module Hasura.RQL.Types.ComputedField where
 
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Function
@@ -22,7 +21,7 @@ import qualified Database.PG.Query          as Q
 
 newtype ComputedFieldName =
   ComputedFieldName { unComputedFieldName :: NonEmptyText}
-  deriving (Show, Eq, NFData, Lift, FromJSON, ToJSON, Q.ToPrepArg, DQuote, Hashable, Q.FromCol, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, Lift, FromJSON, ToJSON, Q.ToPrepArg, DQuote, Hashable, Q.FromCol)
 
 computedFieldNameToText :: ComputedFieldName -> Text
 computedFieldNameToText = unNonEmptyText . unComputedFieldName
@@ -37,8 +36,7 @@ data FunctionTableArgument
   | FTANamed
     !FunctionArgName -- ^ argument name
     !Int -- ^ argument index
-  deriving (Show, Eq, Generic)
-instance Cacheable FunctionTableArgument
+  deriving (Show, Eq)
 
 instance ToJSON FunctionTableArgument where
   toJSON FTAFirst             = String "first_argument"
@@ -47,8 +45,7 @@ instance ToJSON FunctionTableArgument where
 data ComputedFieldReturn
   = CFRScalar !PGScalarType
   | CFRSetofTable !QualifiedTable
-  deriving (Show, Eq, Generic)
-instance Cacheable ComputedFieldReturn
+  deriving (Show, Eq)
 $(deriveToJSON defaultOptions { constructorTagModifier = snakeCase . drop 3
                               , sumEncoding = TaggedObject "type" "info"
                               }
@@ -62,8 +59,7 @@ data ComputedFieldFunction
   , _cffInputArgs     :: !(Seq.Seq FunctionArg)
   , _cffTableArgument :: !FunctionTableArgument
   , _cffDescription   :: !(Maybe PGDescription)
-  } deriving (Show, Eq, Generic)
-instance Cacheable ComputedFieldFunction
+  } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldFunction)
 
 data ComputedFieldInfo
@@ -72,8 +68,7 @@ data ComputedFieldInfo
   , _cfiFunction   :: !ComputedFieldFunction
   , _cfiReturnType :: !ComputedFieldReturn
   , _cfiComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Generic)
-instance Cacheable ComputedFieldInfo
+  } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldInfo)
 $(makeLenses ''ComputedFieldInfo)
 

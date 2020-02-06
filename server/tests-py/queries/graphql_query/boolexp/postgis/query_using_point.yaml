@@ -8,10 +8,6 @@ response:
       type: point
       geom_col:
         type: Point
-        crs:
-          type: name
-          properties:
-            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - 1
         - 2
@@ -19,10 +15,6 @@ response:
       type: linestring
       geom_col:
         type: LineString
-        crs:
-          type: name
-          properties:
-            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - - 0
           - 0
@@ -37,10 +29,6 @@ response:
       type: point
       geom_col:
         type: Point
-        crs:
-          type: name
-          properties:
-            name: urn:ogc:def:crs:EPSG::4326
         coordinates:
         - 1
         - 2
@@ -49,10 +37,6 @@ query:
   variables:
     point:
       type: Point
-      crs:
-        type: name
-        properties:
-          name: urn:ogc:def:crs:EPSG::4326
       coordinates:
       - 1
       - 2

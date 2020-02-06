@@ -1,7 +1,5 @@
 module Hasura.GraphQL.Resolve.Insert
-  ( convertInsert
-  , convertInsertOne
-  )
+  (convertInsert)
 where
 
 import           Control.Arrow                     ((>>>))
@@ -31,9 +29,9 @@ import           Hasura.GraphQL.Resolve.Mutation
 import           Hasura.GraphQL.Resolve.Select
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.DML.Insert             (insertCheckExpr)
-import           Hasura.RQL.DML.Internal           (convAnnBoolExpPartialSQL, convPartialSQLExp,
-                                                    dmlTxErrorHandler, sessVarFromCurrentSetting)
+import           Hasura.RQL.DML.Internal           (convPartialSQLExp,
+                                                    dmlTxErrorHandler,
+                                                    sessVarFromCurrentSetting)
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.GBoolExp               (toSQLBoolExp)
 import           Hasura.RQL.Types
@@ -50,7 +48,7 @@ data AnnIns a
   = AnnIns
   { _aiInsObj         :: !a
   , _aiConflictClause :: !(Maybe RI.ConflictClauseP1)
-  , _aiCheckCond      :: AnnBoolExpPartialSQL
+  , _aiView           :: !QualifiedTable
   , _aiTableCols      :: ![PGColumnInfo]
   , _aiDefVals        :: !(Map.HashMap PGCol S.SQLExp)
   } deriving (Show, Eq, Functor, Foldable, Traversable)
@@ -134,7 +132,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
                    throw500 $ "relation " <> relName <<> " not found"
 
         let rTable = riRTable relInfo
-        InsCtx rtColMap checkCond rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
+        InsCtx rtView rtColMap rtDefVals rtRelInfoMap rtUpdPerm <- getInsCtx rTable
         let rtCols = Map.elems rtColMap
         rtDefValsRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting) rtDefVals
 
@@ -143,7 +141,7 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
             dataObj <- asObject dataVal
             annDataObj <- mkAnnInsObj rtRelInfoMap rtColMap dataObj
             ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm rtColMap
-            let singleObjIns = AnnIns annDataObj ccM checkCond rtCols rtDefValsRes
+            let singleObjIns = AnnIns annDataObj ccM rtView rtCols rtDefValsRes
                 objRelIns = RelIns singleObjIns relInfo
             return (AnnInsObj cols (objRelIns:objRels) arrRels)
 
@@ -154,7 +152,8 @@ traverseInsObj rim allColMap (gName, annVal) defVal@(AnnInsObj cols objRels arrR
                     dataObj <- asObject arrDataVal
                     mkAnnInsObj rtRelInfoMap rtColMap dataObj
                   ccM <- forM onConflictM $ parseOnConflict rTable rtUpdPerm rtColMap
-                  let multiObjIns = AnnIns annDataObjs ccM checkCond rtCols rtDefValsRes
+                  let multiObjIns = AnnIns annDataObjs ccM rtView
+                                    rtCols rtDefValsRes
                       arrRelIns = RelIns multiObjIns relInfo
                   return (AnnInsObj cols objRels (arrRelIns:arrRels))
             -- if array relation insert input data has empty objects
@@ -170,7 +169,7 @@ parseOnConflict
   -> m RI.ConflictClauseP1
 parseOnConflict tn updFiltrM allColMap val = withPathK "on_conflict" $
   flip withObject val $ \_ obj -> do
-    constraint <- RI.CTConstraint <$> parseConstraint obj
+    constraint <- RI.Constraint <$> parseConstraint obj
     updCols <- getUpdCols obj
     case updCols of
       [] -> return $ RI.CP1DoNothing $ Just constraint
@@ -226,32 +225,26 @@ mkInsertQ
   -> [PGColWithValue]
   -> Map.HashMap PGCol S.SQLExp
   -> RoleName
-  -> AnnBoolExpSQL
-  -> m CTEExp
-mkInsertQ tn onConflictM insCols defVals role checkCond = do
+  -> m (CTEExp, Maybe RI.ConflictCtx)
+mkInsertQ vn onConflictM insCols defVals role = do
   (givenCols, args) <- flip runStateT Seq.Empty $ toSQLExps insCols
   let sqlConflict = RI.toSQLConflict <$> onConflictM
       sqlExps = mkSQLRow defVals givenCols
       valueExp = S.ValuesExp [S.TupleExp sqlExps]
       tableCols = Map.keys defVals
       sqlInsert =
-        S.SQLInsert tn tableCols valueExp sqlConflict
-          . Just
-          $ S.RetExp
-            [ S.selectStar
-            , insertCheckExpr (toSQLBoolExp (S.QualTable tn) checkCond)
-            ]
-
-      adminIns = return (CTEExp (S.CTEInsert sqlInsert) args)
+        S.SQLInsert vn tableCols valueExp sqlConflict $ Just S.returningStar
+      adminIns = return (CTEExp (S.CTEInsert sqlInsert) args, Nothing)
       nonAdminInsert = do
-        let cteIns = S.CTEInsert sqlInsert
-        return (CTEExp cteIns args)
+        ccM <- mapM RI.extractConflictCtx onConflictM
+        let cteIns = S.CTEInsert sqlInsert{S.siConflict=Nothing}
+        return (CTEExp cteIns args, ccM)
 
   bool nonAdminInsert adminIns $ isAdmin role
 
 asSingleObject
   :: MonadError QErr m
-  => [ColumnValues J.Value] -> m (Maybe (ColumnValues J.Value))
+  => [ColVals] -> m (Maybe ColVals)
 asSingleObject = \case
   []  -> return Nothing
   [a] -> return $ Just a
@@ -259,7 +252,7 @@ asSingleObject = \case
 
 fetchFromColVals
   :: MonadError QErr m
-  => ColumnValues J.Value
+  => ColVals
   -> [PGColumnInfo]
   -> (PGColumnInfo -> a)
   -> m [(a, WithScalarType PGScalarValue)]
@@ -275,13 +268,11 @@ mkSelCTE
   :: MonadError QErr m
   => QualifiedTable
   -> [PGColumnInfo]
-  -> Maybe (ColumnValues J.Value)
+  -> Maybe ColVals
   -> m CTEExp
 mkSelCTE tn allCols colValM = do
-  selCTE <- mkSelCTEFromColVals parseFn tn allCols $ maybe [] pure colValM
+  selCTE <- mkSelCTEFromColVals tn allCols $ maybe [] pure colValM
   return $ CTEExp selCTE Seq.Empty
-  where
-    parseFn ty val = toTxtValue <$> parsePGScalarValue ty val
 
 execCTEExp
   :: Bool
@@ -310,7 +301,7 @@ validateInsert insCols objRels addCols = do
     <> " columns as their values are already being determined by parent insert"
 
   forM_ objRels $ \relInfo -> do
-    let lCols = Map.keys $ riMapping relInfo
+    let lCols = map fst $ riMapping relInfo
         relName = riName relInfo
         relNameTxt = relNameToTxt relName
         lColConflicts = lCols `intersect` (addCols <> insCols)
@@ -335,7 +326,7 @@ insertObjRel strfyNum role objRelIns =
     colValM <- asSingleObject colVals
     colVal <- onNothing colValM $ throw400 NotSupported errMsg
     retColsWithVals <- fetchFromColVals colVal rColInfos pgiColumn
-    let c = mergeListsWith (Map.toList mapCols) retColsWithVals
+    let c = mergeListsWith mapCols retColsWithVals
           (\(_, rCol) (col, _) -> rCol == col)
           (\(lCol, _) (_, cVal) -> (lCol, cVal))
     return (aRows, c)
@@ -347,7 +338,7 @@ insertObjRel strfyNum role objRelIns =
     mapCols = riMapping relInfo
     tn = riRTable relInfo
     allCols = _aiTableCols singleObjIns
-    rCols = Map.elems mapCols
+    rCols = map snd mapCols
     rColInfos = getColInfos rCols allCols
     errMsg = "cannot proceed to insert object relation "
              <> relName <<> " since insert to table "
@@ -372,7 +363,7 @@ insertArrRel
   -> Q.TxE QErr Int
 insertArrRel strfyNum role resCols arrRelIns =
     withPathK relNameTxt $ do
-    let addCols = mergeListsWith resCols (Map.toList colMapping)
+    let addCols = mergeListsWith resCols colMapping
                (\(col, _) (lCol, _) -> col == lCol)
                (\(_, colVal) (_, rCol) -> (rCol, colVal))
 
@@ -408,11 +399,10 @@ insertObj strfyNum role tn singleObjIns addCols = do
       finalInsCols = cols <> objRelDeterminedCols <> addCols
 
   -- prepare insert query as with expression
-  checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting checkCond
+  (CTEExp cte insPArgs, ccM) <-
+    mkInsertQ vn onConflictM finalInsCols defVals role
 
-  CTEExp cte insPArgs <-
-    mkInsertQ tn onConflictM finalInsCols defVals role checkExpr
-
+  RI.setConflictCtx ccM
   MutateResp affRows colVals <- mutateAndFetchCols tn allCols (cte, insPArgs) strfyNum
   colValM <- asSingleObject colVals
   cteExp <- mkSelCTE tn allCols colValM
@@ -422,11 +412,11 @@ insertObj strfyNum role tn singleObjIns addCols = do
 
   return (totAffRows, cteExp)
   where
-    AnnIns annObj onConflictM checkCond allCols defVals = singleObjIns
+    AnnIns annObj onConflictM vn allCols defVals = singleObjIns
     AnnInsObj cols objRels arrRels = annObj
 
     arrRelDepCols = flip getColInfos allCols $
-      concatMap (Map.keys . riMapping . _riRelInfo) arrRels
+      concatMap (map fst . riMapping . _riRelInfo) arrRels
 
     withArrRels colValM = do
       colVal <- onNothing colValM $ throw400 NotSupported cannotInsArrRelErr
@@ -454,7 +444,7 @@ insertMultipleObjects
 insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
-    AnnIns insObjs onConflictM checkCond tableColInfos defVals = multiObjIns
+    AnnIns insObjs onConflictM vn tableColInfos defVals = multiObjIns
     singleObjInserts = multiToSingles multiObjIns
     insCols = map _aioColumns insObjs
     allInsObjRels = concatMap _aioObjRels insObjs
@@ -475,12 +465,9 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
         rowsWithCol <- mapM toSQLExps withAddCols
         return $ map (mkSQLRow defVals) rowsWithCol
 
-      checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting checkCond
-
-      let insQP1 = RI.InsertQueryP1 tn tableCols sqlRows onConflictM
-                     (Just checkExpr) mutFlds tableColInfos
+      let insQP1 = RI.InsertQueryP1 tn vn tableCols sqlRows onConflictM mutFlds tableColInfos
           p1 = (insQP1, prepArgs)
-      RI.insertP2 strfyNum p1
+      bool (RI.nonAdminInsert strfyNum p1) (RI.insertP2 strfyNum p1) $ isAdmin role
 
     -- insert each object with relations
     withRelsInsert = withErrPath $ do
@@ -525,14 +512,14 @@ convertInsert role tn fld = prefixErrPath fld $ do
     (withEmptyObjs mutFldsRes) $ null annVals
   where
     withNonEmptyObjs annVals mutFlds = do
-      InsCtx tableColMap checkCond defValMap relInfoMap updPerm <- getInsCtx tn
+      InsCtx vn tableColMap defValMap relInfoMap updPerm <- getInsCtx tn
       annObjs <- mapM asObject annVals
       annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap tableColMap
       conflictClauseM <- forM onConflictM $ parseOnConflict tn updPerm tableColMap
       defValMapRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting)
                       defValMap
-      let multiObjIns = AnnIns annInsObjs conflictClauseM checkCond
-                          tableCols defValMapRes
+      let multiObjIns = AnnIns annInsObjs conflictClauseM
+                        vn tableCols defValMapRes
           tableCols = Map.elems tableColMap
       strfyNum <- stringifyNum <$> asks getter
       return $ prefixErrPath fld $ insertMultipleObjects strfyNum role tn
@@ -541,33 +528,6 @@ convertInsert role tn fld = prefixErrPath fld $ do
       return $ return $ buildEmptyMutResp mutFlds
     arguments = _fArguments fld
     onConflictM = Map.lookup "on_conflict" arguments
-
-convertInsertOne
-  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, Has InsCtxMap r
-     )
-  => RoleName
-  -> QualifiedTable -- table
-  -> Field -- the mutation field
-  -> m RespTx
-convertInsertOne role qt field = prefixErrPath field $ do
-  tableSelFields <- processTableSelectionSet (_fType field) $ _fSelSet field
-  let mutationFieldsUnResolved = RR.onlyReturningMutFld tableSelFields
-  mutationFieldsResolved <- RR.traverseMutFlds resolveValTxt mutationFieldsUnResolved
-  annInputObj <- withArg arguments "object" asObject
-  InsCtx tableColMap check defValMap relInfoMap updPerm <- getInsCtx qt
-  annInsertObj <- mkAnnInsObj relInfoMap tableColMap annInputObj
-  conflictClauseM <- forM (Map.lookup "on_conflict" arguments) $ parseOnConflict qt updPerm tableColMap
-  defValMapRes <- mapM (convPartialSQLExp sessVarFromCurrentSetting) defValMap
-  let multiObjIns = AnnIns [annInsertObj] conflictClauseM check tableCols defValMapRes
-      tableCols = Map.elems tableColMap
-  strfyNum <- stringifyNum <$> asks getter
-  pure $ do
-    response <- prefixErrPath field $ insertMultipleObjects strfyNum role qt
-                multiObjIns [] mutationFieldsResolved "object"
-    withSingleTableRow response
-  where
-    arguments = _fArguments field
 
 -- helper functions
 getInsCtx

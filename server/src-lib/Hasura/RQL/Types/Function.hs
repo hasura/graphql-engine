@@ -1,6 +1,5 @@
 module Hasura.RQL.Types.Function where
 
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
@@ -18,9 +17,8 @@ data FunctionType
   = FTVOLATILE
   | FTIMMUTABLE
   | FTSTABLE
-  deriving (Eq, Generic)
-instance NFData FunctionType
-instance Cacheable FunctionType
+  deriving (Eq)
+
 $(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''FunctionType)
 
 funcTypToTxt :: FunctionType -> T.Text
@@ -33,18 +31,17 @@ instance Show FunctionType where
 
 newtype FunctionArgName =
   FunctionArgName { getFuncArgNameTxt :: T.Text}
-  deriving (Show, Eq, NFData, ToJSON, FromJSON, Lift, DQuote, IsString, Generic, Arbitrary, Cacheable)
+  deriving (Show, Eq, ToJSON, FromJSON, Lift, DQuote, IsString)
 
 newtype HasDefault = HasDefault { unHasDefault :: Bool }
-  deriving (Show, Eq, ToJSON, Cacheable)
+  deriving (Show, Eq, ToJSON)
 
 data FunctionArg
   = FunctionArg
   { faName       :: !(Maybe FunctionArgName)
   , faType       :: !QualifiedPGType
   , faHasDefault :: !HasDefault
-  } deriving (Show, Eq, Generic)
-instance Cacheable FunctionArg
+  } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''FunctionArg)
 
 data InputArgument a

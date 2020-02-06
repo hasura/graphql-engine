@@ -1,6 +1,5 @@
 module Hasura.GraphQL.Schema.Mutation.Delete
   ( mkDelMutFld
-  , mkDeleteByPkMutationField
   ) where
 
 import qualified Language.GraphQL.Draft.Syntax         as G
@@ -10,7 +9,6 @@ import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Mutation.Common
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
-import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 {-
@@ -35,22 +33,3 @@ mkDelMutFld mCustomName tn =
     filterArg =
       InpValInfo (Just filterArgDesc) "where" Nothing $ G.toGT $
       G.toNT $ mkBoolExpTy tn
-
-{-
-delete_table_by_pk(
-pk_columns: table_pk_columns_input!
-): table
--}
-
-mkDeleteByPkMutationField
-  :: Maybe G.Name
-  -> QualifiedTable
-  -> PrimaryKey PGColumnInfo
-  -> ObjFldInfo
-mkDeleteByPkMutationField mCustomName qt primaryKey =
-  mkHsraObjFldInfo (Just description) fieldName (fromInpValL inputArgs) $
-  G.toGT $ mkTableTy qt
-  where
-    description = G.Description $ "delete single row from the table: " <>> qt
-    fieldName = flip fromMaybe mCustomName $ "delete_" <> qualObjectToName qt <> "_by_pk"
-    inputArgs = map mkColumnInputVal $ toList $ _pkColumns primaryKey

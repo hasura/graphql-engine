@@ -4,16 +4,12 @@ status: 200
 headers:
   X-Hasura-Role: user2
   X-Hasura-Geom-Dist: '1'
-  X-Hasura-Geom-Val: '{"type":"Polygon","coordinates":[[[2,0],[2,1],[3,1],[3,0],[2,0]]],"crs":{"type":"name","properties":{"name":"EPSG:4326"}}}'
+  X-Hasura-Geom-Val: '{"type":"Polygon","coordinates":[[[2,0],[2,1],[3,1],[3,0],[2,0]]]}'
 response:
 - id: 3
   type: linestring
   geom_col:
     type: LineString
-    crs:
-      type: name
-      properties:
-        name: urn:ogc:def:crs:EPSG::4326
     coordinates:
     - - 1
       - 0
@@ -25,10 +21,6 @@ response:
   type: polygon
   geom_col:
     type: Polygon
-    crs:
-      type: name
-      properties:
-        name: urn:ogc:def:crs:EPSG::4326
     coordinates:
     - - - 0
         - 0
@@ -44,10 +36,6 @@ response:
   type: polygon
   geom_col:
     type: Polygon
-    crs:
-      type: name
-      properties:
-        name: urn:ogc:def:crs:EPSG::4326
     coordinates:
     - - - 2
         - 0

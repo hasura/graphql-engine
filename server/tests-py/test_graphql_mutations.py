@@ -250,18 +250,6 @@ class TestGraphqlNestedInserts(DefaultTestMutations):
     def test_articles_with_author_returning(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/articles_with_author_returning.yaml")
 
-    def test_author_one(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/author_one.yaml")
-
-    def test_author_with_articles_one(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/author_with_articles_one.yaml")
-
-    def test_author_upsert_one_update(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/author_upsert_one_update.yaml")
-
-    def test_author_upsert_one_no_update(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/author_upsert_one_no_update.yaml")
-
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/nested"
@@ -305,18 +293,6 @@ class TestGraphqlUpdateBasic(DefaultTestMutations):
 
     def test_no_operator_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/person_error_no_operator.yaml")
-
-    def test_column_in_multiple_operators(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators.yaml")
-
-    def test_column_in_multiple_operators(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_column_multiple_operators.yaml")
-
-    def test_author_by_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/author_by_pk.yaml")
-
-    def test_author_by_pk_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/author_by_pk_null.yaml")
 
     @classmethod
     def dir(cls):
@@ -391,15 +367,6 @@ class TestGraphqlDeleteBasic(DefaultTestMutations):
 
     def test_article_delete_returning_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/article_returning_author.yaml", transport)
-
-    def test_author_returning_empty_articles(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/author_returning_empty_articles.yaml", transport)
-
-    def test_article_by_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk.yaml", transport)
-
-    def test_article_by_pk_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk_null.yaml", transport)
 
     @classmethod
     def dir(cls):

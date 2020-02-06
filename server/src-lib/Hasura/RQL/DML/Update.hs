@@ -103,7 +103,7 @@ convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap FieldInfo
+  => FieldInfoMap PGColumnInfo
   -> [PGCol]
   -> UpdPermInfo
   -> [(PGCol, a)]
@@ -135,11 +135,10 @@ validateUpdateQueryWith
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfo tableName
-  let coreInfo = _tiCoreInfo tableInfo
 
   -- If it is view then check if it is updatable
   mutableView tableName viIsUpdatable
-    (_tciViewInfo coreInfo) "updatable"
+    (_tiViewInfo tableInfo) "updatable"
 
   -- Check if the role has update permissions
   updPerm <- askUpdPermInfo tableInfo
@@ -151,7 +150,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   selPerm <- modifyErr (<> selNecessaryMsg) $
              askSelPermInfo tableInfo
 
-  let fieldInfoMap = _tciFieldInfoMap coreInfo
+  let fieldInfoMap = _tiFieldInfoMap tableInfo
       allCols = getCols fieldInfoMap
       preSetObj = upiSet updPerm
       preSetCols = M.keys preSetObj
@@ -203,10 +202,10 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
       <> "without \"select\" permission on the table"
 
 validateUpdateQuery
-  :: (QErrM m, UserInfoM m, CacheRM m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => UpdateQuery -> m (AnnUpd, DS.Seq Q.PrepArg)
 validateUpdateQuery =
-  runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
+  liftDMLP1 . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
 
 updateQueryToTx
   :: Bool -> (AnnUpd, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
@@ -217,7 +216,7 @@ updateQueryToTx strfyNum (u, p) =
     updateCTE = mkUpdateCTE u
 
 runUpdate
-  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
   => UpdateQuery -> m EncJSON
 runUpdate q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx

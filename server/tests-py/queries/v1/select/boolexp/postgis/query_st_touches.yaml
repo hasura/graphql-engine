@@ -6,10 +6,6 @@ response:
   type: point
   geom_col:
     type: Point
-    crs:
-      type: name
-      properties:
-        name: urn:ogc:def:crs:EPSG::4326
     coordinates:
     - 1
     - 2
@@ -17,10 +13,6 @@ response:
   type: linestring
   geom_col:
     type: LineString
-    crs:
-      type: name
-      properties:
-        name: urn:ogc:def:crs:EPSG::4326
     coordinates:
     - - 0
       - 0
@@ -38,10 +30,6 @@ query:
       geom_col:
         $st_touches:
           type: LineString
-          crs:
-            type: name
-            properties:
-              name: urn:ogc:def:crs:EPSG::4326
           coordinates:
           - - -1
             - 0

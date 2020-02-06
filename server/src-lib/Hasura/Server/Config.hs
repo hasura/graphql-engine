@@ -9,7 +9,7 @@ import           Data.Aeson.TH
 import           Hasura.Prelude
 import           Hasura.Server.Auth
 import           Hasura.Server.Auth.JWT
-import           Hasura.Server.Version  (HasVersion, Version, currentVersion)
+import qualified Hasura.Server.Version  as V
 
 data JWTInfo
   = JWTInfo
@@ -21,22 +21,22 @@ $(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)
 
 data ServerConfig
   = ServerConfig
-  { scfgVersion          :: !Version
+  { scfgVersion          :: !Text
   , scfgIsAdminSecretSet :: !Bool
   , scfgIsAuthHookSet    :: !Bool
   , scfgIsJwtSet         :: !Bool
   , scfgJwt              :: !(Maybe JWTInfo)
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ServerConfig)
 
-runGetConfig :: HasVersion => AuthMode -> ServerConfig
+runGetConfig ::  AuthMode -> ServerConfig
 runGetConfig am = ServerConfig
-  currentVersion
-  (isAdminSecretSet am)
-  (isAuthHookSet am)
-  (isJWTSet am)
-  (getJWTInfo am)
+    V.currentVersion
+    (isAdminSecretSet am)
+    (isAuthHookSet am)
+    (isJWTSet am)
+    (getJWTInfo am)
 
 isAdminSecretSet :: AuthMode -> Bool
 isAdminSecretSet = \case

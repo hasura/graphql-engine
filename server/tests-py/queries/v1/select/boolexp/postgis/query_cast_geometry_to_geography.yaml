@@ -19,8 +19,4 @@ query:
               distance: 1000000
               from:
                 type: Point
-                crs:
-                  type: name
-                  properties:
-                    name: urn:ogc:def:crs:EPSG::4326
                 coordinates: [1, 50]

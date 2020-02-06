@@ -7,7 +7,6 @@ module Data.Sequence.NonEmpty
   , toSeq
   ) where
 
-import qualified Data.Foldable as F
 import qualified Data.Sequence as Seq
 import           Prelude       (Eq, Show, fst, (.))
 
@@ -17,9 +16,6 @@ infixl 5 |>
 newtype NESeq a
   = NESeq { unNESeq :: (a, Seq.Seq a)}
   deriving (Show, Eq)
-
-instance F.Foldable NESeq where
-  foldr f v = F.foldr f v . toSeq
 
 init :: a -> NESeq a
 init a = NESeq (a, Seq.empty)

@@ -23,7 +23,8 @@ import qualified Hasura.Logging                   as L
 
 import           Hasura.Db
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (QErr, RoleName (..), SchemaCache (..),
+import           Hasura.RQL.Types                 (QErr, RoleName (..),
+                                                   SchemaCache (..),
                                                    mkNonEmptyText)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
@@ -234,10 +235,10 @@ parseStrAsBool t
 readIsoLevel :: String -> Either String Q.TxIsolation
 readIsoLevel isoS =
   case isoS of
-    "read-committed"  -> return Q.ReadCommitted
+    "read-committed" -> return Q.ReadCommitted
     "repeatable-read" -> return Q.RepeatableRead
-    "serializable"    -> return Q.Serializable
-    _                 -> Left "Only expecting read-committed / repeatable-read / serializable"
+    "serializable" -> return Q.Serializable
+    _ -> Left "Only expecting read-committed / repeatable-read / serializable"
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 
@@ -343,8 +344,6 @@ mkServeOptions rso = do
 #endif
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
-      -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
-      -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
@@ -498,16 +497,13 @@ serveHostEnv =
 pgConnsEnv :: (String, String)
 pgConnsEnv =
   ( "HASURA_GRAPHQL_PG_CONNECTIONS"
-  , "Maximum number of Postgres connections that can be opened per stripe (default: 50). "
-    <> "When the maximum is reached we will block until a new connection becomes available, "
-    <> "even if there is capacity in other stripes."
+  , "Number of connections per stripe that need to be opened to Postgres (default: 50)"
   )
 
 pgStripesEnv :: (String, String)
 pgStripesEnv =
   ( "HASURA_GRAPHQL_PG_STRIPES"
-  , "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1). "
-    <> "New connections will be taken from a particular stripe pseudo-randomly."
+  , "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1)"
   )
 
 pgTimeoutEnv :: (String, String)

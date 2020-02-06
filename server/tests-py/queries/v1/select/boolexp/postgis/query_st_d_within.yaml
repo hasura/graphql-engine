@@ -6,10 +6,6 @@ response:
   type: linestring
   geom_col:
     type: LineString
-    crs:
-      type: name
-      properties:
-        name: urn:ogc:def:crs:EPSG::4326
     coordinates:
     - - 1
       - 0
@@ -21,10 +17,6 @@ response:
   type: polygon
   geom_col:
     type: Polygon
-    crs:
-      type: name
-      properties:
-        name: urn:ogc:def:crs:EPSG::4326
     coordinates:
     - - - 0
         - 0
@@ -40,10 +32,6 @@ response:
   type: polygon
   geom_col:
     type: Polygon
-    crs:
-      type: name
-      properties:
-        name: urn:ogc:def:crs:EPSG::4326
     coordinates:
     - - - 2
         - 0
@@ -65,10 +53,6 @@ query:
           distance: 1
           from:
             type: Polygon
-            crs:
-              type: name
-              properties:
-                name: urn:ogc:def:crs:EPSG::4326
             coordinates:
             - - - 2
                 - 0

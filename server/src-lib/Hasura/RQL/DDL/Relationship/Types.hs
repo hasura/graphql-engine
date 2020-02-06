@@ -8,6 +8,7 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Aeson.Types
 import qualified Data.HashMap.Strict        as HM
+import qualified Data.Map.Strict            as M
 import qualified Data.Text                  as T
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
@@ -17,7 +18,7 @@ data RelDef a
   { rdName    :: !RelName
   , rdUsing   :: !a
   , rdComment :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Lift)
 
 $(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RelDef)
 
@@ -34,8 +35,8 @@ instance (ToJSON a) => ToAesonPairs (RelDef a) where
 data RelManualConfig
   = RelManualConfig
   { rmTable   :: !QualifiedTable
-  , rmColumns :: !(HashMap PGCol PGCol)
-  } deriving (Show, Eq, Lift, Generic)
+  , rmColumns :: !(M.Map PGCol PGCol)
+  } deriving (Show, Eq, Lift)
 
 instance FromJSON RelManualConfig where
   parseJSON (Object v) =
@@ -52,22 +53,22 @@ instance ToJSON RelManualConfig where
            , "column_mapping" .= cm
            ]
 
-data RelUsing a
-  = RUFKeyOn !a
-  | RUManual !RelManualConfig
-  deriving (Show, Eq, Lift, Generic)
+data RelUsing a b
+  = RUFKeyOn a
+  | RUManual b
+  deriving (Show, Eq, Lift)
 
-instance (ToJSON a) => ToJSON (RelUsing a) where
+instance (ToJSON a, ToJSON b) => ToJSON (RelUsing a b) where
   toJSON (RUFKeyOn fkey) =
     object [ "foreign_key_constraint_on" .= fkey ]
   toJSON (RUManual manual) =
     object [ "manual_configuration" .= manual ]
 
-instance (FromJSON a) => FromJSON (RelUsing a) where
+instance (FromJSON a, FromJSON b) => FromJSON (RelUsing a b) where
   parseJSON (Object o) = do
     let fkeyOnM = HM.lookup "foreign_key_constraint_on" o
         manualM = HM.lookup "manual_configuration" o
-        msgFrag = "one of foreign_key_constraint_on/manual_configuration should be present"
+    let msgFrag = "one of foreign_key_constraint_on/manual_configuration should be present"
     case (fkeyOnM, manualM) of
       (Nothing, Nothing) -> fail $ "atleast " <> msgFrag
       (Just a, Nothing)  -> RUFKeyOn <$> parseJSON a
@@ -76,20 +77,29 @@ instance (FromJSON a) => FromJSON (RelUsing a) where
   parseJSON _ =
     fail "using should be an object"
 
+newtype ArrRelManualConfig =
+  ArrRelManualConfig { getArrRelMapping :: RelManualConfig }
+  deriving (Show, Eq, FromJSON, ToJSON, Lift)
+
 data ArrRelUsingFKeyOn
   = ArrRelUsingFKeyOn
   { arufTable  :: !QualifiedTable
   , arufColumn :: !PGCol
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ArrRelUsingFKeyOn)
 
-type ArrRelUsing = RelUsing ArrRelUsingFKeyOn
+type ArrRelUsing = RelUsing ArrRelUsingFKeyOn ArrRelManualConfig
 type ArrRelDef = RelDef ArrRelUsing
 type CreateArrRel = WithTable ArrRelDef
 
-type ObjRelUsing = RelUsing PGCol
+newtype ObjRelManualConfig =
+  ObjRelManualConfig { getObjRelMapping :: RelManualConfig }
+  deriving (Show, Eq, FromJSON, ToJSON, Lift)
+
+type ObjRelUsing = RelUsing PGCol ObjRelManualConfig
 type ObjRelDef = RelDef ObjRelUsing
+
 type CreateObjRel = WithTable ObjRelDef
 
 data DropRel

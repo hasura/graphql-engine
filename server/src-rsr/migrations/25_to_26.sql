@@ -103,3 +103,4 @@ WHERE
             ((pg_aggregate.aggfnoid) :: oid = p.oid)
         )
     )
+);

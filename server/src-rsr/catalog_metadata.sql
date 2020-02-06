@@ -1,23 +1,21 @@
 select
   json_build_object(
-    'tables', tables.items :: json,
+    'tables', tables.items,
     'relations', relations.items,
     'permissions', permissions.items,
     'event_triggers', event_triggers.items,
     'remote_schemas', remote_schemas.items,
     'functions', functions.items,
+    'foreign_keys', foreign_keys.items,
     'allowlist_collections', allowlist.item,
-    'computed_fields', computed_field.items,
-    'custom_types', coalesce((select custom_types from hdb_catalog.hdb_custom_types), '{}'),
-    'actions', actions.items,
-    'action_permissions', action_permissions.items
+    'computed_fields', computed_field.items
   )
 from
   (
     select
-      coalesce(jsonb_agg(
-        jsonb_build_object(
-          'name', jsonb_build_object(
+      coalesce(json_agg(
+        json_build_object(
+          'name', json_build_object(
             'name', ht.table_name,
             'schema', ht.table_schema
           ),
@@ -27,8 +25,20 @@ from
           'info', t.info
         )
       ), '[]') as items
-    from hdb_catalog.hdb_table ht
-    left join hdb_catalog.hdb_table_info_agg t using (table_schema, table_name)
+    from hdb_catalog.hdb_table as ht
+    left outer join (
+      select
+        table_schema,
+        table_name,
+        jsonb_build_object(
+          'description', description,
+          'columns', columns,
+          'primary_key_columns', primary_key_columns,
+          'constraints', constraints,
+          'view_info', view_info
+        ) as info
+      from hdb_catalog.hdb_table_info_agg
+    ) as t using (table_schema, table_name)
   ) as tables,
   (
     select
@@ -136,6 +146,35 @@ from
    ) as functions,
   (
     select
+      coalesce(json_agg(foreign_key.info), '[]') as items
+    from
+      (
+        select
+          json_build_object(
+            'table',
+            json_build_object(
+              'schema', f.table_schema,
+              'name', f.table_name
+            ),
+            'ref_table',
+            json_build_object(
+              'schema', f.ref_table_table_schema,
+              'name', f.ref_table
+            ),
+            'oid', f.constraint_oid,
+            'constraint', f.constraint_name,
+            'column_mapping', f.column_mapping
+          ) as info
+        from
+         hdb_catalog.hdb_foreign_key_constraint f
+         left outer join hdb_catalog.hdb_table ht
+         on ( ht.table_schema = f.table_schema
+              and ht.table_name = f.table_name
+            )
+      ) as foreign_key
+  ) as foreign_keys,
+  (
+    select
       coalesce(json_agg(hqc.collection_defn), '[]') as item
     from hdb_catalog.hdb_allowlist ha
     left outer join
@@ -173,35 +212,4 @@ from
         from hdb_catalog.hdb_function_info_agg
         where function_name = cc.function_name and function_schema = cc.function_schema
       ) fi on 'true'
-  ) as computed_field,
-  (
-    select
-      coalesce(
-        json_agg(
-          json_build_object(
-            'name', action_name,
-            'definition', action_defn :: json,
-            'comment', comment
-          )
-        ),
-        '[]'
-      ) as items
-    from
-      hdb_catalog.hdb_action
-  ) as actions,
-  (
-    select
-      coalesce(
-        json_agg(
-          json_build_object(
-            'action', action_name,
-            'role', role_name,
-            'definition', definition :: json,
-            'comment', comment
-          )
-        ),
-        '[]'
-      ) as items
-    from
-      hdb_catalog.hdb_action_permission
-  ) as action_permissions
+  ) as computed_field

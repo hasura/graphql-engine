@@ -1,14 +1,8 @@
-type: bulk
+type: run_sql
 args:
-- type: run_sql
-  args:
-    sql: |
-      create table author(
+  sql: |
+    create table author(
         id serial primary key,
         name text unique,
         is_registered boolean
-        );
-- type: track_table
-  args:
-    schema: public
-    name: author
+    );

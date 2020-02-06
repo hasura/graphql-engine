@@ -40,7 +40,6 @@ module Hasura.RQL.Types.DML
 
 import qualified Hasura.SQL.DML             as S
 
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Common
@@ -63,13 +62,10 @@ data ColExp
   = ColExp
   { ceCol :: !FieldName
   , ceVal :: !Value
-  } deriving (Show, Eq, Lift, Data, Generic)
-instance NFData ColExp
-instance Cacheable ColExp
+  } deriving (Show, Eq, Lift, Data)
 
 newtype BoolExp
-  = BoolExp { unBoolExp :: GBoolExp ColExp }
-  deriving (Show, Eq, Lift, Generic, NFData, Cacheable)
+  = BoolExp { unBoolExp :: GBoolExp ColExp } deriving (Show, Eq, Lift)
 
 $(makeWrapped ''BoolExp)
 
@@ -302,7 +298,7 @@ instance ToJSON SelectQueryT where
   toJSON (DMLQuery qt selQ) =
     object $ "table" .= qt : selectGToPairs selQ
 
-type InsObj = ColumnValues Value
+type InsObj = ColVals
 
 data ConflictAction
   = CAIgnore
@@ -357,7 +353,7 @@ data InsertTxConflictCtx
   } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''InsertTxConflictCtx)
 
-type UpdVals = ColumnValues Value
+type UpdVals = ColVals
 
 data UpdateQuery
   = UpdateQuery

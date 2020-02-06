@@ -23,7 +23,6 @@ import           Control.Lens
 import           Data.Aeson
 import           Data.IORef             (newIORef)
 import           Data.Time.Clock        (UTCTime)
-import           Hasura.Server.Version  (HasVersion)
 
 import qualified Data.Aeson             as J
 import qualified Data.ByteString.Lazy   as BL
@@ -44,13 +43,12 @@ import           Hasura.Server.Utils
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
   resolveUserInfo
-    :: (HasVersion)
-    => Logger Hasura
+    :: Logger Hasura
     -> H.Manager
     -> [N.Header]
     -- ^ request headers
     -> AuthMode
-    -> m (Either QErr (UserInfo, Maybe UTCTime))
+    -> m (Either QErr UserInfo)
 
 newtype AdminSecret
   = AdminSecret { getAdminSecret :: T.Text }
@@ -81,8 +79,7 @@ data AuthMode
   deriving (Show, Eq)
 
 mkAuthMode
-  :: ( HasVersion
-     , MonadIO m
+  :: ( MonadIO m
      , MonadError T.Text m
      )
   => Maybe AdminSecret
@@ -120,8 +117,7 @@ mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager logger =
         <> " when --auth-hook (HASURA_GRAPHQL_AUTH_HOOK) is set"
 
 mkJwtCtx
-  :: ( HasVersion
-     , MonadIO m
+  :: ( MonadIO m
      , MonadError T.Text m
      )
   => JWTConfig
@@ -184,7 +180,7 @@ mkUserInfoFromResp logger url method statusCode respBody
         url method Nothing $ fmap (bsToTxt . BL.toStrict) mResp
 
 userInfoFromAuthHook
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: (MonadIO m, MonadError QErr m)
   => Logger Hasura
   -> H.Manager
   -> AuthHook
@@ -223,7 +219,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
       n `notElem` commonClientHeadersIgnored
 
 getUserInfo
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: (MonadIO m, MonadError QErr m)
   => Logger Hasura
   -> H.Manager
   -> [N.Header]
@@ -232,7 +228,7 @@ getUserInfo
 getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
 
 getUserInfoWithExpTime
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: (MonadIO m, MonadError QErr m)
   => Logger Hasura
   -> H.Manager
   -> [N.Header]

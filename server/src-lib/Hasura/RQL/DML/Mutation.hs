@@ -3,17 +3,13 @@ module Hasura.RQL.DML.Mutation
   , runMutation
   , mutateAndFetchCols
   , mkSelCTEFromColVals
-  , withSingleTableRow
   )
 where
 
-import           Data.Aeson
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Ordered       as AO
 import qualified Data.HashMap.Strict      as Map
 import qualified Data.Sequence            as DS
-import qualified Data.Text                as T
 import qualified Database.PG.Query        as Q
 
 import qualified Hasura.SQL.DML           as S
@@ -52,26 +48,20 @@ mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
 mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
 mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
   -- Perform mutation and fetch unique columns
-  MutateResp _ columnVals <- mutateAndFetchCols qt allCols q strfyNum
-  selCTE <- mkSelCTEFromColVals txtEncodedToSQLExp qt allCols columnVals
+  MutateResp _ colVals <- mutateAndFetchCols qt allCols q strfyNum
+  selCTE <- mkSelCTEFromColVals qt allCols colVals
   let selWith = mkSelWith qt selCTE mutFlds False strfyNum
   -- Perform select query and fetch returning fields
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
-  where
-    txtEncodedToSQLExp colTy = pure . \case
-      TENull          -> S.SENull
-      TELit textValue ->
-        S.withTyAnn (unsafePGColumnToRepresentation colTy) $ S.SELit textValue
 
 
 mutateAndFetchCols
-  :: (FromJSON a)
-  => QualifiedTable
+  :: QualifiedTable
   -> [PGColumnInfo]
   -> (S.CTE, DS.Seq Q.PrepArg)
   -> Bool
-  -> Q.TxE QErr (MutateResp a)
+  -> Q.TxE QErr MutateResp
 mutateAndFetchCols qt cols (cte, p) strfyNum =
   Q.getAltJ . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) (toList p) True
@@ -100,9 +90,8 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
 
 mkSelCTEFromColVals
   :: (MonadError QErr m)
-  => (PGColumnType -> a -> m S.SQLExp)
-  -> QualifiedTable -> [PGColumnInfo] -> [ColumnValues a] -> m S.CTE
-mkSelCTEFromColVals parseFn qt allCols colVals =
+  => QualifiedTable -> [PGColumnInfo] -> [ColVals] -> m S.CTE
+mkSelCTEFromColVals qt allCols colVals =
   S.CTESelect <$> case colVals of
     [] -> return selNoRows
     _  -> do
@@ -120,34 +109,10 @@ mkSelCTEFromColVals parseFn qt allCols colVals =
         let pgCol = pgiColumn ci
         val <- onNothing (Map.lookup pgCol colVal) $
           throw500 $ "column " <> pgCol <<> " not found in returning values"
-        parseFn (pgiType ci) val
+        toTxtValue <$> parsePGScalarValue (pgiType ci) val
 
     selNoRows =
       S.mkSelect { S.selExtr = [S.selectStar]
                  , S.selFrom = Just $ S.mkSimpleFromExp qt
                  , S.selWhere = Just $ S.WhereFrag $ S.BELit False
                  }
-
-
--- | Note: Expecting '{"returning": [{<table-row>}]}' encoded JSON
-withSingleTableRow
-  :: MonadError QErr m => EncJSON -> m EncJSON
-withSingleTableRow response =
-  case AO.eitherDecode $ encJToLBS response of
-    Left e  -> throw500 $ "error occurred while parsing mutation result: " <> T.pack e
-    Right val -> do
-      obj <- asObject val
-      rowsVal <- onNothing (AO.lookup "returning" obj) $
-                 throw500 "returning field not found in mutation result"
-      rows <- asArray rowsVal
-      pure $ AO.toEncJSON $ case rows of
-                              []  -> AO.Null
-                              r:_ -> r
-  where
-    asObject = \case
-      AO.Object o -> pure o
-      _           -> throw500 "expecting ordered Object"
-
-    asArray = \case
-      AO.Array arr -> pure $ toList arr
-      _            -> throw500 "expecting ordered Array"

@@ -12,8 +12,8 @@ query:
       geog_col:
         $st_intersects:
           coordinates:
-          - 0.0
-          - 0.5
+          - -43.23456
+          - 72.4567772
           crs:
             type: name
             properties:

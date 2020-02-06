@@ -18,7 +18,6 @@ import qualified Data.Text.Extended         as T
 import qualified Hasura.SQL.DML             as S
 
 import           Hasura.EncJSON
-import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
@@ -31,8 +30,7 @@ import qualified Database.PG.Query          as Q
 data PermColSpec
   = PCStar
   | PCCols ![PGCol]
-  deriving (Show, Eq, Lift, Generic)
-instance Cacheable PermColSpec
+  deriving (Show, Eq, Lift)
 
 instance FromJSON PermColSpec where
   parseJSON (String "*") = return PCStar
@@ -42,9 +40,26 @@ instance ToJSON PermColSpec where
   toJSON (PCCols cols) = toJSON cols
   toJSON PCStar        = "*"
 
-convColSpec :: FieldInfoMap FieldInfo -> PermColSpec -> [PGCol]
+convColSpec :: FieldInfoMap PGColumnInfo -> PermColSpec -> [PGCol]
 convColSpec _ (PCCols cols) = cols
 convColSpec cim PCStar      = map pgiColumn $ getCols cim
+
+assertPermNotDefined
+  :: (MonadError QErr m)
+  => RoleName
+  -> PermAccessor a
+  -> TableInfo PGColumnInfo
+  -> m ()
+assertPermNotDefined roleName pa tableInfo =
+  when (permissionIsDefined rpi pa || roleName == adminRole)
+  $ throw400 AlreadyExists $ mconcat
+  [ "'" <> T.pack (show $ permAccToType pa) <> "'"
+  , " permission on " <>> _tiName tableInfo
+  , " for role " <>> roleName
+  , " already exists"
+  ]
+  where
+    rpi = M.lookup roleName $ _tiRolePermInfoMap tableInfo
 
 permissionIsDefined
   :: Maybe RolePermInfo -> PermAccessor a -> Bool
@@ -55,12 +70,12 @@ assertPermDefined
   :: (MonadError QErr m)
   => RoleName
   -> PermAccessor a
-  -> TableInfo
+  -> TableInfo PGColumnInfo
   -> m ()
 assertPermDefined roleName pa tableInfo =
   unless (permissionIsDefined rpi pa) $ throw400 PermissionDenied $ mconcat
   [ "'" <> T.pack (show $ permAccToType pa) <> "'"
-  , " permission on " <>> _tciName (_tiCoreInfo tableInfo)
+  , " permission on " <>> _tiName tableInfo
   , " for role " <>> roleName
   , " does not exist"
   ]
@@ -69,7 +84,7 @@ assertPermDefined roleName pa tableInfo =
 
 askPermInfo
   :: (MonadError QErr m)
-  => TableInfo
+  => TableInfo PGColumnInfo
   -> RoleName
   -> PermAccessor c
   -> m c
@@ -77,7 +92,7 @@ askPermInfo tabInfo roleName pa =
   case M.lookup roleName rpim >>= (^. paL) of
     Just c  -> return c
     Nothing -> throw400 PermissionDenied $ mconcat
-               [ pt <> " permission on " <>> _tciName (_tiCoreInfo tabInfo)
+               [ pt <> " permission on " <>> _tiName tabInfo
                , " for role " <>> roleName
                , " does not exist"
                ]
@@ -139,8 +154,8 @@ data PermDef a =
   { pdRole       :: !RoleName
   , pdPermission :: !a
   , pdComment    :: !(Maybe T.Text)
-  } deriving (Show, Eq, Lift, Generic)
-instance (Cacheable a) => Cacheable (PermDef a)
+  } deriving (Show, Eq, Lift)
+
 $(deriveFromJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''PermDef)
 
 instance (ToJSON a) => ToJSON (PermDef a) where
@@ -160,10 +175,8 @@ data CreatePermP1Res a
   } deriving (Show, Eq)
 
 procBoolExp
-  :: (QErrM m, TableCoreInfoRM m)
-  => QualifiedTable
-  -> FieldInfoMap FieldInfo
-  -> BoolExp
+  :: (QErrM m, CacheRM m)
+  => QualifiedTable -> FieldInfoMap PGColumnInfo -> BoolExp
   -> m (AnnBoolExpPartialSQL, [SchemaDependency])
 procBoolExp tn fieldInfoMap be = do
   abe <- annBoolExp valueParser fieldInfoMap $ unBoolExp be
@@ -239,15 +252,27 @@ type family PermInfo a = r | r -> a
 
 class (ToJSON a) => IsPerm a where
 
+  type DropPermP1Res a
+
   permAccessor
     :: PermAccessor (PermInfo a)
 
   buildPermInfo
-    :: (QErrM m, TableCoreInfoRM m)
-    => QualifiedTable
-    -> FieldInfoMap FieldInfo
+    :: (QErrM m, CacheRM m)
+    => TableInfo PGColumnInfo
     -> PermDef a
     -> m (WithDeps (PermInfo a))
+
+  addPermP2Setup
+    :: (MonadTx m) => QualifiedTable -> PermDef a -> PermInfo a -> m ()
+
+  buildDropPermP1Res
+    :: (QErrM m, CacheRM m, UserInfoM m)
+    => DropPerm a
+    -> m (DropPermP1Res a)
+
+  dropPermP2Setup
+    :: (CacheRWM m, MonadTx m) => DropPerm a -> DropPermP1Res a -> m ()
 
   getPermAcc1
     :: PermDef a -> PermAccessor (PermInfo a)
@@ -256,21 +281,58 @@ class (ToJSON a) => IsPerm a where
   getPermAcc2
     :: DropPerm a -> PermAccessor (PermInfo a)
   getPermAcc2 _ = permAccessor
-  
-addPermP2 :: (IsPerm a, MonadTx m, HasSystemDefined m) => QualifiedTable -> PermDef a -> m ()
-addPermP2 tn pd = do
-  let pt = permAccToType $ getPermAcc1 pd
+
+validateViewPerm
+  :: (IsPerm a, QErrM m) => PermDef a -> TableInfo PGColumnInfo -> m ()
+validateViewPerm permDef tableInfo =
+  case permAcc of
+    PASelect -> return ()
+    PAInsert -> mutableView tn viIsInsertable viewInfo "insertable"
+    PAUpdate -> mutableView tn viIsUpdatable viewInfo "updatable"
+    PADelete -> mutableView tn viIsDeletable viewInfo "deletable"
+  where
+    tn = _tiName tableInfo
+    viewInfo = _tiViewInfo tableInfo
+    permAcc = getPermAcc1 permDef
+
+addPermP1
+  :: (QErrM m, CacheRM m, IsPerm a)
+  => TableInfo PGColumnInfo -> PermDef a -> m (WithDeps (PermInfo a))
+addPermP1 tabInfo pd = do
+  assertPermNotDefined (pdRole pd) (getPermAcc1 pd) tabInfo
+  buildPermInfo tabInfo pd
+
+addPermP2 :: (IsPerm a, QErrM m, CacheRWM m, MonadTx m, HasSystemDefined m)
+          => QualifiedTable -> PermDef a -> WithDeps (PermInfo a) -> m ()
+addPermP2 tn pd (permInfo, deps) = do
+  addPermP2Setup tn pd permInfo
+  addPermToCache tn (pdRole pd) pa permInfo deps
   systemDefined <- askSystemDefined
   liftTx $ savePermToCatalog pt tn pd systemDefined
+  where
+    pa = getPermAcc1 pd
+    pt = permAccToType pa
+
+createPermP1
+  :: ( UserInfoM m, MonadError QErr m
+     , CacheRM m, IsPerm a
+     )
+  => WithTable (PermDef a) -> m (WithDeps (PermInfo a))
+createPermP1 (WithTable tn pd) = do
+  tabInfo <- askTabInfo tn
+  validateViewPerm pd tabInfo
+  addPermP1 tabInfo pd
 
 runCreatePerm
-  :: (UserInfoM m, CacheRWM m, IsPerm a, MonadTx m, HasSystemDefined m)
+  :: ( UserInfoM m
+     , CacheRWM m, IsPerm a, MonadTx m
+     , HasSystemDefined m
+     )
   => CreatePerm a -> m EncJSON
-runCreatePerm (WithTable tn pd) = do
-  addPermP2 tn pd
-  let pt = permAccToType $ getPermAcc1 pd
-  buildSchemaCacheFor $ MOTableObj tn (MTOPerm (pdRole pd) pt)
-  pure successMsg
+runCreatePerm defn@(WithTable tn pd) = do
+  permInfo <- createPermP1 defn
+  addPermP2 tn pd permInfo
+  return successMsg
 
 dropPermP1
   :: (QErrM m, CacheRM m, IsPerm a)
@@ -279,8 +341,12 @@ dropPermP1 dp@(DropPerm tn rn) = do
   tabInfo <- askTabInfo tn
   askPermInfo tabInfo rn $ getPermAcc2 dp
 
-dropPermP2 :: forall a m. (MonadTx m, IsPerm a) => DropPerm a -> m ()
-dropPermP2 dp@(DropPerm tn rn) = do
+dropPermP2
+  :: (IsPerm a, QErrM m, CacheRWM m, MonadTx m)
+  => DropPerm a -> DropPermP1Res a -> m ()
+dropPermP2 dp@(DropPerm tn rn) p1Res = do
+  dropPermP2Setup dp p1Res
+  delPermFromCache pa rn tn
   liftTx $ dropPermFromCatalog tn rn pt
   where
     pa = getPermAcc2 dp
@@ -290,7 +356,6 @@ runDropPerm
   :: (IsPerm a, UserInfoM m, CacheRWM m, MonadTx m)
   => DropPerm a -> m EncJSON
 runDropPerm defn = do
-  dropPermP1 defn
-  dropPermP2 defn
-  withNewInconsistentObjsCheck buildSchemaCache
+  permInfo <- buildDropPermP1Res defn
+  dropPermP2 defn permInfo
   return successMsg

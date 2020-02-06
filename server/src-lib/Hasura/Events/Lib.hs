@@ -17,13 +17,13 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
 import           Data.Int                      (Int64)
+import           Data.IORef                    (IORef, readIORef)
 import           Data.Time.Clock
 import           Hasura.Events.HTTP
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Version         (HasVersion)
 import           Hasura.SQL.Types
 
 import qualified Control.Concurrent.STM.TQueue as TQ
@@ -47,6 +47,9 @@ invocationVersion :: Version
 invocationVersion = "2"
 
 type LogEnvHeaders = Bool
+
+newtype CacheRef
+  = CacheRef { unCacheRef :: IORef (SchemaCache, SchemaCacheVer) }
 
 newtype EventInternalErr
   = EventInternalErr QErr
@@ -168,14 +171,15 @@ initEventEngineCtx maxT fetchI = do
   return $ EventEngineCtx q c maxT fetchI
 
 processEventQueue
-  :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
-  -> IO SchemaCache -> EventEngineCtx -> IO ()
-processEventQueue logger logenv httpMgr pool getSchemaCache eectx = do
+  :: L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
+  -> IORef (SchemaCache, SchemaCacheVer) -> EventEngineCtx
+  -> IO ()
+processEventQueue logger logenv httpMgr pool cacheRef eectx = do
   threads <- mapM async [fetchThread, consumeThread]
   void $ waitAny threads
   where
     fetchThread = pushEvents logger pool eectx
-    consumeThread = consumeEvents logger logenv httpMgr pool getSchemaCache eectx
+    consumeThread = consumeEvents logger logenv httpMgr pool (CacheRef cacheRef) eectx
 
 pushEvents
   :: L.Logger L.Hasura -> Q.PGPool -> EventEngineCtx -> IO ()
@@ -188,25 +192,26 @@ pushEvents logger pool eectx  = forever $ do
   threadDelay (fetchI * 1000)
 
 consumeEvents
-  :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> IO SchemaCache
-  -> EventEngineCtx -> IO ()
-consumeEvents logger logenv httpMgr pool getSchemaCache eectx  = forever $ do
+  :: L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> CacheRef -> EventEngineCtx
+  -> IO ()
+consumeEvents logger logenv httpMgr pool cacheRef eectx  = forever $ do
   event <- atomically $ do
     let EventEngineCtx q _ _ _ = eectx
     TQ.readTQueue q
-  async $ runReaderT (processEvent logenv pool getSchemaCache event) (logger, httpMgr, eectx)
+  async $ runReaderT  (processEvent logenv pool event) (logger, httpMgr, cacheRef, eectx)
 
 processEvent
-  :: ( HasVersion
-     , MonadReader r m
+  :: ( MonadReader r m
      , Has HTTP.Manager r
      , Has (L.Logger L.Hasura) r
+     , Has CacheRef r
      , Has EventEngineCtx r
      , MonadIO m
      )
-  => LogEnvHeaders -> Q.PGPool -> IO SchemaCache -> Event -> m ()
-processEvent logenv pool getSchemaCache e = do
-  cache <- liftIO getSchemaCache
+  => LogEnvHeaders -> Q.PGPool -> Event -> m ()
+processEvent logenv pool e = do
+  cacheRef <- asks getter
+  cache <- fmap fst $ liftIO $ readIORef $ unCacheRef cacheRef
   let meti = getEventTriggerInfoFromEvent cache e
   case meti of
     Nothing -> do

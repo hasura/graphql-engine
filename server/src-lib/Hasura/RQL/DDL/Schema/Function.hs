@@ -6,7 +6,6 @@ module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils          (showNames)
-import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils           (makeReasonMessage)
@@ -39,9 +38,7 @@ data RawFunctionInfo
   , rfiDefaultArgs      :: !Int
   , rfiReturnsTable     :: !Bool
   , rfiDescription      :: !(Maybe PGDescription)
-  } deriving (Show, Eq, Generic)
-instance NFData RawFunctionInfo
-instance Cacheable RawFunctionInfo
+  } deriving (Show, Eq)
 $(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
 
 mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
@@ -70,8 +67,7 @@ validateFuncArgs args =
     invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
 
 data FunctionIntegrityError
-  = FunctionNameNotGQLCompliant
-  | FunctionVariadic
+  = FunctionVariadic
   | FunctionReturnNotCompositeType
   | FunctionReturnNotSetof
   | FunctionReturnNotSetofTable
@@ -101,11 +97,15 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
     throwValidateError = MV.dispute . pure
 
     validateFunction = do
-      unless (G.isValidName $ GS.qualObjectToName qf) $ throwValidateError FunctionNameNotGQLCompliant
+      -- throw error if function has variadic arguments
       when hasVariadic $ throwValidateError FunctionVariadic
+      -- throw error if return type is not composite type
       when (retTyTyp /= PGKindComposite) $ throwValidateError FunctionReturnNotCompositeType
+      -- throw error if function do not returns SETOF
       unless retSet $ throwValidateError FunctionReturnNotSetof
+      -- throw error if return type is not a valid table
       unless returnsTab $ throwValidateError FunctionReturnNotSetofTable
+      -- throw error if function type is VOLATILE
       when (funTy == FTVOLATILE) $ throwValidateError FunctionVolatile
 
       -- validate function argument names
@@ -143,7 +143,6 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
       <> makeReasonMessage allErrors showOneError
 
     showOneError = \case
-      FunctionNameNotGQLCompliant -> "function name is not a legal GraphQL identifier"
       FunctionVariadic -> "function with \"VARIADIC\" parameters are not supported"
       FunctionReturnNotCompositeType -> "the function does not return a \"COMPOSITE\" type"
       FunctionReturnNotSetof -> "the function does not return a SETOF"
@@ -181,9 +180,7 @@ newtype TrackFunction
 data FunctionConfig
   = FunctionConfig
   { _fcSessionArgument :: !(Maybe FunctionArgName)
-  } deriving (Show, Eq, Generic, Lift)
-instance NFData FunctionConfig
-instance Cacheable FunctionConfig
+  } deriving (Show, Eq, Lift)
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
 
 emptyFunctionConfig :: FunctionConfig
@@ -202,12 +199,34 @@ trackFunctionP1 qf = do
   when (M.member qt $ scTables rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
-trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)
+trackFunctionP2Setup
+  :: (QErrM m, CacheRWM m, MonadTx m)
+  => QualifiedFunction -> SystemDefined -> FunctionConfig -> RawFunctionInfo -> m ()
+trackFunctionP2Setup qf systemDefined config rawfi = do
+  (fi, dep) <- mkFunctionInfo qf systemDefined config rawfi
+  let retTable = fiReturnType fi
+      err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
+  sc <- askSchemaCache
+  void $ liftMaybe err $ M.lookup retTable $ scTables sc
+  addFunctionToCache fi [dep]
+
+trackFunctionP2 :: (QErrM m, CacheRWM m, HasSystemDefined m, MonadTx m)
                 => QualifiedFunction -> FunctionConfig -> m EncJSON
 trackFunctionP2 qf config = do
+  sc <- askSchemaCache
+  let defGCtx = scDefaultRemoteGCtx sc
+      funcNameGQL = GS.qualObjectToName qf
+  -- check function name is in compliance with GraphQL spec
+  unless (G.isValidName funcNameGQL) $ throw400 NotSupported $
+    "function name " <> qf <<> " is not in compliance with GraphQL spec"
+  -- check for conflicts in remote schema
+  GS.checkConflictingNode defGCtx funcNameGQL
+
+  -- fetch function info
+  rawfi <- fetchRawFunctioInfo qf
   systemDefined <- askSystemDefined
+  trackFunctionP2Setup qf systemDefined config rawfi
   liftTx $ saveFunctionToCatalog qf config systemDefined
-  buildSchemaCacheFor $ MOFunction qf
   return successMsg
 
 handleMultipleFunctions :: (QErrM m) => QualifiedFunction -> [a] -> m a
@@ -232,7 +251,11 @@ fetchRawFunctioInfo qf@(QualifiedObject sn fn) =
           |] (sn, fn) True
 
 runTrackFunc
-  :: (MonadTx m, CacheRWM m, HasSystemDefined m)
+  :: ( QErrM m
+     , CacheRWM m
+     , HasSystemDefined m
+     , MonadTx m
+     )
   => TrackFunction -> m EncJSON
 runTrackFunc (TrackFunction qf)= do
   trackFunctionP1 qf
@@ -242,7 +265,7 @@ data TrackFunctionV2
   = TrackFunctionV2
   { _tfv2Function      :: !QualifiedFunction
   , _tfv2Configuration :: !FunctionConfig
-  } deriving (Show, Eq, Lift, Generic)
+  } deriving (Show, Eq, Lift)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
 
 instance FromJSON TrackFunctionV2 where
@@ -271,5 +294,5 @@ runUntrackFunc
 runUntrackFunc (UnTrackFunction qf) = do
   void $ askFunctionInfo qf
   liftTx $ delFunctionFromCatalog qf
-  withNewInconsistentObjsCheck buildSchemaCache
+  delFunctionFromCache qf
   return successMsg
