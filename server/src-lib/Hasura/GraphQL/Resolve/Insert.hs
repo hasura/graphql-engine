@@ -240,7 +240,7 @@ mkInsertQ tn onConflictM insCols defVals role (insCheck, updCheck) = do
           $ S.RetExp
             [ S.selectStar
             , S.Extractor
-                (insertOrUpdateCheckExpr 
+                (insertOrUpdateCheckExpr tn onConflictM
                   (toSQLBoolExp (S.QualTable tn) insCheck)
                   (fmap (toSQLBoolExp (S.QualTable tn)) updCheck))
                 Nothing

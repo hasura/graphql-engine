@@ -52,7 +52,7 @@ mkInsertCTE (InsertQueryP1 tn cols vals c (insCheck, updCheck) _ _) =
         . S.RetExp 
         $ [ S.selectStar
           , S.Extractor 
-              (insertOrUpdateCheckExpr 
+              (insertOrUpdateCheckExpr tn c
                 (toSQLBoolExp (S.QualTable tn) insCheck) 
                 (fmap (toSQLBoolExp (S.QualTable tn)) updCheck))
               Nothing
@@ -186,7 +186,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
-  updPerm   <- askUpdPermInfo tableInfo
+  updPerm   <- askPermInfo' PAUpdate tableInfo
 
   -- Check if all dependent headers are present
   validateHeaders $ ipiRequiredHeaders insPerm
@@ -217,7 +217,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
       inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 
   insCheck <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting (ipiCheck insPerm)
-  updCheck <- traverse (convAnnBoolExpPartialSQL sessVarFromCurrentSetting) (upiCheck updPerm)
+  updCheck <- traverse (convAnnBoolExpPartialSQL sessVarFromCurrentSetting) (upiCheck =<< updPerm)
   
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
       roleName <- askCurRole
@@ -305,15 +305,27 @@ insertCheckExpr condExpr =
 -- 
 -- See @https://stackoverflow.com/q/34762732@ for more information on the use of
 -- the @xmax@ system column.
-insertOrUpdateCheckExpr :: S.BoolExp -> Maybe S.BoolExp -> S.SQLExp
-insertOrUpdateCheckExpr insCheck updCheck = 
+insertOrUpdateCheckExpr 
+  :: QualifiedTable 
+  -> Maybe ConflictClauseP1
+  -> S.BoolExp 
+  -> Maybe S.BoolExp 
+  -> S.SQLExp
+insertOrUpdateCheckExpr qt (Just _conflict) insCheck updCheck = 
   S.SECond 
     (S.BECompare 
       S.SEQ 
-      (S.SEUnsafe "xmax")
+      (S.SEQIden (S.QIden (S.mkQual qt) (Iden "xmax")))
       (S.SEUnsafe "0"))
     (insertCheckExpr insCheck)
     (maybe S.SENull insertCheckExpr updCheck)
+insertOrUpdateCheckExpr _qt Nothing insCheck _ =
+  -- If we won't generate an ON CONFLICT clause, there is no point
+  -- in testing xmax. In particular, views don't provide the xmax
+  -- system column, but we don't provide ON CONFLICT for views,
+  -- even if they are auto-updatable, so we can fortunately avoid
+  -- having to test the non-existent xmax value.
+  insertCheckExpr insCheck
 
 runInsert
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
