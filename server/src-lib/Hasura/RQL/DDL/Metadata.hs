@@ -406,7 +406,7 @@ fetchMetadata = do
                 'definition', a.action_defn,
                 'comment', a.comment,
                 'permissions', ap.permissions
-              )
+              ) order by a.action_name asc
             ),
             '[]'
           )
@@ -420,7 +420,7 @@ fetchMetadata = do
                     'role', ap.role_name,
                     'definition', ap.definition,
                     'comment', ap.comment
-                  )
+                  ) order by ap.role_name asc
                 ),
                 '[]'
               ) as permissions

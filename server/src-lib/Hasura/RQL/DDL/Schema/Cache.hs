@@ -169,13 +169,12 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
 
   -- Step 3: Build the GraphQL schema.
   ((remoteSchemaMap, gqlSchema, remoteGQLSchema), gqlSchemaInconsistentObjects)
-    <- runWriterA buildGQLSchema
-    -< ( _boTables resolvedOutputs
-       , _boFunctions resolvedOutputs
-       , _boRemoteSchemas resolvedOutputs
-       , _boCustomTypes resolvedOutputs
-       , _boActions resolvedOutputs
-       )
+    <- runWriterA buildGQLSchema -< ( _boTables resolvedOutputs
+                                    , _boFunctions resolvedOutputs
+                                    , _boRemoteSchemas resolvedOutputs
+                                    , _boCustomTypes resolvedOutputs
+                                    , _boActions resolvedOutputs
+                                    )
 
   returnA -< SchemaCache
     { scTables = _boTables resolvedOutputs

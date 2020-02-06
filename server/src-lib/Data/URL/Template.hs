@@ -1,4 +1,4 @@
--- | Simple URL templating language enables interpolating environment variables
+-- | A simple URL templating that enables interpolating an environment variable
 
 module Data.URL.Template
   ( URLTemplate

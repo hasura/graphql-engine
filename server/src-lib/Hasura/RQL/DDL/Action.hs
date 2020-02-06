@@ -230,6 +230,7 @@ fetchActions =
     [Q.sql|
      SELECT action_name, action_defn, comment
        FROM hdb_catalog.hdb_action
+       ORDER BY action_name ASC
      |] () True
   where
     fromRow (actionName, Q.AltJ definition, comment) =
