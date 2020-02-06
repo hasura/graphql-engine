@@ -105,7 +105,7 @@ data ComputedFieldScalarSel v
 
 data ComputedFieldSel v
   = CFSScalar !(ComputedFieldScalarSel v)
-  | CFSTable !(AnnSimpleSelG v)
+  | CFSTable !Bool !(AnnSimpleSelG v)
   deriving (Show, Eq)
 
 traverseComputedFieldSel
@@ -114,7 +114,7 @@ traverseComputedFieldSel
   -> ComputedFieldSel v -> f (ComputedFieldSel w)
 traverseComputedFieldSel fv = \case
   CFSScalar scalarSel -> CFSScalar <$> traverse fv scalarSel
-  CFSTable tableSel   -> CFSTable <$> traverseAnnSimpleSel fv tableSel
+  CFSTable b tableSel -> CFSTable b <$> traverseAnnSimpleSel fv tableSel
 
 type Fields a = [(FieldName, a)]
 
@@ -372,7 +372,7 @@ data BaseNode
   , _bnExtrs               :: !(HM.HashMap S.Alias S.SQLExp)
   , _bnObjs                :: !(HM.HashMap RelName ObjNode)
   , _bnArrs                :: !(HM.HashMap S.Alias ArrNode)
-  , _bnComputedFieldTables :: !(HM.HashMap FieldName BaseNode)
+  , _bnComputedFieldTables :: !(HM.HashMap FieldName CFTableNode)
   } deriving (Show, Eq)
 
 mergeBaseNodes :: BaseNode -> BaseNode -> BaseNode
@@ -381,11 +381,11 @@ mergeBaseNodes lNodeDet rNodeDet =
   (HM.union lExtrs rExtrs)
   (HM.unionWith mergeObjNodes lObjs rObjs)
   (HM.unionWith mergeArrNodes lArrs rArrs)
-  (HM.unionWith mergeBaseNodes lCompCols rCompCols)
+  (HM.unionWith mergeCFTableNodes lCFTables rCFTables)
   where
-    BaseNode pfx dExp f whr ordBy limit offset lExtrs lObjs lArrs lCompCols
+    BaseNode pfx dExp f whr ordBy limit offset lExtrs lObjs lArrs lCFTables
       = lNodeDet
-    BaseNode _   _    _ _   _     _     _      rExtrs rObjs rArrs rCompCols
+    BaseNode _   _    _ _   _     _     _      rExtrs rObjs rArrs rCFTables
       = rNodeDet
 
 data OrderByNode
@@ -448,6 +448,19 @@ data ArrNodeInfo
   , _aniPrefix           :: !Iden
   , _aniSubQueryRequired :: !Bool
   } deriving (Show, Eq)
+
+-- | Node for computed field returning setof <table>
+data CFTableNode
+  = CFTableNode
+  { _ctnAsSingleObject :: !Bool
+  , _ctnNode           :: !BaseNode
+  } deriving (Show, Eq)
+
+mergeCFTableNodes :: CFTableNode -> CFTableNode -> CFTableNode
+mergeCFTableNodes lNode rNode =
+  CFTableNode
+  (_ctnAsSingleObject lNode && _ctnAsSingleObject rNode)
+  (mergeBaseNodes (_ctnNode lNode) (_ctnNode rNode))
 
 data Prefixes
   = Prefixes

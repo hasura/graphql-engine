@@ -1,8 +1,8 @@
 module Hasura.GraphQL.Resolve.Action
-  ( resolveActionSelect
-  , resolveActionInsert
+  ( resolveActionMutation
+  , resolveAsyncActionQuery
   , asyncActionsProcessor
-  , resolveAsyncResponse
+  --, resolveActionSelect
   -- , resolveResponseSelectionSet
 
   , ActionSelect(..)
@@ -70,39 +70,39 @@ data ResponseFieldResolved
   | ResponseFieldTypename !G.NamedType
   deriving (Show, Eq)
 
-resolveOutputSelectionSet
-  :: (MonadError QErr m)
-  => G.NamedType
-  -> SelSet
-  -> m [(Text, OutputFieldResolved)]
-resolveOutputSelectionSet ty selSet =
-  withSelSet selSet $ \fld -> case _fName fld of
-    "__typename" -> return $ OutputFieldTypename ty
-    G.Name t     -> return $ OutputFieldSimple t
+-- resolveOutputSelectionSet
+--   :: (MonadError QErr m)
+--   => G.NamedType
+--   -> SelSet
+--   -> m [(Text, OutputFieldResolved)]
+-- resolveOutputSelectionSet ty selSet =
+--   withSelSet selSet $ \fld -> case _fName fld of
+--     "__typename" -> return $ OutputFieldTypename ty
+--     G.Name t     -> return $ OutputFieldSimple t
 
-resolveResponseSelectionSet
-  :: (MonadError QErr m)
-  => G.NamedType
-  -> SelSet
-  -> m [(Text, ResponseFieldResolved)]
-resolveResponseSelectionSet ty selSet =
-  withSelSet selSet $ \fld -> case _fName fld of
-    "__typename" -> return $ ResponseFieldTypename ty
+-- resolveResponseSelectionSet
+--   :: (MonadError QErr m)
+--   => G.NamedType
+--   -> SelSet
+--   -> m [(Text, ResponseFieldResolved)]
+-- resolveResponseSelectionSet ty selSet =
+--   withSelSet selSet $ \fld -> case _fName fld of
+--     "__typename" -> return $ ResponseFieldTypename ty
 
-    "output"     ->
-      ResponseFieldOutput <$>
-      resolveOutputSelectionSet (_fType fld) (_fSelSet fld)
+--     "output"     ->
+--       ResponseFieldOutput <$>
+--       resolveOutputSelectionSet (_fType fld) (_fSelSet fld)
 
-    -- the metadata columns
-    "id"         -> return $ mkMetadataField "id"
-    "created_at" -> return $ mkMetadataField "created_at"
-    "status"     -> return $ mkMetadataField "status"
-    "errors"     -> return $ mkMetadataField "errors"
+--     -- the metadata columns
+--     "id"         -> return $ mkMetadataField "id"
+--     "created_at" -> return $ mkMetadataField "created_at"
+--     "status"     -> return $ mkMetadataField "status"
+--     "errors"     -> return $ mkMetadataField "errors"
 
-    G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
+--     G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
 
-  where
-    mkMetadataField = ResponseFieldMetadata . FieldName
+--   where
+--     mkMetadataField = ResponseFieldMetadata . FieldName
 
 
 data ActionSelect v
@@ -121,7 +121,7 @@ traverseActionSelect f (ActionSelect idText selection rowFilter) =
   ActionSelect <$> f idText <*> pure selection <*> traverseAnnBoolExp f rowFilter
 
 type ActionSelectResolved = ActionSelect S.SQLExp
-type ActionSelectUnresolved = ActionSelect UnresolvedVal
+-- type ActionSelectUnresolved = ActionSelect UnresolvedVal
 
 actionSelectToSql :: ActionSelectResolved -> Q.Query
 actionSelectToSql (ActionSelect actionIdExp selection _) =
@@ -165,24 +165,24 @@ actionSelectToSql (ActionSelect actionIdExp selection _) =
       \(alias, field) -> [S.SELit alias, f field]
 
 
-resolveActionSelect
-  :: ( MonadReusability m
-     , MonadError QErr m
-     )
-  => ActionSelectOpContext
-  -> Field
-  -> m ActionSelectUnresolved
-resolveActionSelect selectContext field = do
-  actionId <- withArg (_fArguments field) "id" parseActionId
-  responseSelectionSet <- resolveResponseSelectionSet (_fType field) $
-                          _fSelSet field
-  return $ ActionSelect actionId responseSelectionSet unresolvedFilter
-  where
-    unresolvedFilter =
-      fmapAnnBoolExp partialSQLExpToUnresolvedVal $
-      _asocFilter selectContext
-    parseActionId annInpValue = do
-      mkParameterizablePGValue <$> asPGColumnValue annInpValue
+-- resolveActionSelect
+--   :: ( MonadReusability m
+--      , MonadError QErr m
+--      )
+--   => ActionSelectOpContext
+--   -> Field
+--   -> m ActionSelectUnresolved
+-- resolveActionSelect selectContext field = do
+--   actionId <- withArg (_fArguments field) "id" parseActionId
+--   responseSelectionSet <- resolveResponseSelectionSet (_fType field) $
+--                           _fSelSet field
+--   return $ ActionSelect actionId responseSelectionSet unresolvedFilter
+--   where
+--     unresolvedFilter =
+--       fmapAnnBoolExp partialSQLExpToUnresolvedVal $
+--       _asocFilter selectContext
+--     parseActionId annInpValue = do
+--       mkParameterizablePGValue <$> asPGColumnValue annInpValue
 
 -- actionSelectToTx :: ActionSelectResolved -> RespTx
 -- actionSelectToTx actionSelect =
@@ -235,7 +235,7 @@ processOutputSelectionSet tableRowInput definitionList fldTy flds = do
     functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
     selectFrom = RS.FromFunction jsonbToRecordFunction functionArgs $ Just definitionList
 
-resolveActionInsertSync
+resolveActionMutationSync
   :: ( HasVersion
      , MonadReusability m
      , MonadError QErr m
@@ -251,7 +251,7 @@ resolveActionInsertSync
   -> SyncActionExecutionContext
   -> UserVars
   -> m RespTx
-resolveActionInsertSync field executionContext sessionVariables = do
+resolveActionMutationSync field executionContext sessionVariables = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
@@ -426,7 +426,7 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
 
 
 
-resolveActionInsert
+resolveActionMutation
   :: ( HasVersion
      , MonadReusability m
      , MonadError QErr m
@@ -443,15 +443,15 @@ resolveActionInsert
   -- We need the sesion variables for column presets
   -> UserVars
   -> m RespTx
-resolveActionInsert field executionContext sessionVariables =
+resolveActionMutation field executionContext sessionVariables =
   case executionContext of
     ActionExecutionSyncWebhook executionContextSync ->
-      resolveActionInsertSync field executionContextSync sessionVariables
+      resolveActionMutationSync field executionContextSync sessionVariables
     ActionExecutionAsync actionFilter ->
-      resolveActionInsertAsync field actionFilter sessionVariables
+      resolveActionMutationAsync field actionFilter sessionVariables
 
 -- | Resolve asynchronous action mutation which returns only the action uuid
-resolveActionInsertAsync
+resolveActionMutationAsync
   :: ( MonadError QErr m, MonadReader r m
      , Has [HTTP.Header] r
      )
@@ -460,7 +460,7 @@ resolveActionInsertAsync
   -- We need the sesion variables for column presets
   -> UserVars
   -> m RespTx
-resolveActionInsertAsync field _ sessionVariables = do
+resolveActionMutationAsync field _ sessionVariables = do
 
   -- responseSelectionSet <- resolveResponseSelectionSet (_fType field) $ _fSelSet field
   reqHeaders <- asks getter
@@ -522,7 +522,7 @@ annInpValueToJson annInpValue =
     AGObject _ objectM        -> J.toJSON $ fmap (fmap annInpValueToJson) objectM
     AGArray _ valuesM         -> J.toJSON $ fmap (fmap annInpValueToJson) valuesM
 
-resolveAsyncResponse
+resolveAsyncActionQuery
   :: ( MonadReusability m
      , MonadError QErr m
      , MonadReader r m
@@ -534,7 +534,7 @@ resolveAsyncResponse
   -> ActionSelectOpContext
   -> Field
   -> m GRS.AnnSimpleSelect
-resolveAsyncResponse userInfo selectContext field = do
+resolveAsyncActionQuery userInfo selectContext field = do
   actionId <- withArg (_fArguments field) "id" parseActionId
   stringifyNumerics <- stringifyNum <$> asks getter
 
@@ -545,7 +545,8 @@ resolveAsyncResponse userInfo selectContext field = do
         -- Treating "output" as a computed field to "hdb_action_log" table with "jsonb_to_record" SQL function
         let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
             definitionList = _asocDefinitionList selectContext
-        (RS.FComputedField . RS.CFSTable) <$> processOutputSelectionSet inputTableArgument definitionList (_fType fld) (_fSelSet fld)
+        (RS.FComputedField . RS.CFSTable True) -- The output of action is always a single object
+          <$> processOutputSelectionSet inputTableArgument definitionList (_fType fld) (_fSelSet fld)
       -- the metadata columns
       "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
       "created_at" -> return $ mkAnnFldFromPGCol "created_at" PGTimeStampTZ

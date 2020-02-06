@@ -132,6 +132,7 @@ mkSelCTEFromColVals qt allCols colVals =
         S.withTyAnn (unsafePGColumnToRepresentation colTy) $ S.SELit textValue
 
 -- | Note: Expecting '{"returning": [{<table-row>}]}' encoded JSON
+-- FIXME:- If possible, move this logic to SQL
 withSingleTableRow
   :: MonadError QErr m => EncJSON -> m EncJSON
 withSingleTableRow response =

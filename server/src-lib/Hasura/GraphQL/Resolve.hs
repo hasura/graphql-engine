@@ -102,7 +102,7 @@ queryFldToPGAST fld = do
       validateHdrs userInfo (_fqocHeaders ctx)
       QRFAgg <$> RS.convertFuncQueryAgg ctx fld
     QCActionFetch ctx ->
-      QRFActionSelect <$> RA.resolveAsyncResponse userInfo ctx fld
+      QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
 
 mutFldToTx
   :: ( HasVersion
@@ -144,7 +144,7 @@ mutFldToTx fld = do
       validateHdrs userInfo (_docHeaders ctx)
       RM.convertDeleteByPk ctx fld
     MCAction ctx ->
-      RA.resolveActionInsert fld ctx (userVars userInfo)
+      RA.resolveActionMutation fld ctx (userVars userInfo)
 
 getOpCtx
   :: ( MonadReusability m

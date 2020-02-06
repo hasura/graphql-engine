@@ -229,7 +229,7 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
         in S.mkQIdenExp arrPfx fldAls
       FComputedField (CFSScalar computedFieldScalar) ->
         fromScalarComputedField computedFieldScalar
-      FComputedField (CFSTable _) ->
+      FComputedField (CFSTable _ _) ->
         let ccPfx = mkComputedFieldTableAls pfx fldAls
         in S.mkQIdenExp ccPfx fldAls
 
@@ -646,10 +646,10 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
       in (arrAls, arrNode)
 
     -- process a computed field, which returns a table
-    mkComputedFieldTable (fld, sel) =
+    mkComputedFieldTable (fld, asObject, sel) =
       let prefixes = Prefixes (mkComputedFieldTableAls thisPfx fld) thisPfx
           baseNode = annSelToBaseNode False prefixes fld sel
-      in (fld, baseNode)
+      in (fld, CFTableNode asObject baseNode)
 
     getAnnObj (f, annFld) = case annFld of
       FObj ob -> Just (f, ob)
@@ -660,8 +660,8 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
       _       -> Nothing
 
     getComputedFieldTable (f, annFld) = case annFld of
-      FComputedField (CFSTable sel) -> Just (f, sel)
-      _                             -> Nothing
+      FComputedField (CFSTable b sel) -> Just (f, b, sel)
+      _                               -> Nothing
 
 annSelToBaseNode :: Bool -> Prefixes -> FieldName -> AnnSimpleSel -> BaseNode
 annSelToBaseNode subQueryReq pfxs fldAls annSel =
@@ -742,11 +742,11 @@ baseNodeToSel joinCond baseNode =
           als = S.Alias $ _bnPrefix bn
       in S.mkLateralFromItem sel als
 
-    computedFieldNodeToFromItem :: (FieldName, BaseNode) -> S.FromItem
-    computedFieldNodeToFromItem (fld, bn) =
+    computedFieldNodeToFromItem :: (FieldName, CFTableNode) -> S.FromItem
+    computedFieldNodeToFromItem (fld, CFTableNode asObject bn) =
       let internalSel = baseNodeToSel (S.BELit True) bn
           als = S.Alias $ _bnPrefix bn
-          extr = asJsonAggExtr False (S.toAlias fld) False Nothing $
+          extr = asJsonAggExtr asObject (S.toAlias fld) False Nothing $
                  _bnOrderBy bn
           internalSelFrom = S.mkSelFromItem internalSel als
           sel = S.mkSelect

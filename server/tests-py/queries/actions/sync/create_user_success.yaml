@@ -6,9 +6,18 @@ query:
     mutation {
       create_user(email: "clarke@gmail.com", name: "Clarke"){
         id
+        user {
+          name
+          email
+          is_admin
+        }
       }
     }
 response:
   data:
     create_user:
       id: 1
+      user:
+        name: Clarke
+        email: clarke@gmail.com
+        is_admin: false
