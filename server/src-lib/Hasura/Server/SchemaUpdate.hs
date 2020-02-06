@@ -18,13 +18,13 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.IORef
 
-import qualified Control.Concurrent        as C
-import qualified Control.Concurrent.STM    as STM
-import qualified Data.Text                 as T
-import qualified Data.Time                 as UTC
-import qualified Database.PG.Query         as PG
-import qualified Database.PostgreSQL.LibPQ as PQ
-import qualified Network.HTTP.Client       as HTTP
+import qualified Control.Concurrent.Extended as C
+import qualified Control.Concurrent.STM      as STM
+import qualified Data.Text                   as T
+import qualified Data.Time                   as UTC
+import qualified Database.PG.Query           as PG
+import qualified Database.PostgreSQL.LibPQ   as PQ
+import qualified Network.HTTP.Client         as HTTP
 
 pgChannel :: PG.PGChannel
 pgChannel = "hasura_schema_update"
@@ -58,9 +58,10 @@ instance ToEngineLog SchemaSyncThreadLog Hasura where
 
 data EventPayload
   = EventPayload
-  { _epInstanceId :: !InstanceId
-  , _epOccurredAt :: !UTC.UTCTime
-  } deriving (Show, Eq)
+  { _epInstanceId    :: !InstanceId
+  , _epOccurredAt    :: !UTC.UTCTime
+  , _epInvalidations :: !CacheInvalidations
+  }
 $(deriveJSON (aesonDrop 3 snakeCase) ''EventPayload)
 
 data ThreadError
@@ -126,7 +127,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
       liftIO $ runExceptT $ PG.listen pool pgChannel notifyHandler
     either onError return listenResE
     logWarn
-    C.threadDelay $ 1 * 1000 * 1000 -- 1 second
+    C.sleep $ seconds 1
   where
     threadType = TTListener
 
@@ -136,9 +137,9 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
         Just time -> (dbInstId /= instanceId) && accrdAt > time
 
     refreshCache Nothing = return ()
-    refreshCache (Just (dbInstId, accrdAt)) =
+    refreshCache (Just (dbInstId, accrdAt, invalidations)) =
       when (shouldRefresh dbInstId accrdAt) $
-        refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef
+        refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef invalidations
           threadType "schema cache reloaded after postgres listen init"
 
     notifyHandler = \case
@@ -179,7 +180,7 @@ processor sqlGenCtx pool logger httpMgr updateEventRef
     event <- STM.atomically getLatestEvent
     logInfo logger threadType $ object ["processed_event" .= event]
     when (shouldReload event) $
-      refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef
+      refreshSchemaCache sqlGenCtx pool logger httpMgr cacheRef (_epInvalidations event)
         threadType "schema cache reloaded"
   where
     -- checks if there is an event
@@ -202,15 +203,17 @@ refreshSchemaCache
   -> Logger Hasura
   -> HTTP.Manager
   -> SchemaCacheRef
+  -> CacheInvalidations
   -> ThreadType
   -> T.Text -> IO ()
-refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef threadType msg = do
+refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType msg = do
   -- Reload schema cache from catalog
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
-    buildSchemaCacheWithOptions CatalogSync
+    ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations
       & runCacheRWT rebuildableCache
       & peelRun runCtx pgCtx PG.ReadWrite
+    pure ((), cache)
   case resE of
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]

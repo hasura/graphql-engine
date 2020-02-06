@@ -46,8 +46,8 @@ selFromToFromItem pfx = \case
 selFromToQual :: SelectFrom -> S.Qual
 selFromToQual = \case
   FromTable tn         -> S.QualTable tn
-  FromIden i           -> S.QualIden i
-  FromFunction qf _ _  -> S.QualIden $ functionToIden qf
+  FromIden i           -> S.QualIden i Nothing
+  FromFunction qf _ _  -> S.QualIden (functionToIden qf) Nothing
 
 aggFldToExp :: AggFlds -> S.SQLExp
 aggFldToExp aggFlds = jsonRow
@@ -190,8 +190,9 @@ fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =
       S.FunctionArgs positional named
-    toSQLExp AETableRow  = S.SERowIden $ mkBaseTableAls pfx
-    toSQLExp (AEInput s) = s
+    toSQLExp (AETableRow Nothing)    = S.SERowIden $ mkBaseTableAls pfx
+    toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAls pfx) acc
+    toSQLExp (AEInput s)             = s
 
 -- posttgres ignores anything beyond 63 chars for an iden
 -- in this case, we'll need to use json_build_object function

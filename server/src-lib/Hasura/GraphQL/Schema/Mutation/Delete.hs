@@ -38,7 +38,8 @@ mkDelMutFld mCustomName tn =
 
 {-
 delete_table_by_pk(
-pk_columns: table_pk_columns_input!
+  col1: col-ty1!
+  col2: col-ty2!
 ): table
 -}
 

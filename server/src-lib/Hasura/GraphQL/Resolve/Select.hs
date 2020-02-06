@@ -74,11 +74,12 @@ resolveComputedField computedField fld = fieldAsPath fld $ do
     argFn = IFAUnknown
     withTableArgument resolvedArgs =
       let argsExp@(RS.FunctionArgsExp positional named) = RS.AEInput <$> resolvedArgs
+          tableRowArg = RS.AETableRow Nothing
       in case tableArg of
         FTAFirst      ->
-          RS.FunctionArgsExp (RS.AETableRow:positional) named
+          RS.FunctionArgsExp (tableRowArg:positional) named
         FTANamed argName index ->
-          RS.insertFunctionArg argName index RS.AETableRow argsExp
+          RS.insertFunctionArg argName index tableRowArg argsExp
 
 processTableSelectionSet
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r

@@ -62,7 +62,7 @@ mkPGColFld :: PGColumnInfo -> ObjFldInfo
 mkPGColFld colInfo =
   mkHsraObjFldInfo desc name (mkPGColParams colTy) ty
   where
-    PGColumnInfo _ name colTy isNullable pgDesc = colInfo
+    PGColumnInfo _ name _ colTy isNullable pgDesc = colInfo
     desc = (G.Description . getPGDescription) <$> pgDesc
     ty = bool notNullTy nullTy isNullable
     columnType = mkColumnType colTy

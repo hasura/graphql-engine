@@ -250,7 +250,7 @@ type TableAggFldsG v = Fields (TableAggFldG v)
 type TableAggFlds = TableAggFldsG S.SQLExp
 
 data ArgumentExp a
-  = AETableRow
+  = AETableRow !(Maybe Iden) -- ^ table row accessor
   | AEInput !a
   deriving (Show, Eq, Functor, Foldable, Traversable)
 

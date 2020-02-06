@@ -4,7 +4,6 @@ module Hasura.Server.Utils where
 import           Data.Aeson
 import           Data.Char
 import           Data.List                  (find)
-import           Data.Time.Clock
 import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment
 import           System.Exit
@@ -116,13 +115,6 @@ matchRegex regex caseSensitive src =
 fmapL :: (a -> a') -> Either a b -> Either a' b
 fmapL fn (Left e) = Left (fn e)
 fmapL _ (Right x) = pure x
-
--- diff time to micro seconds
-diffTimeToMicro :: NominalDiffTime -> Int
-diffTimeToMicro diff =
-  floor (realToFrac diff :: Double) * aSecond
-  where
-    aSecond = 1000 * 1000
 
 generateFingerprint :: IO Text
 generateFingerprint = UUID.toText <$> UUID.nextRandom
@@ -236,10 +228,3 @@ makeReasonMessage errors showError =
     [singleError] -> "because " <> showError singleError
     _ -> "for the following reasons:\n" <> T.unlines
          (map (("  • " <>) . showError) errors)
-
-withElapsedTime :: MonadIO m => m a -> m (NominalDiffTime, a)
-withElapsedTime ma = do
-  t1 <- liftIO getCurrentTime
-  a <- ma
-  t2 <- liftIO getCurrentTime
-  return (diffUTCTime t2 t1, a)

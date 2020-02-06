@@ -174,11 +174,6 @@ newtype HasSystemDefinedT m a
   = HasSystemDefinedT { unHasSystemDefinedT :: ReaderT SystemDefined m a }
   deriving ( Functor, Applicative, Monad, MonadTrans, MonadIO, MonadError e, MonadTx
            , HasHttpManager, HasSQLGenCtx, TableCoreInfoRM, CacheRM, CacheRWM, UserInfoM )
--- instance (CacheRM m) => CacheRM (HasSystemDefinedT m) where
---   askSchemaCache = HasSystemDefinedT $ lift askSchemaCache
-
--- instance (CacheRWM m) => CacheRWM (HasSystemDefinedT m) where
---   writeSchemaCache = HasSystemDefinedT . lift . writeSchemaCache
 
 runHasSystemDefinedT :: SystemDefined -> HasSystemDefinedT m a -> m a
 runHasSystemDefinedT systemDefined = flip runReaderT systemDefined . unHasSystemDefinedT
