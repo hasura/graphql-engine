@@ -5,6 +5,8 @@ import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 import FoldableHoc from './foldableTable';
 
+import styles from '../../Common/TableCommon/Table.scss';
+
 class DragFoldTable extends Component {
   constructor(props) {
     super(props);
@@ -75,11 +77,9 @@ class DragFoldTable extends Component {
           {col.Header && (
             <Fragment>
               {col.Header}
-              <i
-                className="fa fa-bars"
-                title="Drag column"
-                style={{ paddingTop: '2px' }}
-              />
+              <span className={styles.tableHeaderCell} title="Drag column">
+                <i className="fa fa-bars" style={{ right: '18px' }} />
+              </span>
             </Fragment>
           )}
         </div>

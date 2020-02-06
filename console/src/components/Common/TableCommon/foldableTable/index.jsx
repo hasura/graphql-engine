@@ -1,12 +1,12 @@
 import React from 'react';
 
-const defaultFoldIconComponent = ({ collapsed }) => {
+const defaultFoldIconComponent = ({ collapsed, name }) => {
   let icon;
   let title;
 
   if (collapsed) {
     icon = 'fa-caret-right';
-    title = 'Expand column';
+    title = name ? `Expand column "${name}"` : 'Expand column';
   } else {
     icon = 'fa-caret-left';
     title = 'Collapse column';
@@ -162,7 +162,10 @@ export default ReactTable => {
     foldableHeaderRender = ({ column }) => {
       const { FoldButtonComponent, FoldIconComponent } = this.props;
       const collapsed = this.isFolded(column);
-      const icon = React.createElement(FoldIconComponent, { collapsed });
+      const icon = React.createElement(FoldIconComponent, {
+        collapsed,
+        name: column.id,
+      });
       const onClick = e => {
         e.stopPropagation();
         this.foldingHandler(column);
