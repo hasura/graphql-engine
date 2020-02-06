@@ -962,7 +962,7 @@ const ViewRows = ({
             {selectedRows.length}
             <button
               className={`add_mar_right_small___3slZA btn btn-xs btn-default ${styles.bulkDeleteButton}`}
-              title="Delete row"
+              title="Delete selected rows"
               onClick={handleDeleteItems}
             >
               <i className="fa fa-trash" />
