@@ -39,25 +39,6 @@ export const defaultEnumType = {
   values: [{ ...defaultEnumValue }],
 };
 
-export const gqlInbuiltTypes = [
-  {
-    name: 'Int',
-    isInbuilt: true,
-  },
-  {
-    name: 'String',
-    isInbuilt: true,
-  },
-  {
-    name: 'Float',
-    isInbuilt: true,
-  },
-  {
-    name: 'Boolean',
-    isInbuilt: true,
-  },
-];
-
 export const defaultActionDefSdl = `type Mutation {
   ## Define your action as a mutation here
   actionName (arg1: SampleInput!): SampleOutput
