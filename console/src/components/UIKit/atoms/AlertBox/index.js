@@ -2,13 +2,19 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import { theme } from '../../theme';
+import Icon from '../../Icons';
 
 import { AlertBoxStyles } from './Alert.style';
+import { Text } from '../Typography';
 
 const AlertBox = props => {
   const { children, type } = props;
 
-  // Here I'm dynamically passing color values from theme object based on alert type.
+  /* Here I'm dynamically passing color values from theme object based on alert type.
+   *  - backgroundColor
+   *  - borderColor
+   *  If the alert type is out of the range then I'll assign default color values.
+   */
 
   const backgroundColor = theme.alertBoxes[type]
     ? theme.alertBoxes[type].backgroundColor
@@ -22,6 +28,10 @@ const AlertBox = props => {
 
   return (
     <AlertBoxStyles {...props} bg={backgroundColor} borderColor={borderColor}>
+      <Icon iconType={type} />
+      <Text as="span" px="md" fontWeight="medium" fontSize="p">
+        {type}
+      </Text>
       {children}
     </AlertBoxStyles>
   );
@@ -38,6 +48,10 @@ AlertBox.propTypes = {
   borderColor: PropTypes.string,
   borderRadius: PropTypes.string,
   boxShadow: PropTypes.number,
+  display: PropTypes.string,
+  alignItems: PropTypes.string,
+  pl: PropTypes.string,
+  color: PropTypes.string,
 };
 
 // Default props for AlertBox ********** //
@@ -49,6 +63,10 @@ AlertBox.defaultProps = {
   borderLeft: 4,
   borderRadius: 'xs',
   boxShadow: 2,
+  display: 'flex',
+  alignItems: 'center',
+  pl: 'md',
+  color: 'black.text',
 };
 
 // ***************************** //

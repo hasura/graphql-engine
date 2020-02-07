@@ -79,7 +79,9 @@ const UIKit = () => (
     <AlertBox type="info" my="lg" />
     <AlertBox type="warning" my="lg" />
     <AlertBox type="error" my="lg" />
-    <AlertBox type="default" my="lg" />
+    <AlertBox type="default" my="lg">
+      dummy alert!
+    </AlertBox>
     {/* UI Elements *****************************/}
     <Heading color="black.text">UI Elements</Heading>
     <Heading as="h3" color="black.text" my="lg">
