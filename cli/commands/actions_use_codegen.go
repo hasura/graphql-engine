@@ -22,7 +22,8 @@ const (
 )
 
 type codegenFramework struct {
-	Name string `json:"name"`
+	Name          string `json:"name"`
+	HasStarterKit bool   `json:"hasStarterKit"`
 }
 
 func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -105,17 +106,18 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 	newCodegenExecutionConfig := o.EC.Config.Action.Codegen
 	o.EC.Spinner.Stop()
 
+	frameworkFileBytes, err := ioutil.ReadFile(filepath.Join(o.EC.GlobalConfigDir, actionsCodegenDirName, "frameworks.json"))
+	if err != nil {
+		return err
+	}
+	var allFrameworks []codegenFramework
+	err = json.Unmarshal(frameworkFileBytes, &allFrameworks)
+	if err != nil {
+		return err
+	}
+
 	// if framework flag is not provided, display a list and allow them to choose
 	if o.framework == "" {
-		fileBytes, err := ioutil.ReadFile(filepath.Join(o.EC.GlobalConfigDir, actionsCodegenDirName, "frameworks.json"))
-		if err != nil {
-			return err
-		}
-		var allFrameworks []codegenFramework
-		err = json.Unmarshal(fileBytes, &allFrameworks)
-		if err != nil {
-			return err
-		}
 		var frameworkList []string
 		for _, f := range allFrameworks {
 			frameworkList = append(frameworkList, f.Name)
@@ -129,8 +131,15 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 		newCodegenExecutionConfig.Framework = o.framework
 	}
 
+	hasStarterKit := false
+	for _, f := range allFrameworks {
+		if f.Name == newCodegenExecutionConfig.Framework && f.HasStarterKit {
+			hasStarterKit = true
+		}
+	}
+
 	// if with-starter-kit flag is not provided, give an option to clone a starterkit
-	if !o.withStarterKit {
+	if !o.withStarterKit && hasStarterKit {
 		shouldCloneStarterKit, err := util.GetYesNoPrompt("Do you also want to clone a starter kit for " + newCodegenExecutionConfig.Framework + "?")
 		if err != nil {
 			return err
@@ -139,8 +148,7 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 	}
 
 	// clone the starter kit
-	if o.withStarterKit {
-
+	if o.withStarterKit && hasStarterKit {
 		// get a directory name to clone the starter kit in
 		starterKitDirname := newCodegenExecutionConfig.Framework
 		err = util.FSCheckIfDirPathExists(
