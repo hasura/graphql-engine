@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura GraphQL engine server flags reference
+   :keywords: hasura, docs, deployment, server, flags
+
 GraphQL engine server flags reference
 =====================================
 
@@ -108,7 +112,7 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
        to allow for CORS. Wildcard domains are allowed.
 
    * - ``--disable-cors``
-     - N/A
+     - ``HASURA_GRAPHQL_DISABLE_CORS``
      - Disable CORS. Do not send any CORS headers on any request.
 
    * - ``--ws-read-cookie <true|false>``

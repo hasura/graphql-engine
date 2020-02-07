@@ -16,23 +16,15 @@ source-repository head
   location: https://github.com/hasura/graphql-engine
 
 flag developer
-  description: operate in developer mode
-  default: False
-  manual: True
-
-flag profile
-  description: compile with profile options set
+  description: Enable support for development-only APIs
   default: False
   manual: True
 
 common common-all
   ghc-options:
-    -O2 -fmax-simplifier-iterations=20 -foptimal-applicative-do
+    -fmax-simplifier-iterations=20 -foptimal-applicative-do
     -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
-    -fdefer-typed-holes
 
-  if flag(profile)
-    ghc-prof-options: -fprof-auto -fno-prof-count-entries
   if flag(developer)
     cpp-options: -DDeveloperAPIs
 
@@ -56,9 +48,6 @@ common common-exe
     -- than that is highly unlikely to ever be helpful. More benchmarking would be useful to know if
     -- this is the right decision. It’s possible it would better to just turn it off completely.
     "-with-rtsopts=-N -I2 -qn2"
-
-  if flag(profile)
-    ghc-prof-options: -rtsopts
 
 library
   import: common-all
@@ -133,6 +122,7 @@ library
 
                      -- URL parser related
                      , network-uri
+                     , uri-encode
 
                      -- String related
                      , case-insensitive
@@ -201,11 +191,17 @@ library
                      -- testing
                      , QuickCheck
                      , generic-arbitrary
+                     
+                     , directory
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
                      , Control.Monad.Stateless
                      , Control.Monad.Unique
+                     , Data.Time.Clock.Units
+
+                     -- exposed for tests
+                     , Data.Parser.CacheControl
 
                      , Hasura.Prelude
                      , Hasura.App
@@ -229,6 +225,8 @@ library
                      , Hasura.Server.Migrate
                      , Hasura.Server.Compression
                      , Hasura.Server.PGDump
+                     -- Exposed for testing:
+                     , Hasura.Server.Telemetry.Counters
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Run
@@ -277,7 +275,6 @@ library
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Deps
                      , Hasura.RQL.DDL.Permission.Internal
-                     , Hasura.RQL.DDL.Permission.Triggers
                      , Hasura.RQL.DDL.Permission
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.Relationship.Types
@@ -366,7 +363,6 @@ library
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.Text.Extended
-                     , Data.Time.Clock.Units
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error
@@ -379,13 +375,14 @@ library
 
 executable graphql-engine
   import: common-all, common-exe
-  main-is:           Main.hs
   hs-source-dirs:    src-exec
+  main-is:           Main.hs
   build-depends:     base
                    , graphql-engine
+                   , bytestring
                    , pg-client
                    , text
-                   , bytestring
+                   , text-conversions
 
 test-suite graphql-engine-tests
   import: common-all, common-exe
@@ -406,16 +403,22 @@ test-suite graphql-engine-tests
     , natural-transformation >=0.4 && <0.5
     , optparse-applicative
     , pg-client
+    , process
     , QuickCheck
+    , safe
+    , split
     , time
     , transformers-base
     , unordered-containers
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
+    Data.Parser.CacheControlSpec
+    Data.TimeSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec
+    Hasura.Server.TelemetrySpec
 
 -- Benchmarks related to caching (e.g. the plan cache).
 --

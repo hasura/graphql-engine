@@ -11,7 +11,7 @@ export const isArray = value => {
 };
 
 export const isObject = value => {
-  return typeof value === 'object';
+  return typeof value === 'object' && value !== null;
 };
 
 export const isString = value => {
@@ -225,7 +225,10 @@ export const downloadObjectAsJsonFile = (fileName, object) => {
     : fileName + jsonSuffix;
 
   const dataString =
-    'data:' + contentType + ',' + encodeURIComponent(JSON.stringify(object));
+    'data:' +
+    contentType +
+    ',' +
+    encodeURIComponent(JSON.stringify(object, null, 2));
 
   downloadFile(fileNameWithSuffix, dataString);
 };

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Customise the Hasura GraphQL schema with SQL functions
+   :keywords: hasura, docs, schema, custom function
+
 .. _custom_sql_functions:
 
 Customise schema with SQL functions

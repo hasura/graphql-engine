@@ -90,7 +90,7 @@ objRelP2Setup
   -> RelDef ObjRelUsing
   -> m (RelInfo, [SchemaDependency])
 objRelP2Setup qt foreignKeys (RelDef rn ru _) = case ru of
-  RUManual (ObjRelManualConfig rm) -> do
+  RUManual rm -> do
     let refqt = rmTable rm
         (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
         mkDependency tableName reason col = SchemaDependency (SOTableObj tableName $ TOCol col) reason
@@ -115,7 +115,7 @@ arrRelP2Setup
   -> ArrRelDef
   -> m (RelInfo, [SchemaDependency])
 arrRelP2Setup foreignKeys qt (RelDef rn ru _) = case ru of
-  RUManual (ArrRelManualConfig rm) -> do
+  RUManual rm -> do
     let refqt = rmTable rm
         (lCols, rCols) = unzip $ HM.toList $ rmColumns rm
         deps  = map (\c -> SchemaDependency (SOTableObj qt $ TOCol c) DRLeftColumn) lCols

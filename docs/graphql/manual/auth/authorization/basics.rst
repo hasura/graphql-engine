@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura access control basics
+   :keywords: hasura, docs, authorization, access control
+
 Access control basics
 =====================
 

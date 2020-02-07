@@ -1,3 +1,7 @@
+.. meta::
+   :description: Guides for deploying Hasura
+   :keywords: hasura, docs, guide, deployment
+
 Guides: Deployment
 ==================
 
