@@ -71,6 +71,8 @@ parseHGECommand =
           ( progDesc "Clean graphql-engine's metadata to start afresh" ))
         <> command "execute" (info (pure  HCExecute)
           ( progDesc "Execute a query" ))
+        <> command "downgrade" (info (HCDowngrade <$> downgradeOptionsParser)
+          (progDesc "Downgrade the GraphQL Engine schema to the specified version"))
         <> command "version" (info (pure  HCVersion)
           (progDesc "Prints the version of GraphQL Engine"))
     )
@@ -183,7 +185,6 @@ initialiseCtx hgeCmd rci = do
       -- initialise the catalog
       initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
       either printErrJExit (\(result, schemaCache) -> logger result $> schemaCache) initRes
-
 
 runHGEServer
   :: ( HasVersion
