@@ -101,15 +101,10 @@ data DelOpCtx
   , _docFilter  :: !AnnBoolExpPartialSQL
   } deriving (Show, Eq)
 
-data SyncReturnStrategy
-  = ReturnJson
-  | ExecOnPostgres [(PGCol, PGScalarType)]
-  deriving (Show, Eq)
-
 data SyncActionExecutionContext
   = SyncActionExecutionContext
   { _saecName                 :: !ActionName
-  , _saecStrategy             :: !SyncReturnStrategy
+  , _saecDefinitionList       :: ![(PGCol, PGScalarType)]
   , _saecWebhook              :: !ResolvedWebhook
   , _saecHeaders              :: ![HeaderConf]
   , _saecForwardClientHeaders :: !Bool

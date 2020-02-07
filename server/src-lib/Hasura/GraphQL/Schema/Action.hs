@@ -70,7 +70,7 @@ mkMutationField actionName actionInfo permission definitionList =
         ActionSynchronous  ->
           ActionExecutionSyncWebhook $ SyncActionExecutionContext actionName
   -- TODO: only covers object types
-          (ExecOnPostgres definitionList)
+          definitionList
           (_adHandler definition)
           (_adHeaders definition)
           (_adForwardClientHeaders definition)

@@ -2,12 +2,9 @@ module Hasura.GraphQL.Resolve.Action
   ( resolveActionMutation
   , resolveAsyncActionQuery
   , asyncActionsProcessor
-  --, resolveActionSelect
-  -- , resolveResponseSelectionSet
 
   , ActionSelect(..)
   , traverseActionSelect
-  , actionSelectToSql
   ) where
 
 import           Hasura.Prelude
@@ -34,7 +31,6 @@ import qualified Network.Wreq                      as Wreq
 
 import qualified Hasura.GraphQL.Resolve.Select     as GRS
 import qualified Hasura.RQL.DML.Select             as RS
-import qualified Hasura.SQL.DML                    as S
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Context
@@ -54,11 +50,6 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
                                                     toTxtValue)
 
-data InputFieldResolved
-  = InputFieldSimple !Text
-  | InputFieldTypename !G.NamedType
-  deriving (Show, Eq)
-
 data OutputFieldResolved
   = OutputFieldSimple !Text
   | OutputFieldTypename !G.NamedType
@@ -69,41 +60,6 @@ data ResponseFieldResolved
   | ResponseFieldMetadata !FieldName
   | ResponseFieldTypename !G.NamedType
   deriving (Show, Eq)
-
--- resolveOutputSelectionSet
---   :: (MonadError QErr m)
---   => G.NamedType
---   -> SelSet
---   -> m [(Text, OutputFieldResolved)]
--- resolveOutputSelectionSet ty selSet =
---   withSelSet selSet $ \fld -> case _fName fld of
---     "__typename" -> return $ OutputFieldTypename ty
---     G.Name t     -> return $ OutputFieldSimple t
-
--- resolveResponseSelectionSet
---   :: (MonadError QErr m)
---   => G.NamedType
---   -> SelSet
---   -> m [(Text, ResponseFieldResolved)]
--- resolveResponseSelectionSet ty selSet =
---   withSelSet selSet $ \fld -> case _fName fld of
---     "__typename" -> return $ ResponseFieldTypename ty
-
---     "output"     ->
---       ResponseFieldOutput <$>
---       resolveOutputSelectionSet (_fType fld) (_fSelSet fld)
-
---     -- the metadata columns
---     "id"         -> return $ mkMetadataField "id"
---     "created_at" -> return $ mkMetadataField "created_at"
---     "status"     -> return $ mkMetadataField "status"
---     "errors"     -> return $ mkMetadataField "errors"
-
---     G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
-
---   where
---     mkMetadataField = ResponseFieldMetadata . FieldName
-
 
 data ActionSelect v
   = ActionSelect
@@ -119,74 +75,6 @@ traverseActionSelect
   -> f (ActionSelect b)
 traverseActionSelect f (ActionSelect idText selection rowFilter) =
   ActionSelect <$> f idText <*> pure selection <*> traverseAnnBoolExp f rowFilter
-
-type ActionSelectResolved = ActionSelect S.SQLExp
--- type ActionSelectUnresolved = ActionSelect UnresolvedVal
-
-actionSelectToSql :: ActionSelectResolved -> Q.Query
-actionSelectToSql (ActionSelect actionIdExp selection _) =
-  Q.fromBuilder $ toSQL selectAST
-  where
-    selectAST =
-      S.mkSelect
-      { S.selFrom = Just $ S.FromExp $ pure $ S.FISimple actionLogTable Nothing
-      , S.selExtr = pure $ S.Extractor
-                    (usingJsonBuildObj selection responseFieldToSQLExp)
-                    -- we need the root alias because subscription refers
-                    -- to this particular field
-                    (Just $ S.toAlias $ Iden "root")
-      , S.selWhere = Just $ S.WhereFrag whereExpression
-      }
-
-    whereExpression =
-      S.BECompare S.SEQ (S.mkSIdenExp $ Iden "id") actionIdExp
-      -- we need this annotation because ID is mapped to text
-      -- and hence the prepared value will be a PGText
-      -- S.SETyAnn actionIdExp $ S.TypeAnn "uuid"
-
-    actionLogTable =
-      QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
-
-    responseFieldToSQLExp = \case
-      ResponseFieldOutput fields       -> usingJsonBuildObj fields outputFieldToSQLExp
-      ResponseFieldMetadata columnName -> S.SEIden $ toIden columnName
-      ResponseFieldTypename ty         -> S.SELit $ G.unName $ G.unNamedType ty
-
-    outputFieldToSQLExp = \case
-      OutputFieldSimple fieldName ->
-        S.SEOpApp (S.SQLOp "->>") [outputColumn, S.SELit fieldName]
-      OutputFieldTypename ty      -> S.SELit $ G.unName $ G.unNamedType ty
-      where
-        outputColumn = S.SEIden $ Iden "response_payload"
-
-    usingJsonBuildObj :: [(Text, a)] -> (a -> S.SQLExp) -> S.SQLExp
-    usingJsonBuildObj l f =
-      S.applyJsonBuildObj $ flip concatMap l $
-      \(alias, field) -> [S.SELit alias, f field]
-
-
--- resolveActionSelect
---   :: ( MonadReusability m
---      , MonadError QErr m
---      )
---   => ActionSelectOpContext
---   -> Field
---   -> m ActionSelectUnresolved
--- resolveActionSelect selectContext field = do
---   actionId <- withArg (_fArguments field) "id" parseActionId
---   responseSelectionSet <- resolveResponseSelectionSet (_fType field) $
---                           _fSelSet field
---   return $ ActionSelect actionId responseSelectionSet unresolvedFilter
---   where
---     unresolvedFilter =
---       fmapAnnBoolExp partialSQLExpToUnresolvedVal $
---       _asocFilter selectContext
---     parseActionId annInpValue = do
---       mkParameterizablePGValue <$> asPGColumnValue annInpValue
-
--- actionSelectToTx :: ActionSelectResolved -> RespTx
--- actionSelectToTx actionSelect =
---   asSingleRowJsonResp (actionSelectToSql actionSelect) []
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
@@ -258,18 +146,15 @@ resolveActionMutationSync field executionContext sessionVariables = do
   manager <- asks getter
   reqHeaders <- asks getter
   webhookRes <- callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook handlerPayload
-  case returnStrategy of
-    ReturnJson -> return $ return $ encJFromJValue webhookRes
-    ExecOnPostgres definitionList -> do
-      let webhookResponseExpression = RS.AEInput $ UVSQL $
-            toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB webhookRes
-      selectAstUnresolved <-
-        processOutputSelectionSet webhookResponseExpression definitionList
-        (_fType field) $ _fSelSet field
-      astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
-      return $ asSingleRowJsonResp (RS.selectQuerySQL True astResolved) []
+  let webhookResponseExpression = RS.AEInput $ UVSQL $
+        toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB webhookRes
+  selectAstUnresolved <-
+    processOutputSelectionSet webhookResponseExpression definitionList
+    (_fType field) $ _fSelSet field
+  astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
+  return $ asSingleRowJsonResp (RS.selectQuerySQL True astResolved) []
   where
-    SyncActionExecutionContext actionName returnStrategy resolvedWebhook confHeaders
+    SyncActionExecutionContext actionName definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
 callWebhook
@@ -412,20 +297,6 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
 
     getUndeliveredEvents = runTx undeliveredEventsQuery
 
-      -- map uncurryEvent <$>
-      --   Q.listQE defaultTxErrorHandler [Q.sql|
-      --     update hdb_catalog.hdb_action_log set status = 'processing'
-      --     where
-      --       id in (
-      --         select id from hdb_catalog.hdb_action_log
-      --         where status = 'created'
-      --         for update skip locked limit 10
-      --       ) returning action_name, session_variables, input_payload
-      --   |]
-
-
-
-
 resolveActionMutation
   :: ( HasVersion
      , MonadReusability m
@@ -461,20 +332,8 @@ resolveActionMutationAsync
   -> UserVars
   -> m RespTx
 resolveActionMutationAsync field _ sessionVariables = do
-
-  -- responseSelectionSet <- resolveResponseSelectionSet (_fType field) $ _fSelSet field
   reqHeaders <- asks getter
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
-
-  -- resolvedPresetFields <- resolvePresetFields
-
-  -- The order of the union doesn't matter as the allowed input
-  -- and the present fields are mutually exclusive
-  -- let actionInput = OMap.union inputArgs resolvedPresetFields
-
-  -- resolvedFilter <- resolveFilter
-  -- let resolvedFilter = annBoolExpTrue
-
   pure $ do
     actionId <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
       INSERT INTO
@@ -487,30 +346,9 @@ resolveActionMutationAsync field _ sessionVariables = do
       (actionName, Q.AltJ sessionVariables, Q.AltJ $ toHeadersMap reqHeaders, Q.AltJ inputArgs, "created"::Text) False
 
     pure $ encJFromJValue $ UUID.toText actionId
-    -- actionSelectToTx $
-    --   ActionSelect (S.SELit $ UUID.toText actionId)
-    --   responseSelectionSet resolvedFilter
   where
     actionName = G.unName $ _fName field
     toHeadersMap = Map.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
-
-    -- resolveFilter =
-    --   flip traverseAnnBoolExp (_aiocSelectFilter insertContext) $ \case
-    --   PSESQLExp e -> return e
-    --   PSESessVar variableTy sessVar -> do
-    --     sessionVariableValueExp <- S.SELit <$> fetchSessionVariableValue sessVar
-    --     return $ undefined variableTy sessionVariableValueExp
-
-    -- fetchSessionVariableValue sessionVariable =
-    --   onNothing (getVarVal sessionVariable sessionVariables) $
-    --   throw500 $ "missing required session variable: " <> sessionVariable
-
-    -- resolvePresetFields =
-    --   fmap OMap.fromList $ forM (Map.toList $ _aiocPresetFields insertContext) $
-    --   \(k, v) -> (unActionInputField k,) <$> case v of
-    --   Left sessVariable -> J.toJSON <$> fetchSessionVariableValue sessVariable
-    --   Right scalarValue -> return scalarValue
-
 
 annInpValueToJson :: AnnInpVal -> J.Value
 annInpValueToJson annInpValue =
@@ -551,7 +389,6 @@ resolveAsyncActionQuery userInfo selectContext field = do
       "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
       "created_at" -> return $ mkAnnFldFromPGCol "created_at" PGTimeStampTZ
       "errors"     -> return $ mkAnnFldFromPGCol "errors" PGJSONB
-      -- "status"     -> return $ mkAnnFldFromPGCol "status"
       G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
 
   let tableFromExp = RS.FromTable actionLogTable
@@ -561,13 +398,10 @@ resolveAsyncActionQuery userInfo selectContext field = do
       selectAstUnresolved = RS.AnnSelG annotatedFields tableFromExp tablePermissions
                             tableArguments stringifyNumerics
   return selectAstUnresolved
-
-  -- astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
-  -- return $ asSingleRowJsonResp (RS.selectQuerySQL True astResolved) []
   where
-    -- outputRelName = RelName $ mkNonEmptyTextUnsafe "output"
     actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
 
+    -- TODO:- Avoid using PGColumnInfo
     mkAnnFldFromPGCol column columnType =
       flip RS.mkAnnColField Nothing $
       PGColumnInfo (unsafePGCol column) (G.Name column) 0 (PGColumnScalar columnType) True Nothing
