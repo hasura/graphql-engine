@@ -140,6 +140,7 @@ func (o *consoleOptions) run() error {
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
+		"cdnAssets":       false,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
