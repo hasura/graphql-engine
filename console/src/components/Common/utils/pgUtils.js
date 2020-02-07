@@ -193,6 +193,74 @@ export function getRelationshipRefTable(table, relationship) {
   return _refTable;
 }
 
+/**
+ * @param {string} currentSchema
+ * @param {string} currentTable
+ * @param {any[]} allSchemas
+ *
+ * @returns {Array<{
+ *   columnName: string,
+ *   enumTableName: string,
+ *   enumColumnName: string,
+ * }> | void}
+ */
+export const enumColumnMapping = (allSchemas, tableName, tableSchema) => {
+  const currentTable = findTable(
+    allSchemas,
+    generateTableDef(tableName, tableSchema)
+  );
+
+  const relationships = currentTable && getTableRelationships(currentTable);
+
+  if (!relationships || !relationships.length) {
+    return;
+  }
+
+  const relationsMap = [];
+  relationships.forEach(rel => {
+    const relTableDef = getRelationshipRefTable(currentTable, rel);
+    const relTable = findTable(allSchemas, relTableDef);
+
+    if (!relTable.is_enum) return;
+
+    let _columnName;
+    let _enumColumnName;
+
+    const relDef = getRelationshipDef(rel);
+    if (relDef.manual_configuration) {
+      const keys = Object.keys(relDef.manual_configuration.column_mapping);
+      if (!keys.length) return;
+
+      _columnName = keys[0];
+      _enumColumnName = relDef.manual_configuration.column_mapping[_columnName];
+    }
+
+    if (relDef.foreign_key_constraint_on) {
+      const currentTableConstraint = relTable.opp_foreign_key_constraints.find(
+        ({ columns }) => columns.includes(relDef.foreign_key_constraint_on)
+      );
+
+      if (!currentTableConstraint) return;
+
+      const keys = Object.keys(currentTableConstraint.column_mapping);
+      if (!keys.length) return;
+
+      _columnName = keys[0];
+      _enumColumnName = currentTableConstraint.column_mapping[_columnName];
+    }
+
+    if (_columnName && _enumColumnName) {
+      relationsMap.push({
+        columnName: _columnName,
+        enumTableName: relTableDef.name,
+        enumColumnName: _enumColumnName,
+      });
+    }
+  });
+
+  return relationsMap;
+};
+
 /*** Table/View permissions utils ***/
 
 export const getTablePermissions = (table, role = null, action = null) => {

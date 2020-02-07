@@ -7,7 +7,7 @@ import {
   showSuccessNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
-import { buildFetchEnumRequests } from '../utils';
+import { enumColumnMapping } from '../../../Common/utils/pgUtils';
 
 const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
@@ -115,11 +115,7 @@ const fetchEnumOptions = () => {
       tables: { allSchemas, currentTable, currentSchema },
     } = getState();
 
-    const requests = buildFetchEnumRequests(
-      allSchemas,
-      currentTable,
-      currentSchema
-    );
+    const requests = enumColumnMapping(allSchemas, currentTable, currentSchema);
 
     if (!requests) return;
 
@@ -138,7 +134,7 @@ const fetchEnumOptions = () => {
             name: request.enumTableName,
             schema: currentSchema,
           },
-          columns: [request.enumTableColumn],
+          columns: [request.enumColumnName],
         },
       };
       return dispatch(
