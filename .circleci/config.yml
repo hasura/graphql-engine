@@ -461,6 +461,9 @@ jobs:
     - *skip_job_on_ciignore
     - checkout
     - run:
+        name: install_curl
+        command: apt install -y curl
+    - run:
         name: upgrade_test
         command: .circleci/server-upgrade/run.sh
         environment:
