@@ -1,5 +1,10 @@
 #! /usr/bin/env bash
 
+# If no arguments are provided, all the server upgrade tests will be run
+# With arguments, you can specify which server upgrade pytests should be run
+# Any options provided to this script will be applied to the
+# pytest command collecting server upgrade tests
+
 set -euo pipefail
 
 # # keep track of the last executed command
@@ -84,6 +89,7 @@ export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 
 fail_if_port_busy ${HASURA_GRAPHQL_SERVER_PORT}
+fail_if_port_busy ${HASURA_GRAPHQL_SERVER_PORT}
 
 log "setting up directories"
 mkdir -p $SERVER_OUTPUT_DIR
@@ -112,8 +118,10 @@ make_latest_release_worktree() {
 }
 
 cleanup_hasura_metadata() {
+	set -x
 	psql "$HASURA_GRAPHQL_DATABASE_URL" -c 'drop schema if exists hdb_catalog cascade;
-		drop schema if exists hdb_views cascade' >/dev/null
+		drop schema if exists hdb_views cascade' >/dev/null 2>/dev/null
+	set +x
 }
 
 
@@ -139,7 +147,9 @@ run_server_upgrade_pytest() {
 	local HGE_URL="http://localhost:${HASURA_GRAPHQL_SERVER_PORT}"
 	collect_common_tests() {
 		cd "$RELEASE_PYTEST_DIR"
-		pytest --hge-urls "${HGE_URL}"  --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --collect-only -q "$1" 2>/dev/null | grep '::'
+		set -x
+		pytest --hge-urls "${HGE_URL}"  --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --collect-only -q  "$1" 2>/dev/null | grep '::'
+		cd - > /dev/null
 	}
 
 	[ -n "$1" ] || ( echo "Got no test as input" && false )
@@ -194,6 +204,7 @@ where table_schema not in ('hdb_catalog','hdb_views', 'pg_catalog', 'information
 		# for the graphql-engine to start
 		cd $PYTEST_DIR
 		python3 graphql_server.py & REMOTE_GQL_PID=$!
+		wait_for_port 5000
 		cd -
 	fi
 

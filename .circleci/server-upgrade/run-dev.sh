@@ -11,8 +11,11 @@ ROOT="${BASH_SOURCE[0]%/*}"
 SERVER_DIR="$ROOT/../../server"
 
 cd $SERVER_DIR
+set -x
+cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine
 export SERVER_BINARY=$(cabal new-exec which graphql-engine)
 cd -
+set +x
 
 export SERVER_OUTPUT_DIR="server-output"
 export LATEST_SERVER_BINARY="./graphql-engine-latest"
@@ -51,8 +54,10 @@ function wait_docker_postgres {
 function launch_postgres_container(){
 	CONF_FLAGS=$(echo "$CONF" | sed  -e 's/^/-c /'  | tr '\n' ' ')
 	echo "Launching postgres container: $PG_CONTAINER_NAME"
+	set -x
 	docker run --name "$PG_CONTAINER_NAME" -p 127.0.0.1:"$PG_PORT":$PG_PORT --expose="$PG_PORT" \
 		-e POSTGRES_PASSWORD="$PGPASSWORD"  -d circleci/postgres:11.5-alpine-postgis $CONF_FLAGS
+	set +x
 }
 
 function stop_postgres_container(){

@@ -25,55 +25,91 @@ You can also go the other way using the constructors rather than the selectors:
 0.5
 @
 
-Generally, it doesn’t make sense to pass these wrappers around or put them inside data structures,
-since any function that needs a duration should just accept a 'DiffTime', but they’re useful for
-literals and conversions to/from other types. -}
+NOTE: the 'Real' and 'Fractional' instances just essentially add or strip the unit label (as 
+above), so you can't use 'realToFrac' to convert between the units types here. Instead try 
+'fromUnits' which is less of a foot-gun.
+
+The 'Read' instances for these types mirror the behavior of the 'RealFrac' instance wrt numeric
+literals for convenient serialization (e.g. when working with env vars):
+
+@
+>>> read "1.2" :: Milliseconds 
+Milliseconds {milliseconds = 0.0012s}
+@
+
+Generally, if you need to pass around a duration between functions you should use 'DiffTime'
+directly. However if storing a duration in a type that will be serialized, e.g. one having
+a 'ToJSON' instance, it is better to use one of these explicit wrapper types so that it's 
+obvious what units will be used. -}
 module Data.Time.Clock.Units
   ( Days(..)
   , Hours(..)
   , Minutes(..)
-  , Seconds
-  , seconds
+  , Seconds(..)
   , Milliseconds(..)
   , Microseconds(..)
   , Nanoseconds(..)
+  -- * Converting between units
+  , Duration(..)
+  , fromUnits
+  -- * Reexports
+  -- | We use 'DiffTime' as the standard type for unit-agnostic duration in our
+  -- code. You'll need to convert to a 'NominalDiffTime'  (with 'fromUnits') in
+  -- order to do anything useful with 'UTCTime' with these durations.
+  --
+  -- NOTE: some care must be taken especially when 'NominalDiffTime' interacts
+  -- with 'UTCTime':
+  --
+  --  - a 'DiffTime' or 'NominalDiffTime' my be negative
+  --  - 'addUTCTime' and 'diffUTCTime' do not attempt to handle leap seconds
+  , DiffTime
   ) where
 
 import           Prelude
 
+import           Control.Arrow   (first)
+import           Data.Aeson
+import           Data.Hashable
 import           Data.Proxy
 import           Data.Time.Clock
 import           GHC.TypeLits
+import           Numeric         (readFloat)
 
-type Seconds = DiffTime
 
-seconds :: DiffTime -> DiffTime
-seconds = id
+newtype Seconds = Seconds { seconds :: DiffTime }
+  -- NOTE: we want Show to give a pastable data structure string, even
+  -- though Read is custom.
+  deriving (Duration, Show, Eq, Ord, ToJSON, FromJSON)
+  deriving (Read, Num, Fractional, Real, Hashable, RealFrac) via (TimeUnit (SecondsP 1))
 
+-- TODO if needed: deriving (ToJSON, FromJSON) via (TimeUnit ..) making sure
+--      to copy Aeson instances (with withBoundedScientific), and e.g.
+--         toJSON (5 :: Minutes) == Number 5
 newtype Days = Days { days :: DiffTime }
-  deriving (Show, Eq, Ord)
-  deriving (Num, Fractional, Real, RealFrac) via (TimeUnit (SecondsP 86400))
+  deriving (Duration, Show, Eq, Ord)
+  deriving (Read, Num, Fractional, Real, Hashable, RealFrac) via (TimeUnit (SecondsP 86400))
 
 newtype Hours = Hours { hours :: DiffTime }
-  deriving (Show, Eq, Ord)
-  deriving (Num, Fractional, Real, RealFrac) via (TimeUnit (SecondsP 3600))
+  deriving (Duration, Show, Eq, Ord)
+  deriving (Read, Num, Fractional, Real, Hashable, RealFrac) via (TimeUnit (SecondsP 3600))
 
 newtype Minutes = Minutes { minutes :: DiffTime }
-  deriving (Show, Eq, Ord)
-  deriving (Num, Fractional, Real, RealFrac) via (TimeUnit (SecondsP 60))
+  deriving (Duration, Show, Eq, Ord)
+  deriving (Read, Num, Fractional, Real, Hashable, RealFrac) via (TimeUnit (SecondsP 60))
 
 newtype Milliseconds = Milliseconds { milliseconds :: DiffTime }
-  deriving (Show, Eq, Ord)
-  deriving (Num, Fractional, Real, RealFrac) via (TimeUnit 1000000000)
+  deriving (Duration, Show, Eq, Ord)
+  deriving (Read, Num, Fractional, Real, Hashable, RealFrac) via (TimeUnit 1000000000)
 
 newtype Microseconds = Microseconds { microseconds :: DiffTime }
-  deriving (Show, Eq, Ord)
-  deriving (Num, Fractional, Real, RealFrac) via (TimeUnit 1000000)
+  deriving (Duration, Show, Eq, Ord)
+  deriving (Read, Num, Fractional, Real, Hashable, RealFrac) via (TimeUnit 1000000)
 
 newtype Nanoseconds = Nanoseconds { nanoseconds :: DiffTime }
-  deriving (Show, Eq, Ord)
-  deriving (Num, Fractional, Real, RealFrac) via (TimeUnit 1000)
+  deriving (Duration, Show, Eq, Ord)
+  deriving (Read, Num, Fractional, Real, Hashable, RealFrac) via (TimeUnit 1000)
 
+-- Internal for deriving via
 newtype TimeUnit (picosPerUnit :: Nat) = TimeUnit DiffTime
   deriving (Show, Eq, Ord)
 
@@ -92,6 +128,9 @@ instance (KnownNat picosPerUnit) => Num (TimeUnit picosPerUnit) where
   signum (TimeUnit a) = TimeUnit $ signum a
   fromInteger a = TimeUnit . picosecondsToDiffTime $ a * natNum @picosPerUnit
 
+instance (KnownNat picosPerUnit) => Read (TimeUnit picosPerUnit) where
+  readsPrec _ = map (first fromRational) . readFloat
+
 instance (KnownNat picosPerUnit) => Fractional (TimeUnit picosPerUnit) where
   TimeUnit a / TimeUnit b = TimeUnit . picosecondsToDiffTime $
     diffTimeToPicoseconds a * natNum @picosPerUnit `div` diffTimeToPicoseconds b
@@ -107,3 +146,26 @@ instance (KnownNat picosPerUnit) => RealFrac (TimeUnit picosPerUnit) where
   round = round . toRational
   ceiling = ceiling . toRational
   floor = floor . toRational
+
+-- we can ignore unit:
+instance Hashable (TimeUnit a) where
+  hashWithSalt salt (TimeUnit dt) = hashWithSalt salt $ 
+    (realToFrac :: DiffTime -> Double) dt
+
+
+-- | Duration types isomorphic to 'DiffTime', powering 'fromUnits'.
+class Duration d where
+  fromDiffTime :: DiffTime -> d
+  toDiffTime :: d -> DiffTime
+
+instance Duration DiffTime where
+  fromDiffTime = id
+  toDiffTime = id
+
+instance Duration NominalDiffTime where
+  fromDiffTime = realToFrac
+  toDiffTime = realToFrac
+
+-- | Safe conversion between duration units.
+fromUnits :: (Duration x, Duration y)=> x -> y
+fromUnits = fromDiffTime . toDiffTime
