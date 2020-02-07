@@ -61,6 +61,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
 	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
+	f.BoolVar(&opts.UseServerAssets, "use-server-assets", false, "use assets from server. note: for this to work, the HASURA_GRAPHQL_CONSOLE_ASSETS_DIR environment variable has to be set on the server")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -85,8 +86,9 @@ type consoleOptions struct {
 
 	WG *sync.WaitGroup
 
-	StaticDir string
-	Browser   string
+	StaticDir       string
+	Browser         string
+	UseServerAssets bool
 }
 
 func (o *consoleOptions) run() error {
@@ -140,7 +142,7 @@ func (o *consoleOptions) run() error {
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
-		"cdnAssets":       false,
+		"cdnAssets":       !o.UseServerAssets,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
