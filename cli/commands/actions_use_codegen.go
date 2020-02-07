@@ -149,7 +149,6 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 
 	// clone the starter kit
 	if o.withStarterKit && hasStarterKit {
-
 		// get a directory name to clone the starter kit in
 		starterKitDirname := newCodegenExecutionConfig.Framework
 		err = util.FSCheckIfDirPathExists(

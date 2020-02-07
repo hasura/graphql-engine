@@ -14,14 +14,10 @@ import (
 	"sync"
 	"time"
 
-<<<<<<< HEAD
 	"github.com/pkg/errors"
-
-=======
 	"gopkg.in/yaml.v2"
 
 	"github.com/hasura/graphql-engine/cli/metadata/types"
->>>>>>> 5d7f49e2efa09bdb71cbf9b403626ba2c7e01b32
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 
