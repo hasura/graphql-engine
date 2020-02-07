@@ -27,6 +27,13 @@ class TestActionsAsync(DefaultTestQueries):
     def dir(cls):
         return 'queries/actions/async'
 
+    def mk_headers_with_secret(self, hge_ctx, headers={}):
+        admin_secret = hge_ctx.hge_key
+        if admin_secret:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        return headers
+
+
     def test_create_user_fail(self, hge_ctx, actions_webhook):
         graphql_mutation = '''
         mutation {
@@ -37,7 +44,7 @@ class TestActionsAsync(DefaultTestQueries):
             'query': graphql_mutation,
             'variables': {}
         }
-        status, resp, headers = hge_ctx.anyq('/v1/graphql', query, {})
+        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, self.mk_headers_with_secret(hge_ctx))
         assert status == 200, resp
         assert 'data' in resp
         action_id = resp['data']['create_user']
@@ -88,7 +95,7 @@ class TestActionsAsync(DefaultTestQueries):
             'query': graphql_mutation,
             'variables': {}
         }
-        status, resp, headers = hge_ctx.anyq('/v1/graphql', query, {})
+        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, self.mk_headers_with_secret(hge_ctx))
         assert status == 200, resp
         assert 'data' in resp
         action_id = resp['data']['create_user']
@@ -149,12 +156,12 @@ class TestActionsAsync(DefaultTestQueries):
             'query': graphql_mutation,
             'variables': {}
         }
-        headers = {
+        headers_user_1 = self.mk_headers_with_secret(hge_ctx, {
             'X-Hasura-Role': 'user',
             'X-Hasura-User-Id': '1'
-        }
+        })
         # create action with user-id 1
-        status, resp, headers = hge_ctx.anyq('/v1/graphql', query, headers)
+        status, resp, headers = hge_ctx.anyq('/v1/graphql', query, headers_user_1)
         assert status == 200, resp
         assert 'data' in resp
         action_id = resp['data']['create_user']
@@ -177,12 +184,13 @@ class TestActionsAsync(DefaultTestQueries):
             }
         }
 
+        headers_user_2 = self.mk_headers_with_secret(hge_ctx, {
+            'X-Hasura-Role': 'user',
+            'X-Hasura-User-Id': '2'
+        })
         conf_user_2 = {
             'url': '/v1/graphql',
-            'headers': {
-                'X-Hasura-Role': 'user',
-                'X-Hasura-User-Id': '2'
-            },
+            'headers': headers_user_2,
             'query': query,
             'status': 200,
             'response': {
@@ -192,14 +200,12 @@ class TestActionsAsync(DefaultTestQueries):
             }
         }
         # Query the action as user-id 2
-        check_query(hge_ctx, conf_user_2)
+        # Make request without auth using admin_secret
+        check_query(hge_ctx, conf_user_2, add_auth = False)
 
         conf_user_1 = {
             'url': '/v1/graphql',
-            'headers': {
-                'X-Hasura-Role': 'user',
-                'X-Hasura-User-Id': '1'
-            },
+            'headers': headers_user_1,
             'query': query,
             'status': 200,
             'response': {
@@ -214,4 +220,5 @@ class TestActionsAsync(DefaultTestQueries):
             }
         }
         # Query the action as user-id 1
-        check_query(hge_ctx, conf_user_1)
+        # Make request without auth using admin_secret
+        check_query(hge_ctx, conf_user_1, add_auth = False)
