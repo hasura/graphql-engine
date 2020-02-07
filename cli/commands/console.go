@@ -1,9 +1,11 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/gin-contrib/cors"
@@ -61,7 +63,6 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
 	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
-	f.BoolVar(&opts.UseServerAssets, "use-server-assets", false, "use assets from server. note: for this to work, the HASURA_GRAPHQL_CONSOLE_ASSETS_DIR environment variable has to be set on the server")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -125,6 +126,30 @@ func (o *consoleOptions) run() error {
 
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
+
+	getConfig := func(url string, target interface{}) error {
+		var client = &http.Client{Timeout: 10 * time.Second}
+		r, err := client.Get(url)
+		if err != nil {
+			return err
+		}
+		defer r.Body.Close()
+
+		return json.NewDecoder(r.Body).Decode(target)
+	}
+	type ServerConfig struct {
+		Version          string `json:"version,omitempty"`
+		IsAdminSecretSet bool   `json:"is_admin_secret_set,omitempty"`
+		IsAuthHookSet    bool   `json:"is_auth_hook_set,omitempty"`
+		IsJwtSet         bool   `json:"is_jwt_set,omitempty"`
+		JWT              bool   `json:"jwt,omitempty"`
+		ConsoleAssetsDir string `json:"console_assets_dir,omitempty"`
+	}
+	var config ServerConfig
+	getConfig(o.EC.ServerConfig.Endpoint+"/v1alpha1/config", &config)
+	if config.ConsoleAssetsDir != "" {
+		o.UseServerAssets = true
+	}
 
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
