@@ -8,8 +8,9 @@ from validate import check_query_f, check_event
 usefixtures = pytest.mark.usefixtures
 
 # Every test in this class requires the events webhook to be running first
-pytestmark = usefixtures('evts_webhook')
-
+# We are also going to mark as server upgrade tests are allowed
+# A few tests are going to be excluded with skip_server_upgrade_test mark
+pytestmark = [usefixtures('evts_webhook'), pytest.mark.allow_server_upgrade_test]
 
 def select_last_event_fromdb(hge_ctx):
     q = {
@@ -71,6 +72,8 @@ class TestCreateAndDelete:
     def test_create_reset(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/create_and_reset.yaml")
 
+    # Can't run server upgrade tests, as this test has a schema change
+    @pytest.mark.skip_server_upgrade_test
     def test_create_operation_spec_not_provider_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/create_trigger_operation_specs_not_provided_err.yaml")
 
@@ -292,7 +295,7 @@ class TestDeleteEvtQuery(object):
         with pytest.raises(queue.Empty):
             check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data)
 
-@usefixtures('per_method_tests_db_state')
+@usefixtures('per_class_tests_db_state')
 class TestEvtSelCols:
 
     @classmethod
@@ -338,6 +341,7 @@ class TestEvtSelCols:
         assert st_code == 200, resp
         check_event(hge_ctx, evts_webhook, "t1_cols", table, "DELETE", exp_ev_data)
 
+    @pytest.mark.skip_server_upgrade_test
     def test_selected_cols_dep(self, hge_ctx, evts_webhook):
         st_code, resp = hge_ctx.v1q({
             "type": "run_sql",
@@ -396,7 +400,7 @@ class TestEvtInsertOnly:
             check_event(hge_ctx, evts_webhook, "t1_insert", table, "DELETE", exp_ev_data)
 
 
-@usefixtures('per_method_tests_db_state')
+@usefixtures('per_class_tests_db_state')
 class TestEvtSelPayload:
 
     @classmethod

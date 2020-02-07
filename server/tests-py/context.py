@@ -271,9 +271,8 @@ class HGECtx:
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         env_version = os.getenv('VERSION')
         self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
-        if not self.metadata_disabled:
+        if not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
           try:
-                # TODO Nizar, do this only if schema setup is allowed
               st_code, resp = self.v1q_f('queries/clear_db.yaml')
           except requests.exceptions.RequestException as e:
               self.teardown()

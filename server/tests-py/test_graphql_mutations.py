@@ -1,6 +1,10 @@
 import pytest
 from validate import check_query_f
 
+# Marking all tests in this module that server upgrade tests can be run
+# Few of them cannot be run, which will be marked skip_server_upgrade_test
+pytestmark = pytest.mark.allow_server_upgrade_test
+
 usefixtures = pytest.mark.usefixtures
 
 use_mutation_fixtures = usefixtures(
@@ -290,6 +294,9 @@ class TestGraphqlInsertViews:
 @use_mutation_fixtures
 class TestGraphqlUpdateBasic:
 
+    # This test captures a bug in the previous release
+    # Avoiding this test for server upgrades
+    @pytest.mark.skip_server_upgrade_test
     def test_set_author_name(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
 

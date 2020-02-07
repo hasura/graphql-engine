@@ -1,6 +1,9 @@
 import pytest
 from validate import check_query_f
 
+# Mark that all tests in this module can be run as server upgrade tests
+pytestmark = pytest.mark.allow_server_upgrade_test
+
 usefixtures = pytest.mark.usefixtures
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])

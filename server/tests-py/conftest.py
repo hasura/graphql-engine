@@ -6,6 +6,7 @@ import random
 from datetime import datetime
 import sys
 import os
+from collections import OrderedDict
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -128,6 +129,13 @@ This option may result in test failures if the schema has to change between the 
     """
     )
 
+    parser.addoption(
+        "--collect-upgrade-tests-to-file",
+        metavar="<path>",
+        required=False,
+        help="When used along with collect-only, it will write the list of upgrade tests into the file specified"
+    )
+
 #By default,
 #1) Set default parallelism to one
 #2) Set test grouping to by filename (--dist=loadfile)
@@ -158,11 +166,45 @@ def pytest_configure(config):
 
     random.seed(datetime.now())
 
-def is_help_option_present(config):
-    return any([
-        config.getoption(x)
-        for x in ['--fixtures','--help', '--collect-only']
-    ])
+
+@pytest.hookimpl()
+def pytest_report_collectionfinish(config, startdir, items):
+    """
+    Collect server upgrade tests to the given file
+    """
+    tests_file = config.getoption('--collect-upgrade-tests-to-file')
+    sep=''
+    tests=OrderedDict()
+    if tests_file:
+        def is_upgrade_test(item):
+            # Check if allow_server_upgrade_tests marker are present
+            # skip_server_upgrade_tests marker is not present
+            return item.get_closest_marker('allow_server_upgrade_test') \
+                and not item.get_closest_marker('skip_server_upgrade_test')
+        with open(tests_file,'w') as f:
+            upgrade_items = filter(is_upgrade_test, items)
+            for item in upgrade_items:
+                # This test should be run separately,
+                # since its schema setup has function scope
+                if 'per_method_tests_db_state' in item.fixturenames:
+                    tests[item.nodeid] = True
+                elif any([ (x in item.fixturenames)
+                    for x in
+                    [ 'per_class_tests_db_state',
+                      'per_class_db_schema_for_mutation_tests'
+                    ]
+                ]):
+                    # For this test, schema setup has class scope
+                    # We can run a class of these tests at a time
+                    tests[item.parent.nodeid] = True
+                # Assume tests can only be run separately
+                else:
+                    tests[item.nodeid] = True
+            for test in tests.keys():
+                f.write(test + '\n')
+    return ''
+
+
 
 @pytest.hookimpl(optionalhook=True)
 def pytest_configure_node(node):
@@ -213,6 +255,16 @@ def evts_webhook(request):
     webhook_httpd.shutdown()
     webhook_httpd.server_close()
     web_server.join()
+
+@pytest.fixture(scope='class')
+def ws_client(request, hge_ctx):
+    """
+    This fixture provides an Apollo GraphQL websockets client
+    """
+    client = GQLWsClient(hge_ctx, '/v1/graphql')
+    time.sleep(0.1)
+    yield client
+    client.teardown()
 
 @pytest.fixture(scope='class')
 def per_class_tests_db_state(request, hge_ctx):
@@ -319,15 +371,11 @@ def run_on_elem_or_list(f, x):
     elif isinstance(x, list):
         return [f(e) for e in x]
 
-@pytest.fixture(scope='class')
-def ws_client(request, hge_ctx):
-    """
-    This fixture provides an Apollo GraphQL websockets client
-    """
-    client = GQLWsClient(hge_ctx, '/v1/graphql')
-    time.sleep(0.1)
-    yield client
-    client.teardown()
+def is_help_option_present(config):
+    return any([
+        config.getoption(x)
+        for x in ['--fixtures','--help', '--collect-only']
+    ])
 
 def is_master(config):
     """True if the code running the given pytest.config object is running in a xdist master

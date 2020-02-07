@@ -446,7 +446,8 @@ jobs:
   # test server upgrade from last version to current build
   test_server_upgrade:
     docker:
-    - image: tirumarai/graphql-engine-upgrade-tester
+    # Using the image for pytests, since server upgrade tests are now a bunch of pytests
+    - image: hasura/graphql-engine-server-builder:2020-01-14
       environment:
         HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
     - image: circleci/postgres:10-alpine
