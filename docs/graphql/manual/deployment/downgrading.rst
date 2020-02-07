@@ -38,21 +38,18 @@ Downgrades to the catalogue need to be carried out manually in case you are atte
 Downgrading across catalogue versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can downgrade the catalogue from a particular version to a previous version by executing the ``graphql-engine`` executable on the command line,
-with the ``downgrade`` command, specifying the desired catalog version using one of the ``--to-`` flags.
+You can downgrade the catalogue from a particular version to a previous version by executing the ``graphql-engine`` executable on the command line, with the ``downgrade`` command, specifying the desired catalogue version using one of the ``--to-`` flags.
+
+The ``downgrade`` command is not part of the Hasura CLI but rather a command on ``graphql-engine`` itself. The way to execute this command is to run ``docker run hasura/graphql-engine:<VERSION> graphql-engine downgrade --to-<NEW-VERSION>``.
+
+You need to use a newer version of ``graphql-engine`` to downgrade to an older version, since only the newer version knows how to downgrade from that point in time. After you’ve executed the ``downgrade`` command using the newer version, you should switch to the older version and run ``graphql-engine serve`` as normal.
+
+Catalogue version downgrades will be executed sequentially and in a single transaction.
 
 .. note::
 
-  - The ``downgrade`` command is not part of the Hasura CLI but rather a command on ``graphql-engine`` itself. The way to execute this command is to 
-    run ``docker run hasura/graphql-engine:<VERSION> graphql-engine downgrade --to-<NEW-VERSION>``.
-
-  - You need to use a newer version of ``graphql-engine`` to downgrade to an older version, since only the newer version knows how to downgrade from that point in time. After you’ve executed the ``downgrade`` command using the newer 
-    version, you should switch to the older version and run ``graphql-engine serve`` as normal.
-
   - Running this command while Hasura GraphQL engine is running might lead to unexpected results. It is recommended to first bring down any running
-    Hasura GraphQL engine instances and then run the SQL statements using an external Postgres client (like ``psql``).
-
-  - Catalogue version downgrades will be executed sequentially and in a single transaction.
+    Hasura GraphQL engine instances and then run the SQL statements using an external Postgres client (like ``psql``)
 
 .. contents:: Downgrading
   :backlinks: none
