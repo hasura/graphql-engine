@@ -1,13 +1,10 @@
 Async Actions
 =============
 
-
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1
   :local:
-
-WORK IN PROGRESS
 
 Sometimes you may not want to wait for an action to complete (say if the business logic takes a long time). In such cases you can create an **asynchronous** action, which returns an ``action_id`` immediately to the client before contacting the webhook.
 

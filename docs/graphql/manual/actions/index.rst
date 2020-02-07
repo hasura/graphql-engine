@@ -31,8 +31,7 @@ Learn more
   :titlesonly:
 
   Getting started <getting-started>
-  Input types <input-types>
-  Response types <response-types>
+  Types <types/index>
   Action handlers <action-handlers>
   Async actions <async-actions>
-  Sample use cases <use-cases>
+  Codegen <codegen/index>

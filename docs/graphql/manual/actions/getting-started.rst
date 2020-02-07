@@ -119,7 +119,6 @@ And that's it. You have created your first action!
 CLI
 ---
 
-
 Project setup
 *************
 
