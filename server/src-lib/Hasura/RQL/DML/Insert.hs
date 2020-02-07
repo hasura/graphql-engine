@@ -311,20 +311,23 @@ insertOrUpdateCheckExpr
   -> S.BoolExp 
   -> Maybe S.BoolExp 
   -> S.SQLExp
-insertOrUpdateCheckExpr qt (Just _conflict) insCheck updCheck = 
+insertOrUpdateCheckExpr qt (Just _conflict) insCheck (Just updCheck) = 
   S.SECond 
     (S.BECompare 
       S.SEQ 
       (S.SEQIden (S.QIden (S.mkQual qt) (Iden "xmax")))
       (S.SEUnsafe "0"))
     (insertCheckExpr insCheck)
-    (maybe S.SENull insertCheckExpr updCheck)
-insertOrUpdateCheckExpr _qt Nothing insCheck _ =
+    (insertCheckExpr updCheck)
+insertOrUpdateCheckExpr _ _ insCheck _ =
   -- If we won't generate an ON CONFLICT clause, there is no point
   -- in testing xmax. In particular, views don't provide the xmax
   -- system column, but we don't provide ON CONFLICT for views,
   -- even if they are auto-updatable, so we can fortunately avoid
   -- having to test the non-existent xmax value.
+  --
+  -- Alternatively, if there is no update check constraint, we should
+  -- use the insert check constraint, for backwards compatibility.
   insertCheckExpr insCheck
 
 runInsert
