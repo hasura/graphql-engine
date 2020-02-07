@@ -405,6 +405,8 @@ test-suite graphql-engine-tests
     , pg-client
     , process
     , QuickCheck
+    , safe
+    , split
     , time
     , transformers-base
     , unordered-containers
