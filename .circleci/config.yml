@@ -450,7 +450,7 @@ jobs:
     - image: hasura/graphql-engine-server-builder:2020-01-14
       environment:
         HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
-    - image: circleci/postgres:10-alpine
+    - image: circleci/postgres:11-alpine-postgis
       environment:
         POSTGRES_USER: gql_test
         POSTGRES_DB: gql_test
