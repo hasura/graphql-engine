@@ -26,17 +26,19 @@ data ServerConfig
   , scfgIsAuthHookSet    :: !Bool
   , scfgIsJwtSet         :: !Bool
   , scfgJwt              :: !(Maybe JWTInfo)
+  , scfgConsoleAssetsDir :: !(Maybe Text)
   } deriving (Show)
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ServerConfig)
 
-runGetConfig :: HasVersion => AuthMode -> ServerConfig
-runGetConfig am = ServerConfig
+runGetConfig :: HasVersion => AuthMode -> Maybe Text -> ServerConfig
+runGetConfig am consoleAssetsDir = ServerConfig
   currentVersion
   (isAdminSecretSet am)
   (isAuthHookSet am)
   (isJWTSet am)
   (getJWTInfo am)
+  consoleAssetsDir
 
 isAdminSecretSet :: AuthMode -> Bool
 isAdminSecretSet = \case

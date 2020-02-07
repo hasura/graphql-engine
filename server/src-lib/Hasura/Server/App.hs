@@ -563,7 +563,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       Spock.get "v1alpha1/config" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          let res = encJFromJValue $ runGetConfig (scAuthMode serverCtx)
+          let res = encJFromJValue $ runGetConfig (scAuthMode serverCtx consoleAssetsDir)
           return $ JSONResp $ HttpResponse res Nothing
 
     when enableGraphQL $ do
