@@ -27,6 +27,7 @@ require (
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gorilla/sessions v1.2.0 // indirect
 	github.com/gosimple/slug v1.9.0 // indirect
+	github.com/graphql-go/graphql v0.7.8
 	github.com/jinzhu/configor v1.1.1 // indirect
 	github.com/jinzhu/gorm v1.9.11 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
@@ -63,7 +64,8 @@ require (
 	github.com/theplant/htmltestingutils v0.0.0-20190423050759-0e06de7b6967 // indirect
 	github.com/theplant/testingutils v0.0.0-20190603093022-26d8b4d95c61 // indirect
 	github.com/yosssi/gohtml v0.0.0-20190915184251-7ff6f235ecaf // indirect
-	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
+	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.2.7
 	moul.io/http2curl v1.0.0 // indirect
 )

@@ -47,6 +47,10 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -103,12 +107,7 @@ func (o *consoleOptions) run() error {
 		return errors.New("cannot validate version, object is nil")
 	}
 
-	metadataPath, err := o.EC.GetMetadataFilePath("yaml")
-	if err != nil {
-		return err
-	}
-
-	t, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, false)
+	t, err := newMigrate(o.EC, false)
 	if err != nil {
 		return err
 	}
@@ -119,7 +118,7 @@ func (o *consoleOptions) run() error {
 		t,
 	}
 
-	r.setRoutes(o.EC.MigrationDir, metadataPath, o.EC.Logger)
+	r.setRoutes(o.EC.MigrationDir, o.EC.Logger)
 
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
@@ -133,10 +132,10 @@ func (o *consoleOptions) run() error {
 		"apiPort":         o.APIPort,
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
 		"serverVersion":   o.EC.Version.GetServerVersion(),
-		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
+		"dataApiUrl":      o.EC.Config.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
 		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
-		"adminSecret":     o.EC.ServerConfig.AdminSecret,
+		"adminSecret":     o.EC.Config.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
@@ -200,7 +199,7 @@ type cRouter struct {
 	migrate *migrate.Migrate
 }
 
-func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Logger) {
+func (r *cRouter) setRoutes(migrationDir string, logger *logrus.Logger) {
 	apis := r.router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
@@ -223,7 +222,6 @@ func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Lo
 		// Migrate api endpoints and middleware
 		metadataAPIs := apis.Group("/metadata")
 		{
-			metadataAPIs.Use(setMetadataFile(metadataFile))
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
 	}

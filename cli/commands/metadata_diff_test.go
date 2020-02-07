@@ -84,7 +84,7 @@ func TestMetadataDiffCmd(t *testing.T) {
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MetadataFile: []string{metadataFile},
-			ServerConfig: &cli.ServerConfig{
+			Config: &cli.Config{
 				Endpoint:       endpointURL.String(),
 				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 				ParsedEndpoint: endpointURL,
@@ -94,7 +94,7 @@ func TestMetadataDiffCmd(t *testing.T) {
 	}
 
 	opts.EC.Version = version.New()
-	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
+	v, err := version.FetchServerVersion(opts.EC.Config.ServerConfig.Endpoint)
 	if err != nil {
 		t.Fatalf("getting server version failed: %v", err)
 	}

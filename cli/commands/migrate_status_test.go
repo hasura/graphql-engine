@@ -24,7 +24,7 @@ func testMigrateStatus(t *testing.T, endpoint *url.URL, migrationsDir string, ex
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: migrationsDir,
-			ServerConfig: &cli.ServerConfig{
+			Config: &cli.Config{
 				Endpoint:       endpoint.String(),
 				AdminSecret:    os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 				ParsedEndpoint: endpoint,
@@ -33,7 +33,7 @@ func testMigrateStatus(t *testing.T, endpoint *url.URL, migrationsDir string, ex
 	}
 
 	opts.EC.Version = version.New()
-	v, err := version.FetchServerVersion(opts.EC.ServerConfig.Endpoint)
+	v, err := version.FetchServerVersion(opts.EC.Config.ServerConfig.Endpoint)
 	if err != nil {
 		t.Fatalf("getting server version failed: %v", err)
 	}
@@ -53,7 +53,7 @@ func TestMigrateStatusWithInvalidEndpoint(t *testing.T) {
 			Logger:       logger,
 			Spinner:      spinner.New(spinner.CharSets[7], 100*time.Millisecond),
 			MigrationDir: filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
-			ServerConfig: &cli.ServerConfig{
+			Config: &cli.Config{
 				Endpoint:       ":",
 				AdminSecret:    "",
 				ParsedEndpoint: &url.URL{},

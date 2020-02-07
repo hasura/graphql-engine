@@ -30,6 +30,10 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -38,12 +42,7 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 					EC:     ec,
 					output: os.Stdout,
 				}
-				filename, err := ec.GetExistingMetadataFile()
-				if err != nil {
-					return errors.Wrap(err, "failed getting metadata file")
-				}
-				o.metadata[0] = filename
-				return o.run()
+				return o.run([]string{})
 			}
 			opts.EC.Spin("Applying metadata...")
 			err := opts.run()
@@ -62,6 +61,7 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
+	f.BoolVar(&opts.fromFile, "from-file", false, "apply metadata from migrations/metadata.[yaml|json]")
 	f.BoolVar(&opts.dryRun, "dry-run", false, "show a diff instead of applying the metadata")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
@@ -77,11 +77,15 @@ type metadataApplyOptions struct {
 
 	actionType string
 
-	dryRun bool
+	fromFile bool
+	dryRun   bool
 }
 
 func (o *metadataApplyOptions) run() error {
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
+	if o.fromFile {
+		o.EC.MetadataDir = ""
+	}
+	migrateDrv, err := newMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}

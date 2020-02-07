@@ -19,8 +19,8 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	migrateStatusCmd := &cobra.Command{
-		Use:          "status",
-		Short:        "Display current status of migrations on a database",
+		Use:   "status",
+		Short: "Display current status of migrations on a database",
 		Example: `  # Use with admin secret:
   hasura migrate status --admin-secret "<your-admin-secret>"
 
@@ -29,6 +29,10 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -63,7 +67,7 @@ type migrateStatusOptions struct {
 }
 
 func (o *migrateStatusOptions) run() (*migrate.Status, error) {
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
+	migrateDrv, err := newMigrate(o.EC, true)
 	if err != nil {
 		return nil, err
 	}

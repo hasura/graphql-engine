@@ -1,0 +1,7 @@
+bin/ filter=lfs diff=lfs merge=lfs -text
+bin/command-macos filter=lfs diff=lfs merge=lfs -text
+bin/command-win.exe filter=lfs diff=lfs merge=lfs -text
+bin/cli-hasura-darwin-amd64 filter=lfs diff=lfs merge=lfs -text
+bin/cli-hasura-linux-amd64 filter=lfs diff=lfs merge=lfs -text
+bin/cli-hasura-windows-amd64.exe filter=lfs diff=lfs merge=lfs -text
+bin/command-linux filter=lfs diff=lfs merge=lfs -text

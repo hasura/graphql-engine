@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata"
+	metadataTypes "github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	v2yaml "gopkg.in/yaml.v2"
 
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	log "github.com/sirupsen/logrus"
@@ -41,6 +42,10 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -115,7 +120,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 
 	var migrateDrv *migrate.Migrate
 	if o.sqlServer || o.metaDataServer {
-		migrateDrv, err = newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
+		migrateDrv, err = newMigrate(o.EC, true)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot create migrate instance")
 		}
@@ -145,32 +150,30 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 	}
 
 	if o.metaDataServer {
+		// To create metadata.yaml, set metadata plugin
+		tmpDirName, err := ioutil.TempDir("", "*")
+		if err != nil {
+			return 0, errors.Wrap(err, "cannot create temp directory to fetch metadata")
+		}
+		defer os.RemoveAll(tmpDirName)
+		plugins := make(metadataTypes.MetadataPlugins, 0)
+		plugins = append(plugins, metadata.New(o.EC, tmpDirName))
+		migrateDrv.SetMetadataPlugins(plugins)
 		// fetch metadata from server
-		metaData, err := migrateDrv.ExportMetadata()
+		files, err := migrateDrv.ExportMetadata()
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot fetch metadata from server")
 		}
-
-		tmpfile, err := ioutil.TempFile("", "metadata")
+		err = migrateDrv.WriteMetadata(files)
 		if err != nil {
-			return 0, errors.Wrap(err, "cannot create tempfile")
-		}
-		defer os.Remove(tmpfile.Name())
-
-		t, err := v2yaml.Marshal(metaData)
-		if err != nil {
-			return 0, errors.Wrap(err, "cannot marshal metadata")
-		}
-		if _, err := tmpfile.Write(t); err != nil {
-			return 0, errors.Wrap(err, "cannot write to temp file")
-		}
-		if err := tmpfile.Close(); err != nil {
-			return 0, errors.Wrap(err, "cannot close tmp file")
+			return 0, errors.Wrap(err, "cannot write to tmp file")
 		}
 
-		err = createOptions.SetMetaUpFromFile(tmpfile.Name())
-		if err != nil {
-			return 0, errors.Wrap(err, "cannot parse metadata from the server")
+		for name := range files {
+			err = createOptions.SetMetaUpFromFile(name)
+			if err != nil {
+				return 0, errors.Wrap(err, "cannot parse metadata from the server")
+			}
 		}
 	}
 

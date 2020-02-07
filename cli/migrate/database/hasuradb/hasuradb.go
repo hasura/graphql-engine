@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/oliveagle/jsonpath"
 	"github.com/parnurzeal/gorequest"
@@ -40,9 +41,11 @@ type Config struct {
 	MigrationsTable string
 	SettingsTable   string
 	v1URL           *nurl.URL
+	graphqlURL      *nurl.URL
 	schemDumpURL    *nurl.URL
 	Headers         map[string]string
 	isCMD           bool
+	Plugins         types.MetadataPlugins
 }
 
 type HasuraDB struct {
@@ -115,13 +118,18 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		}
 	}
 
-	hx, err := WithInstance(&Config{
+	config := &Config{
 		MigrationsTable: DefaultMigrationsTable,
 		SettingsTable:   DefaultSettingsTable,
 		v1URL: &nurl.URL{
 			Scheme: scheme,
 			Host:   hurl.Host,
 			Path:   path.Join(hurl.Path, "v1/query"),
+		},
+		graphqlURL: &nurl.URL{
+			Scheme: scheme,
+			Host:   hurl.Host,
+			Path:   path.Join(hurl.Path, "v1/graphql"),
 		},
 		schemDumpURL: &nurl.URL{
 			Scheme: scheme,
@@ -130,13 +138,13 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		},
 		isCMD:   isCMD,
 		Headers: headers,
-	}, logger)
-
+		Plugins: make(types.MetadataPlugins, 0),
+	}
+	hx, err := WithInstance(config, logger)
 	if err != nil {
 		logger.Debug(err)
 		return nil, err
 	}
-
 	return hx, nil
 }
 
@@ -485,8 +493,25 @@ func (h *HasuraDB) ensureVersionTable() error {
 
 func (h *HasuraDB) sendv1Query(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := gorequest.New()
-
 	request = request.Post(h.config.v1URL.String()).Send(m)
+	for headerName, headerValue := range h.config.Headers {
+		request.Set(headerName, headerValue)
+	}
+
+	resp, body, errs := request.EndBytes()
+
+	if len(errs) == 0 {
+		err = nil
+	} else {
+		err = errs[0]
+	}
+
+	return resp, body, err
+}
+
+func (h *HasuraDB) sendv1GraphQL(query interface{}) (resp *http.Response, body []byte, err error) {
+	request := gorequest.New()
+	request = request.Post(h.config.graphqlURL.String()).Send(query)
 
 	for headerName, headerValue := range h.config.Headers {
 		request.Set(headerName, headerValue)

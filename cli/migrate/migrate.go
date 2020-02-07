@@ -9,12 +9,19 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"time"
 
+<<<<<<< HEAD
 	"github.com/pkg/errors"
 
+=======
+	"gopkg.in/yaml.v2"
+
+	"github.com/hasura/graphql-engine/cli/metadata/types"
+>>>>>>> 5d7f49e2efa09bdb71cbf9b403626ba2c7e01b32
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 
@@ -309,8 +316,20 @@ func (m *Migrate) GetUnappliedMigrations(version uint64) []uint64 {
 	return m.sourceDrv.GetUnappliedMigrations(version)
 }
 
-func (m *Migrate) ExportMetadata() (interface{}, error) {
+func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
+	return m.databaseDrv.GetIntroSpectionSchema()
+}
+
+func (m *Migrate) SetMetadataPlugins(plugins types.MetadataPlugins) {
+	m.databaseDrv.SetMetadataPlugins(plugins)
+}
+
+func (m *Migrate) ExportMetadata() (map[string][]byte, error) {
 	return m.databaseDrv.ExportMetadata()
+}
+
+func (m *Migrate) WriteMetadata(files map[string][]byte) error {
+	return m.sourceDrv.WriteMetadata(files)
 }
 
 func (m *Migrate) ResetMetadata() error {
@@ -330,15 +349,19 @@ func (m *Migrate) DropInconsistentMetadata() error {
 	return m.databaseDrv.DropInconsistentMetadata()
 }
 
-func (m *Migrate) ApplyMetadata(data interface{}) error {
-	return m.databaseDrv.ApplyMetadata(data)
+func (m *Migrate) BuildMetadata() (yaml.MapSlice, error) {
+	return m.databaseDrv.BuildMetadata()
+}
+
+func (m *Migrate) ApplyMetadata() error {
+	return m.databaseDrv.ApplyMetadata()
 }
 
 func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
 	return m.databaseDrv.ExportSchemaDump(schemName)
 }
 
-func (m *Migrate) Query(data []interface{}) error {
+func (m *Migrate) Query(data interface{}) error {
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
 		return err
@@ -347,7 +370,6 @@ func (m *Migrate) Query(data []interface{}) error {
 	if mode == "true" {
 		return ErrMigrationMode
 	}
-
 	return m.databaseDrv.Query(data)
 }
 
@@ -495,6 +517,34 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 	go m.read(version, direction, ret)
 
 	return m.unlockErr(m.runMigrations(ret))
+}
+
+func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser) error {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return err
+	}
+
+	if mode != "true" {
+		return ErrNoMigrationMode
+	}
+
+	if err := m.lock(); err != nil {
+		return err
+	}
+
+	if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
+		m.databaseDrv.ResetQuery()
+		return m.unlockErr(err)
+	}
+
+	if version != 0 {
+		if err := m.databaseDrv.InsertVersion(int64(version)); err != nil {
+			m.databaseDrv.ResetQuery()
+			return m.unlockErr(err)
+		}
+	}
+	return m.unlockErr(nil)
 }
 
 // Steps looks at the currently active migration version.

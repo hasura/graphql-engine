@@ -37,6 +37,10 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -80,7 +84,7 @@ func (o *migrateSquashOptions) run() error {
 	o.EC.Logger.Warnln("This command is currently experimental and hence in preview, correctness of squashed migration is not guaranteed!")
 	o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
 	defer o.EC.Spinner.Stop()
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
+	migrateDrv, err := newMigrate(o.EC, true)
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize migrations driver")
 	}

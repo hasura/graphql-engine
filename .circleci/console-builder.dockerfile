@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     libxss1 \
     libasound2 \
     xvfb \
+    zip \
     && curl -Lo /tmp/gcloud-${gcloud_version}.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${gcloud_version}-linux-x86_64.tar.gz \
     && tar -xzf /tmp/gcloud-${gcloud_version}.tar.gz -C /usr/local \
     && /usr/local/google-cloud-sdk/install.sh \
