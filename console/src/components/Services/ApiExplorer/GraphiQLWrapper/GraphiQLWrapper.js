@@ -174,10 +174,6 @@ class GraphiQLWrapper extends Component {
         });
       };
 
-      if (graphiqlContext) {
-        console.log(graphiqlContext.state.operations);
-      }
-
       return (
         <GraphiQL
           ref={c => {

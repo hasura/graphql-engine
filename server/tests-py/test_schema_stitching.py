@@ -90,7 +90,7 @@ class TestRemoteSchemaBasic:
         q = mk_add_remote_q('simple 2', 'http://localhost:5000/hello-graphql')
         st_code, resp = hge_ctx.v1q(q)
         assert st_code == 400
-        assert resp['code'] == 'constraint-violation'
+        assert resp['code'] == 'unexpected'
 
     def test_remove_schema_error(self, hge_ctx):
         """remove remote schema which is not added"""

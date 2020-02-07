@@ -122,6 +122,7 @@ library
 
                      -- URL parser related
                      , network-uri
+                     , uri-encode
 
                      -- String related
                      , case-insensitive
@@ -195,6 +196,7 @@ library
                      , Control.Arrow.Trans
                      , Control.Monad.Stateless
                      , Control.Monad.Unique
+                     , Data.Time.Clock.Units
 
                      -- exposed for tests
                      , Data.Parser.CacheControl
@@ -221,6 +223,8 @@ library
                      , Hasura.Server.Migrate
                      , Hasura.Server.Compression
                      , Hasura.Server.PGDump
+                     -- Exposed for testing:
+                     , Hasura.Server.Telemetry.Counters
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Run
@@ -357,7 +361,6 @@ library
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.Text.Extended
-                     , Data.Time.Clock.Units
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error
@@ -370,13 +373,14 @@ library
 
 executable graphql-engine
   import: common-all, common-exe
-  main-is:           Main.hs
   hs-source-dirs:    src-exec
+  main-is:           Main.hs
   build-depends:     base
                    , graphql-engine
+                   , bytestring
                    , pg-client
                    , text
-                   , bytestring
+                   , text-conversions
 
 test-suite graphql-engine-tests
   import: common-all, common-exe
@@ -405,9 +409,11 @@ test-suite graphql-engine-tests
   main-is: Main.hs
   other-modules:
     Data.Parser.CacheControlSpec
+    Data.TimeSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec
     Hasura.Server.MigrateSpec
+    Hasura.Server.TelemetrySpec
 
 -- Benchmarks related to caching (e.g. the plan cache).
 --

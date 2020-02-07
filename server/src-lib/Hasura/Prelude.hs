@@ -11,6 +11,10 @@ module Hasura.Prelude
   , spanMaybeM
   , findWithIndex
   , mapFromL
+  -- * Measuring and working with moments and durations
+  , withElapsedTime
+  , startTimer
+  , module Data.Time.Clock.Units
   ) where
 
 import           Control.Applicative               as M (Alternative (..))
@@ -54,12 +58,14 @@ import           GHC.Generics                      as M (Generic)
 import           Prelude                           as M hiding (fail, init, lookup)
 import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
+import           Data.Time.Clock.Units
 
 import qualified Data.ByteString                   as B
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Text                         as T
 import qualified Data.Text.Encoding                as TE
 import qualified Data.Text.Encoding.Error          as TE
+import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
 
 alphaNumerics :: String
@@ -106,3 +112,33 @@ findWithIndex p l = do
 -- TODO: Move to Data.HashMap.Strict.Extended; rename to fromListWith?
 mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
 mapFromL f = Map.fromList . map (\v -> (f v, v))
+
+-- | Time an IO action, returning the time with microsecond precision. The
+-- result of the input action will be evaluated to WHNF.
+--
+-- The result 'DiffTime' is guarenteed to be >= 0.
+withElapsedTime :: MonadIO m=> m a -> m (DiffTime, a)
+withElapsedTime ma = do
+  bef <- liftIO Clock.getMonotonicTimeNSec
+  !a <- ma
+  aft <- liftIO Clock.getMonotonicTimeNSec
+  let !dur = nanoseconds $ fromIntegral (aft - bef)
+  return (dur, a)
+
+-- | Start timing and return an action to return the elapsed time since 'startTimer' was called.
+--
+-- @
+--   timer <- startTimer
+--   someStuffToTime
+--   elapsed <- timer
+--   moreStuff
+--   elapsedBoth <- timer
+-- @
+startTimer :: (MonadIO m, MonadIO n)=> m (n DiffTime)
+startTimer = do
+  !bef <- liftIO Clock.getMonotonicTimeNSec
+  return $ do
+    aft <- liftIO Clock.getMonotonicTimeNSec
+    return $ nanoseconds $ fromIntegral (aft - bef)
+
+

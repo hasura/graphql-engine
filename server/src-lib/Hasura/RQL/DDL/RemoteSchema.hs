@@ -13,14 +13,17 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                  as J
 import qualified Data.HashMap.Strict         as Map
+import qualified Data.HashSet                as S
 import qualified Database.PG.Query           as Q
 
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.RQL.Types
+import           Hasura.Server.Version       (HasVersion)
 import           Hasura.SQL.Types
 
 runAddRemoteSchema
-  :: ( QErrM m
+  :: ( HasVersion
+     , QErrM m
      , CacheRWM m
      , MonadTx m
      , MonadIO m
@@ -45,7 +48,7 @@ addRemoteSchemaP1 name = do
     <> name <<> " already exists"
 
 addRemoteSchemaP2Setup
-  :: (QErrM m, MonadIO m, HasHttpManager m)
+  :: (HasVersion, QErrM m, MonadIO m, HasHttpManager m)
   => AddRemoteSchemaQuery -> m RemoteSchemaCtx
 addRemoteSchemaP2Setup (AddRemoteSchemaQuery name def _) = do
   httpMgr <- askHttpManager
@@ -53,7 +56,8 @@ addRemoteSchemaP2Setup (AddRemoteSchemaQuery name def _) = do
   gCtx <- fetchRemoteSchema httpMgr name rsi
   pure $ RemoteSchemaCtx name gCtx rsi
 
-addRemoteSchemaP2 :: (MonadTx m, MonadIO m, HasHttpManager m) => AddRemoteSchemaQuery -> m ()
+addRemoteSchemaP2
+  :: (HasVersion, MonadTx m, MonadIO m, HasHttpManager m) => AddRemoteSchemaQuery -> m ()
 addRemoteSchemaP2 q = do
   void $ addRemoteSchemaP2Setup q
   liftTx $ addRemoteSchemaToCatalog q
@@ -84,8 +88,8 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   void $ onNothing (Map.lookup name rmSchemas) $
     throw400 NotExists $ "remote schema with name " <> name <<> " does not exist"
 
-  invalidateCachedRemoteSchema name
-  withNewInconsistentObjsCheck buildSchemaCache
+  let invalidations = mempty { ciRemoteSchemas = S.singleton name }
+  withNewInconsistentObjsCheck $ buildSchemaCacheWithOptions CatalogUpdate invalidations
   pure successMsg
 
 addRemoteSchemaToCatalog

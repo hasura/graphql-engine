@@ -129,7 +129,7 @@ newtype AppM a = AppM { unAppM :: IO a }
 -- this exists as a separate function because the context (logger, http manager, pg pool) can be
 -- used by other functions as well
 initialiseCtx
-  :: (MonadIO m)
+  :: (HasVersion, MonadIO m)
   => HGECommand Hasura
   -> RawConnInfo
   -> m (InitCtx, UTCTime)
@@ -186,7 +186,8 @@ initialiseCtx hgeCmd rci = do
 
 
 runHGEServer
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadStateless IO m
      , UserAuthentication m
      , MetadataApiAuthorization m
@@ -240,12 +241,13 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
                      $ Warp.defaultSettings
 
   maxEvThrds <- liftIO $ getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-  evFetchMilliSec  <- liftIO $ getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+  fetchI  <- fmap milliseconds $ liftIO $
+    getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 
   -- prepare event triggers data
   prepareEvents _icPgPool logger
-  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
+  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
   void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
     _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx
@@ -253,6 +255,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   -- start a background thread to check for updates
   void $ liftIO $ C.forkIO $ checkForUpdates loggerCtx _icHttpManager
 
+  -- TODO async/immortal:
   -- start a background thread for telemetry
   when soEnableTelemetry $ do
     unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
@@ -313,7 +316,8 @@ runAsAdmin pool sqlGenCtx httpManager m = do
   runExceptT $ peelRun runCtx pgCtx Q.ReadWrite m
 
 execQuery
-  :: ( CacheRWM m
+  :: ( HasVersion
+     , CacheRWM m
      , MonadTx m
      , MonadIO m
      , HasHttpManager m
@@ -356,7 +360,7 @@ instance ConsoleRenderer AppM where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
 
-mkConsoleHTML :: Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
+mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   renderHtmlTemplate consoleTmplt $
       -- variables required to render the template
@@ -364,7 +368,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
                , "consolePath" .= consolePath
                , "enableTelemetry" .= boolToText enableTelemetry
                , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
-               , "assetsVersion" .= consoleVersion
+               , "assetsVersion" .= consoleAssetsVersion
                , "serverVersion" .= currentVersion
                ]
     where

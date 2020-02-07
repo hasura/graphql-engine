@@ -13,6 +13,7 @@ module Hasura.RQL.Types.SchemaCache.Build
 
   , CacheRWM(..)
   , BuildReason(..)
+  , CacheInvalidations(..)
   , buildSchemaCache
   , buildSchemaCacheFor
   , buildSchemaCacheStrict
@@ -26,7 +27,10 @@ import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 
 import           Control.Arrow.Extended
+import           Control.Lens
 import           Data.Aeson                    (toJSON)
+import           Data.Aeson.Casing
+import           Data.Aeson.TH
 import           Data.List                     (nub)
 
 import           Hasura.RQL.Types.Error
@@ -44,6 +48,14 @@ data CollectedInfo
     !SchemaObjId
     !SchemaDependency
   deriving (Show, Eq)
+$(makePrisms ''CollectedInfo)
+
+class AsInconsistentMetadata s where
+  _InconsistentMetadata :: Prism' s InconsistentMetadata
+instance AsInconsistentMetadata InconsistentMetadata where
+  _InconsistentMetadata = id
+instance AsInconsistentMetadata CollectedInfo where
+  _InconsistentMetadata = _CIInconsistency
 
 partitionCollectedInfo
   :: Seq CollectedInfo
@@ -55,12 +67,14 @@ partitionCollectedInfo =
       let dependency = (metadataObject, objectId, schemaDependency)
       in (inconsistencies, dependency:dependencies)
 
-recordInconsistency :: (ArrowWriter (Seq CollectedInfo) arr) => (MetadataObject, Text) `arr` ()
+recordInconsistency
+  :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => (MetadataObject, Text) `arr` ()
 recordInconsistency = first (arr (:[])) >>> recordInconsistencies
 
-recordInconsistencies :: (ArrowWriter (Seq CollectedInfo) arr) => ([MetadataObject], Text) `arr` ()
+recordInconsistencies
+  :: (ArrowWriter (Seq w) arr, AsInconsistentMetadata w) => ([MetadataObject], Text) `arr` ()
 recordInconsistencies = proc (metadataObjects, reason) ->
-  tellA -< Seq.fromList $ map (CIInconsistency . InconsistentObject reason) metadataObjects
+  tellA -< Seq.fromList $ map (review _InconsistentMetadata . InconsistentObject reason) metadataObjects
 
 recordDependencies
   :: (ArrowWriter (Seq CollectedInfo) arr)
@@ -69,7 +83,7 @@ recordDependencies = proc (metadataObject, schemaObjectId, dependencies) ->
   tellA -< Seq.fromList $ map (CIDependency metadataObject schemaObjectId) dependencies
 
 withRecordInconsistency
-  :: (ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr)
+  :: (ArrowChoice arr, ArrowWriter (Seq w) arr, AsInconsistentMetadata w)
   => ErrorA QErr arr (e, s) a
   -> arr (e, (MetadataObject, s)) (Maybe a)
 withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
@@ -85,8 +99,7 @@ withRecordInconsistency f = proc (e, (metadataObject, s)) -> do
 -- operations for triggering a schema cache rebuild
 
 class (CacheRM m) => CacheRWM m where
-  buildSchemaCacheWithOptions :: BuildReason -> m ()
-  invalidateCachedRemoteSchema :: RemoteSchemaName -> m ()
+  buildSchemaCacheWithOptions :: BuildReason -> CacheInvalidations -> m ()
 
 data BuildReason
   -- | The build was triggered by an update this instance made to the catalog (in the
@@ -99,12 +112,26 @@ data BuildReason
   | CatalogSync
   deriving (Show, Eq)
 
+data CacheInvalidations = CacheInvalidations
+  { ciMetadata      :: !Bool
+  -- ^ Force reloading of all database information, including information not technically stored in
+  -- metadata (currently just enum values). Set by the @reload_metadata@ API.
+  , ciRemoteSchemas :: !(HashSet RemoteSchemaName)
+  -- ^ Force refetching of the given remote schemas, even if their definition has not changed. Set
+  -- by the @reload_remote_schema@ API.
+  }
+$(deriveJSON (aesonDrop 2 snakeCase) ''CacheInvalidations)
+
+instance Semigroup CacheInvalidations where
+  CacheInvalidations a1 b1 <> CacheInvalidations a2 b2 = CacheInvalidations (a1 || a2) (b1 <> b2)
+instance Monoid CacheInvalidations where
+  mempty = CacheInvalidations False mempty
+
 instance (CacheRWM m) => CacheRWM (ReaderT r m) where
-  buildSchemaCacheWithOptions = lift . buildSchemaCacheWithOptions
-  invalidateCachedRemoteSchema = lift . invalidateCachedRemoteSchema
+  buildSchemaCacheWithOptions a b = lift $ buildSchemaCacheWithOptions a b
 
 buildSchemaCache :: (CacheRWM m) => m ()
-buildSchemaCache = buildSchemaCacheWithOptions CatalogUpdate
+buildSchemaCache = buildSchemaCacheWithOptions CatalogUpdate mempty
 
 -- | Rebuilds the schema cache. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.

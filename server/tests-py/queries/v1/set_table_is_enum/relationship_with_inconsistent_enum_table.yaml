@@ -1,0 +1,55 @@
+# This is a regression test for #3791.
+- description: Setup enum table, create relationship, and insert invalid enum value
+  url: /v1/query
+  status: 200
+  query:
+    type: bulk
+    args:
+    - type: set_table_is_enum
+      args:
+        table: weekdays
+        is_enum: true
+    - type: create_object_relationship
+      args:
+        table: employees
+        name: favorite_color_object
+        using:
+          foreign_key_constraint_on: favorite_color
+    - type: run_sql
+      args:
+        sql: INSERT INTO colors (value, comment) VALUES ('illegal+graphql+identifier', '')
+    - type: reload_metadata
+      args: {}
+
+- description: Query inconsistent objects
+  url: /v1/query
+  status: 200
+  response:
+    is_consistent: false
+    inconsistent_objects:
+    - definition:
+        schema: public
+        name: colors
+      reason: the table "colors" cannot be used as an enum because the value
+        "illegal+graphql+identifier" is not a valid GraphQL enum value name
+      type: table
+    - definition:
+        using:
+          foreign_key_constraint_on: favorite_color
+        name: favorite_color_object
+        comment:
+        table:
+          schema: public
+          name: employees
+      reason: table "colors" is not tracked
+      type: object_relation
+  query:
+    type: get_inconsistent_metadata
+    args: {}
+
+- description: Drop inconsistent objects
+  url: /v1/query
+  status: 200
+  query:
+    type: drop_inconsistent_metadata
+    args: {}

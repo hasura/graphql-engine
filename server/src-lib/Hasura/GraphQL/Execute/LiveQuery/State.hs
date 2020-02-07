@@ -18,7 +18,7 @@ import qualified Control.Concurrent.STM                   as STM
 import qualified Data.Aeson.Extended                      as J
 import qualified StmContainers.Map                        as STMMap
 
-import           Control.Concurrent.Extended              (threadDelay)
+import           Control.Concurrent.Extended              (sleep)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
 
@@ -85,7 +85,7 @@ addLiveQuery lqState plan onResultAction = do
     metrics <- initRefetchMetrics
     threadRef <- A.async $ forever $ do
       pollQuery metrics batchSize pgExecCtx query handler
-      threadDelay $ unRefetchInterval refetchInterval
+      sleep $ unRefetchInterval refetchInterval
     STM.atomically $ STM.putTMVar (_pIOState handler) (PollerIOState threadRef metrics)
 
   pure $ LiveQueryId handlerId cohortKey sinkId
