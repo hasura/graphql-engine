@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# If no arguments are provided, all the server upgrade tests will be run
+# If no arguments are provided to this script, all the server upgrade tests will be run
 # With arguments, you can specify which server upgrade pytests should be run
 # Any options provided to this script will be applied to the
 # pytest command collecting server upgrade tests
@@ -88,8 +88,11 @@ export GHCRTS='-N1'
 export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
 export EVENT_WEBHOOK_HEADER="MyEnvValue"
 
+# graphql-engine will be run on this port
 fail_if_port_busy ${HASURA_GRAPHQL_SERVER_PORT}
-fail_if_port_busy ${HASURA_GRAPHQL_SERVER_PORT}
+
+# Remote graphql server of pytests run on this port
+fail_if_port_busy 5000
 
 log "setting up directories"
 mkdir -p $SERVER_OUTPUT_DIR

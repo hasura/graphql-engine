@@ -461,10 +461,10 @@ jobs:
     - *skip_job_on_ciignore
     - checkout
     - run:
-        name: install_curl
+        name: install_necessary_packages
         command: |
           apt-get update
-          apt install -y curl
+          apt install -y curl procps
     - run:
         name: upgrade_test
         command: .circleci/server-upgrade/run.sh
