@@ -192,10 +192,10 @@ run_server_upgrade_pytest() {
 	wait $HGE_PID || true
 
 	log "the tables of interest in the database are: "
-	psql $HASURA_GRAPHQL_DATABASE_URL -c "
+	psql $HASURA_GRAPHQL_DATABASE_URL -P pager=off -c "
 select table_schema as schema, table_name as name
 from information_schema.tables
-where table_schema not in ('hdb_catalog','hdb_views', 'pg_catalog', 'information_schema','topology')
+where table_schema not in ('hdb_catalog','hdb_views', 'pg_catalog', 'information_schema','topology', 'tiger')
   and (table_schema <> 'public'
          or table_name not in ('geography_columns','geometry_columns','spatial_ref_sys','raster_columns','raster_overviews')
       );
