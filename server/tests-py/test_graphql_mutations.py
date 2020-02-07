@@ -221,7 +221,6 @@ class TestGraphqlInsertGeoJson(DefaultTestMutations):
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 class TestGraphqlNestedInserts(DefaultTestMutations):
 
-    @pytest.mark.xfail(reason="Incorrect ordering. Refer https://github.com/hasura/graphql-engine/issues/3271")
     def test_author_with_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles.yaml")
 
@@ -234,7 +233,6 @@ class TestGraphqlNestedInserts(DefaultTestMutations):
     def test_author_with_articles_author_id_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles_author_id_fail.yaml")
 
-    @pytest.mark.xfail(reason="Incorrect ordering. Refer https://github.com/hasura/graphql-engine/issues/3271")
     def test_articles_with_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/articles_with_author.yaml")
 

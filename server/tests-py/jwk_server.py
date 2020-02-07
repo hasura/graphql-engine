@@ -52,7 +52,13 @@ class JwkCacheControlHandler(RequestHandler):
         if request.qs:
             if 'error' in request.qs and 'true' in request.qs['error']:
                 header_val = 'invalid-header-value=42'
+            elif 'nocache' in request.qs:
+                header_val = 'no-cache'
+            elif 'nomaxage' in request.qs:
+                header_val = 'public, must-revalidate=123, no-transform'
             elif 'field' in request.qs and 'smaxage' in request.qs['field']:
+                header_val = 's-maxage=' + self.expires_in_secs
+            if 'field' in request.qs and 'smaxage' in request.qs['field']:
                 header_val = 's-maxage=' + self.expires_in_secs
         resp = mkJSONResp(res)
         resp.headers['Cache-Control'] = header_val

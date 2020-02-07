@@ -301,7 +301,7 @@ annColExp
 annColExp rhsParser colInfoMap (ColExp fieldName colVal) = do
   colInfo <- askFieldInfo colInfoMap fieldName
   case colInfo of
-    FIColumn (PGColumnInfo _ _ (PGColumnScalar PGJSON) _ _) ->
+    FIColumn (PGColumnInfo _ _ _ (PGColumnScalar PGJSON) _ _) ->
       throwError (err400 UnexpectedPayload "JSON column can not be part of where clause")
     FIColumn pgi ->
       AVCol pgi <$> parseOperationsExpression rhsParser colInfoMap pgi colVal
@@ -338,12 +338,12 @@ convColRhs tableQual = \case
     put $ curVarNum + 1
     let newIden  = Iden $ "_be_" <> T.pack (show curVarNum) <> "_"
                    <> snakeCaseTable relTN
-        newIdenQ = S.QualIden newIden
+        newIdenQ = S.QualIden newIden Nothing
     annRelBoolExp <- convBoolRhs' newIdenQ nesAnn
     let backCompExp = foldr (S.BEBin S.AndOp) (S.BELit True) $
           flip map (M.toList colMapping) $ \(lCol, rCol) ->
             S.BECompare S.SEQ
-            (mkQCol (S.QualIden newIden) rCol)
+            (mkQCol (S.QualIden newIden Nothing) rCol)
             (mkQCol tableQual lCol)
         innerBoolExp = S.BEBin S.AndOp backCompExp annRelBoolExp
     return $ S.mkExists (S.FISimple relTN $ Just $ S.Alias newIden) innerBoolExp
