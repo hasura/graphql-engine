@@ -2,6 +2,6 @@ _output
 node_modules
 yarn.lock
 .venv
-graphpql-engine-latest
-graphpql-engine-latest.etag
+graphql-engine-latest
+graphql-engine-latest.etag
 server-output

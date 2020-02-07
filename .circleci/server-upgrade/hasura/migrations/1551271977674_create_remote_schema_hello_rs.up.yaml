@@ -1,7 +1,0 @@
-- args:
-    definition:
-      forward_client_headers: false
-      headers: []
-      url_from_env: RS_HELLO_URL
-    name: hello_rs
-  type: add_remote_schema
