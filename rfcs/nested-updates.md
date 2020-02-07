@@ -15,7 +15,7 @@ following actions for nested objects:
 - update
 - delete
 - replace
-- link
+- link 
 - unlink
 
 ### Proposed API
@@ -46,11 +46,13 @@ update_authors(
             # Special kind of "where" that should return 1 result.
             # If more results then error
             _link: SingleBoolExp
-            _unlink: true/false
-            _insert: { data, on_conflict}
+            _unlink: true
+            _insert: { data, on_conflict} 
             _update: {_set, _relationships} # Note that this update has no where
-            _delete: true/false
+            _delete: true
         }
     }
 )
 ```
+
+Replace can be achieved via `_unlink`/`_delete` + `_link`/`_insert` combination
