@@ -254,7 +254,6 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
     resp         = collapse_order_not_selset(resp_orig,         query)
     exp_response = collapse_order_not_selset(exp_response_orig, query)
     matched = equal_CommentedMap(resp, exp_response)
-    is_err_msg = any(exp_response_orig.get(x) for x in ['error','errors'])
 
     if PytestConf.config.getoption("--accept"):
         print('skipping assertion since we chose to --accept new output')
@@ -269,15 +268,30 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs=
             'diff':
               (lambda diff:
                  "(results differ only in their order of keys)" if diff == {} else diff)
-              (stringify_keys(jsondiff.diff(exp_response, resp)))
+              (stringify_keys(jsondiff.diff(exp_response, resp))),
+              'query': query
         }
         if 'x-request-id' in resp_hdrs:
             test_output['request id'] = resp_hdrs['x-request-id']
         yml.dump(test_output, stream=dump_str)
-        if not matched and is_err_msg and skip_if_err_msg:
-            warnings.warn("Response does not have the expected error message\n" + dump_str.getvalue())
-        else:
+        if not skip_if_err_msg:
             assert matched, '\n' + dump_str.getvalue()
+        elif matched:
+            return resp, matched
+        else:
+            def is_err_msg(msg):
+                return any(msg.get(x) for x in ['error','errors'])
+            def as_list(x):
+                return x if isinstance(x, list) else [x]
+            # If it is a batch GraphQL query, compare each individual response separately
+            for (exp, out) in zip(as_list(exp_response), as_list(resp)):
+                matched_ = equal_CommentedMap(exp, out)
+                if is_err_msg(exp):
+                    if not matched_:
+                        warnings.warn("Response does not have the expected error message\n" + dump_str.getvalue())
+                        return resp, matched
+                else:
+                    assert matched_, '\n' + dump_str.getvalue()
     return resp, matched  # matched always True unless --accept
 
 # This really sucks; newer ruamel made __eq__ ignore ordering:
@@ -347,7 +361,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
 # Return a new dict that discards the object key ordering properties of
 # 'result' where the key is not part of the selection set. This lets us compare
 # expected and actual results properly with respect to the graphql spec's
-# ordering requirements.'\n' + dump_str.getvalue()
+# ordering requirements.
 def collapse_order_not_selset(result_inp, query):
   # Collapse to unordered dict recursively by roundtripping through json
   def collapse(x):
