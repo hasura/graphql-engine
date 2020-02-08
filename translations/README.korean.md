@@ -8,7 +8,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://eepurl.com/dBUfJ5"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura GraphQL Engine은 데이터베이스 이벤트를 [**웹훅 트리거**](event-triggers.md)로 제공하고 비즈니스로직을 위한 원격 스키마와 함께 **Postgres를 통한 즉각적이고 실시간 GraphQL API** 를 제공하는 초고속 GraphQL 서버입니다.
+Hasura GraphQL Engine은 데이터베이스 이벤트를 [**웹훅 트리거**](../event-triggers.md)로 제공하고 비즈니스로직을 위한 원격 스키마와 함께 **Postgres를 통한 즉각적이고 실시간 GraphQL API** 를 제공하는 초고속 GraphQL 서버입니다.
 
 Hasura는 Postgres를 지원하는 GraphQL 앱을 만들거나 Postgres를 사용하는 기존 응용 프로그램을 GraphQL로 서서히 옮길수있게 제공합니다.
 
