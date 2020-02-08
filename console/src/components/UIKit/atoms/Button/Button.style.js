@@ -17,24 +17,19 @@ export const ButtonStyles = styled.button`
     // default color for rest of the buttons ~ white.
     return theme.colors.white;
   }};
+  
+  /* Pseudo classes like hover are not supported by Styled-System  */
 
   /* Hover effects when button is not disabled */
 
-  ${({ type, theme: { colors }, disabled }) => {
-    const boxShadowColorsObject = {
-      primary: colors.yellow.hover,
-      secondary: colors.black.hover,
-      success: colors.green.hover,
-      danger: colors.red.hover,
-      warning: colors.orange.hover,
-      info: colors.blue.hover,
-    };
+  ${props => {
+    const { type, theme, disabled } = props;
 
-    // Default ~ If by mistake specified button type is out of the theme range then default box-shadow color value will be black.hover.
+    // Default ~ If the received button type is out of the theme range then default box-shadow color value will be assigned.
 
-    const boxShadowColor = boxShadowColorsObject[type]
-      ? boxShadowColorsObject[type]
-      : colors.black.hover;
+    const boxShadowColor = theme.buttons[type]
+      ? theme.buttons[type].boxShadowColor
+      : theme.buttons.default.boxShadowColor;
 
     // In case of Secondary Button when it's not disabled
 
@@ -42,8 +37,8 @@ export const ButtonStyles = styled.button`
       return css`
         &:hover {
           box-shadow: ${`0 2px 8px 0 ${boxShadowColor}`};
-          background: ${colors.black.secondary};
-          color: ${colors.white};
+          background: ${theme.colors.black.secondary};
+          color: ${theme.colors.white};
         }
       `;
     } else if (!disabled) {
@@ -56,6 +51,8 @@ export const ButtonStyles = styled.button`
     }
     // No else clause here.
   }}
+  
+  /* Button cursor ~ disabled state */
    
    &:disabled {
        cursor: not-allowed;

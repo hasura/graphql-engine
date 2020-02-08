@@ -94,6 +94,39 @@ const baseTheme = {
 
 export const theme = {
   ...baseTheme,
+  // Button Types references
+  buttons: {
+    primary: {
+      backgroundColor: baseTheme.colors.yellow.primary,
+      boxShadowColor: baseTheme.colors.yellow.hover,
+    },
+    secondary: {
+      backgroundColor: baseTheme.colors.white,
+      boxShadowColor: baseTheme.colors.black.hover,
+    },
+    success: {
+      backgroundColor: baseTheme.colors.green.primary,
+      boxShadowColor: baseTheme.colors.green.hover,
+    },
+    danger: {
+      backgroundColor: baseTheme.colors.red.primary,
+      boxShadowColor: baseTheme.colors.red.hover,
+    },
+    warning: {
+      backgroundColor: baseTheme.colors.orange.primary,
+      boxShadowColor: baseTheme.colors.orange.hover,
+    },
+    info: {
+      backgroundColor: baseTheme.colors.blue.primary,
+      boxShadowColor: baseTheme.colors.blue.hover,
+    },
+    default: {
+      backgroundColor: baseTheme.colors.yellow.primary,
+      boxShadowColor: baseTheme.colors.black.hover,
+    },
+  },
+
+  // AlertBox Types references
   alertBoxes: {
     success: {
       backgroundColor: baseTheme.colors.green.light,
@@ -111,6 +144,7 @@ export const theme = {
       backgroundColor: baseTheme.colors.red.light,
       borderColor: baseTheme.colors.red.primary,
     },
+    // type ~ out of range
     default: {
       backgroundColor: baseTheme.colors.green.light,
       borderColor: baseTheme.colors.green.primary,

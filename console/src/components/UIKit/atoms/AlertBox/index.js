@@ -10,10 +10,10 @@ import { Text } from '../Typography';
 const AlertBox = props => {
   const { children, type } = props;
 
-  /* Here I'm dynamically passing color values from theme object based on alert type.
+  /* Color values dynamically assigned from theme object based on alert type.
    *  - backgroundColor
    *  - borderColor
-   *  If the alert type is out of the range then I'll assign default color values.
+   *  If the alert type is out of the range then default color value is assigned.
    */
 
   const backgroundColor = theme.alertBoxes[type]

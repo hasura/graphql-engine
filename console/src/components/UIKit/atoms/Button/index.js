@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import { theme } from '../../theme';
+
 import { ButtonStyles } from './Button.style';
 
 const Button = props => {
@@ -14,32 +16,11 @@ const Button = props => {
 
   const buttonHeight = size === 'small' ? 'sm' : size === 'large' && 'lg';
 
-  // Button Types ~ background & font color.
+  // Background Color is dynamically assigned from theme object based on button type. If the type is out of specified range then default color is assigned.
 
-  let backgroundColor;
-
-  switch (type) {
-    case 'primary':
-      backgroundColor = 'yellow.primary';
-      break;
-    case 'secondary':
-      backgroundColor = 'white';
-      break;
-    case 'success':
-      backgroundColor = 'green.primary';
-      break;
-    case 'danger':
-      backgroundColor = 'red.primary';
-      break;
-    case 'warning':
-      backgroundColor = 'orange.primary';
-      break;
-    case 'info':
-      backgroundColor = 'blue.primary';
-      break;
-    default:
-      backgroundColor = 'yellow.primary';
-  }
+  const backgroundColor = theme.buttons[type]
+    ? theme.buttons[type].backgroundColor
+    : theme.buttons.default.backgroundColor;
 
   // ************************* //
 
