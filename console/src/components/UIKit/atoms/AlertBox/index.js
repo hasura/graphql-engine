@@ -29,7 +29,7 @@ const AlertBox = props => {
   return (
     <AlertBoxStyles {...props} bg={backgroundColor} borderColor={borderColor}>
       <Icon iconType={type} />
-      <Text as="span" px="md" fontWeight="medium" fontSize="p">
+      <Text as="span" px="md" fontWeight="medium">
         {type}
       </Text>
       {children}
@@ -52,6 +52,7 @@ AlertBox.propTypes = {
   alignItems: PropTypes.string,
   pl: PropTypes.string,
   color: PropTypes.string,
+  fontSize: PropTypes.string,
 };
 
 // Default props for AlertBox ********** //
@@ -62,6 +63,7 @@ AlertBox.defaultProps = {
   height: 'lg',
   borderLeft: 4,
   borderRadius: 'xs',
+  fontSize: 'p',
   boxShadow: 2,
   display: 'flex',
   alignItems: 'center',

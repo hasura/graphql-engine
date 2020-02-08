@@ -75,7 +75,9 @@ const UIKit = () => (
       </Button>
     </Flex>
     {/* AlertBox  *******************************/}
-    <AlertBox type="success" my="lg" />
+    <AlertBox type="success" my="lg">
+      Hello Testing!
+    </AlertBox>
     <AlertBox type="info" my="lg" />
     <AlertBox type="warning" my="lg" />
     <AlertBox type="error" my="lg" />
