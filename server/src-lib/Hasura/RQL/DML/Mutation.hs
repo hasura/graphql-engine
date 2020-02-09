@@ -3,16 +3,13 @@ module Hasura.RQL.DML.Mutation
   , runMutation
   , mutateAndFetchCols
   , mkSelCTEFromColVals
-  , withSingleTableRow
   )
 where
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson.Ordered       as AO
 import qualified Data.HashMap.Strict      as Map
 import qualified Data.Sequence            as DS
-import qualified Data.Text                as T
 import qualified Database.PG.Query        as Q
 
 import qualified Hasura.SQL.DML           as S
@@ -30,7 +27,7 @@ data Mutation
   = Mutation
   { _mTable    :: !QualifiedTable
   , _mQuery    :: !(S.CTE, DS.Seq Q.PrepArg)
-  , _mFields   :: !MutFlds
+  , _mOutput   :: !MutationOutput
   , _mCols     :: ![PGColumnInfo]
   , _mStrfyNum :: !Bool
   } deriving (Show, Eq)
@@ -38,22 +35,22 @@ data Mutation
 runMutation :: Mutation -> Q.TxE QErr EncJSON
 runMutation mut =
   bool (mutateAndReturn mut) (mutateAndSel mut) $
-    hasNestedFld $ _mFields mut
+    hasNestedFld $ _mOutput mut
 
 mutateAndReturn :: Mutation -> Q.TxE QErr EncJSON
-mutateAndReturn (Mutation qt (cte, p) mutFlds _ strfyNum) =
+mutateAndReturn (Mutation qt (cte, p) mutationOutput _ strfyNum) =
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith)
         (toList p) True
   where
-    selWith = mkMutationOutputExp qt Nothing cte mutFlds strfyNum
+    selWith = mkMutationOutputExp qt Nothing cte mutationOutput strfyNum
 
 mutateAndSel :: Mutation -> Q.TxE QErr EncJSON
-mutateAndSel (Mutation qt q mutFlds allCols strfyNum) = do
+mutateAndSel (Mutation qt q mutationOutput allCols strfyNum) = do
   -- Perform mutation and fetch unique columns
   MutateResp _ columnVals <- mutateAndFetchCols qt allCols q strfyNum
   selCTE <- mkSelCTEFromColVals qt allCols columnVals
-  let selWith = mkMutationOutputExp qt Nothing selCTE mutFlds strfyNum
+  let selWith = mkMutationOutputExp qt Nothing selCTE mutationOutput strfyNum
   -- Perform select query and fetch returning fields
   encJFromBS . runIdentity . Q.getRow
     <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder $ toSQL selWith) [] True
@@ -88,7 +85,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum =
       { S.selExtr = [S.Extractor S.countStar Nothing]
       , S.selFrom = Just $ S.FromExp [S.FIIden aliasIden]
       }
-    colSel = S.SESelect $ mkSQLSelect False $
+    colSel = S.SESelect $ mkSQLSelect JASMultipleRows $
              AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
 
 -- | Note:- Using sorted columns is necessary to enable casting the rows returned by VALUES expression to table type.
@@ -130,27 +127,3 @@ mkSelCTEFromColVals qt allCols colVals =
       TENull          -> S.SENull
       TELit textValue ->
         S.withTyAnn (unsafePGColumnToRepresentation colTy) $ S.SELit textValue
-
--- | Note: Expecting '{"returning": [{<table-row>}]}' encoded JSON
--- FIXME:- If possible, move this logic to SQL
-withSingleTableRow
-  :: MonadError QErr m => EncJSON -> m EncJSON
-withSingleTableRow response =
-  case AO.eitherDecode $ encJToLBS response of
-    Left e  -> throw500 $ "error occurred while parsing mutation result: " <> T.pack e
-    Right val -> do
-      obj <- asObject val
-      rowsVal <- onNothing (AO.lookup "returning" obj) $
-                 throw500 "returning field not found in mutation result"
-      rows <- asArray rowsVal
-      pure $ AO.toEncJSON $ case rows of
-                              []  -> AO.Null
-                              r:_ -> r
-  where
-    asObject = \case
-      AO.Object o -> pure o
-      _           -> throw500 "expecting ordered Object"
-
-    asArray = \case
-      AO.Array arr -> pure $ toList arr
-      _            -> throw500 "expecting ordered Array"

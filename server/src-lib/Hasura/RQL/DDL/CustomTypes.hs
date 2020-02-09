@@ -167,41 +167,81 @@ isListType = \case
   G.TypeNamed _ _ -> False
 
 data CustomTypeValidationError
-  -- ^ type names have to be unique across all types
   = DuplicateTypeNames !(Set.HashSet G.NamedType)
-  -- ^ field name and the field's base type
+  -- ^ type names have to be unique across all types
   | InputObjectFieldTypeDoesNotExist
     !InputObjectTypeName !InputObjectFieldName !G.NamedType
-  -- ^ duplicate field declaration in input objects
+  -- ^ field name and the field's base type
   | InputObjectDuplicateFields
     !InputObjectTypeName !(Set.HashSet InputObjectFieldName)
-  -- ^ field name and the field's base type
+  -- ^ duplicate field declaration in input objects
   | ObjectFieldTypeDoesNotExist
     !ObjectTypeName !ObjectFieldName !G.NamedType
-  -- ^ duplicate field declaration in objects
+  -- ^ field name and the field's base type
   | ObjectDuplicateFields !ObjectTypeName !(Set.HashSet G.Name)
-  -- ^ object fields can't have arguments
+  -- ^ duplicate field declaration in objects
   | ObjectFieldArgumentsNotAllowed !ObjectTypeName !ObjectFieldName
-  -- ^ object fields can't have object types as base types
+  -- ^ object fields can't have arguments
   | ObjectFieldObjectBaseType !ObjectTypeName !ObjectFieldName !G.NamedType
-  -- ^ The table specified in the relationship does not exist
+  -- ^ object fields can't have object types as base types
   | ObjectRelationshipTableDoesNotExist
     !ObjectTypeName !RelationshipName !QualifiedTable
-  -- ^ The field specified in the relationship mapping does not exist
+  -- ^ The table specified in the relationship does not exist
   | ObjectRelationshipFieldDoesNotExist
     !ObjectTypeName !RelationshipName !ObjectFieldName
-  -- ^ The column specified in the relationship mapping does not exist
+  -- ^ The field specified in the relationship mapping does not exist
   | ObjectRelationshipColumnDoesNotExist
     !ObjectTypeName !RelationshipName !QualifiedTable !PGCol
-  -- ^ duplicate enum values
+  -- ^ The column specified in the relationship mapping does not exist
   | DuplicateEnumValues !EnumTypeName !(Set.HashSet G.EnumValue)
+  -- ^ duplicate enum values
   deriving (Show, Eq)
 
 showCustomTypeValidationError
   :: CustomTypeValidationError -> T.Text
-showCustomTypeValidationError =
-  -- TODO
-  T.pack . show
+showCustomTypeValidationError = \case
+  DuplicateTypeNames types ->
+    "duplicate type names: " <> dquoteList types
+
+  InputObjectFieldTypeDoesNotExist objType fieldName fieldTy ->
+    "the type " <> fieldTy <<> " for field "
+    <> fieldName <<> " in " <> " input object type "
+    <> objType <<> " does not exist"
+
+  InputObjectDuplicateFields objType fields ->
+    "the input object " <> objType <<> " has duplicate fields: " <> dquoteList fields
+
+  ObjectFieldTypeDoesNotExist objType fieldName fieldTy ->
+    "the type " <> fieldTy <<> " for field "
+    <> fieldName <<> " in " <> " object type "
+    <> objType <<> " does not exist"
+
+  ObjectDuplicateFields objType fields ->
+    "the object " <> objType <<> " has duplicate fields: " <> dquoteList fields
+
+  ObjectFieldArgumentsNotAllowed objType _ ->
+    "the object " <> objType <<> " can't have arguments"
+
+  ObjectFieldObjectBaseType objType fieldName fieldType ->
+    "the type " <> fieldType <<> " of the field " <> fieldName
+    <<> " in the object type " <> objType <<> " is object type which isn't allowed"
+
+  ObjectRelationshipTableDoesNotExist objType relName table ->
+    "the remote table " <> table <<> " for relationship " <> relName
+    <<> " of object type " <> objType <<> " does not exist"
+
+  ObjectRelationshipFieldDoesNotExist objType relName fieldName ->
+    "the field " <> fieldName <<> " for relationship " <> relName
+    <<> " in object type " <> objType <<> " does not exist"
+
+  ObjectRelationshipColumnDoesNotExist objType relName remoteTable column ->
+    "the column " <> column <<> " of remote table " <> remoteTable
+    <<> " for relationship " <> relName <<> " of object type " <> objType
+    <<> " does not exist"
+
+  DuplicateEnumValues tyName values ->
+    "the enum type " <> tyName <<> " has duplicate values: " <> dquoteList values
+
 
 runSetCustomTypes
   :: ( MonadError QErr m

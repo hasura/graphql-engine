@@ -64,7 +64,6 @@ import           Hasura.SQL.Types
 
 mergeCustomTypes
   :: MonadError QErr f
-  -- => M.HashMap RoleName GS.GCtx -> GS.GCtx -> VT.TypeMap
   => M.HashMap RoleName GS.GCtx -> GS.GCtx -> (NonObjectTypeMap, AnnotatedObjects)
   -> f (GS.GCtxMap, GS.GCtx)
 mergeCustomTypes gCtxMap remoteSchemaCtx customTypesState = do
@@ -198,7 +197,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (catalogMetadata, invalidationKeys) -> do
       let CatalogMetadata tables relationships permissions
             eventTriggers remoteSchemas functions allowlistDefs
-            computedFields customTypes actions actionPermissions = catalogMetadata
+            computedFields customTypes actions = catalogMetadata
 
       -- tables
       tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
@@ -259,18 +258,23 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       resolvedCustomTypes <- bindA -< resolveCustomTypes tableCache customTypes
 
       -- actions
-      resolvedActionDefs <- (mapFromL _caName actions >- returnA)
+      actionCache <- (mapFromL _amName actions >- returnA)
         >-> (| Inc.keyed (\_ action -> do
-               let CreateAction name def _ = action
-                   metadataObj = mkActionMetadataObj action
+               let ActionMetadata name comment def actionPermissions = action
+                   metadataObj = MetadataObject (MOAction name) $ toJSON $
+                                 CreateAction name def comment
                    addActionContext e = "in action " <> name <<> "; " <> e
                (| withRecordInconsistency (
-                  (| modifyErrA (bindErrorA -< resolveAction resolvedCustomTypes def)
+                  (| modifyErrA ( do
+                       resolvedDef <- bindErrorA -< resolveAction resolvedCustomTypes def
+                       let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
+                           permissionMap = mapFromL _apiRole permissionInfos
+                       returnA -< ActionInfo name resolvedDef permissionMap comment
+                     )
                    |) addActionContext)
                 |) metadataObj)
              |)
         >-> (\actionMap -> returnA -< M.catMaybes actionMap)
-      actionCache <- buildActionCache -< (resolvedActionDefs, M.groupOn _capAction actionPermissions)
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
@@ -289,8 +293,6 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       let objectId = MOTableObj qt $ MTOTrigger trn
           definition = object ["table" .= qt, "configuration" .= configuration]
       in MetadataObject objectId definition
-
-    mkActionMetadataObj ca = MetadataObject (MOAction $ _caName ca) $ toJSON ca
 
     mkRemoteSchemaMetadataObject remoteSchema =
       MetadataObject (MORemoteSchema (_arsqName remoteSchema)) (toJSON remoteSchema)
@@ -398,35 +400,6 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
                (schemaWithCT, defCtxWithCT) <- bindA -< mergeCustomTypes gqlSchema defGqlCtx customTypes
                returnA -< (remoteSchemaMap, schemaWithCT, defCtxWithCT)
            )
-
-
-    buildActionCache
-      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
-         , Inc.ArrowCache m arr, MonadError QErr m
-         )
-      => ( M.HashMap ActionName ResolvedActionDefinition
-         , M.HashMap ActionName [CreateActionPermission]
-         ) `arr` M.HashMap ActionName ActionInfo
-    buildActionCache = proc (definitions, permissions) -> do
-      let combinedMap = M.fromList $ flip map (M.toList definitions) $
-            \(name, def) -> (name, (def, M.lookupDefault [] name permissions))
-      (| Inc.keyed (\actionName (def, perms) -> do
-          permissionInfo <- (\maybeMap -> returnA -< M.catMaybes maybeMap) <-<
-            (| Inc.keyed (\role perm ->
-                 (| withRecordInconsistency (do
-                      selectFilter <- bindErrorA -< buildActionFilter (_apdSelect $ _capDefinition perm)
-                      returnA -< ActionPermissionInfo role selectFilter
-                    )
-                  |) (mkActionPermMetaObj actionName perm)
-               )
-             |) (mapFromL _capRole perms)
-          returnA -< ActionInfo actionName def permissionInfo
-          )
-       |) combinedMap
-      where
-        mkActionPermMetaObj actionName perm =
-          let objId = MOActionPermission actionName $ _capRole perm
-          in MetadataObject objId $ toJSON perm
 
 -- | @'withMetadataCheck' cascade action@ runs @action@ and checks if the schema changed as a
 -- result. If it did, it checks to ensure the changes do not violate any integrity constraints, and

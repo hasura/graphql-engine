@@ -9,8 +9,7 @@ select
     'allowlist_collections', allowlist.item,
     'computed_fields', computed_field.items,
     'custom_types', coalesce((select custom_types from hdb_catalog.hdb_custom_types), '{}'),
-    'actions', actions.items,
-    'action_permissions', action_permissions.items
+    'actions', actions.items
   )
 from
   (
@@ -179,29 +178,32 @@ from
       coalesce(
         json_agg(
           json_build_object(
-            'name', action_name,
-            'definition', action_defn :: json,
-            'comment', comment
+            'name', ha.action_name,
+            'definition', ha.action_defn :: json,
+            'comment', ha.comment,
+            'permissions', p.items
           )
         ),
         '[]'
       ) as items
     from
-      hdb_catalog.hdb_action
-  ) as actions,
-  (
-    select
-      coalesce(
-        json_agg(
-          json_build_object(
-            'action', action_name,
-            'role', role_name,
-            'definition', definition :: json,
-            'comment', comment
-          )
-        ),
-        '[]'
-      ) as items
-    from
-      hdb_catalog.hdb_action_permission
-  ) as action_permissions
+      hdb_catalog.hdb_action ha
+      left join lateral
+      (
+        select
+          coalesce(
+            json_agg(
+              json_build_object(
+                'action', hap.action_name,
+                'role', hap.role_name,
+                'definition', hap.definition :: json,
+                'comment', hap.comment
+              )
+            ),
+            '[]'
+          ) as items
+          from
+              hdb_catalog.hdb_action_permission hap
+          where hap.action_name = ha.action_name
+      ) p on 'true'
+  ) as actions

@@ -35,7 +35,7 @@ data AnnUpdG v
   -- we don't prepare the arguments for returning
   -- however the session variable can still be
   -- converted as desired
-  , uqp1MutFlds :: !(MutFldsG v)
+  , uqp1Output  :: !(MutationOutputG v)
   , uqp1AllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
@@ -48,10 +48,10 @@ traverseAnnUpd f annUpd =
   AnnUpd tn
   <$> traverse (traverse f) setExps
   <*> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseMutFlds f mutFlds
+  <*> traverseMutationOutput f mutOutput
   <*> pure allCols
   where
-    AnnUpd tn setExps (whr, fltr) mutFlds allCols = annUpd
+    AnnUpd tn setExps (whr, fltr) mutOutput allCols = annUpd
 
 type AnnUpd = AnnUpdG S.SQLExp
 
@@ -212,7 +212,7 @@ updateQueryToTx
   :: Bool -> (AnnUpd, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 updateQueryToTx strfyNum (u, p) =
   runMutation $ Mutation (uqp1Table u) (updateCTE, p)
-                (uqp1MutFlds u) (uqp1AllCols u) strfyNum
+                (uqp1Output u) (uqp1AllCols u) strfyNum
   where
     updateCTE = mkUpdateCTE u
 

@@ -17,6 +17,12 @@ import qualified Hasura.SQL.DML             as S
 import           Hasura.SQL.Types
 
 type SelectQExt = SelectG ExtCol BoolExp Int
+
+data JsonAggSelect
+  = JASMultipleRows
+  | JASSingleObject
+  deriving (Show, Eq)
+
 -- Columns in RQL
 data ExtCol
   = ECSimple !PGCol
@@ -105,7 +111,7 @@ data ComputedFieldScalarSel v
 
 data ComputedFieldSel v
   = CFSScalar !(ComputedFieldScalarSel v)
-  | CFSTable !Bool !(AnnSimpleSelG v)
+  | CFSTable !JsonAggSelect !(AnnSimpleSelG v)
   deriving (Show, Eq)
 
 traverseComputedFieldSel
@@ -228,6 +234,11 @@ data AggFld
 type AggFlds = Fields AggFld
 type AnnFldsG v = Fields (AnnFldG v)
 
+traverseAnnFlds
+  :: (Applicative f)
+  => (a -> f b) -> AnnFldsG a -> f (AnnFldsG b)
+traverseAnnFlds f = traverse (traverse (traverseAnnFld f))
+
 type AnnFlds = AnnFldsG S.SQLExp
 
 data TableAggFldG v
@@ -241,8 +252,7 @@ traverseTableAggFld
   => (a -> f b) -> TableAggFldG a -> f (TableAggFldG b)
 traverseTableAggFld f = \case
   TAFAgg aggFlds -> pure $ TAFAgg aggFlds
-  TAFNodes annFlds ->
-    TAFNodes <$> traverse (traverse (traverseAnnFld f)) annFlds
+  TAFNodes annFlds -> TAFNodes <$> traverseAnnFlds f annFlds
   TAFExp t -> pure $ TAFExp t
 
 type TableAggFld = TableAggFldG S.SQLExp
@@ -304,8 +314,7 @@ traverseAnnSimpleSel
   :: (Applicative f)
   => (a -> f b)
   -> AnnSimpleSelG a -> f (AnnSimpleSelG b)
-traverseAnnSimpleSel f =
-  traverseAnnSel (traverse (traverse (traverseAnnFld f))) f
+traverseAnnSimpleSel f = traverseAnnSel (traverseAnnFlds f) f
 
 traverseAnnAggSel
   :: (Applicative f)
@@ -452,14 +461,14 @@ data ArrNodeInfo
 -- | Node for computed field returning setof <table>
 data CFTableNode
   = CFTableNode
-  { _ctnAsSingleObject :: !Bool
-  , _ctnNode           :: !BaseNode
+  { _ctnSelectType :: !JsonAggSelect
+  , _ctnNode       :: !BaseNode
   } deriving (Show, Eq)
 
 mergeCFTableNodes :: CFTableNode -> CFTableNode -> CFTableNode
 mergeCFTableNodes lNode rNode =
   CFTableNode
-  (_ctnAsSingleObject lNode && _ctnAsSingleObject rNode)
+  (_ctnSelectType rNode)
   (mergeBaseNodes (_ctnNode lNode) (_ctnNode rNode))
 
 data Prefixes

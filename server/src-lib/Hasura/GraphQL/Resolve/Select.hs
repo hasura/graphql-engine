@@ -67,7 +67,7 @@ resolveComputedField computedField fld = fieldAsPath fld $ do
         RS.ComputedFieldScalarSel qf argsWithTableArgument scalarTy colOpM
     CFTTable (ComputedFieldTable _ cols permFilter permLimit) -> do
       let functionFrom = RS.FromFunction qf argsWithTableArgument Nothing
-      RS.CFSTable False <$> fromField functionFrom cols permFilter permLimit fld
+      RS.CFSTable RS.JASMultipleRows <$> fromField functionFrom cols permFilter permLimit fld
   where
     ComputedField _ function argSeq fieldType = computedField
     ComputedFieldFunction qf _ tableArg _ = function

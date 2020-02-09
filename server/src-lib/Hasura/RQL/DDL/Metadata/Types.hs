@@ -162,35 +162,6 @@ $(deriveToJSON defaultOptions ''ClearMetadata)
 instance FromJSON ClearMetadata where
   parseJSON _ = return ClearMetadata
 
--- representation of action permission metadata
-data ActionPermissionMetadata
-  = ActionPermissionMetadata
-  { _apmRole       :: !RoleName
-  , _apmComment    :: !(Maybe Text)
-  , _apmDefinition :: !ActionPermissionDefinition
-  } deriving (Show, Eq, Lift, Generic)
-
-$(deriveFromJSON
-  (aesonDrop 4 snakeCase){omitNothingFields=True}
-  ''ActionPermissionMetadata)
-
--- representation of action metadata
-data ActionMetadata
-  = ActionMetadata
-  { _amName        :: !ActionName
-  , _amComment     :: !(Maybe Text)
-  , _amDefinition  :: !ActionDefinitionInput
-  , _amPermissions :: ![ActionPermissionMetadata]
-  } deriving (Show, Eq, Lift, Generic)
-
-instance FromJSON ActionMetadata where
-  parseJSON = withObject "Object" $ \o ->
-    ActionMetadata
-      <$> o .: "name"
-      <*> o .:? "comment"
-      <*> o .: "definition"
-      <*> o .:? "permissions" .!= []
-
 data ReplaceMetadata
   = ReplaceMetadata
   { aqVersion          :: !MetadataVersion
@@ -527,11 +498,8 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
               <> catMaybes [maybeAnyToMaybeOrdPair "description" AO.toOrdered descM]
 
         permToOrdJSON :: ActionPermissionMetadata -> AO.Value
-        permToOrdJSON (ActionPermissionMetadata role permComment permDef) =
-          AO.object $ [ ("role", AO.toOrdered role)
-                      , ("definition", AO.toOrdered permDef)
-                      ]
-          <> catMaybes [maybeCommentToMaybeOrdPair permComment]
+        permToOrdJSON (ActionPermissionMetadata role permComment) =
+          AO.object $ [("role", AO.toOrdered role)] <> catMaybes [maybeCommentToMaybeOrdPair permComment]
 
     -- Utility functions
     listToMaybeOrdPair :: Text -> (a -> AO.Value) -> [a] -> Maybe (Text, AO.Value)

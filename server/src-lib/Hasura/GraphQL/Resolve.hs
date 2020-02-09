@@ -62,10 +62,10 @@ traverseQueryRootFldAST f = \case
 
 toPGQuery :: QueryRootFldResolved -> Q.Query
 toPGQuery = \case
-  QRFPk s           -> DS.selectQuerySQL True s
-  QRFSimple s       -> DS.selectQuerySQL False s
+  QRFPk s           -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFSimple s       -> DS.selectQuerySQL DS.JASMultipleRows s
   QRFAgg s          -> DS.selectAggQuerySQL s
-  QRFActionSelect s -> DS.selectQuerySQL True s
+  QRFActionSelect s -> DS.selectQuerySQL DS.JASSingleObject s
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()

@@ -152,7 +152,7 @@ resolveActionMutationSync field executionContext sessionVariables = do
     processOutputSelectionSet webhookResponseExpression definitionList
     (_fType field) $ _fSelSet field
   astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
-  return $ asSingleRowJsonResp (RS.selectQuerySQL True astResolved) []
+  return $ asSingleRowJsonResp (RS.selectQuerySQL RS.JASSingleObject astResolved) []
   where
     SyncActionExecutionContext actionName definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
@@ -318,8 +318,8 @@ resolveActionMutation field executionContext sessionVariables =
   case executionContext of
     ActionExecutionSyncWebhook executionContextSync ->
       resolveActionMutationSync field executionContextSync sessionVariables
-    ActionExecutionAsync actionFilter ->
-      resolveActionMutationAsync field actionFilter sessionVariables
+    ActionExecutionAsync ->
+      resolveActionMutationAsync field sessionVariables
 
 -- | Resolve asynchronous action mutation which returns only the action uuid
 resolveActionMutationAsync
@@ -327,11 +327,10 @@ resolveActionMutationAsync
      , Has [HTTP.Header] r
      )
   => Field
-  -> AnnBoolExpPartialSQL
   -- We need the sesion variables for column presets
   -> UserVars
   -> m RespTx
-resolveActionMutationAsync field _ sessionVariables = do
+resolveActionMutationAsync field sessionVariables = do
   reqHeaders <- asks getter
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
   pure $ do
@@ -383,7 +382,7 @@ resolveAsyncActionQuery userInfo selectContext field = do
         -- Treating "output" as a computed field to "hdb_action_log" table with "jsonb_to_record" SQL function
         let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
             definitionList = _asocDefinitionList selectContext
-        (RS.FComputedField . RS.CFSTable True) -- The output of action is always a single object
+        (RS.FComputedField . RS.CFSTable RS.JASSingleObject) -- The output of action is always a single object
           <$> processOutputSelectionSet inputTableArgument definitionList (_fType fld) (_fSelSet fld)
       -- the metadata columns
       "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
@@ -394,7 +393,7 @@ resolveAsyncActionQuery userInfo selectContext field = do
   let tableFromExp = RS.FromTable actionLogTable
       tableArguments = RS.noTableArgs
                        { RS._taWhere = Just $ mkTableBoolExpression actionId}
-      tablePermissions = RS.TablePerm unresolvedFilter Nothing
+      tablePermissions = RS.TablePerm annBoolExpTrue Nothing
       selectAstUnresolved = RS.AnnSelG annotatedFields tableFromExp tablePermissions
                             tableArguments stringifyNumerics
   return selectAstUnresolved
@@ -405,8 +404,6 @@ resolveAsyncActionQuery userInfo selectContext field = do
     mkAnnFldFromPGCol column columnType =
       flip RS.mkAnnColField Nothing $
       PGColumnInfo (unsafePGCol column) (G.Name column) 0 (PGColumnScalar columnType) True Nothing
-
-    unresolvedFilter = fmapAnnBoolExp partialSQLExpToUnresolvedVal $ _asocFilter selectContext
 
     parseActionId annInpValue = mkParameterizablePGValue <$> asPGColumnValue annInpValue
 

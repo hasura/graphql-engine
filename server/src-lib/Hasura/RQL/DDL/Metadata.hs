@@ -210,8 +210,7 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta
     Action.persistCreateAction createAction
     for_ (_amPermissions action) $ \permission -> do
       let createActionPermission = CreateActionPermission (_amName action)
-                                   (_apmRole permission) (_apmDefinition permission)
-                                   (_apmComment permission)
+                                   (_apmRole permission) Nothing (_apmComment permission)
       Action.persistCreateActionPermission createActionPermission
 
   buildSchemaCacheStrict

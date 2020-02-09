@@ -70,7 +70,7 @@ instance J.FromJSON GraphQLType where
 
 newtype InputObjectFieldName
   = InputObjectFieldName { unInputObjectFieldName :: G.Name }
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, Lift, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, DQuote, Lift, Generic, NFData, Cacheable)
 
 data InputObjectFieldDefinition
   = InputObjectFieldDefinition
@@ -85,7 +85,7 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''InputObjectFieldDefinition)
 
 newtype InputObjectTypeName
   = InputObjectTypeName { unInputObjectTypeName :: G.NamedType }
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, Lift, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, DQuote, Lift, Generic, NFData, Cacheable)
 
 data InputObjectTypeDefinition
   = InputObjectTypeDefinition
@@ -99,7 +99,7 @@ $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''InputObjectTypeDefinition)
 
 newtype ObjectFieldName
   = ObjectFieldName { unObjectFieldName :: G.Name }
-  deriving ( Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON
+  deriving ( Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, DQuote
            , J.FromJSONKey, J.ToJSONKey, Lift, Generic, NFData, Cacheable)
 
 data ObjectFieldDefinition
@@ -119,7 +119,7 @@ $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ObjectFieldDefinition)
 
 newtype RelationshipName
   = RelationshipName { unRelationshipName :: G.Name }
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, Lift, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, DQuote, Lift, Generic, NFData, Cacheable)
 
 data TypeRelationship t f
   = TypeRelationship
@@ -139,7 +139,7 @@ $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''TypeRelationship)
 
 newtype ObjectTypeName
   = ObjectTypeName { unObjectTypeName :: G.NamedType }
-  deriving ( Show, Eq, Ord, Hashable, J.FromJSON, J.FromJSONKey
+  deriving ( Show, Eq, Ord, Hashable, J.FromJSON, J.FromJSONKey, DQuote
            , J.ToJSONKey, J.ToJSON, Lift, Generic, NFData, Cacheable)
 
 data ObjectTypeDefinition
@@ -164,7 +164,7 @@ $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ScalarTypeDefinition)
 
 newtype EnumTypeName
   = EnumTypeName { unEnumTypeName :: G.NamedType }
-  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, Lift, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, Hashable, J.FromJSON, J.ToJSON, DQuote, Lift, Generic, NFData, Cacheable)
 
 data EnumValueDefinition
   = EnumValueDefinition

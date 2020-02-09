@@ -187,12 +187,6 @@ incSchemaCacheVer :: SchemaCacheVer -> SchemaCacheVer
 incSchemaCacheVer (SchemaCacheVer prev) =
   SchemaCacheVer $ prev + 1
 
--- data CustomTypesState
---   = CustomTypeState
---   { _ctsTypes         :: !RT.TypeMap
---   , _ctsRelationships :: !(M.HashMap G.NamedType )
---   }
-
 type FunctionCache = M.HashMap QualifiedFunction FunctionInfo -- info of all functions
 type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 

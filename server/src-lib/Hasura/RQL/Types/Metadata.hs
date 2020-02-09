@@ -58,7 +58,7 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
           MTOPerm name _        -> dquoteTxt name
           MTOTrigger name       -> dquoteTxt name
     in tableObjectName <> " in " <> moiName (MOTable tableName)
-  MOCustomTypes -> ""
+  MOCustomTypes -> "custom_types"
   MOAction name -> dquoteTxt name
   MOActionPermission name role -> dquoteTxt role <> " permission in " <> dquoteTxt name
 

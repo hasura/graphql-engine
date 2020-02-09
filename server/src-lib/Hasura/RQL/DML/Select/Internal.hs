@@ -143,12 +143,11 @@ withJsonAggExtr subQueryReq permLimitM ordBy alias =
                     )
 
 asJsonAggExtr
-  :: Bool -> S.Alias -> Bool -> Maybe Int -> Maybe S.OrderByExp -> S.Extractor
-asJsonAggExtr singleObj als subQueryReq permLimit ordByExpM =
-  flip S.Extractor (Just als) $
-  bool (withJsonAggExtr subQueryReq permLimit ordByExpM als)
-       (asSingleRowExtr als)
-       singleObj
+  :: JsonAggSelect -> S.Alias -> Bool -> Maybe Int -> Maybe S.OrderByExp -> S.Extractor
+asJsonAggExtr jsonAggSelect als subQueryReq permLimit ordByExpM =
+  flip S.Extractor (Just als) $ case jsonAggSelect of
+    JASMultipleRows -> withJsonAggExtr subQueryReq permLimit ordByExpM als
+    JASSingleObject -> asSingleRowExtr als
 
 -- array relationships are not grouped, so have to be prefixed by
 -- parent's alias
@@ -572,7 +571,7 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
                          map (mkArrItem arrRelCtx) arrFlds
               -- all computed fields with table returns
               computedFieldNodes = HM.fromList $ map mkComputedFieldTable $
-                             mapMaybe getComputedFieldTable flds
+                                   mapMaybe getComputedFieldTable flds
 
               (obExtrs, ordByObjs, ordByArrs, obeM)
                       = mkOrdByItems' arrRelCtx
@@ -646,10 +645,10 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
       in (arrAls, arrNode)
 
     -- process a computed field, which returns a table
-    mkComputedFieldTable (fld, asObject, sel) =
+    mkComputedFieldTable (fld, jsonAggSelect, sel) =
       let prefixes = Prefixes (mkComputedFieldTableAls thisPfx fld) thisPfx
           baseNode = annSelToBaseNode False prefixes fld sel
-      in (fld, CFTableNode asObject baseNode)
+      in (fld, CFTableNode jsonAggSelect baseNode)
 
     getAnnObj (f, annFld) = case annFld of
       FObj ob -> Just (f, ob)
@@ -660,8 +659,8 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
       _       -> Nothing
 
     getComputedFieldTable (f, annFld) = case annFld of
-      FComputedField (CFSTable b sel) -> Just (f, b, sel)
-      _                               -> Nothing
+      FComputedField (CFSTable jas sel) -> Just (f, jas, sel)
+      _                                 -> Nothing
 
 annSelToBaseNode :: Bool -> Prefixes -> FieldName -> AnnSimpleSel -> BaseNode
 annSelToBaseNode subQueryReq pfxs fldAls annSel =
@@ -678,7 +677,7 @@ mkArrNode subQueryReq pfxs (fldName, annArrSel) = case annArrSel of
   ASSimple annArrRel ->
     let bn = annSelToBaseNode subQueryReq pfxs fldName $ aarAnnSel annArrRel
         permLimit = getPermLimit $ aarAnnSel annArrRel
-        extr = asJsonAggExtr False (S.toAlias fldName) subQueryReq permLimit $
+        extr = asJsonAggExtr JASMultipleRows (S.toAlias fldName) subQueryReq permLimit $
                _bnOrderBy bn
     in ArrNode [extr] (aarMapping annArrRel) bn
 
@@ -743,10 +742,10 @@ baseNodeToSel joinCond baseNode =
       in S.mkLateralFromItem sel als
 
     computedFieldNodeToFromItem :: (FieldName, CFTableNode) -> S.FromItem
-    computedFieldNodeToFromItem (fld, CFTableNode asObject bn) =
+    computedFieldNodeToFromItem (fld, CFTableNode jsonAggSelect bn) =
       let internalSel = baseNodeToSel (S.BELit True) bn
           als = S.Alias $ _bnPrefix bn
-          extr = asJsonAggExtr asObject (S.toAlias fld) False Nothing $
+          extr = asJsonAggExtr jsonAggSelect (S.toAlias fld) False Nothing $
                  _bnOrderBy bn
           internalSelFrom = S.mkSelFromItem internalSel als
           sel = S.mkSelect
@@ -765,12 +764,12 @@ mkAggSelect annAggSel =
     ArrNode extr _ bn =
       aggSelToArrNode rootPrefix (FieldName "root") aggSel
 
-mkSQLSelect :: Bool -> AnnSimpleSel -> S.Select
-mkSQLSelect isSingleObject annSel =
+mkSQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
+mkSQLSelect jsonAggSelect annSel =
   prefixNumToAliases $ arrNodeToSelect baseNode extrs $ S.BELit True
   where
     permLimit = getPermLimit annSel
-    extrs = pure $ asJsonAggExtr isSingleObject rootFldAls False permLimit
+    extrs = pure $ asJsonAggExtr jsonAggSelect rootFldAls False permLimit
             $ _bnOrderBy baseNode
     rootFldIden = toIden rootFldName
     rootPrefix = Prefixes rootFldIden rootFldIden

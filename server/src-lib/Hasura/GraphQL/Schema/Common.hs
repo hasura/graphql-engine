@@ -22,7 +22,6 @@ module Hasura.GraphQL.Schema.Common
   , mkColumnEnumVal
   , mkColumnInputVal
   , mkDescriptionWith
-  , mkDescription
 
   , mkFuncArgsTy
   ) where

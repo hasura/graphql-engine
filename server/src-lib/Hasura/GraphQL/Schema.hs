@@ -725,7 +725,6 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
                filter (tableFltr . _tiCoreInfo) $ Map.elems tableCache
   actionsSchema <- mkActionsSchema annotatedObjects actionCache
   typesMap <- combineTypes actionsSchema typesMapL
-  -- TODO: clean this up
   let gCtxMap  = flip Map.map typesMap $
                  \(ty, flds, insCtxMap) -> mkGCtx ty flds insCtxMap
   return gCtxMap
@@ -753,6 +752,7 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
           duplicateMutationFields = duplicates $
             concatMap (Map.keys . _rootMutationFields) rootFields
 
+      -- TODO: The following exception should result in inconsistency
       when (not $ null duplicateQueryFields) $
         throw400 Unexpected $ "following query root fields are duplicated: "
         <> showNames duplicateQueryFields
