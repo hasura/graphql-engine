@@ -1,19 +1,32 @@
-import styled from 'styled-components';
-import { typography, color, space, border } from 'styled-system';
+import React from 'react';
 
-// Heading ************************* //
+import { Heading, Text, TextLinkStyles } from './Typography.style';
 
-export const Heading = styled.h1`
-    ${typography}
-    ${color}
-    ${space}
-`;
+// Anchor / Text Links ******** //
 
-// Paragraph ************************* //
+const TextLink = props => {
+  const { children, underline } = props;
 
-export const Text = styled.p`
-    ${typography}
-    ${color}
-    ${space}
-    ${border}
-`;
+  return (
+    <TextLinkStyles
+      {...props}
+      //   Based on underline prop.
+      borderBottom={underline && 2}
+      borderColor={underline && 'yellow.primary'}
+    >
+      {children}
+    </TextLinkStyles>
+  );
+};
+
+// Default Props for TextLink ***** //
+
+TextLink.defaultProps = {
+  color: 'black.text',
+  fontWeight: 'medium',
+  fontSize: 'p',
+};
+
+// ********************************* //
+
+export { Heading, Text, TextLink };

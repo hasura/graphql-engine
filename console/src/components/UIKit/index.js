@@ -11,8 +11,44 @@ import { BoxShadows } from './demo/Shadows';
 import Button from './atoms/Button';
 import AlertBox from './atoms/AlertBox';
 import ToolTip from './atoms/Tooltip';
+import { Heading, TextLink } from './atoms/Typography';
 
-import { Flex, UIKitWrapperDiv, Heading } from './demo/styles';
+import { Flex, UIKitWrapperDiv } from './demo/styles';
+
+// UI elements created with Styled-System for demo  //
+
+const UIElements = () => (
+  <React.Fragment>
+    <Heading color="black.text" mt="lg">
+      UI Elements
+    </Heading>
+    <Heading as="h3" color="black.text" my="lg">
+      Colors
+    </Heading>
+    <ColorScheme />
+    <Shades />
+    <Heading as="h3" color="black.text" my="lg">
+      Buttons
+    </Heading>
+    <Buttons />
+    <Heading as="h3" color="black.text" my="lg">
+      Shadows
+    </Heading>
+    <BoxShadows />
+    <Heading as="h3" color="black.text" my="lg">
+      Alerts
+    </Heading>
+    <Alerts />
+    <Heading as="h3" color="black.text" my="lg">
+      Text Links
+    </Heading>
+    <TextLinks />
+    <Heading as="h3" color="black.text" my="lg">
+      Typography
+    </Heading>
+    <Typography />
+  </React.Fragment>
+);
 
 // UIKit(Parent) Demo component ************* //
 
@@ -23,8 +59,12 @@ const UIKit = () => (
     mb="xl" // ~ margin-bottom: theme.space.xl
     bg="white" // ~ theme.colors.white
   >
-    {/* UI Components ***************************/}
+    {/* React UI Components ***************************/}
+    <Heading mb="lg">React Componets</Heading>
     {/* Buttons ~ large size */}
+    <Heading mb="md" as="h2">
+      {'<Button />'}
+    </Heading>
     <Flex mb="lg">
       <Button type="primary" size="large" mr="lg">
         Primary Button
@@ -76,6 +116,9 @@ const UIKit = () => (
       </Button>
     </Flex>
     {/* AlertBox  *******************************/}
+    <Heading mb="md" as="h2">
+      {'<Alertbox />'}
+    </Heading>
     <AlertBox type="success" my="lg">
       Hello Testing!
     </AlertBox>
@@ -85,7 +128,10 @@ const UIKit = () => (
     <AlertBox type="default" my="lg">
       dummy alert!
     </AlertBox>
-    {/* ToolTip */}
+    {/* ToolTip ********************************/}
+    <Heading mb="md" as="h2">
+      {'<Tooltip />'}
+    </Heading>
     <Flex mb="lg">
       <ToolTip message="Dummy Text" placement="top" mr="md">
         Hover me!!
@@ -102,34 +148,30 @@ const UIKit = () => (
         Left
       </ToolTip>
     </Flex>
-    {/* **************************************** */}
-    {/* UI Elements *****************************/}
-    <Heading color="black.text">UI Elements</Heading>
-    <Heading as="h3" color="black.text" my="lg">
-      Colors
-    </Heading>
-    <ColorScheme />
-    <Shades />
-    <Heading as="h3" color="black.text" my="lg">
-      Buttons
-    </Heading>
-    <Buttons />
-    <Heading as="h3" color="black.text" my="lg">
-      Shadows
-    </Heading>
-    <BoxShadows />
-    <Heading as="h3" color="black.text" my="lg">
-      Alerts
-    </Heading>
-    <Alerts />
-    <Heading as="h3" color="black.text" my="lg">
-      Text Links
-    </Heading>
-    <TextLinks />
-    <Heading as="h3" color="black.text" my="lg">
+    {/* Typography ******************************/}
+    <Heading my="lg" as="h2">
       Typography
     </Heading>
-    <Typography />
+    <Heading mb="md">{'<Heading />'}</Heading>
+    <Heading mb="md" as="h2">
+      {'<Heading as="h2" />'}
+    </Heading>
+    <Heading mb="md" as="h3">
+      {'<Heading as="h3" />'}
+    </Heading>
+    <Heading mb="md" as="h4">
+      {'<Heading as="h4" />'}
+    </Heading>
+    <Heading mb="md" as="h2">
+      {'<TextLink />'}
+    </Heading>
+    <TextLink>Check it out</TextLink>
+    <Heading my="md" as="h2">
+      {'<TextLink underline />'}
+    </Heading>
+    <TextLink underline>Check it out</TextLink>
+    {/* UI Elements *****************************/}
+    <UIElements />
   </UIKitWrapperDiv>
 );
 
