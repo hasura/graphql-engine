@@ -10,6 +10,7 @@ import { BoxShadows } from './demo/Shadows';
 
 import Button from './atoms/Button';
 import AlertBox from './atoms/AlertBox';
+import ToolTip from './atoms/Tooltip';
 
 import { Flex, UIKitWrapperDiv, Heading } from './demo/styles';
 
@@ -84,6 +85,24 @@ const UIKit = () => (
     <AlertBox type="default" my="lg">
       dummy alert!
     </AlertBox>
+    {/* ToolTip */}
+    <Flex mb="lg">
+      <ToolTip message="Dummy Text" placement="top" mr="md">
+        Hover me!!
+      </ToolTip>
+      <ToolTip message="Primary Button" mr="md">
+        <Button type="primary" size="small">
+          Hover me!
+        </Button>
+      </ToolTip>
+      <ToolTip message="Dummy Text" placement="bottom" mr="md">
+        Bottom
+      </ToolTip>
+      <ToolTip message="Dummy Text" placement="left">
+        Left
+      </ToolTip>
+    </Flex>
+    {/* **************************************** */}
     {/* UI Elements *****************************/}
     <Heading color="black.text">UI Elements</Heading>
     <Heading as="h3" color="black.text" my="lg">

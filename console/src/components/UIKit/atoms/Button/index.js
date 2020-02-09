@@ -45,6 +45,7 @@ const Button = props => {
 // PropTypes for Button *************** //
 
 Button.propTypes = {
+  children: PropTypes.node,
   size: PropTypes.oneOf(['small', 'large']),
   type: PropTypes.string,
   borderRadius: PropTypes.string,

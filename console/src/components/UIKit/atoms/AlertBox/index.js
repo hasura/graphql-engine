@@ -40,6 +40,7 @@ const AlertBox = props => {
 // PropTypes for AlertBox *************** //
 
 AlertBox.propTypes = {
+  children: PropTypes.node,
   type: PropTypes.string,
   width: PropTypes.number,
   height: PropTypes.string,
