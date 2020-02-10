@@ -4,7 +4,6 @@ import { rightContainerConnector } from '../../Common/Layout';
 import Container from './Containers/Main';
 import { fetchActions } from './ServerIO';
 import globals from '../../../Globals';
-import ActionDetails from './Details';
 import ActionsLandingPage from './Landing';
 import ActionRelationships from './Relationships';
 import ActionPermissions from './Permissions';
@@ -41,7 +40,6 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
         <IndexRedirect to="actions" />
         <Route path="actions" component={ActionsLandingPage(connect)} />
         <Route path="add" component={AddAction(connect)} />
-        <Route path=":actionName/details" component={ActionDetails(connect)} />
         <Route path=":actionName/modify" component={ModifyAction(connect)} />
         <Route
           path=":actionName/relationships"
