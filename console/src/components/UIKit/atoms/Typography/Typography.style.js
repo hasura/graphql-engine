@@ -3,7 +3,7 @@ import { typography, color, space, border } from 'styled-system';
 
 // Heading ************************* //
 
-export const Heading = styled.h1`
+const Heading = styled.h1`
     ${typography}
     ${color}
     ${space}
@@ -15,24 +15,18 @@ Heading.defaultProps = {
   color: 'black.text',
 };
 
-// Paragraph / Normal Text *********** //
+// ******************************* //
 
-export const Text = styled.p`
+const TextStyles = styled.p`
     ${typography}
     ${color}
     ${space}
     ${border}
 `;
 
-// Default Props for Text
-
-Text.defaultProps = {
-  color: 'black.text',
-};
-
 // TextLink ************* //
 
-export const TextLinkStyles = styled.a`
+const TextLinkStyles = styled.a`
   text-decoration: none !important;
   cursor: pointer;
 
@@ -42,3 +36,7 @@ export const TextLinkStyles = styled.a`
       ${space}
       ${border}
 `;
+
+// ******************************************* //
+
+export { Heading, TextStyles, TextLinkStyles };

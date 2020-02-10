@@ -11,7 +11,7 @@ import { BoxShadows } from './demo/Shadows';
 import Button from './atoms/Button';
 import AlertBox from './atoms/AlertBox';
 import ToolTip from './atoms/Tooltip';
-import { Heading, TextLink } from './atoms/Typography';
+import { Heading, TextLink, Text } from './atoms/Typography';
 import RadioButton from './atoms/RadioButton';
 import Checkbox from './atoms/Checkbox';
 
@@ -151,6 +151,7 @@ const UIKit = () => (
       </ToolTip>
     </Flex>
     {/* Typography ******************************/}
+    {/* Heading */}
     <Heading my="lg" as="h2">
       Typography
     </Heading>
@@ -164,6 +165,7 @@ const UIKit = () => (
     <Heading mb="md" as="h4">
       {'<Heading as="h4" />'}
     </Heading>
+    {/* TextLink */}
     <Heading mb="md" as="h2">
       {'<TextLink />'}
     </Heading>
@@ -172,6 +174,38 @@ const UIKit = () => (
       {'<TextLink underline />'}
     </Heading>
     <TextLink underline>Check it out</TextLink>
+    {/* Text */}
+    <Heading my="md" as="h2">
+      {'<Text />'}
+    </Heading>
+    <Text>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+      tempor incididunt ut labore et dolore magna aliqua. Semper quis lectus
+      nulla at volutpat diam ut venenatis. Sed viverra tellus in hac habitasse
+      platea dictumst. Id porta nibh venenatis cras. Velit dignissim sodales ut
+      eu sem. Turpis cursus in hac habitasse platea dictumst quisque. Integer
+      feugiat scelerisque varius morbi enim. Dui accumsan sit amet nulla. Donec
+      et odio pellentesque diam volutpat commodo sed. Augue eget arcu dictum
+      varius duis at. Nullam vehicula ipsum a arcu cursus vitae. Sapien et
+      ligula ullamcorper malesuada proin libero nunc. Nunc congue nisi vitae
+      suscipit tellus mauris a diam maecenas.
+    </Text>
+    <Heading my="md" as="h2">
+      {"<Text type='explain' />"}
+    </Heading>
+    {/* Explainer text */}
+    <Text type="explain">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+      tempor incididunt ut labore et dolore magna aliqua. Semper quis lectus
+      nulla at volutpat diam ut venenatis. Sed viverra tellus in hac habitasse
+      platea dictumst. Id porta nibh venenatis cras. Velit dignissim sodales ut
+      eu sem. Turpis cursus in hac habitasse platea dictumst quisque. Integer
+      feugiat scelerisque varius morbi enim. Dui accumsan sit amet nulla. Donec
+      et odio pellentesque diam volutpat commodo sed. Augue eget arcu dictum
+      varius duis at. Nullam vehicula ipsum a arcu cursus vitae. Sapien et
+      ligula ullamcorper malesuada proin libero nunc. Nunc congue nisi vitae
+      suscipit tellus mauris a diam maecenas.
+    </Text>
     {/* RadioButton ******************************/}
     <Heading my="md" as="h2">
       {'<RadioButton />'}
