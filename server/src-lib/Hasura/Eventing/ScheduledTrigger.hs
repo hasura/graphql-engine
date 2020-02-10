@@ -33,8 +33,6 @@ import qualified Network.HTTP.Client             as HTTP
 import qualified Text.Builder                    as TB (run)
 import qualified Data.HashMap.Strict             as Map
 
-import           Debug.Trace
-
 invocationVersion :: Version
 invocationVersion = "1"
 
@@ -44,8 +42,18 @@ oneSecond = 1000000
 oneMinute :: Int
 oneMinute = 60 * oneSecond
 
-oneHour :: Int
-oneHour = 60 * oneMinute
+newtype ScheduledTriggerInternalErr
+  = ScheduledTriggerInternalErr QErr
+  deriving (Show, Eq)
+
+instance L.ToEngineLog ScheduledTriggerInternalErr L.Hasura where
+  toEngineLog (ScheduledTriggerInternalErr qerr) =
+    (L.LevelError, L.scheduledTriggerLogType, J.toJSON qerr)
+
+logQErr :: ( MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
+logQErr err = do
+  logger :: L.Logger L.Hasura <- asks getter
+  L.unLogger logger $ ScheduledTriggerInternalErr err
 
 scheduledEventsTable :: QualifiedTable
 scheduledEventsTable =
@@ -58,10 +66,6 @@ data ScheduledEventSeed
   { sesName          :: !TriggerName
   , sesScheduledTime :: !UTCTime
   } deriving (Show, Eq)
-
--- | ScheduledEvents can be "partial" or "full"
--- Partial represents the event as present in db
--- Full represents the partial event combined with schema cache configuration elements
 
 data ScheduledEventPartial
   = ScheduledEventPartial
@@ -91,7 +95,6 @@ runScheduledEventsGenerator ::
   -> IO ()
 runScheduledEventsGenerator logger pgpool getSC = do
   forever $ do
-    traceM "entering scheduled events generator"
     sc <- getSC
     let scheduledTriggers = Map.elems $ scScheduledTriggers sc
     runExceptT
@@ -101,8 +104,8 @@ runScheduledEventsGenerator logger pgpool getSC = do
          (insertScheduledEventsFor scheduledTriggers) ) >>= \case
       Right _ -> pure ()
       Left err ->
-        L.unLogger logger $ EventInternalErr $ err500 Unexpected (T.pack $ show err)
-    threadDelay oneHour
+        L.unLogger logger $ ScheduledTriggerInternalErr $ err500 Unexpected (T.pack $ show err)
+    threadDelay oneMinute
 
 insertScheduledEventsFor :: [ScheduledTriggerInfo] -> Q.TxE QErr ()
 insertScheduledEventsFor scheduledTriggers = do
@@ -132,7 +135,7 @@ generateScheduledEventsFrom time ScheduledTriggerInfo{..} =
           Cron cron ->
             generateScheduleTimesBetween
               time
-              (addUTCTime nominalDay time)
+              (addUTCTime nominalDay time) -- by default, generate events for one day
               cron
    in map (ScheduledEventSeed stiName) events
 
@@ -155,7 +158,6 @@ processScheduledQueue
   -> IO ()
 processScheduledQueue logger logEnv httpMgr pgpool getSC =
   forever $ do
-    traceM "entering processor queue"
     scheduledTriggersInfo <- scScheduledTriggers <$> getSC
     scheduledEventsE <-
       runExceptT $
@@ -166,14 +168,16 @@ processScheduledQueue logger logEnv httpMgr pgpool getSC =
         flip map partialEvents $ \(ScheduledEventPartial id' name st tries)-> do
           let sti' = Map.lookup name scheduledTriggersInfo
           case sti' of
-            Nothing -> traceM "ERROR: couldn't find scheduled trigger in cache"
+            Nothing ->  L.unLogger logger $ ScheduledTriggerInternalErr $
+              err500 Unexpected "could not find scheduled trigger in cache"
             Just sti -> do
               let webhook = wciCachedValue $ stiWebhookInfo sti
                   payload = fromMaybe J.Null $ stiPayload sti
                   retryConf = stiRetryConf sti
                   se = ScheduledEventFull id' name st tries webhook payload retryConf
               runReaderT (processScheduledEvent logEnv pgpool sti se) (logger, httpMgr)
-      Left err -> traceShowM err
+      Left err -> L.unLogger logger $ ScheduledTriggerInternalErr $
+        err500 Unexpected $ "could not fetch scheduled events: " <> (T.pack $ show err)
     threadDelay oneMinute
 
 processScheduledEvent ::

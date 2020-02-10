@@ -19,6 +19,7 @@ module Hasura.Logging
   , mkLoggerCtx
   , cleanLoggerCtx
   , eventTriggerLogType
+  , scheduledTriggerLogType
   , EnabledLogTypes (..)
   , defaultEnabledEngineLogTypes
   , isEngineLogTypeEnabled
@@ -94,6 +95,7 @@ data InternalLogTypes
  = ILTUnstructured
  -- ^ mostly for debug logs - see @debugT@, @debugBS@ and @debugLBS@ functions
  | ILTEventTrigger
+ | ILTScheduledTrigger
  | ILTWsServer
  -- ^ internal logs for the websocket server
  | ILTPgClient
@@ -110,6 +112,7 @@ instance J.ToJSON InternalLogTypes where
   toJSON = \case
     ILTUnstructured -> "unstructured"
     ILTEventTrigger -> "event-trigger"
+    ILTScheduledTrigger -> "scheduled-trigger"
     ILTWsServer -> "ws-server"
     ILTPgClient -> "pg-client"
     ILTMetadata -> "metadata"
@@ -266,3 +269,6 @@ mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logge
 
 eventTriggerLogType :: EngineLogType Hasura
 eventTriggerLogType = ELTInternal ILTEventTrigger
+
+scheduledTriggerLogType :: EngineLogType Hasura
+scheduledTriggerLogType = ELTInternal ILTScheduledTrigger

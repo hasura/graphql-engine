@@ -37,6 +37,19 @@ import qualified Network.HTTP.Client           as HTTP
 invocationVersion :: Version
 invocationVersion = "2"
 
+newtype EventTriggerInternalErr
+  = EventTriggerInternalErr QErr
+  deriving (Show, Eq)
+
+instance L.ToEngineLog EventTriggerInternalErr L.Hasura where
+  toEngineLog (EventTriggerInternalErr qerr) =
+    (L.LevelError, L.eventTriggerLogType, toJSON qerr)
+
+logQErr :: ( MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
+logQErr err = do
+  logger :: L.Logger L.Hasura <- asks getter
+  L.unLogger logger $ EventTriggerInternalErr err
+
 data Event
   = Event
   { eId        :: EventId
@@ -107,7 +120,7 @@ pushEvents logger pool eectx  = forever $ do
   let EventEngineCtx q _ _ fetchI = eectx
   eventsOrError <- runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) fetchEvents
   case eventsOrError of
-    Left err     -> L.unLogger logger $ EventInternalErr err
+    Left err     -> L.unLogger logger $ EventTriggerInternalErr err
     Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
   threadDelay (fetchI * 1000)
 
