@@ -196,7 +196,6 @@ from
               json_build_object(
                 'action', hap.action_name,
                 'role', hap.role_name,
-                'definition', hap.definition :: json,
                 'comment', hap.comment
               )
             ),

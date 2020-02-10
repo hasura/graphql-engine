@@ -680,7 +680,7 @@ CREATE TABLE hdb_catalog.hdb_action_permission
 (
   action_name TEXT NOT NULL,
   role_name TEXT NOT NULL,
-  definition JSONB NOT NULL,
+  definition JSONB NOT NULL DEFAULT '{}'::jsonb,
   comment    TEXT NULL,
 
   PRIMARY KEY (action_name, role_name),

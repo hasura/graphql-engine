@@ -344,7 +344,7 @@ insertArrRel strfyNum role resCols arrRelIns =
     colMapping = riMapping relInfo
     tn = riRTable relInfo
     relNameTxt = relNameToTxt $ riName relInfo
-    mutOutput = RR.MTOFields [("affected_rows", RR.MCount)]
+    mutOutput = RR.MOutMultirowFields [("affected_rows", RR.MCount)]
 
 -- | insert an object with object and array relationships
 insertObj
@@ -467,7 +467,7 @@ convertInsert
   -> Field -- the mutation field
   -> m RespTx
 convertInsert role tn fld = prefixErrPath fld $ do
-  mutOutputUnres <- RR.MTOFields <$> resolveMutationFields (_fType fld) (_fSelSet fld)
+  mutOutputUnres <- RR.MOutMultirowFields <$> resolveMutationFields (_fType fld) (_fSelSet fld)
   mutOutputRes <- RR.traverseMutationOutput resolveValTxt mutOutputUnres
   annVals <- withArg arguments "objects" asArray
   -- if insert input objects is empty array then
@@ -503,7 +503,7 @@ convertInsertOne
   -> m RespTx
 convertInsertOne role qt field = prefixErrPath field $ do
   tableSelFields <- processTableSelectionSet (_fType field) $ _fSelSet field
-  let mutationOutputUnresolved = RR.MTOObject tableSelFields
+  let mutationOutputUnresolved = RR.MOutSinglerowObject tableSelFields
   mutationOutputResolved <- RR.traverseMutationOutput resolveValTxt mutationOutputUnresolved
   annInputObj <- withArg arguments "object" asObject
   InsCtx tableColMap check defValMap relInfoMap updPerm <- getInsCtx qt

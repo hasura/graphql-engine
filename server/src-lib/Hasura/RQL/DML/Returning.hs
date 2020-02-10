@@ -30,8 +30,8 @@ type MutFld = MutFldG S.SQLExp
 type MutFldsG v = Fields (MutFldG v)
 
 data MutationOutputG v
-  = MTOFields !(MutFldsG v) -- ^ Multirow
-  | MTOObject !(AnnFldsG v) -- ^ Singlerow table object
+  = MOutMultirowFields !(MutFldsG v)
+  | MOutSinglerowObject !(AnnFldsG v)
   deriving (Show, Eq)
 
 traverseMutationOutput
@@ -39,10 +39,10 @@ traverseMutationOutput
   => (a -> f b)
   -> MutationOutputG a -> f (MutationOutputG b)
 traverseMutationOutput f = \case
-  MTOFields mutationFields ->
-    MTOFields <$> traverse (traverse (traverseMutFld f)) mutationFields
-  MTOObject annFields ->
-    MTOObject <$> traverseAnnFlds f annFields
+  MOutMultirowFields mutationFields ->
+    MOutMultirowFields <$> traverse (traverse (traverseMutFld f)) mutationFields
+  MOutSinglerowObject annFields ->
+    MOutSinglerowObject <$> traverseAnnFlds f annFields
 
 type MutationOutput = MutationOutputG S.SQLExp
 
@@ -58,8 +58,8 @@ type MutFlds = MutFldsG S.SQLExp
 
 hasNestedFld :: MutationOutputG a -> Bool
 hasNestedFld = \case
-  MTOFields flds -> any isNestedMutFld flds
-  MTOObject annFlds -> any isNestedAnnFld annFlds
+  MOutMultirowFields flds -> any isNestedMutFld flds
+  MOutSinglerowObject annFlds -> any isNestedAnnFld annFlds
   where
     isNestedMutFld (_, mutFld) = case mutFld of
       MRet annFlds -> any isNestedAnnFld annFlds
@@ -87,7 +87,7 @@ pgColsToSelFlds cols =
   \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColField pgColInfo Nothing)
 
 mkDefaultMutFlds :: Maybe [PGColumnInfo] -> MutationOutput
-mkDefaultMutFlds = MTOFields . \case
+mkDefaultMutFlds = MOutMultirowFields . \case
   Nothing   -> mutFlds
   Just cols -> ("returning", MRet $ pgColsToSelFlds cols):mutFlds
   where
@@ -108,7 +108,6 @@ mkMutFldExp qt preCalAffRows strfyNum = \case
     in maybe countExp (S.SEUnsafe . T.pack . show) preCalAffRows
   MExp t -> S.SELit t
   MRet selFlds ->
-    -- let tabFrom = TableFrom qt $ Just frmItem
     let tabFrom = FromIden cteAlias
         tabPerm = TablePerm annBoolExpTrue Nothing
     in S.SESelect $ mkSQLSelect JASMultipleRows $
@@ -125,12 +124,12 @@ mkMutationOutputExp qt preCalAffRows cte mutOutput strfyNum =
     sel = S.mkSelect { S.selExtr = [S.Extractor extrExp Nothing] }
 
     extrExp = case mutOutput of
-      MTOFields mutFlds ->
+      MOutMultirowFields mutFlds ->
         let jsonBuildObjArgs = flip concatMap mutFlds $
               \(FieldName k, mutFld) -> [S.SELit k, mkMutFldExp qt preCalAffRows strfyNum mutFld]
         in S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
 
-      MTOObject annFlds ->
+      MOutSinglerowObject annFlds ->
         let tabFrom = FromIden cteAlias
             tabPerm = TablePerm annBoolExpTrue Nothing
         in S.SESelect $ mkSQLSelect JASSingleObject $

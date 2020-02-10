@@ -2,9 +2,6 @@ module Hasura.GraphQL.Resolve.Action
   ( resolveActionMutation
   , resolveAsyncActionQuery
   , asyncActionsProcessor
-
-  , ActionSelect(..)
-  , traverseActionSelect
   ) where
 
 import           Hasura.Prelude
@@ -50,32 +47,6 @@ import           Hasura.SQL.Types
 import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
                                                     toTxtValue)
 
-data OutputFieldResolved
-  = OutputFieldSimple !Text
-  | OutputFieldTypename !G.NamedType
-  deriving (Show, Eq)
-
-data ResponseFieldResolved
-  = ResponseFieldOutput ![(Text, OutputFieldResolved)]
-  | ResponseFieldMetadata !FieldName
-  | ResponseFieldTypename !G.NamedType
-  deriving (Show, Eq)
-
-data ActionSelect v
-  = ActionSelect
-  { _asId        :: !v
-  , _asSelection :: ![(Text, ResponseFieldResolved)]
-  , _asFilter    :: !(AnnBoolExp v)
-  } deriving (Show, Eq, Functor)
-
-traverseActionSelect
-  :: (Applicative f)
-  => (a -> f b)
-  -> ActionSelect a
-  -> f (ActionSelect b)
-traverseActionSelect f (ActionSelect idText selection rowFilter) =
-  ActionSelect <$> f idText <*> pure selection <*> traverseAnnBoolExp f rowFilter
-
 newtype ActionContext
   = ActionContext {_acName :: ActionName}
   deriving (Show, Eq)
@@ -96,33 +67,30 @@ data ActionWebhookErrorResponse
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
 
-data ResolvePlan
-  = ResolveReturn
-  | ResolvePostgres [(PGCol, PGScalarType)] ![(Text, OutputFieldResolved)]
-  deriving (Show, Eq)
-
-processOutputSelectionSet
-  :: ( MonadReusability m
+resolveActionMutation
+  :: ( HasVersion
+     , MonadReusability m
      , MonadError QErr m
      , MonadReader r m
+     , MonadIO m
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
+     , Has HTTP.Manager r
+     , Has [HTTP.Header] r
      )
-  => RS.ArgumentExp UnresolvedVal
-  -> [(PGCol, PGScalarType)]
-  -> G.NamedType -> SelSet -> m GRS.AnnSimpleSelect
-processOutputSelectionSet tableRowInput definitionList fldTy flds = do
-  stringifyNumerics <- stringifyNum <$> asks getter
-  annotatedFields <- processTableSelectionSet fldTy flds
-  let annSel = RS.AnnSelG annotatedFields selectFrom
-                  RS.noTablePermissions RS.noTableArgs stringifyNumerics
-  pure annSel
-  where
-    jsonbToRecordFunction = QualifiedObject (SchemaName "pg_catalog") $ FunctionName "jsonb_to_record"
-    functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
-    selectFrom = RS.FromFunction jsonbToRecordFunction functionArgs $ Just definitionList
+  => Field
+  -> ActionExecutionContext
+  -> UserVars
+  -> m RespTx
+resolveActionMutation field executionContext sessionVariables =
+  case executionContext of
+    ActionExecutionSyncWebhook executionContextSync ->
+      resolveActionMutationSync field executionContextSync sessionVariables
+    ActionExecutionAsync ->
+      resolveActionMutationAsync field sessionVariables
 
+-- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionMutationSync
   :: ( HasVersion
      , MonadReusability m
@@ -157,50 +125,120 @@ resolveActionMutationSync field executionContext sessionVariables = do
     SyncActionExecutionContext actionName definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
-callWebhook
-  :: (HasVersion, MonadIO m, MonadError QErr m)
-  => HTTP.Manager
-  -> [HTTP.Header]
-  -> [HeaderConf]
-  -> Bool
-  -> ResolvedWebhook
-  -> ActionWebhookPayload
-  -> m J.Value
-callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook actionWebhookPayload = do
-  resolvedConfHeaders <- makeHeadersFromConf confHeaders
-  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
-      contentType = ("Content-Type", "application/json")
-      options = wreqOptions manager $
-                -- Using HashMap to avoid duplicate headers between configuration headers
-                -- and client headers where configuration headers are preferred
-                contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
-      postPayload = J.toJSON actionWebhookPayload
-      url = (T.unpack $ unResolvedWebhook resolvedWebhook)
-  httpResponse <- liftIO $ try $ try $
-                  Wreq.asJSON =<< Wreq.postWith options url postPayload
-  case httpResponse of
-    Left e ->
-      throw500WithDetail "http exception when calling webhook" $
-      J.toJSON $ HttpException e
-    Right (Left (Wreq.JSONError e)) ->
-      throw500WithDetail "not a valid json response from webhook" $
-      J.toJSON e
-    Right (Right responseWreq) -> do
-      let responseValue = responseWreq ^. Wreq.responseBody
-          responseStatus = responseWreq ^. Wreq.responseStatus
+{- Note: [Async action architecture]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In async actions, acquiring the action result is deferred. The async action mutation is made to
+initiate the action which returns an UUID. The UUID is used to query/subsribe for actions response.
 
-      if | HTTP.statusIsSuccessful responseStatus  -> pure responseValue
+On mutation, the server makes an action log record in hdb_catalog.hdb_action_log table with request headers
+and input arguments. The `asyncActionsProcessor` background thread processes the async actions by executing
+the webhook handler and writing back the response payload or errors if any in the database.
 
-         | HTTP.statusIsClientError responseStatus -> do
-             ActionWebhookErrorResponse message maybeCode <-
-               modifyErr ("webhook response: " <>) $ decodeValue responseValue
-             let code = maybe Unexpected ActionWebhookCode maybeCode
-                 qErr = QErr [] responseStatus message code Nothing
-             throwError qErr
+When an async action query/subscription is made, the server fetches the relavent data from the hdb_action_log
+table provides the action response. See Note [Resolving async action query/subscription] below.
+-}
 
-         | otherwise ->
-             throw500WithDetail "internal error" $
-               J.object ["webhook_response" J..= responseValue]
+-- | Resolve asynchronous action mutation which returns only the action uuid
+resolveActionMutationAsync
+  :: ( MonadError QErr m, MonadReader r m
+     , Has [HTTP.Header] r
+     )
+  => Field
+  -> UserVars
+  -> m RespTx
+resolveActionMutationAsync field sessionVariables = do
+  reqHeaders <- asks getter
+  let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
+  pure $ do
+    actionId <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
+      INSERT INTO
+          "hdb_catalog"."hdb_action_log"
+          ("action_name", "session_variables", "request_headers", "input_payload", "status")
+      VALUES
+          ($1, $2, $3, $4, $5)
+      RETURNING "id"
+              |]
+      (actionName, Q.AltJ sessionVariables, Q.AltJ $ toHeadersMap reqHeaders, Q.AltJ inputArgs, "created"::Text) False
+
+    pure $ encJFromJValue $ UUID.toText actionId
+  where
+    actionName = G.unName $ _fName field
+    toHeadersMap = Map.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
+
+{- Note: [Resolving async action query/subscription]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Resolving async action query involves in selecting fields from hdb_catalog.hdb_action_log table.
+See Note [Async action architecture] above. See the table's Postgres schema in src-rsr/initialise.sql.
+The webhook's response JSON stored in "response_payload" column has to be fetched as "output"
+along with relationships (if any) to other tables. The in-built pg_catalog function `jsonb_to_record`
+helps in converting any JSON object to Postgres record type. Thus generated record is used to resolve
+action's type. Here, we treat the "output" field as a computed field to hdb_action_log table with
+`jsonb_to_record` as custom SQL function.
+-}
+
+resolveAsyncActionQuery
+  :: ( MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     )
+  => UserInfo
+  -> ActionSelectOpContext
+  -> Field
+  -> m GRS.AnnSimpleSelect
+resolveAsyncActionQuery userInfo selectContext field = do
+  actionId <- withArg (_fArguments field) "id" parseActionId
+  stringifyNumerics <- stringifyNum <$> asks getter
+
+  annotatedFields <- fmap (map (first FieldName)) $ withSelSet (_fSelSet field) $ \fld ->
+    case _fName fld of
+      "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType fld
+      "output"     -> do
+        -- See Note [Resolving async action query/subscription]
+        let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
+            definitionList = _asocDefinitionList selectContext
+        (RS.FComputedField . RS.CFSTable RS.JASSingleObject) -- The output of action is always a single object
+          <$> processOutputSelectionSet inputTableArgument definitionList (_fType fld) (_fSelSet fld)
+
+      -- The metadata columns
+      "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
+      "created_at" -> return $ mkAnnFldFromPGCol "created_at" PGTimeStampTZ
+      "errors"     -> return $ mkAnnFldFromPGCol "errors" PGJSONB
+      G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
+
+  let tableFromExp = RS.FromTable actionLogTable
+      tableArguments = RS.noTableArgs
+                       { RS._taWhere = Just $ mkTableBoolExpression actionId}
+      tablePermissions = RS.TablePerm annBoolExpTrue Nothing
+      selectAstUnresolved = RS.AnnSelG annotatedFields tableFromExp tablePermissions
+                            tableArguments stringifyNumerics
+  return selectAstUnresolved
+  where
+    actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
+
+    -- TODO:- Avoid using PGColumnInfo
+    mkAnnFldFromPGCol column columnType =
+      flip RS.mkAnnColField Nothing $
+      PGColumnInfo (unsafePGCol column) (G.Name column) 0 (PGColumnScalar columnType) True Nothing
+
+    parseActionId annInpValue = mkParameterizablePGValue <$> asPGColumnValue annInpValue
+
+    mkTableBoolExpression actionId =
+      let actionIdColumnInfo = PGColumnInfo (unsafePGCol "id") "id" 0 (PGColumnScalar PGUUID) False Nothing
+          actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True actionId]
+          sessionVarsColumnInfo = PGColumnInfo (unsafePGCol "session_variables") "session_variables"
+                                  0 (PGColumnScalar PGJSONB) False Nothing
+          sessionVarValue = UVPG $ AnnPGVal Nothing False $ WithScalarType PGJSONB
+                            $ PGValJSONB $ Q.JSONB $ J.toJSON $ userVars userInfo
+          sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
+
+      -- For non-admin roles, accessing an async action's response should be allowed only for the user
+      -- who initiated the action through mutation. The action's response is accessible for a query/subscription
+      -- only when it's session variables are equal to that of action's.
+      in if isAdmin (userRole userInfo) then actionIdColumnEq
+         else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]
 
 data ActionLogItem
   = ActionLogItem
@@ -211,6 +249,8 @@ data ActionLogItem
   , _aliInputPayload     :: !J.Value
   } deriving (Show, Eq)
 
+-- | Process async actions from hdb_catalog.hdb_action_log table. This functions is executed in a background thread.
+-- See Note [Async action architecture] above
 asyncActionsProcessor
   :: HasVersion
   => IORef (RebuildableSchemaCache Run, SchemaCacheVer)
@@ -297,57 +337,50 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
 
     getUndeliveredEvents = runTx undeliveredEventsQuery
 
-resolveActionMutation
-  :: ( HasVersion
-     , MonadReusability m
-     , MonadError QErr m
-     , MonadReader r m
-     , MonadIO m
-     , Has FieldMap r
-     , Has OrdByCtx r
-     , Has SQLGenCtx r
-     , Has HTTP.Manager r
-     , Has [HTTP.Header] r
-     )
-  => Field
-  -> ActionExecutionContext
-  -- We need the sesion variables for column presets
-  -> UserVars
-  -> m RespTx
-resolveActionMutation field executionContext sessionVariables =
-  case executionContext of
-    ActionExecutionSyncWebhook executionContextSync ->
-      resolveActionMutationSync field executionContextSync sessionVariables
-    ActionExecutionAsync ->
-      resolveActionMutationAsync field sessionVariables
+callWebhook
+  :: (HasVersion, MonadIO m, MonadError QErr m)
+  => HTTP.Manager
+  -> [HTTP.Header]
+  -> [HeaderConf]
+  -> Bool
+  -> ResolvedWebhook
+  -> ActionWebhookPayload
+  -> m J.Value
+callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook actionWebhookPayload = do
+  resolvedConfHeaders <- makeHeadersFromConf confHeaders
+  let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
+      contentType = ("Content-Type", "application/json")
+      options = wreqOptions manager $
+                -- Using HashMap to avoid duplicate headers between configuration headers
+                -- and client headers where configuration headers are preferred
+                contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
+      postPayload = J.toJSON actionWebhookPayload
+      url = (T.unpack $ unResolvedWebhook resolvedWebhook)
+  httpResponse <- liftIO $ try $ try $
+                  Wreq.asJSON =<< Wreq.postWith options url postPayload
+  case httpResponse of
+    Left e ->
+      throw500WithDetail "http exception when calling webhook" $
+      J.toJSON $ HttpException e
+    Right (Left (Wreq.JSONError e)) ->
+      throw500WithDetail "not a valid json response from webhook" $
+      J.toJSON e
+    Right (Right responseWreq) -> do
+      let responseValue = responseWreq ^. Wreq.responseBody
+          responseStatus = responseWreq ^. Wreq.responseStatus
 
--- | Resolve asynchronous action mutation which returns only the action uuid
-resolveActionMutationAsync
-  :: ( MonadError QErr m, MonadReader r m
-     , Has [HTTP.Header] r
-     )
-  => Field
-  -- We need the sesion variables for column presets
-  -> UserVars
-  -> m RespTx
-resolveActionMutationAsync field sessionVariables = do
-  reqHeaders <- asks getter
-  let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
-  pure $ do
-    actionId <- runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler [Q.sql|
-      INSERT INTO
-          "hdb_catalog"."hdb_action_log"
-          ("action_name", "session_variables", "request_headers", "input_payload", "status")
-      VALUES
-          ($1, $2, $3, $4, $5)
-      RETURNING "id"
-              |]
-      (actionName, Q.AltJ sessionVariables, Q.AltJ $ toHeadersMap reqHeaders, Q.AltJ inputArgs, "created"::Text) False
+      if | HTTP.statusIsSuccessful responseStatus  -> pure responseValue
 
-    pure $ encJFromJValue $ UUID.toText actionId
-  where
-    actionName = G.unName $ _fName field
-    toHeadersMap = Map.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
+         | HTTP.statusIsClientError responseStatus -> do
+             ActionWebhookErrorResponse message maybeCode <-
+               modifyErr ("webhook response: " <>) $ decodeValue responseValue
+             let code = maybe Unexpected ActionWebhookCode maybeCode
+                 qErr = QErr [] responseStatus message code Nothing
+             throwError qErr
+
+         | otherwise ->
+             throw500WithDetail "internal error" $
+               J.object ["webhook_response" J..= responseValue]
 
 annInpValueToJson :: AnnInpVal -> J.Value
 annInpValueToJson annInpValue =
@@ -359,7 +392,7 @@ annInpValueToJson annInpValue =
     AGObject _ objectM        -> J.toJSON $ fmap (fmap annInpValueToJson) objectM
     AGArray _ valuesM         -> J.toJSON $ fmap (fmap annInpValueToJson) valuesM
 
-resolveAsyncActionQuery
+processOutputSelectionSet
   :: ( MonadReusability m
      , MonadError QErr m
      , MonadReader r m
@@ -367,55 +400,16 @@ resolveAsyncActionQuery
      , Has OrdByCtx r
      , Has SQLGenCtx r
      )
-  => UserInfo
-  -> ActionSelectOpContext
-  -> Field
-  -> m GRS.AnnSimpleSelect
-resolveAsyncActionQuery userInfo selectContext field = do
-  actionId <- withArg (_fArguments field) "id" parseActionId
+  => RS.ArgumentExp UnresolvedVal
+  -> [(PGCol, PGScalarType)]
+  -> G.NamedType -> SelSet -> m GRS.AnnSimpleSelect
+processOutputSelectionSet tableRowInput definitionList fldTy flds = do
   stringifyNumerics <- stringifyNum <$> asks getter
-
-  annotatedFields <- fmap (map (first FieldName)) $ withSelSet (_fSelSet field) $ \fld ->
-    case _fName fld of
-      "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType fld
-      "output"     -> do
-        -- Treating "output" as a computed field to "hdb_action_log" table with "jsonb_to_record" SQL function
-        let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
-            definitionList = _asocDefinitionList selectContext
-        (RS.FComputedField . RS.CFSTable RS.JASSingleObject) -- The output of action is always a single object
-          <$> processOutputSelectionSet inputTableArgument definitionList (_fType fld) (_fSelSet fld)
-      -- the metadata columns
-      "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
-      "created_at" -> return $ mkAnnFldFromPGCol "created_at" PGTimeStampTZ
-      "errors"     -> return $ mkAnnFldFromPGCol "errors" PGJSONB
-      G.Name t     -> throw500 $ "unexpected field in actions' httpResponse : " <> t
-
-  let tableFromExp = RS.FromTable actionLogTable
-      tableArguments = RS.noTableArgs
-                       { RS._taWhere = Just $ mkTableBoolExpression actionId}
-      tablePermissions = RS.TablePerm annBoolExpTrue Nothing
-      selectAstUnresolved = RS.AnnSelG annotatedFields tableFromExp tablePermissions
-                            tableArguments stringifyNumerics
-  return selectAstUnresolved
+  annotatedFields <- processTableSelectionSet fldTy flds
+  let annSel = RS.AnnSelG annotatedFields selectFrom
+                  RS.noTablePermissions RS.noTableArgs stringifyNumerics
+  pure annSel
   where
-    actionLogTable = QualifiedObject (SchemaName "hdb_catalog") (TableName "hdb_action_log")
-
-    -- TODO:- Avoid using PGColumnInfo
-    mkAnnFldFromPGCol column columnType =
-      flip RS.mkAnnColField Nothing $
-      PGColumnInfo (unsafePGCol column) (G.Name column) 0 (PGColumnScalar columnType) True Nothing
-
-    parseActionId annInpValue = mkParameterizablePGValue <$> asPGColumnValue annInpValue
-
-    mkTableBoolExpression actionId =
-      let actionIdColumnInfo = PGColumnInfo (unsafePGCol "id") "id" 0 (PGColumnScalar PGUUID) False Nothing
-          actionIdColumnEq = BoolFld $ AVCol actionIdColumnInfo [AEQ True actionId]
-          sessionVarsColumnInfo = PGColumnInfo (unsafePGCol "session_variables") "session_variables"
-                                  0 (PGColumnScalar PGJSONB) False Nothing
-          sessionVarValue = UVPG $ AnnPGVal Nothing False $ WithScalarType PGJSONB
-                            $ PGValJSONB $ Q.JSONB $ J.toJSON $ userVars userInfo
-          sessionVarsColumnEq = BoolFld $ AVCol sessionVarsColumnInfo [AEQ True sessionVarValue]
-      in if isAdmin (userRole userInfo) then actionIdColumnEq
-         -- For non-admin roles, the async result is accessible only if the request session variables
-         -- equals to action's session variables
-         else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]
+    jsonbToRecordFunction = QualifiedObject (SchemaName "pg_catalog") $ FunctionName "jsonb_to_record"
+    functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
+    selectFrom = RS.FromFunction jsonbToRecordFunction functionArgs $ Just definitionList

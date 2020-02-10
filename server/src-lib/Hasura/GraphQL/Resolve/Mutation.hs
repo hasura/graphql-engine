@@ -298,7 +298,7 @@ mutationFieldsResolver
      )
   => Field -> m (RR.MutationOutputG UnresolvedVal)
 mutationFieldsResolver field =
-  RR.MTOFields <$> resolveMutationFields (_fType field) (_fSelSet field)
+  RR.MOutMultirowFields <$> resolveMutationFields (_fType field) (_fSelSet field)
 
 tableSelectionAsMutationOutput
   :: ( MonadReusability m, MonadError QErr m
@@ -307,15 +307,15 @@ tableSelectionAsMutationOutput
      )
   => Field -> m (RR.MutationOutputG UnresolvedVal)
 tableSelectionAsMutationOutput field =
-  RR.MTOObject <$> processTableSelectionSet (_fType field) (_fSelSet field)
+  RR.MOutSinglerowObject <$> processTableSelectionSet (_fType field) (_fSelSet field)
 
 -- | build mutation response for empty objects
 buildEmptyMutResp :: RR.MutationOutput -> EncJSON
 buildEmptyMutResp = mkTx
   where
     mkTx = \case
-      RR.MTOFields mutFlds -> encJFromJValue $ OMap.fromList $ map (second convMutFld) mutFlds
-      RR.MTOObject _       -> encJFromJValue $ J.Object mempty
+      RR.MOutMultirowFields mutFlds -> encJFromJValue $ OMap.fromList $ map (second convMutFld) mutFlds
+      RR.MOutSinglerowObject _       -> encJFromJValue $ J.Object mempty
     -- generate empty mutation response
     convMutFld = \case
       RR.MCount -> J.toJSON (0 :: Int)

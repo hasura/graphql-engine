@@ -417,7 +417,6 @@ fetchMetadata = do
                 json_agg(
                   json_build_object(
                     'role', ap.role_name,
-                    'definition', ap.definition,
                     'comment', ap.comment
                   ) order by ap.role_name asc
                 ),

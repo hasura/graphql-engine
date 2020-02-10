@@ -235,9 +235,9 @@ persistCreateActionPermission :: (MonadTx m) => CreateActionPermission -> m ()
 persistCreateActionPermission CreateActionPermission{..}= do
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT into hdb_catalog.hdb_action_permission
-      (action_name, role_name, definition, comment)
-      VALUES ($1, $2, $3, $4)
-  |] (_capAction, _capRole, Q.AltJ J.Null, _capComment) True
+      (action_name, role_name, comment)
+      VALUES ($1, $2, $3)
+  |] (_capAction, _capRole, _capComment) True
 
 data DropActionPermission
   = DropActionPermission
