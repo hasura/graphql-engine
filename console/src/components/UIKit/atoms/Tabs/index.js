@@ -52,8 +52,8 @@ class Tabs extends React.Component {
           </TabList>
           {/* Tab Content */}
           {currentTabContentArray &&
-            currentTabContentArray.map(({ tabContent }) => (
-              <TabContent>{tabContent}</TabContent>
+            currentTabContentArray.map(({ tabContent }, index) => (
+              <TabContent key={index}>{tabContent}</TabContent>
             ))}
         </TabStyles>
       );

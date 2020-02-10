@@ -8,15 +8,19 @@ import { TextLinks, Typography } from './demo/Typography';
 import { Alerts } from './demo/Alerts';
 import { BoxShadows } from './demo/Shadows';
 
-import Button from './atoms/Button';
-import AlertBox from './atoms/AlertBox';
-import ToolTip from './atoms/Tooltip';
-import { Heading, TextLink, Text } from './atoms/Typography';
-import RadioButton from './atoms/RadioButton';
-import Checkbox from './atoms/Checkbox';
-import SwitchButton from './atoms/SwitchButton';
-import Tabs from './atoms/Tabs';
-import Spinner from './atoms/Spinner';
+import {
+  Button,
+  AlertBox,
+  ToolTip,
+  Heading,
+  TextLink,
+  Text,
+  RadioButton,
+  Checkbox,
+  SwitchButton,
+  Tabs,
+  Spinner,
+} from './atoms';
 
 import { Flex, UIKitWrapperDiv } from './demo/styles';
 
@@ -170,7 +174,7 @@ const UIKit = () => (
     <Tabs tabsData={dummytabsData} />
     {/* ToolTip ********************************/}
     <Heading my="lg" as="h2">
-      {'<Tooltip />'}
+      {'<ToolTip />'}
     </Heading>
     <Flex mb="lg">
       <ToolTip message="Dummy Text" placement="top" mr="lg">
