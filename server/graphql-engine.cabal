@@ -191,6 +191,8 @@ library
                      -- testing
                      , QuickCheck
                      , generic-arbitrary
+                     
+                     , directory
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
@@ -412,7 +414,10 @@ test-suite graphql-engine-tests
     , natural-transformation >=0.4 && <0.5
     , optparse-applicative
     , pg-client
+    , process
     , QuickCheck
+    , safe
+    , split
     , time
     , transformers-base
     , unordered-containers
