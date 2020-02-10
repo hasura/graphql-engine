@@ -411,12 +411,6 @@ instance J.ToJSON TypeInfo where
 instance J.FromJSON TypeInfo where
   parseJSON _ = fail "FromJSON not implemented for TypeInfo"
 
--- $(J.deriveJSON
---   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2
---                    , J.sumEncoding = J.TaggedObject "type" "detail"
---                    }
---   ''TypeInfo)
-
 data AsObjType
   = AOTObj ObjTyInfo
   | AOTIFace IFaceTyInfo

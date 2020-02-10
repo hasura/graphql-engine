@@ -48,8 +48,6 @@ mkAsyncActionQueryResponseObj actionName outputType =
         , G.toGT $ mkScalarTy PGTimeStampTZ)
       , ( "errors", "errors related to the invocation"
         , G.toGT $ mkScalarTy PGJSON)
-      -- , ( "status", "the status of this action, whether it is processed, etc."
-      --   , G.toGT $ G.NamedType "action_status")
       , ( "output", "the output fields of this action"
         , unGraphQLType outputType)
       ]
@@ -199,6 +197,8 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
                        )
                      , RFRelationship $ RelationshipField
                        (RelInfo
+                        -- RelationshipName, which is newtype wrapper over G.Name is always
+                        -- non-empty text so as to conform GraphQL spec
                         (RelName $ mkNonEmptyTextUnsafe $ coerce relationshipName)
                         (_trType relationship)
                         columnMapping remoteTable True)

@@ -243,7 +243,6 @@ data DropActionPermission
   = DropActionPermission
   { _dapAction :: !ActionName
   , _dapRole   :: !RoleName
-  -- , _capIfExists   :: !(Maybe IfExists)
   } deriving (Show, Eq, Lift)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''DropActionPermission)
 
