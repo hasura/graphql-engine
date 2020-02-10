@@ -16,6 +16,7 @@ import RadioButton from './atoms/RadioButton';
 import Checkbox from './atoms/Checkbox';
 import SwitchButton from './atoms/SwitchButton';
 import Tabs from './atoms/Tabs';
+import Spinner from './atoms/Spinner';
 
 import { Flex, UIKitWrapperDiv } from './demo/styles';
 
@@ -144,8 +145,13 @@ const UIKit = () => (
         Info Button
       </Button>
     </Flex>
-    {/* AlertBox  *******************************/}
+    {/* Spinner  *******************************/}
     <Heading mb="md" as="h2">
+      {'<Spinner />'}
+    </Heading>
+    <Spinner />
+    {/* AlertBox  *******************************/}
+    <Heading mb="md" mt="lg" as="h2">
       {'<Alertbox />'}
     </Heading>
     <AlertBox type="success" my="lg">
