@@ -60,3 +60,16 @@ export const defaultHeader = {
   value: '',
   type: 'static',
 };
+
+export const defaultRelFieldMapping = {
+  column: '',
+  field: '',
+};
+
+export const defaultRelConfig = {
+  name: '',
+  type: '',
+  refSchema: '',
+  refTable: '',
+  fieldMapping: [defaultRelFieldMapping],
+};

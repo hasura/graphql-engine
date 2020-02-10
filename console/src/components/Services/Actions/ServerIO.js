@@ -19,6 +19,10 @@ import {
   getDropActionPermissionQuery,
   getUpdateActionQuery,
 } from '../../Common/utils/v1QueryUtils';
+import {
+  injectTypeRelationship,
+  removeTypeRelationship,
+} from './Relationships/utils';
 import { getConfirmation } from '../../Common/utils/jsUtils';
 import {
   generateActionDefinition,
@@ -221,6 +225,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     outputType,
     error: actionDefError,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
+
   if (actionDefError) {
     return dispatch(
       showErrorNotification('Invalid Action Definition', actionDefError)
@@ -315,9 +320,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     downQueries = [actionQueryDown, customFieldsQueryDown, oldActionQueryUp];
   }
 
-  const migrationName = `modify_action_${currentAction.action_name}_to_${
-    state.name
-  }`;
+  const migrationName = `modify_action_${currentAction.action_name}_to_${state.name}`;
   const requestMsg = 'Saving action...';
   const successMsg = 'Action saved successfully';
   const errorMsg = 'Saving action failed';
@@ -353,9 +356,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
 };
 
 export const deleteAction = currentAction => (dispatch, getState) => {
-  const confirmMessage = `This will permanently delete the action "${
-    currentAction.action_name
-  }" from this table`;
+  const confirmMessage = `This will permanently delete the action "${currentAction.action_name}" from this table`;
   const isOk = getConfirmation(confirmMessage, true, currentAction.action_name);
   if (!isOk) {
     return;
@@ -395,12 +396,17 @@ export const deleteAction = currentAction => (dispatch, getState) => {
   );
 };
 
-export const addActionRel = (objectType, successCb) => (dispatch, getState) => {
-  const { types } = getState().actions.relationships;
+export const addActionRel = (relConfig, successCb) => (dispatch, getState) => {
   const { types: existingTypes } = getState().types;
 
+  const typesWithRels = injectTypeRelationship(
+    existingTypes,
+    relConfig.typename,
+    relConfig
+  );
+
   const customTypesQueryUp = generateSetCustomTypesQuery(
-    reformCustomTypes(types)
+    reformCustomTypes(typesWithRels)
   );
 
   const customTypesQueryDown = generateSetCustomTypesQuery(
@@ -417,8 +423,71 @@ export const addActionRel = (objectType, successCb) => (dispatch, getState) => {
   const customOnSuccess = () => {
     // dispatch(createActionRequestComplete());
     dispatch(fetchCustomTypes());
-    successCb();
+    if (successCb) {
+      successCb();
+    }
   };
+
+  const customOnError = () => {
+    // dispatch(createActionRequestComplete());
+  };
+  // dispatch(createActionRequestInProgress());
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+export const removeActionRel = (relName, typename, successCb) => (
+  dispatch,
+  getState
+) => {
+  const confirmation = getConfirmation(
+    `This will remove the relationship "${relName}" from type "${typename}". This will affect all the actions that use the type "${typename}"`
+  );
+  if (!confirmation) {
+    return;
+  }
+
+  const { types: existingTypes } = getState().types;
+
+  const typesWithoutRel = removeTypeRelationship(
+    existingTypes,
+    typename,
+    relName
+  );
+
+  const customTypesQueryUp = generateSetCustomTypesQuery(
+    reformCustomTypes(typesWithoutRel)
+  );
+
+  const customTypesQueryDown = generateSetCustomTypesQuery(
+    reformCustomTypes(existingTypes)
+  );
+
+  const upQueries = [customTypesQueryUp];
+  const downQueries = [customTypesQueryDown];
+
+  const migrationName = 'remove_action_rel'; // TODO: better migration name
+  const requestMsg = 'Removing relationship...';
+  const successMsg = 'Relationship removed successfully';
+  const errorMsg = 'Removing relationship failed';
+  const customOnSuccess = () => {
+    // dispatch(createActionRequestComplete());
+    dispatch(fetchCustomTypes());
+    if (successCb) {
+      successCb();
+    }
+  };
+
   const customOnError = () => {
     // dispatch(createActionRequestComplete());
   };
