@@ -1,7 +1,7 @@
 import React from 'react';
 import BaseEditor from './BaseEditor';
 
-const SDLEditor = ({ ...props }) => {
+const SDLEditor = props => {
   return <BaseEditor mode="graphqlschema" {...props} />;
 };
 

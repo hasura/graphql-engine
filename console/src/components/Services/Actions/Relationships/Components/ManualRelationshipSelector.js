@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import styles from '../../../../Common/TableCommon/Table.scss';
-// import { } from '../reducer';
 import { updateSchemaInfo } from '../../../Data/DataActions';
 import {
   getSchemaName,
@@ -83,7 +82,6 @@ const ManualRelationshipSelector = ({
           onChange={handleRelNameChange}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
           placeholder="Enter relationship name"
-          // disabled={!relType}
           data-test="rel-name"
           value={relName}
         />
@@ -116,17 +114,17 @@ const ManualRelationshipSelector = ({
           disabled={!relNameInput}
         >
           {// default unselected option
-            refSchema === '' && (
-              <option value={''} disabled>
-                {'-- reference schema --'}
-              </option>
-            )}
+          refSchema === '' && (
+            <option value={''} disabled>
+              {'-- reference schema --'}
+            </option>
+          )}
           {// all reference schema options
-            orderedSchemaList.map((rs, j) => (
-              <option key={j} value={rs}>
-                {rs}
-              </option>
-            ))}
+          orderedSchemaList.map((rs, j) => (
+            <option key={j} value={rs}>
+              {rs}
+            </option>
+          ))}
         </select>
       </div>
     );
@@ -253,16 +251,12 @@ const ManualRelationshipSelector = ({
 
           return (
             <div
-              className={`row ${styles.add_mar_bottom_mid} ${
-                styles.display_flex
-              }`}
+              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
               key={`fk-col-${i}`}
             >
               <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={field}
                   onChange={handleFieldSet}
                   data-test={`manual-relationship-lcol-${i}`}
@@ -286,9 +280,7 @@ const ManualRelationshipSelector = ({
               </div>
               <div className={'col-sm-4'}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={refColum}
                   onChange={handleRefColSet}
                   disabled={!refTable}

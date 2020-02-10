@@ -2,6 +2,7 @@ import React from 'react';
 import { addActionRel } from '../../ServerIO';
 import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor';
 import ManualRelationshipSelector from './ManualRelationshipSelector';
+import styles from '../../Actions.scss';
 
 const AddManualRelationship = ({
   objectType,
@@ -10,8 +11,6 @@ const AddManualRelationship = ({
   dispatch,
   stateCb,
 }) => {
-  const styles = require('../../Actions.scss');
-
   const saveFunc = toggleEditor => {
     dispatch(addActionRel(objectType, toggleEditor));
   };
