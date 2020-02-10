@@ -24,7 +24,6 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
           <input
             type="checkbox"
             checked={shouldDerive}
-            readOnly
             className={`${styles.cursorPointer} ${styles.add_mar_right_mid}`}
           />
           Generate code with delegation to the derived mutation

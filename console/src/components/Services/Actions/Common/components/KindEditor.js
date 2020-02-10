@@ -16,7 +16,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
   };
 
   return (
-    <div className={`${className || ''}`}>
+    <div className={className || ''}>
       <h2
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
@@ -35,7 +35,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
           <input
             type="radio"
             checked={value === 'synchronous'}
-            className={`${styles.add_mar_right_small}`}
+            className={styles.add_mar_right_small}
           />
           Synchronous
         </label>
@@ -46,7 +46,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
           <input
             type="radio"
             checked={value === 'asynchronous'}
-            className={`${styles.add_mar_right_small}`}
+            className={styles.add_mar_right_small}
           />
           Asynchronous
         </label>

@@ -8,7 +8,7 @@ const editorTooltip =
 
 const HandlerEditor = ({ value, onChange, className, placeholder }) => {
   return (
-    <div className={`${className || ''}`}>
+    <div className={className || ''}>
       <h2
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >

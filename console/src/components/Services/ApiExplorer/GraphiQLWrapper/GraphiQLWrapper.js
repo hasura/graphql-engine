@@ -18,7 +18,6 @@ import {
   getActionDefinitionSdl,
   getTypesSdl,
 } from '../../../../shared/utils/sdlUtils';
-import {} from '../../../../shared/utils/sdlUtils';
 import { showErrorNotification } from '../../Common/Notification';
 import { persistDerivedMutation } from '../../Actions/lsUtils';
 import { getActionsCreateRoute } from '../../../Common/utils/routesUtils';

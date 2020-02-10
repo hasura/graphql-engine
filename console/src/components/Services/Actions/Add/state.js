@@ -6,11 +6,14 @@ import {
 
 let defaultHandler = '';
 if (typeof navigator !== 'undefined') {
-  const isLinux = navigator.appVersion.toLowerCase().includes('linux');
+  const { appVersion } = navigator;
+  const isLinux =
+    appVersion.toLowerCase().includes('linux') ||
+    appVersion.toLowerCase().includes('x11');
   if (isLinux) {
     defaultHandler = 'http://localhost:3000';
   } else {
-    defaultHandler = 'http://host.docker.internal';
+    defaultHandler = 'http://host.docker.internal:3000';
   }
 }
 

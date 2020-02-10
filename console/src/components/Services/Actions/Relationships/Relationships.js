@@ -1,7 +1,14 @@
 import React from 'react';
+import Helmet from 'react-helmet';
 import TypeRelationship from './Components/TypeRelationship';
 
-const Relationships = ({ objectType, allTables, schemaList, dispatch }) => {
+const Relationships = ({
+  objectType,
+  allTables,
+  schemaList,
+  dispatch,
+  currentAction,
+}) => {
   const existingRelationships = (objectType.relationships || []).map(r => {
     return (
       <TypeRelationship
@@ -17,6 +24,9 @@ const Relationships = ({ objectType, allTables, schemaList, dispatch }) => {
 
   return (
     <div>
+      <Helmet
+        title={`Relationships - ${currentAction.action_name} - Actions | Hasura`}
+      />
       {existingRelationships}
       <TypeRelationship
         dispatch={dispatch}

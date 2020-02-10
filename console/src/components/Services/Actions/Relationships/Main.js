@@ -3,7 +3,7 @@ import styles from '../Actions.scss';
 import ActionContainer from '../Containers/ActionContainer';
 import { findAction } from '../utils';
 import { unwrapType } from '../../../../shared/utils/wrappingTypeUtils';
-import AddRelationships from './Relationships';
+import AllRelationships from './Relationships';
 
 const Relationships = ({
   params,
@@ -32,11 +32,12 @@ const Relationships = ({
       <div className={`${styles.padd_left_remove} container-fluid`}>
         <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
           <h4 className={styles.subheading_text}>Relationships</h4>
-          <AddRelationships
+          <AllRelationships
             objectType={actionOutputType}
             allTables={allTables}
             schemaList={schemaList}
             dispatch={dispatch}
+            currentAction={action}
           />
           <hr />
         </div>

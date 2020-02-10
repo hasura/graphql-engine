@@ -66,8 +66,6 @@ const CodeTabs = ({
     };
 
     switch (getFileExtensionFromFilename(name)) {
-      case 'js':
-        return getFileTab(<JSEditor {...editorProps} />, name);
       case 'ts':
         return getFileTab(<TSEditor {...editorProps} />, name);
       default:

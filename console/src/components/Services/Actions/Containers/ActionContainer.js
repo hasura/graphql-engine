@@ -5,6 +5,7 @@ import { NotFoundError } from '../../../Error/PageNotFound';
 import { appPrefix } from '../constants';
 import { setCurrentAction } from '../reducer';
 import { findAction } from '../utils';
+import styles from '../Actions.scss';
 
 const ActionContainer = ({
   params: { actionName },
@@ -26,8 +27,6 @@ const ActionContainer = ({
     dispatch(setCurrentAction(''));
     throw new NotFoundError();
   }
-
-  const styles = require('../Actions.scss');
 
   const breadCrumbs = [
     {

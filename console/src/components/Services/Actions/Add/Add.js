@@ -31,7 +31,6 @@ const AddAction = ({
 }) => {
   React.useEffect(() => {
     if (getUrlSearchParamValue('is_derived') != 'true') {
-      console.log(getUrlSearchParamValue('is_derived'));
       dispatch(setDefaults());
     }
   }, []);
