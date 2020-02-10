@@ -39,6 +39,7 @@ const baseTheme = {
     grey: {
       original: '#888888',
       tab: '#939390',
+      border: '#ededed',
     },
 
     black: {
@@ -51,6 +52,9 @@ const baseTheme = {
     white: '#fff',
 
     transparent: 'transparent',
+
+    // Special color ~ form input / switch
+    tab: '#1fd6e5',
   },
 
   fonts: {
@@ -217,17 +221,22 @@ theme.fontSizes.p = theme.fontSizes[2];
 
 theme.fontSizes.button = theme.fontSizes[1];
 
+theme.fontSizes.tab = theme.fontSizes[3];
+
 theme.fontSizes.explain = theme.fontSizes[0];
 
 // ****************************** //
 
 /* space ~ margin / padding
+ * zero: 0
  * xs: 4px (extra small)
  * sm: 8px (small)
  * md: 16px (medium)
  * lg: 32px (large)
  * xl: 64px (extra large)
  */
+
+theme.space.zero = theme.space[0];
 
 theme.space.xs = theme.space[1];
 

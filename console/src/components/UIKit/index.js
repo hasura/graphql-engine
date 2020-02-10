@@ -15,10 +15,11 @@ import { Heading, TextLink, Text } from './atoms/Typography';
 import RadioButton from './atoms/RadioButton';
 import Checkbox from './atoms/Checkbox';
 import SwitchButton from './atoms/SwitchButton';
+import Tabs from './atoms/Tabs';
 
 import { Flex, UIKitWrapperDiv } from './demo/styles';
 
-// UI elements created with Styled-System for demo  //
+// UI elements created with Styled-System for demo //
 
 const UIElements = () => (
   <React.Fragment>
@@ -53,6 +54,31 @@ const UIElements = () => (
   </React.Fragment>
 );
 
+// Dummy data for Tabs ********************** //
+
+const dummytabsData = [
+  {
+    title: 'Title 1',
+    tabContent: 'Content 1',
+  },
+  {
+    title: 'Title 2',
+    tabContent: 'Content 2',
+  },
+  {
+    title: 'Title 3',
+    tabContent: 'Content 3',
+  },
+  {
+    title: 'Title 4',
+    tabContent: 'Content 4',
+  },
+  {
+    title: 'Title 5',
+    tabContent: 'Content 5',
+  },
+];
+
 // UIKit(Parent) Demo component ************* //
 
 const UIKit = () => (
@@ -62,7 +88,7 @@ const UIKit = () => (
     mb="xl" // ~ margin-bottom: theme.space.xl
     bg="white" // ~ theme.colors.white
   >
-    {/* React UI Components ***************************/}
+    {/* React UI Components ********************/}
     <Heading mb="lg">React Componets</Heading>
     {/* Buttons ~ large size */}
     <Heading mb="md" as="h2">
@@ -131,8 +157,13 @@ const UIKit = () => (
     <AlertBox type="default" my="lg">
       dummy alert!
     </AlertBox>
+    {/* Tabs */}
+    <Heading mb="lg" as="h2">
+      {'<Tabs tabsData={array} />'}
+    </Heading>
+    <Tabs tabsData={dummytabsData} />
     {/* ToolTip ********************************/}
-    <Heading mb="md" as="h2">
+    <Heading my="lg" as="h2">
       {'<Tooltip />'}
     </Heading>
     <Flex mb="lg">
