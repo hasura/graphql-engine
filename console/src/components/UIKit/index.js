@@ -12,6 +12,8 @@ import Button from './atoms/Button';
 import AlertBox from './atoms/AlertBox';
 import ToolTip from './atoms/Tooltip';
 import { Heading, TextLink } from './atoms/Typography';
+import RadioButton from './atoms/RadioButton';
+import Checkbox from './atoms/Checkbox';
 
 import { Flex, UIKitWrapperDiv } from './demo/styles';
 
@@ -133,15 +135,15 @@ const UIKit = () => (
       {'<Tooltip />'}
     </Heading>
     <Flex mb="lg">
-      <ToolTip message="Dummy Text" placement="top" mr="md">
+      <ToolTip message="Dummy Text" placement="top" mr="lg">
         Hover me!!
       </ToolTip>
-      <ToolTip message="Primary Button" mr="md">
+      <ToolTip message="Primary Button" mr="lg">
         <Button type="primary" size="small">
           Hover me!
         </Button>
       </ToolTip>
-      <ToolTip message="Dummy Text" placement="bottom" mr="md">
+      <ToolTip message="Dummy Text" placement="bottom" mr="lg">
         Bottom
       </ToolTip>
       <ToolTip message="Dummy Text" placement="left">
@@ -170,6 +172,18 @@ const UIKit = () => (
       {'<TextLink underline />'}
     </Heading>
     <TextLink underline>Check it out</TextLink>
+    {/* RadioButton ******************************/}
+    <Heading my="md" as="h2">
+      {'<RadioButton />'}
+    </Heading>
+    <RadioButton mb="md">Choice 1</RadioButton>
+    <RadioButton mb="md">Choice 2</RadioButton>
+    {/* Checkbox ******************************/}
+    <Heading my="md" as="h2">
+      {'<Checkbox />'}
+    </Heading>
+    <Checkbox mb="md">Option 1</Checkbox>
+    <Checkbox mb="md">Option 2</Checkbox>
     {/* UI Elements *****************************/}
     <UIElements />
   </UIKitWrapperDiv>

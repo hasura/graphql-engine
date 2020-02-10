@@ -1,14 +1,20 @@
-.commonCheckBox {
+import styled from 'styled-components';
+
+import { BaseStyledDiv } from '../Common.style';
+
+export const CheckboxStyles = styled(BaseStyledDiv)`
   input[type='checkbox'] {
-    position: absolute; // take it out of document flow
-    opacity: 0; // hide it
+    /* take it out of document flow */
+    position: absolute;
+    /* hide it */
+    opacity: 0;
 
     & + label {
       position: relative;
       cursor: pointer;
-      padding: 0;
     }
-    // Box.
+
+    /* Box */
     & + label:before {
       content: '';
       display: inline-block;
@@ -18,32 +24,36 @@
       background: transparent;
       border: 2px solid #939390;
       border-radius: 2px;
+      margin-right: 8px;
     }
 
-    // Box hover
+    /* Box hover */
     &:hover + label:before {
       border: 2px solid #454236;
     }
 
-    // Box checked
+    /* Box checked */
     &:checked + label:before {
       background: #f8d721;
       border: 2px solid #f8d721;
     }
 
-    // Disabled state label.
-    &:disabled + label {
+    /* Disabled State */
+
+    label. &:disabled + label {
       color: #b8b8b8;
       cursor: auto;
     }
 
-    // Disabled box.
-    &:disabled + label:before {
+    /* Disabled */
+
+    box. &:disabled + label:before {
       box-shadow: none;
       background: #ddd;
     }
 
-    // Checkmark. Could be replaced with an image
+    /* Checkmark. Could be replaced with an image */
+
     &:checked + label:after {
       content: '';
       position: absolute;
@@ -57,4 +67,4 @@
       transform: rotate(45deg);
     }
   }
-}
+`;
