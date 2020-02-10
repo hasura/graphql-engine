@@ -14,6 +14,7 @@ import ToolTip from './atoms/Tooltip';
 import { Heading, TextLink, Text } from './atoms/Typography';
 import RadioButton from './atoms/RadioButton';
 import Checkbox from './atoms/Checkbox';
+import SwitchButton from './atoms/SwitchButton';
 
 import { Flex, UIKitWrapperDiv } from './demo/styles';
 
@@ -218,6 +219,11 @@ const UIKit = () => (
     </Heading>
     <Checkbox mb="md">Option 1</Checkbox>
     <Checkbox mb="md">Option 2</Checkbox>
+    {/* Switch Button */}
+    <Heading my="md" as="h2">
+      {'<SwitchButton />'}
+    </Heading>
+    <SwitchButton />
     {/* UI Elements *****************************/}
     <UIElements />
   </UIKitWrapperDiv>

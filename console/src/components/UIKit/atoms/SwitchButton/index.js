@@ -1,15 +1,16 @@
 import React from 'react';
-import styles from './SwitchButton.scss';
+
+import { SwitchButtonStyles } from './SwitchButton.style';
 
 const SwitchButton = props => {
   const { children } = props;
 
   return (
-    <label className={styles.switch}>
+    <SwitchButtonStyles>
       <input type="checkbox" />
-      <span className={styles.slider + ' ' + styles.round} />
+      <span className={'slider' + ' ' + 'round'} />
       {children}
-    </label>
+    </SwitchButtonStyles>
   );
 };
 
