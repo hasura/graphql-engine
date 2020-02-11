@@ -194,8 +194,18 @@ txtEncoder colVal = case txtEncodedPGVal colVal of
   TENull  -> S.SENull
   TELit t -> S.SELit t
 
+{- Note [Type casting prepared params]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Prepared values are passed to Postgres via text encoding. Explicit type cast for prepared params
+is needed to distinguish the column types. For example, the parameter for citext column type is
+generated as ($i)::citext where 'i' is parameter position (integer).
+
+Also see https://github.com/hasura/graphql-engine/issues/2818
+-}
+
 toPrepParam :: Int -> PGScalarType -> S.SQLExp
 toPrepParam i ty =
+  -- See Note [Type casting prepared params] above
   S.withTyAnn ty . withConstructorFn ty $ S.SEPrep i
 
 toBinaryValue :: WithScalarType PGScalarValue -> Q.PrepArg
