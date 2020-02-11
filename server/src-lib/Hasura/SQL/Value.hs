@@ -63,6 +63,7 @@ data PGScalarValue
   | PGValChar !Char
   | PGValVarchar !T.Text
   | PGValText !T.Text
+  | PGValCitext !T.Text
   | PGValDate !Day
   | PGValTimeStampTZ !UTCTime
   | PGValTimeTZ !ZonedTimeOfDay
@@ -107,6 +108,7 @@ parsePGValue ty val = case (ty, val) of
       PGChar -> PGValChar <$> parseJSON val
       PGVarchar -> PGValVarchar <$> parseJSON val
       PGText -> PGValText <$> parseJSON val
+      PGCitext -> PGValCitext <$> parseJSON val
       PGDate -> PGValDate <$> parseJSON val
       PGTimeStampTZ -> PGValTimeStampTZ <$> parseJSON val
       PGTimeTZ -> PGValTimeTZ <$> parseJSON val
@@ -147,6 +149,7 @@ txtEncodedPGVal colVal = case colVal of
   PGValChar t     -> TELit $ T.pack $ show t
   PGValVarchar t  -> TELit t
   PGValText t     -> TELit t
+  PGValCitext t   -> TELit t
   PGValDate d     -> TELit $ T.pack $ showGregorian d
   PGValTimeStampTZ u ->
     TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
@@ -175,6 +178,7 @@ binEncoder colVal = case colVal of
   PGValChar t                      -> Q.toPrepVal t
   PGValVarchar t                   -> Q.toPrepVal t
   PGValText t                      -> Q.toPrepVal t
+  PGValCitext t                    -> Q.toPrepVal t
   PGValDate d                      -> Q.toPrepVal d
   PGValTimeStampTZ u               -> Q.toPrepVal u
   PGValTimeTZ (ZonedTimeOfDay t z) -> Q.toPrepValHelper PTI.timetz PE.timetz_int (t, z)
@@ -191,7 +195,8 @@ txtEncoder colVal = case txtEncodedPGVal colVal of
   TELit t -> S.SELit t
 
 toPrepParam :: Int -> PGScalarType -> S.SQLExp
-toPrepParam i ty = withConstructorFn ty $ S.SEPrep i
+toPrepParam i ty =
+  S.withTyAnn ty . withConstructorFn ty $ S.SEPrep i
 
 toBinaryValue :: WithScalarType PGScalarValue -> Q.PrepArg
 toBinaryValue = binEncoder . pstValue

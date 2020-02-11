@@ -333,6 +333,7 @@ data PGScalarType
   | PGChar
   | PGVarchar
   | PGText
+  | PGCitext
   | PGDate
   | PGTimeStampTZ
   | PGTimeTZ
@@ -361,6 +362,7 @@ instance ToSQL PGScalarType where
     PGChar        -> "character"
     PGVarchar     -> "varchar"
     PGText        -> "text"
+    PGCitext      -> "citext"
     PGDate        -> "date"
     PGTimeStampTZ -> "timestamptz"
     PGTimeTZ      -> "timetz"
@@ -412,7 +414,7 @@ textToPGScalarType t = case t of
   "character varying"        -> PGVarchar
 
   "text"                     -> PGText
-  "citext"                   -> PGText
+  "citext"                   -> PGCitext
 
   "date"                     -> PGDate
 
@@ -449,6 +451,7 @@ pgTypeOid PGBoolean     = PTI.bool
 pgTypeOid PGChar        = PTI.char
 pgTypeOid PGVarchar     = PTI.varchar
 pgTypeOid PGText        = PTI.text
+pgTypeOid PGCitext      = PTI.text
 pgTypeOid PGDate        = PTI.date
 pgTypeOid PGTimeStampTZ = PTI.timestamptz
 pgTypeOid PGTimeTZ      = PTI.timetz
@@ -474,7 +477,8 @@ isNumType PGNumeric = True
 isNumType ty        = isIntegerType ty
 
 stringTypes :: [PGScalarType]
-stringTypes = [PGVarchar, PGText]
+stringTypes = [PGVarchar, PGText, PGCitext]
+
 isStringType :: PGScalarType -> Bool
 isStringType = (`elem` stringTypes)
 
