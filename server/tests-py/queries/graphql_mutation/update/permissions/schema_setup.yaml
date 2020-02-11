@@ -107,7 +107,7 @@ args:
           - author_id: X-HASURA-USER-ID
           - is_published: false
       check:
-        author_id: X-HASURA-USER-ID
+        is_published: false
 
 #Resident table
 - type: run_sql

@@ -338,8 +338,8 @@ class TestGraphqlUpdatePermissions(DefaultTestMutations):
     def test_user_cannot_update_another_users_article(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_another_users_article.yaml")
     
-    def test_user_cannot_unpublish(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/user_cannot_unpublish.yaml")
+    def test_user_cannot_publish(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_cannot_publish.yaml")
 
     def test_user_cannot_update_id_col(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_id_col_article.yaml")
