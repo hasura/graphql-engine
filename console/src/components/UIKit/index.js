@@ -24,6 +24,9 @@ import {
   Spinner,
 } from './atoms';
 
+// Icon
+import { Icon } from './Icons';
+
 import { Flex, UIKitWrapperDiv } from './demo/styles';
 
 // UI elements created with Styled-System for demo //
@@ -174,6 +177,50 @@ const UIKit = () => (
       {'<Tabs tabsData={array} />'}
     </Heading>
     <Tabs tabsData={dummytabsData} />
+    {/* Icon ********************************/}
+    <Heading my="md" as="h2">
+      Icons
+    </Heading>
+    <Heading my="md" as="h3">
+      {'<Icon type="success" />'}
+    </Heading>
+    <Icon type="success" ml="md" />
+    <Heading my="md" as="h3">
+      {'<Icon type="success" color="yellow.primary />'}
+    </Heading>
+    <Icon type="success" color="yellow.primary" ml="md" />
+    <Heading my="md" as="h3">
+      {'<Icon type="info" />'}
+    </Heading>
+    <Icon type="info" ml="md" />
+    <Heading my="md" as="h3">
+      {'<Icon type="warning" />'}
+    </Heading>
+    <Icon type="warning" ml="md" />
+    <Heading my="md" as="h3">
+      {'<Icon type="error" />'}
+    </Heading>
+    <Icon type="error" ml="md" />
+    <Heading my="md" as="h3">
+      {'<Icon type="graphiql" />'}
+    </Heading>
+    <Icon type="graphiql" ml="md" />
+    <Heading my="md" as="h3">
+      {'<Icon type="database" />'}
+    </Heading>
+    <Icon type="database" ml="md" />
+    <Heading my="md" as="h3">
+      {'<Icon type="schema" />'}
+    </Heading>
+    <Icon type="schema" ml="md" />
+    <Heading my="md" as="h3">
+      {'<Icon type="event" />'}
+    </Heading>
+    <Icon type="event" ml="md" />
+    <Heading my="md" as="h3">
+      {'<Icon /> ~ default'}
+    </Heading>
+    <Icon ml="md" />
     {/* ToolTip ********************************/}
     <Heading my="lg" as="h2">
       {'<ToolTip />'}

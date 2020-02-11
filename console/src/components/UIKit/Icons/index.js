@@ -3,17 +3,20 @@ import PropTypes from 'prop-types';
 
 // Icons ************************************ //
 
-// Success Icon
-import { FaCheckCircle } from 'react-icons/fa';
+import {
+  FaCheckCircle,
+  FaFlask,
+  FaInfoCircle,
+  FaExclamationTriangle,
+  FaExclamationCircle,
+  FaDatabase,
+  FaPlug,
+  FaCloud,
+} from 'react-icons/fa';
 
-// Information Icon
-import { FaInfoCircle } from 'react-icons/fa';
+// Theme Object ****************************** //
 
-// Warning Icon
-import { FaExclamationTriangle } from 'react-icons/fa';
-
-// Error Icon
-import { FaExclamationCircle } from 'react-icons/fa';
+import { theme } from '../theme';
 
 // ******************************************* //
 
@@ -29,6 +32,10 @@ const DynamicIcon = ({ type }) => {
     info: FaInfoCircle,
     warning: FaExclamationTriangle,
     error: FaExclamationCircle,
+    graphiql: FaFlask,
+    database: FaDatabase,
+    schema: FaPlug,
+    event: FaCloud,
     default: FaExclamationCircle,
   };
 
@@ -50,10 +57,26 @@ DynamicIcon.propTypes = {
 // ******************************************* //
 
 const Icon = props => {
-  const { type } = props;
+  const { type, color } = props;
+
+  // We can override the icon default color by passing a color prop.
+
+  let iconColor;
+
+  // If color prop is true then it's assigned to iconColor variable else default theme color value is assigned.
+
+  if (color) {
+    iconColor = color;
+  } else {
+    iconColor = theme.icons[type]
+      ? theme.icons[type].color
+      : theme.icons.default.color;
+  }
+
+  // ************************ //
 
   return (
-    <IconStyles {...props}>
+    <IconStyles {...props} color={iconColor}>
       <DynamicIcon type={type} />
     </IconStyles>
   );

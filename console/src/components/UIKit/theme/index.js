@@ -154,6 +154,26 @@ const theme = {
       borderColor: baseTheme.colors.green.primary,
     },
   },
+
+  // Icons
+  icons: {
+    success: {
+      color: baseTheme.colors.green.primary,
+    },
+    info: {
+      color: baseTheme.colors.blue.primary,
+    },
+    warning: {
+      color: baseTheme.colors.orange.primary,
+    },
+    error: {
+      color: baseTheme.colors.red.primary,
+    },
+    // type ~ out of range
+    default: {
+      color: baseTheme.colors.black.secondary,
+    },
+  },
 };
 
 // ********************************* //

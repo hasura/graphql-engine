@@ -30,7 +30,7 @@ const AlertBox = props => {
 
   return (
     <AlertBoxStyles {...props} bg={backgroundColor} borderColor={borderColor}>
-      <Icon type={type} color={borderColor} />
+      <Icon type={type} />
       <Text as="span" px="md" fontWeight="medium">
         {type}
       </Text>
