@@ -103,30 +103,37 @@ const theme = {
     primary: {
       backgroundColor: baseTheme.colors.yellow.primary,
       boxShadowColor: baseTheme.colors.yellow.hover,
+      color: baseTheme.colors.black.text,
     },
     secondary: {
       backgroundColor: baseTheme.colors.white,
       boxShadowColor: baseTheme.colors.black.hover,
+      color: baseTheme.colors.black.text,
     },
     success: {
       backgroundColor: baseTheme.colors.green.primary,
       boxShadowColor: baseTheme.colors.green.hover,
+      color: baseTheme.colors.white,
     },
     danger: {
       backgroundColor: baseTheme.colors.red.primary,
       boxShadowColor: baseTheme.colors.red.hover,
+      color: baseTheme.colors.white,
     },
     warning: {
       backgroundColor: baseTheme.colors.orange.primary,
       boxShadowColor: baseTheme.colors.orange.hover,
+      color: baseTheme.colors.white,
     },
     info: {
       backgroundColor: baseTheme.colors.blue.primary,
       boxShadowColor: baseTheme.colors.blue.hover,
+      color: baseTheme.colors.white,
     },
     default: {
       backgroundColor: baseTheme.colors.yellow.primary,
       boxShadowColor: baseTheme.colors.black.hover,
+      color: baseTheme.colors.white,
     },
   },
 

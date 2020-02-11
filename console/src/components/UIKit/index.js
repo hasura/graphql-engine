@@ -101,40 +101,52 @@ const UIKit = () => (
     {/* React UI Components ********************/}
     <Heading mb="lg">React Components</Heading>
     {/* Buttons ~ large size */}
-    <Heading mb="md" as="h2">
-      {'<Button />'}
+
+    <Heading mb="lg" as="h2">
+      Buttons
     </Heading>
-    <Flex mb="lg">
-      <Button type="primary" size="large" mr="lg">
-        Primary Button
-      </Button>
-      <Button type="secondary" size="large" mr="lg">
-        Secondary Button
-      </Button>
-      <Button type="success" size="large" mr="lg">
-        Success Button
-      </Button>
-      <Button type="danger" size="large" mr="lg">
-        Danger Button
-      </Button>
-      <Button type="warning" size="large" mr="lg">
-        Warning Button
-      </Button>
-      <Button type="info" size="large" mr="lg">
-        Info Button
-      </Button>
-    </Flex>
-    {/* Buttons ~ small size */}
-    <Flex mb="lg">
-      <Button type="primary" mr="lg">
-        Primary Button
-      </Button>
-      <Button type="outOfRange" mr="lg">
-        Default Type
-      </Button>
-    </Flex>
+
+    <Heading as="h3">{'<Button />'}</Heading>
+    <Button m="lg">Default Button</Button>
+
+    <Heading as="h3">{'<Button type="primary" />'}</Heading>
+    <Button type="primary" m="lg">
+      Primary Button
+    </Button>
+
+    <Heading as="h3">{'<Button type="primary" size="large" />'}</Heading>
+    <Button type="primary" size="large" m="lg">
+      Primary Button
+    </Button>
+
+    <Heading as="h3">{'<Button type="secondary" size="large" />'}</Heading>
+    <Button type="secondary" size="large" m="lg">
+      Secondary Button
+    </Button>
+
+    <Heading as="h3">{'<Button type="success" size="large" />'}</Heading>
+    <Button type="success" size="large" m="lg">
+      Success Button
+    </Button>
+
+    <Heading as="h3">{'<Button type="danger" size="large" />'}</Heading>
+    <Button type="danger" size="large" m="lg">
+      Danger Button
+    </Button>
+
+    <Heading as="h3">{'<Button type="warning" size="large" />'}</Heading>
+    <Button type="warning" size="large" m="lg">
+      Warning Button
+    </Button>
+
+    <Heading as="h3">{'<Button type="info" size="large" />'}</Heading>
+    <Button type="info" size="large" m="lg">
+      Info Button
+    </Button>
+
     {/* Disabled State */}
-    <Flex mb="lg">
+    <Heading as="h3">{'<Button type="whatever" disabled  />'}</Heading>
+    <Flex m="lg">
       <Button type="primary" mr="lg" disabled>
         Primary Button
       </Button>
@@ -217,6 +229,14 @@ const UIKit = () => (
       {'<Icon type="event" />'}
     </Heading>
     <Icon type="event" ml="md" />
+    <Heading my="md" as="h3">
+      {'<Icon type="settings" />'}
+    </Heading>
+    <Icon type="settings" ml="md" />
+    <Heading my="md" as="h3">
+      {'<Icon type="question" />'}
+    </Heading>
+    <Icon type="question" ml="md" />
     <Heading my="md" as="h3">
       {'<Icon /> ~ default'}
     </Heading>

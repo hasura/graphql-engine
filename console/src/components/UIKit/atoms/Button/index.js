@@ -6,7 +6,7 @@ import { theme } from '../../theme';
 import { ButtonStyles } from './Button.style';
 
 const Button = props => {
-  const { children, type, size, disabled } = props;
+  const { children, type, size, disabled, color, bg } = props;
 
   // ************************* //
 
@@ -16,11 +16,29 @@ const Button = props => {
 
   const buttonHeight = size === 'small' ? 'sm' : size === 'large' && 'lg';
 
-  // Background Color is dynamically assigned from theme object based on button type. If the type is out of specified range then default color is assigned.
+  /*  Button ~ color and background
+   *  bg / color ~ by passing bg / color prop we can override default color values.
+   *  Default color values are dynamically assigned from theme object based on button type. If the type is out of specified range then default color is assigned.
+   */
 
-  const backgroundColor = theme.buttons[type]
-    ? theme.buttons[type].backgroundColor
-    : theme.buttons.default.backgroundColor;
+  let backgroundColorValue;
+  let colorValue;
+
+  if (bg) {
+    backgroundColorValue = bg;
+  } else {
+    backgroundColorValue = theme.buttons[type]
+      ? theme.buttons[type].backgroundColor
+      : theme.buttons.default.backgroundColor;
+  }
+
+  if (color) {
+    colorValue = color;
+  } else {
+    colorValue = theme.buttons[type]
+      ? theme.buttons[type].color
+      : theme.buttons.default.color;
+  }
 
   // ************************* //
 
@@ -31,11 +49,14 @@ const Button = props => {
       height={buttonHeight}
       px={paddingX}
       // **** Props ~ based on button type **** //
-      bg={backgroundColor}
+      bg={backgroundColorValue}
       // secondary button ~ black border
-      borderColor={type === 'secondary' ? 'black.secondary' : backgroundColor}
+      borderColor={
+        type === 'secondary' ? 'black.secondary' : backgroundColorValue
+      }
       // **** Disabled State **** //
       opacity={disabled && '0.5'}
+      color={colorValue}
     >
       {children}
     </ButtonStyles>
@@ -53,12 +74,12 @@ Button.propTypes = {
   fontSize: PropTypes.string,
   fontWeight: PropTypes.string,
   disabled: PropTypes.bool,
+  color: PropTypes.string,
 };
 
 // Default props for button ********** //
 
 Button.defaultProps = {
-  type: 'primary',
   fontSize: 'button',
   fontWeight: 'bold',
   size: 'small',

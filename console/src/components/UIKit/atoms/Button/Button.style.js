@@ -4,19 +4,6 @@ import { layout, space, color, border, typography } from 'styled-system';
 export const ButtonStyles = styled.button`
   cursor: ${({ disabled }) => !disabled && 'pointer'};
   appearance: button;
-
-  /* Base font color values */
-
-  color: ${({ type, theme }) => {
-    // color for primary and secondary button ~ black.text
-    if (type === 'primary' || type === 'secondary') {
-      return theme.colors.black.text;
-    }
-    // No else clause here.
-
-    // default color for rest of the buttons ~ white.
-    return theme.colors.white;
-  }};
   
   /* Pseudo classes like hover are not supported by Styled-System  */
 

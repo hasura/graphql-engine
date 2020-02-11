@@ -12,6 +12,8 @@ import {
   FaDatabase,
   FaPlug,
   FaCloud,
+  FaCog,
+  FaQuestion,
 } from 'react-icons/fa';
 
 // Theme Object ****************************** //
@@ -36,6 +38,8 @@ const DynamicIcon = ({ type }) => {
     database: FaDatabase,
     schema: FaPlug,
     event: FaCloud,
+    settings: FaCog,
+    question: FaQuestion,
     default: FaExclamationCircle,
   };
 
