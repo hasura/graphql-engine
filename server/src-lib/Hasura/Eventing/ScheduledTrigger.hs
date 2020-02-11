@@ -7,8 +7,10 @@ module Hasura.Eventing.ScheduledTrigger
   , runScheduledEventsGenerator
   ) where
 
+import           Control.Arrow.Extended          (dup)
 import           Control.Concurrent              (threadDelay)
 import           Data.Has
+import           Data.List                       (unfoldr)
 import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
@@ -142,10 +144,7 @@ generateScheduledEventsFrom time ScheduledTriggerInfo{..} =
 generateScheduleTimesBetween :: UTCTime -> UTCTime -> CronSchedule -> [UTCTime]
 generateScheduleTimesBetween from till cron = takeWhile (<= till) $ go from
   where
-    go init =
-      case nextMatch cron init of
-        Nothing   -> []
-        Just next -> next : (go next)
+    go = unfoldr (fmap dup . nextMatch cron)
 
 processScheduledQueue
   :: HasVersion
