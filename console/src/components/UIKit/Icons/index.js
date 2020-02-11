@@ -1,6 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
+// Icons ************************************ //
+
 // Success Icon
 import { FaCheckCircle } from 'react-icons/fa';
 
@@ -15,7 +17,13 @@ import { FaExclamationCircle } from 'react-icons/fa';
 
 // ******************************************* //
 
-const Icon = ({ iconType }) => {
+import { IconStyles } from './Icon.style';
+
+// ******************************************* //
+
+const DynamicIcon = ({ type }) => {
+  // All icons references
+
   const iconsReferenceObject = {
     success: FaCheckCircle,
     info: FaInfoCircle,
@@ -24,19 +32,48 @@ const Icon = ({ iconType }) => {
     default: FaExclamationCircle,
   };
 
-  // If the iconType is out of range then default icon will be assign to ActiveIcon.
+  // If the icon type is out of range then default icon will be assign to ActiveIcon.
 
-  const ActiveIcon = iconsReferenceObject[iconType]
-    ? iconsReferenceObject[iconType]
+  const ActiveIcon = iconsReferenceObject[type]
+    ? iconsReferenceObject[type]
     : iconsReferenceObject.default;
 
   return <ActiveIcon />;
 };
 
+// PropTypes for DynamicIcon *************** //
+
+DynamicIcon.propTypes = {
+  type: PropTypes.string.isRequired,
+};
+
+// ******************************************* //
+
+const Icon = props => {
+  const { type } = props;
+
+  return (
+    <IconStyles {...props}>
+      <DynamicIcon type={type} />
+    </IconStyles>
+  );
+};
+
 // PropTypes for Icons *************** //
 
 Icon.propTypes = {
-  iconType: PropTypes.string.isRequired,
+  type: PropTypes.string.isRequired,
+  fontSize: PropTypes.string,
 };
 
-export default Icon;
+// Default props for Icon ******************* //
+
+Icon.defaultProps = {
+  fontSize: 'icon',
+  width: 18,
+  height: 18,
+};
+
+// ****************************************** //
+
+export { Icon };

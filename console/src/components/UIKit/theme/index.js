@@ -96,7 +96,7 @@ const baseTheme = {
 
 // ********************************* //
 
-export const theme = {
+const theme = {
   ...baseTheme,
   // Button Types references
   buttons: {
@@ -207,6 +207,7 @@ theme.fontWeights.bold = theme.fontWeights[7];
  * p: 16px
  * button: 14px
  * explain (Explainer Text): 12px
+ * icon: 20px
  */
 
 theme.fontSizes.h1 = theme.fontSizes[6];
@@ -224,6 +225,8 @@ theme.fontSizes.button = theme.fontSizes[1];
 theme.fontSizes.tab = theme.fontSizes[3];
 
 theme.fontSizes.explain = theme.fontSizes[0];
+
+theme.fontSizes.icon = theme.fontSizes[3];
 
 // ****************************** //
 
@@ -269,3 +272,7 @@ theme.lineHeights.explain = theme.lineHeights[0];
 theme.sizes.sm = theme.sizes[0];
 
 theme.sizes.lg = theme.sizes[1];
+
+// **************************** //
+
+export { theme };

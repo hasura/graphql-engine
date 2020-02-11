@@ -8,16 +8,7 @@ export const AlertBoxStyles = styled(BaseStyledDiv)`
   /* Styled-System */
   ${flexbox};
 
-  /* Alert Icon */
-
-  svg {
-    font-size: 1.8rem;
-
-    /* Icon color ~ based on Alert Type */
-
-    color: ${({ theme, type }) =>
-    (theme.alertBoxes[type] ? theme.alertBoxes[type].borderColor : 'black')};
-  }
+  /* Alert type text */
 
   span {
     text-transform: capitalize;

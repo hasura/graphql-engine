@@ -8,6 +8,8 @@ import { TextLinks, Typography } from './demo/Typography';
 import { Alerts } from './demo/Alerts';
 import { BoxShadows } from './demo/Shadows';
 
+// Design-System Components ************** //
+
 import {
   Button,
   AlertBox,
@@ -94,7 +96,7 @@ const UIKit = () => (
     bg="white" // ~ theme.colors.white
   >
     {/* React UI Components ********************/}
-    <Heading mb="lg">React Componets</Heading>
+    <Heading mb="lg">React Components</Heading>
     {/* Buttons ~ large size */}
     <Heading mb="md" as="h2">
       {'<Button />'}

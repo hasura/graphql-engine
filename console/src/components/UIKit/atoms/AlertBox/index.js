@@ -2,10 +2,12 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import { theme } from '../../theme';
-import Icon from '../../Icons';
+import { Icon } from '../../Icons';
 
 import { AlertBoxStyles } from './Alert.style';
 import { Text } from '../Typography';
+
+// ***************************** //
 
 const AlertBox = props => {
   const { children, type } = props;
@@ -28,11 +30,12 @@ const AlertBox = props => {
 
   return (
     <AlertBoxStyles {...props} bg={backgroundColor} borderColor={borderColor}>
-      <Icon iconType={type} />
+      <Icon type={type} color={borderColor} />
       <Text as="span" px="md" fontWeight="medium">
         {type}
       </Text>
-      {children}
+      {/* Alert Message ~ {children} */}
+      <Text>{children}</Text>
     </AlertBoxStyles>
   );
 };

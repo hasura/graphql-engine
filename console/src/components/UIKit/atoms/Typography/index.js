@@ -1,11 +1,12 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import { Heading, TextStyles, TextLinkStyles } from './Typography.style';
 
-// Text Component
+// Text Component *************** //
 
 const Text = props => {
-  const { children, type } = props;
+  const { children, type, fontWeight } = props;
 
   /* Explainer Text
    *  lineHeight: 'explain'
@@ -14,8 +15,19 @@ const Text = props => {
    */
 
   const lineHeight = type === 'explain' ? 'body' : 'explain';
+
   const fontSize = type === 'explain' ? 'explain' : 'p';
-  const fontWeight = type === 'explain' && 'bold';
+
+  // fontWeight value can be received as prop.
+
+  let fontWeightValue;
+
+  if (fontWeight) {
+    fontWeightValue = fontWeight;
+  } else if (type === 'explain') {
+    fontWeightValue = 'bold';
+  }
+  // No else clause here.
 
   // ************************* //
 
@@ -24,16 +36,24 @@ const Text = props => {
       {...props}
       lineHeight={lineHeight}
       fontSize={fontSize}
-      fontWeight={fontWeight}
+      fontWeight={fontWeightValue}
     >
       {children}
     </TextStyles>
   );
 };
 
-// Default Props for Text
+// PropTypes for Text *********** //
+
+Text.propTypes = {
+  color: PropTypes.string,
+  m: PropTypes.string,
+};
+
+// Default Props for Text ****** //
 
 Text.defaultProps = {
+  m: 'zero',
   color: 'black.text',
 };
 
@@ -52,6 +72,14 @@ const TextLink = props => {
       {children}
     </TextLinkStyles>
   );
+};
+
+// PropTypes for TextLink ******** //
+
+Text.propTypes = {
+  color: PropTypes.string,
+  fontWeight: PropTypes.string,
+  fontSize: PropTypes.string,
 };
 
 // Default Props for TextLink ***** //
