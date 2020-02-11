@@ -10,7 +10,6 @@ module Hasura.Eventing.ScheduledTrigger
 import           Control.Concurrent              (threadDelay)
 import           Data.Has
 import           Data.Time.Clock
-import           Data.Time.Clock.Units
 import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
@@ -197,7 +196,7 @@ processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEventF
   if diffUTCTime currentTime sefScheduledTime > rcstTolerance stiRetryConf
     then processDead'
     else do
-      let timeoutSeconds = diffTimeToSeconds $ rcstTimeoutSec stiRetryConf
+      let timeoutSeconds = round $ rcstTimeoutSec stiRetryConf
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
           headers = map encodeHeader stiHeaders
           headers' = addDefaultHeaders headers
@@ -252,7 +251,7 @@ retryOrMarkError se@ScheduledEventFull {..} err = do
       markError
     else do
       currentTime <- liftIO getCurrentTime
-      let delay = fromMaybe (diffTimeToSeconds $ rcstIntervalSec sefRetryConf) mRetryHeaderSeconds
+      let delay = fromMaybe (round $ rcstIntervalSec sefRetryConf) mRetryHeaderSeconds
           diff = fromIntegral delay
           retryTime = addUTCTime diff currentTime
       setRetry se retryTime
