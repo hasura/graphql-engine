@@ -24,7 +24,7 @@ import {
   Spinner,
 } from './atoms';
 
-// Icon
+// Icon Component
 import { Icon } from './Icons';
 
 import { Flex, UIKitWrapperDiv } from './demo/styles';
@@ -114,8 +114,20 @@ const UIKit = () => (
       Primary Button
     </Button>
 
+    <Heading as="h3">{'<Button type="primary" isLoading="true" />'}</Heading>
+    <Button type="primary" m="lg" isLoading>
+      Primary Button
+    </Button>
+
     <Heading as="h3">{'<Button type="primary" size="large" />'}</Heading>
     <Button type="primary" size="large" m="lg">
+      Primary Button
+    </Button>
+
+    <Heading as="h3">
+      {'<Button type="primary" size="large" isLoading="true" />'}
+    </Heading>
+    <Button type="primary" size="large" m="lg" isLoading="true">
       Primary Button
     </Button>
 
@@ -166,30 +178,51 @@ const UIKit = () => (
         Info Button
       </Button>
     </Flex>
+
     {/* Spinner  *******************************/}
-    <Heading mb="md" as="h2">
-      {'<Spinner />'}
+
+    <Heading mb="md" as="h3">
+      {'<Spinner size="small" />'}
     </Heading>
-    <Spinner />
+    <Spinner size="small" m="lg" />
+
+    <Heading mb="md" as="h3">
+      {'<Spinner size="large" />'}
+    </Heading>
+    <Spinner size="large" m="lg" />
+
     {/* AlertBox  *******************************/}
-    <Heading mb="md" mt="lg" as="h2">
-      {'<Alertbox />'}
+
+    <Heading mb="lg" mt="lg" as="h2">
+      Alertbox
     </Heading>
-    <AlertBox type="success" my="lg">
+
+    <Heading as="h3">{'<AlertBox />'}</Heading>
+    <AlertBox m="lg">Dummy Text!!</AlertBox>
+
+    <Heading as="h3">{'<AlertBox type="success" />'}</Heading>
+    <AlertBox type="success" m="lg">
       Hello Testing!
     </AlertBox>
-    <AlertBox type="info" my="lg" />
-    <AlertBox type="warning" my="lg" />
-    <AlertBox type="error" my="lg" />
-    <AlertBox type="default" my="lg">
-      dummy alert!
-    </AlertBox>
-    {/* Tabs */}
+
+    <Heading as="h3">{'<AlertBox type="info" />'}</Heading>
+    <AlertBox type="info" m="lg" />
+
+    <Heading as="h3">{'<AlertBox type="info" />'}</Heading>
+    <AlertBox type="warning" m="lg" />
+
+    <Heading as="h3">{'<AlertBox type="error" />'}</Heading>
+    <AlertBox type="error" m="lg" />
+
+    {/* Tabs *********************************/}
+
     <Heading mb="lg" as="h2">
       {'<Tabs tabsData={array} />'}
     </Heading>
     <Tabs tabsData={dummytabsData} />
-    {/* Icon ********************************/}
+
+    {/* Icons *********************************/}
+
     <Heading my="md" as="h2">
       Icons
     </Heading>

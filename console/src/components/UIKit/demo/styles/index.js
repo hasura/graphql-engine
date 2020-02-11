@@ -55,6 +55,11 @@ export const Flex = styled(Box)`
   ${flexbox}
 `;
 
+Flex.defaultProps = {
+  display: 'flex',
+  alignItems: 'center',
+};
+
 /*
  * Extending Base Div ~ Box for readability
  * ColorSchemeDiv

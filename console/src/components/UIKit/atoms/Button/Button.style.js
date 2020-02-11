@@ -1,5 +1,12 @@
 import styled, { css } from 'styled-components';
-import { layout, space, color, border, typography } from 'styled-system';
+import {
+  layout,
+  space,
+  color,
+  border,
+  typography,
+  flexbox,
+} from 'styled-system';
 
 export const ButtonStyles = styled.button`
   cursor: ${({ disabled }) => !disabled && 'pointer'};
@@ -51,4 +58,5 @@ export const ButtonStyles = styled.button`
     ${typography}
     ${color}
     ${border}
+    ${flexbox}
 `;

@@ -26,16 +26,31 @@ const AlertBox = props => {
     ? theme.alertBoxes[type].borderColor
     : theme.alertBoxes.default.borderColor;
 
+  // Default message for AlertBox
+
+  let alertMessage;
+
+  if (children) {
+    alertMessage = children;
+  } else {
+    alertMessage = theme.alertBoxes[type]
+      ? theme.alertBoxes[type].message
+      : theme.alertBoxes.default.message;
+  }
+
   // ***************************** //
 
   return (
     <AlertBoxStyles {...props} bg={backgroundColor} borderColor={borderColor}>
       <Icon type={type} />
-      <Text as="span" px="md" fontWeight="medium">
-        {type}
-      </Text>
+      {/* Alert Type */}
+      {type && (
+        <Text as="span" pl="md" fontWeight="medium">
+          {type}
+        </Text>
+      )}
       {/* Alert Message ~ {children} */}
-      <Text>{children}</Text>
+      <Text pl="md">{alertMessage}</Text>
     </AlertBoxStyles>
   );
 };
@@ -62,7 +77,6 @@ AlertBox.propTypes = {
 // Default props for AlertBox ********** //
 
 AlertBox.defaultProps = {
-  type: 'success',
   width: 866,
   height: 'lg',
   borderLeft: 4,

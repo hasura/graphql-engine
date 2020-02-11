@@ -2,11 +2,12 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import { theme } from '../../theme';
+import Spinner from '../Spinner';
 
 import { ButtonStyles } from './Button.style';
 
 const Button = props => {
-  const { children, type, size, disabled, color, bg } = props;
+  const { children, type, size, disabled, color, bg, isLoading } = props;
 
   // ************************* //
 
@@ -59,6 +60,8 @@ const Button = props => {
       color={colorValue}
     >
       {children}
+      {/* Spinner ~ Loading State */}
+      {isLoading && <Spinner size={size} />}
     </ButtonStyles>
   );
 };
@@ -75,6 +78,10 @@ Button.propTypes = {
   fontWeight: PropTypes.string,
   disabled: PropTypes.bool,
   color: PropTypes.string,
+  display: PropTypes.string,
+  justifyContent: PropTypes.string,
+  alignItems: PropTypes.string,
+  isLoading: PropTypes.bool,
 };
 
 // Default props for button ********** //
@@ -85,6 +92,10 @@ Button.defaultProps = {
   size: 'small',
   borderRadius: 'xs',
   border: 1,
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  isLoading: false,
   disabled: false,
 };
 

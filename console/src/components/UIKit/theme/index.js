@@ -142,23 +142,28 @@ const theme = {
     success: {
       backgroundColor: baseTheme.colors.green.light,
       borderColor: baseTheme.colors.green.primary,
+      message: 'You did something awesome. Well done!',
     },
     info: {
       backgroundColor: baseTheme.colors.blue.light,
       borderColor: baseTheme.colors.blue.primary,
+      message: 'You need to do something.',
     },
     warning: {
       backgroundColor: baseTheme.colors.orange.light,
       borderColor: baseTheme.colors.orange.primary,
+      message: 'You are about to do something wrong.',
     },
     error: {
       backgroundColor: baseTheme.colors.red.light,
       borderColor: baseTheme.colors.red.primary,
+      message: 'You did something wrong.',
     },
     // type ~ out of range
     default: {
       backgroundColor: baseTheme.colors.green.light,
       borderColor: baseTheme.colors.green.primary,
+      message: '',
     },
   },
 
