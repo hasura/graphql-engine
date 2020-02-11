@@ -720,7 +720,9 @@ class PermissionBuilder extends React.Component {
         let columnType = '';
         if (tableSchema && columnName) {
           const column = getTableColumn(tableSchema, columnName);
-          columnType = getColumnType(column);
+          if (column) {
+            columnType = getColumnType(column);
+          }
         }
 
         _columnExp = renderOperatorExp(
