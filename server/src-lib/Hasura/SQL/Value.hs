@@ -93,6 +93,7 @@ pgScalarValueToJson = \case
   PGValChar t     -> toJSON t
   PGValVarchar t  -> toJSON t
   PGValText t     -> toJSON t
+  PGValCitext t   -> toJSON t
   PGValDate d     -> toJSON d
   PGValTimeStampTZ u ->
     toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
