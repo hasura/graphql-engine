@@ -194,7 +194,7 @@ library
                      , generic-arbitrary
 
                      -- scheduled triggers
-                     , cron
+                     , cron >= 0.6.2
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
