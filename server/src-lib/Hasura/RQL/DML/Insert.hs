@@ -270,13 +270,13 @@ insertP2 strfyNum (u, p) =
 -- >     THEN NULL 
 -- >     ELSE hdb_catalog.check_violation('insert check constraint failed') 
 -- >   END
-insertCheckExpr :: S.BoolExp -> S.SQLExp
-insertCheckExpr condExpr = 
+insertCheckExpr :: Text -> S.BoolExp -> S.SQLExp
+insertCheckExpr errorMessage condExpr = 
   S.SECond condExpr S.SENull
     (S.SEFunction 
       (S.FunctionExp 
         (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation")) 
-        (S.FunctionArgs [S.SELit "insert check constraint failed"] mempty)
+        (S.FunctionArgs [S.SELit errorMessage] mempty)
         Nothing)
     )
     
@@ -299,7 +299,7 @@ insertCheckExpr condExpr =
 -- >          END
 -- >     ELSE CASE WHEN {update_cond} 
 -- >            THEN NULL 
--- >            ELSE hdb_catalog.check_violation('insert check constraint failed') 
+-- >            ELSE hdb_catalog.check_violation('update check constraint failed') 
 -- >          END
 -- >   END
 -- 
@@ -317,8 +317,8 @@ insertOrUpdateCheckExpr qt (Just _conflict) insCheck (Just updCheck) =
       S.SEQ 
       (S.SEQIden (S.QIden (S.mkQual qt) (Iden "xmax")))
       (S.SEUnsafe "0"))
-    (insertCheckExpr insCheck)
-    (insertCheckExpr updCheck)
+    (insertCheckExpr "insert check constraint failed" insCheck)
+    (insertCheckExpr "update check constraint failed" updCheck)
 insertOrUpdateCheckExpr _ _ insCheck _ =
   -- If we won't generate an ON CONFLICT clause, there is no point
   -- in testing xmax. In particular, views don't provide the xmax
@@ -328,7 +328,7 @@ insertOrUpdateCheckExpr _ _ insCheck _ =
   --
   -- Alternatively, if there is no update check constraint, we should
   -- use the insert check constraint, for backwards compatibility.
-  insertCheckExpr insCheck
+  insertCheckExpr "insert check constraint failed" insCheck
 
 runInsert
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
