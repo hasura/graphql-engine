@@ -42,6 +42,7 @@ import {
   isJsonString,
   getAllJsonPaths,
   isObject,
+  isArray,
 } from '../../../../Common/utils/jsUtils';
 
 class PermissionBuilder extends React.Component {
@@ -845,6 +846,8 @@ class PermissionBuilder extends React.Component {
       prefix
     ) => {
       const _boolExpArray = [];
+
+      expressions = isArray(expressions) ? expressions : [];
 
       expressions.concat([{}]).forEach((expression, i) => {
         const _boolExp = renderBoolExp(
