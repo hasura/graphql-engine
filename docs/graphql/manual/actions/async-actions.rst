@@ -13,20 +13,27 @@ If you mark an action as **asynchronous**, graphql-engine also generates a query
 .. code-block:: graphql
 
    mutation place_order($order_input: place_order_input!) {
-     place_order(input: $order_input) {
-       action_id
-     }
+     place_order(input: $order_input) 
    }
+
+This will return you a response like:
 
 .. code-block:: graphql
 
-   subscription order_status($action_id: uuid!) {
-     place_order(action_id: $action_id) {
-       order {
-         id
-         payment_url
-         total_amount
-         discount
-       }
+   {
+     "data": {
+       "place_order": "23b1c256-7aff-4b95-95bd-68220d9f93f2"
      }
    }
+
+The returned ``uuid`` is the action id of the async action. To get the response from the action, you can ``query`` or ``subscribe`` to the action using this action id.
+
+.. code-block:: graphql
+
+    query MyQuery {
+      place_order (id: "23b1c256-7aff-4b95-95bd-68220d9f93f2") {
+        output
+        errors
+      }
+    }
+

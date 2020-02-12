@@ -1,5 +1,6 @@
-CLI
-===
+Actions codegen with CLI
+========================
+
 .. contents:: Table of contents
   :backlinks: none
   :depth: 1

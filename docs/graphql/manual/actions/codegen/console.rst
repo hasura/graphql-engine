@@ -1,5 +1,5 @@
-Console
-=======
+Actions codegen on console
+==========================
 
 To get codegen for an action:
 

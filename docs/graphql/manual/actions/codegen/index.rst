@@ -12,6 +12,9 @@ Actions need HTTP handlers to run the business logic. It is very inconvenient to
   :maxdepth: 1
   :titlesonly:
 
-  CLI <cli>
-  Console <console>
+  Codegen with CLI <cli>
+  Codegen on Console <console>
+  Building a codegen for your own framework <building-a-codegen>
+
+
   
