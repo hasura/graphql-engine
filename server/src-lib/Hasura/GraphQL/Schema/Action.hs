@@ -67,6 +67,7 @@ mkMutationField actionName actionInfo definitionList =
       case _adKind definition of
         ActionSynchronous  ->
           ActionExecutionSyncWebhook $ SyncActionExecutionContext actionName
+          (_adOutputType definition)
           definitionList
           (_adHandler definition)
           (_adHeaders definition)
@@ -101,7 +102,7 @@ mkQueryField
 mkQueryField actionName comment definition definitionList =
   case _adKind definition of
     ActionAsynchronous ->
-      Just ( ActionSelectOpContext definitionList
+      Just ( ActionSelectOpContext (_adOutputType definition) definitionList
 
            , mkHsraObjFldInfo (Just description) (unActionName actionName)
              (mapFromL _iviName [idArgument])

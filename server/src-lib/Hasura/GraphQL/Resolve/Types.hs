@@ -19,6 +19,7 @@ import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
+import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
@@ -104,6 +105,7 @@ data DelOpCtx
 data SyncActionExecutionContext
   = SyncActionExecutionContext
   { _saecName                 :: !ActionName
+  , _saecOutputType           :: !GraphQLType
   , _saecDefinitionList       :: ![(PGCol, PGScalarType)]
   , _saecWebhook              :: !ResolvedWebhook
   , _saecHeaders              :: ![HeaderConf]
@@ -117,7 +119,8 @@ data ActionExecutionContext
 
 data ActionSelectOpContext
   = ActionSelectOpContext
-  { _asocDefinitionList :: ![(PGCol, PGScalarType)]
+  { _asocOutputType     :: !GraphQLType
+  , _asocDefinitionList :: ![(PGCol, PGScalarType)]
   } deriving (Show, Eq)
 
 -- (custom name | generated name) -> PG column info

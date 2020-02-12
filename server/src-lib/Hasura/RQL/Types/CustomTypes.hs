@@ -2,6 +2,7 @@ module Hasura.RQL.Types.CustomTypes
   ( CustomTypes(..)
   , emptyCustomTypes
   , GraphQLType(..)
+  , isListType
   , EnumTypeName(..)
   , EnumValueDefinition(..)
   , EnumTypeDefinition(..)
@@ -67,6 +68,12 @@ instance J.FromJSON GraphQLType where
     case GParse.parseGraphQLType t of
       Left _  -> fail $ "not a valid GraphQL type: " <> T.unpack t
       Right a -> return $ GraphQLType a
+
+isListType :: GraphQLType -> Bool
+isListType (GraphQLType ty) =
+  case ty of
+    G.TypeList _ _  -> True
+    G.TypeNamed _ _ -> False
 
 newtype InputObjectFieldName
   = InputObjectFieldName { unInputObjectFieldName :: G.Name }

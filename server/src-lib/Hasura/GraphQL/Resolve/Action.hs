@@ -67,6 +67,21 @@ data ActionWebhookErrorResponse
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
 
+data ActionWebhookResponse
+  = AWRArray ![J.Object]
+  | AWRObject !J.Object
+  deriving (Show, Eq)
+
+instance J.FromJSON ActionWebhookResponse where
+  parseJSON v = case v of
+    J.Array{}  -> AWRArray <$> J.parseJSON v
+    J.Object o -> pure $ AWRObject o
+    _          -> fail $ "expecting object or array of objects for action webhook response"
+
+instance J.ToJSON ActionWebhookResponse where
+  toJSON (AWRArray objects) = J.toJSON objects
+  toJSON (AWRObject object) = J.toJSON object
+
 resolveActionMutation
   :: ( HasVersion
      , MonadReusability m
@@ -113,16 +128,17 @@ resolveActionMutationSync field executionContext sessionVariables = do
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
   manager <- asks getter
   reqHeaders <- asks getter
-  webhookRes <- callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook handlerPayload
+  webhookRes <- callWebhook manager outputType reqHeaders confHeaders forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
-        toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB webhookRes
+        toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
   selectAstUnresolved <-
-    processOutputSelectionSet webhookResponseExpression definitionList
+    processOutputSelectionSet webhookResponseExpression outputType definitionList
     (_fType field) $ _fSelSet field
   astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
-  return $ asSingleRowJsonResp (RS.selectQuerySQL RS.JASSingleObject astResolved) []
+  let jsonAggType = mkJsonAggSelect outputType
+  return $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
   where
-    SyncActionExecutionContext actionName definitionList resolvedWebhook confHeaders
+    SyncActionExecutionContext actionName outputType definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
 {- Note: [Async action architecture]
@@ -188,7 +204,7 @@ resolveAsyncActionQuery
   -> ActionSelectOpContext
   -> Field
   -> m GRS.AnnSimpleSelect
-resolveAsyncActionQuery userInfo selectContext field = do
+resolveAsyncActionQuery userInfo selectOpCtx field = do
   actionId <- withArg (_fArguments field) "id" parseActionId
   stringifyNumerics <- stringifyNum <$> asks getter
 
@@ -198,9 +214,11 @@ resolveAsyncActionQuery userInfo selectContext field = do
       "output"     -> do
         -- See Note [Resolving async action query/subscription]
         let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
-            definitionList = _asocDefinitionList selectContext
-        (RS.FComputedField . RS.CFSTable RS.JASSingleObject) -- The output of action is always a single object
-          <$> processOutputSelectionSet inputTableArgument definitionList (_fType fld) (_fSelSet fld)
+            ActionSelectOpContext outputType definitionList = selectOpCtx
+            jsonAggSelect = mkJsonAggSelect outputType
+        (RS.FComputedField . RS.CFSTable jsonAggSelect)
+          <$> processOutputSelectionSet inputTableArgument outputType
+              definitionList (_fType fld) (_fSelSet fld)
 
       -- The metadata columns
       "id"         -> return $ mkAnnFldFromPGCol "id" PGUUID
@@ -281,12 +299,14 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
           let webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition
+              outputType = _adOutputType definition
               actionContext = ActionContext actionName
-          res <- runExceptT $ callWebhook httpManager reqHeaders confHeaders forwardClientHeaders webhookUrl $
-            ActionWebhookPayload actionContext sessionVariables inputPayload
-          case res of
+          eitherRes <- runExceptT $ callWebhook httpManager outputType reqHeaders confHeaders
+                                    forwardClientHeaders webhookUrl $
+                                    ActionWebhookPayload actionContext sessionVariables inputPayload
+          case eitherRes of
             Left e                -> setError actionId e
-            Right responsePayload -> setCompleted actionId responsePayload
+            Right responsePayload -> setCompleted actionId $ J.toJSON responsePayload
 
     setError :: UUID.UUID -> QErr -> IO ()
     setError actionId e =
@@ -340,13 +360,14 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
 callWebhook
   :: (HasVersion, MonadIO m, MonadError QErr m)
   => HTTP.Manager
+  -> GraphQLType
   -> [HTTP.Header]
   -> [HeaderConf]
   -> Bool
   -> ResolvedWebhook
   -> ActionWebhookPayload
-  -> m J.Value
-callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook actionWebhookPayload = do
+  -> m ActionWebhookResponse
+callWebhook manager outputType reqHeaders confHeaders forwardClientHeaders resolvedWebhook actionWebhookPayload = do
   resolvedConfHeaders <- makeHeadersFromConf confHeaders
   let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
       contentType = ("Content-Type", "application/json")
@@ -362,14 +383,27 @@ callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook 
     Left e ->
       throw500WithDetail "http exception when calling webhook" $
       J.toJSON $ HttpException e
+
     Right (Left (Wreq.JSONError e)) ->
       throw500WithDetail "not a valid json response from webhook" $
       J.toJSON e
+
     Right (Right responseWreq) -> do
       let responseValue = responseWreq ^. Wreq.responseBody
           responseStatus = responseWreq ^. Wreq.responseStatus
+          webhookResponseObject = J.object ["webhook_response" J..= responseValue]
 
-      if | HTTP.statusIsSuccessful responseStatus  -> pure responseValue
+      if | HTTP.statusIsSuccessful responseStatus  -> do
+             let expectingArray = isListType outputType
+                 addInternalToErr e = e{qeInternal = Just webhookResponseObject}
+                 throw400Detail t = throwError $ addInternalToErr $ err400 Unexpected t
+             webhookResponse <- modifyQErr addInternalToErr $ decodeValue responseValue
+             case webhookResponse of
+               AWRArray{} -> when (not expectingArray) $
+                 throw400Detail "expecting object for action webhook response but got array"
+               AWRObject{} -> when expectingArray $
+                 throw400Detail "expecting array for action webhook response but got object"
+             pure webhookResponse
 
          | HTTP.statusIsClientError responseStatus -> do
              ActionWebhookErrorResponse message maybeCode <-
@@ -379,8 +413,7 @@ callWebhook manager reqHeaders confHeaders forwardClientHeaders resolvedWebhook 
              throwError qErr
 
          | otherwise ->
-             throw500WithDetail "internal error" $
-               J.object ["webhook_response" J..= responseValue]
+             throw500WithDetail "internal error" webhookResponseObject
 
 annInpValueToJson :: AnnInpVal -> J.Value
 annInpValueToJson annInpValue =
@@ -392,6 +425,10 @@ annInpValueToJson annInpValue =
     AGObject _ objectM        -> J.toJSON $ fmap (fmap annInpValueToJson) objectM
     AGArray _ valuesM         -> J.toJSON $ fmap (fmap annInpValueToJson) valuesM
 
+mkJsonAggSelect :: GraphQLType -> RS.JsonAggSelect
+mkJsonAggSelect =
+  bool RS.JASSingleObject RS.JASMultipleRows . isListType
+
 processOutputSelectionSet
   :: ( MonadReusability m
      , MonadError QErr m
@@ -401,15 +438,21 @@ processOutputSelectionSet
      , Has SQLGenCtx r
      )
   => RS.ArgumentExp UnresolvedVal
+  -> GraphQLType
   -> [(PGCol, PGScalarType)]
   -> G.NamedType -> SelSet -> m GRS.AnnSimpleSelect
-processOutputSelectionSet tableRowInput definitionList fldTy flds = do
+processOutputSelectionSet tableRowInput actionOutputType definitionList fldTy flds = do
   stringifyNumerics <- stringifyNum <$> asks getter
   annotatedFields <- processTableSelectionSet fldTy flds
   let annSel = RS.AnnSelG annotatedFields selectFrom
                   RS.noTablePermissions RS.noTableArgs stringifyNumerics
   pure annSel
   where
-    jsonbToRecordFunction = QualifiedObject (SchemaName "pg_catalog") $ FunctionName "jsonb_to_record"
+    jsonbToPostgresRecordFunction =
+      QualifiedObject "pg_catalog" $ FunctionName $
+      if isListType actionOutputType then
+        "jsonb_to_recordset" -- Multirow array response
+      else "jsonb_to_record" -- Single object response
+
     functionArgs = RS.FunctionArgsExp [tableRowInput] mempty
-    selectFrom = RS.FromFunction jsonbToRecordFunction functionArgs $ Just definitionList
+    selectFrom = RS.FromFunction jsonbToPostgresRecordFunction functionArgs $ Just definitionList

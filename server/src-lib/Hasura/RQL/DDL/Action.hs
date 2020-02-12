@@ -95,9 +95,6 @@ resolveAction customTypes actionDefinition = do
       _ -> throw400 InvalidParams $ "the argument's base type: "
           <> showNamedTy argumentBaseType <>
           " should be a scalar/enum/input_object"
-  when (hasList responseType) $ throw400 InvalidParams $
-    "the output type: " <> G.showGT responseType <> " cannot be a list"
-
   -- Check if the response type is an object
   getObjectTypeInfo responseBaseType
   traverse resolveWebhook actionDefinition
@@ -118,10 +115,6 @@ resolveAction customTypes actionDefinition = do
         throw400 NotExists $ "the type: "
         <> showNamedTy typeName <>
         " is not an object type defined in custom types"
-
-    hasList = \case
-      G.TypeList _ _  -> True
-      G.TypeNamed _ _ -> False
 
 runUpdateAction
   :: forall m. ( QErrM m , CacheRWM m, MonadTx m)

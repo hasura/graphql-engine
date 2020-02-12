@@ -109,8 +109,8 @@ validateCustomTypeDefinitions tableCache customTypes = do
 
       scalarFields <- fmap (Map.fromList . catMaybes) $
         for fields $ \objectField -> do
-        let fieldType = unGraphQLType $ _ofdType objectField
-            fieldBaseType = G.getBaseType fieldType
+        let fieldType = _ofdType objectField
+            fieldBaseType = G.getBaseType $ unGraphQLType fieldType
             fieldName = _ofdName objectField
 
         -- check that arguments are not defined
@@ -160,11 +160,6 @@ validateCustomTypeDefinitions tableCache customTypes = do
             dispute $ pure $ ObjectRelationshipColumnDoesNotExist
             objectTypeName relationshipName remoteTable columnName
           return ()
-
-isListType :: G.GType -> Bool
-isListType = \case
-  G.TypeList _ _  -> True
-  G.TypeNamed _ _ -> False
 
 data CustomTypeValidationError
   = DuplicateTypeNames !(Set.HashSet G.NamedType)
