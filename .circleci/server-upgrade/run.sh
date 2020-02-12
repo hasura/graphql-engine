@@ -111,7 +111,7 @@ log "Run pytests with server upgrade"
 
 WORKTREE_DIR="$(mktemp -d)"
 rm_worktree(){
-	rm -rf $WORKTREE_DIR
+	rm -rf "$WORKTREE_DIR"
 }
 trap rm_worktree ERR
 
