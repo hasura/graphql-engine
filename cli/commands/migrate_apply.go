@@ -13,7 +13,7 @@ import (
 
 func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	opts := &migrateApplyOptions{
+	opts := &MigrateApplyOptions{
 		EC: ec,
 	}
 	migrateApplyCmd := &cobra.Command{
@@ -65,7 +65,7 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Applying migrations...")
-			err := opts.run()
+			err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
 				if err == migrate.ErrNoChange {
@@ -88,13 +88,13 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := migrateApplyCmd.Flags()
 	f.SortFlags = false
 
-	f.StringVar(&opts.upMigration, "up", "", "apply all or N up migration steps")
-	f.StringVar(&opts.downMigration, "down", "", "apply all or N down migration steps")
-	f.StringVar(&opts.gotoVersion, "goto", "", "apply migration chain up to to the version specified")
+	f.StringVar(&opts.UpMigration, "up", "", "apply all or N up migration steps")
+	f.StringVar(&opts.DownMigration, "down", "", "apply all or N down migration steps")
+	f.StringVar(&opts.GotoVersion, "goto", "", "apply migration chain up to to the version specified")
 
-	f.StringVar(&opts.versionMigration, "version", "", "only apply this particular migration")
-	f.BoolVar(&opts.skipExecution, "skip-execution", false, "skip executing the migration action, but mark them as applied")
-	f.StringVar(&opts.migrationType, "type", "up", "type of migration (up, down) to be used with version flag")
+	f.StringVar(&opts.VersionMigration, "version", "", "only apply this particular migration")
+	f.BoolVar(&opts.SkipExecution, "skip-execution", false, "skip executing the migration action, but mark them as applied")
+	f.StringVar(&opts.MigrationType, "type", "up", "type of migration (up, down) to be used with version flag")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -108,20 +108,20 @@ func newMigrateApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return migrateApplyCmd
 }
 
-type migrateApplyOptions struct {
+type MigrateApplyOptions struct {
 	EC *cli.ExecutionContext
 
-	upMigration      string
-	downMigration    string
-	versionMigration string
-	migrationType    string
+	UpMigration      string
+	DownMigration    string
+	VersionMigration string
+	MigrationType    string
 	// version up to which migration chain has to be applied
-	gotoVersion   string
-	skipExecution bool
+	GotoVersion   string
+	SkipExecution bool
 }
 
-func (o *migrateApplyOptions) run() error {
-	migrationType, step, err := getMigrationTypeAndStep(o.upMigration, o.downMigration, o.versionMigration, o.migrationType, o.gotoVersion, o.skipExecution)
+func (o *MigrateApplyOptions) Run() error {
+	migrationType, step, err := getMigrationTypeAndStep(o.UpMigration, o.DownMigration, o.VersionMigration, o.MigrationType, o.GotoVersion, o.SkipExecution)
 	if err != nil {
 		return errors.Wrap(err, "error validating flags")
 	}
@@ -130,7 +130,7 @@ func (o *migrateApplyOptions) run() error {
 	if err != nil {
 		return err
 	}
-	migrateDrv.SkipExecution = o.skipExecution
+	migrateDrv.SkipExecution = o.SkipExecution
 
 	return ExecuteMigration(migrationType, migrateDrv, step)
 }
@@ -165,7 +165,7 @@ func getMigrationTypeAndStep(upMigration, downMigration, versionMigration, migra
 	}
 
 	if flagCount > 1 {
-		return "", 0, errors.New("Only one migration type can be applied at a time (--up, --down or --goto)")
+		return "", 0, errors.New("only one migration type can be applied at a time (--up, --down or --goto)")
 	}
 
 	if migrationName != "version" && skipExecution {

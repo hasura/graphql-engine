@@ -23,7 +23,7 @@ import (
 // NewConsoleCmd returns the console command
 func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	opts := &consoleOptions{
+	opts := &ConsoleOptions{
 		EC: ec,
 	}
 	consoleCmd := &cobra.Command{
@@ -54,7 +54,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.run()
+			return opts.Run()
 		},
 	}
 	f := consoleCmd.Flags()
@@ -78,7 +78,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return consoleCmd
 }
 
-type consoleOptions struct {
+type ConsoleOptions struct {
 	EC *cli.ExecutionContext
 
 	APIPort     string
@@ -93,7 +93,7 @@ type consoleOptions struct {
 	Browser   string
 }
 
-func (o *consoleOptions) run() error {
+func (o *ConsoleOptions) Run() error {
 	log := o.EC.Logger
 	// Switch to "release" mode in production.
 	gin.SetMode(gin.ReleaseMode)

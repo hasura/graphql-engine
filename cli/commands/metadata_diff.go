@@ -17,19 +17,20 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type metadataDiffOptions struct {
+type MetadataDiffOptions struct {
 	EC     *cli.ExecutionContext
-	output io.Writer
+	Output io.Writer
+	Args   []string
 
-	// two metadata to diff, 2nd is server if it's empty
-	metadata [2]string
+	// two Metadata to diff, 2nd is server if it's empty
+	Metadata [2]string
 }
 
 func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	opts := &metadataDiffOptions{
+	opts := &MetadataDiffOptions{
 		EC:     ec,
-		output: os.Stdout,
+		Output: os.Stdout,
 	}
 
 	metadataDiffCmd := &cobra.Command{
@@ -63,7 +64,8 @@ By default, shows changes between exported metadata file and server metadata.`,
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.run(args)
+			opts.Args = args
+			return opts.Run()
 		},
 	}
 
@@ -81,34 +83,34 @@ By default, shows changes between exported metadata file and server metadata.`,
 	return metadataDiffCmd
 }
 
-func (o *metadataDiffOptions) runv2(args []string) error {
+func (o *MetadataDiffOptions) runv2(args []string) error {
 	messageFormat := "Showing diff between %s and %s..."
 	message := ""
 
 	switch len(args) {
 	case 0:
-		o.metadata[0] = o.EC.MetadataDir
-		message = fmt.Sprintf(messageFormat, o.metadata[0], "the server")
+		o.Metadata[0] = o.EC.MetadataDir
+		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
 	case 1:
 		// 1 arg, diff given directory and the metadata on server
 		err := checkDir(args[0])
 		if err != nil {
 			return err
 		}
-		o.metadata[0] = args[0]
-		message = fmt.Sprintf(messageFormat, o.metadata[0], "the server")
+		o.Metadata[0] = args[0]
+		message = fmt.Sprintf(messageFormat, o.Metadata[0], "the server")
 	case 2:
 		err := checkDir(args[0])
 		if err != nil {
 			return err
 		}
-		o.metadata[0] = args[0]
+		o.Metadata[0] = args[0]
 		err = checkDir(args[1])
 		if err != nil {
 			return err
 		}
-		o.metadata[1] = args[1]
-		message = fmt.Sprintf(messageFormat, o.metadata[0], o.metadata[1])
+		o.Metadata[1] = args[1]
+		message = fmt.Sprintf(messageFormat, o.Metadata[0], o.Metadata[1])
 	}
 	o.EC.Logger.Info(message)
 	var oldYaml, newYaml []byte
@@ -116,13 +118,13 @@ func (o *metadataDiffOptions) runv2(args []string) error {
 	if err != nil {
 		return err
 	}
-	if o.metadata[1] == "" {
+	if o.Metadata[1] == "" {
 		tmpDir, err := ioutil.TempDir("", "*")
 		if err != nil {
 			return err
 		}
 		defer os.RemoveAll(tmpDir)
-		setMetadataPlugins(migrateDrv, tmpDir)
+		setMetadataPlugins(o.EC, migrateDrv, tmpDir)
 		files, err := migrateDrv.ExportMetadata()
 		if err != nil {
 			return err
@@ -132,7 +134,7 @@ func (o *metadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 	} else {
-		setMetadataPlugins(migrateDrv, o.metadata[1])
+		setMetadataPlugins(o.EC, migrateDrv, o.Metadata[1])
 	}
 
 	// build server metadata
@@ -146,7 +148,7 @@ func (o *metadataDiffOptions) runv2(args []string) error {
 	}
 
 	// build local metadata
-	setMetadataPlugins(migrateDrv, o.metadata[0])
+	setMetadataPlugins(o.EC, migrateDrv, o.Metadata[0])
 	localMeta, err := migrateDrv.BuildMetadata()
 	if err != nil {
 		return err
@@ -156,11 +158,11 @@ func (o *metadataDiffOptions) runv2(args []string) error {
 		return errors.Wrap(err, "cannot unmarshal local metadata")
 	}
 
-	printDiff(string(oldYaml), string(newYaml), o.output)
+	printDiff(string(oldYaml), string(newYaml), o.Output)
 	return nil
 }
 
-func (o *metadataDiffOptions) runv1(args []string) error {
+func (o *MetadataDiffOptions) runv1(args []string) error {
 	messageFormat := "Showing diff between %s and %s..."
 	message := ""
 
@@ -172,16 +174,16 @@ func (o *metadataDiffOptions) runv1(args []string) error {
 		if err != nil {
 			return errors.Wrap(err, "failed getting metadata file")
 		}
-		o.metadata[0] = filename
+		o.Metadata[0] = filename
 		message = fmt.Sprintf(messageFormat, filename, "the server")
 	case 1:
 		// 1 arg, diff given filename and the metadata on server
-		o.metadata[0] = args[0]
+		o.Metadata[0] = args[0]
 		message = fmt.Sprintf(messageFormat, args[0], "the server")
 	case 2:
 		// 2 args, diff given filenames
-		o.metadata[0] = args[0]
-		o.metadata[1] = args[1]
+		o.Metadata[0] = args[0]
+		o.Metadata[1] = args[1]
 		message = fmt.Sprintf(messageFormat, args[0], args[1])
 	}
 
@@ -192,7 +194,7 @@ func (o *metadataDiffOptions) runv1(args []string) error {
 		return err
 	}
 
-	if o.metadata[1] == "" {
+	if o.Metadata[1] == "" {
 		// get metadata from server
 		files, err := migrateDrv.ExportMetadata()
 		if err != nil {
@@ -204,26 +206,26 @@ func (o *metadataDiffOptions) runv1(args []string) error {
 			newYaml = content
 		}
 	} else {
-		newYaml, err = ioutil.ReadFile(o.metadata[1])
+		newYaml, err = ioutil.ReadFile(o.Metadata[1])
 		if err != nil {
 			return errors.Wrap(err, "cannot read file")
 		}
 	}
 
-	oldYaml, err = ioutil.ReadFile(o.metadata[0])
+	oldYaml, err = ioutil.ReadFile(o.Metadata[0])
 	if err != nil {
 		return errors.Wrap(err, "cannot read file")
 	}
 
-	printDiff(string(oldYaml), string(newYaml), o.output)
+	printDiff(string(oldYaml), string(newYaml), o.Output)
 	return nil
 }
 
-func (o *metadataDiffOptions) run(args []string) error {
+func (o *MetadataDiffOptions) Run() error {
 	if o.EC.Config.Version == "2" && o.EC.MetadataDir != "" {
-		return o.runv2(args)
+		return o.runv2(o.Args)
 	}
-	return o.runv1(args)
+	return o.runv1(o.Args)
 }
 
 func printDiff(before, after string, to io.Writer) {

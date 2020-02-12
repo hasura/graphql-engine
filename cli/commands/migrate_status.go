@@ -15,7 +15,7 @@ import (
 
 func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	opts := &migrateStatusOptions{
+	opts := &MigrateStatusOptions{
 		EC: ec,
 	}
 	migrateStatusCmd := &cobra.Command{
@@ -37,7 +37,7 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Fetching migration status...")
-			status, err := opts.run()
+			status, err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
 				return err
@@ -62,11 +62,11 @@ func newMigrateStatusCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return migrateStatusCmd
 }
 
-type migrateStatusOptions struct {
+type MigrateStatusOptions struct {
 	EC *cli.ExecutionContext
 }
 
-func (o *migrateStatusOptions) run() (*migrate.Status, error) {
+func (o *MigrateStatusOptions) Run() (*migrate.Status, error) {
 	migrateDrv, err := newMigrate(o.EC, true)
 	if err != nil {
 		return nil, err

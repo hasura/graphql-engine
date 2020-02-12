@@ -94,7 +94,7 @@ type OverrideOptions struct {
 
 func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 	var shouldSkip bool
-	if ec.Version.ServerSemver != nil {
+	if ec.Version != nil && ec.Version.ServerSemver != nil {
 		cons, err := semver.NewConstraint(">= v1.1.0")
 		if err != nil {
 			panic(err)

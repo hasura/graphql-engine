@@ -9,9 +9,9 @@ import (
 
 func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	opts := &metadataClearOptions{
+	opts := &MetadataClearOptions{
 		EC:         ec,
-		actionType: "clear",
+		ActionType: "clear",
 	}
 
 	metadataResetCmd := &cobra.Command{
@@ -40,7 +40,7 @@ func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 				opts.EC.Logger.Warn("metadata reset command is deprecated, use metadata clear instead")
 			}
 			opts.EC.Spin("Clearing metadata...")
-			err := opts.run()
+			err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
 				return errors.Wrap(err, "failed to clear metadata")
@@ -64,18 +64,18 @@ func newMetadataClearCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return metadataResetCmd
 }
 
-type metadataClearOptions struct {
+type MetadataClearOptions struct {
 	EC *cli.ExecutionContext
 
-	actionType string
+	ActionType string
 }
 
-func (o *metadataClearOptions) run() error {
+func (o *MetadataClearOptions) Run() error {
 	migrateDrv, err := newMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}
-	err = executeMetadata(o.actionType, migrateDrv, o.EC)
+	err = executeMetadata(o.ActionType, migrateDrv, o.EC)
 	if err != nil {
 		return errors.Wrap(err, "Cannot clear metadata")
 	}

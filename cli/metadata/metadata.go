@@ -57,12 +57,12 @@ func (m *MetadataConfig) Build(metadata *yaml.MapSlice) error {
 	if metadataContent == nil {
 		return errors.New("Unable to locate metadata.[yaml|json] file under migrations directory")
 	}
-	var item yaml.MapSlice
+	var item []yaml.MapItem
 	err := yaml.Unmarshal(metadataContent, &item)
 	if err != nil {
 		return err
 	}
-	metadata = &item
+	*metadata = append(*metadata, item...)
 	return nil
 }
 

@@ -51,7 +51,7 @@ func newMigrate(ec *cli.ExecutionContext, isCmd bool) (*migrate.Migrate, error) 
 		return nil, errors.Wrap(err, "cannot create migrate instance")
 	}
 	// Set Plugins
-	setMetadataPlugins(t)
+	setMetadataPlugins(ec, t)
 	return t, nil
 }
 
@@ -144,7 +144,7 @@ func getAdminSecretHeaderName(v *version.Version) string {
 }
 
 // dir is optional
-func setMetadataPlugins(drv *migrate.Migrate, dir ...string) {
+func setMetadataPlugins(ec *cli.ExecutionContext, drv *migrate.Migrate, dir ...string) {
 	var metadataDir string
 	if len(dir) == 0 {
 		metadataDir = ec.MetadataDir

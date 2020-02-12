@@ -31,7 +31,7 @@ const (
 
 // NewInitCmd is the definition for init command
 func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
-	opts := &initOptions{
+	opts := &InitOptions{
 		EC: ec,
 	}
 	initCmd := &cobra.Command{
@@ -61,11 +61,12 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if len(args) == 1 {
 				opts.InitDir = args[0]
 			}
-			return opts.run()
+			return opts.Run()
 		},
 	}
 
 	f := initCmd.Flags()
+	f.StringVar(&opts.Version, "version", "2", "config version to be used")
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
 	f.StringVar(&opts.MetadataDir, "metadata-directory", "metadata", "name of directory where metadata files will be created")
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
@@ -80,9 +81,10 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return initCmd
 }
 
-type initOptions struct {
+type InitOptions struct {
 	EC *cli.ExecutionContext
 
+	Version     string
 	Endpoint    string
 	AdminSecret string
 	InitDir     string
@@ -94,7 +96,7 @@ type initOptions struct {
 	Template string
 }
 
-func (o *initOptions) run() error {
+func (o *InitOptions) Run() error {
 	var dir string
 	// prompt for init directory if it's not set already
 	if o.InitDir == "" {
@@ -154,23 +156,32 @@ func (o *initOptions) run() error {
 }
 
 // createFiles creates files required by the CLI in the ExecutionDirectory
-func (o *initOptions) createFiles() error {
+func (o *InitOptions) createFiles() error {
 	// create the directory
 	err := os.MkdirAll(filepath.Dir(o.EC.ExecutionDirectory), os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "error creating setup directories")
 	}
 	// set config object
-	config := &cli.Config{
-		Version: "2",
-		ServerConfig: cli.ServerConfig{
-			Endpoint: "http://localhost:8080",
-		},
-		MetadataDirectory: o.MetadataDir,
-		Action: cli.ActionExecutionConfig{
-			Kind:                  o.ActionKind,
-			HandlerWebhookBaseURL: o.ActionHandler,
-		},
+	var config *cli.Config
+	if o.Version == "1" {
+		config = &cli.Config{
+			ServerConfig: cli.ServerConfig{
+				Endpoint: "http://localhost:8080",
+			},
+		}
+	} else {
+		config = &cli.Config{
+			Version: "2",
+			ServerConfig: cli.ServerConfig{
+				Endpoint: "http://localhost:8080",
+			},
+			MetadataDirectory: o.MetadataDir,
+			Action: cli.ActionExecutionConfig{
+				Kind:                  o.ActionKind,
+				HandlerWebhookBaseURL: o.ActionHandler,
+			},
+		}
 	}
 	if o.Endpoint != "" {
 		config.ServerConfig.Endpoint = o.Endpoint
@@ -194,33 +205,34 @@ func (o *initOptions) createFiles() error {
 		return errors.Wrap(err, "cannot write migration directory")
 	}
 
-	// create metadata directory
-	o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, "metadata")
-	err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
-	if err != nil {
-		return errors.Wrap(err, "cannot write migration directory")
-	}
-
-	// create metadata files
-	// TODO: move plugins in init method
-	plugins := make(metadataTypes.MetadataPlugins, 0)
-	plugins = append(plugins, metadataVersion.New(ec, ec.MetadataDir))
-	plugins = append(plugins, tables.New(ec, ec.MetadataDir))
-	plugins = append(plugins, functions.New(ec, ec.MetadataDir))
-	plugins = append(plugins, querycollections.New(ec, ec.MetadataDir))
-	plugins = append(plugins, allowlist.New(ec, ec.MetadataDir))
-	plugins = append(plugins, remoteschemas.New(ec, ec.MetadataDir))
-	plugins = append(plugins, actions.New(ec, ec.MetadataDir))
-	for _, plg := range plugins {
-		err := plg.CreateFiles()
+	if config.Version == "2" {
+		// create metadata directory
+		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, "metadata")
+		err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
 		if err != nil {
-			return errors.Wrap(err, "cannot create metadata files")
+			return errors.Wrap(err, "cannot write migration directory")
+		}
+
+		// create metadata files
+		plugins := make(metadataTypes.MetadataPlugins, 0)
+		plugins = append(plugins, metadataVersion.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, tables.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, functions.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, querycollections.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, allowlist.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, remoteschemas.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, actions.New(o.EC, o.EC.MetadataDir))
+		for _, plg := range plugins {
+			err := plg.CreateFiles()
+			if err != nil {
+				return errors.Wrap(err, "cannot create metadata files")
+			}
 		}
 	}
 	return nil
 }
 
-func (o *initOptions) createTemplateFiles() error {
+func (o *InitOptions) createTemplateFiles() error {
 	if o.Template == "" {
 		return nil
 	}

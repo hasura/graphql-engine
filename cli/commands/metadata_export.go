@@ -15,9 +15,9 @@ on those tables.`
 
 func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	opts := &metadataExportOptions{
+	opts := &MetadataExportOptions{
 		EC:         ec,
-		actionType: "export",
+		ActionType: "export",
 	}
 
 	metadataExportCmd := &cobra.Command{
@@ -42,7 +42,7 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EC.Spin("Exporting metadata...")
-			err := opts.run()
+			err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
 				return errors.Wrap(err, "failed to export metadata")
@@ -67,16 +67,16 @@ func newMetadataExportCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return metadataExportCmd
 }
 
-type metadataExportOptions struct {
+type MetadataExportOptions struct {
 	EC *cli.ExecutionContext
 
-	actionType string
+	ActionType string
 }
 
-func (o *metadataExportOptions) run() error {
+func (o *MetadataExportOptions) Run() error {
 	migrateDrv, err := newMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}
-	return executeMetadata(o.actionType, migrateDrv, o.EC)
+	return executeMetadata(o.ActionType, migrateDrv, o.EC)
 }

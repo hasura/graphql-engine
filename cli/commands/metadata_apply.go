@@ -11,9 +11,9 @@ import (
 
 func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	opts := &metadataApplyOptions{
+	opts := &MetadataApplyOptions{
 		EC:         ec,
-		actionType: "apply",
+		ActionType: "apply",
 	}
 
 	metadataApplyCmd := &cobra.Command{
@@ -38,14 +38,15 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if opts.dryRun {
-				o := &metadataDiffOptions{
+				o := &MetadataDiffOptions{
 					EC:     ec,
-					output: os.Stdout,
+					Output: os.Stdout,
+					Args:   []string{},
 				}
-				return o.run([]string{})
+				return o.Run()
 			}
 			opts.EC.Spin("Applying metadata...")
-			err := opts.run()
+			err := opts.Run()
 			opts.EC.Spinner.Stop()
 			if err != nil {
 				return errors.Wrap(err, "failed to apply metadata")
@@ -61,7 +62,7 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
-	f.BoolVar(&opts.fromFile, "from-file", false, "apply metadata from migrations/metadata.[yaml|json]")
+	f.BoolVar(&opts.FromFile, "from-file", false, "apply metadata from migrations/metadata.[yaml|json]")
 	f.BoolVar(&opts.dryRun, "dry-run", false, "show a diff instead of applying the metadata")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
@@ -72,22 +73,27 @@ func newMetadataApplyCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return metadataApplyCmd
 }
 
-type metadataApplyOptions struct {
+type MetadataApplyOptions struct {
 	EC *cli.ExecutionContext
 
-	actionType string
+	ActionType string
 
-	fromFile bool
+	FromFile bool
 	dryRun   bool
 }
 
-func (o *metadataApplyOptions) run() error {
-	if o.fromFile {
+func (o *MetadataApplyOptions) Run() error {
+	if o.FromFile {
+		actualMetadataDir := o.EC.MetadataDir
 		o.EC.MetadataDir = ""
+		defer func() {
+			o.EC.MetadataDir = actualMetadataDir
+		}()
 	}
+
 	migrateDrv, err := newMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}
-	return executeMetadata(o.actionType, migrateDrv, o.EC)
+	return executeMetadata(o.ActionType, migrateDrv, o.EC)
 }
