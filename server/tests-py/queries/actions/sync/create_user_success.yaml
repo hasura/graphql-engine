@@ -13,6 +13,7 @@ query:
         }
       }
     }
+
 response:
   data:
     create_user:

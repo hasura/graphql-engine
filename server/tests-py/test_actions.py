@@ -4,24 +4,42 @@ import pytest
 import time
 
 from validate import check_query_f, check_query
-from super_classes import DefaultTestQueries
+from super_classes import DefaultTestQueries, DefaultTestMutations
 
 """
 TODO:- Test Actions metadata
 """
 
-class TestActionsSync(DefaultTestQueries):
+@pytest.mark.usefixtures("actions_webhook")
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+class TestActionsSync(DefaultTestMutations):
 
     @classmethod
     def dir(cls):
         return 'queries/actions/sync'
 
-    def test_create_user_fail(self, hge_ctx, actions_webhook):
-        check_query_f(hge_ctx, self.dir() + '/create_user_fail.yaml')
+    def test_create_user_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/create_user_fail.yaml', transport)
 
-    def test_create_user_success(self, hge_ctx, actions_webhook):
-        check_query_f(hge_ctx, self.dir() + '/create_user_success.yaml')
+    def test_create_user_success(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/create_user_success.yaml', transport)
 
+    def test_create_users_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/create_users_fail.yaml', transport)
+
+    def test_create_users_success(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/create_users_success.yaml', transport)
+
+    def test_invalid_webhook_response(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/invalid_webhook_response.yaml')
+
+    def test_expecting_object_response(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/expecting_object_response.yaml')
+
+    def test_expecting_array_response(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/expecting_array_response.yaml')
+
+@pytest.mark.usefixtures("actions_webhook")
 class TestActionsAsync(DefaultTestQueries):
     @classmethod
     def dir(cls):
@@ -34,7 +52,7 @@ class TestActionsAsync(DefaultTestQueries):
         return headers
 
 
-    def test_create_user_fail(self, hge_ctx, actions_webhook):
+    def test_create_user_fail(self, hge_ctx):
         graphql_mutation = '''
         mutation {
           create_user(email: "random-email", name: "Clarke")
@@ -85,7 +103,7 @@ class TestActionsAsync(DefaultTestQueries):
         }
         check_query(hge_ctx, conf)
 
-    def test_create_user_success(self, hge_ctx, actions_webhook):
+    def test_create_user_success(self, hge_ctx):
         graphql_mutation = '''
         mutation {
           create_user(email: "clarke@hasura.io", name: "Clarke")
@@ -146,7 +164,7 @@ class TestActionsAsync(DefaultTestQueries):
         }
         check_query(hge_ctx, conf)
 
-    def test_create_user_roles(self, hge_ctx, actions_webhook):
+    def test_create_user_roles(self, hge_ctx):
         graphql_mutation = '''
         mutation {
           create_user(email: "blake@hasura.io", name: "Blake")

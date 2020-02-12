@@ -17,6 +17,14 @@ args:
 
 - type: set_custom_types
   args:
+    input_objects:
+    - name: UserInput
+      fields:
+      - name: name
+        type: String!
+      - name: email
+        type: String!
+
     objects:
     - name: UserId
       fields:
@@ -41,3 +49,14 @@ args:
         type: String!
       output_type: UserId
       handler: http://127.0.0.1:5593/create-user
+
+- type: create_action
+  args:
+    name: create_users
+    definition:
+      kind: synchronous
+      arguments:
+      - name: users
+        type: '[UserInput!]!'
+      output_type: '[UserId]'
+      handler: http://127.0.0.1:5593/create-users
