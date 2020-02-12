@@ -11,7 +11,7 @@ During startup, two threads are started:
 1. Generator: Fetches the list of scheduled triggers from cache and generates scheduled events
 for the next @x@ hours (default: 24). This effectively corresponds to doing an INSERT with values containing specific timestamp.
 2. Processor: Fetches the scheduled events from db which are @<=NOW()@ and not delivered and delivers them.
-The delivery mechanism is similar to Event Triggers.
+The delivery mechanism is similar to Event Triggers; see "Hasura.Eventing.EventTrigger"
 -}
 module Hasura.Eventing.ScheduledTrigger
   ( processScheduledQueue
