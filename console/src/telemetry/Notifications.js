@@ -21,7 +21,7 @@ const showTelemetryNotification = () => {
             Help us improve Hasura! The console collects anonymized usage stats
             which allows us to keep improving Hasura at warp speed.
             <a
-              href="https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html"
+              href="https://hasura.io/docs/1.0/graphql/manual/guides/telemetry.html"
               target="_blank"
               rel="noopener noreferrer"
             >

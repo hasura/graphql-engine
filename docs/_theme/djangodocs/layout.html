@@ -22,7 +22,7 @@
 
 {% block linktags %}
 {{ super() }}
-    <link rel="canonical" href="https://docs.{{ BASE_DOMAIN }}/1.0/{{ pagename }}{{ file_suffix }}" />
+    <link rel="canonical" href="https://{{ BASE_DOMAIN }}/docs/1.0/{{ pagename }}{{ file_suffix }}" />
 {% endblock %}
 
 {% block document %}
@@ -52,7 +52,7 @@
                       <img class="responsive logo_img no-shadow" src="{{ pathto('_images/layout/logo-dark.svg', 1) }}" alt="Hasura Logo Dark" />
                     </div>
                   </a>
-                  <a href="https://docs.{{ BASE_DOMAIN }}" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
+                  <a href="https://{{ BASE_DOMAIN }}/docs" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
                 <div id="docs-header-actions">
                   <div class="inline-block mobile-only" id="nav_tree_icon">
@@ -65,7 +65,7 @@
                   <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
                       <div class="social_icons">
-                        <a href="https://learn.hasura.io/" target="_blank" rel="noopener">
+                        <a href="https://hasura.io/learn/" target="_blank" rel="noopener">
                           Tutorials
                         </a>
                       </div>
@@ -280,12 +280,12 @@
       indexName: 'hasura',
       inputSelector: '#search_element',
       transformData: function(suggestions) {
-        if (window.location.origin !== 'https://docs.hasura.io') {
+        if (window.location.origin !== 'https://hasura.io') {
           suggestions.forEach(suggestion => {
             if (window.location.origin === 'http://localhost:8000') {
-              suggestion.url = suggestion.url.replace(/https:\/\/docs.hasura.io\/[^\/]*/, window.location.origin)
+              suggestion.url = suggestion.url.replace(/https:\/\/hasura.io\/docs\/[^\/]*/, window.location.origin)
             } else {
-              suggestion.url = suggestion.url.replace('https://docs.hasura.io', window.location.origin);
+              suggestion.url = suggestion.url.replace('https://hasura.io\/docs', window.location.origin);
             }
           });
         }
@@ -508,7 +508,7 @@
     $(document).ready( function() {
       // if latest release tag elements present, replace with latest release tag
       if ($('.latest-release-tag').length > 0) {
-        const releaseUrl = 'https://releases.hasura.io/graphql-engine?agent=docs.hasura.io';
+        const releaseUrl = 'https://releases.hasura.io/graphql-engine?agent=hasura.io/docs';
 
         promise_ajax(releaseUrl, null, 'GET')
           .then(function (response) {
