@@ -185,6 +185,11 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
 class FilterQuery extends Component {
   componentDidMount() {
     const dispatch = this.props.dispatch;
+    const limit = parseInt(
+      localStorage.getItem('console:queryLimit') || 10,
+      10
+    );
+
     if (!this.props.urlQuery) {
       dispatch(setDefaultQuery(this.props.curQuery));
       return;
@@ -221,7 +226,7 @@ class FilterQuery extends Component {
       return { column, type, nulls };
     });
 
-    dispatch(setDefaultQuery({ where, order_by }));
+    dispatch(setDefaultQuery({ where, order_by, limit }));
     dispatch(runQuery(this.props.tableSchema));
   }
 

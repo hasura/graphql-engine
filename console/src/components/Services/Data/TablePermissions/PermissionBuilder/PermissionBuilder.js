@@ -102,7 +102,6 @@ class PermissionBuilder extends React.Component {
         _missingSchemas = findMissingSchemas(newPath, currTable);
       } else if (isExistOperator(operator)) {
         const existTableDef = getQualifiedTableDef(value[TABLE_KEY]);
-
         let existTableSchema;
         if (existTableDef) {
           existTableSchema = existTableDef.schema;
@@ -725,6 +724,7 @@ class PermissionBuilder extends React.Component {
         let columnType = '';
         if (tableSchema && columnName) {
           const column = getTableColumn(tableSchema, columnName);
+
           if (column) {
             columnType = getColumnType(column);
           }
@@ -825,6 +825,7 @@ class PermissionBuilder extends React.Component {
       };
 
       const unselectedElements = [];
+
       if (!existsOpTable || !existsOpTable.name) {
         unselectedElements.push(WHERE_KEY);
       }
