@@ -127,6 +127,7 @@ func (o *consoleOptions) run() error {
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
 
+	// Determine from where assets should be served
 	getConfig := func(url string, target interface{}) error {
 		var client = &http.Client{Timeout: 10 * time.Second}
 		r, err := client.Get(url)
@@ -146,7 +147,10 @@ func (o *consoleOptions) run() error {
 		ConsoleAssetsDir string `json:"console_assets_dir,omitempty"`
 	}
 	var config ServerConfig
-	getConfig(o.EC.ServerConfig.Endpoint+"/v1alpha1/config", &config)
+	err = getConfig(o.EC.ServerConfig.Endpoint+"/v1alpha1/config", &config)
+	if err != nil {
+		return err
+	}
 	if config.ConsoleAssetsDir != "" {
 		o.UseServerAssets = true
 	}
