@@ -23,13 +23,21 @@ runCreateScheduledTrigger q = do
   return successMsg
 
 addScheduledTriggerToCatalog :: (MonadTx m) => CreateScheduledTrigger ->  m ()
-addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $
+addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
   Q.unitQE defaultTxErrorHandler
-  [Q.sql|
-    INSERT into hdb_catalog.hdb_scheduled_trigger
-                (name, webhook_conf, schedule, payload, retry_conf)
-    VALUES ($1, $2, $3, $4, $5)
-  |] (stName, Q.AltJ stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf) False
+    [Q.sql|
+      INSERT into hdb_catalog.hdb_scheduled_trigger
+        (name, webhook_conf, schedule, payload, retry_conf)
+      VALUES ($1, $2, $3, $4, $5)
+    |] (stName, Q.AltJ stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf) False
+  case stSchedule of
+    Cron _ -> pure ()
+    OneOff timestamp -> Q.unitQE defaultTxErrorHandler
+      [Q.sql|
+        INSERT into hdb_catalog.hdb_scheduled_events
+          (name, scheduled_time)
+         VALUES ($1, $2)
+      |] (stName, timestamp) False
 
 resolveScheduledTrigger
   :: (QErrM m, MonadIO m)
