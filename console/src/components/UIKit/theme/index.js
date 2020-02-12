@@ -85,7 +85,7 @@ const baseTheme = {
   },
 
   // border
-  borders: [0, '1px solid', '2px solid', '1px solid', '4px solid', '5px solid'],
+  borders: [0, '1px solid', '2px solid', '3px solid', '4px solid', '5px solid'],
 
   // border-radius values
   radii: [0, 2, 4, 8, 12, 16],
@@ -257,8 +257,6 @@ theme.fontSizes.button = theme.fontSizes[1];
 theme.fontSizes.tab = theme.fontSizes[3];
 
 theme.fontSizes.explain = theme.fontSizes[0];
-
-theme.fontSizes.icon = theme.fontSizes[3];
 
 // ****************************** //
 

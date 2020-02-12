@@ -6,7 +6,7 @@ import { Heading, TextStyles, TextLinkStyles } from './Typography.style';
 // Text Component *************** //
 
 const Text = props => {
-  const { children, type, fontWeight } = props;
+  const { children, type, fontWeight, fontSize } = props;
 
   /* Explainer Text
    *  lineHeight: 'explain'
@@ -16,11 +16,10 @@ const Text = props => {
 
   const lineHeight = type === 'explain' ? 'body' : 'explain';
 
-  const fontSize = type === 'explain' ? 'explain' : 'p';
-
-  // fontWeight value can be received as prop.
+  // fontWeight & fontSize value can be received as prop to override default styles.
 
   let fontWeightValue;
+  let fontSizeValue;
 
   if (fontWeight) {
     fontWeightValue = fontWeight;
@@ -29,13 +28,19 @@ const Text = props => {
   }
   // No else clause here.
 
+  if (fontSize) {
+    fontSizeValue = fontSize;
+  } else {
+    fontSizeValue = type === 'explain' ? 'explain' : 'p';
+  }
+
   // ************************* //
 
   return (
     <TextStyles
       {...props}
       lineHeight={lineHeight}
-      fontSize={fontSize}
+      fontSize={fontSizeValue}
       fontWeight={fontWeightValue}
     >
       {children}
@@ -47,13 +52,19 @@ const Text = props => {
 
 Text.propTypes = {
   color: PropTypes.string,
-  m: PropTypes.string,
+  mb: PropTypes.string,
+  mt: PropTypes.string,
+  ml: PropTypes.string,
+  mr: PropTypes.string,
 };
 
 // Default Props for Text ****** //
 
 Text.defaultProps = {
-  m: 'zero',
+  mb: 'zero',
+  mt: 'zero',
+  mr: 'zero',
+  ml: 'zero',
   color: 'black.text',
 };
 

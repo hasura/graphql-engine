@@ -5,7 +5,7 @@ import { Flex, ColorSchemeDiv, Brush } from './styles';
 // Color Scheme ******************************** //
 
 export const ColorScheme = () => (
-  <Flex display="flex" justifyContent="flex-start">
+  <Flex justifyContent="flex-start">
     <ColorSchemeDiv
       // ~ background: theme.colors.yellow.primary
       bg="yellow.primary"
