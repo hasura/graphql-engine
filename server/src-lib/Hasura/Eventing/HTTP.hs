@@ -17,9 +17,7 @@ module Hasura.Eventing.HTTP
   , mkClientErr
   , TriggerMetadata(..)
   , DeliveryInfo(..)
-  , logQErr
   , logHTTPErr
-  , EventInternalErr(..)
   , mkWebhookReq
   , mkResp
   , toInt64
@@ -54,7 +52,6 @@ import           Data.Int                      (Int64)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.Error        (QErr)
 import           Hasura.RQL.Types.EventTrigger
 
 type LogEnvHeaders = Bool
@@ -248,13 +245,6 @@ tryWebhook headers timeout payload webhook extraLogCtx = do
       eitherResp <- runHTTP manager req extraLogCtx
       onLeft eitherResp throwError
 
-newtype EventInternalErr
-  = EventInternalErr QErr
-  deriving (Show, Eq)
-
-instance L.ToEngineLog EventInternalErr L.Hasura where
-  toEngineLog (EventInternalErr qerr) = (L.LevelError, L.eventTriggerLogType, J.toJSON qerr)
-
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
   deriving (Show, Eq)
@@ -288,11 +278,6 @@ isClientError status = status >= 1000
 mkMaybe :: [a] -> Maybe [a]
 mkMaybe [] = Nothing
 mkMaybe x  = Just x
-
-logQErr :: ( MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
-logQErr err = do
-  logger :: L.Logger L.Hasura <- asks getter
-  L.unLogger logger $ EventInternalErr err
 
 logHTTPErr
   :: ( MonadReader r m

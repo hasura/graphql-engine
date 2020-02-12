@@ -20,9 +20,9 @@ import           Data.Time.Clock
 import           Data.Vector                   (Vector)
 import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
                                                 M1 (..), U1 (..), V1)
+import           System.Cron.Types
 
 import           Hasura.Incremental.Select
-import           System.Cron.Types
 
 -- | A 'Dependency' represents a value that a 'Rule' can /conditionally/ depend on. A 'Dependency'
 -- is created using 'newDependency', and it can be “opened” again using 'dependOn'. What makes a

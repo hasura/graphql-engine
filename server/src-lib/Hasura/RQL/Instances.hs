@@ -4,6 +4,7 @@ module Hasura.RQL.Instances where
 
 import           Hasura.Prelude
 
+import qualified Data.Aeson                    as J
 import qualified Data.HashMap.Strict           as M
 import qualified Data.HashSet                  as S
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -12,6 +13,7 @@ import qualified Language.Haskell.TH.Syntax    as TH
 import           Data.Functor.Product
 import           Data.GADT.Compare
 import           Instances.TH.Lift             ()
+import           System.Cron.Parser
 import           System.Cron.Types
 
 instance NFData G.Argument
@@ -77,3 +79,10 @@ instance (GCompare f, GCompare g) => GCompare (Product f g) where
       GEQ -> GEQ
       GGT -> GGT
     GGT -> GGT
+
+instance J.FromJSON CronSchedule where
+  parseJSON = J.withText "CronSchedule" $ \t ->
+    either fail pure $ parseCronSchedule t
+
+instance J.ToJSON CronSchedule where
+  toJSON = J.String . serializeCronSchedule

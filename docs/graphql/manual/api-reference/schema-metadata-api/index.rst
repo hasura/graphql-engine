@@ -221,6 +221,26 @@ The various types of queries are listed in the following table:
      - 1
      - Delete an existing event trigger
 
+   * - :ref:`create_scheduled_trigger`
+     - :ref:`create_scheduled_trigger_args <create_scheduled_trigger_syntax>`
+     - 1
+     - Create a scheduled trigger
+
+   * - :ref:`update_scheduled_trigger`
+     - :ref:`update_scheduled_trigger_args <update_scheduled_trigger_syntax>`
+     - 1
+     - Update an existing scheduled trigger
+
+   * - :ref:`delete_scheduled_trigger`
+     - :ref:`delete_scheduled_trigger_args <delete_scheduled_trigger_syntax>`
+     - 1
+     - Delete an existing scheduled trigger
+
+   * - :ref:`cancel_scheduled_event`
+     - :ref:`cancel_scheduled_event_args <cancel_scheduled_event_syntax>`
+     - 1
+     - Cancel a particular run of a scheduled trigger
+
    * - :ref:`add_remote_schema`
      - :ref:`add_remote_schema_args <add_remote_schema_syntax>`
      - 1
@@ -389,6 +409,7 @@ See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting t
   Permissions <permission>
   Computed Fields <computed-field>
   Event Triggers <event-triggers>
+  Scheduled Triggers <scheduled-triggers>
   Remote Schemas <remote-schemas>
   Query Collections <query-collections>
   Manage Metadata <manage-metadata>

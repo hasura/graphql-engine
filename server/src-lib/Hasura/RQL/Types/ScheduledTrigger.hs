@@ -1,5 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
+-- | These are types for Scheduled Trigger definition; see "Hasura.Eventing.ScheduledTrigger"
 module Hasura.RQL.Types.ScheduledTrigger
   ( ScheduleType(..)
   , CreateScheduledTrigger(..)
@@ -15,7 +14,6 @@ import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Hasura.Prelude
 import           System.Cron.Types
-import           System.Cron.Parser
 import           Hasura.Incremental
 
 import qualified Data.Text                     as T
@@ -38,7 +36,7 @@ $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConfST)
 defaultRetryConf :: RetryConfST
 defaultRetryConf =
   RetryConfST
-  { rcstNumRetries = 1
+  { rcstNumRetries = 0
   , rcstIntervalSec = seconds 10
   , rcstTimeoutSec = seconds 60
   , rcstTolerance = 21600 -- 6 hours
@@ -64,13 +62,6 @@ data CreateScheduledTrigger
 
 instance NFData CreateScheduledTrigger
 instance Cacheable CreateScheduledTrigger
-
-instance FromJSON CronSchedule where
-  parseJSON = withText "CronSchedule" $ \t ->
-    either fail pure $ parseCronSchedule t
-
-instance ToJSON CronSchedule where
-  toJSON = J.String . serializeCronSchedule
 
 instance FromJSON CreateScheduledTrigger where
   parseJSON =
