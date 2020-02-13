@@ -86,19 +86,6 @@ func TestCommands(t *testing.T) {
 		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
 		defer os.RemoveAll(initDir)
 
-		t.Run("cli-ext-plugin-install", func(t *testing.T) {
-			installOpts := commands.PluginInstallOptions{
-				EC:           ec,
-				Name:         "cli-ext",
-				ManifestFile: "/build/_cli_ext_output/manifest-dev.yaml",
-			}
-			err := installOpts.Run()
-			if err != nil {
-				t.Fatalf("unable to install cli-ext plugin, got %v", err)
-			}
-		})
-
-		skip(t)
 		// This will prepare the execution context, so no need to run ec.Prepare() on all the other tests
 		t.Run("prepare", func(t *testing.T) {
 			integrationtest.TestPrepare(t, ec)
@@ -114,6 +101,19 @@ func TestCommands(t *testing.T) {
 		// This will validate the project dir
 		t.Run("validate", func(t *testing.T) {
 			integrationtest.TestValidate(t, ec)
+		})
+
+		skip(t)
+		t.Run("cli-ext-plugin-install", func(t *testing.T) {
+			installOpts := commands.PluginInstallOptions{
+				EC:           ec,
+				Name:         "cli-ext",
+				ManifestFile: "/build/_cli_ext_output/manifest-dev.yaml",
+			}
+			err := installOpts.Run()
+			if err != nil {
+				t.Fatalf("unable to install cli-ext plugin, got %v", err)
+			}
 		})
 
 		skip(t)
