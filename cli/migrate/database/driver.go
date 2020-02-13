@@ -82,9 +82,6 @@ type Driver interface {
 	// Dirty means, a previous migration failed and user interaction is required.
 	Version() (version int64, dirty bool, err error)
 
-	// Reset cleans public schema
-	Reset() error
-
 	// First returns the very first migration version available to the driver.
 	// Migrate will call this function multiple times
 	First() (version uint64, ok bool)
@@ -144,5 +141,13 @@ func Open(url string, isCMD bool, logger *log.Logger) (Driver, error) {
 }
 
 func Register(name string, driver Driver) {
+	driversMu.Lock()
+	defer driversMu.Unlock()
+	if driver == nil {
+		panic("Register driver is nil")
+	}
+	if _, dup := drivers[name]; dup {
+		panic("Register called twice for driver " + name)
+	}
 	drivers[name] = driver
 }
