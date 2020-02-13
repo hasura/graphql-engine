@@ -42,6 +42,7 @@ import {
   isJsonString,
   getAllJsonPaths,
   isObject,
+  isArray,
 } from '../../../../Common/utils/jsUtils';
 
 class PermissionBuilder extends React.Component {
@@ -101,9 +102,13 @@ class PermissionBuilder extends React.Component {
         _missingSchemas = findMissingSchemas(newPath, currTable);
       } else if (isExistOperator(operator)) {
         const existTableDef = getQualifiedTableDef(value[TABLE_KEY]);
-        const existTableSchema = existTableDef.schema;
 
-        const existWhere = value[WHERE_KEY];
+        let existTableSchema;
+        if (existTableDef) {
+          existTableSchema = existTableDef.schema;
+        }
+
+        const existWhere = value[WHERE_KEY] || '';
 
         if (existTableSchema) {
           const { allTableSchemas } = this.props;
@@ -443,12 +448,12 @@ class PermissionBuilder extends React.Component {
         );
       });
 
-      const selectedValue = addToPrefix(prefix, value);
+      const selectedValue = addToPrefix(prefix, value || '--');
 
       return (
         <select
           value={selectedValue}
-          name={value}
+          name={prefix}
           onChange={dispatchSelect}
           className={styles.qb_select}
           data-test="qb-select"
@@ -720,7 +725,9 @@ class PermissionBuilder extends React.Component {
         let columnType = '';
         if (tableSchema && columnName) {
           const column = getTableColumn(tableSchema, columnName);
-          columnType = getColumnType(column);
+          if (column) {
+            columnType = getColumnType(column);
+          }
         }
 
         _columnExp = renderOperatorExp(
@@ -818,7 +825,7 @@ class PermissionBuilder extends React.Component {
       };
 
       const unselectedElements = [];
-      if (!existsOpTable.name) {
+      if (!existsOpTable || !existsOpTable.name) {
         unselectedElements.push(WHERE_KEY);
       }
 
@@ -839,6 +846,8 @@ class PermissionBuilder extends React.Component {
       prefix
     ) => {
       const _boolExpArray = [];
+
+      expressions = isArray(expressions) ? expressions : [];
 
       expressions.concat([{}]).forEach((expression, i) => {
         const _boolExp = renderBoolExp(
