@@ -1,6 +1,6 @@
 import pytest
 import time
-from context import HGECtx, HGECtxError, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf
+from context import HGECtx, HGECtxError, ActionsWebhookServer, EvtsWebhookServer, HGECtxGQLServer, GQLWsClient, PytestConf
 import threading
 import random
 from datetime import datetime
@@ -249,6 +249,16 @@ def hge_ctx(request):
 @pytest.fixture(scope='class')
 def evts_webhook(request):
     webhook_httpd = EvtsWebhookServer(server_address=('127.0.0.1', 5592))
+    web_server = threading.Thread(target=webhook_httpd.serve_forever)
+    web_server.start()
+    yield webhook_httpd
+    webhook_httpd.shutdown()
+    webhook_httpd.server_close()
+    web_server.join()
+
+@pytest.fixture(scope='module')
+def actions_webhook(hge_ctx):
+    webhook_httpd = ActionsWebhookServer(hge_ctx, server_address=('127.0.0.1', 5593))
     web_server = threading.Thread(target=webhook_httpd.serve_forever)
     web_server.start()
     yield webhook_httpd

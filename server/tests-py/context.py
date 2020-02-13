@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 from urllib.parse import urlparse
-from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml 
+from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml
 import threading
 import http.server
 import json
@@ -13,6 +13,7 @@ import time
 import string
 import random
 import os
+import re
 
 import ruamel.yaml as yaml
 import requests
@@ -157,6 +158,139 @@ class GQLWsClient():
         if not self.remote_closed:
             self._ws.close()
         self.wst.join()
+
+
+class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        self.send_response(HTTPStatus.OK)
+        self.end_headers()
+
+    def do_POST(self):
+        content_len = self.headers.get('Content-Length')
+        req_body = self.rfile.read(int(content_len)).decode("utf-8")
+        self.req_json = json.loads(req_body)
+        req_headers = self.headers
+        req_path = self.path
+        self.log_message(json.dumps(self.req_json))
+
+        if req_path == "/create-user":
+            resp, status = self.create_user()
+            self._send_response(status, resp)
+
+        elif req_path == "/create-users":
+            resp, status = self.create_users()
+            self._send_response(status, resp)
+
+        elif req_path == "/invalid-response":
+            self._send_response(HTTPStatus.OK, "some-string")
+
+        else:
+            self.send_response(HTTPStatus.NO_CONTENT)
+            self.end_headers()
+
+    def create_user(self):
+        email_address = self.req_json['input']['email']
+        name = self.req_json['input']['name']
+
+        if not self.check_email(email_address):
+            response = {
+                'message': 'Given email address is not valid',
+                'code': 'invalid-email'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+
+        gql_query = '''
+        mutation ($email: String! $name: String!) {
+          insert_user_one(object: {email: $email, name: $name}){
+            id
+          }
+        }
+        '''
+        query = {
+            'query': gql_query,
+            'variables': {
+                'email': email_address,
+                'name': name
+            }
+        }
+        code, resp = self.execute_query(query)
+        if code != 200 or 'data' not in resp:
+            response = {
+                'message': 'GraphQL query execution failed',
+                'code': 'unexpected'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+
+        response = resp['data']['insert_user_one']
+        return response, HTTPStatus.OK
+
+    def create_users(self):
+        inputs = self.req_json['input']['users']
+        for input in inputs:
+            email_address = input['email']
+            if not self.check_email(email_address):
+                response = {
+                    'message': 'Email address is not valid: ' + email_address,
+                    'code': 'invalid-email'
+                }
+                return response, HTTPStatus.BAD_REQUEST
+
+        gql_query = '''
+        mutation ($insert_inputs: [user_insert_input!]!){
+          insert_user(objects: $insert_inputs){
+            returning{
+              id
+            }
+          }
+        }
+        '''
+        query = {
+            'query': gql_query,
+            'variables': {
+                'insert_inputs': inputs
+            }
+        }
+        code, resp = self.execute_query(query)
+        if code != 200 or 'data' not in resp:
+            response = {
+                'message': 'GraphQL query execution failed',
+                'code': 'unexpected'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+
+        response = resp['data']['insert_user']['returning']
+        return response, HTTPStatus.OK
+
+    def check_email(self, email):
+        regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
+        return re.search(regex,email)
+
+    def execute_query(self, query):
+        headers = {}
+        admin_secret = self.hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = self.hge_ctx.anyq('/v1/graphql', query, headers)
+        self.log_message(json.dumps(resp))
+        return code, resp
+
+    def _send_response(self, status, body):
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(body).encode("utf-8"))
+
+
+class ActionsWebhookServer(http.server.HTTPServer):
+    def __init__(self, hge_ctx, server_address):
+        handler = ActionsWebhookHandler
+        handler.hge_ctx = hge_ctx
+        super().__init__(server_address, handler)
+
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.server_address)
 
 class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
