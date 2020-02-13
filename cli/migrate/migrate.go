@@ -636,11 +636,6 @@ func (m *Migrate) Down() error {
 	return m.unlockErr(m.runMigrations(ret))
 }
 
-// Reset resets public schema and hasuradb metadata
-func (m *Migrate) Reset() (err error) {
-	return m.databaseDrv.Reset()
-}
-
 func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
 	defer close(ret)
 	currentVersion := version
