@@ -33,7 +33,7 @@ PID=$!
 wait_for_port 8080
 
 # test cli
-HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" make test
+HASURA_GRAPHQL_TEST_ENDPOINT="http://localhost:8080" TEST_TAGS="latest_release" make test
 
 # kill the running server
 kill -s INT $PID
