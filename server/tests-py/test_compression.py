@@ -4,9 +4,10 @@ import pytest
 import ruamel.yaml as yaml
 import jsondiff
 
-from super_classes import DefaultTestSelectQueries
+usefixtures = pytest.mark.usefixtures
 
-class TestCompression(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestCompression:
 
     gzip_header = {'Accept-Encoding': 'gzip'}
 
