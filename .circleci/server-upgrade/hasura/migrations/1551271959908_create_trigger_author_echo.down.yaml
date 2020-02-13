@@ -1,3 +1,0 @@
-- args:
-    name: author_echo
-  type: delete_event_trigger
