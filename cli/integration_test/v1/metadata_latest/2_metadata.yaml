@@ -1,0 +1,25 @@
+functions: []
+remote_schemas: []
+query_collections: []
+allowlist: []
+version: 2
+tables:
+- table: test
+  is_enum: false
+  configuration:
+    custom_root_fields:
+      select: null
+      select_by_pk: null
+      select_aggregate: null
+      insert: null
+      update: null
+      delete: null
+    custom_column_names: {}
+  object_relationships: []
+  array_relationships: []
+  insert_permissions: []
+  select_permissions: []
+  update_permissions: []
+  delete_permissions: []
+  event_triggers: []
+  computed_fields: []

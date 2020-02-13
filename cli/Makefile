@@ -48,7 +48,7 @@ ci-copy-binary:
 # run tests
 .PHONY: test
 test:
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" ./...
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags=${TEST_TAGS} ./...
 
 # clean the output directory
 .PHONY: clean
