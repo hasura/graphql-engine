@@ -161,7 +161,8 @@ processEvent logenv pool getSchemaCache e = do
           ep = createEventPayload retryConf e
           extraLogCtx = ExtraLogContext (epId ep)
       res <- runExceptT $ withEventEngineCtx eventEngineCtx $
-        tryWebhook headers respTimeout (toJSON ep) webhook (Just extraLogCtx)
+        tryWebhook headers respTimeout (toJSON ep) webhook
+      logHTTPForET res (Just extraLogCtx)
       let decodedHeaders = map (decodeHeader logenv headerInfos) headers
       finally <- either
         (processError pool e retryConf decodedHeaders ep)
@@ -173,8 +174,8 @@ withEventEngineCtx ::
   , MonadMask m
   )
   => EventEngineCtx
-  -> m HTTPResp
-  -> m HTTPResp
+  -> m (HTTPResp a)
+  -> m (HTTPResp a)
 withEventEngineCtx eeCtx = bracket_ (incrementThreadCount eeCtx) (decrementThreadCount eeCtx)
 
 incrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
@@ -202,7 +203,7 @@ createEventPayload retryConf e = EventPayload
 
 processSuccess
   :: ( MonadIO m )
-  => Q.PGPool -> Event -> [HeaderConf] -> EventPayload -> HTTPResp
+  => Q.PGPool -> Event -> [HeaderConf] -> EventPayload -> HTTPResp a
   -> m (Either QErr ())
 processSuccess pool e decodedHeaders ep resp = do
   let respBody = hrsBody resp
@@ -214,14 +215,10 @@ processSuccess pool e decodedHeaders ep resp = do
     setSuccess e
 
 processError
-  :: ( MonadIO m
-     , MonadReader r m
-     , Has (L.Logger L.Hasura) r
-     )
-  => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr
+  :: (MonadIO m)
+  => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr a
   -> m (Either QErr ())
 processError pool e retryConf decodedHeaders ep err = do
-  logHTTPErr err
   let invocation = case err of
         HClient excp -> do
           let errMsg = TBS.fromLBS $ encode $ show excp
@@ -241,7 +238,7 @@ processError pool e retryConf decodedHeaders ep err = do
     insertInvocation invocation
     retryOrSetError e retryConf err
 
-retryOrSetError :: Event -> RetryConf -> HTTPErr -> Q.TxE QErr ()
+retryOrSetError :: Event -> RetryConf -> HTTPErr a -> Q.TxE QErr ()
 retryOrSetError e retryConf err = do
   let mretryHeader = getRetryAfterHeaderFromHTTPErr err
       tries = eTries e

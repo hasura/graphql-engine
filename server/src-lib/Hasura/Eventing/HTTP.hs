@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+
 module Hasura.Eventing.HTTP
   ( HTTPErr(..)
   , HTTPResp(..)
@@ -5,6 +7,8 @@ module Hasura.Eventing.HTTP
   , runHTTP
   , isNetworkError
   , isNetworkErrorHC
+  , logHTTPForET
+  , logHTTPForST
   , ExtraLogContext(..)
   , EventId
   , Invocation(..)
@@ -17,7 +21,6 @@ module Hasura.Eventing.HTTP
   , mkClientErr
   , TriggerMetadata(..)
   , DeliveryInfo(..)
-  , logHTTPErr
   , mkWebhookReq
   , mkResp
   , toInt64
@@ -80,6 +83,8 @@ $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''ClientE
 
 type Version = T.Text
 
+data TriggerTypes = ET | ST
+
 data Response = ResponseType1 WebhookResponse | ResponseType2 ClientError
 
 instance J.ToJSON Response where
@@ -107,7 +112,7 @@ data ExtraLogContext
 
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''ExtraLogContext)
 
-data HTTPResp
+data HTTPResp (a :: TriggerTypes)
    = HTTPResp
    { hrsStatus  :: !Int
    , hrsHeaders :: ![HeaderConf]
@@ -116,17 +121,20 @@ data HTTPResp
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''HTTPResp)
 
-instance ToEngineLog HTTPResp Hasura where
+instance ToEngineLog (HTTPResp 'ET) Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
 
-data HTTPErr
+instance ToEngineLog (HTTPResp 'ST) Hasura where
+  toEngineLog resp = (LevelInfo, scheduledTriggerLogType, J.toJSON resp)
+
+data HTTPErr (a :: TriggerTypes)
   = HClient !HTTP.HttpException
   | HParse !HTTP.Status !String
-  | HStatus !HTTPResp
+  | HStatus !(HTTPResp a)
   | HOther !String
   deriving (Show)
 
-instance J.ToJSON HTTPErr where
+instance J.ToJSON (HTTPErr a) where
   toJSON err = toObj $ case err of
     (HClient e) -> ("client", J.toJSON $ show e)
     (HParse st e) ->
@@ -140,11 +148,14 @@ instance J.ToJSON HTTPErr where
       toObj :: (T.Text, J.Value) -> J.Value
       toObj (k, v) = J.object [ "type" J..= k
                               , "detail" J..= v]
--- encapsulates a http operation
-instance ToEngineLog HTTPErr Hasura where
+
+instance ToEngineLog (HTTPErr 'ET) Hasura where
   toEngineLog err = (LevelError, eventTriggerLogType, J.toJSON err)
 
-mkHTTPResp :: HTTP.Response LBS.ByteString -> HTTPResp
+instance ToEngineLog (HTTPErr 'ST) Hasura where
+  toEngineLog err = (LevelError, scheduledTriggerLogType, J.toJSON err)
+
+mkHTTPResp :: HTTP.Response LBS.ByteString -> HTTPResp a
 mkHTTPResp resp =
   HTTPResp
   { hrsStatus = HTTP.statusCode $ HTTP.responseStatus resp
@@ -156,18 +167,21 @@ mkHTTPResp resp =
     decodeHeader (hdrName, hdrVal)
       = HeaderConf (decodeBS $ CI.original hdrName) (HVValue (decodeBS hdrVal))
 
-data HTTPRespExtra
+data HTTPRespExtra (a :: TriggerTypes)
   = HTTPRespExtra
-  { _hreResponse :: HTTPResp
+  { _hreResponse :: Either (HTTPErr a) (HTTPResp a)
   , _hreContext  :: Maybe ExtraLogContext
   }
 
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPRespExtra)
 
-instance ToEngineLog HTTPRespExtra Hasura where
+instance ToEngineLog (HTTPRespExtra 'ET) Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
 
-isNetworkError :: HTTPErr -> Bool
+instance ToEngineLog (HTTPRespExtra 'ST) Hasura where
+  toEngineLog resp = (LevelInfo, scheduledTriggerLogType, J.toJSON resp)
+
+isNetworkError :: HTTPErr a -> Bool
 isNetworkError = \case
   HClient he -> isNetworkErrorHC he
   _          -> False
@@ -179,7 +193,7 @@ isNetworkErrorHC = \case
   HTTP.HttpExceptionRequest _ HTTP.ResponseTimeout -> True
   _ -> False
 
-anyBodyParser :: HTTP.Response LBS.ByteString -> Either HTTPErr HTTPResp
+anyBodyParser :: HTTP.Response LBS.ByteString -> Either (HTTPErr a) (HTTPResp a)
 anyBodyParser resp = do
   let httpResp = mkHTTPResp resp
   if respCode >= HTTP.status200 && respCode < HTTP.status300
@@ -202,34 +216,43 @@ $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPReq)
 instance ToEngineLog HTTPReq Hasura where
   toEngineLog req = (LevelInfo, eventTriggerLogType, J.toJSON req)
 
-runHTTP
+logHTTPForET
   :: ( MonadReader r m
      , Has (Logger Hasura) r
      , MonadIO m
      )
-  => HTTP.Manager -> HTTP.Request -> Maybe ExtraLogContext -> m (Either HTTPErr HTTPResp)
-runHTTP manager req exLog = do
+  => Either (HTTPErr 'ET) (HTTPResp 'ET) -> Maybe ExtraLogContext -> m ()
+logHTTPForET eitherResp extraLogCtx = do
   logger :: Logger Hasura <- asks getter
+  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx
+
+logHTTPForST
+  :: ( MonadReader r m
+     , Has (Logger Hasura) r
+     , MonadIO m
+     )
+  => Either (HTTPErr 'ST) (HTTPResp 'ST) -> Maybe ExtraLogContext -> m ()
+logHTTPForST eitherResp extraLogCtx = do
+  logger :: Logger Hasura <- asks getter
+  unLogger logger $ HTTPRespExtra eitherResp extraLogCtx
+
+runHTTP :: (MonadIO m) => HTTP.Manager -> HTTP.Request -> m (Either (HTTPErr a) (HTTPResp a))
+runHTTP manager req = do
   res <- liftIO $ try $ HTTP.httpLbs req manager
-  case res of
-    Left e     -> unLogger logger $ HClient e
-    Right resp -> unLogger logger $ HTTPRespExtra (mkHTTPResp resp) exLog
   return $ either (Left . HClient) anyBodyParser res
 
 tryWebhook ::
   ( MonadReader r m
   , Has HTTP.Manager r
-  , Has (L.Logger L.Hasura) r
   , MonadIO m
-  , MonadError HTTPErr m
+  , MonadError (HTTPErr a) m
   )
   => [HTTP.Header]
   -> HTTP.ResponseTimeout
   -> J.Value
   -> String
-  -> Maybe ExtraLogContext
-  -> m HTTPResp
-tryWebhook headers timeout payload webhook extraLogCtx = do
+  -> m (HTTPResp a)
+tryWebhook headers timeout payload webhook = do
   initReqE <- liftIO $ try $ HTTP.parseRequest webhook
   manager <- asks getter
   case initReqE of
@@ -242,7 +265,7 @@ tryWebhook headers timeout payload webhook extraLogCtx = do
               , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode payload)
               , HTTP.responseTimeout = timeout
               }
-      eitherResp <- runHTTP manager req extraLogCtx
+      eitherResp <- runHTTP manager req
       onLeft eitherResp throwError
 
 data TriggerMetadata
@@ -279,15 +302,15 @@ mkMaybe :: [a] -> Maybe [a]
 mkMaybe [] = Nothing
 mkMaybe x  = Just x
 
-logHTTPErr
-  :: ( MonadReader r m
-     , Has (L.Logger L.Hasura) r
-     , MonadIO m
-     )
-  => HTTPErr -> m ()
-logHTTPErr err = do
-  logger :: L.Logger L.Hasura <- asks getter
-  L.unLogger logger err
+-- logHTTPErr
+--   :: ( MonadReader r m
+--      , Has (L.Logger L.Hasura) r
+--      , MonadIO m
+--      )
+--   => HTTPErr a -> m ()
+-- logHTTPErr err = do
+--   logger :: L.Logger L.Hasura <- asks getter
+--   L.unLogger logger err
 
 toInt64 :: (Integral a) => a -> Int64
 toInt64 = fromIntegral
@@ -315,11 +338,11 @@ decodeHeader logenv headerInfos (hdrName, hdrVal)
    where
      decodeBS = TE.decodeUtf8With TE.lenientDecode
 
-getRetryAfterHeaderFromHTTPErr :: HTTPErr -> Maybe Text
+getRetryAfterHeaderFromHTTPErr :: HTTPErr a -> Maybe Text
 getRetryAfterHeaderFromHTTPErr (HStatus resp) = getRetryAfterHeaderFromResp resp
 getRetryAfterHeaderFromHTTPErr _              = Nothing
 
-getRetryAfterHeaderFromResp :: HTTPResp -> Maybe Text
+getRetryAfterHeaderFromResp :: HTTPResp a -> Maybe Text
 getRetryAfterHeaderFromResp resp =
   let mHeader =
         find

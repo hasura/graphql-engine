@@ -192,6 +192,7 @@ library
                      -- testing
                      , QuickCheck
                      , generic-arbitrary
+                     , quickcheck-instances
 
                      -- scheduled triggers
                      , cron >= 0.6.2

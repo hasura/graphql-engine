@@ -3,6 +3,7 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runUpdateScheduledTrigger
   , runDeleteScheduledTrigger
   , runCancelScheduledEvent
+  , addScheduledTriggerToCatalog
   , resolveScheduledTrigger
   , deleteScheduledTriggerFromCatalog
   ) where
@@ -27,9 +28,9 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} includeInMetadata = lif
   Q.unitQE defaultTxErrorHandler
     [Q.sql|
       INSERT into hdb_catalog.hdb_scheduled_trigger
-        (name, webhook_conf, schedule, payload, retry_conf, include_in_metadata)
-      VALUES ($1, $2, $3, $4, $5)
-    |] (stName, Q.AltJ stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
+        (name, webhook_conf, schedule_conf, payload, retry_conf, include_in_metadata)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
        , includeInMetadata) False
   case stSchedule of
     OneOff timestamp -> Q.unitQE defaultTxErrorHandler
@@ -44,7 +45,7 @@ resolveScheduledTrigger
   :: (QErrM m, MonadIO m)
   => CreateScheduledTrigger -> m ScheduledTriggerInfo
 resolveScheduledTrigger CreateScheduledTrigger {..} = do
-  webhookInfo <- getWebhookInfoFromConf stWebhookConf
+  webhookInfo <- getWebhookInfoFromConf stWebhook
   headerInfo <- getHeaderInfosFromConf stHeaders
   let stInfo =
         ScheduledTriggerInfo
@@ -68,12 +69,12 @@ updateScheduledTriggerInCatalog CreateScheduledTrigger {..} includeInMetadata = 
    [Q.sql|
     UPDATE hdb_catalog.hdb_scheduled_trigger
     SET webhook_conf = $2,
-        schedule = $3,
+        schedule_conf = $3,
         payload = $4,
         retry_conf = $5,
         include_in_metadata = $6
     WHERE name = $1
-   |] (stName, Q.AltJ stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
+   |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
       , includeInMetadata) False
   -- since the scheduled trigger is updated, clear all its future events which are not retries
   Q.unitQE defaultTxErrorHandler

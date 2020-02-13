@@ -2,7 +2,7 @@ CREATE TABLE hdb_catalog.hdb_scheduled_trigger
 (
   name TEXT PRIMARY KEY,
   webhook_conf JSON NOT NULL,
-  schedule JSON NOT NULL,
+  schedule_conf JSON NOT NULL,
   payload JSON,
   retry_conf JSON,
   include_in_metadata BOOLEAN NOT NULL DEFAULT FALSE

@@ -3,32 +3,36 @@ module Hasura.RQL.DDL.Metadata.Generator
   (genReplaceMetadata)
 where
 
-import           Hasura.GraphQL.Utils               (simpleGraphQLQuery)
+import           Hasura.GraphQL.Utils                          (simpleGraphQLQuery)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils
 import           Hasura.SQL.Types
+import           System.Cron.Types
 
-import qualified Hasura.GraphQL.Context             as GC
-import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
-import qualified Hasura.RQL.DDL.Permission          as Permission
-import qualified Hasura.RQL.DDL.Permission.Internal as Permission
-import qualified Hasura.RQL.DDL.QueryCollection     as Collection
-import qualified Hasura.RQL.DDL.Relationship        as Relationship
-import qualified Hasura.RQL.DDL.Schema              as Schema
+import qualified Hasura.GraphQL.Context                        as GC
+import qualified Hasura.RQL.DDL.ComputedField                  as ComputedField
+import qualified Hasura.RQL.DDL.Permission                     as Permission
+import qualified Hasura.RQL.DDL.Permission.Internal            as Permission
+import qualified Hasura.RQL.DDL.QueryCollection                as Collection
+import qualified Hasura.RQL.DDL.Relationship                   as Relationship
+import qualified Hasura.RQL.DDL.Schema                         as Schema
 
-import qualified Data.Aeson                         as J
-import qualified Data.HashMap.Strict                as HM
-import qualified Data.Text                          as T
-import qualified Data.Vector                        as V
-import qualified Language.GraphQL.Draft.Parser      as G
-import qualified Language.GraphQL.Draft.Syntax      as G
-import qualified Language.Haskell.TH.Syntax         as TH
-import qualified Network.URI                        as N
+import qualified Data.Aeson                                    as J
+import qualified Data.Text                                     as T
+import qualified Data.Vector                                   as V
+import qualified Language.GraphQL.Draft.Parser                 as G
+import qualified Language.GraphQL.Draft.Syntax                 as G
+import qualified Language.Haskell.TH.Syntax                    as TH
+import qualified Network.URI                                   as N
+import qualified System.Cron.Parser                            as Cr
 
 import           Test.QuickCheck
+import           Test.QuickCheck.Instances.Semigroup           ()
+import           Test.QuickCheck.Instances.Time                ()
+import           Test.QuickCheck.Instances.UnorderedContainers ()
 
 genReplaceMetadata :: Gen ReplaceMetadata
 genReplaceMetadata = do
@@ -39,14 +43,12 @@ genReplaceMetadata = do
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
+    <*> arbitrary
   where
     genFunctionsMetadata :: MetadataVersion -> Gen FunctionsMetadata
     genFunctionsMetadata = \case
       MVVersion1 -> FMVersion1 <$> arbitrary
       MVVersion2 -> FMVersion2 <$> arbitrary
-
-instance (Eq k, Hashable k, Arbitrary k, Arbitrary v) => Arbitrary (HM.HashMap k v) where
-  arbitrary = HM.fromList <$> arbitrary
 
 instance Arbitrary G.Name where
   arbitrary = G.Name . T.pack <$> listOf1 (elements ['a'..'z'])
@@ -195,3 +197,22 @@ instance Arbitrary Collection.CreateCollection where
 
 instance Arbitrary Collection.CollectionReq where
   arbitrary = genericArbitrary
+
+instance Arbitrary CreateScheduledTrigger where
+  arbitrary = genericArbitrary
+
+instance Arbitrary WebhookConf where
+  arbitrary = genericArbitrary
+
+instance Arbitrary ScheduleType where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RetryConfST where
+  arbitrary = genericArbitrary
+
+instance Arbitrary CronSchedule where
+  arbitrary = elements sampleCronSchedules
+
+-- TODO: add more
+sampleCronSchedules :: [CronSchedule]
+sampleCronSchedules = rights $ map Cr.parseCronSchedule [ "* * * * *" ]

@@ -161,13 +161,14 @@ instance FromJSON ClearMetadata where
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqVersion          :: !MetadataVersion
-  , aqTables           :: ![TableMeta]
-  , aqFunctions        :: !FunctionsMetadata
-  , aqRemoteSchemas    :: ![AddRemoteSchemaQuery]
-  , aqQueryCollections :: ![Collection.CreateCollection]
-  , aqAllowlist        :: ![Collection.CollectionReq]
-  } deriving (Show, Eq, Lift)
+  { aqVersion           :: !MetadataVersion
+  , aqTables            :: ![TableMeta]
+  , aqFunctions         :: !FunctionsMetadata
+  , aqRemoteSchemas     :: ![AddRemoteSchemaQuery]
+  , aqQueryCollections  :: ![Collection.CreateCollection]
+  , aqAllowlist         :: ![Collection.CollectionReq]
+  , aqScheduledTriggers :: ![CreateScheduledTrigger]
+  } deriving (Show, Eq)
 
 instance FromJSON ReplaceMetadata where
   parseJSON = withObject "Object" $ \o -> do
@@ -178,6 +179,7 @@ instance FromJSON ReplaceMetadata where
       <*> o .:? "remote_schemas" .!= []
       <*> o .:? "query_collections" .!= []
       <*> o .:? "allow_list" .!= []
+      <*> o .:? "scheduled_triggers" .!= []
     where
       parseFunctions version maybeValue =
         case version of
@@ -240,11 +242,13 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                remoteSchemas
                                queryCollections
                                allowlist
+                               scheduledTriggers
                              ) = AO.object $ [versionPair, tablesPair] <>
                                  catMaybes [ functionsPair
                                            , remoteSchemasPair
                                            , queryCollectionsPair
                                            , allowlistPair
+                                           , scheduledTriggersPair
                                            ]
   where
     versionPair = ("version", AO.toOrdered version)
@@ -256,6 +260,8 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
     queryCollectionsPair = listToMaybeOrdPair "query_collections" createCollectionToOrdJSON queryCollections
 
     allowlistPair = listToMaybeOrdPair "allowlist" AO.toOrdered allowlist
+
+    scheduledTriggersPair = listToMaybeOrdPair "scheduled_triggers" scheduledTriggerQToOrdJSON scheduledTriggers
 
     tableMetaToOrdJSON :: TableMeta -> AO.Value
     tableMetaToOrdJSON ( TableMeta
@@ -403,6 +409,8 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                   , ("definition", AO.toOrdered definition)
                   ] <> catMaybes [maybeCommentToMaybeOrdPair comment]
 
+    scheduledTriggerQToOrdJSON :: CreateScheduledTrigger -> AO.Value
+    scheduledTriggerQToOrdJSON = AO.toOrdered
 
     -- Utility functions
     listToMaybeOrdPair :: Text -> (a -> AO.Value) -> [a] -> Maybe (Text, AO.Value)

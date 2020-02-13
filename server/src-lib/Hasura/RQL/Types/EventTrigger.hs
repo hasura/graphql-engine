@@ -109,18 +109,13 @@ instance NFData WebhookConf
 instance Cacheable WebhookConf
 
 instance ToJSON WebhookConf where
-  toJSON (WCValue w)  = object ["webhook" .= w ]
-  toJSON (WCEnv wEnv) = object ["webhook_from_env" .= wEnv ]
+  toJSON (WCValue w)  = String w
+  toJSON (WCEnv wEnv) = object ["from_env" .= wEnv ]
 
 instance FromJSON WebhookConf where
-  parseJSON = withObject "WebhookConf" \o -> do
-    webhook <- o .:? "webhook"
-    webhookFromEnv <- o .:? "webhook_from_env"
-    case (webhook, webhookFromEnv) of
-      (Just value, Nothing) -> pure $ WCValue value
-      (Nothing, Just env) -> pure $ WCEnv env
-      (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
-      (Nothing, Nothing) ->   fail "must provide webhook or webhook_from_env"
+  parseJSON (Object o) = WCEnv <$> o .: "from_env"
+  parseJSON (String t) = pure $ WCValue t
+  parseJSON _          = fail "one of string or object must be provided for webhook"
 
 data WebhookConfInfo
   = WebhookConfInfo

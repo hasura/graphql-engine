@@ -54,7 +54,7 @@ $(deriveJSON defaultOptions{sumEncoding=TaggedObject "type" "value"} ''ScheduleT
 data CreateScheduledTrigger
   = CreateScheduledTrigger
   { stName           :: !ET.TriggerName
-  , stWebhookConf    :: !ET.WebhookConf
+  , stWebhook        :: !ET.WebhookConf
   , stSchedule       :: !ScheduleType
   , stPayload        :: !(Maybe J.Value)
   , stRetryConf      :: !RetryConfST
@@ -68,17 +68,11 @@ instance FromJSON CreateScheduledTrigger where
   parseJSON =
     withObject "CreateScheduledTrigger" $ \o -> do
       stName <- o .: "name"
-      stWebhook <- o .:? "webhook"
-      stWebhookFromEnv <- o .:? "webhook_from_env"
+      stWebhook <- o .: "webhook"
       stPayload <- o .:? "payload"
       stSchedule <- o .: "schedule"
       stRetryConf <- o .:? "retry_conf" .!= defaultRetryConf
       stHeaders <- o .:? "headers" .!= []
-      stWebhookConf <- case (stWebhook, stWebhookFromEnv) of
-        (Just value, Nothing) -> pure $ ET.WCValue value
-        (Nothing, Just env) -> pure $ ET.WCEnv env
-        (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
-        (Nothing, Nothing) ->   fail "must provide webhook or webhook_from_env"
       pure CreateScheduledTrigger {..}
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)

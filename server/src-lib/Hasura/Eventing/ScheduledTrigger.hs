@@ -211,9 +211,8 @@ processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEventF
           headers = map encodeHeader stiHeaders
           headers' = addDefaultHeaders headers
           extraLogCtx = ExtraLogContext sefId
-      res <-
-        runExceptT $
-        tryWebhook headers' httpTimeout sefPayload (T.unpack sefWebhook) (Just extraLogCtx)
+      res <- runExceptT $ tryWebhook headers' httpTimeout sefPayload (T.unpack sefWebhook)
+      logHTTPForST res (Just extraLogCtx)
       let decodedHeaders = map (decodeHeader logEnv stiHeaders) headers'
       finally <- either
                  (processError pgpool se decodedHeaders)
@@ -226,7 +225,9 @@ processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEventF
         Left err -> logQErr err
         Right _ -> pure ()
 
-processError :: (MonadIO m) => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> HTTPErr -> m (Either QErr ())
+processError
+  :: (MonadIO m)
+  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> HTTPErr a -> m (Either QErr ())
 processError pgpool se decodedHeaders err = do
   let invocation = case err of
         HClient excp -> do
@@ -249,7 +250,7 @@ processError pgpool se decodedHeaders err = do
       insertInvocation invocation
       retryOrMarkError se err
 
-retryOrMarkError :: ScheduledEventFull -> HTTPErr -> Q.TxE QErr ()
+retryOrMarkError :: ScheduledEventFull -> HTTPErr a -> Q.TxE QErr ()
 retryOrMarkError se@ScheduledEventFull {..} err = do
   let mRetryHeader = getRetryAfterHeaderFromHTTPErr err
       mRetryHeaderSeconds = join $ parseRetryHeaderValue <$> mRetryHeader
@@ -275,7 +276,9 @@ retryOrMarkError se@ScheduledEventFull {..} err = do
         WHERE id = $1
       |] (Identity sefId) True
 
-processSuccess :: (MonadIO m) => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> HTTPResp -> m (Either QErr ())
+processSuccess
+  :: (MonadIO m)
+  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> HTTPResp a -> m (Either QErr ())
 processSuccess pgpool se decodedHeaders resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp

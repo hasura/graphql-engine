@@ -28,7 +28,8 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2,
                                                      removeRemoteSchemaFromCatalog)
-import           Hasura.RQL.DDL.ScheduledTrigger    (deleteScheduledTriggerFromCatalog)
+import           Hasura.RQL.DDL.ScheduledTrigger    (addScheduledTriggerToCatalog,
+                                                     deleteScheduledTriggerFromCatalog)
 import           Hasura.RQL.Types
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.SQL.Types
@@ -51,6 +52,7 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_scheduled_trigger WHERE include_in_metadata" () False
 
 runClearMetadata
   :: (MonadTx m, CacheRWM m)
@@ -63,8 +65,8 @@ runClearMetadata _ = do
 applyQP1
   :: (QErrM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) = do
-
+applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist scheduledTriggers)
+  = do
   withPathK "tables" $ do
 
     checkMultipleDecls "tables" $ map _tmTable tables
@@ -105,6 +107,9 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) 
   withPathK "allowlist" $
     checkMultipleDecls "allow list" $ map Collection._crCollection allowlist
 
+  withPathK "scheduled_triggers" $
+    checkMultipleDecls "scheduled triggers" $ map stName scheduledTriggers
+
   where
     withTableName qt = withPathK (qualObjectToText qt)
 
@@ -127,7 +132,8 @@ applyQP2
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) = do
+applyQP2 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist scheduledTriggers)
+  = do
   liftTx clearMetadata
   buildSchemaCacheStrict
 
@@ -192,6 +198,9 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) 
   -- remote schemas
   withPathK "remote_schemas" $
     indexedMapM_ (void . addRemoteSchemaP2) schemas
+
+  withPathK "scheduled_triggers" $
+    indexedForM_ scheduledTriggers $ \st -> liftTx $ addScheduledTriggerToCatalog st True
 
   buildSchemaCacheStrict
   return successMsg
@@ -265,8 +274,10 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map Collection.CollectionReq <$> fetchAllowlists
 
+  scheduledTriggers <- fetchScheduledTriggers
+
   return $ ReplaceMetadata currentMetadataVersion (HMIns.elems postRelMap) functions
-                           remoteSchemas collections allowlist
+                           remoteSchemas collections allowlist scheduledTriggers
 
   where
 
@@ -372,6 +383,24 @@ fetchMetadata = do
                           ( QualifiedObject schema table
                           , ComputedFieldMeta name definition comment
                           )
+
+    fetchScheduledTriggers =
+      map uncurrySchedule <$> Q.listQE defaultTxErrorHandler
+      [Q.sql|
+       SELECT st.name, st.webhook_conf, st.schedule_conf, st.payload, st.retry_conf
+        FROM hdb_catalog.hdb_scheduled_trigger st
+        WHERE include_in_metadata
+      |] () False
+      where
+        uncurrySchedule (n, wc, sc, p, rc) =
+          CreateScheduledTrigger
+          { stName = n,
+            stWebhook = Q.getAltJ wc,
+            stSchedule = Q.getAltJ sc,
+            stPayload = Q.getAltJ <$> p,
+            stRetryConf = Q.getAltJ rc,
+            stHeaders = []
+          }
 
 runExportMetadata
   :: (QErrM m, MonadTx m)
