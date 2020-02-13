@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"os"
 	"testing"
 	"time"
 
@@ -11,13 +10,11 @@ import (
 
 func TestConsoleCmd(t *testing.T, ec *cli.ExecutionContext) {
 	opts := &commands.ConsoleOptions{
-		EC:                  ec,
-		APIPort:             "9693",
-		ConsolePort:         "9695",
-		Address:             "localhost",
-		DontOpenBrowser:     true,
-		APIServerSignal:     make(chan os.Signal),
-		ConsoleServerSignal: make(chan os.Signal),
+		EC:              ec,
+		APIPort:         "9693",
+		ConsolePort:     "9695",
+		Address:         "localhost",
+		DontOpenBrowser: true,
 	}
 
 	go func() {
@@ -25,8 +22,8 @@ func TestConsoleCmd(t *testing.T, ec *cli.ExecutionContext) {
 		for opts.WG == nil {
 			time.Sleep(1 * time.Second)
 		}
-		opts.APIServerSignal <- os.Interrupt
-		opts.ConsoleServerSignal <- os.Interrupt
+		opts.WG.Done()
+		opts.WG.Done()
 	}()
 	err := opts.Run()
 	if err != nil {
