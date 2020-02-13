@@ -4,15 +4,20 @@ import pytest
 import time
 
 from validate import check_query_f, check_query
-from super_classes import DefaultTestQueries, DefaultTestMutations
 
 """
 TODO:- Test Actions metadata
 """
 
-@pytest.mark.usefixtures("actions_webhook")
+use_action_fixtures = pytest.mark.usefixtures(
+    "actions_webhook",
+    'per_class_db_schema_for_mutation_tests',
+    'per_method_db_data_for_mutation_tests'
+)
+
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
-class TestActionsSync(DefaultTestMutations):
+@use_action_fixtures
+class TestActionsSync:
 
     @classmethod
     def dir(cls):
@@ -39,8 +44,8 @@ class TestActionsSync(DefaultTestMutations):
     def test_expecting_array_response(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/expecting_array_response.yaml')
 
-@pytest.mark.usefixtures("actions_webhook")
-class TestActionsAsync(DefaultTestQueries):
+@use_action_fixtures
+class TestActionsAsync:
     @classmethod
     def dir(cls):
         return 'queries/actions/async'
