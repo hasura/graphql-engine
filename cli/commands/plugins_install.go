@@ -10,7 +10,9 @@ import (
 )
 
 func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
-	var manifestFile *string
+	opts := &PluginInstallOptions{
+		EC: ec,
+	}
 	pluginsInstallCmd := &cobra.Command{
 		Use:          "install",
 		Short:        "",
@@ -21,26 +23,37 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pluginName := args[0]
-			ec.Spin(fmt.Sprintf("Installing plugin %q...", pluginName))
+			opts.Name = args[0]
+			ec.Spin(fmt.Sprintf("Installing plugin %q...", opts.Name))
 			defer ec.Spinner.Stop()
-			err := ec.Plugins.Install(pluginName, *manifestFile)
+			err := opts.Run()
 			if err == plugins.ErrIsAlreadyInstalled {
 				ec.Spinner.Stop()
-				ec.Logger.WithField("name", pluginName).Infof("%q", err)
+				ec.Logger.WithField("name", opts.Name).Infof("%q", err)
 				return nil
 			}
 			if err != nil && err != plugins.ErrIsAlreadyInstalled {
-				return errors.Wrapf(err, "failed to install plugin %q", pluginName)
+				return errors.Wrapf(err, "failed to install plugin %q", opts.Name)
 			}
 			ec.Spinner.Stop()
-			ec.Logger.WithField("name", pluginName).Infoln("plugin installed")
+			ec.Logger.WithField("name", opts.Name).Infoln("plugin installed")
 			return nil
 		},
 	}
 
 	f := pluginsInstallCmd.Flags()
 
-	manifestFile = f.String("manifest-file", "", "(dev) speficy local manifest file")
+	f.StringVar(&opts.ManifestFile, "manifest-file", "", "(dev) speficy local manifest file")
 	return pluginsInstallCmd
+}
+
+type PluginInstallOptions struct {
+	EC *cli.ExecutionContext
+
+	Name         string
+	ManifestFile string
+}
+
+func (o *PluginInstallOptions) Run() error {
+	return ec.Plugins.Install(o.Name, o.ManifestFile)
 }
