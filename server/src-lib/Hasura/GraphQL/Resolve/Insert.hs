@@ -335,7 +335,7 @@ insertArrRel strfyNum role resCols arrRelIns =
                (\(col, _) (lCol, _) -> col == lCol)
                (\(_, colVal) (_, rCol) -> (rCol, colVal))
 
-    resBS <- insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds "data"
+    resBS <- insertMultipleObjects strfyNum role tn multiObjIns addCols mutOutput "data"
     resObj <- decodeEncJSON resBS
     onNothing (Map.lookup ("affected_rows" :: T.Text) resObj) $
       throw500 "affected_rows not returned in array rel insert"
@@ -344,7 +344,7 @@ insertArrRel strfyNum role resCols arrRelIns =
     colMapping = riMapping relInfo
     tn = riRTable relInfo
     relNameTxt = relNameToTxt $ riName relInfo
-    mutFlds = [("affected_rows", RR.MCount)]
+    mutOutput = RR.MOutMultirowFields [("affected_rows", RR.MCount)]
 
 -- | insert an object with object and array relationships
 insertObj
@@ -408,10 +408,10 @@ insertMultipleObjects
   -> QualifiedTable
   -> MultiObjIns
   -> [PGColWithValue] -- ^ additional fields
-  -> RR.MutFlds
+  -> RR.MutationOutput
   -> T.Text -- ^ error path
   -> Q.TxE QErr EncJSON
-insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
+insertMultipleObjects strfyNum role tn multiObjIns addCols mutOutput errP =
   bool withoutRelsInsert withRelsInsert anyRelsToInsert
   where
     AnnIns insObjs onConflictM checkCond tableColInfos defVals = multiObjIns
@@ -438,7 +438,7 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
       checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting checkCond
 
       let insQP1 = RI.InsertQueryP1 tn tableCols sqlRows onConflictM
-                     (Just checkExpr) mutFlds tableColInfos
+                     (Just checkExpr) mutOutput tableColInfos
           p1 = (insQP1, prepArgs)
       RI.insertP2 strfyNum p1
 
@@ -450,7 +450,7 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutFlds errP =
       let affRows = sum $ map fst insResps
           columnValues = catMaybes $ map snd insResps
       cteExp <- mkSelCTEFromColVals tn tableColInfos columnValues
-      let sql = toSQL $ RR.mkMutationOutputExp tn (Just affRows) cteExp mutFlds strfyNum
+      let sql = toSQL $ RR.mkMutationOutputExp tn (Just affRows) cteExp mutOutput strfyNum
       runIdentity . Q.getRow
                <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) [] False
 
@@ -467,15 +467,15 @@ convertInsert
   -> Field -- the mutation field
   -> m RespTx
 convertInsert role tn fld = prefixErrPath fld $ do
-  mutFldsUnres <- convertMutResp (_fType fld) $ _fSelSet fld
-  mutFldsRes <- RR.traverseMutFlds resolveValTxt mutFldsUnres
+  mutOutputUnres <- RR.MOutMultirowFields <$> resolveMutationFields (_fType fld) (_fSelSet fld)
+  mutOutputRes <- RR.traverseMutationOutput resolveValTxt mutOutputUnres
   annVals <- withArg arguments "objects" asArray
   -- if insert input objects is empty array then
   -- do not perform insert and return mutation response
-  bool (withNonEmptyObjs annVals mutFldsRes)
-    (withEmptyObjs mutFldsRes) $ null annVals
+  bool (withNonEmptyObjs annVals mutOutputRes)
+    (withEmptyObjs mutOutputRes) $ null annVals
   where
-    withNonEmptyObjs annVals mutFlds = do
+    withNonEmptyObjs annVals mutOutput = do
       InsCtx tableColMap checkCond defValMap relInfoMap updPerm <- getInsCtx tn
       annObjs <- mapM asObject annVals
       annInsObjs <- forM annObjs $ mkAnnInsObj relInfoMap tableColMap
@@ -487,9 +487,9 @@ convertInsert role tn fld = prefixErrPath fld $ do
           tableCols = Map.elems tableColMap
       strfyNum <- stringifyNum <$> asks getter
       return $ prefixErrPath fld $ insertMultipleObjects strfyNum role tn
-        multiObjIns [] mutFlds "objects"
-    withEmptyObjs mutFlds =
-      return $ return $ buildEmptyMutResp mutFlds
+        multiObjIns [] mutOutput "objects"
+    withEmptyObjs mutOutput =
+      return $ return $ buildEmptyMutResp mutOutput
     arguments = _fArguments fld
     onConflictM = Map.lookup "on_conflict" arguments
 
@@ -503,8 +503,8 @@ convertInsertOne
   -> m RespTx
 convertInsertOne role qt field = prefixErrPath field $ do
   tableSelFields <- processTableSelectionSet (_fType field) $ _fSelSet field
-  let mutationFieldsUnResolved = RR.onlyReturningMutFld tableSelFields
-  mutationFieldsResolved <- RR.traverseMutFlds resolveValTxt mutationFieldsUnResolved
+  let mutationOutputUnresolved = RR.MOutSinglerowObject tableSelFields
+  mutationOutputResolved <- RR.traverseMutationOutput resolveValTxt mutationOutputUnresolved
   annInputObj <- withArg arguments "object" asObject
   InsCtx tableColMap check defValMap relInfoMap updPerm <- getInsCtx qt
   annInsertObj <- mkAnnInsObj relInfoMap tableColMap annInputObj
@@ -513,10 +513,8 @@ convertInsertOne role qt field = prefixErrPath field $ do
   let multiObjIns = AnnIns [annInsertObj] conflictClauseM check tableCols defValMapRes
       tableCols = Map.elems tableColMap
   strfyNum <- stringifyNum <$> asks getter
-  pure $ do
-    response <- prefixErrPath field $ insertMultipleObjects strfyNum role qt
-                multiObjIns [] mutationFieldsResolved "object"
-    withSingleTableRow response
+  pure $ prefixErrPath field $ insertMultipleObjects strfyNum role qt
+         multiObjIns [] mutationOutputResolved "object"
   where
     arguments = _fArguments field
 

@@ -60,6 +60,9 @@ class TestGraphQLQueryBasic(DefaultTestSelectQueries):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/select_query_invalid_escape_sequence.yaml", transport)
 
+    def test_select_query_person_citext(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/select_query_person_citext.yaml", transport)
+
     def test_select_query_batching(self, hge_ctx, transport):
         transport = 'http'
         check_query_f(hge_ctx, self.dir() + "/select_query_batching.yaml", transport)

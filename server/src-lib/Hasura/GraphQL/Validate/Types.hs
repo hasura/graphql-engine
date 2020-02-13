@@ -411,12 +411,6 @@ instance J.ToJSON TypeInfo where
 instance J.FromJSON TypeInfo where
   parseJSON _ = fail "FromJSON not implemented for TypeInfo"
 
--- $(J.deriveJSON
---   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2
---                    , J.sumEncoding = J.TaggedObject "type" "detail"
---                    }
---   ''TypeInfo)
-
 data AsObjType
   = AOTObj ObjTyInfo
   | AOTIFace IFaceTyInfo
@@ -631,8 +625,8 @@ mkTyInfoMap :: [TypeInfo] -> TypeMap
 mkTyInfoMap tyInfos =
   Map.fromList [(getNamedTy tyInfo, tyInfo) | tyInfo <- tyInfos]
 
-fromTyDef :: G.TypeDefinition -> TypeLoc -> Either Text TypeInfo
-fromTyDef tyDef loc = pure $ case tyDef of
+fromTyDef :: G.TypeDefinition -> TypeLoc -> TypeInfo
+fromTyDef tyDef loc = case tyDef of
   G.TypeDefinitionScalar t      -> TIScalar $ fromScalarTyDef t loc
   G.TypeDefinitionObject t      -> TIObj $ fromObjTyDef t loc
   G.TypeDefinitionInterface t   -> TIIFace $ fromIFaceDef t loc
@@ -642,7 +636,7 @@ fromTyDef tyDef loc = pure $ case tyDef of
 
 fromSchemaDoc :: G.SchemaDocument -> TypeLoc -> Either Text TypeMap
 fromSchemaDoc (G.SchemaDocument tyDefs) loc = do
-  tyMap <- fmap mkTyInfoMap $ mapM (flip fromTyDef loc) tyDefs
+  let tyMap = mkTyInfoMap $ map (flip fromTyDef loc) tyDefs
   validateTypeMap tyMap
   return tyMap
 
@@ -655,9 +649,7 @@ validateTypeMap tyMap =  mapM_ validateTy $ Map.elems tyMap
     validateTy _           = return ()
 
 fromTyDefQ :: G.TypeDefinition -> TypeLoc -> TH.Q TH.Exp
-fromTyDefQ tyDef loc = case fromTyDef tyDef loc of
-  Left e  -> fail $ T.unpack e
-  Right t -> TH.lift t
+fromTyDefQ tyDef loc = TH.lift $ fromTyDef tyDef loc
 
 fromSchemaDocQ :: G.SchemaDocument -> TypeLoc -> TH.Q TH.Exp
 fromSchemaDocQ sd loc = case fromSchemaDoc sd loc of

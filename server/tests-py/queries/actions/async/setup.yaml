@@ -33,7 +33,7 @@ args:
   args:
     name: create_user
     definition:
-      kind: synchronous
+      kind: asynchronous
       arguments:
       - name: email
         type: String!
@@ -41,3 +41,11 @@ args:
         type: String!
       output_type: UserId
       handler: http://127.0.0.1:5593/create-user
+
+- type: create_action_permission
+  args:
+    action: create_user
+    role: user
+    definition:
+      select:
+        filter: {}

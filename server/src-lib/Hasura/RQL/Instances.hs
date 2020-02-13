@@ -31,6 +31,7 @@ instance NFData G.ValueConst
 instance NFData G.VariableDefinition
 instance (NFData a) => NFData (G.ObjectFieldG a)
 instance NFData UT.Variable
+instance NFData UT.TemplateItem
 instance NFData UT.URLTemplate
 
 deriving instance NFData G.Alias

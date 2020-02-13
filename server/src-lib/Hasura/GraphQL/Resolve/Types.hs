@@ -19,6 +19,7 @@ import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
+import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
@@ -101,15 +102,11 @@ data DelOpCtx
   , _docFilter  :: !AnnBoolExpPartialSQL
   } deriving (Show, Eq)
 
-data SyncReturnStrategy
-  = ReturnJson
-  | ExecOnPostgres [(PGCol, PGScalarType)]
-  deriving (Show, Eq)
-
 data SyncActionExecutionContext
   = SyncActionExecutionContext
   { _saecName                 :: !ActionName
-  , _saecStrategy             :: !SyncReturnStrategy
+  , _saecOutputType           :: !GraphQLType
+  , _saecDefinitionList       :: ![(PGCol, PGScalarType)]
   , _saecWebhook              :: !ResolvedWebhook
   , _saecHeaders              :: ![HeaderConf]
   , _saecForwardClientHeaders :: !Bool
@@ -117,13 +114,13 @@ data SyncActionExecutionContext
 
 data ActionExecutionContext
   = ActionExecutionSyncWebhook !SyncActionExecutionContext
-  | ActionExecutionAsync !AnnBoolExpPartialSQL
+  | ActionExecutionAsync
   deriving (Show, Eq)
 
 data ActionSelectOpContext
   = ActionSelectOpContext
-  { _asocFilter         :: AnnBoolExpPartialSQL
-  , _asocDefinitionList :: [(PGCol, PGScalarType)]
+  { _asocOutputType     :: !GraphQLType
+  , _asocDefinitionList :: ![(PGCol, PGScalarType)]
   } deriving (Show, Eq)
 
 -- (custom name | generated name) -> PG column info
@@ -243,34 +240,6 @@ data InputFunctionArgument
   = IFAKnown !FunctionArgName !UnresolvedVal -- ^ Known value
   | IFAUnknown !FunctionArgItem -- ^ Unknown value, need to be parsed
   deriving (Show, Eq)
-
--- instance Semigroup QueryReusability where
---   Reusable a <> Reusable b = Reusable (a <> b)
---   _          <> _          = NotReusable
--- instance Monoid QueryReusability where
---   mempty = Reusable mempty
-
--- class (MonadError QErr m) => MonadResolve m where
---   recordVariableUse :: G.Variable -> PGColumnType -> m ()
---   markNotReusable :: m ()
-
--- newtype ResolveT m a = ResolveT { unResolveT :: StateT QueryReusability m a }
---   deriving (Functor, Applicative, Monad, MonadError e, MonadReader r, MonadIO)
-
--- instance (MonadError QErr m) => MonadResolve (ResolveT m) where
---   recordVariableUse varName varType = ResolveT $
---     modify' (<> Reusable (ReusableVariableTypes $ Map.singleton varName varType))
---   markNotReusable = ResolveT $ put NotReusable
-
--- runResolveT :: (Functor m) => ResolveT m a -> m (a, Maybe ReusableVariableTypes)
--- runResolveT = fmap (fmap getVarTypes) . flip runStateT mempty . unResolveT
---   where
---     getVarTypes = \case
---       Reusable varTypes -> Just varTypes
---       NotReusable       -> Nothing
-
--- evalResolveT :: (Monad m) => ResolveT m a -> m a
--- evalResolveT = flip evalStateT mempty . unResolveT
 
 -- template haskell related
 $(makePrisms ''ResolveField)

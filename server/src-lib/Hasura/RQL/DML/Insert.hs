@@ -37,7 +37,7 @@ data InsertQueryP1
   , iqp1Tuples    :: ![[S.SQLExp]]
   , iqp1Conflict  :: !(Maybe ConflictClauseP1)
   , iqp1CheckCond :: !(Maybe AnnBoolExpSQL)
-  , iqp1MutFlds   :: !MutFlds
+  , iqp1Output    :: !MutationOutput
   , iqp1AllCols   :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
@@ -47,15 +47,15 @@ mkInsertCTE (InsertQueryP1 tn cols vals c checkCond _ _) =
   where
     tupVals = S.ValuesExp $ map S.TupleExp vals
     insert =
-      S.SQLInsert tn cols tupVals (toSQLConflict <$> c) 
-        . Just 
-        . S.RetExp 
-        $ maybe 
-            [S.selectStar] 
-            (\e -> 
+      S.SQLInsert tn cols tupVals (toSQLConflict <$> c)
+        . Just
+        . S.RetExp
+        $ maybe
+            [S.selectStar]
+            (\e ->
               [ S.selectStar
               , insertCheckExpr (toSQLBoolExp (S.QualTable tn) e)
-              ]) 
+              ])
             checkCond
 
 toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
@@ -201,7 +201,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
     withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
-  let mutFlds = mkDefaultMutFlds mAnnRetCols
+  let mutOutput = mkDefaultMutFlds mAnnRetCols
 
   let defInsVals = S.mkColDefValMap $
                    map pgiColumn $ getCols fieldInfoMap
@@ -216,16 +216,16 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
       inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 
   checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting (ipiCheck insPerm)
-  
+
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
       roleName <- askCurRole
       unless (isTabUpdatable roleName tableInfo) $ throw400 PermissionDenied $
         "upsert is not allowed for role " <> roleName
         <<> " since update permissions are not defined"
+
       buildConflictClause sessVarBldr tableInfo inpCols c
-  
   return $ InsertQueryP1 tableName insCols sqlExps
-           conflictClause (Just checkExpr) mutFlds allCols
+           conflictClause (Just checkExpr) mutOutput allCols
   where
     selNecessaryMsg =
       "; \"returning\" can only be used if the role has "
@@ -251,7 +251,7 @@ insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 insertP2 strfyNum (u, p) =
   runMutation
      $ Mutation (iqp1Table u) (insertCTE, p)
-                (iqp1MutFlds u) (iqp1AllCols u) strfyNum
+                (iqp1Output u) (iqp1AllCols u) strfyNum
   where
     insertCTE = mkInsertCTE u
 
@@ -260,23 +260,23 @@ insertP2 strfyNum (u, p) =
 --
 -- The resulting SQL will look something like this:
 --
--- > INSERT INTO 
+-- > INSERT INTO
 -- >   ...
--- > RETURNING 
--- >   *, 
--- >   CASE WHEN {cond} 
--- >     THEN NULL 
--- >     ELSE hdb_catalog.check_violation('insert check constraint failed') 
+-- > RETURNING
+-- >   *,
+-- >   CASE WHEN {cond}
+-- >     THEN NULL
+-- >     ELSE hdb_catalog.check_violation('insert check constraint failed')
 -- >   END
 insertCheckExpr
   :: S.BoolExp
   -> S.Extractor
-insertCheckExpr condExpr = 
+insertCheckExpr condExpr =
   S.Extractor
     (S.SECond condExpr S.SENull
-      (S.SEFunction 
-        (S.FunctionExp 
-          (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation")) 
+      (S.SEFunction
+        (S.FunctionExp
+          (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation"))
           (S.FunctionArgs [S.SELit "insert check constraint failed"] mempty)
           Nothing)
       ))

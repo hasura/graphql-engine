@@ -17,14 +17,14 @@ module Hasura.RQL.Types.Action
   , aiName
   , aiDefinition
   , aiPermissions
+  , aiComment
   , ActionPermissionInfo(..)
 
   , ActionPermissionMap
-
-  , ActionPermissionSelect(..)
-  , ActionPermissionDefinition(..)
   , CreateActionPermission(..)
 
+  , ActionMetadata(..)
+  , ActionPermissionMetadata(..)
   ) where
 
 
@@ -33,9 +33,7 @@ import           Data.URL.Template
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.CustomTypes
-import           Hasura.RQL.Types.DML
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 import           Language.Haskell.TH.Syntax    (Lift)
@@ -44,7 +42,6 @@ import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.HashMap.Strict           as Map
-import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -116,56 +113,35 @@ type ResolvedActionDefinition = ActionDefinition ResolvedWebhook
 data ActionPermissionInfo
   = ActionPermissionInfo
   { _apiRole   :: !RoleName
-  , _apiFilter :: !AnnBoolExpPartialSQL
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionInfo)
 
 type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
-
--- data ActionMetadataField
---   = ActionMetadataFieldId
---   | ActionMetadataFieldCreatedAt
---   | ActionMetadataFieldStatus
---   deriving (Show, Eq)
-
--- data ActionOutputTypeInfo
---   = ActionOutputScalar !VT.ScalarTyInfo
---   | ActionOutputEnum !VT.EnumTyInfo
---   | ActionOutputObject !VT.ObjTyInfo
---   deriving (Show, Eq)
-
--- TODO: this is terrible
--- instance J.ToJSON ActionOutputTypeInfo where
---   toJSON = J.toJSON . show
 
 data ActionInfo
   = ActionInfo
   { _aiName        :: !ActionName
   , _aiDefinition  :: !ResolvedActionDefinition
   , _aiPermissions :: !ActionPermissionMap
+  , _aiComment     :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
 $(makeLenses ''ActionInfo)
 
-data InputWebhook
-  = IWTemplate !URLTemplate
-  | IWPlain !Text
+newtype InputWebhook
+  = InputWebhook {unInputWebhook :: URLTemplate}
   deriving (Show, Eq, Lift, Generic)
 instance NFData InputWebhook
 instance Cacheable InputWebhook
 
 instance J.ToJSON InputWebhook where
-  toJSON = \case
-    IWTemplate template -> J.String $ printURLTemplate template
-    IWPlain t           -> J.String t
+  toJSON =  J.String . printURLTemplate . unInputWebhook
 
 instance J.FromJSON InputWebhook where
   parseJSON = J.withText "String" $ \t ->
-    if T.any (== '{') t then
-      case parseURLTemplate t of
-        Left _         -> fail "Parsing URL template failed"
-        Right template -> pure $ IWTemplate template
-    else pure $ IWPlain t
+    case parseURLTemplate t of
+      Left e  -> fail $ "Parsing URL template failed: " ++ e
+      Right v -> pure $ InputWebhook v
 
 type ActionDefinitionInput = ActionDefinition InputWebhook
 
@@ -186,29 +162,45 @@ data UpdateAction
   } deriving (Show, Eq, Lift)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''UpdateAction)
 
-newtype ActionPermissionSelect
-  = ActionPermissionSelect
-  { _apsFilter :: BoolExp
-  } deriving (Show, Eq, Lift, Generic)
-instance NFData ActionPermissionSelect
-instance Cacheable ActionPermissionSelect
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionSelect)
-
-newtype ActionPermissionDefinition
-  = ActionPermissionDefinition
-  { _apdSelect :: ActionPermissionSelect
-  } deriving (Show, Eq, Lift, Generic)
-instance NFData ActionPermissionDefinition
-instance Cacheable ActionPermissionDefinition
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionDefinition)
-
 data CreateActionPermission
   = CreateActionPermission
   { _capAction     :: !ActionName
   , _capRole       :: !RoleName
-  , _capDefinition :: !ActionPermissionDefinition
+  , _capDefinition :: !(Maybe J.Value)
   , _capComment    :: !(Maybe Text)
   } deriving (Show, Eq, Lift, Generic)
 instance NFData CreateActionPermission
 instance Cacheable CreateActionPermission
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''CreateActionPermission)
+
+-- representation of action permission metadata
+data ActionPermissionMetadata
+  = ActionPermissionMetadata
+  { _apmRole    :: !RoleName
+  , _apmComment :: !(Maybe Text)
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData ActionPermissionMetadata
+instance Cacheable ActionPermissionMetadata
+
+$(J.deriveFromJSON
+  (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True}
+  ''ActionPermissionMetadata)
+
+-- representation of action metadata
+data ActionMetadata
+  = ActionMetadata
+  { _amName        :: !ActionName
+  , _amComment     :: !(Maybe Text)
+  , _amDefinition  :: !ActionDefinitionInput
+  , _amPermissions :: ![ActionPermissionMetadata]
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData ActionMetadata
+instance Cacheable ActionMetadata
+
+instance J.FromJSON ActionMetadata where
+  parseJSON = J.withObject "Object" $ \o ->
+    ActionMetadata
+      <$> o J..: "name"
+      <*> o J..:? "comment"
+      <*> o J..: "definition"
+      <*> o J..:? "permissions" J..!= []

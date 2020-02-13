@@ -4,7 +4,6 @@ module Hasura.RQL.DDL.Action
   , runCreateAction
   , persistCreateAction
   , resolveAction
-  , buildActionFilter
 
   , UpdateAction
   , runUpdateAction
@@ -43,19 +42,6 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.URL.Template             (renderURLTemplate)
 import           Language.Haskell.TH.Syntax    (Lift)
--- data RetryConf
---   = RetryConf
---   { _rcNumRetries  :: !Word64
---   , _rcIntervalSec :: !Word64
---   , _rcTimeoutSec  :: !(Maybe Word64)
---   } deriving (Show, Eq, Lift)
-
--- data WebhookConf
---   = WebhookConf
---   { _wcUrl     :: !Text
---   , _wcTimeout :: !Word64
---   , _wcRetry   :: !RetryConf
---   } deriving (Show, Eq)
 
 getActionInfo
   :: (QErrM m, CacheRM m)
@@ -109,19 +95,8 @@ resolveAction customTypes actionDefinition = do
       _ -> throw400 InvalidParams $ "the argument's base type: "
           <> showNamedTy argumentBaseType <>
           " should be a scalar/enum/input_object"
-  when (hasList responseType) $ throw400 InvalidParams $
-    "the output type: " <> G.showGT responseType <> " cannot be a list"
-
+  -- Check if the response type is an object
   getObjectTypeInfo responseBaseType
-  -- TODO: validate the output type
-  -- responseTypeInfo <- getNonObjectTypeInfo responseBaseType
-  -- case responseTypeInfo of
-  --   VT.TIScalar typeInfo -> return $ ActionOutputScalar typeInfo
-  --   VT.TIEnum typeInfo   -> return $ ActionOutputEnum typeInfo
-  --   VT.TIObj typeInfo    -> return $ ActionOutputObject typeInfo
-  --   _ -> throw400 InvalidParams $ "the output type: " <>
-  --        showNamedTy responseBaseType <>
-  --        " should be a scalar/enum/object"
   traverse resolveWebhook actionDefinition
   where
     getNonObjectTypeInfo typeName = do
@@ -131,21 +106,15 @@ resolveAction customTypes actionDefinition = do
         throw400 NotExists $ "the type: " <> showNamedTy typeName <>
         " is not defined in custom types"
 
-    resolveWebhook = \case
-      IWPlain t           -> pure $ ResolvedWebhook t
-      IWTemplate template -> do
-        eitherRenderedTemplate <- renderURLTemplate template
-        either (throw400 Unexpected . T.pack) (pure . ResolvedWebhook) eitherRenderedTemplate
+    resolveWebhook (InputWebhook urlTemplate) = do
+      eitherRenderedTemplate <- renderURLTemplate urlTemplate
+      either (throw400 Unexpected . T.pack) (pure . ResolvedWebhook) eitherRenderedTemplate
 
     getObjectTypeInfo typeName =
       onNothing (Map.lookup (ObjectTypeName typeName) (snd customTypes)) $
         throw400 NotExists $ "the type: "
         <> showNamedTy typeName <>
         " is not an object type defined in custom types"
-
-    hasList = \case
-      G.TypeList _ _  -> True
-      G.TypeNamed _ _ -> False
 
 runUpdateAction
   :: forall m. ( QErrM m , CacheRWM m, MonadTx m)
@@ -240,14 +209,6 @@ newtype ActionMetadataField
   = ActionMetadataField { unActionMetadataField :: Text }
   deriving (Show, Eq, J.FromJSON, J.ToJSON)
 
--- TODO
-buildActionFilter
-  :: (QErrM m)
-  => ActionPermissionSelect
-  -> m AnnBoolExpPartialSQL
-buildActionFilter _ =
-  return annBoolExpTrue
-
 runCreateActionPermission
   :: (QErrM m , CacheRWM m, MonadTx m)
   => CreateActionPermission -> m EncJSON
@@ -267,15 +228,14 @@ persistCreateActionPermission :: (MonadTx m) => CreateActionPermission -> m ()
 persistCreateActionPermission CreateActionPermission{..}= do
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
     INSERT into hdb_catalog.hdb_action_permission
-      (action_name, role_name, definition, comment)
-      VALUES ($1, $2, $3, $4)
-  |] (_capAction, _capRole, Q.AltJ _capDefinition, _capComment) True
+      (action_name, role_name, comment)
+      VALUES ($1, $2, $3)
+  |] (_capAction, _capRole, _capComment) True
 
 data DropActionPermission
   = DropActionPermission
   { _dapAction :: !ActionName
   , _dapRole   :: !RoleName
-  -- , _capIfExists   :: !(Maybe IfExists)
   } deriving (Show, Eq, Lift)
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''DropActionPermission)
 

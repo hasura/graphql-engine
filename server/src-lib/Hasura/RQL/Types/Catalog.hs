@@ -139,6 +139,8 @@ instance NFData CatalogFunction
 instance Cacheable CatalogFunction
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
+type CatalogAction = ActionMetadata
+
 data CatalogMetadata
   = CatalogMetadata
   { _cmTables               :: ![CatalogTable]
@@ -150,8 +152,7 @@ data CatalogMetadata
   , _cmAllowlistCollections :: ![CollectionDef]
   , _cmComputedFields       :: ![CatalogComputedField]
   , _cmCustomTypes          :: !CustomTypes
-  , _cmActions              :: ![CreateAction]
-  , _cmActionPermissions    :: ![CreateActionPermission]
+  , _cmActions              :: ![CatalogAction]
   } deriving (Show, Eq, Generic)
 instance NFData CatalogMetadata
 instance Cacheable CatalogMetadata

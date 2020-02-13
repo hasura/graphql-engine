@@ -62,10 +62,10 @@ traverseQueryRootFldAST f = \case
 
 toPGQuery :: QueryRootFldResolved -> Q.Query
 toPGQuery = \case
-  QRFPk s           -> DS.selectQuerySQL True s
-  QRFSimple s       -> DS.selectQuerySQL False s
+  QRFPk s           -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFSimple s       -> DS.selectQuerySQL DS.JASMultipleRows s
   QRFAgg s          -> DS.selectAggQuerySQL s
-  QRFActionSelect s -> DS.selectQuerySQL True s
+  QRFActionSelect s -> DS.selectQuerySQL DS.JASSingleObject s
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
@@ -102,7 +102,7 @@ queryFldToPGAST fld = do
       validateHdrs userInfo (_fqocHeaders ctx)
       QRFAgg <$> RS.convertFuncQueryAgg ctx fld
     QCActionFetch ctx ->
-      QRFActionSelect <$> RA.resolveAsyncResponse userInfo ctx fld
+      QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
 
 mutFldToTx
   :: ( HasVersion
@@ -144,7 +144,7 @@ mutFldToTx fld = do
       validateHdrs userInfo (_docHeaders ctx)
       RM.convertDeleteByPk ctx fld
     MCAction ctx ->
-      RA.resolveActionInsert fld ctx (userVars userInfo)
+      RA.resolveActionMutation fld ctx (userVars userInfo)
 
 getOpCtx
   :: ( MonadReusability m

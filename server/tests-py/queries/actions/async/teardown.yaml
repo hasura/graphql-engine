@@ -1,6 +1,6 @@
 type: bulk
 args:
-- type: drop_action
+- type: drop_action # also drops the permissions
   args:
     name: create_user
     clear_data: true

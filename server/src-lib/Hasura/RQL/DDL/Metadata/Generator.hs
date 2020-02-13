@@ -22,7 +22,6 @@ import qualified Data.Aeson                         as J
 import qualified Data.HashMap.Strict                as HM
 import qualified Data.List.NonEmpty                 as NEList
 import qualified Data.Text                          as T
-import qualified Data.URL.Template                  as UT
 import qualified Data.Vector                        as V
 import qualified Language.GraphQL.Draft.Parser      as G
 import qualified Language.GraphQL.Draft.Syntax      as G
@@ -286,19 +285,7 @@ instance (Arbitrary a) => Arbitrary (ActionDefinition a) where
 instance Arbitrary ActionName where
   arbitrary = genericArbitrary
 
-instance Arbitrary UT.Variable where
-  arbitrary = genericArbitrary
-
-instance Arbitrary UT.URLTemplate where
-  arbitrary = genericArbitrary
-
 instance Arbitrary InputWebhook where
-  arbitrary = genericArbitrary
-
-instance Arbitrary ActionPermissionSelect where
-  arbitrary = genericArbitrary
-
-instance Arbitrary ActionPermissionDefinition where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionPermissionMetadata where

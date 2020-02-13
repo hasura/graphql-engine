@@ -8,6 +8,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import           Data.Coerce                   (coerce)
 
 import           Hasura.GraphQL.Schema.Builder
+import           Hasura.GraphQL.Schema.Common  (mkDescriptionWith)
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
@@ -47,8 +48,6 @@ mkAsyncActionQueryResponseObj actionName outputType =
         , G.toGT $ mkScalarTy PGTimeStampTZ)
       , ( "errors", "errors related to the invocation"
         , G.toGT $ mkScalarTy PGJSON)
-      -- , ( "status", "the status of this action, whether it is processed, etc."
-      --   , G.toGT $ G.NamedType "action_status")
       , ( "output", "the output fields of this action"
         , unGraphQLType outputType)
       ]
@@ -56,10 +55,9 @@ mkAsyncActionQueryResponseObj actionName outputType =
 mkMutationField
   :: ActionName
   -> ActionInfo
-  -> ActionPermissionInfo
   -> [(PGCol, PGScalarType)]
   -> (ActionExecutionContext, ObjFldInfo)
-mkMutationField actionName actionInfo permission definitionList =
+mkMutationField actionName actionInfo definitionList =
   ( actionExecutionContext
   , fieldInfo
   )
@@ -69,16 +67,15 @@ mkMutationField actionName actionInfo permission definitionList =
       case _adKind definition of
         ActionSynchronous  ->
           ActionExecutionSyncWebhook $ SyncActionExecutionContext actionName
-  -- TODO: only covers object types
-          (ExecOnPostgres definitionList)
+          (_adOutputType definition)
+          definitionList
           (_adHandler definition)
           (_adHeaders definition)
           (_adForwardClientHeaders definition)
-        ActionAsynchronous -> ActionExecutionAsync $ _apiFilter permission
+        ActionAsynchronous -> ActionExecutionAsync
 
-    -- TODO: we need to capture the comment from action definition
-    description =
-      G.Description $ "perform the action: " <>> actionName
+    description = mkDescriptionWith (PGDescription <$> (_aiComment actionInfo)) $
+                  "perform the action: " <>> actionName
 
     fieldInfo =
       mkHsraObjFldInfo
@@ -98,14 +95,14 @@ mkMutationField actionName actionInfo permission definitionList =
 
 mkQueryField
   :: ActionName
+  -> Maybe Text
   -> ResolvedActionDefinition
-  -> ActionPermissionInfo
   -> [(PGCol, PGScalarType)]
   -> Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
-mkQueryField actionName definition permission definitionList =
+mkQueryField actionName comment definition definitionList =
   case _adKind definition of
     ActionAsynchronous ->
-      Just ( ActionSelectOpContext (_apiFilter permission) definitionList
+      Just ( ActionSelectOpContext (_adOutputType definition) definitionList
 
            , mkHsraObjFldInfo (Just description) (unActionName actionName)
              (mapFromL _iviName [idArgument])
@@ -116,9 +113,8 @@ mkQueryField actionName definition permission definitionList =
            )
     ActionSynchronous -> Nothing
   where
-    -- TODO: we need to capture the comment from action definition
-    description =
-      G.Description $ "retrieve the result of action: " <>> actionName
+    description = mkDescriptionWith (PGDescription <$> comment) $
+                  "retrieve the result of action: " <>> actionName
 
     idArgument =
       InpValInfo (Just idDescription) "id" Nothing $ G.toNT $ mkScalarTy PGUUID
@@ -136,15 +132,15 @@ mkActionFieldsAndTypes
      , FieldMap
      )
 mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
-  return ( mkQueryField actionName definition permission definitionList
-         , mkMutationField actionName actionInfo permission definitionList
-         -- , maybe mempty mkFieldMap annotatedOutputTypeM
+  return ( mkQueryField actionName comment definition definitionList
+         , mkMutationField actionName actionInfo definitionList
          , fieldMap
          )
   where
     actionName = _aiName actionInfo
     definition = _aiDefinition actionInfo
     roleName = _apiRole permission
+    comment = _aiComment actionInfo
 
     -- all the possible field references
     fieldReferences =
@@ -202,6 +198,8 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
                        )
                      , RFRelationship $ RelationshipField
                        (RelInfo
+                        -- RelationshipName, which is newtype wrapper over G.Name is always
+                        -- non-empty text so as to conform GraphQL spec
                         (RelName $ mkNonEmptyTextUnsafe $ coerce relationshipName)
                         (_trType relationship)
                         columnMapping remoteTable True)
@@ -231,17 +229,13 @@ mkActionSchemaOne
          )
        )
 mkActionSchemaOne annotatedObjects actionInfo = do
-  -- annotatedOutputTypeM <- case _aiOutputTypeInfo actionInfo of
-  --   ActionOutputObject _ ->
-  -- annotatedOutputTypeM <- fmap Just $ onNothing
   annotatedOutputType <- onNothing
       (Map.lookup (ObjectTypeName actionOutputBaseType) annotatedObjects) $
       throw500 $ "missing annotated type for: " <> showNamedTy actionOutputBaseType
-    -- _ -> return Nothing
   forM permissions $ \permission ->
     mkActionFieldsAndTypes actionInfo annotatedOutputType permission
   where
-    adminPermission = ActionPermissionInfo adminRole annBoolExpTrue
+    adminPermission = ActionPermissionInfo adminRole
     permissions = Map.insert adminRole adminPermission $ _aiPermissions actionInfo
     actionOutputBaseType =
       G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo

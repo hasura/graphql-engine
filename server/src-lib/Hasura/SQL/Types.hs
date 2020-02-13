@@ -33,6 +33,7 @@ module Hasura.SQL.Types
 
   , DQuote(..)
   , dquote
+  , dquoteList
 
   , IsIden(..)
   , Iden(..)
@@ -121,9 +122,17 @@ instance DQuote T.Text where
   dquoteTxt = id
   {-# INLINE dquoteTxt #-}
 
+deriving instance DQuote G.NamedType
+deriving instance DQuote G.Name
+deriving instance DQuote G.EnumValue
+
 dquote :: (DQuote a) => a -> T.Text
 dquote = T.dquote . dquoteTxt
 {-# INLINE dquote #-}
+
+dquoteList :: (DQuote a, Foldable t) => t a -> T.Text
+dquoteList = T.intercalate ", " . map dquote . toList
+{-# INLINE dquoteList #-}
 
 infixr 6 <>>
 (<>>) :: (DQuote a) => T.Text -> a -> T.Text
@@ -134,9 +143,6 @@ infixr 6 <<>
 (<<>) :: (DQuote a) => a -> T.Text -> T.Text
 (<<>) a rTxt = dquote a <> rTxt
 {-# INLINE (<<>) #-}
-
-instance DQuote G.Name where
-  dquoteTxt = G.unName
 
 pgFmtIden :: T.Text -> T.Text
 pgFmtIden x =
@@ -338,6 +344,7 @@ data PGScalarType
   | PGChar
   | PGVarchar
   | PGText
+  | PGCitext
   | PGDate
   | PGTimeStampTZ
   | PGTimeTZ
@@ -367,6 +374,7 @@ instance ToSQL PGScalarType where
     PGChar        -> "character"
     PGVarchar     -> "varchar"
     PGText        -> "text"
+    PGCitext      -> "citext"
     PGDate        -> "date"
     PGTimeStampTZ -> "timestamptz"
     PGTimeTZ      -> "timetz"
@@ -419,7 +427,7 @@ textToPGScalarType t = case t of
   "character varying"        -> PGVarchar
 
   "text"                     -> PGText
-  "citext"                   -> PGText
+  "citext"                   -> PGCitext
 
   "date"                     -> PGDate
 
@@ -457,16 +465,15 @@ pgTypeOid PGBoolean     = PTI.bool
 pgTypeOid PGChar        = PTI.char
 pgTypeOid PGVarchar     = PTI.varchar
 pgTypeOid PGText        = PTI.text
+pgTypeOid PGCitext      = PTI.text -- Explict type cast to citext needed, See also Note [Type casting prepared params]
 pgTypeOid PGDate        = PTI.date
 pgTypeOid PGTimeStampTZ = PTI.timestamptz
 pgTypeOid PGTimeTZ      = PTI.timetz
 pgTypeOid PGJSON        = PTI.json
 pgTypeOid PGJSONB       = PTI.jsonb
--- we are using the ST_GeomFromGeoJSON($i) instead of $i
-pgTypeOid PGGeometry    = PTI.text
+pgTypeOid PGGeometry    = PTI.text -- we are using the ST_GeomFromGeoJSON($i) instead of $i
 pgTypeOid PGGeography   = PTI.text
--- we are using the ST_RastFromHexWKB($i) instead of $i
-pgTypeOid PGRaster      = PTI.text
+pgTypeOid PGRaster      = PTI.text -- we are using the ST_RastFromHexWKB($i) instead of $i
 pgTypeOid PGUUID        = PTI.uuid
 pgTypeOid (PGUnknown _) = PTI.auto
 
@@ -483,7 +490,8 @@ isNumType PGNumeric = True
 isNumType ty        = isIntegerType ty
 
 stringTypes :: [PGScalarType]
-stringTypes = [PGVarchar, PGText]
+stringTypes = [PGVarchar, PGText, PGCitext]
+
 isStringType :: PGScalarType -> Bool
 isStringType = (`elem` stringTypes)
 
