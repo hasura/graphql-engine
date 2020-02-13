@@ -12,9 +12,7 @@ curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | bash
 ```
 - Windows
 
-Download the binary cli-hasura-windows-amd64.exe available under Assets of the latest release from the GitHub release page: https://github.com/hasura/graphql-engine/releases
-
-Rename the downloaded file to hasura. You can add the path to the environment variable PATH for making hasura accessible globally.
+Download the binary `cli-hasura-windows-amd64.exe` available under Assets of the latest release from the GitHub release page: https://github.com/hasura/graphql-engine/releases
 
 ### Download using go get
 
