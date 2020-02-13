@@ -349,8 +349,13 @@ An example:
                "filter" : {
                    "author_id" : "X-HASURA-USER-ID"
                },
+               "check" : {
+                   "content" : {
+                     "_ne": ""
+                   }
+               },
                "set":{
-                   "id":"X-HASURA-USER-ID"
+                   "updated_at" : "NOW()"
                }
            }
        }
@@ -358,11 +363,13 @@ An example:
 
 This reads as follows - for the ``user`` role:
 
-* Allow updating only those rows where the ``check`` passes i.e. the value of the ``author_id`` column of a row matches the value of the session variable ``X-HASURA-USER-ID`` value.
+* Allow updating only those rows where the ``filter`` passes i.e. the value of the ``author_id`` column of a row matches the value of the session variable ``X-HASURA-USER-ID`` value.
 
-* If the above ``check`` passes for a given row, allow updating only the ``title``, ``content`` and ``category`` columns (*as specified in the* ``columns`` *key*).
+* If the above ``filter`` passes for a given row, allow updating only the ``title``, ``content`` and ``category`` columns (*as specified in the* ``columns`` *key*).
 
-* When this update happens, the value of the column ``id`` will be automatically ``set`` to the value of the resolved session variable ``X-HASURA-USER-ID``.
+* After the update happens, verify that the ``check`` condition holds for the updated row, i.e. that the value in the ``content`` column is not empty.
+
+* When this update happens, the value of the column ``updated_at`` will be automatically be ``set`` to the current timestamp.
 
 .. note::
 
