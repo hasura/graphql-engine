@@ -92,18 +92,6 @@ func TestCommands(t *testing.T) {
 		})
 
 		skip(t)
-		// This will init the project dir
-		t.Run("init command", func(t *testing.T) {
-			v2.TestInitCmd(t, ec, initDir)
-		})
-
-		skip(t)
-		// This will validate the project dir
-		t.Run("validate", func(t *testing.T) {
-			integrationtest.TestValidate(t, ec)
-		})
-
-		skip(t)
 		t.Run("cli-ext-plugin-install", func(t *testing.T) {
 			installOpts := commands.PluginInstallOptions{
 				EC:           ec,
@@ -114,6 +102,18 @@ func TestCommands(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unable to install cli-ext plugin, got %v", err)
 			}
+		})
+
+		skip(t)
+		// This will init the project dir
+		t.Run("init command", func(t *testing.T) {
+			v2.TestInitCmd(t, ec, initDir)
+		})
+
+		skip(t)
+		// This will validate the project dir
+		t.Run("validate", func(t *testing.T) {
+			integrationtest.TestValidate(t, ec)
 		})
 
 		skip(t)
