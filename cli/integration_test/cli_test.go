@@ -93,7 +93,7 @@ func TestCommands(t *testing.T) {
 
 		skip(t)
 		t.Run("cli-ext-plugin-install", func(t *testing.T) {
-			installOpts := commands.PluginInstallOptions{
+			installOpts := &commands.PluginInstallOptions{
 				EC:           ec,
 				Name:         "cli-ext",
 				ManifestFile: "/build/_cli_ext_output/manifest-dev.yaml",
