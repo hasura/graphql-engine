@@ -88,8 +88,8 @@ data RQLQueryV1
   | RQRedeliverEvent     !RedeliverEventQuery
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
-  | RQCreateScheduledTrigger !CreateScheduledTrigger
-  | RQUpdateScheduledTrigger !CreateScheduledTrigger
+  | RQCreateScheduledTrigger !CreateScheduledTriggerWith
+  | RQUpdateScheduledTrigger !CreateScheduledTriggerWith
   | RQDeleteScheduledTrigger !TriggerName
   | RQCancelScheduledEvent !EventId
 

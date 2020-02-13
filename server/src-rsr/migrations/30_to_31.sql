@@ -4,7 +4,8 @@ CREATE TABLE hdb_catalog.hdb_scheduled_trigger
   webhook_conf JSON NOT NULL,
   schedule JSON NOT NULL,
   payload JSON,
-  retry_conf JSON
+  retry_conf JSON,
+  include_in_metadata BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE hdb_catalog.hdb_scheduled_events

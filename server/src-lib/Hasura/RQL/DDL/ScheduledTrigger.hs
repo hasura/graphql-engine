@@ -16,28 +16,29 @@ import           Hasura.RQL.Types
 
 import qualified Database.PG.Query     as Q
 
-runCreateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger ->  m EncJSON
-runCreateScheduledTrigger q = do
-  addScheduledTriggerToCatalog q
-  buildSchemaCacheFor $ MOScheduledTrigger $ stName q
+runCreateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTriggerWith ->  m EncJSON
+runCreateScheduledTrigger (CreateScheduledTriggerWith definition includeInMetadata) = do
+  addScheduledTriggerToCatalog definition includeInMetadata
+  buildSchemaCacheFor $ MOScheduledTrigger $ stName definition
   return successMsg
 
-addScheduledTriggerToCatalog :: (MonadTx m) => CreateScheduledTrigger ->  m ()
-addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
+addScheduledTriggerToCatalog :: (MonadTx m) => CreateScheduledTrigger -> Bool ->  m ()
+addScheduledTriggerToCatalog CreateScheduledTrigger {..} includeInMetadata = liftTx $ do
   Q.unitQE defaultTxErrorHandler
     [Q.sql|
       INSERT into hdb_catalog.hdb_scheduled_trigger
-        (name, webhook_conf, schedule, payload, retry_conf)
+        (name, webhook_conf, schedule, payload, retry_conf, include_in_metadata)
       VALUES ($1, $2, $3, $4, $5)
-    |] (stName, Q.AltJ stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf) False
+    |] (stName, Q.AltJ stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
+       , includeInMetadata) False
   case stSchedule of
-    Cron _ -> pure ()
     OneOff timestamp -> Q.unitQE defaultTxErrorHandler
       [Q.sql|
         INSERT into hdb_catalog.hdb_scheduled_events
           (name, scheduled_time)
          VALUES ($1, $2)
       |] (stName, timestamp) False
+    _ -> pure ()
 
 resolveScheduledTrigger
   :: (QErrM m, MonadIO m)
@@ -55,23 +56,25 @@ resolveScheduledTrigger CreateScheduledTrigger {..} = do
           headerInfo
   pure stInfo
 
-runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger ->  m EncJSON
-runUpdateScheduledTrigger q = do
-  updateScheduledTriggerInCatalog q
-  buildSchemaCacheFor $ MOScheduledTrigger $ stName q
+runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTriggerWith -> m EncJSON
+runUpdateScheduledTrigger (CreateScheduledTriggerWith definition includeInMetadata) = do
+  updateScheduledTriggerInCatalog definition includeInMetadata
+  buildSchemaCacheFor $ MOScheduledTrigger $ stName definition
   return successMsg
 
-updateScheduledTriggerInCatalog :: (MonadTx m) => CreateScheduledTrigger -> m ()
-updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
+updateScheduledTriggerInCatalog :: (MonadTx m) => CreateScheduledTrigger -> Bool -> m ()
+updateScheduledTriggerInCatalog CreateScheduledTrigger {..} includeInMetadata = liftTx $ do
   Q.unitQE defaultTxErrorHandler
    [Q.sql|
     UPDATE hdb_catalog.hdb_scheduled_trigger
     SET webhook_conf = $2,
         schedule = $3,
         payload = $4,
-        retry_conf = $5
+        retry_conf = $5,
+        include_in_metadata = $6
     WHERE name = $1
-   |] (stName, Q.AltJ stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf) False
+   |] (stName, Q.AltJ stWebhookConf, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
+      , includeInMetadata) False
   -- since the scheduled trigger is updated, clear all its future events which are not retries
   Q.unitQE defaultTxErrorHandler
    [Q.sql|

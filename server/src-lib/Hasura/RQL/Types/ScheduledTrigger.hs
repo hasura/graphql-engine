@@ -1,6 +1,7 @@
 -- | These are types for Scheduled Trigger definition; see "Hasura.Eventing.ScheduledTrigger"
 module Hasura.RQL.Types.ScheduledTrigger
   ( ScheduleType(..)
+  , CreateScheduledTriggerWith(..)
   , CreateScheduledTrigger(..)
   , RetryConfST(..)
   , formatTime'
@@ -81,6 +82,21 @@ instance FromJSON CreateScheduledTrigger where
       pure CreateScheduledTrigger {..}
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
+
+data CreateScheduledTriggerWith
+  = CreateScheduledTriggerWith
+  { stwDefinition        :: !CreateScheduledTrigger
+  , stwIncludeInMetadata :: !Bool
+  } deriving (Show, Eq, Generic)
+
+instance FromJSON CreateScheduledTriggerWith where
+  parseJSON =
+    withObject "CreateScheduledTriggerWith" $ \o -> do
+      stwDefinition <- o .: "definition"
+      stwIncludeInMetadata <- o .: "include_in_metadata"
+      pure CreateScheduledTriggerWith {..}
+
+$(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledTriggerWith)
 
 -- Supported time string formats for the API:
 -- (see FromJSON for ZonedTime: https://hackage.haskell.org/package/aeson-1.4.6.0/docs/src/Data.Aeson.Types.FromJSON.html#line-2050)
