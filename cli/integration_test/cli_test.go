@@ -8,10 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hasura/graphql-engine/cli/commands"
-
 	"github.com/briandowns/spinner"
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/commands"
 	integrationtest "github.com/hasura/graphql-engine/cli/integration_test"
 	"github.com/spf13/viper"
 

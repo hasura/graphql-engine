@@ -172,7 +172,7 @@ func TestOpen(t *testing.T) {
 		err bool
 	}{
 		{
-			"mock://user:pass@tcp(host:1337)/db",
+			"mock://user:pass@host:1337/db",
 			false,
 		},
 		{

@@ -130,7 +130,7 @@ func Open(url string, isCMD bool, logger *log.Logger) (Driver, error) {
 
 	d, ok := drivers[u.Scheme]
 	if !ok {
-		return nil, fmt.Errorf("database driver: unknown driver hasuradb (forgotten import?)")
+		return nil, fmt.Errorf("database driver: unknown driver %v", u.Scheme)
 	}
 
 	if logger == nil {

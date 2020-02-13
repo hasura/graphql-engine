@@ -87,6 +87,16 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			"",
 			"",
 		},
+		{
+			"down-all-migrations",
+			&commands.MigrateApplyOptions{
+				EC:            ec,
+				DownMigration: "all",
+			},
+			nil,
+			"",
+			"",
+		},
 	}
 
 	for _, tc := range tt {
