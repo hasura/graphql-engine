@@ -233,6 +233,7 @@ data UpdPermInfo
   { upiCols            :: !(HS.HashSet PGCol)
   , upiTable           :: !QualifiedTable
   , upiFilter          :: !AnnBoolExpPartialSQL
+  , upiCheck           :: !(Maybe AnnBoolExpPartialSQL)
   , upiSet             :: !PreSetColsPartial
   , upiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq, Generic)

@@ -359,9 +359,10 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
         updPermDefToOrdJSON :: Permission.UpdPermDef -> AO.Value
         updPermDefToOrdJSON = permDefToOrdJSON updPermToOrdJSON
           where
-            updPermToOrdJSON (Permission.UpdPerm columns set fltr) =
+            updPermToOrdJSON (Permission.UpdPerm columns set fltr check) =
               AO.object $ [ ("columns", AO.toOrdered columns)
                           , ("filter", AO.toOrdered fltr)
+                          , ("check", AO.toOrdered check)
                           ] <> catMaybes [maybeSetToMaybeOrdPair set]
 
         delPermDefToOrdJSON :: Permission.DelPermDef -> AO.Value

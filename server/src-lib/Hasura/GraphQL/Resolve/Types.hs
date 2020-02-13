@@ -91,6 +91,7 @@ data UpdOpCtx
   , _uocHeaders    :: ![T.Text]
   , _uocAllCols    :: !PGColGNameMap
   , _uocFilter     :: !AnnBoolExpPartialSQL
+  , _uocCheck      :: !(Maybe AnnBoolExpPartialSQL)
   , _uocPresetCols :: !PreSetColsPartial
   } deriving (Show, Eq)
 
@@ -191,6 +192,7 @@ type RelationInfoMap = Map.HashMap RelName RelInfo
 data UpdPermForIns
   = UpdPermForIns
   { upfiCols   :: ![PGCol]
+  , upfiCheck  :: !(Maybe AnnBoolExpPartialSQL)
   , upfiFilter :: !AnnBoolExpPartialSQL
   , upfiSet    :: !PreSetColsPartial
   } deriving (Show, Eq)
