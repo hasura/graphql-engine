@@ -16,6 +16,7 @@ import TableComment from './TableComment';
 
 import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import CheckConstraints from './CheckConstraints';
 
 import {
   setTableName,
@@ -402,7 +403,9 @@ class AddTable extends Component {
       schemaList,
       columnDefaultFunctions,
       columnTypeCasts,
+      checkConstraints,
     } = this.props;
+
     const getCreateBtnText = () => {
       let createBtnText = 'Add Table';
       if (ongoingRequest) {
@@ -419,9 +422,7 @@ class AddTable extends Component {
 
     return (
       <div
-        className={`${styles.addTablesBody} ${styles.clear_fix} ${
-          styles.padd_left
-        }`}
+        className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
       >
         <Helmet title="Add Table - Data | Hasura" />
         <div className={styles.subHeader}>
@@ -513,6 +514,12 @@ class AddTable extends Component {
               uniqueKeys={uniqueKeys}
               dispatch={dispatch}
               setUniqueKeys={setUniqueKeys}
+            />
+            <hr />
+            <h4 className={styles.subheading_text}>Check Constraints</h4>
+            <CheckConstraints
+              constraints={checkConstraints}
+              dispatch={dispatch}
             />
             <hr />
             <TableComment onChange={this.onTableCommentChange} />
