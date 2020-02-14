@@ -139,15 +139,14 @@ instance NFData CatalogFunction
 instance Cacheable CatalogFunction
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
-
 data CatalogScheduledTrigger
   = CatalogScheduledTrigger
   { _cstName           :: !TriggerName
   , _cstWebhookConf    :: !WebhookConf
-  , _cstSchedule       :: !ScheduleType
+  , _cstScheduleConf   :: !ScheduleType
   , _cstPayload        :: !(Maybe Value)
   , _cstRetryConf      :: !RetryConfST
-  , _cstHeaders        :: !(Maybe [HeaderConf])
+  , _cstHeaderConf     :: !(Maybe [HeaderConf])
   } deriving (Show, Eq, Generic)
 instance NFData CatalogScheduledTrigger
 instance Cacheable CatalogScheduledTrigger

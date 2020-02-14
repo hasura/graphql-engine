@@ -1,6 +1,8 @@
 -- | These are types for Scheduled Trigger definition; see "Hasura.Eventing.ScheduledTrigger"
 module Hasura.RQL.Types.ScheduledTrigger
   ( ScheduleType(..)
+  , ScheduledTriggerName(..)
+  , ScheduledEventId(..)
   , CreateScheduledTrigger(..)
   , RetryConfST(..)
   , formatTime'
@@ -75,6 +77,19 @@ instance FromJSON CreateScheduledTrigger where
       pure CreateScheduledTrigger {..}
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
+
+newtype ScheduledTriggerName
+  = ScheduledTriggerName { unName :: ET.TriggerName }
+  deriving (Show, Eq)
+
+$(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledTriggerName)
+
+newtype ScheduledEventId
+  = ScheduledEventId{ unEventId:: ET.EventId}
+  deriving (Show, Eq)
+
+$(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledEventId)
+
 
 -- Supported time string formats for the API:
 -- (see FromJSON for ZonedTime: https://hackage.haskell.org/package/aeson-1.4.6.0/docs/src/Data.Aeson.Types.FromJSON.html#line-2050)

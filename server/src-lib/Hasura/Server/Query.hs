@@ -90,9 +90,9 @@ data RQLQueryV1
 
   | RQCreateScheduledTrigger !CreateScheduledTrigger
   | RQUpdateScheduledTrigger !CreateScheduledTrigger
-  | RQDeleteScheduledTrigger !TriggerName
-  | RQCancelScheduledEvent !EventId
-  | RQTrackScheduledTrigger !TriggerName
+  | RQDeleteScheduledTrigger !ScheduledTriggerName
+  | RQCancelScheduledEvent   !ScheduledEventId
+  | RQTrackScheduledTrigger  !ScheduledTriggerName
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection

@@ -73,7 +73,7 @@ updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
     SET webhook_conf = $2,
         schedule_conf = $3,
         payload = $4,
-        retry_conf = $5,
+        retry_conf = $5
     WHERE name = $1
    |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
       ) False
@@ -84,8 +84,8 @@ updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
     WHERE name = $1 AND scheduled_time > now() AND tries = 0
    |] (Identity stName) False
 
-runDeleteScheduledTrigger :: (CacheRWM m, MonadTx m) => TriggerName -> m EncJSON
-runDeleteScheduledTrigger stName = do
+runDeleteScheduledTrigger :: (CacheRWM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
+runDeleteScheduledTrigger (ScheduledTriggerName stName) = do
   deleteScheduledTriggerFromCatalog stName
   return successMsg
 
@@ -97,9 +97,9 @@ deleteScheduledTriggerFromCatalog stName = liftTx $ do
     WHERE name = $1
    |] (Identity stName) False
 
-runCancelScheduledEvent :: (MonadTx m) => EventId -> m EncJSON
-runCancelScheduledEvent se = do
-  affectedRows <- deleteScheduledEventFromCatalog se
+runCancelScheduledEvent :: (MonadTx m) => ScheduledEventId -> m EncJSON
+runCancelScheduledEvent (ScheduledEventId seId) = do
+  affectedRows <- deleteScheduledEventFromCatalog seId
   if | affectedRows == 1 -> pure successMsg
      | affectedRows == 0 -> throw400 NotFound "scheduled event not found"
      | otherwise -> throw500 "unexpected: more than one scheduled events cancelled"
@@ -108,13 +108,12 @@ deleteScheduledEventFromCatalog :: (MonadTx m) => EventId -> m Int
 deleteScheduledEventFromCatalog seId = liftTx $ do
   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
-    DELETE FROM hdb_catalog.hdb_scheduled_events
-    WHERE id = $1
-    RETURNING count(*)
+    WITH "cte" AS (DELETE FROM hdb_catalog.hdb_scheduled_events WHERE id = $1 RETURNING *)
+    SELECT count(*) FROM "cte"
    |] (Identity seId) False
 
-runTrackScheduledTrigger :: (MonadTx m) => TriggerName -> m EncJSON
-runTrackScheduledTrigger stName = do
+runTrackScheduledTrigger :: (MonadTx m) => ScheduledTriggerName -> m EncJSON
+runTrackScheduledTrigger (ScheduledTriggerName stName) = do
   trackScheduledTriggerInCatalog stName
   return successMsg
 

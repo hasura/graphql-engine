@@ -179,7 +179,7 @@ from
           json_build_object(
             'name', name,
             'webhook_conf', webhook_conf :: json,
-            'schedule', schedule :: json,
+            'schedule_conf', schedule_conf :: json,
             'payload', payload :: json,
             'retry_conf', retry_conf :: json
           )
