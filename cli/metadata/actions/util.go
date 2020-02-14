@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 
 	gyaml "github.com/ghodss/yaml"
 	"github.com/sirupsen/logrus"
@@ -55,13 +54,18 @@ func convertMetadataToSDL(toPayload sdlToRequest, cmdName string, logger *logrus
 	if err != nil {
 		return
 	}
-	sdlToCmd := exec.Command(cmdName, "cli-ext", "sdl", "to", "--input-file", inputFileName, "--output-file", outputFileName)
+	sdlToCmd, err := getCLIExtPath(cmdName)
+	if err != nil {
+		return
+	}
+	args := []string{"sdl", "to", "--input-file", inputFileName, "--output-file", outputFileName}
+	sdlToCmd.Args = append(sdlToCmd.Args, args...)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	sdlToCmd.Stdout = &stdout
 	sdlToCmd.Stderr = &stderr
 	err = sdlToCmd.Run()
-	logger.WithField("command", "sdl to").Debugln(fmt.Sprintf("output: %s", stdout.String()))
+	logger.WithField("command", "sdl to").Debug(fmt.Sprintf("output: %s", stdout.String()))
 	if err != nil {
 		return toResponse, errors.Wrap(
 			fmt.Errorf(stderr.String()),
@@ -92,7 +96,12 @@ func convertSDLToMetadata(fromPayload sdlFromRequest, cmdName string, logger *lo
 	if err != nil {
 		return
 	}
-	sdlFromCmd := exec.Command(cmdName, "cli-ext", "sdl", "from", "--input-file", inputFileName, "--output-file", outputFileName)
+	sdlFromCmd, err := getCLIExtPath(cmdName)
+	if err != nil {
+		return
+	}
+	args := []string{"sdl", "from", "--input-file", inputFileName, "--output-file", outputFileName}
+	sdlFromCmd.Args = append(sdlFromCmd.Args, args...)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	sdlFromCmd.Stdout = &stdout
@@ -130,7 +139,12 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string, logger 
 	if err != nil {
 		return
 	}
-	actionsCodegenCmd := exec.Command(cmdName, "cli-ext", "actions-codegen", "--input-file", inputFileName, "--output-file", outputFileName)
+	actionsCodegenCmd, err := getCLIExtPath(cmdName)
+	if err != nil {
+		return
+	}
+	args := []string{"actions-codegen", "--input-file", inputFileName, "--output-file", outputFileName}
+	actionsCodegenCmd.Args = append(actionsCodegenCmd.Args, args...)
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	actionsCodegenCmd.Stdout = &stdout

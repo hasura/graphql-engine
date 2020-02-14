@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/fatih/color"
@@ -91,6 +92,9 @@ type ConsoleOptions struct {
 
 	StaticDir string
 	Browser   string
+
+	APIServerSignal     chan os.Signal
+	ConsoleServerSignal chan os.Signal
 }
 
 func (o *ConsoleOptions) Run() error {
@@ -144,22 +148,52 @@ func (o *ConsoleOptions) Run() error {
 		return errors.Wrap(err, "error serving console")
 	}
 
+	// create servers
+	apiServer := &http.Server{
+		Addr:    fmt.Sprintf("%s:%s", o.Address, o.APIPort),
+		Handler: r.router,
+	}
+	consoleServer := &http.Server{
+		Addr:    fmt.Sprintf("%s:%s", o.Address, o.ConsolePort),
+		Handler: consoleRouter,
+	}
+
+	go func() {
+		<-o.APIServerSignal
+		if err := apiServer.Close(); err != nil {
+			o.EC.Logger.Debugf("unable to close server running on port %s", o.APIPort)
+		}
+	}()
+
+	go func() {
+		<-o.ConsoleServerSignal
+		if err := consoleServer.Close(); err != nil {
+			o.EC.Logger.Debugf("unable to close server running on port %s", o.ConsolePort)
+		}
+	}()
+
 	// Create WaitGroup for running 2 servers
 	wg := &sync.WaitGroup{}
 	o.WG = wg
 	wg.Add(1)
 	go func() {
-		err = r.router.Run(o.Address + ":" + o.APIPort)
-		if err != nil {
-			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
+		if err := apiServer.ListenAndServe(); err != nil {
+			if err == http.ErrServerClosed {
+				o.EC.Logger.Infof("server closed on port %s under signal", o.APIPort)
+			} else {
+				o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
+			}
 		}
 		wg.Done()
 	}()
 	wg.Add(1)
 	go func() {
-		err = consoleRouter.Run(o.Address + ":" + o.ConsolePort)
-		if err != nil {
-			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.ConsolePort)
+		if err := consoleServer.ListenAndServe(); err != nil {
+			if err == http.ErrServerClosed {
+				o.EC.Logger.Infof("server closed on port %s under signal", o.ConsolePort)
+			} else {
+				o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.ConsolePort)
+			}
 		}
 		wg.Done()
 	}()
