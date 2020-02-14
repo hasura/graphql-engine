@@ -62,7 +62,6 @@ type DefaultPluginHandler struct {
 // NewDefaultPluginHandler instantiates the DefaultPluginHandler with a list of
 // given filename prefixes used to identify valid plugin filenames.
 func NewDefaultPluginHandler(validPrefixes []string) *DefaultPluginHandler {
-
 	return &DefaultPluginHandler{
 		ValidPrefixes: validPrefixes,
 	}
