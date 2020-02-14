@@ -50,6 +50,8 @@ import {
 } from './AddWarning';
 
 import styles from '../../../Common/TableCommon/Table.scss';
+import { setCheckConstraints } from './AddActions';
+import { getCheckName } from './utils';
 
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
@@ -144,6 +146,26 @@ class AddTable extends Component {
       newUniqueKeys[numUniqueKeys - 1] = [i];
       dispatch(setUniqueKeys([...newUniqueKeys, []]));
     }
+  };
+
+  onConstraintChange = (columnName, e) => {
+    const { dispatch, checkConstraints } = this.props;
+    const name = getCheckName(columnName);
+    let newConstraints;
+    const currentColumnCheck = (checkConstraints || []).find(
+      c => c.name === name
+    );
+    if (currentColumnCheck) {
+      newConstraints = checkConstraints.map(c => {
+        if (c.name === name) {
+          return { name, check: e.target.value };
+        }
+        return c;
+      });
+    } else {
+      newConstraints = [...checkConstraints, { name, check: e.target.value }];
+    }
+    dispatch(setCheckConstraints(newConstraints));
   };
 
   setColDefaultValue = (i, isNullableChecked, value) => {
@@ -448,6 +470,8 @@ class AddTable extends Component {
               onColNullableChange={this.onColNullableChange}
               onColUniqueChange={this.onColUniqueChange}
               setColDefaultValue={this.setColDefaultValue}
+              constraints={checkConstraints}
+              onConstraintChange={this.onConstraintChange}
             />
             <div>
               <FrequentlyUsedColumnSelector

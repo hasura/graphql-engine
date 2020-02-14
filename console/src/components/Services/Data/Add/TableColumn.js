@@ -6,6 +6,7 @@ import { commonDataTypes } from '../utils';
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
+import { getCheckName } from './utils';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -36,6 +37,8 @@ const TableColumn = props => {
     columnDefaultFunctions,
     columnTypeCasts,
     uniqueKeys,
+    constraints,
+    onConstraintChange,
   } = props;
 
   let isColumnUnique = false;
@@ -85,6 +88,10 @@ const TableColumn = props => {
       ? columnDefaultFunctions[column.type]
       : getInferredDefaultValues();
 
+  const columnConstraint = constraints.find(
+    c => c.name === getCheckName(column.name)
+  );
+
   return (
     <div key={i} className={`${styles.display_flex} form-group`}>
       <input
@@ -116,6 +123,19 @@ const TableColumn = props => {
           testId={`col-default-${i}`}
           column={column}
           colDefaultFunctions={defaultFunctions}
+        />
+      </span>
+      <span
+        className={`${styles.inputDefault} ${styles.defaultWidth}`}
+        data-test={`col-type-${i}`}
+      >
+        <input
+          type="text"
+          className="form-control"
+          disabled={!column.name}
+          value={columnConstraint ? columnConstraint.check : ''}
+          placeholder="check constraint, eg. id > 1"
+          onChange={e => onConstraintChange(column.name, e)}
         />
       </span>
       {/*
