@@ -62,7 +62,7 @@ export const getFrameworkCodegen = (
   return getCodegenFunc(framework)
     .then(codegenerator => {
       const derive = {
-        mutation: parentMutation,
+        operation: parentMutation,
       };
       const codegenFiles = codegenerator(actionName, actionsSdl, derive);
       return codegenFiles;
