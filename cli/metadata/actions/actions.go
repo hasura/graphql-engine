@@ -34,9 +34,9 @@ var (
 )
 
 type DerivePayload struct {
-	IntrospectionSchema interface{} `json:"introspection_schema"`
-	Mutation            string      `json:"mutation"`
-	ActionName          string      `json:"action_name"`
+	IntrospectionSchema interface{} `json:"introspection_schema" yaml:"introspection_schema,omitempty"`
+	Operation           string      `json:"operation" yaml:"operation,omitempty"`
+	ActionName          string      `json:"action_name" yaml:"action_name,omitempty"`
 }
 
 type sdlPayload struct {
@@ -63,10 +63,10 @@ type sdlFromResponse struct {
 }
 
 type actionsCodegenRequest struct {
-	ActionName    string                      `json:"action_name"`
-	SDL           sdlPayload                  `json:"sdl"`
+	ActionName    string                      `json:"action_name" yaml:"action_name,omitempty"`
+	SDL           sdlPayload                  `json:"sdl" yaml:"sdl,omitempty"`
 	Derive        DerivePayload               `json:"derive,omitempty"`
-	CodegenConfig *cli.CodegenExecutionConfig `json:"codegen_config"`
+	CodegenConfig *cli.CodegenExecutionConfig `json:"codegen_config" yaml:"codegen_config,omitempty"`
 }
 
 type codegenFile struct {
@@ -75,7 +75,7 @@ type codegenFile struct {
 }
 
 type actionsCodegenResponse struct {
-	Files []codegenFile `json:"codegen"`
+	Files []codegenFile `json:"codegen" yaml:"codegen,omitempty"`
 }
 
 type ActionConfig struct {
@@ -123,7 +123,7 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 	return cfg
 }
 
-func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMutation string, opts *OverrideOptions) error {
+func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFrom string, opts *OverrideOptions) error {
 	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
 	if err != nil {
 		return err
@@ -196,7 +196,7 @@ input SampleInput {
 		sdlToReq := sdlToRequest{
 			Derive: DerivePayload{
 				IntrospectionSchema: introSchema,
-				Mutation:            deriveFromMutation,
+				Operation:           deriveFrom,
 				ActionName:          name,
 			},
 		}

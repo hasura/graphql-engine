@@ -5,12 +5,13 @@ import {
   isEnumType,
   isInputObjectType,
   parse as sdlParse,
+  validate
 } from 'graphql';
 import { wrapTypename, getAstTypeMetadata } from './wrappingTypeUtils';
 import { inbuiltTypes } from './hasuraCustomTypeUtils';
 import { getTypeFields, getUnderlyingType } from './graphqlSchemaUtils';
 
-export const validateMutation = mutationString => {
+export const validateMutation = (mutationString, clientSchema) => {
   // parse mutation string
   let mutationAst;
   try {
@@ -19,12 +20,28 @@ export const validateMutation = mutationString => {
     throw Error('invalid SDL');
   }
 
+  const schemaValidationErrors = validate(clientSchema, mutationAst);
+  if (schemaValidationErrors.length) {
+    throw Error('this is not a valid GraphQL query as per the current GraphQL schema');
+  }
+
+  mutationAst.definitions = mutationAst.definitions.filter(d => d.operation === 'mutation');
+
   // throw error if the AST is empty
   if (!mutationAst.definitions.length) {
-    throw Error('could not find any operation');
+    throw Error('could not find any mutation operations');
   }
+
+  if (mutationAst.definitions.length !== 1) {
+    throw Error('you can derive action from only one operation');
+  }
+
+  if (mutationAst.definitions.find(d => d.kind === 'FragmentDefinition')) {
+    throw Error('fragments are not supported');
+  }
+
   if (mutationAst.definitions[0].kind !== 'OperationDefinition') {
-    throw Error('could not find any operation in the given mutation');
+    throw Error('could not find any operation in the given query');
   }
 
   // filter schema specific fields from the operation
@@ -36,7 +53,7 @@ export const validateMutation = mutationString => {
 
   // throw error if no mutation is being made
   if (!mutationAst.definitions[0].selectionSet.selections.length) {
-    throw Error('the given mutation must ask for one root field');
+    throw Error('the given mutation must ask for at least one root field');
   }
 
   // throw error if the mutation does not have variables
@@ -52,9 +69,12 @@ const deriveMutation = (
   introspectionSchema,
   actionName = null
 ) => {
+
+  const clientSchema = introspectionSchema.__schema ? buildClientSchema(introspectionSchema) : introspectionSchema;
+
   let mutationAst;
   try {
-    mutationAst = validateMutation(mutationString);
+    mutationAst = validateMutation(mutationString, clientSchema);
   } catch (e) {
     throw e;
   }
@@ -62,8 +82,8 @@ const deriveMutation = (
   const variables = mutationAst.definitions[0].variableDefinitions;
 
   // get mutation name
-  const mutationDefinition =
-    mutationAst.definitions[0].selectionSet.selections[0];
+  const rootFields = mutationAst.definitions[0].selectionSet.selections;
+  const mutationDefinition = rootFields[0];
   const mutationName = mutationDefinition.name.value;
 
   // get action name if not provided
@@ -78,10 +98,6 @@ const deriveMutation = (
     return camelize(`${actionName}_${typename}`);
   };
 
-  // parse the introspection schema
-  const clientSchema = introspectionSchema.__schema
-    ? buildClientSchema(introspectionSchema)
-    : introspectionSchema;
   const allHasuraTypes = clientSchema._typeMap;
   const mutationType = clientSchema._mutationType;
 
@@ -159,39 +175,44 @@ const deriveMutation = (
     actionArguments.push(generatedArg);
   });
 
-  const refMutationOutputType = getUnderlyingType(
-    getTypeFields(mutationType)[mutationName].type
-  ).type;
-  const actionOutputTypename = prefixTypename(refMutationOutputType.name);
+  const actionOutputTypename = prefixTypename('output');
   const actionOutputType = {
     name: actionOutputTypename,
     kind: 'object',
     fields: [],
   };
+  const outputTypeFields = {};
+  rootFields.forEach(f => {
+    const rfName = f.name.value;
+    const refMutationOutputType = getUnderlyingType(
+      getTypeFields(mutationType)[rfName].type
+    ).type;
 
-  Object.values(getTypeFields(refMutationOutputType)).forEach(
-    outputTypeField => {
-      const fieldTypeMetadata = getUnderlyingType(outputTypeField.type);
-      if (isScalarType(fieldTypeMetadata.type)) {
-        if (inbuiltTypes[fieldTypeMetadata.type.name]) {
-          actionOutputType.fields.push({
-            name: outputTypeField.name,
-            type: wrapTypename(
+    Object.values(getTypeFields(refMutationOutputType)).forEach(
+      outputTypeField => {
+        const fieldTypeMetadata = getUnderlyingType(outputTypeField.type);
+        if (isScalarType(fieldTypeMetadata.type)) {
+          if (inbuiltTypes[fieldTypeMetadata.type.name]) {
+            outputTypeFields[outputTypeField.name] = wrapTypename(
               fieldTypeMetadata.type.name,
               fieldTypeMetadata.wraps
-            ),
-          });
-        } else {
-          const fieldTypename = prefixTypename(fieldTypeMetadata.type.name);
-          actionOutputType.fields.push({
-            name: outputTypeField.name,
-            type: wrapTypename(fieldTypename, fieldTypeMetadata.wraps),
-          });
-          handleType(fieldTypeMetadata.type, fieldTypename);
+            );
+          } else {
+            const fieldTypename = prefixTypename(fieldTypeMetadata.type.name);
+            outputTypeFields[outputTypeField.name] = wrapTypename(fieldTypename, fieldTypeMetadata.wraps);
+            handleType(fieldTypeMetadata.type, fieldTypename);
+          }
         }
       }
-    }
-  );
+    );
+  });
+
+  Object.keys(outputTypeFields).forEach(fieldName => {
+    actionOutputType.fields.push({
+      name: fieldName,
+      type: outputTypeFields[fieldName]
+    });
+  });
 
   newTypes[actionOutputTypename] = actionOutputType;
 

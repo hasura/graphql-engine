@@ -44,7 +44,7 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	f := actionsCodegenCmd.Flags()
 
-	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a Hasura mutation")
+	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a Hasura operation")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -76,7 +76,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 
 	var derivePayload actions.DerivePayload
 	if o.deriveFrom != "" {
-		derivePayload.Mutation = strings.TrimSpace(o.deriveFrom)
+		derivePayload.Operation = strings.TrimSpace(o.deriveFrom)
 		o.EC.Spin("Deriving a Hasura mutation...")
 		introSchema, err := migrateDrv.GetIntroSpectionSchema()
 		if err != nil {

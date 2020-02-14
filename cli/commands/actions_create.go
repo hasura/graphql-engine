@@ -49,7 +49,7 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.StringVar(&opts.kind, "kind", "", "kind to use in action")
 	f.StringVar(&opts.webhook, "webhook", "", "webhook to use in action")
-	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a Hasura mutation")
+	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a Hasura operation")
 	f.BoolVar(&opts.withCodegen, "with-codegen", false, "create action along with codegen")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
@@ -148,7 +148,7 @@ func (o *actionsCreateOptions) run() error {
 	// construct derive payload to send to codegenerator
 	derivePayload := actions.DerivePayload{
 		IntrospectionSchema: introSchema,
-		Mutation:            o.deriveFrom,
+		Operation:           o.deriveFrom,
 		ActionName:          o.name,
 	}
 
