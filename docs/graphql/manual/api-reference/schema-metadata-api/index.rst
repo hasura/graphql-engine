@@ -236,6 +236,11 @@ The various types of queries are listed in the following table:
      - 1
      - Delete an existing scheduled trigger
 
+   * - :ref:`create_scheduled_event`
+     - :ref:`create_scheduled_event_args <create_scheduled_event_syntax>`
+     - 1
+     - Create a new run of a scheduled trigger
+
    * - :ref:`cancel_scheduled_event`
      - :ref:`cancel_scheduled_event_args <cancel_scheduled_event_syntax>`
      - 1

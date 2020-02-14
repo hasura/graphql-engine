@@ -84,6 +84,7 @@ data ScheduledEventPartial
   { sepId            :: !Text
   , sepName          :: !TriggerName
   , sepScheduledTime :: !UTCTime
+  , sepPayload       :: !(Maybe J.Value)
   , sepTries         :: !Int
   } deriving (Show, Eq)
 
@@ -143,7 +144,7 @@ generateScheduledEventsFrom :: UTCTime -> ScheduledTriggerInfo-> [ScheduledEvent
 generateScheduledEventsFrom time ScheduledTriggerInfo{..} =
   let events =
         case stiSchedule of
-          OneOff _ -> empty -- one-off scheduled events are generated during creation
+          AdHoc -> empty -- ad-hoc scheduled events are created through 'create_scheduled_event' API
           Cron cron ->
             generateScheduleTimesBetween
               time
@@ -174,16 +175,16 @@ processScheduledQueue logger logEnv httpMgr pgpool getSC =
     case scheduledEventsE of
       Right partialEvents ->
         sequence_ $
-        flip map partialEvents $ \(ScheduledEventPartial id' name st tries)-> do
+        flip map partialEvents $ \(ScheduledEventPartial id' name st payload tries)-> do
           let sti' = Map.lookup name scheduledTriggersInfo
           case sti' of
             Nothing ->  L.unLogger logger $ ScheduledTriggerInternalErr $
               err500 Unexpected "could not find scheduled trigger in cache"
             Just sti -> do
               let webhook = wciCachedValue $ stiWebhookInfo sti
-                  payload = fromMaybe J.Null $ stiPayload sti
+                  payload' = fromMaybe (fromMaybe J.Null $ stiPayload sti) payload -- override if neccessary
                   retryConf = stiRetryConf sti
-                  se = ScheduledEventFull id' name st tries webhook payload retryConf
+                  se = ScheduledEventFull id' name st tries webhook payload' retryConf
               runReaderT (processScheduledEvent logEnv pgpool sti se) (logger, httpMgr)
       Left err -> L.unLogger logger $ ScheduledTriggerInternalErr $
         err500 Unexpected $ "could not fetch scheduled events: " <> (T.pack $ show err)
@@ -369,7 +370,7 @@ getScheduledEvents = do
                           )
                     FOR UPDATE SKIP LOCKED
                     )
-      RETURNING id, name, scheduled_time, tries
+      RETURNING id, name, scheduled_time, additional_payload, tries
       |] () True
   pure $ partialSchedules
-  where uncurryEvent (i, n, st, tries) = ScheduledEventPartial i n st tries
+  where uncurryEvent (i, n, st, p, tries) = ScheduledEventPartial i n st (Q.getAltJ <$> p) tries

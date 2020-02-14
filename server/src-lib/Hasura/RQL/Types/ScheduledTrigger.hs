@@ -4,6 +4,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , ScheduledTriggerName(..)
   , ScheduledEventId(..)
   , CreateScheduledTrigger(..)
+  , CreateScheduledEvent(..)
   , RetryConfST(..)
   , formatTime'
   ) where
@@ -44,7 +45,7 @@ defaultRetryConf =
   , rcstTolerance = 21600 -- 6 hours
   }
 
-data ScheduleType = OneOff UTCTime | Cron CronSchedule
+data ScheduleType = Cron CronSchedule | AdHoc
   deriving (Show, Eq, Generic)
 
 instance NFData ScheduleType
@@ -77,6 +78,15 @@ instance FromJSON CreateScheduledTrigger where
       pure CreateScheduledTrigger {..}
 
 $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CreateScheduledTrigger)
+
+data CreateScheduledEvent
+  = CreateScheduledEvent
+  { steName          :: !ET.TriggerName
+  , steTimestamp     :: !UTCTime
+  , stePayload       :: !(Maybe J.Value)
+  } deriving (Show, Eq, Generic)
+
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledEvent)
 
 newtype ScheduledTriggerName
   = ScheduledTriggerName { unName :: ET.TriggerName }

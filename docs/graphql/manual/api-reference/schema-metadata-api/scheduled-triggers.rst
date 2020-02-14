@@ -160,6 +160,53 @@ Args syntax
      - TriggerName_
      - Name of the scheduled trigger
 
+.. _create_scheduled_event:
+
+create_scheduled_event
+----------------------
+
+``create_scheduled_event`` is used to create a new scheduled event with given timestamp and payload
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "create_scheduled_event",
+       "args" : {
+           "name": "sample-adhoc",
+           "timestamp": "2020-02-14 22:00:00 Z",
+           "payload": { "k" : "v"}
+       }
+   }
+
+.. _create_scheduled_event_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - name
+     - true
+     - Text
+     - Name of the scheduled trigger
+   * - timestamp
+     - true
+     - UTCTime
+     - UTC Timestamp to invoke the trigger in ISO8601 format
+   * - payload
+     - false
+     - Object
+     - Any object to send with the trigger, will override configured payload
+
 .. _cancel_scheduled_event:
 
 cancel_scheduled_event
@@ -312,12 +359,12 @@ ScheduleConf
      - Description
    * - type
      - true
-     - OneOff | Cron
+     - Cron | AdHoc
      - Type of scheduled trigger
    * - value
-     - true
+     - false
      - String
-     - Timestamp in UTC or cron expression
+     - Cron expression (if type is Cron)
 
 .. _HeaderFromValue:
 
