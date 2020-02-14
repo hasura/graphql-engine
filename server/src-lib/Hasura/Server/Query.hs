@@ -88,11 +88,12 @@ data RQLQueryV1
   | RQRedeliverEvent     !RedeliverEventQuery
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
 
-  | RQCreateScheduledTrigger !CreateScheduledTrigger
-  | RQUpdateScheduledTrigger !CreateScheduledTrigger
-  | RQDeleteScheduledTrigger !ScheduledTriggerName
-  | RQCancelScheduledEvent   !ScheduledEventId
-  | RQTrackScheduledTrigger  !ScheduledTriggerName
+  | RQCreateScheduledTrigger   !CreateScheduledTrigger
+  | RQUpdateScheduledTrigger   !CreateScheduledTrigger
+  | RQDeleteScheduledTrigger   !ScheduledTriggerName
+  | RQCancelScheduledEvent     !ScheduledEventId
+  | RQTrackScheduledTrigger    !ScheduledTriggerName
+  | RQUntrackScheduledTrigger  !ScheduledTriggerName
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
@@ -256,6 +257,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQDeleteScheduledTrigger _      -> True
   RQCancelScheduledEvent _        -> False
   RQTrackScheduledTrigger _       -> False
+  RQUntrackScheduledTrigger _     -> False
 
   RQCreateQueryCollection _       -> True
   RQDropQueryCollection _         -> True
@@ -380,6 +382,7 @@ runQueryM rq = withPathK "args" $ case rq of
       RQDeleteScheduledTrigger q       -> runDeleteScheduledTrigger q
       RQCancelScheduledEvent q         -> runCancelScheduledEvent q
       RQTrackScheduledTrigger q        -> runTrackScheduledTrigger q
+      RQUntrackScheduledTrigger q      -> runUntrackScheduledTrigger q
 
       RQCreateQueryCollection q        -> runCreateCollection q
       RQDropQueryCollection q          -> runDropCollection q
@@ -459,6 +462,7 @@ requiresAdmin = \case
     RQDeleteScheduledTrigger _      -> True
     RQCancelScheduledEvent _        -> True
     RQTrackScheduledTrigger _       -> True
+    RQUntrackScheduledTrigger _     -> True
 
     RQCreateQueryCollection _       -> True
     RQDropQueryCollection _         -> True

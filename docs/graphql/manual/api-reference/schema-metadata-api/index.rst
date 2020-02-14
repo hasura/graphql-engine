@@ -241,6 +241,16 @@ The various types of queries are listed in the following table:
      - 1
      - Cancel a particular run of a scheduled trigger
 
+   * - :ref:`track_scheduled_trigger`
+     - :ref:`track_scheduled_trigger_args <track_scheduled_trigger_syntax>`
+     - 1
+     - Track an existing scheduled trigger so it can be exported in metadata
+
+   * - :ref:`untrack_scheduled_trigger`
+     - :ref:`untrack_scheduled_trigger_args <untrack_scheduled_trigger_syntax>`
+     - 1
+     - Untrack an existing scheduled trigger so it won't be exported in metadata
+
    * - :ref:`add_remote_schema`
      - :ref:`add_remote_schema_args <add_remote_schema_syntax>`
      - 1

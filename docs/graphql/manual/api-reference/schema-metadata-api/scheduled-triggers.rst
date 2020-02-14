@@ -202,7 +202,7 @@ Args syntax
 track_scheduled_trigger
 -----------------------
 
-``track_scheduled_trigger`` is used to track a scheduled trigger in metadata so it can be exported/imported.
+``track_scheduled_trigger`` is used to track a scheduled trigger so it can be exported in metadata. By default, scheduled triggers are untracked.
 
 .. code-block:: http
 
@@ -234,7 +234,44 @@ Args syntax
      - TriggerName_
      - Name of the scheduled trigger
 
- 
+.. _untrack_scheduled_trigger:
+
+untrack_scheduled_trigger
+-------------------------
+
+``untrack_scheduled_trigger`` is used to untrack a scheduled trigger so it won't be exported in metadata. By default, scheduled triggers are untracked.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "untrack_scheduled_trigger",
+       "args" : {
+           "name": "sample_cron"
+       }
+   }
+
+.. _untrack_scheduled_trigger_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - name
+     - true
+     - TriggerName_
+     - Name of the scheduled trigger
+
+
 .. _TriggerName:
 
 TriggerName

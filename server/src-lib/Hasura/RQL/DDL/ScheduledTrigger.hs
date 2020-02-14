@@ -4,6 +4,7 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runDeleteScheduledTrigger
   , runCancelScheduledEvent
   , runTrackScheduledTrigger
+  , runUntrackScheduledTrigger
   , addScheduledTriggerToCatalog
   , deleteScheduledTriggerFromCatalog
   , trackScheduledTriggerInCatalog
@@ -126,3 +127,16 @@ trackScheduledTriggerInCatalog stName = liftTx $ do
     WHERE name = $1
    |] (Identity stName) False
 
+runUntrackScheduledTrigger :: (MonadTx m) => ScheduledTriggerName -> m EncJSON
+runUntrackScheduledTrigger (ScheduledTriggerName stName) = do
+  untrackScheduledTriggerInCatalog stName
+  return successMsg
+
+untrackScheduledTriggerInCatalog :: (MonadTx m) => TriggerName -> m ()
+untrackScheduledTriggerInCatalog stName = liftTx $ do
+  Q.unitQE defaultTxErrorHandler
+   [Q.sql|
+    UPDATE hdb_catalog.hdb_scheduled_trigger
+    SET include_in_metadata = 'f'
+    WHERE name = $1
+   |] (Identity stName) False
