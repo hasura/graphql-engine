@@ -81,8 +81,10 @@ type actionsCodegenResponse struct {
 type ActionConfig struct {
 	MetadataDir  string
 	ActionConfig cli.ActionExecutionConfig
-	cmdName      string
-	shouldSkip   bool
+
+	cmdName    string
+	shouldSkip bool
+	pluginsCfg *plugins.Config
 
 	logger *logrus.Logger
 }
@@ -101,29 +103,24 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 		}
 		shouldSkip = !cons.Check(ec.Version.ServerSemver)
 	}
-	if !shouldSkip {
-		err := ensureCLIExtension(ec.Plugins)
-		if err != nil {
-			ec.Logger.Errorln(err)
-			msg := fmt.Sprintf(`unable to install cli-ext plugin. execute the following commands to continue:
-
-  hasura plugins install %s
-`, pluginName)
-			ec.Logger.Fatalln(msg)
-			return nil
-		}
-	}
 	cfg := &ActionConfig{
 		MetadataDir:  baseDir,
 		ActionConfig: ec.Config.Action,
 		cmdName:      ec.CMDName,
 		shouldSkip:   shouldSkip,
 		logger:       ec.Logger,
+		pluginsCfg:   ec.Plugins,
 	}
 	return cfg
 }
 
 func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFromMutation string, opts *OverrideOptions) error {
+	if !a.shouldSkip {
+		err := a.ensureCLIExtension()
+		if err != nil {
+			return err
+		}
+	}
 	graphqlFileContent, err := GetActionsGraphQLFileContent(a.MetadataDir)
 	if err != nil {
 		return err
@@ -363,6 +360,12 @@ input SampleInput {
 }
 
 func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
+	if !a.shouldSkip {
+		err := a.ensureCLIExtension()
+		if err != nil {
+			return err
+		}
+	}
 	// Do nothing if the codegen framework does not exist
 	if a.ActionConfig.Codegen.Framework == "" {
 		return nil
@@ -420,6 +423,12 @@ func (a *ActionConfig) CreateFiles() error {
 }
 
 func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
+	if !a.shouldSkip {
+		err := a.ensureCLIExtension()
+		if err != nil {
+			return err
+		}
+	}
 	if a.shouldSkip {
 		_, err := GetActionsFileContent(a.MetadataDir)
 		if err == nil {
@@ -548,6 +557,12 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 }
 
 func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
+	if !a.shouldSkip {
+		err := a.ensureCLIExtension()
+		if err != nil {
+			return nil, err
+		}
+	}
 	if a.shouldSkip {
 		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
 		return make(map[string][]byte), nil
@@ -597,6 +612,19 @@ func (a *ActionConfig) Name() string {
 	return "actions"
 }
 
+func (a *ActionConfig) ensureCLIExtension() error {
+	err := a.pluginsCfg.Install(pluginName, "")
+	if err != nil && err != plugins.ErrIsAlreadyInstalled {
+		msg := fmt.Sprintf(`unable to install cli-ext plugin. execute the following commands to continue:
+
+  hasura plugins install %s
+`, pluginName)
+		a.logger.Info(msg)
+		return errors.Wrap(err, "cannot install cli-ext plugin")
+	}
+	return nil
+}
+
 func GetActionsFileContent(metadataDir string) (content types.Common, err error) {
 	commonByt, err := ioutil.ReadFile(filepath.Join(metadataDir, actionsFileName))
 	if err != nil {
@@ -613,12 +641,4 @@ func GetActionsGraphQLFileContent(metadataDir string) (sdl string, err error) {
 	}
 	sdl = string(commonByt)
 	return
-}
-
-func ensureCLIExtension(pluginCfg *plugins.Config) error {
-	err := pluginCfg.Install(pluginName, "")
-	if err != nil && err != plugins.ErrIsAlreadyInstalled {
-		return errors.Wrap(err, "cannot install cli-ext plugin")
-	}
-	return nil
 }
