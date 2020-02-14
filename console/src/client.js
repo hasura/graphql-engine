@@ -1,6 +1,7 @@
 /**
  * THIS IS THE ENTRY POINT FOR THE CLIENT, JUST LIKE server.js IS THE ENTRY POINT FOR THE SERVER.
  */
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { createLogger } from 'redux-logger';

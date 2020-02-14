@@ -58,3 +58,16 @@ export const getFunctionModifyRoute = (schemaName, functionName) => {
 export const getFunctionPermissionsRoute = (schemaName, functionName) => {
   return `${getFunctionBaseRoute(schemaName, functionName)}/permissions`;
 };
+
+// Action route utils
+
+export const getActionsBaseRoute = () => {
+  return '/actions/manage';
+};
+
+export const getActionsCreateRoute = isDerived => {
+  if (isDerived) {
+    return `${getActionsBaseRoute()}/add?is_derived=true`;
+  }
+  return `${getActionsBaseRoute()}/add`;
+};

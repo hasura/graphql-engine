@@ -16,8 +16,7 @@ export const PGTypes = {
   ],
   geometry: ['geometry'],
   geography: ['geography'],
-  json: ['json'],
-  jsonb: ['jsonb'],
+  json: ['json', 'jsonb'],
   numeric: [
     'smallint',
     'integer',
@@ -41,7 +40,7 @@ const operatorTypePGTypesMap = {
     'user_defined',
   ],
   pattern_match: ['character'],
-  jsonb: ['jsonb'],
+  json: ['json'],
   geometric: ['geometry'],
   geometric_geographic: ['geometry', 'geography'],
   is_null: Object.keys(PGTypes), // all types
@@ -155,25 +154,25 @@ const columnOperatorsInfo = {
     inputStructure: 'object',
   },
   _contains: {
-    type: 'jsonb',
+    type: 'json',
     inputStructure: 'object',
   },
   _contained_in: {
-    type: 'jsonb',
+    type: 'json',
     inputStructure: 'object',
   },
   _has_key: {
-    type: 'jsonb',
+    type: 'json',
     inputStructure: 'object',
     inputType: 'character',
   },
   _has_keys_any: {
-    type: 'jsonb',
+    type: 'json',
     inputStructure: 'array',
     inputType: 'character',
   },
   _has_keys_all: {
-    type: 'jsonb',
+    type: 'json',
     inputStructure: 'array',
     inputType: 'character',
   },

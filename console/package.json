@@ -53,6 +53,8 @@
     }
   },
   "dependencies": {
+    "@graphql-codegen/core": "^1.11.2",
+    "@graphql-codegen/typescript": "^1.11.2",
     "apollo-link": "^1.2.2",
     "apollo-link-ws": "^1.0.8",
     "brace": "^0.11.1",
@@ -77,8 +79,8 @@
     "pretty-error": "^1.2.0",
     "prop-types": "^15.6.0",
     "query-string": "^6.1.0",
+    "react-ace": "^8.0.0",
     "react": "16.8.6",
-    "react-ace": "^6.1.1",
     "react-autosuggest": "^9.4.3",
     "react-bootstrap": "^0.32.1",
     "react-copy-to-clipboard": "^5.0.0",
@@ -96,7 +98,7 @@
     "react-tabs": "^2.1.0",
     "react-toggle": "^4.0.2",
     "redux": "^4.0.0",
-    "redux-logger": "3.0.1",
+    "redux-logger": "^3.0.6",
     "redux-thunk": "^2.2.0",
     "sanitize-filename": "^1.6.1",
     "semver": "5.5.1",
