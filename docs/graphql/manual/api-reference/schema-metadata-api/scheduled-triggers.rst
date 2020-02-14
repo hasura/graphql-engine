@@ -58,13 +58,9 @@ Args syntax
      - TriggerName_
      - Name of the scheduled trigger
    * - webhook
-     - false
-     - String
-     - Full url of webhook
-   * - webhook_from_env
-     - false
-     - String
-     - Environment variable which has the full url of webhook
+     - true
+     - Text | UrlFromEnv_
+     - Url of webhook or environment variable which has the url
    * - schedule
      - true
      - ScheduleConf_
@@ -107,13 +103,9 @@ Args syntax
      - TriggerName_
      - Name of the scheduled trigger
    * - webhook
-     - false
-     - String
-     - Full url of webhook
-   * - webhook_from_env
-     - false
-     - String
-     - Environment variable which has the full url of webhook
+     - true
+     - Text | UrlFromEnv_
+     - Url of webhook or environment variable which has the url
    * - schedule
      - true
      - ScheduleConf_
@@ -204,6 +196,44 @@ Args syntax
      - true
      - UUID
      - Id of the scheduled event
+
+.. _track_scheduled_trigger:
+
+track_scheduled_trigger
+-----------------------
+
+``track_scheduled_trigger`` is used to track a scheduled trigger in metadata so it can be exported/imported.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "track_scheduled_trigger",
+       "args" : {
+           "name": "sample_cron"
+       }
+   }
+
+.. _track_scheduled_trigger_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - name
+     - true
+     - TriggerName_
+     - Name of the scheduled trigger
+
  
 .. _TriggerName:
 
@@ -213,6 +243,23 @@ TriggerName
 .. parsed-literal::
 
   String
+
+.. _UrlFromEnv:
+
+UrlFromEnv
+&&&&&&&&&&
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - from_env
+     - true
+     - String
+     - Name of the environment variable which has the url
 
 .. _ScheduleConf:
 
