@@ -29,7 +29,8 @@ import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2,
                                                      removeRemoteSchemaFromCatalog)
 import           Hasura.RQL.DDL.ScheduledTrigger    (addScheduledTriggerToCatalog,
-                                                     deleteScheduledTriggerFromCatalog)
+                                                     deleteScheduledTriggerFromCatalog,
+                                                     trackScheduledTriggerInCatalog)
 import           Hasura.RQL.Types
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.SQL.Types
@@ -200,7 +201,9 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist s
     indexedMapM_ (void . addRemoteSchemaP2) schemas
 
   withPathK "scheduled_triggers" $
-    indexedForM_ scheduledTriggers $ \st -> liftTx $ addScheduledTriggerToCatalog st True
+    indexedForM_ scheduledTriggers $ \st -> liftTx $ do
+    addScheduledTriggerToCatalog st
+    trackScheduledTriggerInCatalog (stName st)
 
   buildSchemaCacheStrict
   return successMsg

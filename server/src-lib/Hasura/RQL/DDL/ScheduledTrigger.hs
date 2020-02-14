@@ -3,9 +3,11 @@ module Hasura.RQL.DDL.ScheduledTrigger
   , runUpdateScheduledTrigger
   , runDeleteScheduledTrigger
   , runCancelScheduledEvent
+  , runTrackScheduledTrigger
   , addScheduledTriggerToCatalog
-  , resolveScheduledTrigger
   , deleteScheduledTriggerFromCatalog
+  , trackScheduledTriggerInCatalog
+  , resolveScheduledTrigger
   ) where
 
 import           Hasura.Db
@@ -17,21 +19,21 @@ import           Hasura.RQL.Types
 
 import qualified Database.PG.Query     as Q
 
-runCreateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTriggerWith ->  m EncJSON
-runCreateScheduledTrigger (CreateScheduledTriggerWith definition includeInMetadata) = do
-  addScheduledTriggerToCatalog definition includeInMetadata
-  buildSchemaCacheFor $ MOScheduledTrigger $ stName definition
+runCreateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger ->  m EncJSON
+runCreateScheduledTrigger q = do
+  addScheduledTriggerToCatalog q
+  buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
 
-addScheduledTriggerToCatalog :: (MonadTx m) => CreateScheduledTrigger -> Bool ->  m ()
-addScheduledTriggerToCatalog CreateScheduledTrigger {..} includeInMetadata = liftTx $ do
+addScheduledTriggerToCatalog :: (MonadTx m) => CreateScheduledTrigger ->  m ()
+addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
   Q.unitQE defaultTxErrorHandler
     [Q.sql|
       INSERT into hdb_catalog.hdb_scheduled_trigger
-        (name, webhook_conf, schedule_conf, payload, retry_conf, include_in_metadata)
-      VALUES ($1, $2, $3, $4, $5, $6)
+        (name, webhook_conf, schedule_conf, payload, retry_conf)
+      VALUES ($1, $2, $3, $4, $5)
     |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
-       , includeInMetadata) False
+       ) False
   case stSchedule of
     OneOff timestamp -> Q.unitQE defaultTxErrorHandler
       [Q.sql|
@@ -57,14 +59,14 @@ resolveScheduledTrigger CreateScheduledTrigger {..} = do
           headerInfo
   pure stInfo
 
-runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTriggerWith -> m EncJSON
-runUpdateScheduledTrigger (CreateScheduledTriggerWith definition includeInMetadata) = do
-  updateScheduledTriggerInCatalog definition includeInMetadata
-  buildSchemaCacheFor $ MOScheduledTrigger $ stName definition
+runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger -> m EncJSON
+runUpdateScheduledTrigger q = do
+  updateScheduledTriggerInCatalog q
+  buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
 
-updateScheduledTriggerInCatalog :: (MonadTx m) => CreateScheduledTrigger -> Bool -> m ()
-updateScheduledTriggerInCatalog CreateScheduledTrigger {..} includeInMetadata = liftTx $ do
+updateScheduledTriggerInCatalog :: (MonadTx m) => CreateScheduledTrigger -> m ()
+updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
   Q.unitQE defaultTxErrorHandler
    [Q.sql|
     UPDATE hdb_catalog.hdb_scheduled_trigger
@@ -72,10 +74,9 @@ updateScheduledTriggerInCatalog CreateScheduledTrigger {..} includeInMetadata = 
         schedule_conf = $3,
         payload = $4,
         retry_conf = $5,
-        include_in_metadata = $6
     WHERE name = $1
    |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
-      , includeInMetadata) False
+      ) False
   -- since the scheduled trigger is updated, clear all its future events which are not retries
   Q.unitQE defaultTxErrorHandler
    [Q.sql|
@@ -111,3 +112,18 @@ deleteScheduledEventFromCatalog seId = liftTx $ do
     WHERE id = $1
     RETURNING count(*)
    |] (Identity seId) False
+
+runTrackScheduledTrigger :: (MonadTx m) => TriggerName -> m EncJSON
+runTrackScheduledTrigger stName = do
+  trackScheduledTriggerInCatalog stName
+  return successMsg
+
+trackScheduledTriggerInCatalog :: (MonadTx m) => TriggerName -> m ()
+trackScheduledTriggerInCatalog stName = liftTx $ do
+  Q.unitQE defaultTxErrorHandler
+   [Q.sql|
+    UPDATE hdb_catalog.hdb_scheduled_trigger
+    SET include_in_metadata = 't'
+    WHERE name = $1
+   |] (Identity stName) False
+
