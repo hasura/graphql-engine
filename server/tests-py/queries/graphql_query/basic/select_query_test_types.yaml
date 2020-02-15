@@ -40,9 +40,10 @@ response:
         obj:
           c1: c2
         arr: [1,2,3]
-
+        _underscore: 0
       c32_json_child_prop: c2
       c32_json_array_item: 1
+      c32_json_underscore_prefix: 0
       c33_jsonb:
         c: d
         obj:
@@ -106,6 +107,7 @@ query:
         c32_json
         c32_json_child_prop: c32_json(path: ".obj.c1")
         c32_json_array_item: c32_json(path: "arr[0]")
+        c32_json_underscore_prefix: c32_json(path: ".obj._underscore")
         c33_jsonb
         c33_jsonb_child_prop: c33_jsonb(path: ".obj.e1")
         c33_jsonb_array_item: c33_jsonb(path: "arr[2]")
