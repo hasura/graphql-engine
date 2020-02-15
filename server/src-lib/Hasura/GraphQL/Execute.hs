@@ -116,7 +116,7 @@ gatherTypeLocs gCtx nodes =
       in maybe qr (Map.union qr) mr
 
 -- This is for when the graphql query is validated
-type ExecPlanPartial = GQExecPlan (GCtx, VQ.RootSelSet)
+type ExecPlanPartial = GQExecPlan (GCtx, VQ.RootSelSet, PGExecLoc)
 
 getExecPlanPartial
   :: (MonadReusability m, MonadError QErr m)
@@ -144,13 +144,21 @@ getExecPlanPartial userInfo sc enableAL req = do
   case typeLoc of
     VT.TLHasuraType -> do
       rootSelSet <- runReaderT (VQ.validateGQ queryParts) gCtx
-      return $ GExPHasura (gCtx, rootSelSet)
+      execLoc <- getExecLoc rootSelSet
+      return $ GExPHasura (gCtx, rootSelSet, execLoc)
     VT.TLRemoteType _ rsi ->
       return $ GExPRemote rsi opDef
   where
     role = userRole userInfo
+    getExecLoc rootSelSet = case rootSelSet of
+      VQ.RQuery{} -> getGQLQueryExecLoc rootSelSet
+      VQ.RMutation{} -> return PGLMaster
+      VQ.RSubscription{} -> getGQLQueryExecLoc rootSelSet
     gCtxRoleMap = scGCtxMap sc
-
+    -- TODO: We are defaulting the execution location of all GraphQL
+    -- queries to be on read-replica. In future we should be able
+    -- to get this info from the schema-cache
+    getGQLQueryExecLoc _ = return PGLReadReplica
     checkQueryInAllowlist =
       -- only for non-admin roles
       when (role /= adminRole) $ do
@@ -173,7 +181,7 @@ data ExecOp
 
 -- The graphql query is resolved into an execution operation
 type ExecPlanResolved
-  = GQExecPlan ExecOp
+  = GQExecPlan (ExecOp, PGExecLoc)
 
 getResolvedExecPlan
   :: (MonadError QErr m, MonadIO m)
@@ -194,11 +202,11 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   case planM of
     -- plans are only for queries and subscriptions
     Just plan -> (Telem.Hit,) . GExPHasura <$> case plan of
-      EP.RPQuery queryPlan -> do
+      EP.RPQuery queryPlan pgExecLoc -> do
         (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
-        return $ ExOpQuery tx (Just genSql)
-      EP.RPSubs subsPlan ->
-        ExOpSubs <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
+        return (ExOpQuery tx (Just genSql), pgExecLoc)
+      EP.RPSubs subsPlan pgExecLoc ->
+        (,pgExecLoc) . ExOpSubs <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
     Nothing -> (Telem.Miss,) <$> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
@@ -209,17 +217,17 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       req <- toParsed reqUnparsed
       (partialExecPlan, queryReusability) <- runReusabilityT $
         getExecPlanPartial userInfo sc enableAL req
-      forM partialExecPlan $ \(gCtx, rootSelSet) ->
+      forM partialExecPlan $ \(gCtx, rootSelSet, pgExecLoc) -> fmap (,pgExecLoc) $
         case rootSelSet of
           VQ.RMutation selSet ->
             ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
           VQ.RQuery selSet -> do
             (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability selSet
-            traverse_ (addPlanToCache . EP.RPQuery) plan
+            traverse_ (addPlanToCache . flip EP.RPQuery pgExecLoc) plan
             return $ ExOpQuery queryTx (Just genSql)
           VQ.RSubscription fld -> do
             (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld
-            traverse_ (addPlanToCache . EP.RPSubs) plan
+            traverse_ (addPlanToCache . flip EP.RPSubs pgExecLoc) plan
             return $ ExOpSubs lqOp
 
 -- Monad for resolving a hasura query/mutation

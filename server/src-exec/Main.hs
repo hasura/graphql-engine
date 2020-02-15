@@ -41,7 +41,8 @@ runApp (HGEOptionsG rci hgeCmd) =
       (InitCtx{..}, _) <- initialiseCtx hgeCmd rci
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-      res <- runAsAdmin _icPgPool sqlGenCtx _icHttpManager do
+      -- These operations should be run on Postgres master
+      res <- runAsAdmin _icPgPools sqlGenCtx _icHttpManager PGLMaster do
         schemaCache <- buildRebuildableSchemaCache
         execQuery queryBs
           & runHasSystemDefinedT (SystemDefined False)
@@ -53,12 +54,13 @@ runApp (HGEOptionsG rci hgeCmd) =
       (InitCtx{..}, initTime) <- initialiseCtx hgeCmd rci
       let sqlGenCtx = SQLGenCtx False
       res <- downgradeCatalog opts initTime
-             & runAsAdmin _icPgPool sqlGenCtx _icHttpManager
+             & runAsAdmin _icPgPools sqlGenCtx _icHttpManager PGLMaster
       either printErrJExit (liftIO . print) res
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where
+    -- The operations here should be executed in Postgres master
     runTx' initCtx tx =
-      liftIO $ runExceptT $ Q.runTx (_icPgPool initCtx) (Q.Serializable, Nothing) tx
+      liftIO $ runExceptT $ Q.runTx (_pgpMaster $ _icPgPools initCtx) (Q.Serializable, Nothing) tx
 
     cleanSuccess = liftIO $ putStrLn "successfully cleaned graphql-engine related data"

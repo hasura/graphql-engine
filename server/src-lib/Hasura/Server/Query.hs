@@ -166,6 +166,8 @@ recordSchemaUpdate instanceId invalidations =
              DO UPDATE SET instance_id = $1::uuid, occurred_at = DEFAULT, invalidations = $2::json
             |] (instanceId, Q.AltJ invalidations) True
 
+-- This function runs the metadata queries
+-- We will run these queries on Postgres master
 runQuery
   :: (HasVersion, MonadIO m, MonadError QErr m)
   => PGExecCtx -> InstanceId
@@ -176,7 +178,7 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = d
   resE <- runQueryM query
     & runHasSystemDefinedT systemDefined
     & runCacheRWT sc
-    & peelRun runCtx pgExecCtx accessMode
+    & peelRun runCtx pgExecCtx accessMode PGLMaster
     & runExceptT
     & liftIO
   either throwError withReload resE
@@ -184,7 +186,8 @@ runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = d
     runCtx = RunCtx userInfo hMgr sqlGenCtx
     withReload (result, updatedCache, invalidations) = do
       when (queryModifiesSchemaCache query) $ do
-        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite $ liftTx $
+        -- It should be fine to execute all metadata queries on master only
+        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite PGLMaster $ liftTx $
           recordSchemaUpdate instanceId invalidations
         liftEither e
       return (result, updatedCache)

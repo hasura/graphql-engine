@@ -10,7 +10,7 @@ import           Control.Monad.Trans.Control          (MonadBaseControl (..))
 import           Data.Aeson                           ((.=))
 import           Data.Time.Clock                      (UTCTime, getCurrentTime)
 import           Options.Applicative
-import           System.Environment                   (getEnvironment, lookupEnv)
+import           System.Environment                   (getEnvironment, lookupEnv, getEnv)
 import           System.Exit                          (exitFailure)
 
 import qualified Control.Concurrent                   as C
@@ -19,6 +19,7 @@ import qualified Data.Aeson                           as A
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.ByteString.Lazy.Char8           as BLC
 import qualified Data.Text                            as T
+import qualified Data.Text.Encoding                   as TE
 import qualified Data.Time.Clock                      as Clock
 import qualified Data.Yaml                            as Y
 import qualified Database.PG.Query                    as Q
@@ -110,7 +111,7 @@ data InitCtx
   , _icDbUid       :: !Text
   , _icLoggers     :: !Loggers
   , _icConnInfo    :: !Q.ConnInfo
-  , _icPgPool      :: !Q.PGPool
+  , _icPgPools     :: !PGPools
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -141,7 +142,7 @@ initialiseCtx hgeCmd rci = do
   httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
   instanceId <- liftIO generateInstanceId
   connInfo <- liftIO procConnInfo
-  (loggers, pool) <- case hgeCmd of
+  (loggers, pools) <- case hgeCmd of
     -- for server command generate a proper pool
     HCServe so@ServeOptions{..} -> do
       l@(Loggers _ logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
@@ -149,30 +150,36 @@ initialiseCtx hgeCmd rci = do
       unLogger logger $ serveOptsToLog so
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
-      pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
+      masterPool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
+      -- TODO create slave Pools as well
+      readReplicaConns <- liftIO getReadReplicaConns
       -- safe init catalog
-      initialiseCatalog pool (SQLGenCtx soStringifyNum) httpManager logger
+      initialiseCatalog masterPool (SQLGenCtx soStringifyNum) httpManager logger
 
-      return (l, pool)
+      readReplicaPools <- liftIO $ forM readReplicaConns $ \conn -> do
+        let retries = fromMaybe 1 $ connRetries rci
+        Q.initPGPool (Q.ConnInfo retries conn) soConnParams pgLogger
+
+      return (l, PGPools masterPool readReplicaPools )
 
     -- for other commands generate a minimal pool
     _ -> do
       l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
-      pool <- getMinimalPool pgLogger connInfo
-      return (l, pool)
+      pools <- getMinimalPools pgLogger connInfo
+      return (l, pools)
 
   -- get the unique db id
-  eDbId <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
+  eDbId <- liftIO $ runExceptT $ Q.runTx (_pgpMaster pools) (Q.Serializable, Nothing) getDbId
   dbId <- either printErrJExit return eDbId
-
-  return (InitCtx httpManager instanceId dbId loggers connInfo pool, initTime)
+  return (InitCtx httpManager instanceId dbId loggers connInfo pools, initTime)
   where
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
 
-    getMinimalPool pgLogger ci = do
+    -- For the minimal pools, we skip creating read replica pools
+    getMinimalPools pgLogger ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
-      liftIO $ Q.initPGPool ci connParams pgLogger
+      liftIO $ fmap (flip PGPools []) $ Q.initPGPool ci connParams pgLogger
 
     mkLoggers enabledLogs logLevel = do
       loggerCtx <- liftIO $ mkLoggerCtx (defaultLoggerSettings True logLevel) enabledLogs
@@ -183,8 +190,14 @@ initialiseCtx hgeCmd rci = do
     initialiseCatalog pool sqlGenCtx httpManager (Logger logger) = do
       currentTime <- liftIO getCurrentTime
       -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
+      let pools = PGPools pool []
+      initRes <- runAsAdmin pools sqlGenCtx httpManager PGLMaster $ migrateCatalog currentTime
       either printErrJExit (\(result, schemaCache) -> logger result $> schemaCache) initRes
+
+    getReadReplicaConns = do
+      let csvList = T.splitOn "," . T.pack
+      let toDatabaseURI = Q.CDDatabaseURI . TE.encodeUtf8
+      fmap (map toDatabaseURI . csvList) $ getEnv "HASURA_GRAPHQL_READ_REPLICA_URLS"
 
 runHGEServer
   :: ( HasVersion
@@ -214,7 +227,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
                                                                logger
                                                                sqlGenCtx
                                                                soEnableAllowlist
-                                                               _icPgPool
+                                                               _icPgPools
                                                                _icConnInfo
                                                                _icHttpManager
                                                                authMode
@@ -232,7 +245,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   liftIO $ logInconsObjs logger inconsObjs
 
   -- start a background thread for schema sync
-  startSchemaSync sqlGenCtx _icPgPool logger _icHttpManager
+  startSchemaSync sqlGenCtx masterPool logger _icHttpManager
                   cacheRef _icInstanceId cacheInitTime
 
   let warpSettings = Warp.setPort soPort
@@ -247,11 +260,11 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 
   -- prepare event triggers data
-  prepareEvents _icPgPool logger
+  prepareEvents masterPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
   void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx
+    _icHttpManager masterPool (getSCFromRef cacheRef) eventEngineCtx
 
   -- start a background thread to check for updates
   void $ liftIO $ C.forkIO $ checkForUpdates loggerCtx _icHttpManager
@@ -269,6 +282,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   liftIO $ Warp.runSettings warpSettings app
 
   where
+    masterPool = _pgpMaster _icPgPools
     prepareEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
       res <- runTx pool unlockAllEvents
@@ -306,15 +320,16 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
 runAsAdmin
   :: (MonadIO m)
-  => Q.PGPool
+  => PGPools
   -> SQLGenCtx
   -> HTTP.Manager
+  -> PGExecLoc
   -> Run a
   -> m (Either QErr a)
-runAsAdmin pool sqlGenCtx httpManager m = do
+runAsAdmin pools sqlGenCtx httpManager pgExecLoc m = do
   let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-      pgCtx = PGExecCtx pool Q.Serializable
-  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite m
+      pgCtx = PGExecCtx pools Q.Serializable
+  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite pgExecLoc m
 
 execQuery
   :: ( HasVersion

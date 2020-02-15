@@ -40,8 +40,8 @@ runGQ reqId userInfo reqHdrs req = do
     (telemCacheHit, execPlan) <- E.getResolvedExecPlan pgExecCtx planCache
                 userInfo sqlGenCtx enableAL sc scVer req
     case execPlan of
-      E.GExPHasura resolvedOp -> do
-        (telemTimeIO, telemQueryType, resp) <- runHasuraGQ reqId req userInfo resolvedOp
+      E.GExPHasura (resolvedOp, pgExecLoc) -> do
+        (telemTimeIO, telemQueryType, resp) <- runHasuraGQ reqId req userInfo resolvedOp pgExecLoc
         return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
       E.GExPRemote rsi opDef  -> do
         let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
@@ -89,20 +89,21 @@ runHasuraGQ
   -> GQLReqUnparsed
   -> UserInfo
   -> E.ExecOp
+  -> PGExecLoc
   -> m (DiffTime, Telem.QueryType, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
-runHasuraGQ reqId query userInfo resolvedOp = do
+runHasuraGQ reqId query userInfo resolvedOp pgExecLoc = do
   E.ExecutionCtx logger _ pgExecCtx _ _ _ _ _ <- ask
   (telemTimeIO, respE) <- withElapsedTime $ liftIO $ runExceptT $ case resolvedOp of
     E.ExOpQuery tx genSql  -> do
       -- log the generated SQL and the graphql query
       L.unLogger logger $ QueryLog query genSql reqId
-      runLazyTx' pgExecCtx tx
+      runLazyTx' pgExecCtx pgExecLoc tx
     E.ExOpMutation tx -> do
       -- log the graphql query
       L.unLogger logger $ QueryLog query Nothing reqId
-      runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo tx
+      runLazyTx pgExecCtx Q.ReadWrite pgExecLoc $ withUserInfo userInfo tx
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"

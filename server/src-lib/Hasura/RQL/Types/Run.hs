@@ -49,7 +49,8 @@ peelRun
   => RunCtx
   -> PGExecCtx
   -> Q.TxAccess
+  -> PGExecLoc
   -> Run a
   -> ExceptT QErr m a
-peelRun runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
-  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo $ runReaderT m runCtx
+peelRun runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess pgExecLoc (Run m) =
+  runLazyTx pgExecCtx txAccess pgExecLoc $ withUserInfo userInfo $ runReaderT m runCtx

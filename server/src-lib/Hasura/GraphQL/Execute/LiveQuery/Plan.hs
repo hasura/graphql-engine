@@ -208,7 +208,10 @@ validateVariables pgExecCtx variableValues = do
     mkValidationSel vars =
       S.mkSelect { S.selExtr = mkExtrs vars }
     runTx' tx = do
-      res <- liftIO $ runExceptT (runLazyTx' pgExecCtx tx)
+      -- TODO : Defaulting this check to the master database.
+      -- Since the query is a select query, it might be better to
+      -- run in one of the read replicas (if present)
+      res <- liftIO $ runExceptT (runLazyTx' pgExecCtx PGLMaster tx)
       liftEither res
 
     -- Explicitly look for the class of errors raised when the format of a value provided

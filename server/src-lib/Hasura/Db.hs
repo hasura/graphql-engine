@@ -7,6 +7,8 @@ module Hasura.Db
   , LazyTx
 
   , PGExecCtx(..)
+  , PGExecLoc(..)
+  , PGPools(..)
   , runLazyTx
   , runLazyTx'
   , withUserInfo
@@ -25,6 +27,7 @@ import           Control.Monad.Validate
 
 import qualified Data.Aeson.Extended          as J
 import qualified Database.PG.Query            as Q
+import qualified  Test.QuickCheck as QC
 import qualified Database.PG.Query.Connection as Q
 
 import           Hasura.EncJSON
@@ -36,9 +39,19 @@ import           Hasura.SQL.Types
 
 import qualified Hasura.SQL.DML               as S
 
+data PGExecLoc
+  = PGLMaster
+  | PGLReadReplica
+
+data PGPools
+  = PGPools
+  { _pgpMaster       :: !Q.PGPool
+  , _pgpReadReplicas :: ![Q.PGPool]
+  }
+
 data PGExecCtx
   = PGExecCtx
-  { _pecPool        :: !Q.PGPool
+  { _pecPool        :: !PGPools
   , _pecTxIsolation :: !Q.TxIsolation
   }
 
@@ -73,22 +86,51 @@ lazyTxToQTx = \case
   LTNoTx r -> return r
   LTTx tx  -> tx
 
+
+
+-- Transactions in read replicas should have read only access
+choosePGPool :: Q.TxMode -> PGPools -> PGExecLoc -> IO (Q.TxMode, Q.PGPool)
+choosePGPool txMode pgPools = \case
+  PGLMaster -> fmap (txMode,) masterPool
+  PGLReadReplica -> fmap (readReplicaTxMode,) $ bool slavePool masterPool $ null $
+    _pgpReadReplicas pgPools
+  where
+    readReplicaTxMode = (Q.RepeatableRead, Just Q.ReadOnly)
+    masterPool = return $ _pgpMaster pgPools
+    slavePool = randItem $ _pgpReadReplicas pgPools
+    randItem = QC.generate . QC.elements
+
+choosePGPool' :: PGPools -> PGExecLoc -> IO Q.PGPool
+choosePGPool' pgPools = \case
+  PGLMaster -> masterPool
+  PGLReadReplica -> bool slavePool masterPool $ null $
+    _pgpReadReplicas pgPools
+  where
+    masterPool = return $ _pgpMaster pgPools
+    slavePool = randItem $ _pgpReadReplicas pgPools
+    randItem = QC.generate . QC.elements
+
 runLazyTx
   :: (MonadIO m)
   => PGExecCtx
   -> Q.TxAccess
+  -> PGExecLoc
   -> LazyTx QErr a -> ExceptT QErr m a
-runLazyTx (PGExecCtx pgPool txIso) txAccess = \case
+runLazyTx (PGExecCtx pgPools txIso) txAccess txLoc = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ Q.runTx pgPool (txIso, Just txAccess) tx
+  LTTx tx  -> do
+    (txMode, pgPool) <- liftIO $ choosePGPool (txIso, Just txAccess) pgPools txLoc
+    ExceptT <$> liftIO $ runExceptT $ Q.runTx pgPool txMode tx
 
 runLazyTx'
-  :: MonadIO m => PGExecCtx -> LazyTx QErr a -> ExceptT QErr m a
-runLazyTx' (PGExecCtx pgPool _) = \case
+  :: MonadIO m => PGExecCtx -> PGExecLoc -> LazyTx QErr a -> ExceptT QErr m a
+runLazyTx' (PGExecCtx pgPools _) txLoc = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ Q.runTx' pgPool tx
+  LTTx tx  -> do
+    pgPool <- liftIO $ choosePGPool' pgPools txLoc
+    ExceptT <$> liftIO $ runExceptT $ Q.runTx' pgPool tx
 
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON

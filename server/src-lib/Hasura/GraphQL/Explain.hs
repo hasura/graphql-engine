@@ -118,7 +118,7 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
   (execPlan, queryReusability) <- runReusabilityT $
     E.getExecPlanPartial userInfo sc enableAL query
   (gCtx, rootSelSet) <- case execPlan of
-    E.GExPHasura (gCtx, rootSelSet) ->
+    E.GExPHasura (gCtx, rootSelSet, _) ->
       return (gCtx, rootSelSet)
     E.GExPRemote _ _  ->
       throw400 InvalidParams "only hasura queries can be explained"
@@ -133,4 +133,5 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
-    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly
+    -- TODO It might be OK to run explain queries on the master
+    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly PGLMaster

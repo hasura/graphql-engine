@@ -321,7 +321,8 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
     realToFrac $ Clock.diffUTCTime snapshotFinish procInit
   flip A.mapConcurrently_ queryVarsBatches $ \queryVars -> do
     queryInit <- Clock.getCurrentTime
-    mxRes <- runExceptT . runLazyTx' pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
+    -- TODO: Since we are going to poll anyway, it seems to be ok run subscription queries in the read replicas. We need to verify whether this hypothesis holds.
+    mxRes <- runExceptT . runLazyTx' pgExecCtx PGLReadReplica $ executeMultiplexedQuery pgQuery queryVars
     queryFinish <- Clock.getCurrentTime
     let dt = Clock.diffUTCTime queryFinish queryInit
         queryTime = realToFrac dt

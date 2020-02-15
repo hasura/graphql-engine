@@ -300,21 +300,21 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                 planCache sc scVer httpMgr enableAL
 
   case execPlan of
-    E.GExPHasura resolvedOp ->
-      runHasuraGQ timerTot telemCacheHit requestId q userInfo resolvedOp
+    E.GExPHasura (resolvedOp, pgExecLoc) ->
+      runHasuraGQ timerTot telemCacheHit requestId q userInfo pgExecLoc resolvedOp
     E.GExPRemote rsi opDef  ->
       runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
     telemTransport = Telem.HTTP
-    runHasuraGQ :: ExceptT () IO DiffTime 
-                -> Telem.CacheHit -> RequestId -> GQLReqUnparsed -> UserInfo -> E.ExecOp
+    runHasuraGQ :: ExceptT () IO DiffTime
+                -> Telem.CacheHit -> RequestId -> GQLReqUnparsed -> UserInfo -> PGExecLoc -> E.ExecOp
                 -> ExceptT () IO ()
-    runHasuraGQ timerTot telemCacheHit reqId query userInfo = \case
+    runHasuraGQ timerTot telemCacheHit reqId query userInfo pgExecLoc = \case
       E.ExOpQuery opTx genSql ->
-        execQueryOrMut Telem.Query genSql $ runLazyTx' pgExecCtx opTx
+        execQueryOrMut Telem.Query genSql $ runLazyTx' pgExecCtx pgExecLoc opTx
       E.ExOpMutation opTx ->
         execQueryOrMut Telem.Mutation Nothing $
-          runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo opTx
+          runLazyTx pgExecCtx Q.ReadWrite pgExecLoc $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
         -- log the graphql query
         L.unLogger logger $ QueryLog query Nothing reqId
@@ -340,7 +340,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
           sendCompleted (Just reqId)
 
-    runRemoteGQ :: ExceptT () IO DiffTime 
+    runRemoteGQ :: ExceptT () IO DiffTime
                 -> Telem.CacheHit -> E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
                 -> G.TypedOperationDefinition -> RemoteSchemaInfo
                 -> ExceptT () IO ()

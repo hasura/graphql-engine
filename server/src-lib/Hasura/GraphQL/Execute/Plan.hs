@@ -44,14 +44,16 @@ instance J.ToJSON PlanId where
 newtype PlanCache
   = PlanCache {_unPlanCache :: Cache.Cache PlanId ReusablePlan}
 
+
+-- Query execution location should be present in the plan
 data ReusablePlan
-  = RPQuery !EQ.ReusableQueryPlan
-  | RPSubs !LQ.ReusableLiveQueryPlan
+  = RPQuery !EQ.ReusableQueryPlan !PGExecLoc
+  | RPSubs !LQ.ReusableLiveQueryPlan !PGExecLoc
 
 instance J.ToJSON ReusablePlan where
   toJSON = \case
-    RPQuery queryPlan -> J.toJSON queryPlan
-    RPSubs subsPlan -> J.toJSON subsPlan
+    RPQuery queryPlan _ -> J.toJSON queryPlan
+    RPSubs subsPlan _ -> J.toJSON subsPlan
 
 newtype PlanCacheOptions
   = PlanCacheOptions { unPlanCacheSize :: Maybe Cache.CacheSize }

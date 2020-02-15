@@ -88,7 +88,7 @@ startSchemaSync sqlGenCtx pool logger httpMgr cacheRef instanceId cacheInitTime 
   -- only the latest event is recorded here
   -- we don't want to store and process all the events, only the latest event
   updateEventRef <- liftIO $ STM.newTVarIO Nothing
-
+  -- Schema sync will be only done on master
   -- Start listener thread
   lTId <- liftIO $ C.forkIO $ listener sqlGenCtx pool
     logger httpMgr updateEventRef cacheRef instanceId cacheInitTime
@@ -208,18 +208,19 @@ refreshSchemaCache
   -> T.Text -> IO ()
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType msg = do
   -- Reload schema cache from catalog
-  resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger do
+  -- Schema updates will be run of Postgres master
+  resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger $ do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
     ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations
       & runCacheRWT rebuildableCache
-      & peelRun runCtx pgCtx PG.ReadWrite
+      & peelRun runCtx pgCtx PG.ReadWrite PGLMaster
     pure ((), cache)
   case resE of
     Left e   -> logError logger threadType $ TEQueryError e
     Right () -> logInfo logger threadType $ object ["message" .= msg]
  where
   runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-  pgCtx = PGExecCtx pool PG.Serializable
+  pgCtx = PGExecCtx (PGPools pool [])PG.Serializable
 
 logInfo :: Logger Hasura -> ThreadType -> Value -> IO ()
 logInfo logger threadType val = unLogger logger $

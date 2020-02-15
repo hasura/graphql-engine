@@ -435,7 +435,7 @@ mkWaiApp
   -> L.Logger L.Hasura
   -> SQLGenCtx
   -> Bool
-  -> Q.PGPool
+  -> PGPools
   -> Q.ConnInfo
   -> HTTP.Manager
   -> AuthMode
@@ -448,15 +448,16 @@ mkWaiApp
   -> EL.LiveQueriesOptions
   -> E.PlanCacheOptions
   -> m HasuraApp
-mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
+mkWaiApp isoLevel logger sqlGenCtx enableAL pools ci httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts planCacheOptions = do
 
-    let pgExecCtx = PGExecCtx pool isoLevel
-        pgExecCtxSer = PGExecCtx pool Q.Serializable
+    let pgExecCtx = PGExecCtx pools isoLevel
+        pgExecCtxSer = PGExecCtx pools Q.Serializable
         runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
 
     (cacheRef, cacheBuiltTime) <- do
-      pgResp <- runExceptT $ peelRun runCtx pgExecCtxSer Q.ReadWrite $
+      -- Build schema cache operations will be carried out in master
+      pgResp <- runExceptT $ peelRun runCtx pgExecCtxSer Q.ReadWrite PGLMaster $
         (,) <$> buildRebuildableSchemaCache <*> liftTx fetchLastUpdate
       (schemaCache, event) <- liftIO $ either initErrExit return pgResp
       scRef <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
@@ -530,7 +531,10 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     -- Health check endpoint
     Spock.get "healthz" $ do
       sc <- getSCFromRef $ scCacheRef serverCtx
-      dbOk <- checkDbConnection
+      -- TODO Nizar we may have to check both master and read replicas
+      -- Error if master is not running
+      -- Warn if read replicas are not running
+      dbOk <- checkDbConnection undefined
       if dbOk
         then Spock.setStatus HTTP.status200 >> (Spock.text $ if null (scInconsistentObjs sc)
                                                  then "OK"
@@ -622,12 +626,13 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     enablePGDump = isPGDumpEnabled serverCtx
     enableConfig = isConfigEnabled serverCtx
 
-    checkDbConnection = do
-      e <- liftIO $ runExceptT $ runLazyTx' (scPGExecCtx serverCtx) select1Query
+    checkDbConnection pgPool = do
+      -- TODO Check each database separately
+      e <- liftIO $ runExceptT $ Q.runTx' pgPool select1Query
       pure $ isRight e
       where
-        select1Query :: (MonadTx m) => m Int
-        select1Query =   liftTx $ runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
+        select1Query :: Q.TxE QErr Int
+        select1Query =  runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
                          [Q.sql| SELECT 1 |] () False
 
     serveApiConsole = do
