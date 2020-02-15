@@ -17,7 +17,7 @@ parseKey :: Parser T.Text
 parseKey = do
   firstChar <- letter
            <|> (char '_')
-           <?> "the first character of property name must be a letter."
+           <?> "the first character of property name must be a letter or underscore."
   name <- many' (letter
            <|> digit
            <|> satisfy (`elem` ("-_" :: String))

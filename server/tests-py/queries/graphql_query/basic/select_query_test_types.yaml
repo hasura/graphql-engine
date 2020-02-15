@@ -107,7 +107,7 @@ query:
         c32_json
         c32_json_child_prop: c32_json(path: ".obj.c1")
         c32_json_array_item: c32_json(path: "arr[0]")
-        c32_json_underscore_prefix: c32_json(path: ".obj._underscore")
+        c32_json_underscore_prefix: c32_json(path: "._underscore")
         c33_jsonb
         c33_jsonb_child_prop: c33_jsonb(path: ".obj.e1")
         c33_jsonb_array_item: c33_jsonb(path: "arr[2]")
