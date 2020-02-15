@@ -1,4 +1,5 @@
 /* eslint-disable */
+import globals from '../../../../Globals';
 import { CODEGEN_REPO, ALL_FRAMEWORKS_FILE_PATH } from '../constants';
 
 const {
@@ -15,7 +16,7 @@ const { camelize } = require('inflection');
 import { getPersistedDerivedMutation } from '../lsUtils';
 
 export const getCodegenFilePath = framework => {
-  return `https://raw.githubusercontent.com/${CODEGEN_REPO}/master/${framework}/actions-codegen.js`;
+  return `${globals.assetsPath}/common/codegen/${framework}/actions-codegen.js`;
 };
 
 export const getStarterKitPath = framework => {
