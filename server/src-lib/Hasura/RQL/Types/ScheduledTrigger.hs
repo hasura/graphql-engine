@@ -45,13 +45,25 @@ defaultRetryConf =
   , rcstTolerance = 21600 -- 6 hours
   }
 
-data ScheduleType = Cron CronSchedule | AdHoc
+data ScheduleType = Cron CronSchedule | AdHoc (Maybe UTCTime)
   deriving (Show, Eq, Generic)
 
 instance NFData ScheduleType
 instance Cacheable ScheduleType
 
-$(deriveJSON defaultOptions{sumEncoding=TaggedObject "type" "value"} ''ScheduleType)
+instance FromJSON ScheduleType where
+  parseJSON =
+    withObject "ScheduleType" $ \o -> do
+      type' <- o .: "type"
+      case type' of
+        String "cron" -> Cron <$> o .: "value"
+        String "adhoc" -> AdHoc <$> o .:? "value"
+        _ -> fail "expected type to be cron or adhoc"
+
+instance ToJSON ScheduleType where
+  toJSON (Cron cs) = object ["type" .= String "cron", "value" .= toJSON cs]
+  toJSON (AdHoc (Just ts)) = object ["type" .= String "adhoc", "value" .= toJSON ts]
+  toJSON (AdHoc Nothing) = object ["type" .= String "adhoc"]
 
 data CreateScheduledTrigger
   = CreateScheduledTrigger

@@ -36,6 +36,14 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
       VALUES ($1, $2, $3, $4, $5)
     |] (stName, Q.AltJ stWebhook, Q.AltJ stSchedule, Q.AltJ <$> stPayload, Q.AltJ stRetryConf
        ) False
+  case stSchedule of
+    AdHoc (Just timestamp) -> Q.unitQE defaultTxErrorHandler
+      [Q.sql|
+        INSERT into hdb_catalog.hdb_scheduled_events
+          (name, scheduled_time)
+         VALUES ($1, $2)
+      |] (stName, timestamp) False
+    _ -> pure ()
 
 resolveScheduledTrigger
   :: (QErrM m, MonadIO m)

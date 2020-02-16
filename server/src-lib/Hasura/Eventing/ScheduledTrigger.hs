@@ -144,7 +144,7 @@ generateScheduledEventsFrom :: UTCTime -> ScheduledTriggerInfo-> [ScheduledEvent
 generateScheduledEventsFrom time ScheduledTriggerInfo{..} =
   let events =
         case stiSchedule of
-          AdHoc -> empty -- ad-hoc scheduled events are created through 'create_scheduled_event' API
+          AdHoc _ -> empty -- ad-hoc scheduled events are created through 'create_scheduled_event' API
           Cron cron ->
             generateScheduleTimesBetween
               time

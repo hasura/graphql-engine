@@ -31,7 +31,7 @@ create_scheduled_trigger
            "name": "sample_cron",
            "webhook": "https://httpbin.org/post",
            "schedule": {
-               "type": "Cron",
+               "type": "cron",
                "value": "* * * * *"
            },
            "payload": {
@@ -359,12 +359,12 @@ ScheduleConf
      - Description
    * - type
      - true
-     - Cron | AdHoc
+     - cron | adhoc
      - Type of scheduled trigger
    * - value
      - false
      - String
-     - Cron expression (if type is Cron)
+     - If type is cron, then cron expression. If type is adhoc, then optional timestamp
 
 .. _HeaderFromValue:
 
