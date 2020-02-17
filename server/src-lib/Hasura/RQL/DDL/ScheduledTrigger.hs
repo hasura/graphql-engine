@@ -19,7 +19,10 @@ import           Hasura.RQL.DDL.EventTrigger ( getWebhookInfoFromConf
                                              , getHeaderInfosFromConf)
 import           Hasura.RQL.Types
 
+import           Hasura.Eventing.ScheduledTrigger
+
 import qualified Database.PG.Query     as Q
+import qualified Data.Time.Clock       as C
 
 runCreateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger ->  m EncJSON
 runCreateScheduledTrigger q = do
@@ -43,6 +46,11 @@ addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
           (name, scheduled_time)
          VALUES ($1, $2)
       |] (stName, timestamp) False
+    Cron cron -> do
+      currentTime <- liftIO C.getCurrentTime
+      let scheduleTimes = generateScheduleTimes currentTime 100 cron -- generate next 100 events
+          events = map (ScheduledEventSeed stName) scheduleTimes
+      insertScheduledEvents events
     _ -> pure ()
 
 resolveScheduledTrigger

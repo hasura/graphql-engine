@@ -17,6 +17,10 @@ The delivery mechanism is similar to Event Triggers; see "Hasura.Eventing.EventT
 module Hasura.Eventing.ScheduledTrigger
   ( processScheduledQueue
   , runScheduledEventsGenerator
+
+  , ScheduledEventSeed(..)
+  , generateScheduleTimes
+  , insertScheduledEvents
   ) where
 
 import           Control.Arrow.Extended          (dup)
@@ -181,18 +185,28 @@ insertScheduledEventsFor scheduledTriggersWithStats = do
     toArr (ScheduledEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
     toTupleExp = TupleExp . map SELit
 
+insertScheduledEvents :: [ScheduledEventSeed] -> Q.TxE QErr ()
+insertScheduledEvents events = do
+  let insertScheduledEventsSql = TB.run $ toSQL
+        SQLInsert
+          { siTable    = scheduledEventsTable
+          , siCols     = map (PGCol . T.pack) ["name", "scheduled_time"]
+          , siValues   = ValuesExp $ map (toTupleExp . toArr) events
+          , siConflict = Just $ DoNothing Nothing
+          , siRet      = Nothing
+          }
+  Q.unitQE defaultTxErrorHandler (Q.fromText insertScheduledEventsSql) () False
+  where
+    toArr (ScheduledEventSeed n t) = [(triggerNameToTxt n), (formatTime' t)]
+    toTupleExp = TupleExp . map SELit
+
 generateScheduledEventsFrom :: UTCTime -> ScheduledTriggerInfo-> [ScheduledEventSeed]
-generateScheduledEventsFrom time ScheduledTriggerInfo{..} =
+generateScheduledEventsFrom startTime ScheduledTriggerInfo{..} =
   let events =
         case stiSchedule of
           AdHoc _ -> empty -- ad-hoc scheduled events are created through 'create_scheduled_event' API
-          Cron cron ->
-            generateScheduleTimes
-              time
-              100 -- by default, generate next 100 events
-              cron
+          Cron cron -> generateScheduleTimes startTime 100 cron -- by default, generate next 100 events
    in map (ScheduledEventSeed stiName) events
-
 
 -- | Generates next @n events starting @from according to 'CronSchedule'
 generateScheduleTimes :: UTCTime -> Int -> CronSchedule -> [UTCTime]
