@@ -62,7 +62,7 @@ import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { getConfirmation, isJsonString } from '../../../Common/utils/jsUtils';
 import {
   findTable,
   generateTableDef,
@@ -71,6 +71,7 @@ import {
   getTableColumns,
   getGroupedTableComputedFields,
 } from '../../../Common/utils/pgUtils';
+import { showErrorNotification } from '../../Common/Notification';
 
 class Permissions extends Component {
   constructor() {
@@ -85,6 +86,8 @@ class Permissions extends Component {
           columnTypeMap: {},
         },
       },
+      filterString: '',
+      prevPermissionsState: {},
     };
   }
 
@@ -94,6 +97,24 @@ class Permissions extends Component {
     dispatch(setTable(this.props.tableName));
     dispatch(fetchRoleList());
     dispatch(fetchFunctionInit());
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    const prevPermissionsState = prevState.prevPermissionsState;
+    const nextPermissionsState = nextProps.permissionsState;
+
+    const newState = {
+      prevPermissionsState: nextPermissionsState,
+    };
+
+    if (
+      prevPermissionsState.role !== nextPermissionsState.role ||
+      prevPermissionsState.query !== nextPermissionsState.query
+    ) {
+      newState.filterString = '';
+    }
+
+    return newState;
   }
 
   componentDidUpdate(prevProps) {
@@ -140,6 +161,8 @@ class Permissions extends Component {
       nonTrackableFunctions,
       trackableFunctions,
     } = this.props;
+
+    const localFilterString = this.state.filterString;
 
     const currentTableSchema = findTable(
       allSchemas,
@@ -546,6 +569,14 @@ class Permissions extends Component {
             dispatch(permAllowAll());
           };
 
+          const dispatchFuncSetFilter = filter => {
+            this.setState({ filterString: filter });
+
+            if (isJsonString(filter)) {
+              dispatch(permSetFilter(JSON.parse(filter)));
+            }
+          };
+
           const dispatchSetFilterSameAs = filter => () => {
             dispatch(permSetFilterSameAs(JSON.parse(filter)));
           };
@@ -587,11 +618,11 @@ class Permissions extends Component {
           const selectedValue = (
             <AceEditor
               mode="json"
-              value={filterString}
-              readOnly
+              value={localFilterString || filterString}
+              onChange={dispatchFuncSetFilter}
               theme="github"
               height="5em"
-              maxLines={5}
+              maxLines={15}
               width="100%"
               showPrintMargin={false}
               key={-3}
@@ -684,9 +715,6 @@ class Permissions extends Component {
           };
 
           const addCustomCheckOption = () => {
-            const dispatchFuncSetFilter = filter =>
-              permSetFilter(JSON.parse(filter));
-
             const loadSchemasFunc = schemaNames => {
               dispatch(updateSchemaInfo({ schemas: schemaNames }));
             };
@@ -1643,6 +1671,15 @@ class Permissions extends Component {
         }
 
         const dispatchSavePermissions = () => {
+          if (localFilterString && !isJsonString(localFilterString)) {
+            dispatch(
+              showErrorNotification(
+                'Saving permissions failed',
+                'Row permission is not a valid JSON'
+              )
+            );
+            return;
+          }
           dispatch(permChangePermissions(permChangeTypes.save));
         };
 
