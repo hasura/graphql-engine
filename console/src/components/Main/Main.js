@@ -91,10 +91,10 @@ class Main extends React.Component {
       console_opts,
     } = this.props;
 
-    const allowBetaNotifications =
+    const allowPreReleaseNotifications =
       !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
 
-    const latestServerVersionToCheck = allowBetaNotifications
+    const latestServerVersionToCheck = allowPreReleaseNotifications
       ? latestServerVersion
       : latestStableServerVersion;
 
