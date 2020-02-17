@@ -66,7 +66,7 @@ const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
               data-test={a.action_name}
             >
               <i
-                className={styles.tableIcon + ' fa fa-code-fork'}
+                className={styles.tableIcon + ' fa fa-wrench'}
                 aria-hidden="true"
               />
               {a.action_name}

@@ -604,7 +604,7 @@ class Main extends React.Component {
                 )}
                 {getSidebarItem(
                   'Actions',
-                  'fa-industry',
+                  'fa-cogs',
                   tooltips.actions,
                   '/actions/manage/actions'
                 )}
