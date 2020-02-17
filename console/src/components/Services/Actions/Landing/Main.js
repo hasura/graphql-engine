@@ -6,6 +6,7 @@ import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
+import actionsArchDiagram from './actions-arch-diag.svg';
 // import TryItOut from '../../Common/Landing/TryItOut';
 
 class Landing extends React.Component {
@@ -23,9 +24,10 @@ class Landing extends React.Component {
         <div>
           <TopicDescription
             title="What are Actions?"
-            imgUrl={`${globals.assetsPath}/common/img/remote_schema.png`} // TODO: update image & description
+            // imgUrl={`${globals.assetsPath}/common/img/remote_schema.png`} // TODO: update image & description
+            imgUrl={actionsArchDiagram}
             imgAlt="Actions"
-            description="Actions are external web hooks to execute any custom business logic you need to execute"
+            description="Actions are custom mutations to run custom logic"
           />
           <hr className={styles.clear_fix} />
         </div>
