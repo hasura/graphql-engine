@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../Common/components/Styles.scss';
+import styles from '../../Actions.scss';
 import { updateSchemaInfo } from '../../../Data/DataActions';
 import { isEmpty, getLastArrayElement } from '../../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../../Common/Layout/ExpandableEditor/Editor';

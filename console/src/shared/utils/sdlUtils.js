@@ -7,12 +7,14 @@ import {
 } from './hasuraCustomTypeUtils';
 
 const getAstEntityDescription = def => {
-  return def.description ? def.description.value : null;
+  return def.description ? def.description.value.trim() : null;
 };
 
 const getEntityDescriptionSdl = def => {
   let entityDescription = def.description;
-  entityDescription = entityDescription ? `"""${entityDescription}""" ` : '';
+  entityDescription = entityDescription
+    ? `""${JSON.stringify(' ' + entityDescription + ' ')}"" `
+    : '';
   return entityDescription;
 };
 

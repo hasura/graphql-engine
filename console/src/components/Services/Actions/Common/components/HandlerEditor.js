@@ -24,7 +24,7 @@ const HandlerEditor = ({ value, onChange, className, placeholder }) => {
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`form-control ${styles.inputWidth}`}
+        className={`form-control ${styles.inputWidthLarge}`}
       />
     </div>
   );
