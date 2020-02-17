@@ -12,9 +12,7 @@ const getAstEntityDescription = def => {
 
 const getEntityDescriptionSdl = def => {
   let entityDescription = def.description;
-  entityDescription = entityDescription
-    ? `""${JSON.stringify(' ' + entityDescription + ' ')}"" `
-    : '';
+  entityDescription = entityDescription ? `""" ${entityDescription} """ ` : '';
   return entityDescription;
 };
 
