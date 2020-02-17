@@ -422,6 +422,7 @@ getScheduledEvents = do
       WHERE id IN ( SELECT t.id
                     FROM hdb_catalog.hdb_scheduled_events t
                     WHERE ( t.locked = 'f'
+                            and t.cancelled = 'f'
                             and t.delivered = 'f'
                             and t.error = 'f'
                             and (

@@ -129,7 +129,8 @@ deleteScheduledEventFromCatalog :: (MonadTx m) => EventId -> m Int
 deleteScheduledEventFromCatalog seId = liftTx $ do
   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
    [Q.sql|
-    WITH "cte" AS (DELETE FROM hdb_catalog.hdb_scheduled_events WHERE id = $1 RETURNING *)
+    WITH "cte" AS
+    (UPDATE hdb_catalog.hdb_scheduled_events SET cancelled = 't' WHERE id = $1 RETURNING *)
     SELECT count(*) FROM "cte"
    |] (Identity seId) False
 

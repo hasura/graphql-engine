@@ -13,6 +13,7 @@ CREATE TABLE hdb_catalog.hdb_scheduled_events
   id TEXT DEFAULT gen_random_uuid() UNIQUE,
   name TEXT,
   scheduled_time TIMESTAMP NOT NULL,
+  cancelled BOOLEAN NOT NULL DEFAULT FALSE,
   additional_payload JSON,
   delivered BOOLEAN NOT NULL DEFAULT FALSE,
   error BOOLEAN NOT NULL DEFAULT FALSE,
