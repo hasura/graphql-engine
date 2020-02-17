@@ -152,7 +152,7 @@ func setMetadataPlugins(ec *cli.ExecutionContext, drv *migrate.Migrate, dir ...s
 		metadataDir = dir[0]
 	}
 	plugins := make(metadataTypes.MetadataPlugins, 0)
-	if ec.Config.Version == "2" && metadataDir != "" {
+	if ec.Config.Version == cli.V2 && metadataDir != "" {
 		plugins = append(plugins, metadataVersion.New(ec, metadataDir))
 		plugins = append(plugins, tables.New(ec, metadataDir))
 		plugins = append(plugins, functions.New(ec, metadataDir))

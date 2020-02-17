@@ -8,7 +8,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -18,15 +17,13 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/hasura/graphql-engine/cli/plugins"
-	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
-
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -52,14 +49,24 @@ visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
 `
 )
 
+// ConfigVersion defines the version of the Config.
+type ConfigVersion int
+
+const (
+	// V1 represents config version 1
+	V1 ConfigVersion = 1
+	// V2 represents config version 2
+	V2 = 2
+)
+
 // ServerConfig has the config values required to contact the server
 type ServerConfig struct {
 	// Endpoint for the GraphQL Engine
-	Endpoint string `json:"endpoint"`
+	Endpoint string `yaml:"endpoint"`
 	// AccessKey (deprecated) (optional) Admin secret key required to query the endpoint
-	AccessKey string `json:"access_key,omitempty"`
+	AccessKey string `yaml:"access_key,omitempty"`
 	// AdminSecret (optional) Admin secret required to query the endpoint
-	AdminSecret string `json:"admin_secret,omitempty"`
+	AdminSecret string `yaml:"admin_secret,omitempty"`
 
 	ParsedEndpoint *url.URL `json:"-"`
 }
@@ -74,90 +81,20 @@ func (s *ServerConfig) ParseEndpoint() error {
 	return nil
 }
 
-type CodegenExecutionConfig struct {
-	Framework string `json:"framework"`
-	OutputDir string `json:"output_dir"`
-	URI       string `json:"uri,omitempty"`
-}
-
-type ActionExecutionConfig struct {
-	Kind                  string                  `json:"kind"`
-	HandlerWebhookBaseURL string                  `json:"handler_webhook_baseurl"`
-	Codegen               *CodegenExecutionConfig `json:"codegen,omitempty"`
-}
-
-// Config has the config values required to contact the server.
+// Config represents configuration required for the CLI to function
 type Config struct {
-	Version string
+	// Version of the config.
+	Version ConfigVersion `yaml:"version"`
+
+	// ServerConfig to be used by CLI to contact server.
 	ServerConfig
-	MetadataDirectory   string
-	MigrationsDirectory string
-	Action              ActionExecutionConfig
-}
 
-type rawConfig struct {
-	// Version for the CLI config
-	Version string `json:"version"`
-	ServerConfig
-	MetadataDirectory   string                `json:"metadata_directory"`
-	MigrationsDirectory string                `json:"migrations_directory,omitempty"`
-	Action              ActionExecutionConfig `json:"actions"`
-}
-
-func (r rawConfig) toConfig() Config {
-	s := r.AdminSecret
-	if s == "" {
-		s = r.AccessKey
-	}
-	return Config{
-		Version: r.Version,
-		ServerConfig: ServerConfig{
-			Endpoint:       r.ServerConfig.Endpoint,
-			AdminSecret:    r.ServerConfig.AdminSecret,
-			ParsedEndpoint: r.ServerConfig.ParsedEndpoint,
-		},
-		MetadataDirectory:   r.MetadataDirectory,
-		MigrationsDirectory: r.MigrationsDirectory,
-		Action:              r.Action,
-	}
-}
-
-func (s Config) toRawConfig() rawConfig {
-	return rawConfig{
-		Version: s.Version,
-		ServerConfig: ServerConfig{
-			Endpoint:       s.ServerConfig.Endpoint,
-			AdminSecret:    s.ServerConfig.AdminSecret,
-			AccessKey:      "",
-			ParsedEndpoint: s.ServerConfig.ParsedEndpoint,
-		},
-		MetadataDirectory:   s.MetadataDirectory,
-		MigrationsDirectory: s.MigrationsDirectory,
-		Action:              s.Action,
-	}
-}
-
-// MarshalJSON converts s to JSON
-func (s Config) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.toRawConfig())
-}
-
-// UnmarshalJSON converts b to struct s
-func (s Config) UnmarshalJSON(b []byte) error {
-	var r rawConfig
-	err := json.Unmarshal(b, &r)
-	if err != nil {
-		return errors.Wrap(err, "unmarshal error")
-	}
-	sc := r.toConfig()
-	s.Version = sc.Version
-	s.ServerConfig.Endpoint = sc.ServerConfig.Endpoint
-	s.ServerConfig.AdminSecret = sc.ServerConfig.AdminSecret
-	s.ServerConfig.ParsedEndpoint = sc.ServerConfig.ParsedEndpoint
-	s.MetadataDirectory = sc.MetadataDirectory
-	s.MigrationsDirectory = sc.MigrationsDirectory
-	s.Action = sc.Action
-	return nil
+	// MetadataDirectory defines the directory where the metadata files were stored.
+	MetadataDirectory string `yaml:"metadata_directory"`
+	// MigrationsDirectory defines the directory where the migration files were stored.
+	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
+	// ActionConfig defines the config required to create or generate codegen for an action.
+	ActionConfig types.ActionExecutionConfig `yaml:"actions"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -226,8 +163,9 @@ type ExecutionContext struct {
 	// SkipUpdateCheck will skip the auto update check if set to true
 	SkipUpdateCheck bool
 
-	// PluginsPath is the path used by the plugins
-	Plugins *plugins.Config
+	// PluginsConfig defines the config for plugins
+	PluginsConfig *plugins.Config
+
 	// IsTerminal indicates whether the current session is a terminal or not
 	IsTerminal bool
 }
@@ -301,18 +239,14 @@ func (ec *ExecutionContext) Prepare() error {
 // setupPlugins create and returns the inferred paths for hasura. By default, it assumes
 // $HOME/.hasura as the base path
 func (ec *ExecutionContext) setupPlugins() error {
-	home, err := homedir.Dir()
-	if err != nil {
-		return errors.Wrap(err, "cannot get home directory")
-	}
-	base := filepath.Join(home, GlobalConfigDirName, "plugins")
-	base, err = filepath.Abs(base)
+	base := filepath.Join(ec.GlobalConfigDir, "plugins")
+	base, err := filepath.Abs(base)
 	if err != nil {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
-	ec.Plugins = plugins.New(base)
-	ec.Plugins.Logger = ec.Logger
-	return ec.Plugins.Prepare()
+	ec.PluginsConfig = plugins.New(base)
+	ec.PluginsConfig.Logger = ec.Logger
+	return ec.PluginsConfig.Prepare()
 }
 
 // Validate prepares the ExecutionContext ec and then validates the
@@ -320,7 +254,7 @@ func (ec *ExecutionContext) setupPlugins() error {
 // place.
 func (ec *ExecutionContext) Validate() error {
 	// ensure plugins index exists
-	err := gitutil.EnsureCloned(ec.Plugins.Paths.IndexPath())
+	err := ec.PluginsConfig.Repo.EnsureCloned()
 	if err != nil {
 		return errors.Wrap(err, "ensuring plugins index failed")
 	}
@@ -343,7 +277,7 @@ func (ec *ExecutionContext) Validate() error {
 	// set name of migration directory
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MigrationsDirectory)
 
-	if ec.Config.Version != "1" && ec.Config.MetadataDirectory != "" {
+	if ec.Config.Version == V2 && ec.Config.MetadataDirectory != "" {
 		// set name of metadata directory
 		ec.MetadataDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MetadataDirectory)
 		if _, err := os.Stat(ec.MetadataDir); os.IsNotExist(err) {
@@ -387,24 +321,18 @@ func (ec *ExecutionContext) checkServerVersion() error {
 	return nil
 }
 
-// WriteConfig writes the configuration from ec.Config
-func (ec *ExecutionContext) WriteConfig() error {
-	j, err := json.Marshal(ec.Config)
+// WriteConfig writes the configuration from ec.Config or input config
+func (ec *ExecutionContext) WriteConfig(config *Config) error {
+	var cfg *Config
+	if config != nil {
+		cfg = config
+	} else {
+		cfg = ec.Config
+	}
+	y, err := yaml.Marshal(cfg)
 	if err != nil {
 		return err
 	}
-
-	var jsonObj yaml.MapSlice
-	err = yaml.Unmarshal(j, &jsonObj)
-	if err != nil {
-		return err
-	}
-
-	y, err := yaml.Marshal(jsonObj)
-	if err != nil {
-		return err
-	}
-
 	return ioutil.WriteFile(ec.ConfigFile, y, 0644)
 }
 
@@ -438,17 +366,17 @@ func (ec *ExecutionContext) readConfig() error {
 		adminSecret = v.GetString("access_key")
 	}
 	ec.Config = &Config{
-		Version: v.GetString("version"),
+		Version: ConfigVersion(v.GetInt("version")),
 		ServerConfig: ServerConfig{
 			Endpoint:    v.GetString("endpoint"),
 			AdminSecret: adminSecret,
 		},
 		MetadataDirectory:   v.GetString("metadata_directory"),
 		MigrationsDirectory: v.GetString("migrations_directory"),
-		Action: ActionExecutionConfig{
+		ActionConfig: types.ActionExecutionConfig{
 			Kind:                  v.GetString("actions.kind"),
 			HandlerWebhookBaseURL: v.GetString("actions.handler_webhook_baseurl"),
-			Codegen: &CodegenExecutionConfig{
+			Codegen: &types.CodegenExecutionConfig{
 				Framework: v.GetString("actions.codegen.framework"),
 				OutputDir: v.GetString("actions.codegen.output_dir"),
 				URI:       v.GetString("actions.codegen.uri"),
@@ -496,7 +424,7 @@ func (ec *ExecutionContext) setupLogger() {
 	}
 
 	ec.Logger.Hooks = make(logrus.LevelHooks)
-	ec.Logger.AddHook(newLoggerHook(ec.Logger, ec.Spinner, ec.IsTerminal, ec.NoColor))
+	ec.Logger.AddHook(newSpinnerHandlerHook(ec.Logger, ec.Spinner, ec.IsTerminal, ec.NoColor))
 
 	// set the logger for telemetry
 	if ec.Telemetry.Logger == nil {

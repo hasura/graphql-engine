@@ -45,7 +45,7 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if ec.Config.Version == "1" {
+			if ec.Config.Version != cli.V2 {
 				return fmt.Errorf("actions commands can be executed only when config version is greater than 1")
 			}
 			if ec.MetadataDir == "" {
@@ -103,7 +103,7 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 		return
 	}
 	_ = actionsCodegenGit.EnsureUpdated()
-	newCodegenExecutionConfig := o.EC.Config.Action.Codegen
+	newCodegenExecutionConfig := o.EC.Config.ActionConfig.Codegen
 	o.EC.Spinner.Stop()
 
 	frameworkFileBytes, err := ioutil.ReadFile(filepath.Join(o.EC.GlobalConfigDir, actionsCodegenDirName, "frameworks.json"))
@@ -178,7 +178,7 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 
 	// if output directory is not provided, make them enter it
 	if o.outputDir == "" {
-		outputDir, err := util.GetFSPathPrompt("Where do you want to place the codegen files?", o.EC.Config.Action.Codegen.OutputDir)
+		outputDir, err := util.GetFSPathPrompt("Where do you want to place the codegen files?", o.EC.Config.ActionConfig.Codegen.OutputDir)
 		if err != nil {
 			return err
 		}
@@ -188,7 +188,7 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 	}
 
 	newConfig := o.EC.Config
-	newConfig.Action.Codegen = newCodegenExecutionConfig
+	newConfig.ActionConfig.Codegen = newCodegenExecutionConfig
 
 	configString, err := yaml.Marshal(newConfig)
 	if err != nil {

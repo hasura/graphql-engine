@@ -222,7 +222,7 @@ func (o *MetadataDiffOptions) runv1(args []string) error {
 }
 
 func (o *MetadataDiffOptions) Run() error {
-	if o.EC.Config.Version == "2" && o.EC.MetadataDir != "" {
+	if o.EC.Config.Version == cli.V2 && o.EC.MetadataDir != "" {
 		return o.runv2(o.Args)
 	}
 	return o.runv1(o.Args)

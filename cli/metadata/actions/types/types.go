@@ -2,6 +2,25 @@ package types
 
 import "gopkg.in/yaml.v2"
 
+// CodegenExecutionConfig represents the config required to generate codegen for an action.
+type CodegenExecutionConfig struct {
+	// Framework to be used
+	Framework string `json:"framework" yaml:"framework"`
+	// OutputDir - path to the directory where generated files will be saved.
+	OutputDir string `json:"output_dir" yaml:"output_dir"`
+	URI       string `json:"uri,omitempty" yaml:"uri,omitempty"`
+}
+
+// ActionExecutionConfig represents the config required for creating an action.
+type ActionExecutionConfig struct {
+	// Kind of the action
+	Kind string `json:"kind" yaml:"kind"`
+	// The action's webhook URL
+	HandlerWebhookBaseURL string `json:"handler_webhook_baseurl" yaml:"handler_webhook_baseurl"`
+	// Config required to generate codegen
+	Codegen *CodegenExecutionConfig `json:"codegen,omitempty" yaml:"codegen,omitempty"`
+}
+
 type Common struct {
 	Actions     []Action    `json:"actions" yaml:"actions"`
 	CustomTypes CustomTypes `json:"custom_types" yaml:"custom_types"`

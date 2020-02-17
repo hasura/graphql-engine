@@ -10,6 +10,7 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/plugins/paths"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -20,29 +21,37 @@ var (
 	ErrIsAlreadyUpgraded  = errors.New("can't upgrade, the newest version is already installed")
 )
 
+const (
+	indexURI string = "https://github.com/hasura/plugins-index.git"
+)
+
+// Config defines the required
 type Config struct {
-	// Paths
+	// Paths contains all important environment paths
 	Paths paths.Paths
+
+	// Repo defines the git object required to maintain the plugin index
+	Repo *util.GitUtil
 
 	Logger *logrus.Logger
 }
 
 func New(base string) *Config {
+	p := paths.NewPaths(base)
 	return &Config{
-		Paths: paths.NewPaths(base),
+		Paths: p,
+		Repo:  util.NewGitUtil(indexURI, p.IndexPath(), ""),
 	}
 }
 
 // Prepare makes sure that the plugins directory is initialized
 func (c *Config) Prepare() error {
-	// Ensure the plugins directories
-	err := ensureDirs(c.Paths.BasePath(),
+	return errors.Wrap(ensureDirs(c.Paths.BasePath(),
 		c.Paths.DownloadPath(),
 		c.Paths.InstallPath(),
 		c.Paths.BinPath(),
 		c.Paths.InstallReceiptsPath(),
-	)
-	return errors.Wrap(err, "unable to create plugin directories")
+	), "unable to create plugin directories")
 }
 
 // ListInstalledPlugins returns a list of all install plugins in a

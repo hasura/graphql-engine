@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
 	"github.com/hasura/graphql-engine/cli/metadata/functions"
 	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
@@ -14,7 +15,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/metadata/tables"
 	metadataTypes "github.com/hasura/graphql-engine/cli/metadata/types"
 	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
-	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 	"github.com/hasura/graphql-engine/cli/util"
 
 	"github.com/hasura/graphql-engine/cli"
@@ -55,7 +55,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return gitutil.EnsureCloned(ec.Plugins.Paths.IndexPath())
+			return ec.PluginsConfig.Repo.EnsureCloned()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 {
@@ -172,12 +172,12 @@ func (o *InitOptions) createFiles() error {
 		}
 	} else {
 		config = &cli.Config{
-			Version: "2",
+			Version: cli.V2,
 			ServerConfig: cli.ServerConfig{
 				Endpoint: "http://localhost:8080",
 			},
 			MetadataDirectory: o.MetadataDir,
-			Action: cli.ActionExecutionConfig{
+			ActionConfig: types.ActionExecutionConfig{
 				Kind:                  o.ActionKind,
 				HandlerWebhookBaseURL: o.ActionHandler,
 			},
@@ -190,10 +190,10 @@ func (o *InitOptions) createFiles() error {
 		config.ServerConfig.AdminSecret = o.AdminSecret
 	}
 
-	o.EC.Config = config
 	// write the config file
+	o.EC.Config = config
 	o.EC.ConfigFile = filepath.Join(o.EC.ExecutionDirectory, "config.yaml")
-	err = o.EC.WriteConfig()
+	err = o.EC.WriteConfig(nil)
 	if err != nil {
 		return errors.Wrap(err, "cannot write config file")
 	}
@@ -205,7 +205,7 @@ func (o *InitOptions) createFiles() error {
 		return errors.Wrap(err, "cannot write migration directory")
 	}
 
-	if config.Version == "2" {
+	if config.Version == cli.V2 {
 		// create metadata directory
 		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, "metadata")
 		err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)

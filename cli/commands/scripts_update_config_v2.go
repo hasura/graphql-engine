@@ -6,7 +6,6 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/plugins"
-	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -29,19 +28,19 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if ec.Config.Version != "1" {
+			if ec.Config.Version != cli.V1 {
 				return fmt.Errorf("this script can be executed only when the current config version is 1")
 			}
 			// update the plugin index
 			ec.Spin("Updating the plugin index...")
 			defer ec.Spinner.Stop()
-			err := gitutil.EnsureUpdated(ec.Plugins.Paths.IndexPath())
+			err := ec.PluginsConfig.Repo.EnsureUpdated()
 			if err != nil {
 				return errors.Wrap(err, "cannot update plugin index")
 			}
 			// install the plugin
 			ec.Spin("Installing cli-ext plugin...")
-			err = ec.Plugins.Install("cli-ext", "")
+			err = ec.PluginsConfig.Install("cli-ext", "")
 			if err != nil && err != plugins.ErrIsAlreadyInstalled {
 				return errors.Wrap(err, "cannot install plugin")
 			}
@@ -69,7 +68,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				}
 			}()
 			// set codegen to nil, so that it is not exported in yaml
-			ec.Config.Action.Codegen = nil
+			ec.Config.ActionConfig.Codegen = nil
 			// run metadata export
 			ec.Spin("Exporting metadata...")
 			migrateDrv, err := newMigrate(ec, true)
@@ -86,7 +85,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				return errors.Wrap(err, "cannot write metadata")
 			}
 			ec.Spin("Writing new config file...")
-			err = ec.WriteConfig()
+			err = ec.WriteConfig(nil)
 			if err != nil {
 				return errors.Wrap(err, "cannot write config file")
 			}

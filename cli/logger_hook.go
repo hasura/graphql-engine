@@ -6,12 +6,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type loggerHook struct {
+type spinnerHook struct {
 	logger  *logrus.Logger
 	spinner *spinner.Spinner
 }
 
-func newLoggerHook(parent *logrus.Logger, spinner *spinner.Spinner, isTerminal, noColor bool) *loggerHook {
+func newSpinnerHandlerHook(parent *logrus.Logger, spinner *spinner.Spinner, isTerminal, noColor bool) *spinnerHook {
 	logger := logrus.New()
 	if isTerminal {
 		if noColor {
@@ -32,19 +32,19 @@ func newLoggerHook(parent *logrus.Logger, spinner *spinner.Spinner, isTerminal, 
 	}
 	logger.Out = colorable.NewColorableStdout()
 	logger.Level = parent.GetLevel()
-	return &loggerHook{
+	return &spinnerHook{
 		logger:  logger,
 		spinner: spinner,
 	}
 }
 
 // Levels returns all levels this hook should be registered to
-func (hook *loggerHook) Levels() []logrus.Level {
+func (hook *spinnerHook) Levels() []logrus.Level {
 	return logrus.AllLevels
 }
 
 // Fire is triggered on new log entries
-func (hook *loggerHook) Fire(entry *logrus.Entry) error {
+func (hook *spinnerHook) Fire(entry *logrus.Entry) error {
 	if hook.spinner.Active() {
 		hook.spinner.Stop()
 		defer func() {

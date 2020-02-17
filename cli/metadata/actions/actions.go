@@ -63,10 +63,10 @@ type sdlFromResponse struct {
 }
 
 type actionsCodegenRequest struct {
-	ActionName    string                      `json:"action_name" yaml:"action_name,omitempty"`
-	SDL           sdlPayload                  `json:"sdl" yaml:"sdl,omitempty"`
-	Derive        DerivePayload               `json:"derive,omitempty"`
-	CodegenConfig *cli.CodegenExecutionConfig `json:"codegen_config" yaml:"codegen_config,omitempty"`
+	ActionName    string                        `json:"action_name" yaml:"action_name,omitempty"`
+	SDL           sdlPayload                    `json:"sdl" yaml:"sdl,omitempty"`
+	Derive        DerivePayload                 `json:"derive,omitempty"`
+	CodegenConfig *types.CodegenExecutionConfig `json:"codegen_config" yaml:"codegen_config,omitempty"`
 }
 
 type codegenFile struct {
@@ -80,7 +80,7 @@ type actionsCodegenResponse struct {
 
 type ActionConfig struct {
 	MetadataDir  string
-	ActionConfig cli.ActionExecutionConfig
+	ActionConfig types.ActionExecutionConfig
 
 	cmdName    string
 	shouldSkip bool
@@ -105,11 +105,11 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 	}
 	cfg := &ActionConfig{
 		MetadataDir:  baseDir,
-		ActionConfig: ec.Config.Action,
+		ActionConfig: ec.Config.ActionConfig,
 		cmdName:      ec.CMDName,
 		shouldSkip:   shouldSkip,
 		logger:       ec.Logger,
-		pluginsCfg:   ec.Plugins,
+		pluginsCfg:   ec.PluginsConfig,
 	}
 	return cfg
 }

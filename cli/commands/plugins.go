@@ -11,8 +11,6 @@ import (
 	"syscall"
 	"unicode"
 
-	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
-
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -26,7 +24,7 @@ func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return gitutil.EnsureCloned(ec.Plugins.Paths.IndexPath())
+			return ec.PluginsConfig.Repo.EnsureCloned()
 		},
 	}
 	pluginsCmd.AddCommand(
@@ -70,7 +68,7 @@ func NewDefaultPluginHandler(validPrefixes []string) *DefaultPluginHandler {
 // Lookup implements PluginHandler
 func (h *DefaultPluginHandler) Lookup(filename string) (string, bool) {
 	for _, prefix := range h.ValidPrefixes {
-		filename := filepath.Join(ec.Plugins.Paths.BinPath(), fmt.Sprintf("%s-%s", prefix, filename))
+		filename := filepath.Join(ec.PluginsConfig.Paths.BinPath(), fmt.Sprintf("%s-%s", prefix, filename))
 		path, err := exec.LookPath(filename)
 		if err != nil || len(path) == 0 {
 			continue

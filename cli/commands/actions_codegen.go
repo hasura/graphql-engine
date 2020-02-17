@@ -29,7 +29,7 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if ec.Config.Version == "1" {
+			if ec.Config.Version == cli.V1 {
 				return fmt.Errorf("actions commands can be executed only when config version is greater than 1")
 			}
 			if ec.MetadataDir == "" {
@@ -77,7 +77,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 	var derivePayload actions.DerivePayload
 	if o.deriveFrom != "" {
 		derivePayload.Operation = strings.TrimSpace(o.deriveFrom)
-		o.EC.Spin("Deriving a Hasura mutation...")
+		o.EC.Spin("Deriving a Hasura operation...")
 		introSchema, err := migrateDrv.GetIntroSpectionSchema()
 		if err != nil {
 			return err
@@ -86,7 +86,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 		o.EC.Spinner.Stop()
 	}
 
-	if o.EC.Config.Action.Codegen.Framework == "" {
+	if o.EC.Config.ActionConfig.Codegen.Framework == "" {
 		infoMsg := fmt.Sprintf(`Could not find codegen config in config.yaml. For setting codegen config, run:
 
   hasura actions use-codegen`)
@@ -117,7 +117,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 	}
 
 	o.EC.Spinner.Stop()
-	o.EC.Logger.Info("Codegen files generated at " + o.EC.Config.Action.Codegen.OutputDir)
+	o.EC.Logger.Info("Codegen files generated at " + o.EC.Config.ActionConfig.Codegen.OutputDir)
 
 	return nil
 

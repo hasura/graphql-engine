@@ -25,7 +25,7 @@ func newPluginsUpgradeCmd(ec *cli.ExecutionContext) *cobra.Command {
 			pluginName := args[0]
 			ec.Spin(fmt.Sprintf("Upgrading plugin %q...", pluginName))
 			defer ec.Spinner.Stop()
-			plugin, err := ec.Plugins.Upgrade(pluginName)
+			plugin, err := ec.PluginsConfig.Upgrade(pluginName)
 			if err != nil && err != plugins.ErrIsAlreadyUpgraded {
 				return errors.Wrapf(err, "failed to upgrade plugin %q", plugin.Name)
 			}

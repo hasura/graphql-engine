@@ -31,7 +31,7 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if ec.Config.Version == "1" {
+			if ec.Config.Version != cli.V2 {
 				return fmt.Errorf("actions commands can be executed only when config version is greater than 1")
 			}
 			if ec.MetadataDir == "" {
@@ -87,7 +87,7 @@ func (o *actionsCreateOptions) run() error {
 	var introSchema interface{}
 	if o.deriveFrom != "" {
 		o.deriveFrom = strings.TrimSpace(o.deriveFrom)
-		o.EC.Spin("Deriving a Hasura mutation...")
+		o.EC.Spin("Deriving a Hasura operation...")
 		introSchema, err = migrateDrv.GetIntroSpectionSchema()
 		if err != nil {
 			return err
@@ -116,7 +116,7 @@ func (o *actionsCreateOptions) run() error {
 	o.EC.Logger.WithField("name", o.name).Infoln("action created")
 
 	// if codegen config not present, skip codegen
-	if o.EC.Config.Action.Codegen.Framework == "" {
+	if o.EC.Config.ActionConfig.Codegen.Framework == "" {
 		if o.withCodegen {
 			infoMsg := fmt.Sprintf(`Could not find codegen config in config.yaml. For setting codegen config, run:
 
@@ -130,7 +130,7 @@ func (o *actionsCreateOptions) run() error {
 	// if with-codegen flag not present, ask them if they want to codegen
 	var confirmation string
 	if !o.withCodegen {
-		confirmation, err = util.GetYesNoPrompt("Do you want to generate " + o.EC.Config.Action.Codegen.Framework + " code for this action and the custom types?")
+		confirmation, err = util.GetYesNoPrompt("Do you want to generate " + o.EC.Config.ActionConfig.Codegen.Framework + " code for this action and the custom types?")
 		if err != nil {
 			return err
 		}
@@ -159,7 +159,7 @@ func (o *actionsCreateOptions) run() error {
 		return err
 	}
 	o.EC.Spinner.Stop()
-	o.EC.Logger.Info("Codegen files generated at " + o.EC.Config.Action.Codegen.OutputDir)
+	o.EC.Logger.Info("Codegen files generated at " + o.EC.Config.ActionConfig.Codegen.OutputDir)
 	return nil
 
 }

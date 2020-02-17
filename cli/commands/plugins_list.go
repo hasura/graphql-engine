@@ -29,7 +29,7 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ec.Spin("Fetching plugins list...")
 			defer ec.Spinner.Stop()
-			availablePlugins, err := ec.Plugins.ListPlugins()
+			availablePlugins, err := ec.PluginsConfig.ListPlugins()
 			if err != nil {
 				return errors.Wrap(err, "failed to load the list of plugins from the index")
 			}
@@ -40,7 +40,7 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 				pluginMap[p.Name] = p
 			}
 
-			installed, err := ec.Plugins.ListInstalledPlugins()
+			installed, err := ec.PluginsConfig.ListInstalledPlugins()
 			if err != nil {
 				return errors.Wrap(err, "failed to load installed plugins")
 			}

@@ -22,7 +22,7 @@ func newPluginsUnInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 			pluginName := args[0]
 			ec.Spin(fmt.Sprintf("Uninstalling plugin %q", pluginName))
 			defer ec.Spinner.Stop()
-			if err := ec.Plugins.Uninstall(pluginName); err != nil {
+			if err := ec.PluginsConfig.Uninstall(pluginName); err != nil {
 				return errors.Wrapf(err, "failed to uninstall plugin %s", pluginName)
 			}
 			ec.Spinner.Stop()

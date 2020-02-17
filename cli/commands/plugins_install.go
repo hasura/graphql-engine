@@ -5,7 +5,6 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/plugins"
-	"github.com/hasura/graphql-engine/cli/plugins/gitutil"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +24,7 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			err = gitutil.EnsureUpdated(ec.Plugins.Paths.IndexPath())
+			err = ec.PluginsConfig.Repo.EnsureUpdated()
 			if err != nil {
 				ec.Logger.Debugf("unable to update plugins index: got %v", err)
 			}
@@ -64,5 +63,5 @@ type PluginInstallOptions struct {
 }
 
 func (o *PluginInstallOptions) Run() error {
-	return o.EC.Plugins.Install(o.Name, o.ManifestFile)
+	return o.EC.PluginsConfig.Install(o.Name, o.ManifestFile)
 }
