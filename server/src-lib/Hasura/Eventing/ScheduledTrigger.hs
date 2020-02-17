@@ -9,7 +9,8 @@ Scheduled events are modeled using rows in Postgres with a @timestamp@ column.
 During startup, two threads are started:
 
 1. Generator: Fetches the list of scheduled triggers from cache and generates scheduled events
-for the next @x@ hours (default: 24). This effectively corresponds to doing an INSERT with values containing specific timestamp.
+if there are less than 100 upcoming events.
+This effectively corresponds to doing an INSERT with values containing specific timestamp.
 2. Processor: Fetches the scheduled events from db which are @<=NOW()@ and not delivered and delivers them.
 The delivery mechanism is similar to Event Triggers; see "Hasura.Eventing.EventTrigger"
 -}
@@ -73,6 +74,13 @@ scheduledEventsTable =
     hdbCatalogSchema
     (TableName $ T.pack "hdb_scheduled_events")
 
+data ScheduledTriggerStats
+  = ScheduledTriggerStats
+  { stsName                :: !TriggerName
+  , stsUpcomingEventsCount :: !Int
+  , stsMaxScheduledTime    :: !UTCTime
+  } deriving (Show, Eq)
+
 data ScheduledEventSeed
   = ScheduledEventSeed
   { sesName          :: !TriggerName
@@ -109,21 +117,54 @@ runScheduledEventsGenerator ::
 runScheduledEventsGenerator logger pgpool getSC = do
   forever $ do
     sc <- getSC
+    -- get scheduled triggers from cache
     let scheduledTriggers = Map.elems $ scScheduledTriggers sc
-    runExceptT
-      (Q.runTx
-         pgpool
-         (Q.ReadCommitted, Just Q.ReadWrite)
-         (insertScheduledEventsFor scheduledTriggers) ) >>= \case
-      Right _ -> pure ()
-      Left err ->
-        L.unLogger logger $ ScheduledTriggerInternalErr $ err500 Unexpected (T.pack $ show err)
-    threadDelay oneMinute
 
-insertScheduledEventsFor :: [ScheduledTriggerInfo] -> Q.TxE QErr ()
-insertScheduledEventsFor scheduledTriggers = do
-  currentTime <- liftIO getCurrentTime
-  let scheduledEvents = concatMap (generateScheduledEventsFrom currentTime) scheduledTriggers
+    -- get scheduled trigger stats from db
+    runExceptT
+      (Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadOnly) getScheduledTriggerStats) >>= \case
+      Left err -> L.unLogger logger $
+        ScheduledTriggerInternalErr $ err500 Unexpected (T.pack $ show err)
+      Right scheduledTriggerStats -> do
+
+        -- join scheduled triggers with stats and produce @[(ScheduledTriggerInfo, ScheduledTriggerStats)]@
+        scheduledTriggersWithStats' <- mapM (withStats scheduledTriggerStats) scheduledTriggers
+        let scheduledTriggersWithStats = catMaybes scheduledTriggersWithStats'
+
+        -- filter out scheduled trigger which have more than 100 upcoming events already
+        let scheduledTriggersForHydration =
+              filter (\(_sti, stats) -> stsUpcomingEventsCount stats < 100) scheduledTriggersWithStats
+
+        -- insert scheduled events for scheduled triggers that need hydration
+        runExceptT
+          (Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) $
+          insertScheduledEventsFor scheduledTriggersForHydration) >>= \case
+          Right _ -> pure ()
+          Left err ->
+            L.unLogger logger $ ScheduledTriggerInternalErr $ err500 Unexpected (T.pack $ show err)
+    threadDelay oneMinute
+    where
+      getScheduledTriggerStats = liftTx $ do
+        map uncurryStats <$>
+          Q.listQE defaultTxErrorHandler
+          [Q.sql|
+           SELECT name, upcoming_events_count, max_scheduled_time
+            FROM hdb_catalog.hdb_scheduled_events_stats
+           |] () True
+      uncurryStats (n, count, maxTs) = ScheduledTriggerStats n count maxTs
+      withStats stStats sti = do
+        let mStats = find (\ScheduledTriggerStats{stsName} -> stsName == stiName sti) stStats
+        case mStats of
+          Nothing -> do
+            L.unLogger logger $
+              ScheduledTriggerInternalErr $ err500 Unexpected "could not find scheduled trigger in stats"
+            pure Nothing
+          Just stats -> pure $ Just (sti, stats)
+
+insertScheduledEventsFor :: [(ScheduledTriggerInfo, ScheduledTriggerStats)] -> Q.TxE QErr ()
+insertScheduledEventsFor scheduledTriggersWithStats = do
+  let scheduledEvents = flip concatMap scheduledTriggersWithStats $ \(sti, stats) ->
+        generateScheduledEventsFrom (stsMaxScheduledTime stats) sti
   case scheduledEvents of
     []     -> pure ()
     events -> do
@@ -146,17 +187,24 @@ generateScheduledEventsFrom time ScheduledTriggerInfo{..} =
         case stiSchedule of
           AdHoc _ -> empty -- ad-hoc scheduled events are created through 'create_scheduled_event' API
           Cron cron ->
-            generateScheduleTimesBetween
+            generateScheduleTimes
               time
-              (addUTCTime nominalDay time) -- by default, generate events for one day
+              100 -- by default, generate next 100 events
               cron
    in map (ScheduledEventSeed stiName) events
 
--- | Generates events @(from, till]@ according to 'CronSchedule'
-generateScheduleTimesBetween :: UTCTime -> UTCTime -> CronSchedule -> [UTCTime]
-generateScheduleTimesBetween from till cron = takeWhile (<= till) $ go from
+
+-- | Generates next @n events starting @from according to 'CronSchedule'
+generateScheduleTimes :: UTCTime -> Int -> CronSchedule -> [UTCTime]
+generateScheduleTimes from n cron = take n $ go from
   where
     go = unfoldr (fmap dup . nextMatch cron)
+
+-- | Generates events @(from, till]@ according to 'CronSchedule'
+-- generateScheduleTimesFrom :: UTCTime -> UTCTime -> CronSchedule -> [UTCTime]
+-- generateScheduleTimesFrom from till cron = takeWhile (<= till) $ go from
+--   where
+--     go = unfoldr (fmap dup . nextMatch cron)
 
 processScheduledQueue
   :: HasVersion

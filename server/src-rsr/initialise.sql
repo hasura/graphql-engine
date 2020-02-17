@@ -704,3 +704,16 @@ CREATE TABLE hdb_catalog.hdb_scheduled_event_invocation_logs
 
   FOREIGN KEY (event_id) REFERENCES hdb_catalog.hdb_scheduled_events (id) ON DELETE CASCADE
 );
+
+CREATE VIEW hdb_catalog.hdb_scheduled_events_stats AS
+  SELECT st.name,
+         COALESCE(ste.upcoming_events_count,0) as upcoming_events_count,
+         COALESCE(ste.max_scheduled_time, now()) as max_scheduled_time
+  FROM hdb_catalog.hdb_scheduled_trigger st
+  LEFT JOIN
+  ( SELECT name, count(*) as upcoming_events_count, max(scheduled_time) as max_scheduled_time
+    FROM hdb_catalog.hdb_scheduled_events
+    WHERE tries = 0
+    GROUP BY name
+  ) ste
+  ON st.name = ste.name;
