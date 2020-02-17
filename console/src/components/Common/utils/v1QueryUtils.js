@@ -44,12 +44,13 @@ export const generateSetCustomTypesQuery = customTypes => {
   };
 };
 
-export const generateCreateActionQuery = (name, definition) => {
+export const generateCreateActionQuery = (name, definition, comment) => {
   return {
     type: 'create_action',
     args: {
       name,
       definition,
+      comment,
     },
   };
 };
@@ -132,12 +133,13 @@ export const getCreateActionPermissionQuery = (def, actionName) => {
   };
 };
 
-export const getUpdateActionQuery = (def, actionName) => {
+export const getUpdateActionQuery = (def, actionName, actionComment) => {
   return {
     type: 'update_action',
     args: {
       name: actionName,
       definition: def,
+      comment: actionComment,
     },
   };
 };

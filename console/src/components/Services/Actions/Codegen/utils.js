@@ -1,6 +1,7 @@
 /* eslint-disable */
 import globals from '../../../../Globals';
 import { CODEGEN_REPO, ALL_FRAMEWORKS_FILE_PATH } from '../constants';
+import endpoints from '../../../../Endpoints';
 
 const {
   buildClientSchema,
@@ -64,6 +65,7 @@ export const getFrameworkCodegen = (
     .then(codegenerator => {
       const derive = {
         operation: parentMutation,
+        endpoint: endpoints.graphQLUrl,
       };
       const codegenFiles = codegenerator(actionName, actionsSdl, derive);
       return codegenFiles;

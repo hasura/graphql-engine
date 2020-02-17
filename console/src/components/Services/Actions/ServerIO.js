@@ -113,6 +113,7 @@ export const createAction = () => (dispatch, getState) => {
     arguments: args,
     outputType,
     error: actionDefError,
+    comment: actionDescription,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
   if (actionDefError) {
     return dispatch(
@@ -138,6 +139,7 @@ export const createAction = () => (dispatch, getState) => {
     outputType,
     headers: rawState.headers,
     forwardClientHeaders: rawState.forwardClientHeaders,
+    comment: actionDescription,
   };
 
   const validationError = getStateValidationError(state, existingTypesList);
@@ -177,7 +179,8 @@ export const createAction = () => (dispatch, getState) => {
 
   const actionQueryUp = generateCreateActionQuery(
     state.name,
-    generateActionDefinition(state)
+    generateActionDefinition(state),
+    actionDescription
   );
 
   const actionQueryDown = generateDropActionQuery(state.name);
@@ -224,6 +227,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     arguments: args,
     outputType,
     error: actionDefError,
+    comment: actionDescription,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
 
   if (actionDefError) {
@@ -250,6 +254,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     outputType,
     headers: rawState.headers,
     forwardClientHeaders: rawState.forwardClientHeaders,
+    comment: actionDescription,
   };
 
   const validationError = getStateValidationError(state);
@@ -284,22 +289,26 @@ export const saveAction = currentAction => (dispatch, getState) => {
 
   const updateCurrentActionQuery = getUpdateActionQuery(
     generateActionDefinition(state),
-    currentAction.action_name
+    currentAction.action_name,
+    actionDescription
   );
   const rollbackActionQuery = getUpdateActionQuery(
     currentAction.action_defn,
-    currentAction.action_name
+    currentAction.action_name,
+    currentAction.comment
   );
 
   const createNewActionQuery = generateCreateActionQuery(
     state.name,
-    generateActionDefinition(state)
+    generateActionDefinition(state),
+    actionDescription
   );
 
   const actionQueryDown = generateDropActionQuery(state.name);
   const oldActionQueryUp = generateCreateActionQuery(
     currentAction.action_name,
-    currentAction.action_defn
+    currentAction.action_defn,
+    currentAction.comment
   );
 
   let upQueries;
@@ -364,7 +373,8 @@ export const deleteAction = currentAction => (dispatch, getState) => {
   const upQuery = generateDropActionQuery(currentAction.action_name);
   const downQuery = generateCreateActionQuery(
     currentAction.action_name,
-    currentAction.action_defn
+    currentAction.action_defn,
+    currentAction.comment
   );
 
   const migrationName = `delete_action_${currentAction.action_name}`;

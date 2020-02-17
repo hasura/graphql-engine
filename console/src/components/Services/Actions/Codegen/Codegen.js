@@ -134,7 +134,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   };
 
   return (
-    <div>
+    <div style={{ width: '600px' }}>
       <Helmet
         title={`Codegen - ${currentAction.action_name} - Actions | Hasura`}
       />

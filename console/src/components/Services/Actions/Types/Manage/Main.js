@@ -45,7 +45,7 @@ const Manage = ({ allTypes, dispatch, ...manageProps }) => {
   // TODO handling error elegantly
   const allowSave = !isFetching && !error;
 
-  const editorTooltip = 'Manage all your type here';
+  const editorTooltip = 'Manage all your custom types here';
   const editorLabel = 'All custom types';
 
   return (
