@@ -5,6 +5,8 @@ services:
     restart: always
     volumes:
     - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgrespassword
   graphql-engine:
     image: hasura/graphql-engine:v1.0.0
     ports:
