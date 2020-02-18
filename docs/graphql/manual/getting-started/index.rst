@@ -19,8 +19,15 @@ To use the Hasura GraphQL engine, you need to:
 Get started
 -----------
 
-- :doc:`Quickstart <quickstart>`
-- :doc:`Tutorials <tutorials>`
+Quickstart
+^^^^^^^^^^
+
+Get started with setting up a GraphQL API from scratch with our :doc:`Quickstart <quickstart>`.
+
+Tutorials
+^^^^^^^^^
+
+Get started by building a project with our :doc:`GraphQL tutorials <tutorials>`.
 
 
 .. admonition:: Supported Postgres versions
