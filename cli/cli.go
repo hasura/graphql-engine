@@ -166,6 +166,9 @@ type ExecutionContext struct {
 	// PluginsConfig defines the config for plugins
 	PluginsConfig *plugins.Config
 
+	// CodegenAssetsRepo defines the config to handle codegen-assets repo
+	CodegenAssetsRepo *util.GitUtil
+
 	// IsTerminal indicates whether the current session is a terminal or not
 	IsTerminal bool
 }
@@ -212,6 +215,11 @@ func (ec *ExecutionContext) Prepare() error {
 		return errors.Wrap(err, "setting up plugins path failed")
 	}
 
+	err = ec.setupCodegenAssetsRepo()
+	if err != nil {
+		return errors.Wrap(err, "setting up codegen-assets repo failed")
+	}
+
 	ec.LastUpdateCheckFile = filepath.Join(ec.GlobalConfigDir, LastUpdateCheckFileName)
 
 	// initialize a blank server config
@@ -249,6 +257,16 @@ func (ec *ExecutionContext) setupPlugins() error {
 	return ec.PluginsConfig.Prepare()
 }
 
+func (ec *ExecutionContext) setupCodegenAssetsRepo() error {
+	base := filepath.Join(ec.GlobalConfigDir, util.ActionsCodegenDirName)
+	base, err := filepath.Abs(base)
+	if err != nil {
+		return errors.Wrap(err, "cannot get absolute path")
+	}
+	ec.CodegenAssetsRepo = util.NewGitUtil(util.ActionsCodegenRepoURI, base, "")
+	return nil
+}
+
 // Validate prepares the ExecutionContext ec and then validates the
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
@@ -257,6 +275,12 @@ func (ec *ExecutionContext) Validate() error {
 	err := ec.PluginsConfig.Repo.EnsureCloned()
 	if err != nil {
 		return errors.Wrap(err, "ensuring plugins index failed")
+	}
+
+	// ensure codegen-assets repo exists
+	err = ec.CodegenAssetsRepo.EnsureCloned()
+	if err != nil {
+		return errors.Wrap(err, "ensuring codegen-assets repo failed")
 	}
 
 	// validate execution directory

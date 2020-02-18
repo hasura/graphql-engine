@@ -6,6 +6,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -16,7 +17,7 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	actionsCodegenCmd := &cobra.Command{
-		Use:          "codegen",
+		Use:          "codegen [action-name]",
 		Short:        "",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -57,7 +58,6 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v.BindPFlag("access_key", f.Lookup("access-key"))
 
 	return actionsCodegenCmd
-
 }
 
 type actionsCodegenOptions struct {
@@ -72,26 +72,22 @@ func (o *actionsCodegenOptions) run() (err error) {
 		return err
 	}
 
-	actionCfg := actions.New(o.EC, o.EC.MetadataDir)
-
 	var derivePayload actions.DerivePayload
 	if o.deriveFrom != "" {
 		derivePayload.Operation = strings.TrimSpace(o.deriveFrom)
 		o.EC.Spin("Deriving a Hasura operation...")
 		introSchema, err := migrateDrv.GetIntroSpectionSchema()
 		if err != nil {
-			return err
+			return errors.Wrap(err, "unable to fetch introspection schema")
 		}
 		derivePayload.IntrospectionSchema = introSchema
 		o.EC.Spinner.Stop()
 	}
 
 	if o.EC.Config.ActionConfig.Codegen.Framework == "" {
-		infoMsg := fmt.Sprintf(`Could not find codegen config. For adding codegen config, run:
+		return fmt.Errorf(`Could not find codegen config. For adding codegen config, run:
 
   hasura actions use-codegen`)
-		o.EC.Logger.Error(infoMsg)
-		return nil
 	}
 
 	// if no actions are passed, perform codegen for all actions
@@ -100,7 +96,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 	if len(o.actions) == 0 {
 		actionsFileContent, err := actions.GetActionsFileContent(o.EC.MetadataDir)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error getting actions file content")
 		}
 		for _, action := range actionsFileContent.Actions {
 			codegenActions = append(codegenActions, action.Name)
@@ -109,16 +105,14 @@ func (o *actionsCodegenOptions) run() (err error) {
 		codegenActions = o.actions
 	}
 
+	actionCfg := actions.New(o.EC, o.EC.MetadataDir)
 	for _, actionName := range codegenActions {
 		err = actionCfg.Codegen(actionName, derivePayload)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "error generating codegen for action %s", actionName)
 		}
 	}
-
 	o.EC.Spinner.Stop()
 	o.EC.Logger.Info("Codegen files generated at " + o.EC.Config.ActionConfig.Codegen.OutputDir)
-
 	return nil
-
 }

@@ -1,23 +1,16 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"path/filepath"
 	"sort"
 	"strconv"
 
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-)
-
-const (
-	actionsCodegenRepoURI string = "https://github.com/hasura/codegen-assets.git"
-	actionsCodegenDirName string = "actions-codegen-assets"
 )
 
 type codegenFramework struct {
@@ -84,46 +77,45 @@ type actionsUseCodegenOptions struct {
 	withStarterKit bool
 }
 
-func (o *actionsUseCodegenOptions) run() (err error) {
-	// ensure the the actions-codegen repo is cloned and updated
-	o.EC.Spin("Fetching codegen assets...")
+func (o *actionsUseCodegenOptions) run() error {
+	o.EC.Spin("Ensuring codegen-assets repo is updated...")
 	defer o.EC.Spinner.Stop()
-	actionsCodegenGit := util.NewGitUtil(
-		actionsCodegenRepoURI,
-		filepath.Join(o.EC.GlobalConfigDir, actionsCodegenDirName),
-		"",
-	)
-	err = actionsCodegenGit.EnsureCloned()
+	// ensure the the actions-codegen repo is updated
+	err := o.EC.CodegenAssetsRepo.EnsureUpdated()
 	if err != nil {
-		return
+		o.EC.Logger.Warnf("unable to update codegen-assets repo, got %v", err)
 	}
-	_ = actionsCodegenGit.EnsureUpdated()
+
 	newCodegenExecutionConfig := o.EC.Config.ActionConfig.Codegen
-	o.EC.Spinner.Stop()
+	newCodegenExecutionConfig.Framework = ""
 
-	frameworkFileBytes, err := ioutil.ReadFile(filepath.Join(o.EC.GlobalConfigDir, actionsCodegenDirName, "frameworks.json"))
+	o.EC.Spin("Fetching frameworks...")
+	allFrameworks, err := getCodegenFrameworks()
 	if err != nil {
-		return err
-	}
-	var allFrameworks []codegenFramework
-	err = json.Unmarshal(frameworkFileBytes, &allFrameworks)
-	if err != nil {
-		return err
+		return errors.Wrap(err, "error in fetching codegen frameworks")
 	}
 
-	// if framework flag is not provided, display a list and allow them to choose
 	if o.framework == "" {
+		// if framework flag is not provided, display a list and allow them to choose
 		var frameworkList []string
 		for _, f := range allFrameworks {
 			frameworkList = append(frameworkList, f.Name)
 		}
 		sort.Strings(frameworkList)
+		o.EC.Spinner.Stop()
 		newCodegenExecutionConfig.Framework, err = util.GetSelectPrompt("Choose a codegen framework to use", frameworkList)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error in selecting framework")
 		}
 	} else {
-		newCodegenExecutionConfig.Framework = o.framework
+		for _, f := range allFrameworks {
+			if o.framework == f.Name {
+				newCodegenExecutionConfig.Framework = o.framework
+			}
+		}
+		if newCodegenExecutionConfig.Framework == "" {
+			return fmt.Errorf("framework %s is not found", o.framework)
+		}
 	}
 
 	hasStarterKit := false
@@ -133,6 +125,11 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 		}
 	}
 
+	// if with-starter-kit flag is set and the same is not available for the framework, return error
+	if o.withStarterKit && !hasStarterKit {
+		return fmt.Errorf("starter kit is not available for framework %s", newCodegenExecutionConfig.Framework)
+	}
+
 	// if with-starter-kit flag is not provided, give an option to clone a starterkit
 	if !o.withStarterKit && hasStarterKit {
 		shouldCloneStarterKit, err := util.GetYesNoPrompt("Do you also want to clone a starter kit for " + newCodegenExecutionConfig.Framework + "?")
@@ -140,6 +137,17 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 			return err
 		}
 		o.withStarterKit = shouldCloneStarterKit == "y"
+	}
+
+	// if output directory is not provided, make them enter it
+	if o.outputDir == "" {
+		outputDir, err := util.GetFSPathPrompt("Where do you want to place the codegen files?", o.EC.Config.ActionConfig.Codegen.OutputDir)
+		if err != nil {
+			return errors.Wrap(err, "error in getting output directory input")
+		}
+		newCodegenExecutionConfig.OutputDir = outputDir
+	} else {
+		newCodegenExecutionConfig.OutputDir = o.outputDir
 	}
 
 	// clone the starter kit
@@ -160,42 +168,21 @@ func (o *actionsUseCodegenOptions) run() (err error) {
 		// copy the starter kit
 		destinationDir := filepath.Join(o.EC.ExecutionDirectory, starterKitDirname)
 		err = util.FSCopyDir(
-			filepath.Join(o.EC.GlobalConfigDir, actionsCodegenDirName, newCodegenExecutionConfig.Framework, "starter-kit"),
+			filepath.Join(o.EC.GlobalConfigDir, util.ActionsCodegenDirName, newCodegenExecutionConfig.Framework, "starter-kit"),
 			destinationDir,
 		)
-
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error in copying starter kit")
 		}
-
 		o.EC.Logger.Info("Starter kit cloned at " + destinationDir)
-	}
-
-	// if output directory is not provided, make them enter it
-	if o.outputDir == "" {
-		outputDir, err := util.GetFSPathPrompt("Where do you want to place the codegen files?", o.EC.Config.ActionConfig.Codegen.OutputDir)
-		if err != nil {
-			return err
-		}
-		newCodegenExecutionConfig.OutputDir = outputDir
-	} else {
-		newCodegenExecutionConfig.OutputDir = o.outputDir
 	}
 
 	newConfig := o.EC.Config
 	newConfig.ActionConfig.Codegen = newCodegenExecutionConfig
-
-	configString, err := yaml.Marshal(newConfig)
+	err = o.EC.WriteConfig(newConfig)
 	if err != nil {
-		return
+		return errors.Wrap(err, "error in writing config")
 	}
-
-	err = ioutil.WriteFile(o.EC.ConfigFile, configString, 0644)
-	if err != nil {
-		return
-	}
-
-	o.EC.Logger.Info("Codegen configuration updated in config.yaml\n\n")
-
+	o.EC.Logger.Info("Codegen configuration updated in config.yaml")
 	return nil
 }

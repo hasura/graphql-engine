@@ -8,6 +8,11 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
+const (
+	ActionsCodegenRepoURI string = "https://github.com/hasura/codegen-assets.git"
+	ActionsCodegenDirName string = "actions-codegen-assets"
+)
+
 type GitUtil struct {
 	URI  string
 	Path string
