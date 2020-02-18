@@ -27,6 +27,14 @@ export const validateMutation = (mutationString, clientSchema) => {
     );
   }
 
+  if (mutationAst.definitions.find(d => d.kind === 'FragmentDefinition')) {
+    throw Error('fragments are not supported');
+  }
+
+  if (mutationAst.definitions.find(d => d.operation !== 'mutation')) {
+    throw Error('queries cannot be derived into actions');
+  }
+
   mutationAst.definitions = mutationAst.definitions.filter(
     d => d.operation === 'mutation'
   );
@@ -38,10 +46,6 @@ export const validateMutation = (mutationString, clientSchema) => {
 
   if (mutationAst.definitions.length !== 1) {
     throw Error('you can derive action from only one operation');
-  }
-
-  if (mutationAst.definitions.find(d => d.kind === 'FragmentDefinition')) {
-    throw Error('fragments are not supported');
   }
 
   if (mutationAst.definitions[0].kind !== 'OperationDefinition') {
