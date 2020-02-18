@@ -474,9 +474,9 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
         runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
 
     (cacheRef, cacheBuiltTime) <- do
-      pgResp <- runExceptT $ peelRun runCtx pgExecCtxReadComm Q.ReadWrite $
-        (,) <$> pure schemaCache <*> liftTx fetchLastUpdate
-      (schemaCache, event) <- liftIO $ either initErrExit return pgResp
+      eventE <- runExceptT $ peelRun runCtx pgExecCtxReadComm Q.ReadWrite $
+        liftTx fetchLastUpdate
+      event <- liftIO $ either initErrExit return eventE
       scRef <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
       return (scRef, view _2 <$> event)
 
