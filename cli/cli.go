@@ -68,7 +68,7 @@ type ServerConfig struct {
 	// AdminSecret (optional) Admin secret required to query the endpoint
 	AdminSecret string `yaml:"admin_secret,omitempty"`
 
-	ParsedEndpoint *url.URL `json:"-"`
+	ParsedEndpoint *url.URL `yaml:"-"`
 }
 
 // ParseEndpoint ensures the endpoint is valid.
@@ -87,7 +87,7 @@ type Config struct {
 	Version ConfigVersion `yaml:"version"`
 
 	// ServerConfig to be used by CLI to contact server.
-	ServerConfig
+	ServerConfig `yaml:",inline"`
 
 	// MetadataDirectory defines the directory where the metadata files were stored.
 	MetadataDirectory string `yaml:"metadata_directory"`

@@ -89,11 +89,6 @@ type ActionConfig struct {
 	logger *logrus.Logger
 }
 
-type OverrideOptions struct {
-	Kind    string
-	Webhook string
-}
-
 func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 	var shouldSkip bool
 	if ec.Version != nil && ec.Version.ServerSemver != nil {
@@ -114,7 +109,7 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 	return cfg
 }
 
-func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFrom string, opts *OverrideOptions) error {
+func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFrom string) error {
 	if !a.shouldSkip {
 		err := a.ensureCLIExtension()
 		if err != nil {
@@ -287,15 +282,6 @@ input SampleInput {
 		// Set kind and handler for action definition
 		kind := a.ActionConfig.Kind
 		handler := a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
-		if opts != nil {
-			if opts.Kind != "" {
-				kind = opts.Kind
-			}
-
-			if opts.Webhook != "" {
-				handler = opts.Webhook
-			}
-		}
 		if action.Definition.Kind == "" {
 			sdlFromResp.Actions[actionIndex].Definition.Kind = kind
 		}

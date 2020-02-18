@@ -48,8 +48,6 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := actionsCreateCmd.Flags()
 
-	f.StringVar(&opts.kind, "kind", "", "kind to use in action")
-	f.StringVar(&opts.webhook, "webhook", "", "webhook to use in action")
 	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a Hasura operation")
 	f.BoolVar(&opts.withCodegen, "with-codegen", false, "create action along with codegen")
 
@@ -57,11 +55,15 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	f.String("kind", "", "kind to use in action")
+	f.String("webhook", "", "webhook to use in action")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
 	v.BindPFlag("endpoint", f.Lookup("endpoint"))
 	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
 	v.BindPFlag("access_key", f.Lookup("access-key"))
+	v.BindPFlag("actions.kind", f.Lookup("kind"))
+	v.BindPFlag("actions.handler_webhook_baseurl", f.Lookup("webhook"))
 
 	return actionsCreateCmd
 }
@@ -70,8 +72,6 @@ type actionsCreateOptions struct {
 	EC *cli.ExecutionContext
 
 	name        string
-	kind        string
-	webhook     string
 	deriveFrom  string
 	withCodegen bool
 }
@@ -97,12 +97,8 @@ func (o *actionsCreateOptions) run() error {
 	// create new action
 	o.EC.Spin("Creating the action...")
 	o.EC.Spinner.Stop()
-	opts := &actions.OverrideOptions{
-		Kind:    o.kind,
-		Webhook: o.webhook,
-	}
 	actionCfg := actions.New(o.EC, o.EC.MetadataDir)
-	err = actionCfg.Create(o.name, introSchema, o.deriveFrom, opts)
+	err = actionCfg.Create(o.name, introSchema, o.deriveFrom, nil)
 	if err != nil {
 		return errors.Wrap(err, "error in creating action")
 	}
