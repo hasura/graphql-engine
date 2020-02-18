@@ -6,6 +6,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -83,7 +84,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 		return err
 	}
 
-	var derivePayload actions.DerivePayload
+	var derivePayload types.DerivePayload
 	if o.deriveFrom != "" {
 		derivePayload.Operation = strings.TrimSpace(o.deriveFrom)
 		o.EC.Spin("Deriving a Hasura operation...")

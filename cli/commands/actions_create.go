@@ -6,6 +6,7 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -150,7 +151,7 @@ func (o *actionsCreateOptions) run() error {
 	}
 
 	// construct derive payload to send to codegenerator
-	derivePayload := actions.DerivePayload{
+	derivePayload := types.DerivePayload{
 		IntrospectionSchema: introSchema,
 		Operation:           o.deriveFrom,
 		ActionName:          o.name,

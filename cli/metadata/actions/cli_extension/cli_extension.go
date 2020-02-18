@@ -1,4 +1,4 @@
-package actions
+package cliextension
 
 import (
 	"bytes"
@@ -6,36 +6,32 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
+	"path/filepath"
 
 	gyaml "github.com/ghodss/yaml"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
-
-	"github.com/pkg/errors"
 )
 
-func writeCLIExtInput(data []byte) (string, error) {
-	file, err := ioutil.TempFile("", "*.json")
-	if err != nil {
-		return "", err
-	}
-	err = ioutil.WriteFile(file.Name(), data, os.ModePerm)
-	if err != nil {
-		return "", err
-	}
-	return file.Name(), nil
+// Config represents the object to interact with cli-ext plugin
+type Config struct {
+	binPath string
+	logger  *logrus.Logger
 }
 
-func readCliExtOutput(filename string) ([]byte, error) {
-	fileBytes, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
+// NewCLIExtensionConfig creates CLIExtensionConfig to interact with cli-extension plugin
+func NewCLIExtensionConfig(binDir string, logger *logrus.Logger) *Config {
+	return &Config{
+		binPath: filepath.Join(binDir, "hasura-cli_ext"),
+		logger:  logger,
 	}
-	return fileBytes, nil
 }
 
-func convertMetadataToSDL(toPayload sdlToRequest, cmdName string, logger *logrus.Logger) (toResponse sdlToResponse, err error) {
+// ConvertMetadataToSDL converts actions metadata to graphql SDL
+func (c *Config) ConvertMetadataToSDL(toPayload types.SDLToRequest) (toResponse types.SDLToResponse, err error) {
 	outputFile, err := ioutil.TempFile("", "*.json")
 	if err != nil {
 		return
@@ -55,10 +51,7 @@ func convertMetadataToSDL(toPayload sdlToRequest, cmdName string, logger *logrus
 	if err != nil {
 		return
 	}
-	sdlToCmd, err := getCLIExtPath(cmdName)
-	if err != nil {
-		return
-	}
+	sdlToCmd := exec.Command(c.binPath)
 	args := []string{"sdl", "to", "--input-file", inputFileName, "--output-file", outputFileName}
 	sdlToCmd.Args = append(sdlToCmd.Args, args...)
 	var stdout bytes.Buffer
@@ -66,7 +59,7 @@ func convertMetadataToSDL(toPayload sdlToRequest, cmdName string, logger *logrus
 	sdlToCmd.Stdout = &stdout
 	sdlToCmd.Stderr = &stderr
 	err = sdlToCmd.Run()
-	logger.WithField("command", "sdl to").Debug(fmt.Sprintf("output: %s", stdout.String()))
+	c.logger.WithField("command", "sdl to").Debug(fmt.Sprintf("output: %s", stdout.String()))
 	if err != nil {
 		return toResponse, errors.Wrap(
 			fmt.Errorf(stderr.String()),
@@ -81,7 +74,8 @@ func convertMetadataToSDL(toPayload sdlToRequest, cmdName string, logger *logrus
 	return
 }
 
-func convertSDLToMetadata(fromPayload sdlFromRequest, cmdName string, logger *logrus.Logger) (fromResponse sdlFromResponse, err error) {
+// ConvertSDLToMetadata converts graphql SDL to hasura metadata
+func (c *Config) ConvertSDLToMetadata(fromPayload types.SDLFromRequest) (fromResponse types.SDLFromResponse, err error) {
 	outputFile, err := ioutil.TempFile("", "*.json")
 	if err != nil {
 		return
@@ -97,10 +91,7 @@ func convertSDLToMetadata(fromPayload sdlFromRequest, cmdName string, logger *lo
 	if err != nil {
 		return
 	}
-	sdlFromCmd, err := getCLIExtPath(cmdName)
-	if err != nil {
-		return
-	}
+	sdlFromCmd := exec.Command(c.binPath)
 	args := []string{"sdl", "from", "--input-file", inputFileName, "--output-file", outputFileName}
 	sdlFromCmd.Args = append(sdlFromCmd.Args, args...)
 	var stdout bytes.Buffer
@@ -108,7 +99,7 @@ func convertSDLToMetadata(fromPayload sdlFromRequest, cmdName string, logger *lo
 	sdlFromCmd.Stdout = &stdout
 	sdlFromCmd.Stderr = &stderr
 	err = sdlFromCmd.Run()
-	logger.WithField("command", "sdl from").Debugln(fmt.Sprintf("output: %s", stdout.String()))
+	c.logger.WithField("command", "sdl from").Debugln(fmt.Sprintf("output: %s", stdout.String()))
 	if err != nil {
 		err = errors.Wrap(
 			fmt.Errorf(stderr.String()),
@@ -124,7 +115,8 @@ func convertSDLToMetadata(fromPayload sdlFromRequest, cmdName string, logger *lo
 	return
 }
 
-func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string, logger *logrus.Logger) (codegenResp actionsCodegenResponse, err error) {
+// GetActionsCodegen generates codegen for an action
+func (c *Config) GetActionsCodegen(codegenReq types.ActionsCodegenRequest) (codegenResp types.ActionsCodegenResponse, err error) {
 	outputFile, err := ioutil.TempFile("", "*.json")
 	if err != nil {
 		return
@@ -140,10 +132,7 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string, logger 
 	if err != nil {
 		return
 	}
-	actionsCodegenCmd, err := getCLIExtPath(cmdName)
-	if err != nil {
-		return
-	}
+	actionsCodegenCmd := exec.Command(c.binPath)
 	args := []string{"actions-codegen", "--input-file", inputFileName, "--output-file", outputFileName}
 	actionsCodegenCmd.Args = append(actionsCodegenCmd.Args, args...)
 	var stdout bytes.Buffer
@@ -151,7 +140,7 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string, logger 
 	actionsCodegenCmd.Stdout = &stdout
 	actionsCodegenCmd.Stderr = &stderr
 	err = actionsCodegenCmd.Run()
-	logger.WithField("command", "actions-codegen").Debugln(fmt.Sprintf("output: %s", stdout.String()))
+	c.logger.WithField("command", "actions-codegen").Debugln(fmt.Sprintf("output: %s", stdout.String()))
 	if err != nil {
 		err = errors.Wrap(
 			fmt.Errorf(stderr.String()),
@@ -168,8 +157,4 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string, logger 
 		return
 	}
 	return
-}
-
-func getActionsCodegenURI(framework string) string {
-	return fmt.Sprintf(`https://raw.githubusercontent.com/%s/master/%s/actions-codegen.js`, util.ActionsCodegenOrg, framework)
 }

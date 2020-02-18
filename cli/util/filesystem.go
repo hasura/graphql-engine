@@ -7,14 +7,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	//	"path/filepath"
 )
 
 func FSCheckIfDirPathExists(path string) error {
-	// absPath, err := filepath.Abs(path)
-	// if err != nil {
-	// 	return err
-	// }
 	stat, err := os.Lstat(path)
 	if err != nil {
 		return err

@@ -78,3 +78,51 @@ type CustomTypeDef struct {
 	Values        []interface{}   `json:"values,omitempty" yaml:"values,omitempty"`
 	Relationships []yaml.MapSlice `json:"-" yaml:"relationships,omitempty"`
 }
+
+// CLI Extension types
+
+// DerivePayload defines the object required to derive operation
+type DerivePayload struct {
+	IntrospectionSchema interface{} `json:"introspection_schema" yaml:"introspection_schema,omitempty"`
+	Operation           string      `json:"operation" yaml:"operation,omitempty"`
+	ActionName          string      `json:"action_name" yaml:"action_name,omitempty"`
+}
+
+type SDLPayload struct {
+	Complete string `json:"complete"`
+}
+
+type SDLToRequest struct {
+	Types   CustomTypes   `json:"types,omitempty" yaml:"types,omitempty"`
+	Actions []Action      `json:"actions,omitempty" yaml:"actions,omitempty"`
+	Derive  DerivePayload `json:"derive,omitempty" yaml:"derive,omitempty"`
+}
+
+type SDLToResponse struct {
+	SDL SDLPayload `json:"sdl"`
+}
+
+type SDLFromRequest struct {
+	SDL SDLPayload `json:"sdl"`
+}
+
+type SDLFromResponse struct {
+	Types   CustomTypes `json:"types"`
+	Actions []Action    `json:"actions"`
+}
+
+type ActionsCodegenRequest struct {
+	ActionName    string                  `json:"action_name" yaml:"action_name,omitempty"`
+	SDL           SDLPayload              `json:"sdl" yaml:"sdl,omitempty"`
+	Derive        DerivePayload           `json:"derive,omitempty"`
+	CodegenConfig *CodegenExecutionConfig `json:"codegen_config" yaml:"codegen_config,omitempty"`
+}
+
+type CodegenFile struct {
+	Name    string `json:"name"`
+	Content string `json:"content"`
+}
+
+type ActionsCodegenResponse struct {
+	Files []CodegenFile `json:"codegen" yaml:"codegen,omitempty"`
+}

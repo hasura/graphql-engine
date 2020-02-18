@@ -5,20 +5,20 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/pkg/errors"
-
 	"github.com/graphql-go/graphql/language/ast"
 	"github.com/graphql-go/graphql/language/kinds"
 	"github.com/graphql-go/graphql/language/parser"
 	"github.com/hasura/graphql-engine/cli"
+	cliextension "github.com/hasura/graphql-engine/cli/metadata/actions/cli_extension"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/printer"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 	"github.com/hasura/graphql-engine/cli/plugins"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
-
-	"github.com/hasura/graphql-engine/cli/metadata/actions/editor"
-	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 )
 
 const (
@@ -27,59 +27,12 @@ const (
 	pluginName             = "cli-ext"
 )
 
-// DerivePayload defines the object required to derive operation
-type DerivePayload struct {
-	IntrospectionSchema interface{} `json:"introspection_schema" yaml:"introspection_schema,omitempty"`
-	Operation           string      `json:"operation" yaml:"operation,omitempty"`
-	ActionName          string      `json:"action_name" yaml:"action_name,omitempty"`
-}
-
-type sdlPayload struct {
-	Complete string `json:"complete"`
-}
-
-type sdlToRequest struct {
-	Types   types.CustomTypes `json:"types,omitempty" yaml:"types,omitempty"`
-	Actions []types.Action    `json:"actions,omitempty" yaml:"actions,omitempty"`
-	Derive  DerivePayload     `json:"derive,omitempty" yaml:"derive,omitempty"`
-}
-
-type sdlToResponse struct {
-	SDL sdlPayload `json:"sdl"`
-}
-
-type sdlFromRequest struct {
-	SDL sdlPayload `json:"sdl"`
-}
-
-type sdlFromResponse struct {
-	Types   types.CustomTypes `json:"types"`
-	Actions []types.Action    `json:"actions"`
-}
-
-type actionsCodegenRequest struct {
-	ActionName    string                        `json:"action_name" yaml:"action_name,omitempty"`
-	SDL           sdlPayload                    `json:"sdl" yaml:"sdl,omitempty"`
-	Derive        DerivePayload                 `json:"derive,omitempty"`
-	CodegenConfig *types.CodegenExecutionConfig `json:"codegen_config" yaml:"codegen_config,omitempty"`
-}
-
-type codegenFile struct {
-	Name    string `json:"name"`
-	Content string `json:"content"`
-}
-
-type actionsCodegenResponse struct {
-	Files []codegenFile `json:"codegen" yaml:"codegen,omitempty"`
-}
-
 type ActionConfig struct {
-	MetadataDir  string
-	ActionConfig types.ActionExecutionConfig
-
-	cmdName            string
+	MetadataDir        string
+	ActionConfig       types.ActionExecutionConfig
 	serverFeatureFlags *version.ServerFeatureFlags
 	pluginsCfg         *plugins.Config
+	cliExtensionConfig *cliextension.Config
 
 	logger *logrus.Logger
 }
@@ -88,10 +41,10 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 	cfg := &ActionConfig{
 		MetadataDir:        baseDir,
 		ActionConfig:       ec.Config.ActionConfig,
-		cmdName:            ec.CMDName,
 		serverFeatureFlags: ec.Version.ServerFeatureFlags,
 		logger:             ec.Logger,
 		pluginsCfg:         ec.PluginsConfig,
+		cliExtensionConfig: cliextension.NewCLIExtensionConfig(ec.PluginsConfig.Paths.BinPath(), ec.Logger),
 	}
 	return cfg
 }
@@ -169,14 +122,14 @@ input SampleInput {
 }
 `
 	} else {
-		sdlToReq := sdlToRequest{
-			Derive: DerivePayload{
+		sdlToReq := types.SDLToRequest{
+			Derive: types.DerivePayload{
 				IntrospectionSchema: introSchema,
 				Operation:           deriveFrom,
 				ActionName:          name,
 			},
 		}
-		sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName, a.logger)
+		sdlToResp, err := a.cliExtensionConfig.ConvertMetadataToSDL(sdlToReq)
 		if err != nil {
 			return errors.Wrap(err, "error in converting metadata to sdl")
 		}
@@ -233,12 +186,12 @@ input SampleInput {
 	if err != nil {
 		return errors.Wrap(err, "error in getting input from editor")
 	}
-	sdlFromReq := sdlFromRequest{
-		SDL: sdlPayload{
+	sdlFromReq := types.SDLFromRequest{
+		SDL: types.SDLPayload{
 			Complete: string(data),
 		},
 	}
-	sdlFromResp, err := convertSDLToMetadata(sdlFromReq, a.cmdName, a.logger)
+	sdlFromResp, err := a.cliExtensionConfig.ConvertSDLToMetadata(sdlFromReq)
 	if err != nil {
 		return errors.Wrap(err, "error in converting sdl to metadata")
 	}
@@ -329,7 +282,7 @@ input SampleInput {
 	return nil
 }
 
-func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
+func (a *ActionConfig) Codegen(name string, derivePld types.DerivePayload) error {
 	err := a.ensureCLIExtension()
 	if err != nil {
 		return errors.Wrap(err, "error in install cli-extension plugin")
@@ -339,18 +292,18 @@ func (a *ActionConfig) Codegen(name string, derivePld DerivePayload) error {
 	if err != nil {
 		return errors.Wrapf(err, "error in reading %s file", graphqlFileName)
 	}
-	data := actionsCodegenRequest{
+	data := types.ActionsCodegenRequest{
 		ActionName: name,
-		SDL: sdlPayload{
+		SDL: types.SDLPayload{
 			Complete: graphqlFileContent,
 		},
 		CodegenConfig: a.ActionConfig.Codegen,
 		Derive:        derivePld,
 	}
 	if a.ActionConfig.Codegen.URI == "" {
-		data.CodegenConfig.URI = getActionsCodegenURI(data.CodegenConfig.Framework)
+		data.CodegenConfig.URI = a.getActionsCodegenURI(data.CodegenConfig.Framework)
 	}
-	resp, err := getActionsCodegen(data, a.cmdName, a.logger)
+	resp, err := a.cliExtensionConfig.GetActionsCodegen(data)
 	if err != nil {
 		return errors.Wrapf(err, "error in getting codegen for action %s", data.ActionName)
 	}
@@ -407,12 +360,12 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 		return errors.Wrapf(err, "error in reading %s file", graphqlFileName)
 	}
 
-	sdlFromReq := sdlFromRequest{
-		SDL: sdlPayload{
+	sdlFromReq := types.SDLFromRequest{
+		SDL: types.SDLPayload{
 			Complete: graphqlFileContent,
 		},
 	}
-	sdlFromResp, err := convertSDLToMetadata(sdlFromReq, a.cmdName, a.logger)
+	sdlFromResp, err := a.cliExtensionConfig.ConvertSDLToMetadata(sdlFromReq)
 	if err != nil {
 		return errors.Wrap(err, "error in converting sdl to metadata")
 	}
@@ -543,10 +496,10 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in unmarshal to common")
 	}
-	var sdlToReq sdlToRequest
+	var sdlToReq types.SDLToRequest
 	sdlToReq.Types = common.CustomTypes
 	sdlToReq.Actions = common.Actions
-	sdlToResp, err := convertMetadataToSDL(sdlToReq, a.cmdName, a.logger)
+	sdlToResp, err := a.cliExtensionConfig.ConvertMetadataToSDL(sdlToReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in converting metadata to sdl")
 	}
@@ -600,4 +553,8 @@ func (a *ActionConfig) GetActionsGraphQLFileContent() (sdl string, err error) {
 	}
 	sdl = string(commonByt)
 	return
+}
+
+func (a *ActionConfig) getActionsCodegenURI(framework string) string {
+	return fmt.Sprintf(`https://raw.githubusercontent.com/%s/master/%s/actions-codegen.js`, util.ActionsCodegenOrg, framework)
 }
