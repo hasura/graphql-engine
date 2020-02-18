@@ -54,9 +54,9 @@ type ConfigVersion int
 
 const (
 	// V1 represents config version 1
-	V1 ConfigVersion = 1
+	V1 ConfigVersion = iota + 1
 	// V2 represents config version 2
-	V2 = 2
+	V2
 )
 
 // ServerConfig has the config values required to contact the server
