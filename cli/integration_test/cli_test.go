@@ -1,6 +1,7 @@
 package integrationtest_test
 
 import (
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -16,7 +17,6 @@ import (
 
 	v1 "github.com/hasura/graphql-engine/cli/integration_test/v1"
 	v2 "github.com/hasura/graphql-engine/cli/integration_test/v2"
-	"github.com/hasura/graphql-engine/cli/util/fake"
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
@@ -33,7 +33,7 @@ func TestCommands(t *testing.T) {
 		logger, _ := test.NewNullLogger()
 		ec.Logger = logger
 		ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-		ec.Spinner.Writer = &fake.FakeWriter{}
+		ec.Spinner.Writer = ioutil.Discard
 		ec.Viper = viper.New()
 
 		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
@@ -79,7 +79,7 @@ func TestCommands(t *testing.T) {
 		logger, _ := test.NewNullLogger()
 		ec.Logger = logger
 		ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-		ec.Spinner.Writer = &fake.FakeWriter{}
+		ec.Spinner.Writer = ioutil.Discard
 		ec.Viper = viper.New()
 
 		initDir := filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000)))
