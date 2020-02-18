@@ -1,3 +1,7 @@
+.. meta::
+   :description: Sample apps and boilerplates using Hasura
+   :keywords: hasura, docs, sample app, boilerplate
+
 Sample apps & boilerplates
 ==========================
 
@@ -65,4 +69,4 @@ Videos
 Boilerplates
 ------------
 
-For boilerplates, please check our community wiki on `Github <https://github.com/hasura/graphql-engine/wiki/Community#tools-and-boilerplates>`__.
+For boilerplates, please check our community wiki on `Github <https://github.com/hasura/graphql-engine/wiki/Community-Wiki#tools-boilerplates--sample-apps>`__.

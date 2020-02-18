@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura metadata apply to apply Hasura metadata on a database with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura metadata apply
+
 .. _hasura_metadata_apply:
 
 Hasura CLI: hasura metadata apply
@@ -29,6 +33,7 @@ Options
 ::
 
       --admin-secret string   admin secret for Hasura GraphQL engine
+      --dry-run               show a diff instead of applying the metadata
       --endpoint string       http(s) endpoint for Hasura GraphQL engine
   -h, --help                  help for apply
 
@@ -38,6 +43,7 @@ Options inherited from parent commands
 ::
 
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
       --skip-update-check   Skip automatic update check on command execution
 

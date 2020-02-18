@@ -32,6 +32,13 @@ import { createTrigger } from './AddActions';
 
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
+import {
+  getOnlyTables,
+  getSchemaName,
+  getSchemaTables,
+  getTableName,
+  getTrackedTables,
+} from '../../../Common/utils/pgUtils';
 
 class AddTrigger extends Component {
   constructor(props) {
@@ -255,6 +262,10 @@ class AddTrigger extends Component {
       });
     };
 
+    const trackedSchemaTables = getOnlyTables(
+      getTrackedTables(getSchemaTables(allSchemas, schemaName))
+    );
+
     const advancedColumnSection = (
       <div>
         <h4 className={styles.subheading_text}>
@@ -399,20 +410,14 @@ class AddTrigger extends Component {
                 className={styles.selectTrigger + ' form-control'}
               >
                 {schemaList.map(s => {
-                  if (s.schema_name === schemaName) {
-                    return (
-                      <option
-                        value={s.schema_name}
-                        key={s.schema_name}
-                        selected="selected"
-                      >
-                        {s.schema_name}
-                      </option>
-                    );
-                  }
+                  const sName = getSchemaName(s);
                   return (
-                    <option value={s.schema_name} key={s.schema_name}>
-                      {s.schema_name}
+                    <option
+                      value={sName}
+                      key={sName}
+                      selected={sName === schemaName}
+                    >
+                      {sName}
                     </option>
                   );
                 })}
@@ -426,17 +431,13 @@ class AddTrigger extends Component {
                 }
               >
                 <option value="">Select table</option>
-                {allSchemas.map(t => {
-                  if (
-                    t.table_schema === schemaName &&
-                    t.table_type === 'BASE TABLE'
-                  ) {
-                    return (
-                      <option key={t.table_name} value={t.table_name}>
-                        {t.table_name}
-                      </option>
-                    );
-                  }
+                {trackedSchemaTables.map(t => {
+                  const tName = getTableName(t);
+                  return (
+                    <option key={tName} value={tName}>
+                      {tName}
+                    </option>
+                  );
                 })}
               </select>
               <hr />

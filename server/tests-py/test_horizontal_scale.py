@@ -1,12 +1,11 @@
 import pytest
-import yaml
+import ruamel.yaml as yaml
 import time
 import jsondiff
+from context import PytestConf
 
-from validate import json_ordered
 
-
-if not pytest.config.getoption("--test-hge-scale-url"):
+if not PytestConf.config.getoption("--test-hge-scale-url"):
     pytest.skip("--test-hge-scale-url flag is missing, skipping tests", allow_module_level=True)
 
 
@@ -26,7 +25,7 @@ class TestHorizantalScaleBasic():
         with open(self.dir() + "/steps.yaml") as c:
             conf = yaml.safe_load(c)
 
-        assert isinstance(conf, list) == True, 'Not an list'
+        assert isinstance(conf, list) == True, 'Not a list'
         for _, step in enumerate(conf):
             # execute operation
             response = hge_ctx.http.post(
@@ -49,7 +48,7 @@ class TestHorizantalScaleBasic():
             assert st_code == 200, resp
 
             if 'response' in step['validate']:
-                assert json_ordered(resp) == json_ordered(step['validate']['response']), yaml.dump({
+                assert resp == step['validate']['response'], yaml.dump({
                     'response': resp,
                     'expected': step['validate']['response'],
                     'diff': jsondiff.diff(step['validate']['response'], resp)

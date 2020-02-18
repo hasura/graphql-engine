@@ -17,6 +17,7 @@ import {
   getTableDef,
   getSchemaTables,
   getTrackedTables,
+  checkIfTable,
 } from '../../../Common/utils/pgUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
@@ -229,7 +230,15 @@ class PermissionsSummary extends Component {
 
     const getCellOnClick = (table, role, action) => {
       return () => {
-        dispatch(push(getTablePermissionsRoute(table)));
+        dispatch(
+          push(
+            getTablePermissionsRoute(
+              getTableSchema(table),
+              getTableName(table),
+              checkIfTable(table)
+            )
+          )
+        );
 
         if (role && action) {
           // TODO: fix this. above redirect clears state set by this
@@ -456,10 +465,9 @@ class PermissionsSummary extends Component {
               <div className={styles.add_mar_bottom_small}>
                 <b>Columns</b> -{' '}
                 <i>
-                  {getPermissionColumnAccessSummary(
-                    actionPermission,
-                    table.columns
-                  )}
+                  {getPermissionColumnAccessSummary(actionPermission, {
+                    columns: table.columns,
+                  })}
                 </i>
                 {showDetails && getColumnsDetails()}
               </div>

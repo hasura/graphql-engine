@@ -17,7 +17,6 @@ import {
   inferDefaultValues,
 } from '../Common/utils';
 
-import gqlPattern from '../Common/GraphQLValidation';
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 import styles from './ModifyTable.scss';
@@ -31,6 +30,7 @@ const ColumnEditorList = ({
   validTypeCasts,
   dataTypeIndexMap,
   columnDefaultFunctions,
+  customColumnNames,
 }) => {
   const tableName = tableSchema.table_name;
 
@@ -77,6 +77,7 @@ const ColumnEditorList = ({
       // uniqueConstraint: columnUniqueConstraints[colName],
       default: col.column_default || '',
       comment: col.comment || '',
+      customFieldName: customColumnNames[colName] || '',
     };
 
     const onSubmit = toggleEditor => {
@@ -96,11 +97,12 @@ const ColumnEditorList = ({
     };
 
     const gqlCompatibilityWarning = () => {
-      return !gqlPattern.test(colName) ? (
-        <span className={styles.add_mar_left_small}>
-          <GqlCompatibilityWarning />
-        </span>
-      ) : null;
+      return (
+        <GqlCompatibilityWarning
+          identifier={colName}
+          className={styles.add_mar_left_small}
+        />
+      );
     };
 
     const keyProperties = () => {
@@ -148,7 +150,14 @@ const ColumnEditorList = ({
     const collapsedLabel = () => {
       return (
         <div key={colName}>
-          <b>{colName}</b> {gqlCompatibilityWarning()} - {keyProperties()}
+          <b>
+            {colName}
+            <i>
+              {columnProperties.customFieldName &&
+                ` → ${columnProperties.customFieldName}`}
+            </i>
+          </b>{' '}
+          {gqlCompatibilityWarning()} - {keyProperties()}
         </div>
       );
     };
@@ -199,9 +208,9 @@ const ColumnEditorList = ({
      *  "Data type",
      *  "User friendly name of the data type",
      *  "Description of the data type",
-     *  "Comma seperated castable data types",
-     *  "Comma seperated user friendly names of the castable data types",
-     *  "Colon seperated user friendly description of the castable data types"
+     *  "Comma separated castable data types",
+     *  "Comma separated user friendly names of the castable data types",
+     *  "Colon separated user friendly description of the castable data types"
      *  ]
      * */
 

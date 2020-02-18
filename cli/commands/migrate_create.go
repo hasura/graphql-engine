@@ -5,20 +5,26 @@ import (
 	"os"
 	"time"
 
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	v2yaml "gopkg.in/yaml.v2"
 
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	log "github.com/sirupsen/logrus"
 )
 
 const migrateCreateCmdExamples = `  # Setup migration files for the first time by introspecting a server:
-  hasura migrate create "init" --from-server`
+  hasura migrate create "init" --from-server
+
+  # Use with admin secret:
+  hasura migrate create --admin-secret "<admin-secret>"
+
+  # Setup migration files from an instance mentioned by the flag:
+  hasura migrate create init --from-server --endpoint "<endpoint>"`
 
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
@@ -151,7 +157,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 		defer os.Remove(tmpfile.Name())
 
-		t, err := yaml.Marshal(metaData)
+		t, err := v2yaml.Marshal(metaData)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot marshal metadata")
 		}

@@ -4,13 +4,14 @@ import           Hasura.Prelude
 import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment         (lookupEnv)
 
-import           Data.Aeson
+import qualified Data.Aeson                 as J
 import qualified Data.Aeson.Casing          as J
 import qualified Data.Aeson.TH              as J
 import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Network.URI.Extended       as N
 
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.RQL.DDL.Headers     (HeaderConf (..))
 import           Hasura.RQL.Types.Common    (NonEmptyText (..))
 import           Hasura.RQL.Types.Error
@@ -20,8 +21,11 @@ type UrlFromEnv = Text
 
 newtype RemoteSchemaName
   = RemoteSchemaName
-  { unRemoteSchemaName :: NonEmptyText}
-  deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, Q.ToPrepArg, Q.FromCol, DQuote)
+  { unRemoteSchemaName :: NonEmptyText }
+  deriving ( Show, Eq, Ord, Lift, Hashable, J.ToJSON, J.ToJSONKey
+           , J.FromJSON, Q.ToPrepArg, Q.FromCol, DQuote, NFData
+           , Generic, Cacheable, Arbitrary
+           )
 
 remoteSchemaNameToTxt :: RemoteSchemaName -> Text
 remoteSchemaNameToTxt = unNonEmptyText . unRemoteSchemaName
@@ -45,17 +49,28 @@ data RemoteSchemaDef
   , _rsdHeaders              :: !(Maybe [HeaderConf])
   , _rsdForwardClientHeaders :: !Bool
   , _rsdTimeoutSeconds       :: !(Maybe Int)
-  } deriving (Show, Eq, Lift)
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData RemoteSchemaDef
+instance Cacheable RemoteSchemaDef
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''RemoteSchemaDef)
 
-$(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''RemoteSchemaDef)
+instance J.FromJSON RemoteSchemaDef where
+  parseJSON = J.withObject "Object" $ \o ->
+    RemoteSchemaDef
+      <$> o J..:? "url"
+      <*> o J..:? "url_from_env"
+      <*> o J..:? "headers"
+      <*> o J..:? "forward_client_headers" J..!= False
+      <*> o J..:? "timeout_seconds"
 
 data AddRemoteSchemaQuery
   = AddRemoteSchemaQuery
-  { _arsqName       :: !RemoteSchemaName -- TODO: name validation: cannot be empty?
+  { _arsqName       :: !RemoteSchemaName
   , _arsqDefinition :: !RemoteSchemaDef
   , _arsqComment    :: !(Maybe Text)
-  } deriving (Show, Eq, Lift)
-
+  } deriving (Show, Eq, Lift, Generic)
+instance NFData AddRemoteSchemaQuery
+instance Cacheable AddRemoteSchemaQuery
 $(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''AddRemoteSchemaQuery)
 
 newtype RemoteSchemaNameQuery

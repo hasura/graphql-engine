@@ -1,3 +1,9 @@
+.. meta::
+   :description: Model one-to-one relationships in Hasura
+   :keywords: hasura, docs, schema, relationship, one-to-one, 1-1
+
+.. _one_to_one_modelling:
+
 Modelling one-to-one table relationships
 ========================================
 

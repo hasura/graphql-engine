@@ -5,27 +5,34 @@ module Hasura.GraphQL.Schema.Common
 
   , RelationshipFieldInfo(..)
   , SelField(..)
-  , _SelFldCol
-  , _SelFldRel
-  , _SelFldRemote
+  , _SFPGColumn
+  , getPGColumnFields
+  , getRelationshipFields
+  , getComputedFields
+  , getRemoteRelationships
 
   , mkColumnType
   , mkRelName
   , mkAggRelName
+  , mkComputedFieldName
 
   , mkTableTy
   , mkTableEnumType
   , mkTableAggTy
 
   , mkColumnEnumVal
+  , mkColumnInputVal
   , mkDescriptionWith
-  , mkDescription
+
+  , mkFuncArgsTy
   ) where
 
-import           Control.Lens.TH
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
+
+import           Control.Lens
+import           Control.Lens.TH               (makePrisms)
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
@@ -44,11 +51,24 @@ data RelationshipFieldInfo
   } deriving (Show, Eq)
 
 data SelField
-  = SelFldCol PGColumnInfo
-  | SelFldRel RelationshipFieldInfo
-  | SelFldRemote RemoteField
-
+  = SFPGColumn !PGColumnInfo
+  | SFRelationship !RelationshipFieldInfo
+  | SFComputedField !ComputedField
+  | SFRemoteRelationship !RemoteField
+  deriving (Show, Eq)
 $(makePrisms ''SelField)
+
+getPGColumnFields :: [SelField] -> [PGColumnInfo]
+getPGColumnFields = mapMaybe (^? _SFPGColumn)
+
+getRelationshipFields :: [SelField] -> [RelationshipFieldInfo]
+getRelationshipFields = mapMaybe (^? _SFRelationship)
+
+getComputedFields :: [SelField] -> [ComputedField]
+getComputedFields = mapMaybe (^? _SFComputedField)
+
+getRemoteRelationships :: [SelField] -> [RemoteField]
+getRemoteRelationships = mapMaybe (^? _SFRemoteRelationship)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name
 qualObjectToName = G.Name . snakeCaseQualObject
@@ -64,6 +84,9 @@ mkRelName rn = G.Name $ relNameToTxt rn
 
 mkAggRelName :: RelName -> G.Name
 mkAggRelName rn = G.Name $ relNameToTxt rn <> "_aggregate"
+
+mkComputedFieldName :: ComputedFieldName -> G.Name
+mkComputedFieldName = G.Name . computedFieldNameToText
 
 mkColumnType :: PGColumnType -> G.NamedType
 mkColumnType = \case
@@ -84,6 +107,11 @@ mkColumnEnumVal :: G.Name -> EnumValInfo
 mkColumnEnumVal colName =
   EnumValInfo (Just "column name") (G.EnumValue colName) False
 
+mkColumnInputVal :: PGColumnInfo -> InpValInfo
+mkColumnInputVal ci =
+  InpValInfo (mkDescription <$> pgiDescription ci) (pgiName ci)
+  Nothing $ G.toGT $ G.toNT $ mkColumnType $ pgiType ci
+
 mkDescriptionWith :: Maybe PGDescription -> Text -> G.Description
 mkDescriptionWith descM defaultTxt = G.Description $ case descM of
   Nothing                      -> defaultTxt
@@ -91,3 +119,11 @@ mkDescriptionWith descM defaultTxt = G.Description $ case descM of
 
 mkDescription :: PGDescription -> G.Description
 mkDescription = G.Description . getPGDescription
+
+mkFuncArgsName :: QualifiedFunction -> G.Name
+mkFuncArgsName fn =
+  qualObjectToName fn <> "_args"
+
+mkFuncArgsTy :: QualifiedFunction -> G.NamedType
+mkFuncArgsTy =
+  G.NamedType . mkFuncArgsName

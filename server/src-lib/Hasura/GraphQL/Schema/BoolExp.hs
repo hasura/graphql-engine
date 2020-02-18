@@ -283,10 +283,11 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      SelFldCol (PGColumnInfo _ name colTy _ _) -> Just $
-        mk name (mkCompExpTy colTy)
-      SelFldRel relationshipField -> Just $
+      SFPGColumn (PGColumnInfo _ name _ colTy _ _) ->
+        Just $ mk name (mkCompExpTy colTy)
+      SFRelationship relationshipField ->
         let relationshipName = riName $ _rfiInfo relationshipField
             remoteTable = riRTable $  _rfiInfo relationshipField
-        in mk (mkRelName relationshipName) (mkBoolExpTy remoteTable)
-      SelFldRemote {} -> Nothing
+        in Just $ mk (mkRelName relationshipName) (mkBoolExpTy remoteTable)
+      SFComputedField _ -> Nothing -- TODO: support computed fields in bool exps
+      SFRemoteRelationship{} -> Nothing

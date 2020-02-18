@@ -4,49 +4,54 @@ status: 200
 # Since errorMsg in not non-null we should both return a valid result as well
 # as propogate the error the remote server raised.
 response:
-  data:
-    profiles:
-      - id: 1
-        name: alice
-        messagesNestedArgs:
-          - msg: You win!
-            errorMsg: null
-      - id: 2
-        name: bob
-        messagesNestedArgs:
-          - msg: You lose!
-            errorMsg: null
-      - id: 3
-        name: alice
-        messagesNestedArgs:
-          - msg: Another alice
-            errorMsg: null
-  errors: &id001
-  - locations:
-    - column: 71
-      line: 1
-    message: intentional-error
-    path:
-    - hasura_array_idx_0
-    - 0
-    - errorMsg
-  - locations:
-    - column: 154
-      line: 1
-    message: intentional-error
-    path:
-    - hasura_array_idx_1
-    - 0
-    - errorMsg
-  - locations:
-    - column: 237
-      line: 1
-    message: intentional-error
-    path:
-    - hasura_array_idx_2
-    - 0
-    - errorMsg
-
+  # data:
+  #   profiles:
+  #     - id: 1
+  #       name: alice
+  #       messagesNestedArgs:
+  #         - msg: You win!
+  #           errorMsg: null
+  #     - id: 2
+  #       name: bob
+  #       messagesNestedArgs:
+  #         - msg: You lose!
+  #           errorMsg: null
+  #     - id: 3
+  #       name: alice
+  #       messagesNestedArgs:
+  #         - msg: Another alice
+  #           errorMsg: null
+  errors:
+  - extensions:
+      internal:
+        errors:
+        - path:
+          - hasura_array_idx_0
+          - 0
+          - errorMsg
+          message: intentional-error
+          locations:
+          - line: 1
+            column: 71
+        - path:
+          - hasura_array_idx_1
+          - 0
+          - errorMsg
+          message: intentional-error
+          locations:
+          - line: 1
+            column: 154
+        - path:
+          - hasura_array_idx_2
+          - 0
+          - errorMsg
+          message: intentional-error
+          locations:
+          - line: 1
+            column: 237
+      path: $
+      code: unexpected
+    message: Joining results for remote relationships failed
 query:
   query: |
     query {

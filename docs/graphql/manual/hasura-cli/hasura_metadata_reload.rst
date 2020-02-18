@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura metadata reload to reload Hasura metadata on the database from the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura metadata reload
+
 .. _hasura_metadata_reload:
 
 Hasura CLI: hasura metadata reload
@@ -38,6 +42,7 @@ Options inherited from parent commands
 ::
 
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
       --skip-update-check   Skip automatic update check on command execution
 

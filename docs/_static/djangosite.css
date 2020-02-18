@@ -411,7 +411,7 @@ h2+.list-link-soup{border-top:0}
 .list-outline>li>ul>li ul{font-size:14px;font-size:1.4rem;padding:0 0 0 20px}
 .section h2{margin:50px 0 30px}
 .section h3{margin:40px 0 20px}
-.headerlink{opacity:0;padding-left:10px;font-size:0.8em;position:absolute;left:0;font-weight:700;text-decoration:none;-webkit-transition:opacity 200ms ease-in-out;transition:opacity 200ms ease-in-out; color: #ff993a !important;}
+.headerlink{opacity:0;padding-left:10px;font-size:0.8em;position:absolute;left:0;font-weight:700;text-decoration:none;-webkit-transition:opacity 200ms ease-in-out;transition:opacity 200ms ease-in-out; color: #1CD3C6 !important;}
 h1:hover>.headerlink,h2:hover>.headerlink,h3:hover>.headerlink,h4:hover>.headerlink,h5:hover>.headerlink,h6:hover>.headerlink,dl:hover>.headerlink,dt:hover>.headerlink{opacity:1}
 .note,.admonition,.help-block{background:#F1FFF7;padding:15px 20px 15px 70px;border:1px solid #C9F0DD;border-radius:4px;margin:25px 0;position:relative;
     background: #f1f9ff;

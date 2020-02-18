@@ -3,12 +3,12 @@ module Hasura.GraphQL.Utils
   , showNamedTy
   , throwVE
   , getBaseTy
-  , mapFromL
   , groupTuples
   , groupListWith
   , mkMapWith
   , showNames
   , unwrapTy
+  , simpleGraphQLQuery
   ) where
 
 import           Hasura.Prelude
@@ -42,10 +42,6 @@ unwrapTy =
     G.TypeList _ lt -> G.unListType lt
     nt -> nt
 
-mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
-mapFromL f l =
-  Map.fromList [(f v, v) | v <- l]
-
 groupListWith
   :: (Eq k, Hashable k, Foldable t, Functor t)
   => (v -> k) -> t v -> Map.HashMap k (NE.NonEmpty v)
@@ -77,3 +73,7 @@ mkMapWith f l =
 showNames :: (Foldable t) => t G.Name -> Text
 showNames names =
   T.intercalate ", " $ map G.unName $ toList names
+
+-- A simple graphql query to be used in generators
+simpleGraphQLQuery :: Text
+simpleGraphQLQuery = "query {author {id name}}"

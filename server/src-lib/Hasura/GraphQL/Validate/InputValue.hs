@@ -8,9 +8,9 @@ module Hasura.GraphQL.Validate.InputValue
 
 import           Data.Scientific                 (fromFloatDigits)
 import           Hasura.Prelude
-import           Hasura.Server.Utils             (duplicates)
 
 import           Data.Has
+import           Data.List.Extended              (duplicates)
 
 import qualified Data.Aeson                      as J
 import qualified Data.HashMap.Strict             as Map
@@ -252,7 +252,7 @@ validateNamedTypeVal inpValParser (nullability, nt) val = do
     TIEnum eti ->
       withParsed gType (getEnum inpValParser) val $
       fmap (AGEnum nt) . validateEnum eti
-    TIScalar (ScalarTyInfo _ pgColTy _) ->
+    TIScalar (ScalarTyInfo _ _ pgColTy _) ->
       withParsed gType (getScalar inpValParser) val $
       fmap (AGScalar pgColTy) . mapM (validateScalar pgColTy)
   where

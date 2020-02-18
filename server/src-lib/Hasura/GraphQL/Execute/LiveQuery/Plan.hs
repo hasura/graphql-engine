@@ -100,10 +100,11 @@ resolveMultiplexedValue = \case
     pure $ fromResVars (PGTypeScalar $ pstType colVal) varJsonPath
   GR.UVSessVar ty sessVar -> pure $ fromResVars ty ["session", T.toLower sessVar]
   GR.UVSQL sqlExp -> pure sqlExp
+  GR.UVSession -> pure $ fromResVars (PGTypeScalar PGJSON) ["session"]
   where
     fromResVars ty jPath =
       flip S.SETyAnn (S.mkTypeAnn ty) $ S.SEOpApp (S.SQLOp "#>>")
-      [ S.SEQIden $ S.QIden (S.QualIden $ Iden "_subs") (Iden "result_vars")
+      [ S.SEQIden $ S.QIden (S.QualIden (Iden "_subs") Nothing) (Iden "result_vars")
       , S.SEArray $ map S.SELit jPath
       ]
 

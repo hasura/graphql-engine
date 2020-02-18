@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura Metadata file format reference
+   :keywords: hasura, docs, metadata, file format
+
 .. _metadata_file_format:
 
 Metadata file format reference
@@ -125,6 +129,5 @@ defined for each table. Here is an example metadata file:
        role: user
      update_permissions: []
 
-The schema for this file will mostly correspond to the table structure in the
-``hdb_catalog`` Postgres schema which is described at
-:ref:`hasura_metadata_schema`.
+The schema for this file will mostly correspond to the table structure of the
+:doc:`metadata catalogue <../../how-it-works/metadata-schema>`

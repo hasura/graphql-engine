@@ -10,19 +10,18 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
-import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as T
 import qualified Language.GraphQL.Draft.Parser as G
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
-import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
+import           Hasura.RQL.DDL.Headers        (makeHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils           (httpExceptToJSON)
+import           Hasura.Server.Version         (HasVersion)
 
 import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
@@ -32,16 +31,14 @@ introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 
 fetchRemoteSchema
-  :: (MonadIO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
   -> m GC.RemoteGCtx
-fetchRemoteSchema manager name (RemoteSchemaInfo url headerConf _ timeout) = do
-  headers <- getHeadersFromConf headerConf
-  let hdrs = flip map headers $
-             \(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)
-      hdrsWithDefaults = addDefaultHeaders hdrs
+fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) = do
+  headers <- makeHeadersFromConf headerConf
+  let hdrsWithDefaults = addDefaultHeaders headers
 
   initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
   initReq <- either throwHttpErr pure initReqE
@@ -63,7 +60,7 @@ fetchRemoteSchema manager name (RemoteSchemaInfo url headerConf _ timeout) = do
   let (sDoc, qRootN, mRootN, sRootN) =
         fromIntrospection introspectRes
   typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
-     VT.TLRemoteType name
+     VT.TLRemoteType name def
   let mQrTyp = Map.lookup qRootN typMap
       mMrTyp = maybe Nothing (`Map.lookup` typMap) mRootN
       mSrTyp = maybe Nothing (`Map.lookup` typMap) sRootN
@@ -113,9 +110,9 @@ mergeSchemas rmSchemaMap gCtxMap = do
 
 mkDefaultRemoteGCtx
   :: (MonadError QErr m)
-  => [GC.RemoteGCtx] -> m GS.GCtx
+  => [GC.GCtx] -> m GS.GCtx
 mkDefaultRemoteGCtx =
-  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GC.emptyGCtx
+  foldlM (\combG -> mergeGCtx combG) GC.emptyGCtx
 
 -- merge a remote schema `gCtx` into current `gCtxMap`
 mergeRemoteSchema
@@ -148,15 +145,6 @@ mergeGCtx gCtx rmMergedGCtx = do
                          , GS._gSubRoot = newSR
                          }
   return updatedGCtx
-
-convRemoteGCtx :: GC.RemoteGCtx -> GS.GCtx
-convRemoteGCtx rmGCtx =
-  GC.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
-               , GS._gQueryRoot = GC._rgQueryRoot rmGCtx
-               , GS._gMutRoot   = GC._rgMutationRoot rmGCtx
-               , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx
-               }
-
 
 mergeQueryRoot :: GS.GCtx -> GS.GCtx -> VT.ObjTyInfo
 mergeQueryRoot a b = GS._gQueryRoot a <> GS._gQueryRoot b

@@ -9,6 +9,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Common
 import           Hasura.SQL.Types
+import           Hasura.Incremental             (Cacheable)
 
 import           Data.Aeson                    as A
 import qualified Data.Aeson.Types              as AT
@@ -38,7 +39,8 @@ data RemoteField =
     -- ^ Fully resolved arguments (no variable references, since this uses
     -- 'G.ValueConst' not 'G.Value').
     }
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Lift, Generic)
+instance Cacheable RemoteField
 
 data RemoteRelationship =
   RemoteRelationship
@@ -52,7 +54,9 @@ data RemoteRelationship =
     , rtrRemoteSchema :: RemoteSchemaName
     -- ^ Identifier for this mapping.
     , rtrRemoteFields :: NonEmpty FieldCall
-    }  deriving (Show, Eq, Lift)
+    }  deriving (Show, Eq, Lift, Generic)
+instance NFData RemoteRelationship
+instance Cacheable RemoteRelationship
 
 -- Parsing GraphQL input arguments from JSON
 parseObjectFieldsToGValue :: HashMap Text A.Value -> AT.Parser [G.ObjectFieldG G.Value]
@@ -86,7 +90,7 @@ fieldsToObject :: [G.ObjectFieldG G.Value] -> A.Value
 fieldsToObject =
   A.Object .
   HM.fromList .
-  map (\(G.ObjectFieldG {_ofName=G.Name name, _ofValue}) -> (name, gValueToValue _ofValue))
+  map (\G.ObjectFieldG {_ofName=G.Name name, _ofValue} -> (name, gValueToValue _ofValue))
 
 gValueToValue :: G.Value -> A.Value
 gValueToValue =
@@ -113,7 +117,7 @@ parseRemoteArguments j =
 newtype RemoteArguments =
   RemoteArguments
     { getRemoteArguments :: [G.ObjectFieldG G.Value]
-    } deriving (Show, Eq, Lift)
+    } deriving (Show, Eq, Lift, Cacheable, NFData)
 
 instance ToJSON RemoteArguments where
   toJSON (RemoteArguments fields) = fieldsToObject fields
@@ -123,20 +127,29 @@ instance FromJSON RemoteArguments where
 
 -- | Associates a field name with the arguments it will be passed in the query.
 --
--- https://graphql.github.io/graphql-spec/June2018/#sec-Language.Arguments 
+-- https://graphql.github.io/graphql-spec/June2018/#sec-Language.Arguments
 --
 -- TODO we don't seem to support empty RemoteArguments (like 'hello'), but this seems arbitrary:
 data FieldCall =
   FieldCall
     { fcName      :: !G.Name
     , fcArguments :: !RemoteArguments
-    }
-  deriving (Show, Eq, Lift)
+    } deriving (Show, Eq, Lift, Generic)
+instance NFData FieldCall
+instance Cacheable FieldCall
 
 newtype RemoteRelationshipName
   = RemoteRelationshipName
-  { unRemoteRelationshipName :: Text}
-  deriving (Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON, Q.ToPrepArg, Q.FromCol)
+  { unRemoteRelationshipName :: NonEmptyText}
+  deriving ( Show, Eq, Lift, Hashable, ToJSON, ToJSONKey, FromJSON
+           , Q.ToPrepArg, Q.FromCol, DQuote, Cacheable, NFData, Arbitrary
+           )
+
+remoteRelationshipNameToText :: RemoteRelationshipName -> Text
+remoteRelationshipNameToText = unNonEmptyText . unRemoteRelationshipName
+
+fromRemoteRelationship :: RemoteRelationshipName -> FieldName
+fromRemoteRelationship = FieldName . remoteRelationshipNameToText
 
 data DeleteRemoteRelationship =
   DeleteRemoteRelationship
@@ -205,7 +218,8 @@ remoteFieldsJson (field :| subfields) =
                [] -> []
                subfield:subsubfields ->
                  ["field" .= remoteFieldsJson (subfield :| subsubfields)]
-           ])
+           ]
+        )
     ]
   where
     nameText (G.Name t) = t
@@ -283,7 +297,7 @@ constFieldsToObject =
   A.Object .
   HM.fromList .
   map
-    (\(G.ObjectFieldG {_ofName = G.Name name, _ofValue}) ->
+    (\G.ObjectFieldG {_ofName = G.Name name, _ofValue} ->
        (name, gValueConstToValue _ofValue))
 
 parseValueConst :: A.Value -> AT.Parser G.ValueConst
@@ -349,4 +363,3 @@ remoteArgumentsToMap =
   HM.fromList .
   map (\field -> (G._ofName field, G._ofValue field)) .
   getRemoteArguments
-

@@ -27,13 +27,24 @@ import {
 } from './FilterActions';
 
 import _push from '../push';
-import { ordinalColSort, findTableFromRel } from '../utils';
+import { ordinalColSort } from '../utils';
 import FilterQuery from './FilterQuery';
 import Spinner from '../../../Common/Spinner/Spinner';
 import Button from '../../../Common/Button/Button';
 
 import { E_SET_EDITITEM } from './EditActions';
 import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
+import {
+  getTableInsertRowRoute,
+  getTableEditRowRoute,
+} from '../../../Common/utils/routesUtils';
+import {
+  findTable,
+  getRelationshipRefTable,
+  getTableName,
+  getTableSchema,
+} from '../../../Common/utils/pgUtils';
+import { updateSchemaInfo } from '../DataActions';
 
 const ViewRows = ({
   curTableName,
@@ -59,6 +70,8 @@ const ViewRows = ({
   updateInvocationFunction,
   triggeredRow,
   triggeredFunction,
+  location,
+  readOnlyMode,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
@@ -309,7 +322,7 @@ const ViewRows = ({
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
             dispatch(
-              _push(`/schema/${currentSchema}/tables/${curTableName}/edit`)
+              _push(getTableEditRowRoute(currentSchema, curTableName, true))
             );
           };
 
@@ -348,7 +361,7 @@ const ViewRows = ({
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
             dispatch(
-              _push(`/schema/${currentSchema}/tables/${curTableName}/insert`)
+              _push(getTableInsertRowRoute(currentSchema, curTableName, true))
             );
           };
 
@@ -425,7 +438,7 @@ const ViewRows = ({
           );
         };
 
-        const showActionBtns = !_isSingleRow && !isView;
+        const showActionBtns = !readOnlyMode && !_isSingleRow && !isView;
 
         if (showActionBtns) {
           const pkClause = getPKClause();
@@ -547,7 +560,20 @@ const ViewRows = ({
 
               const handleViewClick = e => {
                 e.preventDefault();
-                dispatch(vExpandRel(curPath, rel.rel_name, pkClause));
+
+                const childTableDef = getRelationshipRefTable(
+                  _tableSchema,
+                  rel
+                );
+                if (childTableDef.schema !== currentSchema) {
+                  dispatch(
+                    updateSchemaInfo({ schemas: [childTableDef.schema] })
+                  ).then(() => {
+                    dispatch(vExpandRel(curPath, rel.rel_name, pkClause));
+                  });
+                } else {
+                  dispatch(vExpandRel(curPath, rel.rel_name, pkClause));
+                }
               };
 
               cellValue = getRelExpander('View', '', handleViewClick);
@@ -612,6 +638,7 @@ const ViewRows = ({
             count={count}
             tableName={curTableName}
             offset={offset}
+            urlQuery={location && location.query}
           />
         );
       }
@@ -661,14 +688,14 @@ const ViewRows = ({
             childRows = [childRows];
           }
 
-          // Find the name of this childTable using the rel
+          const childTableDef = getRelationshipRefTable(tableSchema, rel);
+          const childTable = findTable(schemas, childTableDef);
+
           return (
             <ViewRows
               key={i}
-              curTableName={
-                findTableFromRel(schemas, tableSchema, rel).table_name
-              }
-              currentSchema={currentSchema}
+              curTableName={getTableName(childTable)}
+              currentSchema={getTableSchema(childTable)}
               curQuery={cq}
               curFilter={curFilter}
               curPath={[...curPath, rel.rel_name]}
@@ -682,6 +709,7 @@ const ViewRows = ({
               curDepth={curDepth + 1}
               dispatch={dispatch}
               expandedRow={expandedRow}
+              readOnlyMode={readOnlyMode}
             />
           );
         }

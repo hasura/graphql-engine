@@ -9,6 +9,7 @@ import           Hasura.Prelude
 import qualified Data.Text                           as T
 
 import           Hasura.RQL.Types.Common
+import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.RemoteRelationship
@@ -18,12 +19,12 @@ import           Hasura.SQL.Types
 data TableObjId
   = TOCol !PGCol
   | TORel !RelName
+  | TOComputedField !ComputedFieldName
   | TORemoteRel !RemoteRelationshipName
-  | TOCons !ConstraintName
+  | TOForeignKey !ConstraintName
   | TOPerm !RoleName !PermType
   | TOTrigger !TriggerName
   deriving (Show, Eq, Generic)
-
 instance Hashable TableObjId
 
 data SchemaObjId
@@ -42,16 +43,19 @@ reportSchemaObj (SOTableObj tn (TOCol cn)) =
   "column " <> qualObjectToText tn <> "." <> getPGColTxt cn
 reportSchemaObj (SOTableObj tn (TORel cn)) =
   "relationship " <> qualObjectToText tn <> "." <> relNameToTxt cn
-reportSchemaObj (SOTableObj tn (TORemoteRel rn)) =
-  "remote relationship " <> qualObjectToText tn <> "." <> unRemoteRelationshipName rn
-reportSchemaObj (SOTableObj tn (TOCons cn)) =
+reportSchemaObj (SOTableObj tn (TOForeignKey cn)) =
   "constraint " <> qualObjectToText tn <> "." <> getConstraintTxt cn
 reportSchemaObj (SOTableObj tn (TOPerm rn pt)) =
   "permission " <> qualObjectToText tn <> "." <> roleNameToTxt rn
   <> "." <> permTypeToCode pt
 reportSchemaObj (SOTableObj tn (TOTrigger trn )) =
   "event-trigger " <> qualObjectToText tn <> "." <> triggerNameToTxt trn
-reportSchemaObj (SORemoteSchema remoteSchemaName) = "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
+reportSchemaObj (SOTableObj tn (TOComputedField ccn)) =
+  "computed field " <> qualObjectToText tn <> "." <> computedFieldNameToText ccn
+reportSchemaObj (SOTableObj tn (TORemoteRel rn)) =
+  "remote relationship " <> qualObjectToText tn <> "." <> remoteRelationshipNameToText rn
+reportSchemaObj (SORemoteSchema remoteSchemaName) =
+  "remote schema " <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
 
 instance Show SchemaObjId where
   show soi = T.unpack $ reportSchemaObj soi

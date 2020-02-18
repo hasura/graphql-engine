@@ -1,3 +1,9 @@
+.. meta::
+   :description: Manage allow list with Hasura GraphQL engine
+   :keywords: hasura, docs, deployment, allow list
+
+.. _allow-list:
+
 Allow-list for queries
 ======================
 
@@ -80,7 +86,7 @@ variable to ``true`` or running the GraphQL engine with the ``--enable-allowlist
 Recommended usage
 -----------------
 
-The following are the recommended best practises for enabling/disabling allow-list  based validation:
+The following are the recommended best practices for enabling/disabling allow-list  based validation:
 
 * **In development instances**: During development or in dev instances, disable allow-list (*default setting*)
   to allow complete access to the GraphQL schema. Add/remove queries in the allow-list and then export the
