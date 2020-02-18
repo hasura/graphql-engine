@@ -26,7 +26,6 @@ import (
 
 const (
 	defaultDirectory string = "hasura"
-	initTemplatesURI        = "https://github.com/wawhal/graphql-engine-install-manifests.git"
 )
 
 // NewInitCmd is the definition for init command
@@ -72,9 +71,9 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
-	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "")
-	f.StringVar(&opts.ActionHandler, "action-handler", "http://localhost:3000", "")
-	f.StringVar(&opts.Template, "install-manifest", "", "")
+	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "kind to be used for an action")
+	f.StringVar(&opts.ActionHandler, "action-handler-webhook-baseurl", "http://localhost:3000", "webhook baseurl to be used for an action")
+	f.StringVar(&opts.Template, "install-manifest", "", "install manifest to be cloned")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.MarkDeprecated("directory", "use directory-name argument instead")
 
@@ -236,13 +235,11 @@ func (o *InitOptions) createTemplateFiles() error {
 	if o.Template == "" {
 		return nil
 	}
-	gitPath := filepath.Join(o.EC.GlobalConfigDir, "init-templates")
-	git := util.NewGitUtil(initTemplatesURI, gitPath, "")
-	err := git.EnsureUpdated()
+	err := o.EC.InitTemplatesRepo.EnsureUpdated()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error in updating init-templates repo")
 	}
-	templatePath := filepath.Join(gitPath, o.Template)
+	templatePath := filepath.Join(o.EC.InitTemplatesRepo.Path, o.Template)
 	info, err := os.Stat(templatePath)
 	if err != nil {
 		return errors.Wrap(err, "template doesn't exists")

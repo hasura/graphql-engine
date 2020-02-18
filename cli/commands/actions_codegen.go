@@ -17,8 +17,19 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	actionsCodegenCmd := &cobra.Command{
-		Use:          "codegen [action-name]",
-		Short:        "",
+		Use:   "codegen [action-name]",
+		Short: "Generate code for actions",
+		Example: `  # Generate code for all actions
+  hasura actions codegen
+
+  # Generate code for an action
+  hasura actions codegen [action-name]
+
+  # Generate code for two or more actions
+  hasura actions codegen [action-name] [action-name...]
+
+  # Derive an action from a hasura operation
+  hasura actions codegen [action-name] --derive-from ""`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -45,7 +56,7 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	f := actionsCodegenCmd.Flags()
 
-	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a Hasura operation")
+	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a hasura operation")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")

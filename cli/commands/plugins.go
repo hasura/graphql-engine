@@ -20,8 +20,19 @@ var validPluginFilenamePrefixes = []string{"hasura"}
 
 func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsCmd := &cobra.Command{
-		Use:          "plugins",
-		Short:        "",
+		Use:   "plugins",
+		Short: "Manage hasura plugins",
+		Example: `  # Install a plugin
+  hasura plugins install [plugin-name]
+	  
+  # Uninstall a plugin
+  hasura plugins uninstall [plugin-name]
+	  
+  # Upgrade a plugin
+  hasura plugins upgrade [plugin-name]
+
+  # List all plugins
+  hasura plugins list`,
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return ec.PluginsConfig.Repo.EnsureCloned()

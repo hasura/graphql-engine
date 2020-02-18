@@ -13,9 +13,10 @@ import (
 
 func newPluginsUpgradeCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsUpgradeCmd := &cobra.Command{
-		Use:          "upgrade",
-		Short:        "",
-		Example:      ``,
+		Use:   "upgrade",
+		Short: "Upgrade a hasura plugin",
+		Example: `  # Upgrade a plugin
+  hasura plugins upgrade [plugin-name]`,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {

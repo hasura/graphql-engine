@@ -15,9 +15,13 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	var metadataDir string
 	scriptsUpdateConfigV2Cmd := &cobra.Command{
-		Use:          "update-config-v2",
-		Short:        "",
-		Example:      ``,
+		Use:   "update-config-v2",
+		Short: "Upgrade config from v1 to v2",
+		Example: `  # Upgrade config from v1 to v2
+  hasura scripts update-config-v2
+  
+  # Upgrade to v2 config with metadata directory set
+  hasura scripts update-config-v2 --metadata-dir metadata`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v

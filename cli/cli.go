@@ -169,6 +169,9 @@ type ExecutionContext struct {
 	// CodegenAssetsRepo defines the config to handle codegen-assets repo
 	CodegenAssetsRepo *util.GitUtil
 
+	// InitTemplatesRepo defines the config to handle init-templates repo
+	InitTemplatesRepo *util.GitUtil
+
 	// IsTerminal indicates whether the current session is a terminal or not
 	IsTerminal bool
 }
@@ -220,6 +223,11 @@ func (ec *ExecutionContext) Prepare() error {
 		return errors.Wrap(err, "setting up codegen-assets repo failed")
 	}
 
+	err = ec.setupInitTemplatesRepo()
+	if err != nil {
+		return errors.Wrap(err, "setting up init-templates repo failed")
+	}
+
 	ec.LastUpdateCheckFile = filepath.Join(ec.GlobalConfigDir, LastUpdateCheckFileName)
 
 	// initialize a blank server config
@@ -264,6 +272,16 @@ func (ec *ExecutionContext) setupCodegenAssetsRepo() error {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
 	ec.CodegenAssetsRepo = util.NewGitUtil(util.ActionsCodegenRepoURI, base, "")
+	return nil
+}
+
+func (ec *ExecutionContext) setupInitTemplatesRepo() error {
+	base := filepath.Join(ec.GlobalConfigDir, util.InitTemplatesDirName)
+	base, err := filepath.Abs(base)
+	if err != nil {
+		return errors.Wrap(err, "cannot get absolute path")
+	}
+	ec.CodegenAssetsRepo = util.NewGitUtil(util.InitTemplatesRepoURI, base, "")
 	return nil
 }
 

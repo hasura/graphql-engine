@@ -24,8 +24,19 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	actionsUseCodegenCmd := &cobra.Command{
-		Use:          "use-codegen",
-		Short:        "",
+		Use:   "use-codegen",
+		Short: "Use the codegen to generate code for hasura actions",
+		Example: `  # Use codegen by providing framework
+  hasura actions use-codegen --framework nodejs-express
+
+  # Use codegen from framework list
+  hasura actions use-codegen
+
+  # Set output directory
+  hasura actions use-codegen --output-dir codegen
+
+  # Use a codegen with a starter kit
+  hasura actions use-codegen --with-starter-kit true`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -52,9 +63,9 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f := actionsUseCodegenCmd.Flags()
 
-	f.StringVar(&opts.framework, "framework", "", "")
-	f.StringVar(&opts.outputDir, "output-dir", "", "")
-	f.BoolVar(&opts.withStarterKit, "with-starter-kit", false, "")
+	f.StringVar(&opts.framework, "framework", "", "framework to be used by codegen")
+	f.StringVar(&opts.outputDir, "output-dir", "", "directory to create the codegen files")
+	f.BoolVar(&opts.withStarterKit, "with-starter-kit", false, "clone starter kit for a framework")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")

@@ -14,9 +14,10 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	pluginsInstallCmd := &cobra.Command{
-		Use:          "install",
-		Short:        "",
-		Example:      ``,
+		Use:   "install [plugin-name]",
+		Short: "Install a hasura plugin",
+		Example: `  # Install a plugin
+  hasura plugins install [plugin-name]`,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {

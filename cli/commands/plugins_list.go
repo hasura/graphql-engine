@@ -21,10 +21,14 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	pluginsListCmd := &cobra.Command{
-		Use:          "list",
-		Aliases:      []string{"ls"},
-		Short:        "",
-		Example:      ``,
+		Use:     "list",
+		Aliases: []string{"ls"},
+		Short:   "List all hasura plugin",
+		Example: `  # List all hasura plugins
+  hasura plugins list
+ 
+  # List all hasura plugins without updating index
+  hasura plugins list --update-index false`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return ec.Prepare()

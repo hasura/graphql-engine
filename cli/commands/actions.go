@@ -12,8 +12,16 @@ import (
 
 func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	actionsCmd := &cobra.Command{
-		Use:          "actions",
-		Short:        "",
+		Use:   "actions",
+		Short: "Manage actions on hasura",
+		Example: `  # Create an action
+  hasura actions create [action-name]
+
+  # Generate code for an actions
+  hasura actions codegen [action-name]
+
+  # Set a framework to be used by codegen
+  hasura actions use-codegen`,
 		SilenceUsage: true,
 	}
 	actionsCmd.AddCommand(

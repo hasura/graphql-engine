@@ -18,8 +18,19 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		EC: ec,
 	}
 	actionsCreateCmd := &cobra.Command{
-		Use:          "create",
-		Short:        "",
+		Use:   "create [action-name]",
+		Short: "Create a hasura action",
+		Example: `  # Create an action
+  hasura actions create [action-name]
+
+  # Create an action with codegen
+  hasura actions create [action-name] --with-codegen true
+
+  # Create an action by deriving from a hasura operation
+  hasura actions create [action-name] --derive-from ""
+
+  # Create an action with a different kind or webhook
+  hasura actions create [action-name] --kind synchronous --webhook http://localhost:3000`,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {

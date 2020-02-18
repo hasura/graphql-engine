@@ -10,9 +10,10 @@ import (
 
 func newPluginsUnInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsUnInstallCmd := &cobra.Command{
-		Use:          "uninstall",
-		Short:        "",
-		Example:      ``,
+		Use:   "uninstall [plugin-name]",
+		Short: "Uninstall a hasura plugin",
+		Example: `  # Uninstall a plugin
+  hasura plugins uninstall [plugin-name]`,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
