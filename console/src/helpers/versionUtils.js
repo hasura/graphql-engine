@@ -37,6 +37,17 @@ export const versionGT = (version1, version2) => {
   }
 };
 
+export const checkStableVersion = version => {
+  try {
+    const preReleaseInfo = semver.prerelease(version);
+
+    return preReleaseInfo === null;
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+};
+
 export const checkFeatureSupport = feature => {
   return (
     globals.featuresCompatibility && globals.featuresCompatibility[feature]
