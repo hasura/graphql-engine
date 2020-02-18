@@ -87,7 +87,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 	}
 
 	if o.EC.Config.ActionConfig.Codegen.Framework == "" {
-		infoMsg := fmt.Sprintf(`Could not find codegen config in config.yaml. For setting codegen config, run:
+		infoMsg := fmt.Sprintf(`Could not find codegen config. For adding codegen config, run:
 
   hasura actions use-codegen`)
 		o.EC.Logger.Error(infoMsg)
