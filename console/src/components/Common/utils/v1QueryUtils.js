@@ -115,6 +115,7 @@ export const getFetchAllRolesQuery = () => ({
       name: 'hdb_role',
     },
     columns: ['role_name'],
+    order_by: { column: 'role_name', type: 'asc' },
   },
 });
 
