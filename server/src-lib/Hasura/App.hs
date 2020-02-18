@@ -301,7 +301,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   where
     prepareEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-      res <- runTx pool unlockAllEvents
+      res <- runUnlockTx pool unlockAllEvents
       either printErrJExit return res
 
     getFromEnv :: (Read a) => a -> String -> IO a
@@ -313,8 +313,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
           eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
       either printErrExit return eRes
 
-    runTx pool tx =
-      liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+    runUnlockTx pool tx =
+      liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Nothing) tx
 
     -- | Catches the SIGTERM signal and initiates a graceful shutdown. Graceful shutdown for regular HTTP
     -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
