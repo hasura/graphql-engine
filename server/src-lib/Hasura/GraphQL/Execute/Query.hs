@@ -80,13 +80,6 @@ instance J.ToJSON ReusableQueryPlan where
              , "field_plans"     J..= fldPlans
              ]
 
--- instance Semigroup ReusableQueryPlan where
---   (ReusableQueryPlan lTypes lPlans) <> (ReusableQueryPlan rTypes rPlans) =
---     ReusableQueryPlan (lTypes <> rTypes) (lPlans <> rPlans)
-
--- instance Monoid ReusableQueryPlan where
---   mempty = ReusableQueryPlan mempty mempty
-
 withPlan
   :: (MonadError QErr m)
   => UserVars -> PGPlan -> ReusableVariableValues -> m PreparedSql

@@ -258,47 +258,6 @@ convExtRel fieldInfoMap relName mAlias selQ sessVarBldr prepValBldr = do
               , " can't be used"
               ]
 
--- partAnnFlds
---   :: [AnnFld]
---   -> ([(PGCol, PGColType)], [Either ObjSel ArrSel])
--- partAnnFlds flds =
---   partitionEithers $ catMaybes $ flip map flds $ \case
---   FCol c _ -> Just $ Left (pgiName c, pgiType c)
---   FObj o -> Just $ Right $ Left o
---   FArr a -> Just $ Right $ Right a
---   FExp _ -> Nothing
---   FRemote -> Nothing
-
--- getSelectDeps
---   :: AnnSimpleSel
---   -> [SchemaDependency]
--- getSelectDeps (AnnSelG flds tabFrm _ tableArgs _) =
---   mkParentDep tn
---   : fromMaybe [] whereDeps
---   <> colDeps
---   <> relDeps
---   <> nestedDeps
---   where
---     TableFrom tn _ = tabFrm
---     annWc = _taWhere tableArgs
---     (sCols, rCols) = partAnnFlds $ map snd flds
---     (objSels, arrSels) = partitionEithers rCols
---     colDeps      = map (mkColDep "untyped" tn . fst) sCols
---     relDeps      = map mkRelDep $ map aarName objSels
---                    <> mapMaybe getRelName arrSels
---     nestedDeps   = concatMap getSelectDeps $ map aarAnnSel objSels
---                    <> mapMaybe getAnnSel arrSels
---     whereDeps    = getBoolExpDeps tn <$> annWc
---     mkRelDep rn  =
---       SchemaDependency (SOTableObj tn (TORel rn)) "untyped"
-
---     -- ignore aggregate selections to calculate schema deps
---     getRelName (ASSimple aar) = Just $ aarName aar
---     getRelName (ASAgg _)      = Nothing
-
---     getAnnSel (ASSimple aar) = Just $ aarAnnSel aar
---     getAnnSel (ASAgg _)      = Nothing
-
 convSelectQuery
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
   => SessVarBldr m
