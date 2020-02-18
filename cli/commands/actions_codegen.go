@@ -13,7 +13,7 @@ import (
 )
 
 func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
-	v := viper.New()
+	v := viper.GetViper()
 	opts := &actionsCodegenOptions{
 		EC: ec,
 	}
@@ -34,20 +34,6 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
-			err := ec.Prepare()
-			if err != nil {
-				return err
-			}
-			err = ec.Validate()
-			if err != nil {
-				return err
-			}
-			if ec.Config.Version == cli.V1 {
-				return fmt.Errorf("actions commands can be executed only when config version is greater than 1")
-			}
-			if ec.MetadataDir == "" {
-				return fmt.Errorf("actions commands can be executed only when metadata_dir is set in config")
-			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

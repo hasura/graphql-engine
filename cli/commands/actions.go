@@ -2,15 +2,18 @@ package commands
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
+	v := viper.GetViper()
 	actionsCmd := &cobra.Command{
 		Use:   "actions",
 		Short: "Manage actions on hasura",
@@ -23,6 +26,24 @@ func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Set a framework to be used by codegen
   hasura actions use-codegen`,
 		SilenceUsage: true,
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
+			err = ec.Validate()
+			if err != nil {
+				return err
+			}
+			if ec.Config.Version != cli.V2 {
+				return fmt.Errorf("actions commands can be executed only when config version is greater than 1")
+			}
+			if ec.MetadataDir == "" {
+				return fmt.Errorf("actions commands can be executed only when metadata_dir is set in config")
+			}
+			return nil
+		},
 	}
 	actionsCmd.AddCommand(
 		newActionsCreateCmd(ec),

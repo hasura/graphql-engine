@@ -217,13 +217,11 @@ input SampleInput {
 			}
 		}
 		// Set kind and handler for action definition
-		kind := a.ActionConfig.Kind
-		handler := a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
-		if action.Definition.Kind == "" {
-			sdlFromResp.Actions[actionIndex].Definition.Kind = kind
+		if sdlFromResp.Actions[actionIndex].Definition.Kind == "" {
+			sdlFromResp.Actions[actionIndex].Definition.Kind = a.ActionConfig.Kind
 		}
-		if action.Definition.Handler == "" {
-			sdlFromResp.Actions[actionIndex].Definition.Handler = handler
+		if sdlFromResp.Actions[actionIndex].Definition.Handler == "" {
+			sdlFromResp.Actions[actionIndex].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
 		}
 	}
 	for customTypeIndex, customType := range sdlFromResp.Types.Enums {
