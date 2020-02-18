@@ -5,16 +5,23 @@ import ProgressBar from 'react-progress-bar-plus';
 import Notifications from 'react-notification-system-redux';
 import { hot } from 'react-hot-loader';
 import ErrorBoundary from '../Error/ErrorBoundary';
-import { telemetryNotificationShown } from '../../telemetry/Actions';
+import {
+  loadConsoleOpts,
+  telemetryNotificationShown,
+} from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
 
 class App extends Component {
   componentDidMount() {
+    const { dispatch } = this.props;
+
     // Hide the loader once the react component is ready.
     // NOTE: This will execute only once (since this is the parent component for all other components).
     const className = document.getElementById('content').className;
     document.getElementById('content').className = className + ' show';
     document.getElementById('loading').style.display = 'none';
+
+    dispatch(loadConsoleOpts());
   }
 
   componentDidUpdate() {
