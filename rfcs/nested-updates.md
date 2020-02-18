@@ -2,6 +2,7 @@
 
 ### Related issues
 
+- https://github.com/hasura/graphql-engine/issues/669
 - https://github.com/hasura/graphql-engine/issues/1573
 - https://github.com/hasura/graphql-engine/issues/3366
 - https://github.com/hasura/graphql-engine/issues/2952
