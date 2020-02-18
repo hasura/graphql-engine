@@ -98,7 +98,7 @@ func (o *actionsCreateOptions) run() error {
 	o.EC.Spin("Creating the action...")
 	o.EC.Spinner.Stop()
 	actionCfg := actions.New(o.EC, o.EC.MetadataDir)
-	err = actionCfg.Create(o.name, introSchema, o.deriveFrom, nil)
+	err = actionCfg.Create(o.name, introSchema, o.deriveFrom)
 	if err != nil {
 		return errors.Wrap(err, "error in creating action")
 	}
