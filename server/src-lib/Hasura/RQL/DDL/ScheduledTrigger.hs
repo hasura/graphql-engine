@@ -23,12 +23,21 @@ import           Hasura.Eventing.ScheduledTrigger
 
 import qualified Database.PG.Query     as Q
 import qualified Data.Time.Clock       as C
+import qualified Data.HashMap.Strict   as Map
 
 runCreateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger ->  m EncJSON
 runCreateScheduledTrigger q = do
+  addScheduledTriggerP1
   addScheduledTriggerToCatalog q
   buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
+  where
+    addScheduledTriggerP1 = do
+      stMap <- scScheduledTriggers <$> askSchemaCache
+      case Map.lookup (stName q) stMap of
+        Nothing -> pure ()
+        Just _ -> throw400 AlreadyExists $
+          "scheduled trigger with name: " <> (triggerNameToTxt $ stName q) <> " already exists"
 
 addScheduledTriggerToCatalog :: (MonadTx m) => CreateScheduledTrigger ->  m ()
 addScheduledTriggerToCatalog CreateScheduledTrigger {..} = liftTx $ do
@@ -71,9 +80,12 @@ resolveScheduledTrigger CreateScheduledTrigger {..} = do
 
 runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger -> m EncJSON
 runUpdateScheduledTrigger q = do
+  updateScheduledTriggerP1 (stName q)
   updateScheduledTriggerInCatalog q
   buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
+  where
+    updateScheduledTriggerP1 = checkExists
 
 updateScheduledTriggerInCatalog :: (MonadTx m) => CreateScheduledTrigger -> m ()
 updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
@@ -96,9 +108,12 @@ updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
 
 runDeleteScheduledTrigger :: (CacheRWM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
 runDeleteScheduledTrigger (ScheduledTriggerName stName) = do
+  deleteScheduledTriggerP1 stName
   deleteScheduledTriggerFromCatalog stName
   withNewInconsistentObjsCheck buildSchemaCache
   return successMsg
+  where
+    deleteScheduledTriggerP1 = checkExists
 
 deleteScheduledTriggerFromCatalog :: (MonadTx m) => TriggerName -> m ()
 deleteScheduledTriggerFromCatalog stName = liftTx $ do
@@ -108,8 +123,9 @@ deleteScheduledTriggerFromCatalog stName = liftTx $ do
     WHERE name = $1
    |] (Identity stName) False
 
-runCreateScheduledEvent :: (MonadTx m) => CreateScheduledEvent -> m EncJSON
+runCreateScheduledEvent :: (CacheRM m, MonadTx m) => CreateScheduledEvent -> m EncJSON
 runCreateScheduledEvent CreateScheduledEvent{..} = do
+  createScheduledEventP1 steName
   liftTx $ Q.unitQE defaultTxErrorHandler
     [Q.sql|
       INSERT into hdb_catalog.hdb_scheduled_events
@@ -117,6 +133,8 @@ runCreateScheduledEvent CreateScheduledEvent{..} = do
        VALUES ($1, $2, $3)
     |] (steName, steTimestamp, Q.AltJ <$> stePayload) False
   pure successMsg
+  where
+    createScheduledEventP1 = checkExists
 
 runCancelScheduledEvent :: (MonadTx m) => ScheduledEventId -> m EncJSON
 runCancelScheduledEvent (ScheduledEventId seId) = do
@@ -134,10 +152,13 @@ deleteScheduledEventFromCatalog seId = liftTx $ do
     SELECT count(*) FROM "cte"
    |] (Identity seId) False
 
-runTrackScheduledTrigger :: (MonadTx m) => ScheduledTriggerName -> m EncJSON
+runTrackScheduledTrigger :: (CacheRM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
 runTrackScheduledTrigger (ScheduledTriggerName stName) = do
+  trackScheduledTriggerP1 stName
   trackScheduledTriggerInCatalog stName
   return successMsg
+  where
+    trackScheduledTriggerP1 = checkExists
 
 trackScheduledTriggerInCatalog :: (MonadTx m) => TriggerName -> m ()
 trackScheduledTriggerInCatalog stName = liftTx $ do
@@ -148,10 +169,13 @@ trackScheduledTriggerInCatalog stName = liftTx $ do
     WHERE name = $1
    |] (Identity stName) False
 
-runUntrackScheduledTrigger :: (MonadTx m) => ScheduledTriggerName -> m EncJSON
+runUntrackScheduledTrigger :: (CacheRM m, MonadTx m) => ScheduledTriggerName -> m EncJSON
 runUntrackScheduledTrigger (ScheduledTriggerName stName) = do
+  untrackScheduledTriggerP1 stName
   untrackScheduledTriggerInCatalog stName
   return successMsg
+  where
+    untrackScheduledTriggerP1 = checkExists
 
 untrackScheduledTriggerInCatalog :: (MonadTx m) => TriggerName -> m ()
 untrackScheduledTriggerInCatalog stName = liftTx $ do
@@ -161,3 +185,11 @@ untrackScheduledTriggerInCatalog stName = liftTx $ do
     SET include_in_metadata = 'f'
     WHERE name = $1
    |] (Identity stName) False
+
+checkExists :: (CacheRM m, MonadError QErr m) => TriggerName -> m ()
+checkExists name = do
+  stMap <- scScheduledTriggers <$> askSchemaCache
+  void $ onNothing (Map.lookup name stMap) notExistsErr
+  where
+    notExistsErr= throw400 NotExists $
+      "scheduled trigger with name: " <> (triggerNameToTxt name) <> " does not exist"
