@@ -92,7 +92,7 @@ func (m *MetadataConfig) GetMetadataFilePath(format string) (string, error) {
 }
 
 func (m *MetadataConfig) Name() string {
-	return "metadata"
+	return "singleFileMetadata"
 }
 
 // GetExistingMetadataFile returns the path to the default metadata file that
