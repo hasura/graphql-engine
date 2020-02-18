@@ -93,8 +93,8 @@ type ConsoleOptions struct {
 	StaticDir string
 	Browser   string
 
-	APIServerSignal     chan os.Signal
-	ConsoleServerSignal chan os.Signal
+	APIServerInterruptSignal     chan os.Signal
+	ConsoleServerInterruptSignal chan os.Signal
 }
 
 func (o *ConsoleOptions) Run() error {
@@ -159,14 +159,14 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	go func() {
-		<-o.APIServerSignal
+		<-o.APIServerInterruptSignal
 		if err := apiServer.Close(); err != nil {
 			o.EC.Logger.Debugf("unable to close server running on port %s", o.APIPort)
 		}
 	}()
 
 	go func() {
-		<-o.ConsoleServerSignal
+		<-o.ConsoleServerInterruptSignal
 		if err := consoleServer.Close(); err != nil {
 			o.EC.Logger.Debugf("unable to close server running on port %s", o.ConsolePort)
 		}

@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
@@ -87,10 +86,6 @@ type actionsUseCodegenOptions struct {
 
 func (o *actionsUseCodegenOptions) run() (err error) {
 	// ensure the the actions-codegen repo is cloned and updated
-
-	o.framework = strings.TrimSpace(o.framework)
-	o.outputDir = strings.TrimSpace(o.outputDir)
-
 	o.EC.Spin("Fetching codegen assets...")
 	defer o.EC.Spinner.Stop()
 	actionsCodegenGit := util.NewGitUtil(

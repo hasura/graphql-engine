@@ -81,8 +81,6 @@ func (o *actionsCreateOptions) run() error {
 		return err
 	}
 
-	o.name = strings.TrimSpace(o.name)
-
 	// introspect Hasura schema if a mutation is being derived
 	var introSchema interface{}
 	if o.deriveFrom != "" {

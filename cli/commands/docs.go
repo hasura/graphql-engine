@@ -27,7 +27,7 @@ func NewDocsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = viper.New()
-			return ec.Prepare()
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			err = os.MkdirAll(docDirectory, os.ModePerm)
