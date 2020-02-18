@@ -124,7 +124,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 		defer os.RemoveAll(tmpDir)
-		setMetadataPlugins(o.EC, migrateDrv, tmpDir)
+		setMetadataPluginsWithDir(o.EC, migrateDrv, tmpDir)
 		files, err := migrateDrv.ExportMetadata()
 		if err != nil {
 			return err
@@ -134,7 +134,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 			return err
 		}
 	} else {
-		setMetadataPlugins(o.EC, migrateDrv, o.Metadata[1])
+		setMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[1])
 	}
 
 	// build server metadata
@@ -148,7 +148,7 @@ func (o *MetadataDiffOptions) runv2(args []string) error {
 	}
 
 	// build local metadata
-	setMetadataPlugins(o.EC, migrateDrv, o.Metadata[0])
+	setMetadataPluginsWithDir(o.EC, migrateDrv, o.Metadata[0])
 	localMeta, err := migrateDrv.BuildMetadata()
 	if err != nil {
 		return err
