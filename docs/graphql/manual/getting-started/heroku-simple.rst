@@ -45,15 +45,6 @@ You should see the Hasura console.
 .. thumbnail:: ../../../img/graphql/manual/getting-started/heroku-app-deployed.png
    :alt: Open the Hasura console
 
-Hello World (GraphQL or event triggers)
----------------------------------------
-
-Make your :doc:`first graphql query <first-graphql-query>`
-
-OR
-
-Set up your :doc:`first event trigger <first-event-trigger>`
-
 Advanced
 --------
 
