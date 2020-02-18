@@ -108,7 +108,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
           rel="noopener noreferrer"
         >
           <Button color="white" className={`${styles.add_mar_right_mid}`}>
-            Get boilerplate
+            Get starter kit
           </Button>
         </a>
       );

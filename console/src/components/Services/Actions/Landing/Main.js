@@ -14,13 +14,8 @@ class Landing extends React.Component {
   render() {
     const styles = require('../Actions.scss');
 
-    const { dispatch, actions } = this.props;
-    const showIntroSection = !actions.length;
+    const { dispatch } = this.props;
     const getIntroSection = () => {
-      if (!showIntroSection) {
-        return null;
-      }
-
       return (
         <div>
           <TopicDescription
@@ -28,7 +23,7 @@ class Landing extends React.Component {
             // imgUrl={`${globals.assetsPath}/common/img/remote_schema.png`} // TODO: update image & description
             imgUrl={actionsArchDiagram}
             imgAlt="Actions"
-            description="Actions are custom mutations to run custom logic"
+            description="Actions are custom mutations resolved by HTTP handlers for running any custom business logic."
           />
           <hr className={styles.clear_fix} />
         </div>
