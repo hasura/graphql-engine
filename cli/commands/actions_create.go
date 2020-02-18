@@ -7,6 +7,7 @@ import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -88,7 +89,7 @@ func (o *actionsCreateOptions) run() error {
 		o.EC.Spin("Deriving a Hasura operation...")
 		introSchema, err = migrateDrv.GetIntroSpectionSchema()
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error in fetching introspection schema")
 		}
 		o.EC.Spinner.Stop()
 	}
@@ -103,11 +104,11 @@ func (o *actionsCreateOptions) run() error {
 	actionCfg := actions.New(o.EC, o.EC.MetadataDir)
 	err = actionCfg.Create(o.name, introSchema, o.deriveFrom, opts)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error in creating action")
 	}
 	err = migrateDrv.ApplyMetadata()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error in applying metadata")
 	}
 
 	o.EC.Spinner.Stop()
@@ -116,11 +117,9 @@ func (o *actionsCreateOptions) run() error {
 	// if codegen config not present, skip codegen
 	if o.EC.Config.ActionConfig.Codegen.Framework == "" {
 		if o.withCodegen {
-			infoMsg := fmt.Sprintf(`Could not find codegen config in config.yaml. For setting codegen config, run:
+			return fmt.Errorf(`Could not find codegen config. For adding codegen config, run:
 
   hasura actions use-codegen`)
-			o.EC.Logger.Error(infoMsg)
-			return nil
 		}
 		return nil
 	}
@@ -130,7 +129,7 @@ func (o *actionsCreateOptions) run() error {
 	if !o.withCodegen {
 		confirmation, err = util.GetYesNoPrompt("Do you want to generate " + o.EC.Config.ActionConfig.Codegen.Framework + " code for this action and the custom types?")
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error in getting user input")
 		}
 	}
 
@@ -154,7 +153,7 @@ func (o *actionsCreateOptions) run() error {
 	o.EC.Spin(fmt.Sprintf(`Running "hasura actions codegen %s"...`, o.name))
 	err = actionCfg.Codegen(o.name, derivePayload)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "error in generating codegen")
 	}
 	o.EC.Spinner.Stop()
 	o.EC.Logger.Info("Codegen files generated at " + o.EC.Config.ActionConfig.Codegen.OutputDir)

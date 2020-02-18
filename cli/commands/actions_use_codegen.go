@@ -134,7 +134,7 @@ func (o *actionsUseCodegenOptions) run() error {
 	if !o.withStarterKit && hasStarterKit {
 		shouldCloneStarterKit, err := util.GetYesNoPrompt("Do you also want to clone a starter kit for " + newCodegenExecutionConfig.Framework + "?")
 		if err != nil {
-			return err
+			return errors.Wrap(err, "error in getting input from user")
 		}
 		o.withStarterKit = shouldCloneStarterKit == "y"
 	}
@@ -151,6 +151,7 @@ func (o *actionsUseCodegenOptions) run() error {
 	}
 
 	// clone the starter kit
+	o.EC.Spin("Clonning the starter kit...")
 	if o.withStarterKit && hasStarterKit {
 		// get a directory name to clone the starter kit in
 		starterKitDirname := newCodegenExecutionConfig.Framework
@@ -183,6 +184,7 @@ func (o *actionsUseCodegenOptions) run() error {
 	if err != nil {
 		return errors.Wrap(err, "error in writing config")
 	}
+	o.EC.Spinner.Stop()
 	o.EC.Logger.Info("Codegen configuration updated in config.yaml")
 	return nil
 }
