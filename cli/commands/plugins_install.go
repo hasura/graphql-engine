@@ -52,6 +52,8 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := pluginsInstallCmd.Flags()
 
 	f.StringVar(&opts.ManifestFile, "manifest-file", "", "(dev) speficy local manifest file")
+	f.MarkHidden("manifest-file")
+
 	return pluginsInstallCmd
 }
 
