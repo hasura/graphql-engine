@@ -8,6 +8,7 @@ import (
 	"os"
 
 	gyaml "github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
@@ -170,5 +171,5 @@ func getActionsCodegen(codegenReq actionsCodegenRequest, cmdName string, logger 
 }
 
 func getActionsCodegenURI(framework string) string {
-	return fmt.Sprintf(`https://raw.githubusercontent.com/%s/master/%s/actions-codegen.js`, actionsCodegenRepo, framework)
+	return fmt.Sprintf(`https://raw.githubusercontent.com/%s/master/%s/actions-codegen.js`, util.ActionsCodegenOrg, framework)
 }

@@ -321,6 +321,12 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "version check")
 	}
 
+	// get the server feature flags
+	err = ec.Version.GetServerFeatureFlags()
+	if err != nil {
+		return errors.Wrap(err, "error in getting server feature flags")
+	}
+
 	state := util.GetServerState(ec.Config.ServerConfig.Endpoint, ec.Config.ServerConfig.AdminSecret, ec.Version.ServerSemver, ec.Logger)
 	ec.ServerUUID = state.UUID
 	ec.Telemetry.ServerUUID = ec.ServerUUID

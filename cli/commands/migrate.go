@@ -130,14 +130,7 @@ const (
 )
 
 func getAdminSecretHeaderName(v *version.Version) string {
-	if v.ServerSemver == nil {
-		return XHasuraAdminSecret
-	}
-	flags, err := v.GetServerFeatureFlags()
-	if err != nil {
-		return XHasuraAdminSecret
-	}
-	if flags.HasAccessKey {
+	if v.ServerFeatureFlags.HasAccessKey {
 		return XHasuraAccessKey
 	}
 	return XHasuraAdminSecret

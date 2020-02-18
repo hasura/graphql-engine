@@ -8,7 +8,9 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
+// Default Codegen Assets constants
 const (
+	ActionsCodegenOrg     string = "hasura/codegen-assets"
 	ActionsCodegenRepoURI string = "https://github.com/hasura/codegen-assets.git"
 	ActionsCodegenDirName string = "actions-codegen-assets"
 )

@@ -93,8 +93,9 @@ func (o *actionsCodegenOptions) run() (err error) {
 	// if no actions are passed, perform codegen for all actions
 	o.EC.Spin("Generating code...")
 	var codegenActions []string
+	actionCfg := actions.New(o.EC, o.EC.MetadataDir)
 	if len(o.actions) == 0 {
-		actionsFileContent, err := actions.GetActionsFileContent(o.EC.MetadataDir)
+		actionsFileContent, err := actionCfg.GetActionsFileContent()
 		if err != nil {
 			return errors.Wrap(err, "error getting actions file content")
 		}
@@ -105,7 +106,6 @@ func (o *actionsCodegenOptions) run() (err error) {
 		codegenActions = o.actions
 	}
 
-	actionCfg := actions.New(o.EC, o.EC.MetadataDir)
 	for _, actionName := range codegenActions {
 		err = actionCfg.Codegen(actionName, derivePayload)
 		if err != nil {
