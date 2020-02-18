@@ -35,6 +35,7 @@ import           Hasura.Events.Lib
 import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Schema                (RebuildableSchemaCache)
 import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
                                                        HasSQLGenCtx, HasSystemDefined, QErr (..),
                                                        SQLGenCtx (..), SchemaCache (..), UserInfoM,
@@ -107,13 +108,14 @@ mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
 -- | most of the required types for initializing graphql-engine
 data InitCtx
   = InitCtx
-  { _icHttpManager :: !HTTP.Manager
-  , _icInstanceId  :: !InstanceId
-  , _icDbUid       :: !Text
-  , _icLoggers     :: !Loggers
-  , _icConnInfo    :: !Q.ConnInfo
-  , _icPgPool      :: !Q.PGPool
-  , _icPgVersion   :: !PGVersion
+  { _icHttpManager            :: !HTTP.Manager
+  , _icInstanceId             :: !InstanceId
+  , _icDbUid                  :: !Text
+  , _icLoggers                :: !Loggers
+  , _icConnInfo               :: !Q.ConnInfo
+  , _icPgPool                 :: !Q.PGPool
+  , _icPgVersion              :: !PGVersion
+  , _icRebuildableSchemaCache :: !(Maybe (RebuildableSchemaCache Run))
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -144,7 +146,7 @@ initialiseCtx hgeCmd rci = do
   httpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
   instanceId <- liftIO generateInstanceId
   connInfo <- liftIO procConnInfo
-  (loggers, pool) <- case hgeCmd of
+  (loggers, pool, scM) <- case hgeCmd of
     -- for server command generate a proper pool
     HCServe so@ServeOptions{..} -> do
       l@(Loggers _ logger pgLogger) <- mkLoggers soEnabledLogTypes soLogLevel
@@ -154,23 +156,21 @@ initialiseCtx hgeCmd rci = do
       unLogger logger $ connInfoToLog connInfo
       pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
       -- safe init catalog
-      initialiseCatalog pool (SQLGenCtx soStringifyNum) httpManager logger
+      sc <- initialiseCatalog pool (SQLGenCtx soStringifyNum) httpManager logger
 
-      return (l, pool)
+      return (l, pool, Just sc)
 
     -- for other commands generate a minimal pool
     _ -> do
       l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       pool <- getMinimalPool pgLogger connInfo
-      return (l, pool)
+      return (l, pool, Nothing)
 
   -- get the unique db id
-  dbId <- liftIO $ runTxIO pool (Q.Serializable, Nothing) getDbId
+  (dbId, pgVersion) <- liftIO $ runTxIO pool (Q.ReadCommitted, Nothing) $
+    (,) <$> getDbId <*> getPgVersion
 
-  -- get the pg version
-  pgVersion <- liftIO $ runTxIO pool (Q.ReadCommitted, Nothing) getPgVersion
-
-  return (InitCtx httpManager instanceId dbId loggers connInfo pool pgVersion, initTime)
+  return (InitCtx httpManager instanceId dbId loggers connInfo pool pgVersion scM, initTime)
 
   where
     procConnInfo =
@@ -214,7 +214,7 @@ runHGEServer
   -- ^ start time
   -> m ()
 runHGEServer ServeOptions{..} InitCtx{..} initTime = do
-  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to 
+  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to
   -- STDOUT containing "not in normal form". In the future we could try to integrate this into
   -- our tests. For now this is a development tool.
   --
@@ -228,6 +228,9 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
                               _icHttpManager logger
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
+
+  schemaCache <- onNothing _icRebuildableSchemaCache
+                 (printErrExit "expected schema cache to be initialised")
 
   HasuraApp app cacheRef cacheInitTime shutdownApp <- mkWaiApp soTxIso
                                                                logger
@@ -245,13 +248,14 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
                                                                soEnabledAPIs
                                                                soLiveQueryOpts
                                                                soPlanCacheOptions
+                                                               schemaCache
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
   liftIO $ logInconsObjs logger inconsObjs
 
   -- start background threads for schema sync
-  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <- 
+  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <-
     startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
                            cacheRef _icInstanceId cacheInitTime
 
@@ -279,7 +283,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
 
   -- start a background thread to check for updates
-  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $ 
+  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
     checkForUpdates loggerCtx _icHttpManager
 
   -- start a background thread for telemetry

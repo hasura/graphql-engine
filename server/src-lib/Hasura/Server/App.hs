@@ -464,17 +464,18 @@ mkWaiApp
   -> S.HashSet API
   -> EL.LiveQueriesOptions
   -> E.PlanCacheOptions
+  -> (RebuildableSchemaCache Run)
   -> m HasuraApp
 mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts planCacheOptions = do
+         enableTelemetry instanceId apis lqOpts planCacheOptions schemaCache = do
 
     let pgExecCtx = PGExecCtx pool isoLevel
-        pgExecCtxSer = PGExecCtx pool Q.Serializable
+        pgExecCtxReadComm = PGExecCtx pool Q.ReadCommitted
         runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
 
     (cacheRef, cacheBuiltTime) <- do
-      pgResp <- runExceptT $ peelRun runCtx pgExecCtxSer Q.ReadWrite $
-        (,) <$> buildRebuildableSchemaCache <*> liftTx fetchLastUpdate
+      pgResp <- runExceptT $ peelRun runCtx pgExecCtxReadComm Q.ReadWrite $
+        (,) <$> pure schemaCache <*> liftTx fetchLastUpdate
       (schemaCache, event) <- liftIO $ either initErrExit return pgResp
       scRef <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
       return (scRef, view _2 <$> event)
