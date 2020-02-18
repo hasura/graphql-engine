@@ -33,7 +33,7 @@ func newPluginsUpgradeCmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Logger.WithFields(logrus.Fields{
 				"name":    pluginName,
 				"version": plugin.Version,
-			}).Infoln("Upgraded plugin")
+			}).Infoln("Plugin upgraded")
 			return nil
 		},
 	}

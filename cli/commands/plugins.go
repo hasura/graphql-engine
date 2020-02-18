@@ -32,7 +32,6 @@ func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newPluginsInstallCmd(ec),
 		newPluginsUnInstallCmd(ec),
 		newPluginsUpgradeCmd(ec),
-		newPluginsUpdateCmd(ec),
 	)
 	return pluginsCmd
 }
