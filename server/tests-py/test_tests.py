@@ -4,11 +4,13 @@
 # tests are running correctly, or test our python test helpers.
 
 import pytest
-from super_classes import DefaultTestSelectQueries
 from validate import check_query_f, collapse_order_not_selset
 from ruamel.yaml.comments import CommentedMap
 
-class TestTests1(DefaultTestSelectQueries):
+usefixtures = pytest.mark.usefixtures
+
+@usefixtures('per_class_tests_db_state')
+class TestTests1:
     """
     Test various things about our test framework code. Validate that tests work
     as we expect.
@@ -57,7 +59,8 @@ class TestTests1(DefaultTestSelectQueries):
         return 'queries/graphql_query/basic'
 
 
-class TestTests2(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestTests2:
     """
     Test various things about our test framework code. Validate that tests work
     as we expect.

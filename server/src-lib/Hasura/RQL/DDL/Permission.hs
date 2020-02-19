@@ -96,13 +96,13 @@ buildInsPermInfo
   -> FieldInfoMap FieldInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
-buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm chk set mCols) _) =
+buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols) _) =
   withPathK "permission" $ do
-    (be, beDeps) <- withPathK "check" $ procBoolExp tn fieldInfoMap chk
+    (be, beDeps) <- withPathK "check" $ procBoolExp tn fieldInfoMap checkCond
     (setColsSQL, setHdrs, setColDeps) <- procSetObj tn fieldInfoMap set
     void $ withPathK "columns" $ indexedForM insCols $ \col ->
            askPGType fieldInfoMap col ""
-    let fltrHeaders = getDependentHeaders chk
+    let fltrHeaders = getDependentHeaders checkCond
         reqHdrs = fltrHeaders `union` setHdrs
         insColDeps = map (mkColDep DRUntyped tn) insCols
         deps = mkParentDep tn : beDeps ++ setColDeps ++ insColDeps
@@ -201,7 +201,12 @@ data UpdPerm
   = UpdPerm
   { ucColumns :: !PermColSpec -- Allowed columns
   , ucSet     :: !(Maybe (ColumnValues Value)) -- Preset columns
-  , ucFilter  :: !BoolExp     -- Filter expression
+  , ucFilter  :: !BoolExp     -- Filter expression (applied before update)
+  , ucCheck   :: !(Maybe BoolExp)     
+  -- ^ Check expression, which must be true after update.
+  -- This is optional because we don't want to break the v1 API
+  -- but Nothing should be equivalent to the expression which always
+  -- returns true.
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable UpdPerm
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''UpdPerm)
@@ -216,9 +221,11 @@ buildUpdPermInfo
   -> FieldInfoMap FieldInfo
   -> UpdPerm
   -> m (WithDeps UpdPermInfo)
-buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr) = do
+buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr check) = do
   (be, beDeps) <- withPathK "filter" $
     procBoolExp tn fieldInfoMap fltr
+    
+  checkExpr <- traverse (withPathK "check" . procBoolExp tn fieldInfoMap) check
 
   (setColsSQL, setHeaders, setColDeps) <- procSetObj tn fieldInfoMap set
 
@@ -227,12 +234,12 @@ buildUpdPermInfo tn fieldInfoMap (UpdPerm colSpec set fltr) = do
        askPGType fieldInfoMap updCol relInUpdErr
 
   let updColDeps = map (mkColDep DRUntyped tn) updCols
-      deps = mkParentDep tn : beDeps ++ updColDeps ++ setColDeps
+      deps = mkParentDep tn : beDeps ++ maybe [] snd checkExpr ++ updColDeps ++ setColDeps
       depHeaders = getDependentHeaders fltr
       reqHeaders = depHeaders `union` setHeaders
       updColsWithoutPreSets = updCols \\ HM.keys setColsSQL
 
-  return (UpdPermInfo (HS.fromList updColsWithoutPreSets) tn be setColsSQL reqHeaders, deps)
+  return (UpdPermInfo (HS.fromList updColsWithoutPreSets) tn be (fst <$> checkExpr) setColsSQL reqHeaders, deps)
 
   where
     updCols     = convColSpec fieldInfoMap colSpec

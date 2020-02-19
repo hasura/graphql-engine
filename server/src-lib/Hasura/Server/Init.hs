@@ -116,6 +116,12 @@ data ServeOptions impl
   , soPlanCacheOptions :: !E.PlanCacheOptions
   }
 
+data DowngradeOptions
+  = DowngradeOptions
+  { dgoTargetVersion :: !T.Text
+  , dgoDryRun        :: !Bool
+  } deriving (Show, Eq)
+
 data RawConnInfo =
   RawConnInfo
   { connHost     :: !(Maybe String)
@@ -134,6 +140,7 @@ data HGECommandG a
   | HCClean
   | HCExecute
   | HCVersion
+  | HCDowngrade !DowngradeOptions
   deriving (Show, Eq)
 
 data API
@@ -286,11 +293,12 @@ mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
   where
     connInfo = mkRawConnInfo rawConnInfo
     cmd = case rawCmd of
-      HCServe rso -> HCServe <$> mkServeOptions rso
-      HCExport    -> return HCExport
-      HCClean     -> return HCClean
-      HCExecute   -> return HCExecute
-      HCVersion   -> return HCVersion
+      HCServe rso     -> HCServe <$> mkServeOptions rso
+      HCExport        -> return HCExport
+      HCClean         -> return HCClean
+      HCExecute       -> return HCExecute
+      HCVersion       -> return HCVersion
+      HCDowngrade tgt -> return (HCDowngrade tgt)
 
 mkRawConnInfo :: RawConnInfo -> WithEnv RawConnInfo
 mkRawConnInfo rawConnInfo = do
@@ -1071,3 +1079,45 @@ serveOptionsParser =
   <*> parseEnabledLogs
   <*> parseLogLevel
   <*> parsePlanCacheSize
+
+-- | This implements the mapping between application versions
+-- and catalog schema versions.
+downgradeShortcuts :: [(String, String)]
+downgradeShortcuts = 
+  [ ("v1.0.0-beta.1", "16")
+  , ("v1.0.0-beta.2", "17")
+  , ("v1.0.0-beta.3", "17")
+  , ("v1.0.0-beta.4", "19")
+  , ("v1.0.0-beta.5", "19")
+  , ("v1.0.0-beta.6", "22")
+  , ("v1.0.0-beta.7", "24")
+  , ("v1.0.0-beta.8", "26")
+  , ("v1.0.0-beta.9", "26")
+  , ("v1.0.0-beta.10", "27")
+  , ("v1.0.0-rc.1", "28")
+  , ("v1.0.0", "28")
+  , ("v1.1.0-beta.1", "29")
+  , ("v1.1.0-beta.2", "30")
+  ]
+
+downgradeOptionsParser :: Parser DowngradeOptions
+downgradeOptionsParser = 
+    DowngradeOptions
+    <$> choice
+        (strOption
+          ( long "to-catalog-version" <>
+            metavar "<VERSION>" <>
+            help "The target catalog schema version (e.g. 31)"
+          )
+        : map (uncurry shortcut) downgradeShortcuts
+        )
+    <*> switch
+        ( long "dryRun" <>
+          help "Don't run any migrations, just print out the SQL."
+        )
+  where
+    shortcut v catalogVersion = 
+      flag' (DataString.fromString catalogVersion)
+        ( long ("to-" <> v) <>
+          help ("Downgrade to graphql-engine version " <> v <> " (equivalent to --to-catalog-version " <> catalogVersion <> ")")
+        )
