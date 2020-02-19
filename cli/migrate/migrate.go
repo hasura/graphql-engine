@@ -356,6 +356,26 @@ func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
 	return m.databaseDrv.ExportSchemaDump(schemName)
 }
 
+func (m *Migrate) RemoveVersions(versions []uint64) error {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return err
+	}
+
+	if mode != "true" {
+		return ErrNoMigrationMode
+	}
+
+	if err := m.lock(); err != nil {
+		return err
+	}
+
+	for _, version := range versions {
+		m.databaseDrv.RemoveVersion(int64(version))
+	}
+	return m.unlockErr(nil)
+}
+
 func (m *Migrate) Query(data interface{}) error {
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
@@ -375,7 +395,6 @@ func (m *Migrate) Query(data interface{}) error {
 // the squashed metadata for all down steps: dm
 // the squashed SQL for all down steps: ds
 func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm []interface{}, ds []byte, err error) {
-
 	// check the migration mode on the database
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {

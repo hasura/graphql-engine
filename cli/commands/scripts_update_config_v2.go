@@ -1,11 +1,20 @@
 package commands
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
+	"github.com/hasura/graphql-engine/cli/migrate/source"
+	"github.com/hasura/graphql-engine/cli/migrate/source/file"
 	"github.com/hasura/graphql-engine/cli/plugins"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -48,6 +57,204 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil && err != plugins.ErrIsAlreadyInstalled {
 				return errors.Wrap(err, "cannot install plugin")
 			}
+			// Move copy migrations directory to migrations_backup
+			ec.Spin("Backing up migrations...")
+			err = util.CopyDir(ec.MigrationDir, filepath.Join(ec.ExecutionDirectory, "migrations_backup"))
+			if err != nil {
+				return errors.Wrap(err, "error in copying migrations to migrations_backup")
+			}
+			defer func() {
+				if err != nil {
+					ec.Logger.Infof("migrations is backed up in migrations_backup directory.")
+				}
+			}()
+			// Open the file driver to list of source migrations and remove unwanted yaml
+			ec.Spin("Cleaning up migrations...")
+			fileCfg, err := file.New(getFilePath(ec.MigrationDir).String(), ec.Logger)
+			if err != nil {
+				return errors.Wrap(err, "error in opening migrate file driver")
+			}
+			// Remove yaml from up migrations
+			upVersions := make([]uint64, 0)
+			for _, version := range fileCfg.Migrations.Index {
+				sqlUp := &bytes.Buffer{}
+				// check if up.yaml exists
+				upMetaMigration, ok := fileCfg.Migrations.Migrations[version][source.MetaUp]
+				if !ok {
+					continue
+				}
+				// Read the up.yaml file
+				bodyReader, _, _, err := fileCfg.ReadMetaUp(version)
+				if err != nil {
+					return errors.Wrapf(err, "error in reading %s file", upMetaMigration.Raw)
+				}
+				buf := new(bytes.Buffer)
+				buf.ReadFrom(bodyReader)
+				var queries []hasuradb.HasuraInterfaceQuery
+				err = yaml.Unmarshal(buf.Bytes(), &queries)
+				if err != nil {
+					return errors.Wrapf(err, "unable to unmarhsal %s", upMetaMigration.Raw)
+				}
+				// for each query check if type is run_sql
+				// if yes, append to bytes buffer
+				for _, query := range queries {
+					if query.Type == "run_sql" {
+						argByt, err := yaml.Marshal(query.Args)
+						if err != nil {
+							return errors.Wrapf(err, "unable to marshal run_sql args in %s", upMetaMigration.Raw)
+						}
+						var to hasuradb.RunSQLInput
+						err = yaml.Unmarshal(argByt, &to)
+						if err != nil {
+							return errors.Wrapf(err, "unable to unmarshal run_sql args in %s", upMetaMigration.Raw)
+						}
+						sqlUp.WriteString("\n")
+						sqlUp.WriteString(to.SQL)
+					}
+				}
+				// check if up.sql file exists
+				if string(sqlUp.Bytes()) != "" {
+					upMigration, ok := fileCfg.Migrations.Migrations[version][source.Up]
+					if !ok {
+						// if up.sql doesn't exists, create a up.sql file and upMigration
+						var filePath string
+						if upMetaMigration.IsDir {
+							dir := filepath.Dir(upMetaMigration.Raw)
+							filePath = filepath.Join(ec.MigrationDir, dir, "up.sql")
+						} else {
+							fileName := fmt.Sprintf("%d_%s.up.sql", version, upMetaMigration.Identifier)
+							filePath = filepath.Join(ec.MigrationDir, fileName)
+						}
+						err = ioutil.WriteFile(filePath, sqlUp.Bytes(), os.ModePerm)
+						if err != nil {
+							return errors.Wrap(err, "unable to create up migration")
+						}
+						fileCfg.Migrations.Migrations[version][source.Up] = &source.Migration{}
+					} else {
+						upByt, err := ioutil.ReadFile(upMigration.Raw)
+						if err != nil {
+							return errors.Wrap(err, "error in reading up.sql")
+						}
+						upByt = append(upByt, sqlUp.Bytes()...)
+						err = ioutil.WriteFile(upMigration.Raw, upByt, os.ModePerm)
+						if err != nil {
+							return errors.Wrap(err, "error in writing up.sql")
+						}
+					}
+				}
+				// delete the yaml file
+				err = os.Remove(filepath.Join(ec.MigrationDir, upMetaMigration.Raw))
+				if err != nil {
+					return errors.Wrap(err, "error in removing up.yaml")
+				}
+				delete(fileCfg.Migrations.Migrations[version], source.MetaUp)
+			}
+			// Remove yaml from down migrations
+			for _, version := range fileCfg.Migrations.Index {
+				sqlDown := &bytes.Buffer{}
+				downMetaMigration, ok := fileCfg.Migrations.Migrations[version][source.MetaDown]
+				if !ok {
+					continue
+				}
+				bodyReader, _, _, err := fileCfg.ReadMetaDown(version)
+				if err != nil {
+					return errors.Wrapf(err, "error in reading %s file", downMetaMigration.Raw)
+				}
+				buf := new(bytes.Buffer)
+				buf.ReadFrom(bodyReader)
+				var queries []hasuradb.HasuraInterfaceQuery
+				err = yaml.Unmarshal(buf.Bytes(), &queries)
+				if err != nil {
+					return errors.Wrapf(err, "unable to unmarhsal %s", downMetaMigration.Raw)
+				}
+				for _, query := range queries {
+					if query.Type == "run_sql" {
+						argByt, err := yaml.Marshal(query.Args)
+						if err != nil {
+							return errors.Wrapf(err, "unable to marshal run_sql args in %s", downMetaMigration.Raw)
+						}
+						var to hasuradb.RunSQLInput
+						err = yaml.Unmarshal(argByt, &to)
+						if err != nil {
+							return errors.Wrapf(err, "unable to unmarshal run_sql args in %s", downMetaMigration.Raw)
+						}
+						sqlDown.WriteString("\n")
+						sqlDown.WriteString(to.SQL)
+					}
+				}
+				// check if up.sql file exists
+				if string(sqlDown.Bytes()) != "" {
+					downMigration, ok := fileCfg.Migrations.Migrations[version][source.Down]
+					if !ok {
+						// if up.sql doesn't exists, create a up.sql file and upMigration
+						var filePath string
+						if downMetaMigration.IsDir {
+							dir := filepath.Dir(downMetaMigration.Raw)
+							filePath = filepath.Join(ec.MigrationDir, dir, "down.sql")
+						} else {
+							fileName := fmt.Sprintf("%d_%s.down.sql", version, downMetaMigration.Identifier)
+							filePath = filepath.Join(ec.MigrationDir, fileName)
+						}
+						err = ioutil.WriteFile(filePath, sqlDown.Bytes(), os.ModePerm)
+						if err != nil {
+							return errors.Wrap(err, "unable to create up migration")
+						}
+						fileCfg.Migrations.Migrations[version][source.Down] = &source.Migration{}
+					} else {
+						downByt, err := ioutil.ReadFile(downMigration.Raw)
+						if err != nil {
+							return errors.Wrap(err, "error in reading down.sql")
+						}
+						downByt = append(sqlDown.Bytes(), downByt...)
+						err = ioutil.WriteFile(downMigration.Raw, downByt, os.ModePerm)
+						if err != nil {
+							return errors.Wrap(err, "error in writing down.sql")
+						}
+					}
+				}
+				// delete the yaml file
+				err = os.Remove(filepath.Join(ec.MigrationDir, downMetaMigration.Raw))
+				if err != nil {
+					return errors.Wrap(err, "error in removing down.yaml")
+				}
+				delete(fileCfg.Migrations.Migrations[version], source.MetaDown)
+			}
+			for version := range fileCfg.Migrations.Migrations {
+				directions := fileCfg.GetDirections(version)
+				// check if all the directions were set, else delete
+				if !directions[source.Up] && !directions[source.MetaUp] && !directions[source.Down] && !directions[source.MetaDown] {
+					files, err := filepath.Glob(filepath.Join(ec.MigrationDir, fmt.Sprintf("%d_*", version)))
+					if err != nil {
+						return errors.Wrapf(err, "unable to filter files for %d", version)
+					}
+					for _, file := range files {
+						info, err := os.Stat(file)
+						if err != nil {
+							return errors.Wrap(err, "error in stating file")
+						}
+						if info.IsDir() {
+							err = os.RemoveAll(file)
+							if err != nil {
+								return errors.Wrap(err, "error in removing dir")
+							}
+						} else {
+							if err := os.Remove(file); err != nil {
+								return errors.Wrap(err, "error in removing file")
+							}
+						}
+					}
+					upVersions = append(upVersions, version)
+				}
+			}
+			ec.Spin("Removing versions from database...")
+			migrateDrv, err := newMigrate(ec, true)
+			if err != nil {
+				return errors.Wrap(err, "unable to initialize migrations driver")
+			}
+			err = migrateDrv.RemoveVersions(upVersions)
+			if err != nil {
+				return errors.Wrap(err, "unable to remove versions from database")
+			}
 			// update current config to v2
 			ec.Spin("Updating current config to 2")
 			os.Setenv("HASURA_GRAPHQL_VERSION", "2")
@@ -75,7 +282,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Config.ActionConfig.Codegen = nil
 			// run metadata export
 			ec.Spin("Exporting metadata...")
-			migrateDrv, err := newMigrate(ec, true)
+			migrateDrv, err = newMigrate(ec, true)
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
