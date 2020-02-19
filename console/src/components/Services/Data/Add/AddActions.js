@@ -13,7 +13,6 @@ import { isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
-import { getCheckName } from './utils';
 
 const SET_DEFAULTS = 'AddTable/SET_DEFAULTS';
 const SET_TABLENAME = 'AddTable/SET_TABLENAME';
@@ -470,21 +469,13 @@ const addTableReducerCore = (state = defaultState, action) => {
       };
     case SET_COLNAME:
       const i = action.index;
-      const prevName = state.columns[i].name;
-      const newName = action.name;
       return {
         ...state,
         columns: [
           ...state.columns.slice(0, i),
-          { ...state.columns[i], name: newName, nullable: action.isNull },
+          { ...state.columns[i], name: action.name, nullable: action.isNull },
           ...state.columns.slice(i + 1),
         ],
-        checkConstraints: state.checkConstraints.map(c => {
-          if (c.name === getCheckName(prevName)) {
-            return { ...c, name: getCheckName(newName) };
-          }
-          return c;
-        }),
       };
     case SET_COLTYPE:
       const ij = action.index;
