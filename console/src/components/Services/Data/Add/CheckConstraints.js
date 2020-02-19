@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AceEditor from 'react-ace';
+
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import styles from '../TableModify/ModifyTable.scss';
 import { removeCheckConstraint, setCheckConstraints } from './AddActions';
@@ -40,7 +41,6 @@ const CheckConstraints = ({ dispatch, constraints }) => {
       ? 'new-constraint'
       : constraints[i] && constraints[i].name;
 
-    // constraint name as collapsed label
     const collapsedLabel = () => {
       if (isLast) {
         return addConstraintsState.length === 1 ? (
@@ -57,7 +57,6 @@ const CheckConstraints = ({ dispatch, constraints }) => {
       );
     };
 
-    // constraint name as expanded label
     const expandedLabel = () => {
       if (isLast) {
         return null;
@@ -70,19 +69,13 @@ const CheckConstraints = ({ dispatch, constraints }) => {
       );
     };
 
-    // expand button text "View"
-    const expandButtonText = isLast
-      ? addConstraintsState.length
-        ? 'Add a check constraint'
-        : 'Add'
-      : 'Edit';
+    const expandButtonText = isLast ? 'Add a check constraint' : 'Edit';
 
-    // Check constraint definition in AceEditor for syntax highlighting
     const expandedContent = () => {
       return (
         <div>
-          <div className={`${styles.add_mar_bottom}`}>
-            <div className={`${styles.add_mar_bottom_mid}`}>
+          <div className={styles.add_mar_bottom}>
+            <div className={styles.add_mar_bottom_mid}>
               <b>Constraint Name:</b>
             </div>
             <input
@@ -93,13 +86,9 @@ const CheckConstraints = ({ dispatch, constraints }) => {
             />
           </div>
           <div>
-            <div className={`${styles.add_mar_bottom_mid}`}>
+            <div className={styles.add_mar_bottom_mid}>
               <b>Check Expression: </b>
-              <ToolTip
-                message={
-                  'Boolean expression that must be satisfied for all rows in the table. e.g. min_price >= 0 AND max_price >= min_price'
-                }
-              />
+              <ToolTip message="Boolean expression that must be satisfied for all rows in the table. e.g. min_price >= 0 AND max_price >= min_price" />
               &nbsp;&nbsp;
               <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
             </div>
