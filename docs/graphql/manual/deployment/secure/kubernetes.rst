@@ -2,8 +2,8 @@
    :description: Secure Hasura GraphQL endpoint with Kubernetes deployment
    :keywords: hasura, docs, deployment, kubernetes, secure
 
-Securing the GraphQL endpoint (Kubernetes)
-==========================================
+Securing the GraphQL endpoint on Kubernetes
+===========================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -2,8 +2,8 @@
    :description: Secure Hasura GraphQL endpoint with Docker deployment
    :keywords: hasura, docs, deployment, docker, secure
 
-Securing the GraphQL endpoint (Docker)
-======================================
+Securing the GraphQL endpoint on Docker
+=======================================
 
 .. contents:: Table of contents
   :backlinks: none

@@ -2,8 +2,8 @@
    :description: Get Hasura GraphQL engine server logs with Heroku deployment
    :keywords: hasura, docs, deployment, heroku, logs
 
-Hasura GraphQL engine server logs (Heroku)
-==========================================
+Hasura GraphQL engine server logs on Heroku
+===========================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -24,4 +24,4 @@ of the Hasura GraphQL engine deployed on Heroku:
 
 - https://devcenter.heroku.com/articles/logging for more details on logging on Heroku.
 
-- :doc:`../logging` for more details on Hasura logs
+- :doc:`index` for more details on Hasura logs

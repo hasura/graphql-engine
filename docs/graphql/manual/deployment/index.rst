@@ -34,7 +34,7 @@ Configuration
 By default, Hasura GraphQL engine runs in a very permissive mode for easier development. Check out the below pages
 to configure the Hasura GraphQL engine for your production environment:
 
-- :doc:`securing-graphql-endpoint`
+- :doc:`secure/index`
 - :doc:`postgres-permissions`
 - :doc:`GraphQL engine server configuration <graphql-engine-flags/index>`
 
@@ -43,7 +43,7 @@ Logs
 
 For access to Hasura GraphQL engine logs, check the below page for details:
 
-- :doc:`Logging <logging>`
+- :doc:`Logging <logging/index>`
 
 
 .. toctree::

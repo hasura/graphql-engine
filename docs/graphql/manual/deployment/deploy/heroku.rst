@@ -108,7 +108,7 @@ Advanced
 --------
 
 - :doc:`Securing your GraphQL endpoint <../secure/heroku>`
-- :doc:`Using existing Heroku database <../using-existing-heroku-database>`
+- :doc:`Using existing Heroku database <using-existing-heroku-database>`
 - :doc:`GraphQL engine server logs <../logging/heroku>`
 - :doc:`Updating GraphQL engine <../update/heroku>`
 - :doc:`Setting up migrations <../../migrations/index>`
