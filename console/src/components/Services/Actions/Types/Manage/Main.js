@@ -45,7 +45,7 @@ const Manage = ({ allTypes, dispatch, ...manageProps }) => {
   // TODO handling error elegantly
   const allowSave = !isFetching && !error;
 
-  const editorTooltip = 'Manage all GraphQL types used in actions';
+  const editorTooltip = 'All GraphQL types used in actions';
   const editorLabel = 'All custom types';
 
   return (
