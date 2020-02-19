@@ -5,7 +5,7 @@ import {
   isEnumType,
   isInputObjectType,
   parse as sdlParse,
-  validate
+  validate,
 } from 'graphql';
 import { wrapTypename, getAstTypeMetadata } from './wrappingTypeUtils';
 import { inbuiltTypes } from './hasuraCustomTypeUtils';
@@ -22,10 +22,22 @@ export const validateMutation = (mutationString, clientSchema) => {
 
   const schemaValidationErrors = validate(clientSchema, mutationAst);
   if (schemaValidationErrors.length) {
-    throw Error('this is not a valid GraphQL query as per the current GraphQL schema');
+    throw Error(
+      'this is not a valid GraphQL query as per the current GraphQL schema'
+    );
   }
 
-  mutationAst.definitions = mutationAst.definitions.filter(d => d.operation === 'mutation');
+  if (mutationAst.definitions.find(d => d.kind === 'FragmentDefinition')) {
+    throw Error('fragments are not supported');
+  }
+
+  if (mutationAst.definitions.find(d => d.operation !== 'mutation')) {
+    throw Error('queries cannot be derived into actions');
+  }
+
+  mutationAst.definitions = mutationAst.definitions.filter(
+    d => d.operation === 'mutation'
+  );
 
   // throw error if the AST is empty
   if (!mutationAst.definitions.length) {
@@ -34,10 +46,6 @@ export const validateMutation = (mutationString, clientSchema) => {
 
   if (mutationAst.definitions.length !== 1) {
     throw Error('you can derive action from only one operation');
-  }
-
-  if (mutationAst.definitions.find(d => d.kind === 'FragmentDefinition')) {
-    throw Error('fragments are not supported');
   }
 
   if (mutationAst.definitions[0].kind !== 'OperationDefinition') {
@@ -69,7 +77,9 @@ const deriveMutation = (
   introspectionSchema,
   actionName = null
 ) => {
-  const clientSchema = introspectionSchema.__schema ? buildClientSchema(introspectionSchema) : introspectionSchema;
+  const clientSchema = introspectionSchema.__schema
+    ? buildClientSchema(introspectionSchema)
+    : introspectionSchema;
 
   let mutationAst;
   try {
@@ -198,7 +208,10 @@ const deriveMutation = (
             );
           } else {
             const fieldTypename = prefixTypename(fieldTypeMetadata.type.name);
-            outputTypeFields[outputTypeField.name] = wrapTypename(fieldTypename, fieldTypeMetadata.wraps);
+            outputTypeFields[outputTypeField.name] = wrapTypename(
+              fieldTypename,
+              fieldTypeMetadata.wraps
+            );
             handleType(fieldTypeMetadata.type, fieldTypename);
           }
         }
@@ -209,7 +222,7 @@ const deriveMutation = (
   Object.keys(outputTypeFields).forEach(fieldName => {
     actionOutputType.fields.push({
       name: fieldName,
-      type: outputTypeFields[fieldName]
+      type: outputTypeFields[fieldName],
     });
   });
 

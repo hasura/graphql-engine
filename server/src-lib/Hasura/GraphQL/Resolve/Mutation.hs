@@ -150,14 +150,15 @@ convertUpdateP1 opCtx boolExpParser selectionResolver fld = do
 
   mutOutput <- selectionResolver fld
 
-  pure $ RU.AnnUpd tn updateItems (unresolvedPermFilter, whereExp) mutOutput allCols
+  pure $ RU.AnnUpd tn updateItems (unresolvedPermFilter, whereExp) unresolvedPermCheck mutOutput allCols
   where
     convObjWithOp' = convObjWithOp colGNameMap
     allCols = Map.elems colGNameMap
-    UpdOpCtx tn _ colGNameMap filterExp preSetCols = opCtx
+    UpdOpCtx tn _ colGNameMap filterExp checkExpr preSetCols = opCtx
     args = _fArguments fld
     resolvedPreSetItems = Map.toList $ fmap partialSQLExpToUnresolvedVal preSetCols
     unresolvedPermFilter = fmapAnnBoolExp partialSQLExpToUnresolvedVal filterExp
+    unresolvedPermCheck = maybe annBoolExpTrue (fmapAnnBoolExp partialSQLExpToUnresolvedVal) checkExpr
 
     resolveUpdateOperator operator resolveAction =
       (operator,) <$> withArgM args operator resolveAction

@@ -1,4 +1,4 @@
-const LS_DERIVED_MUTATIONS = 'HASURA_CONSOLE_DERIVED_MUTATIONS';
+const LS_DERIVED_MUTATIONS = 'actions:derivedMutations';
 
 export const persistAllDerivedMutations = allMutations => {
   let stringified;

@@ -60,7 +60,7 @@ const CodeTabs = ({
     };
 
     const editorProps = {
-      width: '700px',
+      width: '600px',
       value: content.trim(),
       readOnly: true,
     };
@@ -73,7 +73,7 @@ const CodeTabs = ({
     }
   });
 
-  return <Tabs id="uncontrolled-tab-example">{files}</Tabs>;
+  return <Tabs id="uncontrolled-tab-example">{files} </Tabs>;
 };
 
 export default CodeTabs;

@@ -329,7 +329,7 @@ getRootFldsRole'
   -> [FunctionInfo]
   -> Maybe ([T.Text], Bool) -- insert perm
   -> Maybe (AnnBoolExpPartialSQL, Maybe Int, [T.Text], Bool) -- select filter
-  -> Maybe ([PGColumnInfo], PreSetColsPartial, AnnBoolExpPartialSQL, [T.Text]) -- update filter
+  -> Maybe ([PGColumnInfo], PreSetColsPartial, AnnBoolExpPartialSQL, Maybe AnnBoolExpPartialSQL, [T.Text]) -- update filter
   -> Maybe (AnnBoolExpPartialSQL, [T.Text]) -- delete filter
   -> Maybe ViewInfo
   -> TableConfig -- custom config
@@ -373,26 +373,26 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
     insCustName = getCustomNameWith _tcrfInsert
     getInsDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
-      in ( MCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
+      in ( MCInsert $ InsOpCtx tn $ hdrs `union` maybe [] (^. _5) updM
          , mkInsMutFld insCustName tn isUpsertable
          )
 
     insOneCustName = getCustomNameWith _tcrfInsertOne
     getInsOneDet (hdrs, upsertPerm) =
       let isUpsertable = upsertable constraints upsertPerm $ isJust viM
-      in ( MCInsertOne $ InsOpCtx tn $ hdrs `union` maybe [] (\(_, _, _, x) -> x) updM
+      in ( MCInsertOne $ InsOpCtx tn $ hdrs `union` maybe [] (^. _5) updM
          , mkInsertOneMutationField insOneCustName tn isUpsertable
          )
 
     updCustName = getCustomNameWith _tcrfUpdate
-    getUpdDet (updCols, preSetCols, updFltr, hdrs) =
-      ( MCUpdate $ UpdOpCtx tn hdrs colGNameMap updFltr preSetCols
+    getUpdDet (updCols, preSetCols, updFltr, updCheck, hdrs) =
+      ( MCUpdate $ UpdOpCtx tn hdrs colGNameMap updFltr updCheck preSetCols
       , mkUpdMutFld updCustName tn updCols
       )
 
     updByPkCustName = getCustomNameWith _tcrfUpdateByPk
-    getUpdByPkDet ((updCols, preSetCols, updFltr, hdrs), pKey) =
-      ( MCUpdateByPk $ UpdOpCtx tn hdrs colGNameMap updFltr preSetCols
+    getUpdByPkDet ((updCols, preSetCols, updFltr, updCheck, hdrs), pKey) =
+      ( MCUpdateByPk $ UpdOpCtx tn hdrs colGNameMap updFltr updCheck preSetCols
       , mkUpdateByPkMutationField updByPkCustName tn updCols pKey
       )
 
@@ -545,7 +545,7 @@ mkInsCtx role tableCache fields insPermInfo updPermM = do
     setCols = ipiSet insPermInfo
     checkCond = ipiCheck insPermInfo
     updPermForIns = mkUpdPermForIns <$> updPermM
-    mkUpdPermForIns upi = UpdPermForIns (toList $ upiCols upi)
+    mkUpdPermForIns upi = UpdPermForIns (toList $ upiCols upi) (upiCheck upi)
                           (upiFilter upi) (upiSet upi)
 
     isInsertable Nothing _          = False
@@ -566,7 +566,7 @@ mkAdminInsCtx tc fields = do
       isMutable viIsInsertable viewInfoM && isValidRel relName remoteTable
 
   let relInfoMap = Map.fromList $ catMaybes relTupsM
-      updPerm = UpdPermForIns updCols noFilter Map.empty
+      updPerm = UpdPermForIns updCols Nothing noFilter Map.empty
 
   return $ InsCtx colGNameMap noFilter Map.empty relInfoMap (Just updPerm)
   where
@@ -678,6 +678,7 @@ getRootFldsRole tn pCols constraints fields funcs viM (RolePermInfo insM selM up
     mkUpd u = ( flip getColInfos allCols $ Set.toList $ upiCols u
               , upiSet u
               , upiFilter u
+              , upiCheck u
               , upiRequiredHeaders u
               )
     mkDel d = (dpiFilter d, dpiRequiredHeaders d)
@@ -711,7 +712,7 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
     adminRootFlds =
       getRootFldsRole' tn primaryKey validConstraints fields tabFuncs
       (Just ([], True)) (Just (noFilter, Nothing, [], True))
-      (Just (cols, mempty, noFilter, [])) (Just (noFilter, []))
+      (Just (cols, mempty, noFilter, Nothing, [])) (Just (noFilter, []))
       viewInfo customConfig
 
 noFilter :: AnnBoolExpPartialSQL

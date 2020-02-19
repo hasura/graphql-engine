@@ -29,7 +29,12 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
           Generate code with delegation to the derived mutation
         </label>
       </div>
-      <GraphQLEditor value={parentMutation} readOnly />
+      <GraphQLEditor
+        value={parentMutation}
+        width={'600px'}
+        height={'200px'}
+        readOnly
+      />
     </div>
   );
 };

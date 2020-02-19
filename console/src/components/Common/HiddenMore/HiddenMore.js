@@ -9,9 +9,7 @@ const HiddenMore = ({ title, more, expanded = false }) => {
   const getTitle = () => {
     return (
       <div
-        className={`${styles.display_flex} ${styles.add_mar_bottom} ${
-          styles.cursorPointer
-        } ${styles.hiddenMoreWidth}`}
+        className={`${styles.display_flex} ${styles.add_mar_bottom} ${styles.cursorPointer} ${styles.hiddenMoreWidth}`}
         onClick={toggle}
       >
         <i
