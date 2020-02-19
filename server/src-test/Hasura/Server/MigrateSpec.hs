@@ -8,16 +8,21 @@ import           Control.Concurrent.MVar.Lifted
 import           Control.Monad.Trans.Control    (MonadBaseControl)
 import           Control.Monad.Unique
 import           Control.Natural                ((:~>) (..))
+import           Data.List                      (isPrefixOf, stripPrefix)
+import           Data.List.Split                (splitOn)
 import           Data.Time.Clock                (getCurrentTime)
 import           Data.Tuple                     (swap)
+import           System.Process                 (readProcess)
 import           Test.Hspec.Core.Spec
 import           Test.Hspec.Expectations.Lifted
 
 import qualified Database.PG.Query              as Q
+import qualified Safe
 
 import           Hasura.RQL.DDL.Metadata        (ClearMetadata (..), runClearMetadata)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
+import           Hasura.Server.Init             (DowngradeOptions (..), downgradeShortcuts)
 import           Hasura.Server.Migrate
 import           Hasura.Server.PGDump
 import           Hasura.Server.Version          (HasVersion)
@@ -36,11 +41,10 @@ instance (MonadBase IO m) => TableCoreInfoRM (CacheRefT m)
 instance (MonadBase IO m) => CacheRM (CacheRefT m) where
   askSchemaCache = CacheRefT (fmap lastBuiltSchemaCache . readMVar)
 
-instance (MonadIO m, MonadBaseControl IO m, MonadTx m, MonadUnique m) => CacheRWM (CacheRefT m) where
-  buildSchemaCacheWithOptions options = CacheRefT $ flip modifyMVar \schemaCache ->
-    swap <$> runCacheRWT schemaCache (buildSchemaCacheWithOptions options)
-  invalidateCachedRemoteSchema name = CacheRefT $ flip modifyMVar \schemaCache ->
-    swap <$> runCacheRWT schemaCache (invalidateCachedRemoteSchema name)
+instance (MonadIO m, MonadBaseControl IO m, MonadTx m) => CacheRWM (CacheRefT m) where
+  buildSchemaCacheWithOptions reason invalidations = CacheRefT $ flip modifyMVar \schemaCache -> do
+    ((), cache, _) <- runCacheRWT schemaCache (buildSchemaCacheWithOptions reason invalidations)
+    pure (cache, ())
 
 instance Example (CacheRefT m ()) where
   type Arg (CacheRefT m ()) = CacheRefT m :~> IO
@@ -64,20 +68,40 @@ spec
 spec pgConnInfo = do
   let dropAndInit time = CacheRefT $ flip modifyMVar \_ ->
         dropCatalog *> (swap <$> migrateCatalog time)
-
+      
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
       (dropAndInit =<< liftIO getCurrentTime) `shouldReturn` MRInitialized
 
     it "is idempotent" \(NT transact) -> do
-      let dumpSchema = transact $
-            execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
+      let dumpSchema = execPGDump (PGDumpReqBody ["--schema-only"] (Just False)) pgConnInfo
       time <- getCurrentTime
       transact (dropAndInit time) `shouldReturn` MRInitialized
-      firstDump <- dumpSchema
+      firstDump <- transact dumpSchema
       transact (dropAndInit time) `shouldReturn` MRInitialized
-      secondDump <- dumpSchema
+      secondDump <- transact dumpSchema
       secondDump `shouldBe` firstDump
+      
+    it "supports upgrades after downgrade to version 12" \(NT transact) -> do
+      let downgradeTo v = downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
+          upgradeToLatest time = CacheRefT $ flip modifyMVar \_ ->
+            swap <$> migrateCatalog time
+      time <- getCurrentTime
+      transact (dropAndInit time) `shouldReturn` MRInitialized
+      downgradeResult <- (transact . lift) (downgradeTo "12" time)
+      downgradeResult `shouldSatisfy` \case
+        MRMigrated{} -> True
+        _ -> False
+      transact (upgradeToLatest time) `shouldReturn` MRMigrated "12"
+      
+    it "supports downgrades for every Git tag" $ singleTransaction do
+      gitOutput <- liftIO $ readProcess "git" ["log", "--no-walk", "--tags", "--pretty=%D"] ""
+      let filterOldest = filter (not . isPrefixOf "v1.0.0-alpha")
+          extractTagName = Safe.headMay . splitOn ", " <=< stripPrefix "tag: "
+          supportedDowngrades = sort (map fst downgradeShortcuts)
+          gitTags = (sort . filterOldest . mapMaybe extractTagName . tail . lines) gitOutput
+      for_ gitTags \t -> 
+        t `shouldSatisfy` (`elem` supportedDowngrades)
 
   describe "recreateSystemMetadata" $ do
     let dumpMetadata = execPGDump (PGDumpReqBody ["--schema=hdb_catalog"] (Just False)) pgConnInfo

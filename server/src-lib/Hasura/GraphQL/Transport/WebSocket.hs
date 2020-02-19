@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Hasura.GraphQL.Transport.WebSocket
@@ -293,7 +293,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   requestId <- getRequestId reqHdrs
   (sc, scVer) <- liftIO getSchemaCache
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
-               planCache userInfo sqlGenCtx enableAL sc scVer q
+               planCache userInfo sqlGenCtx enableAL sc scVer httpMgr reqHdrs q
 
   (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx
@@ -306,7 +306,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
     telemTransport = Telem.HTTP
-    runHasuraGQ :: ExceptT () IO DiffTime 
+    runHasuraGQ :: ExceptT () IO DiffTime
                 -> Telem.CacheHit -> RequestId -> GQLReqUnparsed -> UserInfo -> E.ExecOp
                 -> ExceptT () IO ()
     runHasuraGQ timerTot telemCacheHit reqId query userInfo = \case
@@ -340,7 +340,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
           sendCompleted (Just reqId)
 
-    runRemoteGQ :: ExceptT () IO DiffTime 
+    runRemoteGQ :: ExceptT () IO DiffTime
                 -> Telem.CacheHit -> E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
                 -> G.TypedOperationDefinition -> RemoteSchemaInfo
                 -> ExceptT () IO ()

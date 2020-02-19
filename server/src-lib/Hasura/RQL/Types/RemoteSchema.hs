@@ -22,7 +22,7 @@ type UrlFromEnv = Text
 newtype RemoteSchemaName
   = RemoteSchemaName
   { unRemoteSchemaName :: NonEmptyText }
-  deriving ( Show, Eq, Lift, Hashable, J.ToJSON, J.ToJSONKey
+  deriving ( Show, Eq, Ord, Lift, Hashable, J.ToJSON, J.ToJSONKey
            , J.FromJSON, Q.ToPrepArg, Q.FromCol, DQuote, NFData
            , Generic, Cacheable, Arbitrary
            )

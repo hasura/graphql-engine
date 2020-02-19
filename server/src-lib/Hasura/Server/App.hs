@@ -5,6 +5,7 @@ module Hasura.Server.App where
 
 import           Control.Concurrent.MVar
 import           Control.Exception                      (IOException, try)
+import           Control.Lens                           (view, _2)
 import           Control.Monad.Stateless
 import           Data.Aeson                             hiding (json)
 import           Data.Either                            (isRight)
@@ -408,7 +409,7 @@ initErrExit :: QErr -> IO a
 initErrExit e = do
   putStrLn $
     "failed to build schema-cache because of inconsistent metadata: "
-    <> T.unpack (qeError e)
+    <> (show e)
   exitFailure
 
 data HasuraApp
@@ -457,9 +458,9 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
     (cacheRef, cacheBuiltTime) <- do
       pgResp <- runExceptT $ peelRun runCtx pgExecCtxSer Q.ReadWrite $
         (,) <$> buildRebuildableSchemaCache <*> liftTx fetchLastUpdate
-      (schemaCache, time) <- liftIO $ either initErrExit return pgResp
+      (schemaCache, event) <- liftIO $ either initErrExit return pgResp
       scRef <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
-      return (scRef, snd <$> time)
+      return (scRef, view _2 <$> event)
 
     cacheLock <- liftIO $ newMVar ()
     planCache <- liftIO $ E.initPlanCache planCacheOptions

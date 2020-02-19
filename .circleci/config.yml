@@ -446,10 +446,11 @@ jobs:
   # test server upgrade from last version to current build
   test_server_upgrade:
     docker:
-    - image: hasura/graphql-engine-upgrade-tester:v0.4
+    # Using the image for pytests, since server upgrade tests are now a bunch of pytests
+    - image: hasura/graphql-engine-server-builder:2020-01-14
       environment:
         HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
-    - image: circleci/postgres:10-alpine
+    - image: circleci/postgres:11-alpine-postgis
       environment:
         POSTGRES_USER: gql_test
         POSTGRES_DB: gql_test
@@ -460,8 +461,15 @@ jobs:
     - *skip_job_on_ciignore
     - checkout
     - run:
+        name: install_necessary_packages
+        command: |
+          apt-get update
+          apt install -y curl procps
+    - run:
         name: upgrade_test
         command: .circleci/server-upgrade/run.sh
+        environment:
+          HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
     - store_artifacts:
         path: /build/_server_output
         destination: server

@@ -3,6 +3,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , runRemoveRemoteSchema
   , removeRemoteSchemaFromCatalog
   , runReloadRemoteSchema
+  , fetchRemoteSchemas
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
   , addRemoteSchemaP2
@@ -13,6 +14,7 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson                  as J
 import qualified Data.HashMap.Strict         as Map
+import qualified Data.HashSet                as S
 import qualified Database.PG.Query           as Q
 
 import           Hasura.GraphQL.RemoteServer
@@ -87,8 +89,8 @@ runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
   void $ onNothing (Map.lookup name rmSchemas) $
     throw400 NotExists $ "remote schema with name " <> name <<> " does not exist"
 
-  invalidateCachedRemoteSchema name
-  withNewInconsistentObjsCheck buildSchemaCache
+  let invalidations = mempty { ciRemoteSchemas = S.singleton name }
+  withNewInconsistentObjsCheck $ buildSchemaCacheWithOptions CatalogUpdate invalidations
   pure successMsg
 
 addRemoteSchemaToCatalog
@@ -107,3 +109,15 @@ removeRemoteSchemaFromCatalog name =
     DELETE FROM hdb_catalog.remote_schemas
       WHERE name = $1
   |] (Identity name) True
+
+fetchRemoteSchemas :: Q.TxE QErr [AddRemoteSchemaQuery]
+fetchRemoteSchemas =
+  map fromRow <$> Q.listQE defaultTxErrorHandler
+    [Q.sql|
+     SELECT name, definition, comment
+       FROM hdb_catalog.remote_schemas
+     ORDER BY name ASC
+     |] () True
+  where
+    fromRow (name, Q.AltJ def, comment) =
+      AddRemoteSchemaQuery name def comment
