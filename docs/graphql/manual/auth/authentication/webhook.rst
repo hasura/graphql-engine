@@ -20,7 +20,7 @@ You can configure the GraphQL engine to use a webhook to authenticate all incomi
 
 .. admonition:: Prerequisite
    
-   It is mandatory to first :doc:`secure your GraphQL endpoint <../../deployment/securing-graphql-endpoint>` for the webhook mode to take effect.
+   It is mandatory to first :doc:`secure your GraphQL endpoint <../../deployment/secure/index>` for the webhook mode to take effect.
 
 In webhook mode, on a secured endpoint:
 

@@ -14,7 +14,7 @@ This guide will help you get the Hasura GraphQL engine and Postgres running on `
 It is the easiest and fastest way of trying out Hasura.
 
 If you'd like to link this to an existing database, please head to this guide instead:
-:doc:`Using an existing database on Heroku <../deployment/heroku/using-existing-heroku-database>`.
+:doc:`Using an existing database on Heroku <../deployment/deploy/using-existing-heroku-database>`.
 
 Deploy to Heroku
 ----------------
@@ -49,4 +49,4 @@ Advanced
 --------
 
 This was a quickstart guide to get the Hasura GraphQL engine up and running quickly. For more detailed instructions
-on deploying using Heroku, check out :doc:`../deployment/heroku/index`.
+on deploying using Heroku, check out :doc:`../deployment/deploy/heroku`.

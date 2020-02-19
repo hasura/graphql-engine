@@ -405,7 +405,7 @@ Monitoring frameworks
 You can integrate the logs emitted by Hasura GraphQL with external monitoring tools for better visibility as per
 your convenience.
 
-For some examples, see :doc:`../guides/monitoring/index`.
+For some examples, see :doc:`../../guides/monitoring/index`.
 
 .. toctree::
    :maxdepth: 2
@@ -413,4 +413,3 @@ For some examples, see :doc:`../guides/monitoring/index`.
    Heroku <heroku>
    Docker <docker>
    Kubernetes <kubernetes>
-   

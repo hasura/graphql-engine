@@ -27,8 +27,8 @@ Existing database
 
 If you'd like to set up Hasura with an existing database, follow these guides:
 
-- :doc:`Heroku <../deployment/heroku/using-existing-heroku-database>`: Run on Heroku and connect to an existing Heroku Postgres database.
-- :doc:`Docker <../deployment/docker/index>`: Run on Kubernetes and connect to an existing Postgres
+- :doc:`Heroku <../deployment/deploy/using-existing-heroku-database>`: Run on Heroku and connect to an existing Heroku Postgres database.
+- :doc:`Docker <../deployment/deploy/docker>`: Run on Kubernetes and connect to an existing Postgres
   database.
 
 First steps
@@ -135,7 +135,7 @@ Watch the trigger in action
 Next steps
 ----------
 
-Read more about: :doc:`event triggers <../event-triggers/index>`.
+Read more about :doc:`event triggers <../event-triggers/index>`.
 
 
 .. toctree::

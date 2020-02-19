@@ -30,7 +30,7 @@ are used for the permissions system.
 
 .. admonition:: Prerequisite
 
-   It is mandatory to first :doc:`secure your GraphQL endpoint <../../deployment/securing-graphql-endpoint>` for the JWT mode to take effect.
+   It is mandatory to first :doc:`secure your GraphQL endpoint <../../deployment/secure/index>` for the JWT mode to take effect.
 
 
 In JWT mode, on a secured endpoint:
