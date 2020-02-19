@@ -126,7 +126,7 @@ Download the ``deployment.yaml`` file:
 
 .. code-block:: bash
 
-   wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/google-cloud-k8s-sql/deployment.yaml
+   wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/google-cloud-k8s-sql/deployment.yaml
 
 Get the ``[INSTANCE_CONNECTION_NAME]`` using the following command and note it
 down.
