@@ -448,11 +448,46 @@ instance ToSQL FunctionArgs where
                     \(argName, argVal) -> SENamedArg (Iden argName) argVal
     in paren $ ", " <+> (positionalArgs <> namedArgs)
 
+data DefinitionListItem
+  = DefinitionListItem
+  { _dliColumn :: !PGCol
+  , _dliType   :: !PGScalarType
+  } deriving (Show, Eq, Data, Generic)
+instance NFData DefinitionListItem
+instance Cacheable DefinitionListItem
+
+instance ToSQL DefinitionListItem where
+  toSQL (DefinitionListItem column columnType) =
+    toSQL column <-> toSQL columnType
+
+data FunctionAlias
+  = FunctionAlias
+  { _faIden           :: !Alias
+  , _faDefinitionList :: !(Maybe [DefinitionListItem])
+  } deriving (Show, Eq, Data, Generic)
+instance NFData FunctionAlias
+instance Cacheable FunctionAlias
+
+mkSimpleFunctionAlias :: Iden -> FunctionAlias
+mkSimpleFunctionAlias identifier =
+  FunctionAlias (toAlias identifier) Nothing
+
+mkFunctionAlias :: Iden -> Maybe [(PGCol, PGScalarType)] -> FunctionAlias
+mkFunctionAlias identifier listM =
+  FunctionAlias (toAlias identifier) $
+  fmap (map (uncurry DefinitionListItem)) listM
+
+instance ToSQL FunctionAlias where
+  toSQL (FunctionAlias iden (Just definitionList)) =
+    toSQL iden <> paren ( ", " <+> definitionList)
+  toSQL (FunctionAlias iden Nothing) =
+    toSQL iden
+
 data FunctionExp
   = FunctionExp
   { feName  :: !QualifiedFunction
   , feArgs  :: !FunctionArgs
-  , feAlias :: !(Maybe Alias)
+  , feAlias :: !(Maybe FunctionAlias)
   } deriving (Show, Eq, Generic, Data)
 instance NFData FunctionExp
 instance Cacheable FunctionExp

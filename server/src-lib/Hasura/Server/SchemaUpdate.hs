@@ -208,7 +208,7 @@ refreshSchemaCache
   -> T.Text -> IO ()
 refreshSchemaCache sqlGenCtx pool logger httpManager cacheRef invalidations threadType msg = do
   -- Reload schema cache from catalog
-  -- Schema updates will be run of Postgres master
+  -- Schema updates will be run on Postgres master
   resE <- liftIO $ runExceptT $ withSCUpdate cacheRef logger $ do
     rebuildableCache <- fst <$> liftIO (readIORef $ _scrCache cacheRef)
     ((), cache, _) <- buildSchemaCacheWithOptions CatalogSync invalidations

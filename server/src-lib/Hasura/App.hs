@@ -10,7 +10,7 @@ import           Control.Monad.Trans.Control          (MonadBaseControl (..))
 import           Data.Aeson                           ((.=))
 import           Data.Time.Clock                      (UTCTime, getCurrentTime)
 import           Options.Applicative
-import           System.Environment                   (getEnvironment, lookupEnv, getEnv)
+import           System.Environment                   (getEnvironment, lookupEnv)
 import           System.Exit                          (exitFailure)
 
 import qualified Control.Concurrent                   as C
@@ -19,7 +19,6 @@ import qualified Data.Aeson                           as A
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.ByteString.Lazy.Char8           as BLC
 import qualified Data.Text                            as T
-import qualified Data.Text.Encoding                   as TE
 import qualified Data.Time.Clock                      as Clock
 import qualified Data.Yaml                            as Y
 import qualified Database.PG.Query                    as Q
@@ -32,6 +31,7 @@ import qualified Text.Mustache.Compile                as M
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Events.Lib
+import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
@@ -151,16 +151,10 @@ initialiseCtx hgeCmd rci = do
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
       masterPool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
-      -- TODO create slave Pools as well
-      readReplicaConns <- liftIO getReadReplicaConns
       -- safe init catalog
       initialiseCatalog masterPool (SQLGenCtx soStringifyNum) httpManager logger
 
-      readReplicaPools <- liftIO $ forM readReplicaConns $ \conn -> do
-        let retries = fromMaybe 1 $ connRetries rci
-        Q.initPGPool (Q.ConnInfo retries conn) soConnParams pgLogger
-
-      return (l, PGPools masterPool readReplicaPools )
+      return (l, PGPools masterPool [])
 
     -- for other commands generate a minimal pool
     _ -> do
@@ -176,7 +170,7 @@ initialiseCtx hgeCmd rci = do
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
 
-    -- For the minimal pools, we skip creating read replica pools
+    -- For the minimal pools, it should be Ok to just have master connections pool
     getMinimalPools pgLogger ci = do
       let connParams = Q.defaultConnParams { Q.cpConns = 1 }
       liftIO $ fmap (flip PGPools []) $ Q.initPGPool ci connParams pgLogger
@@ -193,11 +187,6 @@ initialiseCtx hgeCmd rci = do
       let pools = PGPools pool []
       initRes <- runAsAdmin pools sqlGenCtx httpManager PGLMaster $ migrateCatalog currentTime
       either printErrJExit (\(result, schemaCache) -> logger result $> schemaCache) initRes
-
-    getReadReplicaConns = do
-      let csvList = T.splitOn "," . T.pack
-      let toDatabaseURI = Q.CDDatabaseURI . TE.encodeUtf8
-      fmap (map toDatabaseURI . csvList) $ getEnv "HASURA_GRAPHQL_READ_REPLICA_URLS"
 
 runHGEServer
   :: ( HasVersion
@@ -265,6 +254,9 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
   void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
     _icHttpManager masterPool (getSCFromRef cacheRef) eventEngineCtx
+
+  -- start a backgroud thread to handle async actions
+  void $ liftIO $ C.forkIO $ asyncActionsProcessor (_scrCache cacheRef) masterPool _icHttpManager
 
   -- start a background thread to check for updates
   void $ liftIO $ C.forkIO $ checkForUpdates loggerCtx _icHttpManager

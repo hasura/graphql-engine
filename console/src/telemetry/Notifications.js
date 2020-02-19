@@ -1,10 +1,10 @@
 import React from 'react';
 import Notifications from 'react-notification-system-redux';
-import { setNotificationShownInDB } from './Actions';
+import { setTelemetryNotificationShownInDB } from './Actions';
 
 const onRemove = () => {
   return dispatch => {
-    dispatch(setNotificationShownInDB());
+    dispatch(setTelemetryNotificationShownInDB());
   };
 };
 

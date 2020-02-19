@@ -45,7 +45,7 @@ newtype PlanCache
   = PlanCache {_unPlanCache :: Cache.Cache PlanId ReusablePlan}
 
 
--- Query execution location should be present in the plan
+-- Including query execution locations to the reusable plans
 data ReusablePlan
   = RPQuery !EQ.ReusableQueryPlan !PGExecLoc
   | RPSubs !LQ.ReusableLiveQueryPlan !PGExecLoc

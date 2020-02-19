@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Hasura.GraphQL.Transport.WebSocket
@@ -293,7 +293,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   requestId <- getRequestId reqHdrs
   (sc, scVer) <- liftIO getSchemaCache
   execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
-               planCache userInfo sqlGenCtx enableAL sc scVer q
+               planCache userInfo sqlGenCtx enableAL sc scVer httpMgr reqHdrs q
 
   (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx
@@ -307,8 +307,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   where
     telemTransport = Telem.HTTP
     runHasuraGQ :: ExceptT () IO DiffTime
-                -> Telem.CacheHit -> RequestId -> GQLReqUnparsed -> UserInfo -> PGExecLoc -> E.ExecOp
-                -> ExceptT () IO ()
+                -> Telem.CacheHit -> RequestId -> GQLReqUnparsed -> UserInfo -> PGExecLoc
+                -> E.ExecOp -> ExceptT () IO ()
     runHasuraGQ timerTot telemCacheHit reqId query userInfo pgExecLoc = \case
       E.ExOpQuery opTx genSql ->
         execQueryOrMut Telem.Query genSql $ runLazyTx' pgExecCtx pgExecLoc opTx

@@ -184,7 +184,7 @@ onlyText
   :: (MonadError QErr m)
   => PGScalarValue -> m Text
 onlyText = \case
-  PGValText t -> return t
+  PGValText t    -> return t
   PGValVarchar t -> return t
   _           -> throw500 "expecting text for asPGColText"
 

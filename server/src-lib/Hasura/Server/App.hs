@@ -409,7 +409,7 @@ initErrExit :: QErr -> IO a
 initErrExit e = do
   putStrLn $
     "failed to build schema-cache because of inconsistent metadata: "
-    <> T.unpack (qeError e)
+    <> (show e)
   exitFailure
 
 data HasuraApp
@@ -531,10 +531,11 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     -- Health check endpoint
     Spock.get "healthz" $ do
       sc <- getSCFromRef $ scCacheRef serverCtx
-      -- TODO Nizar we may have to check both master and read replicas
-      -- Error if master is not running
-      -- Warn if read replicas are not running
-      dbOk <- checkDbConnection undefined
+      let pools = _pecPools $ scPGExecCtx serverCtx
+      -- TODO: Currently we throw errors if anyone among the master or read replicas are not running.
+      -- This can be changed to warnings if read replica(s) are down, with redirecting database
+      -- queries to healthy read replicas (or the master itself).
+      dbOk <- checkDbConnection pools
       if dbOk
         then Spock.setStatus HTTP.status200 >> (Spock.text $ if null (scInconsistentObjs sc)
                                                  then "OK"
@@ -626,11 +627,12 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     enablePGDump = isPGDumpEnabled serverCtx
     enableConfig = isConfigEnabled serverCtx
 
-    checkDbConnection pgPool = do
+    checkDbConnection (PGPools masterPool readReplicaPools) = do
       -- TODO Check each database separately
-      e <- liftIO $ runExceptT $ Q.runTx' pgPool select1Query
+      e <- liftIO $ runExceptT $ forM allPools $ \pool -> Q.runTx' pgPool select1Query
       pure $ isRight e
       where
+        allPools = masterPools : readReplicaPools
         select1Query :: Q.TxE QErr Int
         select1Query =  runIdentity . Q.getRow <$> Q.withQE defaultTxErrorHandler
                          [Q.sql| SELECT 1 |] () False

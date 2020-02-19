@@ -321,7 +321,8 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
     realToFrac $ Clock.diffUTCTime snapshotFinish procInit
   flip A.mapConcurrently_ queryVarsBatches $ \queryVars -> do
     queryInit <- Clock.getCurrentTime
-    -- TODO: Since we are going to poll anyway, it seems to be ok run subscription queries in the read replicas. We need to verify whether this hypothesis holds.
+    -- TODO: We are going to poll anyway, and the database state in read-replica should eventually be
+    -- in sync with master. So it might be Ok to run the multiplexed queries in the read replicas.
     mxRes <- runExceptT . runLazyTx' pgExecCtx PGLReadReplica $ executeMultiplexedQuery pgQuery queryVars
     queryFinish <- Clock.getCurrentTime
     let dt = Clock.diffUTCTime queryFinish queryInit

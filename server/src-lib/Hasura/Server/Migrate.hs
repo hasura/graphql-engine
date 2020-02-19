@@ -403,6 +403,19 @@ recreateSystemMetadata = do
       , table "hdb_catalog" "hdb_version" []
       , table "hdb_catalog" "hdb_query_collection" []
       , table "hdb_catalog" "hdb_allowlist" []
+      , table "hdb_catalog" "hdb_custom_types" []
+      , table "hdb_catalog" "hdb_action_permission" []
+      , table "hdb_catalog" "hdb_action"
+        [ arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_action_permission"
+          [("action_name", "action_name")]
+        ]
+      , table "hdb_catalog" "hdb_action_log" []
+      , table "hdb_catalog" "hdb_role"
+        [ arrayRel $$(nonEmptyText "action_permissions") $ manualConfig "hdb_catalog" "hdb_action_permission"
+          [("role_name", "role_name")]
+        , arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_permission_agg"
+          [("role_name", "role_name")]
+        ]
       ]
 
     tableNameMapping =

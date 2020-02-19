@@ -2,14 +2,16 @@
 
 import pytest
 from validate import check_query_f
-from super_classes import DefaultTestSelectQueries
 from context import PytestConf
+
+usefixtures = pytest.mark.usefixtures
 
 if not PytestConf.config.getoption("--test-allowlist-queries"):
     pytest.skip("flag --test-allowlist-queries is not set. Cannot runt tests for allowlist queries", allow_module_level=True)
 
 @pytest.mark.parametrize("transport", ['http','websocket'])
-class TestAllowlistQueries(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestAllowlistQueries:
 
     def test_query_user(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/query_user.yaml', transport)

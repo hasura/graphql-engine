@@ -27,8 +27,10 @@ import           Control.Monad.Validate
 
 import qualified Data.Aeson.Extended          as J
 import qualified Database.PG.Query            as Q
-import qualified  Test.QuickCheck as QC
 import qualified Database.PG.Query.Connection as Q
+-- Quick check has convenient APIs to randomly select an element from List.
+-- We are anyway including QuickCheck as a dependency for graphql-engine
+import qualified Test.QuickCheck              as QC
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
@@ -51,7 +53,7 @@ data PGPools
 
 data PGExecCtx
   = PGExecCtx
-  { _pecPool        :: !PGPools
+  { _pecPools       :: !PGPools
   , _pecTxIsolation :: !Q.TxIsolation
   }
 
@@ -86,17 +88,18 @@ lazyTxToQTx = \case
   LTNoTx r -> return r
   LTTx tx  -> tx
 
-
-
--- Transactions in read replicas should have read only access
+-- Select the PGPool based on where the query should be executed
 choosePGPool :: Q.TxMode -> PGPools -> PGExecLoc -> IO (Q.TxMode, Q.PGPool)
 choosePGPool txMode pgPools = \case
   PGLMaster -> fmap (txMode,) masterPool
+  -- Default to master pool itself if slavePools is an empty list
   PGLReadReplica -> fmap (readReplicaTxMode,) $ bool slavePool masterPool $ null $
     _pgpReadReplicas pgPools
   where
+    -- Transactions in read-replicas should have only read access
     readReplicaTxMode = (Q.RepeatableRead, Just Q.ReadOnly)
     masterPool = return $ _pgpMaster pgPools
+    -- Randomly select a slave pool from the list of pools
     slavePool = randItem $ _pgpReadReplicas pgPools
     randItem = QC.generate . QC.elements
 
@@ -120,8 +123,9 @@ runLazyTx (PGExecCtx pgPools txIso) txAccess txLoc = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
   LTTx tx  -> do
-    (txMode, pgPool) <- liftIO $ choosePGPool (txIso, Just txAccess) pgPools txLoc
+    (txMode, pgPool) <- liftIO $ choosePGPool masterTxMode pgPools txLoc
     ExceptT <$> liftIO $ runExceptT $ Q.runTx pgPool txMode tx
+    where masterTxMode = (txIso, Just txAccess)
 
 runLazyTx'
   :: MonadIO m => PGExecCtx -> PGExecLoc -> LazyTx QErr a -> ExceptT QErr m a

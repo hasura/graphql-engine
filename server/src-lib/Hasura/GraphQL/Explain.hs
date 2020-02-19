@@ -133,5 +133,7 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
-    -- TODO It might be OK to run explain queries on the master
-    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly PGLMaster
+    -- TODO In future, when we start supporting EXPLAIN for mutations, ensure that it is executed in master
+    -- Right now explain can be done only with queries and subscriptions.
+    -- So it should be fine to run EXPLAIN queries on read-replicas
+    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly PGLReadReplica

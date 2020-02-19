@@ -1,0 +1,15 @@
+type: bulk
+args:
+- type: drop_action # also drops the permissions
+  args:
+    name: create_user
+    clear_data: true
+# clear custom types
+- type: set_custom_types
+  args: {}
+
+- type: run_sql
+  args:
+    cascade: true
+    sql: |
+      DROP TABLE "user";

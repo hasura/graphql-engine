@@ -20,8 +20,8 @@ module Hasura.GraphQL.Schema.Common
   , mkTableAggTy
 
   , mkColumnEnumVal
+  , mkColumnInputVal
   , mkDescriptionWith
-  , mkDescription
 
   , mkFuncArgsTy
   ) where
@@ -101,6 +101,11 @@ mkTableAggTy = addTypeSuffix "_aggregate" . mkTableTy
 mkColumnEnumVal :: G.Name -> EnumValInfo
 mkColumnEnumVal colName =
   EnumValInfo (Just "column name") (G.EnumValue colName) False
+
+mkColumnInputVal :: PGColumnInfo -> InpValInfo
+mkColumnInputVal ci =
+  InpValInfo (mkDescription <$> pgiDescription ci) (pgiName ci)
+  Nothing $ G.toGT $ G.toNT $ mkColumnType $ pgiType ci
 
 mkDescriptionWith :: Maybe PGDescription -> Text -> G.Description
 mkDescriptionWith descM defaultTxt = G.Description $ case descM of

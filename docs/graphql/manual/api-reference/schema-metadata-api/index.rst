@@ -296,6 +296,11 @@ The various types of queries are listed in the following table:
      - 1
      - Drop a collection from the allow-list
 
+   * - :ref:`set_custom_types`
+     - :ref:`set_custom_types_args <set_custom_types_syntax>`
+     - 1
+     - Set custom GraphQL types
+
 **See:**
 
 - :doc:`Run SQL <run-sql>`
@@ -307,6 +312,7 @@ The various types of queries are listed in the following table:
 - :doc:`Event Triggers <event-triggers>`
 - :doc:`Remote Schemas <remote-schemas>`
 - :doc:`Query Collections <query-collections>`
+- :doc:`Custom Types <custom-types>`
 - :doc:`Manage Metadata <manage-metadata>`
 
 Response structure
@@ -391,5 +397,6 @@ See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting t
   Event Triggers <event-triggers>
   Remote Schemas <remote-schemas>
   Query Collections <query-collections>
+  Custom Types <custom-types>
   Manage Metadata <manage-metadata>
   Common syntax definitions <syntax-defs>

@@ -41,7 +41,7 @@ runApp (HGEOptionsG rci hgeCmd) =
       (InitCtx{..}, _) <- initialiseCtx hgeCmd rci
       queryBs <- liftIO BL.getContents
       let sqlGenCtx = SQLGenCtx False
-      -- These operations should be run on Postgres master
+      -- Schema cache operations should be run on Postgres master
       res <- runAsAdmin _icPgPools sqlGenCtx _icHttpManager PGLMaster do
         schemaCache <- buildRebuildableSchemaCache
         execQuery queryBs
@@ -59,7 +59,7 @@ runApp (HGEOptionsG rci hgeCmd) =
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where
-    -- The operations here should be executed in Postgres master
+    -- runTx' is used to do metadata operations, which should be executed on master
     runTx' initCtx tx =
       liftIO $ runExceptT $ Q.runTx (_pgpMaster $ _icPgPools initCtx) (Q.Serializable, Nothing) tx
 
