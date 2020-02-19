@@ -658,6 +658,12 @@ class Main extends React.Component {
                   getSchemaBaseRoute(currentSchema)
                 )}
                 {getSidebarItem(
+                  'Actions',
+                  'fa-cogs',
+                  tooltips.actions,
+                  '/actions/manage/actions'
+                )}
+                {getSidebarItem(
                   'Remote Schemas',
                   'fa-plug',
                   tooltips.remoteSchema,
