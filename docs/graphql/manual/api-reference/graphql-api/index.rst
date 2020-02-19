@@ -88,3 +88,4 @@ query operations in one request:
 
   Query / Subscription <query>
   Mutation <mutation>
+  Batching operations <batching>
