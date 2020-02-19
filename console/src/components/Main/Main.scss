@@ -1307,3 +1307,46 @@
     }
   }
 }
+
+@media(max-width: 1500px) {
+
+  .header_items {
+    width: 52%;
+  }
+  .iconCenter {
+    i {
+      font-size: 12px;
+      width: 18px;
+    }
+  }
+
+  .sidebar {
+    .sidebarItems {
+      li {
+        p {
+          font-size: 12px;
+        }
+        a {
+          margin-left: 10px;
+        }
+      }
+    }
+  }
+
+  .helpSection {
+    font-size: 12px;    
+  }
+
+  .proWrapper{
+    .proName, .proNameClicked {
+      font-size: 12px
+    }
+  }
+
+  .secureSection {
+    a {
+      font-size: 12px;
+    }
+  }
+
+}
