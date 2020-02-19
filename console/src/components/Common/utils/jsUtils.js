@@ -256,3 +256,14 @@ export const getUrlSearchParamValue = param => {
   const urlSearchParams = new URLSearchParams(window.location.search);
   return urlSearchParams.get(param);
 };
+
+export const getLastArrayElement = array => {
+  if (!array) return null;
+  if (!array.length) return null;
+  return array[array.length - 1];
+};
+
+export const getFirstArrayElement = array => {
+  if (!array) return null;
+  return array[0];
+};

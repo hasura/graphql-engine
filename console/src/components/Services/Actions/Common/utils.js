@@ -7,6 +7,7 @@ import {
   wrapTypename,
   unwrapType,
 } from '../../../../shared/utils/wrappingTypeUtils';
+import { inbuiltTypes } from '../../../../shared/utils/hasuraCustomTypeUtils';
 import {
   isInputObjectType,
   isEnumType,
@@ -14,7 +15,6 @@ import {
   isObjectType,
 } from 'graphql';
 
-import { gqlInbuiltTypes } from './stateDefaults';
 import { getActionArguments, getActionOutputType, findType } from '../utils';
 import {
   getConfirmation,
@@ -23,7 +23,7 @@ import {
 import { transformHeaders } from '../../../Common/Headers/utils';
 
 export const isInbuiltType = typename => {
-  return !!gqlInbuiltTypes.find(t => t.name === typename);
+  return !!inbuiltTypes[typename];
 };
 
 export const generateActionDefinition = ({

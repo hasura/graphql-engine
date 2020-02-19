@@ -1,10 +1,11 @@
 import React from 'react';
 import styles from './Styles.scss';
-import Tooltip from './Tooltip';
+import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
+import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
 const editorLabel = 'Kind';
-const editorTooltip = 'Synchronous or Asynchronous';
-// Tooltip todo
+const docsRef =
+  'https://docs.hasura.io/1.0/graphql/manual/actions/async-actions.html';
 
 const HandlerEditor = ({ value, onChange, className }) => {
   const setAsynchronous = () => {
@@ -16,16 +17,15 @@ const HandlerEditor = ({ value, onChange, className }) => {
   };
 
   return (
-    <div className={`${className || ''}`}>
+    <div className={className || ''}>
       <h2
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
         {editorLabel}
-        <Tooltip
-          id="action-name"
-          text={editorTooltip}
-          className={styles.add_mar_left_mid}
+        <ToolTip
+          message={'Toggle between synchronous vs asynchronous action types'}
         />
+        <KnowMoreLink href={docsRef} />
       </h2>
       <div className={styles.display_flex}>
         <label
@@ -35,7 +35,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
           <input
             type="radio"
             checked={value === 'synchronous'}
-            className={`${styles.add_mar_right_small}`}
+            className={styles.add_mar_right_small}
           />
           Synchronous
         </label>
@@ -46,7 +46,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
           <input
             type="radio"
             checked={value === 'asynchronous'}
-            className={`${styles.add_mar_right_small}`}
+            className={styles.add_mar_right_small}
           />
           Asynchronous
         </label>

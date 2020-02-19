@@ -19,6 +19,10 @@ import {
   getDropActionPermissionQuery,
   getUpdateActionQuery,
 } from '../../Common/utils/v1QueryUtils';
+import {
+  injectTypeRelationship,
+  removeTypeRelationship,
+} from './Relationships/utils';
 import { getConfirmation } from '../../Common/utils/jsUtils';
 import {
   generateActionDefinition,
@@ -109,6 +113,7 @@ export const createAction = () => (dispatch, getState) => {
     arguments: args,
     outputType,
     error: actionDefError,
+    comment: actionDescription,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
   if (actionDefError) {
     return dispatch(
@@ -134,6 +139,7 @@ export const createAction = () => (dispatch, getState) => {
     outputType,
     headers: rawState.headers,
     forwardClientHeaders: rawState.forwardClientHeaders,
+    comment: actionDescription,
   };
 
   const validationError = getStateValidationError(state, existingTypesList);
@@ -173,7 +179,8 @@ export const createAction = () => (dispatch, getState) => {
 
   const actionQueryUp = generateCreateActionQuery(
     state.name,
-    generateActionDefinition(state)
+    generateActionDefinition(state),
+    actionDescription
   );
 
   const actionQueryDown = generateDropActionQuery(state.name);
@@ -220,7 +227,9 @@ export const saveAction = currentAction => (dispatch, getState) => {
     arguments: args,
     outputType,
     error: actionDefError,
+    comment: actionDescription,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
+
   if (actionDefError) {
     return dispatch(
       showErrorNotification('Invalid Action Definition', actionDefError)
@@ -245,6 +254,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     outputType,
     headers: rawState.headers,
     forwardClientHeaders: rawState.forwardClientHeaders,
+    comment: actionDescription,
   };
 
   const validationError = getStateValidationError(state);
@@ -279,22 +289,26 @@ export const saveAction = currentAction => (dispatch, getState) => {
 
   const updateCurrentActionQuery = getUpdateActionQuery(
     generateActionDefinition(state),
-    currentAction.action_name
+    currentAction.action_name,
+    actionDescription
   );
   const rollbackActionQuery = getUpdateActionQuery(
     currentAction.action_defn,
-    currentAction.action_name
+    currentAction.action_name,
+    currentAction.comment
   );
 
   const createNewActionQuery = generateCreateActionQuery(
     state.name,
-    generateActionDefinition(state)
+    generateActionDefinition(state),
+    actionDescription
   );
 
   const actionQueryDown = generateDropActionQuery(state.name);
   const oldActionQueryUp = generateCreateActionQuery(
     currentAction.action_name,
-    currentAction.action_defn
+    currentAction.action_defn,
+    currentAction.comment
   );
 
   let upQueries;
@@ -315,9 +329,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     downQueries = [actionQueryDown, customFieldsQueryDown, oldActionQueryUp];
   }
 
-  const migrationName = `modify_action_${currentAction.action_name}_to_${
-    state.name
-  }`;
+  const migrationName = `modify_action_${currentAction.action_name}_to_${state.name}`;
   const requestMsg = 'Saving action...';
   const successMsg = 'Action saved successfully';
   const errorMsg = 'Saving action failed';
@@ -353,9 +365,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
 };
 
 export const deleteAction = currentAction => (dispatch, getState) => {
-  const confirmMessage = `This will permanently delete the action "${
-    currentAction.action_name
-  }" from this table`;
+  const confirmMessage = `This will permanently delete the action "${currentAction.action_name}" from this table`;
   const isOk = getConfirmation(confirmMessage, true, currentAction.action_name);
   if (!isOk) {
     return;
@@ -363,7 +373,8 @@ export const deleteAction = currentAction => (dispatch, getState) => {
   const upQuery = generateDropActionQuery(currentAction.action_name);
   const downQuery = generateCreateActionQuery(
     currentAction.action_name,
-    currentAction.action_defn
+    currentAction.action_defn,
+    currentAction.comment
   );
 
   const migrationName = `delete_action_${currentAction.action_name}`;
@@ -395,12 +406,17 @@ export const deleteAction = currentAction => (dispatch, getState) => {
   );
 };
 
-export const addActionRel = (objectType, successCb) => (dispatch, getState) => {
-  const { types } = getState().actions.relationships;
+export const addActionRel = (relConfig, successCb) => (dispatch, getState) => {
   const { types: existingTypes } = getState().types;
 
+  const typesWithRels = injectTypeRelationship(
+    existingTypes,
+    relConfig.typename,
+    relConfig
+  );
+
   const customTypesQueryUp = generateSetCustomTypesQuery(
-    reformCustomTypes(types)
+    reformCustomTypes(typesWithRels)
   );
 
   const customTypesQueryDown = generateSetCustomTypesQuery(
@@ -417,8 +433,71 @@ export const addActionRel = (objectType, successCb) => (dispatch, getState) => {
   const customOnSuccess = () => {
     // dispatch(createActionRequestComplete());
     dispatch(fetchCustomTypes());
-    successCb();
+    if (successCb) {
+      successCb();
+    }
   };
+
+  const customOnError = () => {
+    // dispatch(createActionRequestComplete());
+  };
+  // dispatch(createActionRequestInProgress());
+  makeMigrationCall(
+    dispatch,
+    getState,
+    upQueries,
+    downQueries,
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
+};
+
+export const removeActionRel = (relName, typename, successCb) => (
+  dispatch,
+  getState
+) => {
+  const confirmation = getConfirmation(
+    `This will remove the relationship "${relName}" from type "${typename}". This will affect all the actions that use the type "${typename}"`
+  );
+  if (!confirmation) {
+    return;
+  }
+
+  const { types: existingTypes } = getState().types;
+
+  const typesWithoutRel = removeTypeRelationship(
+    existingTypes,
+    typename,
+    relName
+  );
+
+  const customTypesQueryUp = generateSetCustomTypesQuery(
+    reformCustomTypes(typesWithoutRel)
+  );
+
+  const customTypesQueryDown = generateSetCustomTypesQuery(
+    reformCustomTypes(existingTypes)
+  );
+
+  const upQueries = [customTypesQueryUp];
+  const downQueries = [customTypesQueryDown];
+
+  const migrationName = 'remove_action_rel'; // TODO: better migration name
+  const requestMsg = 'Removing relationship...';
+  const successMsg = 'Relationship removed successfully';
+  const errorMsg = 'Removing relationship failed';
+  const customOnSuccess = () => {
+    // dispatch(createActionRequestComplete());
+    dispatch(fetchCustomTypes());
+    if (successCb) {
+      successCb();
+    }
+  };
+
   const customOnError = () => {
     // dispatch(createActionRequestComplete());
   };

@@ -60,14 +60,12 @@ const CodeTabs = ({
     };
 
     const editorProps = {
-      width: '700px',
+      width: '600px',
       value: content.trim(),
       readOnly: true,
     };
 
     switch (getFileExtensionFromFilename(name)) {
-      case 'js':
-        return getFileTab(<JSEditor {...editorProps} />, name);
       case 'ts':
         return getFileTab(<TSEditor {...editorProps} />, name);
       default:
@@ -75,7 +73,7 @@ const CodeTabs = ({
     }
   });
 
-  return <Tabs id="uncontrolled-tab-example">{files}</Tabs>;
+  return <Tabs id="uncontrolled-tab-example">{files} </Tabs>;
 };
 
 export default CodeTabs;

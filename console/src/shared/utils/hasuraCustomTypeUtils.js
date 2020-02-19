@@ -5,6 +5,7 @@ export const inbuiltTypes = {
   Boolean: true,
   String: true,
   Float: true,
+  ID: true,
 };
 
 const singularize = kind => {

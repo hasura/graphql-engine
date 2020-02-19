@@ -7,14 +7,12 @@ import {
 } from './hasuraCustomTypeUtils';
 
 const getAstEntityDescription = def => {
-  return def.description ? def.description.value.replace('", "') : undefined;
+  return def.description ? def.description.value.trim() : null;
 };
 
 const getEntityDescriptionSdl = def => {
   let entityDescription = def.description;
-  entityDescription = entityDescription
-    ? `"""${entityDescription.replace('", "')}""" `
-    : '';
+  entityDescription = entityDescription ? `""" ${entityDescription} """ ` : '';
   return entityDescription;
 };
 
@@ -125,6 +123,7 @@ const getActionFromMutationAstDef = astDef => {
     name: '',
     arguments: [],
     outputType: '',
+    comment: getAstEntityDescription(astDef),
     error: null,
   };
 
@@ -152,6 +151,7 @@ export const getActionDefinitionFromSdl = sdl => {
     name: '',
     arguments: [],
     outputType: '',
+    comment: '',
     error: null,
   };
   if (schemaAst.definitions.length > 1) {
@@ -250,7 +250,7 @@ export const getTypesSdl = _types => {
   return sdl;
 };
 
-export const getActionDefinitionSdl = (name, args, outputType) => {
+export const getActionDefinitionSdl = (name, args, outputType, description) => {
   return getObjectTypeSdl({
     name: 'Mutation',
     fields: [
@@ -258,6 +258,7 @@ export const getActionDefinitionSdl = (name, args, outputType) => {
         name,
         arguments: args,
         type: outputType,
+        description,
       },
     ],
   });
@@ -308,7 +309,8 @@ export const getSdlComplete = (allActions, allTypes) => {
     sdl += `extend ${getActionDefinitionSdl(
       a.action_name,
       a.action_defn.arguments,
-      a.action_defn.output_type
+      a.action_defn.output_type,
+      a.comment
     )}`;
   });
 

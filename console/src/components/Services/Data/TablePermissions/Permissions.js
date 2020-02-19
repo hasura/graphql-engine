@@ -763,6 +763,7 @@ class Permissions extends Component {
                   allTableSchemas={allSchemas}
                   schemaList={schemaList}
                   filter={filterString}
+                  dispatch={dispatch}
                   key={-4}
                 />
               );
@@ -1679,7 +1680,6 @@ class Permissions extends Component {
             );
             return;
           }
-
           dispatch(permChangePermissions(permChangeTypes.save));
         };
 

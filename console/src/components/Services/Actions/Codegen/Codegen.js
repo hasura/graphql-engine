@@ -1,4 +1,5 @@
 import React from 'react';
+import Helmet from 'react-helmet';
 import { getSdlComplete } from '../../../../shared/utils/sdlUtils';
 import {
   getAllCodegenFrameworks,
@@ -107,7 +108,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
           rel="noopener noreferrer"
         >
           <Button color="white" className={`${styles.add_mar_right_mid}`}>
-            Get boilerplate
+            Get starter kit
           </Button>
         </a>
       );
@@ -133,7 +134,10 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   };
 
   return (
-    <div>
+    <div style={{ width: '600px' }}>
+      <Helmet
+        title={`Codegen - ${currentAction.action_name} - Actions | Hasura`}
+      />
       {getFrameworkActions()}
       <div className={`${styles.add_mar_bottom}`}>
         <CodeTabs

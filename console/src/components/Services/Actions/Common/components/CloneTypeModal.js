@@ -46,11 +46,7 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
   const onSelection = e => {
     const selectedType = e.target.value;
     if (selectedType === '') return;
-    const newTypes = deriveExistingType(
-      selectedType,
-      schema._typeMap,
-      prefix
-    );
+    const newTypes = deriveExistingType(selectedType, schema._typeMap, prefix);
     handleClonedTypes(newTypes);
     toggleModal();
   };

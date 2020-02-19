@@ -24,13 +24,17 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
           <input
             type="checkbox"
             checked={shouldDerive}
-            readOnly
             className={`${styles.cursorPointer} ${styles.add_mar_right_mid}`}
           />
           Generate code with delegation to the derived mutation
         </label>
       </div>
-      <GraphQLEditor value={parentMutation} readOnly />
+      <GraphQLEditor
+        value={parentMutation}
+        width={'600px'}
+        height={'200px'}
+        readOnly
+      />
     </div>
   );
 };

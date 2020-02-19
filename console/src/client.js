@@ -113,7 +113,7 @@ if (__DEVELOPMENT__) {
     applyMiddleware(
       thunk,
       routerMiddleware(browserHistory),
-      createLogger({ diff: false, duration: true }),
+      createLogger({ diff: true, duration: true }),
       analyticsLogger
     ),
     require('redux-devtools').persistState(

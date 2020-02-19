@@ -3,12 +3,11 @@ import styles from './Styles.scss';
 import Tooltip from './Tooltip';
 
 const editorLabel = 'Handler';
-const editorTooltip =
-  'Set a handler. This handler will be called with mutation payload. This could be an HTTP endpoint or a template using an environment variable.';
+const editorTooltip = 'The HTTP handler for the action';
 
-const HandlerEditor = ({ value, onChange, className, placeholder }) => {
+const HandlerEditor = ({ value, onChange, className }) => {
   return (
-    <div className={`${className || ''}`}>
+    <div className={className || ''}>
       <h2
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
@@ -23,8 +22,8 @@ const HandlerEditor = ({ value, onChange, className, placeholder }) => {
         type="text"
         value={value}
         onChange={onChange}
-        placeholder={placeholder}
-        className={`form-control ${styles.inputWidth}`}
+        placeholder={'http://custom-logic.com/api'}
+        className={`form-control ${styles.inputWidthLarge}`}
       />
     </div>
   );

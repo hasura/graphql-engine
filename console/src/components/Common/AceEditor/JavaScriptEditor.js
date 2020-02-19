@@ -1,7 +1,7 @@
 import React from 'react';
 import BaseEditor from './BaseEditor';
 
-const JSEditor = ({ ...props }) => {
+const JSEditor = props => {
   return <BaseEditor {...props} mode="javascript" />;
 };
 
