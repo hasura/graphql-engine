@@ -16,11 +16,11 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
 
 ------------------
 
-![Hasura GraphQL Engine Demo](assets/demo.gif)
+![Hasura GraphQL Engine Demo](../assets/demo.gif)
 
 ------------------
 
-![Hasura GraphQL Engine Gerçek Zamanlı Demo](assets/realtime.gif)
+![Hasura GraphQL Engine Gerçek Zamanlı Demo](../assets/realtime.gif)
 
 -------------------
 
@@ -28,8 +28,8 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
 
 * **Güçlü sorgular yapın**: Dahili filtreleme, sayfalandırma, model arama, yığın ekleme, güncelleme, mutasyonları silme
 * **Gerçek zamanlı**: Abonelikleri kullanarak herhangi bir GraphQL sorgusunu canlı sorguya dönüştürme
-* **Uzaktan şemaları birleştirme**: Tek bir GraphQL Engine uç noktası üzerinden iş mantığı için özel GraphQL şemalarına erişin.[**Daha fazlası**](remote-schemas.md).
-* **Webhooks ve sunucusuz işlevleri tetikleme**: On Postgres insert/update/delete events ([daha fazlası](event-triggers.md))
+* **Uzaktan şemaları birleştirme**: Tek bir GraphQL Engine uç noktası üzerinden iş mantığı için özel GraphQL şemalarına erişin.[**Daha fazla**](remote-schemas.md).
+* **Webhooks ve sunucusuz işlevleri tetikleme**: On Postgres insert/update/delete events ([daha fazla](event-triggers.md))
 * **Mevcut, canlı veritabanlarıyla çalışır**: Kullanıma hazır bir GraphQL API'si almak için mevcut bir Postgres veritabanına yönlendirin
 * **Hasas erişim kontrolü**: Kimlik doğrulama sisteminizle birleşen dinamik erişim kontrolü (örn: auth0, firebase-auth)
 * **Yüksek performans ve az yer kaplama**: ~15mb docker image; ~50MB RAM @ 1000 req/s; multi-core aware
@@ -51,7 +51,7 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
     - [Uzak şemalar](#remote-schemas)
     - [Veritabanı olaylarındaki webhooks tetikleme](#trigger-webhooks-on-database-events)
 - [Demolar](#demos)
-    - [Gerçek uygulamalar](#realtime-applications)
+    - [Gerçek zamanlı uygulamalar](#realtime-applications)
     - [Videolar](#videos)
 - [Destek ve sorun giderme](#support--troubleshooting)
 - [Katkı](#contributing)
@@ -106,60 +106,56 @@ Ayrıca uzaktan GraphQL şemalarını birleştirebilir ve birleşik GraphQL API'
 
 Hasura herhangi bir GraphQL istemcisi ile çalışır. [Apollo Client](https://github.com/apollographql/apollo-client) kullanmanızı öneririz. İstemci bir listesi için [awesome-graphql](https://github.com/chentsulin/awesome-graphql) adresine bakınız.
 
-## Add business logic
+## İş mantığı ekleme
 
-GraphQL Engine provides easy-to-reason, scalable and performant methods for adding custom business logic to your backend:
+GraphQL Engine, backend'inize özel iş mantığı eklemek için kolay anlaşılır, ölçeklenebilir ve performans yöntemleri sunar: 
 
-### Remote schemas
+### Uzak Şemalar
 
-Add custom resolvers in a remote schema in addition to Hasura's Postgres-based GraphQL schema. Ideal for use-cases like implementing a payment API, or querying data that is not in your database - [read more](remote-schemas.md).
+Hasura'nın Postgres tabanlı GraphQL şemasına ek olarak uzak bir şemada özel çözümleyiciler ekleyin. Bir ödeme API'sini uygulamak veya veritabanımızda bulunan verileri sorgulamak gibi kullanım durumları için idealdir. - [daha fazla](remote-schemas.md).
 
-### Trigger webhooks on database events
+### Veritabanı olaylarındaki webhooks tetikleme
 
-Add asynchronous business logic that is triggered based on database events.
-Ideal for notifications, data-pipelines from Postgres or asynchronous
-processing - [read more](event-triggers.md).
+Veritabanı olaylarına göre tetiklenen eşzamansız iş mantığını ekleyin.
+Bildirimler, Postgres veri  hatları veya asenkron işleme için idealdir - [daha fazla](event-triggers.md).
 
-### Derived data or data transformations
+### Türetilmiş veri veya veri dönüşümleri
 
-Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [read more](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+Postgres'te verileri dönüştürün veya GraphQL Engine kullanılarak ssorgulanabilecek başka bir veri kümesi türetmek için iş mantığı çalıştırın. - [daha fazla](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
 
-## Demos
+## Demolar
 
-Check out all the example applications in the
+Tüm örnek uygulamaları kontrol edin.
 
-[community/sample-apps](community/sample-apps) directory.
+[community/sample-apps](community/sample-apps) dizini.
 
 
-### Realtime applications
+### Gerçek zamanlı uygulamalar
 
-- Group Chat application built with React, includes a typing indicator, online users & new
-  message notifications.
-  - [Try it out](https://realtime-chat.demo.hasura.app/)
+- React ile oluşturulan grup shohbet uygulaması, bir yazma belirteci içerir, çevrimiçi kullanıcılar ve yeni mesaj bildirimleri.
+  - [Deneyin](https://realtime-chat.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-chat)
-  - [Browse APIs](https://realtime-chat.demo.hasura.app/console)
+  - [APİ'lere göz atın](https://realtime-chat.demo.hasura.app/console)
 
-- Live location tracking app that shows a running vehicle changing current GPS
-  coordinates moving on a map.
-  - [Try it out](https://realtime-location-tracking.demo.hasura.app/)
+- Bir harita üzerinde hareket eden mevcut GPS koordinatlarını değiştiren, çalışan bir aracı gösteren canlı konum izleme uygulaması.
+  - [Deneyin](https://realtime-location-tracking.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-location-tracking)
-  - [Browse APIs](https://realtime-location-tracking.demo.hasura.app/console)
+  - [APİ'lere göz ayın](https://realtime-location-tracking.demo.hasura.app/console)
 
-- A realtime dashboard for data aggregations on continuously changing data.
-  - [Try it out](https://realtime-poll.demo.hasura.app/)
+- Sürekli değişen veriler üzerinde veri toplama için gerçek zamanlı bir kontrol paneli.
+  - [Deneyin](https://realtime-poll.demo.hasura.app/)
   - [Tutorial](community/sample-apps/realtime-poll)
-  - [Browse APIs](https://realtime-poll.demo.hasura.app/console)
+  - [APİ'lere göz atın](https://realtime-poll.demo.hasura.app/console)
 
-### Videos
+### Videolar
 
-* [Add GraphQL to a self-hosted GitLab instance](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
-* [Todo app with Auth0 and GraphQL backend](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 mins*)
-* [GraphQL on GitLab integrated with GitLab auth](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 mins*)
-* [Dashboard for 10million rides with geo-location (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
+* [Kendi kendine barındırılan bir GitLab örneğine GraphQL ekleme](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
+* [Auth0 ve GraphQL backend'iyle todo uygulaması](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 mins*)
+* [GitLab auth ile entegre edilmiş GitLab üzerinde GraphQL](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 mins*)
+* [Coğrafi konumlu 10 milyon sürüş için gösterge tablosu (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
 
 
-## Support & Troubleshooting
-
+## Destek ve sorun giderme
 The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
 
 * Support & feedback: [Discord](https://discord.gg/vBPpJkS)
