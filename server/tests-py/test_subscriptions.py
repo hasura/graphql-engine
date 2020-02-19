@@ -5,7 +5,11 @@ import json
 import queue
 import ruamel.yaml as yaml
 
-from super_classes import GraphQLEngineTest
+usefixtures = pytest.mark.usefixtures
+
+@pytest.fixture(scope='class')
+def ws_conn_init(hge_ctx, ws_client):
+        init_ws_conn(hge_ctx, ws_client)
 
 '''
     Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
@@ -28,11 +32,6 @@ def init_ws_conn(hge_ctx, ws_client, payload = None):
     ws_client.send(init_msg)
     ev = ws_client.get_ws_event(3)
     assert ev['type'] == 'connection_ack', ev
-
-class DefaultTestSubscriptions(GraphQLEngineTest):
-    @pytest.fixture(scope='class', autouse=True)
-    def ws_conn_init(self, transact, hge_ctx, ws_client):
-        init_ws_conn(hge_ctx, ws_client)
 
 class TestSubscriptionCtrl(object):
 
@@ -66,7 +65,8 @@ class TestSubscriptionCtrl(object):
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-class TestSubscriptionBasic(DefaultTestSubscriptions):
+@usefixtures('per_method_tests_db_state', 'ws_conn_init')
+class TestSubscriptionBasic:
     @classmethod
     def dir(cls):
         return 'queries/subscriptions/basic'
@@ -168,7 +168,9 @@ class TestSubscriptionBasic(DefaultTestSubscriptions):
         assert ev['type'] == 'complete' and ev['id'] == '2', ev
 
 
-class TestSubscriptionLiveQueries(DefaultTestSubscriptions):
+@usefixtures('per_method_tests_db_state','ws_conn_init')
+class TestSubscriptionLiveQueries:
+
     @classmethod
     def dir(cls):
         return 'queries/subscriptions/live_queries'
@@ -248,7 +250,9 @@ class TestSubscriptionLiveQueries(DefaultTestSubscriptions):
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-class TestSubscriptionMultiplexing(GraphQLEngineTest):
+@usefixtures('per_method_tests_db_state')
+class TestSubscriptionMultiplexing:
+
     @classmethod
     def dir(cls):
         return 'queries/subscriptions/multiplexing'

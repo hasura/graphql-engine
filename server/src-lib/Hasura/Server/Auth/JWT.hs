@@ -252,7 +252,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
   hasuraClaims <- parseObjectFromString claimsFmt hasuraClaimsV
 
   -- filter only x-hasura claims and convert to lower-case
-  let claimsMap = Map.filterWithKey (\k _ -> T.isPrefixOf "x-hasura-" k)
+  let claimsMap = Map.filterWithKey (\k _ -> isUserVar k)
                 $ Map.fromList $ map (first T.toLower)
                 $ Map.toList hasuraClaims
 

@@ -20,11 +20,16 @@ import globals from './Globals';
 import Endpoints from './Endpoints';
 import { filterEventsBlockList, sanitiseUrl } from './telemetryFilter';
 
-const analyticsUrl = Endpoints.telemetryServer;
+/** telemetry **/
 let analyticsConnection;
+
+const analyticsUrl = Endpoints.telemetryServer;
+
 const { consoleMode, enableTelemetry, cliUUID } = window.__env;
+
 const telemetryEnabled =
   enableTelemetry !== undefined && enableTelemetry === true;
+
 if (telemetryEnabled) {
   try {
     analyticsConnection = new WebSocket(analyticsUrl);
@@ -96,6 +101,8 @@ function analyticsLogger({ getState }) {
     return returnValue;
   };
 }
+
+/** telemetry: end **/
 
 // Create the store
 let _finalCreateStore;

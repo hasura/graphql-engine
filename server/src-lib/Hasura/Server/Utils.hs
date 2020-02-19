@@ -159,6 +159,19 @@ commonResponseHeadersIgnored =
   , "Content-Type", "Content-Length"
   ]
 
+isUserVar :: Text -> Bool
+isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
+
+mkClientHeadersForward :: [HTTP.Header] -> [HTTP.Header]
+mkClientHeadersForward reqHeaders =
+  xForwardedHeaders <> (filterUserVars . filterRequestHeaders) reqHeaders
+  where
+    filterUserVars = filter (\(k, _) -> not $ isUserVar $ bsToTxt $ CI.original k)
+    xForwardedHeaders = flip mapMaybe reqHeaders $ \(hdrName, hdrValue) ->
+      case hdrName of
+        "Host"       -> Just ("X-Forwarded-Host", hdrValue)
+        "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
+        _            -> Nothing
 
 filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
 filterRequestHeaders =

@@ -33,11 +33,11 @@ data AnnUpdG v
   { uqp1Table   :: !QualifiedTable
   , uqp1SetExps :: ![(PGCol, v)]
   , uqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
+  , upq1Check   :: !(AnnBoolExp v)
   -- we don't prepare the arguments for returning
   -- however the session variable can still be
   -- converted as desired
-  , upq1Check   :: !(AnnBoolExp v)
-  , uqp1MutFlds :: !(MutFldsG v)
+  , uqp1Output  :: !(MutationOutputG v)
   , uqp1AllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
@@ -51,10 +51,10 @@ traverseAnnUpd f annUpd =
   <$> traverse (traverse f) setExps
   <*> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
   <*> traverseAnnBoolExp f chk
-  <*> traverseMutFlds f mutFlds
+  <*> traverseMutationOutput f mutOutput
   <*> pure allCols
   where
-    AnnUpd tn setExps (whr, fltr) chk mutFlds allCols = annUpd
+    AnnUpd tn setExps (whr, fltr) chk mutOutput allCols = annUpd
 
 type AnnUpd = AnnUpdG S.SQLExp
 
@@ -63,11 +63,11 @@ mkUpdateCTE
 mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) chk _ _) =
   S.CTEUpdate update
   where
-    update = 
-      S.SQLUpdate tn setExp Nothing tableFltr 
-        . Just 
-        . S.RetExp 
-        $ [ S.selectStar 
+    update =
+      S.SQLUpdate tn setExp Nothing tableFltr
+        . Just
+        . S.RetExp
+        $ [ S.selectStar
           , S.Extractor (insertCheckExpr "update check constraint failed" checkExpr) Nothing
           ]
     setExp    = S.SetExp $ map S.SetExpItem setExps
@@ -226,7 +226,7 @@ updateQueryToTx
   :: Bool -> (AnnUpd, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 updateQueryToTx strfyNum (u, p) =
   runMutation $ Mutation (uqp1Table u) (updateCTE, p)
-                (uqp1MutFlds u) (uqp1AllCols u) strfyNum
+                (uqp1Output u) (uqp1AllCols u) strfyNum
   where
     updateCTE = mkUpdateCTE u
 
