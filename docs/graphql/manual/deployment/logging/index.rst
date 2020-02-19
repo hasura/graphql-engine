@@ -17,9 +17,9 @@ Accessing logs
 
 Based on your deployment method, the Hasura GraphQL engine logs can be accessed as follows:
 
-- :doc:`On Heroku <heroku/logging>`
-- :doc:`On Docker <docker/logging>`
-- :doc:`On Kubernetes <kubernetes/logging>`
+- :doc:`On Heroku <heroku>`
+- :doc:`On Docker <docker>`
+- :doc:`On Kubernetes <kubernetes>`
 
 .. _log-types:
 

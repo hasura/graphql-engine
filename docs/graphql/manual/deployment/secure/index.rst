@@ -18,12 +18,20 @@ configure an admin secret key.
 Depending on your deployment method, follow one of these guides to configure an admin secret key, and prevent public
 access to your GraphQL endpoint and the Hasura console:
 
-- :doc:`For Heroku <heroku/securing-graphql-endpoint>`
-- :doc:`For Docker <docker/securing-graphql-endpoint>`
-- :doc:`For Kubernetes <kubernetes/securing-graphql-endpoint>`
+- :doc:`For Heroku <heroku>`
+- :doc:`For Docker <docker>`
+- :doc:`For Kubernetes <kubernetes>`
 
 .. note::
 
   If you're looking at adding access control rules for your data to your GraphQL API then head
   to :doc:`Authentication / access control <../auth/index>`.
+
+.. toctree::
+   :maxdepth: 2
+
+   Heroku <heroku>
+   Docker <docker>
+   Kubernetes <kubernetes>
+
 

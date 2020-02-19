@@ -90,15 +90,15 @@ See :doc:`../../schema/using-existing-database` to enable GraphQL over the datab
 Advanced
 --------
 
-- :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
-- :doc:`GraphQL engine server logs <logging>`
-- :doc:`Updating GraphQL engine <updating>`
+- :doc:`Securing your GraphQL endpoint <../secure/kubernetes>`
+- :doc:`GraphQL engine server logs <../logging/kubernetes>`
+- :doc:`Updating GraphQL engine <../update/kubernetes>`
 - :doc:`Setting up migrations <../../migrations/index>`
 
 .. toctree::
    :titlesonly:
    :hidden:
 
-   Securing your GraphQL endpoint <securing-graphql-endpoint>
-   GraphQL engine server logs <logging>
-   Updating GraphQL engine <updating>
+   Securing your GraphQL endpoint <../secure/kubernetes>
+   GraphQL engine server logs <../logging/kubernetes>
+   Updating GraphQL engine <../update/kubernetes>

@@ -107,17 +107,17 @@ you should see the Hasura console.
 Advanced
 --------
 
-- :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
-- :doc:`using-existing-heroku-database`
-- :doc:`GraphQL engine server logs <logging>`
-- :doc:`Updating GraphQL engine <updating>`
+- :doc:`Securing your GraphQL endpoint <../secure/heroku>`
+- :doc:`Using existing Heroku database <../using-existing-heroku-database>`
+- :doc:`GraphQL engine server logs <../logging/heroku>`
+- :doc:`Updating GraphQL engine <../update/heroku>`
 - :doc:`Setting up migrations <../../migrations/index>`
 
 .. toctree::
    :titlesonly:
    :hidden:
 
-   Securing your GraphQL endpoint <securing-graphql-endpoint>
-   using-existing-heroku-database
-   GraphQL engine server logs <logging>
-   Updating GraphQL engine <updating>
+   Securing your GraphQL endpoint <../secure/heroku>
+   Using existing Heroku database <../using-existing-heroku-database>
+   GraphQL engine server logs <../logging/heroku>
+   Updating GraphQL engine <../update/heroku>
