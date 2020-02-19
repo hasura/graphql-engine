@@ -77,8 +77,11 @@ class DragFoldTable extends Component {
           {col.Header && (
             <Fragment>
               {col.Header}
-              <span className={styles.tableHeaderCell} title="Drag column">
-                <i className="fa fa-bars" style={{ right: '18px' }} />
+              <span
+                className={styles.tableHeaderCell}
+                title="Drag column to rearrange"
+              >
+                <i className="fa fa-bars" style={{ right: '20px' }} />
               </span>
             </Fragment>
           )}
