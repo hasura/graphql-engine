@@ -12,7 +12,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	log "github.com/sirupsen/logrus"
@@ -28,7 +27,6 @@ const migrateCreateCmdExamples = `  # Setup migration files for the first time b
   hasura migrate create init --from-server --endpoint "<endpoint>"`
 
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
-	v := viper.New()
 	opts := &migrateCreateOptions{
 		EC: ec,
 	}
@@ -40,14 +38,6 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Example:      migrateCreateCmdExamples,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			ec.Viper = v
-			err := ec.Prepare()
-			if err != nil {
-				return err
-			}
-			return ec.Validate()
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]
 			opts.EC.Spin("Creating migration files...")
@@ -71,18 +61,9 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringArrayVar(&opts.schemaNames, "schema", []string{"public"}, "name of Postgres schema to export as migration")
 	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
 	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	migrateCreateCmd.MarkFlagFilename("sql-from-file")
 	migrateCreateCmd.MarkFlagFilename("metadata-from-file")
-
-	// need to create a new viper because https://github.com/spf13/viper/issues/233
-	v.BindPFlag("endpoint", f.Lookup("endpoint"))
-	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
-	v.BindPFlag("access_key", f.Lookup("access-key"))
 
 	return migrateCreateCmd
 }

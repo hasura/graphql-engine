@@ -9,11 +9,9 @@ import (
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
-	v := viper.GetViper()
 	opts := &actionsCodegenOptions{
 		EC: ec,
 	}
@@ -32,10 +30,6 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Derive an action from a hasura operation
   hasura actions codegen [action-name] --derive-from ""`,
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			ec.Viper = v
-			return nil
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.actions = args
 			return opts.run()
@@ -44,17 +38,6 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f := actionsCodegenCmd.Flags()
 
 	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a hasura operation")
-
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
-
-	// need to create a new viper because https://github.com/spf13/viper/issues/233
-	v.BindPFlag("endpoint", f.Lookup("endpoint"))
-	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
-	v.BindPFlag("access_key", f.Lookup("access-key"))
-
 	return actionsCodegenCmd
 }
 

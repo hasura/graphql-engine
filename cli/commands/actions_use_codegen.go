@@ -10,7 +10,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 type codegenFramework struct {
@@ -19,7 +18,6 @@ type codegenFramework struct {
 }
 
 func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
-	v := viper.GetViper()
 	opts := &actionsUseCodegenOptions{
 		EC: ec,
 	}
@@ -38,10 +36,6 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Use a codegen with a starter kit
   hasura actions use-codegen --with-starter-kit true`,
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			ec.Viper = v
-			return nil
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return opts.run()
 		},
@@ -52,16 +46,6 @@ func newActionsUseCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.framework, "framework", "", "framework to be used by codegen")
 	f.StringVar(&opts.outputDir, "output-dir", "", "directory to create the codegen files")
 	f.BoolVar(&opts.withStarterKit, "with-starter-kit", false, "clone starter kit for a framework")
-
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
-
-	// need to create a new viper because https://github.com/spf13/viper/issues/233
-	v.BindPFlag("endpoint", f.Lookup("endpoint"))
-	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
-	v.BindPFlag("access_key", f.Lookup("access-key"))
 
 	return actionsUseCodegenCmd
 }

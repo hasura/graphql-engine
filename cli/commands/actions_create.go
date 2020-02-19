@@ -13,8 +13,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
-	v := viper.GetViper()
+func newActionsCreateCmd(ec *cli.ExecutionContext, v *viper.Viper) *cobra.Command {
 	opts := &actionsCreateOptions{
 		EC: ec,
 	}
@@ -34,10 +33,6 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura actions create [action-name] --kind synchronous --webhook http://localhost:3000`,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			ec.Viper = v
-			return nil
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.name = args[0]
 			return opts.run()
@@ -48,18 +43,10 @@ func newActionsCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 	f.StringVar(&opts.deriveFrom, "derive-from", "", "derive action from a Hasura operation")
 	f.BoolVar(&opts.withCodegen, "with-codegen", false, "create action along with codegen")
-
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
 	f.String("kind", "", "kind to use in action")
 	f.String("webhook", "", "webhook to use in action")
 
-	// need to create a new viper because https://github.com/spf13/viper/issues/233
-	v.BindPFlag("endpoint", f.Lookup("endpoint"))
-	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
-	v.BindPFlag("access_key", f.Lookup("access-key"))
+	// bind to viper
 	v.BindPFlag("actions.kind", f.Lookup("kind"))
 	v.BindPFlag("actions.handler_webhook_baseurl", f.Lookup("webhook"))
 

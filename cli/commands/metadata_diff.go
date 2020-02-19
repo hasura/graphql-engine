@@ -13,7 +13,6 @@ import (
 	"github.com/mgutz/ansi"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 )
 
@@ -27,7 +26,6 @@ type MetadataDiffOptions struct {
 }
 
 func newMetadataDiffCmd(ec *cli.ExecutionContext) *cobra.Command {
-	v := viper.New()
 	opts := &MetadataDiffOptions{
 		EC:     ec,
 		Output: os.Stdout,
@@ -55,30 +53,11 @@ By default, shows changes between exported metadata file and server metadata.`,
   # Diff metadata on a different Hasura instance:
   hasura metadata diff --endpoint "<endpoint>"`,
 		Args: cobra.MaximumNArgs(2),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			ec.Viper = v
-			err := ec.Prepare()
-			if err != nil {
-				return err
-			}
-			return ec.Validate()
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.Args = args
 			return opts.Run()
 		},
 	}
-
-	f := metadataDiffCmd.Flags()
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
-
-	// need to create a new viper because https://github.com/spf13/viper/issues/233
-	v.BindPFlag("endpoint", f.Lookup("endpoint"))
-	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
-	v.BindPFlag("access_key", f.Lookup("access-key"))
 
 	return metadataDiffCmd
 }
