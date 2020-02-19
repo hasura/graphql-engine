@@ -103,7 +103,7 @@ type Migrate struct {
 
 // New returns a new Migrate instance from a source URL and a database URL.
 // The URL scheme is defined by each driver.
-func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*Migrate, error) {
+func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, logger *log.Logger) (*Migrate, error) {
 	m := newCommon(cmd)
 
 	sourceName, err := schemeFromUrl(sourceUrl)
@@ -133,6 +133,9 @@ func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*M
 		return nil, err
 	}
 	m.sourceDrv = sourceDrv
+	if configVersion >= 2 {
+		m.sourceDrv.DefaultParser(source.DefaultParsev2)
+	}
 
 	databaseDrv, err := database.Open(databaseUrl, cmd, logger)
 	if err != nil {
@@ -141,8 +144,10 @@ func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*M
 	}
 	m.databaseDrv = databaseDrv
 
-	m.status = NewStatus()
-
+	err = m.ReScan()
+	if err != nil {
+		return nil, err
+	}
 	return m, nil
 }
 

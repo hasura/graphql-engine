@@ -74,6 +74,10 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			if err != nil {
 				return errors.Wrap(err, "error in opening migrate file driver")
 			}
+			err = fileCfg.Scan()
+			if err != nil {
+				return errors.Wrap(err, "error in scanning migrate file driver")
+			}
 			// Remove yaml from up migrations
 			upVersions := make([]uint64, 0)
 			for _, version := range fileCfg.Migrations.Index {

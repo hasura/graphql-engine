@@ -17,10 +17,11 @@ import (
 )
 
 type File struct {
-	url        string
-	path       string
-	Migrations *source.Migrations
-	logger     *log.Logger
+	url           string
+	path          string
+	defaultParser source.Parser
+	Migrations    *source.Migrations
+	logger        *log.Logger
 }
 
 func init() {
@@ -61,15 +62,11 @@ func New(url string, logger *log.Logger) (*File, error) {
 	}
 
 	nf := &File{
-		url:        url,
-		logger:     logger,
-		path:       p,
-		Migrations: source.NewMigrations(),
-	}
-
-	err = nf.Scan()
-	if err != nil {
-		return nil, err
+		url:           url,
+		logger:        logger,
+		path:          p,
+		defaultParser: source.DefaultParse,
+		Migrations:    source.NewMigrations(),
 	}
 	return nf, nil
 }
@@ -81,6 +78,10 @@ func (f *File) Open(url string, logger *log.Logger) (source.Driver, error) {
 func (f *File) Close() error {
 	// nothing do to here
 	return nil
+}
+
+func (f *File) DefaultParser(p source.Parser) {
+	f.defaultParser = p
 }
 
 func (f *File) Scan() error {
@@ -104,7 +105,7 @@ func (f *File) Scan() error {
 					continue
 				}
 				fileName := fmt.Sprintf("%s.%s", dirName, fi.Name())
-				m, err := source.DefaultParse(fileName)
+				m, err := f.defaultParser(fileName)
 				if err != nil {
 					continue // ignore files that we can't parse
 				}
@@ -124,7 +125,7 @@ func (f *File) Scan() error {
 			}
 		} else {
 			// v1 migrate
-			m, err := source.DefaultParse(fo.Name())
+			m, err := f.defaultParser(fo.Name())
 			if err != nil {
 				continue // ignore files that we can't parse
 			}

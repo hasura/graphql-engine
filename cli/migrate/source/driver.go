@@ -40,7 +40,11 @@ type Driver interface {
 	// Migrate will call this function only once per instance.
 	Close() error
 
+	// Scan scans the local migration files
 	Scan() error
+
+	// Default Parser to be used for scanning the file system
+	DefaultParser(Parser)
 
 	// First returns the very first migration version available to the driver.
 	// Migrate will call this function multiple times.

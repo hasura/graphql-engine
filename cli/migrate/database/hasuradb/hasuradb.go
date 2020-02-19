@@ -80,12 +80,6 @@ func WithInstance(config *Config, logger *log.Logger) (database.Driver, error) {
 		logger.Debug(err)
 		return nil, err
 	}
-
-	err := hx.Scan()
-	if err != nil {
-		return nil, err
-	}
-
 	return hx, nil
 }
 

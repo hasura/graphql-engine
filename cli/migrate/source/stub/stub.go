@@ -45,6 +45,10 @@ func (s *Stub) Scan() error {
 	return nil
 }
 
+func (s *Stub) DefaultParser(p source.Parser) {
+	return
+}
+
 func (s *Stub) First() (version uint64, err error) {
 	if v, ok := s.Migrations.First(); !ok {
 		return 0, &os.PathError{Op: "first", Path: s.Url, Err: os.ErrNotExist} // TODO: s.Url can be empty when called with WithInstance
