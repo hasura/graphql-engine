@@ -516,7 +516,16 @@ class AddTable extends Component {
               setUniqueKeys={setUniqueKeys}
             />
             <hr />
-            <h4 className={styles.subheading_text}>Check Constraints</h4>
+            <h4 className={styles.subheading_text}>
+              Check Constraints &nbsp; &nbsp;
+              <OverlayTrigger
+                placement="right"
+                overlay={tooltip.checkConstraintsDescription}
+              >
+                <i className={'fa fa-question-circle'} aria-hidden="true" />
+              </OverlayTrigger>{' '}
+              &nbsp; &nbsp;
+            </h4>
             <CheckConstraints
               constraints={checkConstraints}
               dispatch={dispatch}

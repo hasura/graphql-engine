@@ -33,3 +33,10 @@ export const uniqueKeyDescription = (
 export const dataTypeDescription = description => (
   <Tooltip id="tooltip-datatype-description">{description}</Tooltip>
 );
+
+export const checkConstraintsDescription = (
+  <Tooltip id="tooltip-check-constraint-description">
+    A check constraint allows you to specify if the value in a certain column
+    must satisfy a specific condition.
+  </Tooltip>
+);
