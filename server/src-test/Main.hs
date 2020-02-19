@@ -20,22 +20,22 @@ import qualified Test.Hspec.Runner            as Hspec
 import           Hasura.Db                    (PGExecCtx (..))
 import           Hasura.RQL.Types             (SQLGenCtx (..), adminUserInfo)
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Init          (RawConnInfo, mkConnInfo,
-                                              mkRawConnInfo, parseRawConnInfo,
-                                              runWithEnv)
+import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawConnInfo,
+                                               parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version
 
 import qualified Data.Parser.CacheControlSpec as CacheControlParser
+import qualified Data.Parser.URLTemplate      as URLTemplate
+import qualified Data.TimeSpec                as TimeSpec
 import qualified Hasura.IncrementalSpec       as IncrementalSpec
 import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
 import qualified Hasura.Server.MigrateSpec    as MigrateSpec
-import qualified Data.TimeSpec               as TimeSpec
-import qualified Hasura.Server.TelemetrySpec as TelemetrySpec
+import qualified Hasura.Server.TelemetrySpec  as TelemetrySpec
 
 data TestSuites
   = AllSuites !RawConnInfo
-  -- ^ Run all test suites. It probably doesn't make sense to be able to specify additional 
+  -- ^ Run all test suites. It probably doesn't make sense to be able to specify additional
   -- hspec args here.
   | SingleSuite ![String] !TestSuite
   -- ^ Args to pass through to hspec (as if from 'getArgs'), and the specific suite to run.
@@ -56,6 +56,7 @@ main = withVersion $$(getVersionFromEnvironment) $ parseArgs >>= \case
 unitSpecs :: Spec
 unitSpecs = do
   describe "Data.Parser.CacheControl" CacheControlParser.spec
+  describe "Data.Parser.URLTemplate" URLTemplate.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
   describe "Hasura.RQL.Metadata" MetadataSpec.spec
   describe "Data.Time" TimeSpec.spec
@@ -93,8 +94,8 @@ parseArgs = execParser $ info (helper <*> (parseNoCommand <|> parseSubCommand)) 
   fullDesc <> header "Hasura GraphQL Engine test suite"
   where
     parseNoCommand = AllSuites <$> parseRawConnInfo
-    parseSubCommand = SingleSuite <$> parseHspecPassThroughArgs <*> subCmd 
-      where 
+    parseSubCommand = SingleSuite <$> parseHspecPassThroughArgs <*> subCmd
+      where
         subCmd = subparser $ mconcat
           [ command "unit" $ info (pure UnitSuite) $
               progDesc "Only run unit tests"

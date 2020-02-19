@@ -7,7 +7,6 @@ module Hasura.GraphQL.Resolve.Context
   , LazyRespTx
   , AnnPGVal(..)
   , UnresolvedVal(..)
-  , resolveValPrep
   , resolveValTxt
   , InsertTxConflictCtx(..)
   , getFldInfo
@@ -118,15 +117,6 @@ type PrepArgs = Seq.Seq Q.PrepArg
 
 prepare :: (MonadState PrepArgs m) => AnnPGVal -> m S.SQLExp
 prepare (AnnPGVal _ _ scalarValue) = prepareColVal scalarValue
-
-resolveValPrep
-  :: (MonadState PrepArgs m)
-  => UnresolvedVal -> m S.SQLExp
-resolveValPrep = \case
-  UVPG annPGVal -> prepare annPGVal
-  UVSessVar colTy sessVar -> sessVarFromCurrentSetting colTy sessVar
-  UVSQL sqlExp -> pure sqlExp
-  UVSession -> pure currentSession
 
 resolveValTxt :: (Applicative f) => UnresolvedVal -> f S.SQLExp
 resolveValTxt = \case

@@ -89,7 +89,6 @@ args:
           - author_id: X-HASURA-USER-ID
           - is_published: true
 
-
 #Article update permission for user
 #Allow modifications only on unpublished articles
 - type: create_update_permission
@@ -107,6 +106,8 @@ args:
         $and:
           - author_id: X-HASURA-USER-ID
           - is_published: false
+      check:
+        is_published: false
 
 #Resident table
 - type: run_sql

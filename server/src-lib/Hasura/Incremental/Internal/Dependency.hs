@@ -9,6 +9,7 @@ import           Hasura.Prelude
 import qualified Data.Dependent.Map            as DM
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
+import qualified Data.URL.Template             as UT
 
 import           Control.Applicative
 import           Data.Aeson                    (Value)
@@ -195,6 +196,9 @@ instance Cacheable G.Value
 instance Cacheable G.ValueConst
 instance Cacheable G.VariableDefinition
 instance Cacheable N.URI
+instance Cacheable UT.Variable
+instance Cacheable UT.TemplateItem
+instance Cacheable UT.URLTemplate
 instance (Cacheable a) => Cacheable (Maybe a)
 instance (Cacheable a, Cacheable b) => Cacheable (Either a b)
 instance (Cacheable a) => Cacheable [a]
@@ -209,6 +213,7 @@ deriving instance Cacheable G.Name
 deriving instance Cacheable G.NamedType
 deriving instance Cacheable G.StringValue
 deriving instance Cacheable G.Variable
+deriving instance Cacheable G.Description
 deriving instance (Cacheable a) => Cacheable (G.ListValueG a)
 deriving instance (Cacheable a) => Cacheable (G.ObjectValueG a)
 

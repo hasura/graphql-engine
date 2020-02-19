@@ -296,6 +296,36 @@ The various types of queries are listed in the following table:
      - 1
      - Drop a collection from the allow-list
 
+   * - :ref:`set_custom_types`
+     - :ref:`set_custom_types_args <set_custom_types_syntax>`
+     - 1
+     - Set custom GraphQL types
+
+   * - :ref:`create_action`
+     - :ref:`create_action_args <create_action_syntax>`
+     - 1
+     - Create an action
+
+   * - :ref:`drop_action`
+     - :ref:`drop_action_args <drop_action_syntax>`
+     - 1
+     - Drop an action
+
+   * - :ref:`update_action`
+     - :ref:`update_action_args <update_action_syntax>`
+     - 1
+     - Update an action
+
+   * - :ref:`create_action_permission`
+     - :ref:`create_action_permission_args <create_action_permission_syntax>`
+     - 1
+     - Create an action permission
+
+   * - :ref:`drop_action_permission`
+     - :ref:`drop_action_permission_args <drop_action_permission_syntax>`
+     - 1
+     - Drop an action permission
+
 **See:**
 
 - :doc:`Run SQL <run-sql>`
@@ -307,6 +337,8 @@ The various types of queries are listed in the following table:
 - :doc:`Event Triggers <event-triggers>`
 - :doc:`Remote Schemas <remote-schemas>`
 - :doc:`Query Collections <query-collections>`
+- :doc:`Custom Types <custom-types>`
+- :doc:`Actions <actions>`
 - :doc:`Manage Metadata <manage-metadata>`
 
 Response structure
@@ -391,5 +423,7 @@ See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting t
   Event Triggers <event-triggers>
   Remote Schemas <remote-schemas>
   Query Collections <query-collections>
+  Custom Types <custom-types>
+  Actions <actions>
   Manage Metadata <manage-metadata>
   Common syntax definitions <syntax-defs>
