@@ -51,7 +51,7 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    :titlesonly:
    :hidden:
 
-   Deploying <deploy/index>
+   Deploy GraphQL engine <deploy/index>
    using-existing-heroku-database
    Server configuration <graphql-engine-flags/index>
    postgres-permissions

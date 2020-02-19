@@ -7,7 +7,7 @@ Run Hasura GraphQL engine on Heroku
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 2
+  :depth: 1
   :local:
 
 This guide will help you get the Hasura GraphQL engine running as a "git push to deploy" app on
@@ -113,11 +113,3 @@ Advanced
 - :doc:`Updating GraphQL engine <../update/heroku>`
 - :doc:`Setting up migrations <../../migrations/index>`
 
-.. toctree::
-   :titlesonly:
-   :hidden:
-
-   Securing your GraphQL endpoint <../secure/heroku>
-   Using existing Heroku database <../using-existing-heroku-database>
-   GraphQL engine server logs <../logging/heroku>
-   Updating GraphQL engine <../update/heroku>

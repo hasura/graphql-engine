@@ -23,3 +23,10 @@ Based on your deployment method, follow the appropriate guide to update the Grap
 - :doc:`Updating on Heroku <heroku>`
 - :doc:`Updating on Docker <docker>`
 - :doc:`Updating on Kubernetes <kubernetes>`
+
+.. toctree::
+   :maxdepth: 2
+
+   Heroku <heroku>
+   Docker <docker>
+   Kubernetes <kubernetes>
