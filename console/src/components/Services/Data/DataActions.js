@@ -52,6 +52,8 @@ const SET_CONSISTENT_FUNCTIONS = 'Data/SET_CONSISTENT_FUNCTIONS';
 
 const UPDATE_DATA_HEADERS = 'Data/UPDATE_DATA_HEADERS';
 
+const SET_RELATIONS_MAPPING = 'Data/SET_RELATIONS_MAPPING';
+
 const FETCH_COLUMN_TYPE_INFO = 'Data/FETCH_COLUMN_TYPE_INFO';
 const FETCH_COLUMN_TYPE_INFO_FAIL = 'Data/FETCH_COLUMN_TYPE_INFO_FAIL';
 const RESET_COLUMN_TYPE_INFO = 'Data/RESET_COLUMN_TYPE_INFO';
@@ -611,6 +613,11 @@ const fetchColumnTypeInfo = () => {
   };
 };
 
+const setRelationsMapping = data => ({
+  type: SET_RELATIONS_MAPPING,
+  data,
+});
+
 /* ******************************************************* */
 const dataReducer = (state = defaultState, action) => {
   // eslint-disable-line no-unused-vars
@@ -743,6 +750,11 @@ const dataReducer = (state = defaultState, action) => {
       };
     default:
       return state;
+    case SET_RELATIONS_MAPPING:
+      return {
+        ...state,
+        relationsMapping: action.data,
+      };
   }
 };
 
@@ -772,4 +784,5 @@ export {
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
   setUntrackedRelations,
+  setRelationsMapping,
 };

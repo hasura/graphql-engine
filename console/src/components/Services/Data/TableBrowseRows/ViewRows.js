@@ -28,7 +28,7 @@ import {
 } from './FilterActions';
 
 import _push from '../push';
-import { ordinalColSort } from '../utils';
+import { ordinalColSort, findAllFromRel } from '../utils';
 import FilterQuery from './FilterQuery';
 import Spinner from '../../../Common/Spinner/Spinner';
 import Button from '../../../Common/Button/Button';
@@ -44,8 +44,10 @@ import {
   getRelationshipRefTable,
   getTableName,
   getTableSchema,
+  generateTableDef,
 } from '../../../Common/utils/pgUtils';
-import { updateSchemaInfo } from '../DataActions';
+import { updateSchemaInfo, setRelationsMapping } from '../DataActions';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 const ViewRows = ({
   curTableName,
@@ -74,8 +76,6 @@ const ViewRows = ({
   location,
   readOnlyMode,
 }) => {
-  const styles = require('../../../Common/TableCommon/Table.scss');
-
   // Invoke manual trigger status
   const invokeTrigger = (trigger, row) => {
     updateInvocationRow(row);
@@ -542,23 +542,39 @@ const ViewRows = ({
 
           const getAddButton = () => {
             const childTableDef = getRelationshipRefTable(_tableSchema, rel);
-            const relSchema = schemas.find(
-              s =>
-                s.table_schema === childTableDef.schema &&
-                s.table_name === childTableDef.name
+            const relSchema = findTable(schemas, childTableDef);
+            if (!relSchema || relSchema.is_enum || rel.rel_type !== 'array') {
+              return null;
+            }
+            const currentTableSchema = findTable(
+              schemas,
+              generateTableDef(curTableName, currentSchema)
             );
-            if (!relSchema || relSchema.is_enum) return null;
 
-            // TO DO
-            // const onCLick = () => dispatch({
-            //  type: I_SET_FK_VALUE,
-            //  data: { colName: value },
-            //});
+            const onClick = () => {
+              const fkMapping = findAllFromRel(
+                schemas,
+                currentTableSchema,
+                rel
+              );
+              const columnMap = {};
+              for (let i = 0; i < fkMapping.rcol.length; ++i) {
+                columnMap[fkMapping.rcol[i]] = row[fkMapping.lcol[i]];
+              }
+              dispatch(
+                setRelationsMapping({
+                  fromTable: fkMapping.lTable,
+                  toTable: fkMapping.relName,
+                  columnMap,
+                })
+              );
+            };
 
             return (
               <Link
                 to={`/data/schema/${childTableDef.schema}/tables/${childTableDef.name}/insert`}
-                className={styles.add_mar_left}
+                className={styles.add_mar_left_mid}
+                onClick={onClick}
               >
                 Add
               </Link>

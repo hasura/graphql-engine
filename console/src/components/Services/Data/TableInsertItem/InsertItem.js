@@ -16,6 +16,7 @@ import {
   generateTableDef,
   isColumnAutoIncrement,
 } from '../../../Common/utils/pgUtils';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 class InsertItem extends Component {
   constructor() {
@@ -53,9 +54,8 @@ class InsertItem extends Component {
       lastSuccess,
       count,
       dispatch,
+      relationsMapping,
     } = this.props;
-
-    const styles = require('../../../Common/TableCommon/Table.scss');
 
     const currentTable = findTable(
       schemas,
@@ -90,10 +90,19 @@ class InsertItem extends Component {
         e.target.focus();
       };
 
+      const getDefaultValue = () => {
+        if (clone && colName in clone) {
+          return clone[colName];
+        } else if (relationsMapping && colName in relationsMapping.columnMap) {
+          return relationsMapping.columnMap[colName];
+        }
+        return '';
+      };
+
       const standardInputProps = {
         className: `form-control ${styles.insertBox}`,
         'data-test': `typed-input-${i}`,
-        defaultValue: clone && colName in clone ? clone[colName] : '',
+        defaultValue: getDefaultValue(),
         ref: inputRef,
         type: 'text',
         onClick: clicker,
@@ -361,6 +370,7 @@ const mapStateToProps = (state, ownProps) => {
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
+    relationsMapping: state.tables.relationsMapping,
   };
 };
 
