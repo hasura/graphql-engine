@@ -38,73 +38,73 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
 
 Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.hasura.io) bulabilirsiniz
 
-## Table of contents
+## İçerikler
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
-**Table of Contents**
+**İçerikler**
 
-- [Quickstart:](#quickstart)
-    - [One-click deployment on Heroku](#one-click-deployment-on-heroku)
-    - [Other deployment methods](#other-deployment-methods)
-- [Architecture](#architecture)
-- [Client-side tooling](#client-side-tooling)
-- [Add business logic](#add-business-logic)
-    - [Remote schemas](#remote-schemas)
-    - [Trigger webhooks on database events](#trigger-webhooks-on-database-events)
-- [Demos](#demos)
-    - [Realtime applications](#realtime-applications)
-    - [Videos](#videos)
-- [Support & Troubleshooting](#support--troubleshooting)
-- [Contributing](#contributing)
-- [Brand assets](#brand-assets)
-- [License](#license)
-- [Translations](#translations)
+- [Hızlı Başlangıç:](#quickstart)
+    - [Tek tıklamayla Heroku'ya deploy etme](#one-click-deployment-on-heroku)
+    - [Diğer deploy etme yöntemleri](#other-deployment-methods)
+- [Yapı](#architecture)
+- [İstemci tarafı takımlar](#client-side-tooling)
+- [İş mantığı ekleme](#add-business-logic)
+    - [Uzak şemalar](#remote-schemas)
+    - [Veritabanı olaylarındaki webhooks tetikleme](#trigger-webhooks-on-database-events)
+- [Demolar](#demos)
+    - [Gerçek uygulamalar](#realtime-applications)
+    - [Videolar](#videos)
+- [Destek ve sorun giderme](#support--troubleshooting)
+- [Katkı](#contributing)
+- [Marka varlıkları](#brand-assets)
+- [Lisans](#license)
+- [Çeviriler](#translations)
 
 <!-- markdown-toc end -->
 
-## Quickstart:
+## Hızlı Başlangıç:
 
-### One-click deployment on Heroku
+### Tek tıklama ile Heroku'ya deploy etme
 
-The fastest way to try Hasura out is via Heroku.
+Hasura'yı denemenin en hızlı yolu Heroku'dur.
 
-1. Click on the following button to deploy GraphQL Engine on Heroku with the free Postgres add-on:
+1. Ücretsiz Postgre eklentisiyle Heroku'da GraphQL Engine'i kurmak için aşağıdaki düğmeye tıklayın.
 
     [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-2. Open the Hasura console
+2. Hasura Console'u açın.
 
-   Visit `https://<app-name>.herokuapp.com` (*replace \<app-name\> with your app name*) to open the admin console.
+   Yönetici konsolunu açmak için `https://<app-name>.herokuapp.com` (*\<app-name\>'i uygulama adınızla değiştirin.*) adresini ziyaret edin.
 
-3. Make your first GraphQL query
+3. İlk GraphQL sorgunuzu yapın.
 
-   Create a table and instantly run your first query. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Bir tablo oluşturun ve ilk sorgunuzu hemen çalıştırın. Bunu takip edebilirsin [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
-### Other one-click deployment options
+### Diğer tek tıklamayla deploy etme seçenekleri
 
-Check out the instructions for the following one-click deployment options:
+Tek tıklamayla deploy etme seçenekleri için aşağıdaki talimatları takip edin:
 
-| **Infra provider** | **One-click link** | **Additional information** |
+| **Sağlayıcı** | **Tek tıklama linki** | **Ek bilgi** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
-| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [doküman](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [doküman](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
 
-### Other deployment methods
+### Diğer deploy etme yöntemleri
 
-For Docker-based deployment and advanced configuration options, see [deployment
-guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
-[install manifests](install-manifests).
+Docker tabanlı dağıtım ve gelişmiş yapılandırma seçenekleri için [deployment
+guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ya da 
+[install manifests](install-manifests) bakınız.
 
-## Architecture
+## Yapı
 
-The Hasura GraphQL Engine fronts a Postgres database instance and can accept GraphQL requests from your client apps. It can be configured to work with your existing auth system and can handle access control using field-level rules with dynamic variables from your auth system.
+Hasura GraphQL Engine, bir Postgres veritabnı örneğini önler ve istemci uygulamarınızdan HraphQL isteklerini kabul edebilir. Mevcut kimlik doğrulama sisteminizle çalışacak şekilde yapılandırılabilir ve kimlik doğrumaa sisteminizden dinamik değişkenlerle alan düzeyinde kurallar kullanarak erişim denetimini işleyebilir. 
 
-You can also merge remote GraphQL schemas and provide a unified GraphQL API.
+Ayrıca uzaktan GraphQL şemalarını birleştirebilir ve birleşik GraphQL API'si sağlayabilirsiniz.
 
 ![Hasura GraphQL Engine architecture](assets/hasura-arch.svg)
 
-## Client-side tooling
+## İstemci tarafı takımlar
 
-Hasura works with any GraphQL client. We recommend using [Apollo Client](https://github.com/apollographql/apollo-client). See [awesome-graphql](https://github.com/chentsulin/awesome-graphql) for a list of clients.
+Hasura herhangi bir GraphQL istemcisi ile çalışır. [Apollo Client](https://github.com/apollographql/apollo-client) kullanmanızı öneririz. İstemci bir listesi için [awesome-graphql](https://github.com/chentsulin/awesome-graphql) adresine bakınız.
 
 ## Add business logic
 
