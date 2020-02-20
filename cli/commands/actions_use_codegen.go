@@ -76,6 +76,7 @@ func (o *actionsUseCodegenOptions) run() error {
 		return errors.Wrap(err, "error in fetching codegen frameworks")
 	}
 
+	o.EC.Spinner.Stop()
 	if o.framework == "" {
 		// if framework flag is not provided, display a list and allow them to choose
 		var frameworkList []string
@@ -83,7 +84,6 @@ func (o *actionsUseCodegenOptions) run() error {
 			frameworkList = append(frameworkList, f.Name)
 		}
 		sort.Strings(frameworkList)
-		o.EC.Spinner.Stop()
 		newCodegenExecutionConfig.Framework, err = util.GetSelectPrompt("Choose a codegen framework to use", frameworkList)
 		if err != nil {
 			return errors.Wrap(err, "error in selecting framework")
