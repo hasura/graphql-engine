@@ -27,7 +27,7 @@ func newActionsCreateCmd(ec *cli.ExecutionContext, v *viper.Viper) *cobra.Comman
   hasura actions create [action-name] --with-codegen true
 
   # Create an action by deriving from a hasura operation
-  hasura actions create [action-name] --derive-from ""
+  hasura actions create [action-name] --derive-from ''
 
   # Create an action with a different kind or webhook
   hasura actions create [action-name] --kind synchronous --webhook http://localhost:3000`,
