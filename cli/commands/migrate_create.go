@@ -130,7 +130,8 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 		}
 	}
 
-	if o.metaDataServer {
+	// Create metadata migrations only if config version is V1
+	if o.metaDataServer && ec.Config.Version == cli.V1 {
 		// To create metadata.yaml, set metadata plugin
 		tmpDirName, err := ioutil.TempDir("", "*")
 		if err != nil {
