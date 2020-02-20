@@ -239,6 +239,7 @@ func (r *cRouter) setRoutes(migrationDir string, logger *logrus.Logger) {
 		apis.Use(setLogger(logger))
 		apis.Use(setFilePath(migrationDir))
 		apis.Use(setMigrate(r.migrate))
+		apis.Use(setConfigVersion())
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
@@ -272,6 +273,13 @@ func setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		host := getFilePath(dir)
 		c.Set("filedir", host)
+		c.Next()
+	}
+}
+
+func setConfigVersion() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("version", int(ec.Config.Version))
 		c.Next()
 	}
 }

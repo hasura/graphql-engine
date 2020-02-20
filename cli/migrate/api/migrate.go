@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/cmd"
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
@@ -36,7 +37,7 @@ type Request struct {
 }
 
 type requestType struct {
-	Version *string     `json:"version"`
+	Version int         `json:"version,omitempty"`
 	Type    string      `json:"type"`
 	Args    interface{} `json:"args"`
 }
@@ -57,6 +58,9 @@ func MigrateAPI(c *gin.Context) {
 	if !ok {
 		return
 	}
+
+	// Get version
+	version := c.GetInt("version")
 
 	// Convert to url.URL
 	t := migratePtr.(*migrate.Migrate)
@@ -90,62 +94,92 @@ func MigrateAPI(c *gin.Context) {
 		startTime := time.Now()
 		timestamp := startTime.UnixNano() / int64(time.Millisecond)
 
-		sqlUp := &bytes.Buffer{}
-		sqlDown := &bytes.Buffer{}
-		for _, arg := range request.Up {
-			if arg.Type == hasuradb.RunSQL {
-				argByt, err := json.Marshal(arg.Args)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
-					return
-				}
-				var to hasuradb.RunSQLInput
-				err = json.Unmarshal(argByt, &to)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
-					return
-				}
-				sqlUp.WriteString(to.SQL)
-				sqlUp.WriteString("\n")
-			}
-		}
-
-		for _, arg := range request.Down {
-			if arg.Type == hasuradb.RunSQL {
-				argByt, err := json.Marshal(arg.Args)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
-					return
-				}
-				var to hasuradb.RunSQLInput
-				err = json.Unmarshal(argByt, &to)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
-					return
-				}
-				sqlDown.WriteString(to.SQL)
-				sqlDown.WriteString("\n")
-			}
-		}
-
 		createOptions := cmd.New(timestamp, request.Name, sourceURL.Path)
-		if sqlUp.String() != "" {
-			err := createOptions.SetSQLUp(sqlUp.String())
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
-				return
+		if version != int(cli.V1) {
+			sqlUp := &bytes.Buffer{}
+			sqlDown := &bytes.Buffer{}
+			for _, arg := range request.Up {
+				if arg.Type == hasuradb.RunSQL {
+					argByt, err := json.Marshal(arg.Args)
+					if err != nil {
+						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
+						return
+					}
+					var to hasuradb.RunSQLInput
+					err = json.Unmarshal(argByt, &to)
+					if err != nil {
+						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
+						return
+					}
+					sqlUp.WriteString(to.SQL)
+					sqlUp.WriteString("\n")
+				}
 			}
-		}
-		if sqlDown.String() != "" {
-			err := createOptions.SetSQLDown(sqlDown.String())
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
-				return
-			}
-		}
 
-		if sqlUp.String() != "" || sqlDown.String() != "" {
-			err := createOptions.Create()
+			for _, arg := range request.Down {
+				if arg.Type == hasuradb.RunSQL {
+					argByt, err := json.Marshal(arg.Args)
+					if err != nil {
+						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
+						return
+					}
+					var to hasuradb.RunSQLInput
+					err = json.Unmarshal(argByt, &to)
+					if err != nil {
+						c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
+						return
+					}
+					sqlDown.WriteString(to.SQL)
+					sqlDown.WriteString("\n")
+				}
+			}
+
+			if sqlUp.String() != "" {
+				err := createOptions.SetSQLUp(sqlUp.String())
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+					return
+				}
+			}
+			if sqlDown.String() != "" {
+				err := createOptions.SetSQLDown(sqlDown.String())
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+					return
+				}
+			}
+
+			if sqlUp.String() != "" || sqlDown.String() != "" {
+				err := createOptions.Create()
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+					return
+				}
+
+				defer func() {
+					if err != nil {
+						err := createOptions.Delete()
+						if err != nil {
+							logger.Debug(err)
+						}
+					}
+				}()
+			} else {
+				timestamp = 0
+			}
+		} else {
+			err := createOptions.SetMetaUp(request.Up)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+				return
+			}
+			err = createOptions.SetMetaDown(request.Down)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
+				return
+			}
+
+			err = createOptions.Create()
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 				return
@@ -153,14 +187,12 @@ func MigrateAPI(c *gin.Context) {
 
 			defer func() {
 				if err != nil {
-					err := createOptions.Delete()
+					err = createOptions.Delete()
 					if err != nil {
 						logger.Debug(err)
 					}
 				}
 			}()
-		} else {
-			timestamp = 0
 		}
 
 		// Rescan file system
