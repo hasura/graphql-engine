@@ -318,6 +318,12 @@ func (ec *ExecutionContext) Validate() error {
 
 	// set name of migration directory
 	ec.MigrationDir = filepath.Join(ec.ExecutionDirectory, ec.Config.MigrationsDirectory)
+	if _, err := os.Stat(ec.MigrationDir); os.IsNotExist(err) {
+		err = os.MkdirAll(ec.MigrationDir, os.ModePerm)
+		if err != nil {
+			return errors.Wrap(err, "cannot create migrations directory")
+		}
+	}
 
 	if ec.Config.Version == V2 && ec.Config.MetadataDirectory != "" {
 		// set name of metadata directory
