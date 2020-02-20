@@ -54,7 +54,7 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
     - [Gerçek zamanlı uygulamalar](#realtime-applications)
     - [Videolar](#videos)
 - [Destek ve sorun giderme](#support--troubleshooting)
-- [Katkı](#contributing)
+- [Katkıda bulunmak](#contributing)
 - [Marka varlıkları](#brand-assets)
 - [Lisans](#license)
 - [Çeviriler](#translations)
@@ -156,22 +156,22 @@ Tüm örnek uygulamaları kontrol edin.
 
 
 ## Destek ve sorun giderme
-The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
+Belgeler ve topluluğun çoğu sorunu gidermenize yardımcı olacaktır. Bir hatayla karşılaştıysanız veya bizimle iletişime geçmeniz gerekiyorsa aşağıdaki kanallardan birini kullanarak bizimle iletişime geçebilirsiniz: 
 
-* Support & feedback: [Discord](https://discord.gg/vBPpJkS)
-* Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
-* Follow product updates: [@HasuraHQ](https://twitter.com/hasurahq)
-* Talk to us on our [website chat](https://hasura.io)
+* Destek ve geri bildirim: [Discord](https://discord.gg/vBPpJkS)
+* Sorun ve hata bildirme: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
+* Ürün güncellemelerini takip edin: [@HasuraHQ](https://twitter.com/hasurahq)
+* Bizimle konuşun: [website chat](https://hasura.io)
 
-We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md).
+Tolumda açık ve hoş bir ortam yaratmaya kararlıyız. Lütfen [Code of Conduct](code-of-conduct.md) adresine bakınız
 
-If you want to report a security issue, please [read this](SECURITY.md).
+Bir güvenlik sorununu bildirmek istiyorsanız lütfen [bunu okuyun](SECURITY.md).
 
-## Contributing
+## Katkıda bulunmak
 
-Check out our [contributing guide](CONTRIBUTING.md) for more details.
+Daha fazla detay için [katkıda bulunma kuralını](CONTRIBUTING.md) kontrol edin.
 
-## Brand assets
+## Marka varlıkları
 
 Hasura brand assets (logos, the Hasura mascot, powered by badges etc.) can be
 found in the [assets/brand](assets/brand) folder. Feel free to use them in your
@@ -195,7 +195,7 @@ badge to your applications built using Hasura. ❤️
 </a>
 ```
 
-## License
+## Lisans
 
 The core GraphQL Engine is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
 
@@ -204,7 +204,7 @@ All **other contents** (except those in [`server`](server), [`cli`](cli) and
 This includes everything in the [`docs`](docs) and [`community`](community)
 directories.
 
-## Translations
+## Çeviriler
 
 This readme is available in the following translations:
 
