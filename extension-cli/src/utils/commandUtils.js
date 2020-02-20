@@ -19,7 +19,6 @@ const getFlagValue = (args, flagname) => {
 const getInputPayload = (args) => {
   const inputFilePath = getFlagValue(args, INPUT_FILE_FLAG);
   const payloadString = fs.readFileSync(inputFilePath, 'utf8');
-  console.log(payloadString);
   return JSON.parse(payloadString);
 };
 

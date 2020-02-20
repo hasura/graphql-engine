@@ -56,10 +56,12 @@ try {
     logOutput(JSON.stringify(cliResponse));
   }
 } catch (e) {
-  if (e.error) {
-    console.error(e.error);
-  } else {
-    console.error(e)
+  if (e) {
+    if (e.error) {
+      console.error(e.error);
+    } else {
+      console.error(e.message ? e.message : e);
+    }
   }
   process.exit(1);
 }

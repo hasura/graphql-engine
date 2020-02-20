@@ -5,7 +5,7 @@ const handlePayload = (payload) => {
 
   const { actions, types, derive } = payload;
   const {
-    mutation: toDeriveMutation,
+    operation: toDeriveOperation,
     introspection_schema: introspectionSchema,
     action_name: actionName
   } = derive || {};
@@ -39,9 +39,9 @@ const handlePayload = (payload) => {
 
   let sdl = `${actionSdl}\n\n${typesSdl}`;
 
-  if (toDeriveMutation) {
+  if (toDeriveOperation) {
     try {
-      const derivation = deriveMutation(toDeriveMutation, introspectionSchema, actionName);
+      const derivation = deriveMutation(toDeriveOperation, introspectionSchema, actionName);
       const derivedActionSdl = getActionDefinitionSdl(derivation.action.name, derivation.action.arguments, derivation.action.output_type);
       const derivedTypesSdl = getTypesSdl(derivation.types);
       sdl = `${derivedActionSdl}\n\n${derivedTypesSdl}\n\n${sdl}`
