@@ -281,7 +281,7 @@ func (ec *ExecutionContext) setupInitTemplatesRepo() error {
 	if err != nil {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
-	ec.CodegenAssetsRepo = util.NewGitUtil(util.InitTemplatesRepoURI, base, "")
+	ec.InitTemplatesRepo = util.NewGitUtil(util.InitTemplatesRepoURI, base, "")
 	return nil
 }
 
