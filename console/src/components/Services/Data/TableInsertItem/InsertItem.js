@@ -282,11 +282,11 @@ class InsertItem extends Component {
                     } else if (refs[colName].defaultNode.checked) {
                       // default
                       return;
-                    } else {
+                    } else if (refs[colName].valueNode.props !== undefined) {
                       inputValues[colName] =
-                        refs[colName].valueNode.props !== undefined
-                          ? refs[colName].valueNode.props.value
-                          : refs[colName].valueNode.value;
+                        refs[colName].valueNode.props.value;
+                    } else if (refs[colName].valueNode.value) {
+                      inputValues[colName] = refs[colName].valueNode.value;
                     }
                   });
                   dispatch(insertItem(tableName, inputValues)).then(() => {
