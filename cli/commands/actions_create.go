@@ -30,7 +30,7 @@ func newActionsCreateCmd(ec *cli.ExecutionContext, v *viper.Viper) *cobra.Comman
   hasura actions create [action-name] --derive-from ''
 
   # Create an action with a different kind or webhook
-  hasura actions create [action-name] --kind synchronous --webhook http://localhost:3000`,
+  hasura actions create [action-name] --kind [synchronous|asynchronous] --webhook [http://localhost:3000]`,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
