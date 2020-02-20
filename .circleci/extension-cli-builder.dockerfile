@@ -1,9 +1,6 @@
-FROM node:8
+FROM node:12
 
 ARG gcloud_version="207.0.0"
-
-# update npm
-RUN npm install -g npm@5
 
 # install dependencies
 RUN apt-get update && apt-get install -y \
@@ -15,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     libnss3 \
     libxss1 \
     libasound2 \
+    zip \
     xvfb \
     && curl -Lo /tmp/gcloud-${gcloud_version}.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${gcloud_version}-linux-x86_64.tar.gz \
     && tar -xzf /tmp/gcloud-${gcloud_version}.tar.gz -C /usr/local \
