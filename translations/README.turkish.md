@@ -173,10 +173,7 @@ Daha fazla detay için [katkıda bulunma kuralını](CONTRIBUTING.md) kontrol ed
 
 ## Marka varlıkları
 
-Hasura brand assets (logos, the Hasura mascot, powered by badges etc.) can be
-found in the [assets/brand](assets/brand) folder. Feel free to use them in your
-application/website etc. We'd be thrilled if you add the "Powered by Hasura"
-badge to your applications built using Hasura. ❤️
+Hasura marka varlıkları (logolar, Hasura maskotu, rozetler vb.) [assets/brand](assets/brand) klasöründedir. Bunları Uygulamanızda/websitenizde kullanmaktan çekinmeyin. Hasura kullanılarak oluşturduğunuz uygulamalarınıza "Powered by Hasura" işareti eklerseniz çok seviniriz. ❤️
 
 <div style="display: flex;">
   <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
@@ -184,12 +181,12 @@ badge to your applications built using Hasura. ❤️
 </div>
 
 ```html
-<!-- For light backgrounds -->
+<!-- Beyaz arkaplan için -->
 <a href="https://hasura.io">
   <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_blue.svg" />
 </a>
 
-<!-- For dark backgrounds -->
+<!-- Siyah arkaplan için -->
 <a href="https://hasura.io">
   <img width="150px" src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_white.svg" />
 </a>
@@ -197,26 +194,26 @@ badge to your applications built using Hasura. ❤️
 
 ## Lisans
 
-The core GraphQL Engine is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
+Çekirdek GraphQL Engine [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0) altında bulunur.
 
-All **other contents** (except those in [`server`](server), [`cli`](cli) and
-[`console`](console) directories) are available under the [MIT License](LICENSE-community).
-This includes everything in the [`docs`](docs) and [`community`](community)
+**Diğer türm içerikler** ([`sunucu`](server), [`cli`](cli) ve
+[`konsol`](console) dizinleri hariç) [MIT License](LICENSE-community) altındadır.
+Bu, [`dokuman`](docs) ve [`topluluk`](community) üzerindeki her şeyi içerir.
 directories.
 
 ## Çeviriler
 
-This readme is available in the following translations:
+Bu Readme sayfası aşağıdaki çevirilerde mevcuttur:
 
-- [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
-- [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
-- [Bosnian :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
-- [Russian :ru:](translations/README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
-- [Greek 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
-- [Spanish 🇲🇽](/translations/README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
-- [Indonesian :indonesia:](translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
-- [Brazilian Portuguese :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
-- [German 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
-- [Chinese :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
+- [Japonca :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
+- [Fransızca :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
+- [Boşnakça :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
+- [Rusca :ru:](translations/README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
+- [Yunanca 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [İspanyolca 🇲🇽](/translations/README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
+- [Endonezyaca :indonesia:](translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
+- [Brezilya Portekizcesi :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
+- [Almanca 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
+- [Çince :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
 
-Translations for other files can be found [here](translations).
+Diğer dosyalar için çeviriler [burada](translations) bulunabilir.
