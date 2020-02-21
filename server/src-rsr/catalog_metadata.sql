@@ -181,7 +181,8 @@ from
             'webhook_conf', webhook_conf :: json,
             'schedule_conf', schedule_conf :: json,
             'payload', payload :: json,
-            'retry_conf', retry_conf :: json
+            'retry_conf', retry_conf :: json,
+            'header_conf', header_conf :: json
           )
         ),
         '[]'

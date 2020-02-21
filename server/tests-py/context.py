@@ -217,6 +217,9 @@ class EvtsWebhookServer(http.server.HTTPServer):
             sz = sz + 1
         return sz
 
+    def is_queue_empty(self):
+        return self.resp_queue.empty
+
     def teardown(self):
         self.evt_trggr_httpd.shutdown()
         self.evt_trggr_httpd.server_close()

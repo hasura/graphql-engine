@@ -657,7 +657,7 @@ CREATE VIEW hdb_catalog.hdb_computed_field_function AS
   FROM hdb_catalog.hdb_computed_field
 );
 
-CREATE OR REPLACE FUNCTION hdb_catalog.check_violation(msg text) RETURNS bool AS 
+CREATE OR REPLACE FUNCTION hdb_catalog.check_violation(msg text) RETURNS bool AS  
 $$
   BEGIN
     RAISE check_violation USING message=msg;
@@ -671,6 +671,7 @@ CREATE TABLE hdb_catalog.hdb_scheduled_trigger
   schedule_conf JSON NOT NULL,
   payload JSON,
   retry_conf JSON,
+  header_conf JSON,
   include_in_metadata BOOLEAN NOT NULL DEFAULT FALSE
 );
 
