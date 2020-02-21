@@ -212,6 +212,7 @@ directories.
 
 This readme is available in the following translations:
 
+- [Turkish :tr:](translations/README.turkish.md) (:pray: [@berat](https://github.com/berat))
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
 - [Bosnian :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
