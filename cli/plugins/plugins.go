@@ -36,7 +36,7 @@ var (
 )
 
 const (
-	indexURI string = "https://github.com/hasura/plugins-index.git"
+	indexURI string = "https://github.com/hasura/cli-plugins-index.git"
 )
 
 // Config defines the required

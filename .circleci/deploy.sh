@@ -103,7 +103,7 @@ deploy_cli_ext() {
     export DIST_PATH="/build/_cli_ext_output"
 
     configure_git
-    git clone https://github.com/hasura/plugins-index.git ~/plugins-index
+    git clone https://github.com/hasura/cli-plugins-index.git ~/plugins-index
     cd ~/plugins-index
     git checkout -b cli-ext-${LATEST_TAG}
     cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext.yaml
@@ -188,13 +188,13 @@ deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     build_and_push_cli_migrations_image
+    deploy_cli_ext
 
     # if this is a stable release, update all latest assets
     if [ $IS_STABLE_RELEASE = true ]; then
         deploy_server_latest
         push_server_binary
         push_latest_cli_migrations_image
-        deploy_cli_ext
         send_pr_to_repo graphql-engine-heroku
         deploy_do_manifests
     fi
