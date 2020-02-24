@@ -98,7 +98,7 @@ deploy_console() {
 deploy_cli_ext() {
     echo "deploying extension cli"
 
-    cd "$ROOT/extension-cli"
+    cd "$ROOT/cli-ext"
     export VERSION=$(../scripts/get-version.sh)
     export DIST_PATH="/build/_cli_ext_output"
 
