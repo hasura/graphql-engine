@@ -258,6 +258,8 @@ theme.fontSizes.tab = theme.fontSizes[3];
 
 theme.fontSizes.explain = theme.fontSizes[0];
 
+theme.fontSizes.icon = theme.fontSizes[3];
+
 // ****************************** //
 
 /* space ~ margin / padding
