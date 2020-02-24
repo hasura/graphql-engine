@@ -118,8 +118,8 @@ Learn more
   :maxdepth: 1
   :titlesonly:
 
-  Getting started <getting-started>
+  Creating actions <create>
   Custom types <types/index>
   Action handlers <action-handlers>
   Async actions <async-actions>
-  Codegen <codegen/index>
+  Codegen <codegen>

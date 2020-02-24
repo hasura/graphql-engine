@@ -20,8 +20,8 @@ system allows us to auto-generate the boilerplate code for actions.
   supported frameworks should grow with contributions from the
   community.
 
-Generating handler code for an action
--------------------------------------
+Generating handler code for your action
+---------------------------------------
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -33,7 +33,7 @@ Generating handler code for an action
     You can select the framework of your choice to get the corresponding
     handler boilerplate code.
 
-    .. thumbnail:: ../../../../img/graphql/manual/actions/codegen/console-codegen-tab.png
+    .. thumbnail:: ../../../img/graphql/manual/actions/codegen/console-codegen-tab.png
        :alt: Console codegen tab
 
 
@@ -51,17 +51,17 @@ Generating handler code for an action
 
     1. Choose which framework you want to codegen for:
 
-       .. thumbnail:: ../../../../img/graphql/manual/actions/codegen/cli-framework-prompt.png
+       .. thumbnail:: ../../../img/graphql/manual/actions/codegen/cli-framework-prompt.png
           :alt: CLI Framework Prompt
 
     2. Choose if you also wish to clone a starter kit for the chosen framework:
 
-       .. thumbnail:: ../../../../img/graphql/manual/actions/codegen/cli-starter-kit-prompt.png
+       .. thumbnail:: ../../../img/graphql/manual/actions/codegen/cli-starter-kit-prompt.png
           :alt: CLI Starter Kit Prompt
 
     3. Choose a path where you want to output the auto-generated code files
 
-       .. thumbnail:: ../../../../img/graphql/manual/actions/codegen/cli-output-dir-prompt.png
+       .. thumbnail:: ../../../img/graphql/manual/actions/codegen/cli-output-dir-prompt.png
           :alt: CLI Starter Kit Prompt
 
 
@@ -98,8 +98,8 @@ Generating handler code for an action
     The codegen files will be generated at the ``output_dir`` path from ``config.yaml``.
 
 
-Building a codegen for a framework
-----------------------------------
+Building a codegen for your framework
+-------------------------------------
 
 As of now, Hasura provides codegen for a few frameworks (``nodejs-express``,
 ``typescript-zeit``, etc).
