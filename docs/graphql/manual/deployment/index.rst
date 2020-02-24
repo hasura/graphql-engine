@@ -38,7 +38,7 @@ to configure the Hasura GraphQL engine for your production environment:
 - :doc:`postgres-permissions`
 - :doc:`secure/index`
 - :doc:`Enable HTTPS <enable-https>`
-- :doc:`Enable allow-list for queries <allow-list>`
+- :doc:`Allow-list for queries <allow-list>`
 - :doc:`Enable HTTP compression <compression>`
 
 Update / downgrade Hasura GraphQL engine

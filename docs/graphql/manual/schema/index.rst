@@ -36,3 +36,4 @@ Postgres constructs.
   custom-field-names
   Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>
+  Database modelling guides <database-modelling/index>

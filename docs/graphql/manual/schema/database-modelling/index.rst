@@ -1,6 +1,6 @@
 .. meta::
    :description: Guides for data modelling with Hasura
-   :keywords: hasura, docs, guide, data modelling
+   :keywords: hasura, docs, schema, guide, data modelling
 
 Guides: Data modelling
 ======================
