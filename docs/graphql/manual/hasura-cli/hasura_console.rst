@@ -7,13 +7,13 @@
 Hasura CLI: hasura console
 --------------------------
 
-Open console to manage database and try out APIs.
+Open the console to manage the database and try out APIs.
 
 Synopsis
 ~~~~~~~~
 
 
-Run a web server to serve Hasura Console for GraphQL engine to manage database and build queries.
+Run a web server to serve the Hasura console for the GraphQL engine to manage the database and build queries.
 
 ::
 
@@ -62,7 +62,7 @@ Options inherited from parent commands
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --skip-update-check   skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

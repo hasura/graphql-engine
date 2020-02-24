@@ -7,15 +7,15 @@
 Hasura CLI: hasura metadata export
 ----------------------------------
 
-Export Hasura GraphQL engine metadata from the database.
+Export Hasura GraphQL engine metadata from the database
 
 Synopsis
 ~~~~~~~~
 
 
-Export Hasura metadata and save it in migrations/metadata.yaml file.
+Export Hasura metadata and save it in the ``migrations/metadata.yaml`` file.
 The output is a yaml file which captures all the metadata required
-by GraphQL Engine. This includes info about tables that are tracked,
+by the GraphQL engine. This includes info about tables that are tracked,
 permission rules, relationships and event triggers that are defined
 on those tables.
 
@@ -54,7 +54,7 @@ Options inherited from parent commands
       --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color              do not colorize output (default: false)
       --project string        directory where commands are executed (default: current dir)
-      --skip-update-check     Skip automatic update check on command execution
+      --skip-update-check     skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

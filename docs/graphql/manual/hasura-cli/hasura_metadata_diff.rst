@@ -14,7 +14,7 @@ Synopsis
 
 
 (PREVIEW) Show changes between two different sets of Hasura metadata.
-By default, shows changes between exported metadata file and server metadata.
+By default, it shows changes between the exported metadata file and server metadata.
 
 ::
 
@@ -59,7 +59,7 @@ Options inherited from parent commands
       --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color              do not colorize output (default: false)
       --project string        directory where commands are executed (default: current dir)
-      --skip-update-check     Skip automatic update check on command execution
+      --skip-update-check     skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

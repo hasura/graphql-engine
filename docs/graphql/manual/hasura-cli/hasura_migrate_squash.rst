@@ -13,7 +13,7 @@ Synopsis
 ~~~~~~~~
 
 
-(PREVIEW) Squash multiple migrations leading upto the latest one into a single migration file.
+(PREVIEW) Squash multiple migrations leading up to the latest one into a single migration file.
 
 ::
 
@@ -24,7 +24,7 @@ Examples
 
 ::
 
-    # NOTE: This command is in PREVIEW, correctness is not guaranteed and the usage may change.
+    # NOTE: This command is in PREVIEW. Correctness is not guaranteed and the usage may change.
 
     # squash all migrations from version 123 to the latest one:
     hasura migrate squash --from 123
@@ -52,7 +52,7 @@ Options inherited from parent commands
       --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color              do not colorize output (default: false)
       --project string        directory where commands are executed (default: current dir)
-      --skip-update-check     Skip automatic update check on command execution
+      --skip-update-check     skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~
