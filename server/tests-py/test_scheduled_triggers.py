@@ -22,7 +22,6 @@ def get_events_of_scheduled_trigger(hge_ctx,trigger_name):
     }
     return hge_ctx.v1q(q)
 
-@pytest.mark.usefixtures("evts_webhook")
 class TestScheduledTriggerCron(object):
 
     cron_trigger_name = "a_scheduled_trigger"
@@ -30,7 +29,7 @@ class TestScheduledTriggerCron(object):
     webhook_path = "/hello"
     url = '/v1/query'
 
-    def test_create_schedule_triggers(self,hge_ctx,evts_webhook):
+    def test_create_cron_schedule_triggers(self,hge_ctx):
         # setting the time zone to 'UTC' because everything
         # (utcnow,now,cronschedule) will all be based on UTC.
         q = {
@@ -68,7 +67,7 @@ class TestScheduledTriggerCron(object):
         assert cron_st_code == 200
         assert cron_st_resp['message'] == 'success'
 
-    def test_check_generated_scheduled_events(self,hge_ctx,evts_webhook):
+    def test_check_generated_cron_scheduled_events(self,hge_ctx):
         future_schedule_timestamps = []
         iter = croniter(self.cron_schedule,self.init_time)
         for i in range(100):
@@ -93,7 +92,7 @@ class TestScheduledTriggerCron(object):
             scheduled_events_ts.append(datetime_ts)
         assert future_schedule_timestamps == scheduled_events_ts
 
-    def test_delete_adhoc_scheduled_trigger(self,hge_ctx,evts_webhook):
+    def test_delete_cron_scheduled_trigger(self,hge_ctx):
         q = {
             "type":"delete_scheduled_trigger",
             "args":{
@@ -161,11 +160,11 @@ class TestScheduledTriggerAdhoc(object):
         assert adhoc_st_resp['message'] == 'success'
         assert adhoc_st_code == 200
 
-    def test_check_generated_event(self,hge_ctx,evts_webhook):
+    def test_check_adhoc_generated_event(self,hge_ctx,evts_webhook):
         adhoc_event_st,adhoc_event_resp = get_events_of_scheduled_trigger(hge_ctx,self.adhoc_trigger_name)
         assert int(adhoc_event_resp['result'][1][0]) == 1 # An adhoc ST should create exactly one schedule event
 
-    def test_check_webhook_event(self,hge_ctx,evts_webhook):
+    def test_check_adhoc_webhook_event(self,hge_ctx,evts_webhook):
         ev_full = self.poll_until_scheduled_event_found(evts_webhook)
         validate_event_webhook(ev_full['path'],'/hello')
         validate_event_headers(ev_full['headers'],{"header-1":"header-1-value"})
