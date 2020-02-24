@@ -28,8 +28,8 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
 
 * **Güçlü sorgular yapın**: Dahili filtreleme, sayfalandırma, model arama, yığın ekleme, güncelleme, mutasyonları silme
 * **Gerçek zamanlı**: Abonelikleri kullanarak herhangi bir GraphQL sorgusunu canlı sorguya dönüştürme
-* **Uzaktan şemaları birleştirme**: Tek bir GraphQL Engine uç noktası üzerinden iş mantığı için özel GraphQL şemalarına erişin.[**Daha fazla**](remote-schemas.md).
-* **Webhooks ve sunucusuz işlevleri tetikleme**: On Postgres insert/update/delete events ([daha fazla](event-triggers.md))
+* **Uzaktan şemaları birleştirme**: Tek bir GraphQL Engine uç noktası üzerinden iş mantığı için özel GraphQL şemalarına erişin.[**Daha fazla**](../remote-schemas.md).
+* **Webhooks ve sunucusuz işlevleri tetikleme**: On Postgres insert/update/delete events ([daha fazla](../event-triggers.md))
 * **Mevcut, canlı veritabanlarıyla çalışır**: Kullanıma hazır bir GraphQL API'si almak için mevcut bir Postgres veritabanına yönlendirin
 * **Hasas erişim kontrolü**: Kimlik doğrulama sisteminizle birleşen dinamik erişim kontrolü (örn: auth0, firebase-auth)
 * **Yüksek performans ve az yer kaplama**: ~15mb docker image; ~50MB RAM @ 1000 req/s; multi-core aware
@@ -42,22 +42,22 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **İçerikler**
 
-- [Hızlı Başlangıç:](#quickstart)
-    - [Tek tıklamayla Heroku'ya deploy etme](#one-click-deployment-on-heroku)
-    - [Diğer deploy etme yöntemleri](#other-deployment-methods)
-- [Yapı](#architecture)
-- [İstemci tarafı takımlar](#client-side-tooling)
-- [İş mantığı ekleme](#add-business-logic)
-    - [Uzak şemalar](#remote-schemas)
-    - [Veritabanı olaylarındaki webhooks tetikleme](#trigger-webhooks-on-database-events)
-- [Demolar](#demos)
-    - [Gerçek zamanlı uygulamalar](#realtime-applications)
-    - [Videolar](#videos)
-- [Destek ve sorun giderme](#support--troubleshooting)
-- [Katkıda bulunmak](#contributing)
-- [Marka varlıkları](#brand-assets)
-- [Lisans](#license)
-- [Çeviriler](#translations)
+- [Hızlı Başlangıç:](#hizli-baslangic)
+    - [Tek tıklamayla Heroku'ya deploy etme](#tek-tiklamayla-Heroku-ya-deploy-etme)
+    - [Diğer deploy etme yöntemleri](#diger-deploy-etme-yontemleri)
+- [Yapı](#yapi)
+- [İstemci tarafı takımlar](#istemci-tarafi-takimlari)
+- [İş mantığı ekleme](#is-mantigi-ekleme)
+    - [Uzak şemalar](#uzak-semalar)
+    - [Veritabanı olaylarındaki webhooks tetikleme](#veritabani-olaylarindaki-webhooks-tetikleme)
+- [Demolar](#demolar)
+    - [Gerçek zamanlı uygulamalar](#gercek-zamanli-uygulamalar)
+    - [Videolar](#videolar)
+- [Destek ve sorun giderme](#destek-ve-sorun-giderme)
+- [Katkıda bulunmak](#katkida-bulunmak)
+- [Marka varlıkları](#marka-varliklari)
+- [Lisans](#lisans)
+- [Çeviriler](#ceviriler)
 
 <!-- markdown-toc end -->
 
@@ -92,7 +92,7 @@ Tek tıklamayla deploy etme seçenekleri için aşağıdaki talimatları takip e
 
 Docker tabanlı dağıtım ve gelişmiş yapılandırma seçenekleri için [deployment
 guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ya da 
-[install manifests](install-manifests) bakınız.
+[install manifests](../install-manifests) bakınız.
 
 ## Yapı
 
@@ -100,7 +100,7 @@ Hasura GraphQL Engine, bir Postgres veritabnı örneğini önler ve istemci uygu
 
 Ayrıca uzaktan GraphQL şemalarını birleştirebilir ve birleşik GraphQL API'si sağlayabilirsiniz.
 
-![Hasura GraphQL Engine architecture](assets/hasura-arch.svg)
+![Hasura GraphQL Engine architecture](../assets/hasura-arch.svg)
 
 ## İstemci tarafı takımlar
 
@@ -112,12 +112,12 @@ GraphQL Engine, backend'inize özel iş mantığı eklemek için kolay anlaşıl
 
 ### Uzak Şemalar
 
-Hasura'nın Postgres tabanlı GraphQL şemasına ek olarak uzak bir şemada özel çözümleyiciler ekleyin. Bir ödeme API'sini uygulamak veya veritabanımızda bulunan verileri sorgulamak gibi kullanım durumları için idealdir. - [daha fazla](remote-schemas.md).
+Hasura'nın Postgres tabanlı GraphQL şemasına ek olarak uzak bir şemada özel çözümleyiciler ekleyin. Bir ödeme API'sini uygulamak veya veritabanımızda bulunan verileri sorgulamak gibi kullanım durumları için idealdir. - [daha fazla](../remote-schemas.md).
 
 ### Veritabanı olaylarındaki webhooks tetikleme
 
 Veritabanı olaylarına göre tetiklenen eşzamansız iş mantığını ekleyin.
-Bildirimler, Postgres veri  hatları veya asenkron işleme için idealdir - [daha fazla](event-triggers.md).
+Bildirimler, Postgres veri  hatları veya asenkron işleme için idealdir - [daha fazla](../event-triggers.md).
 
 ### Türetilmiş veri veya veri dönüşümleri
 
@@ -127,24 +127,24 @@ Postgres'te verileri dönüştürün veya GraphQL Engine kullanılarak ssorgulan
 
 Tüm örnek uygulamaları kontrol edin.
 
-[community/sample-apps](community/sample-apps) dizini.
+[community/sample-apps](../community/sample-apps) dizini.
 
 
 ### Gerçek zamanlı uygulamalar
 
 - React ile oluşturulan grup shohbet uygulaması, bir yazma belirteci içerir, çevrimiçi kullanıcılar ve yeni mesaj bildirimleri.
   - [Deneyin](https://realtime-chat.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-chat)
+  - [Tutorial](../community/sample-apps/realtime-chat)
   - [APİ'lere göz atın](https://realtime-chat.demo.hasura.app/console)
 
 - Bir harita üzerinde hareket eden mevcut GPS koordinatlarını değiştiren, çalışan bir aracı gösteren canlı konum izleme uygulaması.
   - [Deneyin](https://realtime-location-tracking.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-location-tracking)
+  - [Tutorial](../community/sample-apps/realtime-location-tracking)
   - [APİ'lere göz ayın](https://realtime-location-tracking.demo.hasura.app/console)
 
 - Sürekli değişen veriler üzerinde veri toplama için gerçek zamanlı bir kontrol paneli.
   - [Deneyin](https://realtime-poll.demo.hasura.app/)
-  - [Tutorial](community/sample-apps/realtime-poll)
+  - [Tutorial](../community/sample-apps/realtime-poll)
   - [APİ'lere göz atın](https://realtime-poll.demo.hasura.app/console)
 
 ### Videolar
@@ -163,21 +163,21 @@ Belgeler ve topluluğun çoğu sorunu gidermenize yardımcı olacaktır. Bir hat
 * Ürün güncellemelerini takip edin: [@HasuraHQ](https://twitter.com/hasurahq)
 * Bizimle konuşun: [website chat](https://hasura.io)
 
-Tolumda açık ve hoş bir ortam yaratmaya kararlıyız. Lütfen [Code of Conduct](code-of-conduct.md) adresine bakınız
+Tolumda açık ve hoş bir ortam yaratmaya kararlıyız. Lütfen [Code of Conduct](../code-of-conduct.md) adresine bakınız
 
-Bir güvenlik sorununu bildirmek istiyorsanız lütfen [bunu okuyun](SECURITY.md).
+Bir güvenlik sorununu bildirmek istiyorsanız lütfen [bunu okuyun](../SECURITY.md).
 
 ## Katkıda bulunmak
 
-Daha fazla detay için [katkıda bulunma kuralını](CONTRIBUTING.md) kontrol edin.
+Daha fazla detay için [katkıda bulunma kuralını](../CONTRIBUTING.md) kontrol edin.
 
 ## Marka varlıkları
 
-Hasura marka varlıkları (logolar, Hasura maskotu, rozetler vb.) [assets/brand](assets/brand) klasöründedir. Bunları Uygulamanızda/websitenizde kullanmaktan çekinmeyin. Hasura kullanılarak oluşturduğunuz uygulamalarınıza "Powered by Hasura" işareti eklerseniz çok seviniriz. ❤️
+Hasura marka varlıkları (logolar, Hasura maskotu, rozetler vb.) [assets/brand](../assets/brand) klasöründedir. Bunları Uygulamanızda/websitenizde kullanmaktan çekinmeyin. Hasura kullanılarak oluşturduğunuz uygulamalarınıza "Powered by Hasura" işareti eklerseniz çok seviniriz. ❤️
 
 <div style="display: flex;">
-  <img src="assets/brand/powered_by_hasura_blue.svg" width="150px"/>
-  <img src="assets/brand/powered_by_hasura_white.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
+  <img src="../assets/brand/powered_by_hasura_white.svg" width="150px"/>
 </div>
 
 ```html
@@ -196,9 +196,9 @@ Hasura marka varlıkları (logolar, Hasura maskotu, rozetler vb.) [assets/brand]
 
 Çekirdek GraphQL Engine [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0) altında bulunur.
 
-**Diğer türm içerikler** ([`sunucu`](server), [`cli`](cli) ve
-[`konsol`](console) dizinleri hariç) [MIT License](LICENSE-community) altındadır.
-Bu, [`dokuman`](docs) ve [`topluluk`](community) üzerindeki her şeyi içerir.
+**Diğer türm içerikler** ([`sunucu`](../server), [`cli`](../cli) ve
+[`konsol`](../console) dizinleri hariç) [MIT License](../LICENSE-community) altındadır.
+Bu, [`dokuman`](../docs) ve [`topluluk`](../community) üzerindeki her şeyi içerir.
 directories.
 
 ## Çeviriler
@@ -216,4 +216,4 @@ Bu Readme sayfası aşağıdaki çevirilerde mevcuttur:
 - [Almanca 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
 - [Çince :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
 
-Diğer dosyalar için çeviriler [burada](translations) bulunabilir.
+Diğer dosyalar için çeviriler [burada](../translations) bulunabilir.
