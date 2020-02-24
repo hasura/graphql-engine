@@ -1083,7 +1083,7 @@ serveOptionsParser =
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
 downgradeShortcuts :: [(String, String)]
-downgradeShortcuts =
+downgradeShortcuts = 
   [ ("v1.0.0-beta.1", "16")
   , ("v1.0.0-beta.2", "17")
   , ("v1.0.0-beta.3", "17")
@@ -1098,12 +1098,10 @@ downgradeShortcuts =
   , ("v1.0.0", "28")
   , ("v1.1.0-beta.1", "29")
   , ("v1.1.0-beta.2", "30")
-  , ("v1.1.0-beta.3", "31")
-  , ("v1.1.0", "31")
   ]
 
 downgradeOptionsParser :: Parser DowngradeOptions
-downgradeOptionsParser =
+downgradeOptionsParser = 
     DowngradeOptions
     <$> choice
         (strOption
@@ -1118,7 +1116,7 @@ downgradeOptionsParser =
           help "Don't run any migrations, just print out the SQL."
         )
   where
-    shortcut v catalogVersion =
+    shortcut v catalogVersion = 
       flag' (DataString.fromString catalogVersion)
         ( long ("to-" <> v) <>
           help ("Downgrade to graphql-engine version " <> v <> " (equivalent to --to-catalog-version " <> catalogVersion <> ")")
