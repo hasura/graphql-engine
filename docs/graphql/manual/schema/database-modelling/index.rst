@@ -2,8 +2,8 @@
    :description: Guides for data modelling with Hasura
    :keywords: hasura, docs, schema, guide, data modelling
 
-Guides: Data modelling
-======================
+Data modelling guides
+=====================
 
 .. contents:: Table of contents
   :backlinks: none
