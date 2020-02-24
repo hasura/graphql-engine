@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 import pytest
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime,timedelta
 from croniter import croniter
 from validate import validate_event_webhook,validate_event_headers
-from _queue import Empty
+from queue import Empty
 import time
 
 def stringify_datetime(dt):
