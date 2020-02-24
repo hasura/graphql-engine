@@ -1,18 +1,11 @@
-// Copyright 2019 The Kubernetes Authors.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package commands
+
+/*
+some of the code here is borrowed from the krew codebse (kubernetes)
+and the copyright belongs to the respective authors.
+
+source: https://github.com/kubernetes-sigs/krew/blob/master/cmd/krew/cmd/install.go
+*/
 
 import (
 	"fmt"
@@ -24,13 +17,13 @@ import (
 )
 
 func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
-	opts := &PluginInstallOptions{
+	opts := &pluginInstallOptions{
 		EC: ec,
 	}
 	pluginsInstallCmd := &cobra.Command{
 		Use:   "install [plugin-name]",
-		Short: "Install a hasura plugin",
-		Example: `  # Install a plugin
+		Short: "Install a plugin from the index",
+		Example: `  # Install a plugin:
   hasura plugins install [plugin-name]`,
 		SilenceUsage: true,
 		Args:         cobra.ExactArgs(1),
@@ -72,13 +65,13 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return pluginsInstallCmd
 }
 
-type PluginInstallOptions struct {
+type pluginInstallOptions struct {
 	EC *cli.ExecutionContext
 
 	Name         string
 	ManifestFile string
 }
 
-func (o *PluginInstallOptions) Run() error {
+func (o *pluginInstallOptions) Run() error {
 	return o.EC.PluginsConfig.Install(o.Name, o.ManifestFile)
 }

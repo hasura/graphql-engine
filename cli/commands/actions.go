@@ -12,20 +12,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+// NewActionsCmd returns the actions command
 func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	ec.Viper = v
 	actionsCmd := &cobra.Command{
-		Use:   "actions",
-		Short: "Manage actions on hasura",
-		Example: `  # Create an action
-  hasura actions create [action-name]
-
-  # Generate code for an actions
-  hasura actions codegen [action-name]
-
-  # Set a framework to be used by codegen
-  hasura actions use-codegen`,
+		Use:          "actions",
+		Short:        "Manage actions on hasura",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			err := ec.Prepare()

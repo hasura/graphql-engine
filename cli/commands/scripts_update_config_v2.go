@@ -24,13 +24,24 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
 	var metadataDir string
 	scriptsUpdateConfigV2Cmd := &cobra.Command{
-		Use:   "update-config-v2",
-		Short: "Upgrade config from v1 to v2",
-		Example: `  # Upgrade config from v1 to v2
-  hasura scripts update-config-v2
-  
-  # Upgrade to v2 config with metadata directory set
-  hasura scripts update-config-v2 --metadata-dir metadata`,
+		Use:     "update-project-v2",
+		Aliases: []string{"update-config-v2"},
+		Short:   "Update the Hasura Project from v1 to v2",
+		Long: `Update the Hasura Project from v1 to v2 by executing the following actions:
+1. Installs a plugin system for CLI
+2. Installs CLI Extensions plugins (primarily for actions)
+3. Takes a back up of migrations directory
+4. Removes all metadata yaml migrations and converts everything to SQL
+5. Exports the metadata from server in the new format (multiple files in a directory)
+6. Re-write the config.yaml file to new format
+`,
+		Example: `  # Read more about v2 configuration for CLI at https://docs.hasura.io
+
+  # Update the Hasura Project from v1 to v2
+  hasura scripts update-project-v2
+
+  # Update the Hasura Project from v1 to v2 with a different metadata directory:
+  hasura scripts update-project-v2 --metadata-dir "metadata"`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
@@ -65,7 +76,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 			defer func() {
 				if err != nil {
-					ec.Logger.Infof("migrations is backed up in migrations_backup directory.")
+					ec.Logger.Infof("migrations are backed up to migrations_backup directory.")
 				}
 			}()
 			// Open the file driver to list of source migrations and remove unwanted yaml
@@ -93,7 +104,10 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 					return errors.Wrapf(err, "error in reading %s file", upMetaMigration.Raw)
 				}
 				buf := new(bytes.Buffer)
-				buf.ReadFrom(bodyReader)
+				_, err = buf.ReadFrom(bodyReader)
+				if err != nil {
+					return errors.Wrapf(err, "unable to read bytes")
+				}
 				var queries []hasuradb.HasuraInterfaceQuery
 				err = yaml.Unmarshal(buf.Bytes(), &queries)
 				if err != nil {
@@ -165,7 +179,10 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 					return errors.Wrapf(err, "error in reading %s file", downMetaMigration.Raw)
 				}
 				buf := new(bytes.Buffer)
-				buf.ReadFrom(bodyReader)
+				_, err = buf.ReadFrom(bodyReader)
+				if err != nil {
+					return errors.Wrap(err, "unable to read bytes")
+				}
 				var queries []hasuradb.HasuraInterfaceQuery
 				err = yaml.Unmarshal(buf.Bytes(), &queries)
 				if err != nil {
