@@ -55,7 +55,7 @@ To downgrade Hasura GraphQL engine, check out the following page:
 Production checklist
 --------------------
 
-For deploying Hasura GraphQL engine in production, check out our production checklist:
+For deploying Hasura GraphQL engine to production, check out our production checklist:
 
 - :doc:`Production checklist <production-checklist>`
 
