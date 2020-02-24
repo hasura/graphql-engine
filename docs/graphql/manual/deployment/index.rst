@@ -34,9 +34,30 @@ Configuration
 By default, Hasura GraphQL engine runs in a very permissive mode for easier development. Check out the below pages
 to configure the Hasura GraphQL engine for your production environment:
 
-- :doc:`secure/index`
-- :doc:`postgres-permissions`
 - :doc:`GraphQL engine server configuration <graphql-engine-flags/index>`
+- :doc:`postgres-permissions`
+- :doc:`secure/index`
+- :doc:`Enable HTTPS <enable-https>`
+- :doc:`Enable allow-list for queries <allow-list>`
+- :doc:`Enable HTTP compression <compression>`
+
+Update / downgrade Hasura GraphQL engine
+----------------------------------------
+
+To update Hasura GraphQL engine, check out the following page:
+
+- :doc:`Update Hasura GraphQL engine <update/index>`
+
+To downgrade Hasura GraphQL engine, check out the following page:
+
+- :doc:`Downgrade Hasura GraphQL engine <downgrading>`
+
+Production checklist
+--------------------
+
+For deploying Hasura GraphQL engine in production, check out our production checklist:
+
+- :doc:`Production checklist <production-checklist>`
 
 Logs
 ----
@@ -44,7 +65,6 @@ Logs
 For access to Hasura GraphQL engine logs, check the below page for details:
 
 - :doc:`Logging <logging/index>`
-
 
 .. toctree::
    :maxdepth: 1
