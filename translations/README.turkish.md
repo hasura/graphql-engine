@@ -42,7 +42,7 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **İçerikler**
 
-- [Hızlı Başlangıç:](#hzl-balang)
+- [Hızlı Başlangıç:](#hızlı-başlangıç)
     - [Tek tıklamayla Heroku'ya deploy etme](#tek-tiklamayla-Heroku-ya-deploy-etme)
     - [Diğer deploy etme yöntemleri](#diger-deploy-etme-yontemleri)
 - [Yapı](#yap)
