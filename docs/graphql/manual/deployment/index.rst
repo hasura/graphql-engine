@@ -26,7 +26,7 @@ Choose from the following guides to deploy the Hasura GraphQL engine and connect
 - :doc:`Deploy using Docker <deploy/docker>`
 - :doc:`Deploy using Kubernetes <deploy/kubernetes>`
 
-You can also check :doc:`../guides/deployment/index` for more specific examples.
+You can also check :doc:`Deployment guides <guides/index>` for more specific examples.
 
 Configuration
 -------------
@@ -63,3 +63,4 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    Production checklist <production-checklist>
    Updating GraphQL engine <update/index>
    Downgrading GraphQL engine <downgrading>
+   Deployment guides <guides/index>
