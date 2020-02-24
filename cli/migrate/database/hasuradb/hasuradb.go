@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/oliveagle/jsonpath"
 	"github.com/parnurzeal/gorequest"
@@ -40,9 +41,11 @@ type Config struct {
 	MigrationsTable string
 	SettingsTable   string
 	v1URL           *nurl.URL
+	graphqlURL      *nurl.URL
 	schemDumpURL    *nurl.URL
 	Headers         map[string]string
 	isCMD           bool
+	Plugins         types.MetadataPlugins
 }
 
 type HasuraDB struct {
@@ -77,12 +80,6 @@ func WithInstance(config *Config, logger *log.Logger) (database.Driver, error) {
 		logger.Debug(err)
 		return nil, err
 	}
-
-	err := hx.Scan()
-	if err != nil {
-		return nil, err
-	}
-
 	return hx, nil
 }
 
@@ -115,13 +112,18 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		}
 	}
 
-	hx, err := WithInstance(&Config{
+	config := &Config{
 		MigrationsTable: DefaultMigrationsTable,
 		SettingsTable:   DefaultSettingsTable,
 		v1URL: &nurl.URL{
 			Scheme: scheme,
 			Host:   hurl.Host,
 			Path:   path.Join(hurl.Path, "v1/query"),
+		},
+		graphqlURL: &nurl.URL{
+			Scheme: scheme,
+			Host:   hurl.Host,
+			Path:   path.Join(hurl.Path, "v1/graphql"),
 		},
 		schemDumpURL: &nurl.URL{
 			Scheme: scheme,
@@ -130,13 +132,13 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		},
 		isCMD:   isCMD,
 		Headers: headers,
-	}, logger)
-
+		Plugins: make(types.MetadataPlugins, 0),
+	}
+	hx, err := WithInstance(config, logger)
 	if err != nil {
 		logger.Debug(err)
 		return nil, err
 	}
-
 	return hx, nil
 }
 
@@ -353,55 +355,6 @@ func (h *HasuraDB) Version() (version int64, dirty bool, err error) {
 	return int64(tmpVersion), false, nil
 }
 
-func (h *HasuraDB) Reset() error {
-	query := HasuraBulk{
-		Type: "bulk",
-		Args: []HasuraQuery{
-			{
-				Type: "clear_metadata",
-				Args: HasuraArgs{},
-			},
-			{
-				Type: "run_sql",
-				Args: HasuraArgs{
-					SQL: `DROP SCHEMA public CASCADE`,
-				},
-			},
-			{
-				Type: "run_sql",
-				Args: HasuraArgs{
-					SQL: `CREATE SCHEMA public`,
-				},
-			},
-			{
-				Type: "run_sql",
-				Args: HasuraArgs{
-					SQL: `TRUNCATE ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable),
-				},
-			},
-		},
-	}
-
-	resp, body, err := h.sendv1Query(query)
-	if err != nil {
-		return err
-	}
-
-	var horror HasuraError
-
-	// If status != 200 return error
-	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
-		}
-
-		return horror.Error(h.config.isCMD)
-	}
-
-	return nil
-}
-
 func (h *HasuraDB) Drop() error {
 	return nil
 }
@@ -485,8 +438,25 @@ func (h *HasuraDB) ensureVersionTable() error {
 
 func (h *HasuraDB) sendv1Query(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := gorequest.New()
-
 	request = request.Post(h.config.v1URL.String()).Send(m)
+	for headerName, headerValue := range h.config.Headers {
+		request.Set(headerName, headerValue)
+	}
+
+	resp, body, errs := request.EndBytes()
+
+	if len(errs) == 0 {
+		err = nil
+	} else {
+		err = errs[0]
+	}
+
+	return resp, body, err
+}
+
+func (h *HasuraDB) sendv1GraphQL(query interface{}) (resp *http.Response, body []byte, err error) {
+	request := gorequest.New()
+	request = request.Post(h.config.graphqlURL.String()).Send(query)
 
 	for headerName, headerValue := range h.config.Headers {
 		request.Set(headerName, headerValue)
