@@ -44,11 +44,12 @@ class TestScheduledTriggerCron(object):
         # any of the events are not triggered.
         min_after_30_mins = (datetime.utcnow() + timedelta(minutes=30)).minute
         TestScheduledTriggerCron.cron_schedule = "{} * * * *".format(min_after_30_mins)
+
         cron_st_api_query = {
             "type":"create_scheduled_trigger",
             "args":{
                 "name":self.cron_trigger_name,
-                "webhook":"http://127.0.0.1:5592" + "/foo",
+                "webhook":"http://127.0.0.1:5593" + "/foo",
                 "schedule":{
                     "type":"cron",
                     "value":self.cron_schedule
@@ -62,7 +63,10 @@ class TestScheduledTriggerCron(object):
                 "payload":self.webhook_payload
             }
         }
-        cron_st_code,cron_st_resp,_ = hge_ctx.anyq(self.url,cron_st_api_query,{})
+        headers = {}
+        if hge_ctx.hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        cron_st_code,cron_st_resp,_ = hge_ctx.anyq(self.url,cron_st_api_query,headers)
         TestScheduledTriggerCron.init_time = datetime.utcnow() # the cron events will be generated based on the current time, they will not be exactly the same though(the server now and now here)
         assert cron_st_code == 200
         assert cron_st_resp['message'] == 'success'
@@ -156,7 +160,10 @@ class TestScheduledTriggerAdhoc(object):
                 ]
             }
         }
-        adhoc_st_code,adhoc_st_resp,_ = hge_ctx.anyq(self.url,adhoc_st_api_query,{})
+        headers = {}
+        if hge_ctx.hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        adhoc_st_code,adhoc_st_resp,_ = hge_ctx.anyq(self.url,adhoc_st_api_query,headers)
         assert adhoc_st_resp['message'] == 'success'
         assert adhoc_st_code == 200
 
