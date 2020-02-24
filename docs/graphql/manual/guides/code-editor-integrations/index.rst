@@ -1,3 +1,7 @@
+.. meta::
+   :description: Guides for code editor integrations with Hasura
+   :keywords: hasura, docs, guide, code editor, integration
+
 Guides: Code Editor Integrations
 ================================
 

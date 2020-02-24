@@ -11,20 +11,21 @@ module Hasura.Cache.Bounded
   , initialise
   , clear
   , insert
+  , insertAllStripes
   , lookup
   , getEntries
   ) where
 
 import           Hasura.Prelude     hiding (lookup)
 
-import           Control.Concurrent (getNumCapabilities, myThreadId,
-                                     threadCapability)
+import           Control.Concurrent (getNumCapabilities, myThreadId, threadCapability)
 import           Data.Word          (Word16)
 
 import qualified Data.Aeson         as J
 import qualified Data.HashPSQ       as HashPSQ
 import qualified Data.IORef         as IORef
 import qualified Data.Vector        as V
+import           GHC.Natural        (Natural)
 
 newtype CacheSize
   = CacheSize { unCacheSize :: Word16 }
@@ -32,9 +33,12 @@ newtype CacheSize
 
 mkCacheSize :: String -> Either String CacheSize
 mkCacheSize v =
-  case readMaybe v of
-    Just w16 -> return (CacheSize w16)
-    Nothing  -> fail "cache size should be between 1 - 65,535"
+  -- NOTE: naively using readMaybe Word16 will silently wrap
+  case readMaybe v :: Maybe Natural of
+    Just n | n <= max16 && n > 0 -> return (CacheSize $ fromIntegral n)
+    _ -> fail "cache size must be given as a number between 1 and 65535"
+  where
+    max16 = fromIntegral (maxBound :: Word16) :: Natural
 
 newtype Tick
   = Tick { unTick :: Word64 }
@@ -120,7 +124,7 @@ clearLocal (LocalCacheRef ref)=
 -- | lookup for a key in the local cache
 lookupLocal :: (Hashable k, Ord k) => LocalCacheRef k v -> k -> IO (Maybe v)
 lookupLocal (LocalCacheRef ref) k =
-  -- | Return the result and replace the cache if needed
+  -- Return the result and replace the cache if needed
   IORef.atomicModifyIORef' ref $ \currentCache ->
     case lookupPure k currentCache of
       Just (v, newCache) -> (newCache, Just v)
@@ -159,19 +163,25 @@ getLocal (BoundedCache handles) = do
 
   (i, _) <- myThreadId >>= threadCapability
 
-  -- The number of capability could be dynamically changed.
-  -- So, let's check the upper boundary of the vector
-  let lim = V.length handles
-      j | i < lim   = i
-        | otherwise = i `mod` lim
+  -- The number of capabilities can grow dynamically so make sure we wrap
+  -- around when indexing.
+  let j = i `mod` V.length handles
 
   return $ handles V.! j
 
+-- | Insert into our thread's local cache stripe.
 insert
   :: (Hashable k, Ord k) => k -> v -> BoundedCache k v -> IO ()
 insert k v striped = do
   localHandle <- getLocal striped
   insertLocal localHandle k v
+
+-- | Insert into all stripes (non-atomically).
+insertAllStripes
+  :: (Hashable k, Ord k) =>  k -> v -> BoundedCache k v ->IO ()
+insertAllStripes k v (BoundedCache handles) = do
+  forM_ handles $ \localHandle->
+    insertLocal localHandle k v
 
 lookup :: (Hashable k, Ord k) => k -> BoundedCache k v -> IO (Maybe v)
 lookup k striped = do

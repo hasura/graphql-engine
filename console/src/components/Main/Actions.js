@@ -33,6 +33,18 @@ const setFeaturesCompatibility = data => ({
   data,
 });
 
+const PRO_CLICKED = 'Main/PRO_CLICKED';
+const emitProClickedEvent = data => ({
+  type: PRO_CLICKED,
+  data,
+});
+
+const SET_READ_ONLY_MODE = 'Main/SET_READ_ONLY_MODE';
+const setReadOnlyMode = data => ({
+  type: SET_READ_ONLY_MODE,
+  data,
+});
+
 const featureCompatibilityInit = () => {
   return (dispatch, getState) => {
     const { serverVersion } = getState().main;
@@ -129,12 +141,10 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
   };
   return dispatch(requestActionPlain(url, options)).then(
     data => {
-      let parsedVersion;
       try {
-        parsedVersion = JSON.parse(data);
         dispatch({
           type: SET_LATEST_SERVER_VERSION_SUCCESS,
-          data: parsedVersion.latest,
+          data: JSON.parse(data),
         });
       } catch (e) {
         console.error(e);
@@ -212,12 +222,13 @@ const mainReducer = (state = defaultState, action) => {
     case SET_LATEST_SERVER_VERSION_SUCCESS:
       return {
         ...state,
-        latestServerVersion: action.data,
+        latestStableServerVersion: action.data.latest,
+        latestServerVersion: action.data.prerelease,
       };
     case SET_LATEST_SERVER_VERSION_ERROR:
       return {
         ...state,
-        latestServerVersion: null,
+        latestStableServerVersion: null,
       };
     case UPDATE_MIGRATION_STATUS_SUCCESS:
       return {
@@ -245,6 +256,12 @@ const mainReducer = (state = defaultState, action) => {
       };
     case UPDATE_MIGRATION_STATUS_ERROR:
       return { ...state, migrationError: action.data };
+    case SET_READ_ONLY_MODE:
+      return {
+        ...state,
+        readOnlyMode: action.data,
+        migrationMode: !action.data, // HACK
+      };
     case HASURACTL_URL_ENV:
       return { ...state, hasuractlEnv: action.data };
     case UPDATE_MIGRATION_MODE:
@@ -301,9 +318,11 @@ export {
   UPDATE_MIGRATION_STATUS_ERROR,
   UPDATE_ADMIN_SECRET_INPUT,
   loadMigrationStatus,
+  setReadOnlyMode,
   updateMigrationModeStatus,
   LOGIN_IN_PROGRESS,
   LOGIN_ERROR,
+  emitProClickedEvent,
   loadServerVersion,
   fetchServerConfig,
   loadLatestServerVersion,

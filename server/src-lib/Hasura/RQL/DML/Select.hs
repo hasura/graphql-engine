@@ -2,8 +2,6 @@ module Hasura.RQL.DML.Select
   ( selectP2
   , selectQuerySQL
   , selectAggQuerySQL
-  , mkFuncSelectSimple
-  , mkFuncSelectAgg
   , convSelectQuery
   , asSingleRowJsonResp
   , module Hasura.RQL.DML.Select.Internal
@@ -29,7 +27,7 @@ import qualified Database.PG.Query              as Q
 import qualified Hasura.SQL.DML                 as S
 
 convSelCol :: (UserInfoM m, QErrM m, CacheRM m)
-           => FieldInfoMap PGColumnInfo
+           => FieldInfoMap FieldInfo
            -> SelPermInfo
            -> SelCol
            -> m [ExtCol]
@@ -49,7 +47,7 @@ convSelCol fieldInfoMap spi (SCStar wildcard) =
 
 convWildcard
   :: (UserInfoM m, QErrM m, CacheRM m)
-  => FieldInfoMap PGColumnInfo
+  => FieldInfoMap FieldInfo
   -> SelPermInfo
   -> Wildcard
   -> m [ExtCol]
@@ -71,14 +69,14 @@ convWildcard fieldInfoMap selPermInfo wildcard =
       mRelSelPerm <- askPermInfo' PASelect relTabInfo
 
       forM mRelSelPerm $ \rspi -> do
-        rExtCols <- convWildcard (_tiFieldInfoMap relTabInfo) rspi wc
+        rExtCols <- convWildcard (_tciFieldInfoMap $ _tiCoreInfo relTabInfo) rspi wc
         return $ ECRel relName Nothing $
           SelectG rExtCols Nothing Nothing Nothing Nothing
 
     relExtCols wc = mapM (mkRelCol wc) relColInfos
 
 resolveStar :: (UserInfoM m, QErrM m, CacheRM m)
-            => FieldInfoMap PGColumnInfo
+            => FieldInfoMap FieldInfo
             -> SelPermInfo
             -> SelectQ
             -> m SelectQExt
@@ -105,7 +103,7 @@ resolveStar fim spi (SelectG selCols mWh mOb mLt mOf) = do
 convOrderByElem
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (FieldInfoMap PGColumnInfo, SelPermInfo)
+  -> (FieldInfoMap FieldInfo, SelPermInfo)
   -> OrderByCol
   -> m AnnObCol
 convOrderByElem sessVarBldr (flds, spi) = \case
@@ -120,7 +118,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
            [ fldName <<> " has type 'geometry'"
            , " and cannot be used in order_by"
            ]
-          else return $ AOCPG colInfo
+          else return $ AOCPG $ pgiColumn colInfo
       FIRelationship _ -> throw400 UnexpectedPayload $ mconcat
         [ fldName <<> " is a"
         , " relationship and should be expanded"
@@ -153,7 +151,7 @@ convOrderByElem sessVarBldr (flds, spi) = \case
 
 convSelectQ
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => FieldInfoMap PGColumnInfo  -- Table information of current table
+  => FieldInfoMap FieldInfo  -- Table information of current table
   -> SelPermInfo   -- Additional select permission info
   -> SelectQExt     -- Given Select Query
   -> SessVarBldr m
@@ -208,7 +206,7 @@ convSelectQ fieldInfoMap selPermInfo selQ sessVarBldr prepValBldr = do
 
 convExtSimple
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap PGColumnInfo
+  => FieldInfoMap FieldInfo
   -> SelPermInfo
   -> PGCol
   -> m PGColumnInfo
@@ -220,7 +218,7 @@ convExtSimple fieldInfoMap selPermInfo pgCol = do
 
 convExtRel
   :: (UserInfoM m, QErrM m, CacheRM m, HasSQLGenCtx m)
-  => FieldInfoMap PGColumnInfo
+  => FieldInfoMap FieldInfo
   -> RelName
   -> Maybe RelName
   -> SelectQExt
@@ -264,35 +262,22 @@ convSelectQuery
 convSelectQuery sessVarBldr prepArgBuilder (DMLQuery qt selQ) = do
   tabInfo     <- withPathK "table" $ askTabInfo qt
   selPermInfo <- askSelPermInfo tabInfo
-  extSelQ <- resolveStar (_tiFieldInfoMap tabInfo) selPermInfo selQ
+  let fieldInfo = _tciFieldInfoMap $ _tiCoreInfo tabInfo
+  extSelQ <- resolveStar fieldInfo selPermInfo selQ
   validateHeaders $ spiRequiredHeaders selPermInfo
-  convSelectQ (_tiFieldInfoMap tabInfo) selPermInfo
+  convSelectQ fieldInfo selPermInfo
     extSelQ sessVarBldr prepArgBuilder
 
-mkFuncSelectSimple
-  :: AnnFnSelSimple
-  -> Q.Query
-mkFuncSelectSimple annFnSel =
-  Q.fromBuilder $ toSQL $
-  mkFuncSelectWith (mkSQLSelect False) annFnSel
-
-mkFuncSelectAgg
-  :: AnnFnSelAgg
-  -> Q.Query
-mkFuncSelectAgg annFnSel =
-  Q.fromBuilder $ toSQL $
-  mkFuncSelectWith mkAggSelect annFnSel
-
-selectP2 :: Bool -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
-selectP2 asSingleObject (sel, p) =
+selectP2 :: JsonAggSelect -> (AnnSimpleSel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
+selectP2 jsonAggSelect (sel, p) =
   encJFromBS . runIdentity . Q.getRow
   <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder selectSQL) (toList p) True
   where
-    selectSQL = toSQL $ mkSQLSelect asSingleObject sel
+    selectSQL = toSQL $ mkSQLSelect jsonAggSelect sel
 
-selectQuerySQL :: Bool -> AnnSimpleSel -> Q.Query
-selectQuerySQL asSingleObject sel =
-  Q.fromBuilder $ toSQL $ mkSQLSelect asSingleObject sel
+selectQuerySQL :: JsonAggSelect -> AnnSimpleSel -> Q.Query
+selectQuerySQL jsonAggSelect sel =
+  Q.fromBuilder $ toSQL $ mkSQLSelect jsonAggSelect sel
 
 selectAggQuerySQL :: AnnAggSel -> Q.Query
 selectAggQuerySQL =
@@ -307,14 +292,14 @@ phaseOne
   :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
   => SelectQuery -> m (AnnSimpleSel, DS.Seq Q.PrepArg)
 phaseOne =
-  liftDMLP1 . convSelectQuery sessVarFromCurrentSetting binRHSBuilder
+  runDMLP1T . convSelectQuery sessVarFromCurrentSetting binRHSBuilder
 
 phaseTwo :: (MonadTx m) => (AnnSimpleSel, DS.Seq Q.PrepArg) -> m EncJSON
 phaseTwo =
-  liftTx . selectP2 False
+  liftTx . selectP2 JASMultipleRows
 
 runSelect
-  :: (QErrM m, UserInfoM m, CacheRWM m, HasSQLGenCtx m, MonadTx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m, MonadTx m)
   => SelectQuery -> m EncJSON
 runSelect q =
   phaseOne q >>= phaseTwo

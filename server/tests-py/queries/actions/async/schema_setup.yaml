@@ -1,0 +1,51 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user"(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        is_admin BOOLEAN NOT NULL DEFAULT false
+      );
+
+- type: track_table
+  args:
+    name: user
+    schema: public
+
+- type: set_custom_types
+  args:
+    objects:
+    - name: UserId
+      fields:
+      - name: id
+        type: Int!
+      relationships:
+      - name: user
+        type: object
+        remote_table: user
+        field_mapping:
+          id: id
+
+- type: create_action
+  args:
+    name: create_user
+    definition:
+      kind: asynchronous
+      arguments:
+      - name: email
+        type: String!
+      - name: name
+        type: String!
+      output_type: UserId
+      handler: http://127.0.0.1:5593/create-user
+
+- type: create_action_permission
+  args:
+    action: create_user
+    role: user
+    definition:
+      select:
+        filter: {}

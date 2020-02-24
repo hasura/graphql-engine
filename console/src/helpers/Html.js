@@ -11,6 +11,7 @@ import { env } from './localDev';
  * HTML doctype declaration, which is added to the rendered output
  * by the server.js file.
  */
+
 export default class Html extends Component {
   static propTypes = {
     assets: PropTypes.object,
@@ -82,7 +83,7 @@ export default class Html extends Component {
           />
 
           <div id="content" className="content" />
-          <script src={assets.javascript.main} charSet="UTF-8" />
+          <script src={`${assets.javascript.main}`} charSet="UTF-8" />
           {/*
           <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@9.13.1/build/highlight.min.js" />
           <script type="text/javascript" src="https://unpkg.com/sql-formatter@latest/dist/sql-formatter.min.js" />

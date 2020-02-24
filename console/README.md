@@ -37,7 +37,7 @@ Feel free to open pull requests to address these issues or to add/fix  console f
 git clone https://github.com/<your-user-name>/graphql-engine
 cd graphql-engine
 cd console
-npm install
+npm ci
 ```
 
 ### Run console development server
@@ -74,11 +74,11 @@ NODE_ENV=development
 PORT=3000
 CDN_ASSETS=true
 ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
-ASSETS_VERSION=channel/beta/v1.0
+ASSETS_VERSION=channel/stable/v1.0
 ENABLE_TELEMETRY=true
 URL_PREFIX=/
 DATA_API_URL=http://localhost:8080
-SERVER_VERSION=v1.0.0-beta.6
+SERVER_VERSION=v1.0.0
 CONSOLE_MODE=server
 IS_ADMIN_SECRET_SET=true
 ```
@@ -120,11 +120,11 @@ API_HOST=http://localhost
 API_PORT=9693
 CDN_ASSETS=true
 ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
-ASSETS_VERSION=channel/beta/v1.0
+ASSETS_VERSION=channel/stable/v1.0
 ENABLE_TELEMETRY=true
 URL_PREFIX=/
 DATA_API_URL=http://localhost:8080
-SERVER_VERSION=v1.0.0-beta.6
+SERVER_VERSION=v1.0.0
 CONSOLE_MODE=cli
 ADMIN_SECRET=my-admin-secret
 ```

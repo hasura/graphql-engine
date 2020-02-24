@@ -60,6 +60,7 @@ const defaultQueryPermissions = {
   },
   select: {
     columns: [],
+    computed_fields: [],
     filter: {},
     limit: null,
     allow_aggregations: false,
@@ -170,6 +171,7 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
+  allRoles: [],
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
   trackedFunctions: [],

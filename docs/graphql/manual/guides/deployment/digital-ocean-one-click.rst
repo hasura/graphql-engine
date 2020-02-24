@@ -1,3 +1,7 @@
+.. meta::
+   :description: Deploy Hasura GraphQL engine One-click App on DigitalOcean Marketplace
+   :keywords: hasura, docs, guide, deployment, digital ocean, marketplace
+
 Hasura GraphQL engine One-click App on DigitalOcean Marketplace
 ===============================================================
 
@@ -306,7 +310,7 @@ Connection pooling
 Connection pooling is a built-in feature of graphql-engine. The default connection pool size is 50.
 If you need to configure the pool size or the timeout, you can use the below environment variables.
 
-- ``HASURA_GRAPHQL_PG_CONNECTIONS``: Number of connections per stripe that need to be opened to Postgres (default: 50)
+- ``HASURA_GRAPHQL_PG_CONNECTIONS``: Maximum number of Postgres connections that can be opened per stripe (default: 50). 
 - ``HASURA_GRAPHQL_PG_TIMEOUT``: Each connection’s idle time before it is closed (default: 180 sec)
 
 .. note::

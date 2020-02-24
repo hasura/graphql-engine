@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura metadata to manage Hasura metadata with Hasura CLI
+   :keywords: hasura, docs, CLI, hasura metadata
+
 .. _hasura_metadata:
 
 Hasura CLI: hasura metadata

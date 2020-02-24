@@ -23,8 +23,7 @@ import qualified Hasura.Logging                   as L
 
 import           Hasura.Db
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (QErr, RoleName (..),
-                                                   SchemaCache (..),
+import           Hasura.RQL.Types                 (QErr, RoleName (..), SchemaCache (..),
                                                    mkNonEmptyText)
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
@@ -117,6 +116,12 @@ data ServeOptions impl
   , soPlanCacheOptions :: !E.PlanCacheOptions
   }
 
+data DowngradeOptions
+  = DowngradeOptions
+  { dgoTargetVersion :: !T.Text
+  , dgoDryRun        :: !Bool
+  } deriving (Show, Eq)
+
 data RawConnInfo =
   RawConnInfo
   { connHost     :: !(Maybe String)
@@ -135,6 +140,7 @@ data HGECommandG a
   | HCClean
   | HCExecute
   | HCVersion
+  | HCDowngrade !DowngradeOptions
   deriving (Show, Eq)
 
 data API
@@ -235,10 +241,10 @@ parseStrAsBool t
 readIsoLevel :: String -> Either String Q.TxIsolation
 readIsoLevel isoS =
   case isoS of
-    "read-committed" -> return Q.ReadCommitted
+    "read-committed"  -> return Q.ReadCommitted
     "repeatable-read" -> return Q.RepeatableRead
-    "serializable" -> return Q.Serializable
-    _ -> Left "Only expecting read-committed / repeatable-read / serializable"
+    "serializable"    -> return Q.Serializable
+    _                 -> Left "Only expecting read-committed / repeatable-read / serializable"
 
 type WithEnv a = ReaderT Env (ExceptT String Identity) a
 
@@ -287,11 +293,12 @@ mkHGEOptions (HGEOptionsG rawConnInfo rawCmd) =
   where
     connInfo = mkRawConnInfo rawConnInfo
     cmd = case rawCmd of
-      HCServe rso -> HCServe <$> mkServeOptions rso
-      HCExport    -> return HCExport
-      HCClean     -> return HCClean
-      HCExecute   -> return HCExecute
-      HCVersion   -> return HCVersion
+      HCServe rso     -> HCServe <$> mkServeOptions rso
+      HCExport        -> return HCExport
+      HCClean         -> return HCClean
+      HCExecute       -> return HCExecute
+      HCVersion       -> return HCVersion
+      HCDowngrade tgt -> return (HCDowngrade tgt)
 
 mkRawConnInfo :: RawConnInfo -> WithEnv RawConnInfo
 mkRawConnInfo rawConnInfo = do
@@ -344,6 +351,8 @@ mkServeOptions rso = do
 #endif
     mkConnParams (RawConnParams s c i p) = do
       stripes <- fromMaybe 1 <$> withEnv s (fst pgStripesEnv)
+      -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
+      -- hard throughput cap at 1000RPS when db queries take 50ms on average:
       conns <- fromMaybe 50 <$> withEnv c (fst pgConnsEnv)
       iTime <- fromMaybe 180 <$> withEnv i (fst pgTimeoutEnv)
       allowPrepare <- fromMaybe True <$> withEnv p (fst pgUsePrepareEnv)
@@ -361,7 +370,11 @@ mkServeOptions rso = do
       withEnv mType "HASURA_GRAPHQL_AUTH_HOOK_TYPE"
 
     mkCorsConfig mCfg = do
-      corsCfg <- fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
+      corsDisabled <- withEnvBool False (fst corsDisableEnv)
+      corsCfg <- if corsDisabled
+        then return (CCDisabled True)
+        else fromMaybe CCAllowAll <$> withEnv mCfg (fst corsDomainEnv)
+
       readCookVal <- withEnvBool (rsoWsReadCookie rso) (fst wsReadCookieEnv)
       wsReadCookie <- case (isCorsDisabled corsCfg, readCookVal) of
         (True, _)      -> return readCookVal
@@ -462,7 +475,7 @@ serveCmdFooter =
       [ databaseUrlEnv, retriesNumEnv, servePortEnv, serveHostEnv
       , pgStripesEnv, pgConnsEnv, pgTimeoutEnv, pgUsePrepareEnv, txIsoEnv
       , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
-      , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, enableConsoleEnv
+      , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
       , enableAllowlistEnv, enabledLogsEnv, logLevelEnv
       ]
@@ -497,13 +510,16 @@ serveHostEnv =
 pgConnsEnv :: (String, String)
 pgConnsEnv =
   ( "HASURA_GRAPHQL_PG_CONNECTIONS"
-  , "Number of connections per stripe that need to be opened to Postgres (default: 50)"
+  , "Maximum number of Postgres connections that can be opened per stripe (default: 50). "
+    <> "When the maximum is reached we will block until a new connection becomes available, "
+    <> "even if there is capacity in other stripes."
   )
 
 pgStripesEnv :: (String, String)
 pgStripesEnv =
   ( "HASURA_GRAPHQL_PG_STRIPES"
-  , "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1)"
+  , "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1). "
+    <> "New connections will be taken from a particular stripe pseudo-randomly."
   )
 
 pgTimeoutEnv :: (String, String)
@@ -559,6 +575,12 @@ unAuthRoleEnv =
   ( "HASURA_GRAPHQL_UNAUTHORIZED_ROLE"
   , "Unauthorized role, used when admin-secret is not sent in admin-secret only mode "
                                  ++ "or \"Authorization\" header is absent in JWT mode"
+  )
+
+corsDisableEnv :: (String, String)
+corsDisableEnv =
+  ( "HASURA_GRAPHQL_DISABLE_CORS"
+  , "Disable CORS. Do not send any CORS headers on any request"
   )
 
 corsDomainEnv :: (String, String)
@@ -846,7 +868,7 @@ parseCorsConfig = mapCC <$> disableCors <*> corsDomain
 
     disableCors =
       switch ( long "disable-cors" <>
-               help "Disable CORS. Do not send any CORS headers on any request"
+               help (snd corsDisableEnv)
              )
 
     mapCC isDisabled domains =
@@ -1057,3 +1079,45 @@ serveOptionsParser =
   <*> parseEnabledLogs
   <*> parseLogLevel
   <*> parsePlanCacheSize
+
+-- | This implements the mapping between application versions
+-- and catalog schema versions.
+downgradeShortcuts :: [(String, String)]
+downgradeShortcuts = 
+  [ ("v1.0.0-beta.1", "16")
+  , ("v1.0.0-beta.2", "17")
+  , ("v1.0.0-beta.3", "17")
+  , ("v1.0.0-beta.4", "19")
+  , ("v1.0.0-beta.5", "19")
+  , ("v1.0.0-beta.6", "22")
+  , ("v1.0.0-beta.7", "24")
+  , ("v1.0.0-beta.8", "26")
+  , ("v1.0.0-beta.9", "26")
+  , ("v1.0.0-beta.10", "27")
+  , ("v1.0.0-rc.1", "28")
+  , ("v1.0.0", "28")
+  , ("v1.1.0-beta.1", "29")
+  , ("v1.1.0-beta.2", "30")
+  ]
+
+downgradeOptionsParser :: Parser DowngradeOptions
+downgradeOptionsParser = 
+    DowngradeOptions
+    <$> choice
+        (strOption
+          ( long "to-catalog-version" <>
+            metavar "<VERSION>" <>
+            help "The target catalog schema version (e.g. 31)"
+          )
+        : map (uncurry shortcut) downgradeShortcuts
+        )
+    <*> switch
+        ( long "dryRun" <>
+          help "Don't run any migrations, just print out the SQL."
+        )
+  where
+    shortcut v catalogVersion = 
+      flag' (DataString.fromString catalogVersion)
+        ( long ("to-" <> v) <>
+          help ("Downgrade to graphql-engine version " <> v <> " (equivalent to --to-catalog-version " <> catalogVersion <> ")")
+        )
