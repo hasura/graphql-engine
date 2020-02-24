@@ -1,15 +1,19 @@
+.. meta::
+   :description: Use hasura plugins uninstall to uninstall a Hasura plugin on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura plugins uninstall
+
 .. _hasura_plugins_uninstall:
 
 Hasura CLI: hasura plugins uninstall
 ------------------------------------
 
-Uninstall a hasura plugin
+Uninstall a Hasura plugin.
 
 Synopsis
 ~~~~~~~~
 
 
-Uninstall a hasura plugin
+Uninstall a Hasura plugin.
 
 ::
 

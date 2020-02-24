@@ -1,15 +1,19 @@
+.. meta::
+   :description: Use hasura plugins list to list Hasura plugins on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura plugins list
+
 .. _hasura_plugins_list:
 
 Hasura CLI: hasura plugins list
 -------------------------------
 
-List all hasura plugin
+List all Hasura plugins.
 
 Synopsis
 ~~~~~~~~
 
 
-List all hasura plugin
+List all Hasura plugins.
 
 ::
 

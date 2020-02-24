@@ -1,15 +1,19 @@
+.. meta::
+   :description: Use hasura plugins to manage Hasura plugins on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura plugins
+
 .. _hasura_plugins:
 
 Hasura CLI: hasura plugins
 --------------------------
 
-Manage hasura plugins
+Manage Hasura plugins.
 
 Synopsis
 ~~~~~~~~
 
 
-Manage hasura plugins
+Manage Hasura plugins.
 
 Examples
 ~~~~~~~~
@@ -48,7 +52,7 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* :ref:`hasura <hasura>` 	 - Hasura GraphQL Engine command line tool
+* :ref:`hasura <hasura>` 	 - Hasura GraphQL engine command line tool
 * :ref:`hasura plugins install <hasura_plugins_install>` 	 - Install a hasura plugin
 * :ref:`hasura plugins list <hasura_plugins_list>` 	 - List all hasura plugin
 * :ref:`hasura plugins uninstall <hasura_plugins_uninstall>` 	 - Uninstall a hasura plugin

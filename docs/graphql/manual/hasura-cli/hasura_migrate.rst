@@ -1,23 +1,27 @@
+.. meta::
+   :description: Use hasura migrate to manage Hasura migrations on the database with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura migrate
+
 .. _hasura_migrate:
 
 Hasura CLI: hasura migrate
 --------------------------
 
-Manage migrations on the database
+Manage migrations on the database.
 
 Synopsis
 ~~~~~~~~
 
 
-Manage migrations on the database
+Manage migrations on the database.
 
 Options
 ~~~~~~~
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
   -h, --help                  help for migrate
 
 Options inherited from parent commands
@@ -33,7 +37,7 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* :ref:`hasura <hasura>` 	 - Hasura GraphQL Engine command line tool
+* :ref:`hasura <hasura>` 	 - Hasura GraphQL engine command line tool
 * :ref:`hasura migrate apply <hasura_migrate_apply>` 	 - Apply migrations on the database
 * :ref:`hasura migrate create <hasura_migrate_create>` 	 - Create files required for a migration
 * :ref:`hasura migrate squash <hasura_migrate_squash>` 	 - (PREVIEW) Squash multiple migrations into a single one

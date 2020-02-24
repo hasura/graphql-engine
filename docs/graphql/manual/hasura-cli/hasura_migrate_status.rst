@@ -1,15 +1,19 @@
+.. meta::
+   :description: Use hasura migrate status to display the current status of Hasura migrations on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura migrate status
+
 .. _hasura_migrate_status:
 
 Hasura CLI: hasura migrate status
 ---------------------------------
 
-Display current status of migrations on a database
+Display current status of migrations on a database.
 
 Synopsis
 ~~~~~~~~
 
 
-Display current status of migrations on a database
+Display current status of migrations on a database.
 
 ::
 
@@ -38,8 +42,8 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
       --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color              do not colorize output (default: false)
       --project string        directory where commands are executed (default: current dir)

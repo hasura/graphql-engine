@@ -1,15 +1,19 @@
+.. meta::
+   :description: Use hasura actions use-codegen to generate code for actions on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura actions use-codegen
+
 .. _hasura_actions_use-codegen:
 
 Hasura CLI: hasura actions use-codegen
 --------------------------------------
 
-Use the codegen to generate code for hasura actions
+Use the codegen to generate code for hasura actions.
 
 Synopsis
 ~~~~~~~~
 
 
-Use the codegen to generate code for hasura actions
+Use the codegen to generate code for hasura actions.
 
 ::
 
@@ -47,8 +51,8 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
       --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color              do not colorize output (default: false)
       --project string        directory where commands are executed (default: current dir)

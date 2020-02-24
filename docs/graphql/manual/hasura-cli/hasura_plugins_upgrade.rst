@@ -1,15 +1,19 @@
+.. meta::
+   :description: Use hasura plugins upgrade to upgrade a Hasura plugin on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura plugins upgrade
+
 .. _hasura_plugins_upgrade:
 
 Hasura CLI: hasura plugins upgrade
 ----------------------------------
 
-Upgrade a hasura plugin
+Upgrade a Hasura plugin.
 
 Synopsis
 ~~~~~~~~
 
 
-Upgrade a hasura plugin
+Upgrade a Hasura plugin.
 
 ::
 

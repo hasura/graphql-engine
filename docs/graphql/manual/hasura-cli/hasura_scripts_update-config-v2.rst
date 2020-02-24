@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura scripts for the update-config-v2 script on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura scripts update-config-v2
+
 .. _hasura_scripts_update-config-v2:
 
 Hasura CLI: hasura scripts update-config-v2
@@ -31,8 +35,8 @@ Options
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
   -h, --help                  help for update-config-v2
       --metadata-dir string    (default "metadata")
 

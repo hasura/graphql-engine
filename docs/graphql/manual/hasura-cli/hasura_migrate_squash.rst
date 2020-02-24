@@ -1,15 +1,19 @@
+.. meta::
+   :description: Use hasura migrate squash to squash multiple migrations into one migration with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura migrate squash
+
 .. _hasura_migrate_squash:
 
 Hasura CLI: hasura migrate squash
 ---------------------------------
 
-(PREVIEW) Squash multiple migrations into a single one
+(PREVIEW) Squash multiple migrations into a single one.
 
 Synopsis
 ~~~~~~~~
 
 
-(PREVIEW) Squash multiple migrations leading upto the latest one into a single migration file
+(PREVIEW) Squash multiple migrations leading upto the latest one into a single migration file.
 
 ::
 
@@ -43,8 +47,8 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
       --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color              do not colorize output (default: false)
       --project string        directory where commands are executed (default: current dir)

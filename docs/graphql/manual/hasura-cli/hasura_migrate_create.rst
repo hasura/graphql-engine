@@ -1,15 +1,19 @@
+.. meta::
+   :description: Use hasura migrate create to create migration files for Hasura migrations with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura migrate create
+
 .. _hasura_migrate_create:
 
 Hasura CLI: hasura migrate create
 ---------------------------------
 
-Create files required for a migration
+Create files required for a migration.
 
 Synopsis
 ~~~~~~~~
 
 
-Create sql and yaml files required for a migration
+Create sql and yaml files required for a migration.
 
 ::
 
@@ -47,8 +51,8 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
       --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color              do not colorize output (default: false)
       --project string        directory where commands are executed (default: current dir)

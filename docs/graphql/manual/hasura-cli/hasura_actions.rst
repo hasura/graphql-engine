@@ -1,15 +1,18 @@
+.. meta::
+   :description: Use hasura actions to manage actions on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura actions
+
 .. _hasura_actions:
 
 Hasura CLI: hasura actions
 --------------------------
 
-Manage actions on hasura
+Manage actions on hasura.
 
 Synopsis
 ~~~~~~~~
 
-
-Manage actions on hasura
+Manage actions on hasura.
 
 Examples
 ~~~~~~~~
@@ -30,8 +33,8 @@ Options
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
   -h, --help                  help for actions
 
 Options inherited from parent commands
@@ -47,7 +50,7 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* :ref:`hasura <hasura>` 	 - Hasura GraphQL Engine command line tool
+* :ref:`hasura <hasura>` 	 - Hasura GraphQL engine command line tool
 * :ref:`hasura actions codegen <hasura_actions_codegen>` 	 - Generate code for actions
 * :ref:`hasura actions create <hasura_actions_create>` 	 - Create a hasura action
 * :ref:`hasura actions use-codegen <hasura_actions_use-codegen>` 	 - Use the codegen to generate code for hasura actions

@@ -1,15 +1,19 @@
+.. meta::
+   :description: Use hasura metadata inconsistency status to show the status of Hasura metadata with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura metadata inconsistency status
+
 .. _hasura_metadata_inconsistency_status:
 
 Hasura CLI: hasura metadata inconsistency status
 ------------------------------------------------
 
-Check if the metadata is inconsistent or not
+Check if the metadata is inconsistent or not.
 
 Synopsis
 ~~~~~~~~
 
 
-Check if the metadata is inconsistent or not
+Check if the metadata is inconsistent or not.
 
 ::
 
@@ -27,8 +31,8 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
       --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color              do not colorize output (default: false)
       --project string        directory where commands are executed (default: current dir)

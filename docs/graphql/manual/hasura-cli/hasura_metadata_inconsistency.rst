@@ -1,15 +1,19 @@
+.. meta::
+   :description: Use hasura metadata inconsistency to export Hasura metadata from the database with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura metadata inconsistency
+
 .. _hasura_metadata_inconsistency:
 
 Hasura CLI: hasura metadata inconsistency
 -----------------------------------------
 
-Manage inconsistent objects in Hasura Metadata
+Manage inconsistent objects in Hasura metadata.
 
 Synopsis
 ~~~~~~~~
 
 
-Manage inconsistent objects in Hasura Metadata
+Manage inconsistent objects in Hasura metadata.
 
 Alias: inconsistencies, ic
 
@@ -25,8 +29,8 @@ Options inherited from parent commands
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL Engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
       --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color              do not colorize output (default: false)
       --project string        directory where commands are executed (default: current dir)
@@ -35,7 +39,7 @@ Options inherited from parent commands
 SEE ALSO
 ~~~~~~~~
 
-* :ref:`hasura metadata <hasura_metadata>` 	 - Manage Hasura GraphQL Engine metadata saved in the database
+* :ref:`hasura metadata <hasura_metadata>` 	 - Manage Hasura GraphQL engine metadata saved in the database
 * :ref:`hasura metadata inconsistency drop <hasura_metadata_inconsistency_drop>` 	 - Drop inconsistent objects from the metadata
 * :ref:`hasura metadata inconsistency list <hasura_metadata_inconsistency_list>` 	 - List all inconsistent objects from the metadata
 * :ref:`hasura metadata inconsistency status <hasura_metadata_inconsistency_status>` 	 - Check if the metadata is inconsistent or not
