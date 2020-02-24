@@ -8,13 +8,16 @@ Action handlers
   :local:
 
 
-Actions need to be backed by custom business logic. This business logic can be defined in a handler which is an HTTP webhook.
+Actions need to be backed by custom business logic. This business logic can be
+defined in a handler which is an HTTP webhook.
 
 
 HTTP handler
 ------------
 
-When the action mutation is called, Hasura makes a ``POST`` request to the handler with the mutation arguments and the session variables. The request payload is:
+When the action mutation is called, Hasura makes a ``POST`` request to the
+handler with the mutation arguments and the session variables. The request
+payload is:
 
 .. code-block:: json
 
@@ -33,12 +36,14 @@ When the action mutation is called, Hasura makes a ``POST`` request to the handl
 Returning a success response
 ----------------------------
 
-To return a success response, you must send back a response payload of action's response type. The HTTP status code must be ``2xx`` for a successful response.
+To return a success response, you must send back a response payload of action's
+response type. The HTTP status code must be ``2xx`` for a successful response.
 
 Returning an error response
 ---------------------------
 
-To return an error response, you must send back an error object or a list of error objects. An error object looks like:
+To return an error response, you must send back an error object or a list of
+error objects. An error object looks like:
 
 .. code-block:: json
 
@@ -93,19 +98,22 @@ Hasura will call the handler with the following payload:
       }
     }
 
-To return a success respone, you must send the response of the action's output type (in this case, ``UserInfo``) with a status code ``2xx``. So a sample response would be:
+To return a success respone, you must send the response of the action's output
+type (in this case, ``UserInfo``) with a status code ``2xx``. So a sample
+response would be:
 
 .. code-block:: json
 
     {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC,
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC",
       "userId": 4829
     }
 
-To throw an error, you must a response payload of the followin type while setting the status code as ``4xx``.
+To throw an error, you must a response payload of the followin type while
+setting the status code as ``4xx``.
 
-..code-block:: json
+.. code-block:: json
 
-    {
-      "message": "invalid credentials"
-    }
+   {
+     "message": "invalid credentials"
+   }

@@ -31,7 +31,9 @@ Before getting the codegen, you have to configure your codegen. Run:
    :alt: CLI Starter Kit Prompt
 
 
-This command will update your ``config.yaml`` with the codegen config as per your preferences. You can also set these values manually in ``config.yaml``. For example:
+This command will update your ``config.yaml`` with the codegen config as per
+your preferences. You can also set these values manually in ``config.yaml``.
+For example:
 
 .. code-block:: yaml
 

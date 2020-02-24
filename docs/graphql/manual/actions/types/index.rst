@@ -6,7 +6,8 @@ Custom Types
   :depth: 1
   :local:
 
-You can add custom GraphQL types in Hasura that you can utilise for defining your actions.
+You can add custom GraphQL types in Hasura that you can utilise for
+defining your actions.
 
 Learn more
 ----------

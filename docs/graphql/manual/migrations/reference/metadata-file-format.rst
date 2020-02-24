@@ -165,5 +165,4 @@ With ``config v2``, the metadata that is exported from the server is a directory
 - ``functions.yaml``: Contains the metadata related to :doc:`custom functions<../../schema/custom-functions>`
 - ``allow_list.yaml``: Contains the metadata related to :doc:`allow lists<../../deployment/allow-list>`
 - ``actions.yaml``: Contains the metadata related to :doc:`actions<../../actions/index>`
-- ``actions.graphql: Contains all the action definition and custom type definitions
-
+- ``actions.graphql``: Contains all the action definition and custom type definitions
