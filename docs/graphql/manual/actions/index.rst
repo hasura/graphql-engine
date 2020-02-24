@@ -1,5 +1,5 @@
-Actions (preview)
-=================
+Actions (beta)
+==============
 
 .. contents:: Table of contents
   :backlinks: none
