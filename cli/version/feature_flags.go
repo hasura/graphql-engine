@@ -14,7 +14,7 @@ type ServerFeatureFlags struct {
 }
 
 const adminSecretVersion = "v1.0.0-alpha38"
-const actionVersion = "v1.2.0"
+const actionVersion = "v1.2.0-beta.1"
 
 // GetServerFeatureFlags returns the feature flags for server.
 func (v *Version) GetServerFeatureFlags() error {
