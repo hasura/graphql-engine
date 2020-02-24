@@ -86,7 +86,7 @@ class Main extends React.Component {
   setShowUpdateNotification() {
     const {
       latestStableServerVersion,
-      latestServerVersion,
+      latestPreReleaseServerVersion,
       serverVersion,
       console_opts,
     } = this.props;
@@ -94,9 +94,15 @@ class Main extends React.Component {
     const allowPreReleaseNotifications =
       !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
 
-    const latestServerVersionToCheck = allowPreReleaseNotifications
-      ? latestServerVersion
-      : latestStableServerVersion;
+    let latestServerVersionToCheck;
+    if (
+      allowPreReleaseNotifications &&
+      versionGT(latestPreReleaseServerVersion, latestStableServerVersion)
+    ) {
+      latestServerVersionToCheck = latestPreReleaseServerVersion;
+    } else {
+      latestServerVersionToCheck = latestStableServerVersion;
+    }
 
     try {
       const lastUpdateCheckClosed = getLocalStorageItem(
