@@ -43,21 +43,21 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
 **İçerikler**
 
 - [Hızlı Başlangıç:](#hızlı-başlangıç)
-    - [Tek tıklamayla Heroku'ya deploy etme](#tek-tiklamayla-Heroku-ya-deploy-etme)
-    - [Diğer deploy etme yöntemleri](#diger-deploy-etme-yontemleri)
-- [Yapı](#yap)
-- [İstemci tarafı takımlar](#istemci-tarafi-takimlari)
-- [İş mantığı ekleme](#is-mantigi-ekleme)
-    - [Uzak şemalar](#uzak-semalar)
-    - [Veritabanı olaylarındaki webhooks tetikleme](#veritabani-olaylarindaki-webhooks-tetikleme)
+    - [Tek tıklamayla Heroku'ya deploy etme](#tek-tıklama-ile-herokuya-deploy-etme)
+    - [Diğer deploy etme yöntemleri](#diğer-deploy-etme-yöntemleri)
+- [Yapı](#yapı)
+- [İstemci tarafı takımlar](#i̇stemci-tarafı-takımlar)
+- [İş mantığı ekleme](#ş-mantığı-ekleme)
+    - [Uzak şemalar](#uzak-şemalar)
+    - [Veritabanı olaylarındaki webhooks tetikleme](#veritabanı-olaylarındaki-webhooks-tetikleme)
 - [Demolar](#demolar)
-    - [Gerçek zamanlı uygulamalar](#gercek-zamanli-uygulamalar)
+    - [Gerçek zamanlı uygulamalar](#gerçek-zamanlı-uygulamalar)
     - [Videolar](#videolar)
 - [Destek ve sorun giderme](#destek-ve-sorun-giderme)
-- [Katkıda bulunmak](#katkida-bulunmak)
-- [Marka varlıkları](#marka-varliklari)
+- [Katkıda bulunmak](#katkıda-bulunmak)
+- [Marka varlıkları](#marka-varlıkları)
 - [Lisans](#lisans)
-- [Çeviriler](#ceviriler)
+- [Çeviriler](#çeviriler)
 
 <!-- markdown-toc end -->
 
