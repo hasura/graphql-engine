@@ -6,7 +6,7 @@ npm install
 npm run package
 ```
 
-The binaries will be placed in the `bin` directory at root. Copy the binary to your PATH as `scaffolder`.
+The binaries will be placed in the `bin` directory at root. Copy the binary to your PATH as `cli-ext`.
 
 ## API
 

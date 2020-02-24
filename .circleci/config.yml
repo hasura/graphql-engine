@@ -365,21 +365,21 @@ jobs:
     - checkout
     - restore_cache:
         key:
-          cli-ext-npm-cache-v1-{{ checksum "extension-cli/package.json" }}-{{ checksum "extension-cli/package-lock.json" }}
+          cli-ext-npm-cache-v1-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
     - run:
         name: install dependencies
-        working_directory: extension-cli
+        working_directory: cli-ext
         command: make ci-deps
     - save_cache:
         key:
-          cli-ext-npm-cache-v1-{{ checksum "extension-cli/package.json" }}-{{ checksum "extension-cli/package-lock.json" }}
+          cli-ext-npm-cache-v1-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
         paths:
-        - extension-cli/node_modules
+        - cli-ext/node_modules
         - ~/.npm
         - ~/.cache
     - run:
         name: build extension cli
-        working_directory: extension-cli
+        working_directory: cli-ext
         command: |
           npm install -g pkg
           npm run build
