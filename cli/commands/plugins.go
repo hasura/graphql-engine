@@ -1,5 +1,22 @@
 package commands
 
+/*
+Most of the plugin handler code is borrowed from the kubectl codebase.
+Wherever "courtesy: kubectl" is indicated, the copyright belongs to the
+respective authors with the following notice:
+
+Copyright 2014 The Kubernetes Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 import (
 	"fmt"
 	"os"
@@ -18,21 +35,17 @@ import (
 
 var validPluginFilenamePrefixes = []string{"hasura"}
 
+// NewPluginsCmd returns the plugins command
 func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsCmd := &cobra.Command{
-		Use:   "plugins",
-		Short: "Manage hasura plugins",
-		Example: `  # Install a plugin
-  hasura plugins install [plugin-name]
-	  
-  # Uninstall a plugin
-  hasura plugins uninstall [plugin-name]
-	  
-  # Upgrade a plugin
-  hasura plugins upgrade [plugin-name]
+		Use:     "plugins",
+		Aliases: []string{"plugin"},
+		Short:   "Manage plugins for the cli",
+		Long: `Plugins can be installed to extend the functionality of Hasura CLI
+An index for all available plugins can be found at 
+https://github.com/hasura/cli-plugins-index
 
-  # List all plugins
-  hasura plugins list`,
+Please open pull requests against this repo to add new plugins`,
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return ec.PluginsConfig.Repo.EnsureCloned()
@@ -50,6 +63,8 @@ func NewPluginsCmd(ec *cli.ExecutionContext) *cobra.Command {
 // PluginHandler is capable of parsing command line arguments
 // and performing executable filename lookups to search
 // for valid plugin files, and execute found plugins.
+// courtesy: kubectl
+// https://github.com/kubernetes/kubernetes/blob/master/pkg/kubectl/cmd/cmd.go
 type PluginHandler interface {
 	// exists at the given filename, or a boolean false.
 	// Lookup will iterate over a list of given prefixes

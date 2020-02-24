@@ -19,7 +19,7 @@ func newActionsCreateCmd(ec *cli.ExecutionContext, v *viper.Viper) *cobra.Comman
 	}
 	actionsCreateCmd := &cobra.Command{
 		Use:   "create [action-name]",
-		Short: "Create a hasura action",
+		Short: "Create an action",
 		Example: `  # Create an action
   hasura actions create [action-name]
 

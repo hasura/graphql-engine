@@ -1,18 +1,11 @@
-// Copyright 2019 The Kubernetes Authors.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package commands
+
+/*
+some of the code here is borrowed from the krew codebse (kubernetes)
+and the copyright belongs to the respective authors.
+
+source: https://github.com/kubernetes-sigs/krew/blob/master/cmd/krew/cmd/list.go
+*/
 
 import (
 	"fmt"
@@ -37,12 +30,13 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 	pluginsListCmd := &cobra.Command{
 		Use:     "list",
 		Aliases: []string{"ls"},
-		Short:   "List all hasura plugin",
-		Example: `  # List all hasura plugins
+		Short:   "List all available plugins from index, versions and installation status",
+		Example: `  # List all plugins
   hasura plugins list
- 
-  # List all hasura plugins without updating index
-  hasura plugins list --update-index false`,
+
+  # The command also updates the plugin index that is cached locally
+  # To avoid updating the index, use the following flag:
+  hasura plugins list --dont-update-index`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return ec.Prepare()
@@ -53,7 +47,7 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := pluginsListCmd.Flags()
-	f.BoolVar(&opts.updateIndex, "update-index", true, "update plugin index")
+	f.BoolVar(&opts.dontUpdateIndex, "dont-update-index", false, "don't update the plugin index local cache, only show the list")
 
 	return pluginsListCmd
 }
@@ -61,11 +55,11 @@ func newPluginsListCmd(ec *cli.ExecutionContext) *cobra.Command {
 type pluginListOptions struct {
 	EC *cli.ExecutionContext
 
-	updateIndex bool
+	dontUpdateIndex bool
 }
 
 func (p *pluginListOptions) run() error {
-	if p.updateIndex {
+	if !p.dontUpdateIndex {
 		ec.Spin("Updating plugin index...")
 		err := p.EC.PluginsConfig.Repo.EnsureUpdated()
 		if err != nil {
