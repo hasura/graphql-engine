@@ -1,19 +1,15 @@
-.. meta::
-   :description: Use hasura migrate create to create migration files for Hasura migrations with the Hasura CLI
-   :keywords: hasura, docs, CLI, hasura migrate create
-
 .. _hasura_migrate_create:
 
 Hasura CLI: hasura migrate create
 ---------------------------------
 
-Create files required for a migration.
+Create files required for a migration
 
 Synopsis
 ~~~~~~~~
 
 
-Create ``sql`` and ``yaml`` files required for a migration.
+Create sql and yaml files required for a migration
 
 ::
 
@@ -24,33 +20,39 @@ Examples
 
 ::
 
-    # Set up migration files for the first time by introspecting a server:
+    # Setup migration files for the first time by introspecting a server:
     hasura migrate create "init" --from-server
+
+    # Use with admin secret:
+    hasura migrate create --admin-secret "<admin-secret>"
+
+    # Setup migration files from an instance mentioned by the flag:
+    hasura migrate create init --from-server --endpoint "<endpoint>"
 
 Options
 ~~~~~~~
 
 ::
 
-      --admin-secret string         admin secret for Hasura GraphQL engine
-      --endpoint string             http(s) endpoint for Hasura GraphQL engine
-      --from-server                 get SQL statements and Hasura metadata from the server
+      --from-server                 get SQL statements and hasura metadata from the server
   -h, --help                        help for create
       --metadata-from-file string   path to a hasura metadata file to be used for up actions
       --metadata-from-server        take metadata from the server and write it as an up migration file
-      --schema stringArray          name of Postgres schema to export as a migration (default [public])
-      --sql-from-file string        path to an SQL file which contains the SQL statements
-      --sql-from-server             take pg_dump from the server and save it as a migration
+      --schema stringArray          name of Postgres schema to export as migration (default [public])
+      --sql-from-file string        path to an sql file which contains the SQL statements
+      --sql-from-server             take pg_dump from server and save it as a migration
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color            do not colorize output (default: false)
-      --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --admin-secret string   admin secret for Hasura GraphQL Engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL Engine
+      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color              do not colorize output (default: false)
+      --project string        directory where commands are executed (default: current dir)
+      --skip-update-check     Skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~
