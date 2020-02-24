@@ -25,13 +25,14 @@ The request payload is of the format:
 .. code-block:: json
 
     {
-      "session_variables": {
-        "x-hasura-user-id": "<session user id>",
-        "x-hasura-role": "<session user role>"
-      },
+      "action": "<action-name>",
       "input": {
         "arg1": "<value>",
         "arg2": "<value>"
+      },
+      "session_variables": {
+        "x-hasura-user-id": "<session user id>",
+        "x-hasura-role": "<session user role>"
       }
     }
 
