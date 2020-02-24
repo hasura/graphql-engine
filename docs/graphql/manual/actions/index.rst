@@ -3,13 +3,16 @@ Actions (preview)
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
+What are actions?
+-----------------
 
-Actions are user defined mutations with custom business logic. Actions can be
+Actions are a way to extend Hasura's mutation root with an entirely custom
+mutation with custom business logic. Actions can be
 added to Hasura to handle various use cases such as data validation, data
-enrichment and other complex business logic.
+enrichment from external sources and any other complex business logic.
 
 .. thumbnail:: ../../../img/graphql/manual/actions/actions-hl-arch.png
    :class: no-shadow
@@ -22,11 +25,10 @@ enrichment and other complex business logic.
 
    .. Actions are supported in versions ``v.1.2.0`` and above.
 
-What is an action?
+Action description
 ------------------
 
-An action is a way to extend Hasura's mutation root with an entirely custom
-mutation. A custom mutation consists of the following parts:
+An action consists of the following parts:
 
 1. ``Definition``: The definition of the mutation
 2. ``Handler``: The logic to be run when the mutation is executed
@@ -77,9 +79,10 @@ Read more about :doc:`custom types<types/index>`.
 Handler
 *******
 
-Once you define the types, you also have to specify the logic to run when the
-action mutation is executed. This can be done in an HTTP webhook, also called
-as action handler; it could be a REST endpoint or a serverless function.
+Once you define the action types, you also have to specify the logic to run
+when the action mutation is executed. This can be done in an HTTP webhook,
+also called the action handler. It could be a REST endpoint or a serverless
+function.
 
 Learn more about :doc:`writing an action handler<action-handlers>`.
 
@@ -88,23 +91,23 @@ Kind
 
 Actions are of two kinds:
 
-* Synchronous actions: In "sync" actions, the GraphQL client is not aware of
-  the event driven flow and gets the appropriate response within the GraphQL
-  mutation response fields.
-* :doc:`Asynchronous actions<async-actions>`: Async actions return the response
-  to the client before receiving a response from the handler but they allow the
-  client to subscribe to the response.
+* **Synchronous actions**: Sync actions return a response to the client after
+  receiving a response from the handler.
+* **Asynchronous actions**: :doc:`Async actions <async-actions>` return an
+  ``action id`` as response to the client before receiving a response from the
+  handler and allow the client to subscribe to the actual response using the
+  ``action id``.
 
 How it works?
 -------------
 
-* Hasura receives the GraphQL mutation and converts this request into an event
-  payload.
-* The event is captured, persisted and then delivered to the handler with the
-  appropriate retry/delivery guarantees.
-* The event handler runs and returns a response that is captured as an event
+* Hasura receives the action GraphQL mutation and converts this request into an
+  event payload.
+* The event is captured, persisted and then delivered to the action handler with
+  the appropriate retry/delivery guarantees.
+* The action handler runs and returns a response that is captured as an event
   and again persisted to the event store.
-* The response is returned to the client synchronously or asynchronously
+* The action response is returned to the client synchronously or asynchronously
   based on the kind.
 
 
@@ -116,7 +119,7 @@ Learn more
   :titlesonly:
 
   Getting started <getting-started>
-  Custom Types <types/index>
+  Custom types <types/index>
   Action handlers <action-handlers>
   Async actions <async-actions>
   Codegen <codegen/index>

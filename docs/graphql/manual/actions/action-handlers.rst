@@ -7,6 +7,8 @@ Action handlers
   :depth: 1
   :local:
 
+Introduction
+------------
 
 Actions need to be backed by custom business logic. This business logic can be
 defined in a handler which is an HTTP webhook.
@@ -16,14 +18,15 @@ HTTP handler
 ------------
 
 When the action mutation is called, Hasura makes a ``POST`` request to the
-handler with the mutation arguments and the session variables. The request
-payload is:
+handler with the mutation arguments and the session variables.
+
+The request payload is of the format:
 
 .. code-block:: json
 
     {
       "session_variables": {
-        "x-hasura-user-id": "<session user id>"
+        "x-hasura-user-id": "<session user id>",
         "x-hasura-role": "<session user role>"
       },
       "input": {
@@ -70,7 +73,7 @@ For example, consider the following mutation.
       userId: Int!
     }
 
-Lets say, the following mutation is executed:
+Let's say, the following mutation is executed:
 
 .. code-block:: graphql 
 
@@ -98,7 +101,7 @@ Hasura will call the handler with the following payload:
       }
     }
 
-To return a success respone, you must send the response of the action's output
+To return a success response, you must send the response of the action's output
 type (in this case, ``UserInfo``) with a status code ``2xx``. So a sample
 response would be:
 
