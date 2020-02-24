@@ -7,13 +7,13 @@
 Hasura CLI: hasura metadata
 ---------------------------
 
-Manage Hasura GraphQL engine metadata saved in the database
+Manage Hasura GraphQL engine metadata saved in the database.
 
 Synopsis
 ~~~~~~~~
 
 
-Manage Hasura GraphQL engine metadata saved in the database
+Manage Hasura GraphQL engine metadata saved in the database.
 
 Alias: md
 

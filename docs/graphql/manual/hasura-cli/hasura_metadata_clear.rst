@@ -7,13 +7,13 @@
 Hasura CLI: hasura metadata clear
 ---------------------------------
 
-Clear Hasura GraphQL engine metadata on the database
+Clear Hasura GraphQL engine metadata on the database.
 
 Synopsis
 ~~~~~~~~
 
 
-Clear Hasura GraphQL engine metadata on the database
+Clear Hasura GraphQL engine metadata on the database.
 
 ::
 
