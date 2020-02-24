@@ -1098,6 +1098,8 @@ downgradeShortcuts =
   , ("v1.0.0", "28")
   , ("v1.1.0-beta.1", "29")
   , ("v1.1.0-beta.2", "30")
+  , ("v1.1.0-beta.3", "31")
+  , ("v1.1.0", "31")
   ]
 
 downgradeOptionsParser :: Parser DowngradeOptions
