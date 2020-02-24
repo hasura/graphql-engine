@@ -78,7 +78,7 @@ Args syntax
    * - table
      - true
      - [ :ref:`QualifiedTable <QualifiedTable>` ]
-     - Name of the table or Object with Table Name and Schema
+     - Object with Table Name and Schema
    * - webhook
      - true
      - String
