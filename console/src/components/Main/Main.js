@@ -96,12 +96,11 @@ class Main extends React.Component {
 
     let latestServerVersionToCheck;
     if (allowPreReleaseNotifications) {
-      latestServerVersionToCheck = versionGT(
-        latestPreReleaseServerVersion,
-        latestStableServerVersion
-      )
-        ? latestPreReleaseServerVersion
-        : latestStableServerVersion;
+      if (versionGT(latestPreReleaseServerVersion, latestStableServerVersion)) {
+        latestServerVersionToCheck = latestPreReleaseServerVersion;
+      } else {
+        latestServerVersionToCheck = latestStableServerVersion;
+      }
     } else {
       latestServerVersionToCheck = latestStableServerVersion;
     }
