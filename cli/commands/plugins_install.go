@@ -17,7 +17,7 @@ import (
 )
 
 func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
-	opts := &pluginInstallOptions{
+	opts := &PluginInstallOptions{
 		EC: ec,
 	}
 	pluginsInstallCmd := &cobra.Command{
@@ -65,13 +65,13 @@ func newPluginsInstallCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return pluginsInstallCmd
 }
 
-type pluginInstallOptions struct {
+type PluginInstallOptions struct {
 	EC *cli.ExecutionContext
 
 	Name         string
 	ManifestFile string
 }
 
-func (o *pluginInstallOptions) Run() error {
+func (o *PluginInstallOptions) Run() error {
 	return o.EC.PluginsConfig.Install(o.Name, o.ManifestFile)
 }
