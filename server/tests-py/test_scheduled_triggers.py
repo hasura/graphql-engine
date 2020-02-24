@@ -105,7 +105,7 @@ class TestScheduledTriggerCron(object):
 class ScheduledEventNotFound(Exception):
     pass
 
-@pytest.mark.usefixtures("evts_webhook")
+@pytest.mark.usefixtures("scheduled_triggers_evts_webhook")
 class TestScheduledTriggerAdhoc(object):
 
     adhoc_trigger_name = "adhoc_trigger"
@@ -118,17 +118,17 @@ class TestScheduledTriggerAdhoc(object):
     def dir(cls):
         return 'queries/scheduled_triggers'
 
-    def poll_until_scheduled_event_found(self,evts_webhook,retries=12,interval_in_secs=5.0):
+    def poll_until_scheduled_event_found(self,scheduled_triggers_evts_webhook,retries=12,interval_in_secs=5.0):
         while (retries > 0):
             try:
-                ev_full = evts_webhook.get_event(3)
+                ev_full = scheduled_triggers_evts_webhook.get_event(3)
                 return ev_full
             except Empty:
                 retries = retries - 1
                 time.sleep(interval_in_secs)
         raise ScheduledEventNotFound # retries exhausted
 
-    def test_create_adhoc_scheduled_trigger(self,hge_ctx,evts_webhook):
+    def test_create_adhoc_scheduled_trigger(self,hge_ctx,scheduled_triggers_evts_webhook):
         q = {
             "type":"run_sql",
             "args":{
@@ -142,7 +142,7 @@ class TestScheduledTriggerAdhoc(object):
             "type":"create_scheduled_trigger",
             "args":{
                 "name":self.adhoc_trigger_name,
-                "webhook":"http://127.0.0.1:5592" + self.webhook_path,
+                "webhook":"http://127.0.0.1:5593" + self.webhook_path,
                 "schedule":{
                     "type":"adhoc",
                     "value":current_time_str
@@ -160,19 +160,19 @@ class TestScheduledTriggerAdhoc(object):
         assert adhoc_st_resp['message'] == 'success'
         assert adhoc_st_code == 200
 
-    def test_check_adhoc_generated_event(self,hge_ctx,evts_webhook):
+    def test_check_adhoc_generated_event(self,hge_ctx,scheduled_triggers_evts_webhook):
         adhoc_event_st,adhoc_event_resp = get_events_of_scheduled_trigger(hge_ctx,self.adhoc_trigger_name)
         assert int(adhoc_event_resp['result'][1][0]) == 1 # An adhoc ST should create exactly one schedule event
 
-    def test_check_adhoc_webhook_event(self,hge_ctx,evts_webhook):
-        ev_full = self.poll_until_scheduled_event_found(evts_webhook)
+    def test_check_adhoc_webhook_event(self,hge_ctx,scheduled_triggers_evts_webhook):
+        ev_full = self.poll_until_scheduled_event_found(scheduled_triggers_evts_webhook)
         validate_event_webhook(ev_full['path'],'/hello')
         validate_event_headers(ev_full['headers'],{"header-1":"header-1-value"})
         assert ev_full['body'] == self.webhook_payload
         time.sleep(1.0) # sleep for 1s more to check if any other events were also fired
-        assert evts_webhook.is_queue_empty()
+        assert scheduled_triggers_evts_webhook.is_queue_empty()
 
-    def test_delete_adhoc_scheduled_trigger(self,hge_ctx,evts_webhook):
+    def test_delete_adhoc_scheduled_trigger(self,hge_ctx,scheduled_triggers_evts_webhook):
         q = {
             "type":"delete_scheduled_trigger",
             "args":{
