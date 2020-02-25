@@ -365,14 +365,14 @@ jobs:
     - checkout
     - restore_cache:
         key:
-          cli-ext-npm-cache-v1-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
     - run:
         name: install dependencies
         working_directory: cli-ext
         command: make ci-deps
     - save_cache:
         key:
-          cli-ext-npm-cache-v1-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
         paths:
         - cli-ext/node_modules
         - ~/.npm
