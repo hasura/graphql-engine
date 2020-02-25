@@ -10,7 +10,7 @@ Introduction
 ------------
 
 An action is a GraphQL mutation. You have to define the GraphQL type of the
-arguments that the mutation accepts and the GraphQL type of the its response.
+arguments that the mutation accepts and the GraphQL type of its response.
 
 To create an action, you have to:
 
@@ -134,7 +134,7 @@ for this handler would look something like:
 .. code-block:: js
 
     const handler = (req, resp) => {
-      // You can access ther arguments input at req.body.input
+      // You can access their arguments input at req.body.input
       const { numbers } = req.body.input;
 
       // perform your custom business logic

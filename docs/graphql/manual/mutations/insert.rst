@@ -112,7 +112,8 @@ Using variables:
 
 .. admonition:: Supported from
 
-   The ``insert_<object>_one`` mutation is available in ``v1.2.0`` and above.
+   The ``insert_<object>_one`` mutation is supported in versions ``v1.2.0``
+   and above.
 
 Insert multiple objects of the same type in the same mutation
 -------------------------------------------------------------
