@@ -215,12 +215,6 @@ generateScheduleTimes from n cron = take n $ go from
   where
     go = unfoldr (fmap dup . nextMatch cron)
 
--- | Generates events @(from, till]@ according to 'CronSchedule'
--- generateScheduleTimesFrom :: UTCTime -> UTCTime -> CronSchedule -> [UTCTime]
--- generateScheduleTimesFrom from till cron = takeWhile (<= till) $ go from
---   where
---     go = unfoldr (fmap dup . nextMatch cron)
-
 processScheduledQueue
   :: HasVersion
   => L.Logger L.Hasura
@@ -237,20 +231,16 @@ processScheduledQueue logger logEnv httpMgr pgpool getSC =
       Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getScheduledEvents
     case scheduledEventsE of
       Right partialEvents ->
-        sequence_ $
-        flip map partialEvents $ \(ScheduledEventPartial id' name st payload tries)-> do
-          let sti' = Map.lookup name scheduledTriggersInfo
-          case sti' of
+        for_ partialEvents $ \(ScheduledEventPartial id' name st payload tries)-> do
+          case Map.lookup name scheduledTriggersInfo of
             Nothing ->  L.unLogger logger $ ScheduledTriggerInternalErr $
               err500 Unexpected "could not find scheduled trigger in cache"
-            Just sti -> do
-              let webhook = wciCachedValue $ stiWebhookInfo sti
-                  payload' = fromMaybe (fromMaybe J.Null $ stiPayload sti) payload -- override if neccessary
-                  retryConf = stiRetryConf sti
-                  se = ScheduledEventFull id' name st tries webhook payload' retryConf
-              runReaderT (processScheduledEvent logEnv pgpool sti se) (logger, httpMgr)
-      Left err -> L.unLogger logger $ ScheduledTriggerInternalErr $
-        err500 Unexpected $ "could not fetch scheduled events: " <> (T.pack $ show err)
+            Just stInfo@ScheduledTriggerInfo{..} -> do
+              let webhook = wciCachedValue stiWebhookInfo
+                  payload' = fromMaybe (fromMaybe J.Null stiPayload) payload -- override if neccessary
+                  scheduledEvent = ScheduledEventFull id' name st tries webhook payload' stiRetryConf
+              runReaderT (processScheduledEvent logEnv pgpool stInfo scheduledEvent) (logger, httpMgr)
+      Left err -> L.unLogger logger $ ScheduledTriggerInternalErr err
     threadDelay oneMinute
 
 processScheduledEvent ::
@@ -268,26 +258,23 @@ processScheduledEvent ::
 processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEventFull {..} = do
   currentTime <- liftIO getCurrentTime
   if diffUTCTime currentTime sefScheduledTime > rcstTolerance stiRetryConf
-    then processDead'
+    then
+      processDead pgpool se >>= \case
+        Left err -> logQErr err
+        Right _ -> pure ()
     else do
       let timeoutSeconds = round $ rcstTimeoutSec stiRetryConf
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
-          headers = map encodeHeader stiHeaders
-          headers' = addDefaultHeaders headers
+          headers = addDefaultHeaders $ map encodeHeader stiHeaders
           extraLogCtx = ExtraLogContext sefId
-      res <- runExceptT $ tryWebhook headers' httpTimeout sefPayload (T.unpack sefWebhook)
+      res <- runExceptT $ tryWebhook headers httpTimeout sefPayload (T.unpack sefWebhook)
       logHTTPForST res (Just extraLogCtx)
-      let decodedHeaders = map (decodeHeader logEnv stiHeaders) headers'
+      let decodedHeaders = map (decodeHeader logEnv stiHeaders) headers
       finally <- either
                  (processError pgpool se decodedHeaders)
                  (processSuccess pgpool se decodedHeaders)
                  res
       either logQErr return finally
-  where
-    processDead' =
-      processDead pgpool se >>= \case
-        Left err -> logQErr err
-        Right _ -> pure ()
 
 processError
   :: (MonadIO m)
@@ -317,10 +304,9 @@ processError pgpool se decodedHeaders err = do
 retryOrMarkError :: ScheduledEventFull -> HTTPErr a -> Q.TxE QErr ()
 retryOrMarkError se@ScheduledEventFull {..} err = do
   let mRetryHeader = getRetryAfterHeaderFromHTTPErr err
-      mRetryHeaderSeconds = join $ parseRetryHeaderValue <$> mRetryHeader
+      mRetryHeaderSeconds = parseRetryHeaderValue =<< mRetryHeader
       triesExhausted = sefTries >= rcstNumRetries sefRetryConf
       noRetryHeader = isNothing mRetryHeaderSeconds
-  -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
   if triesExhausted && noRetryHeader
     then do
       markError
@@ -417,7 +403,7 @@ insertInvocation invo = do
 
 getScheduledEvents :: Q.TxE QErr [ScheduledEventPartial]
 getScheduledEvents = do
-  partialSchedules <- map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
+  map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.hdb_scheduled_events
       SET locked = 't'
       WHERE id IN ( SELECT t.id
@@ -436,5 +422,4 @@ getScheduledEvents = do
                     )
       RETURNING id, name, scheduled_time, additional_payload, tries
       |] () True
-  pure $ partialSchedules
   where uncurryEvent (i, n, st, p, tries) = ScheduledEventPartial i n st (Q.getAltJ <$> p) tries
