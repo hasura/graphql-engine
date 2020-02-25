@@ -1,6 +1,7 @@
 module Hasura.SQL.Value
   ( PGScalarValue(..)
   , pgColValueToInt
+  , pgScalarValueToJson
   , withConstructorFn
   , parsePGValue
 
@@ -35,6 +36,7 @@ import qualified Data.Text                  as T
 import qualified Data.Text.Conversions      as TC
 import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.Lazy             as TL
+import qualified Data.UUID                  as UUID
 
 import qualified Database.PostgreSQL.LibPQ  as PQ
 import qualified PostgreSQL.Binary.Encoding as PE
@@ -50,6 +52,9 @@ instance FromJSON RasterWKB where
       Nothing -> fail
         "invalid hexadecimal representation of raster well known binary format"
     _        -> fail "expecting String for raster"
+
+instance ToJSON RasterWKB where
+  toJSON = toJSON . TC.toText . getRasterWKB
 
 --  Binary value. Used in prepared sq
 data PGScalarValue
@@ -72,8 +77,35 @@ data PGScalarValue
   | PGValJSONB !Q.JSONB
   | PGValGeo !GeometryWithCRS
   | PGValRaster !RasterWKB
+  | PGValUUID !UUID.UUID
   | PGValUnknown !T.Text
   deriving (Show, Eq)
+
+pgScalarValueToJson :: PGScalarValue -> Value
+pgScalarValueToJson = \case
+  PGValInteger i  -> toJSON i
+  PGValSmallInt i -> toJSON i
+  PGValBigInt i   -> toJSON i
+  PGValFloat f    -> toJSON f
+  PGValDouble d   -> toJSON d
+  PGValNumeric sc -> toJSON sc
+  PGValBoolean b  -> toJSON b
+  PGValChar t     -> toJSON t
+  PGValVarchar t  -> toJSON t
+  PGValText t     -> toJSON t
+  PGValCitext t   -> toJSON t
+  PGValDate d     -> toJSON d
+  PGValTimeStampTZ u ->
+    toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
+  PGValTimeTZ (ZonedTimeOfDay tod tz) ->
+    toJSON (show tod ++ timeZoneOffsetString tz)
+  PGNull _ -> Null
+  PGValJSON (Q.JSON j)    -> j
+  PGValJSONB (Q.JSONB j)  -> j
+  PGValGeo o    -> toJSON o
+  PGValRaster r -> toJSON r
+  PGValUUID u -> toJSON u
+  PGValUnknown t -> toJSON t
 
 pgColValueToInt :: PGScalarValue -> Maybe Int
 pgColValueToInt (PGValInteger i)  = Just $ fromIntegral i
@@ -117,6 +149,7 @@ parsePGValue ty val = case (ty, val) of
       PGGeometry -> PGValGeo <$> parseJSON val
       PGGeography -> PGValGeo <$> parseJSON val
       PGRaster -> PGValRaster <$> parseJSON val
+      PGUUID -> PGValUUID <$> parseJSON val
       PGUnknown tyName ->
         fail $ "A string is expected for type : " ++ T.unpack tyName
 
@@ -164,6 +197,7 @@ txtEncodedPGVal colVal = case colVal of
   PGValGeo o    -> TELit $ TL.toStrict $
     AE.encodeToLazyText o
   PGValRaster r -> TELit $ TC.toText $ getRasterWKB r
+  PGValUUID u -> TELit $ UUID.toText u
   PGValUnknown t -> TELit t
 
 binEncoder :: PGScalarValue -> Q.PrepArg
@@ -187,6 +221,7 @@ binEncoder colVal = case colVal of
   PGValJSONB u                     -> Q.toPrepVal u
   PGValGeo o                       -> Q.toPrepVal $ TL.toStrict $ AE.encodeToLazyText o
   PGValRaster r                    -> Q.toPrepVal $ TC.toText $ getRasterWKB r
+  PGValUUID u                      -> Q.toPrepVal u
   PGValUnknown t                   -> (PTI.auto, Just (TE.encodeUtf8 t, PQ.Text))
 
 txtEncoder :: PGScalarValue -> S.SQLExp

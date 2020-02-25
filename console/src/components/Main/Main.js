@@ -19,8 +19,6 @@ import {
   emitProClickedEvent,
 } from './Actions';
 
-import { loadConsoleTelemetryOpts } from '../../telemetry/Actions.js';
-
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
@@ -33,15 +31,22 @@ import {
   setProClickState,
 } from './utils';
 
-import { versionGT } from '../../helpers/versionUtils';
+import { checkStableVersion, versionGT } from '../../helpers/versionUtils';
 import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
+import {
+  getLocalStorageItem,
+  LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
+  setLocalStorageItem,
+} from '../Common/utils/localStorageUtils';
+import ToolTip from '../Common/Tooltip/Tooltip';
+import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 
 class Main extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      showUpdateNotification: false,
+      updateNotificationVersion: null,
       loveConsentState: getLoveConsentState(),
       proClickState: getProClickState(),
       isPopUpOpen: false,
@@ -49,6 +54,7 @@ class Main extends React.Component {
 
     this.handleBodyClick = this.handleBodyClick.bind(this);
   }
+
   componentDidMount() {
     const { dispatch } = this.props;
 
@@ -62,7 +68,6 @@ class Main extends React.Component {
       dispatch(loadInconsistentObjects()).then(() => {
         this.handleMetadataRedirect();
       });
-      dispatch(loadConsoleTelemetryOpts());
 
       dispatch(loadLatestServerVersion()).then(() => {
         this.setShowUpdateNotification();
@@ -71,25 +76,48 @@ class Main extends React.Component {
 
     dispatch(fetchServerConfig());
   }
+
   toggleProPopup() {
     const { dispatch } = this.props;
     dispatch(emitProClickedEvent({ open: !this.state.isPopUpOpen }));
     this.setState({ isPopUpOpen: !this.state.isPopUpOpen });
   }
+
   setShowUpdateNotification() {
-    const { latestServerVersion, serverVersion } = this.props;
+    const {
+      latestStableServerVersion,
+      latestPreReleaseServerVersion,
+      serverVersion,
+      console_opts,
+    } = this.props;
+
+    const allowPreReleaseNotifications =
+      !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
+
+    let latestServerVersionToCheck;
+    if (
+      allowPreReleaseNotifications &&
+      versionGT(latestPreReleaseServerVersion, latestStableServerVersion)
+    ) {
+      latestServerVersionToCheck = latestPreReleaseServerVersion;
+    } else {
+      latestServerVersionToCheck = latestStableServerVersion;
+    }
 
     try {
-      const isClosedBefore = window.localStorage.getItem(
-        latestServerVersion + '_BANNER_NOTIFICATION_CLOSED'
+      const lastUpdateCheckClosed = getLocalStorageItem(
+        LS_VERSION_UPDATE_CHECK_LAST_CLOSED
       );
 
-      if (isClosedBefore !== 'true') {
-        const isUpdateAvailable = versionGT(latestServerVersion, serverVersion);
+      if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
+        const isUpdateAvailable = versionGT(
+          latestServerVersionToCheck,
+          serverVersion
+        );
 
         if (isUpdateAvailable) {
           this.setState({
-            showUpdateNotification: true,
+            updateNotificationVersion: latestServerVersionToCheck,
           });
         }
       }
@@ -132,6 +160,7 @@ class Main extends React.Component {
       loveConsentState: { ...getLoveConsentState() },
     });
   }
+
   updateLocalStorageState() {
     const s = getProClickState();
     if (s && 'isProClicked' in s && !s.isProClicked) {
@@ -148,13 +177,14 @@ class Main extends React.Component {
     this.updateLocalStorageState();
     this.toggleProPopup();
   }
+
   closeUpdateBanner() {
-    const { latestServerVersion } = this.props;
-    window.localStorage.setItem(
-      latestServerVersion + '_BANNER_NOTIFICATION_CLOSED',
-      'true'
+    const { updateNotificationVersion } = this.state;
+    setLocalStorageItem(
+      LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
+      updateNotificationVersion
     );
-    this.setState({ showUpdateNotification: false });
+    this.setState({ updateNotificationVersion: null });
   }
 
   render() {
@@ -164,8 +194,8 @@ class Main extends React.Component {
       migrationModeProgress,
       currentSchema,
       serverVersion,
-      latestServerVersion,
       metadata,
+      dispatch,
     } = this.props;
 
     const { isProClicked } = this.state.proClickState;
@@ -261,7 +291,36 @@ class Main extends React.Component {
     const getUpdateNotification = () => {
       let updateNotificationHtml = null;
 
-      if (this.state.showUpdateNotification) {
+      const { updateNotificationVersion } = this.state;
+
+      const isStableRelease = checkStableVersion(updateNotificationVersion);
+
+      const getPreReleaseNote = () => {
+        const handlePreRelNotifOptOut = e => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          this.closeUpdateBanner();
+
+          dispatch(setPreReleaseNotificationOptOutInDB());
+        };
+
+        return (
+          <React.Fragment>
+            <span className={styles.middot}> &middot; </span>
+            <i>
+              This is a pre-release version. Not recommended for production use.
+              <span className={styles.middot}> &middot; </span>
+              <a href={'#'} onClick={handlePreRelNotifOptOut}>
+                Opt out of pre-release notifications
+              </a>
+              <ToolTip message={'Only be notified about stable releases'} />
+            </i>
+          </React.Fragment>
+        );
+      };
+
+      if (updateNotificationVersion) {
         updateNotificationHtml = (
           <div>
             <div className={styles.phantom} />{' '}
@@ -271,14 +330,14 @@ class Main extends React.Component {
                 <span> Hey there! A new server version </span>
                 <span className={styles.versionUpdateText}>
                   {' '}
-                  {latestServerVersion}
+                  {updateNotificationVersion}
                 </span>
                 <span> is available </span>
                 <span className={styles.middot}> &middot; </span>
                 <a
                   href={
                     'https://github.com/hasura/graphql-engine/releases/tag/' +
-                    latestServerVersion
+                    updateNotificationVersion
                   }
                   target="_blank"
                   rel="noopener noreferrer"
@@ -294,6 +353,7 @@ class Main extends React.Component {
                 >
                   <span>Update Now</span>
                 </a>
+                {!isStableRelease && getPreReleaseNote()}
                 <span
                   className={styles.updateBannerClose}
                   onClick={this.closeUpdateBanner.bind(this)}
@@ -305,6 +365,7 @@ class Main extends React.Component {
           </div>
         );
       }
+
       return updateNotificationHtml;
     };
 
@@ -555,6 +616,7 @@ class Main extends React.Component {
                   'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'
                 }
                 target={'_blank'}
+                rel="noopener noreferrer"
               >
                 Set up a chat to learn more{' '}
                 <img
@@ -600,6 +662,12 @@ class Main extends React.Component {
                   'fa-database',
                   tooltips.data,
                   getSchemaBaseRoute(currentSchema)
+                )}
+                {getSidebarItem(
+                  'Actions',
+                  'fa-cogs',
+                  tooltips.actions,
+                  '/actions/manage/actions'
                 )}
                 {getSidebarItem(
                   'Remote Schemas',
@@ -742,6 +810,7 @@ const mapStateToProps = (state, ownProps) => {
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
     metadata: state.metadata,
+    console_opts: state.telemetry.console_opts,
   };
 };
 

@@ -173,7 +173,7 @@ Adding a computed field to a table
 
      .. thumbnail:: ../../../img/graphql/manual/schema/computed-field-create.png
 
-     .. note::
+     .. admonition:: Supported from
 
        Console support is available in ``v1.1.0`` and above
 

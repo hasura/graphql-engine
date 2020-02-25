@@ -554,9 +554,7 @@ class Schema extends Component {
                 <div className={styles.display_inline}>
                   <Button
                     data-test={`add-track-function-${p.function_name}`}
-                    className={`${
-                      styles.display_inline
-                    } btn btn-xs btn-default`}
+                    className={`${styles.display_inline} btn btn-xs btn-default`}
                     onClick={handleTrackFn}
                   >
                     Track
@@ -572,9 +570,7 @@ class Schema extends Component {
               >
                 {getTrackBtn()}
                 <div
-                  className={`${styles.display_inline} ${
-                    styles.add_mar_left_mid
-                  }`}
+                  className={`${styles.display_inline} ${styles.add_mar_left_mid}`}
                 >
                   <RawSqlButton
                     dataTestId={`view-function-${p.function_name}`}
@@ -691,9 +687,7 @@ class Schema extends Component {
 
     return (
       <div
-        className={`container-fluid ${styles.padd_left_remove} ${
-          styles.padd_top
-        }`}
+        className={`container-fluid ${styles.padd_left_remove} ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
           <Helmet title="Schema - Data | Hasura" />

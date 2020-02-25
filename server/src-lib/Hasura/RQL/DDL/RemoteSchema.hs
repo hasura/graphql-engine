@@ -3,6 +3,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , runRemoveRemoteSchema
   , removeRemoteSchemaFromCatalog
   , runReloadRemoteSchema
+  , fetchRemoteSchemas
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
   , addRemoteSchemaP2
@@ -108,3 +109,15 @@ removeRemoteSchemaFromCatalog name =
     DELETE FROM hdb_catalog.remote_schemas
       WHERE name = $1
   |] (Identity name) True
+
+fetchRemoteSchemas :: Q.TxE QErr [AddRemoteSchemaQuery]
+fetchRemoteSchemas =
+  map fromRow <$> Q.listQE defaultTxErrorHandler
+    [Q.sql|
+     SELECT name, definition, comment
+       FROM hdb_catalog.remote_schemas
+     ORDER BY name ASC
+     |] () True
+  where
+    fromRow (name, Q.AltJ def, comment) =
+      AddRemoteSchemaQuery name def comment

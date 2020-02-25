@@ -201,6 +201,6 @@ contenu des répertoires [`docs`](../docs) et [`community`](../community).
 Ceci readme est disponible dans les traductions suivantes:
 
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
-- [English](https://github.com/hasura/graphql-engine/blob/master/README.md)
+- [English](https://github.com/hasura/graphql-engine/blob/stable/README.md)
 
 Les traductions d'autres fichiers sont disponibles [ici](translations).
