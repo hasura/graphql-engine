@@ -30,7 +30,7 @@ common common-all
 
   default-language: Haskell2010
   default-extensions:
-    ApplicativeDo BangPatterns BlockArguments ConstraintKinds DefaultSignatures DeriveDataTypeable
+    ApplicativeDo BangPatterns BlockArguments ConstraintKinds DataKinds DefaultSignatures DeriveDataTypeable
     DeriveFoldable DeriveFunctor DeriveGeneric DeriveLift DeriveTraversable DerivingVia EmptyCase
     FlexibleContexts FlexibleInstances FunctionalDependencies GeneralizedNewtypeDeriving
     InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns NoImplicitPrelude
@@ -279,7 +279,6 @@ library
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.RemoteSchema
-                     , Hasura.RQL.Types.Helpers
                      , Hasura.RQL.Types.ScheduledTrigger
                      , Hasura.RQL.DDL.ComputedField
                      , Hasura.RQL.DDL.Relationship

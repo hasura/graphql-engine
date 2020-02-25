@@ -149,7 +149,7 @@ data CatalogScheduledTrigger
   , _cstWebhookConf    :: !WebhookConf
   , _cstScheduleConf   :: !ScheduleType
   , _cstPayload        :: !(Maybe Value)
-  , _cstRetryConf      :: !RetryConfST
+  , _cstRetryConf      :: !(Maybe RetryConfST)
   , _cstHeaderConf     :: !(Maybe [HeaderConf])
   } deriving (Show, Eq, Generic)
 instance NFData CatalogScheduledTrigger

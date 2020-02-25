@@ -33,8 +33,11 @@ module Hasura.RQL.Types.Common
 
        , SystemDefined(..)
        , isSystemDefined
+
+       , successMsg
        ) where
 
+import           Hasura.EncJSON
 import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.SQL.Types
@@ -235,3 +238,6 @@ newtype SystemDefined = SystemDefined { unSystemDefined :: Bool }
 
 isSystemDefined :: SystemDefined -> Bool
 isSystemDefined = unSystemDefined
+
+successMsg :: EncJSON
+successMsg = "{\"message\":\"success\"}"

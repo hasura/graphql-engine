@@ -279,11 +279,17 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
 
       -- scheduled triggers
       scheduledTriggersMap <- (mapFromL _cstName scheduledTriggers >- returnA)
-        >-> (| Inc.keyed (\_ (CatalogScheduledTrigger n wc s p rc h ) -> do
-              let q = CreateScheduledTrigger n wc s p rc (fromMaybe [] h)
+        >-> (| Inc.keyed (\_ (CatalogScheduledTrigger{..}) -> do
+              let q = CreateScheduledTrigger
+                       _cstName
+                       _cstWebhookConf
+                       _cstScheduleConf
+                       _cstPayload
+                       (fromMaybe defaultRetryConfST _cstRetryConf)
+                       (fromMaybe [] _cstHeaderConf)
                   definition = toJSON q
-                  triggerName = triggerNameToTxt n
-                  metadataObject = MetadataObject (MOScheduledTrigger n) definition
+                  triggerName = triggerNameToTxt _cstName
+                  metadataObject = MetadataObject (MOScheduledTrigger _cstName) definition
                   addScheduledTriggerContext e = "in scheduled trigger " <> triggerName <> ": " <> e
               (| withRecordInconsistency (
                  (| modifyErrA (bindErrorA -< resolveScheduledTrigger q)

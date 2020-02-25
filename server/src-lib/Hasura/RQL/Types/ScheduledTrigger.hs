@@ -7,6 +7,7 @@ module Hasura.RQL.Types.ScheduledTrigger
   , CreateScheduledEvent(..)
   , RetryConfST(..)
   , formatTime'
+  , defaultRetryConfST
   ) where
 
 import           Data.Time.Clock
@@ -36,8 +37,8 @@ instance Cacheable RetryConfST
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConfST)
 
-defaultRetryConf :: RetryConfST
-defaultRetryConf =
+defaultRetryConfST :: RetryConfST
+defaultRetryConfST =
   RetryConfST
   { rcstNumRetries = 0
   , rcstIntervalSec = seconds 10
@@ -85,7 +86,7 @@ instance FromJSON CreateScheduledTrigger where
       stWebhook <- o .: "webhook"
       stPayload <- o .:? "payload"
       stSchedule <- o .: "schedule"
-      stRetryConf <- o .:? "retry_conf" .!= defaultRetryConf
+      stRetryConf <- o .:? "retry_conf" .!= defaultRetryConfST
       stHeaders <- o .:? "headers" .!= []
       pure CreateScheduledTrigger {..}
 

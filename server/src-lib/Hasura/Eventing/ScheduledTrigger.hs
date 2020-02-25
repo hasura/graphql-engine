@@ -26,6 +26,7 @@ module Hasura.Eventing.ScheduledTrigger
 import           Control.Arrow.Extended          (dup)
 import           Control.Concurrent              (threadDelay)
 import           Data.Has
+import           Data.Int (Int64)
 import           Data.List                       (unfoldr)
 import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
@@ -405,7 +406,7 @@ insertInvocation invo = do
           (event_id, status, request, response)
           VALUES ($1, $2, $3, $4)
           |] ( iEventId invo
-             , toInt64 $ iStatus invo
+             , fromIntegral $ iStatus invo :: Int64
              , Q.AltJ $ J.toJSON $ iRequest invo
              , Q.AltJ $ J.toJSON $ iResponse invo) True
   Q.unitQE defaultTxErrorHandler [Q.sql|

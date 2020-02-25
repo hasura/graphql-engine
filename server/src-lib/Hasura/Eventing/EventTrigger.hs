@@ -16,6 +16,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
+import           Data.Int                      (Int64)
 import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
 import           Hasura.HTTP
@@ -307,7 +308,7 @@ insertInvocation invo = do
           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
           VALUES ($1, $2, $3, $4)
           |] ( iEventId invo
-             , toInt64 $ iStatus invo
+             , fromIntegral $ iStatus invo :: Int64
              , Q.AltJ $ toJSON $ iRequest invo
              , Q.AltJ $ toJSON $ iResponse invo) True
   Q.unitQE defaultTxErrorHandler [Q.sql|

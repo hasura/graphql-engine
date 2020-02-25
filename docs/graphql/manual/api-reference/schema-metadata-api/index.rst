@@ -239,22 +239,22 @@ The various types of queries are listed in the following table:
    * - :ref:`create_scheduled_event`
      - :ref:`create_scheduled_event_args <create_scheduled_event_syntax>`
      - 1
-     - Create a new run of a scheduled trigger
+     - Create a new event for a scheduled trigger
 
    * - :ref:`cancel_scheduled_event`
      - :ref:`cancel_scheduled_event_args <cancel_scheduled_event_syntax>`
      - 1
-     - Cancel a particular run of a scheduled trigger
+     - Cancel a particular event of a scheduled trigger
 
    * - :ref:`track_scheduled_trigger`
      - :ref:`track_scheduled_trigger_args <track_scheduled_trigger_syntax>`
      - 1
-     - Track an existing scheduled trigger so it can be exported in metadata
+     - Scheduled triggers need to be tracked so they can be exported to metadata. More details in API reference
 
    * - :ref:`untrack_scheduled_trigger`
      - :ref:`untrack_scheduled_trigger_args <untrack_scheduled_trigger_syntax>`
      - 1
-     - Untrack an existing scheduled trigger so it won't be exported in metadata
+     - Untrack an already tracked scheduled trigger. More details in API reference
 
    * - :ref:`add_remote_schema`
      - :ref:`add_remote_schema_args <add_remote_schema_syntax>`

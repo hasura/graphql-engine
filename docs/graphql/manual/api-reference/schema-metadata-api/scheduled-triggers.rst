@@ -249,7 +249,9 @@ Args syntax
 track_scheduled_trigger
 -----------------------
 
-``track_scheduled_trigger`` is used to track a scheduled trigger so it can be exported in metadata. By default, scheduled triggers are untracked.
+``track_scheduled_trigger`` is used to enable export of scheduled trigger in metadata. By default, scheduled triggers are untracked.
+This is because different Scheduled Triggers can have different configurations which may be related to user data and hence may not make
+sense to be included in the metadata. For e.g. a one-time scheduled event which has a payload of some user-id should not be in metadata.
 
 .. code-block:: http
 
@@ -286,7 +288,7 @@ Args syntax
 untrack_scheduled_trigger
 -------------------------
 
-``untrack_scheduled_trigger`` is used to untrack a scheduled trigger so it won't be exported in metadata. By default, scheduled triggers are untracked.
+``untrack_scheduled_trigger`` is used to disable export of scheduled trigger in metadata. See track_scheduled_trigger_ .
 
 .. code-block:: http
 
