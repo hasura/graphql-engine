@@ -42,22 +42,27 @@ Pročitaj više na [hasura.io](https://hasura.io) i [dokumentima](https://hasura
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Tabela sadržaja**
 
-- [Brzi početak:](#brzi-početak)
+- [Hasura GraphQL Engine](#hasura-graphql-engine)
+  - [Značajke](#zna%c4%8dajke)
+  - [Tabela sadržaja](#tabela-sadr%c5%beaja)
+  - [Brzi početak:](#brzi-po%c4%8detak)
     - [Implementacija jednim klikom na Heroku](#implementacija-jednim-klikom-na-heroku)
-    - [Ostale metode implementacije](#ostale-metode-implementacije-jednim-klikom)
-- [Arhitektura](#arhitektura)
-- [Klijentski alati](#alati-na-klijentskoj-strani)
-- [Dodavanje poslovne logike](#dodavanje-poslovne-logike)
-    - [Daljinske šeme](#daljinske-šeme)
-    - [Pokretanje webhook-ova na dešavanjima u bazi podataka](#pokrenite-webhook-na-dešavanja-u-bazi-podataka)
-- [Demo](#demo)
-    - [Aplikacije u stvarnom vremenu](#stvarne-aplikacije)
+    - [Ostale metode implementacije jednim klikom](#ostale-metode-implementacije-jednim-klikom)
+    - [Ostale metode implementacije](#ostale-metode-implementacije)
+  - [Arhitektura](#arhitektura)
+  - [Alati na klijentskoj strani](#alati-na-klijentskoj-strani)
+  - [Dodavanje poslovne logike](#dodavanje-poslovne-logike)
+    - [Daljinske šeme](#daljinske-%c5%a1eme)
+    - [Pokrenite webhook na dešavanja u bazi podataka](#pokrenite-webhook-na-de%c5%a1avanja-u-bazi-podataka)
+    - [Izvedeni podaci ili transformacije podataka](#izvedeni-podaci-ili-transformacije-podataka)
+  - [Demo](#demo)
+    - [Stvarne aplikacije](#stvarne-aplikacije)
     - [Video](#video)
-- [Podrška & Rješavanje problema](#podrška--rješavanje-problema)
-- [Doprinos](#doprinos)
-- [Brendirani sadržaj](#brendirani-sadržaj)
-- [Licenca](#licenca)
-- [Prijevodi](#prijevodi)
+  - [Podrška & Rješavanje problema](#podr%c5%a1ka--rje%c5%a1avanje-problema)
+  - [Doprinos](#doprinos)
+  - [Brendirani sadržaj](#brendirani-sadr%c5%beaj)
+  - [Licenca](#licenca)
+  - [Prijevodi](#prijevodi)
 
 <!-- markdown-toc end -->
 
@@ -87,6 +92,7 @@ Pogledaj instrukcije za ostale mogućnosti implementacije jednim klikom:
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
 | DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
 | Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| KintoHub | [![Deploy to KintoHub](http://resources.kintohub.com/deploybutton.png)](https://deploy.kintohub.com/hasura) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/kintohub-one-click.html) |
 
 ### Ostale metode implementacije
 

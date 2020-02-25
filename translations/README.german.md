@@ -43,22 +43,27 @@ Mehr dazu auf [hasura.io](https://hasura.io) und in den [Docs](https://hasura.io
 
 **Table of Contents**
 
-- [Schnellstart](#schnellstart)
-  - [One-click Deployment auf Heroku](#one-click-deployment-auf-heroku)
-  - [Andere one-click Deployment Optionen](#andere-one-click-deployment-optionen)
-- [Architektur](#architektur)
-- [Client-side Tooling](#client-side-tooling)
-- [Füge Businesslogik hinzu](#füge-businesslogik-hinzu)
-  - [Remote Schemas](#remote-schemas)
-  - [Löse Webhooks und Datenbankevents aus](#löse-webhooks-und-datenbankevents-aus)
-- [Demos](#demos)
-  - [Realtime Applikationen](#realtime-applikationen)
-  - [Videos](#videos)
-- [Support & Fehlerbehebung](#support--fehlerbehebung)
-- [Contributing](#contributing)
-- [Marke](#marke)
-- [Lizenz](#lizenz)
-- [Übersetzungen](#uebersetzungen)
+- [Hasura GraphQL Engine](#hasura-graphql-engine)
+  - [Features](#features)
+  - [Inhaltsverzeichnis](#inhaltsverzeichnis)
+  - [Schnellstart:](#schnellstart)
+    - [One-click Deployment auf Heroku](#one-click-deployment-auf-heroku)
+    - [Andere one-click Deployment Optionen](#andere-one-click-deployment-optionen)
+    - [Andere Deployment Möglichkeiten](#andere-deployment-m%c3%b6glichkeiten)
+  - [Architektur](#architektur)
+  - [Client-side Tooling](#client-side-tooling)
+  - [Füge Businesslogik hinzu](#f%c3%bcge-businesslogik-hinzu)
+    - [Remote Schemas](#remote-schemas)
+    - [Löse Webhooks und Datenbankevents aus](#l%c3%b6se-webhooks-und-datenbankevents-aus)
+    - [Abgeleitete Daten oder Datentransformation](#abgeleitete-daten-oder-datentransformation)
+  - [Demos](#demos)
+    - [Realtime Applikationen](#realtime-applikationen)
+    - [Videos](#videos)
+  - [Support & Fehlerbehebung](#support--fehlerbehebung)
+  - [Contributing](#contributing)
+  - [Marke](#marke)
+  - [Lizenz](#lizenz)
+  - [Übersetzungen](#%c3%9cbersetzungen)
 
 <!-- markdown-toc end -->
 
@@ -88,6 +93,7 @@ Probiere die folgenden Guides für die one-click Deployment Optionen:
 | :----------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------: |
 |    DigitalOcean    |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
 |       Azure        | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)                    |
+| KintoHub | [![Deploy to KintoHub](http://resources.kintohub.com/deploybutton.png)](https://deploy.kintohub.com/hasura) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/kintohub-one-click.html) |
 
 ### Andere Deployment Möglichkeiten
 

@@ -43,22 +43,26 @@ Leia mais em [hasura.io](https://hasura.io) e na [documentação](https://hasura
 
 **Índice**
 
-- [Começo rápido](#começo-rápido)
-  - [Implantação no Heroku em um click](#implantação-no-heroku-em-um-click)
-  - [Outros métodos de implantação](#outros-métodos-de-implantação)
-- [Arquitetura](#arquitetura)
-- [Ferramentas do client](#ferramentas-do-client)
-- [Adicionar lógica de negócios](#adicionar-lógica-de-negócios)
-  - [Esquemas remotos](#esquemas-remotos)
-  - [Acionar webhooks em eventos de banco de dados](#acionar-webhooks-em-eventos-de-banco-de-dados)
-  - [Dados derivados ou transformações de dados](#dados-derivados-ou-transformações-de-dados)
-- [Demos](#demos)
-  - [Aplicações em tempo real](#aplicações-em-tempo-real)
-  - [Vídeos](#vídeos)
-- [Suporte e Solução de problemas](#suporte-e-solução-de-problemas)
-- [Contribuindo](#contribuindo)
-- [Recursos da marca](#recursos-da-marca)
-- [Licença](#licença)
+- [Hasura GraphQL Engine](#hasura-graphql-engine)
+  - [Funcionalidades](#funcionalidades)
+  - [Índice](#%c3%8dndice)
+  - [Começo rápido:](#come%c3%a7o-r%c3%a1pido)
+    - [Implantação no Heroku em um click](#implanta%c3%a7%c3%a3o-no-heroku-em-um-click)
+    - [Outros métodos de implantação](#outros-m%c3%a9todos-de-implanta%c3%a7%c3%a3o)
+    - [Outros métodos de implantação](#outros-m%c3%a9todos-de-implanta%c3%a7%c3%a3o-1)
+  - [Arquitetura](#arquitetura)
+  - [Ferramentas do client](#ferramentas-do-client)
+  - [Adicionar lógica de negócios](#adicionar-l%c3%b3gica-de-neg%c3%b3cios)
+    - [Esquemas remotos](#esquemas-remotos)
+    - [Acionar webhooks em eventos de banco de dados](#acionar-webhooks-em-eventos-de-banco-de-dados)
+    - [Dados derivados ou transformações de dados](#dados-derivados-ou-transforma%c3%a7%c3%b5es-de-dados)
+  - [Demos](#demos)
+    - [Aplicações em tempo real](#aplica%c3%a7%c3%b5es-em-tempo-real)
+    - [Vídeos](#v%c3%addeos)
+  - [Suporte e Solução de problemas](#suporte-e-solu%c3%a7%c3%a3o-de-problemas)
+  - [Contribuindo](#contribuindo)
+  - [Recursos da marca](#recursos-da-marca)
+  - [Licença](#licen%c3%a7a)
 
 <!-- markdown-toc end -->
 
@@ -88,6 +92,7 @@ Confira as instruções para as seguintes opções de implantação com um cliqu
 | :------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------: |
 |           DigitalOcean           |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
 |              Azure               | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)                    |
+| KintoHub | [![Deploy to KintoHub](http://resources.kintohub.com/deploybutton.png)](https://deploy.kintohub.com/hasura) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/kintohub-one-click.html) |
 
 ### Outros métodos de implantação
 

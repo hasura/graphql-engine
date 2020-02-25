@@ -43,27 +43,33 @@ Plus d'informations sur [hasura.io](https://hasura.io) et dans la [documentation
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table des matières**
 
-- [Démarrage rapide](#quickstart)
-    - [Déploiement sur Heroku en un click](#one-click-deployment-on-heroku)
-    - [Autres méthodes de déploiement](#other-deployment-methods)
-- [Architecture](#architecture)
-- [Outils côté client](#client-side-tooling)
-- [Ajout de logique métier](#add-business-logic)
-    - [Schémas distants](#remote-schemas)
-    - [Déclenchez des webhooks sur des evènements de base de donnée](#trigger-webhooks-on-database-events)
-- [Demos](#demos)
-    - [Applications temps-réel](#realtime-applications)
-    - [Videos](#videos)
-- [Support & Dépannage](#support--troubleshooting)
-- [Contribuer](#contributing)
-- [Elements de marque](#brand-assets)
-- [Licence](#license)
+- [Hasura GraphQL Engine](#hasura-graphql-engine)
+  - [Fonctionnalités](#fonctionnalit%c3%a9s)
+  - [Table des matières](#table-des-mati%c3%a8res)
+  - [Démarrage rapide:](#d%c3%a9marrage-rapide)
+    - [Déploiement sur Heroku en un clic](#d%c3%a9ploiement-sur-heroku-en-un-clic)
+    - [Autres méthodes de déploiement en un clic](#autres-m%c3%a9thodes-de-d%c3%a9ploiement-en-un-clic)
+    - [Autres méthodes de déploiement](#autres-m%c3%a9thodes-de-d%c3%a9ploiement)
+  - [Architecture](#architecture)
+  - [Outils côté client](#outils-c%c3%b4t%c3%a9-client)
+  - [Ajout de logique métier](#ajout-de-logique-m%c3%a9tier)
+    - [Schémas distants](#sch%c3%a9mas-distants)
+    - [Déclenchez des webhooks sur des évènements de base de données](#d%c3%a9clenchez-des-webhooks-sur-des-%c3%a9v%c3%a8nements-de-base-de-donn%c3%a9es)
+    - [Données dérivée ou transformations de données](#donn%c3%a9es-d%c3%a9riv%c3%a9e-ou-transformations-de-donn%c3%a9es)
+  - [Démos](#d%c3%a9mos)
+    - [Applications temps-réel](#applications-temps-r%c3%a9el)
+    - [Vidéos](#vid%c3%a9os)
+  - [Support & Dépannage](#support--d%c3%a9pannage)
+  - [Contribuer](#contribuer)
+  - [Elements de marque](#elements-de-marque)
+  - [Licence](#licence)
+  - [Traductions](#traductions)
 
 <!-- markdown-toc end -->
 
 ## Démarrage rapide:
 
-### Déploiement sur Heroku en un click
+### Déploiement sur Heroku en un clic
 
 La manière la plus rapide d'essayer Hasura est via Heroku.
 
@@ -78,6 +84,16 @@ La manière la plus rapide d'essayer Hasura est via Heroku.
 3. Réalisez votre première requête GraphQL
 
    Créez une table et réalisez votre première requête. Suivez ce [guide](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html).
+
+### Autres méthodes de déploiement en un clic
+
+Consultez le table ci-dessous pour d'autres options de déploiement en un clic:
+
+| **Plateforme** | **Lien** | **Information additionnelle** |
+|:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
+| DigitalOcean | [![Déployer sur DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Déployer sur Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| KintoHub | [![Déployer sur KintoHub](http://resources.kintohub.com/deploybutton.png)](https://deploy.kintohub.com/hasura) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/kintohub-one-click.html) |
 
 ### Autres méthodes de déploiement
 

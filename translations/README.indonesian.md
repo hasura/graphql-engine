@@ -41,23 +41,26 @@ Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https:/
 ## Daftar isi
 <!-- markdown-toc **start** - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Daftar isi**
-- [Mulai dengan cepat:](#mulai-dengan-cepat)
-  - [Jalankan dengan satu klik di Heroku](#jalankan-dengan-satu-klik-di-heroku)
-  - [Pilihan menjalankan aplikasi dengan satu klik lainnya](#pilihan-menjalankan-aplikasi-dengan-satu-klik-lainnya)
-  - [Metode menjalankan lainnya](#metode-menjalankan-lainnya)
-- [Arsitektur](#arsitektur)
-- [Kakas pada sisi klien](#kakas-pada-sisi-klien)
-- [Tambahkan logika bisnis](#tambahkan-logika-bisnis)
-  - [Skema jarak jauh](#skema-jarak-jauh)
-  - [Picu _webhooks_ pada _event_ basis data](#picu-webhooks-pada-event-basis-data)
-  - [Data turunan atau transformasi data](#data-turunan-atau-transformasi-data)
-- [Demo](#demo)
-  - [Aplikasi _realtime_](#aplikasi-realtime)
-  - [Video](#video)
-- [Dukungan & Penyelesaian masalah](#dukungan--penyelesaian-masalah)
-- [Berkontribusi](#berkontribusi)
-- [Aset merek](#aset-merek)
-- [Lisensi](#lisensi)
+- [Hasura GraphQL Engine](#hasura-graphql-engine)
+  - [Fitur](#fitur)
+  - [Daftar isi](#daftar-isi)
+  - [Mulai dengan cepat:](#mulai-dengan-cepat)
+    - [Jalankan dengan satu klik di Heroku](#jalankan-dengan-satu-klik-di-heroku)
+    - [Pilihan menjalankan aplikasi dengan satu klik lainnya](#pilihan-menjalankan-aplikasi-dengan-satu-klik-lainnya)
+    - [Metode menjalankan lainnya](#metode-menjalankan-lainnya)
+  - [Arsitektur](#arsitektur)
+  - [Kakas pada sisi klien](#kakas-pada-sisi-klien)
+  - [Tambahkan logika bisnis](#tambahkan-logika-bisnis)
+    - [Skema jarak jauh](#skema-jarak-jauh)
+    - [Picu _webhooks_ pada _event_ basis data](#picu-webhooks-pada-event-basis-data)
+    - [Data turunan atau transformasi data](#data-turunan-atau-transformasi-data)
+  - [Demo](#demo)
+    - [Aplikasi _realtime_](#aplikasi-realtime)
+    - [Video](#video)
+  - [Dukungan & Penyelesaian masalah](#dukungan--penyelesaian-masalah)
+  - [Berkontribusi](#berkontribusi)
+  - [Aset merek](#aset-merek)
+  - [Lisensi](#lisensi)
 
 <!-- markdown-toc end -->
 
@@ -87,6 +90,7 @@ Coba lihat pilihan lainnya untuk menjalankan aplikasi dengan satu klik:
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
 | DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [dokumentasi](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
 | Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [dokumentasi](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| KintoHub | [![Deploy to KintoHub](http://resources.kintohub.com/deploybutton.png)](https://deploy.kintohub.com/hasura) | [dokumentasi](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/kintohub-one-click.html) |
 
 ### Metode menjalankan lainnya
 

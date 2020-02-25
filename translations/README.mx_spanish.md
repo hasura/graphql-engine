@@ -42,22 +42,27 @@ Leer más en [hasura.io](https://hasura.io) y en [docs](https://hasura.io/docs).
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Tabla de contenidos**
 
-- [Inicio rápido:](#inicio-rápido)
+- [Motor Hasura GraphQL](#motor-hasura-graphql)
+  - [Características](#caracter%c3%adsticas)
+  - [Tabla de contenidos](#tabla-de-contenidos)
+  - [Inicio rápido:](#inicio-r%c3%a1pido)
     - [Despliegue en un click con Heroku](#despliegue-en-un-click-con-heroku)
-    - [Otros métodos de despliegue](#otros-métodos-de-despliegue)
-- [Arquitectura](#arquitectura)
-- [Herramientas client-side](#herramientas-client-side)
-- [Agregar lógica de negocio](#agregar-lógica-de-negocio)
+    - [Otras opciones de despliegue en un clic](#otras-opciones-de-despliegue-en-un-clic)
+    - [Otros métodos de despliegue](#otros-m%c3%a9todos-de-despliegue)
+  - [Arquitectura](#arquitectura)
+  - [Herramientas client-side](#herramientas-client-side)
+  - [Agregar lógica de negocio](#agregar-l%c3%b3gica-de-negocio)
     - [Esquemas remotos](#esquemas-remotos)
     - [Ejecutar webhooks con eventos de la base de datos](#ejecutar-webhooks-con-eventos-de-la-base-de-datos)
-- [Demos](#demos)
+    - [Datos derivados o transformación de datos](#datos-derivados-o-transformaci%c3%b3n-de-datos)
+  - [Demos](#demos)
     - [Aplicaciones en tiempo real](#aplicaciones-en-tiempo-real)
     - [Videos](#videos)
-- [Soporte y solución de problemas](#soporte-y-solución-de-problemas)
-- [Contribuir](#contribuir)
-- [Archivos de marca](#archivos-de-marca)
-- [Licencia](#licencia)
-- [Traducciones](#traducciones)
+  - [Soporte y solución de problemas](#soporte-y-soluci%c3%b3n-de-problemas)
+  - [Contribuir](#contribuir)
+  - [Archivos de marca](#archivos-de-marca)
+  - [Licencia](#licencia)
+  - [Traducciones](#traducciones)
 
 <!-- markdown-toc end -->
 
@@ -87,6 +92,7 @@ Revisa las instrucciones para las siguientes opciones de despliegue en un click:
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
 | DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
 | Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| KintoHub | [![Deploy to KintoHub](http://resources.kintohub.com/deploybutton.png)](https://deploy.kintohub.com/hasura) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/kintohub-one-click.html) |
 
 ### Otros métodos de despliegue
 

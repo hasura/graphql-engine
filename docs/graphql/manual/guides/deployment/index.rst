@@ -13,6 +13,7 @@ Guides: Deployment
 - :doc:`Digital Ocean One-click App on Marketplace <digital-ocean-one-click>`
 - :doc:`Azure Container Instances with Postgres <azure-container-instances-postgres>`
 - :doc:`Google Cloud Platform with Kubernetes engine and Cloud SQL <google-kubernetes-engine-cloud-sql>`
+- :doc:`KintoHub One-click Deployment with your private Postgres instance <kintohub-one-click>`
 - `Blog: Instant GraphQL on AWS RDS <https://hasura.io/blog/instant-graphql-on-aws-rds-1edfb85b5985>`__
 
 .. note::
@@ -28,4 +29,5 @@ Guides: Deployment
    DigitalOcean One-click App on Marketplace <digital-ocean-one-click>
    Azure Container Instances with Postgres <azure-container-instances-postgres>
    Google Cloud Platform with Kubernetes engine and Cloud SQL <google-kubernetes-engine-cloud-sql>
+   KintoHub One-click Deployment <kintohub-one-click>
    
