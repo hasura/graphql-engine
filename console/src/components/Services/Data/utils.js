@@ -466,7 +466,7 @@ const generateWhereObject = options => {
     });
   }
   if (options.tables) {
-    options.schemas.forEach(t => {
+    options.tables.forEach(t => {
       if (!where.$and) where.$and = [];
       where.$and.push({
         table_schema: t.table_schema,

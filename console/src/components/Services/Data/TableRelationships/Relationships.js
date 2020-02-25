@@ -10,6 +10,7 @@ import {
   formRelName,
   getExistingFieldsMap,
 } from './Actions';
+import { RESET } from '../TableModify/ModifyActions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../../Common/Notification';
 import { setTable } from '../DataActions';
@@ -309,8 +310,10 @@ const Relationships = ({
   currentSchema,
   migrationMode,
   schemaList,
+  readOnlyMode,
 }) => {
   useEffect(() => {
+    dispatch({ type: RESET });
     dispatch(setTable(tableName));
     dispatch(fetchRemoteSchemas());
   }, []);
@@ -373,6 +376,7 @@ const Relationships = ({
                 <RelationshipEditor
                   dispatch={dispatch}
                   key={rel.objRel.rel_name}
+                  readOnlyMode={readOnlyMode}
                   relConfig={findAllFromRel(
                     allSchemas,
                     tableSchema,
@@ -386,6 +390,7 @@ const Relationships = ({
                 <RelationshipEditor
                   key={rel.arrRel.rel_name}
                   dispatch={dispatch}
+                  readOnlyMode={readOnlyMode}
                   relConfig={findAllFromRel(
                     allSchemas,
                     tableSchema,
@@ -422,6 +427,51 @@ const Relationships = ({
     );
   };
 
+  const getAddRelSection = () => {
+    if (readOnlyMode) {
+      return null;
+    }
+
+    let addRelSection = null;
+
+    if (relAdd.isActive) {
+      addRelSection = (
+        <div className={styles.activeEdit}>
+          <AddRelationship
+            tableName={tableName}
+            currentSchema={currentSchema}
+            allSchemas={allSchemas}
+            cachedRelationshipData={relAdd}
+            dispatch={dispatch}
+          />
+          <hr />
+          <AddManualRelationship
+            tableSchema={tableSchema}
+            allSchemas={allSchemas}
+            schemaList={schemaList}
+            relAdd={manualRelAdd}
+            dispatch={dispatch}
+          />
+        </div>
+      );
+    } else {
+      addRelSection = (
+        <Button
+          type="submit"
+          color="white"
+          size="sm"
+          onClick={() => {
+            dispatch(addNewRelClicked());
+          }}
+        >
+          + Add relationship
+        </Button>
+      );
+    }
+
+    return addRelSection;
+  };
+
   return (
     <div className={`${styles.container} container-fluid`}>
       <TableHeader
@@ -438,36 +488,7 @@ const Relationships = ({
           <h4 className={styles.subheading_text}>Table Relationships</h4>
           {addedRelationshipsView}
           <br />
-          {relAdd.isActive ? (
-            <div className={styles.activeEdit}>
-              <AddRelationship
-                tableName={tableName}
-                currentSchema={currentSchema}
-                allSchemas={allSchemas}
-                cachedRelationshipData={relAdd}
-                dispatch={dispatch}
-              />
-              <hr />
-              <AddManualRelationship
-                tableSchema={tableSchema}
-                allSchemas={allSchemas}
-                schemaList={schemaList}
-                relAdd={manualRelAdd}
-                dispatch={dispatch}
-              />
-            </div>
-          ) : (
-            <Button
-              type="submit"
-              color="white"
-              size="sm"
-              onClick={() => {
-                dispatch(addNewRelClicked());
-              }}
-            >
-              + Add relationship
-            </Button>
-          )}
+          {getAddRelSection()}
         </div>
         {remoteRelationshipsSection()}
       </div>
