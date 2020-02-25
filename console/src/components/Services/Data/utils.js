@@ -293,9 +293,7 @@ const generateWhereClause = options => {
   if (options.tables) {
     options.tables.forEach(tableInfo => {
       whereCondtions.push(
-        `(ist.table_schema='${tableInfo.table_schema}' and ist.table_name='${
-          tableInfo.table_name
-        }')`
+        `(ist.table_schema='${tableInfo.table_schema}' and ist.table_name='${tableInfo.table_name}')`
       );
     });
   }

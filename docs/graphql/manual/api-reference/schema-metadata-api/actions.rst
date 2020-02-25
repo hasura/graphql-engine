@@ -255,14 +255,13 @@ create_action_permission
    Content-Type: application/json
    X-Hasura-Role: admin
 
-  {
-    "type": "create_action_permission",
-    "args": {
-      "action": "create_user",
-      "role": "user"
-      }
-    }
-  }
+   {
+     "type": "create_action_permission",
+     "args": {
+       "action": "create_user",
+       "role": "user"
+     }
+   }
 
 .. _create_action_permission_syntax:
 
@@ -302,14 +301,13 @@ drop_action_permission
    Content-Type: application/json
    X-Hasura-Role: admin
 
-  {
-    "type": "drop_action_permission",
-    "args": {
-      "action": "create_user",
-      "role": "user"
-      }
-    }
-  }
+   {
+     "type": "drop_action_permission",
+     "args": {
+       "action": "create_user",
+       "role": "user"
+     }
+   }
 
 .. _drop_action_permission_syntax:
 
