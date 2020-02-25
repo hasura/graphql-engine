@@ -23,29 +23,29 @@ response:
       internal:
         errors:
         - path:
-          - hasura_array_idx_0
+          - messageBasic__0
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 57
+            column: 54
         - path:
-          - hasura_array_idx_1
+          - messageBasic__1
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 126
+            column: 120
         - path:
-          - hasura_array_idx_2
+          - messageBasic__2
           - errorMsg
           message: intentional-error
           locations:
           - line: 1
-            column: 195
+            column: 186
       path: $
       code: unexpected
-    message: Joining results for remote relationships failed
+    message: Errors from remote server
 query:
   query: |
     query {

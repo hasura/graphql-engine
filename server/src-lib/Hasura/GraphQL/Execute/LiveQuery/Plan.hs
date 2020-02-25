@@ -260,8 +260,12 @@ buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved varTypes = do
 
   (astResolved, (queryVariableValues, syntheticVariableValues)) <- flip runStateT mempty $
     GR.traverseQueryRootFldAST resolveMultiplexedValue astUnresolved
-  let pgQuery = mkMultiplexedQuery $ GR.toPGQuery astResolved
-      parameterizedPlan = ParameterizedLiveQueryPlan (userRole userInfo) fieldAlias pgQuery
+
+  let (pgQuery, remoteJoins) = GR.toPGQuery astResolved
+      parameterizedPlan = ParameterizedLiveQueryPlan (userRole userInfo) fieldAlias $ mkMultiplexedQuery pgQuery
+
+  -- Reject remote relationships in subscription live query
+  when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in subscriptions"
 
   -- We need to ensure that the values provided for variables
   -- are correct according to Postgres. Without this check

@@ -203,7 +203,6 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
       remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, remoteSchemas)
-      let remoteSchemaGCtxMap = M.map (rscGCtx . fst) remoteSchemaMap
 
       -- tables
       tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
@@ -219,7 +218,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
         >-> (| Inc.keyed (\_ (((tableRawInfo, tableRelationships), tableComputedFields), tableRemoteRelationships) -> do
                  let columns = _tciFieldInfoMap tableRawInfo
                  (allFields, typeMap) <- addNonColumnFields -<
-                   (tableRawInfos, columns, remoteSchemaGCtxMap, tableRelationships, tableComputedFields, tableRemoteRelationships)
+                   (tableRawInfos, columns, M.map fst remoteSchemaMap, tableRelationships, tableComputedFields, tableRemoteRelationships)
                  returnA -< (tableRawInfo { _tciFieldInfoMap = allFields }, typeMap)) |)
 
       let tableCoreInfos = M.map fst rawTableCoreInfos

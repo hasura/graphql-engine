@@ -1,31 +1,36 @@
 module Hasura.GraphQL.RemoteServer where
 
-import           Control.Exception             (try)
-import           Control.Lens                  ((^.))
-import           Data.Aeson                    ((.:), (.:?))
-import           Data.FileEmbed                (embedStringFile)
-import           Data.Foldable                 (foldlM)
+import           Control.Exception                      (try)
+import           Control.Lens                           ((^.), (^..))
+import           Data.Aeson                             ((.:), (.:?))
+import           Data.FileEmbed                         (embedStringFile)
+import           Data.Foldable                          (foldlM)
 import           Hasura.HTTP
 import           Hasura.Prelude
 
-import qualified Data.Aeson                    as J
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Parser as G
-import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Network.HTTP.Client           as HTTP
-import qualified Network.Wreq                  as Wreq
+import qualified Data.Aeson                             as J
+import qualified Data.ByteString.Lazy                   as BL
+import qualified Data.CaseInsensitive                   as CI
+import qualified Data.HashMap.Strict                    as Map
+import qualified Data.HashSet                           as Set
+import qualified Data.String.Conversions                as CS
+import qualified Data.Text                              as T
+import qualified Language.GraphQL.Draft.Parser          as G
+import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Client                    as HTTP
+import qualified Network.HTTP.Types                     as N
+import qualified Network.Wreq                           as Wreq
 
-import           Hasura.RQL.DDL.Headers        (makeHeadersFromConf)
+import           Hasura.GraphQL.Transport.HTTP.Protocol
+import           Hasura.RQL.DDL.Headers                 (makeHeadersFromConf)
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils           (httpExceptToJSON)
-import           Hasura.Server.Version         (HasVersion)
+import           Hasura.Server.Context
+import           Hasura.Server.Utils
+import           Hasura.Server.Version                  (HasVersion)
 
-import qualified Hasura.GraphQL.Context        as GC
-import qualified Hasura.GraphQL.Schema         as GS
-import qualified Hasura.GraphQL.Validate.Types as VT
+import qualified Hasura.GraphQL.Context                 as GC
+import qualified Hasura.GraphQL.Schema                  as GS
+import qualified Hasura.GraphQL.Validate.Types          as VT
 
 introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
@@ -411,3 +416,57 @@ getNamedTyp ty = case ty of
   G.TypeDefinitionUnion t       -> G._utdName t
   G.TypeDefinitionEnum t        -> G._etdName t
   G.TypeDefinitionInputObject t -> G._iotdName t
+
+execRemoteGQ'
+  :: ( HasVersion
+     , MonadIO m
+     , MonadError QErr m
+     )
+  => HTTP.Manager
+  -> UserInfo
+  -> [N.Header]
+  -> GQLReqUnparsed
+  -> RemoteSchemaInfo
+  -> G.OperationType
+  -> m (DiffTime, Maybe Headers, BL.ByteString)
+execRemoteGQ' manager userInfo reqHdrs q rsi opType = do
+  when (opType == G.OperationTypeSubscription) $
+    throw400 NotSupported "subscription to remote server is not supported"
+  confHdrs <- makeHeadersFromConf hdrConf
+  let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
+      -- filter out duplicate headers
+      -- priority: conf headers > resolved userinfo vars > client headers
+      hdrMaps    = [ Map.fromList confHdrs
+                   , Map.fromList userInfoToHdrs
+                   , Map.fromList clientHdrs
+                   ]
+      headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
+      finalHeaders = addDefaultHeaders headers
+  initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
+  initReq <- either httpThrow pure initReqE
+  let req = initReq
+           { HTTP.method = "POST"
+           , HTTP.requestHeaders = finalHeaders
+           , HTTP.requestBody = HTTP.RequestBodyLBS (J.encode q)
+           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
+           }
+
+  (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
+  resp <- either httpThrow return res
+  let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
+      respHdrs  = Just $ mkRespHeaders cookieHdrs
+  return (time, respHdrs, resp ^. Wreq.responseBody)
+
+  where
+    RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
+    httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
+    httpThrow = \case
+      HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
+      HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
+
+    userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
+                     userInfoToList userInfo
+
+    getCookieHdr = fmap (\h -> ("Set-Cookie", h))
+
+    mkRespHeaders = map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v))

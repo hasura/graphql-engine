@@ -309,11 +309,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
                 -> Telem.CacheHit -> RequestId -> GQLReqUnparsed -> UserInfo -> E.ExecOp
                 -> ExceptT () IO ()
     runHasuraGQ timerTot telemCacheHit reqId query userInfo = \case
-      E.ExOpQuery queryOp genSql ->
-        execQueryOrMut Telem.Query genSql $
-        case queryOp of
-          E.EQOSimple tx -> runLazyTx' pgExecCtx tx
-          E.EQOComposite _ -> throw400 BadRequest "Remote joins are not supported over websockets"
+      E.ExOpQuery tx genSql ->
+        execQueryOrMut Telem.Query genSql $ runLazyTx' pgExecCtx tx
       E.ExOpMutation opTx ->
         execQueryOrMut Telem.Mutation Nothing $
           runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo opTx

@@ -21,7 +21,6 @@ import           Hasura.SQL.Value
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as E
-import qualified Hasura.GraphQL.Execute.RemoteJoins     as E
 import qualified Hasura.GraphQL.Resolve                 as RS
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
@@ -95,8 +94,11 @@ explainField userInfo gCtx sqlGenCtx fld =
           evalReusabilityT $ RS.queryFldToPGAST fld
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
                      unresolvedAST
-      let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
+      let (query, remoteJoins) = RS.toPGQuery resolvedAST
+          txtSQL = Q.getQueryText query
           withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
+      -- Reject if query contains any remote joins
+      when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
       planLines <- liftTx $ map runIdentity <$>
         Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
@@ -124,10 +126,7 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
     E.GExPRemote _ _  ->
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
-    GV.RQuery selSet -> do
-      -- Check for presense of remote relationships
-      let remoteRelationshipFields = concatMap (snd . E.rebuildFieldStrippingRemoteRels) (toList selSet)
-      when (not $ null remoteRelationshipFields) $ throw400 InvalidParams "remote relationship fields cannot be explained"
+    GV.RQuery selSet ->
       runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx) (toList selSet)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"

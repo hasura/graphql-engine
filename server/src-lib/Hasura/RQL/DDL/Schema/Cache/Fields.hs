@@ -10,7 +10,6 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended       as M
 import qualified Data.HashSet                       as HS
-import qualified Hasura.GraphQL.Context             as GC
 import qualified Data.Sequence                      as Seq
 import qualified Language.GraphQL.Draft.Syntax      as G
 import qualified Hasura.GraphQL.Validate.Types      as VT
@@ -33,7 +32,7 @@ addNonColumnFields
      , ArrowKleisli m arr, MonadError QErr m )
   => ( HashMap QualifiedTable TableRawInfo
      , FieldInfoMap PGColumnInfo
-     , HashMap RemoteSchemaName GC.GCtx
+     , RemoteSchemaMap
      , [CatalogRelation]
      , [CatalogComputedField]
      , [RemoteRelationship]
@@ -168,7 +167,7 @@ mkRemoteRelationshipMetadataObject rr =
 buildRemoteRelationship
   :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
-  => (([PGColumnInfo], HashMap RemoteSchemaName GC.GCtx), RemoteRelationship) `arr` Maybe (RemoteField, VT.TypeMap)
+  => (([PGColumnInfo], RemoteSchemaMap), RemoteRelationship) `arr` Maybe (RemoteField, VT.TypeMap)
 buildRemoteRelationship = proc ((pgColumns, remoteSchemaMap), remoteRelationship) -> do
   let relationshipName = rtrName remoteRelationship
       tableName = rtrTable remoteRelationship

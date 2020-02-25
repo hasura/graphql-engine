@@ -38,7 +38,6 @@ import           Instances.TH.Lift                          ()
 
 import qualified Data.HashMap.Strict                        as HM
 import qualified Data.HashSet                               as HS
-import qualified Hasura.GraphQL.Context                     as GC
 import qualified Data.Set                                   as Set
 import qualified Database.PG.Query                          as Q
 
@@ -65,7 +64,7 @@ resolveRemoteRelationship
   :: QErrM m
   => RemoteRelationship
   -> [PGColumnInfo]
-  -> HashMap RemoteSchemaName GC.GCtx
+  -> RemoteSchemaMap
   -> m (RemoteField, TypeMap, [SchemaDependency])
 resolveRemoteRelationship remoteRelationship pgColumns remoteSchemaMap = do
   (remoteField, typesMap) <- either (throw400 RemoteSchemaError . validateErrorToText)

@@ -188,7 +188,7 @@ mkRemoteRelationshipName =
 
 mkRemoteRelationshipFld :: RemoteField -> ObjFldInfo
 mkRemoteRelationshipFld remoteField =
-  ObjFldInfo description fieldName paramMap gType $ TLRemoteRelType remoteRelationship
+  mkHsraObjFldInfo description fieldName paramMap gType
   where
     description = Just "Remote relationship field"
     remoteRelationship = rmfRemoteRelationship remoteField

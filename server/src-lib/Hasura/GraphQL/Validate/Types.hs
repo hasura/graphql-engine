@@ -78,26 +78,25 @@ module Hasura.GraphQL.Validate.Types
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson                          as J
-import qualified Data.Aeson.Casing                   as J
-import qualified Data.Aeson.TH                       as J
-import qualified Data.HashMap.Strict                 as Map
-import qualified Data.HashMap.Strict.InsOrd          as OMap
-import qualified Data.HashSet                        as Set
-import qualified Data.Text                           as T
-import qualified Language.GraphQL.Draft.Syntax       as G
-import qualified Language.GraphQL.Draft.TH           as G
-import qualified Language.Haskell.TH.Syntax          as TH
+import qualified Data.Aeson                    as J
+import qualified Data.Aeson.Casing             as J
+import qualified Data.Aeson.TH                 as J
+import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashMap.Strict.InsOrd    as OMap
+import qualified Data.HashSet                  as Set
+import qualified Data.Text                     as T
+import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Language.GraphQL.Draft.TH     as G
+import qualified Language.Haskell.TH.Syntax    as TH
 
-import           Control.Lens                        (makePrisms)
+import           Control.Lens                  (makePrisms)
 
-import qualified Hasura.RQL.Types.Column             as RQL
+import qualified Hasura.RQL.Types.Column       as RQL
 
 import           Hasura.GraphQL.Utils
-import           Hasura.RQL.Instances                ()
+import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.RemoteRelationship (RemoteRelationship)
-import           Hasura.RQL.Types.RemoteSchema       (RemoteSchemaInfo, RemoteSchemaName)
+import           Hasura.RQL.Types.RemoteSchema (RemoteSchemaInfo, RemoteSchemaName)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
@@ -170,7 +169,6 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 data TypeLoc
   = TLHasuraType
   | TLRemoteType !RemoteSchemaName !RemoteSchemaInfo
-  | TLRemoteRelType !RemoteRelationship
   | TLCustom
   deriving (Show, Eq, TH.Lift, Generic)
 
@@ -179,6 +177,8 @@ $(J.deriveJSON
                    , J.sumEncoding = J.TaggedObject "type" "detail"
                    }
   ''TypeLoc)
+
+instance Hashable TypeLoc
 
 data ObjFldInfo
   = ObjFldInfo

@@ -21,7 +21,6 @@ import           Hasura.SQL.Types
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
-import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
@@ -54,14 +53,14 @@ validateErrorToText = T.pack . show
 -- | Validate a remote relationship given a context.
 validateRemoteRelationship ::
      RemoteRelationship
-  -> HM.HashMap RemoteSchemaName GC.GCtx
+  -> RemoteSchemaMap
   -> [PGColumnInfo]
   -> Either (NonEmpty ValidationError) (RemoteField, TypeMap)
 validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   let remoteSchemaName = rtrRemoteSchema remoteRelationship
   case HM.lookup remoteSchemaName remoteSchemaMap of
     Nothing -> Left $ pure $ RemoteSchemaNotFound remoteSchemaName
-    Just gctx -> do
+    Just (RemoteSchemaCtx _ gctx rsi) -> do
       (_leafTyInfo, leafGType, (leafParamMap, leafTypeMap)) <-
         foldl
           (\eitherObjTyInfoAndTypes fieldCall ->
@@ -71,9 +70,6 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
                  objFldInfo <- lookupField (fcName fieldCall) objTyInfo
                  case _fiLoc objFldInfo of
                    TLHasuraType ->
-                     Left
-                       (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
-                   TLRemoteRelType {} ->
                      Left
                        (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
                    TLCustom ->
@@ -125,6 +121,7 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
             { rmfRemoteRelationship = remoteRelationship
             , rmfGType = leafGType
             , rmfParamMap = leafParamMap
+            , rmfRemoteSchema = rsi
             }
         , leafTypeMap)
   where

@@ -38,22 +38,23 @@ data RemoteField =
     , rmfParamMap           :: !(HashMap G.Name InpValInfo)
     -- ^ Fully resolved arguments (no variable references, since this uses
     -- 'G.ValueConst' not 'G.Value').
+    , rmfRemoteSchema       :: !RemoteSchemaInfo
     }
   deriving (Show, Eq, Lift, Generic)
 instance Cacheable RemoteField
 
 data RemoteRelationship =
   RemoteRelationship
-    { rtrName         :: RemoteRelationshipName
+    { rtrName         :: !RemoteRelationshipName
     -- ^ Field name to which we'll map the remote in hasura; this becomes part
     -- of the hasura schema.
-    , rtrTable        :: QualifiedTable
-    , rtrHasuraFields :: Set FieldName -- TODO? change to PGCol
+    , rtrTable        :: !QualifiedTable
+    , rtrHasuraFields :: !(Set FieldName) -- TODO? change to PGCol
     -- ^ The hasura fields from 'rtrTable' that will be in scope when resolving
     -- the remote objects in 'rtrRemoteFields'.
-    , rtrRemoteSchema :: RemoteSchemaName
+    , rtrRemoteSchema :: !RemoteSchemaName
     -- ^ Identifier for this mapping.
-    , rtrRemoteFields :: NonEmpty FieldCall
+    , rtrRemoteFields :: !(NonEmpty FieldCall)
     }  deriving (Show, Eq, Lift, Generic)
 instance NFData RemoteRelationship
 instance Cacheable RemoteRelationship
@@ -230,6 +231,7 @@ instance ToJSON RemoteField where
       [ "remote_relationship" .= toJSON rmfRemoteRelationship
       , "g_type" .= toJsonGType rmfGType
       , "param_map" .= fmap toJsonInpValInfo rmfParamMap
+      , "remote_schema" .= toJSON rmfRemoteSchema
       ]
 
 instance FromJSON RemoteField where
@@ -238,6 +240,7 @@ instance FromJSON RemoteField where
     rmfRemoteRelationship <- hmap .: "remote_relationship"
     rmfGType <- hmap .: "g_type" >>= parseJsonGType
     rmfParamMap <- hmap .: "param_map" >>= traverse parseJsonInpValInfo
+    rmfRemoteSchema <- hmap .: "remote_schema"
     pure RemoteField {..}
 
 -- | Parse a GType, using Either as an auxilliary type.
