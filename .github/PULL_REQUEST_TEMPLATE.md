@@ -7,7 +7,7 @@
 
 ### Changelog
 
-[ ] `CHANGELOG.md` is updated with user-facing content relevant to this PR.
+- [ ] `CHANGELOG.md` is updated with user-facing content relevant to this PR.
 
 ### Affected components
 <!-- Remove non-affected components from the list -->
