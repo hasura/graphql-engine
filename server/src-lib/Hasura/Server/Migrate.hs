@@ -2,7 +2,7 @@
 --
 -- To add a new migration:
 --
---   1. Bump the catalog version number in "Hasura.Server.Migrate.Version".
+--   1. Bump the catalog version number in @src-rsr/catalog_version.txt@.
 --   2. Add a migration script in the @src-rsr/migrations/@ directory with the name
 --      @<old version>_to_<new version>.sql@.
 --   3. Create a downgrade script in the @src-rsr/migrations/@ directory with the name
