@@ -6,7 +6,7 @@ export VERSION
 registry := hasura
 packager_ver := 20190731
 pg_dump_ver := 12
-build_output := ./build/_server_output
+build_output := /build/_server_output
 
 # Getting access to the built products with the `cabal v2-*` commands is really awkward; see
 # <https://www.haskell.org/cabal/users-guide/nix-local-build.html#where-are-my-build-products> for a
