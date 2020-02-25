@@ -20,7 +20,7 @@ Quickstart
 
 Click the button below to deploy your Hasura GraphQL engine and Postgres instances in your private environment. (``Ctrl+Click`` to open in a new tab)
 
-.. image:: http://resources.kintohub.com/deploybutton.png
+.. image:: https://resources.kintohub.com/deploybutton.png
    :width: 300px
    :alt: do_deploy_hasura_button
    :class: no-shadow
