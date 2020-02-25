@@ -11,6 +11,9 @@ ci-copy-assets:
 	mkdir -p /build/_cli_ext_output
 	cp $(BUILDDIR)/* /build/_cli_ext_output/
 
+upx-compress: $(BUILDDIR)
+	ls $(BUILDDIR)/cli-ext-hasura-* | xargs upx
+
 .PRECIOUS: %.zip
 %.zip: %.exe
 	cd $(BUILDDIR) && \
@@ -27,7 +30,7 @@ ci-copy-assets:
 	shasum -a 256 $< > $@
 
 .PHONY: deploy
-deploy: $(CHECKSUMS)
+deploy: upx-compress $(CHECKSUMS)
 	./scripts/generate-manifest.sh && \
 	$(RM) $(BUILDDIR)/tmp.yaml
 
