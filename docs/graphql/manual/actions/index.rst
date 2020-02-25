@@ -118,8 +118,9 @@ Learn more
   :maxdepth: 1
   :titlesonly:
 
-  Creating actions <create>
+  create
   Custom types <types/index>
-  Action handlers <action-handlers>
-  Async actions <async-actions>
+  action-handlers
+  async-actions
   Codegen <codegen>
+  derive
