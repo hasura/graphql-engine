@@ -47,7 +47,7 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
     - [Diğer deploy etme yöntemleri](#diğer-deploy-etme-yöntemleri)
 - [Yapı](#yapı)
 - [İstemci tarafı takımlar](#i̇stemci-tarafı-takımlar)
-- [İş mantığı ekleme](#iş-mantığı-ekleme)
+- [İş mantığı ekleme](#i̇ş-mantığı-ekleme)
     - [Uzak şemalar](#uzak-şemalar)
     - [Veritabanı olaylarındaki webhooks tetikleme](#veritabanı-olaylarındaki-webhooks-tetikleme)
 - [Demolar](#demolar)
