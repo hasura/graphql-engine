@@ -10,7 +10,7 @@ Introduction
 ------------
 
 It is a typical requirement to run some custom business logic before actually
-executing a mutation. For example, to perform validations or to enrich some data
+executing a mutation, for example, to perform validations or to enrich some data
 from an external source. Actions can be used to achieve this.
 
 To help with creation of such actions, Hasura lets you derive an action from an
