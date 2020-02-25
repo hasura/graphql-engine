@@ -407,19 +407,19 @@ fetchMetadata = do
     fetchScheduledTriggers =
       map uncurrySchedule <$> Q.listQE defaultTxErrorHandler
       [Q.sql|
-       SELECT st.name, st.webhook_conf, st.schedule_conf, st.payload, st.retry_conf
+       SELECT st.name, st.webhook_conf, st.schedule_conf, st.payload, st.retry_conf, st.header_conf
         FROM hdb_catalog.hdb_scheduled_trigger st
         WHERE include_in_metadata
       |] () False
       where
-        uncurrySchedule (n, wc, sc, p, rc) =
+        uncurrySchedule (n, wc, sc, p, rc, hc) =
           CreateScheduledTrigger
           { stName = n,
             stWebhook = Q.getAltJ wc,
             stSchedule = Q.getAltJ sc,
             stPayload = Q.getAltJ <$> p,
             stRetryConf = Q.getAltJ rc,
-            stHeaders = []
+            stHeaders = Q.getAltJ hc
           }
 
     fetchCustomTypes :: Q.TxE QErr CustomTypes
