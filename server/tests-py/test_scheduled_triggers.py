@@ -30,16 +30,6 @@ class TestScheduledTriggerCron(object):
     url = '/v1/query'
 
     def test_create_cron_schedule_triggers(self,hge_ctx):
-        # setting the time zone to 'UTC' because everything
-        # (utcnow,now,cronschedule) will all be based on UTC.
-        q = {
-            "type":"run_sql",
-            "args":{
-                "sql":"set time zone 'UTC'"
-            }
-        }
-        st,resp = hge_ctx.v1q(q)
-        assert st == 200,resp
         # setting the test to be after 30 mins, to make sure that
         # any of the events are not triggered.
         min_after_30_mins = (datetime.utcnow() + timedelta(minutes=30)).minute
@@ -76,8 +66,11 @@ class TestScheduledTriggerCron(object):
         iter = croniter(self.cron_schedule,self.init_time)
         for i in range(100):
             future_schedule_timestamps.append(iter.next(datetime))
+        # Get timestamps in UTC from the db to compare it with
+        # the croniter generated timestamps
         sql = '''
-    select scheduled_time from hdb_catalog.hdb_scheduled_events where
+    select timezone('utc',scheduled_time) as scheduled_time
+        from hdb_catalog.hdb_scheduled_events where
         name = '{}' order by scheduled_time asc;
     '''
         q = {
