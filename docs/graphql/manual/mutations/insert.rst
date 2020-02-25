@@ -199,16 +199,16 @@ Using variables:
     {
       "objects": [
         {
-          id: 22,
-          title: "Article 2",
-          content: "Sample article content",
-          author_id: 4
+          "id": 22,
+          "title": "Article 2",
+          "content": "Sample article content",
+          "author_id": 4
         },
         {
-          id: 23,
-          title: "Article 3",
-          content: "Sample article content",
-          author_id: 5
+          "id": 23,
+          "title": "Article 3",
+          "content": "Sample article content",
+          "author_id": 5
         }
       ]
     }

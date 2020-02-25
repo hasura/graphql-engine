@@ -37,7 +37,7 @@ This is an object type called ``UserInfo`` that has two fields:
 * ``accessToken``: This field is of type ``String!`` (non-nullable ``String``)
 * ``userId``: This field is of type ``Int!`` (non-nullable ``Int``)
 
-`See reference <https://graphql.org/learn/schema/#object-types-and-fields>`_
+`See reference <https://graphql.org/learn/schema/#object-types-and-fields>`__
 
 .. admonition:: Limitations
 
@@ -61,7 +61,7 @@ regular object types, but with the keyword input instead of type:
 
 A field of an input type could be a ``scalar``, an ``enum`` or another input type.
 
-`See reference <https://graphql.org/learn/schema/#input-types>`_
+`See reference <https://graphql.org/learn/schema/#input-types>`__
 
 Scalar types
 ------------
@@ -85,7 +85,7 @@ while defining your actions:
   the same way as a String; however, defining it as an ID signifies that it
   is not intended to be human‐readable.
 
-`See reference <https://graphql.org/learn/schema/#scalar-types>`_
+`See reference <https://graphql.org/learn/schema/#scalar-types>`__
 
 Custom scalars
 **************
@@ -123,5 +123,5 @@ Here's what an enum definition might look like in the GraphQL schema language:
 This means that wherever we use the type ``Color`` in our schema, we expect it
 to be exactly one of RED, GREEN, or BLUE.
 
-`See reference <https://graphql.org/learn/schema/#enumeration-types>`_
+`See reference <https://graphql.org/learn/schema/#enumeration-types>`__
 

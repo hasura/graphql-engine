@@ -174,6 +174,14 @@ Now, set the handler for the action:
 
      Update the ``handler`` to the above endpoint.
 
+.. admonition:: URL templating
+
+  To manage handler endpoints across environments it is possible to template
+  the endpoints using ENV variables.
+
+  e.g. ``https://my-handler-endpoint/addNumbers`` can be templated to ``{{ ACTION_BASE_ENDPOINT }}/addNumbers``
+  where ``ACTION_BASE_ENDPOINT`` is an ENV variable whose value is set to ``https://my-handler-endpoint``
+
 Step 3: Finish action creation
 ------------------------------
 
