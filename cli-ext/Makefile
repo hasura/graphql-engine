@@ -11,6 +11,7 @@ ci-copy-assets:
 	mkdir -p /build/_cli_ext_output
 	cp $(BUILDDIR)/* /build/_cli_ext_output/
 
+# Not supported: Refer https://github.com/zeit/pkg/issues/50
 upx-compress: $(BUILDDIR)
 	ls $(BUILDDIR)/cli-ext-hasura-* | xargs upx
 
@@ -30,7 +31,7 @@ upx-compress: $(BUILDDIR)
 	shasum -a 256 $< > $@
 
 .PHONY: deploy
-deploy: upx-compress $(CHECKSUMS)
+deploy: $(CHECKSUMS)
 	./scripts/generate-manifest.sh && \
 	$(RM) $(BUILDDIR)/tmp.yaml
 
