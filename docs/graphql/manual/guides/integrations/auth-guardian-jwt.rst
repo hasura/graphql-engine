@@ -33,7 +33,7 @@ Step 2: Add an auth rule
 
 On the left sidebar, chose "Auth Services" and then "AuthGuardian".
 
-There are four options how to generate Hasura compatible JWTs:
+There are four options how to generate Hasura compatible JWTs depending on your permission settings.
 
 Option 1: Set Hasura ``user_id``
 --------------------------------
