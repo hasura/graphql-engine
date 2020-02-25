@@ -109,7 +109,7 @@ deploy_cli_ext() {
     cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext.yaml
     git add .
     git commit -m "update cli-ext manifest to ${LATEST_TAG}"
-    git push -q https://${GITHUB_TOKEN}@github.com/hasura/plugins-index.git cli-ext-${LATEST_TAG}
+    git push -q https://${GITHUB_TOKEN}@github.com/hasura/cli-plugins-index.git cli-ext-${LATEST_TAG}
     hub pull-request -F- <<<"Update cli-ext manifest to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
 
     unset VERSION
