@@ -363,13 +363,13 @@ An example:
 
 This reads as follows - for the ``user`` role:
 
-* Allow updating only those rows where the ``filter`` passes i.e. the value of the ``author_id`` column of a row matches the value of the session variable ``X-HASURA-USER-ID`` value.
+* Allow updating only those rows where the ``filter`` passes i.e. the value of the ``author_id`` column of a row matches the value of the session variable ``X-HASURA-USER-ID``.
 
 * If the above ``filter`` passes for a given row, allow updating only the ``title``, ``content`` and ``category`` columns (*as specified in the* ``columns`` *key*).
 
-* After the update happens, verify that the ``check`` condition holds for the updated row, i.e. that the value in the ``content`` column is not empty.
+* After the update happens, verify that the ``check`` condition holds for the updated row i.e. that the value in the ``content`` column is not empty.
 
-* When this update happens, the value of the column ``updated_at`` will be automatically be ``set`` to the current timestamp.
+* When this update happens, the value of the column ``updated_at`` will be automatically ``set`` to the current timestamp.
 
 .. note::
 
