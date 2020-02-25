@@ -47,7 +47,7 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
     - [Diğer deploy etme yöntemleri](#diğer-deploy-etme-yöntemleri)
 - [Yapı](#yapı)
 - [İstemci tarafı takımlar](#i̇stemci-tarafı-takımlar)
-- [İş mantığı ekleme](#ş-mantığı-ekleme)
+- [İş mantığı ekleme](#iş-mantığı-ekleme)
     - [Uzak şemalar](#uzak-şemalar)
     - [Veritabanı olaylarındaki webhooks tetikleme](#veritabanı-olaylarındaki-webhooks-tetikleme)
 - [Demolar](#demolar)
@@ -205,15 +205,15 @@ directories.
 
 Bu Readme sayfası aşağıdaki çevirilerde mevcuttur:
 
-- [Japonca :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
-- [Fransızca :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
-- [Boşnakça :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
-- [Rusca :ru:](translations/README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
-- [Yunanca 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
-- [İspanyolca 🇲🇽](/translations/README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
-- [Endonezyaca :indonesia:](translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
-- [Brezilya Portekizcesi :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
-- [Almanca 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
-- [Çince :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
+- [Japonca :jp:](./README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
+- [Fransızca :fr:](./README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
+- [Boşnakça :bosnia_herzegovina:](./README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
+- [Rusca :ru:](./README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
+- [Yunanca 🇬🇷](./README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [İspanyolca 🇲🇽](/./README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
+- [Endonezyaca :indonesia:](./README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
+- [Brezilya Portekizcesi :brazil:](./README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
+- [Almanca 🇩🇪](./README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
+- [Çince :cn:](./README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
 
-Diğer dosyalar için çeviriler [burada](../translations) bulunabilir.
+Diğer dosyalar için çeviriler [burada](./) bulunabilir.
