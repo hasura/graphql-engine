@@ -96,7 +96,7 @@ guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ya
 
 ## Yapı
 
-Hasura GraphQL Engine, bir Postgres veritabnı örneğini önler ve istemci uygulamarınızdan HraphQL isteklerini kabul edebilir. Mevcut kimlik doğrulama sisteminizle çalışacak şekilde yapılandırılabilir ve kimlik doğrumaa sisteminizden dinamik değişkenlerle alan düzeyinde kurallar kullanarak erişim denetimini işleyebilir. 
+Hasura GraphQL Engine, bir Postgres veritabnı örneğini önler ve istemci uygulamarınızdan GraphQL isteklerini kabul edebilir. Mevcut kimlik doğrulama sisteminizle çalışacak şekilde yapılandırılabilir ve kimlik doğrumaa sisteminizden dinamik değişkenlerle alan düzeyinde kurallar kullanarak erişim denetimini işleyebilir. 
 
 Ayrıca uzaktan GraphQL şemalarını birleştirebilir ve birleşik GraphQL API'si sağlayabilirsiniz.
 
