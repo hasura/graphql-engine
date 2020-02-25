@@ -7,8 +7,8 @@ module Hasura.Eventing.EventTrigger
   , Event(..)
   ) where
 
-import           Control.Concurrent            (threadDelay)
 import           Control.Concurrent.Async      (async, waitAny)
+import           Control.Concurrent.Extended   (sleep)
 import           Control.Concurrent.STM.TVar
 import           Control.Monad.Catch           (MonadMask, bracket_)
 import           Control.Monad.STM             (STM, atomically, retry)
@@ -86,19 +86,20 @@ $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
 
 data EventEngineCtx
   = EventEngineCtx
-  { _eeCtxEventQueue            :: TQ.TQueue Event
-  , _eeCtxEventThreads          :: TVar Int
-  , _eeCtxMaxEventThreads       :: Int
-  , _eeCtxFetchIntervalMilliSec :: Int
+  { _eeCtxEventQueue      :: TQ.TQueue Event
+  , _eeCtxEventThreads    :: TVar Int
+  , _eeCtxMaxEventThreads :: Int
+  , _eeCtxFetchInterval   :: DiffTime
   }
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
 
-defaultFetchIntervalMilliSec :: Int
+defaultFetchIntervalMilliSec :: Milliseconds
 defaultFetchIntervalMilliSec = 1000
 
-initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
+
+initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT fetchI = do
   q <- TQ.newTQueue
   c <- newTVar 0
@@ -122,7 +123,7 @@ pushEvents logger pool eectx  = forever $ do
   case eventsOrError of
     Left err     -> L.unLogger logger $ EventTriggerInternalErr err
     Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
-  threadDelay (fetchI * 1000)
+  sleep fetchI
 
 consumeEvents
   :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> IO SchemaCache

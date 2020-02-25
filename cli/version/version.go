@@ -25,6 +25,10 @@ type Version struct {
 	Server string
 	// ServerSemver is the parsed semantic version for server
 	ServerSemver *semver.Version
+
+	// ServerFeatureFlags indicates what features are supported by this
+	// version of server.
+	ServerFeatureFlags *ServerFeatureFlags
 }
 
 // GetCLIVersion return the CLI version string.

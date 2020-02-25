@@ -175,7 +175,7 @@ insertScheduledEventsFor scheduledTriggersWithStats = do
       let insertScheduledEventsSql = TB.run $ toSQL
             SQLInsert
               { siTable    = scheduledEventsTable
-              , siCols     = map (PGCol . T.pack) ["name", "scheduled_time"]
+              , siCols     = map unsafePGCol ["name", "scheduled_time"]
               , siValues   = ValuesExp $ map (toTupleExp . toArr) events
               , siConflict = Just $ DoNothing Nothing
               , siRet      = Nothing
@@ -190,7 +190,7 @@ insertScheduledEvents events = do
   let insertScheduledEventsSql = TB.run $ toSQL
         SQLInsert
           { siTable    = scheduledEventsTable
-          , siCols     = map (PGCol . T.pack) ["name", "scheduled_time"]
+          , siCols     = map unsafePGCol ["name", "scheduled_time"]
           , siValues   = ValuesExp $ map (toTupleExp . toArr) events
           , siConflict = Just $ DoNothing Nothing
           , siRet      = Nothing

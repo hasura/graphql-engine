@@ -1,27 +1,3 @@
-import React from 'react';
-import styles from './PermissionsSummary.scss';
-
-export const permissionsSymbols = {
-  fullAccess: (
-    <i
-      className={'fa fa-check ' + styles.permissionSymbolFA}
-      aria-hidden="true"
-    />
-  ),
-  noAccess: (
-    <i
-      className={'fa fa-times ' + styles.permissionSymbolNA}
-      aria-hidden="true"
-    />
-  ),
-  partialAccess: (
-    <i
-      className={'fa fa-filter ' + styles.permissionSymbolPA}
-      aria-hidden="true"
-    />
-  ),
-};
-
 export const getAllRoles = allTableSchemas => {
   const _allRoles = [];
 
@@ -81,12 +57,14 @@ export const getPermissionColumnAccessSummary = (permission, tableFields) => {
     let allFields = true;
 
     Object.keys(tableFields).forEach(fieldType => {
-      noFields = noFields && !permission[fieldType].length;
+      const permissionFields = permission[fieldType] || [];
+
+      noFields = noFields && !permissionFields.length;
 
       allFields =
         allFields &&
-        (permission[fieldType] === '*' ||
-          permission[fieldType].length === tableFields[fieldType].length);
+        (permissionFields === '*' ||
+          permissionFields.length === tableFields[fieldType].length);
     });
 
     if (noFields) {

@@ -12,10 +12,11 @@ module Hasura.RQL.DDL.EventTrigger
   , subTableP2
   , subTableP2Setup
   , mkAllTriggersQ
+  , delTriggerQ
   , getEventTriggerDef
-  , updateEventTriggerDef
   , getWebhookInfoFromConf
   , getHeaderInfosFromConf
+  , updateEventTriggerInCatalog
   ) where
 
 import           Data.Aeson
@@ -145,22 +146,13 @@ delEventTriggerFromCatalog trn = do
   delTriggerQ trn
   archiveEvents trn
 
-archiveEvents:: TriggerName -> Q.TxE QErr ()
+archiveEvents :: TriggerName -> Q.TxE QErr ()
 archiveEvents trn = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
            UPDATE hdb_catalog.event_log
            SET archived = 't'
            WHERE trigger_name = $1
                 |] (Identity trn) False
-
-updateEventTriggerToCatalog
-  :: EventTriggerConf
-  -> Q.TxE QErr ()
-updateEventTriggerToCatalog etc = do
-  updateEventTriggerDef name etc
-  delTriggerQ name
-  where
-    EventTriggerConf name _ _ _ _ _ = etc
 
 fetchEvent :: EventId -> Q.TxE QErr (EventId, Bool)
 fetchEvent eid = do
@@ -254,7 +246,7 @@ subTableP2
   :: (MonadTx m)
   => QualifiedTable -> Bool -> EventTriggerConf -> m ()
 subTableP2 qt replace etc = liftTx if replace
-  then updateEventTriggerToCatalog etc
+  then updateEventTriggerInCatalog etc
   else addEventTriggerToCatalog qt etc
 
 runCreateEventTriggerQuery
@@ -355,13 +347,12 @@ getEventTriggerDef triggerName = do
            |] (Identity triggerName) False
   return (QualifiedObject sn tn, etc)
 
-updateEventTriggerDef
-  :: TriggerName -> EventTriggerConf -> Q.TxE QErr ()
-updateEventTriggerDef trigName trigConf =
+updateEventTriggerInCatalog :: EventTriggerConf -> Q.TxE QErr ()
+updateEventTriggerInCatalog trigConf =
   Q.unitQE defaultTxErrorHandler
     [Q.sql|
       UPDATE hdb_catalog.event_triggers
       SET
       configuration = $1
       WHERE name = $2
-    |] (Q.AltJ $ toJSON trigConf, trigName) True
+    |] (Q.AltJ $ toJSON trigConf, etcName trigConf) True

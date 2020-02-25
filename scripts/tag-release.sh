@@ -37,6 +37,10 @@ find "$ROOT/install-manifests" \
      -type f -exec sed -i -E \
      's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(.*)*$#\1'"${TAG}"'\9#' {} \;
 
+# add the latest tag to the catalog_versions file
+[ -n "$(tail -c1 "$ROOT/src-rsr/catalog_versions.txt")" ] && echo >> "$ROOT/src-rsr/catalog_versions.txt"
+echo $TAG $(cat "$ROOT/src-rsr/catalog_version.txt") >> "$ROOT/src-rsr/catalog_versions.txt"
+
 git add "$ROOT/install-manifests" \
         "$ROOT/scripts/cli-migrations"
 

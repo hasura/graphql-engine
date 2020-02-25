@@ -88,9 +88,13 @@ uFunctionArgs :: S.FunctionArgs -> Uniq S.FunctionArgs
 uFunctionArgs (S.FunctionArgs positional named) =
   S.FunctionArgs <$> mapM uSqlExp positional <*> mapM uSqlExp named
 
+uFunctionAlias :: S.FunctionAlias -> Uniq S.FunctionAlias
+uFunctionAlias (S.FunctionAlias alias definitionList) =
+  S.FunctionAlias <$> addAlias alias <*> pure definitionList
+
 uFunctionExp :: S.FunctionExp -> Uniq S.FunctionExp
 uFunctionExp (S.FunctionExp qf args alM) =
-  S.FunctionExp qf <$> uFunctionArgs args <*> mapM addAlias alM
+  S.FunctionExp qf <$> uFunctionArgs args <*> mapM uFunctionAlias alM
 
 uFromItem :: S.FromItem -> Uniq S.FromItem
 uFromItem fromItem = case fromItem of
@@ -199,6 +203,6 @@ uSqlExp = restoringIdens . \case
   S.SEFunction funcExp          -> S.SEFunction <$> uFunctionExp funcExp
   where
     uQual = \case
-      S.QualIden iden -> S.QualIden <$> getIden iden
+      S.QualIden iden ty -> S.QualIden <$> getIden iden <*> pure ty
       S.QualTable t   -> return $ S.QualTable t
       S.QualVar t     -> return $ S.QualVar t

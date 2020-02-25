@@ -26,8 +26,8 @@ import qualified Hasura.RQL.Types.EventTrigger as ET
 data RetryConfST
   = RetryConfST
   { rcstNumRetries  :: !Int
-  , rcstIntervalSec :: !Seconds
-  , rcstTimeoutSec  :: !Seconds
+  , rcstIntervalSec :: !DiffTime
+  , rcstTimeoutSec  :: !DiffTime
   , rcstTolerance   :: !NominalDiffTime
   } deriving (Show, Eq, Generic)
 
