@@ -21,7 +21,7 @@ func NewVersionCmd(ec *cli.ExecutionContext) *cobra.Command {
 			err := ec.Validate()
 			if err == nil {
 				ec.Logger.
-					WithField("endpoint", ec.ServerConfig.Endpoint).
+					WithField("endpoint", ec.Config.ServerConfig.Endpoint).
 					WithField("version", ec.Version.GetServerVersion()).
 					Info("hasura graphql engine")
 			}

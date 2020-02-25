@@ -36,27 +36,27 @@ data InsertQueryP1
   , iqp1Cols      :: ![PGCol]
   , iqp1Tuples    :: ![[S.SQLExp]]
   , iqp1Conflict  :: !(Maybe ConflictClauseP1)
-  , iqp1CheckCond :: !(Maybe AnnBoolExpSQL)
-  , iqp1MutFlds   :: !MutFlds
+  , iqp1CheckCond :: !(AnnBoolExpSQL, Maybe AnnBoolExpSQL)
+  , iqp1Output    :: !MutationOutput
   , iqp1AllCols   :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 mkInsertCTE :: InsertQueryP1 -> S.CTE
-mkInsertCTE (InsertQueryP1 tn cols vals c checkCond _ _) =
+mkInsertCTE (InsertQueryP1 tn cols vals c (insCheck, updCheck) _ _) =
     S.CTEInsert insert
   where
     tupVals = S.ValuesExp $ map S.TupleExp vals
     insert =
-      S.SQLInsert tn cols tupVals (toSQLConflict <$> c) 
-        . Just 
-        . S.RetExp 
-        $ maybe 
-            [S.selectStar] 
-            (\e -> 
-              [ S.selectStar
-              , insertCheckExpr (toSQLBoolExp (S.QualTable tn) e)
-              ]) 
-            checkCond
+      S.SQLInsert tn cols tupVals (toSQLConflict <$> c)
+        . Just
+        . S.RetExp
+        $ [ S.selectStar
+          , S.Extractor
+              (insertOrUpdateCheckExpr tn c
+                (toSQLBoolExp (S.QualTable tn) insCheck)
+                (fmap (toSQLBoolExp (S.QualTable tn)) updCheck))
+              Nothing
+          ]
 
 toSQLConflict :: ConflictClauseP1 -> S.SQLConflict
 toSQLConflict conflict = case conflict of
@@ -186,6 +186,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
   -- Check if the role has insert permissions
   insPerm   <- askInsPermInfo tableInfo
+  updPerm   <- askPermInfo' PAUpdate tableInfo
 
   -- Check if all dependent headers are present
   validateHeaders $ ipiRequiredHeaders insPerm
@@ -201,7 +202,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
 
     withPathK "returning" $ checkRetCols fieldInfoMap selPerm retCols
 
-  let mutFlds = mkDefaultMutFlds mAnnRetCols
+  let mutOutput = mkDefaultMutFlds mAnnRetCols
 
   let defInsVals = S.mkColDefValMap $
                    map pgiColumn $ getCols fieldInfoMap
@@ -215,17 +216,18 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName val oC mRet
   let sqlExps = map snd insTuples
       inpCols = HS.toList $ HS.fromList $ concatMap fst insTuples
 
-  checkExpr <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting (ipiCheck insPerm)
-  
+  insCheck <- convAnnBoolExpPartialSQL sessVarFromCurrentSetting (ipiCheck insPerm)
+  updCheck <- traverse (convAnnBoolExpPartialSQL sessVarFromCurrentSetting) (upiCheck =<< updPerm)
+
   conflictClause <- withPathK "on_conflict" $ forM oC $ \c -> do
       roleName <- askCurRole
       unless (isTabUpdatable roleName tableInfo) $ throw400 PermissionDenied $
         "upsert is not allowed for role " <> roleName
         <<> " since update permissions are not defined"
+
       buildConflictClause sessVarBldr tableInfo inpCols c
-  
   return $ InsertQueryP1 tableName insCols sqlExps
-           conflictClause (Just checkExpr) mutFlds allCols
+           conflictClause (insCheck, updCheck) mutOutput allCols
   where
     selNecessaryMsg =
       "; \"returning\" can only be used if the role has "
@@ -251,7 +253,7 @@ insertP2 :: Bool -> (InsertQueryP1, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 insertP2 strfyNum (u, p) =
   runMutation
      $ Mutation (iqp1Table u) (insertCTE, p)
-                (iqp1MutFlds u) (iqp1AllCols u) strfyNum
+                (iqp1Output u) (iqp1AllCols u) strfyNum
   where
     insertCTE = mkInsertCTE u
 
@@ -260,27 +262,73 @@ insertP2 strfyNum (u, p) =
 --
 -- The resulting SQL will look something like this:
 --
--- > INSERT INTO 
+-- > INSERT INTO
 -- >   ...
--- > RETURNING 
--- >   *, 
--- >   CASE WHEN {cond} 
--- >     THEN NULL 
--- >     ELSE hdb_catalog.check_violation('insert check constraint failed') 
+-- > RETURNING
+-- >   *,
+-- >   CASE WHEN {cond}
+-- >     THEN NULL
+-- >     ELSE hdb_catalog.check_violation('insert check constraint failed')
 -- >   END
-insertCheckExpr
-  :: S.BoolExp
-  -> S.Extractor
-insertCheckExpr condExpr = 
-  S.Extractor
-    (S.SECond condExpr S.SENull
-      (S.SEFunction 
-        (S.FunctionExp 
-          (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation")) 
-          (S.FunctionArgs [S.SELit "insert check constraint failed"] mempty)
-          Nothing)
-      ))
-    Nothing
+insertCheckExpr :: Text -> S.BoolExp -> S.SQLExp
+insertCheckExpr errorMessage condExpr =
+  S.SECond condExpr S.SENull
+    (S.SEFunction
+      (S.FunctionExp
+        (QualifiedObject (SchemaName "hdb_catalog") (FunctionName "check_violation"))
+        (S.FunctionArgs [S.SELit errorMessage] mempty)
+        Nothing)
+    )
+
+-- | When inserting data, we might need to also enforce the update
+-- check condition, because we might fall back to an update via an
+-- @ON CONFLICT@ clause.
+--
+-- We generate something which looks like
+--
+-- > INSERT INTO
+-- >   ...
+-- > ON CONFLICT DO UPDATE SET
+-- >   ...
+-- > RETURNING
+-- >   *,
+-- >   CASE WHEN xmax = 0
+-- >     THEN CASE WHEN {insert_cond}
+-- >            THEN NULL
+-- >            ELSE hdb_catalog.check_violation('insert check constraint failed')
+-- >          END
+-- >     ELSE CASE WHEN {update_cond}
+-- >            THEN NULL
+-- >            ELSE hdb_catalog.check_violation('update check constraint failed')
+-- >          END
+-- >   END
+--
+-- See @https://stackoverflow.com/q/34762732@ for more information on the use of
+-- the @xmax@ system column.
+insertOrUpdateCheckExpr
+  :: QualifiedTable
+  -> Maybe ConflictClauseP1
+  -> S.BoolExp
+  -> Maybe S.BoolExp
+  -> S.SQLExp
+insertOrUpdateCheckExpr qt (Just _conflict) insCheck (Just updCheck) =
+  S.SECond
+    (S.BECompare
+      S.SEQ
+      (S.SEQIden (S.QIden (S.mkQual qt) (Iden "xmax")))
+      (S.SEUnsafe "0"))
+    (insertCheckExpr "insert check constraint failed" insCheck)
+    (insertCheckExpr "update check constraint failed" updCheck)
+insertOrUpdateCheckExpr _ _ insCheck _ =
+  -- If we won't generate an ON CONFLICT clause, there is no point
+  -- in testing xmax. In particular, views don't provide the xmax
+  -- system column, but we don't provide ON CONFLICT for views,
+  -- even if they are auto-updatable, so we can fortunately avoid
+  -- having to test the non-existent xmax value.
+  --
+  -- Alternatively, if there is no update check constraint, we should
+  -- use the insert check constraint, for backwards compatibility.
+  insertCheckExpr "insert check constraint failed" insCheck
 
 runInsert
   :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)

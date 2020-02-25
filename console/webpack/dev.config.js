@@ -24,6 +24,12 @@ module.exports = {
   mode: 'development',
   devtool: 'inline-source-map',
   context: path.resolve(__dirname, '..'),
+  node: {
+    module: 'empty',
+    fs: 'empty',
+    net: 'empty',
+    child_process: 'empty',
+  },
   entry: {
     main: [
       'webpack-hot-middleware/client?path=http://' +

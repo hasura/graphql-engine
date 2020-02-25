@@ -47,7 +47,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
-import           Hasura.Server.Utils                    (RequestId, filterRequestHeaders)
+import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward)
+import           Hasura.Server.Version                  (HasVersion)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -56,6 +57,7 @@ import qualified Hasura.GraphQL.Resolve                 as GR
 import qualified Hasura.GraphQL.Validate                as VQ
 import qualified Hasura.GraphQL.Validate.Types          as VT
 import qualified Hasura.Logging                         as L
+import qualified Hasura.Server.Telemetry.Counters       as Telem
 
 -- The current execution plan of a graphql operation, it is
 -- currently, either local pg execution or a remote execution
@@ -145,6 +147,8 @@ getExecPlanPartial userInfo sc enableAL req = do
       return $ GExPHasura (gCtx, rootSelSet)
     VT.TLRemoteType _ rsi ->
       return $ GExPRemote rsi opDef
+    VT.TLCustom ->
+      throw500 "unexpected custom type for top level field"
   where
     role = userRole userInfo
     gCtxRoleMap = scGCtxMap sc
@@ -174,7 +178,7 @@ type ExecPlanResolved
   = GQExecPlan ExecOp
 
 getResolvedExecPlan
-  :: (MonadError QErr m, MonadIO m)
+  :: (HasVersion, MonadError QErr m, MonadIO m)
   => PGExecCtx
   -> EP.PlanCache
   -> UserInfo
@@ -182,22 +186,24 @@ getResolvedExecPlan
   -> Bool
   -> SchemaCache
   -> SchemaCacheVer
+  -> HTTP.Manager
+  -> [N.Header]
   -> GQLReqUnparsed
-  -> m ExecPlanResolved
+  -> m (Telem.CacheHit, ExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
-  enableAL sc scVer reqUnparsed = do
+  enableAL sc scVer httpManager reqHeaders reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
   let usrVars = userVars userInfo
   case planM of
     -- plans are only for queries and subscriptions
-    Just plan -> GExPHasura <$> case plan of
+    Just plan -> (Telem.Hit,) . GExPHasura <$> case plan of
       EP.RPQuery queryPlan -> do
         (tx, genSql) <- EQ.queryOpFromPlan usrVars queryVars queryPlan
         return $ ExOpQuery tx (Just genSql)
       EP.RPSubs subsPlan ->
         ExOpSubs <$> EL.reuseLiveQueryPlan pgExecCtx usrVars queryVars subsPlan
-    Nothing -> noExistingPlan
+    Nothing -> (Telem.Miss,) <$> noExistingPlan
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
@@ -210,7 +216,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
           VQ.RMutation selSet ->
-            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo selSet
+            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
           VQ.RQuery selSet -> do
             (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability selSet
             traverse_ (addPlanToCache . EP.RPQuery) plan
@@ -266,7 +272,8 @@ mutationRootName :: Text
 mutationRootName = "mutation_root"
 
 resolveMutSelSet
-  :: ( MonadError QErr m
+  :: ( HasVersion
+     , MonadError QErr m
      , MonadReader r m
      , Has UserInfo r
      , Has MutationCtxMap r
@@ -274,6 +281,9 @@ resolveMutSelSet
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has InsCtxMap r
+     , Has HTTP.Manager r
+     , Has [N.Header] r
+     , MonadIO m
      )
   => VQ.SelSet
   -> m LazyRespTx
@@ -285,26 +295,43 @@ resolveMutSelSet fields = do
     return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
 
   -- combines all transactions into a single transaction
-  return $ toSingleTx aliasedTxs
+  return $ liftTx $ toSingleTx aliasedTxs
   where
     -- A list of aliased transactions for eg
     -- [("f1", Tx r1), ("f2", Tx r2)]
     -- are converted into a single transaction as follows
     -- Tx {"f1": r1, "f2": r2}
-    toSingleTx :: [(Text, LazyRespTx)] -> LazyRespTx
+    -- toSingleTx :: [(Text, LazyRespTx)] -> LazyRespTx
     toSingleTx aliasedTxs =
       fmap encJFromAssocList $
       forM aliasedTxs $ \(al, tx) -> (,) al <$> tx
 
 getMutOp
-  :: (MonadError QErr m)
+  :: (HasVersion, MonadError QErr m, MonadIO m)
   => GCtx
   -> SQLGenCtx
   -> UserInfo
+  -> HTTP.Manager
+  -> [N.Header]
   -> VQ.SelSet
   -> m LazyRespTx
-getMutOp ctx sqlGenCtx userInfo selSet =
-  runE ctx sqlGenCtx userInfo $ resolveMutSelSet selSet
+getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
+  runE_ $ resolveMutSelSet selSet
+  where
+    runE_ action = do
+      res <- runExceptT $ runReaderT action
+        ( userInfo, queryCtxMap, mutationCtxMap
+        , typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx
+        , manager, reqHeaders
+        )
+      either throwError return res
+      where
+        queryCtxMap = _gQueryCtxMap ctx
+        mutationCtxMap = _gMutationCtxMap ctx
+        typeMap = _gTypes ctx
+        fldMap = _gFields ctx
+        ordByCtx = _gOrdByCtx ctx
+        insCtxMap = _gInsCtxMap ctx
 
 getSubsOpM
   :: ( MonadError QErr m
@@ -345,7 +372,8 @@ getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld =
   runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld
 
 execRemoteGQ
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadError QErr m
      , MonadReader ExecutionCtx m
      )
@@ -355,7 +383,8 @@ execRemoteGQ
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.TypedOperationDefinition
-  -> m (HttpResponse EncJSON)
+  -> m (DiffTime, HttpResponse EncJSON)
+  -- ^ Also returns time spent in http request, for telemetry.
 execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   execCtx <- ask
   let logger  = _ecxLogger execCtx
@@ -363,14 +392,12 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
       opTy    = G._todType opDef
   when (opTy == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
-  hdrs <- getHeadersFromConf hdrConf
-  let confHdrs   = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) hdrs
-      clientHdrs = bool [] filteredHeaders fwdClientHdrs
+  confHdrs <- makeHeadersFromConf hdrConf
+  let clientHdrs = bool [] (mkClientHeadersForward reqHdrs) fwdClientHdrs
       -- filter out duplicate headers
-      -- priority: conf headers > resolved userinfo vars > x-forwarded headers > client headers
+      -- priority: conf headers > resolved userinfo vars > client headers
       hdrMaps    = [ Map.fromList confHdrs
                    , Map.fromList userInfoToHdrs
-                   , Map.fromList xForwardedHeaders
                    , Map.fromList clientHdrs
                    ]
       headers  = Map.toList $ foldr Map.union Map.empty hdrMaps
@@ -385,11 +412,12 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
            }
 
   L.unLogger logger $ QueryLog q Nothing reqId
-  res  <- liftIO $ try $ HTTP.httpLbs req manager
+  (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
   let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
       respHdrs  = Just $ mkRespHeaders cookieHdrs
-  return $ HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
+      !httpResp = HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
+  return (time, httpResp)
 
   where
     RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
@@ -400,18 +428,6 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                      userInfoToList userInfo
-    filteredHeaders = filterUserVars $ filterRequestHeaders reqHdrs
-
-    xForwardedHeaders = flip mapMaybe reqHdrs $ \(hdrName, hdrValue) ->
-      case hdrName of
-        "Host"       -> Just ("X-Forwarded-Host", hdrValue)
-        "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
-        _            -> Nothing
-
-    filterUserVars hdrs =
-      let txHdrs = map (\(n, v) -> (bsToTxt $ CI.original n, bsToTxt v)) hdrs
-      in map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-         filter (not . isUserVar . fst) txHdrs
 
     getCookieHdr = fmap (\h -> ("Set-Cookie", h))
 
