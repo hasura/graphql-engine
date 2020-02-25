@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Masterminds/semver"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/update"
 	"github.com/pkg/errors"
@@ -39,11 +41,17 @@ func NewUpdateCLICmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 		Example: updateCLICmdExample,
 	}
+
+	f := updateCmd.Flags()
+	f.BoolVar(&opts.preRelease, "pre-release", false, "show pre-release update")
+
 	return updateCmd
 }
 
 type updateOptions struct {
 	EC *cli.ExecutionContext
+
+	preRelease bool
 }
 
 func (o *updateOptions) run(showPrompt bool) error {
@@ -53,29 +61,40 @@ func (o *updateOptions) run(showPrompt bool) error {
 	}
 
 	o.EC.Spin("Checking for update... ")
-	hasUpdate, latestVersion, err := update.HasUpdate(currentVersion, o.EC.LastUpdateCheckFile)
+	hasUpdate, latestVersion, hasPreReleaseUpdate, preReleaseVersion, err := update.HasUpdate(currentVersion, o.EC.LastUpdateCheckFile)
 	o.EC.Spinner.Stop()
 	if err != nil {
 		return errors.Wrap(err, "command: check update")
 	}
 
-	ec.Logger.Debugln("hasUpdate: ", hasUpdate, "latestVersion: ", latestVersion, "currentVersion:", currentVersion)
+	ec.Logger.Debugln("hasUpdate: ", hasUpdate, "latestVersion: ", latestVersion, "hasPreReleaseUpdate: ", hasPreReleaseUpdate, "preReleaseVersion: ", preReleaseVersion, "currentVersion:", currentVersion)
 
-	if !hasUpdate {
+	if !hasUpdate && !hasPreReleaseUpdate {
 		o.EC.Logger.WithField("version", currentVersion).Info("hasura cli is up to date")
 		return nil
 	}
 
-	if showPrompt {
+	var versionToBeInstalled *semver.Version
+	if hasUpdate && showPrompt {
 		ok := ask2confirm(latestVersion.String(), o.EC.Logger)
 		if !ok {
 			o.EC.Logger.Info("skipping update, run 'hasura update-cli' to update manually")
 			return nil
 		}
+		versionToBeInstalled = latestVersion
 	}
 
-	o.EC.Spin(fmt.Sprintf("Updating cli to v%s... ", latestVersion.String()))
-	err = update.ApplyUpdate(latestVersion)
+	if !hasUpdate && hasPreReleaseUpdate && o.preRelease {
+		if showPrompt {
+			// In case of root command PreRun, show an info to run update-cli --pre-release true
+			o.EC.Logger.Info("prerelease update available, run 'hasura update-cli --pre-release true' to update manually")
+			return nil
+		}
+		versionToBeInstalled = preReleaseVersion
+	}
+
+	o.EC.Spin(fmt.Sprintf("Updating cli to v%s... ", versionToBeInstalled.String()))
+	err = update.ApplyUpdate(versionToBeInstalled)
 	o.EC.Spinner.Stop()
 	if err != nil {
 		if os.IsPermission(err) {
