@@ -11,17 +11,22 @@ module Data.Aeson.Ordered
   ( Value(..)
   , Object
   , Array
-  , Data.Aeson.Ordered.safeUnion
+  , safeUnion
   , value
   , decode
   , Data.Aeson.Ordered.toList
   , fromList
+  , object
+  , asObject
+  , array
   , insert
   , delete
   , empty
   , eitherDecode
   , toEncJSON
   , Data.Aeson.Ordered.lookup
+  , toOrdered
+  , fromOrdered
   ) where
 
 import           Control.Applicative              hiding (empty)
@@ -35,6 +40,7 @@ import           Data.ByteString                  (ByteString)
 import qualified Data.ByteString.Lazy             as L
 import           Data.Data
 import           Data.Functor
+import qualified Data.HashMap.Strict              as Map
 import           Data.HashMap.Strict.InsOrd       (InsOrdHashMap)
 import qualified Data.HashMap.Strict.InsOrd       as OMap
 import           Data.Scientific
@@ -45,7 +51,6 @@ import qualified Data.Vector                      as V
 import           GHC.Generics
 import           Hasura.EncJSON
 import           Hasura.Prelude                   hiding (empty, first, second)
--- import           Prelude                          hiding (error, undefined)
 
 --------------------------------------------------------------------------------
 -- Encoding via Hasura's EncJSON
@@ -146,6 +151,40 @@ data Value
   | Bool !Bool
   | Null
   deriving (Eq, Read, Show, Typeable, Data, Generic)
+
+-- | Value pairs to Value
+object :: [(Text, Value)] -> Value
+object = Object . fromList
+
+-- | Value list to Value
+array :: [Value] -> Value
+array = Array . V.fromList
+
+-- | Convert Aeson Value to Ordered Value
+toOrdered :: (J.ToJSON a) => a -> Value
+toOrdered v = case J.toJSON v of
+  J.Object obj    -> Object $ fromList $ map (second toOrdered) $ Map.toList obj
+  J.Array arr     -> Array $ V.fromList $ map toOrdered $ V.toList arr
+  J.String text   -> String text
+  J.Number number -> Number number
+  J.Bool boolean  -> Bool boolean
+  J.Null          -> Null
+
+-- | Convert Ordered Value to Aeson Value
+fromOrdered :: Value -> J.Value
+fromOrdered v = case v of
+  Object obj    -> J.Object $ Map.fromList $ map (second fromOrdered) $
+                   Data.Aeson.Ordered.toList obj
+  Array arr     -> J.Array $ V.fromList $ map fromOrdered $ V.toList arr
+  String text   -> J.String text
+  Number number -> J.Number number
+  Bool boolean  -> J.Bool boolean
+  Null          -> J.Null
+
+asObject :: Value -> Either Text Object
+asObject = \case
+  Object o -> Right o
+  _        -> Left "expecting ordered object"
 
 --------------------------------------------------------------------------------
 -- Top-level entry points

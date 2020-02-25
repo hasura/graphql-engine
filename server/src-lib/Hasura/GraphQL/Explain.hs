@@ -12,7 +12,7 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Resolve.Types
+import           Hasura.GraphQL.Validate.Types          (evalReusabilityT, runReusabilityT)
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
@@ -66,6 +66,7 @@ resolveVal userInfo = \case
       PGTypeScalar colTy -> withConstructorFn colTy sessVarVal
       PGTypeArray _      -> sessVarVal
   RS.UVSQL sqlExp -> return sqlExp
+  RS.UVSession -> pure $ sessionInfoJsonExp $ userVars userInfo
 
 getSessVarVal
   :: (MonadError QErr m)
@@ -90,11 +91,14 @@ explainField userInfo gCtx sqlGenCtx fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-          evalResolveT $ RS.queryFldToPGAST fld
+          evalReusabilityT $ RS.queryFldToPGAST fld
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
                      unresolvedAST
-      let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
+      let (query, remoteJoins) = RS.toPGQuery resolvedAST
+          txtSQL = Q.getQueryText query
           withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
+      -- Reject if query contains any remote joins
+      when (remoteJoins /= mempty) $ throw400 NotSupported "Remote relationships are not allowed in explain query"
       planLines <- liftTx $ map runIdentity <$>
         Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
       return $ FieldPlan fName (Just txtSQL) $ Just planLines
@@ -114,36 +118,22 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
-  E.GQExecPlanPartial opType fieldPlans <-
+  (execPlan, queryReusability) <- runReusabilityT $
     E.getExecPlanPartial userInfo sc enableAL query
-  let hasuraFieldPlans = mapMaybe getHasuraField (toList fieldPlans)
-  if null hasuraFieldPlans
-    then throw400 InvalidParams "only hasura queries can be explained"
-    else pure ()
-  case opType of
-    G.OperationTypeQuery ->
-      runInTx $
-      encJFromJValue <$>
-      traverse
-        (\(gCtx, field) -> explainField userInfo gCtx sqlGenCtx field)
-        hasuraFieldPlans
-    G.OperationTypeMutation ->
+  (gCtx, rootSelSet) <- case execPlan of
+    E.GExPHasura (gCtx, rootSelSet) ->
+      return (gCtx, rootSelSet)
+    E.GExPRemote _ _  ->
+      throw400 InvalidParams "only hasura queries can be explained"
+  case rootSelSet of
+    GV.RQuery selSet ->
+      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx) (toList selSet)
+    GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
-    G.OperationTypeSubscription -> do
-      (gCtx, rootField) <- getRootField hasuraFieldPlans
-      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo rootField
+    GV.RSubscription rootField -> do
+      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability rootField
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw
     userInfo = mkUserInfo (fromMaybe adminRole $ roleFromVars usrVars) usrVars
-    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx
-    getHasuraField =
-      \case
-        E.GQFieldPartialHasura a -> Just a
-        _ -> Nothing
-    getRootField =
-      \case
-        [] -> throw500 "no field found in subscription"
-        [fld] -> pure fld
-        _ ->
-          throw500 "expected only one field in subscription"
+    runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

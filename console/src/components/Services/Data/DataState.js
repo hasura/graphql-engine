@@ -35,6 +35,7 @@ const defaultPermissionsState = {
   limitEnabled: true,
   bulkSelect: [],
   applySamePermissions: [],
+  isEditing: false,
 };
 
 const defaultPresetsState = {
@@ -61,6 +62,7 @@ const defaultQueryPermissions = {
   },
   select: {
     columns: [],
+    computed_fields: [],
     filter: {},
     limit: null,
     allow_aggregations: false,
@@ -106,6 +108,7 @@ const defaultModifyState = {
       onUpdate: 'restrict',
     },
   ],
+  checkConstraintsModify: [],
   uniqueKeyModify: [[]],
   relAdd: {
     isActive: true,
@@ -131,6 +134,14 @@ const defaultModifyState = {
     remoteSchema: {},
     relationships: [{ ...defaultRemoteRelationship }],
     fetchedRemoteRelationships: false,
+  },
+  rootFieldsEdit: {
+    select: '',
+    select_by_pk: '',
+    select_aggregate: '',
+    insert: '',
+    update: '',
+    delete: '',
   },
   permissionsState: { ...defaultPermissionsState },
   prevPermissionState: { ...defaultPermissionsState },
@@ -167,6 +178,7 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
+  allRoles: [],
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
   trackedFunctions: [],

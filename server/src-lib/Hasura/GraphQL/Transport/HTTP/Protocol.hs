@@ -3,10 +3,11 @@
 
 module Hasura.GraphQL.Transport.HTTP.Protocol
   ( GQLReq(..)
+  , GQLBatchedReqs(..)
   , GQLReqUnparsed
   , GQLReqParsed
   , toParsed
-  , GQLQueryText
+  , GQLQueryText(..)
   , GQLExecDoc(..)
   , OperationName(..)
   , VariableValues
@@ -21,9 +22,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , GQRespValue(..), gqRespData, gqRespErrors
   , encodeGQRespValue
   , parseGQRespValue
+  , parseEncJObject
   , GQJoinError(..), gqJoinErrorToValue
-  , mergeResponses
-  , getMergedGQResp
   ) where
 
 import           Control.Lens
@@ -71,7 +71,7 @@ data GQLReq a
   { _grOperationName :: !(Maybe OperationName)
   , _grQuery         :: !a
   , _grVariables     :: !(Maybe VariableValues)
-  } deriving (Show, Eq, Generic)
+  } deriving (Show, Eq, Generic, Functor)
 
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
   ''GQLReq
@@ -79,17 +79,35 @@ $(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
 
 instance (Hashable a) => Hashable (GQLReq a)
 
+-- | Batched queries are sent as a JSON array of
+-- 'GQLReq' records. This newtype exists to support
+-- the unusual JSON encoding.
+--
+-- See <https://github.com/hasura/graphql-engine/issues/1812>.
+data GQLBatchedReqs a
+  = GQLSingleRequest (GQLReq a)
+  | GQLBatchedReqs [GQLReq a]
+  deriving (Show, Eq, Generic)
+
+instance J.ToJSON a => J.ToJSON (GQLBatchedReqs a) where
+  toJSON (GQLSingleRequest q) = J.toJSON q
+  toJSON (GQLBatchedReqs qs)  = J.toJSON qs
+
+instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
+  parseJSON arr@J.Array{} = GQLBatchedReqs <$> J.parseJSON arr
+  parseJSON other         = GQLSingleRequest <$> J.parseJSON other
+
 newtype GQLQueryText
   = GQLQueryText
   { _unGQLQueryText :: Text
-  } deriving (Show, Eq, J.FromJSON, J.ToJSON, Hashable)
+  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable)
 
 type GQLReqUnparsed = GQLReq GQLQueryText
 type GQLReqParsed = GQLReq GQLExecDoc
 
 toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
 toParsed req = case G.parseExecutableDoc gqlText of
-  Left _ -> withPathK "query" $ throwVE "not a valid graphql query"
+  Left _  -> withPathK "query" $ throwVE "not a valid graphql query"
   Right a -> return $ req { _grQuery = GQLExecDoc $ G.getExecutableDefinitions a }
   where
     gqlText = _unGQLQueryText $ _grQuery req
@@ -166,27 +184,30 @@ encodeGraphqlResponse = \case
   GRHasura resp -> encodeGQResp resp
   GRRemote resp -> encodeRemoteGqlResp resp
 
-emptyResp :: GQRespValue
-emptyResp = GQRespValue OJ.empty VB.empty
+-- emptyResp :: GQRespValue
+-- emptyResp = GQRespValue OJ.empty VB.empty
+
+parseEncJObject :: EncJSON -> Either String OJ.Object
+parseEncJObject = OJ.eitherDecode . encJToLBS >=> \case
+  OJ.Object obj -> pure obj
+  _             -> Left "expected object for GraphQL response"
 
 parseGQRespValue :: EncJSON -> Either String GQRespValue
-parseGQRespValue = OJ.eitherDecode . encJToLBS >=> \case
-  OJ.Object obj -> do
-    _gqRespData <-
-      case OJ.lookup "data" obj of
-        -- "an error was encountered before execution began":
-        Nothing -> pure OJ.empty
-        -- "an error was encountered during the execution that prevented a valid response":
-        Just OJ.Null -> pure OJ.empty
-        Just (OJ.Object dobj) -> pure dobj
-        Just _ -> Left "expected object or null for GraphQL data response"
-    _gqRespErrors <-
-      case OJ.lookup "errors" obj of
-        Nothing -> pure VB.empty
-        Just (OJ.Array vec) -> pure $ VB.vector vec
-        Just _ -> Left "expected array for GraphQL error response"
-    pure (GQRespValue {_gqRespData, _gqRespErrors})
-  _ -> Left "expected object for GraphQL response"
+parseGQRespValue = parseEncJObject >=> \obj -> do
+  _gqRespData <-
+    case OJ.lookup "data" obj of
+      -- "an error was encountered before execution began":
+      Nothing               -> pure OJ.empty
+      -- "an error was encountered during the execution that prevented a valid response":
+      Just OJ.Null          -> pure OJ.empty
+      Just (OJ.Object dobj) -> pure dobj
+      Just _                -> Left "expected object or null for GraphQL data response"
+  _gqRespErrors <-
+    case OJ.lookup "errors" obj of
+      Nothing             -> pure VB.empty
+      Just (OJ.Array vec) -> pure $ VB.vector vec
+      Just _              -> Left "expected array for GraphQL error response"
+  pure (GQRespValue {_gqRespData, _gqRespErrors})
 
 encodeGQRespValue :: GQRespValue -> EncJSON
 encodeGQRespValue GQRespValue{..} = OJ.toEncJSON $ OJ.Object $ OJ.fromList $
@@ -212,17 +233,3 @@ encodeGQResp = \case
   GQPreExecError e -> encJFromAssocList [("errors", encJFromJValue e)]
   GQExecError e    -> encJFromAssocList [("data", "null"), ("errors", encJFromJValue e)]
   GQGeneric v -> encodeGQRespValue v
-
--- | See 'mergeResponseData'.
-getMergedGQResp :: Traversable t=> t EncJSON -> Either String GQRespValue
-getMergedGQResp =
-  mergeGQResp <=< traverse parseGQRespValue
-  where mergeGQResp = flip foldM emptyResp $ \respAcc GQRespValue{..} ->
-          respAcc & gqRespErrors <>~ _gqRespErrors
-                  & mapMOf gqRespData (OJ.safeUnion _gqRespData)
-
--- | Union several graphql responses, with the ordering of the top-level fields
--- determined by the input list.
-mergeResponses :: Traversable t=> t EncJSON -> Either String EncJSON
-mergeResponses =
-  fmap encodeGQRespValue . getMergedGQResp

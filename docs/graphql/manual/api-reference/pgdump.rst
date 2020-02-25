@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura PG dump API reference
+   :keywords: hasura, docs, PG dump API, API reference
+
 .. _pg_dump_api_reference:
 
 PG Dump API Reference
@@ -49,7 +53,7 @@ Request
 
   -  SQL front matter, like SET statements.
   -  ``CREATE SCHEMA public``.
-  -  ``COMMENT ON SCHMEA public is 'standard public schema'``;
+  -  ``COMMENT ON SCHEMA public is 'standard public schema'``;
   -  Comments (``--``) and empty newlines.
   -  Postgres triggers created by Hasura for event triggers.
 

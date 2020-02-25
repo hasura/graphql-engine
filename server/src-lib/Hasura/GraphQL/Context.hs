@@ -3,10 +3,7 @@ module Hasura.GraphQL.Context where
 import           Hasura.Prelude
 
 import           Data.Aeson
-import           Data.Aeson.Casing
-import           Data.Aeson.TH
 import           Data.Has
-import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
@@ -14,6 +11,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.Instances          ()
 import           Hasura.RQL.Types.Permission
 
 -- | A /GraphQL context/, aka the final output of GraphQL schema generation. Used to both validate
@@ -76,25 +74,3 @@ emptyGCtx =
       allTys    = mkTyInfoMap $ TIObj queryRoot:defaultTypes
   -- for now subscription root is query root
   in GCtx allTys mempty queryRoot Nothing Nothing mempty mempty mempty mempty
-
-data TableCustomRootFields
-  = TableCustomRootFields
-  { _tcrfSelect          :: !(Maybe G.Name)
-  , _tcrfSelectByPk      :: !(Maybe G.Name)
-  , _tcrfSelectAggregate :: !(Maybe G.Name)
-  , _tcrfInsert          :: !(Maybe G.Name)
-  , _tcrfUpdate          :: !(Maybe G.Name)
-  , _tcrfDelete          :: !(Maybe G.Name)
-  } deriving (Show, Eq, Lift)
-$(deriveJSON (aesonDrop 5 snakeCase) ''TableCustomRootFields)
-
-emptyCustomRootFields :: TableCustomRootFields
-emptyCustomRootFields =
-  TableCustomRootFields
-  { _tcrfSelect          = Nothing
-  , _tcrfSelectByPk      = Nothing
-  , _tcrfSelectAggregate = Nothing
-  , _tcrfInsert          = Nothing
-  , _tcrfUpdate          = Nothing
-  , _tcrfDelete          = Nothing
-  }

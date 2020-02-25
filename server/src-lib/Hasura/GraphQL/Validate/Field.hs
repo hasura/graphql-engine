@@ -116,12 +116,13 @@ data FieldGroup
 
 withDirectives
   :: ( MonadReader ValidationCtx m
-     , MonadError QErr m)
+     , MonadError QErr m
+     , MonadReusability m
+     )
   => [G.Directive]
   -> m a
   -> m (Maybe a)
 withDirectives dirs act = do
-
   dirDefs <- onLeft (mkMapWith G._dName dirs) $ \dups ->
     throwVE $ "the following directives are used more than once: " <>
     showNames dups
@@ -145,13 +146,16 @@ withDirectives dirs act = do
     getIfArg m = do
       val <- onNothing (Map.lookup "if" m) $ throw500
               "missing if argument in the directive"
+      when (isJust $ _aivVariable val) markNotReusable
       case _aivValue val of
         AGScalar _ (Just (PGValBoolean v)) -> return v
         _ -> throw500 "did not find boolean scalar for if argument"
 
 denormSel
   :: ( MonadReader ValidationCtx m
-     , MonadError QErr m)
+     , MonadError QErr m
+     , MonadReusability m
+     )
   => [G.Name] -- visited fragments
   -> ObjTyInfo -- parent type info
   -> G.Selection
@@ -171,7 +175,8 @@ denormSel visFrags parObjTyInfo sel = case sel of
 
 processArgs
   :: ( MonadReader ValidationCtx m
-     , MonadError QErr m)
+     , MonadError QErr m
+     )
   => ParamMap
   -> [G.Argument]
   -> m ArgsMap
@@ -202,7 +207,9 @@ processArgs fldParams argsL = do
 
 denormFld
   :: ( MonadReader ValidationCtx m
-     , MonadError QErr m)
+     , MonadError QErr m
+     , MonadReusability m
+     )
   => [G.Name] -- visited fragments
   -> ObjFldInfo
   -> G.Field
@@ -247,7 +254,9 @@ denormFld visFrags fldInfo (G.Field aliasM name args dirs selSet) = do
 
 denormInlnFrag
   :: ( MonadReader ValidationCtx m
-     , MonadError QErr m)
+     , MonadError QErr m
+     , MonadReusability m
+     )
   => [G.Name] -- visited fragments
   -> ObjTyInfo -- type information of the field
   -> G.InlineFragment
@@ -265,7 +274,9 @@ denormInlnFrag visFrags fldTyInfo inlnFrag = do
 
 denormSelSet
   :: ( MonadReader ValidationCtx m
-     , MonadError QErr m)
+     , MonadError QErr m
+     , MonadReusability m
+     )
   => [G.Name] -- visited fragments
   -> ObjTyInfo
   -> G.SelectionSet
@@ -281,7 +292,9 @@ denormSelSet visFrags fldTyInfo selSet =
 
 mergeFields
   :: ( MonadReader ValidationCtx m
-     , MonadError QErr m)
+     , MonadError QErr m
+     , MonadReusability m
+     )
   => Seq.Seq Field
   -> m (Seq.Seq Field)
 mergeFields flds =
@@ -311,7 +324,9 @@ mergeFields flds =
 
 denormFrag
   :: ( MonadReader ValidationCtx m
-     , MonadError QErr m)
+     , MonadError QErr m
+     , MonadReusability m
+     )
   => [G.Name] -- visited fragments
   -> G.NamedType -- parent type
   -> G.FragmentSpread

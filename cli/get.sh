@@ -34,7 +34,7 @@ fi
 log "Getting latest version..."
 
 # adapted from https://github.com/openfaas/faas-cli/blob/master/get.sh
-version=$(curl -s -H 'Content-Type: text/plain' https://releases.hasura.io/graphql-engine?agent=cli-get.sh)
+version=$(curl -s -f -H 'Content-Type: text/plain' https://releases.hasura.io/graphql-engine?agent=cli-get.sh)
 if [ ! $version ]; then
     log "${YELLOW}"
     log "Failed while attempting to install hasura graphql-engine cli. Please manually install:"
@@ -92,7 +92,7 @@ fi
 log "${PURPLE}Downloading hasura for $platform-$arch to ${targetFile}${NC}"
 url=https://github.com/hasura/graphql-engine/releases/download/$version/cli-hasura$suffix
 
-try curl -L# -o $targetFile "$url"
+try curl -L# -f -o $targetFile "$url"
 try chmod +x $targetFile
 
 log "${GREEN}Download complete!${NC}"

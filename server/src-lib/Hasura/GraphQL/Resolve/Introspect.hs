@@ -59,13 +59,13 @@ scalarR
   => ScalarTyInfo
   -> Field
   -> m J.Object
-scalarR (ScalarTyInfo descM pgColType _) fld =
+scalarR (ScalarTyInfo descM name _ _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
     "kind"        -> retJ TKSCALAR
     "description" -> retJ $ fmap G.unDescription descM
-    "name"        -> retJ $ pgColTyToScalar pgColType
+    "name"        -> retJ name
     _             -> return J.Null
 
 -- 4.5.2.2
@@ -333,7 +333,7 @@ schemaR fld =
     _              -> return J.Null
 
 typeR
-  :: (MonadResolve m, MonadReader r m, Has TypeMap r)
+  :: (MonadReusability m, MonadError QErr m, MonadReader r m, Has TypeMap r)
   => Field -> m J.Value
 typeR fld = do
   name <- asPGColText =<< getArg args "name"

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura version to print the Hasura version on the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura version
+
 .. _hasura_version:
 
 Hasura CLI: hasura version
@@ -28,8 +32,9 @@ Options inherited from parent commands
 ::
 
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --skip-update-check   skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

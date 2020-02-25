@@ -1,3 +1,7 @@
+.. meta::
+   :description: Get started with Hasura using an existing database
+   :keywords: hasura, docs, start, existing database
+
 Getting started with an existing database
 =========================================
 

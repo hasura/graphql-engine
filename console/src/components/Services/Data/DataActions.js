@@ -1,6 +1,7 @@
 import sanitize from 'sanitize-filename';
-import { push } from 'react-router-redux';
 
+import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
@@ -29,13 +30,14 @@ import {
   mergeLoadSchemaData,
 } from './utils';
 
+import _push from './push';
+import { getFetchAllRolesQuery } from '../../Common/utils/v1QueryUtils';
+
 import { fetchColumnTypesQuery, fetchColumnDefaultFunctions } from './utils';
 
 import { fetchColumnCastsQuery, convertArrayToJson } from './TableModify/utils';
 
 import { CLI_CONSOLE_MODE, SERVER_CONSOLE_MODE } from '../../../constants';
-
-import { FT_REMOTE_RELATIONSHIPS } from '../../../helpers/versionUtils';
 
 const SET_TABLE = 'Data/SET_TABLE';
 const LOAD_FUNCTIONS = 'Data/LOAD_FUNCTIONS';
@@ -59,6 +61,12 @@ const RESET_COLUMN_TYPE_INFO = 'Data/RESET_COLUMN_TYPE_INFO';
 const MAKE_REQUEST = 'ModifyTable/MAKE_REQUEST';
 const REQUEST_SUCCESS = 'ModifyTable/REQUEST_SUCCESS';
 const REQUEST_ERROR = 'ModifyTable/REQUEST_ERROR';
+
+export const SET_ALL_ROLES = 'Data/SET_ALL_ROLES';
+export const setAllRoles = roles => ({
+  type: SET_ALL_ROLES,
+  roles,
+});
 
 const initQueries = {
   schemaList: {
@@ -90,8 +98,9 @@ const initQueries = {
         schema: 'hdb_catalog',
       },
       columns: ['function_name', 'function_schema', 'is_system_defined'],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
       where: {
-        function_schema: '',
+        function_schema: '', // needs to be set later
       },
     },
   },
@@ -117,13 +126,13 @@ const initQueries = {
           columns: ['table_schema', 'table_name'],
         },
       ],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
       where: {
-        function_schema: '',
+        function_schema: '', // needs to be set later
         has_variadic: false,
         returns_set: true,
-        return_type_type: {
-          $ilike: '%composite%',
-        },
+        return_type_type: 'c', // COMPOSITE type
+        return_table_info: {},
         $or: [
           {
             function_type: {
@@ -156,17 +165,31 @@ const initQueries = {
         'return_type_name',
         'return_type_type',
         'returns_set',
-      ],
-      where: {
-        // TODO: set correct where
-        function_schema: '',
-        has_variadic: false,
-        returns_set: true,
-        return_type_type: {
-          $ilike: '%composite%',
+        {
+          name: 'return_table_info',
+          columns: ['table_schema', 'table_name'],
         },
-        function_type: {
-          $ilike: '%volatile%',
+      ],
+      order_by: [{ column: 'function_name', type: 'asc', nulls: 'last' }],
+      where: {
+        function_schema: '', // needs to be set later
+        $not: {
+          has_variadic: false,
+          returns_set: true,
+          return_type_type: 'c', // COMPOSITE type
+          return_table_info: {},
+          $or: [
+            {
+              function_type: {
+                $ilike: '%stable%',
+              },
+            },
+            {
+              function_type: {
+                $ilike: '%immutable%',
+              },
+            },
+          ],
         },
       },
     },
@@ -251,9 +274,6 @@ const loadSchema = configOptions => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
 
-    const featuresCompatibility =
-      globals.featuresCompatibility || getState().main.featuresCompatibility;
-
     let allSchemas = getState().tables.allSchemas;
 
     if (
@@ -295,12 +315,9 @@ const loadSchema = configOptions => {
         fetchTrackedTableListQuery(configOptions), // v1/query
         fetchTrackedTableFkQuery(configOptions),
         fetchTrackedTableReferencedFkQuery(configOptions),
+        fetchTrackedTableRemoteRelationshipQuery(configOptions),
       ],
     };
-
-    if (featuresCompatibility[FT_REMOTE_RELATIONSHIPS]) {
-      body.args.push(fetchTrackedTableRemoteRelationshipQuery(configOptions));
-    }
 
     const options = {
       credentials: globalCookiePolicy,
@@ -314,11 +331,7 @@ const loadSchema = configOptions => {
         const tableList = JSON.parse(data[0].result[1]);
         const fkList = JSON.parse(data[2].result[1]);
         const refFkList = JSON.parse(data[3].result[1]);
-        let remoteRelationships = [];
-
-        if (featuresCompatibility[FT_REMOTE_RELATIONSHIPS]) {
-          remoteRelationships = data[4];
-        }
+        const remoteRelationships = data[4];
 
         const mergedData = mergeLoadSchemaData(
           tableList,
@@ -400,7 +413,7 @@ const fetchDataInit = () => (dispatch, getState) => {
   );
 };
 
-const fetchFunctionInit = () => (dispatch, getState) => {
+const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   const url = Endpoints.getSchema;
   const body = {
     type: 'bulk',
@@ -412,10 +425,10 @@ const fetchFunctionInit = () => (dispatch, getState) => {
   };
 
   // set schema in queries
-  const currentSchema = getState().tables.currentSchema;
-  body.args[0].args.where.function_schema = currentSchema;
-  body.args[1].args.where.function_schema = currentSchema;
-  body.args[2].args.where.function_schema = currentSchema;
+  const fnSchema = schema || getState().tables.currentSchema;
+  body.args[0].args.where.function_schema = fnSchema;
+  body.args[1].args.where.function_schema = fnSchema;
+  body.args[2].args.where.function_schema = fnSchema;
 
   const options = {
     credentials: globalCookiePolicy,
@@ -423,10 +436,12 @@ const fetchFunctionInit = () => (dispatch, getState) => {
     headers: dataHeaders(getState),
     body: JSON.stringify(body),
   };
+
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: LOAD_FUNCTIONS, data: data[0] });
       dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: data[1] });
+
       let consistentFunctions = data[2];
       const { inconsistentObjects } = getState().metadata;
       if (inconsistentObjects.length > 0) {
@@ -446,7 +461,7 @@ const fetchFunctionInit = () => (dispatch, getState) => {
 
 const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
   if (redirect) {
-    dispatch(push(`${globals.urlPrefix}/data/schema/${schemaName}`));
+    dispatch(_push(getSchemaBaseRoute(schemaName)));
   }
 
   Promise.all([
@@ -574,25 +589,17 @@ const makeMigrationCall = (
 };
 
 const getBulkColumnInfoFetchQuery = schema => {
-  const fetchColumnTypes = {
-    type: 'run_sql',
-    args: {
-      sql: fetchColumnTypesQuery,
-    },
-  };
-  const fetchTypeDefaultValues = {
-    type: 'run_sql',
-    args: {
-      sql: fetchColumnDefaultFunctions(schema),
-    },
-  };
-
-  const fetchValidTypeCasts = {
-    type: 'run_sql',
-    args: {
-      sql: fetchColumnCastsQuery,
-    },
-  };
+  const fetchColumnTypes = getRunSqlQuery(fetchColumnTypesQuery, false, true);
+  const fetchTypeDefaultValues = getRunSqlQuery(
+    fetchColumnDefaultFunctions(schema),
+    false,
+    true
+  );
+  const fetchValidTypeCasts = getRunSqlQuery(
+    fetchColumnCastsQuery,
+    false,
+    true
+  );
 
   return {
     type: 'bulk',
@@ -641,6 +648,38 @@ const fetchColumnTypeInfo = () => {
       }
     );
   };
+};
+
+export const fetchRoleList = () => (dispatch, getState) => {
+  const query = getFetchAllRolesQuery();
+  const options = {
+    credentials: globalCookiePolicy,
+    method: 'POST',
+    headers: dataHeaders(getState),
+    body: JSON.stringify(query),
+  };
+
+  return dispatch(requestAction(Endpoints.query, options)).then(
+    data => {
+      const allRoles = [...new Set(data.map(r => r.role_name))];
+      const { inconsistentObjects } = getState().metadata;
+
+      let consistentRoles = [...allRoles];
+
+      if (inconsistentObjects.length > 0) {
+        consistentRoles = filterInconsistentMetadataObjects(
+          allRoles,
+          inconsistentObjects,
+          'roles'
+        );
+      }
+
+      dispatch(setAllRoles(consistentRoles));
+    },
+    error => {
+      console.error('Failed to load roles ' + JSON.stringify(error));
+    }
+  );
 };
 
 /* ******************************************************* */
@@ -772,6 +811,11 @@ const dataReducer = (state = defaultState, action) => {
         columnDefaultFunctions: { ...defaultState.columnDefaultFunctions },
         columnTypeCasts: { ...defaultState.columnTypeCasts },
         columnDataTypeInfoErr: defaultState.columnDataTypeInfoErr,
+      };
+    case SET_ALL_ROLES:
+      return {
+        ...state,
+        allRoles: action.roles,
       };
     default:
       return state;

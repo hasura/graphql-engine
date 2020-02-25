@@ -17,13 +17,14 @@ import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getRelDef, getObjArrRelList } from './utils';
 
 import Button from '../../../Common/Button/Button';
-import { FT_REMOTE_RELATIONSHIPS } from '../../../../helpers/versionUtils';
 import AddManualRelationship from './AddManualRelationship';
 import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { fetchRemoteSchemas } from '../../RemoteSchema/Actions';
+import styles from '../TableModify/ModifyTable.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
 
 const addRelationshipCellView = (
   dispatch,
@@ -33,8 +34,6 @@ const addRelationshipCellView = (
   relMetaData,
   tableSchema
 ) => {
-  const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
-
   const onAdd = e => {
     e.preventDefault();
     dispatch(relSelectionChanged(rel));
@@ -127,9 +126,6 @@ const AddRelationship = ({
   cachedRelationshipData,
   dispatch,
 }) => {
-  const styles = require('../TableModify/ModifyTable.scss');
-  const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
-
   const cTable = allSchemas.find(
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
@@ -258,9 +254,7 @@ const AddRelationship = ({
       </div>
       <div className={tableStyles.tableContainer}>
         <table
-          className={`${
-            tableStyles.table
-          } table table-bordered table-striped table-hover`}
+          className={`${tableStyles.table} table table-bordered table-striped table-hover`}
         >
           <thead>
             <tr>
@@ -315,14 +309,11 @@ const Relationships = ({
   currentSchema,
   migrationMode,
   schemaList,
-  featuresCompatibility,
 }) => {
   useEffect(() => {
     dispatch(setTable(tableName));
     dispatch(fetchRemoteSchemas());
   }, []);
-  const styles = require('../TableModify/ModifyTable.scss');
-  const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
   const tableSchema = allSchemas.find(
     t => t.table_name === tableName && t.table_schema === currentSchema
@@ -367,9 +358,7 @@ const Relationships = ({
     addedRelationshipsView = (
       <div className={tableStyles.tableContainer}>
         <table
-          className={`${
-            tableStyles.table
-          } table table-bordered table-striped table-hover`}
+          className={`${tableStyles.table} table table-bordered table-striped table-hover`}
         >
           <thead>
             <tr>
@@ -420,9 +409,6 @@ const Relationships = ({
   }
 
   const remoteRelationshipsSection = () => {
-    if (!featuresCompatibility[FT_REMOTE_RELATIONSHIPS]) {
-      return null;
-    }
     return (
       <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
         <h4 className={styles.subheading_text}>Remote Relationships</h4>
@@ -447,9 +433,7 @@ const Relationships = ({
       <br />
       <div className={`${styles.padd_left_remove} container-fluid`}>
         <div
-          className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${
-            styles.add_mar_bottom
-          }`}
+          className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
         >
           <h4 className={styles.subheading_text}>Table Relationships</h4>
           {addedRelationshipsView}
@@ -501,13 +485,13 @@ Relationships.propTypes = {
   relAdd: PropTypes.object.isRequired,
   manualRelAdd: PropTypes.object.isRequired,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
   remoteSchemas: PropTypes.array.isRequired,
-  featuresCompatibility: PropTypes.object,
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -515,7 +499,8 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
   migrationMode: state.main.migrationMode,
-  featuresCompatibility: state.main.featuresCompatibility,
+  readOnlyMode: state.main.readOnlyMode,
+  serverVersion: state.main.serverVersion,
   schemaList: state.tables.schemaList,
   remoteSchemas: state.remoteSchemas.listData.remoteSchemas.map(r => r.name),
   adminHeaders: state.tables.dataHeaders,

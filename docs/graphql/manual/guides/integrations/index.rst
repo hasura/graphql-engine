@@ -1,3 +1,7 @@
+.. meta::
+   :description: Integration and migration tutorials for Hasura
+   :keywords: hasura, docs, integration, migration
+
 Guides: Integration/migration tutorials
 =======================================
 
@@ -7,6 +11,7 @@ Guides: Integration/migration tutorials
   :local:
 
 - :doc:`auth0-jwt`
+- :doc:`aws-cognito`
 - :doc:`apollo-subscriptions`
 - `Blog: Move from firebase to realtime GraphQL on Postgres <https://blog.hasura.io/firebase2graphql-moving-from-firebase-to-realtime-graphql-on-postgres-4d36cb7f4eaf>`__
 - `Blog: Create a Gatsby site using GraphQL on Postgres <https://blog.hasura.io/create-gatsby-sites-using-graphql-on-postgres-603b5dd1e516>`__
@@ -19,4 +24,5 @@ Guides: Integration/migration tutorials
   :hidden:
 
   Auth0 JWT Integration <auth0-jwt>
+  Using AWS Cognito for authentication <aws-cognito>
   Subscriptions using apollo-client <apollo-subscriptions>

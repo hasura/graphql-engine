@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use authenticaton with webhooks in Hasura
+   :keywords: hasura, docs, authentication, auth, webhook
+
 Authentication using webhooks
 =============================
 
@@ -12,6 +16,7 @@ Introduction
 You can configure the GraphQL engine to use a webhook to authenticate all incoming requests to the Hasura GraphQL engine server. 
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/webhook-auth.png
+   :alt: Authentication using webhooks
 
 .. admonition:: Prerequisite
    

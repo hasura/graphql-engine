@@ -5,24 +5,24 @@ response:
   data:
     profiles:
       - id: 1
+        name: alice
         messagesNestedArr:
           - name: alice
             msg: You win!
           - name: alice
             msg: Another alice
-        name: alice
       - id: 2
+        name: bob
         messagesNestedArr:
           - name: bob
             msg: You lose!
-        name: bob
       - id: 3
+        name: alice
         messagesNestedArr:
           - name: alice
             msg: You win!
           - name: alice
             msg: Another alice
-        name: alice
 query:
   query: |
     query {

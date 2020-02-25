@@ -1,0 +1,53 @@
+description: Import a v2 metadata
+url: /v1/query
+status: 200
+response:
+  message: success
+query:
+  type: replace_metadata
+  args:
+    version: 2
+    functions:
+    - function:
+        schema: public
+        name: search_articles
+    - function:
+        schema: public
+        name: get_session_var
+      configuration:
+        session_argument: hasura_session
+    tables:
+    - table: author
+      object_relationships: []
+      array_relationships:
+      - using:
+          foreign_key_constraint_on:
+            column: author_id
+            table: article
+        name: articles
+        comment: List all articles of the author
+      insert_permissions: []
+      select_permissions: []
+      update_permissions: []
+      delete_permissions: []
+      event_triggers: []
+    - table: article
+      object_relationships:
+      - using:
+          foreign_key_constraint_on: author_id
+        name: author
+        comment: null
+      array_relationships: []
+      insert_permissions: []
+      select_permissions: []
+      update_permissions: []
+      delete_permissions: []
+      event_triggers: []
+    - table: text_result
+      object_relationships: []
+      array_relationships: []
+      insert_permissions: []
+      select_permissions: []
+      update_permissions: []
+      delete_permissions: []
+      event_triggers: []

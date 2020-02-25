@@ -48,14 +48,14 @@ For Docker-based deployment and advanced configuration options, see [deployment 
 ### Serverless boilerplates
 
 Use one of the [serverless trigger
-boilerplates](community/boilerplates/serverless-triggers) to deploy a webhook
+boilerplates](community/boilerplates/event-triggers) to deploy a webhook
 that can capture database events.  
 Serverless/cloud-function platforms covered by boilerplates: 
 
-* [AWS Lambda](community/boilerplates/serverless-triggers/aws-lambda)
-* [Google Cloud Functions](community/boilerplates/serverless-triggers/google-cloud-functions)
-* [Azure Functions](community/boilerplates/serverless-triggers/azure-functions)
-* [Zeit Now](community/boilerplates/serverless-triggers/zeit-now)
+* [AWS Lambda](community/boilerplates/event-triggers/aws-lambda)
+* [Google Cloud Functions](community/boilerplates/event-triggers/google-cloud-functions)
+* [Azure Functions](community/boilerplates/event-triggers/azure-functions)
+* [Zeit Now](community/boilerplates/event-triggers/zeit-now)
 
 ## Architecture
 
@@ -69,7 +69,7 @@ Trigger push notifications and emails based on database events. Try the demo and
 
 * [Watch demo](https://www.youtube.com/watch?v=nuSHkzE2-zo)
 * [Try it out](https://serverless-push.demo.hasura.app/)
-* [Tutorial](community/examples/serverless-push)
+* [Tutorial](community/sample-apps/serverless-push)
 
 
 <!--
@@ -89,7 +89,7 @@ Transform and load data into external data-stores. Check out this demo and tutor
 
 * [Watch demo](https://youtu.be/kWVEBWdEVAA)
 * [Try it out](https://serverless-etl.demo.hasura.app/)
-* [Tutorial](community/examples/serverless-etl)
+* [Tutorial](community/sample-apps/serverless-etl)
 
 ### Building reactive UX for your async backend with realtime GraphQL
 

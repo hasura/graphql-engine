@@ -9,6 +9,10 @@ h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
   margin-bottom: 0;
   -webkit-margin-before: 0;
   -webkit-margin-after: 0;
+
+  a small {
+    color: inherit;
+  }
 }
 
 .error_text {
@@ -602,6 +606,10 @@ code {
   padding-top: 10px;
 }
 
+.add_pad_top {
+  padding-top: 20px;
+}
+
 .padd_bottom {
   padding-bottom: 10px !important;
 }
@@ -609,6 +617,7 @@ code {
 .add_pad_bottom {
   padding-bottom: 20px;
 }
+
 
 .add_padd_bottom {
   padding-bottom: 25px;
@@ -1375,6 +1384,10 @@ code {
 .tooltip {
   cursor: pointer;
   color: #4D4D4D;
+}
+
+.hiddenMoreWidth {
+  width: 300px;
 }
 
 /* container height subtracting top header and bottom scroll bar */

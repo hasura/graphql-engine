@@ -5,10 +5,8 @@
 -- | Validate input queries against remote schemas.
 
 module Hasura.RQL.DDL.RemoteRelationship.Validate
-  ( getCreateRemoteRelationshipValidation
-  , validateRelationship
-  , validateRemoteArguments
-  , ValidationError(..)
+  ( validateRemoteRelationship
+  , validateErrorToText
   ) where
 
 import           Data.Bifunctor
@@ -21,15 +19,15 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict           as HM
+import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
-import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
--- TODO pretty-print readable errors:
 -- | An error validating the remote relationship.
 data ValidationError
-  = CouldntFindRemoteField G.Name ObjTyInfo
+  = RemoteSchemaNotFound !RemoteSchemaName
+  | CouldntFindRemoteField G.Name ObjTyInfo
   | FieldNotFoundInRemoteSchema G.Name
   | NoSuchArgumentForRemote G.Name
   | MissingRequiredArgument G.Name
@@ -38,7 +36,7 @@ data ValidationError
   | TableFieldNonexistent !QualifiedTable !FieldName
   | ExpectedTypeButGot !G.GType !G.GType
   | InvalidType !G.GType!T.Text
-  | InvalidVariable G.Variable (HM.HashMap G.Variable (FieldInfo PGColumnInfo))
+  | InvalidVariable G.Variable (HM.HashMap G.Variable PGColumnInfo)
   | NullNotAllowedHere
   | ForeignRelationshipsNotAllowedInRemoteVariable !RelInfo
   | RemoteFieldsNotAllowedInArguments !RemoteField
@@ -48,39 +46,21 @@ data ValidationError
   | UnsupportedEnum
   deriving (Show, Eq)
 
--- | Get a validation for the remote relationship proposal.
-getCreateRemoteRelationshipValidation ::
-     (QErrM m, CacheRM m)
-  => RemoteRelationship
-  -> m (Either (NonEmpty ValidationError) (RemoteField, TypeMap))
-getCreateRemoteRelationshipValidation createRemoteRelationship = do
-  schemaCache <- askSchemaCache
-  pure
-    (validateRelationship
-       createRemoteRelationship
-       (scDefaultRemoteGCtx schemaCache)
-       (scTables schemaCache))
+-- FIXME:- This is ugly
+validateErrorToText :: NE.NonEmpty ValidationError -> Text
+validateErrorToText = T.pack . show
 
 -- | Validate a remote relationship given a context.
-validateRelationship ::
+validateRemoteRelationship ::
      RemoteRelationship
-  -> GC.GCtx
-  -> HM.HashMap QualifiedTable (TableInfo PGColumnInfo)
+  -> RemoteSchemaMap
+  -> [PGColumnInfo]
   -> Either (NonEmpty ValidationError) (RemoteField, TypeMap)
-validateRelationship remoteRelationship gctx tables = do
-  case HM.lookup tableName tables of
-    Nothing -> Left (pure (TableNotFound tableName))
-    Just table -> do
-      fieldInfos <-
-        fmap
-          HM.fromList
-          (traverse
-             (\fieldName ->
-                case HM.lookup fieldName (_tiFieldInfoMap table) of
-                  Nothing ->
-                    Left (pure (TableFieldNonexistent tableName fieldName))
-                  Just fieldInfo -> pure (fieldName, fieldInfo))
-             (toList (rtrHasuraFields remoteRelationship)))
+validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
+  let remoteSchemaName = rtrRemoteSchema remoteRelationship
+  case HM.lookup remoteSchemaName remoteSchemaMap of
+    Nothing -> Left $ pure $ RemoteSchemaNotFound remoteSchemaName
+    Just (RemoteSchemaCtx _ gctx rsi) -> do
       (_leafTyInfo, leafGType, (leafParamMap, leafTypeMap)) <-
         foldl
           (\eitherObjTyInfoAndTypes fieldCall ->
@@ -92,7 +72,7 @@ validateRelationship remoteRelationship gctx tables = do
                    TLHasuraType ->
                      Left
                        (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
-                   TLRemoteRelType {} ->
+                   TLCustom ->
                      Left
                        (pure (FieldNotFoundInRemoteSchema (fcName fieldCall)))
                    TLRemoteType {} -> do
@@ -104,8 +84,8 @@ validateRelationship remoteRelationship gctx tables = do
                           providedArguments
                           (HM.fromList
                              (map
-                                (first fieldNameToVariable)
-                                (HM.toList fieldInfos)))
+                                (first pgColumnToVariable)
+                                (HM.toList $ mapFromL (pgiColumn) pgColumns)))
                           (GS._gTypes gctx))
                      (newParamMap, newTypeMap) <-
                        first
@@ -141,17 +121,17 @@ validateRelationship remoteRelationship gctx tables = do
             { rmfRemoteRelationship = remoteRelationship
             , rmfGType = leafGType
             , rmfParamMap = leafParamMap
+            , rmfRemoteSchema = rsi
             }
         , leafTypeMap)
   where
-    tableName = rtrTable remoteRelationship
     getTyInfoFromField types field =
       let baseTy = getBaseTy (_fiTy field)
           fieldName = _fiName field
           typeInfo = HM.lookup baseTy types
        in case typeInfo of
             Just (TIObj objTyInfo) -> pure objTyInfo
-            _ -> Left (pure (FieldNotFoundInRemoteSchema fieldName))
+            _                      -> Left (pure (FieldNotFoundInRemoteSchema fieldName))
     isObjType types field =
       let baseTy = getBaseTy (_fiTy field)
           typeInfo = HM.lookup baseTy types
@@ -272,9 +252,8 @@ stripObject remoteRelationshipName types originalGtype keypairs =
 renameTypeForRelationship :: RemoteRelationship -> Text -> Text
 renameTypeForRelationship rtr text =
   text <> "_remote_rel_" <> name
-  where name = schema <> "_" <> table <> rrname
+  where name = schema <> "_" <> table <> remoteRelationshipNameToText (rtrName rtr)
         QualifiedObject (SchemaName schema) (TableName table) = rtrTable rtr
-        RemoteRelationshipName rrname = rtrName rtr
 
 -- | Rename a type.
 renameNamedType :: (Text -> Text) -> G.NamedType -> G.NamedType
@@ -282,8 +261,8 @@ renameNamedType rename (G.NamedType (G.Name text)) =
   G.NamedType (G.Name (rename text))
 
 -- | Convert a field name to a variable name.
-fieldNameToVariable :: FieldName -> G.Variable
-fieldNameToVariable = G.Variable . G.Name . getFieldNameTxt
+pgColumnToVariable :: PGCol -> G.Variable
+pgColumnToVariable = G.Variable . G.Name . getPGColTxt
 
 -- | Lookup the field in the schema.
 lookupField ::
@@ -301,7 +280,7 @@ lookupField name objFldInfo = viaObject objFldInfo
 validateRemoteArguments ::
      HM.HashMap G.Name InpValInfo
   -> HM.HashMap G.Name G.Value
-  -> HM.HashMap G.Variable (FieldInfo PGColumnInfo)
+  -> HM.HashMap G.Variable PGColumnInfo
   -> HM.HashMap G.NamedType TypeInfo
   -> Validation (NonEmpty ValidationError) ()
 validateRemoteArguments expectedArguments providedArguments permittedVariables types = do
@@ -329,7 +308,7 @@ validateRemoteArguments expectedArguments providedArguments permittedVariables t
 
 -- | Validate a value against a type.
 validateType ::
-     HM.HashMap G.Variable (FieldInfo PGColumnInfo)
+     HM.HashMap G.Variable PGColumnInfo
   -> G.Value
   -> G.GType
   -> HM.HashMap G.NamedType TypeInfo
@@ -341,7 +320,7 @@ validateType permittedVariables value expectedGType types =
         Nothing -> Failure (pure (InvalidVariable variable permittedVariables))
         Just fieldInfo ->
           bindValidation
-            (fieldInfoToNamedType fieldInfo)
+            (columnInfoToNamedType fieldInfo)
             (\actualNamedType -> assertType (G.toGT actualNamedType) expectedGType)
     G.VInt {} -> assertType (G.toGT $ mkScalarTy PGInteger) expectedGType
     G.VFloat {} -> assertType (G.toGT $ mkScalarTy PGFloat) expectedGType
@@ -388,10 +367,10 @@ assertType :: G.GType -> G.GType -> Validation (NonEmpty ValidationError) ()
 assertType actualType expectedType = do
   -- check if both are list types or both are named types
   (when
-     (isListType actualType /= isListType expectedType)
+     (isListType' actualType /= isListType' expectedType)
      (Failure (pure $ ExpectedTypeButGot expectedType actualType)))
   -- if list type then check over unwrapped type, else check base types
-  if isListType actualType
+  if isListType' actualType
     then assertType (unwrapTy actualType) (unwrapTy expectedType)
     else (when
             (getBaseTy actualType /= getBaseTy expectedType)
@@ -400,26 +379,11 @@ assertType actualType expectedType = do
 
 assertListType :: G.GType -> Validation (NonEmpty ValidationError) ()
 assertListType actualType =
-  (when (not $ isListType actualType)
+  (when (not $ isListType' actualType)
     (Failure (pure $ InvalidType actualType "is not a list type")))
 
 -- | Convert a field info to a named type, if possible.
-fieldInfoToNamedType ::
-     (FieldInfo PGColumnInfo)
-  -> Validation (NonEmpty ValidationError) G.NamedType
-fieldInfoToNamedType =
-  \case
-    FIColumn colInfo -> case pgiType colInfo of
-      PGColumnScalar scalarType -> pure $ mkScalarTy scalarType
-      _                         -> Failure $ pure UnsupportedEnum
-    FIRelationship relInfo ->
-      Failure (pure (ForeignRelationshipsNotAllowedInRemoteVariable relInfo))
-    FIRemote remoteField ->
-      Failure (pure (RemoteFieldsNotAllowedInArguments remoteField))
-
--- | Reify the constructors to an Either.
-isListType :: G.GType -> Bool
-isListType =
-  \case
-    G.TypeNamed {} -> False
-    G.TypeList {} -> True
+columnInfoToNamedType :: PGColumnInfo -> Validation (NonEmpty ValidationError) G.NamedType
+columnInfoToNamedType pci = case pgiType pci of
+  PGColumnScalar scalarType -> pure $ mkScalarTy scalarType
+  _                         -> Failure $ pure UnsupportedEnum

@@ -1,5 +1,6 @@
 const { ApolloServer, ApolloError } = require('apollo-server');
 const gql = require('graphql-tag');
+const { print } = require('graphql');
 
 
 const allMessages = [
@@ -192,12 +193,25 @@ const resolvers = {
     }
 };
 
+class BasicLogging {
+    requestDidStart({queryString, parsedQuery, variables}) {
+        const query = queryString || print(parsedQuery);
+        console.log(query);
+        console.log(variables);
+    }
+
+    willSendResponse({graphqlResponse}) {
+        console.log(JSON.stringify(graphqlResponse, null, 2));
+    }
+}
+
 const schema = new ApolloServer(
     { typeDefs,
       resolvers,
+      extensions: [() => new BasicLogging()],
       formatError: (err) => {
           // Stack traces make expected test output brittle and noisey:
-          delete err.extensions
+          delete err.extensions;
           return err;
       } });
 
