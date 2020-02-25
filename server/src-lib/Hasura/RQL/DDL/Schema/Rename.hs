@@ -228,16 +228,18 @@ updateSelPermFlds refQT rename rn (SelPerm cols fltr limit aggAllwd computedFiel
 updateUpdPermFlds
   :: (MonadTx m, CacheRM m)
   => QualifiedTable -> Rename -> RoleName -> UpdPerm -> m ()
-updateUpdPermFlds refQT rename rn (UpdPerm cols preset fltr) = do
+updateUpdPermFlds refQT rename rn (UpdPerm cols preset fltr check) = do
   updatedPerm <- case rename of
     RTable rt -> do
       let updFltr = updateTableInBoolExp rt fltr
-      return $ UpdPerm cols preset updFltr
+          updCheck = fmap (updateTableInBoolExp rt) check
+      return $ UpdPerm cols preset updFltr updCheck
     RField rf -> do
       updFltr <- updateFieldInBoolExp refQT rf fltr
+      updCheck <- traverse (updateFieldInBoolExp refQT rf) check
       let updCols = updateCols refQT rf cols
           updPresetM = updatePreset refQT rf <$> preset
-      return $ UpdPerm updCols updPresetM updFltr
+      return $ UpdPerm updCols updPresetM updFltr updCheck
   liftTx $ updatePermDefInCatalog PTUpdate refQT rn updatedPerm
 
 updateDelPermFlds
@@ -349,7 +351,7 @@ updateColInEventTriggerDef
   => TriggerName -> RenameCol -> m ()
 updateColInEventTriggerDef trigName rnCol = do
   (trigTab, trigDef) <- liftTx $ DS.getEventTriggerDef trigName
-  void $ liftTx $ DS.updateEventTriggerDef trigName $
+  void $ liftTx $ DS.updateEventTriggerInCatalog $
     rewriteEventTriggerConf trigTab trigDef
   where
     rewriteSubsCols trigTab = \case

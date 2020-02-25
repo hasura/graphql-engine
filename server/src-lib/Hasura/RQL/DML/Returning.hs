@@ -12,7 +12,7 @@ import qualified Hasura.SQL.DML          as S
 data MutFldG v
   = MCount
   | MExp !T.Text
-  | MRet ![(FieldName, AnnFldG v)]
+  | MRet !(AnnFldsG v)
   deriving (Show, Eq)
 
 traverseMutFld
@@ -27,7 +27,24 @@ traverseMutFld f = \case
 
 type MutFld = MutFldG S.SQLExp
 
-type MutFldsG v = [(T.Text, MutFldG v)]
+type MutFldsG v = Fields (MutFldG v)
+
+data MutationOutputG v
+  = MOutMultirowFields !(MutFldsG v)
+  | MOutSinglerowObject !(AnnFldsG v)
+  deriving (Show, Eq)
+
+traverseMutationOutput
+  :: (Applicative f)
+  => (a -> f b)
+  -> MutationOutputG a -> f (MutationOutputG b)
+traverseMutationOutput f = \case
+  MOutMultirowFields mutationFields ->
+    MOutMultirowFields <$> traverse (traverse (traverseMutFld f)) mutationFields
+  MOutSinglerowObject annFields ->
+    MOutSinglerowObject <$> traverseAnnFlds f annFields
+
+type MutationOutput = MutationOutputG S.SQLExp
 
 traverseMutFlds
   :: (Applicative f)
@@ -39,8 +56,10 @@ traverseMutFlds f =
 
 type MutFlds = MutFldsG S.SQLExp
 
-hasNestedFld :: MutFlds -> Bool
-hasNestedFld = any isNestedMutFld
+hasNestedFld :: MutationOutputG a -> Bool
+hasNestedFld = \case
+  MOutMultirowFields flds -> any isNestedMutFld flds
+  MOutSinglerowObject annFlds -> any isNestedAnnFld annFlds
   where
     isNestedMutFld (_, mutFld) = case mutFld of
       MRet annFlds -> any isNestedAnnFld annFlds
@@ -56,8 +75,8 @@ pgColsFromMutFld = \case
   MExp _ -> []
   MRet selFlds ->
     flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    FCol (AnnColField (PGColumnInfo col _ colTy _ _) _ _) -> Just (col, colTy)
-    _                                                     -> Nothing
+    FCol (AnnColField (PGColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
+    _                                                       -> Nothing
 
 pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColumnType)]
 pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
@@ -67,8 +86,8 @@ pgColsToSelFlds cols =
   flip map cols $
   \pgColInfo -> (fromPGCol $ pgiColumn pgColInfo, mkAnnColField pgColInfo Nothing)
 
-mkDefaultMutFlds :: Maybe [PGColumnInfo] -> MutFlds
-mkDefaultMutFlds = \case
+mkDefaultMutFlds :: Maybe [PGColumnInfo] -> MutationOutput
+mkDefaultMutFlds = MOutMultirowFields . \case
   Nothing   -> mutFlds
   Just cols -> ("returning", MRet $ pgColsToSelFlds cols):mutFlds
   where
@@ -78,36 +97,44 @@ qualTableToAliasIden :: QualifiedTable -> Iden
 qualTableToAliasIden qt =
   Iden $ snakeCaseTable qt <> "__mutation_result_alias"
 
-mkMutFldExp :: QualifiedTable -> Bool -> Bool -> MutFld -> S.SQLExp
-mkMutFldExp qt singleObj strfyNum = \case
-  MCount -> S.SESelect $
-    S.mkSelect
-    { S.selExtr = [S.Extractor S.countStar Nothing]
-    , S.selFrom = Just $ S.FromExp $ pure frmItem
-    }
+mkMutFldExp :: QualifiedTable -> Maybe Int -> Bool -> MutFld -> S.SQLExp
+mkMutFldExp qt preCalAffRows strfyNum = \case
+  MCount ->
+    let countExp = S.SESelect $
+          S.mkSelect
+          { S.selExtr = [S.Extractor S.countStar Nothing]
+          , S.selFrom = Just $ S.FromExp $ pure $ S.FIIden cteAlias
+          }
+    in maybe countExp (S.SEUnsafe . T.pack . show) preCalAffRows
   MExp t -> S.SELit t
   MRet selFlds ->
-    -- let tabFrom = TableFrom qt $ Just frmItem
-    let tabFrom = FromIden $ qualTableToAliasIden qt
+    let tabFrom = FromIden cteAlias
         tabPerm = TablePerm annBoolExpTrue Nothing
-    in S.SESelect $ mkSQLSelect singleObj $
+    in S.SESelect $ mkSQLSelect JASMultipleRows $
        AnnSelG selFlds tabFrom tabPerm noTableArgs strfyNum
   where
-    frmItem = S.FIIden $ qualTableToAliasIden qt
+    cteAlias = qualTableToAliasIden qt
 
-mkSelWith
-  :: QualifiedTable -> S.CTE -> MutFlds -> Bool -> Bool -> S.SelectWith
-mkSelWith qt cte mutFlds singleObj strfyNum =
-  S.SelectWith [(alias, cte)] sel
+mkMutationOutputExp
+  :: QualifiedTable -> Maybe Int -> S.CTE -> MutationOutput -> Bool -> S.SelectWith
+mkMutationOutputExp qt preCalAffRows cte mutOutput strfyNum =
+  S.SelectWith [(S.Alias cteAlias, cte)] sel
   where
-    alias = S.Alias $ qualTableToAliasIden qt
+    cteAlias = qualTableToAliasIden qt
     sel = S.mkSelect { S.selExtr = [S.Extractor extrExp Nothing] }
 
-    extrExp = S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
+    extrExp = case mutOutput of
+      MOutMultirowFields mutFlds ->
+        let jsonBuildObjArgs = flip concatMap mutFlds $
+              \(FieldName k, mutFld) -> [S.SELit k, mkMutFldExp qt preCalAffRows strfyNum mutFld]
+        in S.SEFnApp "json_build_object" jsonBuildObjArgs Nothing
 
-    jsonBuildObjArgs =
-      flip concatMap mutFlds $
-      \(k, mutFld) -> [S.SELit k, mkMutFldExp qt singleObj strfyNum mutFld]
+      MOutSinglerowObject annFlds ->
+        let tabFrom = FromIden cteAlias
+            tabPerm = TablePerm annBoolExpTrue Nothing
+        in S.SESelect $ mkSQLSelect JASSingleObject $
+           AnnSelG annFlds tabFrom tabPerm noTableArgs strfyNum
+
 
 checkRetCols
   :: (UserInfoM m, QErrM m)

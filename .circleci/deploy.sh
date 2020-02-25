@@ -58,7 +58,7 @@ draft_github_release() {
         -r "$CIRCLE_PROJECT_REPONAME" \
         -b "${RELEASE_BODY}" \
         -draft \
-     "$CIRCLE_TAG" /build/_cli_output/binaries/
+     "$CIRCLE_TAG" /build/_cli_output/binaries/ /build/_cli_ext_output/*.tar.gz /build/_cli_ext_output/*.zip
 }
 
 configure_git() {
@@ -90,6 +90,27 @@ deploy_console() {
     gsutil cp "$DIST_PATH/assets/versioned/main.css.gz" "$GS_BUCKET_ROOT/main.css.gz"
     gsutil cp "$DIST_PATH/assets/versioned/vendor.js.gz" "$GS_BUCKET_ROOT/vendor.js.gz"
     gsutil setmeta -h "Content-Encoding: gzip" "$GS_BUCKET_ROOT/*"
+
+    unset VERSION
+    unset DIST_PATH
+}
+
+deploy_cli_ext() {
+    echo "deploying extension cli"
+
+    cd "$ROOT/cli-ext"
+    export VERSION=$(../scripts/get-version.sh)
+    export DIST_PATH="/build/_cli_ext_output"
+
+    configure_git
+    git clone https://github.com/hasura/cli-plugins-index.git ~/plugins-index
+    cd ~/plugins-index
+    git checkout -b cli-ext-${LATEST_TAG}
+    cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext.yaml
+    git add .
+    git commit -m "update cli-ext manifest to ${LATEST_TAG}"
+    git push -q https://${GITHUB_TOKEN}@github.com/hasura/plugins-index.git cli-ext-${LATEST_TAG}
+    hub pull-request -F- <<<"Update cli-ext manifest to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
 
     unset VERSION
     unset DIST_PATH
@@ -167,6 +188,7 @@ deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
     build_and_push_cli_migrations_image
+    deploy_cli_ext
 
     # if this is a stable release, update all latest assets
     if [ $IS_STABLE_RELEASE = true ]; then

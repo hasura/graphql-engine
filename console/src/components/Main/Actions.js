@@ -141,12 +141,10 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
   };
   return dispatch(requestActionPlain(url, options)).then(
     data => {
-      let parsedVersion;
       try {
-        parsedVersion = JSON.parse(data);
         dispatch({
           type: SET_LATEST_SERVER_VERSION_SUCCESS,
-          data: parsedVersion.latest,
+          data: JSON.parse(data),
         });
       } catch (e) {
         console.error(e);
@@ -224,12 +222,13 @@ const mainReducer = (state = defaultState, action) => {
     case SET_LATEST_SERVER_VERSION_SUCCESS:
       return {
         ...state,
-        latestServerVersion: action.data,
+        latestStableServerVersion: action.data.latest,
+        latestPreReleaseServerVersion: action.data.prerelease,
       };
     case SET_LATEST_SERVER_VERSION_ERROR:
       return {
         ...state,
-        latestServerVersion: null,
+        latestStableServerVersion: null,
       };
     case UPDATE_MIGRATION_STATUS_SUCCESS:
       return {

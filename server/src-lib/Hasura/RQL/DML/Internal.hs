@@ -41,7 +41,7 @@ mkAdminRolePermInfo ti =
     i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty []
     s = SelPermInfo (HS.fromList pgCols) (HS.fromList scalarComputedFields) tn annBoolExpTrue
         Nothing True []
-    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue M.empty []
+    u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty []
     d = DelPermInfo tn annBoolExpTrue []
 
 askPermInfo'
@@ -202,7 +202,7 @@ convPartialSQLExp
   -> f S.SQLExp
 convPartialSQLExp f = \case
   PSESQLExp sqlExp -> pure sqlExp
-  PSESessVar colTy sessVar -> f colTy sessVar
+  PSESessVar colTy sessionVariable -> f colTy sessionVariable
 
 sessVarFromCurrentSetting
   :: (Applicative f) => PGType PGScalarType -> SessVar -> f S.SQLExp

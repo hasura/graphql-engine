@@ -11,7 +11,7 @@ const getSQLValue = value => {
   return sqlValue.replace(/['"]+/g, '');
 };
 
-const parseCreateSQL = sql => {
+export const parseCreateSQL = sql => {
   const _objects = [];
 
   const regExp = createSQLRegex;
@@ -48,9 +48,4 @@ const parseCreateSQL = sql => {
   }
 
   return _objects;
-};
-
-export {
-  createSQLRegex,
-  parseCreateSQL
 };
