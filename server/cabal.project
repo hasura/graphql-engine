@@ -11,7 +11,7 @@
 -- ...and then invoke cabal with
 --     $ cabal new-build --project-file=cabal.project.myconfig
 --
--- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project 
+-- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
 packages: .
 
 package *
@@ -34,7 +34,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/hasura/graphql-parser-hs.git
-  tag: 2e8adedbb426d487df77bde244b7fe3cbd40a255
+  tag: 088acdf9120c4bea11f6185dfb587bd04ee2cb54
 
 source-repository-package
   type: git

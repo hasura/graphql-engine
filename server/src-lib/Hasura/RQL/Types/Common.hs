@@ -24,6 +24,7 @@ module Hasura.RQL.Types.Common
        , CustomColumnNames
 
        , NonEmptyText
+       , mkNonEmptyTextUnsafe
        , mkNonEmptyText
        , unNonEmptyText
        , nonEmptyText
@@ -61,6 +62,9 @@ instance Arbitrary NonEmptyText where
 mkNonEmptyText :: T.Text -> Maybe NonEmptyText
 mkNonEmptyText ""   = Nothing
 mkNonEmptyText text = Just $ NonEmptyText text
+
+mkNonEmptyTextUnsafe :: T.Text -> NonEmptyText
+mkNonEmptyTextUnsafe = NonEmptyText
 
 parseNonEmptyText :: MonadFail m => Text -> m NonEmptyText
 parseNonEmptyText text = case mkNonEmptyText text of
@@ -109,7 +113,7 @@ relTypeToTxt ArrRel = "array"
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Lift, Generic)
 instance NFData RelType
 instance Hashable RelType
 instance Cacheable RelType
@@ -142,7 +146,10 @@ $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName
   = FieldName { getFieldNameTxt :: T.Text }
-  deriving (Show, Eq, Ord, Hashable, FromJSON, ToJSON, FromJSONKey, ToJSONKey, Lift, Data, Generic, Arbitrary, NFData, Cacheable)
+  deriving ( Show, Eq, Ord, Hashable, FromJSON, ToJSON
+           , FromJSONKey, ToJSONKey, Lift, Data, Generic
+           , IsString, Arbitrary, NFData, Cacheable
+           )
 
 instance IsIden FieldName where
   toIden (FieldName f) = Iden f
