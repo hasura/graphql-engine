@@ -83,7 +83,7 @@ const routes = store => {
       return {};
     },
     () => {
-      return { public: ['test_table_1'], personal: ['author'] };
+      return { public: [], personal: [] };
     }
   );
   const requireSchema = _dataRouterUtils.requireSchema;

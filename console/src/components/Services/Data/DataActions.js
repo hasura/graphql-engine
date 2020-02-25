@@ -640,6 +640,7 @@ const fetchDataInit = () => (dispatch, getState) => {
   const url = Endpoints.getSchema;
 
   const { schemaFilter } = getState().tables;
+
   const body = {
     type: 'bulk',
     args: [initQueries(schemaFilter).schemaList],
