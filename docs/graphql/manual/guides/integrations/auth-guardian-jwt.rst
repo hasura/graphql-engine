@@ -86,8 +86,8 @@ SCREENSHOT
 Step 3: Generate the JWT config
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-- On the left sidebar, click on "JWT Settings" and scroll down to "Configuration generator"
-- Choose either "Hasura" or "Hasura on Heroku"
+- On the left sidebar, click on "JWT Settings" and scroll down to "Configuration generator".
+- Choose either "Hasura" or "Hasura on Heroku".
 
 The generated config has the following structure:
 
