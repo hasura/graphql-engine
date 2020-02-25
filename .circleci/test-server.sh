@@ -190,7 +190,7 @@ pip3 install -r requirements.txt
 
 # node js deps
 curl -sL https://deb.nodesource.com/setup_8.x | bash -
-apt-get install -y node-js
+apt-get install -y nodejs
 npm_config_loglevel=error npm install $PYTEST_ROOT/remote_schemas/nodejs/
 
 
