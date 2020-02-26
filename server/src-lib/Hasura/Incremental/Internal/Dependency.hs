@@ -11,7 +11,6 @@ import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
 import qualified Data.URL.Template             as UT
 
-import           Control.Applicative
 import           Data.Aeson                    (Value)
 import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
 import           Data.GADT.Compare

@@ -35,7 +35,8 @@ common common-all
     FlexibleContexts FlexibleInstances FunctionalDependencies GeneralizedNewtypeDeriving
     InstanceSigs LambdaCase MultiParamTypeClasses MultiWayIf NamedFieldPuns NoImplicitPrelude
     OverloadedStrings QuantifiedConstraints QuasiQuotes RankNTypes ScopedTypeVariables
-    StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies TypeOperators
+    StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies
+    TypeFamilyDependencies TypeOperators
 
 common common-exe
   ghc-options:
@@ -88,6 +89,11 @@ library
                      , deepseq
                      , dependent-map >=0.2.4 && <0.4
                      , dependent-sum >=0.4 && <0.5
+                     , singletons >=2.5.1
+                     , finite-typelits >=0.1.4.2 && <0.2
+                     , vector-sized >=1.4.0.0 && <1.5
+                     , bookkeeper
+                     , type-level-sets
 
                      -- `these >=1` is split into several different packages, but our current stack
                      -- resolver has `these <1`; when we upgrade we just need to add an extra
@@ -361,6 +367,8 @@ library
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Logging
+
+                     , Hasura.GraphQL.Parser
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP

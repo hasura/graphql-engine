@@ -430,6 +430,6 @@ buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) 
       flip M.traverseWithKey (M.groupOn pgiName columns) \name columnsWithName ->
         case columnsWithName of
           one:two:more -> throw400 AlreadyExists $ "the definitions of columns "
-            <> englishList (dquoteTxt . pgiColumn <$> (one:|two:more))
+            <> englishList "and" (dquoteTxt . pgiColumn <$> (one:|two:more))
             <> " are in conflict: they are mapped to the same field name, " <>> name
           _ -> pure ()
