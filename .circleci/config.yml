@@ -356,7 +356,7 @@ jobs:
   
   test_and_build_cli_ext:
     docker:
-    - image: hasura/graphql-engine-extension-cli-builder:20200220
+    - image: hasura/graphql-engine-extension-cli-builder:20200225
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -365,14 +365,14 @@ jobs:
     - checkout
     - restore_cache:
         key:
-          cli-ext-npm-cache-v1-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
     - run:
         name: install dependencies
         working_directory: cli-ext
         command: make ci-deps
     - save_cache:
         key:
-          cli-ext-npm-cache-v1-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
         paths:
         - cli-ext/node_modules
         - ~/.npm

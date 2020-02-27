@@ -10,7 +10,7 @@ Introduction
 ------------
 
 An action is a GraphQL mutation. You have to define the GraphQL type of the
-arguments that the mutation accepts and the GraphQL type of the its response.
+arguments that the mutation accepts and the GraphQL type of its response.
 
 To create an action, you have to:
 
@@ -29,7 +29,9 @@ Step 0: Setup
 
   .. tab:: CLI
 
-     :ref:`Install <install_hasura_cli>` the latest version of Hasura CLI.
+     .. :ref:`Install <install_hasura_cli>` or :ref:`update to <hasura_update-cli>` the latest version of Hasura CLI.
+
+     Download the latest pre-release CLI version from the `releases page <https://github.com/hasura/graphql-engine/releases>`_
 
      You can either get started with an existing project or create a new project.
 
@@ -132,7 +134,7 @@ for this handler would look something like:
 .. code-block:: js
 
     const handler = (req, resp) => {
-      // You can access ther arguments input at req.body.input
+      // You can access their arguments input at req.body.input
       const { numbers } = req.body.input;
 
       // perform your custom business logic
@@ -171,6 +173,14 @@ Now, set the handler for the action:
      This is a default value taken from ``config.yaml``.
 
      Update the ``handler`` to the above endpoint.
+
+.. admonition:: URL templating
+
+  To manage handler endpoints across environments it is possible to template
+  the endpoints using ENV variables.
+
+  e.g. ``https://my-handler-endpoint/addNumbers`` can be templated to ``{{ ACTION_BASE_ENDPOINT }}/addNumbers``
+  where ``ACTION_BASE_ENDPOINT`` is an ENV variable whose value is set to ``https://my-handler-endpoint``
 
 Step 3: Finish action creation
 ------------------------------

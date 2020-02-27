@@ -9,8 +9,8 @@ Actions (beta)
 What are actions?
 -----------------
 
-Actions are a way to extend Hasura's mutation root with an entirely custom
-mutation with custom business logic. Actions can be
+Actions are a way to extend Hasura's auto-generated mutations with entirely
+custom mutations with custom business logic. Actions can be
 added to Hasura to handle various use cases such as data validation, data
 enrichment from external sources and any other complex business logic.
 
@@ -118,8 +118,9 @@ Learn more
   :maxdepth: 1
   :titlesonly:
 
-  Creating actions <create>
+  create
   Custom types <types/index>
-  Action handlers <action-handlers>
-  Async actions <async-actions>
+  action-handlers
+  async-actions
   Codegen <codegen>
+  derive

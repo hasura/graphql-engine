@@ -2,8 +2,8 @@
    :description: Manage authenticaton with Hasura
    :keywords: hasura, docs, authentication, auth
 
-Authentication
-==============
+GraphQL Authentication
+======================
 
 .. contents:: Table of contents
   :backlinks: none

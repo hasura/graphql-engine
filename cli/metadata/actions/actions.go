@@ -437,8 +437,8 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 		for newTypeObjIndex, newTypeObj := range sdlFromResp.Types.Scalars {
 			if customType.Name == newTypeObj.Name {
 				isFound = true
-				sdlFromResp.Types.Objects[newTypeObjIndex].Description = oldAction.CustomTypes.Objects[customTypeIndex].Description
-				sdlFromResp.Types.Objects[newTypeObjIndex].Relationships = oldAction.CustomTypes.Objects[customTypeIndex].Relationships
+				sdlFromResp.Types.Scalars[newTypeObjIndex].Description = oldAction.CustomTypes.Scalars[customTypeIndex].Description
+				sdlFromResp.Types.Scalars[newTypeObjIndex].Relationships = oldAction.CustomTypes.Scalars[customTypeIndex].Relationships
 				break
 			}
 		}
