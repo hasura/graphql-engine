@@ -509,7 +509,7 @@
     $(document).ready( function() {
       // if latest release tag elements present, replace with latest release tag
       if ($('.latest-release-tag').length > 0) {
-        const releaseUrl = 'https://releases.hasura.io/graphql-engine?agent=hasura.io/docs';
+        const releaseUrl = 'https://releases.hasura.io/graphql-engine?agent=docs.hasura.io';
 
         promise_ajax(releaseUrl, null, 'GET')
           .then(function (response) {
