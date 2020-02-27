@@ -89,6 +89,7 @@ consoleAssetsVersion = case currentVersion of
           | "alpha" `T.isPrefixOf` r -> Just "alpha"
           | "beta" `T.isPrefixOf` r  -> Just "beta"
           | "rc" `T.isPrefixOf` r    -> Just "rc"
+          | "rj" `T.isPrefixOf` r    -> Just "rj"
           | otherwise                -> Nothing
 
     getTextFromId :: V.Identifier -> Maybe Text

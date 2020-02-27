@@ -18,6 +18,7 @@ if [[ "$LATEST_TAG" =~ $SEMVER_REGEX ]]; then
     if [[ $release == -alpha* ]]; then channel="alpha"; fi
     if [[ $release == -beta* ]]; then channel="beta"; fi
     if [[ $release == -rc* ]]; then channel="rc"; fi
+    if [[ $release == -rj* ]]; then channel="rj"; fi
 
     VERSION="channel/$channel/v$major.$minor"
 fi
