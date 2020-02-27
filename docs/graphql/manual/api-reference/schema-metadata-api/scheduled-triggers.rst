@@ -60,7 +60,7 @@ Args syntax
    * - webhook
      - true
      - Text | UrlFromEnv_
-     - Url of webhook or environment variable which has the url
+     - URL of webhook or environment variable which has the URL
    * - schedule
      - true
      - ScheduleConf_
@@ -105,7 +105,7 @@ Args syntax
    * - webhook
      - true
      - Text | UrlFromEnv_
-     - Url of webhook or environment variable which has the url
+     - URL of webhook or environment variable which has the URL
    * - schedule
      - true
      - ScheduleConf_
@@ -165,7 +165,7 @@ Args syntax
 create_scheduled_event
 ----------------------
 
-``create_scheduled_event`` is used to create a new scheduled event with given timestamp and payload
+``create_scheduled_event`` is used to create a new scheduled event with a given timestamp and optional payload.
 
 .. code-block:: http
 
@@ -242,7 +242,7 @@ Args syntax
    * - event_id
      - true
      - UUID
-     - Id of the scheduled event
+     - ID of the scheduled event
 
 .. _track_scheduled_trigger:
 
@@ -345,7 +345,7 @@ UrlFromEnv
    * - from_env
      - true
      - String
-     - Name of the environment variable which has the url
+     - Name of the environment variable which has the URL
 
 .. _ScheduleConf:
 
@@ -438,5 +438,4 @@ RetryConfST
      - false
      - Integer
      - Number of minutes between scheduled time and actual delivery time that is acceptable. If the time difference is more than this, then the event is dropped. Default: 360 (6 hours)
-
 
