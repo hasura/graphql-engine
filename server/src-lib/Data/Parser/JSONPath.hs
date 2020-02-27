@@ -8,12 +8,12 @@ import           Control.Applicative  ((<|>))
 import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
 import           Data.Attoparsec.Text
 import           Data.Bool            (bool)
-import           Data.Char            (isDigit)
 import qualified Data.Text            as T
 import           Prelude              hiding (takeWhile)
 import           Text.Read            (readMaybe)
 
-parseKey :: Parser T.Text
+
+parseKey :: Parser JSONPathElement
 parseKey = do
   firstChar <- letter
            <|> (char '_')
@@ -22,23 +22,23 @@ parseKey = do
            <|> digit
            <|> satisfy (`elem` ("-_" :: String))
             )
-  return $ T.pack (firstChar:name)
+  return $ Key $ T.pack (firstChar:name)
 
-parseIndex :: Parser Int
-parseIndex = skip (== '[') *> anyChar >>= parseDigits
+-- parse json property key or index in squared bracket format
+-- this parser support special characters
+parseBracketElement :: Parser JSONPathElement
+parseBracketElement = skip (== '[') *> anyChar >>= parseContent
   where
-    parseDigits :: Char -> Parser Int
-    parseDigits firstDigit
-      | firstDigit == ']' = fail "empty array index"
-      | not $ isDigit firstDigit =
-          fail $ "invalid array index: " ++ [firstDigit]
-      | otherwise = do
-          remain <- many' (notChar ']')
-          skip (== ']')
-          let content = firstDigit:remain
-          case (readMaybe content :: Maybe Int) of
-            Nothing -> fail $ "invalid array index: " ++ content
-            Just v  -> return v
+    parseContent :: Char -> Parser JSONPathElement
+    parseContent firstChar
+      | firstChar == ']' = fail "empty array index"
+      | otherwise = do 
+        remain <- many' (notChar ']') 
+        skip (== ']')
+        let content = firstChar:remain
+        case (readMaybe content :: Maybe Int) of
+          Nothing -> return $ Key $ T.pack content
+          Just v  -> return $ Index v
 
 parseElement :: Parser JSONPathElement
 parseElement = do
@@ -47,8 +47,8 @@ parseElement = do
     then fail "multiple dots in json path"
     else peekChar >>= \case
       Nothing ->  fail "empty json path"
-      Just '[' -> Index <$> parseIndex
-      _ -> Key <$> parseKey
+      Just '[' -> parseBracketElement
+      _ -> parseKey
 
 parseElements :: Parser JSONPath
 parseElements = skipWhile (== '$') *> many1 parseElement

@@ -120,6 +120,7 @@ E.g.
       address(path: "city") # scalar JSON field -> property; '$.' prefix is optional
       contacts(path: "[0]") # scalar JSON field -> array_item
       contacts(path: "[0].phone") # scalar JSON field -> array_item_property
+      contacts(path: "[Hello world!]") # scalar JSON field -> property; used for special characters key
 
       article {  # nested object
         title
