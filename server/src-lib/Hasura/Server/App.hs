@@ -409,7 +409,7 @@ initErrExit :: QErr -> IO a
 initErrExit e = do
   putStrLn $
     "failed to build schema-cache because of inconsistent metadata: "
-    <> T.unpack (qeError e)
+    <> (show e)
   exitFailure
 
 data HasuraApp

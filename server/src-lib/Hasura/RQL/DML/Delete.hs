@@ -29,7 +29,7 @@ data AnnDelG v
   = AnnDel
   { dqp1Table   :: !QualifiedTable
   , dqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
-  , dqp1MutFlds :: !(MutFldsG v)
+  , dqp1Output  :: !(MutationOutputG v)
   , dqp1AllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
@@ -41,10 +41,10 @@ traverseAnnDel
 traverseAnnDel f annUpd =
   AnnDel tn
   <$> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseMutFlds f mutFlds
+  <*> traverseMutationOutput f mutOutput
   <*> pure allCols
   where
-    AnnDel tn (whr, fltr) mutFlds allCols = annUpd
+    AnnDel tn (whr, fltr) mutOutput allCols = annUpd
 
 type AnnDel = AnnDelG S.SQLExp
 
@@ -115,7 +115,7 @@ validateDeleteQ =
 deleteQueryToTx :: Bool -> (AnnDel, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 deleteQueryToTx strfyNum (u, p) =
   runMutation $ Mutation (dqp1Table u) (deleteCTE, p)
-                (dqp1MutFlds u) (dqp1AllCols u) strfyNum
+                (dqp1Output u) (dqp1AllCols u) strfyNum
   where
     deleteCTE = mkDeleteCTE u
 

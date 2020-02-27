@@ -64,11 +64,12 @@ data ColExp
   { ceCol :: !FieldName
   , ceVal :: !Value
   } deriving (Show, Eq, Lift, Data, Generic)
+instance NFData ColExp
 instance Cacheable ColExp
 
 newtype BoolExp
   = BoolExp { unBoolExp :: GBoolExp ColExp }
-  deriving (Show, Eq, Lift, Generic, Cacheable)
+  deriving (Show, Eq, Lift, Generic, NFData, Cacheable)
 
 $(makeWrapped ''BoolExp)
 

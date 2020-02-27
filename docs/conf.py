@@ -44,9 +44,13 @@ GRAPHIQL_DEFAULT_ENDPOINT = "http://localhost:8080/v1/graphql"
 if os.getenv("GRAPHIQL_DEFAULT_ENDPOINT"):
     GRAPHIQL_DEFAULT_ENDPOINT = os.getenv("GRAPHIQL_DEFAULT_ENDPOINT")
 
+sitemap_domain = "https://hasura-stg.hasura-app.io/docs/"
+if(BASE_DOMAIN == "production"):
+    sitemap_domain = "https://hasura.io/docs/"
+
 # set context
 html_context = {
-    "SITEMAP_DOMAIN": "https://docs.hasura.io/",
+    "SITEMAP_DOMAIN": sitemap_domain,
     "BASE_DOMAIN": "hasura.io" if BASE_DOMAIN == "production" else "hasura-stg.hasura-app.io",
     "GRAPHIQL_DEFAULT_ENDPOINT": GRAPHIQL_DEFAULT_ENDPOINT,
 }
@@ -275,7 +279,7 @@ html_show_copyright = True
 # contain a <link> tag referring to it.  The value of this option must be the
 # base URL from which the finished HTML is served.
 #
-html_use_opensearch = 'https://docs.hasura.io'
+html_use_opensearch = 'https://hasura.io/docs'
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
 # html_file_suffix = None
