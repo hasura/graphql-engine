@@ -58,7 +58,7 @@ import           Hasura.GraphQL.Execute.LiveQuery.Options
 import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
-
+import Debug.Trace (trace)
 -- -------------------------------------------------------------------------------------------------
 -- Subscribers
 
@@ -79,7 +79,7 @@ data LiveQueryResponse
   = LiveQueryResponse
   { _lqrPayload       :: !BL.ByteString
   , _lqrExecutionTime :: !Clock.DiffTime
-  }
+  } deriving (Show, Eq)
 
 type LGQResponse = GQResult LiveQueryResponse
 
@@ -359,7 +359,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler = do
     getCohortOperations cohortSnapshotMap actionMeta = \case
       Left e ->
         -- TODO: this is internal error
-        let resp = GQExecError [encodeGQErr False e]
+        let resp = GQExecError [encodeGQLErr False e]
         in [ (resp, Nothing, actionMeta, snapshot)
            | (_, snapshot) <- Map.toList cohortSnapshotMap
            ]
