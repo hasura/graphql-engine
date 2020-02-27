@@ -1,6 +1,6 @@
 {
   "name": "@vksci123/console-oss-table",
-  "version": "0.0.7-1",
+  "version": "0.0.8-1",
   "description": "Contains custom react table used in hasura-oss",
   "main": "index.js",
   "scripts": {

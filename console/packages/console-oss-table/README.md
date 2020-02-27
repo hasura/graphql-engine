@@ -1,3 +1,4 @@
+0.0.8-1 - Merges v1.1.0 into ex-bundle and release
 0.0.7-1 -
 Adds SearchableSelectBox to the exports
 
