@@ -416,6 +416,16 @@ recreateSystemMetadata = do
         , arrayRel $$(nonEmptyText "permissions") $ manualConfig "hdb_catalog" "hdb_permission_agg"
           [("role_name", "role_name")]
         ]
+      , table "hdb_catalog" "hdb_scheduled_trigger"
+        [ arrayRel $$(nonEmptyText "scheduled_events") $ RUFKeyOn $
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_scheduled_events") "name"
+        ]
+      , table "hdb_catalog" "hdb_scheduled_events"
+        [ objectRel $$(nonEmptyText "scheduled_trigger") $ RUFKeyOn "name"
+        , arrayRel $$(nonEmptyText "logs") $ RUFKeyOn $
+          ArrRelUsingFKeyOn (QualifiedObject "hdb_catalog" "hdb_scheduled_event_invocation_logs") "event_id" ]
+      , table "hdb_catalog" "hdb_scheduled_event_invocation_logs"
+        [ objectRel $$(nonEmptyText "scheduled_event") $ RUFKeyOn "event_id" ]
       ]
 
     tableNameMapping =
