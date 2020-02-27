@@ -4,24 +4,24 @@ shortDescription: "Hasura CLI extension"
 homepage: https://github.com/hasura/graphql-engine
 hidden: true
 platforms:
-  - uri: "${BUCKET_URL}/command-linux.tar.gz"
+  - uri: "${BUCKET_URL}/cli-ext-hasura-linux.tar.gz"
     sha256: "${LINUX_SHA256}"
-    bin: command-linux
+    bin: cli-ext-hasura-linux
     files:
-      - from: ./command-linux
-        to: command-linux
+      - from: ./cli-ext-hasura-linux
+        to: cli-ext-hasura-linux
     selector: linux-amd64
-  - uri: "${BUCKET_URL}/command-macos.tar.gz"
+  - uri: "${BUCKET_URL}/cli-ext-hasura-macos.tar.gz"
     sha256: "${MACOS_SHA256}"
-    bin: command-macos
+    bin: cli-ext-hasura-macos
     files:
-      - from: ./command-macos
-        to: command-macos
+      - from: ./cli-ext-hasura-macos
+        to: cli-ext-hasura-macos
     selector: darwin-amd64
-  - uri: "${BUCKET_URL}/command-win.zip"
+  - uri: "${BUCKET_URL}/cli-ext-hasura-win.zip"
     sha256: "${WINDOWS_SHA256}"
-    bin: command-win.exe
+    bin: cli-ext-hasura-win.exe
     files:
-      - from: ./command-win.exe
-        to: command-win.exe
+      - from: ./cli-ext-hasura-win.exe
+        to: cli-ext-hasura-win.exe
     selector: windows-amd64

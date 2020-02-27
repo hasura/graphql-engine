@@ -51,7 +51,7 @@ func (r *RemoteSchemaConfig) Build(metadata *yaml.MapSlice) error {
 	item := yaml.MapItem{
 		Key: "remote_schemas",
 	}
-	var obj yaml.MapSlice
+	var obj []yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
 		return err
