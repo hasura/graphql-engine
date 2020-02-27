@@ -92,9 +92,9 @@ type ConsoleOptions struct {
 
 	WG *sync.WaitGroup
 
-	UseServerAssets bool
 	StaticDir       string
 	Browser         string
+	UseServerAssets bool
 
 	APIServerInterruptSignal     chan os.Signal
 	ConsoleServerInterruptSignal chan os.Signal
