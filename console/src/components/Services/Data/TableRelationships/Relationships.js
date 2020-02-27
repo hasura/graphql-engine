@@ -10,7 +10,6 @@ import {
   formRelName,
   getExistingFieldsMap,
 } from './Actions';
-import { RESET } from '../TableModify/ModifyActions';
 import { findAllFromRel } from '../utils';
 import { showErrorNotification } from '../../Common/Notification';
 import { setTable } from '../DataActions';
@@ -313,7 +312,6 @@ const Relationships = ({
   readOnlyMode,
 }) => {
   useEffect(() => {
-    dispatch({ type: RESET });
     dispatch(setTable(tableName));
     dispatch(fetchRemoteSchemas());
   }, []);

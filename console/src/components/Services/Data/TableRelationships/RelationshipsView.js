@@ -1,27 +1,25 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import TableHeader from '../TableCommon/TableHeader';
-import { RESET } from '../TableModify/ModifyActions';
 import { findAllFromRel } from '../utils';
 import { getObjArrRelList } from './utils';
 import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 import AddManualRelationship from './AddManualRelationship';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import globals from '../../../../Globals';
-import { FT_REMOTE_RELATIONSHIPS } from '../../../../helpers/versionUtils';
 import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
+import { fetchRemoteSchemas } from '../../RemoteSchema/Actions';
 
 class RelationshipsView extends Component {
   componentDidMount() {
     const { dispatch, currentSchema, tableName } = this.props;
-    dispatch({ type: RESET });
     dispatch(setTable(tableName));
     // Sourcing the current schema into manual relationship
     dispatch({
       type: UPDATE_REMOTE_SCHEMA_MANUAL_REL,
       data: currentSchema,
     });
+    dispatch(fetchRemoteSchemas());
   }
 
   render() {
@@ -138,14 +136,6 @@ class RelationshipsView extends Component {
     }
 
     const remoteRelationshipsSection = () => {
-      if (
-        !(
-          globals.featuresCompatibility &&
-          globals.featuresCompatibility[FT_REMOTE_RELATIONSHIPS]
-        )
-      ) {
-        return null;
-      }
       return (
         <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
           <h4 className={styles.subheading_text}>Remote Relationships</h4>
