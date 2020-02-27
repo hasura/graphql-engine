@@ -41,9 +41,11 @@ ci-build:
 	echo '$(VERSION)' > '$(build_output)/version.txt'
 	shopt -s failglob globstar && cp $(executables_glob) '$(build_output)/'
 	# Copy the .mix files needed for `hpc` to generate code coverage reports into the build output
-	# directory.
-	mkdir -p '$(build_output)/mix/'
-	shopt -s failglob globstar && cp -R $(mix_dirs_glob) '$(build_output)/mix/'
+	# directory, only if coverage is enabled (the mix files aren't generated otherwise).
+	if [[ -n '$(enable_coverage)' ]]; then \
+	  mkdir -p '$(build_output)/mix/' && \
+	  shopt -s failglob globstar && cp -R $(mix_dirs_glob) '$(build_output)/mix/'; \
+	fi
 
 # assumes this is built in circleci
 ci-image:

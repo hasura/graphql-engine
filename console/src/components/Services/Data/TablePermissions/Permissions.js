@@ -13,8 +13,7 @@ import {
   permOpenEdit,
   permSetFilter,
   permSetFilterSameAs,
-  permToggleColumn,
-  permToggleComputedField,
+  permToggleField,
   permToggleAllFields,
   permAllowAll,
   permCloseEdit,
@@ -36,17 +35,24 @@ import {
   X_HASURA_CONST,
 } from './Actions';
 
+import PermTableHeader from '../../../Common/Permissions/TableHeader';
+import PermTableBody from '../../../Common/Permissions/TableBody';
+import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
+
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
-
-import { fetchFunctionInit, setTable, updateSchemaInfo } from '../DataActions';
+import {
+  fetchFunctionInit,
+  setTable,
+  updateSchemaInfo,
+  fetchRoleList,
+} from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import {
-  permissionsSymbols,
-  getAllRoles,
   getPermissionFilterString,
   getPermissionColumnAccessSummary,
   getTablePermissionsByRoles,
@@ -56,7 +62,7 @@ import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { getConfirmation, isJsonString } from '../../../Common/utils/jsUtils';
 import {
   findTable,
   generateTableDef,
@@ -65,6 +71,7 @@ import {
   getTableColumns,
   getGroupedTableComputedFields,
 } from '../../../Common/utils/pgUtils';
+import { showErrorNotification } from '../../Common/Notification';
 
 class Permissions extends Component {
   constructor() {
@@ -79,15 +86,35 @@ class Permissions extends Component {
           columnTypeMap: {},
         },
       },
+      filterString: '',
+      prevPermissionsState: {},
     };
   }
 
   componentDidMount() {
     const { dispatch } = this.props;
-
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
+    dispatch(fetchRoleList());
     dispatch(fetchFunctionInit());
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    const prevPermissionsState = prevState.prevPermissionsState;
+    const nextPermissionsState = nextProps.permissionsState;
+
+    const newState = {
+      prevPermissionsState: nextPermissionsState,
+    };
+
+    if (
+      prevPermissionsState.role !== nextPermissionsState.role ||
+      prevPermissionsState.query !== nextPermissionsState.query
+    ) {
+      newState.filterString = '';
+    }
+
+    return newState;
   }
 
   componentDidUpdate(prevProps) {
@@ -135,6 +162,8 @@ class Permissions extends Component {
       trackableFunctions,
     } = this.props;
 
+    const localFilterString = this.state.filterString;
+
     const currentTableSchema = findTable(
       allSchemas,
       generateTableDef(tableName, currentSchema)
@@ -144,8 +173,6 @@ class Permissions extends Component {
       // throw a 404 exception
       throw new NotFoundError();
     }
-
-    const styles = require('./Permissions.scss');
 
     const allFunctions = nonTrackableFunctions.concat(trackableFunctions);
     const groupedComputedFields = getGroupedTableComputedFields(
@@ -254,30 +281,29 @@ class Permissions extends Component {
       };
 
       const getPermissionsTableHead = () => {
-        const _permissionsHead = [];
-
-        // push role head
-        _permissionsHead.push(<th key={-2}>Role</th>);
-
-        // push action heads
-        queryTypes.forEach((queryType, i) => {
-          _permissionsHead.push(<th key={i}>{queryType}</th>);
-        });
-
-        // push bulk actions head
-        _permissionsHead.push(<th key={-1} />);
-
-        return (
-          <thead>
-            <tr>{_permissionsHead}</tr>
-          </thead>
-        );
+        const headings = ['Role', ...queryTypes, ''];
+        return <PermTableHeader headings={headings} />;
       };
 
       const getPermissionsTableBody = () => {
-        const _permissionsRowsHtml = [];
+        const getBulkCheckbox = (role, isNewRole) => {
+          const dispatchBulkSelect = e => {
+            const isChecked = e.target.checked;
+            const selectedRole = e.target.getAttribute('data-role');
+            dispatch(permSetBulkSelect(isChecked, selectedRole));
+          };
 
-        const getPermissionsTableRow = (role, newPermRow = null) => {
+          return {
+            showCheckbox: !(role === 'admin' || isNewRole),
+            bulkSelect: permissionsState.bulkSelect,
+            onChange: dispatchBulkSelect,
+            role,
+            isNewRole,
+            checked: permissionsState.bulkSelect.filter(e => e === role).length,
+          };
+        };
+
+        const getQueryTypes = role => {
           const dispatchOpenEdit = queryType => () => {
             if (role === '') {
               document.getElementById('new-role-input').focus();
@@ -288,12 +314,6 @@ class Permissions extends Component {
 
           const dispatchCloseEdit = () => {
             dispatch(permCloseEdit());
-          };
-
-          const dispatchBulkSelect = e => {
-            const isChecked = e.target.checked;
-            const selectedRole = e.target.getAttribute('data-role');
-            dispatch(permSetBulkSelect(isChecked, selectedRole));
           };
 
           // const dispatchDeletePermission = () => {
@@ -374,34 +394,7 @@ class Permissions extends Component {
 
             return _permission;
           };
-
-          const _permissionsRowHtml = [];
-
-          // push role value
-          if (!newPermRow) {
-            _permissionsRowHtml.push(<th key={-2}>{role}</th>);
-          } else {
-            const dispatchRoleNameChange = e => {
-              dispatch(permSetRoleName(e.target.value));
-            };
-
-            _permissionsRowHtml.push(
-              <th key={-2}>
-                <input
-                  id="new-role-input"
-                  className={`form-control ${styles.newRoleInput}`}
-                  onChange={dispatchRoleNameChange}
-                  type="text"
-                  placeholder="Enter new role"
-                  value={role}
-                  data-test="role-textbox"
-                />
-              </th>
-            );
-          }
-
-          // push action permission value
-          queryTypes.forEach((queryType, i) => {
+          return queryTypes.map(queryType => {
             const isEditAllowed = role !== 'admin';
             const isCurrEdit =
               permissionsState.role === role &&
@@ -421,73 +414,45 @@ class Permissions extends Component {
                 onClick = dispatchOpenEdit(queryType);
               }
             }
-
-            _permissionsRowHtml.push(
-              <td
-                key={i}
-                className={className}
-                onClick={onClick}
-                title="Edit permissions"
-                data-test={`${role}-${queryType}`}
-              >
-                {getRoleQueryPermission(queryType)}
-                {editIcon}
-              </td>
-            );
+            return {
+              className,
+              permType: queryType,
+              onClick,
+              dataTest: `${role}-${queryType}`,
+              access: getRoleQueryPermission(queryType),
+              editIcon,
+            };
           });
-
-          // push bulk action value
-          if (role === 'admin' || role === '') {
-            _permissionsRowHtml.push(<td key={-1} />);
-          } else {
-            const bulkSelect = permissionsState.bulkSelect;
-
-            // const deleteIcon = (
-            //   <i
-            //     onClick={dispatchDeletePermission}
-            //     className={styles.permissionDelete + ' fa fa-close'}
-            //     title="Remove all permissions"
-            //     aria-hidden="true"
-            //   />
-            // );
-
-            _permissionsRowHtml.push(
-              <td key={-1}>
-                <div>
-                  <input
-                    onChange={dispatchBulkSelect}
-                    checked={bulkSelect.filter(e => e === role).length}
-                    data-role={role}
-                    title="Select for bulk actions"
-                    type="checkbox"
-                  />
-                  {/*{deleteIcon}*/}
-                </div>
-              </td>
-            );
-          }
-
-          return _permissionsRowHtml;
         };
 
         // add admin to roles
         const _roleList = ['admin'].concat(roleList);
 
-        // add existing roles rows
-        _roleList.forEach((role, i) => {
-          _permissionsRowsHtml.push(
-            <tr key={i}>{getPermissionsTableRow(role)}</tr>
-          );
+        const _rolePermissions = _roleList.map(r => {
+          return {
+            roleName: r,
+            permTypes: getQueryTypes(r),
+            bulkSection: getBulkCheckbox(r, false),
+          };
         });
 
-        // add new role row
-        _permissionsRowsHtml.push(
-          <tr key="newPerm">
-            {getPermissionsTableRow(permissionsState.newRole, true)}
-          </tr>
-        );
+        _rolePermissions.push({
+          roleName: permissionsState.newRole,
+          permTypes: getQueryTypes(permissionsState.newRole, true),
+          bulkSection: getBulkCheckbox(permissionsState.newRole, true),
+          isNewRole: true,
+        });
 
-        return <tbody>{_permissionsRowsHtml}</tbody>;
+        const dispatchRoleNameChange = e => {
+          dispatch(permSetRoleName(e.target.value));
+        };
+
+        return (
+          <PermTableBody
+            rolePermissions={_rolePermissions}
+            dispatchRoleNameChange={dispatchRoleNameChange}
+          />
+        );
       };
 
       return (
@@ -604,6 +569,14 @@ class Permissions extends Component {
             dispatch(permAllowAll());
           };
 
+          const dispatchFuncSetFilter = filter => {
+            this.setState({ filterString: filter });
+
+            if (isJsonString(filter)) {
+              dispatch(permSetFilter(JSON.parse(filter)));
+            }
+          };
+
           const dispatchSetFilterSameAs = filter => () => {
             dispatch(permSetFilterSameAs(JSON.parse(filter)));
           };
@@ -645,11 +618,11 @@ class Permissions extends Component {
           const selectedValue = (
             <AceEditor
               mode="json"
-              value={filterString}
-              readOnly
+              value={localFilterString || filterString}
+              onChange={dispatchFuncSetFilter}
               theme="github"
               height="5em"
-              maxLines={5}
+              maxLines={15}
               width="100%"
               showPrintMargin={false}
               key={-3}
@@ -742,9 +715,6 @@ class Permissions extends Component {
           };
 
           const addCustomCheckOption = () => {
-            const dispatchFuncSetFilter = filter =>
-              permSetFilter(JSON.parse(filter));
-
             const loadSchemasFunc = schemaNames => {
               dispatch(updateSchemaInfo({ schemas: schemaNames }));
             };
@@ -886,87 +856,56 @@ class Permissions extends Component {
         const getColumnList = () => {
           const _columnList = [];
 
-          const dispatchToggleColumn = e => {
-            const column = e.target.value;
-            dispatch(permToggleColumn(column));
+          const dispatchToggleField = fieldType => e => {
+            const fieldName = e.target.value;
+            dispatch(permToggleField(fieldType, fieldName));
           };
 
-          const dispatchToggleComputedField = e => {
-            const computedField = e.target.value;
-            dispatch(permToggleComputedField(computedField));
-          };
-
-          tableSchema.columns.forEach((colObj, i) => {
-            const column = colObj.column_name;
-
-            let checked;
+          const getFieldCheckbox = (fieldType, fieldName) => {
+            let checked = false;
             if (permissionsState[query]) {
-              if (permissionsState[query].columns === '*') {
+              const permittedFields = permissionsState[query][fieldType] || [];
+
+              if (permittedFields === '*') {
                 checked = true;
               } else {
-                checked = permissionsState[query].columns.includes(column);
+                checked = permittedFields.includes(fieldName);
               }
-            } else {
-              checked = false;
             }
 
-            _columnList.push(
-              <div key={'column_' + i} className={styles.columnListElement}>
+            return (
+              <div key={fieldName} className={styles.columnListElement}>
                 <div className="checkbox">
                   <label>
                     <input
                       type="checkbox"
                       checked={checked}
-                      value={column}
-                      onChange={dispatchToggleColumn}
+                      value={fieldName}
+                      onChange={dispatchToggleField(fieldType)}
                       disabled={noPermissions}
                       title={noPermissions ? noPermissionsMsg : ''}
                     />
-                    {column}
+                    {fieldType === 'columns' ? fieldName : <i>{fieldName}</i>}
                   </label>
                 </div>
               </div>
             );
+          };
+
+          tableSchema.columns.forEach(colObj => {
+            const columnName = colObj.column_name;
+
+            _columnList.push(getFieldCheckbox('columns', columnName));
           });
 
           if (query === 'select') {
-            groupedComputedFields.scalar.forEach((scalarComputedField, i) => {
+            groupedComputedFields.scalar.forEach(scalarComputedField => {
               const computedFieldName = getComputedFieldName(
                 scalarComputedField
               );
 
-              let checked;
-              if (permissionsState[query]) {
-                if (permissionsState[query].computed_fields === '*') {
-                  checked = true;
-                } else {
-                  checked = permissionsState[query].computed_fields.includes(
-                    computedFieldName
-                  );
-                }
-              } else {
-                checked = false;
-              }
-
               _columnList.push(
-                <div
-                  key={'computed_field_' + i}
-                  className={styles.columnListElement}
-                >
-                  <div className="checkbox">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        value={computedFieldName}
-                        onChange={dispatchToggleComputedField}
-                        disabled={noPermissions}
-                        title={noPermissions ? noPermissionsMsg : ''}
-                      />
-                      <i>{computedFieldName}</i>
-                    </label>
-                  </div>
-                </div>
+                getFieldCheckbox('computed_fields', computedFieldName)
               );
             });
           }
@@ -1732,6 +1671,15 @@ class Permissions extends Component {
         }
 
         const dispatchSavePermissions = () => {
+          if (localFilterString && !isJsonString(localFilterString)) {
+            dispatch(
+              showErrorNotification(
+                'Saving permissions failed',
+                'Row permission is not a valid JSON'
+              )
+            );
+            return;
+          }
           dispatch(permChangePermissions(permChangeTypes.save));
         };
 
@@ -1883,7 +1831,7 @@ class Permissions extends Component {
       }
     }
 
-    const allRolesList = getAllRoles(allSchemas);
+    const allRolesList = this.props.allRoles;
 
     return (
       <div className={styles.container}>
@@ -1910,6 +1858,7 @@ Permissions.propTypes = {
   tableName: PropTypes.string.isRequired,
   tableType: PropTypes.string.isRequired,
   allSchemas: PropTypes.array.isRequired,
+  allRoles: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   readOnlyMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
@@ -1925,6 +1874,7 @@ const mapStateToProps = (state, ownProps) => ({
   tableName: ownProps.params.table,
   tableType: ownProps.route.tableType,
   allSchemas: state.tables.allSchemas,
+  allRoles: state.tables.allRoles,
   schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
   nonTrackableFunctions: state.tables.nonTrackablePostgresFunctions || [],

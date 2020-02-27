@@ -1,8 +1,0 @@
-- args:
-    name: authorByauthorId
-    table:
-      name: article
-      schema: public
-    using:
-      foreign_key_constraint_on: author_id
-  type: create_object_relationship

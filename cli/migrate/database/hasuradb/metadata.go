@@ -5,13 +5,20 @@ import (
 	"fmt"
 	"net/http"
 
+	gyaml "github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
+	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 
 	"github.com/oliveagle/jsonpath"
-	v2yaml "gopkg.in/yaml.v2"
 )
 
-func (h *HasuraDB) ExportMetadata() (interface{}, error) {
+func (h *HasuraDB) SetMetadataPlugins(plugins types.MetadataPlugins) {
+	h.config.Plugins = plugins
+}
+
+func (h *HasuraDB) ExportMetadata() (map[string][]byte, error) {
 	query := HasuraQuery{
 		Type: "export_metadata",
 		Args: HasuraArgs{},
@@ -34,13 +41,24 @@ func (h *HasuraDB) ExportMetadata() (interface{}, error) {
 		return nil, horror.Error(h.config.isCMD)
 	}
 
-	var hres v2yaml.MapSlice
-	err = v2yaml.Unmarshal(body, &hres)
+	var c yaml.MapSlice
+	err = yaml.Unmarshal(body, &c)
 	if err != nil {
 		h.logger.Debug(err)
 		return nil, err
 	}
-	return hres, nil
+
+	metadataFiles := make(map[string][]byte)
+	for _, plg := range h.config.Plugins {
+		files, err := plg.Export(c)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("cannot export %s from metadata", plg.Name()))
+		}
+		for fileName, content := range files {
+			metadataFiles[fileName] = content
+		}
+	}
+	return metadataFiles, nil
 }
 
 func (h *HasuraDB) ResetMetadata() error {
@@ -154,7 +172,35 @@ func (h *HasuraDB) DropInconsistentMetadata() error {
 	return nil
 }
 
-func (h *HasuraDB) ApplyMetadata(data interface{}) error {
+func (h *HasuraDB) BuildMetadata() (yaml.MapSlice, error) {
+	var tmpMeta yaml.MapSlice
+	for _, plg := range h.config.Plugins {
+		err := plg.Build(&tmpMeta)
+		if err != nil {
+			return tmpMeta, errors.Wrap(err, fmt.Sprintf("cannot build %s from metadata", plg.Name()))
+		}
+	}
+	return tmpMeta, nil
+}
+
+func (h *HasuraDB) ApplyMetadata() error {
+	tmpMeta, err := h.BuildMetadata()
+	if err != nil {
+		return err
+	}
+	yByt, err := yaml.Marshal(tmpMeta)
+	if err != nil {
+		return err
+	}
+	jbyt, err := gyaml.YAMLToJSON(yByt)
+	if err != nil {
+		return err
+	}
+	var obj interface{}
+	err = json.Unmarshal(jbyt, &obj)
+	if err != nil {
+		return err
+	}
 	query := HasuraInterfaceBulk{
 		Type: "bulk",
 		Args: []interface{}{
@@ -164,11 +210,10 @@ func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 			},
 			HasuraInterfaceQuery{
 				Type: "replace_metadata",
-				Args: data,
+				Args: obj,
 			},
 		},
 	}
-
 	resp, body, err := h.sendv1Query(query)
 	if err != nil {
 		h.logger.Debug(err)
@@ -208,8 +253,8 @@ func (h *HasuraDB) ApplyMetadata(data interface{}) error {
 	return nil
 }
 
-func (h *HasuraDB) Query(data []interface{}) error {
-	query := HasuraInterfaceBulk{
+func (h *HasuraDB) Query(data interface{}) error {
+	query := HasuraInterfaceQuery{
 		Type: "bulk",
 		Args: data,
 	}
