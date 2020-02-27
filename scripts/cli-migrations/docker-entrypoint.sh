@@ -72,7 +72,8 @@ if [ -d "$HASURA_GRAPHQL_MIGRATIONS_DIR" ]; then
     cp -a "$HASURA_GRAPHQL_MIGRATIONS_DIR/." "$TEMP_MIGRATIONS_DIR/migrations/"
     cd "$TEMP_MIGRATIONS_DIR"
     echo "endpoint: http://localhost:$HASURA_GRAPHQL_MIGRATIONS_SERVER_PORT" > config.yaml
-    echo "show_update_notification: false" >> config.yaml
+    # set HASURA_GRAPHQL_SHOW_UPDATE_NOTIFICATION to disable update notification
+    export HASURA_GRAPHQL_SHOW_UPDATE_NOTIFICATION=false
     hasura-cli migrate apply
     # check if metadata.[yaml|json] exist and apply
     if [ -f migrations/metadata.yaml ]; then
