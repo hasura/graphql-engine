@@ -78,7 +78,7 @@ ul {
 
 .content_inner_wrapper {
   width: 75% !important;
-  height: calc(100vh - 80px);
+  /* height: calc(100vh - 80px); */
   overflow-y: auto;
 }
 
@@ -541,7 +541,7 @@ article ol ol {
   width: 24% !important;
   font-family: 'Gudea' !important;
   font-size: 16px;
-  height: calc(100vh - 80px);
+  height: auto;
   overflow-y: auto;
   padding-left: 15px !important;
 }
