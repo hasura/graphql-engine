@@ -155,7 +155,7 @@ When configuring your permissions in Hasura, it's useful to be able to quickly g
 .. thumbnail:: ../../../../img/graphql/manual/guides/auth-guardian-generate-test-jwt.png
    :alt: Use the JWT-signer form to quickly sign any JSON and test in the Hasura console
 
-- In GraphiQL, try out queries to test that the integration works as expected by an ``Authorization`` header, with a value of ``Bearer <the-copied-JWT-text>``. Hasura's GraphiQL will recognize this header, show you its content, and confirm whether it recognizes the JWT as securely signed.
+- In GraphiQL, try out queries to test that the integration works as expected by adding an ``Authorization`` header, with a value of ``Bearer <the-copied-JWT-text>``. Hasura's GraphiQL will recognize this header, show you its content, and confirm whether it recognizes the JWT as securely signed.
 
 .. thumbnail:: ../../../../img/graphql/manual/guides/auth-guardian-test-jwt.png
    :alt: Test AuthGuardian JWT
