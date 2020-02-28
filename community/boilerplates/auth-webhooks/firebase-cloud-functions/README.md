@@ -24,11 +24,11 @@ Further reading: [Firebase SDK for Cloud Functions](https://firebase.google.com/
 
   Set `--auth-hook` or `HASURA_GRAPHQL_AUTH_HOOK` to the endpoint obtained above.
 
-  [GraphQL engine server flags reference](https://docs.hasura.io/1.0/graphql/manual/deployment/graphql-engine-flags/reference.html) for details.
+  [GraphQL engine server flags reference](https://hasura.io/docs/1.0/graphql/manual/deployment/graphql-engine-flags/reference.html) for details.
 
 ## Create table and set permission
 
-  Follow [Common roles and auth examples](https://docs.hasura.io/1.0/graphql/manual/auth/authorization/common-roles-auth-examples.html)
+  Follow [Common roles and auth examples](https://hasura.io/docs/1.0/graphql/manual/auth/authorization/common-roles-auth-examples.html)
   on Hasura doc for details of how to setup permission to a table.
 
   Make sure to change id column of user table to TXT type as uid sent from webhook is firebase User UID format (e.g. 0LnvZc7405TjRTbjURhZYYVXPI52)

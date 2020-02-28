@@ -12,6 +12,12 @@ Introduction
 You can add custom GraphQL types in Hasura that you can utilise for
 defining your actions.
 
+
+.. admonition:: Limitations
+
+  It is currently not possible to define ``Interfaces`` and ``Union types``
+  as custom types
+
 Object types
 ------------
 
@@ -31,13 +37,12 @@ This is an object type called ``UserInfo`` that has two fields:
 * ``accessToken``: This field is of type ``String!`` (non-nullable ``String``)
 * ``userId``: This field is of type ``Int!`` (non-nullable ``Int``)
 
-[Reference](https://graphql.org/learn/schema/#object-types-and-fields)
+`See reference <https://graphql.org/learn/schema/#object-types-and-fields>`__
 
-Limitation
-**********
+.. admonition:: Limitations
 
-Hasura does not allow a field of an object type to be another object type,
-i.e. the fields of an object type could be only ``scalars`` and ``enums``.
+  Hasura does not allow a field of an object type to be another object type,
+  i.e. the fields of an object type can only be ``scalars`` and ``enums``.
 
 Input types
 -----------
@@ -55,6 +60,8 @@ regular object types, but with the keyword input instead of type:
     }
 
 A field of an input type could be a ``scalar``, an ``enum`` or another input type.
+
+`See reference <https://graphql.org/learn/schema/#input-types>`__
 
 Scalar types
 ------------
@@ -78,6 +85,7 @@ while defining your actions:
   the same way as a String; however, defining it as an ID signifies that it
   is not intended to be human‐readable.
 
+`See reference <https://graphql.org/learn/schema/#scalar-types>`__
 
 Custom scalars
 **************
@@ -91,8 +99,6 @@ a scalar called ``Date``, you can define it like.
 
 These scalars can be used as arguments of the mutation or as fields of object
 types and input types.
-
-[Reference](https://graphql.org/learn/schema/#scalar-types)
 
 Enum types
 ----------
@@ -117,5 +123,5 @@ Here's what an enum definition might look like in the GraphQL schema language:
 This means that wherever we use the type ``Color`` in our schema, we expect it
 to be exactly one of RED, GREEN, or BLUE.
 
-[Reference](https://graphql.org/learn/schema/#enumeration-types)
+`See reference <https://graphql.org/learn/schema/#enumeration-types>`__
 

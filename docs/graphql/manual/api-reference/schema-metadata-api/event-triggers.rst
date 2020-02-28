@@ -29,7 +29,10 @@ create_event_trigger
        "type" : "create_event_trigger",
        "args" : {
            "name": "sample_trigger",
-           "table": "users",
+           "table": {
+              "name": "users",
+              "schema": "public",
+           },
            "webhook": "https://httpbin.org/post",
            "insert": {
                "columns": "*",
@@ -74,8 +77,8 @@ Args syntax
      - Name of the event trigger
    * - table
      - true
-     - :ref:`TableName <TableName>`
-     - Name of the table
+     - [ :ref:`QualifiedTable <QualifiedTable>` ]
+     - Object with table name and schema
    * - webhook
      - true
      - String

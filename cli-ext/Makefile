@@ -1,5 +1,5 @@
 BUILDDIR   := bin
-ASSETS     := $(BUILDDIR)/command-macos.tar.gz $(BUILDDIR)/command-linux.tar.gz $(BUILDDIR)/command-win.zip
+ASSETS     := $(BUILDDIR)/cli-ext-hasura-macos.tar.gz $(BUILDDIR)/cli-ext-hasura-linux.tar.gz $(BUILDDIR)/cli-ext-hasura-win.zip
 CHECKSUMS  := $(patsubst %,%.sha256,$(ASSETS))
 
 COMPRESS := gzip --best -k -c
@@ -10,6 +10,10 @@ ci-deps:
 ci-copy-assets:
 	mkdir -p /build/_cli_ext_output
 	cp $(BUILDDIR)/* /build/_cli_ext_output/
+
+# Not supported: Refer https://github.com/zeit/pkg/issues/50
+upx-compress: $(BUILDDIR)
+	ls $(BUILDDIR)/cli-ext-hasura-* | xargs upx
 
 .PRECIOUS: %.zip
 %.zip: %.exe

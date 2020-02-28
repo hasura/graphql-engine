@@ -42,7 +42,7 @@ Insert / upsert syntax
      - Name of the auto-generated mutation field, e.g. *insert_author*
    * - input-object
      - true
-     - InputObject_
+     - InputObjects_
      - Name of the auto-generated mutation field
    * - mutation-response
      - true
@@ -94,6 +94,67 @@ Insert / upsert syntax
         affected_rows
       }
     }
+
+.. _insert_upsert_one_syntax:
+
+Insert / upsert one syntax
+--------------------------
+
+.. code-block:: none
+
+    mutation [<mutation-name>] {
+      <mutation-field-name> (
+        [<input-object>!]
+        [conflict-clause]
+      )
+      [mutation-response!]
+    }
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - mutation-name
+     - false
+     - Value
+     - Name of mutation for observability
+   * - mutation-field-name
+     - true
+     - Value
+     - Name of the auto-generated mutation field, e.g. *insert_author_one*
+   * - input-object
+     - true
+     - InputObject_
+     - Name of the auto-generated mutation field
+   * - mutation-response
+     - true
+     - :ref:`SimpleObject`
+     - Object to be returned after mutation succeeds
+   * - on-conflict
+     - false
+     - ConflictClause_
+     - Converts *insert* to *upsert* by handling conflict
+
+**E.g. INSERT ONE**:
+
+.. code-block:: graphql
+
+    mutation insert_article_one {
+      insert_article_one(
+        object: {
+          title: "Software is gluttonous",
+          content: "Something happened in HP",
+          author_id: 3
+        }
+      ) {
+        id
+        title
+      }
+    }
+
 
 .. _update_syntax:
 
@@ -263,7 +324,7 @@ E.g.:
       }
     }
 
-.. _InputObject:
+.. _InputObjects:
 
 **objects** argument
 ^^^^^^^^^^^^^^^^^^^^
@@ -304,6 +365,43 @@ E.g.:
         }
       }
     ]
+
+.. _InputObject:
+
+**object** argument
+^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: none
+
+    object: {
+      field1: value,
+      field2: value,
+      <object-rel-name>: {
+        data: <Input-Object>!,
+        on_conflict: <Conflict-Clause>
+      },
+      <array-rel-name>: {
+        data: [<Input-Object>!]!,
+        on_conflict: <Conflict-Clause>
+      }
+      ..
+    }
+
+
+E.g.:
+
+.. code-block:: graphql
+
+    object: {
+      title: "Software is eating the world",
+      content: "This week, Hewlett-Packard...",
+      author: {
+        data: {
+          id: 1,
+          name: "Sydney"
+        }
+      }
+    }
 
 .. _ConflictClause:
 

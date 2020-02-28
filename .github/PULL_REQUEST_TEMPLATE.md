@@ -42,7 +42,7 @@
 Does this PR change Hasura Catalog version?
 - [ ] No
 - [ ] Yes
-  - [ ] Updated docs with SQL for downgrading the catalog <!-- https://docs.hasura.io/1.0/graphql/manual/deployment/downgrading.html#downgrading-across-catalogue-versions -->
+  - [ ] Updated docs with SQL for downgrading the catalog <!-- https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-across-catalogue-versions -->
 
 #### Metadata
 <!-- Hasura metadata changes -->
