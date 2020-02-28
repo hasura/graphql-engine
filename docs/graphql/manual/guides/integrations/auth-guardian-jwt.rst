@@ -36,7 +36,7 @@ AuthGuardian works with two basic concepts: ``rules`` and ``effects``.
 
 ``Effects`` are useful for modifying the JWT during sign-in. AuthGuardian supports four ``effects``:
 
-- Set the user-id for Hasura in the JWT
+- Set the ``user_id`` for Hasura in the JWT
 - Set the default Hasura user role in the JWT
 - Set the allowed Hasura user roles in the JWT
 - Set session variables for Hasura to use in the JWT
