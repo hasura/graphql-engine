@@ -10,7 +10,7 @@
 
 Hasura GraphQL Engine, veritaban olaylarında webhook tetikleyici ve iş mantığı için uzaktan şemalar ile size **Postgres üzerinden anında, gerçek zamanlı GraphQL API**'leri sağlayan hızlı bir GraphQL sunucusudur.
 
-Hasura, Postgres tarafından desteklenen GraphQL uygulamaları yaratmanıza veya Postgress kullananan mevcut uygulamaları aşamalı olarak GraphQL'e geçmenize yardımcı olur.
+Hasura, Postgres tarafından desteklenen GraphQL uygulamaları yaratmanıza veya Postgres kullanan mevcut uygulamaları aşamalı olarak GraphQL'e geçmenize yardımcı olur.
 
 Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.hasura.io) bulabilirsiniz
 
@@ -29,11 +29,11 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
 * **Güçlü sorgular yapın**: Dahili filtreleme, sayfalandırma, model arama, yığın ekleme, güncelleme, mutasyonları silme
 * **Gerçek zamanlı**: Abonelikleri kullanarak herhangi bir GraphQL sorgusunu canlı sorguya dönüştürme
 * **Uzaktan şemaları birleştirme**: Tek bir GraphQL Engine uç noktası üzerinden iş mantığı için özel GraphQL şemalarına erişin.[**Daha fazla**](../remote-schemas.md).
-* **Webhooks ve sunucusuz işlevleri tetikleme**: On Postgres insert/update/delete events ([daha fazla](../event-triggers.md))
+* **Webhooks ve sunucusuz işlevleri tetikleme**: Postgres insert/update/delete olaylarında ([daha fazla](../event-triggers.md))
 * **Mevcut, canlı veritabanlarıyla çalışır**: Kullanıma hazır bir GraphQL API'si almak için mevcut bir Postgres veritabanına yönlendirin
-* **Hasas erişim kontrolü**: Kimlik doğrulama sisteminizle birleşen dinamik erişim kontrolü (örn: auth0, firebase-auth)
-* **Yüksek performans ve az yer kaplama**: ~15mb docker image; ~50MB RAM @ 1000 req/s; multi-core aware
-* **Yönetici Kullanıcı Arayüzü ve Taşıma İşlemleri**: Yönetici arayüzünden ve Rails'ten ilham alan şema taşıma işlemleri
+* **Hassas erişim kontrolü**: Kimlik doğrulama sisteminizle birleşen dinamik erişim kontrolü (örn: auth0, firebase-auth)
+* **Yüksek performans ve az yer kaplama**: ~15mb Docker imaji; ~50MB RAM içinde saniyede 1000 sorgu; çoklu çekirdek farkındalığı
+* **Yönetici Kullanıcı Arayüzü ve Taşıma İşlemleri**: Yönetici arayüzü ve Rails'den ilham alan şema taşıma işlemleri
 * **Postgres** ❤️: Postgres türlerini (PostGIS/geo-location vb.) destekler, görünümleri grafiklere dönüştürür, depolanmış fonksiyonları veya mutasyonlu prosedürleri tetikler
 
 Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.hasura.io) bulabilirsiniz
@@ -77,7 +77,7 @@ Hasura'yı denemenin en hızlı yolu Heroku'dur.
 
 3. İlk GraphQL sorgunuzu yapın.
 
-   Bir tablo oluşturun ve ilk sorgunuzu hemen çalıştırın. Bunu takip edebilirsin [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Bir tablo oluşturun ve ilk sorgunuzu hemen çalıştırın. Bunu takip edebilirsin [basit rehber](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
 ### Diğer tek tıklamayla deploy etme seçenekleri
 
@@ -96,7 +96,7 @@ guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) ya
 
 ## Yapı
 
-Hasura GraphQL Engine, bir Postgres veritabnı örneğini önler ve istemci uygulamarınızdan GraphQL isteklerini kabul edebilir. Mevcut kimlik doğrulama sisteminizle çalışacak şekilde yapılandırılabilir ve kimlik doğrumaa sisteminizden dinamik değişkenlerle alan düzeyinde kurallar kullanarak erişim denetimini işleyebilir. 
+Hasura GraphQL Engine, bir Postgres veritabanı örneğinin önünde durur ve istemci uygulamalarınızdan GraphQL isteklerini kabul edebilir. Mevcut kimlik doğrulama sisteminizle çalışacak şekilde yapılandırılabilir ve kimlik doğrulama sisteminizden dinamik değişkenlerle alan düzeyinde kurallar kullanarak erişim denetimini işleyebilir. 
 
 Ayrıca uzaktan GraphQL şemalarını birleştirebilir ve birleşik GraphQL API'si sağlayabilirsiniz.
 
@@ -104,15 +104,15 @@ Ayrıca uzaktan GraphQL şemalarını birleştirebilir ve birleşik GraphQL API'
 
 ## İstemci tarafı takımlar
 
-Hasura herhangi bir GraphQL istemcisi ile çalışır. [Apollo Client](https://github.com/apollographql/apollo-client) kullanmanızı öneririz. İstemci bir listesi için [awesome-graphql](https://github.com/chentsulin/awesome-graphql) adresine bakınız.
+Hasura herhangi bir GraphQL istemcisi ile çalışır. [Apollo Client](https://github.com/apollographql/apollo-client) kullanmanızı öneririz. İstemci listesi için [awesome-graphql](https://github.com/chentsulin/awesome-graphql) adresine bakınız.
 
 ## İş mantığı ekleme
 
-GraphQL Engine, backend'inize özel iş mantığı eklemek için kolay anlaşılır, ölçeklenebilir ve performans yöntemleri sunar: 
+GraphQL Engine, backend'inize özel iş mantığı eklemek için kolay anlaşılır, ölçeklenebilir ve yüksek performanslı yöntemler sunar: 
 
 ### Uzak Şemalar
 
-Hasura'nın Postgres tabanlı GraphQL şemasına ek olarak uzak bir şemada özel çözümleyiciler ekleyin. Bir ödeme API'sini uygulamak veya veritabanımızda bulunan verileri sorgulamak gibi kullanım durumları için idealdir. - [daha fazla](../remote-schemas.md).
+Hasura'nın Postgres tabanlı GraphQL şemasına ek olarak uzak bir şemada özel çözümleyiciler ekleyin. Bir ödeme API'sini uygulamak veya veritabanınızda bulunmayan verileri sorgulamak gibi kullanım durumları için idealdir. - [daha fazla](../remote-schemas.md).
 
 ### Veritabanı olaylarındaki webhooks tetikleme
 
@@ -121,30 +121,27 @@ Bildirimler, Postgres veri  hatları veya asenkron işleme için idealdir - [dah
 
 ### Türetilmiş veri veya veri dönüşümleri
 
-Postgres'te verileri dönüştürün veya GraphQL Engine kullanılarak ssorgulanabilecek başka bir veri kümesi türetmek için iş mantığı çalıştırın. - [daha fazla](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+Postgres'te verileri dönüştürün veya GraphQL Engine kullanılarak sorgulanabilecek başka bir veri kümesi türetmek için iş mantığı çalıştırın. - [daha fazla](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demolar
 
-Tüm örnek uygulamaları kontrol edin.
-
-[community/sample-apps](../community/sample-apps) dizini.
-
+[community/sample-apps](../community/sample-apps) dizinindeki örnek uygulamalara göz atın.
 
 ### Gerçek zamanlı uygulamalar
 
-- React ile oluşturulan grup shohbet uygulaması, bir yazma belirteci içerir, çevrimiçi kullanıcılar ve yeni mesaj bildirimleri.
+- React ile oluşturulmuş grup sohbet uygulaması. Yazma belirteci, çevrimiçi kullanıcılar ve yeni mesaj bildirimleri içerir.
   - [Deneyin](https://realtime-chat.demo.hasura.app/)
-  - [Tutorial](../community/sample-apps/realtime-chat)
+  - [Rehber](../community/sample-apps/realtime-chat)
   - [APİ'lere göz atın](https://realtime-chat.demo.hasura.app/console)
 
 - Bir harita üzerinde hareket eden mevcut GPS koordinatlarını değiştiren, çalışan bir aracı gösteren canlı konum izleme uygulaması.
   - [Deneyin](https://realtime-location-tracking.demo.hasura.app/)
-  - [Tutorial](../community/sample-apps/realtime-location-tracking)
+  - [Rehber](../community/sample-apps/realtime-location-tracking)
   - [APİ'lere göz ayın](https://realtime-location-tracking.demo.hasura.app/console)
 
 - Sürekli değişen veriler üzerinde veri toplama için gerçek zamanlı bir kontrol paneli.
   - [Deneyin](https://realtime-poll.demo.hasura.app/)
-  - [Tutorial](../community/sample-apps/realtime-poll)
+  - [Rehber](../community/sample-apps/realtime-poll)
   - [APİ'lere göz atın](https://realtime-poll.demo.hasura.app/console)
 
 ### Videolar
@@ -156,14 +153,14 @@ Tüm örnek uygulamaları kontrol edin.
 
 
 ## Destek ve sorun giderme
-Belgeler ve topluluğun çoğu sorunu gidermenize yardımcı olacaktır. Bir hatayla karşılaştıysanız veya bizimle iletişime geçmeniz gerekiyorsa aşağıdaki kanallardan birini kullanarak bizimle iletişime geçebilirsiniz: 
+Belgeler ve topluluk, çoğu sorunu gidermenize yardımcı olacaktır. Bir hatayla karşılaştıysanız veya bizimle iletişime geçmeniz gerekiyorsa aşağıdaki kanallardan birini kullanarak bizimle iletişime geçebilirsiniz: 
 
 * Destek ve geri bildirim: [Discord](https://discord.gg/vBPpJkS)
 * Sorun ve hata bildirme: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
 * Ürün güncellemelerini takip edin: [@HasuraHQ](https://twitter.com/hasurahq)
 * Bizimle konuşun: [website chat](https://hasura.io)
 
-Tolumda açık ve hoş bir ortam yaratmaya kararlıyız. Lütfen [Code of Conduct](../code-of-conduct.md) adresine bakınız
+Toplulukta açık ve hoş bir ortam yaratmaya kararlıyız. Lütfen [Davranış Kodu](../code-of-conduct.md) adresine bakınız
 
 Bir güvenlik sorununu bildirmek istiyorsanız lütfen [bunu okuyun](../SECURITY.md).
 
@@ -173,7 +170,7 @@ Daha fazla detay için [katkıda bulunma kuralını](../CONTRIBUTING.md) kontrol
 
 ## Marka varlıkları
 
-Hasura marka varlıkları (logolar, Hasura maskotu, rozetler vb.) [assets/brand](../assets/brand) klasöründedir. Bunları Uygulamanızda/websitenizde kullanmaktan çekinmeyin. Hasura kullanılarak oluşturduğunuz uygulamalarınıza "Powered by Hasura" işareti eklerseniz çok seviniriz. ❤️
+Hasura marka varlıkları (logolar, Hasura maskotu, rozetler vb.) [assets/brand](../assets/brand) klasöründedir. Bunları uygulamanızda/websitenizde kullanmaktan çekinmeyin. Hasura kullanılarak oluşturduğunuz uygulamalarınıza "Powered by Hasura" işareti eklerseniz çok seviniriz. ❤️
 
 <div style="display: flex;">
   <img src="../assets/brand/powered_by_hasura_blue.svg" width="150px"/>
@@ -196,10 +193,9 @@ Hasura marka varlıkları (logolar, Hasura maskotu, rozetler vb.) [assets/brand]
 
 Çekirdek GraphQL Engine [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0) altında bulunur.
 
-**Diğer türm içerikler** ([`sunucu`](../server), [`cli`](../cli) ve
+**Diğer tüm içerikler** ([`sunucu`](../server), [`cli`](../cli) ve
 [`konsol`](../console) dizinleri hariç) [MIT License](../LICENSE-community) altındadır.
-Bu, [`dokuman`](../docs) ve [`topluluk`](../community) üzerindeki her şeyi içerir.
-directories.
+Buna, [`doküman`](../docs) ve [`topluluk`](../community) dizinleri içindeki herşey dahildir.
 
 ## Çeviriler
 
@@ -210,10 +206,11 @@ Bu Readme sayfası aşağıdaki çevirilerde mevcuttur:
 - [Boşnakça :bosnia_herzegovina:](./README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
 - [Rusca :ru:](./README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
 - [Yunanca 🇬🇷](./README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
-- [İspanyolca 🇲🇽](/./README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
+- [İspanyolca 🇲🇽](./README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
 - [Endonezyaca :indonesia:](./README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
 - [Brezilya Portekizcesi :brazil:](./README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
 - [Almanca 🇩🇪](./README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
 - [Çince :cn:](./README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
+- [Korece :kr:](./README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
 
 Diğer dosyalar için çeviriler [burada](./) bulunabilir.
