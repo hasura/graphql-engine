@@ -19,6 +19,8 @@ import { eventRouterUtils } from './components/Services/EventTrigger';
 
 import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
+import { getActionsRouter } from './components/Services/Actions';
+
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
 
 import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
@@ -84,6 +86,8 @@ const routes = store => {
     composeOnEnterHooks
   );
 
+  const actionsRouter = getActionsRouter(connect, store, composeOnEnterHooks);
+
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
       <Route path="login" component={generatedLoginConnector(connect)} />
@@ -122,6 +126,7 @@ const routes = store => {
           {dataRouter}
           {eventRouter}
           {remoteSchemaRouter}
+          {actionsRouter}
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />
