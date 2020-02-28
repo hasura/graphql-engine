@@ -25,6 +25,6 @@ Guides: Integration/migration tutorials
   :hidden:
 
   Auth0 JWT Integration <auth0-jwt>
-  AuthGuardian JWT Integration <auth-guardian-jwt>
+  OneGraph's AuthGuardian JWT Integration <auth-guardian-jwt>
   Using AWS Cognito for authentication <aws-cognito>
   Subscriptions using apollo-client <apollo-subscriptions>
