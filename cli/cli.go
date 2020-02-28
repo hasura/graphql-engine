@@ -45,7 +45,7 @@ const (
 const (
 	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which
 allow us to keep improving Hasura at warp speed. To opt-out or read more,
-visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html
+visit https://hasura.io/docs/1.0/graphql/manual/guides/telemetry.html
 `
 )
 

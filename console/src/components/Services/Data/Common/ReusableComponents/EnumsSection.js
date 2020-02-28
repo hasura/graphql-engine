@@ -5,7 +5,7 @@ import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 
 const enumCompatibilityDocsUrl =
-  'https://docs.hasura.io/1.0/graphql/manual/schema/enums.html#create-enum-table';
+  'https://hasura.io/docs/1.0/graphql/manual/schema/enums.html#create-enum-table';
 
 export const EnumTableModifyWarning = ({ isEnum }) => {
   if (!isEnum) {

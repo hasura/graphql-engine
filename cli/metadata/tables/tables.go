@@ -51,7 +51,7 @@ func (t *TableConfig) Build(metadata *yaml.MapSlice) error {
 	}
 	item := yaml.MapItem{
 		Key:   "tables",
-		Value: yaml.MapSlice{},
+		Value: []yaml.MapSlice{},
 	}
 	err = yaml.Unmarshal(data, &item.Value)
 	if err != nil {
