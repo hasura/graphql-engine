@@ -194,9 +194,6 @@ library
                      
                      , directory
 
-                     -- regex
-                     , regex-posix
-
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
                      , Control.Monad.Stateless

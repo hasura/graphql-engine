@@ -11,4 +11,3 @@ test -n "$VERSION" || VERSION="${GIT_BRANCH}-${GIT_SHA}${GIT_DIRTY}"
 VERSION="$(echo $VERSION | tr -cd '[[:alnum:]]._-')"
 
 echo "$VERSION"
-#echo "v1.2.0-rj.1"

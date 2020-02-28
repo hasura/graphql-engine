@@ -17,7 +17,7 @@ import qualified Data.SemVer                as V
 import qualified Data.Text                  as T
 import qualified Language.Haskell.TH.Syntax as TH
 
-import           Text.Regex.Posix           ((=~~))
+import           Text.Regex.TDFA           ((=~~))
 import           Control.Lens               ((^.), (^?))
 import           Data.Aeson                 (FromJSON (..), ToJSON (..))
 import           Data.Text.Conversions      (FromText (..), ToText (..))
