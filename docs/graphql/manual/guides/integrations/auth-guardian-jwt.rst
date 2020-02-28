@@ -43,7 +43,7 @@ AuthGuardian works with two basic concepts: ``rules`` and ``effects``.
 
 These can all be mixed and matched when creating Hasura-compatible JWTs to fully cover your app's permission settings.
 
-The second concept, ``rules`` determine whether the ``effects`` are allowed to be added to the JWT. The rules might look like:
+The second concept, ``rules`` determines whether the ``effects`` are allowed to be added to the JWT. The rules might look like:
 
 - "If this user is logged into Twitch.tv"
 - "If this user has an email on Salesforce that belongs to my organization's domain"
