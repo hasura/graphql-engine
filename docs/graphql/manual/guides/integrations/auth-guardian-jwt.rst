@@ -4,7 +4,7 @@
 
 .. _auth_guardian_jwt:
 
-AuthGuardian JWT Integration with Hasura GraphQL engine
+OneGraph's AuthGuardian JWT Integration with Hasura GraphQL engine
 =======================================================
 
 .. contents:: Table of contents
