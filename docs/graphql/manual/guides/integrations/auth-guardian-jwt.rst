@@ -39,7 +39,7 @@ AuthGuardian works with two basic concepts: ``rules`` and ``effects``.
 - Set the user-id for Hasura in the JWT
 - Set the default Hasura user role in the JWT
 - Set the allowed Hasura user roles in the JWT
-- Set sessions variables for Hasura to use in the JWT
+- Set session variables for Hasura to use in the JWT
 
 These can all be mixed and matched when creating Hasura-compatible JWTs to fully cover your app's permission settings.
 
