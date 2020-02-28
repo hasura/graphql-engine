@@ -116,7 +116,7 @@ You're all done! Now whenever a user hits your Hasura API they'll always have a 
 
 - Their Hasura user-id will match their (permanent) GitHub user id if they're logged into GitHub
 - They'll be allowed to use the ``admin`` permissions if they're a member of your GitHub organization
-- They'll have a session variable of ``x-hasura-is-our-biggest-fan: true`` if they've starred ``hasura/graphql-engine`` on GitHub
+- They'll have a session variable of ``x-hasura-is-our-biggest-fan: true`` if they've starred ``hasura/graphql-engine`` on GitHub.
 
 Nice!
 
