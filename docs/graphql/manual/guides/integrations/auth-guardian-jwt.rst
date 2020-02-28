@@ -110,7 +110,7 @@ Let's say we want to restrict access to some super-interesting data in our Hasur
 
 .. note::
 
-   AuthGuardian knows where to place Hasura session variables in the JWT, and also knows to prefix the variables with `x-hasura-` automatically
+   AuthGuardian knows where to place Hasura session variables in the JWT, and also knows to prefix the variables with ``x-hasura-`` automatically.
 
 You're all done! Now whenever a user hits your Hasura API they'll always have a default role of ``user``, and:
 
