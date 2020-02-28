@@ -69,7 +69,8 @@ const SchemaExplorer = ({
               f.name,
               f.argNesting,
               checked,
-              f.parentArg
+              f.parentArg,
+              f.type
             );
           } else {
             handleRemoteFieldChange(f.name, f.nesting, checked);

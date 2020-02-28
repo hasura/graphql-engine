@@ -98,6 +98,7 @@ export const getSchemaTree = (relationship, fields) => {
     );
     schemaTree.push({
       name: arg.name,
+      type: getUnderlyingType(arg.type).name,
       nesting,
       argNesting,
       isChecked: !!isChecked,
@@ -165,6 +166,7 @@ export const getSchemaTree = (relationship, fields) => {
     schemaTree.push({
       name: field.name,
       nesting,
+      type: field.type,
       isChecked,
     });
     if (isChecked) {
@@ -211,6 +213,35 @@ export const getSchemaTree = (relationship, fields) => {
   return schemaTree;
 };
 
+const getTypedInput = (input_, argType, argName) => {
+  const throwError = () => {
+    throw Error(
+      `Invalid static input for argument "${argName}" of type "${argType}".`
+    );
+  };
+  const input = input_.trim();
+  if (argType === 'Int') {
+    const intVal = parseInt(input, 10);
+    if (isNaN(intVal)) {
+      throwError();
+    }
+    return intVal;
+  }
+  if (argType === 'Boolean') {
+    if (input.toLowerCase() === 'true') return true;
+    if (input.toLowerCase() === 'false') return false;
+    throwError();
+  }
+  if (argType === 'Float') {
+    const floatVal = parseFloat(input);
+    if (isNaN(floatVal)) {
+      throwError();
+    }
+    return floatVal;
+  }
+  return input;
+};
+
 export const getRemoteRelPayload = (remoteRel, table) => {
   const payload = {};
   const { remoteField, name, remoteSchema } = remoteRel;
@@ -226,7 +257,7 @@ export const getRemoteRelPayload = (remoteRel, table) => {
           argObj[a.name] = `$${a.column}`;
           hasuraFields.push(a.column);
         } else if (a.static) {
-          argObj[a.name] = a.static;
+          argObj[a.name] = getTypedInput(a.static, a.type, a.name);
         } else {
           argObj[a.name] = getArgs(
             field,
@@ -291,7 +322,14 @@ export const parseRemoteRelationship = remoteRel => {
             argObj.column = argValue.substr(1);
           } else {
             argObj.static = argValue;
+            argObj.type = 'String';
           }
+        } else if (typeof argValue === 'number') {
+          argObj.static = argValue.toString();
+          argObj.type = 'Int';
+        } else if (typeof argValue === 'boolean') {
+          argObj.static = argValue.toString();
+          argObj.type = 'Boolean';
         }
         argsList.push(argObj);
         if (typeof argValue === 'object') {
