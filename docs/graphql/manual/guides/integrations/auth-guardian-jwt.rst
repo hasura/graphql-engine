@@ -54,7 +54,7 @@ Let's see how to use these ``rules`` and ``effects`` in action!
 
 Option 1: Set Hasura ``user_id``
 --------------------------------
-Let's say you're using GitHub as the primary login for your Hasura app, and that you want to use their GitHub ``userId`` as a primary key:
+Let's say you're using GitHub as the primary login for your Hasura app, and that you want to use their GitHub ``user_id`` as a primary key:
 
 - For the section "When the user on", select ``GitHub`` -> ``login status`` -> ``is true`` ("When this user is logged into GitHub")
 - For the section "Then", choose ``On hasura set user id``.
