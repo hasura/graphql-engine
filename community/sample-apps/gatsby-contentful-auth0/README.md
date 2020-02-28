@@ -12,7 +12,7 @@ npm install
 > Note: if you clone this project through the Gatsby CLI, it will install the modules for you.
 
 ## Auth0
-This application uses Auth0 to manage identity. Refer to the [Auth0 integration guide](https://docs.hasura.io/1.0/graphql/manual/guides/integrations/auth0-jwt.html) for the configuration.
+This application uses Auth0 to manage identity. Refer to the [Auth0 integration guide](https://hasura.io/docs/1.0/graphql/manual/guides/integrations/auth0-jwt.html) for the configuration.
 
 ### Modify auth config
 
