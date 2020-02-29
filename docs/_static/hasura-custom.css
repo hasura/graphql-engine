@@ -66,7 +66,7 @@ ul {
 
 .main_container_wrapper {
   min-width: 90%;
-  overflow-y: auto;
+  /* overflow-y: auto; */
   -webkit-overflow-scrolling: touch; /* for iOS momentum scroll */
 }
 .content_wrapper {
@@ -74,6 +74,7 @@ ul {
   font-family: 'Gudea';
   margin: auto;
   width: 100%;
+  min-height: calc( 100vh - 80px);
 }
 
 .content_inner_wrapper {
@@ -541,11 +542,20 @@ article ol ol {
   width: 24% !important;
   font-family: 'Gudea' !important;
   font-size: 16px;
-  height: auto;
+  height: 100vh;
   overflow-y: auto;
   padding-left: 15px !important;
+  position: sticky;
+  top: 0;
 }
-
+.positionSticky {
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -ms-sticky;
+  position: -o-sticky;
+  position: sticky;
+  top: 5px;
+}
 #sidebar .sphinxsidebar .sphinxsidebarwrapper h3 {
   padding-top: 10px;
   /*
@@ -729,6 +739,7 @@ article ol ol {
 .header_wrapper .gitHubBtn {
   margin: 0 6px;
   opacity: .8;
+  height: 20px;
 }
 .header_wrapper .gitHubBtn:hover {
   opacity: 1;
@@ -747,7 +758,6 @@ article ol ol {
   cursor: pointer;
   margin: 0 6px;
   border: 0;
-  margin-top: -6px;
 }
 .discordBtn img, .twitterBtn img {
   width: 12px;
