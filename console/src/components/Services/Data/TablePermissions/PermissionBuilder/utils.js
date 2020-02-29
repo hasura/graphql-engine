@@ -16,7 +16,8 @@ export const PGTypes = {
   ],
   geometry: ['geometry'],
   geography: ['geography'],
-  json: ['json', 'jsonb'],
+  json: ['json'],
+  jsonb: ['jsonb'],
   numeric: [
     'smallint',
     'integer',
@@ -40,9 +41,10 @@ const operatorTypePGTypesMap = {
     'user_defined',
   ],
   pattern_match: ['character'],
-  json: ['json'],
+  jsonb: ['jsonb'],
   geometric: ['geometry'],
   geometric_geographic: ['geometry', 'geography'],
+  is_null: Object.keys(PGTypes), // all types
 };
 
 const boolOperatorsInfo = {
@@ -93,11 +95,6 @@ const columnOperatorsInfo = {
     type: 'comparision',
     inputStructure: 'object',
   },
-  _is_null: {
-    type: 'comparision',
-    inputStructure: 'object',
-    inputType: 'boolean',
-  },
   _ceq: {
     type: 'comparision',
     inputStructure: 'object',
@@ -128,6 +125,11 @@ const columnOperatorsInfo = {
     inputStructure: 'object',
     inputType: 'column',
   },
+  _is_null: {
+    type: 'is_null',
+    inputStructure: 'object',
+    inputType: 'boolean',
+  },
   _like: {
     type: 'pattern_match',
     inputStructure: 'object',
@@ -153,25 +155,25 @@ const columnOperatorsInfo = {
     inputStructure: 'object',
   },
   _contains: {
-    type: 'json',
+    type: 'jsonb',
     inputStructure: 'object',
   },
   _contained_in: {
-    type: 'json',
+    type: 'jsonb',
     inputStructure: 'object',
   },
   _has_key: {
-    type: 'json',
+    type: 'jsonb',
     inputStructure: 'object',
     inputType: 'character',
   },
   _has_keys_any: {
-    type: 'json',
+    type: 'jsonb',
     inputStructure: 'array',
     inputType: 'character',
   },
   _has_keys_all: {
-    type: 'json',
+    type: 'jsonb',
     inputStructure: 'array',
     inputType: 'character',
   },

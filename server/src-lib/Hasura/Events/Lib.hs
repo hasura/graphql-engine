@@ -7,7 +7,7 @@ module Hasura.Events.Lib
   , Event(..)
   ) where
 
-import           Control.Concurrent            (threadDelay)
+import           Control.Concurrent.Extended   (sleep)
 import           Control.Concurrent.Async      (async, waitAny)
 import           Control.Concurrent.STM.TVar
 import           Control.Exception             (try)
@@ -23,6 +23,7 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Server.Version         (HasVersion)
 import           Hasura.SQL.Types
 
 import qualified Control.Concurrent.STM.TQueue as TQ
@@ -148,28 +149,27 @@ data EventEngineCtx
   { _eeCtxEventQueue            :: TQ.TQueue Event
   , _eeCtxEventThreads          :: TVar Int
   , _eeCtxMaxEventThreads       :: Int
-  , _eeCtxFetchIntervalMilliSec :: Int
+  , _eeCtxFetchInterval         :: DiffTime
   }
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
 
-defaultFetchIntervalMilliSec :: Int
+defaultFetchIntervalMilliSec :: Milliseconds
 defaultFetchIntervalMilliSec = 1000
 
 retryAfterHeader :: CI.CI T.Text
 retryAfterHeader = "Retry-After"
 
-initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
+initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT fetchI = do
   q <- TQ.newTQueue
   c <- newTVar 0
   return $ EventEngineCtx q c maxT fetchI
 
 processEventQueue
-  :: L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
-  -> IO SchemaCache -> EventEngineCtx
-  -> IO ()
+  :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
+  -> IO SchemaCache -> EventEngineCtx -> IO ()
 processEventQueue logger logenv httpMgr pool getSchemaCache eectx = do
   threads <- mapM async [fetchThread, consumeThread]
   void $ waitAny threads
@@ -185,19 +185,20 @@ pushEvents logger pool eectx  = forever $ do
   case eventsOrError of
     Left err     -> L.unLogger logger $ EventInternalErr err
     Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
-  threadDelay (fetchI * 1000)
+  sleep fetchI
 
 consumeEvents
-  :: L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> IO SchemaCache -> EventEngineCtx
-  -> IO ()
+  :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> IO SchemaCache
+  -> EventEngineCtx -> IO ()
 consumeEvents logger logenv httpMgr pool getSchemaCache eectx  = forever $ do
   event <- atomically $ do
     let EventEngineCtx q _ _ _ = eectx
     TQ.readTQueue q
-  async $ runReaderT  (processEvent logenv pool getSchemaCache event) (logger, httpMgr, eectx)
+  async $ runReaderT (processEvent logenv pool getSchemaCache event) (logger, httpMgr, eectx)
 
 processEvent
-  :: ( MonadReader r m
+  :: ( HasVersion
+     , MonadReader r m
      , Has HTTP.Manager r
      , Has (L.Logger L.Hasura) r
      , Has EventEngineCtx r
@@ -284,7 +285,7 @@ retryOrSetError :: Event -> RetryConf -> HTTPErr -> Q.TxE QErr ()
 retryOrSetError e retryConf err = do
   let mretryHeader = getRetryAfterHeaderFromError err
       tries = eTries e
-      mretryHeaderSeconds = parseRetryHeader mretryHeader
+      mretryHeaderSeconds = mretryHeader >>= parseRetryHeader
       triesExhausted = tries >= rcNumRetries retryConf
       noRetryHeader = isNothing mretryHeaderSeconds
   -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
@@ -307,12 +308,8 @@ retryOrSetError e retryConf err = do
         in case mHeader of
              Just (HeaderConf _ (HVValue value)) -> Just value
              _                                   -> Nothing
-    parseRetryHeader Nothing = Nothing
-    parseRetryHeader (Just hValue)
-      = let seconds = readMaybe $ T.unpack hValue
-        in case seconds of
-             Nothing  -> Nothing
-             Just sec -> if sec > 0 then Just sec else Nothing
+
+    parseRetryHeader = mfilter (> 0) . readMaybe . T.unpack
 
 encodeHeader :: EventHeaderInfo -> HTTP.Header
 encodeHeader (EventHeaderInfo hconf cache) =
