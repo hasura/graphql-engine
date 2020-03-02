@@ -69,40 +69,52 @@ func (o *updateOptions) run(showPrompt bool) error {
 
 	ec.Logger.Debugln("hasUpdate: ", hasUpdate, "latestVersion: ", latestVersion, "hasPreReleaseUpdate: ", hasPreReleaseUpdate, "preReleaseVersion: ", preReleaseVersion, "currentVersion:", currentVersion)
 
-	if !hasUpdate && !hasPreReleaseUpdate {
+	if !hasUpdate && (!hasPreReleaseUpdate && o.preRelease) {
 		o.EC.Logger.WithField("version", currentVersion).Info("hasura cli is up to date")
 		return nil
 	}
 
 	var versionToBeInstalled *semver.Version
-	switch {
-	case hasUpdate && hasPreReleaseUpdate:
-		if o.preRelease {
-			versionToBeInstalled = preReleaseVersion
-		} else {
-			versionToBeInstalled = latestVersion
-		}
-	case hasUpdate && !hasPreReleaseUpdate:
-		if !o.preRelease {
-			versionToBeInstalled = latestVersion
-		}
-	}
-	if hasUpdate && showPrompt {
-		ok := ask2confirm(latestVersion.String(), o.EC.Logger)
-		if !ok {
-			o.EC.Logger.Info("skipping update, run 'hasura update-cli' to update manually")
-			return nil
-		}
-		versionToBeInstalled = latestVersion
-	}
-
-	if !hasUpdate && hasPreReleaseUpdate && o.preRelease {
-		if showPrompt {
-			// In case of root command PreRun, show an info to run update-cli --pre-release true
+	if showPrompt {
+		switch {
+		case !hasUpdate && hasPreReleaseUpdate:
 			o.EC.Logger.Info("prerelease update available, run 'hasura update-cli --pre-release true' to update manually")
 			return nil
+		default:
+			ok := ask2confirm(latestVersion.String(), o.EC.Logger)
+			if !ok {
+				o.EC.Logger.Info("skipping update, run 'hasura update-cli' to update manually")
+				return nil
+			}
+			versionToBeInstalled = latestVersion
 		}
-		versionToBeInstalled = preReleaseVersion
+	} else {
+		switch {
+		case hasUpdate && hasPreReleaseUpdate:
+			if o.preRelease {
+				if preReleaseVersion.GreaterThan(latestVersion) {
+					versionToBeInstalled = preReleaseVersion
+				} else {
+					// TODO: confirm whether to show up-to-date
+					o.EC.Logger.WithField("version", currentVersion).Info("hasura cli is up to date")
+					return nil
+				}
+			} else {
+				versionToBeInstalled = latestVersion
+			}
+		case hasUpdate && !hasPreReleaseUpdate:
+			if o.preRelease {
+				o.EC.Logger.WithField("version", currentVersion).Info("hasura cli is up to date")
+				return nil
+			}
+			versionToBeInstalled = latestVersion
+		case !hasUpdate && hasPreReleaseUpdate:
+			if !o.preRelease {
+				o.EC.Logger.WithField("version", currentVersion).Info("hasura cli is up to date")
+				return nil
+			}
+			versionToBeInstalled = preReleaseVersion
+		}
 	}
 
 	o.EC.Spin(fmt.Sprintf("Updating cli to v%s... ", versionToBeInstalled.String()))
@@ -115,7 +127,7 @@ func (o *updateOptions) run(showPrompt bool) error {
 		return errors.Wrap(err, "apply update")
 	}
 
-	o.EC.Logger.WithField("version", "v"+latestVersion.String()).Info("Updated to latest version")
+	o.EC.Logger.WithField("version", "v"+versionToBeInstalled.String()).Info("Updated to latest version")
 	return nil
 }
 
