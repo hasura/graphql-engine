@@ -95,12 +95,7 @@ func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.V
 		return false, nil, false, nil, errors.Wrap(err, "get latest version")
 	}
 
-	c, err := semver.NewConstraint(fmt.Sprintf("> %s", currentVersion.String()))
-	if err != nil {
-		return false, nil, false, nil, errors.Wrap(err, "semver constraint build")
-	}
-
-	return c.Check(latestVersion), latestVersion, c.Check(preReleaseVersion), preReleaseVersion, nil
+	return latestVersion.GreaterThan(currentVersion), latestVersion, preReleaseVersion.GreaterThan(currentVersion), preReleaseVersion, nil
 }
 
 // ApplyUpdate downloads and applies the update indicated by version v.

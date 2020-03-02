@@ -75,6 +75,18 @@ func (o *updateOptions) run(showPrompt bool) error {
 	}
 
 	var versionToBeInstalled *semver.Version
+	switch {
+	case hasUpdate && hasPreReleaseUpdate:
+		if o.preRelease {
+			versionToBeInstalled = preReleaseVersion
+		} else {
+			versionToBeInstalled = latestVersion
+		}
+	case hasUpdate && !hasPreReleaseUpdate:
+		if !o.preRelease {
+			versionToBeInstalled = latestVersion
+		}
+	}
 	if hasUpdate && showPrompt {
 		ok := ask2confirm(latestVersion.String(), o.EC.Logger)
 		if !ok {
