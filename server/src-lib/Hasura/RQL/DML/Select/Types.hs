@@ -162,10 +162,11 @@ data AnnColField
 
 data RemoteSelect
   = RemoteSelect
-  { _rselArgs         :: !ArgsMap
-  , _rselSelection    :: !SelSet
-  , _rselRelationship :: !RemoteRelationship
-  , _rselInfo         :: !RemoteSchemaInfo
+  { _rselArgs          :: !ArgsMap
+  , _rselSelection     :: !SelSet
+  , _rselHasuraColumns :: !(HashSet PGColumnInfo)
+  , _rselFieldCall     :: !(NonEmpty FieldCall)
+  , _rselRemoteSchema  :: !RemoteSchemaInfo
   } deriving (Show, Eq)
 
 data AnnFldG v

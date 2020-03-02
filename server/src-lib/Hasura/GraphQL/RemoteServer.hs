@@ -37,11 +37,8 @@ introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 
 fetchRemoteSchema
   :: (HasVersion, MonadIO m, MonadError QErr m)
-  => HTTP.Manager
-  -> RemoteSchemaName
-  -> RemoteSchemaInfo
-  -> m GC.RemoteGCtx
-fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) = do
+  => HTTP.Manager -> RemoteSchemaInfo -> m GC.RemoteGCtx
+fetchRemoteSchema manager def@(RemoteSchemaInfo name url headerConf _ timeout) = do
   headers <- makeHeadersFromConf headerConf
   let hdrsWithDefaults = addDefaultHeaders headers
 
@@ -458,7 +455,7 @@ execRemoteGQ' manager userInfo reqHdrs q rsi opType = do
   return (time, respHdrs, resp ^. Wreq.responseBody)
 
   where
-    RemoteSchemaInfo url hdrConf fwdClientHdrs timeout = rsi
+    RemoteSchemaInfo _ url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
     httpThrow = \case
       HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content

@@ -32,7 +32,8 @@ remoteSchemaNameToTxt = unNonEmptyText . unRemoteSchemaName
 
 data RemoteSchemaInfo
   = RemoteSchemaInfo
-  { rsUrl              :: !N.URI
+  { rsName             :: !RemoteSchemaName
+  , rsUrl              :: !N.URI
   , rsHeaders          :: ![HeaderConf]
   , rsFwdClientHeaders :: !Bool
   , rsTimeoutSeconds   :: !Int
@@ -94,15 +95,16 @@ getUrlFromEnv urlFromEnv = do
 
 validateRemoteSchemaDef
   :: (MonadError QErr m, MonadIO m)
-  => RemoteSchemaDef
+  => RemoteSchemaName
+  -> RemoteSchemaDef
   -> m RemoteSchemaInfo
-validateRemoteSchemaDef (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
+validateRemoteSchemaDef rsName (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout) =
   case (mUrl, mUrlEnv) of
     (Just url, Nothing)    ->
-      return $ RemoteSchemaInfo url hdrs fwdHdrs timeout
+      return $ RemoteSchemaInfo rsName url hdrs fwdHdrs timeout
     (Nothing, Just urlEnv) -> do
       url <- getUrlFromEnv urlEnv
-      return $ RemoteSchemaInfo url hdrs fwdHdrs timeout
+      return $ RemoteSchemaInfo rsName url hdrs fwdHdrs timeout
     (Nothing, Nothing)     ->
         throw400 InvalidParams "both `url` and `url_from_env` can't be empty"
     (Just _, Just _)       ->

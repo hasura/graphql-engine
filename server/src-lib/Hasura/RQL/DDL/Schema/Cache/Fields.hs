@@ -21,6 +21,7 @@ import qualified Hasura.Incremental                 as Inc
 
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.Relationship
+import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.Schema.Cache.Common
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.Types
@@ -167,7 +168,7 @@ mkRemoteRelationshipMetadataObject rr =
 buildRemoteRelationship
   :: ( ArrowChoice arr, ArrowWriter (Seq CollectedInfo) arr
      , ArrowKleisli m arr, MonadError QErr m )
-  => (([PGColumnInfo], RemoteSchemaMap), RemoteRelationship) `arr` Maybe (RemoteField, VT.TypeMap)
+  => (([PGColumnInfo], RemoteSchemaMap), RemoteRelationship) `arr` Maybe (RemoteFieldInfo, VT.TypeMap)
 buildRemoteRelationship = proc ((pgColumns, remoteSchemaMap), remoteRelationship) -> do
   let relationshipName = rtrName remoteRelationship
       tableName = rtrTable remoteRelationship

@@ -19,6 +19,7 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict           as HM
+import qualified Data.HashSet                  as HS
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
 import qualified Hasura.GraphQL.Schema         as GS
@@ -39,7 +40,7 @@ data ValidationError
   | InvalidVariable G.Variable (HM.HashMap G.Variable PGColumnInfo)
   | NullNotAllowedHere
   | ForeignRelationshipsNotAllowedInRemoteVariable !RelInfo
-  | RemoteFieldsNotAllowedInArguments !RemoteField
+  -- | RemoteFieldsNotAllowedInArguments !RemoteField
   | UnsupportedArgumentType G.Value
   | InvalidGTypeForStripping !G.GType
   | UnsupportedMultipleElementLists
@@ -55,9 +56,14 @@ validateRemoteRelationship ::
      RemoteRelationship
   -> RemoteSchemaMap
   -> [PGColumnInfo]
-  -> Either (NonEmpty ValidationError) (RemoteField, TypeMap)
+  -> Either (NonEmpty ValidationError) (RemoteFieldInfo, TypeMap)
 validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
   let remoteSchemaName = rtrRemoteSchema remoteRelationship
+      table = rtrTable remoteRelationship
+  hasuraFields <- forM (toList $ rtrHasuraFields remoteRelationship) $
+    \fieldName -> case find ((==) fieldName . fromPGCol . pgiColumn) pgColumns of
+                    Nothing -> Left $ pure $ TableFieldNonexistent table fieldName
+                    Just r  -> pure r
   case HM.lookup remoteSchemaName remoteSchemaMap of
     Nothing -> Left $ pure $ RemoteSchemaNotFound remoteSchemaName
     Just (RemoteSchemaCtx _ gctx rsi) -> do
@@ -115,13 +121,15 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
              ( GS._gQueryRoot gctx
              , G.toGT (_otiName $ GS._gQueryRoot gctx)
              , (mempty, mempty)))
-          (rtrRemoteFields remoteRelationship)
+          (unRemoteFields $ rtrRemoteField remoteRelationship)
       pure
-        ( RemoteField
-            { rmfRemoteRelationship = remoteRelationship
-            , rmfGType = leafGType
-            , rmfParamMap = leafParamMap
-            , rmfRemoteSchema = rsi
+        ( RemoteFieldInfo
+            { _rfiName = rtrName remoteRelationship
+            , _rfiGType = leafGType
+            , _rfiParamMap = leafParamMap
+            , _rfiHasuraFields = HS.fromList hasuraFields
+            , _rfiRemoteFields = unRemoteFields $ rtrRemoteField remoteRelationship
+            , _rfiRemoteSchema = rsi
             }
         , leafTypeMap)
   where
@@ -138,12 +146,18 @@ validateRemoteRelationship remoteRelationship remoteSchemaMap pgColumns = do
        in case typeInfo of
             Just (TIObj _) -> True
             _              -> False
+
     isScalarType types field =
       let baseTy = getBaseTy (_fiTy field)
           typeInfo = HM.lookup baseTy types
        in case typeInfo of
             Just (TIScalar _) -> True
             _                 -> False
+
+    remoteArgumentsToMap =
+      HM.fromList .
+      map (\field -> (G._ofName field, G._ofValue field)) .
+      getRemoteArguments
 
 -- | Return a map with keys deleted whose template argument is
 -- specified as an atomic (variable, constant), keys which are kept

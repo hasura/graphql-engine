@@ -112,9 +112,12 @@ processTableSelectionSet fldTy flds =
               return $ case riType relInfo of
                 ObjRel -> RS.FObj annRel
                 ArrRel -> RS.FArr $ RS.ASSimple annRel
-          RFRemoteRelationship (RemoteField relationship _ _ rsi) -> do
-            markNotReusable
-            pure $ RS.FRemote $ RS.RemoteSelect (_fArguments fld) (_fSelSet fld) relationship rsi
+          RFRemoteRelationship info ->
+            pure $ RS.FRemote $ RS.RemoteSelect (_fArguments fld)
+                                                (_fSelSet fld)
+                                                (_rfiHasuraFields info)
+                                                (_rfiRemoteFields info)
+                                                (_rfiRemoteSchema info)
 
 type TableAggFlds = RS.TableAggFldsG UnresolvedVal
 

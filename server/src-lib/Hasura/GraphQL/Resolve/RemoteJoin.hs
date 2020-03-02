@@ -31,6 +31,7 @@ import qualified Data.Aeson.Ordered                     as AO
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashMap.Strict.Extended           as Map
 import qualified Data.HashMap.Strict.InsOrd             as OMap
+import qualified Data.HashSet                           as HS
 import qualified Data.List.NonEmpty                     as NE
 import qualified Data.Text                              as T
 import qualified Data.UUID                              as UUID
@@ -90,12 +91,13 @@ pathToAlias path counter =
 
 data RemoteJoin
   = RemoteJoin
-  { _rjName           :: !FieldName -- ^ The remote join field name.
-  , _rjArgs           :: !ArgsMap -- ^ User-provided arguments.
-  , _rjSelSet         :: !SelSet -- ^ Selection set of remote field.
-  , _rjRelationship   :: !RemoteRelationship -- ^ Details of remote join.
-  , _rjRemoteSchema   :: !RemoteSchemaInfo -- ^ The remote schema server info.
-  , _rjPhantomColumns :: ![FieldName]
+  { _rjName          :: !FieldName -- ^ The remote join field name.
+  , _rjArgs          :: !ArgsMap -- ^ User-provided arguments.
+  , _rjSelSet        :: !SelSet -- ^ Selection set of remote field.
+  , _rjHasuraFields  :: !(HashSet FieldName) -- ^ Table fields.
+  , _rjFieldCall     :: !(NonEmpty FieldCall) -- ^ Remote fields.
+  , _rjRemoteSchema  :: !RemoteSchemaInfo -- ^ The remote schema server info.
+  , _rjPhantomFields :: ![PGColumnInfo]
     -- ^ Hasura fields which are not in the selection set, but are required as
     -- parameters to satisfy the remote join.
   } deriving (Show, Eq)
@@ -134,11 +136,11 @@ transformAnnFields path fields = do
   let pgColumnFields = map fst $ getFields _FCol fields
       remoteSelects = getFields _FRemote fields
       remoteJoins = flip map remoteSelects $ \(fieldName, remoteSelect) ->
-        let RemoteSelect argsMap selSet relationship rsi = remoteSelect
-            -- TODO:- Have PGColumnInfo for Hasura fields
-            hasuraFields = toList $ rtrHasuraFields relationship
-            phantomColumns = filter (`notElem` pgColumnFields) hasuraFields
-        in RemoteJoin fieldName argsMap selSet relationship rsi phantomColumns
+        let RemoteSelect argsMap selSet hasuraColumns remoteFields rsi = remoteSelect
+            hasuraColumnL = toList hasuraColumns
+            hasuraColumnFields = HS.fromList $ map (fromPGCol . pgiColumn) hasuraColumnL
+            phantomColumns = filter ((`notElem` pgColumnFields) . fromPGCol . pgiColumn) hasuraColumnL
+        in RemoteJoin fieldName argsMap selSet hasuraColumnFields remoteFields rsi phantomColumns
 
   transformedFields <- forM fields $ \(fieldName, field) -> do
     let fieldPath = appendPath fieldName path
@@ -157,10 +159,10 @@ transformAnnFields path fields = do
   case NE.nonEmpty remoteJoins of
     Nothing -> pure transformedFields
     Just nonEmptyRemoteJoins -> do
-      let phantomColumnFields = map fakePGColumnField $
-                               concatMap _rjPhantomColumns remoteJoins
+      let phantomColumns = map (\ci -> (fromPGCol $ pgiColumn ci, FCol $ AnnColField ci False Nothing)) $
+                           concatMap _rjPhantomFields remoteJoins
       modify (Map.insert path nonEmptyRemoteJoins)
-      pure $ transformedFields <> phantomColumnFields
+      pure $ transformedFields <> phantomColumns
     where
       getFields f = mapMaybe (sequence . (second (^? f)))
       transformAnnRel fieldPath annRel = do
@@ -172,15 +174,6 @@ transformAnnFields path fields = do
         let annSel = aarAnnSel annRel
         transformedSel <- transformAggSelect fieldPath annSel
         pure $ annRel{aarAnnSel = transformedSel}
-
-      -- FIXME:- this is terrible
-      fakePGColumnField :: FieldName -> (FieldName, AnnFld)
-      fakePGColumnField f =
-        let info = PGColumnInfo (unsafePGCol $ getFieldNameTxt f)
-                   (G.Name $ getFieldNameTxt f)
-                   0 (PGColumnScalar $ PGUnknown "unknown") False Nothing
-        in (f,  FCol $ AnnColField info False Nothing)
-
 
 type CompositeObject a = OMap.InsOrdHashMap Text (CompositeValue a)
 
@@ -229,13 +222,11 @@ traverseQueryResponseJSON rjm =
       where
         mkRemoteSchemaField siblingFields remoteJoin = do
           counter <- getCounter
-          let RemoteJoin fieldName inputArgs selSet relationship rsi _ = remoteJoin
-              hasuraFields = map (G.Variable . G.Name . getFieldNameTxt) $
-                             toList $ rtrHasuraFields relationship
-              fieldCall = rtrRemoteFields relationship
+          let RemoteJoin fieldName inputArgs selSet hasuraFields fieldCall rsi _ = remoteJoin
+              hasuraFieldVariables = map (G.Variable . G.Name . getFieldNameTxt) $ toList hasuraFields
               siblingFieldArgs = Map.fromList $
                                  map ((G.Variable . G.Name) *** valueToValueConst) siblingFields
-              hasuraFieldArgs = flip Map.filterWithKey siblingFieldArgs $ \k _ -> k `elem` hasuraFields
+              hasuraFieldArgs = flip Map.filterWithKey siblingFieldArgs $ \k _ -> k `elem` hasuraFieldVariables
               fieldAlias = pathToAlias (appendPath fieldName path) counter
           queryField <- fieldCallsToField inputArgs hasuraFieldArgs selSet fieldAlias fieldCall
           pure $ RemoteJoinField rsi queryField $ map fcName $ toList $ NE.tail fieldCall
@@ -250,8 +241,9 @@ traverseQueryResponseJSON rjm =
                 Nothing -> Just <$> traverseValue fieldPath value
                 Just nonEmptyRemoteJoins -> do
                   let remoteJoins = toList nonEmptyRemoteJoins
-                      phantomColumns = concatMap _rjPhantomColumns remoteJoins
-                  if | fieldName `elem` phantomColumns -> pure Nothing
+                      phantomColumnFields = map (fromPGCol . pgiColumn) $
+                                            concatMap _rjPhantomFields remoteJoins
+                  if | fieldName `elem` phantomColumnFields -> pure Nothing
                      | otherwise ->
                          case find ((== fieldName) . _rjName) remoteJoins of
                            Just rj -> (Just . CVFromRemote) <$> mkRemoteSchemaField fields rj

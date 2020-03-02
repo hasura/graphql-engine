@@ -311,5 +311,7 @@ deriving instance Arbitrary RemoteArguments
 instance Arbitrary FieldCall where
   arbitrary = genericArbitrary
 
+deriving instance Arbitrary RemoteFields
+
 instance Arbitrary RemoteRelationship where
   arbitrary = genericArbitrary

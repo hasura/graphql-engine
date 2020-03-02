@@ -39,6 +39,7 @@ import qualified Hasura.RQL.DDL.CustomTypes         as CustomTypes
 import qualified Hasura.RQL.DDL.Permission          as Permission
 import qualified Hasura.RQL.DDL.QueryCollection     as Collection
 import qualified Hasura.RQL.DDL.Relationship        as Relationship
+import qualified Hasura.RQL.DDL.RemoteRelationship  as RemoteRelationship
 import qualified Hasura.RQL.DDL.Schema              as Schema
 
 clearMetadata :: Q.TxE QErr ()
@@ -220,7 +221,7 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta
 
   -- remote relationships
   withPathK "remote_relationships" $
-    indexedMapM_ (void . Relationship.runCreateRemoteRelationship) remoteRelationships
+    indexedMapM_ (void . RemoteRelationship.runCreateRemoteRelationship) remoteRelationships
 
   buildSchemaCacheStrict
   return successMsg
@@ -497,7 +498,7 @@ purgeMetadataObj = liftTx . \case
   MOTableObj qt (MTOPerm rn pt)              -> dropPermFromCatalog qt rn pt
   MOTableObj _ (MTOTrigger trn)              -> delEventTriggerFromCatalog trn
   MOTableObj qt (MTOComputedField ccn)       -> dropComputedFieldFromCatalog qt ccn
-  MOTableObj qt (MTORemoteRelationship rn)   -> Relationship.delRemoteRelFromCatalog qt rn
+  MOTableObj qt (MTORemoteRelationship rn)   -> RemoteRelationship.delRemoteRelFromCatalog qt rn
   MOCustomTypes                              -> CustomTypes.clearCustomTypes
   MOAction action                            -> Action.deleteActionFromCatalog action Nothing
   MOActionPermission action role             -> Action.deleteActionPermissionFromCatalog action role

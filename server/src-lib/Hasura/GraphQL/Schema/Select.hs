@@ -186,15 +186,14 @@ mkRemoteRelationshipName :: RemoteRelationshipName -> G.Name
 mkRemoteRelationshipName =
   G.Name . remoteRelationshipNameToText
 
-mkRemoteRelationshipFld :: RemoteField -> ObjFldInfo
+mkRemoteRelationshipFld :: RemoteFieldInfo -> ObjFldInfo
 mkRemoteRelationshipFld remoteField =
   mkHsraObjFldInfo description fieldName paramMap gType
   where
     description = Just "Remote relationship field"
-    remoteRelationship = rmfRemoteRelationship remoteField
-    fieldName = mkRemoteRelationshipName $ rtrName remoteRelationship
-    paramMap = rmfParamMap remoteField
-    gType = rmfGType remoteField
+    fieldName = mkRemoteRelationshipName $ _rfiName remoteField
+    paramMap = _rfiParamMap remoteField
+    gType = _rfiGType remoteField
 
 {-
 type table_aggregate {

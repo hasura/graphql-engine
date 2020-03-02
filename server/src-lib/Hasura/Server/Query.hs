@@ -25,6 +25,7 @@ import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.QueryCollection
 import           Hasura.RQL.DDL.Relationship
 import           Hasura.RQL.DDL.Relationship.Rename
+import           Hasura.RQL.DDL.RemoteRelationship
 import           Hasura.RQL.DDL.RemoteSchema
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.DML.Count

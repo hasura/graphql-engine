@@ -307,6 +307,7 @@ library
                      , Hasura.RQL.DDL.QueryCollection
                      , Hasura.RQL.DDL.Action
                      , Hasura.RQL.DDL.CustomTypes
+                     , Hasura.RQL.DDL.RemoteRelationship
                      , Hasura.RQL.DDL.RemoteRelationship.Validate
                      , Hasura.RQL.DML.Delete
                      , Hasura.RQL.DML.Internal

@@ -66,8 +66,8 @@ addRemoteSchemaP2Setup
   => AddRemoteSchemaQuery -> m RemoteSchemaCtx
 addRemoteSchemaP2Setup (AddRemoteSchemaQuery name def _) = do
   httpMgr <- askHttpManager
-  rsi <- validateRemoteSchemaDef def
-  gCtx <- fetchRemoteSchema httpMgr name rsi
+  rsi <- validateRemoteSchemaDef name def
+  gCtx <- fetchRemoteSchema httpMgr rsi
   pure $ RemoteSchemaCtx name (convRemoteGCtx gCtx) rsi
   where
     convRemoteGCtx rmGCtx =

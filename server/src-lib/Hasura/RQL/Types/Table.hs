@@ -163,7 +163,7 @@ data FieldInfo
   = FIColumn !PGColumnInfo
   | FIRelationship !RelInfo
   | FIComputedField !ComputedFieldInfo
-  | FIRemoteRelationship !RemoteField
+  | FIRemoteRelationship !RemoteFieldInfo
   deriving (Show, Eq, Generic)
 instance Cacheable FieldInfo
 $(deriveToJSON
@@ -180,7 +180,7 @@ fieldInfoName = \case
   FIColumn info -> fromPGCol $ pgiColumn info
   FIRelationship info -> fromRel $ riName info
   FIComputedField info -> fromComputedField $ _cfiName info
-  FIRemoteRelationship info -> fromRemoteRelationship $ rtrName $ rmfRemoteRelationship info
+  FIRemoteRelationship info -> fromRemoteRelationship $ _rfiName info
 
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an
@@ -194,8 +194,7 @@ fieldInfoGraphQLNames = \case
       ObjRel -> [name]
       ArrRel -> [name, name <> "_aggregate"]
   FIComputedField info -> [G.Name . computedFieldNameToText $ _cfiName info]
-  FIRemoteRelationship info -> pure $ G.Name $ remoteRelationshipNameToText $ rtrName $
-                               rmfRemoteRelationship info
+  FIRemoteRelationship info -> pure $ G.Name $ remoteRelationshipNameToText $ _rfiName info
 
 getCols :: FieldInfoMap FieldInfo -> [PGColumnInfo]
 getCols = mapMaybe (^? _FIColumn) . M.elems
@@ -206,7 +205,7 @@ getRels = mapMaybe (^? _FIRelationship) . M.elems
 getComputedFieldInfos :: FieldInfoMap FieldInfo -> [ComputedFieldInfo]
 getComputedFieldInfos = mapMaybe (^? _FIComputedField) . M.elems
 
-getRemoteRels :: FieldInfoMap FieldInfo -> [RemoteField]
+getRemoteRels :: FieldInfoMap FieldInfo -> [RemoteFieldInfo]
 getRemoteRels = mapMaybe (^? _FIRemoteRelationship) . M.elems
 
 isPGColInfo :: FieldInfo -> Bool

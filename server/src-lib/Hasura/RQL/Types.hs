@@ -292,13 +292,13 @@ askFieldInfo m f =
 askRemoteRel :: (MonadError QErr m)
            => FieldInfoMap FieldInfo
            -> RemoteRelationshipName
-           -> m RemoteField
+           -> m RemoteFieldInfo
 askRemoteRel fieldInfoMap relName = do
   fieldInfo <- askFieldInfo fieldInfoMap (fromRemoteRelationship relName)
   case fieldInfo of
-    (FIRemoteRelationship remoteField) -> return remoteField
-    _                        ->
-      throwError $ err400 UnexpectedPayload "expecting a remote relationship"
+    (FIRemoteRelationship remoteFieldInfo) -> return remoteFieldInfo
+    _                                      ->
+      throw400 UnexpectedPayload "expecting a remote relationship"
 
 askCurRole :: (UserInfoM m) => m RoleName
 askCurRole = userRole <$> askUserInfo

@@ -68,9 +68,9 @@ isValidCol = G.isValidName . pgiName
 isValidRel :: ToTxt a => RelName -> QualifiedObject a -> Bool
 isValidRel rn rt = G.isValidName (mkRelName rn) && isValidObjectName rt
 
-isValidRemoteRel :: RemoteField -> Bool
+isValidRemoteRel :: RemoteFieldInfo -> Bool
 isValidRemoteRel =
-  G.isValidName . mkRemoteRelationshipName . rtrName . rmfRemoteRelationship
+  G.isValidName . mkRemoteRelationshipName . _rfiName
 
 isValidField :: FieldInfo -> Bool
 isValidField = \case
@@ -251,7 +251,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
         , RFComputedField cf
         )
       SFRemoteRelationship remoteField -> pure
-        ( (ty, G.Name (remoteRelationshipNameToText (rtrName (rmfRemoteRelationship remoteField))))
+        ( (ty, G.Name (remoteRelationshipNameToText (_rfiName remoteField)))
         , RFRemoteRelationship remoteField
         )
 

@@ -54,7 +54,7 @@ data SelField
   = SFPGColumn !PGColumnInfo
   | SFRelationship !RelationshipFieldInfo
   | SFComputedField !ComputedField
-  | SFRemoteRelationship !RemoteField
+  | SFRemoteRelationship !RemoteFieldInfo
   deriving (Show, Eq)
 $(makePrisms ''SelField)
 
@@ -67,7 +67,7 @@ getRelationshipFields = mapMaybe (^? _SFRelationship)
 getComputedFields :: [SelField] -> [ComputedField]
 getComputedFields = mapMaybe (^? _SFComputedField)
 
-getRemoteRelationships :: [SelField] -> [RemoteField]
+getRemoteRelationships :: [SelField] -> [RemoteFieldInfo]
 getRemoteRelationships = mapMaybe (^? _SFRemoteRelationship)
 
 qualObjectToName :: (ToTxt a) => QualifiedObject a -> G.Name

@@ -167,7 +167,7 @@ data ResolveField
   = RFPGColumn !PGColumnInfo
   | RFRelationship !RelationshipField
   | RFComputedField !ComputedField
-  | RFRemoteRelationship !RemoteField
+  | RFRemoteRelationship !RemoteFieldInfo
   deriving (Show, Eq)
 
 type FieldMap = Map.HashMap (G.NamedType, G.Name) ResolveField
