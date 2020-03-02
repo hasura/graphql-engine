@@ -1,5 +1,6 @@
 # Hasura GraphQL Engine Changelog
 
-## `v1.2.0`
+## `v1.2.0-beta.1`
 
-wip: changelog for 1.2 release
+- Introducing Actions: https://docs.hasura.io/1.0/graphql/manual/actions/index.html
+- Downgrade command: https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine
