@@ -356,7 +356,7 @@ jobs:
   
   test_and_build_cli_ext:
     docker:
-    - image: hasura/graphql-engine-extension-cli-builder:20200220
+    - image: hasura/graphql-engine-extension-cli-builder:20200225
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
