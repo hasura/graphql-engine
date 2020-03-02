@@ -5,7 +5,7 @@
 .. _auth_guardian_jwt:
 
 OneGraph's AuthGuardian JWT Integration with Hasura GraphQL engine
-=======================================================
+==================================================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -132,11 +132,11 @@ The generated config has the following structure:
 
 .. code-block:: json
 
-        {
-        "type": "RS256",
-        "jwk_url": "https://serve.onegraph.com/app/35bcf98c-1df0-4644-a453-bf06a1349449/.well-known/jwks.json",
-        "claims_format": "json"
-        }
+  {
+    "type": "RS256",
+    "jwk_url": "https://serve.onegraph.com/app/35bcf98c-1df0-4644-a453-bf06a1349449/.well-known/jwks.json",
+    "claims_format": "json"
+  }
 
 - Add the generated config as a value for the environment variable ``HASURA_GRAPHQL_JWT_SECRET`` or for the ``--jwt-secret`` server flag.
 
