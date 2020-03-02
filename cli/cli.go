@@ -8,7 +8,9 @@
 package cli
 
 import (
+	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -95,6 +97,32 @@ type Config struct {
 	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
 	// ActionConfig defines the config required to create or generate codegen for an action.
 	ActionConfig types.ActionExecutionConfig `yaml:"actions"`
+
+	HasuraServerConfigAPI HasuraServerConfigAPI
+}
+
+func (c *Config) InitHasuraServerConfigAPI() error {
+	// Determine from where assets should be served
+	url := c.ServerConfig.Endpoint + "/v1alpha1/config"
+	var client = &http.Client{Timeout: 10 * time.Second}
+	r, err := client.Get(url)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	return json.NewDecoder(r.Body).Decode(&c.HasuraServerConfigAPI)
+}
+
+// HasuraServerConfig is the type returned by the v1alpha1/config API
+// TODO: Move this type to client a implementation for hasura
+type HasuraServerConfigAPI struct {
+	Version          string `json:"version,omitempty"`
+	IsAdminSecretSet bool   `json:"is_admin_secret_set,omitempty"`
+	IsAuthHookSet    bool   `json:"is_auth_hook_set,omitempty"`
+	IsJwtSet         bool   `json:"is_jwt_set,omitempty"`
+	JWT              string `json:"jwt,omitempty"`
+	ConsoleAssetsDir string `json:"console_assets_dir,omitempty"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -360,11 +388,12 @@ func (ec *ExecutionContext) Validate() error {
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	v, err := version.FetchServerVersion(ec.Config.ServerConfig.Endpoint)
+	err := ec.Config.InitHasuraServerConfigAPI()
 	if err != nil {
-		return errors.Wrap(err, "failed to get version from server")
+		return errors.Wrap(err, "failed to get config from server")
 	}
-	ec.Version.SetServerVersion(v)
+
+	ec.Version.SetServerVersion(ec.Config.HasuraServerConfigAPI.Version)
 	ec.Telemetry.ServerVersion = ec.Version.GetServerVersion()
 	isCompatible, reason := ec.Version.CheckCLIServerCompatibility()
 	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())

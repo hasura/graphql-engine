@@ -1,12 +1,10 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/gin-contrib/cors"
@@ -129,32 +127,7 @@ func (o *ConsoleOptions) Run() error {
 
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
-
-	// Determine from where assets should be served
-	getConfig := func(url string, target interface{}) error {
-		var client = &http.Client{Timeout: 10 * time.Second}
-		r, err := client.Get(url)
-		if err != nil {
-			return err
-		}
-		defer r.Body.Close()
-
-		return json.NewDecoder(r.Body).Decode(target)
-	}
-	type ServerConfig struct {
-		Version          string `json:"version,omitempty"`
-		IsAdminSecretSet bool   `json:"is_admin_secret_set,omitempty"`
-		IsAuthHookSet    bool   `json:"is_auth_hook_set,omitempty"`
-		IsJwtSet         bool   `json:"is_jwt_set,omitempty"`
-		JWT              bool   `json:"jwt,omitempty"`
-		ConsoleAssetsDir string `json:"console_assets_dir,omitempty"`
-	}
-	var config ServerConfig
-	err = getConfig(o.EC.Config.Endpoint+"/v1alpha1/config", &config)
-	if err != nil {
-		return err
-	}
-	if config.ConsoleAssetsDir != "" {
+	if ec.Config.HasuraServerConfigAPI.ConsoleAssetsDir != "" {
 		o.UseServerAssets = true
 	}
 
