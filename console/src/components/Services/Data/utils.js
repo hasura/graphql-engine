@@ -485,8 +485,9 @@ export const fetchTrackedTableRemoteRelationshipQuery = options => {
         schema: 'hdb_catalog',
         name: 'hdb_remote_relationship',
       },
-      columns: ['*.*'],
+      columns: ['*.*', 'name'],
       where: generateWhereObject(options),
+      order_by: [{ column: 'name', type: 'asc' }],
     },
   };
   return query;

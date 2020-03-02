@@ -312,6 +312,7 @@ const Relationships = ({
   readOnlyMode,
 }) => {
   useEffect(() => {
+    dispatch(resetRelationshipForm());
     dispatch(setTable(tableName));
     dispatch(fetchRemoteSchemas());
   }, []);

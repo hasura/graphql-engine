@@ -26,7 +26,7 @@ const RemoteRelationships = ({
   });
   useEffect(() => {
     dispatch(setRemoteRelationships(existingRemoteRelationships));
-  }, []);
+  }, [tableSchema]);
 
   // render list of relationships
   const relationshipList = () => {
