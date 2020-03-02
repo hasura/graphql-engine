@@ -597,7 +597,7 @@ class Schema extends Component {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
-        <KnowMoreLink href="https://docs.hasura.io/1.0/graphql/manual/queries/custom-functions.html" />
+        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/queries/custom-functions.html" />
       );
 
       return (

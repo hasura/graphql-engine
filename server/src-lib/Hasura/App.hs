@@ -388,4 +388,4 @@ telemetryNotice :: String
 telemetryNotice =
   "Help us improve Hasura! The graphql-engine server collects anonymized "
   <> "usage stats which allows us to keep improving Hasura at warp speed. "
-  <> "To read more or opt-out, visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html"
+  <> "To read more or opt-out, visit https://hasura.io/docs/1.0/graphql/manual/guides/telemetry.html"
