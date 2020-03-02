@@ -766,7 +766,7 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 		}
 
 		prev, err := m.sourceDrv.Prev(from)
-		if err != nil {
+		if os.IsNotExist(err) {
 			migr, err := m.metanewMigration(from, -1)
 			if err != nil {
 				ret <- err
@@ -782,6 +782,10 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			}
 			ret <- migr
 			go migr.Buffer()
+			return
+		} else if err != nil {
+			ret <- err
+			return
 		}
 
 		migr, err := m.metanewMigration(from, int64(prev))

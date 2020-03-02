@@ -51,7 +51,7 @@ func (a *AllowListConfig) Build(metadata *yaml.MapSlice) error {
 	item := yaml.MapItem{
 		Key: "allowlist",
 	}
-	var obj yaml.MapSlice
+	var obj []yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
 		return err

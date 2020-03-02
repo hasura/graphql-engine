@@ -6,9 +6,9 @@ ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../../)"
 
 export VERSION=$(${ROOT}/scripts/get-version.sh)
 export BUCKET_URL=https://github.com/hasura/graphql-engine/releases/download/${VERSION}
-export LINUX_SHA256=$(cat ${ROOT}/cli-ext/bin/command-linux.tar.gz.sha256 | cut -f1 -d' ')
-export MACOS_SHA256=$(cat ${ROOT}/cli-ext/bin/command-macos.tar.gz.sha256 | cut -f1 -d' ')
-export WINDOWS_SHA256=$(cat ${ROOT}/cli-ext/bin/command-win.zip.sha256 | cut -f1 -d' ')
+export LINUX_SHA256=$(cat ${ROOT}/cli-ext/bin/cli-ext-hasura-linux.tar.gz.sha256 | cut -f1 -d' ')
+export MACOS_SHA256=$(cat ${ROOT}/cli-ext/bin/cli-ext-hasura-macos.tar.gz.sha256 | cut -f1 -d' ')
+export WINDOWS_SHA256=$(cat ${ROOT}/cli-ext/bin/cli-ext-hasura-win.zip.sha256 | cut -f1 -d' ')
 
 ( echo "cat <<EOF >${ROOT}/cli-ext/bin/manifest.yaml";
   cat ${ROOT}/cli-ext/scripts/manifest.yaml;
