@@ -115,7 +115,7 @@ func (c *Config) InitHasuraServerConfigAPI() error {
 }
 
 // HasuraServerConfig is the type returned by the v1alpha1/config API
-// TODO: Move this type to client a implementation for hasura
+// TODO: Move this type to a client implementation for hasura
 type HasuraServerConfigAPI struct {
 	Version          string `json:"version,omitempty"`
 	IsAdminSecretSet bool   `json:"is_admin_secret_set,omitempty"`
