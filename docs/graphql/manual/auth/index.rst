@@ -2,8 +2,8 @@
    :description: Manage GraphQL Authentication and Authorization with Hasura
    :keywords: hasura, docs, authentication, auth, authorization
 
-GraphQL Authentication & Authorization
-======================================
+Authentication & Authorization
+==============================
 
 .. contents:: Table of contents
   :backlinks: none
