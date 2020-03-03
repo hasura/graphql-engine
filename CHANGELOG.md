@@ -1,9 +1,5 @@
 # Hasura GraphQL Engine Changelog
 
-## `v1.2.0-beta.2`
-
-- CLI: preserve action definition in metadata apply (close #3988)
-
 ## `v1.2.0-beta.1`
 
 - Introducing Actions: https://docs.hasura.io/1.0/graphql/manual/actions/index.html
