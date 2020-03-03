@@ -68,11 +68,6 @@ instance L.ToEngineLog ScheduledTriggerInternalErr L.Hasura where
   toEngineLog (ScheduledTriggerInternalErr qerr) =
     (L.LevelError, L.scheduledTriggerLogType, J.toJSON qerr)
 
-logQErr :: ( MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
-logQErr err = do
-  logger :: L.Logger L.Hasura <- asks getter
-  L.unLogger logger $ ScheduledTriggerInternalErr err
-
 scheduledEventsTable :: QualifiedTable
 scheduledEventsTable =
   QualifiedObject
@@ -233,15 +228,19 @@ processScheduledQueue logger logEnv httpMgr pgpool getSC =
       Right partialEvents ->
         for_ partialEvents $ \(ScheduledEventPartial id' name st payload tries)-> do
           case Map.lookup name scheduledTriggersInfo of
-            Nothing ->  L.unLogger logger $ ScheduledTriggerInternalErr $
+            Nothing ->  logInternalError $
               err500 Unexpected "could not find scheduled trigger in cache"
             Just stInfo@ScheduledTriggerInfo{..} -> do
               let webhook = wciCachedValue stiWebhookInfo
                   payload' = fromMaybe (fromMaybe J.Null stiPayload) payload -- override if neccessary
                   scheduledEvent = ScheduledEventFull id' name st tries webhook payload' stiRetryConf
-              runReaderT (processScheduledEvent logEnv pgpool stInfo scheduledEvent) (logger, httpMgr)
-      Left err -> L.unLogger logger $ ScheduledTriggerInternalErr err
+              finally <- runExceptT $
+                runReaderT (processScheduledEvent logEnv pgpool stInfo scheduledEvent) (logger, httpMgr)
+              either logInternalError pure finally
+      Left err -> logInternalError err
     threadDelay oneMinute
+    where
+      logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
 
 processScheduledEvent ::
   ( MonadReader r m
@@ -249,6 +248,7 @@ processScheduledEvent ::
   , Has (L.Logger L.Hasura) r
   , HasVersion
   , MonadIO m
+  , MonadError QErr m
   )
   => LogEnvHeaders
   -> Q.PGPool
@@ -258,10 +258,7 @@ processScheduledEvent ::
 processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEventFull {..} = do
   currentTime <- liftIO getCurrentTime
   if diffUTCTime currentTime sefScheduledTime > rcstTolerance stiRetryConf
-    then
-      processDead pgpool se >>= \case
-        Left err -> logQErr err
-        Right _ -> pure ()
+    then processDead pgpool se
     else do
       let timeoutSeconds = round $ rcstTimeoutSec stiRetryConf
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
@@ -270,15 +267,14 @@ processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEventF
       res <- runExceptT $ tryWebhook headers httpTimeout sefPayload (T.unpack sefWebhook)
       logHTTPForST res (Just extraLogCtx)
       let decodedHeaders = map (decodeHeader logEnv stiHeaders) headers
-      finally <- either
-                 (processError pgpool se decodedHeaders)
-                 (processSuccess pgpool se decodedHeaders)
-                 res
-      either logQErr return finally
+      either
+        (processError pgpool se decodedHeaders)
+        (processSuccess pgpool se decodedHeaders)
+        res
 
 processError
-  :: (MonadIO m)
-  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> HTTPErr a -> m (Either QErr ())
+  :: (MonadIO m, MonadError QErr m)
+  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> HTTPErr a -> m ()
 processError pgpool se decodedHeaders err = do
   let invocation = case err of
         HClient excp -> do
@@ -295,11 +291,10 @@ processError pgpool se decodedHeaders err = do
         HOther detail -> do
           let errMsg = (TBS.fromLBS $ J.encode detail)
           mkInvocation se 500 decodedHeaders errMsg []
-  liftIO $
-    runExceptT $
+  liftExceptTIO $
     Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
-      insertInvocation invocation
-      retryOrMarkError se err
+    insertInvocation invocation
+    retryOrMarkError se err
 
 retryOrMarkError :: ScheduledEventFull -> HTTPErr a -> Q.TxE QErr ()
 retryOrMarkError se@ScheduledEventFull {..} err = do
@@ -327,18 +322,17 @@ retryOrMarkError se@ScheduledEventFull {..} err = do
       |] (Identity sefId) True
 
 processSuccess
-  :: (MonadIO m)
-  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> HTTPResp a -> m (Either QErr ())
+  :: (MonadIO m, MonadError QErr m)
+  => Q.PGPool -> ScheduledEventFull -> [HeaderConf] -> HTTPResp a -> m ()
 processSuccess pgpool se decodedHeaders resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
       invocation = mkInvocation se respStatus decodedHeaders respBody respHeaders
-  liftIO $
-    runExceptT $
+  liftExceptTIO $
     Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) $ do
-      insertInvocation invocation
-      markSuccess
+    insertInvocation invocation
+    markSuccess
   where
     markSuccess =
       Q.unitQE
@@ -349,10 +343,10 @@ processSuccess pgpool se decodedHeaders resp = do
         WHERE id = $1
       |] (Identity $ sefId se) True
 
-processDead :: (MonadIO m) => Q.PGPool -> ScheduledEventFull -> m (Either QErr ())
+processDead :: (MonadIO m, MonadError QErr m) => Q.PGPool -> ScheduledEventFull -> m ()
 processDead pgpool se =
-  liftIO $
-  runExceptT $ Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) markDead
+  liftExceptTIO $
+  Q.runTx pgpool (Q.RepeatableRead, Just Q.ReadWrite) markDead
   where
     markDead =
       Q.unitQE
@@ -423,3 +417,6 @@ getScheduledEvents = do
       RETURNING id, name, scheduled_time, additional_payload, tries
       |] () True
   where uncurryEvent (i, n, st, p, tries) = ScheduledEventPartial i n st (Q.getAltJ <$> p) tries
+
+liftExceptTIO :: (MonadError e m, MonadIO m) => ExceptT e IO a -> m a
+liftExceptTIO m = liftEither =<< liftIO (runExceptT m)
