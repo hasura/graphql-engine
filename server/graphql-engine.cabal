@@ -70,7 +70,7 @@ library
                      , http-types
                      , attoparsec
                      , attoparsec-iso8601 >= 1.0
-                     , time
+                     , time >= 1.9
                      , scientific
                      , Spock-core
                      , split
@@ -93,7 +93,8 @@ library
                      -- `these >=1` is split into several different packages, but our current stack
                      -- resolver has `these <1`; when we upgrade we just need to add an extra
                      -- dependency on `semialign`
-                     , these >=0.7.1 && <0.8
+                     , these
+                     , semialign
 
                      -- Encoder related
                      , uuid

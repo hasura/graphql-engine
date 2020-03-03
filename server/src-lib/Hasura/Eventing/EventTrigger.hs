@@ -96,9 +96,8 @@ data EventEngineCtx
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
 
-defaultFetchIntervalMilliSec :: Milliseconds
+defaultFetchIntervalMilliSec :: (Milliseconds 'Absolute)
 defaultFetchIntervalMilliSec = 1000
-
 
 initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT fetchI = do

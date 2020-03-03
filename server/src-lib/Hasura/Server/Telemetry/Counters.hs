@@ -49,9 +49,9 @@ instance Hashable RequestDimensions
 -- | Accumulated time metrics.
 data RequestTimings  =
   RequestTimings {
-      telemTimeIO  :: !Seconds
+      telemTimeIO  :: !(Seconds 'Absolute)
     -- ^ Time spent waiting on PG/remote http calls
-    , telemTimeTot :: !Seconds
+    , telemTimeTot :: !(Seconds 'Absolute)
     -- ^ Total service time for request (including 'telemTimeIO')
     }
 
@@ -62,8 +62,8 @@ instance Semigroup RequestTimings where
 -- | 'RequestTimings' along with the count
 data RequestTimingsCount  =
   RequestTimingsCount {
-      telemTimeIO  :: !Seconds
-    , telemTimeTot :: !Seconds
+      telemTimeIO  :: !(Seconds 'Absolute)
+    , telemTimeTot :: !(Seconds 'Absolute)
     , telemCount   :: !Word
     -- ^ The number of requests that have contributed to the accumulated timings above.
     -- So e.g. @telemTimeTot / count@ would give the mean service time.
@@ -125,7 +125,7 @@ instance A.FromJSON Transport
 
 -- | The timings and counts here were from requests with total time longer than
 -- 'bucketGreaterThan' (but less than any larger bucket cutoff times).
-newtype RunningTimeBucket = RunningTimeBucket { bucketGreaterThan :: Seconds }
+newtype RunningTimeBucket = RunningTimeBucket { bucketGreaterThan :: Seconds 'Absolute }
   deriving (Fractional, Num, Ord, Eq, Show, Generic, A.ToJSON, A.FromJSON, Hashable)
 
 

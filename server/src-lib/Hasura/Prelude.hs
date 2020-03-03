@@ -28,8 +28,7 @@ import           Control.Monad.Identity            as M
 import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M
 import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..))
-import           Data.Align                        as M (Align (align, alignWith))
-import           Data.Align.Key                    as M (AlignWithKey (..))
+import           Data.Align                        as M (Semialign (align, alignWith))
 import           Data.Bool                         as M (bool)
 import           Data.Data                         as M (Data (..))
 import           Data.Either                       as M (lefts, partitionEithers, rights)
@@ -42,7 +41,7 @@ import           Data.HashSet                      as M (HashSet)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
-import           Data.List.NonEmpty                as M (NonEmpty(..))
+import           Data.List.NonEmpty                as M (NonEmpty (..))
 import           Data.Maybe                        as M (catMaybes, fromMaybe, isJust, isNothing,
                                                          listToMaybe, mapMaybe, maybeToList)
 import           Data.Ord                          as M (comparing)
@@ -52,13 +51,13 @@ import           Data.String                       as M (IsString)
 import           Data.Text                         as M (Text)
 import           Data.These                        as M (These (..), fromThese, mergeThese,
                                                          mergeTheseWith, these)
+import           Data.Time.Clock.Units
 import           Data.Traversable                  as M (for)
 import           Data.Word                         as M (Word64)
 import           GHC.Generics                      as M (Generic)
 import           Prelude                           as M hiding (fail, init, lookup)
 import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
-import           Data.Time.Clock.Units
 
 import qualified Data.ByteString                   as B
 import qualified Data.HashMap.Strict               as Map

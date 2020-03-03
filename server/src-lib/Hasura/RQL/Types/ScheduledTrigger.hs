@@ -12,7 +12,7 @@ module Hasura.RQL.Types.ScheduledTrigger
 
 import           Data.Time.Clock
 import           Data.Time.Clock.Units
-import           Data.Time.Format
+import           Data.Time.Format.ISO8601
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -43,7 +43,7 @@ defaultRetryConfST =
   { rcstNumRetries = 0
   , rcstIntervalSec = seconds 10
   , rcstTimeoutSec = seconds 60
-  , rcstTolerance = 21600 -- 6 hours
+  , rcstTolerance = hours 6
   }
 
 data ScheduleType = Cron CronSchedule | AdHoc (Maybe UTCTime)
@@ -123,4 +123,4 @@ $(deriveJSON (aesonDrop 2 snakeCase) ''ScheduledEventId)
 -- The Z may be replaced with a time zone offset of the form +0000 or -08:00,
 -- where the first two digits are hours, the : is optional and the second two digits (also optional) are minutes.
 formatTime' :: UTCTime -> T.Text
-formatTime'= T.pack . formatTime defaultTimeLocale "%Y-%m-%d %H:%M:%S Z"
+formatTime'= T.pack . iso8601Show
