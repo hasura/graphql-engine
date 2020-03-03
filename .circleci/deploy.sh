@@ -11,6 +11,17 @@ CHANGELOG_TEXT=""
 # reviewers for pull requests opened to update installation manifests
 REVIEWERS="shahidhk,coco98,arvi3411301"
 
+IS_STABLE_RELEASE=false
+STABLE_SEMVER_REGEX="^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+if [ ! -z "${CIRCLE_TAG}" ]; then
+    if [[ "$CIRCLE_TAG" =~ $STABLE_SEMVER_REGEX ]]; then
+        echo
+        echo "this is a stable release"
+        echo
+        IS_STABLE_RELEASE=true
+    fi
+fi
+
 changelog() {
   CHANGELOG=$(git log ${PREVIOUS_TAG}..${LATEST_TAG} --pretty="tformat:- $1: %s" --reverse -- $ROOT/$1)
   if [ -n "$CHANGELOG" ]
@@ -33,10 +44,10 @@ deploy_server() {
 }
 
 deploy_server_latest() {
-  echo "deloying server latest tag"
-  cd "$ROOT/server"
-  echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
-  make push-latest
+    echo "deloying server latest tag"
+    cd "$ROOT/server"
+    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+    make push-latest
 }
 
 draft_github_release() {
@@ -47,7 +58,7 @@ draft_github_release() {
         -r "$CIRCLE_PROJECT_REPONAME" \
         -b "${RELEASE_BODY}" \
         -draft \
-     "$CIRCLE_TAG" /build/_cli_output/binaries/
+     "$CIRCLE_TAG" /build/_cli_output/binaries/ /build/_cli_ext_output/*.tar.gz /build/_cli_ext_output/*.zip
 }
 
 configure_git() {
@@ -56,6 +67,7 @@ configure_git() {
 }
 
 send_pr_to_repo() {
+  configure_git
   git clone https://github.com/hasura/$1.git ~/$1
   cd ~/$1
   git checkout -b ${LATEST_TAG}
@@ -83,19 +95,46 @@ deploy_console() {
     unset DIST_PATH
 }
 
+deploy_cli_ext() {
+    echo "deploying extension cli"
+
+    cd "$ROOT/cli-ext"
+    export VERSION=$(../scripts/get-version.sh)
+    export DIST_PATH="/build/_cli_ext_output"
+
+    configure_git
+    git clone https://github.com/hasura/cli-plugins-index.git ~/plugins-index
+    cd ~/plugins-index
+    git checkout -b cli-ext-${LATEST_TAG}
+    cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext.yaml
+    git add .
+    git commit -m "update cli-ext manifest to ${LATEST_TAG}"
+    git push -q https://${GITHUB_TOKEN}@github.com/hasura/cli-plugins-index.git cli-ext-${LATEST_TAG}
+    hub pull-request -F- <<<"Update cli-ext manifest to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
+
+    unset VERSION
+    unset DIST_PATH
+}
+
 # build and push container for auto-migrations
 build_and_push_cli_migrations_image() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
-    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations"
     cd "$ROOT/scripts/cli-migrations"
     cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
     docker build -t "$IMAGE_TAG" .
     docker push "$IMAGE_TAG"
+}
+
+# build and push latest container for auto-migrations
+push_latest_cli_migrations_image() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
+    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations"
 
     # push latest.cli-migrations tag
     docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
     docker push "$LATEST_IMAGE_TAG"
 }
+
 
 # copy docker-compose-https manifests to gcr for digital ocean one-click app
 deploy_do_manifests() {
@@ -148,9 +187,20 @@ fi
 deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
-    deploy_server_latest
-    push_server_binary
     build_and_push_cli_migrations_image
+    deploy_cli_ext
+
+    # if this is a stable release, update all latest assets
+    if [ $IS_STABLE_RELEASE = true ]; then
+        deploy_server_latest
+        push_server_binary
+        push_latest_cli_migrations_image
+        send_pr_to_repo graphql-engine-heroku
+        deploy_do_manifests
+    fi
+
+    # submit a release draft to github
+    # build changelog
     CHANGELOG_TEXT=$(changelog server)
     CHANGELOG_TEXT+=$(changelog cli)
     CHANGELOG_TEXT+=$(changelog console)
@@ -159,7 +209,4 @@ $(<$ROOT/.circleci/release_notes.template.md)
 EOF
 ")
     draft_github_release
-    configure_git
-    send_pr_to_repo graphql-engine-heroku
-    deploy_do_manifests
 fi

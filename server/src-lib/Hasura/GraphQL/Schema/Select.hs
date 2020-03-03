@@ -62,7 +62,7 @@ mkPGColFld :: PGColumnInfo -> ObjFldInfo
 mkPGColFld colInfo =
   mkHsraObjFldInfo desc name (mkPGColParams colTy) ty
   where
-    PGColumnInfo _ name colTy isNullable pgDesc = colInfo
+    PGColumnInfo _ name _ colTy isNullable pgDesc = colInfo
     desc = (G.Description . getPGDescription) <$> pgDesc
     ty = bool notNullTy nullTy isNullable
     columnType = mkColumnType colTy
@@ -295,11 +295,8 @@ mkSelFldPKey mCustomName tn cols =
     desc = G.Description $ "fetch data from the table: " <> tn
            <<> " using primary key columns"
     fldName = fromMaybe (mkTableByPkName tn) mCustomName
-    args = fromInpValL $ map colInpVal cols
+    args = fromInpValL $ map mkColumnInputVal cols
     ty = G.toGT $ mkTableTy tn
-    colInpVal ci =
-      InpValInfo (mkDescription <$> pgiDescription ci) (pgiName ci)
-      Nothing $ G.toGT $ G.toNT $ mkColumnType $ pgiType ci
 
 {-
 

@@ -4,13 +4,13 @@ import globals from '../../../Globals';
 import endpoints from '../../../Endpoints';
 import defaultState from './State';
 import { filterInconsistentMetadataObjects } from './utils';
-import { RELOAD_METADATA_API_CHANGE } from '../../../helpers/versionUtils';
 import {
   setConsistentSchema,
   setConsistentFunctions,
   makeMigrationCall,
 } from '../Data/DataActions';
 import { setConsistentRemoteSchemas } from '../RemoteSchema/Actions';
+import { setActions } from '../Actions/reducer';
 import {
   showSuccessNotification,
   showErrorNotification,
@@ -184,6 +184,7 @@ const handleInconsistentObjects = inconsistentObjects => {
     const allSchemas = getState().tables.allSchemas;
     const functions = getState().tables.trackedFunctions;
     const remoteSchemas = getState().remoteSchemas.listData.remoteSchemas;
+    const actions = getState().actions.common.actions;
 
     dispatch({
       type: LOAD_INCONSISTENT_OBJECTS,
@@ -206,10 +207,16 @@ const handleInconsistentObjects = inconsistentObjects => {
         inconsistentObjects,
         'remote_schemas'
       );
+      const filteredActions = filterInconsistentMetadataObjects(
+        actions,
+        inconsistentObjects,
+        'actions'
+      );
 
       dispatch(setConsistentSchema(filteredSchema));
       dispatch(setConsistentFunctions(filteredFunctions));
       dispatch(setConsistentRemoteSchemas(filteredRemoteSchemas));
+      dispatch(setActions(filteredActions));
     }
   };
 };
@@ -261,11 +268,10 @@ export const loadInconsistentObjects = (
 export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
-    const { featuresCompatibility } = getState().main;
 
-    const reloadQuery = featuresCompatibility[RELOAD_METADATA_API_CHANGE]
-      ? reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery(remoteSchemaName)
-      : reloadCacheAndGetInconsistentObjectsQuery;
+    const reloadQuery = reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery(
+      remoteSchemaName
+    );
 
     dispatch({ type: LOADING_METADATA });
     return dispatch(

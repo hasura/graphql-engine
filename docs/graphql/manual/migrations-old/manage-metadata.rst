@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage Hasura metadata
+   :keywords: hasura, docs, metadata
+
 .. _manage_hasura_metadata:
 
 Managing Hasura metadata

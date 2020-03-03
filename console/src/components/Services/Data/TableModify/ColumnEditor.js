@@ -5,10 +5,6 @@ import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/Custo
 
 import { getValidAlterOptions } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import {
-  checkFeatureSupport,
-  CUSTOM_GRAPHQL_FIELDS_SUPPORT,
-} from '../../../../helpers/versionUtils';
 
 const ColumnEditor = ({
   onSubmit,
@@ -80,8 +76,6 @@ const ColumnEditor = ({
   };
 
   const getColumnCustomFieldInput = () => {
-    if (!checkFeatureSupport(CUSTOM_GRAPHQL_FIELDS_SUPPORT)) return;
-
     return (
       <div className={`${styles.display_flex} form-group`}>
         <label className={'col-xs-4'}>

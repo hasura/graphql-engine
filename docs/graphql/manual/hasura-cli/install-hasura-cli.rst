@@ -1,6 +1,6 @@
-.. .. meta::
-   :description: Installing the hasura CLI on Linux, Mac OS, Windows.
-   :keywords: hasura, hasura CLI, install, linux, mac, windows
+.. meta::
+   :description: Install the Hasura CLI on Linux, Mac OS, Windows
+   :keywords: hasura, hasura cli, install, linux, mac, windows
 
 .. _install_hasura_cli:
 
@@ -25,7 +25,7 @@ Install a binary globally
 
          .. code-block:: bash
 
-            curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | bash
+            curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
 
          This will install the Hasura CLI in ``/usr/local/bin``. You might have to provide
          your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
@@ -35,7 +35,7 @@ Install a binary globally
 
          .. code-block:: bash
 
-            curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | INSTALL_PATH=$HOME/bin bash
+            curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | INSTALL_PATH=$HOME/bin bash
 
 
 
@@ -45,7 +45,7 @@ Install a binary globally
 
          .. code-block:: bash
 
-            curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | bash
+            curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | bash
 
          This will install the Hasura CLI in ``/usr/local/bin``. You might have to provide
          your ``sudo`` password depending on the permissions of your ``/usr/local/bin`` location.
@@ -55,7 +55,7 @@ Install a binary globally
 
          .. code-block:: bash
 
-            curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | INSTALL_PATH=$HOME/bin bash
+            curl -L https://github.com/hasura/graphql-engine/raw/stable/cli/get.sh | INSTALL_PATH=$HOME/bin bash
 
      - id: windows
        content: |

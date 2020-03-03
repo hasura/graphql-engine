@@ -60,6 +60,7 @@ const defaultQueryPermissions = {
   },
   select: {
     columns: [],
+    computed_fields: [],
     filter: {},
     limit: null,
     allow_aggregations: false,
@@ -105,6 +106,7 @@ const defaultModifyState = {
       onUpdate: 'restrict',
     },
   ],
+  checkConstraintsModify: [],
   uniqueKeyModify: [[]],
   relAdd: {
     isActive: true,
@@ -169,6 +171,7 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
+  allRoles: [],
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
   trackedFunctions: [],

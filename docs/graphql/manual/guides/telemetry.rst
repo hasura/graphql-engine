@@ -1,3 +1,7 @@
+.. meta::
+   :description: Telemetry on Hasura
+   :keywords: hasura, docs, guide, telemetry
+
 .. _telemetry:
 
 Telemetry Guide/FAQ

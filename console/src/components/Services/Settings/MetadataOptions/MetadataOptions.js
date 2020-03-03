@@ -61,9 +61,7 @@ const MetadataOptions = props => {
 
   return (
     <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${
-        styles.metadata_wrapper
-      } container-fluid`}
+      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
     >
       <div className={styles.subHeader}>
         <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
@@ -75,7 +73,7 @@ const MetadataOptions = props => {
           permissions, etc. that is used to generate the GraphQL schema and
           API.&nbsp;
           <a
-            href="https://docs.hasura.io/1.0/graphql/manual/how-it-works/metadata-schema.html"
+            href="https://hasura.io/docs/1.0/graphql/manual/how-it-works/metadata-schema.html"
             target="_blank"
             rel="noopener noreferrer"
           >

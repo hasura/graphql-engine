@@ -2,7 +2,6 @@ aniso8601==7.0.0
 apipkg==1.5
 atomicwrites==1.3.0
 attrs==19.3.0
-brotlipy==0.7.0
 certifi==2019.9.11
 cffi==1.13.2
 chardet==3.0.4
@@ -15,13 +14,15 @@ idna==2.8
 importlib-metadata==0.23
 jsondiff==1.2.0
 more-itertools==7.2.0
+packaging==19.2
 pluggy==0.13.0
 promise==2.2.1
 psycopg2-binary==2.8.4
 py==1.8.0
 pycparser==2.19
 PyJWT==1.7.1
-pytest==4.5.0
+pyparsing==2.4.5
+pytest==5.3.1
 pytest-forked==1.1.3
 pytest-xdist==1.30.0
 PyYAML==5.1.2

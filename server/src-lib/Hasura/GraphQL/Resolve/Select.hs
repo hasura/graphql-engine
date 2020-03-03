@@ -5,14 +5,11 @@ module Hasura.GraphQL.Resolve.Select
   , convertFuncQuerySimple
   , convertFuncQueryAgg
   , parseColumns
-  , fromSelSet
-  , QueryRootFldAST(..)
-  , traverseQueryRootFldAST
-  , QueryRootFldUnresolved
-  , QueryRootFldResolved
-  , toPGQuery
+  , processTableSelectionSet
+  , AnnSimpleSelect
   ) where
 
+import           Control.Lens                      ((^?), _2)
 import           Data.Has
 import           Data.Parser.JSONPath
 import           Hasura.Prelude
@@ -24,7 +21,6 @@ import qualified Data.Sequence                     as Seq
 import qualified Data.Text                         as T
 import qualified Language.GraphQL.Draft.Syntax     as G
 
-import qualified Database.PG.Query                 as Q
 import qualified Hasura.RQL.DML.Select             as RS
 import qualified Hasura.SQL.DML                    as S
 
@@ -62,35 +58,35 @@ resolveComputedField
      )
   => ComputedField -> Field -> m (RS.ComputedFieldSel UnresolvedVal)
 resolveComputedField computedField fld = fieldAsPath fld $ do
-  funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq argFn
-  let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
-      argsWithTableArgument = withTableArgument funcArgs
+  funcArgs <- parseFunctionArgs argSeq argFn $ Map.lookup "args" $ _fArguments fld
+  let argsWithTableArgument = withTableArgument funcArgs
   case fieldType of
     CFTScalar scalarTy -> do
       colOpM <- argsToColOp $ _fArguments fld
       pure $ RS.CFSScalar $
         RS.ComputedFieldScalarSel qf argsWithTableArgument scalarTy colOpM
     CFTTable (ComputedFieldTable _ cols permFilter permLimit) -> do
-      let functionFrom = RS.FromFunction qf argsWithTableArgument
-      RS.CFSTable <$> fromField functionFrom cols permFilter permLimit fld
+      let functionFrom = RS.FromFunction qf argsWithTableArgument Nothing
+      RS.CFSTable RS.JASMultipleRows <$> fromField functionFrom cols permFilter permLimit fld
   where
     ComputedField _ function argSeq fieldType = computedField
     ComputedFieldFunction qf _ tableArg _ = function
     argFn = IFAUnknown
     withTableArgument resolvedArgs =
       let argsExp@(RS.FunctionArgsExp positional named) = RS.AEInput <$> resolvedArgs
+          tableRowArg = RS.AETableRow Nothing
       in case tableArg of
         FTAFirst      ->
-          RS.FunctionArgsExp (RS.AETableRow:positional) named
+          RS.FunctionArgsExp (tableRowArg:positional) named
         FTANamed argName index ->
-          RS.insertFunctionArg argName index RS.AETableRow argsExp
+          RS.insertFunctionArg argName index tableRowArg argsExp
 
-fromSelSet
+processTableSelectionSet
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
   => G.NamedType -> SelSet -> m AnnFlds
-fromSelSet fldTy flds =
+processTableSelectionSet fldTy flds =
   forM (toList flds) $ \fld -> do
     let fldName = _fName fld
     let rqlFldName = FieldName $ G.unName $ G.unAlias $ _fAlias fld
@@ -108,7 +104,7 @@ fromSelSet fldTy flds =
                 colMapping = riMapping relInfo
                 rn = riName relInfo
             if isAgg then do
-              aggSel <- fromAggField relTN colGNameMap tableFilter tableLimit fld
+              aggSel <- fromAggField (RS.FromTable relTN) colGNameMap tableFilter tableLimit fld
               return $ RS.FArr $ RS.ASAgg $ RS.AnnRelG rn colMapping aggSel
             else do
               annSel <- fromField (RS.FromTable relTN) colGNameMap tableFilter tableLimit fld
@@ -131,7 +127,7 @@ fromAggSelSet colGNameMap fldTy selSet = fmap toFields $
     case _fName f of
       "__typename" -> return $ RS.TAFExp $ G.unName $ G.unNamedType fldTy
       "aggregate"  -> RS.TAFAgg <$> convertAggFld colGNameMap fTy fSelSet
-      "nodes"      -> RS.TAFNodes <$> fromSelSet fTy fSelSet
+      "nodes"      -> RS.TAFNodes <$> processTableSelectionSet fTy fSelSet
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
 
 type TableArgs = RS.TableArgsG UnresolvedVal
@@ -158,8 +154,8 @@ parseTableArgs colGNameMap args = do
           initOrdBys = take colsLen $ toList ordBys
           initOrdByCols = flip mapMaybe initOrdBys $ \ob ->
             case obiColumn ob of
-              RS.AOCPG ci -> Just $ pgiColumn ci
-              _           -> Nothing
+              RS.AOCPG pgCol -> Just pgCol
+              _              -> Nothing
           isValid = (colsLen == length initOrdByCols)
                     && all (`elem` initOrdByCols) (toList cols)
 
@@ -179,7 +175,7 @@ fromField
   -> Field -> m AnnSimpleSelect
 fromField selFrom colGNameMap permFilter permLimitM fld = fieldAsPath fld $ do
   tableArgs <- parseTableArgs colGNameMap args
-  annFlds   <- fromSelSet (_fType fld) $ _fSelSet fld
+  annFlds   <- processTableSelectionSet (_fType fld) $ _fSelSet fld
   let unresolvedPermFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter
   let tabPerm = RS.TablePerm unresolvedPermFltr permLimitM
   strfyNum <- stringifyNum <$> asks getter
@@ -227,7 +223,7 @@ getAnnObItems f nt obj = do
       <> showNamedTy nt <> " map"
     case ordByItem of
       OBIPGCol ci -> do
-        let aobCol = f $ RS.AOCPG ci
+        let aobCol = f $ RS.AOCPG $ pgiColumn ci
         (_, enumValM) <- asEnumValM v
         ordByItemM <- forM enumValM $ \enumVal -> do
           (ordTy, nullsOrd) <- parseOrderByEnum enumVal
@@ -302,22 +298,6 @@ parseLimit v = do
 
 type AnnSimpleSel = RS.AnnSimpleSelG UnresolvedVal
 
-type PGColValMap = Map.HashMap G.Name AnnInpVal
-
-pgColValToBoolExp
-  :: (MonadReusability m, MonadError QErr m) => PGColArgMap -> PGColValMap -> m AnnBoolExpUnresolved
-pgColValToBoolExp colArgMap colValMap = do
-  colExps <- forM colVals $ \(name, val) ->
-    BoolFld <$> do
-      opExp <- AEQ True . mkParameterizablePGValue <$> asPGColumnValue val
-      colInfo <- onNothing (Map.lookup name colArgMap) $
-        throw500 $ "column name " <> showName name
-        <> " not found in column arguments map"
-      return $ AVCol colInfo [opExp]
-  return $ BoolAnd colExps
-  where
-    colVals = Map.toList colValMap
-
 fromFieldByPKey
   :: ( MonadReusability m
      , MonadError QErr m
@@ -330,7 +310,7 @@ fromFieldByPKey
   -> AnnBoolExpPartialSQL -> Field -> m AnnSimpleSel
 fromFieldByPKey tn colArgMap permFilter fld = fieldAsPath fld $ do
   boolExp <- pgColValToBoolExp colArgMap $ _fArguments fld
-  annFlds <- fromSelSet fldTy $ _fSelSet fld
+  annFlds <- processTableSelectionSet fldTy $ _fSelSet fld
   let tabFrom = RS.FromTable tn
       unresolvedPermFltr = fmapAnnBoolExp partialSQLExpToUnresolvedVal
                            permFilter
@@ -345,9 +325,9 @@ convertSelect
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => SelOpCtx -> Field -> m QueryRootFldUnresolved
+  => SelOpCtx -> Field -> m (RS.AnnSimpleSelG UnresolvedVal)
 convertSelect opCtx fld =
-  withPathK "selectionSet" $ QRFSimple <$>
+  withPathK "selectionSet" $
   fromField (RS.FromTable qt) colGNameMap permFilter permLimit fld
   where
     SelOpCtx qt _ colGNameMap permFilter permLimit = opCtx
@@ -356,9 +336,9 @@ convertSelectByPKey
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => SelPkOpCtx -> Field -> m QueryRootFldUnresolved
+  => SelPkOpCtx -> Field -> m (RS.AnnSimpleSelG UnresolvedVal)
 convertSelectByPKey opCtx fld =
-  withPathK "selectionSet" $ QRFPk <$>
+  withPathK "selectionSet" $
     fromFieldByPKey qt colArgMap permFilter fld
   where
     SelPkOpCtx qt _ permFilter colArgMap = opCtx
@@ -423,20 +403,19 @@ fromAggField
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => QualifiedTable
+  => RS.SelectFromG UnresolvedVal
   -> PGColGNameMap
   -> AnnBoolExpPartialSQL
   -> Maybe Int
   -> Field -> m AnnAggSel
-fromAggField tn colGNameMap permFilter permLimit fld = fieldAsPath fld $ do
+fromAggField selectFrom colGNameMap permFilter permLimit fld = fieldAsPath fld $ do
   tableArgs   <- parseTableArgs colGNameMap args
   aggSelFlds  <- fromAggSelSet colGNameMap (_fType fld) (_fSelSet fld)
   let unresolvedPermFltr =
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter
-  let tabFrom = RS.FromTable tn
-      tabPerm = RS.TablePerm unresolvedPermFltr permLimit
+  let tabPerm = RS.TablePerm unresolvedPermFltr permLimit
   strfyNum <- stringifyNum <$> asks getter
-  return $ RS.AnnSelG aggSelFlds tabFrom tabPerm tableArgs strfyNum
+  return $ RS.AnnSelG aggSelFlds selectFrom tabPerm tableArgs strfyNum
   where
     args = _fArguments fld
 
@@ -444,11 +423,10 @@ convertAggSelect
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
      )
-  => SelOpCtx -> Field -> m QueryRootFldUnresolved
+  => SelOpCtx -> Field -> m (RS.AnnAggSelG UnresolvedVal)
 convertAggSelect opCtx fld =
-  withPathK "selectionSet" $ QRFAgg <$>
-  fromAggField qt colGNameMap permFilter permLimit fld
-  -- return $ RS.selectAggQuerySQL selData
+  withPathK "selectionSet" $
+  fromAggField (RS.FromTable qt) colGNameMap permFilter permLimit fld
   where
     SelOpCtx qt _ colGNameMap permFilter permLimit = opCtx
 
@@ -456,12 +434,19 @@ parseFunctionArgs
   :: (MonadReusability m, MonadError QErr m)
   => Seq.Seq a
   -> (a -> InputFunctionArgument)
-  -> AnnInpVal
+  -> Maybe AnnInpVal
   -> m (RS.FunctionArgsExpG UnresolvedVal)
-parseFunctionArgs argSeq argFn val = flip withObject val $ \_ obj -> do
-  (positionalArgs, argsLeft) <- spanMaybeM (parsePositionalArg obj) argSeq
-  namedArgs <- Map.fromList . catMaybes <$> traverse (parseNamedArg obj) argsLeft
-  pure $ RS.FunctionArgsExp positionalArgs namedArgs
+parseFunctionArgs argSeq argFn = withPathK "args" . \case
+  Nothing  -> do
+    -- The input "args" field is not provided, hence resolve only known
+    -- input arguments as positional arguments
+    let positionalArgs = mapMaybe ((^? _IFAKnown._2) . argFn) $ toList argSeq
+    pure RS.emptyFunctionArgsExp{RS._faePositional = positionalArgs}
+
+  Just val -> flip withObject val $ \_ obj -> do
+    (positionalArgs, argsLeft) <- spanMaybeM (parsePositionalArg obj) argSeq
+    namedArgs <- Map.fromList . catMaybes <$> traverse (parseNamedArg obj) argsLeft
+    pure $ RS.FunctionArgsExp positionalArgs namedArgs
   where
     parsePositionalArg obj inputArg = case argFn inputArg of
       IFAKnown _ resolvedVal -> pure $ Just resolvedVal
@@ -483,17 +468,15 @@ parseFunctionArgs argSeq argFn val = flip withObject val $ \_ obj -> do
                        throw400 NotSupported "Non default arguments cannot be omitted"
                      else pure Nothing
 
-fromFuncQueryField
+makeFunctionSelectFrom
   :: (MonadReusability m, MonadError QErr m)
-  => (Field -> m s)
-  -> QualifiedFunction
+  => QualifiedFunction
   -> FunctionArgSeq
   -> Field
-  -> m (RS.AnnFnSelG s UnresolvedVal)
-fromFuncQueryField fn qf argSeq fld = fieldAsPath fld $ do
-  funcArgsM <- withArgM (_fArguments fld) "args" $ parseFunctionArgs argSeq argFn
-  let funcArgs = fromMaybe RS.emptyFunctionArgsExp funcArgsM
-  RS.AnnFnSel qf funcArgs <$> fn fld
+  -> m (RS.SelectFromG UnresolvedVal)
+makeFunctionSelectFrom qf argSeq fld = withPathK "args" $ do
+  funcArgs <- parseFunctionArgs argSeq argFn $ Map.lookup "args" $ _fArguments fld
+  pure $ RS.FromFunction qf (RS.AEInput <$> funcArgs) Nothing
   where
     argFn (IAUserProvided val)         = IFAUnknown val
     argFn (IASessionVariables argName) = IFAKnown argName UVSession
@@ -506,12 +489,13 @@ convertFuncQuerySimple
      , Has OrdByCtx r
      , Has SQLGenCtx r
      )
-  => FuncQOpCtx -> Field -> m QueryRootFldUnresolved
+  => FuncQOpCtx -> Field -> m AnnSimpleSelect
 convertFuncQuerySimple funcOpCtx fld =
-  withPathK "selectionSet" $ QRFFnSimple <$> fromFuncQueryField
-    (fromField (RS.FromTable qt) colGNameMap permFilter permLimit) qf argSeq fld
+  withPathK "selectionSet" $ fieldAsPath fld $ do
+    selectFrom <- makeFunctionSelectFrom qf argSeq fld
+    fromField selectFrom colGNameMap permFilter permLimit fld
   where
-    FuncQOpCtx qt _ colGNameMap permFilter permLimit qf argSeq = funcOpCtx
+    FuncQOpCtx qf argSeq _ colGNameMap permFilter permLimit = funcOpCtx
 
 convertFuncQueryAgg
   :: ( MonadReusability m
@@ -521,40 +505,10 @@ convertFuncQueryAgg
      , Has OrdByCtx r
      , Has SQLGenCtx r
      )
-  => FuncQOpCtx -> Field -> m QueryRootFldUnresolved
+  => FuncQOpCtx -> Field -> m AnnAggSel
 convertFuncQueryAgg funcOpCtx fld =
-  withPathK "selectionSet" $ QRFFnAgg <$> fromFuncQueryField
-    (fromAggField qt colGNameMap permFilter permLimit) qf argSeq fld
+  withPathK "selectionSet" $ fieldAsPath fld $ do
+    selectFrom <- makeFunctionSelectFrom qf argSeq fld
+    fromAggField selectFrom colGNameMap permFilter permLimit fld
   where
-    FuncQOpCtx qt _ colGNameMap permFilter permLimit qf argSeq = funcOpCtx
-
-data QueryRootFldAST v
-  = QRFPk !(RS.AnnSimpleSelG v)
-  | QRFSimple !(RS.AnnSimpleSelG v)
-  | QRFAgg !(RS.AnnAggSelG v)
-  | QRFFnSimple !(RS.AnnFnSelSimpleG v)
-  | QRFFnAgg !(RS.AnnFnSelAggG v)
-  deriving (Show, Eq)
-
-type QueryRootFldUnresolved = QueryRootFldAST UnresolvedVal
-type QueryRootFldResolved = QueryRootFldAST S.SQLExp
-
-traverseQueryRootFldAST
-  :: (Applicative f)
-  => (a -> f b)
-  -> QueryRootFldAST a
-  -> f (QueryRootFldAST b)
-traverseQueryRootFldAST f = \case
-  QRFPk s       -> QRFPk <$> RS.traverseAnnSimpleSel f s
-  QRFSimple s   -> QRFSimple <$> RS.traverseAnnSimpleSel f s
-  QRFAgg s      -> QRFAgg <$> RS.traverseAnnAggSel f s
-  QRFFnSimple s -> QRFFnSimple <$> RS.traverseAnnFnSimple f s
-  QRFFnAgg s    -> QRFFnAgg <$> RS.traverseAnnFnAgg f s
-
-toPGQuery :: QueryRootFldResolved -> Q.Query
-toPGQuery = \case
-  QRFPk s       -> RS.selectQuerySQL True s
-  QRFSimple s   -> RS.selectQuerySQL False s
-  QRFAgg s      -> RS.selectAggQuerySQL s
-  QRFFnSimple s -> RS.mkFuncSelectSimple s
-  QRFFnAgg s    -> RS.mkFuncSelectAgg s
+    FuncQOpCtx qf argSeq _ colGNameMap permFilter permLimit = funcOpCtx

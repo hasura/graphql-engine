@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura API reference
+   :keywords: hasura, docs, API, API reference
+
 .. _api-reference:
 
 API Reference
@@ -11,23 +15,25 @@ API Reference
 Available APIs
 --------------
 
-+-----------------+----------------------------------------+------------------+
-| API             | Endpoint                               | Access           |
-+=================+========================================+==================+
-| GraphQL         | :ref:`/v1/graphql <graphql_api>`       | Permission rules |
-+-----------------+----------------------------------------+------------------+
-| Legacy GraphQL  | :ref:`/v1alpha1/graphql <graphql_api>` | Permission rules |
-+-----------------+----------------------------------------+------------------+
-| Schema/Metadata | :ref:`/v1/query <schema_metadata_api>` | Admin only       |
-+-----------------+----------------------------------------+------------------+
-| Version         | :ref:`/v1/version <version_api>`       | Public           |
-+-----------------+----------------------------------------+------------------+
-| Health          | :ref:`/healthz <health_api>`           | Public           |
-+-----------------+----------------------------------------+------------------+
-| PG Dump         | :ref:`/v1alpha1/pg_dump <pg_dump_api>` | Admin only       |
-+-----------------+----------------------------------------+------------------+
-| Config          | :ref:`/v1alpha1/config <config_api>`   | Admin only       |
-+-----------------+----------------------------------------+------------------+
++-----------------+-----------------------------------------+------------------+
+| API             | Endpoint                                | Access           |
++=================+=========================================+==================+
+| GraphQL         | :ref:`/v1/graphql <graphql_api>`        | Permission rules |
++-----------------+-----------------------------------------+------------------+
+| Legacy GraphQL  | :ref:`/v1alpha1/graphql <graphql_api>`  | Permission rules |
++-----------------+-----------------------------------------+------------------+
+| Schema/Metadata | :ref:`/v1/query <schema_metadata_api>`  | Admin only       |
++-----------------+-----------------------------------------+------------------+
+| Version         | :ref:`/v1/version <version_api>`        | Public           |
++-----------------+-----------------------------------------+------------------+
+| Health          | :ref:`/healthz <health_api>`            | Public           |
++-----------------+-----------------------------------------+------------------+
+| PG Dump         | :ref:`/v1alpha1/pg_dump <pg_dump_api>`  | Admin only       |
++-----------------+-----------------------------------------+------------------+
+| Config          | :ref:`/v1alpha1/config <config_api>`    | Admin only       |
++-----------------+-----------------------------------------+------------------+
+| Explain         | :ref:`/v1/graphql/explain <explain_api>`| Admin only       |
++-----------------+-----------------------------------------+------------------+
 
 .. _graphql_api:
 
@@ -55,24 +61,18 @@ See details at :doc:`schema-metadata-api/index`.
 Version API
 ^^^^^^^^^^^
 
-A ``GET`` request to the public ``/v1/version`` endpoint responds with the current server version
-in JSON format:
+The ``/v1/version`` is a public endpoint that responds with the current server version in JSON format.
 
-.. code-block:: js
-
-   {"version": "v1.0.0-alpha01"}
+See details at :doc:`version`.
 
 .. _health_api:
 
 Health check API
 ^^^^^^^^^^^^^^^^
 
-A ``GET`` request to the public ``/healthz`` endpoint will respond with ``200``
-if the GraphQL engine is ready to serve requests and there are no inconsistencies
-with the metadata. The response will be ``500`` if there are metadata
-inconsistencies and you should use the console or check the server logs to find
-out what the errors are.
+The ``/healthz`` is a public endpoint that returns the server health status.
 
+See details at :doc:`health`.
 
 .. _pg_dump_api:
 
@@ -96,6 +96,16 @@ configuration.
 
 See details at :doc:`config`.
 
+.. _explain_api:
+
+Explain API
+^^^^^^^^^^^
+
+``v1/graphql/explain`` returns the Postgres plan for a query or subscription based
+on the defined permissions.
+
+See details at :doc:`explain`.
+
 Supported PostgreSQL types
 --------------------------
 You can refer to the following to know about all PostgreSQL types supported by the Hasura GraphQL engine:
@@ -108,6 +118,9 @@ You can refer to the following to know about all PostgreSQL types supported by t
 
   GraphQL API <graphql-api/index>
   Schema / Metadata APIs <schema-metadata-api/index>
+  Version API <version>
+  Health check API <health>
   PG Dump API <pgdump>
   Config API <config>
+  Explain API <explain>
   Supported PostgreSQL types <postgresql-types>

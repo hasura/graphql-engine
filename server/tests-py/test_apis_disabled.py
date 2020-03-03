@@ -2,6 +2,7 @@
 
 import pytest
 from validate import check_query, check_query_f
+from context import PytestConf
 
 def check_post_404(hge_ctx,url):
    return check_query(hge_ctx, {
@@ -10,8 +11,10 @@ def check_post_404(hge_ctx,url):
      'query': {}
    })[0]
 
+metadata_api_disabled = PytestConf.config.getoption("--test-metadata-disabled")
+graphql_api_disabled = PytestConf.config.getoption("--test-graphql-disabled")
 
-@pytest.mark.skipif(not pytest.config.getoption("--test-metadata-disabled"),
+@pytest.mark.skipif(not metadata_api_disabled,
                     reason="flag --test-metadata-disabled is not set. Cannot run tests for metadata disabled")
 class TestMetadataDisabled:
 
@@ -24,19 +27,17 @@ class TestMetadataDisabled:
     def test_metadata_api_1_disabled(self, hge_ctx):
         check_post_404(hge_ctx,'/api/1/table/foo/select')
 
+    def test_graphql_explain_disabled(self, hge_ctx):
+        check_post_404(hge_ctx, '/v1/graphql/explain')
 
-@pytest.mark.skipif(not pytest.config.getoption("--test-graphql-disabled"),
+@pytest.mark.skipif(not graphql_api_disabled,
                     reason="--test-graphql-disabled is not set. Cannot run GraphQL disabled tests")
 class TestGraphQLDisabled:
 
     def test_graphql_endpoint_disabled(self, hge_ctx):
         check_post_404(hge_ctx, '/v1/graphql')
 
-    def test_graphql_explain_disabled(self, hge_ctx):
-        check_post_404(hge_ctx, '/v1/graphql/explain')
-
-
-@pytest.mark.skipif(pytest.config.getoption("--test-graphql-disabled"),
+@pytest.mark.skipif(graphql_api_disabled,
                     reason="--test-graphql-disabled is set. Cannot run GraphQL enabled tests")
 class TestGraphQLEnabled:
 
@@ -44,7 +45,7 @@ class TestGraphQLEnabled:
         check_query_f(hge_ctx, "queries/graphql_introspection/introspection_only_kind_of_queryType.yaml")
 
 
-@pytest.mark.skipif(pytest.config.getoption("--test-metadata-disabled"),
+@pytest.mark.skipif(metadata_api_disabled,
                     reason="--test-metadata-disabled is set. Cannot run metadata enabled tests")
 class TestMetadataEnabled:
 

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import * as tooltip from './Tooltips';
 import { TOGGLE_ENABLE_MANUAL_CONFIG } from './AddActions';
+import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 
 const Operations = ({
   enableManual,
@@ -56,15 +57,7 @@ const Operations = ({
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
           &nbsp;&nbsp;
-          <a
-            href="https://docs.hasura.io/1.0/graphql/manual/event-triggers/invoke-trigger-console.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <small>
-              <i>(Know more)</i>
-            </small>
-          </a>
+          <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html" />
         </span>
       ),
     };
