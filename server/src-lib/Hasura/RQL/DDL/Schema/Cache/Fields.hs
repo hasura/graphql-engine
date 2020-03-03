@@ -34,31 +34,19 @@ addNonColumnFields
      , [CatalogComputedField]
      ) `arr` FieldInfoMap FieldInfo
 addNonColumnFields = proc (rawTableInfo, columns, relationships, computedFields) -> do
-  let foreignKeys = _tciForeignKeys <$> rawTableInfo
-  relationshipInfos <-
-    (| Inc.keyed (\_ relationshipsByName -> do
-         maybeRelationship <- noDuplicates mkRelationshipMetadataObject -< relationshipsByName
-         (\info -> join info >- returnA) <-<
-           (| traverseA (\relationship -> do
-                info <- buildRelationship -< (foreignKeys, relationship)
-                returnA -< info <&> (, mkRelationshipMetadataObject relationship))
-           |) maybeRelationship)
-    |) (M.groupOn _crRelName relationships)
-
-  let trackedTableNames = HS.fromList $ M.keys rawTableInfo
-  computedFieldInfos <-
-    (| Inc.keyed (\_ computedFieldsByName -> do
-         maybeComputedField <- noDuplicates mkComputedFieldMetadataObject -< computedFieldsByName
-         (\info -> join info >- returnA) <-<
-           (| traverseA (\computedField -> do
-                info <- buildComputedField -< (trackedTableNames, computedField)
-                returnA -< info <&> (, mkComputedFieldMetadataObject computedField))
-           |) maybeComputedField)
-    |) (M.groupOn (_afcName . _cccComputedField) computedFields)
+  relationshipInfos
+    <- buildInfoMapPreservingMetadata _crRelName mkRelationshipMetadataObject buildRelationship
+    -< (_tciForeignKeys <$> rawTableInfo, relationships)
+  computedFieldInfos
+    <- buildInfoMapPreservingMetadata
+         (_afcName . _cccComputedField)
+         mkComputedFieldMetadataObject
+         buildComputedField
+    -< (HS.fromList $ M.keys rawTableInfo, computedFields)
 
   let mapKey f = M.fromList . map (first f) . M.toList
-      relationshipFields = mapKey fromRel $ M.catMaybes relationshipInfos
-      computedFieldFields = mapKey fromComputedField $ M.catMaybes computedFieldInfos
+      relationshipFields = mapKey fromRel relationshipInfos
+      computedFieldFields = mapKey fromComputedField computedFieldInfos
 
   -- First, check for conflicts between non-column fields, since we can raise a better error
   -- message in terms of the two metadata objects that define them.

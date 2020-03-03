@@ -8,7 +8,7 @@ Click on the following button to deploy GraphQL Engine on Heroku with the free P
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-Checkout [docs](https://docs.hasura.io/1.0/graphql/manual/deployment/index.html) for other deployment options.
+Checkout [docs](https://hasura.io/docs/1.0/graphql/manual/deployment/index.html) for other deployment options.
 
 
 ###  Setup `netlify-cli`

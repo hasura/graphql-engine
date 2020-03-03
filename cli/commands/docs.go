@@ -25,8 +25,9 @@ func NewDocsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "Generate CLI docs in various formats",
 		Hidden:       true,
 		SilenceUsage: true,
-		PreRun: func(cmd *cobra.Command, args []string) {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = viper.New()
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			err = os.MkdirAll(docDirectory, os.ModePerm)

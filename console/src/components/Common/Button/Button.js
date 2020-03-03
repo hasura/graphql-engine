@@ -10,7 +10,7 @@ import styles from '../Common.scss';
 */
 
 const Button = props => {
-  const { children, size, color, className } = props;
+  const { children, size, color, className, type = 'button' } = props;
   let extendedClassName = `${className || ''} btn ${
     size ? `btn-${size} ` : 'button '
   }`;
@@ -32,7 +32,7 @@ const Button = props => {
       break;
   }
   return (
-    <button {...props} className={extendedClassName}>
+    <button {...props} className={extendedClassName} type={type}>
       {children}
     </button>
   );

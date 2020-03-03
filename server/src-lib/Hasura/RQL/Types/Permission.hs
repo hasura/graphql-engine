@@ -28,7 +28,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
                                              unNonEmptyText)
 import           Hasura.Server.Utils        (adminSecretHeader, deprecatedAccessKeyHeader,
-                                             userRoleHeader)
+                                             isUserVar, userRoleHeader)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query          as Q
@@ -65,9 +65,6 @@ type SessVarVal = Text
 newtype UserVars
   = UserVars { unUserVars :: Map.HashMap SessVar SessVarVal}
   deriving (Show, Eq, FromJSON, ToJSON, Hashable)
-
-isUserVar :: T.Text -> Bool
-isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
 
 -- returns Nothing if x-hasura-role is an empty string
 roleFromVars :: UserVars -> Maybe RoleName

@@ -353,6 +353,45 @@ jobs:
         root: /build
         paths:
           - _cli_output
+  
+  test_and_build_cli_ext:
+    docker:
+    - image: hasura/graphql-engine-extension-cli-builder:20200225
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - restore_cache:
+        key:
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: cli-ext
+        command: make ci-deps
+    - save_cache:
+        key:
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+        paths:
+        - cli-ext/node_modules
+        - ~/.npm
+        - ~/.cache
+    - run:
+        name: build extension cli
+        working_directory: cli-ext
+        command: |
+          npm install -g pkg
+          npm run build
+          make deploy
+          make ci-copy-assets
+    - store_artifacts:
+        path: /build/_cli_ext_output
+        destination: cli_ext
+    - persist_to_workspace:
+        root: /build
+        paths:
+          - _cli_ext_output
 
   # build console assets
   build_console:
@@ -446,10 +485,11 @@ jobs:
   # test server upgrade from last version to current build
   test_server_upgrade:
     docker:
-    - image: hasura/graphql-engine-upgrade-tester:v0.4
+    # Using the image for pytests, since server upgrade tests are now a bunch of pytests
+    - image: hasura/graphql-engine-server-builder:2020-01-14
       environment:
         HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
-    - image: circleci/postgres:10-alpine
+    - image: circleci/postgres:11-alpine-postgis
       environment:
         POSTGRES_USER: gql_test
         POSTGRES_DB: gql_test
@@ -460,8 +500,15 @@ jobs:
     - *skip_job_on_ciignore
     - checkout
     - run:
+        name: install_necessary_packages
+        command: |
+          apt-get update
+          apt install -y curl procps
+    - run:
         name: upgrade_test
         command: .circleci/server-upgrade/run.sh
+        environment:
+          HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
     - store_artifacts:
         path: /build/_server_output
         destination: server
@@ -485,6 +532,10 @@ workflows:
   workflow_v20200120:
     jobs:
     - check_build_worthiness: *filter_only_vtags
+    - test_and_build_cli_ext:
+        <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
     - build_console:
         <<: *filter_only_vtags
         requires:
@@ -492,6 +543,11 @@ workflows:
     - build_server:
         <<: *filter_only_vtags
         requires:
+        - check_build_worthiness
+    - test_cli_with_last_release:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_cli_ext
         - check_build_worthiness
     - build_image:
         <<: *filter_only_vtags
@@ -536,13 +592,10 @@ workflows:
         - test_server_pg_9.5
         - server_unit_tests
         - test_server_upgrade
-    - test_cli_with_last_release:
-        <<: *filter_only_vtags
-        requires:
-        - check_build_worthiness
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
+        - test_and_build_cli_ext
         - build_server
     - test_console:
         <<: *filter_only_vtags

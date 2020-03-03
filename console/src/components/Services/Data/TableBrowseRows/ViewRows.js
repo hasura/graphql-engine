@@ -638,7 +638,7 @@ const ViewRows = ({
             count={count}
             tableName={curTableName}
             offset={offset}
-            urlQuery={location.query}
+            urlQuery={location && location.query}
           />
         );
       }
