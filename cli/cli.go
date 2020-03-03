@@ -461,12 +461,19 @@ func (ec *ExecutionContext) readConfig() error {
 			},
 		},
 	}
+
+	err = ec.Config.ServerConfig.ParseEndpoint()
+	if err != nil {
+		return errors.Wrap(err, "error parsing endpoint")
+	}
+
 	// this populates the ec.Config.ServerConfig.HasuraServerInternalConfig
 	err = ec.Config.ServerConfig.GetHasuraInternalServerConfig()
 	if err != nil {
 		return errors.Wrap(err, "cannot get config information from server")
 	}
-	return ec.Config.ServerConfig.ParseEndpoint()
+
+	return nil
 }
 
 // setupSpinner creates a default spinner if the context does not already have
