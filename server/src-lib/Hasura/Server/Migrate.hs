@@ -2,7 +2,7 @@
 --
 -- To add a new migration:
 --
---   1. Bump the catalog version number in "Hasura.Server.Migrate.Version".
+--   1. Bump the catalog version number in @src-rsr/catalog_version.txt@.
 --   2. Add a migration script in the @src-rsr/migrations/@ directory with the name
 --      @<old version>_to_<new version>.sql@.
 --   3. Create a downgrade script in the @src-rsr/migrations/@ directory with the name
@@ -137,7 +137,7 @@ migrateCatalog migrationTime = do
             permissionsMessage =
               "pgcrypto extension is required, but the current user doesn’t have permission to"
               <> " create it. Please grant superuser permission, or setup the initial schema via"
-              <> " https://docs.hasura.io/1.0/graphql/manual/deployment/postgres-permissions.html"
+              <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
 
     -- migrates an existing catalog to the latest version from an existing verion
     migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
