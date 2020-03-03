@@ -2,8 +2,8 @@
    :description: Manage authorization with Hasura
    :keywords: hasura, docs, authorization, auth
 
-GraphQL Authorization / Access control
-======================================
+Authorization / Access control
+==============================
 
 .. contents:: Table of contents
   :backlinks: none

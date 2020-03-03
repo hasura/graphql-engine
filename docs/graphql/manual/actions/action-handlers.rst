@@ -46,13 +46,14 @@ response type. The HTTP status code must be ``2xx`` for a successful response.
 Returning an error response
 ---------------------------
 
-To return an error response, you must send back an error object or a list of
-error objects. An error object looks like:
+To return an error response, you must send back an error object.
+An error object looks like:
 
 .. code-block:: json
 
     {
-      "message": "<error message>"
+      "message": "<mandatory error message>",
+      "code": "<optional error code>"
     }
 
 The HTTP status code must be ``4xx`` for an error response.

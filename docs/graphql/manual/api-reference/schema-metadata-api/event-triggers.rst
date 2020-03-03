@@ -77,7 +77,7 @@ Args syntax
      - Name of the event trigger
    * - table
      - true
-     - [ :ref:`QualifiedTable <QualifiedTable>` ]
+     - :ref:`QualifiedTable <QualifiedTable>`
      - Object with table name and schema
    * - webhook
      - true
