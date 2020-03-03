@@ -136,5 +136,5 @@ Using tools like ``curl`` you can easily integrate the metadata API requests for
 actions with your CI/CD workflows.
 
 In case you need an automated way of applying/importing the metadata, take a
-look at the :doc:`CLI-Migrations <./advanced/auto-apply-migrations>` Docker image, which
+look at the :doc:`CLI-Migrations <auto-apply-migrations>` Docker image, which
 can start the GraphQL engine after automatically importing a mounted metadata file.

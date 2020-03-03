@@ -36,6 +36,7 @@ Advanced use cases
 - :doc:`advanced/auto-apply-migrations`
 - :doc:`advanced/writing-migrations-manually`
 - :doc:`advanced/rolling-back-migrations`
+- :doc:`advanced/seed-data-migration`
 - :doc:`advanced/collaboration`
 
 Reference documentation

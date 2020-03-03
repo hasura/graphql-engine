@@ -13,5 +13,3 @@ Migrations advanced use cases
   rolling-back-migrations
   seed-data-migration
   collaboration
-
-  

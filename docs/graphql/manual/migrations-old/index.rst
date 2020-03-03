@@ -1,4 +1,8 @@
-.. _migrations_old:
+.. meta::
+   :description: Manage Hasura migrations and metadata
+   :keywords: hasura, docs, migration, metadata
+
+.. _migrations:
 
 Migrations & Metadata
 =====================
