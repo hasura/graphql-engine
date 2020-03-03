@@ -24,6 +24,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/telemetry"
 	"github.com/hasura/graphql-engine/cli/util"
@@ -91,19 +92,14 @@ func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 	if err != nil {
 		return err
 	}
-	type apiError struct {
-		ErrorMessage string `json:"error"`
-		Code         string `json:"code"`
-	}
 	if r.StatusCode != http.StatusOK {
-		var apierror apiError
-		err := json.NewDecoder(r.Body).Decode(&apierror)
+		var horror hasuradb.HasuraError
+		err := json.NewDecoder(r.Body).Decode(&horror)
 		if err != nil {
 			return fmt.Errorf("error fetching server config")
 		}
 
-		return fmt.Errorf("error fetching server config: %v", apierror.ErrorMessage)
-
+		return fmt.Errorf("error fetching server config: %v", horror.CMDError())
 	}
 	defer r.Body.Close()
 
