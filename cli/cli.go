@@ -8,7 +8,9 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -77,10 +79,31 @@ type ServerConfig struct {
 func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 	// Determine from where assets should be served
 	url := c.Endpoint + "/v1alpha1/config"
-	var client = &http.Client{Timeout: 10 * time.Second}
-	r, err := client.Get(url)
+	client := http.Client{Timeout: 30 * time.Second}
+	req, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
+	if c.AdminSecret != "" {
+		req.Header.Set("x-hasura-admin-secret", c.AdminSecret)
+	}
+	if err != nil {
+		return errors.Wrap(err, "error fetching config from server")
+	}
+	r, err := client.Do(req)
 	if err != nil {
 		return err
+	}
+	type apiError struct {
+		ErrorMessage string `json:"error"`
+		Code         string `json:"code"`
+	}
+	if r.StatusCode != http.StatusOK {
+		var apierror apiError
+		err := json.NewDecoder(r.Body).Decode(&apierror)
+		if err != nil {
+			return fmt.Errorf("error fetching server config")
+		}
+
+		return fmt.Errorf("error fetching server config: %v", apierror.ErrorMessage)
+
 	}
 	defer r.Body.Close()
 
