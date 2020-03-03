@@ -52,7 +52,7 @@ An error object looks like:
 .. code-block:: json
 
     {
-      "message": "<mandatory error message>"
+      "message": "<mandatory error message>",
       "code": "<optional error code>"
     }
 
