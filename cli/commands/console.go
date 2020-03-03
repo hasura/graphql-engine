@@ -127,7 +127,7 @@ func (o *ConsoleOptions) Run() error {
 
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
-	if ec.Config.ServerConfig.HasuraServerInternalConfig.ConsoleAssetsDir != "" {
+	if o.EC.Config.ServerConfig.HasuraServerInternalConfig.ConsoleAssetsDir != "" {
 		o.UseServerAssets = true
 	}
 
