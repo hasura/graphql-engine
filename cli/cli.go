@@ -70,7 +70,32 @@ type ServerConfig struct {
 	// AdminSecret (optional) Admin secret required to query the endpoint
 	AdminSecret string `yaml:"admin_secret,omitempty"`
 
-	ParsedEndpoint *url.URL `yaml:"-"`
+	ParsedEndpoint             *url.URL                   `yaml:"-"`
+	HasuraServerInternalConfig HasuraServerInternalConfig `yaml:"-"`
+}
+
+func (c *ServerConfig) GetHasuraInternalServerConfig() error {
+	// Determine from where assets should be served
+	url := c.Endpoint + "/v1alpha1/config"
+	var client = &http.Client{Timeout: 10 * time.Second}
+	r, err := client.Get(url)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+
+	return json.NewDecoder(r.Body).Decode(&c.HasuraServerInternalConfig)
+}
+
+// HasuraServerConfig is the type returned by the v1alpha1/config API
+// TODO: Move this type to a client implementation for hasura
+type HasuraServerInternalConfig struct {
+	Version          string `json:"version"`
+	IsAdminSecretSet bool   `json:"is_admin_secret_set"`
+	IsAuthHookSet    bool   `json:"is_auth_hook_set"`
+	IsJwtSet         bool   `json:"is_jwt_set"`
+	JWT              string `json:"jwt"`
+	ConsoleAssetsDir string `json:"console_assets_dir"`
 }
 
 // ParseEndpoint ensures the endpoint is valid.
@@ -97,32 +122,6 @@ type Config struct {
 	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
 	// ActionConfig defines the config required to create or generate codegen for an action.
 	ActionConfig types.ActionExecutionConfig `yaml:"actions"`
-
-	HasuraServerConfigAPI HasuraServerConfigAPI
-}
-
-func (c *Config) InitHasuraServerConfigAPI() error {
-	// Determine from where assets should be served
-	url := c.ServerConfig.Endpoint + "/v1alpha1/config"
-	var client = &http.Client{Timeout: 10 * time.Second}
-	r, err := client.Get(url)
-	if err != nil {
-		return err
-	}
-	defer r.Body.Close()
-
-	return json.NewDecoder(r.Body).Decode(&c.HasuraServerConfigAPI)
-}
-
-// HasuraServerConfig is the type returned by the v1alpha1/config API
-// TODO: Move this type to a client implementation for hasura
-type HasuraServerConfigAPI struct {
-	Version          string `json:"version,omitempty"`
-	IsAdminSecretSet bool   `json:"is_admin_secret_set,omitempty"`
-	IsAuthHookSet    bool   `json:"is_auth_hook_set,omitempty"`
-	IsJwtSet         bool   `json:"is_jwt_set,omitempty"`
-	JWT              string `json:"jwt,omitempty"`
-	ConsoleAssetsDir string `json:"console_assets_dir,omitempty"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -388,12 +387,7 @@ func (ec *ExecutionContext) Validate() error {
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	err := ec.Config.InitHasuraServerConfigAPI()
-	if err != nil {
-		return errors.Wrap(err, "failed to get config from server")
-	}
-
-	ec.Version.SetServerVersion(ec.Config.HasuraServerConfigAPI.Version)
+	ec.Version.SetServerVersion(ec.Config.ServerConfig.HasuraServerInternalConfig.Version)
 	ec.Telemetry.ServerVersion = ec.Version.GetServerVersion()
 	isCompatible, reason := ec.Version.CheckCLIServerCompatibility()
 	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
@@ -448,6 +442,7 @@ func (ec *ExecutionContext) readConfig() error {
 	if adminSecret == "" {
 		adminSecret = v.GetString("access_key")
 	}
+
 	ec.Config = &Config{
 		Version: ConfigVersion(v.GetInt("version")),
 		ServerConfig: ServerConfig{
@@ -465,6 +460,11 @@ func (ec *ExecutionContext) readConfig() error {
 				URI:       v.GetString("actions.codegen.uri"),
 			},
 		},
+	}
+	// this populates the ec.Config.ServerConfig.HasuraServerInternalConfig
+	err = ec.Config.ServerConfig.GetHasuraInternalServerConfig()
+	if err != nil {
+		return errors.Wrap(err, "cannot get config information from server")
 	}
 	return ec.Config.ServerConfig.ParseEndpoint()
 }
