@@ -1,5 +1,5 @@
-Connecting actions with the rest of the graph
-=============================================
+Connecting actions with the graph
+=================================
 
 .. contents:: Table of contents
   :backlinks: none
