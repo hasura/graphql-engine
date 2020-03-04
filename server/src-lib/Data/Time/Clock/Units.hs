@@ -51,6 +51,7 @@ module Data.Time.Clock.Units
   , Microseconds(..)
   , Nanoseconds(..)
   -- * Converting between units
+  , Duration
   , Duration'(..)
   , DurationType(..)
   , fromUnits
