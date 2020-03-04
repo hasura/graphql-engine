@@ -70,10 +70,7 @@ class DragFoldTable extends Component {
     const cols = columns.map(col => ({
       ...col,
       Header: (
-        <div
-          className="draggable-header"
-          style={{ display: 'flex', justifyContent: 'space-between' }}
-        >
+        <div className={`draggable-header ${styles.flex_space_between}`}>
           {col.Header && (
             <Fragment>
               {col.Header}
@@ -81,7 +78,7 @@ class DragFoldTable extends Component {
                 className={styles.tableHeaderCell}
                 title="Drag column to rearrange"
               >
-                <i className="fa fa-bars" style={{ right: '20px' }} />
+                <i className={`fa fa-bars ${styles.right20}`} />
               </span>
             </Fragment>
           )}
