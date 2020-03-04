@@ -82,16 +82,21 @@ func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 	url := c.Endpoint + "/v1alpha1/config"
 	client := http.Client{Timeout: 30 * time.Second}
 	req, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
-	if c.AdminSecret != "" {
-		req.Header.Set("x-hasura-admin-secret", c.AdminSecret)
-	}
 	if err != nil {
 		return errors.Wrap(err, "error fetching config from server")
 	}
+
+	const XHasuraAdminSecret = "x-hasura-admin-secret"
+	if c.AdminSecret != "" {
+		req.Header.Set(XHasuraAdminSecret, c.AdminSecret)
+	}
+
 	r, err := client.Do(req)
 	if err != nil {
 		return err
 	}
+	defer r.Body.Close()
+
 	if r.StatusCode != http.StatusOK {
 		var horror hasuradb.HasuraError
 		err := json.NewDecoder(r.Body).Decode(&horror)
@@ -101,7 +106,6 @@ func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 
 		return fmt.Errorf("error fetching server config: %v", horror.CMDError())
 	}
-	defer r.Body.Close()
 
 	return json.NewDecoder(r.Body).Decode(&c.HasuraServerInternalConfig)
 }
