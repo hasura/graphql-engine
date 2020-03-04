@@ -199,7 +199,7 @@ const ViewRows = ({
       Header: (
         <div className={styles.tableCenterContent}>
           <input
-            className={styles.inputCheckbox}
+            className={`${styles.inputCheckbox} ${styles.add_mar_bottom_2}`}
             style={{ marginBottom: '2px' }}
             checked={
               curRows.length > 0 && selectedRows.length === curRows.length
@@ -954,10 +954,7 @@ const ViewRows = ({
       {getFilterQuery()}
       <div className={`row ${styles.add_mar_top}`}>
         {selectedRows.length > 0 && (
-          <div
-            className={`${styles.display_flex}`}
-            style={{ paddingLeft: '18px' }}
-          >
+          <div className={`${styles.display_flex} ${styles.add_padd_left_18}`}>
             <b className={styles.padd_small_right}>Selected:</b>
             {selectedRows.length}
             <button
