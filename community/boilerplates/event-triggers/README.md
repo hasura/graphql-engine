@@ -24,7 +24,7 @@ Note: *If you want to add support for other platforms, please submit a PR or cre
 ## Setup Postgres + Hasura GraphQL engine
 This boilerplate code assumes that you already have a HGE instance running.
 
-If not you can visit the [docs](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) and setup Postgres + HGE.
+If not you can visit the [docs](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) and setup Postgres + HGE.
 
 ## Deploying the boilerplate examples
 
