@@ -15,6 +15,7 @@ export const TypedInput = ({
   onChange,
   onFocus,
   prevValue,
+  hasDefault,
 }) => {
   const {
     column_name: colName,
@@ -23,7 +24,6 @@ export const TypedInput = ({
   } = col;
 
   const isAutoIncrement = isColumnAutoIncrement(col);
-  const hasDefault = colDefault && colDefault.trim() !== '';
   const placeHolder = hasDefault ? colDefault : getPlaceholder(colType);
   const getDefaultValue = () => {
     if (prevValue) return prevValue;

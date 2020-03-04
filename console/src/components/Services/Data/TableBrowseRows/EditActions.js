@@ -11,8 +11,9 @@ import {
   generateTableDef,
   getColumnType,
   getTableColumn,
-  enumColumnMapping,
+  getEnumColumnMappings,
 } from '../../../Common/utils/pgUtils';
+import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';
@@ -133,7 +134,11 @@ const fetchEnumOptions = () => {
       tables: { allSchemas, currentTable, currentSchema },
     } = getState();
 
-    const requests = enumColumnMapping(allSchemas, currentTable, currentSchema);
+    const requests = getEnumColumnMappings(
+      allSchemas,
+      currentTable,
+      currentSchema
+    );
 
     if (!requests) return;
 
@@ -145,16 +150,8 @@ const fetchEnumOptions = () => {
     const url = Endpoints.query;
 
     requests.forEach(request => {
-      const req = {
-        type: 'select',
-        args: {
-          table: {
-            name: request.enumTableName,
-            schema: currentSchema,
-          },
-          columns: [request.enumColumnName],
-        },
-      };
+      const req = getEnumOptionsQuery(request, currentSchema);
+
       return dispatch(
         requestAction(url, {
           ...options,

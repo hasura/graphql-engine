@@ -209,3 +209,16 @@ export const getDropComputedFieldQuery = (tableDef, computedFieldName) => {
     },
   };
 };
+
+export const getEnumOptionsQuery = (request, currentSchema) => {
+  return {
+    type: 'select',
+    args: {
+      table: {
+        name: request.enumTableName,
+        schema: currentSchema,
+      },
+      columns: [request.enumColumnName],
+    },
+  };
+};

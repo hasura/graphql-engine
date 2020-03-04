@@ -105,6 +105,7 @@ class EditItem extends Component {
               enumOptions={enumOptions}
               col={col}
               index={i}
+              hasDefault={hasDefault}
             />
           </label>
           <label className={styles.radioLabel + ' radio-inline'}>

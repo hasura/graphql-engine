@@ -204,7 +204,7 @@ export function getRelationshipRefTable(table, relationship) {
  *   enumColumnName: string,
  * }> | void}
  */
-export const enumColumnMapping = (allSchemas, tableName, tableSchema) => {
+export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
   const currentTable = findTable(
     allSchemas,
     generateTableDef(tableName, tableSchema)
@@ -218,10 +218,10 @@ export const enumColumnMapping = (allSchemas, tableName, tableSchema) => {
 
   const relationsMap = [];
   relationships.forEach(rel => {
-    const relTableDef = getRelationshipRefTable(currentTable, rel);
-    const relTable = findTable(allSchemas, relTableDef);
+    const refTableDef = getRelationshipRefTable(currentTable, rel);
+    const refTable = findTable(allSchemas, refTableDef);
 
-    if (!relTable.is_enum) return;
+    if (!refTable.is_enum) return;
 
     let _columnName;
     let _enumColumnName;
@@ -236,7 +236,7 @@ export const enumColumnMapping = (allSchemas, tableName, tableSchema) => {
     }
 
     if (relDef.foreign_key_constraint_on) {
-      const currentTableConstraint = relTable.opp_foreign_key_constraints.find(
+      const currentTableConstraint = refTable.opp_foreign_key_constraints.find(
         ({ columns }) => columns.includes(relDef.foreign_key_constraint_on)
       );
 
@@ -252,7 +252,7 @@ export const enumColumnMapping = (allSchemas, tableName, tableSchema) => {
     if (_columnName && _enumColumnName) {
       relationsMap.push({
         columnName: _columnName,
-        enumTableName: relTableDef.name,
+        enumTableName: refTableDef.name,
         enumColumnName: _enumColumnName,
       });
     }
