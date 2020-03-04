@@ -20,6 +20,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
+	XHasuraAccessKey   = "X-Hasura-Access-Key"
+)
+
 func init() {
 	db := HasuraDB{}
 	database.Register("hasuradb", &db)

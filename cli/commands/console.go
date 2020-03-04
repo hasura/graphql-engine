@@ -13,6 +13,7 @@ import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -142,7 +143,7 @@ func (o *ConsoleOptions) Run() error {
 		"serverVersion":   o.EC.Version.GetServerVersion(),
 		"dataApiUrl":      o.EC.Config.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
-		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
+		"hasAccessKey":    adminSecretHeader == hasuradb.XHasuraAccessKey,
 		"adminSecret":     o.EC.Config.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
@@ -306,8 +307,8 @@ func setLogger(logger *logrus.Logger) gin.HandlerFunc {
 func allowCors() gin.HandlerFunc {
 	config := cors.DefaultConfig()
 	config.AddAllowHeaders("X-Hasura-User-Id")
-	config.AddAllowHeaders(XHasuraAccessKey)
-	config.AddAllowHeaders(XHasuraAdminSecret)
+	config.AddAllowHeaders(hasuradb.XHasuraAccessKey)
+	config.AddAllowHeaders(hasuradb.XHasuraAdminSecret)
 	config.AddAllowHeaders("X-Hasura-Role")
 	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
 	config.AddAllowMethods("DELETE")

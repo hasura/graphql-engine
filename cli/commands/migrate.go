@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/viper"
 
 	// Initialize migration drivers
+	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	_ "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	_ "github.com/hasura/graphql-engine/cli/migrate/source/file"
 )
@@ -142,16 +143,11 @@ func getFilePath(dir string) *url.URL {
 	return host
 }
 
-const (
-	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
-	XHasuraAccessKey   = "X-Hasura-Access-Key"
-)
-
 func getAdminSecretHeaderName(v *version.Version) string {
 	if v.ServerFeatureFlags.HasAccessKey {
-		return XHasuraAccessKey
+		return hasuradb.XHasuraAccessKey
 	}
-	return XHasuraAdminSecret
+	return hasuradb.XHasuraAdminSecret
 }
 
 func setMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *migrate.Migrate, dir ...string) {

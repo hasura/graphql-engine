@@ -86,9 +86,8 @@ func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 		return errors.Wrap(err, "error fetching config from server")
 	}
 
-	const XHasuraAdminSecret = "x-hasura-admin-secret"
 	if c.AdminSecret != "" {
-		req.Header.Set(XHasuraAdminSecret, c.AdminSecret)
+		req.Header.Set(hasuradb.XHasuraAdminSecret, c.AdminSecret)
 	}
 
 	r, err := client.Do(req)
