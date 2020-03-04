@@ -377,6 +377,12 @@ instance Hashable (TimeUnit a 'Absolute) where
 
 
 -- instances for Calendar
+-- NOTE: secondsToNominalDiffTime :: Pico -> NominalDiffTime
+-- http://hackage.haskell.org/package/time-1.9.3/docs/Data-Time-Clock.html
+-- If a Pico value is supplied to the function then the output is also in Pico
+-- and when the Pico value is converted into seconds(divide by 10^12)
+-- then the output is in Seconds
+-- So, the function `toFixedPico` converts Pico into Seconds
 instance (KnownNat picosPerUnit) => Num (TimeUnit picosPerUnit 'Calendar) where
   TimeUnit a + TimeUnit b = TimeUnit $ a + b
   TimeUnit a - TimeUnit b = TimeUnit $ a - b
@@ -428,5 +434,7 @@ instance Duration' NominalDiffTime where
 fromUnits :: (Duration' x, Duration' y)=> x -> y
 fromUnits = fromDiffTime . toDiffTime
 
+-- | The input to this function is the number of picos in Integer
+-- and then converting it into seconds.
 toFixedPico :: Integer -> Pico
-toFixedPico = fromIntegral
+toFixedPico = (/1000000000000) . fromIntegral
