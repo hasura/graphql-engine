@@ -134,8 +134,6 @@ func (o *ConsoleOptions) Run() error {
 
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
-	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
-
 	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,
@@ -143,7 +141,6 @@ func (o *ConsoleOptions) Run() error {
 		"serverVersion":   o.EC.Version.GetServerVersion(),
 		"dataApiUrl":      o.EC.Config.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
-		"hasAccessKey":    adminSecretHeader == hasuradb.XHasuraAccessKey,
 		"adminSecret":     o.EC.Config.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,

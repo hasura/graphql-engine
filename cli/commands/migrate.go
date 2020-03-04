@@ -144,9 +144,6 @@ func getFilePath(dir string) *url.URL {
 }
 
 func getAdminSecretHeaderName(v *version.Version) string {
-	if v.ServerFeatureFlags.HasAccessKey {
-		return hasuradb.XHasuraAccessKey
-	}
 	return hasuradb.XHasuraAdminSecret
 }
 
