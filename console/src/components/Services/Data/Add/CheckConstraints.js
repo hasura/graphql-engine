@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import AceEditor from 'react-ace';
 
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import styles from '../TableModify/ModifyTable.scss';
 import { removeCheckConstraint, setCheckConstraints } from './AddActions';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import { ConstraintExpandedContent } from '../Common/ReusableComponents/ConstraintExpandedContent';
 
 const CheckConstraints = ({ dispatch, constraints }) => {
   const [addConstraintsState, setAddConstraintsState] = useState([]);
@@ -71,44 +68,6 @@ const CheckConstraints = ({ dispatch, constraints }) => {
 
     const expandButtonText = isLast ? 'Add a check constraint' : 'Edit';
 
-    const expandedContent = () => {
-      return (
-        <div>
-          <div className={styles.add_mar_bottom}>
-            <div className={styles.add_mar_bottom_mid}>
-              <b>Constraint Name:</b>
-            </div>
-            <input
-              type="text"
-              value={name}
-              onChange={onChangeName}
-              className={`form-control ${styles.wd50percent}`}
-            />
-          </div>
-          <div>
-            <div className={styles.add_mar_bottom_mid}>
-              <b>Check Expression: </b>
-              <ToolTip message="Boolean expression that must be satisfied for all rows in the table. e.g. min_price >= 0 AND max_price >= min_price" />
-              &nbsp;&nbsp;
-              <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
-            </div>
-            <AceEditor
-              mode="sql"
-              theme="github"
-              name={existingConstraintName}
-              onChange={onChangeCheck}
-              value={check}
-              minLines={1}
-              maxLines={100}
-              fontSize={15}
-              width="100%"
-              showPrintMargin={false}
-            />
-          </div>
-        </div>
-      );
-    };
-
     let saveFunc;
     if (name && check) {
       saveFunc = toggle => {
@@ -129,6 +88,15 @@ const CheckConstraints = ({ dispatch, constraints }) => {
         toggle();
       };
     }
+    const expandedContent = () => (
+      <ConstraintExpandedContent
+        nameOnChange={onChangeName}
+        constraintName={existingConstraintName}
+        name={name}
+        checkOnChange={onChangeCheck}
+        check={check}
+      />
+    );
 
     return (
       <ExpandableEditor
