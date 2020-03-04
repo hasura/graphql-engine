@@ -27,6 +27,10 @@ Step 0: Setup
 .. rst-class:: api_tabs
 .. tabs::
 
+  .. tab:: Console
+
+     There is no setup required for defining actions via the console.
+
   .. tab:: CLI
 
      .. :ref:`Install <install_hasura_cli>` or :ref:`update to <hasura_update-cli>` the latest version of Hasura CLI.
