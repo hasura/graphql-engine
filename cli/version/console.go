@@ -47,7 +47,6 @@ func (v *Version) GetConsoleAssetsVersion() (av string) {
 			if preRelease != "" {
 				// Get the correct channel from the prerelease tag
 				var re = regexp.MustCompile(`^[a-z]+`)
-				re.FindStringIndex(preRelease)
 				tag := re.FindString(preRelease)
 				if tag != "" {
 					channel = tag
