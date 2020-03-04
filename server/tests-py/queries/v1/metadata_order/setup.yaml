@@ -133,6 +133,7 @@ args:
     update:
       columns: '*'
     webhook: http://httpbin.org/post
+    pause: true
 - type: create_event_trigger
   args:
     table: test1

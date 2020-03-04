@@ -132,7 +132,7 @@ addEventTriggerToCatalog qt etc = do
          |] (name, sn, tn, Q.AltJ $ toJSON etc) False
   where
     QualifiedObject sn tn = qt
-    (EventTriggerConf name _ _ _ _ _) = etc
+    (EventTriggerConf name _ _ _ _ _ _) = etc
 
 delEventTriggerFromCatalog :: TriggerName -> Q.TxE QErr ()
 delEventTriggerFromCatalog trn = do
@@ -184,7 +184,7 @@ markForDelivery eid =
           |] (Identity eid) True
 
 subTableP1 :: (UserInfoM m, QErrM m, CacheRM m) => CreateEventTriggerQuery -> m (QualifiedTable, Bool, EventTriggerConf)
-subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace) = do
+subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual retryConf webhook webhookFromEnv mheaders replace pause) = do
   ti <- askTableCoreInfo qt
   -- can only replace for same table
   when replace $ do
@@ -196,7 +196,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
   assertCols ti delete
 
   let rconf = fromMaybe defaultRetryConf retryConf
-  return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders)
+  return (qt, replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders pause)
   where
     assertCols _ Nothing = return ()
     assertCols ti (Just sos) = do
@@ -208,7 +208,7 @@ subTableP1 (CreateEventTriggerQuery name qt insert update delete enableManual re
 subTableP2Setup
   :: (QErrM m, MonadIO m)
   => QualifiedTable -> EventTriggerConf -> m (EventTriggerInfo, [SchemaDependency])
-subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders) = do
+subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mheaders pause) = do
   webhookConf <- case (webhook, webhookFromEnv) of
     (Just w, Nothing)    -> return $ WCValue w
     (Nothing, Just wEnv) -> return $ WCEnv wEnv
@@ -216,7 +216,7 @@ subTableP2Setup qt (EventTriggerConf name def webhook webhookFromEnv rconf mhead
   let headerConfs = fromMaybe [] mheaders
   webhookInfo <- getWebhookInfoFromConf webhookConf
   headerInfos <- getHeaderInfosFromConf headerConfs
-  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos
+  let eTrigInfo = EventTriggerInfo name def rconf webhookInfo headerInfos pause
       tabDep = SchemaDependency (SOTable qt) DRParent
   pure (eTrigInfo, tabDep:getTrigDefDeps qt def)
 

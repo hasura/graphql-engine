@@ -275,6 +275,7 @@ data EventTriggerInfo
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo
    , etiHeaders     :: ![EventHeaderInfo]
+   , etiPause       :: !Bool
    } deriving (Show, Eq, Generic)
 instance NFData EventTriggerInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)

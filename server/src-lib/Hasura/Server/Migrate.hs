@@ -75,7 +75,7 @@ instance ToEngineLog MigrationResult Hasura where
     }
 
 -- A migration and (hopefully) also its inverse if we have it.
--- Polymorphic because `m` can be any `MonadTx`, `MonadIO` when 
+-- Polymorphic because `m` can be any `MonadTx`, `MonadIO` when
 -- used in the `migrations` function below.
 data MigrationPair m = MigrationPair
   { mpMigrate :: m ()
@@ -157,12 +157,12 @@ migrateCatalog migrationTime = do
           pure (MRMigrated previousVersion, schemaCache)
       where
         neededMigrations = dropWhile ((/= previousVersion) . fst) (migrations False)
-        
+
     buildCacheAndRecreateSystemMetadata :: m (RebuildableSchemaCache m)
     buildCacheAndRecreateSystemMetadata = do
       schemaCache <- buildRebuildableSchemaCache
       view _2 <$> runCacheRWT schemaCache recreateSystemMetadata
-      
+
     updateCatalogVersion = setCatalogVersion latestCatalogVersionString migrationTime
 
     doesSchemaExist schemaName =
@@ -195,29 +195,28 @@ downgradeCatalog opts time = do
     downgradeFrom previousVersion
         | previousVersion == dgoTargetVersion opts = do
             pure MRNothingToDo
-        | otherwise = 
+        | otherwise =
             case neededDownMigrations (dgoTargetVersion opts) of
-              Left reason -> 
+              Left reason ->
                 throw400 NotSupported $
                   "This downgrade path (from "
-                    <> previousVersion <> " to " 
-                    <> dgoTargetVersion opts <> 
+                    <> previousVersion <> " to "
+                    <> dgoTargetVersion opts <>
                     ") is not supported, because "
                     <> reason
               Right path -> do
-                sequence_ path 
+                sequence_ path
                 unless (dgoDryRun opts) do
                   setCatalogVersion (dgoTargetVersion opts) time
                 pure (MRMigrated previousVersion)
-      
       where
-        neededDownMigrations newVersion = 
-          downgrade previousVersion newVersion 
+        neededDownMigrations newVersion =
+          downgrade previousVersion newVersion
             (reverse (migrations (dgoDryRun opts)))
 
-        downgrade 
+        downgrade
           :: T.Text
-          -> T.Text 
+          -> T.Text
           -> [(T.Text, MigrationPair m)]
           -> Either T.Text [m ()]
         downgrade lower upper = skipFutureDowngrades where
@@ -235,7 +234,7 @@ downgradeCatalog opts time = do
             | otherwise = skipFutureDowngrades xs
 
           dropOlderDowngrades [] = Left "the target version is unrecognized."
-          dropOlderDowngrades ((x, MigrationPair{ mpDown = Nothing }):_) = 
+          dropOlderDowngrades ((x, MigrationPair{ mpDown = Nothing }):_) =
             Left $ "there is no available migration back to version " <> x <> "."
           dropOlderDowngrades ((x, MigrationPair{ mpDown = Just y }):xs)
             | x == upper = Right [y]
@@ -269,7 +268,7 @@ migrations dryRun =
             if exists
               then [| Just (runTxOrPrint $(Q.sqlFromFile path)) |]
               else [| Nothing |]
-                 
+
           migrationsFromFile = map $ \(to :: Integer) ->
             let from = to - 1
             in [| ( $(TH.lift $ T.pack (show from))
@@ -286,7 +285,7 @@ migrations dryRun =
   where
     runTxOrPrint :: Q.Query -> m ()
     runTxOrPrint
-      | dryRun = 
+      | dryRun =
           liftIO . TIO.putStrLn . Q.getQueryText
       | otherwise = runTx
 
@@ -295,7 +294,7 @@ migrations dryRun =
         ALTER TABLE hdb_catalog.event_triggers
         ADD COLUMN configuration JSON |] () False
       eventTriggers <- map uncurryEventTrigger <$> Q.listQ [Q.sql|
-        SELECT e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
+        SELECT e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json,e.pause
         FROM hdb_catalog.event_triggers e |] () False
       forM_ eventTriggers updateEventTrigger3To4
       Q.unitQ [Q.sql|
@@ -305,11 +304,12 @@ migrations dryRun =
         DROP COLUMN webhook,
         DROP COLUMN num_retries,
         DROP COLUMN retry_interval,
-        DROP COLUMN headers |] () False
+        DROP COLUMN headers,
+        DROP COLUMN pause|] () False
       where
-        uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers) =
-          EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers
-        updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _) = Q.unitQ [Q.sql|
+        uncurryEventTrigger (trn, Q.AltJ tDef, w, nr, rint, Q.AltJ headers, pause) =
+          EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers pause
+        updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _ _) = Q.unitQ [Q.sql|
                                              UPDATE hdb_catalog.event_triggers
                                              SET
                                              configuration = $1

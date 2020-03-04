@@ -74,6 +74,7 @@ response:
         interval_sec: 10
         timeout_sec: 60
       webhook: http://httpbin.org/post
+      pause: true
     - name: event_trigger_2
       definition:
         enable_manual: false
@@ -86,6 +87,7 @@ response:
         interval_sec: 10
         timeout_sec: 60
       webhook: http://httpbin.org/post
+      pause: false
   - table:
       schema: public
       name: test2

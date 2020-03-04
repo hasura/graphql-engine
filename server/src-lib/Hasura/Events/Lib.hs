@@ -438,7 +438,7 @@ fetchEvents =
                     FROM hdb_catalog.event_log l
                     WHERE l.delivered = 'f' and l.error = 'f' and l.locked = 'f'
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
-                          and l.archived = 'f'
+                          and l.archived = 'f' and l.paused = 'f'
                     FOR UPDATE SKIP LOCKED
                     LIMIT 100 )
       RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at

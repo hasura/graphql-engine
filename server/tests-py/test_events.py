@@ -4,6 +4,7 @@ import pytest
 import queue
 import time
 from validate import check_query_f, check_event
+from queue import Empty
 
 usefixtures = pytest.mark.usefixtures
 
@@ -557,3 +558,61 @@ class TestManualEvents(object):
         assert st_code == 200, resp
         st_code, resp = hge_ctx.v1q_f('queries/event_triggers/manual_events/disabled.yaml')
         assert st_code == 400, resp
+
+
+class TestPauseEventTriggers(object):
+
+    @classmethod
+    def dir(cls):
+        return 'queries/event_triggers/pause_event_triggers'
+
+    def test_setup(self, hge_ctx, evts_webhook):
+        st_code,resp = hge_ctx.v1q_f(self.dir() + '/setup.yaml')
+        assert st_code == 200, resp
+
+    def test_check_generated_events_pause_state(self, hge_ctx, evts_webhook):
+        table = {"schema": "hge_tests", "name": "test_t1"}
+        init_row = {"c1": 1, "c2": "foo"}
+        exp_ev_data = {
+            "old": None,
+            "new": init_row
+        }
+        q = {
+            "type":"select",
+            "args":{
+                "table": {"schema": "hdb_catalog", "name": "event_log"},
+                "columns": ["paused"],
+                "order_by": ["-created_at"],
+                "where": {"trigger_name":"t1_all","archived":"f"}
+            }
+        }
+        st_code,resp = hge_ctx.v1q(q)
+        assert st_code == 200,resp
+        for log in resp:
+            assert log['paused']
+        q = {
+            "type":"select",
+            "args":{
+                "table": {"schema": "hdb_catalog", "name": "event_log"},
+                "columns": ["paused"],
+                "order_by": ["-created_at"],
+                "where": {"trigger_name":"t1_all_without_pause","archived":"f"}
+            }
+        }
+        check_event(hge_ctx, evts_webhook, "t1_all_without_pause", table, "INSERT", exp_ev_data)
+        st_code,resp = hge_ctx.v1q(q)
+        for log in resp:
+            assert not log['paused']
+        assert st_code == 200,resp
+
+    # The below test checks that the webhook queue should be empty, that is no webhook call
+    # from the "t1_all" trigger because it was paused.
+    def test_check_for_events_from_paused_event_trigger(self, hge_ctx, evts_webhook):
+        try:
+            ev_full = evts_webhook.get_event(5)
+        except Empty:
+            assert True
+
+    def test_teardown(self, hge_ctx, evts_webhook):
+        st_code,resp = hge_ctx.v1q_f(self.dir() + '/teardown.yaml')
+        assert st_code == 200, resp

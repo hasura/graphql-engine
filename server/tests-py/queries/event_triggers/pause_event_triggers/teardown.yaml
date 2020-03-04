@@ -1,0 +1,12 @@
+type: bulk
+args:
+- type: delete_event_trigger
+  args:
+    name: t1_all
+- type: delete_event_trigger
+  args:
+    name: t1_all_without_pause
+- type: run_sql
+  args:
+    sql: |
+      drop table hge_tests.test_t1
