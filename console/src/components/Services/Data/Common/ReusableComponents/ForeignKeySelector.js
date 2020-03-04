@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from '../../../../Common/TableCommon/Table.scss';
-import { fkViolationOnUpdate, fkViolationOnDelete } from './Tooltips';
+import { fkViolationOnUpdate, fkViolationOnDelete } from '../Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { updateSchemaInfo } from '../../DataActions';
 
@@ -215,16 +215,12 @@ const ForeignKeySelector = ({
 
           return (
             <div
-              className={`row ${styles.add_mar_bottom_mid} ${
-                styles.display_flex
-              }`}
+              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
               key={`fk-col-${index}-${_i}`}
             >
               <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={lc}
                   onChange={dispatchSetLcol}
                   data-test={`foreign-key-${index}-lcol-${_i}`}
@@ -247,9 +243,7 @@ const ForeignKeySelector = ({
               </div>
               <div className={'col-sm-4'}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={rc}
                   onChange={dispatchSetRcol}
                   disabled={!refTableName}

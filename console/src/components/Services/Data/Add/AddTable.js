@@ -14,7 +14,7 @@ import TableName from './TableName';
 import TableColumns from './TableColumns';
 import TableComment from './TableComment';
 
-import * as tooltip from './Tooltips';
+import * as tooltip from '../Common/Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import CheckConstraints from './CheckConstraints';
 

@@ -40,3 +40,15 @@ export const checkConstraintsDescription = (
     must satisfy a specific condition.
   </Tooltip>
 );
+
+export const fkViolationOnUpdate = (
+  <Tooltip id="tooltip-fk-violation-on-update">
+    Action when the reference key is updated
+  </Tooltip>
+);
+
+export const fkViolationOnDelete = (
+  <Tooltip id="tooltip-primary-key-description">
+    Action when the reference key is deleted
+  </Tooltip>
+);
