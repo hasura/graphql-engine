@@ -1,8 +1,8 @@
 import React from 'react';
 import styles from '../../../../Common/TableCommon/Table.scss';
-import { fkViolationOnUpdate, fkViolationOnDelete } from '../Tooltips';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import { fkViolationOnUpdate, fkViolationOnDelete } from '../TooltipMessages';
 import { updateSchemaInfo } from '../../DataActions';
+import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
 const violiationActions = [
   'restrict',
@@ -317,20 +317,14 @@ const ForeignKeySelector = ({
         <div className={`${styles.add_mar_bottom}`}>
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Update Violation:</b>&nbsp; &nbsp;
-            <OverlayTrigger placement="right" overlay={fkViolationOnUpdate}>
-              <i className={'fa fa-question-circle'} aria-hidden="true" />
-            </OverlayTrigger>{' '}
-            &nbsp; &nbsp;
+            <ToolTip message={fkViolationOnUpdate} />
           </div>
           {radios('onUpdate')}
         </div>
         <div className={`${styles.add_mar_bottom}`}>
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Delete Violation:</b>&nbsp; &nbsp;
-            <OverlayTrigger placement="right" overlay={fkViolationOnDelete}>
-              <i className={'fa fa-question-circle'} aria-hidden="true" />
-            </OverlayTrigger>{' '}
-            &nbsp; &nbsp;
+            <ToolTip message={fkViolationOnDelete} />
           </div>
           {radios('onDelete')}
         </div>

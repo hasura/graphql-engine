@@ -14,8 +14,6 @@ import TableName from './TableName';
 import TableColumns from './TableColumns';
 import TableComment from './TableComment';
 
-import * as tooltip from '../Common/Tooltips';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import CheckConstraints from './CheckConstraints';
 
 import {
@@ -50,6 +48,13 @@ import {
 } from './AddWarning';
 
 import styles from '../../../Common/TableCommon/Table.scss';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import {
+  foreignKeyDescription,
+  primaryKeyDescription,
+  uniqueKeyDescription,
+  checkConstraintsDescription,
+} from '../Common/TooltipMessages';
 
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
@@ -459,13 +464,7 @@ class AddTable extends Component {
             <hr />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.primaryKeyDescription}
-              >
-                <i className={'fa fa-question-circle'} aria-hidden="true" />
-              </OverlayTrigger>{' '}
-              &nbsp; &nbsp;
+              <ToolTip message={primaryKeyDescription} />
             </h4>
             <PrimaryKeySelector
               primaryKeys={primaryKeys}
@@ -476,13 +475,7 @@ class AddTable extends Component {
             <hr />
             <h4 className={styles.subheading_text}>
               Foreign Keys &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.foreignKeyDescription}
-              >
-                <i className={'fa fa-question-circle'} aria-hidden="true" />
-              </OverlayTrigger>{' '}
-              &nbsp; &nbsp;
+              <ToolTip message={foreignKeyDescription} />
             </h4>
             <ForeignKeyWrapper
               allSchemas={allSchemas}
@@ -498,13 +491,7 @@ class AddTable extends Component {
             <hr />
             <h4 className={styles.subheading_text}>
               Unique Keys &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.uniqueKeyDescription}
-              >
-                <i className={'fa fa-question-circle'} aria-hidden="true" />
-              </OverlayTrigger>{' '}
-              &nbsp; &nbsp;
+              <ToolTip message={uniqueKeyDescription} />
             </h4>
             <UniqueKeyWrapper
               allSchemas={allSchemas}
@@ -518,13 +505,7 @@ class AddTable extends Component {
             <hr />
             <h4 className={styles.subheading_text}>
               Check Constraints &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.checkConstraintsDescription}
-              >
-                <i className={'fa fa-question-circle'} aria-hidden="true" />
-              </OverlayTrigger>{' '}
-              &nbsp; &nbsp;
+              <ToolTip message={checkConstraintsDescription} />
             </h4>
             <CheckConstraints
               constraints={checkConstraints}
