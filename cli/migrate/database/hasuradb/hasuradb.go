@@ -22,7 +22,6 @@ import (
 
 const (
 	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
-	XHasuraAccessKey   = "X-Hasura-Access-Key"
 )
 
 func init() {

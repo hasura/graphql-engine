@@ -18,12 +18,12 @@ import (
 	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
-	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	// Initialize migration drivers
+
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	_ "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	_ "github.com/hasura/graphql-engine/cli/migrate/source/file"
@@ -63,7 +63,7 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func newMigrate(ec *cli.ExecutionContext, isCmd bool) (*migrate.Migrate, error) {
-	dbURL := getDataPath(ec.Config.ServerConfig.ParsedEndpoint, getAdminSecretHeaderName(ec.Version), ec.Config.ServerConfig.AdminSecret)
+	dbURL := getDataPath(ec.Config.ServerConfig.ParsedEndpoint, ec.Config.ServerConfig.AdminSecret)
 	fileURL := getFilePath(ec.MigrationDir)
 	t, err := migrate.New(fileURL.String(), dbURL.String(), isCmd, int(ec.Config.Version), ec.Logger)
 	if err != nil {
@@ -109,7 +109,7 @@ func executeStatus(t *migrate.Migrate) (*migrate.Status, error) {
 	return status, nil
 }
 
-func getDataPath(nurl *url.URL, adminSecretHeader, adminSecretValue string) *url.URL {
+func getDataPath(nurl *url.URL, adminSecretValue string) *url.URL {
 	host := &url.URL{
 		Scheme: "hasuradb",
 		Host:   nurl.Host,
@@ -124,7 +124,7 @@ func getDataPath(nurl *url.URL, adminSecretHeader, adminSecretValue string) *url
 		q.Set("sslmode", "disable")
 	}
 	if adminSecretValue != "" {
-		q.Add("headers", fmt.Sprintf("%s:%s", adminSecretHeader, adminSecretValue))
+		q.Add("headers", fmt.Sprintf("%s:%s", hasuradb.XHasuraAdminSecret, adminSecretValue))
 	}
 	host.RawQuery = q.Encode()
 	return host
@@ -141,10 +141,6 @@ func getFilePath(dir string) *url.URL {
 		host.Path = "/" + host.Path
 	}
 	return host
-}
-
-func getAdminSecretHeaderName(v *version.Version) string {
-	return hasuradb.XHasuraAdminSecret
 }
 
 func setMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *migrate.Migrate, dir ...string) {
