@@ -102,7 +102,7 @@ class TestEventFlood(object):
 
         def get_evt():
             # TODO hm, without a long timeout this fails intermittently on CI:
-            ev_full = evts_webhook.get_event(3)
+            ev_full = evts_webhook.get_event(300)
             return ev_full['body']['event']['data']['new']['c1']
         # Make sure we got all payloads (probably out of order):
         ns = list(map(lambda _: get_evt(), payload))
