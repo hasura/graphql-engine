@@ -9,14 +9,16 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
-
+	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
+	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -101,7 +103,7 @@ type Migrate struct {
 
 // New returns a new Migrate instance from a source URL and a database URL.
 // The URL scheme is defined by each driver.
-func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*Migrate, error) {
+func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, logger *log.Logger) (*Migrate, error) {
 	m := newCommon(cmd)
 
 	sourceName, err := schemeFromUrl(sourceUrl)
@@ -131,6 +133,9 @@ func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*M
 		return nil, err
 	}
 	m.sourceDrv = sourceDrv
+	if configVersion >= 2 {
+		m.sourceDrv.DefaultParser(source.DefaultParsev2)
+	}
 
 	databaseDrv, err := database.Open(databaseUrl, cmd, logger)
 	if err != nil {
@@ -139,8 +144,10 @@ func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*M
 	}
 	m.databaseDrv = databaseDrv
 
-	m.status = NewStatus()
-
+	err = m.ReScan()
+	if err != nil {
+		return nil, err
+	}
 	return m, nil
 }
 
@@ -309,8 +316,20 @@ func (m *Migrate) GetUnappliedMigrations(version uint64) []uint64 {
 	return m.sourceDrv.GetUnappliedMigrations(version)
 }
 
-func (m *Migrate) ExportMetadata() (interface{}, error) {
+func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
+	return m.databaseDrv.GetIntroSpectionSchema()
+}
+
+func (m *Migrate) SetMetadataPlugins(plugins types.MetadataPlugins) {
+	m.databaseDrv.SetMetadataPlugins(plugins)
+}
+
+func (m *Migrate) ExportMetadata() (map[string][]byte, error) {
 	return m.databaseDrv.ExportMetadata()
+}
+
+func (m *Migrate) WriteMetadata(files map[string][]byte) error {
+	return m.sourceDrv.WriteMetadata(files)
 }
 
 func (m *Migrate) ResetMetadata() error {
@@ -330,15 +349,39 @@ func (m *Migrate) DropInconsistentMetadata() error {
 	return m.databaseDrv.DropInconsistentMetadata()
 }
 
-func (m *Migrate) ApplyMetadata(data interface{}) error {
-	return m.databaseDrv.ApplyMetadata(data)
+func (m *Migrate) BuildMetadata() (yaml.MapSlice, error) {
+	return m.databaseDrv.BuildMetadata()
+}
+
+func (m *Migrate) ApplyMetadata() error {
+	return m.databaseDrv.ApplyMetadata()
 }
 
 func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
 	return m.databaseDrv.ExportSchemaDump(schemName)
 }
 
-func (m *Migrate) Query(data []interface{}) error {
+func (m *Migrate) RemoveVersions(versions []uint64) error {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return err
+	}
+
+	if mode != "true" {
+		return ErrNoMigrationMode
+	}
+
+	if err := m.lock(); err != nil {
+		return err
+	}
+
+	for _, version := range versions {
+		m.databaseDrv.RemoveVersion(int64(version))
+	}
+	return m.unlockErr(nil)
+}
+
+func (m *Migrate) Query(data interface{}) error {
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
 		return err
@@ -347,7 +390,6 @@ func (m *Migrate) Query(data []interface{}) error {
 	if mode == "true" {
 		return ErrMigrationMode
 	}
-
 	return m.databaseDrv.Query(data)
 }
 
@@ -358,7 +400,6 @@ func (m *Migrate) Query(data []interface{}) error {
 // the squashed metadata for all down steps: dm
 // the squashed SQL for all down steps: ds
 func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm []interface{}, ds []byte, err error) {
-
 	// check the migration mode on the database
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
@@ -497,6 +538,34 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 	return m.unlockErr(m.runMigrations(ret))
 }
 
+func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser) error {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return err
+	}
+
+	if mode != "true" {
+		return ErrNoMigrationMode
+	}
+
+	if err := m.lock(); err != nil {
+		return err
+	}
+
+	if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
+		m.databaseDrv.ResetQuery()
+		return m.unlockErr(err)
+	}
+
+	if version != 0 {
+		if err := m.databaseDrv.InsertVersion(int64(version)); err != nil {
+			m.databaseDrv.ResetQuery()
+			return m.unlockErr(err)
+		}
+	}
+	return m.unlockErr(nil)
+}
+
 // Steps looks at the currently active migration version.
 // It will migrate up if n > 0, and down if n < 0.
 func (m *Migrate) Steps(n int64) error {
@@ -589,11 +658,6 @@ func (m *Migrate) Down() error {
 	go m.readDown(-1, ret)
 
 	return m.unlockErr(m.runMigrations(ret))
-}
-
-// Reset resets public schema and hasuradb metadata
-func (m *Migrate) Reset() (err error) {
-	return m.databaseDrv.Reset()
 }
 
 func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
@@ -702,7 +766,7 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 		}
 
 		prev, err := m.sourceDrv.Prev(from)
-		if err != nil {
+		if os.IsNotExist(err) {
 			migr, err := m.metanewMigration(from, -1)
 			if err != nil {
 				ret <- err
@@ -718,6 +782,10 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			}
 			ret <- migr
 			go migr.Buffer()
+			return
+		} else if err != nil {
+			ret <- err
+			return
 		}
 
 		migr, err := m.metanewMigration(from, int64(prev))
