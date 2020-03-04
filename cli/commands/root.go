@@ -39,8 +39,7 @@ var rootCmd = &cobra.Command{
 		if cmd.Use != updateCLICmdUse {
 			if update.ShouldRunCheck(ec.LastUpdateCheckFile) && ec.GlobalConfig.ShowUpdateNotification && !ec.SkipUpdateCheck {
 				u := &updateOptions{
-					EC:         ec,
-					preRelease: true,
+					EC: ec,
 				}
 				err := u.run(true)
 				if err != nil && u.EC.Version.GetCLIVersion() != version.DevVersion {
