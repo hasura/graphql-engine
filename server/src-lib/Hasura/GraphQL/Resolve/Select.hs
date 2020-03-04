@@ -28,6 +28,7 @@ import           Hasura.GraphQL.Resolve.BoolExp
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.GraphQL.Resolve.InputValue
 import           Hasura.GraphQL.Schema             (isAggFld)
+import           Hasura.GraphQL.Validate
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.RQL.DML.Internal           (onlyPositiveInt)
@@ -97,8 +98,10 @@ processTableSelectionSet fldTy flds =
         case fldInfo of
           RFPGColumn colInfo ->
             RS.mkAnnColField colInfo <$> argsToColOp (_fArguments fld)
+
           RFComputedField computedField ->
             RS.FComputedField <$> resolveComputedField computedField fld
+
           RFRelationship (RelationshipField relInfo isAgg colGNameMap tableFilter tableLimit) -> do
             let relTN = riRTable relInfo
                 colMapping = riMapping relInfo
@@ -112,12 +115,14 @@ processTableSelectionSet fldTy flds =
               return $ case riType relInfo of
                 ObjRel -> RS.FObj annRel
                 ArrRel -> RS.FArr $ RS.ASSimple annRel
+
           RFRemoteRelationship info ->
-            pure $ RS.FRemote $ RS.RemoteSelect (_fArguments fld)
-                                                (_fSelSet fld)
-                                                (_rfiHasuraFields info)
-                                                (_rfiRemoteFields info)
-                                                (_rfiRemoteSchema info)
+            pure $ RS.FRemote $ RS.RemoteSelect
+                                (unValidateArgsMap $ _fArguments fld) -- Unvalidate the input arguments
+                                (map unValidateField $ toList $ _fSelSet fld) -- Unvalidate the selection fields
+                                (_rfiHasuraFields info)
+                                (_rfiRemoteFields info)
+                                (_rfiRemoteSchema info)
 
 type TableAggFlds = RS.TableAggFldsG UnresolvedVal
 

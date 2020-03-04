@@ -11,8 +11,8 @@ import qualified Data.HashMap.Strict           as HM
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
+import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Hasura.GraphQL.Validate.Field
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import qualified Hasura.SQL.DML                as S
@@ -162,8 +162,8 @@ data AnnColField
 
 data RemoteSelect
   = RemoteSelect
-  { _rselArgs          :: !ArgsMap
-  , _rselSelection     :: !SelSet
+  { _rselArgs          :: ![G.Argument]
+  , _rselSelection     :: ![G.Field]
   , _rselHasuraColumns :: !(HashSet PGColumnInfo)
   , _rselFieldCall     :: !(NonEmpty FieldCall)
   , _rselRemoteSchema  :: !RemoteSchemaInfo

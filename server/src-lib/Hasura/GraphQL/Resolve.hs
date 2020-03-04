@@ -61,7 +61,7 @@ traverseQueryRootFldAST f = \case
   QRFAgg s          -> QRFAgg <$> DS.traverseAnnAggSel f s
   QRFActionSelect s -> QRFActionSelect <$> DS.traverseAnnSimpleSel f s
 
-toPGQuery :: QueryRootFldResolved -> (Q.Query, RR.RemoteJoinMap)
+toPGQuery :: QueryRootFldResolved -> (Q.Query, Maybe RR.RemoteJoins)
 toPGQuery = \case
   QRFPk s           -> first (DS.selectQuerySQL DS.JASSingleObject) $ RR.getRemoteJoins s
   QRFSimple s       -> first (DS.selectQuerySQL DS.JASMultipleRows) $ RR.getRemoteJoins s

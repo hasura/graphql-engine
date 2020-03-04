@@ -9,11 +9,15 @@ module Hasura.GraphQL.Utils
   , showNames
   , unwrapTy
   , simpleGraphQLQuery
+  , jsonValueToGValue
   ) where
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 
+import           Data.Scientific               (floatingOrInteger)
+
+import qualified Data.Aeson                    as A
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
@@ -77,3 +81,15 @@ showNames names =
 -- A simple graphql query to be used in generators
 simpleGraphQLQuery :: Text
 simpleGraphQLQuery = "query {author {id name}}"
+
+-- | Convert a JSON value to a GraphQL value.
+jsonValueToGValue :: A.Value -> G.Value
+jsonValueToGValue = \case
+  A.String t -> G.VString $ G.StringValue t
+  -- TODO: Note the danger zone of scientific:
+  A.Number n -> either G.VFloat G.VInt (floatingOrInteger n)
+  A.Bool b -> G.VBoolean b
+  A.Object o -> G.VObject $ G.ObjectValueG $
+    map (uncurry G.ObjectFieldG . (G.Name *** jsonValueToGValue)) $ Map.toList o
+  A.Array a -> G.VList $ G.ListValueG $ map jsonValueToGValue $ toList a
+  A.Null -> G.VNull

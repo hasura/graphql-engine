@@ -10,7 +10,6 @@ module Hasura.RQL.Types.RemoteRelationship
   , RemoteRelationship(..)
   , FieldCall(..)
   , RemoteArguments(..)
-  , substituteVariables
   , DeleteRemoteRelationship(..)
   ) where
 
@@ -30,7 +29,6 @@ import           Data.HashSet                  (HashSet)
 import           Data.List.NonEmpty            (NonEmpty (..))
 import           Data.Scientific
 import           Data.Set                      (Set)
-import           Data.Validation
 import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.HashMap.Strict           as HM
@@ -258,37 +256,3 @@ data DeleteRemoteRelationship =
     }  deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''DeleteRemoteRelationship)
-
---------------------------------------------------------------------------------
--- Operations
-
--- | An error substituting variables into the argument list.
-data SubstituteError
-  = ValueNotProvided !G.Variable
-  deriving (Show, Eq)
-
--- | Substitute values in the argument list.
-substituteVariables ::
-     HashMap G.Variable G.ValueConst
-  -- ^ Values to use.
-  -> [G.ObjectFieldG G.Value]
-  -- ^ A template.
-  -> Validation [SubstituteError] [G.ObjectFieldG G.ValueConst]
-substituteVariables values = traverse (traverse go)
-  where
-    go =
-      \case
-        G.VVariable variable ->
-          case HM.lookup variable values of
-            Nothing         -> Failure [ValueNotProvided variable]
-            Just valueConst -> pure valueConst
-        G.VInt int32 -> pure (G.VCInt int32)
-        G.VFloat double -> pure (G.VCFloat double)
-        G.VString stringValue -> pure (G.VCString stringValue)
-        G.VBoolean boolean -> pure (G.VCBoolean boolean)
-        G.VNull -> pure G.VCNull
-        G.VEnum enumValue -> pure (G.VCEnum enumValue)
-        G.VList (G.ListValueG listValue) ->
-          fmap (G.VCList . G.ListValueG) (traverse go listValue)
-        G.VObject (G.ObjectValueG objectValue) ->
-          fmap (G.VCObject . G.ObjectValueG) (traverse (traverse go) objectValue)
