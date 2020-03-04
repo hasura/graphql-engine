@@ -153,4 +153,4 @@ care of when switching to subscriptions.
 Related Blog
 ------------
 
-- `moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client <https://blog.hasura.io/moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client-cc0373e0adb0>`__.
+- `moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client <https://hasura.io/blog/moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client-cc0373e0adb0>`__.

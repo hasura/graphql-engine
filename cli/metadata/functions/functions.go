@@ -51,7 +51,7 @@ func (f *FunctionConfig) Build(metadata *yaml.MapSlice) error {
 	item := yaml.MapItem{
 		Key: "functions",
 	}
-	var obj yaml.MapSlice
+	var obj []yaml.MapSlice
 	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
 		return err
