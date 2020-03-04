@@ -319,6 +319,7 @@ library
                      , Hasura.RQL.DML.Select
                      , Hasura.RQL.DML.Update
                      , Hasura.RQL.DML.Count
+                     , Hasura.RQL.DML.RemoteJoin
                      , Hasura.RQL.GBoolExp
 
                      , Hasura.GraphQL.Transport.HTTP.Protocol
@@ -366,7 +367,6 @@ library
                      , Hasura.GraphQL.Resolve.Insert
                      , Hasura.GraphQL.Resolve.Mutation
                      , Hasura.GraphQL.Resolve.Select
-                     , Hasura.GraphQL.Resolve.RemoteJoin
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
                      , Hasura.GraphQL.Logging

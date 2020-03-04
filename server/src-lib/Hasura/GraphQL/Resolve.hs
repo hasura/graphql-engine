@@ -34,9 +34,9 @@ import qualified Hasura.GraphQL.Resolve.Action     as RA
 import qualified Hasura.GraphQL.Resolve.Insert     as RI
 import qualified Hasura.GraphQL.Resolve.Introspect as RIntro
 import qualified Hasura.GraphQL.Resolve.Mutation   as RM
-import qualified Hasura.GraphQL.Resolve.RemoteJoin as RR
 import qualified Hasura.GraphQL.Resolve.Select     as RS
 import qualified Hasura.GraphQL.Validate           as V
+import qualified Hasura.RQL.DML.RemoteJoin         as RR
 import qualified Hasura.RQL.DML.Select             as DS
 import qualified Hasura.SQL.DML                    as S
 
@@ -124,26 +124,29 @@ mutFldToTx
   -> m RespTx
 mutFldToTx fld = do
   userInfo <- asks getter
+  reqHeaders <- asks getter
+  httpManager <- asks getter
+  let rjCtx = (httpManager, reqHeaders, userInfo)
   opCtx <- getOpCtx $ V._fName fld
   case opCtx of
     MCInsert ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      RI.convertInsert (userRole userInfo) (_iocTable ctx) fld
+      RI.convertInsert rjCtx (userRole userInfo) (_iocTable ctx) fld
     MCInsertOne ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      RI.convertInsertOne (userRole userInfo) (_iocTable ctx) fld
+      RI.convertInsertOne rjCtx (userRole userInfo) (_iocTable ctx) fld
     MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
-      RM.convertUpdate ctx fld
+      RM.convertUpdate ctx rjCtx fld
     MCUpdateByPk ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
-      RM.convertUpdateByPk ctx fld
+      RM.convertUpdateByPk ctx rjCtx fld
     MCDelete ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
-      RM.convertDelete ctx fld
+      RM.convertDelete ctx rjCtx fld
     MCDeleteByPk ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
-      RM.convertDeleteByPk ctx fld
+      RM.convertDeleteByPk ctx rjCtx fld
     MCAction ctx ->
       RA.resolveActionMutation fld ctx (userVars userInfo)
 

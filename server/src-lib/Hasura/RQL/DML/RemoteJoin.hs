@@ -1,8 +1,9 @@
 -- | Types and Functions for resolving remote join fields
-module Hasura.GraphQL.Resolve.RemoteJoin
-  ( selectWithRemoteJoins
+module Hasura.RQL.DML.RemoteJoin
+  ( executeQueryWithRemoteJoins
   , getRemoteJoins
   , getRemoteJoinsAggSel
+  , getRemoteJoinsMutationOutput
   , RemoteJoins
   ) where
 
@@ -16,6 +17,7 @@ import           Hasura.GraphQL.RemoteServer            (execRemoteGQ')
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Utils
 import           Hasura.RQL.DML.Internal
+import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
@@ -34,7 +36,7 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
-selectWithRemoteJoins
+executeQueryWithRemoteJoins
   :: (HasVersion, MonadTx m, MonadIO m)
   => HTTP.Manager
   -> [N.Header]
@@ -43,7 +45,7 @@ selectWithRemoteJoins
   -> [Q.PrepArg]
   -> RemoteJoins
   -> m EncJSON
-selectWithRemoteJoins manager reqHdrs userInfo q prepArgs rjs = do
+executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs rjs = do
   -- Step 1: Perform the query on Database and fetch the response
   pgRes <- runIdentity . Q.getRow <$> liftTx (Q.rawQE dmlTxErrorHandler q prepArgs True)
   jsonRes <- either (throw500 . T.pack) pure $ AO.eitherDecode pgRes
@@ -107,7 +109,7 @@ getRemoteJoins :: AnnSimpleSel -> (AnnSimpleSel, Maybe RemoteJoins)
 getRemoteJoins =
   second mapToNonEmpty . flip runState mempty . transformSelect mempty
 
-transformSelect :: FieldPath -> AnnSimpleSel -> State (RemoteJoinMap) AnnSimpleSel
+transformSelect :: FieldPath -> AnnSimpleSel -> State RemoteJoinMap AnnSimpleSel
 transformSelect path sel = do
   let fields = _asnFields sel
   -- Transform selects in array, object and computed fields
@@ -119,7 +121,7 @@ getRemoteJoinsAggSel :: AnnAggSel -> (AnnAggSel, Maybe RemoteJoins)
 getRemoteJoinsAggSel =
   second mapToNonEmpty . flip runState mempty . transformAggSelect mempty
 
-transformAggSelect :: FieldPath -> AnnAggSel -> State (RemoteJoinMap) AnnAggSel
+transformAggSelect :: FieldPath -> AnnAggSel -> State RemoteJoinMap AnnAggSel
 transformAggSelect path sel = do
   let aggFields = _asnFields sel
   transformedFields <- forM aggFields $ \(fieldName, aggField) ->
@@ -129,7 +131,27 @@ transformAggSelect path sel = do
       TAFExp t           -> pure $ TAFExp t
   pure sel{_asnFields = transformedFields}
 
-transformAnnFields :: FieldPath -> AnnFlds -> State (RemoteJoinMap) AnnFlds
+-- | Traverse through 'MutationOutput' and collect remote join fields (if any)
+getRemoteJoinsMutationOutput :: MutationOutput -> (MutationOutput, Maybe RemoteJoins)
+getRemoteJoinsMutationOutput =
+  second mapToNonEmpty . flip runState mempty . transformMutationOutput mempty
+  where
+    transformMutationOutput :: FieldPath -> MutationOutput -> State RemoteJoinMap MutationOutput
+    transformMutationOutput path = \case
+      MOutMultirowFields mutationFields ->
+        MOutMultirowFields <$> transfromMutationFields mutationFields
+      MOutSinglerowObject annFields ->
+        MOutSinglerowObject <$> transformAnnFields path annFields
+      where
+        transfromMutationFields fields =
+          forM fields $ \(fieldName, field) -> do
+          let fieldPath = appendPath fieldName path
+          (fieldName,) <$> case field of
+            MCount         -> pure MCount
+            MExp t         -> pure $ MExp t
+            MRet annFields -> MRet <$> transformAnnFields fieldPath annFields
+
+transformAnnFields :: FieldPath -> AnnFlds -> State RemoteJoinMap AnnFlds
 transformAnnFields path fields = do
   let pgColumnFields = map fst $ getFields _FCol fields
       remoteSelects = getFields _FRemote fields

@@ -28,10 +28,10 @@ import qualified Hasura.GraphQL.Validate.Field          as V
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Resolve.RemoteJoin
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
+import           Hasura.RQL.DML.RemoteJoin
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
@@ -282,7 +282,7 @@ mkLazyRespTx manager reqHdrs userInfo resolved =
         let prepArgs = map fst args
         case maybeRemoteJoins of
           Nothing -> liftTx $ asSingleRowJsonResp q prepArgs
-          Just remoteJoins -> selectWithRemoteJoins manager reqHdrs userInfo q prepArgs remoteJoins
+          Just remoteJoins -> executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs remoteJoins
     return (G.unName $ G.unAlias alias, resp)
 
 mkGeneratedSqlMap :: [(G.Alias, ResolvedQuery)] -> GeneratedSqlMap
