@@ -1,6 +1,4 @@
-{-# LANGUAGE ApplicativeDo         #-}
-{-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE ViewPatterns          #-}
+{-# LANGUAGE ViewPatterns #-}
 
 -- | Validate input queries against remote schemas.
 
@@ -16,6 +14,7 @@ import           Data.Validation
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude                hiding (first)
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils           (makeReasonMessage)
 import           Hasura.SQL.Types
 
 import qualified Data.HashMap.Strict           as HM
@@ -28,28 +27,58 @@ import qualified Language.GraphQL.Draft.Syntax as G
 -- | An error validating the remote relationship.
 data ValidationError
   = RemoteSchemaNotFound !RemoteSchemaName
-  | CouldntFindRemoteField G.Name ObjTyInfo
-  | FieldNotFoundInRemoteSchema G.Name
-  | NoSuchArgumentForRemote G.Name
-  | MissingRequiredArgument G.Name
-  | TypeNotFound G.NamedType
+  | CouldntFindRemoteField !G.Name !G.NamedType
+  | FieldNotFoundInRemoteSchema !G.Name
+  | NoSuchArgumentForRemote !G.Name
+  | MissingRequiredArgument !G.Name
+  | TypeNotFound !G.NamedType
   | TableNotFound !QualifiedTable
   | TableFieldNonexistent !QualifiedTable !FieldName
   | ExpectedTypeButGot !G.GType !G.GType
   | InvalidType !G.GType!T.Text
-  | InvalidVariable G.Variable (HM.HashMap G.Variable PGColumnInfo)
+  | InvalidVariable !G.Variable !(HM.HashMap G.Variable PGColumnInfo)
   | NullNotAllowedHere
-  | ForeignRelationshipsNotAllowedInRemoteVariable !RelInfo
-  -- | RemoteFieldsNotAllowedInArguments !RemoteField
-  | UnsupportedArgumentType G.Value
   | InvalidGTypeForStripping !G.GType
   | UnsupportedMultipleElementLists
   | UnsupportedEnum
   deriving (Show, Eq)
 
--- FIXME:- This is ugly
 validateErrorToText :: NE.NonEmpty ValidationError -> Text
-validateErrorToText = T.pack . show
+validateErrorToText (toList -> errs) =
+  "cannot validate remote relationship " <> makeReasonMessage errs errorToText
+  where
+    errorToText :: ValidationError -> Text
+    errorToText = \case
+      RemoteSchemaNotFound name ->
+        "remote schema with name " <> name <<> " not found"
+      CouldntFindRemoteField name ty ->
+        "remote field with name " <> name <<> " and type " <> ty <<> " not found"
+      FieldNotFoundInRemoteSchema name ->
+        "field with name " <> name <<> " not found in remote schema"
+      NoSuchArgumentForRemote name ->
+        "argument with name " <> name <<> " not found in remote schema"
+      MissingRequiredArgument name ->
+        "required argument with name " <> name <<> " is missing"
+      TypeNotFound ty ->
+        "type with name " <> ty <<> " not found"
+      TableNotFound name ->
+        "table with name " <> name <<> " not found"
+      TableFieldNonexistent table fieldName ->
+        "field with name " <> fieldName <<> " not found in table " <>> table
+      ExpectedTypeButGot expTy actualTy ->
+        "expected type " <> getBaseTy expTy <<> " but got " <>> getBaseTy actualTy
+      InvalidType ty err ->
+        "type " <> getBaseTy ty <<> err
+      InvalidVariable var _ ->
+        "variable " <> G.unVariable var <<> " is not found"
+      NullNotAllowedHere ->
+        "null is not allowed here"
+      InvalidGTypeForStripping ty ->
+        "type " <> getBaseTy ty <<> " is invalid for stripping"
+      UnsupportedMultipleElementLists ->
+        "multiple elements in list value is not supported"
+      UnsupportedEnum ->
+        "enum value is not supported"
 
 -- | Validate a remote relationship given a context.
 validateRemoteRelationship ::
@@ -286,7 +315,7 @@ lookupField ::
 lookupField name objFldInfo = viaObject objFldInfo
   where
     viaObject =
-      maybe (Left (pure (CouldntFindRemoteField name objFldInfo))) pure .
+      maybe (Left (pure (CouldntFindRemoteField name $ _otiName objFldInfo))) pure .
       HM.lookup name .
       _otiFields
 
@@ -341,7 +370,7 @@ validateType permittedVariables value expectedGType types =
     G.VBoolean {} -> assertType (G.toGT $ mkScalarTy PGBoolean) expectedGType
     G.VNull -> Failure (pure NullNotAllowedHere)
     G.VString {} -> assertType (G.toGT $ mkScalarTy PGText) expectedGType
-    v@(G.VEnum _) -> Failure (pure (UnsupportedArgumentType v))
+    G.VEnum _ -> Failure (pure UnsupportedEnum)
     G.VList (G.unListValue -> values) -> do
       case values of
         []  -> pure ()
