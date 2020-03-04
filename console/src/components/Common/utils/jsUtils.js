@@ -18,6 +18,11 @@ export const isString = value => {
   return typeof value === 'string';
 };
 
+export const isPromise = value => {
+  if (!value) return false;
+  return value.constructor.name === 'Promise';
+};
+
 export const isEmpty = value => {
   let _isEmpty = false;
 
@@ -231,4 +236,34 @@ export const downloadObjectAsJsonFile = (fileName, object) => {
     encodeURIComponent(JSON.stringify(object, null, 2));
 
   downloadFile(fileNameWithSuffix, dataString);
+};
+
+export const getFileExtensionFromFilename = filename => {
+  return filename.match(/\.[0-9a-z]+$/i)[0];
+};
+
+export const isValidTemplateLiteral = literal_ => {
+  const literal = literal_.trim();
+  if (!literal) return false;
+  const templateStartIndex = literal.indexOf('{{');
+  const templateEndEdex = literal.indexOf('}}');
+  return (
+    templateStartIndex !== '-1' && templateEndEdex > templateStartIndex + 2
+  );
+};
+
+export const getUrlSearchParamValue = param => {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  return urlSearchParams.get(param);
+};
+
+export const getLastArrayElement = array => {
+  if (!array) return null;
+  if (!array.length) return null;
+  return array[array.length - 1];
+};
+
+export const getFirstArrayElement = array => {
+  if (!array) return null;
+  return array[0];
 };

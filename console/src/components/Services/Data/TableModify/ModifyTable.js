@@ -185,7 +185,7 @@ class ModifyTable extends React.Component {
             <Tooltip
               message={'Add a function as a virtual field in the GraphQL API'}
             />
-            <KnowMoreLink href="https://docs.hasura.io/1.0/graphql/manual/schema/computed-fields.html" />
+            <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html" />
           </h4>
           <ComputedFieldsEditor
             table={table}
