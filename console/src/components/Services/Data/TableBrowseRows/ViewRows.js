@@ -200,7 +200,6 @@ const ViewRows = ({
         <div className={styles.tableCenterContent}>
           <input
             className={`${styles.inputCheckbox} ${styles.add_mar_bottom_2}`}
-            style={{ marginBottom: '2px' }}
             checked={
               curRows.length > 0 && selectedRows.length === curRows.length
             }
