@@ -9,6 +9,7 @@ import {
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { getBulkDeleteQuery } from '../../../Common/utils/v1QueryUtils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -220,19 +221,13 @@ const deleteItems = pkClauses => {
 
     const state = getState();
 
-    const url = Endpoints.query;
     const reqBody = {
       type: 'bulk',
-      args: pkClauses.map(pkClause => ({
-        type: 'delete',
-        args: {
-          table: {
-            name: state.tables.currentTable,
-            schema: state.tables.currentSchema,
-          },
-          where: pkClause,
-        },
-      })),
+      args: getBulkDeleteQuery(
+        pkClauses,
+        state.tables.currentTable,
+        state.tables.currentSchema
+      ),
     };
     const options = {
       method: 'POST',
@@ -240,7 +235,7 @@ const deleteItems = pkClauses => {
       headers: dataHeaders(getState),
       credentials: globalCookiePolicy,
     };
-    dispatch(requestAction(url, options)).then(
+    dispatch(requestAction(Endpoints.query, options)).then(
       data => {
         const affected = data.reduce((acc, d) => acc + d.affected_rows, 0);
         dispatch(vMakeRequest());

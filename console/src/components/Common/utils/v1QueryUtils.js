@@ -107,3 +107,15 @@ export const getDropComputedFieldQuery = (tableDef, computedFieldName) => {
     },
   };
 };
+
+export const getBulkDeleteQuery = (pkClauses, tableName, schemaName) =>
+  pkClauses.map(pkClause => ({
+    type: 'delete',
+    args: {
+      table: {
+        name: tableName,
+        schema: schemaName,
+      },
+      where: pkClause,
+    },
+  }));
