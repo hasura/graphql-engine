@@ -8,7 +8,6 @@
 package cli
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -81,7 +80,7 @@ func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 	// Determine from where assets should be served
 	url := c.Endpoint + "/v1alpha1/config"
 	client := http.Client{Timeout: 30 * time.Second}
-	req, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return errors.Wrap(err, "error fetching config from server")
 	}
