@@ -116,7 +116,7 @@ class (Monad m) => WebSocketLog m where
     -> [H.Header]
     -- ^ list of request headers
     -> m ()
-  logWebSocketSuccess logger = logWebSocket logger L.LevelError
+  logWebSocketSuccess logger = logWebSocket logger L.LevelInfo
 
 mkWsLog :: L.LogLevel -> Maybe UserVars -> WSConnInfo -> WSEvent -> WSLog
 mkWsLog level uv ci ev = WSLog level $ WSLogInfo uv ci ev
