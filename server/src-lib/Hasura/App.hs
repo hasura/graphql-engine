@@ -31,6 +31,7 @@ import qualified Text.Mustache.Compile                as M
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Events.Lib
+import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
@@ -194,6 +195,7 @@ runHGEServer
      , UserAuthentication m
      , MetadataApiAuthorization m
      , HttpLog m
+     , WebSocketLog m
      , ConsoleRenderer m
      , LA.Forall (LA.Pure m)
      )
@@ -348,6 +350,10 @@ instance HttpLog AppM where
   logHttpSuccess logger userInfoM reqId httpReq _ _ compressedResponse qTime cType headers =
     unLogger logger $ mkHttpLog $
       mkHttpAccessLogContext userInfoM reqId httpReq compressedResponse qTime cType headers
+
+instance WebSocketLog AppM where
+  logWebSocket logger level userVars conn ev _ =
+    unLogger logger $ mkWsLog level userVars conn ev
 
 instance UserAuthentication AppM where
   resolveUserInfo logger manager headers authMode =

@@ -316,6 +316,7 @@ library
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
+                     , Hasura.GraphQL.Transport.WebSocket.Types
                      , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common

@@ -35,6 +35,7 @@ import qualified Text.Mustache                          as M
 import qualified Web.Spock.Core                         as Spock
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Logging
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
@@ -427,6 +428,7 @@ mkWaiApp
      , MonadStateless IO m
      , ConsoleRenderer m
      , HttpLog m
+     , WebSocketLog m
      , UserAuthentication m
      , MetadataApiAuthorization m
      , LA.Forall (LA.Pure m)
