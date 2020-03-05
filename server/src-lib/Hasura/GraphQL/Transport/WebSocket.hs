@@ -195,15 +195,16 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
   case execPlan of
     E.GExPHasura resolvedOp ->
-      runHasuraGQ timerTot telemCacheHit requestId q userInfo resolvedOp
+      runHasuraGQ timerTot telemCacheHit requestId q userInfo resolvedOp reqHdrs
     E.GExPRemote rsi opDef  ->
       runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
     telemTransport = Telem.HTTP
     runHasuraGQ :: (MonadIO m, WebSocketLog m) => ExceptT () m DiffTime
-                -> Telem.CacheHit -> RequestId -> GQLReqUnparsed -> UserInfo -> E.ExecOp
+                -> Telem.CacheHit -> RequestId -> GQLReqUnparsed
+                -> UserInfo -> E.ExecOp -> [H.Header]
                 -> ExceptT () m ()
-    runHasuraGQ timerTot telemCacheHit reqId query userInfo = \case
+    runHasuraGQ timerTot telemCacheHit reqId query userInfo execOp reqHdrs = case execOp of
       E.ExOpQuery opTx genSql ->
         execQueryOrMut Telem.Query genSql $ runLazyTx' pgExecCtx opTx
       E.ExOpMutation opTx ->
@@ -215,12 +216,12 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
         liftIO $ STM.atomically $
           STMMap.insert (lqId, _grOperationName q) opId opMap
-        lift $ logOpEv ODStarted (Just reqId)
+        lift $ logOpEv ODStarted (Just reqId) reqHdrs
 
       where
         telemLocality = Telem.Local
         execQueryOrMut telemQueryType genSql action = do
-          lift $ logOpEv ODStarted (Just reqId)
+          lift $ logOpEv ODStarted (Just reqId) reqHdrs
           -- log the generated SQL and the graphql query
           L.unLogger logger $ QueryLog query genSql reqId
           withElapsedTime (liftIO $ runExceptT action) >>= \case
@@ -274,9 +275,9 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     WSConnData userInfoR opMap errRespTy = WS.getData wsConn
 
-    logOpEv :: (MonadIO m, WebSocketLog m) => OpDetail -> Maybe RequestId -> m ()
-    logOpEv opTy reqId =
-      logWSEvent logger wsConn $ EOperation opDet
+    logOpEv :: (MonadIO m, WebSocketLog m) => OpDetail -> Maybe RequestId -> [H.Header] -> m ()
+    logOpEv opTy reqId reqHdrs =
+      logWSEvent logger wsConn (EOperation opDet) reqHdrs
       where
         opDet = OperationDetails opId reqId (_grOperationName q) opTy query
         -- log the query only in errors
@@ -294,17 +295,17 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       let errFn = getErrFn errRespTy
       sendMsg wsConn $
         SMErr $ ErrorMsg opId $ errFn False $ err400 StartFailed e
-      logOpEv (ODProtoErr e) Nothing
+      logOpEv (ODProtoErr e) Nothing []
 
     sendCompleted :: (MonadIO m, WebSocketLog m) => Maybe RequestId -> m ()
     sendCompleted reqId = do
       sendMsg wsConn (SMComplete $ CompletionMsg opId)
-      logOpEv ODCompleted reqId
+      logOpEv ODCompleted reqId []
 
     postExecErr :: (MonadIO m, WebSocketLog m) => RequestId -> QErr -> m ()
     postExecErr reqId qErr = do
       let errFn = getErrFn errRespTy
-      logOpEv (ODQueryErr qErr) (Just reqId)
+      logOpEv (ODQueryErr qErr) (Just reqId) []
       sendMsg wsConn $ SMData $
         DataMsg opId $ GRHasura $ GQExecError $ pure $ errFn False qErr
 
@@ -312,7 +313,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     preExecErr :: (MonadIO m, WebSocketLog m) => RequestId -> QErr -> m ()
     preExecErr reqId qErr = do
       let errFn = getErrFn errRespTy
-      logOpEv (ODQueryErr qErr) (Just reqId)
+      logOpEv (ODQueryErr qErr) (Just reqId) []
       let err = case errRespTy of
             ERTLegacy           -> errFn False qErr
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
@@ -349,7 +350,7 @@ onMessage authMode serverEnv wsConn msgRaw =
   case J.eitherDecode msgRaw of
     Left e    -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
-      logWSEvent logger wsConn $ EConnErr err
+      logWSEvent logger wsConn (EConnErr err) []
       sendMsg wsConn $ SMConnErr err
 
     Right msg -> case msg of
@@ -368,7 +369,7 @@ onStop serverEnv wsConn (StopMsg opId) = do
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
     Just (lqId, opNameM) -> do
-      logWSEvent logger wsConn $ EOperation $ opDet opNameM
+      logWSEvent logger wsConn (EOperation $ opDet opNameM) []
       liftIO $ LQ.removeLiveQuery lqMap lqId
     Nothing    -> return ()
   liftIO $ STM.atomically $ STMMap.delete opId opMap
@@ -380,15 +381,15 @@ onStop serverEnv wsConn (StopMsg opId) = do
 
 logWSEvent
   :: (MonadIO m, WebSocketLog m)
-  => L.Logger L.Hasura -> WSConn -> WSEvent -> m ()
-logWSEvent hLogger wsConn wsEv = do
+  => L.Logger L.Hasura -> WSConn -> WSEvent -> [H.Header] -> m ()
+logWSEvent hLogger wsConn wsEv reqHdrs = do
   userInfoME <- liftIO $ STM.readTVarIO userInfoR
   let (userVarsM, jwtExpM) = case userInfoME of
         CSInitialised userInfo jwtM _ -> ( Just $ userVars userInfo
                                          , jwtM
                                          )
         _                             -> (Nothing, Nothing)
-  logWebSocket hLogger logLevel userVarsM (WSConnInfo wsId jwtExpM Nothing) wsEv []
+  logWebSocket hLogger logLevel userVarsM (WSConnInfo wsId jwtExpM Nothing) wsEv reqHdrs
   where
     WSConnData userInfoR _ _ = WS.getData wsConn
     wsId = WS.getWSId wsConn
@@ -416,7 +417,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
       liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
         CSInitError $ qeError e
       let connErr = ConnErrMsg $ qeError e
-      logWSEvent logger wsConn $ EConnErr connErr
+      logWSEvent logger wsConn (EConnErr connErr) []
       sendMsg wsConn $ SMConnErr connErr
     Right (userInfo, expTimeM) -> do
       liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
@@ -445,7 +446,7 @@ onClose
   -> WSConn
   -> m ()
 onClose logger lqMap wsConn = do
-  logWSEvent logger wsConn EClosed
+  logWSEvent logger wsConn EClosed []
   operations <- liftIO $ STM.atomically $ ListT.toList $ STMMap.listT opMap
   void $ liftIO $ A.forConcurrently operations $ \(_, (lqId, _)) ->
     LQ.removeLiveQuery lqMap lqId
