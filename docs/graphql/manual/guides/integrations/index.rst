@@ -11,6 +11,7 @@ Guides: Integration/migration tutorials
   :local:
 
 - :doc:`auth0-jwt`
+- :doc:`auth-guardian-jwt`
 - :doc:`aws-cognito`
 - :doc:`apollo-subscriptions`
 - `Blog: Move from firebase to realtime GraphQL on Postgres <https://hasura.io/blog/firebase2graphql-moving-from-firebase-to-realtime-graphql-on-postgres-4d36cb7f4eaf>`__
@@ -24,5 +25,6 @@ Guides: Integration/migration tutorials
   :hidden:
 
   Auth0 JWT Integration <auth0-jwt>
+  OneGraph's AuthGuardian JWT Integration <auth-guardian-jwt>
   Using AWS Cognito for authentication <aws-cognito>
   Subscriptions using apollo-client <apollo-subscriptions>
