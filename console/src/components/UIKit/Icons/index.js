@@ -13,12 +13,11 @@ import {
 } from 'react-icons/fa';
 
 import { theme } from '../theme';
-
 import { StyledIcon } from './Icon';
 
 // ************************************** //
 
-const iconsReferenceObject = {
+const iconsReferenceMap = {
   success: FaCheckCircle,
   info: FaInfoCircle,
   warning: FaExclamationTriangle,
@@ -41,11 +40,9 @@ export const Icon = props => {
     ? theme.icons[type].color
     : theme.icons.default.color;
 
-  // If the received icon type is out of range then the default icon will be assign to ActiveIcon.
-
-  const CurrentActiveIcon = iconsReferenceObject[type]
-    ? iconsReferenceObject[type]
-    : iconsReferenceObject.default;
+  const CurrentActiveIcon = iconsReferenceMap[type]
+    ? iconsReferenceMap[type]
+    : iconsReferenceMap.default;
 
   return (
     <StyledIcon
