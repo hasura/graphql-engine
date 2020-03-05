@@ -158,6 +158,7 @@ library
                      , list-t
                      , async
                      , lifted-async
+                     , immortal < 0.3
 
                      -- logging related
                      , base64-bytestring >= 1.0
