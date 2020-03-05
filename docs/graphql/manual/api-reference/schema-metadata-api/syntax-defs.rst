@@ -21,6 +21,8 @@ TableName
 
    String | QualifiedTable_
 
+.. _QualifiedTable:
+
 QualifiedTable
 ^^^^^^^^^^^^^^
 
