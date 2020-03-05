@@ -84,17 +84,17 @@ func (s *ServerConfig) ParseEndpoint() error {
 // Config represents configuration required for the CLI to function
 type Config struct {
 	// Version of the config.
-	Version ConfigVersion `yaml:"version"`
+	Version ConfigVersion `yaml:"version,omitempty"`
 
 	// ServerConfig to be used by CLI to contact server.
 	ServerConfig `yaml:",inline"`
 
 	// MetadataDirectory defines the directory where the metadata files were stored.
-	MetadataDirectory string `yaml:"metadata_directory"`
+	MetadataDirectory string `yaml:"metadata_directory,omitempty"`
 	// MigrationsDirectory defines the directory where the migration files were stored.
 	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
 	// ActionConfig defines the config required to create or generate codegen for an action.
-	ActionConfig types.ActionExecutionConfig `yaml:"actions"`
+	ActionConfig *types.ActionExecutionConfig `yaml:"actions,omitempty"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -427,7 +427,7 @@ func (ec *ExecutionContext) readConfig() error {
 		},
 		MetadataDirectory:   v.GetString("metadata_directory"),
 		MigrationsDirectory: v.GetString("migrations_directory"),
-		ActionConfig: types.ActionExecutionConfig{
+		ActionConfig: &types.ActionExecutionConfig{
 			Kind:                  v.GetString("actions.kind"),
 			HandlerWebhookBaseURL: v.GetString("actions.handler_webhook_baseurl"),
 			Codegen: &types.CodegenExecutionConfig{

@@ -29,7 +29,7 @@ const (
 
 type ActionConfig struct {
 	MetadataDir        string
-	ActionConfig       types.ActionExecutionConfig
+	ActionConfig       *types.ActionExecutionConfig
 	serverFeatureFlags *version.ServerFeatureFlags
 	pluginsCfg         *plugins.Config
 	cliExtensionConfig *cliextension.Config
