@@ -22,6 +22,9 @@ const updateCLICmdExample = `  # Update CLI to latest version:
   # To disable auto-update check on the CLI, set
   # "show_update_notification": false
   # in ~/.hasura/config.json
+
+  # Update CLI to a specific version (say v1.2.0-beta.1):
+  hasura update-cli --version v1.2.0-beta.1
 `
 
 // NewUpdateCLICmd returns the update-cli command.
@@ -31,7 +34,7 @@ func NewUpdateCLICmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	updateCmd := &cobra.Command{
 		Use:          updateCLICmdUse,
-		Short:        "Update the CLI to latest version",
+		Short:        "Update the CLI to latest or a specific version",
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return ec.Prepare()
@@ -43,7 +46,7 @@ func NewUpdateCLICmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := updateCmd.Flags()
-	f.StringVar(&opts.version, "version", "", "version to be installed")
+	f.StringVar(&opts.version, "version", "", "a specific version to install")
 
 	return updateCmd
 }
@@ -87,8 +90,13 @@ func (o *updateOptions) run(showPrompt bool) (err error) {
 				}
 				versionToBeInstalled = latestVersion
 			case hasPreReleaseUpdate:
-				o.EC.Logger.Infof(`A new pre-release is available: %s: see changelog at %s
-  Update CLI to this version using: hasura update-cli --version %s`, preReleaseVersion.Original(), getChangeLogLink(preReleaseVersion), preReleaseVersion.Original())
+				o.EC.Logger.Infof(`a new pre-release version is available:
+- %s (changelog: %s)
+to update cli to this version, execute:
+
+  hasura update-cli --version %s
+
+`, preReleaseVersion.Original(), getChangeLogLink(preReleaseVersion), preReleaseVersion.Original())
 				return nil
 			}
 		} else {
