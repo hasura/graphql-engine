@@ -61,7 +61,7 @@ sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
   liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
   where
     bs = encodeServerMsg msg
-    wsInfo = Just $ WS.WSEventInfo
+    wsInfo = Just $ WS.WSServerEventInfo
       { WS._wseiQueryExecutionTime = Just $ realToFrac execTime
       , WS._wseiResponseSize = Just $ BL.length bs
       }

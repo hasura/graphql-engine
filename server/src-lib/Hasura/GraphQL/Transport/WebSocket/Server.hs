@@ -16,7 +16,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , WSHandlers(..)
 
   , WSServer
-  , WSEventInfo(..)
+  , WSServerEventInfo(..)
   , WSQueueResponse(..)
   , createWSServer
   , closeAll
@@ -53,7 +53,7 @@ instance J.ToJSON WSId where
   toJSON (WSId uuid) =
     J.toJSON $ UUID.toText uuid
 
-data WSEvent
+data WSServerEvent
   = EConnectionRequest
   | EAccepted
   | ERejected
@@ -68,11 +68,11 @@ $(J.deriveToJSON
   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 1
                    , J.sumEncoding = J.TaggedObject "type" "detail"
                    }
-  ''WSEvent)
+  ''WSServerEvent)
 
 -- extra websocket event info
-data WSEventInfo
-  = WSEventInfo
+data WSServerEventInfo
+  = WSServerEventInfo
   { _wseiQueryExecutionTime :: !(Maybe Double)
   , _wseiResponseSize       :: !(Maybe Int64)
   } deriving (Show, Eq)
@@ -80,29 +80,29 @@ $(J.deriveToJSON
   J.defaultOptions { J.fieldLabelModifier = J.snakeCase . drop 5
                    , J.omitNothingFields = True
                    }
-  ''WSEventInfo)
+  ''WSServerEventInfo)
 
 
-data WSLog
-  = WSLog
+data WSServerLog
+  = WSServerLog
   { _wslWebsocketId :: !WSId
-  , _wslEvent       :: !WSEvent
-  , _wslMetadata    :: !(Maybe WSEventInfo)
+  , _wslEvent       :: !WSServerEvent
+  , _wslMetadata    :: !(Maybe WSServerEventInfo)
   } deriving (Show, Eq)
 $(J.deriveToJSON
   J.defaultOptions { J.fieldLabelModifier = J.snakeCase . drop 4
                    , J.omitNothingFields = True
                    }
-  ''WSLog)
+  ''WSServerLog)
 
-instance L.ToEngineLog WSLog L.Hasura where
+instance L.ToEngineLog WSServerLog L.Hasura where
   toEngineLog wsLog =
     (L.LevelDebug, L.ELTInternal L.ILTWsServer, J.toJSON wsLog)
 
 data WSQueueResponse
   = WSQueueResponse
   { _wsqrMessage   :: !BL.ByteString
-  , _wsqrEventInfo :: !(Maybe WSEventInfo)
+  , _wsqrEventInfo :: !(Maybe WSServerEventInfo)
   -- ^ extra metadata that we use for other actions, such as print log
   -- we don't want to inlcude them into websocket message payload
   }
@@ -133,7 +133,7 @@ forceConnReconnect wsConn bs = liftIO $ closeConnWithCode wsConn 1012 bs
 closeConnWithCode :: WSConn a -> Word16 -> BL.ByteString -> IO ()
 closeConnWithCode wsConn code bs = do
   (L.unLogger . _wcLogger) wsConn $
-    WSLog (_wcConnId wsConn) (ECloseSent $ TBS.fromLBS bs) Nothing
+    WSServerLog (_wcConnId wsConn) (ECloseSent $ TBS.fromLBS bs) Nothing
   WS.sendCloseCode (_wcConnRaw wsConn) code bs
 
 -- writes to a queue instead of the raw connection
@@ -215,7 +215,7 @@ createServerApp
   -> m ()
 createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
-  writeLog $ WSLog wsId EConnectionRequest Nothing
+  writeLog $ WSServerLog wsId EConnectionRequest Nothing
   status <- liftIO $ STM.readTVarIO serverStatus
   case status of
     AcceptingConns _ -> do
@@ -235,11 +235,11 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
 
     onReject wsId rejectRequest = do
       liftIO $ WS.rejectRequestWith pendingConn rejectRequest
-      writeLog $ WSLog wsId ERejected Nothing
+      writeLog $ WSServerLog wsId ERejected Nothing
 
     onAccept wsId (AcceptWith a acceptWithParams keepAliveM onJwtExpiryM) = do
       conn  <- liftIO $ WS.acceptRequestWith pendingConn acceptWithParams
-      writeLog $ WSLog wsId EAccepted Nothing
+      writeLog $ WSServerLog wsId EAccepted Nothing
       sendQ <- liftIO STM.newTQueueIO
       let wsConn = WSConn wsId logger conn sendQ a
 
@@ -260,13 +260,13 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
         AcceptingConns connMap -> do
           rcvRef <- LA.async $ forever $ do
             msg <- liftIO $ WS.receiveData conn
-            writeLog $ WSLog wsId (EMessageReceived $ TBS.fromLBS msg) Nothing
+            writeLog $ WSServerLog wsId (EMessageReceived $ TBS.fromLBS msg) Nothing
             _hOnMessage wsHandlers wsConn msg
 
           sendRef <- LA.async $ forever $ do
             WSQueueResponse msg wsInfo <- liftIO $ STM.atomically $ STM.readTQueue sendQ
             liftIO $ WS.sendTextData conn msg
-            writeLog $ WSLog wsId (EMessageSent $ TBS.fromLBS msg) wsInfo
+            writeLog $ WSServerLog wsId (EMessageSent $ TBS.fromLBS msg) wsInfo
 
           keepAliveRefM <- forM keepAliveM $ \action -> LA.async $ liftIO $ action wsConn
           onJwtExpiryRefM <- forM onJwtExpiryM $ \action -> LA.async $ liftIO $ action wsConn
@@ -278,17 +278,17 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
 
           case res of
             Left ( _ :: WS.ConnectionException) -> do
-              writeLog $ WSLog (_wcConnId wsConn) ECloseReceived Nothing
+              writeLog $ WSServerLog (_wcConnId wsConn) ECloseReceived Nothing
               onConnClose connMap wsConn
             -- this will happen when jwt is expired
             Right _ -> do
-              writeLog $ WSLog (_wcConnId wsConn) EJwtExpired Nothing
+              writeLog $ WSServerLog (_wcConnId wsConn) EJwtExpired Nothing
               onConnClose connMap wsConn
 
     onConnClose connMap wsConn = do
       liftIO $ STM.atomically $ STMMap.delete (_wcConnId wsConn) connMap
       _hOnClose wsHandlers wsConn
-      writeLog $ WSLog (_wcConnId wsConn) EClosed Nothing
+      writeLog $ WSServerLog (_wcConnId wsConn) EClosed Nothing
 
 
 shutdown :: WSServer a -> IO ()
