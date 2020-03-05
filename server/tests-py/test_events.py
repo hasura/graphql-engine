@@ -95,14 +95,16 @@ class TestEventFlood(object):
     def test_flood(self, hge_ctx, evts_webhook):
         table = {"schema": "hge_tests", "name": "test_t1"}
 
-        payload = range(1,2001)
+        payload = range(1,1001)
         rows = list(map(lambda x: {"c1": x, "c2": "hello"}, payload))
         st_code, resp = insert_many(hge_ctx, table, rows)
         assert st_code == 200, resp
 
         def get_evt():
-            # TODO hm, without a long timeout this fails intermittently on CI:
-            ev_full = evts_webhook.get_event(300)
+            # TODO ThreadedHTTPServer helps locally (I only need a timeout of
+            # 10 here), but we still need a bit of a long timeout here for CI
+            # it seems, since webhook can't keep up there:
+            ev_full = evts_webhook.get_event(600)
             return ev_full['body']['event']['data']['new']['c1']
         # Make sure we got all payloads (probably out of order):
         ns = list(map(lambda _: get_evt(), payload))
