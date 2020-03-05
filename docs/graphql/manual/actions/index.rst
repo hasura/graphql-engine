@@ -110,6 +110,9 @@ How it works?
 * The action response is returned to the client synchronously or asynchronously
   based on the kind.
 
+.. admonition:: Limitations
+
+  Currently, actions are only supported for **Postgres versions 10 or higher**.
 
 Learn more
 ----------
