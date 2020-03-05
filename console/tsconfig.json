@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "lib": ["es6", "dom", "es2017"],
+    "checkJs": true,
+    "allowJs": true,
+    "jsx": "react",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "noEmitOnError": false
+  },
+  "exclude": ["node_modules"],
+  "include": ["src/**/*"]
+}
