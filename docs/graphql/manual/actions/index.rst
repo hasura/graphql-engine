@@ -20,8 +20,9 @@ enrichment from external sources and any other complex business logic.
 
 .. admonition:: Supported from
 
-   Actions are currently available for preview in the pre-release versions of
-   ``v1.2.0``
+   - Actions are currently available for preview in the pre-release versions of ``v1.2.0``
+
+   - Actions are only supported for ``Postgres versions 10 or higher``.
 
    .. Actions are supported in versions ``v.1.2.0`` and above.
 
@@ -109,10 +110,6 @@ How it works?
   and again persisted to the event store.
 * The action response is returned to the client synchronously or asynchronously
   based on the kind.
-
-.. admonition:: Limitations
-
-  Currently, actions are only supported for **Postgres versions 10 or higher**.
 
 Learn more
 ----------
