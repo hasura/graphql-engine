@@ -20,7 +20,7 @@ enrichment from external sources and any other complex business logic.
 
 .. admonition:: Supported from
 
-   Actions are currently available in beta in the pre-release versions of ``v1.2.0``
+   Actions are currently available in beta in the pre-release versions of ``v1.2.0``.
 
    .. Actions are supported in versions ``v.1.2.0`` and above.
 
