@@ -230,6 +230,9 @@ library
                      -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
 
+                     , Hasura.GraphQL.Transport.WebSocket.Types
+                     , Hasura.GraphQL.Logging
+                     
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Run
                      , Hasura.RQL.DDL.Metadata
@@ -317,7 +320,6 @@ library
                      , Hasura.GraphQL.Transport.HTTP
                      , Hasura.GraphQL.Transport.WebSocket.Protocol
                      , Hasura.GraphQL.Transport.WebSocket.Server
-                     , Hasura.GraphQL.Transport.WebSocket.Types
                      , Hasura.GraphQL.Transport.WebSocket
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
@@ -361,7 +363,7 @@ library
                      , Hasura.GraphQL.Resolve.Select
                      , Hasura.GraphQL.RemoteServer
                      , Hasura.GraphQL.Context
-                     , Hasura.GraphQL.Logging
+                     
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
