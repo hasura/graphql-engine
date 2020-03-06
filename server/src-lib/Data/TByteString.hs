@@ -13,8 +13,10 @@ import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as TE
 
 import           Data.Bool              (bool)
+import           Data.String
 import           Prelude
 
+-- | A JSON-serializable type for either text or raw binary data, encoded with base-64.
 newtype TByteString
   = TByteString (Bool, T.Text)
   deriving (Show, Eq)
@@ -22,6 +24,9 @@ newtype TByteString
 instance J.ToJSON TByteString where
   toJSON (TByteString (isBase64, t)) =
     bool (J.toJSON t) (J.toJSON ["Base64", t]) isBase64
+
+instance IsString TByteString where
+  fromString = fromText . T.pack
 
 fromText :: T.Text -> TByteString
 fromText t = TByteString (False, t)
