@@ -134,6 +134,8 @@ $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPReq)
 instance ToEngineLog HTTPReq Hasura where
   toEngineLog req = (LevelInfo, eventTriggerLogType, J.toJSON req)
 
+-- | Like 'HTTP.httpLbs' but we catch 'HTTP.HttpException' and return all known
+-- error-like conditions as 'HTTPErr'.
 runHTTP
   :: ( MonadReader r m
      , Has (Logger Hasura) r
