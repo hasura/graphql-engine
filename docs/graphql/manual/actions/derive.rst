@@ -20,6 +20,7 @@ existing mutation by:
 - Generating the handler code to delegate the action back to the original mutation
   after executing some business logic
 
+
 Generate derived action GraphQL types
 -------------------------------------
 
@@ -169,6 +170,9 @@ the action back to the original mutation.
       currently only possible to generate handler files with the delegation
       logic during action creation.
 
+Best Practices
+--------------
 
+If you are using an action to validate a mutation, it is highly recommended to disable the underlying mutation for all non-admin roles so that it cannot be executed without the validation. This way, only the action is exposed to non-admin roles and the underlying mutation is executed only from the webhook in admin mode (with admin secret).
 
-
+Therefore, you want to send ``admin-secret`` as a header to the webhook and execute the mutation with admin secret after all the validation.
