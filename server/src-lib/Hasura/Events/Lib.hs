@@ -481,7 +481,7 @@ fetchEvents limitI =
                     FROM hdb_catalog.event_log l
                     WHERE l.delivered = 'f' and l.error = 'f' and l.locked = 'f'
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
-                          and l.archived = 'f'
+                          and l.archived = 'f' and l.paused = 'f'
                     ORDER BY created_at
                     LIMIT $1
                     FOR UPDATE SKIP LOCKED )

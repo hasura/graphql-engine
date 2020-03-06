@@ -6,6 +6,8 @@ module Hasura.RQL.DDL.EventTrigger
   , RedeliverEventQuery
   , runRedeliverEvent
   , runInvokeEventTrigger
+  , runPauseEventTrigger
+  , runResumeEventTrigger
 
   -- TODO: review
   , delEventTriggerFromCatalog
@@ -307,6 +309,24 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
       Just True -> return ()
       _         -> throw400 NotSupported "manual mode is not enabled for event trigger"
 
+runPauseEventTrigger
+  :: (MonadTx m)
+  => PauseEventTriggerQuery -> m EncJSON
+runPauseEventTrigger (PauseEventTriggerQuery name) = do
+  affectedRows <- updatePauseOfEventTriggerInCatalog name True
+  if | affectedRows == 1 -> pure successMsg
+     | affectedRows == 0 -> throw400 NotFound "event trigger not found"
+     | otherwise -> throw500 "unexpected: more than one event triggers have been paused"
+
+runResumeEventTrigger
+  :: (MonadTx m)
+  => ResumeEventTriggerQuery -> m EncJSON
+runResumeEventTrigger (ResumeEventTriggerQuery name) = do
+  affectedRows <- updatePauseOfEventTriggerInCatalog name False
+  if | affectedRows == 1 -> pure successMsg
+     | affectedRows == 0 -> throw400 NotFound "event trigger not found"
+     | otherwise -> throw500 "unexpected: more than one event triggers have been resumed"
+
 getHeaderInfosFromConf
   :: (QErrM m, MonadIO m)
   => [HeaderConf] -> m [EventHeaderInfo]
@@ -354,3 +374,12 @@ updateEventTriggerInCatalog trigConf =
       configuration = $1
       WHERE name = $2
     |] (Q.AltJ $ toJSON trigConf, etcName trigConf) True
+
+updatePauseOfEventTriggerInCatalog :: (MonadTx m) => TriggerName -> Bool -> m Int
+updatePauseOfEventTriggerInCatalog triggerName pause = liftTx $ do
+  (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+    [Q.sql|
+      WITH "cte" AS
+      (UPDATE hdb_catalog.event_triggers SET paused = $1 WHERE name = $2 RETURNING *)
+      SELECT count(*) FROM "cte"
+    |] (pause, triggerName) True

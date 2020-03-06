@@ -276,6 +276,7 @@ CREATE TABLE hdb_catalog.event_triggers
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
   configuration JSON,
+  paused BOOLEAN NOT NULL DEFAULT FALSE,
   comment TEXT,
   FOREIGN KEY (schema_name, table_name)
   REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
@@ -294,7 +295,8 @@ CREATE TABLE hdb_catalog.event_log
   created_at TIMESTAMP DEFAULT NOW(),
   locked BOOLEAN NOT NULL DEFAULT FALSE,
   next_retry_at TIMESTAMP,
-  archived BOOLEAN NOT NULL DEFAULT FALSE
+  archived BOOLEAN NOT NULL DEFAULT FALSE,
+  paused BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE INDEX ON hdb_catalog.event_log (trigger_name);
@@ -593,8 +595,11 @@ CREATE OR REPLACE FUNCTION
     payload json;
     session_variables json;
     server_version_num int;
+    et_pause boolean;
   BEGIN
     id := gen_random_uuid();
+    select paused into et_pause
+    from hdb_catalog.event_triggers where name = trigger_name;
     server_version_num := current_setting('server_version_num');
     IF server_version_num >= 90600 THEN
       session_variables := current_setting('hasura.user', 't');
@@ -611,9 +616,9 @@ CREATE OR REPLACE FUNCTION
       'session_variables', session_variables
     );
     INSERT INTO hdb_catalog.event_log
-                (id, schema_name, table_name, trigger_name, payload)
+                (id, schema_name, table_name, trigger_name, payload, paused)
     VALUES
-    (id, schema_name, table_name, trigger_name, payload);
+    (id, schema_name, table_name, trigger_name, payload, et_pause);
     RETURN id;
   END;
 $$ LANGUAGE plpgsql;

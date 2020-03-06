@@ -224,3 +224,77 @@ EventTriggerColumns
    :class: haskell-pre
 
    "*" | [:ref:`PGColumn`]
+
+.. _pause_event_trigger:
+
+pause_event_trigger
+--------------------
+
+``pause_event_trigger`` is used to pause an event trigger.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "pause_event_trigger",
+       "args" : {
+           "name": "sample_trigger"
+       }
+   }
+
+.. _pause_event_trigger_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - name
+     - true
+     - TriggerName_
+     - Name of the event trigger
+
+.. _resume_event_trigger:
+
+resume_event_trigger
+--------------------
+
+``resume_event_trigger`` is used to resume an event trigger.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "resume_event_trigger",
+       "args" : {
+           "name": "sample_trigger"
+       }
+   }
+
+.. _resume_event_trigger_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - name
+     - true
+     - TriggerName_
+     - Name of the event trigger
