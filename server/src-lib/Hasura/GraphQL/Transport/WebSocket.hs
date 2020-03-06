@@ -178,7 +178,7 @@ onConn hLogger corsPolicy wsId requestHead = do
             <> "HASURA_GRAPHQL_WS_READ_COOKIE to force read cookie when CORS is disabled."
 
 
-onStart :: (MonadIO m, WebSocketLog m, HasVersion) => WSServerEnv -> WSConn -> StartMsg -> m ()
+onStart :: forall m. (MonadIO m, WebSocketLog m, HasVersion) => WSServerEnv -> WSConn -> StartMsg -> m ()
 onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
   timerTot <- startTimer
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
@@ -212,7 +212,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       runRemoteGQ timerTot telemCacheHit execCtx requestId userInfo reqHdrs opDef rsi
   where
     telemTransport = Telem.HTTP
-    runHasuraGQ :: (MonadIO m, WebSocketLog m) => ExceptT () m DiffTime
+    runHasuraGQ :: ExceptT () m DiffTime
                 -> Telem.CacheHit -> RequestId -> GQLReqUnparsed
                 -> UserInfo -> E.ExecOp -> [H.Header]
                 -> ExceptT () m ()
@@ -250,7 +250,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
           lift $ sendCompleted (Just reqId)
 
-    runRemoteGQ :: (MonadIO m, WebSocketLog m) => ExceptT () m DiffTime
+    runRemoteGQ :: ExceptT () m DiffTime
                 -> Telem.CacheHit -> E.ExecutionCtx -> RequestId -> UserInfo -> [H.Header]
                 -> G.TypedOperationDefinition -> RemoteSchemaInfo
                 -> ExceptT () m ()
@@ -276,7 +276,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
       lift $ sendCompleted (Just reqId)
 
-    sendRemoteResp :: (MonadIO m, WebSocketLog m) => RequestId -> EncJSON -> LQ.LiveQueryMetadata -> m ()
+    sendRemoteResp :: RequestId -> EncJSON -> LQ.LiveQueryMetadata -> m ()
     sendRemoteResp reqId resp meta =
       case J.eitherDecodeStrict (encJToBS resp) of
         Left e    -> postExecErr reqId $ invalidGqlErr $ T.pack e
@@ -290,9 +290,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
 
     WSConnData userInfoR opMap errRespTy = WS.getData wsConn
 
-    logOpEv :: (MonadIO m, WebSocketLog m) => OpDetail -> Maybe RequestId -> [H.Header] -> m ()
-    logOpEv opTy reqId reqHdrs =
-      logWSEvent logger wsConn (EOperation opDet) reqHdrs
+    logOpEv :: OpDetail -> Maybe RequestId -> [H.Header] -> m ()
+    logOpEv opTy reqId = logWSEvent logger wsConn (EOperation opDet)
       where
         opDet = OperationDetails opId reqId (_grOperationName q) opTy query
         -- log the query only in errors
@@ -305,19 +304,19 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         ERTLegacy           -> encodeQErr
         ERTGraphqlCompliant -> encodeGQLErr
 
-    sendStartErr :: (MonadIO m, WebSocketLog m) => Text -> m ()
+    sendStartErr :: Text -> m ()
     sendStartErr e = do
       let errFn = getErrFn errRespTy
       sendMsg wsConn $
         SMErr $ ErrorMsg opId $ errFn False $ err400 StartFailed e
       logOpEv (ODProtoErr e) Nothing []
 
-    sendCompleted :: (MonadIO m, WebSocketLog m) => Maybe RequestId -> m ()
+    sendCompleted :: Maybe RequestId -> m ()
     sendCompleted reqId = do
       sendMsg wsConn (SMComplete $ CompletionMsg opId)
       logOpEv ODCompleted reqId []
 
-    postExecErr :: (MonadIO m, WebSocketLog m) => RequestId -> QErr -> m ()
+    postExecErr :: RequestId -> QErr -> m ()
     postExecErr reqId qErr = do
       let errFn = getErrFn errRespTy
       logOpEv (ODQueryErr qErr) (Just reqId) []
@@ -325,7 +324,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         DataMsg opId $ GRHasura $ GQExecError $ pure $ errFn False qErr
 
     -- why wouldn't pre exec error use graphql response?
-    preExecErr :: (MonadIO m, WebSocketLog m) => RequestId -> QErr -> m ()
+    preExecErr :: RequestId -> QErr -> m ()
     preExecErr reqId qErr = do
       let errFn = getErrFn errRespTy
       logOpEv (ODQueryErr qErr) (Just reqId) []
@@ -334,12 +333,12 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             ERTGraphqlCompliant -> J.object ["errors" J..= [errFn False qErr]]
       sendMsg wsConn (SMErr $ ErrorMsg opId err)
 
-    sendSuccResp :: MonadIO m => EncJSON -> LQ.LiveQueryMetadata -> m ()
+    sendSuccResp :: EncJSON -> LQ.LiveQueryMetadata -> m ()
     sendSuccResp encJson =
       sendMsgWithMetadata wsConn
         (SMData $ DataMsg opId $ GRHasura $ GQSuccess $ encJToLBS encJson)
 
-    withComplete :: (MonadIO m, WebSocketLog m) => ExceptT () m () -> ExceptT () m a
+    withComplete :: ExceptT () m () -> ExceptT () m a
     withComplete action = do
       action
       lift $ sendCompleted Nothing
@@ -353,7 +352,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     liveQOnChange resp = sendMsg wsConn $ SMData $ DataMsg opId $ GRHasura $
       LQ._lqrPayload <$> resp
 
-    catchAndIgnore :: MonadIO m => ExceptT () m () -> m ()
+    catchAndIgnore :: ExceptT () m () -> m ()
     catchAndIgnore m = void $ runExceptT m
 
 onMessage
