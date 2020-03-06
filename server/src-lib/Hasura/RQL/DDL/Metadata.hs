@@ -70,7 +70,7 @@ applyQP1
   :: (QErrM m)
   => ReplaceMetadata -> m ()
 applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
-          allowlist _ actions remoteRelationships) = do
+          allowlist _ actions) = do
   withPathK "tables" $ do
 
     checkMultipleDecls "tables" $ map _tmTable tables
@@ -86,6 +86,7 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
           delPerms = map Permission.pdRole $ table ^. tmDeletePermissions
           eventTriggers = map etcName $ table ^. tmEventTriggers
           computedFields = map _cfmName $ table ^. tmComputedFields
+          remoteRelationships = map rtrName $ table ^. tmRemoteRelationships
 
       checkMultipleDecls "relationships" allRels
       checkMultipleDecls "insert permissions" insPerms
@@ -94,6 +95,7 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
       checkMultipleDecls "delete permissions" delPerms
       checkMultipleDecls "event triggers" eventTriggers
       checkMultipleDecls "computed fields" computedFields
+      checkMultipleDecls "remote relationships" remoteRelationships
 
   withPathK "functions" $
     case functionsMeta of
@@ -113,10 +115,6 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
 
   withPathK "actions" $
     checkMultipleDecls "actions" $ map _amName actions
-
-  withPathK "remote_relationships" $
-      checkMultipleDecls "remote relationships" $
-      map (\rel -> (rtrName rel, rtrTable rel)) remoteRelationships
 
   where
     withTableName qt = withPathK (qualObjectToText qt)
@@ -141,7 +139,7 @@ applyQP2
   => ReplaceMetadata
   -> m EncJSON
 applyQP2 (ReplaceMetadata _ tables functionsMeta
-          schemas collections allowlist customTypes actions remoteRelationships) = do
+          schemas collections allowlist customTypes actions) = do
 
   liftTx clearMetadata
   buildSchemaCacheStrict
@@ -168,6 +166,10 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta
           \(ComputedFieldMeta name definition comment) ->
             ComputedField.addComputedFieldToCatalog $
               ComputedField.AddComputedField (table ^. tmTable) name definition comment
+      -- Remote relationships
+      withPathK "remote_relationships" $
+        indexedForM_ (table ^. tmRemoteRelationships) (void . RemoteRelationship.runCreateRemoteRelationship)
+
 
     -- Permissions
     indexedForM_ tables $ \table -> do
@@ -219,10 +221,6 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta
                                    (_apmRole permission) Nothing (_apmComment permission)
       Action.persistCreateActionPermission createActionPermission
 
-  -- remote relationships
-  withPathK "remote_relationships" $
-    indexedMapM_ (void . RemoteRelationship.runCreateRemoteRelationship) remoteRelationships
-
   buildSchemaCacheStrict
   return successMsg
 
@@ -273,6 +271,9 @@ fetchMetadata = do
   -- Fetch all computed fields
   computedFields <- fetchComputedFields
 
+  -- Fetch all remote relationships
+  remoteRelationships <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
+
   let (_, postRelMap) = flip runState tableMetaMap $ do
         modMetaMap tmObjectRelationships objRelDefs
         modMetaMap tmArrayRelationships arrRelDefs
@@ -282,6 +283,7 @@ fetchMetadata = do
         modMetaMap tmDeletePermissions delPermDefs
         modMetaMap tmEventTriggers triggerMetaDefs
         modMetaMap tmComputedFields computedFields
+        modMetaMap tmRemoteRelationships remoteRelationships
 
   -- fetch all functions
   functions <- FMVersion2 <$> Q.catchE defaultTxErrorHandler fetchFunctions
@@ -300,12 +302,9 @@ fetchMetadata = do
   -- fetch actions
   actions <- fetchActions
 
-  -- fetch all remote relationships
-  remoteRels <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
-
   return $ ReplaceMetadata currentMetadataVersion (HMIns.elems postRelMap) functions
                            remoteSchemas collections allowlist
-                           customTypes actions remoteRels
+                           customTypes actions
 
   where
 

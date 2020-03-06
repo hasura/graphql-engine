@@ -41,7 +41,6 @@ genReplaceMetadata = do
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
-    <*> arbitrary
   where
     genFunctionsMetadata :: MetadataVersion -> Gen FunctionsMetadata
     genFunctionsMetadata = \case

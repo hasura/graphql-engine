@@ -11,6 +11,7 @@ module Hasura.RQL.DDL.Metadata.Types
   , tmObjectRelationships
   , tmArrayRelationships
   , tmComputedFields
+  , tmRemoteRelationships
   , tmInsertPermissions
   , tmSelectPermissions
   , tmUpdatePermissions
@@ -90,6 +91,7 @@ data TableMeta
   , _tmObjectRelationships :: ![Relationship.ObjRelDef]
   , _tmArrayRelationships  :: ![Relationship.ArrRelDef]
   , _tmComputedFields      :: ![ComputedFieldMeta]
+  , _tmRemoteRelationships :: ![RemoteRelationship.RemoteRelationship]
   , _tmInsertPermissions   :: ![Permission.InsPermDef]
   , _tmSelectPermissions   :: ![Permission.SelPermDef]
   , _tmUpdatePermissions   :: ![Permission.UpdPermDef]
@@ -100,7 +102,7 @@ $(makeLenses ''TableMeta)
 
 mkTableMeta :: QualifiedTable -> Bool -> TableConfig -> TableMeta
 mkTableMeta qt isEnum config =
-  TableMeta qt isEnum config [] [] [] [] [] [] [] []
+  TableMeta qt isEnum config [] [] [] [] [] [] [] [] []
 
 instance FromJSON TableMeta where
   parseJSON (Object o) = do
@@ -115,6 +117,7 @@ instance FromJSON TableMeta where
      <*> o .:? orKey .!= []
      <*> o .:? arKey .!= []
      <*> o .:? cfKey .!= []
+     <*> o .:? rrKey .!= []
      <*> o .:? ipKey .!= []
      <*> o .:? spKey .!= []
      <*> o .:? upKey .!= []
@@ -133,6 +136,7 @@ instance FromJSON TableMeta where
       dpKey = "delete_permissions"
       etKey = "event_triggers"
       cfKey = "computed_fields"
+      rrKey = "remote_relationships"
 
       unexpectedKeys =
         HS.fromList (HM.keys o) `HS.difference` expectedKeySet
@@ -140,7 +144,7 @@ instance FromJSON TableMeta where
       expectedKeySet =
         HS.fromList [ tableKey, isEnumKey, configKey, orKey
                     , arKey , ipKey, spKey, upKey, dpKey, etKey
-                    , cfKey
+                    , cfKey, rrKey
                     ]
 
   parseJSON _ =
@@ -165,15 +169,14 @@ instance FromJSON ClearMetadata where
 
 data ReplaceMetadata
   = ReplaceMetadata
-  { aqVersion             :: !MetadataVersion
-  , aqTables              :: ![TableMeta]
-  , aqFunctions           :: !FunctionsMetadata
-  , aqRemoteSchemas       :: ![AddRemoteSchemaQuery]
-  , aqQueryCollections    :: ![Collection.CreateCollection]
-  , aqAllowlist           :: ![Collection.CollectionReq]
-  , aqCustomTypes         :: !CustomTypes
-  , aqActions             :: ![ActionMetadata]
-  , aqRemoteRelationships :: ![RemoteRelationship.RemoteRelationship]
+  { aqVersion          :: !MetadataVersion
+  , aqTables           :: ![TableMeta]
+  , aqFunctions        :: !FunctionsMetadata
+  , aqRemoteSchemas    :: ![AddRemoteSchemaQuery]
+  , aqQueryCollections :: ![Collection.CreateCollection]
+  , aqAllowlist        :: ![Collection.CollectionReq]
+  , aqCustomTypes      :: !CustomTypes
+  , aqActions          :: ![ActionMetadata]
   } deriving (Show, Eq, Lift)
 
 instance FromJSON ReplaceMetadata where
@@ -187,7 +190,6 @@ instance FromJSON ReplaceMetadata where
       <*> o .:? "allow_list" .!= []
       <*> o .:? "custom_types" .!= emptyCustomTypes
       <*> o .:? "actions" .!= []
-      <*> o .:? "remote_relationships" .!= []
     where
       parseFunctions version maybeValue =
         case version of
@@ -252,7 +254,6 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                allowlist
                                customTypes
                                actions
-                               remoteRelationships
                              ) = AO.object $ [versionPair, tablesPair] <>
                                  catMaybes [ functionsPair
                                            , remoteSchemasPair
@@ -260,7 +261,6 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                            , allowlistPair
                                            , actionsPair
                                            , customTypesPair
-                                           , remoteRelationshipsPair
                                            ]
   where
     versionPair = ("version", AO.toOrdered version)
@@ -275,7 +275,6 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
     customTypesPair = if customTypes == emptyCustomTypes then Nothing
                       else Just ("custom_types", customTypesToOrdJSON customTypes)
     actionsPair = listToMaybeOrdPair "actions" actionMetadataToOrdJSON actions
-    remoteRelationshipsPair = listToMaybeOrdPair "remote_relationships" AO.toOrdered remoteRelationships
 
     tableMetaToOrdJSON :: TableMeta -> AO.Value
     tableMetaToOrdJSON ( TableMeta
@@ -285,6 +284,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                          objectRelationships
                          arrayRelationships
                          computedFields
+                         remoteRelationships
                          insertPermissions
                          selectPermissions
                          updatePermissions
@@ -296,6 +296,7 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                         , objectRelationshipsPair
                                         , arrayRelationshipsPair
                                         , computedFieldsPair
+                                        , remoteRelationshipsPair
                                         , insertPermissionsPair
                                         , selectPermissionsPair
                                         , updatePermissionsPair
@@ -312,6 +313,8 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                                  relDefToOrdJSON arrayRelationships
         computedFieldsPair = listToMaybeOrdPair "computed_fields"
                              computedFieldMetaToOrdJSON computedFields
+        remoteRelationshipsPair = listToMaybeOrdPair "remote_relationships"
+                                  AO.toOrdered remoteRelationships
         insertPermissionsPair = listToMaybeOrdPair "insert_permissions"
                                 insPermDefToOrdJSON insertPermissions
         selectPermissionsPair = listToMaybeOrdPair "select_permissions"
