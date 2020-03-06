@@ -276,7 +276,8 @@ CREATE TABLE hdb_catalog.event_triggers
   schema_name TEXT NOT NULL,
   table_name TEXT NOT NULL,
   configuration JSON,
-  comment TEXT,
+  paused BOOLEAN NOT NULL DEFAULT FALSE,
+  comment TEXT
   FOREIGN KEY (schema_name, table_name)
   REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
 );

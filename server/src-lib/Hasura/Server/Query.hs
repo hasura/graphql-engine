@@ -89,6 +89,7 @@ data RQLQueryV1
   | RQDeleteEventTrigger !DeleteEventTriggerQuery
   | RQRedeliverEvent     !RedeliverEventQuery
   | RQInvokeEventTrigger !InvokeEventTriggerQuery
+  | RQPauseEventTrigger  !PauseEventTriggerQuery
 
   -- query collections, allow list related
   | RQCreateQueryCollection !CreateCollection
@@ -251,6 +252,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQDeleteEventTrigger _          -> True
   RQRedeliverEvent _              -> False
   RQInvokeEventTrigger _          -> False
+  RQPauseEventTrigger _           -> False
 
   RQCreateQueryCollection _       -> True
   RQDropQueryCollection _         -> True
@@ -376,6 +378,7 @@ runQueryM rq = withPathK "args" $ case rq of
       RQDeleteEventTrigger q       -> runDeleteEventTriggerQuery q
       RQRedeliverEvent q           -> runRedeliverEvent q
       RQInvokeEventTrigger q       -> runInvokeEventTrigger q
+      RQPauseEventTrigger q        -> runPauseEventTrigger q
 
       RQCreateQueryCollection q        -> runCreateCollection q
       RQDropQueryCollection q          -> runDropCollection q
@@ -457,6 +460,7 @@ requiresAdmin = \case
     RQDeleteEventTrigger _          -> True
     RQRedeliverEvent _              -> True
     RQInvokeEventTrigger _          -> True
+    RQPauseEventTrigger _           -> True
 
     RQCreateQueryCollection _       -> True
     RQDropQueryCollection _         -> True

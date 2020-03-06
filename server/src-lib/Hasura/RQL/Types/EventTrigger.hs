@@ -18,6 +18,7 @@ module Hasura.RQL.Types.EventTrigger
   , EventHeaderInfo(..)
   , WebhookConf(..)
   , WebhookConfInfo(..)
+  , PauseEventTriggerQuery(..)
 
   , defaultRetryConf
   , defaultTimeoutSeconds
@@ -219,3 +220,11 @@ data InvokeEventTriggerQuery
   } deriving (Show, Eq, Lift)
 
 $(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvokeEventTriggerQuery)
+
+data PauseEventTriggerQuery
+  = PauseEventTriggerQuery
+  { petqName  :: !TriggerName
+  , petqState :: !Bool
+  } deriving (Show, Eq, Lift)
+
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''PauseEventTriggerQuery)

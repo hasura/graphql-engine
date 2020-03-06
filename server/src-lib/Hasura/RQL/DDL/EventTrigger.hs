@@ -6,6 +6,7 @@ module Hasura.RQL.DDL.EventTrigger
   , RedeliverEventQuery
   , runRedeliverEvent
   , runInvokeEventTrigger
+  , runPauseEventTrigger
 
   -- TODO: review
   , delEventTriggerFromCatalog
@@ -307,6 +308,13 @@ runInvokeEventTrigger (InvokeEventTriggerQuery name payload) = do
       Just True -> return ()
       _         -> throw400 NotSupported "manual mode is not enabled for event trigger"
 
+runPauseEventTrigger
+  :: (QErrM m, MonadTx m)
+  => PauseEventTriggerQuery -> m EncJSON
+runPauseEventTrigger (PauseEventTriggerQuery name state) = do
+  liftTx $ updatePauseOfEventTriggerInCatalog name state
+  return $ encJFromJValue $ object ["success" .= True]
+
 getHeaderInfosFromConf
   :: (QErrM m, MonadIO m)
   => [HeaderConf] -> m [EventHeaderInfo]
@@ -354,3 +362,13 @@ updateEventTriggerInCatalog trigConf =
       configuration = $1
       WHERE name = $2
     |] (Q.AltJ $ toJSON trigConf, etcName trigConf) True
+
+updatePauseOfEventTriggerInCatalog :: TriggerName -> Bool -> Q.TxE QErr ()
+updatePauseOfEventTriggerInCatalog triggerName pause =
+  Q.unitQE defaultTxErrorHandler
+    [Q.sql|
+      UPDATE hdb_catalog.event_triggers
+      SET
+      pause = $1
+      WHERE name = $2
+    |] (pause, triggerName) True
