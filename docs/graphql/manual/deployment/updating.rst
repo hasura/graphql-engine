@@ -18,6 +18,16 @@ The current latest version is:
 
    <code>hasura/graphql-engine:<span class="latest-release-tag">latest</span></code>
 
+The current latest pre-release version is:
+
+.. raw:: html
+
+   <code>hasura/graphql-engine:<span class="latest-prerelease-tag">prerelease</span></code>
+
+.. note::
+
+  Full stability with pre-release builds is not guaranteed. They are not recommended for production use.
+
 Based on your deployment method, follow the appropriate guide to update the GraphQL engine version you're running:
 
 - :doc:`Updating on Heroku <heroku/updating>`
