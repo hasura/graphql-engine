@@ -8,7 +8,11 @@ module Hasura.GraphQL.Transport.WebSocket
   , WSServerEnv
   ) where
 
-import qualified Control.Concurrent.Async                    as A
+-- NOTE!:
+--   The handler functions 'onClose', 'onMessage', etc. depend for correctness on two properties:
+--     - they run with async exceptions masked
+--     - they do not race on the same connection
+
 import qualified Control.Concurrent.Async.Lifted.Safe        as LA
 import qualified Control.Concurrent.STM                      as STM
 import qualified Control.Monad.Trans.Control                 as MC
@@ -27,6 +31,8 @@ import qualified Network.WebSockets                          as WS
 import qualified StmContainers.Map                           as STMMap
 
 import           Control.Concurrent.Extended                 (sleep)
+import           Control.Exception.Lifted
+import           Data.String
 import qualified ListT
 
 import           Hasura.EncJSON
@@ -51,6 +57,12 @@ import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
 import qualified Hasura.Logging                              as L
 import qualified Hasura.Server.Telemetry.Counters            as Telem
 
+-- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
+-- this to track a connection's operations so we can remove them from 'LiveQueryState', and
+-- log.
+--
+-- NOTE!: This must be kept consistent with the global 'LiveQueryState', in 'onClose'
+-- and 'onStart'.
 
 sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
 sendMsg wsConn msg =
@@ -72,7 +84,7 @@ data WSServerEnv
   , _wseRunTx           :: !PGExecCtx
   , _wseLiveQMap        :: !LQ.LiveQueriesState
   , _wseGCtxMap         :: !(IO (SchemaCache, SchemaCacheVer))
-  -- ^ an action that always returns the latest version of the schema cache
+  -- ^ an action that always returns the latest version of the schema cache. See 'SchemaCacheRef'.
   , _wseHManager        :: !H.Manager
   , _wseCorsPolicy      :: !CorsPolicy
   , _wseSQLCtx          :: !SQLGenCtx
@@ -213,8 +225,11 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
       E.ExOpSubs lqOp -> do
         -- log the graphql query
         L.unLogger logger $ QueryLog query Nothing reqId
-        lqId <- liftIO $ LQ.addLiveQuery lqMap lqOp liveQOnChange
+        -- NOTE!: we mask async exceptions higher in the call stack, but it's
+        -- crucial we don't lose lqId after addLiveQuery returns successfully.
+        lqId <- liftIO $ LQ.addLiveQuery logger lqMap lqOp liveQOnChange
         liftIO $ STM.atomically $
+          -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
           STMMap.insert (lqId, _grOperationName q) opId opMap
         lift $ logOpEv ODStarted (Just reqId) reqHdrs
 
@@ -359,19 +374,25 @@ onMessage authMode serverEnv wsConn msgRaw =
                            wsConn authMode params
       CMStart startMsg  -> onStart serverEnv wsConn startMsg
       CMStop stopMsg    -> onStop serverEnv wsConn stopMsg
+      -- The idea is cleanup will be handled by 'onClose', but...
+      -- NOTE: we need to close the websocket connection when we receive the
+      -- CMConnTerm message and calling WS.closeConn will definitely throw an
+      -- exception, but I'm not sure if 'closeConn' is the correct thing here....
       CMConnTerm        -> liftIO $ WS.closeConn wsConn "GQL_CONNECTION_TERMINATE received"
   where
     logger = _wseLogger serverEnv
 
 onStop :: (MonadIO m, WebSocketLog m) => WSServerEnv -> WSConn -> StopMsg -> m ()
 onStop serverEnv wsConn (StopMsg opId) = do
-  -- probably wrap the whole thing in a single tx?
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
     Just (lqId, opNameM) -> do
       logWSEvent logger wsConn (EOperation $ opDet opNameM) []
-      liftIO $ LQ.removeLiveQuery lqMap lqId
-    Nothing    -> return ()
+      liftIO $ LQ.removeLiveQuery logger lqMap lqId
+    Nothing    ->
+      L.unLogger logger $ L.UnstructuredLog L.LevelError $ fromString $
+        "Received STOP for an operation "<>(show opId)<>" we have no record for. "<>
+        "this could be a misbehaving client or a bug"
   liftIO $ STM.atomically $ STMMap.delete opId opMap
   where
     logger = _wseLogger serverEnv
@@ -448,8 +469,8 @@ onClose
 onClose logger lqMap wsConn = do
   logWSEvent logger wsConn EClosed []
   operations <- liftIO $ STM.atomically $ ListT.toList $ STMMap.listT opMap
-  void $ liftIO $ A.forConcurrently operations $ \(_, (lqId, _)) ->
-    LQ.removeLiveQuery lqMap lqId
+  liftIO $ for_ operations $ \(_, (lqId, _)) ->
+    LQ.removeLiveQuery logger lqMap lqId
   where
     opMap = _wscOpMap $ WS.getData wsConn
 
@@ -489,9 +510,10 @@ createWSServerApp authMode serverEnv =
   where
     handlers =
       WS.WSHandlers
-      (onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv))
-      (onMessage authMode serverEnv)
-      (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)
+      -- Mask async exceptions during event processing to help maintain integrity of mutable vars:
+      (\rid rh ->  mask_ $ onConn (_wseLogger serverEnv) (_wseCorsPolicy serverEnv) rid rh)
+      (\conn bs -> mask_ $ onMessage authMode serverEnv conn bs)
+      (\conn ->    mask_ $ onClose (_wseLogger serverEnv) (_wseLiveQMap serverEnv) conn)
 
 stopWSServerApp :: WSServerEnv -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)
