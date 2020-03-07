@@ -1,6 +1,5 @@
 module Hasura.GraphQL.Transport.WebSocket.Types
-  ( WSServer
-  , WSConn
+  ( WSId(..)
   , WSConnData(..)
   , WSConnState(..)
   , ErrRespType(..)
@@ -16,6 +15,7 @@ import qualified Data.Aeson                                  as J
 import qualified Data.Aeson.Casing                           as J
 import qualified Data.Aeson.TH                               as J
 import qualified Data.Time.Clock                             as TC
+import qualified Data.UUID                                   as UUID
 import qualified Network.HTTP.Types                          as H
 import qualified StmContainers.Map                           as STMMap
 
@@ -26,7 +26,14 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Utils                         (RequestId)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ
-import qualified Hasura.GraphQL.Transport.WebSocket.Server   as WS
+
+newtype WSId
+  = WSId { unWSId :: UUID.UUID }
+  deriving (Show, Eq, Hashable)
+
+instance J.ToJSON WSId where
+  toJSON (WSId uuid) =
+    J.toJSON $ UUID.toText uuid
 
 type OperationMap
   = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
@@ -58,11 +65,6 @@ data WSConnData
   , _wscOpMap     :: !OperationMap
   , _wscErrRespTy :: !ErrRespType
   }
-
-type WSServer = WS.WSServer WSConnData
-
-type WSConn = WS.WSConn WSConnData
-
 
 data OpDetail
   = ODStarted
@@ -102,7 +104,7 @@ $(J.deriveToJSON
 
 data WSConnInfo
   = WSConnInfo
-  { _wsciWebsocketId :: !WS.WSId
+  { _wsciWebsocketId :: !WSId
   , _wsciJwtExpiry   :: !(Maybe TC.UTCTime)
   , _wsciMsg         :: !(Maybe Text)
   } deriving (Show, Eq)

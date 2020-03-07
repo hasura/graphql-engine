@@ -64,6 +64,10 @@ import qualified Hasura.Server.Telemetry.Counters            as Telem
 -- NOTE!: This must be kept consistent with the global 'LiveQueryState', in 'onClose'
 -- and 'onStart'.
 
+type WSServer = WS.WSServer WSConnData
+
+type WSConn = WS.WSConn WSConnData
+
 sendMsg :: (MonadIO m) => WSConn -> ServerMsg -> m ()
 sendMsg wsConn msg =
   liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse (encodeServerMsg msg) Nothing
@@ -120,7 +124,8 @@ onConn hLogger corsPolicy wsId requestHead = do
       sleep $ fromUnits $ TC.diffUTCTime expTime currTime
 
     accept hdrs errType = do
-      logWebSocketSuccess hLogger Nothing (WSConnInfo wsId Nothing Nothing) EAccepted []
+      logWebSocketSuccess hLogger Nothing (WSConnInfo wsId Nothing Nothing)
+        EAccepted $ unWSHeaders hdrs
       connData <- liftIO $ WSConnData
                   <$> STM.newTVarIO (CSNotInitialised hdrs)
                   <*> STMMap.newIO
@@ -152,7 +157,7 @@ onConn hLogger corsPolicy wsId requestHead = do
         if readCookie
         then return reqHdrs
         else do
-          lift $ logWebSocketSuccess hLogger Nothing (WSConnInfo wsId Nothing (Just corsNote)) EAccepted []
+          lift $ logWebSocketSuccess hLogger Nothing (WSConnInfo wsId Nothing (Just corsNote)) EAccepted reqHdrs
           return $ filter (\h -> fst h /= "Cookie") reqHdrs
       CCAllowedOrigins ds
         -- if the origin is in our cors domains, no error
@@ -437,7 +442,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
       liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
         CSInitError $ qeError e
       let connErr = ConnErrMsg $ qeError e
-      logWSEvent logger wsConn (EConnErr connErr) []
+      logWSEvent logger wsConn (EConnErr connErr) headers
       sendMsg wsConn $ SMConnErr connErr
     Right (userInfo, expTimeM) -> do
       liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $

@@ -2,9 +2,7 @@
 {-# LANGUAGE RankNTypes               #-}
 
 module Hasura.GraphQL.Transport.WebSocket.Server
-  ( WSId(..)
-
-  , WSConn
+  ( WSConn
   , getData
   , getWSId
   , closeConn
@@ -25,35 +23,28 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , shutdown
   ) where
 
-import qualified Control.Concurrent.Async             as A
-import qualified Control.Concurrent.Async.Lifted.Safe as LA
-import qualified Control.Concurrent.STM               as STM
+import qualified Control.Concurrent.Async                 as A
+import qualified Control.Concurrent.Async.Lifted.Safe     as LA
+import qualified Control.Concurrent.STM                   as STM
 import           Control.Exception.Lifted
-import qualified Control.Monad.Trans.Control          as MC
-import qualified Data.Aeson                           as J
-import qualified Data.Aeson.Casing                    as J
-import qualified Data.Aeson.TH                        as J
-import qualified Data.ByteString.Lazy                 as BL
+import qualified Control.Monad.Trans.Control              as MC
+import qualified Data.Aeson                               as J
+import qualified Data.Aeson.Casing                        as J
+import qualified Data.Aeson.TH                            as J
+import qualified Data.ByteString.Lazy                     as BL
 import           Data.String
-import qualified Data.TByteString                     as TBS
-import qualified Data.UUID                            as UUID
-import qualified Data.UUID.V4                         as UUID
-import           Data.Word                            (Word16)
-import           GHC.Int                              (Int64)
+import qualified Data.TByteString                         as TBS
+import qualified Data.UUID.V4                             as UUID
+import           Data.Word                                (Word16)
+import           GHC.Int                                  (Int64)
 import           Hasura.Prelude
 import qualified ListT
-import qualified Network.WebSockets                   as WS
-import qualified StmContainers.Map                    as STMMap
+import qualified Network.WebSockets                       as WS
+import qualified StmContainers.Map                        as STMMap
 
-import qualified Hasura.Logging                       as L
+import qualified Hasura.Logging                           as L
 
-newtype WSId
-  = WSId { unWSId :: UUID.UUID }
-  deriving (Show, Eq, Hashable)
-
-instance J.ToJSON WSId where
-  toJSON (WSId uuid) =
-    J.toJSON $ UUID.toText uuid
+import           Hasura.GraphQL.Transport.WebSocket.Types (WSId (..))
 
 data WSServerEvent
   = EConnectionRequest
