@@ -1,24 +1,31 @@
-{-# LANGUAGE UndecidableInstances #-}
+module Hasura.GraphQL.Resolve.Types
+  ( module Hasura.GraphQL.Resolve.Types
+  -- * Re-exports
+  , MonadReusability(..)
+  ) where
 
-module Hasura.GraphQL.Resolve.Types where
-
+import           Control.Lens.TH
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Sequence                 as Seq
-import qualified Data.Text                     as T
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Data.HashMap.Strict            as Map
+import qualified Data.Sequence                  as Seq
+import qualified Data.Text                      as T
+import qualified Language.GraphQL.Draft.Syntax  as G
 
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.RQL.DDL.Headers         (HeaderConf)
+import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Error
+import           Hasura.RQL.Types.ComputedField
+import           Hasura.RQL.Types.CustomTypes
+import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 
-import qualified Hasura.SQL.DML                as S
+import qualified Hasura.SQL.DML                 as S
 
 data QueryCtx
   = QCSelect !SelOpCtx
@@ -26,12 +33,17 @@ data QueryCtx
   | QCSelectAgg !SelOpCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
+  | QCActionFetch !ActionSelectOpContext
   deriving (Show, Eq)
 
 data MutationCtx
   = MCInsert !InsOpCtx
+  | MCInsertOne !InsOpCtx
   | MCUpdate !UpdOpCtx
+  | MCUpdateByPk !UpdOpCtx
   | MCDelete !DelOpCtx
+  | MCDeleteByPk !DelOpCtx
+  | MCAction !ActionExecutionContext
   deriving (Show, Eq)
 
 type OpCtxMap a = Map.HashMap G.Name a
@@ -61,15 +73,16 @@ data SelPkOpCtx
   , _spocArgMap  :: !PGColArgMap
   } deriving (Show, Eq)
 
+type FunctionArgSeq = Seq.Seq (InputArgument FunctionArgItem)
+
 data FuncQOpCtx
   = FuncQOpCtx
-  { _fqocTable    :: !QualifiedTable
+  { _fqocFunction :: !QualifiedFunction
+  , _fqocArgs     :: !FunctionArgSeq
   , _fqocHeaders  :: ![T.Text]
   , _fqocAllCols  :: !PGColGNameMap
   , _fqocFilter   :: !AnnBoolExpPartialSQL
   , _fqocLimit    :: !(Maybe Int)
-  , _fqocFunction :: !QualifiedFunction
-  , _fqocArgs     :: !FuncArgSeq
   } deriving (Show, Eq)
 
 data UpdOpCtx
@@ -78,6 +91,7 @@ data UpdOpCtx
   , _uocHeaders    :: ![T.Text]
   , _uocAllCols    :: !PGColGNameMap
   , _uocFilter     :: !AnnBoolExpPartialSQL
+  , _uocCheck      :: !(Maybe AnnBoolExpPartialSQL)
   , _uocPresetCols :: !PreSetColsPartial
   } deriving (Show, Eq)
 
@@ -85,20 +99,30 @@ data DelOpCtx
   = DelOpCtx
   { _docTable   :: !QualifiedTable
   , _docHeaders :: ![T.Text]
+  , _docAllCols :: !PGColGNameMap
   , _docFilter  :: !AnnBoolExpPartialSQL
-  , _docAllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
-data OpCtx
-  = OCSelect !SelOpCtx
-  | OCSelectPkey !SelPkOpCtx
-  | OCSelectAgg !SelOpCtx
-  | OCFuncQuery !FuncQOpCtx
-  | OCFuncAggQuery !FuncQOpCtx
-  | OCInsert !InsOpCtx
-  | OCUpdate !UpdOpCtx
-  | OCDelete !DelOpCtx
+data SyncActionExecutionContext
+  = SyncActionExecutionContext
+  { _saecName                 :: !ActionName
+  , _saecOutputType           :: !GraphQLType
+  , _saecDefinitionList       :: ![(PGCol, PGScalarType)]
+  , _saecWebhook              :: !ResolvedWebhook
+  , _saecHeaders              :: ![HeaderConf]
+  , _saecForwardClientHeaders :: !Bool
+  } deriving (Show, Eq)
+
+data ActionExecutionContext
+  = ActionExecutionSyncWebhook !SyncActionExecutionContext
+  | ActionExecutionAsync
   deriving (Show, Eq)
+
+data ActionSelectOpContext
+  = ActionSelectOpContext
+  { _asocOutputType     :: !GraphQLType
+  , _asocDefinitionList :: ![(PGCol, PGScalarType)]
+  } deriving (Show, Eq)
 
 -- (custom name | generated name) -> PG column info
 -- used in resolvers
@@ -113,9 +137,36 @@ data RelationshipField
   , _rfPermLimit  :: !(Maybe Int)
   } deriving (Show, Eq)
 
-type FieldMap =
-  Map.HashMap (G.NamedType, G.Name)
-  (Either PGColumnInfo RelationshipField)
+data ComputedFieldTable
+  = ComputedFieldTable
+  { _cftTable      :: !QualifiedTable
+  , _cftCols       :: !PGColGNameMap
+  , _cftPermFilter :: !AnnBoolExpPartialSQL
+  , _cftPermLimit  :: !(Maybe Int)
+  } deriving (Show, Eq)
+
+data ComputedFieldType
+  = CFTScalar !PGScalarType
+  | CFTTable !ComputedFieldTable
+  deriving (Show, Eq)
+
+type ComputedFieldFunctionArgSeq = Seq.Seq FunctionArgItem
+
+data ComputedField
+  = ComputedField
+  { _cfName     :: !ComputedFieldName
+  , _cfFunction :: !ComputedFieldFunction
+  , _cfArgSeq   :: !ComputedFieldFunctionArgSeq
+  , _cfType     :: !ComputedFieldType
+  } deriving (Show, Eq)
+
+data ResolveField
+  = RFPGColumn !PGColumnInfo
+  | RFRelationship !RelationshipField
+  | RFComputedField !ComputedField
+  deriving (Show, Eq)
+
+type FieldMap = Map.HashMap (G.NamedType, G.Name) ResolveField
 
 -- order by context
 data OrdByItem
@@ -128,14 +179,12 @@ type OrdByItemMap = Map.HashMap G.Name OrdByItem
 
 type OrdByCtx = Map.HashMap G.NamedType OrdByItemMap
 
-data FuncArgItem
-  = FuncArgItem
+data FunctionArgItem
+  = FunctionArgItem
   { _faiInputArgName :: !G.Name
   , _faiSqlArgName   :: !(Maybe FunctionArgName)
-  , _faiHasDefault   :: !Bool
+  , _faiHasDefault   :: !HasDefault
   } deriving (Show, Eq)
-
-type FuncArgSeq = Seq.Seq FuncArgItem
 
 -- insert context
 type RelationInfoMap = Map.HashMap RelName RelInfo
@@ -143,14 +192,15 @@ type RelationInfoMap = Map.HashMap RelName RelInfo
 data UpdPermForIns
   = UpdPermForIns
   { upfiCols   :: ![PGCol]
+  , upfiCheck  :: !(Maybe AnnBoolExpPartialSQL)
   , upfiFilter :: !AnnBoolExpPartialSQL
   , upfiSet    :: !PreSetColsPartial
   } deriving (Show, Eq)
 
 data InsCtx
   = InsCtx
-  { icView      :: !QualifiedTable
-  , icAllCols   :: !PGColGNameMap
+  { icAllCols   :: !PGColGNameMap
+  , icCheck     :: !AnnBoolExpPartialSQL
   , icSet       :: !PreSetColsPartial
   , icRelations :: !RelationInfoMap
   , icUpdPerm   :: !(Maybe UpdPermForIns)
@@ -177,7 +227,9 @@ partialSQLExpToUnresolvedVal = \case
 
 -- | A value that will be converted to an sql expression eventually
 data UnresolvedVal
-  = UVSessVar !(PGType PGScalarType) !SessVar
+  -- | an entire session variables JSON object
+  = UVSession
+  | UVSessVar !(PGType PGScalarType) !SessVar
   -- | a SQL value literal that can be parameterized over
   | UVPG !AnnPGVal
   -- | an arbitrary SQL expression, which /cannot/ be parameterized over
@@ -186,53 +238,13 @@ data UnresolvedVal
 
 type AnnBoolExpUnresolved = AnnBoolExp UnresolvedVal
 
--- | Tracks whether or not a query is /reusable/. Reusable queries are nice, since we can cache
--- their resolved ASTs and avoid re-resolving them if we receive an identical query. However, we
--- can’t always safely reuse queries if they have variables, since some variable values can affect
--- the generated SQL. For example, consider the following query:
---
--- > query users_where($condition: users_bool_exp!) {
--- >   users(where: $condition) {
--- >     id
--- >   }
--- > }
---
--- Different values for @$condition@ will produce completely different queries, so we can’t reuse
--- its plan (unless the variable values were also all identical, of course, but we don’t bother
--- caching those).
---
--- If a query does turn out to be reusable, we build up a 'ReusableVariableTypes' value that maps
--- variable names to their types so that we can use a fast path for validating new sets of
--- variables (namely 'Hasura.GraphQL.Validate.validateVariablesForReuse').
-data QueryReusability
-  = Reusable !ReusableVariableTypes
-  | NotReusable
+data InputFunctionArgument
+  = IFAKnown !FunctionArgName !UnresolvedVal -- ^ Known value
+  | IFAUnknown !FunctionArgItem -- ^ Unknown value, need to be parsed
   deriving (Show, Eq)
 
-instance Semigroup QueryReusability where
-  Reusable a <> Reusable b = Reusable (a <> b)
-  _          <> _          = NotReusable
-instance Monoid QueryReusability where
-  mempty = Reusable mempty
-
-class (MonadError QErr m) => MonadResolve m where
-  recordVariableUse :: G.Variable -> PGColumnType -> m ()
-  markNotReusable :: m ()
-
-newtype ResolveT m a = ResolveT { unResolveT :: StateT QueryReusability m a }
-  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r)
-
-instance (MonadError QErr m) => MonadResolve (ResolveT m) where
-  recordVariableUse varName varType = ResolveT $
-    modify' (<> Reusable (ReusableVariableTypes $ Map.singleton varName varType))
-  markNotReusable = ResolveT $ put NotReusable
-
-runResolveT :: (Functor m) => ResolveT m a -> m (a, Maybe ReusableVariableTypes)
-runResolveT = fmap (fmap getVarTypes) . flip runStateT mempty . unResolveT
-  where
-    getVarTypes = \case
-      Reusable varTypes -> Just varTypes
-      NotReusable       -> Nothing
-
-evalResolveT :: (Monad m) => ResolveT m a -> m a
-evalResolveT = flip evalStateT mempty . unResolveT
+-- template haskell related
+$(makePrisms ''ResolveField)
+$(makeLenses ''ComputedField)
+$(makePrisms ''ComputedFieldType)
+$(makePrisms ''InputFunctionArgument)

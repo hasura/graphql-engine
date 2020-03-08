@@ -5,12 +5,12 @@ import globals from '../../../Globals';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
+import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 import { updateCurrentSchema } from './DataActions';
 import { NotFoundError } from '../../Error/PageNotFound';
 import { CLI_CONSOLE_MODE } from '../../../constants';
-
-const sectionPrefix = '/data';
+import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 
 const DataPageContainer = ({
   currentSchema,
@@ -39,7 +39,7 @@ const DataPageContainer = ({
           currentLocation.includes('data/migrations') ? styles.active : ''
         }
       >
-        <Link className={styles.linkBorder} to={sectionPrefix + '/migrations'}>
+        <Link className={styles.linkBorder} to={'/data/migrations'}>
           Migrations
         </Link>
       </li>
@@ -66,7 +66,7 @@ const DataPageContainer = ({
       >
         <Link
           className={styles.linkBorder}
-          to={sectionPrefix + '/schema/' + currentSchema}
+          to={getSchemaBaseRoute(currentSchema)}
         >
           <div className={styles.schemaWrapper}>
             <div className={styles.schemaSidebarSection} data-test="schema">
@@ -78,6 +78,10 @@ const DataPageContainer = ({
               >
                 {getSchemaOptions()}
               </select>
+              <GqlCompatibilityWarning
+                identifier={currentSchema}
+                className={styles.add_mar_left_mid}
+              />
             </div>
           </div>
         </Link>
@@ -89,7 +93,7 @@ const DataPageContainer = ({
       >
         <Link
           className={styles.linkBorder}
-          to={sectionPrefix + '/sql'}
+          to={'/data/sql'}
           data-test="sql-link"
         >
           SQL

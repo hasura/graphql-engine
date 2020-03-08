@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
+  , pgColValToBoolExp
   ) where
 
 import           Data.Has
@@ -20,7 +21,7 @@ import qualified Hasura.SQL.DML                    as S
 
 type OpExp = OpExpG UnresolvedVal
 
-parseOpExps :: (MonadResolve m) => PGColumnType -> AnnInpVal -> m [OpExp]
+parseOpExps :: (MonadReusability m, MonadError QErr m) => PGColumnType -> AnnInpVal -> m [OpExp]
 parseOpExps colTy annVal = do
   opExpsM <- flip withObjectM annVal $ \nt objM -> forM objM $ \obj ->
     forM (OMap.toList obj) $ \(k, v) ->
@@ -138,18 +139,19 @@ parseOpExps colTy annVal = do
       mkParameterizablePGValue <$> asPGColumnValue geomminVal
 
 parseCastExpression
-  :: (MonadResolve m)
+  :: (MonadReusability m, MonadError QErr m)
   => AnnInpVal -> m (Maybe (CastExp UnresolvedVal))
 parseCastExpression =
   withObjectM $ \_ objM -> forM objM $ \obj -> do
     targetExps <- forM (OMap.toList obj) $ \(targetTypeName, castedComparisonExpressionInput) -> do
-      let targetType = txtToPgColTy $ G.unName targetTypeName
+      let targetType = textToPGScalarType $ G.unName targetTypeName
       castedComparisonExpressions <- parseOpExps (PGColumnScalar targetType) castedComparisonExpressionInput
       return (targetType, castedComparisonExpressions)
     return $ Map.fromList targetExps
 
 parseColExp
-  :: ( MonadResolve m
+  :: ( MonadReusability m
+     , MonadError QErr m
      , MonadReader r m
      , Has FieldMap r
      )
@@ -158,16 +160,19 @@ parseColExp
 parseColExp nt n val = do
   fldInfo <- getFldInfo nt n
   case fldInfo of
-    Left pgColInfo -> do
+    RFPGColumn pgColInfo -> do
       opExps <- parseOpExps (pgiType pgColInfo) val
       return $ AVCol pgColInfo opExps
-    Right (RelationshipField relInfo _ _ permExp _)-> do
+    RFRelationship (RelationshipField relInfo _ _ permExp _)-> do
       relBoolExp <- parseBoolExp val
       return $ AVRel relInfo $ andAnnBoolExps relBoolExp $
         fmapAnnBoolExp partialSQLExpToUnresolvedVal permExp
+    RFComputedField _ -> throw500
+          "computed fields are not allowed in bool_exp"
 
 parseBoolExp
-  :: ( MonadResolve m
+  :: ( MonadReusability m
+     , MonadError QErr m
      , MonadReader r m
      , Has FieldMap r
      )
@@ -183,3 +188,20 @@ parseBoolExp annGVal = do
           | k == "_not" -> BoolNot <$> parseBoolExp v
           | otherwise   -> BoolFld <$> parseColExp nt k v
   return $ BoolAnd $ fromMaybe [] boolExpsM
+
+type PGColValMap = Map.HashMap G.Name AnnInpVal
+
+pgColValToBoolExp
+  :: (MonadReusability m, MonadError QErr m)
+  => PGColArgMap -> PGColValMap -> m AnnBoolExpUnresolved
+pgColValToBoolExp colArgMap colValMap = do
+  colExps <- forM colVals $ \(name, val) ->
+    BoolFld <$> do
+      opExp <- AEQ True . mkParameterizablePGValue <$> asPGColumnValue val
+      colInfo <- onNothing (Map.lookup name colArgMap) $
+        throw500 $ "column name " <> showName name
+        <> " not found in column arguments map"
+      return $ AVCol colInfo [opExp]
+  return $ BoolAnd colExps
+  where
+    colVals = Map.toList colValMap

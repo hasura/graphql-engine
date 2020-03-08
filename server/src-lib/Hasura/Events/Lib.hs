@@ -1,32 +1,35 @@
 module Hasura.Events.Lib
   ( initEventEngineCtx
-  , processEventQueue
+  , forkEventQueueProcessors
   , unlockAllEvents
   , defaultMaxEventThreads
   , defaultFetchIntervalMilliSec
   , Event(..)
   ) where
 
-import           Control.Concurrent            (threadDelay)
-import           Control.Concurrent.Async      (async, waitAny)
+import           Control.Concurrent.Extended   (sleep, forkImmortal)
+import           Control.Concurrent.Async      (async, link)
 import           Control.Concurrent.STM.TVar
-import           Control.Exception             (try)
-import           Control.Monad.STM             (STM, atomically, retry)
+import           Control.Exception.Lifted      (mask_, try, bracket_)
+import           Control.Monad.Trans.Control   (MonadBaseControl) 
+import           Control.Monad.STM
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
 import           Data.Int                      (Int64)
-import           Data.IORef                    (IORef, readIORef)
+import           Data.String
 import           Data.Time.Clock
 import           Hasura.Events.HTTP
 import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
+import           Hasura.Server.Version         (HasVersion)
 import           Hasura.SQL.Types
 
 import qualified Control.Concurrent.STM.TQueue as TQ
+import qualified Control.Immortal              as Immortal
 import qualified Data.ByteString               as BS
 import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as M
@@ -48,15 +51,12 @@ invocationVersion = "2"
 
 type LogEnvHeaders = Bool
 
-newtype CacheRef
-  = CacheRef { unCacheRef :: IORef (SchemaCache, SchemaCacheVer) }
-
 newtype EventInternalErr
   = EventInternalErr QErr
   deriving (Show, Eq)
 
-instance L.ToEngineLog EventInternalErr where
-  toEngineLog (EventInternalErr qerr) = (L.LevelError, L.ELTEventTrigger, toJSON qerr )
+instance L.ToEngineLog EventInternalErr L.Hasura where
+  toEngineLog (EventInternalErr qerr) = (L.LevelError, L.eventTriggerLogType, toJSON qerr)
 
 data TriggerMeta
   = TriggerMeta { tmName :: TriggerName }
@@ -152,86 +152,86 @@ data EventEngineCtx
   { _eeCtxEventQueue            :: TQ.TQueue Event
   , _eeCtxEventThreads          :: TVar Int
   , _eeCtxMaxEventThreads       :: Int
-  , _eeCtxFetchIntervalMilliSec :: Int
+  , _eeCtxFetchInterval         :: DiffTime
   }
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
 
-defaultFetchIntervalMilliSec :: Int
+defaultFetchIntervalMilliSec :: Milliseconds
 defaultFetchIntervalMilliSec = 1000
 
 retryAfterHeader :: CI.CI T.Text
 retryAfterHeader = "Retry-After"
 
-initEventEngineCtx :: Int -> Int -> STM EventEngineCtx
+initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT fetchI = do
   q <- TQ.newTQueue
   c <- newTVar 0
   return $ EventEngineCtx q c maxT fetchI
 
-processEventQueue
-  :: L.LoggerCtx -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
-  -> IORef (SchemaCache, SchemaCacheVer) -> EventEngineCtx
-  -> IO ()
-processEventQueue logctx logenv httpMgr pool cacheRef eectx = do
-  threads <- mapM async [fetchThread, consumeThread]
-  void $ waitAny threads
+forkEventQueueProcessors
+  :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
+  -> IO SchemaCache -> EventEngineCtx 
+  -> IO (Immortal.Thread, Immortal.Thread)
+  -- ^ returns: (pushEvents handle, consumeEvents handle)
+forkEventQueueProcessors logger logenv httpMgr pool getSchemaCache eectx = do
+  (,) <$> forkImmortal "pushEvents" logger pushEvents
+      <*> forkImmortal "consumeEvents" logger consumeEvents
   where
-    fetchThread = pushEvents (mkHLogger logctx) pool eectx
-    consumeThread = consumeEvents (mkHLogger logctx)
-                    logenv httpMgr pool (CacheRef cacheRef) eectx
+    -- FIXME proper backpressure. See: #3839 
+    pushEvents = forever $ do
+      let EventEngineCtx q _ _ fetchI = eectx
+      eventsOrError <- runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) fetchEvents
+      case eventsOrError of
+        Left err     -> L.unLogger logger $ EventInternalErr err
+        Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
+      sleep fetchI
 
-pushEvents
-  :: HLogger -> Q.PGPool -> EventEngineCtx -> IO ()
-pushEvents logger pool eectx  = forever $ do
-  let EventEngineCtx q _ _ fetchI = eectx
-  eventsOrError <- runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) fetchEvents
-  case eventsOrError of
-    Left err     -> logger $ L.toEngineLog $ EventInternalErr err
-    Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
-  threadDelay (fetchI * 1000)
+    -- TODO this has all events race. How do we know this is correct? Document.
+    consumeEvents = forever $
+      -- ensure async exceptions from link only raised between iterations of forever block:
+      mask_ $ do
+        event <- atomically $ do
+          let EventEngineCtx q _ _ _ = eectx
+          TQ.readTQueue q
+        -- FIXME proper backpressure. See: #3839 
+        t <- async $ runReaderT (processEvent event) (logger, httpMgr, eectx)
+        -- Make sure any stray exceptions are at least logged via 'forkImmortal':
+        link t
 
-consumeEvents
-  :: HLogger -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> CacheRef -> EventEngineCtx
-  -> IO ()
-consumeEvents logger logenv httpMgr pool cacheRef eectx  = forever $ do
-  event <- atomically $ do
-    let EventEngineCtx q _ _ _ = eectx
-    TQ.readTQueue q
-  async $ runReaderT  (processEvent logenv pool event) (logger, httpMgr, cacheRef, eectx)
-
-processEvent
-  :: ( MonadReader r m
-     , MonadIO m
-     , Has HTTP.Manager r
-     , Has HLogger r
-     , Has CacheRef r
-     , Has EventEngineCtx r
-     )
-  => LogEnvHeaders -> Q.PGPool -> Event -> m ()
-processEvent logenv pool e = do
-  cacheRef <- asks getter
-  cache <- fmap fst $ liftIO $ readIORef $ unCacheRef cacheRef
-  let meti = getEventTriggerInfoFromEvent cache e
-  case meti of
-    Nothing -> do
-      logQErr $ err500 Unexpected "table or event-trigger not found in schema cache"
-    Just eti -> do
-      let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
-          retryConf = etiRetryConf eti
-          timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
-          responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
-          headerInfos = etiHeaders eti
-          etHeaders = map encodeHeader headerInfos
-          headers = addDefaultHeaders etHeaders
-          ep = createEventPayload retryConf e
-      res <- runExceptT $ tryWebhook headers responseTimeout ep webhook
-      let decodedHeaders = map (decodeHeader logenv headerInfos) headers
-      finally <- either
-        (processError pool e retryConf decodedHeaders ep)
-        (processSuccess pool e decodedHeaders ep) res
-      either logQErr return finally
+    -- NOTE: Blocks in tryWebhook if >= _eeCtxMaxEventThreads invocations active.
+    processEvent
+      :: ( HasVersion
+         , MonadReader r m
+         , Has HTTP.Manager r
+         , Has (L.Logger L.Hasura) r
+         , Has EventEngineCtx r
+         , MonadIO m
+         , MonadBaseControl IO m
+         )
+      => Event -> m ()
+    processEvent e = do
+      cache <- liftIO getSchemaCache
+      let meti = getEventTriggerInfoFromEvent cache e
+      case meti of
+        Nothing -> do
+          logQErr $ err500 Unexpected "table or event-trigger not found in schema cache"
+        Just eti -> do
+          let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
+              retryConf = etiRetryConf eti
+              timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
+              responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
+              headerInfos = etiHeaders eti
+              etHeaders = map encodeHeader headerInfos
+              headers = addDefaultHeaders etHeaders
+              ep = createEventPayload retryConf e
+          res <- runExceptT $ tryWebhook headers responseTimeout ep webhook
+          let decodedHeaders = map (decodeHeader logenv headerInfos) headers
+          finally <- either
+            (processError pool e retryConf decodedHeaders ep)
+            (processSuccess pool e decodedHeaders ep) res
+          either logQErr return finally
 
 createEventPayload :: RetryConf -> Event ->  EventPayload
 createEventPayload retryConf e = EventPayload
@@ -262,7 +262,7 @@ processSuccess pool e decodedHeaders ep resp = do
 processError
   :: ( MonadIO m
      , MonadReader r m
-     , Has HLogger r
+     , Has (L.Logger L.Hasura) r
      )
   => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr
   -> m (Either QErr ())
@@ -291,7 +291,7 @@ retryOrSetError :: Event -> RetryConf -> HTTPErr -> Q.TxE QErr ()
 retryOrSetError e retryConf err = do
   let mretryHeader = getRetryAfterHeaderFromError err
       tries = eTries e
-      mretryHeaderSeconds = parseRetryHeader mretryHeader
+      mretryHeaderSeconds = mretryHeader >>= parseRetryHeader
       triesExhausted = tries >= rcNumRetries retryConf
       noRetryHeader = isNothing mretryHeaderSeconds
   -- current_try = tries + 1 , allowed_total_tries = rcNumRetries retryConf + 1
@@ -314,12 +314,8 @@ retryOrSetError e retryConf err = do
         in case mHeader of
              Just (HeaderConf _ (HVValue value)) -> Just value
              _                                   -> Nothing
-    parseRetryHeader Nothing = Nothing
-    parseRetryHeader (Just hValue)
-      = let seconds = readMaybe $ T.unpack hValue
-        in case seconds of
-             Nothing  -> Nothing
-             Just sec -> if sec > 0 then Just sec else Nothing
+
+    parseRetryHeader = mfilter (> 0) . readMaybe . T.unpack
 
 encodeHeader :: EventHeaderInfo -> HTTP.Header
 encodeHeader (EventHeaderInfo hconf cache) =
@@ -378,29 +374,37 @@ mkMaybe :: [a] -> Maybe [a]
 mkMaybe [] = Nothing
 mkMaybe x  = Just x
 
-logQErr :: ( MonadReader r m, MonadIO m,  Has HLogger r) => QErr -> m ()
+logQErr :: ( MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
 logQErr err = do
-  logger <- asks getter
-  liftIO $ logger $ L.toEngineLog $ EventInternalErr err
+  logger :: L.Logger L.Hasura <- asks getter
+  L.unLogger logger $ EventInternalErr err
 
-logHTTPErr :: ( MonadReader r m, MonadIO m,  Has HLogger r) => HTTPErr -> m ()
-logHTTPErr err = do
-  logger <- asks getter
-  liftIO $ logger $ L.toEngineLog err
-
-tryWebhook
+logHTTPErr
   :: ( MonadReader r m
+     , Has (L.Logger L.Hasura) r
+     , MonadIO m
+     )
+  => HTTPErr -> m ()
+logHTTPErr err = do
+  logger :: L.Logger L.Hasura <- asks getter
+  L.unLogger logger $ err
+
+-- NOTE: Blocks if >= _eeCtxMaxEventThreads invocations active, though we
+-- expect this to be bounded by responseTimeout.
+tryWebhook
+  :: ( Has (L.Logger L.Hasura) r
+     , Has HTTP.Manager r
+     , Has EventEngineCtx r
+     , MonadReader r m
+     , MonadBaseControl IO m
      , MonadIO m
      , MonadError HTTPErr m
-     , Has HTTP.Manager r
-     , Has HLogger r
-     , Has EventEngineCtx r
      )
   => [HTTP.Header] -> HTTP.ResponseTimeout -> EventPayload -> String
   -> m HTTPResp
 tryWebhook headers responseTimeout ep webhook = do
-  let createdAt = epCreatedAt ep
-      eventId =  epId ep
+  logger :: L.Logger L.Hasura <- asks getter
+  let context = ExtraContext (epCreatedAt ep) (epId ep)
   initReqE <- liftIO $ try $ HTTP.parseRequest webhook
   case initReqE of
     Left excp -> throwError $ HClient excp
@@ -411,23 +415,28 @@ tryWebhook headers responseTimeout ep webhook = do
                 , HTTP.requestBody = HTTP.RequestBodyLBS (encode ep)
                 , HTTP.responseTimeout = responseTimeout
                 }
-      eeCtx <- asks getter
-      -- wait for counter and then increment beforing making http
-      liftIO $ atomically $ do
-        let EventEngineCtx _ c maxT _ = eeCtx
-        countThreads <- readTVar c
-        if countThreads >= maxT
-          then retry
-          else modifyTVar' c (+1)
+      EventEngineCtx _ c maxT _ <- asks getter
+      -- wait for counter and then increment beforing making http request
+      let haveCapacity = do
+            countThreads <- readTVar c
+            pure $ countThreads < maxT
+          waitForCapacity = do
+            haveCapacity >>= check
+            modifyTVar' c (+1)
+          release = modifyTVar' c (subtract 1) 
 
-      eitherResp <- runHTTP req  (Just (ExtraContext createdAt eventId))
+      -- we could also log after we block, but that's actually even more awkward:
+      likelyHaveCapacity <- liftIO $ atomically haveCapacity  
+      unless likelyHaveCapacity $ do
+        L.unLogger logger $ L.UnstructuredLog L.LevelWarn $
+          fromString $ "In event queue webhook: exceeded HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE " <>
+                       "and likely about to block for: "<> show context
 
-      -- decrement counter once http is done
-      liftIO $ atomically $ do
-        let EventEngineCtx _ c _ _ = eeCtx
-        modifyTVar' c (\v -> v - 1)
-
-      onLeft eitherResp throwError
+      -- ensure we don't leak capacity and become totally broken in the
+      -- presence of unexpected exceptions:
+      bracket_ (liftIO $ atomically waitForCapacity) (liftIO $ atomically release) $ do
+        eitherResp <- runHTTP req (Just context)
+        onLeft eitherResp throwError
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e
@@ -441,10 +450,9 @@ fetchEvents =
       SET locked = 't'
       WHERE id IN ( SELECT l.id
                     FROM hdb_catalog.event_log l
-                    JOIN hdb_catalog.event_triggers e
-                    ON (l.trigger_name = e.name)
-                    WHERE l.delivered ='f' and l.error = 'f' and l.locked = 'f'
+                    WHERE l.delivered = 'f' and l.error = 'f' and l.locked = 'f'
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
+                          and l.archived = 'f'
                     FOR UPDATE SKIP LOCKED
                     LIMIT 100 )
       RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at

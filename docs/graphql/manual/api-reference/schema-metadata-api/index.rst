@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura schema/metadata API reference
+   :keywords: hasura, docs, schema/metadata API, API reference
+
 .. _metadata_apis:
 
 Schema / Metadata API Reference
@@ -112,6 +116,11 @@ The various types of queries are listed in the following table:
      - 1
      - Add an SQL function
 
+   * - :ref:`track_function`
+     - :ref:`track_function_args <track_function_args_syntax_v2>`
+     - 2
+     - Add an SQL function with configuration
+
    * - :ref:`untrack_function`
      - :ref:`FunctionName <FunctionName>`
      - 1
@@ -132,10 +141,25 @@ The various types of queries are listed in the following table:
      - 1
      - Drop an existing relationship
 
+   * - :ref:`rename_relationship`
+     - :ref:`rename_relationship_args <rename_relationship_syntax>`
+     - 1
+     - Modify name of an existing relationship
+
    * - :ref:`set_relationship_comment`
      - :ref:`set_relationship_comment_args <set_relationship_comment_syntax>`
      - 1
      - Set comment on an existing relationship
+
+   * - :ref:`add_computed_field`
+     - :ref:`add_computed_field_args <add_computed_field_syntax>`
+     - 1
+     - Add a computed field
+
+   * - :ref:`drop_computed_field`
+     - :ref:`drop_computed_field_args <drop_computed_field_syntax>`
+     - 1
+     - Drop a computed field
 
    * - :ref:`create_insert_permission`
      - :ref:`create_insert_permission_args <create_insert_permission_syntax>`
@@ -272,16 +296,49 @@ The various types of queries are listed in the following table:
      - 1
      - Drop a collection from the allow-list
 
+   * - :ref:`set_custom_types`
+     - :ref:`set_custom_types_args <set_custom_types_syntax>`
+     - 1
+     - Set custom GraphQL types
+
+   * - :ref:`create_action`
+     - :ref:`create_action_args <create_action_syntax>`
+     - 1
+     - Create an action
+
+   * - :ref:`drop_action`
+     - :ref:`drop_action_args <drop_action_syntax>`
+     - 1
+     - Drop an action
+
+   * - :ref:`update_action`
+     - :ref:`update_action_args <update_action_syntax>`
+     - 1
+     - Update an action
+
+   * - :ref:`create_action_permission`
+     - :ref:`create_action_permission_args <create_action_permission_syntax>`
+     - 1
+     - Create an action permission
+
+   * - :ref:`drop_action_permission`
+     - :ref:`drop_action_permission_args <drop_action_permission_syntax>`
+     - 1
+     - Drop an action permission
+
 **See:**
 
 - :doc:`Run SQL <run-sql>`
 - :doc:`Tables/Views <table-view>`
 - :doc:`Custom SQL Functions <custom-functions>`
 - :doc:`Relationships <relationship>`
+- :doc:`Computed Fields <computed-field>`
 - :doc:`Permissions <permission>`
 - :doc:`Event Triggers <event-triggers>`
 - :doc:`Remote Schemas <remote-schemas>`
 - :doc:`Query Collections <query-collections>`
+- :doc:`Custom Types <custom-types>`
+- :doc:`Actions <actions>`
 - :doc:`Manage Metadata <manage-metadata>`
 
 Response structure
@@ -362,8 +419,11 @@ See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting t
   Custom Functions <custom-functions>
   Relationships <relationship>
   Permissions <permission>
+  Computed Fields <computed-field>
   Event Triggers <event-triggers>
   Remote Schemas <remote-schemas>
   Query Collections <query-collections>
+  Custom Types <custom-types>
+  Actions <actions>
   Manage Metadata <manage-metadata>
   Common syntax definitions <syntax-defs>

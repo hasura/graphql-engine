@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage mutations with Hasura
+   :keywords: hasura, docs, mutation
+
 Mutations
 =========
 
@@ -5,6 +9,9 @@ Mutations
   :backlinks: none
   :depth: 1
   :local:
+
+Introduction
+------------
 
 GraphQL mutations are used to modify data on the server (i.e. write, update or delete data).
 

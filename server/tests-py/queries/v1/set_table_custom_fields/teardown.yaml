@@ -3,5 +3,6 @@ args:
 - type: run_sql
   args:
     sql: |
+      DROP TABLE article;
       DROP TABLE author;
     cascade: true

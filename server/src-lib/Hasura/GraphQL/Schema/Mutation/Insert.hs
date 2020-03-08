@@ -3,6 +3,7 @@ module Hasura.GraphQL.Schema.Mutation.Insert
   , mkInsInpTy
   , mkRelInsInps
   , mkInsMutFld
+  , mkInsertOneMutationField
   , mkOnConflictTypes
   ) where
 
@@ -10,6 +11,7 @@ import qualified Data.HashMap.Strict                   as Map
 import qualified Language.GraphQL.Draft.Syntax         as G
 
 import           Hasura.GraphQL.Resolve.Types
+import           Hasura.GraphQL.Schema.BoolExp
 import           Hasura.GraphQL.Schema.Common
 import           Hasura.GraphQL.Schema.Mutation.Common
 import           Hasura.GraphQL.Validate.Types
@@ -124,6 +126,7 @@ mkInsInp tn insCols relInfoMap =
 input table_on_conflict {
   constraint: table_constraint!
   update_columns: [table_column!]
+  where: table_bool_exp
 }
 
 -}
@@ -131,7 +134,7 @@ input table_on_conflict {
 mkOnConflictInp :: QualifiedTable -> InpObjTyInfo
 mkOnConflictInp tn =
   mkHsraInpTyInfo (Just desc) (mkOnConflictInpTy tn) $ fromInpValL
-  [constraintInpVal, updateColumnsInpVal]
+  [constraintInpVal, updateColumnsInpVal, whereInpVal]
   where
     desc = G.Description $
       "on conflict condition type for table " <>> tn
@@ -141,6 +144,9 @@ mkOnConflictInp tn =
 
     updateColumnsInpVal = InpValInfo Nothing (G.Name "update_columns") Nothing $
       G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkUpdColumnInpTy tn
+
+    whereInpVal = InpValInfo Nothing (G.Name "where") Nothing $
+                  G.toGT $ mkBoolExpTy tn
 {-
 
 insert_table(
@@ -154,7 +160,7 @@ mkInsMutFld mCustomName tn isUpsertable =
   mkHsraObjFldInfo (Just desc) fldName (fromInpValL inputVals) $
     G.toGT $ mkMutRespTy tn
   where
-    inputVals = catMaybes [Just objectsArg , onConflictInpVal]
+    inputVals = catMaybes [Just objectsArg , mkOnConflictInputVal tn isUpsertable]
     desc = G.Description $
       "insert data into the table: " <>> tn
 
@@ -165,12 +171,6 @@ mkInsMutFld mCustomName tn isUpsertable =
     objectsArg =
       InpValInfo (Just objsArgDesc) "objects" Nothing $ G.toGT $
       G.toNT $ G.toLT $ G.toNT $ mkInsInpTy tn
-
-    onConflictInpVal = bool Nothing (Just onConflictArg) isUpsertable
-
-    onConflictDesc = "on conflict condition"
-    onConflictArg = InpValInfo (Just onConflictDesc) "on_conflict"
-                    Nothing $ G.toGT $ mkOnConflictInpTy tn
 
 mkConstraintTy :: QualifiedTable -> [ConstraintName] -> EnumTyInfo
 mkConstraintTy tn cons = enumTyInfo
@@ -203,3 +203,34 @@ mkOnConflictTypes tn uniqueOrPrimaryCons cols =
               , TIEnum $ mkUpdColumnTy tn cols
               , TIInpObj $ mkOnConflictInp tn
               ]
+
+mkOnConflictInputVal :: QualifiedTable -> Bool -> Maybe InpValInfo
+mkOnConflictInputVal qt =
+  bool Nothing (Just onConflictArg)
+  where
+    onConflictDesc = "on conflict condition"
+    onConflictArg = InpValInfo (Just onConflictDesc) "on_conflict"
+                    Nothing $ G.toGT $ mkOnConflictInpTy qt
+
+
+{-
+insert_table_one(
+  object: table_insert_input!
+  on_conflict: table_on_conflict
+  ): table
+-}
+
+mkInsertOneMutationField :: Maybe G.Name -> QualifiedTable -> Bool -> ObjFldInfo
+mkInsertOneMutationField mCustomName qt isUpsertable =
+  mkHsraObjFldInfo (Just description) fieldName (fromInpValL inputVals) $
+  G.toGT $ mkTableTy qt
+  where
+    description = G.Description $ "insert a single row into the table: " <>> qt
+
+    fieldName = flip fromMaybe mCustomName $ "insert_" <> qualObjectToName qt <> "_one"
+
+    inputVals = catMaybes [Just objectArg, mkOnConflictInputVal qt isUpsertable]
+
+    objectArgDesc = "the row to be inserted"
+    objectArg = InpValInfo (Just objectArgDesc) "object" Nothing $ G.toGT $
+                G.toNT $ mkInsInpTy qt

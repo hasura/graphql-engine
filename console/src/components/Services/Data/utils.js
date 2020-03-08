@@ -1,5 +1,8 @@
-import globals from '../../../Globals';
-import { TABLE_ENUMS_SUPPORT } from '../../../helpers/versionUtils';
+import {
+  READ_ONLY_RUN_SQL_QUERIES,
+  checkFeatureSupport,
+} from '../../../helpers/versionUtils';
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 
 export const INTEGER = 'integer';
 export const SERIAL = 'serial';
@@ -212,6 +215,8 @@ export const fetchTrackedTableListQuery = options => {
       columns: [
         'table_schema',
         'table_name',
+        'is_enum',
+        'configuration',
         {
           name: 'primary_key',
           columns: ['*'],
@@ -228,17 +233,26 @@ export const fetchTrackedTableListQuery = options => {
           name: 'unique_constraints',
           columns: ['*'],
         },
+        {
+          name: 'check_constraints',
+          columns: ['*'],
+          order_by: {
+            column: 'constraint_name',
+            type: 'asc',
+          },
+        },
+        {
+          name: 'computed_fields',
+          columns: ['*'],
+          order_by: {
+            column: 'computed_field_name',
+            type: 'asc',
+          },
+        },
       ],
       order_by: [{ column: 'table_name', type: 'asc' }],
     },
   };
-
-  const supportEnums =
-    globals.featuresCompatibility &&
-    globals.featuresCompatibility[TABLE_ENUMS_SUPPORT];
-  if (supportEnums) {
-    query.args.columns.push('is_enum');
-  }
 
   if (
     (options.schemas && options.schemas.length !== 0) ||
@@ -279,9 +293,7 @@ const generateWhereClause = options => {
   if (options.tables) {
     options.tables.forEach(tableInfo => {
       whereCondtions.push(
-        `(ist.table_schema='${tableInfo.table_schema}' and ist.table_name='${
-          tableInfo.table_name
-        }')`
+        `(ist.table_schema='${tableInfo.table_schema}' and ist.table_name='${tableInfo.table_name}')`
       );
     });
   }
@@ -324,12 +336,11 @@ FROM
     ${whereQuery}
   ) as info
 `;
-  return {
-    type: 'run_sql',
-    args: {
-      sql: runSql,
-    },
-  };
+  return getRunSqlQuery(
+    runSql,
+    false,
+    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+  );
 };
 
 export const fetchTrackedTableReferencedFkQuery = options => {
@@ -359,12 +370,11 @@ FROM
     ${whereQuery}
   ) as info
 `;
-  return {
-    type: 'run_sql',
-    args: {
-      sql: runSql,
-    },
-  };
+  return getRunSqlQuery(
+    runSql,
+    false,
+    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+  );
 };
 
 export const fetchTableListQuery = options => {
@@ -402,14 +412,7 @@ FROM
             FROM 
               pg_catalog.pg_class c 
             WHERE 
-              c.oid = (
-                SELECT 
-                  (
-                    (
-                      quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)
-                    ):: text
-                  ):: regclass :: oid
-              ) 
+              c.oid = (quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)):: regclass :: oid
               AND c.relname = is_columns.table_name
           )
         )
@@ -419,7 +422,9 @@ FROM
           'comment',
           (
             SELECT description FROM pg_description JOIN pg_trigger ON pg_description.objoid = pg_trigger.oid 
-            WHERE tgname = is_triggers.trigger_name
+            WHERE 
+              tgname = is_triggers.trigger_name 
+              AND tgrelid = (quote_ident(is_triggers.event_object_schema) || '.' || quote_ident(is_triggers.event_object_table)):: regclass :: oid
           )
         )
       ) FILTER (WHERE is_triggers.trigger_name IS NOT NULL), '[]' :: JSON) AS triggers,
@@ -442,12 +447,11 @@ FROM
       is_views.*
   ) AS info
 `;
-  return {
-    type: 'run_sql',
-    args: {
-      sql: runSql,
-    },
-  };
+  return getRunSqlQuery(
+    runSql,
+    false,
+    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
+  );
 };
 
 export const mergeLoadSchemaData = (
@@ -481,6 +485,9 @@ export const mergeLoadSchemaData = (
     let _fkConstraints = [];
     let _refFkConstraints = [];
     let _isEnum = false;
+    let _checkConstraints = [];
+    let _configuration = {};
+    let _computed_fields = [];
 
     if (_isTableTracked) {
       _primaryKey = trackedTableInfo.primary_key;
@@ -488,6 +495,9 @@ export const mergeLoadSchemaData = (
       _permissions = trackedTableInfo.permissions;
       _uniqueConstraints = trackedTableInfo.unique_constraints;
       _isEnum = trackedTableInfo.is_enum;
+      _checkConstraints = trackedTableInfo.check_constraints;
+      _configuration = trackedTableInfo.configuration;
+      _computed_fields = trackedTableInfo.computed_fields;
 
       _fkConstraints = fkData.filter(
         fk => fk.table_schema === _tableSchema && fk.table_name === _tableName
@@ -512,10 +522,13 @@ export const mergeLoadSchemaData = (
       relationships: _relationships,
       permissions: _permissions,
       unique_constraints: _uniqueConstraints,
+      check_constraints: _checkConstraints,
       foreign_key_constraints: _fkConstraints,
       opp_foreign_key_constraints: _refFkConstraints,
       view_info: _viewInfo,
       is_enum: _isEnum,
+      configuration: _configuration,
+      computed_fields: _computed_fields,
     };
 
     _mergedTableData.push(_mergedInfo);

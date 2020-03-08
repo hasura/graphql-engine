@@ -1,3 +1,4 @@
+-- | See: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md
 module Hasura.GraphQL.Transport.WebSocket.Protocol
   ( OperationId(..)
   , ConnParams(..)
@@ -22,6 +23,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 
+-- | These come from the client and are websocket connection-local.
 newtype OperationId
   = OperationId { unOperationId :: Text }
   deriving (Show, Eq, J.ToJSON, J.FromJSON, Hashable)
@@ -56,14 +58,13 @@ instance J.FromJSON ClientMsg where
   parseJSON = J.withObject "ClientMessage" $ \obj -> do
     t <- obj J..: "type"
     case t of
-      "connection_init" -> CMConnInit <$> obj J..:? "payload"
-      "start" -> CMStart <$> J.parseJSON (J.Object obj)
-      "stop" -> CMStop <$> J.parseJSON (J.Object obj)
+      "connection_init"      -> CMConnInit <$> obj J..:? "payload"
+      "start"                -> CMStart <$> J.parseJSON (J.Object obj)
+      "stop"                 -> CMStop <$> J.parseJSON (J.Object obj)
       "connection_terminate" -> return CMConnTerm
-      _ -> fail $ "unexpected type for ClientMessage: " <> t
+      _                      -> fail $ "unexpected type for ClientMessage: " <> t
 
 -- server to client messages
-
 data DataMsg
   = DataMsg
   { _dmId      :: !OperationId

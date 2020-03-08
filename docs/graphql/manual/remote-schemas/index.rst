@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage remote schemas with Hasura
+   :keywords: hasura, docs, remote schema
+
 Remote schemas
 ==============
 
@@ -20,6 +24,7 @@ This is what Hasura running with "Remote schemas" looks like:
 .. thumbnail:: ../../../img/graphql/manual/remote-schemas/remote-schemas-arch.png
    :class: no-shadow
    :width: 75%
+   :alt: Architecture of Hasura with remote schemas
 
 .. note::
 
@@ -70,7 +75,7 @@ To merge your remote schema with the GraphQL engine's auto-generated schema:
 Head to the ``Remote Schemas`` tab of the console and click on the ``Add`` button.
 
 .. thumbnail:: ../../../img/graphql/manual/business-logic/add-remote-schemas-interface.png
-
+   :alt: Merge remote schema
 
 You need to enter the following information:
 
@@ -80,9 +85,10 @@ You need to enter the following information:
 
   .. note::
 
-    During **local development** using Docker and a localhost server, ensure the Hasura Docker container can reach
-    the server endpoint on the host, i.e. use ``host.docker.internal`` on Mac or ``docker.for.win.localhost`` on
-    Windows.
+    During **local development** with the remote schema server on localhost, ensure that the Hasura Docker container can reach
+    the server endpoint on the host. A common way to do this is to use the domain ``host.docker.internal`` on Docker for Mac and Windows or the Docker bridge IP on Linux (typically ``172.17.0.1`` - the IP address of ``docker0`` interface. use ``ip addr show docker0``) instead of ``127.0.0.1``. 
+    
+    Similarly, if you are adding the URL using env variable, then run the Hasura docker container with the env variable added during `docker run`. Example ``-e REMOTE_SCHEMA_ENDPOINT=http://host.docker.internal:4000/mycustomgraphql``
 
 - **Headers**: configure the headers to be sent to your custom GraphQL server:
 

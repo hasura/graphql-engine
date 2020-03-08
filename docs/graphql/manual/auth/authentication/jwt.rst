@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use authenticaton with JWT in Hasura
+   :keywords: hasura, docs, authentication, auth, JWT
+
 Authentication using JWT
 ========================
 
@@ -12,12 +16,11 @@ Introduction
 You can configure the GraphQL engine to use JWT authorization mode to authorize all incoming requests to the Hasura GraphQL engine server.
 
 The idea is that your auth server will return JWT tokens, which are decoded and
-verified by the GraphQL engine to authorize and get metadata about the request
+verified by the GraphQL engine, to authorize and get metadata about the request
 (``x-hasura-*`` values).
 
-
 .. thumbnail:: ../../../../img/graphql/manual/auth/jwt-auth.png
-
+   :alt: Authentication using JWT
 
 The JWT is decoded, the signature is verified, then it is asserted that the
 current role of the user (if specified in the request) is in the list of allowed roles.
@@ -26,7 +29,7 @@ If the authorization passes, then all of the ``x-hasura-*`` values in the claim
 are used for the permissions system.
 
 .. admonition:: Prerequisite
-   
+
    It is mandatory to first :doc:`secure your GraphQL endpoint <../../deployment/securing-graphql-endpoint>` for the JWT mode to take effect.
 
 
@@ -53,9 +56,9 @@ When your auth server generates the JWT, the custom claims in the JWT **must con
 the following:
 
 1. A ``x-hasura-default-role`` field : indicating the default role of that user i.e. the role that will be
-   used in case ``x-hasura-role`` header is not passed
+   used in case ``x-hasura-role`` header is not passed.
 2. A ``x-hasura-allowed-roles`` field : a list of allowed roles for the user i.e. acceptable values of the
-   ``x-hasura-role`` header
+   ``x-hasura-role`` header.
 
 The claims in the JWT can have other ``x-hasura-*`` fields where their values
 can only be strings. You can use these ``x-hasura-*`` fields in your
@@ -159,16 +162,47 @@ JWTs). The URL **must** publish the JWKs in the standard format as described in
 https://tools.ietf.org/html/rfc7517.
 
 This is an optional field. You can also provide the key (certificate, PEM
-encoded public key) as string as well - under the ``key`` field.
+encoded public key) as a string - under the ``key`` field.
 
-**Rotating JWKs**:
+Rotating JWKs
++++++++++++++
 
-Some providers rotate their JWKs (e.g. Firebase). If the provider sends an
-``Expires`` header with the response of JWK, then the GraphQL engine will refresh
-the JWKs automatically. If the provider does not send an ``Expires`` header, the
-JWKs are not refreshed.
+Some providers rotate their JWKs (e.g. Firebase). If the provider sends
 
-**Example**:
+1. ``max-age`` or ``s-maxage`` in ``Cache-Control`` header
+2. or ``Expires`` header
+
+with the response of JWK, then the GraphQL engine will refresh the JWKs automatically. If the
+provider does not send the above, the JWKs are not refreshed.
+
+Following is the behaviour in detail:
+
+**On startup**:
+
+1. GraphQL engine will fetch the JWK and will -
+
+   1. first, try to parse ``max-age`` or ``s-maxage`` directive in ``Cache-Control`` header.
+   2. second, check if ``Expires`` header is present (if ``Cache-Control`` is not present), and try
+      to parse the value as a timestamp.
+
+2. If it is able to parse any of the above successfully, then it will use that parsed time to
+   refresh/refetch the JWKs again. If it is unable to parse, then it will not refresh the JWKs (it
+   assumes that if the above headers are not present, the provider doesn't rotate their JWKs).
+
+**While running**:
+
+1. While GraphQL engine is running with refreshing JWKs, in one of the refresh cycles it will -
+
+   1. first, try to parse ``max-age`` or ``s-maxage`` directive in ``Cache-Control`` header.
+   2. second, check if ``Expires`` header is present (if ``Cache-Control`` is not present), and try
+      to parse the value as a timestamp.
+
+2. If it is able to parse any of the above successfully, then it will use that parsed time to
+   refresh/refetch the JWKs again. If it is unable to parse, then it will sleep for 1 minute and
+   will start another refresh cycle.
+
+Example JWK URL
++++++++++++++++
 
 - Auth0 publishes their JWK url at: ``https://<YOUR_AUTH0_DOMAIN>.auth0.com``.
   But Auth0 has a bug. See known issues: :ref:`auth0-issues`.
@@ -177,7 +211,7 @@ JWKs are not refreshed.
 
 ``claims_namespace``
 ^^^^^^^^^^^^^^^^^^^^
-This is an optional field. You can specify the key name
+This is an optional field. You can specify the key name,
 inside which the Hasura specific claims will be present, e.g. ``https://mydomain.com/claims``.
 
 **Default value** is: ``https://hasura.io/jwt/claims``.
@@ -191,8 +225,8 @@ This is an optional field, with only the following possible values:
 
 Default is ``json``.
 
-This is to indicate that if the Hasura specific claims are a regular JSON object
-or stringified JSON.
+This is to indicate whether the Hasura specific claims are a regular JSON object
+or a stringified JSON.
 
 This is required because providers like AWS Cognito only allow strings in the
 JWT claims. `See #1176 <https://github.com/hasura/graphql-engine/issues/1176>`_.
@@ -272,8 +306,8 @@ or
    the ``aud`` claim from the JWT is also checked during verification. Not doing
    this check will allow JWTs issued for other tenants to be valid as well.
 
-   In these cases, you **MUST** set the ``audience`` field to appropriate value.
-   Failing to do is a major security vulnerability.
+   In these cases, you **MUST** set the ``audience`` field to the appropriate value.
+   Failing to do so is a major security vulnerability.
 
 
 ``issuer``
@@ -323,7 +357,7 @@ The ``key`` is the actual shared secret, which is used by Hasura and the externa
 RSA based
 +++++++++
 If your auth server is using RSA to sign JWTs, and is using a 512-bit key,
-the JWT config needs to have the only the public key.
+the JWT config only needs to have the public key.
 
 **Example 1**: public key in PEM format (not OpenSSH format):
 
@@ -387,7 +421,7 @@ Setting audience check
 ^^^^^^^^^^^^^^^^^^^^^^
 Certain JWT providers share JWKs between multiple tenants (like Firebase). They use the ``aud`` claim of JWT to specify the intended tenant for the JWT. Setting the ``audience`` field in the Hasura JWT configuration will make sure that the ``aud`` claim from the JWT is also checked during verification. Not doing this check will allow JWTs issued for other tenants to be valid as well.
 
-In these cases, you **MUST** set the ``audience`` field to appropriate value. Failing to do is a major security vulnerability.
+In these cases, you **MUST** set the ``audience`` field to appropriate value. Failing to do so is a major security vulnerability.
 
 
 Popular providers and known issues
@@ -478,6 +512,7 @@ care of escaping new lines.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/jwt-config-generated.png
    :width: 75%
+   :alt: Generating JWT config
 
 Auth JWT Examples
 -----------------

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Examples of server configurations with Hasura GraphQL engine
+   :keywords: hasura, docs, deployment, flags, server, server configuration, example
+
 GraphQL engine server config examples
 =====================================
 
@@ -132,15 +136,15 @@ you're already handling CORS on a reverse proxy etc.
 
 .. _console-assets-on-server:
 
-Load console assets from server instead of CDN
-----------------------------------------------
+Run console offline *(i.e load console assets from server instead of CDN)*
+--------------------------------------------------------------------------
 
-Starting with ``v1.0.0-beta.1``, the static assets (js, css, fonts, img etc.)
-required by the console are bundled with the Docker image published by Hasura.
+Normally the static assets (js, css, fonts, img etc.) required by the console are loaded from a CDN.
+Starting with ``v1.0.0-beta.1``, these assets are bundled with the Docker image published by Hasura.
 These files can be found at ``/srv/console-assets``.
 
 If you're working in an environment with Hasura running locally and have no
-access to internet, you can configure server/console to load assets from the
+access to internet, you can configure the GraphQL engine to load assets from the
 Docker image itself, instead of the CDN.
 
 Set the following env var or flag on the server:

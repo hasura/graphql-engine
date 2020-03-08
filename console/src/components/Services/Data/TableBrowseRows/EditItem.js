@@ -13,6 +13,7 @@ import { replace } from 'react-router-redux';
 import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
+import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
 
 class EditItem extends Component {
   constructor() {
@@ -27,6 +28,7 @@ class EditItem extends Component {
       schemas,
       oldItem,
       migrationMode,
+      readOnlyMode,
       ongoingRequest,
       lastError,
       lastSuccess,
@@ -38,8 +40,11 @@ class EditItem extends Component {
     if (!oldItem) {
       dispatch(
         replace(
-          `${globals.urlPrefix ||
-            ''}/data/schema/${currentSchema}/tables/${tableName}/browse`
+          `${globals.urlPrefix || ''}${getTableBrowseRoute(
+            currentSchema,
+            tableName,
+            true
+          )}`
         )
       );
       return null;
@@ -65,8 +70,13 @@ class EditItem extends Component {
 
       const prevValue = oldItem[colName];
 
-      refs[colName] = { valueNode: null, nullNode: null, defaultNode: null };
-      const inputRef = node => (refs[colName].valueNode = node);
+      refs[colName] = {
+        valueNode: null,
+        valueInput: null,
+        nullNode: null,
+        defaultNode: null,
+      };
+      const inputRef = node => (refs[colName].valueInput = node);
 
       const clicker = e => {
         e.target
@@ -149,7 +159,14 @@ class EditItem extends Component {
             {colName}
           </label>
           <label className={styles.radioLabel + ' radio-inline'}>
-            <input type="radio" name={colName + '-value'} value="option1" />
+            <input
+              type="radio"
+              ref={node => {
+                refs[colName].valueNode = node;
+              }}
+              name={colName + '-value'}
+              value="option1"
+            />
             {typedInput}
           </label>
           <label className={styles.radioLabel + ' radio-inline'}>
@@ -205,6 +222,30 @@ class EditItem extends Component {
       );
     }
 
+    const handleSaveClick = e => {
+      e.preventDefault();
+
+      const inputValues = {};
+      Object.keys(refs).map(colName => {
+        if (refs[colName].nullNode.checked) {
+          // null
+          inputValues[colName] = null;
+        } else if (refs[colName].defaultNode.checked) {
+          // default
+          inputValues[colName] = { default: true };
+        } else if (refs[colName].valueNode.checked) {
+          inputValues[colName] =
+            refs[colName].valueInput.props !== undefined
+              ? refs[colName].valueInput.props.value
+              : refs[colName].valueInput.value;
+        }
+      });
+
+      dispatch({ type: E_ONGOING_REQ });
+
+      dispatch(editItem(tableName, inputValues));
+    };
+
     return (
       <div className={styles.container + ' container-fluid'}>
         <TableHeader
@@ -213,6 +254,7 @@ class EditItem extends Component {
           table={currentTable}
           tabName="edit"
           migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
         />
         <br />
         <div className={styles.insertContainer + ' container-fluid'}>
@@ -223,26 +265,7 @@ class EditItem extends Component {
                 type="submit"
                 color="yellow"
                 size="sm"
-                onClick={e => {
-                  e.preventDefault();
-                  dispatch({ type: E_ONGOING_REQ });
-                  const inputValues = {};
-                  Object.keys(refs).map(colName => {
-                    if (refs[colName].nullNode.checked) {
-                      // null
-                      inputValues[colName] = null;
-                    } else if (refs[colName].defaultNode.checked) {
-                      // default
-                      return;
-                    } else {
-                      inputValues[colName] =
-                        refs[colName].valueNode.props !== undefined
-                          ? refs[colName].valueNode.props.value
-                          : refs[colName].valueNode.value;
-                    }
-                  });
-                  dispatch(editItem(tableName, inputValues));
-                }}
+                onClick={handleSaveClick}
                 data-test="edit-save-button"
               >
                 {buttonText}
@@ -271,6 +294,7 @@ EditItem.propTypes = {
   lastSuccess: PropTypes.object,
   lastError: PropTypes.object,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   count: PropTypes.number,
   dispatch: PropTypes.func.isRequired,
 };
@@ -281,6 +305,7 @@ const mapStateToProps = (state, ownProps) => {
     ...state.tables.update,
     schemas: state.tables.allSchemas,
     migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
     currentSchema: state.tables.currentSchema,
   };
 };

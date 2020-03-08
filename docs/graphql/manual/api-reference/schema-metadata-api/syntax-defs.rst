@@ -1,3 +1,7 @@
+.. meta::
+   :description: Common syntax definitions for the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, syntax definitions
+
 Schema/Metadata API Reference: Common syntax definitions
 ========================================================
 
@@ -17,6 +21,8 @@ TableName
 
    String | QualifiedTable_
 
+.. _QualifiedTable:
+
 QualifiedTable
 ^^^^^^^^^^^^^^
 
@@ -24,8 +30,8 @@ QualifiedTable
    :class: haskell-pre
 
    {
-           "name": String,
-           "schema": String
+       "name": String,
+       "schema": String
    }
 
 .. _FunctionName:
@@ -45,14 +51,23 @@ QualifiedFunction
    :class: haskell-pre
 
    {
-           "name": String,
-           "schema": String
+       "name": String,
+       "schema": String
    }
 
 .. _RoleName:
 
 RoleName
 ^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _ComputedFieldName:
+
+ComputedFieldName
+^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
 
@@ -494,3 +509,97 @@ A JSONObject_ of Postgres column name to GraphQL name mapping
       "column2" : String,
       ..
    }
+
+.. _ActionName:
+
+ActionName
+^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String
+
+
+.. _WebhookURL:
+
+WebhookURL
+^^^^^^^^^^
+
+A String value which supports templating environment variables enclosed in ``{{`` and ``}}``.
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String
+
+Template example: ``https://{{ACTION_API_DOMAIN}}/create-user``
+
+.. _HeaderFromValue:
+
+HeaderFromValue
+^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - name
+     - true
+     - String
+     - Name of the header
+   * - value
+     - true
+     - String
+     - Value of the header
+
+.. _HeaderFromEnv:
+
+
+HeaderFromEnv
+^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - name
+     - true
+     - String
+     - Name of the header
+   * - value_from_env
+     - true
+     - String
+     - Name of the environment variable which holds the value of the header
+
+.. _GraphQLType:
+
+GraphQLType
+^^^^^^^^^^^
+
+A GraphQL `Type Reference <https://spec.graphql.org/June2018/#sec-Type-References>`__ string.
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String
+
+Example: ``String!`` for non-nullable String type and ``[String]`` for array of String types
+
+.. _GraphQLName:
+
+GraphQLName
+^^^^^^^^^^^
+
+A string literal that conform to `GraphQL spec <https://spec.graphql.org/June2018/#Name>`__.
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String

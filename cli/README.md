@@ -8,10 +8,11 @@
 
 - Linux/macOS
 ```bash
-curl -L https://cli.hasura.io/install.sh | bash
-``` 
-- Windows: [installer](https://cli.hasura.io/install/windows-amd64)
+curl -L https://github.com/hasura/graphql-engine/raw/master/cli/get.sh | bash
+```
+- Windows
 
+Download the binary `cli-hasura-windows-amd64.exe` available under Assets of the latest release from the GitHub release page: https://github.com/hasura/graphql-engine/releases
 
 ### Download using go get
 

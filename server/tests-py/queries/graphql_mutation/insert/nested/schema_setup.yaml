@@ -8,7 +8,8 @@ args:
       create table author(
           id serial primary key,
           name text unique,
-          is_registered boolean not null default false
+          is_registered boolean not null default false,
+          emails text[] not null default '{}'::text[]
       );
 - type: track_table
   args:
@@ -25,8 +26,20 @@ args:
         content TEXT,
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
-        published_on TIMESTAMP
-      )
+        published_on TIMESTAMP,
+        tags JSON
+      );
+
+      CREATE FUNCTION fetch_articles(search text, author_row author)
+      RETURNS SETOF article AS $$
+        SELECT *
+        FROM article
+        WHERE
+          ( title ilike ('%' || search || '%')
+            OR content ilike ('%' || search || '%')
+          ) AND author_id = author_row.id
+      $$ LANGUAGE sql STABLE;
+
 - type: track_table
   args:
     schema: public
@@ -49,3 +62,11 @@ args:
         table: article
         column: author_id
 
+# add a computed field
+- type: add_computed_field
+  args:
+    table: author
+    name: fetch_articles
+    definition:
+      function: fetch_articles
+      table_argument: author_row

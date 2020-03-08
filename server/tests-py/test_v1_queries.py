@@ -1,12 +1,19 @@
-import yaml
 from validate import check_query_f
-from super_classes import DefaultTestSelectQueries, DefaultTestQueries, DefaultTestMutations
+import pytest
+
+usefixtures = pytest.mark.usefixtures
+
+use_mutation_fixtures = usefixtures(
+    'per_class_db_schema_for_mutation_tests',
+    'per_method_db_data_for_mutation_tests'
+)
 
 class TestDropNoColsTable:
     def test_drop_no_cols_table(self, hge_ctx):
         check_query_f(hge_ctx, 'queries/v1/ddl/drop_no_cols_table.yaml')
 
-class TestV1General(DefaultTestQueries):
+@usefixtures('per_method_tests_db_state')
+class TestV1General:
 
     def test_query_string_input_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_string_input_err.yaml')
@@ -17,12 +24,15 @@ class TestV1General(DefaultTestQueries):
     def test_query_args_as_string_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_args_as_string_err.yaml')
 
+    def test_query_v2_invalid_version(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/query_v2_invalid_version.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/basic"
 
-
-class TestV1SelectBasic(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1SelectBasic:
 
     def test_select_query_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_article.yaml')
@@ -53,7 +63,8 @@ class TestV1SelectBasic(DefaultTestSelectQueries):
         return "queries/v1/select/basic"
 
 
-class TestV1SelectLimits(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1SelectLimits:
 
     def test_limit_1(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_limit_1.yaml')
@@ -72,7 +83,8 @@ class TestV1SelectLimits(DefaultTestSelectQueries):
         return 'queries/v1/select/limits'
 
 
-class TestV1SelectOffset(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1SelectOffset:
 
     def test_offset_1_limit_2(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_query_article_offset_1_limit_2.yaml')
@@ -91,7 +103,8 @@ class TestV1SelectOffset(DefaultTestSelectQueries):
         return 'queries/v1/select/offset'
 
 
-class TestV1SelectBoolExpBasic(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1SelectBoolExpBasic:
 
     def test_author_article_where_not_equal(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_author_article_where_neq.yaml')
@@ -134,7 +147,8 @@ class TestV1SelectBoolExpBasic(DefaultTestSelectQueries):
         return 'queries/v1/select/boolexp/basic'
 
 
-class TestV1SelectBoolExpSearch(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1SelectBoolExpSearch:
 
     def test_city_where_like(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_city_where_like.yaml')
@@ -158,7 +172,8 @@ class TestV1SelectBoolExpSearch(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/v1/select/boolexp/search'
 
-class TestV1SelectBoolExpJSONB(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1SelectBoolExpJSONB:
 
     def test_select_article_author_jsonb_contained_in_bestseller_latest(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_article_author_jsonb_contained_in_bestseller_latest.yaml')
@@ -186,7 +201,8 @@ class TestV1SelectBoolExpJSONB(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/v1/select/boolexp/jsonb'
 
-class TestV1SelectBoolExpPostGIS(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1SelectBoolExpPostGIS:
 
     def test_query_st_equals(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/query_st_equals.yaml')
@@ -225,7 +241,8 @@ class TestV1SelectBoolExpPostGIS(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/v1/select/boolexp/postgis'
 
-class TestV1SelectPermissions(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1SelectPermissions:
 
     def test_user_select_unpublished_articles(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/user_select_query_unpublished_articles.yaml')
@@ -264,8 +281,8 @@ class TestV1SelectPermissions(DefaultTestSelectQueries):
     def dir(cls):
         return 'queries/v1/select/permissions'
 
-
-class TestV1InsertBasic(DefaultTestMutations):
+@use_mutation_fixtures
+class TestV1InsertBasic:
 
     def test_insert_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/insert_author.yaml')
@@ -276,12 +293,15 @@ class TestV1InsertBasic(DefaultTestMutations):
     def test_insert_null_col_value(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/order_col_shipped_null.yaml")
 
+    def test_insert_nullable_enum_field(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_nullable_enum_field.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/v1/insert/basic"
 
-
-class TestV1InsertOnConflict(DefaultTestMutations):
+@use_mutation_fixtures
+class TestV1InsertOnConflict:
 
     def test_author_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/upsert_author.yaml')
@@ -306,8 +326,8 @@ class TestV1InsertOnConflict(DefaultTestMutations):
     def dir(cls):
         return "queries/v1/insert/onconflict"
 
-
-class TestV1InsertPermissions(DefaultTestMutations):
+@use_mutation_fixtures
+class TestV1InsertPermissions:
 
     def test_user_role_on_conflict_update(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/article_on_conflict_user_role.yaml")
@@ -341,8 +361,8 @@ class TestV1InsertPermissions(DefaultTestMutations):
     def dir(cls):
         return "queries/v1/insert/permissions"
 
-
-class TestV1UpdateBasic(DefaultTestMutations):
+@use_mutation_fixtures
+class TestV1UpdateBasic:
 
     def test_set_author_name(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
@@ -369,8 +389,8 @@ class TestV1UpdateBasic(DefaultTestMutations):
     def dir(cls):
         return "queries/v1/update/basic"
 
-
-class TestV1UpdatePermissions(DefaultTestMutations):
+@use_mutation_fixtures
+class TestV1UpdatePermissions:
 
     def test_user_can_update_unpublished_article(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article.yaml")
@@ -401,8 +421,8 @@ class TestV1UpdatePermissions(DefaultTestMutations):
     def dir(cls):
         return "queries/v1/update/permissions"
 
-
-class TestV1CountBasic(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1CountBasic:
 
     def test_count_authors(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/count_authors.yaml")
@@ -433,7 +453,8 @@ class TestV1CountBasic(DefaultTestSelectQueries):
         return "queries/v1/count/basic"
 
 
-class TestV1CountPermissions(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1CountPermissions:
 
     def test_count_user_has_no_select_permission_err(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/count_user_has_no_select_perm_error.yaml")
@@ -445,8 +466,8 @@ class TestV1CountPermissions(DefaultTestSelectQueries):
     def dir(cls):
         return "queries/v1/count/permissions"
 
-
-class TestV1Delete(DefaultTestQueries):
+@usefixtures('per_method_tests_db_state')
+class TestV1Delete:
 
     def test_delete_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/delete_article.yaml')
@@ -455,8 +476,9 @@ class TestV1Delete(DefaultTestQueries):
     def dir(cls):
         return "queries/v1/delete"
 
-
-class TestMetadata(DefaultTestQueries):
+import ruamel.yaml as yaml
+@usefixtures('per_method_tests_db_state')
+class TestMetadata:
 
     def test_reload_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/reload_metadata.yaml')
@@ -473,16 +495,49 @@ class TestMetadata(DefaultTestQueries):
     def test_replace_metadata_wo_remote_schemas(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata_wo_rs.yaml')
 
+    def test_replace_metadata_v2(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/replace_metadata_v2.yaml')
+
     def test_dump_internal_state(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/dump_internal_state.yaml')
-
 
     @classmethod
     def dir(cls):
         return "queries/v1/metadata"
 
+# TODO These look like dependent tests. Ideally we should be able to run tests independently
+@usefixtures('per_class_tests_db_state')
+class TestMetadataOrder:
+    @classmethod
+    def dir(cls):
+        return "queries/v1/metadata_order"
 
-class TestRunSQL(DefaultTestQueries):
+    def test_export_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/export_metadata.yaml')
+
+    def test_clear_export_metadata(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/clear_export_metadata.yaml')
+
+    def test_export_replace(self, hge_ctx):
+        url = '/v1/query'
+        export_query = {
+            'type': 'export_metadata',
+            'args': {}
+        }
+        headers = {}
+        if hge_ctx.hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        export_code, export_resp, _ = hge_ctx.anyq(url, export_query, headers)
+        assert export_code == 200, export_resp
+        replace_query = {
+            'type': 'replace_metadata',
+            'args': export_resp
+        }
+        replace_code, replace_resp, _ = hge_ctx.anyq(url, replace_query, headers)
+        assert replace_code == 200, replace_resp
+
+@usefixtures('per_method_tests_db_state')
+class TestRunSQL:
 
     def test_select_query(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_select_query.yaml')
@@ -523,7 +578,8 @@ class TestRunSQL(DefaultTestQueries):
         return "queries/v1/run_sql"
 
 
-class TestRelationships(DefaultTestQueries):
+@usefixtures('per_method_tests_db_state')
+class TestRelationships:
 
     def test_object_relationship_foreign_key(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/object_relationship_foreign_key.yaml')
@@ -560,7 +616,8 @@ class TestRelationships(DefaultTestQueries):
         return "queries/v1/relationships"
 
 
-class TestTrackTables(DefaultTestQueries):
+@usefixtures('per_method_tests_db_state')
+class TestTrackTables:
 
     def test_track_table_function_same_name(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_table_function_same_name.yaml')
@@ -588,7 +645,8 @@ class TestTrackTables(DefaultTestQueries):
         return "queries/v1/track_table"
 
 
-class TestCreatePermission(DefaultTestQueries):
+@usefixtures('per_method_tests_db_state')
+class TestCreatePermission:
 
     def test_create_permission_admin_role_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_article_permission_role_admin_error.yaml')
@@ -596,11 +654,14 @@ class TestCreatePermission(DefaultTestQueries):
     def test_create_permission_user_role_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_article_permission_role_user.yaml')
 
+    def test_create_author_insert_permission_long_role(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_author_insert_permission_long_role.yaml')
+
     @classmethod
     def dir(cls):
         return "queries/v1/permissions"
 
-
+# All these tests fail. So it should be fine to not have a cleanup after tests
 class TestNonEmptyText:
 
     def test_create_event_trigger(self, hge_ctx):
@@ -625,7 +686,8 @@ class TestNonEmptyText:
     def dir(cls):
         return "queries/v1/non_empty_text"
 
-class TestSetTableIsEnum(DefaultTestQueries):
+@usefixtures('per_method_tests_db_state')
+class TestSetTableIsEnum:
     @classmethod
     def dir(cls):
         return 'queries/v1/set_table_is_enum'
@@ -636,7 +698,15 @@ class TestSetTableIsEnum(DefaultTestQueries):
     def test_add_invalid(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/add_invalid.yaml')
 
-class TestSetTableCustomFields(DefaultTestQueries):
+    def test_add_test_schema_enum_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_test_schema_enum_table.yaml')
+
+    def test_relationship_with_inconsistent_enum_table(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/relationship_with_inconsistent_enum_table.yaml')
+
+@usefixtures('per_method_tests_db_state')
+class TestSetTableCustomFields:
+
     @classmethod
     def dir(cls):
         return 'queries/v1/set_table_custom_fields'
@@ -649,3 +719,48 @@ class TestSetTableCustomFields(DefaultTestQueries):
 
     def test_alter_column(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/alter_column.yaml')
+
+    def test_conflict_with_relationship(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/conflict_with_relationship.yaml')
+
+    def test_column_field_swap(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/column_field_swap.yaml")
+
+    def test_relationship_conflict_with_custom_column(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/relationship_conflict_with_custom_column.yaml")
+
+@usefixtures('per_method_tests_db_state')
+class TestComputedFields:
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/computed_fields'
+
+    def test_add_computed_fields_errors(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_computed_field_errors.yaml')
+
+    def test_add_and_drop(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/add_and_drop.yaml')
+
+    def test_create_permissions(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_permissions.yaml')
+
+    def test_run_sql(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/run_sql.yaml')
+
+@usefixtures('per_method_tests_db_state')
+class TestBulkQuery:
+    @classmethod
+    def dir(cls):
+        return 'queries/v1/bulk'
+
+    def test_run_bulk(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/basic.yaml')
+
+    def test_run_bulk_mixed_access_mode(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/mixed_access_mode.yaml')
+
+    def test_run_bulk_with_select_and_writes(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_with_writes.yaml')
+
+    def test_run_bulk_with_select_and_reads(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/select_with_reads.yaml')

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Deploy Hasura GraphQL engine
+   :keywords: hasura, docs, deployment
+
 Deploying Hasura GraphQL engine
 ===============================
 
@@ -51,9 +55,12 @@ For access to Hasura GraphQL engine logs, check the below page for details:
    Using Docker <docker/index>
    Using Kubernetes <kubernetes/index>
    Server configuration <graphql-engine-flags/index>
-   Server logs <logging>
-   securing-graphql-endpoint
-   allow-list
    postgres-permissions
-   Updating GraphQL engine <updating>
+   securing-graphql-endpoint
+   Server logs <logging>
+   Enable HTTPS <enable-https>
+   allow-list
    HTTP Compression <compression>
+   Production checklist <production-checklist>
+   Updating GraphQL engine <updating>
+   Downgrading GraphQL engine <downgrading>

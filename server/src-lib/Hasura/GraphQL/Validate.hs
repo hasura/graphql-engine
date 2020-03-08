@@ -148,7 +148,8 @@ data RootSelSet
   | RSubscription !Field
   deriving (Show, Eq)
 
-validateGQ :: (MonadError QErr m, MonadReader GCtx m) => QueryParts -> m RootSelSet
+validateGQ
+  :: (MonadError QErr m, MonadReader GCtx m, MonadReusability m) => QueryParts -> m RootSelSet
 validateGQ (QueryParts opDef opRoot fragDefsL varValsM) = do
   ctx <- ask
 
