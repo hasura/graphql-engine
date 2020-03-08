@@ -17,9 +17,6 @@ const Editor = ({ mode, ...props }) => {
       tabSize={2}
       setOptions={{
         showLineNumbers: true,
-        enableBasicAutocompletion: true,
-        enableSnippets: true,
-        behavioursEnabled: true,
       }}
       {...props}
     />
