@@ -18,6 +18,7 @@ services:
       HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_PRO_KEY: "eyJwcm9qZWN0X2lkIjoiYmQzNjBmOTQtY2JjZi00ZGY0LWJlNDgtZDdmY2Y2OTYwYjgzIiwiY29uc29sZV9pZCI6IjFlMDczYTQ2LTVlYTQtNDE4OS1hZDdiLTNiMjZmNWIwMGIzOF9jb25zb2xlIiwic2VydmVyX2lkIjoiMWUwNzNhNDYtNWVhNC00MTg5LWFkN2ItM2IyNmY1YjAwYjM4X3NlcnZlciIsInNlcnZlcl9zZWNyZXQiOiIzU1p2ekU1cUdlQjFCYUMybUFranJJWGttME5YVHJ0aDlDNGJETnJ3Nm42N002MW53NEd0ekpDVVJZZk9qNkNnIn0="
       ## uncomment next line to set an admin secret
       # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
 volumes:
