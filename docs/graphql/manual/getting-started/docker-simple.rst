@@ -2,6 +2,8 @@
    :description: Get started with Hasura using Docker
    :keywords: hasura, docs, start, docker
 
+.. _docker_simple:
+
 Quickstart with Docker
 ======================
 

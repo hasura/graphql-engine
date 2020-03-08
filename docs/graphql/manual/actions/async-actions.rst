@@ -1,3 +1,5 @@
+.. _async_actions:
+
 Async actions
 =============
 

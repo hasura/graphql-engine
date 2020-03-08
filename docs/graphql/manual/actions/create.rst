@@ -1,3 +1,5 @@
+.. _create_actions:
+
 Creating actions
 ================
 

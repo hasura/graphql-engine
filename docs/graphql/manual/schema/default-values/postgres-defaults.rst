@@ -2,6 +2,8 @@
    :description: Set default field values using Postgres defaults
    :keywords: hasura, docs, schema, default value, Postgres default
 
+.. _postgres_defaults:
+
 Setting default values for fields using Postgres defaults
 =========================================================
 

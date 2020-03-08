@@ -2,6 +2,8 @@
    :description: Use authenticaton with webhooks in Hasura
    :keywords: hasura, docs, authentication, auth, webhook
 
+.. _auth_webhooks:
+
 Authentication using webhooks
 =============================
 

@@ -2,6 +2,8 @@
    :description: How Hasura GraphQL engine works
    :keywords: hasura, docs, graphql engine, how it works
 
+.. _how_it_works:
+
 How Hasura GraphQL engine works
 ===============================
 

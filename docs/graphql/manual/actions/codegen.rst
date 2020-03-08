@@ -1,3 +1,5 @@
+.. _codegen:
+
 Actions codegen
 ===============
 

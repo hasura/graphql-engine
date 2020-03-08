@@ -2,6 +2,8 @@
    :description: Deploy Hasura GraphQL engine
    :keywords: hasura, docs, deployment
 
+.. _deployment:
+
 Deploying Hasura GraphQL engine
 ===============================
 

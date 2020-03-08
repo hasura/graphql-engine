@@ -2,6 +2,8 @@
    :description: Deploy Hasura GraphQL engine with Heroku
    :keywords: hasura, docs, deployment, heroku
 
+.. _deploy_heroku:
+
 Run Hasura GraphQL engine on Heroku
 ===================================
 

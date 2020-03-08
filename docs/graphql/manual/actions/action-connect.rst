@@ -1,3 +1,5 @@
+.. _connect:
+
 Connecting actions with the graph
 =================================
 

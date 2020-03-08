@@ -2,6 +2,8 @@
    :description: Set up a Hasura GraphQL schema with an existing database
    :keywords: hasura, docs, schema, existing database
 
+.. _schema_existing_db:
+
 Setting up a GraphQL schema using an existing database
 ======================================================
 

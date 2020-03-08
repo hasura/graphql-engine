@@ -2,6 +2,8 @@
    :description: Define custom types with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, custom types
 
+.. _api_custom_types:
+
 Schema/Metadata API Reference: Custom Types
 ===========================================
 

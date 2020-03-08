@@ -2,6 +2,8 @@
    :description: Make nested object queries in Hasura
    :keywords: hasura, docs, query, nested object query
 
+.. _nested_object_queries:
+
 Nested object queries
 =====================
 

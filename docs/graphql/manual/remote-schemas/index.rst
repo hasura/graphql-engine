@@ -2,6 +2,8 @@
    :description: Manage remote schemas with Hasura
    :keywords: hasura, docs, remote schema
 
+.. _remote_schemas:
+
 Remote schemas
 ==============
 

@@ -2,6 +2,8 @@
    :description: Get Hasura GraphQL engine server logs with Docker deployment
    :keywords: hasura, docs, deployment, docker, logs
 
+.. _docker_logs:
+
 Hasura GraphQL engine server logs (Docker)
 ==========================================
 

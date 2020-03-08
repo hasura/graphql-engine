@@ -2,6 +2,8 @@
    :description: How Hasura migrations work
    :keywords: hasura, docs, migration, how it works
 
+.. _migrations_how_to:
+
 How Hasura migrations work
 ==========================
 

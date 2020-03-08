@@ -2,6 +2,8 @@
    :description: Update Hasura GraphQL engine with Heroku deployment
    :keywords: hasura, docs, deployment, heroku, update
 
+.. _heroku_update:
+
 Updating Hasura GraphQL engine on Heroku
 ========================================
 

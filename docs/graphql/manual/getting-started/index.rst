@@ -2,6 +2,8 @@
    :description: Get started with Hasura
    :keywords: hasura, docs, start
 
+.. _getting_started:
+
 Getting started
 ===============
 

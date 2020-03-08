@@ -2,6 +2,8 @@
    :description: Integration and migration tutorials for Hasura
    :keywords: hasura, docs, integration, migration
 
+.. _guides_integrations_migrations:
+
 Guides: Integration/migration tutorials
 =======================================
 

@@ -2,6 +2,8 @@
    :description: Manage actions with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, actions
 
+.. _api_actions:
+
 Schema/Metadata API Reference: Actions
 ======================================
 

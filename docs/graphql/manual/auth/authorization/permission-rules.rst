@@ -2,6 +2,8 @@
    :description: Configure permission rules in Hasura
    :keywords: hasura, docs, authorization, permissions, rules
 
+.. _permission_rules:
+
 Configuring Permission Rules
 ============================
 

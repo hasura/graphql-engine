@@ -2,6 +2,8 @@
    :description: Set default field values in Hasura
    :keywords: hasura, docs, schema, default value
 
+.. _default_values:
+
 Setting default values for fields
 =================================
 

@@ -1,3 +1,5 @@
+.. _custom_types:
+
 Custom GraphQL types
 ====================
 

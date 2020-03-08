@@ -2,7 +2,7 @@
    :description: Hasura API reference
    :keywords: hasura, docs, API, API reference
 
-.. _api-reference:
+.. _api_reference:
 
 API Reference
 =============

@@ -2,6 +2,8 @@
    :description: Examples for managing access control with Hasura
    :keywords: hasura, docs, authorization, access control, examples
 
+.. _auth_examples:
+
 Access control examples
 =======================
 

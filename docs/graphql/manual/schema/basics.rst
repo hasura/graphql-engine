@@ -2,6 +2,8 @@
    :description: Schema design basics in Hasura
    :keywords: hasura, docs, schema, basics
 
+.. _schema_basics:
+
 Schema design basics
 ====================
 

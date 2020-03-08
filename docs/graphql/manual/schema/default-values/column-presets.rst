@@ -2,6 +2,8 @@
    :description: Set default field values using role-based column presets
    :keywords: hasura, docs, schema, default value, role-based, column preset
 
+.. _column_presets:
+
 Setting default values for fields using role-based column presets
 =================================================================
 

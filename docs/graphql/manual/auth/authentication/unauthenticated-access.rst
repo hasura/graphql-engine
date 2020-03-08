@@ -2,6 +2,8 @@
    :description: Manage unauthenticated access in Hasura
    :keywords: hasura, docs, authentication, auth, unauthenticated access
 
+.. _unauthenticated_access:
+
 Unauthenticated access
 ======================
 

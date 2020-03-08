@@ -2,6 +2,8 @@
    :description: Get started with Hasura using Heroku
    :keywords: hasura, docs, start, heroku
 
+.. _heroku_simple:
+
 Quickstart with Heroku
 ======================
 

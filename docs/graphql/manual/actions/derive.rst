@@ -1,3 +1,5 @@
+.. _derive:
+
 Deriving actions
 ================
 

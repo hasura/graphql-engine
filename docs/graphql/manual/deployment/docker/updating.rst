@@ -2,6 +2,8 @@
    :description: Update Hasura GraphQL engine with Docker deployment
    :keywords: hasura, docs, deployment, docker, update
 
+.. _docker_update:
+
 Updating Hasura GraphQL engine running with Docker
 ==================================================
 

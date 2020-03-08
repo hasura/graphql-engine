@@ -2,6 +2,8 @@
    :description: Manage pagination with Hasura
    :keywords: hasura, docs, query, pagination
 
+.. _pagination:
+
 Paginate query results
 ======================
 

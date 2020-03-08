@@ -2,6 +2,8 @@
    :description: Manage queries with Hasura
    :keywords: hasura, docs, query
 
+.. _queries:
+
 Queries
 =======
 

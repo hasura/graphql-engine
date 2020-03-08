@@ -2,6 +2,8 @@
    :description: Manage migrations on an existing database and Hasura instance
    :keywords: hasura, docs, migration, existing database
 
+.. _migrations_existing_db:
+
 Migrations for an existing database and Hasura instance
 =======================================================
 

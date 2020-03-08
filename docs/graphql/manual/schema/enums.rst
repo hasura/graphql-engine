@@ -2,6 +2,8 @@
    :description: Use enums in Hasura
    :keywords: hasura, docs, schema, enum
 
+.. _enums:
+
 Enum type fields
 ================
 

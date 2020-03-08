@@ -2,6 +2,8 @@
    :description: Make distinct queries with Hasura
    :keywords: hasura, docs, query, distinct query
 
+.. _distinct_queries:
+
 Distinct query results
 ======================
 

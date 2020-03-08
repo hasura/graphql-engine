@@ -2,6 +2,8 @@
    :description: Manage migrations on a new database and Hasura instance
    :keywords: hasura, docs, migration, new database
 
+.. _migrations_new_db:
+
 Migrations for a new database and Hasura instance
 =================================================
 

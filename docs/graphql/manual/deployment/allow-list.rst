@@ -2,7 +2,7 @@
    :description: Manage allow list with Hasura GraphQL engine
    :keywords: hasura, docs, deployment, allow list
 
-.. _allow-list:
+.. _allow_list:
 
 Allow-list for queries
 ======================

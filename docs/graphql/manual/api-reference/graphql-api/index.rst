@@ -2,6 +2,8 @@
    :description: Hasura GraphQL API reference
    :keywords: hasura, docs, GraphQL API, reference
 
+.. _graphql_api:
+
 GraphQL API Reference
 =====================
 

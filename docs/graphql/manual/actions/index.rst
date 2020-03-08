@@ -1,3 +1,5 @@
+.. _actions:
+
 Actions (beta)
 ==============
 

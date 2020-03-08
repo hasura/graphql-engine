@@ -2,6 +2,8 @@
    :description: Write manual migrations for Hasura GraphQL engine
    :keywords: hasura, docs, migration, manual
 
+.. _manual_migrations:
+
 Writing migrations manually
 ===========================
 

@@ -4,6 +4,8 @@
 
 .. _first_graphql_query:
 
+.. _first_graphql_query:
+
 Making your first GraphQL query
 ===============================
 

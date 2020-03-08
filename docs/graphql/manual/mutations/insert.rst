@@ -2,6 +2,8 @@
    :description: Insert an object into the database using a mutation
    :keywords: hasura, docs, mutation, insert
 
+.. _insert:
+
 Insert mutation
 ===============
 

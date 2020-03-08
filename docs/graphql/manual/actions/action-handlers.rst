@@ -1,3 +1,5 @@
+.. _action_handlers:
+
 Action handlers
 ===============
 

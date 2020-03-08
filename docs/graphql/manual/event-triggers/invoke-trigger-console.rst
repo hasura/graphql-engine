@@ -2,6 +2,8 @@
    :description: Invoke event triggers on the Hasura console
    :keywords: hasura, docs, event trigger, console, invoke
 
+.. _invoke_trigger:
+
 Invoke event trigger via console
 ================================
 

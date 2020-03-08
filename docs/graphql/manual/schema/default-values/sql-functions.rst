@@ -2,6 +2,8 @@
    :description: Set default field values using SQL functions
    :keywords: hasura, docs, schema, default value, sql function, stored procedure
 
+.. _sql_functions:
+
 Setting values of fields using SQL functions/stored procedures
 ==============================================================
 

@@ -2,6 +2,8 @@
    :description: Manage subscriptions with Hasura
    :keywords: hasura, docs, subscription
 
+.. _subscriptions:
+
 Subscriptions
 =============
 

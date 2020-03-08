@@ -2,6 +2,8 @@
    :description: Update Hasura GraphQL engine version
    :keywords: hasura, docs, deployment, update, version
 
+.. _update_hge:
+
 Updating Hasura GraphQL engine
 ==============================
 

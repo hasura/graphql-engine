@@ -2,6 +2,8 @@
    :description: Deploy Hasura GraphQL engine with Docker
    :keywords: hasura, docs, deployment, docker
 
+.. _deployment_docker:
+
 Run Hasura GraphQL engine using Docker
 ======================================
 

@@ -2,6 +2,8 @@
    :description: Downgrade Hasura GraphQL engine version
    :keywords: hasura, docs, deployment, downgrade, version
 
+.. _downgrade_hge:
+
 Downgrading Hasura GraphQL engine
 =================================
 

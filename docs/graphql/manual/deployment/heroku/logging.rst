@@ -2,6 +2,8 @@
    :description: Get Hasura GraphQL engine server logs with Heroku deployment
    :keywords: hasura, docs, deployment, heroku, logs
 
+.. _heroku_logs:
+
 Hasura GraphQL engine server logs (Heroku)
 ==========================================
 

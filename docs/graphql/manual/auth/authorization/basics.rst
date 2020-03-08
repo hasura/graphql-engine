@@ -2,6 +2,8 @@
    :description: Hasura access control basics
    :keywords: hasura, docs, authorization, access control
 
+.. _auth_basics:
+
 Access control basics
 =====================
 
