@@ -28,3 +28,4 @@ Guides: Integration/migration tutorials
   OneGraph's AuthGuardian JWT Integration <auth-guardian-jwt>
   Using AWS Cognito for authentication <aws-cognito>
   Subscriptions using apollo-client <apollo-subscriptions>
+  Migrating from graph.cool <graphcool-migration>
