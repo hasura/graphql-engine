@@ -1,11 +1,18 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
-import { Heading, TextStyles, TextLinkStyles } from './Typography.style';
+import { StyledHeading, StyledText, StyledTextLink } from './Typography';
 
-// Text Component *************** //
+export const Heading = props => {
+  const { children } = props;
 
-const Text = props => {
+  return <StyledHeading {...props}>{children}</StyledHeading>;
+};
+
+Heading.defaultProps = {
+  color: 'black.text',
+};
+
+export const Text = props => {
   const { children, type, fontWeight, fontSize } = props;
 
   /* Explainer Text
@@ -34,73 +41,42 @@ const Text = props => {
     fontSizeValue = type === 'explain' ? 'explain' : 'p';
   }
 
-  // ************************* //
-
   return (
-    <TextStyles
+    <StyledText
       {...props}
       lineHeight={lineHeight}
       fontSize={fontSizeValue}
       fontWeight={fontWeightValue}
+      color="black.text"
     >
       {children}
-    </TextStyles>
+    </StyledText>
   );
 };
-
-// PropTypes for Text *********** //
-
-Text.propTypes = {
-  color: PropTypes.string,
-  mb: PropTypes.string,
-  mt: PropTypes.string,
-  ml: PropTypes.string,
-  mr: PropTypes.string,
-};
-
-// Default Props for Text ****** //
 
 Text.defaultProps = {
   mb: 'zero',
   mt: 'zero',
   mr: 'zero',
   ml: 'zero',
-  color: 'black.text',
 };
 
-// Anchor / Text Links ******** //
-
-const TextLink = props => {
+export const TextLink = props => {
   const { children, underline } = props;
 
   return (
-    <TextLinkStyles
+    <StyledTextLink
       {...props}
-      //   Based on underline prop.
-      borderBottom={underline && 2}
-      borderColor={underline && 'yellow.primary'}
+      borderBottom={underline ? 2 : 'none'}
+      borderColor={underline ? 'yellow.primary' : 'none'}
+      fontWeight="medium"
+      fontSize="p"
     >
       {children}
-    </TextLinkStyles>
+    </StyledTextLink>
   );
 };
 
-// PropTypes for TextLink ******** //
-
-Text.propTypes = {
-  color: PropTypes.string,
-  fontWeight: PropTypes.string,
-  fontSize: PropTypes.string,
-};
-
-// Default Props for TextLink ***** //
-
 TextLink.defaultProps = {
   color: 'black.text',
-  fontWeight: 'medium',
-  fontSize: 'p',
 };
-
-// ********************************* //
-
-export { Heading, Text, TextLink };
