@@ -2,28 +2,21 @@ import React from 'react';
 
 import { theme } from '../../theme';
 import { Icon } from '../Icon';
-
-import { AlertBoxStyles } from './Alert.style';
+import { StyledAlertBox } from './AlertBox';
 import { Text } from '../Typography';
 
 export const AlertBox = props => {
   const { children, type } = props;
 
-  /* Color values dynamically assigned from theme object based on alert type.
-   *  - backgroundColor
-   *  - borderColor
-   *  If the alert type is out of the range then default color value is assigned.
-   */
-
-  const backgroundColor = theme.alertBox[type]
+  const backgroundColorValue = theme.alertBox[type]
     ? theme.alertBox[type].backgroundColor
     : theme.alertBox.default.backgroundColor;
 
-  const borderColor = theme.alertBox[type]
+  const borderColorValue = theme.alertBox[type]
     ? theme.alertBox[type].borderColor
     : theme.alertBox.default.borderColor;
 
-  // Default message for AlertBox
+  const alertBoxWidth = 866;
 
   let alertMessage;
 
@@ -35,10 +28,22 @@ export const AlertBox = props => {
       : theme.alertBox.default.message;
   }
 
-  // ***************************** //
-
   return (
-    <AlertBoxStyles {...props} bg={backgroundColor} borderColor={borderColor}>
+    <StyledAlertBox
+      {...props}
+      width={alertBoxWidth}
+      bg={backgroundColorValue}
+      borderRadius="xs"
+      fontSize="p"
+      borderLeft={4}
+      borderColor={borderColorValue}
+      boxShadow={2}
+      height="lg"
+      pl="md"
+      display="flex"
+      alignItems="center"
+      color="black.text"
+    >
       <Icon type={type} />
       {/* Alert Type */}
       {type && (
@@ -46,21 +51,7 @@ export const AlertBox = props => {
           {type}
         </Text>
       )}
-      {/* Alert Message ~ {children} */}
       <Text pl="md">{alertMessage}</Text>
-    </AlertBoxStyles>
+    </StyledAlertBox>
   );
-};
-
-AlertBox.defaultProps = {
-  width: 866,
-  height: 'lg',
-  borderLeft: 4,
-  borderRadius: 'xs',
-  fontSize: 'p',
-  boxShadow: 2,
-  display: 'flex',
-  alignItems: 'center',
-  pl: 'md',
-  color: 'black.text',
 };

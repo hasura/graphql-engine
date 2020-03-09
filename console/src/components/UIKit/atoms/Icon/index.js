@@ -44,13 +44,16 @@ export const Icon = props => {
     ? iconReferenceMap[type]
     : iconReferenceMap.default;
 
+  const iconWidth = 18;
+  const iconHeight = 18;
+
   return (
     <StyledIcon
       {...props}
       color={iconColor}
-      fontSize='icon'
-      width={18}
-      height={18}
+      fontSize="icon"
+      width={iconWidth}
+      height={iconHeight}
     >
       <CurrentActiveIcon />
     </StyledIcon>

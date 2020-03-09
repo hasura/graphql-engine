@@ -10,10 +10,6 @@ export const Button = props => {
 
   const { button } = theme;
 
-  const buttonHeight = size === 'small' ? 'sm' : size === 'large' && 'lg';
-
-  const paddingX = size === 'small' ? 'md' : size === 'large' && 'lg';
-
   let colorValue;
   let backgroundColorValue;
   let boxShadowColorValue;
@@ -28,6 +24,13 @@ export const Button = props => {
     boxShadowColorValue = button.default.boxShadowColor;
   }
 
+  const borderColorValue =
+    type === 'secondary' ? 'black.secondary' : backgroundColorValue;
+
+  const buttonHeight = size === 'small' ? 'sm' : size === 'large' && 'lg';
+
+  const paddingX = size === 'small' ? 'md' : size === 'large' && 'lg';
+
   return (
     <StyledButton
       {...props}
@@ -39,15 +42,12 @@ export const Button = props => {
       boxShadowColor={boxShadowColorValue}
       fontSize="button"
       fontWeight="bold"
-      display={'flex'}
-      justifyContent={'center'}
-      alignItems={'center'}
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
       border={1}
       borderRadius="xs"
-      // In case of secondary button ~ black border
-      borderColor={
-        type === 'secondary' ? 'black.secondary' : backgroundColorValue
-      }
+      borderColor={borderColorValue}
     >
       {children}
       {isLoading && <Spinner size={size} />}
