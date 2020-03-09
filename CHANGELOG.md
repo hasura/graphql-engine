@@ -1,6 +1,6 @@
 # Hasura GraphQL Engine Changelog
 
-## `v1.2.0` (wip)
+## `v1.2.0` (in beta)
 
 ### New features :tada:
 
