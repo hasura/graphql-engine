@@ -1,104 +1,64 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import { theme } from '../../theme';
 import Spinner from '../Spinner';
 
-import { ButtonStyles } from './Button.style';
+import { StyledButton } from './Button';
 
 const Button = props => {
-  const { children, type, size, disabled, color, bg, isLoading } = props;
+  const { children, type, size, disabled, isLoading } = props;
 
-  // ************************* //
-
-  // Button Sizes ~ height & padding (x-axis)
-
-  const paddingX = size === 'small' ? 'md' : size === 'large' && 'lg';
+  const { button } = theme;
 
   const buttonHeight = size === 'small' ? 'sm' : size === 'large' && 'lg';
 
-  /*  Button ~ color and background
-   *  bg / color ~ by passing bg / color prop we can override default color values.
-   *  Default color values are dynamically assigned from theme object based on button type. If the type is out of specified range then default color is assigned.
-   */
+  const paddingX = size === 'small' ? 'md' : size === 'large' && 'lg';
 
-  let backgroundColorValue;
   let colorValue;
+  let backgroundColorValue;
+  let boxShadowColorValue;
 
-  if (bg) {
-    backgroundColorValue = bg;
+  if (button[type]) {
+    colorValue = button[type].color;
+    backgroundColorValue = button[type].backgroundColor;
+    boxShadowColorValue = button[type].boxShadowColor;
   } else {
-    backgroundColorValue = theme.buttons[type]
-      ? theme.buttons[type].backgroundColor
-      : theme.buttons.default.backgroundColor;
+    colorValue = button.default.color;
+    backgroundColorValue = button.default.backgroundColor;
+    boxShadowColorValue = button.default.boxShadowColor;
   }
-
-  if (color) {
-    colorValue = color;
-  } else {
-    colorValue = theme.buttons[type]
-      ? theme.buttons[type].color
-      : theme.buttons.default.color;
-  }
-
-  // ************************* //
 
   return (
-    <ButtonStyles
+    <StyledButton
       {...props}
-      // **** Props ~ based on button size **** //
       height={buttonHeight}
       px={paddingX}
-      // **** Props ~ based on button type **** //
+      opacity={disabled && '0.5'}
+      color={colorValue}
       bg={backgroundColorValue}
-      // secondary button ~ black border
+      boxShadowColor={boxShadowColorValue}
+      fontSize="button"
+      fontWeight="bold"
+      display={'flex'}
+      justifyContent={'center'}
+      alignItems={'center'}
+      border={1}
+      borderRadius="xs"
+      // In case of secondary button ~ black border
       borderColor={
         type === 'secondary' ? 'black.secondary' : backgroundColorValue
       }
-      // **** Disabled State **** //
-      opacity={disabled && '0.5'}
-      color={colorValue}
     >
       {children}
-      {/* Spinner ~ Loading State */}
       {isLoading && <Spinner size={size} />}
-    </ButtonStyles>
+    </StyledButton>
   );
 };
 
-// PropTypes for Button *************** //
-
-Button.propTypes = {
-  children: PropTypes.node,
-  size: PropTypes.oneOf(['small', 'large']),
-  type: PropTypes.string,
-  borderRadius: PropTypes.string,
-  border: PropTypes.number,
-  fontSize: PropTypes.string,
-  fontWeight: PropTypes.string,
-  disabled: PropTypes.bool,
-  color: PropTypes.string,
-  display: PropTypes.string,
-  justifyContent: PropTypes.string,
-  alignItems: PropTypes.string,
-  isLoading: PropTypes.bool,
-};
-
-// Default props for button ********** //
-
 Button.defaultProps = {
-  fontSize: 'button',
-  fontWeight: 'bold',
   size: 'small',
-  borderRadius: 'xs',
-  border: 1,
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
   isLoading: false,
   disabled: false,
 };
-
-// ***************************** //
 
 export default Button;

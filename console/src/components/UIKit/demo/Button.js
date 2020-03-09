@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Flex } from './styles';
-import { ButtonStyles } from '../atoms/Button/Button.style';
+import { ButtonStyles } from '../atoms/Button/Button';
 
 // Buttons *************************** //
 

@@ -8,7 +8,7 @@ import {
   flexbox,
 } from 'styled-system';
 
-export const ButtonStyles = styled.button`
+export const StyledButton = styled.button`
   cursor: ${({ disabled }) => !disabled && 'pointer'};
   appearance: button;
   
@@ -45,18 +45,15 @@ export const ButtonStyles = styled.button`
     }
     // No else clause here.
   }}
-  
-  /* Button cursor ~ disabled state */
-   
-   &:disabled {
-       cursor: not-allowed;
-   }
 
-  /* Styled-System ********************/
     ${layout}
     ${space}
     ${typography}
     ${color}
     ${border}
     ${flexbox}
+
+    &:disabled {
+       cursor: not-allowed;
+   }
 `;
