@@ -57,7 +57,7 @@ const Operations = ({
             <i className="fa fa-question-circle" aria-hidden="true" />
           </OverlayTrigger>
           &nbsp;&nbsp;
-          <KnowMoreLink href="https://docs.hasura.io/1.0/graphql/manual/event-triggers/invoke-trigger-console.html" />
+          <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html" />
         </span>
       ),
     };

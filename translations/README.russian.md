@@ -1,6 +1,6 @@
 # Hasura GraphQL Engine
 
-[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
+[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://hasura.io/docs)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
@@ -12,7 +12,7 @@ Hasura GraphQL Engine - это сверхбыстрый графический �
 
 Hasura помогает строить GraphQL приложения при поддержке Postgres или постепенно перейти на GraphQL для уже существующих приложений, использующих Postgres.
 
-Подробнее на [hasura.io](https://hasura.io) и [docs](https://docs.hasura.io).
+Подробнее на [hasura.io](https://hasura.io) и [docs](https://hasura.io/docs).
 
 ------------------
 
@@ -36,7 +36,7 @@ Hasura помогает строить GraphQL приложения при по�
 * **Интерфейс администрирования и миграции**: Интерфейс администрирования и миграция схемы на Rails
 * **Postgres** ❤️: Поддержка Postgres типов (PostGIS/geo-location, и т.д.), преобразуется в *graphs*, запускает процедуры или функции, сохраненные посредством мутаций.
 
-Подробнее на [hasura.io](https://hasura.io) и [docs](https://docs.hasura.io).
+Подробнее на [hasura.io](https://hasura.io) и [docs](https://hasura.io/docs).
 
 ## Содержание
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -76,7 +76,7 @@ Hasura помогает строить GraphQL приложения при по�
 
 3. Сделайте свой первый GraphQL-запрос
 
-   Создайте таблицу и сразу же выполните свой первый запрос. Следуйте следующим указаниям [простое руководство](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Создайте таблицу и сразу же выполните свой первый запрос. Следуйте следующим указаниям [простое руководство](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
 ### Другие варианты деплоймента одним кликом
 
@@ -84,12 +84,12 @@ Hasura помогает строить GraphQL приложения при по�
 
 | **Infra provider** | **One-click link** | **Additional information** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
-| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
 
 ### Другие методы деплоймента
 
-Для методов деплоймента на базе Docker и расширенных опций конфигурации, ознакомьтесь с [руководство по деплойменту](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) или
+Для методов деплоймента на базе Docker и расширенных опций конфигурации, ознакомьтесь с [руководство по деплойменту](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) или
 [установока манифестов](../install-manifests).
 
 ## Архитектура
@@ -119,7 +119,7 @@ GraphQL Engine предоставляет простые в обосновани
 
 ### Полученные данные или трансформация данных
 
-Преобразование данных в Postgres или запуск бизнес-логики для получения другого набора данных, который можно запросить с помощью GraphQL Engine. - [подробнее](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+Преобразование данных в Postgres или запуск бизнес-логики для получения другого набора данных, который можно запросить с помощью GraphQL Engine. - [подробнее](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demos
 

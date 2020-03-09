@@ -15,10 +15,10 @@ module Hasura.Server.Auth
   , JWKSet (..)
   , processJwt
   , updateJwkRef
-  , jwkRefreshCtrl
   , UserAuthentication (..)
   ) where
 
+import           Control.Concurrent.Extended (forkImmortal)
 import           Control.Exception      (try)
 import           Control.Lens
 import           Data.Aeson
@@ -145,7 +145,8 @@ mkJwtCtx JWTConfig{..} httpManager logger = do
       case maybeExpiry of
         Nothing   -> return ref
         Just time -> do
-          jwkRefreshCtrl logger httpManager url ref (fromUnits time)
+          void $ liftIO $ forkImmortal "jwkRefreshCtrl" logger $
+            jwkRefreshCtrl logger httpManager url ref (fromUnits time)
           return ref
 
     withJwkError act = do
