@@ -1,8 +1,8 @@
 export { default as RadioButton } from './RadioButton';
 export { default as SwitchButton } from './SwitchButton';
 export { default as Checkbox } from './Checkbox';
-export { default as Tabs } from './Tabs';
 
+export * from './Tabs';
 export * from './Spinner';
 export * from './AlertBox';
 export * from './Icon';

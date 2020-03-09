@@ -6,20 +6,25 @@ import {
   layout,
   space,
   color,
+  shadow,
 } from 'styled-system';
 
-import { BaseStyledDiv } from '../Common.style';
+// ********************************* //
+
+const StyledTab = styled.div`
+  ${color}
+  ${border}
+  ${typography}
+  ${layout}
+  ${space}
+  ${shadow}
+`;
 
 // ********************************* //
 
-const TabStyles = styled(BaseStyledDiv)``;
-
-// ********************************* //
-
-const TabList = styled.ul`
+const StyledTabList = styled.ul`
   list-style-type: none;
 
-  /* Styled-System */
   ${border}
   ${flexbox}
   ${layout}
@@ -27,9 +32,7 @@ const TabList = styled.ul`
   ${typography}
 `;
 
-// Default props for TabList ******** //
-
-TabList.defaultProps = {
+StyledTabList.defaultProps = {
   borderBottom: 1,
   borderColor: 'grey.border',
   display: 'flex',
@@ -40,7 +43,7 @@ TabList.defaultProps = {
 
 // *********************************** //
 
-const TabListItem = styled.li`
+const StyledTabListItem = styled.li`
   cursor: pointer;
 
   /* Hover */
@@ -64,9 +67,7 @@ const TabListItem = styled.li`
 
 `;
 
-// Default props for TabListItem ***** //
-
-TabListItem.defaultProps = {
+StyledTabListItem.defaultProps = {
   fontSize: 'tab',
   mr: 40,
   pb: 'sm',
@@ -78,8 +79,15 @@ TabListItem.defaultProps = {
 
 // ***************************** //
 
-const TabContent = styled(BaseStyledDiv)``;
+const StyledTabContent = styled.div`
+  ${color}
+  ${border}
+  ${typography}
+  ${layout}
+  ${space}
+  ${shadow}
+`;
 
 // ********************************* //
 
-export { TabStyles, TabList, TabListItem, TabContent };
+export { StyledTab, StyledTabList, StyledTabListItem, StyledTabContent };

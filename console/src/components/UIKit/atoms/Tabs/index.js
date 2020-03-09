@@ -1,79 +1,47 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { useState } from 'react';
 
-import { TabStyles, TabList, TabListItem, TabContent } from './Tabs.style';
+import {
+  StyledTab,
+  StyledTabList,
+  StyledTabListItem,
+  StyledTabContent,
+} from './Tabs';
 
-class Tabs extends React.Component {
-  state = {
-    // Current Active Tab
-    currentActiveTabIndex: 0,
-  };
+export const Tabs = props => {
+  const [currentActiveTabIndex, changeCurrentActiveTab] = useState(0);
+  const { tabsData } = props;
 
-  // function to change current active tab
+  const currentTabContentArray =
+    tabsData &&
+    tabsData.filter((currentElement, index) => {
+      return index === currentActiveTabIndex;
+    });
 
-  changeCurrentActiveTab = tabIndex =>
-    this.setState({ currentActiveTabIndex: tabIndex });
-
-  // ************************** //
-
-  render() {
-    const { currentActiveTabIndex } = this.state;
-
-    const { tabsData } = this.props;
-
-    // Current Active Tab Content
-
-    const currentTabContentArray =
-      tabsData &&
-      tabsData.filter((currentElement, index) => {
-        return index === currentActiveTabIndex;
-      });
-
-    // ****************** //
-
-    // Tabs only going to render if the received tabsdata is truthy and atleast have some data inside.
-
-    if (tabsData && tabsData.length > 0) {
-      return (
-        <TabStyles {...this.props}>
-          {/* Tab Navigation */}
-          <TabList>
-            {tabsData &&
-              tabsData.map(({ title }, index) => (
-                <TabListItem
-                  key={title}
-                  // CSS-in-Js prop ~ Active Tab
-                  selected={index === currentActiveTabIndex && true}
-                  onClick={() => this.changeCurrentActiveTab(index)}
-                >
-                  {title}
-                </TabListItem>
-              ))}
-          </TabList>
-          {/* Tab Content */}
-          {currentTabContentArray &&
-            currentTabContentArray.map(({ tabContent }, index) => (
-              <TabContent key={index}>{tabContent}</TabContent>
+  if (tabsData && tabsData.length > 0) {
+    return (
+      <StyledTab {...props}>
+        {/* Tab Navigation */}
+        <StyledTabList>
+          {tabsData &&
+            tabsData.map(({ title }, index) => (
+              <StyledTabListItem
+                key={title}
+                selected={index === currentActiveTabIndex && true}
+                onClick={() => changeCurrentActiveTab(index)}
+              >
+                {title}
+              </StyledTabListItem>
             ))}
-        </TabStyles>
-      );
-    }
-    // No else clause here.
-
-    // In case when we forget to pass tabs data.
-
-    return <p>Please provide data for tabs</p>;
+        </StyledTabList>
+        {/* Tab Content */}
+        {currentTabContentArray &&
+          currentTabContentArray.map(({ tabContent }, index) => (
+            <StyledTabContent key={index}>{tabContent}</StyledTabContent>
+          ))}
+      </StyledTab>
+    );
   }
-}
 
-// PropTypes for Tabs ************* //
-
-Tabs.propTypes = {
-  tabsData: PropTypes.array.isRequired,
-  border: PropTypes.number,
-  borderColor: PropTypes.string,
+  // In case when we forget to pass tabs data.
+  return <p>Please provide data for tabs</p>;
 };
-
-// ******************************* //
-
-export default Tabs;
