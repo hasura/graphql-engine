@@ -3,7 +3,7 @@ import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
-import { App, Main, PageNotFound } from 'components';
+import { App, Main, PageNotFound, UIKit } from 'components';
 
 import globals from './Globals';
 
@@ -127,6 +127,7 @@ const routes = store => {
           {eventRouter}
           {remoteSchemaRouter}
           {actionsRouter}
+          <Route path="ui-elements" component={UIKit} />
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />

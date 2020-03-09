@@ -41,7 +41,6 @@ const Sidebar = ({ location, metadata }) => {
     title: 'Allowed Queries',
   });
 
-
   const adminSecret = getAdminSecret();
 
   if (adminSecret && globals.consoleMode !== CLI_CONSOLE_MODE) {
