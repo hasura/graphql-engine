@@ -27,25 +27,32 @@ Examples
     # Apply Hasura GraphQL engine metadata present in metadata.[yaml|json] file:
     hasura metadata apply
 
+    # Use with admin secret:
+    hasura metadata apply --admin-secret "<admin-secret>"
+
+    # Apply metadata to an instance specified by the flag:
+    hasura metadata apply --endpoint "<endpoint>"
+
 Options
 ~~~~~~~
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL engine
-      --dry-run               show a diff instead of applying the metadata
-      --endpoint string       http(s) endpoint for Hasura GraphQL engine
-  -h, --help                  help for apply
+      --dry-run     show a diff instead of applying the metadata
+      --from-file   apply metadata from migrations/metadata.[yaml|json]
+  -h, --help        help for apply
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color            do not colorize output (default: false)
-      --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
+      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color              do not colorize output (default: false)
+      --project string        directory where commands are executed (default: current dir)
+      --skip-update-check     skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

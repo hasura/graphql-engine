@@ -107,7 +107,7 @@ class Chat extends React.Component {
               Source
             </a>
             &nbsp; | &nbsp;
-            <a href="https://blog.hasura.io/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f" target="_blank" rel="noopener noreferrer">
+            <a href="https://hasura.io/blog/building-a-realtime-chat-app-with-graphql-subscriptions-d68cd33e73f" target="_blank" rel="noopener noreferrer">
               Blogpost
             </a>
           </div>
