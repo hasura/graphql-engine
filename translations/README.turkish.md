@@ -42,22 +42,27 @@ Daha fazla bilgiyi [hasura.io](https://hasura.io) ve [dökümanda](https://docs.
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **İçerikler**
 
-- [Hızlı Başlangıç:](#hızlı-başlangıç)
-    - [Tek tıklamayla Heroku'ya deploy etme](#tek-tıklama-ile-herokuya-deploy-etme)
-    - [Diğer deploy etme yöntemleri](#diğer-deploy-etme-yöntemleri)
-- [Yapı](#yapı)
-- [İstemci tarafı takımlar](#i̇stemci-tarafı-takımlar)
-- [İş mantığı ekleme](#i̇ş-mantığı-ekleme)
-    - [Uzak şemalar](#uzak-şemalar)
-    - [Veritabanı olaylarındaki webhooks tetikleme](#veritabanı-olaylarındaki-webhooks-tetikleme)
-- [Demolar](#demolar)
-    - [Gerçek zamanlı uygulamalar](#gerçek-zamanlı-uygulamalar)
+- [Hasura GraphQL Engine](#hasura-graphql-engine)
+  - [Özellikler](#%c3%96zellikler)
+  - [İçerikler](#%c4%b0%c3%a7erikler)
+  - [Hızlı Başlangıç:](#h%c4%b1zl%c4%b1-ba%c5%9flang%c4%b1%c3%a7)
+    - [Tek tıklama ile Heroku'ya deploy etme](#tek-t%c4%b1klama-ile-herokuya-deploy-etme)
+    - [Diğer tek tıklamayla deploy etme seçenekleri](#di%c4%9fer-tek-t%c4%b1klamayla-deploy-etme-se%c3%a7enekleri)
+    - [Diğer deploy etme yöntemleri](#di%c4%9fer-deploy-etme-y%c3%b6ntemleri)
+  - [Yapı](#yap%c4%b1)
+  - [İstemci tarafı takımlar](#%c4%b0stemci-taraf%c4%b1-tak%c4%b1mlar)
+  - [İş mantığı ekleme](#%c4%b0%c5%9f-mant%c4%b1%c4%9f%c4%b1-ekleme)
+    - [Uzak Şemalar](#uzak-%c5%9eemalar)
+    - [Veritabanı olaylarındaki webhooks tetikleme](#veritaban%c4%b1-olaylar%c4%b1ndaki-webhooks-tetikleme)
+    - [Türetilmiş veri veya veri dönüşümleri](#t%c3%bcretilmi%c5%9f-veri-veya-veri-d%c3%b6n%c3%bc%c5%9f%c3%bcmleri)
+  - [Demolar](#demolar)
+    - [Gerçek zamanlı uygulamalar](#ger%c3%a7ek-zamanl%c4%b1-uygulamalar)
     - [Videolar](#videolar)
-- [Destek ve sorun giderme](#destek-ve-sorun-giderme)
-- [Katkıda bulunmak](#katkıda-bulunmak)
-- [Marka varlıkları](#marka-varlıkları)
-- [Lisans](#lisans)
-- [Çeviriler](#çeviriler)
+  - [Destek ve sorun giderme](#destek-ve-sorun-giderme)
+  - [Katkıda bulunmak](#katk%c4%b1da-bulunmak)
+  - [Marka varlıkları](#marka-varl%c4%b1klar%c4%b1)
+  - [Lisans](#lisans)
+  - [Çeviriler](#%c3%87eviriler)
 
 <!-- markdown-toc end -->
 
@@ -87,6 +92,7 @@ Tek tıklamayla deploy etme seçenekleri için aşağıdaki talimatları takip e
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
 | DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [doküman](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
 | Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [doküman](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| KintoHub | [![Deploy to KintoHub](https://resources.kintohub.com/deploybutton_200px.png)](https://deploy.kintohub.com/hasura) | [doküman](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/kintohub-one-click.html) |
 
 ### Diğer deploy etme yöntemleri
 
