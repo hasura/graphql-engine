@@ -1,8 +1,14 @@
 import styled from 'styled-components';
+import {
+  color,
+  border,
+  typography,
+  layout,
+  space,
+  shadow,
+} from 'styled-system';
 
-import { BaseStyledDiv } from '../Common.style';
-
-export const SpinnerStyles = styled(BaseStyledDiv)`
+export const StyledSpinner = styled.div`
   position: relative;
 
   .sk_child {
@@ -172,4 +178,11 @@ export const SpinnerStyles = styled(BaseStyledDiv)`
       transform: scale(1);
     }
   }
+
+  ${color}
+  ${border}
+  ${typography}
+  ${layout}
+  ${space}
+  ${shadow}
 `;

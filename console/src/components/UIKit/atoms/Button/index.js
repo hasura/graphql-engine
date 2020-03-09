@@ -50,7 +50,7 @@ export const Button = props => {
       borderColor={borderColorValue}
     >
       {children}
-      {isLoading && <Spinner size={size} />}
+      {isLoading && <Spinner size={size} ml={18} />}
     </StyledButton>
   );
 };
