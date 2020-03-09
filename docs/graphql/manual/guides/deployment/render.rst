@@ -13,14 +13,14 @@ This guide talks about how to deploy the Hasura GraphQL engine on `Render
 Pre-requisites
 --------------
 
-- GitHub (or alternative) account
-- Render account associated with a Github account and with billing enabled
+- GitHub or GitLab account
+- Render account associated with the above Github or Gitlab account and with billing enabled
 
 
 Create a repository
 -------------------
 
-- Create a new GitHub repository
+- Create a new GitHub or GitLab repository
 - Within the new repository, create a new file named ``Dockerfile`` that
 references the latest Hasura GraphQL engine Docker image by including the
 following single line in the file:
@@ -30,12 +30,11 @@ following single line in the file:
    FROM hasura/graphql-engine:latest
 
 
-Using Render Infrastrcuture as Code (Fastest)
+Using render.yaml (Fastest)
 ---------------------------------------------
 
 In the same repository, create a second new file named 
-``render.yaml``. Insert the following Render infrastructure as 
-code configuration:
+``render.yaml``. Insert the following configuration:
 
 .. code-block:: yaml
 
