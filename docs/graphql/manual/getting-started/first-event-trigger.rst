@@ -62,4 +62,4 @@ Next steps
 
 Read more about:
 
-- :doc:`Event triggers <../event-triggers/index>`
+- :ref:`Event triggers <event_triggers>`

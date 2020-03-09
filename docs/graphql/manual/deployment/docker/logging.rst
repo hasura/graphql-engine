@@ -31,4 +31,4 @@ GraphQL engine container:
 
 - https://docs.docker.com/config/containers/logging for more details on logging in Docker.
 
-- :doc:`../logging` for more details on Hasura logs.
+- :ref:`hge_logs` for more details on Hasura logs.

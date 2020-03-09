@@ -139,7 +139,7 @@ instance at ``http://another-graphql-instance.herokuapp.com``:
    hasura migrate apply --endpoint http://another-graphql-instance.herokuapp.com
 
 In case you need an automated way of applying the migrations, take a look at the
-:doc:`CLI-Migrations <auto-apply-migrations>` Docker image, which can start the
+:ref:`CLI-Migrations <auto_apply_migrations>` Docker image, which can start the
 GraphQL engine after automatically applying the migrations which are
 mounted into a directory.  
 

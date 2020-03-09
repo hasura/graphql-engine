@@ -26,4 +26,4 @@ of the Hasura GraphQL engine deployed on Heroku:
 
 - https://devcenter.heroku.com/articles/logging for more details on logging on Heroku.
 
-- :doc:`../logging` for more details on Hasura logs
+- :ref:`hge_logs` for more details on Hasura logs

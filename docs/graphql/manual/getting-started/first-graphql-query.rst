@@ -4,8 +4,6 @@
 
 .. _first_graphql_query:
 
-.. _first_graphql_query:
-
 Making your first GraphQL query
 ===============================
 
@@ -58,6 +56,6 @@ Next steps
 
 Read more about:
 
-- :doc:`Building your schema <../schema/index>`
-- :doc:`Queries <../queries/index>`
+- :ref:`Building your schema <schema>`
+- :ref:`Queries <queries>`
 

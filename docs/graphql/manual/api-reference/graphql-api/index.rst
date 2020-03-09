@@ -2,7 +2,7 @@
    :description: Hasura GraphQL API reference
    :keywords: hasura, docs, GraphQL API, reference
 
-.. _graphql_api:
+.. _api_reference_graphql:
 
 GraphQL API Reference
 =====================
@@ -31,8 +31,8 @@ Request types
 
 The following types of requests can be made using the GraphQL API:
 
-- :doc:`Query / Subscription <query>`
-- :doc:`Mutation <mutation>`
+- :ref:`Query / Subscription <graphql_api_query>`
+- :ref:`Mutation <graphql_api_mutation>`
 
 Batching operations
 -------------------

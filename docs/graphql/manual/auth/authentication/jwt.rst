@@ -32,7 +32,7 @@ are used for the permissions system.
 
 .. admonition:: Prerequisite
 
-   It is mandatory to first :doc:`secure your GraphQL endpoint <../../deployment/securing-graphql-endpoint>` for the JWT mode to take effect.
+   It is mandatory to first :ref:`secure your GraphQL endpoint <securing_graphql_endpoint>` for the JWT mode to take effect.
 
 
 In JWT mode, on a secured endpoint:
@@ -458,7 +458,7 @@ If you are using Firebase and Hasura, use this config:
 Auth0
 ^^^^^
 
-Refer the :doc:`Auth0 JWT Integration guide <../../guides/integrations/auth0-jwt>` for a full integration guide
+Refer the :ref:`Auth0 JWT Integration guide <auth0_jwt>` for a full integration guide
 with Auth0.
 
 Auth0 publishes their JWK under:

@@ -60,7 +60,7 @@ Step 3: Rollout the change
 .. note::
 
   If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue version
-  as described in :doc:`../downgrading`
+  as described in :ref:`downgrade_hge`
 
 
 

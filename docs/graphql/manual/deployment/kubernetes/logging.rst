@@ -27,4 +27,4 @@ service, i.e. ``hasura``:
 
 - https://kubernetes.io/docs/concepts/cluster-administration/logging for more details on logging in Kubernetes.
 
-- :doc:`../logging` for more details on Hasura logs
+- :ref:`hge_logs` for more details on Hasura logs

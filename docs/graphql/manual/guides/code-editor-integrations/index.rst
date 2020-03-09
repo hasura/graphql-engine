@@ -12,7 +12,7 @@ Guides: Code Editor Integrations
   :depth: 1
   :local:
 
-- :doc:`Visual Studio Code <visual-studio-code>`
+- :ref:`Visual Studio Code <vs_code>`
 
 
 .. toctree::

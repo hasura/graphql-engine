@@ -138,7 +138,7 @@ InputArgument
 
 .. note::
 
-   The ``GraphQL Types`` used in creating an action must be defined before via :doc:`Custom Types <custom-types>`
+   The ``GraphQL Types`` used in creating an action must be defined before via :ref:`Custom Types <api_custom_types>`
 
 .. _drop_action:
 

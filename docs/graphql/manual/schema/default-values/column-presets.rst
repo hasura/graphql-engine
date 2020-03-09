@@ -13,7 +13,7 @@ Setting default values for fields using role-based column presets
   :local:
 
 Let's say you want certain fields to have their values set automatically when not explicitly passed using session
-variables or fixed values when a new row is created with a particular :doc:`user role <../../auth/authorization/roles-variables>`.
+variables or fixed values when a new row is created with a particular :ref:`user role <roles_variables>`.
 
 Hasura GraphQL engine's column presets let you define role-based default values for any field/column. These values
 can either be a session variable value or a static value.
@@ -91,5 +91,5 @@ passed in the ``X-Hasura-User-Id`` variable:
 Also see
 --------
 
-- :doc:`postgres-defaults`
-- :doc:`sql-functions`
+- :ref:`postgres_defaults`
+- :ref:`sql_functions`

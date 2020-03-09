@@ -7,7 +7,7 @@
 Schema/Metadata API Reference: Custom Types
 ===========================================
 
-**Custom Types** are user-defined GraphQL types which help to define :doc:`Actions <actions>`.
+**Custom Types** are user-defined GraphQL types which help to define :ref:`Actions <api_actions>`.
 
 .. _set_custom_types:
 
