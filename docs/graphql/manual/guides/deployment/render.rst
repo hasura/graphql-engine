@@ -1,4 +1,4 @@
-Hasura GraphQL Engine on Render
+Deploying Hasura GraphQL engine on Render
 ====================================================================
 
 .. contents:: Table of contents
@@ -23,7 +23,7 @@ Create a repository
 Create a new GitHub repository
 
 Within the new repository, create a new file named ``Dockerfile`` that 
-references the latest Hasura GraphQL Engine docker image by including the 
+references the latest Hasura GraphQL engine Docker image by including the 
 following single line in the file:
 
 .. code-block:: bash
@@ -34,9 +34,9 @@ following single line in the file:
 Using Render Infrastrcuture as Code (Fastest)
 ---------------------------------------------
 
-In the same repository, create a second new file, this one named 
-``render.yaml``. Includes the following Render Infrastrcuture as 
-Code configuration:
+In the same repository, create a second new file named 
+``render.yaml``. Insert the following Render infrastructure as 
+code configuration:
 
 .. code-block:: yaml
 
@@ -55,41 +55,41 @@ Code configuration:
    databases:
    - name: hasura
 
-Within the Render Dashboard, find the YAML section and the New from 
-YAML button or `go directly there <https://dashboard.render.com/select-repo?type=iac>`_ 
+On the Render dashboard, find the **YAML** section and the **New from 
+YAML** button or `go directly there <https://dashboard.render.com/select-repo?type=iac>`_ 
 and select the repository you've created.
 
-This it! Skip to notes about the Hasura Console and debugging with logs below.
+That's it! Skip to notes about the Hasura console and debug with the logs below.
 
 
-Provision the Database and Web Service Manually (Alternate Method)
+Provision the database and web service manually (alternative method)
 ------------------------------------------------------------------
 
 .. note::
 
-   If you already have a Render database setup, you can skip this step.
+   If you already have a Render database setup, you can skip the first step.
 
 Create a Postgres server by providing a name in Render's `New Database 
 configuration page <https://dashboard.render.com/new/database>`__.
 
-Once created, you'll see an Internal Connection String which 
+Once created, you'll see an internal connection string which 
 is the database URL used in the next step.
 
 Create a web service by selecting the repository you just created in the `New Web 
 Service configuration page <https://dashboard.render.com/select-repo?type=web>`__. 
 You have to specify a name.
 
-Upon creation of the web service, find the Environment tab and create two 
+Upon creation of the web service, find the environment tab and create two 
 environment variables: one named ``HASURA_GRAPHQL_DATABASE_URL`` whose value is 
-the Internal Connection String from the database you created earlier; 
-another named ``HASURA_GRAPHQL_ENABLE_CONSOLE`` whose value is ``true``.
+the internal connection string from the database you created earlier, 
+and another named ``HASURA_GRAPHQL_ENABLE_CONSOLE`` whose value is ``true``.
 
 
 Open the Hasura Console
 -----------------------
 
-That's it! You can monitor the deployment of the web service from the Logs tab. 
-There you can see error messages if deployment fails. If deployment succeeds, you 
+That's it! You can monitor the deployment of the web service from the logs tab. 
+There you can see error messages if the deployment fails. If the deployment succeeds, you 
 follow the link at the top of the web service detail page or visit the following 
 URL for the Hasura console:
 
@@ -100,13 +100,13 @@ URL for the Hasura console:
 Replace ``<web-service-name>`` with the name specified earlier.
 
 You can create tables and test your GraphQL queries here. Check out :ref:`Making
-your first GraphQL Query <first_graphql_query>` for a detailed guide.
+your first GraphQL Query <first_graphql_query>` for a detailed example.
 
 
 Tearing down
 ------------
 
-To clean-up, delete the web service and the database from the Render Dashboard.
+To clean up, delete the web service and the database from the Render dashboard.
 
 
 References
