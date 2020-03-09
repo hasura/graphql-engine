@@ -13,7 +13,7 @@ import           Options.Applicative
 import           System.Environment                   (getEnvironment, lookupEnv)
 import           System.Exit                          (exitFailure)
 
-import qualified Control.Concurrent                   as C
+import qualified Control.Concurrent.Extended          as C
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Data.Aeson                           as A
 import qualified Data.ByteString.Char8                as BC
@@ -232,9 +232,10 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
   liftIO $ logInconsObjs logger inconsObjs
 
-  -- start a background thread for schema sync
-  startSchemaSync sqlGenCtx _icPgPool logger _icHttpManager
-                  cacheRef _icInstanceId cacheInitTime
+  -- start background threads for schema sync
+  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <- 
+    startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
+                           cacheRef _icInstanceId cacheInitTime
 
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
@@ -251,20 +252,23 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-  void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
+  (_pushEventsThread, _consumeEventsThread) <- liftIO $
+    forkEventQueueProcessors logger logEnvHeaders
     _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx
 
   -- start a backgroud thread to handle async actions
-  void $ liftIO $ C.forkIO $ asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
+  _asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $ liftIO $
+    asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
 
   -- start a background thread to check for updates
-  void $ liftIO $ C.forkIO $ checkForUpdates loggerCtx _icHttpManager
+  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $ 
+    checkForUpdates loggerCtx _icHttpManager
 
-  -- TODO async/immortal:
   -- start a background thread for telemetry
   when soEnableTelemetry $ do
     unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-    void $ liftIO $ C.forkIO $ runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId
+    void $ C.forkImmortal "runTelemetry" logger $ liftIO $ 
+      runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime

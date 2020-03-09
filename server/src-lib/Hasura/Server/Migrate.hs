@@ -206,7 +206,8 @@ downgradeCatalog opts time = do
                     <> reason
               Right path -> do
                 sequence_ path 
-                setCatalogVersion (dgoTargetVersion opts) time
+                unless (dgoDryRun opts) do
+                  setCatalogVersion (dgoTargetVersion opts) time
                 pure (MRMigrated previousVersion)
       
       where

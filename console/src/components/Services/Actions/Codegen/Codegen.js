@@ -101,6 +101,15 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     };
 
     const getStarterKitButton = () => {
+      const selectedFrameworkMetadata = allFrameworks.find(
+        f => f.name === selectedFramework
+      );
+      if (
+        selectedFrameworkMetadata &&
+        !selectedFrameworkMetadata.hasStarterKit
+      ) {
+        return null;
+      }
       return (
         <a
           href={getStarterKitPath(selectedFramework)}
