@@ -1,0 +1,15 @@
+on: pull_request
+name: Changelog Reminder
+jobs:
+  remind:
+    name: Changelog Reminder
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Changelog Reminder
+      uses: peterjgrainger/action-changelog-reminder@v1.2.0
+      with:
+        changelog_regex: '/CHANGELOG.md'
+        # customPrMessage: ''
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
