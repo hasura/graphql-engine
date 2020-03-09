@@ -1,5 +1,5 @@
 Deploying Hasura GraphQL engine on Render
-====================================================================
+=========================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -20,10 +20,9 @@ Pre-requisites
 Create a repository
 -------------------
 
-Create a new GitHub repository
-
-Within the new repository, create a new file named ``Dockerfile`` that 
-references the latest Hasura GraphQL engine Docker image by including the 
+- Create a new GitHub repository
+- Within the new repository, create a new file named ``Dockerfile`` that
+references the latest Hasura GraphQL engine Docker image by including the
 following single line in the file:
 
 .. code-block:: bash
@@ -63,23 +62,23 @@ That's it! Skip to notes about the Hasura console and debug with the logs below.
 
 
 Provision the database and web service manually (alternative method)
-------------------------------------------------------------------
+--------------------------------------------------------------------
 
 .. note::
 
    If you already have a Render database setup, you can skip the first step.
 
-Create a Postgres server by providing a name in Render's `New Database 
+- Create a Postgres server by providing a name in Render's `New Database 
 configuration page <https://dashboard.render.com/new/database>`__.
 
-Once created, you'll see an internal connection string which 
+- Once created, you'll see an internal connection string which 
 is the database URL used in the next step.
 
-Create a web service by selecting the repository you just created in the `New Web 
+- Create a web service by selecting the repository you just created in the `New Web 
 Service configuration page <https://dashboard.render.com/select-repo?type=web>`__. 
 You have to specify a name.
 
-Upon creation of the web service, find the environment tab and create two 
+- Upon creation of the web service, find the environment tab and create two 
 environment variables: one named ``HASURA_GRAPHQL_DATABASE_URL`` whose value is 
 the internal connection string from the database you created earlier, 
 and another named ``HASURA_GRAPHQL_ENABLE_CONSOLE`` whose value is ``true``.
