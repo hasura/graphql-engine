@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Flex } from './styles';
-import { ButtonStyles } from '../atoms/Button/Button';
+import { StyledButton } from '../atoms/Button/Button';
 
 // Buttons *************************** //
 
@@ -13,7 +13,7 @@ export const Buttons = () => (
       mb="lg" // ~ margin-bottom: theme.space.lg
     >
       {/* Primary button */}
-      <ButtonStyles
+      <StyledButton
         bg="yellow.primary" // ~ background-color: theme.colors.yellow.primary
         color="black.text" // ~ theme.colors.black.text
         height={1} // button height ~ theme.sizes[1]
@@ -26,9 +26,9 @@ export const Buttons = () => (
         mr="lg" // ~ margin-right: theme.space.lg
       >
         Primary button
-      </ButtonStyles>
+      </StyledButton>
       {/* Secondary button */}
-      <ButtonStyles
+      <StyledButton
         bg="white"
         color="black.text"
         height={1}
@@ -40,11 +40,11 @@ export const Buttons = () => (
         borderRadius="xs"
       >
         Secondary button
-      </ButtonStyles>
+      </StyledButton>
     </Flex>
     {/* Second row ~ small primary buttons */}
     <Flex display="flex" justifyContent="flex-start">
-      <ButtonStyles
+      <StyledButton
         bg="yellow.primary"
         color="white"
         height={0}
@@ -57,8 +57,8 @@ export const Buttons = () => (
         mr="lg"
       >
         Primary button
-      </ButtonStyles>
-      <ButtonStyles
+      </StyledButton>
+      <StyledButton
         bg="green.primary"
         color="white"
         height={0}
@@ -71,8 +71,8 @@ export const Buttons = () => (
         mr="lg"
       >
         Primary button
-      </ButtonStyles>
-      <ButtonStyles
+      </StyledButton>
+      <StyledButton
         bg="red.primary"
         color="white"
         height={0}
@@ -85,8 +85,8 @@ export const Buttons = () => (
         mr="lg"
       >
         Primary button
-      </ButtonStyles>
-      <ButtonStyles
+      </StyledButton>
+      <StyledButton
         bg="orange.primary"
         color="white"
         height={0}
@@ -99,8 +99,8 @@ export const Buttons = () => (
         mr="lg"
       >
         Primary button
-      </ButtonStyles>
-      <ButtonStyles
+      </StyledButton>
+      <StyledButton
         bg="blue.primary"
         color="white"
         height={0}
@@ -112,7 +112,7 @@ export const Buttons = () => (
         borderRadius="xs"
       >
         Primary button
-      </ButtonStyles>
+      </StyledButton>
     </Flex>
   </React.Fragment>
 );

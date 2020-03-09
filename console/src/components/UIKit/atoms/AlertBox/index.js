@@ -1,15 +1,12 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import { theme } from '../../theme';
-import { Icon } from '../../Icons';
+import { Icon } from '../Icon';
 
 import { AlertBoxStyles } from './Alert.style';
 import { Text } from '../Typography';
 
-// ***************************** //
-
-const AlertBox = props => {
+export const AlertBox = props => {
   const { children, type } = props;
 
   /* Color values dynamically assigned from theme object based on alert type.
@@ -18,13 +15,13 @@ const AlertBox = props => {
    *  If the alert type is out of the range then default color value is assigned.
    */
 
-  const backgroundColor = theme.alertBoxes[type]
-    ? theme.alertBoxes[type].backgroundColor
-    : theme.alertBoxes.default.backgroundColor;
+  const backgroundColor = theme.alertBox[type]
+    ? theme.alertBox[type].backgroundColor
+    : theme.alertBox.default.backgroundColor;
 
-  const borderColor = theme.alertBoxes[type]
-    ? theme.alertBoxes[type].borderColor
-    : theme.alertBoxes.default.borderColor;
+  const borderColor = theme.alertBox[type]
+    ? theme.alertBox[type].borderColor
+    : theme.alertBox.default.borderColor;
 
   // Default message for AlertBox
 
@@ -33,9 +30,9 @@ const AlertBox = props => {
   if (children) {
     alertMessage = children;
   } else {
-    alertMessage = theme.alertBoxes[type]
-      ? theme.alertBoxes[type].message
-      : theme.alertBoxes.default.message;
+    alertMessage = theme.alertBox[type]
+      ? theme.alertBox[type].message
+      : theme.alertBox.default.message;
   }
 
   // ***************************** //
@@ -55,27 +52,6 @@ const AlertBox = props => {
   );
 };
 
-// PropTypes for AlertBox *************** //
-
-AlertBox.propTypes = {
-  children: PropTypes.node,
-  type: PropTypes.string,
-  width: PropTypes.number,
-  height: PropTypes.string,
-  backgroundColor: PropTypes.string,
-  borderLeft: PropTypes.number,
-  borderColor: PropTypes.string,
-  borderRadius: PropTypes.string,
-  boxShadow: PropTypes.number,
-  display: PropTypes.string,
-  alignItems: PropTypes.string,
-  pl: PropTypes.string,
-  color: PropTypes.string,
-  fontSize: PropTypes.string,
-};
-
-// Default props for AlertBox ********** //
-
 AlertBox.defaultProps = {
   width: 866,
   height: 'lg',
@@ -88,7 +64,3 @@ AlertBox.defaultProps = {
   pl: 'md',
   color: 'black.text',
 };
-
-// ***************************** //
-
-export default AlertBox;

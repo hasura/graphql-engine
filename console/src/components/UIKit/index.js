@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { connect } from 'react-redux';
 
@@ -7,8 +6,6 @@ import { ColorScheme, Shades } from './demo/Colors';
 import { TextLinks, Typography } from './demo/Typography';
 import { Alerts } from './demo/Alerts';
 import { BoxShadows } from './demo/Shadows';
-
-// Design-System Components ************** //
 
 import {
   Button,
@@ -22,17 +19,24 @@ import {
   SwitchButton,
   Tabs,
   Spinner,
+  Icon,
 } from './atoms';
-
-// Icon Component
-import { Icon } from './Icons';
-
 import {
   Flex,
   UIKitWrapperDiv,
   ColorSchemeDiv,
   BoxShadowDiv,
 } from './demo/styles';
+
+// UIKit(Parent) Demo component ************* //
+
+const UIKit = () => (
+  <UIKitWrapperDiv fontFamily="roboto" py="lg" px="xl" mb="xl" bg="white">
+    <Heading mb="lg">Design System</Heading>
+    <StyleGuide />
+    <UIComponents />
+  </UIKitWrapperDiv>
+);
 
 // UI elements created with Styled-System for demo //
 
@@ -94,25 +98,11 @@ const dummytabsData = [
   },
 ];
 
-// UIKit(Parent) Demo component ************* //
-
-const UIKit = () => (
-  <UIKitWrapperDiv
-    fontFamily="roboto" // ~ theme.fonts.roboto
-    py="lg" // ~ padding y-axis: theme.space.lg
-    px="xl" // ~ padding x-axis: theme.space.xl
-    mb="xl" // ~ margin-bottom: theme.space.xl
-    bg="white" // ~ theme.colors.white
-  >
-    {/* React UI Components ********************/}
-    <Heading mb="lg">Design System</Heading>
-
-    {/* Color Scheme ***************************/}
-
+const StyleGuide = () => (
+  <React.Fragment>
     <Heading mb="lg" as="h3">
       Color Scheme
     </Heading>
-
     <Flex m="lg">
       <Flex flexDirection="column" mr="40px">
         <ColorSchemeDiv
@@ -842,7 +832,11 @@ const UIKit = () => (
         </Text>
       </Flex>
     </Flex>
+  </React.Fragment>
+);
 
+const UIComponents = () => (
+  <React.Fragment>
     {/* Buttons ~ large size */}
 
     <Heading as="h2" mt="xl" mb="lg">
@@ -928,7 +922,6 @@ const UIKit = () => (
         Info Button
       </Button>
     </Flex>
-
     {/* Spinner  *******************************/}
 
     <Heading my="md" as="h3">
@@ -1170,16 +1163,7 @@ const UIKit = () => (
       {'<SwitchButton />'}
     </Heading>
     <SwitchButton />
-    {/* UI Elements *****************************/}
-  </UIKitWrapperDiv>
+  </React.Fragment>
 );
-
-// ************************************ //
-
-UIKit.propTypes = {
-  dispatch: PropTypes.func.isRequired,
-};
-
-// ************************************ //
 
 export default connect()(UIKit);

@@ -21,9 +21,9 @@ export const StyledButton = styled.button`
 
     // Default ~ If the received button type is out of the theme range then default box-shadow color value will be assigned.
 
-    const boxShadowColor = theme.buttons[type]
-      ? theme.buttons[type].boxShadowColor
-      : theme.buttons.default.boxShadowColor;
+    const boxShadowColor = theme.button[type]
+      ? theme.button[type].boxShadowColor
+      : theme.button.default.boxShadowColor;
 
     // In case of Secondary Button when it's not disabled
 
@@ -36,7 +36,7 @@ export const StyledButton = styled.button`
         }
       `;
     } else if (!disabled) {
-      // Hover effect for the reset of buttons except secondary in case of when button is not disabled.
+      // Hover effect for the rest of buttons except secondary in case of when button is not disabled.
       return css`
         &:hover {
           box-shadow: ${`0 2px 8px 0 ${boxShadowColor}`};

@@ -1,9 +1,8 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
 import { SpinnerStyles } from './Spinner.style';
 
-const Spinner = props => {
+export const Spinner = props => {
   const { size } = props;
 
   // Spinner size (width & height ~ px values) depends upon the size prop received from parent <Button />
@@ -32,19 +31,6 @@ const Spinner = props => {
   );
 };
 
-// PropTypes for Spinner *********** //
-
-Spinner.propTypes = {
-  size: PropTypes.string.isRequired,
-  ml: PropTypes.string,
-};
-
-// Default props for Spinner ******* //
-
 Spinner.defaultProps = {
   ml: '12px',
 };
-
-// ********************************** //
-
-export default Spinner;

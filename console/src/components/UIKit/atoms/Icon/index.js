@@ -12,12 +12,12 @@ import {
   FaQuestion,
 } from 'react-icons/fa';
 
-import { theme } from '../theme';
+import { theme } from '../../theme';
 import { StyledIcon } from './Icon';
 
 // ************************************** //
 
-const iconsReferenceMap = {
+const iconReferenceMap = {
   success: FaCheckCircle,
   info: FaInfoCircle,
   warning: FaExclamationTriangle,
@@ -36,19 +36,19 @@ const iconsReferenceMap = {
 export const Icon = props => {
   const { type } = props;
 
-  const iconColor = theme.icons[type]
-    ? theme.icons[type].color
-    : theme.icons.default.color;
+  const { icon } = theme;
 
-  const CurrentActiveIcon = iconsReferenceMap[type]
-    ? iconsReferenceMap[type]
-    : iconsReferenceMap.default;
+  const iconColor = icon[type] ? icon[type].color : icon.default.color;
+
+  const CurrentActiveIcon = iconReferenceMap[type]
+    ? iconReferenceMap[type]
+    : iconReferenceMap.default;
 
   return (
     <StyledIcon
       {...props}
       color={iconColor}
-      fontSize="icon"
+      fontSize='icon'
       width={18}
       height={18}
     >
