@@ -172,12 +172,8 @@ mergeMutRoot a b =
       else x
 
 mkNewEmptyMutRoot :: VT.ObjTyInfo
-mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
+mkNewEmptyMutRoot = VT.mkHsraObjTyInfo (Just "mutation root")
                     (G.NamedType "mutation_root") Set.empty Map.empty
-
-mkNewMutRoot :: VT.ObjFieldMap -> VT.ObjTyInfo
-mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") Set.empty flds
 
 mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
 mergeSubRoot a b =
@@ -193,7 +189,7 @@ mergeSubRoot a b =
       else x
 
 mkNewEmptySubRoot :: VT.ObjTyInfo
-mkNewEmptySubRoot = VT.ObjTyInfo (Just "subscription root")
+mkNewEmptySubRoot = VT.mkHsraObjTyInfo (Just "subscription root")
                     (G.NamedType "subscription_root") Set.empty Map.empty
 
 
