@@ -8,6 +8,8 @@
 - Downgrade command: https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine
 - console: allow selecting enum values from dropdown during row insert (#3810)
 
+  If the table has a field referencing to the enum table via a foreign key or by manually created relationship, then there will be a dropdown with all possible enum values on `Insert Row` and `Edit Row` views.
+
 ### Other changes
 
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
@@ -39,7 +41,7 @@
 - tag release v1.2.0-beta.1 (#3966)
 - noop: replace subdomain links with subpath (#3869)
 - docs: add reference to QualifiedTable to table args (#3880)
-- update actions docs  (#3953)
+- update actions docs (#3953)
 - cli: bug fixes related to actions (#3951)
 - update docs (#3947)
 - fix regression on tag release script (#3944)
