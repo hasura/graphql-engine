@@ -8,6 +8,8 @@
 - Downgrade command: https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine
 - console: allow setting check constraints during table create (#3881)
 
+  There was added a component that allows adding check constraints while creating a new table in the same way as it can be done on the `Modify` view.
+
 ### Other changes
 
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
@@ -39,7 +41,7 @@
 - tag release v1.2.0-beta.1 (#3966)
 - noop: replace subdomain links with subpath (#3869)
 - docs: add reference to QualifiedTable to table args (#3880)
-- update actions docs  (#3953)
+- update actions docs (#3953)
 - cli: bug fixes related to actions (#3951)
 - update docs (#3947)
 - fix regression on tag release script (#3944)
