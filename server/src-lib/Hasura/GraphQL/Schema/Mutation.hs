@@ -631,7 +631,7 @@ insertMultipleObjects multiObjIns mutationOutput planVars stringifyNum =
       let affectedRows = sum $ map fst insertRequests
           columnValues = catMaybes $ map snd insertRequests
       selectExpr <- RQL.mkSelCTEFromColVals table columnInfos columnValues
-      let sqlOutput = toSQL $ RQL.mkMutationOutputExp table (Just affectedRows) selectExpr mutationOutput stringifyNum
+      let sqlOutput = toSQL $ RQL.mkMutationOutputExp table columnInfos (Just affectedRows) selectExpr mutationOutput stringifyNum
       runIdentity . Q.getRow <$> Q.rawQE RQL.dmlTxErrorHandler (Q.fromBuilder sqlOutput) [] False
 
 insertObject

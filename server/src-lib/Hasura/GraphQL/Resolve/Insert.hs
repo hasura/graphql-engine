@@ -458,7 +458,7 @@ insertMultipleObjects strfyNum role tn multiObjIns addCols mutOutput errP =
       let affRows = sum $ map fst insResps
           columnValues = catMaybes $ map snd insResps
       cteExp <- mkSelCTEFromColVals tn tableColInfos columnValues
-      let sql = toSQL $ RR.mkMutationOutputExp tn (Just affRows) cteExp mutOutput strfyNum
+      let sql = toSQL $ RR.mkMutationOutputExp tn tableColInfos (Just affRows) cteExp mutOutput strfyNum
       runIdentity . Q.getRow
                <$> Q.rawQE dmlTxErrorHandler (Q.fromBuilder sql) [] False
 
