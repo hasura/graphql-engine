@@ -194,24 +194,17 @@ export function getRelationshipRefTable(table, relationship) {
 }
 
 /**
- * @param {string} currentSchema
  * @param {string} currentTable
- * @param {any[]} allSchemas
+ * @param {Array<{[key: string]: any}>} allSchemas
  *
  * @returns {Array<{
  *   columnName: string,
  *   enumTableName: string,
  *   enumColumnName: string,
- * }> | void}
+ * }>}
  */
-export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
-  const currentTable = findTable(
-    allSchemas,
-    generateTableDef(tableName, tableSchema)
-  );
-
+const getEnumColMapFromManualRel = (currentTable, allSchemas) => {
   const relationships = currentTable && getTableRelationships(currentTable);
-
   if (!relationships || !relationships.length) {
     return;
   }
@@ -223,31 +216,14 @@ export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
 
     if (!refTable.is_enum) return;
 
-    let _columnName;
-    let _enumColumnName;
+    const { manual_configuration } = getRelationshipDef(rel);
+    if (!manual_configuration) return;
 
-    const relDef = getRelationshipDef(rel);
-    if (relDef.manual_configuration) {
-      const keys = Object.keys(relDef.manual_configuration.column_mapping);
-      if (!keys.length) return;
+    const keys = Object.keys(manual_configuration.column_mapping);
+    if (!keys.length) return;
 
-      _columnName = keys[0];
-      _enumColumnName = relDef.manual_configuration.column_mapping[_columnName];
-    }
-
-    if (relDef.foreign_key_constraint_on) {
-      const currentTableConstraint = refTable.opp_foreign_key_constraints.find(
-        ({ columns }) => columns.includes(relDef.foreign_key_constraint_on)
-      );
-
-      if (!currentTableConstraint) return;
-
-      const keys = Object.keys(currentTableConstraint.column_mapping);
-      if (!keys.length) return;
-
-      _columnName = keys[0];
-      _enumColumnName = currentTableConstraint.column_mapping[_columnName];
-    }
+    const _columnName = keys[0];
+    const _enumColumnName = manual_configuration.column_mapping[_columnName];
 
     if (_columnName && _enumColumnName) {
       relationsMap.push({
@@ -259,6 +235,72 @@ export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
   });
 
   return relationsMap;
+};
+
+/**
+ * @param {string} currentTable
+ * @param {Array<{[key: string]: any}>} allSchemas
+ *
+ * @returns {Array<{
+ *   columnName: string,
+ *   enumTableName: string,
+ *   enumColumnName: string,
+ * }>}
+ */
+export const getEnumColMapFrokFK = (currentTable, allSchemas) => {
+  const relationsMap = [];
+  if (!currentTable.foreign_key_constraints.length) return;
+
+  currentTable.foreign_key_constraints.map(
+    ({ ref_table, ref_table_table_schema, column_mapping }) => {
+      const refTableSchema = findTable(
+        allSchemas,
+        generateTableDef(ref_table, ref_table_table_schema)
+      );
+      if (!refTableSchema.is_enum) return;
+
+      const keys = Object.keys(column_mapping);
+      if (!keys.length) return;
+
+      const _columnName = keys[0];
+      const _enumColumnName = column_mapping[_columnName];
+
+      if (_columnName && _enumColumnName) {
+        relationsMap.push({
+          columnName: _columnName,
+          enumTableName: ref_table,
+          enumColumnName: _enumColumnName,
+        });
+      }
+    }
+  );
+
+  return relationsMap;
+};
+
+/**
+ * @param {string} currentSchema
+ * @param {string} currentTable
+ * @param {Array<{[key: string]: any}>} allSchemas
+ *
+ * @returns {Array<{
+ *   columnName: string,
+ *   enumTableName: string,
+ *   enumColumnName: string,
+ * }>}
+ */
+export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
+  const currentTable = findTable(
+    allSchemas,
+    generateTableDef(tableName, tableSchema)
+  );
+
+  const relBasedMappings =
+    getEnumColMapFromManualRel(currentTable, allSchemas) || [];
+
+  const fkBasedMapping = getEnumColMapFrokFK(currentTable, allSchemas) || [];
+
+  return [...relBasedMappings, ...fkBasedMapping];
 };
 
 /*** Table/View permissions utils ***/
