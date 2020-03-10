@@ -10,22 +10,68 @@ import Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended as M
 import qualified Data.HashSet as S
 
-import Language.GraphQL.Draft.Syntax (Description(..), EnumValue(..), Name(..), NamedType(..), Value(..), StringValue(..), Field(..), SelectionSet, Selection(..), ValueConst(..), ObjectValueG(..), ObjectFieldG(..), ListValueG(..), Alias(..), Argument(..))
+import Language.GraphQL.Draft.Syntax (Description(..), EnumValue(..), Name(..), SelectionSet, Selection(..), Value(..), Field(..), literal, litName, mkName, unsafeMkName)
 import Data.Int (Int32)
-import Control.Lens.Extended hiding (enum)
+import Control.Lens.Extended hiding (enum, index)
 import Data.Type.Equality
+import Data.Void
+import Data.Parser.JSONPath
+import Control.Monad.Validate
 
-import qualified Hasura.RQL.Types as RQL
+import qualified Hasura.RQL.Types.Column as RQL
 
+import Hasura.SQL.DML
 import Hasura.SQL.Types
 import Hasura.SQL.Value
 import Hasura.Server.Utils (englishList)
-import Hasura.RQL.Types hiding (EnumValue(..), EnumValueInfo(..), FieldInfo(..))
-import Hasura.GraphQL.Resolve.Types (UnresolvedVal(..), AnnPGVal(..))
-import Hasura.GraphQL.Schema.Common
+import Hasura.RQL.Types.Column hiding (EnumValue(..), EnumValueInfo(..))
+import Hasura.RQL.Types.Permission (SessVar)
+-- import Hasura.RQL.Types hiding (EnumValue(..), EnumValueInfo(..), FieldInfo(..))
+-- import Hasura.GraphQL.Resolve.Types (UnresolvedVal(..), AnnPGVal(..))
+-- import Hasura.GraphQL.Schema.Common
 
-literal :: ValueConst -> Value
-literal _ = error "literal: FIXME"
+-- -------------------------------------------------------------------------------------------------
+
+class Monad m => MonadParse m where
+  withPath :: (JSONPath -> JSONPath) -> m a -> m a
+  parseError :: Text -> m a
+
+  -- | See 'QueryReusability'.
+  markNotReusable :: m ()
+
+newtype ParseT m a = ParseT
+  { unParseT :: ReaderT ParseContext (StateT ParseState (ValidateT ParseError m)) a }
+  deriving (Functor, Applicative, Monad)
+
+newtype ParseContext = ParseContext
+  { pcPath :: JSONPath }
+
+newtype ParseState = ParseState
+  { psReusability :: QueryReusability }
+
+-- | Tracks whether or not a query is /reusable/. Reusable queries are nice,
+-- since we can cache their resolved ASTs and avoid re-resolving them if we
+-- receive an identical query. However, we can’t always safely reuse queries if
+-- they have variables, since some variable values can affect the generated SQL.
+-- For example, consider the following query:
+--
+-- > query users_where($condition: users_bool_exp!) {
+-- >   users(where: $condition) {
+-- >     id
+-- >   }
+-- > }
+--
+-- Different values for @$condition@ will produce completely different queries,
+-- so we can’t reuse its plan (unless the variable values were also all
+-- identical, of course, but we don’t bother caching those).
+data QueryReusability = Reusable | NotReusable
+
+data ParseError = ParseError
+  { pePath :: JSONPath
+  , peMessage :: Text
+  }
+
+-- -------------------------------------------------------------------------------------------------
 
 -- | GraphQL types are divided into two classes: input types and output types.
 -- The GraphQL spec does not use the word “kind” to describe these classes, but
@@ -102,7 +148,9 @@ data TypeInfo k where
 data Definition a = Definition
   { dName :: Name
   , dDescription :: Maybe Description
-  , dInfo :: a
+  , dInfo :: ~a
+  -- ^ Lazy to allow mutually-recursive type definitions without needing to
+  -- eagerly construct an infinitely-large type definition.
   }
 
 -- | Enum values have no extra information except for the information common to
@@ -123,11 +171,18 @@ data instance FieldInfo 'Input
   -- default value at all. If no default value is provided, the GraphQL
   -- specification allows distinguishing provided @null@ values from values left
   -- completely absent; see <http://spec.graphql.org/June2018/#CoerceArgumentValues()>.
-  | forall k. ('Input <: k) => IFOptional (NonNullableType k) (Maybe ValueConst)
+  | forall k. ('Input <: k) => IFOptional (NonNullableType k) (Maybe (Value Void))
 
 data instance FieldInfo 'Output = forall k. ('Output <: k) => FieldInfo
   { fArguments :: [Definition (FieldInfo 'Input)]
   , fType :: Type k
+  }
+
+data Variable = Variable
+  { vDefinition :: Definition (FieldInfo 'Input)
+  , vValue :: Value Void
+  -- ^ Note: if the variable was null or was not provided and the field has a
+  -- non-null default value, this field contains the default value, not 'VNull'.
   }
 
 data Parser k m a = Parser
@@ -136,17 +191,17 @@ data Parser k m a = Parser
   } deriving (Functor)
 
 type family ParserInput k where
-  ParserInput 'Both = Value
-  ParserInput 'Input = Value
-  ParserInput 'Output = SelectionSet
+  ParserInput 'Both = Value Variable
+  ParserInput 'Input = Value Variable
+  ParserInput 'Output = SelectionSet Variable
 
 -- | The constraint @(''Input' '<:' k)@ entails @('ParserInput' k ~ 'Value')@,
 -- but GHC can’t figure that out on its own, so we have to be explicit to give
 -- it a little help.
-inputParserInput :: forall k. 'Input <: k => ParserInput k :~: Value
+inputParserInput :: forall k. 'Input <: k => ParserInput k :~: Value Variable
 inputParserInput = case subKind @'Input @k of { KRefl -> Refl; KBoth -> Refl }
 
-pInputParser :: forall k m a. 'Input <: k => Parser k m a -> Value -> m a
+pInputParser :: forall k m a. 'Input <: k => Parser k m a -> Value Variable -> m a
 pInputParser = gcastWith (inputParserInput @k) pParser
 
 infixl 1 `bind`
@@ -159,21 +214,25 @@ bind p f = p { pParser = pParser p >=> f }
 -- into a 'Parser'.
 data FieldsParser k m a = FieldsParser
   -- Note: this is isomorphic to
-  -- `Compose ((,) [Definition InputFieldInfo]) (ReaderT (HashMap Name Value) m) a`,
+  -- `Compose ((,) [Definition (FieldInfo k)]) (ReaderT (HashMap Name (FieldInput k)) m) a`,
   -- but working with that type kind of sucks.
   { ifDefinitions :: [Definition (FieldInfo k)]
   , ifParser :: HashMap Name (FieldInput k) -> m a
   } deriving (Functor)
 
 type family FieldInput k = r | r -> k where
-  FieldInput 'Input = Value
-  FieldInput 'Output = Field
+  FieldInput 'Input = Value Variable
+  FieldInput 'Output = Field Variable
 
 instance Applicative m => Applicative (FieldsParser k m) where
   pure v = FieldsParser [] (const $ pure v)
   a <*> b = FieldsParser
     (ifDefinitions a <> ifDefinitions b)
     (liftA2 (<*>) (ifParser a) (ifParser b))
+
+peelVariable :: MonadParse m => Value Variable -> m (Value Variable)
+peelVariable (VVariable (Variable { vValue })) = markNotReusable $> literal vValue
+peelVariable value = pure value
 
 data ScalarRepresentation a where
   SRBoolean :: ScalarRepresentation Bool
@@ -182,7 +241,7 @@ data ScalarRepresentation a where
   SRString :: ScalarRepresentation Text
 
 scalar
-  :: MonadError Text m
+  :: MonadParse m
   => Name
   -> Maybe Description
   -> ScalarRepresentation a
@@ -193,7 +252,7 @@ scalar name description representation = Parser
     , dDescription = description
     , dInfo = TIScalar
     }
-  , pParser = \v -> case representation of
+  , pParser = peelVariable >=> \v -> case representation of
       SRBoolean -> case v of
         VBoolean a -> pure a
         _ -> typeMismatch name "a boolean" v
@@ -204,24 +263,24 @@ scalar name description representation = Parser
         VFloat a -> pure a
         _ -> typeMismatch name "a float" v
       SRString -> case v of
-        VString (StringValue a) -> pure a
+        VString a -> pure a
         _ -> typeMismatch name "a string" v
   }
 
-boolean :: MonadError Text m => Parser 'Both m Bool
-boolean = scalar "Boolean" Nothing SRBoolean
+boolean :: MonadParse m => Parser 'Both m Bool
+boolean = scalar $$(litName "Boolean") Nothing SRBoolean
 
-int :: MonadError Text m => Parser 'Both m Int32
-int = scalar "Int" Nothing SRInt
+int :: MonadParse m => Parser 'Both m Int32
+int = scalar $$(litName "Int") Nothing SRInt
 
-float :: MonadError Text m => Parser 'Both m Double
-float = scalar "Float" Nothing SRFloat
+float :: MonadParse m => Parser 'Both m Double
+float = scalar $$(litName "Float") Nothing SRFloat
 
-string :: MonadError Text m => Parser 'Both m Text
-string = scalar "String" Nothing SRString
+string :: MonadParse m => Parser 'Both m Text
+string = scalar $$(litName "String") Nothing SRString
 
 enum
-  :: MonadError Text m
+  :: MonadParse m
   => Name
   -> Maybe Description
   -> NonEmpty (Definition EnumValueInfo, a)
@@ -232,10 +291,10 @@ enum name description values = Parser
     , dDescription = description
     , dInfo = TIEnum (fst <$> values)
     }
-  , pParser = \case
+  , pParser = peelVariable >=> \case
       VEnum (EnumValue value) -> case M.lookup value valuesMap of
         Just result -> pure result
-        Nothing -> throwError $ "expected one of the values "
+        Nothing -> parseError $ "expected one of the values "
           <> englishList "or" (dquoteTxt . dName . fst <$> values) <> "for type "
           <> name <<> ", but found " <>> value
       other -> typeMismatch name "an enum value" other
@@ -243,27 +302,27 @@ enum name description values = Parser
   where
     valuesMap = M.fromList $ over (traverse._1) dName $ toList values
 
-nullable :: forall k m a. (Applicative m, 'Input <: k) => Parser k m a -> Parser k m (Maybe a)
-nullable parser = gcastWith (inputParserInput @k) $ Parser
+nullable :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m (Maybe a)
+nullable parser = gcastWith (inputParserInput @k) Parser
   { pType = case pType parser of
       NonNullable t -> Nullable t
       Nullable t -> Nullable t
-  , pParser = \case
-      -- FIXME: Handle variables!
+  , pParser = peelVariable >=> \case
       VNull -> pure Nothing
       other -> Just <$> pParser parser other
   }
 
-list :: forall k m a. (MonadError Text m, 'Input <: k) => Parser k m a -> Parser k m [a]
-list parser = gcastWith (inputParserInput @k) $ Parser
+list :: forall k m a. (MonadParse m, 'Input <: k) => Parser k m a -> Parser k m [a]
+list parser = gcastWith (inputParserInput @k) Parser
   { pType = NonNullable $ TList $ pType parser
-  , pParser = \case
-      VList (ListValueG values) -> traverse (pParser parser) values
-      other -> throwError $ "expected a list, but found " <> describeValue other
+  , pParser = peelVariable >=> \case
+      VList values -> for (zip [0..] values) \(index, value) ->
+        withPath (Index index :) $ pParser parser value
+      other -> parseError $ "expected a list, but found " <> describeValue other
   }
 
 object
-  :: MonadError Text m
+  :: MonadParse m
   => Name
   -> Maybe Description
   -> FieldsParser 'Input m a
@@ -274,22 +333,21 @@ object name description parser = Parser
     , dDescription = description
     , dInfo = TIInputObject (ifDefinitions parser)
     }
-  , pParser = \case
-      VObject (ObjectValueG fields) -> do
+  , pParser = peelVariable >=> \case
+      VObject fields -> do
         -- check for extraneous fields here, since the FieldsParser just
         -- handles parsing the fields it cares about
-        for_ fields \(ObjectFieldG fieldName _) -> do
+        for_ (M.keys fields) \fieldName -> do
           unless (fieldName `S.member` fieldNames) $
-            throwError $ name <<> " has no field named " <>> fieldName
-        ifParser parser $! M.fromList (fieldToPair <$> fields)
+            parseError $ name <<> " has no field named " <>> fieldName
+        ifParser parser fields
       other -> typeMismatch name "an object" other
   }
   where
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
-    fieldToPair (ObjectFieldG fieldName value) = (fieldName, value)
 
 field
-  :: (MonadError Text m, 'Input <: k)
+  :: (MonadParse m, 'Input <: k)
   => Name
   -> Maybe Description
   -> Parser k m a
@@ -301,20 +359,20 @@ field name description parser = case pType parser of
       , dDescription = description
       , dInfo = case pType parser of
           NonNullable typ -> IFRequired typ
-          Nullable typ -> IFOptional typ (Just VCNull)
+          Nullable typ -> IFOptional typ (Just VNull)
       }]
     , ifParser = M.lookup name
-        >>> (`onNothing` throwError ("missing required field " <>> name))
-        >=> pInputParser parser
+        >>> (`onNothing` parseError ("missing required field " <>> name))
+        >=> withPath (Key (unName name) :) . pInputParser parser
     }
   -- nullable fields just have an implicit default value of `null`
-  Nullable _ -> fieldWithDefault name description VCNull parser
+  Nullable _ -> fieldWithDefault name description VNull parser
 
 fieldWithDefault
-  :: 'Input <: k
+  :: (MonadParse m, 'Input <: k)
   => Name
   -> Maybe Description
-  -> ValueConst -- ^ default value
+  -> Value Void -- ^ default value
   -> Parser k m a
   -> FieldsParser 'Input m a
 fieldWithDefault name description defaultValue parser = FieldsParser
@@ -323,15 +381,33 @@ fieldWithDefault name description defaultValue parser = FieldsParser
     , dDescription = description
     , dInfo = IFOptional (discardNullability $ pType parser) (Just defaultValue)
     }]
-  , ifParser = pInputParser parser . fromMaybe (literal defaultValue) . M.lookup name
+  , ifParser = M.lookup name >>> withPath (Key (unName name) :) . \case
+      Just value -> parseValue value
+      Nothing    -> pInputParser parser $ literal defaultValue
   }
+  where
+    parseValue = \value -> case value of
+      VVariable (Variable { vValue, vDefinition }) ->
+        -- This case is tricky: if we get a nullable variable, we have to
+        -- pessimistically mark the query non-reusable, regardless of its
+        -- contents. Theoretically, we could be smarter: we could create a sort
+        -- of “derived variable” with its own default value and pass that to the
+        -- downstream parser. But that would be more complicated, so for now we
+        -- don’t do that.
+        -- FIXME: Clarify this explanation.
+        case dInfo vDefinition of
+          IFRequired _ -> parseValue value
+          IFOptional _ _ -> markNotReusable *> parseValue (literal vValue)
+      VNull -> pInputParser parser $ literal defaultValue
+      other -> pInputParser parser other
 
--- | A nullable field with no default value. If the field is omitted, the provided parser
--- /will not be called/. This allows a field to distinguish an omitted field from a field supplied
--- with @null@ (which is permitted by the GraphQL specification). If you want a field that defaults
--- to @null@, combine 'field' with 'nullable', instead.
+-- | A nullable field with no default value. If the field is omitted, the
+-- provided parser /will not be called/. This allows a field to distinguish an
+-- omitted field from a field supplied with @null@ (which is permitted by the
+-- GraphQL specification). If you want a field that defaults to @null@, combine
+-- 'field' with 'nullable', instead.
 fieldOptional
-  :: (Applicative m, 'Input <: k)
+  :: (MonadParse m, 'Input <: k)
   => Name
   -> Maybe Description
   -> Parser k m a
@@ -342,11 +418,11 @@ fieldOptional name description parser = FieldsParser
     , dDescription = description
     , dInfo = IFOptional (discardNullability $ pType parser) Nothing
     }]
-  , ifParser = traverse (pInputParser parser) . M.lookup name
+  , ifParser = M.lookup name >>> withPath (Key (unName name) :) . traverse (pInputParser parser)
   }
 
 selectionSet
-  :: MonadError Text m
+  :: MonadParse m
   => Name
   -> Maybe Description
   -> FieldsParser 'Output m a
@@ -357,28 +433,28 @@ selectionSet name description parser = Parser
     , dDescription = description
     , dInfo = TIObject (ifDefinitions parser)
     }
-  , pParser = \selectionSet -> do
-      let fields = selectionSet & mapMaybe \case
+  , pParser = \input -> do
+      let fields = input & mapMaybe \case
             -- FIXME: handle fragments
-            SelectionField field -> Just field
+            SelectionField inputField -> Just inputField
             _ -> Nothing
       -- check for extraneous fields here, since the FieldsParser just
       -- handles parsing the fields it cares about
       for_ fields \Field{ _fName = fieldName } -> do
         unless (fieldName `S.member` fieldNames) $
-          throwError $ name <<> " has no field named " <>> fieldName
+          parseError $ name <<> " has no field named " <>> fieldName
       ifParser parser $! M.fromListOn _fName fields
   }
   where
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
 
 type family SelectionResult k a b where
-  SelectionResult 'Both   a _ = (Alias, a)
-  SelectionResult 'Output a b = (Alias, a, b)
+  SelectionResult 'Both   a _ = (Name, a)
+  SelectionResult 'Output a b = (Name, a, b)
 
 selection
   :: forall k m a b
-   . (MonadError Text m, 'Output <: k)
+   . (MonadParse m, 'Output <: k)
   => Name
   -> Maybe Description
   -> FieldsParser 'Input m a
@@ -390,15 +466,16 @@ selection name description argumentsParser bodyParser = FieldsParser
     , dDescription = description
     , dInfo = FieldInfo (ifDefinitions argumentsParser) (pType bodyParser)
     }]
-  , ifParser = M.lookup name >>> traverse \selectionField -> do
+  , ifParser = M.lookup name >>> withPath (Key (unName name) :) . traverse \selectionField -> do
       let Field{ _fName = fieldName, _fArguments = arguments } = selectionField
-          alias = _fAlias selectionField & fromMaybe (Alias fieldName)
+          alias = _fAlias selectionField & fromMaybe fieldName
 
-      for_ arguments \(Argument argumentName _) -> do
+      for_ (M.keys arguments) \argumentName -> do
         unless (argumentName `S.member` argumentNames) $
-          throwError $ name <<> " has no argument named " <>> argumentName
-      parsedArguments <- ifParser argumentsParser $! M.fromList (argumentToPair <$> arguments)
+          parseError $ name <<> " has no argument named " <>> argumentName
+      parsedArguments <- ifParser argumentsParser arguments
 
+      -- see Note [The delicate balance of GraphQL kinds]
       case subKind @'Output @k of
         KRefl -> do
           parsedBody <- pParser bodyParser $ _fSelectionSet selectionField
@@ -407,15 +484,18 @@ selection name description argumentsParser bodyParser = FieldsParser
   }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
-    argumentToPair (Argument argumentName value) = (argumentName, value)
 
 
-typeMismatch :: MonadError Text m => Name -> Text -> Value -> m a
-typeMismatch name expected given = throwError $
+typeMismatch :: MonadParse m => Name -> Text -> Value Variable -> m a
+typeMismatch name expected given = parseError $
   "expected " <> expected <> " for type " <> name <<> ", but found " <> describeValue given
 
-describeValue :: Value -> Text
-describeValue = \case
+describeValue :: Value Variable -> Text
+describeValue = describeValueWith (describeValueWith absurd . vValue)
+
+describeValueWith :: (var -> Text) -> Value var -> Text
+describeValueWith describeVariable = \case
+  VVariable var -> describeVariable var
   VInt _ -> "an integer"
   VFloat _ -> "a float"
   VString _ -> "a string"
@@ -427,190 +507,135 @@ describeValue = \case
 
 -- -------------------------------------------------------------------------------------------------
 
-column :: MonadError Text m => PGColumnType -> Parser 'Both m (WithScalarType PGScalarValue)
-column columnType = case columnType of
-  PGColumnScalar scalarType -> WithScalarType scalarType <$> case scalarType of
-    PGInteger -> PGValInteger <$> int
-    PGBoolean -> PGValBoolean <$> boolean
-    PGFloat   -> PGValDouble <$> float
-    PGText    -> PGValText <$> string
-    PGVarchar -> PGValVarchar <$> string
-    _         -> PGValUnknown <$> scalar name Nothing SRString -- FIXME: is SRString right?
-  PGColumnEnumReference (EnumReference _ enumValues) -> case nonEmpty (M.toList enumValues) of
-    Just enumValuesList ->
-      WithScalarType PGText <$> enum name Nothing (mkEnumValue <$> enumValuesList)
-    Nothing -> error "empty enum values" -- FIXME
-  where
-    name = unNamedType $ mkColumnType columnType
-    -- FIXME: unify these types, avoid unchecked conversion to Name
-    mkEnumValue (RQL.EnumValue value, RQL.EnumValueInfo description) =
-      ( Definition (Name value) (Description <$> description) EnumValueInfo
-      , PGValText value )
+data Opaque a = Opaque
+  { opVariable :: Maybe (Definition (FieldInfo 'Input))
+  -- ^ The variable this value came from, if any.
+  , opValue :: a
+  } -- Note: we intentionally don’t derive any instances here, since that would
+    -- defeat the opaqueness!
+
+openOpaque :: MonadParse m => Opaque a -> m a
+openOpaque (Opaque Nothing  value) = pure value
+openOpaque (Opaque (Just _) value) = markNotReusable $> value
+
+data UnpreparedValue
+  -- | A SQL value that can be parameterized over.
+  = UVParameter PGColumnValue
+                (Maybe (Definition (FieldInfo 'Input)))
+                -- ^ The GraphQL variable this value came from, if any.
+  -- | A literal SQL expression that /cannot/ be parameterized over.
+  | UVLiteral SQLExp
+  -- | The entire session variables JSON object.
+  | UVSession
+  -- | A single session variable.
+  | UVSessionVar (PGType PGScalarType) SessVar
+
+data PGColumnValue = PGColumnValue
+  { pcvType :: PGColumnType
+  , pcvValue :: WithScalarType PGScalarValue
+  }
+
+mkParameter :: Opaque PGColumnValue -> UnpreparedValue
+mkParameter (Opaque variable value) = UVParameter value variable
 
 -- -------------------------------------------------------------------------------------------------
 
-type OpExp = OpExpG UnresolvedVal
-
-mkBoolExpr
-  :: MonadError Text m
-  => Name
-  -> Maybe Description
-  -> FieldsParser 'Input m [a]
-  -> Parser 'Input m (GBoolExp a)
-mkBoolExpr name description fields =
-  fix \recur -> BoolAnd <$> object name description do
-    basicFields <- map BoolFld <$> fields
-    specialFields <- catMaybes <$> sequenceA
-      [ fieldOptional "_or" Nothing (BoolOr <$> list recur)
-      , fieldOptional "_and" Nothing (BoolAnd <$> list recur)
-      , fieldOptional "_not" Nothing (BoolNot <$> recur)
-      ]
-    pure (basicFields ++ specialFields)
-
-comparisonExprs :: MonadError Text m => PGColumnType -> Parser 'Input m [OpExp]
-comparisonExprs columnType = object name Nothing $ catMaybes <$> sequenceA
-  [ fieldOptional "_cast" Nothing (ACast <$> castExpr columnType)
-  , fieldOptional "_eq" Nothing (AEQ True . UVPG . AnnPGVal _ _ <$> column columnType)
-  -- etc.
-  ]
+column
+  :: (MonadError Text m, MonadParse n)
+  => PGColumnType
+  -> m (Parser 'Both n (Opaque PGColumnValue))
+column columnType = opaque . fmap (PGColumnValue columnType) <$> case columnType of
+  PGColumnScalar scalarType -> fmap (WithScalarType scalarType) <$> case scalarType of
+    PGInteger -> pure (PGValInteger <$> int)
+    PGBoolean -> pure (PGValBoolean <$> boolean)
+    PGFloat   -> pure (PGValDouble <$> float)
+    PGText    -> pure (PGValText <$> string)
+    PGVarchar -> pure (PGValVarchar <$> string)
+    _         -> do
+      name <- mkScalarTypeName scalarType
+      pure (PGValUnknown <$> scalar name Nothing SRString) -- FIXME: is SRString right?
+  PGColumnEnumReference (EnumReference tableName enumValues) ->
+    case nonEmpty (M.toList enumValues) of
+      Just enumValuesList -> do
+        name <- mkEnumTypeName tableName
+        pure (WithScalarType PGText <$> enum name Nothing (mkEnumValue <$> enumValuesList))
+      Nothing -> error "empty enum values" -- FIXME
   where
-    name = unNamedType (mkColumnType columnType & addTypeSuffix "_comparison_exp")
+    -- Sadly, this combinator is not sound in general, so we can’t export it
+    -- for general-purpose use. If we did, someone could write this:
+    --
+    --   mkParameter <$> opaque do
+    --     n <- int
+    --     pure (mkIntColumnValue (n + 1))
+    --
+    -- Now we’d end up with a UVParameter that has a variable in it, so we’d
+    -- parameterize over it. But when we’d reuse the plan, we wouldn’t know to
+    -- increment the value by 1, so we’d use the wrong value!
+    --
+    -- We could theoretically solve this by retaining a reference to the parser
+    -- itself  and re-parsing each new value, using the saved parser, which
+    -- would admittedly be neat. But it’s more complicated, and it isn’t clear
+    -- that it would actually be useful, so for now we don’t support it.
+    opaque :: Functor m => Parser 'Both m a -> Parser 'Both m (Opaque a)
+    opaque parser = parser
+      { pParser = \case
+          VVariable (Variable { vDefinition, vValue }) ->
+            Opaque (Just vDefinition) <$> pParser parser (literal vValue)
+          value -> Opaque Nothing <$> pParser parser value
+      }
 
-castExpr :: forall m. MonadError Text m => PGColumnType -> Parser 'Input m (CastExp UnresolvedVal)
-castExpr sourceType = object name Nothing (M.fromList . catMaybes <$> traverse mkField targetTypes)
-  where
-    name = unNamedType (mkColumnType sourceType & addTypeSuffix "_cast_exp")
-    targetTypes = case sourceType of
-      PGColumnScalar PGGeometry -> [PGGeography]
-      PGColumnScalar PGGeography -> [PGGeometry]
-      _ -> []
+    -- FIXME: unify these types, avoid unsafe conversion to Name
+    mkEnumValue (RQL.EnumValue value, RQL.EnumValueInfo description) =
+      ( Definition (unsafeMkName value) (Description <$> description) EnumValueInfo
+      , PGValText value )
 
-    mkField :: PGScalarType -> FieldsParser 'Input m (Maybe (PGScalarType, [OpExp]))
-    mkField targetType = fieldOptional fieldName Nothing $
-      (targetType,) <$> comparisonExprs (PGColumnScalar targetType)
-      where
-        fieldName = unNamedType $ mkColumnType $ PGColumnScalar targetType
+    mkScalarTypeName scalarType = mkName (toSQLTxt scalarType) `onNothing` throwError
+      ("cannot use SQL type " <> scalarType <<> " in GraphQL schema because its name is not a "
+      <> "valid GraphQL identifier")
+    mkEnumTypeName tableName = mkName (snakeCaseQualObject tableName) `onNothing` throwError
+      ("cannot use " <> tableName <<> " as an enum table because its name is not a valid "
+      <> "GraphQL identifier")
 
+-- -------------------------------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-{-
-
-data Kind = Output | Input
-
-data TypeRep k where
-  RScalar :: ScalarRep -> TypeRep k
-  RNullable :: TypeRep k -> TypeRep k
-  RList :: TypeRep k -> TypeRep k
-  REnum :: Nat -> TypeRep k
-  RObject :: FieldsRep FieldRep -> TypeRep 'Output
-  RUnion :: [TypeRep 'Output] -> TypeRep 'Output
-  RInputObject :: FieldsRep (TypeRep 'Input) -> TypeRep 'Input
-
-data ScalarRep
-  = RString
-  | RBoolean
-  | RInt
-  | RFloat
-
-data FieldsRep r
-  = FREmpty
-  | FRField r (FieldsRep r)
-  | FRMap r
-
-data FieldRep = RField (FieldsRep (TypeRep 'Input)) (TypeRep 'Output)
-
-data Nullability = NonNullable | Nullable
-type family PossiblyNullable n s where
-  PossiblyNullable 'NonNullable s = s
-  PossiblyNullable 'Nullable s = 'RNullable s
-
-$(genSingletons [''ScalarRep, ''Nullability])
-
-data Definition a = Definition
-  { dName :: Name
-  , dDescription :: Maybe Description
-  , dInfo :: a
-  }
-
-data TypeInfo (r :: TypeRep k) where
-  TIScalar :: Sing r -> TypeInfo ('RScalar r)
-  TIEnum :: Vector n (EnumValue, Description) -> TypeInfo ('REnum n)
-  TIObject :: FieldsDefinition fr -> TypeInfo ('RObject fr)
-  TIInputObject :: InputFieldsDefinition fr -> TypeInfo ('RInputObject fr)
-
-data Type r where
-  TNamed :: Definition (TypeInfo r) -> Type r
-  TList :: Type r -> Sing n -> Type (PossiblyNullable n ('RList r))
-
-data InputFieldsDefinition fr where
-  IFDEmpty :: InputFieldsDefinition 'FREmpty
-  IFDField
-    :: Definition (InputFieldType r)
-    -> InputFieldsDefinition fr
-    -> InputFieldsDefinition ('FRField r fr)
-
-data InputFieldType r where
-  IFTRequired :: Type r -> InputFieldType r
-  IFTOptional :: Type r -> TypedValue r -> InputFieldType ('RNullable r)
-
-data FieldsDefinition fr
-
-data TypedValue s where
-  TVString :: Text -> TypedValue ('RScalar 'RString)
-  TVBoolean :: Bool -> TypedValue ('RScalar 'RBoolean)
-  TVInt :: Int32 -> TypedValue ('RScalar 'RInt)
-  TVFloat :: Double -> TypedValue ('RScalar 'RFloat)
-  TVNullable :: Maybe (TypedValue s) -> TypedValue ('RNullable s)
-  TVEnum :: Finite n -> TypedValue ('REnum n)
-  -- TVInputObject ::
-
-validateScalar
-  :: forall m s. MonadError Text m
-  => Definition (TypeInfo ('RScalar s)) -> Value -> m (TypedValue ('RScalar s))
-validateScalar Definition{ dName, dInfo = TIScalar shape } v = case shape of
-  SRString -> case v of
-    VString (StringValue s) -> pure $ TVString s
-    _ -> representationMismatch "string"
-  SRBoolean -> case v of
-    VBoolean b -> pure $ TVBoolean b
-    _ -> representationMismatch "boolean"
-  SRInt -> case v of
-    VInt i -> pure $ TVInt i
-    _ -> representationMismatch "integer"
-  SRFloat -> case v of
-    VInt i -> pure $ TVFloat (fromIntegral i)
-    VFloat f -> pure $ TVFloat f
-    _ -> representationMismatch "number"
-  where
-    representationMismatch :: Text -> m a
-    representationMismatch expected =
-      throwError $ "expected a " <> expected <> " for value of type " <> unName dName
-
-
--- validateObject :: Type ('SObject fs) -> SelectionSet -> Either Text (TypedValue ('SObject fs))
-
-data Parser r a = Parser
-  { pType :: Definition (TypeInfo r)
-  , pParse :: TypedValue r -> a
-  } deriving (Functor)
-
-int :: Parser ('RScalar 'RInt) Int32
-int = Parser
-  { pType = Definition
-    { dName = Name "Int"
-    , dDescription = Nothing
-    , dInfo = TIScalar SRInt
-    }
-  , pParse = \(TVInt i) -> i
-  }
-
--}
+-- type OpExp = OpExpG UnresolvedVal
+--
+-- mkBoolExpr
+--   :: MonadError Text m
+--   => Name
+--   -> Maybe Description
+--   -> FieldsParser 'Input m [a]
+--   -> Parser 'Input m (GBoolExp a)
+-- mkBoolExpr name description fields =
+--   fix \recur -> BoolAnd <$> object name description do
+--     basicFields <- map BoolFld <$> fields
+--     specialFields <- catMaybes <$> sequenceA
+--       [ fieldOptional "_or" Nothing (BoolOr <$> list recur)
+--       , fieldOptional "_and" Nothing (BoolAnd <$> list recur)
+--       , fieldOptional "_not" Nothing (BoolNot <$> recur)
+--       ]
+--     pure (basicFields ++ specialFields)
+--
+-- comparisonExprs :: MonadError Text m => PGColumnType -> Parser 'Input m [OpExp]
+-- comparisonExprs columnType = object name Nothing $ catMaybes <$> sequenceA
+--   [ fieldOptional "_cast" Nothing (ACast <$> castExpr columnType)
+--   , fieldOptional "_eq" Nothing (AEQ True . UVPG . AnnPGVal _ _ <$> column columnType)
+--   -- etc.
+--   ]
+--   where
+--     name = unNamedType (mkColumnType columnType & addTypeSuffix "_comparison_exp")
+--
+-- castExpr :: forall m. MonadError Text m => PGColumnType -> Parser 'Input m (CastExp UnresolvedVal)
+-- castExpr sourceType = object name Nothing (M.fromList . catMaybes <$> traverse mkField targetTypes)
+--   where
+--     name = unNamedType (mkColumnType sourceType & addTypeSuffix "_cast_exp")
+--     targetTypes = case sourceType of
+--       PGColumnScalar PGGeometry -> [PGGeography]
+--       PGColumnScalar PGGeography -> [PGGeometry]
+--       _ -> []
+--
+--     mkField :: PGScalarType -> FieldsParser 'Input m (Maybe (PGScalarType, [OpExp]))
+--     mkField targetType = fieldOptional fieldName Nothing $
+--       (targetType,) <$> comparisonExprs (PGColumnScalar targetType)
+--       where
+--         fieldName = unNamedType $ mkColumnType $ PGColumnScalar targetType

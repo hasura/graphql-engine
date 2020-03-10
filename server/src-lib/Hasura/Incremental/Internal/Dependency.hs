@@ -19,6 +19,7 @@ import           Data.Scientific               (Scientific)
 import           Data.Vector                   (Vector)
 import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
                                                 M1 (..), U1 (..), V1)
+import Data.Void (Void)
 
 import           Hasura.Incremental.Select
 
@@ -160,6 +161,7 @@ instance Cacheable Integer where unchanged _ = (==)
 instance Cacheable Scientific where unchanged _ = (==)
 instance Cacheable Text where unchanged _ = (==)
 instance Cacheable N.URIAuth where unchanged _ = (==)
+instance Cacheable G.Name where unchanged _ = (==)
 
 instance (Cacheable a) => Cacheable (Seq a) where
   unchanged = liftEq . unchanged
@@ -177,22 +179,12 @@ instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d) => Cacheable (a, b
 instance (Cacheable a, Cacheable b, Cacheable c, Cacheable d, Cacheable e) => Cacheable (a, b, c, d, e)
 
 instance Cacheable Bool
+instance Cacheable Void
 instance Cacheable Value
-instance Cacheable G.Argument
-instance Cacheable G.Directive
-instance Cacheable G.ExecutableDefinition
-instance Cacheable G.Field
 instance Cacheable G.FragmentDefinition
-instance Cacheable G.FragmentSpread
 instance Cacheable G.GType
-instance Cacheable G.InlineFragment
 instance Cacheable G.Nullability
-instance Cacheable G.OperationDefinition
 instance Cacheable G.OperationType
-instance Cacheable G.Selection
-instance Cacheable G.TypedOperationDefinition
-instance Cacheable G.Value
-instance Cacheable G.ValueConst
 instance Cacheable G.VariableDefinition
 instance Cacheable N.URI
 instance Cacheable UT.Variable
@@ -200,21 +192,20 @@ instance Cacheable UT.TemplateItem
 instance Cacheable UT.URLTemplate
 instance (Cacheable a) => Cacheable (Maybe a)
 instance (Cacheable a, Cacheable b) => Cacheable (Either a b)
-instance (Cacheable a) => Cacheable [a]
-instance (Cacheable a) => Cacheable (NonEmpty a)
-instance (Cacheable a) => Cacheable (G.ObjectFieldG a)
+instance Cacheable a => Cacheable [a]
+instance Cacheable a => Cacheable (NonEmpty a)
+instance Cacheable a => Cacheable (G.Directive a)
+instance Cacheable a => Cacheable (G.ExecutableDefinition a)
+instance Cacheable a => Cacheable (G.Field a)
+instance Cacheable a => Cacheable (G.FragmentSpread a)
+instance Cacheable a => Cacheable (G.InlineFragment a)
+instance Cacheable a => Cacheable (G.OperationDefinition a)
+instance Cacheable a => Cacheable (G.Selection a)
+instance Cacheable a => Cacheable (G.TypedOperationDefinition a)
+instance Cacheable a => Cacheable (G.Value a)
 
-deriving instance Cacheable G.Alias
 deriving instance Cacheable G.EnumValue
-deriving instance Cacheable G.ExecutableDocument
-deriving instance Cacheable G.ListType
-deriving instance Cacheable G.Name
-deriving instance Cacheable G.NamedType
-deriving instance Cacheable G.StringValue
-deriving instance Cacheable G.Variable
-deriving instance Cacheable G.Description
-deriving instance (Cacheable a) => Cacheable (G.ListValueG a)
-deriving instance (Cacheable a) => Cacheable (G.ObjectValueG a)
+deriving instance Cacheable a => Cacheable (G.ExecutableDocument a)
 
 class GCacheable f where
   gunchanged :: f p -> f p -> Accesses -> Bool

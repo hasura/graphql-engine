@@ -122,8 +122,9 @@ instance DQuote T.Text where
   dquoteTxt = id
   {-# INLINE dquoteTxt #-}
 
-deriving instance DQuote G.NamedType
-deriving instance DQuote G.Name
+instance DQuote G.Name where
+  dquoteTxt = dquoteTxt . G.unName
+
 deriving instance DQuote G.EnumValue
 
 dquote :: (DQuote a) => a -> T.Text

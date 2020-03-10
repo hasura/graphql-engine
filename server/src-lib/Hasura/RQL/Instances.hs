@@ -10,42 +10,36 @@ import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 
+import           Control.DeepSeq (NFData(..))
 import           Data.Functor.Product
 import           Data.GADT.Compare
 import           Instances.TH.Lift             ()
 
-instance NFData G.Argument
-instance NFData G.Directive
-instance NFData G.ExecutableDefinition
-instance NFData G.Field
 instance NFData G.FragmentDefinition
-instance NFData G.FragmentSpread
 instance NFData G.GType
-instance NFData G.InlineFragment
-instance NFData G.OperationDefinition
 instance NFData G.OperationType
-instance NFData G.Selection
-instance NFData G.TypedOperationDefinition
-instance NFData G.Value
-instance NFData G.ValueConst
 instance NFData G.VariableDefinition
-instance (NFData a) => NFData (G.ObjectFieldG a)
 instance NFData UT.Variable
 instance NFData UT.TemplateItem
 instance NFData UT.URLTemplate
 
-deriving instance NFData G.Alias
+instance NFData G.Name where
+  rnf = rnf . G.unName
+
+instance NFData a => NFData (G.Directive a)
+instance NFData a => NFData (G.ExecutableDefinition a)
+instance NFData a => NFData (G.Field a)
+instance NFData a => NFData (G.FragmentSpread a)
+instance NFData a => NFData (G.InlineFragment a)
+instance NFData a => NFData (G.OperationDefinition a)
+instance NFData a => NFData (G.Selection a)
+instance NFData a => NFData (G.TypedOperationDefinition a)
+instance NFData a => NFData (G.Value a)
+
 deriving instance NFData G.EnumValue
-deriving instance NFData G.ExecutableDocument
-deriving instance NFData G.ListType
-deriving instance NFData G.Name
-deriving instance NFData G.NamedType
 deriving instance NFData G.Nullability
-deriving instance NFData G.StringValue
-deriving instance NFData G.Variable
-deriving instance NFData G.Description
-deriving instance (NFData a) => NFData (G.ListValueG a)
-deriving instance (NFData a) => NFData (G.ObjectValueG a)
+
+deriving instance NFData a => NFData (G.ExecutableDocument a)
 
 instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
   lift m = [| M.fromList $(TH.lift $ M.toList m) |]
