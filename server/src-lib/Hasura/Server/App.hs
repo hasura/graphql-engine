@@ -3,10 +3,11 @@
 
 module Hasura.Server.App where
 
-import           Control.Concurrent.MVar
+import           Control.Concurrent.MVar.Lifted
 import           Control.Exception                      (IOException, try)
 import           Control.Lens                           (view, _2)
 import           Control.Monad.Stateless
+import           Control.Monad.Trans.Control            (MonadBaseControl) 
 import           Data.Aeson                             hiding (json)
 import           Data.Either                            (isRight)
 import           Data.Int                               (Int64)
@@ -65,9 +66,23 @@ import qualified Hasura.Server.PGDump                   as PGD
 data SchemaCacheRef
   = SchemaCacheRef
   { _scrLock     :: MVar ()
+  -- ^ The idea behind explicit locking here is to
+  --
+  --   1. Allow maximum throughput for serving requests (/v1/graphql) (as each
+  --      request reads the current schemacache)
+  --   2. We don't want to process more than one request at any point of time
+  --      which would modify the schema cache as such queries are expensive. 
+  --
+  -- Another option is to consider removing this lock in place of `_scrCache ::
+  -- MVar ...` if it's okay or in fact correct to block during schema update in
+  -- e.g.  _wseGCtxMap. Vamshi says: It is theoretically possible to have a
+  -- situation (in between building new schemacache and before writing it to
+  -- the IORef) where we serve a request with a stale schemacache but I guess
+  -- it is an okay trade-off to pay for a higher throughput (I remember doing a
+  -- bunch of benchmarks to test this hypothesis). 
   , _scrCache    :: IORef (RebuildableSchemaCache Run, SchemaCacheVer)
-  -- an action to run when schemacache changes
   , _scrOnChange :: IO ()
+  -- ^ an action to run when schemacache changes
   }
 
 data ServerCtx
@@ -121,25 +136,22 @@ logInconsObjs logger objs =
   unless (null objs) $ L.unLogger logger $ mkInconsMetadataLog objs
 
 withSCUpdate
-  :: (MonadIO m, MonadError e m)
+  :: (MonadIO m, MonadBaseControl IO m)
   => SchemaCacheRef -> L.Logger L.Hasura -> m (a, RebuildableSchemaCache Run) -> m a
 withSCUpdate scr logger action = do
-  acquireLock
-  (res, newSC) <- action `catchError` onError
-  liftIO $ do
-    -- update schemacache in IO reference
-    modifyIORef' cacheRef $
-      \(_, prevVer) -> (newSC, incSchemaCacheVer prevVer)
-    -- log any inconsistent objects
-    logInconsObjs logger $ scInconsistentObjs $ lastBuiltSchemaCache newSC
-    onChange
-  releaseLock
-  return res
+  withMVarMasked lk $ \()-> do
+    (!res, !newSC) <- action
+    liftIO $ do
+      -- update schemacache in IO reference
+      modifyIORef' cacheRef $ \(_, prevVer) -> 
+        let !newVer = incSchemaCacheVer prevVer
+          in (newSC, newVer)
+      -- log any inconsistent objects
+      logInconsObjs logger $ scInconsistentObjs $ lastBuiltSchemaCache newSC
+      onChange
+    return res
   where
     SchemaCacheRef lk cacheRef onChange = scr
-    onError e   = releaseLock >> throwError e
-    acquireLock = liftIO $ takeMVar lk
-    releaseLock = liftIO $ putMVar lk ()
 
 mkGetHandler :: Handler m APIResp -> APIHandler m ()
 mkGetHandler = AHGet
@@ -274,7 +286,9 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
       mkHeaders = maybe [] (map unHeader)
 
-v1QueryHandler :: (HasVersion, MonadIO m, MetadataApiAuthorization m) => RQLQuery -> Handler m (HttpResponse EncJSON)
+v1QueryHandler 
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m) 
+  => RQLQuery -> Handler m (HttpResponse EncJSON)
 v1QueryHandler query = do
   userInfo <- asks hcUser
   authorizeMetadataApi query userInfo
@@ -395,7 +409,7 @@ queryParsers =
       return $ f q
 
 legacyQueryHandler
-  :: (HasVersion, MonadIO m, MetadataApiAuthorization m)
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m)
   => TableName -> T.Text -> Object
   -> Handler m (HttpResponse EncJSON)
 legacyQueryHandler tn queryType req =
@@ -511,7 +525,7 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
 
 
 httpApp
-  :: (HasVersion, MonadIO m, ConsoleRenderer m, HttpLog m, UserAuthentication m, MetadataApiAuthorization m)
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m, ConsoleRenderer m, HttpLog m, UserAuthentication m, MetadataApiAuthorization m)
   => CorsConfig
   -> ServerCtx
   -> Bool
