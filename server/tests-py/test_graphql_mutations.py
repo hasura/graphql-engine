@@ -380,6 +380,9 @@ class TestGraphqlUpdateJsonB:
 @use_mutation_fixtures
 class TestGraphqlUpdatePermissions:
 
+    def test_user_update_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_update_author.yaml", transport)
+
     def test_user_can_update_unpublished_article(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article.yaml")
 
@@ -388,7 +391,7 @@ class TestGraphqlUpdatePermissions:
 
     def test_user_cannot_update_another_users_article(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_another_users_article.yaml")
-    
+
     def test_user_cannot_publish(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_publish.yaml")
 
