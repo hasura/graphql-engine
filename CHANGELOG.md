@@ -6,6 +6,9 @@
 
 - Introducing Actions: https://docs.hasura.io/1.0/graphql/manual/actions/index.html
 - Downgrade command: https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine
+- console: add multi select to data table and bulk delete (#3735)
+
+  Added a checkbox to each row on Browse Rows view that allows selecting one or more rows from the table and bulk delete them.
 
 ### Other changes
 
@@ -38,7 +41,7 @@
 - tag release v1.2.0-beta.1 (#3966)
 - noop: replace subdomain links with subpath (#3869)
 - docs: add reference to QualifiedTable to table args (#3880)
-- update actions docs  (#3953)
+- update actions docs (#3953)
 - cli: bug fixes related to actions (#3951)
 - update docs (#3947)
 - fix regression on tag release script (#3944)
