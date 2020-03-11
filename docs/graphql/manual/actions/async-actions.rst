@@ -1,3 +1,7 @@
+.. meta::
+   :description: Async actions
+   :keywords: hasura, docs, actions, async actions
+
 Async actions
 =============
 
