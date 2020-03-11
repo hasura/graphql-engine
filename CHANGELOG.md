@@ -64,3 +64,4 @@
 - fix casting citext column type (fix #2818) (#3861)
 - Add downgrade command (close #1156) (#3760)
 - persist mix files only when coverage is enabled (#3844)
+- fix postgres query error when computed fields included in mutation response (fix #4035)
