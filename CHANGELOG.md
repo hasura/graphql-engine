@@ -16,7 +16,7 @@
 
   ### Select dropdown for Enum columns (console)
 
-  If the table has a field referencing an Enum table via a foreign key or by manually created relationship, then there will be a select dropdown with all possible enum values on `Insert Row` and `Edit Row` views on the Console.
+  If a table has a field referencing an Enum table via a foreign key, then there will be a select dropdown with all possible enum values on `Insert Row` and `Edit Row` views on the Console.
 
   (close #3748) (#3810)
 
