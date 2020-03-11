@@ -2,6 +2,8 @@
    :description: Manage event triggers with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, event trigger
 
+.. _api_event_triggers:
+
 Schema/Metadata API Reference: Event Triggers
 =============================================
 
