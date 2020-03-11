@@ -146,7 +146,7 @@ The schema for this file will mostly correspond to the table structure of the
 config v2
 ---------
 
-For ``config v1``, the ``config.yaml`` of your Hasura project would look like:
+For ``config v2``, the ``config.yaml`` of your Hasura project would look like:
 
 .. code-block:: bash
 

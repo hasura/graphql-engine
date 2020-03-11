@@ -1,10 +1,1 @@
-CREATE TABLE hdb_catalog.hdb_remote_relationship
-(
-  name TEXT NOT NULL,
-  table_schema name NOT NULL,
-  table_name name NOT NULL,
-  remote_schema TEXT NOT NULL,
-  configuration JSONB NOT NULL,
-  PRIMARY KEY (name, table_schema, table_name),
-  FOREIGN KEY (table_schema, table_name) REFERENCES hdb_catalog.hdb_table(table_schema, table_name) ON UPDATE CASCADE
-);
+CREATE INDEX event_log_created_at_idx ON hdb_catalog.event_log (created_at);

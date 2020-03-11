@@ -31,7 +31,7 @@ newtype UpdateInfo
 
 $(A.deriveJSON (A.aesonDrop 2 A.snakeCase) ''UpdateInfo)
 
-checkForUpdates :: (HasVersion) => LoggerCtx a -> H.Manager -> IO ()
+checkForUpdates :: (HasVersion) => LoggerCtx a -> H.Manager -> IO void
 checkForUpdates (LoggerCtx loggerSet _ _ _) manager = do
   let options = wreqOptions manager []
   url <- getUrl

@@ -1,1 +1,1 @@
-DROP TABLE hdb_catalog.hdb_remote_relationship;
+DROP INDEX IF EXISTS hdb_catalog."event_log_created_at_idx";

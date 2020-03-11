@@ -106,7 +106,7 @@ runTelemetry
   -- ^ an action that always returns the latest schema cache
   -> Text
   -> InstanceId
-  -> IO ()
+  -> IO void
 runTelemetry (Logger logger) manager getSchemaCache dbId instanceId = do
   let options = wreqOptions manager []
   forever $ do

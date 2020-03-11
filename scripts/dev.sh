@@ -161,6 +161,7 @@ function wait_docker_postgres {
 #################################
 if [ "$MODE" = "graphql-engine" ]; then
   cd "$PROJECT_ROOT/server"
+  rm -f graphql-engine.tix
 
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
 

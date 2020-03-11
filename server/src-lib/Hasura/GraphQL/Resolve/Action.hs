@@ -274,7 +274,7 @@ asyncActionsProcessor
   => IORef (RebuildableSchemaCache Run, SchemaCacheVer)
   -> Q.PGPool
   -> HTTP.Manager
-  -> IO ()
+  -> IO void
 asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
   asyncInvocations <- getUndeliveredEvents
   actionCache <- scActions . lastBuiltSchemaCache . fst <$> readIORef cacheRef
