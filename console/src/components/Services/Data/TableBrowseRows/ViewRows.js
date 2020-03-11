@@ -78,6 +78,8 @@ const ViewRows = ({
 
   const styles = require('../../../Common/TableCommon/Table.scss');
 
+  const NO_PRIMARY_KEY_MSG = 'No primary key to identify row';
+
   // Invoke manual trigger status
   const invokeTrigger = (trigger, row) => {
     updateInvocationRow(row);
@@ -127,7 +129,7 @@ const ViewRows = ({
     );
   };
 
-  const getGridHeadings = (_columns, _relationships) => {
+  const getGridHeadings = (_columns, _relationships, _disableBulkSelect) => {
     const _gridHeadings = [];
 
     const getColWidth = (header, contentRows = []) => {
@@ -203,6 +205,8 @@ const ViewRows = ({
             checked={
               curRows.length > 0 && selectedRows.length === curRows.length
             }
+            disabled={_disableBulkSelect}
+            title={_disableBulkSelect ? 'No primary key to identify row' : ''}
             type="checkbox"
             onChange={handleAllCheckboxChange}
           />
@@ -305,7 +309,12 @@ const ViewRows = ({
     return pkClause;
   };
 
-  const getGridRows = (_tableSchema, _hasPrimaryKey, _isSingleRow) => {
+  const getGridRows = (
+    _tableSchema,
+    _hasPrimaryKey,
+    _isSingleRow,
+    _disableBulkSelect
+  ) => {
     const _gridRows = [];
 
     curRows.forEach((row, rowIndex) => {
@@ -530,6 +539,8 @@ const ViewRows = ({
           <input
             className={styles.inputCheckbox}
             type="checkbox"
+            disabled={_disableBulkSelect}
+            title={_disableBulkSelect ? NO_PRIMARY_KEY_MSG : ''}
             checked={selectedRows.some(selectedRow =>
               compareRows(selectedRow, row, _tableSchema, _hasPrimaryKey)
             )}
@@ -677,9 +688,20 @@ const ViewRows = ({
 
   const isSingleRow = checkIfSingleRow(curRelName);
 
-  const _gridHeadings = getGridHeadings(tableColumnsSorted, tableRelationships);
+  const disableBulkSelect = !hasPrimaryKey;
 
-  const _gridRows = getGridRows(tableSchema, hasPrimaryKey, isSingleRow);
+  const _gridHeadings = getGridHeadings(
+    tableColumnsSorted,
+    tableRelationships,
+    disableBulkSelect
+  );
+
+  const _gridRows = getGridRows(
+    tableSchema,
+    hasPrimaryKey,
+    isSingleRow,
+    disableBulkSelect
+  );
 
   const getFilterQuery = () => {
     let _filterQuery = null;
@@ -720,12 +742,34 @@ const ViewRows = ({
     return _filterQuery;
   };
 
-  const handleDeleteItems = () => {
-    const pkClauses = selectedRows.map(row =>
-      getPKClause(row, hasPrimaryKey, tableSchema)
-    );
-    dispatch(deleteItems(pkClauses));
-    setSelectedRows([]);
+  const getSelectedRowsSection = () => {
+    const handleDeleteItems = () => {
+      const pkClauses = selectedRows.map(row =>
+        getPKClause(row, hasPrimaryKey, tableSchema)
+      );
+      dispatch(deleteItems(pkClauses));
+      setSelectedRows([]);
+    };
+
+    let selectedRowsSection = null;
+
+    if (selectedRows.length > 0) {
+      selectedRowsSection = (
+        <div className={`${styles.display_flex} ${styles.add_padd_left_18}`}>
+          <b className={styles.padd_small_right}>Selected:</b>
+          {selectedRows.length}
+          <button
+            className={`${styles.add_mar_right_small} btn btn-xs btn-default ${styles.bulkDeleteButton}`}
+            title="Delete selected rows"
+            onClick={handleDeleteItems}
+          >
+            <i className="fa fa-trash" />
+          </button>
+        </div>
+      );
+    }
+
+    return selectedRowsSection;
   };
 
   // If query object has expanded columns
@@ -952,19 +996,7 @@ const ViewRows = ({
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
       <div className={`row ${styles.add_mar_top}`}>
-        {selectedRows.length > 0 && (
-          <div className={`${styles.display_flex} ${styles.add_padd_left_18}`}>
-            <b className={styles.padd_small_right}>Selected:</b>
-            {selectedRows.length}
-            <button
-              className={`${styles.add_mar_right_small} btn btn-xs btn-default ${styles.bulkDeleteButton}`}
-              title="Delete selected rows"
-              onClick={handleDeleteItems}
-            >
-              <i className="fa fa-trash" />
-            </button>
-          </div>
-        )}
+        {getSelectedRowsSection()}
         <div className="col-xs-12">
           <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />
