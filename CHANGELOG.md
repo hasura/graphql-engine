@@ -10,6 +10,10 @@
 
   Added a checkbox to each row on Browse Rows view that allows selecting one or more rows from the table and bulk delete them.
 
+- console: allow setting check constraints during table create (#3881)
+
+  Added a component that allows adding check constraints while creating a new table in the same way as it can be done on the `Modify` view.
+
 ### Other changes
 
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
