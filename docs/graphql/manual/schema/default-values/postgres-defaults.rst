@@ -62,5 +62,5 @@ value will be set automatically by Postgres.
 Also see
 --------
 
-- :ref:`sql_functions`
+- :ref:`sql_functions_as_default`
 - :ref:`column_presets`

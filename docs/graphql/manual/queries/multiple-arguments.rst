@@ -2,7 +2,7 @@
    :description: Use multiple arguments in a query in Hasura
    :keywords: hasura, docs, query, multiple arguments
 
-.. _multiple_arguments:
+.. _multiple_arguments_query:
 
 Using multiple arguments in a query
 ===================================

@@ -2,7 +2,7 @@
    :description: Use cases for Hasura subscriptions
    :keywords: hasura, docs, subscription, use case
 
-.. _subscription_cases:
+.. _subscription_use_cases:
 
 Subscriptions sample use cases
 ==============================

@@ -2,7 +2,7 @@
    :description: Use serverless functions with Hasura event triggers
    :keywords: hasura, docs, event trigger, serverless function
 
-.. _serverless:
+.. _triggers_serverless:
 
 Using serverless functions
 ==========================

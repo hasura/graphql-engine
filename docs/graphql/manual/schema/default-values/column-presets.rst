@@ -92,4 +92,4 @@ Also see
 --------
 
 - :ref:`postgres_defaults`
-- :ref:`sql_functions`
+- :ref:`sql_functions_as_default`

@@ -2,7 +2,7 @@
    :description: Use AWS Cognito for authentication with Hasura
    :keywords: hasura, docs, guide, authentication, auth, integration
 
-.. _aws_cognito:
+.. _guides_aws_cognito:
 
 Using AWS Cognito for authentication
 ====================================

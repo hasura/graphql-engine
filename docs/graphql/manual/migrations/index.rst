@@ -62,7 +62,7 @@ Advanced use cases
 Reference documentation
 -----------------------
 
-- :ref:`migrations_how_to`
+- :ref:`migrations_how_it_works`
 - :ref:`migration_file_format`
 - :ref:`metadata_file_format`
 

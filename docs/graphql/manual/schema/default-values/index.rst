@@ -2,7 +2,7 @@
    :description: Set default field values in Hasura
    :keywords: hasura, docs, schema, default value
 
-.. _default_values:
+.. _default_field_values:
 
 Setting default values for fields
 =================================
@@ -17,7 +17,7 @@ the following ways:
 
 - :ref:`Postgres defaults <postgres_defaults>`: configure default values, using fixed values or simple SQL functions,
   for columns in the table definition. E.g. an auto-incrementing ``id``, a ``created_at`` timestamp, etc.
-- :ref:`Custom SQL functions <sql_functions>`: set up Postgres triggers which run custom SQL functions/stored procedures
+- :ref:`Custom SQL functions <sql_functions_as_default>`: set up Postgres triggers which run custom SQL functions/stored procedures
   to set the values of certain columns on inserts/updates on the table. This is useful to set values of fields which
   depend on other fields passed in the input. e.g. set ``submission_time`` of an online quiz as 1 hour from the
   ``start_time``.
