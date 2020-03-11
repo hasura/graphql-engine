@@ -20,10 +20,13 @@ enrichment from external sources and any other complex business logic.
 
 .. admonition:: Supported from
 
-   Actions are currently available for preview in the pre-release versions of
-   ``v1.2.0``
+   Actions are currently available in beta in the pre-release versions of ``v1.2.0``.
 
    .. Actions are supported in versions ``v.1.2.0`` and above.
+
+.. admonition:: Postgres support
+
+   Actions are supported for ``Postgres versions 10 or higher``.
 
 Action description
 ------------------
@@ -110,7 +113,6 @@ How it works?
 * The action response is returned to the client synchronously or asynchronously
   based on the kind.
 
-
 Learn more
 ----------
 
@@ -124,3 +126,4 @@ Learn more
   async-actions
   Codegen <codegen>
   derive
+  action-connect

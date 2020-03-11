@@ -132,7 +132,8 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``
-     - Postgres events polling interval
+     - Interval in milliseconds to sleep before trying to fetch events again after a fetch 
+       returned no events from postgres
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
