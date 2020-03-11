@@ -194,6 +194,7 @@ export function getRelationshipRefTable(table, relationship) {
 }
 
 /**
+ * @param {string} currentSchema
  * @param {string} currentTable
  * @param {Array<{[key: string]: any}>} allSchemas
  *
@@ -203,51 +204,12 @@ export function getRelationshipRefTable(table, relationship) {
  *   enumColumnName: string,
  * }>}
  */
-const getEnumColMapFromManualRel = (currentTable, allSchemas) => {
-  const relationships = currentTable && getTableRelationships(currentTable);
-  if (!relationships || !relationships.length) {
-    return;
-  }
+export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
+  const currentTable = findTable(
+    allSchemas,
+    generateTableDef(tableName, tableSchema)
+  );
 
-  const relationsMap = [];
-  relationships.forEach(rel => {
-    const refTableDef = getRelationshipRefTable(currentTable, rel);
-    const refTable = findTable(allSchemas, refTableDef);
-
-    if (!refTable.is_enum) return;
-
-    const { manual_configuration } = getRelationshipDef(rel);
-    if (!manual_configuration) return;
-
-    const keys = Object.keys(manual_configuration.column_mapping);
-    if (!keys.length) return;
-
-    const _columnName = keys[0];
-    const _enumColumnName = manual_configuration.column_mapping[_columnName];
-
-    if (_columnName && _enumColumnName) {
-      relationsMap.push({
-        columnName: _columnName,
-        enumTableName: refTableDef.name,
-        enumColumnName: _enumColumnName,
-      });
-    }
-  });
-
-  return relationsMap;
-};
-
-/**
- * @param {string} currentTable
- * @param {Array<{[key: string]: any}>} allSchemas
- *
- * @returns {Array<{
- *   columnName: string,
- *   enumTableName: string,
- *   enumColumnName: string,
- * }>}
- */
-export const getEnumColMapFrokFK = (currentTable, allSchemas) => {
   const relationsMap = [];
   if (!currentTable.foreign_key_constraints.length) return;
 
@@ -276,31 +238,6 @@ export const getEnumColMapFrokFK = (currentTable, allSchemas) => {
   );
 
   return relationsMap;
-};
-
-/**
- * @param {string} currentSchema
- * @param {string} currentTable
- * @param {Array<{[key: string]: any}>} allSchemas
- *
- * @returns {Array<{
- *   columnName: string,
- *   enumTableName: string,
- *   enumColumnName: string,
- * }>}
- */
-export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
-  const currentTable = findTable(
-    allSchemas,
-    generateTableDef(tableName, tableSchema)
-  );
-
-  const relBasedMappings =
-    getEnumColMapFromManualRel(currentTable, allSchemas) || [];
-
-  const fkBasedMapping = getEnumColMapFrokFK(currentTable, allSchemas) || [];
-
-  return [...relBasedMappings, ...fkBasedMapping];
 };
 
 /*** Table/View permissions utils ***/
