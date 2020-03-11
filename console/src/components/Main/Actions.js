@@ -335,5 +335,6 @@ export {
   fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,
+  RUN_TIME_ERROR,
   registerRunTimeError,
 };
