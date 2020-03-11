@@ -354,16 +354,24 @@ export const UIComponents = () => (
     </Text>
     {/* RadioButton ******************************/}
     <Heading mb="lg" mt="xl" as="h2">
-      {'<RadioButton />'}
+      {'<RadioButton name={id} />'}
     </Heading>
-    <RadioButton mb="md">Choice 1</RadioButton>
-    <RadioButton mb="md">Choice 2</RadioButton>
+    <RadioButton mb="md" name="ex1">
+      Choice 1
+    </RadioButton>
+    <RadioButton mb="md" name="ex2">
+      Choice 2
+    </RadioButton>
     {/* Checkbox ******************************/}
     <Heading mb="lg" mt="xl" as="h2">
-      {'<Checkbox />'}
+      {'<Checkbox name={id} />'}
     </Heading>
-    <Checkbox mb="md">Option 1</Checkbox>
-    <Checkbox mb="md">Option 2</Checkbox>
+    <Checkbox mb="md" name="test">
+      Option 1
+    </Checkbox>
+    <Checkbox mb="md" name="test2">
+      Option 2
+    </Checkbox>
     {/* Switch Button */}
     <Heading mb="lg" mt="xl" as="h2">
       {'<SwitchButton />'}
