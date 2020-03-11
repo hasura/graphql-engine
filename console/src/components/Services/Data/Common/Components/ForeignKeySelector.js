@@ -1,8 +1,8 @@
 import React from 'react';
 import styles from '../../../../Common/TableCommon/Table.scss';
-import { fkViolationOnUpdate, fkViolationOnDelete } from './Tooltips';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import { fkViolationOnUpdate, fkViolationOnDelete } from '../TooltipMessages';
 import { updateSchemaInfo } from '../../DataActions';
+import ToolTip from '../../../../Common/Tooltip/Tooltip';
 
 const violiationActions = [
   'restrict',
@@ -45,14 +45,14 @@ const ForeignKeySelector = ({
       options.push(
         <option key={-1} value={''} disabled>
           {'-- reference schema --'}
-        </option>,
+        </option>
       );
 
       schemaList.forEach((rs, j) => {
         options.push(
           <option key={j} value={rs}>
             {rs}
-          </option>,
+          </option>
         );
       });
 
@@ -108,7 +108,7 @@ const ForeignKeySelector = ({
       options.push(
         <option key={-1} value={''} disabled>
           {'-- reference table --'}
-        </option>,
+        </option>
       );
 
       // all reference table options
@@ -118,7 +118,7 @@ const ForeignKeySelector = ({
           options.push(
             <option key={i} value={rt}>
               {rt}
-            </option>,
+            </option>
           );
         });
 
@@ -317,20 +317,14 @@ const ForeignKeySelector = ({
         <div className={`${styles.add_mar_bottom}`}>
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Update Violation:</b>&nbsp; &nbsp;
-            <OverlayTrigger placement="right" overlay={fkViolationOnUpdate}>
-              <i className={'fa fa-question-circle'} aria-hidden="true" />
-            </OverlayTrigger>{' '}
-            &nbsp; &nbsp;
+            <ToolTip message={fkViolationOnUpdate} />
           </div>
           {radios('onUpdate')}
         </div>
         <div className={`${styles.add_mar_bottom}`}>
           <div className={`${styles.add_mar_bottom_mid}`}>
             <b>On Delete Violation:</b>&nbsp; &nbsp;
-            <OverlayTrigger placement="right" overlay={fkViolationOnDelete}>
-              <i className={'fa fa-question-circle'} aria-hidden="true" />
-            </OverlayTrigger>{' '}
-            &nbsp; &nbsp;
+            <ToolTip message={fkViolationOnDelete} />
           </div>
           {radios('onDelete')}
         </div>
