@@ -17,7 +17,10 @@ export const StyledText = styled.p`
 `;
 
 export const StyledTextLink = styled.a`
-  text-decoration: none !important;
+  &&& {
+    text-decoration: none;
+  }
+
   cursor: pointer;
 
   ${typography}
