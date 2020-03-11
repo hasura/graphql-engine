@@ -1,3 +1,7 @@
+.. meta::
+   :description: Connecting Hasura actions with the graph
+   :keywords: hasura, docs, actions, connect 
+
 .. _connect:
 
 Connecting actions with the graph

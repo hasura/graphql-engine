@@ -515,12 +515,20 @@
           .then(function (response) {
             const data = JSON.parse(response);
             const latest_version = data.latest;
+            const latest_prerelease_version = data.prerelease;
 
-            const targets = document.getElementsByClassName('latest-release-tag');
-            for (let i = 0; i < targets.length; i++) {
-              const target = targets[i];
+            const release_targets = document.getElementsByClassName('latest-release-tag');
+            for (let i = 0; i < release_targets.length; i++) {
+              const release_target = release_targets[i];
 
-              target.innerHTML = latest_version;
+              release_target.innerHTML = latest_version;
+            }
+
+            const prerelease_targets = document.getElementsByClassName('latest-prerelease-tag');
+            for (let i = 0; i < prerelease_targets.length; i++) {
+              const prerelease_target = prerelease_targets[i];
+
+              prerelease_target.innerHTML = latest_prerelease_version;
             }
           })
           .catch(function (err) {

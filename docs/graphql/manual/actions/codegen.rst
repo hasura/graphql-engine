@@ -1,3 +1,7 @@
+.. meta::
+   :description: Codegen for Hasura actions
+   :keywords: hasura, docs, actions, codegen
+
 .. _codegen:
 
 Actions codegen

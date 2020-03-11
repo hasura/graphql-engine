@@ -1,3 +1,7 @@
+.. meta::
+   :description: Action handlers for Hasura actions
+   :keywords: hasura, docs, actions, handlers
+
 .. _action_handlers:
 
 Action handlers
@@ -94,7 +98,7 @@ Hasura will call the handler with the following payload:
 .. code-block:: json
 
     {
-      "action": "UserInfo",
+      "action": "UserLogin",
       "input": {
         "username": "jake",
         "password": "secretpassword"
