@@ -1,3 +1,7 @@
+.. meta::
+   :description: Creating Hasura actions
+   :keywords: hasura, docs, actions, create 
+
 Creating actions
 ================
 
