@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { removeCheckConstraint, setCheckConstraints } from './AddActions';
-import { ConstraintExpandedContent } from '../Common/ReusableComponents/ConstraintExpandedContent';
+import { ConstraintExpandedContent } from '../Common/Components/ConstraintExpandedContent';
 
 const CheckConstraints = ({ dispatch, constraints }) => {
   const [addConstraintsState, setAddConstraintsState] = useState([]);

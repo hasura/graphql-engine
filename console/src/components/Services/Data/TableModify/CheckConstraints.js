@@ -7,7 +7,7 @@ import {
   removeCheckConstraint,
 } from './ModifyActions';
 import { getCheckConstraintBoolExp } from '../../../Common/utils/sqlUtils';
-import { ConstraintExpandedContent } from '../Common/ReusableComponents/ConstraintExpandedContent';
+import { ConstraintExpandedContent } from '../Common/Components/ConstraintExpandedContent';
 
 const CheckConstraints = ({
   constraints,
