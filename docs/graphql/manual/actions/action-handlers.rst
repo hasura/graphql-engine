@@ -1,3 +1,7 @@
+.. meta::
+   :description: Action handlers for Hasura actions
+   :keywords: hasura, docs, actions, handlers
+
 Action handlers
 ===============
 
