@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura actions
+   :keywords: hasura, docs, actions
+
 Actions (beta)
 ==============
 
