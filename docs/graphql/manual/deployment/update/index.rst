@@ -36,16 +36,6 @@ The current latest stable version is:
 Pre-release version
 *******************
 
-- :doc:`Updating on Heroku <heroku>`
-- :doc:`Updating on Docker <docker>`
-- :doc:`Updating on Kubernetes <kubernetes>`
-
-.. toctree::
-   :maxdepth: 2
-
-   Heroku <heroku>
-   Docker <docker>
-   Kubernetes <kubernetes>
 The current latest pre-release version is:
 
 .. raw:: html
