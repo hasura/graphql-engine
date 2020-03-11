@@ -13,7 +13,6 @@ import {
 } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
 
-// Current console theme.
 import { theme } from '../UIKit/theme';
 
 class App extends Component {
@@ -74,8 +73,6 @@ class App extends Component {
         </div>
       );
     }
-
-    // <ThemeProvider /> ~ Whole component tree is wrapped using Styled-Components's ThemeProvider.
 
     return (
       <ThemeProvider theme={theme}>
