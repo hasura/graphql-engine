@@ -2,6 +2,8 @@
    :description: Hasura GraphQL API mutations API reference
    :keywords: hasura, docs, GraphQL API, API reference, mutation
 
+.. _graphql_api_mutation:
+
 API Reference - Mutation
 ========================
 
@@ -292,7 +294,7 @@ Delete syntax
 
 .. note::
 
-    For more examples and details of usage, please see :doc:`this <../../mutations/index>`.
+    For more examples and details of usage, please see :ref:`this <mutations>`.
 
 Syntax definitions
 ------------------

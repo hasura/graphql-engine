@@ -2,6 +2,8 @@
    :description: Guides for integrating Hasura with monitoring frameworks
    :keywords: hasura, docs, integration, monitoring, monitoring framework
 
+.. _guides_monitoring_frameworks:
+
 Guides: Integrating with monitoring frameworks
 ==============================================
 

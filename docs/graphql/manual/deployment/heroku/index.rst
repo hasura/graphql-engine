@@ -2,6 +2,8 @@
    :description: Deploy Hasura GraphQL engine with Heroku
    :keywords: hasura, docs, deployment, heroku
 
+.. _deploy_heroku:
+
 Run Hasura GraphQL engine on Heroku
 ===================================
 
@@ -12,8 +14,8 @@ Run Hasura GraphQL engine on Heroku
 
 This guide will help you get the Hasura GraphQL engine running as a "git push to deploy" app on
 `Heroku <https://www.heroku.com/platform>`_ and connecting it to a `Heroku Postgres <https://www.heroku.com/postgres>`_
-instance. If you want a simple, quick deployment on Heroku, follow this :doc:`Heroku quickstart
-guide <../../getting-started/heroku-simple>`.
+instance. If you want a simple, quick deployment on Heroku, follow this :ref:`Heroku quickstart
+guide <heroku_simple>`.
 
 Clone the Hasura GraphQL engine Heroku app
 ------------------------------------------
@@ -41,12 +43,12 @@ By default, it connects to the primary database in your app which is available a
      --server-port $PORT \
      --enable-console
 
-Read about more configuration options :doc:`here <../graphql-engine-flags/reference>`.
+Read about more configuration options :ref:`here <server_flag_reference>`.
 
 .. note::
 
   Hasura GraphQL engine needs access permissions to your Postgres database as described in
-  :doc:`Postgres permissions <../postgres-permissions>`.
+  :ref:`Postgres permissions <postgres_permissions>`.
 
 
 Deploying
@@ -107,11 +109,11 @@ you should see the Hasura console.
 Advanced
 --------
 
-- :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
-- :doc:`using-existing-heroku-database`
-- :doc:`GraphQL engine server logs <logging>`
-- :doc:`Updating GraphQL engine <updating>`
-- :doc:`Setting up migrations <../../migrations/index>`
+- :ref:`Securing your GraphQL endpoint <heroku_secure>`
+- :ref:`heroku_existing_db`
+- :ref:`GraphQL engine server logs <heroku_logs>`
+- :ref:`Updating GraphQL engine <heroku_update>`
+- :ref:`Setting up migrations <auth>`
 
 .. toctree::
    :titlesonly:

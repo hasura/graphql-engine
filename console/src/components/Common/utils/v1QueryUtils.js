@@ -225,3 +225,16 @@ export const getDeleteQuery = (pkClause, tableName, schemaName) => {
 
 export const getBulkDeleteQuery = (pkClauses, tableName, schemaName) =>
   pkClauses.map(pkClause => getDeleteQuery(pkClause, tableName, schemaName));
+
+export const getEnumOptionsQuery = (request, currentSchema) => {
+  return {
+    type: 'select',
+    args: {
+      table: {
+        name: request.enumTableName,
+        schema: currentSchema,
+      },
+      columns: [request.enumColumnName],
+    },
+  };
+};
