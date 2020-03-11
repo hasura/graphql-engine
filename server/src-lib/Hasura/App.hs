@@ -252,8 +252,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   prepareEvents _icPgPool logger
   eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-  (_pushEventsThread, _consumeEventsThread) <- liftIO $
-    forkEventQueueProcessors logger logEnvHeaders
+  _eventQueueThread <- C.forkImmortal "processEventQueue" logger $ liftIO $
+    processEventQueue logger logEnvHeaders
     _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx
 
   -- start a backgroud thread to handle async actions
