@@ -2,8 +2,6 @@
 
 ## `v1.2.0` (in beta)
 
-### New features :tada:
-
 ### Hasura Actions
 
 Actions are a way to extend Hasura’s auto-generated mutations with entirely custom ones which can handle various use cases such as data validation, data enrichment from external sources and any other complex business logic.
@@ -14,7 +12,7 @@ Read more about actions in the [docs](https://docs.hasura.io/1.0/graphql/manual/
 
 (#3042) (#3252) (#3859)
 
-#### Manage Postgres Check Constraints from Console
+### Manage Postgres Check Constraints from Console
 
 Postgres Check constraints allows you to specify that the value in a certain column must satisfy a Boolean (truth-value) expression. They can be used to put in simple input validations for mutations and with this release, these constraints can now be added while creating a table or later from Modify tab on the console.
 
@@ -35,7 +33,7 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 (close #1700) (#3881)
 
-#### Downgrade command
+### Downgrade command
 
 A new command is added to the server executable for downgrading to earlier releases. Previously, if you ran a newer Hasura version and wanted to go back to an old version on the same database, you had to stop Hasura, run some SQL statements and start Hasura again. With the new `downgrade` command, these SQL statements can be run automatically.
 
@@ -53,9 +51,8 @@ Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/ma
 
 (close #1156) (#3760)
 
-#### Check expression in update permissions
+### Check expression in update permissions
 
 wip
 
 (close #384) (rfc #3750) (#3804) 
-
