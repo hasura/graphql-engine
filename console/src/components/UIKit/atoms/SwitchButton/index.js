@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-import { StyledSwitchButton } from './SwitchButton';
+import { StyledSwitchButton, StyledSlider } from './SwitchButton';
 
 export const SwitchButton = props => {
+  const [isChecked, toggleCheckbox] = useState(false);
   const { children } = props;
 
   return (
     <StyledSwitchButton {...props}>
       <label>
-        <input type="checkbox" />
-        <span className={'slider' + ' ' + 'round'} />
+        <input type="checkbox" onClick={() => toggleCheckbox(!isChecked)} />
+        <StyledSlider checked={isChecked} />
         {children}
       </label>
     </StyledSwitchButton>

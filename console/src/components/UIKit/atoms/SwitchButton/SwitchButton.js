@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 export const StyledSwitchButton = styled.div`
   label {
@@ -13,50 +13,61 @@ export const StyledSwitchButton = styled.div`
       height: 0;
     }
 
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #484538;
-      -webkit-transition: 0.4s;
-      transition: 0.4s;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: '';
-      height: 16px;
-      width: 16px;
-      left: 2px;
-      bottom: 2px;
-      background-color: white;
-      -webkit-transition: 0.4s;
-      transition: 0.4s;
-    }
-
-    input:checked + .slider {
+    input:checked {
       background-color: #1fd6e5;
     }
 
-    input:focus + .slider {
+    input:focus {
       box-shadow: 0 0 1px #1fd6e5;
     }
 
-    input:checked + .slider:before {
+    input:checked {
       -webkit-transform: translateX(20px);
       -ms-transform: translateX(20px);
       transform: translateX(20px);
     }
-
-    .slider.round {
-      border-radius: 34px;
-    }
-
-    .slider.round:before {
-      border-radius: 50%;
-    }
   }
+`;
+
+export const StyledSlider = styled.span`
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #484538;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  border-radius: 34px;
+
+  &:before {
+    border-radius: 50%;
+    position: absolute;
+    content: '';
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    -webkit-transition: 0.4s;
+    transition: 0.4s;
+  }
+
+  &:hover {
+    box-shadow: 0 0 1px #1fd6e5;
+  }
+
+  ${({ checked }) =>
+    checked &&
+    css`
+      background-color: #1fd6e5;
+      box-shadow: 0 0 1px #1fd6e5;
+
+      :before {
+        -webkit-transform: translateX(20px);
+        -ms-transform: translateX(20px);
+        transform: translateX(20px);
+      }
+    `};
 `;
