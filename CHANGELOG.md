@@ -6,9 +6,12 @@
 
 - Introducing Actions: https://docs.hasura.io/1.0/graphql/manual/actions/index.html
 - Downgrade command: https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine
-- console: allow selecting enum values from dropdown during row insert (#3810)
 
-  If the table has a field referencing to the enum table via a foreign key or by manually created relationship, then there will be a dropdown with all possible enum values on `Insert Row` and `Edit Row` views.
+  ### Select dropdown for Enum columns (console)
+
+  If the table has a field referencing an Enum table via a foreign key or by manually created relationship, then there will be a select dropdown with all possible enum values on `Insert Row` and `Edit Row` views on the Console.
+
+  (close #3748) (#3810)
 
 ### Other changes
 
