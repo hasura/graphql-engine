@@ -22,14 +22,14 @@ Prerequisites
 Step 1: Get the **docker-run.sh** bash script
 ---------------------------------------------
 
-The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/master/install-manifests>`_
+The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/stable/install-manifests>`_
 repo contains all installation manifests required to deploy Hasura anywhere.
 
 Get the Docker run bash script from there:
 
 .. code-block:: bash
 
-   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-run/docker-run.sh
+   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-run/docker-run.sh
 
 Step 2: Configure the **docker-run.sh** script
 ----------------------------------------------

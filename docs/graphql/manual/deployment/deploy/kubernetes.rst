@@ -17,14 +17,14 @@ and connect it to your Postgres database.
 Step 1: Get the Kubernetes deployment and service files
 -------------------------------------------------------
 
-The `hasura/graphql-engine/install-manifests <https://GitHub.com/hasura/graphql-engine/tree/master/install-manifests>`_ repo
+The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/stable/install-manifests>`_ repo
 contains all installation manifests required to deploy Hasura anywhere. Get the Kubernetes deployment and service files
 from there:
 
 .. code-block:: bash
 
-   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/kubernetes/deployment.yaml
-   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/kubernetes/svc.yaml
+   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/kubernetes/deployment.yaml
+   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/kubernetes/svc.yaml
 
 Step 2: Set the Postgres database url
 -------------------------------------

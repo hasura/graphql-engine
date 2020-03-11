@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura explain API reference
+   :keywords: hasura, docs, explain API, API reference
+
 .. _explain_api_reference:
 
 Explain API Reference
@@ -32,7 +36,7 @@ The request expects a JSON object with the following keys:
    Content-Type: application/json
 
    {
-        "query": <query>,
+        "query": "<query>",
         "user": {
             "x-hasura-role" : "...",
             "x-hasura-session-var1" : "..."
@@ -60,7 +64,7 @@ Response
 
 The response for a query is a list of plans:
 
-.. code-block:: json
+.. code-block:: none
 
     [
         {
@@ -72,7 +76,7 @@ The response for a query is a list of plans:
 
 The response for a subscription is a single plan:
 
-.. code-block:: json
+.. code-block:: none
 
     {
         "sql": String -- "the generated SQL for the operation",

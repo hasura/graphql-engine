@@ -9,7 +9,7 @@ backed by an existing Postgres server (e.g. [Azure Database for
 PostgreSQL](https://azure.microsoft.com/en-us/services/postgresql/)).
 For a more detailed step-by-step guide on deplopying individual
 resources to Azure using the CLI, refer to the 
-[documentation](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html).
+[documentation](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html).
 
 [![Deploy to Azure Button](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container%2fazuredeploy.json)
 
@@ -84,11 +84,11 @@ Once you open the console, switch to Data tab and you’ll be able to see the ta
 
 ## Next steps
 
-- [Building your schema](https://docs.hasura.io/1.0/graphql/manual/schema/index.html)
-- [GraphQL Queries](https://docs.hasura.io/1.0/graphql/manual/queries/index.html)
-- [GraphQL Mutations](https://docs.hasura.io/1.0/graphql/manual/mutations/index.html)
-- [GraphQL Subscriptions](https://docs.hasura.io/1.0/graphql/manual/subscriptions/index.html)
-- [Event Triggers](https://docs.hasura.io/1.0/graphql/manual/event-triggers/index.html)
-- [Authentication/Access control](https://docs.hasura.io/1.0/graphql/manual/auth/index.html)
-- [Database Migrations](https://docs.hasura.io/1.0/graphql/manual/migrations/index.html)
-- [Guides/Tutorials/Resources](https://docs.hasura.io/1.0/graphql/manual/guides/index.html)
+- [Building your schema](https://hasura.io/docs/1.0/graphql/manual/schema/index.html)
+- [GraphQL Queries](https://hasura.io/docs/1.0/graphql/manual/queries/index.html)
+- [GraphQL Mutations](https://hasura.io/docs/1.0/graphql/manual/mutations/index.html)
+- [GraphQL Subscriptions](https://hasura.io/docs/1.0/graphql/manual/subscriptions/index.html)
+- [Event Triggers](https://hasura.io/docs/1.0/graphql/manual/event-triggers/index.html)
+- [Authentication/Access control](https://hasura.io/docs/1.0/graphql/manual/auth/index.html)
+- [Database Migrations](https://hasura.io/docs/1.0/graphql/manual/migrations/index.html)
+- [Guides/Tutorials/Resources](https://hasura.io/docs/1.0/graphql/manual/guides/index.html)
