@@ -18,7 +18,7 @@ export const StyledButton = styled.button`
     if (type === 'secondary' && !disabled) {
       return css`
         &:hover {
-          box-shadow: ${`0 2px 8px 0 ${boxShadowColor}`};
+          box-shadow: 0 2px 8px 0 ${boxShadowColor};
           background: ${theme.colors.black.secondary};
           color: ${theme.colors.white};
         }
@@ -26,7 +26,7 @@ export const StyledButton = styled.button`
     } else if (!disabled) {
       return css`
         &:hover {
-          box-shadow: ${`0 2px 8px 0 ${boxShadowColor}`};
+          box-shadow: 0 2px 8px 0 ${boxShadowColor};
         }
       `;
     }
