@@ -64,5 +64,6 @@
 - fix casting citext column type (fix #2818) (#3861)
 - Add downgrade command (close #1156) (#3760)
 - persist mix files only when coverage is enabled (#3844)
+- add meta descriptions to actions docs (#4082)
 - `HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL` changes semantics slightly: we only sleep for the interval
   when there were previously no events to process. Potential space leak fixed. (#3839)
