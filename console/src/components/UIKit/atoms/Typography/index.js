@@ -33,7 +33,6 @@ export const Text = props => {
   } else if (type === 'explain') {
     fontWeightValue = 'bold';
   }
-  // No else clause here.
 
   if (fontSize) {
     fontSizeValue = fontSize;

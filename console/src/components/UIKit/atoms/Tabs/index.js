@@ -11,9 +11,9 @@ export const Tabs = props => {
   const [currentActiveTabIndex, changeCurrentActiveTab] = useState(0);
   const { tabsData } = props;
 
-  const currentTabContentArray =
+  const currentTabContent =
     tabsData &&
-    tabsData.filter((currentElement, index) => {
+    tabsData.filter((_, index) => {
       return index === currentActiveTabIndex;
     });
 
@@ -34,8 +34,8 @@ export const Tabs = props => {
             ))}
         </StyledTabList>
         {/* Tab Content */}
-        {currentTabContentArray &&
-          currentTabContentArray.map(({ tabContent }, index) => (
+        {currentTabContent &&
+          currentTabContent.map(({ tabContent }, index) => (
             <StyledTabContent key={index}>{tabContent}</StyledTabContent>
           ))}
       </StyledTab>
