@@ -72,3 +72,28 @@ Fetch an object using its primary key
         }
       }
     }
+
+Fetch value from JSON/JSONB column at particular path
+-----------------------------------------------------
+**Example:** Fetch pincode from address for a user where address is a JSON/JSONB column
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      user_by_pk(id: 1) {
+        id
+        name
+        pincode: address(path: ".pincode") # pincode is an alias
+      }
+    }
+  :response:
+    {
+      "data": {
+        "user_by_pk": {
+          "id": 1,
+          "name": "Justin",
+          "pincode": 110017
+        }
+      }
+    }
