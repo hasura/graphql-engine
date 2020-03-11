@@ -22,7 +22,7 @@
 
 {% block linktags %}
 {{ super() }}
-    <link rel="canonical" href="https://docs.{{ BASE_DOMAIN }}/1.0/{{ pagename }}{{ file_suffix }}" />
+    <link rel="canonical" href="https://{{ BASE_DOMAIN }}/docs/1.0/{{ pagename }}{{ file_suffix }}" />
 {% endblock %}
 
 {% block document %}
@@ -52,7 +52,7 @@
                       <img class="responsive logo_img no-shadow" src="{{ pathto('_images/layout/logo-dark.svg', 1) }}" alt="Hasura Logo Dark" />
                     </div>
                   </a>
-                  <a href="https://docs.{{ BASE_DOMAIN }}" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
+                  <a href="https://{{ BASE_DOMAIN }}/docs" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
                 <div id="docs-header-actions">
                   <div class="inline-block mobile-only" id="nav_tree_icon">
@@ -65,7 +65,7 @@
                   <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
                       <div class="social_icons">
-                        <a href="https://learn.hasura.io/" target="_blank" rel="noopener">
+                        <a href="https://hasura.io/learn/" target="_blank" rel="noopener">
                           Tutorials
                         </a>
                       </div>
@@ -145,7 +145,7 @@
                   </div>
                   <div>
                     Powered by <a target="_blank" rel="noopener" href="http://www.sphinx-doc.org">Sphinx</a>.
-                    |  Copyright &copy; 2019 <a target="_blank" rel="noopener" href="https://hasura.io">Hasura</a>.
+                    |  Copyright &copy; 2020 <a target="_blank" rel="noopener" href="https://hasura.io">Hasura</a>.
                   </div>
                 </div>
               </div>
@@ -276,16 +276,17 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js"></script>
   <script type="text/javascript">
     docsearch({
-      apiKey: 'c59018461c19e20fe11459136e57900c',
-      indexName: 'hasura',
+      appId: 'WCBB1VVLRC',
+      apiKey: '298d448cd9d7ed93fbab395658da19e8',
+      indexName: 'graphql-docs-prod',
       inputSelector: '#search_element',
       transformData: function(suggestions) {
-        if (window.location.origin !== 'https://docs.hasura.io') {
+        if (window.location.origin !== 'https://hasura.io') {
           suggestions.forEach(suggestion => {
             if (window.location.origin === 'http://localhost:8000') {
-              suggestion.url = suggestion.url.replace(/https:\/\/docs.hasura.io\/[^\/]*/, window.location.origin)
+              suggestion.url = suggestion.url.replace(/https:\/\/hasura.io\/docs\/[^\/]*/, window.location.origin)
             } else {
-              suggestion.url = suggestion.url.replace('https://docs.hasura.io', window.location.origin);
+              suggestion.url = suggestion.url.replace('https://hasura.io\/docs', window.location.origin);
             }
           });
         }
@@ -514,12 +515,20 @@
           .then(function (response) {
             const data = JSON.parse(response);
             const latest_version = data.latest;
+            const latest_prerelease_version = data.prerelease;
 
-            const targets = document.getElementsByClassName('latest-release-tag');
-            for (let i = 0; i < targets.length; i++) {
-              const target = targets[i];
+            const release_targets = document.getElementsByClassName('latest-release-tag');
+            for (let i = 0; i < release_targets.length; i++) {
+              const release_target = release_targets[i];
 
-              target.innerHTML = latest_version;
+              release_target.innerHTML = latest_version;
+            }
+
+            const prerelease_targets = document.getElementsByClassName('latest-prerelease-tag');
+            for (let i = 0; i < prerelease_targets.length; i++) {
+              const prerelease_target = prerelease_targets[i];
+
+              prerelease_target.innerHTML = latest_prerelease_version;
             }
           })
           .catch(function (err) {

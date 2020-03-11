@@ -9,9 +9,11 @@ import qualified Data.String                      as DataString
 import qualified Data.Text                        as T
 import qualified Data.Text.Encoding               as TE
 import qualified Database.PG.Query                as Q
+import qualified Language.Haskell.TH.Syntax       as TH
 import qualified Text.PrettyPrint.ANSI.Leijen     as PP
 
 import           Data.Char                        (toLower)
+import           Data.FileEmbed                   (embedStringFile)
 import           Data.Time.Clock.Units            (milliseconds)
 import           Network.Wai.Handler.Warp         (HostPreference)
 import           Options.Applicative
@@ -485,7 +487,8 @@ serveCmdFooter =
         , "Max event threads"
         )
       , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Postgres events polling interval in milliseconds"
+        , "Interval in milliseconds to sleep before trying to fetch events again after a " 
+          <> "fetch returned no events from postgres."
         )
       ]
 
@@ -1084,21 +1087,13 @@ serveOptionsParser =
 -- and catalog schema versions.
 downgradeShortcuts :: [(String, String)]
 downgradeShortcuts = 
-  [ ("v1.0.0-beta.1", "16")
-  , ("v1.0.0-beta.2", "17")
-  , ("v1.0.0-beta.3", "17")
-  , ("v1.0.0-beta.4", "19")
-  , ("v1.0.0-beta.5", "19")
-  , ("v1.0.0-beta.6", "22")
-  , ("v1.0.0-beta.7", "24")
-  , ("v1.0.0-beta.8", "26")
-  , ("v1.0.0-beta.9", "26")
-  , ("v1.0.0-beta.10", "27")
-  , ("v1.0.0-rc.1", "28")
-  , ("v1.0.0", "28")
-  , ("v1.1.0-beta.1", "29")
-  , ("v1.1.0-beta.2", "30")
-  ]
+  $(do let s = $(embedStringFile "src-rsr/catalog_versions.txt")
+          
+           parseVersions = map (parseVersion . words) . lines
+     
+           parseVersion [tag, version] = (tag, version)
+           parseVersion other = error ("unrecognized tag/catalog mapping " ++ show other)
+       TH.lift (parseVersions s))     
 
 downgradeOptionsParser :: Parser DowngradeOptions
 downgradeOptionsParser = 

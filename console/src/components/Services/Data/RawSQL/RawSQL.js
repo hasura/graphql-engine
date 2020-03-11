@@ -20,6 +20,10 @@ import {
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
 import './AceEditorFix.css';
+import {
+  ACE_EDITOR_THEME,
+  ACE_EDITOR_FONT_SIZE,
+} from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 
 const RawSQL = ({
@@ -169,14 +173,14 @@ const RawSQL = ({
         title={'Run SQL'}
         onClose={onModalClose}
         onSubmit={onConfirmNoMigration}
-        submitText={'Yes, i confirm'}
+        submitText={'Yes, I confirm'}
         submitTestId={'not-migration-confirm'}
       >
         <div className="content-fluid">
           <div className="row">
             <div className="col-xs-12">
-              Your SQL Statement is most likely modifying the database schema.
-              Are you sure its not a migration?
+              Your SQL statement is most likely modifying the database schema.
+              Are you sure it is not a migration?
             </div>
           </div>
         </div>
@@ -235,7 +239,8 @@ const RawSQL = ({
         <AceEditor
           data-test="sql-test-editor"
           mode="sql"
-          theme="github"
+          theme={ACE_EDITOR_THEME}
+          fontSize={ACE_EDITOR_FONT_SIZE}
           name="raw_sql"
           value={sql}
           minLines={15}
@@ -284,9 +289,7 @@ const RawSQL = ({
           <h4 className={styles.subheading_text}>SQL Result:</h4>
           <div className={styles.tableContainer}>
             <table
-              className={`table table-bordered table-striped table-hover ${
-                styles.table
-              } `}
+              className={`table table-bordered table-striped table-hover ${styles.table} `}
             >
               <thead>
                 <tr>{getTableHeadings()}</tr>
@@ -508,9 +511,7 @@ const RawSQL = ({
           </div>
 
           <div
-            className={`${styles.padd_left_remove} ${
-              styles.add_mar_bottom
-            } col-xs-8`}
+            className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
           >
             {getTrackThisSection()}
             {getMetadataCascadeSection()}

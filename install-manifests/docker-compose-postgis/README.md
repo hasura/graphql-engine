@@ -2,7 +2,7 @@
 
 This Docker Compose setup runs [Hasura GraphQL Engine](https://github.com/hasura/graphql-engine) along with Postgres with the postgis extension using `docker-compose`.
 
-See [this blog post for a tutorial](https://blog.hasura.io/graphql-and-geo-location-on-postgres-using-hasura-562e7bd47a2f).
+See [this blog post for a tutorial](https://hasura.io/blog/graphql-and-geo-location-on-postgres-using-hasura-562e7bd47a2f).
 
 ## Pre-requisites
 
