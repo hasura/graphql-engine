@@ -97,17 +97,17 @@ defaultRoleClaim = "x-hasura-default-role"
 defaultClaimNs :: T.Text
 defaultClaimNs = "https://hasura.io/jwt/claims"
 
--- | create a background thread to refresh the JWK
+
+-- | An action that refreshes the JWK at intervals in an infinite loop.
 jwkRefreshCtrl
-  :: (HasVersion, MonadIO m)
+  :: (HasVersion)
   => Logger Hasura
   -> HTTP.Manager
   -> URI
   -> IORef Jose.JWKSet
   -> DiffTime
-  -> m ()
-jwkRefreshCtrl logger manager url ref time =
-  void $ liftIO $ C.forkIO $ do
+  -> IO void
+jwkRefreshCtrl logger manager url ref time = liftIO $ do
     C.sleep time
     forever $ do
       res <- runExceptT $ updateJwkRef logger manager url ref

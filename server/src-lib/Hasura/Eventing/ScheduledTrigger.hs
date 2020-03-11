@@ -263,7 +263,7 @@ processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEventF
       let timeoutSeconds = round $ rcstTimeoutSec stiRetryConf
           httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
           headers = addDefaultHeaders $ map encodeHeader stiHeaders
-          extraLogCtx = ExtraLogContext sefId
+          extraLogCtx = ExtraContext currentTime sefId
       res <- runExceptT $ tryWebhook headers httpTimeout sefPayload (T.unpack sefWebhook)
       logHTTPForST res (Just extraLogCtx)
       let decodedHeaders = map (decodeHeader logEnv stiHeaders) headers

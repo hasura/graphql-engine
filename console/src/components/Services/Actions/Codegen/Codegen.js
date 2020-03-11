@@ -67,7 +67,9 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     const getDrodown = () => {
       return (
         <select
-          className={`form-control ${styles.inputWidth} ${styles.add_mar_right} ${styles.add_mar_right}`}
+          className={`form-control ${styles.inputWidth} ${
+            styles.add_mar_right
+          } ${styles.add_mar_right}`}
           value={selectedFramework}
           onChange={onChange}
         >
@@ -101,6 +103,15 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     };
 
     const getStarterKitButton = () => {
+      const selectedFrameworkMetadata = allFrameworks.find(
+        f => f.name === selectedFramework
+      );
+      if (
+        selectedFrameworkMetadata &&
+        !selectedFrameworkMetadata.hasStarterKit
+      ) {
+        return null;
+      }
       return (
         <a
           href={getStarterKitPath(selectedFramework)}

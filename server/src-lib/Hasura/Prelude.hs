@@ -139,5 +139,3 @@ startTimer = do
   return $ do
     aft <- liftIO Clock.getMonotonicTimeNSec
     return $ nanoseconds $ fromIntegral (aft - bef)
-
-

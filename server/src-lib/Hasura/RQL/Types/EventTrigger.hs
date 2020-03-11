@@ -39,6 +39,7 @@ import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
 
+-- | Unique name for event trigger.
 newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
   deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable)
 
@@ -179,6 +180,7 @@ instance FromJSON CreateEventTriggerQuery where
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
 
+-- | The table operations on which the event trigger will be invoked.
 data TriggerOpsDef
   = TriggerOpsDef
   { tdInsert       :: !(Maybe SubscribeOpSpec)

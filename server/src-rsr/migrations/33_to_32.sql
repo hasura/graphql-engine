@@ -1,4 +1,1 @@
-DROP VIEW hdb_catalog.hdb_scheduled_events_stats;
-DROP TABLE hdb_catalog.hdb_scheduled_event_invocation_logs;
-DROP TABLE hdb_catalog.hdb_scheduled_events;
-DROP TABLE hdb_catalog.hdb_scheduled_trigger;
+DROP INDEX IF EXISTS hdb_catalog."event_log_created_at_idx";
