@@ -23,6 +23,7 @@ import {
 } from '../../../Common/utils/pgUtils';
 import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
+import { changeViewRootFields } from '../Common/TooltipMessages';
 
 class ModifyView extends Component {
   componentDidMount() {
@@ -120,9 +121,7 @@ class ModifyView extends Component {
         <React.Fragment>
           <h4 className={styles.subheading_text}>
             Custom GraphQL Root Fields
-            <Tooltip
-              message={'Change the root fields for the view in the GraphQL API'}
-            />
+            <Tooltip message={changeViewRootFields} />
           </h4>
           <RootFields
             existingRootFields={existingRootFields}
