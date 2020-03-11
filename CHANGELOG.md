@@ -14,6 +14,12 @@
 
   Added a component that allows adding check constraints while creating a new table in the same way as it can be done on the `Modify` view.
 
+  ### Select dropdown for Enum columns (console)
+
+  If a table has a field referencing an Enum table via a foreign key, then there will be a select dropdown with all possible enum values on `Insert Row` and `Edit Row` views on the Console.
+
+  (close #3748) (#3810)
+
 ### Other changes
 
 - console: disable editing action relationships
