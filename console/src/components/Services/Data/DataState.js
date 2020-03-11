@@ -171,6 +171,7 @@ const defaultState = {
     lastSuccess: null,
   },
   allSchemas: [],
+  allRoles: [],
   postgresFunctions: [],
   nonTrackablePostgresFunctions: [],
   trackedFunctions: [],

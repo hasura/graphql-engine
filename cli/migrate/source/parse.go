@@ -16,14 +16,19 @@ var (
 )
 
 var (
-	DefaultParse = Parse
-	DefaultRegex = Regex
+	DefaultParse   = Parse
+	DefaultParsev2 = Parsev2
+	DefaultRegex   = Regex
 )
+
+// Parser to parse source files
+type Parser func(raw string) (*Migration, error)
 
 // Regex matches the following pattern:
 //  123_name.up.ext
 //  123_name.down.ext
 var Regex = regexp.MustCompile(`^([0-9]+)_(.*)\.(` + string(Down) + `|` + string(Up) + `)\.(.*)$`)
+var Regexv2 = regexp.MustCompile(`^([0-9]+)_(.*)\.(` + string(Down) + `|` + string(Up) + `)\.(sql)$`)
 
 // Parse returns Migration for matching Regex pattern.
 func Parse(raw string) (*Migration, error) {
@@ -45,6 +50,36 @@ func Parse(raw string) (*Migration, error) {
 				return nil, errors.New("Invalid Direction type")
 			}
 		} else if m[4] == "sql" {
+			if m[3] == "up" {
+				direction = Up
+			} else if m[3] == "down" {
+				direction = Down
+			} else {
+				return nil, errors.New("Invalid Direction type")
+			}
+		}
+
+		return &Migration{
+			Version:    versionUint64,
+			Identifier: m[2],
+			Direction:  direction,
+		}, nil
+	}
+	return nil, ErrParse
+}
+
+// Parsev2 returns Migration for matching Regex (only sql) pattern.
+func Parsev2(raw string) (*Migration, error) {
+	var direction Direction
+	m := Regexv2.FindStringSubmatch(raw)
+	if len(m) == 5 {
+		versionUint64, err := strconv.ParseUint(m[1], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		// Have different direction type for sql
+		if m[4] == "sql" {
 			if m[3] == "up" {
 				direction = Up
 			} else if m[3] == "down" {
