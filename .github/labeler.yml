@@ -1,0 +1,15 @@
+# auto-assign labels based on the files changed in a pull request
+# see https://github.com/actions/labeler and .github/workflows/label_pr.yml
+c/server:
+- server/**/*
+c/cli:
+- cli/**/*
+c/console:
+- console/**/*
+c/docs:
+- docs/**/*
+c/community:
+- community/**/*
+c/build-system:
+- .circleci/**/*
+- scripts/**/*
