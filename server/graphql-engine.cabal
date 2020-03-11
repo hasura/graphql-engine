@@ -89,6 +89,7 @@ library
                      , deepseq
                      , dependent-map >=0.2.4 && <0.4
                      , dependent-sum >=0.4 && <0.5
+                     , primitive
 
                      -- `these >=1` is split into several different packages, but our current stack
                      -- resolver has `these <1`; when we upgrade we just need to add an extra
@@ -262,7 +263,7 @@ library
                      -- , Hasura.RQL.Types.Table
                      -- , Hasura.RQL.Types.SchemaCache.Build
                      -- , Hasura.RQL.Types.SchemaCacheTypes
-                     -- , Hasura.RQL.Types.BoolExp
+                     , Hasura.RQL.Types.BoolExp
                      -- , Hasura.RQL.Types.Function
                      -- , Hasura.RQL.Types.Catalog
                      , Hasura.RQL.Types.Column
@@ -371,9 +372,10 @@ library
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
                      , Data.Aeson.Extended
-                     , Data.List.Extended
+                     , Data.GADT.Compare.Extended
                      , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
+                     , Data.List.Extended
                      , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
                      , Data.TByteString

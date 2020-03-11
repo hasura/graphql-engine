@@ -356,7 +356,7 @@ data PGScalarType
   | PGRaster
   | PGUUID
   | PGUnknown !T.Text
-  deriving (Show, Eq, Lift, Generic, Data)
+  deriving (Show, Eq, Ord, Lift, Generic, Data)
 instance NFData PGScalarType
 instance Hashable PGScalarType
 instance Cacheable PGScalarType

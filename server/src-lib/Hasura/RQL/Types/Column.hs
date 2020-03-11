@@ -44,12 +44,12 @@ import           Hasura.SQL.Value
 
 newtype EnumValue
   = EnumValue { getEnumValue :: T.Text }
-  deriving (Show, Eq, Lift, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
+  deriving (Show, Eq, Ord, Lift, NFData, Hashable, ToJSON, ToJSONKey, FromJSON, FromJSONKey, Cacheable)
 
 newtype EnumValueInfo
   = EnumValueInfo
   { evComment :: Maybe T.Text
-  } deriving (Show, Eq, Lift, NFData, Hashable, Cacheable)
+  } deriving (Show, Eq, Ord, Lift, NFData, Hashable, Cacheable)
 $(deriveJSON (aesonDrop 2 snakeCase) ''EnumValueInfo)
 
 type EnumValues = M.HashMap EnumValue EnumValueInfo
@@ -60,7 +60,7 @@ data EnumReference
   = EnumReference
   { erTable  :: !QualifiedTable
   , erValues :: !EnumValues
-  } deriving (Show, Eq, Generic, Lift)
+  } deriving (Show, Eq, Ord, Generic, Lift)
 instance NFData EnumReference
 instance Hashable EnumReference
 instance Cacheable EnumReference
@@ -77,7 +77,7 @@ data PGColumnType
   -- always have type @text@), but we really want to distinguish this case, since we treat it
   -- /completely/ differently in the GraphQL schema.
   | PGColumnEnumReference !EnumReference
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 instance NFData PGColumnType
 instance Hashable PGColumnType
 instance Cacheable PGColumnType

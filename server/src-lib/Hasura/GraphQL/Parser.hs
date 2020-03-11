@@ -9,14 +9,22 @@ import Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended as M
 import qualified Data.HashSet as S
+import qualified Data.Dependent.Map as DM
 
-import Language.GraphQL.Draft.Syntax (Description(..), EnumValue(..), Name(..), SelectionSet, Selection(..), Value(..), Field(..), literal, litName, mkName, unsafeMkName)
+import Language.GraphQL.Draft.Syntax (Description(..), EnumValue(..), Name(..), SelectionSet, Selection(..), Value(..), Field(..), Nullability(..), literal, litName, mkName, unsafeMkName)
 import Data.Int (Int32)
 import Control.Lens.Extended hiding (enum, index)
 import Data.Type.Equality
 import Data.Void
 import Data.Parser.JSONPath
 import Control.Monad.Validate
+import Control.Monad.Unique
+import Data.Dependent.Map (DMap)
+import Data.GADT.Compare.Extended
+import Data.Primitive.MutVar
+import Control.Monad.Primitive (PrimMonad, stToPrim)
+import Control.Monad.ST.Unsafe (unsafeInterleaveST)
+import GHC.Stack (HasCallStack)
 
 import qualified Hasura.RQL.Types.Column as RQL
 
@@ -26,22 +34,153 @@ import Hasura.SQL.Value
 import Hasura.Server.Utils (englishList)
 import Hasura.RQL.Types.Column hiding (EnumValue(..), EnumValueInfo(..))
 import Hasura.RQL.Types.Permission (SessVar)
+import Hasura.RQL.Types.BoolExp
 -- import Hasura.RQL.Types hiding (EnumValue(..), EnumValueInfo(..), FieldInfo(..))
 -- import Hasura.GraphQL.Resolve.Types (UnresolvedVal(..), AnnPGVal(..))
 -- import Hasura.GraphQL.Schema.Common
 
 -- -------------------------------------------------------------------------------------------------
 
+{- Note [Tying the knot]
+~~~~~~~~~~~~~~~~~~~~~~~~
+GraphQL type definitions can be mutually recursive, and indeed, they quite often
+are! For example, two tables that reference one another will be represented by
+types such as the following:
+
+  type author {
+    id: Int!
+    name: String!
+    articles: [article!]!
+  }
+
+  type article {
+    id: Int!
+    title: String!
+    content: String!
+    author: author!
+  }
+
+This doesn’t cause any trouble if the schema is represented by a mapping from
+type names to type definitions, but the Parser abstraction is all about avoiding
+that kind of indirection to improve type safety — parsers refer to their
+sub-parsers directly. This presents two problems during schema generation:
+
+  1. Schema generation needs to terminate in finite time, so we need to ensure
+     we don’t try to eagerly construct an infinitely-large schema due to the
+     mutually-recursive structure.
+
+  2. To serve introspection queries, we do eventually need to construct a
+     mapping from names to types (a TypeMap), so we need to be able to
+     recursively walk the entire schema in finite time.
+
+Solving point number 1 could be done with either laziness or sharing, but
+neither of those are enough to solve point number 2, which requires /observable/
+sharing. We need to construct a Parser graph that contains enough information to
+detect cycles during traversal.
+
+It may seem appealing to just use type names to detect cycles, which would allow
+us to get away with using laziness rather than true sharing. Unfortunately, that
+leads to two further problems:
+
+  * It’s possible to end up with two different types with the same name, which
+    is an error and should be reported as such. Using names to break cycles
+    prevents us from doing that, since we have no way to check that two types
+    with the same name are actually the same.
+
+  * Some Parser constructors can fail — the `column` parser checks that the type
+    name is a valid GraphQL name, for example. This extra validation means lazy
+    schema construction isn’t viable, since we need to eagerly build the schema
+    to ensure all the validation checks hold.
+
+So we’re forced to use sharing. But how do we do it? Somehow, we have to /tie
+the knot/ — we have to build a cyclic data structure — and some of the cycles
+may be quite large. Doing all this knot-tying by hand would be incredibly
+tricky, and it would require a lot of inversion of control to thread the shared
+parsers around.
+
+To avoid contorting the program, we instead implement a form of memoization. The
+MonadSchema class provides a mechanism to memoize a parser constructor function,
+which allows us to get sharing mostly for free. The memoization strategy also
+annotates cached parsers with a Unique that can be used to break cycles while
+traversing the graph, so we get observable sharing as well. -}
+
+-- | see Note [Tying the knot]
+data ParserId a where
+  PIDComparisonExprs :: PGColumnType -> Nullability -> ParserId '( 'Input, [OpExp])
+
+instance GEq ParserId where
+  PIDComparisonExprs a1 b1 `geq` PIDComparisonExprs a2 b2 | a1 == a2 && b1 == b2 = Just Refl
+  _ `geq` _ = Nothing
+
+instance GCompare ParserId where
+  PIDComparisonExprs a1 b1 `gcompare` PIDComparisonExprs a2 b2 =
+    strengthenOrdering (a1 `compare` a2 <> b1 `compare` b2)
+
+-- | A class that provides functionality used when building the GraphQL schema,
+-- i.e. constructing the 'Parser' graph.
+class Monad m => MonadSchema n m | m -> n where
+  -- | see Note [Tying the knot]
+  withParserId :: HasCallStack => ParserId '(k, a) -> m (Parser k n a) -> m (Parser k n a)
+
+newtype SchemaT n m a = SchemaT
+  { unSchemaT :: StateT (DMap ParserId (ParserById n)) m a
+  } deriving (Functor, Applicative, Monad, MonadTrans)
+
+runSchemaT :: Monad m => SchemaT n m a -> m a
+runSchemaT = flip evalStateT mempty . unSchemaT
+
+data family ParserById (m :: * -> *) (a :: (Kind, *))
+newtype instance ParserById m '(k, a) = ParserById { unParserById :: Parser k m a }
+
+instance PrimMonad m => MonadSchema n (SchemaT n m) where
+  withParserId parserId buildParser = SchemaT do
+    parsersById <- get
+    case DM.lookup parserId parsersById of
+      Just (ParserById parser) -> pure parser
+      Nothing -> do
+        -- We manually do eager blackholing here using a MutVar rather than
+        -- relying on MonadFix and ordinary thunk blackholing. Why? A few
+        -- reasons:
+        --
+        --   1. We have more control. We aren’t at the whims of whatever
+        --      MonadFix instance happens to get used.
+        --
+        --   2. We can be more precise. GHC’s lazy blackholing doesn’t always
+        --      kick in when you’d expect.
+        --
+        --   3. We can provide more useful error reporting if things go wrong.
+        --      Most usefully, we can include a HasCallStack source location.
+        cell <- newMutVar Nothing
+
+        -- We use unsafeInterleaveST here, which sounds scary, but
+        -- unsafeInterleaveIO/ST is actually far more safe than unsafePerformIO.
+        -- unsafeInterleave just defers the execution of the action until its
+        -- result is needed, adding some laziness.
+        --
+        -- That laziness can be dangerous if the action has side-effects, since
+        -- the point at which the effect is performed can be unpredictable. But
+        -- this action just reads, never writes, so that isn’t a concern.
+        parserById <- stToPrim $ unsafeInterleaveST $ readMutVar cell >>= \case
+          Just parser -> pure $ ParserById parser
+          Nothing -> error "withParserId: parser was forced before it was fully constructed"
+        put $! DM.insert parserId parserById parsersById
+
+        parser <- unSchemaT buildParser
+        writeMutVar cell (Just parser)
+        pure parser
+
+
+-- | A class that provides functionality for parsing GraphQL queries, i.e.
+-- running a fully-constructed 'Parser'.
 class Monad m => MonadParse m where
   withPath :: (JSONPath -> JSONPath) -> m a -> m a
   parseError :: Text -> m a
-
   -- | See 'QueryReusability'.
   markNotReusable :: m ()
 
 newtype ParseT m a = ParseT
-  { unParseT :: ReaderT ParseContext (StateT ParseState (ValidateT ParseError m)) a }
-  deriving (Functor, Applicative, Monad)
+  { unParseT :: ReaderT ParseContext (StateT ParseState (ValidateT ParseError m)) a
+  } deriving (Functor, Applicative, Monad)
 
 newtype ParseContext = ParseContext
   { pcPath :: JSONPath }
@@ -72,6 +211,14 @@ data ParseError = ParseError
   }
 
 -- -------------------------------------------------------------------------------------------------
+
+class HasName a where
+  getName :: a -> Name
+instance HasName Name where
+  getName = id
+
+class HasDefinition s a | s -> a where
+  definitionLens :: Lens' s (Definition a)
 
 -- | GraphQL types are divided into two classes: input types and output types.
 -- The GraphQL spec does not use the word “kind” to describe these classes, but
@@ -131,13 +278,28 @@ data Type k
   = NonNullable (NonNullableType k)
   | Nullable (NonNullableType k)
 
-data NonNullableType k
-  = TNamed (Definition (TypeInfo k))
-  | TList (Type k)
+instance HasName (Type k) where
+  getName = getName . discardNullability
+
+instance HasDefinition (Type k) (TypeInfo k) where
+  definitionLens f (NonNullable t) = NonNullable <$> definitionLens f t
+  definitionLens f (Nullable t) = Nullable <$> definitionLens f t
 
 discardNullability :: Type k -> NonNullableType k
 discardNullability (NonNullable t) = t
 discardNullability (Nullable t) = t
+
+data NonNullableType k
+  = TNamed (Definition (TypeInfo k))
+  | TList (Type k)
+
+instance HasName (NonNullableType k) where
+  getName (TNamed definition) = getName definition
+  getName (TList t) = getName t
+
+instance HasDefinition (NonNullableType k) (TypeInfo k) where
+  definitionLens f (TNamed definition) = TNamed <$> f definition
+  definitionLens f (TList t) = TList <$> definitionLens f t
 
 data TypeInfo k where
   TIScalar :: TypeInfo 'Both
@@ -147,11 +309,31 @@ data TypeInfo k where
 
 data Definition a = Definition
   { dName :: Name
+  , dUnique :: Maybe Unique
+  -- ^ A unique identifier used to break cycles in mutually-recursive type
+  -- definitions. If two 'Definition's have the same 'Unique', they can be
+  -- assumed to be identical. Note that the inverse is /not/ true: two
+  -- definitions with different 'Unique's might still be otherwise identical.
+  --
+  -- Also see Note [Tying the knot].
   , dDescription :: Maybe Description
   , dInfo :: ~a
-  -- ^ Lazy to allow mutually-recursive type definitions without needing to
-  -- eagerly construct an infinitely-large type definition.
+  -- ^ Lazy to allow mutually-recursive type definitions.
   }
+
+mkDefinition :: Name -> Maybe Description -> a -> Definition a
+mkDefinition name description info = Definition name Nothing description info
+
+instance HasName (Definition a) where
+  getName = dName
+instance HasDefinition (Definition a) a where
+  definitionLens = id
+
+-- | Adds a 'Unique' to a 'Definition' that does not yet have one. If the
+-- definition already has a 'Unique', the existing 'Unique' is kept.
+addDefinitionUnique :: HasDefinition s a => Unique -> s -> s
+addDefinitionUnique unique = over definitionLens \definition ->
+  definition { dUnique = dUnique definition <|> Just unique }
 
 -- | Enum values have no extra information except for the information common to
 -- all definitions, so this is just a placeholder for use as @'Definition'
@@ -185,10 +367,17 @@ data Variable = Variable
   -- non-null default value, this field contains the default value, not 'VNull'.
   }
 
+instance HasName Variable where
+  getName = getName . vDefinition
+
 data Parser k m a = Parser
-  { pType :: Type k
+  { pType :: ~(Type k)
+  -- ^ Lazy for knot-tying reasons; see Note [Tying the knot].
   , pParser :: ParserInput k -> m a
   } deriving (Functor)
+
+instance HasName (Parser k m a) where
+  getName = getName . pType
 
 type family ParserInput k where
   ParserInput 'Both = Value Variable
@@ -247,11 +436,7 @@ scalar
   -> ScalarRepresentation a
   -> Parser 'Both m a
 scalar name description representation = Parser
-  { pType = NonNullable $ TNamed Definition
-    { dName = name
-    , dDescription = description
-    , dInfo = TIScalar
-    }
+  { pType = NonNullable $ TNamed $ mkDefinition name description TIScalar
   , pParser = peelVariable >=> \v -> case representation of
       SRBoolean -> case v of
         VBoolean a -> pure a
@@ -286,11 +471,7 @@ enum
   -> NonEmpty (Definition EnumValueInfo, a)
   -> Parser 'Both m a
 enum name description values = Parser
-  { pType = NonNullable $ TNamed Definition
-    { dName = name
-    , dDescription = description
-    , dInfo = TIEnum (fst <$> values)
-    }
+  { pType = NonNullable $ TNamed $ mkDefinition name description $ TIEnum (fst <$> values)
   , pParser = peelVariable >=> \case
       VEnum (EnumValue value) -> case M.lookup value valuesMap of
         Just result -> pure result
@@ -328,11 +509,8 @@ object
   -> FieldsParser 'Input m a
   -> Parser 'Input m a
 object name description parser = Parser
-  { pType = NonNullable $ TNamed Definition
-    { dName = name
-    , dDescription = description
-    , dInfo = TIInputObject (ifDefinitions parser)
-    }
+  { pType = NonNullable $ TNamed $ mkDefinition name description $
+      TIInputObject (ifDefinitions parser)
   , pParser = peelVariable >=> \case
       VObject fields -> do
         -- check for extraneous fields here, since the FieldsParser just
@@ -354,13 +532,9 @@ field
   -> FieldsParser 'Input m a
 field name description parser = case pType parser of
   NonNullable _ -> FieldsParser
-    { ifDefinitions = [Definition
-      { dName = name
-      , dDescription = description
-      , dInfo = case pType parser of
-          NonNullable typ -> IFRequired typ
-          Nullable typ -> IFOptional typ (Just VNull)
-      }]
+    { ifDefinitions = [mkDefinition name description case pType parser of
+        NonNullable typ -> IFRequired typ
+        Nullable typ -> IFOptional typ (Just VNull)]
     , ifParser = M.lookup name
         >>> (`onNothing` parseError ("missing required field " <>> name))
         >=> withPath (Key (unName name) :) . pInputParser parser
@@ -376,11 +550,8 @@ fieldWithDefault
   -> Parser k m a
   -> FieldsParser 'Input m a
 fieldWithDefault name description defaultValue parser = FieldsParser
-  { ifDefinitions = [Definition
-    { dName = name
-    , dDescription = description
-    , dInfo = IFOptional (discardNullability $ pType parser) (Just defaultValue)
-    }]
+  { ifDefinitions = [mkDefinition name description $
+      IFOptional (discardNullability $ pType parser) (Just defaultValue)]
   , ifParser = M.lookup name >>> withPath (Key (unName name) :) . \case
       Just value -> parseValue value
       Nothing    -> pInputParser parser $ literal defaultValue
@@ -413,11 +584,8 @@ fieldOptional
   -> Parser k m a
   -> FieldsParser 'Input m (Maybe a)
 fieldOptional name description parser = FieldsParser
-  { ifDefinitions = [Definition
-    { dName = name
-    , dDescription = description
-    , dInfo = IFOptional (discardNullability $ pType parser) Nothing
-    }]
+  { ifDefinitions = [mkDefinition name description $
+      IFOptional (discardNullability $ pType parser) Nothing]
   , ifParser = M.lookup name >>> withPath (Key (unName name) :) . traverse (pInputParser parser)
   }
 
@@ -428,11 +596,7 @@ selectionSet
   -> FieldsParser 'Output m a
   -> Parser 'Output m a
 selectionSet name description parser = Parser
-  { pType = NonNullable $ TNamed Definition
-    { dName = name
-    , dDescription = description
-    , dInfo = TIObject (ifDefinitions parser)
-    }
+  { pType = NonNullable $ TNamed $ mkDefinition name description $ TIObject (ifDefinitions parser)
   , pParser = \input -> do
       let fields = input & mapMaybe \case
             -- FIXME: handle fragments
@@ -461,11 +625,8 @@ selection
   -> Parser k m b
   -> FieldsParser 'Output m (Maybe (SelectionResult k a b))
 selection name description argumentsParser bodyParser = FieldsParser
-  { ifDefinitions = [Definition
-    { dName = name
-    , dDescription = description
-    , dInfo = FieldInfo (ifDefinitions argumentsParser) (pType bodyParser)
-    }]
+  { ifDefinitions = [mkDefinition name description $
+      FieldInfo (ifDefinitions argumentsParser) (pType bodyParser)]
   , ifParser = M.lookup name >>> withPath (Key (unName name) :) . traverse \selectionField -> do
       let Field{ _fName = fieldName, _fArguments = arguments } = selectionField
           alias = _fAlias selectionField & fromMaybe fieldName
@@ -543,9 +704,10 @@ mkParameter (Opaque variable value) = UVParameter value variable
 column
   :: (MonadError Text m, MonadParse n)
   => PGColumnType
+  -> Nullability
   -> m (Parser 'Both n (Opaque PGColumnValue))
-column columnType = opaque . fmap (PGColumnValue columnType) <$> case columnType of
-  PGColumnScalar scalarType -> fmap (WithScalarType scalarType) <$> case scalarType of
+column columnType (Nullability isNullable) = opaque . fmap (PGColumnValue columnType) <$> case columnType of
+  PGColumnScalar scalarType -> withScalarType scalarType <$> case scalarType of
     PGInteger -> pure (PGValInteger <$> int)
     PGBoolean -> pure (PGValBoolean <$> boolean)
     PGFloat   -> pure (PGValDouble <$> float)
@@ -558,7 +720,7 @@ column columnType = opaque . fmap (PGColumnValue columnType) <$> case columnType
     case nonEmpty (M.toList enumValues) of
       Just enumValuesList -> do
         name <- mkEnumTypeName tableName
-        pure (WithScalarType PGText <$> enum name Nothing (mkEnumValue <$> enumValuesList))
+        pure $ withScalarType PGText $ enum name Nothing (mkEnumValue <$> enumValuesList)
       Nothing -> error "empty enum values" -- FIXME
   where
     -- Sadly, this combinator is not sound in general, so we can’t export it
@@ -584,9 +746,14 @@ column columnType = opaque . fmap (PGColumnValue columnType) <$> case columnType
           value -> Opaque Nothing <$> pParser parser value
       }
 
+    withScalarType scalarType = fmap (WithScalarType scalarType) . possiblyNullable scalarType
+    possiblyNullable scalarType
+      | isNullable = fmap (fromMaybe $ PGNull scalarType) . nullable
+      | otherwise  = id
+
     -- FIXME: unify these types, avoid unsafe conversion to Name
     mkEnumValue (RQL.EnumValue value, RQL.EnumValueInfo description) =
-      ( Definition (unsafeMkName value) (Description <$> description) EnumValueInfo
+      ( mkDefinition (unsafeMkName value) (Description <$> description) EnumValueInfo
       , PGValText value )
 
     mkScalarTypeName scalarType = mkName (toSQLTxt scalarType) `onNothing` throwError
@@ -598,34 +765,42 @@ column columnType = opaque . fmap (PGColumnValue columnType) <$> case columnType
 
 -- -------------------------------------------------------------------------------------------------
 
--- type OpExp = OpExpG UnresolvedVal
---
--- mkBoolExpr
---   :: MonadError Text m
---   => Name
---   -> Maybe Description
---   -> FieldsParser 'Input m [a]
---   -> Parser 'Input m (GBoolExp a)
--- mkBoolExpr name description fields =
---   fix \recur -> BoolAnd <$> object name description do
---     basicFields <- map BoolFld <$> fields
---     specialFields <- catMaybes <$> sequenceA
---       [ fieldOptional "_or" Nothing (BoolOr <$> list recur)
---       , fieldOptional "_and" Nothing (BoolAnd <$> list recur)
---       , fieldOptional "_not" Nothing (BoolNot <$> recur)
---       ]
---     pure (basicFields ++ specialFields)
---
--- comparisonExprs :: MonadError Text m => PGColumnType -> Parser 'Input m [OpExp]
--- comparisonExprs columnType = object name Nothing $ catMaybes <$> sequenceA
---   [ fieldOptional "_cast" Nothing (ACast <$> castExpr columnType)
---   , fieldOptional "_eq" Nothing (AEQ True . UVPG . AnnPGVal _ _ <$> column columnType)
---   -- etc.
---   ]
---   where
---     name = unNamedType (mkColumnType columnType & addTypeSuffix "_comparison_exp")
---
--- castExpr :: forall m. MonadError Text m => PGColumnType -> Parser 'Input m (CastExp UnresolvedVal)
+type OpExp = OpExpG UnpreparedValue
+
+mkBoolExpr
+  :: MonadParse m
+  => Name
+  -> Maybe Description
+  -> FieldsParser 'Input m [a]
+  -> Parser 'Input m (GBoolExp a)
+mkBoolExpr name description fields =
+  fix \recur -> BoolAnd <$> object name description do
+    basicFields <- map BoolFld <$> fields
+    specialFields <- catMaybes <$> sequenceA (specialFieldParsers recur)
+    pure (basicFields ++ specialFields)
+  where
+    specialFieldParsers recur =
+      [ fieldOptional $$(litName "_or") Nothing (BoolOr <$> list recur)
+      , fieldOptional $$(litName "_and") Nothing (BoolAnd <$> list recur)
+      , fieldOptional $$(litName "_not") Nothing (BoolNot <$> recur)
+      ]
+
+comparisonExprs
+  :: (MonadSchema n m, MonadError Text m, MonadParse n)
+  => PGColumnType -> Nullability -> m (Parser 'Input n [OpExp])
+comparisonExprs columnType nullability = withParserId (PIDComparisonExprs columnType nullability) do
+  columnParser <- column columnType nullability
+  let name = getName columnParser <> $$(litName "_comparison_exp")
+  pure $ object name Nothing $ catMaybes <$> sequenceA
+    [ -- fieldOptional $$(litName "_cast") Nothing (ACast <$> castExpr columnType)
+    -- ,
+    fieldOptional $$(litName "_eq") Nothing (AEQ True . mkParameter <$> columnParser)
+    -- etc.
+    ]
+
+-- castExpr
+--   :: forall m n. (MonadError Text m, MonadParse n)
+--   => PGColumnType -> Nullability -> Parser 'Input m (CastExp UnpreparedValue)
 -- castExpr sourceType = object name Nothing (M.fromList . catMaybes <$> traverse mkField targetTypes)
 --   where
 --     name = unNamedType (mkColumnType sourceType & addTypeSuffix "_cast_exp")
