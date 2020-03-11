@@ -1,8 +1,14 @@
 import styled from 'styled-components';
+import {
+  color,
+  border,
+  typography,
+  layout,
+  space,
+  shadow,
+} from 'styled-system';
 
-import { BaseStyledDiv } from '../Common.style';
-
-export const CheckboxStyles = styled(BaseStyledDiv)`
+export const StyledCheckBox = styled.div`
   input[type='checkbox'] {
     /* take it out of document flow */
     position: absolute;
@@ -67,4 +73,11 @@ export const CheckboxStyles = styled(BaseStyledDiv)`
       transform: rotate(45deg);
     }
   }
+
+  ${color}
+  ${border}
+  ${typography}
+  ${layout}
+  ${space}
+  ${shadow}
 `;

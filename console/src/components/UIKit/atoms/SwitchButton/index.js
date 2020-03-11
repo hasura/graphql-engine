@@ -1,17 +1,17 @@
 import React from 'react';
 
-import { SwitchButtonStyles } from './SwitchButton.style';
+import { StyledSwitchButton } from './SwitchButton';
 
-const SwitchButton = props => {
+export const SwitchButton = props => {
   const { children } = props;
 
   return (
-    <SwitchButtonStyles>
-      <input type="checkbox" />
-      <span className={'slider' + ' ' + 'round'} />
-      {children}
-    </SwitchButtonStyles>
+    <StyledSwitchButton {...props}>
+      <label>
+        <input type="checkbox" />
+        <span className={'slider' + ' ' + 'round'} />
+        {children}
+      </label>
+    </StyledSwitchButton>
   );
 };
-
-export default SwitchButton;

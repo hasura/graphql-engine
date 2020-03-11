@@ -1,16 +1,14 @@
 import React from 'react';
 
-import { CheckboxStyles } from './Checkbox.style';
+import { StyledCheckBox } from './Checkbox';
 
-const Checkbox = props => {
+export const Checkbox = props => {
   const { children } = props;
 
   return (
-    <CheckboxStyles {...props}>
+    <StyledCheckBox {...props}>
       <input id={children} type="checkbox" value="value1" />
       <label htmlFor={children}>{children}</label>
-    </CheckboxStyles>
+    </StyledCheckBox>
   );
 };
-
-export default Checkbox;

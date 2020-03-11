@@ -1,8 +1,14 @@
 import styled from 'styled-components';
+import {
+  color,
+  border,
+  typography,
+  layout,
+  space,
+  shadow,
+} from 'styled-system';
 
-import { BaseStyledDiv } from '../Common.style';
-
-export const RadioButtonStyles = styled(BaseStyledDiv)`
+export const StyledRadioButton = styled.div`
   [type='radio']:checked,
   [type='radio']:not(:checked) {
     position: absolute;
@@ -69,4 +75,11 @@ export const RadioButtonStyles = styled(BaseStyledDiv)`
     -webkit-transform: scale(1);
     transform: scale(1);
   }
+
+  ${color}
+  ${border}
+  ${typography}
+  ${layout}
+  ${space}
+  ${shadow}
 `;

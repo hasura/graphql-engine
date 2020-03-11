@@ -1,16 +1,14 @@
 import React from 'react';
 
-import { RadioButtonStyles } from './RadioButton.style';
+import { StyledRadioButton } from './RadioButton';
 
-const RadioBtn = props => {
+export const RadioButton = props => {
   const { children } = props;
 
   return (
-    <RadioButtonStyles {...props}>
+    <StyledRadioButton {...props}>
       <input type="radio" id={children} name="radio-group" checked />
       <label htmlFor={children}>{children}</label>
-    </RadioButtonStyles>
+    </StyledRadioButton>
   );
 };
-
-export default RadioBtn;
