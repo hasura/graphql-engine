@@ -179,6 +179,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} =
               headers = addDefaultHeaders etHeaders
               ep = createEventPayload retryConf e
           res <- runExceptT $ tryWebhook headers responseTimeout (toJSON ep) webhook
+          logHTTPForET res Nothing
           let decodedHeaders = map (decodeHeader logenv headerInfos) headers
           either
             (processError pool e retryConf decodedHeaders ep)
@@ -216,7 +217,6 @@ processError
   => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr a
   -> m (Either QErr ())
 processError pool e retryConf decodedHeaders ep err = do
---  logHTTPErr err        === Need to implement this function
   let invocation = case err of
         HClient excp -> do
           let errMsg = TBS.fromLBS $ encode $ show excp
