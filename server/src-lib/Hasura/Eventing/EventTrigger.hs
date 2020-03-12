@@ -12,7 +12,7 @@ module Hasura.Eventing.EventTrigger
 import           Control.Concurrent.Extended   (sleep)
 import           Control.Concurrent.Async      (wait, withAsync, async, link)
 import           Control.Concurrent.STM.TVar
-import           Control.Exception.Lifted      (finally, mask_, try)
+import           Control.Exception.Lifted      (finally, mask_)
 import           Control.Monad.STM
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -30,19 +30,13 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Version         (HasVersion)
 import           Hasura.SQL.Types
 
-import qualified Data.ByteString               as BS
-import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as M
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as T
-import qualified Data.Text.Encoding            as TE
-import qualified Data.Text.Encoding.Error      as TE
 import qualified Data.Time.Clock               as Time
 import qualified Database.PG.Query             as Q
 import qualified Hasura.Logging                as L
 import qualified Network.HTTP.Client           as HTTP
-import qualified Network.HTTP.Types            as HTTP
 
 invocationVersion :: Version
 invocationVersion = "2"
@@ -80,9 +74,6 @@ defaultMaxEventThreads = 100
 
 defaultFetchIntervalMilliSec :: (Milliseconds 'Absolute)
 defaultFetchIntervalMilliSec = 1000
-
-retryAfterHeader :: CI.CI T.Text
-retryAfterHeader = "Retry-After"
 
 initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval = do
@@ -266,13 +257,6 @@ retryOrSetError e retryConf err = do
     getRetryAfterHeaderFromError (HStatus resp) = getRetryAfterHeaderFromResp resp
     getRetryAfterHeaderFromError _              = Nothing
 
-    getRetryAfterHeaderFromResp resp
-      = let mHeader = find (\(HeaderConf name _)
-                            -> CI.mk name == retryAfterHeader) (hrsHeaders resp)
-        in case mHeader of
-             Just (HeaderConf _ (HVValue value)) -> Just value
-             _                                   -> Nothing
-
     parseRetryHeader = mfilter (> 0) . readMaybe . T.unpack
 
 mkInvo
@@ -288,10 +272,6 @@ mkInvo ep status reqHeaders respBody respHeaders
       status
       (mkWebhookReq (toJSON ep) reqHeaders invocationVersion)
       resp
-
-mkMaybe :: [a] -> Maybe [a]
-mkMaybe [] = Nothing
-mkMaybe x  = Just x
 
 logQErr :: ( MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
 logQErr err = do
