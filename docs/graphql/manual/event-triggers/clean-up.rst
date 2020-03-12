@@ -2,6 +2,8 @@
    :description: Clean up event data of event triggers in Hasura
    :keywords: hasura, docs, event trigger, event data, clean up
 
+.. _clean_up_event_data:
+
 Clean up event data
 ===================
 .. contents:: Table of contents

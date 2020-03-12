@@ -6,7 +6,13 @@ module Hasura.GraphQL.Validate.Types
   , mkHsraObjFldInfo
   , ObjFieldMap
 
-  , ObjTyInfo(..)
+  -- Don't expose 'ObjTyInfo' constructor. Instead use 'mkObjTyInfo' or 'mkHsraObjTyInfo'
+  -- which will auto-insert the compulsory '__typename' field.
+  , ObjTyInfo
+  , _otiDesc
+  , _otiName
+  , _otiImplIFaces
+  , _otiFields
   , mkObjTyInfo
   , mkHsraObjTyInfo
 

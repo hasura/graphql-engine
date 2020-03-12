@@ -118,6 +118,15 @@ const RelationshipEditor = ({
 
   // rel name input
   const getRelNameInput = () => {
+    /*
+      There is no neat solution to renaming a relationship.
+      This is because name is the only unique identifier of a relationship.
+      TODO FIXME
+    */
+    const isDisabled = !!existingRelConfig;
+    const relNameInputTitle = isDisabled
+      ? 'A relationship cannot be renamed. Please drop and re-create if you really must.'
+      : undefined;
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
@@ -129,6 +138,8 @@ const RelationshipEditor = ({
           className={`${styles.select} form-control ${styles.add_pad_left}`}
           placeholder="Enter relationship name"
           data-test="rel-name"
+          disabled={isDisabled}
+          title={relNameInputTitle}
           value={name}
         />
       </div>
@@ -180,17 +191,17 @@ const RelationshipEditor = ({
           disabled={!name}
         >
           {// default unselected option
-            refSchema === '' && (
-              <option value={''} disabled>
-                {'-- reference schema --'}
-              </option>
-            )}
+          refSchema === '' && (
+            <option value={''} disabled>
+              {'-- reference schema --'}
+            </option>
+          )}
           {// all reference schema options
-            orderedSchemaList.map((rs, j) => (
-              <option key={j} value={rs}>
-                {rs}
-              </option>
-            ))}
+          orderedSchemaList.map((rs, j) => (
+            <option key={j} value={rs}>
+              {rs}
+            </option>
+          ))}
         </select>
       </div>
     );
