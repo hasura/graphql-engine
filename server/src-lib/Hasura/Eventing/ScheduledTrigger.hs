@@ -286,16 +286,16 @@ processScheduledQueue logger logenv httpMgr pgpool getSC ScheduledEventEngineCtx
                unless alreadyWarned $
                  when clearlyBehind $
                    L.unLogger logger $ L.UnstructuredLog L.LevelWarn $ fromString $
-                     "Events processor may not be keeping up with events generated in postgres, " <>
-                     "or we're working on a backlog of events. Consider increasing " <>
-                     "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+                     "Scheduled Events processor may not be keeping up with events generated in postgres, " <>
+                     "or we're working on a backlog of scheduled events. Consider increasing " <>
+                     "HASURA_GRAPHQL_SCHEDULED_EVENTS_HTTP_POOL_SIZE"
                go eventsNext (fullFetchCount+1) (alreadyWarned || clearlyBehind)
 
            | otherwise -> do
                when (lenEvents /= fetchBatchSize && alreadyWarned) $
                  -- emit as warning in case users are only logging warning severity and saw above
                  L.unLogger logger $ L.UnstructuredLog L.LevelWarn $ fromString $
-                   "It looks like the events processor is keeping up again."
+                   "It looks like the scheduled events processor is keeping up again."
                go eventsNext 0 False
 
 processScheduledEvent ::
