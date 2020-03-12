@@ -280,7 +280,7 @@ const mainReducer = (state = defaultState, action) => {
     case LOGIN_ERROR:
       return { ...state, loginError: action.data };
     case RUN_TIME_ERROR: // To trigger telemetry event
-      return { ...state };
+      return state;
     case FETCHING_SERVER_CONFIG:
       return {
         ...state,
