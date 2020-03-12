@@ -8,10 +8,12 @@
 package cli
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -58,6 +60,42 @@ const (
 	// V2 represents config version 2
 	V2
 )
+
+// ErrInvalidConfigVersion - if the config version is not valid
+var ErrInvalidConfigVersion error = fmt.Errorf("invalid config version")
+
+// NewConfigVersionValue returns ConfigVersion set with default value
+func NewConfigVersionValue(val ConfigVersion, p *ConfigVersion) *ConfigVersion {
+	*p = val
+	return p
+}
+
+// Set sets the value of the named command-line flag.
+func (c *ConfigVersion) Set(s string) error {
+	v, err := strconv.ParseInt(s, 0, 64)
+	*c = ConfigVersion(v)
+	if err != nil {
+		return err
+	}
+	if !c.IsValid() {
+		return ErrInvalidConfigVersion
+	}
+	return nil
+}
+
+// Type returns a string that uniquely represents this flag's type.
+func (c *ConfigVersion) Type() string {
+	return "int"
+}
+
+func (c *ConfigVersion) String() string {
+	return strconv.Itoa(int(*c))
+}
+
+// IsValid returns if its a valid config version
+func (c ConfigVersion) IsValid() bool {
+	return c != 0 && c <= V2
+}
 
 // ServerConfig has the config values required to contact the server
 type ServerConfig struct {
@@ -436,6 +474,9 @@ func (ec *ExecutionContext) readConfig() error {
 				URI:       v.GetString("actions.codegen.uri"),
 			},
 		},
+	}
+	if !ec.Config.Version.IsValid() {
+		return ErrInvalidConfigVersion
 	}
 	return ec.Config.ServerConfig.ParseEndpoint()
 }

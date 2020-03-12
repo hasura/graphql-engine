@@ -65,7 +65,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := initCmd.Flags()
-	f.IntVar(&opts.Version, "version", 2, "config version to be used")
+	f.Var(cli.NewConfigVersionValue(cli.V2, &opts.Version), "version", "config version to be used")
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
 	f.StringVar(&opts.MetadataDir, "metadata-directory", "metadata", "name of directory where metadata files will be created")
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
@@ -83,7 +83,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
 type InitOptions struct {
 	EC *cli.ExecutionContext
 
-	Version     int
+	Version     cli.ConfigVersion
 	Endpoint    string
 	AdminSecret string
 	InitDir     string
@@ -163,7 +163,7 @@ func (o *InitOptions) createFiles() error {
 	}
 	// set config object
 	var config *cli.Config
-	if cli.ConfigVersion(o.Version) == cli.V1 {
+	if o.Version == cli.V1 {
 		config = &cli.Config{
 			ServerConfig: cli.ServerConfig{
 				Endpoint: "http://localhost:8080",
@@ -171,7 +171,7 @@ func (o *InitOptions) createFiles() error {
 		}
 	} else {
 		config = &cli.Config{
-			Version: cli.V2,
+			Version: o.Version,
 			ServerConfig: cli.ServerConfig{
 				Endpoint: "http://localhost:8080",
 			},
