@@ -158,7 +158,7 @@ run_server_upgrade_pytest() {
 	[ -n "$1" ] || ( echo "Got no test as input" && false )
 
 	local tests_to_run="$(collect_common_tests $1)"
-	[ -n "$tests_to_run" ] || ( echo "could not collect any tests for $1" && false )
+	[ -z "$tests_to_run" ] && log "could not collect any tests for $1" && return
 
 	log "Removing schemas with hasura metadata"
 	# This is required since we do not have a dowgrade command, yet.
