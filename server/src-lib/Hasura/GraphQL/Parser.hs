@@ -39,9 +39,6 @@ import Hasura.Server.Utils (englishList)
 import Hasura.RQL.Types.Column hiding (EnumValue(..), EnumValueInfo(..))
 import Hasura.RQL.Types.Permission (SessVar)
 import Hasura.RQL.Types.BoolExp
--- import Hasura.RQL.Types hiding (EnumValue(..), EnumValueInfo(..), FieldInfo(..))
--- import Hasura.GraphQL.Resolve.Types (UnresolvedVal(..), AnnPGVal(..))
--- import Hasura.GraphQL.Schema.Common
 
 -- -------------------------------------------------------------------------------------------------
 
@@ -108,38 +105,12 @@ which allows us to get sharing mostly for free. The memoization strategy also
 annotates cached parsers with a Unique that can be used to break cycles while
 traversing the graph, so we get observable sharing as well. -}
 
-data ParserId (t :: (Kind, *)) where
-  ParserId :: (Ord a, Typeable a, Typeable b, Typeable k) => TH.Name -> ~a -> ParserId '(k, b)
-
-instance GEq ParserId where
-  geq (ParserId name1 (arg1 :: a1) :: ParserId t1)
-      (ParserId name2 (arg2 :: a2) :: ParserId t2)
-    | _ :: Proxy '(k1, b1) <- Proxy @t1
-    , _ :: Proxy '(k2, b2) <- Proxy @t2
-    , name1 == name2
-    , Just Refl <- typeRep @a1 `geq` typeRep @a2
-    , arg1 == arg2
-    , Just Refl <- typeRep @k1 `geq` typeRep @k2
-    , Just Refl <- typeRep @b1 `geq` typeRep @b2
-    = Just Refl
-    | otherwise = Nothing
-
-instance GCompare ParserId where
-  gcompare (ParserId name1 (arg1 :: a1) :: ParserId t1)
-           (ParserId name2 (arg2 :: a2) :: ParserId t2)
-    | _ :: Proxy '(k1, b1) <- Proxy @t1
-    , _ :: Proxy '(k2, b2) <- Proxy @t2
-    = strengthenOrdering (compare name1 name2)
-      `extendGOrdering` gcompare (typeRep @a1) (typeRep @a2)
-      `extendGOrdering` strengthenOrdering (compare arg1 arg2)
-      `extendGOrdering` gcompare (typeRep @k1) (typeRep @k2)
-      `extendGOrdering` gcompare (typeRep @b1) (typeRep @b2)
-      `extendGOrdering` GEQ
-
 -- | A class that provides functionality used when building the GraphQL schema,
 -- i.e. constructing the 'Parser' graph.
 class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
-  -- | see Note [Tying the knot]
+  -- | Memoizes a parser constructor function for the extent of a single schema
+  -- construction process. This is mostly useful for recursive parsers;
+  -- see Note [Tying the knot] for more details.
   memoize
     :: (HasCallStack, Ord a, Typeable a, Typeable b, Typeable k)
     => TH.Name
@@ -179,10 +150,7 @@ newtype SchemaT n m a = SchemaT
 runSchemaT :: Monad m => SchemaT n m a -> m a
 runSchemaT = flip evalStateT mempty . unSchemaT
 
-data family ParserById (m :: * -> *) (a :: (Kind, *))
-newtype instance ParserById m '(k, a) = ParserById { unParserById :: Parser k m a }
-
-instance (PrimMonad m, MonadParse n) => MonadSchema n (SchemaT n m) where
+instance (PrimMonad m, MonadUnique m, MonadParse n) => MonadSchema n (SchemaT n m) where
   memoize name buildParser arg = SchemaT do
     let parserId = ParserId name arg
     parsersById <- get
@@ -218,10 +186,50 @@ instance (PrimMonad m, MonadParse n) => MonadSchema n (SchemaT n m) where
             , "  parser constructor: " ++ TH.pprint name ]
         put $! DM.insert parserId parserById parsersById
 
-        parser <- unSchemaT $ buildParser arg
+        unique <- newUnique
+        parser <- addDefinitionUnique unique <$> unSchemaT (buildParser arg)
         writeMutVar cell (Just parser)
         pure parser
 
+-- | A key used to distinguish calls to 'memoize'd functions. The 'TH.Name'
+-- distinguishes calls to completely different parsers, and the @a@ value
+-- records the arguments.
+data ParserId (t :: (Kind, *)) where
+  ParserId :: (Ord a, Typeable a, Typeable b, Typeable k) => TH.Name -> a -> ParserId '(k, b)
+
+instance GEq ParserId where
+  geq (ParserId name1 (arg1 :: a1) :: ParserId t1)
+      (ParserId name2 (arg2 :: a2) :: ParserId t2)
+    | _ :: Proxy '(k1, b1) <- Proxy @t1
+    , _ :: Proxy '(k2, b2) <- Proxy @t2
+    , name1 == name2
+    , Just Refl <- typeRep @a1 `geq` typeRep @a2
+    , arg1 == arg2
+    , Just Refl <- typeRep @k1 `geq` typeRep @k2
+    , Just Refl <- typeRep @b1 `geq` typeRep @b2
+    = Just Refl
+    | otherwise = Nothing
+
+instance GCompare ParserId where
+  gcompare (ParserId name1 (arg1 :: a1) :: ParserId t1)
+           (ParserId name2 (arg2 :: a2) :: ParserId t2)
+    | _ :: Proxy '(k1, b1) <- Proxy @t1
+    , _ :: Proxy '(k2, b2) <- Proxy @t2
+    = strengthenOrdering (compare name1 name2)
+      `extendGOrdering` gcompare (typeRep @a1) (typeRep @a2)
+      `extendGOrdering` strengthenOrdering (compare arg1 arg2)
+      `extendGOrdering` gcompare (typeRep @k1) (typeRep @k2)
+      `extendGOrdering` gcompare (typeRep @b1) (typeRep @b2)
+      `extendGOrdering` GEQ
+
+-- | A newtype wrapper around a 'Parser' that rearranges the type parameters
+-- so that it can be indexed by a 'ParserId' in a 'DMap'.
+--
+-- This is really just a single newtype, but it’s implemented as a data family
+-- because GHC doesn’t allow ordinary datatype declarations to pattern-match on
+-- type parameters, and we want to match on the tuple.
+data family ParserById (m :: * -> *) (a :: (Kind, *))
+newtype instance ParserById m '(k, a) = ParserById { unParserById :: Parser k m a }
 
 -- | A class that provides functionality for parsing GraphQL queries, i.e.
 -- running a fully-constructed 'Parser'.
@@ -232,14 +240,15 @@ class Monad m => MonadParse m where
   markNotReusable :: m ()
 
 newtype ParseT m a = ParseT
-  { unParseT :: ReaderT ParseContext (StateT ParseState (ValidateT ParseError m)) a
+  { unParseT :: ReaderT JSONPath (StateT QueryReusability (ValidateT ParseError m)) a
   } deriving (Functor, Applicative, Monad)
 
-newtype ParseContext = ParseContext
-  { pcPath :: JSONPath }
+instance MonadTrans ParseT where
+  lift = ParseT . lift . lift . lift
 
-newtype ParseState = ParseState
-  { psReusability :: QueryReusability }
+data ParseError = ParseError
+  { pePath :: JSONPath
+  , peMessage :: Text }
 
 -- | Tracks whether or not a query is /reusable/. Reusable queries are nice,
 -- since we can cache their resolved ASTs and avoid re-resolving them if we
@@ -258,10 +267,13 @@ newtype ParseState = ParseState
 -- identical, of course, but we don’t bother caching those).
 data QueryReusability = Reusable | NotReusable
 
-data ParseError = ParseError
-  { pePath :: JSONPath
-  , peMessage :: Text
-  }
+instance Semigroup QueryReusability where
+  NotReusable <> _           = NotReusable
+  _           <> NotReusable = NotReusable
+  Reusable    <> Reusable    = Reusable
+
+instance Monoid QueryReusability where
+  mempty = Reusable
 
 -- -------------------------------------------------------------------------------------------------
 
@@ -431,6 +443,9 @@ data Parser k m a = Parser
 
 instance HasName (Parser k m a) where
   getName = getName . pType
+
+instance HasDefinition (Parser k m a) (TypeInfo k) where
+  definitionLens f parser = definitionLens f (pType parser) <&> \pType -> parser { pType }
 
 type family ParserInput k where
   ParserInput 'Both = Value Variable
