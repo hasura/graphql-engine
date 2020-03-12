@@ -298,17 +298,6 @@ logQErr err = do
   logger :: L.Logger L.Hasura <- asks getter
   L.unLogger logger $ EventInternalErr err
 
--- TODO: Implement this function
--- logHTTPErr
---   :: ( MonadReader r m
---      , Has (L.Logger L.Hasura) r
---      , MonadIO m
---      )
---   => HTTPErr a -> m ()
--- logHTTPErr err = do
---   logger :: L.Logger L.Hasura <- asks getter
---   L.unLogger logger $ err
-
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
 getEventTriggerInfoFromEvent sc e = let table = eTable e
                                         tableInfo = M.lookup table $ scTables sc

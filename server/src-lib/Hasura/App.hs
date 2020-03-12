@@ -261,8 +261,10 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   _asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $ liftIO $
     asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
 
+  maxSTEvThreads <- liftIO $ getFromEnv defaultMaxScheduledEventThreads "HASURA_GRAPHQL_SCHEDULED_EVENTS_HTTP_POOL_SIZE"
+  scEventEngineCtx <- liftIO $ atomically $ initScheduledEventEngineCtx maxSTEvThreads
   void $ liftIO $ C.forkIO $ runScheduledEventsGenerator logger _icPgPool (getSCFromRef cacheRef)
-  void $ liftIO $ C.forkIO $ processScheduledQueue logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef)
+  void $ liftIO $ C.forkImmortal "processScheduledQueue" logger $ processScheduledQueue logger logEnvHeaders _icHttpManager _icPgPool (getSCFromRef cacheRef) scEventEngineCtx
 
   -- start a background thread to check for updates
   _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
