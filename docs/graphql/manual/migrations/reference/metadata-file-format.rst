@@ -28,16 +28,14 @@ For ``config v2``, the ``config.yaml`` of your Hasura project would look like:
     metadata_directory: metadata
     version: 2
 
-With ``config v2``, the metadata that is exported from the server is a directory
-of multiple files. When you run ``hasura metadata export``, the following files
-will be generated in the ``metadata/`` directory of your project.
+With ``config v2``, the metadata that is exported from the server is a directory of multiple files. When you run ``hasura metadata export``, the following files will be generated in the ``metadata/`` directory of your project.
 
 - ``version.yaml``: Contains the metadata version of the server
-- ``tables.yaml``: Contains the metadata related to tables.
-- ``remote_schemas.yaml``: Contains the metadata related to :doc:`remote schemas<../../remote-schemas/index>`
-- ``functions.yaml``: Contains the metadata related to :doc:`custom functions<../../schema/custom-functions>`
-- ``allow_list.yaml``: Contains the metadata related to :doc:`allow lists<../../deployment/allow-list>`
-- ``actions.yaml``: Contains the metadata related to :doc:`actions<../../actions/index>`
+- ``tables.yaml``: Contains the metadata related to tables
+- ``remote_schemas.yaml``: Contains the metadata related to :ref:`remote schemas<remote_schemas>`
+- ``functions.yaml``: Contains the metadata related to :ref:`custom functions<custom_sql_functions>`
+- ``allow_list.yaml``: Contains the metadata related to :ref:`allow lists<allow_list>`
+- ``actions.yaml``: Contains the metadata related to :ref:`actions<actions>`
 - ``actions.graphql``: Contains all the action definition and custom type definitions
 
 config v1

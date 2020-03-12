@@ -2,6 +2,8 @@
    :description: Set up a Hasura GraphQL schema with an existing database
    :keywords: hasura, docs, schema, existing database
 
+.. _schema_existing_db:
+
 Setting up a GraphQL schema using an existing database
 ======================================================
 
@@ -36,7 +38,7 @@ To track all tables and views present in the database:
 Step 2: Track foreign-keys
 --------------------------
 
-Tracking a foreign-key means creating a :doc:`relationship <relationships/index>` between the tables involved in the
+Tracking a foreign-key means creating a :ref:`relationship <relationships>` between the tables involved in the
 foreign-key.
 
 To track a foreign-key between two tables in the database:
@@ -45,7 +47,7 @@ To track a foreign-key between two tables in the database:
 #. Head to the ``Data -> Schema`` section of the console.
 #. Click on a table involved in the foreign-key and head to the ``Relationships`` tab.
 #. You should see a suggested relationship based on the foreign-key. Click ``Add``, give a name to your relationship
-   (this will be the name of the :doc:`nested object <../queries/nested-object-queries>` in the GraphQL query), and
+   (this will be the name of the :ref:`nested object <nested_object_queries>` in the GraphQL query), and
    hit ``Save`` to create the relationship.
 #. Repeat with the other table involved in the foreign-key.
 
@@ -60,7 +62,7 @@ To track all the foreign-keys of all tables in the database:
 .. admonition:: Relationship nomenclature
 
   In this case, Hasura GraphQL engine will **automatically generate relationship names** (the names of the
-  :doc:`nested objects <../queries/nested-object-queries>` in the GraphQL query) based on the table names and the
+  :ref:`nested objects <nested_object_queries>` in the GraphQL query) based on the table names and the
   foreign-key names.
 
   The name is generated in the following format:
@@ -76,5 +78,5 @@ To track all the foreign-keys of all tables in the database:
 
   Note that, **this is just  an arbitrary naming convention** chosen by Hasura to ensure the generation of unique
   relationship names. You can choose to rename your relationships to anything you wish. You can **change the
-  relationship names** with a name of your choice as shown in :doc:`relationships/rename`.
+  relationship names** with a name of your choice as shown in :ref:`rename_relationships`.
 

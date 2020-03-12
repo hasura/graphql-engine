@@ -210,7 +210,7 @@ resolveAsyncActionQuery userInfo selectOpCtx field = do
 
   annotatedFields <- fmap (map (first FieldName)) $ withSelSet (_fSelSet field) $ \fld ->
     case _fName fld of
-      "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType fld
+      "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType field
       "output"     -> do
         -- See Note [Resolving async action query/subscription]
         let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"

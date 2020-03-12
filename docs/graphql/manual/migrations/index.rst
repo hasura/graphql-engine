@@ -33,18 +33,18 @@ Setting up migrations
 Advanced use cases
 ------------------
 
-- :doc:`advanced/auto-apply-migrations`
-- :doc:`advanced/writing-migrations-manually`
-- :doc:`advanced/rolling-back-migrations`
+- :ref:`auto_apply_migrations`
+- :ref:`manual_migrations`
+- :ref:`roll_back_migrations`
 - :doc:`advanced/seed-data-migration`
 - :doc:`advanced/collaboration`
 
 Reference documentation
 -----------------------
 
-- :doc:`reference/how-it-works`
-- :doc:`reference/migration-file-format`
-- :doc:`reference/metadata-file-format`
+- :ref:`migrations_how_it_works`
+- :ref:`migration_file_format`
+- :ref:`metadata_file_format`
 
 .. toctree::
   :maxdepth: 1

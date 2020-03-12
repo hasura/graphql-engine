@@ -2,6 +2,8 @@
    :description: Hasura actions
    :keywords: hasura, docs, actions
 
+.. _actions:
+
 Actions (beta)
 ==============
 
@@ -81,7 +83,7 @@ custom types like so:
       userId: Int!
     }
 
-Read more about :doc:`custom types<types/index>`.
+Read more about :ref:`custom types<custom_types>`.
 
 Handler
 *******
@@ -91,7 +93,7 @@ when the action mutation is executed. This can be done in an HTTP webhook,
 also called the action handler. It could be a REST endpoint or a serverless
 function.
 
-Learn more about :doc:`writing an action handler<action-handlers>`.
+Learn more about :ref:`writing an action handler<action_handlers>`.
 
 Kind
 ****
@@ -100,7 +102,7 @@ Actions are of two kinds:
 
 * **Synchronous actions**: Sync actions return a response to the client after
   receiving a response from the handler.
-* **Asynchronous actions**: :doc:`Async actions <async-actions>` return an
+* **Asynchronous actions**: :ref:`Async actions <async_actions>` return an
   ``action id`` as response to the client before receiving a response from the
   handler and allow the client to subscribe to the actual response using the
   ``action id``.

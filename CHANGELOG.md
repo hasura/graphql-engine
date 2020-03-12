@@ -6,9 +6,23 @@
 
 - Introducing Actions: https://docs.hasura.io/1.0/graphql/manual/actions/index.html
 - Downgrade command: https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine
+- console: add multi select to data table and bulk delete (#3735)
+
+  Added a checkbox to each row on Browse Rows view that allows selecting one or more rows from the table and bulk delete them.
+
+- console: allow setting check constraints during table create (#3881)
+
+  Added a component that allows adding check constraints while creating a new table in the same way as it can be done on the `Modify` view.
+
+  ### Select dropdown for Enum columns (console)
+
+  If a table has a field referencing an Enum table via a foreign key, then there will be a select dropdown with all possible enum values on `Insert Row` and `Edit Row` views on the Console.
+
+  (close #3748) (#3810)
 
 ### Other changes
 
+- console: disable editing action relationships
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
 - console: fix run_sql migration modal messaging (close #4020) (#4060)
 - docs: add note on pg versions for actions (#4034)
@@ -38,7 +52,7 @@
 - tag release v1.2.0-beta.1 (#3966)
 - noop: replace subdomain links with subpath (#3869)
 - docs: add reference to QualifiedTable to table args (#3880)
-- update actions docs  (#3953)
+- update actions docs (#3953)
 - cli: bug fixes related to actions (#3951)
 - update docs (#3947)
 - fix regression on tag release script (#3944)
@@ -67,3 +81,4 @@
 - add meta descriptions to actions docs (#4082)
 - `HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL` changes semantics slightly: we only sleep for the interval
   when there were previously no events to process. Potential space leak fixed. (#3839)
+- auto-include `__typename` field in custom types' objects (fix #4063)

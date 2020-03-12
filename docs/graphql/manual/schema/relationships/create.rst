@@ -2,6 +2,8 @@
    :description: Create relationships in Hasura
    :keywords: hasura, docs, schema, relationship, create
 
+.. _create_relationships:
+
 Creating relationships
 ======================
 
