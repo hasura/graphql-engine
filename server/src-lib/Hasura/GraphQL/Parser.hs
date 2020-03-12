@@ -10,6 +10,7 @@ import Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended as M
 import qualified Data.HashSet as S
 import qualified Data.Dependent.Map as DM
+import qualified Language.Haskell.TH as TH
 
 import Language.GraphQL.Draft.Syntax (Description(..), EnumValue(..), Name(..), SelectionSet, Selection(..), Value(..), Field(..), Nullability(..), literal, litName, mkName, unsafeMkName)
 import Data.Int (Int32)
@@ -25,6 +26,9 @@ import Data.Primitive.MutVar
 import Control.Monad.Primitive (PrimMonad, stToPrim)
 import Control.Monad.ST.Unsafe (unsafeInterleaveST)
 import GHC.Stack (HasCallStack)
+import Type.Reflection (Typeable, typeRep)
+import Data.Proxy (Proxy(..))
+import Data.Tuple.Extended
 
 import qualified Hasura.RQL.Types.Column as RQL
 
@@ -104,23 +108,69 @@ which allows us to get sharing mostly for free. The memoization strategy also
 annotates cached parsers with a Unique that can be used to break cycles while
 traversing the graph, so we get observable sharing as well. -}
 
--- | see Note [Tying the knot]
-data ParserId a where
-  PIDComparisonExprs :: PGColumnType -> Nullability -> ParserId '( 'Input, [OpExp])
+data ParserId (t :: (Kind, *)) where
+  ParserId :: (Ord a, Typeable a, Typeable b, Typeable k) => TH.Name -> ~a -> ParserId '(k, b)
 
 instance GEq ParserId where
-  PIDComparisonExprs a1 b1 `geq` PIDComparisonExprs a2 b2 | a1 == a2 && b1 == b2 = Just Refl
-  _ `geq` _ = Nothing
+  geq (ParserId name1 (arg1 :: a1) :: ParserId t1)
+      (ParserId name2 (arg2 :: a2) :: ParserId t2)
+    | _ :: Proxy '(k1, b1) <- Proxy @t1
+    , _ :: Proxy '(k2, b2) <- Proxy @t2
+    , name1 == name2
+    , Just Refl <- typeRep @a1 `geq` typeRep @a2
+    , arg1 == arg2
+    , Just Refl <- typeRep @k1 `geq` typeRep @k2
+    , Just Refl <- typeRep @b1 `geq` typeRep @b2
+    = Just Refl
+    | otherwise = Nothing
 
 instance GCompare ParserId where
-  PIDComparisonExprs a1 b1 `gcompare` PIDComparisonExprs a2 b2 =
-    strengthenOrdering (a1 `compare` a2 <> b1 `compare` b2)
+  gcompare (ParserId name1 (arg1 :: a1) :: ParserId t1)
+           (ParserId name2 (arg2 :: a2) :: ParserId t2)
+    | _ :: Proxy '(k1, b1) <- Proxy @t1
+    , _ :: Proxy '(k2, b2) <- Proxy @t2
+    = strengthenOrdering (compare name1 name2)
+      `extendGOrdering` gcompare (typeRep @a1) (typeRep @a2)
+      `extendGOrdering` strengthenOrdering (compare arg1 arg2)
+      `extendGOrdering` gcompare (typeRep @k1) (typeRep @k2)
+      `extendGOrdering` gcompare (typeRep @b1) (typeRep @b2)
+      `extendGOrdering` GEQ
 
 -- | A class that provides functionality used when building the GraphQL schema,
 -- i.e. constructing the 'Parser' graph.
-class Monad m => MonadSchema n m | m -> n where
+class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
   -- | see Note [Tying the knot]
-  withParserId :: HasCallStack => ParserId '(k, a) -> m (Parser k n a) -> m (Parser k n a)
+  memoize
+    :: (HasCallStack, Ord a, Typeable a, Typeable b, Typeable k)
+    => TH.Name
+    -- ^ A unique name used to identify the function being memoized. There isn’t
+    -- really any metaprogramming going on here, we just use a Template Haskell
+    -- 'TH.Name' as a convenient source for a static, unique identifier.
+    -> (a -> m (Parser k n b))
+    -> (a -> m (Parser k n b))
+
+memoize2
+  :: (HasCallStack, MonadSchema n m, Ord a, Ord b, Typeable a, Typeable b, Typeable c, Typeable k)
+  => TH.Name
+  -> (a -> b -> m (Parser k n c))
+  -> (a -> b -> m (Parser k n c))
+memoize2 name = curry . memoize name . uncurry
+
+memoize3
+  :: ( HasCallStack, MonadSchema n m, Ord a, Ord b, Ord c
+     , Typeable a, Typeable b, Typeable c, Typeable d, Typeable k )
+  => TH.Name
+  -> (a -> b -> c -> m (Parser k n d))
+  -> (a -> b -> c -> m (Parser k n d))
+memoize3 name = curry3 . memoize name . uncurry3
+
+memoize4
+  :: ( HasCallStack, MonadSchema n m, Ord a, Ord b, Ord c, Ord d
+     , Typeable a, Typeable b, Typeable c, Typeable d, Typeable e, Typeable k )
+  => TH.Name
+  -> (a -> b -> c -> d -> m (Parser k n e))
+  -> (a -> b -> c -> d -> m (Parser k n e))
+memoize4 name = curry4 . memoize name . uncurry4
 
 newtype SchemaT n m a = SchemaT
   { unSchemaT :: StateT (DMap ParserId (ParserById n)) m a
@@ -132,8 +182,9 @@ runSchemaT = flip evalStateT mempty . unSchemaT
 data family ParserById (m :: * -> *) (a :: (Kind, *))
 newtype instance ParserById m '(k, a) = ParserById { unParserById :: Parser k m a }
 
-instance PrimMonad m => MonadSchema n (SchemaT n m) where
-  withParserId parserId buildParser = SchemaT do
+instance (PrimMonad m, MonadParse n) => MonadSchema n (SchemaT n m) where
+  memoize name buildParser arg = SchemaT do
+    let parserId = ParserId name arg
     parsersById <- get
     case DM.lookup parserId parsersById of
       Just (ParserById parser) -> pure parser
@@ -162,10 +213,12 @@ instance PrimMonad m => MonadSchema n (SchemaT n m) where
         -- this action just reads, never writes, so that isn’t a concern.
         parserById <- stToPrim $ unsafeInterleaveST $ readMutVar cell >>= \case
           Just parser -> pure $ ParserById parser
-          Nothing -> error "withParserId: parser was forced before it was fully constructed"
+          Nothing -> error $ unlines
+            [ "memoize: parser was forced before being fully constructed"
+            , "  parser constructor: " ++ TH.pprint name ]
         put $! DM.insert parserId parserById parsersById
 
-        parser <- unSchemaT buildParser
+        parser <- unSchemaT $ buildParser arg
         writeMutVar cell (Just parser)
         pure parser
 
@@ -702,26 +755,30 @@ mkParameter (Opaque variable value) = UVParameter value variable
 -- -------------------------------------------------------------------------------------------------
 
 column
-  :: (MonadError Text m, MonadParse n)
+  :: (MonadSchema n m, MonadError Text m)
   => PGColumnType
   -> Nullability
   -> m (Parser 'Both n (Opaque PGColumnValue))
-column columnType (Nullability isNullable) = opaque . fmap (PGColumnValue columnType) <$> case columnType of
-  PGColumnScalar scalarType -> withScalarType scalarType <$> case scalarType of
-    PGInteger -> pure (PGValInteger <$> int)
-    PGBoolean -> pure (PGValBoolean <$> boolean)
-    PGFloat   -> pure (PGValDouble <$> float)
-    PGText    -> pure (PGValText <$> string)
-    PGVarchar -> pure (PGValVarchar <$> string)
-    _         -> do
-      name <- mkScalarTypeName scalarType
-      pure (PGValUnknown <$> scalar name Nothing SRString) -- FIXME: is SRString right?
-  PGColumnEnumReference (EnumReference tableName enumValues) ->
-    case nonEmpty (M.toList enumValues) of
-      Just enumValuesList -> do
-        name <- mkEnumTypeName tableName
-        pure $ withScalarType PGText $ enum name Nothing (mkEnumValue <$> enumValuesList)
-      Nothing -> error "empty enum values" -- FIXME
+column columnType (Nullability isNullable) =
+  -- TODO: It might be worth memoizing this function even though it isn’t
+  -- recursive simply for performance reasons, since it’s likely to be hammered
+  -- during schema generation. Need to profile to see whether or not it’s a win.
+  opaque . fmap (PGColumnValue columnType) <$> case columnType of
+    PGColumnScalar scalarType -> withScalarType scalarType <$> case scalarType of
+      PGInteger -> pure (PGValInteger <$> int)
+      PGBoolean -> pure (PGValBoolean <$> boolean)
+      PGFloat   -> pure (PGValDouble <$> float)
+      PGText    -> pure (PGValText <$> string)
+      PGVarchar -> pure (PGValVarchar <$> string)
+      _         -> do
+        name <- mkScalarTypeName scalarType
+        pure (PGValUnknown <$> scalar name Nothing SRString) -- FIXME: is SRString right?
+    PGColumnEnumReference (EnumReference tableName enumValues) ->
+      case nonEmpty (M.toList enumValues) of
+        Just enumValuesList -> do
+          name <- mkEnumTypeName tableName
+          pure $ withScalarType PGText $ enum name Nothing (mkEnumValue <$> enumValuesList)
+        Nothing -> error "empty enum values" -- FIXME
   where
     -- Sadly, this combinator is not sound in general, so we can’t export it
     -- for general-purpose use. If we did, someone could write this:
@@ -786,31 +843,34 @@ mkBoolExpr name description fields =
       ]
 
 comparisonExprs
-  :: (MonadSchema n m, MonadError Text m, MonadParse n)
+  :: (MonadSchema n m, MonadError Text m)
   => PGColumnType -> Nullability -> m (Parser 'Input n [OpExp])
-comparisonExprs columnType nullability = withParserId (PIDComparisonExprs columnType nullability) do
+comparisonExprs = memoize2 'comparisonExprs \columnType nullability -> do
   columnParser <- column columnType nullability
   let name = getName columnParser <> $$(litName "_comparison_exp")
+  castParser <- castExpr columnType nullability
   pure $ object name Nothing $ catMaybes <$> sequenceA
-    [ -- fieldOptional $$(litName "_cast") Nothing (ACast <$> castExpr columnType)
-    -- ,
-    fieldOptional $$(litName "_eq") Nothing (AEQ True . mkParameter <$> columnParser)
+    [ fieldOptional $$(litName "_cast") Nothing (ACast <$> castParser)
+    , fieldOptional $$(litName "_eq") Nothing (AEQ True . mkParameter <$> columnParser)
     -- etc.
     ]
 
--- castExpr
---   :: forall m n. (MonadError Text m, MonadParse n)
---   => PGColumnType -> Nullability -> Parser 'Input m (CastExp UnpreparedValue)
--- castExpr sourceType = object name Nothing (M.fromList . catMaybes <$> traverse mkField targetTypes)
---   where
---     name = unNamedType (mkColumnType sourceType & addTypeSuffix "_cast_exp")
---     targetTypes = case sourceType of
---       PGColumnScalar PGGeometry -> [PGGeography]
---       PGColumnScalar PGGeography -> [PGGeometry]
---       _ -> []
---
---     mkField :: PGScalarType -> FieldsParser 'Input m (Maybe (PGScalarType, [OpExp]))
---     mkField targetType = fieldOptional fieldName Nothing $
---       (targetType,) <$> comparisonExprs (PGColumnScalar targetType)
---       where
---         fieldName = unNamedType $ mkColumnType $ PGColumnScalar targetType
+castExpr
+  :: forall m n. (MonadSchema n m, MonadError Text m)
+  => PGColumnType -> Nullability -> m (Parser 'Input n (CastExp UnpreparedValue))
+castExpr sourceType nullability = do
+  sourceName <- getName <$> column sourceType nullability
+  let name = sourceName <> $$(litName "_cast_exp")
+  fieldParsers <- sequenceA <$> traverse mkField targetTypes
+  pure $ object name Nothing $ M.fromList . catMaybes <$> fieldParsers
+  where
+    targetTypes = case sourceType of
+      PGColumnScalar PGGeometry -> [PGGeography]
+      PGColumnScalar PGGeography -> [PGGeometry]
+      _ -> []
+
+    mkField :: PGScalarType -> m (FieldsParser 'Input n (Maybe (PGScalarType, [OpExp])))
+    mkField targetType = do
+      targetName <- getName <$> column (PGColumnScalar targetType) nullability
+      valueParser <- comparisonExprs (PGColumnScalar targetType) nullability
+      pure $ fieldOptional targetName Nothing $ (targetType,) <$> valueParser
