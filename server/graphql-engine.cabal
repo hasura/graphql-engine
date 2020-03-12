@@ -35,8 +35,9 @@ common common-all
     DerivingVia EmptyCase ExistentialQuantification FlexibleContexts FlexibleInstances
     FunctionalDependencies GADTs GeneralizedNewtypeDeriving InstanceSigs LambdaCase
     MultiParamTypeClasses MultiWayIf NamedFieldPuns NoImplicitPrelude OverloadedStrings
-    QuantifiedConstraints QuasiQuotes RankNTypes ScopedTypeVariables StandaloneDeriving
-    TemplateHaskell TupleSections TypeApplications TypeFamilies TypeFamilyDependencies TypeOperators
+    QuantifiedConstraints QuasiQuotes RankNTypes RoleAnnotations ScopedTypeVariables
+    StandaloneDeriving TemplateHaskell TupleSections TypeApplications TypeFamilies
+    TypeFamilyDependencies TypeOperators
 
 common common-exe
   ghc-options:
@@ -205,7 +206,7 @@ library
 
                      -- -- exposed for tests
                      -- , Data.Parser.CacheControl
-                     -- , Data.URL.Template
+                     , Data.URL.Template
 
                      , Hasura.Prelude
                      -- , Hasura.App
@@ -214,7 +215,7 @@ library
                      -- , Hasura.Cache.Bounded
                      -- , Hasura.Cache.Unbounded
                      -- , Hasura.Cache
-                     -- , Hasura.Logging
+                     , Hasura.Logging
                      -- , Hasura.HTTP
                      , Hasura.Incremental
 
@@ -364,7 +365,11 @@ library
                      -- , Hasura.GraphQL.Context
                      -- , Hasura.GraphQL.Logging
 
-                     , Hasura.GraphQL.Parser
+                     , Hasura.GraphQL.Parser.Column
+                     , Hasura.GraphQL.Parser.Internal.Class
+                     , Hasura.GraphQL.Parser.Internal.Parser
+                     , Hasura.GraphQL.Parser.Internal.Schema
+                     , Hasura.GraphQL.Parser.Monad
 
                      -- , Hasura.Events.Lib
                      -- , Hasura.Events.HTTP
