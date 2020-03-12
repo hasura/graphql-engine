@@ -231,6 +231,11 @@ generateScheduleTimes from n cron = take n $ go from
   where
     go = unfoldr (fmap dup . nextMatch cron)
 
+-- | processScheduledQueue works like processEventQueue(defined in Eventing/EventTrigger.hs)
+-- | Here, the sleep time is hard-coded to 1 minute unlike in processEventQueue where it can
+-- | be a value that can be set by the user.
+-- | The number of threads to be spawned can be set through the `HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE`,
+-- | by default it's set to 10
 processScheduledQueue
   :: HasVersion
   => L.Logger L.Hasura
