@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP       #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE CPP #-}
 
 module Hasura.Server.App where
 

@@ -1,5 +1,4 @@
 {-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE GADTs #-}
 
 -- | Supporting functionality for fine-grained dependency tracking.
 module Hasura.Incremental.Internal.Dependency where

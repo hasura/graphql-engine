@@ -1,5 +1,4 @@
 {-# OPTIONS_HADDOCK not-home #-}
-{-# LANGUAGE GADTs           #-}
 {-# LANGUAGE RoleAnnotations #-}
 
 module Hasura.Incremental.Select

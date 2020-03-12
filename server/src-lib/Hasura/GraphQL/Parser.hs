@@ -1,44 +1,45 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE StrictData #-}
+{-# LANGUAGE StrictData          #-}
 
 module Hasura.GraphQL.Parser where
 
-import Hasura.Prelude
+import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended as M
-import qualified Data.HashSet as S
-import qualified Data.Dependent.Map as DM
-import qualified Language.Haskell.TH as TH
+import qualified Data.Dependent.Map            as DM
+import qualified Data.HashMap.Strict.Extended  as M
+import qualified Data.HashSet                  as S
+import qualified Language.Haskell.TH           as TH
 
-import Language.GraphQL.Draft.Syntax (Description(..), EnumValue(..), Name(..), SelectionSet, Selection(..), Value(..), Field(..), Nullability(..), literal, litName, mkName, unsafeMkName)
-import Data.Int (Int32)
-import Control.Lens.Extended hiding (enum, index)
-import Data.Type.Equality
-import Data.Void
-import Data.Parser.JSONPath
-import Control.Monad.Validate
-import Control.Monad.Unique
-import Data.Dependent.Map (DMap)
-import Data.GADT.Compare.Extended
-import Data.Primitive.MutVar
-import Control.Monad.Primitive (PrimMonad, stToPrim)
-import Control.Monad.ST.Unsafe (unsafeInterleaveST)
-import GHC.Stack (HasCallStack)
-import Type.Reflection (Typeable, typeRep)
-import Data.Proxy (Proxy(..))
-import Data.Tuple.Extended
+import           Control.Lens.Extended         hiding (enum, index)
+import           Control.Monad.Primitive       (PrimMonad, stToPrim)
+import           Control.Monad.ST.Unsafe       (unsafeInterleaveST)
+import           Control.Monad.Unique
+import           Control.Monad.Validate
+import           Data.Dependent.Map            (DMap)
+import           Data.GADT.Compare.Extended
+import           Data.Int                      (Int32)
+import           Data.Parser.JSONPath
+import           Data.Primitive.MutVar
+import           Data.Proxy                    (Proxy (..))
+import           Data.Tuple.Extended
+import           Data.Type.Equality
+import           Data.Void
+import           GHC.Stack                     (HasCallStack)
+import           Language.GraphQL.Draft.Syntax (Description (..), EnumValue (..), Field (..),
+                                                Name (..), Nullability (..), Selection (..),
+                                                SelectionSet, Value (..), litName, literal, mkName,
+                                                unsafeMkName)
+import           Type.Reflection               (Typeable, typeRep)
 
-import qualified Hasura.RQL.Types.Column as RQL
+import qualified Hasura.RQL.Types.Column       as RQL
 
-import Hasura.SQL.DML
-import Hasura.SQL.Types
-import Hasura.SQL.Value
-import Hasura.Server.Utils (englishList)
-import Hasura.RQL.Types.Column hiding (EnumValue(..), EnumValueInfo(..))
-import Hasura.RQL.Types.Permission (SessVar)
-import Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.Types.BoolExp
+import           Hasura.RQL.Types.Column       hiding (EnumValue (..), EnumValueInfo (..))
+import           Hasura.RQL.Types.Permission   (SessVar)
+import           Hasura.Server.Utils           (englishList)
+import           Hasura.SQL.DML
+import           Hasura.SQL.Types
+import           Hasura.SQL.Value
 
 -- -------------------------------------------------------------------------------------------------
 
