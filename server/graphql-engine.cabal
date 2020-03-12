@@ -365,11 +365,12 @@ library
                      -- , Hasura.GraphQL.Context
                      -- , Hasura.GraphQL.Logging
 
+                     , Hasura.GraphQL.Parser
+                     , Hasura.GraphQL.Parser.Class
                      , Hasura.GraphQL.Parser.Column
-                     , Hasura.GraphQL.Parser.Internal.Class
                      , Hasura.GraphQL.Parser.Internal.Parser
-                     , Hasura.GraphQL.Parser.Internal.Schema
                      , Hasura.GraphQL.Parser.Monad
+                     , Hasura.GraphQL.Parser.Schema
 
                      -- , Hasura.Events.Lib
                      -- , Hasura.Events.HTTP

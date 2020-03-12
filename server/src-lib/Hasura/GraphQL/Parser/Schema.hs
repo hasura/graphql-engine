@@ -1,8 +1,7 @@
-{-# OPTIONS_HADDOCK not-home #-}
 {-# LANGUAGE StrictData #-}
 
 -- | Types for representing a GraphQL schema.
-module Hasura.GraphQL.Parser.Internal.Schema where
+module Hasura.GraphQL.Parser.Schema where
 
 import           Hasura.Prelude
 
@@ -111,7 +110,7 @@ data Definition a = Definition
   -- assumed to be identical. Note that the inverse is /not/ true: two
   -- definitions with different 'Unique's might still be otherwise identical.
   --
-  -- Also see Note [Tying the knot] in Hasura.GraphQL.Parser.Internal.Class.
+  -- Also see Note [Tying the knot] in Hasura.GraphQL.Parser.Class.
   , dDescription :: Maybe Description
   , dInfo        :: ~a
   -- ^ Lazy to allow mutually-recursive type definitions.

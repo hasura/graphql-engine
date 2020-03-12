@@ -1,7 +1,5 @@
-{-# OPTIONS_HADDOCK not-home #-}
-
 -- | Classes for monads used during schema construction and query parsing.
-module Hasura.GraphQL.Parser.Internal.Class where
+module Hasura.GraphQL.Parser.Class where
 
 import           Hasura.Prelude
 

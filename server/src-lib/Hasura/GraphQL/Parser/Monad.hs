@@ -25,9 +25,9 @@ import           Data.Primitive.MutVar
 import           Data.Proxy                            (Proxy (..))
 import           Type.Reflection                       (Typeable, typeRep)
 
-import           Hasura.GraphQL.Parser.Internal.Class
+import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
-import           Hasura.GraphQL.Parser.Internal.Schema
+import           Hasura.GraphQL.Parser.Schema
 
 -- -------------------------------------------------------------------------------------------------
 -- schema construction

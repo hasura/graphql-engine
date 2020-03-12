@@ -7,22 +7,22 @@ module Hasura.GraphQL.Parser.Internal.Parser where
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended          as M
-import qualified Data.HashSet                          as S
+import qualified Data.HashMap.Strict.Extended  as M
+import qualified Data.HashSet                  as S
 
-import           Control.Lens.Extended                 hiding (enum, index)
+import           Control.Lens.Extended         hiding (enum, index)
 import           Data.GADT.Compare.Extended
-import           Data.Int                              (Int32)
+import           Data.Int                      (Int32)
 import           Data.Parser.JSONPath
 import           Data.Type.Equality
 import           Data.Void
-import           Language.GraphQL.Draft.Syntax         (Description (..), EnumValue (..),
-                                                        Field (..), Name (..), Selection (..),
-                                                        SelectionSet, Value (..), litName, literal)
+import           Language.GraphQL.Draft.Syntax (Description (..), EnumValue (..), Field (..),
+                                                Name (..), Selection (..), SelectionSet, Value (..),
+                                                litName, literal)
 
-import           Hasura.GraphQL.Parser.Internal.Class
-import           Hasura.GraphQL.Parser.Internal.Schema
-import           Hasura.Server.Utils                   (englishList)
+import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Parser.Schema
+import           Hasura.Server.Utils           (englishList)
 import           Hasura.SQL.Types
 
 -- -------------------------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ import           Hasura.SQL.Types
 data Parser k m a = Parser
   { pType   :: ~(Type k)
   -- ^ Lazy for knot-tying reasons; see Note [Tying the knot] in
-  -- Hasura.GraphQL.Parser.Internal.Class.
+  -- Hasura.GraphQL.Parser.Class.
   , pParser :: ParserInput k -> m a
   } deriving (Functor)
 
@@ -297,7 +297,7 @@ selection name description argumentsParser bodyParser = FieldsParser
           parseError $ name <<> " has no argument named " <>> argumentName
       parsedArguments <- ifParser argumentsParser arguments
 
-      -- see Note [The delicate balance of GraphQL kinds] in Hasura.GraphQL.Parser.Internal.Schema
+      -- see Note [The delicate balance of GraphQL kinds] in Hasura.GraphQL.Parser.Schema
       case subKind @'Output @k of
         KRefl -> do
           parsedBody <- pParser bodyParser $ _fSelectionSet selectionField

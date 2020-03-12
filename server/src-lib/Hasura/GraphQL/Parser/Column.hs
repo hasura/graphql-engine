@@ -20,9 +20,9 @@ import           Language.GraphQL.Draft.Syntax         (Description (..), Nullab
 
 import qualified Hasura.RQL.Types.Column               as RQL
 
-import           Hasura.GraphQL.Parser.Internal.Class
+import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
-import           Hasura.GraphQL.Parser.Internal.Schema
+import           Hasura.GraphQL.Parser.Schema
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.RQL.Types.Permission           (SessVar)
 import           Hasura.SQL.DML
