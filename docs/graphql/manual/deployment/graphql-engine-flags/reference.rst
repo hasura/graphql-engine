@@ -2,6 +2,8 @@
    :description: Hasura GraphQL engine server flags reference
    :keywords: hasura, docs, deployment, server, flags
 
+.. _server_flag_reference:
+
 GraphQL engine server flags reference
 =====================================
 

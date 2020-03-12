@@ -2,6 +2,8 @@
    :description: Examples for managing access control with Hasura
    :keywords: hasura, docs, authorization, access control, examples
 
+.. _auth_examples:
+
 Access control examples
 =======================
 
@@ -11,7 +13,7 @@ Access control examples
   :local:
 
 This is a guide to help you set up a basic authorization architecture for your GraphQL fields. It is recommended
-that you first check out :doc:`roles-variables` and :doc:`permission-rules`
+that you first check out :ref:`roles_variables` and :ref:`permission_rules`
 that will be referred to throughout this guide.
 
 Here are some examples of common use cases.
@@ -33,7 +35,7 @@ Anonymous (not logged in) users
    :class: no-shadow
    :alt: Access control for an anonymous role
 
-See :doc:`../authentication/unauthenticated-access` for steps to configure the anonymous user role in Hasura.
+See :ref:`unauthenticated_access` for steps to configure the anonymous user role in Hasura.
 
 Logged-in users
 ---------------
@@ -42,8 +44,8 @@ Logged-in users
 - Access control rules in this case are usually dependent on a ``user_id`` or a ``owner_id`` column in your data model.
 - Set up a permission for insert/select/update/delete that uses said column. E.g.:
   ``author_id: {_eq: "X-Hasura-User-Id"}`` for an article table.
-- Note that the ``X-Hasura-User-Id`` is a :doc:`dynamic session variable<./roles-variables>` that comes in from
-  your :doc:`auth webhook's <../authentication/webhook>` response, or as a request header if you're testing.
+- Note that the ``X-Hasura-User-Id`` is a :ref:`dynamic session variable<roles_variables>` that comes in from
+  your :ref:`auth webhook's <auth_webhooks>` response, or as a request header if you're testing.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/user-select-graphiql.png
    :class: no-shadow
@@ -59,8 +61,8 @@ organisation either in the same table or via a related table.
 
 - Create a role called ``manager``.
 - Create a permission for select, which has the condition: ``org_id: {_eq: "X-Hasura-Org-Id"}``.
-- ``X-Hasura-Org-Id`` is a :doc:`dynamic variable <./roles-variables>` that is returned by your
-  :doc:`auth webhook <../authentication/webhook>` for an incoming GraphQL request.
+- ``X-Hasura-Org-Id`` is a :ref:`dynamic variable <roles_variables>` that is returned by your
+  :ref:`auth webhook <auth_webhooks>` for an incoming GraphQL request.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/org-manager-graphiql.png
    :class: no-shadow
@@ -236,7 +238,7 @@ Permissions for role ``author``
 
   a) :ref:`Column-level permissions<col-level-permissions>`: Restrict access to certain columns only.
   
-  b) :doc:`Column presets <../../schema/default-values/column-presets>`: Session-variable-based column preset for the ``author_id`` column to automatically insert the user's ID i.e. the ``X-Hasura-User-Id`` session-variable's value. It also helps us avoid explicitly passing the user's ID in the insert mutation.
+  b) :ref:`Column presets <column_presets>`: Session-variable-based column preset for the ``author_id`` column to automatically insert the user's ID i.e. the ``X-Hasura-User-Id`` session-variable's value. It also helps us avoid explicitly passing the user's ID in the insert mutation.
 
   .. thumbnail:: ../../../../img/graphql/manual/auth/multirole-example-author-insert.png
      :alt: Permissions for the role author
