@@ -86,7 +86,7 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
           delPerms = map Permission.pdRole $ table ^. tmDeletePermissions
           eventTriggers = map etcName $ table ^. tmEventTriggers
           computedFields = map _cfmName $ table ^. tmComputedFields
-          remoteRelationships = map rtrName $ table ^. tmRemoteRelationships
+          remoteRelationships = map _rrmName $ table ^. tmRemoteRelationships
 
       checkMultipleDecls "relationships" allRels
       checkMultipleDecls "insert permissions" insPerms
@@ -168,7 +168,11 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta
               ComputedField.AddComputedField (table ^. tmTable) name definition comment
       -- Remote relationships
       withPathK "remote_relationships" $
-        indexedForM_ (table ^. tmRemoteRelationships) (void . RemoteRelationship.runCreateRemoteRelationship)
+        indexedForM_ (table ^. tmRemoteRelationships) $
+          \(RemoteRelationshipMeta name def) -> do
+             let RemoteRelationshipDef rs hf rf = def
+             liftTx $ RemoteRelationship.persistRemoteRelationship $
+                      RemoteRelationship name (table ^. tmTable) hf rs rf
 
 
     -- Permissions
@@ -440,11 +444,16 @@ fetchMetadata = do
           ) ap on true;
                             |] [] False
 
-    fetchRemoteRelationships =
-      map (Q.getAltJ . runIdentity) <$> Q.listQ [Q.sql|
-                SELECT configuration::json
+    fetchRemoteRelationships = do
+      r <- Q.listQ [Q.sql|
+                SELECT table_schema, table_name,
+                       remote_relationship_name, definition::json
                 FROM hdb_catalog.hdb_remote_relationship
-                    |] () False
+             |] () False
+      pure $ flip map r $ \(schema, table, name, Q.AltJ definition) ->
+                          ( QualifiedObject schema table
+                          , RemoteRelationshipMeta name definition
+                          )
 
 runExportMetadata
   :: (QErrM m, MonadTx m)

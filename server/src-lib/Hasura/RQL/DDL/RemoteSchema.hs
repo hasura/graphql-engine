@@ -16,24 +16,23 @@ import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Deps
 
-import qualified Data.Aeson                             as J
-import qualified Data.HashMap.Strict                    as Map
-import qualified Data.HashSet                           as S
-import qualified Data.Sequence                          as Seq
-import qualified Data.Text                              as T
-import qualified Database.PG.Query                      as Q
+import qualified Data.Aeson                        as J
+import qualified Data.HashMap.Strict               as Map
+import qualified Data.HashSet                      as S
+import qualified Data.Sequence                     as Seq
+import qualified Data.Text                         as T
+import qualified Database.PG.Query                 as Q
 
 import           Hasura.GraphQL.RemoteServer
-import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.Types
-import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 
-import qualified Hasura.GraphQL.Context                 as GC
-import qualified Hasura.GraphQL.Resolve.Introspect      as RI
-import qualified Hasura.GraphQL.Schema                  as GS
-import qualified Hasura.GraphQL.Validate                as VQ
-import qualified Hasura.GraphQL.Validate.Types          as VT
+import qualified Hasura.GraphQL.Context            as GC
+import qualified Hasura.GraphQL.Resolve.Introspect as RI
+import qualified Hasura.GraphQL.Schema             as GS
+import qualified Hasura.GraphQL.Validate           as VQ
+import qualified Hasura.GraphQL.Validate.Types     as VT
 
 runAddRemoteSchema
   :: ( HasVersion
@@ -148,13 +147,10 @@ fetchRemoteSchemas =
   where
     fromRow (n, Q.AltJ def, comm) = AddRemoteSchemaQuery n def comm
 
-runIntrospectRemoteSchema :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
+runIntrospectRemoteSchema
+  :: (CacheRM m, QErrM m) => RemoteSchemaNameQuery -> m EncJSON
 runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
   sc <- askSchemaCache
-  introspectionReq <-
-    onNothing (J.decode introspectionQuery) $
-    throw500 "could not decode introspection query"
-  req <- toParsed introspectionReq
   rGCtx <-
     case Map.lookup rsName (scRemoteSchemas sc) of
       Nothing ->
@@ -162,7 +158,7 @@ runIntrospectRemoteSchema (RemoteSchemaNameQuery rsName) = do
         "remote schema: " <> remoteSchemaNameToTxt rsName <> " not found"
       Just rCtx -> mergeGCtx (rscGCtx rCtx) GC.emptyGCtx
       -- ^ merge with emptyGCtx to get default query fields
-  queryParts <- flip runReaderT rGCtx $ VQ.getQueryParts req
+  queryParts <- flip runReaderT rGCtx $ VQ.getQueryParts introspectionQuery
   (rootSelSet, _) <- flip runReaderT rGCtx $ VT.runReusabilityT $ VQ.validateGQ queryParts
   schemaField <-
     case rootSelSet of

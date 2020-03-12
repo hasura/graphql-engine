@@ -8,6 +8,7 @@ module Hasura.RQL.Types.RemoteRelationship
   , RemoteFields(..)
   , RemoteFieldInfo(..)
   , RemoteRelationship(..)
+  , RemoteRelationshipDef(..)
   , FieldCall(..)
   , RemoteArguments(..)
   , DeleteRemoteRelationship(..)
@@ -248,6 +249,14 @@ data RemoteRelationship =
 instance NFData RemoteRelationship
 instance Cacheable RemoteRelationship
 $(deriveJSON (aesonDrop 3 snakeCase) ''RemoteRelationship)
+
+data RemoteRelationshipDef
+  = RemoteRelationshipDef
+  { _rrdRemoteSchema :: !RemoteSchemaName
+  , _rrdHasuraFields :: !(Set FieldName)
+  , _rrdRemoteField  :: !RemoteFields
+  } deriving (Show, Eq, Generic, Lift)
+$(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipDef)
 
 data DeleteRemoteRelationship =
   DeleteRemoteRelationship

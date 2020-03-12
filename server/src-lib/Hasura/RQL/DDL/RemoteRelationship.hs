@@ -3,6 +3,7 @@ module Hasura.RQL.DDL.RemoteRelationship
   ( runCreateRemoteRelationship
   , runDeleteRemoteRelationship
   , runUpdateRemoteRelationship
+  , persistRemoteRelationship
   , resolveRemoteRelationship
   , delRemoteRelFromCatalog
   ) where
@@ -14,13 +15,12 @@ import           Hasura.RQL.DDL.RemoteRelationship.Validate
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 
-import           Data.Aeson.Types
 import           Instances.TH.Lift                          ()
 
 import qualified Database.PG.Query                          as Q
 
-runCreateRemoteRelationship ::
-     (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
+runCreateRemoteRelationship
+  :: (MonadTx m, CacheRWM m) => RemoteRelationship -> m EncJSON
 runCreateRemoteRelationship remoteRelationship = do
   -- Few checks
   void $ askTabInfo $ rtrTable remoteRelationship
@@ -69,39 +69,32 @@ runUpdateRemoteRelationship remoteRelationship = do
   where
     table = rtrTable remoteRelationship
 
-persistRemoteRelationship
-  :: RemoteRelationship -> Q.TxE QErr ()
+mkRemoteRelationshipDef :: RemoteRelationship -> RemoteRelationshipDef
+mkRemoteRelationshipDef RemoteRelationship {..} =
+  RemoteRelationshipDef rtrRemoteSchema rtrHasuraFields rtrRemoteField
+
+persistRemoteRelationship :: RemoteRelationship -> Q.TxE QErr ()
 persistRemoteRelationship remoteRelationship =
   Q.unitQE defaultTxErrorHandler [Q.sql|
-  INSERT INTO hdb_catalog.hdb_remote_relationship
-  (name, table_schema, table_name, remote_schema, configuration)
-  VALUES ($1, $2, $3, $4, $5 :: jsonb)
-  |]
-  (let QualifiedObject schema_name table_name = rtrTable remoteRelationship
-   in (rtrName remoteRelationship
-      ,schema_name
-      ,table_name
-      ,rtrRemoteSchema remoteRelationship
-      ,Q.AltJ remoteRelationship))
-  True
+       INSERT INTO hdb_catalog.hdb_remote_relationship
+       (remote_relationship_name, table_schema, table_name, definition)
+       VALUES ($1, $2, $3, $4::jsonb)
+  |] (rtrName remoteRelationship, schemaName, tableName, Q.AltJ definition) True
+  where
+    QualifiedObject schemaName tableName = rtrTable remoteRelationship
+    definition = mkRemoteRelationshipDef remoteRelationship
 
 updateRemoteRelInCatalog
   :: RemoteRelationship -> Q.TxE QErr ()
 updateRemoteRelInCatalog remoteRelationship =
   Q.unitQE defaultTxErrorHandler [Q.sql|
-  UPDATE hdb_catalog.hdb_remote_relationship
-  SET
-  remote_schema = $4,
-  configuration = $5
-  WHERE name = $1 AND table_schema = $2 AND table_name = $3
-  |]
-  (let QualifiedObject schema_name table_name = rtrTable remoteRelationship
-   in (rtrName remoteRelationship
-      ,schema_name
-      ,table_name
-      ,rtrRemoteSchema remoteRelationship
-      ,Q.JSONB (toJSON (remoteRelationship))))
-  True
+    UPDATE hdb_catalog.hdb_remote_relationship
+    SET definition = $4::jsonb
+    WHERE remote_relationship_name = $1 AND table_schema = $2 AND table_name = $3
+  |] (rtrName remoteRelationship, schemaName, tableName, Q.AltJ definition) True
+  where
+    QualifiedObject schemaName tableName = rtrTable remoteRelationship
+    definition = mkRemoteRelationshipDef remoteRelationship
 
 runDeleteRemoteRelationship ::
      (MonadTx m, CacheRWM m) => DeleteRemoteRelationship -> m EncJSON
@@ -113,14 +106,12 @@ runDeleteRemoteRelationship (DeleteRemoteRelationship table relName)= do
   pure successMsg
 
 delRemoteRelFromCatalog
-  :: QualifiedTable
-  -> RemoteRelationshipName
-  -> Q.TxE QErr ()
+  :: QualifiedTable -> RemoteRelationshipName -> Q.TxE QErr ()
 delRemoteRelFromCatalog (QualifiedObject sn tn) (RemoteRelationshipName relName) =
   Q.unitQE defaultTxErrorHandler [Q.sql|
            DELETE FROM
                   hdb_catalog.hdb_remote_relationship
            WHERE table_schema =  $1
              AND table_name = $2
-             AND name = $3
+             AND remote_relationship_name = $3
                 |] (sn, tn, relName) True

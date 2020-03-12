@@ -23,6 +23,7 @@ module Hasura.RQL.DDL.Metadata.Types
   , ActionMetadata(..)
   , ActionPermissionMetadata(..)
   , ComputedFieldMeta(..)
+  , RemoteRelationshipMeta(..)
   , FunctionsMetadata(..)
   , ExportMetadata(..)
   , ClearMetadata(..)
@@ -83,6 +84,13 @@ data ComputedFieldMeta
   } deriving (Show, Eq, Lift, Generic)
 $(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldMeta)
 
+data RemoteRelationshipMeta
+  = RemoteRelationshipMeta
+  { _rrmName       :: !RemoteRelationshipName
+  , _rrmDefinition :: !RemoteRelationship.RemoteRelationshipDef
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveJSON (aesonDrop 4 snakeCase) ''RemoteRelationshipMeta)
+
 data TableMeta
   = TableMeta
   { _tmTable               :: !QualifiedTable
@@ -91,7 +99,7 @@ data TableMeta
   , _tmObjectRelationships :: ![Relationship.ObjRelDef]
   , _tmArrayRelationships  :: ![Relationship.ArrRelDef]
   , _tmComputedFields      :: ![ComputedFieldMeta]
-  , _tmRemoteRelationships :: ![RemoteRelationship.RemoteRelationship]
+  , _tmRemoteRelationships :: ![RemoteRelationshipMeta]
   , _tmInsertPermissions   :: ![Permission.InsPermDef]
   , _tmSelectPermissions   :: ![Permission.SelPermDef]
   , _tmUpdatePermissions   :: ![Permission.UpdPermDef]

@@ -32,8 +32,8 @@ import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 
-
 import           Language.GraphQL.Draft.Instances ()
+import           Language.Haskell.TH.Syntax       (Lift)
 
 import qualified Data.Aeson                       as J
 import qualified Data.Aeson.Casing                as J
@@ -49,7 +49,7 @@ import qualified VectorBuilder.Vector             as VB
 
 newtype GQLExecDoc
   = GQLExecDoc { unGQLExecDoc :: [G.ExecutableDefinition] }
-  deriving (Ord, Show, Eq, Hashable)
+  deriving (Ord, Show, Eq, Hashable, Lift)
 
 instance J.FromJSON GQLExecDoc where
   parseJSON v = (GQLExecDoc . G.getExecutableDefinitions) <$> J.parseJSON v
@@ -59,7 +59,7 @@ instance J.ToJSON GQLExecDoc where
 
 newtype OperationName
   = OperationName { _unOperationName :: G.Name }
-  deriving (Ord, Show, Eq, Hashable, J.ToJSON)
+  deriving (Ord, Show, Eq, Hashable, J.ToJSON, Lift)
 
 instance J.FromJSON OperationName where
   parseJSON v = OperationName . G.Name <$> J.parseJSON v
@@ -71,7 +71,7 @@ data GQLReq a
   { _grOperationName :: !(Maybe OperationName)
   , _grQuery         :: !a
   , _grVariables     :: !(Maybe VariableValues)
-  } deriving (Show, Eq, Generic, Functor)
+  } deriving (Show, Eq, Generic, Functor, Lift)
 
 $(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
   ''GQLReq
@@ -100,7 +100,7 @@ instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
 newtype GQLQueryText
   = GQLQueryText
   { _unGQLQueryText :: Text
-  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable)
+  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable, Lift)
 
 type GQLReqUnparsed = GQLReq GQLQueryText
 type GQLReqParsed = GQLReq GQLExecDoc

@@ -3,7 +3,6 @@ module Hasura.GraphQL.RemoteServer where
 import           Control.Exception                      (try)
 import           Control.Lens                           ((^.), (^..))
 import           Data.Aeson                             ((.:), (.:?))
-import           Data.FileEmbed                         (embedStringFile)
 import           Data.Foldable                          (foldlM)
 import           Hasura.HTTP
 import           Hasura.Prelude
@@ -17,6 +16,7 @@ import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Parser          as G
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Language.Haskell.TH.Syntax             as TH
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
@@ -32,8 +32,16 @@ import qualified Hasura.GraphQL.Context                 as GC
 import qualified Hasura.GraphQL.Schema                  as GS
 import qualified Hasura.GraphQL.Validate.Types          as VT
 
-introspectionQuery :: BL.ByteString
-introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
+introspectionQuery :: GQLReqParsed
+introspectionQuery =
+  $(do
+       let fp = "src-rsr/introspection.json"
+       TH.qAddDependentFile fp
+       eitherResult <- TH.runIO $ J.eitherDecodeFileStrict fp
+       case eitherResult of
+         Left e                  -> fail e
+         Right (r::GQLReqParsed) -> TH.lift r
+   )
 
 fetchRemoteSchema
   :: (HasVersion, MonadIO m, MonadError QErr m)
@@ -47,7 +55,7 @@ fetchRemoteSchema manager def@(RemoteSchemaInfo name url headerConf _ timeout) =
   let req = initReq
            { HTTP.method = "POST"
            , HTTP.requestHeaders = hdrsWithDefaults
-           , HTTP.requestBody = HTTP.RequestBodyLBS introspectionQuery
+           , HTTP.requestBody = HTTP.RequestBodyLBS $ J.encode introspectionQuery
            , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
            }
   res  <- liftIO $ try $ HTTP.httpLbs req manager

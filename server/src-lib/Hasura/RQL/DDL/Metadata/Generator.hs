@@ -312,5 +312,8 @@ instance Arbitrary FieldCall where
 
 deriving instance Arbitrary RemoteFields
 
-instance Arbitrary RemoteRelationship where
+instance Arbitrary RemoteRelationshipDef where
+  arbitrary = genericArbitrary
+
+instance Arbitrary RemoteRelationshipMeta where
   arbitrary = genericArbitrary

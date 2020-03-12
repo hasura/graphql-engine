@@ -20,6 +20,7 @@
           }
         }
       }
+
 - description: Simple remote relationship query with permissions
   url: /v1/graphql
   status: 200

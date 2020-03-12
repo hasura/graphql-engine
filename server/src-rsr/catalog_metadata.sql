@@ -208,6 +208,14 @@ from
       ) p on 'true'
   ) as actions,
   (
-    select coalesce(json_agg(configuration),'[]') as items
-      from hdb_catalog.hdb_remote_relationship
+    select coalesce(json_agg(
+      json_build_object(
+        'name', remote_relationship_name,
+        'table', json_build_object('schema', table_schema, 'name', table_name),
+        'hasura_fields', definition -> 'hasura_fields',
+        'remote_schema', definition -> 'remote_schema',
+        'remote_field', definition -> 'remote_field'
+      )
+    ),'[]') as items
+    from hdb_catalog.hdb_remote_relationship
   ) as remote_relationships
