@@ -23,6 +23,7 @@ const defaultState = {
   lastError: null,
   internalError: null,
   lastSuccess: null,
+  checkConstraints: [],
 };
 
 export default defaultState;

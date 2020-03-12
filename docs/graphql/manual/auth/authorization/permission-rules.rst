@@ -2,6 +2,8 @@
    :description: Configure permission rules in Hasura
    :keywords: hasura, docs, authorization, permissions, rules
 
+.. _permission_rules:
+
 Configuring Permission Rules
 ============================
 
@@ -32,7 +34,7 @@ constraints on the data being returned or modified.
 
 Let's take a look at the different configuration options available to define a permission rule. Permission
 rules are defined for each role, table, operation (*insert, select, update, delete*) by using the console
-or the :doc:`metadata APIs for permissions <../../api-reference/schema-metadata-api/permission>`.
+or the :ref:`metadata APIs for permissions <api_permission>`.
 
 Operation permissions
 ---------------------
@@ -95,7 +97,7 @@ Using column operators to build rules
 *************************************
 
 Type-based operators (*depending on the column type*) are available for constructing row-level permissions.
-You can use the same operators that you use to :doc:`filter query results <../../queries/query-filters>`
+You can use the same operators that you use to :ref:`filter query results <filter_queries>`
 along with a few others to define permission rules.
 
 See the :ref:`API reference <MetadataOperator>` for a list of all supported column operators.
@@ -152,7 +154,7 @@ the author's ID*):
 Using relationships or nested objects
 *************************************
 
-You can leverage :doc:`relationships <../../schema/relationships/index>` to define permission rules with fields
+You can leverage :ref:`relationships <relationships>` to define permission rules with fields
 from a nested object.
 
 **For example**, let's say you have an object relationship called ``agent`` from the ``authors`` table to another table
@@ -225,7 +227,7 @@ In the above example, this configuration  restricts the number of accessible row
 Aggregation queries permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the case of ``select`` operations, access to :doc:`aggregation queries <../../queries/aggregation-queries>`
+In the case of ``select`` operations, access to :ref:`aggregation queries <aggregation_queries>`
 can be restricted for a given role using this configuration.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/aggregation-query-permissions.png
@@ -239,7 +241,7 @@ Column presets
 ^^^^^^^^^^^^^^
 
 While this is strictly not a permission configuration, defining
-:doc:`role-based column presets <../../schema/default-values/column-presets>` on any column automatically
+:ref:`role-based column presets <column_presets>` on any column automatically
 removes access to it. This preset can be defined for ``insert`` and ``update`` operations. This configuration
 is also very useful to avoid sending sensitive user-information in the query and leverage session variables
 or static data instead.

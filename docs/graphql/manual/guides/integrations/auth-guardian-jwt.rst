@@ -2,7 +2,7 @@
    :description: Integrate AuthGuardian JWT with Hasura
    :keywords: hasura, docs, guide, authentication, auth, jwt, integration
 
-.. _auth_guardian_jwt:
+.. _guides_auth_guardian_jwt:
 
 OneGraph's AuthGuardian JWT Integration with Hasura GraphQL engine
 ==================================================================

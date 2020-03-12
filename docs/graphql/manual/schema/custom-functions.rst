@@ -456,7 +456,7 @@ Use the ``->>`` JSON operator to fetch the value of a session variable as shown 
 Permissions for custom function queries
 ---------------------------------------
 
-:doc:`Access control permissions <../auth/authorization/permission-rules>` configured for the ``SETOF`` table of a function are also applicable to the function itself.
+:ref:`Access control permissions <permission_rules>` configured for the ``SETOF`` table of a function are also applicable to the function itself.
 
 **For example**, in our text-search example above, if the role ``user`` doesn't have the requisite permissions to view
 the table ``article``, a validation error will be thrown if the ``search_articles`` query is run using the ``user``
