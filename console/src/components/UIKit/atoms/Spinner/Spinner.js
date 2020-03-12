@@ -50,7 +50,7 @@ export const StyledSpinner = styled.div`
     transform: rotate(90deg);
   }
 
-  .sk_circle5 {
+  .sk_circle5 {     
     -webkit-transform: rotate(120deg);
     -ms-transform: rotate(120deg);
     transform: rotate(120deg);

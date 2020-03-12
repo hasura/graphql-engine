@@ -20,20 +20,18 @@ export const Tabs = props => {
   if (tabsData && tabsData.length > 0) {
     return (
       <StyledTab {...props}>
-        {/* Tab Navigation */}
         <StyledTabList>
           {tabsData &&
             tabsData.map(({ title }, index) => (
               <StyledTabListItem
                 key={title}
-                selected={index === currentActiveTabIndex && true}
+                selected={index === currentActiveTabIndex}
                 onClick={() => changeCurrentActiveTab(index)}
               >
                 {title}
               </StyledTabListItem>
             ))}
         </StyledTabList>
-        {/* Tab Content */}
         {currentTabContent &&
           currentTabContent.map(({ tabContent }, index) => (
             <StyledTabContent key={index}>{tabContent}</StyledTabContent>

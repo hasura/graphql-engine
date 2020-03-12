@@ -5,6 +5,8 @@ import { Icon } from '../Icon';
 import { StyledAlertBox } from './AlertBox';
 import { Text } from '../Typography';
 
+const alertBoxWidth = 866;
+
 export const AlertBox = props => {
   const { children, type } = props;
 
@@ -15,8 +17,6 @@ export const AlertBox = props => {
   const borderColorValue = theme.alertBox[type]
     ? theme.alertBox[type].borderColor
     : theme.alertBox.default.borderColor;
-
-  const alertBoxWidth = 866;
 
   let alertMessage;
 
@@ -45,7 +45,6 @@ export const AlertBox = props => {
       color="black.text"
     >
       <Icon type={type} />
-      {/* Alert Type */}
       {type && (
         <Text as="span" pl="md" fontWeight="medium">
           {type}

@@ -58,16 +58,18 @@ export const StyledSlider = styled.span`
     box-shadow: 0 0 1px #1fd6e5;
   }
 
-  ${({ checked }) =>
-    checked &&
-    css`
-      background-color: #1fd6e5;
-      box-shadow: 0 0 1px #1fd6e5;
+  ${({ checked }) => {
+    return checked
+      ? css`
+          background-color: #1fd6e5;
+          box-shadow: 0 0 1px #1fd6e5;
 
-      :before {
-        -webkit-transform: translateX(20px);
-        -ms-transform: translateX(20px);
-        transform: translateX(20px);
-      }
-    `};
+          :before {
+            -webkit-transform: translateX(20px);
+            -ms-transform: translateX(20px);
+            transform: translateX(20px);
+          }
+        `
+      : ' ';
+  }}
 `;

@@ -2,12 +2,15 @@ import React from 'react';
 
 import { StyledSpinner } from './Spinner';
 
+const smallSpinnerSize = 17;
+const largeSpinnerSize = 20;
+
 export const Spinner = props => {
   const { size } = props;
 
-  const spinnerWidth = size === 'small' ? 17 : 20;
+  const spinnerWidth = size === 'small' ? smallSpinnerSize : largeSpinnerSize;
 
-  const spinnerHeight = size === 'small' ? 17 : 20;
+  const spinnerHeight = size === 'small' ? smallSpinnerSize : largeSpinnerSize;
 
   return (
     <StyledSpinner {...props} height={spinnerHeight} width={spinnerWidth}>

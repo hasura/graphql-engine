@@ -15,8 +15,6 @@ import {
 import { theme } from '../../theme';
 import { StyledIcon } from './Icon';
 
-// ************************************** //
-
 const iconReferenceMap = {
   success: FaCheckCircle,
   info: FaInfoCircle,
@@ -31,7 +29,8 @@ const iconReferenceMap = {
   default: FaExclamationCircle,
 };
 
-// ************************************** //
+const iconWidth = 18;
+const iconHeight = 18;
 
 export const Icon = props => {
   const { type } = props;
@@ -43,9 +42,6 @@ export const Icon = props => {
   const CurrentActiveIcon = iconReferenceMap[type]
     ? iconReferenceMap[type]
     : iconReferenceMap.default;
-
-  const iconWidth = 18;
-  const iconHeight = 18;
 
   return (
     <StyledIcon
