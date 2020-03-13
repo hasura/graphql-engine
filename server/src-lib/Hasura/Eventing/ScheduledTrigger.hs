@@ -113,7 +113,7 @@ runScheduledEventsGenerator ::
      L.Logger L.Hasura
   -> Q.PGPool
   -> IO SchemaCache
-  -> IO ()
+  -> IO void
 runScheduledEventsGenerator logger pgpool getSC = do
   forever $ do
     sc <- getSC
