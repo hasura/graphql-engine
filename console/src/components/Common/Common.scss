@@ -522,6 +522,10 @@ input {
   padding-left: 15px;
 }
 
+.add_padd_left_18 {
+  padding-left: 18px;
+}
+
 .add_mar_top_small {
   margin-top: 10px;
 }
@@ -606,6 +610,10 @@ code {
   padding-top: 10px;
 }
 
+.add_pad_top {
+  padding-top: 20px;
+}
+
 .padd_bottom {
   padding-bottom: 10px !important;
 }
@@ -613,6 +621,7 @@ code {
 .add_pad_bottom {
   padding-bottom: 20px;
 }
+
 
 .add_padd_bottom {
   padding-bottom: 25px;
@@ -1366,6 +1375,10 @@ code {
 
 .cursorNotAllowed {
   cursor: not-allowed;
+}
+
+.hiddenMoreWidth {
+  width: 300px;
 }
 
 /* container height subtracting top header and bottom scroll bar */

@@ -2,6 +2,8 @@
    :description: Manage actions with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, actions
 
+.. _api_actions:
+
 Schema/Metadata API Reference: Actions
 ======================================
 
@@ -136,7 +138,7 @@ InputArgument
 
 .. note::
 
-   The ``GraphQL Types`` used in creating an action must be defined before via :doc:`Custom Types <custom-types>`
+   The ``GraphQL Types`` used in creating an action must be defined before via :ref:`Custom Types <api_custom_types>`
 
 .. _drop_action:
 
@@ -255,14 +257,13 @@ create_action_permission
    Content-Type: application/json
    X-Hasura-Role: admin
 
-  {
-    "type": "create_action_permission",
-    "args": {
-      "action": "create_user",
-      "role": "user"
-      }
-    }
-  }
+   {
+     "type": "create_action_permission",
+     "args": {
+       "action": "create_user",
+       "role": "user"
+     }
+   }
 
 .. _create_action_permission_syntax:
 
@@ -302,14 +303,13 @@ drop_action_permission
    Content-Type: application/json
    X-Hasura-Role: admin
 
-  {
-    "type": "drop_action_permission",
-    "args": {
-      "action": "create_user",
-      "role": "user"
-      }
-    }
-  }
+   {
+     "type": "drop_action_permission",
+     "args": {
+       "action": "create_user",
+       "role": "user"
+     }
+   }
 
 .. _drop_action_permission_syntax:
 

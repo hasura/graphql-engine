@@ -13,13 +13,16 @@ module Hasura.GraphQL.Execute.LiveQuery.State
 
 import           Hasura.Prelude
 
-import qualified Control.Concurrent.Async                 as A
 import qualified Control.Concurrent.STM                   as STM
+import qualified Control.Immortal                         as Immortal
 import qualified Data.Aeson.Extended                      as J
 import qualified StmContainers.Map                        as STMMap
 
-import           Control.Concurrent.Extended              (sleep)
+import           Control.Concurrent.Extended              (sleep, forkImmortal)
+import           Control.Exception                        (mask_)
+import           Data.String
 
+import qualified Hasura.Logging                           as L
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
 
 import           Hasura.Db
@@ -28,6 +31,9 @@ import           Hasura.GraphQL.Execute.LiveQuery.Plan
 import           Hasura.GraphQL.Execute.LiveQuery.Poll
 
 -- | The top-level datatype that holds the state for all active live queries.
+--
+-- NOTE!: This must be kept consistent with a websocket connection's 'OperationMap', in 'onClose' 
+-- and 'onStart'.
 data LiveQueriesState
   = LiveQueriesState
   { _lqsOptions      :: !LiveQueriesOptions
@@ -51,15 +57,19 @@ data LiveQueryId
   { _lqiPoller     :: !PollerKey
   , _lqiCohort     :: !CohortKey
   , _lqiSubscriber :: !SubscriberId
-  }
+  } deriving Show
 
 addLiveQuery
-  :: LiveQueriesState
+  :: L.Logger L.Hasura
+  -> LiveQueriesState
   -> LiveQueryPlan
   -> OnChange
   -- ^ the action to be executed when result changes
   -> IO LiveQueryId
-addLiveQuery lqState plan onResultAction = do
+addLiveQuery logger lqState plan onResultAction = do
+  -- CAREFUL!: It's absolutely crucial that we can't throw any exceptions here!
+
+  -- disposable UUIDs:
   responseId <- newCohortId
   sinkId <- newSinkId
 
@@ -83,7 +93,7 @@ addLiveQuery lqState plan onResultAction = do
   -- the livequery can only be cancelled after putTMVar
   onJust handlerM $ \handler -> do
     metrics <- initRefetchMetrics
-    threadRef <- A.async $ forever $ do
+    threadRef <- forkImmortal ("pollQuery."<>show sinkId) logger $ forever $ do
       pollQuery metrics batchSize pgExecCtx query handler
       sleep $ unRefetchInterval refetchInterval
     STM.atomically $ STM.putTMVar (_pIOState handler) (PollerIOState threadRef metrics)
@@ -107,16 +117,17 @@ addLiveQuery lqState plan onResultAction = do
     newPoller = Poller <$> TMap.new <*> STM.newEmptyTMVar
 
 removeLiveQuery
-  :: LiveQueriesState
+  :: L.Logger L.Hasura
+  -> LiveQueriesState
   -- the query and the associated operation
   -> LiveQueryId
   -> IO ()
-removeLiveQuery lqState (LiveQueryId handlerId cohortId sinkId) = do
-  threadRef <- STM.atomically $ do
+removeLiveQuery logger lqState lqId@(LiveQueryId handlerId cohortId sinkId) = mask_ $ do
+  mbCleanupIO <- STM.atomically $ do
     detM <- getQueryDet
     fmap join $ forM detM $ \(Poller cohorts ioState, cohort) ->
       cleanHandlerC cohorts ioState cohort
-  traverse_ A.cancel threadRef
+  sequence_ mbCleanupIO
   where
     lqMap = _lqsLiveQueryMap lqState
 
@@ -136,11 +147,18 @@ removeLiveQuery lqState (LiveQueryId handlerId cohortId sinkId) = do
         <*> TMap.null newOps
       when cohortIsEmpty $ TMap.delete cohortId cohortMap
       handlerIsEmpty <- TMap.null cohortMap
-      -- when there is no need for handler
-      -- i.e, this happens to be the last operation, take the
-      -- ref for the polling thread to cancel it
+      -- when there is no need for handler i.e, this happens to be the last
+      -- operation, take the ref for the polling thread to cancel it
       if handlerIsEmpty
         then do
           STMMap.delete handlerId lqMap
-          fmap _pThread <$> STM.tryReadTMVar ioState
+          threadRefM <- fmap _pThread <$> STM.tryReadTMVar ioState
+          return $ Just $ -- deferred IO:
+            case threadRefM of
+              Just threadRef -> Immortal.stop threadRef
+              -- This would seem to imply addLiveQuery broke or a bug
+              -- elsewhere. Be paranoid and log:
+              Nothing -> L.unLogger logger $ L.UnstructuredLog L.LevelError $ fromString $
+                "In removeLiveQuery no worker thread installed. Please report this as a bug: "<>
+                show lqId
         else return Nothing

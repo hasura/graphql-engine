@@ -8,9 +8,9 @@ import {
 import {
   getForeignKeyConfig,
   getExistingFKConstraints,
-} from '../Common/ReusableComponents/utils';
+} from '../Common/Components/utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import ForeignKeySelector from '../Common/ReusableComponents/ForeignKeySelector';
+import ForeignKeySelector from '../Common/Components/ForeignKeySelector';
 import { updateSchemaInfo } from '../DataActions';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';

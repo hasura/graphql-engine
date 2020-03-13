@@ -22,28 +22,24 @@ import (
 const updateCheckURL = "https://releases.hasura.io/graphql-engine?agent=cli"
 
 type updateCheckResponse struct {
-	Latest string `json:"latest"`
+	Latest     *semver.Version `json:"latest"`
+	PreRelease *semver.Version `json:"prerelease"`
 }
 
-func getLatestVersion() (*semver.Version, error) {
+func getLatestVersion() (*semver.Version, *semver.Version, error) {
 	res, err := http.Get(updateCheckURL)
 	if err != nil {
-		return nil, errors.Wrap(err, "update check request")
+		return nil, nil, errors.Wrap(err, "update check request")
 	}
 
 	defer res.Body.Close()
 	var response updateCheckResponse
 	err = json.NewDecoder(res.Body).Decode(&response)
 	if err != nil {
-		return nil, errors.Wrap(err, "decoding update check response")
+		return nil, nil, errors.Wrap(err, "decoding update check response")
 	}
 
-	v, err := semver.NewVersion(response.Latest)
-	if err != nil {
-		return nil, errors.Wrap(err, "semver parsing")
-	}
-
-	return v, nil
+	return response.Latest, response.PreRelease, nil
 }
 
 func buildAssetURL(v string) string {
@@ -88,23 +84,18 @@ func downloadAsset(url, fileName, filePath string) (*os.File, error) {
 	return asset, nil
 }
 
-// HasUpdate tells us if there is a new update available.
-func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.Version, error) {
+// HasUpdate tells us if there is a new stable or prerelease update available.
+func HasUpdate(currentVersion *semver.Version, timeFile string) (bool, *semver.Version, bool, *semver.Version, error) {
 	if timeFile != "" {
 		defer writeTimeToFile(timeFile, time.Now().UTC())
 	}
 
-	latestVersion, err := getLatestVersion()
+	latestVersion, preReleaseVersion, err := getLatestVersion()
 	if err != nil {
-		return false, nil, errors.Wrap(err, "get latest version")
+		return false, nil, false, nil, errors.Wrap(err, "get latest version")
 	}
 
-	c, err := semver.NewConstraint(fmt.Sprintf("> %s", currentVersion.String()))
-	if err != nil {
-		return false, nil, errors.Wrap(err, "semver constraint build")
-	}
-
-	return c.Check(latestVersion), latestVersion, nil
+	return latestVersion.GreaterThan(currentVersion), latestVersion, preReleaseVersion.GreaterThan(currentVersion), preReleaseVersion, nil
 }
 
 // ApplyUpdate downloads and applies the update indicated by version v.

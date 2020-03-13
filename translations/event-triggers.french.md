@@ -35,11 +35,11 @@ La manière la plus rapide de tester les évènements déclencheurs est via Hero
 3. Configurez votre premier évènement déclencheur et webhook
 
    Créez une table, configurez le changement de donnée que vous souhaitez utiliser comme déclencheur et invoquez immédiatement un webhook en ajoutant une nouvelle ligne dans votre table.
-   Suivez ce [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-event-trigger.html).
+   Suivez ce [simple guide](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-event-trigger.html).
 
 ### Autres méthodes de déploiement
 
-Pour les déploiements basés sur Docker et le options de configuration avancées, consultez les [guides de déploiement](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+Pour les déploiements basés sur Docker et le options de configuration avancées, consultez les [guides de déploiement](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html).
 
 ### Demo (*30 secondes*)
 
