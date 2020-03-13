@@ -51,7 +51,10 @@ newtype ActionName
            , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
 
 instance Q.FromCol ActionName where
-  fromCol bs = ActionName . G.Name <$> Q.fromCol bs
+  fromCol bs = do
+    text <- Q.fromCol bs
+    name <- G.mkName text `onNothing` Left (text <> " is not valid GraphQL name")
+    pure $ ActionName name
 
 instance Q.ToPrepArg ActionName where
   toPrepVal = Q.toPrepVal . G.unName . unActionName

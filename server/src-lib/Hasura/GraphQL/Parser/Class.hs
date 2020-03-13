@@ -81,14 +81,26 @@ class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
   -- | Memoizes a parser constructor function for the extent of a single schema
   -- construction process. This is mostly useful for recursive parsers;
   -- see Note [Tying the knot] for more details.
-  memoize
+  memoizeOn
     :: (HasCallStack, Ord a, Typeable a, Typeable b, Typeable k)
     => TH.Name
     -- ^ A unique name used to identify the function being memoized. There isn’t
     -- really any metaprogramming going on here, we just use a Template Haskell
     -- 'TH.Name' as a convenient source for a static, unique identifier.
-    -> (a -> m (Parser k n b))
-    -> (a -> m (Parser k n b))
+    -> a
+    -- ^ The value to use as the memoization key. It’s the caller’s
+    -- responsibility to ensure multiple calls to the same function don’t use
+    -- the same key.
+    -> m (Parser k n b) -> m (Parser k n b)
+
+-- | A wrapper around 'memoizeOn' that memoizes a function by using its argument
+-- as the key.
+memoize
+  :: (HasCallStack, MonadSchema n m, Ord a, Typeable a, Typeable b, Typeable k)
+  => TH.Name
+  -> (a -> m (Parser k n b))
+  -> (a -> m (Parser k n b))
+memoize name f a = memoizeOn name a (f a)
 
 memoize2
   :: (HasCallStack, MonadSchema n m, Ord a, Ord b, Typeable a, Typeable b, Typeable c, Typeable k)

@@ -16,13 +16,14 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended          as M
 
 import           Language.GraphQL.Draft.Syntax         (Description (..), Nullability (..),
-                                                        Value (..), literal, mkName, unsafeMkName)
+                                                        Value (..), literal, mkName, unsafeMkName, litName)
 
 import qualified Hasura.RQL.Types.Column               as RQL
 
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
+import           Hasura.GraphQL.Schema.Common (qualifiedObjectToName)
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.RQL.Types.Permission           (SessVar)
 import           Hasura.SQL.DML
@@ -126,6 +127,4 @@ column columnType (Nullability isNullable) =
     mkScalarTypeName scalarType = mkName (toSQLTxt scalarType) `onNothing` throwError
       ("cannot use SQL type " <> scalarType <<> " in GraphQL schema because its name is not a "
       <> "valid GraphQL identifier")
-    mkEnumTypeName tableName = mkName (snakeCaseQualObject tableName) `onNothing` throwError
-      ("cannot use " <> tableName <<> " as an enum table because its name is not a valid "
-      <> "GraphQL identifier")
+    mkEnumTypeName tableName = qualifiedObjectToName tableName <&> (<> $$(litName "_enum"))

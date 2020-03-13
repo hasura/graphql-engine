@@ -19,6 +19,7 @@ import           Language.Haskell.TH.Syntax (Lift)
 
 import qualified Data.Sequence              as Seq
 import qualified Database.PG.Query          as Q
+import qualified Language.GraphQL.Draft.Syntax as G
 
 newtype ComputedFieldName =
   ComputedFieldName { unComputedFieldName :: NonEmptyText}
@@ -61,7 +62,7 @@ data ComputedFieldFunction
   { _cffName          :: !QualifiedFunction
   , _cffInputArgs     :: !(Seq.Seq FunctionArg)
   , _cffTableArgument :: !FunctionTableArgument
-  , _cffDescription   :: !(Maybe PGDescription)
+  , _cffDescription   :: !(Maybe G.Description)
   } deriving (Show, Eq, Generic)
 instance Cacheable ComputedFieldFunction
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldFunction)

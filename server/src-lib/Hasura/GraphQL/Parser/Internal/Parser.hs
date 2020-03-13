@@ -305,13 +305,31 @@ selection name description argumentsParser bodyParser = FieldsParser
 
       -- see Note [The delicate balance of GraphQL kinds] in Hasura.GraphQL.Parser.Schema
       case subKind @'Output @k of
+        KBoth -> pure (alias, parsedArguments)
         KRefl -> do
           parsedBody <- pParser bodyParser $ _fSelectionSet selectionField
           pure (alias, parsedArguments, parsedBody)
-        KBoth -> pure (alias, parsedArguments)
   }
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
+
+type family SelectionResult_ k a = r | r -> k where
+  SelectionResult_ 'Both   _ = Name
+  SelectionResult_ 'Output a = (Name, a)
+
+-- | A shorthand for a 'selection' that takes no input arguments.
+selection_
+  :: forall k m a
+   . (MonadParse m, 'Output <: k)
+  => Name
+  -> Maybe Description
+  -> Parser k m a
+  -> FieldsParser 'Output m (Maybe (SelectionResult_ k a))
+selection_ name description parser = selection name description (pure ()) parser
+  -- see Note [The delicate balance of GraphQL kinds] in Hasura.GraphQL.Parser.Schema
+  <&> fmap case subKind @'Output @k of
+        KBoth -> \(alias, ()) -> alias
+        KRefl -> \(alias, (), result) -> (alias, result)
 
 -- -------------------------------------------------------------------------------------------------
 -- internal helpers

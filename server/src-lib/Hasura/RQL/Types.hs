@@ -5,7 +5,7 @@ module Hasura.RQL.Types
   , successMsg
 
   , HasHttpManager (..)
-  , HasGCtxMap (..)
+  -- , HasGCtxMap (..)
 
   , SQLGenCtx(..)
   , HasSQLGenCtx(..)
@@ -60,7 +60,7 @@ import           Hasura.RQL.Types.SchemaCache       as R
 import           Hasura.RQL.Types.SchemaCache.Build as R
 import           Hasura.RQL.Types.Table             as R
 
-import qualified Hasura.GraphQL.Context             as GC
+-- import qualified Hasura.GraphQL.Context             as GC
 
 import qualified Data.HashMap.Strict                as M
 import qualified Data.Text                          as T
@@ -135,13 +135,13 @@ instance (HasHttpManager m) => HasHttpManager (StateT s m) where
 instance (Monoid w, HasHttpManager m) => HasHttpManager (WriterT w m) where
   askHttpManager = lift askHttpManager
 
-class (Monad m) => HasGCtxMap m where
-  askGCtxMap :: m GC.GCtxMap
-
-instance (HasGCtxMap m) => HasGCtxMap (ReaderT r m) where
-  askGCtxMap = lift askGCtxMap
-instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
-  askGCtxMap = lift askGCtxMap
+-- class (Monad m) => HasGCtxMap m where
+--   askGCtxMap :: m GC.GCtxMap
+--
+-- instance (HasGCtxMap m) => HasGCtxMap (ReaderT r m) where
+--   askGCtxMap = lift askGCtxMap
+-- instance (Monoid w, HasGCtxMap m) => HasGCtxMap (WriterT w m) where
+--   askGCtxMap = lift askGCtxMap
 
 newtype SQLGenCtx
   = SQLGenCtx

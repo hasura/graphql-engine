@@ -203,6 +203,7 @@ instance Cacheable a => Cacheable (G.Selection a)
 instance Cacheable a => Cacheable (G.TypedOperationDefinition a)
 instance Cacheable a => Cacheable (G.Value a)
 
+deriving instance Cacheable G.Description
 deriving instance Cacheable G.EnumValue
 deriving instance Cacheable a => Cacheable (G.ExecutableDocument a)
 

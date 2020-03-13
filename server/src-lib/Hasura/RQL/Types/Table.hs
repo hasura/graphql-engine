@@ -40,6 +40,7 @@ module Hasura.RQL.Types.Table
        , _FIRelationship
        , _FIComputedField
        , fieldInfoName
+       , fieldInfoGraphQLName
        , fieldInfoGraphQLNames
        , getFieldInfoM
        , getPGColumnInfoM
@@ -78,7 +79,6 @@ module Hasura.RQL.Types.Table
 
 -- import qualified Hasura.GraphQL.Context            as GC
 
-import           Hasura.GraphQL.Utils           (showNames)
 import           Hasura.Incremental             (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.BoolExp
@@ -88,7 +88,7 @@ import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
-import           Hasura.Server.Utils            (duplicates)
+import           Hasura.Server.Utils            (englishList, duplicates)
 import           Hasura.SQL.Types
 
 import           Control.Lens
@@ -136,9 +136,9 @@ instance FromJSON TableCustomRootFields where
                                         , update, updateByPk
                                         , delete, deleteByPk
                                         ]
-    when (not $ null duplicateRootFields) $ fail $ T.unpack $
+    for_ (nonEmpty duplicateRootFields) \duplicatedFields -> fail $ T.unpack $
       "the following custom root field names are duplicated: "
-      <> showNames duplicateRootFields
+      <> englishList "and" (dquoteTxt <$> duplicatedFields)
 
     pure $ TableCustomRootFields select selectByPk selectAggregate
                                  insert insertOne update updateByPk delete deleteByPk
@@ -177,18 +177,24 @@ fieldInfoName = \case
   FIRelationship info -> fromRel $ riName info
   FIComputedField info -> fromComputedField $ _cfiName info
 
+fieldInfoGraphQLName :: FieldInfo -> Maybe G.Name
+fieldInfoGraphQLName = \case
+  FIColumn info -> Just $ pgiName info
+  FIRelationship info -> G.mkName $ relNameToTxt $ riName info
+  FIComputedField info -> G.mkName $ computedFieldNameToText $ _cfiName info
+
 -- | Returns all the field names created for the given field. Columns, object relationships, and
 -- computed fields only ever produce a single field, but array relationships also contain an
 -- @_aggregate@ field.
 fieldInfoGraphQLNames :: FieldInfo -> [G.Name]
-fieldInfoGraphQLNames = \case
-  FIColumn info -> [pgiName info]
-  FIRelationship info ->
-    let name = G.Name . relNameToTxt $ riName info
-    in case riType info of
+fieldInfoGraphQLNames info = case info of
+  FIColumn _ -> maybeToList $ fieldInfoGraphQLName info
+  FIRelationship relationshipInfo -> fold do
+    name <- fieldInfoGraphQLName info
+    pure $ case riType relationshipInfo of
       ObjRel -> [name]
-      ArrRel -> [name, name <> "_aggregate"]
-  FIComputedField info -> [G.Name . computedFieldNameToText $ _cfiName info]
+      ArrRel -> [name, name <> $$(G.litName "_aggregate")]
+  FIComputedField _ -> maybeToList $ fieldInfoGraphQLName info
 
 getCols :: FieldInfoMap FieldInfo -> [PGColumnInfo]
 getCols = mapMaybe (^? _FIColumn) . M.elems
@@ -274,12 +280,12 @@ data EventTriggerInfo
    , etiOpsDef      :: !TriggerOpsDef
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo
-   -- ^ The HTTP(s) URL which will be called with the event payload on configured operation. 
-   -- Must be a POST handler. This URL can be entered manually or can be picked up from an 
-   -- environment variable (the environment variable needs to be set before using it for 
-   -- this configuration). 
+   -- ^ The HTTP(s) URL which will be called with the event payload on configured operation.
+   -- Must be a POST handler. This URL can be entered manually or can be picked up from an
+   -- environment variable (the environment variable needs to be set before using it for
+   -- this configuration).
    , etiHeaders     :: ![EventHeaderInfo]
-   -- ^ Custom headers can be added to an event trigger. Each webhook request will have these 
+   -- ^ Custom headers can be added to an event trigger. Each webhook request will have these
    -- headers added.
    } deriving (Show, Eq, Generic)
 instance NFData EventTriggerInfo
@@ -379,7 +385,7 @@ instance FromJSON TableConfig where
 data TableCoreInfoG field primaryKeyColumn
   = TableCoreInfo
   { _tciName              :: !QualifiedTable
-  , _tciDescription       :: !(Maybe PGDescription)
+  , _tciDescription       :: !(Maybe G.Description)
   , _tciSystemDefined     :: !SystemDefined
   , _tciFieldInfoMap      :: !(FieldInfoMap field)
   , _tciPrimaryKey        :: !(Maybe (PrimaryKey primaryKeyColumn))

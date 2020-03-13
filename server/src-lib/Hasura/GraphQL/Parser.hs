@@ -18,6 +18,7 @@ module Hasura.GraphQL.Parser
 
   , selectionSet
   , selection
+  , selection_
 
   , FieldsParser
   , field

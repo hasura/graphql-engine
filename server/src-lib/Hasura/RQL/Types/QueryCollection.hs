@@ -1,15 +1,15 @@
 module Hasura.RQL.Types.QueryCollection where
 
-import           Hasura.GraphQL.Validate.Types    (stripTypenames)
+-- import           Hasura.GraphQL.Validate.Types    (stripTypenames)
 import           Hasura.Incremental               (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common          (NonEmptyText)
 import           Hasura.SQL.Types
+import Hasura.RQL.Instances ()
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.GraphQL.Draft.Instances ()
 import           Language.Haskell.TH.Syntax       (Lift)
 
 import qualified Data.Text                        as T
@@ -28,7 +28,7 @@ newtype QueryName
   deriving (Show, Eq, Ord, NFData, Hashable, Lift, ToJSON, ToJSONKey, FromJSON, DQuote, Generic, Arbitrary, Cacheable)
 
 newtype GQLQuery
-  = GQLQuery {unGQLQuery :: G.ExecutableDocument}
+  = GQLQuery { unGQLQuery :: G.ExecutableDocument G.Name }
   deriving (Show, Eq, NFData, Hashable, Lift, ToJSON, FromJSON, Cacheable)
 
 newtype GQLQueryWithText
@@ -45,10 +45,10 @@ instance ToJSON GQLQueryWithText where
 getGQLQuery :: GQLQueryWithText -> GQLQuery
 getGQLQuery (GQLQueryWithText v) = snd v
 
-queryWithoutTypeNames :: GQLQuery -> GQLQuery
-queryWithoutTypeNames =
-  GQLQuery . G.ExecutableDocument . stripTypenames
-  . G.getExecutableDefinitions . unGQLQuery
+-- queryWithoutTypeNames :: GQLQuery -> GQLQuery
+-- queryWithoutTypeNames =
+--   GQLQuery . G.ExecutableDocument . stripTypenames
+--   . G.getExecutableDefinitions . unGQLQuery
 
 data ListedQuery
   = ListedQuery

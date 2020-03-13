@@ -34,6 +34,7 @@ instance NFData a => NFData (G.Selection a)
 instance NFData a => NFData (G.TypedOperationDefinition a)
 instance NFData a => NFData (G.Value a)
 
+deriving instance NFData G.Description
 deriving instance NFData G.EnumValue
 deriving instance NFData G.Nullability
 

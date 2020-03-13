@@ -40,8 +40,8 @@ runSchemaT :: Monad m => SchemaT n m a -> m a
 runSchemaT = flip evalStateT mempty . unSchemaT
 
 instance (PrimMonad m, MonadUnique m, MonadParse n) => MonadSchema n (SchemaT n m) where
-  memoize name buildParser arg = SchemaT do
-    let parserId = ParserId name arg
+  memoizeOn name key buildParser = SchemaT do
+    let parserId = ParserId name key
     parsersById <- get
     case DM.lookup parserId parsersById of
       Just (ParserById parser) -> pure parser
@@ -76,7 +76,7 @@ instance (PrimMonad m, MonadUnique m, MonadParse n) => MonadSchema n (SchemaT n 
         put $! DM.insert parserId parserById parsersById
 
         unique <- newUnique
-        parser <- addDefinitionUnique unique <$> unSchemaT (buildParser arg)
+        parser <- addDefinitionUnique unique <$> unSchemaT buildParser
         writeMutVar cell (Just parser)
         pure parser
 

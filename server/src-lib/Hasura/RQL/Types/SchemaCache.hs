@@ -16,12 +16,12 @@ module Hasura.RQL.Types.SchemaCache
   , TableCache
   , ActionCache
 
-  , OutputFieldTypeInfo(..)
-  , AnnotatedObjectType(..)
-  , AnnotatedObjects
+  -- , OutputFieldTypeInfo(..)
+  -- , AnnotatedObjectType(..)
+  -- , AnnotatedObjects
   , TypeRelationship(..)
   , trName, trType, trRemoteTable, trFieldMapping
-  , NonObjectTypeMap(..)
+  -- , NonObjectTypeMap(..)
   , TableCoreInfoG(..)
   , TableRawInfo
   , TableCoreInfo
@@ -115,7 +115,7 @@ module Hasura.RQL.Types.SchemaCache
   , askFunctionInfo
   ) where
 
-import qualified Hasura.GraphQL.Context            as GC
+-- import qualified Hasura.GraphQL.Context            as GC
 
 import           Hasura.Db
 import           Hasura.Incremental                (Dependency, MonadDepend (..),
@@ -163,7 +163,7 @@ type WithDeps a = (a, [SchemaDependency])
 data RemoteSchemaCtx
   = RemoteSchemaCtx
   { rscName :: !RemoteSchemaName
-  , rscGCtx :: !GC.RemoteGCtx
+  -- , rscGCtx :: !GC.RemoteGCtx
   , rscInfo :: !RemoteSchemaInfo
   } deriving (Show, Eq)
 
@@ -195,9 +195,9 @@ data SchemaCache
   , scFunctions         :: !FunctionCache
   , scRemoteSchemas     :: !RemoteSchemaMap
   , scAllowlist         :: !(HS.HashSet GQLQuery)
-  , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
-  , scGCtxMap           :: !GC.GCtxMap
-  , scDefaultRemoteGCtx :: !GC.GCtx
+  -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
+  -- , scGCtxMap           :: !GC.GCtxMap
+  -- , scDefaultRemoteGCtx :: !GC.GCtx
   , scDepMap            :: !DepMap
   , scInconsistentObjs  :: ![InconsistentMetadata]
   } deriving (Show, Eq)

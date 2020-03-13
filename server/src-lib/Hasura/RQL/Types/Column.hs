@@ -147,7 +147,7 @@ data PGRawColumnInfo
   -- consistently identified by its position.
   , prciType        :: !PGScalarType
   , prciIsNullable  :: !Bool
-  , prciDescription :: !(Maybe PGDescription)
+  , prciDescription :: !(Maybe G.Description)
   } deriving (Show, Eq, Generic)
 instance NFData PGRawColumnInfo
 instance Cacheable PGRawColumnInfo
@@ -163,7 +163,7 @@ data PGColumnInfo
   , pgiPosition    :: !Int
   , pgiType        :: !PGColumnType
   , pgiIsNullable  :: !Bool
-  , pgiDescription :: !(Maybe PGDescription)
+  , pgiDescription :: !(Maybe G.Description)
   } deriving (Show, Eq, Generic)
 instance NFData PGColumnInfo
 instance Cacheable PGColumnInfo
