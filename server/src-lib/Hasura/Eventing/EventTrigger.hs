@@ -10,10 +10,10 @@ module Hasura.Eventing.EventTrigger
   ) where
 
 import           Control.Concurrent.Extended   (sleep)
-import           Control.Concurrent.Async      (wait, withAsync, async, link)
+import           Control.Concurrent.Async      (wait, withAsync)
 import           Control.Concurrent.STM.TVar
-import           Control.Exception.Lifted      (finally, mask_)
 import           Control.Monad.STM
+import           Control.Monad.Catch           (MonadMask, bracket_)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
@@ -129,7 +129,7 @@ processEventQueue
   :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
   -> IO SchemaCache -> EventEngineCtx
   -> IO void
-processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} = do
+processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx{..} = do
   events0 <- popEventsBatch
   go events0 0 False
   where
@@ -155,20 +155,9 @@ processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} =
       -- worth the effort for something more fine-tuned
       eventsNext <- withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
-        forM_ events $ \event ->
-          mask_ $ do
-            atomically $ do  -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
-              capacity <- readTVar _eeCtxEventThreadsCapacity
-              check $ capacity > 0
-              writeTVar _eeCtxEventThreadsCapacity (capacity - 1)
-            -- since there is some capacity in our worker threads, we can launch another:
-            let restoreCapacity = liftIO $ atomically $
-                  modifyTVar' _eeCtxEventThreadsCapacity (+ 1)
-            t <- async $ flip runReaderT (logger, httpMgr) $
-                    processEvent event `finally` restoreCapacity
-            link t
-
-        -- return when next batch ready; some 'processEvent' threads may be running.
+        forM_ events $ \event -> do
+             res <- runReaderT (withEventEngineCtx eeCtx $ (processEvent event)) (logger, httpMgr)
+             return res
         wait eventsNextA
 
       let lenEvents = length events
@@ -222,6 +211,24 @@ processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} =
             (processError pool e retryConf decodedHeaders ep)
             (processSuccess pool e decodedHeaders ep) res
             >>= flip onLeft logQErr
+
+withEventEngineCtx ::
+    ( MonadIO m
+    , MonadMask m
+    )
+    => EventEngineCtx -> m () -> m ()
+withEventEngineCtx eeCtx = bracket_ (decrementThreadCount eeCtx) (incrementThreadCount eeCtx)
+
+incrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
+incrementThreadCount (EventEngineCtx c _) = liftIO $ atomically $ modifyTVar' c (+1)
+
+decrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
+decrementThreadCount (EventEngineCtx c _) = liftIO $ atomically $ do
+  countThreads <- readTVar c
+  if countThreads > 0
+     then modifyTVar' c (\v -> v - 1)
+     else retry
+
 
 createEventPayload :: RetryConf -> Event ->  EventPayload
 createEventPayload retryConf e = EventPayload
