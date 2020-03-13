@@ -1,5 +1,7 @@
 module Hasura.GraphQL.Parser
   ( Parser
+  , parserType
+  , runParser
   , bind
 
   , ScalarRepresentation(..)

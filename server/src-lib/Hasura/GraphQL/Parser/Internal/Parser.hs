@@ -35,6 +35,12 @@ data Parser k m a = Parser
   , pParser :: ParserInput k -> m a
   } deriving (Functor)
 
+parserType :: Parser k m a -> Type k
+parserType = pType
+
+runParser :: Parser k m a -> ParserInput k -> m a
+runParser = pParser
+
 instance HasName (Parser k m a) where
   getName = getName . pType
 
@@ -273,7 +279,7 @@ selectionSet name description parser = Parser
   where
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
 
-type family SelectionResult k a b where
+type family SelectionResult k a b = r | r -> k a where
   SelectionResult 'Both   a _ = (Name, a)
   SelectionResult 'Output a b = (Name, a, b)
 
