@@ -3,7 +3,7 @@ import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
-import { App, Main, PageNotFound, UIKit } from 'components';
+import { App, Main, PageNotFound } from 'components';
 
 import globals from './Globals';
 
@@ -37,6 +37,7 @@ import logoutContainer from './components/Services/Settings/Logout/Logout';
 
 import { showErrorNotification } from './components/Services/Common/Notification';
 import { CLI_CONSOLE_MODE } from './constants';
+import UIKit from './components/UIKit/';
 
 const routes = store => {
   // load hasuractl migration status

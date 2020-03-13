@@ -1,5 +1,4 @@
 import React from 'react';
-import { connect } from 'react-redux';
 
 import { Heading } from './atoms';
 import { StyleGuide } from './demo/StyleGuide';
@@ -14,4 +13,4 @@ const UIKit = () => (
   </UIKitWrapperDiv>
 );
 
-export default connect()(UIKit);
+export default UIKit;
