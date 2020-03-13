@@ -279,24 +279,6 @@ runHTTP manager req = do
   res <- liftIO $ try $ HTTP.httpLbs req manager
   return $ either (Left . HClient) anyBodyParser res
 
--- -- | Like 'HTTP.httpLbs' but we catch 'HTTP.HttpException' and return all known
--- -- error-like conditions as 'HTTPErr'.
--- runHTTP
---   :: ( MonadReader r m
---      , Has (Logger Hasura) r
---      , Has HTTP.Manager r
---      , MonadIO m
---      )
---   => HTTP.Request -> Maybe ExtraContext -> m (Either (HTTPErr a) (HTTPResp a))
--- runHTTP req exLog = do
---   logger :: Logger Hasura <- asks getter
---   manager <- asks getter
---   res <- liftIO $ try $ HTTP.httpLbs req manager
---   -- case res of
---   --   Left e     -> unLogger logger $ HClient e
---   --   Right resp -> unLogger logger $ HTTPRespExtra (mkHTTPResp resp) exLog
---   return $ either (Left . HClient) anyBodyParser res
-
 tryWebhook ::
   ( MonadReader r m
   , Has HTTP.Manager r
@@ -323,33 +305,6 @@ tryWebhook headers timeout payload webhook = do
               }
       eitherResp <- runHTTP manager req
       onLeft eitherResp throwError
-
--- These run concurrently on their respective EventPayloads
--- tryWebhook
---   :: ( Has (L.Logger L.Hasura) r
---      , Has HTTP.Manager r
---      , MonadReader r m
---      , MonadIO m
---      , MonadError (HTTPErr a) m
---      )
---   => [HTTP.Header] -> HTTP.ResponseTimeout -> EventPayload -> String
---   -> m (HTTPResp a)
--- tryWebhook headers responseTimeout ep webhook = do
---   let context = ExtraContext (epCreatedAt ep) (epId ep)
---   initReqE <- liftIO $ try $ HTTP.parseRequest webhook
---   case initReqE of
---     Left excp -> throwError $ HClient excp
---     Right initReq -> do
---       let req = initReq
---                 { HTTP.method = "POST"
---                 , HTTP.requestHeaders = headers
---                 , HTTP.requestBody = HTTP.RequestBodyLBS (encode ep)
---                 , HTTP.responseTimeout = responseTimeout
---                 }
-
---       eitherResp <- runHTTP req (Just context)
---       onLeft eitherResp throwError
-
 
 mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response
 mkResp status payload headers =
