@@ -279,6 +279,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
     def _send_response(self, status, body):
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
+        self.send_header('Set-Cookie', 'abcd')
         self.end_headers()
         self.wfile.write(json.dumps(body).encode("utf-8"))
 
@@ -333,7 +334,7 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
                                         "headers": req_headers})
 
 # A very slightly more sane/performant http server.
-# See: https://stackoverflow.com/a/14089457/176841 
+# See: https://stackoverflow.com/a/14089457/176841
 #
 # TODO use this elsewhere, or better yet: use e.g. bottle + waitress
 class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):

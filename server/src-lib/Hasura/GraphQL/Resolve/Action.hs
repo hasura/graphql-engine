@@ -41,7 +41,8 @@ import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Utils               (mkClientHeadersForward)
+import           Hasura.Server.Context
+import           Hasura.Server.Utils               (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
@@ -97,13 +98,13 @@ resolveActionMutation
   => Field
   -> ActionExecutionContext
   -> UserVars
-  -> m RespTx
+  -> m (RespTx, Headers)
 resolveActionMutation field executionContext sessionVariables =
   case executionContext of
     ActionExecutionSyncWebhook executionContextSync ->
       resolveActionMutationSync field executionContextSync sessionVariables
     ActionExecutionAsync ->
-      resolveActionMutationAsync field sessionVariables
+      (,[]) <$> resolveActionMutationAsync field sessionVariables
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionMutationSync
@@ -121,14 +122,15 @@ resolveActionMutationSync
   => Field
   -> SyncActionExecutionContext
   -> UserVars
-  -> m RespTx
+  -> m (RespTx, Headers)
 resolveActionMutationSync field executionContext sessionVariables = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
   manager <- asks getter
   reqHeaders <- asks getter
-  webhookRes <- callWebhook manager outputType reqHeaders confHeaders forwardClientHeaders resolvedWebhook handlerPayload
+  (webhookRes, respHeaders) <-
+    callWebhook manager outputType reqHeaders confHeaders forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
   selectAstUnresolved <-
@@ -136,7 +138,7 @@ resolveActionMutationSync field executionContext sessionVariables = do
     (_fType field) $ _fSelSet field
   astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
   let jsonAggType = mkJsonAggSelect outputType
-  return $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
+  return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
   where
     SyncActionExecutionContext actionName outputType definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
@@ -305,8 +307,8 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
                                     forwardClientHeaders webhookUrl $
                                     ActionWebhookPayload actionContext sessionVariables inputPayload
           case eitherRes of
-            Left e                -> setError actionId e
-            Right responsePayload -> setCompleted actionId $ J.toJSON responsePayload
+            Left e                     -> setError actionId e
+            Right (responsePayload, _) -> setCompleted actionId $ J.toJSON responsePayload
 
     setError :: UUID.UUID -> QErr -> IO ()
     setError actionId e =
@@ -366,7 +368,7 @@ callWebhook
   -> Bool
   -> ResolvedWebhook
   -> ActionWebhookPayload
-  -> m ActionWebhookResponse
+  -> m (ActionWebhookResponse, Headers)
 callWebhook manager outputType reqHeaders confHeaders forwardClientHeaders resolvedWebhook actionWebhookPayload = do
   resolvedConfHeaders <- makeHeadersFromConf confHeaders
   let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
@@ -403,7 +405,7 @@ callWebhook manager outputType reqHeaders confHeaders forwardClientHeaders resol
                  throw400Detail "expecting object for action webhook response but got array"
                AWRObject{} -> when expectingArray $
                  throw400Detail "expecting array for action webhook response but got object"
-             pure webhookResponse
+             pure (webhookResponse, mkSetCookieHeaders responseWreq)
 
          | HTTP.statusIsClientError responseStatus -> do
              ActionWebhookErrorResponse message maybeCode <-

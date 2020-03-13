@@ -2,6 +2,7 @@
 module Hasura.Server.Utils where
 
 import           Data.Aeson
+import           Control.Lens               ((^..))
 import           Data.Char
 import           Data.List                  (find)
 import           Language.Haskell.TH.Syntax (Lift)
@@ -23,8 +24,10 @@ import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
 import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ByteString as TDFA
+import qualified Network.Wreq                           as Wreq
 
 import           Hasura.Prelude
+import           Hasura.Server.Context
 
 newtype RequestId
   = RequestId { unRequestId :: Text }
@@ -172,6 +175,13 @@ mkClientHeadersForward reqHeaders =
         "Host"       -> Just ("X-Forwarded-Host", hdrValue)
         "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
         _            -> Nothing
+
+mkSetCookieHeaders :: Wreq.Response a -> [Header]
+mkSetCookieHeaders resp =
+  map (Header . (headerName,) . bsToTxt) $ resp ^.. Wreq.responseHeader headerName
+  where
+    headerName :: IsString a => a
+    headerName = "Set-Cookie"
 
 filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
 filterRequestHeaders =

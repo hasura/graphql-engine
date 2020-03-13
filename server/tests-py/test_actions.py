@@ -44,18 +44,43 @@ class TestActionsSync:
     def test_expecting_array_response(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/expecting_array_response.yaml')
 
+def mk_headers_with_secret(hge_ctx, headers={}):
+    admin_secret = hge_ctx.hge_key
+    if admin_secret:
+        headers['X-Hasura-Admin-Secret'] = admin_secret
+    return headers
+
+@use_action_fixtures
+class TestActionSyncResponseHeaders:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/sync'
+
+    def test_set_cookie_header(self, hge_ctx):
+        mutation = '''
+          mutation {
+            create_user(email: "clarke@gmail.com", name: "Clarke"){
+              id
+            }
+          }
+        '''
+        query = {
+            'query': mutation,
+            'variables': {}
+        }
+        status, resp, resp_headers = hge_ctx.anyq('/v1/graphql', query, mk_headers_with_secret(hge_ctx))
+        assert status == 200, resp
+        assert 'data' in resp, resp
+        assert ('Set-Cookie' in resp_headers and
+                resp_headers['Set-Cookie'] == 'abcd'), resp_headers
+
+
 @use_action_fixtures
 class TestActionsAsync:
     @classmethod
     def dir(cls):
         return 'queries/actions/async'
-
-    def mk_headers_with_secret(self, hge_ctx, headers={}):
-        admin_secret = hge_ctx.hge_key
-        if admin_secret:
-            headers['X-Hasura-Admin-Secret'] = admin_secret
-        return headers
-
 
     def test_create_user_fail(self, hge_ctx):
         graphql_mutation = '''
@@ -67,7 +92,7 @@ class TestActionsAsync:
             'query': graphql_mutation,
             'variables': {}
         }
-        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, self.mk_headers_with_secret(hge_ctx))
+        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, mk_headers_with_secret(hge_ctx))
         assert status == 200, resp
         assert 'data' in resp
         action_id = resp['data']['create_user']
@@ -118,7 +143,7 @@ class TestActionsAsync:
             'query': graphql_mutation,
             'variables': {}
         }
-        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, self.mk_headers_with_secret(hge_ctx))
+        status, resp, _ = hge_ctx.anyq('/v1/graphql', query, mk_headers_with_secret(hge_ctx))
         assert status == 200, resp
         assert 'data' in resp
         action_id = resp['data']['create_user']
@@ -185,7 +210,7 @@ class TestActionsAsync:
             'query': graphql_mutation,
             'variables': {}
         }
-        headers_user_1 = self.mk_headers_with_secret(hge_ctx, {
+        headers_user_1 = mk_headers_with_secret(hge_ctx, {
             'X-Hasura-Role': 'user',
             'X-Hasura-User-Id': '1'
         })
@@ -213,7 +238,7 @@ class TestActionsAsync:
             }
         }
 
-        headers_user_2 = self.mk_headers_with_secret(hge_ctx, {
+        headers_user_2 = mk_headers_with_secret(hge_ctx, {
             'X-Hasura-Role': 'user',
             'X-Hasura-User-Id': '2'
         })

@@ -16,5 +16,5 @@ type Headers = [Header]
 data HttpResponse a
   = HttpResponse
   { _hrBody    :: !a
-  , _hrHeaders :: !(Maybe Headers)
+  , _hrHeaders :: !Headers
   } deriving (Functor, Foldable, Traversable)
