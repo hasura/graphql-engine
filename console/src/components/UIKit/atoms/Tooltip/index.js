@@ -4,13 +4,9 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 
 import { StyledTooltip } from './Tooltip';
 
-// ToolTip Message Generator *********** //
-
 const tooltipGenerator = message => {
   return <Tooltip id={message}>{message}</Tooltip>;
 };
-
-// ******************************* //
 
 export const ToolTip = props => {
   const { message, placement, children } = props;
