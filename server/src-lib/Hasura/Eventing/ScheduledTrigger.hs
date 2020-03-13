@@ -21,21 +21,13 @@ module Hasura.Eventing.ScheduledTrigger
   , ScheduledEventSeed(..)
   , generateScheduleTimes
   , insertScheduledEvents
-  , defaultMaxScheduledEventThreads
-  , initScheduledEventEngineCtx
   ) where
 
-import           Control.Concurrent.Extended   (sleep)
-import           Control.Concurrent.Async      (wait, withAsync, async, link)
-import           Control.Concurrent.STM.TVar
-import           Control.Exception.Lifted      (finally, mask_)
-import           Control.Monad.STM
 import           Control.Arrow.Extended          (dup)
 import           Control.Concurrent              (threadDelay)
 import           Data.Has
 import           Data.Int (Int64)
 import           Data.List                       (unfoldr)
-import           Data.String
 import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
 import           Hasura.Prelude
@@ -116,19 +108,6 @@ data ScheduledEventFull
   } deriving (Show, Eq)
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) {J.omitNothingFields = True} ''ScheduledEventFull)
-
-defaultMaxScheduledEventThreads :: Int
-defaultMaxScheduledEventThreads = 10
-
-data ScheduledEventEngineCtx
-    = ScheduledEventEngineCtx
-    { _seeCtxEventThreadsCapacity :: TVar Int
-    }
-
-initScheduledEventEngineCtx :: Int -> STM ScheduledEventEngineCtx
-initScheduledEventEngineCtx maxT = do
-  _seeCtxEventThreadsCapacity <- newTVar maxT
-  return $ ScheduledEventEngineCtx{..}
 
 runScheduledEventsGenerator ::
      L.Logger L.Hasura
@@ -231,11 +210,6 @@ generateScheduleTimes from n cron = take n $ go from
   where
     go = unfoldr (fmap dup . nextMatch cron)
 
--- | processScheduledQueue works like processEventQueue(defined in Eventing/EventTrigger.hs)
--- | Here, the sleep time is hard-coded to 1 minute unlike in processEventQueue where it can
--- | be a value that can be set by the user.
--- | The number of threads to be spawned can be set through the `HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE`,
--- | by default it's set to 10
 processScheduledQueue
   :: HasVersion
   => L.Logger L.Hasura
@@ -243,65 +217,30 @@ processScheduledQueue
   -> HTTP.Manager
   -> Q.PGPool
   -> IO SchemaCache
-  -> ScheduledEventEngineCtx
   -> IO void
-processScheduledQueue logger logenv httpMgr pgpool getSC ScheduledEventEngineCtx{..} = do
-    events0 <- popEventsBatch
-    go events0 0 False
+processScheduledQueue logger logEnv httpMgr pgpool getSC =
+  forever $ do
+    scheduledTriggersInfo <- scScheduledTriggers <$> getSC
+    scheduledEventsE <-
+      runExceptT $
+      Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite) getScheduledEvents
+    case scheduledEventsE of
+      Right partialEvents ->
+        for_ partialEvents $ \(ScheduledEventPartial id' name st payload tries)-> do
+          case Map.lookup name scheduledTriggersInfo of
+            Nothing ->  logInternalError $
+              err500 Unexpected "could not find scheduled trigger in cache"
+            Just stInfo@ScheduledTriggerInfo{..} -> do
+              let webhook = wciCachedValue stiWebhookInfo
+                  payload' = fromMaybe (fromMaybe J.Null stiPayload) payload -- override if neccessary
+                  scheduledEvent = ScheduledEventFull id' name st tries webhook payload' stiRetryConf
+              finally <- runExceptT $
+                runReaderT (processScheduledEvent logEnv pgpool stInfo scheduledEvent) (logger, httpMgr)
+              either logInternalError pure finally
+      Left err -> logInternalError err
+    threadDelay oneMinute
     where
-      fetchBatchSize = 100
       logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
-      popEventsBatch = do
-        let run = runExceptT . Q.runTx pgpool (Q.ReadCommitted, Just Q.ReadWrite)
-        run (getScheduledEvents fetchBatchSize) >>= \case
-            Left err -> do
-              logInternalError err
-              return []
-            Right events -> return events
-
-      go :: [ScheduledEventPartial] -> Int -> Bool -> IO void
-      go events !fullFetchCount !alreadyWarned = do
-        when (null events) $ sleep (fromIntegral oneMinute)
-        scheduledTriggersInfo <- scScheduledTriggers <$> getSC
-        eventsNext <- withAsync popEventsBatch $ \eventsNextA -> do
-          forM_ events $ \(ScheduledEventPartial id' name st payload tries) -> do
-            case Map.lookup name scheduledTriggersInfo of
-              Nothing -> logInternalError $ err500 Unexpected "could not find scheduled trigger in cache"
-              Just stInfo@ScheduledTriggerInfo{..} ->
-                mask_ $ do
-                  atomically $ do
-                    capacity <- readTVar _seeCtxEventThreadsCapacity
-                    check $ capacity > 0
-                    writeTVar _seeCtxEventThreadsCapacity (capacity - 1)
-                  let restoreCapacity = liftIO $ atomically $ modifyTVar' _seeCtxEventThreadsCapacity (+ 1)
-                      webhook = wciCachedValue stiWebhookInfo
-                      payload' = fromMaybe (fromMaybe J.Null stiPayload) payload
-                      scheduledEvent = ScheduledEventFull id' name st tries webhook payload' stiRetryConf
-                  t <- async $ runExceptT $ flip runReaderT (logger, httpMgr) $
-                         (processScheduledEvent logenv pgpool stInfo scheduledEvent) `finally` restoreCapacity
-                  link t
-
-          wait eventsNextA
-
-        let lenEvents = length events
-        if | lenEvents == fetchBatchSize -> do
-             -- If we've seen N fetches in a row from the DB come back full (i.e. only limited
-             -- by our LIMIT clause), then we say we're clearly falling behind:
-               let clearlyBehind = fullFetchCount >= 3
-               unless alreadyWarned $
-                 when clearlyBehind $
-                   L.unLogger logger $ L.UnstructuredLog L.LevelWarn $ fromString $
-                     "Scheduled Events processor may not be keeping up with events generated in postgres, " <>
-                     "or we're working on a backlog of scheduled events. Consider increasing " <>
-                     "HASURA_GRAPHQL_SCHEDULED_EVENTS_HTTP_POOL_SIZE"
-               go eventsNext (fullFetchCount+1) (alreadyWarned || clearlyBehind)
-
-           | otherwise -> do
-               when (lenEvents /= fetchBatchSize && alreadyWarned) $
-                 -- emit as warning in case users are only logging warning severity and saw above
-                 L.unLogger logger $ L.UnstructuredLog L.LevelWarn $ fromString $
-                   "It looks like the scheduled events processor is keeping up again."
-               go eventsNext 0 False
 
 processScheduledEvent ::
   ( MonadReader r m
@@ -456,8 +395,8 @@ insertInvocation invo = do
           WHERE id = $1
           |] (Identity $ iEventId invo) True
 
-getScheduledEvents :: Int -> Q.TxE QErr [ScheduledEventPartial]
-getScheduledEvents limitI = do
+getScheduledEvents :: Q.TxE QErr [ScheduledEventPartial]
+getScheduledEvents = do
   map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.hdb_scheduled_events
       SET locked = 't'
@@ -473,13 +412,11 @@ getScheduledEvents limitI = do
                             )
                             and t.dead = 'f'
                           )
-                    LIMIT $1
                     FOR UPDATE SKIP LOCKED
                     )
       RETURNING id, name, scheduled_time, additional_payload, tries
-      |] (Identity limit) True
+      |] () True
   where uncurryEvent (i, n, st, p, tries) = ScheduledEventPartial i n st (Q.getAltJ <$> p) tries
-        limit = fromIntegral limitI :: Word64
 
 liftExceptTIO :: (MonadError e m, MonadIO m) => ExceptT e IO a -> m a
 liftExceptTIO m = liftEither =<< liftIO (runExceptT m)
