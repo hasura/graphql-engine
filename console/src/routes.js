@@ -38,6 +38,7 @@ import logoutContainer from './components/Services/Settings/Logout/Logout';
 import { showErrorNotification } from './components/Services/Common/Notification';
 import { CLI_CONSOLE_MODE } from './constants';
 import UIKit from './components/UIKit/';
+import { Heading } from './components/UIKit/atoms';
 
 const routes = store => {
   // load hasuractl migration status
@@ -128,7 +129,16 @@ const routes = store => {
           {eventRouter}
           {remoteSchemaRouter}
           {actionsRouter}
-          <Route path="ui-elements" component={UIKit} />
+          <Route
+            path="/"
+            // TODO: fix me
+            component={() => (
+              <div>
+                <Heading />
+                <UIKit />
+              </div>
+            )}
+          />
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />
