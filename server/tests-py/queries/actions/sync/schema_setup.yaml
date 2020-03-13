@@ -36,6 +36,11 @@ args:
         remote_table: user
         field_mapping:
           id: id
+    # For issue https://github.com/hasura/graphql-engine/issues/4061
+    - name: ObjectID
+      fields:
+      - name: id
+        type: ID!
 
 - type: create_action
   args:
