@@ -130,7 +130,7 @@ const routes = store => {
           {remoteSchemaRouter}
           {actionsRouter}
           <Route
-            path="/"
+            path="/ui-elements"
             // TODO: fix me
             component={() => (
               <div>
