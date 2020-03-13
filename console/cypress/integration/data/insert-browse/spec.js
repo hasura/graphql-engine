@@ -74,6 +74,7 @@ const checkOrder = order => {
           .find('[role=gridcell]')
           .first()
           .next()
+          .next()
           .contains(index);
       }
     });
@@ -83,6 +84,7 @@ const checkOrder = order => {
         cy.wrap($el)
           .find('[role=gridcell]')
           .first()
+          .next()
           .next()
           .contains(22 - index);
       }
@@ -231,7 +233,7 @@ export const checkPagination = () => {
   cy.wait(3000);
   // Check if the page changed
   cy.get(
-    '.rt-tbody > div:nth-child(1) > div > div:nth-child(2) > div'
+    '.rt-tbody > div:nth-child(1) > div > div:nth-child(3) > div'
   ).contains('11');
   cy.get('.-pageJump > input').should('have.value', '2');
   cy.get('.-previous > button').click();

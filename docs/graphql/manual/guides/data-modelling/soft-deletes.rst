@@ -72,7 +72,7 @@ the ``deleted_at`` field to the current timestamp:
 Step 3: Set up appropriate insert/update/delete permissions
 -----------------------------------------------------------
 
-Now, we need to ensure that appropriate :doc:`permissions <../../auth/authorization/index>` are set to avoid
+Now, we need to ensure that appropriate :ref:`permissions <authorization>` are set to avoid
 actual deletes from happening and allowing update of the ``deleted_at`` field.
 
 Here are some typical rules we should set:
@@ -97,7 +97,7 @@ Step 4: Restrict access to soft-deleted records
 Now that we have set up the soft deleting pattern for records, we need to ensure that we restrict the "deleted"
 records from being accessed.
 
-We can achieve this by setting appropriate :doc:`permissions <../../auth/authorization/index>` for roles which have
+We can achieve this by setting appropriate :ref:`permissions <authorization>` for roles which have
 access to the ``todos`` table.
 
 For example, let's say that a role ``user`` can only access non-deleted todos, we need to add the following
