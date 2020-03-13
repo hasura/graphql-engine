@@ -7,7 +7,7 @@ module Hasura.Eventing.HTTP
   , isNetworkErrorHC
   , logHTTPForET
   , logHTTPForST
-  , ExtraContext(..)
+  , ExtraLogContext(..)
   , EventId
   , Invocation(..)
   , Version
@@ -106,13 +106,13 @@ data Invocation
   , iResponse :: Response
   }
 
-data ExtraContext
-  = ExtraContext
-  { elEventCreatedAt :: Time.UTCTime
+data ExtraLogContext
+  = ExtraLogContext
+  { elEventCreatedAt :: Maybe Time.UTCTime
   , elEventId        :: EventId
   } deriving (Show, Eq)
 
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ExtraContext)
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''ExtraLogContext)
 
 data HTTPResp (a :: TriggerTypes)
    = HTTPResp
@@ -208,7 +208,7 @@ mkHTTPResp resp =
 data HTTPRespExtra (a :: TriggerTypes)
   = HTTPRespExtra
   { _hreResponse :: Either (HTTPErr a) (HTTPResp a)
-  , _hreContext  :: Maybe ExtraContext
+  , _hreContext  :: ExtraLogContext
   }
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''HTTPRespExtra)
@@ -259,7 +259,7 @@ logHTTPForET
      , Has (Logger Hasura) r
      , MonadIO m
      )
-  => Either (HTTPErr 'Event) (HTTPResp 'Event) -> Maybe ExtraContext -> m ()
+  => Either (HTTPErr 'Event) (HTTPResp 'Event) -> ExtraLogContext -> m ()
 logHTTPForET eitherResp extraLogCtx = do
   logger :: Logger Hasura <- asks getter
   unLogger logger $ HTTPRespExtra eitherResp extraLogCtx
@@ -269,7 +269,7 @@ logHTTPForST
      , Has (Logger Hasura) r
      , MonadIO m
      )
-  => Either (HTTPErr 'Scheduled) (HTTPResp 'Scheduled) -> Maybe ExtraContext -> m ()
+  => Either (HTTPErr 'Scheduled) (HTTPResp 'Scheduled) -> ExtraLogContext -> m ()
 logHTTPForST eitherResp extraLogCtx = do
   logger :: Logger Hasura <- asks getter
   unLogger logger $ HTTPRespExtra eitherResp extraLogCtx

@@ -178,8 +178,9 @@ processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} =
               etHeaders = map encodeHeader headerInfos
               headers = addDefaultHeaders etHeaders
               ep = createEventPayload retryConf e
+              extraLogCtx = ExtraLogContext Nothing (epId ep) -- avoiding getting current time here to avoid another IO call with each event call
           res <- runExceptT $ tryWebhook headers responseTimeout (toJSON ep) webhook
-          logHTTPForET res Nothing
+          logHTTPForET res extraLogCtx
           let decodedHeaders = map (decodeHeader logenv headerInfos) headers
           either
             (processError pool e retryConf decodedHeaders ep)
