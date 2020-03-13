@@ -186,6 +186,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         elif req_path == "/invalid-response":
             self._send_response(HTTPStatus.OK, "some-string")
 
+        elif req_path == "/mirror-action":
+            resp, status = self.mirror_action()
+            self._send_response(status, resp)
+
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
@@ -262,6 +266,11 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
         response = resp['data']['insert_user']['returning']
         return response, HTTPStatus.OK
+
+    def mirror_action(self):
+        response = self.req_json['input']['arg']
+        return response, HTTPStatus.OK
+
 
     def check_email(self, email):
         regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'

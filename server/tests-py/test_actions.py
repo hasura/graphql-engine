@@ -44,6 +44,19 @@ class TestActionsSync:
     def test_expecting_array_response(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/expecting_array_response.yaml')
 
+    # Webhook response validation tests. See https://github.com/hasura/graphql-engine/issues/3977
+    def test_mirror_action_not_null(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_not_null.yaml')
+
+    def test_mirror_action_unexpected_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_unexpected_field.yaml')
+
+    def test_mirror_action_no_field(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_no_field.yaml')
+
+    def test_mirror_action_success(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/mirror_action_success.yaml')
+
 def mk_headers_with_secret(hge_ctx, headers={}):
     admin_secret = hge_ctx.hge_key
     if admin_secret:
@@ -51,12 +64,13 @@ def mk_headers_with_secret(hge_ctx, headers={}):
     return headers
 
 @use_action_fixtures
-class TestActionSyncResponseHeaders:
+class TestActionsSyncResponseHeaders:
 
     @classmethod
     def dir(cls):
         return 'queries/actions/sync'
 
+    # See https://github.com/hasura/graphql-engine/issues/4021
     def test_set_cookie_header(self, hge_ctx):
         mutation = '''
           mutation {

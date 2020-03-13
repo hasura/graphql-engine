@@ -1,0 +1,26 @@
+description: Unexpected extra field in response
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      internal:
+        webhook_response:
+          age: 25
+          name: Alice
+          id: some-id
+      path: $
+      code: unexpected
+    message: 'unexpected fields in webhook response: age'
+query:
+  variables:
+    id: some-id
+    name: Alice
+    age: 25
+  query: |
+    mutation ($id: ID, $name: String, $age: Int) {
+      mirror(arg: {id: $id, name: $name, age: $age}){
+        id
+        name
+      }
+    }
