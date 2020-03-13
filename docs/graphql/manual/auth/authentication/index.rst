@@ -2,6 +2,8 @@
    :description: Manage authenticaton with Hasura
    :keywords: hasura, docs, authentication, auth
 
+.. _authentication:
+
 Authentication
 ==============
 

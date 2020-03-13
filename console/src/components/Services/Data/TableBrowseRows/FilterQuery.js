@@ -24,7 +24,8 @@ import {
 } from './FilterActions.js';
 import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
-import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
+import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
+
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
 const history = createHistory();

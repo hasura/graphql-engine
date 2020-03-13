@@ -4,13 +4,10 @@ import {
   setPrimaryKeys,
   savePrimaryKeys,
 } from './ModifyActions';
-import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
+import PrimaryKeySelector from '../Common/Components/PrimaryKeySelector';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { showSuccessNotification } from '../../Common/Notification';
-import {
-  getUkeyPkeyConfig,
-  getKeyDef,
-} from '../Common/ReusableComponents/utils';
+import { getUkeyPkeyConfig, getKeyDef } from '../Common/Components/utils';
 
 import styles from './ModifyTable.scss';
 
