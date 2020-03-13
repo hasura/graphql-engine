@@ -41,6 +41,12 @@ import qualified Network.HTTP.Client           as HTTP
 invocationVersion :: Version
 invocationVersion = "2"
 
+data TriggerMetadata
+  = TriggerMetadata { tmName :: TriggerName }
+  deriving (Show, Eq)
+
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMetadata)
+
 newtype EventInternalErr
   = EventInternalErr QErr
   deriving (Show, Eq)
@@ -68,6 +74,36 @@ data EventEngineCtx
   { _eeCtxEventThreadsCapacity  :: TVar Int
   , _eeCtxFetchInterval         :: DiffTime
   }
+
+data DeliveryInfo
+  = DeliveryInfo
+  { diCurrentRetry :: Int
+  , diMaxRetries   :: Int
+  } deriving (Show, Eq)
+
+$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeliveryInfo)
+
+newtype QualifiedTableStrict = QualifiedTableStrict
+  { getQualifiedTable :: QualifiedTable
+  } deriving (Show, Eq)
+
+instance ToJSON QualifiedTableStrict where
+  toJSON (QualifiedTableStrict (QualifiedObject sn tn)) =
+     object [ "schema" .= sn
+            , "name"  .= tn
+           ]
+
+data EventPayload
+  = EventPayload
+  { epId           :: EventId
+  , epTable        :: QualifiedTableStrict
+  , epTrigger      :: TriggerMetadata
+  , epEvent        :: Value
+  , epDeliveryInfo :: DeliveryInfo
+  , epCreatedAt    :: Time.UTCTime
+  } deriving (Show, Eq)
+
+$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
 
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
@@ -208,7 +244,7 @@ processSuccess pool e decodedHeaders ep resp = do
   let respBody = hrsBody resp
       respHeaders = hrsHeaders resp
       respStatus = hrsStatus resp
-      invocation = mkInvo ep respStatus decodedHeaders respBody respHeaders
+      invocation = mkInvocation ep respStatus decodedHeaders respBody respHeaders
   liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation
     setSuccess e
@@ -221,18 +257,18 @@ processError pool e retryConf decodedHeaders ep err = do
   let invocation = case err of
         HClient excp -> do
           let errMsg = TBS.fromLBS $ encode $ show excp
-          mkInvo ep 1000 decodedHeaders errMsg []
+          mkInvocation ep 1000 decodedHeaders errMsg []
         HParse _ detail -> do
           let errMsg = TBS.fromLBS $ encode detail
-          mkInvo ep 1001 decodedHeaders errMsg []
+          mkInvocation ep 1001 decodedHeaders errMsg []
         HStatus errResp -> do
           let respPayload = hrsBody errResp
               respHeaders = hrsHeaders errResp
               respStatus = hrsStatus errResp
-          mkInvo ep respStatus decodedHeaders respPayload respHeaders
+          mkInvocation ep respStatus decodedHeaders respPayload respHeaders
         HOther detail -> do
           let errMsg = (TBS.fromLBS $ encode detail)
-          mkInvo ep 500 decodedHeaders errMsg []
+          mkInvocation ep 500 decodedHeaders errMsg []
   liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
     insertInvocation invocation
     retryOrSetError e retryConf err
@@ -260,10 +296,10 @@ retryOrSetError e retryConf err = do
 
     parseRetryHeader = mfilter (> 0) . readMaybe . T.unpack
 
-mkInvo
+mkInvocation
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
   -> Invocation
-mkInvo ep status reqHeaders respBody respHeaders
+mkInvocation ep status reqHeaders respBody respHeaders
   = let resp = if isClientError status
           then mkClientErr respBody
           else mkResp status respBody respHeaders
@@ -325,7 +361,7 @@ insertInvocation invo = do
           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
           VALUES ($1, $2, $3, $4)
           |] ( iEventId invo
-             , toInt64 $ iStatus invo
+             , fromIntegral $ iStatus invo :: Int64
              , Q.AltJ $ toJSON $ iRequest invo
              , Q.AltJ $ toJSON $ iResponse invo) True
   Q.unitQE defaultTxErrorHandler [Q.sql|
@@ -363,6 +399,3 @@ unlockAllEvents =
           SET locked = 'f'
           WHERE locked = 't'
           |] () False
-
-toInt64 :: (Integral a) => a -> Int64
-toInt64 = fromIntegral

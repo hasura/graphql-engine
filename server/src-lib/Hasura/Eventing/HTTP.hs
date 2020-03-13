@@ -17,8 +17,6 @@ module Hasura.Eventing.HTTP
   , ClientError(..)
   , isClientError
   , mkClientErr
-  , TriggerMetadata(..)
-  , DeliveryInfo(..)
   , mkWebhookReq
   , mkResp
   , LogEnvHeaders
@@ -27,8 +25,6 @@ module Hasura.Eventing.HTTP
   , getRetryAfterHeaderFromHTTPErr
   , getRetryAfterHeaderFromResp
   , parseRetryHeaderValue
-  , EventPayload(..)
-  , QualifiedTableStrict(..)
   ) where
 
 import qualified Data.ByteString               as BS
@@ -156,42 +152,6 @@ instance ToEngineLog (HTTPErr 'Event) Hasura where
 
 instance ToEngineLog (HTTPErr 'Scheduled) Hasura where
   toEngineLog err = (LevelError, scheduledTriggerLogType, toJSON err)
-
-data DeliveryInfo
-  = DeliveryInfo
-  { diCurrentRetry :: Int
-  , diMaxRetries   :: Int
-  } deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeliveryInfo)
-
-data TriggerMetadata
-  = TriggerMetadata { tmName :: TriggerName }
-  deriving (Show, Eq)
-
-$(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerMetadata)
-
-newtype QualifiedTableStrict = QualifiedTableStrict
-  { getQualifiedTable :: QualifiedTable
-  } deriving (Show, Eq)
-
-instance ToJSON QualifiedTableStrict where
-  toJSON (QualifiedTableStrict (QualifiedObject sn tn)) =
-     object [ "schema" .= sn
-            , "name"  .= tn
-           ]
-
-data EventPayload
-  = EventPayload
-  { epId           :: EventId
-  , epTable        :: QualifiedTableStrict
-  , epTrigger      :: TriggerMetadata
-  , epEvent        :: Value
-  , epDeliveryInfo :: DeliveryInfo
-  , epCreatedAt    :: Time.UTCTime
-  } deriving (Show, Eq)
-
-$(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
 
 mkHTTPResp :: HTTP.Response LBS.ByteString -> HTTPResp a
 mkHTTPResp resp =
