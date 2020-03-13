@@ -1,3 +1,5 @@
+.. _setup_migrations:
+
 Setting up Hasura migrations
 ============================
 

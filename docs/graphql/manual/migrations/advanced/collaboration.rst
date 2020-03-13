@@ -1,3 +1,6 @@
+
+.. _collaborate_migrations:
+
 Collaborating with migrations
 =============================
 
