@@ -51,8 +51,7 @@ const addRelationshipCellView = (
       dispatch(
         showErrorNotification(
           'Error adding relationship!',
-          'Please select a name for the relationship',
-          { custom: 'Relationship name cannot be empty' }
+          'Relationship name cannot be empty'
         )
       );
       return false;
@@ -61,7 +60,7 @@ const addRelationshipCellView = (
         showErrorNotification(
           gqlRelErrorNotif[0],
           gqlRelErrorNotif[1],
-          gqlRelErrorNotif[3]
+          gqlRelErrorNotif[2]
         )
       );
       return false;
@@ -257,9 +256,7 @@ const AddRelationship = ({
       </div>
       <div className={tableStyles.tableContainer}>
         <table
-          className={`${
-            tableStyles.table
-          } table table-bordered table-striped table-hover`}
+          className={`${tableStyles.table} table table-bordered table-striped table-hover`}
         >
           <thead>
             <tr>
@@ -319,6 +316,7 @@ class Relationships extends Component {
       manualRelAdd,
       currentSchema,
       migrationMode,
+      readOnlyMode,
       schemaList,
     } = this.props;
     const styles = require('../TableModify/ModifyTable.scss');
@@ -367,9 +365,7 @@ class Relationships extends Component {
       addedRelationshipsView = (
         <div className={tableStyles.tableContainer}>
           <table
-            className={`${
-              tableStyles.table
-            } table table-bordered table-striped table-hover`}
+            className={`${tableStyles.table} table table-bordered table-striped table-hover`}
           >
             <thead>
               <tr>
@@ -384,6 +380,7 @@ class Relationships extends Component {
                   <RelationshipEditor
                     dispatch={dispatch}
                     key={rel.objRel.rel_name}
+                    readOnlyMode={readOnlyMode}
                     relConfig={findAllFromRel(
                       allSchemas,
                       tableSchema,
@@ -397,6 +394,7 @@ class Relationships extends Component {
                   <RelationshipEditor
                     key={rel.arrRel.rel_name}
                     dispatch={dispatch}
+                    readOnlyMode={readOnlyMode}
                     relConfig={findAllFromRel(
                       allSchemas,
                       tableSchema,
@@ -419,14 +417,59 @@ class Relationships extends Component {
       );
     }
 
+    const getAddRelSection = () => {
+      if (readOnlyMode) {
+        return null;
+      }
+
+      let addRelSection = null;
+
+      if (relAdd.isActive) {
+        addRelSection = (
+          <div className={styles.activeEdit}>
+            <AddRelationship
+              tableName={tableName}
+              currentSchema={currentSchema}
+              allSchemas={allSchemas}
+              cachedRelationshipData={relAdd}
+              dispatch={dispatch}
+            />
+            <hr />
+            <AddManualRelationship
+              tableSchema={tableSchema}
+              allSchemas={allSchemas}
+              schemaList={schemaList}
+              relAdd={manualRelAdd}
+              dispatch={dispatch}
+            />
+          </div>
+        );
+      } else {
+        addRelSection = (
+          <Button
+            type="submit"
+            color="white"
+            size="sm"
+            onClick={() => {
+              dispatch(addNewRelClicked());
+            }}
+          >
+            + Add relationship
+          </Button>
+        );
+      }
+
+      return addRelSection;
+    };
+
     return (
       <div className={`${styles.container} container-fluid`}>
         <TableHeader
           dispatch={dispatch}
-          tableName={tableName}
+          table={tableSchema}
           tabName="relationships"
-          currentSchema={currentSchema}
           migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
         />
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
@@ -434,36 +477,7 @@ class Relationships extends Component {
             <h4 className={styles.subheading_text}>Relationships</h4>
             {addedRelationshipsView}
             <br />
-            {relAdd.isActive ? (
-              <div className={styles.activeEdit}>
-                <AddRelationship
-                  tableName={tableName}
-                  currentSchema={currentSchema}
-                  allSchemas={allSchemas}
-                  cachedRelationshipData={relAdd}
-                  dispatch={dispatch}
-                />
-                <hr />
-                <AddManualRelationship
-                  tableSchema={tableSchema}
-                  allSchemas={allSchemas}
-                  schemaList={schemaList}
-                  relAdd={manualRelAdd}
-                  dispatch={dispatch}
-                />
-              </div>
-            ) : (
-              <Button
-                type="submit"
-                color="white"
-                size="sm"
-                onClick={() => {
-                  dispatch(addNewRelClicked());
-                }}
-              >
-                + Add relationship
-              </Button>
-            )}
+            {getAddRelSection()}
           </div>
         </div>
         <div className={`${styles.fixed} hidden`}>{alert}</div>
@@ -481,6 +495,7 @@ Relationships.propTypes = {
   relAdd: PropTypes.object.isRequired,
   manualRelAdd: PropTypes.object.isRequired,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,
@@ -494,6 +509,7 @@ const mapStateToProps = (state, ownProps) => ({
   allSchemas: state.tables.allSchemas,
   currentSchema: state.tables.currentSchema,
   migrationMode: state.main.migrationMode,
+  readOnlyMode: state.main.readOnlyMode,
   serverVersion: state.main.serverVersion,
   schemaList: state.tables.schemaList,
   ...state.tables.modify,

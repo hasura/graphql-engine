@@ -1,0 +1,117 @@
+description: Query article table with customised root field names
+url: /v1/graphql
+status: 200
+response:
+  data:
+    Article:
+      ArticleId: 3
+      title: Article 3
+      content: Content for Article 3
+      AuthorId: 2
+      author:
+        name: Author 2
+    Articles:
+    - ArticleId: 1
+      title: Article 1
+      content: Content for Article 1
+      AuthorId: 1
+    - ArticleId: 2
+      title: Article 2
+      content: Content for Article 2
+      AuthorId: 1
+    - ArticleId: 3
+      title: Article 3
+      content: Content for Article 3
+      AuthorId: 2
+    ArticlesWhere:
+    - ArticleId: 1
+      title: Article 1
+      content: Content for Article 1
+      AuthorId: 1
+    - ArticleId: 2
+      title: Article 2
+      content: Content for Article 2
+      AuthorId: 1
+    ArticleAgg:
+      aggregate:
+        count: 3
+      nodes:
+      - ArticleId: 1
+        title: Article 1
+        content: Content for Article 1
+        author:
+          AuthorId: 1
+          name: Author 1
+      - ArticleId: 2
+        title: Article 2
+        content: Content for Article 2
+        author:
+          AuthorId: 1
+          name: Author 1
+      - ArticleId: 3
+        title: Article 3
+        content: Content for Article 3
+        author:
+          AuthorId: 2
+          name: Author 2
+    ArticleDist:
+    - ArticleId: 3
+      title: Article 3
+      content: Content for Article 3
+      AuthorId: 2
+    - ArticleId: 2
+      title: Article 2
+      content: Content for Article 2
+      AuthorId: 1
+query:
+  query: |
+    query {
+      Article(ArticleId: 3){
+        ArticleId
+        title
+        content
+        AuthorId
+        author{
+          name
+        }
+      }
+
+      Articles{
+        ArticleId
+        title
+        content
+        AuthorId
+      }
+
+      ArticlesWhere: Articles(where: {author: {AuthorId: {_eq: 1}}}){
+        ArticleId
+        title
+        content
+        AuthorId
+      }
+
+      ArticleAgg{
+        aggregate{
+          count
+        }
+        nodes{
+          ArticleId
+          title
+          content
+          author{
+            AuthorId
+            name
+          }
+        }
+      }
+
+      ArticleDist: Articles(
+        distinct_on: AuthorId,
+        order_by: [{AuthorId: desc}, {ArticleId: desc}]
+      ){
+        ArticleId
+        title
+        content
+        AuthorId
+      }
+    }

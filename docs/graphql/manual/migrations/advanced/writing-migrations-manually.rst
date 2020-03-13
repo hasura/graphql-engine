@@ -1,3 +1,9 @@
+.. meta::
+   :description: Write manual migrations for Hasura GraphQL engine
+   :keywords: hasura, docs, migration, manual
+
+.. _manual_migrations:
+
 Writing migrations manually
 ===========================
 
@@ -8,8 +14,8 @@ Writing migrations manually
 
 While the Hasura Console can auto generate migrations for every action,
 sometimes you might want to write the migrations yourself, by hand. Using the
-Hasura CLI, you can bootstrap these migration files and write the SQL for
-Postgres Schema and YAML for Hasura metadata actions.
+Hasura CLI, you can bootstrap these migration files and write the SQL for the
+Postgres schema and YAML for Hasura metadata actions.
 
 #. Set up the migration files:
 
@@ -22,7 +28,7 @@ Postgres Schema and YAML for Hasura metadata actions.
 
 #. Edit the file and add your migration actions. For the file format and
    instructions on what actions can be added, refer to
-   :doc:`../reference/migration-file-format`.
+   :ref:`migration_file_format`.
 
 #. Apply the migration:
 

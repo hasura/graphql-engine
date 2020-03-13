@@ -3,23 +3,20 @@ module Hasura.GraphQL.Utils
   , showNamedTy
   , throwVE
   , getBaseTy
-  , mapFromL
   , groupTuples
   , groupListWith
   , mkMapWith
   , showNames
-  , isValidName
+  , simpleGraphQLQuery
   ) where
 
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
 
-import qualified Data.ByteString.Lazy          as LBS
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.List.NonEmpty            as NE
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
-import qualified Text.Regex.TDFA               as TDFA
 
 showName :: G.Name -> Text
 showName name = "\"" <> G.unName name <> "\""
@@ -37,10 +34,6 @@ getBaseTy = \case
   G.TypeList _ lt     -> getBaseTyL lt
   where
     getBaseTyL = getBaseTy . G.unListType
-
-mapFromL :: (Eq k, Hashable k) => (a -> k) -> [a] -> Map.HashMap k a
-mapFromL f l =
-  Map.fromList [(f v, v) | v <- l]
 
 groupListWith
   :: (Eq k, Hashable k, Foldable t, Functor t)
@@ -74,9 +67,6 @@ showNames :: (Foldable t) => t G.Name -> Text
 showNames names =
   T.intercalate ", " $ map G.unName $ toList names
 
--- Ref: http://facebook.github.io/graphql/June2018/#sec-Names
-isValidName :: G.Name -> Bool
-isValidName =
-  TDFA.match compiledRegex . T.unpack . G.unName
-  where
-    compiledRegex = TDFA.makeRegex ("^[_a-zA-Z][_a-zA-Z0-9]*$" ::LBS.ByteString) :: TDFA.Regex
+-- A simple graphql query to be used in generators
+simpleGraphQLQuery :: Text
+simpleGraphQLQuery = "query {author {id name}}"

@@ -1,0 +1,9 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE posts;
+      DROP TABLE users;
+      DROP TABLE colors;
+    cascade: true

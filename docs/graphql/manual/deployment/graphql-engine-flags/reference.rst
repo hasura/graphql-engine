@@ -1,3 +1,9 @@
+.. meta::
+   :description: Hasura GraphQL engine server flags reference
+   :keywords: hasura, docs, deployment, server, flags
+
+.. _server_flag_reference:
+
 GraphQL engine server flags reference
 =====================================
 
@@ -17,7 +23,7 @@ The flags can be passed as ENV variables as well.
 Server flags
 ^^^^^^^^^^^^
 
-For ``graphql-engine`` command these are the flags and ENV variables available:
+For the ``graphql-engine`` command these are the available flags and ENV variables:
 
 
 .. list-table::
@@ -36,7 +42,7 @@ For ``graphql-engine`` command these are the flags and ENV variables available:
 
        Example: ``postgres://admin:mypass@mydomain.com:5432/mydb``
 
-Or you can specify following options *(only via flags)*
+Or you can specify the following options *(only via flags)*:
 
 .. code-block:: none
 
@@ -52,7 +58,7 @@ Or you can specify following options *(only via flags)*
 Command flags
 ^^^^^^^^^^^^^
 
-For ``serve`` sub-command these are the flags and ENV variables available:
+For the ``serve`` sub-command these are the available flags and ENV variables:
 
 .. list-table::
    :header-rows: 1
@@ -72,7 +78,7 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``--enable-console <true|false>``
      - ``HASURA_GRAPHQL_ENABLE_CONSOLE``
-     - Enable the Hasura Console (served by the server on ``/`` and ``/console``)
+     - Enable the Hasura Console (served by the server on ``/`` and ``/console``) (default: false)
 
    * - ``--admin-secret <ADMIN_SECRET_KEY>``
      - ``HASURA_GRAPHQL_ADMIN_SECRET``
@@ -98,17 +104,17 @@ For ``serve`` sub-command these are the flags and ENV variables available:
    * - ``--unauthorized-role <ROLE>``
      - ``HASURA_GRAPHQL_UNAUTHORIZED_ROLE``
      - Unauthorized role, used when access-key is not sent in access-key only
-       mode or "Authorization" header is absent in JWT mode.
-       Example: ``anonymous``. Now whenever "Authorization" header is
-       absent, request's role will default to "anonymous".
+       mode or the ``Authorization`` header is absent in JWT mode.
+       Example: ``anonymous``. Now whenever the "authorization" header is
+       absent, the request's role will default to ``anonymous``.
 
    * - ``--cors-domain <DOMAINS>``
      - ``HASURA_GRAPHQL_CORS_DOMAIN``
      - CSV of list of domains, excluding scheme (http/https) and including port,
-       to allow CORS for. Wildcard domains are allowed.
+       to allow for CORS. Wildcard domains are allowed.
 
    * - ``--disable-cors``
-     - N/A
+     - ``HASURA_GRAPHQL_DISABLE_CORS``
      - Disable CORS. Do not send any CORS headers on any request.
 
    * - ``--ws-read-cookie <true|false>``
@@ -128,15 +134,19 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``
-     - Postgres events polling interval
+     - Interval in milliseconds to sleep before trying to fetch events again after a fetch 
+       returned no events from postgres
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
-     - Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1)
+     - Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1).
+       New connections will be taken from a particular stripe pseudo-randomly.
 
    * - ``-c, --connections <NO_OF_CONNS>``
      - ``HASURA_GRAPHQL_PG_CONNECTIONS``
-     - Number of connections per stripe that need to be opened to Postgres (default: 50)
+     - Maximum number of Postgres connections that can be opened per stripe (default: 50). 
+       When the maximum is reached we will block until a new connection becomes available, 
+       even if there is capacity in other stripes.
 
    * - ``--timeout <SECONDS>``
      - ``HASURA_GRAPHQL_PG_TIMEOUT``
@@ -148,7 +158,7 @@ For ``serve`` sub-command these are the flags and ENV variables available:
 
    * - ``-i, --tx-iso <TXISO>``
      - ``HASURA_GRAPHQL_TX_ISOLATION``
-     - transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
+     - Transaction isolation. read-committed / repeatable-read / serializable (default: read-commited)
 
    * - ``--stringify-numeric-types``
      - ``HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES``
@@ -161,37 +171,32 @@ For ``serve`` sub-command these are the flags and ENV variables available:
      - Comma separated list of APIs (options: ``metadata``, ``graphql``, ``pgdump``) to be enabled.
        (default: ``metadata,graphql,pgdump``)
 
-   * - ``--live-queries-fallback-refetch-interval``
-     - ``HASURA_GRAPHQL_LIVE_QUERIES_FALLBACK_REFETCH_INTERVAL``
-     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
-       which cannot be multiplexed. Default: 1000 (1sec)
-
-   * - ``live-queries-multiplexed-refetch-interval``
+   * - ``--live-queries-multiplexed-refetch-interval``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL``
-     - updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
+     - Updated results (if any) will be sent at most once in this interval (in milliseconds) for live queries
        which can be multiplexed. Default: 1000 (1sec)
 
-   * - ``live-queries-multiplexed-batch-size``
+   * - ``--live-queries-multiplexed-batch-size``
      - ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE``
-     - multiplexed live queries are split into batches of the specified size. Default 100. 
+     - Multiplexed live queries are split into batches of the specified size. Default: 100
 
-   * - ``enable-allowlist``
+   * - ``--enable-allowlist``
      - ``HASURA_GRAPHQL_ENABLE_ALLOWLIST``
-     - Restrict queries allowed to be executed by GraphQL engine to those that are part of the configured
-       allow-list. Default ``false``. *(Available for versions > v1.0.0-beta.1)*
-  
-   * - ``console-assets-dir``
+     - Restrict queries allowed to be executed by the GraphQL engine to those that are part of the configured
+       allow-list. Default: ``false`` *(Available for versions > v1.0.0-beta.1)*
+
+   * - ``--console-assets-dir``
      - ``HASURA_GRAPHQL_CONSOLE_ASSETS_DIR``
      - Set the value to ``/srv/console-assets`` for the console to load assets from the server itself
-       instead of CDN. *(Available for versions > v1.0.0-beta.1)*
+       instead of CDN *(Available for versions > v1.0.0-beta.1)*
 
-   * - ``enabled-log-types``
+   * - ``--enabled-log-types``
      - ``HASURA_GRAPHQL_ENABLED_LOG_TYPES``
      - Set the enabled log types. This is a comma-separated list of log-types to
        enable. Default: ``startup, http-log, webhook-log, websocket-log``. See
        :ref:`log types <log-types>` for more details.
 
-   * - ``log-level``
+   * - ``--log-level``
      - ``HASURA_GRAPHQL_LOG_LEVEL``
      - Set the logging level. Default: ``info``. Options: ``debug``, ``info``,
        ``warn``, ``error``.

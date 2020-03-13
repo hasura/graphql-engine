@@ -1,5 +1,5 @@
 module Hasura.Server.PGDump
-  ( PGDumpReqBody
+  ( PGDumpReqBody(..)
   , execPGDump
   ) where
 
@@ -48,7 +48,8 @@ execPGDump b ci = do
         ExitSuccess   -> Right $ CS.cs (clean stdOut)
         ExitFailure _ -> Left $ CS.cs stdErr
 
-    opts = Q.pgConnString ci : "--encoding=utf8" : prbOpts b
+    connString = T.unpack $ bsToTxt $ Q.pgConnString $ Q.ciDetails ci
+    opts = connString : "--encoding=utf8" : prbOpts b
 
     clean str
       | fromMaybe False (prbCleanOutput b) =
@@ -78,6 +79,7 @@ execPGDump b ci = do
       , "SET row_security = off;"
       , "SET default_tablespace = '';"
       , "SET default_with_oids = false;"
+      , "SET default_table_access_method = heap;"
       , "CREATE SCHEMA public;"
       , "COMMENT ON SCHEMA public IS 'standard public schema';"
       ]
@@ -85,6 +87,6 @@ execPGDump b ci = do
     notifyTriggerRegex =
       let regexStr :: String =
             "^CREATE TRIGGER \"?notify_hasura_.+\"? AFTER [[:alnum:]]+ "
-              <> "ON .+ FOR EACH ROW EXECUTE PROCEDURE "
+              <> "ON .+ FOR EACH ROW EXECUTE (FUNCTION|PROCEDURE) "
               <> "\"?hdb_views\"?\\.\"?notify_hasura_.+\"?\\(\\);$"
       in TDFA.makeRegex regexStr :: TDFA.Regex

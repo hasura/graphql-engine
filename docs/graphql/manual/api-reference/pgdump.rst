@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura PG dump API reference
+   :keywords: hasura, docs, PG dump API, API reference
+
 .. _pg_dump_api_reference:
 
 PG Dump API Reference
@@ -13,7 +17,7 @@ Postgres instance that Hasura is configured with.
 
 The primary motive of this API is to provide convenience methods to initialise migrations from an
 existing Hasura instance. But the functionality can be later expanded to do other things
-such as taking data dump etc.
+such as taking a data dump etc.
 
 Endpoint
 --------
@@ -49,12 +53,10 @@ Request
 
   -  SQL front matter, like SET statements.
   -  ``CREATE SCHEMA public``.
-  -  ``COMMENT ON SCHMEA public is 'standard public schema'``;
+  -  ``COMMENT ON SCHEMA public is 'standard public schema'``;
   -  Comments (``--``) and empty newlines.
   -  Postgres triggers created by Hasura for event triggers.
 
-
-Source code for the script that is executed can be found `here <https://github.com/hasura/graphql-engine/tree/master/server/src-rsr/run_pg_dump.sh>`_.
 
 Sample response
 ^^^^^^^^^^^^^^^
@@ -94,4 +96,4 @@ state that this API is not enabled. i.e. remove it from the list of enabled APIs
    --enabled-apis="graphql,metadata"
    HASURA_GRAPHQL_ENABLED_APIS="graphql,metadata"
 
-See :doc:`../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var
+See :ref:`server_flag_reference` for info on setting the above flag/env var.

@@ -1,3 +1,9 @@
+.. meta::
+   :description: Manage remote schemas with the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, remote schema
+
+.. _api_remote_schemas:
+
 Schema/Metadata API Reference: Remote schemas
 =============================================
 
@@ -30,7 +36,8 @@ An example request as follows:
            "definition": {
                "url": "https://remote-server.com/graphql",
                "headers": [{"name": "X-Server-Request-From", "value": "Hasura"}],
-               "forward_client_headers": false
+               "forward_client_headers": false,
+               "timeout_seconds": 60
            },
            "comment": "some optional comment"
        }

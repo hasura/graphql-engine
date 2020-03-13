@@ -1,6 +1,5 @@
 module Hasura.RQL.DML.Count
   ( CountQueryP1(..)
-  , getCountDeps
   , validateCountQWith
   , validateCountQ
   , runCount
@@ -30,16 +29,6 @@ data CountQueryP1
   , cqp1Distinct :: !(Maybe [PGCol])
   } deriving (Show, Eq)
 
-getCountDeps
-  :: CountQueryP1 -> [SchemaDependency]
-getCountDeps (CountQueryP1 tn (_, mWc) mDistCols) =
-  mkParentDep tn
-  : fromMaybe [] whereDeps
-  <> fromMaybe [] distDeps
-  where
-    distDeps   = map (mkColDep "untyped" tn) <$> mDistCols
-    whereDeps   = getBoolExpDeps tn <$> mWc
-
 mkSQLCount
   :: CountQueryP1 -> S.Select
 mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
@@ -67,14 +56,14 @@ mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
           , S.selExtr     = extrs
           }
       Nothing -> S.mkSelect
-                 { S.selExtr = [S.Extractor S.SEStar Nothing] }
+                 { S.selExtr = [S.Extractor (S.SEStar Nothing) Nothing] }
 
 -- SELECT count(*) FROM (SELECT DISTINCT c1, .. cn FROM .. WHERE ..) r;
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
 validateCountQWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> CountQuery
   -> m CountQueryP1
 validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
@@ -84,7 +73,7 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
   selPerm <- modifyErr (<> selNecessaryMsg) $
              askSelPermInfo tableInfo
 
-  let colInfoMap = tiFieldInfoMap tableInfo
+  let colInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
 
   forM_ mDistCols $ \distCols -> do
     let distColAsrns = [ checkSelOnCol selPerm
@@ -111,10 +100,10 @@ validateCountQWith sessVarBldr prepValBldr (CountQuery qt mDistCols mWhere) = do
       "Relationships can't be used in \"distinct\"."
 
 validateCountQ
-  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m)
   => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
 validateCountQ =
-  liftDMLP1 . validateCountQWith sessVarFromCurrentSetting binRHSBuilder
+  runDMLP1T . validateCountQWith sessVarFromCurrentSetting binRHSBuilder
 
 countQToTx
   :: (QErrM m, MonadTx m)
@@ -129,7 +118,7 @@ countQToTx (u, p) = do
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 
 runCount
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m)
   => CountQuery -> m EncJSON
 runCount q =
   validateCountQ q >>= countQToTx

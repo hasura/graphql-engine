@@ -3,9 +3,10 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
 import Button from '../../../Common/Button/Button';
-import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
+import PrimaryKeySelector from '../Common/Components/PrimaryKeySelector';
 import ForeignKeyWrapper from './ForeignKeyWrapper';
 import UniqueKeyWrapper from './UniqueKeyWrapper';
+import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
 
 import { showErrorNotification } from '../../Common/Notification';
 
@@ -13,8 +14,7 @@ import TableName from './TableName';
 import TableColumns from './TableColumns';
 import TableComment from './TableComment';
 
-import * as tooltip from './Tooltips';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import CheckConstraints from './CheckConstraints';
 
 import {
   setTableName,
@@ -40,16 +40,22 @@ import gqlPattern, {
 
 import {
   tableNameNullNotif,
-  tableEnufColumns,
-  tableColumnNoDups,
-  tableColumnTypes,
-  tableColumnDefaults,
-  tableMinPrimaryKey,
+  tableEnufColumnsNotif,
+  tableColumnNoDupsNotif,
+  tableColumnTypesNotif,
+  tableColumnDefaultsNotif,
+  tableMinPrimaryKeyNotif,
 } from './AddWarning';
 
 import styles from '../../../Common/TableCommon/Table.scss';
-import { frequentlyUsedColumns, getFreqUsedColDisplayInfo } from './utils';
-import Dropdown from '../../../Common/Dropdown/Dropdown';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
+import {
+  foreignKeyDescription,
+  primaryKeyDescription,
+  uniqueKeyDescription,
+  checkConstraintsDescription,
+} from '../Common/TooltipMessages';
+
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
  *  2) Columns inputs
@@ -74,7 +80,7 @@ class AddTable extends Component {
     this.setColDefaultValue = this.setColDefaultValue.bind(this);
 
     this.trimEmptyColumns = this.trimEmptyColumns.bind(this);
-    this.checkAndDispatch = this.checkAndDispatch.bind(this);
+    this.checkAndNotify = this.checkAndNotify.bind(this);
     this.validateAndSubmit = this.validateAndSubmit.bind(this);
 
     this.tableNameCheck = this.tableNameCheck.bind(this);
@@ -154,31 +160,27 @@ class AddTable extends Component {
     return this.props.primaryKeys.filter(key => key !== '').length > 0;
   }
 
-  // check the validity and if invalid, dispatch
+  // check the validity and if invalid, notify
   // valid values are true and ""
   // strings get interpolated with notificationArray
   // and objects are assumed to be an array like notificationArray
   // and the second arg is ignored
-  checkAndDispatch(validated, notificationArray) {
+  checkAndNotify(validated, notificationArray) {
     if (validated === true || validated === '') return true;
     else if (validated === false) {
       this.props.dispatch(
         showErrorNotification(
           notificationArray[0],
           notificationArray[1],
-          notificationArray[2],
-          notificationArray[3]
+          notificationArray[2]
         )
       );
       return false;
     } else if (typeof validated === 'string') {
       this.props.dispatch(
-        showErrorNotification(
-          notificationArray[0],
-          validated,
-          notificationArray[2],
-          { custom: validated }
-        )
+        showErrorNotification(notificationArray[0], validated, {
+          custom: validated,
+        })
       );
       return false;
     } else if (typeof validated === 'object') {
@@ -186,12 +188,15 @@ class AddTable extends Component {
         showErrorNotification(
           notificationArray[0],
           notificationArray[1],
-          notificationArray[2],
-          notificationArray[3]
+          notificationArray[2]
         )
       );
       return false;
     }
+  }
+
+  tableNameEmptyCheck() {
+    return this.props.tableName !== null;
   }
 
   tableNameCheck() {
@@ -355,32 +360,29 @@ class AddTable extends Component {
     const validColumns = this.trimEmptyColumns(this.props.columns);
 
     if (
-      this.checkAndDispatch(
-        this.props.tableName !== null,
-        tableNameNullNotif
-      ) &&
-      this.checkAndDispatch(this.tableNameCheck(), gqlTableErrorNotif) &&
-      this.checkAndDispatch(
+      this.checkAndNotify(this.tableNameEmptyCheck(), tableNameNullNotif) &&
+      this.checkAndNotify(this.tableNameCheck(), gqlTableErrorNotif) &&
+      this.checkAndNotify(
         this.validateEnoughColumns(validColumns),
-        tableEnufColumns
+        tableEnufColumnsNotif
       ) &&
-      this.checkAndDispatch(
+      this.checkAndNotify(
         this.validateColumnNames(validColumns),
         gqlColumnErrorNotif
       ) &&
-      this.checkAndDispatch(
+      this.checkAndNotify(
         this.validateNoDupNames(validColumns),
-        tableColumnNoDups
+        tableColumnNoDupsNotif
       ) &&
-      this.checkAndDispatch(
+      this.checkAndNotify(
         this.validateColumnTypes(validColumns),
-        tableColumnTypes
+        tableColumnTypesNotif
       ) &&
-      this.checkAndDispatch(
+      this.checkAndNotify(
         this.validateColumnDefaults(validColumns),
-        tableColumnDefaults
+        tableColumnDefaultsNotif
       ) &&
-      this.checkAndDispatch(this.minPrimaryKeyCheck(), tableMinPrimaryKey)
+      this.checkAndNotify(this.minPrimaryKeyCheck(), tableMinPrimaryKeyNotif)
     ) {
       this.props.dispatch(createTableSql());
     }
@@ -406,7 +408,9 @@ class AddTable extends Component {
       schemaList,
       columnDefaultFunctions,
       columnTypeCasts,
+      checkConstraints,
     } = this.props;
+
     const getCreateBtnText = () => {
       let createBtnText = 'Add Table';
       if (ongoingRequest) {
@@ -421,28 +425,9 @@ class AddTable extends Component {
       return createBtnText;
     };
 
-    const frequentlyUsedColumnsOptions = () => {
-      return frequentlyUsedColumns.map(fuc => {
-        const { title, subTitle } = getFreqUsedColDisplayInfo(fuc);
-        return {
-          content: (
-            <div>
-              <div>
-                <b>{title}</b>
-              </div>
-              <div>{subTitle}</div>
-            </div>
-          ),
-          onClick: () => dispatch(setFreqUsedColumn(fuc)),
-        };
-      });
-    };
-
     return (
       <div
-        className={`${styles.addTablesBody} ${styles.clear_fix} ${
-          styles.padd_left
-        }`}
+        className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
       >
         <Helmet title="Add Table - Data | Hasura" />
         <div className={styles.subHeader}>
@@ -470,31 +455,16 @@ class AddTable extends Component {
               setColDefaultValue={this.setColDefaultValue}
             />
             <div>
-              <Dropdown
-                testId={'frequently-used-columns'}
-                options={frequentlyUsedColumnsOptions()}
-                position="bottom"
-                key={'frequently-used-columns'}
-                keyPrefix={'frequently-used-columns'}
-              >
-                <Button color="white" size="xs">
-                  + Frequently used columns
-                </Button>
-              </Dropdown>
+              <FrequentlyUsedColumnSelector
+                onSelect={setFreqUsedColumn}
+                action={'add'}
+                dispatch={dispatch}
+              />
             </div>
             <hr />
             <h4 className={styles.subheading_text}>
               Primary Key &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.primaryKeyDescription}
-              >
-                <i
-                  className={`fa fa-question-circle ${styles.iClickable}`}
-                  aria-hidden="true"
-                />
-              </OverlayTrigger>{' '}
-              &nbsp; &nbsp;
+              <ToolTip message={primaryKeyDescription} />
             </h4>
             <PrimaryKeySelector
               primaryKeys={primaryKeys}
@@ -505,16 +475,7 @@ class AddTable extends Component {
             <hr />
             <h4 className={styles.subheading_text}>
               Foreign Keys &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.foreignKeyDescription}
-              >
-                <i
-                  className={`fa fa-question-circle ${styles.iClickable}`}
-                  aria-hidden="true"
-                />
-              </OverlayTrigger>{' '}
-              &nbsp; &nbsp;
+              <ToolTip message={foreignKeyDescription} />
             </h4>
             <ForeignKeyWrapper
               allSchemas={allSchemas}
@@ -530,16 +491,7 @@ class AddTable extends Component {
             <hr />
             <h4 className={styles.subheading_text}>
               Unique Keys &nbsp; &nbsp;
-              <OverlayTrigger
-                placement="right"
-                overlay={tooltip.uniqueKeyDescription}
-              >
-                <i
-                  className={`fa fa-question-circle ${styles.iClickable}`}
-                  aria-hidden="true"
-                />
-              </OverlayTrigger>{' '}
-              &nbsp; &nbsp;
+              <ToolTip message={uniqueKeyDescription} />
             </h4>
             <UniqueKeyWrapper
               allSchemas={allSchemas}
@@ -549,6 +501,15 @@ class AddTable extends Component {
               uniqueKeys={uniqueKeys}
               dispatch={dispatch}
               setUniqueKeys={setUniqueKeys}
+            />
+            <hr />
+            <h4 className={styles.subheading_text}>
+              Check Constraints &nbsp; &nbsp;
+              <ToolTip message={checkConstraintsDescription} />
+            </h4>
+            <CheckConstraints
+              constraints={checkConstraints}
+              dispatch={dispatch}
             />
             <hr />
             <TableComment onChange={this.onTableCommentChange} />

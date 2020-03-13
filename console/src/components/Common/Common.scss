@@ -9,6 +9,10 @@ h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
   margin-bottom: 0;
   -webkit-margin-before: 0;
   -webkit-margin-after: 0;
+
+  a small {
+    color: inherit;
+  }
 }
 
 .error_text {
@@ -43,10 +47,20 @@ table {
   font-size: 14px;
 }
 
-table thead tr th {
+table thead tr th,
+table tbody tr th {
   background-color: #F2F2F2 !important;
   color: #4D4D4D;
   font-weight: 600 !important;
+}
+
+.full_container {
+  margin: 20px;
+  min-width: fit-content;
+}
+
+.fit_content {
+  width: fit-content;
 }
 
 .pageSidebar {
@@ -116,7 +130,7 @@ table thead tr th {
         display: inline-block;
       }
     }
-   }
+  }
 }
 
 .sidebarCreateTable {
@@ -167,8 +181,13 @@ table thead tr th {
   display: flex;
 }
 
-.line_mar {
-  margin: 15px 20px;
+.flex_space_between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.flex_0 {
+  flex: 0;
 }
 
 .wd5 {
@@ -196,6 +215,10 @@ table thead tr th {
 .wd100 {
   width: 100%;
   float: left;
+}
+
+.wd100Percent {
+  width: 100% !important;
 }
 
 .wd90 {
@@ -412,6 +435,10 @@ input {
   margin: 0 !important;
 }
 
+.remove_margin_top {
+  margin-top: 0 !important;
+}
+
 .display_inline {
   display: inline-block;
 }
@@ -493,6 +520,10 @@ input {
 
 .add_pad_left {
   padding-left: 15px;
+}
+
+.add_padd_left_18 {
+  padding-left: 18px;
 }
 
 .add_mar_top_small {
@@ -579,6 +610,10 @@ code {
   padding-top: 10px;
 }
 
+.add_pad_top {
+  padding-top: 20px;
+}
+
 .padd_bottom {
   padding-bottom: 10px !important;
 }
@@ -586,6 +621,7 @@ code {
 .add_pad_bottom {
   padding-bottom: 20px;
 }
+
 
 .add_padd_bottom {
   padding-bottom: 25px;
@@ -754,6 +790,10 @@ code {
   float: left;
 }
 
+.text_center {
+  text-align: center;
+}
+
 .block_wrapper {
   padding: 20px;
   background-color: #fff;
@@ -859,6 +899,14 @@ code {
 
 .text_gray {
   color: #767E96
+}
+
+.text_link {
+  color: #337ab7;
+}
+
+.text_link:hover, .text_link:focus {
+  color: #23527c;
 }
 
 .docsButton {
@@ -1325,8 +1373,12 @@ code {
   width: 325px;
 }
 
-.wd100Percent {
-  width: 100% !important;
+.cursorNotAllowed {
+  cursor: not-allowed;
+}
+
+.hiddenMoreWidth {
+  width: 300px;
 }
 
 /* container height subtracting top header and bottom scroll bar */

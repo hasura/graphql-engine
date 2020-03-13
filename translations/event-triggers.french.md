@@ -35,11 +35,11 @@ La manière la plus rapide de tester les évènements déclencheurs est via Hero
 3. Configurez votre premier évènement déclencheur et webhook
 
    Créez une table, configurez le changement de donnée que vous souhaitez utiliser comme déclencheur et invoquez immédiatement un webhook en ajoutant une nouvelle ligne dans votre table.
-   Suivez ce [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-event-trigger.html).
+   Suivez ce [simple guide](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-event-trigger.html).
 
 ### Autres méthodes de déploiement
 
-Pour les déploiements basés sur Docker et le options de configuration avancées, consultez les [guides de déploiement](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+Pour les déploiements basés sur Docker et le options de configuration avancées, consultez les [guides de déploiement](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html).
 
 ### Demo (*30 secondes*)
 
@@ -68,7 +68,7 @@ Déclenchez des notifications push et des emails à partir d'évènements de la 
 
 * [Regardez la démo](https://www.youtube.com/watch?v=nuSHkzE2-zo)
 * [Essayez la](https://serverless-push.demo.hasura.app/)
-* [Tutoriel](../community/examples/serverless-push)
+* [Tutoriel](../community/sample-apps/serverless-push)
 
 
 <!--
@@ -88,7 +88,7 @@ Transformez et chargez de la donnée dans des data-stores externes. Allez voir c
 
 * [Regardez la démo](https://youtu.be/kWVEBWdEVAA)
 * [Essayez la](https://serverless-etl.demo.hasura.app/)
-* [Tutoriel](../community/examples/serverless-etl)
+* [Tutoriel](../community/sample-apps/serverless-etl)
 
 ### Construction d'UX réactive pour votre backend asynchrone avec une API GraphQL temps-réel
 

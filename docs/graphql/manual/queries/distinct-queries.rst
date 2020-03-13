@@ -1,15 +1,26 @@
+.. meta::
+   :description: Make distinct queries with Hasura
+   :keywords: hasura, docs, query, distinct query
+
+.. _distinct_queries:
+
 Distinct query results
 ======================
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
+
+The **distinct_on** argument
+----------------------------
 
 You can fetch rows with only distinct values of a column using the ``distinct_on`` argument.
 
-This requires the data to be first sorted by the column i.e. the ``distinct_on`` column should also be the first
-``order_by`` column. See :doc:`sort queries <sorting>` for more info on using ``order_by``.
+It is typically recommended to use ``order_by`` along with ``distinct_on`` to ensure we get predictable results
+*(otherwise any arbitrary row with a distinct value of the column may be returned)*.
+Note that the ``distinct_on`` column needs to be the first column in the ``order_by`` expression.
+See :ref:`sort queries <sort_query_results>` for more info on using ``order_by``.
 
 .. code-block:: graphql
 
@@ -31,7 +42,7 @@ You can see the complete specification of the ``distinct_on`` argument in the :r
 Fetch results with distinct values of a particular field
 --------------------------------------------------------
 
-**For example**, fetch highest salaried employee from each department:
+**For example**, fetch the employee with the highest salary from each department:
 
 .. graphiql::
    :view_only:

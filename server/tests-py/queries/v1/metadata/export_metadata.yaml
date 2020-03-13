@@ -1,40 +1,39 @@
-description: Export schema cache (metadata)
+description: Export metadata
 url: /v1/query
 status: 200
 response:
-  remote_schemas: []
+  version: 2
   tables:
-  - table: author
-    object_relationships: []
+  - table:
+      schema: public
+      name: article
+    object_relationships:
+    - name: author
+      using:
+        foreign_key_constraint_on: author_id
+  - table:
+      schema: public
+      name: author
     array_relationships:
-    - using:
+    - name: articles
+      using:
         foreign_key_constraint_on:
           column: author_id
-          table: article
-      name: articles
+          table:
+            schema: public
+            name: article
       comment: List all articles of the author
-    insert_permissions: []
-    select_permissions: []
-    update_permissions: []
-    delete_permissions: []
-    event_triggers: []
-  - table: article
-    object_relationships:
-    - using:
-        foreign_key_constraint_on: author_id
-      name: author
-      comment: null
-    array_relationships: []
-    insert_permissions: []
-    select_permissions: []
-    update_permissions: []
-    delete_permissions: []
-    event_triggers: []
-  query_templates: []
-  query_collections: []
-  allowlist: []
+    computed_fields:
+    - name: get_articles
+      definition:
+        function:
+          schema: public
+          name: fetch_articles
+        table_argument: author_row
   functions:
-  - search_articles
+  - function:
+      schema: public
+      name: search_articles
 
 query:
   type: export_metadata

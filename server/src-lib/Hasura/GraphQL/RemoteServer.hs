@@ -5,24 +5,22 @@ import           Control.Lens                  ((^.))
 import           Data.Aeson                    ((.:), (.:?))
 import           Data.FileEmbed                (embedStringFile)
 import           Data.Foldable                 (foldlM)
+import           Hasura.HTTP
 import           Hasura.Prelude
 
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
-import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as T
 import qualified Language.GraphQL.Draft.Parser as G
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.Wreq                  as Wreq
 
-import           Hasura.HTTP                   (wreqOptions)
-import           Hasura.RQL.DDL.Headers        (getHeadersFromConf)
+import           Hasura.RQL.DDL.Headers        (makeHeadersFromConf)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils           (httpExceptToJSON)
+import           Hasura.Server.Version         (HasVersion)
 
 import qualified Hasura.GraphQL.Context        as GC
 import qualified Hasura.GraphQL.Schema         as GS
@@ -32,17 +30,24 @@ introspectionQuery :: BL.ByteString
 introspectionQuery = $(embedStringFile "src-rsr/introspection.json")
 
 fetchRemoteSchema
-  :: (MonadIO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> RemoteSchemaName
   -> RemoteSchemaInfo
   -> m GC.RemoteGCtx
-fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _) = do
-  headers <- getHeadersFromConf headerConf
-  let hdrs = flip map headers $
-             \(hn, hv) -> (CI.mk . T.encodeUtf8 $ hn, T.encodeUtf8 hv)
-      options = wreqOptions manager hdrs
-  res  <- liftIO $ try $ Wreq.postWith options (show url) introspectionQuery
+fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) = do
+  headers <- makeHeadersFromConf headerConf
+  let hdrsWithDefaults = addDefaultHeaders headers
+
+  initReqE <- liftIO $ try $ HTTP.parseRequest (show url)
+  initReq <- either throwHttpErr pure initReqE
+  let req = initReq
+           { HTTP.method = "POST"
+           , HTTP.requestHeaders = hdrsWithDefaults
+           , HTTP.requestBody = HTTP.RequestBodyLBS introspectionQuery
+           , HTTP.responseTimeout = HTTP.responseTimeoutMicro (timeout * 1000000)
+           }
+  res  <- liftIO $ try $ HTTP.httpLbs req manager
   resp <- either throwHttpErr return res
 
   let respData = resp ^. Wreq.responseBody
@@ -106,7 +111,7 @@ mkDefaultRemoteGCtx
   :: (MonadError QErr m)
   => [GC.RemoteGCtx] -> m GS.GCtx
 mkDefaultRemoteGCtx =
-  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GS.emptyGCtx
+  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GC.emptyGCtx
 
 -- merge a remote schema `gCtx` into current `gCtxMap`
 mergeRemoteSchema
@@ -142,7 +147,7 @@ mergeGCtx gCtx rmMergedGCtx = do
 
 convRemoteGCtx :: GC.RemoteGCtx -> GS.GCtx
 convRemoteGCtx rmGCtx =
-  GS.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
+  GC.emptyGCtx { GS._gTypes     = GC._rgTypes rmGCtx
                , GS._gQueryRoot = GC._rgQueryRoot rmGCtx
                , GS._gMutRoot   = GC._rgMutationRoot rmGCtx
                , GS._gSubRoot   = GC._rgSubscriptionRoot rmGCtx
@@ -153,43 +158,10 @@ mergeQueryRoot :: GS.GCtx -> GS.GCtx -> VT.ObjTyInfo
 mergeQueryRoot a b = GS._gQueryRoot a <> GS._gQueryRoot b
 
 mergeMutRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
-mergeMutRoot a b =
-  let objA' = fromMaybe mempty $ GS._gMutRoot a
-      objB  = fromMaybe mempty $ GS._gMutRoot b
-      objA  = newRootOrEmpty objA' objB
-      merged = objA <> objB
-  in bool (Just merged) Nothing $ merged == mempty
-  where
-    newRootOrEmpty x y =
-      if x == mempty && y /= mempty
-      then mkNewEmptyMutRoot
-      else x
-
-mkNewEmptyMutRoot :: VT.ObjTyInfo
-mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") Set.empty Map.empty
-
-mkNewMutRoot :: VT.ObjFieldMap -> VT.ObjTyInfo
-mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") Set.empty flds
+mergeMutRoot a b = GS._gMutRoot a <> GS._gMutRoot b
 
 mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
-mergeSubRoot a b =
-  let objA' = fromMaybe mempty $ GS._gSubRoot a
-      objB  = fromMaybe mempty $ GS._gSubRoot b
-      objA  = newRootOrEmpty objA' objB
-      merged = objA <> objB
-  in bool (Just merged) Nothing $ merged == mempty
-  where
-    newRootOrEmpty x y =
-      if x == mempty && y /= mempty
-      then mkNewEmptySubRoot
-      else x
-
-mkNewEmptySubRoot :: VT.ObjTyInfo
-mkNewEmptySubRoot = VT.ObjTyInfo (Just "subscription root")
-                    (G.NamedType "subscription_root") Set.empty Map.empty
-
+mergeSubRoot a b = GS._gSubRoot a <> GS._gSubRoot b
 
 mergeTyMaps
   :: VT.TypeMap

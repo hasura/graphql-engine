@@ -1,30 +1,49 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
-import { changeTableOrViewName } from '../TableModify/ModifyActions';
+import { changeTableName } from '../TableModify/ModifyActions';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
+import {
+  checkIfTable,
+  getTableName,
+  getTableSchema,
+} from '../../../Common/utils/pgUtils';
+import {
+  getSchemaBaseRoute,
+  getTableBrowseRoute,
+  getTableEditRowRoute,
+  getTableInsertRowRoute,
+  getTableModifyRoute,
+  getTablePermissionsRoute,
+  getTableRelationshipsRoute,
+} from '../../../Common/utils/routesUtils';
 
 const TableHeader = ({
-  tableName,
   tabName,
   count,
+  table,
   migrationMode,
-  currentSchema,
+  readOnlyMode,
   dispatch,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
-  let capitalised = tabName;
-  capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
-  let showCount = '';
+
+  const capitalisedTabName = tabName[0].toUpperCase() + tabName.slice(1);
+
+  const tableName = getTableName(table);
+  const tableSchema = getTableSchema(table);
+  const isTable = checkIfTable(table);
+
+  let countDisplay = '';
   if (!(count === null || count === undefined)) {
-    showCount = '(' + count + ')';
+    countDisplay = '(' + count + ')';
   }
   const activeTab = tabNameMap[tabName];
 
   const saveTableNameChange = newName => {
-    dispatch(changeTableOrViewName(true, tableName, newName));
+    dispatch(changeTableName(tableName, newName, isTable));
   };
 
   const getBreadCrumbs = () => {
@@ -38,13 +57,12 @@ const TableHeader = ({
         url: '/data/schema/',
       },
       {
-        title: currentSchema,
-        url: '/data/schema/' + currentSchema,
+        title: tableSchema,
+        url: getSchemaBaseRoute(tableSchema),
       },
       {
         title: tableName,
-        url:
-          '/data/schema/' + currentSchema + '/tables/' + tableName + '/browse',
+        url: getTableBrowseRoute(tableSchema, tableName, isTable),
       },
       {
         title: activeTab,
@@ -53,9 +71,21 @@ const TableHeader = ({
     ];
   };
 
+  const getTab = (tab, link, title, dataTestId) => {
+    return (
+      <li role="presentation" className={tabName === tab ? styles.active : ''}>
+        <Link to={link} data-test={dataTestId || 'table-' + tab}>
+          {title}
+        </Link>
+      </li>
+    );
+  };
+
   return (
     <div>
-      <Helmet title={capitalised + ' - ' + tableName + ' - Data | Hasura'} />
+      <Helmet
+        title={capitalisedTabName + ' - ' + tableName + ' - Data | Hasura'}
+      />
       <div className={styles.subHeader}>
         <BreadCrumb breadCrumbs={getBreadCrumbs()} />
         <EditableHeading
@@ -64,97 +94,46 @@ const TableHeader = ({
           loading={false}
           editable={tabName === 'modify'}
           dispatch={dispatch}
-          property="table"
+          property={isTable ? 'table' : 'view'}
         />
         <div className={styles.nav}>
           <ul className="nav nav-pills">
-            <li
-              role="presentation"
-              className={tabName === 'browse' ? styles.active : ''}
-            >
-              <Link
-                to={
-                  '/data/schema/' +
-                  currentSchema +
-                  '/tables/' +
-                  tableName +
-                  '/browse'
-                }
-                data-test="table-browse-rows"
-              >
-                Browse Rows {showCount}
-              </Link>
-            </li>
-            <li
-              role="presentation"
-              className={tabName === 'insert' ? styles.active : ''}
-            >
-              <Link
-                to={
-                  '/data/schema/' +
-                  currentSchema +
-                  '/tables/' +
-                  tableName +
-                  '/insert'
-                }
-                data-test="table-insert-rows"
-              >
-                Insert Row
-              </Link>
-            </li>
-            {migrationMode ? (
-              <li
-                role="presentation"
-                className={tabName === 'modify' ? styles.active : ''}
-              >
-                <Link
-                  to={
-                    '/data/schema/' +
-                    currentSchema +
-                    '/tables/' +
-                    tableName +
-                    '/modify'
-                  }
-                  data-test="table-modify"
-                >
-                  Modify
-                </Link>
-              </li>
-            ) : null}
-            <li
-              role="presentation"
-              className={tabName === 'relationships' ? styles.active : ''}
-            >
-              <Link
-                to={
-                  '/data/schema/' +
-                  currentSchema +
-                  '/tables/' +
-                  tableName +
-                  '/relationships'
-                }
-                data-test="table-relationships"
-              >
-                Relationships
-              </Link>
-            </li>
-            <li
-              role="presentation"
-              className={tabName === 'permissions' ? styles.active : ''}
-            >
-              <Link
-                to={
-                  '/data/schema/' +
-                  currentSchema +
-                  '/tables/' +
-                  tableName +
-                  '/permissions'
-                }
-                data-test="table-permissions"
-              >
-                Permissions
-              </Link>
-            </li>
+            {getTab(
+              'browse',
+              getTableBrowseRoute(tableSchema, tableName, isTable),
+              `Browse Rows ${countDisplay}`,
+              'table-browse-rows'
+            )}
+            {!readOnlyMode &&
+              isTable &&
+              getTab(
+                'insert',
+                getTableInsertRowRoute(tableSchema, tableName, isTable),
+                'Insert Row',
+                'table-insert-rows'
+              )}
+            {migrationMode &&
+              getTab(
+                'modify',
+                getTableModifyRoute(tableSchema, tableName, isTable),
+                'Modify'
+              )}
+            {getTab(
+              'relationships',
+              getTableRelationshipsRoute(tableSchema, tableName, isTable),
+              'Relationships'
+            )}
+            {getTab(
+              'permissions',
+              getTablePermissionsRoute(tableSchema, tableName, isTable),
+              'Permissions'
+            )}
+            {tabName === 'edit' &&
+              getTab(
+                'edit',
+                getTableEditRowRoute(tableSchema, tableName, isTable),
+                'Edit Row'
+              )}
           </ul>
         </div>
         <div className="clearfix" />

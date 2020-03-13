@@ -4,18 +4,16 @@ module Hasura.Events.HTTP
   , runHTTP
   , isNetworkError
   , isNetworkErrorHC
-  , HLogger
-  , mkHLogger
   , ExtraContext(..)
   ) where
+
+import           Data.Either
 
 import qualified Data.Aeson                    as J
 import qualified Data.Aeson.Casing             as J
 import qualified Data.Aeson.TH                 as J
 import qualified Data.ByteString.Lazy          as B
 import qualified Data.CaseInsensitive          as CI
-import           Data.Either
-import qualified Data.HashSet                  as Set
 import qualified Data.TByteString              as TBS
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as TE
@@ -23,7 +21,6 @@ import qualified Data.Text.Encoding.Error      as TE
 import qualified Data.Time.Clock               as Time
 import qualified Network.HTTP.Client           as HTTP
 import qualified Network.HTTP.Types            as HTTP
-import qualified System.Log.FastLogger         as FL
 
 import           Control.Exception             (try)
 import           Control.Monad.IO.Class        (MonadIO, liftIO)
@@ -33,8 +30,6 @@ import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.EventTrigger
-
-type HLogger = (LogLevel, EngineLogType, J.Value) -> IO ()
 
 data ExtraContext
   = ExtraContext
@@ -53,8 +48,8 @@ data HTTPResp
 
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase){J.omitNothingFields=True} ''HTTPResp)
 
-instance ToEngineLog HTTPResp where
-  toEngineLog resp = (LevelInfo, ELTEventTrigger, J.toJSON resp )
+instance ToEngineLog HTTPResp Hasura where
+  toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
 
 mkHTTPResp :: HTTP.Response B.ByteString -> HTTPResp
 mkHTTPResp resp =
@@ -76,8 +71,8 @@ data HTTPRespExtra
 
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPRespExtra)
 
-instance ToEngineLog HTTPRespExtra where
-  toEngineLog resp = (LevelInfo, ELTEventTrigger, J.toJSON resp )
+instance ToEngineLog HTTPRespExtra Hasura where
+  toEngineLog resp = (LevelInfo, eventTriggerLogType, J.toJSON resp)
 
 data HTTPErr
   = HClient !HTTP.HttpException
@@ -101,8 +96,8 @@ instance J.ToJSON HTTPErr where
       toObj (k, v) = J.object [ "type" J..= k
                               , "detail" J..= v]
 -- encapsulates a http operation
-instance ToEngineLog HTTPErr where
-  toEngineLog err = (LevelError, ELTEventTrigger, J.toJSON err )
+instance ToEngineLog HTTPErr Hasura where
+  toEngineLog err = (LevelError, eventTriggerLogType, J.toJSON err)
 
 isNetworkError :: HTTPErr -> Bool
 isNetworkError = \case
@@ -136,28 +131,23 @@ data HTTPReq
 
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase){J.omitNothingFields=True} ''HTTPReq)
 
-instance ToEngineLog  HTTPReq where
-  toEngineLog req = (LevelInfo, ELTEventTrigger, J.toJSON req )
+instance ToEngineLog HTTPReq Hasura where
+  toEngineLog req = (LevelInfo, eventTriggerLogType, J.toJSON req)
 
+-- | Like 'HTTP.httpLbs' but we catch 'HTTP.HttpException' and return all known
+-- error-like conditions as 'HTTPErr'.
 runHTTP
   :: ( MonadReader r m
-     , MonadIO m
-     , Has HLogger r
+     , Has (Logger Hasura) r
      , Has HTTP.Manager r
+     , MonadIO m
      )
   => HTTP.Request -> Maybe ExtraContext -> m (Either HTTPErr HTTPResp)
 runHTTP req exLog = do
-  (logF:: HLogger) <- asks getter
+  logger :: Logger Hasura <- asks getter
   manager <- asks getter
   res <- liftIO $ try $ HTTP.httpLbs req manager
   case res of
-    Left e -> liftIO $ logF $ toEngineLog $ HClient e
-    Right resp -> liftIO $ logF $ toEngineLog $ HTTPRespExtra (mkHTTPResp resp) exLog
+    Left e     -> unLogger logger $ HClient e
+    Right resp -> unLogger logger $ HTTPRespExtra (mkHTTPResp resp) exLog
   return $ either (Left . HClient) anyBodyParser res
-
-mkHLogger :: LoggerCtx -> HLogger
-mkHLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogs) (logLevel, logTy, logDet) = do
-  localTime <- timeGetter
-  when (logLevel >= serverLogLevel && logTy `Set.member` enabledLogs) $
-    FL.pushLogStrLn loggerSet $ FL.toLogStr $
-    J.encode $ EngineLog localTime logLevel logTy logDet

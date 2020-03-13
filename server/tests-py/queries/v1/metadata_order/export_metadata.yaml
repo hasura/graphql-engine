@@ -1,0 +1,159 @@
+description: export metadata
+url: /v1/query
+status: 200
+query:
+  type: export_metadata
+  args: {}
+response:
+  version: 2
+  tables:
+  - table:
+      schema: public
+      name: test1
+    object_relationships:
+    - name: test2_obj1
+      using:
+        manual_configuration:
+          remote_table:
+            schema: public
+            name: test2
+          column_mapping:
+            id: id
+    - name: test2_obj2
+      using:
+        manual_configuration:
+          remote_table:
+            schema: public
+            name: test2
+          column_mapping:
+            id: id
+    insert_permissions:
+    - role: role1
+      permission:
+        check: {}
+    - role: role2
+      permission:
+        check: {}
+    select_permissions:
+    - role: role1
+      permission:
+        columns: "*"
+        filter: {}
+    - role: role2
+      permission:
+        columns: "*"
+        filter: {}
+    update_permissions:
+    - role: role1
+      permission:
+        columns: "*"
+        filter: {}
+        check:
+    - role: role2
+      permission:
+        columns: "*"
+        filter: {}
+        check:
+    delete_permissions:
+    - role: role1
+      permission:
+        filter: {}
+    - role: role2
+      permission:
+        filter: {}
+    event_triggers:
+    - name: event_trigger_1
+      definition:
+        enable_manual: false
+        insert:
+          columns: "*"
+        update:
+          columns: "*"
+      retry_conf:
+        num_retries: 0
+        interval_sec: 10
+        timeout_sec: 60
+      webhook: http://httpbin.org/post
+    - name: event_trigger_2
+      definition:
+        enable_manual: false
+        insert:
+          columns: "*"
+        update:
+          columns: "*"
+      retry_conf:
+        num_retries: 0
+        interval_sec: 10
+        timeout_sec: 60
+      webhook: http://httpbin.org/post
+  - table:
+      schema: public
+      name: test2
+    configuration:
+      custom_root_fields:
+        select: test2_select
+        insert: test2_insert
+      custom_column_names:
+        id: test2_id
+    array_relationships:
+    - name: test1_arr1
+      using:
+        manual_configuration:
+          remote_table:
+            schema: public
+            name: test2
+          column_mapping:
+            id: id
+    - name: test1_arr2
+      using:
+        manual_configuration:
+          remote_table:
+            schema: public
+            name: test2
+          column_mapping:
+            id: id
+  functions:
+  - function:
+      schema: public
+      name: get_test1
+  - function:
+      schema: public
+      name: get_test2
+  query_collections:
+  - name: collection_1
+    definition:
+      queries:
+      - name: query_1
+        query: |
+          query {
+            test1{
+              id
+            }
+          }
+      - name: query_2
+        query: |
+          query {
+            test2{
+              id
+            }
+          }
+  - name: collection_2
+    definition:
+      queries:
+      - name: query_1
+        query: |
+          query {
+            get_test1(args: {id: 1}){
+              id
+            }
+          }
+      - name: query_2
+        query: |
+          query {
+            get_test2(args: {id: 1}){
+              id
+            }
+          }
+  allowlist:
+  - collection: collection_1
+  - collection: collection_2

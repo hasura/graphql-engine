@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage Hasura migrations and metadata
+   :keywords: hasura, docs, migration, metadata
+
 .. _migrations:
 
 Migrations & Metadata
@@ -14,7 +18,7 @@ Introduction
 It is typical for developers to use some kind of "migration" tool to track
 changes to the Postgres schema. Usually the SQL statements used to create the
 tables, views etc. are stored as a single file or multiple files. Certain tools
-also let you add an "up" and a "down" step so that you can roll-back the
+also let you add an "up" and a "down" step so that you can roll back the
 changes.
 
 When you connect Hasura to a Postgres database and use the console to "track" a
@@ -22,7 +26,7 @@ table, a piece of information is added to the Hasura "metadata" (configuration)
 indicating this table in Postgres should be exposed via GraphQL. Similarly,
 most of the actions on the console update the Hasura metadata.
 
-In the development phase, you'll be using the Hasura Console to create and track
+In the development phase, you'll be using the Hasura console to create and track
 tables, create relationships, add permissions etc. When you need to move to a
 new environment, it will become quite hard to re-do all these operations using
 the console again on a fresh database. You might be looking for a way to export
@@ -40,27 +44,27 @@ Simple use cases
 
 We will split the use cases into two:
 
-1. :doc:`You're already using a migration tool for the Postgres schema
-   <manage-metadata>`. (like knex, TypeORM, Sequelize, Rails/Django
+1. :ref:`You're already using a migration tool for the Postgres schema
+   <manage_hasura_metadata>`. (like knex, TypeORM, Sequelize, Rails/Django
    migrations. In this case you only need to manage the Hasura metadata)
-2. :doc:`You're not using any migration tool for the Postgres schema
-   <manage-migrations>`. (Hasura will take care of the
+2. :ref:`You're not using any migration tool for the Postgres schema
+   <postgres_schema_metadata>`. (Hasura will take care of the
    Postgres schema also)
 
 Advanced use cases
 ------------------
 
 
-- :doc:`auto-apply-migrations`
-- :doc:`advanced/writing-migrations-manually`
-- :doc:`advanced/rolling-back-migrations`
+- :ref:`auto_apply_migrations`
+- :ref:`manual_migrations`
+- :ref:`roll_back_migrations`
 
 Reference documentation
 -----------------------
 
-- :doc:`reference/how-it-works`
-- :doc:`reference/migration-file-format`
-- :doc:`reference/metadata-file-format`
+- :ref:`migrations_how_it_works`
+- :ref:`migration_file_format`
+- :ref:`metadata_file_format`
 
 .. toctree::
   :maxdepth: 1

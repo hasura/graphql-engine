@@ -3,7 +3,7 @@ import math
 import json
 import time
 
-import yaml
+import ruamel.yaml as yaml
 import pytest
 import jwt
 from test_subscriptions import init_ws_conn
@@ -12,12 +12,13 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
 from validate import check_query
+from context import PytestConf
 
 
-if not pytest.config.getoption('--hge-jwt-key-file'):
+if not PytestConf.config.getoption('--hge-jwt-key-file'):
     pytest.skip('--hge-jwt-key-file is missing, skipping JWT tests', allow_module_level=True)
 
-if not pytest.config.getoption('--hge-jwt-conf'):
+if not PytestConf.config.getoption('--hge-jwt-conf'):
     pytest.skip('--hge-jwt-key-conf is missing, skipping JWT tests', allow_module_level=True)
 
 def get_claims_fmt(raw_conf):
@@ -284,7 +285,7 @@ class TestSubscriptionJwtExpiry(object):
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        exp = curr_time + timedelta(seconds=5)
+        exp = curr_time + timedelta(seconds=4)
         self.claims['exp'] = round(exp.timestamp())
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         payload = {
@@ -293,7 +294,7 @@ class TestSubscriptionJwtExpiry(object):
             }
         }
         init_ws_conn(hge_ctx, ws_client, payload)
-        time.sleep(5)
+        time.sleep(6)
         assert ws_client.remote_closed == True, ws_client.remote_closed
 
 

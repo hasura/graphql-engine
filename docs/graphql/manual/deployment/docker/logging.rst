@@ -1,3 +1,9 @@
+.. meta::
+   :description: Get Hasura GraphQL engine server logs with Docker deployment
+   :keywords: hasura, docs, deployment, docker, logs
+
+.. _docker_logs:
+
 Hasura GraphQL engine server logs (Docker)
 ==========================================
 
@@ -6,7 +12,7 @@ Hasura GraphQL engine server logs (Docker)
   :depth: 1
   :local:
 
-You can check logs of Hasura GraphQL engine deployed using Docker by checking the logs of the
+You can check the logs of the Hasura GraphQL engine deployed using Docker by checking the logs of the
 GraphQL engine container:
 
 .. code-block:: bash
@@ -25,4 +31,4 @@ GraphQL engine container:
 
 - https://docs.docker.com/config/containers/logging for more details on logging in Docker.
 
-- :doc:`../logging` for more details on Hasura logs.
+- :ref:`hge_logs` for more details on Hasura logs.

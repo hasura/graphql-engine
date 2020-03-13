@@ -4,7 +4,12 @@ import Button from '../../../Common/Button/Button';
 import { deleteRelMigrate, saveRenameRelationship } from './Actions';
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
+import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+
 import styles from '../TableModify/ModifyTable.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
+
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 class RelationshipEditor extends React.Component {
   constructor(props) {
@@ -50,9 +55,9 @@ class RelationshipEditor extends React.Component {
     if (!gqlPattern.test(text)) {
       return dispatch(
         showErrorNotification(
-          gqlRelErrorNotif[4],
+          gqlRelErrorNotif[3],
           gqlRelErrorNotif[1],
-          gqlRelErrorNotif[3]
+          gqlRelErrorNotif[2]
         )
       );
     }
@@ -67,36 +72,55 @@ class RelationshipEditor extends React.Component {
   };
 
   render() {
-    const { dispatch, relConfig } = this.props;
+    const { dispatch, relConfig, readOnlyMode } = this.props;
     const { text, isEditting } = this.state;
-    const { relName } = relConfig;
 
-    const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
+    const { relName } = relConfig;
 
     const onDelete = e => {
       e.preventDefault();
-      const isOk = confirm('Are you sure?');
+
+      const confirmMessage = `This will delete the relationship "${relName}" from this table`;
+      const isOk = getConfirmation(confirmMessage);
       if (isOk) {
         dispatch(deleteRelMigrate(relConfig));
       }
     };
-    const collapsed = () => (
-      <div>
-        <Button
-          color={'white'}
-          size={'xs'}
-          onClick={this.toggleEditor}
-          data-test={`relationship-toggle-editor-${relName}`}
-        >
-          Edit
-        </Button>
-        &nbsp;
-        <b>{relName}</b>
-        <div className={tableStyles.relationshipTopPadding}>
-          {getRelDef(relConfig)}
+    const collapsed = () => {
+      const getEditBtn = () => {
+        if (readOnlyMode) {
+          return null;
+        }
+
+        return (
+          <React.Fragment>
+            <Button
+              color={'white'}
+              size={'xs'}
+              onClick={this.toggleEditor}
+              data-test={`relationship-toggle-editor-${relName}`}
+            >
+              Edit
+            </Button>
+            &nbsp;
+          </React.Fragment>
+        );
+      };
+
+      return (
+        <div>
+          {getEditBtn()}
+          <b>{relName}</b>
+          <GqlCompatibilityWarning
+            identifier={relName}
+            className={styles.add_mar_left_small}
+          />
+          <div className={tableStyles.relationshipTopPadding}>
+            {getRelDef(relConfig)}
+          </div>
         </div>
-      </div>
-    );
+      );
+    };
 
     const expanded = () => (
       <div className={styles.activeEdit}>

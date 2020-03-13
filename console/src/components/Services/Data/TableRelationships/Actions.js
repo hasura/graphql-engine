@@ -204,9 +204,7 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
   const relChangesDown = [upQuery];
 
   // Apply migrations
-  const migrationName = `drop_relationship_${relMeta.relName}_${
-    relMeta.lSchema
-  }_table_${relMeta.lTable}`;
+  const migrationName = `drop_relationship_${relMeta.relName}_${relMeta.lSchema}_table_${relMeta.lTable}`;
 
   const requestMsg = 'Deleting Relationship...';
   const successMsg = 'Relationship deleted';
@@ -250,9 +248,7 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   const relChangesDown = [downQuery];
 
   // Apply migrations
-  const migrationName = `add_relationship_${state.name}_table_${
-    state.lSchema
-  }_${state.lTable}`;
+  const migrationName = `add_relationship_${state.name}_table_${state.lSchema}_${state.lTable}`;
 
   const requestMsg = 'Adding Relationship...';
   const successMsg = 'Relationship created';
@@ -377,8 +373,7 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
     dispatch(
       showErrorNotification(
         'Error adding relationship!',
-        'Please select a name for the relationship',
-        { custom: 'Relationship name cannot be empty' }
+        'Relationship name cannot be empty'
       )
     );
   } else if (!gqlPattern.test(relName)) {
@@ -386,7 +381,7 @@ const addRelViewMigrate = (tableSchema, toggleEditor) => (
       showErrorNotification(
         gqlRelErrorNotif[0],
         gqlRelErrorNotif[1],
-        gqlRelErrorNotif[3]
+        gqlRelErrorNotif[2]
       )
     );
   } else {
@@ -569,9 +564,7 @@ const autoAddRelName = obj => (dispatch, getState) => {
   const relChangesDown = [obj.downQuery];
 
   // Apply migrations
-  const migrationName = `add_relationship_${relName}_table_${currentSchema}_${
-    obj.data.tableName
-  }`;
+  const migrationName = `add_relationship_${relName}_table_${currentSchema}_${obj.data.tableName}`;
 
   const requestMsg = 'Adding Relationship...';
   const successMsg = 'Relationship created';

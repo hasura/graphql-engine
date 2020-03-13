@@ -4,13 +4,14 @@ import { connect } from 'react-redux';
 
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+import globals from '../../Globals';
 
 class RuntimeError extends Component {
   render() {
-    const errorImage = require('./error-logo.png');
+    const errorImage = `${globals.assetsPath}/common/img/hasura_icon_green.svg`;
     const styles = require('./ErrorPage.scss');
 
-    const { resetCallback } = this.props;
+    const { resetCallback, error } = this.props;
 
     return (
       <div className={styles.viewContainer}>
@@ -26,6 +27,10 @@ class RuntimeError extends Component {
                   Home
                 </Link>
                 .
+              </div>
+              <br />
+              <div>
+                <pre className={styles.errorStack}>{error.stack}</pre>
               </div>
               <br />
               <div>

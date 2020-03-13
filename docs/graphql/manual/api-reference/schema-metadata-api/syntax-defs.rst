@@ -1,3 +1,9 @@
+.. meta::
+   :description: Common syntax definitions for the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, syntax definitions
+
+.. _api_metadata_syntax_defs:
+
 Schema/Metadata API Reference: Common syntax definitions
 ========================================================
 
@@ -17,6 +23,8 @@ TableName
 
    String | QualifiedTable_
 
+.. _QualifiedTable:
+
 QualifiedTable
 ^^^^^^^^^^^^^^
 
@@ -24,8 +32,8 @@ QualifiedTable
    :class: haskell-pre
 
    {
-           "name": String,
-           "schema": String
+       "name": String,
+       "schema": String
    }
 
 .. _FunctionName:
@@ -45,14 +53,23 @@ QualifiedFunction
    :class: haskell-pre
 
    {
-           "name": String,
-           "schema": String
+       "name": String,
+       "schema": String
    }
 
 .. _RoleName:
 
 RoleName
 ^^^^^^^^
+
+.. parsed-literal::
+
+  String
+
+.. _ComputedFieldName:
+
+ComputedFieldName
+^^^^^^^^^^^^^^^^^^
 
 .. parsed-literal::
 
@@ -203,7 +220,7 @@ BoolExp
 .. parsed-literal::
    :class: haskell-pre
 
-   AndExp_ | OrExp_ | NotExp_ | TrueExp_ | ColumnExp_
+   AndExp_ | OrExp_ | NotExp_ | ExistsExp_ | TrueExp_ | ColumnExp_
 
 AndExp
 ^^^^^^
@@ -235,6 +252,18 @@ NotExp
        "$not" : BoolExp_
    }
 
+ExistsExp
+^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+       "$exists" : {
+            "_table": TableName_,
+            "_where": BoolExp_
+       }
+   }
 
 TrueExp
 ^^^^^^^
@@ -253,6 +282,8 @@ ColumnExp
    {
        PGColumn_ : { Operator_ : Value }
    }
+
+.. _MetadataOperator:
 
 Operator
 ^^^^^^^^
@@ -334,12 +365,12 @@ Operator
    * - ``_st_d_within``
      - ``ST_DWithin``
 
-(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
+(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
 
 .. note::
 
    - All operators take a JSON representation of ``geometry/geography`` values as input value.
-   - Input value for ``_st_d_within`` operator is an object:
+   - The input value for ``_st_d_within`` operator is an object:
 
      .. parsed-literal::
 
@@ -381,7 +412,7 @@ An empty JSONObject_
 
 ColumnPresetsExp
 ^^^^^^^^^^^^^^^^
-A JSONObject_ of Postgres column name to value mapping, where value can be static or derived from a session variable.
+A JSONObject_ of a Postgres column name to value mapping, where the value can be static or derived from a session variable.
 
 .. parsed-literal::
    :class: haskell-pre
@@ -392,7 +423,7 @@ A JSONObject_ of Postgres column name to value mapping, where value can be stati
       ..
    }
 
-E.g. where ``id`` is derived from session variable and ``city`` is a static value.
+E.g. where ``id`` is derived from a session variable and ``city`` is a static value.
 
 .. code-block:: json
 
@@ -431,7 +462,8 @@ RemoteSchemaDef
              "value_from_env": env-var-string
            }
       ],
-      "forward_client_headers": boolean
+      "forward_client_headers": boolean,
+      "timeout_seconds": integer
    }
 
 .. _CollectionName:
@@ -464,3 +496,112 @@ CollectionQuery
        "name": String,
        "query": String
    }
+
+.. _CustomColumnNames:
+
+CustomColumnNames
+^^^^^^^^^^^^^^^^^^
+A JSONObject_ of Postgres column name to GraphQL name mapping
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   {
+      "column1" : String,
+      "column2" : String,
+      ..
+   }
+
+.. _ActionName:
+
+ActionName
+^^^^^^^^^^
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String
+
+
+.. _WebhookURL:
+
+WebhookURL
+^^^^^^^^^^
+
+A String value which supports templating environment variables enclosed in ``{{`` and ``}}``.
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String
+
+Template example: ``https://{{ACTION_API_DOMAIN}}/create-user``
+
+.. _HeaderFromValue:
+
+HeaderFromValue
+^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - name
+     - true
+     - String
+     - Name of the header
+   * - value
+     - true
+     - String
+     - Value of the header
+
+.. _HeaderFromEnv:
+
+
+HeaderFromEnv
+^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - required
+     - Schema
+     - Description
+   * - name
+     - true
+     - String
+     - Name of the header
+   * - value_from_env
+     - true
+     - String
+     - Name of the environment variable which holds the value of the header
+
+.. _GraphQLType:
+
+GraphQLType
+^^^^^^^^^^^
+
+A GraphQL `Type Reference <https://spec.graphql.org/June2018/#sec-Type-References>`__ string.
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String
+
+Example: ``String!`` for non-nullable String type and ``[String]`` for array of String types
+
+.. _GraphQLName:
+
+GraphQLName
+^^^^^^^^^^^
+
+A string literal that conform to `GraphQL spec <https://spec.graphql.org/June2018/#Name>`__.
+
+.. parsed-literal::
+   :class: haskell-pre
+
+   String

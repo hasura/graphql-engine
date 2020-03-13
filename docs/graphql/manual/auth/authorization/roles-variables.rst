@@ -1,3 +1,9 @@
+.. meta::
+   :description: Manage roles and session variables for permissions with Hasura
+   :keywords: hasura, docs, authorization, access control, permission, role, session variable
+
+.. _roles_variables:
+
 Roles & Session variables
 =========================
 
@@ -34,8 +40,7 @@ Examples:
 Dynamic session variables
 -------------------------
 
-When you create a permission, or an access control rule, the permission rule itself needs access to some variables
-that are derived from the request itself. Let's refer to these as *session variables*.
+Permission rules can also refer to *session variables*. Session variables are key-value pairs returned from the authentication service for each request.
 
 For example: If a user makes a request, the session token maps to a ``user-id``. This ``user-id`` can be used in
 a permission to show that inserts into a table are only allowed if the ``user_id`` column has a value equal to that
@@ -43,7 +48,7 @@ of ``user-id``, the session variable.
 
 When you are constructing permission rules, however, there might be several variables that represent the business logic
 of having access to data. For example, if you have a SaaS application, you might restrict access based on a ``client_id``
-variable. If you want to provide different levels of access on different devices you might restrict access based on a
+variable. If you want to provide different levels of access on different devices, you might restrict access based on a
 ``device_type`` variable.
 
 Hasura allows you to create permission rules that can use any dynamic variable that is a property of the request.
@@ -84,17 +89,23 @@ Examples:
             }
           }
 
+.. admonition:: ABAC
+
+  Session variables are analogous to *attributes* in a typical `attribute-based access control <https://en.wikipedia.org/wiki/Attribute-based_access_control>`_ (ABAC) system.
+
+
 Modelling Roles in Hasura
 -------------------------
 
 General guidelines for modelling roles in Hasura.
 
-Roles are typically be modelled in two ways:
+Roles are typically modelled in two ways:
 
 1. **Hierarchical roles**: Access scopes are nested depending on available roles. `Roles in Github for organisations <https://help.github.com/en/articles/managing-peoples-access-to-your-organization-with-roles>`_
    is a great example of such modelling where access scopes are inherited by deeper roles:
 
    .. thumbnail:: ../../../../img/graphql/manual/auth/github-org-hierarchical-roles.png
+      :alt: Hierarchical roles
 
 2. **Flat roles**: Non-hierarchical roles with each role requiring an independent access scope to be defined.
 
@@ -124,7 +135,7 @@ partially captured by the table below (*showing access permissions for the* ``us
            }
 
   * - org-member
-    - Allow access to personally created repositories and the organisation's repositories.
+    - Allow access to personally created repositories and the organisation's repositories
     -
       .. code-block:: json
 
@@ -159,7 +170,7 @@ trivial row-level permission like ``"creator_id": {"_eq": "X-Hasura-User-Id"}`` 
 our example in the previous section, this user information (*ownership or relationship*) must be available for
 defining a permission rule.
 
-These non-trivial use-cases are to handled differently based on whether this information is available in the same
+These non-trivial use cases are to be handled differently based on whether this information is available in the same
 database or not.
 
 Relationship information is available in the same database
@@ -169,8 +180,8 @@ Let's take a closer look at the permission rule for the ``org-member`` rule in t
 section. The rule reads as "*allow access to this repository if it was created by this user or if this user is
 a member of the organisation that this repository belongs to*".
 
-The crucial piece of user information, that is presumed to be available in the same database, that makes this an
-effective rule is the mapping of users (*members*) to organizations.
+The crucial piece of user information that is presumed to be available in the same database and that makes this an
+effective rule, is the mapping of users (*members*) to organizations.
 
 Since this information is available in the same database, it can be easily leveraged via
 :ref:`Relationships in permissions <relationships-in-permissions>` (*see this reference for another
@@ -181,11 +192,11 @@ Relationship information is **not** available in the same database
 
 When this user information is not available in the database that Hasura is configured to use, session variables
 are the only avenue to pass this information to a permission rule. In our example, the mapping of users (members)
-to organizations may not have been in available in the same database.
+to organizations may not have been available in the same database.
 
 To convey this information, a session variable, say ``X-Hasura-Allowed-Organisations`` can be used by the
 configured authentication to relay this information. We can then check for the following condition to emulate
-the same rule - *is the organization that this repository belongs to part of the list of the organizations the
+the same rule: *is the organization that this repository belongs to part of the list of the organizations the
 user is a member of*.
 
 The permission for ``org-member`` role changes to this:

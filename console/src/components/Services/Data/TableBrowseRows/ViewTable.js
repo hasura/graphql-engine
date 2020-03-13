@@ -10,7 +10,6 @@ import {
 } from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
-import ViewHeader from './ViewHeader';
 import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
@@ -142,7 +141,6 @@ class ViewTable extends Component {
   render() {
     const {
       tableName,
-      tableComment,
       schemas,
       query,
       curFilter,
@@ -150,6 +148,7 @@ class ViewTable extends Component {
       count,
       activePath,
       migrationMode,
+      readOnlyMode,
       ongoingRequest,
       isProgressing,
       lastError,
@@ -160,6 +159,7 @@ class ViewTable extends Component {
       manualTriggers = [],
       triggeredRow,
       triggeredFunction,
+      location,
     } = this.props;
 
     // check if table exists
@@ -203,35 +203,27 @@ class ViewTable extends Component {
         updateInvocationFunction={this.updateInvocationFunction.bind(this)}
         triggeredRow={triggeredRow}
         triggeredFunction={triggeredFunction}
+        location={location}
+        readOnlyMode={readOnlyMode}
       />
     );
 
     // Choose the right nav bar header thing
-    const header = isView ? (
-      <ViewHeader
-        dispatch={dispatch}
-        tableName={tableName}
-        tabName="browse"
-        tableComment={tableComment}
-        migrationMode={migrationMode}
-        currentSchema={currentSchema}
-      />
-    ) : (
+    const header = (
       <TableHeader
         count={count}
         dispatch={dispatch}
-        tableName={tableName}
-        tableComment={tableComment}
+        table={tableSchema}
         tabName="browse"
         migrationMode={migrationMode}
-        currentSchema={currentSchema}
+        readOnlyMode={readOnlyMode}
       />
     );
 
     let comment = null;
     if (tableSchema.comment) {
       comment = (
-        <div className={styles.mar_bottom}>
+        <div className={styles.add_mar_top}>
           <div className={styles.commentText + ' alert alert-warning'}>
             {tableSchema.comment}
           </div>
@@ -242,7 +234,6 @@ class ViewTable extends Component {
     return (
       <div>
         {header}
-        <br />
         {comment}
         <div>{viewRows}</div>
       </div>
@@ -259,6 +250,7 @@ ViewTable.propTypes = {
   query: PropTypes.object.isRequired,
   curFilter: PropTypes.object.isRequired,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   isProgressing: PropTypes.bool.isRequired,
   rows: PropTypes.array.isRequired,
@@ -276,6 +268,7 @@ const mapStateToProps = (state, ownProps) => {
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.view,
   };

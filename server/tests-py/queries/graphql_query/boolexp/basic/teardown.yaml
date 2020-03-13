@@ -1,39 +1,15 @@
 type: bulk
 args:
-#Drop relationship first
-- type: drop_relationship
-  args:
-    relationship: articles
-    table:
-      schema: public
-      name: author
-
 - type: run_sql
   args:
     sql: |
-      drop table article
-
-- type: run_sql
-  args:
-    sql: |
-      drop table author
-
-- type: run_sql
-  args:
-    sql: |
-      drop table city
-
-- type: run_sql
-  args:
-    sql: |
-      drop table orders
-
-- type: run_sql
-  args:
-    sql: |
-      drop table message
-
-- type: run_sql
-  args:
-    sql: |
-      drop table uuid_test
+      DROP TABLE table_with_sql_identifier;
+      DROP TABLE article;
+      DROP TABLE author;
+      DROP TABLE city;
+      DROP TABLE orders;
+      DROP TABLE message;
+      DROP TABLE uuid_test;
+      DROP TABLE "user";
+      DROP TABLE account;
+    cascade: true

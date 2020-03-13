@@ -41,3 +41,11 @@ args:
       author_id: 2
       title: Article 5
 
+#Insert users and accounts
+- type: run_sql
+  args:
+    sql: |
+      insert into "user" (name, is_admin)
+        values ('user_1', false), ('user_2', true)
+      ;
+      insert into account (account_no) values (1), (2) ;

@@ -1,0 +1,47 @@
+- description: Upsert into orders only if new value is greater than old value
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_orders:
+        affected_rows: 0
+  query:
+    variables:
+      placed: '2017-08-18 14:22:11.802755+02'
+    query: |
+      mutation ($placed: timestamptz) {
+        insert_orders(
+          objects: [{id: 1, placed: $placed}]
+          on_conflict: {
+            constraint:orders_pkey
+            update_columns: [placed]
+            where: {placed: {_lt: $placed}}
+          }
+        ){
+          affected_rows
+        }
+      }
+
+- description: Upsert into orders only if new value is greater than old value
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insert_orders:
+        affected_rows: 1
+  query:
+    variables:
+      placed: '2017-08-20 14:22:11.802755+02'
+    query: |
+      mutation ($placed: timestamptz) {
+        insert_orders(
+          objects: [{id: 1, placed: $placed}]
+          on_conflict: {
+            constraint:orders_pkey
+            update_columns: [placed]
+            where: {placed: {_lt: $placed}}
+          }
+        ){
+          affected_rows
+        }
+      }

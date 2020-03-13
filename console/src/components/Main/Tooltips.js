@@ -1,26 +1,12 @@
-import React from 'react';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
-import globals from '../../Globals';
+export const data = 'Data & Schema management';
 
-export const data = (
-  <Tooltip id="tooltip-data-service">Data & Schema management</Tooltip>
-);
+export const actions = 'Manage Actions';
 
-export const apiexplorer = (
-  <Tooltip id="tooltip-api-explorer">Test the GraphQL APIs</Tooltip>
-);
+export const apiExplorer = 'Test the GraphQL APIs';
 
-export const events = (
-  <Tooltip id="tooltip-events">Manage Event Triggers</Tooltip>
-);
+export const events = 'Manage Event Triggers';
 
-export const customresolver = (
-  <Tooltip id="tooltip-customresolver">Manage Remote Schemas</Tooltip>
-);
+export const remoteSchema = 'Manage Remote Schemas';
 
-export const secureEndpoint = (
-  <Tooltip id="tooltip-secure-endpoint">
-    This graphql endpoint is public and you should add an{' '}
-    {globals.adminSecretLabel}
-  </Tooltip>
-);
+export const secureEndpoint =
+  'This GraphQL endpoint is public. You should add an admin-secret';

@@ -23,7 +23,7 @@ class EventTrigger extends Component {
   }
 
   render() {
-    const { dispatch, listingTrigger } = this.props;
+    const { dispatch, listingTrigger, readOnlyMode } = this.props;
 
     const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
@@ -52,6 +52,10 @@ class EventTrigger extends Component {
     };
 
     const getAddBtn = () => {
+      if (readOnlyMode) {
+        return null;
+      }
+
       const handleClick = e => {
         e.preventDefault();
 
@@ -80,9 +84,7 @@ class EventTrigger extends Component {
 
     return (
       <div
-        className={`${styles.padd_left_remove} container-fluid ${
-          styles.padd_top
-        }`}
+        className={`${styles.padd_left_remove} container-fluid ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
           <Helmet title="Event Triggers | Hasura" />
@@ -127,6 +129,7 @@ const mapStateToProps = state => ({
   untrackedRelations: state.tables.untrackedRelations,
   currentSchema: state.tables.currentSchema,
   listingTrigger: state.triggers.listingTrigger,
+  readOnlyMode: state.main.readOnlyMode,
 });
 
 const eventTriggerConnector = connect => connect(mapStateToProps)(EventTrigger);

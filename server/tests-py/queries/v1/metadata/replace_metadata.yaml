@@ -6,7 +6,6 @@ response:
 query:
   type: replace_metadata
   args:
-    query_templates: []
     remote_schemas:
     - name: test
       comment: testing replace metadata with remote schemas
@@ -28,6 +27,12 @@ query:
       update_permissions: []
       delete_permissions: []
       event_triggers: []
+      computed_fields:
+      - name: get_articles
+        comment: null
+        definition:
+          function: fetch_articles
+          table_argument: author_row
     - table: article
       object_relationships:
       - using:

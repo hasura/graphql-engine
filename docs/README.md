@@ -1,8 +1,8 @@
 # Hasura GraphQL Engine Docs
 
-The documentation accompanying the Hasura GraphQL Engine is written with
+The documentation accompanying the Hasura GraphQL engine is written with
 [Sphinx](http://www.sphinx-doc.org/en/master/) and deployed to
-[docs.hasura.io](https://docs.hasura.io).
+[hasura.io/docs](https://hasura.io/docs).
 
 ## Contributing
 

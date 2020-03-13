@@ -3,8 +3,13 @@
 package commands
 
 import (
+	"fmt"
+	"io"
+	"os"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/update"
+	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -37,8 +42,8 @@ var rootCmd = &cobra.Command{
 					EC: ec,
 				}
 				err := u.run(true)
-				if err != nil {
-					ec.Logger.WithError(err).Error("auto-update failed, run 'hasura update-cli' to update manually")
+				if err != nil && u.EC.Version.GetCLIVersion() != version.DevVersion {
+					ec.Logger.WithError(err).Warn("auto-update failed, run 'hasura update-cli' to update manually")
 				}
 			}
 		}
@@ -60,7 +65,10 @@ func init() {
 		NewConsoleCmd(ec),
 		NewMetadataCmd(ec),
 		NewMigrateCmd(ec),
+		NewActionsCmd(ec),
+		NewPluginsCmd(ec),
 		NewVersionCmd(ec),
+		NewScriptsCmd(ec),
 		NewDocsCmd(ec),
 		NewCompletionCmd(ec),
 		NewUpdateCLICmd(ec),
@@ -70,6 +78,36 @@ func init() {
 	f.StringVar(&ec.LogLevel, "log-level", "INFO", "log level (DEBUG, INFO, WARN, ERROR, FATAL)")
 	f.StringVar(&ec.ExecutionDirectory, "project", "", "directory where commands are executed (default: current dir)")
 	f.BoolVar(&ec.SkipUpdateCheck, "skip-update-check", false, "Skip automatic update check on command execution")
+	f.BoolVar(&ec.NoColor, "no-color", false, "do not colorize output (default: false)")
+}
+
+// NewDefaultHasuraCommand creates the `hasura` command with default arguments
+func NewDefaultHasuraCommand() *cobra.Command {
+	return NewDefaultHasuraCommandWithArgs(NewDefaultPluginHandler(validPluginFilenamePrefixes), os.Args, os.Stdin, os.Stdout, os.Stderr)
+}
+
+// NewDefaultHasuraCommandWithArgs creates the `hasura` command with arguments
+func NewDefaultHasuraCommandWithArgs(pluginHandler PluginHandler, args []string, in io.Reader, out, errout io.Writer) *cobra.Command {
+	cmd := rootCmd
+
+	if pluginHandler == nil {
+		return cmd
+	}
+
+	if len(args) > 1 {
+		cmdPathPieces := args[1:]
+
+		// only look for suitable extension executables if
+		// the specified command does not already exist
+		if _, _, err := cmd.Find(cmdPathPieces); err != nil {
+			if err := HandlePluginCommand(pluginHandler, cmdPathPieces); err != nil {
+				fmt.Fprintf(errout, "%v\n", err)
+				os.Exit(1)
+			}
+		}
+	}
+
+	return cmd
 }
 
 // Execute executes the command and returns the error
@@ -78,7 +116,7 @@ func Execute() error {
 	if err != nil {
 		return errors.Wrap(err, "preparing execution context failed")
 	}
-	err = rootCmd.Execute()
+	err = NewDefaultHasuraCommand().Execute()
 	if err != nil {
 		ec.Telemetry.IsError = true
 	}

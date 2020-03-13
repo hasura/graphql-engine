@@ -10,6 +10,10 @@ from webserver import RequestHandler, WebServer, MkHandlers, Response
 
 from enum import Enum
 
+import time
+
+HGE_URLS=[]
+
 def mkJSONResp(graphql_result):
     return Response(HTTPStatus.OK, graphql_result.to_dict(),
                     {'Content-Type': 'application/json'})
@@ -25,7 +29,13 @@ class HelloWorldHandler(RequestHandler):
 class Hello(graphene.ObjectType):
     hello = graphene.String(arg=graphene.String(default_value="world"))
 
+    delayedHello = graphene.String(arg=graphene.String(default_value="world"))
+
     def resolve_hello(self, info, arg):
+        return "Hello " + arg
+
+    def resolve_delayedHello(self, info, arg):
+        time.sleep(10)
         return "Hello " + arg
 
 hello_schema = graphene.Schema(query=Hello, subscription=Hello)
@@ -607,13 +617,16 @@ class HeaderTest(graphene.ObjectType):
 
     def resolve_wassup(self, info, arg):
         headers = info.context
-        print('recvd headers: ', headers)
+        hosts = list(map(lambda o: urlparse(o).netloc, HGE_URLS))
         if not (headers.get_all('x-hasura-test') == ['abcd'] and
                 headers.get_all('x-hasura-role') == ['user'] and
                 headers.get_all('x-hasura-user-id') == ['abcd1234'] and
                 headers.get_all('content-type') == ['application/json'] and
-                headers.get_all('Authorization') == ['Bearer abcdef']):
-            raise Exception('headers dont match')
+                headers.get_all('Authorization') == ['Bearer abcdef'] and
+                len(headers.get_all('x-forwarded-host')) == 1 and
+                all(host in headers.get_all('x-forwarded-host') for host in hosts) and
+                headers.get_all('x-forwarded-user-agent') == ['python-requests/2.22.0']):
+            raise Exception('headers dont match. Received: ' + str(headers))
 
         return "Hello " + arg
 
@@ -661,6 +674,10 @@ def create_server(host='127.0.0.1', port=5000):
 def stop_server(server):
     server.shutdown()
     server.server_close()
+
+def set_hge_urls(hge_urls = []):
+    global HGE_URLS
+    HGE_URLS=hge_urls
 
 if __name__ == '__main__':
     s = create_server(host='0.0.0.0')

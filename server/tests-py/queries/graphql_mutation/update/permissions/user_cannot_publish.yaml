@@ -1,0 +1,27 @@
+description: Try to change the published flag on an unpublished article
+url: /v1/graphql
+response:
+  errors:
+  - extensions:
+      path: $
+      code: permission-error
+    message: Check constraint violation. update check constraint failed
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+status: 200
+query:
+  query: |
+    mutation update_article {
+      update_article(
+        where: {id: {_eq: 2}},
+        _set: {
+           is_published: true
+        }
+      ) {
+        affected_rows
+        returning{
+          id
+        }
+      }
+    }

@@ -5,110 +5,163 @@ own machine and how to contribute.
 
 ## Pre-requisites
 
-- [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install)
-- A Postgres server (Recommended: Use docker to run a local postgres instance)
-- GNU Make (optional)
-- [Node.js](https://nodejs.org/en/) (v8.9+)
+- [GHC](https://www.haskell.org/ghc/) 8.6.5 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+  - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
+- [Node.js](https://nodejs.org/en/) (>= v8.9)
+- npm >= 5.7
+- [gsutil](https://cloud.google.com/storage/docs/gsutil)
 - libpq-dev
-- psql
-- python >= 3.7 with pip3
+- python >= 3.5 with pip3
 
-## Upgrading npm
+The last two prerequisites can be installed on Debian with:
 
-If your npm is too old  (< 5.7),
+    $ sudo apt install libpq-dev python3 python3-pip python3-venv
 
-npm install -g npm@latest
+### Upgrading npm
 
-or
+If your npm is too old (>= 5.7 required):
 
-sudo npm install -g npm@latest
+    $ npm install -g npm@latest   # sudo may be required
 
-or update your nodejs
+or update your nodejs.
 
-## Getting pip3
-
-sudo apt install python3-pip
 
 ## Development workflow
 
-### Fork and clone
-- Fork the repo on GitHub
-- Clone your forked repo: `git clone https://github.com/<your-username>/graphql-engine`
-- `cd graphql-engine`
+You should fork the repo on github and then `git clone https://github.com/<your-username>/graphql-engine`.
+After making your changes
 
 ### Compile
-- compile console assets
-  ```
-  cd console
-  npm ci
-  npm run server-build
-  cd ..
-  ```
-- compile the server
-  ```
-  cd server
-  stack build --fast
-  ```
 
-### Run
-- Make sure postgres is running (Postgres >= 9.5)
-- Create a database on postgres
-- Run the binary: `stack exec graphql-engine -- --database-url=<database-url> serve`
+...console assets:
 
-Use `--enable-console --console-assets-dir ../console/static/dist` if you want console to be served.
+    $ cd console
+    $ npm ci
+    $ npm run server-build
+    $ cd ..
 
-database url looks like: `postgres://<username>:<password>@<host>:<port>/<dbname>`
+...and the server:
 
-### Running Postgres
+    $ cd server
+    $ ln -s cabal.project.dev cabal.project.local
+    $ cabal new-update
+    $ cabal new-build
 
-The easiest way is to run docker in a container
+### Run and test via `dev.sh`
 
-````
-docker run -p 5432:5432 -d postgres:11.1
-````
+The `dev.sh` script in the top-level `scripts/` directory is a turnkey solution to build, run, and
+test `graphql-engine` using a Docker container to run a Postgres database. **Docker is necessary to
+use `dev.sh`.**
 
-Test if it's running by
+To use `dev.sh`, first launch a new postgres container with:
 
-telnet localhost 5432
+    $ scripts/dev.sh postgres
 
-### psql
+Then in a new terminal launch `graphql-engine` in dev mode with:
 
-You will need psql or another client
+    $ scripts/dev.sh graphql-engine
 
-````
-sudo apt install postgresql-client
-````
+The `dev.sh` will print some helpful information and logs from both services
+will be printed to screen.
 
+You can run the test suite with:
 
-### Work
-- Work on the feature/fix
-- Add test cases if relevant
+    $ scripts/dev.sh test
 
-### Test
-- Install the py-test dependencies:
+This should run in isolation.
+
+### Run and test manually
+
+If you want, you can also run the server and test suite manually against a Postgres instance of your choosing.
+
+#### Run
+
+The following command can be used to build and launch a local `graphql-engine` instance:
 
 ```
-pip3 install -r tests-py/requirements.txt
+cabal new-run -- exe:graphql-engine \
+  --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
+  serve --enable-console --console-assets-dir=../console/static/dist
 ```
 
-- Make sure postgres is running
-- Set the environmental variables for event-trigger tests and run the graphql-engine:
+This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build` as mentioned above.
+
+#### Test
+
+`graphql-engine` has two test suites:
+
+  1. A small set of unit tests and integration tests written in Haskell.
+
+  2. An extensive set of end-to-end tests written in Python.
+
+Both sets of tests require a running Postgres database.
+
+##### Running the Haskell test suite
 
 ```
-export EVENT_WEBHOOK_HEADER="MyEnvValue"
-export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
-stack exec graphql-engine -- --database-url=<database-url> serve --enable-console --stringify-numeric-types
+cabal new-run -- test:graphql-engine-tests \
+  --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>'
 ```
 
-- Run tests:
+##### Running the Python test suite
 
-```
-cd tests-py
-pytest --hge-urls http://127.0.0.1:8080 --pg-urls <database_url> -vv
-```
+1. To run the Python tests, you’ll need to install the necessary Python dependencies first. It is
+   recommended that you do this in a self-contained Python venv, which is supported by Python 3.3+
+   out of the box. To create one, run:
+
+   ```
+   python3 -m venv .python-venv
+   ```
+
+   (The second argument names a directory where the venv sandbox will be created; it can be anything
+   you like, but `.python-venv` is `.gitignore`d.)
+
+   With the venv created, you can enter into it in your current shell session by running:
+
+   ```
+   source .python-venv/bin/activate
+   ```
+
+   (Source `.python-venv/bin/activate.fish` instead if you are using `fish` as your shell.)
+
+2. Install the necessary Python dependencies into the sandbox:
+
+   ```
+   pip3 install -r tests-py/requirements.txt
+   ```
+
+3. Start an instance of `graphql-engine` for the test suite to use:
+
+   ```
+   env EVENT_WEBHOOK_HEADER=MyEnvValue \
+       WEBHOOK_FROM_ENV=http://localhost:5592/ \
+     cabal new-run -- exe:graphql-engine \
+       --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
+       serve --stringify-numeric-types
+   ```
+
+   The environment variables are needed for a couple tests, and the `--stringify-numeric-types` option is used to avoid the need to do floating-point comparisons.
+
+4. With the server running, run the test suite:
+
+   ```
+   cd tests-py
+   pytest --hge-urls http://localhost:8080 \
+          --pg-urls 'postgres://<user>:<password>@<host>:<port>/<dbname>'
+   ```
+
+This will run all the tests, which can take a couple minutes (especially since some of the tests are slow). You can configure `pytest` to run only a subset of the tests; see [the `pytest` documentation](https://doc.pytest.org/en/latest/usage.html) for more details.
+
+Some other useful points of note:
+
+  - It is recommended to use a separate Postgres database for testing, since the tests will drop and recreate the `hdb_catalog` schema, and they may fail if certain tables already exist. (It’s also useful to be able to just drop and recreate the entire test database if it somehow gets into a bad state.)
+
+  - You can pass the `-v` or `-vv` options to `pytest` to enable more verbose output while running the tests and in test failures. You can also pass the `-l` option to display the current values of Python local variables in test failures.
 
 ### Create Pull Request
+
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
+- If you changed the versions of any dependencies, run `cabal new-freeze` to update the freeze file.
 - Create a pull request from your forked repo to the main repo.
 - Every pull request will automatically build and run the tests.
 

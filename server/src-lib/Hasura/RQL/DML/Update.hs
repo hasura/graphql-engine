@@ -5,7 +5,6 @@ module Hasura.RQL.DML.Update
   , traverseAnnUpd
   , AnnUpd
   , updateQueryToTx
-  , getUpdateDeps
   , runUpdate
   ) where
 
@@ -17,6 +16,7 @@ import qualified Data.Sequence            as DS
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DML.Insert    (insertCheckExpr)
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.DML.Mutation
 import           Hasura.RQL.DML.Returning
@@ -33,11 +33,12 @@ data AnnUpdG v
   { uqp1Table   :: !QualifiedTable
   , uqp1SetExps :: ![(PGCol, v)]
   , uqp1Where   :: !(AnnBoolExp v, AnnBoolExp v)
+  , upq1Check   :: !(AnnBoolExp v)
   -- we don't prepare the arguments for returning
   -- however the session variable can still be
   -- converted as desired
-  , uqp1MutFlds :: !(MutFldsG v)
-  , uqp1AllCols :: ![PGColInfo]
+  , uqp1Output  :: !(MutationOutputG v)
+  , uqp1AllCols :: ![PGColumnInfo]
   } deriving (Show, Eq)
 
 traverseAnnUpd
@@ -49,40 +50,36 @@ traverseAnnUpd f annUpd =
   AnnUpd tn
   <$> traverse (traverse f) setExps
   <*> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseMutFlds f mutFlds
+  <*> traverseAnnBoolExp f chk
+  <*> traverseMutationOutput f mutOutput
   <*> pure allCols
   where
-    AnnUpd tn setExps (whr, fltr) mutFlds allCols = annUpd
+    AnnUpd tn setExps (whr, fltr) chk mutOutput allCols = annUpd
 
 type AnnUpd = AnnUpdG S.SQLExp
 
 mkUpdateCTE
   :: AnnUpd -> S.CTE
-mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) _ _) =
+mkUpdateCTE (AnnUpd tn setExps (permFltr, wc) chk _ _) =
   S.CTEUpdate update
   where
-    update = S.SQLUpdate tn setExp Nothing tableFltr $ Just S.returningStar
+    update =
+      S.SQLUpdate tn setExp Nothing tableFltr
+        . Just
+        . S.RetExp
+        $ [ S.selectStar
+          , S.Extractor (insertCheckExpr "update check constraint failed" checkExpr) Nothing
+          ]
     setExp    = S.SetExp $ map S.SetExpItem setExps
-    tableFltr = Just $ S.WhereFrag $
-                toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
-
-getUpdateDeps
-  :: AnnUpd
-  -> [SchemaDependency]
-getUpdateDeps (AnnUpd tn setExps (_, wc) mutFlds allCols) =
-  mkParentDep tn : colDeps <> allColDeps <> whereDeps <> retDeps
-  where
-    colDeps   = map (mkColDep "on_type" tn . fst) setExps
-    allColDeps = map (mkColDep "on_type" tn . pgiName) allCols
-    whereDeps = getBoolExpDeps tn wc
-    retDeps   = map (mkColDep "untyped" tn . fst) $
-                pgColsFromMutFlds mutFlds
+    tableFltr = Just $ S.WhereFrag tableFltrExpr
+    tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
+    checkExpr = toSQLBoolExp (S.QualTable tn) chk
 
 convInc
   :: (QErrM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => (PGColumnType -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColType
+  -> PGColumnType
   -> Value
   -> m (PGCol, S.SQLExp)
 convInc f col colType val = do
@@ -91,9 +88,9 @@ convInc f col colType val = do
 
 convMul
   :: (QErrM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => (PGColumnType -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColType
+  -> PGColumnType
   -> Value
   -> m (PGCol, S.SQLExp)
 convMul f col colType val = do
@@ -102,25 +99,25 @@ convMul f col colType val = do
 
 convSet
   :: (QErrM m)
-  => (PGColType -> Value -> m S.SQLExp)
+  => (PGColumnType -> Value -> m S.SQLExp)
   -> PGCol
-  -> PGColType
+  -> PGColumnType
   -> Value
   -> m (PGCol, S.SQLExp)
 convSet f col colType val = do
   prepExp <- f colType val
   return (col, prepExp)
 
-convDefault :: (Monad m) => PGCol -> PGColType -> () -> m (PGCol, S.SQLExp)
+convDefault :: (Monad m) => PGCol -> PGColumnType -> () -> m (PGCol, S.SQLExp)
 convDefault col _ _ = return (col, S.SEUnsafe "DEFAULT")
 
 convOp
   :: (UserInfoM m, QErrM m)
-  => FieldInfoMap
+  => FieldInfoMap FieldInfo
   -> [PGCol]
   -> UpdPermInfo
   -> [(PGCol, a)]
-  -> (PGCol -> PGColType -> a -> m (PGCol, S.SQLExp))
+  -> (PGCol -> PGColumnType -> a -> m (PGCol, S.SQLExp))
   -> m [(PGCol, S.SQLExp)]
 convOp fieldInfoMap preSetCols updPerm objs conv =
   forM objs $ \(pgCol, a) -> do
@@ -142,16 +139,17 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, CacheRM m)
   => SessVarBldr m
-  -> (PGColType -> Value -> m S.SQLExp)
+  -> (PGColumnType -> Value -> m S.SQLExp)
   -> UpdateQuery
   -> m AnnUpd
 validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   let tableName = uqTable uq
   tableInfo <- withPathK "table" $ askTabInfo tableName
+  let coreInfo = _tiCoreInfo tableInfo
 
   -- If it is view then check if it is updatable
   mutableView tableName viIsUpdatable
-    (tiViewInfo tableInfo) "updatable"
+    (_tciViewInfo coreInfo) "updatable"
 
   -- Check if the role has update permissions
   updPerm <- askUpdPermInfo tableInfo
@@ -163,7 +161,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   selPerm <- modifyErr (<> selNecessaryMsg) $
              askSelPermInfo tableInfo
 
-  let fieldInfoMap = tiFieldInfoMap tableInfo
+  let fieldInfoMap = _tciFieldInfoMap coreInfo
       allCols = getCols fieldInfoMap
       preSetObj = upiSet updPerm
       preSetCols = M.keys preSetObj
@@ -200,11 +198,15 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 
   resolvedUpdFltr <- convAnnBoolExpPartialSQL sessVarBldr $
                      upiFilter updPerm
+  resolvedUpdCheck <- fromMaybe gBoolExpTrue <$>
+                        traverse (convAnnBoolExpPartialSQL sessVarBldr)
+                          (upiCheck updPerm)
 
   return $ AnnUpd
     tableName
     setExpItems
     (resolvedUpdFltr, annSQLBoolExp)
+    resolvedUpdCheck
     (mkDefaultMutFlds mAnnRetCols)
     allCols
   where
@@ -215,21 +217,21 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
       <> "without \"select\" permission on the table"
 
 validateUpdateQuery
-  :: (QErrM m, UserInfoM m, CacheRM m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m)
   => UpdateQuery -> m (AnnUpd, DS.Seq Q.PrepArg)
 validateUpdateQuery =
-  liftDMLP1 . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
+  runDMLP1T . validateUpdateQueryWith sessVarFromCurrentSetting binRHSBuilder
 
 updateQueryToTx
   :: Bool -> (AnnUpd, DS.Seq Q.PrepArg) -> Q.TxE QErr EncJSON
 updateQueryToTx strfyNum (u, p) =
   runMutation $ Mutation (uqp1Table u) (updateCTE, p)
-                (uqp1MutFlds u) (uqp1AllCols u) strfyNum
+                (uqp1Output u) (uqp1AllCols u) strfyNum
   where
     updateCTE = mkUpdateCTE u
 
 runUpdate
-  :: (QErrM m, UserInfoM m, CacheRWM m, MonadTx m, HasSQLGenCtx m)
+  :: (QErrM m, UserInfoM m, CacheRM m, MonadTx m, HasSQLGenCtx m)
   => UpdateQuery -> m EncJSON
 runUpdate q = do
   strfyNum <- stringifyNum <$> askSQLGenCtx

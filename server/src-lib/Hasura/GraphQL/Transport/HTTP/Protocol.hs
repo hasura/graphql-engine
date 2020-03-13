@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Transport.HTTP.Protocol
   ( GQLReq(..)
+  , GQLBatchedReqs(..)
   , GQLReqUnparsed
   , GQLReqParsed
   , toParsed
@@ -9,7 +10,8 @@ module Hasura.GraphQL.Transport.HTTP.Protocol
   , VariableValues
   , encodeGQErr
   , encodeGQResp
-  , GQResp(..)
+  , GQResult(..)
+  , GQResponse
   , isExecError
   , RemoteGqlResp(..)
   , GraphqlResponse(..)
@@ -63,17 +65,35 @@ $(J.deriveJSON (J.aesonDrop 3 J.camelCase){J.omitNothingFields=True}
 
 instance (Hashable a) => Hashable (GQLReq a)
 
+-- | Batched queries are sent as a JSON array of
+-- 'GQLReq' records. This newtype exists to support
+-- the unusual JSON encoding.
+--
+-- See <https://github.com/hasura/graphql-engine/issues/1812>.
+data GQLBatchedReqs a
+  = GQLSingleRequest (GQLReq a)
+  | GQLBatchedReqs [GQLReq a]
+  deriving (Show, Eq, Generic)
+  
+instance J.ToJSON a => J.ToJSON (GQLBatchedReqs a) where
+  toJSON (GQLSingleRequest q) = J.toJSON q
+  toJSON (GQLBatchedReqs qs) = J.toJSON qs
+
+instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
+  parseJSON arr@J.Array{} = GQLBatchedReqs <$> J.parseJSON arr
+  parseJSON other = GQLSingleRequest <$> J.parseJSON other
+
 newtype GQLQueryText
   = GQLQueryText
   { _unGQLQueryText :: Text
-  } deriving (Show, Eq, J.FromJSON, J.ToJSON, Hashable)
+  } deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, Hashable)
 
 type GQLReqUnparsed = GQLReq GQLQueryText
 type GQLReqParsed = GQLReq GQLExecDoc
 
 toParsed :: (MonadError QErr m ) => GQLReqUnparsed -> m GQLReqParsed
 toParsed req = case G.parseExecutableDoc gqlText of
-  Left _ -> withPathK "query" $ throwVE "not a valid graphql query"
+  Left _  -> withPathK "query" $ throwVE "not a valid graphql query"
   Right a -> return $ req { _grQuery = GQLExecDoc $ G.getExecutableDefinitions a }
   where
     gqlText = _unGQLQueryText $ _grQuery req
@@ -82,18 +102,20 @@ encodeGQErr :: Bool -> QErr -> J.Value
 encodeGQErr includeInternal qErr =
   J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
 
-data GQResp
-  = GQSuccess !BL.ByteString
+data GQResult a
+  = GQSuccess !a
   | GQPreExecError ![J.Value]
   | GQExecError ![J.Value]
-  deriving (Show, Eq)
+  deriving (Show, Eq, Functor, Foldable, Traversable)
 
-isExecError :: GQResp -> Bool
+type GQResponse = GQResult BL.ByteString
+
+isExecError :: GQResult a -> Bool
 isExecError = \case
   GQExecError _ -> True
   _             -> False
 
-encodeGQResp :: GQResp -> EncJSON
+encodeGQResp :: GQResponse -> EncJSON
 encodeGQResp gqResp =
   encJFromAssocList $ case gqResp of
     GQSuccess r      -> [("data", encJFromLBS r)]
@@ -118,7 +140,7 @@ encodeRemoteGqlResp (RemoteGqlResp d e ex) =
 
 -- | Represents a proper GraphQL response
 data GraphqlResponse
-  = GRHasura !GQResp
+  = GRHasura !GQResponse
   | GRRemote !RemoteGqlResp
 
 encodeGraphqlResponse :: GraphqlResponse -> EncJSON

@@ -4,18 +4,24 @@ import {
   defaultPresetsState,
 } from '../DataState';
 import { getEdForm, getIngForm } from '../utils';
-import { makeMigrationCall } from '../DataActions';
-import dataHeaders from '../Common/Headers';
-import { globalCookiePolicy } from '../../../../Endpoints';
-import requestAction from '../../../../utils/requestAction';
-import Endpoints from '../../../../Endpoints';
+import { makeMigrationCall, fetchRoleList } from '../DataActions';
+import {
+  findTable,
+  generateTableDef,
+  getSchemaTables,
+  getTableDef,
+  getTablePermissions,
+} from '../../../Common/utils/pgUtils';
+import {
+  getCreatePermissionQuery,
+  getDropPermissionQuery,
+} from '../../../Common/utils/v1QueryUtils';
 
-export const PERM_ADD_TABLE_SCHEMAS = 'ModifyTable/PERM_ADD_TABLE_SCHEMAS';
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
 export const PERM_SET_FILTER = 'ModifyTable/PERM_SET_FILTER';
 export const PERM_SET_FILTER_SAME_AS = 'ModifyTable/PERM_SET_FILTER_SAME_AS';
-export const PERM_TOGGLE_COLUMN = 'ModifyTable/PERM_TOGGLE_COLUMN';
-export const PERM_TOGGLE_ALL_COLUMNS = 'ModifyTable/PERM_TOGGLE_ALL_COLUMNS';
+export const PERM_TOGGLE_FIELD = 'ModifyTable/PERM_TOGGLE_FIELD';
+export const PERM_TOGGLE_ALL_FIELDS = 'ModifyTable/PERM_TOGGLE_ALL_FIELDS';
 export const PERM_ALLOW_ALL = 'ModifyTable/PERM_ALLOW_ALL';
 export const PERM_TOGGLE_ENABLE_LIMIT = 'ModifyTable/PERM_TOGGLE_ENABLE_LIMIT';
 export const PERM_TOGGLE_MODIFY_LIMIT = 'ModifyTable/PERM_TOGGLE_MODIFY_LIMIT';
@@ -62,10 +68,14 @@ const permSetFilterSameAs = filter => ({
   type: PERM_SET_FILTER_SAME_AS,
   filter,
 });
-const permToggleColumn = column => ({ type: PERM_TOGGLE_COLUMN, column });
-const permToggleAllColumns = allColumns => ({
-  type: PERM_TOGGLE_ALL_COLUMNS,
-  allColumns,
+const permToggleField = (fieldType, fieldName) => ({
+  type: PERM_TOGGLE_FIELD,
+  fieldType,
+  fieldName,
+});
+const permToggleAllFields = allFields => ({
+  type: PERM_TOGGLE_ALL_FIELDS,
+  allFields,
 });
 const permAllowAll = () => ({ type: PERM_ALLOW_ALL });
 const permCloseEdit = () => ({ type: PERM_CLOSE_EDIT });
@@ -114,7 +124,7 @@ const getFilterKey = query => {
   return query === 'insert' ? 'check' : 'filter';
 };
 
-const getBasePermissionsState = (tableSchema, role, query) => {
+const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
   const _permissions = JSON.parse(JSON.stringify(defaultPermissionsState));
 
   _permissions.table = tableSchema.table_name;
@@ -124,6 +134,7 @@ const getBasePermissionsState = (tableSchema, role, query) => {
   const rolePermissions = tableSchema.permissions.find(
     p => p.role_name === role
   );
+
   if (rolePermissions) {
     Object.keys(rolePermissions.permissions).forEach(q => {
       const localPresets = [];
@@ -158,50 +169,13 @@ const getBasePermissionsState = (tableSchema, role, query) => {
         }
       }
     });
-  } else {
+  }
+
+  if (isNewRole) {
     _permissions.newRole = role;
   }
 
   return _permissions;
-};
-
-const permAddTableSchemas = schemaNames => {
-  return (dispatch, getState) => {
-    const url = Endpoints.getSchema;
-    const options = {
-      credentials: globalCookiePolicy,
-      method: 'POST',
-      headers: dataHeaders(getState),
-      body: JSON.stringify({
-        type: 'select',
-        args: {
-          table: {
-            name: 'hdb_table',
-            schema: 'hdb_catalog',
-          },
-          columns: [
-            '*.*',
-            {
-              name: 'columns',
-              columns: ['*.*'],
-              order_by: [{ column: 'column_name', type: 'asc', nulls: 'last' }],
-            },
-          ],
-          where: { table_schema: { $in: schemaNames } },
-          order_by: [{ column: 'table_name', type: 'asc', nulls: 'last' }],
-        },
-      }),
-    };
-
-    return dispatch(requestAction(url, options)).then(
-      data => {
-        dispatch({ type: PERM_ADD_TABLE_SCHEMAS, schemas: data });
-      },
-      error => {
-        console.error('Failed to load table schemas: ' + JSON.stringify(error));
-      }
-    );
-  };
 };
 
 const updatePermissionsState = (permissions, key, value) => {
@@ -234,7 +208,11 @@ const updateApplySamePerms = (permissionsState, data, isDelete) => {
     applySamePerms.splice(data, 1);
   } else {
     if (data.index === applySamePerms.length) {
-      applySamePerms.push({ table: '', role: '', action: '' });
+      applySamePerms.push({
+        table: permissionsState.table,
+        action: permissionsState.query,
+        role: '',
+      });
     }
   }
 
@@ -254,26 +232,36 @@ const deleteFromPermissionsState = permissions => {
   return _permissions;
 };
 
-const toggleAllColumns = (permissions, allColumns) => {
-  const currColumns = permissions ? permissions.columns : [];
+// fieldType: columns / computed_fields
+const toggleAllFields = (permissions, allFields, fieldType) => {
+  let allFieldsSelected = true;
 
-  return currColumns.length === allColumns.length ? [] : allColumns;
+  Object.keys(allFields).forEach(fType => {
+    const currSelected = permissions ? permissions[fType] : [];
+
+    const allSelected = currSelected.length === allFields[fType].length;
+
+    allFieldsSelected = allFieldsSelected && allSelected;
+  });
+
+  return allFieldsSelected ? [] : allFields[fieldType];
 };
 
-const toggleColumn = (permissions, column) => {
-  const currColumns = permissions ? permissions.columns : [];
-  let _newColumns = currColumns;
+// fieldType: columns / computed_fields
+const toggleField = (permissions, fieldName, fieldType) => {
+  const currFields = permissions ? permissions[fieldType] : [];
+  let _newFields = currFields;
 
-  const columnIndex = currColumns.indexOf(column);
-  if (columnIndex === -1) {
-    _newColumns.push(column);
+  const fieldIndex = currFields.indexOf(fieldName);
+  if (fieldIndex === -1) {
+    _newFields.push(fieldName);
   } else {
-    _newColumns.splice(columnIndex, 1);
+    _newFields.splice(fieldIndex, 1);
   }
 
-  _newColumns = _newColumns.sort();
+  _newFields = _newFields.sort();
 
-  return _newColumns;
+  return _newFields;
 };
 
 const permRemoveRole = (tableSchema, roleName) => {
@@ -326,6 +314,8 @@ const permRemoveRole = (tableSchema, roleName) => {
       dispatch(permSetRoleName(''));
       // close edit box
       dispatch(permCloseEdit());
+      // fetch all roles
+      dispatch(fetchRoleList());
     };
     const customOnError = () => {};
 
@@ -395,6 +385,8 @@ const permRemoveMultipleRoles = tableSchema => {
       dispatch(permCloseEdit());
       // reset checkbox selections
       dispatch({ type: PERM_RESET_BULK_SELECT });
+      // fetch all roles
+      dispatch(fetchRoleList());
     };
     const customOnError = () => {};
 
@@ -415,6 +407,9 @@ const permRemoveMultipleRoles = tableSchema => {
 
 const applySamePermissionsBulk = tableSchema => {
   return (dispatch, getState) => {
+    const permissionsUpQueries = [];
+    const permissionsDownQueries = [];
+
     const allSchemas = getState().tables.allSchemas;
     const currentSchema = getState().tables.currentSchema;
     const permissionsState = getState().tables.modify.permissionsState;
@@ -425,16 +420,13 @@ const applySamePermissionsBulk = tableSchema => {
 
     const mainApplyTo = {
       table: table,
-      role: permissionsState.role,
       action: currentQueryType,
+      role: permissionsState.role,
     };
 
-    const permApplyToList = permissionsState.applySamePermissions.concat([
-      mainApplyTo,
-    ]);
-
-    const permissionsUpQueries = [];
-    const permissionsDownQueries = [];
+    const permApplyToList = permissionsState.applySamePermissions
+      .filter(applyTo => applyTo.table && applyTo.action && applyTo.role)
+      .concat([mainApplyTo]);
 
     let currentPermissions = [];
     allSchemas.forEach(tSchema => {
@@ -511,9 +503,9 @@ const applySamePermissionsBulk = tableSchema => {
     const migrationName =
       'apply_same_permissions_' + currentSchema + '_table_' + table;
 
-    const requestMsg = 'Applying Permissions';
-    const successMsg = 'Permission Changes Applied';
-    const errorMsg = 'Permission Changes Failed';
+    const requestMsg = 'Applying permissions';
+    const successMsg = 'Permission changes applied';
+    const errorMsg = 'Permission changes failed';
 
     const customOnSuccess = () => {
       // reset new role name
@@ -522,6 +514,125 @@ const applySamePermissionsBulk = tableSchema => {
       dispatch(permCloseEdit());
       // reset checkbox selections
       dispatch({ type: PERM_RESET_APPLY_SAME });
+      // fetch all roles
+      dispatch(fetchRoleList());
+    };
+    const customOnError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      permissionsUpQueries,
+      permissionsDownQueries,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+const copyRolePermissions = (
+  fromRole,
+  tableNameWithSchema,
+  action,
+  toRoles,
+  onSuccess
+) => {
+  return (dispatch, getState) => {
+    const permissionsUpQueries = [];
+    const permissionsDownQueries = [];
+
+    const allSchemas = getState().tables.allSchemas;
+    const currentSchema = getState().tables.currentSchema;
+
+    let tables;
+    if (tableNameWithSchema === 'all') {
+      tables = getSchemaTables(allSchemas, currentSchema);
+    } else {
+      const fromTableDef = generateTableDef(null, null, tableNameWithSchema);
+      tables = [findTable(allSchemas, fromTableDef)];
+    }
+
+    tables.forEach(table => {
+      const tableDef = getTableDef(table);
+
+      let actions;
+      if (action === 'all') {
+        actions = ['select', 'insert', 'update', 'delete'];
+      } else {
+        actions = [action];
+      }
+
+      toRoles.forEach(toRole => {
+        actions.forEach(_action => {
+          const currPermissions = getTablePermissions(table, toRole, _action);
+          const toBeAppliedPermissions = getTablePermissions(
+            table,
+            fromRole,
+            _action
+          );
+
+          if (currPermissions) {
+            // existing permission is there. so drop and recreate for down migrations
+            const deleteQuery = getDropPermissionQuery(
+              _action,
+              tableDef,
+              toRole
+            );
+            const createQuery = getCreatePermissionQuery(
+              _action,
+              tableDef,
+              toRole,
+              currPermissions
+            );
+
+            permissionsUpQueries.push(deleteQuery);
+            permissionsDownQueries.push(createQuery);
+          }
+
+          if (toBeAppliedPermissions) {
+            // now add normal create and drop permissions
+            const createQuery = getCreatePermissionQuery(
+              _action,
+              tableDef,
+              toRole,
+              toBeAppliedPermissions
+            );
+            const deleteQuery = getDropPermissionQuery(
+              _action,
+              tableDef,
+              toRole
+            );
+
+            permissionsUpQueries.push(createQuery);
+            permissionsDownQueries.push(deleteQuery);
+          }
+        });
+      });
+    });
+
+    // Apply migration
+    const migrationName =
+      'copy_role_' +
+      fromRole +
+      '_' +
+      action +
+      '_query_permissions_for_' +
+      tableNameWithSchema.replace('.', '_') +
+      '_table_to_' +
+      toRoles.join('_');
+
+    const requestMsg = 'Copying permissions';
+    const successMsg = 'Permissions copied';
+    const errorMsg = 'Permissions copy failed';
+
+    const customOnSuccess = () => {
+      onSuccess();
+      // fetch all roles
+      dispatch(fetchRoleList());
     };
     const customOnError = () => {};
 
@@ -652,6 +763,8 @@ const permChangePermissions = changeType => {
       dispatch(permSetRoleName(''));
       // close edit box
       dispatch(permCloseEdit());
+      // fetch all roles
+      dispatch(fetchRoleList());
     };
     const customOnError = () => {};
 
@@ -672,12 +785,11 @@ const permChangePermissions = changeType => {
 
 export {
   permChangeTypes,
-  permAddTableSchemas,
   permOpenEdit,
   permSetFilter,
   permSetFilterSameAs,
-  permToggleColumn,
-  permToggleAllColumns,
+  permToggleField,
+  permToggleAllFields,
   permCloseEdit,
   permSetRoleName,
   permChangePermissions,
@@ -688,8 +800,8 @@ export {
   permCustomChecked,
   permRemoveRole,
   permSetBulkSelect,
-  toggleColumn,
-  toggleAllColumns,
+  toggleField,
+  toggleAllFields,
   getFilterKey,
   getBasePermissionsState,
   updatePermissionsState,
@@ -700,4 +812,5 @@ export {
   permSetApplySamePerm,
   permDelApplySamePerm,
   applySamePermissionsBulk,
+  copyRolePermissions,
 };

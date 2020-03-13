@@ -49,6 +49,8 @@ type Driver interface {
 	// Migrate will call this function only once per instance.
 	Close() error
 
+	Scan() error
+
 	// Lock should acquire a database lock so that only one migration process
 	// can run at a time. Migrate will call this function before Run is called.
 	// If the implementation can't provide this functionality, return nil.
@@ -80,9 +82,6 @@ type Driver interface {
 	// Dirty means, a previous migration failed and user interaction is required.
 	Version() (version int64, dirty bool, err error)
 
-	// Reset cleans public schema
-	Reset() error
-
 	// First returns the very first migration version available to the driver.
 	// Migrate will call this function multiple times
 	First() (version uint64, ok bool)
@@ -102,9 +101,15 @@ type Driver interface {
 
 	Read(version uint64) (ok bool)
 
+	PushToList(migration io.Reader, fileType string, list *CustomList) error
+
+	Squash(list *CustomList, ret chan<- interface{})
+
 	SettingsDriver
 
 	MetadataDriver
+
+	GraphQLDriver
 
 	SchemaDriver
 }
@@ -125,7 +130,7 @@ func Open(url string, isCMD bool, logger *log.Logger) (Driver, error) {
 
 	d, ok := drivers[u.Scheme]
 	if !ok {
-		return nil, fmt.Errorf("database driver: unknown driver hasuradb (forgotten import?)")
+		return nil, fmt.Errorf("database driver: unknown driver %v", u.Scheme)
 	}
 
 	if logger == nil {
@@ -136,5 +141,13 @@ func Open(url string, isCMD bool, logger *log.Logger) (Driver, error) {
 }
 
 func Register(name string, driver Driver) {
+	driversMu.Lock()
+	defer driversMu.Unlock()
+	if driver == nil {
+		panic("Register driver is nil")
+	}
+	if _, dup := drivers[name]; dup {
+		panic("Register called twice for driver " + name)
+	}
 	drivers[name] = driver
 }

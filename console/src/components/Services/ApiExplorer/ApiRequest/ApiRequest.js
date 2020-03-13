@@ -6,20 +6,16 @@ import jwt from 'jsonwebtoken';
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
-import ModalWrapper from '../../../Common/ModalWrapper';
-
-import { parseAuthHeader } from './utils';
+import Modal from '../../../Common/Modal/Modal';
 
 import {
   changeRequestHeader,
   removeRequestHeader,
   focusHeaderTextbox,
   unfocusTypingHeader,
-  setInitialHeaderState,
   verifyJWTToken,
+  setHeadersBulk,
 } from '../Actions';
-
-import globals from '../../../../Globals';
 
 import GraphiQLWrapper from '../GraphiQLWrapper/GraphiQLWrapper';
 
@@ -30,11 +26,18 @@ import {
   setEndPointSectionIsOpen,
   getHeadersSectionIsOpen,
   setHeadersSectionIsOpen,
-  getGraphiQLHeadersFromLocalStorage,
-  setGraphiQLHeadersInLocalStorage,
+  persistGraphiQLHeaders,
+  getPersistedGraphiQLHeaders,
+  parseAuthHeader,
+  getDefaultGraphiqlHeaders,
+  getAdminSecret,
+  getPersistedAdminSecretHeaderWasAdded,
+  persistAdminSecretHeaderWasAdded,
+  removePersistedAdminSecretHeaderWasAdded,
 } from './utils';
 
 import styles from '../ApiExplorer.scss';
+import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
 
 const inspectJWTTooltip = (
   <Tooltip id="tooltip-inspect-jwt">Decode JWT</Tooltip>
@@ -78,19 +81,64 @@ class ApiRequest extends Component {
   }
 
   componentDidMount() {
-    const { headers } = this.props;
-    const HEADER_FROM_LS = getGraphiQLHeadersFromLocalStorage();
-    if (HEADER_FROM_LS) {
-      try {
-        const initialHeader = JSON.parse(HEADER_FROM_LS);
-        this.props.dispatch(setInitialHeaderState(initialHeader));
-      } catch (e) {
-        console.error(e);
-        setGraphiQLHeadersInLocalStorage(JSON.stringify(headers));
+    const handleHeaderInit = () => {
+      const graphiqlHeaders =
+        getPersistedGraphiQLHeaders() || getDefaultGraphiqlHeaders();
+
+      // if admin secret is set and admin secret header was ever added to headers, add admin secret header if not already present
+      const adminSecret = getAdminSecret();
+      const adminSecretHeaderWasAdded = getPersistedAdminSecretHeaderWasAdded();
+      if (adminSecret && !adminSecretHeaderWasAdded) {
+        const headerKeys = graphiqlHeaders.map(h => h.key);
+
+        // add admin secret header if not present
+        if (!headerKeys.includes(ADMIN_SECRET_HEADER_KEY)) {
+          graphiqlHeaders.push({
+            key: ADMIN_SECRET_HEADER_KEY,
+            value: adminSecret,
+            isActive: true,
+            isNewHeader: false,
+            isDisabled: true,
+          });
+        }
+
+        // set in local storage that admin secret header has been automatically added
+        persistAdminSecretHeaderWasAdded();
       }
-    } else {
-      setGraphiQLHeadersInLocalStorage(JSON.stringify(headers));
-    }
+
+      // if admin secret is not set and admin secret header was ever added to headers, remove admin secret header if present
+      if (!adminSecret && adminSecretHeaderWasAdded) {
+        const headerKeys = graphiqlHeaders.map(h => h.key);
+
+        // remove admin secret header if present
+        const adminSecretHeaderIndex = headerKeys.indexOf(
+          ADMIN_SECRET_HEADER_KEY
+        );
+        if (adminSecretHeaderIndex >= 0) {
+          graphiqlHeaders.splice(adminSecretHeaderIndex, 1);
+        }
+
+        // remove from local storage that admin secret header has been automatically added
+        removePersistedAdminSecretHeaderWasAdded();
+      }
+
+      // add an empty placeholder header
+      graphiqlHeaders.push({
+        key: '',
+        value: '',
+        isActive: true,
+        isNewHeader: true,
+        isDisabled: false,
+      });
+
+      // persist headers to local storage
+      persistGraphiQLHeaders(graphiqlHeaders);
+
+      // set headers in redux
+      this.props.dispatch(setHeadersBulk(graphiqlHeaders));
+    };
+
+    handleHeaderInit();
   }
 
   onAnalyzeBearerClose() {
@@ -226,7 +274,7 @@ class ApiRequest extends Component {
     };
 
     const getHeaderTable = () => {
-      const { headersSectionIsOpen } = this.state;
+      const { headersSectionIsOpen, adminSecretVisible } = this.state;
       const getHeaderRows = () => {
         const headers = this.props.headers;
 
@@ -242,7 +290,7 @@ class ApiRequest extends Component {
           const index = parseInt(e.target.getAttribute('data-header-id'), 10);
           this.props
             .dispatch(removeRequestHeader(index))
-            .then(r => setGraphiQLHeadersInLocalStorage(JSON.stringify(r)));
+            .then(r => persistGraphiQLHeaders(r));
         };
 
         const onHeaderValueChanged = e => {
@@ -251,7 +299,7 @@ class ApiRequest extends Component {
           const newValue = e.target.value;
           this.props
             .dispatch(changeRequestHeader(index, key, newValue, false))
-            .then(r => setGraphiQLHeadersInLocalStorage(JSON.stringify(r)));
+            .then(r => persistGraphiQLHeaders(r));
         };
 
         const onShowAdminSecretClicked = () => {
@@ -259,6 +307,9 @@ class ApiRequest extends Component {
         };
 
         return headers.map((header, i) => {
+          const isAdminSecret =
+            header.key.toLowerCase() === ADMIN_SECRET_HEADER_KEY;
+
           const getHeaderActiveCheckBox = () => {
             let headerActiveCheckbox = null;
 
@@ -338,11 +389,7 @@ class ApiRequest extends Component {
             }
 
             let type = 'text';
-            if (
-              header.key.toLowerCase() ===
-                `x-hasura-${globals.adminSecretLabel}` &&
-              !this.state.adminSecretVisible
-            ) {
+            if (isAdminSecret && !adminSecretVisible) {
               type = 'password';
             }
 
@@ -368,10 +415,7 @@ class ApiRequest extends Component {
           const getHeaderAdminVal = () => {
             let headerAdminVal = null;
 
-            if (
-              header.key.toLowerCase() ===
-              `x-hasura-${globals.adminSecretLabel}`
-            ) {
+            if (isAdminSecret) {
               headerAdminVal = (
                 <i
                   className={styles.showAdminSecret + ' fa fa-eye'}
@@ -405,7 +449,7 @@ class ApiRequest extends Component {
               } else {
                 analyzeIcon = (
                   <i
-                    className={styles.showInspector + ' fa fa-plus-square-o'}
+                    className={styles.showInspector + ' fa fa-user-secret'}
                     token={token}
                     data-header-index={i}
                     onClick={this.analyzeBearerToken}
@@ -686,18 +730,18 @@ class ApiRequest extends Component {
       };
 
       return (
-        <ModalWrapper
+        <Modal
           show={
             isAnalyzingToken &&
             tokenAnalyzeResp &&
             Object.keys(tokenAnalyzeResp).length > 0
           }
-          onHide={this.onAnalyzeBearerClose}
-          dialogClassName={styles.analyzerBearerModal}
+          onClose={this.onAnalyzeBearerClose}
+          customClass={styles.analyzerBearerModal}
           title={tokenAnalyzeError ? 'Error decoding JWT' : 'Decoded JWT'}
         >
           {getAnalyzeBearerBody()}
-        </ModalWrapper>
+        </Modal>
       );
     };
 
@@ -716,6 +760,7 @@ ApiRequest.propTypes = {
   method: PropTypes.string.isRequired,
   url: PropTypes.string.isRequired,
   headers: PropTypes.array,
+  dataHeaders: PropTypes.array,
   params: PropTypes.string,
   dispatch: PropTypes.func.isRequired,
   explorerData: PropTypes.object.isRequired,

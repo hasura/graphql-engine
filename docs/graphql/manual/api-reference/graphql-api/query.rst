@@ -1,3 +1,9 @@
+.. meta::
+   :description: Hasura GraphQL API queries and subscriptions API reference
+   :keywords: hasura, docs, GraphQL API, API reference, query, subscription
+
+.. _graphql_api_query:
+
 API Reference - Query / Subscription
 ====================================
 
@@ -6,8 +12,8 @@ API Reference - Query / Subscription
   :depth: 3
   :local:
 
-Query/Subscription syntax
--------------------------
+Query / subscription syntax
+---------------------------
 
 .. code-block:: none
 
@@ -61,7 +67,7 @@ Query/Subscription syntax
 
 .. note::
 
-    For more examples and details of usage, please see :doc:`this <../../queries/index>`.
+    For more examples and details of usage, please see :ref:`this <queries>`.
 
 Syntax definitions
 ------------------
@@ -75,7 +81,7 @@ Object
 
 .. _SimpleObject:
 
-Simple Object
+Simple object
 *************
 
 .. code-block:: none
@@ -133,7 +139,7 @@ E.g.
 
 .. _AggregateObject:
 
-Aggregate Object
+Aggregate object
 ****************
 
 .. code-block:: none
@@ -192,7 +198,7 @@ Aggregate Object
     }
   }
 
-(For more details on aggregate functions, refer to `Postgres docs <https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE>`__.)
+(For more details on aggregate functions, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-aggregate.html#FUNCTIONS-AGGREGATE-STATISTICS-TABLE>`__).
 
 E.g.
 
@@ -300,6 +306,8 @@ BoolExp
 
    AndExp_ | OrExp_ | NotExp_ | TrueExp_ | ColumnExp_
 
+.. _AndExp:
+
 AndExp
 ######
 
@@ -309,6 +317,30 @@ AndExp
       _and: [BoolExp_]
     }
 
+.. admonition:: Syntactic sugar
+
+  You can simplify an ``_and`` expression by passing the sub-expressions separated by a ``,``.
+
+  **For example:**
+
+  .. code-block:: graphql
+
+    {
+      _and: [
+        { rating: { _gte: 4 } },
+        { published_on: { _gte: "2018-01-01" } }
+      ]
+    }
+
+    # can be simplified to:
+
+    {
+      rating: { _gte: 4 },
+      published_on: { _gte: "2018-01-01" }
+    }
+
+.. _OrExp:
+
 OrExp
 #####
 
@@ -317,6 +349,46 @@ OrExp
     {
       _or: [BoolExp_]
     }
+
+.. note::
+
+  The ``_or`` operator expects an array of expressions as input. Passing an object to it will result in the
+  behaviour of the ``_and`` operator due to the way `GraphQL list input coercion <https://graphql.github.io/graphql-spec/June2018/#sec-Type-System.List>`_
+  behaves.
+
+  **For example:**
+
+  .. code-block:: graphql
+
+    {
+      _or: {
+       rating: { _gte: 4 },
+       published_on: { _gte: "2018-01-01" }
+      }
+    }
+
+    # will be coerced to:
+
+    {
+      _or: [
+        {
+          rating: { _gte: 4 },
+          published_on: { _gte: "2018-01-01" }
+        }
+      ]
+    }
+
+    # which is equivalent to:
+
+    {
+      _or: [
+        _and: [
+          { rating: { _gte: 4 } },
+          { published_on: { _gte: "2018-01-01" } }
+        ]
+      ]
+    }
+
 
 NotExp
 ######
@@ -393,7 +465,7 @@ Operator
    * - ``_has_keys_all``
      - ``?&``
 
-(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
+(For more details on what these operators do, refer to the `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__).
 
 **PostGIS related operators on GEOMETRY columns:**
 
@@ -419,18 +491,52 @@ Operator
    * - ``_st_d_within``
      - ``ST_DWithin``
 
-(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
+(For more details on what these operators do, refer to the `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
 
 .. note::
 
    - All operators take a JSON representation of ``geometry/geography`` values as input value.
-   - Input value for ``_st_d_within`` operator is an object:
+   - The input value for ``_st_d_within`` operator is an object:
 
      .. parsed-literal::
 
        {
          field-name : {_st_d_within: {distance: Float, from: Value} }
        }
+
+**Intersect Operators on RASTER columns:**
+
+- ``_st_intersects_rast``
+
+Executes ``boolean ST_Intersects( raster <raster-column> , raster <input-raster> )``
+
+.. parsed-literal ::
+
+   { _st_intersects_rast: raster }
+
+
+- ``_st_intersects_nband_geom``
+
+Executes ``boolean ST_Intersects( raster <raster-column> , integer nband , geometry geommin )``
+
+This accepts ``st_intersects_nband_geom_input`` input object
+
+.. parsed-literal ::
+
+   { _st_intersects_nband_geom: {nband: Integer! geommin: geometry!}
+
+
+
+- ``_st_intersects_geom_nband``
+
+Executes ``boolean ST_Intersects( raster <raster-column> , geometry geommin , integer nband = NULL )``
+
+This accepts ``st_intersects_geom_nband_input`` input object
+
+.. parsed-literal ::
+
+   { _st_intersects_geom_nband: {geommin: geometry! nband: Integer }
+
 
 .. _CastExp:
 
@@ -544,7 +650,7 @@ Operation aggregate
    {op_name: TableAggOpOrderBy_}
 
 Available operations are ``sum``, ``avg``, ``max``, ``min``, ``stddev``, ``stddev_samp``,
-``stddev_pop``, ``variance``, ``var_samp`` and ``var_pop``
+``stddev_pop``, ``variance``, ``var_samp`` and ``var_pop``.
 
 TableAggOpOrderBy
 &&&&&&&&&&&&&&&&&

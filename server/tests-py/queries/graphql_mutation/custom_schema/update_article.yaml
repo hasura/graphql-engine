@@ -1,0 +1,39 @@
+description: Update article title
+url: /v1/graphql
+status: 200
+response:
+  data:
+    UpdateArticles:
+      affected_rows: 2
+      returning:
+      - ArticleId: 1
+        title: Article's by author 1 updated
+        content: Content for Article 1
+        author:
+          AuthorId: 1
+          name: Author 1
+      - ArticleId: 2
+        title: Article's by author 1 updated
+        content: Content for Article 2
+        author:
+          AuthorId: 1
+          name: Author 1
+query:
+  query: |
+    mutation {
+      UpdateArticles(
+        where: {author: {AuthorId: {_eq: 1}}}
+        _set: {title: "Article's by author 1 updated"}
+      ){
+        affected_rows
+        returning{
+          ArticleId
+          title
+          content
+          author{
+            AuthorId
+            name
+          }
+        }
+      }
+    }

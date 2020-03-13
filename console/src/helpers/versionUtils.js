@@ -1,29 +1,29 @@
+import globals from '../Globals';
+
 const semver = require('semver');
 
-export const FT_JWT_ANALYZER = 'JWTAnalyzer';
-export const RELOAD_METADATA_API_CHANGE = 'reloadMetaDataApiChange';
+export const READ_ONLY_RUN_SQL_QUERIES = 'readOnlyRunSqlQueries';
 
 // list of feature launch versions
 const featureLaunchVersions = {
-  // feature: 'v1.0.0'
-  [RELOAD_METADATA_API_CHANGE]: 'v1.0.0-beta.3',
-  [FT_JWT_ANALYZER]: 'v1.0.0-beta.3',
+  // feature: 'v1.0.1'
+  [READ_ONLY_RUN_SQL_QUERIES]: 'v1.1.0',
+};
+
+export const checkValidServerVersion = version => {
+  return semver.valid(version) !== null;
 };
 
 export const getFeaturesCompatibility = serverVersion => {
   const featuresCompatibility = {};
 
-  const isPullRequest = serverVersion.startsWith('pull');
+  const isValidServerVersion = checkValidServerVersion(serverVersion);
 
-  try {
-    Object.keys(featureLaunchVersions).forEach(feature => {
-      featuresCompatibility[feature] =
-        isPullRequest ||
-        semver.satisfies(featureLaunchVersions[feature], '<=' + serverVersion);
-    });
-  } catch (e) {
-    console.error(e);
-  }
+  Object.keys(featureLaunchVersions).forEach(feature => {
+    featuresCompatibility[feature] = isValidServerVersion
+      ? semver.satisfies(serverVersion, '>=' + featureLaunchVersions[feature])
+      : true;
+  });
 
   return featuresCompatibility;
 };
@@ -35,4 +35,21 @@ export const versionGT = (version1, version2) => {
     console.error(e);
     return false;
   }
+};
+
+export const checkStableVersion = version => {
+  try {
+    const preReleaseInfo = semver.prerelease(version);
+
+    return preReleaseInfo === null;
+  } catch (e) {
+    console.error(e);
+    return false;
+  }
+};
+
+export const checkFeatureSupport = feature => {
+  return (
+    globals.featuresCompatibility && globals.featuresCompatibility[feature]
+  );
 };

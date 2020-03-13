@@ -271,6 +271,26 @@ args:
     - name: User 2
       number: '123456780'
 
+- type: run_sql
+  args:
+    sql: |
+      create extension if not exists citext;
+      create table person (
+          id serial primary key,
+          name citext
+      );
+- type: track_table
+  args:
+    schema: public
+    name: person
+- type: insert
+  args:
+    table: person
+    objects:
+    - name: "John\\"
+    - name: "Clarke"
+    - name: "clarke"
+
 #Set timezone
 - type: run_sql
   args:

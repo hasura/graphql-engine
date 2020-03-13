@@ -5,9 +5,11 @@ Description: Create/delete SQL functions to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Function where
 
 import           Hasura.EncJSON
-import           Hasura.GraphQL.Utils          (isValidName, showNames)
+import           Hasura.GraphQL.Utils          (showNames)
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Utils           (makeReasonMessage)
 import           Hasura.SQL.Types
 
 import           Data.Aeson
@@ -18,45 +20,45 @@ import           Language.Haskell.TH.Syntax    (Lift)
 import qualified Hasura.GraphQL.Schema         as GS
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import qualified Control.Monad.Validate        as MV
 import qualified Data.HashMap.Strict           as M
 import qualified Data.Sequence                 as Seq
 import qualified Data.Text                     as T
 import qualified Database.PG.Query             as Q
 
-
-data PGTypType
-  = PTBASE
-  | PTCOMPOSITE
-  | PTDOMAIN
-  | PTENUM
-  | PTRANGE
-  | PTPSUEDO
-  deriving (Show, Eq)
-$(deriveJSON defaultOptions{constructorTagModifier = drop 2} ''PGTypType)
-
-data RawFuncInfo
-  = RawFuncInfo
+data RawFunctionInfo
+  = RawFunctionInfo
   { rfiHasVariadic      :: !Bool
   , rfiFunctionType     :: !FunctionType
   , rfiReturnTypeSchema :: !SchemaName
-  , rfiReturnTypeName   :: !T.Text
-  , rfiReturnTypeType   :: !PGTypType
+  , rfiReturnTypeName   :: !PGScalarType
+  , rfiReturnTypeType   :: !PGTypeKind
   , rfiReturnsSet       :: !Bool
-  , rfiInputArgTypes    :: ![PGColType]
-  , rfiInputArgNames    :: ![T.Text]
+  , rfiInputArgTypes    :: ![QualifiedPGType]
+  , rfiInputArgNames    :: ![FunctionArgName]
+  , rfiDefaultArgs      :: !Int
   , rfiReturnsTable     :: !Bool
-  } deriving (Show, Eq)
-$(deriveJSON (aesonDrop 3 snakeCase) ''RawFuncInfo)
+  , rfiDescription      :: !(Maybe PGDescription)
+  } deriving (Show, Eq, Generic)
+instance NFData RawFunctionInfo
+instance Cacheable RawFunctionInfo
+$(deriveJSON (aesonDrop 3 snakeCase) ''RawFunctionInfo)
 
-mkFunctionArgs :: [PGColType] -> [T.Text] -> [FunctionArg]
-mkFunctionArgs tys argNames =
+mkFunctionArgs :: Int -> [QualifiedPGType] -> [FunctionArgName] -> [FunctionArg]
+mkFunctionArgs defArgsNo tys argNames =
   bool withNames withNoNames $ null argNames
   where
-    withNoNames = flip map tys $ \ty -> FunctionArg Nothing ty
-    withNames = zipWith mkArg argNames tys
+    hasDefaultBoolSeq = replicate (length tys - defArgsNo) (HasDefault False)
+                        -- only last arguments can have default expression
+                        <> replicate defArgsNo (HasDefault True)
 
-    mkArg "" ty = FunctionArg Nothing ty
-    mkArg n  ty = flip FunctionArg ty $ Just $ FunctionArgName n
+    tysWithHasDefault = zip tys hasDefaultBoolSeq
+
+    withNoNames = flip map tysWithHasDefault $ uncurry $ FunctionArg Nothing
+    withNames = zipWith mkArg argNames tysWithHasDefault
+
+    mkArg "" (ty, hasDef) = FunctionArg Nothing ty hasDef
+    mkArg n  (ty, hasDef) = FunctionArg (Just n) ty hasDef
 
 validateFuncArgs :: MonadError QErr m => [FunctionArg] -> m ()
 validateFuncArgs args =
@@ -65,39 +67,103 @@ validateFuncArgs args =
     <> " are not in compliance with GraphQL spec"
   where
     funcArgsText = mapMaybe (fmap getFuncArgNameTxt . faName) args
-    invalidArgs = filter (not . isValidName) $ map G.Name funcArgsText
+    invalidArgs = filter (not . G.isValidName) $ map G.Name funcArgsText
+
+data FunctionIntegrityError
+  = FunctionNameNotGQLCompliant
+  | FunctionVariadic
+  | FunctionReturnNotCompositeType
+  | FunctionReturnNotSetof
+  | FunctionReturnNotSetofTable
+  | FunctionVolatile
+  | FunctionSessionArgumentNotJSON !FunctionArgName
+  | FunctionInvalidSessionArgument !FunctionArgName
+  | FunctionInvalidArgumentNames [FunctionArgName]
+  deriving (Show, Eq)
 
 mkFunctionInfo
-  :: QErrM m => QualifiedFunction -> RawFuncInfo -> m FunctionInfo
-mkFunctionInfo qf rawFuncInfo = do
-  -- throw error if function has variadic arguments
-  when hasVariadic $ throw400 NotSupported "function with \"VARIADIC\" parameters are not supported"
-  -- throw error if return type is not composite type
-  when (retTyTyp /= PTCOMPOSITE) $ throw400 NotSupported "function does not return a \"COMPOSITE\" type"
-  -- throw error if function do not returns SETOF
-  unless retSet $ throw400 NotSupported "function does not return a SETOF"
-  -- throw error if return type is not a valid table
-  unless returnsTab $ throw400 NotSupported "function does not return a SETOF table"
-  -- throw error if function type is VOLATILE
-  when (funTy == FTVOLATILE) $ throw400 NotSupported "function of type \"VOLATILE\" is not supported now"
-
-  let funcArgs = mkFunctionArgs inpArgTyps inpArgNames
-  validateFuncArgs funcArgs
-
-  let funcArgsSeq = Seq.fromList funcArgs
-      dep = SchemaDependency (SOTable retTable) "table"
-      retTable = QualifiedObject retSn (TableName retN)
-  return $ FunctionInfo qf False funTy funcArgsSeq retTable [dep]
+  :: (QErrM m)
+  => QualifiedFunction
+  -> SystemDefined
+  -> FunctionConfig
+  -> RawFunctionInfo
+  -> m (FunctionInfo, SchemaDependency)
+mkFunctionInfo qf systemDefined config rawFuncInfo =
+  either (throw400 NotSupported . showErrors) pure
+    =<< MV.runValidateT validateFunction
   where
-    RawFuncInfo hasVariadic funTy retSn retN retTyTyp
-                retSet inpArgTyps inpArgNames returnsTab
+    functionArgs = mkFunctionArgs defArgsNo inpArgTyps inpArgNames
+    RawFunctionInfo hasVariadic funTy retSn retN retTyTyp retSet
+                inpArgTyps inpArgNames defArgsNo returnsTab descM
                 = rawFuncInfo
+    returnType = QualifiedPGType retSn retN retTyTyp
 
-saveFunctionToCatalog :: QualifiedFunction -> Bool -> Q.TxE QErr ()
-saveFunctionToCatalog (QualifiedObject sn fn) isSystemDefined =
+    throwValidateError = MV.dispute . pure
+
+    validateFunction = do
+      unless (G.isValidName $ GS.qualObjectToName qf) $ throwValidateError FunctionNameNotGQLCompliant
+      when hasVariadic $ throwValidateError FunctionVariadic
+      when (retTyTyp /= PGKindComposite) $ throwValidateError FunctionReturnNotCompositeType
+      unless retSet $ throwValidateError FunctionReturnNotSetof
+      unless returnsTab $ throwValidateError FunctionReturnNotSetofTable
+      when (funTy == FTVOLATILE) $ throwValidateError FunctionVolatile
+
+      -- validate function argument names
+      validateFunctionArgNames
+
+      inputArguments <- makeInputArguments
+
+      let retTable = typeToTable returnType
+
+      pure ( FunctionInfo qf systemDefined funTy inputArguments retTable descM
+           , SchemaDependency (SOTable retTable) DRTable
+           )
+
+    validateFunctionArgNames = do
+      let argNames = mapMaybe faName functionArgs
+          invalidArgs = filter (not . G.isValidName . G.Name . getFuncArgNameTxt) argNames
+      when (not $ null invalidArgs) $
+        throwValidateError $ FunctionInvalidArgumentNames invalidArgs
+
+    makeInputArguments =
+      case _fcSessionArgument config of
+        Nothing -> pure $ Seq.fromList $ map IAUserProvided functionArgs
+        Just sessionArgName -> do
+          when (not $ any (\arg -> (Just sessionArgName) == faName arg) functionArgs) $
+            throwValidateError $ FunctionInvalidSessionArgument sessionArgName
+          fmap Seq.fromList $ forM functionArgs $ \arg ->
+            if (Just sessionArgName) == faName arg then do
+              let argTy = _qptName $ faType arg
+              if argTy == PGJSON then pure $ IASessionVariables sessionArgName
+              else MV.refute $ pure $ FunctionSessionArgumentNotJSON sessionArgName
+            else pure $ IAUserProvided arg
+
+    showErrors allErrors =
+      "the function " <> qf <<> " cannot be tracked "
+      <> makeReasonMessage allErrors showOneError
+
+    showOneError = \case
+      FunctionNameNotGQLCompliant -> "function name is not a legal GraphQL identifier"
+      FunctionVariadic -> "function with \"VARIADIC\" parameters are not supported"
+      FunctionReturnNotCompositeType -> "the function does not return a \"COMPOSITE\" type"
+      FunctionReturnNotSetof -> "the function does not return a SETOF"
+      FunctionReturnNotSetofTable -> "the function does not return a SETOF table"
+      FunctionVolatile -> "function of type \"VOLATILE\" is not supported now"
+      FunctionSessionArgumentNotJSON argName ->
+        "given session argument " <> argName <<> " is not of type json"
+      FunctionInvalidSessionArgument argName ->
+        "given session argument " <> argName <<> " not the input argument of the function"
+      FunctionInvalidArgumentNames args ->
+        let argsText = T.intercalate "," $ map getFuncArgNameTxt args
+        in "the function arguments " <> argsText <> " are not in compliance with GraphQL spec"
+
+saveFunctionToCatalog :: QualifiedFunction -> FunctionConfig -> SystemDefined -> Q.TxE QErr ()
+saveFunctionToCatalog (QualifiedObject sn fn) config systemDefined =
   Q.unitQE defaultTxErrorHandler [Q.sql|
-         INSERT INTO "hdb_catalog"."hdb_function" VALUES ($1, $2, $3)
-                 |] (sn, fn, isSystemDefined) False
+         INSERT INTO "hdb_catalog"."hdb_function"
+           (function_schema, function_name, configuration, is_system_defined)
+         VALUES ($1, $2, $3, $4)
+                 |] (sn, fn, Q.AltJ config, systemDefined) False
 
 delFunctionFromCatalog :: QualifiedFunction -> Q.TxE QErr ()
 delFunctionFromCatalog (QualifiedObject sn fn) =
@@ -112,13 +178,23 @@ newtype TrackFunction
   { tfName :: QualifiedFunction}
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
+data FunctionConfig
+  = FunctionConfig
+  { _fcSessionArgument :: !(Maybe FunctionArgName)
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData FunctionConfig
+instance Cacheable FunctionConfig
+$(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields = True} ''FunctionConfig)
+
+emptyFunctionConfig :: FunctionConfig
+emptyFunctionConfig = FunctionConfig Nothing
+
 -- | Track function, Phase 1:
 -- Validate function tracking operation. Fails if function is already being
 -- tracked, or if a table with the same name is being tracked.
 trackFunctionP1
-  :: (CacheRM m, UserInfoM m, QErrM m) => TrackFunction -> m ()
-trackFunctionP1 (TrackFunction qf) = do
-  adminOnly
+  :: (CacheRM m, QErrM m) => QualifiedFunction -> m ()
+trackFunctionP1 qf = do
   rawSchemaCache <- askSchemaCache
   when (M.member qf $ scFunctions rawSchemaCache) $
     throw400 AlreadyTracked $ "function already tracked : " <>> qf
@@ -126,58 +202,63 @@ trackFunctionP1 (TrackFunction qf) = do
   when (M.member qt $ scTables rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"
 
-trackFunctionP2Setup :: (QErrM m, CacheRWM m, MonadTx m)
-                     => QualifiedFunction -> RawFuncInfo -> m ()
-trackFunctionP2Setup qf rawfi = do
-  fi <- mkFunctionInfo qf rawfi
-  let retTable = fiReturnType fi
-      err = err400 NotExists $ "table " <> retTable <<> " is not tracked"
-  sc <- askSchemaCache
-  void $ liftMaybe err $ M.lookup retTable $ scTables sc
-  addFunctionToCache fi
-
-trackFunctionP2 :: (QErrM m, CacheRWM m, MonadTx m)
-                => QualifiedFunction -> m EncJSON
-trackFunctionP2 qf = do
-  sc <- askSchemaCache
-  let defGCtx = scDefaultRemoteGCtx sc
-      funcNameGQL = GS.qualObjectToName qf
-  -- check function name is in compliance with GraphQL spec
-  unless (isValidName funcNameGQL) $ throw400 NotSupported $
-    "function name " <> qf <<> " is not in compliance with GraphQL spec"
-  -- check for conflicts in remote schema
-  GS.checkConflictingNode defGCtx funcNameGQL
-
-  -- fetch function info
-  functionInfos <- liftTx fetchFuncDets
-  rawfi <- case functionInfos of
-    []      ->
-      throw400 NotExists $ "no such function exists in postgres : " <>> qf
-    [rawfi] -> return rawfi
-    _       ->
-      throw400 NotSupported $
-      "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
-  trackFunctionP2Setup qf rawfi
-  liftTx $ saveFunctionToCatalog qf False
+trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)
+                => QualifiedFunction -> FunctionConfig -> m EncJSON
+trackFunctionP2 qf config = do
+  systemDefined <- askSystemDefined
+  liftTx $ saveFunctionToCatalog qf config systemDefined
+  buildSchemaCacheFor $ MOFunction qf
   return successMsg
+
+handleMultipleFunctions :: (QErrM m) => QualifiedFunction -> [a] -> m a
+handleMultipleFunctions qf = \case
+  []      ->
+    throw400 NotExists $ "no such function exists in postgres : " <>> qf
+  [fi] -> return fi
+  _       ->
+    throw400 NotSupported $
+    "function " <> qf <<> " is overloaded. Overloaded functions are not supported"
+
+fetchRawFunctioInfo :: MonadTx m => QualifiedFunction -> m RawFunctionInfo
+fetchRawFunctioInfo qf@(QualifiedObject sn fn) =
+  handleMultipleFunctions qf =<< map (Q.getAltJ . runIdentity) <$> fetchFromDatabase
   where
-    QualifiedObject sn fn = qf
-    fetchFuncDets = map (Q.getAltJ . runIdentity) <$>
+    fetchFromDatabase = liftTx $
       Q.listQE defaultTxErrorHandler [Q.sql|
-            SELECT function_info
-              FROM hdb_catalog.hdb_function_info_agg
-             WHERE function_schema = $1
-               AND function_name = $2
-           |] (sn, fn) True
+           SELECT function_info
+             FROM hdb_catalog.hdb_function_info_agg
+            WHERE function_schema = $1
+              AND function_name = $2
+          |] (sn, fn) True
 
 runTrackFunc
-  :: ( QErrM m, CacheRWM m, MonadTx m
-     , UserInfoM m
-     )
+  :: (MonadTx m, CacheRWM m, HasSystemDefined m)
   => TrackFunction -> m EncJSON
-runTrackFunc q = do
-  trackFunctionP1 q
-  trackFunctionP2 $ tfName q
+runTrackFunc (TrackFunction qf)= do
+  trackFunctionP1 qf
+  trackFunctionP2 qf emptyFunctionConfig
+
+data TrackFunctionV2
+  = TrackFunctionV2
+  { _tfv2Function      :: !QualifiedFunction
+  , _tfv2Configuration :: !FunctionConfig
+  } deriving (Show, Eq, Lift, Generic)
+$(deriveToJSON (aesonDrop 5 snakeCase) ''TrackFunctionV2)
+
+instance FromJSON TrackFunctionV2 where
+  parseJSON = withObject "Object" $ \o ->
+    TrackFunctionV2
+    <$> o .: "function"
+    <*> o .:? "configuration" .!= emptyFunctionConfig
+
+runTrackFunctionV2
+  :: ( QErrM m, CacheRWM m, HasSystemDefined m
+     , MonadTx m
+     )
+  => TrackFunctionV2 -> m EncJSON
+runTrackFunctionV2 (TrackFunctionV2 qf config) = do
+  trackFunctionP1 qf
+  trackFunctionP2 qf config
 
 newtype UnTrackFunction
   = UnTrackFunction
@@ -185,13 +266,10 @@ newtype UnTrackFunction
   deriving (Show, Eq, FromJSON, ToJSON, Lift)
 
 runUntrackFunc
-  :: ( QErrM m, CacheRWM m, MonadTx m
-     , UserInfoM m
-     )
+  :: (QErrM m, CacheRWM m, MonadTx m)
   => UnTrackFunction -> m EncJSON
 runUntrackFunc (UnTrackFunction qf) = do
-  adminOnly
   void $ askFunctionInfo qf
   liftTx $ delFunctionFromCatalog qf
-  delFunctionFromCache qf
+  withNewInconsistentObjsCheck buildSchemaCache
   return successMsg
