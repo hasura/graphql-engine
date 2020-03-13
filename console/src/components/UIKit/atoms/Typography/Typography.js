@@ -1,8 +1,6 @@
 import styled from 'styled-components';
 import { typography, color, space, border } from 'styled-system';
 
-// Heading ************************* //
-
 export const StyledHeading = styled.h1`
     ${typography}
     ${color}

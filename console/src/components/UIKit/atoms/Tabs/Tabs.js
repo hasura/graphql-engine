@@ -9,8 +9,6 @@ import {
   shadow,
 } from 'styled-system';
 
-// ********************************* //
-
 const StyledTab = styled.div`
   ${color}
   ${border}
@@ -19,8 +17,6 @@ const StyledTab = styled.div`
   ${space}
   ${shadow}
 `;
-
-// ********************************* //
 
 const StyledTabList = styled.ul`
   list-style-type: none;
@@ -40,31 +36,23 @@ StyledTabList.defaultProps = {
   alignItems: 'center',
   px: 0,
 };
-
-// *********************************** //
+const selectedBorderStyles = css`
+  border-color: ${props => props.theme.colors.tab};
+`;
 
 const StyledTabListItem = styled.li`
   cursor: pointer;
 
-  /* Hover */
   &:hover {
     color: ${props => props.theme.colors.black.text};
   }
 
-  /* Styled-System */
   ${typography}
   ${space}
   ${color}
   ${border}
 
-   /* Selected / active tab list item */
-
-  ${props =>
-    props.selected &&
-    css`
-      border-color: ${props.theme.colors.tab};
-    `};
-
+  ${props => (props.selected ? selectedBorderStyles : '')};
 `;
 
 StyledTabListItem.defaultProps = {
@@ -77,8 +65,6 @@ StyledTabListItem.defaultProps = {
   color: 'grey.tab',
 };
 
-// ***************************** //
-
 const StyledTabContent = styled.div`
   ${color}
   ${border}
@@ -87,7 +73,5 @@ const StyledTabContent = styled.div`
   ${space}
   ${shadow}
 `;
-
-// ********************************* //
 
 export { StyledTab, StyledTabList, StyledTabListItem, StyledTabContent };

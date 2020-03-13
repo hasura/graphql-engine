@@ -1,5 +1,14 @@
 import styled, { css } from 'styled-components';
 
+const checkedStyles = css`
+  background-color: #1fd6e5;
+  box-shadow: 0 0 1px #1fd6e5;
+
+  :before {
+    transform: translateX(20px);
+  }
+`;
+
 export const StyledSwitchButton = styled.div`
   label {
     position: relative;
@@ -22,8 +31,6 @@ export const StyledSwitchButton = styled.div`
     }
 
     input:checked {
-      -webkit-transform: translateX(20px);
-      -ms-transform: translateX(20px);
       transform: translateX(20px);
     }
   }
@@ -37,7 +44,6 @@ export const StyledSlider = styled.span`
   right: 0;
   bottom: 0;
   background-color: #484538;
-  -webkit-transition: 0.4s;
   transition: 0.4s;
   border-radius: 34px;
 
@@ -50,7 +56,6 @@ export const StyledSlider = styled.span`
     left: 2px;
     bottom: 2px;
     background-color: white;
-    -webkit-transition: 0.4s;
     transition: 0.4s;
   }
 
@@ -58,18 +63,5 @@ export const StyledSlider = styled.span`
     box-shadow: 0 0 1px #1fd6e5;
   }
 
-  ${({ checked }) => {
-    return checked
-      ? css`
-          background-color: #1fd6e5;
-          box-shadow: 0 0 1px #1fd6e5;
-
-          :before {
-            -webkit-transform: translateX(20px);
-            -ms-transform: translateX(20px);
-            transform: translateX(20px);
-          }
-        `
-      : ' ';
-  }}
+  ${({ checked }) => (checked ? checkedStyles : ' ')}
 `;

@@ -45,13 +45,12 @@ export const Icon = props => {
 
   return (
     <StyledIcon
-      {...props}
-      color={iconColor}
       fontSize="icon"
+      color={iconColor}
       width={iconWidth}
       height={iconHeight}
-    >
-      <CurrentActiveIcon />
-    </StyledIcon>
+      as={CurrentActiveIcon}
+      {...props}
+    />
   );
 };

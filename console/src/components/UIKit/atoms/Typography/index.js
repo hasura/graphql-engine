@@ -2,28 +2,23 @@ import React from 'react';
 
 import { StyledHeading, StyledText, StyledTextLink } from './Typography';
 
-export const Heading = props => {
-  const { children } = props;
-
-  return <StyledHeading {...props}>{children}</StyledHeading>;
-};
+export const Heading = StyledHeading;
 
 Heading.defaultProps = {
   color: 'black.text',
 };
 
+/**
+ * @example
+ *  Explainer Text
+ *  lineHeight: 'explain'
+ *  fontSize: 'explain'
+ *  fontWeight: 'bold'
+ */
 export const Text = props => {
   const { children, type, fontWeight, fontSize } = props;
 
-  /* Explainer Text
-   *  lineHeight: 'explain'
-   *  fontSize: 'explain'
-   *  fontWeight: 'bold'
-   */
-
   const lineHeight = type === 'explain' ? 'body' : 'explain';
-
-  // fontWeight & fontSize value can be received as prop to override default styles.
 
   let fontWeightValue;
   let fontSizeValue;

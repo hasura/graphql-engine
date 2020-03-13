@@ -30,7 +30,6 @@ export const AlertBox = props => {
 
   return (
     <StyledAlertBox
-      {...props}
       width={alertBoxWidth}
       bg={backgroundColorValue}
       borderRadius="xs"
@@ -43,6 +42,7 @@ export const AlertBox = props => {
       display="flex"
       alignItems="center"
       color="black.text"
+      {...props}
     >
       <Icon type={type} />
       {type && (

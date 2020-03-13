@@ -1,9 +1,43 @@
 import React from 'react';
+import { css, keyframes } from 'styled-components';
 
 import { StyledSpinner } from './Spinner';
 
 const smallSpinnerSize = 17;
 const largeSpinnerSize = 20;
+
+const circleBounceDelay = keyframes`
+  0%,
+  80%,
+  100% {
+    -webkit-transform: scale(0);
+    transform: scale(0);
+  }
+  40% {
+    -webkit-transform: scale(1);
+    transform: scale(1);
+  }
+`;
+
+const spinnerChildStyles = css`
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  &:before {
+    content: '';
+    display: block;
+    margin: 0 auto;
+    width: 15%;
+    height: 15%;
+    border-radius: 100%;
+    animation: ${circleBounceDelay} 1.2s infinite ease-in-out both;
+
+    background-color: #333;
+  }
+`;
 
 export const Spinner = props => {
   const { size } = props;
@@ -14,18 +48,18 @@ export const Spinner = props => {
 
   return (
     <StyledSpinner {...props} height={spinnerHeight} width={spinnerWidth}>
-      <div className={'sk_circle1' + ' ' + 'sk_child'} />
-      <div className={'sk_circle2' + ' ' + 'sk_child'} />
-      <div className={'sk_circle3' + ' ' + 'sk_child'} />
-      <div className={'sk_circle4' + ' ' + 'sk_child'} />
-      <div className={'sk_circle5' + ' ' + 'sk_child'} />
-      <div className={'sk_circle6' + ' ' + 'sk_child'} />
-      <div className={'sk_circle7' + ' ' + 'sk_child'} />
-      <div className={'sk_circle8' + ' ' + 'sk_child'} />
-      <div className={'sk_circle9' + ' ' + 'sk_child'} />
-      <div className={'sk_circle10' + ' ' + 'sk_child'} />
-      <div className={'sk_circle11' + ' ' + 'sk_child'} />
-      <div className={'sk_circle12' + ' ' + 'sk_child'} />
+      {Array.from(new Array(12), (_, i) => i).map(i => (
+        <div
+          css={css`
+              ${spinnerChildStyles}
+              transform: rotate(${30 * i}deg);
+
+              &:before {
+                animation-delay: ${-1.1 + i / 10}s;
+              }
+            `}
+        />
+      ))}
     </StyledSpinner>
   );
 };
