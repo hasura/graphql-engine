@@ -27,9 +27,9 @@ export const Button = props => {
   const borderColorValue =
     type === 'secondary' ? 'black.secondary' : backgroundColorValue;
 
-  const buttonHeight = size === 'large' ? 'lg' : 'small';
+  const buttonHeight = size === 'large' ? 'lg' : 'sm';
 
-  const paddingX = size === 'large' ? 'lg' : 'small';
+  const paddingX = size === 'large' ? 'lg' : 'md';
 
   return (
     <StyledButton
