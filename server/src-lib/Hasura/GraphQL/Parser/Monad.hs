@@ -11,6 +11,7 @@ module Hasura.GraphQL.Parser.Monad
 
 import           Hasura.Prelude
 
+import qualified Data.HashMap.Strict as M
 import qualified Data.Dependent.Map                    as DM
 import qualified Language.Haskell.TH                   as TH
 
@@ -28,18 +29,31 @@ import           Type.Reflection                       (Typeable, typeRep)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
+import Hasura.RQL.Types
+import Hasura.SQL.Types
 
 -- -------------------------------------------------------------------------------------------------
 -- schema construction
 
 newtype SchemaT n m a = SchemaT
-  { unSchemaT :: StateT (DMap ParserId (ParserById n)) m a
-  } deriving (Functor, Applicative, Monad, MonadTrans)
+  { unSchemaT :: ReaderT (RoleName, TableCache) (StateT (DMap ParserId (ParserById n)) m) a
+  } deriving (Functor, Applicative, Monad)
 
-runSchemaT :: Monad m => SchemaT n m a -> m a
-runSchemaT = flip evalStateT mempty . unSchemaT
+runSchemaT :: Monad m => RoleName -> TableCache -> SchemaT n m a -> m a
+runSchemaT roleName tableCache = unSchemaT
+  >>> flip runReaderT (roleName, tableCache)
+  >>> flip evalStateT mempty
 
-instance (PrimMonad m, MonadUnique m, MonadParse n) => MonadSchema n (SchemaT n m) where
+instance (PrimMonad m, MonadUnique m, MonadError QErr m, MonadParse n)
+      => MonadSchema n (SchemaT n m) where
+  askRoleName = SchemaT $ asks fst
+
+  askTableInfo tableName = SchemaT $ do
+    tableInfo <- asks $ M.lookup tableName . snd
+    -- This should never fail, since the schema cache construction process is
+    -- supposed to ensure that all dependencies are resolved.
+    tableInfo `onNothing` throw500 ("SchemaT.askTableInfo: no info for " <>> tableName)
+
   memoizeOn name key buildParser = SchemaT do
     let parserId = ParserId name key
     parsersById <- get

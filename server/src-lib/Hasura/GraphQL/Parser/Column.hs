@@ -3,6 +3,8 @@
 module Hasura.GraphQL.Parser.Column
   ( PGColumnValue(..)
   , column
+  , mkColumnTypeName
+  , mkScalarTypeName
 
   , UnpreparedValue(..)
 
@@ -16,7 +18,7 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended          as M
 
 import           Language.GraphQL.Draft.Syntax         (Description (..), Nullability (..),
-                                                        Value (..), literal, mkName, unsafeMkName, litName)
+                                                        Value (..), literal, mkName, unsafeMkName, litName, Name)
 
 import qualified Hasura.RQL.Types.Column               as RQL
 
@@ -25,6 +27,7 @@ import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
 import           Hasura.GraphQL.Schema.Common (qualifiedObjectToName)
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
+import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission           (SessVar)
 import           Hasura.SQL.DML
 import           Hasura.SQL.Types
@@ -66,7 +69,7 @@ mkParameter (Opaque variable value) = UVParameter value variable
 -- -------------------------------------------------------------------------------------------------
 
 column
-  :: (MonadSchema n m, MonadError Text m)
+  :: (MonadSchema n m, MonadError QErr m)
   => PGColumnType
   -> Nullability
   -> m (Parser 'Both n (Opaque PGColumnValue))
@@ -82,12 +85,12 @@ column columnType (Nullability isNullable) =
       PGText    -> pure (PGValText <$> string)
       PGVarchar -> pure (PGValVarchar <$> string)
       _         -> do
-        name <- mkScalarTypeName scalarType
+        name <- mkColumnTypeName columnType
         pure (PGValUnknown <$> scalar name Nothing SRString) -- FIXME: is SRString right?
     PGColumnEnumReference (EnumReference tableName enumValues) ->
       case nonEmpty (M.toList enumValues) of
         Just enumValuesList -> do
-          name <- mkEnumTypeName tableName
+          name <- mkColumnTypeName columnType
           pure $ withScalarType PGText $ enum name Nothing (mkEnumValue <$> enumValuesList)
         Nothing -> error "empty enum values" -- FIXME
   where
@@ -124,7 +127,13 @@ column columnType (Nullability isNullable) =
       ( mkDefinition (unsafeMkName value) (Description <$> description) EnumValueInfo
       , PGValText value )
 
-    mkScalarTypeName scalarType = mkName (toSQLTxt scalarType) `onNothing` throwError
-      ("cannot use SQL type " <> scalarType <<> " in GraphQL schema because its name is not a "
-      <> "valid GraphQL identifier")
-    mkEnumTypeName tableName = qualifiedObjectToName tableName <&> (<> $$(litName "_enum"))
+mkColumnTypeName :: MonadError QErr m => PGColumnType -> m Name
+mkColumnTypeName = \case
+  PGColumnScalar scalarType -> mkScalarTypeName scalarType
+  PGColumnEnumReference (EnumReference tableName _) ->
+    qualifiedObjectToName tableName <&> (<> $$(litName "_enum"))
+
+mkScalarTypeName :: MonadError QErr m => PGScalarType -> m Name
+mkScalarTypeName scalarType = mkName (toSQLTxt scalarType) `onNothing` throw400 ValidationFailed
+  ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
+  <> "valid GraphQL identifier")

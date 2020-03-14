@@ -359,6 +359,7 @@ library
                      , Hasura.GraphQL.Parser.Schema
 
                      , Hasura.GraphQL.Schema
+                     , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
 
                      -- , Hasura.Events.Lib

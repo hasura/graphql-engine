@@ -10,6 +10,8 @@ import           Data.Tuple.Extended
 import           GHC.Stack                             (HasCallStack)
 import           Type.Reflection                       (Typeable)
 
+import Hasura.RQL.Types
+import Hasura.SQL.Types
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
 
 {- Note [Tying the knot]
@@ -78,6 +80,14 @@ traversing the graph, so we get observable sharing as well. -}
 -- | A class that provides functionality used when building the GraphQL schema,
 -- i.e. constructing the 'Parser' graph.
 class (Monad m, MonadParse n) => MonadSchema n m | m -> n where
+  -- | Gets the current role the schema is being built for.
+  askRoleName :: m RoleName
+
+  -- | Looks up table information for the given table name. This function
+  -- should never fail, since the schema cache construction process is
+  -- supposed to ensure all dependencies are resolved.
+  askTableInfo :: QualifiedTable -> m TableInfo
+
   -- | Memoizes a parser constructor function for the extent of a single schema
   -- construction process. This is mostly useful for recursive parsers;
   -- see Note [Tying the knot] for more details.
@@ -129,6 +139,8 @@ memoize4 name = curry4 . memoize name . uncurry4
 -- running a fully-constructed 'Parser'.
 class Monad m => MonadParse m where
   withPath :: (JSONPath -> JSONPath) -> m a -> m a
+  -- | Not the full power of 'MonadError' because parse errors cannot be
+  -- caught.
   parseError :: Text -> m a
   -- | See 'QueryReusability'.
   markNotReusable :: m ()
