@@ -7,10 +7,10 @@ module Data.GADT.Compare.Extended
   , extendGOrdering
   ) where
 
-import Prelude
+import           Prelude
 
-import Type.Reflection
-import Data.GADT.Compare
+import           Data.GADT.Compare
+import           Type.Reflection
 
 instance GEq ((:~~:) a) where
   geq HRefl HRefl = Just Refl

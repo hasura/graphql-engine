@@ -11,7 +11,7 @@ import           Data.Hashable
 import           Hasura.Prelude
 import           Network.URI
 
-import qualified Data.Text                  as T
+import qualified Data.Text        as T
 
 instance {-# INCOHERENT #-} FromJSON URI where
   parseJSON (String uri) = do

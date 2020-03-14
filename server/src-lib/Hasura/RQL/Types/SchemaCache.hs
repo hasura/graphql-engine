@@ -118,8 +118,7 @@ module Hasura.RQL.Types.SchemaCache
 -- import qualified Hasura.GraphQL.Context            as GC
 
 import           Hasura.Db
-import           Hasura.Incremental                (Dependency, MonadDepend (..),
-                                                    selectKeyD)
+import           Hasura.Incremental                (Dependency, MonadDepend (..), selectKeyD)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.BoolExp
@@ -190,16 +189,16 @@ type ActionCache = M.HashMap ActionName ActionInfo -- info of all actions
 
 data SchemaCache
   = SchemaCache
-  { scTables            :: !TableCache
-  , scActions           :: !ActionCache
-  , scFunctions         :: !FunctionCache
-  , scRemoteSchemas     :: !RemoteSchemaMap
-  , scAllowlist         :: !(HS.HashSet GQLQuery)
+  { scTables           :: !TableCache
+  , scActions          :: !ActionCache
+  , scFunctions        :: !FunctionCache
+  , scRemoteSchemas    :: !RemoteSchemaMap
+  , scAllowlist        :: !(HS.HashSet GQLQuery)
   -- , scCustomTypes       :: !(NonObjectTypeMap, AnnotatedObjects)
   -- , scGCtxMap           :: !GC.GCtxMap
   -- , scDefaultRemoteGCtx :: !GC.GCtx
-  , scDepMap            :: !DepMap
-  , scInconsistentObjs  :: ![InconsistentMetadata]
+  , scDepMap           :: !DepMap
+  , scInconsistentObjs :: ![InconsistentMetadata]
   } deriving (Show, Eq)
 $(deriveToJSON (aesonDrop 2 snakeCase) ''SchemaCache)
 

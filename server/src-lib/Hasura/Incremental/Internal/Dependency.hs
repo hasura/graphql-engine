@@ -6,9 +6,9 @@ module Hasura.Incremental.Internal.Dependency where
 import           Hasura.Prelude
 
 import qualified Data.Dependent.Map            as DM
+import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
-import qualified Data.URL.Template             as UT
 
 import           Data.Aeson                    (Value)
 import           Data.Functor.Classes          (Eq1 (..), Eq2 (..))
@@ -16,9 +16,9 @@ import           Data.GADT.Compare
 import           Data.Int
 import           Data.Scientific               (Scientific)
 import           Data.Vector                   (Vector)
+import           Data.Void                     (Void)
 import           GHC.Generics                  ((:*:) (..), (:+:) (..), Generic (..), K1 (..),
                                                 M1 (..), U1 (..), V1)
-import Data.Void (Void)
 
 import           Hasura.Incremental.Select
 

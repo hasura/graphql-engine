@@ -2,18 +2,19 @@ module Hasura.GraphQL.Schema.BoolExp
   ( boolExp
   ) where
 
-import Hasura.Prelude
+import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict.Extended as M
+import qualified Data.HashMap.Strict.Extended  as M
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import qualified Hasura.GraphQL.Parser as P
+import qualified Hasura.GraphQL.Parser         as P
 
-import Hasura.GraphQL.Parser (Parser, FieldsParser, Kind(..), UnpreparedValue, mkParameter)
-import Hasura.GraphQL.Parser.Class
-import Hasura.RQL.Types
-import Hasura.GraphQL.Schema.Common (qualifiedObjectToName)
-import Hasura.SQL.Types
+import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser, UnpreparedValue,
+                                                mkParameter)
+import           Hasura.GraphQL.Parser.Class
+import           Hasura.GraphQL.Schema.Common  (qualifiedObjectToName)
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 type ComparisonExp = OpExpG UnpreparedValue
 
@@ -90,9 +91,9 @@ castExp sourceType nullability = do
   pure $ P.object sourceName Nothing $ M.fromList . catMaybes <$> fields
   where
     targetTypes = case sourceType of
-      PGColumnScalar PGGeometry -> [PGGeography]
+      PGColumnScalar PGGeometry  -> [PGGeography]
       PGColumnScalar PGGeography -> [PGGeometry]
-      _ -> []
+      _                          -> []
 
     mkField :: PGScalarType -> m (FieldsParser 'Input n (Maybe (PGScalarType, [ComparisonExp])))
     mkField targetType = do

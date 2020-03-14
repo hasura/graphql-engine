@@ -10,7 +10,7 @@ import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 
-import           Control.DeepSeq (NFData(..))
+import           Control.DeepSeq               (NFData (..))
 import           Instances.TH.Lift             ()
 
 instance NFData G.FragmentDefinition

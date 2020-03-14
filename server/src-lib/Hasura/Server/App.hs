@@ -6,7 +6,7 @@ import           Control.Concurrent.MVar.Lifted
 import           Control.Exception                      (IOException, try)
 import           Control.Lens                           (view, _2)
 import           Control.Monad.Stateless
-import           Control.Monad.Trans.Control            (MonadBaseControl) 
+import           Control.Monad.Trans.Control            (MonadBaseControl)
 import           Data.Aeson                             hiding (json)
 import           Data.Either                            (isRight)
 import           Data.Int                               (Int64)
@@ -70,7 +70,7 @@ data SchemaCacheRef
   --   1. Allow maximum throughput for serving requests (/v1/graphql) (as each
   --      request reads the current schemacache)
   --   2. We don't want to process more than one request at any point of time
-  --      which would modify the schema cache as such queries are expensive. 
+  --      which would modify the schema cache as such queries are expensive.
   --
   -- Another option is to consider removing this lock in place of `_scrCache ::
   -- MVar ...` if it's okay or in fact correct to block during schema update in
@@ -78,7 +78,7 @@ data SchemaCacheRef
   -- situation (in between building new schemacache and before writing it to
   -- the IORef) where we serve a request with a stale schemacache but I guess
   -- it is an okay trade-off to pay for a higher throughput (I remember doing a
-  -- bunch of benchmarks to test this hypothesis). 
+  -- bunch of benchmarks to test this hypothesis).
   , _scrCache    :: IORef (RebuildableSchemaCache Run, SchemaCacheVer)
   , _scrOnChange :: IO ()
   -- ^ an action to run when schemacache changes
@@ -142,7 +142,7 @@ withSCUpdate scr logger action = do
     (!res, !newSC) <- action
     liftIO $ do
       -- update schemacache in IO reference
-      modifyIORef' cacheRef $ \(_, prevVer) -> 
+      modifyIORef' cacheRef $ \(_, prevVer) ->
         let !newVer = incSchemaCacheVer prevVer
           in (newSC, newVer)
       -- log any inconsistent objects
@@ -285,8 +285,8 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
       mkHeaders = maybe [] (map unHeader)
 
-v1QueryHandler 
-  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m) 
+v1QueryHandler
+  :: (HasVersion, MonadIO m, MonadBaseControl IO m, MetadataApiAuthorization m)
   => RQLQuery -> Handler m (HttpResponse EncJSON)
 v1QueryHandler query = do
   userInfo <- asks hcUser

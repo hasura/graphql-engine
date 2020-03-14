@@ -1,20 +1,20 @@
 module Hasura.RQL.Types.QueryCollection where
 
 -- import           Hasura.GraphQL.Validate.Types    (stripTypenames)
-import           Hasura.Incremental               (Cacheable)
+import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
-import           Hasura.RQL.Types.Common          (NonEmptyText)
+import           Hasura.RQL.Instances          ()
+import           Hasura.RQL.Types.Common       (NonEmptyText)
 import           Hasura.SQL.Types
-import Hasura.RQL.Instances ()
 
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import           Language.Haskell.TH.Syntax       (Lift)
+import           Language.Haskell.TH.Syntax    (Lift)
 
-import qualified Data.Text                        as T
-import qualified Database.PG.Query                as Q
-import qualified Language.GraphQL.Draft.Syntax    as G
+import qualified Data.Text                     as T
+import qualified Database.PG.Query             as Q
+import qualified Language.GraphQL.Draft.Syntax as G
 
 newtype CollectionName
   = CollectionName {unCollectionName :: NonEmptyText}

@@ -2,12 +2,12 @@ module Hasura.GraphQL.Schema.Common
   ( qualifiedObjectToName
   ) where
 
-import Hasura.Prelude
+import           Hasura.Prelude
 
-import Language.GraphQL.Draft.Syntax (Name, mkName)
+import           Language.GraphQL.Draft.Syntax (Name, mkName)
 
-import Hasura.SQL.Types
-import Hasura.RQL.Types
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 qualifiedObjectToName :: (ToTxt a, MonadError QErr m) => QualifiedObject a -> m Name
 qualifiedObjectToName objectName = do

@@ -10,9 +10,9 @@ import           Data.Tuple.Extended
 import           GHC.Stack                             (HasCallStack)
 import           Type.Reflection                       (Typeable)
 
-import Hasura.RQL.Types
-import Hasura.SQL.Types
 import {-# SOURCE #-} Hasura.GraphQL.Parser.Internal.Parser
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 {- Note [Tying the knot]
 ~~~~~~~~~~~~~~~~~~~~~~~~

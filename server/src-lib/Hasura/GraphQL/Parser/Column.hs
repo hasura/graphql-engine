@@ -17,15 +17,16 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict.Extended          as M
 
-import           Language.GraphQL.Draft.Syntax         (Description (..), Nullability (..),
-                                                        Value (..), literal, mkName, unsafeMkName, litName, Name)
+import           Language.GraphQL.Draft.Syntax         (Description (..), Name, Nullability (..),
+                                                        Value (..), litName, literal, mkName,
+                                                        unsafeMkName)
 
 import qualified Hasura.RQL.Types.Column               as RQL
 
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
-import           Hasura.GraphQL.Schema.Common (qualifiedObjectToName)
+import           Hasura.GraphQL.Schema.Common          (qualifiedObjectToName)
 import           Hasura.RQL.Types.Column               hiding (EnumValue (..), EnumValueInfo (..))
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Permission           (SessVar)

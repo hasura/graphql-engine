@@ -11,8 +11,8 @@ module Hasura.GraphQL.Parser.Monad
 
 import           Hasura.Prelude
 
-import qualified Data.HashMap.Strict as M
 import qualified Data.Dependent.Map                    as DM
+import qualified Data.HashMap.Strict                   as M
 import qualified Language.Haskell.TH                   as TH
 
 import           Control.Monad.Primitive               (PrimMonad, stToPrim)
@@ -29,8 +29,8 @@ import           Type.Reflection                       (Typeable, typeRep)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Parser.Internal.Parser
 import           Hasura.GraphQL.Parser.Schema
-import Hasura.RQL.Types
-import Hasura.SQL.Types
+import           Hasura.RQL.Types
+import           Hasura.SQL.Types
 
 -- -------------------------------------------------------------------------------------------------
 -- schema construction

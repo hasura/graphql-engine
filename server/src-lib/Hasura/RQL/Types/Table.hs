@@ -88,7 +88,7 @@ import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
-import           Hasura.Server.Utils            (englishList, duplicates)
+import           Hasura.Server.Utils            (duplicates, englishList)
 import           Hasura.SQL.Types
 
 import           Control.Lens
