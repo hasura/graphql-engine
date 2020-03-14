@@ -49,10 +49,10 @@ echo "Changes in this build:"
 echo $changes
 echo
 
-if [[ ${#changes[@]} -gt 0 ]]; then
-	  # If there's still changes left, then we have stuff to build, leave the commit alone.
+if [[ ! -z "$changes" ]]; then
+	# If there's still changes left, then we have stuff to build, leave the commit alone.
     echo "Files that are not ignored present in commits, need to build, succeed the job"
-	  exit
+	exit
 fi
 
 echo "Only ignored files are present in commits, build is not required, write the skip_job file"

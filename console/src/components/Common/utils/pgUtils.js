@@ -193,6 +193,53 @@ export function getRelationshipRefTable(table, relationship) {
   return _refTable;
 }
 
+/**
+ * @param {string} currentSchema
+ * @param {string} currentTable
+ * @param {Array<{[key: string]: any}>} allSchemas
+ *
+ * @returns {Array<{
+ *   columnName: string,
+ *   enumTableName: string,
+ *   enumColumnName: string,
+ * }>}
+ */
+export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
+  const currentTable = findTable(
+    allSchemas,
+    generateTableDef(tableName, tableSchema)
+  );
+
+  const relationsMap = [];
+  if (!currentTable.foreign_key_constraints.length) return;
+
+  currentTable.foreign_key_constraints.map(
+    ({ ref_table, ref_table_table_schema, column_mapping }) => {
+      const refTableSchema = findTable(
+        allSchemas,
+        generateTableDef(ref_table, ref_table_table_schema)
+      );
+      if (!refTableSchema.is_enum) return;
+
+      const keys = Object.keys(column_mapping);
+      if (!keys.length) return;
+
+      const _columnName = keys[0];
+      const _enumColumnName = column_mapping[_columnName];
+
+      if (_columnName && _enumColumnName) {
+        relationsMap.push({
+          columnName: _columnName,
+          enumTableName: ref_table,
+          enumColumnName: _enumColumnName,
+        });
+      }
+    }
+  );
+
+  return relationsMap;
+};
+
 /*** Table/View permissions utils ***/
 
 export const getTablePermissions = (table, role = null, action = null) => {

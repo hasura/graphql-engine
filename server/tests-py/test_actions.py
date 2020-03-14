@@ -127,10 +127,13 @@ class TestActionsAsync:
         query_async = '''
         query ($action_id: uuid!){
           create_user(id: $action_id){
+            __typename
             id
             output {
+              __typename
               id
               user {
+                __typename
                 name
                 email
                 is_admin
@@ -148,10 +151,13 @@ class TestActionsAsync:
         response = {
             'data': {
                 'create_user': {
+                    '__typename': 'create_user',
                     'id': action_id,
                     'output': {
+                        '__typename': 'UserId',
                         'id': 1,
                         'user': {
+                            '__typename': 'user',
                             'name': 'Clarke',
                             'email': 'clarke@hasura.io',
                             'is_admin': False
