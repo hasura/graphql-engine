@@ -36,7 +36,7 @@ export const Button = props => {
       {...props}
       height={buttonHeight}
       px={paddingX}
-      opacity={disabled && '0.5'}
+      opacity={disabled ? '0.5' : undefined}
       color={colorValue}
       bg={backgroundColorValue}
       boxShadowColor={boxShadowColorValue}

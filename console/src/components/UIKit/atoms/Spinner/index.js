@@ -50,6 +50,7 @@ export const Spinner = props => {
     <StyledSpinner {...props} height={spinnerHeight} width={spinnerWidth}>
       {Array.from(new Array(12), (_, i) => i).map(i => (
         <div
+          key={i}
           css={css`
               ${spinnerChildStyles}
               transform: rotate(${30 * i}deg);
