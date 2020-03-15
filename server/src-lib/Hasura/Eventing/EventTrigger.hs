@@ -155,9 +155,8 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       -- worth the effort for something more fine-tuned
       eventsNext <- withAsync popEventsBatch $ \eventsNextA -> do
         -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
-        forM_ events $ \event -> do
-             res <- runReaderT (withEventEngineCtx eeCtx $ (processEvent event)) (logger, httpMgr)
-             return res
+        forM_ events $ \event ->
+             runReaderT (withEventEngineCtx eeCtx $ (processEvent event)) (logger, httpMgr)
         wait eventsNextA
 
       let lenEvents = length events
