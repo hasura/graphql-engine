@@ -12,11 +12,6 @@ import {
 // Parent Div ~ Global Styles ************* //
 
 export const UIKitWrapperDiv = styled.div`
-  /* Roboto Font */
-  @import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,900');
-
-  font-family: 'Roboto', sans-serif;
-
   ${typography}
   ${space}
   ${color}
