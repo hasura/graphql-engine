@@ -51,7 +51,6 @@ import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.EventTrigger
-import           Hasura.SQL.Types
 
 type LogEnvHeaders = Bool
 
