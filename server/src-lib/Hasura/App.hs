@@ -112,6 +112,7 @@ data InitCtx
   , _icLoggers     :: !Loggers
   , _icConnInfo    :: !Q.ConnInfo
   , _icPgPool      :: !Q.PGPool
+  , _icPgVersion   :: !Text
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -166,7 +167,11 @@ initialiseCtx hgeCmd rci = do
   eDbId <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
   dbId <- either printErrJExit return eDbId
 
-  return (InitCtx httpManager instanceId dbId loggers connInfo pool, initTime)
+  -- get the pg version
+  ePgVersion <- liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Nothing) getPgVersion
+  pgVersion <- either printErrJExit return ePgVersion
+  return (InitCtx httpManager instanceId dbId loggers connInfo pool pgVersion, initTime)
+
   where
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
@@ -267,8 +272,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   -- start a background thread for telemetry
   when soEnableTelemetry $ do
     unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-    void $ C.forkImmortal "runTelemetry" logger $ liftIO $ 
-      runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId
+    void $ C.forkImmortal "runTelemetry" logger $ liftIO $
+      runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId _icPgVersion
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime

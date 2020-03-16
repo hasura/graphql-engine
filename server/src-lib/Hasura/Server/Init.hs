@@ -45,6 +45,13 @@ getDbId =
     SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
   |] () False
 
+getPgVersion :: Q.TxE QErr Text
+getPgVersion =
+  (runIdentity . Q.getRow) <$>
+  Q.withQE defaultTxErrorHandler
+  [Q.sql|
+    SHOW server_version
+  |] () False
 
 newtype InstanceId
   = InstanceId { getInstanceId :: Text }
