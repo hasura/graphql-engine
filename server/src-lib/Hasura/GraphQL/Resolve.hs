@@ -28,7 +28,6 @@ import qualified Network.HTTP.Types                as HTTP
 import           Hasura.GraphQL.Resolve.Context
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Context
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 
@@ -122,7 +121,7 @@ mutFldToTx
      , MonadIO m
      )
   => V.Field
-  -> m (RespTx, Headers)
+  -> m (RespTx, HTTP.ResponseHeaders)
 mutFldToTx fld = do
   userInfo <- asks getter
   opCtx <- getOpCtx $ V._fName fld

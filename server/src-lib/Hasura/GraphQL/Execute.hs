@@ -171,7 +171,7 @@ getExecPlanPartial userInfo sc enableAL req = do
 -- to be executed
 data ExecOp
   = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
-  | ExOpMutation !Headers !LazyRespTx
+  | ExOpMutation !N.ResponseHeaders !LazyRespTx
   | ExOpSubs !EL.LiveQueryPlan
 
 -- The graphql query is resolved into an execution operation
@@ -287,7 +287,7 @@ resolveMutSelSet
      , MonadIO m
      )
   => VQ.SelSet
-  -> m (LazyRespTx, Headers)
+  -> m (LazyRespTx, N.ResponseHeaders)
 resolveMutSelSet fields = do
   aliasedTxs <- forM (toList fields) $ \fld -> do
     fldRespTx <- case VQ._fName fld of
@@ -315,7 +315,7 @@ getMutOp
   -> HTTP.Manager
   -> [N.Header]
   -> VQ.SelSet
-  -> m (LazyRespTx, Headers)
+  -> m (LazyRespTx, N.ResponseHeaders)
 getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
   peelReaderT $ resolveMutSelSet selSet
   where

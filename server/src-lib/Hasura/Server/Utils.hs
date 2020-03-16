@@ -1,8 +1,8 @@
 {-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
 
-import           Data.Aeson
 import           Control.Lens               ((^..))
+import           Data.Aeson
 import           Data.Char
 import           Data.List                  (find)
 import           Language.Haskell.TH.Syntax (Lift)
@@ -22,56 +22,52 @@ import qualified Data.UUID.V4               as UUID
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
+import qualified Network.Wreq               as Wreq
 import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ByteString as TDFA
-import qualified Network.Wreq                           as Wreq
 
 import           Hasura.Prelude
-import           Hasura.Server.Context
 
 newtype RequestId
   = RequestId { unRequestId :: Text }
   deriving (Show, Eq, ToJSON, FromJSON)
 
-jsonHeader :: (T.Text, T.Text)
+jsonHeader :: HTTP.Header
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 
-sqlHeader :: (T.Text, T.Text)
+sqlHeader :: HTTP.Header
 sqlHeader = ("Content-Type", "application/sql; charset=utf-8")
 
-htmlHeader :: (T.Text, T.Text)
+htmlHeader :: HTTP.Header
 htmlHeader = ("Content-Type", "text/html; charset=utf-8")
 
-gzipHeader :: (T.Text, T.Text)
+gzipHeader :: HTTP.Header
 gzipHeader = ("Content-Encoding", "gzip")
 
-brHeader :: (T.Text, T.Text)
-brHeader = ("Content-Encoding", "br")
-
-userRoleHeader :: T.Text
+userRoleHeader :: IsString a => a
 userRoleHeader = "x-hasura-role"
 
-deprecatedAccessKeyHeader :: T.Text
+deprecatedAccessKeyHeader :: IsString a => a
 deprecatedAccessKeyHeader = "x-hasura-access-key"
 
-adminSecretHeader :: T.Text
+adminSecretHeader :: IsString a => a
 adminSecretHeader = "x-hasura-admin-secret"
 
-userIdHeader :: T.Text
+userIdHeader :: IsString a => a
 userIdHeader = "x-hasura-user-id"
 
-requestIdHeader :: T.Text
+requestIdHeader :: IsString a => a
 requestIdHeader = "x-request-id"
 
-getRequestHeader :: B.ByteString -> [HTTP.Header] -> Maybe B.ByteString
+getRequestHeader :: HTTP.HeaderName -> [HTTP.Header] -> Maybe B.ByteString
 getRequestHeader hdrName hdrs = snd <$> mHeader
   where
-    mHeader = find (\h -> fst h == CI.mk hdrName) hdrs
+    mHeader = find (\h -> fst h == hdrName) hdrs
 
 getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
 getRequestId headers =
   -- generate a request id for every request if the client has not sent it
-  case getRequestHeader (txtToBs requestIdHeader) headers  of
+  case getRequestHeader requestIdHeader headers  of
     Nothing    -> RequestId <$> liftIO generateFingerprint
     Just reqId -> return $ RequestId $ bsToTxt reqId
 
@@ -176,11 +172,10 @@ mkClientHeadersForward reqHeaders =
         "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
         _            -> Nothing
 
-mkSetCookieHeaders :: Wreq.Response a -> [Header]
+mkSetCookieHeaders :: Wreq.Response a -> HTTP.ResponseHeaders
 mkSetCookieHeaders resp =
-  map (Header . (headerName,) . bsToTxt) $ resp ^.. Wreq.responseHeader headerName
+  map (headerName,) $ resp ^.. Wreq.responseHeader headerName
   where
-    headerName :: IsString a => a
     headerName = "Set-Cookie"
 
 filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]

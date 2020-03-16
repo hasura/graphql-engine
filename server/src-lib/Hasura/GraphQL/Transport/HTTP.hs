@@ -20,6 +20,7 @@ import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Types                     as HTTP
 
 runGQ
   :: ( HasVersion
@@ -89,7 +90,7 @@ runHasuraGQ
   -> GQLReqUnparsed
   -> UserInfo
   -> E.ExecOp
-  -> m (DiffTime, Telem.QueryType, Headers, EncJSON)
+  -> m (DiffTime, Telem.QueryType, HTTP.ResponseHeaders, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runHasuraGQ reqId query userInfo resolvedOp = do

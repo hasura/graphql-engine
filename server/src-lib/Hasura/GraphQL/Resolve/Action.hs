@@ -41,7 +41,6 @@ import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Context
 import           Hasura.Server.Utils               (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
@@ -98,7 +97,7 @@ resolveActionMutation
   => Field
   -> ActionExecutionContext
   -> UserVars
-  -> m (RespTx, Headers)
+  -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionMutation field executionContext sessionVariables =
   case executionContext of
     ActionExecutionSyncWebhook executionContextSync ->
@@ -122,7 +121,7 @@ resolveActionMutationSync
   => Field
   -> SyncActionExecutionContext
   -> UserVars
-  -> m (RespTx, Headers)
+  -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionMutationSync field executionContext sessionVariables = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       actionContext = ActionContext actionName
@@ -369,7 +368,7 @@ callWebhook
   -> Bool
   -> ResolvedWebhook
   -> ActionWebhookPayload
-  -> m (ActionWebhookResponse, Headers)
+  -> m (ActionWebhookResponse, HTTP.ResponseHeaders)
 callWebhook manager outputType outputFields reqHeaders confHeaders
             forwardClientHeaders resolvedWebhook actionWebhookPayload = do
   resolvedConfHeaders <- makeHeadersFromConf confHeaders
