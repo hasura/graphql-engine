@@ -10,14 +10,14 @@ TODO:- Test Actions metadata
 """
 
 use_action_fixtures = pytest.mark.usefixtures(
-    "actions_webhook",
+    "actions_fixture",
     'per_class_db_schema_for_mutation_tests',
     'per_method_db_data_for_mutation_tests'
 )
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @use_action_fixtures
-class TestActionsSync:
+class TestActionsSyncWebsocket:
 
     @classmethod
     def dir(cls):
@@ -35,26 +35,33 @@ class TestActionsSync:
     def test_create_users_success(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/create_users_success.yaml', transport)
 
-    def test_invalid_webhook_response(self, hge_ctx, transport):
+@use_action_fixtures
+class TestActionsSync:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/sync'
+
+    def test_invalid_webhook_response(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/invalid_webhook_response.yaml')
 
-    def test_expecting_object_response(self, hge_ctx, transport):
+    def test_expecting_object_response(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/expecting_object_response.yaml')
 
-    def test_expecting_array_response(self, hge_ctx, transport):
+    def test_expecting_array_response(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/expecting_array_response.yaml')
 
     # Webhook response validation tests. See https://github.com/hasura/graphql-engine/issues/3977
-    def test_mirror_action_not_null(self, hge_ctx, transport):
+    def test_mirror_action_not_null(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_not_null.yaml')
 
-    def test_mirror_action_unexpected_field(self, hge_ctx, transport):
+    def test_mirror_action_unexpected_field(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_unexpected_field.yaml')
 
-    def test_mirror_action_no_field(self, hge_ctx, transport):
+    def test_mirror_action_no_field(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_no_field.yaml')
 
-    def test_mirror_action_success(self, hge_ctx, transport):
+    def test_mirror_action_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_success.yaml')
 
 def mk_headers_with_secret(hge_ctx, headers={}):
@@ -110,7 +117,7 @@ class TestActionsAsync:
         assert status == 200, resp
         assert 'data' in resp
         action_id = resp['data']['create_user']
-        time.sleep(2)
+        time.sleep(3)
 
         query_async = '''
         query ($action_id: uuid!){
@@ -161,7 +168,7 @@ class TestActionsAsync:
         assert status == 200, resp
         assert 'data' in resp
         action_id = resp['data']['create_user']
-        time.sleep(2)
+        time.sleep(3)
 
         query_async = '''
         query ($action_id: uuid!){
@@ -233,7 +240,7 @@ class TestActionsAsync:
         assert status == 200, resp
         assert 'data' in resp
         action_id = resp['data']['create_user']
-        time.sleep(2)
+        time.sleep(3)
 
         query_async = '''
         query ($action_id: uuid!){

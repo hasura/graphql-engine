@@ -419,7 +419,7 @@ class HGECtx:
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
 
-
+        # HGE version
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         env_version = os.getenv('VERSION')
         self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
@@ -430,6 +430,11 @@ class HGECtx:
               self.teardown()
               raise HGECtxError(repr(e))
           assert st_code == 200, resp
+
+        # Postgres version
+        pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
+        self.pg_version = int(pg_version_text)
+
 
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
