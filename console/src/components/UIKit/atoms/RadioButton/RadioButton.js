@@ -40,13 +40,11 @@ export const StyledRadioButton = styled.div`
 
   [type='radio']:checked + label:before {
     border: 2px solid #1fd6e5;
-    -webkit-transition: all 0.2s ease;
     transition: all 0.2s ease;
   }
 
   [type='radio']:hover + label:before {
     border: 2px solid #1fd6e5;
-    -webkit-transition: all 0.2s ease;
     transition: all 0.2s ease;
   }
 
@@ -60,19 +58,16 @@ export const StyledRadioButton = styled.div`
     top: 5px;
     left: 5px;
     border-radius: 100%;
-    -webkit-transition: all 0.2s ease;
     transition: all 0.2s ease;
   }
 
   [type='radio']:not(:checked) + label:after {
     opacity: 0;
-    -webkit-transform: scale(0);
     transform: scale(0);
   }
 
   [type='radio']:checked + label:after {
     opacity: 1;
-    -webkit-transform: scale(1);
     transform: scale(1);
   }
 
