@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40.25" height="40.25" viewBox="0 0 40.25 40.25">
+    <defs>
+        <style>
+            .prefix__cls-1{fill:none;stroke:#1cd3c6;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.5px}
+        </style>
+    </defs>
+    <g id="prefix__Group_7881" data-name="Group 7881" transform="translate(-1810.75 -14140.75)">
+        <g id="prefix__streamline-icon-database-hierarchy_40x40" data-name="streamline-icon-database-hierarchy@40x40" transform="translate(1810.75 14140.748)">
+            <path id="prefix__Path_6322" d="M11.25 6.252c5.523 0 10 2.238 10 5s-4.477 5-10 5-10-2.238-10-5 4.477-5 10-5z" class="prefix__cls-1" data-name="Path 6322"/>
+            <path id="prefix__Path_6323" d="M1.25 11.252v7.5c0 2.762 4.477 5 10 5s10-2.238 10-5v-7.5" class="prefix__cls-1" data-name="Path 6323"/>
+            <path id="prefix__Path_6324" d="M1.25 18.752v7.5c0 2.762 4.477 5 10 5s10-2.238 10-5v-7.5" class="prefix__cls-1" data-name="Path 6324"/>
+            <path id="prefix__Path_6325" d="M26.25 11.252l-5 5" class="prefix__cls-1" data-name="Path 6325"/>
+            <path id="prefix__Path_6326" d="M32.5 1.252c3.452 0 6.25 1.678 6.25 3.75s-2.8 3.75-6.25 3.75S26.25 7.073 26.25 5s2.798-3.748 6.25-3.748z" class="prefix__cls-1" data-name="Path 6326"/>
+            <path id="prefix__Path_6327" d="M26.25 5v7.5c0 2.07 2.8 3.75 6.25 3.75s6.25-1.68 6.25-3.75V5" class="prefix__cls-1" data-name="Path 6327"/>
+            <path id="prefix__Path_6328" d="M20.568 28.07l5.682 5.682" class="prefix__cls-1" data-name="Path 6328"/>
+            <path id="prefix__Path_6329" d="M32.5 23.752c3.452 0 6.25 1.678 6.25 3.75s-2.8 3.75-6.25 3.75-6.25-1.678-6.25-3.75 2.798-3.75 6.25-3.75z" class="prefix__cls-1" data-name="Path 6329"/>
+            <path id="prefix__Path_6330" d="M26.25 27.5V35c0 2.07 2.8 3.75 6.25 3.75s6.25-1.68 6.25-3.75v-7.5" class="prefix__cls-1" data-name="Path 6330"/>
+        </g>
+        <path id="prefix__Rectangle_10537" d="M0 0H40V40H0z" data-name="Rectangle 10537" transform="translate(1811 14141)" style="fill:none"/>
+    </g>
+</svg>
