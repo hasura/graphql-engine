@@ -428,7 +428,11 @@ UpdatePermission
    * - filter
      - true
      - :ref:`BoolExp`
-     - Only the rows where this expression holds true are deletable
+     - Only the rows where this precondition holds true are updatable
+   * - check
+     - false
+     - :ref:`BoolExp`
+     - Postcondition which must be satisfied by rows which have been updated
    * - set
      - false
      - :ref:`ColumnPresetExp`
