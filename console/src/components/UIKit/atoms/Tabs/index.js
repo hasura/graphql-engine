@@ -12,25 +12,21 @@ export const Tabs = props => {
   const { tabsData } = props;
 
   const currentTabContent =
-    tabsData &&
-    tabsData.filter((_, index) => {
-      return index === currentActiveTabIndex;
-    });
+    tabsData && tabsData.filter((_, index) => index === currentActiveTabIndex);
 
   if (tabsData && tabsData.length > 0) {
     return (
       <StyledTab {...props}>
         <StyledTabList>
-          {tabsData &&
-            tabsData.map(({ title }, index) => (
-              <StyledTabListItem
-                key={title}
-                selected={index === currentActiveTabIndex}
-                onClick={() => changeCurrentActiveTab(index)}
-              >
-                {title}
-              </StyledTabListItem>
-            ))}
+          {tabsData.map(({ title }, index) => (
+            <StyledTabListItem
+              key={title}
+              selected={index === currentActiveTabIndex}
+              onClick={() => changeCurrentActiveTab(index)}
+            >
+              {title}
+            </StyledTabListItem>
+          ))}
         </StyledTabList>
         {currentTabContent &&
           currentTabContent.map(({ tabContent }, index) => (
