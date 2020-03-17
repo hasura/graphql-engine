@@ -14,11 +14,15 @@ import (
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/plugins"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
 func newPluginsUpgradeCmd(ec *cli.ExecutionContext) *cobra.Command {
+	opts := &PluginUpgradeOptions{
+		EC: ec,
+	}
 	pluginsUpgradeCmd := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade a plugin to a newer version",
@@ -30,20 +34,36 @@ func newPluginsUpgradeCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return ec.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			pluginName := args[0]
-			ec.Spin(fmt.Sprintf("Upgrading plugin %q...", pluginName))
+			opts.Name = args[0]
+			ec.Spin(fmt.Sprintf("Upgrading plugin %q...", opts.Name))
 			defer ec.Spinner.Stop()
-			plugin, err := ec.PluginsConfig.Upgrade(pluginName)
+			plugin, err := opts.Run()
 			if err != nil && err != plugins.ErrIsAlreadyUpgraded {
-				return errors.Wrapf(err, "failed to upgrade plugin %q", plugin.Name)
+				return errors.Wrapf(err, "failed to upgrade plugin %q", opts.Name)
 			}
 			ec.Spinner.Stop()
 			ec.Logger.WithFields(logrus.Fields{
-				"name":    pluginName,
+				"name":    opts.Name,
 				"version": plugin.Version,
 			}).Infoln("Plugin upgraded")
 			return nil
 		},
 	}
+
+	f := pluginsUpgradeCmd.Flags()
+
+	f.Var(&opts.Version, "version", "version to be upgraded")
+
 	return pluginsUpgradeCmd
+}
+
+type PluginUpgradeOptions struct {
+	EC *cli.ExecutionContext
+
+	Name    string
+	Version util.VersionFlag
+}
+
+func (o *PluginUpgradeOptions) Run() (plugins.Plugin, error) {
+	return o.EC.PluginsConfig.Upgrade(o.Name, o.Version.Version)
 }

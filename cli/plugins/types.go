@@ -8,10 +8,80 @@ source: https://github.com/kubernetes-sigs/krew/tree/master/internal
 */
 
 import (
+	"fmt"
+	"sort"
 	"strings"
 
+	"github.com/Masterminds/semver"
 	"github.com/pkg/errors"
 )
+
+// Plugins - holds multiple plugins
+type Plugins map[string]*PluginVersions
+
+// PluginVersions holds manifest data for multiple versions of a plugin
+type PluginVersions struct {
+	Index    versionSlice
+	Versions map[*semver.Version]Plugin
+}
+
+func NewPluginVersions() *PluginVersions {
+	return &PluginVersions{
+		Index:    make(versionSlice, 0),
+		Versions: make(map[*semver.Version]Plugin),
+	}
+}
+
+func (i *PluginVersions) Append(p Plugin) (err error) {
+	if _, ok := i.Versions[p.ParsedVersion]; ok {
+		return fmt.Errorf("found duplicate versions for plugin %s - %s", p.Name, p.Version)
+	}
+
+	i.Versions[p.ParsedVersion] = p
+	i.buildIndex()
+	return nil
+}
+
+func (i *PluginVersions) buildIndex() {
+	i.Index = make(versionSlice, 0)
+	for version := range i.Versions {
+		i.Index = append(i.Index, version)
+	}
+	sort.Sort(i.Index)
+}
+
+// versionSlice is a collection of Version instances and implements the sort
+// interface. See the sort package for more details.
+// https://golang.org/pkg/sort/
+type versionSlice []*semver.Version
+
+// Len returns the length of a collection. The number of Version instances
+// on the slice.
+func (v versionSlice) Len() int {
+	return len(v)
+}
+
+// Swap is needed for the sort interface to replace the Version objects
+// at two different positions in the slice.
+func (v versionSlice) Swap(i, j int) {
+	v[i], v[j] = v[j], v[i]
+}
+
+// Less is needed for the sort interface to compare two Version objects on the
+// slice. If checks if one is less than the other.
+func (v versionSlice) Less(i, j int) bool {
+	return v[i].LessThan(v[j])
+}
+
+// Search is needed to search a particular version
+func (v versionSlice) Search(x *semver.Version) *semver.Version {
+	for _, ver := range v {
+		if ver.String() == x.String() {
+			return ver
+		}
+	}
+	return nil
+}
 
 // Plugin describes a plugin manifest file.
 type Plugin struct {
@@ -21,6 +91,18 @@ type Plugin struct {
 	Homepage         string     `json:"homepage,omitempty"`
 	Hidden           bool       `json:"hidden,omitempty"`
 	Platforms        []Platform `json:"platforms,omitempty"`
+
+	ParsedVersion *semver.Version `json:"-"`
+}
+
+// ParseVersion - ensures the version is valid
+func (p *Plugin) ParseVersion() {
+	v, err := semver.NewVersion(p.Version)
+	if err != nil {
+		p.ParsedVersion = nil
+		return
+	}
+	p.ParsedVersion = v
 }
 
 // ValidatePlugin checks for structural validity of the Plugin object with given

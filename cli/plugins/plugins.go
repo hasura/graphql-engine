@@ -15,6 +15,7 @@ import (
 	"runtime"
 
 	"github.com/Masterminds/semver"
+
 	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli/plugins/paths"
 	"github.com/hasura/graphql-engine/cli/util"
@@ -23,9 +24,10 @@ import (
 )
 
 var (
-	ErrIsAlreadyInstalled = errors.New("can't install, the newest version is already installed")
-	ErrIsNotInstalled     = errors.New("plugin is not installed")
-	ErrIsAlreadyUpgraded  = errors.New("can't upgrade, the newest version is already installed")
+	ErrIsAlreadyInstalled  = errors.New("can't install, plugin is already installed")
+	ErrIsNotInstalled      = errors.New("plugin is not installed")
+	ErrIsAlreadyUpgraded   = errors.New("can't upgrade, the newest version is already installed")
+	ErrVersionNotAvailable = errors.New("plugin version is not available")
 )
 
 const (
@@ -80,21 +82,34 @@ func (c *Config) ListInstalledPlugins() (map[string]string, error) {
 	return installed, nil
 }
 
-func (c *Config) ListPlugins() ([]Plugin, error) {
+func (c *Config) ListPlugins() (Plugins, error) {
 	return c.LoadPluginListFromFS(c.Paths.IndexPluginsPath())
 }
 
-func (c *Config) Install(pluginName string, mainfestFile string) error {
+func (c *Config) Install(pluginName string, mainfestFile string, version *semver.Version) error {
 	var plugin Plugin
 	var err error
 	if mainfestFile == "" {
 		// Load the plugin index by name
-		plugin, err = c.LoadPluginByName(c.Paths.IndexPluginsPath(), pluginName)
+		ps, err := c.LoadPluginByName(pluginName)
 		if err != nil {
 			if os.IsNotExist(err) {
 				return errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
 			}
 			return errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
+		}
+
+		// get the latest version
+		if version != nil {
+			ver := ps.Index.Search(version)
+			if ver != nil {
+				plugin = ps.Versions[ver]
+			} else {
+				return ErrVersionNotAvailable
+			}
+		} else {
+			latestVersion := ps.Index[len(ps.Index)-1]
+			plugin = ps.Versions[latestVersion]
 		}
 
 		// Load the installed manifest
@@ -195,23 +210,36 @@ func (c *Config) installPlugin(plugin Plugin, platform Platform) error {
 
 // Upgrade will reinstall and delete the old plugin. The operation tries
 // to not get the plugin dir in a bad state if it fails during the process.
-func (c *Config) Upgrade(pluginName string) (Plugin, error) {
-	plugin, err := c.LoadPluginByName(c.Paths.IndexPluginsPath(), pluginName)
+func (c *Config) Upgrade(pluginName string, version *semver.Version) (Plugin, error) {
+	ps, err := c.LoadPluginByName(pluginName)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return Plugin{}, errors.Errorf("plugin %q does not exist in the plugin index", pluginName)
 		}
 		return Plugin{}, errors.Wrapf(err, "failed to load the plugin manifest for plugin %s", pluginName)
 	}
+
+	// get the latest version
+	var plugin Plugin
+	if version != nil {
+		ver := ps.Index.Search(version)
+		if ver != nil {
+			plugin = ps.Versions[ver]
+		} else {
+			return Plugin{}, ErrVersionNotAvailable
+		}
+	} else {
+		latestVersion := ps.Index[len(ps.Index)-1]
+		plugin = ps.Versions[latestVersion]
+	}
+
 	installReceipt, err := c.LoadManifest(c.Paths.PluginInstallReceiptPath(plugin.Name))
 	if err != nil {
 		return plugin, errors.Wrapf(err, "failed to load install receipt for plugin %q", plugin.Name)
 	}
 
-	curVersion := installReceipt.Version
-	curv, err := semver.NewVersion(curVersion)
-	if err != nil {
-		c.Logger.Debugf("failed to parse installed plugin version (%q) as a semver value", curVersion)
+	if installReceipt.ParsedVersion == nil {
+		c.Logger.Debugf("failed to parse installed plugin version (%q) as a semver value", installReceipt.ParsedVersion)
 		c.Logger.Debugf("assuming installed plugin %s as a dev version and force upgrade", plugin.Name)
 	}
 
@@ -225,15 +253,10 @@ func (c *Config) Upgrade(pluginName string) (Plugin, error) {
 			plugin.Name, fmt.Sprintf("%s-%s", runtime.GOOS, runtime.GOARCH))
 	}
 
-	newVersion := plugin.Version
-	newv, err := semver.NewVersion(newVersion)
-	if err != nil {
-		return plugin, errors.Wrapf(err, "failed to parse candidate version spec (%q)", newVersion)
-	}
-
 	// See if it's a newer version
-	if curv != nil {
-		if !curv.LessThan(newv) {
+	if installReceipt.ParsedVersion != nil {
+		if !installReceipt.ParsedVersion.LessThan(plugin.ParsedVersion) || installReceipt.ParsedVersion.Equal(plugin.ParsedVersion) {
+			fmt.Println("asdasd")
 			return plugin, ErrIsAlreadyUpgraded
 		}
 	}
@@ -248,7 +271,7 @@ func (c *Config) Upgrade(pluginName string) (Plugin, error) {
 	}
 
 	// Clean old installations
-	return plugin, os.RemoveAll(c.Paths.PluginVersionInstallPath(plugin.Name, curVersion))
+	return plugin, os.RemoveAll(c.Paths.PluginVersionInstallPath(plugin.Name, installReceipt.Version))
 }
 
 func (c *Config) LoadManifest(path string) (Plugin, error) {
