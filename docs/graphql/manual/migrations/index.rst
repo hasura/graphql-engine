@@ -18,11 +18,28 @@ Introduction
 How is Hasura state managed?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Hasura needs 2 pieces of information to expose the GraphQL API, the PG
+database schema and the Hasura metadata which is used to describe the exposed
+GraphQL API.
+
 PG DB migrations
 ****************
 
+The state of your database is managed via incremental SQL migration files.
+These migration files can be applied one after the other to achieve the final
+DB schema.
+
+DB migration files can be generated incrementally and can by applied in parts to
+reach particular checkpoints. They can be used to roll back the DB schemas as well.
+
 Hasura metadata
 ***************
+
+The state of Hasura metadata is managed via snapshots of the metadata. These s
+napshots can be applied as a whole to configure Hasura to a state represented
+in the snapshot.
+
+Hasura metadata can be exported and imported as a whole.
 
 Setting up migrations
 ---------------------

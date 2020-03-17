@@ -21,53 +21,74 @@ Initializing migrations
 Generating migrations
 ---------------------
 
-- Create migrations
+.. rst-class:: api_tabs
+.. tabs::
 
-  .. rst-class:: api_tabs
-  .. tabs::
+  .. tab:: Via console
 
-    .. tab:: Via console
+    - Open the Hasura console via the CLI
 
-      - Open console
+      .. code-block:: bash
 
-        .. code-block:: bash
+        hasura console
 
-          hasura console
+    - As you make changes, migration files will be created and latest
+      metadata will be exported automatically
 
-      - Do things
-      - Migration created and metadata updated automatically
+  .. tab:: Manually
 
-    .. tab:: Manually
+    - Create a new migration
 
-      - Create migration folder
+      .. code-block:: bash
 
-        .. code-block:: bash
+        hasura migrate create <name-of-migration>
 
-          hasura migrate create <name-of-migration>
+    - Add SQL manually to the ``up.sql`` and ``down.sql`` files in the created
+      migration directory
+    - Edit the corresponding metadata manually
 
-      - Add SQL manually
-      - Edit metadata manually
+Managing migrations
+-------------------
 
-- Squash migrations
+For maintaining a clean set of migrations with the possibility to move between
+different checkpoints in your DB and metadata state it is recommended to clean
+up intermediate DB migration files and to version control the Hasura project.
 
-  .. code-block:: bash
+Squash migrations
+^^^^^^^^^^^^^^^^^
 
-    hasura migrate squash --from <version>
+Typically while adding a feature a lot of incremental migration files get
+created for each of the small tasks that you did to achieve the feature.
 
-- Add checkpoint
+Once you are confident about the final state of a feature, you can use the
+``migrate squash`` command to make a single DB migration file containing all
+the intermediate steps required to reach the final state.
 
-  .. code-block:: bash
+.. code-block:: bash
 
-    git commit
+  hasura migrate squash --name "<feature-name>" --from <migration-version>
+
+Add checkpoints
+^^^^^^^^^^^^^^^
+
+As your metadata is exported on every change you make to the schema, once a final
+state for a feature is reached you should mark it as a checkpoint via version
+control so that you can get back the metadata at that point.
+
+.. code-block:: bash
+
+  git commit -m "<feature-name>"
 
 Applying migrations
 -------------------
 
-- Get migrations directory and metadata.yaml
+- Get the Hasura project with the ``migrations`` and ``metadata`` directories.
 
-- Apply migrations
+- Apply DB migration files and metadata snapshot
 
   .. code-block:: bash
 
-    hasura migrate apply
-    hasura metadata apply
+    hasura migrate apply --endpoint <server-endpoint>
+    hasura metadata apply --endpoint <server-endpoint>
+
+Your Hasura server should be up and running!
