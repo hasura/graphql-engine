@@ -90,6 +90,19 @@ const routes = store => {
 
   const actionsRouter = getActionsRouter(connect, store, composeOnEnterHooks);
 
+  const uiKitRouter = globals.isProduction ? null : (
+    <Route
+      path="/ui-elements"
+      // TODO: fix me
+      component={() => (
+        <div>
+          <Heading />
+          <UIKit />
+        </div>
+      )}
+    />
+  );
+
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
       <Route path="login" component={generatedLoginConnector(connect)} />
@@ -129,16 +142,7 @@ const routes = store => {
           {eventRouter}
           {remoteSchemaRouter}
           {actionsRouter}
-          <Route
-            path="/ui-elements"
-            // TODO: fix me
-            component={() => (
-              <div>
-                <Heading />
-                <UIKit />
-              </div>
-            )}
-          />
+          {uiKitRouter}
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />
