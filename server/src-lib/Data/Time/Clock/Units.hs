@@ -52,7 +52,6 @@ module Data.Time.Clock.Units
   , Nanoseconds(..)
   -- * Converting between units
   , Duration
-  , Duration'(..)
   , DurationType(..)
   , fromUnits
   -- * Reexports
@@ -88,8 +87,8 @@ type family Duration a = r | r -> a where
 
 newtype Seconds t = Seconds { seconds :: Duration t}
 
-deriving instance Duration' (Seconds 'Absolute)
-deriving instance Duration' (Seconds 'Calendar)
+deriving instance AsDuration (Seconds 'Absolute)
+deriving instance AsDuration (Seconds 'Calendar)
 
 -- NOTE: we want Show to give a pastable data structure string, even
 -- though Read is custom.
@@ -132,8 +131,8 @@ deriving via (TimeUnit (SecondsP 1) 'Calendar) instance RealFrac (Seconds 'Calen
 --         toJSON (5 :: Minutes) == Number 5
 newtype Days t = Days { days :: Duration t}
 
-deriving instance Duration' (Days 'Absolute)
-deriving instance Duration' (Days 'Calendar)
+deriving instance AsDuration (Days 'Absolute)
+deriving instance AsDuration (Days 'Calendar)
 
 deriving instance Show (Days 'Absolute)
 deriving instance Show (Days 'Calendar)
@@ -164,8 +163,8 @@ deriving via (TimeUnit (SecondsP 86400) 'Calendar) instance RealFrac (Days 'Cale
 
 newtype Hours t = Hours { hours :: Duration t}
 
-deriving instance Duration' (Hours 'Absolute)
-deriving instance Duration' (Hours 'Calendar)
+deriving instance AsDuration (Hours 'Absolute)
+deriving instance AsDuration (Hours 'Calendar)
 
 deriving instance Show (Hours 'Absolute)
 deriving instance Show (Hours 'Calendar)
@@ -196,8 +195,8 @@ deriving via (TimeUnit (SecondsP 3600) 'Calendar) instance RealFrac (Hours 'Cale
 
 newtype Minutes t = Minutes { minutes :: Duration t}
 
-deriving instance Duration' (Minutes 'Absolute)
-deriving instance Duration' (Minutes 'Calendar)
+deriving instance AsDuration (Minutes 'Absolute)
+deriving instance AsDuration (Minutes 'Calendar)
 
 deriving instance Show (Minutes 'Absolute)
 deriving instance Show (Minutes 'Calendar)
@@ -228,8 +227,8 @@ deriving via (TimeUnit (SecondsP 60) 'Calendar) instance RealFrac (Minutes 'Cale
 
 newtype Milliseconds t = Milliseconds { milliseconds :: Duration t}
 
-deriving instance Duration' (Milliseconds 'Absolute)
-deriving instance Duration' (Milliseconds 'Calendar)
+deriving instance AsDuration (Milliseconds 'Absolute)
+deriving instance AsDuration (Milliseconds 'Calendar)
 
 deriving instance Show (Milliseconds 'Absolute)
 deriving instance Show (Milliseconds 'Calendar)
@@ -261,8 +260,8 @@ deriving via (TimeUnit 1000000000 'Calendar) instance RealFrac (Milliseconds 'Ca
 
 newtype Microseconds t = Microseconds { microseconds :: Duration t}
 
-deriving instance Duration' (Microseconds 'Absolute)
-deriving instance Duration' (Microseconds 'Calendar)
+deriving instance AsDuration (Microseconds 'Absolute)
+deriving instance AsDuration (Microseconds 'Calendar)
 
 deriving instance Show (Microseconds 'Absolute)
 deriving instance Show (Microseconds 'Calendar)
@@ -294,8 +293,8 @@ deriving via (TimeUnit 1000000 'Calendar) instance RealFrac (Microseconds 'Calen
 
 newtype Nanoseconds t = Nanoseconds { nanoseconds :: Duration t}
 
-deriving instance Duration' (Nanoseconds 'Absolute)
-deriving instance Duration' (Nanoseconds 'Calendar)
+deriving instance AsDuration (Nanoseconds 'Absolute)
+deriving instance AsDuration (Nanoseconds 'Calendar)
 
 deriving instance Show (Nanoseconds 'Absolute)
 deriving instance Show (Nanoseconds 'Calendar)
@@ -418,20 +417,20 @@ instance Hashable (TimeUnit a 'Calendar) where
     (realToFrac :: NominalDiffTime -> Double) dt
 
 -- | Duration types isomorphic to 'DiffTime', powering 'fromUnits'.
-class Duration' d where
+class AsDuration d where
   fromDiffTime :: DiffTime -> d
   toDiffTime :: d -> DiffTime
 
-instance Duration' DiffTime where
+instance AsDuration DiffTime where
   fromDiffTime = id
   toDiffTime = id
 
-instance Duration' NominalDiffTime where
+instance AsDuration NominalDiffTime where
   fromDiffTime = realToFrac
   toDiffTime = realToFrac
 
 -- | Safe conversion between duration units.
-fromUnits :: (Duration' x, Duration' y)=> x -> y
+fromUnits :: (AsDuration x, AsDuration y)=> x -> y
 fromUnits = fromDiffTime . toDiffTime
 
 -- | The input to this function is the number of picos in Integer
