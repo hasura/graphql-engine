@@ -35,7 +35,7 @@ func (p *Provider) BasePath() string {
 // DoAssetExist returns true if an asset exists at pathk
 func (p *Provider) DoAssetExist(path string) bool {
 	_, err := packed.AssetInfo(path)
-	return err != nil
+	return err == nil
 }
 
 func (p *Provider) LoadTemplates(path string, templateNames ...string) (multitemplate.Render, error) {

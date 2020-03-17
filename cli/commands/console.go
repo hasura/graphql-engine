@@ -8,12 +8,11 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
-	"github.com/hasura/graphql-engine/cli/pkg/templates"
+	"github.com/hasura/graphql-engine/cli/pkg/console"
 	"github.com/hasura/graphql-engine/cli/pkg/templates/oss"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -132,7 +131,7 @@ func (o *ConsoleOptions) Run() error {
 
 	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
 
-	consoleRouter, err := BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
+	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
@@ -145,6 +144,7 @@ func (o *ConsoleOptions) Run() error {
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
 	})
+
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
 	}
@@ -310,30 +310,4 @@ func allowCors() gin.HandlerFunc {
 	config.AllowAllOrigins = true
 	config.AllowCredentials = false
 	return cors.New(config)
-}
-
-func BuildConsoleRouter(templateProvider templates.Provider, assetsVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
-	// An Engine instance with the Logger and Recovery middleware already attached.
-	r := gin.New()
-
-	if !templateProvider.DoAssetExist(templateProvider.BasePath() + assetsVersion + "/console.html") {
-		assetsVersion = "latest"
-	}
-
-	// Template console.html
-	templateRender, err := templateProvider.LoadTemplates(templateProvider.BasePath()+assetsVersion+"/", "console.html")
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot fetch template")
-	}
-	r.HTMLRender = templateRender
-
-	if staticDir != "" {
-		r.Use(static.Serve("/static", static.LocalFile(staticDir, false)))
-		opts["cliStaticDir"] = staticDir
-	}
-	r.GET("/*action", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "console.html", &opts)
-	})
-
-	return r, nil
 }
