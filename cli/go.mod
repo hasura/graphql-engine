@@ -27,6 +27,7 @@ require (
 	github.com/jinzhu/gorm v1.9.11 // indirect
 	github.com/josharian/impl v0.0.0-20191119165012-6b9658ad00c7 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
+	github.com/labstack/gommon v0.3.0
 	github.com/manifoldco/promptui v0.6.0
 	github.com/mattn/go-colorable v0.1.4
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b

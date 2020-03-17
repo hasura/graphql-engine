@@ -3,8 +3,6 @@ package commands
 import (
 	"fmt"
 	"net/url"
-	"runtime"
-	"strings"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata"
@@ -18,6 +16,7 @@ import (
 	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	"github.com/hasura/graphql-engine/cli/pkg/console"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -63,7 +62,7 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 
 func newMigrate(ec *cli.ExecutionContext, isCmd bool) (*migrate.Migrate, error) {
 	dbURL := getDataPath(ec.Config.ServerConfig.ParsedEndpoint, getAdminSecretHeaderName(ec.Version), ec.Config.ServerConfig.AdminSecret)
-	fileURL := getFilePath(ec.MigrationDir)
+	fileURL := console.GetFilePath(ec.MigrationDir)
 	t, err := migrate.New(fileURL.String(), dbURL.String(), isCmd, int(ec.Config.Version), ec.Logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot create migrate instance")
@@ -126,19 +125,6 @@ func getDataPath(nurl *url.URL, adminSecretHeader, adminSecretValue string) *url
 		q.Add("headers", fmt.Sprintf("%s:%s", adminSecretHeader, adminSecretValue))
 	}
 	host.RawQuery = q.Encode()
-	return host
-}
-
-func getFilePath(dir string) *url.URL {
-	host := &url.URL{
-		Scheme: "file",
-		Path:   dir,
-	}
-
-	// Add Prefix / to path if runtime.GOOS equals to windows
-	if runtime.GOOS == "windows" && !strings.HasPrefix(host.Path, "/") {
-		host.Path = "/" + host.Path
-	}
 	return host
 }
 

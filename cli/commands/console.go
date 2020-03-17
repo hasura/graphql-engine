@@ -7,15 +7,12 @@ import (
 	"sync"
 
 	"github.com/fatih/color"
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/migrate/api"
 	"github.com/hasura/graphql-engine/cli/pkg/console"
 	"github.com/hasura/graphql-engine/cli/pkg/templates/oss"
+	"github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -98,39 +95,25 @@ type ConsoleOptions struct {
 }
 
 func (o *ConsoleOptions) Run() error {
-	log := o.EC.Logger
-	// Switch to "release" mode in production.
 	gin.SetMode(gin.ReleaseMode)
-
-	// An Engine instance with the Logger and Recovery middleware already attached.
-	g := gin.New()
-
-	g.Use(allowCors())
-
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
 	}
 
-	t, err := newMigrate(o.EC, false)
+	migrate, err := newMigrate(o.EC, false)
 	if err != nil {
 		return err
 	}
 
-	// My Router struct
-	r := &cRouter{
-		g,
-		t,
-	}
+	apiServer := console.NewAPIServer(migrate, o.Address, o.APIPort, o.EC)
 
-	r.setRoutes(o.EC.MigrationDir, o.EC.Logger)
+	// Setup console server
 	templateProvider := oss.NewOSSProvider()
 	consoleTemplateVersion := templateProvider.GetConsoleTemplateVersion(o.EC.Version)
 	consoleAssetsVersion := templateProvider.GetConsoleAssetsVersion(o.EC.Version)
-
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
 	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
-
 	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,
@@ -144,41 +127,34 @@ func (o *ConsoleOptions) Run() error {
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
 	})
-
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
 	}
+	consoleServer := console.NewConsoleServer(&console.NewConsoleServerOpts{
+		Logger:           o.EC.Logger,
+		APIPort:          o.APIPort,
+		Address:          o.Address,
+		Browser:          o.Browser,
+		DontOpenBrowser:  o.DontOpenBrowser,
+		EC:               o.EC,
+		Port:             o.ConsolePort,
+		Router:           consoleRouter,
+		StaticDir:        o.StaticDir,
+		TemplateProvider: templateProvider,
+	})
 
-	// create servers
-	apiServer := &http.Server{
-		Addr:    fmt.Sprintf("%s:%s", o.Address, o.APIPort),
-		Handler: r.router,
+	// get HTTP servers
+	apiHTTPServer := apiServer.GetHTTPServer()
+	consoleHTTPServer, err := consoleServer.GetHTTPServer()
+	if err != nil {
+		return errors.Wrap(err, "cannot create console server")
 	}
-	consoleServer := &http.Server{
-		Addr:    fmt.Sprintf("%s:%s", o.Address, o.ConsolePort),
-		Handler: consoleRouter,
-	}
-
-	go func() {
-		<-o.APIServerInterruptSignal
-		if err := apiServer.Close(); err != nil {
-			o.EC.Logger.Debugf("unable to close server running on port %s", o.APIPort)
-		}
-	}()
-
-	go func() {
-		<-o.ConsoleServerInterruptSignal
-		if err := consoleServer.Close(); err != nil {
-			o.EC.Logger.Debugf("unable to close server running on port %s", o.ConsolePort)
-		}
-	}()
-
 	// Create WaitGroup for running 2 servers
 	wg := &sync.WaitGroup{}
 	o.WG = wg
 	wg.Add(1)
 	go func() {
-		if err := apiServer.ListenAndServe(); err != nil {
+		if err := apiHTTPServer.ListenAndServe(); err != nil {
 			if err == http.ErrServerClosed {
 				o.EC.Logger.Infof("server closed on port %s under signal", o.APIPort)
 			} else {
@@ -189,7 +165,7 @@ func (o *ConsoleOptions) Run() error {
 	}()
 	wg.Add(1)
 	go func() {
-		if err := consoleServer.ListenAndServe(); err != nil {
+		if err := consoleHTTPServer.ListenAndServe(); err != nil {
 			if err == http.ErrServerClosed {
 				o.EC.Logger.Infof("server closed on port %s under signal", o.ConsolePort)
 			} else {
@@ -227,87 +203,4 @@ func (o *ConsoleOptions) Run() error {
 
 	wg.Wait()
 	return nil
-}
-
-type cRouter struct {
-	router  *gin.Engine
-	migrate *migrate.Migrate
-}
-
-func (r *cRouter) setRoutes(migrationDir string, logger *logrus.Logger) {
-	apis := r.router.Group("/apis")
-	{
-		apis.Use(setLogger(logger))
-		apis.Use(setFilePath(migrationDir))
-		apis.Use(setMigrate(r.migrate))
-		apis.Use(setConfigVersion())
-		// Migrate api endpoints and middleware
-		migrateAPIs := apis.Group("/migrate")
-		{
-			settingsAPIs := migrateAPIs.Group("/settings")
-			{
-				settingsAPIs.Any("", api.SettingsAPI)
-			}
-			squashAPIs := migrateAPIs.Group("/squash")
-			{
-				squashAPIs.POST("/create", api.SquashCreateAPI)
-				squashAPIs.POST("/delete", api.SquashDeleteAPI)
-			}
-			migrateAPIs.Any("", api.MigrateAPI)
-		}
-		// Migrate api endpoints and middleware
-		metadataAPIs := apis.Group("/metadata")
-		{
-			metadataAPIs.Any("", api.MetadataAPI)
-		}
-	}
-}
-
-func setMigrate(t *migrate.Migrate) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("migrate", t)
-		c.Next()
-	}
-}
-
-func setFilePath(dir string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		host := getFilePath(dir)
-		c.Set("filedir", host)
-		c.Next()
-	}
-}
-
-func setConfigVersion() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("version", int(ec.Config.Version))
-		c.Next()
-	}
-}
-
-func setMetadataFile(file string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("metadataFile", file)
-		c.Next()
-	}
-}
-
-func setLogger(logger *logrus.Logger) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("logger", logger)
-		c.Next()
-	}
-}
-
-func allowCors() gin.HandlerFunc {
-	config := cors.DefaultConfig()
-	config.AddAllowHeaders("X-Hasura-User-Id")
-	config.AddAllowHeaders(XHasuraAccessKey)
-	config.AddAllowHeaders(XHasuraAdminSecret)
-	config.AddAllowHeaders("X-Hasura-Role")
-	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
-	config.AddAllowMethods("DELETE")
-	config.AllowAllOrigins = true
-	config.AllowCredentials = false
-	return cors.New(config)
 }
