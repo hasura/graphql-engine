@@ -81,4 +81,6 @@
 - add meta descriptions to actions docs (#4082)
 - `HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL` changes semantics slightly: we only sleep for the interval
   when there were previously no events to process. Potential space leak fixed. (#3839)
+- console: track runtime errors (#4083)
 - auto-include `__typename` field in custom types' objects (fix #4063)
+- docs: bump MarupSafe version (#4102)
