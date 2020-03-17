@@ -2,7 +2,7 @@
    :description: Migrations reference documentation
    :keywords: hasura, docs, migration, reference
 
-.. _migration_reference:
+.. _migration_reference_old:
 
 Migrations reference documentation
 ==================================

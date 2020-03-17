@@ -2,10 +2,10 @@
    :description: Manage Hasura migrations and metadata
    :keywords: hasura, docs, migration, metadata
 
-.. _migrations:
+.. _migrations_old:
 
-Migrations & Metadata
-=====================
+Migrations & Metadata (pre v1.2)
+================================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -45,26 +45,26 @@ Simple use cases
 We will split the use cases into two:
 
 1. :ref:`You're already using a migration tool for the Postgres schema
-   <manage_hasura_metadata>`. (like knex, TypeORM, Sequelize, Rails/Django
+   <manage_hasura_metadata_old>`. (like knex, TypeORM, Sequelize, Rails/Django
    migrations. In this case you only need to manage the Hasura metadata)
 2. :ref:`You're not using any migration tool for the Postgres schema
-   <postgres_schema_metadata>`. (Hasura will take care of the
+   <postgres_schema_metadata_old>`. (Hasura will take care of the
    Postgres schema also)
 
 Advanced use cases
 ------------------
 
 
-- :ref:`auto_apply_migrations`
-- :ref:`manual_migrations`
-- :ref:`roll_back_migrations`
+- :ref:`auto_apply_migrations_old`
+- :ref:`manual_migrations_old`
+- :ref:`roll_back_migrations_old`
 
 Reference documentation
 -----------------------
 
-- :ref:`migrations_how_it_works`
-- :ref:`migration_file_format`
-- :ref:`metadata_file_format`
+- :ref:`migrations_how_it_works_old`
+- :ref:`migration_file_format_old`
+- :ref:`metadata_file_format_old`
 
 .. toctree::
   :maxdepth: 1

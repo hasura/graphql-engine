@@ -2,7 +2,7 @@
    :description: Hasura Metadata file format reference
    :keywords: hasura, docs, metadata, file format
 
-.. _metadata_file_format:
+.. _metadata_file_format_old:
 
 Metadata file format reference
 ==============================

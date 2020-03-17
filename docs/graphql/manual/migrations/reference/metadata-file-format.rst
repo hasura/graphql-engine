@@ -21,12 +21,13 @@ For ``config v2``, the ``config.yaml`` of your Hasura project would look like:
 
 .. code-block:: bash
 
+    version: 2
+    endpoint: http://localhost:8080
+    metadata_directory: metadata
+    migrations_directory: migrations
     actions:
       handler_webhook_baseurl: http://localhost:3000/api
       kind: synchronous
-    endpoint: http://localhost:8080
-    metadata_directory: metadata
-    version: 2
 
 With ``config v2``, the metadata that is exported from the server is a directory of multiple files. When you run ``hasura metadata export``, the following files will be generated in the ``metadata/`` directory of your project.
 

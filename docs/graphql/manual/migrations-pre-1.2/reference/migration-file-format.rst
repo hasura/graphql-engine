@@ -2,7 +2,7 @@
    :description: Hasura Migration file format reference
    :keywords: hasura, docs, migration, file format
 
-.. _migration_file_format:
+.. _migration_file_format_old:
 
 Migration file format reference
 ===============================

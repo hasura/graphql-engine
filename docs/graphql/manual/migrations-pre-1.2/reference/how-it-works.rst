@@ -2,7 +2,7 @@
    :description: How Hasura migrations work
    :keywords: hasura, docs, migration, how it works
 
-.. _migrations_how_it_works:
+.. _migrations_how_it_works_old:
 
 How Hasura migrations work
 ==========================
@@ -13,7 +13,7 @@ How Hasura migrations work
   :local:
 
 This is an explanation on how the Hasura migration system works. To understand how
-to use the system, refer to :ref:`Migrations & Metadata <auth>`.
+to use the system, refer to :ref:`Migrations & Metadata <migrations_old>`.
 
 Metadata
 --------
@@ -33,9 +33,9 @@ data. One thing to note is that all the Postgres resources the metadata refers
 to should already exist when the import happens, otherwise Hasura will throw an
 error. 
 
-To understand the format of the ``metadata.json`` file, refer to :ref:`metadata_file_format`.
+To understand the format of the ``metadata.json`` file, refer to :ref:`metadata_file_format_old`.
 
-For more details on how to import and export metadata, refer to :ref:`manage_hasura_metadata`.
+For more details on how to import and export metadata, refer to :ref:`manage_hasura_metadata_old`.
 
 Migrations
 ----------
@@ -59,7 +59,7 @@ can be written by hand. They are stored as YAML files in a directory
 called ``migrations``.
 
 For more details on the format of these files, refer to
-:ref:`migration_file_format`.
+:ref:`migration_file_format_old`.
 
 When someone executes ``migrate apply`` using the Hasura CLI, the CLI will first
 read the migration files present in the designated directory. The CLI would then
@@ -81,4 +81,4 @@ migrations. In order to roll back changes, you would need to execute ``down``
 migrations using the ``--down`` flag on the CLI.
 
 This guide provides an overall idea of how the system works. For more details
-on how to actually use the system, refer to :ref:`postgres_schema_metadata`.
+on how to actually use the system, refer to :ref:`postgres_schema_metadata_old`.

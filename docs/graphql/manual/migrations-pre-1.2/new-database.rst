@@ -2,7 +2,7 @@
    :description: Manage migrations on a new database and Hasura instance
    :keywords: hasura, docs, migration, new database
 
-.. _migrations_new_db:
+.. _migrations_new_db_old:
 
 Migrations for a new database and Hasura instance
 =================================================
@@ -99,7 +99,7 @@ instance at ``http://another-graphql-instance.herokuapp.com``:
    hasura migrate apply --endpoint http://another-graphql-instance.herokuapp.com
 
 In case you need an automated way of applying the migrations, take a look at the
-:ref:`CLI-Migrations <auto_apply_migrations>` Docker image, which can start the
+:ref:`CLI-Migrations <auto_apply_migrations_old>` Docker image, which can start the
 GraphQL engine after automatically applying the migrations which are
 mounted into a directory.
 

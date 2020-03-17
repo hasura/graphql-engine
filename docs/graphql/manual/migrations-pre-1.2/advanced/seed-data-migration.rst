@@ -2,7 +2,7 @@
    :description: Create a seed data migration in Hasura
    :keywords: hasura, docs, migration, seed data
 
-.. _seed_data_migration:
+.. _seed_data_migration_old:
 
 Creating a seed data migration
 ==============================

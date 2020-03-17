@@ -2,7 +2,7 @@
    :description: Examples for advanced Hasura migration use cases
    :keywords: hasura, docs, migration, advanced, use case
 
-.. _migrations_advanced:
+.. _migrations_advanced_old:
 
 Migrations advanced use cases
 =============================
