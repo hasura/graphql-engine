@@ -71,6 +71,7 @@ import           Prelude
 
 import           Control.Arrow   (first)
 import           Data.Aeson
+import           Data.Aeson.Internal.Time (fromPico, toPico)
 import           Data.Fixed
 import           Data.Hashable
 import           Data.Proxy
@@ -90,41 +91,33 @@ newtype Seconds t = Seconds { seconds :: Duration t}
 deriving instance AsDuration (Seconds 'Absolute)
 deriving instance AsDuration (Seconds 'Calendar)
 
--- NOTE: we want Show to give a pastable data structure string, even
--- though Read is custom.
-deriving instance Show (Seconds 'Absolute)
-deriving instance Show (Seconds 'Calendar)
-
-deriving instance Eq (Seconds 'Absolute)
-deriving instance Eq (Seconds 'Calendar)
-
-deriving instance Ord (Seconds 'Absolute)
-deriving instance Ord (Seconds 'Calendar)
-
 deriving instance ToJSON (Seconds 'Absolute)
 deriving instance ToJSON (Seconds 'Calendar)
 
 deriving instance FromJSON (Seconds 'Absolute)
 deriving instance FromJSON (Seconds 'Calendar)
 
-deriving via (TimeUnit (SecondsP 1) 'Absolute) instance Read (Seconds 'Absolute)
-deriving via (TimeUnit (SecondsP 1) 'Calendar) instance Read (Seconds 'Calendar)
+-- NOTE: we want Show to give a pastable data structure string, even
+-- though Read is custom.
+deriving instance Show (Seconds 'Absolute)
+deriving instance Show (Seconds 'Calendar)
 
-deriving via (TimeUnit (SecondsP 1) 'Absolute) instance Num (Seconds 'Absolute)
-deriving via (TimeUnit (SecondsP 1) 'Calendar) instance Num (Seconds 'Calendar)
+deriving via (TimeUnit (SecondsP 1) t) instance (AsPicoseconds t) => Eq (Seconds t)
 
-deriving via (TimeUnit (SecondsP 1) 'Absolute) instance Fractional (Seconds 'Absolute)
-deriving via (TimeUnit (SecondsP 1) 'Calendar) instance Fractional (Seconds 'Calendar)
+deriving via (TimeUnit (SecondsP 1) t) instance (AsPicoseconds t) => Ord (Seconds t)
 
-deriving via (TimeUnit (SecondsP 1) 'Absolute) instance Real (Seconds 'Absolute)
-deriving via (TimeUnit (SecondsP 1) 'Calendar) instance Real (Seconds 'Calendar)
+deriving via (TimeUnit (SecondsP 1) t) instance (AsPicoseconds t) => Read (Seconds t)
+
+deriving via (TimeUnit (SecondsP 1) t) instance (AsPicoseconds t) => Num (Seconds t)
+
+deriving via (TimeUnit (SecondsP 1) t) instance (AsPicoseconds t) => Fractional (Seconds t)
+
+deriving via (TimeUnit (SecondsP 1) t) instance (AsPicoseconds t) => Real (Seconds t)
 
 deriving via (TimeUnit (SecondsP 1) 'Absolute) instance Hashable (Seconds 'Absolute)
 deriving via (TimeUnit (SecondsP 1) 'Calendar) instance Hashable (Seconds 'Calendar)
 
-deriving via (TimeUnit (SecondsP 1) 'Absolute) instance RealFrac (Seconds 'Absolute)
-deriving via (TimeUnit (SecondsP 1) 'Calendar) instance RealFrac (Seconds 'Calendar)
-
+deriving via (TimeUnit (SecondsP 1) t) instance (AsPicoseconds t) => RealFrac (Seconds t)
 
 -- TODO if needed: deriving (ToJSON, FromJSON) via (TimeUnit ..) making sure
 --      to copy Aeson instances (with withBoundedScientific), and e.g.
@@ -137,29 +130,23 @@ deriving instance AsDuration (Days 'Calendar)
 deriving instance Show (Days 'Absolute)
 deriving instance Show (Days 'Calendar)
 
-deriving instance Eq (Days 'Absolute)
-deriving instance Eq (Days 'Calendar)
+deriving via (TimeUnit (SecondsP 86400) t) instance (AsPicoseconds t) => Eq (Days t)
 
-deriving instance Ord (Days 'Absolute)
-deriving instance Ord (Days 'Calendar)
+deriving via (TimeUnit (SecondsP 86400) t) instance (AsPicoseconds t) => Ord (Days t)
 
-deriving via (TimeUnit (SecondsP 86400) 'Absolute) instance Read (Days 'Absolute)
-deriving via (TimeUnit (SecondsP 86400) 'Calendar) instance Read (Days 'Calendar)
+deriving via (TimeUnit (SecondsP 86400) t) instance (AsPicoseconds t) => Read (Days t)
 
-deriving via (TimeUnit (SecondsP 86400) 'Absolute) instance Num (Days 'Absolute)
-deriving via (TimeUnit (SecondsP 86400) 'Calendar) instance Num (Days 'Calendar)
+deriving via (TimeUnit (SecondsP 86400) t) instance (AsPicoseconds t) => Num (Days t)
 
-deriving via (TimeUnit (SecondsP 86400) 'Absolute) instance Fractional (Days 'Absolute)
-deriving via (TimeUnit (SecondsP 86400) 'Calendar) instance Fractional (Days 'Calendar)
+deriving via (TimeUnit (SecondsP 86400) t) instance (AsPicoseconds t) => Fractional (Days t)
 
-deriving via (TimeUnit (SecondsP 86400) 'Absolute) instance Real (Days 'Absolute)
-deriving via (TimeUnit (SecondsP 86400) 'Calendar) instance Real (Days 'Calendar)
+deriving via (TimeUnit (SecondsP 86400) t) instance (AsPicoseconds t) => Real (Days t)
 
 deriving via (TimeUnit (SecondsP 86400) 'Absolute) instance Hashable (Days 'Absolute)
 deriving via (TimeUnit (SecondsP 86400) 'Calendar) instance Hashable (Days 'Calendar)
 
-deriving via (TimeUnit (SecondsP 86400) 'Absolute) instance RealFrac (Days 'Absolute)
-deriving via (TimeUnit (SecondsP 86400) 'Calendar) instance RealFrac (Days 'Calendar)
+deriving via (TimeUnit (SecondsP 86400) t) instance (AsPicoseconds t) => RealFrac (Days t)
+
 
 newtype Hours t = Hours { hours :: Duration t}
 
@@ -169,29 +156,22 @@ deriving instance AsDuration (Hours 'Calendar)
 deriving instance Show (Hours 'Absolute)
 deriving instance Show (Hours 'Calendar)
 
-deriving instance Eq (Hours 'Absolute)
-deriving instance Eq (Hours 'Calendar)
+deriving via (TimeUnit (SecondsP 3600) t) instance (AsPicoseconds t) => Eq (Hours t)
 
-deriving instance Ord (Hours 'Absolute)
-deriving instance Ord (Hours 'Calendar)
+deriving via (TimeUnit (SecondsP 3600) t) instance (AsPicoseconds t) => Ord (Hours t)
 
-deriving via (TimeUnit (SecondsP 3600) 'Absolute) instance Read (Hours 'Absolute)
-deriving via (TimeUnit (SecondsP 3600) 'Calendar) instance Read (Hours 'Calendar)
+deriving via (TimeUnit (SecondsP 3600) t) instance (AsPicoseconds t) => Read (Hours t)
 
-deriving via (TimeUnit (SecondsP 3600) 'Absolute) instance Num (Hours 'Absolute)
-deriving via (TimeUnit (SecondsP 3600) 'Calendar) instance Num (Hours 'Calendar)
+deriving via (TimeUnit (SecondsP 3600) t) instance (AsPicoseconds t) => Num (Hours t)
 
-deriving via (TimeUnit (SecondsP 3600) 'Absolute) instance Fractional (Hours 'Absolute)
-deriving via (TimeUnit (SecondsP 3600) 'Calendar) instance Fractional (Hours 'Calendar)
+deriving via (TimeUnit (SecondsP 3600) t) instance (AsPicoseconds t) => Fractional (Hours t)
 
-deriving via (TimeUnit (SecondsP 3600) 'Absolute) instance Real (Hours 'Absolute)
-deriving via (TimeUnit (SecondsP 3600) 'Calendar) instance Real (Hours 'Calendar)
+deriving via (TimeUnit (SecondsP 3600) t) instance (AsPicoseconds t) => Real (Hours t)
 
 deriving via (TimeUnit (SecondsP 3600) 'Absolute) instance Hashable (Hours 'Absolute)
 deriving via (TimeUnit (SecondsP 3600) 'Calendar) instance Hashable (Hours 'Calendar)
 
-deriving via (TimeUnit (SecondsP 3600) 'Absolute) instance RealFrac (Hours 'Absolute)
-deriving via (TimeUnit (SecondsP 3600) 'Calendar) instance RealFrac (Hours 'Calendar)
+deriving via (TimeUnit (SecondsP 3600) t) instance (AsPicoseconds t) => RealFrac (Hours t)
 
 newtype Minutes t = Minutes { minutes :: Duration t}
 
@@ -201,29 +181,22 @@ deriving instance AsDuration (Minutes 'Calendar)
 deriving instance Show (Minutes 'Absolute)
 deriving instance Show (Minutes 'Calendar)
 
-deriving instance Eq (Minutes 'Absolute)
-deriving instance Eq (Minutes 'Calendar)
+deriving via (TimeUnit (SecondsP 60) t) instance (AsPicoseconds t) => Eq (Minutes t)
 
-deriving instance Ord (Minutes 'Absolute)
-deriving instance Ord (Minutes 'Calendar)
+deriving via (TimeUnit (SecondsP 60) t) instance (AsPicoseconds t) => Ord (Minutes t)
 
-deriving via (TimeUnit (SecondsP 60) 'Absolute) instance Read (Minutes 'Absolute)
-deriving via (TimeUnit (SecondsP 60) 'Calendar) instance Read (Minutes 'Calendar)
+deriving via (TimeUnit (SecondsP 60) t) instance (AsPicoseconds t) => Read (Minutes t)
 
-deriving via (TimeUnit (SecondsP 60) 'Absolute) instance Num (Minutes 'Absolute)
-deriving via (TimeUnit (SecondsP 60) 'Calendar) instance Num (Minutes 'Calendar)
+deriving via (TimeUnit (SecondsP 60) t) instance (AsPicoseconds t) => Num (Minutes t)
 
-deriving via (TimeUnit (SecondsP 60) 'Absolute) instance Fractional (Minutes 'Absolute)
-deriving via (TimeUnit (SecondsP 60) 'Calendar) instance Fractional (Minutes 'Calendar)
+deriving via (TimeUnit (SecondsP 60) t) instance (AsPicoseconds t) => Fractional (Minutes t)
 
-deriving via (TimeUnit (SecondsP 60) 'Absolute) instance Real (Minutes 'Absolute)
-deriving via (TimeUnit (SecondsP 60) 'Calendar) instance Real (Minutes 'Calendar)
+deriving via (TimeUnit (SecondsP 60) t) instance (AsPicoseconds t) => Real (Minutes t)
 
 deriving via (TimeUnit (SecondsP 60) 'Absolute) instance Hashable (Minutes 'Absolute)
 deriving via (TimeUnit (SecondsP 60) 'Calendar) instance Hashable (Minutes 'Calendar)
 
-deriving via (TimeUnit (SecondsP 60) 'Absolute) instance RealFrac (Minutes 'Absolute)
-deriving via (TimeUnit (SecondsP 60) 'Calendar) instance RealFrac (Minutes 'Calendar)
+deriving via (TimeUnit (SecondsP 60) t) instance (AsPicoseconds t) => RealFrac (Minutes t)
 
 newtype Milliseconds t = Milliseconds { milliseconds :: Duration t}
 
@@ -233,29 +206,22 @@ deriving instance AsDuration (Milliseconds 'Calendar)
 deriving instance Show (Milliseconds 'Absolute)
 deriving instance Show (Milliseconds 'Calendar)
 
-deriving instance Eq (Milliseconds 'Absolute)
-deriving instance Eq (Milliseconds 'Calendar)
+deriving via (TimeUnit 1000000000 t) instance (AsPicoseconds t) => Eq (Milliseconds t)
 
-deriving instance Ord (Milliseconds 'Absolute)
-deriving instance Ord (Milliseconds 'Calendar)
+deriving via (TimeUnit 1000000000 t) instance (AsPicoseconds t) => Ord (Milliseconds t)
 
-deriving via (TimeUnit 1000000000 'Absolute) instance Read (Milliseconds 'Absolute)
-deriving via (TimeUnit 1000000000 'Calendar) instance Read (Milliseconds 'Calendar)
+deriving via (TimeUnit 1000000000 t) instance (AsPicoseconds t) => Read (Milliseconds t)
 
-deriving via (TimeUnit 1000000000 'Absolute) instance Num (Milliseconds 'Absolute)
-deriving via (TimeUnit 1000000000 'Calendar) instance Num (Milliseconds 'Calendar)
+deriving via (TimeUnit 1000000000 t) instance (AsPicoseconds t) => Num (Milliseconds t)
 
-deriving via (TimeUnit 1000000000 'Absolute) instance Fractional (Milliseconds 'Absolute)
-deriving via (TimeUnit 1000000000 'Calendar) instance Fractional (Milliseconds 'Calendar)
+deriving via (TimeUnit 1000000000 t) instance (AsPicoseconds t) => Fractional (Milliseconds t)
 
-deriving via (TimeUnit 1000000000 'Absolute) instance Real (Milliseconds 'Absolute)
-deriving via (TimeUnit 1000000000 'Calendar) instance Real (Milliseconds 'Calendar)
+deriving via (TimeUnit 1000000000 t) instance (AsPicoseconds t) => Real (Milliseconds t)
 
 deriving via (TimeUnit 1000000000 'Absolute) instance Hashable (Milliseconds 'Absolute)
 deriving via (TimeUnit 1000000000 'Calendar) instance Hashable (Milliseconds 'Calendar)
 
-deriving via (TimeUnit 1000000000 'Absolute) instance RealFrac (Milliseconds 'Absolute)
-deriving via (TimeUnit 1000000000 'Calendar) instance RealFrac (Milliseconds 'Calendar)
+deriving via (TimeUnit 1000000000 t) instance (AsPicoseconds t) => RealFrac (Milliseconds t)
 
 
 newtype Microseconds t = Microseconds { microseconds :: Duration t}
@@ -266,30 +232,22 @@ deriving instance AsDuration (Microseconds 'Calendar)
 deriving instance Show (Microseconds 'Absolute)
 deriving instance Show (Microseconds 'Calendar)
 
-deriving instance Eq (Microseconds 'Absolute)
-deriving instance Eq (Microseconds 'Calendar)
+deriving via (TimeUnit 1000000 t) instance (AsPicoseconds t) => Eq (Microseconds t)
 
-deriving instance Ord (Microseconds 'Absolute)
-deriving instance Ord (Microseconds 'Calendar)
+deriving via (TimeUnit 1000000 t) instance (AsPicoseconds t) => Ord (Microseconds t)
 
-deriving via (TimeUnit 1000000 'Absolute) instance Read (Microseconds 'Absolute)
-deriving via (TimeUnit 1000000 'Calendar) instance Read (Microseconds 'Calendar)
+deriving via (TimeUnit 1000000 t) instance (AsPicoseconds t) => Read (Microseconds t)
 
-deriving via (TimeUnit 1000000 'Absolute) instance Num (Microseconds 'Absolute)
-deriving via (TimeUnit 1000000 'Calendar) instance Num (Microseconds 'Calendar)
+deriving via (TimeUnit 1000000 t) instance (AsPicoseconds t) => Num (Microseconds t)
 
-deriving via (TimeUnit 1000000 'Absolute) instance Fractional (Microseconds 'Absolute)
-deriving via (TimeUnit 1000000 'Calendar) instance Fractional (Microseconds 'Calendar)
+deriving via (TimeUnit 1000000 t) instance (AsPicoseconds t) => Fractional (Microseconds t)
 
-deriving via (TimeUnit 1000000 'Absolute) instance Real (Microseconds 'Absolute)
-deriving via (TimeUnit 1000000 'Calendar) instance Real (Microseconds 'Calendar)
+deriving via (TimeUnit 1000000 t) instance (AsPicoseconds t) => Real (Microseconds t)
 
 deriving via (TimeUnit 1000000 'Absolute) instance Hashable (Microseconds 'Absolute)
 deriving via (TimeUnit 1000000 'Calendar) instance Hashable (Microseconds 'Calendar)
 
-deriving via (TimeUnit 1000000 'Absolute) instance RealFrac (Microseconds 'Absolute)
-deriving via (TimeUnit 1000000 'Calendar) instance RealFrac (Microseconds 'Calendar)
-
+deriving via (TimeUnit 1000000 t) instance (AsPicoseconds t) => RealFrac (Microseconds t)
 
 newtype Nanoseconds t = Nanoseconds { nanoseconds :: Duration t}
 
@@ -299,29 +257,22 @@ deriving instance AsDuration (Nanoseconds 'Calendar)
 deriving instance Show (Nanoseconds 'Absolute)
 deriving instance Show (Nanoseconds 'Calendar)
 
-deriving instance Eq (Nanoseconds 'Absolute)
-deriving instance Eq (Nanoseconds 'Calendar)
+deriving via (TimeUnit 1000 t) instance (AsPicoseconds t) => Eq (Nanoseconds t)
 
-deriving instance Ord (Nanoseconds 'Absolute)
-deriving instance Ord (Nanoseconds 'Calendar)
+deriving via (TimeUnit 1000 t) instance (AsPicoseconds t) => Ord (Nanoseconds t)
 
-deriving via (TimeUnit 1000 'Absolute) instance Read (Nanoseconds 'Absolute)
-deriving via (TimeUnit 1000 'Calendar) instance Read (Nanoseconds 'Calendar)
+deriving via (TimeUnit 1000 t) instance (AsPicoseconds t) => Read (Nanoseconds t)
 
-deriving via (TimeUnit 1000 'Absolute) instance Num (Nanoseconds 'Absolute)
-deriving via (TimeUnit 1000 'Calendar) instance Num (Nanoseconds 'Calendar)
+deriving via (TimeUnit 1000 t) instance (AsPicoseconds t) => Num (Nanoseconds t)
 
-deriving via (TimeUnit 1000 'Absolute) instance Fractional (Nanoseconds 'Absolute)
-deriving via (TimeUnit 1000 'Calendar) instance Fractional (Nanoseconds 'Calendar)
+deriving via (TimeUnit 1000 t) instance (AsPicoseconds t) => Fractional (Nanoseconds t)
 
-deriving via (TimeUnit 1000 'Absolute) instance Real (Nanoseconds 'Absolute)
-deriving via (TimeUnit 1000 'Calendar) instance Real (Nanoseconds 'Calendar)
+deriving via (TimeUnit 1000 t) instance (AsPicoseconds t) => Real (Nanoseconds t)
 
 deriving via (TimeUnit 1000 'Absolute) instance Hashable (Nanoseconds 'Absolute)
 deriving via (TimeUnit 1000 'Calendar) instance Hashable (Nanoseconds 'Calendar)
 
-deriving via (TimeUnit 1000 'Absolute) instance RealFrac (Nanoseconds 'Absolute)
-deriving via (TimeUnit 1000 'Calendar) instance RealFrac (Nanoseconds 'Calendar)
+deriving via (TimeUnit 1000 t) instance (AsPicoseconds t) => RealFrac (Nanoseconds t)
 
 -- Internal for deriving via
 newtype TimeUnit (picosPerUnit :: Nat) t = TimeUnit (Duration t)
@@ -332,36 +283,53 @@ deriving instance Show (TimeUnit picosPerUnit 'Calendar)
 deriving instance Eq (TimeUnit picosPerUnit 'Absolute)
 deriving instance Eq (TimeUnit picosPerUnit 'Calendar)
 
-deriving instance Ord (TimeUnit picosPerUnit 'Absolute)
-deriving instance Ord (TimeUnit picosPerUnit 'Calendar)
+deriving instance Integral Pico
 
 type SecondsP n = n GHC.TypeLits.* 1000000000000
 
 natNum :: forall n a. (KnownNat n, Num a) => a
 natNum = fromInteger $ natVal (Proxy @n)
 
-instance (KnownNat picosPerUnit) => Num (TimeUnit picosPerUnit 'Absolute) where
-  TimeUnit a + TimeUnit b = TimeUnit $ a + b
-  TimeUnit a - TimeUnit b = TimeUnit $ a - b
-  TimeUnit a * TimeUnit b = TimeUnit . picosecondsToDiffTime $
-    diffTimeToPicoseconds a * diffTimeToPicoseconds b `div` natNum @picosPerUnit
-  negate (TimeUnit a) = TimeUnit $ negate a
-  abs (TimeUnit a) = TimeUnit $ abs a
-  signum (TimeUnit a) = TimeUnit $ signum a
-  fromInteger a = TimeUnit . picosecondsToDiffTime $ a * natNum @picosPerUnit
+class AsPicoseconds t where
+    toPicoseconds :: Duration t -> Pico
+    fromPicoseconds :: Pico -> Duration t
 
-instance (KnownNat picosPerUnit) => Read (TimeUnit picosPerUnit 'Absolute) where
+instance AsPicoseconds 'Absolute where
+    toPicoseconds = toPico . diffTimeToPicoseconds
+    fromPicoseconds = picosecondsToDiffTime . fromPico
+
+instance AsPicoseconds 'Calendar where
+    toPicoseconds = nominalDiffTimeToSeconds
+    fromPicoseconds = secondsToNominalDiffTime
+
+instance (KnownNat picosPerUnit, AsPicoseconds t) => Eq (TimeUnit picosPerUnit t) where
+    TimeUnit a == TimeUnit b = toPicoseconds a == toPicoseconds b
+
+instance (KnownNat picosPerUnit, AsPicoseconds t) => Ord (TimeUnit picosPerUnit t) where
+    compare (TimeUnit a) (TimeUnit b) = compare (toPicoseconds a) (toPicoseconds b)
+
+instance (KnownNat picosPerUnit, AsPicoseconds t) => Num (TimeUnit picosPerUnit t) where
+  TimeUnit a + TimeUnit b = TimeUnit $ fromPicoseconds $ (toPicoseconds a) + (toPicoseconds b)
+  TimeUnit a - TimeUnit b = TimeUnit $ fromPicoseconds $ (toPicoseconds a) - (toPicoseconds b)
+  TimeUnit a * TimeUnit b = TimeUnit . fromPicoseconds $
+    toPicoseconds a * toPicoseconds b `div` natNum @picosPerUnit
+  negate (TimeUnit a) = TimeUnit $ fromPicoseconds $ negate $ (toPicoseconds a)
+  abs (TimeUnit a) = TimeUnit $ fromPicoseconds $ abs $ (toPicoseconds a)
+  signum (TimeUnit a) = TimeUnit $ fromPicoseconds $ signum $ (toPicoseconds a)
+  fromInteger a = TimeUnit . fromPicoseconds $ toPico $ a * natNum @picosPerUnit
+
+instance (KnownNat picosPerUnit, AsPicoseconds t) => Read (TimeUnit picosPerUnit t) where
   readsPrec _ = map (first fromRational) . readFloat
 
-instance (KnownNat picosPerUnit) => Fractional (TimeUnit picosPerUnit 'Absolute) where
-  TimeUnit a / TimeUnit b = TimeUnit . picosecondsToDiffTime $
-    diffTimeToPicoseconds a * natNum @picosPerUnit `div` diffTimeToPicoseconds b
-  fromRational a = TimeUnit . picosecondsToDiffTime $ round (a * natNum @picosPerUnit)
+instance (KnownNat picosPerUnit, AsPicoseconds t) => Fractional (TimeUnit picosPerUnit t) where
+  TimeUnit a / TimeUnit b = TimeUnit . fromPicoseconds $
+    toPicoseconds a * natNum @picosPerUnit `div` toPicoseconds b
+  fromRational a = TimeUnit . fromPicoseconds $ round (a * natNum @picosPerUnit)
 
-instance (KnownNat picosPerUnit) => Real (TimeUnit picosPerUnit 'Absolute) where
-  toRational (TimeUnit a) = toRational (diffTimeToPicoseconds a) / natNum @picosPerUnit
+instance (KnownNat picosPerUnit, AsPicoseconds t) => Real (TimeUnit picosPerUnit t) where
+  toRational (TimeUnit a) = toRational (toPicoseconds a) / natNum @picosPerUnit
 
-instance (KnownNat picosPerUnit) => RealFrac (TimeUnit picosPerUnit 'Absolute) where
+instance (KnownNat picosPerUnit, AsPicoseconds t) => RealFrac (TimeUnit picosPerUnit t) where
   properFraction a = (i, a - fromIntegral i)
     where i = truncate a
   truncate = truncate . toRational
@@ -373,43 +341,6 @@ instance (KnownNat picosPerUnit) => RealFrac (TimeUnit picosPerUnit 'Absolute) w
 instance Hashable (TimeUnit a 'Absolute) where
   hashWithSalt salt (TimeUnit dt) = hashWithSalt salt $
     (realToFrac :: DiffTime -> Double) dt
-
-
--- instances for Calendar
--- NOTE: secondsToNominalDiffTime :: Pico -> NominalDiffTime
--- http://hackage.haskell.org/package/time-1.9.3/docs/Data-Time-Clock.html
--- If a Pico value is supplied to the function then the output is also in Pico
--- and when the Pico value is converted into seconds(divide by 10^12)
--- then the output is in Seconds
--- So, the function `toFixedPico` converts Pico into Seconds
-instance (KnownNat picosPerUnit) => Num (TimeUnit picosPerUnit 'Calendar) where
-  TimeUnit a + TimeUnit b = TimeUnit $ a + b
-  TimeUnit a - TimeUnit b = TimeUnit $ a - b
-  TimeUnit a * TimeUnit b = TimeUnit . secondsToNominalDiffTime . toFixedPico $
-    (toRational $ nominalDiffTimeToSeconds a * nominalDiffTimeToSeconds b) `div'` (natNum @picosPerUnit)
-  negate (TimeUnit a) = TimeUnit $ negate a
-  abs (TimeUnit a) = TimeUnit $ abs a
-  signum (TimeUnit a) = TimeUnit $ signum a
-  fromInteger a = TimeUnit . secondsToNominalDiffTime . toFixedPico $ a * natNum @picosPerUnit
-
-instance (KnownNat picosPerUnit) => Read (TimeUnit picosPerUnit 'Calendar) where
-  readsPrec _ = map (first fromRational) . readFloat
-
-instance (KnownNat picosPerUnit) => Fractional (TimeUnit picosPerUnit 'Calendar) where
-  TimeUnit a / TimeUnit b = TimeUnit . secondsToNominalDiffTime . toFixedPico $ fromInteger $
-    ((toRational $ nominalDiffTimeToSeconds a) * natNum @picosPerUnit) `div'` (toRational $ nominalDiffTimeToSeconds b)
-  fromRational a = TimeUnit . secondsToNominalDiffTime . toFixedPico $ round (a * natNum @picosPerUnit)
-
-instance (KnownNat picosPerUnit) => Real (TimeUnit picosPerUnit 'Calendar) where
-  toRational (TimeUnit a) = toRational (nominalDiffTimeToSeconds a) / natNum @picosPerUnit
-
-instance (KnownNat picosPerUnit) => RealFrac (TimeUnit picosPerUnit 'Calendar) where
-  properFraction a = (i, a - fromIntegral i)
-    where i = truncate a
-  truncate = truncate . toRational
-  round = round . toRational
-  ceiling = ceiling . toRational
-  floor = floor . toRational
 
 -- we can ignore unit:
 instance Hashable (TimeUnit a 'Calendar) where
