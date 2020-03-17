@@ -9,34 +9,41 @@ Migrations & Metadata
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
 
 Introduction
 ------------
 
-How is Hasura state managed?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+It is a typical requirement to export an existing Hasura "setup" so that you can
+apply it on another instance to reproduce the same setup. For example, to achieve
+a dev -> staging -> production environment promotion scenario.
 
-Hasura needs 2 pieces of information to expose the GraphQL API, the PG
-database schema and the Hasura metadata which is used to describe the exposed
+How is Hasura state managed?
+----------------------------
+
+Hasura needs 2 pieces of information to recreate your GraphQL API, the underlying
+PG database schema and the Hasura metadata which is used to describe the exposed
 GraphQL API.
 
-PG DB migrations
-****************
+The :ref:`Hasura CLI <hasuracli-manual>` lets you manage these pieces of
+information as you build your project via:
 
-The state of your database is managed via incremental SQL migration files.
+Database migration files
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The state of your PG database is managed via incremental SQL migration files.
 These migration files can be applied one after the other to achieve the final
 DB schema.
 
 DB migration files can be generated incrementally and can by applied in parts to
-reach particular checkpoints. They can be used to roll back the DB schemas as well.
+reach particular checkpoints. They can be used to roll-back the DB schema as well.
 
-Hasura metadata
-***************
+Hasura metadata files
+^^^^^^^^^^^^^^^^^^^^^
 
-The state of Hasura metadata is managed via snapshots of the metadata. These s
-napshots can be applied as a whole to configure Hasura to a state represented
+The state of Hasura metadata is managed via snapshots of the metadata. These
+snapshots can be applied as a whole to configure Hasura to a state represented
 in the snapshot.
 
 Hasura metadata can be exported and imported as a whole.
@@ -44,7 +51,7 @@ Hasura metadata can be exported and imported as a whole.
 Setting up migrations
 ---------------------
 
-- :doc:`setup`
+Follow the :ref:`setup_migrations` guide.
 
 
 Advanced use cases
@@ -53,8 +60,8 @@ Advanced use cases
 - :ref:`auto_apply_migrations`
 - :ref:`manual_migrations`
 - :ref:`roll_back_migrations`
-- :doc:`advanced/seed-data-migration`
-- :doc:`advanced/collaboration`
+- :ref:`seed_data_migration`
+- :ref:`collaborate_migrations`
 
 Reference documentation
 -----------------------

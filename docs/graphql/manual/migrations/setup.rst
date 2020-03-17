@@ -11,10 +11,18 @@ Setting up Hasura migrations
 Initializing migrations
 -----------------------
 
+Download the latest pre-release CLI version from the `releases page <https://github.com/hasura/graphql-engine/releases>`_
+
+.. Install the Hasura CLI as described in :ref:`install_hasura_cli`
+
+Run:
+
 .. code-block:: bash
 
+  # create a Hasura project
   hasura init
 
+  # Export current Hasura state
   hasura migrate create --from-server <endpoint>
   hasura metadata export --from-server <endpoint>
 
@@ -43,15 +51,15 @@ Generating migrations
 
         hasura migrate create <name-of-migration>
 
-    - Add SQL manually to the ``up.sql`` and ``down.sql`` files in the created
-      migration directory
-    - Edit the corresponding metadata manually
+    - Add SQL manually to the ``up.sql`` and ``down.sql`` files in the newly
+      created migration's directory in ``/migrations``
+    - Edit the corresponding metadata manually in ``/metadata``
 
 Managing migrations
 -------------------
 
 For maintaining a clean set of migrations with the possibility to move between
-different checkpoints in your DB and metadata state it is recommended to clean
+different checkpoints in your project's state it is recommended to clean
 up intermediate DB migration files and to version control the Hasura project.
 
 Squash migrations
