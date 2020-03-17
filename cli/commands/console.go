@@ -13,7 +13,8 @@ import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/pkg/templates"
+	"github.com/hasura/graphql-engine/cli/pkg/templates/oss"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
@@ -123,15 +124,15 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	r.setRoutes(o.EC.MigrationDir, o.EC.Logger)
-
-	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
-	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
+	templateProvider := oss.NewOSSProvider()
+	consoleTemplateVersion := templateProvider.GetConsoleTemplateVersion(o.EC.Version)
+	consoleAssetsVersion := templateProvider.GetConsoleAssetsVersion(o.EC.Version)
 
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
 	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
 
-	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
+	consoleRouter, err := BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
@@ -311,16 +312,16 @@ func allowCors() gin.HandlerFunc {
 	return cors.New(config)
 }
 
-func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
+func BuildConsoleRouter(templateProvider templates.Provider, assetsVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
 
-	if !util.DoAssetExist("assets/" + assetsVersion + "/console.html") {
+	if !templateProvider.DoAssetExist("assets/" + assetsVersion + "/console.html") {
 		assetsVersion = "latest"
 	}
 
 	// Template console.html
-	templateRender, err := util.LoadTemplates("assets/"+assetsVersion+"/", "console.html")
+	templateRender, err := templateProvider.LoadTemplates("assets/"+assetsVersion+"/", "console.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch template")
 	}

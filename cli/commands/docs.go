@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/assets"
+	assets "github.com/hasura/graphql-engine/cli/pkg/templates/oss/packed"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
