@@ -11,7 +11,6 @@ import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/pkg/console"
 	"github.com/hasura/graphql-engine/cli/pkg/templates/oss"
-	"github.com/labstack/gommon/log"
 	"github.com/pkg/errors"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
@@ -197,7 +196,7 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	o.EC.Spinner.Stop()
-	log.Infof("console running at: %s", consoleURL)
+	o.EC.Logger.Infof("console running at: %s", consoleURL)
 
 	o.EC.Telemetry.Beam()
 
