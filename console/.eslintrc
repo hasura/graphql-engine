@@ -97,7 +97,9 @@
     "@typescript-eslint/no-empty-interface": "off",
     "@typescript-eslint/no-parameter-properties": "off",
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-var-requires": "off"
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/no-useless-constructor": "error",
+    "@typescript-eslint/no-unused-expressions": ["error"]
   },
   "plugins": ["react", "import", "cypress", "@typescript-eslint/eslint-plugin"],
   "settings": {
@@ -116,5 +118,29 @@
     "socket": true,
     "webpackIsomorphicTools": true,
     "CONSOLE_ASSET_VERSION": true
-  }
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        /**
+         * Disable things that are checked by Typescript
+         */
+        "import/no-unresolved": 0,
+        "getter-return": "off",
+        "no-dupe-args": "off",
+        "no-dupe-keys": "off",
+        "no-unreachable": "off",
+        "valid-typeof": "off",
+        "no-const-assign": "off",
+        "no-new-symbol": "off",
+        "no-this-before-super": "off",
+        "no-undef": "off",
+        "no-dupe-class-members": "off",
+        "no-redeclare": "off",
+        "no-useless-constructor": "off",
+        "no-unused-expressions": "off"
+      }
+    }
+  ]
 }
