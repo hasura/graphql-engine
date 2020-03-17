@@ -253,7 +253,7 @@ export const getCurrTimeForFileName = () => {
 
   const month = (currTime.getMonth() + 1).toString().padStart(2, '0');
 
-  const date = currTime
+  const day = currTime
     .getDate()
     .toString()
     .padStart(2, '0');
@@ -278,7 +278,7 @@ export const getCurrTimeForFileName = () => {
     .toString()
     .padStart(3, '0');
 
-  return [year, month, date, hours, minutes, seconds, milliSeconds].join('_');
+  return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
 };
 
 export const isValidTemplateLiteral = literal_ => {
