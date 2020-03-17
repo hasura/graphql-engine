@@ -316,12 +316,12 @@ func BuildConsoleRouter(templateProvider templates.Provider, assetsVersion, stat
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
 
-	if !templateProvider.DoAssetExist("assets/" + assetsVersion + "/console.html") {
+	if !templateProvider.DoAssetExist(templateProvider.BasePath() + assetsVersion + "/console.html") {
 		assetsVersion = "latest"
 	}
 
 	// Template console.html
-	templateRender, err := templateProvider.LoadTemplates("assets/"+assetsVersion+"/", "console.html")
+	templateRender, err := templateProvider.LoadTemplates(templateProvider.BasePath()+assetsVersion+"/", "console.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch template")
 	}

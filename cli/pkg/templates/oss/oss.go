@@ -14,14 +14,22 @@ const (
 	preReleaseVersion = "v1.0-alpha"
 	unversioned       = "unversioned"
 	versioned         = "versioned"
+	basePath          = "pkg/templates/oss/files/"
 )
 
 // Provider implemets the github.com/hasura/graphl-engine/cli/pkg/templates.Provider interface
 type Provider struct {
+	basePath string
 }
 
 func NewOSSProvider() *Provider {
-	return &Provider{}
+	return &Provider{
+		basePath: basePath,
+	}
+}
+
+func (p *Provider) BasePath() string {
+	return p.basePath
 }
 
 // DoAssetExist returns true if an asset exists at pathk
