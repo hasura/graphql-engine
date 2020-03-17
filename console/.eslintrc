@@ -1,5 +1,5 @@
 {
-  "extends": ["eslint-config-airbnb", "plugin:@typescript-eslint/recommended"],
+  "extends": ["plugin:@typescript-eslint/recommended", "eslint-config-airbnb"],
   "env": {
     "browser": true,
     "node": true,
@@ -84,6 +84,8 @@
     "no-continue": 0,
     "eqeqeq": 0,
     "no-nested-ternary": 0,
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": 2,
     "@typescript-eslint/indent": 0,
     "@typescript-eslint/explicit-function-return-type": 0,
     "@typescript-eslint/prefer-interface": 0,
