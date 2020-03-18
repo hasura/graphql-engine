@@ -79,7 +79,7 @@ const getValueFromObject = (object, name) => {
   // check if the name is present ('as such') in the object.
   if (object && object[name]) {
     return object[name];
-  } else if (object && (name.includes('[') && name.includes(']'))) {
+  } else if (object && name.includes('[') && name.includes(']')) {
     // name is consider as a key followed by array indices.
     const names = name
       .split(']')

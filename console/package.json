@@ -23,7 +23,8 @@
     "watch-client": "better-npm-run watch-client",
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
     "cypress": "cypress open",
-    "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record"
+    "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record",
+    "format": "prettier --write src/**/*.{js,ts,tsx}"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
