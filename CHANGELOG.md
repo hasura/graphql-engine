@@ -22,8 +22,6 @@
 
 ### Other changes
 
-- console: allow renaming action relationships
-- console: disable renaming action relationships
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
 - console: fix run_sql migration modal messaging (close #4020) (#4060)
 - docs: add note on pg versions for actions (#4034)
