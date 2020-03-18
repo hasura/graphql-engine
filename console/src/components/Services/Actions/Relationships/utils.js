@@ -95,7 +95,7 @@ export const validateRelTypename = (types, typename, relname) => {
   for (let i = types.length - 1; i >= 0; i--) {
     const type = types[i];
     if (type.kind === 'object' && type.name === typename) {
-      if ((type.relationships || []).find(r => r.name === relname)) {
+      if ((type.relationships || []).some(r => r.name === relname)) {
         return `Relationship with name "${relname}" already exists.`;
       }
     }
