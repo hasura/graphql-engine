@@ -14,6 +14,7 @@ import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 
+/*
 const genHeadings = headings => {
   if (headings.length === 0) {
     return [];
@@ -68,6 +69,7 @@ const genRow = (row, headings) => {
 
   throw 'Incomplete pattern match'; // eslint-disable-line no-throw-literal
 };
+*/
 
 class ViewTable extends Component {
   constructor(props) {

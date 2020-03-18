@@ -45,6 +45,7 @@ const onError = error => {
   console.error('WebSocket Error for Events' + error);
 };
 
+// eslint-disable-next-line no-unused-vars
 const onClose = () => {
   try {
     analyticsConnection = new WebSocket(analyticsUrl);
