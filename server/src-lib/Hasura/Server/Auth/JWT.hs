@@ -20,6 +20,7 @@ import           Data.Parser.CacheControl        (parseMaxAge)
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
                                                   getCurrentTime)
 import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
+import           GHC.AssertNF
 import           Network.URI                     (URI)
 
 import           Hasura.HTTP
@@ -148,8 +149,10 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     logAndThrow err
 
   let parseErr e = JFEJwkParseError (T.pack e) $ "Error parsing JWK from url: " <> urlT
-  jwkset <- either (logAndThrow . parseErr) return $ J.eitherDecode respBody
-  liftIO $ writeIORef jwkRef jwkset
+  !jwkset <- either (logAndThrow . parseErr) return $ J.eitherDecode' respBody
+  liftIO $ do
+    $assertNFHere jwkset  -- so we don't write thunks to mutable vars
+    writeIORef jwkRef jwkset
 
   -- first check for Cache-Control header to get max-age, if not found, look for Expires header
   let cacheHeader   = resp ^? Wreq.responseHeader "Cache-Control"
