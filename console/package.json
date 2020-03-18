@@ -27,11 +27,11 @@
     "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record"
   },
   "lint-staged": {
-    "*.js": [
+    "*.{js,ts,tsx}": [
       "eslint --fix",
       "git add"
     ],
-    "*.{js,json,css,md}": [
+    "*.{js,json,ts,tsx,css,md}": [
       "prettier --single-quote --trailing-comma es5 --write",
       "git add"
     ]
@@ -160,6 +160,8 @@
     "@types/webpack-bundle-analyzer": "^2.13.3",
     "@types/webpack-dev-middleware": "^3.7.0",
     "@types/webpack-hot-middleware": "^2.25.0",
+    "@typescript-eslint/eslint-plugin": "^2.24.0",
+    "@typescript-eslint/parser": "^2.24.0",
     "babel-eslint": "^9.0.0",
     "babel-loader": "^8.0.0",
     "babel-plugin-istanbul": "^5.1.1",
@@ -173,7 +175,7 @@
     "css-loader": "^0.28.11",
     "cypress": "^3.2.0",
     "dotenv": "^5.0.1",
-    "eslint": "^4.19.1",
+    "eslint": "^6.5.1",
     "eslint-config-airbnb": "16.1.0",
     "eslint-loader": "^1.0.0",
     "eslint-plugin-chai-friendly": "^0.4.1",
