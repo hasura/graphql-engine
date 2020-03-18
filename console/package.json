@@ -27,11 +27,11 @@
     "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record"
   },
   "lint-staged": {
-    "*.js": [
+    "*.{js,ts,tsx}": [
       "eslint --fix",
       "git add"
     ],
-    "*.{js,json,css,md}": [
+    "*.{js,json,ts,tsx,css,md}": [
       "prettier --single-quote --trailing-comma es5 --write",
       "git add"
     ]
@@ -86,6 +86,7 @@
     "react-copy-to-clipboard": "^5.0.0",
     "react-dom": "16.8.6",
     "react-helmet": "^5.2.0",
+    "react-icons": "^3.9.0",
     "react-modal": "^3.1.2",
     "react-notification-system": "^0.2.17",
     "react-notification-system-redux": "^1.2.0",
@@ -101,6 +102,8 @@
     "redux-thunk": "^2.2.0",
     "sanitize-filename": "^1.6.1",
     "semver": "5.5.1",
+    "styled-components": "^5.0.1",
+    "styled-system": "^5.1.5",
     "subscriptions-transport-ws": "^0.9.12",
     "uuid": "^3.0.1",
     "valid-url": "^1.0.9"
@@ -160,9 +163,12 @@
     "@types/webpack-bundle-analyzer": "^2.13.3",
     "@types/webpack-dev-middleware": "^3.7.0",
     "@types/webpack-hot-middleware": "^2.25.0",
+    "@typescript-eslint/eslint-plugin": "^2.24.0",
+    "@typescript-eslint/parser": "^2.24.0",
     "babel-eslint": "^9.0.0",
     "babel-loader": "^8.0.0",
     "babel-plugin-istanbul": "^5.1.1",
+    "babel-plugin-styled-components": "^1.10.6",
     "babel-plugin-transform-react-remove-prop-types": "^0.4.10",
     "babel-plugin-typecheck": "^2.0.0",
     "better-npm-run": "^0.1.0",
@@ -173,7 +179,7 @@
     "css-loader": "^0.28.11",
     "cypress": "^3.2.0",
     "dotenv": "^5.0.1",
-    "eslint": "^4.19.1",
+    "eslint": "^6.5.1",
     "eslint-config-airbnb": "16.1.0",
     "eslint-loader": "^1.0.0",
     "eslint-plugin-chai-friendly": "^0.4.1",
