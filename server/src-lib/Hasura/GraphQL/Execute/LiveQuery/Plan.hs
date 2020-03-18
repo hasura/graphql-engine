@@ -5,6 +5,7 @@
 module Hasura.GraphQL.Execute.LiveQuery.Plan
   ( MultiplexedQuery
   , mkMultiplexedQuery
+  , unMultiplexedQuery
 --  , resolveMultiplexedValue
 
   , CohortId

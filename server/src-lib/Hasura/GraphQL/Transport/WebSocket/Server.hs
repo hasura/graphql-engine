@@ -46,6 +46,7 @@ import qualified Data.UUID.V4                         as UUID
 import           Data.Word                            (Word16)
 import           GHC.Int                              (Int64)
 import           Hasura.Prelude
+import           GHC.AssertNF
 import qualified ListT
 import           Network.Wai.Extended                 (IpAddress)
 import qualified Network.WebSockets                   as WS
@@ -159,7 +160,9 @@ closeConnWithCode wsConn code bs = do
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
-sendMsg wsConn = STM.atomically . STM.writeTQueue (_wcSendQ wsConn)
+sendMsg wsConn = \ !resp -> do
+  $assertNFHere resp  -- so we don't write thunks to mutable vars
+  STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) resp
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
 

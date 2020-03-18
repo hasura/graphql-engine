@@ -624,27 +624,3 @@ Author: Phil Freeman <phil@hasura.io>
 Date:   Thu Mar 26 13:42:33 2020 -0700
 
     Remove any outstanding hdb_views (fixes #3940) (#3965)
-
-commit 4d2dbe68fa244ea100356ca1f104f7fb1c6ee2ae
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Tue Mar 17 21:31:22 2020 -0400
-
-    Use AssertNF for leak prophylaxis when doing mutable writes. Closes #3937 (#4097)
-
-    Writing to a mutable var is a particularly potent source of leaks since
-    it mostly defeats GHC's analysis. Here we add assertions to all mutable
-    writes, and fix a couple spots where we wrote some thunks to a mutable
-    var (compiled with -O2).
-
-    Some of these thunks were probably benign, but others looked liked they
-    might be retaining big args. Didn't do much analysis, just fixed.
-
-    Actually pretty happy with how easy this was to use and as a diagnostic,
-    once I sorted out some issues. We should consider using it elsewhere,
-    and maybe extending so that we can use it with tests, enable when
-    `-fenable-assertsions` etc.
-
-    Relates #3388
-
-    Also simplified codepaths that use `AcceptWith`, which has unnecessary
-    `Maybe` fields.

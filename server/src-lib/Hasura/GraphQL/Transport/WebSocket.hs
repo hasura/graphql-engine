@@ -36,6 +36,7 @@ import qualified StmContainers.Map                           as STMMap
 import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
 import           Data.String
+import           GHC.AssertNF
 import qualified ListT
 
 import           Hasura.EncJSON
@@ -120,9 +121,9 @@ sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
   liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
   where
     bs = encodeServerMsg msg
-    wsInfo = Just $ WS.WSEventInfo
-      { WS._wseiQueryExecutionTime = Just $ realToFrac execTime
-      , WS._wseiResponseSize = Just $ BL.length bs
+    wsInfo = Just $! WS.WSEventInfo
+      { WS._wseiQueryExecutionTime = Just $! realToFrac execTime
+      , WS._wseiResponseSize = Just $! BL.length bs
       }
 
 data OpDetail
@@ -398,10 +399,13 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         L.unLogger logger $ QueryLog query Nothing reqId
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
-        lqId <- liftIO $ LQ.addLiveQuery logger lqMap lqOp liveQOnChange
+        !lqId <- liftIO $ LQ.addLiveQuery logger lqMap lqOp liveQOnChange
+        let !opName = _grOperationName q
+        liftIO $ $assertNFHere $! (lqId, opName)  -- so we don't write thunks to mutable vars
+
         liftIO $ STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
-          STMMap.insert (lqId, _grOperationName q) opId opMap
+          STMMap.insert (lqId, opName) opId opMap
         logOpEv ODStarted (Just reqId)
 
       where
