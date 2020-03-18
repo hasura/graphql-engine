@@ -3,11 +3,13 @@ package oss
 import (
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"regexp"
 
 	"github.com/gin-gonic/contrib/renders/multitemplate"
-	"github.com/hasura/graphql-engine/cli/pkg/templates/oss/packed"
+	_ "github.com/hasura/graphql-engine/cli/pkg/templates/oss/pkger"
 	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/markbates/pkger"
 )
 
 const (
@@ -33,7 +35,7 @@ func (p *Provider) BasePath() string {
 
 // DoAssetExist returns true if an asset exists at pathk
 func (p *Provider) DoAssetExist(path string) bool {
-	_, err := packed.AssetInfo(path)
+	_, err := pkger.Stat(path)
 	return err == nil
 }
 
@@ -41,7 +43,11 @@ func (p *Provider) LoadTemplates(path string, templateNames ...string) (multitem
 	r := multitemplate.New()
 
 	for _, templateName := range templateNames {
-		templateBytes, err := packed.Asset(path + templateName)
+		templateFile, err := pkger.Open(path + templateName)
+		if err != nil {
+			return nil, err
+		}
+		templateBytes, err := ioutil.ReadAll(templateFile)
 		if err != nil {
 			return nil, err
 		}
@@ -50,6 +56,7 @@ func (p *Provider) LoadTemplates(path string, templateNames ...string) (multitem
 		if err != nil {
 			return nil, err
 		}
+		templateFile.Close()
 
 		r.Add(templateName, template)
 	}
