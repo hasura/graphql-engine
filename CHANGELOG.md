@@ -84,4 +84,6 @@
   when there were previously no events to process. Potential space leak fixed. (#3839)
 - console: track runtime errors (#4083)
 - auto-include `__typename` field in custom types' objects (fix #4063)
+- squash some potential space leaks (#3937)
 - docs: bump MarupSafe version (#4102)
+- console: add design system base components (#3866)
