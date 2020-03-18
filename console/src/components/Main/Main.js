@@ -620,7 +620,7 @@ class Main extends React.Component {
                     Read Replicas
                   </div>
                   <div className={styles.featuresDescription}>
-                    Native Read Replica support for enhanced performance and durability
+                    Native Read Replica support for enhanced performance and scalability
                   </div>
                 </div>
               </div>
