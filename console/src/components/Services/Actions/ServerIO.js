@@ -445,7 +445,7 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
     );
   }
 
-  const errorMsg = 'Adding relationship failed';
+  const errorMsg = 'Saving relationship failed';
   if (validationError) {
     return dispatch(showErrorNotification(errorMsg, validationError));
   }
@@ -468,9 +468,9 @@ export const addActionRel = (relConfig, successCb, existingRelConfig) => (
   const upQueries = [customTypesQueryUp];
   const downQueries = [customTypesQueryDown];
 
-  const migrationName = 'add_action_rel'; // TODO: better migration name
-  const requestMsg = 'Adding relationship...';
-  const successMsg = 'Relationship added successfully';
+  const migrationName = `save_rel_${relConfig.name}_on_${relConfig.typename}`;
+  const requestMsg = 'Saving relationship...';
+  const successMsg = 'Relationship saved successfully';
   const customOnSuccess = () => {
     // dispatch(createActionRequestComplete());
     dispatch(fetchCustomTypes());
