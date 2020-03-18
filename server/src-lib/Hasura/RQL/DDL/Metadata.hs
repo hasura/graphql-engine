@@ -15,6 +15,7 @@ import           Control.Lens                       hiding ((.=))
 import           Data.Aeson
 
 import qualified Data.Aeson.Ordered                 as AO
+import qualified Data.HashMap.Strict                as HM
 import qualified Data.HashMap.Strict.InsOrd         as HMIns
 import qualified Data.HashSet                       as HS
 import qualified Data.List                          as L
@@ -436,9 +437,17 @@ runExportMetadata _ =
   (AO.toEncJSON . replaceMetadataToOrdJSON) <$> liftTx fetchMetadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
-runReloadMetadata ReloadMetadata = do
-  buildSchemaCacheWithOptions CatalogUpdate mempty { ciMetadata = True }
-  return successMsg
+runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
+  sc <- askSchemaCache
+  let allRemoteSchemas = HM.keys (scRemoteSchemas sc) <>
+                         getInconsistentRemoteSchemas (scInconsistentObjs sc)
+      remoteSchemaInvalidations =
+        if reloadRemoteSchemas then HS.fromList allRemoteSchemas else mempty
+  buildSchemaCacheWithOptions CatalogUpdate CacheInvalidations
+                                            { ciMetadata = True
+                                            , ciRemoteSchemas = remoteSchemaInvalidations
+                                            }
+  pure successMsg
 
 runDumpInternalState
   :: (QErrM m, CacheRM m)

@@ -85,9 +85,14 @@ runReloadRemoteSchema
   :: (QErrM m, CacheRWM m)
   => RemoteSchemaNameQuery -> m EncJSON
 runReloadRemoteSchema (RemoteSchemaNameQuery name) = do
-  rmSchemas <- scRemoteSchemas <$> askSchemaCache
-  void $ onNothing (Map.lookup name rmSchemas) $
-    throw400 NotExists $ "remote schema with name " <> name <<> " does not exist"
+  sc <- askSchemaCache
+  case Map.lookup name (scRemoteSchemas sc) of
+    Nothing -> if name `elem` getInconsistentRemoteSchemas (scInconsistentObjs sc) then
+                 throw400 NotSupported $
+                 "remote schema with name " <> name <<> " is in inconsistent state; cannot reload"
+               else throw400 NotExists $
+                    "remote schema with name " <> name <<> " does not exist"
+    Just _ -> pure ()
 
   let invalidations = mempty { ciRemoteSchemas = S.singleton name }
   withNewInconsistentObjsCheck $ buildSchemaCacheWithOptions CatalogUpdate invalidations
