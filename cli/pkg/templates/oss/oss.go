@@ -7,7 +7,7 @@ import (
 	"regexp"
 
 	"github.com/gin-gonic/contrib/renders/multitemplate"
-	_ "github.com/hasura/graphql-engine/cli/pkg/templates/oss/pkger"
+	_ "github.com/hasura/graphql-engine/cli/pkg/templates/oss/packed"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/markbates/pkger"
 )
