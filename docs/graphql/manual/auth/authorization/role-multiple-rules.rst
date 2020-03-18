@@ -2,6 +2,8 @@
    :description: Manage multiple column + row permissions for the same role in Hasura
    :keywords: hasura, docs, authorization, access control, permission, role
 
+.. _role_multiple_rules:
+
 Multiple column + row permissions for the same role
 ===================================================
 

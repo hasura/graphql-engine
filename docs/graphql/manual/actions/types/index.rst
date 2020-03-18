@@ -1,3 +1,9 @@
+.. meta::
+   :description: Custom GraphQL types for Hasura actions
+   :keywords: hasura, docs, actions, custom types
+
+.. _custom_types:
+
 Custom GraphQL types
 ====================
 
@@ -43,6 +49,41 @@ This is an object type called ``UserInfo`` that has two fields:
 
   Hasura does not allow a field of an object type to be another object type,
   i.e. the fields of an object type can only be ``scalars`` and ``enums``.
+
+  For a more complicated structure, the object types can be connected to the rest
+  of the graph via :ref:`relationships <custom_object_type_relationships>`.
+
+.. _custom_object_type_relationships:
+
+Relationships
+*************
+
+Custom object types can be connected to the rest of the graph by setting up
+:ref:`relationships <relationships>` with tables/views.
+
+**For example**, given the object type:
+
+.. code-block:: graphql
+
+  type UserInfo {
+    accessToken: String!
+    userId: Int!
+  }
+
+We can create an **object relationship** called ``createdUser`` between the
+``UserInfo`` object type and the ``user`` table via the
+``UserInfo::userId -> user::id`` fields.
+
+The object type will now be modified as:
+
+.. code-block:: graphql
+  :emphasize-lines: 4
+
+  type UserInfo {
+    accessToken: String!
+    userId: Int!
+    createdUser: user
+  }
 
 Input types
 -----------

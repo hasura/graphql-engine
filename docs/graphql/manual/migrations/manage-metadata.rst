@@ -38,8 +38,8 @@ Exporting Hasura metadata
 
   .. tab:: API
 
-     The export can be done via the :doc:`Metadata API
-     <../api-reference/schema-metadata-api/manage-metadata>`.
+     The export can be done via the :ref:`Metadata API
+     <api_manage_metadata>`.
      Response will be a JSON object with the Hasura metadata. Here is an example
      using ``curl`` to save this as a file:
 
@@ -72,8 +72,8 @@ before.
 
   .. tab:: API
 
-     The exported JSON can be imported via the :doc:`Metadata API
-     <../api-reference/schema-metadata-api/manage-metadata>`.
+     The exported JSON can be imported via the :ref:`Metadata API
+     <api_manage_metadata>`.
      Here is an example using ``curl``:
 
      .. code-block:: bash
@@ -112,8 +112,8 @@ when a new column has been added to a table via an external tool such as ``psql`
 
   .. tab:: API
 
-     The reload of metadata can be done via the :doc:`Metadata API
-     <../api-reference/schema-metadata-api/manage-metadata>`.
+     The reload of metadata can be done via the :ref:`Metadata API
+     <api_manage_metadata>`.
      Here is an example using ``curl``:
 
      .. code-block:: bash
@@ -136,5 +136,5 @@ Using tools like ``curl`` you can easily integrate the metadata API requests for
 actions with your CI/CD workflows.
 
 In case you need an automated way of applying/importing the metadata, take a
-look at the :doc:`CLI-Migrations <auto-apply-migrations>` Docker image, which
+look at the :ref:`CLI-Migrations <auto_apply_migrations>` Docker image, which
 can start the GraphQL engine after automatically importing a mounted metadata file.

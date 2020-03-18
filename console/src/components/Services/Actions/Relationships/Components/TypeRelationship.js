@@ -118,6 +118,15 @@ const RelationshipEditor = ({
 
   // rel name input
   const getRelNameInput = () => {
+    /*
+      There is no neat solution to renaming a relationship.
+      This is because name is the only unique identifier of a relationship.
+      TODO FIXME
+    */
+    const isDisabled = !!existingRelConfig;
+    const relNameInputTitle = isDisabled
+      ? 'A relationship cannot be renamed. Please drop and re-create if you really must.'
+      : undefined;
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
@@ -129,6 +138,8 @@ const RelationshipEditor = ({
           className={`${styles.select} form-control ${styles.add_pad_left}`}
           placeholder="Enter relationship name"
           data-test="rel-name"
+          disabled={isDisabled}
+          title={relNameInputTitle}
           value={name}
         />
       </div>
@@ -290,12 +301,16 @@ const RelationshipEditor = ({
 
           return (
             <div
-              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
+              className={`row ${styles.add_mar_bottom_mid} ${
+                styles.display_flex
+              }`}
               key={`fk-col-${i}`}
             >
               <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
-                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
+                  className={`form-control ${styles.select} ${
+                    styles.wd100Percent
+                  }`}
                   value={field}
                   onChange={setField}
                   data-test={`manual-relationship-lcol-${i}`}
@@ -318,7 +333,9 @@ const RelationshipEditor = ({
               </div>
               <div className={'col-sm-4'}>
                 <select
-                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
+                  className={`form-control ${styles.select} ${
+                    styles.wd100Percent
+                  }`}
                   value={refColumn}
                   onChange={setColumn}
                   disabled={!refTable}

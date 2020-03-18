@@ -45,7 +45,7 @@ func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
   # Create a directory with endpoint and admin secret configured:
   hasura init <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
-  # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details`,
+  # See https://hasura.io/docs/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
 		Args:         cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {

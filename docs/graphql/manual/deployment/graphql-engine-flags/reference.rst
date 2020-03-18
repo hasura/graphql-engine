@@ -2,6 +2,8 @@
    :description: Hasura GraphQL engine server flags reference
    :keywords: hasura, docs, deployment, server, flags
 
+.. _server_flag_reference:
+
 GraphQL engine server flags reference
 =====================================
 
@@ -132,7 +134,8 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - N/A
      - ``HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL``
-     - Postgres events polling interval
+     - Interval in milliseconds to sleep before trying to fetch events again after a fetch 
+       returned no events from postgres
 
    * - ``-s, --stripes <NO_OF_STRIPES>``
      - ``HASURA_GRAPHQL_PG_STRIPES``
