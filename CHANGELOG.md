@@ -18,11 +18,11 @@
 - console: add dropdown for enum fields in insert/edit rows page (close #3748) (#3810)
 
   If a table has a field referencing an enum table via a foreign key, then there will be a select dropdown with all possible enum values for that field on `Insert Row` and `Edit Row` views.
-  
+
 - console: generate unique exported metadata filenames (close #1772) (#4106)
 
-  Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.  
-  
+  Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.
+
 ### Other changes
 
 - console: disable editing action relationships
@@ -89,3 +89,4 @@
 - squash some potential space leaks (#3937)
 - docs: bump MarupSafe version (#4102)
 - console: add design system base components (#3866)
+- option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
