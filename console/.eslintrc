@@ -1,5 +1,5 @@
 {
-  "extends": ["plugin:@typescript-eslint/recommended", "eslint-config-airbnb"],
+  "extends": ["plugin:@typescript-eslint/recommended", "airbnb", "prettier"],
   "env": {
     "browser": true,
     "node": true,
