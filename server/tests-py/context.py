@@ -333,7 +333,7 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
                                         "headers": req_headers})
 
 # A very slightly more sane/performant http server.
-# See: https://stackoverflow.com/a/14089457/176841 
+# See: https://stackoverflow.com/a/14089457/176841
 #
 # TODO use this elsewhere, or better yet: use e.g. bottle + waitress
 class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
@@ -367,17 +367,29 @@ class EvtsWebhookServer(ThreadedHTTPServer):
         self.evt_trggr_web_server.join()
 
 class HGECtxGQLServer:
-    def __init__(self, hge_urls):
+    def __init__(self, hge_urls, port=5000):
         # start the graphql server
-        self.graphql_server = graphql_server.create_server('127.0.0.1', 5000)
-        self.hge_urls = graphql_server.set_hge_urls(hge_urls)
-        self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
-        self.gql_srvr_thread.start()
+        self.port = port
+        self._hge_urls = hge_urls
+        self.is_running = False
+        self.start_server()
+
+    def start_server(self):
+        if not self.is_running:
+            self.graphql_server = graphql_server.create_server('127.0.0.1', self.port)
+            self.hge_urls = graphql_server.set_hge_urls(self._hge_urls)
+            self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
+            self.gql_srvr_thread.start()
+        self.is_running = True
 
     def teardown(self):
-        graphql_server.stop_server(self.graphql_server)
-        self.gql_srvr_thread.join()
+        self.stop_server()
 
+    def stop_server(self):
+        if self.is_running:
+            graphql_server.stop_server(self.graphql_server)
+            self.gql_srvr_thread.join()
+        self.is_running = False
 
 class HGECtx:
 

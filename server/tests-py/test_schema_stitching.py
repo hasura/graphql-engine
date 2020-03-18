@@ -12,7 +12,6 @@ import pytest
 
 from validate import check_query_f, check_query
 
-
 def mk_add_remote_q(name, url, headers=None, client_hdrs=False, timeout=None):
     return {
         "type": "add_remote_schema",
@@ -549,3 +548,38 @@ def compare_flds(fldH, fldR):
             has_arg[arg_path] = True
             compare_args(argH, argR)
         assert has_arg[arg_path], 'Argument ' + arg_path + ' in the remote schema root query type not found in Hasura schema'
+
+class TestRemoteSchemaReload:
+
+    def test_inconsistent_remote_schema_reload(self, gql_server, hge_ctx):
+        # Add remote schema
+        st_code, resp = hge_ctx.v1q(mk_add_remote_q('simple 1', 'http://127.0.0.1:5991/hello-graphql'))
+        assert st_code == 200, resp
+        # stop remote graphql server
+        gql_server.stop_server()
+        reload_metadata_q = {
+            'type': 'reload_metadata',
+            "args": {
+                "reload_remote_schemas": True
+            }
+        }
+        # Reload metadata with remote schemas
+        st_code, resp = hge_ctx.v1q(reload_metadata_q)
+        assert st_code == 200, resp
+        # Reload remote schema, should raise expection saying the remote schema is in inconsistent metadata
+        st_code, resp = hge_ctx.v1q(mk_reload_remote_q('simple 1'))
+        assert st_code == 400, resp
+        assert resp['error'] == 'remote schema with name "simple 1" is in inconsistent state; cannot reload', resp
+        assert resp['code'] == 'not-supported', resp
+        # Restart remote graphql server
+        gql_server.start_server()
+        # Reload metadata with remote schemas which also refreshes the
+        # remote schemas present in inconsistent metadata
+        st_code, resp = hge_ctx.v1q(reload_metadata_q)
+        assert st_code == 200, resp
+        # Reload remote schema to check whether it is lifted from inconsistent metadata
+        st_code, resp = hge_ctx.v1q(mk_reload_remote_q('simple 1'))
+        assert st_code == 200, resp
+        # Delete remote schema
+        st_code, resp = hge_ctx.v1q(mk_delete_remote_q('simple 1'))
+        assert st_code == 200, resp

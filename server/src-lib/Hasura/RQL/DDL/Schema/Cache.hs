@@ -33,14 +33,14 @@ import           Data.List                                (nub)
 
 import qualified Hasura.GraphQL.Context                   as GC
 import qualified Hasura.GraphQL.Schema                    as GS
-import qualified Hasura.GraphQL.Validate.Types      as VT
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Hasura.GraphQL.Validate.Types            as VT
 import qualified Hasura.Incremental                       as Inc
+import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Hasura.Db
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.GraphQL.Schema.CustomTypes
-import           Hasura.GraphQL.Utils               (showNames)
+import           Hasura.GraphQL.Utils                     (showNames)
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
@@ -146,7 +146,7 @@ instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
       -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
       -- hanging onto unnecessary keys.
       pruneInvalidationKeys schemaCache = over ikRemoteSchemas $ M.filterWithKey \name _ ->
-        M.member name (scRemoteSchemas schemaCache)
+                                          name `elem` getAllRemoteSchemas schemaCache
 
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
