@@ -22,7 +22,7 @@
     "import/prefer-default-export": 0,
     "comma-dangle": 0,
     "id-length": [1, { "min": 1, "properties": "never" }],
-    "indent": [2, 2, { "SwitchCase": 1 }],
+    "indent": "off",
     "no-console": 0,
     "arrow-parens": 0,
     "no-alert": 0,

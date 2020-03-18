@@ -91,17 +91,17 @@ const ManualRelationshipSelector = ({
           disabled={!relAdd.relType || !relAdd.relName}
         >
           {// default unselected option
-            relAdd.rSchema === '' && (
-              <option value={''} disabled>
-                {'-- reference schema --'}
-              </option>
-            )}
+          relAdd.rSchema === '' && (
+            <option value={''} disabled>
+              {'-- reference schema --'}
+            </option>
+          )}
           {// all reference schema options
-            schemaList.map((rs, j) => (
-              <option key={j} value={rs}>
-                {rs}
-              </option>
-            ))}
+          schemaList.map((rs, j) => (
+            <option key={j} value={rs}>
+              {rs}
+            </option>
+          ))}
         </select>
       </div>
     );
@@ -208,16 +208,12 @@ const ManualRelationshipSelector = ({
 
           return (
             <div
-              className={`row ${styles.add_mar_bottom_mid} ${
-                styles.display_flex
-              }`}
+              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
               key={`fk-col-${_i}`}
             >
               <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={lc}
                   onChange={dispatchSetLcol}
                   data-test={`manual-relationship-lcol-${_i}`}
@@ -242,9 +238,7 @@ const ManualRelationshipSelector = ({
               </div>
               <div className={'col-sm-4'}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={rc}
                   onChange={dispatchSetRcol}
                   disabled={!relAdd.rTable}

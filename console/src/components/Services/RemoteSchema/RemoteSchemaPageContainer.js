@@ -48,7 +48,4 @@ RemoteSchemaPageContainer.propTypes = {
 };
 
 export default (connect, mapStateToProps, mapDispatchToProps) =>
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )(RemoteSchemaPageContainer);
+  connect(mapStateToProps, mapDispatchToProps)(RemoteSchemaPageContainer);

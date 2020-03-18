@@ -207,17 +207,13 @@ class FilterQuery extends Component {
         >
           <div className="">
             <div
-              className={`${styles.queryBox} col-xs-6 ${
-                styles.padd_left_remove
-              }`}
+              className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
               <span className={styles.subheading_text}>Filter</span>
               {renderWheres(whereAnd, triggerSchema, dispatch)}
             </div>
             <div
-              className={`${styles.queryBox} col-xs-6 ${
-                styles.padd_left_remove
-              }`}
+              className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
               <b className={styles.subheading_text}>Sort</b>
               {renderSorts(orderBy, triggerSchema, dispatch)}

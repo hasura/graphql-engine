@@ -144,8 +144,8 @@ export default class QueryAnalyser extends React.Component {
                       {this.state.activeNode >= 0 &&
                       this.state.analyseData.length > 0
                         ? this.state.analyseData[
-                          this.state.activeNode
-                        ].plan.join('\n')
+                            this.state.activeNode
+                          ].plan.join('\n')
                         : ''}
                     </code>
                   </pre>
@@ -183,9 +183,9 @@ export default class QueryAnalyser extends React.Component {
       if (type === 'sql') {
         text = window.sqlFormatter
           ? window.sqlFormatter.format(
-            this.state.analyseData[this.state.activeNode].sql,
-            { language: 'sql' }
-          )
+              this.state.analyseData[this.state.activeNode].sql,
+              { language: 'sql' }
+            )
           : this.state.analyseData[this.state.activeNode].sql;
       } else {
         text = this.state.analyseData[this.state.activeNode].plan.join('\n');
