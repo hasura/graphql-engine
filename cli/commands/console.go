@@ -1,18 +1,14 @@
 package commands
 
 import (
-	"fmt"
-	"net/http"
 	"os"
 	"sync"
 
-	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/pkg/console"
 	"github.com/hasura/graphql-engine/cli/pkg/templates/oss"
 	"github.com/pkg/errors"
-	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -142,64 +138,15 @@ func (o *ConsoleOptions) Run() error {
 		TemplateProvider: templateProvider,
 	})
 
-	// get HTTP servers
-	apiHTTPServer := apiServer.GetHTTPServer()
-	consoleHTTPServer, err := consoleServer.GetHTTPServer()
-	if err != nil {
-		return errors.Wrap(err, "cannot create console server")
+	serveOpts := &console.ServeOpts{
+		APIServer:       apiServer,
+		ConsoleServer:   consoleServer,
+		EC:              o.EC,
+		DontOpenBrowser: o.DontOpenBrowser,
+		Browser:         o.Browser,
+		ConsolePort:     o.ConsolePort,
+		APIPort:         o.APIPort,
+		Address:         o.Address,
 	}
-	// Create WaitGroup for running 2 servers
-	wg := &sync.WaitGroup{}
-	o.WG = wg
-	wg.Add(1)
-	go func() {
-		if err := apiHTTPServer.ListenAndServe(); err != nil {
-			if err == http.ErrServerClosed {
-				o.EC.Logger.Infof("server closed on port %s under signal", o.APIPort)
-			} else {
-				o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
-			}
-		}
-		wg.Done()
-	}()
-	wg.Add(1)
-	go func() {
-		if err := consoleHTTPServer.ListenAndServe(); err != nil {
-			if err == http.ErrServerClosed {
-				o.EC.Logger.Infof("server closed on port %s under signal", o.ConsolePort)
-			} else {
-				o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.ConsolePort)
-			}
-		}
-		wg.Done()
-	}()
-
-	consoleURL := fmt.Sprintf("http://%s:%s/", o.Address, o.ConsolePort)
-
-	if !o.DontOpenBrowser {
-		if o.Browser != "" {
-			o.EC.Spin(color.CyanString("Opening console on: %s", o.Browser))
-			defer o.EC.Spinner.Stop()
-			err = open.RunWith(consoleURL, o.Browser)
-			if err != nil {
-				o.EC.Logger.WithError(err).Warnf("failed opening console in '%s', try to open the url manually", o.Browser)
-			}
-		} else {
-			o.EC.Spin(color.CyanString("Opening console using default browser..."))
-			defer o.EC.Spinner.Stop()
-
-			err = open.Run(consoleURL)
-			if err != nil {
-				o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
-			}
-		}
-	}
-
-	o.EC.Spinner.Stop()
-	o.EC.Logger.Infof("console running at: %s", consoleURL)
-
-	o.EC.Telemetry.Beam()
-
-	wg.Wait()
-	return nil
+	return console.Serve(serveOpts)
 }
