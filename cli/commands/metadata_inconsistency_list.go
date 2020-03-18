@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"text/tabwriter"
 
+	"github.com/hasura/graphql-engine/cli/migrate"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
@@ -47,7 +49,7 @@ type metadataInconsistencyListOptions struct {
 }
 
 func (o *metadataInconsistencyListOptions) read() error {
-	d, err := newMigrate(o.EC, true)
+	d, err := migrate.NewMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}

@@ -3,9 +3,6 @@ package console
 import (
 	"fmt"
 	"net/http"
-	"net/url"
-	"runtime"
-	"strings"
 
 	"github.com/gin-contrib/cors"
 
@@ -25,7 +22,11 @@ type APIServer struct {
 	EC      *cli.ExecutionContext
 }
 
-func NewAPIServer(migrate *migrate.Migrate, address string, port string, ec *cli.ExecutionContext) *APIServer {
+func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APIServer, error) {
+	migrate, err := migrate.NewMigrate(ec, false)
+	if err != nil {
+		return nil, err
+	}
 	router := gin.New()
 	// Setup API Router
 	// Switch to "release" mode in production.
@@ -35,7 +36,7 @@ func NewAPIServer(migrate *migrate.Migrate, address string, port string, ec *cli
 
 	apiServer := &APIServer{Router: router, Migrate: migrate, Address: address, Port: port, EC: ec}
 	apiServer.setRoutes(ec.MigrationDir, ec.Logger)
-	return apiServer
+	return apiServer, nil
 }
 
 func (r *APIServer) GetHTTPServer() *http.Server {
@@ -84,7 +85,7 @@ func (r *APIServer) setMigrate(t *migrate.Migrate) gin.HandlerFunc {
 
 func (r *APIServer) setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := GetFilePath(dir)
+		host := migrate.GetFilePath(dir)
 		c.Set("filedir", host)
 		c.Next()
 	}
@@ -122,17 +123,4 @@ func allowCors() gin.HandlerFunc {
 	config.AllowAllOrigins = true
 	config.AllowCredentials = false
 	return cors.New(config)
-}
-
-func GetFilePath(dir string) *url.URL {
-	host := &url.URL{
-		Scheme: "file",
-		Path:   dir,
-	}
-
-	// Add Prefix / to path if runtime.GOOS equals to windows
-	if runtime.GOOS == "windows" && !strings.HasPrefix(host.Path, "/") {
-		host.Path = "/" + host.Path
-	}
-	return host
 }

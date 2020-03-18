@@ -7,13 +7,14 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/migrate"
+
 	"gopkg.in/yaml.v2"
 
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 	"github.com/hasura/graphql-engine/cli/migrate/source/file"
-	"github.com/hasura/graphql-engine/cli/pkg/console"
 	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
@@ -82,7 +83,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			}()
 			// Open the file driver to list of source migrations and remove unwanted yaml
 			ec.Spin("Cleaning up migrations...")
-			fileCfg, err := file.New(console.GetFilePath(ec.MigrationDir).String(), ec.Logger)
+			fileCfg, err := file.New(migrate.GetFilePath(ec.MigrationDir).String(), ec.Logger)
 			if err != nil {
 				return errors.Wrap(err, "error in opening migrate file driver")
 			}
@@ -269,7 +270,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				}
 			}
 			ec.Spin("Removing versions from database...")
-			migrateDrv, err := newMigrate(ec, true)
+			migrateDrv, err := migrate.NewMigrate(ec, true)
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}
@@ -304,7 +305,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			ec.Config.ActionConfig.Codegen = nil
 			// run metadata export
 			ec.Spin("Exporting metadata...")
-			migrateDrv, err = newMigrate(ec, true)
+			migrateDrv, err = migrate.NewMigrate(ec, true)
 			if err != nil {
 				return errors.Wrap(err, "unable to initialize migrations driver")
 			}

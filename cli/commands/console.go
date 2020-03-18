@@ -4,6 +4,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/hasura/graphql-engine/cli/migrate"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/pkg/console"
@@ -95,20 +97,19 @@ func (o *ConsoleOptions) Run() error {
 		return errors.New("cannot validate version, object is nil")
 	}
 
-	migrate, err := newMigrate(o.EC, false)
+	apiServer, err := console.NewAPIServer(o.Address, o.APIPort, o.EC)
 	if err != nil {
 		return err
 	}
 
-	apiServer := console.NewAPIServer(migrate, o.Address, o.APIPort, o.EC)
-
 	// Setup console server
-	templateProvider := oss.NewOSSProvider()
+	const basePath = "pkg/templates/oss/files/"
+	templateProvider := oss.NewOSSProvider(basePath)
 	consoleTemplateVersion := templateProvider.GetConsoleTemplateVersion(o.EC.Version)
 	consoleAssetsVersion := templateProvider.GetConsoleAssetsVersion(o.EC.Version)
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
-	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
+	adminSecretHeader := migrate.GetAdminSecretHeaderName(o.EC.Version)
 	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,
@@ -116,7 +117,7 @@ func (o *ConsoleOptions) Run() error {
 		"serverVersion":   o.EC.Version.GetServerVersion(),
 		"dataApiUrl":      o.EC.Config.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
-		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
+		"hasAccessKey":    adminSecretHeader == migrate.XHasuraAccessKey,
 		"adminSecret":     o.EC.Config.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
@@ -138,6 +139,7 @@ func (o *ConsoleOptions) Run() error {
 		TemplateProvider: templateProvider,
 	})
 
+	// start console and API HTTP Servers
 	serveOpts := &console.ServeOpts{
 		APIServer:       apiServer,
 		ConsoleServer:   consoleServer,
@@ -148,5 +150,6 @@ func (o *ConsoleOptions) Run() error {
 		APIPort:         o.APIPort,
 		Address:         o.Address,
 	}
+
 	return console.Serve(serveOpts)
 }
