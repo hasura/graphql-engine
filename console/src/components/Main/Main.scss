@@ -10,10 +10,6 @@
   position: relative;
 }
 
-.flexRow {
-  // display: flex;
-}
-
 .phantom {
   display: block;
   padding: 14.5px 10px;
@@ -82,18 +78,15 @@
   font-size: 20px;
 }
 
-.header_items {
-  width: 45%;
-}
-
 .header_logo_wrapper {
-  padding: 10px 20px;
   position: relative;
   display: flex;
+  justify-content: flex-start;
+  padding-left: 20px;
   align-items: center;
   border-right: 1px solid #788095;
-  display: inline-block;
   width: 20%;
+  height: 100%;
 
   .logoParent {
     display: flex;
@@ -419,10 +412,11 @@
   font-family: 'Gudea';
   font-weight: 700;
   text-transform: uppercase;
-  display: flex;
   align-items: center;
   position: fixed;
+  display: flex;
   width: 100%;
+  height: 50px;
   min-width: $minContainerWidth;
   z-index: 100;
 
@@ -433,12 +427,24 @@
     opacity: 0.8;
   }
 
+  .navigation_wrapper {
+    width: 80%;
+    height: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
   .sidebarItems {
     list-style-type: none;
     padding: 0;
-    display: inline-block;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
     margin-bottom: 0;
-    margin-top: 16px;
+    height: 100%;
+    width: auto;
+    padding-top: 5px;
 
     a,
     a:visited {
@@ -453,11 +459,11 @@
       transition: color 0.5s;
       font-size: 14px;
       letter-spacing: 1px;
-      display: inline-block;
+      height: 100%;
+      margin-left: 20px;
 
       p {
         padding-left: 5px;
-        display: inline-block;
         font-size: 14px;
         letter-spacing: 1px;
         margin: 0 0 0px;
@@ -465,20 +471,23 @@
 
       a {
         margin: 0px 0px;
-        display: block;
-        margin-left: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         border-bottom: 4px solid transparent;
         padding: 0 10px;
-        padding-bottom: 10px;
+        height: 100%;
+        text-decoration: none;
 
         .iconCenter {
           display: inline-block;
           width: 20px;
+          line-height: 30px;
           text-align: center;
 
-          i {
-            width: 20px;
-            display: inline-block;
+          svg {
+            width: 14px;
+            height: 14px;
           }
         }
       }
@@ -540,7 +549,7 @@
     .navSideBarActive {
       border-bottom: 4px solid #ffc627;
 
-      i {
+      svg {
         color: #ffc627;
       }
 
@@ -1310,38 +1319,21 @@
   }
 }
 
-@media(max-width: 1500px) {
-
-  .header_items {
-    width: 52%;
-  }
+@media (max-width: 1500px) {
   .iconCenter {
-    i {
-      font-size: 12px;
+    svg {
       width: 18px;
     }
   }
 
-  .sidebar {
-    .sidebarItems {
-      li {
-        p {
-          font-size: 12px;
-        }
-        a {
-          margin-left: 10px;
-        }
-      }
-    }
-  }
-
   .helpSection {
-    font-size: 12px;    
+    font-size: 12px;
   }
 
-  .proWrapper{
-    .proName, .proNameClicked {
-      font-size: 12px
+  .proWrapper {
+    .proName,
+    .proNameClicked {
+      font-size: 12px;
     }
   }
 
@@ -1350,5 +1342,4 @@
       font-size: 12px;
     }
   }
-
 }

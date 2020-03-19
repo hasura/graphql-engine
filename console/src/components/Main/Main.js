@@ -10,6 +10,7 @@ import { getPathRoot } from '../Common/utils/urlUtils';
 
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
+import { Icon } from '../UIKit/atoms/Icon';
 
 import {
   loadServerVersion,
@@ -518,9 +519,9 @@ class Main extends React.Component {
               }
               to={appPrefix + path}
             >
-              <div className={styles.iconCenter} data-test={block}>
-                <i className={`fa ${icon}`} aria-hidden="true" />
-              </div>
+              <span className={styles.iconCenter} data-test={block}>
+                <Icon type={icon} />
+              </span>
               <p>{title}</p>
             </Link>
           </li>
@@ -634,55 +635,53 @@ class Main extends React.Component {
 
     return (
       <div className={styles.container}>
-        <div className={styles.flexRow}>
-          <div className={styles.sidebar}>
-            <div className={styles.header_logo_wrapper}>
-              <div className={styles.logoParent}>
-                <div className={styles.logo}>
-                  <Link to="/">
-                    <img className="img img-responsive" src={logo} />
-                  </Link>
-                </div>
+        <div className={styles.sidebar}>
+          <div className={styles.header_logo_wrapper}>
+            <div className={styles.logoParent}>
+              <div className={styles.logo}>
                 <Link to="/">
-                  <div className={styles.project_version}>{serverVersion}</div>
+                  <img className="img img-responsive" src={logo} />
                 </Link>
               </div>
+              <Link to="/">
+                <div className={styles.project_version}>{serverVersion}</div>
+              </Link>
             </div>
-            <div className={styles.header_items}>
-              <ul className={styles.sidebarItems}>
-                {getSidebarItem(
-                  'GraphiQL',
-                  'fa-flask',
-                  tooltips.apiExplorer,
-                  '/api-explorer',
-                  true
-                )}
-                {getSidebarItem(
-                  'Data',
-                  'fa-database',
-                  tooltips.data,
-                  getSchemaBaseRoute(currentSchema)
-                )}
-                {getSidebarItem(
-                  'Actions',
-                  'fa-cogs',
-                  tooltips.actions,
-                  '/actions/manage/actions'
-                )}
-                {getSidebarItem(
-                  'Remote Schemas',
-                  'fa-plug',
-                  tooltips.remoteSchema,
-                  '/remote-schemas/manage/schemas'
-                )}
-                {getSidebarItem(
-                  'Events',
-                  'fa-cloud',
-                  tooltips.events,
-                  '/events/manage/triggers'
-                )}
-              </ul>
-            </div>
+          </div>
+          <div className={styles.navigation_wrapper}>
+            <ul className={styles.sidebarItems}>
+              {getSidebarItem(
+                'GraphiQL',
+                'graphiQL',
+                tooltips.apiExplorer,
+                '/api-explorer',
+                true
+              )}
+              {getSidebarItem(
+                'Data',
+                'database',
+                tooltips.data,
+                getSchemaBaseRoute(currentSchema)
+              )}
+              {getSidebarItem(
+                'Actions',
+                'action',
+                tooltips.actions,
+                '/actions/manage/actions'
+              )}
+              {getSidebarItem(
+                'Remote Schemas',
+                'schema',
+                tooltips.remoteSchema,
+                '/remote-schemas/manage/schemas'
+              )}
+              {getSidebarItem(
+                'Events',
+                'event',
+                tooltips.events,
+                '/events/manage/triggers'
+              )}
+            </ul>
             <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
               <div className={styles.helpSection + ' ' + styles.proWrapper}>
@@ -791,13 +790,13 @@ class Main extends React.Component {
               {getLoveSection()}
             </div>
           </div>
-
-          <div className={styles.main + ' container-fluid'}>
-            {getMainContent()}
-          </div>
-
-          {getUpdateNotification()}
         </div>
+
+        <div className={styles.main + ' container-fluid'}>
+          {getMainContent()}
+        </div>
+
+        {getUpdateNotification()}
       </div>
     );
   }
