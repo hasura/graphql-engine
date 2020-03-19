@@ -22,6 +22,7 @@ import {
 import {
   injectTypeRelationship,
   removeTypeRelationship,
+  validateRelTypename,
 } from './Relationships/utils';
 import { getConfirmation } from '../../Common/utils/jsUtils';
 import {
@@ -406,11 +407,52 @@ export const deleteAction = currentAction => (dispatch, getState) => {
   );
 };
 
-export const addActionRel = (relConfig, successCb) => (dispatch, getState) => {
+export const addActionRel = (relConfig, successCb, existingRelConfig) => (
+  dispatch,
+  getState
+) => {
   const { types: existingTypes } = getState().types;
 
-  const typesWithRels = injectTypeRelationship(
-    existingTypes,
+  let typesWithRels = [...existingTypes];
+
+  let validationError;
+
+  if (existingRelConfig) {
+    // modifying existing relationship
+    // if the relationship is being renamed
+    if (existingRelConfig.name !== relConfig.name) {
+      // validate the new name
+      validationError = validateRelTypename(
+        existingTypes,
+        relConfig.typename,
+        relConfig.name
+      );
+      // remove old relationship from types
+      typesWithRels = removeTypeRelationship(
+        existingTypes,
+        relConfig.typename,
+        existingRelConfig.name
+      );
+    }
+  } else {
+    // creating a new relationship
+
+    // validate the relationship name
+    validationError = validateRelTypename(
+      existingTypes,
+      relConfig.typename,
+      relConfig.name
+    );
+  }
+
+  const errorMsg = 'Saving relationship failed';
+  if (validationError) {
+    return dispatch(showErrorNotification(errorMsg, validationError));
+  }
+
+  // add modified relationship to types
+  typesWithRels = injectTypeRelationship(
+    typesWithRels,
     relConfig.typename,
     relConfig
   );
@@ -426,10 +468,9 @@ export const addActionRel = (relConfig, successCb) => (dispatch, getState) => {
   const upQueries = [customTypesQueryUp];
   const downQueries = [customTypesQueryDown];
 
-  const migrationName = 'add_action_rel'; // TODO: better migration name
-  const requestMsg = 'Adding relationship...';
-  const successMsg = 'Relationship added successfully';
-  const errorMsg = 'Adding relationship failed';
+  const migrationName = `save_rel_${relConfig.name}_on_${relConfig.typename}`;
+  const requestMsg = 'Saving relationship...';
+  const successMsg = 'Relationship saved successfully';
   const customOnSuccess = () => {
     // dispatch(createActionRequestComplete());
     dispatch(fetchCustomTypes());
