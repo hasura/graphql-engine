@@ -18,12 +18,11 @@ import qualified Hasura.GraphQL.Validate.Types as VT
 
 buildObjectTypeInfo :: RoleName -> AnnotatedObjectType -> VT.ObjTyInfo
 buildObjectTypeInfo roleName annotatedObjectType =
-    VT.ObjTyInfo
-    { VT._otiDesc = _otdDescription objectDefinition
-    , VT._otiName = unObjectTypeName $ _otdName objectDefinition
-    , VT._otiImplIFaces = mempty
-    , VT._otiFields = mapFromL VT._fiName $ fields <> catMaybes relationships
-    }
+  let description = _otdDescription objectDefinition
+      namedType = unObjectTypeName $ _otdName objectDefinition
+      fieldMap = mapFromL VT._fiName $ fields <> catMaybes relationships
+  -- 'mkObjTyInfo' function takes care of inserting `__typename` field
+  in VT.mkObjTyInfo description namedType mempty fieldMap VT.TLCustom
   where
     objectDefinition = _aotDefinition annotatedObjectType
 
