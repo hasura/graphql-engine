@@ -315,15 +315,15 @@ class StreamingLogs extends Component {
                         ),
                         finalResponse.status_code,
                         ' ',
-                      <OverlayTrigger
-                        placement="top"
-                        overlay={tooltip.statusCodeDescription}
-                      >
-                        <i
-                          className="fa fa-question-circle"
-                          aria-hidden="true"
-                        />
-                      </OverlayTrigger>,
+                        <OverlayTrigger
+                          placement="top"
+                          overlay={tooltip.statusCodeDescription}
+                        >
+                          <i
+                            className="fa fa-question-circle"
+                            aria-hidden="true"
+                          />
+                        </OverlayTrigger>,
                       ]
                     : null}
                 </div>

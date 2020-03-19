@@ -445,17 +445,17 @@ const ViewRows = ({
                                           : failureIcon,
                                         finalResponse.status_code,
                                         ' ',
-                                      <OverlayTrigger
-                                        placement="top"
-                                        overlay={
+                                        <OverlayTrigger
+                                          placement="top"
+                                          overlay={
                                             tooltip.statusCodeDescription
                                           }
-                                      >
-                                        <i
-                                          className="fa fa-question-circle"
-                                          aria-hidden="true"
-                                        />
-                                      </OverlayTrigger>,
+                                        >
+                                          <i
+                                            className="fa fa-question-circle"
+                                            aria-hidden="true"
+                                          />
+                                        </OverlayTrigger>,
                                       ]
                                     : null}
                                 </div>
