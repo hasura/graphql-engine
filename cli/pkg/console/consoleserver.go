@@ -125,6 +125,7 @@ func (c *ConsoleServer) Serve() {
 
 func BuildConsoleRouter(templateProvider TemplateProvider, templateVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
 	// An Engine instance with the Logger and Recovery middleware already attached.
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	if !templateProvider.DoTemplateExist(templateProvider.BasePath() + templateVersion + templateProvider.TemplateFilename()) {
 		templateVersion = "latest"

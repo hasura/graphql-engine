@@ -91,7 +91,6 @@ type ConsoleOptions struct {
 }
 
 func (o *ConsoleOptions) Run() error {
-	gin.SetMode(gin.ReleaseMode)
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
 	}

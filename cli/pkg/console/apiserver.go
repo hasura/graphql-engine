@@ -30,6 +30,7 @@ func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APISe
 	if err != nil {
 		return nil, errors.Wrap(err, "error creating migrate instance")
 	}
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	// Setup API Router
 	// Switch to "release" mode in production.
