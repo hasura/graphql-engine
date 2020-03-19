@@ -11,6 +11,11 @@ import {
   FaCog,
   FaQuestion,
   FaCogs,
+  FaExclamation,
+  FaTimes,
+  FaStar,
+  FaTwitter,
+  FaHeart,
 } from 'react-icons/fa';
 
 import { StyledIcon } from './Icon';
@@ -28,6 +33,11 @@ const iconReferenceMap = {
   question: FaQuestion,
   default: FaExclamationCircle,
   action: FaCogs,
+  exclamation: FaExclamation,
+  close: FaTimes,
+  star: FaStar,
+  twitter: FaTwitter,
+  love: FaHeart,
 };
 
 export const Icon = props => {

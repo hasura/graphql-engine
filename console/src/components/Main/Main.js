@@ -250,15 +250,16 @@ class Main extends React.Component {
 
     const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <i className={styles.question + ' fa fa-cog'} />;
+        return <Icon className={styles.question} type="settings" />;
       }
+
       return (
         <div className={styles.question}>
-          <i className={'fa fa-cog'} />
+          <Icon type="settings" />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
             <div>
-              <i className={'fa fa-exclamation-circle'} />
+              <Icon type="default" />
             </div>
           </div>
         </div>
@@ -359,7 +360,7 @@ class Main extends React.Component {
                   className={styles.updateBannerClose}
                   onClick={this.closeUpdateBanner.bind(this)}
                 >
-                  <i className={'fa fa-times'} />
+                  <Icon type="close" size={14} />
                 </span>
               </div>
             </div>
@@ -386,7 +387,6 @@ class Main extends React.Component {
               src={pixHeart}
               alt={'pix Heart'}
             />
-            {/* <i className={styles.heart + ' fa fa-heart'} /> */}
           </div>,
           <ul
             key="main_love_2"
@@ -394,9 +394,10 @@ class Main extends React.Component {
           >
             <div className={styles.dropdown_menu_container}>
               <div className={styles.closeDropDown}>
-                <i
-                  className="fa fa-close"
+                <Icon
+                  type="close"
                   onClick={this.closeLoveIcon.bind(this)}
+                  size={14}
                 />
                 {/*
                         <img
@@ -425,7 +426,7 @@ class Main extends React.Component {
                   <br />
                   Star us on GitHub,
                   <br />
-                  To make our <i className={'fa fa-heart'} /> go wooooo!
+                  To make our <Icon type="love" size={14} /> go wooooo!
                 </li>
                 <li className={'dropdown-item'}>
                   <a
@@ -441,7 +442,7 @@ class Main extends React.Component {
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <i className="fa fa-star" />
+                      <Icon type="star" size={14} />
                       &nbsp; Star
                     </div>
                   </a>
@@ -472,7 +473,7 @@ class Main extends React.Component {
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <i className="fa fa-twitter" />
+                      <Icon type="twitter" size={14} />
                       &nbsp; Tweet
                     </div>
                   </a>
@@ -520,7 +521,7 @@ class Main extends React.Component {
               to={appPrefix + path}
             >
               <span className={styles.iconCenter} data-test={block}>
-                <Icon type={icon} />
+                <Icon type={icon} size={14} />
               </span>
               <p>{title}</p>
             </Link>
@@ -709,7 +710,7 @@ class Main extends React.Component {
                   aria-expanded="false"
                   aria-haspopup="true"
                 >
-                  <i className={styles.question + ' fa fa-question'} />
+                  <Icon type="question" className={styles.question} />
                 </div>
                 <ul
                   className={

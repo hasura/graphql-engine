@@ -393,10 +393,6 @@
     li {
       list-style-type: none;
       text-align: left;
-
-      i {
-        padding-right: 10px;
-      }
     }
   }
 }
@@ -484,11 +480,6 @@
           width: 20px;
           line-height: 30px;
           text-align: center;
-
-          svg {
-            width: 14px;
-            height: 14px;
-          }
         }
       }
 
@@ -503,10 +494,6 @@
         width: 20%;
         display: inline-block;
         float: right;
-
-        i {
-          font-size: 14px;
-        }
 
         a {
           margin: 0 0;
@@ -549,10 +536,7 @@
     .navSideBarActive {
       border-bottom: 4px solid #ffc627;
 
-      svg {
-        color: #ffc627;
-      }
-
+      svg,
       p {
         color: #ffc627;
       }
@@ -562,7 +546,7 @@
       // color: $navbar-inverse-link-hover-color;
       // background: #444;
       transition: color 0.5s;
-      pointer: cursor;
+      cursor: pointer;
     }
   }
 }
@@ -575,15 +559,6 @@
     li {
       p {
         display: none !important;
-      }
-
-      a {
-        .iconCenter {
-          i {
-            font-size: 20px;
-            margin-left: -20px;
-          }
-        }
       }
     }
   }
@@ -839,7 +814,7 @@
     padding: 5px;
     cursor: pointer;
 
-    i {
+    svg {
       color: #aaaaaa;
     }
   }
@@ -879,10 +854,6 @@
   .yellow_button {
     border-radius: 20px;
     margin-right: 20px;
-
-    i {
-      padding-top: 0px;
-    }
   }
 }
 
@@ -896,12 +867,6 @@
 
 .heart {
   display: inline-block;
-
-  i {
-    font-size: 20px;
-    // color: #fb5f5f;
-    color: #fff;
-  }
 }
 
 .borderBottom {
@@ -1320,12 +1285,6 @@
 }
 
 @media (max-width: 1500px) {
-  .iconCenter {
-    svg {
-      width: 18px;
-    }
-  }
-
   .helpSection {
     font-size: 12px;
   }
