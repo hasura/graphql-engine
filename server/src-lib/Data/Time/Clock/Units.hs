@@ -324,7 +324,7 @@ instance (KnownNat picosPerUnit, AsPicoseconds t) => Read (TimeUnit picosPerUnit
 instance (KnownNat picosPerUnit, AsPicoseconds t) => Fractional (TimeUnit picosPerUnit t) where
   TimeUnit a / TimeUnit b = TimeUnit . fromPicoseconds $
     toPicoseconds a * natNum @picosPerUnit `div` toPicoseconds b
-  fromRational a = TimeUnit . fromPicoseconds $ round (a * natNum @picosPerUnit)
+  fromRational a = TimeUnit . fromPicoseconds $ toFixedPico $ round (a * natNum @picosPerUnit)
 
 instance (KnownNat picosPerUnit, AsPicoseconds t) => Real (TimeUnit picosPerUnit t) where
   toRational (TimeUnit a) = toRational (toPicoseconds a) / natNum @picosPerUnit
