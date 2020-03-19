@@ -10,9 +10,9 @@ import {
   FaCloud,
   FaCog,
   FaQuestion,
+  FaCogs,
 } from 'react-icons/fa';
 
-import { theme } from '../../theme';
 import { StyledIcon } from './Icon';
 
 const iconReferenceMap = {
@@ -20,37 +20,26 @@ const iconReferenceMap = {
   info: FaInfoCircle,
   warning: FaExclamationTriangle,
   error: FaExclamationCircle,
-  graphiql: FaFlask,
+  graphiQL: FaFlask,
   database: FaDatabase,
   schema: FaPlug,
   event: FaCloud,
   settings: FaCog,
   question: FaQuestion,
   default: FaExclamationCircle,
+  action: FaCogs,
 };
-
-const iconWidth = 18;
-const iconHeight = 18;
 
 export const Icon = props => {
   const { type } = props;
-
-  const { icon } = theme;
-
-  const iconColor = icon[type] ? icon[type].color : icon.default.color;
 
   const CurrentActiveIcon = iconReferenceMap[type]
     ? iconReferenceMap[type]
     : iconReferenceMap.default;
 
-  return (
-    <StyledIcon
-      fontSize="icon"
-      color={iconColor}
-      width={iconWidth}
-      height={iconHeight}
-      as={CurrentActiveIcon}
-      {...props}
-    />
-  );
+  return <StyledIcon fontSize="icon" as={CurrentActiveIcon} {...props} />;
+};
+
+Icon.defaultProps = {
+  size: 18,
 };
