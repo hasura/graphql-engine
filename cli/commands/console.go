@@ -104,7 +104,8 @@ func (o *ConsoleOptions) Run() error {
 
 	// Setup console server
 	const basePath = "/pkg/templates/oss/files/"
-	templateProvider := oss.NewOSSProvider(basePath)
+	const templateFilename = "console.html"
+	templateProvider := oss.NewOSSProvider(basePath, templateFilename)
 	consoleTemplateVersion := templateProvider.GetConsoleTemplateVersion(o.EC.Version)
 	consoleAssetsVersion := templateProvider.GetConsoleAssetsVersion(o.EC.Version)
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)

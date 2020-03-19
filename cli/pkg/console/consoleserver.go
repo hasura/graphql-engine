@@ -124,15 +124,14 @@ func (c *ConsoleServer) Serve() {
 	c.Logger.Infof("console running at: %s", consoleURL)
 }
 
-func BuildConsoleRouter(templateProvider templates.Provider, assetsVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
+func BuildConsoleRouter(templateProvider templates.Provider, templateVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
-	if !templateProvider.DoAssetExist(templateProvider.BasePath() + assetsVersion + "/console.html") {
-		assetsVersion = "latest"
+	if !templateProvider.DoAssetExist(templateProvider.BasePath() + templateVersion + templateProvider.TemplateFilename()) {
+		templateVersion = "latest"
 	}
-
 	// Template console.html
-	templateRender, err := templateProvider.LoadTemplates(templateProvider.BasePath()+assetsVersion+"/", "console.html")
+	templateRender, err := templateProvider.LoadTemplates(templateProvider.BasePath()+templateVersion+"/", templateProvider.TemplateFilename())
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch template")
 	}
@@ -143,7 +142,7 @@ func BuildConsoleRouter(templateProvider templates.Provider, assetsVersion, stat
 		opts["cliStaticDir"] = staticDir
 	}
 	r.GET("/*action", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "console.html", &opts)
+		c.HTML(http.StatusOK, templateProvider.TemplateFilename(), &opts)
 	})
 
 	return r, nil

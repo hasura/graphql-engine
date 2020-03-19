@@ -9,6 +9,9 @@ type Provider interface {
 	// BasePath will return the basepath for the tempalate directory
 	BasePath() string
 
+	// This is the template filename eg: console.html, console2.html
+	TemplateFilename() string
+
 	// DoAssetExist returns true if an asset exists at pathk
 	DoAssetExist(path string) bool
 	LoadTemplates(path string, templateNames ...string) (multitemplate.Render, error)

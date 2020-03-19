@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/pkg/errors"
+
 	"github.com/gin-contrib/cors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/hasura/graphql-engine/cli/migrate/api"
+	_ "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,7 +28,7 @@ type APIServer struct {
 func NewAPIServer(address string, port string, ec *cli.ExecutionContext) (*APIServer, error) {
 	migrate, err := migrate.NewMigrate(ec, false)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error creating migrate instance")
 	}
 	router := gin.New()
 	// Setup API Router

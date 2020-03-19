@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"regexp"
 
+	"github.com/pkg/errors"
+
 	"github.com/gin-gonic/contrib/renders/multitemplate"
 	_ "github.com/hasura/graphql-engine/cli/pkg/templates/oss/packed"
 	"github.com/hasura/graphql-engine/cli/version"
@@ -20,17 +22,23 @@ const (
 
 // Provider implemets the github.com/hasura/graphl-engine/cli/pkg/templates.Provider interface
 type Provider struct {
-	basePath string
+	basePath         string
+	templateFileName string
 }
 
-func NewOSSProvider(basePath string) *Provider {
+func NewOSSProvider(basePath, templateFilename string) *Provider {
 	return &Provider{
-		basePath: basePath,
+		basePath:         basePath,
+		templateFileName: templateFilename,
 	}
 }
 
 func (p *Provider) BasePath() string {
 	return p.basePath
+}
+
+func (p *Provider) TemplateFilename() string {
+	return p.templateFileName
 }
 
 // DoAssetExist returns true if an asset exists at pathk
@@ -45,16 +53,16 @@ func (p *Provider) LoadTemplates(path string, templateNames ...string) (multitem
 	for _, templateName := range templateNames {
 		templateFile, err := pkger.Open(path + templateName)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "error opening file "+path+templateName)
 		}
 		templateBytes, err := ioutil.ReadAll(templateFile)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "error reading from file "+path+templateName)
 		}
 
 		template, err := template.New(templateName).Parse(string(templateBytes))
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "error creating template"+path+templateName)
 		}
 		templateFile.Close()
 
