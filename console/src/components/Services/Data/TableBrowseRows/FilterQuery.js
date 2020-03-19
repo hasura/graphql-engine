@@ -4,28 +4,28 @@ dispatch actions using a given function,
 but don't listen to state.
 derive everything through viewtable as much as possible.
 */
-import React, {Component} from "react";
-import PropTypes from "prop-types";
-import {createHistory} from "history";
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { createHistory } from 'history';
 
-import {Operators} from "../constants";
+import { Operators } from '../constants';
 import {
   setFilterCol,
   setFilterOp,
   setFilterVal,
   addFilter,
-  removeFilter
-} from "./FilterActions.js";
+  removeFilter,
+} from './FilterActions.js';
 import {
   setOrderCol,
   setOrderType,
   addOrder,
-  removeOrder
-} from "./FilterActions.js";
-import {setDefaultQuery, runQuery, setOffset} from "./FilterActions";
-import Button from "../../../Common/Button/Button";
-import ReloadEnumValuesButton from "../Common/ReusableComponents/ReloadEnumValuesButton";
-import styles from "../../../Common/FilterQuery/FilterQuery.scss";
+  removeOrder,
+} from './FilterActions.js';
+import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
+import Button from '../../../Common/Button/Button';
+import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
+import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
 const history = createHistory();
 
@@ -48,10 +48,10 @@ const renderCols = (
       onChange={onChange}
       value={colName.trim()}
       data-test={
-        usage === "sort" ? `sort-column-${key}` : `filter-column-${key}`
+        usage === 'sort' ? `sort-column-${key}` : `filter-column-${key}`
       }
     >
-      {colName.trim() === "" ? (
+      {colName.trim() === '' ? (
         <option disabled value="">
           -- column --
         </option>
@@ -72,7 +72,7 @@ const renderOps = (opName, onChange, key) => (
     value={opName.trim()}
     data-test={`filter-op-${key}`}
   >
-    {opName.trim() === "" ? (
+    {opName.trim() === '' ? (
       <option disabled value="">
         -- op --
       </option>
@@ -92,7 +92,7 @@ const getDefaultValue = (possibleValue, opName) => {
   }
 
   const operator = Operators.find(op => op.value === opName);
-  return operator && operator.defaultValue ? operator.defaultValue : "";
+  return operator && operator.defaultValue ? operator.defaultValue : '';
 };
 
 const renderWheres = (whereAnd, tableSchema, dispatch) => {
@@ -121,7 +121,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-4">
-          {renderCols(colName, tableSchema, dSetFilterCol, "filter", i, [])}
+          {renderCols(colName, tableSchema, dSetFilterCol, 'filter', i, [])}
         </div>
         <div className="col-xs-3">{renderOps(opName, dSetFilterOp, i)}</div>
         <div className="col-xs-4">
@@ -173,14 +173,14 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
             c.column,
             tableSchema,
             dSetOrderCol,
-            "sort",
+            'sort',
             i,
             currentOrderBy
           )}
         </div>
         <div className="col-xs-5">
           <select
-            value={c.column ? c.type : ""}
+            value={c.column ? c.type : ''}
             className="form-control"
             onChange={e => {
               dispatch(setOrderType(e.target.value, i));
@@ -209,44 +209,44 @@ class FilterQuery extends Component {
     }
 
     let urlFilters = [];
-    if (typeof this.props.urlQuery.filter === "string") {
+    if (typeof this.props.urlQuery.filter === 'string') {
       urlFilters = [this.props.urlQuery.filter];
     } else if (Array.isArray(this.props.urlQuery.filter)) {
       urlFilters = this.props.urlQuery.filter;
     }
     const where = {
       $and: urlFilters.map(filter => {
-        const parts = filter.split(";");
+        const parts = filter.split(';');
         const col = parts[0];
         const op = parts[1];
         const value = parts[2];
-        return {[col]: {[op]: value}};
-      })
+        return { [col]: { [op]: value } };
+      }),
     };
 
     let urlSorts = [];
-    if (typeof this.props.urlQuery.sort === "string") {
+    if (typeof this.props.urlQuery.sort === 'string') {
       urlSorts = [this.props.urlQuery.sort];
     } else if (Array.isArray(this.props.urlQuery.sort)) {
       urlSorts = this.props.urlQuery.sort;
     }
 
     const order_by = urlSorts.map(sort => {
-      const parts = sort.split(";");
+      const parts = sort.split(';');
       const column = parts[0];
       const type = parts[1];
-      const nulls = "last";
-      return {column, type, nulls};
+      const nulls = 'last';
+      return { column, type, nulls };
     });
 
-    dispatch(setDefaultQuery({where, order_by}));
+    dispatch(setDefaultQuery({ where, order_by }));
     dispatch(runQuery(this.props.tableSchema));
   }
 
-  setParams(query = {filters: [], sorts: []}) {
+  setParams(query = { filters: [], sorts: [] }) {
     const searchParams = new URLSearchParams();
-    query.filters.forEach(filter => searchParams.append("filter", filter));
-    query.sorts.forEach(sort => searchParams.append("sort", sort));
+    query.filters.forEach(filter => searchParams.append('filter', filter));
+    query.sorts.forEach(sort => searchParams.append('sort', sort));
     return searchParams.toString();
   }
 
@@ -256,7 +256,7 @@ class FilterQuery extends Component {
       .map(order => `${order.column};${order.type}`);
     const filters = whereAnd
       .filter(
-        where => Object.keys(where).length === 1 && Object.keys(where)[0] !== ""
+        where => Object.keys(where).length === 1 && Object.keys(where)[0] !== ''
       )
       .map(where => {
         const col = Object.keys(where)[0];
@@ -264,15 +264,15 @@ class FilterQuery extends Component {
         const value = where[col][op];
         return `${col};${op};${value}`;
       });
-    const url = this.setParams({filters, sorts});
+    const url = this.setParams({ filters, sorts });
     history.push({
       pathname: history.getCurrentLocation().pathname,
-      search: `?${url}`
+      search: `?${url}`,
     });
   }
 
   render() {
-    const {dispatch, whereAnd, tableSchema, orderBy} = this.props; // eslint-disable-line no-unused-vars
+    const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
 
     return (
       <div className={styles.add_mar_top}>
@@ -330,7 +330,7 @@ FilterQuery.propTypes = {
   count: PropTypes.number,
   tableName: PropTypes.string,
   offset: PropTypes.number.isRequired,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
 export default FilterQuery;
