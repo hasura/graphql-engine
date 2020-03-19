@@ -1,3 +1,5 @@
+{-# LANGUAGE StrictData #-}  -- TODO project-wide, maybe. See #3941
+{-# LANGUAGE RecordWildCards #-}
 module Hasura.Events.Lib
   ( initEventEngineCtx
   , processEventQueue
@@ -8,16 +10,18 @@ module Hasura.Events.Lib
   ) where
 
 import           Control.Concurrent.Extended   (sleep)
-import           Control.Concurrent.Async      (async, waitAny)
+import           Control.Concurrent.Async      (wait, withAsync, async, link)
 import           Control.Concurrent.STM.TVar
-import           Control.Exception             (try)
-import           Control.Monad.STM             (STM, atomically, retry)
+import           Control.Exception.Lifted      (finally, mask_, try)
+import           Control.Monad.STM
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
 import           Data.Int                      (Int64)
+import           Data.String
 import           Data.Time.Clock
+import           Data.Word
 import           Hasura.Events.HTTP
 import           Hasura.HTTP
 import           Hasura.Prelude
@@ -26,7 +30,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Version         (HasVersion)
 import           Hasura.SQL.Types
 
-import qualified Control.Concurrent.STM.TQueue as TQ
 import qualified Data.ByteString               as BS
 import qualified Data.CaseInsensitive          as CI
 import qualified Data.HashMap.Strict           as M
@@ -69,6 +72,9 @@ data DeliveryInfo
 
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''DeliveryInfo)
 
+-- | Change data for a particular row
+--
+-- https://docs.hasura.io/1.0/graphql/manual/event-triggers/payload.html 
 data Event
   = Event
   { eId        :: EventId
@@ -91,6 +97,7 @@ instance ToJSON QualifiedTableStrict where
             , "name"  .= tn
            ]
 
+-- | See 'Event'.
 data EventPayload
   = EventPayload
   { epId           :: EventId
@@ -146,9 +153,7 @@ data Invocation
 
 data EventEngineCtx
   = EventEngineCtx
-  { _eeCtxEventQueue            :: TQ.TQueue Event
-  , _eeCtxEventThreads          :: TVar Int
-  , _eeCtxMaxEventThreads       :: Int
+  { _eeCtxEventThreadsCapacity  :: TVar Int
   , _eeCtxFetchInterval         :: DiffTime
   }
 
@@ -162,70 +167,114 @@ retryAfterHeader :: CI.CI T.Text
 retryAfterHeader = "Retry-After"
 
 initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
-initEventEngineCtx maxT fetchI = do
-  q <- TQ.newTQueue
-  c <- newTVar 0
-  return $ EventEngineCtx q c maxT fetchI
+initEventEngineCtx maxT _eeCtxFetchInterval = do
+  _eeCtxEventThreadsCapacity <- newTVar maxT
+  return $ EventEngineCtx{..}
 
+-- | Service events from our in-DB queue.
+--
+-- There are a few competing concerns and constraints here; we want to...
+--   - fetch events in batches for lower DB pressure
+--   - don't fetch more than N at a time (since that can mean: space leak, less
+--     effective scale out, possible double sends for events we've checked out 
+--     on exit (TODO clean shutdown procedure))
+--   - try not to cause webhook workers to stall waiting on DB fetch
+--   - limit webhook HTTP concurrency per HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE
 processEventQueue
   :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
-  -> IO SchemaCache -> EventEngineCtx -> IO ()
-processEventQueue logger logenv httpMgr pool getSchemaCache eectx = do
-  threads <- mapM async [fetchThread, consumeThread]
-  void $ waitAny threads
+  -> IO SchemaCache -> EventEngineCtx 
+  -> IO void
+processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} = do
+  events0 <- popEventsBatch
+  go events0 0 False
   where
-    fetchThread = pushEvents logger pool eectx
-    consumeThread = consumeEvents logger logenv httpMgr pool getSchemaCache eectx
+    fetchBatchSize = 100
+    popEventsBatch = do
+      let run = runExceptT . Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite)
+      run (fetchEvents fetchBatchSize) >>= \case
+          Left err -> do 
+            L.unLogger logger $ EventInternalErr err
+            return []
+          Right events -> 
+            return events
 
-pushEvents
-  :: L.Logger L.Hasura -> Q.PGPool -> EventEngineCtx -> IO ()
-pushEvents logger pool eectx  = forever $ do
-  let EventEngineCtx q _ _ fetchI = eectx
-  eventsOrError <- runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) fetchEvents
-  case eventsOrError of
-    Left err     -> L.unLogger logger $ EventInternalErr err
-    Right events -> atomically $ mapM_ (TQ.writeTQueue q) events
-  sleep fetchI
+    -- work on this batch of events while prefetching the next. Recurse after we've forked workers
+    -- for each in the batch, minding the requested pool size.
+    go :: [Event] -> Int -> Bool -> IO void
+    go events !fullFetchCount !alreadyWarned = do
+      -- process events ASAP until we've caught up; only then can we sleep
+      when (null events) $ sleep _eeCtxFetchInterval
 
-consumeEvents
-  :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager -> Q.PGPool -> IO SchemaCache
-  -> EventEngineCtx -> IO ()
-consumeEvents logger logenv httpMgr pool getSchemaCache eectx  = forever $ do
-  event <- atomically $ do
-    let EventEngineCtx q _ _ _ = eectx
-    TQ.readTQueue q
-  async $ runReaderT (processEvent logenv pool getSchemaCache event) (logger, httpMgr, eectx)
+      -- Prefetch next events payload while concurrently working through our current batch.
+      -- NOTE: we probably don't need to prefetch so early, but probably not
+      -- worth the effort for something more fine-tuned
+      eventsNext <- withAsync popEventsBatch $ \eventsNextA -> do
+        -- process approximately in order, minding HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE:
+        forM_ events $ \event -> 
+          mask_ $ do
+            atomically $ do  -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
+              capacity <- readTVar _eeCtxEventThreadsCapacity
+              check $ capacity > 0
+              writeTVar _eeCtxEventThreadsCapacity $! (capacity - 1) 
+            -- since there is some capacity in our worker threads, we can launch another:
+            let restoreCapacity = liftIO $ atomically $ 
+                  modifyTVar' _eeCtxEventThreadsCapacity (+ 1)
+            t <- async $ flip runReaderT (logger, httpMgr) $ 
+                    processEvent event `finally` restoreCapacity
+            link t
 
-processEvent
-  :: ( HasVersion
-     , MonadReader r m
-     , Has HTTP.Manager r
-     , Has (L.Logger L.Hasura) r
-     , Has EventEngineCtx r
-     , MonadIO m
-     )
-  => LogEnvHeaders -> Q.PGPool -> IO SchemaCache -> Event -> m ()
-processEvent logenv pool getSchemaCache e = do
-  cache <- liftIO getSchemaCache
-  let meti = getEventTriggerInfoFromEvent cache e
-  case meti of
-    Nothing -> do
-      logQErr $ err500 Unexpected "table or event-trigger not found in schema cache"
-    Just eti -> do
-      let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
-          retryConf = etiRetryConf eti
-          timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
-          responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
-          headerInfos = etiHeaders eti
-          etHeaders = map encodeHeader headerInfos
-          headers = addDefaultHeaders etHeaders
-          ep = createEventPayload retryConf e
-      res <- runExceptT $ tryWebhook headers responseTimeout ep webhook
-      let decodedHeaders = map (decodeHeader logenv headerInfos) headers
-      finally <- either
-        (processError pool e retryConf decodedHeaders ep)
-        (processSuccess pool e decodedHeaders ep) res
-      either logQErr return finally
+        -- return when next batch ready; some 'processEvent' threads may be running.
+        wait eventsNextA
+
+      let lenEvents = length events
+      if | lenEvents == fetchBatchSize -> do
+             -- If we've seen N fetches in a row from the DB come back full (i.e. only limited 
+             -- by our LIMIT clause), then we say we're clearly falling behind:
+             let clearlyBehind = fullFetchCount >= 3
+             unless alreadyWarned $
+               when clearlyBehind $
+                 L.unLogger logger $ L.UnstructuredLog L.LevelWarn $ fromString $
+                   "Events processor may not be keeping up with events generated in postgres, " <>
+                   "or we're working on a backlog of events. Consider increasing " <>
+                   "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+             go eventsNext (fullFetchCount+1) (alreadyWarned || clearlyBehind)
+
+         | otherwise -> do
+             when (lenEvents /= fetchBatchSize && alreadyWarned) $
+               -- emit as warning in case users are only logging warning severity and saw above
+               L.unLogger logger $ L.UnstructuredLog L.LevelWarn $ fromString $
+                 "It looks like the events processor is keeping up again."
+             go eventsNext 0 False
+
+    processEvent
+      :: ( HasVersion
+         , MonadReader r m
+         , Has HTTP.Manager r
+         , Has (L.Logger L.Hasura) r
+         , MonadIO m
+         )
+      => Event -> m ()
+    processEvent e = do
+      cache <- liftIO getSchemaCache
+      let meti = getEventTriggerInfoFromEvent cache e
+      case meti of
+        Nothing -> do
+          logQErr $ err500 Unexpected "table or event-trigger not found in schema cache"
+        Just eti -> do
+          let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
+              retryConf = etiRetryConf eti
+              timeoutSeconds = fromMaybe defaultTimeoutSeconds (rcTimeoutSec retryConf)
+              responseTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
+              headerInfos = etiHeaders eti
+              etHeaders = map encodeHeader headerInfos
+              headers = addDefaultHeaders etHeaders
+              ep = createEventPayload retryConf e
+          res <- runExceptT $ tryWebhook headers responseTimeout ep webhook
+          let decodedHeaders = map (decodeHeader logenv headerInfos) headers
+          either
+            (processError pool e retryConf decodedHeaders ep)
+            (processSuccess pool e decodedHeaders ep) res
+            >>= flip onLeft logQErr
 
 createEventPayload :: RetryConf -> Event ->  EventPayload
 createEventPayload retryConf e = EventPayload
@@ -383,10 +432,10 @@ logHTTPErr err = do
   logger :: L.Logger L.Hasura <- asks getter
   L.unLogger logger $ err
 
+-- These run concurrently on their respective EventPayloads
 tryWebhook
   :: ( Has (L.Logger L.Hasura) r
      , Has HTTP.Manager r
-     , Has EventEngineCtx r
      , MonadReader r m
      , MonadIO m
      , MonadError HTTPErr m
@@ -394,8 +443,7 @@ tryWebhook
   => [HTTP.Header] -> HTTP.ResponseTimeout -> EventPayload -> String
   -> m HTTPResp
 tryWebhook headers responseTimeout ep webhook = do
-  let createdAt = epCreatedAt ep
-      eventId =  epId ep
+  let context = ExtraContext (epCreatedAt ep) (epId ep)
   initReqE <- liftIO $ try $ HTTP.parseRequest webhook
   case initReqE of
     Left excp -> throwError $ HClient excp
@@ -406,22 +454,8 @@ tryWebhook headers responseTimeout ep webhook = do
                 , HTTP.requestBody = HTTP.RequestBodyLBS (encode ep)
                 , HTTP.responseTimeout = responseTimeout
                 }
-      eeCtx <- asks getter
-      -- wait for counter and then increment beforing making http
-      liftIO $ atomically $ do
-        let EventEngineCtx _ c maxT _ = eeCtx
-        countThreads <- readTVar c
-        if countThreads >= maxT
-          then retry
-          else modifyTVar' c (+1)
 
-      eitherResp <- runHTTP req  (Just (ExtraContext createdAt eventId))
-
-      -- decrement counter once http is done
-      liftIO $ atomically $ do
-        let EventEngineCtx _ c _ _ = eeCtx
-        modifyTVar' c (\v -> v - 1)
-
+      eitherResp <- runHTTP req (Just context)
       onLeft eitherResp throwError
 
 getEventTriggerInfoFromEvent :: SchemaCache -> Event -> Maybe EventTriggerInfo
@@ -429,8 +463,17 @@ getEventTriggerInfoFromEvent sc e = let table = eTable e
                                         tableInfo = M.lookup table $ scTables sc
                                     in M.lookup ( tmName $ eTrigger e) =<< (_tiEventTriggerInfoMap <$> tableInfo)
 
-fetchEvents :: Q.TxE QErr [Event]
-fetchEvents =
+---- DATABASE QUERIES ---------------------
+--
+--   The API for our in-database work queue:
+-------------------------------------------
+
+-- | Lock and return events not yet being processed or completed, up to some
+-- limit. Process events approximately in created_at order, but we make no
+-- ordering guarentees; events can and will race. Nevertheless we want to
+-- ensure newer change events don't starve older ones.
+fetchEvents :: Int -> Q.TxE QErr [Event]
+fetchEvents limitI =
   map uncurryEvent <$> Q.listQE defaultTxErrorHandler [Q.sql|
       UPDATE hdb_catalog.event_log
       SET locked = 't'
@@ -439,10 +482,11 @@ fetchEvents =
                     WHERE l.delivered = 'f' and l.error = 'f' and l.locked = 'f'
                           and (l.next_retry_at is NULL or l.next_retry_at <= now())
                           and l.archived = 'f'
-                    FOR UPDATE SKIP LOCKED
-                    LIMIT 100 )
+                    ORDER BY created_at
+                    LIMIT $1
+                    FOR UPDATE SKIP LOCKED )
       RETURNING id, schema_name, table_name, trigger_name, payload::json, tries, created_at
-      |] () True
+      |] (Identity limit) True
   where uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) =
           Event
           { eId        = id'
@@ -452,6 +496,7 @@ fetchEvents =
           , eTries     = tries
           , eCreatedAt = created
           }
+        limit = fromIntegral limitI :: Word64
 
 insertInvocation :: Invocation -> Q.TxE QErr ()
 insertInvocation invo = do

@@ -2,6 +2,8 @@
    :description: Manage subscriptions with Hasura
    :keywords: hasura, docs, subscription
 
+.. _subscriptions:
+
 Subscriptions
 =============
 
@@ -17,7 +19,7 @@ A GraphQL subscription is essentially a query where the client receives an updat
 changes upstream.
 
 Subscriptions are supported for all kinds of queries. All the concepts of
-:doc:`queries <../queries/index>` hold true for subscriptions as well.
+:ref:`queries <queries>` hold true for subscriptions as well.
 
 Execution
 ---------
@@ -28,7 +30,7 @@ latest result of the query being made and not necessarily all the individual eve
 By default updates are delivered to clients every **1 sec**. This interval can be configured via the
 ``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`` env var or the
 ``--live-queries-multiplexed-refetch-interval`` flag. See the
-:doc:`server flag reference <../deployment/graphql-engine-flags/reference>` for info on setting the flag/env var.
+:ref:`server flag reference <server_flag_reference>` for info on setting the flag/env var.
 
 You can read more about the implementation of subscriptions in the `architecture doc <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`_.
 
@@ -105,7 +107,7 @@ It uses the provided CORS configuration (as per :ref:`configure-cors`).
    (because of potential security issues). To override the behaviour, you can
    use the flag ``--ws-read-cookie`` or the environment variable
    ``HASURA_GRAPHQL_WS_READ_COOKIE``. See
-   :doc:`../deployment/graphql-engine-flags/reference` for the setting.
+   :ref:`server_flag_reference` for the setting.
 
 .. toctree::
   :maxdepth: 1

@@ -2,6 +2,8 @@
    :description: Hasura GraphQL API queries and subscriptions API reference
    :keywords: hasura, docs, GraphQL API, API reference, query, subscription
 
+.. _graphql_api_query:
+
 API Reference - Query / Subscription
 ====================================
 
@@ -65,7 +67,7 @@ Query / subscription syntax
 
 .. note::
 
-    For more examples and details of usage, please see :doc:`this <../../queries/index>`.
+    For more examples and details of usage, please see :ref:`this <queries>`.
 
 Syntax definitions
 ------------------

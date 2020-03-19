@@ -2,6 +2,8 @@
    :description: Sort query results in Hasura
    :keywords: hasura, docs, query, sort
 
+.. _sort_query_results:
+
 Sort query results
 ==================
 

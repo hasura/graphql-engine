@@ -2,6 +2,8 @@
    :description: Update Hasura GraphQL engine with Kubernetes deployment
    :keywords: hasura, docs, deployment, kubernetes, update
 
+.. _kubernetes_update:
+
 Updating Hasura GraphQL engine running on Kubernetes
 ====================================================
 
@@ -58,7 +60,7 @@ Step 3: Rollout the change
 .. note::
 
   If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue version
-  as described in :doc:`../downgrading`
+  as described in :ref:`downgrade_hge`
 
 
 
