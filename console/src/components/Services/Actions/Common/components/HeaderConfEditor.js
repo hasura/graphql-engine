@@ -39,6 +39,7 @@ const HandlerEditor = ({
           <input
             type="checkbox"
             checked={forwardClientHeaders}
+            readOnly
             className={`${styles.add_mar_right_small}`}
           />
           Forward client headers to webhook
