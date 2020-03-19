@@ -33,7 +33,7 @@ data. One thing to note is that all the Postgres resources the metadata refers
 to should already exist when the import happens, otherwise Hasura will throw an
 error. 
 
-To understand the format of the ``metadata.json`` file, refer to :ref:`metadata_file_format`.
+To understand the format of the ``hasura_metadata.json`` file, refer to :ref:`metadata_file_format`.
 
 For more details on how to import and export metadata, refer to :ref:`manage_hasura_metadata`.
 
