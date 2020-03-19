@@ -1,8 +1,8 @@
 # CLI Migrations
 
-This docker image provides a method to run migrations at docker entrypoint.
+This docker image provides a method to run migrations and metadata at docker entrypoint.
 A temporary server is booted, with the migrations API allowed, securely through localhost.
-Once migrations have been applied, the server will reboot in a secure mode for inbound graphql usage.
+Once migrations and metadata have been applied, the server will reboot in a secure mode for inbound graphql usage.
 
 See [./docker-entrypoint.sh](docker-entrypoint.sh)
 
@@ -14,6 +14,7 @@ See [./docker-entrypoint.sh](docker-entrypoint.sh)
       - [Deploy](#deploy)
   - [Configuration](#configuration)
     - [Migrations Directory (Optional)](#migrations-directory-optional)
+    - [Metadata Directory (Optional)](#metadata-directory-optional)
     - [Database (One of required)](#database-one-of-them-required)
     - [GraphQL Server (Optional)](#graphql-server-optional)
 
