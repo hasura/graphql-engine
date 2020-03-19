@@ -37,7 +37,9 @@ const getInconsistentObjectsQuery = {
 
 const reloadCacheQuery = {
   type: 'reload_metadata',
-  args: {},
+  args: {
+    reload_remote_schemas: true,
+  },
 };
 
 const reloadRemoteSchemaCacheQuery = remoteSchemaName => {
