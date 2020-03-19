@@ -136,7 +136,7 @@ build_and_push_cli_migrations_image_v2() {
 }
 
 # build and push latest container for auto-migrations
-push_latest_cli_migrations_image() {
+push_latest_cli_migrations_image()_v1 {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
     LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations"
 
@@ -207,7 +207,7 @@ fi
 deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
-    build_and_push_cli_migrations_image
+    build_and_push_cli_migrations_image_v1
     build_and_push_cli_migrations_image_v2
     deploy_cli_ext
 
@@ -215,7 +215,7 @@ if [[ ! -z "$CIRCLE_TAG" ]]; then
     if [ $IS_STABLE_RELEASE = true ]; then
         deploy_server_latest
         push_server_binary
-        push_latest_cli_migrations_image
+        push_latest_cli_migrations_image_v1
         push_latest_cli_migrations_image_v2
         send_pr_to_repo graphql-engine-heroku
         deploy_do_manifests
