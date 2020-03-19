@@ -7,7 +7,7 @@ OUTPUT_DIR := _output
 # compile assets
 .PHONY: assets
 assets:
-	pkger -o pkg/templates/oss/packed -include /pkg/templates/oss/files/
+	pkger -o pkg/console/templates/packed -include /pkg/console/templates/gohtml/
 
 HAS_GOX := $(shell command -v gox;)
 HAS_BINDATA := $(shell command -v go-bindata;)

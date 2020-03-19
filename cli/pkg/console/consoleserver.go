@@ -10,7 +10,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/pkg/templates"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/skratchdot/open-golang/open"
@@ -31,7 +30,7 @@ type ConsoleServer struct {
 	Browser         string
 
 	EC               *cli.ExecutionContext
-	TemplateProvider templates.Provider
+	TemplateProvider TemplateProvider
 	Router           *gin.Engine
 }
 
@@ -44,7 +43,7 @@ type NewConsoleServerOpts struct {
 	StaticDir       string
 	Browser         string
 
-	TemplateProvider templates.Provider
+	TemplateProvider TemplateProvider
 	EC               *cli.ExecutionContext
 	Router           *gin.Engine
 }
@@ -69,8 +68,8 @@ func (c *ConsoleServer) GetHTTPServer() (*http.Server, error) {
 	// Switch to "release" mode in production.
 	gin.SetMode(gin.ReleaseMode)
 
-	consoleTemplateVersion := c.TemplateProvider.GetConsoleTemplateVersion(c.EC.Version)
-	consoleAssetsVersion := c.TemplateProvider.GetConsoleAssetsVersion(c.EC.Version)
+	consoleTemplateVersion := c.TemplateProvider.GetTemplateVersion(c.EC.Version)
+	consoleAssetsVersion := c.TemplateProvider.GetAssetsVersion(c.EC.Version)
 
 	c.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
@@ -124,13 +123,13 @@ func (c *ConsoleServer) Serve() {
 	c.Logger.Infof("console running at: %s", consoleURL)
 }
 
-func BuildConsoleRouter(templateProvider templates.Provider, templateVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
+func BuildConsoleRouter(templateProvider TemplateProvider, templateVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
-	if !templateProvider.DoAssetExist(templateProvider.BasePath() + templateVersion + templateProvider.TemplateFilename()) {
+	if !templateProvider.DoTemplateExist(templateProvider.BasePath() + templateVersion + templateProvider.TemplateFilename()) {
 		templateVersion = "latest"
 	}
-	// Template console.html
+	// Template console.gohtml
 	templateRender, err := templateProvider.LoadTemplates(templateProvider.BasePath()+templateVersion+"/", templateProvider.TemplateFilename())
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot fetch template")

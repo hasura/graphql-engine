@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/pkg/console"
-	"github.com/hasura/graphql-engine/cli/pkg/templates/oss"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -103,11 +102,11 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	// Setup console server
-	const basePath = "/pkg/templates/oss/files/"
-	const templateFilename = "console.html"
-	templateProvider := oss.NewOSSProvider(basePath, templateFilename)
-	consoleTemplateVersion := templateProvider.GetConsoleTemplateVersion(o.EC.Version)
-	consoleAssetsVersion := templateProvider.GetConsoleAssetsVersion(o.EC.Version)
+	const basePath = "/pkg/console/templates/gohtml/"
+	const templateFilename = "console.gohtml"
+	templateProvider := console.NewDefaultTemplateProvider(basePath, templateFilename)
+	consoleTemplateVersion := templateProvider.GetTemplateVersion(o.EC.Version)
+	consoleAssetsVersion := templateProvider.GetAssetsVersion(o.EC.Version)
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
 	adminSecretHeader := migrate.GetAdminSecretHeaderName(o.EC.Version)

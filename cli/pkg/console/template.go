@@ -1,4 +1,4 @@
-package oss
+package console
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/gin-gonic/contrib/renders/multitemplate"
-	_ "github.com/hasura/graphql-engine/cli/pkg/templates/oss/packed"
+	_ "github.com/hasura/graphql-engine/cli/pkg/console/templates/packed"
 	"github.com/hasura/graphql-engine/cli/version"
 	"github.com/markbates/pkger"
 )
@@ -20,34 +20,59 @@ const (
 	versioned         = "versioned"
 )
 
-// Provider implemets the github.com/hasura/graphl-engine/cli/pkg/templates.Provider interface
-type Provider struct {
+type TemplateProvider interface {
+	// BasePath will return the basepath for the tempalate directory
+	BasePath() string
+
+	// This is the template filename eg: console.html, console2.html
+	TemplateFilename() string
+
+	// DoTemplateExist returns true if an asset exists at pathk
+	DoTemplateExist(path string) bool
+	LoadTemplates(path string, templateNames ...string) (multitemplate.Render, error)
+
+	// GetTemplateVersion returns the template version tv required to render
+	// the console html.
+	GetTemplateVersion(v *version.Version) string
+	// GetAssetsVersion returns the assets version av to be used in the
+	// console template. This function is supposed to return the following:
+	// > input           -> output
+	// > dev-build       -> versioned/dev-build
+	// > v1.0.0-beta.01  -> beta/v1.0
+	// > v1.0.0-alpha.01 -> alpha/v1.0
+	// > v1.2.1-rc.03    -> rc/v1.2
+	// > v1.1.0          -> stable/v1.1
+	GetAssetsVersion(v *version.Version) string
+}
+
+// DefaultTemplateProvider implemets the github.com/hasura/graphl-engine/cli/pkg/templates.DefaultTemplateProvider interface
+type DefaultTemplateProvider struct {
 	basePath         string
 	templateFileName string
 }
 
-func NewOSSProvider(basePath, templateFilename string) *Provider {
-	return &Provider{
+func NewDefaultTemplateProvider(basePath, templateFilename string) *DefaultTemplateProvider {
+	return &DefaultTemplateProvider{
 		basePath:         basePath,
 		templateFileName: templateFilename,
 	}
 }
 
-func (p *Provider) BasePath() string {
+func (p *DefaultTemplateProvider) BasePath() string {
 	return p.basePath
 }
 
-func (p *Provider) TemplateFilename() string {
+func (p *DefaultTemplateProvider) TemplateFilename() string {
 	return p.templateFileName
 }
 
-// DoAssetExist returns true if an asset exists at pathk
-func (p *Provider) DoAssetExist(path string) bool {
+// DoTemplateExist returns true if an asset exists at pathk
+func (p *DefaultTemplateProvider) DoTemplateExist(path string) bool {
 	_, err := pkger.Stat(path)
 	return err == nil
 }
 
-func (p *Provider) LoadTemplates(path string, templateNames ...string) (multitemplate.Render, error) {
+func (p *DefaultTemplateProvider) LoadTemplates(path string, templateNames ...string) (multitemplate.Render, error) {
 	r := multitemplate.New()
 
 	for _, templateName := range templateNames {
@@ -72,9 +97,9 @@ func (p *Provider) LoadTemplates(path string, templateNames ...string) (multitem
 	return r, nil
 }
 
-// GetConsoleTemplateVersion returns the template version tv required to render
+// GetTemplateVersion returns the template version tv required to render
 // the console html.
-func (p *Provider) GetConsoleTemplateVersion(v *version.Version) string {
+func (p *DefaultTemplateProvider) GetTemplateVersion(v *version.Version) string {
 	// pre-release builds
 	if v.Server == "" {
 		return preReleaseVersion
@@ -89,7 +114,7 @@ func (p *Provider) GetConsoleTemplateVersion(v *version.Version) string {
 	return unversioned
 }
 
-// GetConsoleAssetsVersion returns the assets version av to be used in the
+// GetAssetsVersion returns the assets version av to be used in the
 // console template. This function is supposed to return the following:
 // > input           -> output
 // > dev-build       -> versioned/dev-build
@@ -97,7 +122,7 @@ func (p *Provider) GetConsoleTemplateVersion(v *version.Version) string {
 // > v1.0.0-alpha.01 -> alpha/v1.0
 // > v1.2.1-rc.03    -> rc/v1.2
 // > v1.1.0          -> stable/v1.1
-func (p *Provider) GetConsoleAssetsVersion(v *version.Version) string {
+func (p *DefaultTemplateProvider) GetAssetsVersion(v *version.Version) string {
 	// server has a version
 	if v.Server != "" {
 		// version is semver
