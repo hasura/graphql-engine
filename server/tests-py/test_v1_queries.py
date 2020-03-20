@@ -629,6 +629,10 @@ class TestTrackTables:
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table.yaml')
         hge_ctx.may_skip_test_teardown = True
 
+    def test_track_untrack_matview(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_untrack_matview.yaml')
+        hge_ctx.may_skip_test_teardown = True
+
     def test_track_untrack_table_with_deps(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table_deps.yaml')
         hge_ctx.may_skip_test_teardown = True
