@@ -72,7 +72,6 @@ import           Prelude
 import           Control.Arrow   (first)
 import           Data.Aeson
 import           Data.Aeson.Internal.Time (fromPico, toPico)
-import           Data.Fixed
 import           Data.Hashable
 import           Data.Proxy
 import           Data.Time.Clock
@@ -276,26 +275,24 @@ deriving instance Show (TimeUnit picosPerUnit 'Calendar)
 deriving instance Eq (TimeUnit picosPerUnit 'Absolute)
 deriving instance Eq (TimeUnit picosPerUnit 'Calendar)
 
-deriving instance Integral Pico
-
 type SecondsP n = n GHC.TypeLits.* 1000000000000
 
 natNum :: forall n a. (KnownNat n, Num a) => a
 natNum = fromInteger $ natVal (Proxy @n)
 
 class AsPicoseconds t where
-    toPicoseconds :: Duration t -> Pico
-    fromPicoseconds :: Pico -> Duration t
+    toPicoseconds :: Duration t -> Integer
+    fromPicoseconds :: Integer -> Duration t
     toFrac :: Duration t -> Double
 
 instance AsPicoseconds 'Absolute where
-    toPicoseconds = toPico . diffTimeToPicoseconds
-    fromPicoseconds = picosecondsToDiffTime . fromPico
+    toPicoseconds = diffTimeToPicoseconds
+    fromPicoseconds = picosecondsToDiffTime
     toFrac = realToFrac
 
 instance AsPicoseconds 'Calendar where
-    toPicoseconds = nominalDiffTimeToSeconds
-    fromPicoseconds = secondsToNominalDiffTime
+    toPicoseconds = fromPico . nominalDiffTimeToSeconds
+    fromPicoseconds = secondsToNominalDiffTime . toPico
     toFrac = realToFrac
 
 instance (KnownNat picosPerUnit, AsPicoseconds t) => Eq (TimeUnit picosPerUnit t) where
@@ -307,12 +304,11 @@ instance (KnownNat picosPerUnit, AsPicoseconds t) => Ord (TimeUnit picosPerUnit 
 instance (KnownNat picosPerUnit, AsPicoseconds t) => Num (TimeUnit picosPerUnit t) where
   TimeUnit a + TimeUnit b = TimeUnit $ fromPicoseconds $ (toPicoseconds a) + (toPicoseconds b)
   TimeUnit a - TimeUnit b = TimeUnit $ fromPicoseconds $ (toPicoseconds a) - (toPicoseconds b)
-  TimeUnit a * TimeUnit b = TimeUnit . fromPicoseconds $
-    toPicoseconds a * toPicoseconds b `div` natNum @picosPerUnit
+  TimeUnit a * TimeUnit b =  TimeUnit $ fromPicoseconds $ (toPicoseconds a) * (toPicoseconds b) `div` natNum @picosPerUnit
   negate (TimeUnit a) = TimeUnit $ fromPicoseconds $ negate $ (toPicoseconds a)
   abs (TimeUnit a) = TimeUnit $ fromPicoseconds $ abs $ (toPicoseconds a)
   signum (TimeUnit a) = TimeUnit $ fromPicoseconds $ signum $ (toPicoseconds a)
-  fromInteger a = TimeUnit . fromPicoseconds $ toPico $ a * natNum @picosPerUnit
+  fromInteger a = TimeUnit . fromPicoseconds . fromIntegral $ a * natNum @picosPerUnit
 
 instance (KnownNat picosPerUnit, AsPicoseconds t) => Read (TimeUnit picosPerUnit t) where
   readsPrec _ = map (first fromRational) . readFloat
@@ -320,7 +316,7 @@ instance (KnownNat picosPerUnit, AsPicoseconds t) => Read (TimeUnit picosPerUnit
 instance (KnownNat picosPerUnit, AsPicoseconds t) => Fractional (TimeUnit picosPerUnit t) where
   TimeUnit a / TimeUnit b = TimeUnit . fromPicoseconds $
     toPicoseconds a * natNum @picosPerUnit `div` toPicoseconds b
-  fromRational a = TimeUnit . fromPicoseconds $ toFixedPico $ round (a * natNum @picosPerUnit)
+  fromRational a = TimeUnit . fromPicoseconds $ round (a * natNum @picosPerUnit)
 
 instance (KnownNat picosPerUnit, AsPicoseconds t) => Real (TimeUnit picosPerUnit t) where
   toRational (TimeUnit a) = toRational (toPicoseconds a) / natNum @picosPerUnit
@@ -352,8 +348,3 @@ instance AsDuration NominalDiffTime where
 -- | Safe conversion between duration units.
 fromUnits :: (AsDuration x, AsDuration y)=> x -> y
 fromUnits = fromDiffTime . toDiffTime
-
--- | The input to this function is the number of picos in Integer
--- and then converting it into seconds.
-toFixedPico :: Integer -> Pico
-toFixedPico = (/1000000000000) . fromIntegral
