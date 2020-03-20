@@ -187,7 +187,7 @@ onMessageHandler authMode serverEnv wsTxData wsConn rawMessage = do
               E.GExPHasura resolvedOp -> do
                 (queryType, tx, genSql) <- case resolvedOp of
                   E.ExOpQuery queryTx genSql -> pure (Telem.Query, queryTx, genSql)
-                  E.ExOpMutation mutationTx -> pure (Telem.Mutation, mutationTx, Nothing)
+                  E.ExOpMutation _ mutationTx -> pure (Telem.Mutation, mutationTx, Nothing)
                   E.ExOpSubs _ -> throw400 NotSupported "Subscriptions are not allowed in graphql transactions"
                 logger $ QueryLog query genSql reqId
                 res <- runLazyTxWithConn pgConn tx
