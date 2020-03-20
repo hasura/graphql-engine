@@ -52,6 +52,7 @@ validateCustomTypeDefinitions tableCache customTypes = do
       , $$(G.litName "Float")
       , $$(G.litName "String")
       , $$(G.litName "Boolean") ]
+      , $$(G.litName "ID") ]
 
     validateEnum
       :: (MonadValidate [CustomTypeValidationError] m)

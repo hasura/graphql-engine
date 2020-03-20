@@ -82,3 +82,6 @@
 - `HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL` changes semantics slightly: we only sleep for the interval
   when there were previously no events to process. Potential space leak fixed. (#3839)
 - auto-include `__typename` field in custom types' objects (fix #4063)
+- server: validate action webhook response to conform to action output type (fix #3977)
+- server: preserve cookie headers from sync action webhook (close #4021)
+- server: add 'ID' to default scalars in custom types (fix #4061)

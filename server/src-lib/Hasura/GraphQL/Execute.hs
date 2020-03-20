@@ -23,13 +23,13 @@ import qualified Data.Aeson                             as J
 import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
+import qualified Data.Sequence.NonEmpty                 as NESeq
 import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 import qualified Network.Wreq                           as Wreq
-import qualified Data.Sequence.NonEmpty                 as NESeq
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Logging
@@ -40,16 +40,17 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
 import           Hasura.Server.Context
-import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward)
+import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
+                                                         mkSetCookieHeaders)
 import           Hasura.Server.Version                  (HasVersion)
 
 import qualified Hasura.GraphQL.Context                 as C
+import qualified Hasura.GraphQL.Execute.Inline          as EI
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
+import qualified Hasura.GraphQL.Execute.Mutation        as EM
 import qualified Hasura.GraphQL.Execute.Plan            as EP
 import qualified Hasura.GraphQL.Execute.Prepare         as EPr
 import qualified Hasura.GraphQL.Execute.Query           as EQ
-import qualified Hasura.GraphQL.Execute.Mutation        as EM
-import qualified Hasura.GraphQL.Execute.Inline          as EI
 import qualified Hasura.GraphQL.Parser.Schema           as PS
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
@@ -144,6 +145,17 @@ data ResolvedExecutionPlan
   | SubscriptionExecutionPlan (EPr.ExecutionPlan EL.LiveQueryPlan Void Void)
   -- ^ live query execution; remote schemata and introspection not supported
 
+-- An execution operation, in case of
+-- queries and mutations it is just a transaction
+-- to be executed
+-- data ExecOp
+--   = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
+--   | ExOpMutation !N.ResponseHeaders !LazyRespTx
+--   | ExOpSubs !EL.LiveQueryPlan
+
+-- The graphql query is resolved into an execution operation
+-- type ExecPlanResolved = GQExecPlan ExecOp
+
 getResolvedExecPlan
   :: forall m . (HasVersion, MonadError QErr m, MonadIO m)
   => PGExecCtx
@@ -212,8 +224,9 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
 
       -- forM partialExecPlan $ \(gCtx, rootSelSet) ->
       --   case rootSelSet of
-      --     VQ.RMutation selSet ->
-      --       ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
+      --     VQ.RMutation selSet -> do
+      --       (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
+      --       pure $ ExOpMutation respHeaders tx
       --     VQ.RQuery selSet -> do
       --       (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability selSet
       --       traverse_ (addPlanToCache . EP.RPQuery) plan
@@ -224,6 +237,112 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       --       return $ ExOpSubs lqOp
 
 {-
+-- Monad for resolving a hasura query/mutation
+type E m =
+  ReaderT ( UserInfo
+          , QueryCtxMap
+          , MutationCtxMap
+          , TypeMap
+          , FieldMap
+          , OrdByCtx
+          , InsCtxMap
+          , SQLGenCtx
+          ) (ExceptT QErr m)
+
+runE
+  :: (MonadError QErr m)
+  => GCtx
+  -> SQLGenCtx
+  -> UserInfo
+  -> E m a
+  -> m a
+runE ctx sqlGenCtx userInfo action = do
+  res <- runExceptT $ runReaderT action
+    (userInfo, queryCtxMap, mutationCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
+  either throwError return res
+  where
+    queryCtxMap = _gQueryCtxMap ctx
+    mutationCtxMap = _gMutationCtxMap ctx
+    typeMap = _gTypes ctx
+    fldMap = _gFields ctx
+    ordByCtx = _gOrdByCtx ctx
+    insCtxMap = _gInsCtxMap ctx
+
+getQueryOp
+  :: (MonadError QErr m)
+  => GCtx
+  -> SQLGenCtx
+  -> UserInfo
+  -> QueryReusability
+  -> VQ.SelSet
+  -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
+getQueryOp gCtx sqlGenCtx userInfo queryReusability fields =
+  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet queryReusability fields
+
+mutationRootName :: Text
+mutationRootName = "mutation_root"
+
+resolveMutSelSet
+  :: ( HasVersion
+     , MonadError QErr m
+     , MonadReader r m
+     , Has UserInfo r
+     , Has MutationCtxMap r
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     , Has InsCtxMap r
+     , Has HTTP.Manager r
+     , Has [N.Header] r
+     , MonadIO m
+     )
+  => VQ.SelSet
+  -> m (LazyRespTx, N.ResponseHeaders)
+resolveMutSelSet fields = do
+  aliasedTxs <- forM (toList fields) $ \fld -> do
+    fldRespTx <- case VQ._fName fld of
+      "__typename" -> return (return $ encJFromJValue mutationRootName, [])
+      _            -> evalReusabilityT $ GR.mutFldToTx fld
+    return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
+
+  -- combines all transactions into a single transaction
+  return (liftTx $ toSingleTx aliasedTxs, concatMap (snd . snd) aliasedTxs)
+  where
+    -- A list of aliased transactions for eg
+    -- [("f1", Tx r1), ("f2", Tx r2)]
+    -- are converted into a single transaction as follows
+    -- Tx {"f1": r1, "f2": r2}
+    -- toSingleTx :: [(Text, LazyRespTx)] -> LazyRespTx
+    toSingleTx aliasedTxs =
+      fmap encJFromAssocList $
+      forM aliasedTxs $ \(al, (tx, _)) -> (,) al <$> tx
+
+getMutOp
+  :: (HasVersion, MonadError QErr m, MonadIO m)
+  => GCtx
+  -> SQLGenCtx
+  -> UserInfo
+  -> HTTP.Manager
+  -> [N.Header]
+  -> VQ.SelSet
+  -> m (LazyRespTx, N.ResponseHeaders)
+getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
+  peelReaderT $ resolveMutSelSet selSet
+  where
+    peelReaderT action =
+      runReaderT action
+        ( userInfo, queryCtxMap, mutationCtxMap
+        , typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx
+        , manager, reqHeaders
+        )
+      where
+        queryCtxMap = _gQueryCtxMap ctx
+        mutationCtxMap = _gMutationCtxMap ctx
+        typeMap = _gTypes ctx
+        fldMap = _gFields ctx
+        ordByCtx = _gOrdByCtx ctx
+        insCtxMap = _gInsCtxMap ctx
+
 getSubsOpM
   :: ( MonadError QErr m
      , MonadIO m
@@ -285,9 +404,7 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
   L.unLogger logger $ QueryLog q Nothing reqId
   (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
-  let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
-      respHdrs  = Just $ mkRespHeaders cookieHdrs
-      !httpResp = HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) respHdrs
+  let !httpResp = HttpResponse (encJFromLBS $ resp ^. Wreq.responseBody) $ mkSetCookieHeaders resp
   return (time, httpResp)
 
   where
@@ -299,7 +416,3 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                      userInfoToList userInfo
-
-    getCookieHdr = fmap ("Set-Cookie",)
-
-    mkRespHeaders = map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v))

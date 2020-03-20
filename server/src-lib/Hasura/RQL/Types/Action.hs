@@ -13,8 +13,10 @@ module Hasura.RQL.Types.Action
   , ResolvedWebhook(..)
   , ResolvedActionDefinition
 
+  , ActionOutputFields
   , ActionInfo(..)
   , aiName
+  , aiOutputFields
   , aiDefinition
   , aiPermissions
   , aiComment
@@ -120,13 +122,15 @@ data ActionPermissionInfo
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionInfo)
 
 type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
+type ActionOutputFields = Map.HashMap G.Name G.GType
 
 data ActionInfo
   = ActionInfo
-  { _aiName        :: !ActionName
-  , _aiDefinition  :: !ResolvedActionDefinition
-  , _aiPermissions :: !ActionPermissionMap
-  , _aiComment     :: !(Maybe Text)
+  { _aiName         :: !ActionName
+  , _aiOutputFields :: !ActionOutputFields
+  , _aiDefinition   :: !ResolvedActionDefinition
+  , _aiPermissions  :: !ActionPermissionMap
+  , _aiComment      :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
 $(makeLenses ''ActionInfo)

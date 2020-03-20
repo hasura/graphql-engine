@@ -79,7 +79,7 @@ resolveAction
   :: (QErrM m, MonadIO m)
   => (NonObjectTypeMap, AnnotatedObjects)
   -> ActionDefinitionInput
-  -> m ResolvedActionDefinition
+  -> m (ResolvedActionDefinition, ActionOutputFields)
 resolveAction customTypes actionDefinition = do
   let responseType = unGraphQLType $ _adOutputType actionDefinition
       responseBaseType = G.getBaseType responseType
@@ -94,8 +94,10 @@ resolveAction customTypes actionDefinition = do
           <> showNamedTy argumentBaseType <>
           " should be a scalar/enum/input_object"
   -- Check if the response type is an object
-  getObjectTypeInfo responseBaseType
-  traverse resolveWebhook actionDefinition
+  annFields <- _aotAnnotatedFields <$> getObjectTypeInfo responseBaseType
+  let outputFields = Map.fromList $ map (unObjectFieldName *** fst) $ Map.toList annFields
+  resolvedDef <- traverse resolveWebhook actionDefinition
+  pure (resolvedDef, outputFields)
   where
     getNonObjectTypeInfo typeName = do
       let nonObjectTypeMap = unNonObjectTypeMap $ fst $ customTypes

@@ -28,7 +28,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (fmapL, userRoleHeader)
+import           Hasura.Server.Utils             (fmapL, getRequestHeader, userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 
 import qualified Control.Concurrent.Extended     as C
@@ -294,8 +294,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
 
     -- see if there is a x-hasura-role header, or else pick the default role
     getCurrentRole defaultRole =
-      let userRoleHeaderB = CS.cs userRoleHeader
-          mUserRole = snd <$> find (\h -> fst h == CI.mk userRoleHeaderB) headers
+      let mUserRole = getRequestHeader userRoleHeader headers
       in maybe defaultRole RoleName $ mUserRole >>= mkNonEmptyText . bsToTxt
 
     decodeJSON val = case J.fromJSON val of

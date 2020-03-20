@@ -257,7 +257,12 @@ def evts_webhook(request):
     web_server.join()
 
 @pytest.fixture(scope='module')
-def actions_webhook(hge_ctx):
+def actions_fixture(hge_ctx):
+    pg_version = hge_ctx.pg_version
+    if pg_version < 100000: # version less than 10.0
+        pytest.skip('Actions are not supported on Postgres version < 10')
+
+    # Start actions' webhook server
     webhook_httpd = ActionsWebhookServer(hge_ctx, server_address=('127.0.0.1', 5593))
     web_server = threading.Thread(target=webhook_httpd.serve_forever)
     web_server.start()

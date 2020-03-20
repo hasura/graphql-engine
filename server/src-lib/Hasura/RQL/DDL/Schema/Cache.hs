@@ -271,10 +271,10 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       --              addActionContext e = "in action " <> name <<> "; " <> e
       --          (| withRecordInconsistency (
       --             (| modifyErrA ( do
-      --                  resolvedDef <- bindErrorA -< resolveAction resolvedCustomTypes def
+      --                  (resolvedDef, outFields) <- bindErrorA -< resolveAction resolvedCustomTypes def
       --                  let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
       --                      permissionMap = mapFromL _apiRole permissionInfos
-      --                  returnA -< ActionInfo name resolvedDef permissionMap comment
+      --                  returnA -< ActionInfo name outFields resolvedDef permissionMap comment
       --                )
       --              |) addActionContext)
       --           |) metadataObj)
