@@ -6,7 +6,13 @@ module Hasura.GraphQL.Validate.Types
   , mkHsraObjFldInfo
   , ObjFieldMap
 
-  , ObjTyInfo(..)
+  -- Don't expose 'ObjTyInfo' constructor. Instead use 'mkObjTyInfo' or 'mkHsraObjTyInfo'
+  -- which will auto-insert the compulsory '__typename' field.
+  , ObjTyInfo
+  , _otiDesc
+  , _otiName
+  , _otiImplIFaces
+  , _otiFields
   , mkObjTyInfo
   , mkHsraObjTyInfo
 
@@ -29,6 +35,7 @@ module Hasura.GraphQL.Validate.Types
   , mkHsraInpTyInfo
 
   , ScalarTyInfo(..)
+  , fromScalarTyDef
   , mkHsraScalarTyInfo
 
   , DirectiveInfo(..)
@@ -184,7 +191,14 @@ type ParamMap = Map.HashMap G.Name InpValInfo
 data TypeLoc
   = TLHasuraType
   | TLRemoteType !RemoteSchemaName !RemoteSchemaInfo
+  | TLCustom
   deriving (Show, Eq, TH.Lift, Generic)
+
+$(J.deriveJSON
+  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 2
+                   , J.sumEncoding = J.TaggedObject "type" "detail"
+                   }
+  ''TypeLoc)
 
 instance Hashable TypeLoc
 
@@ -360,12 +374,14 @@ mkHsraInpTyInfo descM ty flds =
 data ScalarTyInfo
   = ScalarTyInfo
   { _stiDesc :: !(Maybe G.Description)
+  , _stiName :: !G.Name
   , _stiType :: !PGScalarType
   , _stiLoc  :: !TypeLoc
   } deriving (Show, Eq, TH.Lift)
 
 mkHsraScalarTyInfo :: PGScalarType -> ScalarTyInfo
-mkHsraScalarTyInfo ty = ScalarTyInfo Nothing ty TLHasuraType
+mkHsraScalarTyInfo ty =
+  ScalarTyInfo Nothing (G.Name $ pgColTyToScalar ty) ty TLHasuraType
 
 instance EquatableGType ScalarTyInfo where
   type EqProps ScalarTyInfo = PGScalarType
@@ -374,16 +390,17 @@ instance EquatableGType ScalarTyInfo where
 fromScalarTyDef
   :: G.ScalarTypeDefinition
   -> TypeLoc
-  -> Either Text ScalarTyInfo
-fromScalarTyDef (G.ScalarTypeDefinition descM n _) loc =
-  ScalarTyInfo descM <$> ty <*> pure loc
+  -> ScalarTyInfo
+fromScalarTyDef (G.ScalarTypeDefinition descM n _) =
+  ScalarTyInfo descM n ty
   where
     ty = case n of
-      "Int"     -> return PGInteger
-      "Float"   -> return PGFloat
-      "String"  -> return PGText
-      "Boolean" -> return PGBoolean
-      _         -> return $ textToPGScalarType $ G.unName n
+      "Int"     -> PGInteger
+      "Float"   -> PGFloat
+      "String"  -> PGText
+      "Boolean" -> PGBoolean
+      "ID"      -> PGText
+      _         -> textToPGScalarType $ G.unName n
 
 data TypeInfo
   = TIScalar !ScalarTyInfo
@@ -393,6 +410,12 @@ data TypeInfo
   | TIIFace !IFaceTyInfo
   | TIUnion !UnionTyInfo
   deriving (Show, Eq, TH.Lift)
+
+instance J.ToJSON TypeInfo where
+  toJSON _ = J.String "toJSON not implemented for TypeInfo"
+
+instance J.FromJSON TypeInfo where
+  parseJSON _ = fail "FromJSON not implemented for TypeInfo"
 
 data AsObjType
   = AOTObj ObjTyInfo
@@ -546,7 +569,7 @@ extrTyInfo tyMap tn = maybe
 extrIFaceTyInfo :: MonadError Text m => Map.HashMap G.NamedType TypeInfo -> G.NamedType -> m IFaceTyInfo
 extrIFaceTyInfo tyMap tn = case Map.lookup tn tyMap of
   Just (TIIFace i) -> return i
-  _ -> throwError $ "Could not find interface " <> showNamedTy tn
+  _                -> throwError $ "Could not find interface " <> showNamedTy tn
 
 extrObjTyInfoM :: TypeMap -> G.NamedType -> Maybe ObjTyInfo
 extrObjTyInfoM tyMap tn = case Map.lookup tn tyMap of
@@ -576,7 +599,7 @@ validateIsSubType tyMap subFldTy supFldTy = do
 isSubTypeBase :: (MonadError Text m) => TypeInfo -> TypeInfo -> m ()
 isSubTypeBase subTyInfo supTyInfo = case (subTyInfo,supTyInfo) of
   (TIObj obj, TIIFace iFace) -> unless (_ifName iFace `elem` _otiImplIFaces obj) notSubTyErr
-  _ -> unless (subTyInfo == supTyInfo) notSubTyErr
+  _                          -> unless (subTyInfo == supTyInfo) notSubTyErr
   where
     showTy = showNamedTy . getNamedTy
     notSubTyErr = throwError $ "Type " <> showTy subTyInfo <> " is not a sub type of " <> showTy supTyInfo
@@ -597,7 +620,7 @@ mkScalarTy =
 
 getNamedTy :: TypeInfo -> G.NamedType
 getNamedTy = \case
-  TIScalar t -> mkScalarTy $ _stiType t
+  TIScalar t -> G.NamedType $ _stiName t
   TIObj t -> _otiName t
   TIIFace i -> _ifName i
   TIEnum t -> _etiName t
@@ -608,19 +631,18 @@ mkTyInfoMap :: [TypeInfo] -> TypeMap
 mkTyInfoMap tyInfos =
   Map.fromList [(getNamedTy tyInfo, tyInfo) | tyInfo <- tyInfos]
 
-fromTyDef :: G.TypeDefinition -> TypeLoc -> Either Text TypeInfo
+fromTyDef :: G.TypeDefinition -> TypeLoc -> TypeInfo
 fromTyDef tyDef loc = case tyDef of
-  G.TypeDefinitionScalar t -> TIScalar <$> fromScalarTyDef t loc
-  G.TypeDefinitionObject t -> return $ TIObj $ fromObjTyDef t loc
-  G.TypeDefinitionInterface t ->
-    return $ TIIFace $ fromIFaceDef t loc
-  G.TypeDefinitionUnion t -> return $ TIUnion $ fromUnionTyDef t
-  G.TypeDefinitionEnum t -> return $ TIEnum $ fromEnumTyDef t loc
-  G.TypeDefinitionInputObject t -> return $ TIInpObj $ fromInpObjTyDef t loc
+  G.TypeDefinitionScalar t      -> TIScalar $ fromScalarTyDef t loc
+  G.TypeDefinitionObject t      -> TIObj $ fromObjTyDef t loc
+  G.TypeDefinitionInterface t   -> TIIFace $ fromIFaceDef t loc
+  G.TypeDefinitionUnion t       -> TIUnion $ fromUnionTyDef t
+  G.TypeDefinitionEnum t        -> TIEnum $ fromEnumTyDef t loc
+  G.TypeDefinitionInputObject t -> TIInpObj $ fromInpObjTyDef t loc
 
 fromSchemaDoc :: G.SchemaDocument -> TypeLoc -> Either Text TypeMap
 fromSchemaDoc (G.SchemaDocument tyDefs) loc = do
-  tyMap <- fmap mkTyInfoMap $ mapM (flip fromTyDef loc) tyDefs
+  let tyMap = mkTyInfoMap $ map (flip fromTyDef loc) tyDefs
   validateTypeMap tyMap
   return tyMap
 
@@ -633,9 +655,7 @@ validateTypeMap tyMap =  mapM_ validateTy $ Map.elems tyMap
     validateTy _           = return ()
 
 fromTyDefQ :: G.TypeDefinition -> TypeLoc -> TH.Q TH.Exp
-fromTyDefQ tyDef loc = case fromTyDef tyDef loc of
-  Left e  -> fail $ T.unpack e
-  Right t -> TH.lift t
+fromTyDefQ tyDef loc = TH.lift $ fromTyDef tyDef loc
 
 fromSchemaDocQ :: G.SchemaDocument -> TypeLoc -> TH.Q TH.Exp
 fromSchemaDocQ sd loc = case fromSchemaDoc sd loc of
@@ -807,7 +827,7 @@ instance (MonadReusability m) => MonadReusability (ReaderT r m) where
   markNotReusable = lift markNotReusable
 
 newtype ReusabilityT m a = ReusabilityT { unReusabilityT :: StateT QueryReusability m a }
-  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r)
+  deriving (Functor, Applicative, Monad, MonadError e, MonadReader r, MonadIO)
 
 instance (Monad m) => MonadReusability (ReusabilityT m) where
   recordVariableUse varName varType = ReusabilityT $

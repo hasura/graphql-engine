@@ -2,6 +2,8 @@
    :description: Secure Hasura GraphQL endpoint with Heroku deployment
    :keywords: hasura, docs, deployment, heroku, secure
 
+.. _heroku_secure:
+
 Securing the GraphQL endpoint (Heroku)
 ======================================
 
@@ -31,7 +33,7 @@ prompted for the admin secret key.
 .. note::
 
   The ``HASURA_GRAPHQL_ADMIN_SECRET`` should never be passed from the client to Hasura GraphQL engine as it would
-  give the client full admin rights to your Hasura instance. See :doc:`../../auth/index` for information on
+  give the client full admin rights to your Hasura instance. See :ref:`auth` for information on
   setting up authentication.
 
 

@@ -132,3 +132,6 @@ deleteMetadataObject objectId = case objectId of
     MTOPerm roleName permType -> withPermType permType \accessor ->
       tiRolePermInfoMap.ix roleName.permAccToLens accessor .~ Nothing
     MTOTrigger name -> tiEventTriggerInfoMap %~ M.delete name
+  MOCustomTypes                -> boCustomTypes %~ const (NonObjectTypeMap mempty, mempty)
+  MOAction           name      -> boActions %~ M.delete name
+  MOActionPermission name role -> boActions.ix name.aiPermissions %~ M.delete role

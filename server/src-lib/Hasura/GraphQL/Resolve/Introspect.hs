@@ -59,13 +59,13 @@ scalarR
   => ScalarTyInfo
   -> Field
   -> m J.Object
-scalarR (ScalarTyInfo descM pgColType _) fld =
+scalarR (ScalarTyInfo descM name _ _) fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
     "kind"        -> retJ TKSCALAR
     "description" -> retJ $ fmap G.unDescription descM
-    "name"        -> retJ $ pgColTyToScalar pgColType
+    "name"        -> retJ name
     _             -> return J.Null
 
 -- 4.5.2.2
@@ -75,7 +75,7 @@ objectTypeR
   => ObjTyInfo
   -> Field
   -> m J.Object
-objectTypeR (ObjTyInfo descM n iFaces flds) fld =
+objectTypeR objectType fld =
   withSubFields (_fSelSet fld) $ \subFld ->
   case _fName subFld of
     "__typename"  -> retJT "__Type"
@@ -87,6 +87,11 @@ objectTypeR (ObjTyInfo descM n iFaces flds) fld =
                      sortOn _fiName $
                      filter notBuiltinFld $ Map.elems flds
     _             -> return J.Null
+  where
+    descM = _otiDesc objectType
+    n = _otiName objectType
+    iFaces = _otiImplIFaces objectType
+    flds = _otiFields objectType
 
 notBuiltinFld :: ObjFldInfo -> Bool
 notBuiltinFld f =
@@ -209,7 +214,7 @@ nonNullR gTyp fld =
     "ofType"     -> case gTyp of
       G.TypeNamed (G.Nullability False) nt -> J.toJSON <$> namedTypeR nt subFld
       G.TypeList (G.Nullability False) lt  -> J.toJSON <$> listTypeR lt subFld
-      _ -> throw500 "nullable type passed to nonNullR"
+      _                                    -> throw500 "nullable type passed to nonNullR"
     _        -> return J.Null
 
 namedTypeR

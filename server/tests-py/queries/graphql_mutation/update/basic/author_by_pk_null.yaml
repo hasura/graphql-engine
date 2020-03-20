@@ -1,0 +1,19 @@
+description: Update a row of author by primary key
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      update_author_by_pk(
+        pk_columns: {id: 3}
+        _set: {emails: "{author1@hasura.io}"}
+      ){
+        id
+        name
+        emails
+      }
+    }
+
+response:
+  data:
+    update_author_by_pk: null

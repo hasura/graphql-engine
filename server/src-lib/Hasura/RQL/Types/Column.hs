@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Column
   , parsePGScalarValue
   , parsePGScalarValues
   , unsafePGColumnToRepresentation
+  , parseTxtEncodedPGValue
 
   , PGColumnInfo(..)
   , PGRawColumnInfo(..)
@@ -125,6 +126,15 @@ parsePGScalarValues columnType values = do
   scalarValues <- indexedMapM (fmap pstValue . parsePGScalarValue columnType) values
   pure $ WithScalarType (unsafePGColumnToRepresentation columnType) scalarValues
 
+parseTxtEncodedPGValue
+  :: (MonadError QErr m)
+  => PGColumnType -> TxtEncodedPGVal -> m (WithScalarType PGScalarValue)
+parseTxtEncodedPGValue colTy val =
+  parsePGScalarValue colTy $ case val of
+    TENull  -> Null
+    TELit t -> String t
+
+
 -- | “Raw” column info, as stored in the catalog (but not in the schema cache). Instead of
 -- containing a 'PGColumnType', it only contains a 'PGScalarType', which is combined with the
 -- 'pcirReferences' field and other table data to eventually resolve the type to a 'PGColumnType'.
@@ -150,6 +160,7 @@ data PGColumnInfo
   { pgiColumn      :: !PGCol
   , pgiName        :: !G.Name
   -- ^ field name exposed in GraphQL interface
+  , pgiPosition    :: !Int
   , pgiType        :: !PGColumnType
   , pgiIsNullable  :: !Bool
   , pgiDescription :: !(Maybe PGDescription)

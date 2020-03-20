@@ -6,6 +6,7 @@ import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict           as M
 import qualified Data.HashSet                  as S
+import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
 
@@ -29,6 +30,9 @@ instance NFData G.Value
 instance NFData G.ValueConst
 instance NFData G.VariableDefinition
 instance (NFData a) => NFData (G.ObjectFieldG a)
+instance NFData UT.Variable
+instance NFData UT.TemplateItem
+instance NFData UT.URLTemplate
 
 deriving instance NFData G.Alias
 deriving instance NFData G.EnumValue
@@ -39,6 +43,7 @@ deriving instance NFData G.NamedType
 deriving instance NFData G.Nullability
 deriving instance NFData G.StringValue
 deriving instance NFData G.Variable
+deriving instance NFData G.Description
 deriving instance (NFData a) => NFData (G.ListValueG a)
 deriving instance (NFData a) => NFData (G.ObjectValueG a)
 

@@ -13,8 +13,9 @@ const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
   require('./webpack-isomorphic-tools')
 );
 
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const cleanOptions = {
   root: process.cwd(),
@@ -34,6 +35,12 @@ module.exports = {
     chunkFilename: '[name].js',
     publicPath: hasuraConfig.webpackPrefix,
   },
+  node: {
+    module: 'empty',
+    fs: 'empty',
+    net: 'empty',
+    child_process: 'empty',
+  },
   module: {
     rules: [
       {
@@ -42,7 +49,7 @@ module.exports = {
         type: 'javascript/auto',
       },
       {
-        test: /\.jsx?$/,
+        test: /\.(j|t)sx?$/,
         exclude: /node_modules/,
         use: 'babel-loader',
       },
@@ -118,7 +125,7 @@ module.exports = {
   },
   resolve: {
     modules: ['src', 'node_modules'],
-    extensions: ['.json', '.js', '.jsx', '.mjs'],
+    extensions: ['.json', '.js', '.jsx', '.mjs', '.ts', '.tsx'],
   },
   optimization: {
     minimize: true,
@@ -126,8 +133,8 @@ module.exports = {
       name: 'vendor',
     },
     minimizer: [
-      new UglifyJSPlugin({
-        uglifyOptions: {
+      new TerserPlugin({
+        terserOptions: {
           ecma: 8,
           warnings: false,
           compress: false,
@@ -143,6 +150,7 @@ module.exports = {
           keep_fnames: false,
           safari10: false,
         },
+        extractComments: false,
       }),
       new OptimizeCssAssetsPlugin({
         assetNameRegExp: /\.css$/,
@@ -188,6 +196,13 @@ module.exports = {
         NODE_ENV: JSON.stringify('production'),
       },
       CONSOLE_ASSET_VERSION: Date.now().toString(),
+      'process.hrtime': () => null,
+    }),
+    new ForkTsCheckerWebpackPlugin({
+      compilerOptions: {
+        allowJs: false,
+        checkJs: false,
+      },
     }),
   ],
 };

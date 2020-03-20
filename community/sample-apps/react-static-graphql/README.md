@@ -11,7 +11,7 @@ A sample app to get started with [react-static](https://github.com/nozzle/react-
   [![Deploy to
   heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-  Please checkout our [docs](https://docs.hasura.io/1.0/graphql/manual/deployment/index.html) for other deployment methods
+  Please checkout our [docs](https://hasura.io/docs/1.0/graphql/manual/deployment/index.html) for other deployment methods
 
 - Get the Heroku app URL (say `my-app.herokuapp.com`)
 - Create `author` table:
