@@ -9,9 +9,15 @@ Scheduled events are modeled using rows in Postgres with a @timestamp@ column.
 During startup, two threads are started:
 
 1. Generator: Fetches the list of scheduled triggers from cache and generates scheduled events
-if there are less than 100 upcoming events.
+ - Additional events will be generated only if there are lesser than 100 scheduled events
+ - The upcoming events timestamp will be generated using
+    - cron schedule of the scheduled trigger
+    - max timestamp of the scheduled events that already exist or current_timestamp(when no scheduled events exist)
+    - The timestamp of the scheduled events is stored with timezone because `SELECT NOW()` returns timestamp with timezone, so it's good to compare two things of the same type.
+
 This effectively corresponds to doing an INSERT with values containing specific timestamp.
 2. Processor: Fetches the scheduled events from db which are @<=NOW()@ and not delivered and delivers them.
+
 The delivery mechanism is similar to Event Triggers; see "Hasura.Eventing.EventTrigger"
 -}
 module Hasura.Eventing.ScheduledTrigger
