@@ -25,7 +25,9 @@ const Relationships = ({
   return (
     <div>
       <Helmet
-        title={`Relationships - ${currentAction.action_name} - Actions | Hasura`}
+        title={`Relationships - ${
+          currentAction.action_name
+        } - Actions | Hasura`}
       />
       {existingRelationships}
       <TypeRelationship
@@ -34,6 +36,7 @@ const Relationships = ({
         typename={objectType.name}
         allTables={allTables}
         schemaList={schemaList}
+        isNew
       />
     </div>
   );

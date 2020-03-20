@@ -196,6 +196,10 @@ library
                      , generic-arbitrary
                      , quickcheck-instances
 
+                     -- 0.6.1 is supposedly not okay for ghc 8.6:
+                     --   https://github.com/nomeata/ghc-heap-view/issues/27
+                     , ghc-heap-view == 0.6.0
+
                      , directory
 
                      -- scheduled triggers
