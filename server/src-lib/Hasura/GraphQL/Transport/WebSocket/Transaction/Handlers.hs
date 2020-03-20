@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Hasura.GraphQL.Transport.WebSocket.Transaction.Handlers
   ( onMessageHandler
   , onCloseHandler
@@ -6,7 +7,6 @@ module Hasura.GraphQL.Transport.WebSocket.Transaction.Handlers
 
 import           Hasura.Db
 import           Hasura.EncJSON
-import           Hasura.Server.Cors
 import           Hasura.GraphQL.Logging
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.GraphQL.Transport.WebSocket.Common
@@ -17,15 +17,17 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth                                      (AuthMode,
                                                                           UserAuthentication,
                                                                           resolveUserInfo)
+import           Hasura.Server.Cors
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 
-import           Control.Concurrent                                      (threadDelay)
+import           Control.Concurrent.Extended                             (sleep)
 import           Data.Aeson
 
 import qualified Hasura.GraphQL.Execute                                  as E
 import qualified Hasura.GraphQL.Transport.WebSocket.Server               as WS
 import qualified Hasura.Logging                                          as L
+import qualified Hasura.Server.Telemetry.Counters                        as Telem
 
 import qualified Control.Concurrent.STM                                  as STM
 import qualified Data.ByteString.Lazy                                    as BL
@@ -54,19 +56,19 @@ onConnHandler (L.Logger logger) pgExecCtx corsPolicy wsId requestHead = do
           pgConnCtx = PGConnCtx pgConn localPool
           connData = WSTxData errTy pgConnCtx txStatus
       logger $ mkInfoLog wsId EAccepted
-      pure $ Right $ WS.AcceptWith (CSTransaction connData) acceptRequest Nothing (Just $ jwtExpiryHandler txStatus)
+      pure $ Right $ WS.AcceptWith (CSTransaction connData) acceptRequest Nothing (jwtExpiryHandler txStatus)
   where
     PGExecCtx pool _ = pgExecCtx
     jwtExpiryHandler txStatusTVar _ = do
       expTime <- liftIO $ STM.atomically $ do
         txStatus <- STM.readTVar txStatusTVar
         case txStatus of
-          TxNotInitialised _ -> STM.retry
-          TxBegin _ expTimeM -> maybe STM.retry pure expTimeM
-          TxCommit           -> STM.retry
-          TxAbort            -> STM.retry
+          TxNotInitialised _   -> STM.retry
+          TxBegin _ expTimeM _ -> maybe STM.retry pure expTimeM
+          TxCommit             -> STM.retry
+          TxAbort              -> STM.retry
       currTime <- TC.getCurrentTime
-      threadDelay $ diffTimeToMicro $ TC.diffUTCTime expTime currTime
+      sleep $ fromUnits $ TC.diffUTCTime expTime currTime
 
     resolveAll = do
       let logCorsNote corsNote = lift $ logger $ mkInfoLog wsId $ ECorsNote corsNote
@@ -87,7 +89,8 @@ onConnHandler (L.Logger logger) pgExecCtx corsPolicy wsId requestHead = do
 
 onMessageHandler :: forall m. (HasVersion, MonadIO m, UserAuthentication m)
                  => AuthMode -> WSServerEnv -> WSTxData -> WSConn -> BL.ByteString -> m ()
-onMessageHandler authMode serverEnv wsTxData wsConn rawMessage =
+onMessageHandler authMode serverEnv wsTxData wsConn rawMessage = do
+  timerTot <- startTimer
   case eitherDecode rawMessage of
     Left e -> do
       let errMsg = ErrorMessage Nothing wsId $ encodeQErr True $ err400 BadRequest $
@@ -95,7 +98,7 @@ onMessageHandler authMode serverEnv wsTxData wsConn rawMessage =
       sendMsg wsConn $ SMError errMsg
     Right msg -> case msg of
       CMInit initPayload       -> onInit initPayload
-      CMExecute executePayload -> onExecute executePayload
+      CMExecute executePayload -> onExecute timerTot executePayload
       CMAbort                  -> runCommand do
         lift $ logOp OAbort
         runLazyTxWithConn pgConn abortTx
@@ -128,10 +131,10 @@ onMessageHandler authMode serverEnv wsTxData wsConn rawMessage =
         getUserInfo = do
           txStatus <- liftIO $ STM.readTVarIO txStatusTVar
           case txStatus of
-            TxNotInitialised _ -> throw500 "query received without transaction init"
-            TxBegin userInfo _ -> pure userInfo
-            TxCommit           -> throw500 "transaction already committed"
-            TxAbort            -> throw500 "transaction already aborted"
+            TxNotInitialised _         -> throw500 "query received without transaction init"
+            TxBegin userInfo _ headers -> pure (userInfo, headers)
+            TxCommit                   -> throw500 "transaction already committed"
+            TxAbort                    -> throw500 "transaction already aborted"
 
     onInit :: InitPayload -> m ()
     onInit (InitPayload (TxIsolation txIso) paramHeaders) = do
@@ -140,7 +143,7 @@ onMessageHandler authMode serverEnv wsTxData wsConn rawMessage =
       eitherResult <- runExceptT $ case txStatus of
         TxNotInitialised clientHeaders -> do
           let reqHeaders = (Map.toList . Map.fromList) $
-                           (map ((CI.mk . txtToBs) *** txtToBs) $ Map.toList paramHeaders)
+                           map ((CI.mk . txtToBs) *** txtToBs) (Map.toList paramHeaders)
                            <> clientHeaders
           userInfoE <- lift $ resolveUserInfo lg manager reqHeaders authMode
           (userInfo, expTime) <- liftEither userInfoE
@@ -149,7 +152,7 @@ onMessageHandler authMode serverEnv wsTxData wsConn rawMessage =
             beginTx txIso
             -- Set session variables
             liftTx $ setHeadersTx $ userVars userInfo
-          modifyTxStatus $ TxBegin userInfo expTime
+          modifyTxStatus $ TxBegin userInfo expTime reqHeaders
 
         _ -> throw500 "transaction cannot be initialised more than once in a single WebSocket session"
 
@@ -162,44 +165,51 @@ onMessageHandler authMode serverEnv wsTxData wsConn rawMessage =
           liftIO $ logEvent EInitialised
           sendMsg wsConn SMInitialised
 
-    onExecute :: ExecutePayload -> m ()
-    onExecute (ExecutePayload maybeReqId query) = do
+    onExecute :: m DiffTime -> ExecutePayload -> m ()
+    onExecute timerTot (ExecutePayload maybeReqId query) = do
       reqId <- liftIO $ maybe (RequestId <$> generateFingerprint) pure maybeReqId
-      withUser (Just reqId) $ \userInfo -> do
+      withUser (Just reqId) $ \(userInfo, reqHeaders) -> do
         logOp $ OExecute $ ExecuteQuery reqId query userInfo
         (sc, scVer) <- liftIO getSchemaCache
         execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
-                     planCache userInfo sqlGenCtx enableAL sc scVer query
+                     planCache userInfo sqlGenCtx enableAL sc scVer manager reqHeaders query
         case execPlanE of
           Left e -> do
             logError $ EQueryError e
             let err = case errTy of
-                  WS.ERTLegacy -> errFn userInfo e
+                  WS.ERTLegacy           -> errFn userInfo e
                   -- Pre execute GraphQL error format
                   WS.ERTGraphqlCompliant -> object ["errors" .= [errFn userInfo e]]
             sendMsg wsConn $ SMError $ ErrorMessage (Just reqId) wsId err
 
-          Right execPlan -> do
-            eitherResult <- runExceptT $ case execPlan of
+          Right (telemCacheHit, execPlan) -> do
+            eitherResult <- withElapsedTime $ runExceptT $ case execPlan of
               E.GExPHasura resolvedOp -> do
-                (tx, genSql) <- case resolvedOp of
-                  E.ExOpQuery queryTx genSql -> pure (queryTx, genSql)
-                  E.ExOpMutation mutationTx -> pure (mutationTx, Nothing)
+                (queryType, tx, genSql) <- case resolvedOp of
+                  E.ExOpQuery queryTx genSql -> pure (Telem.Query, queryTx, genSql)
+                  E.ExOpMutation mutationTx -> pure (Telem.Mutation, mutationTx, Nothing)
                   E.ExOpSubs _ -> throw400 NotSupported "Subscriptions are not allowed in graphql transactions"
                 logger $ QueryLog query genSql reqId
                 res <- runLazyTxWithConn pgConn tx
-                pure $ SMData $ DataMessage reqId wsId $ GRHasura $ GQSuccess $ encJToLBS res
+                pure $ (, queryType) $ SMData $ DataMessage reqId wsId $ GRHasura $ GQSuccess $ encJToLBS res
               E.GExPRemote _ _  ->
                 throw400 NotSupported "Remote server queries are not supported over graphql transactions"
 
             case eitherResult of
-              Left e -> handleError userInfo (Just reqId) e
-              Right r -> sendMsg wsConn r
+              (_, Left e)  -> handleError userInfo (Just reqId) e
+              (telemTimeIO_DT, Right (r, telemQueryType)) -> do
+                -- Telemetry. NOTE: don't time network IO:
+                telemTimeTot <- Seconds <$> timerTot
+                sendMsg wsConn r
+                let telemTimeIO = fromUnits telemTimeIO_DT
+                    telemLocality = Telem.Local
+                    telemTransport = Telem.WebSocket
+                Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
 
     runCommand :: ExceptT QErr m ServerMessage -> m ()
     runCommand action =
-      withUser Nothing $ \userInfo -> do
+      withUser Nothing $ \(userInfo, _) -> do
         eitherResult <- runExceptT action
         case eitherResult of
           Left e -> handleError userInfo Nothing e
@@ -212,7 +222,7 @@ onMessageHandler authMode serverEnv wsTxData wsConn rawMessage =
     handleError userInfo maybeReqId qErr = do
       logError $ EQueryError qErr
       sendMsg wsConn $ SMError $ ErrorMessage maybeReqId wsId $ errFn userInfo qErr
-      when (qeError qErr == "connection error") $ do
+      when (qeError qErr == "connection error") $
         liftIO $ WS.closeConn wsConn "PG Connection error occured, closing the connection now"
 
     errFn userInfo =
@@ -230,7 +240,7 @@ onCloseHandler
 onCloseHandler (L.Logger logger) wsId wsTxData = do
   txStatus <- liftIO $ STM.atomically $ STM.readTVar txStatusTVar
   case txStatus of
-    TxBegin _ _ -> do
+    TxBegin{} -> do
       -- If status is still 'Begin', abort now
       eRes <- runExceptT $ runLazyTxWithConn pgConn abortTx
       either (logger . mkErrorLog wsId . EQueryError) pure eRes

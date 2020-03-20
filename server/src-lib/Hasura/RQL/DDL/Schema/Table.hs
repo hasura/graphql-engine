@@ -37,7 +37,6 @@ import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
-import qualified Hasura.GraphQL.Context             as GC
 import qualified Hasura.GraphQL.Schema              as GS
 import qualified Hasura.Incremental                 as Inc
 import qualified Language.GraphQL.Draft.Syntax      as G
@@ -140,7 +139,7 @@ runSetExistingTableIsEnumQ (SetTableIsEnum tableName isEnum) = do
 data SetTableCustomFields
   = SetTableCustomFields
   { _stcfTable             :: !QualifiedTable
-  , _stcfCustomRootFields  :: !GC.TableCustomRootFields
+  , _stcfCustomRootFields  :: !TableCustomRootFields
   , _stcfCustomColumnNames :: !CustomColumnNames
   } deriving (Show, Eq, Lift)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''SetTableCustomFields)
@@ -149,7 +148,7 @@ instance FromJSON SetTableCustomFields where
   parseJSON = withObject "SetTableCustomFields" $ \o ->
     SetTableCustomFields
     <$> o .: "table"
-    <*> o .:? "custom_root_fields" .!= GC.emptyCustomRootFields
+    <*> o .:? "custom_root_fields" .!= emptyCustomRootFields
     <*> o .:? "custom_column_names" .!= M.empty
 
 runSetTableCustomFieldsQV2
@@ -292,10 +291,14 @@ buildTableCache
   :: forall arr m
    . ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
      , Inc.ArrowCache m arr, MonadTx m )
-  => [CatalogTable] `arr` M.HashMap QualifiedTable TableRawInfo
-buildTableCache = Inc.cache proc catalogTables -> do
+  => ( [CatalogTable]
+     , Inc.Dependency Inc.InvalidationKey
+     ) `arr` M.HashMap QualifiedTable TableRawInfo
+buildTableCache = Inc.cache proc (catalogTables, reloadMetadataInvalidationKey) -> do
   rawTableInfos <-
-    (| Inc.keyed (| withTable (\tables -> buildRawTableInfo <<< noDuplicateTables -< tables) |)
+    (| Inc.keyed (| withTable (\tables
+         -> (tables, reloadMetadataInvalidationKey)
+         >- first noDuplicateTables >>> buildRawTableInfo) |)
     |) (M.groupOnNE _ctName catalogTables)
   let rawTableCache = M.catMaybes rawTableInfos
       enumTables = flip M.mapMaybe rawTableCache \rawTableInfo ->
@@ -314,8 +317,13 @@ buildTableCache = Inc.cache proc catalogTables -> do
       _           -> throwA -< err400 AlreadyExists "duplication definition for table"
 
     -- Step 1: Build the raw table cache from metadata information.
-    buildRawTableInfo :: ErrorA QErr arr CatalogTable (TableCoreInfoG PGRawColumnInfo PGCol)
-    buildRawTableInfo = Inc.cache proc (CatalogTable name systemDefined isEnum config maybeInfo) -> do
+    buildRawTableInfo
+      :: ErrorA QErr arr
+       ( CatalogTable
+       , Inc.Dependency Inc.InvalidationKey
+       ) (TableCoreInfoG PGRawColumnInfo PGCol)
+    buildRawTableInfo = Inc.cache proc (catalogTable, reloadMetadataInvalidationKey) -> do
+      let CatalogTable name systemDefined isEnum config maybeInfo = catalogTable
       catalogInfo <-
         (| onNothingA (throwA -<
              err400 NotExists $ "no such table/view exists in postgres: " <>> name)
@@ -326,7 +334,11 @@ buildTableCache = Inc.cache proc catalogTables -> do
           primaryKey = _ctiPrimaryKey catalogInfo
       rawPrimaryKey <- liftEitherA -< traverse (resolvePrimaryKeyColumns columnMap) primaryKey
       enumValues <- if isEnum
-        then bindErrorA -< Just <$> fetchAndValidateEnumValues name rawPrimaryKey columns
+        then do
+          -- We want to make sure we reload enum values whenever someone explicitly calls
+          -- `reload_metadata`.
+          Inc.dependOn -< reloadMetadataInvalidationKey
+          bindErrorA -< Just <$> fetchAndValidateEnumValues name rawPrimaryKey columns
         else returnA -< Nothing
 
       returnA -< TableCoreInfo
@@ -395,6 +407,7 @@ buildTableCache = Inc.cache proc catalogTables -> do
       pure PGColumnInfo
         { pgiColumn = pgCol
         , pgiName = name
+        , pgiPosition = prciPosition rawInfo
         , pgiType = resolvedType
         , pgiIsNullable = prciIsNullable rawInfo
         , pgiDescription = prciDescription rawInfo

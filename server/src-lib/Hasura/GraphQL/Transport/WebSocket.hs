@@ -13,6 +13,17 @@ import qualified Data.Text                                               as T
 import qualified Network.HTTP.Types                                      as H
 import qualified Network.WebSockets                                      as WS
 
+-- NOTE!:
+--   The handler functions 'onClose', 'onMessage', etc. depend for correctness on two properties:
+--     - they run with async exceptions masked
+--     - they do not race on the same connection
+import           Control.Exception.Lifted                                (mask_)
+
+import qualified Hasura.GraphQL.Execute.LiveQuery                        as LQ
+import qualified Hasura.GraphQL.Transport.WebSocket.Queries.Handlers     as WQH
+import qualified Hasura.GraphQL.Transport.WebSocket.Server               as WS
+import qualified Hasura.GraphQL.Transport.WebSocket.Transaction.Handlers as WTH
+import qualified Hasura.Logging                                          as L
 
 import           Hasura.GraphQL.Transport.WebSocket.Common
 import           Hasura.Prelude
@@ -20,12 +31,6 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth                                      (AuthMode,
                                                                           UserAuthentication)
 import           Hasura.Server.Version                                   (HasVersion)
-
-import qualified Hasura.GraphQL.Execute.LiveQuery                        as LQ
-import qualified Hasura.GraphQL.Transport.WebSocket.Queries.Handlers     as WQH
-import qualified Hasura.GraphQL.Transport.WebSocket.Server               as WS
-import qualified Hasura.GraphQL.Transport.WebSocket.Transaction.Handlers as WTH
-import qualified Hasura.Logging                                          as L
 
 onConn
   :: (MonadIO m)
@@ -78,14 +83,14 @@ createWSServerApp
   -> WSServerEnv
   -> WS.PendingConnection -> m ()
   -- ^ aka generalized 'WS.ServerApp'
-createWSServerApp authMode serverEnv =
-  WS.createServerApp (_wseServer serverEnv) handlers
+createWSServerApp authMode serverEnv = \ !pendingConn ->
+  WS.createServerApp (_wseServer serverEnv) handlers pendingConn
   where
     handlers =
       WS.WSHandlers
-      (onConn serverEnv)
-      (onMessage authMode serverEnv)
-      (onClose (_wseLogger serverEnv) $ _wseLiveQMap serverEnv)
+      (\rid rh ->  mask_ $ onConn serverEnv rid rh)
+      (\conn bs -> mask_ $ onMessage authMode serverEnv conn bs)
+      (mask_ . onClose (_wseLogger serverEnv) (_wseLiveQMap serverEnv))
 
 stopWSServerApp :: WSServerEnv -> IO ()
 stopWSServerApp wsEnv = WS.shutdown (_wseServer wsEnv)

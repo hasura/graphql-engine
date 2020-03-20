@@ -72,7 +72,7 @@ The contributing guide for docs can be found at [docs/CONTRIBUTING.md](docs/CONT
 
 ### Community content
 
-Since we launched our [learn page](https://learn.hasura.io/), we are happy about contributions:
+Since we launched our [learn page](https://hasura.io/learn/), we are happy about contributions:
 
 - Fix errors in existing learn tutorials
 

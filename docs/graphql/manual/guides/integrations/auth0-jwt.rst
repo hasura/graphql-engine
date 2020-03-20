@@ -2,7 +2,7 @@
    :description: Integrate Auth0 JWT with Hasura
    :keywords: hasura, docs, guide, authentication, auth, jwt, integration
 
-.. _auth0_jwt:
+.. _guides_auth0_jwt:
 
 Auth0 JWT Integration with Hasura GraphQL engine
 ================================================
@@ -199,7 +199,7 @@ Add Access Control Rules via Hasura Console
 Auth0 is configured and ready to be used in the application. You can now set up access control rules that
 will automatically get applied whenever a client makes a graphql query with the Auth0 token.
 
-Refer to :doc:`../../auth/authorization/basics` for more information.
+Refer to :ref:`auth_basics` for more information.
 
 To test this out, add an access control rule that uses ``x-hasura-user-id`` for the role ``user``.
 Then make a GraphQL query or a mutation, with the authorization token from the :ref:`previous step <test-auth0>`

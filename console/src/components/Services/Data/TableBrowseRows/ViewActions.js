@@ -9,6 +9,7 @@ import {
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { getBulkDeleteQuery } from '../../../Common/utils/v1QueryUtils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -205,6 +206,47 @@ const deleteItem = pkClause => {
       },
       err => {
         dispatch(showErrorNotification('Deleting row failed!', err.error, err));
+      }
+    );
+  };
+};
+
+const deleteItems = pkClauses => {
+  return (dispatch, getState) => {
+    const confirmMessage = 'This will permanently delete rows from this table';
+    const isOk = getConfirmation(confirmMessage);
+    if (!isOk) {
+      return;
+    }
+
+    const state = getState();
+
+    const reqBody = {
+      type: 'bulk',
+      args: getBulkDeleteQuery(
+        pkClauses,
+        state.tables.currentTable,
+        state.tables.currentSchema
+      ),
+    };
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(reqBody),
+      headers: dataHeaders(getState),
+      credentials: globalCookiePolicy,
+    };
+    dispatch(requestAction(Endpoints.query, options)).then(
+      data => {
+        const affected = data.reduce((acc, d) => acc + d.affected_rows, 0);
+        dispatch(vMakeRequest());
+        dispatch(
+          showSuccessNotification('Rows deleted!', 'Affected rows: ' + affected)
+        );
+      },
+      err => {
+        dispatch(
+          showErrorNotification('Deleting rows failed!', err.error, err)
+        );
       }
     );
   };
@@ -560,6 +602,7 @@ export {
   vCollapseRow,
   V_SET_ACTIVE,
   deleteItem,
+  deleteItems,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
 };

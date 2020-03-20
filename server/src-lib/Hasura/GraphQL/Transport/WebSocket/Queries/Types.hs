@@ -18,6 +18,12 @@ import qualified Hasura.GraphQL.Execute.LiveQuery                    as LQ
 import qualified Hasura.GraphQL.Transport.WebSocket.Server           as WS
 import qualified Hasura.Logging                                      as L
 
+-- | 'LQ.LiveQueryId' comes from 'Hasura.GraphQL.Execute.LiveQuery.State.addLiveQuery'. We use
+-- this to track a connection's operations so we can remove them from 'LiveQueryState', and
+-- log.
+--
+-- NOTE!: This must be kept consistent with the global 'LiveQueryState', in 'onClose'
+-- and 'onStart'.
 type OperationMap
   = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
 

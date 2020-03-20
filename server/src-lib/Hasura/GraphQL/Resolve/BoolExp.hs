@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Resolve.BoolExp
   ( parseBoolExp
+  , pgColValToBoolExp
   ) where
 
 import           Data.Has
@@ -187,3 +188,20 @@ parseBoolExp annGVal = do
           | k == "_not" -> BoolNot <$> parseBoolExp v
           | otherwise   -> BoolFld <$> parseColExp nt k v
   return $ BoolAnd $ fromMaybe [] boolExpsM
+
+type PGColValMap = Map.HashMap G.Name AnnInpVal
+
+pgColValToBoolExp
+  :: (MonadReusability m, MonadError QErr m)
+  => PGColArgMap -> PGColValMap -> m AnnBoolExpUnresolved
+pgColValToBoolExp colArgMap colValMap = do
+  colExps <- forM colVals $ \(name, val) ->
+    BoolFld <$> do
+      opExp <- AEQ True . mkParameterizablePGValue <$> asPGColumnValue val
+      colInfo <- onNothing (Map.lookup name colArgMap) $
+        throw500 $ "column name " <> showName name
+        <> " not found in column arguments map"
+      return $ AVCol colInfo [opExp]
+  return $ BoolAnd colExps
+  where
+    colVals = Map.toList colValMap

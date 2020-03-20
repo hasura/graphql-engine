@@ -28,6 +28,7 @@ data TxStatus
   | TxBegin
     !UserInfo -- ^ session user
     !(Maybe UTCTime) -- ^ JWT expiry time
+    ![H.Header] -- ^ request headers
   | TxCommit
   | TxAbort
   deriving (Eq)

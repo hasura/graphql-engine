@@ -730,7 +730,7 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 		if body == "" {
 			break
 		}
-		tt := &runSQLInput{
+		tt := &RunSQLInput{
 			SQL: body,
 		}
 		l.PushBack(tt)
@@ -748,7 +748,7 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 				for e := l.Front(); e != nil; e = next {
 					next = e.Next()
 					switch e.Value.(type) {
-					case *runSQLInput:
+					case *RunSQLInput:
 						// do nothing
 					default:
 						l.Remove(e)
@@ -765,7 +765,7 @@ func (h *HasuraDB) PushToList(migration io.Reader, fileType string, l *database.
 				for e := l.Front(); e != nil; e = next {
 					next = e.Next()
 					switch e.Value.(type) {
-					case *runSQLInput:
+					case *RunSQLInput:
 						// do nothing
 					default:
 						l.Remove(e)
@@ -1246,7 +1246,7 @@ func (h *HasuraDB) Squash(l *database.CustomList, ret chan<- interface{}) {
 			q.Type = addComputedField
 		case *dropComputedFieldInput:
 			q.Type = dropComputedField
-		case *runSQLInput:
+		case *RunSQLInput:
 			ret <- []byte(args.SQL)
 			continue
 		default:
