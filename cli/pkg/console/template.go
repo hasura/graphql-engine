@@ -45,7 +45,7 @@ type TemplateProvider interface {
 	GetAssetsVersion(v *version.Version) string
 }
 
-// DefaultTemplateProvider implemets the github.com/hasura/graphl-engine/cli/pkg/templates.DefaultTemplateProvider interface
+// DefaultTemplateProvider implements the github.com/hasura/graphl-engine/cli/pkg/templates.DefaultTemplateProvider interface
 type DefaultTemplateProvider struct {
 	basePath         string
 	templateFileName string
@@ -85,13 +85,16 @@ func (p *DefaultTemplateProvider) LoadTemplates(path string, templateNames ...st
 			return nil, errors.Wrap(err, "error reading from file "+path+templateName)
 		}
 
-		template, err := template.New(templateName).Parse(string(templateBytes))
+		theTemplate, err := template.New(templateName).Parse(string(templateBytes))
 		if err != nil {
 			return nil, errors.Wrap(err, "error creating template"+path+templateName)
 		}
-		templateFile.Close()
+		err = templateFile.Close()
+		if err != nil {
+			return nil, err
+		}
 
-		r.Add(templateName, template)
+		r.Add(templateName, theTemplate)
 	}
 
 	return r, nil
