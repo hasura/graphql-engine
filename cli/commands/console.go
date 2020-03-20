@@ -123,7 +123,7 @@ func (o *ConsoleOptions) Run() error {
 		o.CliExternalEndpoint = "http://" + o.Address + ":" + o.APIPort
 	}
 	if o.ServerExternalEndpoint == "" {
-		o.ServerExternalEndpoint = o.EC.ServerConfig.Endpoint
+		o.ServerExternalEndpoint = o.EC.Config.ServerConfig.Endpoint
 	}
 
 	// My Router struct
@@ -152,7 +152,7 @@ func (o *ConsoleOptions) Run() error {
 		"assetsVersion":    consoleAssetsVersion,
 		"enableTelemetry":  o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":          o.EC.GlobalConfig.UUID,
-		"isAdminSecretSet": o.EC.ServerConfig.AdminSecret != "",
+		"isAdminSecretSet": o.EC.Config.ServerConfig.AdminSecret != "",
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
@@ -349,8 +349,8 @@ func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, err
 
 func verifyAdminSecret() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if ec.ServerConfig.AdminSecret != "" {
-			if c.GetHeader(XHasuraAdminSecret) != ec.ServerConfig.AdminSecret {
+		if ec.Config.ServerConfig.AdminSecret != "" {
+			if c.GetHeader(XHasuraAdminSecret) != ec.Config.ServerConfig.AdminSecret {
 				//reject
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
 			}
