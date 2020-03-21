@@ -24,6 +24,12 @@ import {
   FaSearch,
   FaSpinner,
   FaQuestionCircle,
+  FaPause,
+  FaPlay,
+  FaCheck,
+  FaRedoAlt,
+  FaChevronUp,
+  FaTrash,
 } from 'react-icons/fa';
 
 import { StyledIcon } from './Icon';
@@ -48,12 +54,18 @@ const iconReferenceMap = {
   love: FaHeart,
   right: FaChevronRight,
   down: FaChevronDown,
+  up: FaChevronUp,
   compress: FaCompressArrowsAlt,
   expand: FaExpand,
   edit: FaEdit,
   search: FaSearch,
   spinner: FaSpinner,
   questionCircle: FaQuestionCircle,
+  pause: FaPause,
+  play: FaPlay,
+  check: FaCheck,
+  reload: FaRedoAlt,
+  delete: FaTrash,
 };
 
 export const Icon = props => {

@@ -2,41 +2,59 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
+
 import Globals from 'Globals';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { Icon } from '../../../UIKit/atoms';
+import styles from '../ApiExplorer.scss';
 
-class ApiCollectionPanel extends Component {
-  onClearHistoryClicked = () => {
+const ApiCollectionPanel = props => {
+  const {
+    clearHistoryCallback,
+    tabSelectionCallback,
+    selectedApi,
+    currentTab,
+    tabs,
+    panelStyles,
+    authApiExpanded,
+    apiSelectionCallback,
+    authApiExpandCallback,
+    authApiExpandCallback,
+    apiSelectionCallback,
+  } = props;
+
+  const onClearHistoryClicked = () => {
     const isOk = getConfirmation();
     if (isOk) {
-      this.props.clearHistoryCallback();
+      clearHistoryCallback();
     }
   };
 
-  onTabSelectionChanged = e => {
-    this.props.tabSelectionCallback(e);
+  const onTabSelectionChanged = e => {
+    tabSelectionCallback(e);
   };
 
-  getTabs(tabs, currentTab, styles) {
+  const getTabs = (tabs, currentTab, styles) => {
     return tabs.map((tab, i) => {
       const style =
         styles.apiCollectionTabList +
         (currentTab === i ? ' ' + styles.activeApiCollectionTab : '');
+
       return (
         <Tab key={tab.title + i} className={style}>
           {tab.title}
         </Tab>
       );
     });
-  }
+  };
 
-  getTabPanelApiList(
+  const getTabPanelApiList = (
     apiList,
     selectedApiKey,
     styles,
     isCategorised,
     authApiExpanded
-  ) {
+  ) => {
     return apiList.map((apiDetails, outerIndex) => {
       const rightArrowImage = require('./chevron.svg');
       if (isCategorised) {
@@ -83,10 +101,7 @@ class ApiCollectionPanel extends Component {
               <div
                 onClick={() => {
                   // eslint-disable-line no-loop-func
-                  this.props.apiSelectionCallback(
-                    categorisedApiDetails,
-                    authApiExpanded
-                  );
+                  apiSelectionCallback(categorisedApiDetails, authApiExpanded);
                 }}
                 key={key}
                 className={style}
@@ -116,8 +131,10 @@ class ApiCollectionPanel extends Component {
                 </div>
               </div>
             );
+
             if (index + 1 === currentContentLength) {
-              let circleClass = 'fa fa-chevron-down';
+              let circleClass = 'down';
+
               if (apiDetails.title !== authApiExpanded) {
                 finalCategorisedArray.push(
                   <div
@@ -133,16 +150,16 @@ class ApiCollectionPanel extends Component {
                     <button
                       className={'btn ' + styles.collectionButtonLess}
                       onClick={() => {
-                        this.props.authApiExpandCallback(apiDetails.title);
+                        authApiExpandCallback(apiDetails.title);
                       }}
                     >
                       <span>{apiDetails.title}</span>
-                      <i className={circleClass} aria-hidden="true" />
+                      <Icon type={circleClass} />
                     </button>
                   </div>
                 );
               } else {
-                circleClass = 'fa fa-chevron-up';
+                circleClass = 'up';
                 finalCategorisedArray.push(
                   <div
                     key={index + 1 + apiDetails.title}
@@ -157,13 +174,13 @@ class ApiCollectionPanel extends Component {
                     <button
                       className={'btn ' + styles.collectionButtonLess}
                       onClick={() => {
-                        this.props.authApiExpandCallback('None');
+                        authApiExpandCallback('None');
                       }}
                     >
                       <span className={styles.padd_bottom}>
                         {apiDetails.title}
                       </span>
-                      <i className={circleClass} aria-hidden="true" />
+                      <Icon type={circleClass} />
                     </button>
                     {categorisedArray}
                   </div>
@@ -207,7 +224,7 @@ class ApiCollectionPanel extends Component {
         return (
           <div
             onClick={() => {
-              this.props.apiSelectionCallback(apiDetails, authApiExpanded);
+              apiSelectionCallback(apiDetails, authApiExpanded);
             }}
             key={key}
             className={style}
@@ -239,16 +256,16 @@ class ApiCollectionPanel extends Component {
         );
       }
     });
-  }
+  };
 
-  getTabPanelContent(
+  const getTabPanelContent = (
     tabContentList,
     emptyText,
     selectedApi,
     styles,
     authApiExpanded,
     index
-  ) {
+  ) => {
     if (tabContentList.length === 0) {
       return (
         <div
@@ -267,6 +284,7 @@ class ApiCollectionPanel extends Component {
         </div>
       );
     }
+
     return tabContentList.map((tabContent, index) => {
       let paddingClassname = '';
       if (index === 0) {
@@ -284,16 +302,17 @@ class ApiCollectionPanel extends Component {
             }
           >
             <div
-              onClick={this.onClearHistoryClicked}
+              onClick={onClearHistoryClicked}
               className={styles.apiCollectionClearHistoryButton}
             >
-              <i className="fa fa-trash-o" aria-hidden="true" />
+              <Icon type="delete" />
               Clear History
             </div>
           </div>
         );
       }
-      const tabPanelList = this.getTabPanelApiList(
+
+      const tabPanelList = getTabPanelApiList(
         tabContent.content,
         selectedApi,
         styles,
@@ -301,6 +320,7 @@ class ApiCollectionPanel extends Component {
         authApiExpanded
       );
       let html = tabPanelList;
+
       return (
         <div
           key={tabContent.title + index}
@@ -329,14 +349,14 @@ class ApiCollectionPanel extends Component {
         </div>
       );
     });
-  }
+  };
 
-  getTabPanels(tabs, selectedApi, styles, authApiExpanded) {
+  const getTabPanels = (tabs, selectedApi, styles, authApiExpanded) => {
     const selectedApiKey = selectedApi.id;
     return tabs.map((tab, index) => {
       return (
         <TabPanel key={tab.title}>
-          {this.getTabPanelContent(
+          {getTabPanelContent(
             tab.content,
             tab.emptyText,
             selectedApiKey,
@@ -347,43 +367,33 @@ class ApiCollectionPanel extends Component {
         </TabPanel>
       );
     });
-  }
+  };
 
-  render() {
-    const styles = require('../ApiExplorer.scss');
-    const {
-      selectedApi,
-      currentTab,
-      tabs,
-      panelStyles,
-      authApiExpanded,
-    } = this.props;
-    return (
-      <div
-        className={
-          styles.padd_remove +
-          ' ' +
-          styles.apiCollectionWrapper +
-          ' ' +
-          styles.wd20 +
-          ' ' +
-          panelStyles
-        }
+  return (
+    <div
+      className={
+        styles.padd_remove +
+        ' ' +
+        styles.apiCollectionWrapper +
+        ' ' +
+        styles.wd20 +
+        ' ' +
+        panelStyles
+      }
+    >
+      <Tabs
+        className={styles.apiCollectionTabWrapper + ' ' + styles.wd100}
+        selectedIndex={currentTab}
+        onSelect={onTabSelectionChanged}
       >
-        <Tabs
-          className={styles.apiCollectionTabWrapper + ' ' + styles.wd100}
-          selectedIndex={currentTab}
-          onSelect={this.onTabSelectionChanged}
-        >
-          <TabList className={styles.apiCollectionTab}>
-            {this.getTabs(tabs, currentTab, styles)}
-          </TabList>
-          {this.getTabPanels(tabs, selectedApi, styles, authApiExpanded)}
-        </Tabs>
-      </div>
-    );
-  }
-}
+        <TabList className={styles.apiCollectionTab}>
+          {getTabs(tabs, currentTab, styles)}
+        </TabList>
+        {getTabPanels(tabs, selectedApi, styles, authApiExpanded)}
+      </Tabs>
+    </div>
+  );
+};
 
 ApiCollectionPanel.propTypes = {
   selectedApi: PropTypes.object.isRequired,

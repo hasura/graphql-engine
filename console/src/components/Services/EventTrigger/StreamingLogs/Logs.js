@@ -5,6 +5,8 @@ import AceEditor from 'react-ace';
 // import matchSorter from 'match-sorter';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+
 import RedeliverEvent from '../TableCommon/RedeliverEvent';
 import TableHeader from '../TableCommon/TableHeader';
 import { parseRowData, verifySuccessStatus } from '../utils';
@@ -25,10 +27,10 @@ import {
   toggleNewAvailable,
 } from './LogActions';
 import * as tooltip from '../Common/Tooltips';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import { convertDateTimeToLocale } from '../utils';
 import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { Icon } from '../../../UIKit/atoms';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -152,9 +154,9 @@ class StreamingLogs extends Component {
       const status =
         // 2xx is success
         verifySuccessStatus(r.status) ? (
-          <i className={styles.invocationSuccess + ' fa fa-check'} />
+          <Icon type="check" className={styles.invocationSuccess} />
         ) : (
-          <i className={styles.invocationFailure + ' fa fa-times'} />
+          <Icon type="close" className={styles.invocationFailure} />
         );
 
       requestData.push(parseRowData(r, 'request'));
@@ -209,13 +211,15 @@ class StreamingLogs extends Component {
         if (col === 'redeliver') {
           return (
             <div className={conditionalClassname}>
-              <i
+              <Icon
+                type="reload"
+                className={styles.retryEvent}
                 onClick={this.toggleModal.bind(this, r.event_id)}
-                className={styles.retryEvent + ' fa fa-repeat'}
               />
             </div>
           );
         }
+
         const content = r[col] === undefined ? 'NULL' : r[col].toString();
         return <div className={conditionalClassname}>{content}</div>;
       };
@@ -301,16 +305,14 @@ class StreamingLogs extends Component {
                     ? [
                       'Status Code: ',
                       verifySuccessStatus(finalResponse.status_code) ? (
-                        <i
-                          className={
-                            styles.invocationSuccess + ' fa fa-check'
-                          }
+                        <Icon
+                          type="check"
+                          className={styles.invocationSuccess}
                         />
                       ) : (
-                        <i
-                          className={
-                            styles.invocationFailure + ' fa fa-times'
-                          }
+                        <Icon
+                          type="close"
+                          className={styles.invocationFailure}
                         />
                       ),
                       finalResponse.status_code,
@@ -319,10 +321,7 @@ class StreamingLogs extends Component {
                         placement="top"
                         overlay={tooltip.statusCodeDescription}
                       >
-                        <i
-                          className="fa fa-question-circle"
-                          aria-hidden="true"
-                        />
+                        <Icon type="questionCircle" />
                       </OverlayTrigger>,
                     ]
                     : null}
@@ -365,12 +364,12 @@ class StreamingLogs extends Component {
           >
             {this.state.isWatching ? (
               <span>
-                <i className={'fa fa-pause'} /> Streaming...{' '}
+                <Icon type="pause" /> Streaming...{' '}
                 <i className={'fa fa-spinner fa-spin'} />
               </span>
             ) : (
               <span>
-                Stream Logs <i className={'fa fa-play'} />
+                Stream Logs <Icon type="play" />
               </span>
             )}
           </Button>

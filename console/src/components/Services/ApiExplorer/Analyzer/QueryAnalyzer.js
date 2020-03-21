@@ -11,6 +11,7 @@ export default class QueryAnalyser extends React.Component {
       activeNode: 0,
     };
   }
+
   componentDidMount() {
     this.props
       .analyzeFetcher(this.props.analyseQuery.query)
@@ -31,6 +32,7 @@ export default class QueryAnalyser extends React.Component {
         this.props.clearAnalyse();
       });
   }
+
   render() {
     const { show, clearAnalyse } = this.props;
     const analysisList = this.state.analyseData.map((analysis, i) => {

@@ -1,14 +1,16 @@
 import React from 'react';
 import { getActionPermissions, findActionPermission } from '../utils';
 import Helmet from 'react-helmet';
+
 import { fetchRoleList } from '../../Data/DataActions';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import { permOpenEdit, permCloseEdit, permSetRoleName } from './reducer';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import PermissionEditor from './PermissionEditor';
 import { setDefaults } from './reducer';
+import { Icon } from '../../../UIKit/atoms';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 const queryTypes = ['Permission'];
 
@@ -56,7 +58,7 @@ const Permissions = ({
       const getEditIcon = () => {
         return (
           <span className={styles.editPermsIcon}>
-            <i className="fa fa-pencil" aria-hidden="true" />
+            <Icon type="edit" />
           </span>
         );
       };
@@ -86,6 +88,7 @@ const Permissions = ({
               (permissionEdit.isNewRole && permissionEdit.newRole === role));
           let editIcon = '';
           let className = '';
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
           let onClick = () => {};
           if (isEditAllowed) {
             editIcon = getEditIcon();
