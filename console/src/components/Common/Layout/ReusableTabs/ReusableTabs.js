@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router';
 
+import { Icon } from '../../../UIKit/atoms';
+
 const Tabs = ({
   appPrefix,
   tabsInfo,
@@ -14,14 +16,16 @@ const Tabs = ({
   if (!(count === null || count === undefined)) {
     showCount = '(' + count + ')';
   }
+
   const styles = require('./ReusableTabs.scss');
   const dataLoader = () => {
     return (
       <span className={styles.loader_ml}>
-        <i className="fa fa-spinner fa-spin" />
+        <Icon type="spinner" />
       </span>
     );
   };
+
   return [
     <div className={styles.common_nav} key={'reusable-tabs-1'}>
       <ul className="nav nav-pills">
