@@ -21,6 +21,7 @@ import {
   FaExpand,
   FaEdit,
   FaChevronDown,
+  FaSearch,
 } from 'react-icons/fa';
 
 import { StyledIcon } from './Icon';
@@ -48,6 +49,7 @@ const iconReferenceMap = {
   compress: FaCompressArrowsAlt,
   expand: FaExpand,
   edit: FaEdit,
+  search: FaSearch,
 };
 
 export const Icon = props => {
