@@ -10,7 +10,7 @@ import { getPathRoot } from '../Common/utils/urlUtils';
 
 import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
-import { Icon } from '../UIKit/atoms/Icon';
+import { Icon } from '../UIKit/atoms/';
 
 import {
   loadServerVersion,

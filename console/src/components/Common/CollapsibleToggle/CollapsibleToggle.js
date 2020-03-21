@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { Icon } from '../../UIKit/atoms';
+
 /**
  *  Accepts following props
  *    `title, string || react-element `: Title of the collapsible toggle
@@ -63,10 +65,11 @@ class CollapsibleToggle extends React.Component {
           onClick={toggleHandler}
         >
           <span className={styles.collapsibleIndicatorWrapper}>
-            <i
-              className={`fa fa-chevron-right ${
-                styles.collapsibleIndicator
-              } ${isOpen && styles.collapsibleIndicatorOpen}`}
+            <Icon
+              type="right"
+              size={12}
+              className={`${styles.collapsibleIndicator} ${isOpen &&
+                styles.collapsibleIndicatorOpen}`}
             />
           </span>
 

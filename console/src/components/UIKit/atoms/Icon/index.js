@@ -16,6 +16,11 @@ import {
   FaStar,
   FaTwitter,
   FaHeart,
+  FaChevronRight,
+  FaCompressArrowsAlt,
+  FaExpand,
+  FaEdit,
+  FaChevronDown,
 } from 'react-icons/fa';
 
 import { StyledIcon } from './Icon';
@@ -38,6 +43,11 @@ const iconReferenceMap = {
   star: FaStar,
   twitter: FaTwitter,
   love: FaHeart,
+  right: FaChevronRight,
+  down: FaChevronDown,
+  compress: FaCompressArrowsAlt,
+  expand: FaExpand,
+  edit: FaEdit,
 };
 
 export const Icon = props => {
@@ -47,7 +57,7 @@ export const Icon = props => {
     ? iconReferenceMap[type]
     : iconReferenceMap.default;
 
-  return <StyledIcon fontSize="icon" as={CurrentActiveIcon} {...props} />;
+  return <StyledIcon as={CurrentActiveIcon} {...props} aria-hidden="true" />;
 };
 
 Icon.defaultProps = {

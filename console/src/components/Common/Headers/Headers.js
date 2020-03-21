@@ -1,7 +1,9 @@
 import React from 'react';
-import styles from './Headers.scss';
+
+import { Icon } from '../../UIKit/atoms';
 import DropdownButton from '../DropdownButton/DropdownButton';
 import { addPlaceholderHeader } from './utils';
+import styles from './Headers.scss';
 
 const Headers = ({ headers, setHeaders }) => {
   return headers.map(({ name, value, type }, i) => {
@@ -67,12 +69,7 @@ const Headers = ({ headers, setHeaders }) => {
 
     const getRemoveButton = () => {
       if (i === headers.length - 1) return null;
-      return (
-        <i
-          className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
-          onClick={removeHeader}
-        />
-      );
+      return <Icon type="close" onClick={removeHeader} />;
     };
 
     return (

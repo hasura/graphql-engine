@@ -1,4 +1,6 @@
 import React from 'react';
+
+import { Icon } from '../../UIKit/atoms';
 import styles from '../Common.scss';
 
 const HiddenMore = ({ title, more, expanded = false }) => {
@@ -12,12 +14,7 @@ const HiddenMore = ({ title, more, expanded = false }) => {
         className={`${styles.display_flex} ${styles.add_mar_bottom} ${styles.cursorPointer} ${styles.hiddenMoreWidth}`}
         onClick={toggle}
       >
-        <i
-          className={`fa fa-chevron-${isExpanded ? 'down' : 'right'} ${
-            styles.add_mar_right_small
-          }`}
-          aria-hidden="true"
-        />
+        <Icon type={isExpanded ? 'down' : 'right'} mr="xs" />
         <b>{title}</b>
       </div>
     );

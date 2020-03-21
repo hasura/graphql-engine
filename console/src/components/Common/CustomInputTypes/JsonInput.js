@@ -3,6 +3,7 @@ import AceEditor from 'react-ace';
 
 import 'brace/mode/markdown';
 import 'brace/theme/github';
+import { Icon } from '../../UIKit/atoms';
 
 const styles = require('./CustomInput.scss');
 
@@ -123,13 +124,10 @@ const JsonInput = props => {
   const editor = editorType === JSONKEY ? getJsonEditor() : getNormalEditor();
 
   const toggleIcon = (
-    <i
+    <Icon
       key="icon_json_editor"
-      className={
-        'fa ' +
-        styles.modeToggleButton +
-        (editorType === JSONKEY ? ' fa-compress' : ' fa-expand')
-      }
+      className={styles.modeToggleButton}
+      type={editorType === JSONKEY ? 'compress' : 'expand'}
       onClick={() => updateState(toggleEditorType)}
       title={
         (editorType === JSONKEY ? 'Collapse' : 'Expand') + ' (Ctrl + Space)'
@@ -144,4 +142,5 @@ const JsonInput = props => {
     </span>
   );
 };
+
 export default JsonInput;

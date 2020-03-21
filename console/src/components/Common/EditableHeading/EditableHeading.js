@@ -1,4 +1,6 @@
 import React from 'react';
+
+import { Icon } from '../../UIKit/atoms';
 import styles from '../Common.scss';
 
 class Heading extends React.Component {
@@ -52,7 +54,7 @@ class Heading extends React.Component {
             className={styles.editable_heading_action}
             data-test={`heading-edit-${property}`}
           >
-            <i className="fa fa-edit" />
+            <Icon type="edit" />
           </div>
         </div>
       );
