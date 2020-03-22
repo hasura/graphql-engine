@@ -36,6 +36,7 @@ prompted for the admin secret key.
   give the client full admin rights to your Hasura instance. See :ref:`auth` for information on
   setting up authentication.
 
+
 (optional) Use the admin secret with the CLI
 --------------------------------------------
 
