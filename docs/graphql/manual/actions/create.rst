@@ -72,6 +72,9 @@ Step 0: Setup
      Run ``hasura metadata export`` so that you get server's metadata into the
      ``metadata/`` directory.
 
+  .. tab:: API
+
+    There is no setup required for defining actions via the metadata API.
 
 Step 1: Define your mutation and associated types
 -------------------------------------------------
@@ -126,6 +129,10 @@ Step 1: Define your mutation and associated types
         type AddResult {
           sum: Int
         }
+
+  .. tab:: API
+
+    An action can be created via the :ref:`create_action <create_action>` metadata API. 
 
 The above definition means:
 
@@ -184,6 +191,10 @@ Now, set the handler for the action:
 
      Update the ``handler`` to the above endpoint.
 
+  .. tab:: API
+
+     A handler can be set while creating an action via the :ref:`create_action <create_action>` metadata API. 
+
 .. admonition:: URL templating
 
   To manage handler endpoints across environments it is possible to template
@@ -205,6 +216,10 @@ Step 3: Finish action creation
   .. tab:: CLI
 
      Run ``hasura metadata apply``.
+
+  .. tab:: API
+
+     The action will be created by calling the :ref:`create_action <create_action>` metadata API. 
 
 
 Step 4: Try it out
