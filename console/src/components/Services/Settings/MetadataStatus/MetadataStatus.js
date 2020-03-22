@@ -11,6 +11,7 @@ import styles from '../../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { Icon } from '../../../UIKit/atoms';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
@@ -20,9 +21,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   const inconsistentObjectsTable = () => {
     return (
       <table
-        className={`${metaDataStyles.metadataStatusTable} ${
-          metaDataStyles.wd750
-        }`}
+        className={`${metaDataStyles.metadataStatusTable} ${metaDataStyles.wd750}`}
         id="t01"
       >
         <thead>
@@ -144,9 +143,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
         </div>
         <div className={styles.add}>{inconsistentObjectsTable()}</div>
         <div
-          className={`${metaDataStyles.wd50percent} ${
-            metaDataStyles.add_mar_top
-          }`}
+          className={`${metaDataStyles.wd50percent} ${metaDataStyles.add_mar_top}`}
         >
           To resolve these inconsistencies, you can do one of the following:
           <ul className={styles.add_mar_top_small}>
@@ -165,9 +162,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
           <Button
             color="yellow"
             size="sm"
-            className={`${metaDataStyles.add_mar_top_small} ${
-              metaDataStyles.add_mar_right
-            }`}
+            className={`${metaDataStyles.add_mar_top_small} ${metaDataStyles.add_mar_right}`}
             onClick={reloadCacheAndLoadInconsistentObjects}
           >
             Reload metadata
@@ -198,22 +193,18 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     }
     return (
       <div className={`${styles.errorBanner} alert alert-danger`}>
-        <i
-          className={`${styles.add_mar_right_small} ${
-            styles.fontStyleNormal
-          } fa fa-exclamation-circle`}
-          aria-hidden="true"
+        <Icon
+          type="error"
+          className={`${styles.add_mar_right_small} ${styles.fontStyleNormal}`}
         />
         <strong>
           You have been redirected because your GraphQL Engine metadata is in an
           inconsistent state
         </strong>
-        <i
-          className={`${styles.align_right} ${styles.fontStyleNormal} ${
-            styles.cursorPointer
-          } fa fa-times`}
-          aria-hidden="true"
+        <Icon
+          type="close"
           onClick={dismissErrorBanner}
+          className={`${styles.align_right} ${styles.fontStyleNormal} ${styles.cursorPointer}`}
         />
       </div>
     );
@@ -223,9 +214,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     <div className={styles.add_mar_bottom}>
       {banner()}
       <div
-        className={`${styles.clear_fix} ${styles.padd_left} ${
-          styles.padd_top
-        } ${metaDataStyles.metadata_wrapper} container-fluid`}
+        className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${metaDataStyles.metadata_wrapper} container-fluid`}
       >
         <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
           Hasura Metadata Status

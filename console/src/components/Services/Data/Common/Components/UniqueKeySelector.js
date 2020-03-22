@@ -1,4 +1,6 @@
 import React from 'react';
+
+import { Icon } from '../../../../UIKit/atoms';
 import styles from '../../../../Common/TableCommon/Table.scss';
 
 const UniqueKeySelector = ({
@@ -54,10 +56,11 @@ const UniqueKeySelector = ({
     const setUniqueCol = e => dispatchSelectUniqueCol(e, i);
 
     const removeIcon = (
-      <i
-        className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+      <Icon
+        type="close"
         data-test={`remove-uk-${index}-column-${i}`}
         onClick={removeUniqueCol}
+        className={`${styles.fontAwosomeClose}`}
       />
     );
 

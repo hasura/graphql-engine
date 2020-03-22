@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 
 import { generateHeaderSyms } from './HeaderReducer';
 import DropdownButton from '../../DropdownButton/DropdownButton';
+import { Icon } from '../../../UIKit/atoms';
 
 class Header extends React.Component {
   constructor(props) {
@@ -187,10 +188,11 @@ class Header extends React.Component {
           />
           */}
           {i !== this.props.headers.length - 1 && !isDisabled ? (
-            <i
-              className={styles.fontAwosomeClose + ' fa-lg fa fa-times'}
+            <Icon
+              type="close"
               onClick={this.deleteHeader.bind(this)}
               data-index-id={i}
+              className={styles.fontAwosomeClose}
             />
           ) : null}
         </div>

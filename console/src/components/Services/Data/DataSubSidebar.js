@@ -17,6 +17,7 @@ import {
   getSchemaAddTableRoute,
   getTableBrowseRoute,
 } from '../../Common/utils/routesUtils';
+import { Icon } from '../../UIKit/atoms';
 
 class DataSubSidebar extends React.Component {
   constructor() {
@@ -119,10 +120,7 @@ class DataSubSidebar extends React.Component {
                 )}
                 data-test={tableName}
               >
-                <i
-                  className={styles.tableIcon + ' fa fa-table'}
-                  aria-hidden="true"
-                />
+                <Icon type="table" className={styles.tableIcon} />
                 {displayTableName(table)}
               </Link>
               <GqlCompatibilityWarning

@@ -5,7 +5,9 @@ import 'brace/mode/json';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import 'react-table/react-table.css';
-import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions'; // eslint-disable-line no-unused-vars
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions';
 import FilterQuery from './FilterQuery';
 import {
   setOrderCol,
@@ -20,6 +22,7 @@ import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import '../TableCommon/EventReactTableOverrides.css';
 import { verifySuccessStatus } from '../utils';
+import { Icon } from '../../../UIKit/atoms';
 
 const ViewRows = ({
   curTriggerName,
@@ -224,6 +227,7 @@ const ViewRows = ({
         accessor: column,
       });
     });
+
     return (
       <ReactTable
         className="-highlight"
@@ -264,9 +268,9 @@ const ViewRows = ({
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
             const status = verifySuccessStatus(r.status) ? (
-              <i className={styles.invocationSuccess + ' fa fa-check'} />
+              <Icon type="check" className={styles.invocationSuccess} />
             ) : (
-              <i className={styles.invocationFailure + ' fa fa-times'} />
+              <Icon type="close" className={styles.invocationFailure} />
             );
 
             // Insert cells corresponding to all rows

@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import { Icon } from '../../../UIKit/atoms';
 
 const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
   const [searchText, setSearchText] = React.useState('');
@@ -65,10 +66,7 @@ const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
               to={appPrefix + '/manage/' + a.action_name + '/modify'}
               data-test={a.action_name}
             >
-              <i
-                className={styles.tableIcon + ' fa fa-wrench'}
-                aria-hidden="true"
-              />
+              <Icon type="wrench" className={styles.tableIcon} />
               {a.action_name}
             </Link>
           </li>

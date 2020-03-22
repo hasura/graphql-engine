@@ -29,11 +29,14 @@ class InvokeManualTrigger extends React.Component {
     this.setState({
       isModalOpen: false,
     });
+
     const { onClose } = this.props;
+
     if (onClose && typeof onClose !== 'undefined') {
       onClose();
     }
   };
+
   constructor() {
     super();
     this.state = {
@@ -41,6 +44,7 @@ class InvokeManualTrigger extends React.Component {
       pollId: null,
     };
   }
+
   componentDidMount() {
     const { name, args, dispatch } = this.props;
     dispatch(invokeManualTrigger(name, args))
@@ -60,11 +64,13 @@ class InvokeManualTrigger extends React.Component {
         console.error('Error invoking trigger' + err);
       });
   }
+
   setPoll(pollId) {
     this.setState({
       pollId,
     });
   }
+
   componentWillUnmount() {
     const { dispatch } = this.props;
     clearInterval(this.state.pollId);
@@ -72,6 +78,7 @@ class InvokeManualTrigger extends React.Component {
       type: RESET,
     });
   }
+
   render() {
     const { isModalOpen } = this.state;
     const { name, invokeEventTrigger } = this.props;

@@ -6,6 +6,7 @@ import { commonDataTypes } from '../utils';
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
+import { Icon } from '../../../UIKit/atoms';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -66,9 +67,10 @@ const TableColumn = props => {
       removeIcon = <i className={`${styles.fontAwosomeClose}`} />;
     } else {
       removeIcon = (
-        <i
-          className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+        <Icon
+          type="close"
           onClick={onRemoveColumn.bind(undefined, i)}
+          className={`${styles.fontAwosomeClose}`}
         />
       );
     }

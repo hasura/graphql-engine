@@ -2,6 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Modal from 'react-modal';
 
+import { Icon } from '../../../UIKit/atoms';
+
 export default class QueryAnalyser extends React.Component {
   constructor() {
     super();
@@ -43,7 +45,7 @@ export default class QueryAnalyser extends React.Component {
           data-key={i}
           onClick={this.handleAnalyseNodeChange.bind(this)}
         >
-          <i className="fa fa-table" aria-hidden="true" />
+          <Icon type="table" />
           {analysis.field}
         </li>
       );
@@ -80,8 +82,8 @@ export default class QueryAnalyser extends React.Component {
                       <span className="tooltiptext" id="copySql">
                         Copy
                       </span>
-                      <i
-                        className={'fa fa-copy'}
+                      <Icon
+                        type="copy"
                         onClick={this.copyToClip.bind(this, 'sql', 'copySql')}
                         onMouseLeave={this.resetCopy.bind(this, 'copySql')}
                       />
@@ -124,8 +126,8 @@ export default class QueryAnalyser extends React.Component {
                       <span className="tooltiptext" id="copyPlan">
                         Copy
                       </span>
-                      <i
-                        className={'fa fa-copy'}
+                      <Icon
+                        type="copy"
                         onClick={this.copyToClip.bind(this, 'plan', 'copyPlan')}
                         onMouseLeave={this.resetCopy.bind(this, 'copyPlan')}
                       />
@@ -181,6 +183,7 @@ export default class QueryAnalyser extends React.Component {
       this.setState({ activeNode: parseInt(nodeKey, 10) });
     }
   }
+
   copyToClip(type, id) {
     let text = '';
     if (this.state.analyseData.length > 0) {
@@ -195,6 +198,7 @@ export default class QueryAnalyser extends React.Component {
         text = this.state.analyseData[this.state.activeNode].plan.join('\n');
       }
     }
+
     const textArea = document.createElement('textarea');
     textArea.value = text;
     document.body.appendChild(textArea);
@@ -213,6 +217,7 @@ export default class QueryAnalyser extends React.Component {
     }
     document.body.removeChild(textArea);
   }
+
   resetCopy(id) {
     const tooltip = document.getElementById(id);
     tooltip.innerHTML = 'Copy';

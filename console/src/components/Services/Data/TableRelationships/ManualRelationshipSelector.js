@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../../Common/TableCommon/Table.scss';
+
 import {
   manualRelRTableChanged,
   manualRelTypeChanged,
@@ -8,6 +8,8 @@ import {
   manualRelRSchemaChanged,
 } from './Actions';
 import { updateSchemaInfo } from '../DataActions';
+import { Icon } from '../../../UIKit/atoms';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 const ManualRelationshipSelector = ({
   tableSchema,
@@ -199,25 +201,22 @@ const ManualRelationshipSelector = ({
             removeIcon = null;
           } else {
             removeIcon = (
-              <i
-                className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+              <Icon
+                type="close"
                 onClick={dispatchRemoveCol}
+                className={`${styles.fontAwosomeClose}`}
               />
             );
           }
 
           return (
             <div
-              className={`row ${styles.add_mar_bottom_mid} ${
-                styles.display_flex
-              }`}
+              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
               key={`fk-col-${_i}`}
             >
               <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={lc}
                   onChange={dispatchSetLcol}
                   data-test={`manual-relationship-lcol-${_i}`}
@@ -242,9 +241,7 @@ const ManualRelationshipSelector = ({
               </div>
               <div className={'col-sm-4'}>
                 <select
-                  className={`form-control ${styles.select} ${
-                    styles.wd100Percent
-                  }`}
+                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
                   value={rc}
                   onChange={dispatchSetRcol}
                   disabled={!relAdd.rTable}

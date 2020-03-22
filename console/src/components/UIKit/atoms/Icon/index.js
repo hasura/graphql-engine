@@ -38,10 +38,17 @@ import {
   FaSort,
   FaCaretUp,
   FaCaretDown,
+  FaCaretRight,
+  FaCaretLeft,
   FaRegClone,
   FaRegCaretSquareRight,
   FaCopy,
   FaExternalLinkAlt,
+  FaTable,
+  FaFilter,
+  FaWrench,
+  FaRegPaperPlane,
+  FaCodeBranch,
 } from 'react-icons/fa';
 
 import { StyledIcon } from './Icon';
@@ -87,9 +94,16 @@ const iconReferenceMap = {
   sort: FaSort,
   caretUp: FaCaretUp,
   caretDown: FaCaretDown,
+  caretRight: FaCaretRight,
+  caretLeft: FaCaretLeft,
   clone: FaRegClone,
   copy: FaCopy,
   link: FaExternalLinkAlt,
+  table: FaTable,
+  filter: FaFilter,
+  wrench: FaWrench,
+  send: FaRegPaperPlane,
+  fork: FaCodeBranch,
 };
 
 export const Icon = props => {

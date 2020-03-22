@@ -2,6 +2,7 @@ import React from 'react';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
+import { Icon } from '../../UIKit/atoms';
 import styles from './WarningSymbol.scss';
 
 const WarningSymbol = ({
@@ -24,11 +25,9 @@ const WarningSymbol = ({
 
 export const WarningIcon = ({ customStyle }) => {
   return (
-    <i
-      className={`fa fa-exclamation-triangle ${styles.warningSymbol} ${
-        customStyle ? customStyle : ''
-      }`}
-      aria-hidden="true"
+    <Icon
+      type="warning"
+      className={`${styles.warningSymbol} ${customStyle ? customStyle : ''}`}
     />
   );
 };

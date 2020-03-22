@@ -2,6 +2,8 @@ import React from 'react';
 import ReloadEnumMetadata from '../../../Settings/MetadataOptions/ReloadMetadata';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
+
+import { Icon } from '../../../../UIKit/atoms';
 import styles from '../../../../Common/Common.scss';
 
 const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
@@ -18,11 +20,9 @@ const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
     <React.Fragment>
       <ReloadEnumMetadata buttonText="Reload enum values" dispatch={dispatch} />
       <OverlayTrigger overlay={tooltip} placement="right">
-        <i
-          className={`fa fa-info-circle ${
-            styles.cursorPointer
-          } ${tooltipStyle || ''}`}
-          aria-hidden="true"
+        <Icon
+          type="info"
+          className={`${styles.cursorPointer} ${tooltipStyle || ''}`}
         />
       </OverlayTrigger>
     </React.Fragment>

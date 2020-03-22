@@ -1,6 +1,8 @@
+/* eslint-disable react/no-danger */
 import React from 'react';
-
 import PropTypes from 'prop-types';
+
+import { Icon } from '../../UIKit/atoms';
 
 class TextAreaWithCopy extends React.Component {
   copyToClip(id, e) {
@@ -141,8 +143,8 @@ class TextAreaWithCopy extends React.Component {
             >
               Copy
             </span>
-            <i
-              className={'fa fa-copy'}
+            <Icon
+              type="copy"
               onClick={this.copyToClip.bind(this, id)}
               onMouseLeave={this.resetCopy.bind(this, id)}
             />

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
+import { Icon } from '../../UIKit/atoms';
 
 const RemoteSchemaSubSidebar = ({
   appPrefix,
@@ -65,10 +66,7 @@ const RemoteSchemaSubSidebar = ({
               to={appPrefix + '/manage/' + d.name + '/details'}
               data-test={d.name}
             >
-              <i
-                className={styles.tableIcon + ' fa fa-code-fork'}
-                aria-hidden="true"
-              />
+              <Icon type="fork" />
               {d.name}
             </Link>
           </li>

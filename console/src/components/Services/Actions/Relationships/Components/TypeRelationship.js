@@ -22,6 +22,7 @@ import {
 import { addActionRel, removeActionRel } from '../../ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';
 import tableStyles from '../../../../Common/TableCommon/TableStyles.scss';
+import { Icon } from '../../../../UIKit/atoms';
 
 const RelationshipEditor = ({
   objectType,
@@ -191,17 +192,17 @@ const RelationshipEditor = ({
           disabled={!name}
         >
           {// default unselected option
-          refSchema === '' && (
-            <option value={''} disabled>
-              {'-- reference schema --'}
-            </option>
-          )}
+            refSchema === '' && (
+              <option value={''} disabled>
+                {'-- reference schema --'}
+              </option>
+            )}
           {// all reference schema options
-          orderedSchemaList.map((rs, j) => (
-            <option key={j} value={rs}>
-              {rs}
-            </option>
-          ))}
+            orderedSchemaList.map((rs, j) => (
+              <option key={j} value={rs}>
+                {rs}
+              </option>
+            ))}
         </select>
       </div>
     );
@@ -286,9 +287,10 @@ const RelationshipEditor = ({
             removeIcon = null;
           } else {
             removeIcon = (
-              <i
-                className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+              <Icon
+                type="close"
                 onClick={removeField}
+                className={`${styles.fontAwosomeClose}`}
               />
             );
           }

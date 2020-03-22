@@ -6,6 +6,7 @@ import { Link } from 'react-router';
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
 
 import { LISTING_TRIGGER } from './EventActions';
+import { Icon } from '../../UIKit/atoms';
 
 const appPrefix = '/events';
 
@@ -77,10 +78,7 @@ const EventSubSidebar = ({
                 to={appPrefix + '/manage/triggers/' + trigger + '/processed'}
                 data-test={trigger}
               >
-                <i
-                  className={styles.tableIcon + ' fa fa-send-o'}
-                  aria-hidden="true"
-                />
+                <Icon type="send" className={styles.tableIcon} />
                 {trigger}
               </Link>
             </li>

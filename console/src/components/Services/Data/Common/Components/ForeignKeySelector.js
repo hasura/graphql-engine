@@ -1,8 +1,10 @@
 import React from 'react';
+
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { fkViolationOnUpdate, fkViolationOnDelete } from '../TooltipMessages';
 import { updateSchemaInfo } from '../../DataActions';
 import ToolTip from '../../../../Common/Tooltip/Tooltip';
+import { Icon } from '../../../../UIKit/atoms';
 
 const violiationActions = [
   'restrict',
@@ -206,9 +208,10 @@ const ForeignKeySelector = ({
             removeIcon = null;
           } else {
             removeIcon = (
-              <i
-                className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+              <Icon
+                type="close"
                 onClick={dispatchRemoveCol}
+                className={`${styles.fontAwosomeClose}`}
               />
             );
           }

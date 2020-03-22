@@ -25,6 +25,7 @@ import {
   ACE_EDITOR_FONT_SIZE,
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
+import { Icon } from '../../../UIKit/atoms';
 
 const RawSQL = ({
   sql,
@@ -344,10 +345,7 @@ const RawSQL = ({
           Cascade metadata
         </label>
         <OverlayTrigger placement="right" overlay={cascadeTip}>
-          <i
-            className={`${styles.add_mar_left_small} fa fa-info-circle`}
-            aria-hidden="true"
-          />
+          <Icon type="info" className={`${styles.add_mar_left_small}`} />
         </OverlayTrigger>
       </div>
     );
@@ -375,10 +373,7 @@ const RawSQL = ({
           Track this
         </label>
         <OverlayTrigger placement="right" overlay={trackTableTip()}>
-          <i
-            className={`${styles.add_mar_left_small} fa fa-info-circle`}
-            aria-hidden="true"
-          />
+          <Icon type="info" className={`${styles.add_mar_left_small}`} />
         </OverlayTrigger>
       </div>
     );
@@ -409,10 +404,7 @@ const RawSQL = ({
             This is a migration
           </label>
           <OverlayTrigger placement="right" overlay={migrationTip}>
-            <i
-              className={`${styles.add_mar_left_small} fa fa-info-circle`}
-              aria-hidden="true"
-            />
+            <Icon type="info" className={`${styles.add_mar_left_small}`} />
           </OverlayTrigger>
         </div>
       );
@@ -441,10 +433,7 @@ const RawSQL = ({
                 type="text"
               />
               <OverlayTrigger placement="right" overlay={migrationNameTip}>
-                <i
-                  className={`${styles.add_mar_left_small} fa fa-info-circle`}
-                  aria-hidden="true"
-                />
+                <Icon type="info" className={`${styles.add_mar_left_small}`} />
               </OverlayTrigger>
               <div
                 className={styles.add_mar_top_small + ' ' + styles.text_gray}

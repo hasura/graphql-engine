@@ -1,11 +1,13 @@
 import React from 'react';
+
+import { Icon } from '../../UIKit/atoms';
 import styles from '../Common.scss';
 
 const RemoveIcon = ({ className, ...props }) => (
-  <i
-    className={`${styles.fontAwosomeClose} fa-lg fa fa-times ${className ||
-      ''}`}
+  <Icon
+    type="close"
     {...props}
+    className={`${styles.fontAwosomeClose} ${className || ''}`}
   />
 );
 

@@ -1,7 +1,9 @@
 import React from 'react';
 
+import { Icon } from '../../UIKit/atoms';
+
 const Copy = ({ className }) => {
-  return <i className={`fa fa-copy ${className || ''}`} aria-hidden="true" />;
+  return <Icon type="copy" className={className || ''} />;
 };
 
 export default Copy;

@@ -6,7 +6,9 @@ import 'brace/mode/markdown';
 import 'brace/theme/github';
 import 'brace/theme/chrome';
 
-const styles = require('./CustomInput.scss');
+import styles from './CustomInput.scss';
+
+import { Icon } from '../../UIKit/atoms';
 
 // editorType is what sort of editor. All are ACE Editor
 // modes except 0, which is text input
@@ -113,7 +115,10 @@ const TextInput = props => {
         commands={[
           {
             name: 'toggleEditor',
-            bindKey: { win: 'Ctrl-Space', mac: 'Command-Space' },
+            bindKey: {
+              win: 'Ctrl-Space',
+              mac: 'Command-Space',
+            },
             exec: handleEditorExec,
           },
         ]}
@@ -152,30 +157,24 @@ const TextInput = props => {
   //     <span className={styles.modeType}>
   //       {SHORT_EDITOR_TYPE_NAMES[editorType]}
   //     </span>
-  //     <i
+  //     <Icon
   //       key="icon_text_editor"
-  //       className={
-  //         'fa ' +
-  //         styles.modeToggleButton +
-  //         (editorType === NORMAL_KEY ? ' fa-expand' : ' fa-chevron-right')
-  //       }
+  //       type={(editorType === NORMAL_KEY ? 'expand' : 'right')}
+  //       className={styles.modeToggleButton}
   //     />
   //   </span>
   // );
 
   const cycleIcon = (
-    <i
+    <Icon
       key="icon_text_editor"
-      className={
-        'fa ' +
-        styles.modeToggleButton +
-        (editorType === MULTILINE_KEY ? ' fa-compress' : ' fa-expand')
-      }
+      type={editorType === MULTILINE_KEY ? 'compress' : 'expand'}
       onClick={() => updateState(cycleEditorType)}
       title={
         (editorType === MULTILINE_KEY ? 'Collapse' : 'Expand') +
         ' (Ctrl + Space)'
       }
+      className={styles.modeToggleButton}
     />
   );
 

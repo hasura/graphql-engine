@@ -1,13 +1,10 @@
 import React from 'react';
+
+import { Icon } from '../../UIKit/atoms';
 import styles from '../Common.scss';
 
 const Cross = ({ className }) => {
-  return (
-    <i
-      className={`fa fa-times ${styles.iconCross} ${className}`}
-      aria-hidden="true"
-    />
-  );
+  return <Icon type="close" className={`${styles.iconCross} ${className}`} />;
 };
 
 export default Cross;
