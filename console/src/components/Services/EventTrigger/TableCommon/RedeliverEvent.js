@@ -5,16 +5,19 @@ import { connect } from 'react-redux';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import Modal from 'react-bootstrap/lib/Modal';
+import AceEditor from 'react-ace';
+
 import {
   MODAL_OPEN,
   loadEventInvocations,
   redeliverEvent,
 } from '../EventActions';
-import AceEditor from 'react-ace';
+
 import 'brace/mode/json';
 import Button from '../../../Common/Button/Button';
-
 import { verifySuccessStatus } from '../utils';
+import { Icon } from '../../../UIKit/atoms';
+import styles from './EventTable.scss';
 
 class RedeliverEvent extends Component {
   constructor(props) {
@@ -22,11 +25,13 @@ class RedeliverEvent extends Component {
     this.state = { isWatching: true, intervalId: null };
     this.refreshData = this.refreshData.bind(this);
   }
+
   componentDidMount() {
     if (this.props.log.isModalOpen) {
       this.attachFetching(this.props.log.redeliverEventId);
     }
   }
+
   componentWillReceiveProps(nextProps) {
     if (this.props.log.isModalOpen !== nextProps.log.isModalOpen) {
       if (nextProps.log.isModalOpen === true) {
@@ -42,14 +47,17 @@ class RedeliverEvent extends Component {
       this.removeFetching(this.state.intervalId);
     }
   }
+
   componentWillUnmount() {
     if (this.props.log.isModalOpen) {
       this.removeFetching(this.state.intervalId);
     }
   }
+
   onModalClose = () => {
     this.props.dispatch({ type: MODAL_OPEN, data: false });
   };
+
   attachFetching(eventId) {
     const intervalId = setInterval(
       () => this.props.dispatch(loadEventInvocations(eventId)),
@@ -57,19 +65,21 @@ class RedeliverEvent extends Component {
     );
     this.setState({ intervalId: intervalId });
   }
+
   removeFetching(intervalId) {
     clearInterval(intervalId);
     this.setState({ intervalId: null });
   }
+
   refreshData() {
     this.props.dispatch(loadEventInvocations(this.props.log.event_id));
   }
+
   handleRedeliver() {
     this.props.dispatch(redeliverEvent(this.props.log.event_id));
   }
 
   render() {
-    const styles = require('./EventTable.scss');
     const { log } = this.props;
 
     const isLoading = this.state.intervalId ? (
@@ -80,6 +90,7 @@ class RedeliverEvent extends Component {
       if (log.eventInvocations.length === 0) {
         return <div> No rows found. </div>;
       }
+
       const invocationColumns = ['status', 'id', 'created_at'];
       const invocationGridHeadings = [];
       invocationColumns.map(column => {
@@ -89,22 +100,17 @@ class RedeliverEvent extends Component {
         });
       });
       const invocationRowsData = [];
+
       log.eventInvocations.map(r => {
         const newRow = {};
         const status = verifySuccessStatus(r.status) ? (
-          <i
-            className={
-              styles.invocationSuccess +
-              ' fa fa-check invocationsSuccess ' +
-              styles.tabletdCenter
-            }
+          <Icon
+            type="check"
+            color="green.original"
+            className={styles.tabletdCenter}
           />
         ) : (
-          <i
-            className={
-              styles.invocationFailure + ' fa fa-times invocationsFailure'
-            }
-          />
+          <Icon type="close" color="red.primary" />
         );
 
         // Insert cells corresponding to all rows
@@ -132,6 +138,7 @@ class RedeliverEvent extends Component {
         });
         invocationRowsData.push(newRow);
       });
+
       return (
         <ReactTable
           className="invocationClass"
@@ -186,6 +193,7 @@ class RedeliverEvent extends Component {
     };
 
     let latestResponse = '';
+
     try {
       latestResponse = JSON.stringify(
         JSON.parse(log.eventInvocations[0].response),

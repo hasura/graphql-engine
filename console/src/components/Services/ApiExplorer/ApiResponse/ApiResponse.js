@@ -2,12 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import AceEditor from 'react-ace';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
-
 import CopyToClipboard from 'react-copy-to-clipboard';
 
 import generateSuggestionBox from './generateSuggestionBox';
-
 import suggestionFunctions from './suggestionFunctions';
+import { Icon } from '../../../UIKit/atoms';
 
 class ApiResponse extends React.Component {
   constructor() {
@@ -115,7 +114,7 @@ class ApiResponse extends React.Component {
 
         {showHelpBulb ? (
           <div className={styles.helpTextWrapper}>
-            <i className="fa fa-lightbulb-o" aria-hidden="true" />
+            <Icon type="lightBulb" />
             Embed in your HTML as follows
             <div className="input-group">
               <pre>{imgHTMLTag}</pre>
@@ -235,4 +234,5 @@ ApiResponse.propTypes = {
   url: PropTypes.string,
   categoryType: PropTypes.string,
 };
+
 export default ApiResponse;

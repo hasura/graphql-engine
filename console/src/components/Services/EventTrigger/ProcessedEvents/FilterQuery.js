@@ -4,9 +4,9 @@
   but don't listen to state.
   derive everything through viewtable as much as possible.
 */
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
-import React, { Component } from 'react';
 import Operators from '../Operators';
 import {
   setFilterCol,
@@ -24,6 +24,9 @@ import {
 import Button from '../../../Common/Button/Button';
 import { setDefaultQuery, runQuery } from './FilterActions';
 import { vMakeRequest } from './ViewActions';
+import { Icon } from '../../../UIKit/atoms';
+
+import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
 const renderCols = (colName, triggerSchema, onChange, usage, key) => {
   const columns = ['id', 'delivered', 'created_at'];
@@ -71,7 +74,6 @@ const renderOps = (opName, onChange, key) => (
 );
 
 const renderWheres = (whereAnd, triggerSchema, dispatch) => {
-  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
   return whereAnd.map((clause, i) => {
     const colName = Object.keys(clause)[0];
     const opName = Object.keys(clause[colName])[0];
@@ -81,11 +83,13 @@ const renderWheres = (whereAnd, triggerSchema, dispatch) => {
     const dSetFilterOp = e => {
       dispatch(setFilterOp(e.target.value, i));
     };
+
     let removeIcon = null;
+
     if (i + 1 < whereAnd.length) {
       removeIcon = (
-        <i
-          className="fa fa-times"
+        <Icon
+          type="close"
           onClick={() => {
             dispatch(removeFilter(i));
           }}
@@ -93,6 +97,7 @@ const renderWheres = (whereAnd, triggerSchema, dispatch) => {
         />
       );
     }
+
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-4">
@@ -120,7 +125,6 @@ const renderWheres = (whereAnd, triggerSchema, dispatch) => {
 };
 
 const renderSorts = (orderBy, triggerSchema, dispatch) => {
-  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
   return orderBy.map((c, i) => {
     const dSetOrderCol = e => {
       dispatch(setOrderCol(e.target.value, i));
@@ -128,11 +132,13 @@ const renderSorts = (orderBy, triggerSchema, dispatch) => {
         dispatch(addOrder());
       }
     };
+
     let removeIcon = null;
+
     if (i + 1 < orderBy.length) {
       removeIcon = (
-        <i
-          className="fa fa-times"
+        <Icon
+          type="close"
           onClick={() => {
             dispatch(removeOrder(i));
           }}
@@ -140,6 +146,7 @@ const renderSorts = (orderBy, triggerSchema, dispatch) => {
         />
       );
     }
+
     return (
       <div key={i} className={`${styles.inputRow} row`}>
         <div className="col-xs-6">
@@ -170,6 +177,7 @@ class FilterQuery extends Component {
     this.state = { isWatching: false, intervalId: null };
     this.refreshData = this.refreshData.bind(this);
   }
+
   componentDidMount() {
     const dispatch = this.props.dispatch;
     dispatch(setDefaultQuery(this.props.curQuery));
@@ -196,7 +204,7 @@ class FilterQuery extends Component {
 
   render() {
     const { dispatch, whereAnd, triggerSchema, orderBy } = this.props;
-    const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
+
     return (
       <div>
         <form
@@ -207,17 +215,13 @@ class FilterQuery extends Component {
         >
           <div className="">
             <div
-              className={`${styles.queryBox} col-xs-6 ${
-                styles.padd_left_remove
-              }`}
+              className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
               <span className={styles.subheading_text}>Filter</span>
               {renderWheres(whereAnd, triggerSchema, dispatch)}
             </div>
             <div
-              className={`${styles.queryBox} col-xs-6 ${
-                styles.padd_left_remove
-              }`}
+              className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
               <b className={styles.subheading_text}>Sort</b>
               {renderSorts(orderBy, triggerSchema, dispatch)}

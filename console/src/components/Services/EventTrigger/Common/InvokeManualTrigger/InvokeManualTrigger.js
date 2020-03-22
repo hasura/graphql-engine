@@ -45,6 +45,7 @@ class InvokeManualTrigger extends React.Component {
     const { name, args, dispatch } = this.props;
     dispatch(invokeManualTrigger(name, args))
       .then(data => {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const currThis = this;
         const pollId = setInterval(() => {
           dispatch(loadEventInvocations(data.event_id)).then(d => {
@@ -139,14 +140,10 @@ class InvokeManualTrigger extends React.Component {
       getEventIdErrorText('Unable to invoke trigger');
     const getEventData = () => (
       <div
-        className={`${styles.remove_padding_left} container-fluid ${
-          styles.clear_fix
-        } ${styles.padd_right_remove}`}
+        className={`${styles.remove_padding_left} container-fluid ${styles.clear_fix} ${styles.padd_right_remove}`}
       >
         <div
-          className={`${styles.remove_padding_left} col-md-12 ${
-            styles.padd_right_remove
-          }`}
+          className={`${styles.remove_padding_left} col-md-12 ${styles.padd_right_remove}`}
         >
           <div className={`${styles.margin_bottom_20} `}>
             Event ID - {eventInfo}

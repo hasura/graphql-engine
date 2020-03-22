@@ -38,7 +38,6 @@ import {
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
@@ -72,6 +71,8 @@ import {
   getGroupedTableComputedFields,
 } from '../../../Common/utils/pgUtils';
 import { showErrorNotification } from '../../Common/Notification';
+import { Icon } from '../../../UIKit/atoms';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 class Permissions extends Component {
   constructor() {
@@ -185,7 +186,7 @@ class Permissions extends Component {
         <span>
           <span className={styles.add_mar_right_small}>{text}</span>
           <OverlayTrigger placement="right" overlay={tooltip}>
-            <i className="fa fa-question-circle" aria-hidden="true" />
+            <Icon type="questionCircle" />
           </OverlayTrigger>
         </span>
       );
@@ -271,7 +272,7 @@ class Permissions extends Component {
         if (!hasPermissions) {
           note = (
             <div className={styles.permissionsLegend}>
-              <i className="fa fa-info-circle" aria-hidden="true" />
+              <Icon type="info" />
               &nbsp; You cannot insert/update into this view
             </div>
           );
@@ -327,7 +328,7 @@ class Permissions extends Component {
           const getEditIcon = () => {
             return (
               <span className={styles.editPermsIcon}>
-                <i className="fa fa-pencil" aria-hidden="true" />
+                <Icon type="pencil" />
               </span>
             );
           };
@@ -402,6 +403,7 @@ class Permissions extends Component {
 
             let editIcon = '';
             let className = '';
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
             let onClick = () => {};
             if (isEditAllowed) {
               className += styles.clickableCell;
@@ -737,7 +739,7 @@ class Permissions extends Component {
               <span data-test="custom-check">
                 <span className={styles.add_mar_right}>With custom check:</span>
                 <OverlayTrigger placement="right" overlay={customCheckToolTip}>
-                  <i className="fa fa-question-circle" aria-hidden="true" />
+                  <Icon type="questionCircle" />
                 </OverlayTrigger>
               </span>
             );
@@ -1365,8 +1367,8 @@ class Permissions extends Component {
 
             if (presetType) {
               _deleteBtn = (
-                <i
-                  className="fa-lg fa fa-times"
+                <Icon
+                  type="close"
                   onClick={deletePreset}
                   data-index-id={index}
                 />
@@ -1575,8 +1577,9 @@ class Permissions extends Component {
 
               if (applyTo.table && applyTo.role && applyTo.action) {
                 _removeIcon = (
-                  <i
-                    className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+                  <Icon
+                    type="close"
+                    className={styles.fontAwosomeClose}
                     onClick={removeApplyTo}
                   />
                 );

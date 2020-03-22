@@ -1,6 +1,8 @@
 import React from 'react';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
+
+import { Icon } from '../../UIKit/atoms';
 import styles from './Tooltip.scss';
 
 const tooltipGen = message => {
@@ -9,10 +11,7 @@ const tooltipGen = message => {
 
 const ToolTip = ({ message }) => (
   <OverlayTrigger placement="right" overlay={tooltipGen(message)}>
-    <i
-      className={`fa fa-question-circle + ${styles.tooltipIcon}`}
-      aria-hidden="true"
-    />
+    <Icon type="questionCircle" className={styles.tooltipIcon} />
   </OverlayTrigger>
 );
 

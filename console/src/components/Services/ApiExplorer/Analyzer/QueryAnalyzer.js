@@ -48,6 +48,7 @@ export default class QueryAnalyser extends React.Component {
         </li>
       );
     });
+
     return (
       <Modal
         className="modalWrapper"
@@ -89,6 +90,7 @@ export default class QueryAnalyser extends React.Component {
                   {window.hljs && window.sqlFormatter ? (
                     <pre>
                       <code
+                        // eslint-disable-next-line react/no-danger
                         dangerouslySetInnerHTML={{
                           __html:
                             this.state.activeNode >= 0 &&

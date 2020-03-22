@@ -4,15 +4,16 @@ import GraphiQL from 'graphiql';
 import PropTypes from 'prop-types';
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
-import AnalyzeButton from '../Analyzer/AnalyzeButton';
+import { parse as sdlParse, print } from 'graphql';
 
+import AnalyzeButton from '../Analyzer/AnalyzeButton';
 import {
   clearCodeMirrorHints,
   setQueryVariableSectionHeight,
   copyToClipboard,
 } from './utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
-import { parse as sdlParse, print } from 'graphql';
+
 import deriveMutation from '../../../../shared/utils/deriveMutation';
 import {
   getActionDefinitionSdl,
@@ -25,6 +26,7 @@ import {
   setActionDefinition,
   setTypeDefinition,
 } from '../../Actions/Add/reducer';
+import { Icon } from '../../../UIKit/atoms';
 
 import 'graphiql/graphiql.css';
 import './GraphiQL.css';
@@ -160,7 +162,7 @@ class GraphiQLWrapper extends Component {
             label: 'Voyager',
             title: 'GraphQL Voyager',
             onClick: () => window.open(voyagerUrl, '_blank'),
-            icon: <i className="fa fa-external-link" aria-hidden="true" />,
+            icon: <Icon type="link" />,
           },
           {
             label: 'Derive action',

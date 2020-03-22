@@ -39,6 +39,7 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import RawSqlButton from '../Common/Components/RawSqlButton';
+import { Icon } from '../../../UIKit/atoms';
 
 class Schema extends Component {
   constructor(props) {
@@ -191,7 +192,7 @@ class Schema extends Component {
               onClick={handleCreateNewClick}
               title="Create new schema"
             >
-              <i className="fa fa-plus" aria-hidden="true" />
+              <Icon type="add" />
             </Button>
           );
 
@@ -253,7 +254,7 @@ class Schema extends Component {
               onClick={handleDelete}
               title="Delete current schema"
             >
-              <i className="fa fa-trash" aria-hidden="true" />
+              <Icon type="delete" />
             </Button>
           );
         }

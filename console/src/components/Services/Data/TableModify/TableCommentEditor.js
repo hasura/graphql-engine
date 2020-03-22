@@ -5,6 +5,7 @@ import {
   saveTableCommentSql,
 } from './ModifyActions';
 
+import { Icon } from '../../../UIKit/atoms';
 import styles from './ModifyTable.scss';
 
 const TableCommentEditor = ({
@@ -33,7 +34,7 @@ const TableCommentEditor = ({
     <div className={styles.add_pad_bottom}>
       <div className={styles.commentText}>Add a comment</div>
       <div onClick={editCommentClicked} className={styles.commentEdit}>
-        <i className="fa fa-edit" />
+        <Icon type="edit" />
       </div>
     </div>
   );
@@ -45,7 +46,7 @@ const TableCommentEditor = ({
           {tableComment}
         </div>
         <div onClick={editCommentClicked} className={styles.commentEdit}>
-          <i className="fa fa-edit" />
+          <Icon type="edit" />
         </div>
       </div>
     );

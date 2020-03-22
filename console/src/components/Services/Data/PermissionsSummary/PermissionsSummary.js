@@ -1,11 +1,11 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 
 import Modal from '../../../Common/Modal/Modal';
 import Button from '../../../Common/Button/Button';
-
-import styles from './PermissionsSummary.scss';
+import { Icon } from '../../../UIKit/atoms';
 
 import { getTablePermissionsRoute } from '../../../Common/utils/routesUtils';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
@@ -32,6 +32,7 @@ import {
   getTablePermissionsByRoles,
   getPermissionRowAccessSummary,
 } from './utils';
+import styles from './PermissionsSummary.scss';
 
 class PermissionsSummary extends Component {
   initState = {
@@ -142,18 +143,14 @@ class PermissionsSummary extends Component {
       );
     };
 
-    const getActionIcon = (faIconType, onClick = null) => {
+    const getActionIcon = (iconType, onClick = null) => {
       return (
-        <i
-          className={`fa ${faIconType} ${styles.actionIcon}`}
-          aria-hidden="true"
-          onClick={onClick}
-        />
+        <Icon type={iconType} className={styles.actionIcon} onClick={onClick} />
       );
     };
 
     const getEditIcon = () => {
-      return getActionIcon('fa-pencil');
+      return getActionIcon('pencil');
     };
 
     // ------------------------------------------------------------------------------
@@ -285,7 +282,7 @@ class PermissionsSummary extends Component {
                 onClick={copyOnClick}
                 title="Copy permissions"
               >
-                {getActionIcon('fa-copy')}
+                {getActionIcon('copy')}
               </Button>
             );
           };
@@ -948,7 +945,7 @@ class PermissionsSummary extends Component {
               title="Create new role"
               className={styles.add_mar_left_mid}
             >
-              <i className="fa fa-plus" aria-hidden="true" />
+              <Icon type="add" />
             </Button>
           </div>
         );

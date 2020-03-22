@@ -5,6 +5,8 @@ import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import 'brace/mode/json';
 import 'react-table/react-table.css';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+
 import FilterQuery from './FilterQuery';
 import {
   setOrderCol,
@@ -23,7 +25,8 @@ import {
 } from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
 import * as tooltip from '../Common/Tooltips';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import { Icon } from '../../../UIKit/atoms';
+import styles from '../TableCommon/EventTable.scss';
 
 const ViewRows = ({
   curTriggerName,
@@ -39,7 +42,6 @@ const ViewRows = ({
   count,
   expandedRow,
 }) => {
-  const styles = require('../TableCommon/EventTable.scss');
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
 
   // Am I a single row display
@@ -124,17 +126,9 @@ const ViewRows = ({
           }
           if (col === 'delivered') {
             content = row[col] ? (
-              <i
-                className={
-                  styles.invocationSuccess + ' fa fa-check invocationsSuccess'
-                }
-              />
+              <Icon type="check" color="green.original" />
             ) : (
-              <i
-                className={
-                  styles.invocationFailure + ' fa fa-times invocationsFailure'
-                }
-              />
+              <Icon type="close" color="red.primary" />
             );
           }
           return <div className={conditionalClassname}>{content}</div>;
@@ -224,18 +218,15 @@ const ViewRows = ({
     }
   };
 
-  const successIcon = (
-    <i className={styles.invocationSuccess + ' fa fa-check'} />
-  );
+  const successIcon = <Icon type="check" color="green.original" />;
 
-  const failureIcon = (
-    <i className={styles.invocationFailure + ' fa fa-times'} />
-  );
+  const failureIcon = <Icon type="close" color="red.primary" />;
 
   const renderTableBody = () => {
     if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }
+
     let shouldSortColumn = true;
     const invocationColumns = ['status', 'id', 'created_at'];
     const invocationGridHeadings = [];
@@ -245,6 +236,7 @@ const ViewRows = ({
         accessor: column,
       });
     });
+
     return (
       <ReactTable
         className="-highlight processedEventsTable"
@@ -325,6 +317,7 @@ const ViewRows = ({
             });
             invocationRowsData.push(newRow);
           });
+
           return (
             <div style={{ padding: '20px' }}>
               <em>Recent Invocations</em>
@@ -451,10 +444,7 @@ const ViewRows = ({
                                           tooltip.statusCodeDescription
                                         }
                                       >
-                                        <i
-                                          className="fa fa-question-circle"
-                                          aria-hidden="true"
-                                        />
+                                        <Icon type="questionCircle" />
                                       </OverlayTrigger>,
                                     ]
                                     : null}

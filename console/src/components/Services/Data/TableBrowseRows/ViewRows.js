@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import 'react-table/react-table.css';
+
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
-
 import Dropdown from '../../../Common/Dropdown/Dropdown';
-
 import InvokeManualTrigger from '../../EventTrigger/Common/InvokeManualTrigger/InvokeManualTrigger';
 
 import {
@@ -32,6 +31,7 @@ import { ordinalColSort } from '../utils';
 import FilterQuery from './FilterQuery';
 import Spinner from '../../../Common/Spinner/Spinner';
 import Button from '../../../Common/Button/Button';
+import { Icon } from '../../../UIKit/atoms';
 
 import { E_SET_EDITITEM } from './EditActions';
 import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
@@ -220,13 +220,13 @@ const ViewRows = ({
     _columns.map(col => {
       const columnName = col.column_name;
 
-      let sortIcon = 'fa-sort';
+      let sortIcon = 'sort';
       if (curQuery.order_by && curQuery.order_by.length) {
         sortIcon = '';
 
         curQuery.order_by.forEach(orderBy => {
           if (orderBy.column === columnName) {
-            sortIcon = orderBy.type === 'asc' ? 'fa-caret-up' : 'fa-caret-down';
+            sortIcon = orderBy.type === 'asc' ? 'caretUp' : 'caretDown';
           }
         });
       }
@@ -235,7 +235,7 @@ const ViewRows = ({
         Header: (
           <div className="ellipsis" title="Click to sort">
             <span className={styles.tableHeaderCell}>
-              {columnName} <i className={'fa ' + sortIcon} />
+              {columnName} <Icon type={sortIcon} />
             </span>
           </div>
         ),
@@ -368,22 +368,22 @@ const ViewRows = ({
           const handleCollapse = () => dispatch(vCollapseRow());
 
           if (isExpanded) {
-            icon = 'fa-compress';
+            icon = 'compress';
             title = 'Collapse row';
             handleClick = handleCollapse;
           } else {
-            icon = 'fa-expand';
+            icon = 'expand';
             title = 'Expand row';
             handleClick = handleExpand;
           }
 
-          const expanderIcon = <i className={`fa ${icon}`} />;
+          const expanderIcon = <Icon type={icon} />;
 
           return getActionButton('expand', expanderIcon, title, handleClick);
         };
 
         const getEditButton = pkClause => {
-          const editIcon = <i className="fa fa-edit" />;
+          const editIcon = <Icon type="edit" />;
 
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
@@ -404,7 +404,7 @@ const ViewRows = ({
         };
 
         const getDeleteButton = pkClause => {
-          const deleteIcon = <i className="fa fa-trash" />;
+          const deleteIcon = <Icon type="delete" />;
 
           const handleDeleteClick = () => {
             dispatch(deleteItem(pkClause));
@@ -422,7 +422,7 @@ const ViewRows = ({
         };
 
         const getCloneButton = () => {
-          const cloneIcon = <i className="fa fa-clone" />;
+          const cloneIcon = <Icon type="clone" />;
 
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
@@ -467,13 +467,14 @@ const ViewRows = ({
             };
           });
 
-          const triggerIcon = <i className="fa fa-caret-square-o-right" />;
+          const triggerIcon = <Icon type="playbox" />;
           const triggerTitle = 'Invoke event trigger';
 
           const triggerBtn = getActionButton(
             'trigger',
             triggerIcon,
             triggerTitle,
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
             () => {}
           );
 
@@ -763,7 +764,7 @@ const ViewRows = ({
             title="Delete selected rows"
             onClick={handleDeleteItems}
           >
-            <i className="fa fa-trash" />
+            <Icon type="delete" />
           </button>
         </div>
       );

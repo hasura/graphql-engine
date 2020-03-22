@@ -4,10 +4,10 @@
   but don't listen to state.
   derive everything through viewtable as much as possible.
 */
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { createHistory } from 'history';
 
-import React, { Component } from 'react';
 import { Operators } from '../constants';
 import {
   setFilterCol,
@@ -25,6 +25,8 @@ import {
 import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
+import { Icon } from '../../../UIKit/atoms';
+import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
 const history = createHistory();
 
@@ -84,7 +86,6 @@ const getDefaultValue = (possibleValue, opName) => {
 };
 
 const renderWheres = (whereAnd, tableSchema, dispatch) => {
-  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
   return whereAnd.map((clause, i) => {
     const colName = Object.keys(clause)[0];
     const opName = Object.keys(clause[colName])[0];
@@ -94,11 +95,13 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
     const dSetFilterOp = e => {
       dispatch(setFilterOp(e.target.value, i));
     };
+
     let removeIcon = null;
+
     if (i + 1 < whereAnd.length) {
       removeIcon = (
-        <i
-          className="fa fa-times"
+        <Icon
+          type="close"
           onClick={() => {
             dispatch(removeFilter(i));
           }}
@@ -134,7 +137,6 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
 };
 
 const renderSorts = (orderBy, tableSchema, dispatch) => {
-  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
   return orderBy.map((c, i) => {
     const dSetOrderCol = e => {
       dispatch(setOrderCol(e.target.value, i));
@@ -145,8 +147,8 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
     let removeIcon = null;
     if (i + 1 < orderBy.length) {
       removeIcon = (
-        <i
-          className="fa fa-times"
+        <Icon
+          type="close"
           onClick={() => {
             dispatch(removeOrder(i));
           }}
@@ -255,7 +257,6 @@ class FilterQuery extends Component {
 
   render() {
     const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
-    const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
 
     return (
       <div className={styles.add_mar_top}>

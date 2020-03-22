@@ -1,9 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+
 import * as tooltip from './Tooltips';
 import { TOGGLE_ENABLE_MANUAL_CONFIG } from './AddActions';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
+import { Icon } from '../../../UIKit/atoms';
+import styles from '../TableCommon/EventTable.scss';
 
 const Operations = ({
   enableManual,
@@ -11,8 +14,6 @@ const Operations = ({
   handleOperationSelection,
   dispatch,
 }) => {
-  const styles = require('../TableCommon/EventTable.scss');
-
   const databaseOperations = [
     {
       name: 'insert',
@@ -54,7 +55,7 @@ const Operations = ({
             placement="right"
             overlay={tooltip.manualOperationsDescription}
           >
-            <i className="fa fa-question-circle" aria-hidden="true" />
+            <Icon type="questionCircle" />
           </OverlayTrigger>
           &nbsp;&nbsp;
           <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html" />
@@ -100,7 +101,7 @@ const Operations = ({
             placement="right"
             overlay={tooltip.operationsDescription}
           >
-            <i className="fa fa-question-circle" aria-hidden="true" />
+            <Icon type="questionCircle" />
           </OverlayTrigger>{' '}
         </h4>
         <div className={styles.add_mar_left_small}>{getOperationsList()}</div>

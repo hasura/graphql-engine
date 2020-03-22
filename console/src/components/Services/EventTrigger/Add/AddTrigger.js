@@ -1,8 +1,9 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
-import * as tooltip from './Tooltips';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+
+import * as tooltip from './Tooltips';
 import Button from '../../../Common/Button/Button';
 import Operations from './Operations';
 
@@ -39,6 +40,8 @@ import {
   getTableName,
   getTrackedTables,
 } from '../../../Common/utils/pgUtils';
+import { Icon } from '../../../UIKit/atoms';
+import styles from '../TableCommon/EventTable.scss';
 
 class AddTrigger extends Component {
   constructor(props) {
@@ -179,8 +182,6 @@ class AddTrigger extends Component {
       enableManual,
     } = this.props;
 
-    const styles = require('../TableCommon/EventTable.scss');
-
     let createBtnText = 'Create Event Trigger';
     if (ongoingRequest) {
       createBtnText = 'Creating...';
@@ -274,7 +275,7 @@ class AddTrigger extends Component {
             placement="right"
             overlay={tooltip.advancedOperationDescription}
           >
-            <i className="fa fa-question-circle" aria-hidden="true" />
+            <Icon type="questionCircle" />
           </OverlayTrigger>{' '}
         </h4>
         {selectedOperations.update ? (
@@ -291,18 +292,21 @@ class AddTrigger extends Component {
 
     const headersList = headers.map((header, i) => {
       let removeIcon;
+
       if (i + 1 === headers.length) {
         removeIcon = <i className={`${styles.fontAwosomeClose}`} />;
       } else {
         removeIcon = (
-          <i
-            className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+          <Icon
+            type="close"
+            className={styles.fontAwosomeClose}
             onClick={() => {
               dispatch(removeHeader(i));
             }}
           />
         );
       }
+
       return (
         <div key={i} className={`${styles.display_flex} form-group`}>
           <input
@@ -376,7 +380,7 @@ class AddTrigger extends Component {
                   placement="right"
                   overlay={tooltip.triggerNameDescription}
                 >
-                  <i className="fa fa-question-circle" aria-hidden="true" />
+                  <Icon type="questionCircle" />
                 </OverlayTrigger>{' '}
               </h4>
               <input
@@ -397,7 +401,7 @@ class AddTrigger extends Component {
                   placement="right"
                   overlay={tooltip.postgresDescription}
                 >
-                  <i className="fa fa-question-circle" aria-hidden="true" />
+                  <Icon type="questionCircle" />
                 </OverlayTrigger>{' '}
               </h4>
               <select
@@ -457,7 +461,7 @@ class AddTrigger extends Component {
                     placement="right"
                     overlay={tooltip.webhookUrlDescription}
                   >
-                    <i className="fa fa-question-circle" aria-hidden="true" />
+                    <Icon type="questionCircle" />
                   </OverlayTrigger>{' '}
                 </h4>
                 <div>

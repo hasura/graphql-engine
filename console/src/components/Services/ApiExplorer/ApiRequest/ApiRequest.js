@@ -35,6 +35,7 @@ import {
   persistAdminSecretHeaderWasAdded,
   removePersistedAdminSecretHeaderWasAdded,
 } from './utils';
+import { Icon } from '../../../UIKit/atoms';
 
 import styles from '../ApiExplorer.scss';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
@@ -417,11 +418,12 @@ class ApiRequest extends Component {
 
             if (isAdminSecret) {
               headerAdminVal = (
-                <i
-                  className={styles.showAdminSecret + ' fa fa-eye'}
+                <Icon
+                  type="eye"
                   data-header-id={i}
                   aria-hidden="true"
                   onClick={onShowAdminSecretClicked}
+                  className={styles.showAdminSecret}
                 />
               );
             }
@@ -448,8 +450,9 @@ class ApiRequest extends Component {
                 );
               } else {
                 analyzeIcon = (
-                  <i
-                    className={styles.showInspector + ' fa fa-user-secret'}
+                  <Icon
+                    type="secret"
+                    className={styles.showInspector}
                     token={token}
                     data-header-index={i}
                     onClick={this.analyzeBearerToken}
@@ -473,11 +476,12 @@ class ApiRequest extends Component {
 
           const getHeaderRemoveBtn = () => {
             return (
-              <i
-                className={styles.closeHeader + ' fa fa-times'}
+              <Icon
+                type="close"
                 data-header-id={i}
                 aria-hidden="true"
                 onClick={onDeleteHeaderClicked}
+                className={styles.closeHeader}
               />
             );
           };
@@ -607,14 +611,14 @@ class ApiRequest extends Component {
                   overlay={jwtValidityStatus('Valid JWT token')}
                 >
                   <span className={styles.valid_jwt_token}>
-                    <i className="fa fa-check" />
+                    <Icon type="check" />
                   </span>
                 </OverlayTrigger>
               );
             case !tokenVerified && JWTError.length > 0:
               return (
                 <span className={styles.invalid_jwt_icon}>
-                  <i className="fa fa-times" />
+                  <Icon type="close" />
                 </span>
               );
             default:
