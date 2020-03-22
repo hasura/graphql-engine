@@ -30,18 +30,18 @@ prompted for the admin secret key.
 .. thumbnail:: ../../../../img/graphql/manual/deployment/access-key-console.png
    :alt: Prompt for the admin secret
 
-(optional) Use the admin secret with the CLI
---------------------------------------------
-
-If you open the Hasura console from the CLI, use the ``admin-secret`` flag when you open the console:
-
-.. code-block:: bash
-
-   hasura console --admin-secret=myadminsecretkey
-
 .. note::
 
   The ``HASURA_GRAPHQL_ADMIN_SECRET`` should never be passed from the client to Hasura GraphQL engine as it would
   give the client full admin rights to your Hasura instance. See :ref:`auth` for information on
   setting up authentication.
+
+(optional) Use the admin secret with the CLI
+--------------------------------------------
+
+In case you're using the CLI to open the Hasura console, use the ``admin-secret`` flag when you open the console:
+
+.. code-block:: bash
+
+   hasura console --admin-secret=myadminsecretkey
 
