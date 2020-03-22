@@ -31,25 +31,62 @@ Let us now connect these tables to enable nested queries using a foreign-key:
 Step 1: Add foreign-key constraint
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the console, navigate to the ``Modify`` tab of the ``article`` table. Click the ``Add`` button in
-the Foreign Keys section and configure the ``author_id`` column as a foreign-key for the ``id`` column in
-the ``author`` table:
+The first step is to add a foreign-key constraint on the ``article`` table.
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/add-foreign-key.png
-   :alt: Add foreign-key constraint
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    In the console, navigate to the ``Modify`` tab of the ``article`` table. Click the ``Add`` button in
+    the Foreign Keys section and configure the ``author_id`` column as a foreign-key for the ``id`` column in
+    the ``author`` table:
+
+    .. thumbnail:: ../../../../img/graphql/manual/schema/add-foreign-key.png
+      :alt: Add foreign-key constraint
+
+  .. tab:: API
+
+    A foreign-key constraint can be created via the :ref:`run_sql <run_sql>` metadata API. 
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+           "sql": "alter table "public"."article"
+                 add constraint "article_author_id_fkey"
+                 foreign key ("author_id")
+                 references "public"."author"
+                 ("id") on update restrict on delete restrict;"
+        }
+      }
 
 Step 2: Create an object relationship
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Each article has one author. This is an ``object relationship``.
 
-The console infers this using the foreign-key created above and recommends the potential relationship in the
-``Relationships`` tab of the ``article`` table.
+.. rst-class:: api_tabs
+.. tabs::
 
-Add an ``object relationship`` named ``author`` for the ``article`` table as shown here:
+  .. tab:: Console
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/add-1-1-relationship.png
-   :alt: Create an object relationship
+    The console infers this using the foreign-key created above and recommends the potential relationship in the
+    ``Relationships`` tab of the ``article`` table.
+
+    Add an ``object relationship`` named ``author`` for the ``article`` table as shown here:
+
+    .. thumbnail:: ../../../../img/graphql/manual/schema/add-1-1-relationship.png
+      :alt: Create an object relationship
+
+  .. tab:: API
+
+    An object relationship can be created via the :ref:`create_object_relationship <create_object_relationship>` metadata API. 
 
 We can now run a nested object query that is based on this ``object relationship``.
 
@@ -107,10 +144,19 @@ An author can write multiple articles. This is an ``array relationship``.
 
 You can add an ``array relationship`` in the same fashion as an ``object relationship`` as shown above.
 
-Add an ``array relationship`` named ``articles`` for the ``author`` table as shown here:
+.. rst-class:: api_tabs
+.. tabs::
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/add-1-many-relationship.png
-   :alt: Create an array relationship
+  .. tab:: Console
+
+    Add an ``array relationship`` named ``articles`` for the ``author`` table as shown here:
+
+    .. thumbnail:: ../../../../img/graphql/manual/schema/add-1-many-relationship.png
+      :alt: Create an array relationship
+
+  .. tab:: API
+
+    An array relationship can be created via the :ref:`create_array_relationship <create_array_relationship>` metadata API. 
 
 We can now run a nested object query that is based on this ``array relationship``.
 
@@ -194,33 +240,42 @@ average rating of articles for each author.
 Let us now create an ``object relationship`` called ``avg_rating`` from the ``author`` table to the
 ``author_avg_rating`` view using a manual relationship:
 
-Step 1: Open the manual relationship section
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. rst-class:: api_tabs
+.. tabs::
 
-- Open the console and navigate to the ``Data -> author -> Relationships`` tab.
-- Click on the ``Configure`` button:
+  .. tab:: Console
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/manual-relationship-btn.png
-   :alt: Open the manual relationship section
+    Step 1: Open the manual relationship section
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Step 2: Define the relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    - Open the console and navigate to the ``Data -> author -> Relationships`` tab.
+    - Click on the ``Configure`` button:
 
-The above step will open up a section as shown below:
+    .. thumbnail:: ../../../../img/graphql/manual/schema/manual-relationship-btn.png
+      :alt: Open the manual relationship section
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/manual-relationship-create.png
-   :alt: Define the relationship
+    Step 2: Define the relationship
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this case:
+    The above step will open up a section as shown below:
 
-- **Relationship Type** will be: ``Object Relationship``
-- **Relationship Name** can be: ``avg_rating``
-- **Reference** will be: ``id -> author_avg_rating . id`` *(similar to defining a foreign-key)*
+    .. thumbnail:: ../../../../img/graphql/manual/schema/manual-relationship-create.png
+      :alt: Define the relationship
 
-Step 3: Create the relationship
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    In this case:
 
-Now click on the ``Save`` button to create the relationship.
+    - **Relationship Type** will be: ``Object Relationship``
+    - **Relationship Name** can be: ``avg_rating``
+    - **Reference** will be: ``id -> author_avg_rating . id`` *(similar to defining a foreign-key)*
+
+    Step 3: Create the relationship
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    Now click on the ``Save`` button to create the relationship.
+
+  .. tab:: API
+
+    A manual relationship can be created via the :ref:`metadata API <create_manual_relationship>`. 
 
 We can now run a nested object query that is based on this ``object relationship``.
 

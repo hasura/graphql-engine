@@ -31,7 +31,7 @@ Expose columns with a different name in the GraphQL API
      .. thumbnail:: ../../../img/graphql/manual/schema/custom-field-name-column.png
         :alt: Customise GraphQL field name
 
-  .. tab:: Metadata API
+  .. tab:: API
 
     A custom field name can be set for a column via the following 2 methods:
 
@@ -53,7 +53,7 @@ Expose table root fields with a different name in the GraphQL API
      .. thumbnail:: ../../../img/graphql/manual/schema/custom-field-name-root-fields.png
         :alt: Customise GraphQL root field
 
-  .. tab:: Metadata API
+  .. tab:: API
 
     A custom field name can be set for a table root field via the following 2 methods:
 

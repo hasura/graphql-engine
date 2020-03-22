@@ -28,12 +28,21 @@ Hasura GraphQL engine lets you expose views over the GraphQL API to allow queryi
 Creating & exposing views
 -------------------------
 
-Views can be created using SQL which can be run in the Hasura console:
+Views can be created using SQL:
 
-- Head to the ``Data -> SQL`` section of the Hasura console
-- Enter your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__
-- Select the ``Track this`` checkbox to expose the new view over the GraphQL API
-- Hit the ``Run`` button
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    - Head to the ``Data -> SQL`` section of the Hasura console
+    - Enter your `create view SQL statement <https://www.postgresql.org/docs/current/static/sql-createview.html>`__
+    - Select the ``Track this`` checkbox to expose the new view over the GraphQL API
+    - Hit the ``Run`` button
+
+  .. tab:: API
+
+    A view can be created via the :ref:`run_sql <run_sql>` metadata API. 
 
 Use cases
 ---------

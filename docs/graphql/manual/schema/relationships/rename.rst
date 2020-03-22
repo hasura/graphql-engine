@@ -14,9 +14,18 @@ Renaming relationships
 
 To rename a relationship:
 
-- Head to ``Data -> [table-name] -> Relationships`` in the console
-- Drop the existing relationship
-- Recreate the relationship with the new name
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    - Head to ``Data -> [table-name] -> Relationships`` in the console
+    - Drop the existing relationship
+    - Recreate the relationship with the new name
+
+  .. tab:: API
+
+    A relationship can be renamed via the :ref:`rename_relationship <rename_relationship>` metadata API. 
 
 .. note::
 

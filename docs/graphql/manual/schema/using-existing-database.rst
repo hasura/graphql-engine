@@ -26,8 +26,17 @@ Tracking a table or a view means telling Hasura GraphQL engine that you want to 
 To track a table or a view:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. Head to the ``Data -> Schema`` section of the console.
-#. Under the heading ``Untracked Tables/Views``, click on the ``Track`` button next to the table/view name.
+.. rst-class:: api_tabs
+.. tabs::
+
+   .. tab:: Console
+
+      #. Head to the ``Data -> Schema`` section of the console.
+      #. Under the heading ``Untracked Tables/Views``, click on the ``Track`` button next to the table/view name.
+
+   .. tab:: API
+
+      A table or view can be tracked via the :ref:`track_table <track_table>` metadata API. 
 
 To track all tables and views present in the database:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -44,13 +53,21 @@ foreign-key.
 To track a foreign-key between two tables in the database:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#. Head to the ``Data -> Schema`` section of the console.
-#. Click on a table involved in the foreign-key and head to the ``Relationships`` tab.
-#. You should see a suggested relationship based on the foreign-key. Click ``Add``, give a name to your relationship
-   (this will be the name of the :ref:`nested object <nested_object_queries>` in the GraphQL query), and
-   hit ``Save`` to create the relationship.
-#. Repeat with the other table involved in the foreign-key.
+.. rst-class:: api_tabs
+.. tabs::
 
+   .. tab:: Console
+
+      #. Head to the ``Data -> Schema`` section of the console.
+      #. Click on a table involved in the foreign-key and head to the ``Relationships`` tab.
+      #. You should see a suggested relationship based on the foreign-key. Click ``Add``, give a name to your relationship
+         (this will be the name of the :ref:`nested object <nested_object_queries>` in the GraphQL query), and
+         hit ``Save`` to create the relationship.
+      #. Repeat with the other table involved in the foreign-key.
+
+   .. tab:: API
+
+      A foreign-key between two tables can be tracked via the :ref:`metadata API <api_relationship>`. 
 
 To track all the foreign-keys of all tables in the database:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

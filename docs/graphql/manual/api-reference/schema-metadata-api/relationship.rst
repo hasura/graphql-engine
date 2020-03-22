@@ -219,6 +219,7 @@ Create an ``array relationship`` ``articles`` on ``author`` *table*,  *using* th
        }
    }
 
+.. _create_manual_relationship:
 
 2. Manual configuration
 ^^^^^^^^^^^^^^^^^^^^^^^

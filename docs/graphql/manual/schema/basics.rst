@@ -40,16 +40,40 @@ Let's say we want to create two simple tables for an article/author schema:
 Create tables
 -------------
 
-Open the Hasura console and head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to
-create tables.
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    Open the Hasura console and head to the ``Data`` tab and click the ``Create Table`` button to open up an interface to
+    create tables.
+
+    For example, here is the schema for the ``article`` table in this interface:
+
+    .. thumbnail:: ../../../img/graphql/manual/schema/create-table-graphql.png
+      :alt: Schema for an article table
+
+    You can insert some sample data into the tables using the ``Insert Row`` tab of the created tables.
+
+  .. tab:: API
+
+    A table can be created via the :ref:`run_sql <run_sql>` metadata API. 
+
+    .. code-block:: http
+
+      POST /v1/query HTTP/1.1
+      Content-Type: application/json
+      X-Hasura-Role: admin
+
+      {
+        "type": "run_sql",
+        "args": {
+           "sql": "CREATE TABLE article (id INT, title TEXT, content TEXT, rating INT, author_id INT, PRIMARY KEY (id));"
+        }
+      }
 
 As soon as a table is created, the corresponding GraphQL schema types and query/mutation resolvers will be
 automatically generated.
-
-For example, here is the schema for the ``article`` table in this interface:
-
-.. thumbnail:: ../../../img/graphql/manual/schema/create-table-graphql.png
-   :alt: Schema for an article table
 
 The following object type and query/mutation fields are generated for the ``article`` table we just created:
 
@@ -90,77 +114,91 @@ The following object type and query/mutation fields are generated for the ``arti
     where: article_bool_exp!
   ): article_mutation_response
 
-See the :ref:`query <graphql_api_query>` and :ref:`mutation <graphql_api_mutation>`
-API references for the full specifications.
-
-You can insert some sample data into the tables using the ``Insert Row`` tab of the created tables.
-
 Try out basic GraphQL queries
 -----------------------------
-At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables
-from the GraphiQL tab in the console (*you may want to add some sample data into the tables first*).
 
-Here are a couple of examples:
+.. rst-class:: api_tabs
+.. tabs::
 
-- Query all rows in the ``article`` table
+  .. tab:: Console
 
-.. graphiql::
-  :view_only:
-  :query:
-    query {
-      article {
-        id
-        title
-        author_id
-      }
-    }
-  :response:
-    {
-      "data": {
-        "article": [
-          {
-            "id": 1,
-            "title": "sit amet",
-            "author_id": 4
-          },
-          {
-            "id": 2,
-            "title": "a nibh",
-            "author_id": 2
-          },
-          {
-            "id": 3,
-            "title": "amet justo morbi",
-            "author_id": 4
-          },
-          {
-            "id": 4,
-            "title": "vestibulum ac est",
-            "author_id": 5
+    At this point, you should be able to try out basic GraphQL queries/mutations on the newly created tables
+    from the GraphiQL tab in the console (*you may want to add some sample data into the tables first*).
+
+    Here are a couple of examples:
+
+    - Query all rows in the ``article`` table
+
+    .. graphiql::
+      :view_only:
+      :query:
+        query {
+          article {
+            id
+            title
+            author_id
           }
-        ]
-      }
-    }
+        }
+      :response:
+        {
+          "data": {
+            "article": [
+              {
+                "id": 1,
+                "title": "sit amet",
+                "author_id": 4
+              },
+              {
+                "id": 2,
+                "title": "a nibh",
+                "author_id": 2
+              },
+              {
+                "id": 3,
+                "title": "amet justo morbi",
+                "author_id": 4
+              },
+              {
+                "id": 4,
+                "title": "vestibulum ac est",
+                "author_id": 5
+              }
+            ]
+          }
+        }
+
+  .. tab:: API
+
+    A query can be made via the :ref:`GraphQL API <graphql_api_query>`. 
 
 - Insert data in the ``author`` table
 
-.. graphiql::
-  :view_only:
-  :query:
-    mutation add_author {
-      insert_author(
-        objects: [
-          {id: 11, name: "Jane"}
-        ]
-      ) {
-        affected_rows
-      }
-    }
-  :response:
-    {
-      "data": {
-        "insert_author": {
-          "affected_rows": 1
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    .. graphiql::
+      :view_only:
+      :query:
+        mutation add_author {
+          insert_author(
+            objects: [
+              {id: 11, name: "Jane"}
+            ]
+          ) {
+            affected_rows
+          }
         }
-      }
-    }
+      :response:
+        {
+          "data": {
+            "insert_author": {
+              "affected_rows": 1
+            }
+          }
+        }
+
+  .. tab:: API
+
+    A mutation can be made via the :ref:`GraphQL API <graphql_api_mutation>`. 

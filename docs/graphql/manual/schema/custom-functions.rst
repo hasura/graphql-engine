@@ -36,12 +36,22 @@ Currently, only functions which satisfy the following constraints can be exposed
 Creating & exposing SQL functions
 ---------------------------------
 
-Custom SQL functions can be created using SQL which can be run in the Hasura console:
+Custom SQL functions can be created using SQL:
 
-- Head to the ``Data -> SQL`` section of the Hasura console
-- Enter your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
-- Select the ``Track this`` checkbox to expose the new function over the GraphQL API
-- Hit the ``Run`` button
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    - Head to the ``Data -> SQL`` section of the Hasura console
+    - Enter your `create function SQL statement <https://www.postgresql.org/docs/current/sql-createfunction.html>`__
+    - Select the ``Track this`` checkbox to expose the new function over the GraphQL API
+    - Hit the ``Run`` button
+
+  .. tab:: API
+
+    - A custom function can be created via the :ref:`run_sql <run_sql>` metadata API. 
+    - A function can be tracked via the :ref:`track_function <track_function>` metadata API.
 
 .. note::
 

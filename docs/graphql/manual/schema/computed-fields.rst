@@ -182,7 +182,7 @@ Adding a computed field to a table
   .. tab:: API
 
      A computed field can be added to a table using the :ref:`add_computed_field <api_computed_field>`
-     metadata API
+     metadata API.
 
 Computed fields permissions
 ---------------------------
