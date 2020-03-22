@@ -245,3 +245,7 @@ While this is strictly not a permission configuration, defining
 removes access to it. This preset can be defined for ``insert`` and ``update`` operations. This configuration
 is also very useful to avoid sending sensitive user-information in the query and leverage session variables
 or static data instead.
+
+.. note::
+
+   All of the above permissions can also be configured via the :ref:`api_permission <api_permission>` metadata API. 

@@ -36,6 +36,10 @@ Exporting Hasura metadata
      2. In the Hasura metadata actions page that opens, click on the ``Export Metadata`` button.
      3. This will prompt a file download for ``metadata.json``. Save the file.
 
+  .. tab:: CLI
+
+     Metadata can be exported with the :ref:`hasura metadata export <hasura_metadata_export>` command on the Hasura CLI.
+
   .. tab:: API
 
      The export can be done via the :ref:`Metadata API
@@ -109,6 +113,10 @@ when a new column has been added to a table via an external tool such as ``psql`
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. Click on ``Reload`` button.
      3. A notification should appear indicating the success.
+
+  .. tab:: CLI
+
+     Metadata can be reloaded with the :ref:`hasura metadata reload <hasura_metadata_reload>` command on the Hasura CLI.
 
   .. tab:: API
 

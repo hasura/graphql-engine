@@ -86,12 +86,22 @@ query is accepted with **admin** permissions.
 Define access control rules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now let's define an access control rule for the ``author`` table for a role ``users``. Head to the
-**Permissions** section of the table (``Data`` --> <table> --> ``Permissions`` tab) and define permissions
-as shown below:
+Now let's define an access control rule for the ``author`` table for a role ``users``. 
 
-.. thumbnail:: ../../../../img/graphql/manual/auth/permission-basics-simple-example.png
-   :alt: Define access control rules
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+    Head to the **Permissions** section of the table (``Data`` --> <table> --> ``Permissions`` tab) and define permissions
+    as shown below:
+
+    .. thumbnail:: ../../../../img/graphql/manual/auth/permission-basics-simple-example.png
+      :alt: Define access control rules
+
+  .. tab:: API
+
+    A permission can be defined via the :ref:`create_select_permission <create_select_permission>` metadata API. 
 
 This permission rule reads as: "*For the role* ``user`` *, table* ``author`` *and operation* ``select``/``query``,
 allow access to those rows where the value in the ``id`` *column is the same as the value in the*
