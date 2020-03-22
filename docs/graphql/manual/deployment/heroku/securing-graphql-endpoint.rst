@@ -19,29 +19,25 @@ configure an admin secret key.
 Add the HASURA_GRAPHQL_ADMIN_SECRET env var
 -------------------------------------------
 
-.. rst-class:: api_tabs
-.. tabs::
+Head to the config-vars URL on your Heroku dashboard and set the ``HASURA_GRAPHQL_ADMIN_SECRET`` environment variable.
 
-   .. tab:: Console
+.. thumbnail:: ../../../../img/graphql/manual/deployment/secure-heroku.png
+   :alt: Add an admin secret
 
-      Head to the config-vars URL on your Heroku dashboard and set the ``HASURA_GRAPHQL_ADMIN_SECRET`` environment variable.
+Setting this environment variable will automatically restart the dyno. Now when you access your console, you'll be
+prompted for the admin secret key.
 
-      .. thumbnail:: ../../../../img/graphql/manual/deployment/secure-heroku.png
-         :alt: Add an admin secret
+.. thumbnail:: ../../../../img/graphql/manual/deployment/access-key-console.png
+   :alt: Prompt for the admin secret
 
-      Setting this environment variable will automatically restart the dyno. Now when you access your console, you'll be
-      prompted for the admin secret key.
+(optional) Use the admin secret with the CLI
+--------------------------------------------
 
-      .. thumbnail:: ../../../../img/graphql/manual/deployment/access-key-console.png
-         :alt: Prompt for the admin secret
+If you open the Hasura console from the CLI, use the ``admin-secret`` flag when you open the console:
 
-   .. tab:: CLI
+.. code-block:: bash
 
-      If you open the Hasura console from the CLI, use the ``admin-secret`` flag when you open the console:
-
-      .. code-block:: bash
-
-         hasura console --admin-secret=myadminsecretkey
+   hasura console --admin-secret=myadminsecretkey
 
 .. note::
 

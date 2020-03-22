@@ -42,7 +42,8 @@ Views can be created using SQL:
 
   .. tab:: API
 
-    A view can be created via the :ref:`run_sql <run_sql>` metadata API. 
+    - A view can be created via the :ref:`run_sql <run_sql>` metadata API. 
+    - A view can be tracked via the :ref:`track_table <track_table>` metadata API. 
 
 Use cases
 ---------

@@ -248,4 +248,4 @@ or static data instead.
 
 .. note::
 
-   All of the above permissions can also be configured via the :ref:`api_permission <api_permission>` metadata API. 
+   All of the above permissions can also be configured via the :ref:`metadata API <api_permission>`. 
