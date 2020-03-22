@@ -251,7 +251,7 @@ class Main extends React.Component {
 
     const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <Icon className={styles.question} type="settings" />;
+        return <Icon className={styles.question} type="settings" size={18} />;
       }
 
       return (
@@ -361,7 +361,7 @@ class Main extends React.Component {
                   className={styles.updateBannerClose}
                   onClick={this.closeUpdateBanner.bind(this)}
                 >
-                  <Icon type="close" size={14} />
+                  <Icon type="close" />
                 </span>
               </div>
             </div>
@@ -395,11 +395,7 @@ class Main extends React.Component {
           >
             <div className={styles.dropdown_menu_container}>
               <div className={styles.closeDropDown}>
-                <Icon
-                  type="close"
-                  onClick={this.closeLoveIcon.bind(this)}
-                  size={14}
-                />
+                <Icon type="close" onClick={this.closeLoveIcon.bind(this)} />
                 {/*
                         <img
                           className={'img-responsive'}
@@ -427,7 +423,7 @@ class Main extends React.Component {
                   <br />
                   Star us on GitHub,
                   <br />
-                  To make our <Icon type="love" size={14} /> go wooooo!
+                  To make our <Icon type="love" /> go wooooo!
                 </li>
                 <li className={'dropdown-item'}>
                   <a
@@ -443,7 +439,7 @@ class Main extends React.Component {
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <Icon type="star" size={14} />
+                      <Icon type="star" />
                       &nbsp; Star
                     </div>
                   </a>
@@ -474,7 +470,7 @@ class Main extends React.Component {
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <Icon type="twitter" size={14} />
+                      <Icon type="twitter" />
                       &nbsp; Tweet
                     </div>
                   </a>
@@ -524,7 +520,6 @@ class Main extends React.Component {
               <span className={styles.iconCenter} data-test={block}>
                 <Icon
                   type={icon}
-                  size={14}
                   css={
                     icon === 'schema'
                       ? css`
@@ -721,7 +716,7 @@ class Main extends React.Component {
                   aria-expanded="false"
                   aria-haspopup="true"
                 >
-                  <Icon type="question" className={styles.question} />
+                  <Icon type="question" className={styles.question} size={18} />
                 </div>
                 <ul
                   className={

@@ -117,5 +117,5 @@ export const Icon = props => {
 };
 
 Icon.defaultProps = {
-  size: 18,
+  size: 14,
 };
