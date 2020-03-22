@@ -423,7 +423,7 @@ class Main extends React.Component {
                   <br />
                   Star us on GitHub,
                   <br />
-                  To make our <Icon type="love" size={12} /> go wooooo!
+                  To make our <Icon type="love" size={10} /> go wooooo!
                 </li>
                 <li className={'dropdown-item'}>
                   <a

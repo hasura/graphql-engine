@@ -192,7 +192,7 @@ class Schema extends Component {
               onClick={handleCreateNewClick}
               title="Create new schema"
             >
-              <Icon type="add" />
+              <Icon type="add" size={10} />
             </Button>
           );
 
@@ -254,7 +254,7 @@ class Schema extends Component {
               onClick={handleDelete}
               title="Delete current schema"
             >
-              <Icon type="delete" />
+              <Icon type="delete" size={10} />
             </Button>
           );
         }
