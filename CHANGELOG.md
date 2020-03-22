@@ -91,3 +91,4 @@
 - server: preserve cookie headers from sync action webhook (close #4021)
 - server: add 'ID' to default scalars in custom types (fix #4061)
 - console: add design system base components (#3866)
+- docs: add workflows (console / cli / api) to all use cases in docs using tabs (#4162) (close #3593)
