@@ -87,7 +87,7 @@ const Common = props => {
         <div className={styles.subheading_text}>
           GraphQL server timeout
           <OverlayTrigger placement="right" overlay={tooltips.timeoutConf}>
-            <Icon type="questionCircle" />
+            <Icon type="questionCircle" size={12} />
           </OverlayTrigger>
         </div>
         <label
@@ -117,7 +117,7 @@ const Common = props => {
       <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
         Remote Schema name *
         <OverlayTrigger placement="right" overlay={tooltips.schema}>
-          <Icon type="questionCircle" />
+          <Icon type="questionCircle" size={12} />
         </OverlayTrigger>
       </div>
       <label
@@ -143,7 +143,7 @@ const Common = props => {
       <div className={styles.subheading_text}>
         GraphQL server URL *
         <OverlayTrigger placement="right" overlay={tooltips.graphqlurl}>
-          <Icon type="questionCircle" />>
+          <Icon type="questionCircle" size={12} />
         </OverlayTrigger>
       </div>
       <div className={styles.wd_300}>
@@ -200,13 +200,13 @@ const Common = props => {
           placement="right"
           overlay={tooltips.clientHeaderForward}
         >
-          <Icon type="questionCircle" />
+          <Icon type="questionCircle" size={12} />
         </OverlayTrigger>
       </div>
       <div className={styles.subheading_text + ' ' + styles.font_normal}>
         Additional headers:
         <OverlayTrigger placement="right" overlay={tooltips.additionalHeaders}>
-          <Icon type="questionCircle" />
+          <Icon type="questionCircle" size={12} />
         </OverlayTrigger>
       </div>
       <CommonHeader

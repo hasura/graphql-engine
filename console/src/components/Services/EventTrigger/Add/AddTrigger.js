@@ -275,7 +275,7 @@ class AddTrigger extends Component {
             placement="right"
             overlay={tooltip.advancedOperationDescription}
           >
-            <Icon type="questionCircle" />
+            <Icon type="questionCircle" size={12} />
           </OverlayTrigger>{' '}
         </h4>
         {selectedOperations.update ? (
@@ -380,7 +380,7 @@ class AddTrigger extends Component {
                   placement="right"
                   overlay={tooltip.triggerNameDescription}
                 >
-                  <Icon type="questionCircle" />
+                  <Icon type="questionCircle" size={12} />
                 </OverlayTrigger>{' '}
               </h4>
               <input
@@ -401,7 +401,7 @@ class AddTrigger extends Component {
                   placement="right"
                   overlay={tooltip.postgresDescription}
                 >
-                  <Icon type="questionCircle" />
+                  <Icon type="questionCircle" size={12} />
                 </OverlayTrigger>{' '}
               </h4>
               <select
@@ -461,7 +461,7 @@ class AddTrigger extends Component {
                     placement="right"
                     overlay={tooltip.webhookUrlDescription}
                   >
-                    <Icon type="questionCircle" />
+                    <Icon type="questionCircle" size={12} />
                   </OverlayTrigger>{' '}
                 </h4>
                 <div>

@@ -138,7 +138,7 @@ class ViewStitchedSchema extends React.Component {
           </span>
           <span>
             <OverlayTrigger placement="right" overlay={refresh}>
-              <Icon type="questionCircle" />
+              <Icon type="questionCircle" size={12} />
             </OverlayTrigger>
           </span>
         </div>

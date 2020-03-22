@@ -423,7 +423,7 @@ class Main extends React.Component {
                   <br />
                   Star us on GitHub,
                   <br />
-                  To make our <Icon type="love" /> go wooooo!
+                  To make our <Icon type="love" size={12} /> go wooooo!
                 </li>
                 <li className={'dropdown-item'}>
                   <a
@@ -439,7 +439,7 @@ class Main extends React.Component {
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <Icon type="star" />
+                      <Icon type="star" size={12} />
                       &nbsp; Star
                     </div>
                   </a>
@@ -470,7 +470,7 @@ class Main extends React.Component {
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <Icon type="twitter" />
+                      <Icon type="twitter" size={12} />
                       &nbsp; Tweet
                     </div>
                   </a>

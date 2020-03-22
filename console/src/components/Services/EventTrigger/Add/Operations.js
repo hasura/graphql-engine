@@ -55,7 +55,7 @@ const Operations = ({
             placement="right"
             overlay={tooltip.manualOperationsDescription}
           >
-            <Icon type="questionCircle" />
+            <Icon type="questionCircle" size={12} />
           </OverlayTrigger>
           &nbsp;&nbsp;
           <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html" />
@@ -101,7 +101,7 @@ const Operations = ({
             placement="right"
             overlay={tooltip.operationsDescription}
           >
-            <Icon type="questionCircle" />
+            <Icon type="questionCircle" size={12} />
           </OverlayTrigger>{' '}
         </h4>
         <div className={styles.add_mar_left_small}>{getOperationsList()}</div>

@@ -11,7 +11,7 @@ const tooltipGen = message => {
 
 const ToolTip = ({ message }) => (
   <OverlayTrigger placement="right" overlay={tooltipGen(message)}>
-    <Icon type="questionCircle" className={styles.tooltipIcon} />
+    <Icon type="questionCircle" className={styles.tooltipIcon} size={12} />
   </OverlayTrigger>
 );
 

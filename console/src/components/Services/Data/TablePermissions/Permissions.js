@@ -186,7 +186,7 @@ class Permissions extends Component {
         <span>
           <span className={styles.add_mar_right_small}>{text}</span>
           <OverlayTrigger placement="right" overlay={tooltip}>
-            <Icon type="questionCircle" />
+            <Icon type="questionCircle" size={12} />
           </OverlayTrigger>
         </span>
       );
@@ -739,7 +739,7 @@ class Permissions extends Component {
               <span data-test="custom-check">
                 <span className={styles.add_mar_right}>With custom check:</span>
                 <OverlayTrigger placement="right" overlay={customCheckToolTip}>
-                  <Icon type="questionCircle" />
+                  <Icon type="questionCircle" size={12} />
                 </OverlayTrigger>
               </span>
             );
