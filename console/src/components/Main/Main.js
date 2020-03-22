@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import { css } from 'styled-components';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 
@@ -521,7 +522,17 @@ class Main extends React.Component {
               to={appPrefix + path}
             >
               <span className={styles.iconCenter} data-test={block}>
-                <Icon type={icon} size={14} />
+                <Icon
+                  type={icon}
+                  size={14}
+                  css={
+                    icon === 'schema'
+                      ? css`
+                          transform: rotate(45deg);
+                        `
+                      : ''
+                  }
+                />
               </span>
               <p>{title}</p>
             </Link>
