@@ -186,6 +186,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         elif req_path == "/invalid-response":
             self._send_response(HTTPStatus.OK, "some-string")
 
+        elif req_path == "/mirror-action":
+            resp, status = self.mirror_action()
+            self._send_response(status, resp)
+
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
@@ -263,6 +267,11 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         response = resp['data']['insert_user']['returning']
         return response, HTTPStatus.OK
 
+    def mirror_action(self):
+        response = self.req_json['input']['arg']
+        return response, HTTPStatus.OK
+
+
     def check_email(self, email):
         regex = '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
         return re.search(regex,email)
@@ -279,6 +288,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
     def _send_response(self, status, body):
         self.send_response(status)
         self.send_header('Content-Type', 'application/json')
+        self.send_header('Set-Cookie', 'abcd')
         self.end_headers()
         self.wfile.write(json.dumps(body).encode("utf-8"))
 
@@ -421,7 +431,7 @@ class HGECtx:
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
 
-
+        # HGE version
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         env_version = os.getenv('VERSION')
         self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
@@ -432,6 +442,11 @@ class HGECtx:
               self.teardown()
               raise HGECtxError(repr(e))
           assert st_code == 200, resp
+
+        # Postgres version
+        pg_version_text = self.sql('show server_version_num').fetchone()['server_version_num']
+        self.pg_version = int(pg_version_text)
+
 
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
