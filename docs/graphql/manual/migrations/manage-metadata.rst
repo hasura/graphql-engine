@@ -38,7 +38,7 @@ Exporting Hasura metadata
 
   .. tab:: CLI
 
-     Metadata can be exported with the :ref:`hasura metadata export <hasura_metadata_export>` command on the Hasura CLI.
+     Metadata can be exported with the :ref:`hasura metadata export <hasura_metadata_export>` command via the Hasura CLI.
 
   .. tab:: API
 
@@ -116,7 +116,7 @@ when a new column has been added to a table via an external tool such as ``psql`
 
   .. tab:: CLI
 
-     Metadata can be reloaded with the :ref:`hasura metadata reload <hasura_metadata_reload>` command on the Hasura CLI.
+     Metadata can be reloaded with the :ref:`hasura metadata reload <hasura_metadata_reload>` command via the Hasura CLI.
 
   .. tab:: API
 
