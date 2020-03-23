@@ -151,6 +151,7 @@ class PermissionsSummary extends Component {
           size={12}
           cursor
           onClick={onClick}
+          className={styles.actionIcon}
         />
       );
     };
