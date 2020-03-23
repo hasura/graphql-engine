@@ -1,10 +1,11 @@
 import React from 'react';
-import Spinner from '../../../Common/Spinner/Spinner';
+import { Tabs, Tab } from 'react-bootstrap';
+
 import JSEditor from '../../../Common/AceEditor/JavaScriptEditor';
 import TSEditor from '../../../Common/AceEditor/TypescriptEditor';
 import { getFrameworkCodegen } from './utils';
 import { getFileExtensionFromFilename } from '../../../Common/utils/jsUtils';
-import { Tabs, Tab } from 'react-bootstrap';
+import { Spinner } from '../../../UIKit/atoms';
 
 const CodeTabs = ({
   framework,

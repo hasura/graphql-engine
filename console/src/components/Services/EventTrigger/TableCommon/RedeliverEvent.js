@@ -16,7 +16,7 @@ import {
 import 'brace/mode/json';
 import Button from '../../../Common/Button/Button';
 import { verifySuccessStatus } from '../utils';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Spinner } from '../../../UIKit/atoms';
 import styles from './EventTable.scss';
 
 class RedeliverEvent extends Component {
@@ -82,9 +82,7 @@ class RedeliverEvent extends Component {
   render() {
     const { log } = this.props;
 
-    const isLoading = this.state.intervalId ? (
-      <i className="fa fa-spinner fa-spin" />
-    ) : null;
+    const isLoading = this.state.intervalId ? <Spinner /> : null;
 
     const renderTableBody = () => {
       if (log.eventInvocations.length === 0) {

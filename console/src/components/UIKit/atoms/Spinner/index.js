@@ -62,3 +62,7 @@ export const Spinner = props => {
     </StyledSpinner>
   );
 };
+
+Spinner.defaultProps = {
+  size: 'small',
+};

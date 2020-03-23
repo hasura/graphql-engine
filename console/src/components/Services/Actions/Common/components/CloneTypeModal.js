@@ -1,11 +1,12 @@
 import React from 'react';
-import Spinner from '../../../../Common/Spinner/Spinner';
 import { connect } from 'react-redux';
 import { isInputObjectType, isObjectType, isEnumType } from 'graphql';
+
 import { deriveExistingType } from '../utils';
 import Tooltip from './Tooltip';
-import styles from './Styles.scss';
 import { useIntrospectionSchema } from '../../../../Common/utils/graphqlUtils';
+import { Spinner } from '../../../../UIKit/atoms';
+import styles from './Styles.scss';
 
 const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
   const [prefix, setPrefix] = React.useState('_');

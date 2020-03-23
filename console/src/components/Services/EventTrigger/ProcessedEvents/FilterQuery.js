@@ -24,7 +24,7 @@ import {
 import Button from '../../../Common/Button/Button';
 import { setDefaultQuery, runQuery } from './FilterActions';
 import { vMakeRequest } from './ViewActions';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Spinner } from '../../../UIKit/atoms';
 
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
@@ -245,7 +245,7 @@ class FilterQuery extends Component {
             >
               {this.state.isWatching ? (
                 <span>
-                  Watching <i className={'fa fa-spinner fa-spin'} />
+                  Watching <Spinner ml="xs" />
                 </span>
               ) : (
                 'Watch'

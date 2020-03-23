@@ -9,6 +9,8 @@ import {
   loadEventInvocations,
   RESET,
 } from './InvokeManualTriggerAction';
+import { Spinner } from '../../../../UIKit/atoms';
+import styles from './InvokeManualTrigger.scss';
 
 /* This component accepts for following props
  *  1) Trigger name
@@ -89,14 +91,16 @@ class InvokeManualTrigger extends React.Component {
       err,
       identifier,
     } = invokeEventTrigger;
-    const styles = require('./InvokeManualTrigger.scss');
-    const loader = () => <i className="fa fa-spinner fa-spin" />;
+
+    const loader = () => <Spinner ml="xs" />;
+
     const getEventId = () =>
       (isCreatingManualTrigger && loader()) || success.event_id;
     const getEventPayload = () => {
       if (status.length === 0) {
         return <div>Fetching invocation info {loader()}</div>;
       }
+
       return (
         <div className={styles.displayFlexContainer}>
           <div className={`${styles.padd_left_remove} col-md-6`}>

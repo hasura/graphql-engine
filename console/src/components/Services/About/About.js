@@ -10,6 +10,7 @@ import requestAction from '../../../utils/requestAction';
 import { showErrorNotification } from '../Common/Notification';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { versionGT } from '../../../helpers/versionUtils';
+import { Spinner } from '../../UIKit/atoms';
 
 class About extends Component {
   state = {
@@ -51,7 +52,7 @@ class About extends Component {
 
     const { serverVersion, latestStableServerVersion } = this.props;
 
-    const spinner = <i className="fa fa-spinner fa-spin" />;
+    const spinner = <Spinner ml="xs" />;
 
     const getServerVersionSection = () => {
       return (

@@ -29,9 +29,8 @@ import {
 import _push from '../push';
 import { ordinalColSort } from '../utils';
 import FilterQuery from './FilterQuery';
-import Spinner from '../../../Common/Spinner/Spinner';
 import Button from '../../../Common/Button/Button';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Spinner } from '../../../UIKit/atoms';
 
 import { E_SET_EDITITEM } from './EditActions';
 import { I_SET_CLONE } from '../TableInsertItem/InsertActions';

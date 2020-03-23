@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { push } from 'react-router-redux';
 import Helmet from 'react-helmet';
+
 import Button from '../Common/Button/Button';
 import globals from '../../Globals';
 import { verifyLogin } from './Actions';
 import { CLI_CONSOLE_MODE } from '../../constants';
 import { getAdminSecret } from '../Services/ApiExplorer/ApiRequest/utils';
+import { Spinner } from '../UIKit/atoms';
+import styles from './Login.scss';
 
-const styles = require('./Login.scss');
 const hasuraLogo = require('./blue-logo.svg');
 
 const Login = ({ dispatch }) => {
@@ -25,11 +27,12 @@ const Login = ({ dispatch }) => {
     const getLoginButtonText = () => {
       // login button text
       let loginText = 'Enter';
+
       if (loading) {
         loginText = (
           <span>
             Verifying...
-            <i className="fa fa-spinner fa-spin" aria-hidden="true" />
+            <Spinner ml="xs" />
           </span>
         );
       } else if (error) {

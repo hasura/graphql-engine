@@ -9,9 +9,8 @@ import * as tooltips from './Tooltips';
 import globals from '../../Globals';
 import { getPathRoot } from '../Common/utils/urlUtils';
 
-import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
-import { Icon } from '../UIKit/atoms/';
+import { Icon, Spinner } from '../UIKit/atoms/';
 
 import {
   loadServerVersion,
@@ -236,6 +235,7 @@ class Main extends React.Component {
           </div>
         );
       }
+
       return mainContent;
     };
 
