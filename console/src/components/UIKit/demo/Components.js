@@ -191,6 +191,11 @@ export const UIComponents = () => (
     <Icon ml="xl" size={20} />
 
     <Heading my="lg" as="h3">
+      {'<Icon cursor /> ~ cursor prop'}
+    </Heading>
+    <Icon ml="xl" cursor />
+
+    <Heading my="lg" as="h3">
       {'<Icon type="success" />'}
     </Heading>
     <Icon type="success" ml="xl" />
