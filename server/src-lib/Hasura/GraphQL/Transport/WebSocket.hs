@@ -63,7 +63,7 @@ import qualified Hasura.Server.Telemetry.Counters            as Telem
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
 -- log.
 --
--- NOTE!: This must be kept consistent with the global 'LiveQueryState', in 'onClose' 
+-- NOTE!: This must be kept consistent with the global 'LiveQueryState', in 'onClose'
 -- and 'onStart'.
 type OperationMap
   = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
@@ -325,7 +325,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     runHasuraGQ timerTot telemCacheHit reqId query userInfo = \case
       E.ExOpQuery opTx genSql ->
         execQueryOrMut Telem.Query genSql $ runLazyTx' pgExecCtx opTx
-      E.ExOpMutation opTx ->
+      -- Response headers discarded over websockets
+      E.ExOpMutation _ opTx ->
         execQueryOrMut Telem.Mutation Nothing $
           runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
