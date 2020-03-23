@@ -261,9 +261,9 @@ const ViewRows = ({
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
             const status = verifySuccessStatus(r.status) ? (
-              <Icon type="check" className={styles.invocationSuccess} />
+              <Icon type="check" color="green.original" />
             ) : (
-              <Icon type="close" className={styles.invocationFailure} />
+              <Icon type="close" color="red.original" />
             );
 
             // Insert cells corresponding to all rows

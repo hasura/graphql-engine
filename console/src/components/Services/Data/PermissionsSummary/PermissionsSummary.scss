@@ -1,4 +1,4 @@
-@import "../../../Common/Common";
+@import '../../../Common/Common';
 
 //.rolesTableWrapper {
 //}
@@ -6,7 +6,8 @@
 .rolesTable {
   width: fit-content;
 
-  th, td {
+  th,
+  td {
     vertical-align: middle !important;
   }
 
@@ -25,21 +26,7 @@
 
 .selected,
 .selected th {
-  background-color: #FFF3D5 !important;
-}
-
-.permissionSymbolNA {
-  color: firebrick;
-}
-
-.permissionSymbolFA {
-  color: green;
-}
-
-.permissionSymbolNA,
-.permissionSymbolFA,
-.permissionSymbolPA {
-  font-size: 16px;
+  background-color: #fff3d5 !important;
 }
 
 // TODO: make common with Permissions page

@@ -299,10 +299,12 @@ class AddTrigger extends Component {
         removeIcon = (
           <Icon
             type="close"
-            className={styles.fontAwosomeClose}
             onClick={() => {
               dispatch(removeHeader(i));
             }}
+            cursor
+            size={15}
+            ml="10px"
           />
         );
       }

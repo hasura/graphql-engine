@@ -345,7 +345,7 @@ const RawSQL = ({
           Cascade metadata
         </label>
         <OverlayTrigger placement="right" overlay={cascadeTip}>
-          <Icon type="info" className={`${styles.add_mar_left_small}`} />
+          <Icon type="info" ml="xs" />
         </OverlayTrigger>
       </div>
     );
@@ -373,7 +373,7 @@ const RawSQL = ({
           Track this
         </label>
         <OverlayTrigger placement="right" overlay={trackTableTip()}>
-          <Icon type="info" className={`${styles.add_mar_left_small}`} />
+          <Icon type="info" ml="xs" />
         </OverlayTrigger>
       </div>
     );
@@ -404,7 +404,7 @@ const RawSQL = ({
             This is a migration
           </label>
           <OverlayTrigger placement="right" overlay={migrationTip}>
-            <Icon type="info" className={`${styles.add_mar_left_small}`} />
+            <Icon type="info" ml="xs" />
           </OverlayTrigger>
         </div>
       );
@@ -433,7 +433,7 @@ const RawSQL = ({
                 type="text"
               />
               <OverlayTrigger placement="right" overlay={migrationNameTip}>
-                <Icon type="info" className={`${styles.add_mar_left_small}`} />
+                <Icon type="info" ml="xs" />
               </OverlayTrigger>
               <div
                 className={styles.add_mar_top_small + ' ' + styles.text_gray}

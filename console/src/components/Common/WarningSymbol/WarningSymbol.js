@@ -3,7 +3,7 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import { Icon } from '../../UIKit/atoms';
-import styles from './WarningSymbol.scss';
+import styles from '../Common.scss';
 
 const WarningSymbol = ({
   tooltipText,
@@ -27,7 +27,8 @@ export const WarningIcon = ({ customStyle }) => {
   return (
     <Icon
       type="warning"
-      className={`${styles.warningSymbol} ${customStyle ? customStyle : ''}`}
+      color="red.primary"
+      className={customStyle ? customStyle : ''}
     />
   );
 };

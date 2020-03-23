@@ -70,7 +70,9 @@ const TableColumn = props => {
         <Icon
           type="close"
           onClick={onRemoveColumn.bind(undefined, i)}
-          className={`${styles.fontAwosomeClose}`}
+          ml="10px"
+          size={15}
+          cursor
         />
       );
     }

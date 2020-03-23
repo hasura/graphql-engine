@@ -211,7 +211,9 @@ const ForeignKeySelector = ({
               <Icon
                 type="close"
                 onClick={dispatchRemoveCol}
-                className={`${styles.fontAwosomeClose}`}
+                ml="10px"
+                size={15}
+                cursor
               />
             );
           }

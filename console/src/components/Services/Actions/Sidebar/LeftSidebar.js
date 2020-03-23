@@ -66,7 +66,7 @@ const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
               to={appPrefix + '/manage/' + a.action_name + '/modify'}
               data-test={a.action_name}
             >
-              <Icon type="wrench" className={styles.tableIcon} />
+              <Icon type="wrench" mr="xs" size={12} />
               {a.action_name}
             </Link>
           </li>

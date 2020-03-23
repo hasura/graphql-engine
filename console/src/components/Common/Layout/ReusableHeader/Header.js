@@ -192,7 +192,8 @@ class Header extends React.Component {
               type="close"
               onClick={this.deleteHeader.bind(this)}
               data-index-id={i}
-              className={styles.fontAwosomeClose}
+              ml="10px"
+              size={15}
             />
           ) : null}
         </div>

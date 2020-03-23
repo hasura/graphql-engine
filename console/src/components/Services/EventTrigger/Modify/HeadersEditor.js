@@ -112,8 +112,9 @@ const HeadersEditor = props => {
             </div>
             <Icon
               type="close"
-              className={`${styles.fontAwosomeClose}
-                    ${styles.removeHeader}`}
+              className={styles.removeHeader}
+              ml="10px"
+              cursor
               onClick={() => {
                 dispatch(removeHeader(i));
               }}

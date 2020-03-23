@@ -286,11 +286,7 @@ const RelationshipEditor = ({
             removeIcon = null;
           } else {
             removeIcon = (
-              <Icon
-                type="close"
-                onClick={removeField}
-                className={`${styles.fontAwosomeClose}`}
-              />
+              <Icon type="close" onClick={removeField} ml="10px" size={15} />
             );
           }
 

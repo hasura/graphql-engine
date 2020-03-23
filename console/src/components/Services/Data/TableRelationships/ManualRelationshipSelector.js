@@ -204,7 +204,9 @@ const ManualRelationshipSelector = ({
               <Icon
                 type="close"
                 onClick={dispatchRemoveCol}
-                className={`${styles.fontAwosomeClose}`}
+                cursor
+                size={15}
+                ml="10px"
               />
             );
           }

@@ -5,32 +5,27 @@
     cursor: pointer;
     display: inline-block;
 
-    .collapsibleIndicatorWrapper {
-      padding-right: 10px;
-      font-size: 12px;
-
-      .collapsibleIndicator {
-        transition: transform 0.3s ease;
-      }
-
-      .collapsibleIndicatorOpen {
-        transform: rotate(90deg);
-      }
+    .collapsibleIndicator {
+      transition: transform 0.3s ease;
     }
 
-    .titleWrapper {
-      display: inline-block;
-    }
-
-    .defaultCollapsibleTitle {
-      color: #788095;
-      font-weight: bold;
-      font-size: 14px;
+    .collapsibleIndicatorOpen {
+      transform: rotate(90deg);
     }
   }
 
-  .collapsibleContent {
-    margin-top: 10px;
-    display: block;
+  .titleWrapper {
+    display: inline-block;
   }
+
+  .defaultCollapsibleTitle {
+    color: #788095;
+    font-weight: bold;
+    font-size: 14px;
+  }
+}
+
+.collapsibleContent {
+  margin-top: 10px;
+  display: block;
 }

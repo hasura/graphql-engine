@@ -1,10 +1,16 @@
 import React from 'react';
 
 import { Icon } from '../../UIKit/atoms';
-import styles from '../Common.scss';
 
 const Check = ({ className }) => {
-  return <Icon type="check" className={`${styles.iconCheck} ${className}`} />;
+  return (
+    <Icon
+      type="check"
+      size={20}
+      color="green.original"
+      className={className || ''}
+    />
+  );
 };
 
 export default Check;

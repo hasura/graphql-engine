@@ -145,7 +145,13 @@ class PermissionsSummary extends Component {
 
     const getActionIcon = (iconType, onClick = null) => {
       return (
-        <Icon type={iconType} className={styles.actionIcon} onClick={onClick} />
+        <Icon
+          type={iconType}
+          color="blue.primary"
+          size={12}
+          cursor
+          onClick={onClick}
+        />
       );
     };
 

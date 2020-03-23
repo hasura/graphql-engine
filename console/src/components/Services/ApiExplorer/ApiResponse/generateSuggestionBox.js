@@ -12,7 +12,7 @@ const generateSuggestionBox = (response, parseFunc) => {
         styles.clear_fix + ' ' + styles.alertDanger + ' alert alert-danger'
       }
     >
-      <Icon type="info" className={styles.padd_right} />
+      <Icon type="info" pr="15px" />
       {suggestionText}
     </div>
   ) : (

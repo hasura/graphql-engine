@@ -4,8 +4,8 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 
 import { Icon } from '../../../../UIKit/atoms';
-import styles from '../../../../Common/Common.scss';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
   if (!isEnum) return null;
 
@@ -20,10 +20,7 @@ const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
     <React.Fragment>
       <ReloadEnumMetadata buttonText="Reload enum values" dispatch={dispatch} />
       <OverlayTrigger overlay={tooltip} placement="right">
-        <Icon
-          type="info"
-          className={`${styles.cursorPointer} ${tooltipStyle || ''}`}
-        />
+        <Icon type="info" cursor />
       </OverlayTrigger>
     </React.Fragment>
   );

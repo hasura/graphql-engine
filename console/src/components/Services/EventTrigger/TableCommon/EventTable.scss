@@ -52,14 +52,6 @@
     line-height: 23px;
     border-bottom: 1px solid #e1e4e8;
   }
-
-  .invocationSuccess {
-    color: #28a745;
-  }
-
-  .invocationFailure {
-    color: red;
-  }
 }
 
 .streamingLogs {
@@ -72,13 +64,6 @@
     margin-left: -10px;
     line-height: 23px;
     border-bottom: 1px solid #e1e4e8;
-  }
-
-  .invocationSuccess {
-    color: #28a745;
-  }
-  .invocationFailure {
-    color: red;
   }
 }
 
@@ -130,10 +115,6 @@
     width: auto;
     margin-left: 10px;
   }
-}
-
-.retryEvent {
-  cursor: pointer;
 }
 
 .redeliverModal {

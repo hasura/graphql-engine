@@ -55,7 +55,9 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
             type="close"
             data-test={`remove-pk-column-${i}`}
             onClick={dispatchRemove}
-            className={`${styles.fontAwosomeClose}`}
+            ml="10px"
+            size={15}
+            cursor
           />
         );
       }

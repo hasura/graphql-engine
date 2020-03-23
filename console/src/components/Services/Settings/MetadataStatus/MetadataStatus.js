@@ -193,10 +193,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     }
     return (
       <div className={`${styles.errorBanner} alert alert-danger`}>
-        <Icon
-          type="error"
-          className={`${styles.add_mar_right_small} ${styles.fontStyleNormal}`}
-        />
+        <Icon type="error" mr="xs" />
         <strong>
           You have been redirected because your GraphQL Engine metadata is in an
           inconsistent state
@@ -204,7 +201,8 @@ const MetadataStatus = ({ dispatch, metadata }) => {
         <Icon
           type="close"
           onClick={dismissErrorBanner}
-          className={`${styles.align_right} ${styles.fontStyleNormal} ${styles.cursorPointer}`}
+          cursor
+          className={styles.align_right}
         />
       </div>
     );
