@@ -26,12 +26,21 @@ timestamp whenever a new row is added to the table:
 Step 1: Modify the table
 ------------------------
 
-Edit the ``created_at`` field and set its default value as the SQL function ``now()``.
+.. rst-class:: api_tabs
+.. tabs::
 
-Open the console and head to ``Data -> article -> Modify``:
+  .. tab:: Console
 
-.. thumbnail:: ../../../../img/graphql/manual/schema/add-default-value.png
-   :alt: Modify the table in the console
+    Edit the ``created_at`` field and set its default value as the SQL function ``now()``.
+
+    Open the console and head to ``Data -> article -> Modify``:
+
+    .. thumbnail:: ../../../../img/graphql/manual/schema/add-default-value.png
+      :alt: Modify the table in the console
+
+  .. tab:: API
+
+    A table can be modified via the :ref:`run_sql <run_sql>` metadata API.
 
 .. admonition:: To set an auto-incrementing default value
 
@@ -41,7 +50,7 @@ Open the console and head to ``Data -> article -> Modify``:
   Let's say we have a field called ``roll_number`` which we would like to be set by default as an auto-incremented
   integer.
 
-  Head to ``Data -> SQL`` and run the following SQL command to create a new sequence.
+  Head to ``Data -> SQL`` on the console or call the :ref:`run_sql <run_sql>` metadata API and run the following SQL command to create a new sequence.
 
   .. code-block:: SQL
 
