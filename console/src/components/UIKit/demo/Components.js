@@ -181,6 +181,16 @@ export const UIComponents = () => (
     </Heading>
 
     <Heading my="lg" as="h3">
+      {'<Icon /> ~ default'}
+    </Heading>
+    <Icon ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon size={20} /> ~ default size is "14px"'}
+    </Heading>
+    <Icon ml="xl" size={20} />
+
+    <Heading my="lg" as="h3">
       {'<Icon type="success" />'}
     </Heading>
     <Icon type="success" ml="xl" />
@@ -206,9 +216,9 @@ export const UIComponents = () => (
     <Icon type="error" ml="xl" />
 
     <Heading my="lg" as="h3">
-      {'<Icon type="graphiql" />'}
+      {'<Icon type="graphiQL" />'}
     </Heading>
-    <Icon type="graphiql" ml="xl" />
+    <Icon type="graphiQL" ml="xl" />
 
     <Heading my="lg" as="h3">
       {'<Icon type="database" />'}
@@ -236,9 +246,199 @@ export const UIComponents = () => (
     <Icon type="question" ml="xl" />
 
     <Heading my="lg" as="h3">
-      {'<Icon /> ~ default'}
+      {'<Icon type="action" />'}
     </Heading>
-    <Icon ml="xl" />
+    <Icon type="action" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="exclamation" />'}
+    </Heading>
+    <Icon type="exclamation" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="close" />'}
+    </Heading>
+    <Icon type="close" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="star" />'}
+    </Heading>
+    <Icon type="star" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="twitter" />'}
+    </Heading>
+    <Icon type="twitter" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="love" />'}
+    </Heading>
+    <Icon type="love" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="right" />'}
+    </Heading>
+    <Icon type="right" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="down" />'}
+    </Heading>
+    <Icon type="down" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="up" />'}
+    </Heading>
+    <Icon type="up" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="compress" />'}
+    </Heading>
+    <Icon type="compress" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="expand" />'}
+    </Heading>
+    <Icon type="expand" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="edit" />'}
+    </Heading>
+    <Icon type="edit" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="pencil" />'}
+    </Heading>
+    <Icon type="pencil" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="search" />'}
+    </Heading>
+    <Icon type="search" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="spinner" />'}
+    </Heading>
+    <Icon type="spinner" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="questionCircle" />'}
+    </Heading>
+    <Icon type="questionCircle" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="pause" />'}
+    </Heading>
+    <Icon type="pause" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="play" />'}
+    </Heading>
+    <Icon type="play" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="playBox" />'}
+    </Heading>
+    <Icon type="playBox" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="check" />'}
+    </Heading>
+    <Icon type="check" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="reload" />'}
+    </Heading>
+    <Icon type="reload" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="delete" />'}
+    </Heading>
+    <Icon type="delete" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="add" />'}
+    </Heading>
+    <Icon type="add" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="eye" />'}
+    </Heading>
+    <Icon type="eye" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="secret" />'}
+    </Heading>
+    <Icon type="secret" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="lightBulb" />'}
+    </Heading>
+    <Icon type="lightBulb" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="sort" />'}
+    </Heading>
+    <Icon type="sort" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="caretUp" />'}
+    </Heading>
+    <Icon type="caretUp" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="caretDown" />'}
+    </Heading>
+    <Icon type="caretDown" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="caretRight" />'}
+    </Heading>
+    <Icon type="caretRight" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="caretLeft" />'}
+    </Heading>
+    <Icon type="caretLeft" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="clone" />'}
+    </Heading>
+    <Icon type="clone" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="copy" />'}
+    </Heading>
+    <Icon type="copy" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="link" />'}
+    </Heading>
+    <Icon type="link" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="table" />'}
+    </Heading>
+    <Icon type="table" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="filter" />'}
+    </Heading>
+    <Icon type="filter" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="wrench" />'}
+    </Heading>
+    <Icon type="wrench" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="send" />'}
+    </Heading>
+    <Icon type="send" ml="xl" />
+
+    <Heading my="lg" as="h3">
+      {'<Icon type="fork" />'}
+    </Heading>
+    <Icon type="fork" ml="xl" />
 
     {/* ToolTip ********************************/}
     <Heading mb="lg" mt="xl" as="h2">
