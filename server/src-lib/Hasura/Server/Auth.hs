@@ -23,12 +23,15 @@ import           Control.Exception           (try)
 import           Control.Lens
 import           Data.Aeson
 import           Data.IORef                  (newIORef)
-import           Data.Time.Clock             (UTCTime)
+import           Data.Parser.CacheControl    (parseMaxAge)
+import           Data.Time.Clock             (UTCTime, addUTCTime, getCurrentTime)
+import           Data.Time.Format            (defaultTimeLocale, parseTimeM)
 import           Hasura.Server.Version       (HasVersion)
 
 import qualified Data.Aeson                  as J
 import qualified Data.ByteString.Lazy        as BL
 import qualified Data.HashMap.Strict         as Map
+import qualified Data.String.Conversions     as CS
 import qualified Data.Text                   as T
 import qualified Network.HTTP.Client         as H
 import qualified Network.HTTP.Types          as N
@@ -169,8 +172,8 @@ mkUserInfoFromResp
   -> N.StdMethod
   -> N.Status
   -> BL.ByteString
-  -> m UserInfo
-mkUserInfoFromResp logger url method statusCode respBody
+  -> m (UserInfo, Maybe UTCTime)
+mkUserInfoFromResp (Logger logger) url method statusCode respBody
   | statusCode == N.status200 =
     case eitherDecode respBody of
       Left e -> do
@@ -193,15 +196,38 @@ mkUserInfoFromResp logger url method statusCode respBody
           logError
           throw500 "missing x-hasura-role key in webhook response"
         Just rn -> do
-          logWebHookResp LevelInfo Nothing
-          return $ mkUserInfo rn usrVars
+          logWebHookResp LevelInfo Nothing Nothing
+          expTimeFromCC <- expiryTimeFromCacheControl rawHeaders
+          expTimeFromE  <- expiryTimeFromExpires      rawHeaders
+          return ( mkUserInfo rn usrVars
+                 , expTimeFromCC <|> expTimeFromE
+                 )
 
+    logWarn =
+      logWebHookResp LevelWarn $ Just respBody
     logError =
-      logWebHookResp LevelError $ Just respBody
+      logWebHookResp LevelError (Just respBody) Nothing
 
-    logWebHookResp logLevel mResp =
-      unLogger logger $ WebHookLog logLevel (Just statusCode)
-        url method Nothing $ fmap (bsToTxt . BL.toStrict) mResp
+    logWebHookResp logLevel mResp message =
+      logger $ WebHookLog logLevel (Just statusCode)
+        url method Nothing (bsToTxt . BL.toStrict <$> mResp) message
+
+    expiryTimeFromCacheControl rawHeaders =
+      case Map.lookup "Cache-Control" rawHeaders of
+        Nothing     -> return Nothing
+        Just header -> case parseMaxAge header of
+          Left e       -> logWarn (Just $ T.pack e) >> return Nothing
+          Right maxAge -> Just . addUTCTime (fromInteger maxAge) <$> liftIO getCurrentTime
+
+    expiryTimeFromExpires rawHeaders = do
+      case Map.lookup "Expires" rawHeaders of
+        Nothing     -> return Nothing
+        Just header -> case parseTimeM True defaultTimeLocale timeFmt $ CS.cs header of
+          Left e        -> logWarn (Just $ T.pack e) >> return Nothing
+          Right expTime -> return $ Just expTime
+
+    timeFmt = "%a, %d %b %Y %T GMT"
+
 
 userInfoFromAuthHook
   :: (HasVersion, MonadIO m, MonadError QErr m)
@@ -209,7 +235,7 @@ userInfoFromAuthHook
   -> H.Manager
   -> AuthHook
   -> [N.Header]
-  -> m UserInfo
+  -> m (UserInfo, Maybe UTCTime)
 userInfoFromAuthHook logger manager hook reqHeaders = do
   res <- liftIO $ try $ bool withGET withPOST isPost
   resp <- either logAndThrow return res
@@ -236,7 +262,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
     logAndThrow err = do
       unLogger logger $
         WebHookLog LevelError Nothing urlT method
-        (Just $ HttpException err) Nothing
+        (Just $ HttpException err) Nothing Nothing
       throw500 "Internal Server Error"
 
     filteredHeaders = flip filter reqHeaders $ \(n, _) ->
@@ -271,10 +297,10 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
 
   AMAdminSecretAndHook accKey hook ->
     whenAdminSecretAbsent accKey $
-      withNoExpTime $ userInfoFromAuthHook logger manager hook rawHeaders
+      userInfoFromAuthHook logger manager hook rawHeaders
 
   AMAdminSecretAndJWT accKey jwtSecret unAuthRole ->
-    whenAdminSecretAbsent accKey (processJwt jwtSecret rawHeaders unAuthRole)
+    whenAdminSecretAbsent accKey $ processJwt jwtSecret rawHeaders unAuthRole
 
   where
     -- when admin secret is absent, run the action to retrieve UserInfo, otherwise
