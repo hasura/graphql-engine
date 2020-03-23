@@ -55,14 +55,13 @@ foreign-key.
 To track a foreign-key between two tables in the database:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A foreign key between two tables can be tracked via the console or the metadata API.
-
 #. Head to the ``Data -> Schema`` section of the console.
 #. Click on a table involved in the foreign-key and head to the ``Relationships`` tab.
 #. You should see a suggested relationship based on the foreign-key. Click ``Add``, give a name to your relationship
    (this will be the name of the :ref:`nested object <nested_object_queries>` in the GraphQL query), and
    hit ``Save`` to create the relationship.
 #. Repeat with the other table involved in the foreign-key.
+
 
 To track all the foreign-keys of all tables in the database:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
