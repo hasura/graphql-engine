@@ -1,9 +1,10 @@
 import React from 'react';
 import { parse as sdlParse } from 'graphql/language/parser';
-import styles from './Styles.scss';
+
 import Tooltip from './Tooltip';
-import CrossIcon from '../../../../Common/Icons/Cross';
 import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
+import { Icon } from '../../../../UIKit/atoms';
+import styles from './Styles.scss';
 
 const editorLabel = 'Action definition';
 const editorTooltip =
@@ -68,7 +69,7 @@ const ActionDefinitionEditor = ({
         >
           {error && (
             <div className={`${styles.display_flex}  ${styles.errorMessage}`}>
-              <CrossIcon className={styles.add_mar_right_small} />
+              <Icon type="close" color="red.primary" size={20} mr="xs" />
               <p>{errorMessage}</p>
             </div>
           )}
