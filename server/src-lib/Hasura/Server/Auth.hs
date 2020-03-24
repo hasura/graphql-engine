@@ -1,11 +1,13 @@
 {-# LANGUAGE RecordWildCards #-}
+
 module Hasura.Server.Auth
   ( getUserInfo
   , getUserInfoWithExpTime
-  , AuthMode(..)
+  , AuthMode (..)
   , mkAuthMode
   , AdminSecret (..)
-  , AuthHookType(..)
+  -- WebHook related
+  , AuthHookType (..)
   , AuthHookG (..)
   , AuthHook
   -- JWT related

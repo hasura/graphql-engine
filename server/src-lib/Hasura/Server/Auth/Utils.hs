@@ -19,20 +19,22 @@ data ExpiryTime = AbsoluteTime UTCTime
                 | RelativeTime NominalDiffTime
 
 
+-- | Extracts a relative expiry time from the CacheControl header.
 timeFromCacheControlHeader
   :: (Monad m)
-  => Maybe T.Text
-  -> (T.Text -> m ())
+  => Maybe T.Text         -- ^ the header
+  -> (T.Text -> m ())     -- ^ what should be done if parsing fails
   -> m (Maybe ExpiryTime)
 timeFromCacheControlHeader header onError =
   onMaybe header $ \h -> case parseMaxAge h of
     Left e       -> onError (T.pack e) >> return Nothing
     Right maxAge -> return $ Just $ RelativeTime $ fromInteger maxAge
 
+-- | Extracts an absolute expiry time from a the Expires header.
 timeFromExpiresHeader
   :: (Monad m)
-  => Maybe T.Text
-  -> (T.Text -> m ())
+  => Maybe T.Text         -- ^ the header
+  -> (T.Text -> m ())     -- ^ what should be done if parsing fails
   -> m (Maybe ExpiryTime)
 timeFromExpiresHeader header onError =
   onMaybe header $ \h -> case parseTimeM True defaultTimeLocale timeFmt $ CS.cs h of

@@ -28,8 +28,6 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 
 
--- hook type
-
 data AuthHookType
   = AHTGet
   | AHTPost
@@ -43,8 +41,6 @@ isPost :: AuthHookType -> Bool
 isPost AHTGet  = False
 isPost AHTPost = True
 
-
--- auth hook
 
 data AuthHookG a b
   = AuthHookG
@@ -62,8 +58,10 @@ hookMethod :: AuthHook -> N.StdMethod
 hookMethod = bool N.GET N.POST . isPost . ahType
 
 
-
--- | Extract @UserInfo@ from the webhook answer.
+-- | Extracts 'UserInfo' from the webhook answer.
+--   This uses the provided manager to make the call, extracts
+--   information such as response body and status, and delegates to a
+--   local 'mkUserInfoFromResp'.
 userInfoFromAuthHook
   :: (HasVersion, MonadIO m, MonadError QErr m)
   => Logger Hasura
@@ -96,7 +94,9 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
       n `notElem` commonClientHeadersIgnored
 
 
--- | Form the 'UserInfo' from the response from webhook
+-- | Processes the result of the wehook call, and tries to construct a
+--   'UserInfo'. The expiration time is retrieved from either the
+--   CacheControl or Expires header.
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
   => Logger Hasura
@@ -148,4 +148,3 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody
         Just t  -> return $ Just t
         Nothing -> timeFromExpiresHeader eHeader $ logWarn . Just
       onMaybe expTime $ fmap Just . toUTCTime
-
