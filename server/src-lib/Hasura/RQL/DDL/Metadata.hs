@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Hasura.RQL.DDL.Metadata
   ( runReplaceMetadata
   , runExportMetadata
@@ -28,10 +29,13 @@ import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
 import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2, fetchRemoteSchemas,
                                                      removeRemoteSchemaFromCatalog)
+import           Hasura.RQL.DDL.Schema.Catalog      (saveTableToCatalog)
 import           Hasura.RQL.Types
 import           Hasura.Server.Version              (HasVersion)
 import           Hasura.SQL.Types
 
+import qualified Hasura.GraphQL.Schema              as GS
+import qualified Hasura.GraphQL.Context             as GC
 import qualified Database.PG.Query                  as Q
 import qualified Hasura.RQL.DDL.Action              as Action
 import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
@@ -142,11 +146,16 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta
 
   withPathK "tables" $ do
     -- tables and views
-    indexedForM_ tables $ \tableMeta -> do
-      let tableName = tableMeta ^. tmTable
-          isEnum = tableMeta ^. tmIsEnum
-          config = tableMeta ^. tmConfiguration
-      void $ Schema.trackExistingTableOrViewP2 tableName isEnum config
+    
+    -- NOTE: this is essentially a more efficient bulk 'Schema.trackExistingTableOrViewP2':
+    withBuildSchemaCache $ do
+      typeMap <- GC._gTypes . scDefaultRemoteGCtx <$> askSchemaCache
+      indexedForM tables $ \TableMeta{..} -> do
+        -- It should be okay to do this check against old cache as we work through new tables; we've 
+        -- already checked for duplicates in the track table payload:
+        GS.checkConflictingNode typeMap $ GS.qualObjectToName _tmTable
+        saveTableToCatalog _tmTable _tmIsEnum _tmConfiguration
+        return (MOTable _tmTable)
 
     indexedForM_ tables $ \table -> do
       -- Relationships

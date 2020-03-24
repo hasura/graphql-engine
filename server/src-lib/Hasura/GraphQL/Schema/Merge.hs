@@ -93,12 +93,12 @@ checkSchemaConflicts gCtx remoteCtx = do
 
 checkConflictingNode
   :: (MonadError QErr m)
-  => GCtx
+  => TypeMap
+  -- ^ See 'GCtx'.
   -> G.Name
   -> m ()
-checkConflictingNode gCtx node = do
-  let typeMap = _gTypes gCtx
-      hQR     = _otiFields <$>
+checkConflictingNode typeMap node = do
+  let hQR     = _otiFields <$>
                 (getObjTyM =<< Map.lookup hQRName typeMap)
       hMR     = _otiFields <$>
                 (getObjTyM =<< Map.lookup hMRName typeMap)

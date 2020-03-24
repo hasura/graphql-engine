@@ -16,6 +16,7 @@ module Hasura.RQL.Types.SchemaCache.Build
   , CacheInvalidations(..)
   , buildSchemaCache
   , buildSchemaCacheFor
+  , withBuildSchemaCache
   , buildSchemaCacheStrict
   , withNewInconsistentObjsCheck
   ) where
@@ -136,21 +137,28 @@ buildSchemaCache = buildSchemaCacheWithOptions CatalogUpdate mempty
 -- | Rebuilds the schema cache. If an object with the given object id became newly inconsistent,
 -- raises an error about it specifically. Otherwise, raises a generic metadata inconsistency error.
 buildSchemaCacheFor :: (QErrM m, CacheRWM m) => MetadataObjId -> m ()
-buildSchemaCacheFor objectId = do
+buildSchemaCacheFor = withBuildSchemaCache . pure . pure
+
+-- | More efficient bulk 'buildSchemaCacheFor'.
+withBuildSchemaCache :: (QErrM m, CacheRWM m) => m [MetadataObjId] -> m ()
+withBuildSchemaCache mObjs = do
   oldSchemaCache <- askSchemaCache
+  objectIds <- mObjs
   buildSchemaCache
   newSchemaCache <- askSchemaCache
 
   let diffInconsistentObjects = M.difference `on` (groupInconsistentMetadataById . scInconsistentObjs)
       newInconsistentObjects = newSchemaCache `diffInconsistentObjects` oldSchemaCache
 
-  for_ (M.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
-    let reasons = T.intercalate ", " $ map imReason $ toList matchingObjects
+  let matchingObjects = concat $ mapMaybe (fmap toList . (`M.lookup` newInconsistentObjects)) objectIds
+  unless (null matchingObjects) $ do
+    let reasons = T.intercalate ", " $ map imReason matchingObjects
     throwError (err400 ConstraintViolation reasons) { qeInternal = Just $ toJSON matchingObjects }
 
   unless (null newInconsistentObjects) $
     throwError (err400 Unexpected "cannot continue due to new inconsistent metadata")
       { qeInternal = Just $ toJSON (nub . concatMap toList $ M.elems newInconsistentObjects) }
+
 
 -- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
 buildSchemaCacheStrict :: (QErrM m, CacheRWM m) => m ()

@@ -90,5 +90,6 @@
 - server: validate action webhook response to conform to action output type (fix #3977)
 - server: preserve cookie headers from sync action webhook (close #4021)
 - server: add 'ID' to default scalars in custom types (fix #4061)
+- server: improve performance of replace_metadata tracking many tables (fix #3802)
 - console: add design system base components (#3866)
 - docs: add docs for redeliver_event API
