@@ -2,11 +2,14 @@ import React from 'react';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 
+import { Icon } from '../Icon';
 import { StyledTooltip } from './Tooltip';
 
 const tooltipGenerator = message => {
   return <Tooltip id={message}>{message}</Tooltip>;
 };
+
+const InfoIcon = <Icon type="questionCircle" size={12} />;
 
 export const ToolTip = props => {
   const { message, placement, children } = props;
@@ -22,4 +25,5 @@ export const ToolTip = props => {
 
 ToolTip.defaultProps = {
   placement: 'right',
+  children: InfoIcon,
 };

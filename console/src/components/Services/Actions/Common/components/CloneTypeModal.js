@@ -3,9 +3,8 @@ import { connect } from 'react-redux';
 import { isInputObjectType, isObjectType, isEnumType } from 'graphql';
 
 import { deriveExistingType } from '../utils';
-import Tooltip from './Tooltip';
 import { useIntrospectionSchema } from '../../../../Common/utils/graphqlUtils';
-import { Spinner } from '../../../../UIKit/atoms';
+import { Spinner, ToolTip } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
@@ -63,7 +62,7 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
         className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
       >
         <div className={'col-md-3'}>
-          Prefix <Tooltip text={prefixTooltipText} id="clone-prefix" />
+          <ToolTip message={prefixTooltipText}>Prefix</ToolTip>
         </div>
         <input
           type="text"

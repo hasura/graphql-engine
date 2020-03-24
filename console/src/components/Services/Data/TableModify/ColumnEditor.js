@@ -2,9 +2,9 @@ import React from 'react';
 
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
-
 import { getValidAlterOptions } from './utils';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
+import { ToolTip } from '../../../UIKit/atoms';
+import styles from './ModifyTable.scss';
 
 const ColumnEditor = ({
   onSubmit,
@@ -20,8 +20,6 @@ const ColumnEditor = ({
   if (!selectedProperties[colName]) {
     return null;
   }
-
-  const styles = require('./ModifyTable.scss');
 
   const getColumnType = () => {
     return (
@@ -79,12 +77,13 @@ const ColumnEditor = ({
     return (
       <div className={`${styles.display_flex} form-group`}>
         <label className={'col-xs-4'}>
-          GraphQL field name
-          <Tooltip
+          <ToolTip
             message={
               'Expose the column with a different name in the GraphQL API'
             }
-          />
+          >
+            GraphQL field name
+          </ToolTip>
         </label>
         <div className="col-xs-6">
           <input

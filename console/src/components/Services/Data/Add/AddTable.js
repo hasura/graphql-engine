@@ -47,14 +47,14 @@ import {
   tableMinPrimaryKeyNotif,
 } from './AddWarning';
 
-import styles from '../../../Common/TableCommon/Table.scss';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
 import {
   foreignKeyDescription,
   primaryKeyDescription,
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
+import { ToolTip } from '../../../UIKit/atoms';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 /* AddTable is a wrapper which wraps
  *  1) Table Name input
@@ -298,6 +298,7 @@ class AddTable extends Component {
   }
 
   /* eslint-disable no-unused-vars */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isValidDefault(type, d) {
     return true;
   }
@@ -463,8 +464,9 @@ class AddTable extends Component {
             </div>
             <hr />
             <h4 className={styles.subheading_text}>
-              Primary Key &nbsp; &nbsp;
-              <ToolTip message={primaryKeyDescription} />
+              <ToolTip message={primaryKeyDescription}>
+                Primary Key &nbsp; &nbsp;
+              </ToolTip>
             </h4>
             <PrimaryKeySelector
               primaryKeys={primaryKeys}
@@ -474,8 +476,9 @@ class AddTable extends Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>
-              Foreign Keys &nbsp; &nbsp;
-              <ToolTip message={foreignKeyDescription} />
+              <ToolTip message={foreignKeyDescription}>
+                Foreign Keys &nbsp; &nbsp;
+              </ToolTip>
             </h4>
             <ForeignKeyWrapper
               allSchemas={allSchemas}
@@ -490,8 +493,9 @@ class AddTable extends Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>
-              Unique Keys &nbsp; &nbsp;
-              <ToolTip message={uniqueKeyDescription} />
+              <ToolTip message={uniqueKeyDescription}>
+                Unique Keys &nbsp; &nbsp;
+              </ToolTip>
             </h4>
             <UniqueKeyWrapper
               allSchemas={allSchemas}
@@ -504,8 +508,9 @@ class AddTable extends Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>
-              Check Constraints &nbsp; &nbsp;
-              <ToolTip message={checkConstraintsDescription} />
+              <ToolTip message={checkConstraintsDescription}>
+                Check Constraints &nbsp; &nbsp;
+              </ToolTip>
             </h4>
             <CheckConstraints
               constraints={checkConstraints}

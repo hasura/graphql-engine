@@ -1,8 +1,6 @@
 import React from 'react';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
-import { Icon } from '../../UIKit/atoms';
+import { Icon, ToolTip } from '../../UIKit/atoms';
 import styles from '../Common.scss';
 
 const WarningSymbol = ({
@@ -10,15 +8,11 @@ const WarningSymbol = ({
   tooltipPlacement = 'right',
   customStyle = null,
 }) => {
-  const tooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
-
   return (
     <div className={styles.display_inline}>
-      <OverlayTrigger placement={tooltipPlacement} overlay={tooltip}>
-        <span>
-          <WarningIcon customStyle={customStyle} />
-        </span>
-      </OverlayTrigger>
+      <ToolTip message={tooltipText} placement={tooltipPlacement}>
+        <WarningIcon customStyle={customStyle} />
+      </ToolTip>
     </div>
   );
 };

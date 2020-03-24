@@ -3,8 +3,7 @@ import React from 'react';
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { fkViolationOnUpdate, fkViolationOnDelete } from '../TooltipMessages';
 import { updateSchemaInfo } from '../../DataActions';
-import ToolTip from '../../../../Common/Tooltip/Tooltip';
-import { Icon } from '../../../../UIKit/atoms';
+import { Icon, ToolTip } from '../../../../UIKit/atoms';
 
 const violiationActions = [
   'restrict',
@@ -321,15 +320,17 @@ const ForeignKeySelector = ({
       <div>
         <div className={`${styles.add_mar_bottom}`}>
           <div className={`${styles.add_mar_bottom_mid}`}>
-            <b>On Update Violation:</b>&nbsp; &nbsp;
-            <ToolTip message={fkViolationOnUpdate} />
+            <ToolTip message={fkViolationOnUpdate}>
+              <b>On Update Violation:</b>&nbsp; &nbsp;
+            </ToolTip>
           </div>
           {radios('onUpdate')}
         </div>
         <div className={`${styles.add_mar_bottom}`}>
           <div className={`${styles.add_mar_bottom_mid}`}>
-            <b>On Delete Violation:</b>&nbsp; &nbsp;
-            <ToolTip message={fkViolationOnDelete} />
+            <ToolTip message={fkViolationOnDelete}>
+              <b>On Delete Violation:</b>&nbsp; &nbsp;
+            </ToolTip>
           </div>
           {radios('onDelete')}
         </div>

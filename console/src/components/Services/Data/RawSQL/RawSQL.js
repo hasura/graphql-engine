@@ -8,8 +8,6 @@ import Button from '../../../Common/Button/Button';
 import { parseCreateSQL } from './utils';
 import { checkSchemaModification } from '../../../Common/utils/sqlUtils';
 
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 import {
   executeSQL,
   SET_SQL,
@@ -25,7 +23,8 @@ import {
   ACE_EDITOR_FONT_SIZE,
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, ToolTip } from '../../../UIKit/atoms';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 const RawSQL = ({
   sql,
@@ -43,8 +42,6 @@ const RawSQL = ({
   migrationMode,
   allSchemas,
 }) => {
-  const styles = require('../../../Common/TableCommon/Table.scss');
-
   // local storage key for SQL
   const LS_RAW_SQL_SQL = 'rawSql:sql';
 
@@ -74,28 +71,16 @@ const RawSQL = ({
 
   /* hooks - end */
 
-  const cascadeTip = (
-    <Tooltip id="tooltip-cascade">
-      Cascade actions on all dependent metadata references, like relationships
-      and permissions
-    </Tooltip>
-  );
-  const migrationTip = (
-    <Tooltip id="tooltip-migration">
-      Create a migration file with the SQL statement
-    </Tooltip>
-  );
-  const migrationNameTip = (
-    <Tooltip id="tooltip-migration">
-      Name of the generated migration file. Default: 'run_sql_migration'
-    </Tooltip>
-  );
-  const trackTableTip = () => (
-    <Tooltip id="tooltip-tracktable">
-      If you are creating a table/view/function, checking this will also expose
-      them over the GraphQL API
-    </Tooltip>
-  );
+  const cascadeTip =
+    'Cascade actions on all dependent metadata references, like relationships and permissions';
+
+  const migrationTip = 'Create a migration file with the SQL statement';
+
+  const migrationNameTip =
+    "Name of the generated migration file. Default: 'run_sql_migration";
+
+  const trackTableTip =
+    'If you are creating a table/view/function, checking this will also expose them over the GraphQL API';
 
   const submitSQL = () => {
     // set SQL to LS
@@ -344,9 +329,9 @@ const RawSQL = ({
           />
           Cascade metadata
         </label>
-        <OverlayTrigger placement="right" overlay={cascadeTip}>
+        <ToolTip message={cascadeTip}>
           <Icon type="info" ml="xs" />
-        </OverlayTrigger>
+        </ToolTip>
       </div>
     );
   };
@@ -372,9 +357,9 @@ const RawSQL = ({
           />
           Track this
         </label>
-        <OverlayTrigger placement="right" overlay={trackTableTip()}>
+        <ToolTip message={trackTableTip}>
           <Icon type="info" ml="xs" />
-        </OverlayTrigger>
+        </ToolTip>
       </div>
     );
   };
@@ -403,9 +388,9 @@ const RawSQL = ({
             />
             This is a migration
           </label>
-          <OverlayTrigger placement="right" overlay={migrationTip}>
+          <ToolTip message={migrationTip}>
             <Icon type="info" ml="xs" />
-          </OverlayTrigger>
+          </ToolTip>
         </div>
       );
     };
@@ -432,9 +417,9 @@ const RawSQL = ({
                 id="migration-name"
                 type="text"
               />
-              <OverlayTrigger placement="right" overlay={migrationNameTip}>
+              <ToolTip message={migrationNameTip}>
                 <Icon type="info" ml="xs" />
-              </OverlayTrigger>
+              </ToolTip>
               <div
                 className={styles.add_mar_top_small + ' ' + styles.text_gray}
               >

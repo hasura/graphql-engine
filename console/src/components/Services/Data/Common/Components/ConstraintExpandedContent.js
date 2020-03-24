@@ -1,10 +1,10 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 
-import styles from '../../../../Common/Common.scss';
-import ToolTip from '../../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import { checkConstraintExpression } from '../TooltipMessages';
+import { ToolTip } from '../../../../UIKit/atoms';
+import styles from '../../../../Common/Common.scss';
 
 export const ConstraintExpandedContent = ({
   nameOnChange,
@@ -28,9 +28,9 @@ export const ConstraintExpandedContent = ({
       </div>
       <div>
         <div className={styles.add_mar_bottom_mid}>
-          <b>Check Expression: </b>
-          <ToolTip message={checkConstraintExpression} />
-          &nbsp;&nbsp;
+          <ToolTip message={checkConstraintExpression}>
+            <b>Check Expression: </b>&nbsp;&nbsp;
+          </ToolTip>
           <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
         </div>
         <AceEditor

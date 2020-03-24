@@ -1,6 +1,7 @@
 import React from 'react';
+
+import { ToolTip } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
-import Tooltip from './Tooltip';
 
 const editorLabel = 'Name';
 const editorTooltip =
@@ -12,12 +13,9 @@ const NameEditor = ({ value, onChange, className, placeholder }) => {
       <h2
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
-        {editorLabel}
-        <Tooltip
-          id="action-name"
-          text={editorTooltip}
-          className={styles.add_mar_left_mid}
-        />
+        <ToolTip message={editorTooltip} ml="sm">
+          {editorLabel}
+        </ToolTip>
       </h2>
       <input
         type="text"

@@ -1,7 +1,8 @@
 import React from 'react';
-import styles from './Styles.scss';
-import Tooltip from './Tooltip';
+
 import Headers from '../../../../Common/Headers/Headers';
+import { ToolTip } from '../../../../UIKit/atoms';
+import styles from './Styles.scss';
 
 const editorLabel = 'Headers';
 const editorTooltip =
@@ -24,12 +25,13 @@ const HandlerEditor = ({
       <h2
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
-        {editorLabel}
-        <Tooltip
-          id="action-name"
-          text={editorTooltip}
+        <ToolTip
+          message={editorTooltip}
           className={styles.add_mar_left_mid}
-        />
+          ml="md"
+        >
+          {editorLabel}
+        </ToolTip>
       </h2>
       <div className={`${styles.add_mar_bottom_mid}`}>
         <label

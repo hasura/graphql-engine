@@ -4,9 +4,8 @@ import PropTypes from 'prop-types';
 import jwt from 'jsonwebtoken';
 
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 import Modal from '../../../Common/Modal/Modal';
+import { ToolTip } from '../../../UIKit/atoms';
 
 import {
   changeRequestHeader,
@@ -40,13 +39,9 @@ import { Icon, Spinner } from '../../../UIKit/atoms';
 import styles from '../ApiExplorer.scss';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../../constants';
 
-const inspectJWTTooltip = (
-  <Tooltip id="tooltip-inspect-jwt">Decode JWT</Tooltip>
-);
+const inspectJWTTooltipText = 'Decode JWT';
 
-const jwtValidityStatus = message => (
-  <Tooltip id="tooltip-jwt-validity-status">{message}</Tooltip>
-);
+const jwtValidityStatus = message => message || '';
 
 /* When the page is loaded for the first time, hydrate the header state from the localStorage
  * Keep syncing the localStorage state when user modifies.
@@ -461,9 +456,9 @@ class ApiRequest extends Component {
 
             if (isAuthHeader && isJWTSet) {
               inspectorIcon = (
-                <OverlayTrigger placement="top" overlay={inspectJWTTooltip}>
+                <ToolTip placement="top" message={inspectJWTTooltipText}>
                   {getAnalyzeIcon()}
-                </OverlayTrigger>
+                </ToolTip>
               );
             }
 
@@ -602,14 +597,14 @@ class ApiRequest extends Component {
           switch (true) {
             case tokenVerified:
               return (
-                <OverlayTrigger
+                <ToolTip
                   placement="top"
-                  overlay={jwtValidityStatus('Valid JWT token')}
+                  message={jwtValidityStatus('Valid JWT token')}
                 >
                   <span className={styles.valid_jwt_token}>
                     <Icon type="check" />
                   </span>
-                </OverlayTrigger>
+                </ToolTip>
               );
             case !tokenVerified && JWTError.length > 0:
               return (

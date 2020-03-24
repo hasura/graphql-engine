@@ -36,10 +36,9 @@ import {
 } from '../../../Common/utils/pgUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import RawSqlButton from '../Common/Components/RawSqlButton';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, ToolTip } from '../../../UIKit/atoms';
 
 class Schema extends Component {
   constructor(props) {
@@ -97,9 +96,7 @@ class Schema extends Component {
           <h4 className={`${styles.subheading_text} ${styles.display_inline}`}>
             {headingText}
           </h4>
-          <span className={styles.add_mar_left_small}>
-            <ToolTip message={tooltip} />
-          </span>
+          <ToolTip message={tooltip} ml="sm" />
           <span className={styles.add_mar_left}>{actionElement}</span>
         </div>
       );

@@ -1,16 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 
 import {
   inputChange,
   UPDATE_FORWARD_CLIENT_HEADERS,
 } from '../Add/addRemoteSchemaReducer';
-
 import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
-import { Icon } from '../../../UIKit/atoms';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
+import { ToolTip } from '../../../UIKit/atoms';
 import styles from '../RemoteSchema.scss';
 
 const Common = props => {
@@ -52,33 +49,14 @@ const Common = props => {
   };
 
   const tooltips = {
-    graphqlurl: (
-      <Tooltip id="tooltip-cascade">
-        Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql
-      </Tooltip>
-    ),
-    clientHeaderForward: (
-      <Tooltip id="tooltip-cascade">
-        Toggle forwarding headers sent by the client app in the request to your
-        remote GraphQL server
-      </Tooltip>
-    ),
-    additionalHeaders: (
-      <Tooltip id="tooltip-cascade">
-        Custom headers to be sent to the remote GraphQL server
-      </Tooltip>
-    ),
-    schema: (
-      <Tooltip id="tooltip-cascade">
-        Give this GraphQL schema a friendly name.
-      </Tooltip>
-    ),
-    timeoutConf: (
-      <Tooltip id="tooltip-cascade">
-        Configure timeout for your remote GraphQL server. Defaults to 60
-        seconds.
-      </Tooltip>
-    ),
+    graphqlurl:
+      'Remote GraphQL server’s URL. E.g. https://my-domain/v1/graphql',
+    clientHeaderForward:
+      'Toggle forwarding headers sent by the client app in the request to your remote GraphQL server',
+    additionalHeaders: 'Custom headers to be sent to the remote GraphQL server',
+    schema: 'Give this GraphQL schema a friendly name.',
+    timeoutConf:
+      'Configure timeout for your remote GraphQL server. Defaults to 60 seconds.',
   };
 
   const getTimeoutSection = () => {
@@ -86,9 +64,7 @@ const Common = props => {
       <React.Fragment>
         <div className={styles.subheading_text}>
           GraphQL server timeout
-          <OverlayTrigger placement="right" overlay={tooltips.timeoutConf}>
-            <Icon type="questionCircle" size={12} />
-          </OverlayTrigger>
+          <ToolTip message={tooltips.timeoutConf} />
         </div>
         <label
           className={
@@ -116,9 +92,7 @@ const Common = props => {
     <div className={styles.CommonWrapper}>
       <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
         Remote Schema name *
-        <OverlayTrigger placement="right" overlay={tooltips.schema}>
-          <Icon type="questionCircle" size={12} />
-        </OverlayTrigger>
+        <ToolTip message={tooltips.schema} />
       </div>
       <label
         className={
@@ -142,9 +116,7 @@ const Common = props => {
       <hr />
       <div className={styles.subheading_text}>
         GraphQL server URL *
-        <OverlayTrigger placement="right" overlay={tooltips.graphqlurl}>
-          <Icon type="questionCircle" size={12} />
-        </OverlayTrigger>
+        <ToolTip message={tooltips.graphqlurl} />
       </div>
       <div className={styles.wd_300}>
         <DropdownButton
@@ -196,18 +168,11 @@ const Common = props => {
           />
           <span>Forward all headers from client</span>
         </label>
-        <OverlayTrigger
-          placement="right"
-          overlay={tooltips.clientHeaderForward}
-        >
-          <Icon type="questionCircle" size={12} />
-        </OverlayTrigger>
+        <ToolTip message={tooltips.clientHeaderForward} />
       </div>
       <div className={styles.subheading_text + ' ' + styles.font_normal}>
         Additional headers:
-        <OverlayTrigger placement="right" overlay={tooltips.additionalHeaders}>
-          <Icon type="questionCircle" size={12} />
-        </OverlayTrigger>
+        <ToolTip message={tooltips.additionalHeaders} />
       </div>
       <CommonHeader
         eventPrefix="REMOTE_SCHEMA"

@@ -1,13 +1,12 @@
 import React from 'react';
 import AceEditor from 'react-ace';
-import styles from './AllowedQueries.scss';
 
 import { addAllowedQueries } from '../Actions';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
-
 import { readFile, parseQueryString } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
+import { ToolTip } from '../../../UIKit/atoms';
+import styles from './AllowedQueries.scss';
 
 class AddAllowedQuery extends React.Component {
   constructor(props) {
@@ -31,6 +30,7 @@ class AddAllowedQuery extends React.Component {
       dispatch(addAllowedQueries([manualQuery], isEmptyList, toggle));
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     const handleFileUploadCollapse = () => {};
 
     function handleFileUploadSubmit(toggle) {
@@ -123,8 +123,9 @@ class AddAllowedQuery extends React.Component {
       return (
         <div>
           <div className={styles.add_mar_bottom_mid}>
-            <b>Graphql File:</b>
-            <Tooltip message={'.graphql file with queries'} />
+            <ToolTip message={'.graphql file with queries'}>
+              <b>Graphql File:</b>
+            </ToolTip>
           </div>
           <input
             type="file"

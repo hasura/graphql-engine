@@ -1,27 +1,21 @@
 import React from 'react';
-import ReloadEnumMetadata from '../../../Settings/MetadataOptions/ReloadMetadata';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 
-import { Icon } from '../../../../UIKit/atoms';
+import ReloadEnumMetadata from '../../../Settings/MetadataOptions/ReloadMetadata';
+import { Icon, ToolTip } from '../../../../UIKit/atoms';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
   if (!isEnum) return null;
 
-  const tooltip = (
-    <Tooltip id="tooltip-reload-enum-metadata">
-      Reload enum values in your GraphQL schema after inserting, updating or
-      deleting enum values
-    </Tooltip>
-  );
+  const tooltipText =
+    'Reload enum values in your GraphQL schema after inserting, updating or deleting enum values';
 
   return (
     <React.Fragment>
       <ReloadEnumMetadata buttonText="Reload enum values" dispatch={dispatch} />
-      <OverlayTrigger overlay={tooltip} placement="right">
+      <ToolTip message={tooltipText}>
         <Icon type="info" cursor />
-      </OverlayTrigger>
+      </ToolTip>
     </React.Fragment>
   );
 };

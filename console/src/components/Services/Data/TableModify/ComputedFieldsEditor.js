@@ -1,11 +1,9 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 
-import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import RawSqlButton from '../Common/Components/RawSqlButton';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
 import {
   findFunction,
   getFunctionDefinition,
@@ -17,6 +15,11 @@ import {
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+import { ToolTip } from '../../../UIKit/atoms';
+import styles from './ModifyTable.scss';
+
+const tooltipText =
+  'The argument of the function to which the table row is passed. By default, the first argument of the function is assumed to be the table row argument';
 
 const ComputedFieldsEditor = ({
   table,
@@ -335,8 +338,9 @@ const ComputedFieldsEditor = ({
           </div>
           <div className={`${styles.add_mar_top}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Table row argument:</b>
-              <Tooltip message="The argument of the function to which the table row is passed. By default, the first argument of the function is assumed to be the table row argument" />
+              <ToolTip message={tooltipText}>
+                <b>Table row argument:</b>
+              </ToolTip>
             </div>
             <input
               type="text"

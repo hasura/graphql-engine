@@ -1,10 +1,8 @@
 import React from 'react';
+import { push } from 'react-router-redux';
 
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import tabInfo from './tabInfo';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import { push } from 'react-router-redux';
 
 import {
   fetchRemoteSchema,
@@ -15,7 +13,7 @@ import {
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchema';
 
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, ToolTip } from '../../../UIKit/atoms';
 
 import { appPrefix } from '../constants';
 
@@ -116,12 +114,8 @@ class ViewStitchedSchema extends React.Component {
       });
     }
 
-    const refresh = (
-      <Tooltip id="tooltip-cascade">
-        If your remote schema has changed, you need to refresh the GraphQL
-        Engine metadata to query the modified schema
-      </Tooltip>
-    );
+    const refreshText =
+      'If your remote schema has changed, you need to refresh the GraphQL Engine metadata to query the modified schema';
 
     if (readOnlyMode) {
       delete tabInfo.modify;
@@ -137,9 +131,9 @@ class ViewStitchedSchema extends React.Component {
             />
           </span>
           <span>
-            <OverlayTrigger placement="right" overlay={refresh}>
+            <ToolTip message={refreshText}>
               <Icon type="questionCircle" size={12} />
-            </OverlayTrigger>
+            </ToolTip>
           </span>
         </div>
       ) : null;
