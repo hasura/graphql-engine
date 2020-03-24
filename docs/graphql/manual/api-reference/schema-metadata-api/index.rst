@@ -211,15 +211,20 @@ The various types of queries are listed in the following table:
      - 1
      - Create or replace an event trigger
 
-   * - :ref:`invoke_event_trigger`
-     - :ref:`invoke_event_trigger_args <invoke_event_trigger_syntax>`
-     - 1
-     - Invoke a trigger manually
-
    * - :ref:`delete_event_trigger`
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
      - 1
      - Delete an existing event trigger
+
+   * - :ref:`redeliver_event`
+     - :ref:`redeliver_event_args <redeliver_event_syntax>`
+     - 1
+     - Redeliver an existing event
+
+   * - :ref:`invoke_event_trigger`
+     - :ref:`invoke_event_trigger_args <invoke_event_trigger_syntax>`
+     - 1
+     - Invoke a trigger with custom payload
 
    * - :ref:`add_remote_schema`
      - :ref:`add_remote_schema_args <add_remote_schema_syntax>`

@@ -143,12 +143,53 @@ Args syntax
      - TriggerName_
      - Name of the event trigger
 
+
+.. _redeliver_event:
+
+redeliver_event
+---------------
+
+``redeliver_event`` is used to redeliver an existing event. For e.g., if an event is marked as error (
+say it did not succeed event after retries) then you can redeliver it using this API. Note that this will reset the count of retries so far,
+if the event fails to deliver then it will be retried automatically according to it's ``retry_conf``.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "redeliver_event",
+       "args" : {
+           "event_id": "ad4f698f-a14e-4a6d-a01b-38cd252dd8bf"
+       }
+   }
+
+.. _redeliver_event_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - event_id
+     - true
+     - String
+     - UUID of the event
+
+
 .. _invoke_event_trigger:
 
 invoke_event_trigger
 --------------------
 
-``invoke_event_trigger`` is used to invoke an event trigger manually.
+``invoke_event_trigger`` is used to invoke an event trigger with custom payload.
 
 .. code-block:: http
 
