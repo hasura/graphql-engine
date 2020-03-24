@@ -149,9 +149,9 @@ Args syntax
 redeliver_event
 ---------------
 
-``redeliver_event`` is used to redeliver an existing event. For e.g., if an event is marked as error (
-say it did not succeed event after retries) then you can redeliver it using this API. Note that this will reset the count of retries so far,
-if the event fails to deliver then it will be retried automatically according to it's ``retry_conf``.
+``redeliver_event`` is used to redeliver an existing event. For example, if an event is marked as error (
+say it did not succeed after retries), you can redeliver it using this API. Note that this will reset the count of retries so far.
+If the event fails to deliver, it will be retried automatically according to its ``retry_conf``.
 
 .. code-block:: http
 
