@@ -123,9 +123,8 @@ class AddAllowedQuery extends React.Component {
       return (
         <div>
           <div className={styles.add_mar_bottom_mid}>
-            <ToolTip message={'.graphql file with queries'}>
-              <b>Graphql File:</b>
-            </ToolTip>
+            <b>Graphql File:</b>
+            <ToolTip message={'.graphql file with queries'} ml="sm" />
           </div>
           <input
             type="file"

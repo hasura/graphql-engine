@@ -13,7 +13,7 @@ import {
 import { VIEW_REMOTE_SCHEMA } from '../Actions';
 import ReloadRemoteSchema from '../../Settings/MetadataOptions/ReloadRemoteSchema';
 
-import { Icon, ToolTip } from '../../../UIKit/atoms';
+import { ToolTip } from '../../../UIKit/atoms';
 
 import { appPrefix } from '../constants';
 
@@ -130,11 +130,7 @@ class ViewStitchedSchema extends React.Component {
               remoteSchemaName={remoteSchemaName}
             />
           </span>
-          <span>
-            <ToolTip message={refreshText}>
-              <Icon type="questionCircle" size={12} />
-            </ToolTip>
-          </span>
+          <ToolTip message={refreshText} />
         </div>
       ) : null;
 

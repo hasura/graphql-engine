@@ -320,17 +320,15 @@ const ForeignKeySelector = ({
       <div>
         <div className={`${styles.add_mar_bottom}`}>
           <div className={`${styles.add_mar_bottom_mid}`}>
-            <ToolTip message={fkViolationOnUpdate}>
-              <b>On Update Violation:</b>&nbsp; &nbsp;
-            </ToolTip>
+            <b>On Update Violation:</b>
+            <ToolTip message={fkViolationOnUpdate} ml="sm" />
           </div>
           {radios('onUpdate')}
         </div>
         <div className={`${styles.add_mar_bottom}`}>
           <div className={`${styles.add_mar_bottom_mid}`}>
-            <ToolTip message={fkViolationOnDelete}>
-              <b>On Delete Violation:</b>&nbsp; &nbsp;
-            </ToolTip>
+            <b>On Delete Violation:</b>
+            <ToolTip message={fkViolationOnDelete} ml="sm" />
           </div>
           {radios('onDelete')}
         </div>

@@ -61,9 +61,8 @@ const ActionDefinitionEditor = ({
       <h2
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
-        <ToolTip message={tooltip} ml="sm">
-          {label}
-        </ToolTip>
+        {label}
+        <ToolTip message={tooltip} ml="sm" />
       </h2>
       <div className={styles.sdlEditorContainer}>
         <div

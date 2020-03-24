@@ -464,9 +464,8 @@ class AddTable extends Component {
             </div>
             <hr />
             <h4 className={styles.subheading_text}>
-              <ToolTip message={primaryKeyDescription}>
-                Primary Key &nbsp; &nbsp;
-              </ToolTip>
+              Primary Key
+              <ToolTip message={primaryKeyDescription} ml="sm" />
             </h4>
             <PrimaryKeySelector
               primaryKeys={primaryKeys}
@@ -476,9 +475,8 @@ class AddTable extends Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>
-              <ToolTip message={foreignKeyDescription}>
-                Foreign Keys &nbsp; &nbsp;
-              </ToolTip>
+              Foreign Keys
+              <ToolTip message={foreignKeyDescription} ml="sm" />
             </h4>
             <ForeignKeyWrapper
               allSchemas={allSchemas}
@@ -493,9 +491,8 @@ class AddTable extends Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>
-              <ToolTip message={uniqueKeyDescription}>
-                Unique Keys &nbsp; &nbsp;
-              </ToolTip>
+              Unique Keys
+              <ToolTip message={uniqueKeyDescription} ml="sm" />
             </h4>
             <UniqueKeyWrapper
               allSchemas={allSchemas}
@@ -508,9 +505,8 @@ class AddTable extends Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>
-              <ToolTip message={checkConstraintsDescription}>
-                Check Constraints &nbsp; &nbsp;
-              </ToolTip>
+              Check Constraints
+              <ToolTip message={checkConstraintsDescription} ml="sm" />
             </h4>
             <CheckConstraints
               constraints={checkConstraints}

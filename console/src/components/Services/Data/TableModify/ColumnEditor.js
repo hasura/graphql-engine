@@ -77,13 +77,12 @@ const ColumnEditor = ({
     return (
       <div className={`${styles.display_flex} form-group`}>
         <label className={'col-xs-4'}>
+          GraphQL field name
           <ToolTip
             message={
               'Expose the column with a different name in the GraphQL API'
             }
-          >
-            GraphQL field name
-          </ToolTip>
+          />
         </label>
         <div className="col-xs-6">
           <input

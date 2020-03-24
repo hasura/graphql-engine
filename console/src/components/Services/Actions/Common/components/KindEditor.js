@@ -22,11 +22,11 @@ const HandlerEditor = ({ value, onChange, className }) => {
       <h2
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
+        {editorLabel}
         <ToolTip
           message={'Toggle between synchronous vs asynchronous action types'}
-        >
-          {editorLabel}
-        </ToolTip>
+          ml="sm"
+        />
         <KnowMoreLink href={docsRef} />
       </h2>
       <div className={styles.display_flex}>

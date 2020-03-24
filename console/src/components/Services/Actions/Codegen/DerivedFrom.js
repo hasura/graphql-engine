@@ -13,9 +13,8 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
   return (
     <div>
       <h2 className={`${styles.subheading_text} ${styles.add_mar_bottom}`}>
-        <ToolTip message={tooltipText} ml="sm">
-          Derived mutation
-        </ToolTip>
+        Derived mutation
+        <ToolTip message={tooltipText} ml="sm" />
       </h2>
       <div className={`${styles.add_mar_bottom}`}>
         <label className={`${styles.cursorPointer}`} onClick={toggleDerivation}>

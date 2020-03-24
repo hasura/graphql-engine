@@ -57,13 +57,13 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
   return (
     <div>
       <h4 className={`${styles.subheading_text}`}>
+        Set table as enum
         <ToolTip
           message={
             'Expose the table values as GraphQL enums in the GraphQL API'
           }
-        >
-          Set table as enum &nbsp;
-        </ToolTip>
+          ml="sm"
+        />
         <KnowMoreLink
           href={enumCompatibilityDocsUrl}
           text={'See table requirements'}

@@ -13,9 +13,8 @@ const NameEditor = ({ value, onChange, className, placeholder }) => {
       <h2
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
-        <ToolTip message={editorTooltip} ml="sm">
-          {editorLabel}
-        </ToolTip>
+        {editorLabel}
+        <ToolTip message={editorTooltip} ml="sm" />
       </h2>
       <input
         type="text"

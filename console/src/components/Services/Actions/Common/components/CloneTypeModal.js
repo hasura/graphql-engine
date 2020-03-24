@@ -62,7 +62,8 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
         className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
       >
         <div className={'col-md-3'}>
-          <ToolTip message={prefixTooltipText}>Prefix</ToolTip>
+          Prefix
+          <ToolTip message={prefixTooltipText} />
         </div>
         <input
           type="text"

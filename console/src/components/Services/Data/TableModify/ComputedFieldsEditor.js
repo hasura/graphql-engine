@@ -338,9 +338,8 @@ const ComputedFieldsEditor = ({
           </div>
           <div className={`${styles.add_mar_top}`}>
             <div className={`${styles.add_mar_bottom_mid}`}>
-              <ToolTip message={tooltipText}>
-                <b>Table row argument:</b>
-              </ToolTip>
+              <b>Table row argument:</b>
+              <ToolTip message={tooltipText} ml="sm" />
             </div>
             <input
               type="text"
