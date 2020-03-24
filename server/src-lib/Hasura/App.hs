@@ -112,7 +112,7 @@ data InitCtx
   , _icLoggers     :: !Loggers
   , _icConnInfo    :: !Q.ConnInfo
   , _icPgPool      :: !Q.PGPool
-  , _icPgVersion   :: !Text
+  , _icPgVersion   :: !PGVersion
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger

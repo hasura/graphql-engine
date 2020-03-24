@@ -64,7 +64,7 @@ data Metrics
   , _mtRemoteSchemas  :: !Int
   , _mtFunctions      :: !Int
   , _mtServiceTimings :: !ServiceTimingMetrics
-  , _mtPgVersion      :: !Text
+  , _mtPgVersion      :: !PGVersion
   } deriving (Show, Eq)
 $(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
 
@@ -107,7 +107,7 @@ runTelemetry
   -- ^ an action that always returns the latest schema cache
   -> Text
   -> InstanceId
-  -> Text
+  -> PGVersion
   -> IO void
 runTelemetry (Logger logger) manager getSchemaCache dbId instanceId pgVersion = do
   let options = wreqOptions manager []
@@ -134,7 +134,7 @@ runTelemetry (Logger logger) manager getSchemaCache dbId instanceId pgVersion = 
         let httpErr = Just $ mkHttpError telemetryUrl (Just resp) Nothing
         logger $ mkTelemetryLog "http_error" "failed to post telemetry" httpErr
 
-computeMetrics :: SchemaCache -> ServiceTimingMetrics -> Text -> Metrics
+computeMetrics :: SchemaCache -> ServiceTimingMetrics -> PGVersion -> Metrics
 computeMetrics sc _mtServiceTimings _mtPgVersion =
   let _mtTables = countUserTables (isNothing . _tciViewInfo . _tiCoreInfo)
       _mtViews = countUserTables (isJust . _tciViewInfo . _tiCoreInfo)
