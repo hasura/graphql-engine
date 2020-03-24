@@ -21,9 +21,7 @@ Create a repository
 -------------------
 
 - Create a new GitHub or GitLab repository
-- Within the new repository, create a new file named ``Dockerfile`` that
-references the latest Hasura GraphQL engine Docker image by including the
-following single line in the file:
+- Within the new repository, create a new file named ``Dockerfile`` that references the latest Hasura GraphQL engine Docker image by including the following single line in the file:
 
 .. code-block:: bash
 
@@ -67,23 +65,16 @@ Provision the database and web service manually (alternative method)
 
    If you already have a Render database setup, you can skip the first step.
 
-- Create a Postgres server by providing a name in Render's `New Database 
-configuration page <https://dashboard.render.com/new/database>`__.
+- Create a Postgres server by providing a name in Render's `database configuration page <https://dashboard.render.com/new/database>`_.
 
-- Once created, you'll see an internal connection string which 
-is the database URL used in the next step.
+- Once created, you'll see an internal connection string which is the database URL used in the next step.
 
-- Create a web service by selecting the repository you just created in the `New Web 
-Service configuration page <https://dashboard.render.com/select-repo?type=web>`__. 
-You have to specify a name.
+- Create a web service by selecting the repository you just created in the `web service configuration page <https://dashboard.render.com/select-repo?type=web>`__. You have to specify a name.
 
-- Upon creation of the web service, find the environment tab and create two 
-environment variables: one named ``HASURA_GRAPHQL_DATABASE_URL`` whose value is 
-the internal connection string from the database you created earlier, 
-and another named ``HASURA_GRAPHQL_ENABLE_CONSOLE`` whose value is ``true``.
+- Upon creation of the web service, find the environment tab and create two environment variables: one named ``HASURA_GRAPHQL_DATABASE_URL`` whose value is the internal connection string from the database you created earlier, and another named ``HASURA_GRAPHQL_ENABLE_CONSOLE`` whose value is ``true``.
 
 
-Open the Hasura Console
+Open the Hasura console
 -----------------------
 
 That's it! You can monitor the deployment of the web service from the logs tab. 

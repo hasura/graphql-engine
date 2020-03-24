@@ -28,5 +28,6 @@ Guides: Deployment
 
    DigitalOcean One-click App on Marketplace <digital-ocean-one-click>
    Azure Container Instances with Postgres <azure-container-instances-postgres>
+   Render Single Click Deploy with Postgres <render>
    Google Cloud Platform with Kubernetes engine and Cloud SQL <google-kubernetes-engine-cloud-sql>
    
