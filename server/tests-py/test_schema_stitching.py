@@ -549,37 +549,43 @@ def compare_flds(fldH, fldR):
             compare_args(argH, argR)
         assert has_arg[arg_path], 'Argument ' + arg_path + ' in the remote schema root query type not found in Hasura schema'
 
+reload_metadata_q = {
+    'type': 'reload_metadata',
+    "args": {
+        "reload_remote_schemas": True
+    }
+}
+
+get_inconsistent_metadata_q = {
+    'type': 'get_inconsistent_metadata',
+    'args': {}
+}
+
 class TestRemoteSchemaReload:
 
-    def test_inconsistent_remote_schema_reload(self, gql_server, hge_ctx):
+    def test_inconsistent_remote_schema_reload_metadata(self, gql_server, hge_ctx):
         # Add remote schema
         st_code, resp = hge_ctx.v1q(mk_add_remote_q('simple 1', 'http://127.0.0.1:5991/hello-graphql'))
         assert st_code == 200, resp
         # stop remote graphql server
         gql_server.stop_server()
-        reload_metadata_q = {
-            'type': 'reload_metadata',
-            "args": {
-                "reload_remote_schemas": True
-            }
-        }
         # Reload metadata with remote schemas
         st_code, resp = hge_ctx.v1q(reload_metadata_q)
         assert st_code == 200, resp
-        # Reload remote schema, should raise expection saying the remote schema is in inconsistent metadata
-        st_code, resp = hge_ctx.v1q(mk_reload_remote_q('simple 1'))
-        assert st_code == 400, resp
-        assert resp['error'] == 'remote schema with name "simple 1" is in inconsistent state; cannot reload', resp
-        assert resp['code'] == 'not-supported', resp
+        # Check if the remote schema present in inconsistent metadata
+        st_code, resp = hge_ctx.v1q(get_inconsistent_metadata_q)
+        assert st_code == 200, resp
+        assert resp['is_consistent'] == False, resp
+        assert resp['inconsistent_objects'][0]['type'] == 'remote_schema', resp
         # Restart remote graphql server
         gql_server.start_server()
-        # Reload metadata with remote schemas which also refreshes the
-        # remote schemas present in inconsistent metadata
-        st_code, resp = hge_ctx.v1q(reload_metadata_q)
-        assert st_code == 200, resp
-        # Reload remote schema to check whether it is lifted from inconsistent metadata
+        # Reload the inconsistent remote schema
         st_code, resp = hge_ctx.v1q(mk_reload_remote_q('simple 1'))
         assert st_code == 200, resp
+        # Check if metadata is consistent
+        st_code, resp = hge_ctx.v1q(get_inconsistent_metadata_q)
+        assert st_code == 200, resp
+        assert resp['is_consistent'] == True, resp
         # Delete remote schema
         st_code, resp = hge_ctx.v1q(mk_delete_remote_q('simple 1'))
         assert st_code == 200, resp
