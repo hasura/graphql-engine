@@ -48,7 +48,3 @@ toUTCTime (RelativeTime d) = addUTCTime d <$> liftIO getCurrentTime
 toNominalDiffTime :: (MonadIO m) => ExpiryTime -> m NominalDiffTime
 toNominalDiffTime (RelativeTime d) = return d
 toNominalDiffTime (AbsoluteTime t) = diffUTCTime t <$> liftIO getCurrentTime
-
-
-onMaybe :: Monad m => Maybe a -> (a -> m (Maybe b)) -> m (Maybe b)
-onMaybe m action = maybe (return Nothing) action m

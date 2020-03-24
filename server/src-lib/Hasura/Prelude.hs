@@ -4,6 +4,7 @@ module Hasura.Prelude
   , alphaNumerics
   , onNothing
   , onJust
+  , onMaybe
   , onLeft
   , choice
   , bsToTxt
@@ -42,7 +43,7 @@ import           Data.HashSet                      as M (HashSet)
 import           Data.List                         as M (find, findIndex, foldl', group,
                                                          intercalate, intersect, lookup, sort,
                                                          sortBy, sortOn, union, unionBy, (\\))
-import           Data.List.NonEmpty                as M (NonEmpty(..))
+import           Data.List.NonEmpty                as M (NonEmpty (..))
 import           Data.Maybe                        as M (catMaybes, fromMaybe, isJust, isNothing,
                                                          listToMaybe, mapMaybe, maybeToList)
 import           Data.Ord                          as M (comparing)
@@ -52,13 +53,13 @@ import           Data.String                       as M (IsString)
 import           Data.Text                         as M (Text)
 import           Data.These                        as M (These (..), fromThese, mergeThese,
                                                          mergeTheseWith, these)
+import           Data.Time.Clock.Units
 import           Data.Traversable                  as M (for)
 import           Data.Word                         as M (Word64)
 import           GHC.Generics                      as M (Generic)
 import           Prelude                           as M hiding (fail, init, lookup)
 import           Test.QuickCheck.Arbitrary.Generic as M
 import           Text.Read                         as M (readEither, readMaybe)
-import           Data.Time.Clock.Units
 
 import qualified Data.ByteString                   as B
 import qualified Data.HashMap.Strict               as Map
@@ -79,6 +80,9 @@ onNothing m act = maybe act return m
 
 onJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
 onJust m action = maybe (return ()) action m
+
+onMaybe :: Monad m => Maybe a -> (a -> m (Maybe b)) -> m (Maybe b)
+onMaybe m action = maybe (return Nothing) action m
 
 onLeft :: (Monad m) => Either e a -> (e -> m a) -> m a
 onLeft e f = either f return e

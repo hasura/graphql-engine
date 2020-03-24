@@ -98,7 +98,7 @@ defaultClaimNs = "https://hasura.io/jwt/claims"
 
 -- | An action that refreshes the JWK at intervals in an infinite loop.
 jwkRefreshCtrl
-  :: (HasVersion)
+  :: HasVersion
   => Logger Hasura
   -> HTTP.Manager
   -> URI
@@ -111,7 +111,7 @@ jwkRefreshCtrl logger manager url ref time = liftIO $ do
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
-      let delay = maybe (minutes 1) (fromUnits) mTime
+      let delay = maybe (minutes 1) fromUnits mTime
       C.sleep delay
   where
     logNotice = do
@@ -158,9 +158,7 @@ updateJwkRef (Logger logger) manager url jwkRef = do
   expTime <- case cct of
     Just t  -> return $ Just t
     Nothing -> timeFromExpiresHeader expiresHeader $ const (logAndThrowInfo parseTimeErr)
-  case expTime of
-    Just t  -> Just <$> toNominalDiffTime t
-    Nothing -> return Nothing
+  onMaybe expTime $ fmap Just . toNominalDiffTime
 
   where
     parseCacheControlErr e =

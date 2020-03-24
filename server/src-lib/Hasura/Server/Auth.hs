@@ -38,7 +38,7 @@ import           Hasura.Server.Utils
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
   resolveUserInfo
-    :: (HasVersion)
+    :: HasVersion
     => Logger Hasura
     -> H.Manager
     -> [N.Header]

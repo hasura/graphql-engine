@@ -147,6 +147,5 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody
       expTime <- case cct of
         Just t  -> return $ Just t
         Nothing -> timeFromExpiresHeader eHeader $ logWarn . Just
-      case expTime of
-        Just t  -> Just <$> toUTCTime t
-        Nothing -> return Nothing
+      onMaybe expTime $ fmap Just . toUTCTime
+
