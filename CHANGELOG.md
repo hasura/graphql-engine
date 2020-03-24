@@ -87,7 +87,6 @@
 - auto-include `__typename` field in custom types' objects (fix #4063)
 - squash some potential space leaks (#3937)
 - docs: bump MarupSafe version (#4102)
-- console: add design system base components (#3866)
 - server: validate action webhook response to conform to action output type (fix #3977)
 - server: preserve cookie headers from sync action webhook (close #4021)
 - server: add 'ID' to default scalars in custom types (fix #4061)
