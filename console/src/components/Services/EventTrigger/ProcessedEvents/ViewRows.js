@@ -5,7 +5,6 @@ import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import 'brace/mode/json';
 import 'react-table/react-table.css';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import FilterQuery from './FilterQuery';
 import {
@@ -25,7 +24,7 @@ import {
 } from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
 import * as tooltip from '../Common/Tooltips';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, ToolTip } from '../../../UIKit/atoms';
 import styles from '../TableCommon/EventTable.scss';
 
 const ViewRows = ({
@@ -438,17 +437,12 @@ const ViewRows = ({
                                         : failureIcon,
                                       finalResponse.status_code,
                                       ' ',
-                                      <OverlayTrigger
+                                      <ToolTip
                                         placement="top"
-                                        overlay={
+                                        message={
                                           tooltip.statusCodeDescription
                                         }
-                                      >
-                                        <Icon
-                                          type="questionCircle"
-                                          size={12}
-                                        />
-                                      </OverlayTrigger>,
+                                      />,
                                     ]
                                     : null}
                                 </div>

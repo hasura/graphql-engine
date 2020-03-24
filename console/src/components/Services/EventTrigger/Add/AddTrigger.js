@@ -1,7 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
 import * as tooltip from './Tooltips';
 import Button from '../../../Common/Button/Button';
@@ -40,7 +39,7 @@ import {
   getTableName,
   getTrackedTables,
 } from '../../../Common/utils/pgUtils';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, ToolTip } from '../../../UIKit/atoms';
 import styles from '../TableCommon/EventTable.scss';
 
 class AddTrigger extends Component {
@@ -270,13 +269,8 @@ class AddTrigger extends Component {
     const advancedColumnSection = (
       <div>
         <h4 className={styles.subheading_text}>
-          Listen columns for update &nbsp; &nbsp;
-          <OverlayTrigger
-            placement="right"
-            overlay={tooltip.advancedOperationDescription}
-          >
-            <Icon type="questionCircle" size={12} />
-          </OverlayTrigger>{' '}
+          Listen columns for update
+          <ToolTip message={tooltip.advancedOperationDescription} mx="sm" />
         </h4>
         {selectedOperations.update ? (
           <div className={styles.clear_fix + ' ' + styles.listenColumnWrapper}>
@@ -377,13 +371,8 @@ class AddTrigger extends Component {
               className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
             >
               <h4 className={styles.subheading_text}>
-                Trigger Name &nbsp; &nbsp;
-                <OverlayTrigger
-                  placement="right"
-                  overlay={tooltip.triggerNameDescription}
-                >
-                  <Icon type="questionCircle" size={12} />
-                </OverlayTrigger>{' '}
+                Trigger Name
+                <ToolTip message={tooltip.triggerNameDescription} ml="sm" />
               </h4>
               <input
                 type="text"
@@ -398,13 +387,8 @@ class AddTrigger extends Component {
               />
               <hr />
               <h4 className={styles.subheading_text}>
-                Schema/Table &nbsp; &nbsp;
-                <OverlayTrigger
-                  placement="right"
-                  overlay={tooltip.postgresDescription}
-                >
-                  <Icon type="questionCircle" size={12} />
-                </OverlayTrigger>{' '}
+                Schema/Table
+                <ToolTip mx="sm" message={tooltip.postgresDescription} />
               </h4>
               <select
                 onChange={updateTableList}
@@ -458,13 +442,8 @@ class AddTrigger extends Component {
               <hr />
               <div className={styles.add_mar_bottom}>
                 <h4 className={styles.subheading_text}>
-                  Webhook URL &nbsp; &nbsp;
-                  <OverlayTrigger
-                    placement="right"
-                    overlay={tooltip.webhookUrlDescription}
-                  >
-                    <Icon type="questionCircle" size={12} />
-                  </OverlayTrigger>{' '}
+                  Webhook URL
+                  <ToolTip message={tooltip.webhookUrlDescription} />
                 </h4>
                 <div>
                   <div className={styles.dropdown_wrapper}>

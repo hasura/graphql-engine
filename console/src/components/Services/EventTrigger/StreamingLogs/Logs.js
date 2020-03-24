@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import ReactTable from 'react-table';
 import AceEditor from 'react-ace';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 // import matchSorter from 'match-sorter';
@@ -30,7 +29,7 @@ import * as tooltip from '../Common/Tooltips';
 import { convertDateTimeToLocale } from '../utils';
 import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { Icon, Spinner } from '../../../UIKit/atoms';
+import { Icon, Spinner, ToolTip } from '../../../UIKit/atoms';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -311,12 +310,10 @@ class StreamingLogs extends Component {
                       ),
                       finalResponse.status_code,
                       ' ',
-                      <OverlayTrigger
+                      <ToolTip
                         placement="top"
-                        overlay={tooltip.statusCodeDescription}
-                      >
-                        <Icon type="questionCircle" size={12} />
-                      </OverlayTrigger>,
+                        message={tooltip.statusCodeDescription}
+                      />,
                     ]
                     : null}
                 </div>

@@ -208,7 +208,7 @@ const OperationEditor = props => {
       <div className={styles.modifySection}>
         <h4 className={styles.modifySectionHeading}>
           Trigger Operations{' '}
-          <ToolTip message="Edit operations and related columns" ml="xs" />
+          <ToolTip message="Edit operations and related columns" ml="sm" />
         </h4>
         <Editor
           editorCollapsed={collapsed}

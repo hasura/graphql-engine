@@ -1,12 +1,16 @@
 import React from 'react';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
+
+import { ToolTip } from '../../../UIKit/atoms';
 
 const Info = ({ triggerName, tableName, schemaName, styles }) => (
   <div className={`${styles.container} ${styles.borderBottom}`}>
     <div className={styles.modifySection}>
       <h4 className={styles.modifySectionHeading}>
-        Info{' '}
-        <Tooltip message="Delete this trigger and create another one if you need to edit any of these fields" />
+        Info
+        <ToolTip
+          message="Delete this trigger and create another one if you need to edit any of these fields"
+          ml="sm"
+        />
       </h4>
       <div className={styles.infoContent}>
         <table className="table table-striped table-bordered">

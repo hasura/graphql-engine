@@ -1,9 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import AceEditor from 'react-ace';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
-import OverlayTrigger from 'react-bootstrap/es/OverlayTrigger';
+
 import 'brace/mode/json';
 import 'brace/theme/github';
 
@@ -71,7 +70,7 @@ import {
   getGroupedTableComputedFields,
 } from '../../../Common/utils/pgUtils';
 import { showErrorNotification } from '../../Common/Notification';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, ToolTip } from '../../../UIKit/atoms';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 class Permissions extends Component {
@@ -184,10 +183,8 @@ class Permissions extends Component {
     const addTooltip = (text, tooltip) => {
       return (
         <span>
-          <span className={styles.add_mar_right_small}>{text}</span>
-          <OverlayTrigger placement="right" overlay={tooltip}>
-            <Icon type="questionCircle" size={12} />
-          </OverlayTrigger>
+          {text}
+          <ToolTip message={tooltip} ml="sm" />
         </span>
       );
     };
@@ -532,6 +529,7 @@ class Permissions extends Component {
 
       const getSectionHeader = (title, toolTip, sectionStatus) => {
         let sectionStatusHtml;
+
         if (sectionStatus) {
           sectionStatusHtml = (
             <span className={styles.add_mar_left}>
@@ -729,18 +727,13 @@ class Permissions extends Component {
             const isSelected =
               permissionsState.custom_checked || isUniqueFilter;
 
-            const customCheckToolTip = (
-              <Tooltip id="tooltip-custom-check">
-                Create custom check using permissions builder
-              </Tooltip>
-            );
+            const customCheckToolTip =
+              'Create custom check using permissions builder';
 
             const customChecklabel = (
               <span data-test="custom-check">
-                <span className={styles.add_mar_right}>With custom check:</span>
-                <OverlayTrigger placement="right" overlay={customCheckToolTip}>
-                  <Icon type="questionCircle" size={12} />
-                </OverlayTrigger>
+                With custom check:
+                <ToolTip message={customCheckToolTip} ml="sm" />
               </span>
             );
 
@@ -787,11 +780,8 @@ class Permissions extends Component {
 
           let _limitSection;
 
-          const rowLimitTooltip = (
-            <Tooltip id="tooltip-row-permissions">
-              Set limit on number of rows fetched per request
-            </Tooltip>
-          );
+          const rowLimitTooltip =
+            'Set limit on number of rows fetched per request';
 
           if (query === 'select') {
             const limitValue =
@@ -821,11 +811,9 @@ class Permissions extends Component {
           }
         };
 
-        const rowPermissionTooltip = (
-          <Tooltip id="tooltip-row-permissions">
-            Set permission rule for {getIngForm(permissionsState.query)} rows
-          </Tooltip>
-        );
+        const rowPermissionTooltip = `Set permission rule for ${getIngForm(
+          permissionsState.query
+        )} rows`;
 
         const rowSectionTitle = 'Row ' + query + ' permissions';
 
@@ -990,11 +978,9 @@ class Permissions extends Component {
             return accessText;
           };
 
-          const colPermissionTooltip = (
-            <Tooltip id="tooltip-row-permissions">
-              Choose columns allowed to be {getEdForm(permissionsState.query)}
-            </Tooltip>
-          );
+          const colPermissionTooltip = `Choose columns allowed to be ${getEdForm(
+            permissionsState.query
+          )}`;
 
           const colSectionTitle = 'Column ' + query + ' permissions';
 
@@ -1057,12 +1043,8 @@ class Permissions extends Component {
       //     ? permissionsState.insert.allow_upsert
       //     : false;
       //
-      //   const upsertToolTip = (
-      //     <Tooltip id="tooltip-upsert">
-      //       Allow upsert queries. Upsert lets you update a row if it already
-      //       exists, otherwise insert it
-      //     </Tooltip>
-      //   );
+      //   const upsertToolTip = ' Allow upsert queries. Upsert lets you update a row if it already
+      //       exists, otherwise insert it';
       //
       //   const upsertStatus = upsertAllowed ? 'enabled' : 'disabled';
       //
@@ -1408,12 +1390,8 @@ class Permissions extends Component {
           });
         };
 
-        const presetTooltip = (
-          <Tooltip id="tooltip-insert-set-operations">
-            Set static values or session variables as pre-determined values for
-            columns while {getIngForm(query)}
-          </Tooltip>
-        );
+        const presetTooltip = ` Set static values or session variables as pre-determined values for
+            columns while ${getIngForm(query)}`;
 
         let presetStatus = '';
         if (presets.length > 1) {
@@ -1462,12 +1440,8 @@ class Permissions extends Component {
           ? permissionsState.select.allow_aggregations
           : false;
 
-        const aggregationToolTip = (
-          <Tooltip id="tooltip-aggregation">
-            Allow queries with aggregate functions like sum, count, avg, max,
-            min, etc
-          </Tooltip>
-        );
+        const aggregationToolTip =
+          'Allow queries with aggregate functions like sum, count, avg, max, min, etc';
 
         const aggregationStatus = aggregationAllowed ? 'enabled' : 'disabled';
 
@@ -1619,12 +1593,10 @@ class Permissions extends Component {
         const applyToListHtml = getApplyToList();
 
         let clonePermissionsHtml = null;
+
         if (applyToListHtml.length) {
-          const cloneToolTip = (
-            <Tooltip id="tooltip-clone">
-              Apply same permissions to other tables/roles/actions
-            </Tooltip>
-          );
+          const cloneToolTip =
+            'Apply same permissions to other tables/roles/actions';
 
           const validApplyToList = permissionsState.applySamePermissions.filter(
             applyTo => applyTo.table && applyTo.action && applyTo.role

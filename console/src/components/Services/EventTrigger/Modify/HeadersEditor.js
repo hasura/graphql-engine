@@ -10,8 +10,7 @@ import {
   setHeaderValue,
 } from './Actions';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, ToolTip } from '../../../UIKit/atoms';
 
 const HeadersEditor = props => {
   const { dispatch, headers, modifyTrigger, styles, save } = props;
@@ -131,10 +130,11 @@ const HeadersEditor = props => {
       <div className={styles.modifySection}>
         <h4 className={styles.modifySectionHeading}>
           Headers{' '}
-          <Tooltip
+          <ToolTip
             message={
               'Edit headers to be sent along with the event to your webhook'
             }
+            ml="sm"
           />
         </h4>
         <Editor
