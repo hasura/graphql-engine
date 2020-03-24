@@ -97,7 +97,7 @@ Args syntax
    * - reload_remote_schemas
      - false
      - Boolean
-     - If set to ``true``, all remote schemas' (including inconsistent ones) cached graphql schema is refreshed (default: ``false``)
+     - If set to ``true``, all remote schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``false``)
 
 .. _clear_metadata:
 
