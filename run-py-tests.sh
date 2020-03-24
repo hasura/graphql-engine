@@ -13,6 +13,7 @@ pip3 install -r tests-py/requirements.txt > /dev/null
 export EVENT_WEBHOOK_HEADER=MyEnvValue
 export WEBHOOK_FROM_ENV=http://localhost:5592/
 
+cabal new-build
 cabal new-run -- exe:graphql-engine \
   --database-url=${POSTGRES}        \
   serve                             \
