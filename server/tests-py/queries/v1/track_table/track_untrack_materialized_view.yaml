@@ -1,0 +1,77 @@
+- description: Track materialized view
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: track_table
+    args:
+      name: articles
+
+- description: Track already untracked materialized view
+  url: /v1/query
+  status: 400
+  response:
+    path: $.args
+    error: 'view/table already tracked : "articles"'
+    code: already-tracked
+  query:
+    type: track_table
+    args:
+      name: articles
+
+- description: Select query
+  url: /v1/query
+  status: 200
+  response:
+  - title: "Lorem ipsum dolor sit amet"
+    name: Author 1
+  - title: "lolcats: an anthology"
+    name: Author 2
+  - title: "consectetur adipiscing elit"
+    name: Author 1
+  query:
+    type: select
+    args:
+      table: articles
+      columns:
+        - title
+        - name
+
+- description: Untrack materialized view
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: untrack_table
+    args:
+      table: articles
+
+
+- description: Untrack materialized view
+  url: /v1/query
+  status: 400
+  response:
+    path: $.args
+    error: 'view/table already untracked : "articles"'
+    code: already-untracked
+  query:
+    type: untrack_table
+    args:
+      table: articles
+
+- description: Select query error
+  url: /v1/query
+  status: 400
+  response:
+    path: $.args.table
+    error: table "articles" does not exist
+    code: not-exists
+  query:
+    type: select
+    args:
+      table: articles
+      columns:
+        - title
+        - name
