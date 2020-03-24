@@ -451,7 +451,12 @@ export const UIComponents = () => (
     </Heading>
 
     <Heading mb="lg" mt="xl" as="h3">
-      {'<ToolTip />'}
+      {'<ToolTip /> ~ default when no children is passed'}
+    </Heading>
+    <ToolTip message="Dummy Text" ml="xl" />
+
+    <Heading mb="lg" mt="xl" as="h3">
+      {'<ToolTip message={"whatever"}>Hover me!!</ToolTip>'}
     </Heading>
     <ToolTip message="Dummy Text" ml="xl">
       Hover me!!
