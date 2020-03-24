@@ -164,12 +164,11 @@ initialiseCtx hgeCmd rci = do
       return (l, pool)
 
   -- get the unique db id
-  eDbId <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
-  dbId <- either printErrJExit return eDbId
+  dbId <- liftIO $ runTxIO pool (Q.Serializable, Nothing) getDbId
 
   -- get the pg version
-  ePgVersion <- liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Nothing) getPgVersion
-  pgVersion <- either printErrJExit return ePgVersion
+  pgVersion <- liftIO $ runTxIO pool (Q.ReadCommitted, Nothing) getPgVersion
+
   return (InitCtx httpManager instanceId dbId loggers connInfo pool pgVersion, initTime)
 
   where
@@ -191,6 +190,13 @@ initialiseCtx hgeCmd rci = do
       -- initialise the catalog
       initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
       either printErrJExit (\(result, schemaCache) -> logger result $> schemaCache) initRes
+
+-- | Run a transaction and if an error is encountered, log the error and abort the program
+runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a
+runTxIO pool isoLevel tx = do
+  eVal <- liftIO $ runExceptT $ Q.runTx pool isoLevel tx
+  val <- either printErrJExit return eVal
+  return val
 
 runHGEServer
   :: ( HasVersion
