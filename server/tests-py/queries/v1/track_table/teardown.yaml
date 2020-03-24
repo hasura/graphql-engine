@@ -4,6 +4,7 @@ args:
 - type: run_sql
   args:
     sql: |
+      DROP MATERIALIZED VIEW articles;
       DROP TABLE hge_tests.resident;
       DROP TABLE article;
       DROP TABLE author;
