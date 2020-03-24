@@ -65,6 +65,7 @@ module Data.Time.Clock.Units
   --  - a 'DiffTime' or 'NominalDiffTime' my be negative
   --  - 'addUTCTime' and 'diffUTCTime' do not attempt to handle leap seconds
   , DiffTime
+  , AsPicoseconds
   ) where
 
 import           Prelude
