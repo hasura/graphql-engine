@@ -141,12 +141,12 @@ defined for each table. Here is an example metadata file:
      update_permissions: []
 
 The schema for this file will mostly correspond to the table structure of the
-:doc:`metadata catalogue <../../how-it-works/metadata-schema>`
+:ref:`metadata catalogue <hasura_metadata_schema>`.
 
 config v2
 ---------
 
-For ``config v1``, the ``config.yaml`` of your Hasura project would look like:
+For ``config v2``, the ``config.yaml`` of your Hasura project would look like:
 
 .. code-block:: bash
 
@@ -160,9 +160,9 @@ For ``config v1``, the ``config.yaml`` of your Hasura project would look like:
 With ``config v2``, the metadata that is exported from the server is a directory of multiple files. When you run ``hasura metadata export``, the following files will be generated in the ``metadata/`` directory of your project.
 
 - ``version.yaml``: Contains the metadata version of the server
-- ``tables.yaml``: Contains the metadata related to tables.
-- ``remote_schemas.yaml``: Contains the metadata related to :doc:`remote schemas<../../remote-schemas/index>`
-- ``functions.yaml``: Contains the metadata related to :doc:`custom functions<../../schema/custom-functions>`
-- ``allow_list.yaml``: Contains the metadata related to :doc:`allow lists<../../deployment/allow-list>`
-- ``actions.yaml``: Contains the metadata related to :doc:`actions<../../actions/index>`
+- ``tables.yaml``: Contains the metadata related to tables
+- ``remote_schemas.yaml``: Contains the metadata related to :ref:`remote schemas<remote_schemas>`
+- ``functions.yaml``: Contains the metadata related to :ref:`custom functions<custom_sql_functions>`
+- ``allow_list.yaml``: Contains the metadata related to :ref:`allow lists<allow_list>`
+- ``actions.yaml``: Contains the metadata related to :ref:`actions<actions>`
 - ``actions.graphql``: Contains all the action definition and custom type definitions

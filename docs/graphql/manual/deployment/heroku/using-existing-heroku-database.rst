@@ -2,6 +2,8 @@
    :description: Use an existing database with Heroku deployment
    :keywords: hasura, docs, deployment, heroku, existing database
 
+.. _heroku_existing_db:
+
 Using an existing Heroku database
 =================================
 
@@ -54,10 +56,10 @@ if you want to secure your endpoint.
 .. note::
 
   The Hasura GraphQL engine needs access permissions to your Postgres database as described in
-  :doc:`Postgres permissions <../postgres-permissions>`.
+  :ref:`Postgres permissions <postgres_permissions>`.
 
 Step 4: Track tables and relationships
 --------------------------------------
 
-Wait for the GraphQL engine to restart and then see :doc:`../../schema/using-existing-database` to enable GraphQL
+Wait for the GraphQL engine to restart and then see :ref:`schema_existing_db` to enable GraphQL
 over the database.

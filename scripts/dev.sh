@@ -161,6 +161,7 @@ function wait_docker_postgres {
 #################################
 if [ "$MODE" = "graphql-engine" ]; then
   cd "$PROJECT_ROOT/server"
+  rm -f graphql-engine.tix
 
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
 
@@ -318,6 +319,9 @@ elif [ "$MODE" = "test" ]; then
   ###     Integration / unit tests     ###
   ########################################
   cd "$PROJECT_ROOT/server"
+
+  # Until we can use a real webserver for TestEventFlood, limit concurrency
+  export HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE=8
 
   # We'll get an hpc error if these exist; they will be deleted below too:
   rm -f graphql-engine-tests.tix graphql-engine.tix graphql-engine-combined.tix
