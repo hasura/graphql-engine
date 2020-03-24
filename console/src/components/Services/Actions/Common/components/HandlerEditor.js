@@ -13,7 +13,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
         {editorLabel}
-        <ToolTip message={editorTooltip} ml="md" />
+        <ToolTip message={editorTooltip} ml="sm" />
       </h2>
       <input
         type="text"

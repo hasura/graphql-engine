@@ -1,4 +1,5 @@
 import React from 'react';
+
 import Editor from '../../../Common/Layout/ExpandableEditor/Editor';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 import {
@@ -6,23 +7,30 @@ import {
   setWebhookUrlType,
   showValidationError,
 } from './Actions';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
+import { ToolTip } from '../../../UIKit/atoms';
 
-class WebhookEditor extends React.Component {
-  setValues = () => {
-    const { webhook, env, dispatch } = this.props;
+const WebhookEditor = props => {
+  const {
+    webhook,
+    env,
+    dispatch,
+    modifyTrigger,
+    styles,
+    save: saveWebhook,
+  } = props;
+
+  const setValues = () => {
     dispatch(setWebhookUrl(webhook));
     dispatch(setWebhookUrlType(env ? 'env' : 'url'));
   };
 
-  handleSelectionChange = e => {
-    const { dispatch } = this.props;
+  const handleSelectionChange = e => {
     dispatch(setWebhookUrlType(e.target.getAttribute('value')));
     dispatch(setWebhookUrl(''));
   };
 
-  validateAndSave = () => {
-    const { modifyTrigger, dispatch } = this.props;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const validateAndSave = () => {
     if (modifyTrigger.webhookUrlType === 'url') {
       let tempUrl = false;
       try {
@@ -35,80 +43,69 @@ class WebhookEditor extends React.Component {
         return;
       }
     }
-    this.props.save();
+
+    props.save();
   };
 
-  render() {
-    const {
-      webhook,
-      modifyTrigger,
-      env,
-      dispatch,
-      styles,
-      save: saveWebhook,
-    } = this.props;
-    const collapsed = () => (
-      <div className={styles.modifyProperty}>
-        <p>
-          {webhook}
-          &nbsp;
-        </p>
-        <i>{env && '- from env'}</i>
-      </div>
-    );
+  const collapsed = () => (
+    <div className={styles.modifyProperty}>
+      <p>
+        {webhook}
+        &nbsp;
+      </p>
+      <i>{env && '- from env'}</i>
+    </div>
+  );
 
-    const expanded = () => (
-      <div className={styles.modifyWhDropdownWrapper}>
-        <DropdownButton
-          dropdownOptions={[
-            { display_text: 'URL', value: 'url' },
-            { display_text: 'From env var', value: 'env' },
-          ]}
-          title={
-            modifyTrigger.webhookUrlType === 'env' ? 'From env var' : 'URL'
-          }
-          dataKey={modifyTrigger.webhookUrlType === 'env' ? 'env' : 'url'}
-          onButtonChange={this.handleSelectionChange}
-          onInputChange={e => dispatch(setWebhookUrl(e.target.value))}
-          required
-          bsClass={styles.dropdown_button}
-          inputVal={modifyTrigger.webhookURL}
-          id="webhook-url"
-          inputPlaceHolder={
-            modifyTrigger.webhookUrlType === 'env'
-              ? 'MY_WEBHOOK_URL'
-              : 'http://httpbin.org/post'
-          }
-          testId="webhook"
+  const expanded = () => (
+    <div className={styles.modifyWhDropdownWrapper}>
+      <DropdownButton
+        dropdownOptions={[
+          { display_text: 'URL', value: 'url' },
+          { display_text: 'From env var', value: 'env' },
+        ]}
+        title={modifyTrigger.webhookUrlType === 'env' ? 'From env var' : 'URL'}
+        dataKey={modifyTrigger.webhookUrlType === 'env' ? 'env' : 'url'}
+        onButtonChange={handleSelectionChange}
+        onInputChange={e => dispatch(setWebhookUrl(e.target.value))}
+        required
+        bsClass={styles.dropdown_button}
+        inputVal={modifyTrigger.webhookURL}
+        id="webhook-url"
+        inputPlaceHolder={
+          modifyTrigger.webhookUrlType === 'env'
+            ? 'MY_WEBHOOK_URL'
+            : 'http://httpbin.org/post'
+        }
+        testId="webhook"
+      />
+      <br />
+      <small>
+        Note: Specifying the webhook URL via an environmental variable is
+        recommended if you have different URLs for multiple environments.
+      </small>
+    </div>
+  );
+
+  return (
+    <div className={`${styles.container} ${styles.borderBottom}`}>
+      <div className={styles.modifySection}>
+        <h4 className={styles.modifySectionHeading}>
+          Webhook URL <ToolTip message="Edit your webhook URL" ml="sm" />
+        </h4>
+        <Editor
+          editorCollapsed={collapsed}
+          editorExpanded={expanded}
+          expandCallback={setValues}
+          property="webhook"
+          service="modify-trigger"
+          ongoingRequest={modifyTrigger.ongoingRequest}
+          styles={styles}
+          saveFunc={saveWebhook}
         />
-        <br />
-        <small>
-          Note: Specifying the webhook URL via an environmental variable is
-          recommended if you have different URLs for multiple environments.
-        </small>
       </div>
-    );
-
-    return (
-      <div className={`${styles.container} ${styles.borderBottom}`}>
-        <div className={styles.modifySection}>
-          <h4 className={styles.modifySectionHeading}>
-            Webhook URL <Tooltip message="Edit your webhook URL" />
-          </h4>
-          <Editor
-            editorCollapsed={collapsed}
-            editorExpanded={expanded}
-            expandCallback={this.setValues}
-            property="webhook"
-            service="modify-trigger"
-            ongoingRequest={modifyTrigger.ongoingRequest}
-            styles={styles}
-            saveFunc={saveWebhook}
-          />
-        </div>
-      </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
 export default WebhookEditor;

@@ -311,14 +311,13 @@ class Main extends React.Component {
             <i>
               This is a pre-release version. Not recommended for production use.
               <span className={styles.middot}> &middot; </span>
+              <a href={'#'} onClick={handlePreRelNotifOptOut}>
+                Opt out of pre-release notifications
+              </a>
               <ToolTip
                 message={'Only be notified about stable releases'}
                 placement="top"
-              >
-                <a href={'#'} onClick={handlePreRelNotifOptOut}>
-                  Opt out of pre-release notifications
-                </a>
-              </ToolTip>
+              />
             </i>
           </React.Fragment>
         );

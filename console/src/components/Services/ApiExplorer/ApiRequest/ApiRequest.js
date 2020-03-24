@@ -601,17 +601,11 @@ class ApiRequest extends Component {
                   placement="top"
                   message={jwtValidityStatus('Valid JWT token')}
                 >
-                  <span className={styles.valid_jwt_token}>
-                    <Icon type="check" />
-                  </span>
+                  <Icon type="check" color="green.original" />
                 </ToolTip>
               );
             case !tokenVerified && JWTError.length > 0:
-              return (
-                <span className={styles.invalid_jwt_icon}>
-                  <Icon type="close" />
-                </span>
-              );
+              return <Icon type="close" color="red.primary" />;
             default:
               return null;
           }

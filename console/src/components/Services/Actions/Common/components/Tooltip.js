@@ -6,6 +6,7 @@ import { Icon } from '../../../../UIKit/atoms';
 
 const Tooltip = ({ text, id, className }) => {
   const tooltip = <TooltipElement id={id}>{text}</TooltipElement>;
+
   return (
     <OverlayTrigger placement="right" overlay={tooltip}>
       <Icon type="questionCircle" className={className} size={12} />

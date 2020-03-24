@@ -1,6 +1,7 @@
-import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import AceEditor from 'react-ace';
+
 import TableHeader from '../TableCommon/TableHeader';
 import {
   fetchViewDefinition,
@@ -22,8 +23,9 @@ import {
   getTableCustomRootFields,
 } from '../../../Common/utils/pgUtils';
 import RootFields from './RootFields';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { changeViewRootFields } from '../Common/TooltipMessages';
+import { ToolTip } from '../../../UIKit/atoms';
+import styles from './ModifyTable.scss';
 
 class ModifyView extends Component {
   componentDidMount() {
@@ -54,8 +56,6 @@ class ModifyView extends Component {
       migrationMode,
       readOnlyMode,
     } = this.props;
-
-    const styles = require('./ModifyTable.scss');
 
     const tableSchema = findTable(
       allSchemas,
@@ -121,7 +121,7 @@ class ModifyView extends Component {
         <React.Fragment>
           <h4 className={styles.subheading_text}>
             Custom GraphQL Root Fields
-            <Tooltip message={changeViewRootFields} />
+            <ToolTip message={changeViewRootFields} ml="sm" />
           </h4>
           <RootFields
             existingRootFields={existingRootFields}

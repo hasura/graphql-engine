@@ -30,7 +30,6 @@ import UniqueKeyEditor from './UniqueKeyEditor';
 import TriggerEditorList from './TriggerEditorList';
 import CheckConstraints from './CheckConstraints';
 import RootFields from './RootFields';
-import styles from './ModifyTable.scss';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -41,16 +40,16 @@ import {
   getTableCustomRootFields,
   getTableCustomColumnNames,
 } from '../../../Common/utils/pgUtils';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import ComputedFieldsEditor from './ComputedFieldsEditor';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
 import {
   foreignKeyDescription,
   primaryKeyDescription,
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
+import { ToolTip } from '../../../UIKit/atoms';
+import styles from './ModifyTable.scss';
 
 class ModifyTable extends React.Component {
   componentDidMount() {
@@ -165,10 +164,11 @@ class ModifyTable extends React.Component {
         <React.Fragment>
           <h4 className={styles.subheading_text}>
             Custom GraphQL Root Fields
-            <Tooltip
+            <ToolTip
               message={
                 'Change the root fields for the table in the GraphQL API'
               }
+              ml="sm"
             />
           </h4>
           <RootFields
@@ -189,8 +189,9 @@ class ModifyTable extends React.Component {
         <React.Fragment>
           <h4 className={styles.subheading_text}>
             Computed fields
-            <Tooltip
+            <ToolTip
               message={'Add a function as a virtual field in the GraphQL API'}
+              ml="sm"
             />
             <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html" />
           </h4>
@@ -255,8 +256,8 @@ class ModifyTable extends React.Component {
             <hr />
             {getComputedFieldsSection()}
             <h4 className={styles.subheading_text}>
-              Primary Key &nbsp; &nbsp;
-              <ToolTip message={primaryKeyDescription} />
+              Primary Key
+              <ToolTip message={primaryKeyDescription} ml="sm" />
             </h4>
             <PrimaryKeyEditor
               tableSchema={table}
@@ -266,8 +267,8 @@ class ModifyTable extends React.Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>
-              Foreign Keys &nbsp; &nbsp;
-              <ToolTip message={foreignKeyDescription} />
+              Foreign Keys
+              <ToolTip message={foreignKeyDescription} ml="sm" />
             </h4>
             <ForeignKeyEditor
               tableSchema={table}
@@ -279,8 +280,8 @@ class ModifyTable extends React.Component {
             />
             <hr />
             <h4 className={styles.subheading_text}>
-              Unique Keys &nbsp; &nbsp;
-              <ToolTip message={uniqueKeyDescription} />
+              Unique Keys
+              <ToolTip message={uniqueKeyDescription} ml="sm" />
             </h4>
             <UniqueKeyEditor
               tableSchema={table}
@@ -295,8 +296,8 @@ class ModifyTable extends React.Component {
             <TriggerEditorList tableSchema={table} dispatch={dispatch} />
             <hr />
             <h4 className={styles.subheading_text}>
-              Check Constraints &nbsp; &nbsp;
-              <ToolTip message={checkConstraintsDescription} />
+              Check Constraints
+              <ToolTip message={checkConstraintsDescription} ml="sm" />
             </h4>
             <CheckConstraints
               constraints={getTableCheckConstraints(table)}
