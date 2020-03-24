@@ -80,7 +80,7 @@ $(makePrisms ''InconsistentMetadata)
 
 getInconsistentRemoteSchemas :: [InconsistentMetadata] -> [RemoteSchemaName]
 getInconsistentRemoteSchemas =
-  mapMaybe (^? _InconsistentObject._2.moId._MORemoteSchema)
+  toListOf (traverse._InconsistentObject._2.moId._MORemoteSchema)
 
 imObjectIds :: InconsistentMetadata -> [MetadataObjId]
 imObjectIds = \case

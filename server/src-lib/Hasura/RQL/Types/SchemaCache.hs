@@ -211,9 +211,9 @@ getFuncsOfTable qt fc = flip filter allFuncs $ \f -> qt == fiReturnType f
 getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
 getAllRemoteSchemas sc =
   let consistentRemoteSchemas = M.keys $ scRemoteSchemas sc
-      inConsistentRemoteSchemas =
+      inconsistentRemoteSchemas =
         getInconsistentRemoteSchemas $ scInconsistentObjs sc
-  in consistentRemoteSchemas <> inConsistentRemoteSchemas
+  in consistentRemoteSchemas <> inconsistentRemoteSchemas
 
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
