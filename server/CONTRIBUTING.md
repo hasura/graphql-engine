@@ -17,6 +17,11 @@ The last two prerequisites can be installed on Debian with:
 
     $ sudo apt install libpq-dev python3 python3-pip python3-venv
 
+Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
+
+- [PostgreSQL](https://www.postgresql.org) >= 9.5
+- [postgis](https://postgis.net)
+
 ### Upgrading npm
 
 If your npm is too old (>= 5.7 required):
