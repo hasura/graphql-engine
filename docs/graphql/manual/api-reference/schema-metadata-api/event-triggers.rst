@@ -228,7 +228,7 @@ EventTriggerColumns
 .. _pause_event_trigger:
 
 pause_event_trigger
---------------------
+-------------------
 
 ``pause_event_trigger`` is used to pause an event trigger.
 
