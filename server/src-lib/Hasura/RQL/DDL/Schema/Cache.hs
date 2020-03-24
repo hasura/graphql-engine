@@ -146,7 +146,8 @@ instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
       -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
       -- hanging onto unnecessary keys.
       pruneInvalidationKeys schemaCache = over ikRemoteSchemas $ M.filterWithKey \name _ ->
-                                          name `elem` getAllRemoteSchemas schemaCache
+        -- see Note [Keep invalidation keys for inconsistent objects]
+        name `elem` getAllRemoteSchemas schemaCache
 
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
@@ -503,3 +504,16 @@ withMetadataCheck cascade action = do
         diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
         newInconsistentObjects = nub $ concatMap toList $
           M.elems (currentInconsMeta `diffInconsistentObjects` originalInconsMeta)
+
+{- Note [Keep invalidation keys for inconsistent objects]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+After building the schema cache, we prune InvalidationKeys for objects
+that no longer exist in the schema to avoid leaking memory for objects
+that have been dropped. However, note that we *don’t* want to drop
+keys for objects that are simply inconsistent!
+
+Why? The object is still in the metadata, so next time we reload it,
+we’ll reprocess that object. We want to reuse the cache if its
+definition hasn’t changed, but if we dropped the invalidation key, it
+will incorrectly be reprocessed (since the invalidation key changed
+from present to absent). -}
