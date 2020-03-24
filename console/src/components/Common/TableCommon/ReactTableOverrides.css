@@ -28,6 +28,7 @@
 }
 
 .ReactTable .rt-thead .rt-resizable-header-content {
+  width: inherit;
   font-weight: bold;
 }
 
@@ -64,8 +65,8 @@
 
 .ReactTable .rt-table .rt-thead .rt-th,
 .ReactTable .rt-table .rt-thead .rt-td {
-  padding-left: 20px !important;
-  padding-right: 35px !important;
+  padding-left: 23px !important;
+  padding-right: 20px !important;
   border-right: 1px solid rgba(0, 0, 0, 0.1);
 }
 

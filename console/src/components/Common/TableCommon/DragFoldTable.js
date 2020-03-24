@@ -67,19 +67,21 @@ class DragFoldTable extends Component {
   render() {
     const { data, columns } = this.props;
 
-    const cols = columns.map(col => ({
+    const cols = columns.map((col, idx) => ({
       ...col,
       Header: (
         <div className={`draggable-header ${styles.flex_space_between}`}>
           {col.Header && (
             <Fragment>
               {col.Header}
-              <span
-                className={styles.tableHeaderCell}
-                title="Drag column to rearrange"
-              >
-                <i className={`fa fa-bars ${styles.right20}`} />
-              </span>
+              {idx > 1 && (
+                <span
+                  className={styles.tableHeaderCell}
+                  title="Drag column to rearrange"
+                >
+                  <i className={`fa fa-bars ${styles.right20}`} />
+                </span>
+              )}
             </Fragment>
           )}
         </div>
