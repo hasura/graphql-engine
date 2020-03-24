@@ -19,30 +19,20 @@ module Hasura.Server.Auth
   ) where
 
 import           Control.Concurrent.Extended (forkImmortal)
-import           Control.Exception           (try)
-import           Control.Lens
-import           Data.Aeson
 import           Data.IORef                  (newIORef)
-import           Data.Parser.CacheControl    (parseMaxAge)
-import           Data.Time.Clock             (UTCTime, addUTCTime, getCurrentTime)
-import           Data.Time.Format            (defaultTimeLocale, parseTimeM)
+import           Data.Time.Clock             (UTCTime)
 import           Hasura.Server.Version       (HasVersion)
 
-import qualified Data.Aeson                  as J
-import qualified Data.ByteString.Lazy        as BL
-import qualified Data.HashMap.Strict         as Map
-import qualified Data.String.Conversions     as CS
 import qualified Data.Text                   as T
 import qualified Network.HTTP.Client         as H
 import qualified Network.HTTP.Types          as N
-import qualified Network.Wreq                as Wreq
 
 import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT
-import           Hasura.Server.Logging
+import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
@@ -60,22 +50,6 @@ newtype AdminSecret
   = AdminSecret { getAdminSecret :: T.Text }
   deriving (Show, Eq)
 
-data AuthHookType
-  = AHTGet
-  | AHTPost
-  deriving (Eq)
-
-instance Show AuthHookType where
-  show AHTGet  = "GET"
-  show AHTPost = "POST"
-
-data AuthHookG a b
-  = AuthHookG
-  { ahUrl  :: !a
-  , ahType :: !b
-  } deriving (Show, Eq)
-
-type AuthHook = AuthHookG T.Text AuthHookType
 
 data AuthMode
   = AMNoAuth
@@ -106,13 +80,13 @@ mkAuthMode mAdminSecret mWebHook mJwtSecret mUnAuthRole httpManager logger =
       jwtCtx <- mkJwtCtx jwtConf httpManager logger
       return $ AMAdminSecretAndJWT key jwtCtx mUnAuthRole
 
-    (Nothing, Just _, Nothing)     -> throwError $
+    (Nothing, Just _,  Nothing) -> throwError $
       "Fatal Error : --auth-hook (HASURA_GRAPHQL_AUTH_HOOK)" <> requiresAdminScrtMsg
-    (Nothing, Nothing, Just _)     -> throwError $
+    (Nothing, Nothing, Just _)  -> throwError $
       "Fatal Error : --jwt-secret (HASURA_GRAPHQL_JWT_SECRET)" <> requiresAdminScrtMsg
-    (Nothing, Just _, Just _)     -> throwError
+    (Nothing, Just _,  Just _)  -> throwError
       "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
-    (Just _, Just _, Just _)     -> throwError
+    (Just _,  Just _,  Just _)  -> throwError
       "Fatal Error: Both webhook and JWT mode cannot be enabled at the same time"
   where
     requiresAdminScrtMsg =
@@ -164,109 +138,7 @@ mkJwtCtx JWTConfig{..} httpManager logger = do
           JFEExpiryParseError _ _ -> return Nothing
 
 
--- | Form the 'UserInfo' from the response from webhook
-mkUserInfoFromResp
-  :: (MonadIO m, MonadError QErr m)
-  => Logger Hasura
-  -> T.Text
-  -> N.StdMethod
-  -> N.Status
-  -> BL.ByteString
-  -> m (UserInfo, Maybe UTCTime)
-mkUserInfoFromResp (Logger logger) url method statusCode respBody
-  | statusCode == N.status200 =
-    case eitherDecode respBody of
-      Left e -> do
-        logError
-        throw500 $ "Invalid response from authorization hook: " <> T.pack e
-      Right rawHeaders -> getUserInfoFromHdrs rawHeaders
 
-  | statusCode == N.status401 = do
-    logError
-    throw401 "Authentication hook unauthorized this request"
-
-  | otherwise = do
-    logError
-    throw500 "Invalid response from authorization hook"
-  where
-    getUserInfoFromHdrs rawHeaders = do
-      let usrVars = mkUserVars $ Map.toList rawHeaders
-      case roleFromVars usrVars of
-        Nothing -> do
-          logError
-          throw500 "missing x-hasura-role key in webhook response"
-        Just rn -> do
-          logWebHookResp LevelInfo Nothing Nothing
-          expTimeFromCC <- expiryTimeFromCacheControl rawHeaders
-          expTimeFromE  <- expiryTimeFromExpires      rawHeaders
-          return ( mkUserInfo rn usrVars
-                 , expTimeFromCC <|> expTimeFromE
-                 )
-
-    logWarn =
-      logWebHookResp LevelWarn $ Just respBody
-    logError =
-      logWebHookResp LevelError (Just respBody) Nothing
-
-    logWebHookResp logLevel mResp message =
-      logger $ WebHookLog logLevel (Just statusCode)
-        url method Nothing (bsToTxt . BL.toStrict <$> mResp) message
-
-    expiryTimeFromCacheControl rawHeaders =
-      case Map.lookup "Cache-Control" rawHeaders of
-        Nothing     -> return Nothing
-        Just header -> case parseMaxAge header of
-          Left e       -> logWarn (Just $ T.pack e) >> return Nothing
-          Right maxAge -> Just . addUTCTime (fromInteger maxAge) <$> liftIO getCurrentTime
-
-    expiryTimeFromExpires rawHeaders = do
-      case Map.lookup "Expires" rawHeaders of
-        Nothing     -> return Nothing
-        Just header -> case parseTimeM True defaultTimeLocale timeFmt $ CS.cs header of
-          Left e        -> logWarn (Just $ T.pack e) >> return Nothing
-          Right expTime -> return $ Just expTime
-
-    timeFmt = "%a, %d %b %Y %T GMT"
-
-
-userInfoFromAuthHook
-  :: (HasVersion, MonadIO m, MonadError QErr m)
-  => Logger Hasura
-  -> H.Manager
-  -> AuthHook
-  -> [N.Header]
-  -> m (UserInfo, Maybe UTCTime)
-userInfoFromAuthHook logger manager hook reqHeaders = do
-  res <- liftIO $ try $ bool withGET withPOST isPost
-  resp <- either logAndThrow return res
-  let status = resp ^. Wreq.responseStatus
-      respBody = resp ^. Wreq.responseBody
-
-  mkUserInfoFromResp logger urlT method status respBody
-  where
-    mkOptions = wreqOptions manager
-    AuthHookG urlT ty = hook
-    isPost = case ty of
-      AHTPost -> True
-      AHTGet  -> False
-    method = bool N.GET N.POST isPost
-
-    withGET = Wreq.getWith (mkOptions filteredHeaders) $
-              T.unpack urlT
-
-    contentType = ("Content-Type", "application/json")
-    postHdrsPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
-    withPOST = Wreq.postWith (mkOptions [contentType]) (T.unpack urlT) $
-               object ["headers" J..= postHdrsPayload]
-
-    logAndThrow err = do
-      unLogger logger $
-        WebHookLog LevelError Nothing urlT method
-        (Just $ HttpException err) Nothing Nothing
-      throw500 "Internal Server Error"
-
-    filteredHeaders = flip filter reqHeaders $ \(n, _) ->
-      n `notElem` commonClientHeadersIgnored
 
 getUserInfo
   :: (HasVersion, MonadIO m, MonadError QErr m)

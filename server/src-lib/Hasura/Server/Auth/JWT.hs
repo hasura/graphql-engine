@@ -16,10 +16,7 @@ import           Control.Lens
 import           Control.Monad                   (when)
 import           Data.IORef                      (IORef, readIORef, writeIORef)
 import           Data.List                       (find)
-import           Data.Parser.CacheControl        (parseMaxAge)
-import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
-                                                  getCurrentTime)
-import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
+import           Data.Time.Clock                 (NominalDiffTime, UTCTime, getCurrentTime)
 import           GHC.AssertNF
 import           Network.URI                     (URI)
 
@@ -29,7 +26,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (fmapL, getRequestHeader, userRoleHeader)
+import           Hasura.Server.Auth.Utils
+import           Hasura.Server.Utils             (getRequestHeader, userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 
 import qualified Control.Concurrent.Extended     as C
@@ -41,7 +39,6 @@ import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI
 import qualified Data.HashMap.Strict             as Map
-import qualified Data.String.Conversions         as CS
 import qualified Data.Text                       as T
 import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
@@ -155,34 +152,23 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     writeIORef jwkRef jwkset
 
   -- first check for Cache-Control header to get max-age, if not found, look for Expires header
-  let cacheHeader   = resp ^? Wreq.responseHeader "Cache-Control"
-      expiresHeader = resp ^? Wreq.responseHeader "Expires"
-  case cacheHeader of
-    Just header -> getTimeFromCacheControlHeader header
-    Nothing     -> mapM getTimeFromExpiresHeader expiresHeader
+  let cacheHeader   = bsToTxt <$> resp ^? Wreq.responseHeader "Cache-Control"
+      expiresHeader = bsToTxt <$> resp ^? Wreq.responseHeader "Expires"
+  cct <- timeFromCacheControlHeader cacheHeader $ logAndThrowInfo . parseCacheControlErr
+  expTime <- case cct of
+    Just t  -> return $ Just t
+    Nothing -> timeFromExpiresHeader expiresHeader $ const (logAndThrowInfo parseTimeErr)
+  case expTime of
+    Just t  -> Just <$> toNominalDiffTime t
+    Nothing -> return Nothing
 
   where
-    getTimeFromExpiresHeader header = do
-      let maybeExpiry = parseTimeM True defaultTimeLocale timeFmt (CS.cs header)
-      expires  <- maybe (logAndThrowInfo parseTimeErr) return maybeExpiry
-      currTime <- liftIO getCurrentTime
-      return $ diffUTCTime expires currTime
-
-    getTimeFromCacheControlHeader header =
-      case parseCacheControlHeader (bsToTxt header) of
-        Left e       -> logAndThrowInfo e
-        Right maxAge -> return $ Just $ fromInteger maxAge
-
-    parseCacheControlHeader = fmapL (parseCacheControlErr . T.pack) . parseMaxAge
-
     parseCacheControlErr e =
       JFEExpiryParseError (Just e)
       "Failed parsing Cache-Control header from JWK response. Could not find max-age or s-maxage"
     parseTimeErr =
       JFEExpiryParseError Nothing
       "Failed parsing Expires header from JWK response. Value of header is not a valid timestamp"
-
-    timeFmt = "%a, %d %b %Y %T GMT"
 
     logAndThrowInfo :: (MonadIO m, MonadError JwkFetchError m) => JwkFetchError -> m a
     logAndThrowInfo err = do
