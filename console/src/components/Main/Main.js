@@ -2,15 +2,13 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import { css } from 'styled-components';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
 
 import * as tooltips from './Tooltips';
 import globals from '../../Globals';
 import { getPathRoot } from '../Common/utils/urlUtils';
 
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
-import { Icon, Spinner } from '../UIKit/atoms/';
+import { Icon, Spinner, ToolTip } from '../UIKit/atoms/';
 
 import {
   loadServerVersion,
@@ -39,7 +37,6 @@ import {
   LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
   setLocalStorageItem,
 } from '../Common/utils/localStorageUtils';
-import ToolTip from '../Common/Tooltip/Tooltip';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 
 class Main extends React.Component {
@@ -314,10 +311,14 @@ class Main extends React.Component {
             <i>
               This is a pre-release version. Not recommended for production use.
               <span className={styles.middot}> &middot; </span>
-              <a href={'#'} onClick={handlePreRelNotifOptOut}>
-                Opt out of pre-release notifications
-              </a>
-              <ToolTip message={'Only be notified about stable releases'} />
+              <ToolTip
+                message={'Only be notified about stable releases'}
+                placement="top"
+              >
+                <a href={'#'} onClick={handlePreRelNotifOptOut}>
+                  Opt out of pre-release notifications
+                </a>
+              </ToolTip>
             </i>
           </React.Fragment>
         );
@@ -501,12 +502,10 @@ class Main extends React.Component {
       path,
       isDefault = false
     ) => {
-      const itemTooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
-
       const block = getPathRoot(path);
 
       return (
-        <OverlayTrigger placement="right" overlay={itemTooltip}>
+        <ToolTip message={tooltipText} height="100%">
           <li>
             <Link
               className={
@@ -532,12 +531,13 @@ class Main extends React.Component {
               <p>{title}</p>
             </Link>
           </li>
-        </OverlayTrigger>
+        </ToolTip>
       );
     };
 
     const renderProPopup = () => {
       const { isPopUpOpen } = this.state;
+
       if (isPopUpOpen) {
         return (
           <div className={styles.proPopUpWrapper}>
