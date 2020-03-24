@@ -1,4 +1,4 @@
-- description: Track matview
+- description: Track materialized view
   url: /v1/query
   status: 200
   response:
@@ -8,7 +8,7 @@
     args:
       name: articles
 
-- description: Track already untracked matview
+- description: Track already untracked materialized view
   url: /v1/query
   status: 400
   response:
@@ -38,8 +38,7 @@
         - title
         - name
 
-#Untrack matview
-- description: Untrack matview
+- description: Untrack materialized view
   url: /v1/query
   status: 200
   response:
@@ -50,8 +49,7 @@
       table: articles
 
 
-#Untrack matview
-- description: Untrack matview
+- description: Untrack materialized view
   url: /v1/query
   status: 400
   response:
@@ -63,7 +61,6 @@
     args:
       table: articles
 
-#Run a select query: error
 - description: Select query error
   url: /v1/query
   status: 400
