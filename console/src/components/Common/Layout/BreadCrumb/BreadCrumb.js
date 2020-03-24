@@ -19,7 +19,7 @@ const BreadCrumb = ({ breadCrumbs }) => {
 
       const addArrow = () => [
         <Sp key={'breadcrumb-space-before' + i} />,
-        <Icon key={'l' + i} type="right" />,
+        <Icon key={'l' + i} type="right" size={10} />,
 
         <Sp key={'breadcrumb-space-after' + i} />,
       ];

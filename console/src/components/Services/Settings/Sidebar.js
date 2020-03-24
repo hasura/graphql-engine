@@ -1,12 +1,11 @@
 import React from 'react';
-import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import { Link } from 'react-router';
-import CheckIcon from '../../Common/Icons/Check';
-import CrossIcon from '../../Common/Icons/Cross';
+
+import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import globals from '../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
-
+import { Icon } from '../../UIKit/atoms';
 import styles from '../../Common/TableCommon/Table.scss';
 
 const Sidebar = ({ location, metadata }) => {
@@ -20,8 +19,11 @@ const Sidebar = ({ location, metadata }) => {
   });
 
   const consistentIcon =
-    metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
-
+    metadata.inconsistentObjects.length === 0 ? (
+      <Icon type="check" size={20} color="green.original" />
+    ) : (
+      <Icon type="close" color="red.primary" size={20} />
+    );
   sectionsData.push({
     key: 'status',
     link: '/settings/metadata-status',

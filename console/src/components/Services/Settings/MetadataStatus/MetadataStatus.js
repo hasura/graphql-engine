@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import Button from '../../../Common/Button/Button';
 import { dropInconsistentObjects, loadInconsistentObjects } from '../Actions';
 import { permissionTypes, getTableNameFromDef } from '../utils';
@@ -7,11 +8,9 @@ import {
   showErrorNotification,
 } from '../../Common/Notification';
 import metaDataStyles from '../Settings.scss';
-import styles from '../../../Common/TableCommon/Table.scss';
-import CheckIcon from '../../../Common/Icons/Check';
-import CrossIcon from '../../../Common/Icons/Cross';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { Icon } from '../../../UIKit/atoms';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
@@ -110,7 +109,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
         <div className={styles.add_mar_top}>
           <div className={metaDataStyles.content_width}>
             <div className={styles.display_flex}>
-              <CheckIcon className={metaDataStyles.add_mar_right_small} />
+              <Icon type="check" size={20} color="green.original" mr="xs" />
               <h4>GraphQL Engine metadata is consistent with database</h4>
             </div>
           </div>
@@ -122,7 +121,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
       <div className={styles.add_mar_top}>
         <div className={metaDataStyles.content_width}>
           <div className={styles.display_flex}>
-            <CrossIcon className={metaDataStyles.add_mar_right_small} />
+            <Icon type="close" color="red.primary" size={20} mr="xs" />
             <h4> GraphQL Engine metadata is inconsistent with database </h4>
           </div>
           <div className={styles.add_mar_top}>

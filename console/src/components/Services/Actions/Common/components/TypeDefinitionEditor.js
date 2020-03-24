@@ -1,13 +1,13 @@
 import React from 'react';
 import { parse as sdlParse } from 'graphql/language/parser';
-import styles from './Styles.scss';
+
 import Tooltip from './Tooltip';
-import CrossIcon from '../../../../Common/Icons/Cross';
-import CopyIcon from '../../../../Common/Icons/Copy';
 import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
 import Modal from '../../../../Common/Modal/Modal';
 import CloneTypeModal from './CloneTypeModal';
 import { getTypesSdl } from '../../../../../shared/utils/sdlUtils';
+import { Icon } from '../../../../UIKit/atoms';
+import styles from './Styles.scss';
 
 const editorLabel = 'New types definition';
 const editorTooltip =
@@ -75,7 +75,7 @@ const ActionDefinitionEditor = ({
         >
           {error && (
             <div className={`${styles.display_flex} ${styles.errorMessage}`}>
-              <CrossIcon className={styles.add_mar_right_small} />
+              <Icon mr="xs" type="close" color="red.primary" size={20} />
               <div>{errorMessage}</div>
             </div>
           )}
@@ -83,8 +83,7 @@ const ActionDefinitionEditor = ({
             className={`${styles.cloneTypeText} ${styles.cursorPointer} ${styles.add_mar_right}`}
             onClick={toggleModal}
           >
-            <CopyIcon className={styles.add_mar_right_small} />
-            Clone an existing type
+            <Icon type="copy" mr="xs" />
           </a>
           <Modal
             show={modalOpen}
