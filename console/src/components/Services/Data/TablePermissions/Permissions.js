@@ -458,8 +458,14 @@ class Permissions extends Component {
             );
           });
 
+          const rolePermissions = getTablePermissionsByRoles(tableSchema);
+
           // push bulk action value
-          if (role === 'admin' || role === '') {
+          if (
+            role === 'admin' ||
+            role === '' ||
+            !Object.keys(rolePermissions).includes(role)
+          ) {
             _permissionsRowHtml.push(<td key={-1} />);
           } else {
             const bulkSelect = permissionsState.bulkSelect;
