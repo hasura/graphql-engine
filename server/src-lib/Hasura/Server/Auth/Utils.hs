@@ -38,8 +38,8 @@ timeFromExpiresHeader
   -> m (Maybe ExpiryTime)
 timeFromExpiresHeader header onError =
   onMaybe header $ \h -> case parseTimeM True defaultTimeLocale timeFmt $ CS.cs h of
-    Left e        -> onError (T.pack e) >> return Nothing
-    Right expTime -> return $ Just $ AbsoluteTime expTime
+    Nothing      -> onError "Value of Expires header is not a valid timestamp" >> return Nothing
+    Just expTime -> return $ Just $ AbsoluteTime expTime
   where timeFmt = "%a, %d %b %Y %T GMT"
 
 
