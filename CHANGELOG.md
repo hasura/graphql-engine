@@ -25,6 +25,7 @@
   
 ### Other changes
 
+- console and cli-ext: fix parsing of wrapped types in SDL
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
 - console: fix run_sql migration modal messaging (close #4020) (#4060)
 - docs: add note on pg versions for actions (#4034)
@@ -91,3 +92,4 @@
 - server: preserve cookie headers from sync action webhook (close #4021)
 - server: add 'ID' to default scalars in custom types (fix #4061)
 - console: add design system base components (#3866)
+- docs: add docs for redeliver_event API
