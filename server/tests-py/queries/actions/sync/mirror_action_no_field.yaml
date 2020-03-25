@@ -1,0 +1,22 @@
+description: Expected field not found in response
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      internal:
+        webhook_response:
+          name: Alice
+      path: $
+      code: unexpected
+    message: field "id" expected in webhook response, but not found
+query:
+  variables:
+    name: Alice
+  query: |
+    mutation ($name: String) {
+      mirror(arg: {name: $name}){
+        id
+        name
+      }
+    }
