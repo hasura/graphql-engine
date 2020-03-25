@@ -84,7 +84,7 @@ Fetch value from JSON/JSONB column at particular path
       user_by_pk(id: 1) {
         id
         name
-        pincode: address(path: ".pincode") # pincode is an alias
+        address(path: "$.pincode")
       }
     }
   :response:
@@ -93,7 +93,7 @@ Fetch value from JSON/JSONB column at particular path
         "user_by_pk": {
           "id": 1,
           "name": "Justin",
-          "pincode": 110017
+          "address": 11017
         }
       }
     }
