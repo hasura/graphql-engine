@@ -58,7 +58,24 @@ draft_github_release() {
         -r "$CIRCLE_PROJECT_REPONAME" \
         -b "${RELEASE_BODY}" \
         -draft \
+     "$CIRCLE_TAG"
+    echo "uploading cli assets"
+    ghr -t "$GITHUB_TOKEN" \
+        -u "$CIRCLE_PROJECT_USERNAME" \
+        -r "$CIRCLE_PROJECT_REPONAME" \
+        -draft \
      "$CIRCLE_TAG" /build/_cli_output/binaries/
+    echo "uploading cli-ext assets"
+    ghr -t "$GITHUB_TOKEN" \
+        -u "$CIRCLE_PROJECT_USERNAME" \
+        -r "$CIRCLE_PROJECT_REPONAME" \
+        -draft \
+     "$CIRCLE_TAG" /build/_cli_ext_output/*.tar.gz
+    ghr -t "$GITHUB_TOKEN" \
+        -u "$CIRCLE_PROJECT_USERNAME" \
+        -r "$CIRCLE_PROJECT_REPONAME" \
+        -draft \
+     "$CIRCLE_TAG" /build/_cli_ext_output/*.zip
 }
 
 configure_git() {
