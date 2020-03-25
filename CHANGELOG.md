@@ -25,6 +25,7 @@
   
 ### Other changes
 
+- cli: add support for multiple versions of plugin (close #4105)
 - console and cli-ext: fix parsing of wrapped types in SDL
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
 - console: fix run_sql migration modal messaging (close #4020) (#4060)
