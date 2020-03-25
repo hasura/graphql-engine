@@ -117,7 +117,7 @@ instance ToJSON WebHookLog where
            , "method" .= show (whlMethod whl)
            , "http_error" .= whlError whl
            , "response" .= whlResponse whl
-           , "message" .= whlResponse whl
+           , "message" .= whlMessage whl
            ]
 
 
