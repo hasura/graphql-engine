@@ -102,3 +102,4 @@
 - console: add design system base components (#3866)
 - docs: add docs for redeliver_event API
 - option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
+- console: fix bulk deleting roles without permissions (#4195)
