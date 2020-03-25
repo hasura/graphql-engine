@@ -25,6 +25,7 @@
   
 ### Other changes
 
+- cli: fix parse error returned on console api (close #4126)
 - console and cli-ext: fix parsing of wrapped types in SDL
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
 - console: fix run_sql migration modal messaging (close #4020) (#4060)
