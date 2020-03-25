@@ -136,7 +136,7 @@ build_and_push_cli_migrations_image_v2() {
 }
 
 # build and push latest container for auto-migrations
-push_latest_cli_migrations_image()_v1 {
+push_latest_cli_migrations_image_v1() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
     LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations"
 
