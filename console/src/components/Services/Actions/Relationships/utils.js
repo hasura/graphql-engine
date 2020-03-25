@@ -76,7 +76,7 @@ export const getRelDef = relMeta => {
     ? `${relMeta.remote_table.schema}.${relMeta.remote_table.name}`
     : relMeta.remote_table;
 
-  return `${lcol} → ${tableLabel} . ${rcol}`;
+  return `${relMeta.typename} . ${lcol} → ${tableLabel} . ${rcol}`;
 };
 
 export const removeTypeRelationship = (types, typename, relName) => {
@@ -89,4 +89,16 @@ export const removeTypeRelationship = (types, typename, relName) => {
     }
     return t;
   });
+};
+
+export const validateRelTypename = (types, typename, relname) => {
+  for (let i = types.length - 1; i >= 0; i--) {
+    const type = types[i];
+    if (type.kind === 'object' && type.name === typename) {
+      if ((type.relationships || []).some(r => r.name === relname)) {
+        return `Relationship with name "${relname}" already exists.`;
+      }
+    }
+  }
+  return null;
 };
