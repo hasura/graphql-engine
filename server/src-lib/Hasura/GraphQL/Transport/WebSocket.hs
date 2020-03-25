@@ -35,6 +35,7 @@ import qualified StmContainers.Map                           as STMMap
 import           Control.Concurrent.Extended                 (sleep)
 import           Control.Exception.Lifted
 import           Data.String
+import           GHC.AssertNF
 import qualified ListT
 
 import           Hasura.EncJSON
@@ -62,7 +63,7 @@ import qualified Hasura.Server.Telemetry.Counters            as Telem
 -- this to track a connection's operations so we can remove them from 'LiveQueryState', and
 -- log.
 --
--- NOTE!: This must be kept consistent with the global 'LiveQueryState', in 'onClose' 
+-- NOTE!: This must be kept consistent with the global 'LiveQueryState', in 'onClose'
 -- and 'onStart'.
 type OperationMap
   = STMMap.Map OperationId (LQ.LiveQueryId, Maybe OperationName)
@@ -79,10 +80,10 @@ data ErrRespType
 data WSConnState
   -- headers from the client for websockets
   = CSNotInitialised !WsHeaders
-  | CSInitError Text
+  | CSInitError !Text
   -- headers from the client (in conn params) to forward to the remote schema
   -- and JWT expiry time if any
-  | CSInitialised UserInfo (Maybe TC.UTCTime) [H.Header]
+  | CSInitialised !UserInfo !(Maybe TC.UTCTime) ![H.Header]
 
 data WSConnData
   = WSConnData
@@ -108,9 +109,9 @@ sendMsgWithMetadata wsConn msg (LQ.LiveQueryMetadata execTime) =
   liftIO $ WS.sendMsg wsConn $ WS.WSQueueResponse bs wsInfo
   where
     bs = encodeServerMsg msg
-    wsInfo = Just $ WS.WSEventInfo
-      { WS._wseiQueryExecutionTime = Just $ realToFrac execTime
-      , WS._wseiResponseSize = Just $ BL.length bs
+    wsInfo = Just $! WS.WSEventInfo
+      { WS._wseiQueryExecutionTime = Just $! realToFrac execTime
+      , WS._wseiResponseSize = Just $! BL.length bs
       }
 
 data OpDetail
@@ -232,8 +233,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
                   <*> pure errType
       let acceptRequest = WS.defaultAcceptRequest
                           { WS.acceptSubprotocol = Just "graphql-ws"}
-      return $ Right $ WS.AcceptWith connData acceptRequest
-                       (Just keepAliveAction) (Just jwtExpiryHandler)
+      return $ Right $ WS.AcceptWith connData acceptRequest keepAliveAction jwtExpiryHandler
 
     reject qErr = do
       logger $ mkWsErrorLog Nothing (WsConnInfo wsId Nothing Nothing) (ERejected qErr)
@@ -325,7 +325,8 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     runHasuraGQ timerTot telemCacheHit reqId query userInfo = \case
       E.ExOpQuery opTx genSql ->
         execQueryOrMut Telem.Query genSql $ runLazyTx' pgExecCtx opTx
-      E.ExOpMutation opTx ->
+      -- Response headers discarded over websockets
+      E.ExOpMutation _ opTx ->
         execQueryOrMut Telem.Mutation Nothing $
           runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo opTx
       E.ExOpSubs lqOp -> do
@@ -333,10 +334,13 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         L.unLogger logger $ QueryLog query Nothing reqId
         -- NOTE!: we mask async exceptions higher in the call stack, but it's
         -- crucial we don't lose lqId after addLiveQuery returns successfully.
-        lqId <- liftIO $ LQ.addLiveQuery logger lqMap lqOp liveQOnChange
+        !lqId <- liftIO $ LQ.addLiveQuery logger lqMap lqOp liveQOnChange
+        let !opName = _grOperationName q
+        liftIO $ $assertNFHere $! (lqId, opName)  -- so we don't write thunks to mutable vars
+
         liftIO $ STM.atomically $
           -- NOTE: see crucial `lookup` check above, ensuring this doesn't clobber:
-          STMMap.insert (lqId, _grOperationName q) opId opMap
+          STMMap.insert (lqId, opName) opId opMap
         logOpEv ODStarted (Just reqId)
 
       where
@@ -534,14 +538,20 @@ onConnInit logger manager wsConn authMode connParamsM = do
   res <- resolveUserInfo logger manager headers authMode
   case res of
     Left e  -> do
-      liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
-        CSInitError $ qeError e
+      let !initErr = CSInitError $ qeError e
+      liftIO $ do
+        $assertNFHere initErr  -- so we don't write thunks to mutable vars
+        STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) initErr 
+
       let connErr = ConnErrMsg $ qeError e
       logWSEvent logger wsConn $ EConnErr connErr
       sendMsg wsConn $ SMConnErr connErr
     Right (userInfo, expTimeM) -> do
-      liftIO $ STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) $
-        CSInitialised userInfo expTimeM paramHeaders
+      let !csInit = CSInitialised userInfo expTimeM paramHeaders
+      liftIO $ do
+        $assertNFHere csInit  -- so we don't write thunks to mutable vars
+        STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) csInit
+
       sendMsg wsConn SMConnAck
       -- TODO: send it periodically? Why doesn't apollo's protocol use
       -- ping/pong frames of websocket spec?
@@ -603,8 +613,8 @@ createWSServerApp
   -> WSServerEnv
   -> WS.PendingConnection -> m ()
   -- ^ aka generalized 'WS.ServerApp'
-createWSServerApp authMode serverEnv =
-  WS.createServerApp (_wseServer serverEnv) handlers
+createWSServerApp authMode serverEnv = \ !pendingConn ->
+  WS.createServerApp (_wseServer serverEnv) handlers pendingConn
   where
     handlers =
       WS.WSHandlers
