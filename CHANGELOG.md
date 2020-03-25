@@ -6,12 +6,28 @@
 
 - Introducing Actions: https://docs.hasura.io/1.0/graphql/manual/actions/index.html
 - Downgrade command: https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine
+
+- console: add multi select in browse rows to allow bulk delete (close #1739) (#3735)
+
+  Adds a checkbox to each row on Browse Rows view that allows selecting one or more rows from the table and bulk delete them.
+
 - console: allow setting check constraints during table create (#3881)
 
-  There was added a component that allows adding check constraints while creating a new table in the same way as it can be done on the `Modify` view.
+  Adds a component that allows adding check constraints while creating a new table in the same way as it can be done on the `Modify` view.
 
+- console: add dropdown for enum fields in insert/edit rows page (close #3748) (#3810)
+
+  If a table has a field referencing an enum table via a foreign key, then there will be a select dropdown with all possible enum values for that field on `Insert Row` and `Edit Row` views.
+  
+- console: generate unique exported metadata filenames (close #1772) (#4106)
+
+  Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.  
+  
 ### Other changes
 
+- fix deploy script to upload github release assets
+- cli: fix parse error returned on console api (close #4126)
+- console and cli-ext: fix parsing of wrapped types in SDL
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
 - console: fix run_sql migration modal messaging (close #4020) (#4060)
 - docs: add note on pg versions for actions (#4034)
@@ -70,4 +86,12 @@
 - add meta descriptions to actions docs (#4082)
 - `HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL` changes semantics slightly: we only sleep for the interval
   when there were previously no events to process. Potential space leak fixed. (#3839)
+- console: track runtime errors (#4083)
 - auto-include `__typename` field in custom types' objects (fix #4063)
+- squash some potential space leaks (#3937)
+- docs: bump MarupSafe version (#4102)
+- server: validate action webhook response to conform to action output type (fix #3977)
+- server: preserve cookie headers from sync action webhook (close #4021)
+- server: add 'ID' to default scalars in custom types (fix #4061)
+- console: add design system base components (#3866)
+- docs: add docs for redeliver_event API

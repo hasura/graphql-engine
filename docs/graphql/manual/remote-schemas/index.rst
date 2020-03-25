@@ -2,6 +2,8 @@
    :description: Manage remote schemas with Hasura
    :keywords: hasura, docs, remote schema
 
+.. _remote_schemas:
+
 Remote schemas
 ==============
 
@@ -47,7 +49,7 @@ a union of top-level nodes from each of the sub-schemas.
 
   If you are looking for adding authorization & access control for your
   app users to the GraphQL APIs that are auto-generated via Hasura, head to
-  :doc:`../auth/index`
+  :ref:`auth`
 
 Adding a remote schema
 ----------------------
@@ -135,7 +137,7 @@ metadata modifying operation like adding tables/functions, defining relationship
 
 From ``v1.0.0-beta.3`` onwards, a remote server's GraphQL schema is cached and refreshed only when user
 explicitly reloads remote schema by clicking the ``Reload`` button on the console or
-by making a :doc:`reload_remote_schema<../api-reference/schema-metadata-api/remote-schemas>` metadata API request
+by making a :ref:`reload_remote_schema<api_remote_schemas>` metadata API request
 
 
 Current limitations
@@ -212,7 +214,7 @@ Hasura. However a similar solution can be achieved by the following workarounds:
 Bypassing webhook authorization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have a :doc:`webhook authorization setup <../auth/authentication/webhook>`, in the normal scenario, your authorization
+If you have a :ref:`webhook authorization setup <auth_webhooks>`, in the normal scenario, your authorization
 webhook would return ``200`` on success and ``401`` if it is either unable to authorize the current request or if
 the authorization information is absent (like cookie, authorization header etc.)
 
@@ -226,7 +228,7 @@ To bypass the webhook auth:
 Bypassing JWT authorization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have a :doc:`JWT authorization setup <../auth/authentication/jwt>`, to bypass the JWT auth:
+If you have a :ref:`JWT authorization setup <auth_jwt>`, to bypass the JWT auth:
 
 - your authentication server should generate a static JWT token for ``anonymous`` i.e. unauthenticated users.
 - when adding the remote schema, check the ``Forward all headers from client`` option so that the remote server

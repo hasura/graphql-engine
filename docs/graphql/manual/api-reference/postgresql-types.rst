@@ -2,6 +2,8 @@
    :description: Supported PostgreSQL types in the Hasura API
    :keywords: hasura, docs, PostgreSQL types, API reference
 
+.. _api_postgres_types:
+
 API Reference - Supported PostgreSQL Types
 ==========================================
 

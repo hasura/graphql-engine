@@ -20,6 +20,7 @@ import           Data.Parser.CacheControl        (parseMaxAge)
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
                                                   getCurrentTime)
 import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
+import           GHC.AssertNF
 import           Network.URI                     (URI)
 
 import           Hasura.HTTP
@@ -28,7 +29,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (fmapL, userRoleHeader)
+import           Hasura.Server.Utils             (fmapL, getRequestHeader, userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 
 import qualified Control.Concurrent.Extended     as C
@@ -148,8 +149,10 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     logAndThrow err
 
   let parseErr e = JFEJwkParseError (T.pack e) $ "Error parsing JWK from url: " <> urlT
-  jwkset <- either (logAndThrow . parseErr) return $ J.eitherDecode respBody
-  liftIO $ writeIORef jwkRef jwkset
+  !jwkset <- either (logAndThrow . parseErr) return $ J.eitherDecode' respBody
+  liftIO $ do
+    $assertNFHere jwkset  -- so we don't write thunks to mutable vars
+    writeIORef jwkRef jwkset
 
   -- first check for Cache-Control header to get max-age, if not found, look for Expires header
   let cacheHeader   = resp ^? Wreq.responseHeader "Cache-Control"
@@ -294,8 +297,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
 
     -- see if there is a x-hasura-role header, or else pick the default role
     getCurrentRole defaultRole =
-      let userRoleHeaderB = CS.cs userRoleHeader
-          mUserRole = snd <$> find (\h -> fst h == CI.mk userRoleHeaderB) headers
+      let mUserRole = getRequestHeader userRoleHeader headers
       in maybe defaultRole RoleName $ mUserRole >>= mkNonEmptyText . bsToTxt
 
     decodeJSON val = case J.fromJSON val of

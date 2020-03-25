@@ -2,6 +2,8 @@
    :description: Manage tables and views with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, table, view
 
+.. _api_tables_views:
+
 Schema/Metadata API Reference: Tables/Views
 ===========================================
 

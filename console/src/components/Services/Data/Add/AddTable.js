@@ -3,10 +3,10 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
 import Button from '../../../Common/Button/Button';
-import PrimaryKeySelector from '../Common/ReusableComponents/PrimaryKeySelector';
+import PrimaryKeySelector from '../Common/Components/PrimaryKeySelector';
 import ForeignKeyWrapper from './ForeignKeyWrapper';
 import UniqueKeyWrapper from './UniqueKeyWrapper';
-import FrequentlyUsedColumnSelector from '../Common/ReusableComponents/FrequentlyUsedColumnSelector';
+import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
 
 import { showErrorNotification } from '../../Common/Notification';
 
