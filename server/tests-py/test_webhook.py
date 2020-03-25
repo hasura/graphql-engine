@@ -13,35 +13,65 @@ from context import PytestConf
 if not PytestConf.config.getoption('--hge-webhook'):
     pytest.skip('--hge-webhook is missing, skipping webhook expiration tests', allow_module_level=True)
 
-class TestSubscriptionWebhookExpiryWithExpireHeader(object):
-    def test_webhook_expiry(self, hge_ctx, ws_client):
+@pytest.fixture(scope='method')
+def ws_conn_recreate(ws_client):
+    ws_client.recreate_conn()
+
+def connect_with(hge_ctx, ws_client, headers):
+    headers['X-Hasura-Role']      = 'user'
+    headers['X-Hasura-User-Id']   = '1234321'
+    headers['X-Hasura-Auth-Mode'] = 'webhook'
+
+    token = base64.b64encode(json.dumps(headers).encode('utf-8')).decode('utf-8')
+    headers['Authorization'] = 'Bearer ' + token
+    payload = {'headers': headers}
+    init_ws_conn(hge_ctx, ws_client, payload)
+
+EXPIRE_TIME_FORMAT = '%a, %d %b %Y %T GMT'
+
+@usefixtures('ws_conn_recreate')
+class TestWebhookSubscriptionExpiry(object):
+    def test_expiry_with_expires_header(self, hge_ctx, ws_client):
         exp = datetime.now() + timedelta(seconds=3)
-        headers = {
-            'Expires': exp.strftime('%a, %d %b %Y %T GMT'),
-            'X-Hasura-Role': 'user',
-            'X-Hasura-User-Id': '1234321',
-            'X-Hasura-Auth-Mode': 'webhook',
-        }
-        token = base64.b64encode(json.dumps(headers).encode('utf-8')).decode('utf-8')
-        headers['Authorization'] = 'Bearer ' + token
-        init_ws_conn(hge_ctx, ws_client, {'headers': headers})
+        connect_with(hge_ctx, ws_client, {
+            'Expires': exp.strftime(EXPIRE_TIME_FORMAT)
+        })
         time.sleep(2)
         assert ws_client.remote_closed == False, ws_client.remote_closed
         time.sleep(2)
         assert ws_client.remote_closed == True, ws_client.remote_closed
 
-class TestSubscriptionWebhookExpiryWithCacheControlHeader(object):
-    def test_webhook_expiry(self, hge_ctx, ws_client):
-        headers = {
-            'Cache-Control': 'max-age=3',
-            'X-Hasura-Role': 'user',
-            'X-Hasura-User-Id': '1234321',
-            'X-Hasura-Auth-Mode': 'webhook',
-        }
-        token = base64.b64encode(json.dumps(headers).encode('utf-8')).decode('utf-8')
-        headers['Authorization'] = 'Bearer ' + token
-        init_ws_conn(hge_ctx, ws_client, {'headers': headers})
+    def test_expiry_with_cache_control(self, hge_ctx, ws_client):
+        connect_with(hge_ctx, ws_client, {
+            'Cache-Control': 'max-age=3'
+        })
         time.sleep(2)
         assert ws_client.remote_closed == False, ws_client.remote_closed
         time.sleep(2)
         assert ws_client.remote_closed == True, ws_client.remote_closed
+
+    def test_expiry_with_both(self, hge_ctx, ws_client):
+        exp = datetime.now() + timedelta(seconds=3)
+        connect_with(hge_ctx, ws_client, {
+            'Expires': exp.strftime(EXPIRE_TIME_FORMAT),
+            'Cache-Control': 'max-age=5',
+        })
+        # cache-control has precedence, so the expiry time will be five seconds
+        time.sleep(2)
+        assert ws_client.remote_closed == False, ws_client.remote_closed
+        time.sleep(2)
+        assert ws_client.remote_closed == False, ws_client.remote_closed
+        time.sleep(2)
+        assert ws_client.remote_closed == True, ws_client.remote_closed
+
+    def test_expiry_with_parse_error(self, hge_ctx, ws_client):
+        exp = datetime.now() + timedelta(seconds=3)
+        connect_with(hge_ctx, ws_client, {
+            'Expires': exp.strftime('%a, %d %m %Y %T UTC'),
+            'Cache-Control': 'maxage=3',
+        })
+        # neither will parse, the connection will remain alive
+        time.sleep(2)
+        assert ws_client.remote_closed == False, ws_client.remote_closed
+        time.sleep(2)
+        assert ws_client.remote_closed == False, ws_client.remote_closed
