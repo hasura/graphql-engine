@@ -84,7 +84,7 @@ address column:
   :view_only:
   :query:
     query {
-      user_by_pk(id: 1) {
+      author_by_pk(id: 1) {
         id
         name
         address
@@ -95,7 +95,7 @@ address column:
   :response:
     {
       "data": {
-        "user_by_pk": {
+        "author_by_pk": {
           "id": 1,
           "name": "Justin",
           "address": {
