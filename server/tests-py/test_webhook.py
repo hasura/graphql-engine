@@ -13,9 +13,8 @@ from context import PytestConf
 if not PytestConf.config.getoption('--hge-webhook'):
     pytest.skip('--hge-webhook is missing, skipping webhook expiration tests', allow_module_level=True)
 
-class TestSubscriptionWebhookExpiry(object):
-
-    def test_webhook_expiry_with_expires_header(self, hge_ctx, ws_client):
+class TestSubscriptionWebhookExpiryWithExpireHeader(object):
+    def test_webhook_expiry(self, hge_ctx, ws_client):
         exp = datetime.now() + timedelta(seconds=3)
         headers = {
             'Expires': exp.strftime('%a, %d %b %Y %T GMT'),
@@ -31,9 +30,8 @@ class TestSubscriptionWebhookExpiry(object):
         time.sleep(2)
         assert ws_client.remote_closed == True, ws_client.remote_closed
 
-class TestSubscriptionWebhookExpiry2(object):
-
-    def test_webhook_expiry_with_cache_control_header(self, hge_ctx, ws_client):
+class TestSubscriptionWebhookExpiryWithCacheControlHeader(object):
+    def test_webhook_expiry(self, hge_ctx, ws_client):
         headers = {
             'Cache-Control': 'max-age=3',
             'X-Hasura-Role': 'user',
