@@ -91,4 +91,5 @@
 - server: preserve cookie headers from sync action webhook (close #4021)
 - server: add 'ID' to default scalars in custom types (fix #4061)
 - console: add design system base components (#3866)
+- docs: add docs for redeliver_event API
 - option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
