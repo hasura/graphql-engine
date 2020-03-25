@@ -25,7 +25,7 @@
   
 ### Other changes
 
-- console: disable editing action relationships
+- console and cli-ext: fix parsing of wrapped types in SDL
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
 - console: fix run_sql migration modal messaging (close #4020) (#4060)
 - docs: add note on pg versions for actions (#4034)
@@ -88,4 +88,8 @@
 - auto-include `__typename` field in custom types' objects (fix #4063)
 - squash some potential space leaks (#3937)
 - docs: bump MarupSafe version (#4102)
+- server: validate action webhook response to conform to action output type (fix #3977)
+- server: preserve cookie headers from sync action webhook (close #4021)
+- server: add 'ID' to default scalars in custom types (fix #4061)
 - console: add design system base components (#3866)
+- docs: add docs for redeliver_event API

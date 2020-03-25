@@ -48,8 +48,7 @@ validateCustomTypeDefinitions tableCache customTypes = do
     enumTypes =
       Set.fromList $ map (unEnumTypeName . _etdName) enumDefinitions
 
-    -- TODO, clean it up maybe?
-    defaultScalars = map G.NamedType ["Int", "Float", "String", "Boolean"]
+    defaultScalars = map G.NamedType ["Int", "Float", "String", "Boolean", "ID"]
 
     validateEnum
       :: (MonadValidate [CustomTypeValidationError] m)
