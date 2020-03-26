@@ -102,4 +102,5 @@
 - console: add design system base components (#3866)
 - docs: add docs for redeliver_event API
 - option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
+- console: disable selecting roles without permissions for bulk actions (close #4178) (#4195)
 - console: show remote schema / event trigger intro sections always (#4044)
