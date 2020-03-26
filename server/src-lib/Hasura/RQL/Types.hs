@@ -41,6 +41,7 @@ module Hasura.RQL.Types
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.SQL.Types
+import           Hasura.User
 
 import           Hasura.Db                          as R
 import           Hasura.RQL.Types.Action            as R
@@ -286,7 +287,7 @@ askFieldInfo m f =
     ]
 
 askCurRole :: (UserInfoM m) => m RoleName
-askCurRole = userRole <$> askUserInfo
+askCurRole = _uiRole <$> askUserInfo
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"

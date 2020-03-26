@@ -16,6 +16,7 @@ import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances     ()
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.User
 
 import qualified Database.PG.Query        as Q
 import qualified Hasura.SQL.DML           as S
@@ -95,7 +96,7 @@ convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
     preSetCols = HM.keys setInsVals
 
     throwNotInsErr c = do
-      role <- userRole <$> askUserInfo
+      role <- _uiRole <$> askUserInfo
       throw400 NotSupported $ "column " <> c <<> " is not insertable"
         <> " for role " <>> role
 

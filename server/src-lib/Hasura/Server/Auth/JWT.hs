@@ -29,8 +29,10 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (fmapL, getRequestHeader, userRoleHeader)
+import           Hasura.Server.Utils             (fmapL, getRequestHeader, isSessionVariable,
+                                                  userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
+import           Hasura.User
 
 import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
@@ -101,7 +103,7 @@ defaultClaimNs = "https://hasura.io/jwt/claims"
 
 -- | An action that refreshes the JWK at intervals in an infinite loop.
 jwkRefreshCtrl
-  :: (HasVersion)
+  :: HasVersion
   => Logger Hasura
   -> HTTP.Manager
   -> URI
@@ -114,7 +116,7 @@ jwkRefreshCtrl logger manager url ref time = liftIO $ do
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
-      let delay = maybe (minutes 1) (fromUnits) mTime
+      let delay = maybe (minutes 1) fromUnits mTime
       C.sleep delay
   where
     logNotice = do
@@ -224,7 +226,7 @@ processJwt jwtCtx headers mUnAuthRole =
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
       return $ (, Nothing) $
-        mkUserInfo unAuthRole $ mkUserVars $ hdrsToText headers
+        mkUserInfo unAuthRole $ mkSessionVariables headers
 
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
@@ -255,7 +257,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
   hasuraClaims <- parseObjectFromString claimsFmt hasuraClaimsV
 
   -- filter only x-hasura claims and convert to lower-case
-  let claimsMap = Map.filterWithKey (\k _ -> isUserVar k)
+  let claimsMap = Map.filterWithKey (\k _ -> isSessionVariable k)
                 $ Map.fromList $ map (first T.toLower)
                 $ Map.toList hasuraClaims
 
@@ -269,7 +271,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ J.Object finalClaims
 
-  return $ (, expTimeM) $ mkUserInfo role $ mkUserVars $ Map.toList metadata
+  return $ (, expTimeM) $ mkUserInfo role $ mkSessionVariablesText $ Map.toList metadata
 
   where
     parseAuthzHeader = do
@@ -298,7 +300,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
     -- see if there is a x-hasura-role header, or else pick the default role
     getCurrentRole defaultRole =
       let mUserRole = getRequestHeader userRoleHeader headers
-      in maybe defaultRole RoleName $ mUserRole >>= mkNonEmptyText . bsToTxt
+      in fromMaybe defaultRole $ mUserRole >>= mkRoleName . bsToTxt
 
     decodeJSON val = case J.fromJSON val of
       J.Error e   -> throw400 JWTInvalidClaims ("x-hasura-* claims: " <> T.pack e)

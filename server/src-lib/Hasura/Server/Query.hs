@@ -37,6 +37,7 @@ import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
 import           Hasura.Server.Version              (HasVersion)
+import           Hasura.User
 
 
 data RQLQueryV1

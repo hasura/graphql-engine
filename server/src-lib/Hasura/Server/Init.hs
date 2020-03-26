@@ -25,12 +25,12 @@ import qualified Hasura.Logging                   as L
 
 import           Hasura.Db
 import           Hasura.Prelude
-import           Hasura.RQL.Types                 (QErr, RoleName (..), SchemaCache (..),
-                                                   mkNonEmptyText)
+import           Hasura.RQL.Types                 (QErr, SchemaCache (..))
 import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
+import           Hasura.User
 import           Network.URI                      (parseURI)
 
 newtype DbUid
@@ -193,9 +193,9 @@ instance FromEnv AdminSecret where
   fromEnv = Right . AdminSecret . T.pack
 
 instance FromEnv RoleName where
-  fromEnv string = case mkNonEmptyText (T.pack string) of
-    Nothing     -> Left "empty string not allowed"
-    Just neText -> Right $ RoleName neText
+  fromEnv string = case mkRoleName (T.pack string) of
+    Nothing   -> Left "empty string not allowed"
+    Just role -> Right role
 
 instance FromEnv Bool where
   fromEnv = parseStrAsBool
@@ -487,7 +487,7 @@ serveCmdFooter =
         , "Max event threads"
         )
       , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Interval in milliseconds to sleep before trying to fetch events again after a " 
+        , "Interval in milliseconds to sleep before trying to fetch events again after a "
           <> "fetch returned no events from postgres."
         )
       ]
@@ -851,13 +851,13 @@ jwtSecretHelp = "The JSON containing type and the JWK used for verifying. e.g: "
               <> "`{\"type\": \"RS256\", \"key\": \"<your-PEM-RSA-public-key>\", \"claims_namespace\": \"<optional-custom-claims-key-name>\"}`"
 
 parseUnAuthRole :: Parser (Maybe RoleName)
-parseUnAuthRole = fmap mkRoleName $ optional $
+parseUnAuthRole = fmap mkRoleName' $ optional $
   strOption ( long "unauthorized-role" <>
               metavar "<ROLE>" <>
               help (snd unAuthRoleEnv)
             )
   where
-    mkRoleName mText = mText >>= (fmap RoleName . mkNonEmptyText)
+    mkRoleName' mText = mText >>= mkRoleName
 
 parseCorsConfig :: Parser (Maybe CorsConfig)
 parseCorsConfig = mapCC <$> disableCors <*> corsDomain
@@ -1086,17 +1086,17 @@ serveOptionsParser =
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
 downgradeShortcuts :: [(String, String)]
-downgradeShortcuts = 
+downgradeShortcuts =
   $(do let s = $(embedStringFile "src-rsr/catalog_versions.txt")
-          
+
            parseVersions = map (parseVersion . words) . lines
-     
+
            parseVersion [tag, version] = (tag, version)
-           parseVersion other = error ("unrecognized tag/catalog mapping " ++ show other)
-       TH.lift (parseVersions s))     
+           parseVersion other          = error ("unrecognized tag/catalog mapping " ++ show other)
+       TH.lift (parseVersions s))
 
 downgradeOptionsParser :: Parser DowngradeOptions
-downgradeOptionsParser = 
+downgradeOptionsParser =
     DowngradeOptions
     <$> choice
         (strOption
@@ -1111,7 +1111,7 @@ downgradeOptionsParser =
           help "Don't run any migrations, just print out the SQL."
         )
   where
-    shortcut v catalogVersion = 
+    shortcut v catalogVersion =
       flag' (DataString.fromString catalogVersion)
         ( long ("to-" <> v) <>
           help ("Downgrade to graphql-engine version " <> v <> " (equivalent to --to-catalog-version " <> catalogVersion <> ")")

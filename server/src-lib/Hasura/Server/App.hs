@@ -53,6 +53,7 @@ import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.SQL.Types
+import           Hasura.User
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
@@ -187,7 +188,7 @@ parseBody reqBody =
 
 onlyAdmin :: (Monad m) => Handler m ()
 onlyAdmin = do
-  uRole <- asks (userRole . hcUser)
+  uRole <- asks (_uiRole . hcUser)
   when (uRole /= adminRole) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
@@ -231,7 +232,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
                  return userInfoE
 
     let handlerState = HandlerCtx serverCtx userInfo headers requestId
-        curRole = userRole userInfo
+        curRole = _uiRole userInfo
 
     (serviceTime, (result, q)) <- withElapsedTime $ case apiHandler of
       AHGet handler -> do

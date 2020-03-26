@@ -11,8 +11,7 @@ import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
-import           Hasura.RQL.Instances          ()
-import           Hasura.RQL.Types.Permission
+import           Hasura.User
 
 -- | A /GraphQL context/, aka the final output of GraphQL schema generation. Used to both validate
 -- incoming queries and respond to introspection queries.

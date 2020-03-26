@@ -25,10 +25,8 @@ import           Control.Lens
 import           Data.Has
 
 import qualified Data.Aeson                             as J
-import qualified Data.CaseInsensitive                   as CI
 import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as Set
-import qualified Data.String.Conversions                as CS
 import qualified Data.Text                              as T
 import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
@@ -50,6 +48,7 @@ import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
                                                          mkSetCookieHeaders)
 import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.User
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -151,7 +150,7 @@ getExecPlanPartial userInfo sc enableAL req = do
     VT.TLCustom ->
       throw500 "unexpected custom type for top level field"
   where
-    role = userRole userInfo
+    role = _uiRole userInfo
     gCtxRoleMap = scGCtxMap sc
 
     checkQueryInAllowlist =
@@ -192,9 +191,9 @@ getResolvedExecPlan
   -> m (Telem.CacheHit, ExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer httpManager reqHeaders reqUnparsed = do
-  planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
+  planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo)
            opNameM queryStr planCache
-  let usrVars = userVars userInfo
+  let usrVars = _uiSession userInfo
   case planM of
     -- plans are only for queries and subscriptions
     Just plan -> (Telem.Hit,) . GExPHasura <$> case plan of
@@ -207,7 +206,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
-      liftIO $ EP.addPlan scVer (userRole userInfo)
+      liftIO $ EP.addPlan scVer (_uiRole userInfo)
       opNameM queryStr plan planCache
     noExistingPlan = do
       req <- toParsed reqUnparsed
@@ -424,5 +423,4 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
       HTTP.HttpExceptionRequest _req content -> throw500 $ T.pack . show $ content
       HTTP.InvalidUrlException _url reason -> throw500 $ T.pack . show $ reason
 
-    userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
-                     userInfoToList userInfo
+    userInfoToHdrs = sessionVariablesToHeaders $ _uiSession userInfo

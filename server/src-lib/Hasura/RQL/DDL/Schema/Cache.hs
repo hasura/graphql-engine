@@ -61,6 +61,7 @@ import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.Server.Version                    (HasVersion)
 import           Hasura.SQL.Types
+import           Hasura.User
 
 mergeCustomTypes
   :: MonadError QErr f

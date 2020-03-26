@@ -158,14 +158,14 @@ commonResponseHeadersIgnored =
   , "Content-Type", "Content-Length"
   ]
 
-isUserVar :: Text -> Bool
-isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
+isSessionVariable :: Text -> Bool
+isSessionVariable = T.isPrefixOf "x-hasura-" . T.toLower
 
 mkClientHeadersForward :: [HTTP.Header] -> [HTTP.Header]
 mkClientHeadersForward reqHeaders =
-  xForwardedHeaders <> (filterUserVars . filterRequestHeaders) reqHeaders
+  xForwardedHeaders <> (filterSessionVariables . filterRequestHeaders) reqHeaders
   where
-    filterUserVars = filter (\(k, _) -> not $ isUserVar $ bsToTxt $ CI.original k)
+    filterSessionVariables = filter (\(k, _) -> not $ isSessionVariable $ bsToTxt $ CI.original k)
     xForwardedHeaders = flip mapMaybe reqHeaders $ \(hdrName, hdrValue) ->
       case hdrName of
         "Host"       -> Just ("X-Forwarded-Host", hdrValue)

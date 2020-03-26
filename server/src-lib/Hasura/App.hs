@@ -14,8 +14,8 @@ import           Options.Applicative
 import           System.Environment                   (getEnvironment, lookupEnv)
 import           System.Exit                          (exitFailure)
 
-import qualified Control.Concurrent.Extended          as C
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Control.Concurrent.Extended          as C
 import qualified Data.Aeson                           as A
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.ByteString.Lazy.Char8           as BLC
@@ -38,9 +38,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
                                                        HasSQLGenCtx, HasSystemDefined, QErr (..),
                                                        SQLGenCtx (..), SchemaCache (..), UserInfoM,
-                                                       adminRole, adminUserInfo,
                                                        buildSchemaCacheStrict, decodeValue,
-                                                       throw400, userRole, withPathK)
+                                                       throw400, withPathK)
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.App
 import           Hasura.Server.Auth
@@ -52,6 +51,7 @@ import           Hasura.Server.Query                  (requiresAdmin, runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
+import           Hasura.User
 
 
 printErrExit :: (MonadIO m) => forall a . String -> m a
@@ -204,7 +204,7 @@ runHGEServer
   -- ^ start time
   -> m ()
 runHGEServer ServeOptions{..} InitCtx{..} initTime = do
-  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to 
+  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to
   -- STDOUT containing "not in normal form". In the future we could try to integrate this into
   -- our tests. For now this is a development tool.
   --
@@ -241,7 +241,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   liftIO $ logInconsObjs logger inconsObjs
 
   -- start background threads for schema sync
-  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <- 
+  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <-
     startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
                            cacheRef _icInstanceId cacheInitTime
 
@@ -269,13 +269,13 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
 
   -- start a background thread to check for updates
-  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $ 
+  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
     checkForUpdates loggerCtx _icHttpManager
 
   -- start a background thread for telemetry
   when soEnableTelemetry $ do
     unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-    void $ C.forkImmortal "runTelemetry" logger $ liftIO $ 
+    void $ C.forkImmortal "runTelemetry" logger $ liftIO $
       runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId
 
   finishTime <- liftIO Clock.getCurrentTime
@@ -367,7 +367,7 @@ instance UserAuthentication AppM where
 
 instance MetadataApiAuthorization AppM where
   authorizeMetadataApi query userInfo = do
-    let currRole = userRole userInfo
+    let currRole = _uiRole userInfo
     when (requiresAdmin query && currRole /= adminRole) $
       withPathK "args" $ throw400 AccessDenied errMsg
     where

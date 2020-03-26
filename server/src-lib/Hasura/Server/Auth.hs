@@ -41,11 +41,12 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
+import           Hasura.User
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
   resolveUserInfo
-    :: (HasVersion)
+    :: HasVersion
     => Logger Hasura
     -> H.Manager
     -> [N.Header]
@@ -187,14 +188,14 @@ mkUserInfoFromResp logger url method statusCode respBody
     throw500 "Invalid response from authorization hook"
   where
     getUserInfoFromHdrs rawHeaders = do
-      let usrVars = mkUserVars $ Map.toList rawHeaders
-      case roleFromVars usrVars of
+      let sessionVariables = mkSessionVariablesText $ Map.toList rawHeaders
+      case roleFromSession sessionVariables of
         Nothing -> do
           logError
           throw500 "missing x-hasura-role key in webhook response"
         Just rn -> do
           logWebHookResp LevelInfo Nothing
-          return $ mkUserInfo rn usrVars
+          return $ mkUserInfo rn sessionVariables
 
     logError =
       logWebHookResp LevelError $ Just respBody
@@ -283,9 +284,9 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
       maybe action (withNoExpTime . userInfoWhenAdminSecret ak) adminSecretM
 
     adminSecretM= foldl1 (<|>) $
-      map (`getVarVal` usrVars) [adminSecretHeader, deprecatedAccessKeyHeader]
+      map (`getSessionVariableValue` sessionVariables) [adminSecretHeader, deprecatedAccessKeyHeader]
 
-    usrVars = mkUserVars $ hdrsToText rawHeaders
+    sessionVariables = mkSessionVariables rawHeaders
 
     userInfoWhenAdminSecret key reqKey = do
       when (reqKey /= getAdminSecret key) $ throw401 $
@@ -295,11 +296,11 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
     userInfoWhenNoAdminSecret = \case
       Nothing -> throw401 $ adminSecretHeader <> "/"
                  <> deprecatedAccessKeyHeader <> " required, but not found"
-      Just role -> return $ mkUserInfo role usrVars
+      Just role -> return $ mkUserInfo role sessionVariables
 
     withNoExpTime a = (, Nothing) <$> a
 
     userInfoFromHeaders =
-      case roleFromVars usrVars of
-        Just rn -> mkUserInfo rn usrVars
-        Nothing -> mkUserInfo adminRole usrVars
+      case roleFromSession sessionVariables of
+        Just rn -> mkUserInfo rn sessionVariables
+        Nothing -> mkUserInfo adminRole sessionVariables

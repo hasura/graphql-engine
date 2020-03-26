@@ -33,6 +33,7 @@ import           Hasura.RQL.DML.Internal               (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                   (duplicates)
 import           Hasura.SQL.Types
+import           Hasura.User
 
 import           Hasura.GraphQL.Schema.Action
 import           Hasura.GraphQL.Schema.BoolExp

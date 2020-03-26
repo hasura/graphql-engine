@@ -12,13 +12,15 @@ import           Control.Arrow                      ((***))
 import           Control.Lens.Combinators
 import           Control.Lens.Operators
 import           Hasura.Prelude
-import qualified Hasura.RQL.DDL.EventTrigger        as DS
 import           Hasura.RQL.DDL.Permission
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.User
+
+import qualified Hasura.RQL.DDL.EventTrigger        as DS
 
 import qualified Data.HashMap.Strict                as M
 import qualified Database.PG.Query                  as Q

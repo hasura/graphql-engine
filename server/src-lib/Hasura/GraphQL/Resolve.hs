@@ -18,6 +18,7 @@ module Hasura.GraphQL.Resolve
   ) where
 
 import           Data.Has
+import           Hasura.User
 
 import qualified Data.HashMap.Strict               as Map
 import qualified Database.PG.Query                 as Q
@@ -71,9 +72,9 @@ toPGQuery = \case
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
 validateHdrs userInfo hdrs = do
-  let receivedVars = userVars userInfo
+  let receivedVars = _uiSession userInfo
   forM_ hdrs $ \hdr ->
-    unless (isJust $ getVarVal hdr receivedVars) $
+    unless (isJust $ getSessionVariableValue (mkSessionVariable hdr) receivedVars) $
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
 queryFldToPGAST
@@ -129,10 +130,10 @@ mutFldToTx fld = do
   case opCtx of
     MCInsert ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsert (userRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsert (_uiRole userInfo) (_iocTable ctx) fld
     MCInsertOne ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsertOne (userRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsertOne (_uiRole userInfo) (_iocTable ctx) fld
     MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
       noRespHeaders $ RM.convertUpdate ctx fld
@@ -146,7 +147,7 @@ mutFldToTx fld = do
       validateHdrs userInfo (_docHeaders ctx)
       noRespHeaders $ RM.convertDeleteByPk ctx fld
     MCAction ctx ->
-      RA.resolveActionMutation fld ctx (userVars userInfo)
+      RA.resolveActionMutation fld ctx (_uiSession userInfo)
 
 getOpCtx
   :: ( MonadReusability m

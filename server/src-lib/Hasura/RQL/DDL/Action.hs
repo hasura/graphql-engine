@@ -29,6 +29,7 @@ import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.User
 
 import qualified Hasura.GraphQL.Validate.Types as VT
 

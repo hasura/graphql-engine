@@ -41,8 +41,10 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.Permission
-import qualified Hasura.SQL.DML              as S
 import           Hasura.SQL.Types
+import           Hasura.User
+
+import qualified Hasura.SQL.DML              as S
 
 import           Control.Lens.Plated
 import           Control.Lens.TH
@@ -50,10 +52,11 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.Internal
 import           Data.Aeson.TH
-import qualified Data.Aeson.Types            as J
-import qualified Data.HashMap.Strict         as M
 import           Instances.TH.Lift           ()
 import           Language.Haskell.TH.Syntax  (Lift)
+
+import qualified Data.Aeson.Types            as J
+import qualified Data.HashMap.Strict         as M
 
 data GExists a
   = GExists
@@ -341,13 +344,13 @@ type PreSetCols = M.HashMap PGCol S.SQLExp
 
 -- doesn't resolve the session variable
 data PartialSQLExp
-  = PSESessVar !(PGType PGScalarType) !SessVar
+  = PSESessVar !(PGType PGScalarType) !SessionVariable
   | PSESQLExp !S.SQLExp
   deriving (Show, Eq, Generic, Data)
 instance NFData PartialSQLExp
 instance Cacheable PartialSQLExp
 
-mkTypedSessionVar :: PGType PGColumnType -> SessVar -> PartialSQLExp
+mkTypedSessionVar :: PGType PGColumnType -> SessionVariable -> PartialSQLExp
 mkTypedSessionVar columnType =
   PSESessVar (unsafePGColumnToRepresentation <$> columnType)
 
