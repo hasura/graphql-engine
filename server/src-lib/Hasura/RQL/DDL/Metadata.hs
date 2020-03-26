@@ -474,9 +474,7 @@ runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
 runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
   sc <- askSchemaCache
   let remoteSchemaInvalidations =
-        -- TODO
-        -- if reloadRemoteSchemas then HS.fromList (getAllRemoteSchemas sc) else
-          mempty
+        if reloadRemoteSchemas then HS.fromList (getAllRemoteSchemas sc) else mempty
   buildSchemaCacheWithOptions CatalogUpdate CacheInvalidations
                                             { ciMetadata = True
                                             , ciRemoteSchemas = remoteSchemaInvalidations

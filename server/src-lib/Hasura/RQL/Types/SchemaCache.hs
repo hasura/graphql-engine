@@ -11,17 +11,14 @@ module Hasura.RQL.Types.SchemaCache
   , incSchemaCacheVer
   , TableConfig(..)
   , emptyTableConfig
+  , getAllRemoteSchemas
 
   , TableCoreCache
   , TableCache
   , ActionCache
 
-  -- , OutputFieldTypeInfo(..)
-  -- , AnnotatedObjectType(..)
-  -- , AnnotatedObjects
   , TypeRelationship(..)
   , trName, trType, trRemoteTable, trFieldMapping
-  -- , NonObjectTypeMap(..)
   , TableCoreInfoG(..)
   , TableRawInfo
   , TableCoreInfo
@@ -244,6 +241,13 @@ getFuncsOfTable :: QualifiedTable -> FunctionCache -> [FunctionInfo]
 getFuncsOfTable qt fc = flip filter allFuncs $ \f -> qt == fiReturnType f
   where
     allFuncs = M.elems fc
+
+getAllRemoteSchemas :: SchemaCache -> [RemoteSchemaName]
+getAllRemoteSchemas sc =
+  let consistentRemoteSchemas = M.keys $ scRemoteSchemas sc
+      inconsistentRemoteSchemas =
+        getInconsistentRemoteSchemas $ scInconsistentObjs sc
+  in consistentRemoteSchemas <> inconsistentRemoteSchemas
 
 -- | A more limited version of 'CacheRM' that is used when building the schema cache, since the
 -- entire schema cache has not been built yet.
