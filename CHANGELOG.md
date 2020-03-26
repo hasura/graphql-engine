@@ -22,6 +22,10 @@
 - console: generate unique exported metadata filenames (close #1772) (#4106)
 
   Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.  
+
+- cli(migrations-docker): add support for v2 config (close #3969)
+
+  A new CLI migrations image is introduced to account for the new CLI workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
   
 ### Other changes
 
