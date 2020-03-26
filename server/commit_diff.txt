@@ -618,9 +618,3 @@ Date:   Tue Mar 31 10:00:12 2020 -0400
 
     Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
     Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>
-
-commit 4ce4eb1d2faa52d5f3ac19db6aeefa79093ec3eb
-Author: Phil Freeman <phil@hasura.io>
-Date:   Thu Mar 26 13:42:33 2020 -0700
-
-    Remove any outstanding hdb_views (fixes #3940) (#3965)
