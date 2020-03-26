@@ -23,8 +23,17 @@
 
   Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.
 
+- cli(migrations-docker): add support for v2 config (close #3969)
+
+  A new CLI migrations image is introduced to account for the new CLI workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
+
 ### Other changes
 
+- cli: fix init command to generate correct config.yaml (close #4036)
+- cli: fix command path not being set in telemetry data (close #4127)
+- fix deploy script to upload github release assets
+- cli: fix parse error returned on console api (close #4126)
+- console and cli-ext: fix parsing of wrapped types in SDL
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
 - console: fix run_sql migration modal messaging (close #4020) (#4060)
 - docs: add note on pg versions for actions (#4034)
