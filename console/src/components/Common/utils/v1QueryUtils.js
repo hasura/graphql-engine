@@ -209,3 +209,73 @@ export const getDropComputedFieldQuery = (tableDef, computedFieldName) => {
     },
   };
 };
+
+export const getDeleteQuery = (pkClause, tableName, schemaName) => {
+  return {
+    type: 'delete',
+    args: {
+      table: {
+        name: tableName,
+        schema: schemaName,
+      },
+      where: pkClause,
+    },
+  };
+};
+
+export const getBulkDeleteQuery = (pkClauses, tableName, schemaName) =>
+  pkClauses.map(pkClause => getDeleteQuery(pkClause, tableName, schemaName));
+
+export const getEnumOptionsQuery = (request, currentSchema) => {
+  return {
+    type: 'select',
+    args: {
+      table: {
+        name: request.enumTableName,
+        schema: currentSchema,
+      },
+      columns: [request.enumColumnName],
+    },
+  };
+};
+
+export const inconsistentObjectsQuery = {
+  type: 'get_inconsistent_metadata',
+  args: {},
+};
+
+export const dropInconsistentObjectsQuery = {
+  type: 'drop_inconsistent_metadata',
+  args: {},
+};
+
+export const getReloadMetadataQuery = shouldReloadRemoteSchemas => ({
+  type: 'reload_metadata',
+  args: {
+    reload_remote_schemas: shouldReloadRemoteSchemas,
+  },
+});
+
+export const getReloadRemoteSchemaCacheQuery = remoteSchemaName => {
+  return {
+    type: 'reload_remote_schema',
+    args: {
+      name: remoteSchemaName,
+    },
+  };
+};
+
+export const exportMetadataQuery = {
+  type: 'export_metadata',
+  args: {},
+};
+
+export const generateReplaceMetadataQuery = metadataJson => ({
+  type: 'replace_metadata',
+  args: metadataJson,
+});
+
+export const resetMetadataQuery = {
+  type: 'clear_metadata',
+  args: {},
+};

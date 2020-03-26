@@ -42,9 +42,21 @@ columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's 
 
 `npm install --global @gridsome/cli`
 
+- Create a Gridsome project
+
+`gridsome create my-gridsome-site`
+
+- Go to your project directory
+
+`cd my-gridsome-site`
+
 - Install node modules:
   ```bash
   yarn install
+  ```
+  or npm
+  ```bash
+  npm install
   ```
 
 - Configure Gridsome to use `source-graphql` plugin and a connection GraphQL url to stitch the schema. Open the file `gridsome.config.js` and modify the plugin section to configure the GraphQL Endpoint.

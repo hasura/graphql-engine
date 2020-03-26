@@ -120,6 +120,7 @@
 .ReactTable .rt-table {
   overflow: unset;
 }
+
 .ReactTable .rt-table .rt-tbody {
   margin-bottom: 10px;
   border: solid 1px rgba(0, 0, 0, 0.05);

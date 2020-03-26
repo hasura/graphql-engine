@@ -4,7 +4,7 @@ import AceEditor from 'react-ace';
 import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import RawSqlButton from '../Common/ReusableComponents/RawSqlButton';
+import RawSqlButton from '../Common/Components/RawSqlButton';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import {
   findFunction,

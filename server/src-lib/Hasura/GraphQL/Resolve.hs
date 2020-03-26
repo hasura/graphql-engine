@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Resolve
   ( mutFldToTx
+
   , queryFldToPGAST
   , traverseQueryRootFldAST
   , UnresolvedVal(..)
@@ -120,29 +121,30 @@ mutFldToTx
      , MonadIO m
      )
   => V.Field
-  -> m RespTx
+  -> m (RespTx, HTTP.ResponseHeaders)
 mutFldToTx fld = do
   userInfo <- asks getter
   opCtx <- getOpCtx $ V._fName fld
+  let noRespHeaders = fmap (,[])
   case opCtx of
     MCInsert ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      RI.convertInsert (userRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsert (userRole userInfo) (_iocTable ctx) fld
     MCInsertOne ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      RI.convertInsertOne (userRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsertOne (userRole userInfo) (_iocTable ctx) fld
     MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
-      RM.convertUpdate ctx fld
+      noRespHeaders $ RM.convertUpdate ctx fld
     MCUpdateByPk ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
-      RM.convertUpdateByPk ctx fld
+      noRespHeaders $ RM.convertUpdateByPk ctx fld
     MCDelete ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
-      RM.convertDelete ctx fld
+      noRespHeaders $ RM.convertDelete ctx fld
     MCDeleteByPk ctx -> do
       validateHdrs userInfo (_docHeaders ctx)
-      RM.convertDeleteByPk ctx fld
+      noRespHeaders $ RM.convertDeleteByPk ctx fld
     MCAction ctx ->
       RA.resolveActionMutation fld ctx (userVars userInfo)
 

@@ -2,6 +2,8 @@
    :description: Make distinct queries with Hasura
    :keywords: hasura, docs, query, distinct query
 
+.. _distinct_queries:
+
 Distinct query results
 ======================
 
@@ -18,7 +20,7 @@ You can fetch rows with only distinct values of a column using the ``distinct_on
 It is typically recommended to use ``order_by`` along with ``distinct_on`` to ensure we get predictable results
 *(otherwise any arbitrary row with a distinct value of the column may be returned)*.
 Note that the ``distinct_on`` column needs to be the first column in the ``order_by`` expression.
-See :doc:`sort queries <sorting>` for more info on using ``order_by``.
+See :ref:`sort queries <sort_query_results>` for more info on using ``order_by``.
 
 .. code-block:: graphql
 
