@@ -134,9 +134,7 @@ export const resetMetadata = (successCb, errorCb) => (dispatch, getState) => {
   const options = {
     method: 'POST',
     credentials: globalCookiePolicy,
-    headers: {
-      ...(headers || {}),
-    },
+    headers: headers || {},
     body: JSON.stringify(resetMetadataQuery),
   };
 

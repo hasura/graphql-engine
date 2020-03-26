@@ -154,7 +154,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
           <Button
             color="red"
             size="sm"
-            className={`${metaDataStyles.add_mar_right}`}
+            className={metaDataStyles.add_mar_right}
             onClick={verifyAndDropAll}
             disabled={isLoading}
           >

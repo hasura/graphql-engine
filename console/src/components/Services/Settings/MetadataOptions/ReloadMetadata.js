@@ -8,6 +8,7 @@ import {
   showErrorNotification,
 } from '../../Common/Notification';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
+import metaDataStyles from '../Settings.scss';
 
 class ReloadMetadata extends Component {
   constructor(props) {
@@ -27,8 +28,6 @@ class ReloadMetadata extends Component {
   render() {
     const { dispatch } = this.props;
     const { isReloading, shouldReloadRemoteSchemas } = this.state;
-
-    const metaDataStyles = require('../Settings.scss');
 
     const reloadMetadataAndLoadInconsistentMetadata = e => {
       e.preventDefault();
