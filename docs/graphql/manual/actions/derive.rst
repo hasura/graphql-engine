@@ -1,3 +1,9 @@
+.. meta::
+   :description: Deriving Hasura actions
+   :keywords: hasura, docs, actions, derive
+
+.. _derive_actions:
+
 Deriving actions
 ================
 

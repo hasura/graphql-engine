@@ -2,7 +2,7 @@
    :description: Enable HTTPS with Hasura GraphQL engine
    :keywords: hasura, docs, deployment, https
 
-.. _enable-https:
+.. _enable_https:
 
 Enable HTTPS
 ============

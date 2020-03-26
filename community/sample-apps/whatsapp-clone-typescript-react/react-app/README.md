@@ -4,7 +4,7 @@
 
 Make sure to setup Hasura GraphQL Engine first.
 
-####Install Dependencies
+#### Install Dependencies
 
     yarn install
 
@@ -22,7 +22,7 @@ REACT_APP_AUTH_URL='<auth_server_url'>
 REACT_APP_ENV='dev'
 ```
 
-####Start the app
+#### Start the app
 
 ```
 yarn start
