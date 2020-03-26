@@ -16,6 +16,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Aliases: []string{"md"},
 		Short:   "Manage Hasura GraphQL Engine metadata saved in the database",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Root().PersistentPreRun(cmd, args)
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
