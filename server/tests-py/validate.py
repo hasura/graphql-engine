@@ -407,6 +407,7 @@ def collapse_order_not_selset(result_inp, query):
 # Use this since jsondiff seems to produce object/dict structures that can't
 # always be serialized to json.
 def stringify_keys(d):
+    """Recursively convert a dict's keys to strings."""
     if not isinstance(d, dict): return d
 
     def decode(k):
@@ -414,9 +415,6 @@ def stringify_keys(d):
         try:
             return k.decode("utf-8")
         except Exception:
-            try:
-                return repr(k)
-            except Exception:
-                raise
+            return repr(k)
 
     return { decode(k): stringify_keys(v) for k, v in d.items() }
