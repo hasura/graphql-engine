@@ -13,3 +13,4 @@ c/community:
 c/build-system:
 - .circleci/**/*
 - scripts/**/*
+- .github/**/*
