@@ -8,12 +8,14 @@
 package cli
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -91,6 +93,42 @@ func (s ServerAPIPaths) GetQueryParams() url.Values {
 	return vals
 }
 
+// ErrInvalidConfigVersion - if the config version is not valid
+var ErrInvalidConfigVersion error = fmt.Errorf("invalid config version")
+
+// NewConfigVersionValue returns ConfigVersion set with default value
+func NewConfigVersionValue(val ConfigVersion, p *ConfigVersion) *ConfigVersion {
+	*p = val
+	return p
+}
+
+// Set sets the value of the named command-line flag.
+func (c *ConfigVersion) Set(s string) error {
+	v, err := strconv.ParseInt(s, 0, 64)
+	*c = ConfigVersion(v)
+	if err != nil {
+		return err
+	}
+	if !c.IsValid() {
+		return ErrInvalidConfigVersion
+	}
+	return nil
+}
+
+// Type returns a string that uniquely represents this flag's type.
+func (c *ConfigVersion) Type() string {
+	return "int"
+}
+
+func (c *ConfigVersion) String() string {
+	return strconv.Itoa(int(*c))
+}
+
+// IsValid returns if its a valid config version
+func (c ConfigVersion) IsValid() bool {
+	return c != 0 && c <= V2
+}
+
 // ServerConfig has the config values required to contact the server
 type ServerConfig struct {
 	// Endpoint for the GraphQL Engine
@@ -125,17 +163,17 @@ func (s *ServerConfig) ParseEndpoint() error {
 // Config represents configuration required for the CLI to function
 type Config struct {
 	// Version of the config.
-	Version ConfigVersion `yaml:"version"`
+	Version ConfigVersion `yaml:"version,omitempty"`
 
 	// ServerConfig to be used by CLI to contact server.
 	ServerConfig `yaml:",inline"`
 
 	// MetadataDirectory defines the directory where the metadata files were stored.
-	MetadataDirectory string `yaml:"metadata_directory"`
+	MetadataDirectory string `yaml:"metadata_directory,omitempty"`
 	// MigrationsDirectory defines the directory where the migration files were stored.
 	MigrationsDirectory string `yaml:"migrations_directory,omitempty"`
 	// ActionConfig defines the config required to create or generate codegen for an action.
-	ActionConfig types.ActionExecutionConfig `yaml:"actions"`
+	ActionConfig *types.ActionExecutionConfig `yaml:"actions,omitempty"`
 }
 
 // ExecutionContext contains various contextual information required by the cli
@@ -480,7 +518,7 @@ func (ec *ExecutionContext) readConfig() error {
 		},
 		MetadataDirectory:   v.GetString("metadata_directory"),
 		MigrationsDirectory: v.GetString("migrations_directory"),
-		ActionConfig: types.ActionExecutionConfig{
+		ActionConfig: &types.ActionExecutionConfig{
 			Kind:                  v.GetString("actions.kind"),
 			HandlerWebhookBaseURL: v.GetString("actions.handler_webhook_baseurl"),
 			Codegen: &types.CodegenExecutionConfig{
@@ -489,6 +527,9 @@ func (ec *ExecutionContext) readConfig() error {
 				URI:       v.GetString("actions.codegen.uri"),
 			},
 		},
+	}
+	if !ec.Config.Version.IsValid() {
+		return ErrInvalidConfigVersion
 	}
 	return ec.Config.ServerConfig.ParseEndpoint()
 }
