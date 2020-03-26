@@ -13,7 +13,9 @@ from context import PytestConf
 if not PytestConf.config.getoption('--hge-webhook'):
     pytest.skip('--hge-webhook is missing, skipping webhook expiration tests', allow_module_level=True)
 
-@pytest.fixture(scope='method')
+usefixtures = pytest.mark.usefixtures
+
+@pytest.fixture(scope='function')
 def ws_conn_recreate(ws_client):
     ws_client.recreate_conn()
 
@@ -29,8 +31,15 @@ def connect_with(hge_ctx, ws_client, headers):
 
 EXPIRE_TIME_FORMAT = '%a, %d %b %Y %T GMT'
 
+
 @usefixtures('ws_conn_recreate')
 class TestWebhookSubscriptionExpiry(object):
+    def test_expiry_with_no_header(self, hge_ctx, ws_client):
+        # no expiry time => the connextion will remain alive
+        connect_with(hge_ctx, ws_client, {})
+        time.sleep(2)
+        assert ws_client.remote_closed == False, ws_client.remote_closed
+
     def test_expiry_with_expires_header(self, hge_ctx, ws_client):
         exp = datetime.now() + timedelta(seconds=3)
         connect_with(hge_ctx, ws_client, {
