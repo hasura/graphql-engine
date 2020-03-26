@@ -100,6 +100,11 @@ deploy_console() {
 
     cd "$ROOT/console"
     export VERSION=$(../scripts/get-console-assets-version.sh)
+    # if version is not set, then skip console
+    if [ -z "$VERSION" ]; then
+        echo "version is not, skipping console deployment"
+        return
+    fi
     export DIST_PATH="/build/_console_output"
     local GS_BUCKET_ROOT="gs://graphql-engine-cdn.hasura.io/console/assets/$VERSION"
     # assets are at /build/_console_output/assets/versioned, already gzipped
@@ -213,11 +218,12 @@ fi
 
 setup_gcloud
 
-RELEASE_BRANCH_REGEX="^release-v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
-if [[ "$CIRCLE_BRANCH" =~ $RELEASE_BRANCH_REGEX ]]; then
-    # release branch, only update console
-    echo "release branch, only deploying console"
+if [[ -z "$CIRCLE_TAG" ]]; then
+    # channel branch, only update console
+    echo "channel branch, only deploying console"
+    export EXPECTED_CHANNEL="${CIRCLE_BRANCH}"
     deploy_console
+    unset EXPECTED_CHANNEL
     exit
 fi
 
