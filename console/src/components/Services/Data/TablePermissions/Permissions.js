@@ -300,7 +300,9 @@ class Permissions extends Component {
           return {
             showCheckbox: !(role === 'admin' || isNewRole),
             disableCheckbox,
-            title: disableCheckbox ? 'No permissions exist' : 'Select for bulk actions',
+            title: disableCheckbox
+              ? 'No permissions exist'
+              : 'Select for bulk actions',
             bulkSelect: permissionsState.bulkSelect,
             onChange: dispatchBulkSelect,
             role,
