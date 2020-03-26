@@ -39,8 +39,7 @@ wait_for_port 9693
 export PORT=3000
 export NODE_ENV=development
 export DATA_API_URL=http://localhost:8080
-export API_HOST=http://localhost
-export API_PORT=9693
+export MIGRATE_API_URL=http://localhost:9693
 export CONSOLE_MODE=cli
 export DEV_DATA_API_URL=http://localhost:8080
 export URL_PREFIX=/

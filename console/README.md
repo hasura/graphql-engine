@@ -115,8 +115,7 @@ Here's an example `.env` file for `cli` mode:
 ```bash
 NODE_ENV=development
 PORT=3000
-API_HOST=http://localhost
-API_PORT=9693
+MIGRATE_API_URL=http://localhost:9693
 CDN_ASSETS=true
 ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
 ASSETS_VERSION=channel/stable/v1.0
