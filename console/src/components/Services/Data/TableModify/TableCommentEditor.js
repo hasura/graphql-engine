@@ -34,7 +34,7 @@ const TableCommentEditor = ({
     <div className={styles.add_pad_bottom}>
       <div className={styles.commentText}>Add a comment</div>
       <div onClick={editCommentClicked} className={styles.commentEdit}>
-        <Icon type="edit" />
+        <Icon type="edit" size={12} />
       </div>
     </div>
   );
