@@ -406,26 +406,15 @@ def collapse_order_not_selset(result_inp, query):
 
 # Use this since jsondiff seems to produce object/dict structures that can't
 # always be serialized to json.
-# Copy-pasta from: https://stackoverflow.com/q/12734517/176841
 def stringify_keys(d):
- """Convert a dict's keys to strings if they are not."""
- if isinstance(d, dict):
-   for key in d.keys():
-     # check inner dict
-     if isinstance(d[key], dict):
-         value = stringify_keys(d[key])
-     else:
-         value = d[key]
-     # convert nonstring to string if needed
-     if not isinstance(key, str):
-         try:
-             d[key.decode("utf-8")] = value
-         except Exception:
-             try:
-                 d[repr(key)] = value
-             except Exception:
-                 raise
+    """Recursively convert a dict's keys to strings."""
+    if not isinstance(d, dict): return d
 
-         # delete old key
-         del d[key]
- return d
+    def decode(k):
+        if isinstance(k, str): return k
+        try:
+            return k.decode("utf-8")
+        except Exception:
+            return repr(k)
+
+    return { decode(k): stringify_keys(v) for k, v in d.items() }
