@@ -44,6 +44,7 @@ module Hasura.RQL.Types.Table
        , getFieldInfoM
        , getPGColumnInfoM
        , getCols
+       , sortCols
        , getRels
        , getComputedFieldInfos
 
@@ -192,6 +193,10 @@ fieldInfoGraphQLNames = \case
 
 getCols :: FieldInfoMap FieldInfo -> [PGColumnInfo]
 getCols = mapMaybe (^? _FIColumn) . M.elems
+
+-- | Sort columns based on their ordinal position
+sortCols :: [PGColumnInfo] -> [PGColumnInfo]
+sortCols = sortBy (\l r -> compare (pgiPosition l) (pgiPosition r))
 
 getRels :: FieldInfoMap FieldInfo -> [RelInfo]
 getRels = mapMaybe (^? _FIRelationship) . M.elems
