@@ -92,12 +92,11 @@
   padding-bottom: 0px;
   position: relative;
 
-  i {
+  // Search icon
+  svg {
     position: absolute;
-    padding: 10px;
-    font-size: 14px;
-    padding-left: 8px;
-    color: #979797;
+    top: 20px;
+    left: 8px;
   }
 
   input {
