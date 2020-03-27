@@ -559,9 +559,14 @@ const ViewRows = ({
         const getRelCellContent = () => {
           let cellValue = '';
 
-          const getRelExpander = (value, className, clickHandler) => {
+          const getRelExpander = (value, className, clickHandler, testId) => {
             return (
-              <a href="#" className={className} onClick={clickHandler}>
+              <a
+                href="#"
+                onClick={clickHandler}
+                className={className}
+                data-test={testId}
+              >
                 {value}
               </a>
             );
@@ -579,7 +584,8 @@ const ViewRows = ({
             cellValue = getRelExpander(
               'Close',
               styles.expanded,
-              handleCloseClick
+              handleCloseClick,
+              `close-relationship-${rowIndex}`
             );
           } else {
             const currentFkey = rel.rel_def.foreign_key_constraint_on;
@@ -610,7 +616,12 @@ const ViewRows = ({
                 }
               };
 
-              cellValue = getRelExpander('View', '', handleViewClick);
+              cellValue = getRelExpander(
+                'View',
+                '',
+                handleViewClick,
+                `view-relationship-${rowIndex}`
+              );
             }
           }
 
