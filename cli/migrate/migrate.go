@@ -556,7 +556,6 @@ func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser) error {
 		m.databaseDrv.ResetQuery()
 		return m.unlockErr(err)
 	}
-
 	if version != 0 {
 		if err := m.databaseDrv.InsertVersion(int64(version)); err != nil {
 			m.databaseDrv.ResetQuery()

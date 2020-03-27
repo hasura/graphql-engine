@@ -16,7 +16,6 @@ import (
 
 	"github.com/parnurzeal/gorequest"
 
-	yaml "github.com/ghodss/yaml"
 	v1Client "github.com/hasura/graphql-engine/cli/client/v1"
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
@@ -57,7 +56,7 @@ type HasuraDB struct {
 	config         *Config
 	settings       []database.Setting
 	migrations     *database.Migrations
-	migrationQuery v1Client.SendBulkQueryPayload
+	migrationQuery *v1Client.BulkPayload
 	jsonPath       map[string]string
 	isLocked       bool
 	logger         *log.Logger
@@ -174,9 +173,8 @@ func (h *HasuraDB) Lock() error {
 		return database.ErrLocked
 	}
 
-	h.migrationQuery = v1Client.SendBulkQueryPayload{
+	h.migrationQuery = &v1Client.BulkPayload{
 		Type: "bulk",
-		Args: make([]v1Client.SendQueryPayload, 0),
 	}
 	h.jsonPath = make(map[string]string)
 	h.isLocked = true
@@ -195,12 +193,8 @@ func (h *HasuraDB) UnLock() error {
 	if len(h.migrationQuery.Args) == 0 {
 		return nil
 	}
-	for _, q := range h.migrationQuery.Args {
-		log.Printf("%+v", q)
-	}
-	_, _, v1ClientErr := h.config.hasuraClient.SendBulkQuery(&h.migrationQuery)
+	_, _, v1ClientErr := h.config.hasuraClient.Send(h.migrationQuery)
 	if v1ClientErr != nil {
-		log.Println("err:", v1ClientErr)
 		if v1ClientErr.Err != nil {
 			return v1ClientErr
 		}
@@ -258,27 +252,22 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 		if body == "" {
 			break
 		}
-		t := v1Client.SendQueryPayload{
+		runSQLPayload := &v1Client.RunSQLPayload{
 			Type: "run_sql",
-			Args: v1Client.SendQueryPayloadArgs{
+			Args: v1Client.RunSQLArgs{
 				SQL: string(body),
 			},
 		}
-		h.migrationQuery.Args = append(h.migrationQuery.Args, t)
+		h.migrationQuery.Args = append(h.migrationQuery.Args, runSQLPayload)
 		h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
 
 	case "meta":
-		var t []v1Client.SendQueryPayload
-		err := yaml.Unmarshal(migr, &t)
+		bulkQuery, err := v1Client.BulkPayloadMaker(migr)
 		if err != nil {
 			h.migrationQuery.ResetArgs()
 			return err
 		}
-
-		for _, v := range t {
-			h.migrationQuery.Args = append(h.migrationQuery.Args, v)
-			h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
-		}
+		h.migrationQuery = bulkQuery
 	}
 	return nil
 }
@@ -288,24 +277,24 @@ func (h *HasuraDB) ResetQuery() {
 }
 
 func (h *HasuraDB) InsertVersion(version int64) error {
-	query := v1Client.SendQueryPayload{
+	runSQLPayload := &v1Client.RunSQLPayload{
 		Type: "run_sql",
-		Args: v1Client.SendQueryPayloadArgs{
+		Args: v1Client.RunSQLArgs{
 			SQL: `INSERT INTO ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable) + ` (version, dirty) VALUES (` + strconv.FormatInt(version, 10) + `, ` + fmt.Sprintf("%t", false) + `)`,
 		},
 	}
-	h.migrationQuery.Args = append(h.migrationQuery.Args, query)
+	h.migrationQuery.Args = append(h.migrationQuery.Args, runSQLPayload)
 	return nil
 }
 
 func (h *HasuraDB) RemoveVersion(version int64) error {
-	query := v1Client.SendQueryPayload{
+	runSQLPayload := &v1Client.RunSQLPayload{
 		Type: "run_sql",
-		Args: v1Client.SendQueryPayloadArgs{
+		Args: v1Client.RunSQLArgs{
 			SQL: `DELETE FROM ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable) + ` WHERE version = ` + strconv.FormatInt(version, 10),
 		},
 	}
-	h.migrationQuery.Args = append(h.migrationQuery.Args, query)
+	h.migrationQuery.Args = append(h.migrationQuery.Args, runSQLPayload)
 	return nil
 }
 

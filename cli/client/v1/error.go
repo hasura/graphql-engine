@@ -8,16 +8,12 @@ import (
 
 type Error struct {
 	Err    error
-	ErrAPI APIError
+	ErrAPI *APIError
 }
 
 // ErrAPIJSON returns Error from API In JSON format
-func (e *Error) ErrAPIJSON() string {
-	return e.ErrAPI.JSON()
-}
-
-func (e *Error) ErrAPIHumanReadable() string {
-	return e.ErrAPI.Error()
+func (e *Error) ErrAPIJSON() error {
+	return fmt.Errorf("%s", e.ErrAPI.JSON())
 }
 
 func (e *Error) Error() string {
@@ -34,7 +30,7 @@ func E(args ...interface{}) *Error {
 		case error:
 			e.Err = a
 		case APIError:
-			e.ErrAPI = a
+			e.ErrAPI = &a
 		default:
 			e.Err = fmt.Errorf("%v", a)
 		}
@@ -45,8 +41,8 @@ func E(args ...interface{}) *Error {
 // APIError maps to JSON error messages returned by Hasura server
 type APIError struct {
 	// MigrationFile is used internally for hasuractl
-	migrationFile  string
-	migrationQuery string
+	MigrationFile  string
+	MigrationQuery string
 	Path           string            `json:"path"`
 	ErrorMessage   string            `json:"error"`
 	Internal       *SQLInternalError `json:"internal,omitempty"`
@@ -75,11 +71,11 @@ type PostgresError struct {
 func (h *APIError) Error() string {
 	var errorStrings []string
 	errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s (%s)", h.Code, h.ErrorMessage, h.Path))
-	if h.migrationFile != "" {
-		errorStrings = append(errorStrings, fmt.Sprintf("File: '%s'", h.migrationFile))
+	if h.MigrationFile != "" {
+		errorStrings = append(errorStrings, fmt.Sprintf("File: '%s'", h.MigrationFile))
 	}
-	if h.migrationQuery != "" {
-		errorStrings = append(errorStrings, h.migrationQuery)
+	if h.MigrationQuery != "" {
+		errorStrings = append(errorStrings, h.MigrationQuery)
 	}
 	if h.Internal != nil {
 		// postgres error

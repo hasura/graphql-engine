@@ -2,26 +2,31 @@ package v1
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
-
-	"github.com/parnurzeal/gorequest"
 )
 
+type PGDumpService service
+
+const pgDumpAPIEndpoint = "v1/alpha1/pgdump"
+
 // SendPGDumpQuery --
-func (client *Client) SendPGDumpQuery(m interface{}) (*http.Response, []byte, *Error) {
-	request := gorequest.New()
-
-	request = request.Post(client.PGDumpAPIEndpoint.String()).Send(m)
-
-	for headerName, headerValue := range client.Headers {
-		request.Set(headerName, headerValue)
+func (s *PGDumpService) SendPGDumpQuery(payload interface{}) (*http.Response, []byte, *Error) {
+	request, err := s.client.NewRequest("POST", pgDumpAPIEndpoint, payload)
+	if err != nil {
+		return nil, nil, E(err)
 	}
 
-	resp, body, errs := request.EndBytes()
-	if len(errs) != 0 {
-		return resp, body, E(errs[0])
+	resp, err := s.client.Do(request)
+	if err != nil {
+		return nil, nil, E(err)
 	}
+	defer resp.Body.Close()
 
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil, E(err)
+	}
 	if resp.StatusCode != http.StatusOK {
 		var apiError APIError
 		err := json.Unmarshal(body, &apiError)

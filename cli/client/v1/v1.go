@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // Client will implement the hasura V1 API
@@ -22,6 +24,7 @@ type Client struct {
 	// ones passed in url
 	defaultHeaders map[string]string
 	*QueryService
+	*PGDumpService
 }
 
 type service struct {
@@ -75,13 +78,13 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 		enc.SetEscapeHTML(false)
 		err := enc.Encode(body)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "error creating request")
 		}
 	}
 
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "error creating request")
 	}
 
 	if body != nil {
