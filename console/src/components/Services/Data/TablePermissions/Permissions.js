@@ -272,8 +272,8 @@ class Permissions extends Component {
         if (!hasPermissions) {
           note = (
             <div className={styles.permissionsLegend}>
-              <Icon type="info" />
-              &nbsp; You cannot insert/update into this view
+              <Icon type="info" mr="xs" />
+              You cannot insert/update into this view
             </div>
           );
         }
