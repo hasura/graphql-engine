@@ -48,6 +48,7 @@ https://github.com/hasura/cli-plugins-index
 Please open pull requests against this repo to add new plugins`,
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Root().PersistentPreRun(cmd, args)
 			return ec.PluginsConfig.Repo.EnsureCloned()
 		},
 	}
