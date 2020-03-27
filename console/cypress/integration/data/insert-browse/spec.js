@@ -479,15 +479,9 @@ export const checkViewRelationship = () => {
   cy.wait(1000);
   cy.get(getElementFromAlias('table-browse-rows')).click();
   cy.wait(1000);
-  cy.get('a')
-    .contains('View')
-    .first()
-    .click();
-  cy.wait(5000);
-  cy.get('a')
-    .contains('Close')
-    .first()
-    .click();
+  cy.get(getElementFromAlias('view-relationship-0')).click();
+  cy.wait(1000);
+  cy.get(getElementFromAlias('close-relationship-0')).click();
 };
 
 export const passDeleteRow = () => {
