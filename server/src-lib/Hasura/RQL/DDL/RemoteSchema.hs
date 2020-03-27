@@ -6,7 +6,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , fetchRemoteSchemas
   , addRemoteSchemaP1
   , addRemoteSchemaP2Setup
-  , addRemoteSchemaP2
+  , addRemoteSchemaToCatalog
   ) where
 
 import           Hasura.EncJSON
