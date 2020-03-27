@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from http import HTTPStatus
+from socketserver import ThreadingMixIn
 from urllib.parse import urlparse
 from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml 
 import threading
@@ -197,7 +198,14 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
                                         "body": req_json,
                                         "headers": req_headers})
 
-class EvtsWebhookServer(http.server.HTTPServer):
+# A very slightly more sane/performant http server.
+# See: https://stackoverflow.com/a/14089457/176841 
+#
+# TODO use this elsewhere, or better yet: use e.g. bottle + waitress
+class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
+    """Handle requests in a separate thread."""
+
+class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):
         self.resp_queue = queue.Queue(maxsize=1)
         self.error_queue = queue.Queue()
@@ -239,38 +247,39 @@ class HGECtxGQLServer:
 
 class HGECtx:
 
-    def __init__(self, hge_url, pg_url, hge_key, hge_webhook, webhook_insecure,
-                 hge_jwt_key_file, hge_jwt_conf, metadata_disabled,
-                 ws_read_cookie, hge_scale_url):
+    def __init__(self, hge_url, pg_url, config):
 
         self.http = requests.Session()
-        self.hge_key = hge_key
+        self. hge_key = config.getoption('--hge-key')
         self.hge_url = hge_url
         self.pg_url = pg_url
-        self.hge_webhook = hge_webhook
+        self.hge_webhook = config.getoption('--hge-webhook')
+        hge_jwt_key_file = config.getoption('--hge-jwt-key-file')
         if hge_jwt_key_file is None:
             self.hge_jwt_key = None
         else:
             with open(hge_jwt_key_file) as f:
                 self.hge_jwt_key = f.read()
-        self.hge_jwt_conf = hge_jwt_conf
-        self.webhook_insecure = webhook_insecure
-        self.metadata_disabled = metadata_disabled
+        self.hge_jwt_conf = config.getoption('--hge-jwt-conf')
+        self.webhook_insecure = config.getoption('--test-webhook-insecure')
+        self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False
 
         self.engine = create_engine(self.pg_url)
         self.meta = MetaData()
 
-        self.ws_read_cookie = ws_read_cookie
+        self.ws_read_cookie = config.getoption('--test-ws-init-cookie')
 
-        self.hge_scale_url = hge_scale_url
+        self.hge_scale_url = config.getoption('--test-hge-scale-url')
+        self.avoid_err_msg_checks = config.getoption('--avoid-error-message-checks')
 
         self.ws_client = GQLWsClient(self, '/v1/graphql')
+
 
         result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
         env_version = os.getenv('VERSION')
         self.version = env_version if env_version else result.stdout.decode('utf-8').strip()
-        if not self.metadata_disabled:
+        if not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
           try:
               st_code, resp = self.v1q_f('queries/clear_db.yaml')
           except requests.exceptions.RequestException as e:
