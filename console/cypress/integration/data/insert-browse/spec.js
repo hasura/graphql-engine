@@ -483,7 +483,7 @@ export const checkViewRelationship = () => {
     .contains('View')
     .first()
     .click();
-  cy.wait(1000);
+  cy.wait(5000);
   cy.get('a')
     .contains('Close')
     .first()
