@@ -3,15 +3,12 @@
     <link rel="icon" type="image/png" href="https://graphql-engine-cdn.hasura.io/console/assets/common/img/favicon_green.png" />
     <script>
       window.__env = {
-        apiHost: {{.apiHost}},
-        apiPort: "{{.apiPort}}",
         cliVersion: {{.cliVersion}},
+        migrateApiUrl: {{.migrateApiUrl}},
         dataApiUrl: {{.dataApiUrl}},
         dataApiVersion: {{.dataApiVersion}},
-        {{- if .hasAccessKey }}
-        accessKey: {{.adminSecret}},
-        {{ else }}
-        adminSecret: {{.adminSecret}},
+        {{- if .isAdminSecretSet }}
+        isAdminSecretSet: {{.isAdminSecretSet}},
         {{ end -}}
         urlPrefix: "/",
         consoleMode: "cli",
