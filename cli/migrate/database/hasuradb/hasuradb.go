@@ -12,11 +12,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pkg/errors"
+
+	"github.com/parnurzeal/gorequest"
+
 	yaml "github.com/ghodss/yaml"
+	v1Client "github.com/hasura/graphql-engine/cli/client/v1"
 	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/oliveagle/jsonpath"
-	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -46,13 +50,14 @@ type Config struct {
 	Headers         map[string]string
 	isCMD           bool
 	Plugins         types.MetadataPlugins
+	hasuraClient    *v1Client.Client
 }
 
 type HasuraDB struct {
 	config         *Config
 	settings       []database.Setting
 	migrations     *database.Migrations
-	migrationQuery HasuraInterfaceBulk
+	migrationQuery v1Client.SendBulkQueryPayload
 	jsonPath       map[string]string
 	isLocked       bool
 	logger         *log.Logger
@@ -111,7 +116,6 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 			}
 		}
 	}
-
 	config := &Config{
 		MigrationsTable: DefaultMigrationsTable,
 		SettingsTable:   DefaultSettingsTable,
@@ -134,6 +138,19 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 		Headers: headers,
 		Plugins: make(types.MetadataPlugins, 0),
 	}
+
+	hasuraAPIURL := nurl.URL{
+		Scheme: scheme,
+		Host:   hurl.Host,
+	}
+
+	// Setup client
+	client, err := v1Client.NewClient(hasuraAPIURL.String(), nil, config.Headers)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed creating a hasura API client")
+	}
+	config.hasuraClient = client
+
 	hx, err := WithInstance(config, logger)
 	if err != nil {
 		logger.Debug(err)
@@ -157,9 +174,9 @@ func (h *HasuraDB) Lock() error {
 		return database.ErrLocked
 	}
 
-	h.migrationQuery = HasuraInterfaceBulk{
+	h.migrationQuery = v1Client.SendBulkQueryPayload{
 		Type: "bulk",
-		Args: make([]interface{}, 0),
+		Args: make([]v1Client.SendQueryPayload, 0),
 	}
 	h.jsonPath = make(map[string]string)
 	h.isLocked = true
@@ -178,51 +195,54 @@ func (h *HasuraDB) UnLock() error {
 	if len(h.migrationQuery.Args) == 0 {
 		return nil
 	}
-
-	resp, body, err := h.sendv1Query(h.migrationQuery)
-	if err != nil {
-		return err
+	for _, q := range h.migrationQuery.Args {
+		log.Printf("%+v", q)
 	}
-
-	var horror HasuraError
-	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
+	_, _, v1ClientErr := h.config.hasuraClient.SendBulkQuery(&h.migrationQuery)
+	if v1ClientErr != nil {
+		log.Println("err:", v1ClientErr)
+		if v1ClientErr.Err != nil {
+			return v1ClientErr
 		}
 
-		// Handle migration version here
-		if horror.Path != "" {
-			jsonData, err := json.Marshal(h.migrationQuery)
-			if err != nil {
-				return err
-			}
-			var migrationQuery interface{}
-			err = json.Unmarshal(jsonData, &migrationQuery)
-			if err != nil {
-				return err
-			}
-			res, err := jsonpath.JsonPathLookup(migrationQuery, horror.Path)
-			if err == nil {
-				queryData, err := json.MarshalIndent(res, "", "    ")
+		if v1ClientErr.ErrAPI != nil {
+			// Handle migration version here
+			if v1ClientErr.ErrAPI.Path != "" {
+				jsonData, err := json.Marshal(h.migrationQuery)
 				if err != nil {
 					return err
 				}
-				horror.migrationQuery = string(queryData)
-			}
-			re1, err := regexp.Compile(`\$.args\[([0-9]+)\]*`)
-			if err != nil {
-				return err
-			}
-			result := re1.FindAllStringSubmatch(horror.Path, -1)
-			if len(result) != 0 {
-				migrationNumber, ok := h.jsonPath[result[0][1]]
-				if ok {
-					horror.migrationFile = migrationNumber
+				var migrationQuery interface{}
+				err = json.Unmarshal(jsonData, &migrationQuery)
+				if err != nil {
+					return err
+				}
+				res, err := jsonpath.JsonPathLookup(migrationQuery, v1ClientErr.ErrAPI.Path)
+				if err == nil {
+					queryData, err := json.MarshalIndent(res, "", "    ")
+					if err != nil {
+						return err
+					}
+					v1ClientErr.ErrAPI.MigrationQuery = string(queryData)
+				}
+				re1, err := regexp.Compile(`\$.args\[([0-9]+)\]*`)
+				if err != nil {
+					return err
+				}
+				result := re1.FindAllStringSubmatch(v1ClientErr.ErrAPI.Path, -1)
+				if len(result) != 0 {
+					migrationNumber, ok := h.jsonPath[result[0][1]]
+					if ok {
+						v1ClientErr.ErrAPI.MigrationFile = migrationNumber
+					}
 				}
 			}
+			if v1ClientErr.ErrAPI != nil && !h.config.isCMD {
+				// If the it's not executed by CLI dump the whole JSON error string
+				return v1ClientErr.ErrAPIJSON()
+			}
+			return v1ClientErr
 		}
-		return horror.Error(h.config.isCMD)
 	}
 	return nil
 }
@@ -238,9 +258,9 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 		if body == "" {
 			break
 		}
-		t := HasuraInterfaceQuery{
+		t := v1Client.SendQueryPayload{
 			Type: "run_sql",
-			Args: HasuraArgs{
+			Args: v1Client.SendQueryPayloadArgs{
 				SQL: string(body),
 			},
 		}
@@ -248,7 +268,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 		h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
 
 	case "meta":
-		var t []interface{}
+		var t []v1Client.SendQueryPayload
 		err := yaml.Unmarshal(migr, &t)
 		if err != nil {
 			h.migrationQuery.ResetArgs()
@@ -268,9 +288,9 @@ func (h *HasuraDB) ResetQuery() {
 }
 
 func (h *HasuraDB) InsertVersion(version int64) error {
-	query := HasuraQuery{
+	query := v1Client.SendQueryPayload{
 		Type: "run_sql",
-		Args: HasuraArgs{
+		Args: v1Client.SendQueryPayloadArgs{
 			SQL: `INSERT INTO ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable) + ` (version, dirty) VALUES (` + strconv.FormatInt(version, 10) + `, ` + fmt.Sprintf("%t", false) + `)`,
 		},
 	}
@@ -279,9 +299,9 @@ func (h *HasuraDB) InsertVersion(version int64) error {
 }
 
 func (h *HasuraDB) RemoveVersion(version int64) error {
-	query := HasuraQuery{
+	query := v1Client.SendQueryPayload{
 		Type: "run_sql",
-		Args: HasuraArgs{
+		Args: v1Client.SendQueryPayloadArgs{
 			SQL: `DELETE FROM ` + fmt.Sprintf("%s.%s", DefaultSchema, h.config.MigrationsTable) + ` WHERE version = ` + strconv.FormatInt(version, 10),
 		},
 	}
