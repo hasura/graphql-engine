@@ -109,7 +109,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
         <div className={styles.add_mar_top}>
           <div className={metaDataStyles.content_width}>
             <div className={styles.display_flex}>
-              <Icon type="check" size={20} color="green.original" mr="xs" />
+              <Icon type="check" size={16} color="green.original" mr="xs" />
               <h4>GraphQL Engine metadata is consistent with database</h4>
             </div>
           </div>
@@ -121,7 +121,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
       <div className={styles.add_mar_top}>
         <div className={metaDataStyles.content_width}>
           <div className={styles.display_flex}>
-            <Icon type="close" color="red.primary" size={20} mr="xs" />
+            <Icon type="close" color="red.primary" size={16} mr="xs" />
             <h4> GraphQL Engine metadata is inconsistent with database </h4>
           </div>
           <div className={styles.add_mar_top}>

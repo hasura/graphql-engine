@@ -20,10 +20,11 @@ const Sidebar = ({ location, metadata }) => {
 
   const consistentIcon =
     metadata.inconsistentObjects.length === 0 ? (
-      <Icon type="check" size={20} color="green.original" />
+      <Icon type="check" size={16} color="green.original" />
     ) : (
-      <Icon type="close" color="red.primary" size={20} />
+      <Icon type="close" color="red.primary" size={16} />
     );
+
   sectionsData.push({
     key: 'status',
     link: '/settings/metadata-status',
