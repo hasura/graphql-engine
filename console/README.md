@@ -108,7 +108,7 @@ Environment variables accepted in `cli` mode:
 - `DATA_API_URL`: The Hasura GraphQL engine url. (If you are running it on Heroku, it will look like <app-name\>.herokuapp.com, if you are running locally, it will look like http://localhost:<port\>)
 - `SERVER_VERSION`: Hasura GraphQL Engine server version
 - `CONSOLE_MODE`: In cli mode, it should be `cli`
-- `ADMIN_SECRET`: the admin secret passed via the CLI
+- `IS_ADMIN_SECRET_SET`: Is GraphQl engine configured with an admin secret (`true`/`false`)
 
 Here's an example `.env` file for `cli` mode:
 
@@ -124,7 +124,7 @@ URL_PREFIX=/
 DATA_API_URL=http://localhost:8080
 SERVER_VERSION=v1.0.0
 CONSOLE_MODE=cli
-ADMIN_SECRET=my-admin-secret
+IS_ADMIN_SECRET_SET=true
 ```
 
 ##### Run console development server:
