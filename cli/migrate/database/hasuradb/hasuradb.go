@@ -12,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ghodss/yaml"
+
 	"github.com/pkg/errors"
 
 	"github.com/parnurzeal/gorequest"
@@ -262,7 +264,7 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 		h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
 
 	case "meta":
-		bulkQuery, err := v1Client.BulkPayloadMaker(migr)
+		bulkQuery, err := v1Client.BulkPayloadMaker(migr, yaml.Unmarshal)
 		if err != nil {
 			h.migrationQuery.ResetArgs()
 			return err

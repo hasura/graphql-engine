@@ -123,13 +123,17 @@ func (s *QueryService) Send(payload SendPayload) (*http.Response, []byte, *Error
 
 // BulkPayloadMaker will accept an list of json []byte and make a BulkPayload
 // out of it by finding and assigning the correct underlying types to the interface
-func BulkPayloadMaker(payload []byte) (*BulkPayload, error) {
+// It also accepts an optional Unmarshal function, if not provided a default json.Unmarshal will be used.
+func BulkPayloadMaker(payload []byte, Unmarshal func(from []byte, to interface{}) error) (*BulkPayload, error) {
+	if Unmarshal == nil {
+		Unmarshal = json.Unmarshal
+	}
 	var bulkPayload = new(BulkPayload)
 	bulkPayload.Type = Bulk
 	var payloads = make([]map[string]interface{}, 0)
-	err := json.Unmarshal(payload, &payloads)
+	err := Unmarshal(payload, &payloads)
 	if err != nil {
-		return nil, errors.Wrapf(err, "cannot unmarshal payload %v", payload)
+		return nil, errors.Wrapf(err, "cannot unmarshal payload \n%v\n", string(payload))
 	}
 	for _, payload := range payloads {
 		payloadWithUnderlyingType, err := PayloadMaker(payload)
