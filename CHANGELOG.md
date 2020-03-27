@@ -18,13 +18,22 @@
 - console: add dropdown for enum fields in insert/edit rows page (close #3748) (#3810)
 
   If a table has a field referencing an enum table via a foreign key, then there will be a select dropdown with all possible enum values for that field on `Insert Row` and `Edit Row` views.
-  
+
 - console: generate unique exported metadata filenames (close #1772) (#4106)
 
-  Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.  
-  
+  Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.
+
+- cli(migrations-docker): add support for v2 config (close #3969)
+
+  A new CLI migrations image is introduced to account for the new CLI workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
+
 ### Other changes
 
+- cli: fix init command to generate correct config.yaml (close #4036)
+- cli: fix command path not being set in telemetry data (close #4127)
+- fix deploy script to upload github release assets
+- cli: fix parse error returned on console api (close #4126)
+- console and cli-ext: fix parsing of wrapped types in SDL
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
 - console: fix run_sql migration modal messaging (close #4020) (#4060)
 - docs: add note on pg versions for actions (#4034)
@@ -91,4 +100,8 @@
 - server: preserve cookie headers from sync action webhook (close #4021)
 - server: add 'ID' to default scalars in custom types (fix #4061)
 - console: add design system base components (#3866)
+- docs: add docs for redeliver_event API
+- option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
+- console: disable selecting roles without permissions for bulk actions (close #4178) (#4195)
+- console: show remote schema / event trigger intro sections always (#4044)
 - server: fix postgres query error when computed fields included in mutation response (fix #4035)
