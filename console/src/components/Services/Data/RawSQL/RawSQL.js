@@ -289,7 +289,9 @@ const RawSQL = ({
           <h4 className={styles.subheading_text}>SQL Result:</h4>
           <div className={styles.tableContainer}>
             <table
-              className={`table table-bordered table-striped table-hover ${styles.table} `}
+              className={`table table-bordered table-striped table-hover ${
+                styles.table
+              } `}
             >
               <thead>
                 <tr>{getTableHeadings()}</tr>
@@ -511,7 +513,9 @@ const RawSQL = ({
           </div>
 
           <div
-            className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
+            className={`${styles.padd_left_remove} ${
+              styles.add_mar_bottom
+            } col-xs-8`}
           >
             {getTrackThisSection()}
             {getMetadataCascadeSection()}
