@@ -1,5 +1,5 @@
 on: pull_request
-name: check_changelog
+name: Changelog Checker
 jobs:
   check_changelog:
     runs-on: ubuntu-latest
