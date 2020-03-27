@@ -105,6 +105,7 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
           onClick={() => {
             dispatch(removeFilter(i));
           }}
+          pt="xs"
           data-test={`clear-filter-${i}`}
         />
       );
@@ -152,6 +153,7 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
           onClick={() => {
             dispatch(removeOrder(i));
           }}
+          pt="xs"
           data-test={`clear-sorts-${i}`}
         />
       );
