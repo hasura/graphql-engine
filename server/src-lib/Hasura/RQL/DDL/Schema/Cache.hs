@@ -33,14 +33,14 @@ import           Data.List                                (nub)
 
 import qualified Hasura.GraphQL.Context                   as GC
 import qualified Hasura.GraphQL.Schema                    as GS
-import qualified Hasura.GraphQL.Validate.Types      as VT
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Hasura.GraphQL.Validate.Types            as VT
 import qualified Hasura.Incremental                       as Inc
+import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Hasura.Db
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.GraphQL.Schema.CustomTypes
-import           Hasura.GraphQL.Utils               (showNames)
+import           Hasura.GraphQL.Utils                     (showNames)
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
@@ -55,7 +55,7 @@ import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.Utils
+import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
@@ -146,7 +146,8 @@ instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
       -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
       -- hanging onto unnecessary keys.
       pruneInvalidationKeys schemaCache = over ikRemoteSchemas $ M.filterWithKey \name _ ->
-        M.member name (scRemoteSchemas schemaCache)
+        -- see Note [Keep invalidation keys for inconsistent objects]
+        name `elem` getAllRemoteSchemas schemaCache
 
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
@@ -503,3 +504,16 @@ withMetadataCheck cascade action = do
         diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
         newInconsistentObjects = nub $ concatMap toList $
           M.elems (currentInconsMeta `diffInconsistentObjects` originalInconsMeta)
+
+{- Note [Keep invalidation keys for inconsistent objects]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+After building the schema cache, we prune InvalidationKeys for objects
+that no longer exist in the schema to avoid leaking memory for objects
+that have been dropped. However, note that we *don’t* want to drop
+keys for objects that are simply inconsistent!
+
+Why? The object is still in the metadata, so next time we reload it,
+we’ll reprocess that object. We want to reuse the cache if its
+definition hasn’t changed, but if we dropped the invalidation key, it
+will incorrectly be reprocessed (since the invalidation key changed
+from present to absent). -}

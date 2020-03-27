@@ -238,3 +238,44 @@ export const getEnumOptionsQuery = (request, currentSchema) => {
     },
   };
 };
+
+export const inconsistentObjectsQuery = {
+  type: 'get_inconsistent_metadata',
+  args: {},
+};
+
+export const dropInconsistentObjectsQuery = {
+  type: 'drop_inconsistent_metadata',
+  args: {},
+};
+
+export const getReloadMetadataQuery = shouldReloadRemoteSchemas => ({
+  type: 'reload_metadata',
+  args: {
+    reload_remote_schemas: shouldReloadRemoteSchemas,
+  },
+});
+
+export const getReloadRemoteSchemaCacheQuery = remoteSchemaName => {
+  return {
+    type: 'reload_remote_schema',
+    args: {
+      name: remoteSchemaName,
+    },
+  };
+};
+
+export const exportMetadataQuery = {
+  type: 'export_metadata',
+  args: {},
+};
+
+export const generateReplaceMetadataQuery = metadataJson => ({
+  type: 'replace_metadata',
+  args: metadataJson,
+});
+
+export const resetMetadataQuery = {
+  type: 'clear_metadata',
+  args: {},
+};
