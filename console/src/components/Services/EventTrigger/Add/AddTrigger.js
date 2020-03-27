@@ -251,7 +251,7 @@ class AddTrigger extends Component {
         return (
           <div
             key={i}
-            className={`${styles.padd_remove} ${styles.wordBreakAll} style col-md-4`}
+            className={`${styles.padd_remove} ${styles.columnListElement}`}
           >
             <div className={'checkbox '}>
               <label>
