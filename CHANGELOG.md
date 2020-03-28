@@ -105,3 +105,4 @@
 - console: disable selecting roles without permissions for bulk actions (close #4178) (#4195)
 - console: show remote schema / event trigger intro sections always (#4044)
 - server: fix postgres query error when computed fields included in mutation response (fix #4035)
+- console: Fix JSON(B) rendering in data (close #4201) (#4221)
