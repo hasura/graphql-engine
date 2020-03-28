@@ -1,9 +1,7 @@
-on:
-  pull_request:
-    types: [labeled, unlabeled, opened, synchronize, reopened]
-name: Changelog Checker
+on: pull_request
+name: changelog 
 jobs:
-  check_changelog:
+  check:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/github-script@0.9.0
