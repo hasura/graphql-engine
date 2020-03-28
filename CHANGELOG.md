@@ -64,10 +64,10 @@ Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/ma
 - console: add dropdown for enum fields in insert/edit rows page (close #3748) (#3810)
 
   If a table has a field referencing an enum table via a foreign key, then there will be a select dropdown with all possible enum values for that field on `Insert Row` and `Edit Row` views.
-  
+
 - console: generate unique exported metadata filenames (close #1772) (#4106)
 
-  Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.  
+  Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.
 
 - cli(migrations-docker): add support for v2 config (close #3969)
 
