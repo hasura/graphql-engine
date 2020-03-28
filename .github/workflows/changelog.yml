@@ -12,7 +12,6 @@ jobs:
             repo: context.repo.repo,
             issue_number: context.payload.pull_request.number,
           });
-          console.log(labels);
           for (const label of labels.data) {
             if (label.name === 'no-changelog-required') {
               return;
@@ -24,7 +23,7 @@ jobs:
             pull_number: context.payload.pull_request.number,
           });
           let changeLogPresent = false; 
-          for (const file of files) {
+          for (const file of files.data) {
             if (file.filename === 'CHANGELOG.md') {
               changeLogPresent = true;
               break;
