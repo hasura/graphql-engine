@@ -13,7 +13,7 @@ jobs:
             issue_number: context.payload.pull_request.number,
           });
           for (const label of labels) {
-            if (label === 'no-changelog-required') {
+            if (label.name === 'no-changelog-required') {
               return;
             }
           }
