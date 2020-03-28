@@ -6,12 +6,14 @@ jobs:
     steps:
     - uses: actions/github-script@0.9.0
       with:
+        github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
           const labels = await github.issues.listLabelsOnIssue({
             owner: context.repo.owner,
             repo: context.repo.repo,
             issue_number: context.payload.pull_request.number,
           });
+          console.log(labels);
           for (const label of labels) {
             if (label.name === 'no-changelog-required') {
               return;
