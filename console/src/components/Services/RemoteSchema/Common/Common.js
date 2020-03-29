@@ -64,7 +64,7 @@ const Common = props => {
       <React.Fragment>
         <div className={styles.subheading_text}>
           GraphQL server timeout
-          <ToolTip message={tooltips.timeoutConf} />
+          <ToolTip message={tooltips.timeoutConf} ml="sm" />
         </div>
         <label
           className={
@@ -92,7 +92,7 @@ const Common = props => {
     <div className={styles.CommonWrapper}>
       <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
         Remote Schema name *
-        <ToolTip message={tooltips.schema} />
+        <ToolTip message={tooltips.schema} ml="sm" />
       </div>
       <label
         className={
@@ -116,7 +116,7 @@ const Common = props => {
       <hr />
       <div className={styles.subheading_text}>
         GraphQL server URL *
-        <ToolTip message={tooltips.graphqlurl} />
+        <ToolTip message={tooltips.graphqlurl} ml="sm" />
       </div>
       <div className={styles.wd_300}>
         <DropdownButton
@@ -168,11 +168,11 @@ const Common = props => {
           />
           <span>Forward all headers from client</span>
         </label>
-        <ToolTip message={tooltips.clientHeaderForward} />
+        <ToolTip message={tooltips.clientHeaderForward} ml="sm" />
       </div>
       <div className={styles.subheading_text + ' ' + styles.font_normal}>
         Additional headers:
-        <ToolTip message={tooltips.additionalHeaders} />
+        <ToolTip message={tooltips.additionalHeaders} ml="sm" />
       </div>
       <CommonHeader
         eventPrefix="REMOTE_SCHEMA"
