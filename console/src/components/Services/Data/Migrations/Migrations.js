@@ -1,17 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
-
 import Toggle from 'react-toggle';
 import 'react-toggle/style.css';
-import '../../../Common/ReactToggle/ReactToggleOverrides.css';
 
 import { updateMigrationModeStatus } from '../../../Main/Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { Heading } from '../../../UIKit/atoms';
+import '../../../Common/ReactToggle/ReactToggleOverrides.css';
+import styles from './Migrations.scss';
 
 const Migrations = ({ dispatch, migrationMode }) => {
-  const styles = require('./Migrations.scss');
-
   const handleMigrationModeToggle = () => {
     const isOk = getConfirmation();
     if (isOk) {
@@ -47,9 +46,9 @@ const Migrations = ({ dispatch, migrationMode }) => {
     >
       <Helmet title="Migrations - Data | Hasura" />
       <div className={styles.subHeader}>
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
+        <Heading as="h2" pb="0px" fontSize="18px">
           Database Migrations
-        </h2>
+        </Heading>
         <div className="clearfix" />
       </div>
       <div className={styles.add_mar_top}>

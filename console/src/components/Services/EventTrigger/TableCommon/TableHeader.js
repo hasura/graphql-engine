@@ -1,10 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
+import { Heading } from '../../../UIKit/atoms';
+import styles from './EventTable.scss';
 
 const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
-  const styles = require('./EventTable.scss');
   let capitalised = tabName;
   capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
   let showCount = '';
@@ -54,7 +56,9 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
       />
       <div className={styles.subHeader}>
         <BreadCrumb breadCrumbs={getBreadCrumbs()} />
-        <h2 className={styles.heading_text}>{triggerName}</h2>
+        <Heading as="h2" fontSize="18px" pb="20px">
+          {triggerName}
+        </Heading>
         <div className={styles.nav}>
           <ul className="nav nav-pills">
             <li
@@ -117,4 +121,5 @@ const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
     </div>
   );
 };
+
 export default TableHeader;

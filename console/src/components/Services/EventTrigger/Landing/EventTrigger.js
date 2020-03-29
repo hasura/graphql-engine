@@ -1,16 +1,17 @@
 /* eslint-disable space-infix-ops */
 /* eslint-disable no-loop-func  */
-
-import PropTypes from 'prop-types';
-
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+
 import { loadTriggers } from '../EventActions';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 import TryItOut from '../../Common/Landing/TryItOut';
+import { Heading } from '../../../UIKit/atoms';
+import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 
 const appPrefix = globals.urlPrefix + '/events';
 
@@ -24,8 +25,6 @@ class EventTrigger extends Component {
 
   render() {
     const { dispatch, readOnlyMode } = this.props;
-
-    const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
     const queryDefinition = `mutation {
   insert_user(objects: [{name: "testuser"}] ){
@@ -71,9 +70,9 @@ class EventTrigger extends Component {
         <div className={styles.padd_left}>
           <Helmet title="Event Triggers | Hasura" />
           <div className={styles.display_flex}>
-            <h2 className={`${styles.headerText} ${styles.inline_block}`}>
+            <Heading as="h2" display="inline-block" fontSize="h2">
               Event Triggers
-            </h2>
+            </Heading>
             {getAddBtn()}
           </div>
           <hr />

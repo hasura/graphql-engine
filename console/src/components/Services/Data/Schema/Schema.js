@@ -38,7 +38,8 @@ import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import RawSqlButton from '../Common/Components/RawSqlButton';
-import { Icon, ToolTip } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading } from '../../../UIKit/atoms';
+import styles from '../../../Common/Common.scss';
 
 class Schema extends Component {
   constructor(props) {
@@ -69,8 +70,6 @@ class Schema extends Component {
       nonTrackableFunctions,
       trackedFunctions,
     } = this.props;
-
-    const styles = require('../../../Common/Common.scss');
 
     const handleSchemaChange = e => {
       dispatch(updateCurrentSchema(e.target.value));
@@ -690,9 +689,9 @@ class Schema extends Component {
         <div className={styles.padd_left}>
           <Helmet title="Schema - Data | Hasura" />
           <div className={styles.display_flex}>
-            <h2 className={`${styles.headerText} ${styles.display_inline}`}>
+            <Heading as="h2" display="inline-block" fontSize="h2">
               Schema
-            </h2>
+            </Heading>
             {getCreateBtn()}
           </div>
           {getCurrentSchemaSection()}

@@ -39,7 +39,7 @@ import {
   getTableName,
   getTrackedTables,
 } from '../../../Common/utils/pgUtils';
-import { Icon, ToolTip } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading } from '../../../UIKit/atoms';
 import styles from '../TableCommon/EventTable.scss';
 
 class AddTrigger extends Component {
@@ -361,7 +361,9 @@ class AddTrigger extends Component {
       >
         <Helmet title="Create Trigger - Events | Hasura" />
         <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Create a new event trigger</h2>
+          <Heading as="h2" fontSize="18px" pb="20px">
+            Create a new event trigger
+          </Heading>
           <div className="clearfix" />
         </div>
         <br />

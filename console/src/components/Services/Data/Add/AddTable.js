@@ -53,7 +53,7 @@ import {
   uniqueKeyDescription,
   checkConstraintsDescription,
 } from '../Common/TooltipMessages';
-import { ToolTip } from '../../../UIKit/atoms';
+import { ToolTip, Heading } from '../../../UIKit/atoms';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 /* AddTable is a wrapper which wraps
@@ -432,7 +432,9 @@ class AddTable extends Component {
       >
         <Helmet title="Add Table - Data | Hasura" />
         <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add a new table</h2>
+          <Heading as="h2" fontSize="18px" pb="20px">
+            Add a new table
+          </Heading>
           <div className="clearfix" />
         </div>
         <br />

@@ -23,7 +23,7 @@ import {
   ACE_EDITOR_FONT_SIZE,
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
-import { Icon, ToolTip } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading } from '../../../UIKit/atoms';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const RawSQL = ({
@@ -469,9 +469,9 @@ const RawSQL = ({
     >
       <Helmet title="Run SQL - Data | Hasura" />
       <div className={styles.subHeader}>
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
+        <Heading as="h2" pb="0px" fontSize="18px">
           Raw SQL
-        </h2>
+        </Heading>
         <div className="clearfix" />
       </div>
       <div className={styles.add_mar_top}>

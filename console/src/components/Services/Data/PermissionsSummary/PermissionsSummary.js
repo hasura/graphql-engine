@@ -5,7 +5,7 @@ import { push } from 'react-router-redux';
 
 import Modal from '../../../Common/Modal/Modal';
 import Button from '../../../Common/Button/Button';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Heading } from '../../../UIKit/atoms';
 
 import { getTablePermissionsRoute } from '../../../Common/utils/routesUtils';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
@@ -1044,11 +1044,9 @@ class PermissionsSummary extends Component {
         className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
       >
         <Helmet title="Permissions Summary | Hasura" />
-        <div className={styles.add_mar_bottom}>
-          <h2 className={styles.heading_text}>
-            Permissions summary - {currentSchema}
-          </h2>
-        </div>
+        <Heading as="h2" fontSize="18px" pb="20px" mb="20px">
+          Permissions summary - {currentSchema}
+        </Heading>
 
         {getTable()}
 

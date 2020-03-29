@@ -1,11 +1,14 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
+
 import {
   setTableName,
   setDefaults,
   addExistingTableSql,
 } from './AddExistingTableViewActions';
+import { Heading } from '../../../UIKit/atoms';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 class AddExistingTableView extends Component {
   constructor(props) {
@@ -15,7 +18,6 @@ class AddExistingTableView extends Component {
 
   render() {
     const { dispatch, ongoingRequest, lastError, lastSuccess } = this.props;
-    const styles = require('../../../Common/TableCommon/Table.scss');
 
     let alert = null;
     if (ongoingRequest) {
@@ -52,7 +54,9 @@ class AddExistingTableView extends Component {
       >
         <Helmet title="Add Existing Table/View - Data | Hasura" />
         <div className={styles.subHeader}>
-          <h2 className={styles.heading_text}>Add an existing table or view</h2>
+          <Heading as="h2" fontSize="18px" pb="20px">
+            Add an existing table or view
+          </Heading>
           <div className="clearfix" />
         </div>
         <div className={'container-fluid ' + styles.padd_left_remove}>
