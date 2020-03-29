@@ -3,7 +3,7 @@ import React from 'react';
 import { Icon } from '../../UIKit/atoms';
 import styles from '../Common.scss';
 
-class Heading extends React.Component {
+class EditableHeading extends React.Component {
   state = {
     text: this.props.currentValue,
     isEditting: false,
@@ -91,4 +91,4 @@ class Heading extends React.Component {
   };
 }
 
-export default Heading;
+export default EditableHeading;
