@@ -2,15 +2,13 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
-
 import globals from '../../../Globals';
-
-import styles from './About.scss';
 import requestAction from '../../../utils/requestAction';
 import { showErrorNotification } from '../Common/Notification';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { versionGT } from '../../../helpers/versionUtils';
-import { Spinner } from '../../UIKit/atoms';
+import { Spinner, Heading } from '../../UIKit/atoms';
+import styles from './About.scss';
 
 class About extends Component {
   state = {
@@ -138,7 +136,9 @@ class About extends Component {
       <div className={`container-fluid ${styles.full_container}`}>
         <div className={styles.subHeader}>
           <Helmet title={'About | Hasura'} />
-          <h2 className={styles.headerText}>About</h2>
+          <Heading as="h2" fontSize="h2">
+            About
+          </Heading>
           <div className={styles.wd60}>
             <div className={styles.add_mar_top}>
               {getServerVersionSection()}

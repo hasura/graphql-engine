@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ToolTip } from '../../../../UIKit/atoms';
+import { ToolTip, Heading } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const editorLabel = 'Handler';
@@ -9,12 +9,10 @@ const editorTooltip = 'The HTTP handler for the action';
 const HandlerEditor = ({ value, onChange, className }) => {
   return (
     <div className={className || ''}>
-      <h2
-        className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
-      >
+      <Heading as="h2" fontSize="15px" mt="0px" mb="xs">
         {editorLabel}
         <ToolTip message={editorTooltip} ml="sm" />
-      </h2>
+      </Heading>
       <input
         type="text"
         value={value}

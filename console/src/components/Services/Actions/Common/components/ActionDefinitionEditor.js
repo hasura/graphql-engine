@@ -2,7 +2,7 @@ import React from 'react';
 import { parse as sdlParse } from 'graphql/language/parser';
 
 import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
-import { Icon, ToolTip } from '../../../../UIKit/atoms';
+import { Icon, ToolTip, Heading } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const editorLabel = 'Action definition';
@@ -52,12 +52,10 @@ const ActionDefinitionEditor = ({
 
   return (
     <div className={`${className || ''}`}>
-      <h2
-        className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
-      >
+      <Heading as="h2" pb="20px" fontSize="15px" mt="0px" mb="xs">
         {editorLabel}
         <ToolTip message={editorTooltip} ml="sm" />
-      </h2>
+      </Heading>
       <div className={styles.sdlEditorContainer}>
         <div
           className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}

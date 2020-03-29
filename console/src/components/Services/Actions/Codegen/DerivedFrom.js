@@ -1,7 +1,7 @@
 import React from 'react';
 
 import GraphQLEditor from '../../../Common/AceEditor/SDLEditor';
-import { ToolTip } from '../../../UIKit/atoms';
+import { ToolTip, Heading } from '../../../UIKit/atoms';
 import styles from '../Common/components/Styles.scss';
 
 const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
@@ -12,10 +12,10 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
 
   return (
     <div>
-      <h2 className={`${styles.subheading_text} ${styles.add_mar_bottom}`}>
+      <Heading as="h2" pb="20px" fontSize="15px" mt="0px" mb="xs">
         Derived mutation
         <ToolTip message={tooltipText} ml="sm" />
-      </h2>
+      </Heading>
       <div className={`${styles.add_mar_bottom}`}>
         <label className={`${styles.cursorPointer}`} onClick={toggleDerivation}>
           <input
