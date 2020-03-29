@@ -52,7 +52,7 @@ class EditableHeading extends React.Component {
     if (!isEditting) {
       return (
         <div className={styles.editable_heading_text}>
-          <Heading as="h2" fontSize="18px" ml="sm">
+          <Heading as="h2" fontSize="18px" mr="sm">
             {currentValue}
           </Heading>
           <div
