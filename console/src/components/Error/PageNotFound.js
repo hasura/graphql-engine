@@ -1,50 +1,47 @@
+import React from 'react';
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
 import { connect } from 'react-redux';
-
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+
 import globals from '../../Globals';
+import { Heading } from '../UIKit/atoms';
+import styles from './ErrorPage.scss';
 
 export class NotFoundError extends Error {}
 
-class PageNotFound extends Component {
-  render() {
-    const errorImage = `${globals.assetsPath}/common/img/hasura_icon_green.svg`;
-    const styles = require('./ErrorPage.scss');
+const errorImage = `${globals.assetsPath}/common/img/hasura_icon_green.svg`;
 
-    const { resetCallback } = this.props;
-
-    return (
-      <div className={styles.viewContainer}>
-        <Helmet title="404 - Page Not Found | Hasura" />
-        <div className={'container ' + styles.centerContent}>
-          <div className={'row ' + styles.message}>
-            <div className="col-xs-8">
-              <h1>404</h1>
-              <br />
-              <div>
-                This page doesn't exist. Head back{' '}
-                <Link to="/" onClick={resetCallback}>
-                  Home
-                </Link>
-                .
-              </div>
-            </div>
-            <div className="col-xs-4">
-              <img
-                src={errorImage}
-                className="img-responsive"
-                name="hasura"
-                title="We think you are lost!"
-              />
-            </div>
+const PageNotFound = ({ resetCallback }) => (
+  <div className={styles.viewContainer}>
+    <Helmet title="404 - Page Not Found | Hasura" />
+    <div className={'container ' + styles.centerContent}>
+      <div className={'row ' + styles.message}>
+        <div className="col-xs-8">
+          <Heading fontSize="54px" fontWeight="bold">
+            404
+          </Heading>
+          <br />
+          <div>
+            This page doesn't exist. Head back{' '}
+            <Link to="/" onClick={resetCallback}>
+              Home
+            </Link>
+            .
           </div>
         </div>
+        <div className="col-xs-4">
+          <img
+            src={errorImage}
+            className="img-responsive"
+            name="hasura"
+            title="We think you are lost!"
+          />
+        </div>
       </div>
-    );
-  }
-}
+    </div>
+  </div>
+);
 
 PageNotFound.propTypes = {
   dispatch: PropTypes.func.isRequired,
