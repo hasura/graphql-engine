@@ -18,9 +18,7 @@ const PageNotFound = ({ resetCallback }) => (
     <div className={'container ' + styles.centerContent}>
       <div className={'row ' + styles.message}>
         <div className="col-xs-8">
-          <Heading fontSize="54px" fontWeight="bold">
-            404
-          </Heading>
+          <Heading fontSize="54px">404</Heading>
           <br />
           <div>
             This page doesn't exist. Head back{' '}

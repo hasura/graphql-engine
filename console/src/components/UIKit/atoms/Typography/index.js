@@ -6,6 +6,7 @@ export const Heading = StyledHeading;
 
 Heading.defaultProps = {
   color: 'black.text',
+  fontWeight: 'bold',
 };
 
 /**

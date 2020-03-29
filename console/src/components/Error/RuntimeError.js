@@ -16,9 +16,7 @@ const RuntimeError = ({ resetCallback, error }) => (
     <div className={'container ' + styles.centerContent}>
       <div className={'row ' + styles.message}>
         <div className="col-xs-8">
-          <Heading fontWeight="bold" fontSize="54px">
-            Error
-          </Heading>
+          <Heading fontSize="54px">Error</Heading>
           <br />
           <div>
             Something went wrong. Head back{' '}

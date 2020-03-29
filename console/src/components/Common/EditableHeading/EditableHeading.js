@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Icon } from '../../UIKit/atoms';
+import { Icon, Heading } from '../../UIKit/atoms';
 import styles from '../Common.scss';
 
 class EditableHeading extends React.Component {
@@ -38,7 +38,11 @@ class EditableHeading extends React.Component {
     const { text, isEditting } = this.state;
 
     if (!editable) {
-      return <h2 className={styles.heading_text}>{currentValue}</h2>;
+      return (
+        <Heading as="h2" fontSize="18px" pb="20px">
+          {currentValue}
+        </Heading>
+      );
     }
 
     if (!save) {
@@ -48,7 +52,9 @@ class EditableHeading extends React.Component {
     if (!isEditting) {
       return (
         <div className={styles.editable_heading_text}>
-          <h2>{currentValue}</h2>
+          <Heading as="h2" fontSize="18px" ml="sm">
+            {currentValue}
+          </Heading>
           <div
             onClick={this.toggleEditting}
             className={styles.editable_heading_action}
