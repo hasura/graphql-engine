@@ -1,11 +1,12 @@
 import React from 'react';
-import Common from '../Common/Common';
 
+import Common from '../Common/Common';
 import { addRemoteSchema, RESET } from './addRemoteSchemaReducer';
 import Helmet from 'react-helmet';
 import Button from '../../../Common/Button/Button';
-
 import { pageTitle } from '../constants';
+import { Heading } from '../../../UIKit/atoms';
+import styles from '../RemoteSchema.scss';
 
 class Add extends React.Component {
   componentWillUnmount() {
@@ -13,14 +14,14 @@ class Add extends React.Component {
   }
 
   render() {
-    const styles = require('../RemoteSchema.scss');
-
     const { isRequesting, dispatch } = this.props;
 
     return (
       <div className={styles.addWrapper}>
         <Helmet title={`Add ${pageTitle} - ${pageTitle}s | Hasura`} />
-        <div className={styles.heading_text}>Add a new remote schema</div>
+        <Heading as="h2" fontSize="18px" pb="20px">
+          Add a new remote schema
+        </Heading>
         <form
           onSubmit={e => {
             e.preventDefault();
