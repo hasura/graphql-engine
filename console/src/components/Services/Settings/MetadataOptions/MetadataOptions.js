@@ -1,12 +1,13 @@
 import React from 'react';
+
 import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
+import { Heading } from '../../../UIKit/atoms';
+import styles from '../Settings.scss';
 
 const MetadataOptions = props => {
-  const styles = require('../Settings.scss');
-
   const getMetadataImportExportSection = () => {
     return (
       <div>
@@ -64,9 +65,9 @@ const MetadataOptions = props => {
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
     >
       <div className={styles.subHeader}>
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
+        <Heading as="h2" pb="0px" fontSize="18px">
           Hasura Metadata Actions
-        </h2>
+        </Heading>
         <div className="clearfix" />
         <div className={styles.content_width}>
           Hasura metadata stores information about your tables, relationships,

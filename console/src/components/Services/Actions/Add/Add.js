@@ -1,6 +1,6 @@
 import React from 'react';
-import styles from './Styles.scss';
 import Helmet from 'react-helmet';
+
 import HandlerEditor from '../Common/components/HandlerEditor';
 import KindEditor from '../Common/components/KindEditor';
 import ActionDefinitionEditor from '../Common/components/ActionDefinitionEditor';
@@ -18,6 +18,7 @@ import {
 } from './reducer';
 import { createAction } from '../ServerIO';
 import { getUrlSearchParamValue } from '../../../Common/utils/jsUtils';
+import styles from './Styles.scss';
 
 const AddAction = ({
   handler,

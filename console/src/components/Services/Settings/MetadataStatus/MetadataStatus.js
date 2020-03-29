@@ -6,7 +6,7 @@ import { permissionTypes, getTableNameFromDef } from '../utils';
 import metaDataStyles from '../Settings.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ReloadMetadata from '../MetadataOptions/ReloadMetadata';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Heading } from '../../../UIKit/atoms';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
@@ -205,9 +205,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
       <div
         className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${metaDataStyles.metadata_wrapper} container-fluid`}
       >
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
+        <Heading as="h2" pb="0px" fontSize="18px">
           Hasura Metadata Status
-        </h2>
+        </Heading>
         {content()}
       </div>
     </div>
