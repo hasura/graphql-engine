@@ -13,6 +13,7 @@ args:
     sql: |
       drop table address;
       drop table resident;
+      drop function fetch_articles(text,author);
       drop table article;
       drop table blog;
       drop table author;

@@ -120,7 +120,7 @@ class DataSubSidebar extends React.Component {
                 )}
                 data-test={tableName}
               >
-                <Icon type="table" size={12} mr="xs" />
+                <Icon type="table" size={13} mr="xs" mb="-1px" />
                 {displayTableName(table)}
               </Link>
               <GqlCompatibilityWarning

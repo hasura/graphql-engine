@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { Icon } from '../../UIKit/atoms';
+import styles from './CollapsibleToggle.scss';
 
 /**
  *  Accepts following props
@@ -35,8 +36,6 @@ class CollapsibleToggle extends React.Component {
   }
 
   render() {
-    const styles = require('./CollapsibleToggle.scss');
-
     const { title, children, testId, useDefaultTitleStyle } = this.props;
 
     const { isOpen, toggleHandler } = this.state;
@@ -64,16 +63,13 @@ class CollapsibleToggle extends React.Component {
           data-test={testId}
           onClick={toggleHandler}
         >
-          <span className={styles.collapsibleIndicatorWrapper}>
-            <Icon
-              type="right"
-              size={12}
-              mr="10px"
-              className={`${styles.collapsibleIndicator} ${isOpen &&
-                styles.collapsibleIndicatorOpen}`}
-            />
-          </span>
-
+          <Icon
+            type="right"
+            size={12}
+            mr="10px"
+            className={`${styles.collapsibleIndicator} ${isOpen &&
+              styles.collapsibleIndicatorOpen}`}
+          />
           <span className={styles.titleWrapper}>{getTitle()}</span>
         </div>
 

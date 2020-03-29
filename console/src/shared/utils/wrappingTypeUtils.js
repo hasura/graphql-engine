@@ -12,6 +12,7 @@ export const unwrapType = wrappedTypename => {
   let _typename = wrappedTypename;
   const typeWrapperStack = [];
 
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const _lastChar = _typename.charAt(_typename.length - 1);
     if (_lastChar === ']') {
@@ -35,7 +36,7 @@ export const unwrapType = wrappedTypename => {
 };
 
 export const getAstTypeMetadata = type => {
-  let _t = { type };
+  let _t = { ...type };
   const typewraps = [];
   while (_t.kind !== 'NamedType') {
     if (_t.kind === 'ListType') {
@@ -74,7 +75,7 @@ export const getSchemaTypeMetadata = type => {
 
 export const wrapTypename = (name, wrapperStack) => {
   let wrappedTypename = name;
-  wrapperStack.forEach(w => {
+  wrapperStack.reverse().forEach(w => {
     if (w === 'l') {
       wrappedTypename = `[${wrappedTypename}]`;
     }
