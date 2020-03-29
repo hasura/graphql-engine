@@ -24,7 +24,7 @@ import {
 } from '../../../Common/utils/pgUtils';
 import RootFields from './RootFields';
 import { changeViewRootFields } from '../Common/TooltipMessages';
-import { ToolTip } from '../../../UIKit/atoms';
+import { ToolTip, Heading } from '../../../UIKit/atoms';
 import styles from './ModifyTable.scss';
 
 class ModifyView extends Component {
@@ -100,14 +100,12 @@ class ModifyView extends Component {
         return (
           <div key={i}>
             <div className="container-fluid">
-              <div className={`row + ${styles.add_mar_bottom}`}>
-                <h5>
-                  <Button disabled="disabled" size="xs">
-                    -
-                  </Button>{' '}
-                  &nbsp; <b>{getColumnName(c)}</b>
-                </h5>
-              </div>
+              <Heading as="h5" className="row" mb="20px" fontWeight="normal">
+                <Button disabled="disabled" size="xs">
+                  -
+                </Button>{' '}
+                &nbsp; <b>{getColumnName(c)}</b>
+              </Heading>
             </div>
           </div>
         );
