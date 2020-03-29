@@ -1,10 +1,10 @@
 {-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
 
+import           Control.Lens               ((^..))
 import           Data.Aeson
 import           Data.Char
 import           Data.List                  (find)
-import           Data.Time.Clock
 import           Language.Haskell.TH.Syntax (Lift)
 import           System.Environment
 import           System.Exit
@@ -22,6 +22,7 @@ import qualified Data.UUID.V4               as UUID
 import qualified Language.Haskell.TH.Syntax as TH
 import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
+import qualified Network.Wreq               as Wreq
 import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ByteString as TDFA
 
@@ -31,58 +32,55 @@ newtype RequestId
   = RequestId { unRequestId :: Text }
   deriving (Show, Eq, ToJSON, FromJSON)
 
-jsonHeader :: (T.Text, T.Text)
+jsonHeader :: HTTP.Header
 jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 
-sqlHeader :: (T.Text, T.Text)
+sqlHeader :: HTTP.Header
 sqlHeader = ("Content-Type", "application/sql; charset=utf-8")
 
-htmlHeader :: (T.Text, T.Text)
+htmlHeader :: HTTP.Header
 htmlHeader = ("Content-Type", "text/html; charset=utf-8")
 
-gzipHeader :: (T.Text, T.Text)
+gzipHeader :: HTTP.Header
 gzipHeader = ("Content-Encoding", "gzip")
 
-brHeader :: (T.Text, T.Text)
-brHeader = ("Content-Encoding", "br")
-
-userRoleHeader :: T.Text
+userRoleHeader :: IsString a => a
 userRoleHeader = "x-hasura-role"
 
-deprecatedAccessKeyHeader :: T.Text
+deprecatedAccessKeyHeader :: IsString a => a
 deprecatedAccessKeyHeader = "x-hasura-access-key"
 
-adminSecretHeader :: T.Text
+adminSecretHeader :: IsString a => a
 adminSecretHeader = "x-hasura-admin-secret"
 
-userIdHeader :: T.Text
+userIdHeader :: IsString a => a
 userIdHeader = "x-hasura-user-id"
 
-requestIdHeader :: T.Text
+requestIdHeader :: IsString a => a
 requestIdHeader = "x-request-id"
 
-getRequestHeader :: B.ByteString -> [HTTP.Header] -> Maybe B.ByteString
+getRequestHeader :: HTTP.HeaderName -> [HTTP.Header] -> Maybe B.ByteString
 getRequestHeader hdrName hdrs = snd <$> mHeader
   where
-    mHeader = find (\h -> fst h == CI.mk hdrName) hdrs
+    mHeader = find (\h -> fst h == hdrName) hdrs
 
 getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
 getRequestId headers =
   -- generate a request id for every request if the client has not sent it
-  case getRequestHeader (txtToBs requestIdHeader) headers  of
+  case getRequestHeader requestIdHeader headers  of
     Nothing    -> RequestId <$> liftIO generateFingerprint
     Just reqId -> return $ RequestId $ bsToTxt reqId
 
 -- Get an env var during compile time
-getValFromEnvOrScript :: String -> String -> TH.Q TH.Exp
+getValFromEnvOrScript :: String -> String -> TH.Q (TH.TExp String)
 getValFromEnvOrScript n s = do
   maybeVal <- TH.runIO $ lookupEnv n
   case maybeVal of
-    Just val -> TH.lift val
+    Just val -> [|| val ||]
     Nothing  -> runScript s
 
 -- Run a shell script during compile time
-runScript :: FilePath -> TH.Q TH.Exp
+runScript :: FilePath -> TH.Q (TH.TExp String)
 runScript fp = do
   TH.addDependentFile fp
   fileContent <- TH.runIO $ TI.readFile fp
@@ -91,7 +89,7 @@ runScript fp = do
   when (exitCode /= ExitSuccess) $ fail $
     "Running shell script " ++ fp ++ " failed with exit code : "
     ++ show exitCode ++ " and with error : " ++ stdErr
-  TH.lift stdOut
+  [|| stdOut ||]
 
 -- find duplicates
 duplicates :: Ord a => [a] -> [a]
@@ -116,13 +114,6 @@ matchRegex regex caseSensitive src =
 fmapL :: (a -> a') -> Either a b -> Either a' b
 fmapL fn (Left e) = Left (fn e)
 fmapL _ (Right x) = pure x
-
--- diff time to micro seconds
-diffTimeToMicro :: NominalDiffTime -> Int
-diffTimeToMicro diff =
-  floor (realToFrac diff :: Double) * aSecond
-  where
-    aSecond = 1000 * 1000
 
 generateFingerprint :: IO Text
 generateFingerprint = UUID.toText <$> UUID.nextRandom
@@ -167,6 +158,25 @@ commonResponseHeadersIgnored =
   , "Content-Type", "Content-Length"
   ]
 
+isUserVar :: Text -> Bool
+isUserVar = T.isPrefixOf "x-hasura-" . T.toLower
+
+mkClientHeadersForward :: [HTTP.Header] -> [HTTP.Header]
+mkClientHeadersForward reqHeaders =
+  xForwardedHeaders <> (filterUserVars . filterRequestHeaders) reqHeaders
+  where
+    filterUserVars = filter (\(k, _) -> not $ isUserVar $ bsToTxt $ CI.original k)
+    xForwardedHeaders = flip mapMaybe reqHeaders $ \(hdrName, hdrValue) ->
+      case hdrName of
+        "Host"       -> Just ("X-Forwarded-Host", hdrValue)
+        "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
+        _            -> Nothing
+
+mkSetCookieHeaders :: Wreq.Response a -> HTTP.ResponseHeaders
+mkSetCookieHeaders resp =
+  map (headerName,) $ resp ^.. Wreq.responseHeader headerName
+  where
+    headerName = "Set-Cookie"
 
 filterRequestHeaders :: [HTTP.Header] -> [HTTP.Header]
 filterRequestHeaders =
@@ -223,10 +233,3 @@ makeReasonMessage errors showError =
     [singleError] -> "because " <> showError singleError
     _ -> "for the following reasons:\n" <> T.unlines
          (map (("  • " <>) . showError) errors)
-
-withElapsedTime :: MonadIO m => m a -> m (NominalDiffTime, a)
-withElapsedTime ma = do
-  t1 <- liftIO getCurrentTime
-  a <- ma
-  t2 <- liftIO getCurrentTime
-  return (diffUTCTime t2 t1, a)

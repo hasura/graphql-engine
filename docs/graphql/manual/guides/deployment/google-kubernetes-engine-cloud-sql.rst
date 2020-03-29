@@ -2,6 +2,8 @@
    :description: Deploy Hasura GraphQL engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
    :keywords: hasura, docs, guide, deployment, google cloud, kubernetes, cloud sql
 
+.. _deploy_gc_kubernetes:
+
 Hasura GraphQL engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
 ===================================================================================
 
@@ -126,7 +128,7 @@ Download the ``deployment.yaml`` file:
 
 .. code-block:: bash
 
-   wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/google-cloud-k8s-sql/deployment.yaml
+   wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/google-cloud-k8s-sql/deployment.yaml
 
 Get the ``[INSTANCE_CONNECTION_NAME]`` using the following command and note it
 down.

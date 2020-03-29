@@ -23,7 +23,7 @@ class EventTrigger extends Component {
   }
 
   render() {
-    const { dispatch, listingTrigger, readOnlyMode } = this.props;
+    const { dispatch, readOnlyMode } = this.props;
 
     const styles = require('../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
@@ -32,24 +32,6 @@ class EventTrigger extends Component {
     affected_rows
   }
 }`;
-    const showIntroSection = !listingTrigger.length;
-    const getIntroSection = () => {
-      if (!showIntroSection) {
-        return null;
-      }
-
-      return (
-        <div>
-          <TopicDescription
-            title="What are Event Triggers?"
-            imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
-            imgAlt="Event Triggers"
-            description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
-          />
-          <hr className={styles.clear_fix} />
-        </div>
-      );
-    };
 
     const getAddBtn = () => {
       if (readOnlyMode) {
@@ -84,9 +66,7 @@ class EventTrigger extends Component {
 
     return (
       <div
-        className={`${styles.padd_left_remove} container-fluid ${
-          styles.padd_top
-        }`}
+        className={`${styles.padd_left_remove} container-fluid ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
           <Helmet title="Event Triggers | Hasura" />
@@ -98,7 +78,13 @@ class EventTrigger extends Component {
           </div>
           <hr />
 
-          {getIntroSection()}
+          <TopicDescription
+            title="What are Event Triggers?"
+            imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
+            imgAlt="Event Triggers"
+            description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
+          />
+          <hr className={styles.clear_fix} />
 
           <TryItOut
             service="eventTrigger"
@@ -110,7 +96,7 @@ class EventTrigger extends Component {
             MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/azure-functions/nodejs"
             awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/aws-lambda/nodejs8"
             adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/"
-            isAvailable={showIntroSection}
+            isAvailable
           />
         </div>
       </div>

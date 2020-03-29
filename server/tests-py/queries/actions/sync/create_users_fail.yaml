@@ -1,0 +1,18 @@
+description: Run create_users sync action mutation with invalid email
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      create_users(users: [{email: "blake@hasura.io", name: "Blake"}, {email: "random-email", name: "Elsa"}]){
+        id
+        __typename
+      }
+    }
+
+response:
+  errors:
+    - extensions:
+        path: $
+        code: invalid-email
+      message: 'Email address is not valid: random-email'

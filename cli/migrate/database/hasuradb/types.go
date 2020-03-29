@@ -8,7 +8,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 
 	"github.com/qor/transition"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -121,8 +120,8 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		q.Args = &replaceMetadataInput{}
 	case clearMetadata:
 		q.Args = &clearMetadataInput{}
-	case runSQL:
-		q.Args = &runSQLInput{}
+	case RunSQL:
+		q.Args = &RunSQLInput{}
 	case addComputedField:
 		q.Args = &addComputedFieldInput{}
 	case dropComputedField:
@@ -203,7 +202,7 @@ type SchemaDump struct {
 	CleanOutput bool     `json:"clean_output"`
 }
 
-func (h *HasuraError) CMDError() error {
+func (h HasuraError) Error() string {
 	var errorStrings []string
 	errorStrings = append(errorStrings, fmt.Sprintf("[%s] %s (%s)", h.Code, h.ErrorMessage, h.Path))
 	if h.migrationFile != "" {
@@ -222,27 +221,22 @@ func (h *HasuraError) CMDError() error {
 			errorStrings = append(errorStrings, fmt.Sprintf("Hint: %s", h.Internal.Error.Hint))
 		}
 	}
-	return fmt.Errorf(strings.Join(errorStrings, "\r\n"))
+	return strings.Join(errorStrings, "\r\n")
 }
 
-func (h *HasuraError) APIError() error {
-	data, err := json.Marshal(&h)
-	if err != nil {
-		return err
-	}
-	return fmt.Errorf("Data Error: %s", string(data))
-}
-
-func (h *HasuraError) Error(isCMD bool) error {
-	var err error
-	switch isCMD {
+// NewHasuraError - returns error based on data and isCmd
+func NewHasuraError(data []byte, isCmd bool) error {
+	switch isCmd {
 	case true:
-		err = h.CMDError()
-	case false:
-		err = h.APIError()
+		var herror HasuraError
+		err := json.Unmarshal(data, &herror)
+		if err != nil {
+			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(data))
+		}
+		return herror
+	default:
+		return fmt.Errorf("Data Error: %s", string(data))
 	}
-	log.Debug(err)
-	return err
 }
 
 type HasuraSQLRes struct {
@@ -284,7 +278,7 @@ const (
 	dropCollectionFromAllowList              = "drop_collection_from_allowlist"
 	replaceMetadata                          = "replace_metadata"
 	clearMetadata                            = "clear_metadata"
-	runSQL                                   = "run_sql"
+	RunSQL                                   = "run_sql"
 	bulkQuery                                = "bulk"
 	addComputedField                         = "add_computed_field"
 	dropComputedField                        = "drop_computed_field"
@@ -845,7 +839,7 @@ func (i InconsistentMeatadataObject) GetReason() string {
 	return i.Reason
 }
 
-type runSQLInput struct {
+type RunSQLInput struct {
 	SQL string `json:"sql" yaml:"sql"`
 }
 

@@ -2,6 +2,8 @@
    :description: Manage multiple column + row permissions for the same role in Hasura
    :keywords: hasura, docs, authorization, access control, permission, role
 
+.. _role_multiple_rules:
+
 Multiple column + row permissions for the same role
 ===================================================
 
@@ -37,7 +39,7 @@ We can achieve this via the following steps:
 Step 1: Create a view 
 ---------------------
 
-Create a :ref:`view <create_views>` called ``user_private`` with columns ``(user_id, email, phone, address)``:
+:ref:`Create a view <create_views>` called ``user_private`` with columns ``(user_id, email, phone, address)``:
 
 .. code-block:: SQL
 
@@ -48,7 +50,7 @@ Create a :ref:`view <create_views>` called ``user_private`` with columns ``(user
 Step 2: Create a relationship
 -----------------------------
 
-For the table ``user_info``, create a :ref:`manual object relationship <create_manual_relationships>` called
+For the table ``user_info``, :ref:`create a manual object relationship <create_manual_relationships>` called
 ``private_info`` using ``user_info : id -> user_private : user_id``:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/multiple-rules-create-manual-relationship.png

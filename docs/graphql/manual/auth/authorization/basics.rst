@@ -2,6 +2,8 @@
    :description: Hasura access control basics
    :keywords: hasura, docs, authorization, access control
 
+.. _auth_basics:
+
 Access control basics
 =====================
 
@@ -28,7 +30,7 @@ combination of **role**, **table** and **action** (*insert, update, select and d
 
 Limit access to a subset of the rows in the table based on this permission. Row-level permissions are
 essentially boolean expressions that, when evaluated against any row, determine access to it. These
-permissions are constructed from the values in columns, :doc:`session variables <roles-variables>` and
+permissions are constructed from the values in columns, :ref:`session variables <roles_variables>` and
 static values to build this boolean expression.
 
 **Column-level permissions**
@@ -38,7 +40,7 @@ this permission rule.
 
 .. admonition:: More information
 
-  For details on all the configuration options, see :doc:`permission-rules`.
+  For details on all the configuration options, see :ref:`permission_rules`.
 
 
 Example
@@ -109,13 +111,13 @@ As you can see, the results are now filtered based on the access control rule fo
 restricted to only those rows where the value in the ``id`` column is equal to ``1`` (*as indicated by
 the* ``X-Hasura-User-ID`` *session variable*).
 
-As described in the :doc:`Introduction to Authentication and Authorization <index>` section of the docs,
+As described in the :ref:`Introduction to Authentication and Authorization <authorization>` section of the docs,
 your auth service is required to resolve authentication tokens into these session variables. See
-:doc:`Reference - Session Variables<index>` for more details.
+:ref:`Reference - Session Variables<authorization>` for more details.
 
 Next steps
 ----------
 
-Read about roles and session variables at: :doc:`roles-variables`
+Read about roles and session variables at: :ref:`roles_variables`
 
-See more detailed examples at: :doc:`Common access control examples<common-roles-auth-examples>`
+See more detailed examples at: :ref:`Common access control examples<auth_examples>`

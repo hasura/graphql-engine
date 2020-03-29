@@ -58,7 +58,24 @@ draft_github_release() {
         -r "$CIRCLE_PROJECT_REPONAME" \
         -b "${RELEASE_BODY}" \
         -draft \
+     "$CIRCLE_TAG"
+    echo "uploading cli assets"
+    ghr -t "$GITHUB_TOKEN" \
+        -u "$CIRCLE_PROJECT_USERNAME" \
+        -r "$CIRCLE_PROJECT_REPONAME" \
+        -draft \
      "$CIRCLE_TAG" /build/_cli_output/binaries/
+    echo "uploading cli-ext assets"
+    ghr -t "$GITHUB_TOKEN" \
+        -u "$CIRCLE_PROJECT_USERNAME" \
+        -r "$CIRCLE_PROJECT_REPONAME" \
+        -draft \
+     "$CIRCLE_TAG" /build/_cli_ext_output/*.tar.gz
+    ghr -t "$GITHUB_TOKEN" \
+        -u "$CIRCLE_PROJECT_USERNAME" \
+        -r "$CIRCLE_PROJECT_REPONAME" \
+        -draft \
+     "$CIRCLE_TAG" /build/_cli_ext_output/*.zip
 }
 
 configure_git() {
@@ -95,21 +112,62 @@ deploy_console() {
     unset DIST_PATH
 }
 
+deploy_cli_ext() {
+    echo "deploying extension cli"
+
+    cd "$ROOT/cli-ext"
+    export VERSION=$(../scripts/get-version.sh)
+    export DIST_PATH="/build/_cli_ext_output"
+
+    configure_git
+    git clone https://github.com/hasura/cli-plugins-index.git ~/plugins-index
+    cd ~/plugins-index
+    git checkout -b cli-ext-${LATEST_TAG}
+    cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext.yaml
+    git add .
+    git commit -m "update cli-ext manifest to ${LATEST_TAG}"
+    git push -q https://${GITHUB_TOKEN}@github.com/hasura/cli-plugins-index.git cli-ext-${LATEST_TAG}
+    hub pull-request -F- <<<"Update cli-ext manifest to ${LATEST_TAG}" -r ${REVIEWERS} -a ${REVIEWERS}
+
+    unset VERSION
+    unset DIST_PATH
+}
+
 # build and push container for auto-migrations
-build_and_push_cli_migrations_image() {
+build_and_push_cli_migrations_image_v1() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
-    cd "$ROOT/scripts/cli-migrations"
+    cd "$ROOT/scripts/cli-migrations/v1"
     cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
     docker build -t "$IMAGE_TAG" .
     docker push "$IMAGE_TAG"
 }
 
+# build and push container for auto-migrations-v2
+build_and_push_cli_migrations_image_v2() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v2"
+    cd "$ROOT/scripts/cli-migrations/v2"
+    cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
+    cp /build/_cli_ext_output/manifest-dev.yaml manifest.yaml
+    docker build -t "$IMAGE_TAG" .
+    docker push "$IMAGE_TAG"
+}
+
 # build and push latest container for auto-migrations
-push_latest_cli_migrations_image() {
+push_latest_cli_migrations_image_v1() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
     LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations"
 
     # push latest.cli-migrations tag
+    docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
+    docker push "$LATEST_IMAGE_TAG"
+}
+
+# build and push latest container for auto-migrations-v2
+push_latest_cli_migrations_image_v2() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v2"
+    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations-v2"
+
+    # push latest.cli-migrations-v2 tag
     docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
     docker push "$LATEST_IMAGE_TAG"
 }
@@ -166,13 +224,16 @@ fi
 deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
-    build_and_push_cli_migrations_image
+    build_and_push_cli_migrations_image_v1
+    build_and_push_cli_migrations_image_v2
+    deploy_cli_ext
 
     # if this is a stable release, update all latest assets
     if [ $IS_STABLE_RELEASE = true ]; then
         deploy_server_latest
         push_server_binary
-        push_latest_cli_migrations_image
+        push_latest_cli_migrations_image_v1
+        push_latest_cli_migrations_image_v2
         send_pr_to_repo graphql-engine-heroku
         deploy_do_manifests
     fi

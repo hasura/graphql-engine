@@ -19,6 +19,8 @@ import { eventRouterUtils } from './components/Services/EventTrigger';
 
 import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
+import { getActionsRouter } from './components/Services/Actions';
+
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
 
 import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
@@ -35,6 +37,8 @@ import logoutContainer from './components/Services/Settings/Logout/Logout';
 
 import { showErrorNotification } from './components/Services/Common/Notification';
 import { CLI_CONSOLE_MODE } from './constants';
+import UIKit from './components/UIKit/';
+import { Heading } from './components/UIKit/atoms';
 
 const routes = store => {
   // load hasuractl migration status
@@ -84,6 +88,21 @@ const routes = store => {
     composeOnEnterHooks
   );
 
+  const actionsRouter = getActionsRouter(connect, store, composeOnEnterHooks);
+
+  const uiKitRouter = globals.isProduction ? null : (
+    <Route
+      path="/ui-elements"
+      // TODO: fix me
+      component={() => (
+        <div>
+          <Heading />
+          <UIKit />
+        </div>
+      )}
+    />
+  );
+
   return (
     <Route path="/" component={App} onEnter={validateLogin(store)}>
       <Route path="login" component={generatedLoginConnector(connect)} />
@@ -122,6 +141,8 @@ const routes = store => {
           {dataRouter}
           {eventRouter}
           {remoteSchemaRouter}
+          {actionsRouter}
+          {uiKitRouter}
         </Route>
       </Route>
       <Route path="404" component={PageNotFound} status="404" />

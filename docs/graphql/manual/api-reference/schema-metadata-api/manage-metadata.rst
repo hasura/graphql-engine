@@ -2,6 +2,8 @@
    :description: Manage metadata with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, metadata
 
+.. _api_manage_metadata:
+
 Schema/Metadata API Reference: Manage metadata
 ==============================================
 
@@ -75,8 +77,27 @@ table using ``psql`` and this column should now be added to the GraphQL schema.
 
    {
        "type" : "reload_metadata",
-       "args": {}
+       "args": {
+           "reload_remote_schemas": true
+       }
    }
+
+.. _reload_metadata_args_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - reload_remote_schemas
+     - false
+     - Boolean
+     - If set to ``true``, all remote schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: ``false``)
 
 .. _clear_metadata:
 
