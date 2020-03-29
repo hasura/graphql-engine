@@ -335,10 +335,11 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
         insPermDefToOrdJSON :: Permission.InsPermDef -> AO.Value
         insPermDefToOrdJSON = permDefToOrdJSON insPermToOrdJSON
           where
-            insPermToOrdJSON (Permission.InsPerm check set columns) =
+            insPermToOrdJSON (Permission.InsPerm check set columns mAdminOnly) =
               let columnsPair = ("columns",) . AO.toOrdered <$> columns
+                  adminOnlyPair = ("admin_only",) . AO.toOrdered <$> mAdminOnly
               in AO.object $ [("check", AO.toOrdered check)]
-                 <> catMaybes [maybeSetToMaybeOrdPair set, columnsPair]
+                 <> catMaybes [maybeSetToMaybeOrdPair set, columnsPair, adminOnlyPair]
 
         selPermDefToOrdJSON :: Permission.SelPermDef -> AO.Value
         selPermDefToOrdJSON = permDefToOrdJSON selPermToOrdJSON

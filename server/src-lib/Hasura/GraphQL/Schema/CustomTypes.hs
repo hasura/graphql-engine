@@ -17,21 +17,22 @@ import           Hasura.User
 
 import qualified Hasura.GraphQL.Validate.Types as VT
 
-buildObjectTypeInfo :: RoleName -> AnnotatedObjectType -> VT.ObjTyInfo
-buildObjectTypeInfo roleName annotatedObjectType =
+buildObjectTypeInfo :: Role -> AnnotatedObjectType -> VT.ObjTyInfo
+buildObjectTypeInfo role annotatedObjectType =
   let description = _otdDescription objectDefinition
       namedType = unObjectTypeName $ _otdName objectDefinition
       fieldMap = mapFromL VT._fiName $ fields <> catMaybes relationships
   -- 'mkObjTyInfo' function takes care of inserting `__typename` field
   in VT.mkObjTyInfo description namedType mempty fieldMap VT.TLCustom
   where
+    roleName = getRoleName role
     objectDefinition = _aotDefinition annotatedObjectType
 
     relationships =
       flip map (toList $ _aotRelationships annotatedObjectType) $
       \(TypeRelationship name ty remoteTableInfo _) ->
         if isJust (getSelectPermissionInfoM remoteTableInfo roleName) ||
-           roleName == adminRole
+           roleName == adminRoleName
         then Just (relationshipToFieldInfo name ty $ _tciName $ _tiCoreInfo remoteTableInfo)
         else Nothing
       where
@@ -61,13 +62,13 @@ buildObjectTypeInfo roleName annotatedObjectType =
           }
 
 buildCustomTypesSchema
-  :: NonObjectTypeMap -> AnnotatedObjects -> RoleName -> VT.TypeMap
-buildCustomTypesSchema nonObjectTypeMap annotatedObjectTypes roleName =
+  :: NonObjectTypeMap -> AnnotatedObjects -> Role -> VT.TypeMap
+buildCustomTypesSchema nonObjectTypeMap annotatedObjectTypes role =
   unNonObjectTypeMap nonObjectTypeMap <> objectTypeInfos
   where
     objectTypeInfos =
       mapFromL VT.getNamedTy $
-      map (VT.TIObj . buildObjectTypeInfo roleName) $
+      map (VT.TIObj . buildObjectTypeInfo role) $
       Map.elems annotatedObjectTypes
 
 annotateObjectType

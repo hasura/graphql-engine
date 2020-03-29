@@ -232,7 +232,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
                  return userInfoE
 
     let handlerState = HandlerCtx serverCtx userInfo headers requestId
-        curRole = _uiRole userInfo
+        curRole = getRoleName $ _uiRole userInfo
 
     (serviceTime, (result, q)) <- withElapsedTime $ case apiHandler of
       AHGet handler -> do

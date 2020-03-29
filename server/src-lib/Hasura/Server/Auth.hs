@@ -195,7 +195,7 @@ mkUserInfoFromResp logger url method statusCode respBody
           throw500 "missing x-hasura-role key in webhook response"
         Just rn -> do
           logWebHookResp LevelInfo Nothing
-          return $ mkUserInfo rn sessionVariables
+          return $ mkUserInfo (RoleSimple rn) sessionVariables
 
     logError =
       logWebHookResp LevelError $ Just respBody
@@ -261,7 +261,7 @@ getUserInfoWithExpTime
   -> m (UserInfo, Maybe UTCTime)
 getUserInfoWithExpTime logger manager rawHeaders = \case
 
-  AMNoAuth -> return (userInfoFromHeaders, Nothing)
+  AMNoAuth -> return (userInfoFromHeaders RoleSimple, Nothing)
 
   AMAdminSecret adminScrt unAuthRole ->
     case adminSecretM of
@@ -291,16 +291,16 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
     userInfoWhenAdminSecret key reqKey = do
       when (reqKey /= getAdminSecret key) $ throw401 $
         "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
-      return userInfoFromHeaders
+      return $ userInfoFromHeaders RoleWithAdminSecret
 
     userInfoWhenNoAdminSecret = \case
       Nothing -> throw401 $ adminSecretHeader <> "/"
                  <> deprecatedAccessKeyHeader <> " required, but not found"
-      Just role -> return $ mkUserInfo role sessionVariables
+      Just roleName -> return $ mkUserInfo (RoleSimple roleName) sessionVariables
 
     withNoExpTime a = (, Nothing) <$> a
 
-    userInfoFromHeaders =
+    userInfoFromHeaders f =
       case roleFromSession sessionVariables of
-        Just rn -> mkUserInfo rn sessionVariables
+        Just rn -> mkUserInfo (f rn) sessionVariables
         Nothing -> mkUserInfo adminRole sessionVariables

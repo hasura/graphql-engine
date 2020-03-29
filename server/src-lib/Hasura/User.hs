@@ -1,9 +1,12 @@
 module Hasura.User
   ( RoleName
   , mkRoleName
+  , adminRoleName
   , adminRole
   , isAdmin
   , roleNameToTxt
+  , Role(..)
+  , getRoleName
   , SessionVariable
   , mkSessionVariable
   , SessionVariables
@@ -30,6 +33,7 @@ import           Hasura.Server.Utils        (adminSecretHeader, deprecatedAccess
 import           Hasura.SQL.Types
 
 import           Data.Aeson
+import           Data.Aeson.Types
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -53,11 +57,32 @@ roleNameToTxt = unNonEmptyText . getRoleTxt
 mkRoleName :: Text -> Maybe RoleName
 mkRoleName = fmap RoleName . mkNonEmptyText
 
-adminRole :: RoleName
-adminRole = RoleName adminText
+adminRoleName :: RoleName
+adminRoleName = RoleName adminText
+
+adminRole :: Role
+adminRole = RoleSimple adminRoleName
 
 isAdmin :: RoleName -> Bool
-isAdmin = (adminRole ==)
+isAdmin = (getRoleName adminRole ==)
+
+data Role
+  = RoleSimple !RoleName -- ^ Plain role (x-hasura-role)
+  | RoleWithAdminSecret !RoleName -- ^ Role (x-hasura-role) should accompany by admin secret (x-hasura-admin-secret)
+  deriving (Show, Eq, Generic)
+instance Hashable Role
+
+instance ToJSON Role where
+  toJSON (RoleSimple r)          = toJSON r
+  toJSON (RoleWithAdminSecret r) = toJSON r
+
+getRoleName :: Role -> RoleName
+getRoleName = \case
+  RoleSimple r -> r
+  RoleWithAdminSecret r -> r
+
+instance ToJSONKey Role where
+  toJSONKey = toJSONKeyText (roleNameToTxt . getRoleName)
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
   deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData)
@@ -115,14 +140,14 @@ getSessionVariableValue k = Map.lookup k . unSessionVariables
 
 data UserInfo
   = UserInfo
-  { _uiRole    :: !RoleName
+  { _uiRole    :: !Role
   , _uiSession :: !SessionVariables
   } deriving (Show, Eq, Generic)
 instance Hashable UserInfo
 
-mkUserInfo :: RoleName -> SessionVariables -> UserInfo
-mkUserInfo rn (SessionVariables v) =
-  UserInfo rn $ SessionVariables $ Map.insert userRoleHeader (roleNameToTxt rn) $
+mkUserInfo :: Role -> SessionVariables -> UserInfo
+mkUserInfo role (SessionVariables v) =
+  UserInfo role $ SessionVariables $ Map.insert userRoleHeader (roleNameToTxt $ getRoleName role) $
   foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
 
 adminUserInfo :: UserInfo

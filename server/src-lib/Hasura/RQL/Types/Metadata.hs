@@ -63,7 +63,7 @@ moiName objectId = moiTypeName objectId <> " " <> case objectId of
     in tableObjectName <> " in " <> moiName (MOTable tableName)
   MOCustomTypes -> "custom_types"
   MOAction name -> dquoteTxt name
-  MOActionPermission name role -> dquoteTxt role <> " permission in " <> dquoteTxt name
+  MOActionPermission name roleName -> dquoteTxt roleName <> " permission in " <> dquoteTxt name
 
 data MetadataObject
   = MetadataObject

@@ -76,7 +76,7 @@ mkMutationField actionName actionInfo definitionList =
           (_adForwardClientHeaders definition)
         ActionAsynchronous -> ActionExecutionAsync
 
-    description = mkDescriptionWith (PGDescription <$> (_aiComment actionInfo)) $
+    description = mkDescriptionWith (PGDescription <$> _aiComment actionInfo) $
                   "perform the action: " <>> actionName
 
     fieldInfo =
@@ -211,7 +211,7 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
                      )
               Nothing -> Nothing
     getFilterAndLimit remoteTableInfo =
-      if roleName == adminRole
+      if roleName == adminRoleName
       then Just (annBoolExpTrue, Nothing)
       else do
         selectPermisisonInfo <-
@@ -224,7 +224,7 @@ mkActionSchemaOne
   :: (QErrM m)
   => AnnotatedObjects
   -> ActionInfo
-  -> m (Map.HashMap RoleName
+  -> m (Map.HashMap Role
          ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
          , (ActionExecutionContext, ObjFldInfo)
          , FieldMap
@@ -234,19 +234,23 @@ mkActionSchemaOne annotatedObjects actionInfo = do
   annotatedOutputType <- onNothing
       (Map.lookup (ObjectTypeName actionOutputBaseType) annotatedObjects) $
       throw500 $ "missing annotated type for: " <> showNamedTy actionOutputBaseType
-  forM permissions $ \permission ->
+  forM permissionsWithRole $ \permission ->
     mkActionFieldsAndTypes actionInfo annotatedOutputType permission
   where
-    adminPermission = ActionPermissionInfo adminRole
-    permissions = Map.insert adminRole adminPermission $ _aiPermissions actionInfo
     actionOutputBaseType =
       G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
+    permissionsWithRole =
+      let adminPermission = ActionPermissionInfo adminRoleName
+          permissions = Map.insert adminRoleName adminPermission $ _aiPermissions actionInfo
+      in Map.fromList $ flip concatMap (Map.toList permissions) $
+         -- Use actions for roles requested with and without admin secret
+         \r -> [first RoleSimple r, first RoleWithAdminSecret r]
 
 mkActionsSchema
   :: (QErrM m)
   => AnnotatedObjects
   -> ActionCache
-  -> m (Map.HashMap RoleName (RootFields, TyAgg))
+  -> m (Map.HashMap Role (RootFields, TyAgg))
 mkActionsSchema annotatedObjects =
   foldM
   (\aggregate actionInfo ->

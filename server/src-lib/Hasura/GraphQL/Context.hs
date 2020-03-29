@@ -48,7 +48,7 @@ instance Has TypeMap GCtx where
 instance ToJSON GCtx where
   toJSON _ = String "ToJSON for GCtx is not implemented"
 
-type GCtxMap = Map.HashMap RoleName GCtx
+type GCtxMap = Map.HashMap Role GCtx
 
 mkQueryRootTyInfo :: [ObjFldInfo] -> ObjTyInfo
 mkQueryRootTyInfo flds =

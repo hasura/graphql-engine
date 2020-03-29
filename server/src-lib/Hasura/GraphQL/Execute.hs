@@ -191,7 +191,7 @@ getResolvedExecPlan
   -> m (Telem.CacheHit, ExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer httpManager reqHeaders reqUnparsed = do
-  planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo)
+  planM <- liftIO $ EP.getPlan scVer (getRoleName $ _uiRole userInfo)
            opNameM queryStr planCache
   let usrVars = _uiSession userInfo
   case planM of
@@ -206,7 +206,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
-      liftIO $ EP.addPlan scVer (_uiRole userInfo)
+      liftIO $ EP.addPlan scVer (getRoleName $ _uiRole userInfo)
       opNameM queryStr plan planCache
     noExistingPlan = do
       req <- toParsed reqUnparsed

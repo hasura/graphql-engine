@@ -39,7 +39,7 @@ mkAdminRolePermInfo ti =
                      getComputedFieldInfos fields
 
     tn = _tciName ti
-    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty []
+    i = InsPermInfo (HS.fromList pgCols) annBoolExpTrue M.empty False []
     s = SelPermInfo (HS.fromList pgCols) (HS.fromList scalarComputedFields) tn annBoolExpTrue
         Nothing True []
     u = UpdPermInfo (HS.fromList pgCols) tn annBoolExpTrue Nothing M.empty []
@@ -57,7 +57,7 @@ askPermInfo' pa tableInfo = do
   where
     rpim = _tiRolePermInfoMap tableInfo
     getRolePermInfo roleName
-      | roleName == adminRole = Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
+      | roleName == adminRoleName = Just $ mkAdminRolePermInfo (_tiCoreInfo tableInfo)
       | otherwise             = M.lookup roleName rpim
 
 askPermInfo
@@ -79,9 +79,9 @@ askPermInfo pa tableInfo = do
     pt = permTypeToCode $ permAccToType pa
 
 isTabUpdatable :: RoleName -> TableInfo -> Bool
-isTabUpdatable role ti
-  | role == adminRole = True
-  | otherwise = isJust $ M.lookup role rpim >>= _permUpd
+isTabUpdatable roleName ti
+  | roleName == adminRoleName = True
+  | otherwise = isJust $ M.lookup roleName rpim >>= _permUpd
   where
     rpim = _tiRolePermInfoMap ti
 
@@ -125,7 +125,7 @@ checkPermOnCol pt allowedCols pgCol = do
     throw400 PermissionDenied $ permErrMsg roleName
   where
     permErrMsg roleName
-      | roleName == adminRole = "no such column exists : " <>> pgCol
+      | roleName == adminRoleName = "no such column exists : " <>> pgCol
       | otherwise = mconcat
         [ "role " <>> roleName
         , " does not have permission to "

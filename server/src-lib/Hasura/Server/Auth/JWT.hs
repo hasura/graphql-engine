@@ -226,7 +226,7 @@ processJwt jwtCtx headers mUnAuthRole =
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
       return $ (, Nothing) $
-        mkUserInfo unAuthRole $ mkSessionVariables headers
+        mkUserInfo (RoleSimple unAuthRole) $ mkSessionVariables headers
 
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
@@ -262,11 +262,12 @@ processAuthZHeader jwtCtx headers authzHeader = do
                 $ Map.toList hasuraClaims
 
   HasuraClaims allowedRoles defaultRole <- parseHasuraClaims claimsMap
-  let role = getCurrentRole defaultRole
+  let roleName = getCurrentRole defaultRole
 
-  when (role `notElem` allowedRoles) currRoleNotAllowed
+  when (roleName `notElem` allowedRoles) currRoleNotAllowed
   let finalClaims =
         Map.delete defaultRoleClaim . Map.delete allowedRolesClaim $ claimsMap
+      role = RoleSimple roleName
 
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ J.Object finalClaims

@@ -59,9 +59,10 @@ import qualified Data.Text                          as T
 -- Insert permission
 data InsPerm
   = InsPerm
-  { ipCheck   :: !BoolExp
-  , ipSet     :: !(Maybe (ColumnValues Value))
-  , ipColumns :: !(Maybe PermColSpec)
+  { ipCheck     :: !BoolExp
+  , ipSet       :: !(Maybe (ColumnValues Value))
+  , ipColumns   :: !(Maybe PermColSpec)
+  , ipAdminOnly :: !(Maybe Bool)
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable InsPerm
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
@@ -97,7 +98,7 @@ buildInsPermInfo
   -> FieldInfoMap FieldInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
-buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols) _) =
+buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mAdminOnly) _) =
   withPathK "permission" $ do
     (be, beDeps) <- withPathK "check" $ procBoolExp tn fieldInfoMap checkCond
     (setColsSQL, setHdrs, setColDeps) <- procSetObj tn fieldInfoMap set
@@ -108,8 +109,9 @@ buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols) _) =
         insColDeps = map (mkColDep DRUntyped tn) insCols
         deps = mkParentDep tn : beDeps ++ setColDeps ++ insColDeps
         insColsWithoutPresets = insCols \\ HM.keys setColsSQL
-    return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL reqHdrs, deps)
+    return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL adminOnly reqHdrs, deps)
   where
+    adminOnly = fromMaybe False mAdminOnly
     allCols = map pgiColumn $ getCols fieldInfoMap
     insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
 

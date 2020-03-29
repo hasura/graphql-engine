@@ -127,13 +127,14 @@ mutFldToTx fld = do
   userInfo <- asks getter
   opCtx <- getOpCtx $ V._fName fld
   let noRespHeaders = fmap (,[])
+      roleName = getRoleName $ _uiRole userInfo
   case opCtx of
     MCInsert ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsert (_uiRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsert roleName (_iocTable ctx) fld
     MCInsertOne ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)
-      noRespHeaders $ RI.convertInsertOne (_uiRole userInfo) (_iocTable ctx) fld
+      noRespHeaders $ RI.convertInsertOne roleName (_iocTable ctx) fld
     MCUpdate ctx -> do
       validateHdrs userInfo (_uocHeaders ctx)
       noRespHeaders $ RM.convertUpdate ctx fld

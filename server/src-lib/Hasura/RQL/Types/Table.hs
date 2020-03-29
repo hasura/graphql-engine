@@ -53,6 +53,7 @@ module Hasura.RQL.Types.Table
 
        , RolePermInfo(..)
        , mkRolePermInfo
+       , roleNameToRoleMap
        , permIns
        , permSel
        , permUpd
@@ -214,6 +215,7 @@ data InsPermInfo
   { ipiCols            :: !(HS.HashSet PGCol)
   , ipiCheck           :: !AnnBoolExpPartialSQL
   , ipiSet             :: !PreSetColsPartial
+  , ipiAdminOnly       :: !Bool
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq, Generic)
 instance NFData InsPermInfo
@@ -273,6 +275,21 @@ $(deriveToJSON (aesonDrop 5 snakeCase) ''RolePermInfo)
 makeLenses ''RolePermInfo
 
 type RolePermInfoMap = M.HashMap RoleName RolePermInfo
+
+roleNameToRoleMap
+  :: M.HashMap RoleName RolePermInfo
+  -> M.HashMap Role RolePermInfo
+roleNameToRoleMap roleNameMap =
+  M.fromList $ flip concatMap (M.toList roleNameMap) $ \(roleName, permInfo) ->
+    let insPerm = _permIns permInfo
+        adminOnlyInsert = maybe False ipiAdminOnly insPerm
+    in if adminOnlyInsert then
+         [ (RoleWithAdminSecret roleName, permInfo)
+         -- Remove the insert permission for simple role requests
+         , (RoleSimple roleName, permInfo{_permIns = Nothing})
+         ]
+       else map ((, permInfo) . ($ roleName)) [RoleWithAdminSecret, RoleSimple]
+
 
 data EventTriggerInfo
  = EventTriggerInfo

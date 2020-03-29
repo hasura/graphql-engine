@@ -48,11 +48,12 @@ import           Hasura.GraphQL.Schema.Mutation.Update
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Select
 
-getInsPerm :: TableInfo -> RoleName -> Maybe InsPermInfo
+getInsPerm :: TableInfo -> Role -> Maybe InsPermInfo
 getInsPerm tabInfo role
-  | role == adminRole = _permIns $ mkAdminRolePermInfo (_tiCoreInfo tabInfo)
-  | otherwise = Map.lookup role rolePermInfoMap >>= _permIns
+  | roleName == adminRoleName = _permIns $ mkAdminRolePermInfo (_tiCoreInfo tabInfo)
+  | otherwise = Map.lookup roleName rolePermInfoMap >>= _permIns
   where
+    roleName = getRoleName role
     rolePermInfoMap = _tiRolePermInfoMap tabInfo
 
 getTabInfo
@@ -455,9 +456,9 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
           \fa -> FunctionArgItem (G.Name gName) (faName fa) (faHasDefault fa)
 
 
-getSelPermission :: TableInfo -> RoleName -> Maybe SelPermInfo
+getSelPermission :: TableInfo -> Role -> Maybe SelPermInfo
 getSelPermission tabInfo role =
-  Map.lookup role (_tiRolePermInfoMap tabInfo) >>= _permSel
+  Map.lookup (getRoleName role) (_tiRolePermInfoMap tabInfo) >>= _permSel
 
 getSelPerm
   :: (MonadError QErr m)
@@ -465,7 +466,7 @@ getSelPerm
   -- all the fields of a table
   -> FieldInfoMap FieldInfo
   -- role and its permission
-  -> RoleName -> SelPermInfo
+  -> Role -> SelPermInfo
   -> m (Bool, [SelField])
 getSelPerm tableCache fields role selPermInfo = do
 
@@ -521,7 +522,7 @@ getSelPerm tableCache fields role selPermInfo = do
 
 mkInsCtx
   :: MonadError QErr m
-  => RoleName
+  => Role
   -> TableCache
   -> FieldInfoMap FieldInfo
   -> InsPermInfo
@@ -633,7 +634,7 @@ mkGCtxRole
   -> [FunctionInfo]
   -> Maybe ViewInfo
   -> TableConfig
-  -> RoleName
+  -> Role
   -> RolePermInfo
   -> m (TyAgg, RootFields, InsCtxMap)
 mkGCtxRole tableCache tn descM fields primaryKey constraints funcs viM tabConfigM role permInfo = do
@@ -691,9 +692,9 @@ mkGCtxMapTable
   => TableCache
   -> FunctionCache
   -> TableInfo
-  -> m (Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap))
+  -> m (Map.HashMap Role (TyAgg, RootFields, InsCtxMap))
 mkGCtxMapTable tableCache funcCache tabInfo = do
-  m <- flip Map.traverseWithKey rolePerms $
+  m <- flip Map.traverseWithKey (roleNameToRoleMap rolePerms) $
        mkGCtxRole tableCache tn descM fields primaryKey validConstraints
                   tabFuncs viewInfo customConfig
   adminInsCtx <- mkAdminInsCtx tableCache fields
@@ -734,9 +735,9 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
     tableFltr ti = not (isSystemDefined $ _tciSystemDefined ti) && isValidObjectName (_tciName ti)
 
     combineTypes
-      :: Map.HashMap RoleName (RootFields, TyAgg)
-      -> [Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap)]
-      -> m (Map.HashMap RoleName (TyAgg, RootFields, InsCtxMap))
+      :: Map.HashMap Role (RootFields, TyAgg)
+      -> [Map.HashMap Role (TyAgg, RootFields, InsCtxMap)]
+      -> m (Map.HashMap Role (TyAgg, RootFields, InsCtxMap))
     combineTypes actionsSchema maps = do
       let listMap = foldr (Map.unionWith (++) . Map.map pure)
                           ((\(rf, tyAgg) -> pure (tyAgg, rf, mempty)) <$> actionsSchema)
@@ -765,7 +766,7 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
 
       pure $ mconcat rootFields
 
-getGCtx :: (CacheRM m) => RoleName -> GCtxMap -> m GCtx
+getGCtx :: (CacheRM m) => Role -> GCtxMap -> m GCtx
 getGCtx rn ctxMap = do
   sc <- askSchemaCache
   return $ fromMaybe (scDefaultRemoteGCtx sc) $ Map.lookup rn ctxMap

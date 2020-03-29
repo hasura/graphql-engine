@@ -201,16 +201,16 @@ updatePermFlds refQT rn pt rename = do
 updateInsPermFlds
   :: (MonadTx m, CacheRM m)
   => QualifiedTable -> Rename -> RoleName -> InsPerm -> m ()
-updateInsPermFlds refQT rename rn (InsPerm chk preset cols) = do
+updateInsPermFlds refQT rename rn (InsPerm chk preset cols mAdminOnly) = do
   updatedPerm <- case rename of
     RTable rt -> do
       let updChk = updateTableInBoolExp rt chk
-      return $ InsPerm updChk preset cols
+      return $ InsPerm updChk preset cols mAdminOnly
     RField rf -> do
       updChk <- updateFieldInBoolExp refQT rf chk
       let updPresetM = updatePreset refQT rf <$> preset
           updColsM = updateCols refQT rf <$> cols
-      return $ InsPerm updChk updPresetM updColsM
+      return $ InsPerm updChk updPresetM updColsM mAdminOnly
   liftTx $ updatePermDefInCatalog PTInsert refQT rn updatedPerm
 
 updateSelPermFlds

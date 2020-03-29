@@ -98,7 +98,7 @@ convObj prepFn defInsVals setInsVals fieldInfoMap insObj = do
     throwNotInsErr c = do
       role <- _uiRole <$> askUserInfo
       throw400 NotSupported $ "column " <> c <<> " is not insertable"
-        <> " for role " <>> role
+        <> " for role " <>> getRoleName role
 
 validateInpCols :: (MonadError QErr m) => [PGCol] -> [PGCol] -> m ()
 validateInpCols inpCols updColsPerm = forM_ inpCols $ \inpCol ->
