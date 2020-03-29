@@ -50,7 +50,7 @@ const LeftSubSidebar = props => {
             styles.sidebarSearch + ' form-group col-xs-12 ' + styles.padd_remove
           }
         >
-          <Icon type="search" />
+          <Icon type="search" color="grey.tab" />
           {searchInput}
         </div>
       </div>

@@ -234,7 +234,7 @@ const ViewRows = ({
         Header: (
           <div className="ellipsis" title="Click to sort">
             <span className={styles.tableHeaderCell}>
-              {columnName} <Icon type={sortIcon} />
+              {columnName} <Icon type={sortIcon} size={10} />
             </span>
           </div>
         ),
@@ -376,13 +376,13 @@ const ViewRows = ({
             handleClick = handleExpand;
           }
 
-          const expanderIcon = <Icon type={icon} />;
+          const expanderIcon = <Icon type={icon} size={10} />;
 
           return getActionButton('expand', expanderIcon, title, handleClick);
         };
 
         const getEditButton = pkClause => {
-          const editIcon = <Icon type="edit" />;
+          const editIcon = <Icon type="edit" size={10} />;
 
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
@@ -403,7 +403,7 @@ const ViewRows = ({
         };
 
         const getDeleteButton = pkClause => {
-          const deleteIcon = <Icon type="delete" />;
+          const deleteIcon = <Icon type="delete" size={10} />;
 
           const handleDeleteClick = () => {
             dispatch(deleteItem(pkClause));
@@ -421,7 +421,7 @@ const ViewRows = ({
         };
 
         const getCloneButton = () => {
-          const cloneIcon = <Icon type="clone" />;
+          const cloneIcon = <Icon type="clone" size={10} />;
 
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
@@ -763,7 +763,7 @@ const ViewRows = ({
             title="Delete selected rows"
             onClick={handleDeleteItems}
           >
-            <Icon type="delete" />
+            <Icon type="delete" size={10} />
           </button>
         </div>
       );

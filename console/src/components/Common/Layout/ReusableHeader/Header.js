@@ -193,7 +193,6 @@ class Header extends React.Component {
               onClick={this.deleteHeader.bind(this)}
               data-index-id={i}
               ml="10px"
-              size={15}
             />
           ) : null}
         </div>

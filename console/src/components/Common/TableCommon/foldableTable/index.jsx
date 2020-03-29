@@ -14,7 +14,7 @@ const defaultFoldIconComponent = ({ collapsed }) => {
     title = 'Collapse column';
   }
 
-  return <Icon type={icon} title={title} />;
+  return <Icon type={icon} title={title} size={12} />;
 };
 
 const defaultFoldButtonComponent = ({ header, collapsed, icon, onClick }) => {
