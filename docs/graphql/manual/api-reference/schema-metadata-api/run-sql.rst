@@ -215,6 +215,10 @@ Args syntax
      - false
      - Boolean
      - When set to ``true``, the query will be run in ``READ ONLY`` transaction access mode which means only ``select`` queries will be successful. This flag ensures that the GraphQL schema is not modified and is hence highly performant.
+   * - skip_cache_reload
+     - false
+     - Boolean
+     - When set to ``true``, the sql is executed and the GraphQL schema is not modified. This field should be set to ``true`` in ``READ ONLY`` queries or while migrating data, because after the migrations, :ref:`replace_metadata` will be called.
 
 Response
 ^^^^^^^^

@@ -7,6 +7,7 @@ import json
 import queue
 import requests
 import time
+import datetime
 
 import pytest
 
@@ -589,3 +590,45 @@ class TestRemoteSchemaReload:
         # Delete remote schema
         st_code, resp = hge_ctx.v1q(mk_delete_remote_q('simple 1'))
         assert st_code == 200, resp
+
+class TestSkipCacheReload:
+
+    def test_skip_cache_reload_schema_cache(self,hge_ctx):
+        headers = {}
+        if hge_ctx.hge_key:
+            headers['x-hasura-admin-secret'] = hge_ctx.hge_key
+        occured_at_body = {
+            "type":"run_sql",
+            "args":{
+                "skip_cache_reload":True,
+                "sql":"select timezone('utc',occurred_at) from hdb_catalog.hdb_schema_update_event"
+            }
+        }
+        st_code, resp,_ = hge_ctx.anyq('/v1/query', occured_at_body, headers)
+        initial_ts = datetime.datetime.strptime(resp['result'][1][0],'%Y-%m-%d %H:%M:%S.%f')
+        assert st_code == 200,resp
+        # skip_cache_reload is omitted from the body, so the schema cache will be rebuilt
+        body = {
+            "type":"run_sql",
+            "args":{
+                "sql":"create table hge_tests.test_t1 (fname text, lname text)"
+            }
+        }
+        # Whenever the schema cache is rebuilt, the hdb_schema_update_event's
+        # occured_at will be updated to the current_timestamp
+        st_code, resp,_ = hge_ctx.anyq('/v1/query', body, headers)
+        assert st_code == 200,resp
+        st_code, resp,_ = hge_ctx.anyq('/v1/query', occured_at_body, headers)
+        after_schema_cache_rebuild_ts = datetime.datetime.strptime(resp['result'][1][0],'%Y-%m-%d %H:%M:%S.%f')
+        # We're checking the latest occured_at of the schema_update_event
+        # and it should be greater than the initial occured_at, which signifies
+        # the schema cache has been rebuilt
+        assert after_schema_cache_rebuild_ts > initial_ts
+        body = {
+            "type":"run_sql",
+            "args":{
+                "sql":"drop table hge_tests.test_t1"
+            }
+        }
+        st_code, resp,_ = hge_ctx.anyq('/v1/query', body, headers)
+        assert st_code == 200,resp

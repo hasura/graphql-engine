@@ -62,6 +62,7 @@ data RunSQL
   , rCascade                  :: !Bool
   , rCheckMetadataConsistency :: !(Maybe Bool)
   , rTxAccessMode             :: !Q.TxAccess
+  , rSkipCacheReload          :: !Bool
   } deriving (Show, Eq, Lift)
 
 instance FromJSON RunSQL where
@@ -70,6 +71,7 @@ instance FromJSON RunSQL where
     rCascade <- o .:? "cascade" .!= False
     rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
     isReadOnly <- o .:? "read_only" .!= False
+    rSkipCacheReload <- o .:? "skip_cache_reload" .!= True
     let rTxAccessMode = if isReadOnly then Q.ReadOnly else Q.ReadWrite
     pure RunSQL{..}
 
@@ -83,6 +85,7 @@ instance ToJSON RunSQL where
         case rTxAccessMode of
           Q.ReadOnly  -> True
           Q.ReadWrite -> False
+      , "skip_cache_reload" .= rSkipCacheReload
       ]
 
 runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
