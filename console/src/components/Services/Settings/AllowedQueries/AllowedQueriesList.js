@@ -163,7 +163,7 @@ class AllowedQueriesList extends React.Component {
 
     return (
       <div>
-        <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px" mr="sm">
+        <Heading type="subHeading">
           Allowed Queries
           {getDeleteAllBtn()}
         </Heading>

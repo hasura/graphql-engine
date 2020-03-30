@@ -147,9 +147,7 @@ class RelationshipsView extends Component {
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
           <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
-              Relationships
-            </Heading>
+            <Heading type="subHeading">Relationships</Heading>
             {addedRelationshipsView}
             <br />
             <AddManualRelationship

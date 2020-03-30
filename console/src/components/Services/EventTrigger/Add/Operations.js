@@ -88,7 +88,7 @@ const Operations = ({
   return (
     <div>
       <div className={styles.add_mar_bottom + ' ' + styles.selectOperations}>
-        <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+        <Heading type="subHeading">
           Trigger Operations
           <ToolTip mx="sm" message={tooltip.operationsDescription} />
         </Heading>

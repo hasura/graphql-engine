@@ -1820,9 +1820,7 @@ class Permissions extends Component {
         <br />
         <div className={styles.padd_left_remove}>
           <div className={`${styles.padd_remove} col-xs-12`}>
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
-              Permissions
-            </Heading>
+            <Heading type="subHeading">Permissions</Heading>
             {getPermissionsTable(tSchema, qTypes, allRolesList)}
             {getBulkSection(tSchema)}
             {getEditSection(tSchema, qTypes, allRolesList)}

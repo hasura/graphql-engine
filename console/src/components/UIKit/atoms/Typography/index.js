@@ -2,7 +2,27 @@ import React from 'react';
 
 import { StyledHeading, StyledText, StyledTextLink } from './Typography';
 
-export const Heading = StyledHeading;
+export const Heading = props => {
+  const { children, type } = props;
+
+  if (type === 'subHeading') {
+    return (
+      <StyledHeading
+        as="h4"
+        fontSize="15px"
+        pb="20px"
+        mt="0px"
+        mb="0px"
+        {...props}
+      >
+        {children}
+      </StyledHeading>
+    );
+  }
+  // No else block here.
+
+  return <StyledHeading {...props}>{children}</StyledHeading>;
+};
 
 Heading.defaultProps = {
   color: 'black.text',

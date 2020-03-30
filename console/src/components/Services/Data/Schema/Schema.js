@@ -92,14 +92,7 @@ class Schema extends Component {
     const getSectionHeading = (headingText, tooltip, actionElement = null) => {
       return (
         <div>
-          <Heading
-            as="h4"
-            fontSize="15px"
-            pb="20px"
-            mt="0px"
-            mb="0px"
-            display="inline-block"
-          >
+          <Heading type="subHeading" display="inline-block">
             {headingText}
           </Heading>
           <ToolTip message={tooltip} mx="sm" />

@@ -70,9 +70,7 @@ class AddExistingTableView extends Component {
               styles.padd_bottom
             }
           >
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
-              Table/View name:
-            </Heading>
+            <Heading type="subHeading">Table/View name:</Heading>
             <form
               onSubmit={e => {
                 e.preventDefault();

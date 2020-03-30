@@ -268,7 +268,7 @@ class AddTrigger extends Component {
 
     const advancedColumnSection = (
       <div>
-        <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+        <Heading type="subHeading">
           Listen columns for update
           <ToolTip message={tooltip.advancedOperationDescription} mx="sm" />
         </Heading>

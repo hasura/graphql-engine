@@ -117,7 +117,7 @@ class ModifyView extends Component {
 
       return (
         <React.Fragment>
-          <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+          <Heading type="subHeading">
             Custom GraphQL Root Fields
             <ToolTip message={changeViewRootFields} ml="sm" />
           </Heading>

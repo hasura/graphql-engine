@@ -137,9 +137,7 @@ class AddAllowedQuery extends React.Component {
 
     return (
       <div>
-        <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
-          Add new queries to allow-list
-        </Heading>
+        <Heading type="subHeading">Add new queries to allow-list</Heading>
         <div className={styles.subsection}>
           <div>
             <ExpandableEditor

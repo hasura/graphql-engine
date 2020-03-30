@@ -272,9 +272,7 @@ const RawSQL = ({
         <div
           className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
         >
-          <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
-            SQL Result:
-          </Heading>
+          <Heading type="subHeading">SQL Result:</Heading>
           <div className={styles.tableContainer}>
             <table
               className={`table table-bordered table-striped table-hover ${styles.table} `}

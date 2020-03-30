@@ -465,7 +465,7 @@ class AddTable extends Component {
               />
             </div>
             <hr />
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+            <Heading type="subHeading">
               Primary Key
               <ToolTip message={primaryKeyDescription} ml="sm" />
             </Heading>
