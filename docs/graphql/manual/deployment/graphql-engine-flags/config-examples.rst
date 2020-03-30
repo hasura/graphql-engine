@@ -1,3 +1,9 @@
+.. meta::
+   :description: Examples of server configurations with Hasura GraphQL engine
+   :keywords: hasura, docs, deployment, flags, server, server configuration, example
+
+.. _config_examples:
+
 GraphQL engine server config examples
 =====================================
 

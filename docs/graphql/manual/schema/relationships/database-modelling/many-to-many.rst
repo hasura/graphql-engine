@@ -1,4 +1,8 @@
-.. _many-to-many-modelling:
+.. meta::
+   :description: Model many-to-many relationships in Hasura
+   :keywords: hasura, docs, schema, relationship, many-to-many, n-m
+
+.. _many_to_many_modelling:
 
 Modelling many-to-many table relationships
 ==========================================
@@ -60,7 +64,7 @@ permutations of their association via the foreign keys.
 Set up GraphQL relationships
 ----------------------------
 
-To access the nested objects via the GraphQL API, :doc:`create the following relationships <../create>`:
+To access the nested objects via the GraphQL API, :ref:`create the following relationships <create_relationships>`:
 
 - Array relationship, ``article_tags`` from ``article`` table using  ``article_tag :: article_id -> id``
 - Object relationship, ``tag`` from ``article_tag`` table using  ``tag_id -> tag :: id``
@@ -264,7 +268,7 @@ Flattening a many-to-many relationship query
 --------------------------------------------
 
 In case you would like to flatten the above queries and avoid the intermediate fields ``article_tags`` &
-``tag_articles``, you can :doc:`create the following views <../../views>` additionally and then
+``tag_articles``, you can :ref:`create the following views <custom_views>` additionally and then
 query using relationships created on these views:
 
 .. code-block:: sql
@@ -279,7 +283,7 @@ query using relationships created on these views:
       FROM article_tag LEFT JOIN article
         ON article_tag.article_id = article.id
 
-Now :doc:`create the following relationships <../create>`:
+Now :ref:`create the following relationships <create_relationships>`:
 
 - Array relationship, ``tags`` from the ``article`` table using  ``article_tags_view :: article_id -> id``
 - Array relationship, ``articles`` from the ``tag`` table using  ``tag_articles_view :: tag_id -> id``

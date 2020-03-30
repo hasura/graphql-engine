@@ -1,3 +1,9 @@
+.. meta::
+   :description: Get Hasura GraphQL engine server logs with Kubernetes deployment
+   :keywords: hasura, docs, deployment, kubernetes, logs
+
+.. _kubernetes_logs:
+
 Hasura GraphQL engine server logs (Kubernetes)
 ==============================================
 
@@ -21,4 +27,4 @@ service, i.e. ``hasura``:
 
 - https://kubernetes.io/docs/concepts/cluster-administration/logging for more details on logging in Kubernetes.
 
-- :doc:`../logging` for more details on Hasura logs
+- :ref:`hge_logs` for more details on Hasura logs

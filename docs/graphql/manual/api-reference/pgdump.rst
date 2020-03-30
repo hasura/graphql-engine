@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura PG dump API reference
+   :keywords: hasura, docs, PG dump API, API reference
+
 .. _pg_dump_api_reference:
 
 PG Dump API Reference
@@ -92,4 +96,4 @@ state that this API is not enabled. i.e. remove it from the list of enabled APIs
    --enabled-apis="graphql,metadata"
    HASURA_GRAPHQL_ENABLED_APIS="graphql,metadata"
 
-See :doc:`../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var.
+See :ref:`server_flag_reference` for info on setting the above flag/env var.

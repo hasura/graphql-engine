@@ -1,3 +1,9 @@
+.. meta::
+   :description: How Hasura migrations work
+   :keywords: hasura, docs, migration, how it works
+
+.. _migrations_how_it_works:
+
 How Hasura migrations work
 ==========================
 
@@ -7,13 +13,13 @@ How Hasura migrations work
   :local:
 
 This is an explanation on how the Hasura migration system works. To understand how
-to use the system, refer to :doc:`Migrations & Metadata <../index>`.
+to use the system, refer to :ref:`Migrations & Metadata <auth>`.
 
 Metadata
 --------
 
 Let's first talk about metadata. Whenever you do certain actions on the console
-or via the API, Hasura records it in the :doc:`metadata catalogue <../../how-it-works/metadata-schema>`
+or via the API, Hasura records it in the :ref:`metadata catalogue <hasura_metadata_schema>`
 which is a schema called ``hdb_catalog`` in your Postgres database. For example, if you track
 a table, a new entry is created in the ``hdb_catalog.hdb_table`` table in Postgres.
 Similarly, there are more tables in this schema to track relationships, event triggers,
@@ -27,7 +33,7 @@ data. One thing to note is that all the Postgres resources the metadata refers
 to should already exist when the import happens, otherwise Hasura will throw an
 error. 
 
-To understand the format of the ``metadata.json`` file, refer to :ref:`metadata_file_format`.
+To understand the format of the ``hasura_metadata.json`` file, refer to :ref:`metadata_file_format`.
 
 For more details on how to import and export metadata, refer to :ref:`manage_hasura_metadata`.
 

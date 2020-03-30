@@ -9,11 +9,24 @@ CREATE TABLE hdb_catalog.hdb_version (
 CREATE UNIQUE INDEX hdb_version_one_row
 ON hdb_catalog.hdb_version((version IS NOT NULL));
 
+/* Note [Reference system columns using type name]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+While working on #3394, I (Alexis) discovered that Postgres seems to sometimes generate very bad
+query plans when joining against the system catalogs if we store things like table/schema names
+using type `text` rather than type `name`, the latter of which is used internally. The two types are
+compatible in the sense that Postgres will willingly widen `name` to `type` automatically, but
+`name`s are restricted to 64 bytes.
+
+Using `name` for ordinary user data would be a deep sin, but using it to store references to actual
+Postgres identifiers makes a lot of sense, so using `name` in those places is alright. And by doing
+so, we make Postgres much more likely to take advantage of certain indexes that can significantly
+improve query performance. */
+
 CREATE TABLE hdb_catalog.hdb_table
 (
-    table_schema TEXT,
-    table_name TEXT,
-    configuration JSONB,
+    table_schema name, -- See Note [Reference system columns using type name]
+    table_name name,
+    configuration jsonb,
     is_system_defined boolean default false,
     is_enum boolean NOT NULL DEFAULT false,
 
@@ -22,8 +35,8 @@ CREATE TABLE hdb_catalog.hdb_table
 
 CREATE TABLE hdb_catalog.hdb_relationship
 (
-    table_schema TEXT,
-    table_name TEXT,
+    table_schema name, -- See Note [Reference system columns using type name]
+    table_name name,
     rel_name   TEXT,
     rel_type   TEXT CHECK (rel_type IN ('object', 'array')),
     rel_def    JSONB NOT NULL,
@@ -36,8 +49,8 @@ CREATE TABLE hdb_catalog.hdb_relationship
 
 CREATE TABLE hdb_catalog.hdb_permission
 (
-    table_schema TEXT,
-    table_name TEXT,
+    table_schema name, -- See Note [Reference system columns using type name]
+    table_name name,
     role_name  TEXT,
     perm_type  TEXT CHECK(perm_type IN ('insert', 'select', 'update', 'delete')),
     perm_def   JSONB NOT NULL,
@@ -287,6 +300,7 @@ CREATE TABLE hdb_catalog.event_log
 CREATE INDEX ON hdb_catalog.event_log (trigger_name);
 CREATE INDEX ON hdb_catalog.event_log (locked);
 CREATE INDEX ON hdb_catalog.event_log (delivered);
+CREATE INDEX ON hdb_catalog.event_log (created_at);
 
 CREATE TABLE hdb_catalog.event_invocation_logs
 (
@@ -398,7 +412,8 @@ CREATE TABLE hdb_catalog.remote_schemas (
 
 CREATE TABLE hdb_catalog.hdb_schema_update_event (
   instance_id uuid NOT NULL,
-  occurred_at timestamptz NOT NULL DEFAULT NOW()
+  occurred_at timestamptz NOT NULL DEFAULT NOW(),
+  invalidations json NOT NULL
 );
 
 CREATE UNIQUE INDEX hdb_schema_update_event_one_row
@@ -409,13 +424,16 @@ $function$
   DECLARE
     instance_id uuid;
     occurred_at timestamptz;
+    invalidations json;
     curr_rec record;
   BEGIN
     instance_id = NEW.instance_id;
     occurred_at = NEW.occurred_at;
+    invalidations = NEW.invalidations;
     PERFORM pg_notify('hasura_schema_update', json_build_object(
       'instance_id', instance_id,
-      'occurred_at', occurred_at
+      'occurred_at', occurred_at,
+      'invalidations', invalidations
       )::text);
     RETURN curr_rec;
   END;
@@ -426,129 +444,110 @@ CREATE TRIGGER hdb_schema_update_event_notifier AFTER INSERT OR UPDATE ON
   hdb_catalog.hdb_schema_update_event FOR EACH ROW EXECUTE PROCEDURE
   hdb_catalog.hdb_schema_update_event_notifier();
 
-CREATE VIEW hdb_catalog.hdb_column AS
-     WITH primary_key_references AS (
-            SELECT fkey.table_schema           AS src_table_schema
-                 , fkey.table_name             AS src_table_name
-                 , fkey.columns->>0            AS src_column_name
-                 , json_agg(json_build_object(
-                     'schema', fkey.ref_table_table_schema,
-                     'name', fkey.ref_table
-                   )) AS ref_tables
-              FROM hdb_catalog.hdb_foreign_key_constraint AS fkey
-              JOIN hdb_catalog.hdb_primary_key            AS pkey
-                    ON pkey.table_schema   = fkey.ref_table_table_schema
-                   AND pkey.table_name     = fkey.ref_table
-                   AND pkey.columns::jsonb = fkey.ref_columns::jsonb
-             WHERE json_array_length(fkey.columns) = 1
-          GROUP BY fkey.table_schema
-                 , fkey.table_name
-                 , fkey.columns->>0)
-   SELECT columns.table_schema
-        , columns.table_name
-        , columns.column_name AS name
-        , columns.udt_name AS type
-        , columns.is_nullable
-        , columns.ordinal_position
-        , coalesce(pkey_refs.ref_tables, '[]') AS primary_key_references
-        , col_description(pg_class.oid, columns.ordinal_position) AS description
-     FROM information_schema.columns
-JOIN pg_class ON pg_class.relname = columns.table_name
-JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-     AND pg_namespace.nspname = columns.table_schema
-LEFT JOIN primary_key_references AS pkey_refs
-           ON columns.table_schema = pkey_refs.src_table_schema
-          AND columns.table_name   = pkey_refs.src_table_name
-          AND columns.column_name  = pkey_refs.src_column_name;
+CREATE VIEW hdb_catalog.hdb_table_info_agg AS
+  SELECT
+    schema.nspname AS table_schema,
+    "table".relname AS table_name,
 
-CREATE VIEW hdb_catalog.hdb_table_info_agg AS (
-select
-  tables.table_name as table_name,
-  tables.table_schema as table_schema,
-  descriptions.description,
-  coalesce(columns.columns, '[]') as columns,
-  coalesce(pk.columns, '[]') as primary_key_columns,
-  coalesce(constraints.constraints, '[]') as constraints,
-  coalesce(views.view_info, 'null') as view_info
-from
-  information_schema.tables as tables
-  left outer join (
-    select
-      c.table_name,
-      c.table_schema,
-      json_agg(
-        json_build_object(
-          'name', name,
-          'type', type,
-          'is_nullable', is_nullable :: boolean,
-          'references', primary_key_references,
-          'description', description
-        )
-      ) as columns
-    from
-      hdb_catalog.hdb_column c
-    group by
-      c.table_schema,
-      c.table_name
-  ) columns on (
-    tables.table_schema = columns.table_schema
-    AND tables.table_name = columns.table_name
-  )
-  left outer join (
-    select * from hdb_catalog.hdb_primary_key
-  ) pk on (
-    tables.table_schema = pk.table_schema
-    AND tables.table_name = pk.table_name
-  )
-  left outer join (
-    select
-      c.table_schema,
-      c.table_name,
-      json_agg(constraint_name) as constraints
-    from
-      information_schema.table_constraints c
-    where
-      c.constraint_type = 'UNIQUE'
-      or c.constraint_type = 'PRIMARY KEY'
-    group by
-      c.table_schema,
-      c.table_name
-  ) constraints on (
-    tables.table_schema = constraints.table_schema
-    AND tables.table_name = constraints.table_name
-  )
-  left outer join (
-    select
-      table_schema,
-      table_name,
-      json_build_object(
-        'is_updatable',
-        (is_updatable::boolean OR is_trigger_updatable::boolean),
-        'is_deletable',
-        (is_updatable::boolean OR is_trigger_deletable::boolean),
-        'is_insertable',
-        (is_insertable_into::boolean OR is_trigger_insertable_into::boolean)
-      ) as view_info
-    from
-      information_schema.views v
-  ) views on (
-    tables.table_schema = views.table_schema
-    AND tables.table_name = views.table_name
-  )
-  left outer join (
-    select
-        pc.relname as table_name,
-        pn.nspname as table_schema,
-        pd.description
-    from pg_class pc
-        left join pg_namespace pn on pn.oid = pc.relnamespace
-        left join pg_description pd on pd.objoid = pc.oid
-    where pd.objsubid = 0
-  ) descriptions on (
-    tables.table_schema = descriptions.table_schema
-    AND tables.table_name = descriptions.table_name
-  )
-);
+    -- This field corresponds to the `CatalogTableInfo` Haskell type
+    jsonb_build_object(
+      'oid', "table".oid :: integer,
+      'columns', coalesce(columns.info, '[]'),
+      'primary_key', primary_key.info,
+      -- Note: unique_constraints does NOT include primary key constraints!
+      'unique_constraints', coalesce(unique_constraints.info, '[]'),
+      'foreign_keys', coalesce(foreign_key_constraints.info, '[]'),
+      'view_info', CASE "table".relkind WHEN 'v' THEN jsonb_build_object(
+        'is_updatable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 4) = 4),
+        'is_insertable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 8) = 8),
+        'is_deletable', ((pg_catalog.pg_relation_is_updatable("table".oid, true) & 16) = 16)
+      ) END,
+      'description', description.description
+    ) AS info
+
+  -- table & schema
+  FROM pg_catalog.pg_class "table"
+  JOIN pg_catalog.pg_namespace schema
+    ON schema.oid = "table".relnamespace
+
+  -- description
+  LEFT JOIN pg_catalog.pg_description description
+    ON  description.classoid = 'pg_catalog.pg_class'::regclass
+    AND description.objoid = "table".oid
+    AND description.objsubid = 0
+
+  -- columns
+  LEFT JOIN LATERAL
+    ( SELECT jsonb_agg(jsonb_build_object(
+        'name', "column".attname,
+        'position', "column".attnum,
+        'type', coalesce(base_type.typname, "type".typname),
+        'is_nullable', NOT "column".attnotnull,
+        'description', pg_catalog.col_description("table".oid, "column".attnum)
+      )) AS info
+      FROM pg_catalog.pg_attribute "column"
+      LEFT JOIN pg_catalog.pg_type "type"
+        ON "type".oid = "column".atttypid
+      LEFT JOIN pg_catalog.pg_type base_type
+        ON "type".typtype = 'd' AND base_type.oid = "type".typbasetype
+      WHERE "column".attrelid = "table".oid
+        -- columns where attnum <= 0 are special, system-defined columns
+        AND "column".attnum > 0
+        -- dropped columns still exist in the system catalog as “zombie” columns, so ignore those
+        AND NOT "column".attisdropped
+    ) columns ON true
+
+  -- primary key
+  LEFT JOIN LATERAL
+    ( SELECT jsonb_build_object(
+        'constraint', jsonb_build_object('name', class.relname, 'oid', class.oid :: integer),
+        'columns', coalesce(columns.info, '[]')
+      ) AS info
+      FROM pg_catalog.pg_index index
+      JOIN pg_catalog.pg_class class
+        ON class.oid = index.indexrelid
+      LEFT JOIN LATERAL
+        ( SELECT jsonb_agg("column".attname) AS info
+          FROM pg_catalog.pg_attribute "column"
+          WHERE "column".attrelid = "table".oid
+            AND "column".attnum = ANY (index.indkey)
+        ) AS columns ON true
+      WHERE index.indrelid = "table".oid
+        AND index.indisprimary
+    ) primary_key ON true
+
+  -- unique constraints
+  LEFT JOIN LATERAL
+    ( SELECT jsonb_agg(jsonb_build_object('name', class.relname, 'oid', class.oid :: integer)) AS info
+      FROM pg_catalog.pg_index index
+      JOIN pg_catalog.pg_class class
+        ON class.oid = index.indexrelid
+      WHERE index.indrelid = "table".oid
+        AND index.indisunique
+        AND NOT index.indisprimary
+    ) unique_constraints ON true
+
+  -- foreign keys
+  LEFT JOIN LATERAL
+    ( SELECT jsonb_agg(jsonb_build_object(
+        'constraint', jsonb_build_object(
+          'name', foreign_key.constraint_name,
+          'oid', foreign_key.constraint_oid :: integer
+        ),
+        'columns', foreign_key.columns,
+        'foreign_table', jsonb_build_object(
+          'schema', foreign_key.ref_table_table_schema,
+          'name', foreign_key.ref_table
+        ),
+        'foreign_columns', foreign_key.ref_columns
+      )) AS info
+      FROM hdb_catalog.hdb_foreign_key_constraint foreign_key
+      WHERE foreign_key.table_schema = schema.nspname
+        AND foreign_key.table_name = "table".relname
+    ) foreign_key_constraints ON true
+
+  -- all these identify table-like things
+  WHERE "table".relkind IN ('r', 't', 'v', 'm', 'f', 'p');
 
 CREATE VIEW hdb_catalog.hdb_function_info_agg AS (
   SELECT
@@ -661,4 +660,62 @@ CREATE VIEW hdb_catalog.hdb_computed_field_function AS
       ELSE (definition::jsonb -> 'function')::jsonb ->> 'schema'
     END AS function_schema
   FROM hdb_catalog.hdb_computed_field
+);
+
+CREATE OR REPLACE FUNCTION hdb_catalog.check_violation(msg text) RETURNS bool AS
+$$
+  BEGIN
+    RAISE check_violation USING message=msg;
+  END;
+$$ LANGUAGE plpgsql;
+
+CREATE TABLE hdb_catalog.hdb_action
+(
+  action_name TEXT PRIMARY KEY,
+  action_defn JSONB NOT NULL,
+  comment TEXT NULL,
+  is_system_defined boolean default false
+);
+
+CREATE TABLE hdb_catalog.hdb_action_permission
+(
+  action_name TEXT NOT NULL,
+  role_name TEXT NOT NULL,
+  definition JSONB NOT NULL DEFAULT '{}'::jsonb,
+  comment    TEXT NULL,
+
+  PRIMARY KEY (action_name, role_name),
+  FOREIGN KEY (action_name) REFERENCES hdb_catalog.hdb_action(action_name) ON UPDATE CASCADE
+);
+
+CREATE TABLE hdb_catalog.hdb_action_log
+(
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- we deliberately do not reference the action name
+  -- because sometimes we may want to retain history
+  -- after dropping the action
+  action_name TEXT,
+  input_payload JSONB NOT NULL,
+  request_headers JSONB NOT NULL,
+  session_variables JSONB NOT NULL,
+  response_payload JSONB NULL,
+  errors JSONB NULL,
+  created_at timestamptz NOT NULL default now(),
+  response_received_at timestamptz NULL,
+  status text NOT NULL,
+  CHECK (status IN ('created', 'processing', 'completed', 'error'))
+);
+
+CREATE TABLE hdb_catalog.hdb_custom_types
+(
+  custom_types jsonb NOT NULL
+);
+
+CREATE VIEW hdb_catalog.hdb_role AS
+(
+  SELECT DISTINCT role_name FROM (
+    SELECT role_name FROM hdb_catalog.hdb_permission
+    UNION ALL
+    SELECT role_name FROM hdb_catalog.hdb_action_permission
+  ) q
 );

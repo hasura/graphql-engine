@@ -1,13 +1,12 @@
-import ruamel.yaml as yaml
 import pytest
-#from validate import check_query, test_forbidden_when_admin_secret_reqd, test_forbidden_webhook
 from validate import check_query
 import validate
-from super_classes import DefaultTestSelectQueries
 from context import GQLWsClient
 
+usefixtures = pytest.mark.usefixtures
 
-class TestV1Alpha1GraphQLErrors(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1Alpha1GraphQLErrors:
 
     @classmethod
     def dir(cls):

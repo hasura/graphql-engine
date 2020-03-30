@@ -1,16 +1,13 @@
 import React from 'react';
-import AceEditor from 'react-ace';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { getCheckConstraintName } from '../../../Common/utils/pgUtils';
-import styles from './ModifyTable.scss';
 import {
   setCheckConstraints,
   saveCheckConstraint,
   removeCheckConstraint,
 } from './ModifyActions';
-import ToolTip from '../../../Common/Tooltip/Tooltip';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import { getCheckConstraintBoolExp } from '../../../Common/utils/sqlUtils';
+import { ConstraintExpandedContent } from '../Common/Components/ConstraintExpandedContent';
 
 const CheckConstraints = ({
   constraints,
@@ -95,7 +92,6 @@ const CheckConstraints = ({
     };
 
     // expand button text "View"
-    // eslint-disable-next-line no-nested-ternary
     const expandButtonText = isLast
       ? constraints.length
         ? 'Add a new check constraint'
@@ -103,48 +99,6 @@ const CheckConstraints = ({
       : 'Edit';
 
     // Check constraint definition in AceEditor for syntax highlighting
-    const expandedContent = () => {
-      return (
-        <div>
-          <div className={`${styles.add_mar_bottom}`}>
-            <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Constraint Name:</b>
-            </div>
-            <input
-              type="text"
-              value={name}
-              onChange={nameOnChange}
-              className={`form-control ${styles.wd50percent}`}
-            />
-          </div>
-          <div>
-            <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Check Expression: </b>
-              <ToolTip
-                message={
-                  'Boolean expression that must be satisfied for all rows in the table. e.g. min_price >= 0 AND max_price >= min_price'
-                }
-              />
-              &nbsp;&nbsp;
-              <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
-            </div>
-            <AceEditor
-              mode="sql"
-              theme="github"
-              // placeholder="email ~ '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+[.][A-Za-z]+$'"
-              name={existingConstraintName}
-              onChange={checkOnChange}
-              value={check}
-              minLines={1}
-              maxLines={100}
-              fontSize={15}
-              width="100%"
-              showPrintMargin={false}
-            />
-          </div>
-        </div>
-      );
-    };
 
     let saveFunc;
     if (name && check) {
@@ -160,6 +114,16 @@ const CheckConstraints = ({
         dispatch(removeCheckConstraint(existingConstraintName, toggle));
       };
     }
+
+    const expandedContent = () => (
+      <ConstraintExpandedContent
+        nameOnChange={nameOnChange}
+        constraintName={existingConstraintName}
+        name={name}
+        checkOnChange={checkOnChange}
+        check={check}
+      />
+    );
 
     return (
       <ExpandableEditor

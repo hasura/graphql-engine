@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
 module Hasura.RQL.DDL.Metadata
   ( runReplaceMetadata
   , runExportMetadata
@@ -24,18 +23,19 @@ import qualified Data.Text                          as T
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.ComputedField       (dropComputedFieldFromCatalog)
-import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog,
-                                                     subTableP2)
+import           Hasura.RQL.DDL.EventTrigger        (delEventTriggerFromCatalog, subTableP2)
 import           Hasura.RQL.DDL.Metadata.Types
 import           Hasura.RQL.DDL.Permission.Internal (dropPermFromCatalog)
-import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2,
-                                                     buildGCtxMap,
+import           Hasura.RQL.DDL.RemoteSchema        (addRemoteSchemaP2, fetchRemoteSchemas,
                                                      removeRemoteSchemaFromCatalog)
 import           Hasura.RQL.Types
+import           Hasura.Server.Version              (HasVersion)
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
+import qualified Hasura.RQL.DDL.Action              as Action
 import qualified Hasura.RQL.DDL.ComputedField       as ComputedField
+import qualified Hasura.RQL.DDL.CustomTypes         as CustomTypes
 import qualified Hasura.RQL.DDL.Permission          as Permission
 import qualified Hasura.RQL.DDL.QueryCollection     as Collection
 import qualified Hasura.RQL.DDL.Relationship        as Relationship
@@ -52,20 +52,23 @@ clearMetadata = Q.catchE defaultTxErrorHandler $ do
   Q.unitQ "DELETE FROM hdb_catalog.remote_schemas" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_allowlist" () False
   Q.unitQ "DELETE FROM hdb_catalog.hdb_query_collection WHERE is_system_defined <> 'true'" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_custom_types" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_action_permission" () False
+  Q.unitQ "DELETE FROM hdb_catalog.hdb_action WHERE is_system_defined <> 'true'" () False
 
 runClearMetadata
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
+  :: (MonadTx m, CacheRWM m)
   => ClearMetadata -> m EncJSON
 runClearMetadata _ = do
   liftTx clearMetadata
-  Schema.buildSchemaCacheStrict
+  buildSchemaCacheStrict
   return successMsg
 
 applyQP1
   :: (QErrM m)
   => ReplaceMetadata -> m ()
-applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) = do
-
+applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections
+          allowlist _ actions) = do
   withPathK "tables" $ do
 
     checkMultipleDecls "tables" $ map _tmTable tables
@@ -106,6 +109,9 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) 
   withPathK "allowlist" $
     checkMultipleDecls "allow list" $ map Collection._crCollection allowlist
 
+  withPathK "actions" $
+    checkMultipleDecls "actions" $ map _amName actions
+
   where
     withTableName qt = withPathK (qualObjectToText qt)
 
@@ -119,49 +125,48 @@ applyQP1 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) 
       l L.\\ HS.toList (HS.fromList l)
 
 applyQP2
-  :: ( UserInfoM m
-     , CacheRWM m
-     , MonadTx m
+  :: ( HasVersion
      , MonadIO m
-     , HasHttpManager m
-     , HasSQLGenCtx m
+     , MonadTx m
+     , CacheRWM m
      , HasSystemDefined m
+     , HasHttpManager m
      )
   => ReplaceMetadata
   -> m EncJSON
-applyQP2 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) = do
+applyQP2 (ReplaceMetadata _ tables functionsMeta
+          schemas collections allowlist customTypes actions) = do
 
   liftTx clearMetadata
-  Schema.buildSchemaCacheStrict
+  buildSchemaCacheStrict
 
-  systemDefined <- askSystemDefined
   withPathK "tables" $ do
     -- tables and views
     indexedForM_ tables $ \tableMeta -> do
       let tableName = tableMeta ^. tmTable
           isEnum = tableMeta ^. tmIsEnum
           config = tableMeta ^. tmConfiguration
-      void $ Schema.trackExistingTableOrViewP2 tableName systemDefined isEnum config
+      void $ Schema.trackExistingTableOrViewP2 tableName isEnum config
 
     indexedForM_ tables $ \table -> do
       -- Relationships
       withPathK "object_relationships" $
         indexedForM_ (table ^. tmObjectRelationships) $ \objRel ->
-        Relationship.objRelP2 (table ^. tmTable) objRel
+        Relationship.insertRelationshipToCatalog (table ^. tmTable) ObjRel objRel
       withPathK "array_relationships" $
         indexedForM_ (table ^. tmArrayRelationships) $ \arrRel ->
-        Relationship.arrRelP2 (table ^. tmTable) arrRel
+        Relationship.insertRelationshipToCatalog (table ^. tmTable) ArrRel arrRel
       -- Computed Fields
       withPathK "computed_fields" $
         indexedForM_ (table ^. tmComputedFields) $
           \(ComputedFieldMeta name definition comment) ->
-            void $ ComputedField.addComputedFieldP2 $
+            ComputedField.addComputedFieldToCatalog $
               ComputedField.AddComputedField (table ^. tmTable) name definition comment
 
     -- Permissions
     indexedForM_ tables $ \table -> do
       let tableName = table ^. tmTable
-      tabInfo <- modifyErrAndSet500 ("apply " <> ) $ askTabInfo tableName
+      tabInfo <- modifyErrAndSet500 ("apply " <> ) $ askTableCoreInfo tableName
       withPathK "insert_permissions" $ processPerms tabInfo $
         table ^. tmInsertPermissions
       withPathK "select_permissions" $ processPerms tabInfo $
@@ -184,35 +189,43 @@ applyQP2 (ReplaceMetadata _ tables functionsMeta schemas collections allowlist) 
         \(Schema.TrackFunctionV2 function config) -> void $ Schema.trackFunctionP2 function config
 
   -- query collections
+  systemDefined <- askSystemDefined
   withPathK "query_collections" $
     indexedForM_ collections $ \c -> liftTx $ Collection.addCollectionToCatalog c systemDefined
 
   -- allow list
   withPathK "allowlist" $ do
-    indexedForM_ allowlist $
-      \(Collection.CollectionReq name) -> liftTx $ Collection.addCollectionToAllowlistCatalog name
-    -- add to cache
-    Collection.refreshAllowlist
+    indexedForM_ allowlist $ \(Collection.CollectionReq name) ->
+      liftTx $ Collection.addCollectionToAllowlistCatalog name
 
   -- remote schemas
   withPathK "remote_schemas" $
     indexedMapM_ (void . addRemoteSchemaP2) schemas
 
-  -- build GraphQL Context with Remote schemas
-  buildGCtxMap
+  CustomTypes.persistCustomTypes customTypes
 
+  for_ actions $ \action -> do
+    let createAction =
+          CreateAction (_amName action) (_amDefinition action) (_amComment action)
+    Action.persistCreateAction createAction
+    for_ (_amPermissions action) $ \permission -> do
+      let createActionPermission = CreateActionPermission (_amName action)
+                                   (_apmRole permission) Nothing (_apmComment permission)
+      Action.persistCreateActionPermission createActionPermission
+
+  buildSchemaCacheStrict
   return successMsg
 
   where
-    processPerms tabInfo perms =
-      indexedForM_ perms $ \permDef -> do
-        permInfo <- Permission.addPermP1 tabInfo permDef
-        Permission.addPermP2 (_tiName tabInfo) permDef permInfo
+    processPerms tabInfo perms = indexedForM_ perms $ Permission.addPermP2 (_tciName tabInfo)
 
 runReplaceMetadata
-  :: ( QErrM m, UserInfoM m, CacheRWM m, MonadTx m
-     , MonadIO m, HasHttpManager m, HasSQLGenCtx m
+  :: ( HasVersion
+     , MonadIO m
+     , MonadTx m
+     , CacheRWM m
      , HasSystemDefined m
+     , HasHttpManager m
      )
   => ReplaceMetadata -> m EncJSON
 runReplaceMetadata q = do
@@ -272,8 +285,15 @@ fetchMetadata = do
   -- fetch allow list
   allowlist <- map Collection.CollectionReq <$> fetchAllowlists
 
+  customTypes <- fetchCustomTypes
+
+  -- fetch actions
+  actions <- fetchActions
+
   return $ ReplaceMetadata currentMetadataVersion (HMIns.elems postRelMap) functions
                            remoteSchemas collections allowlist
+                           customTypes
+                           actions
 
   where
 
@@ -358,17 +378,6 @@ fetchMetadata = do
           ORDER BY collection_name ASC
          |] () False
 
-    fetchRemoteSchemas =
-      map fromRow <$> Q.listQE defaultTxErrorHandler
-        [Q.sql|
-         SELECT name, definition, comment
-           FROM hdb_catalog.remote_schemas
-         ORDER BY name ASC
-         |] () True
-      where
-        fromRow (name, Q.AltJ def, comment) =
-          AddRemoteSchemaQuery name def comment
-
     fetchComputedFields = do
       r <- Q.listQE defaultTxErrorHandler [Q.sql|
               SELECT table_schema, table_name, computed_field_name,
@@ -380,18 +389,62 @@ fetchMetadata = do
                           , ComputedFieldMeta name definition comment
                           )
 
+    fetchCustomTypes :: Q.TxE QErr CustomTypes
+    fetchCustomTypes =
+      Q.getAltJ . runIdentity . Q.getRow <$>
+      Q.rawQE defaultTxErrorHandler [Q.sql|
+         select coalesce((select custom_types::json from hdb_catalog.hdb_custom_types), '{}'::json)
+         |] [] False
+    fetchActions =
+      Q.getAltJ . runIdentity . Q.getRow <$> Q.rawQE defaultTxErrorHandler [Q.sql|
+        select
+          coalesce(
+            json_agg(
+              json_build_object(
+                'name', a.action_name,
+                'definition', a.action_defn,
+                'comment', a.comment,
+                'permissions', ap.permissions
+              ) order by a.action_name asc
+            ),
+            '[]'
+          )
+        from
+          hdb_catalog.hdb_action as a
+          left outer join lateral (
+            select
+              coalesce(
+                json_agg(
+                  json_build_object(
+                    'role', ap.role_name,
+                    'comment', ap.comment
+                  ) order by ap.role_name asc
+                ),
+                '[]'
+              ) as permissions
+            from
+              hdb_catalog.hdb_action_permission ap
+            where
+              ap.action_name = a.action_name
+          ) ap on true;
+                            |] [] False
+
 runExportMetadata
   :: (QErrM m, MonadTx m)
   => ExportMetadata -> m EncJSON
 runExportMetadata _ =
   (AO.toEncJSON . replaceMetadataToOrdJSON) <$> liftTx fetchMetadata
 
-runReloadMetadata
-  :: (QErrM m, CacheRWM m, MonadTx m, MonadIO m, HasHttpManager m, HasSQLGenCtx m)
-  => ReloadMetadata -> m EncJSON
-runReloadMetadata _ = do
-  Schema.buildSchemaCache
-  return successMsg
+runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
+runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
+  sc <- askSchemaCache
+  let remoteSchemaInvalidations =
+        if reloadRemoteSchemas then HS.fromList (getAllRemoteSchemas sc) else mempty
+  buildSchemaCacheWithOptions CatalogUpdate CacheInvalidations
+                                            { ciMetadata = True
+                                            , ciRemoteSchemas = remoteSchemaInvalidations
+                                            }
+  pure successMsg
 
 runDumpInternalState
   :: (QErrM m, CacheRM m)
@@ -415,17 +468,24 @@ runDropInconsistentMetadata
   => DropInconsistentMetadata -> m EncJSON
 runDropInconsistentMetadata _ = do
   sc <- askSchemaCache
-  let inconsSchObjs = map _moId $ scInconsistentObjs sc
-  mapM_ purgeMetadataObj inconsSchObjs
-  writeSchemaCache sc{scInconsistentObjs = []}
+  let inconsSchObjs = L.nub . concatMap imObjectIds $ scInconsistentObjs sc
+  -- Note: when building the schema cache, we try to put dependents after their dependencies in the
+  -- list of inconsistent objects, so reverse the list to start with dependents first. This is not
+  -- perfect — a completely accurate solution would require performing a topological sort — but it
+  -- seems to work well enough for now.
+  mapM_ purgeMetadataObj (reverse inconsSchObjs)
+  buildSchemaCacheStrict
   return successMsg
 
 purgeMetadataObj :: MonadTx m => MetadataObjId -> m ()
 purgeMetadataObj = liftTx . \case
-  (MOTable qt)                            -> Schema.deleteTableFromCatalog qt
-  (MOFunction qf)                         -> Schema.delFunctionFromCatalog qf
-  (MORemoteSchema rsn)                    -> removeRemoteSchemaFromCatalog rsn
-  (MOTableObj qt (MTORel rn _))           -> Relationship.delRelFromCatalog qt rn
-  (MOTableObj qt (MTOPerm rn pt))         -> dropPermFromCatalog qt rn pt
-  (MOTableObj _ (MTOTrigger trn))         -> delEventTriggerFromCatalog trn
-  (MOTableObj qt (MTOComputedField ccn))  -> dropComputedFieldFromCatalog qt ccn
+  MOTable qt                            -> Schema.deleteTableFromCatalog qt
+  MOFunction qf                         -> Schema.delFunctionFromCatalog qf
+  MORemoteSchema rsn                    -> removeRemoteSchemaFromCatalog rsn
+  MOTableObj qt (MTORel rn _)           -> Relationship.delRelFromCatalog qt rn
+  MOTableObj qt (MTOPerm rn pt)         -> dropPermFromCatalog qt rn pt
+  MOTableObj _ (MTOTrigger trn)         -> delEventTriggerFromCatalog trn
+  MOTableObj qt (MTOComputedField ccn)  -> dropComputedFieldFromCatalog qt ccn
+  MOCustomTypes                         -> CustomTypes.clearCustomTypes
+  MOAction action                       -> Action.deleteActionFromCatalog action Nothing
+  MOActionPermission action role        -> Action.deleteActionPermissionFromCatalog action role

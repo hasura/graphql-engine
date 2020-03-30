@@ -1,3 +1,9 @@
+.. meta::
+   :description: Set default field values using role-based column presets
+   :keywords: hasura, docs, schema, default value, role-based, column preset
+
+.. _column_presets:
+
 Setting default values for fields using role-based column presets
 =================================================================
 
@@ -7,7 +13,7 @@ Setting default values for fields using role-based column presets
   :local:
 
 Let's say you want certain fields to have their values set automatically when not explicitly passed using session
-variables or fixed values when a new row is created with a particular :doc:`user role <../../auth/authorization/roles-variables>`.
+variables or fixed values when a new row is created with a particular :ref:`user role <roles_variables>`.
 
 Hasura GraphQL engine's column presets let you define role-based default values for any field/column. These values
 can either be a session variable value or a static value.
@@ -27,11 +33,13 @@ The column preset option is available under the ``Permissions`` tab of a table. 
 ``Data -> article -> Permissions``:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/column-presets-option.png
+   :alt: Add a column preset in the permissions tab
 
 Enable the column preset option to define presets for one or more columns. For each column, you can pick between
 setting the preset using a static value or from a session variable.
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/column-presets-value-options.png
+   :alt: Configure the column preset
 
 For our chosen example, we'll use the ``from session variable`` option and configure the ``user_id`` column to be
 automatically populated based on the value of the ``X-Hasura-User-Id`` session variable.
@@ -55,11 +63,13 @@ As mentioned earlier, you'll notice when you add the ``X-Hasura-Role`` header th
 available as the mutation type's field:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/column-preset-schema-change-for-role.png
+   :alt: Write an insert mutation
 
 Now, if we run the following insert mutation, we'll see that the ``user_id`` field is indeed being set with the value
 passed in the ``X-Hasura-User-Id`` variable:
 
 .. thumbnail:: ../../../../img/graphql/manual/schema/column-preset-mutation-result.png
+   :alt: Run the insert mutation
 
 .. note::
 
@@ -81,5 +91,5 @@ passed in the ``X-Hasura-User-Id`` variable:
 Also see
 --------
 
-- :doc:`postgres-defaults`
-- :doc:`sql-functions`
+- :ref:`postgres_defaults`
+- :ref:`sql_functions_as_default`

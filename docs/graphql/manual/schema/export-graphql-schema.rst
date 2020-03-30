@@ -1,3 +1,9 @@
+.. meta::
+   :description: Export the GraphQL schema in Hasura
+   :keywords: hasura, docs, schema, graphql schema, export
+
+.. _export_graphql_schema:
+
 Exporting the Hasura GraphQL schema
 ===================================
 

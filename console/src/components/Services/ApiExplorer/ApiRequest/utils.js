@@ -47,18 +47,26 @@ export const getAdminSecret = () => {
   return adminSecret;
 };
 
+const LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED =
+  'ApiExplorer:AdminSecretHeaderWasAdded';
+
 export const persistAdminSecretHeaderWasAdded = () => {
-  window.localStorage.setItem('ApiExplorer:AdminSecretHeaderWasAdded', true);
+  window.localStorage.setItem(
+    LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED,
+    'true'
+  );
+};
+
+export const removePersistedAdminSecretHeaderWasAdded = () => {
+  window.localStorage.removeItem(LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED);
 };
 
 export const getPersistedAdminSecretHeaderWasAdded = () => {
-  const defaultIsSet = false;
-
-  const isSet = window.localStorage.getItem(
-    'ApiExplorer:AdminSecretHeaderWasAdded'
+  const lsValue = window.localStorage.getItem(
+    LS_API_EXPLORER_ADMIN_SECRET_HEADER_WAS_ADDED
   );
 
-  return isSet ? isSet === 'true' : defaultIsSet;
+  return lsValue ? lsValue === 'true' : false;
 };
 
 export const persistGraphiQLHeaders = headers => {

@@ -1,20 +1,13 @@
 module Hasura.Server.Context
-  ( HttpResponse(..)
-  , Header (..)
-  , Headers
-  )
+  (HttpResponse(..))
   where
 
 import           Hasura.Prelude
 
-newtype Header
-  = Header { unHeader :: (Text, Text) }
-  deriving (Show, Eq)
-
-type Headers = [Header]
+import qualified Network.HTTP.Types as HTTP
 
 data HttpResponse a
   = HttpResponse
   { _hrBody    :: !a
-  , _hrHeaders :: !(Maybe Headers)
-  }
+  , _hrHeaders :: !HTTP.ResponseHeaders
+  } deriving (Functor, Foldable, Traversable)

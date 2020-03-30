@@ -1,3 +1,9 @@
+.. meta::
+   :description: Use cases for Hasura subscriptions
+   :keywords: hasura, docs, subscription, use case
+
+.. _subscription_use_cases:
+
 Subscriptions sample use cases
 ==============================
 
@@ -157,8 +163,8 @@ Check this `sample app <https://realtime-chat.demo.hasura.app/>`__ for a working
 Subscribe to the latest value of some derived data
 --------------------------------------------------
 
-In case you are interested in the latest value of some derived data, you can :doc:`create a view to query the derived
-data <../queries/derived-data>` and then use subscriptions to fetch the derived value and get its latest value
+In case you are interested in the latest value of some derived data, you can :ref:`create a view to query the derived
+data <custom_views>` and then use subscriptions to fetch the derived value and get its latest value
 whenever it updates.
 
 Example: A poll dashboard
@@ -218,7 +224,7 @@ First, create a view ``poll_results`` to give the result of the poll:
 This view will have the following fields: ``poll_id``, ``option_id`` and ``votes``, i.e. it gives the number of votes
 received by each option for a poll.
 
-Next, :doc:`setup relationships <../schema/relationships/index>` ``poll`` and ``option`` between the ``poll_results`` view
+Next, :ref:`setup relationships <relationships>` ``poll`` and ``option`` between the ``poll_results`` view
 and the ``poll`` and ``option`` tables using the ``poll_id`` and ``option_id`` fields respectively.
 
 Now we can use the following subscription to display the latest poll result:

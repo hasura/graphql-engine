@@ -26,6 +26,7 @@ module Hasura.RQL.Types.EventTrigger
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.Common    (NonEmptyText (..))
@@ -37,8 +38,9 @@ import qualified Data.Text                  as T
 import qualified Database.PG.Query          as Q
 import qualified Text.Regex.TDFA            as TDFA
 
+-- | Unique name for event trigger.
 newtype TriggerName = TriggerName { unTriggerName :: NonEmptyText }
-  deriving (Show, Eq, Hashable, Lift, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary)
+  deriving (Show, Eq, Hashable, Lift, DQuote, FromJSON, ToJSON, ToJSONKey, Q.FromCol, Q.ToPrepArg, Generic, Arbitrary, NFData, Cacheable)
 
 triggerNameToTxt :: TriggerName -> Text
 triggerNameToTxt = unNonEmptyText . unTriggerName
@@ -47,7 +49,10 @@ type EventId = T.Text
 
 data Ops = INSERT | UPDATE | DELETE | MANUAL deriving (Show)
 
-data SubscribeColumns = SubCStar | SubCArray [PGCol] deriving (Show, Eq, Lift, Generic)
+data SubscribeColumns = SubCStar | SubCArray [PGCol]
+  deriving (Show, Eq, Generic, Lift)
+instance NFData SubscribeColumns
+instance Cacheable SubscribeColumns
 
 instance FromJSON SubscribeColumns where
   parseJSON (String s) = case s of
@@ -64,8 +69,9 @@ data SubscribeOpSpec
   = SubscribeOpSpec
   { sosColumns :: !SubscribeColumns
   , sosPayload :: !(Maybe SubscribeColumns)
-  } deriving (Show, Eq, Lift, Generic)
-
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData SubscribeOpSpec
+instance Cacheable SubscribeOpSpec
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''SubscribeOpSpec)
 
 defaultNumRetries :: Int
@@ -85,20 +91,21 @@ data RetryConf
   { rcNumRetries  :: !Int
   , rcIntervalSec :: !Int
   , rcTimeoutSec  :: !(Maybe Int)
-  } deriving (Show, Eq, Lift, Generic)
-
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData RetryConf
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''RetryConf)
 
 data EventHeaderInfo
   = EventHeaderInfo
   { ehiHeaderConf  :: !HeaderConf
   , ehiCachedValue :: !T.Text
-  } deriving (Show, Eq, Lift)
-
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData EventHeaderInfo
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventHeaderInfo)
 
 data WebhookConf = WCValue T.Text | WCEnv T.Text
-  deriving (Show, Eq, Lift)
+  deriving (Show, Eq, Generic, Lift)
+instance NFData WebhookConf
 
 instance ToJSON WebhookConf where
   toJSON (WCValue w)  = String w
@@ -108,8 +115,8 @@ data WebhookConfInfo
   = WebhookConfInfo
   { wciWebhookConf :: !WebhookConf
   , wciCachedValue :: !T.Text
-  } deriving (Show, Eq, Lift)
-
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData WebhookConfInfo
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''WebhookConfInfo)
 
 data CreateEventTriggerQuery
@@ -153,7 +160,7 @@ instance FromJSON CreateEventTriggerQuery where
       (Just _, Nothing) -> return ()
       (Nothing, Just _) -> return ()
       (Just _, Just _)  -> fail "only one of webhook or webhook_from_env should be given"
-      _ ->   fail "must provide webhook or webhook_from_env"
+      _                 ->   fail "must provide webhook or webhook_from_env"
     mapM_ checkEmptyCols [insert, update, delete]
     return $ CreateEventTriggerQuery name table insert update delete (Just enableManual) retryConf webhook webhookFromEnv headers replace
     where
@@ -166,14 +173,16 @@ instance FromJSON CreateEventTriggerQuery where
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
 
+-- | The table operations on which the event trigger will be invoked.
 data TriggerOpsDef
   = TriggerOpsDef
   { tdInsert       :: !(Maybe SubscribeOpSpec)
   , tdUpdate       :: !(Maybe SubscribeOpSpec)
   , tdDelete       :: !(Maybe SubscribeOpSpec)
   , tdEnableManual :: !(Maybe Bool)
-  } deriving (Show, Eq, Lift, Generic)
-
+  } deriving (Show, Eq, Generic, Lift)
+instance NFData TriggerOpsDef
+instance Cacheable TriggerOpsDef
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
 data DeleteEventTriggerQuery

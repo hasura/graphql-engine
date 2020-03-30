@@ -7,9 +7,12 @@ import (
 	"github.com/Masterminds/semver"
 )
 
+// DevVersion is the version string for development versions.
+const DevVersion = "dev"
+
 // BuildVersion is the versin string with which CLI is built. Set during
 // the build time.
-var BuildVersion = "dev"
+var BuildVersion = DevVersion
 
 // Version defines the version object.
 type Version struct {
@@ -22,6 +25,10 @@ type Version struct {
 	Server string
 	// ServerSemver is the parsed semantic version for server
 	ServerSemver *semver.Version
+
+	// ServerFeatureFlags indicates what features are supported by this
+	// version of server.
+	ServerFeatureFlags *ServerFeatureFlags
 }
 
 // GetCLIVersion return the CLI version string.

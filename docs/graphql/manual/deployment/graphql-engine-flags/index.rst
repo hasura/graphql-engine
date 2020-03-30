@@ -1,3 +1,7 @@
+.. meta::
+   :description: Server configuration for Hasura GraphQL engine
+   :keywords: hasura, docs, deployment, flags, server, server configuration
+
 .. _hge_flags:
 
 GraphQL engine server configuration
@@ -13,7 +17,7 @@ Hasura supports various flags and options for customising how you are running th
 Server flags
 ------------
 
-See the :doc:`server flag reference <reference>` for all the available flags.
+See the :ref:`server flag reference <server_flag_reference>` for all the available flags.
 
 Use cases
 ---------

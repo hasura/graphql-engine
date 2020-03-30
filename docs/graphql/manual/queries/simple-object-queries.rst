@@ -1,3 +1,9 @@
+.. meta::
+   :description: Make simple object queries in Hasura
+   :keywords: hasura, docs, query, object query
+
+.. _simple_object_queries:
+
 Simple object queries
 =====================
 
@@ -42,5 +48,29 @@ Fetch list of objects
             "name": "Anjela"
           }
         ]
+      }
+    }
+
+
+Fetch an object using its primary key
+-------------------------------------
+**Example:** Fetch an author using their primary key:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author_by_pk(id: 1) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author_by_pk": {
+          "id": 1,
+          "name": "Justin"
+        }
       }
     }

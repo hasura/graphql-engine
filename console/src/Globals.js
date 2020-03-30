@@ -1,6 +1,7 @@
 import { SERVER_CONSOLE_MODE } from './constants';
 import { getFeaturesCompatibility } from './helpers/versionUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
+import { isEmpty } from './components/Common/utils/jsUtils';
 
 // TODO: move this section to a more appropriate location
 /* set helper tools into window */
@@ -29,7 +30,9 @@ const globals = {
   urlPrefix: stripTrailingSlash(window.__env.urlPrefix || '/'), // overridden below if server mode in production
   adminSecret: window.__env.adminSecret || null, // gets updated after login/logout in server mode
   isAdminSecretSet:
-    window.__env.isAdminSecretSet || window.__env.adminSecret || false,
+    window.__env.isAdminSecretSet ||
+    !isEmpty(window.__env.adminSecret) ||
+    false,
   consoleMode: window.__env.consoleMode || SERVER_CONSOLE_MODE,
   enableTelemetry: window.__env.enableTelemetry,
   telemetryTopic: isProduction ? 'console' : 'console_test',
@@ -39,6 +42,7 @@ const globals = {
   featuresCompatibility: window.__env.serverVersion
     ? getFeaturesCompatibility(window.__env.serverVersion)
     : null,
+  isProduction,
 };
 
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {

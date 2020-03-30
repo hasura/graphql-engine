@@ -25,8 +25,8 @@ Feel free to open pull requests to address these issues or to add/fix  console f
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/en/) (v8.9+)
-- [Hasura GraphQL Engine](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html)
-- [Hasura CLI](https://docs.hasura.io/1.0/graphql/manual/hasura-cli/install-hasura-cli.html) (for working with migrations)
+- [Hasura GraphQL Engine](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html)
+- [Hasura CLI](https://hasura.io/docs/1.0/graphql/manual/hasura-cli/install-hasura-cli.html) (for working with migrations)
 
 ### Set up and install dependencies
 
@@ -37,14 +37,14 @@ Feel free to open pull requests to address these issues or to add/fix  console f
 git clone https://github.com/<your-user-name>/graphql-engine
 cd graphql-engine
 cd console
-npm install
+npm ci
 ```
 
 ### Run console development server
 
 Hasura console can be developed in two modes, `server` or `cli` mode. If you are looking to add/tweak functionality related to migrations, check out [Develop with Hasura CLI](#develop-with-hasura-cli-cli-mode), otherwise check out [Develop with Hasura GraphQL engine](#develop-with-hasura-graphql-engine-server-mode).
 
-Both modes require a running instance of GraphQL Engine. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://docs.hasura.io/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine are documented [here](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+Both modes require a running instance of GraphQL Engine. The easiest way to get Hasura GraphQL engine instance is by Heroku. You can get it by following the steps given in [this](https://hasura.io/docs/1.0/graphql/manual/getting-started/heroku-simple.html) link. Other methods to install Hasura GraphQL engine are documented [here](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html).
 
 [Dotenv](https://github.com/motdotla/dotenv) is used for setting environment variables for development. In production, these environment variables are templated by the server or CLI.
 
@@ -74,11 +74,11 @@ NODE_ENV=development
 PORT=3000
 CDN_ASSETS=true
 ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
-ASSETS_VERSION=channel/beta/v1.0
+ASSETS_VERSION=channel/stable/v1.0
 ENABLE_TELEMETRY=true
 URL_PREFIX=/
 DATA_API_URL=http://localhost:8080
-SERVER_VERSION=v1.0.0-beta.6
+SERVER_VERSION=v1.0.0
 CONSOLE_MODE=server
 IS_ADMIN_SECRET_SET=true
 ```
@@ -120,11 +120,11 @@ API_HOST=http://localhost
 API_PORT=9693
 CDN_ASSETS=true
 ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
-ASSETS_VERSION=channel/beta/v1.0
+ASSETS_VERSION=channel/stable/v1.0
 ENABLE_TELEMETRY=true
 URL_PREFIX=/
 DATA_API_URL=http://localhost:8080
-SERVER_VERSION=v1.0.0-beta.6
+SERVER_VERSION=v1.0.0
 CONSOLE_MODE=cli
 ADMIN_SECRET=my-admin-secret
 ```

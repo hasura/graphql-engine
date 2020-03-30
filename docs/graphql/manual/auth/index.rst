@@ -1,3 +1,9 @@
+.. meta::
+   :description: Manage GraphQL Authentication and Authorization with Hasura
+   :keywords: hasura, docs, authentication, auth, authorization
+
+.. _auth:
+
 Authentication & Authorization
 ==============================
 
@@ -10,6 +16,7 @@ In Hasura, access control or authorization is based on **roles**. Let's take a l
 when the GraphQL engine receives a request:
 
 .. thumbnail:: ../../../img/graphql/manual/auth/auth-high-level-overview.png
+   :alt: Authentication and authorization with Hasura
 
 As you can see from this:
 

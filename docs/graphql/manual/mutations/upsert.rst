@@ -1,3 +1,9 @@
+.. meta::
+   :description: Use upsert mutations with Hasura
+   :keywords: hasura, docs, mutation, upsert
+
+.. _upsert:
+
 Upsert mutation
 ===============
 
@@ -18,7 +24,7 @@ Convert insert mutation to upsert
   Only tables with **update** permissions are **upsertable**. i.e. a table's update permissions are respected
   before updating an existing row in case of a conflict.
 
-To convert an :doc:`insert mutation <insert>` into an upsert, you need to use the ``on_conflict`` argument to specify:
+To convert an :ref:`insert mutation <insert>` into an upsert, you need to use the ``on_conflict`` argument to specify:
 
 - a **unique or primary key constraint** using the ``constraint`` field, and
 - the **columns to be updated** in the case of a violation of that constraint using the ``update_columns`` field.

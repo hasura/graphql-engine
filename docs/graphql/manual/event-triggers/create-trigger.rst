@@ -1,3 +1,9 @@
+.. meta::
+   :description: Create an event trigger with Hasura
+   :keywords: hasura, docs, event trigger, create
+
+.. _create_trigger:
+
 Creating an event trigger
 =========================
 
@@ -12,6 +18,7 @@ Open the Hasura console, head to the ``Events`` tab and click on the ``Create`` 
 page below:
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/create-event-trigger.png
+   :alt: Create an event trigger
 
 Parameters
 ----------
@@ -38,6 +45,7 @@ Advanced Settings
 -----------------
 
 .. thumbnail:: ../../../img/graphql/manual/event-triggers/create-event-trigger-advanced-settings.png
+   :alt: Advanced settings for event triggers
 
 Listen columns for update
 ^^^^^^^^^^^^^^^^^^^^^^^^^

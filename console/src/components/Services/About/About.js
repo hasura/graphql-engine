@@ -1,50 +1,62 @@
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 
-import Endpoints from '../../../Endpoints';
+import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 
 import globals from '../../../Globals';
 
 import styles from './About.scss';
+import requestAction from '../../../utils/requestAction';
+import { showErrorNotification } from '../Common/Notification';
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
+import { versionGT } from '../../../helpers/versionUtils';
 
 class About extends Component {
   state = {
-    serverVersion: null,
-    latestServerVersion: null,
     consoleAssetVersion: globals.consoleAssetVersion,
+    pgVersion: null,
   };
 
   componentDidMount() {
-    fetch(Endpoints.version)
-      .then(response => response.json())
-      .then(serverVersion =>
-        this.setState({
-          serverVersion: serverVersion.version,
-        })
-      );
+    const fetchPgVersion = () => {
+      const { dispatch, dataHeaders } = this.props;
 
-    fetch(Endpoints.updateCheck)
-      .then(response => response.json())
-      .then(latest =>
-        this.setState({
-          latestServerVersion: latest.latest,
-        })
+      const url = Endpoints.query;
+      const options = {
+        method: 'POST',
+        credentials: globalCookiePolicy,
+        headers: dataHeaders,
+        body: JSON.stringify(getRunSqlQuery('SELECT version();', false, true)),
+      };
+
+      dispatch(requestAction(url, options)).then(
+        data => {
+          this.setState({
+            pgVersion: data.result[1][0],
+          });
+        },
+        error => {
+          dispatch(
+            showErrorNotification('Failed fetching PG version', null, error)
+          );
+        }
       );
+    };
+
+    fetchPgVersion();
   }
 
   render() {
-    const {
-      serverVersion,
-      latestServerVersion,
-      consoleAssetVersion,
-    } = this.state;
+    const { consoleAssetVersion, pgVersion } = this.state;
+
+    const { serverVersion, latestStableServerVersion } = this.props;
 
     const spinner = <i className="fa fa-spinner fa-spin" />;
 
     const getServerVersionSection = () => {
       return (
         <div>
-          <b>Server version: </b>
+          <b>Current server version: </b>
           <span className={styles.add_mar_left_mid}>
             {serverVersion || spinner}
           </span>
@@ -56,15 +68,15 @@ class About extends Component {
       let updateLinks;
       if (
         serverVersion &&
-        latestServerVersion &&
-        serverVersion !== latestServerVersion
+        latestStableServerVersion &&
+        versionGT(latestStableServerVersion, serverVersion)
       ) {
         updateLinks = (
           <span className={styles.add_mar_left_mid}>
             <a
               href={
                 'https://github.com/hasura/graphql-engine/releases/tag/' +
-                latestServerVersion
+                latestStableServerVersion
               }
               target="_blank"
               rel="noopener noreferrer"
@@ -77,7 +89,7 @@ class About extends Component {
               &nbsp;<b>&middot;</b>&nbsp;
             </span>
             <a
-              href="https://docs.hasura.io/1.0/graphql/manual/deployment/updating.html"
+              href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -91,9 +103,9 @@ class About extends Component {
 
       return (
         <div>
-          <b>Latest server version: </b>
+          <b>Latest stable server version: </b>
           <span className={styles.add_mar_left_mid}>
-            {latestServerVersion || spinner} {updateLinks}
+            {latestStableServerVersion || spinner} {updateLinks}
           </span>
         </div>
       );
@@ -105,6 +117,17 @@ class About extends Component {
           <b>Console asset version: </b>
           <span className={styles.add_mar_left_mid}>
             {consoleAssetVersion || 'NA'}
+          </span>
+        </div>
+      );
+    };
+
+    const getPgVersionSection = () => {
+      return (
+        <div>
+          <b>Postgres version: </b>
+          <span className={styles.add_mar_left_mid}>
+            {pgVersion || spinner}
           </span>
         </div>
       );
@@ -125,6 +148,7 @@ class About extends Component {
             <div className={styles.add_mar_top}>
               {getConsoleAssetVersionSection()}
             </div>
+            <div className={styles.add_mar_top}>{getPgVersionSection()}</div>
           </div>
         </div>
       </div>
@@ -132,8 +156,12 @@ class About extends Component {
   }
 }
 
-const mapStateToProps = () => {
-  return {};
+const mapStateToProps = state => {
+  return {
+    dataHeaders: state.tables.dataHeaders,
+    serverVersion: state.main.serverVersion,
+    latestStableServerVersion: state.main.latestStableServerVersion,
+  };
 };
 
 const aboutConnector = connect => connect(mapStateToProps)(About);

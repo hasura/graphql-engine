@@ -5,6 +5,10 @@
 <!-- The title might not be enough to convey how this change affects the user. -->
 <!-- Describe the changes from a user's perspective -->
 
+### Changelog
+
+- [ ] `CHANGELOG.md` is updated with user-facing content relevant to this PR.
+
 ### Affected components
 <!-- Remove non-affected components from the list -->
 
@@ -26,6 +30,14 @@
 <!-- How is this issue solved/fixed? What is the design? -->
 <!-- It's better if we elaborate -->
 
+### Steps to test and verify
+<!-- If this is a feature, what are the steps to try them out? -->
+<!-- If this is a bug-fix, how do we verify the fix? -->
+
+### Limitations, known bugs & workarounds
+<!-- Limitations of the PR, known bugs and suggested workarounds -->
+<!-- Feel free to delete these comment lines -->
+
 ### Server checklist
 <!-- A checklist for server code -->
 
@@ -34,7 +46,7 @@
 Does this PR change Hasura Catalog version?
 - [ ] No
 - [ ] Yes
-  - [ ] Updated docs with SQL for downgrading the catalog <!-- https://docs.hasura.io/1.0/graphql/manual/deployment/downgrading.html#downgrading-across-catalogue-versions -->
+  - [ ] Updated docs with SQL for downgrading the catalog <!-- https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-across-catalogue-versions -->
 
 #### Metadata
 <!-- Hasura metadata changes -->
@@ -97,13 +109,3 @@ Does this PR add a new Metadata feature?
 <!-- Add any other breaking change not mentioned above -->
 
 <!-- Explain briefly about your breaking changes below -->
-
-
-### Steps to test and verify
-<!-- If this is a feature, what are the steps to try them out? -->
-<!-- If this is a bug-fix, how do we verify the fix? -->
-
-### Limitations, known bugs & workarounds
-<!-- Limitations of the PR, known bugs and suggested workarounds -->
-
-<!-- Feel free to delete these comment lines -->

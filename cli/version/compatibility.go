@@ -1,12 +1,12 @@
 package version
 
 const (
-	untaggedBuild   = "for untagged builds, server and cli versions should match"
-	taggedBuild     = "cli version (major.minor) should be equal or ahead of server version, please update cli"
+	untaggedBuild   = "untagged build, there could be inconsistencies"
+	taggedBuild     = "older cli version might not be compatible with latest server apis, please update cli"
 	noServerVersion = "server with no version treated as pre-release build"
 	noCLIVersion    = "cli version is empty, indicates a broken build"
 	untaggedCLI     = "untagged cli build can work with tagged server build"
-	devCLI          = "dev version of cli, compatible with all servers"
+	devCLI          = "dev version of cli, there could be inconsistencies"
 )
 
 // CheckCLIServerCompatibility compares server and cli for compatibility,
@@ -14,7 +14,7 @@ const (
 // a message which states the reason for the result.
 func (v *Version) CheckCLIServerCompatibility() (compatible bool, reason string) {
 	// mark dev builds as compatible
-	if v.CLI == "dev" {
+	if v.CLI == DevVersion {
 		return true, devCLI
 	}
 	// empty cli version

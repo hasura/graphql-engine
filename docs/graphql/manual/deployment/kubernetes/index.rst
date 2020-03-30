@@ -1,3 +1,9 @@
+.. meta::
+   :description: Deploy Hasura GraphQL engine with Kubernetes
+   :keywords: hasura, docs, deployment, kubernetes
+
+.. _deploy_kubernetes:
+
 Run Hasura GraphQL engine on Kubernetes
 =======================================
 
@@ -13,14 +19,14 @@ and connect it to your Postgres database.
 Step 1: Get the Kubernetes deployment and service files
 -------------------------------------------------------
 
-The `hasura/graphql-engine/install-manifests <https://GitHub.com/hasura/graphql-engine/tree/master/install-manifests>`_ repo
+The `hasura/graphql-engine/install-manifests <https://github.com/hasura/graphql-engine/tree/stable/install-manifests>`_ repo
 contains all installation manifests required to deploy Hasura anywhere. Get the Kubernetes deployment and service files
 from there:
 
 .. code-block:: bash
 
-   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/kubernetes/deployment.yaml
-   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/kubernetes/svc.yaml
+   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/kubernetes/deployment.yaml
+   $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/kubernetes/svc.yaml
 
 Step 2: Set the Postgres database url
 -------------------------------------
@@ -46,11 +52,11 @@ Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
   - If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
     ``HASURA_GRAPHQL_DATABASE_URL`` env var (e.g. %40 for @).
 
-    You can check the :doc:`logs <logging>` to see if the database credentials are proper and if Hasura is able
+    You can check the :ref:`logs <kubernetes_logs>` to see if the database credentials are proper and if Hasura is able
     to connect to the database.
 
   - The Hasura GraphQL engine needs access permissions on your Postgres database as described in
-    :doc:`Postgres permissions <../postgres-permissions>`.
+    :ref:`Postgres permissions <postgres_permissions>`.
 
 
 Step 3: Create the Kubernetes deployment and service
@@ -81,15 +87,15 @@ Head to: http://localhost and the console should load!
 Step 5: Track existing tables and relationships
 -----------------------------------------------
 
-See :doc:`../../schema/using-existing-database` to enable GraphQL over the database.
+See :ref:`schema_existing_db` to enable GraphQL over the database.
 
 Advanced
 --------
 
-- :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
-- :doc:`GraphQL engine server logs <logging>`
-- :doc:`Updating GraphQL engine <updating>`
-- :doc:`Setting up migrations <../../migrations/index>`
+- :ref:`Securing your GraphQL endpoint <kubernetes_secure>`
+- :ref:`GraphQL engine server logs <kubernetes_logs>`
+- :ref:`Updating GraphQL engine <kubernetes_update>`
+- :ref:`Setting up migrations <auth>`
 
 .. toctree::
    :titlesonly:

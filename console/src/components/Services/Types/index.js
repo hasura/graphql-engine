@@ -1,0 +1,1 @@
+export typesReducer from './reducer';

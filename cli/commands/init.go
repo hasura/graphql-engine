@@ -2,12 +2,21 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/ghodss/yaml"
+	"github.com/hasura/graphql-engine/cli/metadata/actions"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
+	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
+	"github.com/hasura/graphql-engine/cli/metadata/functions"
+	"github.com/hasura/graphql-engine/cli/metadata/querycollections"
+	"github.com/hasura/graphql-engine/cli/metadata/remoteschemas"
+	"github.com/hasura/graphql-engine/cli/metadata/tables"
+	metadataTypes "github.com/hasura/graphql-engine/cli/metadata/types"
+	metadataVersion "github.com/hasura/graphql-engine/cli/metadata/version"
+	"github.com/hasura/graphql-engine/cli/util"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/manifoldco/promptui"
 	"github.com/pkg/errors"
@@ -16,55 +25,77 @@ import (
 )
 
 const (
-	defaultDirectory = "hasura"
+	defaultDirectory string = "hasura"
 )
 
 // NewInitCmd is the definition for init command
 func NewInitCmd(ec *cli.ExecutionContext) *cobra.Command {
-	opts := &initOptions{
+	opts := &InitOptions{
 		EC: ec,
 	}
 	initCmd := &cobra.Command{
-		Use:   "init",
+		Use:   "init [directory-name]",
 		Short: "Initialize directory for Hasura GraphQL Engine migrations",
 		Long:  "Create directories and files required for enabling migrations on Hasura GraphQL Engine",
 		Example: `  # Create a directory to store migrations
-  hasura init
+  hasura init [directory-name]
 
   # Now, edit <my-directory>/config.yaml to add endpoint and admin secret
 
   # Create a directory with endpoint and admin secret configured:
-  hasura init --directory <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
+  hasura init <my-project> --endpoint https://my-graphql-engine.com --admin-secret adminsecretkey
 
-  # See https://docs.hasura.io/1.0/graphql/manual/migrations/index.html for more details`,
+  # See https://hasura.io/docs/1.0/graphql/manual/migrations/index.html for more details`,
 		SilenceUsage: true,
-		PreRun: func(cmd *cobra.Command, args []string) {
+		Args:         cobra.MaximumNArgs(1),
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = viper.New()
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
+			return ec.PluginsConfig.Repo.EnsureCloned()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.run()
+			if len(args) == 1 {
+				opts.InitDir = args[0]
+			}
+			return opts.Run()
 		},
 	}
 
 	f := initCmd.Flags()
+	f.Var(cli.NewConfigVersionValue(cli.V2, &opts.Version), "version", "config version to be used")
 	f.StringVar(&opts.InitDir, "directory", "", "name of directory where files will be created")
+	f.StringVar(&opts.MetadataDir, "metadata-directory", "metadata", "name of directory where metadata files will be created")
 	f.StringVar(&opts.Endpoint, "endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.StringVar(&opts.AdminSecret, "access-key", "", "access key for Hasura GraphQL Engine")
+	f.StringVar(&opts.ActionKind, "action-kind", "synchronous", "kind to be used for an action")
+	f.StringVar(&opts.ActionHandler, "action-handler-webhook-baseurl", "http://localhost:3000", "webhook baseurl to be used for an action")
+	f.StringVar(&opts.Template, "install-manifest", "", "install manifest to be cloned")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	f.MarkDeprecated("directory", "use directory-name argument instead")
 
 	return initCmd
 }
 
-type initOptions struct {
+type InitOptions struct {
 	EC *cli.ExecutionContext
 
+	Version     cli.ConfigVersion
 	Endpoint    string
 	AdminSecret string
 	InitDir     string
+	MetadataDir string
+
+	ActionKind    string
+	ActionHandler string
+
+	Template string
 }
 
-func (o *initOptions) run() error {
+func (o *InitOptions) Run() error {
 	var dir string
 	// prompt for init directory if it's not set already
 	if o.InitDir == "" {
@@ -107,6 +138,12 @@ func (o *initOptions) run() error {
   hasura console
 `, o.EC.ExecutionDirectory)
 
+	// create template files
+	err = o.createTemplateFiles()
+	if err != nil {
+		return err
+	}
+
 	// create other required files, like config.yaml, migrations directory
 	err = o.createFiles()
 	if err != nil {
@@ -118,30 +155,44 @@ func (o *initOptions) run() error {
 }
 
 // createFiles creates files required by the CLI in the ExecutionDirectory
-func (o *initOptions) createFiles() error {
+func (o *InitOptions) createFiles() error {
 	// create the directory
 	err := os.MkdirAll(filepath.Dir(o.EC.ExecutionDirectory), os.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "error creating setup directories")
 	}
 	// set config object
-	config := &cli.ServerConfig{
-		Endpoint: "http://localhost:8080",
+	var config *cli.Config
+	if o.Version == cli.V1 {
+		config = &cli.Config{
+			ServerConfig: cli.ServerConfig{
+				Endpoint: "http://localhost:8080",
+			},
+		}
+	} else {
+		config = &cli.Config{
+			Version: o.Version,
+			ServerConfig: cli.ServerConfig{
+				Endpoint: "http://localhost:8080",
+			},
+			MetadataDirectory: o.MetadataDir,
+			ActionConfig: &types.ActionExecutionConfig{
+				Kind:                  o.ActionKind,
+				HandlerWebhookBaseURL: o.ActionHandler,
+			},
+		}
 	}
 	if o.Endpoint != "" {
-		config.Endpoint = o.Endpoint
+		config.ServerConfig.Endpoint = o.Endpoint
 	}
 	if o.AdminSecret != "" {
-		config.AdminSecret = o.AdminSecret
+		config.ServerConfig.AdminSecret = o.AdminSecret
 	}
 
 	// write the config file
-	data, err := yaml.Marshal(config)
-	if err != nil {
-		return errors.Wrap(err, "cannot convert to yaml")
-	}
+	o.EC.Config = config
 	o.EC.ConfigFile = filepath.Join(o.EC.ExecutionDirectory, "config.yaml")
-	err = ioutil.WriteFile(o.EC.ConfigFile, data, 0644)
+	err = o.EC.WriteConfig(nil)
 	if err != nil {
 		return errors.Wrap(err, "cannot write config file")
 	}
@@ -153,6 +204,53 @@ func (o *initOptions) createFiles() error {
 		return errors.Wrap(err, "cannot write migration directory")
 	}
 
+	if config.Version == cli.V2 {
+		// create metadata directory
+		o.EC.MetadataDir = filepath.Join(o.EC.ExecutionDirectory, "metadata")
+		err = os.MkdirAll(o.EC.MetadataDir, os.ModePerm)
+		if err != nil {
+			return errors.Wrap(err, "cannot write migration directory")
+		}
+
+		// create metadata files
+		plugins := make(metadataTypes.MetadataPlugins, 0)
+		plugins = append(plugins, metadataVersion.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, tables.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, functions.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, querycollections.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, allowlist.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, remoteschemas.New(o.EC, o.EC.MetadataDir))
+		plugins = append(plugins, actions.New(o.EC, o.EC.MetadataDir))
+		for _, plg := range plugins {
+			err := plg.CreateFiles()
+			if err != nil {
+				return errors.Wrap(err, "cannot create metadata files")
+			}
+		}
+	}
+	return nil
+}
+
+func (o *InitOptions) createTemplateFiles() error {
+	if o.Template == "" {
+		return nil
+	}
+	err := o.EC.InitTemplatesRepo.EnsureUpdated()
+	if err != nil {
+		return errors.Wrap(err, "error in updating init-templates repo")
+	}
+	templatePath := filepath.Join(o.EC.InitTemplatesRepo.Path, o.Template)
+	info, err := os.Stat(templatePath)
+	if err != nil {
+		return errors.Wrap(err, "template doesn't exists")
+	}
+	if !info.IsDir() {
+		return errors.Errorf("template should be a directory")
+	}
+	err = util.CopyDir(templatePath, filepath.Join(o.EC.ExecutionDirectory, "install-manifest"))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

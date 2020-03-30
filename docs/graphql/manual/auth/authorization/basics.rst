@@ -1,3 +1,9 @@
+.. meta::
+   :description: Hasura access control basics
+   :keywords: hasura, docs, authorization, access control
+
+.. _auth_basics:
+
 Access control basics
 =====================
 
@@ -14,6 +20,7 @@ To understand the basics of access control in Hasura, let's take a look at this 
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/permissions-rule-analogy.png
   :width: 70%
+  :alt: Understanding access control in Hasura
 
 This query returns the right set of results by defining the requirements for columns and rows in a given
 table. Hasura's rule-based access control works similary - you define the following permissions for a
@@ -23,7 +30,7 @@ combination of **role**, **table** and **action** (*insert, update, select and d
 
 Limit access to a subset of the rows in the table based on this permission. Row-level permissions are
 essentially boolean expressions that, when evaluated against any row, determine access to it. These
-permissions are constructed from the values in columns, :doc:`session variables <roles-variables>` and
+permissions are constructed from the values in columns, :ref:`session variables <roles_variables>` and
 static values to build this boolean expression.
 
 **Column-level permissions**
@@ -33,7 +40,7 @@ this permission rule.
 
 .. admonition:: More information
 
-  For details on all the configuration options, see :doc:`permission-rules`.
+  For details on all the configuration options, see :ref:`permission_rules`.
 
 
 Example
@@ -74,6 +81,7 @@ You'll see that this results in a response that contains all the authors because
 query is accepted with **admin** permissions.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/fetch-authors.png
+   :alt: Run a query without access control
 
 Define access control rules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -83,7 +91,7 @@ Now let's define an access control rule for the ``author`` table for a role ``us
 as shown below:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/permission-basics-simple-example.png
-
+   :alt: Define access control rules
 
 This permission rule reads as: "*For the role* ``user`` *, table* ``author`` *and operation* ``select``/``query``,
 allow access to those rows where the value in the ``id`` *column is the same as the value in the*
@@ -96,19 +104,20 @@ variables also included to indicate role and user information. These session var
 the ``Request Headers`` section of ``GraphiQL`` as highlighted below:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/permission-basics-query-with-access-control.png
+   :alt: Run a query with access control
 
 As you can see, the results are now filtered based on the access control rule for the role ``user``
 (*since that is the role indicated by the* ``X-Hasura-Role`` *session variable*) and the results are
 restricted to only those rows where the value in the ``id`` column is equal to ``1`` (*as indicated by
 the* ``X-Hasura-User-ID`` *session variable*).
 
-As described in the :doc:`Introduction to Authentication and Authorization <index>` section of the docs,
+As described in the :ref:`Introduction to Authentication and Authorization <authorization>` section of the docs,
 your auth service is required to resolve authentication tokens into these session variables. See
-:doc:`Reference - Session Variables<index>` for more details.
+:ref:`Reference - Session Variables<authorization>` for more details.
 
 Next steps
 ----------
 
-Read about roles and session variables at: :doc:`roles-variables`
+Read about roles and session variables at: :ref:`roles_variables`
 
-See more detailed examples at: :doc:`Common access control examples<common-roles-auth-examples>`
+See more detailed examples at: :ref:`Common access control examples<auth_examples>`

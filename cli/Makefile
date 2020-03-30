@@ -20,7 +20,7 @@ ifndef HAS_GOX
 	go get github.com/mitchellh/gox
 endif
 ifndef HAS_BINDATA
-	go get github.com/hasura/go-bindata/go-bindata
+	go get github.com/kevinburke/go-bindata/...
 endif
 
 # build cli locally, for all given platform/arch
@@ -48,7 +48,9 @@ ci-copy-binary:
 # run tests
 .PHONY: test
 test:
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" ./...
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" `go list ./... | grep -v integration_test`
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v1 ./integration_test
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./integration_test
 
 # clean the output directory
 .PHONY: clean

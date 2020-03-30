@@ -1,3 +1,9 @@
+.. meta::
+   :description: Use authenticaton with webhooks in Hasura
+   :keywords: hasura, docs, authentication, auth, webhook
+
+.. _auth_webhooks:
+
 Authentication using webhooks
 =============================
 
@@ -12,10 +18,11 @@ Introduction
 You can configure the GraphQL engine to use a webhook to authenticate all incoming requests to the Hasura GraphQL engine server. 
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/webhook-auth.png
+   :alt: Authentication using webhooks
 
 .. admonition:: Prerequisite
    
-   It is mandatory to first :doc:`secure your GraphQL endpoint <../../deployment/securing-graphql-endpoint>` for the webhook mode to take effect.
+   It is mandatory to first :ref:`secure your GraphQL endpoint <securing_graphql_endpoint>` for the webhook mode to take effect.
 
 In webhook mode, on a secured endpoint:
 
@@ -26,9 +33,9 @@ In webhook mode, on a secured endpoint:
 Configuring webhook mode
 ------------------------
 
-* You can configure Hasura to run in webhook mode by running the GraphQL engine with the ``--auth-hook`` flag or the ``HASURA_GRAPHQL_AUTH_HOOK`` environment variable (see :doc:`GraphQL engine server options <../../deployment/graphql-engine-flags/reference>`), the value of which is the webhook endpoint.
+* You can configure Hasura to run in webhook mode by running the GraphQL engine with the ``--auth-hook`` flag or the ``HASURA_GRAPHQL_AUTH_HOOK`` environment variable (see :ref:`GraphQL engine server options <server_flag_reference>`), the value of which is the webhook endpoint.
 
-* You can configure Hasura to send either a ``GET`` or a ``POST`` request to your auth webhook. The default configuration is ``GET`` and you can override this with ``POST`` by using the ``--auth-hook-mode`` flag or the ``HASURA_GRAPHQL_AUTH_HOOK_MODE`` environment variable (*in addition to those specified above; see* :doc:`GraphQL engine server options <../../deployment/graphql-engine-flags/reference>`).
+* You can configure Hasura to send either a ``GET`` or a ``POST`` request to your auth webhook. The default configuration is ``GET`` and you can override this with ``POST`` by using the ``--auth-hook-mode`` flag or the ``HASURA_GRAPHQL_AUTH_HOOK_MODE`` environment variable (*in addition to those specified above; see* :ref:`GraphQL engine server options <server_flag_reference>`).
 
 Spec for the webhook
 --------------------

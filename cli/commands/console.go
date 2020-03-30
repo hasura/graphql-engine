@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/fatih/color"
@@ -23,7 +24,7 @@ import (
 // NewConsoleCmd returns the console command
 func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	opts := &consoleOptions{
+	opts := &ConsoleOptions{
 		EC: ec,
 	}
 	consoleCmd := &cobra.Command{
@@ -47,10 +48,14 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.run()
+			return opts.Run()
 		},
 	}
 	f := consoleCmd.Flags()
@@ -60,6 +65,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
+	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -73,7 +79,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return consoleCmd
 }
 
-type consoleOptions struct {
+type ConsoleOptions struct {
 	EC *cli.ExecutionContext
 
 	APIPort     string
@@ -85,9 +91,13 @@ type consoleOptions struct {
 	WG *sync.WaitGroup
 
 	StaticDir string
+	Browser   string
+
+	APIServerInterruptSignal     chan os.Signal
+	ConsoleServerInterruptSignal chan os.Signal
 }
 
-func (o *consoleOptions) run() error {
+func (o *ConsoleOptions) Run() error {
 	log := o.EC.Logger
 	// Switch to "release" mode in production.
 	gin.SetMode(gin.ReleaseMode)
@@ -101,12 +111,7 @@ func (o *consoleOptions) run() error {
 		return errors.New("cannot validate version, object is nil")
 	}
 
-	metadataPath, err := o.EC.GetMetadataFilePath("yaml")
-	if err != nil {
-		return err
-	}
-
-	t, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, false)
+	t, err := newMigrate(o.EC, false)
 	if err != nil {
 		return err
 	}
@@ -117,7 +122,7 @@ func (o *consoleOptions) run() error {
 		t,
 	}
 
-	r.setRoutes(o.EC.MigrationDir, metadataPath, o.EC.Logger)
+	r.setRoutes(o.EC.MigrationDir, o.EC.Logger)
 
 	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
 	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
@@ -131,10 +136,10 @@ func (o *consoleOptions) run() error {
 		"apiPort":         o.APIPort,
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
 		"serverVersion":   o.EC.Version.GetServerVersion(),
-		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
+		"dataApiUrl":      o.EC.Config.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
 		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
-		"adminSecret":     o.EC.ServerConfig.AdminSecret,
+		"adminSecret":     o.EC.Config.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
@@ -143,22 +148,52 @@ func (o *consoleOptions) run() error {
 		return errors.Wrap(err, "error serving console")
 	}
 
-	// Create WaitGroup for running 3 servers
+	// create servers
+	apiServer := &http.Server{
+		Addr:    fmt.Sprintf("%s:%s", o.Address, o.APIPort),
+		Handler: r.router,
+	}
+	consoleServer := &http.Server{
+		Addr:    fmt.Sprintf("%s:%s", o.Address, o.ConsolePort),
+		Handler: consoleRouter,
+	}
+
+	go func() {
+		<-o.APIServerInterruptSignal
+		if err := apiServer.Close(); err != nil {
+			o.EC.Logger.Debugf("unable to close server running on port %s", o.APIPort)
+		}
+	}()
+
+	go func() {
+		<-o.ConsoleServerInterruptSignal
+		if err := consoleServer.Close(); err != nil {
+			o.EC.Logger.Debugf("unable to close server running on port %s", o.ConsolePort)
+		}
+	}()
+
+	// Create WaitGroup for running 2 servers
 	wg := &sync.WaitGroup{}
 	o.WG = wg
 	wg.Add(1)
 	go func() {
-		err = r.router.Run(o.Address + ":" + o.APIPort)
-		if err != nil {
-			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
+		if err := apiServer.ListenAndServe(); err != nil {
+			if err == http.ErrServerClosed {
+				o.EC.Logger.Infof("server closed on port %s under signal", o.APIPort)
+			} else {
+				o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
+			}
 		}
 		wg.Done()
 	}()
 	wg.Add(1)
 	go func() {
-		err = consoleRouter.Run(o.Address + ":" + o.ConsolePort)
-		if err != nil {
-			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.ConsolePort)
+		if err := consoleServer.ListenAndServe(); err != nil {
+			if err == http.ErrServerClosed {
+				o.EC.Logger.Infof("server closed on port %s under signal", o.ConsolePort)
+			} else {
+				o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.ConsolePort)
+			}
 		}
 		wg.Done()
 	}()
@@ -166,12 +201,21 @@ func (o *consoleOptions) run() error {
 	consoleURL := fmt.Sprintf("http://%s:%s/", o.Address, o.ConsolePort)
 
 	if !o.DontOpenBrowser {
-		o.EC.Spin(color.CyanString("Opening console using default browser..."))
-		defer o.EC.Spinner.Stop()
+		if o.Browser != "" {
+			o.EC.Spin(color.CyanString("Opening console on: %s", o.Browser))
+			defer o.EC.Spinner.Stop()
+			err = open.RunWith(consoleURL, o.Browser)
+			if err != nil {
+				o.EC.Logger.WithError(err).Warnf("failed opening console in '%s', try to open the url manually", o.Browser)
+			}
+		} else {
+			o.EC.Spin(color.CyanString("Opening console using default browser..."))
+			defer o.EC.Spinner.Stop()
 
-		err = open.Run(consoleURL)
-		if err != nil {
-			o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
+			err = open.Run(consoleURL)
+			if err != nil {
+				o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
+			}
 		}
 	}
 
@@ -189,12 +233,13 @@ type cRouter struct {
 	migrate *migrate.Migrate
 }
 
-func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Logger) {
+func (r *cRouter) setRoutes(migrationDir string, logger *logrus.Logger) {
 	apis := r.router.Group("/apis")
 	{
 		apis.Use(setLogger(logger))
 		apis.Use(setFilePath(migrationDir))
 		apis.Use(setMigrate(r.migrate))
+		apis.Use(setConfigVersion())
 		// Migrate api endpoints and middleware
 		migrateAPIs := apis.Group("/migrate")
 		{
@@ -212,7 +257,6 @@ func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Lo
 		// Migrate api endpoints and middleware
 		metadataAPIs := apis.Group("/metadata")
 		{
-			metadataAPIs.Use(setMetadataFile(metadataFile))
 			metadataAPIs.Any("", api.MetadataAPI)
 		}
 	}
@@ -229,6 +273,13 @@ func setFilePath(dir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		host := getFilePath(dir)
 		c.Set("filedir", host)
+		c.Next()
+	}
+}
+
+func setConfigVersion() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("version", int(ec.Config.Version))
 		c.Next()
 	}
 }
@@ -263,6 +314,10 @@ func allowCors() gin.HandlerFunc {
 func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
 	// An Engine instance with the Logger and Recovery middleware already attached.
 	r := gin.New()
+
+	if !util.DoAssetExist("assets/" + assetsVersion + "/console.html") {
+		assetsVersion = "latest"
+	}
 
 	// Template console.html
 	templateRender, err := util.LoadTemplates("assets/"+assetsVersion+"/", "console.html")

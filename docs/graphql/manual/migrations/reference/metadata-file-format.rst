@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura Metadata file format reference
+   :keywords: hasura, docs, metadata, file format
+
 .. _metadata_file_format:
 
 Metadata file format reference
@@ -8,8 +12,19 @@ Metadata file format reference
   :depth: 1
   :local:
 
+The CLI now supports two versions of configuration: ``v1`` and ``v2``
+
+config v1
+---------
+
+For ``config v1``, the ``config.yaml`` of your Hasura project would look like:
+
+.. code-block:: bash
+
+    endpoint: http://localhost:8080
+
 The metadata file that is exported from the server is a JSON/YAML representation
-of the Hausra metadata stored in the ``hdb_catalog`` schema on the Postgres
+of the Hasura metadata stored in the ``hdb_catalog`` schema on the Postgres
 database.
 
 The top level keys will be the following arrays:
@@ -126,4 +141,28 @@ defined for each table. Here is an example metadata file:
      update_permissions: []
 
 The schema for this file will mostly correspond to the table structure of the
-:doc:`metadata catalogue <../../how-it-works/metadata-schema>`
+:ref:`metadata catalogue <hasura_metadata_schema>`.
+
+config v2
+---------
+
+For ``config v2``, the ``config.yaml`` of your Hasura project would look like:
+
+.. code-block:: bash
+
+    actions:
+      handler_webhook_baseurl: http://localhost:3000/api
+      kind: synchronous
+    endpoint: http://localhost:8080
+    metadata_directory: metadata
+    version: 2
+
+With ``config v2``, the metadata that is exported from the server is a directory of multiple files. When you run ``hasura metadata export``, the following files will be generated in the ``metadata/`` directory of your project.
+
+- ``version.yaml``: Contains the metadata version of the server
+- ``tables.yaml``: Contains the metadata related to tables
+- ``remote_schemas.yaml``: Contains the metadata related to :ref:`remote schemas<remote_schemas>`
+- ``functions.yaml``: Contains the metadata related to :ref:`custom functions<custom_sql_functions>`
+- ``allow_list.yaml``: Contains the metadata related to :ref:`allow lists<allow_list>`
+- ``actions.yaml``: Contains the metadata related to :ref:`actions<actions>`
+- ``actions.graphql``: Contains all the action definition and custom type definitions

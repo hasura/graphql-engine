@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura metadata reload to reload Hasura metadata on the database from the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura metadata reload
+
 .. _hasura_metadata_reload:
 
 Hasura CLI: hasura metadata reload
@@ -23,24 +27,30 @@ Examples
     # Reload all the metadata information from database:
     hasura metadata reload
 
+    # Use with admin secret:
+    hasura metadata reload --admin-secret "<admin-secret>"
+
+    # Reload metadata on a different instance:
+    hasura metadata export --endpoint "<endpoint>"
+
 Options
 ~~~~~~~
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL engine
-  -h, --help                  help for reload
+  -h, --help   help for reload
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color            do not colorize output (default: false)
-      --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
+      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color              do not colorize output (default: false)
+      --project string        directory where commands are executed (default: current dir)
+      --skip-update-check     skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

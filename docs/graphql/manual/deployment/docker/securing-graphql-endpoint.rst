@@ -1,3 +1,9 @@
+.. meta::
+   :description: Secure Hasura GraphQL endpoint with Docker deployment
+   :keywords: hasura, docs, deployment, docker, secure
+
+.. _docker_secure:
+
 Securing the GraphQL endpoint (Docker)
 ======================================
 
@@ -26,5 +32,5 @@ Run the Docker command with an admin-secret env var
 .. note::
 
   The ``HASURA_GRAPHQL_ADMIN_SECRET`` should never be passed from the client to the Hasura GraphQL engine as it would
-  give the client full admin rights to your Hasura instance. See :doc:`../../auth/index` for information on
+  give the client full admin rights to your Hasura instance. See :ref:`auth` for information on
   setting up authentication.

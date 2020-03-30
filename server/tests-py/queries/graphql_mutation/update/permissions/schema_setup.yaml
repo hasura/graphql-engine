@@ -27,12 +27,30 @@ args:
         is_published BOOLEAN,
         published_on TIMESTAMP,
         PRIMARY KEY (id,version)
-      )
+      );
+
+      CREATE FUNCTION fetch_articles(search text, author_row author)
+      RETURNS SETOF article AS $$
+        SELECT *
+        FROM article
+        WHERE
+          ( title ilike ('%' || search || '%')
+            OR content ilike ('%' || search || '%')
+          ) AND author_id = author_row.id
+      $$ LANGUAGE sql STABLE;
+
 - type: track_table
   args:
     schema: public
     name: article
 
+- type: add_computed_field
+  args:
+    table: author
+    name: get_articles
+    definition:
+      function: fetch_articles
+      table_argument: author_row
 
 #Object relationship
 - type: create_object_relationship
@@ -77,6 +95,17 @@ args:
       filter:
         id: X-HASURA-USER-ID
 
+#Author update permission for user
+- type: create_update_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns:
+      - name
+      filter:
+        id: X-Hasura-User-Id
+
 #Article select permission for user
 - type: create_select_permission
   args:
@@ -88,7 +117,6 @@ args:
         $or:
           - author_id: X-HASURA-USER-ID
           - is_published: true
-
 
 #Article update permission for user
 #Allow modifications only on unpublished articles
@@ -107,6 +135,8 @@ args:
         $and:
           - author_id: X-HASURA-USER-ID
           - is_published: false
+      check:
+        is_published: false
 
 #Resident table
 - type: run_sql

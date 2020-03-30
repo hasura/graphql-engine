@@ -4,13 +4,12 @@ import pytest
 import ruamel.yaml as yaml
 import jsondiff
 
-from super_classes import DefaultTestSelectQueries
+usefixtures = pytest.mark.usefixtures
 
-class TestCompression(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestCompression:
 
     gzip_header = {'Accept-Encoding': 'gzip'}
-    brotli_header = {'Accept-Encoding': 'br'}
-    gzip_brotli_header = {'Accept-Encoding': 'gzip, br'}
 
     def _make_post(self, hge_ctx, u, q, h):
         if hge_ctx.hge_key is not None:
@@ -47,11 +46,6 @@ class TestCompression(DefaultTestSelectQueries):
         self._assert_encoding(resp.headers, 'gzip')
         self._assert_resp(resp, exp_resp)
 
-    def _assert_brotli(self, resp, exp_resp):
-        self._assert_status_code_200(resp)
-        self._assert_encoding(resp.headers, 'br')
-        self._assert_resp(resp, exp_resp)
-
     def test_gzip_compression_graphql(self, hge_ctx):
         url, q, exp_resp = self._get_config(self.dir() + '/graphql_query.yaml')
         resp = self._make_post(hge_ctx, url, q, self.gzip_header)
@@ -60,17 +54,6 @@ class TestCompression(DefaultTestSelectQueries):
     def test_gzip_compression_v1_query(self, hge_ctx):
         url, q, exp_resp = self._get_config(self.dir() + '/v1_query.yaml')
         resp = self._make_post(hge_ctx, url, q, self.gzip_header)
-        self._assert_gzip(resp, exp_resp)
-
-
-    def test_gzip_brotli_graphql_query(self, hge_ctx):
-        url, q, exp_resp = self._get_config(self.dir() + '/graphql_query.yaml')
-        resp = self._make_post(hge_ctx, url, q, self.gzip_brotli_header)
-        self._assert_gzip(resp, exp_resp)
-
-    def test_gzip_brotli_v1_query(self, hge_ctx):
-        url, q, exp_resp = self._get_config(self.dir() + '/v1_query.yaml')
-        resp = self._make_post(hge_ctx, url, q, self.gzip_brotli_header)
         self._assert_gzip(resp, exp_resp)
 
     @classmethod

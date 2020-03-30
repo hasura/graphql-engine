@@ -33,11 +33,11 @@ The fastest way to try event triggers out is via Heroku.
 
 3. Configure your first event trigger and webhook
 
-   Create a table, configure the database update you want to use as a trigger and instantly invoke a webhook by adding a new row in your table. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-event-trigger.html).
+   Create a table, configure the database update you want to use as a trigger and instantly invoke a webhook by adding a new row in your table. Follow this [simple guide](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-event-trigger.html).
 
 ### Other deployment methods
 
-For Docker-based deployment and advanced configuration options, see [deployment guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html).
+For Docker-based deployment and advanced configuration options, see [deployment guides](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html).
 
 ### Demo (*30 seconds*)
 
@@ -48,14 +48,14 @@ For Docker-based deployment and advanced configuration options, see [deployment 
 ### Serverless boilerplates
 
 Use one of the [serverless trigger
-boilerplates](community/boilerplates/serverless-triggers) to deploy a webhook
+boilerplates](community/boilerplates/event-triggers) to deploy a webhook
 that can capture database events.  
 Serverless/cloud-function platforms covered by boilerplates: 
 
-* [AWS Lambda](community/boilerplates/serverless-triggers/aws-lambda)
-* [Google Cloud Functions](community/boilerplates/serverless-triggers/google-cloud-functions)
-* [Azure Functions](community/boilerplates/serverless-triggers/azure-functions)
-* [Zeit Now](community/boilerplates/serverless-triggers/zeit-now)
+* [AWS Lambda](community/boilerplates/event-triggers/aws-lambda)
+* [Google Cloud Functions](community/boilerplates/event-triggers/google-cloud-functions)
+* [Azure Functions](community/boilerplates/event-triggers/azure-functions)
+* [Zeit Now](community/boilerplates/event-triggers/zeit-now)
 
 ## Architecture
 

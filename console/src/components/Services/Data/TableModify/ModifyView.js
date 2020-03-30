@@ -23,6 +23,7 @@ import {
 } from '../../../Common/utils/pgUtils';
 import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
+import { changeViewRootFields } from '../Common/TooltipMessages';
 
 class ModifyView extends Component {
   componentDidMount() {
@@ -49,8 +50,9 @@ class ModifyView extends Component {
       dispatch,
       currentSchema,
       tableCommentEdit,
-      migrationMode,
       rootFieldsEdit,
+      migrationMode,
+      readOnlyMode,
     } = this.props;
 
     const styles = require('./ModifyTable.scss');
@@ -119,9 +121,7 @@ class ModifyView extends Component {
         <React.Fragment>
           <h4 className={styles.subheading_text}>
             Custom GraphQL Root Fields
-            <Tooltip
-              message={'Change the root fields for the view in the GraphQL API'}
-            />
+            <Tooltip message={changeViewRootFields} />
           </h4>
           <RootFields
             existingRootFields={existingRootFields}
@@ -192,6 +192,7 @@ class ModifyView extends Component {
           table={tableSchema}
           tabName="modify"
           migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
         />
         <br />
         <div className={'container-fluid ' + styles.padd_left_remove}>
@@ -241,6 +242,8 @@ ModifyView.propTypes = {
   currentSchema: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
+  migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
@@ -254,6 +257,7 @@ const mapStateToProps = (state, ownProps) => {
     sql: state.rawSQL.sql,
     currentSchema: state.tables.currentSchema,
     migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.modify,
   };

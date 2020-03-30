@@ -20,11 +20,9 @@
   {%- endif %}
 {%- endmacro %}
 
-{% block extrahead %}
-  <!--<meta name="viewport" content="user-scalable=no">-->
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css" />
+{% block linktags %}
+{{ super() }}
+    <link rel="canonical" href="https://{{ BASE_DOMAIN }}/docs/1.0/{{ pagename }}{{ file_suffix }}" />
 {% endblock %}
 
 {% block document %}
@@ -49,12 +47,12 @@
 
               <div id="docs-header">
                 <div class="mobile-only" id="mobile-logo">
-                  <a href="https://{{ BASE_DOMAIN }}/" target="_blank">
+                  <a href="https://{{ BASE_DOMAIN }}/" target="_blank" rel="noopener">
                     <div class="img_wrapper inline-block">
-                      <img class="responsive logo_img no-shadow" src="{{ pathto('_images/layout/logo-dark.svg', 1) }}" />
+                      <img class="responsive logo_img no-shadow" src="{{ pathto('_images/layout/logo-dark.svg', 1) }}" alt="Hasura Logo Dark" />
                     </div>
                   </a>
-                  <a href="https://docs.{{ BASE_DOMAIN }}" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
+                  <a href="https://{{ BASE_DOMAIN }}/docs" class="docs_label mobile-logo-docs">DOCS&nbsp;&nbsp;v{{version}}</a>
                 </div>
                 <div id="docs-header-actions">
                   <div class="inline-block mobile-only" id="nav_tree_icon">
@@ -67,21 +65,21 @@
                   <div class="inline-block header_links">
                     <div class="social_icons_wrapper">
                       <div class="social_icons">
-                        <a href="https://learn.hasura.io/" target="_blank">
+                        <a href="https://hasura.io/learn/" target="_blank" rel="noopener">
                           Tutorials
                         </a>
                       </div>
                       <div class="social_icons">
-                        <iframe src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true" frameBorder="0" scrolling="0" width="100px" height="25px"></iframe>
+                        <iframe title="Hasura GraphQL Github Stars" src="https://ghbtns.com/github-btn.html?user=hasura&repo=graphql-engine&type=star&count=true" frameBorder="0" scrolling="0" width="100px" height="25px"></iframe>
                       </div>
                       <div class="social_icons">
-                        <a href="https://twitter.com/hasurahq/" target="_blank">
-                          <img class="responsive" src="{{ pathto('_images/layout/Twitter.svg', 1) }}" />
+                        <a href="https://twitter.com/hasurahq/" target="_blank" rel="noopener">
+                          <img class="responsive" src="{{ pathto('_images/layout/Twitter.svg', 1) }}" alt="Twitter icon" />
                         </a>
                       </div>
                       <div class="social_icons tooltip">
-                        <a href="https://discord.gg/vBPpJkS" target="_blank">
-                          <img class="responsive" src="{{ pathto('_images/layout/Discord.svg', 1) }}" />
+                        <a href="https://discord.gg/vBPpJkS" target="_blank" rel="noopener">
+                          <img class="responsive" src="{{ pathto('_images/layout/Discord.svg', 1) }}" alt="Discord icon" />
                         </a>
                         <span class="tooltip_text">Get instant support on our discord server</span>
                       </div>
@@ -112,7 +110,7 @@
                     </svg>
                   </div>
                   <div class="display_inl actions thumb_down">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_2" x="0px" y="0px" width="21px" height="21px" viewBox="0 0 561 561" style="enable-background:new 0 0 561 561;" xml:space="preserve">
                       <g>
                         <g id="thumb-down">
                             <path d="M357,25.5H127.5c-20.4,0-38.25,12.75-45.9,30.6L5.1,237.15C2.55,242.25,0,247.35,0,255v48.45l0,0V306    c0,28.05,22.95,51,51,51h160.65l-25.5,117.3c0,2.55,0,5.101,0,7.65c0,10.2,5.1,20.399,10.2,28.05l28.05,25.5l168.3-168.3    c10.2-10.2,15.3-22.95,15.3-35.7v-255C408,48.45,385.05,25.5,357,25.5z M459,25.5v306h102v-306H459z" fill="#787878"/>
@@ -133,21 +131,21 @@
               </div>
 
               <div class="footer-hasura-custom">
-                <img class="responsive footer_logo" src="{{ pathto('_images/layout/hasura_logo.svg', 1) }}" />
+                <img class="responsive footer_logo" src="{{ pathto('_images/layout/hasura_logo.svg', 1) }}" alt="Hasura Logo Dark"/>
                 <div class="footer_text">
                   <div>Want to contribute or report missing content?</div>
                   <div>
-                    <a target="_blank" href="https://github.com/hasura/graphql-engine/blob/master/docs/{{ pagename }}.rst">edit this page on github</a>
-                    | <a target="_blank" href="https://github.com/hasura/graphql-engine/blob/master/CONTRIBUTING.md">contributing guidelines</a>
-                    | <a target="_blank" href="https://github.com/hasura/graphql-engine/issues">report an issue</a>
+                    <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/blob/master/docs/{{ pagename }}.rst">edit this page on github</a>
+                    | <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/blob/master/CONTRIBUTING.md">contributing guidelines</a>
+                    | <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/issues">report an issue</a>
                   </div>
                   <br/>
                   <div>
-                    <a target="_blank" href="https://github.com/hasura/graphql-engine">Hasura GraphQL engine</a> is open source. <a target="_blank" href="https://github.com/hasura/graphql-engine/blob/master/LICENSE">See license</a>
+                    <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine">Hasura GraphQL engine</a> is open source. <a target="_blank" rel="noopener" href="https://github.com/hasura/graphql-engine/blob/master/LICENSE">See license</a>
                   </div>
                   <div>
-                    Powered by <a target="_blank" href="http://www.sphinx-doc.org">Sphinx</a>.
-                    |  Copyright &copy; 2019 <a target="_blank" href="https://hasura.io">Hasura</a>.
+                    Powered by <a target="_blank" rel="noopener" href="http://www.sphinx-doc.org">Sphinx</a>.
+                    |  Copyright &copy; 2020 <a target="_blank" rel="noopener" href="https://hasura.io">Hasura</a>.
                   </div>
                 </div>
               </div>
@@ -278,16 +276,17 @@
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js"></script>
   <script type="text/javascript">
     docsearch({
-      apiKey: 'c59018461c19e20fe11459136e57900c',
-      indexName: 'hasura',
+      appId: 'WCBB1VVLRC',
+      apiKey: '298d448cd9d7ed93fbab395658da19e8',
+      indexName: 'graphql-docs-prod',
       inputSelector: '#search_element',
       transformData: function(suggestions) {
-        if (window.location.origin !== 'https://docs.hasura.io') {
+        if (window.location.origin !== 'https://hasura.io') {
           suggestions.forEach(suggestion => {
             if (window.location.origin === 'http://localhost:8000') {
-              suggestion.url = suggestion.url.replace(/https:\/\/docs.hasura.io\/[^\/]*/, window.location.origin)
+              suggestion.url = suggestion.url.replace(/https:\/\/hasura.io\/docs\/[^\/]*/, window.location.origin)
             } else {
-              suggestion.url = suggestion.url.replace('https://docs.hasura.io', window.location.origin);
+              suggestion.url = suggestion.url.replace('https://hasura.io\/docs', window.location.origin);
             }
           });
         }
@@ -516,12 +515,20 @@
           .then(function (response) {
             const data = JSON.parse(response);
             const latest_version = data.latest;
+            const latest_prerelease_version = data.prerelease;
 
-            const targets = document.getElementsByClassName('latest-release-tag');
-            for (let i = 0; i < targets.length; i++) {
-              const target = targets[i];
+            const release_targets = document.getElementsByClassName('latest-release-tag');
+            for (let i = 0; i < release_targets.length; i++) {
+              const release_target = release_targets[i];
 
-              target.innerHTML = latest_version;
+              release_target.innerHTML = latest_version;
+            }
+
+            const prerelease_targets = document.getElementsByClassName('latest-prerelease-tag');
+            for (let i = 0; i < prerelease_targets.length; i++) {
+              const prerelease_target = prerelease_targets[i];
+
+              prerelease_target.innerHTML = latest_prerelease_version;
             }
           })
           .catch(function (err) {
@@ -542,4 +549,11 @@
   </script>
 
   {%- block extrafooter %} {% endblock %}
+  {% block extrahead %}
+    <!--<meta name="viewport" content="user-scalable=no">-->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css" />
+  {% endblock %}
+
 {% endblock %}

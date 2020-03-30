@@ -1,3 +1,7 @@
+.. meta::
+   :description: Make a first GraphQL query with Hasura
+   :keywords: hasura, docs, start, query, graphql
+
 .. _first_graphql_query:
 
 Making your first GraphQL query
@@ -24,6 +28,7 @@ the following columns:
   )
 
 .. thumbnail:: ../../../img/graphql/manual/getting-started/create-profile-table.png
+   :alt: Create a table
 
 Now, insert some sample data into the table using the ``Insert Row`` tab of the ``profile`` table.
 
@@ -44,12 +49,13 @@ Head to the ``GraphiQL`` tab in the console and try running the following query:
 You'll see that you get all the inserted data!
 
 .. thumbnail:: ../../../img/graphql/manual/getting-started/profile-query.png
+   :alt: Try out a query
 
 Next steps
 ----------
 
 Read more about:
 
-- :doc:`Building your schema <../schema/index>`
-- :doc:`Queries <../queries/index>`
+- :ref:`Building your schema <schema>`
+- :ref:`Queries <queries>`
 

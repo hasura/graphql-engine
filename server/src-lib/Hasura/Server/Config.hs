@@ -9,7 +9,7 @@ import           Data.Aeson.TH
 import           Hasura.Prelude
 import           Hasura.Server.Auth
 import           Hasura.Server.Auth.JWT
-import qualified Hasura.Server.Version  as V
+import           Hasura.Server.Version  (HasVersion, Version, currentVersion)
 
 data JWTInfo
   = JWTInfo

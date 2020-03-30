@@ -1,3 +1,7 @@
+.. meta::
+   :description: Manage Hasura metadata
+   :keywords: hasura, docs, metadata
+
 .. _manage_hasura_metadata:
 
 Managing Hasura metadata
@@ -30,20 +34,20 @@ Exporting Hasura metadata
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. In the Hasura metadata actions page that opens, click on the ``Export Metadata`` button.
-     3. This will prompt a file download for ``metadata.json``. Save the file.
+     3. This will prompt a file download for ``hasura_metadata_<timestamp>.json``. Save the file.
 
   .. tab:: API
 
-     The export can be done via the :doc:`Metadata API
-     <../api-reference/schema-metadata-api/manage-metadata>`.
+     The export can be done via the :ref:`Metadata API
+     <api_manage_metadata>`.
      Response will be a JSON object with the Hasura metadata. Here is an example
      using ``curl`` to save this as a file:
 
      .. code-block:: bash
 
-        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/query -o metadata.json
+        curl -d'{"type": "export_metadata", "args": {}}' http://localhost:8080/v1/query -o hasura_metadata.json
 
-     This command will create a ``metadata.json`` file.
+     This command will create a ``hasura_metadata.json`` file.
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
      admin-only API.
 
@@ -63,20 +67,20 @@ before.
 
      1. Click on the settings (⚙) icon at the top right corner of the console screen.
      2. Click on ``Import Metadata`` button.
-     3. Choose a ``metadata.json`` file that was exported earlier.
+     3. Choose a ``hasura_metadata.json`` file that was exported earlier.
      4. A notification should appear indicating the success or error.
 
   .. tab:: API
 
-     The exported JSON can be imported via the :doc:`Metadata API
-     <../api-reference/schema-metadata-api/manage-metadata>`.
+     The exported JSON can be imported via the :ref:`Metadata API
+     <api_manage_metadata>`.
      Here is an example using ``curl``:
 
      .. code-block:: bash
 
-        curl -d'{"type":"replace_metadata", "args":'$(cat metadata.json)'}' http://localhost:8080/v1/query
+        curl -d'{"type":"replace_metadata", "args":'$(cat hasura_metadata.json)'}' http://localhost:8080/v1/query
 
-     This command reads the ``metadata.json`` file and makes a POST request to
+     This command reads the ``hasura_metadata.json`` file and makes a POST request to
      replace the metadata.
      If an admin secret is set, add ``-H 'X-Hasura-Admin-Secret: <your-admin-secret>'`` as the API is an
      admin-only API.
@@ -108,8 +112,8 @@ when a new column has been added to a table via an external tool such as ``psql`
 
   .. tab:: API
 
-     The reload of metadata can be done via the :doc:`Metadata API
-     <../api-reference/schema-metadata-api/manage-metadata>`.
+     The reload of metadata can be done via the :ref:`Metadata API
+     <api_manage_metadata>`.
      Here is an example using ``curl``:
 
      .. code-block:: bash
@@ -132,5 +136,5 @@ Using tools like ``curl`` you can easily integrate the metadata API requests for
 actions with your CI/CD workflows.
 
 In case you need an automated way of applying/importing the metadata, take a
-look at the :doc:`CLI-Migrations <auto-apply-migrations>` Docker image, which
+look at the :ref:`CLI-Migrations <auto_apply_migrations>` Docker image, which
 can start the GraphQL engine after automatically importing a mounted metadata file.

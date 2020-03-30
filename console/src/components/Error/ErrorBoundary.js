@@ -9,6 +9,7 @@ import Spinner from '../Common/Spinner/Spinner';
 
 import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
+import { registerRunTimeError } from '../Main/Actions';
 
 class ErrorBoundary extends React.Component {
   initialState = {
@@ -40,16 +41,23 @@ class ErrorBoundary extends React.Component {
 
     this.setState({ hasError: true, info: info, error: error });
 
-    dispatch(loadInconsistentObjects(true)).then(() => {
-      if (this.props.metadata.inconsistentObjects.length > 0) {
-        if (!isMetadataStatusPage()) {
-          this.resetState();
-          this.props.dispatch(redirectToMetadataStatus());
+    // trigger telemetry
+    dispatch(
+      registerRunTimeError({ message: error.message, stack: error.stack })
+    );
+
+    dispatch(loadInconsistentObjects({ shouldReloadMetadata: true })).then(
+      () => {
+        if (this.props.metadata.inconsistentObjects.length > 0) {
+          if (!isMetadataStatusPage()) {
+            this.resetState();
+            this.props.dispatch(redirectToMetadataStatus());
+          }
+        } else {
+          console.error(error);
         }
-      } else {
-        console.error(error);
       }
-    });
+    );
   }
 
   render() {

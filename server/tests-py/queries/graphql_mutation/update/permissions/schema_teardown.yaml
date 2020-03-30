@@ -4,6 +4,7 @@ args:
 - type: run_sql
   args:
     sql: |
+      DROP function fetch_articles(text,author);
       DROP table article;
       DROP table author;
       DROP table person;
