@@ -12,11 +12,11 @@ Guides: Deployment
   :depth: 1
   :local:
 
-- :ref:`Render One-Click Deploy with Managed PostgreSQL <deploy_render>`
 - :ref:`Digital Ocean One-click App on Marketplace <deploy_do_marketplace>`
 - :ref:`Azure Container Instances with Postgres <deploy_azure_ci_pg>`
 - :ref:`Google Cloud Platform with Kubernetes engine and Cloud SQL <deploy_gc_kubernetes>`
 - `Blog: Instant GraphQL on AWS RDS <https://hasura.io/blog/instant-graphql-on-aws-rds-1edfb85b5985>`__
+- :ref:`Render One-Click Deploy with Managed PostgreSQL <deploy_render>`
 
 .. note::
    The above are guides to deploy the Hasura GraphQL engine on some specific platforms.
