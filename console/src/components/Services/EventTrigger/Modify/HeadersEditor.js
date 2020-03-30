@@ -128,7 +128,7 @@ const HeadersEditor = props => {
   return (
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
-        <Heading type="subHeading">
+        <Heading as="h4" fontSize="15px" mb="20px">
           Headers{' '}
           <ToolTip
             message={
