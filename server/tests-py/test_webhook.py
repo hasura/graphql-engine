@@ -37,40 +37,40 @@ class TestWebhookSubscriptionExpiry(object):
     def test_expiry_with_no_header(self, hge_ctx, ws_client):
         # no expiry time => the connextion will remain alive
         connect_with(hge_ctx, ws_client, {})
-        time.sleep(2)
+        time.sleep(5)
         assert ws_client.remote_closed == False, ws_client.remote_closed
 
     def test_expiry_with_expires_header(self, hge_ctx, ws_client):
-        exp = datetime.utcnow() + timedelta(seconds=3)
+        exp = datetime.utcnow() + timedelta(seconds=6)
         connect_with(hge_ctx, ws_client, {
             'Expires': exp.strftime(EXPIRE_TIME_FORMAT)
         })
-        time.sleep(2)
+        time.sleep(4)
         assert ws_client.remote_closed == False, ws_client.remote_closed
-        time.sleep(2)
+        time.sleep(4)
         assert ws_client.remote_closed == True, ws_client.remote_closed
 
     def test_expiry_with_cache_control(self, hge_ctx, ws_client):
         connect_with(hge_ctx, ws_client, {
-            'Cache-Control': 'max-age=3'
+            'Cache-Control': 'max-age=6'
         })
-        time.sleep(2)
+        time.sleep(4)
         assert ws_client.remote_closed == False, ws_client.remote_closed
-        time.sleep(2)
+        time.sleep(4)
         assert ws_client.remote_closed == True, ws_client.remote_closed
 
     def test_expiry_with_both(self, hge_ctx, ws_client):
-        exp = datetime.utcnow() + timedelta(seconds=3)
+        exp = datetime.utcnow() + timedelta(seconds=6)
         connect_with(hge_ctx, ws_client, {
             'Expires': exp.strftime(EXPIRE_TIME_FORMAT),
-            'Cache-Control': 'max-age=5',
+            'Cache-Control': 'max-age=10',
         })
         # cache-control has precedence, so the expiry time will be five seconds
-        time.sleep(2)
+        time.sleep(4)
         assert ws_client.remote_closed == False, ws_client.remote_closed
-        time.sleep(2)
+        time.sleep(4)
         assert ws_client.remote_closed == False, ws_client.remote_closed
-        time.sleep(2)
+        time.sleep(4)
         assert ws_client.remote_closed == True, ws_client.remote_closed
 
     def test_expiry_with_parse_error(self, hge_ctx, ws_client):
@@ -80,7 +80,5 @@ class TestWebhookSubscriptionExpiry(object):
             'Cache-Control': 'maxage=3',
         })
         # neither will parse, the connection will remain alive
-        time.sleep(2)
-        assert ws_client.remote_closed == False, ws_client.remote_closed
-        time.sleep(2)
+        time.sleep(5)
         assert ws_client.remote_closed == False, ws_client.remote_closed
