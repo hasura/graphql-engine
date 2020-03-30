@@ -677,11 +677,18 @@ class Main extends React.Component {
                   tooltips.remoteSchema,
                   '/remote-schemas/manage/schemas'
                 )}
-                {getSidebarItem(
+                {/*                {getSidebarItem(
                   'Events',
                   'fa-cloud',
                   tooltips.events,
                   '/events/manage/triggers'
+                )}
+*/}{' '}
+                {getSidebarItem(
+                  'Triggers',
+                  'fa-cloud',
+                  tooltips.events,
+                  '/triggers/events/manage'
                 )}
               </ul>
             </div>

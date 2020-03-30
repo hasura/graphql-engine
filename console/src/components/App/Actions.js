@@ -22,6 +22,7 @@ const CONNECTION_FAILED = 'App/CONNECTION_FAILED';
  * onRemove: function, null, same as onAdd
  * uid: integer/string, null, unique identifier to the notification, same uid will not be shown again
  */
+
 const showNotification = ({
   level = 'info',
   position = 'tr',

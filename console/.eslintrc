@@ -82,6 +82,7 @@
     "jsx-a11y/no-autofocus": 0,
     "max-len": 0,
     "no-continue": 0,
+    "no-new": 0,
     "eqeqeq": 0,
     "no-nested-ternary": 0,
     "no-unused-vars": "off",

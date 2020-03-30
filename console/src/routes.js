@@ -21,6 +21,8 @@ import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 
 import { getActionsRouter } from './components/Services/Actions';
 
+import { getTriggersRouter } from './components/Services/Triggers';
+
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
 
 import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
@@ -33,6 +35,7 @@ import settingsContainer from './components/Services/Settings/Container';
 import metadataOptionsContainer from './components/Services/Settings/MetadataOptions/MetadataOptions';
 import metadataStatusContainer from './components/Services/Settings/MetadataStatus/MetadataStatus';
 import allowedQueriesContainer from './components/Services/Settings/AllowedQueries/AllowedQueries';
+
 import logoutContainer from './components/Services/Settings/Logout/Logout';
 
 import { showErrorNotification } from './components/Services/Common/Notification';
@@ -90,6 +93,8 @@ const routes = store => {
 
   const actionsRouter = getActionsRouter(connect, store, composeOnEnterHooks);
 
+  const triggersRouter = getTriggersRouter(connect, store, composeOnEnterHooks);
+
   const uiKitRouter = globals.isProduction ? null : (
     <Route
       path="/ui-elements"
@@ -142,6 +147,7 @@ const routes = store => {
           {eventRouter}
           {remoteSchemaRouter}
           {actionsRouter}
+          {triggersRouter}
           {uiKitRouter}
         </Route>
       </Route>
