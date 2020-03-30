@@ -41,7 +41,7 @@ class TestWebhookSubscriptionExpiry(object):
         assert ws_client.remote_closed == False, ws_client.remote_closed
 
     def test_expiry_with_expires_header(self, hge_ctx, ws_client):
-        exp = datetime.now() + timedelta(seconds=3)
+        exp = datetime.utcnow() + timedelta(seconds=3)
         connect_with(hge_ctx, ws_client, {
             'Expires': exp.strftime(EXPIRE_TIME_FORMAT)
         })
@@ -60,7 +60,7 @@ class TestWebhookSubscriptionExpiry(object):
         assert ws_client.remote_closed == True, ws_client.remote_closed
 
     def test_expiry_with_both(self, hge_ctx, ws_client):
-        exp = datetime.now() + timedelta(seconds=3)
+        exp = datetime.utcnow() + timedelta(seconds=3)
         connect_with(hge_ctx, ws_client, {
             'Expires': exp.strftime(EXPIRE_TIME_FORMAT),
             'Cache-Control': 'max-age=5',
@@ -74,7 +74,7 @@ class TestWebhookSubscriptionExpiry(object):
         assert ws_client.remote_closed == True, ws_client.remote_closed
 
     def test_expiry_with_parse_error(self, hge_ctx, ws_client):
-        exp = datetime.now() + timedelta(seconds=3)
+        exp = datetime.utcnow() + timedelta(seconds=3)
         connect_with(hge_ctx, ws_client, {
             'Expires': exp.strftime('%a, %d %m %Y %T UTC'),
             'Cache-Control': 'maxage=3',
