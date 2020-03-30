@@ -15,7 +15,7 @@ import           Hasura.Prelude
 -- | Extracts an absolute expiration time from a Expires header.
 parseExpirationTime :: MonadError String m => T.Text -> m UTCTime
 parseExpirationTime header = maybe (throwError errorMessage) return
-                             $ parseTimeM True defaultTimeLocale timeFormat
-                             $ CS.cs header
+                           $ parseTimeM True defaultTimeLocale timeFormat
+                           $ CS.cs header
   where timeFormat = "%a, %d %b %Y %T GMT"
         errorMessage = "Value of Expires header is not a valid timestamp"
