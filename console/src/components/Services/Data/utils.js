@@ -405,7 +405,7 @@ FROM (
     end as table_type,
     obj_description(pgc.oid) AS comment,
     COALESCE(json_agg(DISTINCT row_to_json(isc) :: jsonb || jsonb_build_object('comment', col_description(pga.attrelid, pga.attnum))) filter (WHERE isc.column_name IS NOT NULL), '[]' :: json) AS columns,
-    COALESCE(json_agg(DISTINCT row_to_json(ist) :: jsonb || jsonb_build_object('comment', obj_description(pgt.tgrelid))) filter (WHERE ist.trigger_name IS NOT NULL), '[]' :: json) AS triggers,
+    COALESCE(json_agg(DISTINCT row_to_json(ist) :: jsonb || jsonb_build_object('comment', obj_description(pgt.oid))) filter (WHERE ist.trigger_name IS NOT NULL), '[]' :: json) AS triggers,
     row_to_json(isv) AS view_info
 
   FROM pg_class as pgc
