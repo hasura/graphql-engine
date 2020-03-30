@@ -1,16 +1,16 @@
 # make @hge-changelog-owners team a mandatory reviewer for all
 # pull requests to make sure a proper changelog is part of the pr
-*         @hge-changelog-owners
+*         @hasura/hge-changelog-owners
 
 # server code owners
-/server/  @hge-server-owners
+/server/  @hasura/hge-server-owners
 
 # docs code owners
-/docs/    @hge-docs-owners
+/docs/    @hasura/hge-docs-owners
 
 # cli code owners
-/cli/     @hge-cli-owners
+/cli/     @hasura/hge-cli-owners
 
 # console code owners
-/console/ @hge-console-owners
+/console/ @hasura/hge-console-owners
 
