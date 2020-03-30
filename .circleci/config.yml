@@ -517,7 +517,7 @@ jobs:
 
   deploy:
     docker:
-    - image: hasura/graphql-engine-deployer:v0.3
+    - image: hasura/graphql-engine-deployer:v0.4
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:

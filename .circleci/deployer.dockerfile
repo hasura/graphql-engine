@@ -3,7 +3,7 @@ FROM ubuntu:16.04
 ARG docker_ver="17.09.0-ce"
 ARG upx_version="3.94"
 ARG gcloud_version="207.0.0"
-ARG ghr_version="0.10.0"
+ARG ghr_version="0.13.0"
 ARG hub_version="2.5.0"
 
 RUN apt-get -y update \
