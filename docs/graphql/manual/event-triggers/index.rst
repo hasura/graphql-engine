@@ -24,6 +24,11 @@ Events can be of the following types:
 - DELETE: When a row is deleted from a table
 - MANUAL: Using the console or API, an event can be triggered manually on a row
 
+.. note::
+
+  Event webhook notifications will be delivered at least once, and may arrive out of order with 
+  respect to the underlying event.
+
 **See:**
 
 .. toctree::

@@ -6,6 +6,9 @@
 
 - Introducing Actions: https://docs.hasura.io/1.0/graphql/manual/actions/index.html
 - Downgrade command: https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine
+- console: allow setting check constraints during table create (#3881)
+
+  There was added a component that allows adding check constraints while creating a new table in the same way as it can be done on the `Modify` view.
 
 ### Other changes
 
@@ -38,7 +41,7 @@
 - tag release v1.2.0-beta.1 (#3966)
 - noop: replace subdomain links with subpath (#3869)
 - docs: add reference to QualifiedTable to table args (#3880)
-- update actions docs  (#3953)
+- update actions docs (#3953)
 - cli: bug fixes related to actions (#3951)
 - update docs (#3947)
 - fix regression on tag release script (#3944)
@@ -64,3 +67,7 @@
 - fix casting citext column type (fix #2818) (#3861)
 - Add downgrade command (close #1156) (#3760)
 - persist mix files only when coverage is enabled (#3844)
+- add meta descriptions to actions docs (#4082)
+- `HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL` changes semantics slightly: we only sleep for the interval
+  when there were previously no events to process. Potential space leak fixed. (#3839)
+- auto-include `__typename` field in custom types' objects (fix #4063)

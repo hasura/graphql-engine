@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from http import HTTPStatus
+from socketserver import ThreadingMixIn
 from urllib.parse import urlparse
 from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml
 import threading
@@ -331,7 +332,14 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
                                         "body": req_json,
                                         "headers": req_headers})
 
-class EvtsWebhookServer(http.server.HTTPServer):
+# A very slightly more sane/performant http server.
+# See: https://stackoverflow.com/a/14089457/176841 
+#
+# TODO use this elsewhere, or better yet: use e.g. bottle + waitress
+class ThreadedHTTPServer(ThreadingMixIn, http.server.HTTPServer):
+    """Handle requests in a separate thread."""
+
+class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):
         self.resp_queue = queue.Queue(maxsize=1)
         self.error_queue = queue.Queue()
