@@ -249,7 +249,6 @@ library
                      , Hasura.Incremental.Internal.Rule
 
                      , Hasura.Server.Auth.JWT
-                     , Hasura.Server.Auth.Utils
                      , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
@@ -380,6 +379,7 @@ library
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.Text.Extended
+                     , Data.Parser.Expires
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error

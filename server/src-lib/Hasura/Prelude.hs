@@ -4,9 +4,9 @@ module Hasura.Prelude
   , alphaNumerics
   , onNothing
   , onJust
-  , onMaybe
   , onLeft
   , choice
+  , afold
   , bsToTxt
   , txtToBs
   , spanMaybeM
@@ -46,6 +46,7 @@ import           Data.List                         as M (find, findIndex, foldl'
 import           Data.List.NonEmpty                as M (NonEmpty (..))
 import           Data.Maybe                        as M (catMaybes, fromMaybe, isJust, isNothing,
                                                          listToMaybe, mapMaybe, maybeToList)
+import           Data.Monoid                       as M (getAlt)
 import           Data.Ord                          as M (comparing)
 import           Data.Semigroup                    as M (Semigroup (..))
 import           Data.Sequence                     as M (Seq)
@@ -81,14 +82,14 @@ onNothing m act = maybe act return m
 onJust :: (Monad m) => Maybe a -> (a -> m ()) -> m ()
 onJust m action = maybe (return ()) action m
 
-onMaybe :: Monad m => Maybe a -> (a -> m (Maybe b)) -> m (Maybe b)
-onMaybe m action = maybe (return Nothing) action m
-
 onLeft :: (Monad m) => Either e a -> (e -> m a) -> m a
 onLeft e f = either f return e
 
 choice :: (Alternative f) => [f a] -> f a
 choice = asum
+
+afold :: (Foldable t, Alternative f) => t a -> f a
+afold = getAlt . foldMap pure
 
 bsToTxt :: B.ByteString -> Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode

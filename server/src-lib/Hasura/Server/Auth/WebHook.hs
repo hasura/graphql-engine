@@ -5,25 +5,27 @@ module Hasura.Server.Auth.WebHook
   , userInfoFromAuthHook
   ) where
 
-import           Control.Exception        (try)
+import           Control.Exception         (try)
 import           Control.Lens
+import           Control.Monad.Trans.Maybe
 import           Data.Aeson
-import           Data.Time.Clock          (UTCTime)
-import           Hasura.Server.Version    (HasVersion)
+import           Data.Time.Clock           (UTCTime, addUTCTime, getCurrentTime)
+import           Hasura.Server.Version     (HasVersion)
 
-import qualified Data.Aeson               as J
-import qualified Data.ByteString.Lazy     as BL
-import qualified Data.HashMap.Strict      as Map
-import qualified Data.Text                as T
-import qualified Network.HTTP.Client      as H
-import qualified Network.HTTP.Types       as N
-import qualified Network.Wreq             as Wreq
+import qualified Data.Aeson                as J
+import qualified Data.ByteString.Lazy      as BL
+import qualified Data.HashMap.Strict       as Map
+import qualified Data.Text                 as T
+import qualified Network.HTTP.Client       as H
+import qualified Network.HTTP.Types        as N
+import qualified Network.Wreq              as Wreq
 
+import           Data.Parser.CacheControl
+import           Data.Parser.Expires
 import           Hasura.HTTP
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
-import           Hasura.Server.Auth.Utils
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 
@@ -129,22 +131,20 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody
           throw500 "missing x-hasura-role key in webhook response"
         Just rn -> do
           logWebHookResp LevelInfo Nothing Nothing
-          let ccHeader = Map.lookup "Cache-Control" rawHeaders
-              eHeader  = Map.lookup "Expires"       rawHeaders
-          expTime <- getExpiryTime ccHeader eHeader
-          return (mkUserInfo rn usrVars, expTime)
+          expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
+          return (mkUserInfo rn usrVars, expiration)
 
-    logWarn =
-      logWebHookResp LevelWarn $ Just respBody
-    logError =
-      logWebHookResp LevelError (Just respBody) Nothing
+    logWebHookResp :: MonadIO m => LogLevel -> Maybe BL.ByteString -> Maybe T.Text -> m ()
     logWebHookResp logLevel mResp message =
       logger $ WebHookLog logLevel (Just statusCode)
         url method Nothing (bsToTxt . BL.toStrict <$> mResp) message
+    logWarn message = logWebHookResp LevelWarn (Just respBody) (Just message)
+    logError = logWebHookResp LevelError (Just respBody) Nothing
 
-    getExpiryTime ccHeader eHeader = do
-      cct <- timeFromCacheControlHeader ccHeader $ logWarn . Just
-      expTime <- case cct of
-        Just t  -> return $ Just t
-        Nothing -> timeFromExpiresHeader eHeader $ logWarn . Just
-      onMaybe expTime $ fmap Just . toUTCTime
+    timeFromCacheControl headers = do
+      header <- afold $ Map.lookup "Cache-Control" headers
+      duration <- parseMaxAge header `onLeft` \err -> logWarn (T.pack err) *> empty
+      addUTCTime (fromInteger duration) <$> liftIO getCurrentTime
+    timeFromExpires headers = do
+      header <- afold $ Map.lookup "Expires" headers
+      parseExpirationTime header `onLeft` \err -> logWarn (T.pack err) *> empty
