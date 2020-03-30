@@ -1,22 +1,107 @@
 import React from 'react';
 import { isEqual, isString } from './jsUtils';
+import { TableDefinition, FunctionDefinition } from './v1QueryUtils';
 
 /*** Table/View utils ***/
 
-export const getTableName = table => {
+export type TableRelationship = {
+  rel_name: string,
+  rel_def: {
+    manual_configuration?: any,
+    foreign_key_constraint_on?: any // TODO
+  },
+  rel_type: "object" | "array",
+}
+
+export type TablePermission = {
+  role_name: string
+  permissions: {
+    [action: string]: any
+  }
+}
+
+export type TableColumn = {
+  column_name: string,
+  data_type: string,
+  udt_name: string,
+  column_default: string
+};
+
+export type ForeignKeyConstraint = {
+  ref_table: string,
+  ref_table_table_schema: string,
+  column_mapping: {
+    [lcol: string]: string
+  }
+}
+
+export type CheckConstraint = {
+  constraint_name: string,
+  check: string
+}
+
+export type ComputedField = {
+  computed_field_name: string,
+  definition: {
+    function: FunctionDefinition
+  }
+}
+
+export type Table = {
+  table_name: string,
+  table_schema: string,
+  table_type: string,
+  is_table_tracked: boolean,
+  columns: TableColumn[],
+  relationships: TableRelationship[]
+  permissions: TablePermission[]
+  foreign_key_constraints: ForeignKeyConstraint[],
+  check_constraints: CheckConstraint[]
+  configuration?: {
+    custom_column_names: {
+      [column: string]: string
+    },
+    custom_root_fields: {
+      select?: string,
+      select_by_pk?: string,
+      select_aggregate?: string,
+      insert?: string,
+      insert_one?: string,
+      update?: string,
+      update_by_pk?: string,
+      delete?: string,
+      delete_by_pk?: string
+    }
+  },
+  computed_fields: ComputedField[]
+  is_enum: boolean,
+};
+
+export type PGFunction = {
+  function_name: string,
+  function_schema: string,
+  function_definition: string
+  return_type_type: string
+};
+
+export type PGSchema = {
+  schema_name: string
+}
+
+export const getTableName = (table: Table) => {
   return table.table_name;
 };
 
-export const getTableSchema = table => {
+export const getTableSchema = (table: Table) => {
   return table.table_schema;
 };
 
 // TODO: figure out better pattern for overloading fns
 // tableName and tableNameWithSchema are either/or arguments
 export const generateTableDef = (
-  tableName,
+  tableName: string,
   tableSchema = 'public',
-  tableNameWithSchema = null
+  tableNameWithSchema: (string | null) = null
 ) => {
   if (tableNameWithSchema) {
     tableSchema = tableNameWithSchema.split('.')[0];
@@ -29,15 +114,15 @@ export const generateTableDef = (
   };
 };
 
-export const getTableDef = table => {
+export const getTableDef = (table: Table) => {
   return generateTableDef(getTableName(table), getTableSchema(table));
 };
 
-export const getQualifiedTableDef = tableDef => {
-  return isString(tableDef) ? generateTableDef(tableDef) : tableDef;
+export const getQualifiedTableDef = (tableDef: TableDefinition | string) => {
+  return isString(tableDef) ? generateTableDef(tableDef as string) : tableDef;
 };
 
-export const getTableNameWithSchema = (tableDef, wrapDoubleQuotes = false) => {
+export const getTableNameWithSchema = (tableDef: TableDefinition, wrapDoubleQuotes = false) => {
   let _fullTableName;
 
   if (wrapDoubleQuotes) {
@@ -50,58 +135,58 @@ export const getTableNameWithSchema = (tableDef, wrapDoubleQuotes = false) => {
   return _fullTableName;
 };
 
-export const checkIfTable = table => {
+export const checkIfTable = (table: Table) => {
   return table.table_type === 'BASE TABLE';
 };
 
-export const displayTableName = table => {
+export const displayTableName = (table: Table) => {
   const tableName = getTableName(table);
   const isTable = checkIfTable(table);
 
   return isTable ? <span>{tableName}</span> : <i>{tableName}</i>;
 };
 
-export const findTable = (allTables, tableDef) => {
+export const findTable = (allTables: Table[], tableDef: TableDefinition) => {
   return allTables.find(t => isEqual(getTableDef(t), tableDef));
 };
 
-export const getTrackedTables = tables => {
+export const getTrackedTables = (tables: Table[]) => {
   return tables.filter(t => t.is_table_tracked);
 };
 
-export const getUntrackedTables = tables => {
+export const getUntrackedTables = (tables: Table[]) => {
   return tables.filter(t => !t.is_table_tracked);
 };
 
-export const getOnlyTables = tablesOrViews => {
+export const getOnlyTables = (tablesOrViews: Table[]) => {
   return tablesOrViews.filter(t => checkIfTable(t));
 };
 
-export const getOnlyViews = tablesOrViews => {
+export const getOnlyViews = (tablesOrViews: Table[]) => {
   return tablesOrViews.filter(t => !checkIfTable(t));
 };
 
 /*** Table/View column utils ***/
 
-export const getTableColumns = table => {
+export const getTableColumns = (table: Table) => {
   return table.columns;
 };
 
-export const getColumnName = column => {
+export const getColumnName = (column: TableColumn) => {
   return column.column_name;
 };
 
-export const getTableColumnNames = table => {
+export const getTableColumnNames = (table: Table) => {
   return getTableColumns(table).map(c => getColumnName(c));
 };
 
-export const getTableColumn = (table, columnName) => {
+export const getTableColumn = (table: Table, columnName: string) => {
   return getTableColumns(table).find(
     column => getColumnName(column) === columnName
   );
 };
 
-export const getColumnType = column => {
+export const getColumnType = (column: TableColumn) => {
   let _columnType = column.data_type;
 
   if (_columnType === 'USER-DEFINED') {
@@ -111,7 +196,7 @@ export const getColumnType = column => {
   return _columnType;
 };
 
-export const isColumnAutoIncrement = column => {
+export const isColumnAutoIncrement = (column: TableColumn) => {
   const columnDefault = column.column_default;
 
   const autoIncrementDefaultRegex = /^nextval\('(.*)_seq'::regclass\)$/;
@@ -124,33 +209,33 @@ export const isColumnAutoIncrement = column => {
 
 /*** Table/View relationship utils ***/
 
-export const getTableRelationships = table => {
+export const getTableRelationships = (table: Table) => {
   return table.relationships;
 };
 
-export const getRelationshipName = relationship => {
+export const getRelationshipName = (relationship: TableRelationship) => {
   return relationship.rel_name;
 };
 
-export const getRelationshipDef = relationship => {
+export const getRelationshipDef = (relationship: TableRelationship) => {
   return relationship.rel_def;
 };
 
-export const getRelationshipType = relationship => {
+export const getRelationshipType = (relationship: TableRelationship) => {
   return relationship.rel_type;
 };
 
-export const getTableRelationshipNames = table => {
+export const getTableRelationshipNames = (table: Table) => {
   return getTableRelationships(table).map(r => getRelationshipName(r));
 };
 
-export function getTableRelationship(table, relationshipName) {
+export function getTableRelationship(table: Table, relationshipName: string) {
   return getTableRelationships(table).find(
     relationship => getRelationshipName(relationship) === relationshipName
   );
 }
 
-export function getRelationshipRefTable(table, relationship) {
+export function getRelationshipRefTable(table: Table, relationship: TableRelationship) {
   let _refTable = null;
 
   const relationshipDef = getRelationshipDef(relationship);
@@ -204,22 +289,24 @@ export function getRelationshipRefTable(table, relationship) {
  *   enumColumnName: string,
  * }>}
  */
-export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
+
+export const getEnumColumnMappings = (allSchemas: Table[], tableName: string, tableSchema: string) => {
   const currentTable = findTable(
     allSchemas,
     generateTableDef(tableName, tableSchema)
   );
 
-  const relationsMap = [];
+  const relationsMap: any[] = [];
+  if (!currentTable) return;
   if (!currentTable.foreign_key_constraints.length) return;
 
   currentTable.foreign_key_constraints.map(
     ({ ref_table, ref_table_table_schema, column_mapping }) => {
-      const refTableSchema = findTable(
+      const refTable = findTable(
         allSchemas,
         generateTableDef(ref_table, ref_table_table_schema)
       );
-      if (!refTableSchema.is_enum) return;
+      if (!refTable || !refTable.is_enum) return;
 
       const keys = Object.keys(column_mapping);
       if (!keys.length) return;
@@ -242,14 +329,16 @@ export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
 
 /*** Table/View permissions utils ***/
 
-export const getTablePermissions = (table, role = null, action = null) => {
+export const getTablePermissions = (table: Table, role: (string | null) = null, action: (string | null) = null) => {
   let tablePermissions = table.permissions;
 
   if (role) {
-    tablePermissions = tablePermissions.find(p => p.role_name === role);
+    let rolePermissions = tablePermissions.find(p => p.role_name === role);
 
-    if (tablePermissions && action) {
-      tablePermissions = tablePermissions.permissions[action];
+    if (rolePermissions && action) {
+      return rolePermissions.permissions[action];
+    } else {
+      return null;
     }
   }
 
@@ -258,15 +347,15 @@ export const getTablePermissions = (table, role = null, action = null) => {
 
 /*** Table/View Check Constraints utils ***/
 
-export const getTableCheckConstraints = table => {
+export const getTableCheckConstraints = (table: Table) => {
   return table.check_constraints;
 };
 
-export const getCheckConstraintName = constraint => {
+export const getCheckConstraintName = (constraint: CheckConstraint) => {
   return constraint.constraint_name;
 };
 
-export const findTableCheckConstraint = (checkConstraints, constraintName) => {
+export const findTableCheckConstraint = (checkConstraints: CheckConstraint[], constraintName: string) => {
   return checkConstraints.find(
     c => getCheckConstraintName(c) === constraintName
   );
@@ -274,23 +363,23 @@ export const findTableCheckConstraint = (checkConstraints, constraintName) => {
 
 /*** Function utils ***/
 
-export const getFunctionSchema = pgFunction => {
+export const getFunctionSchema = (pgFunction: PGFunction) => {
   return pgFunction.function_schema;
 };
 
-export const getFunctionName = pgFunction => {
+export const getFunctionName = (pgFunction: PGFunction) => {
   return pgFunction.function_name;
 };
 
-export const getFunctionDefinition = pgFunction => {
+export const getFunctionDefinition = (pgFunction: PGFunction) => {
   return pgFunction.function_definition;
 };
 
-export const getSchemaFunctions = (allFunctions, fnSchema) => {
+export const getSchemaFunctions = (allFunctions: PGFunction[], fnSchema: string) => {
   return allFunctions.filter(fn => getFunctionSchema(fn) === fnSchema);
 };
 
-export const findFunction = (allFunctions, functionName, functionSchema) => {
+export const findFunction = (allFunctions: PGFunction[], functionName: string, functionSchema: string) => {
   return allFunctions.find(
     f =>
       getFunctionName(f) === functionName &&
@@ -300,28 +389,28 @@ export const findFunction = (allFunctions, functionName, functionSchema) => {
 
 /*** Schema utils ***/
 
-export const getSchemaName = schema => {
+export const getSchemaName = (schema: PGSchema) => {
   return schema.schema_name;
 };
 
-export const getSchemaTables = (allTables, tableSchema) => {
+export const getSchemaTables = (allTables: Table[], tableSchema: string) => {
   return allTables.filter(t => getTableSchema(t) === tableSchema);
 };
 
-export const getSchemaTableNames = (allTables, tableSchema) => {
+export const getSchemaTableNames = (allTables: Table[], tableSchema: string) => {
   return getSchemaTables(allTables, tableSchema).map(t => getTableName(t));
 };
 
 /*** Custom table fields utils ***/
 
-export const getTableCustomRootFields = table => {
+export const getTableCustomRootFields = (table: Table) => {
   if (table.configuration) {
     return table.configuration.custom_root_fields || {};
   }
   return {};
 };
 
-export const getTableCustomColumnNames = table => {
+export const getTableCustomColumnNames = (table: Table) => {
   if (table.configuration) {
     return table.configuration.custom_column_names || {};
   }
@@ -330,16 +419,16 @@ export const getTableCustomColumnNames = table => {
 
 /*** Table/View Computed Field utils ***/
 
-export const getTableComputedFields = table => {
+export const getTableComputedFields = (table: Table) => {
   return table.computed_fields;
 };
 
-export const getComputedFieldName = computedField => {
+export const getComputedFieldName = (computedField: ComputedField) => {
   return computedField.computed_field_name;
 };
 
-export const getGroupedTableComputedFields = (table, allFunctions) => {
-  const groupedComputedFields = { scalar: [], table: [] };
+export const getGroupedTableComputedFields = (table: Table, allFunctions: PGFunction[]) => {
+  const groupedComputedFields: { scalar: ComputedField[], table: ComputedField[] } = { scalar: [], table: [] };
 
   getTableComputedFields(table).forEach(computedField => {
     const computedFieldFnDef = computedField.definition.function;

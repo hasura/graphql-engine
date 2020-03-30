@@ -1,12 +1,25 @@
 import { terminateSql } from './sqlUtils';
 import { LocalScheduledTriggerState } from '../../Services/Triggers/ScheduledTriggers/Add/state';
 import { transformHeaders } from '../Headers/utils';
+import { generateTableDef } from './pgUtils';
 
 // TODO add type for the where clause
 
 // TODO extend all queries with v1 query type
 
-type TableDefinition = {
+type WhereClause = any;
+
+type OrderBy = {
+  column: string;
+  type: 'asc' | 'desc';
+};
+
+export type TableDefinition = {
+  name: string;
+  schema: string;
+};
+
+export type FunctionDefinition = {
   name: string;
   schema: string;
 };
@@ -216,7 +229,7 @@ export const getFetchAllRolesQuery = () => ({
       name: 'hdb_role',
     },
     columns: ['role_name'],
-    order_by: { column: 'role_name', type: 'asc' },
+    order_by: [{ column: 'role_name', type: 'asc' }],
   },
 });
 
@@ -329,7 +342,7 @@ export const getDropComputedFieldQuery = (
 };
 
 export const getDeleteQuery = (
-  pkClause: any,
+  pkClause: WhereClause,
   tableName: string,
   schemaName: string
 ) => {
@@ -346,11 +359,11 @@ export const getDeleteQuery = (
 };
 
 export const getBulkDeleteQuery = (
-  pkClauses: any,
+  pkClauses: WhereClause,
   tableName: string,
   schemaName: string
 ) =>
-  pkClauses.map((pkClause: any) =>
+  pkClauses.map((pkClause: WhereClause) =>
     getDeleteQuery(pkClause, tableName, schemaName)
   );
 
@@ -420,7 +433,7 @@ export const fetchEventTriggersQuery = {
       schema: 'hdb_catalog',
     },
     columns: ['*.*'],
-    order_by: { column: 'name', type: 'asc' },
+    order_by: [{ column: 'name', type: 'asc' }],
   },
 };
 
@@ -432,7 +445,7 @@ export const fetchScheduledTriggersQuery = {
       schema: 'hdb_catalog',
     },
     columns: ['*.*'],
-    order_by: { column: 'name', type: 'asc' },
+    order_by: [{ column: 'name', type: 'asc' }],
   },
 };
 
@@ -499,4 +512,40 @@ export const getCreateScheduledEventQuery = (triggerName: string) => {
       payload: { k: 'v' },
     },
   };
+};
+
+export const getSelectQuery = (
+  table: TableDefinition,
+  columns: string[],
+  where?: WhereClause,
+  offset?: number,
+  limit?: number,
+  order_by?: OrderBy[]
+) => {
+  return {
+    type: 'select',
+    args: {
+      table,
+      columns,
+      where,
+      offset,
+      limit,
+      order_by,
+    },
+  };
+};
+
+export const getFetchInvocationLogsQuery = (
+  where: WhereClause,
+  order_by: OrderBy[],
+  limit: number
+) => {
+  return getSelectQuery(
+    generateTableDef('hdb_scheduled_event_invocation_logs', 'hdb_catalog'),
+    ['*'],
+    where,
+    undefined,
+    limit,
+    order_by
+  );
 };
