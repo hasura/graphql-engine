@@ -1,6 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+
 import PopUp from './PopUp';
+import { Heading } from '../../../UIKit/atoms';
+import styles from '../../RemoteSchema/RemoteSchema.scss';
+import Rectangle from './images/Rectangle.svg';
+import glitch from './images/glitch.png';
+import googleCloud from './images/google_cloud.svg';
+import MicrosoftAzure from './images/Microsoft_Azure_Logo.svg';
+import AWS from './images/AWS.png';
+import externalLink from './images/external-link.svg';
 
 class TryItOut extends React.Component {
   constructor() {
@@ -9,26 +18,29 @@ class TryItOut extends React.Component {
       isPopUp: false,
     };
   }
+
   togglePopup() {
     this.setState({ isPopUp: !this.state.isPopUp });
   }
+
   render() {
-    const Rectangle = require('./images/Rectangle.svg');
-    const styles = require('../../RemoteSchema/RemoteSchema.scss');
-    const glitch = require('./images/glitch.png');
-    const googleCloud = require('./images/google_cloud.svg');
-    const MicrosoftAzure = require('./images/Microsoft_Azure_Logo.svg');
-    const AWS = require('./images/AWS.png');
-    const externalLink = require('./images/external-link.svg');
     // const { title, imgUrl, imgAlt,  description} = this.props;
     const commonStyle = this.props.isAvailable
       ? styles.instructionsWrapper
       : styles.instructionsWrapperPos;
+
     return (
       <div>
         <div className={styles.subHeaderText}>
           <img className={'img-responsive'} src={Rectangle} alt={'Rectangle'} />
-          Try it out
+          <Heading
+            as="h4"
+            display="inline-block"
+            fontSize="18px"
+            fontWeight={6}
+          >
+            Try it out
+          </Heading>
         </div>
         <div className={styles.tryOutWrapper}>
           <div className={styles.boxLarge}>
@@ -133,6 +145,7 @@ class TryItOut extends React.Component {
     );
   }
 }
+
 TryItOut.propTypes = {
   service: PropTypes.string.isRequired,
   queryDefinition: PropTypes.string.isRequired,
@@ -145,4 +158,5 @@ TryItOut.propTypes = {
   // imgAlt: PropTypes.string.isRequired,
   // description: PropTypes.string.isRequired,
 };
+
 export default TryItOut;
