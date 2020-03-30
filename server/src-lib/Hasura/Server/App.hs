@@ -189,7 +189,7 @@ parseBody reqBody =
 onlyAdmin :: (Monad m) => Handler m ()
 onlyAdmin = do
   uRole <- asks (_uiRole . hcUser)
-  when (uRole /= adminRole) $
+  when (uRole /= adminRoleName) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
 buildQCtx :: (MonadIO m) => Handler m QCtx
@@ -232,7 +232,7 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
                  return userInfoE
 
     let handlerState = HandlerCtx serverCtx userInfo headers requestId
-        curRole = getRoleName $ _uiRole userInfo
+        curRole = _uiRole userInfo
 
     (serviceTime, (result, q)) <- withElapsedTime $ case apiHandler of
       AHGet handler -> do

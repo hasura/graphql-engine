@@ -262,7 +262,7 @@ buildLiveQueryPlan pgExecCtx fieldAlias astUnresolved varTypes = do
   (astResolved, (queryVariableValues, syntheticVariableValues)) <- flip runStateT mempty $
     GR.traverseQueryRootFldAST resolveMultiplexedValue astUnresolved
   let pgQuery = mkMultiplexedQuery $ GR.toPGQuery astResolved
-      roleName = getRoleName $ _uiRole userInfo
+      roleName = _uiRole userInfo
       parameterizedPlan = ParameterizedLiveQueryPlan roleName fieldAlias pgQuery
 
   -- We need to ensure that the values provided for variables

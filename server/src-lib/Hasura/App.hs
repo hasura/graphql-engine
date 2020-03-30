@@ -368,7 +368,7 @@ instance UserAuthentication AppM where
 instance MetadataApiAuthorization AppM where
   authorizeMetadataApi query userInfo = do
     let currRole = _uiRole userInfo
-    when (requiresAdmin query && currRole /= adminRole) $
+    when (requiresAdmin query && currRole /= adminRoleName) $
       withPathK "args" $ throw400 AccessDenied errMsg
     where
       errMsg = "restricted access : admin only"

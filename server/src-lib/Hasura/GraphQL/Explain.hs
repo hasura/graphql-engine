@@ -75,7 +75,7 @@ getSessVarVal
 getSessVarVal userInfo sessVar =
   onNothing (getSessionVariableValue sessVar sessionVariables) $
     throw400 UnexpectedPayload $
-    "missing required session variable for role " <> getRoleName rn <<>
+    "missing required session variable for role " <> rn <<>
     " : " <> sessionVariableToText sessVar
   where
     rn = _uiRole userInfo
@@ -133,5 +133,5 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
-    userInfo = mkUserInfo (maybe adminRole RoleSimple $ roleFromSession sessionVariables) sessionVariables
+    userInfo = mkUserInfo (fromMaybe adminRoleName $ roleFromSession sessionVariables) sessionVariables UAdminSecretAbsent
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

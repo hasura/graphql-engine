@@ -48,7 +48,16 @@ instance Has TypeMap GCtx where
 instance ToJSON GCtx where
   toJSON _ = String "ToJSON for GCtx is not implemented"
 
-type GCtxMap = Map.HashMap Role GCtx
+data RoleContext a
+  = RoleContext
+  { _rctxOnlyRole        :: !a
+  , _rctxWithAdminSecret :: !(Maybe a)
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+
+instance ToJSON (RoleContext a) where
+  toJSON _ = String "ToJSON for Role Context not implemented"
+
+type GCtxMap = Map.HashMap RoleName (RoleContext GCtx)
 
 mkQueryRootTyInfo :: [ObjFldInfo] -> ObjTyInfo
 mkQueryRootTyInfo flds =

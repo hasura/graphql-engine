@@ -127,7 +127,7 @@ mutFldToTx fld = do
   userInfo <- asks getter
   opCtx <- getOpCtx $ V._fName fld
   let noRespHeaders = fmap (,[])
-      roleName = getRoleName $ _uiRole userInfo
+      roleName = _uiRole userInfo
   case opCtx of
     MCInsert ctx -> do
       validateHdrs userInfo (_iocHeaders ctx)

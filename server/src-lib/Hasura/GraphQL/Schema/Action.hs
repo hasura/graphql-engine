@@ -224,7 +224,7 @@ mkActionSchemaOne
   :: (QErrM m)
   => AnnotatedObjects
   -> ActionInfo
-  -> m (Map.HashMap Role
+  -> m (Map.HashMap RoleName
          ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
          , (ActionExecutionContext, ObjFldInfo)
          , FieldMap
@@ -241,16 +241,13 @@ mkActionSchemaOne annotatedObjects actionInfo = do
       G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
     permissionsWithRole =
       let adminPermission = ActionPermissionInfo adminRoleName
-          permissions = Map.insert adminRoleName adminPermission $ _aiPermissions actionInfo
-      in Map.fromList $ flip concatMap (Map.toList permissions) $
-         -- Use actions for roles requested with and without admin secret
-         \r -> [first RoleSimple r, first RoleWithAdminSecret r]
+      in Map.insert adminRoleName adminPermission $ _aiPermissions actionInfo
 
 mkActionsSchema
   :: (QErrM m)
   => AnnotatedObjects
   -> ActionCache
-  -> m (Map.HashMap Role (RootFields, TyAgg))
+  -> m (Map.HashMap RoleName (RootFields, TyAgg))
 mkActionsSchema annotatedObjects =
   foldM
   (\aggregate actionInfo ->

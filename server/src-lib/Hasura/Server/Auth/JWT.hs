@@ -226,7 +226,7 @@ processJwt jwtCtx headers mUnAuthRole =
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
       return $ (, Nothing) $
-        mkUserInfo (RoleSimple unAuthRole) $ mkSessionVariables headers
+        mkUserInfo unAuthRole (mkSessionVariables headers) UAdminSecretAbsent
 
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
@@ -267,12 +267,11 @@ processAuthZHeader jwtCtx headers authzHeader = do
   when (roleName `notElem` allowedRoles) currRoleNotAllowed
   let finalClaims =
         Map.delete defaultRoleClaim . Map.delete allowedRolesClaim $ claimsMap
-      role = RoleSimple roleName
 
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ J.Object finalClaims
 
-  return $ (, expTimeM) $ mkUserInfo role $ mkSessionVariablesText $ Map.toList metadata
+  return $ (, expTimeM) $ mkUserInfo roleName (mkSessionVariablesText $ Map.toList metadata) UAdminSecretAbsent
 
   where
     parseAuthzHeader = do

@@ -48,12 +48,13 @@ import           Hasura.GraphQL.Schema.Mutation.Update
 import           Hasura.GraphQL.Schema.OrderBy
 import           Hasura.GraphQL.Schema.Select
 
-getInsPerm :: TableInfo -> Role -> Maybe InsPermInfo
-getInsPerm tabInfo role
+type TableSchemaCtx = RoleContext (TyAgg, RootFields, InsCtxMap)
+
+getInsPerm :: TableInfo -> RoleName -> Maybe InsPermInfo
+getInsPerm tabInfo roleName
   | roleName == adminRoleName = _permIns $ mkAdminRolePermInfo (_tiCoreInfo tabInfo)
   | otherwise = Map.lookup roleName rolePermInfoMap >>= _permIns
   where
-    roleName = getRoleName role
     rolePermInfoMap = _tiRolePermInfoMap tabInfo
 
 getTabInfo
@@ -456,9 +457,9 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
           \fa -> FunctionArgItem (G.Name gName) (faName fa) (faHasDefault fa)
 
 
-getSelPermission :: TableInfo -> Role -> Maybe SelPermInfo
-getSelPermission tabInfo role =
-  Map.lookup (getRoleName role) (_tiRolePermInfoMap tabInfo) >>= _permSel
+getSelPermission :: TableInfo -> RoleName -> Maybe SelPermInfo
+getSelPermission tabInfo roleName =
+  Map.lookup roleName (_tiRolePermInfoMap tabInfo) >>= _permSel
 
 getSelPerm
   :: (MonadError QErr m)
@@ -466,13 +467,13 @@ getSelPerm
   -- all the fields of a table
   -> FieldInfoMap FieldInfo
   -- role and its permission
-  -> Role -> SelPermInfo
+  -> RoleName -> SelPermInfo
   -> m (Bool, [SelField])
-getSelPerm tableCache fields role selPermInfo = do
+getSelPerm tableCache fields roleName selPermInfo = do
 
   relFlds <- fmap catMaybes $ forM validRels $ \relInfo -> do
       remTableInfo <- getTabInfo tableCache $ riRTable relInfo
-      let remTableSelPermM = getSelPermission remTableInfo role
+      let remTableSelPermM = getSelPermission remTableInfo roleName
           remTableFlds = _tciFieldInfoMap $ _tiCoreInfo remTableInfo
           remTableColGNameMap =
             mkPGColGNameMap $ getValidCols remTableFlds
@@ -494,7 +495,7 @@ getSelPerm tableCache fields role selPermInfo = do
         CFRScalar scalarTy  -> pure $ Just $ CFTScalar scalarTy
         CFRSetofTable retTable -> do
           retTableInfo <- getTabInfo tableCache retTable
-          let retTableSelPermM = getSelPermission retTableInfo role
+          let retTableSelPermM = getSelPermission retTableInfo roleName
               retTableFlds = _tciFieldInfoMap $ _tiCoreInfo retTableInfo
               retTableColGNameMap =
                 mkPGColGNameMap $ getValidCols retTableFlds
@@ -522,7 +523,7 @@ getSelPerm tableCache fields role selPermInfo = do
 
 mkInsCtx
   :: MonadError QErr m
-  => Role
+  => RoleName
   -> TableCache
   -> FieldInfoMap FieldInfo
   -> InsPermInfo
@@ -634,7 +635,7 @@ mkGCtxRole
   -> [FunctionInfo]
   -> Maybe ViewInfo
   -> TableConfig
-  -> Role
+  -> RoleName
   -> RolePermInfo
   -> m (TyAgg, RootFields, InsCtxMap)
 mkGCtxRole tableCache tn descM fields primaryKey constraints funcs viM tabConfigM role permInfo = do
@@ -692,30 +693,38 @@ mkGCtxMapTable
   => TableCache
   -> FunctionCache
   -> TableInfo
-  -> m (Map.HashMap Role (TyAgg, RootFields, InsCtxMap))
+  -> m (Map.HashMap RoleName TableSchemaCtx)
 mkGCtxMapTable tableCache funcCache tabInfo = do
-  m <- flip Map.traverseWithKey (roleNameToRoleMap rolePerms) $
-       mkGCtxRole tableCache tn descM fields primaryKey validConstraints
-                  tabFuncs viewInfo customConfig
+  m <- flip Map.traverseWithKey rolePermsMap $ \roleName rolePerm ->
+    flip traverse rolePerm $ mkGCtxRole tableCache tn descM fields primaryKey validConstraints
+                  tabFuncs viewInfo customConfig roleName
   adminInsCtx <- mkAdminInsCtx tableCache fields
   adminSelFlds <- mkAdminSelFlds fields tableCache
   let adminCtx = mkGCtxRole' tn descM (Just (cols, icRelations adminInsCtx))
                  (Just (True, adminSelFlds)) (Just cols) (Just ())
                  primaryKey validConstraints viewInfo tabFuncs
       adminInsCtxMap = Map.singleton tn adminInsCtx
-  return $ Map.insert adminRole (adminCtx, adminRootFlds, adminInsCtxMap) m
+      adminTableCtx = RoleContext (adminCtx, adminRootFlds, adminInsCtxMap) Nothing
+  pure $ Map.insert adminRoleName adminTableCtx m
   where
     TableInfo coreInfo rolePerms _ = tabInfo
     TableCoreInfo tn descM _ fields primaryKey _ _ viewInfo _ customConfig = coreInfo
     validConstraints = mkValidConstraints $ map _cName (tciUniqueOrPrimaryKeyConstraints coreInfo)
     cols = getValidCols fields
-    tabFuncs = filter (isValidObjectName . fiName) $
-               getFuncsOfTable tn funcCache
+    tabFuncs = filter (isValidObjectName . fiName) $ getFuncsOfTable tn funcCache
+
     adminRootFlds =
       getRootFldsRole' tn primaryKey validConstraints fields tabFuncs
       (Just ([], True)) (Just (noFilter, Nothing, [], True))
       (Just (cols, mempty, noFilter, Nothing, [])) (Just (noFilter, []))
       viewInfo customConfig
+
+    rolePermsMap = flip Map.map rolePerms $ \permInfo ->
+      case _permIns permInfo of
+        Nothing -> RoleContext permInfo Nothing
+        Just insPerm -> if ipiAdminOnly insPerm then
+                          RoleContext permInfo{_permIns = Nothing} (Just permInfo)
+                        else RoleContext permInfo Nothing
 
 noFilter :: AnnBoolExpPartialSQL
 noFilter = annBoolExpTrue
@@ -729,47 +738,65 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
   actionsSchema <- mkActionsSchema annotatedObjects actionCache
   typesMap <- combineTypes actionsSchema typesMapL
   let gCtxMap  = flip Map.map typesMap $
-                 \(ty, flds, insCtxMap) -> mkGCtx ty flds insCtxMap
-  return gCtxMap
+                 fmap (\(ty, flds, insCtxMap) -> mkGCtx ty flds insCtxMap)
+  pure gCtxMap
   where
     tableFltr ti = not (isSystemDefined $ _tciSystemDefined ti) && isValidObjectName (_tciName ti)
 
     combineTypes
-      :: Map.HashMap Role (RootFields, TyAgg)
-      -> [Map.HashMap Role (TyAgg, RootFields, InsCtxMap)]
-      -> m (Map.HashMap Role (TyAgg, RootFields, InsCtxMap))
+      :: Map.HashMap RoleName (RootFields, TyAgg)
+      -> [Map.HashMap RoleName TableSchemaCtx]
+      -> m (Map.HashMap RoleName TableSchemaCtx)
     combineTypes actionsSchema maps = do
       let listMap = foldr (Map.unionWith (++) . Map.map pure)
-                          ((\(rf, tyAgg) -> pure (tyAgg, rf, mempty)) <$> actionsSchema)
+                          ((\(rf, tyAgg) -> pure $ RoleContext (tyAgg, rf, mempty) Nothing) <$> actionsSchema)
                           maps
-      flip Map.traverseWithKey listMap $ \_ typeList -> do
-        let tyAgg = mconcat $ map (^. _1) typeList
-            insCtx = mconcat $ map (^. _3) typeList
-        rootFields <- combineRootFields $ map (^. _2) typeList
-        pure (tyAgg, rootFields, insCtx)
+      flip Map.traverseWithKey listMap $ \_ schemaCtxList -> do
+        let roleOnlyTypes = map _rctxOnlyRole schemaCtxList
+            withAdminSecretTypes =
+              let typeList = flip map schemaCtxList $
+                             \r -> fromMaybe (_rctxOnlyRole r) $ _rctxWithAdminSecret r
+              -- If all with-admin-secret types are Nothing then related combined types should be Nothing.
+              -- Else, if any with-admin-secret types present then it has to be combined with others'
+              -- role-only types if with-admin-secret types is Nothing
+              in if all (isNothing . _rctxWithAdminSecret) schemaCtxList then Nothing else Just typeList
 
-    combineRootFields :: [RootFields] -> m RootFields
-    combineRootFields rootFields = do
-      let duplicateQueryFields = duplicates $
-            concatMap (Map.keys . _rootQueryFields) rootFields
-          duplicateMutationFields = duplicates $
-            concatMap (Map.keys . _rootMutationFields) rootFields
+        RoleContext <$> combineTypes' roleOnlyTypes <*> mapM combineTypes' withAdminSecretTypes
+      where
+        combineTypes' :: [(TyAgg, RootFields, InsCtxMap)] -> m (TyAgg, RootFields, InsCtxMap)
+        combineTypes' typeList = do
+          let tyAgg = mconcat $ map (^. _1) typeList
+              insCtx = mconcat $ map (^. _3) typeList
+          rootFields <- combineRootFields $ map (^. _2) typeList
+          pure (tyAgg, rootFields, insCtx)
 
-      -- TODO: The following exception should result in inconsistency
-      when (not $ null duplicateQueryFields) $
-        throw400 Unexpected $ "following query root fields are duplicated: "
-        <> showNames duplicateQueryFields
+        combineRootFields :: [RootFields] -> m RootFields
+        combineRootFields rootFields = do
+          let duplicateQueryFields = duplicates $
+                concatMap (Map.keys . _rootQueryFields) rootFields
+              duplicateMutationFields = duplicates $
+                concatMap (Map.keys . _rootMutationFields) rootFields
 
-      when (not $ null duplicateMutationFields) $
-        throw400 Unexpected $ "following mutation root fields are duplicated: "
-        <> showNames duplicateMutationFields
+          -- TODO: The following exception should result in inconsistency
+          when (not $ null duplicateQueryFields) $
+            throw400 Unexpected $ "following query root fields are duplicated: "
+            <> showNames duplicateQueryFields
 
-      pure $ mconcat rootFields
+          when (not $ null duplicateMutationFields) $
+            throw400 Unexpected $ "following mutation root fields are duplicated: "
+            <> showNames duplicateMutationFields
 
-getGCtx :: (CacheRM m) => Role -> GCtxMap -> m GCtx
-getGCtx rn ctxMap = do
-  sc <- askSchemaCache
-  return $ fromMaybe (scDefaultRemoteGCtx sc) $ Map.lookup rn ctxMap
+          pure $ mconcat rootFields
+
+getGCtx :: SchemaCache -> UserAdminSecret -> RoleName -> GCtx
+getGCtx sc userAdminSecret roleName =
+  case Map.lookup roleName (scGCtxMap sc) of
+    Nothing -> scDefaultRemoteGCtx sc
+    Just (RoleContext gctx Nothing) -> gctx
+    Just (RoleContext gctx (Just gctxWithAdminSecret)) ->
+      case userAdminSecret of
+        UAdminSecretPresent -> gctxWithAdminSecret
+        UAdminSecretAbsent  -> gctx
 
 -- pretty print GCtx
 ppGCtx :: GCtx -> String

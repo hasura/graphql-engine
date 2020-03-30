@@ -119,11 +119,9 @@ mergeRemoteSchema
   => GS.GCtxMap
   -> GS.GCtx
   -> m GS.GCtxMap
-mergeRemoteSchema ctxMap mergedRemoteGCtx = do
-  res <- forM (Map.toList ctxMap) $ \(role, gCtx) -> do
-    updatedGCtx <- mergeGCtx gCtx mergedRemoteGCtx
-    return (role, updatedGCtx)
-  return $ Map.fromList res
+mergeRemoteSchema ctxMap mergedRemoteGCtx =
+  flip Map.traverseWithKey ctxMap $ \_ schemaCtx ->
+    for schemaCtx $ \gCtx -> mergeGCtx gCtx mergedRemoteGCtx
 
 mergeGCtx
   :: (MonadError QErr m)

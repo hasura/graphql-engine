@@ -53,7 +53,6 @@ module Hasura.RQL.Types.Table
 
        , RolePermInfo(..)
        , mkRolePermInfo
-       , roleNameToRoleMap
        , permIns
        , permSel
        , permUpd
@@ -77,8 +76,6 @@ module Hasura.RQL.Types.Table
        , emptyCustomRootFields
 
        ) where
-
--- import qualified Hasura.GraphQL.Context            as GC
 
 import           Hasura.GraphQL.Utils           (showNames)
 import           Hasura.Incremental             (Cacheable)
@@ -275,21 +272,6 @@ $(deriveToJSON (aesonDrop 5 snakeCase) ''RolePermInfo)
 makeLenses ''RolePermInfo
 
 type RolePermInfoMap = M.HashMap RoleName RolePermInfo
-
-roleNameToRoleMap
-  :: M.HashMap RoleName RolePermInfo
-  -> M.HashMap Role RolePermInfo
-roleNameToRoleMap roleNameMap =
-  M.fromList $ flip concatMap (M.toList roleNameMap) $ \(roleName, permInfo) ->
-    let insPerm = _permIns permInfo
-        adminOnlyInsert = maybe False ipiAdminOnly insPerm
-    in if adminOnlyInsert then
-         [ (RoleWithAdminSecret roleName, permInfo)
-         -- Remove the insert permission for simple role requests
-         , (RoleSimple roleName, permInfo{_permIns = Nothing})
-         ]
-       else map ((, permInfo) . ($ roleName)) [RoleWithAdminSecret, RoleSimple]
-
 
 data EventTriggerInfo
  = EventTriggerInfo

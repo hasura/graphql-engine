@@ -21,7 +21,6 @@ import           Hasura.RQL.DDL.Permission         (purgePerm)
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
-import           Hasura.User
 
 import           Data.Aeson.Types
 import qualified Data.HashMap.Strict               as HM

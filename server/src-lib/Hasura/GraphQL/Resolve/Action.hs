@@ -257,7 +257,7 @@ resolveAsyncActionQuery userInfo selectOpCtx field = do
       -- For non-admin roles, accessing an async action's response should be allowed only for the user
       -- who initiated the action through mutation. The action's response is accessible for a query/subscription
       -- only when it's session variables are equal to that of action's.
-      in if isAdmin (getRoleName $ _uiRole userInfo) then actionIdColumnEq
+      in if isAdmin (_uiRole userInfo) then actionIdColumnEq
          else BoolAnd [actionIdColumnEq, sessionVarsColumnEq]
 
 data ActionLogItem

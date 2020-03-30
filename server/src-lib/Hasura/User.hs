@@ -2,11 +2,11 @@ module Hasura.User
   ( RoleName
   , mkRoleName
   , adminRoleName
-  , adminRole
+  -- , adminRole
   , isAdmin
   , roleNameToTxt
-  , Role(..)
-  , getRoleName
+  -- , Role(..)
+  -- , getRoleName
   , SessionVariable
   , mkSessionVariable
   , SessionVariables
@@ -17,9 +17,11 @@ module Hasura.User
   , sessionVariablesToHeaders
   , getSessionVariableValue
   , getSessionVariables
+  , UserAdminSecret(..)
   , UserInfo
   , _uiRole
   , _uiSession
+  , _uiAdminSecret
   , mkUserInfo
   , adminUserInfo
   ) where
@@ -33,7 +35,6 @@ import           Hasura.Server.Utils        (adminSecretHeader, deprecatedAccess
 import           Hasura.SQL.Types
 
 import           Data.Aeson
-import           Data.Aeson.Types
 import           Instances.TH.Lift          ()
 import           Language.Haskell.TH.Syntax (Lift)
 
@@ -60,29 +61,8 @@ mkRoleName = fmap RoleName . mkNonEmptyText
 adminRoleName :: RoleName
 adminRoleName = RoleName adminText
 
-adminRole :: Role
-adminRole = RoleSimple adminRoleName
-
 isAdmin :: RoleName -> Bool
-isAdmin = (getRoleName adminRole ==)
-
-data Role
-  = RoleSimple !RoleName -- ^ Plain role (x-hasura-role)
-  | RoleWithAdminSecret !RoleName -- ^ Role (x-hasura-role) should accompany by admin secret (x-hasura-admin-secret)
-  deriving (Show, Eq, Generic)
-instance Hashable Role
-
-instance ToJSON Role where
-  toJSON (RoleSimple r)          = toJSON r
-  toJSON (RoleWithAdminSecret r) = toJSON r
-
-getRoleName :: Role -> RoleName
-getRoleName = \case
-  RoleSimple r -> r
-  RoleWithAdminSecret r -> r
-
-instance ToJSONKey Role where
-  toJSONKey = toJSONKeyText (roleNameToTxt . getRoleName)
+isAdmin = (adminRoleName ==)
 
 newtype SessionVariable = SessionVariable {unSessionVariable :: CI.CI Text}
   deriving (Show, Eq, Hashable, IsString, Cacheable, Data, NFData)
@@ -138,17 +118,24 @@ roleFromSession uv =
 getSessionVariableValue :: SessionVariable -> SessionVariables -> Maybe SessionVariableValue
 getSessionVariableValue k = Map.lookup k . unSessionVariables
 
+data UserAdminSecret
+  = UAdminSecretPresent
+  | UAdminSecretAbsent
+  deriving (Show, Eq, Generic)
+instance Hashable UserAdminSecret
+
 data UserInfo
   = UserInfo
-  { _uiRole    :: !Role
-  , _uiSession :: !SessionVariables
+  { _uiRole        :: !RoleName
+  , _uiSession     :: !SessionVariables
+  , _uiAdminSecret :: !UserAdminSecret
   } deriving (Show, Eq, Generic)
 instance Hashable UserInfo
 
-mkUserInfo :: Role -> SessionVariables -> UserInfo
-mkUserInfo role (SessionVariables v) =
-  UserInfo role $ SessionVariables $ Map.insert userRoleHeader (roleNameToTxt $ getRoleName role) $
+mkUserInfo :: RoleName -> SessionVariables -> UserAdminSecret -> UserInfo
+mkUserInfo roleName (SessionVariables v) =
+  UserInfo roleName $ SessionVariables $ Map.insert userRoleHeader (roleNameToTxt roleName) $
   foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
 
 adminUserInfo :: UserInfo
-adminUserInfo = mkUserInfo adminRole mempty
+adminUserInfo = mkUserInfo adminRoleName mempty UAdminSecretAbsent

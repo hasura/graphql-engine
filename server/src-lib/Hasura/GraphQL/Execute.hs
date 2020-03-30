@@ -130,7 +130,7 @@ getExecPlanPartial userInfo sc enableAL req = do
   -- check if query is in allowlist
   when enableAL checkQueryInAllowlist
 
-  gCtx <- flip runCacheRT sc $ getGCtx role gCtxRoleMap
+  let gCtx = getGCtx sc (_uiAdminSecret userInfo) roleName
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   let opDef = VQ.qpOpDef queryParts
@@ -150,12 +150,11 @@ getExecPlanPartial userInfo sc enableAL req = do
     VT.TLCustom ->
       throw500 "unexpected custom type for top level field"
   where
-    role = _uiRole userInfo
-    gCtxRoleMap = scGCtxMap sc
+    roleName = _uiRole userInfo
 
     checkQueryInAllowlist =
       -- only for non-admin roles
-      when (role /= adminRole) $ do
+      when (roleName /= adminRoleName) $ do
         let notInAllowlist =
               not $ VQ.isQueryInAllowlist (_grQuery req) (scAllowlist sc)
         when notInAllowlist $ modifyQErr modErr $ throwVE "query is not allowed"
@@ -191,7 +190,7 @@ getResolvedExecPlan
   -> m (Telem.CacheHit, ExecPlanResolved)
 getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer httpManager reqHeaders reqUnparsed = do
-  planM <- liftIO $ EP.getPlan scVer (getRoleName $ _uiRole userInfo)
+  planM <- liftIO $ EP.getPlan scVer (_uiRole userInfo)
            opNameM queryStr planCache
   let usrVars = _uiSession userInfo
   case planM of
@@ -206,7 +205,7 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
   where
     GQLReq opNameM queryStr queryVars = reqUnparsed
     addPlanToCache plan =
-      liftIO $ EP.addPlan scVer (getRoleName $ _uiRole userInfo)
+      liftIO $ EP.addPlan scVer (_uiRole userInfo)
       opNameM queryStr plan planCache
     noExistingPlan = do
       req <- toParsed reqUnparsed

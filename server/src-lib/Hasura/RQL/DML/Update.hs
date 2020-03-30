@@ -133,9 +133,9 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
     allowedCols  = upiCols updPerm
     relWhenPgErr = "relationships can't be updated"
     throwNotUpdErr c = do
-      role <- _uiRole <$> askUserInfo
+      roleName <- _uiRole <$> askUserInfo
       throw400 NotSupported $ "column " <> c <<> " is not updatable"
-        <> " for role " <> getRoleName role <<> "; its value is predefined in permission"
+        <> " for role " <> roleName <<> "; its value is predefined in permission"
 
 validateUpdateQueryWith
   :: (UserInfoM m, QErrM m, CacheRM m)

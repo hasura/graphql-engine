@@ -287,7 +287,7 @@ askFieldInfo m f =
     ]
 
 askCurRole :: (UserInfoM m) => m RoleName
-askCurRole = getRoleName . _uiRole <$> askUserInfo
+askCurRole = _uiRole <$> askUserInfo
 
 successMsg :: EncJSON
 successMsg = "{\"message\":\"success\"}"
