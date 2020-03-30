@@ -52,30 +52,21 @@ deploy_server_latest() {
 
 draft_github_release() {
     cd "$ROOT"
+    export GITHUB_REPOSITORY="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
     echo "drafting github release"
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -b "${RELEASE_BODY}" \
-        -draft \
+    hub release create \
+        --draft \
+        -a /build/_cli_output/binaries/cli-hasura-darwin-amd64 \
+        -a /build/_cli_output/binaries/cli-hasura-linux-amd64 \
+        -a /build/_cli_output/binaries/cli-hasura-windows-amd64.exe \
+        -a /build/_cli_ext_output/cli-ext-hasura-linux.tar.gz \
+        -a /build/_cli_ext_output/cli-ext-hasura-macos.tar.gz \
+        -a /build/_cli_ext_output/cli-ext-hasura-win.zip \
+        -m "$CIRCLE_TAG" \
+        -m "${RELEASE_BODY}" \
      "$CIRCLE_TAG"
-    echo "uploading cli assets"
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -draft \
-     "$CIRCLE_TAG" /build/_cli_output/binaries/
-    echo "uploading cli-ext assets"
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -draft \
-     "$CIRCLE_TAG" /build/_cli_ext_output/*.tar.gz
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -draft \
-     "$CIRCLE_TAG" /build/_cli_ext_output/*.zip
+
+    unset GITHUB_REPOSITORY
 }
 
 configure_git() {
