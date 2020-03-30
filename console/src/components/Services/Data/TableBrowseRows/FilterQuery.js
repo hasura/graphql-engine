@@ -25,7 +25,7 @@ import {
 import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Heading } from '../../../UIKit/atoms';
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
 const history = createHistory();
@@ -274,13 +274,17 @@ class FilterQuery extends Component {
             <div
               className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
-              <span className={styles.subheading_text}>Filter</span>
+              <Heading type="subHeading" display="inline-block">
+                Filter
+              </Heading>
               {renderWheres(whereAnd, tableSchema, dispatch)}
             </div>
             <div
               className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
-              <b className={styles.subheading_text}>Sort</b>
+              <Heading type="subHeading" display="inline-block">
+                Sort
+              </Heading>
               {renderSorts(orderBy, tableSchema, dispatch)}
             </div>
           </div>

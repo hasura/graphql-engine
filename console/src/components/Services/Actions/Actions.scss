@@ -1,4 +1,4 @@
-@import "../../Common/Common.scss";
+@import '../../Common/Common.scss';
 
 .addPaddCommom {
   padding: 10px 0;
@@ -52,7 +52,7 @@
   .commonBtn {
     text-align: center;
     padding: 20px 0;
-    padding-bottom: 10px
+    padding-bottom: 10px;
   }
 
   .readMore {
@@ -61,7 +61,7 @@
   }
 }
 
-.iconWrapper{
+.iconWrapper {
   padding: 20px 0;
 
   .icon {
@@ -96,12 +96,6 @@
     font-weight: normal;
   }
 
-  .subheading_text {
-    i {
-      cursor: pointer;
-    }
-  }
-
   .defaultWidth {
     width: 300px;
   }
@@ -119,7 +113,8 @@
   .inputLabel {
     margin-left: 0;
 
-    input, select {
+    input,
+    select {
       width: 300px;
     }
   }
@@ -140,7 +135,7 @@
     }
 
     .red_button {
-      color: #FFF;
+      color: #fff;
     }
 
     a {
@@ -166,7 +161,6 @@
   .set_line_height {
     line-height: 26px;
   }
-
 }
 
 .actionsImg {
@@ -193,7 +187,7 @@
   display: flex;
   align-items: center;
 
-  a{
+  a {
     color: #909090;
   }
 
@@ -260,24 +254,24 @@
       display: inline-block;
     }
 
-    .instructionsWrapper, .instructionsWrapperPos {
+    .instructionsWrapper,
+    .instructionsWrapperPos {
       margin-top: 20px;
-      border-top: 1px solid #DEDEDE;
+      border-top: 1px solid #dedede;
       .instructions {
         padding: 12px 0;
       }
     }
-    .instructionsWrapper
-    {
+    .instructionsWrapper {
       position: relative;
     }
-    .instructionsWrapperPos
-    {
+    .instructionsWrapperPos {
       position: static;
     }
-    .instructionsWrapper:hover, .instructionsWrapperPos:hover {
+    .instructionsWrapper:hover,
+    .instructionsWrapperPos:hover {
       .instructions {
-        color: #505050
+        color: #505050;
       }
 
       .rightArrow {

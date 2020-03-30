@@ -21,7 +21,7 @@ import {
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
 import { verifySuccessStatus } from '../utils';
-import { Icon, Spinner } from '../../../UIKit/atoms';
+import { Icon, Spinner, Heading } from '../../../UIKit/atoms';
 
 const ViewRows = ({
   curTriggerName,
@@ -337,9 +337,7 @@ const ViewRows = ({
                           >
                             <Tab eventKey={1} title="Request">
                               <div className={styles.add_mar_top}>
-                                <div className={styles.subheading_text}>
-                                  Request
-                                </div>
+                                <Heading type="subHeading">Request</Heading>
                                 <AceEditor
                                   mode="json"
                                   theme="github"
@@ -355,9 +353,7 @@ const ViewRows = ({
                             </Tab>
                             <Tab eventKey={2} title="Response">
                               <div className={styles.add_mar_top}>
-                                <div className={styles.subheading_text}>
-                                  Response
-                                </div>
+                                <Heading type="subHeading">Response</Heading>
                                 <AceEditor
                                   mode="json"
                                   theme="github"

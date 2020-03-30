@@ -24,7 +24,8 @@ import {
 import { setDefaultQuery, runQuery } from './FilterActions';
 import { vMakeRequest } from './ViewActions';
 import Button from '../../../Common/Button/Button';
-import { Icon, Spinner } from '../../../UIKit/atoms';
+import { Icon, Spinner, Heading } from '../../../UIKit/atoms';
+import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
 const renderCols = (colName, triggerSchema, onChange, usage, key) => {
   const columns = ['id', 'delivered', 'created_at'];
@@ -72,8 +73,6 @@ const renderOps = (opName, onChange, key) => (
 );
 
 const renderWheres = (whereAnd, triggerSchema, dispatch) => {
-  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
-
   return whereAnd.map((clause, i) => {
     const colName = Object.keys(clause)[0];
     const opName = Object.keys(clause[colName])[0];
@@ -125,7 +124,6 @@ const renderWheres = (whereAnd, triggerSchema, dispatch) => {
 };
 
 const renderSorts = (orderBy, triggerSchema, dispatch) => {
-  const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
   return orderBy.map((c, i) => {
     const dSetOrderCol = e => {
       dispatch(setOrderCol(e.target.value, i));
@@ -203,7 +201,7 @@ class FilterQuery extends Component {
 
   render() {
     const { dispatch, whereAnd, triggerSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
-    const styles = require('../../../Common/FilterQuery/FilterQuery.scss');
+
     return (
       <div>
         <form
@@ -216,13 +214,17 @@ class FilterQuery extends Component {
             <div
               className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
-              <span className={styles.subheading_text}>Filter</span>
+              <Heading type="subHeading" display="inline-block">
+                Filter
+              </Heading>
               {renderWheres(whereAnd, triggerSchema, dispatch)}
             </div>
             <div
               className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
-              <b className={styles.subheading_text}>Sort</b>
+              <Heading type="subHeading" display="inline-block">
+                Sort
+              </Heading>
               {renderSorts(orderBy, triggerSchema, dispatch)}
             </div>
           </div>

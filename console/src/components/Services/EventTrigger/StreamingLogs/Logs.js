@@ -29,7 +29,8 @@ import * as tooltip from '../Common/Tooltips';
 import { convertDateTimeToLocale } from '../utils';
 import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { Icon, Spinner, ToolTip } from '../../../UIKit/atoms';
+import { Icon, Spinner, ToolTip, Heading } from '../../../UIKit/atoms';
+import styles from '../TableCommon/EventTable.scss';
 
 class StreamingLogs extends Component {
   constructor(props) {
@@ -116,8 +117,6 @@ class StreamingLogs extends Component {
       triggerList,
       readOnlyMode,
     } = this.props;
-
-    const styles = require('../TableCommon/EventTable.scss');
 
     // check if trigger exists
     const currentTrigger = triggerList.find(s => s.name === triggerName);
@@ -241,7 +240,7 @@ class StreamingLogs extends Component {
             <Tab eventKey={1} title="Request">
               {finalRequest.headers ? (
                 <div className={styles.add_mar_top}>
-                  <div className={styles.subheading_text}>Headers</div>
+                  <Heading type="subHeading">Headers</Heading>
                   <AceEditor
                     mode="json"
                     theme="github"
@@ -256,7 +255,7 @@ class StreamingLogs extends Component {
                 </div>
               ) : null}
               <div className={styles.add_mar_top}>
-                <div className={styles.subheading_text}>Payload</div>
+                <Heading type="subHeading">Payload</Heading>
                 <AceEditor
                   mode="json"
                   theme="github"
@@ -273,7 +272,7 @@ class StreamingLogs extends Component {
             <Tab eventKey={2} title="Response">
               {finalResponse.headers ? (
                 <div className={styles.add_mar_top}>
-                  <div className={styles.subheading_text}>Headers</div>
+                  <Heading type="subHeading">Headers</Heading>
                   <AceEditor
                     mode="json"
                     theme="github"
@@ -288,12 +287,10 @@ class StreamingLogs extends Component {
                 </div>
               ) : null}
               <div className={styles.add_mar_top}>
-                <div
-                  className={
-                    styles.subheading_text + ' col-md-6 ' + styles.padd_remove
-                  }
-                >
-                  {finalResponse.status_code ? 'Payload' : 'Error'}
+                <div className="col-md-6">
+                  <Heading type="subHeading" px="0px">
+                    {finalResponse.status_code ? 'Payload' : 'Error'}
+                  </Heading>
                 </div>
                 <div
                   className={

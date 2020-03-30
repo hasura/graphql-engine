@@ -24,7 +24,7 @@ import {
 import Button from '../../../Common/Button/Button';
 import { setDefaultQuery, runQuery } from './FilterActions';
 import { vMakeRequest } from './ViewActions';
-import { Icon, Spinner } from '../../../UIKit/atoms';
+import { Icon, Spinner, Heading } from '../../../UIKit/atoms';
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
 const renderCols = (colName, triggerSchema, onChange, usage, key) => {
@@ -213,13 +213,17 @@ class FilterQuery extends Component {
             <div
               className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
-              <span className={styles.subheading_text}>Filter</span>
+              <Heading type="subHeading" display="inline-block">
+                Filter
+              </Heading>
               {renderWheres(whereAnd, triggerSchema, dispatch)}
             </div>
             <div
               className={`${styles.queryBox} col-xs-6 ${styles.padd_left_remove}`}
             >
-              <b className={styles.subheading_text}>Sort</b>
+              <Heading type="subHeading" display="inline-block">
+                Sort
+              </Heading>
               {renderSorts(orderBy, triggerSchema, dispatch)}
             </div>
           </div>

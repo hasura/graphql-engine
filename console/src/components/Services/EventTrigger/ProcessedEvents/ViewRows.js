@@ -24,7 +24,7 @@ import {
 } from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
 import * as tooltip from '../Common/Tooltips';
-import { Icon, ToolTip } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading } from '../../../UIKit/atoms';
 import styles from '../TableCommon/EventTable.scss';
 
 const ViewRows = ({
@@ -344,9 +344,7 @@ const ViewRows = ({
                             <Tab eventKey={1} title="Request">
                               {finalRequest.headers ? (
                                 <div className={styles.add_mar_top}>
-                                  <div className={styles.subheading_text}>
-                                    Headers
-                                  </div>
+                                  <Heading type="subHeading">Headers</Heading>
                                   <AceEditor
                                     mode="json"
                                     theme="github"
@@ -365,9 +363,7 @@ const ViewRows = ({
                                 </div>
                               ) : null}
                               <div className={styles.add_mar_top}>
-                                <div className={styles.subheading_text}>
-                                  Payload
-                                </div>
+                                <Heading type="subHeading">Payload</Heading>
                                 <AceEditor
                                   mode="json"
                                   theme="github"
@@ -388,9 +384,7 @@ const ViewRows = ({
                             <Tab eventKey={2} title="Response">
                               {finalResponse.headers ? (
                                 <div className={styles.add_mar_top}>
-                                  <div className={styles.subheading_text}>
-                                    Headers
-                                  </div>
+                                  <Heading type="subHeading">Headers</Heading>
                                   <AceEditor
                                     mode="json"
                                     theme="github"
@@ -409,16 +403,12 @@ const ViewRows = ({
                                 </div>
                               ) : null}
                               <div className={styles.add_mar_top}>
-                                <div
-                                  className={
-                                    styles.subheading_text +
-                                    ' col-md-6 ' +
-                                    styles.padd_remove
-                                  }
-                                >
-                                  {finalResponse.status_code
-                                    ? 'Payload'
-                                    : 'Error'}
+                                <div className="col-md-6">
+                                  <Heading type="subHeading" px="0px">
+                                    {finalResponse.status_code
+                                      ? 'Payload'
+                                      : 'Error'}
+                                  </Heading>
                                 </div>
                                 <div
                                   className={

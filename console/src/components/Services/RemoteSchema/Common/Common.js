@@ -7,7 +7,7 @@ import {
 } from '../Add/addRemoteSchemaReducer';
 import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
-import { ToolTip } from '../../../UIKit/atoms';
+import { ToolTip, Heading } from '../../../UIKit/atoms';
 import styles from '../RemoteSchema.scss';
 
 const Common = props => {
@@ -62,10 +62,10 @@ const Common = props => {
   const getTimeoutSection = () => {
     return (
       <React.Fragment>
-        <div className={styles.subheading_text}>
+        <Heading type="subHeading">
           GraphQL server timeout
           <ToolTip message={tooltips.timeoutConf} ml="sm" />
-        </div>
+        </Heading>
         <label
           className={
             styles.inputLabel + ' radio-inline ' + styles.padd_left_remove
@@ -90,10 +90,10 @@ const Common = props => {
 
   return (
     <div className={styles.CommonWrapper}>
-      <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
+      <Heading type="subHeading" pt="20px">
         Remote Schema name *
         <ToolTip message={tooltips.schema} ml="sm" />
-      </div>
+      </Heading>
       <label
         className={
           styles.inputLabel + ' radio-inline ' + styles.padd_left_remove
@@ -114,10 +114,10 @@ const Common = props => {
         />
       </label>
       <hr />
-      <div className={styles.subheading_text}>
+      <Heading type="subHeading">
         GraphQL server URL *
         <ToolTip message={tooltips.graphqlurl} ml="sm" />
-      </div>
+      </Heading>
       <div className={styles.wd_300}>
         <DropdownButton
           dropdownOptions={[
@@ -152,9 +152,9 @@ const Common = props => {
         Note: Specifying the server URL via an environmental variable is
         recommended if you have different URLs for multiple environments.
       </small>
-      <div className={styles.subheading_text + ' ' + styles.addPaddTop}>
+      <Heading type="subHeading" display="inline-block" pt="20px">
         Headers for the remote GraphQL server
-      </div>
+      </Heading>
       <div className={styles.check_box}>
         <label>
           <input
@@ -170,10 +170,10 @@ const Common = props => {
         </label>
         <ToolTip message={tooltips.clientHeaderForward} ml="sm" />
       </div>
-      <div className={styles.subheading_text + ' ' + styles.font_normal}>
+      <Heading type="subHeading" fontWeight="normal">
         Additional headers:
         <ToolTip message={tooltips.additionalHeaders} ml="sm" />
-      </div>
+      </Heading>
       <CommonHeader
         eventPrefix="REMOTE_SCHEMA"
         headers={headers}
