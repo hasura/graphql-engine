@@ -1,10 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+
 import TableColumn from './TableColumn';
+import { Heading } from '../../../UIKit/atoms';
 
 const TableColumns = props => {
   const { columns } = props;
-  const styles = require('../../../Common/TableCommon/Table.scss');
+
   const cols = columns.map((column, i) => {
     return (
       <TableColumn
@@ -16,10 +18,18 @@ const TableColumns = props => {
       />
     );
   });
+
   return [
-    <h4 key="table_columns_header" className={styles.subheading_text}>
+    <Heading
+      as="h4"
+      key="table_columns_header"
+      fontSize="15px"
+      pb="20px"
+      mt="0px"
+      mb="0px"
+    >
       Columns
-    </h4>,
+    </Heading>,
     <div key="table_colums_value">{cols}</div>,
   ];
 };

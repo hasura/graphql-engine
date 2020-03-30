@@ -1,7 +1,7 @@
 import React from 'react';
 import Toggle from 'react-toggle';
 
-import { ToolTip } from '../../../../UIKit/atoms';
+import { ToolTip, Heading } from '../../../../UIKit/atoms';
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import styles from '../../../../Common/Common.scss';
 
@@ -56,7 +56,7 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
 
   return (
     <div>
-      <h4 className={`${styles.subheading_text}`}>
+      <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
         Set table as enum
         <ToolTip
           message={
@@ -68,7 +68,7 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
           href={enumCompatibilityDocsUrl}
           text={'See table requirements'}
         />
-      </h4>
+      </Heading>
       <div
         className={`${styles.display_flex} ${styles.add_mar_bottom}`}
         title={title}

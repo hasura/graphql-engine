@@ -70,7 +70,7 @@ import {
   getGroupedTableComputedFields,
 } from '../../../Common/utils/pgUtils';
 import { showErrorNotification } from '../../Common/Notification';
-import { Icon, ToolTip } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading } from '../../../UIKit/atoms';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 class Permissions extends Component {
@@ -1820,7 +1820,9 @@ class Permissions extends Component {
         <br />
         <div className={styles.padd_left_remove}>
           <div className={`${styles.padd_remove} col-xs-12`}>
-            <h4 className={styles.subheading_text}>Permissions</h4>
+            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+              Permissions
+            </Heading>
             {getPermissionsTable(tSchema, qTypes, allRolesList)}
             {getBulkSection(tSchema)}
             {getEditSection(tSchema, qTypes, allRolesList)}

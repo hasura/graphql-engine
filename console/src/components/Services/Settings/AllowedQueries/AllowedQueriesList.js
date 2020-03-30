@@ -1,17 +1,16 @@
 import React from 'react';
 import AceEditor from 'react-ace';
+
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-
-import styles from './AllowedQueries.scss';
-
 import {
   updateAllowedQuery,
   deleteAllowedQuery,
   deleteAllowList,
 } from '../Actions';
-import Button from '../../../Common/Button/Button';
-
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import Button from '../../../Common/Button/Button';
+import { Heading } from '../../../UIKit/atoms';
+import styles from './AllowedQueries.scss';
 
 class AllowedQueriesList extends React.Component {
   constructor(props) {
@@ -164,10 +163,10 @@ class AllowedQueriesList extends React.Component {
 
     return (
       <div>
-        <h4 className={styles.subheading_text}>
+        <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px" mr="sm">
           Allowed Queries
-          <span className={styles.add_mar_left}>{getDeleteAllBtn()}</span>
-        </h4>
+          {getDeleteAllBtn()}
+        </Heading>
 
         <div className={styles.subsection}>{getQueryList()}</div>
       </div>

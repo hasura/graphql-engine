@@ -1,15 +1,23 @@
 import React from 'react';
-
 import PropTypes from 'prop-types';
 
+import { Heading } from '../../../UIKit/atoms';
 import TextInput from '../../../Common/TextInput/TextInput';
+import styles from '../../../Common/TableCommon/Table.scss';
 
 const TableComment = ({ onChange }) => {
-  const styles = require('../../../Common/TableCommon/Table.scss');
   return [
-    <h4 key="add_table_comment_header" className={styles.subheading_text}>
-      Comment &nbsp; &nbsp;
-    </h4>,
+    <Heading
+      as="h4"
+      key="add_table_comment_header"
+      fontSize="15px"
+      pb="20px"
+      mt="0px"
+      mb="0px"
+      mr="sm"
+    >
+      Comment
+    </Heading>,
     <TextInput
       key="add_table_comment_element"
       type="text"

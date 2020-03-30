@@ -92,11 +92,18 @@ class Schema extends Component {
     const getSectionHeading = (headingText, tooltip, actionElement = null) => {
       return (
         <div>
-          <h4 className={`${styles.subheading_text} ${styles.display_inline}`}>
+          <Heading
+            as="h4"
+            fontSize="15px"
+            pb="20px"
+            mt="0px"
+            mb="0px"
+            display="inline-block"
+          >
             {headingText}
-          </h4>
-          <ToolTip message={tooltip} ml="sm" />
-          <span className={styles.add_mar_left}>{actionElement}</span>
+          </Heading>
+          <ToolTip message={tooltip} mx="sm" />
+          {actionElement}
         </div>
       );
     };

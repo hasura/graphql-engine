@@ -1,9 +1,11 @@
 import React from 'react';
-import styles from '../Actions.scss';
+
 import ActionContainer from '../Containers/ActionContainer';
 import { findAction } from '../utils';
 import { unwrapType } from '../../../../shared/utils/wrappingTypeUtils';
 import AllRelationships from './Relationships';
+import { Heading } from '../../../UIKit/atoms';
+import styles from '../Actions.scss';
 
 const Relationships = ({
   params,
@@ -31,7 +33,9 @@ const Relationships = ({
     >
       <div className={`${styles.padd_left_remove} container-fluid`}>
         <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-          <h4 className={styles.subheading_text}>Relationships</h4>
+          <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+            Relationships
+          </Heading>
           <AllRelationships
             objectType={actionOutputType}
             allTables={allTables}

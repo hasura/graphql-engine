@@ -10,7 +10,7 @@ import {
   setHeaderValue,
 } from './Actions';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
-import { Icon, ToolTip } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading } from '../../../UIKit/atoms';
 
 const HeadersEditor = props => {
   const { dispatch, headers, modifyTrigger, styles, save } = props;
@@ -128,7 +128,7 @@ const HeadersEditor = props => {
   return (
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
-        <h4 className={styles.modifySectionHeading}>
+        <Heading as="h4" fontSize="15px" mb="20px">
           Headers{' '}
           <ToolTip
             message={
@@ -136,7 +136,7 @@ const HeadersEditor = props => {
             }
             ml="sm"
           />
-        </h4>
+        </Heading>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}

@@ -1,4 +1,4 @@
-@import "../TableCommon/EventTable.scss";
+@import '../TableCommon/EventTable.scss';
 
 .containerWhole {
   padding: 0;
@@ -92,7 +92,8 @@
   align-items: center;
 }
 
-.modifyOpsCollapsedContent p, .modifyOpsCollapsedContent1 p {
+.modifyOpsCollapsedContent p,
+.modifyOpsCollapsedContent1 p {
   margin-bottom: 0;
   font-size: 14px;
 }
@@ -112,9 +113,9 @@ modifyHeadersCollapsedHeadings {
   font-size: 13px;
 }
 
-.modifyHeadersCollapsedContent p{
+.modifyHeadersCollapsedContent p {
   font-size: 14px;
-  width: 100%
+  width: 100%;
 }
 
 .modifyOpsCollapsed {
@@ -142,16 +143,16 @@ modifyHeadersCollapsedHeadings {
 .modifyProperty {
   align-self: center;
   font-size: 13px;
-  display:flex;
+  display: flex;
   flex-direction: row;
 }
 
-.modifyProperty p{
+.modifyProperty p {
   font-size: 14px;
 }
 
 .modifyOpsCollapsedtitle {
-  margin:5px 0;
+  margin: 5px 0;
 
   i {
     font-size: 11px;
@@ -172,7 +173,7 @@ modifyHeadersCollapsedHeadings {
 
 .opsCheckboxWrapper p {
   font-size: 13px;
-  font-style:italic;
+  font-style: italic;
   align-self: center;
   margin-top: 8px;
 }
@@ -186,7 +187,7 @@ modifyHeadersCollapsedHeadings {
 
 .headersInputWrapper p {
   font-size: 13px;
-  font-style:italic;
+  font-style: italic;
   align-self: center;
   margin-top: 8px;
 }
@@ -213,7 +214,6 @@ modifyHeadersCollapsedHeadings {
   margin-right: 5px !important;
 }
 
-
 .opsCheckboxDisabled {
   margin-right: 5px !important;
 }
@@ -223,16 +223,13 @@ modifyHeadersCollapsedHeadings {
   cursor: default;
 }
 
-
 .modifyHeadersTextbox {
   width: 200px;
 }
 
-
 .modifyHeadersTextboxDisabled {
   width: 200px;
 }
-
 
 .modifyHeadersTextboxDisabled:hover {
   width: 200px;
@@ -256,7 +253,6 @@ modifyHeadersCollapsedHeadings {
   width: 200px;
 }
 
-
 .modifyHeaderCollapsedInput:hover {
   cursor: text;
 }
@@ -269,7 +265,7 @@ modifyHeadersCollapsedHeadings {
   input {
     height: 25px;
     margin-left: 5px;
-    width: 300px
+    width: 300px;
   }
 }
 

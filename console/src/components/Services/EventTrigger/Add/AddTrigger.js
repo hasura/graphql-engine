@@ -268,10 +268,10 @@ class AddTrigger extends Component {
 
     const advancedColumnSection = (
       <div>
-        <h4 className={styles.subheading_text}>
+        <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
           Listen columns for update
           <ToolTip message={tooltip.advancedOperationDescription} mx="sm" />
-        </h4>
+        </Heading>
         {selectedOperations.update ? (
           <div className={styles.clear_fix + ' ' + styles.listenColumnWrapper}>
             {getColumnList('update')}
@@ -372,10 +372,10 @@ class AddTrigger extends Component {
             <div
               className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
             >
-              <h4 className={styles.subheading_text}>
+              <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
                 Trigger Name
                 <ToolTip message={tooltip.triggerNameDescription} ml="sm" />
-              </h4>
+              </Heading>
               <input
                 type="text"
                 data-test="trigger-name"
@@ -388,10 +388,10 @@ class AddTrigger extends Component {
                 }}
               />
               <hr />
-              <h4 className={styles.subheading_text}>
+              <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
                 Schema/Table
                 <ToolTip mx="sm" message={tooltip.postgresDescription} />
-              </h4>
+              </Heading>
               <select
                 onChange={updateTableList}
                 data-test="select-schema"
@@ -443,10 +443,10 @@ class AddTrigger extends Component {
               </div>
               <hr />
               <div className={styles.add_mar_bottom}>
-                <h4 className={styles.subheading_text}>
+                <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
                   Webhook URL
-                  <ToolTip message={tooltip.webhookUrlDescription} />
-                </h4>
+                  <ToolTip message={tooltip.webhookUrlDescription} ml="sm" />
+                </Heading>
                 <div>
                   <div className={styles.dropdown_wrapper}>
                     <DropdownButton
@@ -490,7 +490,9 @@ class AddTrigger extends Component {
               <hr />
               <CollapsibleToggle
                 title={
-                  <h4 className={styles.subheading_text}>Advanced Settings</h4>
+                  <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+                    Advanced Settings
+                  </Heading>
                 }
                 testId="advanced-settings"
               >
@@ -498,7 +500,15 @@ class AddTrigger extends Component {
                   {advancedColumnSection}
                   <hr />
                   <div className={styles.add_mar_top}>
-                    <h4 className={styles.subheading_text}>Retry Logic</h4>
+                    <Heading
+                      as="h4"
+                      fontSize="15px"
+                      pb="20px"
+                      mt="0px"
+                      mb="0px"
+                    >
+                      Retry Logic
+                    </Heading>
                     <div className={styles.retrySection}>
                       <div className={`col-md-3 ${styles.padd_left_remove}`}>
                         <label
@@ -562,7 +572,15 @@ class AddTrigger extends Component {
                   </div>
                   <hr />
                   <div className={styles.add_mar_top}>
-                    <h4 className={styles.subheading_text}>Headers</h4>
+                    <Heading
+                      as="h4"
+                      fontSize="15px"
+                      pb="20px"
+                      mt="0px"
+                      mb="0px"
+                    >
+                      Headers
+                    </Heading>
                     {headersList}
                   </div>
                 </div>

@@ -12,7 +12,7 @@ const MetadataOptions = props => {
     return (
       <div>
         <div className={styles.intro_note}>
-          <h4>Import/Export metadata</h4>
+          <Heading as="h4">Import/Export metadata</Heading>
           <div className={styles.content_width}>
             Get Hasura metadata as JSON.
           </div>
@@ -33,7 +33,7 @@ const MetadataOptions = props => {
     return (
       <div>
         <div key="meta_data_1" className={styles.intro_note}>
-          <h4>Reload metadata</h4>
+          <Heading as="h4">Reload metadata</Heading>
           <div className={styles.content_width}>
             Refresh Hasura metadata, typically required if you have changed the
             underlying postgres or if you have updated your remote schemas.
@@ -45,7 +45,7 @@ const MetadataOptions = props => {
         </div>
 
         <div key="meta_data_3" className={styles.intro_note}>
-          <h4>Reset metadata</h4>
+          <Heading as="h4">Reset metadata</Heading>
           <div className={styles.content_width}>
             Permanently clear GraphQL Engine's metadata and configure it from
             scratch (tracking relevant tables and relationships). This process

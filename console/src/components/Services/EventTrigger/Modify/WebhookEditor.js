@@ -7,7 +7,7 @@ import {
   setWebhookUrlType,
   showValidationError,
 } from './Actions';
-import { ToolTip } from '../../../UIKit/atoms';
+import { ToolTip, Heading } from '../../../UIKit/atoms';
 
 const WebhookEditor = props => {
   const {
@@ -90,9 +90,9 @@ const WebhookEditor = props => {
   return (
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
-        <h4 className={styles.modifySectionHeading}>
+        <Heading as="h4" fontSize="15px" mb="20px">
           Webhook URL <ToolTip message="Edit your webhook URL" ml="sm" />
-        </h4>
+        </Heading>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}

@@ -7,7 +7,7 @@ import {
   triggerOperationMap,
   MANUAL_TRIGGER_VAR,
 } from './utils';
-import { ToolTip } from '../../../UIKit/atoms';
+import { ToolTip, Heading } from '../../../UIKit/atoms';
 
 const OperationEditor = props => {
   const {
@@ -206,10 +206,10 @@ const OperationEditor = props => {
   return (
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
-        <h4 className={styles.modifySectionHeading}>
-          Trigger Operations{' '}
+        <Heading as="h4" fontSize="15px" mb="20px">
+          Trigger Operations
           <ToolTip message="Edit operations and related columns" ml="sm" />
-        </h4>
+        </Heading>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}

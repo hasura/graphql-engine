@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+
 import TableHeader from '../TableCommon/TableHeader';
 import { RESET } from '../TableModify/ModifyActions';
 import { findAllFromRel } from '../utils';
@@ -8,6 +9,10 @@ import { setTable, UPDATE_REMOTE_SCHEMA_MANUAL_REL } from '../DataActions';
 import AddManualRelationship from './AddManualRelationship';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { Heading } from '../../../UIKit/atoms';
+
+import styles from '../TableModify/ModifyTable.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
 
 class RelationshipsView extends Component {
   componentDidMount() {
@@ -36,8 +41,6 @@ class RelationshipsView extends Component {
       readOnlyMode,
       schemaList,
     } = this.props;
-    const styles = require('../TableModify/ModifyTable.scss');
-    const tableStyles = require('../../../Common/TableCommon/TableStyles.scss');
 
     const tableSchema = allSchemas.find(
       t => t.table_name === tableName && t.table_schema === currentSchema
@@ -144,7 +147,9 @@ class RelationshipsView extends Component {
         <br />
         <div className={`${styles.padd_left_remove} container-fluid`}>
           <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-            <h4 className={styles.subheading_text}>Relationships</h4>
+            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+              Relationships
+            </Heading>
             {addedRelationshipsView}
             <br />
             <AddManualRelationship

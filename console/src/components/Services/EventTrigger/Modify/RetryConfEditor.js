@@ -7,7 +7,7 @@ import {
   setRetryTimeout,
   showValidationError,
 } from './Actions';
-import { ToolTip } from '../../../UIKit/atoms';
+import { ToolTip, Heading } from '../../../UIKit/atoms';
 
 const RetryConfEditor = props => {
   const { dispatch, save, styles, modifyTrigger } = props;
@@ -129,13 +129,13 @@ const RetryConfEditor = props => {
   return (
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
-        <h4 className={styles.modifySectionHeading}>
-          Retry configuration{' '}
+        <Heading as="h4" fontSize="15px" mb="20px">
+          Retry configuration
           <ToolTip
             message="Edit your retry settings for event failures"
             ml="sm"
           />
-        </h4>
+        </Heading>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}

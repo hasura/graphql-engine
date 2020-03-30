@@ -465,10 +465,10 @@ class AddTable extends Component {
               />
             </div>
             <hr />
-            <h4 className={styles.subheading_text}>
+            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
               Primary Key
               <ToolTip message={primaryKeyDescription} ml="sm" />
-            </h4>
+            </Heading>
             <PrimaryKeySelector
               primaryKeys={primaryKeys}
               columns={columns}
@@ -476,10 +476,10 @@ class AddTable extends Component {
               dispatch={dispatch}
             />
             <hr />
-            <h4 className={styles.subheading_text}>
+            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
               Foreign Keys
               <ToolTip message={foreignKeyDescription} ml="sm" />
-            </h4>
+            </Heading>
             <ForeignKeyWrapper
               allSchemas={allSchemas}
               columns={columns}
@@ -492,10 +492,10 @@ class AddTable extends Component {
               schemaList={schemaList}
             />
             <hr />
-            <h4 className={styles.subheading_text}>
+            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
               Unique Keys
               <ToolTip message={uniqueKeyDescription} ml="sm" />
-            </h4>
+            </Heading>
             <UniqueKeyWrapper
               allSchemas={allSchemas}
               columns={columns}
@@ -506,10 +506,10 @@ class AddTable extends Component {
               setUniqueKeys={setUniqueKeys}
             />
             <hr />
-            <h4 className={styles.subheading_text}>
+            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
               Check Constraints
               <ToolTip message={checkConstraintsDescription} ml="sm" />
-            </h4>
+            </Heading>
             <CheckConstraints
               constraints={checkConstraints}
               dispatch={dispatch}

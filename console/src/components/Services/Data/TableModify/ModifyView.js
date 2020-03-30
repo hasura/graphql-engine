@@ -117,10 +117,10 @@ class ModifyView extends Component {
 
       return (
         <React.Fragment>
-          <h4 className={styles.subheading_text}>
+          <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
             Custom GraphQL Root Fields
             <ToolTip message={changeViewRootFields} ml="sm" />
-          </h4>
+          </Heading>
           <RootFields
             existingRootFields={existingRootFields}
             rootFieldsEdit={rootFieldsEdit}
@@ -201,13 +201,15 @@ class ModifyView extends Component {
               isTable={false}
               dispatch={dispatch}
             />
-            <h4 className={styles.subheading_text}>Columns</h4>
+            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+              Columns
+            </Heading>
             {getViewColumnsSection()}
             <br />
-            <h4 className={styles.subheading_text}>
+            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
               View Definition:
               <span className={styles.add_mar_left}>{modifyBtn}</span>
-            </h4>
+            </Heading>
             <AceEditor
               mode="sql"
               theme="github"
