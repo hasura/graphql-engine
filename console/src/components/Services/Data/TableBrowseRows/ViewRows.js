@@ -235,7 +235,7 @@ const ViewRows = ({
         Header: (
           <div className="ellipsis" title="Click to sort">
             <span className={styles.tableHeaderCell}>
-              {columnName} <Icon type={sortIcon} size={10} />
+              {columnName} <Icon type={sortIcon} size={12} pl="xs" />
             </span>
           </div>
         ),
