@@ -420,9 +420,15 @@ runExportMetadata _ =
   (AO.toEncJSON . replaceMetadataToOrdJSON) <$> liftTx fetchMetadata
 
 runReloadMetadata :: (QErrM m, CacheRWM m) => ReloadMetadata -> m EncJSON
-runReloadMetadata ReloadMetadata = do
-  buildSchemaCacheWithOptions CatalogUpdate mempty { ciMetadata = True }
-  return successMsg
+runReloadMetadata (ReloadMetadata reloadRemoteSchemas) = do
+  sc <- askSchemaCache
+  let remoteSchemaInvalidations =
+        if reloadRemoteSchemas then HS.fromList (getAllRemoteSchemas sc) else mempty
+  buildSchemaCacheWithOptions CatalogUpdate CacheInvalidations
+                                            { ciMetadata = True
+                                            , ciRemoteSchemas = remoteSchemaInvalidations
+                                            }
+  pure successMsg
 
 runDumpInternalState
   :: (QErrM m, CacheRM m)

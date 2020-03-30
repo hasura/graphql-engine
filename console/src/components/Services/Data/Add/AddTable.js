@@ -427,7 +427,9 @@ class AddTable extends Component {
 
     return (
       <div
-        className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
+        className={`${styles.addTablesBody} ${styles.clear_fix} ${
+          styles.padd_left
+        }`}
       >
         <Helmet title="Add Table - Data | Hasura" />
         <div className={styles.subHeader}>

@@ -46,16 +46,18 @@ class ErrorBoundary extends React.Component {
       registerRunTimeError({ message: error.message, stack: error.stack })
     );
 
-    dispatch(loadInconsistentObjects(true)).then(() => {
-      if (this.props.metadata.inconsistentObjects.length > 0) {
-        if (!isMetadataStatusPage()) {
-          this.resetState();
-          this.props.dispatch(redirectToMetadataStatus());
+    dispatch(loadInconsistentObjects({ shouldReloadMetadata: true })).then(
+      () => {
+        if (this.props.metadata.inconsistentObjects.length > 0) {
+          if (!isMetadataStatusPage()) {
+            this.resetState();
+            this.props.dispatch(redirectToMetadataStatus());
+          }
+        } else {
+          console.error(error);
         }
-      } else {
-        console.error(error);
       }
-    });
+    );
   }
 
   render() {
