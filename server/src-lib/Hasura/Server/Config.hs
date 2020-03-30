@@ -31,9 +31,9 @@ data ServerConfig
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ServerConfig)
 
-runGetConfig ::  AuthMode -> Bool -> ServerConfig
+runGetConfig :: HasVersion => AuthMode -> Bool -> ServerConfig
 runGetConfig am isAllowListEnabled = ServerConfig
-    V.currentVersion
+    currentVersion
     (isAdminSecretSet am)
     (isAuthHookSet am)
     (isJWTSet am)
