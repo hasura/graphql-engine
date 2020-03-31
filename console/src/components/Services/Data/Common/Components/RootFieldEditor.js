@@ -10,8 +10,11 @@ const RootFieldEditor = ({
   selectByPkOnChange,
   selectAggOnChange,
   insertOnChange,
+  insertOneOnChange,
   updateOnChange,
+  updateByPkOnChange,
   deleteOnChange,
+  deleteByPkOnChange,
   tableName,
 }) => {
   const {
@@ -19,8 +22,11 @@ const RootFieldEditor = ({
     select_by_pk: selectByPk,
     select_aggregate: selectAgg,
     insert,
+    insert_one: insertOne,
     update,
+    update_by_pk: updateByPk,
     delete: _delete,
+    delete_by_pk: deleteByPk,
   } = rootFields;
 
   const getDefaultRootField = rfType => {
@@ -68,8 +74,11 @@ const RootFieldEditor = ({
           {rfType === 'mutation' && (
             <div className={`${styles.add_pad_left} ${styles.add_pad_right}`}>
               {getRow('insert', insert, insertOnChange)}
+              {getRow('insert_one', insertOne, insertOneOnChange)}
               {getRow('update', update, updateOnChange)}
+              {getRow('update_by_pk', updateByPk, updateByPkOnChange)}
               {getRow('delete', _delete, deleteOnChange)}
+              {getRow('delete_by_pk', deleteByPk, deleteByPkOnChange)}
             </div>
           )}
         </CollapsibleToggle>
