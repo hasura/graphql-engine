@@ -30,6 +30,11 @@ query:
             id
             name
             is_registered
+            get_articles(args: {search: "Article"}){
+              id
+              title
+              content
+            }
           }
         }
       }
