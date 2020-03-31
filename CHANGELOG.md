@@ -2,7 +2,7 @@
 
 ## `v1.2.0-beta.3`
 
-### Manage Postgres Check Constraints from Console
+### console: manage Postgres check constraints
 
 Postgres Check constraints allows you to specify that the value in a certain column must satisfy a Boolean (truth-value) expression. They can be used to put in simple input validations for mutations and with this release, these constraints can now be added while creating a table or later from Modify tab on the console.
 
@@ -23,6 +23,12 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 (close #1700) (#3881)
 
+### CLI: V2 migrations architecture
+
+  A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
+
+(close #3969) (#4145)
+
 ### Bug fixes and improvements
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption
@@ -31,14 +37,51 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 - server: preserve cookie headers from sync action webhook (close #4021)
 - server: validate action webhook response to conform to action output type (fix #3977)
 - server: add 'ID' to default scalars in custom types (fix #4061)
+- console: fix computed field permission selection (#4246)
+- console: fix json string rendering in data browser (close #4201) (#4221)
+- console: handle long column names in event trigger update columns (close #4123) (#4210)
+- console: disable selecting roles without permissions for bulk actions (close #4178) (#4195)
+- console: show remote shema / event trigger intro sections always (#4044)
+- console: fix passing default value to JsonInput (#4175)
+- console shared modules: fix parsing of wrapped types in SDL (close #4099) (#4167)
+- console: misc actions fixes (#4059)
+- console: action relationship page improvements (fix #4062, #4130) (#4133)
+- console: exported metadata file name will now be of format `hasura_metadata_<timestamp.json` (close #1772) (#4106)
+- console: add dropdown for enum fields in insert/edit row pages (close #3748) (#3810)
+- console: add multi select in browse rows to allow bulk delete (close #1739) (#3735)
+- console: fix run_sql migration modal messaging (close #4020) (#4060)
+- console: update actions intro image (#4042)
+- console: hide starter kit button if a framework has no starter kit (#4023)
+- cli: fix init command to generate correct config (fix #4036) (#4038)
+- cli: fix parse error returned on console api (close #4126) (#4152)
+- cli: fix typo in cli example for squash (fix #4047) (#4049)
+- docs: add statement to grant hasura permissions for PG functions (#4238)
+- docs: add docs for redeliver_event api (fix #4176) (#4177)
+- docs: update permission.rst for check constraint api (#4124)
+- docs: add note on pg versions for actions (#4034)
+- docs: add latest prerelease build info (close #4041) (#4048)
+- docs: add AuthGuardian JWT guide (#3958)
+
+revert auth heading changes in docs (#3992)
+add changelog file to the repo and update pr template (#3946)
+fix docs 404 (#3979)
+tag release v1.2.0-beta.1 (#3966)
+noop: replace subdomain links with subpath (#3869)
+docs: add reference to QualifiedTable to table args (#3880)
+cli: bug fixes related to actions (#3951)
+update actions docs  (#3953)
+cli: bug fixes related to actions (#3951)
+
 
 ## `v1.2.0-beta.2`
 
 - server: Don't update catalog version if using --dryRun (#3970)
-- cli: bug fixes related to actions (#3951)
-- cli(actions): preserve action definition in metadata apply (fix… (#3993)
-- cli: fix flags in actions, migrate and metadata cmd (fix #3982) (#3991)
 - cli: add version flag in update-cli command (#3996)
+- cli(migrations-img): add env to skip update prompts (fix #3964) (#3968)
+- cli, server: use prerelease tag as channel for console assets cdn (#3975)
+- cli: fix flags in actions, migrate and metadata cmd (fix #3982) (#3991)
+- cli: preserve action definition in metadata apply (fix… (#3993)
+- cli: bug fixes related to actions (#3951)
 
 ## `v1.2.0-beta.1`
 
@@ -70,18 +113,5 @@ Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/ma
 
 (close #1156) (#3760)
 
-### V2 migrations architecture
-
-- cli(migrations-docker): add support for v2 config (close #3969)
-
-  A new CLI migrations image is introduced to account for the new CLI workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
-
 ### Bug fixes and improvements
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
-- console: add multi select in browse rows to allow bulk delete (close #1739) (#3735)
-- console: add dropdown for enum fields in insert/edit rows page (close #3748) (#3810)
-- console: exported metadata file name will now be of format `hasura_metadata_<timestamp.json` (close #1772) (#4106)
-- console: handle invalid keys in permission builder (close #3848) (#3863)
-- cli(actions): preserve action definition in metadata apply (fix #3988) (#3993)
-- docs: add AuthGuardian JWT guide (#3958)
-- docs: document `redeliver_event` API
