@@ -62,17 +62,6 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 - docs: add latest prerelease build info (close #4041) (#4048)
 - docs: add AuthGuardian JWT guide (#3958)
 
-revert auth heading changes in docs (#3992)
-add changelog file to the repo and update pr template (#3946)
-fix docs 404 (#3979)
-tag release v1.2.0-beta.1 (#3966)
-noop: replace subdomain links with subpath (#3869)
-docs: add reference to QualifiedTable to table args (#3880)
-cli: bug fixes related to actions (#3951)
-update actions docs  (#3953)
-cli: bug fixes related to actions (#3951)
-
-
 ## `v1.2.0-beta.2`
 
 - server: Don't update catalog version if using --dryRun (#3970)
