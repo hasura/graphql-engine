@@ -30,6 +30,7 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
+- server: improve performance of replace_metadata tracking many tables (fix #3802)
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption
 - server: fix postgres query error when computed fields included in mutation response (fix #4035)
