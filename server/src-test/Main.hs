@@ -18,12 +18,13 @@ import qualified Network.HTTP.Client.TLS      as HTTP
 import qualified Test.Hspec.Runner            as Hspec
 
 import           Hasura.Db                    (PGExecCtx (..))
-import           Hasura.RQL.Types             (SQLGenCtx (..), adminUserInfo)
+import           Hasura.RQL.Types             (SQLGenCtx (..))
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawConnInfo,
                                                parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version
+import           Hasura.User                  (adminUserInfo)
 
 import qualified Data.Parser.CacheControlSpec as CacheControlParser
 import qualified Data.Parser.URLTemplate      as URLTemplate

@@ -240,6 +240,7 @@ library
                      , Hasura.RQL.DDL.Metadata.Generator
                      , Hasura.RQL.DDL.Schema
                      , Hasura.EncJSON
+                     , Hasura.User
 
                      , Data.Aeson.Ordered
 
@@ -367,8 +368,6 @@ library
 
                      , Hasura.Events.Lib
                      , Hasura.Events.HTTP
-
-                     , Hasura.User
 
                      , Control.Concurrent.Extended
                      , Control.Lens.Extended
