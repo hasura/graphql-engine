@@ -82,4 +82,15 @@ export const sanitiseRootFields = rootFields => {
   return santisedRootFields;
 };
 
+export const sanitiseColumnNames = columnNames => {
+  const sanitised = {};
+  Object.keys(columnNames).forEach(c => {
+    const trimmedCustomName = columnNames[c] ? columnNames[c].trim() : null;
+    if (trimmedCustomName) {
+      sanitised[c] = columnNames[c].trim();
+    }
+  });
+  return sanitised;
+};
+
 export { convertArrayToJson, getValidAlterOptions, fetchColumnCastsQuery };
