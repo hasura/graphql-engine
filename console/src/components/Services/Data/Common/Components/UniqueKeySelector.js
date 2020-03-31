@@ -62,7 +62,7 @@ const UniqueKeySelector = ({
         onClick={removeUniqueCol}
         ml="10px"
         size={15}
-        cursor
+        pointer
       />
     );
 

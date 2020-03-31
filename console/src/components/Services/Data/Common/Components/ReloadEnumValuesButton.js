@@ -20,7 +20,7 @@ const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
     <React.Fragment>
       <ReloadEnumMetadata buttonText="Reload enum values" dispatch={dispatch} />
       <OverlayTrigger overlay={tooltip} placement="right">
-        <Icon type="info" cursor />
+        <Icon type="info" pointer />
       </OverlayTrigger>
     </React.Fragment>
   );

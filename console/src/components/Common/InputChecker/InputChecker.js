@@ -50,6 +50,7 @@ class InputChecker extends Component {
       border: '1px solid red',
       cursor: 'pointer',
     };
+
     return (
       <input
         className={'input-sm form-control'}

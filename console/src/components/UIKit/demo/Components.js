@@ -191,9 +191,9 @@ export const UIComponents = () => (
     <Icon ml="xl" size={20} />
 
     <Heading my="lg" as="h3">
-      {'<Icon cursor /> ~ cursor prop'}
+      {'<Icon pointer /> ~ pointer prop'}
     </Heading>
-    <Icon ml="xl" cursor />
+    <Icon ml="xl" pointer />
 
     <Heading my="lg" as="h3">
       {'<Icon type="success" />'}

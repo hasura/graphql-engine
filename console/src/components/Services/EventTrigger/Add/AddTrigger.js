@@ -305,7 +305,7 @@ class AddTrigger extends Component {
             onClick={() => {
               dispatch(removeHeader(i));
             }}
-            cursor
+            pointer
             size={15}
             ml="10px"
           />
