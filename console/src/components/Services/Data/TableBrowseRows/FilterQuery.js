@@ -299,7 +299,6 @@ class FilterQuery extends Component {
             <ReloadEnumValuesButton
               dispatch={dispatch}
               isEnum={tableSchema.is_enum}
-              tooltipStyle={styles.add_mar_left_mid}
             />
             {/* <div className={styles.count + ' alert alert-info'}><i>Total <b>{tableName}</b> rows in the database for current query: {count} </i></div> */}
           </div>
