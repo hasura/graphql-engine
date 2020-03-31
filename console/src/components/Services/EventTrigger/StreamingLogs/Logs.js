@@ -315,7 +315,7 @@ class StreamingLogs extends Component {
                         placement="top"
                         overlay={tooltip.statusCodeDescription}
                       >
-                        <Icon type="questionCircle" size={12} />
+                        <Icon type="questionCircle" size={12} ml="xs" />
                       </OverlayTrigger>,
                     ]
                     : null}
