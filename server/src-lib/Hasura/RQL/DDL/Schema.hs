@@ -102,7 +102,7 @@ runRunSQL RunSQL {..} = do
     isAltrDropReplace = either throwErr return . matchRegex regex False
       where
         throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
-        regex = "alter|drop|replace|create function|comment on"
+        regex = "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b"
 
 data RunSQLRes
   = RunSQLRes
