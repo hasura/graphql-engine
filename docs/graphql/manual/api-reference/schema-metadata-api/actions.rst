@@ -2,6 +2,8 @@
    :description: Manage actions with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, actions
 
+.. _api_actions:
+
 Schema/Metadata API Reference: Actions
 ======================================
 
@@ -136,7 +138,7 @@ InputArgument
 
 .. note::
 
-   The ``GraphQL Types`` used in creating an action must be defined before via :doc:`Custom Types <custom-types>`
+   The ``GraphQL Types`` used in creating an action must be defined before via :ref:`Custom Types <api_custom_types>`
 
 .. _drop_action:
 

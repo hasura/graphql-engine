@@ -44,27 +44,27 @@ Simple use cases
 
 We will split the use cases into two:
 
-1. :doc:`You're already using a migration tool for the Postgres schema
-   <manage-metadata>`. (like knex, TypeORM, Sequelize, Rails/Django
+1. :ref:`You're already using a migration tool for the Postgres schema
+   <manage_hasura_metadata>`. (like knex, TypeORM, Sequelize, Rails/Django
    migrations. In this case you only need to manage the Hasura metadata)
-2. :doc:`You're not using any migration tool for the Postgres schema
-   <manage-migrations>`. (Hasura will take care of the
+2. :ref:`You're not using any migration tool for the Postgres schema
+   <postgres_schema_metadata>`. (Hasura will take care of the
    Postgres schema also)
 
 Advanced use cases
 ------------------
 
 
-- :doc:`auto-apply-migrations`
-- :doc:`advanced/writing-migrations-manually`
-- :doc:`advanced/rolling-back-migrations`
+- :ref:`auto_apply_migrations`
+- :ref:`manual_migrations`
+- :ref:`roll_back_migrations`
 
 Reference documentation
 -----------------------
 
-- :doc:`reference/how-it-works`
-- :doc:`reference/migration-file-format`
-- :doc:`reference/metadata-file-format`
+- :ref:`migrations_how_it_works`
+- :ref:`migration_file_format`
+- :ref:`metadata_file_format`
 
 .. toctree::
   :maxdepth: 1

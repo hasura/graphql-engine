@@ -1,3 +1,9 @@
+.. meta::
+   :description: Hasura actions
+   :keywords: hasura, docs, actions
+
+.. _actions:
+
 Actions (beta)
 ==============
 
@@ -20,10 +26,13 @@ enrichment from external sources and any other complex business logic.
 
 .. admonition:: Supported from
 
-   Actions are currently available for preview in the pre-release versions of
-   ``v1.2.0``
+   Actions are currently available in beta in the pre-release versions of ``v1.2.0``.
 
    .. Actions are supported in versions ``v.1.2.0`` and above.
+
+.. admonition:: Postgres support
+
+   Actions are supported for ``Postgres versions 10 or higher``.
 
 Action description
 ------------------
@@ -74,7 +83,7 @@ custom types like so:
       userId: Int!
     }
 
-Read more about :doc:`custom types<types/index>`.
+Read more about :ref:`custom types<custom_types>`.
 
 Handler
 *******
@@ -84,7 +93,7 @@ when the action mutation is executed. This can be done in an HTTP webhook,
 also called the action handler. It could be a REST endpoint or a serverless
 function.
 
-Learn more about :doc:`writing an action handler<action-handlers>`.
+Learn more about :ref:`writing an action handler<action_handlers>`.
 
 Kind
 ****
@@ -93,7 +102,7 @@ Actions are of two kinds:
 
 * **Synchronous actions**: Sync actions return a response to the client after
   receiving a response from the handler.
-* **Asynchronous actions**: :doc:`Async actions <async-actions>` return an
+* **Asynchronous actions**: :ref:`Async actions <async_actions>` return an
   ``action id`` as response to the client before receiving a response from the
   handler and allow the client to subscribe to the actual response using the
   ``action id``.
@@ -110,7 +119,6 @@ How it works?
 * The action response is returned to the client synchronously or asynchronously
   based on the kind.
 
-
 Learn more
 ----------
 
@@ -124,3 +132,4 @@ Learn more
   async-actions
   Codegen <codegen>
   derive
+  action-connect

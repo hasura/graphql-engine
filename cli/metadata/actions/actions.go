@@ -29,7 +29,7 @@ const (
 
 type ActionConfig struct {
 	MetadataDir        string
-	ActionConfig       types.ActionExecutionConfig
+	ActionConfig       *types.ActionExecutionConfig
 	serverFeatureFlags *version.ServerFeatureFlags
 	pluginsCfg         *plugins.Config
 	cliExtensionConfig *cliextension.Config
@@ -213,6 +213,8 @@ input SampleInput {
 				sdlFromResp.Actions[actionIndex].Permissions = oldAction.Actions[oldActionIndex].Permissions
 				sdlFromResp.Actions[actionIndex].Definition.Kind = oldAction.Actions[oldActionIndex].Definition.Kind
 				sdlFromResp.Actions[actionIndex].Definition.Handler = oldAction.Actions[oldActionIndex].Definition.Handler
+				sdlFromResp.Actions[actionIndex].Definition.ForwardClientHeaders = oldAction.Actions[oldActionIndex].Definition.ForwardClientHeaders
+				sdlFromResp.Actions[actionIndex].Definition.Headers = oldAction.Actions[oldActionIndex].Definition.Headers
 				break
 			}
 		}
@@ -445,10 +447,6 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 		if !isFound {
 			return fmt.Errorf("custom type %s is not present in %s", customType.Name, graphqlFileName)
 		}
-	}
-	for index, action := range sdlFromResp.Actions {
-		sdlFromResp.Actions[index].Definition.Kind = a.ActionConfig.Kind
-		sdlFromResp.Actions[index].Definition.Handler = a.ActionConfig.HandlerWebhookBaseURL + "/" + action.Name
 	}
 	if len(sdlFromResp.Actions) != 0 {
 		actionItem := yaml.MapItem{

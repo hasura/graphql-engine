@@ -61,7 +61,7 @@ export const generateFKConstraintName = (
   tableName,
   lCols,
   existingConstraints,
-  ignoreConstraints = []
+  ignoreConstraints = [],
 ) => {
   const expectedName = `${tableName}_${lCols
     .map(lc => lc.replace(/"/g, ''))

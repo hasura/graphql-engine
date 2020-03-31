@@ -1,0 +1,36 @@
+description: Update name of an author
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+response:
+  data:
+    update_author:
+      affected_rows: 1
+      returning:
+      - id: 1
+        name: Author 1 updated
+        get_articles:
+        - id: 2
+          title: Article 1
+          content: Sample article 1, content version 1.0.1
+query:
+  query: |
+    mutation {
+      update_author(
+        _set: {name: "Author 1 updated"}
+        where: {id: {_eq: 1}}
+      ){
+        affected_rows
+        returning{
+          id
+          name
+          get_articles(args: {search: "1.0.1"}){
+            id
+            title
+            content
+          }
+        }
+      }
+    }

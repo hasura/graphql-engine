@@ -1,6 +1,6 @@
 import React from 'react';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import RootFieldEditor from '../Common/ReusableComponents/RootFieldEditor';
+import RootFieldEditor from '../Common/Components/RootFieldEditor';
 import { modifyRootFields, setCustomRootFields } from './ModifyActions';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 

@@ -126,10 +126,7 @@ Transform data in Postgres or run business logic on it to derive another dataset
 
 ## Demos
 
-Check out all the example applications in the
-
-[community/sample-apps](community/sample-apps) directory.
-
+Check out all the example applications in the [community/sample-apps](community/sample-apps) directory.
 
 ### Realtime applications
 
@@ -222,6 +219,7 @@ This readme is available in the following translations:
 - [Brazilian Portuguese :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
 - [German 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
 - [Chinese :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
+- [Turkish :tr:](translations/README.turkish.md) (:pray: [@berat](https://github.com/berat))
 - [Korean :kr:](translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
 
 Translations for other files can be found [here](translations).

@@ -2,6 +2,8 @@
    :description: Guides, Tutorials and Resources around using Hasura and GraphQL
    :keywords: hasura, docs, guide, tutorial, resource
 
+.. _guides:
+
 Guides / Tutorials / Resources
 ==============================
 

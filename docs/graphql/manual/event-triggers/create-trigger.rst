@@ -2,6 +2,8 @@
    :description: Create an event trigger with Hasura
    :keywords: hasura, docs, event trigger, create
 
+.. _create_trigger:
+
 Creating an event trigger
 =========================
 

@@ -64,9 +64,7 @@ const UniqueKeySelector = ({
     return (
       <div key={i} className={`form-group ${styles.pkEditorWrapper}`}>
         <select
-          className={`${styles.select} ${styles.sample} form-control ${
-            styles.add_pad_left
-          }`}
+          className={`${styles.select} ${styles.sample} form-control ${styles.add_pad_left}`}
           data-test={`unique-key-${index}-column-${i}`}
           value={uk}
           onChange={setUniqueCol}
@@ -87,9 +85,7 @@ const UniqueKeySelector = ({
     return (
       <div key={numCols} className={`form-group ${styles.pkEditorWrapper}`}>
         <select
-          className={`${styles.select} ${styles.sample} form-control ${
-            styles.add_pad_left
-          }`}
+          className={`${styles.select} ${styles.sample} form-control ${styles.add_pad_left}`}
           data-test={`unique-key-${index}-column-${numCols}`}
           onChange={selectUniqueCol}
           value={''}

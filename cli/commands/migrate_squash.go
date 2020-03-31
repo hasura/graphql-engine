@@ -39,7 +39,7 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := migrateSquashCmd.Flags()
-	f.Uint64Var(&opts.from, "from", 0, "start squashing form this version")
+	f.Uint64Var(&opts.from, "from", 0, "start squashing from this version")
 	f.StringVar(&opts.name, "name", "squashed", "name for the new squashed migration")
 	f.BoolVar(&opts.deleteSource, "delete-source", false, "delete the source files after squashing without any confirmation")
 

@@ -158,6 +158,7 @@ library
                      , list-t
                      , async
                      , lifted-async
+                     , immortal < 0.3
 
                      -- logging related
                      , base64-bytestring >= 1.0
@@ -191,6 +192,9 @@ library
                      -- testing
                      , QuickCheck
                      , generic-arbitrary
+                     -- 0.6.1 is supposedly not okay for ghc 8.6: 
+                     --   https://github.com/nomeata/ghc-heap-view/issues/27 
+                     , ghc-heap-view == 0.6.0
                      
                      , directory
 

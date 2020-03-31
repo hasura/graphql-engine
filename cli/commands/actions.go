@@ -15,12 +15,13 @@ import (
 // NewActionsCmd returns the actions command
 func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	ec.Viper = v
 	actionsCmd := &cobra.Command{
 		Use:          "actions",
 		Short:        "Manage actions on hasura",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Root().PersistentPreRun(cmd, args)
+			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
 				return err

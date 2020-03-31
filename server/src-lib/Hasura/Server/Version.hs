@@ -17,6 +17,7 @@ import qualified Data.SemVer                as V
 import qualified Data.Text                  as T
 import qualified Language.Haskell.TH.Syntax as TH
 
+import           Text.Regex.TDFA           ((=~~))
 import           Control.Lens               ((^.), (^?))
 import           Data.Aeson                 (FromJSON (..), ToJSON (..))
 import           Data.Text.Conversions      (FromText (..), ToText (..))
@@ -86,10 +87,12 @@ consoleAssetsVersion = case currentVersion of
       (mr:_) -> case getTextFromId mr of
         Nothing -> Nothing
         Just r  -> if
-          | "alpha" `T.isPrefixOf` r -> Just "alpha"
-          | "beta" `T.isPrefixOf` r  -> Just "beta"
-          | "rc" `T.isPrefixOf` r    -> Just "rc"
-          | otherwise                -> Nothing
+          | T.null r   -> Nothing
+          | otherwise  -> T.pack <$> (getChannelFromPreRelease $ T.unpack r)
+
+    getChannelFromPreRelease :: String -> Maybe String
+    getChannelFromPreRelease sv = sv =~~ ("^([a-z]+)"::String)
+
 
     getTextFromId :: V.Identifier -> Maybe Text
     getTextFromId i = Just i ^? (toTextualM . V._Textual)

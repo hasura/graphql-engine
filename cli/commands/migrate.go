@@ -31,12 +31,13 @@ import (
 // NewMigrateCmd returns the migrate command
 func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	ec.Viper = v
 	migrateCmd := &cobra.Command{
 		Use:          "migrate",
 		Short:        "Manage migrations on the database",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Root().PersistentPreRun(cmd, args)
+			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
 				return err

@@ -2,6 +2,8 @@
    :description: Use computed fields in Hasura
    :keywords: hasura, docs, schema, computed field
 
+.. _computed_fields:
+
 Computed fields
 ===============
 
@@ -100,7 +102,7 @@ The return table must be tracked to define such a computed field.
 
 **Example:**
 
-In a simple ``author <-> article`` schema, we can define a :doc:`relationship <../schema/relationships/index>` on the ``author``
+In a simple ``author <-> article`` schema, we can define a :ref:`relationship <relationships>` on the ``author``
 table to fetch authors along with their articles.
 
 We can make use of computed fields to fetch the author's articles with a search parameter.
@@ -179,13 +181,13 @@ Adding a computed field to a table
 
   .. tab:: API
 
-     A computed field can be added to a table using the :doc:`add_computed_field <../api-reference/schema-metadata-api/computed-field>`
+     A computed field can be added to a table using the :ref:`add_computed_field <api_computed_field>`
      metadata API
 
 Computed fields permissions
 ---------------------------
 
-:doc:`Access control <../auth/authorization/index>` to computed fields depends on the type of computed field.
+:ref:`Access control <authorization>` to computed fields depends on the type of computed field.
 
 - For **scalar computed fields**, permissions are managed similar to the :ref:`columns permissions <col-level-permissions>`
   of the table.

@@ -2,6 +2,8 @@
    :description: Downgrade Hasura GraphQL engine version
    :keywords: hasura, docs, deployment, downgrade, version
 
+.. _downgrade_hge:
+
 Downgrading Hasura GraphQL engine
 =================================
 
@@ -20,9 +22,9 @@ as changing the image tag to the version you want.
 Based on your deployment method, follow the appropriate guide to downgrade the
 GraphQL engine version you're running:
 
-- :doc:`Updating on Heroku <heroku/updating>`
-- :doc:`Updating on Docker <docker/updating>`
-- :doc:`Updating on Kubernetes <kubernetes/updating>`
+- :ref:`Updating on Heroku <heroku_update>`
+- :ref:`Updating on Docker <docker_update>`
+- :ref:`Updating on Kubernetes <kubernetes_update>`
 
 If the GraphQL engine version you are downgrading to has a different catalogue
 version than your current, you will have to downgrade the catalogue
@@ -36,16 +38,15 @@ described :ref:`here <hasura_metadata_schema>`. The schema of the catalogue is
 versioned. Updates to the Hasura GraphQL engine may have Hasura catalogue
 version bumps.
 
-During upgrades the server automatically migrates the catalogue to the latest
-version on startup.
-
 Downgrades to the catalogue need to be carried out manually in case you are
 attempting to downgrade to a lower Hasura GraphQL engine version.
 
-You can downgrade the catalogue from a particular version to a previous version
-by executing the ``graphql-engine`` executable on the command line, with the
-``downgrade`` command, specifying the desired catalogue version using one of
-the ``--to-`` flags.
+From ``v1.2.0``, you can downgrade the catalogue from a particular version to a
+previous version by executing the ``graphql-engine`` executable on the command
+line, with the ``downgrade`` command, specifying the desired catalogue version
+using one of the ``--to-`` flags. For earlier versions, it is recommended to
+first upgrade to the latest version and then use the ``downgrade`` command to
+downgrade to the desired version.
 
 The ``downgrade`` command is not part of the Hasura CLI but rather a command on
 ``graphql-engine`` itself. The way to execute this command is to run:

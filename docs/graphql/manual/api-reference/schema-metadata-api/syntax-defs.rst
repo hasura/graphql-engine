@@ -2,6 +2,8 @@
    :description: Common syntax definitions for the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, syntax definitions
 
+.. _api_metadata_syntax_defs:
+
 Schema/Metadata API Reference: Common syntax definitions
 ========================================================
 
@@ -20,6 +22,8 @@ TableName
    :class: haskell-pre
 
    String | QualifiedTable_
+
+.. _QualifiedTable:
 
 QualifiedTable
 ^^^^^^^^^^^^^^

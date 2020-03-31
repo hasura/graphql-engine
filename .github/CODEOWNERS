@@ -1,4 +1,16 @@
-/server/    @lexi-lambda
-/docs/      @marionschleifer
-/cli/       @shahidhk
-/console/   @beerose
+# make @hge-changelog-owners team a mandatory reviewer for all
+# pull requests to make sure a proper changelog is part of the pr
+*         @hasura/hge-changelog-owners
+
+# server code owners
+/server/  @hasura/hge-server-owners
+
+# docs code owners
+/docs/    @hasura/hge-docs-owners
+
+# cli code owners
+/cli/     @hasura/hge-cli-owners
+
+# console code owners
+/console/ @hasura/hge-console-owners
+
