@@ -8,7 +8,9 @@
 --   3. Create a downgrade script in the @src-rsr/migrations/@ directory with the name
 --      @<new version>_to_<old version>.sql@.
 --   4. If making a new release, add the mapping from application version to catalog
---      schema version in @src-lib/Hasura/Server/Init.hs@.
+--      schema version in @src-rsr/catalog_versions.txt@.
+--   5. If appropriate, add the change to @server/src-rsr/initialise.sql@ for fresh installations
+--      of hasura.
 --
 -- The Template Haskell code in this module will automatically compile the new migration script into
 -- the @graphql-engine@ executable.
