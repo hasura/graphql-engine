@@ -4,7 +4,6 @@
 module Hasura.RQL.DDL.Schema.Table
   ( TrackTable(..)
   , runTrackTableQ
-  , trackExistingTableOrViewP2
 
   , TrackTableV2(..)
   , runTrackTableV2Q

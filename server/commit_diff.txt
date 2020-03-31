@@ -597,24 +597,3 @@ Date:   Thu Apr 2 03:23:02 2020 +0530
 
     When consistent_metadata_check is set to false, then a new schema update
     event should not be created.
-
-commit 58ba01f31c29e8b8576d10307fb5abc82315d90e
-Author: Brandon Simmons <brandon.m.simmons@gmail.com>
-Date:   Tue Mar 31 10:00:12 2020 -0400
-
-    Improve performance of replace_metadata on tracking tables. Closes #3802 (#4182)
-
-    * Improve performance of replace_metadata on tracking tables. Closes #3802
-
-    On the 1000 table track case this went from >20min to 8 seconds, the
-    bottleneck being all the former calls (for each table) to
-    buildSchemaCache.
-
-    * refactor replace metadata
-
-    Only save metadata in hdb_catalog schema and build schema cache (strictly)
-
-    * remove `withBuildSchemaCache` function
-
-    Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
-    Co-authored-by: Vamshi Surabhi <0x777@users.noreply.github.com>

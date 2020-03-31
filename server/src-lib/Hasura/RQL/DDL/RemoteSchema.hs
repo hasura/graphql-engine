@@ -8,6 +8,7 @@ module Hasura.RQL.DDL.RemoteSchema
   , addRemoteSchemaP2Setup
   , addRemoteSchemaP2
   , runIntrospectRemoteSchema
+  , addRemoteSchemaToCatalog
   ) where
 
 import           Control.Monad.Unique

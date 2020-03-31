@@ -43,10 +43,10 @@ genReplaceMetadata = do
     <$> arbitrary
     <*> genFunctionsMetadata version
     <*> arbitrary
-    -- <*> arbitrary
     <*> arbitrary
-    -- <*> arbitrary
-    -- <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
     <*> arbitrary
   where
     genFunctionsMetadata :: MetadataVersion -> Gen FunctionsMetadata
