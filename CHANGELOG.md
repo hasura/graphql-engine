@@ -23,6 +23,18 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 (close #1700) (#3881)
 
+### console: add multi select in browse rows to allow bulk delete (close #1739) (#3735)	
+
+  Adds a checkbox to each row on Browse Rows view that allows selecting one or more rows from the table and bulk delete them.	
+
+### console: add dropdown for enum fields in insert/edit rows page (close #3748) (#3810)	
+
+  If a table has a field referencing an enum table via a foreign key, then there will be a select dropdown with all possible enum values for that field on `Insert Row` and `Edit Row` views.	
+
+### console: generate unique exported metadata filenames (close #1772) (#4106)	
+
+  Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.
+
 ### CLI: V2 migrations architecture
 
   A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
@@ -46,9 +58,6 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 - console shared modules: fix parsing of wrapped types in SDL (close #4099) (#4167)
 - console: misc actions fixes (#4059)
 - console: action relationship page improvements (fix #4062, #4130) (#4133)
-- console: exported metadata file name will now be of format `hasura_metadata_<timestamp.json` (close #1772) (#4106)
-- console: add dropdown for enum fields in insert/edit row pages (close #3748) (#3810)
-- console: add multi select in browse rows to allow bulk delete (close #1739) (#3735)
 - console: fix run_sql migration modal messaging (close #4020) (#4060)
 - console: update actions intro image (#4042)
 - console: hide starter kit button if a framework has no starter kit (#4023)
