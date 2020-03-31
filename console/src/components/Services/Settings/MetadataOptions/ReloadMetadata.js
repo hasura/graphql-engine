@@ -53,7 +53,7 @@ class ReloadMetadata extends Component {
 
     const buttonText = isReloading ? 'Reloading' : 'Reload';
     return (
-      <div className={`${metaDataStyles.display_flex}`}>
+      <div className={`${metaDataStyles.display_inline}`}>
         <Button
           data-test="data-reload-metadata"
           color="white"
