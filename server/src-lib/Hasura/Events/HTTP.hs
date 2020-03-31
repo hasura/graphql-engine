@@ -136,16 +136,16 @@ instance ToEngineLog HTTPReq Hasura where
 
 runHTTP
   :: ( MonadReader r m
-     , Has (Logger Hasura) r
+     -- , Has (Logger Hasura) r
      , Has HTTP.Manager r
      , MonadIO m
      )
   => HTTP.Request -> Maybe ExtraContext -> m (Either HTTPErr HTTPResp)
-runHTTP req exLog = do
-  logger :: Logger Hasura <- asks getter
+runHTTP req _exLog = do
+  -- logger :: Logger Hasura <- asks getter
   manager <- asks getter
   res <- liftIO $ try $ HTTP.httpLbs req manager
-  case res of
-    Left e     -> unLogger logger $ HClient e
-    Right resp -> unLogger logger $ HTTPRespExtra (mkHTTPResp resp) exLog
+  -- case res of
+  --   Left e     -> unLogger logger $ HClient e
+  --   Right resp -> unLogger logger $ HTTPRespExtra (mkHTTPResp resp) exLog
   return $ either (Left . HClient) anyBodyParser res

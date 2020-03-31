@@ -7,8 +7,8 @@ module Hasura.Events.Lib
   , Event(..)
   ) where
 
-import           Control.Concurrent.Extended   (sleep)
 import           Control.Concurrent.Async      (async, waitAny)
+import           Control.Concurrent.Extended   (sleep)
 import           Control.Concurrent.STM.TVar
 import           Control.Exception             (try)
 import           Control.Monad.STM             (STM, atomically, retry)
@@ -146,10 +146,10 @@ data Invocation
 
 data EventEngineCtx
   = EventEngineCtx
-  { _eeCtxEventQueue            :: TQ.TQueue Event
-  , _eeCtxEventThreads          :: TVar Int
-  , _eeCtxMaxEventThreads       :: Int
-  , _eeCtxFetchInterval         :: DiffTime
+  { _eeCtxEventQueue      :: TQ.TQueue Event
+  , _eeCtxEventThreads    :: TVar Int
+  , _eeCtxMaxEventThreads :: Int
+  , _eeCtxFetchInterval   :: DiffTime
   }
 
 defaultMaxEventThreads :: Int
@@ -255,13 +255,13 @@ processSuccess pool e decodedHeaders ep resp = do
 
 processError
   :: ( MonadIO m
-     , MonadReader r m
-     , Has (L.Logger L.Hasura) r
+     -- , MonadReader r m
+     -- , Has (L.Logger L.Hasura) r
      )
   => Q.PGPool -> Event -> RetryConf -> [HeaderConf] -> EventPayload -> HTTPErr
   -> m (Either QErr ())
 processError pool e retryConf decodedHeaders ep err = do
-  logHTTPErr err
+  -- logHTTPErr err
   let invocation = case err of
         HClient excp -> do
           let errMsg = TBS.fromLBS $ encode $ show excp
@@ -373,21 +373,21 @@ logQErr err = do
   logger :: L.Logger L.Hasura <- asks getter
   L.unLogger logger $ EventInternalErr err
 
-logHTTPErr
-  :: ( MonadReader r m
-     , Has (L.Logger L.Hasura) r
-     , MonadIO m
-     )
-  => HTTPErr -> m ()
-logHTTPErr err = do
-  logger :: L.Logger L.Hasura <- asks getter
-  L.unLogger logger $ err
+-- logHTTPErr
+--   :: ( MonadReader r m
+--      , Has (L.Logger L.Hasura) r
+--      , MonadIO m
+--      )
+--   => HTTPErr -> m ()
+-- logHTTPErr err = do
+--   logger :: L.Logger L.Hasura <- asks getter
+--   L.unLogger logger $ err
 
 tryWebhook
-  :: ( Has (L.Logger L.Hasura) r
-     , Has HTTP.Manager r
+  :: ( MonadReader r m
+    -- Has (L.Logger L.Hasura) r
      , Has EventEngineCtx r
-     , MonadReader r m
+     , Has HTTP.Manager r
      , MonadIO m
      , MonadError HTTPErr m
      )
