@@ -33,7 +33,7 @@ Postgres constructs.
   Customise with views <views>
   Customise with SQL functions <custom-functions>
   Default field values <default-values/index>
-  Enum type fields <enums>
+  enums
   computed-fields
   custom-field-names
   data-validation

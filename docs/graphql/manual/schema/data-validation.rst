@@ -23,7 +23,7 @@ If the validation concerns the table that is about to be manipulated, we can use
 
 **Example:** Check that the ``rating`` for a user is between 1 and 10 when a user is inserted or updated.
 
-You can add a Postgres check constraint when creating a table:
+In the ``Data -> SQL`` tab on the Hasura console, we can add a Postgres check constraint when creating a table:
 
 .. code-block:: plpgsql
 
@@ -34,7 +34,7 @@ You can add a Postgres check constraint when creating a table:
     rating integer CHECK (rating > 0 AND rating < 11)
   );
 
-If the table already exists, you can add a Postgres check constraint as follows:
+If the table already exists, we can add a Postgres check constraint as follows:
 
 .. code-block:: plpgsql
 
@@ -42,7 +42,7 @@ If the table already exists, you can add a Postgres check constraint as follows:
    rating > 0 AND rating < 11
   );
 
-If we're trying to add an author with a rating of ``12``, we'll get the following error:
+If we're now trying to add an author with a rating of ``12``, we'll get the following error:
 
 ``Check constraint violation. new row for relation "authors" violates check constraint "authors_rating_check"``.
 
@@ -53,7 +53,7 @@ If the validation involves checks across tables, we can use Postgres triggers.
 
 **Example:** Validate that an article can be added only for an author where ``is_active`` is true.
 
-First, we create a `Postgres function <https://www.postgresql.org/docs/9.1/sql-createfunction.html>`__ to perform the validation. 
+In the ``Data -> SQL`` tab on the Hasura console, we can create a `Postgres function <https://www.postgresql.org/docs/9.1/sql-createfunction.html>`__ to perform the validation. 
 
 .. code-block:: plpgsql
 
@@ -81,7 +81,7 @@ If we're trying to insert an article for an author where ``is_active`` is ``fals
 
 .. note::
 
-  If you run the above SQL statements from the SQL tab in the Hasura console, make sure that the ``Track this`` box is not checked, since these statements should go into Postgres directly and should not be tracked by Hasura. Otherwise, an error will occur.
+  If you run the above SQL statements from the SQL tab in the Hasura console, make sure that the ``Track this`` box is not checked, since these statements should go into Postgres directly and should not be tracked by Hasura. 
 
 Complex data validation: actions
 --------------------------------
