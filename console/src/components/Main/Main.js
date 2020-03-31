@@ -683,6 +683,7 @@ class Main extends React.Component {
                   tooltips.events,
                   '/events/manage/triggers'
                 )}
+                {' '}
 */}{' '}
                 {getSidebarItem(
                   'Triggers',

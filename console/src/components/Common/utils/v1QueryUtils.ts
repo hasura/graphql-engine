@@ -536,9 +536,10 @@ export const getSelectQuery = (
 };
 
 export const getFetchInvocationLogsQuery = (
-  where: WhereClause,
-  order_by: OrderBy[],
-  limit: number
+  where?: WhereClause,
+  offset?: number,
+  order_by?: OrderBy[],
+  limit?: number
 ) => {
   return getSelectQuery(
     generateTableDef('hdb_scheduled_event_invocation_logs', 'hdb_catalog'),
@@ -549,3 +550,5 @@ export const getFetchInvocationLogsQuery = (
     order_by
   );
 };
+
+export type SelectQueryGenerator = typeof getFetchInvocationLogsQuery;

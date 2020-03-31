@@ -83,6 +83,9 @@ export const addScheduledTrigger = (
 
   const errorMsg = 'Creating scheduled trigger failed';
   if (validationError) {
+    if (errorCb) {
+      errorCb();
+    }
     return dispatch(showErrorNotification(errorMsg, validationError));
   }
 

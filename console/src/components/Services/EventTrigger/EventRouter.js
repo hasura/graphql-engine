@@ -30,6 +30,7 @@ const makeEventRouter = (
   requirePendingEvents,
   requireRunningEvents
 ) => {
+  console.log('Making events router');
   return (
     <Route
       path="events"

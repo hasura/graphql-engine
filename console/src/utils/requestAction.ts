@@ -1,5 +1,6 @@
 import { push } from 'react-router-redux';
 import globals from '../Globals';
+import dataHeaders from '../components/Services/Data/Common/Headers';
 
 import {
   LOAD_REQUEST,
@@ -13,16 +14,26 @@ const requestAction = (
   options: RequestInit,
   SUCCESS?: string,
   ERROR?: string,
-  includeCredentials=true
+  includeCredentials = true,
+  includeAdminHeaders = false
 ) => {
-  if (!options.credentials && includeCredentials) {
-    options.credentials = 'omit';
-  }
+  return (dispatch: any, getState: any) => {
+    const requestOptions = { ...options };
 
-  return (dispatch: any) => {
+    if (!options.credentials && includeCredentials) {
+      requestOptions.credentials = 'omit';
+    }
+
+    if (includeAdminHeaders) {
+      requestOptions.headers = {
+        ...(options.headers || {}),
+        ...dataHeaders(getState),
+      };
+    }
+
     return new Promise((resolve, reject) => {
       dispatch({ type: LOAD_REQUEST });
-      fetch(url, options).then(
+      fetch(url, requestOptions).then(
         response => {
           if (response.ok) {
             return response.json().then(results => {
@@ -36,7 +47,7 @@ const requestAction = (
           dispatch({ type: FAILED_REQUEST });
           if (response.status >= 400 && response.status <= 500) {
             return response.json().then(errorMsg => {
-              let msg = errorMsg;
+              const msg = errorMsg;
               if (ERROR) {
                 dispatch({ type: ERROR, data: msg });
               } else {

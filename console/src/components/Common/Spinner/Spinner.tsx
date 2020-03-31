@@ -1,8 +1,7 @@
 import React from 'react';
+import styles from './Spinner.scss';
 
 const Spinner = () => {
-  const styles = require('./Spinner.scss');
-
   return (
     <div className={styles.sk_circle}>
       <div className={styles.sk_circle1 + ' ' + styles.sk_child} />
