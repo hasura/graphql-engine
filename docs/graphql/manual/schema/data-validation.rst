@@ -12,36 +12,82 @@ Data validation
   :depth: 2
   :local:
 
-Sometimes, we need to perform some kind of validation in the context of a database event like ``insert``, ``update`` or ``delete``.
-
-For example, in an online shop, we need the following types of validation (among others):
-
-- Before a user can add an item to a cart, we need to make sure that we have the respective amount of items in stock.
-- During checkout, we need to make sure that the user is logged in with a valid token
+Sometimes, we need to perform validation in the context of a database event like ``insert``, ``update`` or ``delete``.
 
 The best solution to implement validation depends on the complexity of the use case. 
 
-Simple checks
--------------
+Simple checks: Postgres check constraints
+-----------------------------------------
 
-Simple checks can be done using a
-`Postgres trigger <https://www.postgresql.org/docs/9.1/sql-createtrigger.html>`__.
+If the validation concerns the table that is about to be manipulated, we can use `Postgres check constraints <https://www.postgresql.org/docs/9.4/ddl-constraints.html>`__.
 
-To make sure a user can only add as many items to the cart as we have in stock, we can write the following Postgres function:
+**Example:** Check that the ``rating`` for a user is between 1 and 10 when a user is inserted or updated.
 
-## Postgres function
+You can add a Postgres check constraint when creating a table:
 
-Now let's create a trigger that calls this function before we can add something to the cart.
+.. code-block:: plpgsql
 
-## Postgres trigger
+  CREATE TABLE authors (
+    id integer,
+    name text,
+    is_active BOOLEAN,
+    rating integer CHECK (rating > 0 AND rating < 11)
+  );
 
-If we now try to add something to the cart where we don't have enough in stock, the following error will show:
+If the table already exists, you can add a Postgres check constraint as follows:
 
-## Error
+.. code-block:: plpgsql
 
-Complex data validation
------------------------
+  ALTER TABLE authors ADD CONSTRAINT authors_rating_check CHECK (
+   rating > 0 AND rating < 11
+  );
 
-For more complex validation use cases like user login, we recommend using :ref:`Hasura actions <actions>`. 
+If we're trying to add an author with a rating of ``12``, we'll get the following error:
+
+``Check constraint violation. new row for relation "authors" violates check constraint "authors_rating_check"``.
+
+Validation across tables: Postgres triggers
+-------------------------------------------
+
+If the validation involves checks across tables, we can use Postgres triggers.
+
+**Example:** Validate that an article can be added only for an author where ``is_active`` is true.
+
+First, we create a `Postgres function <https://www.postgresql.org/docs/9.1/sql-createfunction.html>`__ to perform the validation. 
+
+.. code-block:: plpgsql
+
+  CREATE FUNCTION check_author_active()
+  RETURNS trigger AS $BODY$
+  DECLARE active_author BOOLEAN;
+  BEGIN
+  SELECT author.is_active INTO active_author FROM "authors" author WHERE author.id = NEW."author_id";
+  IF active_author != TRUE THEN
+      RAISE EXCEPTION 'Author must be active';
+  END IF;
+  RETURN NEW;
+  END;
+  $BODY$ LANGUAGE plpgsql;
+
+Then we'll add a `Postgres trigger <https://www.postgresql.org/docs/9.1/sql-createtrigger.html>`__ that is called every time an article is inserted or updated.
+
+.. code-block:: plpgsql
+
+  CREATE TRIGGER insert_article BEFORE INSERT OR UPDATE ON "articles" FOR EACH ROW EXECUTE PROCEDURE check_author_active();
+
+If we're trying to insert an article for an author where ``is_active`` is ``false``, we'll get the following error:
+
+``Error``
+
+.. note::
+
+  If you run the above SQL statements from the SQL tab in the Hasura console, make sure that the ``Track this`` box is not checked, since these statements should go into Postgres directly and should not be tracked by Hasura. Otherwise, an error will occur.
+
+Complex data validation: actions
+--------------------------------
+
+If the validation can't be captured with SQL and / or includes a third party service, we recommend using :ref:`Hasura actions <actions>`. 
+
+**Example:** Make sure an author is logged in before creating an article.
 
 An example of an action handler implementation for user login can be found :ref:`here <action_handlers>`.
