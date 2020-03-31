@@ -2,7 +2,7 @@ import requestAction from '../../../utils/requestAction';
 import { clearIntrospectionSchemaCache } from '../RemoteSchema/graphqlUtils';
 import { push } from 'react-router-redux';
 import globals from '../../../Globals';
-import endpoints from '../../../Endpoints';
+import endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import defaultState from './State';
 import { filterInconsistentMetadataObjects } from './utils';
 import {
@@ -16,6 +16,15 @@ import {
   showSuccessNotification,
   showErrorNotification,
 } from '../Common/Notification';
+import {
+  inconsistentObjectsQuery,
+  getReloadMetadataQuery,
+  getReloadRemoteSchemaCacheQuery,
+  dropInconsistentObjectsQuery,
+  exportMetadataQuery,
+  generateReplaceMetadataQuery,
+  resetMetadataQuery,
+} from '../../Common/utils/v1QueryUtils';
 
 const LOAD_INCONSISTENT_OBJECTS = 'Metadata/LOAD_INCONSISTENT_OBJECTS';
 const LOADING_METADATA = 'Metadata/LOADING_METADATA';
@@ -31,52 +40,28 @@ const UPDATE_ALLOWED_QUERY = 'Metadata/UPDATE_ALLOWED_QUERY';
 const DELETE_ALLOWED_QUERY = 'Metadata/DELETE_ALLOWED_QUERY';
 const DELETE_ALLOW_LIST = 'Metadata/DELETE_ALLOW_LIST';
 
-const getInconsistentObjectsQuery = {
-  type: 'get_inconsistent_metadata',
-  args: {},
-};
-
-const reloadCacheQuery = {
-  type: 'reload_metadata',
-  args: {},
-};
-
-const reloadRemoteSchemaCacheQuery = remoteSchemaName => {
-  return {
-    type: 'reload_remote_schema',
-    args: {
-      name: remoteSchemaName,
-    },
-  };
-};
-
 const reloadRemoteSchemaCacheAndGetInconsistentObjectsQuery = remoteSchemaName => {
   return {
     type: 'bulk',
     args: [
-      reloadRemoteSchemaCacheQuery(remoteSchemaName),
-      getInconsistentObjectsQuery,
+      getReloadRemoteSchemaCacheQuery(remoteSchemaName),
+      inconsistentObjectsQuery,
     ],
   };
 };
 
-const reloadCacheAndGetInconsistentObjectsQuery = {
+const getReloadCacheAndGetInconsistentObjectsQuery = shouldReloadRemoteSchemas => ({
   type: 'bulk',
-  args: [reloadCacheQuery, getInconsistentObjectsQuery],
-};
-
-const dropInconsistentObjectsQuery = {
-  type: 'drop_inconsistent_metadata',
-  args: {},
-};
+  args: [
+    getReloadMetadataQuery(shouldReloadRemoteSchemas),
+    inconsistentObjectsQuery,
+  ],
+});
 
 export const exportMetadata = (successCb, errorCb) => (dispatch, getState) => {
   const { dataHeaders } = getState().tables;
 
-  const query = {
-    type: 'export_metadata',
-    args: {},
-  };
+  const query = exportMetadataQuery;
 
   const options = {
     method: 'POST',
@@ -100,13 +85,6 @@ export const replaceMetadata = (newMetadata, successCb, errorCb) => (
   getState
 ) => {
   const exportSuccessCb = oldMetadata => {
-    const generateReplaceMetadataQuery = metadataJson => {
-      return {
-        type: 'replace_metadata',
-        args: metadataJson,
-      };
-    };
-
     const upQuery = generateReplaceMetadataQuery(newMetadata);
     const downQuery = generateReplaceMetadataQuery(oldMetadata);
 
@@ -149,6 +127,33 @@ export const replaceMetadata = (newMetadata, successCb, errorCb) => (
   };
 
   dispatch(exportMetadata(exportSuccessCb, exportErrorCb));
+};
+
+export const resetMetadata = (successCb, errorCb) => (dispatch, getState) => {
+  const headers = getState().tables.dataHeaders;
+
+  const options = {
+    method: 'POST',
+    credentials: globalCookiePolicy,
+    headers: headers || {},
+    body: JSON.stringify(resetMetadataQuery),
+  };
+
+  return dispatch(requestAction(endpoints.query, options)).then(
+    () => {
+      if (successCb) {
+        successCb();
+      }
+      dispatch(showSuccessNotification('Metadata reset successfully!'));
+    },
+    error => {
+      console.error(error);
+      dispatch(showErrorNotification('Metadata reset failed', null, error));
+      if (errorCb) {
+        errorCb(error);
+      }
+    }
+  );
 };
 
 export const replaceMetadataFromFile = (
@@ -222,17 +227,17 @@ const handleInconsistentObjects = inconsistentObjects => {
   };
 };
 
-export const loadInconsistentObjects = (
-  shouldReloadCache,
-  successCb,
-  failureCb
-) => {
+export const loadInconsistentObjects = (reloadConfig, successCb, failureCb) => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
 
-    const loadQuery = shouldReloadCache
-      ? reloadCacheAndGetInconsistentObjectsQuery
-      : getInconsistentObjectsQuery;
+    const { shouldReloadMetadata, shouldReloadRemoteSchemas } = reloadConfig;
+
+    const loadQuery = shouldReloadMetadata
+      ? getReloadCacheAndGetInconsistentObjectsQuery(
+        shouldReloadRemoteSchemas === false ? false : true
+      )
+      : inconsistentObjectsQuery;
 
     dispatch({ type: LOADING_METADATA });
     return dispatch(
@@ -243,7 +248,7 @@ export const loadInconsistentObjects = (
       })
     ).then(
       data => {
-        const inconsistentObjects = shouldReloadCache
+        const inconsistentObjects = shouldReloadMetadata
           ? data[1].inconsistent_objects
           : data.inconsistent_objects;
 
@@ -307,13 +312,26 @@ export const reloadRemoteSchema = (remoteSchemaName, successCb, failureCb) => {
   };
 };
 
-export const reloadMetadata = (successCb, failureCb) => {
+export const reloadMetadata = (
+  shouldReloadRemoteSchemas,
+  successCb,
+  failureCb
+) => {
   return dispatch => {
-    return dispatch(loadInconsistentObjects(true, successCb, failureCb));
+    return dispatch(
+      loadInconsistentObjects(
+        {
+          shouldReloadMetadata: true,
+          shouldReloadRemoteSchemas: shouldReloadRemoteSchemas,
+        },
+        successCb,
+        failureCb
+      )
+    );
   };
 };
 
-export const dropInconsistentObjects = () => {
+export const dropInconsistentObjects = (successCb, failureCb) => {
   return (dispatch, getState) => {
     const headers = getState().tables.dataHeaders;
     dispatch({ type: DROP_INCONSISTENT_METADATA });
@@ -327,8 +345,11 @@ export const dropInconsistentObjects = () => {
       () => {
         dispatch({ type: DROPPED_INCONSISTENT_METADATA });
         dispatch(showSuccessNotification('Dropped inconsistent metadata'));
-        dispatch(loadInconsistentObjects(false));
+        dispatch(loadInconsistentObjects({ shouldReloadRemoteSchemas: false }));
         clearIntrospectionSchemaCache();
+        if (successCb) {
+          successCb();
+        }
       },
       error => {
         console.error(error);
@@ -340,6 +361,9 @@ export const dropInconsistentObjects = () => {
             error
           )
         );
+        if (failureCb) {
+          failureCb();
+        }
       }
     );
   };

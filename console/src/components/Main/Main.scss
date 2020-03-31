@@ -1,9 +1,9 @@
-@import "~bootstrap-sass/assets/stylesheets/bootstrap/variables";
-@import "../Common/Common.scss";
+@import '~bootstrap-sass/assets/stylesheets/bootstrap/variables';
+@import '../Common/Common.scss';
 
 @font-face {
-    font-family: arcadeClassic;
-    src: url(https://storage.googleapis.com/hasura-graphql-engine/console/assets/ARCADECLASSIC.ttf);
+  font-family: arcadeClassic;
+  src: url(https://storage.googleapis.com/hasura-graphql-engine/console/assets/ARCADECLASSIC.ttf);
 }
 
 .container {
@@ -22,15 +22,15 @@
 }
 
 .updateBannerWrapper {
-    position: fixed;
-    right: 0;
-    bottom: 0px;
-    width: 100%;
-    z-index: 10;
-    text-align: center;
-    background-color: #FFC627;
-    color: #43495a;
-    padding: 14.5px 10px;
+  position: fixed;
+  right: 0;
+  bottom: 0px;
+  width: 100%;
+  z-index: 10;
+  text-align: center;
+  background-color: #ffc627;
+  color: #43495a;
+  padding: 14.5px 10px;
 
   .updateBanner {
     display: flex;
@@ -152,7 +152,7 @@
 
   .clusterBtn {
     background-color: transparent;
-    color: #DEDEDE;
+    color: #dedede;
     font-weight: 700;
     pointer-events: none;
 
@@ -187,7 +187,8 @@
   z-index: 101;
 }
 
-.setting_wrapper, .clusterInfoWrapper {
+.setting_wrapper,
+.clusterInfoWrapper {
   .setting_dropdown {
     .dropdown_menu {
       left: inherit;
@@ -208,20 +209,20 @@
 }
 
 .bubble {
-    display: inline-block;
-    font-size: 16px;
-    -webkit-transition: all 0.2s;
-    -moz-transition: all 0.2s;
-    -o-transition: all 0.2s;
-    transition: all 0.2s;
-    padding: 15px 60px;
-    color: #fff;
-    background-color: #FEC53D;
-    -webkit-animation: pulse 1s ease infinite;
-    -moz-animation: pulse 1s ease infinite;
-    -ms-animation: pulse 1s ease infinite;
-    -o-animation: pulse 1s ease infinite;
-    animation: pulse 1s ease infinite;
+  display: inline-block;
+  font-size: 16px;
+  -webkit-transition: all 0.2s;
+  -moz-transition: all 0.2s;
+  -o-transition: all 0.2s;
+  transition: all 0.2s;
+  padding: 15px 60px;
+  color: #fff;
+  background-color: #fec53d;
+  -webkit-animation: pulse 1s ease infinite;
+  -moz-animation: pulse 1s ease infinite;
+  -ms-animation: pulse 1s ease infinite;
+  -o-animation: pulse 1s ease infinite;
+  animation: pulse 1s ease infinite;
 }
 
 .onBoardingHighlight {
@@ -243,7 +244,7 @@
     -moz-transform: rotate(45deg);
     -ms-transform: rotate(45deg);
     transform: rotate(45deg);
-    background-color: #4D4D4D;
+    background-color: #4d4d4d;
   }
 
   .onBoardingDataFocus {
@@ -298,7 +299,7 @@
   }
 
   .onBoardingHighlightInterior {
-    background-color: #4D4D4D;
+    background-color: #4d4d4d;
     position: relative;
     width: 300px;
     border-radius: 5px;
@@ -312,7 +313,7 @@
   top: 126px;
 }
 
-.onBoardingBuilderPosition{
+.onBoardingBuilderPosition {
   left: 45%;
   top: 320px;
 }
@@ -371,7 +372,7 @@
     font-size: 25px;
     font-family: 'Gudea';
     font-weight: 400;
-    color: #FEC53D;
+    color: #fec53d;
     padding-top: 20px;
     padding-bottom: 20px;
   }
@@ -413,7 +414,7 @@
 }
 
 .sidebar {
-  color: #DEDEDE;
+  color: #dedede;
   background-color: #43495a;
   font-family: 'Gudea';
   font-weight: 700;
@@ -439,12 +440,13 @@
     margin-bottom: 0;
     margin-top: 16px;
 
-    a,a:visited {
-      color: #DEDEDE;
+    a,
+    a:visited {
+      color: #dedede;
     }
 
     a:hover {
-      color: #DEDEDE;
+      color: #dedede;
     }
 
     li {
@@ -513,15 +515,15 @@
           background-color: #515766;
 
           li {
-              a {
-                padding: 6px 15px;
-              }
+            a {
+              padding: 6px 15px;
             }
+          }
 
-            hr {
-              margin-top: 6px;
-              margin-bottom: 6px;
-            }
+          hr {
+            margin-top: 6px;
+            margin-bottom: 6px;
+          }
         }
       }
 
@@ -536,14 +538,14 @@
     }
 
     .navSideBarActive {
-      border-bottom: 4px solid #FFC627;
+      border-bottom: 4px solid #ffc627;
 
       i {
-        color: #FFC627;
+        color: #ffc627;
       }
 
       p {
-        color: #FFC627;
+        color: #ffc627;
       }
     }
 
@@ -624,7 +626,7 @@
   clear: both;
   font-family: 'Gudea';
   // color: #767E93;
-  color: #4D4D4D ;
+  color: #4d4d4d;
   padding-top: 50px;
 }
 
@@ -674,8 +676,8 @@
   button {
     background-color: transparent;
     border-radius: 5px;
-    color: #DEDEDE;
-    border: 1px solid #DEDEDE;
+    color: #dedede;
+    border: 1px solid #dedede;
     padding: 4px 10px;
   }
 }
@@ -736,7 +738,6 @@
     float: right;
     padding-bottom: 10px;
   }
-
 }
 
 .exploreDisabled {
@@ -744,7 +745,7 @@
 }
 
 .exploreSidebar {
-  box-shadow: -3px 7px 14px 0px rgba(222,222,222,1);
+  box-shadow: -3px 7px 14px 0px rgba(222, 222, 222, 1);
   float: right;
   width: 260px;
   // background: beige;
@@ -762,7 +763,7 @@
   p {
     font-size: 16px;
     padding-top: 5px;
-    color: #AAAAAA;
+    color: #aaaaaa;
   }
 
   .exploreSidebarHeading {
@@ -775,13 +776,13 @@
     padding-top: 10px;
     padding-bottom: 10px;
     font-weight: bold;
-    color: #272B36;
+    color: #272b36;
   }
 
   .exploreSidebarDescription {
     font-size: 16px;
     padding-top: 10px;
-    color: #272B36;
+    color: #272b36;
     height: calc(100vh - 260px);
     overflow-y: auto;
 
@@ -830,7 +831,7 @@
     cursor: pointer;
 
     i {
-      color: #AAAAAA;
+      color: #aaaaaa;
     }
   }
 
@@ -843,17 +844,17 @@
 }
 
 .notificationCount {
-    position: absolute;
-    top: 0px;
-    right: 25px;
-    background-color: #FF993A;
-    width: 14px;
-    font-size: 10px;
-    height: 14px;
-    border-radius: 50%;
-    text-align: center;
-    vertical-align: middle;
-    color: #fff;
+  position: absolute;
+  top: 0px;
+  right: 25px;
+  background-color: #ff993a;
+  width: 14px;
+  font-size: 10px;
+  height: 14px;
+  border-radius: 50%;
+  text-align: center;
+  vertical-align: middle;
+  color: #fff;
 }
 
 .exploreSidebar.minimised {
@@ -918,7 +919,7 @@
 
   .selected {
     bottom: 0;
-    background: #FFC627;
+    background: #ffc627;
     position: absolute;
     z-index: 999999999;
     height: 4px;
@@ -957,7 +958,7 @@
 
   a {
     //color: #FFC627;
-    color: #FFFFFF;
+    color: #ffffff;
     text-decoration: none;
   }
 
@@ -969,27 +970,27 @@
 
 @keyframes heartbeat {
   0% {
-    transform: scale( .75 );
+    transform: scale(0.75);
   }
 
   20% {
-    transform: scale( 1 );
+    transform: scale(1);
   }
 
   40% {
-    transform: scale( .75 );
+    transform: scale(0.75);
   }
 
   60% {
-    transform: scale( 1 );
+    transform: scale(1);
   }
 
   80% {
-    transform: scale( .75 );
+    transform: scale(0.75);
   }
 
   100% {
-    transform: scale( .75 );
+    transform: scale(0.75);
   }
 }
 
@@ -1086,7 +1087,7 @@
     float: right;
 
     // background-color: #0038d5;
-    background-color: #FFF;
+    background-color: #fff;
     border: #43495a 2px dashed;
     border-top: 0;
     border-right: 0;
@@ -1207,7 +1208,8 @@
 .proWrapper {
   position: relative;
   padding: 12px 15px;
-  .proName, .proNameClicked {
+  .proName,
+  .proNameClicked {
     font-size: 15px;
     font-weight: bold;
     font-stretch: normal;
@@ -1216,7 +1218,7 @@
     letter-spacing: 1px;
     cursor: pointer;
     &:hover {
-      opacity: .8;
+      opacity: 0.8;
     }
   }
   .proName {
@@ -1253,7 +1255,7 @@
         right: 24px;
         cursor: pointer;
         &:hover {
-          opacity: .8;
+          opacity: 0.8;
         }
       }
     }
@@ -1279,7 +1281,7 @@
             padding-bottom: 8px;
           }
           .featuresDescription {
-            opacity: .6;
+            opacity: 0.6;
           }
         }
       }

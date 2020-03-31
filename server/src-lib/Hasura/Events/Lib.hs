@@ -215,7 +215,7 @@ processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} =
             atomically $ do  -- block until < HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE threads:
               capacity <- readTVar _eeCtxEventThreadsCapacity
               check $ capacity > 0
-              writeTVar _eeCtxEventThreadsCapacity (capacity - 1) 
+              writeTVar _eeCtxEventThreadsCapacity $! (capacity - 1) 
             -- since there is some capacity in our worker threads, we can launch another:
             let restoreCapacity = liftIO $ atomically $ 
                   modifyTVar' _eeCtxEventThreadsCapacity (+ 1)

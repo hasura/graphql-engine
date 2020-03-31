@@ -110,6 +110,7 @@ data SyncActionExecutionContext
   = SyncActionExecutionContext
   { _saecName                 :: !ActionName
   , _saecOutputType           :: !GraphQLType
+  , _saecOutputFields         :: !ActionOutputFields
   , _saecDefinitionList       :: ![(PGCol, PGScalarType)]
   , _saecWebhook              :: !ResolvedWebhook
   , _saecHeaders              :: ![HeaderConf]

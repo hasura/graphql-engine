@@ -65,11 +65,11 @@ runMutation mut =
 mutateAndReturn
   :: (HasVersion, MonadTx m, MonadIO m)
   => Mutation -> m EncJSON
-mutateAndReturn (Mutation qt (cte, p) mutationOutput _ remoteJoins strfyNum) =
+mutateAndReturn (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
   executeMutationOutputQuery sqlQuery (toList p) remoteJoins
   where
     sqlQuery = Q.fromBuilder $ toSQL $
-               mkMutationOutputExp qt Nothing cte mutationOutput strfyNum
+               mkMutationOutputExp qt allCols Nothing cte mutationOutput strfyNum
 
 mutateAndSel
   :: (HasVersion, MonadTx m, MonadIO m)
@@ -78,7 +78,7 @@ mutateAndSel (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = do
   -- Perform mutation and fetch unique columns
   MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum
   selCTE <- mkSelCTEFromColVals qt allCols columnVals
-  let selWith = mkMutationOutputExp qt Nothing selCTE mutationOutput strfyNum
+  let selWith = mkMutationOutputExp qt allCols Nothing selCTE mutationOutput strfyNum
   -- Perform select query and fetch returning fields
   executeMutationOutputQuery (Q.fromBuilder $ toSQL selWith) [] remoteJoins
 
@@ -148,8 +148,7 @@ mkSelCTEFromColVals qt allCols colVals =
   where
     rowAlias = Iden "row"
     extractor = S.selectStar' $ S.QualIden rowAlias $ Just $ S.TypeAnn $ toSQLTxt qt
-    sortedCols = flip sortBy allCols $ \lCol rCol ->
-                 compare (pgiPosition lCol) (pgiPosition rCol)
+    sortedCols = sortCols allCols
     mkTupsFromColVal colVal =
       fmap S.TupleExp $ forM sortedCols $ \ci -> do
         let pgCol = pgiColumn ci

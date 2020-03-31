@@ -27,7 +27,7 @@ import           Hasura.SQL.Types
 data InvalidationKeys = InvalidationKeys
   { _ikMetadata      :: !Inc.InvalidationKey
   , _ikRemoteSchemas :: !(HashMap RemoteSchemaName Inc.InvalidationKey)
-  } deriving (Eq, Generic)
+  } deriving (Show, Eq, Generic)
 instance Inc.Cacheable InvalidationKeys
 instance Inc.Select InvalidationKeys
 $(makeLenses ''InvalidationKeys)

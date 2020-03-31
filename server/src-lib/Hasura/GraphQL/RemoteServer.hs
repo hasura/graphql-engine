@@ -1,7 +1,7 @@
 module Hasura.GraphQL.RemoteServer where
 
 import           Control.Exception                      (try)
-import           Control.Lens                           ((^.), (^..))
+import           Control.Lens                           ((^.))
 import           Data.Aeson                             ((.:), (.:?))
 import           Data.Foldable                          (foldlM)
 import           Hasura.HTTP
@@ -23,7 +23,6 @@ import qualified Network.Wreq                           as Wreq
 import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.RQL.DDL.Headers                 (makeHeadersFromConf)
 import           Hasura.RQL.Types
-import           Hasura.Server.Context
 import           Hasura.Server.Utils
 import           Hasura.Server.Version                  (HasVersion)
 
@@ -71,12 +70,12 @@ fetchRemoteSchema manager def@(RemoteSchemaInfo name url headerConf _ timeout) =
   typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
      VT.TLRemoteType name def
   let mQrTyp = Map.lookup qRootN typMap
-      mMrTyp = maybe Nothing (`Map.lookup` typMap) mRootN
-      mSrTyp = maybe Nothing (`Map.lookup` typMap) sRootN
+      mMrTyp = (`Map.lookup` typMap) =<< mRootN
+      mSrTyp = (`Map.lookup` typMap) =<< sRootN
   qrTyp <- liftMaybe noQueryRoot mQrTyp
   let mRmQR = VT.getObjTyM qrTyp
-      mRmMR = join $ VT.getObjTyM <$> mMrTyp
-      mRmSR = join $ VT.getObjTyM <$> mSrTyp
+      mRmMR = VT.getObjTyM =<< mMrTyp
+      mRmSR = VT.getObjTyM =<< mSrTyp
   rmQR <- liftMaybe (err400 Unexpected "query root has to be an object type") mRmQR
   return $ GC.RemoteGCtx typMap rmQR mRmMR mRmSR
 
@@ -121,7 +120,7 @@ mkDefaultRemoteGCtx
   :: (MonadError QErr m)
   => [GC.GCtx] -> m GS.GCtx
 mkDefaultRemoteGCtx =
-  foldlM (\combG -> mergeGCtx combG) GC.emptyGCtx
+  foldlM mergeGCtx GC.emptyGCtx
 
 -- merge a remote schema `gCtx` into current `gCtxMap`
 mergeRemoteSchema
@@ -399,7 +398,7 @@ execRemoteGQ'
   -> GQLReqUnparsed
   -> RemoteSchemaInfo
   -> G.OperationType
-  -> m (DiffTime, Maybe Headers, BL.ByteString)
+  -> m (DiffTime, [N.Header], BL.ByteString)
 execRemoteGQ' manager userInfo reqHdrs q rsi opType = do
   when (opType == G.OperationTypeSubscription) $
     throw400 NotSupported "subscription to remote server is not supported"
@@ -424,10 +423,7 @@ execRemoteGQ' manager userInfo reqHdrs q rsi opType = do
 
   (time, res)  <- withElapsedTime $ liftIO $ try $ HTTP.httpLbs req manager
   resp <- either httpThrow return res
-  let cookieHdrs = getCookieHdr (resp ^.. Wreq.responseHeader "Set-Cookie")
-      respHdrs  = Just $ mkRespHeaders cookieHdrs
-  return (time, respHdrs, resp ^. Wreq.responseBody)
-
+  pure (time, mkSetCookieHeaders resp, resp ^. Wreq.responseBody)
   where
     RemoteSchemaInfo _ url hdrConf fwdClientHdrs timeout = rsi
     httpThrow :: (MonadError QErr m) => HTTP.HttpException -> m a
@@ -437,7 +433,3 @@ execRemoteGQ' manager userInfo reqHdrs q rsi opType = do
 
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                      userInfoToList userInfo
-
-    getCookieHdr = fmap (\h -> ("Set-Cookie", h))
-
-    mkRespHeaders = map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v))

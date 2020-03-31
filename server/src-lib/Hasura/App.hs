@@ -9,6 +9,7 @@ import           Control.Monad.STM                    (atomically)
 import           Control.Monad.Trans.Control          (MonadBaseControl (..))
 import           Data.Aeson                           ((.=))
 import           Data.Time.Clock                      (UTCTime, getCurrentTime)
+import           GHC.AssertNF
 import           Options.Applicative
 import           System.Environment                   (getEnvironment, lookupEnv)
 import           System.Exit                          (exitFailure)
@@ -202,6 +203,13 @@ runHGEServer
   -- ^ start time
   -> m ()
 runHGEServer ServeOptions{..} InitCtx{..} initTime = do
+  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to 
+  -- STDOUT containing "not in normal form". In the future we could try to integrate this into
+  -- our tests. For now this is a development tool.
+  --
+  -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
+  liftIO disableAssertNF
+
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
 

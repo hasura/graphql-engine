@@ -1,1 +1,5 @@
-DROP TABLE hdb_catalog.hdb_remote_relationship;
+DO language plpgsql $$
+BEGIN
+  RAISE NOTICE 'Nothing to do';
+END
+$$;

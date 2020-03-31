@@ -1,28 +1,24 @@
 import React, { useState } from 'react';
 import Button from '../../../Common/Button/Button';
-import { dropInconsistentObjects, loadInconsistentObjects } from '../Actions';
+import { dropInconsistentObjects } from '../Actions';
 import { permissionTypes, getTableNameFromDef } from '../utils';
-import {
-  showSuccessNotification,
-  showErrorNotification,
-} from '../../Common/Notification';
 import metaDataStyles from '../Settings.scss';
 import styles from '../../../Common/TableCommon/Table.scss';
 import CheckIcon from '../../../Common/Icons/Check';
 import CrossIcon from '../../../Common/Icons/Cross';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import ReloadMetadata from '../MetadataOptions/ReloadMetadata';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
   const [shouldShowErrorBanner, toggleErrorBanner] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const dismissErrorBanner = () => {
     toggleErrorBanner(false);
   };
   const inconsistentObjectsTable = () => {
     return (
       <table
-        className={`${metaDataStyles.metadataStatusTable} ${
-          metaDataStyles.wd750
-        }`}
+        className={`${metaDataStyles.metadataStatusTable} ${metaDataStyles.wd750}`}
         id="t01"
       >
         <thead>
@@ -95,24 +91,17 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     const confirmMessage =
       'This will drop all the inconsistent objects in your metadata. This action is irreversible.';
     const isOk = getConfirmation(confirmMessage);
+    const callback = () => setIsLoading(false);
     if (isOk) {
-      dispatch(dropInconsistentObjects());
+      setIsLoading(true);
+      dispatch(dropInconsistentObjects(callback, callback));
     }
   };
 
-  const reloadCacheAndLoadInconsistentObjects = () => {
-    dispatch(loadInconsistentObjects(true))
-      .then(() => {
-        dispatch(showSuccessNotification('Metadata reloaded'));
-      })
-      .catch(e => {
-        // todo error handling
-        console.error('reloadMetadata error: ', e);
-        dispatch(showErrorNotification('Error reloading metadata', null, e));
-      });
-  };
-
   const content = () => {
+    const isInconsistentRemoteSchemaPresent = metadata.inconsistentObjects.some(
+      i => i.type === 'remote_schema'
+    );
     if (metadata.inconsistentObjects.length === 0) {
       return (
         <div className={styles.add_mar_top}>
@@ -151,9 +140,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
         </div>
         <div className={styles.add}>{inconsistentObjectsTable()}</div>
         <div
-          className={`${metaDataStyles.wd50percent} ${
-            metaDataStyles.add_mar_top
-          }`}
+          className={`${metaDataStyles.wd50percent} ${metaDataStyles.add_mar_top}`}
         >
           To resolve these inconsistencies, you can do one of the following:
           <ul className={styles.add_mar_top_small}>
@@ -168,25 +155,23 @@ const MetadataStatus = ({ dispatch, metadata }) => {
             </li>
           </ul>
         </div>
-        <div className={metaDataStyles.display_flex}>
-          <Button
-            color="yellow"
-            size="sm"
-            className={`${metaDataStyles.add_mar_top_small} ${
-              metaDataStyles.add_mar_right
-            }`}
-            onClick={reloadCacheAndLoadInconsistentObjects}
-          >
-            Reload metadata
-          </Button>
+        <div
+          className={`${metaDataStyles.display_flex} ${metaDataStyles.add_mar_top_small}`}
+        >
           <Button
             color="red"
             size="sm"
-            className={metaDataStyles.add_mar_top_small}
+            className={metaDataStyles.add_mar_right}
             onClick={verifyAndDropAll}
+            disabled={isLoading}
           >
             Delete all
           </Button>
+          <ReloadMetadata
+            dispatch={dispatch}
+            buttonText="Reload metadata"
+            shouldReloadRemoteSchemas={isInconsistentRemoteSchemaPresent}
+          />
         </div>
       </div>
     );
@@ -206,9 +191,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     return (
       <div className={`${styles.errorBanner} alert alert-danger`}>
         <i
-          className={`${styles.add_mar_right_small} ${
-            styles.fontStyleNormal
-          } fa fa-exclamation-circle`}
+          className={`${styles.add_mar_right_small} ${styles.fontStyleNormal} fa fa-exclamation-circle`}
           aria-hidden="true"
         />
         <strong>
@@ -216,9 +199,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
           inconsistent state
         </strong>
         <i
-          className={`${styles.align_right} ${styles.fontStyleNormal} ${
-            styles.cursorPointer
-          } fa fa-times`}
+          className={`${styles.align_right} ${styles.fontStyleNormal} ${styles.cursorPointer} fa fa-times`}
           aria-hidden="true"
           onClick={dismissErrorBanner}
         />
@@ -230,9 +211,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     <div className={styles.add_mar_bottom}>
       {banner()}
       <div
-        className={`${styles.clear_fix} ${styles.padd_left} ${
-          styles.padd_top
-        } ${metaDataStyles.metadata_wrapper} container-fluid`}
+        className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${metaDataStyles.metadata_wrapper} container-fluid`}
       >
         <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
           Hasura Metadata Status

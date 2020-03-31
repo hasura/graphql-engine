@@ -101,6 +101,8 @@ refs:
           # Setting default number of threads to 2
           # since circleci allocates 2 cpus per test container
           GHCRTS: -N2
+          # Until we can use a real webserver for TestEventFlood, limit concurrency:
+          HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
           HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
           HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
           GRAPHQL_ENGINE: /build/_server_output/graphql-engine

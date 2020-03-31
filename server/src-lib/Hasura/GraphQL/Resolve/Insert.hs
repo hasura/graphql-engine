@@ -469,7 +469,7 @@ insertMultipleObjects strfyNum rjCtx role tn multiObjIns addCols mutOutput errP 
       cteExp <- mkSelCTEFromColVals tn tableColInfos columnValues
       let (mutOutputRJ, remoteJoins) = getRemoteJoinsMutationOutput mutOutput
           sqlQuery = Q.fromBuilder $ toSQL $
-                     RR.mkMutationOutputExp tn (Just affRows) cteExp mutOutputRJ strfyNum
+                     RR.mkMutationOutputExp tn tableColInfos (Just affRows) cteExp mutOutputRJ strfyNum
       executeMutationOutputQuery sqlQuery [] $ (,rjCtx) <$> remoteJoins
 
 prefixErrPath :: (MonadError QErr m) => Field -> m a -> m a

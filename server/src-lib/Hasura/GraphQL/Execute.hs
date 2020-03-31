@@ -157,10 +157,11 @@ getExecPlanPartial userInfo sc enableAL req = do
 -- transaction to be executed
 data ExecOp
   = ExOpQuery !LazyRespTx !(Maybe EQ.GeneratedSqlMap)
-  | ExOpMutation !LazyRespTx
+  | ExOpMutation !N.ResponseHeaders !LazyRespTx
   | ExOpSubs !EL.LiveQueryPlan
   deriving Show
 
+-- The graphql query is resolved into an execution operation
 type GQExecPlanResolved = GQExecPlan ExecOp
 
 getResolvedExecPlan
@@ -201,8 +202,9 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       (partialExecPlan, queryReusability) <- runReusabilityT $ getExecPlanPartial userInfo sc enableAL req
       forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
-          VQ.RMutation selSet ->
-            ExOpMutation <$> getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
+          VQ.RMutation selSet -> do
+            (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
+            pure $ ExOpMutation respHeaders tx
           VQ.RQuery selSet -> do
               (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx httpManager reqHeaders userInfo queryReusability selSet
               traverse_ (addPlanToCache . EP.RPQuery) plan
@@ -274,18 +276,25 @@ resolveMutSelSet
      , MonadIO m
      )
   => VQ.SelSet
-  -> m LazyRespTx
+  -> m (LazyRespTx, N.ResponseHeaders)
 resolveMutSelSet fields = do
   aliasedTxs <- forM (toList fields) $ \fld -> do
     fldRespTx <- case VQ._fName fld of
-      "__typename" -> return $ return $ encJFromJValue mutationRootName
-      _            -> fmap liftTx . evalReusabilityT $ GR.mutFldToTx fld
+      "__typename" -> return (return $ encJFromJValue mutationRootName, [])
+      _            -> evalReusabilityT $ GR.mutFldToTx fld
     return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
 
   -- combines all transactions into a single transaction
-  return $ liftTx $ toSingleTx aliasedTxs
+  return (liftTx $ toSingleTx aliasedTxs, concatMap (snd . snd) aliasedTxs)
   where
-    toSingleTx aliasedTxs = fmap encJFromAssocList $ forM aliasedTxs sequence
+    -- A list of aliased transactions for eg
+    -- [("f1", Tx r1), ("f2", Tx r2)]
+    -- are converted into a single transaction as follows
+    -- Tx {"f1": r1, "f2": r2}
+    -- toSingleTx :: [(Text, LazyRespTx)] -> LazyRespTx
+    toSingleTx aliasedTxs =
+      fmap encJFromAssocList $
+      forM aliasedTxs $ \(al, (tx, _)) -> (,) al <$> tx
 
 getMutOp
   :: (HasVersion, MonadError QErr m, MonadIO m)
@@ -295,17 +304,16 @@ getMutOp
   -> HTTP.Manager
   -> [N.Header]
   -> VQ.SelSet
-  -> m LazyRespTx
+  -> m (LazyRespTx, N.ResponseHeaders)
 getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
-  runE_ $ resolveMutSelSet selSet
+  peelReaderT $ resolveMutSelSet selSet
   where
-    runE_ action = do
-      res <- runExceptT $ runReaderT action
+    peelReaderT action =
+      runReaderT action
         ( userInfo, queryCtxMap, mutationCtxMap
         , typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx
         , manager, reqHeaders
         )
-      either throwError return res
       where
         queryCtxMap = _gQueryCtxMap ctx
         mutationCtxMap = _gMutationCtxMap ctx
