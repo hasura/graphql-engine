@@ -23,17 +23,23 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 (close #1700) (#3881)
 
-### console: add multi select in browse rows to allow bulk delete (close #1739) (#3735)	
+### console: add multi select in browse rows to allow bulk delete 
 
   Adds a checkbox to each row on Browse Rows view that allows selecting one or more rows from the table and bulk delete them.	
+  
+  (close #1739) (#3735)	
 
-### console: add dropdown for enum fields in insert/edit rows page (close #3748) (#3810)	
+### console: add dropdown for enum fields in insert/edit rows page	
 
   If a table has a field referencing an enum table via a foreign key, then there will be a select dropdown with all possible enum values for that field on `Insert Row` and `Edit Row` views.	
+  
+  (close #3748) (#3810)
 
-### console: generate unique exported metadata filenames (close #1772) (#4106)	
+### console: generate unique exported metadata filenames 
 
   Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.
+  
+  (close #1772) (#4106)	
 
 ### CLI: V2 migrations architecture
 
