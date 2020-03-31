@@ -99,3 +99,8 @@ docker run hasura/graphql-engine:v1.2.0 graphql-engine --database-url <db-url> d
 Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine).
 
 (close #1156) (#3760)
+
+### Bug fixes and improvements
+- server: check expression in update permissions (close #384) (rfc #3750) (#3804)
+- console: show pre-release update notifications with opt out option (#3888)
+- console: handle invalid keys in permission builder (close #3848) (#3863)
