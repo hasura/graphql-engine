@@ -87,7 +87,9 @@ instance ToJSON RunSQL where
 
 runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
 runRunSQL RunSQL {..} = do
-  metadataCheckNeeded <- onNothing rCheckMetadataConsistency $ isAltrDropReplace rSql
+  metadataCheckNeeded <- case rTxAccessMode of
+    Q.ReadOnly  -> pure False
+    Q.ReadWrite -> onNothing rCheckMetadataConsistency $ containsMutationKeyword rSql
   bool (execRawSQL rSql) (withMetadataCheck rCascade $ execRawSQL rSql) metadataCheckNeeded
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
@@ -98,11 +100,11 @@ runRunSQL RunSQL {..} = do
           let e = err400 PostgresError "query execution failed"
            in e {qeInternal = Just $ toJSON txe}
 
-    isAltrDropReplace :: QErrM m => T.Text -> m Bool
-    isAltrDropReplace = either throwErr return . matchRegex regex False
+    containsMutationKeyword :: QErrM m => T.Text -> m Bool
+    containsMutationKeyword = either throwErr return . matchRegex regex False
       where
         throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
-        regex = "alter|drop|replace|create function|comment on"
+        regex = "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b"
 
 data RunSQLRes
   = RunSQLRes
