@@ -56,7 +56,7 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 - server: validate action webhook response to conform to action output type (fix #3977)
 - server: add 'ID' to default scalars in custom types (fix #4061)
 - console: fix computed field permission selection (#4246)
-- console: allow customising root fields of single row mutations (close #4203) #4254
+- console: allow customising root fields of single row mutations (close #4203) (#4254)
 - console: fix json string rendering in data browser (close #4201) (#4221)
 - console: handle long column names in event trigger update columns (close #4123) (#4210)
 - console: disable selecting roles without permissions for bulk actions (close #4178) (#4195)
