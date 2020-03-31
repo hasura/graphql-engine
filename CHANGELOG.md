@@ -23,24 +23,6 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 (close #1700) (#3881)
 
-### console: add multi select in browse rows to allow bulk delete 
-
-  Adds a checkbox to each row on Browse Rows view that allows selecting one or more rows from the table and bulk delete them.	
-  
-  (close #1739) (#3735)	
-
-### console: add dropdown for enum fields in insert/edit rows page	
-
-  If a table has a field referencing an enum table via a foreign key, then there will be a select dropdown with all possible enum values for that field on `Insert Row` and `Edit Row` views.	
-  
-  (close #3748) (#3810)
-
-### console: generate unique exported metadata filenames 
-
-  Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.
-  
-  (close #1772) (#4106)	
-
 ### CLI: V2 migrations architecture
 
   A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
@@ -55,19 +37,18 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 - server: preserve cookie headers from sync action webhook (close #4021)
 - server: validate action webhook response to conform to action output type (fix #3977)
 - server: add 'ID' to default scalars in custom types (fix #4061)
+- console: enum field values can be selected through a dropdown in insert/edit rows page (close #3748) (#3810)
+- console: exported metadata filenames are now unique(`hasura_metadata_<timestamp>.json`) (close #1772) (#4106)
+- console: allow bulk deleting rows in 'Browse Rows' section (close #1739) (#3735)
 - console: fix computed field permission selection (#4246)
 - console: allow customising root fields of single row mutations (close #4203) (#4254)
 - console: fix json string rendering in data browser (close #4201) (#4221)
 - console: handle long column names in event trigger update columns (close #4123) (#4210)
 - console: disable selecting roles without permissions for bulk actions (close #4178) (#4195)
-- console: show remote shema / event trigger intro sections always (#4044)
 - console: fix passing default value to JsonInput (#4175)
-- console shared modules: fix parsing of wrapped types in SDL (close #4099) (#4167)
+- console: fix parsing of wrapped types in SDL (close #4099) (#4167)
 - console: misc actions fixes (#4059)
 - console: action relationship page improvements (fix #4062, #4130) (#4133)
-- console: fix run_sql migration modal messaging (close #4020) (#4060)
-- console: update actions intro image (#4042)
-- console: hide starter kit button if a framework has no starter kit (#4023)
 - cli: fix init command to generate correct config (fix #4036) (#4038)
 - cli: fix parse error returned on console api (close #4126) (#4152)
 - cli: fix typo in cli example for squash (fix #4047) (#4049)
