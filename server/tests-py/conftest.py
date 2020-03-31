@@ -378,12 +378,22 @@ def setup_and_teardown(request, hge_ctx, setup_files, teardown_files, check_file
         if os.path.isfile(f):
             st_code, resp = hge_ctx.v1q_f(f)
             assert st_code == 200, resp
+    body = {
+        "type":"reload_metadata",
+        "args":{}
+    }
+    headers = {}
+    if hge_ctx.hge_key is not None:
+        headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
     if not skip_setup:
         run_on_elem_or_list(v1q_f, setup_files)
+        st,resp,_ = hge_ctx.anyq('/v1/query',body,headers)
     yield
     # Teardown anyway if any of the tests have failed
     if request.session.testsfailed > 0 or not skip_teardown:
         run_on_elem_or_list(v1q_f, teardown_files)
+        st,resp,_ = hge_ctx.anyq('/v1/query',body,headers)
+
 
 def run_on_elem_or_list(f, x):
     if isinstance(x, str):

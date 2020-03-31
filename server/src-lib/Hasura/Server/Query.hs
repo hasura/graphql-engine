@@ -259,7 +259,11 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQAddCollectionToAllowlist _    -> True
   RQDropCollectionFromAllowlist _ -> True
 
-  RQRunSql RunSQL{rSkipCacheReload} ->
+  RQRunSql RunSQL{rTxAccessMode,rSkipCacheReload} ->
+      case rTxAccessMode of
+        Q.ReadOnly  -> False
+        Q.ReadWrite -> True
+      ||
       not rSkipCacheReload
 
   RQReplaceMetadata _             -> True

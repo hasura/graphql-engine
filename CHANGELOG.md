@@ -51,7 +51,7 @@ Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/ma
 
 (close #1156) (#3760)
 
-- Check expression in update permissions (close #384) (rfc #3750) (#3804) 
+- Check expression in update permissions (close #384) (rfc #3750) (#3804)
 
 - console: add multi select in browse rows to allow bulk delete (close #1739) (#3735)
 
@@ -73,4 +73,4 @@ Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/ma
 
   A new CLI migrations image is introduced to account for the new CLI workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
 
-- server: Skip the schema cache building in `run_sql` request, if `skip_cache_reload` is set to `true`. (close #4200)
+- server: server: The `run_sql` API supports a new skip_cache_reload option to suppress reloading metadata from Postgres after executing the query. (close #4200)
