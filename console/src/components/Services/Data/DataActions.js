@@ -327,7 +327,7 @@ const loadSchema = configOptions => {
           allSchemas: consistentSchemas || maybeInconsistentSchemas,
         });
 
-        dispatch(loadInconsistentObjects());
+        dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
       },
       error => {
         console.error('loadSchema error: ' + JSON.stringify(error));

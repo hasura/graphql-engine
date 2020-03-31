@@ -201,13 +201,16 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 instance FromJSON ExportMetadata where
   parseJSON _ = return ExportMetadata
 
-data ReloadMetadata
+newtype ReloadMetadata
   = ReloadMetadata
+  { _rmReloadRemoteSchemas :: Bool}
   deriving (Show, Eq, Lift)
-$(deriveToJSON defaultOptions ''ReloadMetadata)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''ReloadMetadata)
 
 instance FromJSON ReloadMetadata where
-  parseJSON _ = return ReloadMetadata
+  parseJSON = \case
+    Object o -> ReloadMetadata <$> o .:? "reload_remote_schemas" .!= False
+    _        -> pure $ ReloadMetadata False
 
 data DumpInternalState
   = DumpInternalState

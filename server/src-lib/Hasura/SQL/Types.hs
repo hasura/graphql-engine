@@ -11,7 +11,6 @@ module Hasura.SQL.Types
   , isView
 
   , QualifiedTable
-  , snakeCaseTable
   , QualifiedFunction
 
   , PGDescription(..)
@@ -303,10 +302,6 @@ snakeCaseQualObject (QualifiedObject sn o)
   | otherwise = getSchemaTxt sn <> "_" <> toTxt o
 
 type QualifiedTable = QualifiedObject TableName
-
-snakeCaseTable :: QualifiedObject TableName -> T.Text
-snakeCaseTable (QualifiedObject sn tn) =
-  getSchemaTxt sn <> "_" <> getTableTxt tn
 
 type QualifiedFunction = QualifiedObject FunctionName
 
