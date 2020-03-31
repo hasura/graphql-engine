@@ -51,8 +51,6 @@ Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/ma
 
 (close #1156) (#3760)
 
-- console: allow customising root fields of single row mutationss (close #4203) (#4254)
-
 - Check expression in update permissions (close #384) (rfc #3750) (#3804) 
 
 - console: add multi select in browse rows to allow bulk delete (close #1739) (#3735)
