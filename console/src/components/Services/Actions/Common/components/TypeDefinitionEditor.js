@@ -84,6 +84,7 @@ const ActionDefinitionEditor = ({
             onClick={toggleModal}
           >
             <Icon type="copy" mr="xs" />
+            Clone an existing type
           </a>
           <Modal
             show={modalOpen}
