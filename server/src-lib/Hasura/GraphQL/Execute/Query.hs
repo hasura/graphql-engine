@@ -188,10 +188,11 @@ convertQuerySelSet
      , Has SQLGenCtx r
      , Has UserInfo r
      )
-  => QueryReusability
+  => R.ActionsGuard
+  -> QueryReusability
   -> V.SelSet
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet initialReusability fields = do
+convertQuerySelSet actionsGuard initialReusability fields = do
   usrVars <- asks (userVars . getter)
   (fldPlans, finalReusability) <- runReusabilityTWith initialReusability $
     forM (toList fields) $ \fld -> do
@@ -200,7 +201,7 @@ convertQuerySelSet initialReusability fields = do
         "__schema"   -> fldPlanFromJ <$> R.schemaR fld
         "__typename" -> pure $ fldPlanFromJ queryRootName
         _            -> do
-          unresolvedAst <- R.queryFldToPGAST fld
+          unresolvedAst <- R.queryFldToPGAST actionsGuard fld
           (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
             R.traverseQueryRootFldAST prepareWithPlan unresolvedAst
           pure . RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped

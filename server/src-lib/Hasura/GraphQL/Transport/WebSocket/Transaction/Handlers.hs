@@ -25,6 +25,7 @@ import           Control.Concurrent.Extended                             (sleep)
 import           Data.Aeson
 
 import qualified Hasura.GraphQL.Execute                                  as E
+import qualified Hasura.GraphQL.Resolve                                  as R
 import qualified Hasura.GraphQL.Transport.WebSocket.Server               as WS
 import qualified Hasura.Logging                                          as L
 import qualified Hasura.Server.Telemetry.Counters                        as Telem
@@ -171,7 +172,7 @@ onMessageHandler authMode serverEnv wsTxData wsConn rawMessage = do
       withUser (Just reqId) $ \(userInfo, reqHeaders) -> do
         logOp $ OExecute $ ExecuteQuery reqId query userInfo
         (sc, scVer) <- liftIO getSchemaCache
-        execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
+        execPlanE <- runExceptT $ E.getResolvedExecPlan R.restrictGraphqlTxActions pgExecCtx
                      planCache userInfo sqlGenCtx enableAL sc scVer manager reqHeaders query
         case execPlanE of
           Left e -> do

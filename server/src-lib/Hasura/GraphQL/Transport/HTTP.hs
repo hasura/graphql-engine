@@ -17,6 +17,7 @@ import           Hasura.Server.Version                  (HasVersion)
 
 import qualified Database.PG.Query                      as Q
 import qualified Hasura.GraphQL.Execute                 as E
+import qualified Hasura.GraphQL.Resolve                 as R
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Language.GraphQL.Draft.Syntax          as G
@@ -38,8 +39,8 @@ runGQ reqId userInfo reqHdrs req = do
   let telemTransport = Telem.HTTP
   (telemTimeTot_DT, (telemCacheHit, telemLocality, (telemTimeIO_DT, telemQueryType, !resp))) <- withElapsedTime $ do
     E.ExecutionCtx _ sqlGenCtx pgExecCtx planCache sc scVer httpManager enableAL <- ask
-    (telemCacheHit, execPlan) <- E.getResolvedExecPlan pgExecCtx planCache
-                userInfo sqlGenCtx enableAL sc scVer httpManager reqHdrs req
+    (telemCacheHit, execPlan) <- E.getResolvedExecPlan R.allowActions pgExecCtx planCache
+                                 userInfo sqlGenCtx enableAL sc scVer httpManager reqHdrs req
     case execPlan of
       E.GExPHasura resolvedOp -> do
         (telemTimeIO, telemQueryType, respHdrs, resp) <- runHasuraGQ reqId req userInfo resolvedOp
@@ -78,8 +79,7 @@ runGQBatched reqId userInfo reqHdrs reqs =
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr False) _hrBody)
           try = flip catchError (pure . Left) . fmap Right
-      fmap removeHeaders $
-        traverse (try . runGQ reqId userInfo reqHdrs) batch
+      removeHeaders <$> traverse (try . runGQ reqId userInfo reqHdrs) batch
 
 runHasuraGQ
   :: ( MonadIO m

@@ -41,6 +41,7 @@ import           Hasura.Server.Version
 import qualified Hasura.GraphQL.Execute                              as E
 import qualified Hasura.GraphQL.Execute.LiveQuery                    as LQ
 import qualified Hasura.GraphQL.Execute.LiveQuery.Poll               as LQ
+import qualified Hasura.GraphQL.Resolve                              as R
 import qualified Hasura.GraphQL.Transport.WebSocket.Server           as WS
 import qualified Hasura.Logging                                      as L
 import qualified Hasura.Server.Telemetry.Counters                    as Telem
@@ -167,7 +168,7 @@ onStart serverEnv wsConn connData (StartMsg opId q) = catchAndIgnore $ do
 
   requestId <- getRequestId reqHdrs
   (sc, scVer) <- liftIO getSchemaCache
-  execPlanE <- runExceptT $ E.getResolvedExecPlan pgExecCtx
+  execPlanE <- runExceptT $ E.getResolvedExecPlan R.allowActions pgExecCtx
                planCache userInfo sqlGenCtx enableAL sc scVer httpMgr reqHdrs q
   (telemCacheHit, execPlan) <- either (withComplete . preExecErr requestId) return execPlanE
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx

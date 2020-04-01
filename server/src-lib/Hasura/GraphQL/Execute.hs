@@ -179,7 +179,8 @@ type ExecPlanResolved = GQExecPlan ExecOp
 
 getResolvedExecPlan
   :: (HasVersion, MonadError QErr m, MonadIO m)
-  => PGExecCtx
+  => GR.ActionsGuard
+  -> PGExecCtx
   -> EP.PlanCache
   -> UserInfo
   -> SQLGenCtx
@@ -190,7 +191,7 @@ getResolvedExecPlan
   -> [N.Header]
   -> GQLReqUnparsed
   -> m (Telem.CacheHit, ExecPlanResolved)
-getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
+getResolvedExecPlan actionsGuard pgExecCtx planCache userInfo sqlGenCtx
   enableAL sc scVer httpManager reqHeaders reqUnparsed = do
   planM <- liftIO $ EP.getPlan scVer (userRole userInfo)
            opNameM queryStr planCache
@@ -216,10 +217,10 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       forM partialExecPlan $ \(gCtx, rootSelSet) ->
         case rootSelSet of
           VQ.RMutation selSet -> do
-            (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
+            (tx, respHeaders) <- getMutOp actionsGuard gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
             pure $ ExOpMutation respHeaders tx
           VQ.RQuery selSet -> do
-            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability selSet
+            (queryTx, plan, genSql) <- getQueryOp actionsGuard gCtx sqlGenCtx userInfo queryReusability selSet
             traverse_ (addPlanToCache . EP.RPQuery) plan
             return $ ExOpQuery queryTx (Just genSql)
           VQ.RSubscription fld -> do
@@ -260,14 +261,15 @@ runE ctx sqlGenCtx userInfo action = do
 
 getQueryOp
   :: (MonadError QErr m)
-  => GCtx
+  => GR.ActionsGuard
+  -> GCtx
   -> SQLGenCtx
   -> UserInfo
   -> QueryReusability
   -> VQ.SelSet
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gCtx sqlGenCtx userInfo queryReusability fields =
-  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet queryReusability fields
+getQueryOp actionsGuard gCtx sqlGenCtx userInfo queryReusability fields =
+  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet actionsGuard queryReusability fields
 
 mutationRootName :: Text
 mutationRootName = "mutation_root"
@@ -286,13 +288,14 @@ resolveMutSelSet
      , Has [N.Header] r
      , MonadIO m
      )
-  => VQ.SelSet
+  => GR.ActionsGuard
+  -> VQ.SelSet
   -> m (LazyRespTx, N.ResponseHeaders)
-resolveMutSelSet fields = do
+resolveMutSelSet actionsGuard fields = do
   aliasedTxs <- forM (toList fields) $ \fld -> do
     fldRespTx <- case VQ._fName fld of
       "__typename" -> return (return $ encJFromJValue mutationRootName, [])
-      _            -> evalReusabilityT $ GR.mutFldToTx fld
+      _            -> evalReusabilityT $ GR.mutFldToTx actionsGuard fld
     return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
 
   -- combines all transactions into a single transaction
@@ -309,15 +312,16 @@ resolveMutSelSet fields = do
 
 getMutOp
   :: (HasVersion, MonadError QErr m, MonadIO m)
-  => GCtx
+  => GR.ActionsGuard
+  -> GCtx
   -> SQLGenCtx
   -> UserInfo
   -> HTTP.Manager
   -> [N.Header]
   -> VQ.SelSet
   -> m (LazyRespTx, N.ResponseHeaders)
-getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
-  peelReaderT $ resolveMutSelSet selSet
+getMutOp actionsGuard ctx sqlGenCtx userInfo manager reqHeaders selSet =
+  peelReaderT $ resolveMutSelSet actionsGuard selSet
   where
     peelReaderT action =
       runReaderT action
@@ -353,7 +357,7 @@ getSubsOpM pgExecCtx initialReusability fld =
       throwVE "you cannot create a subscription on '__typename' field"
     _            -> do
       (astUnresolved, finalReusability) <- runReusabilityTWith initialReusability $
-        GR.queryFldToPGAST fld
+        GR.queryFldToPGAST GR.allowActions fld
       let varTypes = finalReusability ^? _Reusable
       EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved varTypes
 

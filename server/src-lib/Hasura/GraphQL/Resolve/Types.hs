@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 module Hasura.GraphQL.Resolve.Types
   ( module Hasura.GraphQL.Resolve.Types
   -- * Re-exports
@@ -20,6 +21,7 @@ import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
+import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.Function
 import           Hasura.RQL.Types.Permission
 import           Hasura.SQL.Types
@@ -243,6 +245,18 @@ data InputFunctionArgument
   = IFAKnown !FunctionArgName !UnresolvedVal -- ^ Known value
   | IFAUnknown !FunctionArgItem -- ^ Unknown value, need to be parsed
   deriving (Show, Eq)
+
+-- | Guard actions running in various requests
+type ActionsGuard = forall m a. (MonadError QErr m) => m a -> m a
+
+-- | Allow actions
+allowActions :: ActionsGuard
+allowActions = id
+
+-- | Don't allow actions in graphql transactions
+restrictGraphqlTxActions :: ActionsGuard
+restrictGraphqlTxActions _ =
+  throw400 NotSupported "Actions are not allowed in graphql transactions"
 
 -- template haskell related
 $(makePrisms ''ResolveField)

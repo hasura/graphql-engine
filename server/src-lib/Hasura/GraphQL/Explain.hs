@@ -91,7 +91,7 @@ explainField userInfo gCtx sqlGenCtx fld =
     _            -> do
       unresolvedAST <-
         runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
-          evalReusabilityT $ RS.queryFldToPGAST fld
+          evalReusabilityT $ RS.queryFldToPGAST RS.allowActions fld
       resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
                      unresolvedAST
       let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST

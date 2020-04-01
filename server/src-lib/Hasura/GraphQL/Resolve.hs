@@ -13,6 +13,10 @@ module Hasura.GraphQL.Resolve
   , QueryRootFldResolved
   , toPGQuery
 
+  , ActionsGuard
+  , allowActions
+  , restrictGraphqlTxActions
+
   , RIntro.schemaR
   , RIntro.typeR
   ) where
@@ -81,9 +85,8 @@ queryFldToPGAST
      , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
      , Has QueryCtxMap r
      )
-  => V.Field
-  -> m QueryRootFldUnresolved
-queryFldToPGAST fld = do
+  => ActionsGuard -> V.Field -> m QueryRootFldUnresolved
+queryFldToPGAST actionGuard fld = do
   opCtx <- getOpCtx $ V._fName fld
   userInfo <- asks getter
   case opCtx of
@@ -103,7 +106,7 @@ queryFldToPGAST fld = do
       validateHdrs userInfo (_fqocHeaders ctx)
       QRFAgg <$> RS.convertFuncQueryAgg ctx fld
     QCActionFetch ctx ->
-      QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
+      QRFActionSelect <$> actionGuard (RA.resolveAsyncActionQuery userInfo ctx fld)
 
 mutFldToTx
   :: ( HasVersion
@@ -120,9 +123,8 @@ mutFldToTx
      , Has [HTTP.Header] r
      , MonadIO m
      )
-  => V.Field
-  -> m (RespTx, HTTP.ResponseHeaders)
-mutFldToTx fld = do
+  => ActionsGuard -> V.Field -> m (RespTx, HTTP.ResponseHeaders)
+mutFldToTx actionGuard fld = do
   userInfo <- asks getter
   opCtx <- getOpCtx $ V._fName fld
   let noRespHeaders = fmap (,[])
@@ -146,7 +148,7 @@ mutFldToTx fld = do
       validateHdrs userInfo (_docHeaders ctx)
       noRespHeaders $ RM.convertDeleteByPk ctx fld
     MCAction ctx ->
-      RA.resolveActionMutation fld ctx (userVars userInfo)
+      actionGuard $ RA.resolveActionMutation fld ctx (userVars userInfo)
 
 getOpCtx
   :: ( MonadReusability m
