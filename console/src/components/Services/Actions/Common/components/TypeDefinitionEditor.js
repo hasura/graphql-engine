@@ -5,7 +5,7 @@ import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
 import Modal from '../../../../Common/Modal/Modal';
 import CloneTypeModal from './CloneTypeModal';
 import { getTypesSdl } from '../../../../../shared/utils/sdlUtils';
-import { Icon, ToolTip, Heading } from '../../../../UIKit/atoms';
+import { Icon, ToolTip, Heading, Text } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const editorLabel = 'New types definition';
@@ -67,9 +67,9 @@ const ActionDefinitionEditor = ({
           className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}
         >
           {error && (
-            <div className={`${styles.display_flex} ${styles.errorMessage}`}>
+            <div className={styles.display_flex}>
               <Icon mr="xs" type="close" color="red.primary" />
-              <div>{errorMessage}</div>
+              <Text color="red.primary">{errorMessage}</Text>
             </div>
           )}
           <a

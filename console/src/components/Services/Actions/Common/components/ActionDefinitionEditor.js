@@ -2,7 +2,7 @@ import React from 'react';
 import { parse as sdlParse } from 'graphql/language/parser';
 
 import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
-import { Icon, ToolTip, Heading } from '../../../../UIKit/atoms';
+import { Icon, ToolTip, Heading, Text } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const editorLabel = 'Action definition';
@@ -61,9 +61,9 @@ const ActionDefinitionEditor = ({
           className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}
         >
           {error && (
-            <div className={`${styles.display_flex}  ${styles.errorMessage}`}>
+            <div className={styles.display_flex}>
               <Icon type="close" color="red.primary" mr="xs" mb="12px" />
-              <p>{errorMessage}</p>
+              <Text color="red.primary">{errorMessage}</Text>
             </div>
           )}
         </div>

@@ -7,7 +7,7 @@ import {
   setWebhookUrlType,
   showValidationError,
 } from './Actions';
-import { ToolTip, Heading } from '../../../UIKit/atoms';
+import { ToolTip, Heading, Text } from '../../../UIKit/atoms';
 
 const WebhookEditor = props => {
   const {
@@ -49,10 +49,9 @@ const WebhookEditor = props => {
 
   const collapsed = () => (
     <div className={styles.modifyProperty}>
-      <p>
+      <Text mr="xs" fontSize="button">
         {webhook}
-        &nbsp;
-      </p>
+      </Text>
       <i>{env && '- from env'}</i>
     </div>
   );

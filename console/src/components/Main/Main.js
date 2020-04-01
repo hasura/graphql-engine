@@ -8,7 +8,7 @@ import globals from '../../Globals';
 import { getPathRoot } from '../Common/utils/urlUtils';
 
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
-import { Icon, Spinner, ToolTip } from '../UIKit/atoms/';
+import { Icon, Spinner, ToolTip, Text } from '../UIKit/atoms/';
 
 import {
   loadServerVersion,
@@ -38,6 +38,8 @@ import {
   setLocalStorageItem,
 } from '../Common/utils/localStorageUtils';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
+
+import styles from './Main.scss';
 
 class Main extends React.Component {
   constructor(props) {
@@ -199,8 +201,6 @@ class Main extends React.Component {
     } = this.props;
 
     const { isProClicked } = this.state.proClickState;
-
-    const styles = require('./Main.scss');
 
     const appPrefix = '';
 
@@ -518,19 +518,19 @@ class Main extends React.Component {
               }
               to={appPrefix + path}
             >
-              <span className={styles.iconCenter} data-test={block}>
-                <Icon
-                  type={icon}
-                  css={
-                    icon === 'schema'
-                      ? css`
-                          transform: rotate(45deg);
-                        `
-                      : ''
-                  }
-                />
-              </span>
-              <p>{title}</p>
+              <Icon
+                type={icon}
+                data-test={block}
+                css={
+                  icon === 'schema'
+                    ? css`
+                        transform: rotate(45deg);
+                      `
+                    : ''
+                }
+                mr="xs"
+              />
+              <Text>{title}</Text>
             </Link>
           </li>
         </ToolTip>

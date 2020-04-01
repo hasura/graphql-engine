@@ -10,7 +10,7 @@ import {
   setHeaderValue,
 } from './Actions';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
-import { Icon, ToolTip, Heading } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading, Text } from '../../../UIKit/atoms';
 
 const HeadersEditor = props => {
   const { dispatch, headers, modifyTrigger, styles, save } = props;
@@ -67,7 +67,9 @@ const HeadersEditor = props => {
           />
         </div>
       ) : (
-        <div className={styles.modifyProperty}>No headers</div>
+        <div className={styles.modifyProperty}>
+          <Text fontSize="button">No headers</Text>
+        </div>
       )}
     </div>
   );

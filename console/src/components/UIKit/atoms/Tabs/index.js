@@ -6,6 +6,7 @@ import {
   StyledTabListItem,
   StyledTabContent,
 } from './Tabs';
+import { Text } from '../Typography';
 
 export const Tabs = props => {
   const [currentActiveTabIndex, changeCurrentActiveTab] = useState(0);
@@ -37,5 +38,5 @@ export const Tabs = props => {
   }
 
   // In case when we forget to pass tabs data.
-  return <p>Please provide data for tabs</p>;
+  return <Text>Please provide data for tabs</Text>;
 };

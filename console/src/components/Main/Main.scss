@@ -447,10 +447,6 @@
       color: #dedede;
     }
 
-    a:hover {
-      color: #dedede;
-    }
-
     li {
       transition: color 0.5s;
       font-size: 14px;
@@ -474,13 +470,6 @@
         padding: 0 10px;
         height: 100%;
         text-decoration: none;
-
-        .iconCenter {
-          display: inline-block;
-          width: 20px;
-          line-height: 30px;
-          text-align: center;
-        }
       }
 
       .serviceLink {
@@ -672,16 +661,6 @@
 
 .statusNotOk {
   color: red;
-}
-
-.logoHeading {
-  display: inline-block;
-  float: left;
-  padding-top: 15px;
-  padding-left: 15px;
-  font-size: 18px;
-  text-transform: uppercase;
-  font-weight: bold;
 }
 
 .separator {

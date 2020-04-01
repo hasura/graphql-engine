@@ -23,6 +23,8 @@ import {
   getFunctionBaseRoute,
   getTablePermissionsRoute,
 } from '../../../../Common/utils/routesUtils';
+import { Text } from '../../../../UIKit/atoms';
+import styles from '../Modify/ModifyCustomFunction.scss';
 
 const prefixUrl = globals.urlPrefix + appPrefix;
 
@@ -50,8 +52,8 @@ class Permission extends React.Component {
         }),
     ]);
   }
+
   render() {
-    const styles = require('../Modify/ModifyCustomFunction.scss');
     const {
       functionSchema: schema,
       functionName,
@@ -112,6 +114,7 @@ class Permission extends React.Component {
         url: '',
       });
     }
+
     return (
       <div className={'col-xs-8' + ' ' + styles.modifyWrapper}>
         <Helmet
@@ -128,7 +131,7 @@ class Permission extends React.Component {
           testPrefix={'functions'}
         />
         <br />
-        <p>
+        <Text>
           Permissions defined for the SETOF table, <b>{setOffTable}</b>, are
           applicable to the data returned by this function.
           <br />
@@ -142,7 +145,7 @@ class Permission extends React.Component {
             here
           </Link>
           .
-        </p>
+        </Text>
       </div>
     );
   }

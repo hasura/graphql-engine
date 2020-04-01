@@ -62,18 +62,10 @@ export const Text = props => {
       lineHeight={lineHeight}
       fontSize={fontSizeValue}
       fontWeight={fontWeightValue}
-      color="black.text"
     >
       {children}
     </StyledText>
   );
-};
-
-Text.defaultProps = {
-  mb: 'zero',
-  mt: 'zero',
-  mr: 'zero',
-  ml: 'zero',
 };
 
 export const TextLink = props => {

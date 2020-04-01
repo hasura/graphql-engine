@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Icon } from '../../UIKit/atoms';
+import { Icon, Text } from '../../UIKit/atoms';
 import styles from './CollapsibleToggle.scss';
 
 /**
@@ -70,7 +70,7 @@ class CollapsibleToggle extends React.Component {
             className={`${styles.collapsibleIndicator} ${isOpen &&
               styles.collapsibleIndicatorOpen}`}
           />
-          <span className={styles.titleWrapper}>{getTitle()}</span>
+          <Text display="inline-block">{getTitle()}</Text>
         </div>
 
         {isOpen && getChildren()}
