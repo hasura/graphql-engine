@@ -39,7 +39,9 @@ class RemoteSchema extends React.Component {
 
     return (
       <div
-        className={`${styles.padd_left_remove} ${styles.remoteSchemaWrapper} container-fluid ${styles.padd_top}`}
+        className={`${styles.padd_left_remove} ${
+          styles.remoteSchemaWrapper
+        } container-fluid ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
           <Helmet title={`${pageTitle}s | Hasura`} />
