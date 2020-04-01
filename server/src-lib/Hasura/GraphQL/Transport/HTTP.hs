@@ -20,6 +20,7 @@ import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.Logging                         as L
 import qualified Hasura.Server.Telemetry.Counters       as Telem
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Types                     as HTTP
 
 runGQ
   :: ( HasVersion
@@ -41,8 +42,8 @@ runGQ reqId userInfo reqHdrs req = do
                 userInfo sqlGenCtx enableAL sc scVer httpManager reqHdrs req
     case execPlan of
       E.GExPHasura resolvedOp -> do
-        (telemTimeIO, telemQueryType, resp) <- runHasuraGQ reqId req userInfo resolvedOp
-        return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp Nothing))
+        (telemTimeIO, telemQueryType, respHdrs, resp) <- runHasuraGQ reqId req userInfo resolvedOp
+        return (telemCacheHit, Telem.Local, (telemTimeIO, telemQueryType, HttpResponse resp respHdrs))
       E.GExPRemote rsi opDef  -> do
         let telemQueryType | G._todType opDef == G.OperationTypeMutation = Telem.Mutation
                             | otherwise = Telem.Query
@@ -73,7 +74,7 @@ runGQBatched reqId userInfo reqHdrs reqs =
       -- responses with distinct headers, so just do the simplest thing
       -- in this case, and don't forward any.
       let removeHeaders =
-            flip HttpResponse Nothing
+            flip HttpResponse []
             . encJFromList
             . map (either (encJFromJValue . encodeGQErr False) _hrBody)
           try = flip catchError (pure . Left) . fmap Right
@@ -89,7 +90,7 @@ runHasuraGQ
   -> GQLReqUnparsed
   -> UserInfo
   -> E.ExecOp
-  -> m (DiffTime, Telem.QueryType, EncJSON)
+  -> m (DiffTime, Telem.QueryType, HTTP.ResponseHeaders, EncJSON)
   -- ^ Also return 'Mutation' when the operation was a mutation, and the time
   -- spent in the PG query; for telemetry.
 runHasuraGQ reqId query userInfo resolvedOp = do
@@ -98,15 +99,15 @@ runHasuraGQ reqId query userInfo resolvedOp = do
     E.ExOpQuery tx genSql  -> do
       -- log the generated SQL and the graphql query
       L.unLogger logger $ QueryLog query genSql reqId
-      runLazyTx' pgExecCtx tx
-    E.ExOpMutation tx -> do
+      ([],) <$> runLazyTx' pgExecCtx tx
+    E.ExOpMutation respHeaders tx -> do
       -- log the graphql query
       L.unLogger logger $ QueryLog query Nothing reqId
-      runLazyTx pgExecCtx Q.ReadWrite $ withUserInfo userInfo tx
+      (respHeaders,) <$> runLazyTx pgExecCtx Q.ReadWrite (withUserInfo userInfo tx)
     E.ExOpSubs _ ->
       throw400 UnexpectedPayload
       "subscriptions are not supported over HTTP, use websockets instead"
-  resp <- liftEither respE
+  (respHdrs, resp) <- liftEither respE
   let !json = encodeGQResp $ GQSuccess $ encJToLBS resp
       telemQueryType = case resolvedOp of E.ExOpMutation{} -> Telem.Mutation ; _ -> Telem.Query
-  return (telemTimeIO, telemQueryType, json)
+  return (telemTimeIO, telemQueryType, respHdrs, json)

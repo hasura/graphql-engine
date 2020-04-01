@@ -36,6 +36,7 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "Manage migrations on the database",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Root().PersistentPreRun(cmd, args)
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {

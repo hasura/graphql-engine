@@ -19,8 +19,8 @@ args:
         rast raster
       );
       INSERT INTO dummy_rast (rast) values
-        (ST_AsRaster(ST_Buffer(ST_GeomFromText('SRID=4326;POINT(1 2)'),2), 5, 5))
-      , (ST_AsRaster(ST_Buffer(ST_GeomFromText('SRID=4326;LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)'), 2), 5, 5))
+        (ST_AsRaster(ST_Buffer(ST_GeomFromEWKT('SRID=4326;POINT(1 2)'),2), 5, 5))
+      , (ST_AsRaster(ST_Buffer(ST_GeomFromEWKT('SRID=4326;LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)'), 2), 5, 5))
       ;
 - type: track_table
   args:

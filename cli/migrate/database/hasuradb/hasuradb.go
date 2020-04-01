@@ -184,45 +184,44 @@ func (h *HasuraDB) UnLock() error {
 		return err
 	}
 
-	var horror HasuraError
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
-		}
-
-		// Handle migration version here
-		if horror.Path != "" {
-			jsonData, err := json.Marshal(h.migrationQuery)
-			if err != nil {
-				return err
-			}
-			var migrationQuery interface{}
-			err = json.Unmarshal(jsonData, &migrationQuery)
-			if err != nil {
-				return err
-			}
-			res, err := jsonpath.JsonPathLookup(migrationQuery, horror.Path)
-			if err == nil {
-				queryData, err := json.MarshalIndent(res, "", "    ")
+		switch herror := NewHasuraError(body, h.config.isCMD).(type) {
+		case HasuraError:
+			// Handle migration version here
+			if herror.Path != "" {
+				jsonData, err := json.Marshal(h.migrationQuery)
 				if err != nil {
 					return err
 				}
-				horror.migrationQuery = string(queryData)
-			}
-			re1, err := regexp.Compile(`\$.args\[([0-9]+)\]*`)
-			if err != nil {
-				return err
-			}
-			result := re1.FindAllStringSubmatch(horror.Path, -1)
-			if len(result) != 0 {
-				migrationNumber, ok := h.jsonPath[result[0][1]]
-				if ok {
-					horror.migrationFile = migrationNumber
+				var migrationQuery interface{}
+				err = json.Unmarshal(jsonData, &migrationQuery)
+				if err != nil {
+					return err
+				}
+				res, err := jsonpath.JsonPathLookup(migrationQuery, herror.Path)
+				if err == nil {
+					queryData, err := json.MarshalIndent(res, "", "    ")
+					if err != nil {
+						return err
+					}
+					herror.migrationQuery = string(queryData)
+				}
+				re1, err := regexp.Compile(`\$.args\[([0-9]+)\]*`)
+				if err != nil {
+					return err
+				}
+				result := re1.FindAllStringSubmatch(herror.Path, -1)
+				if len(result) != 0 {
+					migrationNumber, ok := h.jsonPath[result[0][1]]
+					if ok {
+						herror.migrationFile = migrationNumber
+					}
 				}
 			}
+			return herror
+		default:
+			return herror
 		}
-		return horror.Error(h.config.isCMD)
 	}
 	return nil
 }
@@ -304,16 +303,9 @@ func (h *HasuraDB) getVersions() (err error) {
 		return err
 	}
 
-	var horror HasuraError
-
 	// If status != 200 return error
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
-		}
-
-		return horror.Error(h.config.isCMD)
+		return NewHasuraError(body, h.config.isCMD)
 	}
 
 	var hres HasuraSQLRes
@@ -375,19 +367,11 @@ func (h *HasuraDB) ensureVersionTable() error {
 	}
 	h.logger.Debug("response: ", string(body))
 
-	var horror HasuraError
-
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			h.logger.Debug(err)
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
-		}
-		return horror.Error(h.config.isCMD)
+		return NewHasuraError(body, h.config.isCMD)
 	}
 
 	var hres HasuraSQLRes
-
 	err = json.Unmarshal(body, &hres)
 	if err != nil {
 		h.logger.Debug(err)
@@ -416,12 +400,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		err = json.Unmarshal(body, &horror)
-		if err != nil {
-			return fmt.Errorf("failed parsing json: %v; response from API: %s", err, string(body))
-		}
-
-		return horror.Error(h.config.isCMD)
+		return NewHasuraError(body, h.config.isCMD)
 	}
 
 	err = json.Unmarshal(body, &hres)
