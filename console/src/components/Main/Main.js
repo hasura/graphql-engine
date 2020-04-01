@@ -319,6 +319,7 @@ class Main extends React.Component {
               <ToolTip
                 message={'Only be notified about stable releases'}
                 placement="top"
+                ml="xs"
               />
             </i>
           </React.Fragment>
