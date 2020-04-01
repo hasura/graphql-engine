@@ -250,7 +250,10 @@ class AddTrigger extends Component {
           />
         );
         return (
-          <div key={i} className={styles.padd_remove + ' col-md-4'}>
+          <div
+            key={i}
+            className={`${styles.padd_remove} ${styles.columnListElement}`}
+          >
             <div className={'checkbox '}>
               <label>
                 {inputHtml}
@@ -302,7 +305,7 @@ class AddTrigger extends Component {
             onClick={() => {
               dispatch(removeHeader(i));
             }}
-            cursor
+            pointer
             size={15}
             ml="10px"
           />

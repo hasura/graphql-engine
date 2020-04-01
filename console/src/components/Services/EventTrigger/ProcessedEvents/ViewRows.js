@@ -447,6 +447,7 @@ const ViewRows = ({
                                         <Icon
                                           type="questionCircle"
                                           size={12}
+                                          ml="xs"
                                         />
                                       </OverlayTrigger>,
                                     ]

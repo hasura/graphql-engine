@@ -57,7 +57,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
             onClick={dispatchRemove}
             ml="10px"
             size={15}
-            cursor
+            pointer
           />
         );
       }

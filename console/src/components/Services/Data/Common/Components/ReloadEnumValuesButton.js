@@ -6,7 +6,7 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import { Icon } from '../../../../UIKit/atoms';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
+const ReloadEnumValuesButton = ({ isEnum, dispatch }) => {
   if (!isEnum) return null;
 
   const tooltip = (
@@ -20,7 +20,7 @@ const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
     <React.Fragment>
       <ReloadEnumMetadata buttonText="Reload enum values" dispatch={dispatch} />
       <OverlayTrigger overlay={tooltip} placement="right">
-        <Icon type="info" cursor />
+        <Icon type="info" pointer ml="sm" size={12} />
       </OverlayTrigger>
     </React.Fragment>
   );

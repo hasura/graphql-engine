@@ -72,7 +72,7 @@ const TableColumn = props => {
           onClick={onRemoveColumn.bind(undefined, i)}
           ml="10px"
           size={15}
-          cursor
+          pointer
         />
       );
     }

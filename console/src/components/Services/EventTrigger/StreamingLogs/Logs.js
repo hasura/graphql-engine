@@ -213,7 +213,7 @@ class StreamingLogs extends Component {
             <div className={conditionalClassname}>
               <Icon
                 type="reload"
-                cursor
+                pointer
                 onClick={this.toggleModal.bind(this, r.event_id)}
               />
             </div>
@@ -315,7 +315,7 @@ class StreamingLogs extends Component {
                         placement="top"
                         overlay={tooltip.statusCodeDescription}
                       >
-                        <Icon type="questionCircle" size={12} />
+                        <Icon type="questionCircle" size={12} ml="xs" />
                       </OverlayTrigger>,
                     ]
                     : null}

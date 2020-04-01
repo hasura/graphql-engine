@@ -75,7 +75,7 @@ const ActionDefinitionEditor = ({
         >
           {error && (
             <div className={`${styles.display_flex} ${styles.errorMessage}`}>
-              <Icon mr="xs" type="close" color="red.primary" size={20} />
+              <Icon mr="xs" type="close" color="red.primary" />
               <div>{errorMessage}</div>
             </div>
           )}
@@ -84,6 +84,7 @@ const ActionDefinitionEditor = ({
             onClick={toggleModal}
           >
             <Icon type="copy" mr="xs" />
+            Clone an existing type
           </a>
           <Modal
             show={modalOpen}
