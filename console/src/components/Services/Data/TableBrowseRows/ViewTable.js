@@ -7,6 +7,7 @@ import {
   fetchManualTriggers,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
+  vMakeCountRequest,
 } from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
@@ -14,6 +15,7 @@ import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 
+/*
 const genHeadings = headings => {
   if (headings.length === 0) {
     return [];
@@ -46,6 +48,7 @@ const genHeadings = headings => {
   throw 'Incomplete pattern match'; // eslint-disable-line no-throw-literal
 };
 
+
 const genRow = (row, headings) => {
   if (headings.length === 0) {
     return [];
@@ -68,6 +71,7 @@ const genRow = (row, headings) => {
 
   throw 'Incomplete pattern match'; // eslint-disable-line no-throw-literal
 };
+*/
 
 class ViewTable extends Component {
   constructor(props) {
@@ -93,6 +97,7 @@ class ViewTable extends Component {
       dispatch(setTable(tableName)),
       dispatch(vSetDefaults(tableName)),
       dispatch(vMakeRequest()),
+      dispatch(vMakeCountRequest()),
       dispatch(fetchManualTriggers(tableName)),
     ]);
   }
@@ -160,6 +165,7 @@ class ViewTable extends Component {
       triggeredRow,
       triggeredFunction,
       location,
+      countLoading,
     } = this.props;
 
     // check if table exists
@@ -205,6 +211,7 @@ class ViewTable extends Component {
         triggeredFunction={triggeredFunction}
         location={location}
         readOnlyMode={readOnlyMode}
+        countLoading={countLoading}
       />
     );
 
@@ -259,6 +266,7 @@ ViewTable.propTypes = {
   lastError: PropTypes.object.isRequired,
   lastSuccess: PropTypes.object.isRequired,
   dispatch: PropTypes.func.isRequired,
+  countLoading: PropTypes.bool.isRequired,
 };
 
 const mapStateToProps = (state, ownProps) => {

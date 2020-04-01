@@ -22,6 +22,10 @@ const V_REQUEST_PROGRESS = 'ViewTable/V_REQUEST_PROGRESS';
 const V_EXPAND_ROW = 'ViewTable/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
 
+const V_COUNT_REQUEST_START = 'ViewTable/V_COUNT_REQUEST_START';
+const V_COUNT_REQUEST_SUCCESS = 'ViewTable/V_COUNT_REQUEST_SUCCESS';
+const V_COUNT_REQUEST_ERROR = 'ViewTable/V_COUNT_REQUEST_ERROR';
+
 const FETCHING_MANUAL_TRIGGER = 'ViewTable/FETCHING_MANUAL_TRIGGER';
 const FETCH_MANUAL_TRIGGER_SUCCESS = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
 const FETCH_MANUAL_TRIGGER_FAIL = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
@@ -57,29 +61,14 @@ const vMakeRequest = () => {
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
     const requestBody = {
-      type: 'bulk',
-      args: [
-        {
-          type: 'select',
-          args: {
-            ...state.tables.view.query,
-            table: {
-              name: state.tables.currentTable,
-              schema: getState().tables.currentSchema,
-            },
-          },
+      type: 'select',
+      args: {
+        ...state.tables.view.query,
+        table: {
+          name: state.tables.currentTable,
+          schema: getState().tables.currentSchema,
         },
-        {
-          type: 'count',
-          args: {
-            ...state.tables.view.query,
-            table: {
-              name: state.tables.currentTable,
-              schema: getState().tables.currentSchema,
-            },
-          },
-        },
-      ],
+      },
     };
     const options = {
       method: 'POST',
@@ -94,8 +83,7 @@ const vMakeRequest = () => {
           Promise.all([
             dispatch({
               type: V_REQUEST_SUCCESS,
-              data: data[0],
-              count: data[1].count,
+              data: data,
             }),
             dispatch({ type: V_REQUEST_PROGRESS, data: false }),
           ]);
@@ -107,6 +95,50 @@ const vMakeRequest = () => {
             showErrorNotification('Browse query failed!', error.error, error)
           ),
           dispatch({ type: V_REQUEST_PROGRESS, data: false }),
+        ]);
+      }
+    );
+  };
+};
+
+const vMakeCountRequest = () => {
+  return (dispatch, getState) => {
+    const state = getState();
+    const url = Endpoints.query;
+    const originalTable = getState().tables.currentTable;
+    dispatch({ type: V_COUNT_REQUEST_START });
+
+    const requestBody = {
+      type: 'count',
+      args: {
+        ...state.tables.view.query,
+        table: {
+          name: state.tables.currentTable,
+          schema: getState().tables.currentSchema,
+        },
+      },
+    };
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      headers: dataHeaders(getState),
+      credentials: globalCookiePolicy,
+    };
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        if (originalTable === getState().tables.currentTable) {
+          dispatch({
+            type: V_COUNT_REQUEST_SUCCESS,
+            count: data.count,
+          });
+        }
+      },
+      error => {
+        Promise.all([
+          dispatch(
+            showErrorNotification('Count query failed!', error.error, error)
+          ),
+          dispatch({ type: V_COUNT_REQUEST_ERROR }),
         ]);
       }
     );
@@ -546,6 +578,12 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
       return { ...viewState, rows: action.data, count: action.count };
     case V_REQUEST_PROGRESS:
       return { ...viewState, isProgressing: action.data };
+    case V_COUNT_REQUEST_SUCCESS:
+      return { ...viewState, count: action.count, countLoading: false };
+    case V_COUNT_REQUEST_START:
+      return { ...viewState, countLoading: true };
+    case V_COUNT_REQUEST_ERROR:
+      return { ...viewState, countLoding: false };
     case V_EXPAND_ROW:
       return {
         ...viewState,
@@ -600,6 +638,7 @@ export {
   vCloseRel,
   vExpandRow,
   vCollapseRow,
+  vMakeCountRequest,
   V_SET_ACTIVE,
   deleteItem,
   deleteItems,

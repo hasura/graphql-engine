@@ -1,6 +1,6 @@
 // import Endpoints, {globalCookiePolicy} from '../../Endpoints';
 import { defaultCurFilter } from '../DataState';
-import { vMakeRequest } from './ViewActions';
+import { vMakeRequest, vMakeCountRequest } from './ViewActions';
 import { Integers, Reals } from '../constants';
 
 const LOADING = 'ViewTable/FilterQuery/LOADING';
@@ -109,6 +109,7 @@ const runQuery = tableSchema => {
     }
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
     dispatch(vMakeRequest());
+    dispatch(vMakeCountRequest());
   };
 };
 
