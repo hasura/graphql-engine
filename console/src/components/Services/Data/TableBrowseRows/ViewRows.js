@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
-import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
+import DragFoldTable, {
+  getColWidth,
+} from '../../../Common/TableCommon/DragFoldTable';
 
 import Dropdown from '../../../Common/Dropdown/Dropdown';
 
@@ -138,64 +140,6 @@ const ViewRows = ({
   const getGridHeadings = (_columns, _relationships, _disableBulkSelect) => {
     const _gridHeadings = [];
 
-    const getColWidth = (header, contentRows = []) => {
-      const MAX_WIDTH = 600;
-      const HEADER_PADDING = 62;
-      const CONTENT_PADDING = 18;
-      const HEADER_FONT = 'bold 16px Gudea';
-      const CONTENT_FONT = '14px Gudea';
-
-      const getTextWidth = (text, font) => {
-        // Doesn't work well with non-monospace fonts
-        // const CHAR_WIDTH = 8;
-        // return text.length * CHAR_WIDTH;
-
-        // if given, use cached canvas for better performance
-        // else, create new canvas
-        const canvas =
-          getTextWidth.canvas ||
-          (getTextWidth.canvas = document.createElement('canvas'));
-
-        const context = canvas.getContext('2d');
-        context.font = font;
-
-        const metrics = context.measureText(text);
-        return metrics.width;
-      };
-
-      let maxContentWidth = 0;
-      for (let i = 0; i < contentRows.length; i++) {
-        if (contentRows[i] !== undefined && contentRows[i][header] !== null) {
-          const content = contentRows[i][header];
-
-          let contentString;
-          if (content === null || content === undefined) {
-            contentString = 'NULL';
-          } else if (typeof content === 'object') {
-            contentString = JSON.stringify(content, null, 4);
-          } else {
-            contentString = content.toString();
-          }
-
-          const currLength = getTextWidth(contentString, CONTENT_FONT);
-
-          if (currLength > maxContentWidth) {
-            maxContentWidth = currLength;
-          }
-        }
-      }
-
-      const maxContentCellWidth = maxContentWidth + CONTENT_PADDING;
-
-      const headerCellWidth =
-        getTextWidth(header, HEADER_FONT) + HEADER_PADDING;
-
-      return Math.min(
-        MAX_WIDTH,
-        Math.max(maxContentCellWidth, headerCellWidth)
-      );
-    };
-
     _gridHeadings.push({
       Header: '',
       accessor: 'tableRowActionButtons',
@@ -237,7 +181,7 @@ const ViewRows = ({
 
       _gridHeadings.push({
         Header: (
-          <div className="ellipsis" title="Click to sort">
+          <div className="ellipsis">
             <span className={styles.tableHeaderCell}>
               {columnName} <i className={'fa ' + sortIcon} />
             </span>
@@ -985,6 +929,7 @@ const ViewRows = ({
         className="-highlight -fit-content"
         data={_gridRows}
         columns={_gridHeadings}
+        headerTitle={'Click to sort / Drag to rearrange'}
         resizable
         manual
         sortable={false}
