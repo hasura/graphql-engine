@@ -6,6 +6,7 @@ module Hasura.App where
 import           Control.Monad.Base
 import           Control.Monad.Stateless
 import           Control.Monad.STM                    (atomically)
+import           Control.Concurrent.STM.TVar          (readTVarIO)
 import           Control.Monad.Trans.Control          (MonadBaseControl (..))
 import           Data.Aeson                           ((.=))
 import           Data.Time.Clock                      (UTCTime, getCurrentTime)
@@ -28,6 +29,7 @@ import qualified Network.HTTP.Client.TLS              as HTTP
 import qualified Network.Wai.Handler.Warp             as Warp
 import qualified System.Posix.Signals                 as Signals
 import qualified Text.Mustache.Compile                as M
+import qualified Data.Set                             as Set
 
 import           Hasura.Db
 import           Hasura.EncJSON
@@ -204,7 +206,7 @@ runHGEServer
   -- ^ start time
   -> m ()
 runHGEServer ServeOptions{..} InitCtx{..} initTime = do
-  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to 
+  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to
   -- STDOUT containing "not in normal form". In the future we could try to integrate this into
   -- our tests. For now this is a development tool.
   --
@@ -241,15 +243,9 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   liftIO $ logInconsObjs logger inconsObjs
 
   -- start background threads for schema sync
-  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <- 
+  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <-
     startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
                            cacheRef _icInstanceId cacheInitTime
-
-  let warpSettings = Warp.setPort soPort
-                     . Warp.setHost soHost
-                     . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
-                     . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp)
-                     $ Warp.defaultSettings
 
   maxEvThrds <- liftIO $ getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
   fetchI  <- fmap milliseconds $ liftIO $
@@ -269,26 +265,59 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
 
   -- start a background thread to check for updates
-  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $ 
+  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
     checkForUpdates loggerCtx _icHttpManager
 
   -- start a background thread for telemetry
   when soEnableTelemetry $ do
     unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-    void $ C.forkImmortal "runTelemetry" logger $ liftIO $ 
+    void $ C.forkImmortal "runTelemetry" logger $ liftIO $
       runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
   unLogger logger $
     mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
+  let warpSettings = Warp.setPort soPort
+                     . Warp.setHost soHost
+                     . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
+                     . Warp.setInstallShutdownHandler (shutdownHandler logger shutdownApp eventEngineCtx _icPgPool)
+                     $ Warp.defaultSettings
   liftIO $ Warp.runSettings warpSettings app
 
   where
+    -- | prepareEvents is a function to unlock all the events that are
+    -- locked and unprocessed. Locked and unprocessed events can occur in 2 ways
+    -- 1)
+    -- hasura's shutdown was not graceful in which all the fetched
+    -- events will remain locked and unprocessed(TODO: clean shutdown)
+    -- state.
+    -- 2)
+    -- There is another hasura instance which is processing events and
+    -- it will lock events to process them.
+    -- So, unlocking all the locked events might re-deliver an event(due to #2).
     prepareEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-      res <- runTx pool unlockAllEvents
+      res <- liftIO $ runTx pool (Q.Serializable, Nothing) unlockAllEvents
       either printErrJExit return res
+
+    -- | shutdownEvents will be triggered when a graceful shutdown has been inititiated, it will
+    -- get the locked events from the event engine context and then it will unlock all those events.
+    -- It may happen that an event may be processed more than one time, an event that has been already
+    -- processed but not been marked as delivered in the db will be unlocked by `shutdownEvents`
+    -- and will be processed when the events are proccessed next time.
+    shutdownEvents :: Q.PGPool -> Logger Hasura -> EventEngineCtx -> IO ()
+    shutdownEvents pool (Logger logger) EventEngineCtx {..} = do
+      liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "unlocking events that are locked by the HGE"
+      lockedEvents <- readTVarIO _eeCtxLockedEvents
+      liftIO $ do
+        when (not $ Set.null $ lockedEvents) $ do
+          res <- runTx pool (Q.ReadCommitted, Nothing) (unlockEvents $ toList lockedEvents)
+          case res of
+            Left err -> logger $ mkGenericStrLog
+                         LevelWarn "event_triggers" ("Error in unlocking the events " ++ (show err))
+            Right count -> logger $ mkGenericStrLog
+                            LevelInfo "event_triggers" ((show count) ++ " events were updated")
 
     getFromEnv :: (Read a) => a -> String -> IO a
     getFromEnv defaults env = do
@@ -299,21 +328,24 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
           eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
       either printErrExit return eRes
 
-    runTx pool tx =
-      liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+    runTx :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO (Either QErr a)
+    runTx pool txLevel tx =
+      liftIO $ runExceptT $ Q.runTx pool txLevel tx
 
     -- | Catches the SIGTERM signal and initiates a graceful shutdown. Graceful shutdown for regular HTTP
     -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
-    -- We only catch the SIGTERM signal once, that is, if the user hits CTRL-C once again, we terminate
-    -- the process immediately.
-    shutdownHandler :: Logger Hasura -> IO () -> IO () -> IO ()
-    shutdownHandler (Logger logger) shutdownApp closeSocket =
+    -- We only catch the SIGTERM signal once, that is, if we catch another SIGTERM signal then the process
+    -- is terminated immediately.
+    -- If the user hits CTRL-C (SIGINT), then the process is terminated immediately
+    shutdownHandler :: Logger Hasura -> IO () -> EventEngineCtx -> Q.PGPool -> IO () -> IO ()
+    shutdownHandler (Logger logger) shutdownApp eeCtx pool closeSocket =
       void $ Signals.installHandler
         Signals.sigTERM
         (Signals.CatchOnce shutdownSequence)
         Nothing
      where
       shutdownSequence = do
+        shutdownEvents pool (Logger logger) eeCtx
         closeSocket
         shutdownApp
         logShutdown
