@@ -195,8 +195,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
         <Icon
           type="close"
           onClick={dismissErrorBanner}
-          cursor
-          cursor
+          pointer
           className={styles.align_right}
         />
       </div>

@@ -149,7 +149,7 @@ class PermissionsSummary extends Component {
           type={iconType}
           color="blue.primary"
           size={12}
-          cursor
+          pointer
           onClick={onClick}
           className={styles.actionIcon}
         />

@@ -212,7 +212,7 @@ const ForeignKeySelector = ({
                 onClick={dispatchRemoveCol}
                 ml="10px"
                 size={15}
-                cursor
+                pointer
               />
             );
           }

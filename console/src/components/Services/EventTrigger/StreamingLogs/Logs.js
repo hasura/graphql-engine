@@ -211,7 +211,7 @@ class StreamingLogs extends Component {
             <div className={conditionalClassname}>
               <Icon
                 type="reload"
-                cursor
+                pointer
                 onClick={this.toggleModal.bind(this, r.event_id)}
               />
             </div>
@@ -310,6 +310,7 @@ class StreamingLogs extends Component {
                       <ToolTip
                         placement="top"
                         message={tooltip.statusCodeDescription}
+                        ml="xs"
                       />,
                     ]
                     : null}

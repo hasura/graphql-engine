@@ -60,7 +60,7 @@ class EditableHeading extends React.Component {
             className={styles.editable_heading_action}
             data-test={`heading-edit-${property}`}
           >
-            <Icon type="edit" cursor />
+            <Icon type="edit" pointer />
           </div>
         </div>
       );
