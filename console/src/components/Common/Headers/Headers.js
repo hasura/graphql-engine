@@ -37,7 +37,9 @@ const Headers = ({ headers, setHeaders }) => {
           value={name}
           onChange={setHeaderKey}
           placeholder="key"
-          className={`form-control ${styles.add_mar_right} ${styles.headerInputWidth}`}
+          className={`form-control ${styles.add_mar_right} ${
+            styles.headerInputWidth
+          }`}
         />
       );
     };
@@ -76,7 +78,10 @@ const Headers = ({ headers, setHeaders }) => {
     };
 
     return (
-      <div className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}>
+      <div
+        className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
+        key={i}
+      >
         {getHeaderNameInput()}
         {getHeaderValueInput()}
         {getRemoveButton()}

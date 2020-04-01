@@ -68,6 +68,7 @@ mkMutationField actionName actionInfo definitionList =
         ActionSynchronous  ->
           ActionExecutionSyncWebhook $ SyncActionExecutionContext actionName
           (_adOutputType definition)
+          (_aiOutputFields actionInfo)
           definitionList
           (_adHandler definition)
           (_adHeaders definition)

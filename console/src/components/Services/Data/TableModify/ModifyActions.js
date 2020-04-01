@@ -215,7 +215,9 @@ export const saveComputedField = (
     );
   }
 
-  const migrationName = `save_computed_field_${computedField.table_schema}_${computedField.table_name}_${computedFieldName}`;
+  const migrationName = `save_computed_field_${computedField.table_schema}_${
+    computedField.table_name
+  }_${computedFieldName}`;
   const requestMsg = 'Saving computed field...';
   const successMsg = 'Saving computed field successful';
   const errorMsg = 'Saving computed field failed';
@@ -259,7 +261,9 @@ export const deleteComputedField = (computedField, table) => (
     )
   );
 
-  const migrationName = `delete_computed_field_${computedField.table_schema}_${computedField.table_name}_${computedFieldName}`;
+  const migrationName = `delete_computed_field_${computedField.table_schema}_${
+    computedField.table_name
+  }_${computedFieldName}`;
   const requestMsg = 'Deleting computed field...';
   const successMsg = 'Deleting computed field successful';
   const errorMsg = 'Deleting computed field failed';
@@ -585,14 +589,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}"
           foreign key (${Object.keys(oldConstraint.column_mapping)
-    .map(lc => `"${lc}"`)
-    .join(', ')})
+            .map(lc => `"${lc}"`)
+            .join(', ')})
           references "${oldConstraint.ref_table_table_schema}"."${
-  oldConstraint.ref_table
-}"
+        oldConstraint.ref_table
+      }"
           (${Object.values(oldConstraint.column_mapping)
-    .map(rc => `"${rc}"`)
-    .join(', ')})
+            .map(rc => `"${rc}"`)
+            .join(', ')})
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -663,7 +667,9 @@ const removeForeignKey = (index, tableSchema) => {
     const tableName = tableSchema.table_name;
     const schemaName = tableSchema.table_schema;
     const oldConstraint = tableSchema.foreign_key_constraints[index];
-    const upSql = `alter table "${schemaName}"."${tableName}" drop constraint "${oldConstraint.constraint_name}";`;
+    const upSql = `alter table "${schemaName}"."${tableName}" drop constraint "${
+      oldConstraint.constraint_name
+    }";`;
     const downSql = `alter table "${schemaName}"."${tableName}" add foreign key (${Object.keys(
       oldConstraint.column_mapping
     )
@@ -677,7 +683,9 @@ const removeForeignKey = (index, tableSchema) => {
     } on delete ${pgConfTypes[oldConstraint.on_delete]};`;
     const migrationUp = [getRunSqlQuery(upSql)];
     const migrationDown = [getRunSqlQuery(downSql)];
-    const migrationName = `delete_fk_${schemaName}_${tableName}_${oldConstraint.constraint_name}`;
+    const migrationName = `delete_fk_${schemaName}_${tableName}_${
+      oldConstraint.constraint_name
+    }`;
     const requestMsg = 'Deleting foreign key...';
     const successMsg = 'Foreign key deleted';
     const errorMsg = 'Deleting foreign key failed';
@@ -792,7 +800,9 @@ const deleteTrigger = (trigger, table) => {
     let downMigrationSql = '';
 
     downMigrationSql += `CREATE TRIGGER "${triggerName}"
-${trigger.action_timing} ${trigger.event_manipulation} ON "${tableSchema}"."${tableName}"
+${trigger.action_timing} ${
+      trigger.event_manipulation
+    } ON "${tableSchema}"."${tableName}"
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
@@ -1964,7 +1974,9 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
     // Up migration: Drop the constraint
     const sqlUp = [
       getRunSqlQuery(
-        `alter table "${currentSchema}"."${tableName}" drop constraint "${existingConstraint.constraint_name}";`
+        `alter table "${currentSchema}"."${tableName}" drop constraint "${
+          existingConstraint.constraint_name
+        }";`
       ),
     ];
 
@@ -2263,7 +2275,9 @@ const saveUniqueKey = (
     if (index < numUniqueKeys - 1) {
       upMigration.push(
         getRunSqlQuery(
-          `alter table "${currentSchema}"."${tableName}" drop constraint "${existingConstraint.constraint_name}";`
+          `alter table "${currentSchema}"."${tableName}" drop constraint "${
+            existingConstraint.constraint_name
+          }";`
         )
       );
     }
