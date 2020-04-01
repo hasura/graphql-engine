@@ -1,6 +1,6 @@
 appVersion: 1.x.x
 dependencies:
-  - condition: hasura.database.postgres.enabled
+  - condition: hasura.database.postgres.managed.enabled
     name: postgresql
     repository: 'https://charts.bitnami.com/bitnami'
     version: 8.x.x
