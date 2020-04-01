@@ -62,12 +62,12 @@ buildObjectTypeInfo roleName annotatedObjectType =
 
 buildCustomTypesSchema
   :: NonObjectTypeMap -> AnnotatedObjects -> RoleName -> VT.TypeMap
-buildCustomTypesSchema nonObjectTypeMap annotatedObjectTypes role =
+buildCustomTypesSchema nonObjectTypeMap annotatedObjectTypes roleName =
   unNonObjectTypeMap nonObjectTypeMap <> objectTypeInfos
   where
     objectTypeInfos =
       mapFromL VT.getNamedTy $
-      map (VT.TIObj . buildObjectTypeInfo role) $
+      map (VT.TIObj . buildObjectTypeInfo roleName) $
       Map.elems annotatedObjectTypes
 
 annotateObjectType

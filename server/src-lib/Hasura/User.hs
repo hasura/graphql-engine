@@ -2,11 +2,8 @@ module Hasura.User
   ( RoleName
   , mkRoleName
   , adminRoleName
-  -- , adminRole
   , isAdmin
   , roleNameToTxt
-  -- , Role(..)
-  -- , getRoleName
   , SessionVariable
   , mkSessionVariable
   , SessionVariables

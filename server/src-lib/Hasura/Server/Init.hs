@@ -194,8 +194,8 @@ instance FromEnv AdminSecret where
 
 instance FromEnv RoleName where
   fromEnv string = case mkRoleName (T.pack string) of
-    Nothing   -> Left "empty string not allowed"
-    Just role -> Right role
+    Nothing       -> Left "empty string not allowed"
+    Just roleName -> Right roleName
 
 instance FromEnv Bool where
   fromEnv = parseStrAsBool

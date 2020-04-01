@@ -129,8 +129,8 @@ deleteMetadataObject objectId = case objectId of
   MOTableObj tableName tableObjectId -> boTables.ix tableName %~ case tableObjectId of
     MTORel           name _ -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromRel name)
     MTOComputedField name   -> tiCoreInfo.tciFieldInfoMap %~ M.delete (fromComputedField name)
-    MTOPerm role permType -> withPermType permType \accessor ->
-      tiRolePermInfoMap.ix role.permAccToLens accessor .~ Nothing
+    MTOPerm roleName permType -> withPermType permType \accessor ->
+      tiRolePermInfoMap.ix roleName.permAccToLens accessor .~ Nothing
     MTOTrigger name -> tiEventTriggerInfoMap %~ M.delete name
   MOCustomTypes                -> boCustomTypes %~ const (NonObjectTypeMap mempty, mempty)
   MOAction           name      -> boActions %~ M.delete name
