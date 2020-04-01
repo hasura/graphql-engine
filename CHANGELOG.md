@@ -2,6 +2,13 @@
 
 ## Next release
 
+
+### console: persist columns state in data browser
+
+The order and collapsed state of columns is now persisted across page navigation
+
+(close #3390) (#3753)
+
 ### Bug fixes and improvements
 
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
