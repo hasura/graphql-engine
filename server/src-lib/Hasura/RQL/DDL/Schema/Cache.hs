@@ -96,7 +96,7 @@ mergeCustomTypes gCtxMap remoteSchemaCtx customTypesState = do
       gCtx { GS._gTypes = GS._gTypes gCtx <> customTypes}
     existingTypes =
       case M.lookup adminRoleName gCtxMap of
-        Just schemaCtx -> GS._gTypes $ GC._rctxOnlyRole schemaCtx
+        Just schemaCtx -> GS._gTypes $ GC._rctxDefault schemaCtx
         Nothing        -> GS._gTypes remoteSchemaCtx
 
 buildRebuildableSchemaCache

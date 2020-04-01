@@ -722,9 +722,12 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
     rolePermsMap = flip Map.map rolePerms $ \permInfo ->
       case _permIns permInfo of
         Nothing -> RoleContext permInfo Nothing
-        Just insPerm -> if ipiAdminOnly insPerm then
-                          RoleContext permInfo{_permIns = Nothing} (Just permInfo)
-                        else RoleContext permInfo Nothing
+        Just insPerm ->
+          if ipiAdminOnly insPerm then
+            RoleContext { _rctxDefault = permInfo
+                        , _rctxRoleOnly = Just permInfo{_permIns = Nothing} -- Remove insert mutation from role-only authentication
+                        }
+          else RoleContext permInfo Nothing
 
 noFilter :: AnnBoolExpPartialSQL
 noFilter = annBoolExpTrue
@@ -752,16 +755,15 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
                           ((\(rf, tyAgg) -> pure $ RoleContext (tyAgg, rf, mempty) Nothing) <$> actionsSchema)
                           maps
       flip Map.traverseWithKey listMap $ \_ schemaCtxList -> do
-        let roleOnlyTypes = map _rctxOnlyRole schemaCtxList
-            withAdminSecretTypes =
+        let defaultGCtxTypes = map _rctxDefault schemaCtxList
+            roleOnlyTypes =
               let typeList = flip map schemaCtxList $
-                             \r -> fromMaybe (_rctxOnlyRole r) $ _rctxWithAdminSecret r
-              -- If all with-admin-secret types are Nothing then related combined types should be Nothing.
-              -- Else, if any with-admin-secret types present then it has to be combined with others'
-              -- role-only types if with-admin-secret types is Nothing
-              in if all (isNothing . _rctxWithAdminSecret) schemaCtxList then Nothing else Just typeList
+                             \r -> fromMaybe (_rctxDefault r) $ _rctxRoleOnly r
+              -- If all role-only types are Nothing then related combined types should be Nothing.
+              -- Else, if any role-only types present then it has to be combined with others'
+              in if all (isNothing . _rctxRoleOnly) schemaCtxList then Nothing else Just typeList
 
-        RoleContext <$> combineTypes' roleOnlyTypes <*> mapM combineTypes' withAdminSecretTypes
+        RoleContext <$> combineTypes' defaultGCtxTypes <*> mapM combineTypes' roleOnlyTypes
       where
         combineTypes' :: [(TyAgg, RootFields, InsCtxMap)] -> m (TyAgg, RootFields, InsCtxMap)
         combineTypes' typeList = do
@@ -792,11 +794,12 @@ getGCtx :: SchemaCache -> UserAdminSecret -> RoleName -> GCtx
 getGCtx sc userAdminSecret roleName =
   case Map.lookup roleName (scGCtxMap sc) of
     Nothing -> scDefaultRemoteGCtx sc
-    Just (RoleContext gctx Nothing) -> gctx
-    Just (RoleContext gctx (Just gctxWithAdminSecret)) ->
+    Just (RoleContext defaultGCtx Nothing) -> defaultGCtx
+    Just (RoleContext defaultGCtx (Just roleOnlyGCtx)) ->
       case userAdminSecret of
-        UAdminSecretPresent -> gctxWithAdminSecret
-        UAdminSecretAbsent  -> gctx
+        UAdminSecretPresent -> defaultGCtx
+        UAdminSecretAbsent  -> roleOnlyGCtx
+        UNoAuthSet          -> defaultGCtx
 
 -- pretty print GCtx
 ppGCtx :: GCtx -> String

@@ -1,5 +1,6 @@
 import pytest
-from validate import check_query_f, validate_http_anyq
+from validate import check_query_f, check_query
+
 
 # Marking all tests in this module that server upgrade tests can be run
 # Few of them cannot be run, which will be marked skip_server_upgrade_test
@@ -168,7 +169,6 @@ class TestGraphqlInsertPermission:
         check_query_f(hge_ctx, self.dir() + "/user_insert_account_fail.yaml")
 
     def test_admin_only_insert(self, hge_ctx, transport):
-        admin_secret = hge_ctx.hge_key
         graphql_query = '''
           mutation {
             insert_user(objects: [
@@ -187,18 +187,8 @@ class TestGraphqlInsertPermission:
         headers = {
             "x-hasura-role": "admin_user" # Role for which admin_only insert defined
         }
-        if admin_secret:
-            # If admin secret present, the mutation should go through
-            headers['x-hasura-admin-secret'] = admin_secret
-            response = {
-               "data": {
-                 "insert_user": {
-                   "affected_rows": 1
-                 }
-               }
-            }
-        else:
-            # Else, the mutation fails with no such mutations exist
+        if hge_ctx.hge_webhook or hge_ctx.hge_jwt_key:
+            # If any external authentication configured
             response = {
               "errors": [
                 {
@@ -210,8 +200,25 @@ class TestGraphqlInsertPermission:
                 }
               ]
             }
+        else:
+            # If no external authentication configured
+            response = {
+               "data": {
+                 "insert_user": {
+                   "affected_rows": 1
+                 }
+               }
+            }
 
-        validate_http_anyq(hge_ctx, '/v1/graphql', query, headers, 200, response)
+        conf = {
+            'status': 200,
+            'url': '/v1/graphql',
+            'query': query,
+            'response': response,
+            'headers': headers
+        }
+
+        check_query(hge_ctx, conf, transport)
 
     @classmethod
     def dir(cls):

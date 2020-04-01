@@ -50,8 +50,8 @@ instance ToJSON GCtx where
 
 data RoleContext a
   = RoleContext
-  { _rctxOnlyRole        :: !a
-  , _rctxWithAdminSecret :: !(Maybe a)
+  { _rctxDefault  :: !a
+  , _rctxRoleOnly :: !(Maybe a)
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 
 instance ToJSON (RoleContext a) where

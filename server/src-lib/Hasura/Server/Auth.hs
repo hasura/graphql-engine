@@ -261,7 +261,7 @@ getUserInfoWithExpTime
   -> m (UserInfo, Maybe UTCTime)
 getUserInfoWithExpTime logger manager rawHeaders = \case
 
-  AMNoAuth -> pure (userInfoFromHeaders UAdminSecretAbsent, Nothing)
+  AMNoAuth -> pure (userInfoFromHeaders UNoAuthSet, Nothing)
 
   AMAdminSecret adminScrt unAuthRole ->
     case adminSecretM of

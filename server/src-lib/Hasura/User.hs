@@ -118,6 +118,7 @@ getSessionVariableValue k = Map.lookup k . unSessionVariables
 data UserAdminSecret
   = UAdminSecretPresent
   | UAdminSecretAbsent
+  | UNoAuthSet
   deriving (Show, Eq, Generic)
 instance Hashable UserAdminSecret
 
