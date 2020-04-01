@@ -1,5 +1,11 @@
 # Hasura GraphQL Engine Changelog
 
+## Next release
+
+### Bug fixes and improvements
+
+- docs: add One-Click Render deployment guide (close #3683) (#4209)
+
 ## `v1.2.0-beta.3`
 
 ### console: manage Postgres check constraints
