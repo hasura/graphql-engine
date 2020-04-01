@@ -3,7 +3,9 @@
 ## Next release
 
 ### Bug fixes and improvements
-- console: allow customising exposed column names of views (close #3689) (#4255)
+
+- console: allow customising graphql field names for columns of views (close #3689) (#4255)
+- docs: add One-Click Render deployment guide (close #3683) (#4209)
 
 ## `v1.2.0-beta.3`
 
