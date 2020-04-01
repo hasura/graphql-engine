@@ -16,7 +16,7 @@ if [[ "$LATEST_TAG" =~ $SEMVER_REGEX ]]; then
     major=${BASH_REMATCH[1]}
     minor=${BASH_REMATCH[2]}
     release=${BASH_REMATCH[5]}
-    if [[ "$release" =~ $CHANNEL_REGEX ]]; then
+    if [[ "$release" =~ $CHANNEL_REGEX ]] && [[ "${BASH_REMATCH[0]}" != "pro" ]]; then
         channel="${BASH_REMATCH[0]}"
     fi
     VERSION="channel/$channel/v$major$minor"
