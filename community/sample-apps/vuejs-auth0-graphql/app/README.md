@@ -21,13 +21,38 @@ Auth0 as our authentication and JWT token provider.
 
 ## Add rules for custom JWT claims
 
-In the Auth0 dashboard, navigate to "Rules". Add the following rules to add our custom JWT claims:
+Auth0 has multiple versions of its SDK available and unfortunately they have different semantics
+when it comes to JWT handling. If you're using [Auth0.js](https://auth0.com/docs/libraries/auth0js),
+you'll need to add a rule to update the `idToken`. If you're using the [Auth0 Single Page App SDK](https://auth0.com/docs/libraries/auth0-spa-js),
+you'll need to add a rule to update the `accessToken`. If you update the wrong token, the necessary
+Hasura claims will not appear in the generated JWT and your client will not authenticate properly.
+
+In both cases you'll want to open the Auth0 dashboard and then navigate to "Rules". Then add a rule
+to add the custom JWT claims. You can name the rule anything you want.
+
+For Auth0.js:
 
 ```javascript
 function (user, context, callback) {
   const namespace = "https://hasura.io/jwt/claims";
   context.idToken[namespace] = 
     { 
+      'x-hasura-default-role': 'user',
+      // do some custom logic to decide allowed roles
+      'x-hasura-allowed-roles': user.email === 'admin@foobar.com' ? ['user', 'admin'] : ['user'],
+      'x-hasura-user-id': user.user_id
+    };
+  callback(null, user, context);
+}
+```
+
+For auth0-spa-js:
+
+```javascript
+function (user, context, callback) {
+  const namespace = "https://hasura.io/jwt/claims";
+  context.accessToken[namespace] =
+    {
       'x-hasura-default-role': 'user',
       // do some custom logic to decide allowed roles
       'x-hasura-allowed-roles': user.email === 'admin@foobar.com' ? ['user', 'admin'] : ['user'],

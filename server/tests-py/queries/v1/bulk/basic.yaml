@@ -2,7 +2,6 @@ description: Bulk query
 url: /v1/query
 status: 200
 response:
-  - message: success
   - affected_rows: 2
   - result_type: TuplesOk
     result:
@@ -12,10 +11,6 @@ response:
 query:
   type: bulk
   args:
-  - type: track_table
-    args:
-      schema: public
-      name: author
   - type: insert
     args:
       table: author

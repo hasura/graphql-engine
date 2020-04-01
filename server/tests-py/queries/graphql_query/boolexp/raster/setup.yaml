@@ -7,14 +7,20 @@ args:
     sql: |
       CREATE EXTENSION IF NOT EXISTS postgis;
       CREATE EXTENSION IF NOT EXISTS postgis_topology;
+      DO $$
+      BEGIN
+        IF PostGIS_lib_version() ~ '^3.*' THEN
+          CREATE EXTENSION IF NOT EXISTS postgis_raster;
+        END IF;
+      END$$;
 
       CREATE TABLE dummy_rast(
         rid serial primary key,
         rast raster
       );
       INSERT INTO dummy_rast (rast) values
-        (ST_AsRaster(ST_Buffer(ST_GeomFromText('SRID=4326;POINT(1 2)'),2), 5, 5))
-      , (ST_AsRaster(ST_Buffer(ST_GeomFromText('SRID=4326;LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)'), 2), 5, 5))
+        (ST_AsRaster(ST_Buffer(ST_GeomFromEWKT('SRID=4326;POINT(1 2)'),2), 5, 5))
+      , (ST_AsRaster(ST_Buffer(ST_GeomFromEWKT('SRID=4326;LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)'), 2), 5, 5))
       ;
 - type: track_table
   args:

@@ -1,3 +1,9 @@
+.. meta::
+   :description: Use relationships with the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, relationship
+
+.. _api_relationship:
+
 Schema/Metadata API Reference: Relationships
 ============================================
 
@@ -390,7 +396,7 @@ Args syntax
      - true
      - :ref:`TableName`
      - Name of the table
-   * - name
+   * - relationship
      - true
      - :ref:`RelationshipName`
      - Name of the relationship that needs to be dropped
@@ -445,7 +451,7 @@ Args syntax
      - true
      - :ref:`TableName`
      - Name of the table
-   * - name
+   * - relationship
      - true
      - :ref:`RelationshipName`
      - The relationship
@@ -453,3 +459,52 @@ Args syntax
      - false
      - Text
      - Comment
+
+.. _rename_relationship:
+
+rename_relationship
+-------------------
+
+``rename_relationship`` is used to modify the name of an existing relationship.
+
+An example:
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type": "rename_relationship",
+       "args": {
+           "table": "article",
+           "name": "article_details",
+           "new_name": "article_detail"
+       }
+   }
+
+.. _rename_relationship_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - table
+     - true
+     - :ref:`TableName`
+     - Name of the table
+   * - name
+     - true
+     - :ref:`RelationshipName`
+     - The relationship
+   * - new_name
+     - true
+     - :ref:`RelationshipName`
+     - New relationship name

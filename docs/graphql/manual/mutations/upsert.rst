@@ -1,3 +1,9 @@
+.. meta::
+   :description: Use upsert mutations with Hasura
+   :keywords: hasura, docs, mutation, upsert
+
+.. _upsert:
+
 Upsert mutation
 ===============
 
@@ -18,10 +24,10 @@ Convert insert mutation to upsert
   Only tables with **update** permissions are **upsertable**. i.e. a table's update permissions are respected
   before updating an existing row in case of a conflict.
 
-To convert an :doc:`insert mutation <insert>` into an upsert, you need to use the ``on_conflict`` argument to specify:
+To convert an :ref:`insert mutation <insert>` into an upsert, you need to use the ``on_conflict`` argument to specify:
 
-- a unique or primary key constraint using the ``constraint`` field, and
-- the columns to be updated in the case of a violation of that constraint using the ``update_columns`` field.
+- a **unique or primary key constraint** using the ``constraint`` field, and
+- the **columns to be updated** in the case of a violation of that constraint using the ``update_columns`` field.
 
 The value of the ``update_columns`` field determines the behaviour of the upsert request as shown via the use cases
 below.
@@ -44,7 +50,7 @@ The upsert functionality is sometimes confused with the update functionality. Ho
 differently. An upsert mutation is used in the case when it's not clear if the respective row is already present
 in the database. If it's known that the row is present in the database, ``update`` is the functionality to use.
 
-**For an upsert, all columns that are necessary for an insert are required**.
+For an upsert, **all columns that are necessary for an insert are required**.
 
 **How it works**
 
@@ -226,15 +232,22 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
     }
 
 
-.. admonition:: Edge-cases
+.. _nested-upsert-caveats:
+
+Nested upsert caveats
+^^^^^^^^^^^^^^^^^^^^^
+
+.. note::
+
+  The process by which nested inserts/upserts are executed is documented :ref:`here <nested_inserts>`.
 
   Nested upserts will fail when:
 
   - In case of an array relationship, the parent upsert does not affect any rows (i.e. ``update_columns: []`` for parent
-    and a conflict occurs)
+    and a conflict occurs), as the array relationship objects are inserted after the parent.
   - In case of an object relationship, the nested object upsert does not affect any row (i.e. ``update_columns: []`` for
-    nested object and a conflict occurs)
+    nested object and a conflict occurs), as the object relationship object is inserted before the parent.
 
-  To allow upserting in these cases, set ``update_columns: [<conflict-column>]``. By doing this, in case of a
-  conflict, the conflicted column will be updated with the new value (which is the same value it had before and hence
-  will effectively leave it unchanged) and will allow the upsert to go through.
+  To allow upserting in these cases, set ``update_columns: [<conflict-columns>]``. By doing this, in case of a
+  conflict, the conflicted column/s will be updated with the new value (which is the same values as they had before and hence
+  will effectively leave them unchanged) and will allow the upsert to go through.

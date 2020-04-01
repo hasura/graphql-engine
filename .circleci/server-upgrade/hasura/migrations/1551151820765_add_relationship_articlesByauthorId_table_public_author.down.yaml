@@ -1,6 +1,0 @@
-- args:
-    relationship: articlesByauthorId
-    table:
-      name: author
-      schema: public
-  type: drop_relationship

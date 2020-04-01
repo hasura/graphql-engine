@@ -5,9 +5,20 @@ args:
 - type: run_sql
   args:
     sql: |
+      CREATE EXTENSION IF NOT EXISTS postgis;
+      CREATE EXTENSION IF NOT EXISTS postgis_topology;
+      DO $$
+      BEGIN
+        IF PostGIS_lib_version() ~ '^3.*' THEN
+          CREATE EXTENSION IF NOT EXISTS postgis_raster;
+        END IF;
+      END$$;
       create table author(
           id serial primary key,
-          name text unique
+          name text unique,
+          emails text[] not null default '{}'::text[],
+          info jsonb,
+          location geography
       );
 - type: track_table
   args:

@@ -6,19 +6,20 @@ response:
     insert_article:
       affected_rows: 2
       returning:
-      - content: Content for Article 5
+      - id: 5
+        title: Article by Author 5
+        content: Content for Article 5
+        tags: '[]'
         author:
-          name: Author 5
-          articles:
-          - content: Content for Article 5
-            id: 5
-            title: Article by Author 5
           id: 5
+          name: Author 5
           articles_aggregate:
             aggregate:
               count: 1
-        id: 5
-        title: Article by Author 5
+          articles:
+          - id: 5
+            title: Article by Author 5
+            content: Content for Article 5
 query:
   query: |
     mutation {
@@ -27,6 +28,7 @@ query:
           id: 5
           title: "Article by Author 5"
           content: "Content for Article 5"
+          tags: "[]"
           author: {
             data: {
               id: 5
@@ -40,6 +42,7 @@ query:
           id
           title
           content
+          tags
           author{
             id
             name

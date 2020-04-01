@@ -12,11 +12,7 @@
   status: 200
   response:
     version: 2
-    allowlist: []
-    functions: []
-    query_collections: []
     tables: []
-    remote_schemas: []
   query:
     type: export_metadata
     args: {}

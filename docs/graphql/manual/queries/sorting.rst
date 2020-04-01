@@ -1,3 +1,9 @@
+.. meta::
+   :description: Sort query results in Hasura
+   :keywords: hasura, docs, query, sort
+
+.. _sort_query_results:
+
 Sort query results
 ==================
 
@@ -5,6 +11,9 @@ Sort query results
   :backlinks: none
   :depth: 2
   :local:
+
+The **order_by** argument
+-------------------------
 
 Results from your query can be sorted by using the ``order_by`` argument. The argument can be used to sort nested
 objects too.

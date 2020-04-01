@@ -1,0 +1,28 @@
+description: Run create_user sync action mutation with valid email
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      create_user(email: "clarke@gmail.com", name: "Clarke"){
+        __typename
+        id
+        user {
+          __typename
+          name
+          email
+          is_admin
+        }
+      }
+    }
+
+response:
+  data:
+    create_user:
+      __typename: UserId
+      id: 1
+      user:
+        __typename: user
+        name: Clarke
+        email: clarke@gmail.com
+        is_admin: false

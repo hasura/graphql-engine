@@ -1,3 +1,9 @@
+.. meta::
+   :description: Manage pagination with Hasura
+   :keywords: hasura, docs, query, pagination
+
+.. _pagination:
+
 Paginate query results
 ======================
 
@@ -5,6 +11,9 @@ Paginate query results
   :backlinks: none
   :depth: 2
   :local:
+
+The **limit** & **offset** arguments
+------------------------------------
 
 The operators ``limit`` and ``offset`` are used for pagination.
 
@@ -189,8 +198,77 @@ Limit results in a nested object
       }
     }
 
-Fetch limited results along with aggregated data on all results *(e.g. total count)* in the same query
-------------------------------------------------------------------------------------------------------
+Keyset cursor based pagination
+------------------------------
+
+Cursors are used to traverse across rows of a dataset. They work by returning a pointer to a specific row which can
+then be used to fetch the next batch of data.
+
+Keyset cursors are a column (or a set of columns) of the data that are used as the cursor. The column(s) used as the
+cursor must be unique and sequential. This ensures that data is read after a specific row rather than relying on the
+position of the row in the dataset as done by ``offset``, and that duplicate records are not fetched again.
+
+**For example**, consider the following query to fetch a list of authors with a ``where`` clause used in place of
+``offset``:
+
+.. graphiql::
+  :view_only:
+  :query:
+    query {
+      author(
+        limit: 5,
+        where: { id: {_gt: 5} }
+      ) {
+        id
+        name
+      }
+    }
+  :response:
+    {
+      "data": {
+        "author": [
+          {
+            "id": 6,
+            "name": "Corny"
+          },
+          {
+            "id": 7,
+            "name": "Berti"
+          },
+          {
+            "id": 8,
+            "name": "April"
+          },
+          {
+            "id": 9,
+            "name": "Ninnetta"
+          },
+          {
+            "id": 10,
+            "name": "Lyndsay"
+          }
+        ]
+      }
+    }
+
+Here we are fetching authors where the value of ``id`` is greater than 5. This will always skip the previously fetched
+results which would have been ids 1 to 5, ensuring no duplicate results. Column ``id`` is acting as the cursor here,
+unique and sequential.
+
+The choice of cursor columns depends on the order of the expected results i.e. if the query has an ``order_by``
+clause, the column(s) used in the ``order_by`` need to be used as the cursor.
+
+Columns such as ``id`` (auto-incrementing integer/big integer) or ``created_at`` (timestamp) are commonly used as
+cursors when an order is not explicit, as they should be unique and sequential.
+
+
+.. note::
+
+  Keyset cursor based pagination using ``where`` is more performant than using ``offset`` because we can leverage
+  database indexes on the columns that are being used as cursors.
+
+Fetch limited results along with data aggregated over all results *(e.g. total count)* in the same query
+--------------------------------------------------------------------------------------------------------
 
 Sometimes, some aggregated information on all the data is required along with a subset of data.
 
@@ -245,6 +323,6 @@ articles to return.
 
 .. admonition:: Caveat
 
-  If this needs to be done over :doc:`subscriptions <../subscriptions/index>`, two subscriptions will need to be run
+  If this needs to be done over :ref:`subscriptions <subscriptions>`, two subscriptions will need to be run
   as Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`_ which
   allows for only one root field in a subscription.

@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 -- A module for postgres execution related types and operations
 
 module Hasura.Db
@@ -17,6 +19,8 @@ module Hasura.Db
   ) where
 
 import           Control.Lens
+import           Control.Monad.Trans.Control  (MonadBaseControl (..))
+import           Control.Monad.Unique
 import           Control.Monad.Validate
 
 import qualified Data.Aeson.Extended          as J
@@ -45,6 +49,8 @@ instance (MonadTx m) => MonadTx (StateT s m) where
   liftTx = lift . liftTx
 instance (MonadTx m) => MonadTx (ReaderT s m) where
   liftTx = lift . liftTx
+instance (Monoid w, MonadTx m) => MonadTx (WriterT w m) where
+  liftTx = lift . liftTx
 instance (MonadTx m) => MonadTx (ValidateT e m) where
   liftTx = lift . liftTx
 
@@ -68,20 +74,21 @@ lazyTxToQTx = \case
   LTTx tx  -> tx
 
 runLazyTx
-  :: PGExecCtx
+  :: (MonadIO m)
+  => PGExecCtx
   -> Q.TxAccess
-  -> LazyTx QErr a -> ExceptT QErr IO a
+  -> LazyTx QErr a -> ExceptT QErr m a
 runLazyTx (PGExecCtx pgPool txIso) txAccess = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> Q.runTx pgPool (txIso, Just txAccess) tx
+  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ Q.runTx pgPool (txIso, Just txAccess) tx
 
 runLazyTx'
-  :: PGExecCtx -> LazyTx QErr a -> ExceptT QErr IO a
+  :: MonadIO m => PGExecCtx -> LazyTx QErr a -> ExceptT QErr m a
 runLazyTx' (PGExecCtx pgPool _) = \case
   LTErr e  -> throwError e
   LTNoTx a -> return a
-  LTTx tx  -> Q.runTx' pgPool tx
+  LTTx tx  -> ExceptT <$> liftIO $ runExceptT $ Q.runTx' pgPool tx
 
 type RespTx = Q.TxE QErr EncJSON
 type LazyRespTx = LazyTx QErr EncJSON
@@ -124,7 +131,7 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
 
         PGDataException code -> case code of
           Just (PGErrorSpecific PGInvalidEscapeSequence) -> (BadRequest, message)
-          _ -> (DataException, message)
+          _                                              -> (DataException, message)
 
         PGSyntaxErrorOrAccessRuleViolation code -> (ConstraintError,) $ case code of
           Just (PGErrorSpecific PGInvalidColumnReference) ->
@@ -171,5 +178,16 @@ instance MonadTx (LazyTx QErr) where
 instance MonadTx (Q.TxE QErr) where
   liftTx = id
 
-instance MonadIO (LazyTx QErr) where
+instance MonadIO (LazyTx e) where
   liftIO = LTTx . liftIO
+
+instance MonadBase IO (LazyTx e) where
+  liftBase = liftIO
+
+instance MonadBaseControl IO (LazyTx e) where
+  type StM (LazyTx e) a = StM (Q.TxE e) a
+  liftBaseWith f = LTTx $ liftBaseWith \run -> f (run . lazyTxToQTx)
+  restoreM = LTTx . restoreM
+
+instance MonadUnique (LazyTx e) where
+  newUnique = liftIO newUnique

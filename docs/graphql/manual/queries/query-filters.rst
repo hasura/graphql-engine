@@ -1,10 +1,19 @@
+.. meta::
+   :description: Filter query results and search queries in Hasura
+   :keywords: hasura, docs, query, filter, search
+
+.. _filter_queries:
+
 Filter query results / search queries
 =====================================
 
 .. contents:: Table of contents
   :backlinks: none
-  :depth: 1
+  :depth: 2
   :local:
+
+The **where** argument
+----------------------
 
 You can use the ``where`` argument in your queries to filter results based on some field’s values (even
 nested objects' fields). You can even use multiple filters in the same ``where`` clause using the ``_and`` or the
@@ -48,10 +57,13 @@ argument to filter on equality.
 
 You can see the complete specification of the ``where`` argument in the :ref:`API reference <WhereExp>`.
 
-Let’s take a look at different comparision operators that can be used to filter results and other advanced use cases:
+Comparision operators
+---------------------
+
+Let’s take a look at different comparision operators that can be used to filter results.
 
 Equality operators (_eq, _neq)
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible with any Postgres type other than
 ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
@@ -59,8 +71,8 @@ The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible w
 
 The following are examples of using the equality operators on different types.
 
-Example: Integer (works with Double, Float, Numeric, etc.)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Example: Integer (works with Double, Float, Numeric, etc.)**
+
 Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
 
 .. graphiql::
@@ -86,8 +98,8 @@ Fetch data about author whose ``id`` *(an integer field)* is equal to 3:
       }
     }
 
-Example: String or Text
-^^^^^^^^^^^^^^^^^^^^^^^
+**Example: String or Text**
+
 Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
 
 .. graphiql::
@@ -113,8 +125,8 @@ Fetch a list of authors with ``name`` *(a text field)* as "Sidney":
       }
     }
 
-Example: Boolean
-^^^^^^^^^^^^^^^^
+**Example: Boolean**
+
 Fetch a list of articles that have not been published (``is_published`` is a boolean field):
 
 .. graphiql::
@@ -158,8 +170,8 @@ Fetch a list of articles that have not been published (``is_published`` is a boo
     }
 
 
-Example: Date (works with Time, Timezone, etc.)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Example: Date (works with Time, Timezone, etc.)**
+
 Fetch a list of articles that were published on a certain date (``published_on`` is a Date field):
 
 .. graphiql::
@@ -188,7 +200,7 @@ Fetch a list of articles that were published on a certain date (``published_on``
     }
 
 Greater than or less than operators (_gt, _lt, _gte, _lte)
-----------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal to),
 ``_lte`` (less than or equal to) operators are compatible with any Postgres type other than ``json`` or ``jsonB``
@@ -197,8 +209,8 @@ The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal
 The following are examples of using these operators on different types:
 
 
-Example: Integer (works with Double, Float, etc.)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Example: Integer (works with Double, Float, etc.)**
+
 Fetch a list of articles rated 4 or more (``rating`` is an integer field):
 
 .. graphiql::
@@ -236,8 +248,8 @@ Fetch a list of articles rated 4 or more (``rating`` is an integer field):
       }
     }
 
-Example: String or Text
-^^^^^^^^^^^^^^^^^^^^^^^
+**Example: String or Text**
+
 Fetch a list of authors whose names begin with M or any letter that follows M *(essentially, a filter based on a
 dictionary sort)*:
 
@@ -268,8 +280,8 @@ dictionary sort)*:
       }
     }
 
-Example: Date (works with Time, Timezone, etc.)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Example: Date (works with Time, Timezone, etc.)**
+
 Fetch a list of articles that were published on or after date "01/01/2018":
 
 .. graphiql::
@@ -313,7 +325,7 @@ Fetch a list of articles that were published on or after date "01/01/2018":
     }
 
 List based search operators (_in, _nin)
----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``_in`` (in a list) and ``_nin`` (not in list) operators are used to compare field values to a list of values.
 They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``,
@@ -321,8 +333,8 @@ They are compatible with any Postgres type other than ``json`` or ``jsonB`` (lik
 
 The following are examples of using these operators on different types:
 
-Example: Integer (works with Double, Float, etc.)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Example: Integer (works with Double, Float, etc.)**
+
 Fetch a list of articles rated 1, 3 or 5:
 
 .. graphiql::
@@ -365,8 +377,8 @@ Fetch a list of articles rated 1, 3 or 5:
       }
     }
 
-Example: String or Text
-^^^^^^^^^^^^^^^^^^^^^^^
+**Example: String or Text**
+
 Fetch a list of those authors whose names are NOT part of a list:
 
 .. graphiql::
@@ -405,15 +417,15 @@ Fetch a list of those authors whose names are NOT part of a list:
     }
 
 Text search or pattern matching operators (_like, _similar, etc.)
------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators are used for
 pattern matching on string/text fields.
 
 These operators behave exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__
 
-Example: _like
-^^^^^^^^^^^^^^
+**Example: _like**
+
 Fetch a list of articles whose titles contain the word “amet”:
 
 .. graphiql::
@@ -450,8 +462,8 @@ Fetch a list of articles whose titles contain the word “amet”:
   ``_like`` is case-sensitive. Use ``_ilike`` for case-insensitive search.
 
 
-Example: _similar
-^^^^^^^^^^^^^^^^^
+**Example: _similar**
+
 Fetch a list of authors whose names begin with A or C:
 
 .. graphiql::
@@ -494,15 +506,15 @@ Fetch a list of authors whose names begin with A or C:
   ``_similar`` is case-sensitive
 
 JSONB operators (_contains, _has_key, etc.)
--------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``_contains``, ``_contained_in``, ``_has_key``, ``_has_key_any`` and ``_has_key_all`` operators are used to filter
 based on ``JSONB`` columns.
 
 For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.
 
-Example: _contains
-^^^^^^^^^^^^^^^^^^
+**Example: _contains**
+
 Fetch all authors living within a particular pincode (present in ``address`` JSONB column):
 
 .. graphiql::
@@ -544,8 +556,8 @@ Fetch all authors living within a particular pincode (present in ``address`` JSO
       }
     }
 
-Example: _has_key
-^^^^^^^^^^^^^^^^^
+**Example: _has_key**
+
 Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
 
 .. graphiql::
@@ -583,7 +595,7 @@ Fetch authors if the ``phone`` key is present in their JSONB ``address`` column:
 
 
 PostGIS spatial relationship operators (_st_contains, _st_crosses, etc.)
-------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st_overlaps``, ``_st_touches``,
 ``_st_within`` and ``_st_d_within`` operators are used to filter based on ``geometry`` like columns.
@@ -597,8 +609,8 @@ Use JSON representation (see `GeoJSON <https://tools.ietf.org/html/rfc7946>`_) o
 ``variables`` as shown in the following examples:
 
 
-Example: _st_within
-^^^^^^^^^^^^^^^^^^^
+**Example: _st_within**
+
 Fetch a list of geometry values which are within the given ``polygon`` value:
 
 .. graphiql::
@@ -645,8 +657,8 @@ Fetch a list of geometry values which are within the given ``polygon`` value:
       }
     }
 
-Example: _st_d_within
-^^^^^^^^^^^^^^^^^^^^^
+**Example: _st_d_within**
+
 Fetch a list of ``geometry`` values which are 3 units from given ``point`` value:
 
 .. graphiql::
@@ -696,12 +708,12 @@ Fetch a list of ``geometry`` values which are 3 units from given ``point`` value
     }
 
 Filter or check for null values (_is_null)
-------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Checking for null values can be achieved using the ``_is_null`` operator.
 
-Example: Filter null values in a field
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Example: Filter null values in a field**
+
 Fetch a list of articles that have a value in the ``published_on`` field:
 
 .. graphiql::
@@ -744,14 +756,166 @@ Fetch a list of articles that have a value in the ``published_on`` field:
       }
     }
 
+Intersect operators on RASTER columns (_st_intersects_rast, etc)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Intersect operators on columns with ``raster`` type are supported.
+Refer to `Postgis docs <https://postgis.net/docs/RT_ST_Intersects.html>`__ to know more about intersect functions on ``raster`` columns.
+Please submit a feature request via `github <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
+
+**Example: _st_intersects_rast**
+
+
+Filter the raster values which intersect the input raster value.
+
+Executes the following SQL function:
+
+.. code-block:: sql
+
+   boolean ST_Intersects( raster <raster-col> , raster <raster-value> );
+
+
+.. graphiql::
+  :view_only:
+  :query:
+   query getIntersectingValues ($rast: raster){
+     dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
+       rid
+       rast
+     }
+   }
+  :response:
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
+  :variables:
+   {
+     "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
+   }
+
+**Example: _st_intersects_geom_nband**
+
+Filter the raster values which intersect the input geometry value and optional band number.
+
+Executes the following SQL function:
+
+.. code-block:: sql
+
+   boolean ST_Intersects( raster <raster-col> , geometry geommin , integer nband=NULL );
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    query getIntersectingValues ($point: geometry!){
+      dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){
+        rid
+        rast
+      }
+    }
+  :response:
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
+  :variables:
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [
+         1,
+         2
+       ],
+       "crs": {
+         "type": "name",
+         "properties": {
+           "name": "urn:ogc:def:crs:EPSG::4326"
+         }
+       }
+     }
+   }
+
+**Example: _st_intersects_nband_geom**
+
+Filter the raster values (with specified band number) which intersect the input geometry value.
+
+Executes the following SQL function:
+
+.. code-block:: sql
+
+   boolean ST_Intersects( raster <raster-col> , integer nband , geometry geommin );
+
+
+.. graphiql::
+  :view_only:
+  :query:
+    query getIntersectingValues ($point: geometry!){
+      dummy_rast(where: {rast: {_st_intersects_nband_geom: {nband: 5 geommin: $point}}}){
+        rid
+        rast
+      }
+    }
+  :response:
+   {
+     "data": {
+       "dummy_rast": [
+         {
+           "rid": 1,
+           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
+         },
+         {
+           "rid": 2,
+           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
+         }
+       ]
+     }
+   }
+  :variables:
+   {
+     "point": {
+       "type": "Point",
+       "coordinates": [
+         1,
+         2
+       ],
+       "crs": {
+         "type": "name",
+         "properties": {
+           "name": "urn:ogc:def:crs:EPSG::4326"
+         }
+       }
+     }
+   }
+
 Filter based on failure of some criteria (_not)
 -----------------------------------------------
 
 The ``_not`` operator can be used to fetch results for which some condition does not hold true. i.e. to invert the
 filter set for a condition.
 
-Example: _not
-^^^^^^^^^^^^^
+**Example: _not**
+
 Fetch all authors who don't have any published articles:
 
 .. graphiql::
@@ -816,8 +980,8 @@ results based on more than one criteria.
   You can use the ``_or`` and ``_and`` operators along with the ``_not`` operator to create arbitrarily complex boolean
   expressions involving multiple filtering criteria.
 
-Example:  _and
-^^^^^^^^^^^^^^
+**Example:  _and**
+
 Fetch a list of articles published in a specific time-frame (for example: in year 2017):
 
 .. graphiql::
@@ -866,8 +1030,13 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
       }
     }
 
-Example:  _or
-^^^^^^^^^^^^^
+.. note::
+
+  Certain ``_and`` expressions can be expressed in a simpler format using some syntactic sugar. See the
+  :ref:`API reference <AndExp>` for more details.
+
+**Example:  _or**
+
 Fetch a list of articles rated more than 4 or published after "01/01/2018":
 
 .. graphiql::
@@ -921,6 +1090,11 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
       }
     }
 
+.. note::
+
+  The ``_or`` operator expects an array of expressions as input. If an object is passed as input it will behave like
+  the ``_and`` operator as explained in the :ref:`API reference <OrExp>`
+
 .. _nested_filter:
 
 Filter nested objects
@@ -929,8 +1103,8 @@ Filter nested objects
 The ``where`` argument can be used in **array relationships** as well to filter the nested objects.
 **Object relationships** have only one nested object and hence they do not expose the ``where`` argument.
 
-Example:
-^^^^^^^^
+**Example:**
+
 Fetch all authors with only their 5 rated articles:
 
 .. graphiql::
@@ -1010,8 +1184,8 @@ Let's look at a few use cases based on the above:
 Fetch if the single nested object defined via an object relationship satisfies a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Example:
-~~~~~~~~
+**Example:**
+
 Fetch all articles whose author's name starts with "A":
 
 .. graphiql::
@@ -1079,8 +1253,8 @@ Fetch all articles whose author's name starts with "A":
 Fetch if **any** of the nested objects defined via an array relationship satisfy a condition
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Example:
-~~~~~~~~
+**Example:**
+
 Fetch all authors which have written at least one article which is rated 1:
 
 .. graphiql::
@@ -1171,8 +1345,8 @@ For example:
 | ``{object: {field: {_gt: "value"}}}`` | ``{_not: {object: {field: {_lte: "value"}}}`` |
 +---------------------------------------+-----------------------------------------------+
 
-Example:
-~~~~~~~~
+**Example:**
+
 Fetch all authors which have all of their articles published i.e. have ``{is_published {_eq: true}``.
 
 .. graphiql::
@@ -1272,8 +1446,8 @@ For example,
 | ``{object: {field: {_gt: "value"}}}`` | ``{_not: {object: {field: {_gt: "value"}}}`` |
 +---------------------------------------+----------------------------------------------+
 
-Example:
-~~~~~~~~
+**Example:**
+
 Fetch all authors which have none of their articles published i.e. have ``{is_published {_eq: true}``:
 
 .. graphiql::
@@ -1323,15 +1497,15 @@ Fetch all authors which have none of their articles published i.e. have ``{is_pu
       }
     }
 
-Filter based on existence of nested objects
--------------------------------------------
+Fetch if nested object(s) exist
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can filter results based on if they have nested objects by checking if any nested objects exist. This can be
 achieved by using the expression ``{}`` which evaluates to ``true`` if any object exists.
 
 
-Example:
-^^^^^^^^
+**Example:**
+
 Fetch all authors which have at least one article written by them:
 
 .. graphiql::
@@ -1406,8 +1580,7 @@ between PostGIS ``geometry`` and ``geography`` types is supported.
 Casting using ``_cast`` corresponds directly to
 `SQL type casts <https://www.postgresql.org/docs/current/sql-expressions.html#SQL-SYNTAX-TYPE-CASTS>`__.
 
-Example: cast ``geometry`` to ``geography``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Example: cast ``geometry`` to ``geography``**
 
 Filtering using ``_st_d_within`` over large distances can be inaccurate for location data stored in
 ``geometry`` columns. For accurate queries, cast the field to ``geography`` before comparing:
@@ -1448,8 +1621,7 @@ Filtering using ``_st_d_within`` over large distances can be inaccurate for loca
       "distance": 1000000
     }
 
-Example: cast ``geography`` to ``geometry``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Example: cast ``geography`` to ``geometry``**
 
 Columns of type ``geography`` are more accurate, but they don’t support as many operations as
 ``geometry``. Cast to ``geometry`` to use those operations in a filter:
@@ -1509,156 +1681,21 @@ Columns of type ``geography`` are more accurate, but they don’t support as man
 
     CREATE INDEX cities_location_geography ON cities USING GIST ((location::geography));
 
-Intersect operators on RASTER columns
--------------------------------------
+.. _true_expression:
 
-Intersect operators on columns with ``raster`` type are supported.
-Refer to `Postgis docs <https://postgis.net/docs/RT_ST_Intersects.html>`__ to know more about intersect functions on ``raster`` columns.
-Please submit a feature request via `github <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
+The TRUE expression ( **{ }** )
+-------------------------------
 
-Example: _st_intersects_rast
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The expression ``{}`` evaluates to ``true`` for all objects.
 
-Filter the raster values which intersect the input raster value.
+**For example**, any query with the condition ``{ where: {} }`` will return all objects without applying any filter.
 
-Executes the following SQL function:
+.. _null_value_evaluation:
 
-.. code-block:: sql
+Evaluation of **null** values in comparision expressions
+--------------------------------------------------------
 
-   boolean ST_Intersects( raster <raster-col> , raster <raster-value> );
+If in any comparision expression a ``null`` (or ``undefined``) value is passed, the expression currently gets
+reduced to ``{}`` (:ref:`TRUE expression <true_expression>`)
 
-
-.. graphiql::
-  :view_only:
-  :query:
-   query getIntersectingValues ($rast: raster){
-     dummy_rast(where: {rast: {_st_intersects_rast: $rast}}){
-       rid
-       rast
-     }
-   }
-  :response:
-   {
-     "data": {
-       "dummy_rast": [
-         {
-           "rid": 1,
-           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
-         },
-         {
-           "rid": 2,
-           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
-         }
-       ]
-     }
-   }
-  :variables:
-   {
-     "rast": "0100000100000000000000004000000000000000C00000000000000000000000000000084000000000000000000000000000000000E610000001000100440001"
-   }
-
-Example: _st_intersects_geom_nband
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Filter the raster values which intersect the input geometry value and optional band number.
-
-Executes the following SQL function:
-
-.. code-block:: sql
-
-   boolean ST_Intersects( raster <raster-col> , geometry geommin , integer nband=NULL );
-
-
-.. graphiql::
-  :view_only:
-  :query:
-    query getIntersectingValues ($point: geometry!){
-      dummy_rast(where: {rast: {_st_intersects_geom_nband: {geommin: $point}}}){
-        rid
-        rast
-      }
-    }
-  :response:
-   {
-     "data": {
-       "dummy_rast": [
-         {
-           "rid": 1,
-           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
-         },
-         {
-           "rid": 2,
-           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
-         }
-       ]
-     }
-   }
-  :variables:
-   {
-     "point": {
-       "type": "Point",
-       "coordinates": [
-         1,
-         2
-       ],
-       "crs": {
-         "type": "name",
-         "properties": {
-           "name": "urn:ogc:def:crs:EPSG::4326"
-         }
-       }
-     }
-   }
-
-Example: _st_intersects_nband_geom
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Filter the raster values (with specified band number) which intersect the input geometry value.
-
-Executes the following SQL function:
-
-.. code-block:: sql
-
-   boolean ST_Intersects( raster <raster-col> , integer nband , geometry geommin );
-
-
-.. graphiql::
-  :view_only:
-  :query:
-    query getIntersectingValues ($point: geometry!){
-      dummy_rast(where: {rast: {_st_intersects_nband_geom: {nband: 5 geommin: $point}}}){
-        rid
-        rast
-      }
-    }
-  :response:
-   {
-     "data": {
-       "dummy_rast": [
-         {
-           "rid": 1,
-           "rast": "01000001009A9999999999E93F9A9999999999E9BF000000000000F0BF000000000000104000000000000000000000000000000000E610000005000500440000010101000101010101010101010101010101010001010100"
-         },
-         {
-           "rid": 2,
-           "rast": "0100000100166C8E335B91F13FE2385B00285EF6BF360EE40064EBFFBF8D033900D9FA134000000000000000000000000000000000E610000005000500440000000101010001010101010101010101010101000101010000"
-         }
-       ]
-     }
-   }
-  :variables:
-   {
-     "point": {
-       "type": "Point",
-       "coordinates": [
-         1,
-         2
-       ],
-       "crs": {
-         "type": "name",
-         "properties": {
-           "name": "urn:ogc:def:crs:EPSG::4326"
-         }
-       }
-     }
-   }
+**For example**, the expression ``{ where: { _eq: null } }`` will be reduced to ``{ where: {} }``

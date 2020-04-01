@@ -9,9 +9,6 @@ import           Hasura.Prelude
 
 import qualified Data.Aeson            as J
 
-import           Data.Time.Clock       (DiffTime)
-import           Data.Time.Clock.Units (seconds)
-
 data LiveQueriesOptions
   = LiveQueriesOptions
   { _lqoBatchSize       :: !BatchSize
@@ -21,7 +18,7 @@ data LiveQueriesOptions
 mkLiveQueriesOptions :: Maybe BatchSize -> Maybe RefetchInterval -> LiveQueriesOptions
 mkLiveQueriesOptions batchSize refetchInterval = LiveQueriesOptions
   { _lqoBatchSize = fromMaybe (BatchSize 100) batchSize
-  , _lqoRefetchInterval = fromMaybe (RefetchInterval $ seconds 1) refetchInterval
+  , _lqoRefetchInterval = fromMaybe (RefetchInterval 1) refetchInterval
   }
 
 instance J.ToJSON LiveQueriesOptions where
@@ -33,5 +30,7 @@ instance J.ToJSON LiveQueriesOptions where
 newtype BatchSize = BatchSize { unBatchSize :: Int }
   deriving (Show, Eq, J.ToJSON)
 
+-- TODO this is treated as milliseconds in fromEnv and as seconds in ToJSON. 
+--      ideally this would have e.g. ... unRefetchInterval :: Milliseconds
 newtype RefetchInterval = RefetchInterval { unRefetchInterval :: DiffTime }
   deriving (Show, Eq, J.ToJSON)

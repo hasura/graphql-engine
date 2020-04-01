@@ -1,3 +1,9 @@
+.. meta::
+   :description: Configure permission rules in Hasura
+   :keywords: hasura, docs, authorization, permissions, rules
+
+.. _permission_rules:
+
 Configuring Permission Rules
 ============================
 
@@ -13,6 +19,7 @@ Access control rules in Hasura are defined at a role, table and action (*insert,
 level granularity:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/permission-rule-granularity.png
+   :alt: Access control rules in Hasura
 
 Requests to Hasura should contain the reserved session variable ``X-Hasura-Role`` to indicate the requesting
 user's role, and the table and action information is inferred from the request itself. This information is used
@@ -27,7 +34,7 @@ constraints on the data being returned or modified.
 
 Let's take a look at the different configuration options available to define a permission rule. Permission
 rules are defined for each role, table, operation (*insert, select, update, delete*) by using the console
-or the :doc:`metadata APIs for permissions <../../api-reference/schema-metadata-api/permission>`.
+or the :ref:`metadata APIs for permissions <api_permission>`.
 
 Operation permissions
 ---------------------
@@ -86,23 +93,26 @@ determine whether that row can be read. In the case of ``insert``, the boolean e
 Row-level permissions are defined using operators, static values, values in columns (*including those in
 related tables or nested objects*) and session variables.
 
-Using operators to build rules
-******************************
+Using column operators to build rules
+*************************************
 
 Type-based operators (*depending on the column type*) are available for constructing row-level permissions.
-You can use the same operators that you use to :doc:`filter query results <../../queries/query-filters>`
-to define permission rules.
+You can use the same operators that you use to :ref:`filter query results <filter_queries>`
+along with a few others to define permission rules.
 
-See the :ref:`API reference <MetadataOperator>` for a list of all supported operators.
+See the :ref:`API reference <MetadataOperator>` for a list of all supported column operators.
 
-E.g. the following two images illustrate the different operators available for ``integer`` and ``text`` types:
+**For example**, the following two images illustrate the different operators available for ``integer`` and ``text``
+types:
 
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/operators-for-integer-types.png
-   :width: 45%
+   :width: 40%
+   :alt: Column operators for integer types
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/operators-for-text-types.png
-   :width: 45%
+   :width: 40%
+   :alt: Column operators for text types
 
 Using boolean expressions
 *************************
@@ -111,16 +121,19 @@ The following is an example of a simple boolean expression to restrict access fo
 the value in the ``id`` column is greater than 10:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/simple-boolean-expression.png
+   :alt: Using boolean expressions to build rules
 
 You can construct more complex boolean expressions using the ``_and``, ``_or`` and ``not`` operators:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/boolean-operators.png
+   :alt: Using more complex boolean expressions to build rules
 
-E.g. using the ``_and`` operator, you can construct a rule to restrict access for ``select`` to rows where
+**For example**, using the ``_and`` operator, you can construct a rule to restrict access for ``select`` to rows where
 the value in the ``id`` column is greater than 10 **and** the value in the ``name`` column starts with "a"
 or "A":
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/composite-boolean-expression.png
+   :alt: Example of a rule with the _and operator
 
 Using session variables
 ***********************
@@ -128,27 +141,29 @@ Using session variables
 Session variables that have been resolved from authentication tokens by either your authentication webhook or
 by Hasura using the JWT configuration are available for constructing row-level permissions.
 
-E.g. to allow an ``author`` to access only their articles, you can use the ``X-Hasura-User-ID`` session variable
+**For example**, to allow an ``author`` to access only their articles, you can use the ``X-Hasura-User-ID`` session variable
 to construct a rule to restrict access for ``select`` to rows in the ``articles`` table where the value in the
 ``id`` column is equal to the value in the session variable (*assuming this variable is being used to indicate
 the author's ID*):
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/session-variables-in-permissions-simple-example.png
+   :alt: Using session variables to build rules
 
 .. _relationships-in-permissions:
 
 Using relationships or nested objects
 *************************************
 
-You can leverage :doc:`relationships <../../schema/relationships/index>` to define permission rules with fields
+You can leverage :ref:`relationships <relationships>` to define permission rules with fields
 from a nested object.
 
-For example, let's say you have an object relationship called ``agent`` from the ``authors`` table to another table
+**For example**, let's say you have an object relationship called ``agent`` from the ``authors`` table to another table
 called ``agent`` (*an author can have an agent*) and we want to allow users with the role ``agent`` to access
 the details of the authors who they manage in ``authors`` table. We can define the following permission rule
 that uses the aforementioned object relationship:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/nested-object-permission-simple-example.png
+   :alt: Using a nested object to build rules
 
 This permission rule reads as "*if the author's agent's*  ``id``  *is the same as the requesting user's*
 ``id`` *, allow access to the author's details*."
@@ -162,6 +177,23 @@ This permission rule reads as "*if the author's agent's*  ``id``  *is the same a
 
    - You can also check out this more elaborate :ref:`example<nested-object-permissions-example>`.
 
+.. _unrelated-tables-in-permissions:
+
+Using unrelated tables / views
+******************************
+
+You can use the ``_exists`` operator to set a permission rule based on tables/views that are not related to
+our table.
+
+**For example**, say we want to allow a user to ``insert`` an ``article`` only if the value of the ``allow_article_create``
+column in the ``users`` table is set to ``true``. Let's assume the user's id is passed in the ``X-Hasura-User-ID``
+session variable.
+
+.. thumbnail:: ../../../../img/graphql/manual/auth/exists-permission-example.png
+   :alt: Use an unrelated table to build rules
+
+This permission rule reads as "*if there exists a row in the table* ``users`` *whose*  ``id``  *is the same as the requesting user's*
+``id`` *and has the* ``allow_article_create`` *column set to true, allow access to insert articles*."
 
 .. _col-level-permissions:
 
@@ -171,6 +203,7 @@ Column-level permissions determine access to columns in the rows that are access
 permissions. These permissions are simple selections:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/column-level-permissions.png
+   :alt: Column level permissions
 
 In this example, the role ``author`` has only partial access to columns of the accessible rows for
 the ``select`` operation.
@@ -184,6 +217,7 @@ In the case of ``select`` operations, the number of rows to be returned in the r
 using this configuration:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/limit-rows-for-select.png
+   :alt: Row fetch limit
 
 In the above example, this configuration  restricts the number of accessible rows (*based on the rule*:
 ``{"id":{"_eq":"X-Hasura-User-Id"}}``) to 20.
@@ -193,10 +227,11 @@ In the above example, this configuration  restricts the number of accessible row
 Aggregation queries permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the case of ``select`` operations, access to :doc:`aggregation queries <../../queries/aggregation-queries>`
+In the case of ``select`` operations, access to :ref:`aggregation queries <aggregation_queries>`
 can be restricted for a given role using this configuration.
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/aggregation-query-permissions.png
+   :alt: Aggregation queries permissions
 
 In the above example, the role ``user`` is allowed to make aggregation queries.
 
@@ -206,7 +241,7 @@ Column presets
 ^^^^^^^^^^^^^^
 
 While this is strictly not a permission configuration, defining
-:doc:`role-based column presets <../../schema/default-values/column-presets>` on any column automatically
+:ref:`role-based column presets <column_presets>` on any column automatically
 removes access to it. This preset can be defined for ``insert`` and ``update`` operations. This configuration
 is also very useful to avoid sending sensitive user-information in the query and leverage session variables
 or static data instead.

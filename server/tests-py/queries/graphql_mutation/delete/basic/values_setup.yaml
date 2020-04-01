@@ -8,6 +8,18 @@ args:
     objects:
       - name: Author 1
       - name: Author 2
+      - name: Author 3
+        info:
+          age: 23
+        location:
+          type: Point
+          crs:
+            type: name
+            properties:
+              name: urn:ogc:def:crs:EPSG::4326
+          coordinates:
+          - -118.4079
+          - 33.9434
 
 #Insert aticle table data
 - type: insert

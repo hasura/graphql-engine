@@ -1,3 +1,9 @@
+.. meta::
+   :description: Manage roles and session variables for permissions with Hasura
+   :keywords: hasura, docs, authorization, access control, permission, role, session variable
+
+.. _roles_variables:
+
 Roles & Session variables
 =========================
 
@@ -34,8 +40,7 @@ Examples:
 Dynamic session variables
 -------------------------
 
-When you create a permission, or an access control rule, the permission rule itself needs access to some variables
-that are derived from the request itself. Let's refer to these as *session variables*.
+Permission rules can also refer to *session variables*. Session variables are key-value pairs returned from the authentication service for each request.
 
 For example: If a user makes a request, the session token maps to a ``user-id``. This ``user-id`` can be used in
 a permission to show that inserts into a table are only allowed if the ``user_id`` column has a value equal to that
@@ -84,6 +89,11 @@ Examples:
             }
           }
 
+.. admonition:: ABAC
+
+  Session variables are analogous to *attributes* in a typical `attribute-based access control <https://en.wikipedia.org/wiki/Attribute-based_access_control>`_ (ABAC) system.
+
+
 Modelling Roles in Hasura
 -------------------------
 
@@ -95,6 +105,7 @@ Roles are typically modelled in two ways:
    is a great example of such modelling where access scopes are inherited by deeper roles:
 
    .. thumbnail:: ../../../../img/graphql/manual/auth/github-org-hierarchical-roles.png
+      :alt: Hierarchical roles
 
 2. **Flat roles**: Non-hierarchical roles with each role requiring an independent access scope to be defined.
 

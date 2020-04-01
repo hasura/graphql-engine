@@ -36,6 +36,7 @@ module Hasura.RQL.Types.BoolExp
        , PreSetColsPartial
        ) where
 
+import           Hasura.Incremental          (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
@@ -58,9 +59,10 @@ data GExists a
   = GExists
   { _geTable :: !QualifiedTable
   , _geWhere :: !(GBoolExp a)
-  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data)
-
+  } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
+instance (NFData a) => NFData (GExists a)
 instance (Data a) => Plated (GExists a)
+instance (Cacheable a) => Cacheable (GExists a)
 
 gExistsToJSON :: (a -> (Text, Value)) -> GExists a -> Value
 gExistsToJSON f (GExists qt wh) =
@@ -83,9 +85,10 @@ data GBoolExp a
   | BoolNot !(GBoolExp a)
   | BoolExists !(GExists a)
   | BoolFld !a
-  deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data)
-
+  deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Data, Generic)
+instance (NFData a) => NFData (GBoolExp a)
 instance (Data a) => Plated (GBoolExp a)
+instance (Cacheable a) => Cacheable (GBoolExp a)
 
 gBoolExpTrue :: GBoolExp a
 gBoolExpTrue = BoolAnd []
@@ -134,7 +137,9 @@ data DWithinGeomOp a =
   DWithinGeomOp
   { dwgeomDistance :: !a
   , dwgeomFrom     :: !a
-  } deriving (Show, Eq, Functor, Foldable, Traversable, Data)
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
+instance (NFData a) => NFData (DWithinGeomOp a)
+instance (Cacheable a) => Cacheable (DWithinGeomOp a)
 $(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeomOp)
 
 data DWithinGeogOp a =
@@ -142,21 +147,27 @@ data DWithinGeogOp a =
   { dwgeogDistance    :: !a
   , dwgeogFrom        :: !a
   , dwgeogUseSpheroid :: !a
-  } deriving (Show, Eq, Functor, Foldable, Traversable, Data)
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
+instance (NFData a) => NFData (DWithinGeogOp a)
+instance (Cacheable a) => Cacheable (DWithinGeogOp a)
 $(deriveJSON (aesonDrop 6 snakeCase) ''DWithinGeogOp)
 
 data STIntersectsNbandGeommin a =
   STIntersectsNbandGeommin
   { singNband   :: !a
   , singGeommin :: !a
-  } deriving (Show, Eq, Functor, Foldable, Traversable, Data)
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
+instance (NFData a) => NFData (STIntersectsNbandGeommin a)
+instance (Cacheable a) => Cacheable (STIntersectsNbandGeommin a)
 $(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsNbandGeommin)
 
 data STIntersectsGeomminNband a =
   STIntersectsGeomminNband
   { signGeommin :: !a
   , signNband   :: !(Maybe a)
-  } deriving (Show, Eq, Functor, Foldable, Traversable, Data)
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Generic, Data)
+instance (NFData a) => NFData (STIntersectsGeomminNband a)
+instance (Cacheable a) => Cacheable (STIntersectsGeomminNband a)
 $(deriveJSON (aesonDrop 4 snakeCase) ''STIntersectsGeomminNband)
 
 type CastExp a = M.HashMap PGScalarType [OpExpG a]
@@ -213,7 +224,9 @@ data OpExpG a
   | CLT !PGCol
   | CGTE !PGCol
   | CLTE !PGCol
-  deriving (Eq, Show, Functor, Foldable, Traversable, Data)
+  deriving (Eq, Show, Functor, Foldable, Traversable, Generic, Data)
+instance (NFData a) => NFData (OpExpG a)
+instance (Cacheable a) => Cacheable (OpExpG a)
 
 opExpDepCol :: OpExpG a -> Maybe PGCol
 opExpDepCol = \case
@@ -284,7 +297,9 @@ opExpToJPair f = \case
 data AnnBoolExpFld a
   = AVCol !PGColumnInfo ![OpExpG a]
   | AVRel !RelInfo !(AnnBoolExp a)
-  deriving (Show, Eq, Functor, Foldable, Traversable)
+  deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
+instance (NFData a) => NFData (AnnBoolExpFld a)
+instance (Cacheable a) => Cacheable (AnnBoolExpFld a)
 
 type AnnBoolExp a
   = GBoolExp (AnnBoolExpFld a)
@@ -328,7 +343,9 @@ type PreSetCols = M.HashMap PGCol S.SQLExp
 data PartialSQLExp
   = PSESessVar !(PGType PGScalarType) !SessVar
   | PSESQLExp !S.SQLExp
-  deriving (Show, Eq, Data)
+  deriving (Show, Eq, Generic, Data)
+instance NFData PartialSQLExp
+instance Cacheable PartialSQLExp
 
 mkTypedSessionVar :: PGType PGColumnType -> SessVar -> PartialSQLExp
 mkTypedSessionVar columnType =

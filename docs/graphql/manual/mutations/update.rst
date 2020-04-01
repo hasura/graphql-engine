@@ -1,3 +1,9 @@
+.. meta::
+   :description: Update an object in the database using a mutation
+   :keywords: hasura, docs, mutation, update
+
+.. _update:
+
 Update mutation
 ===============
 
@@ -29,7 +35,7 @@ Auto-generated update mutation schema
 
 As you can see from the schema:
 
-- The ``where`` argument is compulsory to filter rows to be updated. See :doc:`Filter queries <../queries/query-filters>`
+- The ``where`` argument is compulsory to filter rows to be updated. See :ref:`Filter queries <filter_queries>`
   for filtering options. Objects can be updated based on filters on their own fields or those in their nested objects.
   The ``{}`` expression can be used to update all rows.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
@@ -229,7 +235,6 @@ evaluates to ``true`` for all objects.
         }
       }
     }
-
 
 Increment **int** columns
 -------------------------
@@ -496,4 +501,55 @@ The input value should be a ``String Array``.
         }
       }
     }
+
+Replace all nested array objects of an object
+---------------------------------------------
+
+In order to replace all existing nested array objects of an object, currently it's required to use two mutations:
+one to delete all the existing objects and one to add a list of new nested objects.
+
+**Example:** Replace all articles of an author with a new list:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation updateAuthorArticles($author_id: Int!) {
+      delete_articles(
+        where: {author_id: {_eq: $author_id}}
+      ) {
+        affected_rows
+      }
+      insert_articles(
+        objects: [
+          {
+            author_id: $author_id,
+            title: "title",
+            content: "some content"
+          },
+          {
+            author_id: $author_id,
+            title: "another title",
+            content: "some other content"
+          }
+        ]
+      ) {
+        affected_rows
+      }
+    }
+  :response:
+    {
+      "data": {
+        "delete_article_tags": {
+          "affected_rows": 3
+        },
+        "insert_article_tags": {
+          "affected_rows": 2
+        }
+      }
+    }
+  :variables:
+    {
+      "author_id": 21
+    }
+
 

@@ -1,3 +1,9 @@
+.. meta::
+   :description: Roll back Hasura migrations
+   :keywords: hasura, docs, migration, roll back
+
+.. _roll_back_migrations:
+
 Rolling back applied migrations
 ===============================
 

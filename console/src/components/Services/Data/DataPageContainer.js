@@ -5,6 +5,7 @@ import globals from '../../../Globals';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import DataSubSidebar from './DataSubSidebar';
+import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
 import { updateCurrentSchema } from './DataActions';
 import { NotFoundError } from '../../Error/PageNotFound';
@@ -77,6 +78,10 @@ const DataPageContainer = ({
               >
                 {getSchemaOptions()}
               </select>
+              <GqlCompatibilityWarning
+                identifier={currentSchema}
+                className={styles.add_mar_left_mid}
+              />
             </div>
           </div>
         </Link>

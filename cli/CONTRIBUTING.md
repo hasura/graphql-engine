@@ -17,7 +17,7 @@ from [shahidhk](https://github.com/shahidhk)'s [calendar](https://calendly.com/s
 
 ## Pre-requisites
 
-- [Go >= 1.10](https://golang.org/doc/install)
+- [Go >= 1.11](https://golang.org/doc/install)
 - [GNU Make](https://www.gnu.org/software/make/) (optional)
 
 You can follow your existing Golang workflow to fork, work on a branch and
@@ -25,8 +25,6 @@ submit PR. If you're new to forking and working on Golang repositories, please
 follow the instructions below to make sure the import paths are correct:
 
 - Fork the repo on GitHub
-- `mkdir -p $GOPATH/src/github.com/hasura`
-- `cd $GOPATH/src/github.com/hasura`
 - `git clone https://github.com/<your-username>/graphql-engine`
 - `cd graphql-engine/cli`
 - `git remote add upstream https://github.com/hasura/graphql-engine`
@@ -65,7 +63,7 @@ The tests expect a GraphQL Engine server instance to be running. You can point
 the tests to any GraphQL Engine server but please note that **the database
 should be empty**. The easiest way to do this is to run Postgres and GraphQL
 Engine using [Docker
-Compose](https://github.com/hasura/graphql-engine/tree/master/install-manifests).
+Compose](https://github.com/hasura/graphql-engine/tree/stable/install-manifests).
 Once the server is running, you can run the tests by executing the make command:  
 
 ```bash

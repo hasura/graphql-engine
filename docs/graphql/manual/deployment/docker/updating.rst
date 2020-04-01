@@ -1,3 +1,9 @@
+.. meta::
+   :description: Update Hasura GraphQL engine with Docker deployment
+   :keywords: hasura, docs, deployment, docker, update
+
+.. _docker_update:
+
 Updating Hasura GraphQL engine running with Docker
 ==================================================
 
@@ -41,4 +47,4 @@ you should change it to:
 .. note::
 
   If you are downgrading to an older version of the GraphQL engine you might need to downgrade your metadata catalogue version
-  as described in :doc:`../downgrading`
+  as described in :ref:`downgrade_hge`

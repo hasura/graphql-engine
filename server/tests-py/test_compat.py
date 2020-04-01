@@ -1,6 +1,7 @@
 import pytest
+from context import PytestConf
 
-if not pytest.config.getoption("--hge-key"):
+if not PytestConf.config.getoption("--hge-key"):
     pytest.skip("--hge-key flag is missing, skipping tests", allow_module_level=True)
 
 def v1qCompat(hge_ctx, q, headers = {}):

@@ -15,6 +15,15 @@ import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import {
+  findTable,
+  generateTableDef,
+  getColumnName,
+  getTableCustomRootFields,
+} from '../../../Common/utils/pgUtils';
+import RootFields from './RootFields';
+import Tooltip from '../../../Common/Tooltip/Tooltip';
+import { changeViewRootFields } from '../Common/TooltipMessages';
 
 class ModifyView extends Component {
   componentDidMount() {
@@ -41,13 +50,16 @@ class ModifyView extends Component {
       dispatch,
       currentSchema,
       tableCommentEdit,
+      rootFieldsEdit,
       migrationMode,
+      readOnlyMode,
     } = this.props;
 
     const styles = require('./ModifyTable.scss');
 
-    const tableSchema = allSchemas.find(
-      t => t.table_name === tableName && t.table_schema === currentSchema
+    const tableSchema = findTable(
+      allSchemas,
+      generateTableDef(tableName, currentSchema)
     );
 
     if (!tableSchema) {
@@ -81,30 +93,51 @@ class ModifyView extends Component {
       );
     }
 
-    const columns = tableSchema.columns.sort(ordinalColSort);
-    const columnEditors = columns.map((c, i) => {
-      const bg = '';
-      return (
-        <div key={i} className={bg}>
-          <div className="container-fluid">
-            <div className={`row + ${styles.add_mar_bottom}`}>
-              <h5>
-                <Button disabled="disabled" size="xs">
-                  -
-                </Button>{' '}
-                &nbsp; <b>{c.column_name}</b>
-              </h5>
+    const getViewColumnsSection = () => {
+      const columns = tableSchema.columns.sort(ordinalColSort);
+
+      return columns.map((c, i) => {
+        return (
+          <div key={i}>
+            <div className="container-fluid">
+              <div className={`row + ${styles.add_mar_bottom}`}>
+                <h5>
+                  <Button disabled="disabled" size="xs">
+                    -
+                  </Button>{' '}
+                  &nbsp; <b>{getColumnName(c)}</b>
+                </h5>
+              </div>
             </div>
           </div>
-        </div>
+        );
+      });
+    };
+
+    const getViewRootFieldsSection = () => {
+      const existingRootFields = getTableCustomRootFields(tableSchema);
+
+      return (
+        <React.Fragment>
+          <h4 className={styles.subheading_text}>
+            Custom GraphQL Root Fields
+            <Tooltip message={changeViewRootFields} />
+          </h4>
+          <RootFields
+            existingRootFields={existingRootFields}
+            rootFieldsEdit={rootFieldsEdit}
+            dispatch={dispatch}
+            tableName={tableName}
+          />
+          <hr />
+        </React.Fragment>
       );
-    });
+    };
 
     const modifyBtn = (
       <Button
         type="submit"
-        color="yellow"
-        size="sm"
+        size="xs"
         className={styles.add_mar_right}
         onClick={() => {
           this.modifyViewDefinition(tableName);
@@ -159,6 +192,7 @@ class ModifyView extends Component {
           table={tableSchema}
           tabName="modify"
           migrationMode={migrationMode}
+          readOnlyMode={readOnlyMode}
         />
         <br />
         <div className={'container-fluid ' + styles.padd_left_remove}>
@@ -170,9 +204,12 @@ class ModifyView extends Component {
               dispatch={dispatch}
             />
             <h4 className={styles.subheading_text}>Columns</h4>
-            {columnEditors}
+            {getViewColumnsSection()}
             <br />
-            <h4>View Definition:</h4>
+            <h4 className={styles.subheading_text}>
+              View Definition:
+              <span className={styles.add_mar_left}>{modifyBtn}</span>
+            </h4>
             <AceEditor
               mode="sql"
               theme="github"
@@ -185,7 +222,7 @@ class ModifyView extends Component {
               readOnly
             />
             <hr />
-            {modifyBtn}
+            {getViewRootFieldsSection()}
             {untrackBtn}
             {deleteBtn}
             <br />
@@ -205,6 +242,8 @@ ModifyView.propTypes = {
   currentSchema: PropTypes.string.isRequired,
   activeEdit: PropTypes.object.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
+  migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
@@ -218,6 +257,7 @@ const mapStateToProps = (state, ownProps) => {
     sql: state.rawSQL.sql,
     currentSchema: state.tables.currentSchema,
     migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.modify,
   };

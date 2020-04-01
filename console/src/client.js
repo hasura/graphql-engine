@@ -1,6 +1,7 @@
 /**
  * THIS IS THE ENTRY POINT FOR THE CLIENT, JUST LIKE server.js IS THE ENTRY POINT FOR THE SERVER.
  */
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { createLogger } from 'redux-logger';
@@ -18,13 +19,20 @@ import getRoutes from './routes';
 import reducer from './reducer';
 import globals from './Globals';
 import Endpoints from './Endpoints';
+
 import { filterEventsBlockList, sanitiseUrl } from './telemetryFilter';
+import { RUN_TIME_ERROR } from './components/Main/Actions';
+
+/** telemetry **/
+let analyticsConnection;
 
 const analyticsUrl = Endpoints.telemetryServer;
-let analyticsConnection;
+
 const { consoleMode, enableTelemetry, cliUUID } = window.__env;
+
 const telemetryEnabled =
   enableTelemetry !== undefined && enableTelemetry === true;
+
 if (telemetryEnabled) {
   try {
     analyticsConnection = new WebSocket(analyticsUrl);
@@ -51,39 +59,47 @@ function analyticsLogger({ getState }) {
   return next => action => {
     // Call the next dispatch method in the middleware chain.
     const returnValue = next(action);
+
     // check if analytics tracking is enabled
     if (telemetryEnabled) {
-      const serverVersion = getState().main.serverVersion;
       const actionType = action.type;
-      const url = sanitiseUrl(window.location.pathname);
-      const reqBody = {
-        server_version: serverVersion,
-        event_type: actionType,
-        url,
-        console_mode: consoleMode,
-        cli_uuid: cliUUID,
-        server_uuid: getState().telemetry.hasura_uuid,
-      };
 
-      let isLocationType = false;
-      if (actionType === '@@router/LOCATION_CHANGE') {
-        isLocationType = true;
-      }
       // filter events
       if (!filterEventsBlockList.includes(actionType)) {
+        // When the connection is open, send data to the server
         if (
           analyticsConnection &&
           analyticsConnection.readyState === analyticsConnection.OPEN
         ) {
-          // When the connection is open, send data to the server
+          const serverVersion = getState().main.serverVersion;
+          const url = sanitiseUrl(window.location.pathname);
+
+          const reqBody = {
+            server_version: serverVersion,
+            event_type: actionType,
+            url,
+            console_mode: consoleMode,
+            cli_uuid: cliUUID,
+            server_uuid: getState().telemetry.hasura_uuid,
+          };
+
+          const isLocationType = actionType === '@@router/LOCATION_CHANGE';
           if (isLocationType) {
             // capture page views
             const payload = action.payload;
             reqBody.url = sanitiseUrl(payload.pathname);
           }
+
+          const isErrorType = actionType === RUN_TIME_ERROR;
+          if (isErrorType) {
+            reqBody.data = action.data;
+          }
+
+          // Send the data
           analyticsConnection.send(
             JSON.stringify({ data: reqBody, topic: globals.telemetryTopic })
-          ); // Send the data
+          );
+
           // check for possible error events and store more data?
         } else {
           // retry websocket connection
@@ -91,11 +107,14 @@ function analyticsLogger({ getState }) {
         }
       }
     }
+
     // This will likely be the action itself, unless
     // a middleware further in chain changed it.
     return returnValue;
   };
 }
+
+/** telemetry: end **/
 
 // Create the store
 let _finalCreateStore;

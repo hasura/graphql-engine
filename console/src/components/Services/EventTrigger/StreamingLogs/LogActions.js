@@ -2,8 +2,6 @@ import { defaultLogState } from '../EventState';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
 import dataHeaders from '../Common/Headers';
-import globals from '../../../../Globals';
-import { IMPROVED_EVENT_FETCH_QUERY } from '../../../../helpers/versionUtils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'StreamingLogs/V_SET_DEFAULTS';
@@ -42,15 +40,10 @@ const vMakeRequest = triggerName => {
     const countQuery = JSON.parse(JSON.stringify(state.triggers.log.query));
     countQuery.columns = ['id'];
 
-    currentQuery.where = { event: { trigger_name: triggerName } };
-
-    if (
-      globals.featuresCompatibility &&
-      globals.featuresCompatibility[IMPROVED_EVENT_FETCH_QUERY]
-    ) {
-      currentQuery.where.event.archived = false;
-      countQuery.where.event.archived = false;
-    }
+    currentQuery.where = {
+      event: { trigger_name: triggerName, archived: false },
+    };
+    countQuery.where.event.archived = false;
 
     // order_by for relationship
     currentQuery.order_by = ['-created_at'];
@@ -118,17 +111,11 @@ const loadNewerEvents = (latestTimestamp, triggerName) => {
     countQuery.columns = ['id'];
 
     currentQuery.where = {
-      event: { trigger_name: triggerName },
+      event: { trigger_name: triggerName, archived: false },
       created_at: { $gt: latestTimestamp },
     };
 
-    if (
-      globals.featuresCompatibility &&
-      globals.featuresCompatibility[IMPROVED_EVENT_FETCH_QUERY]
-    ) {
-      currentQuery.where.event.archived = false;
-      countQuery.where.event.archived = false;
-    }
+    countQuery.where.event.archived = false;
 
     // order_by for relationship
     currentQuery.order_by = ['-created_at'];
@@ -216,17 +203,11 @@ const loadOlderEvents = (oldestTimestamp, triggerName) => {
     countQuery.columns = ['id'];
 
     currentQuery.where = {
-      event: { trigger_name: triggerName },
+      event: { trigger_name: triggerName, archived: false },
       created_at: { $lt: oldestTimestamp },
     };
 
-    if (
-      globals.featuresCompatibility &&
-      globals.featuresCompatibility[IMPROVED_EVENT_FETCH_QUERY]
-    ) {
-      currentQuery.where.event.archived = false;
-      countQuery.where.event.archived = false;
-    }
+    countQuery.where.event.archived = false;
 
     // order_by for relationship
     currentQuery.order_by = ['-created_at'];

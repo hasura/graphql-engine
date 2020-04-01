@@ -10,22 +10,18 @@ assets:
 	go-bindata --pkg assets -o assets/assets.go assets/**/*.html
 
 HAS_GOX := $(shell command -v gox;)
-HAS_DEP := $(shell command -v dep;)
 HAS_BINDATA := $(shell command -v go-bindata;)
 
 .PHONY: deps
 # get dependencies
 deps:
-ifndef HAS_DEP
-	go get -u github.com/golang/dep/cmd/dep
-endif
+	go mod download
 ifndef HAS_GOX
 	go get github.com/mitchellh/gox
 endif
 ifndef HAS_BINDATA
-	go get github.com/hasura/go-bindata/go-bindata
+	go get github.com/kevinburke/go-bindata/...
 endif
-	if [ ! -d "vendor" ]; then dep ensure -v -vendor-only; fi
 
 # build cli locally, for all given platform/arch
 .PHONY: build
@@ -52,7 +48,9 @@ ci-copy-binary:
 # run tests
 .PHONY: test
 test:
-	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" ./...
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" `go list ./... | grep -v integration_test`
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v1 ./integration_test
+	go test -ldflags "-X github.com/hasura/graphql-engine/cli/version.BuildVersion=$(VERSION)" -v -tags="${TEST_TAGS}" -run Commands/config=v2 ./integration_test
 
 # clean the output directory
 .PHONY: clean

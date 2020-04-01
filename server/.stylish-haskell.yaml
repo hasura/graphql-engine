@@ -205,7 +205,7 @@ steps:
 
 # A common setting is the number of columns (parts of) code will be wrapped
 # to. Different steps take this into account. Default: 80.
-columns: 80
+columns: 100
 
 # By default, line endings are converted according to the OS. You can override
 # preferred format here.
@@ -225,25 +225,36 @@ newline: native
 #
 # No language extensions are enabled by default.
 language_extensions:
-- TemplateHaskell
-- QuasiQuotes
-- EmptyCase
-- FlexibleContexts
-- FlexibleInstances
-- InstanceSigs
-- MultiParamTypeClasses
-- LambdaCase
-- MultiWayIf
-- TupleSections
+- ApplicativeDo
+- BangPatterns
+- BlockArguments
+- ConstraintKinds
+- DefaultSignatures
+- DeriveDataTypeable
 - DeriveFoldable
 - DeriveFunctor
 - DeriveGeneric
 - DeriveLift
 - DeriveTraversable
+- DerivingVia
+- EmptyCase
+- FlexibleContexts
+- FlexibleInstances
+- FunctionalDependencies
 - GeneralizedNewtypeDeriving
-- BangPatterns
+- InstanceSigs
+- LambdaCase
+- MultiParamTypeClasses
+- MultiWayIf
+- NamedFieldPuns
+- NoImplicitPrelude
 - OverloadedStrings
-- ScopedTypeVariables
-- TemplateHaskell
 - QuasiQuotes
+- RankNTypes
+- ScopedTypeVariables
+- StandaloneDeriving
+- TemplateHaskell
+- TupleSections
+- TypeApplications
 - TypeFamilies
+- TypeOperators

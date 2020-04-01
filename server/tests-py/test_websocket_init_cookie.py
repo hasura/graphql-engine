@@ -5,8 +5,9 @@ from urllib.parse import urlparse
 import websocket
 import pytest
 from validate import check_query
+from context import PytestConf
 
-if not pytest.config.getoption("--test-ws-init-cookie"):
+if not PytestConf.config.getoption("--test-ws-init-cookie"):
     pytest.skip("--test-ws-init-cookie flag is missing, skipping tests", allow_module_level=True)
 
 

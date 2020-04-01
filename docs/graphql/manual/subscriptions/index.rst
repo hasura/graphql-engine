@@ -1,3 +1,9 @@
+.. meta::
+   :description: Manage subscriptions with Hasura
+   :keywords: hasura, docs, subscription
+
+.. _subscriptions:
+
 Subscriptions
 =============
 
@@ -6,9 +12,27 @@ Subscriptions
   :depth: 1
   :local:
 
-A GraphQL subscription is essentially a query where the client receives an event whenever the value of any field changes
-upstream. The Hasura GraphQL engine supports subscriptions for all kinds of queries. All the concepts of
-:doc:`queries <../queries/index>` hold true for subscriptions as well.
+Introduction
+------------
+
+A GraphQL subscription is essentially a query where the client receives an update whenever the value of any field
+changes upstream.
+
+Subscriptions are supported for all kinds of queries. All the concepts of
+:ref:`queries <queries>` hold true for subscriptions as well.
+
+Execution
+---------
+
+The Hasura GraphQL engine subscriptions are actually **live queries**, i.e. a subscription will return the
+latest result of the query being made and not necessarily all the individual events leading up to the result.
+
+By default updates are delivered to clients every **1 sec**. This interval can be configured via the
+``HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL`` env var or the
+``--live-queries-multiplexed-refetch-interval`` flag. See the
+:ref:`server flag reference <server_flag_reference>` for info on setting the flag/env var.
+
+You can read more about the implementation of subscriptions in the `architecture doc <https://github.com/hasura/graphql-engine/blob/master/architecture/live-queries.md>`_.
 
 Convert a query to a subscription
 ---------------------------------
@@ -54,8 +78,8 @@ for sending and receiving events.
       }
     });
 
-  See `this <https://www.apollographql.com/docs/react/data/subscriptions/#authentication-over-websocket>`_ for more info on
-  using ``connectionParams``.
+  See `this <https://www.apollographql.com/docs/react/data/subscriptions/#authentication-over-websocket>`_ for more
+  info on using ``connectionParams``.
 
 
 Cookies and WebSockets
@@ -83,7 +107,7 @@ It uses the provided CORS configuration (as per :ref:`configure-cors`).
    (because of potential security issues). To override the behaviour, you can
    use the flag ``--ws-read-cookie`` or the environment variable
    ``HASURA_GRAPHQL_WS_READ_COOKIE``. See
-   :doc:`../deployment/graphql-engine-flags/reference` for the setting.
+   :ref:`server_flag_reference` for the setting.
 
 .. toctree::
   :maxdepth: 1

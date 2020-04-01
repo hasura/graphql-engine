@@ -107,7 +107,14 @@ class StreamingLogs extends Component {
   }
 
   render() {
-    const { triggerName, log, count, dispatch, triggerList } = this.props;
+    const {
+      triggerName,
+      log,
+      count,
+      dispatch,
+      triggerList,
+      readOnlyMode,
+    } = this.props;
 
     const styles = require('../TableCommon/EventTable.scss');
 
@@ -345,6 +352,7 @@ class StreamingLogs extends Component {
           dispatch={dispatch}
           triggerName={triggerName}
           tabName="logs"
+          readOnlyMode={readOnlyMode}
         />
         <br />
         <div className={'hide'}>
@@ -453,6 +461,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     ...state.triggers,
     serverVersion: state.main.serverVersion,
+    readOnlyMode: state.main.readOnlyMode,
     triggerName: ownProps.params.trigger,
     currentSchema: state.tables.currentSchema,
     triggerList: state.triggers.triggerList,

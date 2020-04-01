@@ -3,15 +3,11 @@ url: /v1/query
 status: 400
 response:
   path: $
-  error: "incompatible access mode requirements in bulk query: $.args[1] requires READ WRITE, $.args[2] requires READ ONLY"
+  error: "incompatible access mode requirements in bulk query, expected access mode: READ WRITE but $.args[1] forces READ ONLY"
   code: bad-request
 query:
   type: bulk
   args:
-  - type: track_table
-    args:
-      schema: public
-      name: author
   - type: insert
     args:
       table: author

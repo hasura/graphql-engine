@@ -1,3 +1,9 @@
+.. meta::
+   :description: Run multiple mutations in a request in Hasura
+   :keywords: hasura, docs, mutation, multiple mutations, request
+
+.. _multiple_mutations:
+
 Multiple mutations in a request
 ===============================
 
@@ -6,11 +12,15 @@ Multiple mutations in a request
   :depth: 1
   :local:
 
-If multiple mutations are part of the same request, they are executed **sequentially** in a single **transaction**. If any of the mutations fail,
-all the executed mutations will be rolled back.
+Execution
+---------
 
-Run multiple top level mutations transactionally
-------------------------------------------------
+If multiple mutations are part of the same request, they are executed **sequentially** in a single **transaction**.
+If any of the mutations fail, all the executed mutations will be rolled back.
+
+Run multiple top level mutations in the same request
+----------------------------------------------------
+
 **Example:** Delete all ``article`` objects written by an author and update the ``author`` object:
 
 .. graphiql::
@@ -56,6 +66,7 @@ Run multiple top level mutations transactionally
 
 Insert an object and a nested object in the same mutation
 ---------------------------------------------------------
+
 If you are trying to insert multiple objects which have relationships between them, you can use nested inserts.
 
 **Example:** Insert a new ``article`` object with its ``author`` and return the inserted article object with its author

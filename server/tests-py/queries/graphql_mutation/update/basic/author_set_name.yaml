@@ -7,6 +7,18 @@ response:
       returning:
       - id: 1
         name: Jane
+        emails: []
+        info:
+          age: 23
+        location:
+          type: Point
+          crs:
+            type: name
+            properties:
+              name: urn:ogc:def:crs:EPSG::4326
+          coordinates:
+          - -118.4079
+          - 33.9434
         articles: []
 status: 200
 query:
@@ -20,6 +32,9 @@ query:
         returning{
           id
           name
+          emails
+          info
+          location
           articles{
             id
             title

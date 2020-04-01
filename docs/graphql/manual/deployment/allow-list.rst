@@ -1,4 +1,8 @@
-.. _allow-list:
+.. meta::
+   :description: Manage allow list with Hasura GraphQL engine
+   :keywords: hasura, docs, deployment, allow list
+
+.. _allow_list:
 
 Allow-list for queries
 ======================
@@ -38,7 +42,7 @@ You can add or remove a query in the allow-list in two ways:
     to add multiple queries to the allow-list (each query needs to have a name).
 
 * **Using metadata APIs:** Queries can be stored in collections and a collection can be added to or removed
-  from the allow-list. See :doc:`Collections & Allow-list APIs<../api-reference/schema-metadata-api/query-collections>`
+  from the allow-list. See :ref:`Collections & Allow-list APIs<api_query_collections>`
   for API reference.
 
 .. note::
@@ -63,7 +67,7 @@ You can add or remove a query in the allow-list in two ways:
      }
 
   * The allow-list is stored in the metadata. To version control the state of the list, you are required to export
-    the metadata. See :doc:`Managing Hasura metadata <../migrations/manage-metadata>` for more details.
+    the metadata. See :ref:`Managing Hasura metadata <manage_hasura_metadata>` for more details.
 
   * You can modify the allow-list without actually enabling it on your instance.
 
@@ -73,7 +77,7 @@ Enable allow-list
 
 The allow-list validation can be enabled by setting the ``HASURA_GRAPHQL_ENABLE_ALLOWLIST`` environment
 variable to ``true`` or running the GraphQL engine with the ``--enable-allowlist`` flag (*default value is*
-``false``). See  :ref:`reference docs <command-flags>`.
+``false``). See :ref:`reference docs <command-flags>`.
 
 .. note::
 

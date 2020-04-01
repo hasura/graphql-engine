@@ -1,3 +1,9 @@
+.. meta::
+   :description: Manage authenticaton with Hasura
+   :keywords: hasura, docs, authentication, auth
+
+.. _authentication:
+
 Authentication
 ==============
 
@@ -34,6 +40,7 @@ rules.
 Here's how a GraphQL request is processed in webhook mode:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/auth-webhook-overview.png
+   :alt: Authentication using webhooks
 
 2. JWT (JSON Web Token)
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -45,6 +52,7 @@ evaluate access control rules.
 Here's how a GraphQL query is processed in JWT mode:
 
 .. thumbnail:: ../../../../img/graphql/manual/auth/auth-jwt-overview.png
+   :alt: Authentication using JWT
 
 **See more details at:**
 

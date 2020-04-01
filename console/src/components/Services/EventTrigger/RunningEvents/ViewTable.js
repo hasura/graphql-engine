@@ -128,6 +128,7 @@ class ViewTable extends Component {
       lastSuccess,
       dispatch,
       expandedRow,
+      readOnlyMode,
     } = this.props; // eslint-disable-line no-unused-vars
 
     // check if table exists
@@ -169,6 +170,7 @@ class ViewTable extends Component {
         dispatch={dispatch}
         triggerName={triggerName}
         tabName="running"
+        readOnlyMode={readOnlyMode}
       />
     );
 
@@ -189,6 +191,7 @@ ViewTable.propTypes = {
   query: PropTypes.object.isRequired,
   curFilter: PropTypes.object.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   isProgressing: PropTypes.bool.isRequired,
   rows: PropTypes.array.isRequired,
   expandedRow: PropTypes.string.isRequired,
@@ -202,6 +205,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     triggerName: ownProps.params.trigger,
     triggerList: state.triggers.runningEvents,
+    readOnlyMode: state.main.readOnlyMode,
     ...state.triggers.view,
   };
 };

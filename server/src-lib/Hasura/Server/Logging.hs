@@ -4,11 +4,17 @@ module Hasura.Server.Logging
   ( StartupLog(..)
   , PGLog(..)
   , mkInconsMetadataLog
-  , mkHttpAccessLog
-  , mkHttpErrorLog
+  , mkHttpAccessLogContext
+  , mkHttpErrorLogContext
+  , mkHttpLog
+  , HttpInfoLog(..)
+  , OperationLog(..)
+  , HttpLogContext(..)
   , WebHookLog(..)
-  , WebHookLogger
   , HttpException
+  , getSourceFromFallback
+  , getSource
+  , HttpLog (..)
   ) where
 
 import           Data.Aeson
@@ -18,7 +24,6 @@ import           Data.Bits                 (shift, (.&.))
 import           Data.ByteString.Char8     (ByteString)
 import           Data.Int                  (Int64)
 import           Data.List                 (find)
-import           Data.Time.Clock
 import           Data.Word                 (Word32)
 import           Network.Socket            (SockAddr (..))
 import           System.ByteOrder          (ByteOrder (..), byteOrder)
@@ -27,21 +32,19 @@ import           Text.Printf               (printf)
 import qualified Data.ByteString.Char8     as BS
 import qualified Data.ByteString.Lazy      as BL
 import qualified Data.Text                 as T
-import qualified Network.HTTP.Types        as N
+import qualified Network.HTTP.Types        as HTTP
 import qualified Network.Wai               as Wai
 
 import           Hasura.HTTP
-import           Hasura.Logging            (EngineLogType (..))
+import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Compression
 import           Hasura.Server.Utils
 
-import qualified Hasura.Logging            as L
-
 data StartupLog
   = StartupLog
-  { slLogLevel :: !L.LogLevel
+  { slLogLevel :: !LogLevel
   , slKind     :: !T.Text
   , slInfo     :: !Value
   } deriving (Show, Eq)
@@ -52,13 +55,13 @@ instance ToJSON StartupLog where
            , "info" .= info
            ]
 
-instance L.ToEngineLog StartupLog where
+instance ToEngineLog StartupLog Hasura where
   toEngineLog startupLog =
     (slLogLevel startupLog, ELTStartup, toJSON startupLog)
 
 data PGLog
   = PGLog
-  { plLogLevel :: !L.LogLevel
+  { plLogLevel :: !LogLevel
   , plMessage  :: !T.Text
   } deriving (Show, Eq)
 
@@ -66,13 +69,13 @@ instance ToJSON PGLog where
   toJSON (PGLog _ msg) =
     object ["message" .= msg]
 
-instance L.ToEngineLog PGLog where
+instance ToEngineLog PGLog Hasura where
   toEngineLog pgLog =
-    (plLogLevel pgLog, ELTPgClient, toJSON pgLog)
+    (plLogLevel pgLog, ELTInternal ILTPgClient, toJSON pgLog)
 
 data MetadataLog
   = MetadataLog
-  { mlLogLevel :: !L.LogLevel
+  { mlLogLevel :: !LogLevel
   , mlMessage  :: !T.Text
   , mlInfo     :: !Value
   } deriving (Show, Eq)
@@ -83,54 +86,98 @@ instance ToJSON MetadataLog where
            , "info" .= infoVal
            ]
 
-instance L.ToEngineLog MetadataLog where
+instance ToEngineLog MetadataLog Hasura where
   toEngineLog ml =
-    (mlLogLevel ml, ELTMetadata, toJSON ml)
+    (mlLogLevel ml, ELTInternal ILTMetadata, toJSON ml)
 
-mkInconsMetadataLog :: [InconsistentMetadataObj] -> MetadataLog
+mkInconsMetadataLog :: [InconsistentMetadata] -> MetadataLog
 mkInconsMetadataLog objs =
-  MetadataLog L.LevelWarn "Inconsistent Metadata!" $
+  MetadataLog LevelWarn "Inconsistent Metadata!" $
     object [ "objects" .= objs]
 
 data WebHookLog
   = WebHookLog
-  { whlLogLevel   :: !L.LogLevel
-  , whlStatusCode :: !(Maybe N.Status)
+  { whlLogLevel   :: !LogLevel
+  , whlStatusCode :: !(Maybe HTTP.Status)
   , whlUrl        :: !T.Text
-  , whlMethod     :: !N.StdMethod
+  , whlMethod     :: !HTTP.StdMethod
   , whlError      :: !(Maybe HttpException)
   , whlResponse   :: !(Maybe T.Text)
   } deriving (Show)
 
-instance L.ToEngineLog WebHookLog where
+instance ToEngineLog WebHookLog Hasura where
   toEngineLog webHookLog =
     (whlLogLevel webHookLog, ELTWebhookLog, toJSON webHookLog)
 
 instance ToJSON WebHookLog where
   toJSON whl =
-    object [ "status_code" .= (N.statusCode <$> whlStatusCode whl)
+    object [ "status_code" .= (HTTP.statusCode <$> whlStatusCode whl)
            , "url" .= whlUrl whl
            , "method" .= show (whlMethod whl)
            , "http_error" .= whlError whl
            , "response" .= whlResponse whl
            ]
 
-type WebHookLogger = WebHookLog -> IO ()
+
+class (Monad m) => HttpLog m where
+  logHttpError
+    :: Logger Hasura
+    -- ^ the logger
+    -> Maybe UserInfo
+    -- ^ user info may or may not be present (error can happen during user resolution)
+    -> RequestId
+    -- ^ request id of the request
+    -> Wai.Request
+    -- ^ the Wai.Request object
+    -> Either BL.ByteString Value
+    -- ^ the actual request body (bytestring if unparsed, Aeson value if parsed)
+    -> QErr
+    -- ^ the error
+    -> [HTTP.Header]
+    -- ^ list of request headers
+    -> m ()
+
+  logHttpSuccess
+    :: Logger Hasura
+    -- ^ the logger
+    -> Maybe UserInfo
+    -- ^ user info may or may not be present (error can happen during user resolution)
+    -> RequestId
+    -- ^ request id of the request
+    -> Wai.Request
+    -- ^ the Wai.Request object
+    -> Maybe Value
+    -- ^ the actual request body, if present
+    -> BL.ByteString
+    -- ^ the response bytes
+    -> BL.ByteString
+    -- ^ the compressed response bytes
+    -- ^ TODO: make the above two type represented
+    -> Maybe (DiffTime, DiffTime)
+    -- ^ IO/network wait time and service time (respectively) for this request, if available.
+    -> Maybe CompressionType
+    -- ^ possible compression type
+    -> [HTTP.Header]
+    -- ^ list of request headers
+    -> m ()
+
 
 -- | Log information about the HTTP request
 data HttpInfoLog
   = HttpInfoLog
-  { hlStatus      :: !N.Status
+  { hlStatus      :: !HTTP.Status
   , hlMethod      :: !T.Text
   , hlSource      :: !T.Text
   , hlPath        :: !T.Text
-  , hlHttpVersion :: !N.HttpVersion
+  , hlHttpVersion :: !HTTP.HttpVersion
   , hlCompression :: !(Maybe CompressionType)
+  , hlHeaders     :: ![HTTP.Header]
+  -- ^ all the request headers
   } deriving (Show, Eq)
 
 instance ToJSON HttpInfoLog where
-  toJSON (HttpInfoLog st met src path hv compressTypeM) =
-    object [ "status" .= N.statusCode st
+  toJSON (HttpInfoLog st met src path hv compressTypeM _) =
+    object [ "status" .= HTTP.statusCode st
            , "method" .= met
            , "ip" .= src
            , "url" .= path
@@ -144,95 +191,109 @@ data OperationLog
   { olRequestId          :: !RequestId
   , olUserVars           :: !(Maybe UserVars)
   , olResponseSize       :: !(Maybe Int64)
-  , olQueryExecutionTime :: !(Maybe Double)
+  , olRequestReadTime    :: !(Maybe Seconds)
+  -- ^ Request IO wait time, i.e. time spent reading the full request from the socket.
+  , olQueryExecutionTime :: !(Maybe Seconds)
+  -- ^ Service time, not including request IO wait time.
   , olQuery              :: !(Maybe Value)
   , olRawQuery           :: !(Maybe Text)
   , olError              :: !(Maybe QErr)
   } deriving (Show, Eq)
+
 $(deriveToJSON (aesonDrop 2 snakeCase)
   { omitNothingFields = True
   } ''OperationLog)
 
-data HttpAccessLog
-  = HttpAccessLog
-  { halHttpInfo  :: !HttpInfoLog
-  , halOperation :: !OperationLog
+data HttpLogContext
+  = HttpLogContext
+  { hlcHttpInfo  :: !HttpInfoLog
+  , hlcOperation :: !OperationLog
   } deriving (Show, Eq)
-$(deriveToJSON (aesonDrop 3 snakeCase) ''HttpAccessLog)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''HttpLogContext)
 
-data HttpLog
-  = HttpLog
-  { _hlLogLevel :: !L.LogLevel
-  , _hlLogLing  :: !HttpAccessLog
-  }
-
-instance L.ToEngineLog HttpLog where
-  toEngineLog (HttpLog logLevel accessLog) =
-    (logLevel, ELTHttpLog, toJSON accessLog)
-
-mkHttpAccessLog
-  :: Maybe UserInfo -- may not have been resolved
+mkHttpAccessLogContext
+  :: Maybe UserInfo
+  -- ^ Maybe because it may not have been resolved
   -> RequestId
   -> Wai.Request
   -> BL.ByteString
-  -> Maybe (UTCTime, UTCTime)
+  -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
-  -> HttpLog
-mkHttpAccessLog userInfoM reqId req res mTimeT compressTypeM =
+  -> [HTTP.Header]
+  -> HttpLogContext
+mkHttpAccessLogContext userInfoM reqId req res mTiming compressTypeM headers =
   let http = HttpInfoLog
-             { hlStatus       = status
-             , hlMethod       = bsToTxt $ Wai.requestMethod req
-             , hlSource       = bsToTxt $ getSourceFromFallback req
-             , hlPath         = bsToTxt $ Wai.rawPathInfo req
-             , hlHttpVersion  = Wai.httpVersion req
+             { hlStatus      = status
+             , hlMethod      = bsToTxt $ Wai.requestMethod req
+             , hlSource      = bsToTxt $ getSourceFromFallback req
+             , hlPath        = bsToTxt $ Wai.rawPathInfo req
+             , hlHttpVersion = Wai.httpVersion req
              , hlCompression  = compressTypeM
+             , hlHeaders     = headers
              }
       op = OperationLog
            { olRequestId    = reqId
            , olUserVars     = userVars <$> userInfoM
            , olResponseSize = respSize
-           , olQueryExecutionTime = respTime
+           , olRequestReadTime    = Seconds . fst <$> mTiming
+           , olQueryExecutionTime = Seconds . snd <$> mTiming
            , olQuery = Nothing
            , olRawQuery = Nothing
            , olError = Nothing
            }
-  in HttpLog L.LevelInfo $ HttpAccessLog http op
+  in HttpLogContext http op
   where
-    status = N.status200
+    status = HTTP.status200
     respSize = Just $ BL.length res
-    respTime = computeTimeDiff mTimeT
 
-mkHttpErrorLog
-  :: Maybe UserInfo -- may not have been resolved
+mkHttpErrorLogContext
+  :: Maybe UserInfo
+  -- ^ Maybe because it may not have been resolved
   -> RequestId
   -> Wai.Request
   -> QErr
   -> Either BL.ByteString Value
-  -> Maybe (UTCTime, UTCTime)
+  -> Maybe (DiffTime, DiffTime)
   -> Maybe CompressionType
-  -> HttpLog
-mkHttpErrorLog userInfoM reqId req err query mTimeT compressTypeM =
+  -> [HTTP.Header]
+  -> HttpLogContext
+mkHttpErrorLogContext userInfoM reqId req err query mTiming compressTypeM headers =
   let http = HttpInfoLog
-             { hlStatus       = qeStatus err
-             , hlMethod       = bsToTxt $ Wai.requestMethod req
-             , hlSource       = bsToTxt $ getSourceFromFallback req
-             , hlPath         = bsToTxt $ Wai.rawPathInfo req
-             , hlHttpVersion  = Wai.httpVersion req
+             { hlStatus      = qeStatus err
+             , hlMethod      = bsToTxt $ Wai.requestMethod req
+             , hlSource      = bsToTxt $ getSourceFromFallback req
+             , hlPath        = bsToTxt $ Wai.rawPathInfo req
+             , hlHttpVersion = Wai.httpVersion req
              , hlCompression  = compressTypeM
+             , hlHeaders     = headers
              }
       op = OperationLog
            { olRequestId          = reqId
            , olUserVars           = userVars <$> userInfoM
            , olResponseSize       = Just $ BL.length $ encode err
-           , olQueryExecutionTime = computeTimeDiff mTimeT
+           , olRequestReadTime    = Seconds . fst <$> mTiming
+           , olQueryExecutionTime = Seconds . snd <$> mTiming
            , olQuery              = either (const Nothing) Just query
            , olRawQuery           = either (Just . bsToTxt . BL.toStrict) (const Nothing) query
            , olError              = Just err
            }
-  in HttpLog L.LevelError $ HttpAccessLog http op
+  in HttpLogContext http op
 
-computeTimeDiff :: Maybe (UTCTime, UTCTime) -> Maybe Double
-computeTimeDiff = fmap (realToFrac . uncurry (flip diffUTCTime))
+data HttpLogLine
+  = HttpLogLine
+  { _hlLogLevel :: !LogLevel
+  , _hlLogLine  :: !HttpLogContext
+  }
+
+instance ToEngineLog HttpLogLine Hasura where
+  toEngineLog (HttpLogLine logLevel logLine) =
+    (logLevel, ELTHttpLog, toJSON logLine)
+
+mkHttpLog :: HttpLogContext -> HttpLogLine
+mkHttpLog httpLogCtx =
+  let isError = isJust $ olError $ hlcOperation httpLogCtx
+      logLevel = bool LevelInfo LevelError isError
+  in HttpLogLine logLevel httpLogCtx
 
 getSourceFromSocket :: Wai.Request -> ByteString
 getSourceFromSocket = BS.pack . showSockAddr . Wai.remoteHost

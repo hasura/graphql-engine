@@ -72,16 +72,10 @@ class RelationshipEditor extends React.Component {
   };
 
   render() {
-    const { dispatch, relConfig } = this.props;
+    const { dispatch, relConfig, readOnlyMode } = this.props;
     const { text, isEditting } = this.state;
 
     const { relName } = relConfig;
-
-    const gqlCompatibilityWarning = !gqlPattern.test(relName) ? (
-      <span className={styles.add_mar_left_small}>
-        <GqlCompatibilityWarning />
-      </span>
-    ) : null;
 
     const onDelete = e => {
       e.preventDefault();
@@ -92,23 +86,41 @@ class RelationshipEditor extends React.Component {
         dispatch(deleteRelMigrate(relConfig));
       }
     };
-    const collapsed = () => (
-      <div>
-        <Button
-          color={'white'}
-          size={'xs'}
-          onClick={this.toggleEditor}
-          data-test={`relationship-toggle-editor-${relName}`}
-        >
-          Edit
-        </Button>
-        &nbsp;
-        <b>{relName}</b> {gqlCompatibilityWarning}
-        <div className={tableStyles.relationshipTopPadding}>
-          {getRelDef(relConfig)}
+    const collapsed = () => {
+      const getEditBtn = () => {
+        if (readOnlyMode) {
+          return null;
+        }
+
+        return (
+          <React.Fragment>
+            <Button
+              color={'white'}
+              size={'xs'}
+              onClick={this.toggleEditor}
+              data-test={`relationship-toggle-editor-${relName}`}
+            >
+              Edit
+            </Button>
+            &nbsp;
+          </React.Fragment>
+        );
+      };
+
+      return (
+        <div>
+          {getEditBtn()}
+          <b>{relName}</b>
+          <GqlCompatibilityWarning
+            identifier={relName}
+            className={styles.add_mar_left_small}
+          />
+          <div className={tableStyles.relationshipTopPadding}>
+            {getRelDef(relConfig)}
+          </div>
         </div>
-      </div>
-    );
+      );
+    };
 
     const expanded = () => (
       <div className={styles.activeEdit}>

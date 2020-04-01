@@ -80,10 +80,11 @@ These limitations will be addressed in upcoming versions.
 
 ## Documentation
 
-Read the complete [documentation](https://docs.hasura.io/1.0/graphql/manual/remote-schemas/index.html).
+Read the complete [documentation](https://hasura.io/docs/1.0/graphql/manual/remote-schemas/index.html).
 
 ## Translations
 
 This document is available in the following translations:
 
 - [French :fr:](translations/remote-schemas.french.md)
+- [Hindi  :india:](translations/remote-schemas.hindi.md)

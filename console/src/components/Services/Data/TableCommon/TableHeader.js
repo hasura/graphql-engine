@@ -20,7 +20,14 @@ import {
   getTableRelationshipsRoute,
 } from '../../../Common/utils/routesUtils';
 
-const TableHeader = ({ tabName, count, table, migrationMode, dispatch }) => {
+const TableHeader = ({
+  tabName,
+  count,
+  table,
+  migrationMode,
+  readOnlyMode,
+  dispatch,
+}) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
 
   const capitalisedTabName = tabName[0].toUpperCase() + tabName.slice(1);
@@ -97,7 +104,8 @@ const TableHeader = ({ tabName, count, table, migrationMode, dispatch }) => {
               `Browse Rows ${countDisplay}`,
               'table-browse-rows'
             )}
-            {isTable &&
+            {!readOnlyMode &&
+              isTable &&
               getTab(
                 'insert',
                 getTableInsertRowRoute(tableSchema, tableName, isTable),

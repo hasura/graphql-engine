@@ -1,0 +1,89 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user"(
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        is_admin BOOLEAN NOT NULL DEFAULT false
+      );
+
+- type: track_table
+  args:
+    name: user
+    schema: public
+
+- type: set_custom_types
+  args:
+    input_objects:
+    - name: UserInput
+      fields:
+      - name: name
+        type: String!
+      - name: email
+        type: String!
+
+    - name: InObject
+      fields:
+      - name: id
+        type: ID
+      - name: name
+        type: String
+      - name: age
+        type: Int
+
+    objects:
+    - name: UserId
+      fields:
+      - name: id
+        type: Int!
+      relationships:
+      - name: user
+        type: object
+        remote_table: user
+        field_mapping:
+          id: id
+
+    - name: OutObject
+      fields:
+      - name: id
+        type: ID! # For issue https://github.com/hasura/graphql-engine/issues/4061
+      - name: name
+        type: String
+
+- type: create_action
+  args:
+    name: create_user
+    definition:
+      kind: synchronous
+      arguments:
+      - name: email
+        type: String!
+      - name: name
+        type: String!
+      output_type: UserId
+      handler: http://127.0.0.1:5593/create-user
+
+- type: create_action
+  args:
+    name: create_users
+    definition:
+      kind: synchronous
+      arguments:
+      - name: users
+        type: '[UserInput!]!'
+      output_type: '[UserId]'
+      handler: http://127.0.0.1:5593/create-users
+
+- type: create_action
+  args:
+    name: mirror
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: 'InObject!'
+      output_type: 'OutObject'
+      handler: http://127.0.0.1:5593/mirror-action

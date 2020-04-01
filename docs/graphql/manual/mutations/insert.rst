@@ -1,3 +1,9 @@
+.. meta::
+   :description: Insert an object into the database using a mutation
+   :keywords: hasura, docs, mutation, insert
+
+.. _insert:
+
 Insert mutation
 ===============
 
@@ -26,11 +32,18 @@ Auto-generated insert mutation schema
     returning: [article!]!
   }
 
+  # single object insert (supported from v1.2.0)
+  insert_article_one (
+    object: article_insert_input!
+    on_conflict: article_on_conflict
+  ): article
+
 As you can see from the schema:
 
 - ``objects`` argument is necessary and you can pass multiple ``objects`` to the mutation.
-- You can pass an ``on_conflict`` argument to convert the mutation to an :doc:`upsert mutation <upsert>`.
+- You can pass an ``on_conflict`` argument to convert the mutation to an :ref:`upsert mutation <upsert>`.
 - You can return the number of affected rows and the affected objects (with nested objects) in the response.
+- You can use the single object insert to get the inserted object directly as the mutation response.
 
 See the :ref:`insert mutation API reference <insert_upsert_syntax>` for the full specifications.
 
@@ -46,34 +59,25 @@ Insert a single object
 .. graphiql::
   :view_only:
   :query:
-    mutation insert_article {
-      insert_article(
-        objects: [
-          {
-            id: 21,
-            title: "Article 1",
-            content: "Sample article content",
-            author_id: 3
-          }
-        ]
-      ) {
-        returning {
-          id
-          title
+    mutation insert_single_article {
+      insert_article_one(
+        object: {
+          id: 21,
+          title: "Article 1",
+          content: "Sample article content",
+          author_id: 3
         }
+      ) {
+        id
+        title
       }
     }
   :response:
     {
       "data": {
-        "insert_article": {
-          "affected_rows": 1,
-          "returning": [
-            {
-              "id": 21,
-              "title": "Article 1"
-            }
-          ]
+        "insert_article_one": {
+          "id": 21,
+          "title": "Article 1"
         }
       }
     }
@@ -83,39 +87,35 @@ Using variables:
 .. graphiql::
   :view_only:
   :query:
-    mutation insert_article($objects: [article_insert_input!]! ) {
-      insert_article(objects: $objects) {
-        returning {
-          id
-          title
-        }
+    mutation insert_single_article($object: article_insert_input! ) {
+      insert_article_one(object: $object) {
+        id
+        title
       }
     }
   :response:
     {
       "data": {
-        "insert_article": {
-          "affected_rows": 1,
-          "returning": [
-            {
-              "id": 21,
-              "title": "Article 1"
-            }
-          ]
+        "insert_article_one": {
+          "id": 21,
+          "title": "Article 1"
         }
       }
     }
   :variables:
     {
-      "objects": [
-        {
-          "id": 21,
-          "title": "Article 1",
-          "content": "Sample article content",
-          "author_id": 3
-        }
-      ]
+      "object": {
+        "id": 21,
+        "title": "Article 1",
+        "content": "Sample article content",
+        "author_id": 3
+      }
     }
+
+.. admonition:: Supported from
+
+   The ``insert_<object>_one`` mutation is supported in versions ``v1.2.0``
+   and above.
 
 Insert multiple objects of the same type in the same mutation
 -------------------------------------------------------------
@@ -124,7 +124,7 @@ Insert multiple objects of the same type in the same mutation
 .. graphiql::
   :view_only:
   :query:
-    mutation insert_article {
+    mutation insert_multiple_articles {
       insert_article(
         objects: [
           {
@@ -165,6 +165,56 @@ Insert multiple objects of the same type in the same mutation
         }
       }
     }
+
+Using variables:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_multiple_articles($objects: [article_insert_input!]! ) {
+      insert_article(objects: $objects) {
+        returning {
+          id
+          title
+        }
+      }
+    }
+  :response:
+    {
+        "data": {
+          "insert_article": {
+            "affected_rows": 2,
+            "returning": [
+              {
+                "id": 22,
+                "title": "Article 2"
+              },
+              {
+                "id": 23,
+                "title": "Article 3"
+              }
+            ]
+          }
+        }
+      }
+  :variables:
+    {
+      "objects": [
+        {
+          "id": 22,
+          "title": "Article 2",
+          "content": "Sample article content",
+          "author_id": 4
+        },
+        {
+          "id": 23,
+          "title": "Article 3",
+          "content": "Sample article content",
+          "author_id": 5
+        }
+      ]
+    }
+
 
 Insert an object and get a nested object in response
 ----------------------------------------------------
@@ -217,9 +267,14 @@ Insert an object and get a nested object in response
 
 Insert an object along with its related objects through relationships
 ---------------------------------------------------------------------
-**Example:** Insert an ``author`` along with their ``address`` and a few ``articles``.
 
-Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``addresses`` table and an ``array relationship`` called ``articles`` to the ``articles`` table.
+One-to-one / One-to-many relationships
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Let's say an ``author`` has an ``object relationship`` called ``address`` to the ``addresses`` table and an
+``array relationship`` called ``articles`` to the ``articles`` table.
+
+**Example:** Insert an ``author`` along with their ``address`` and a few ``articles``.
 
 .. graphiql::
   :view_only:
@@ -306,17 +361,134 @@ Let's say an ``author`` has an ``object relationship`` called ``address`` to the
 
 A nested insert mutation is processed as follows:
 
-1. The object relationships are inserted first, i.e. in this case, the address is inserted and its ``id`` is collected in     this step. 
+1. The object relationship objects are inserted first, i.e. in this case, the ``address`` is inserted and its ``id`` is
+   collected in this step.
 
-2. The parent object is inserted next. i.e. in this case, the author is now inserted with the ``address_id`` being set to the ``id`` of the address that was inserted. Because of this, it is not allowed to pass ``address_id`` in the author object if you are also providing data for the address relationship. 
+2. The parent object is inserted next. i.e. in this case, the ``author`` is now inserted with the ``address_id`` being set
+   to the ``id`` of the address that was inserted. Because of this, it is not allowed to pass ``address_id`` in the
+   author object if you are also providing data for the address relationship.
 
    The ``id`` of the author is collected in this step.
 
-3. The array relationships are inserted at the end. i.e. in this case, the articles are now inserted with their ``author_id`` set to the author's ``id`` collected in the step 2. Hence, it's not possible to specify ``author_id`` in the data for the articles relationship.
+3. The array relationship objects are inserted at the end. i.e. in this case, the ``articles`` are now inserted with their
+   ``author_id`` set to the author's ``id`` collected in the step 2. Hence, it's not possible to specify ``author_id``
+   in the data for the articles relationship.
 
-Insert an object with a JSONB column
-------------------------------------
-**Example:** Insert a new ``author`` object with a JSONB ``address`` column:
+Many-to-many relationships
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Let's say the ``articles`` has a :ref:`many-to-many relationship <many_to_many_modelling>` with the ``tags`` table via
+a bridge table ``article_tags``.
+
+**Example:** Insert an ``article`` along with a few ``tags``.
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insertArticle {
+      insert_articles(objects: [
+        {
+          id: 34,
+          title: "How to make fajitas",
+          content: "Guide on making the best fajitas in the world",
+          author_id: 3,
+          article_tags: {
+            data: [
+              {
+                tag: {
+                  data: {
+                    label: "Recipes"
+                  },
+                  on_conflict: {
+                    constraint: tags_label_key,
+                    update_columns: [label]
+                  }
+                }
+              },
+              {
+                tag: {
+                  data: {
+                    label: "Cooking"
+                  },
+                  on_conflict: {
+                    constraint: tags_label_key,
+                    update_columns: [label]
+                  }
+                }
+              }  
+            ]
+          }
+        }
+      ]) {
+        affected_rows
+        returning {
+          id
+          title
+          content
+          author_id
+          article_tags {
+            tag {
+              label
+            }
+          }
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_articles": {
+          "affected_rows": 5,
+          "returning": [
+            {
+              "author_id": 3,
+              "article_tags": [
+                {
+                  "tag": {
+                    "label": "Recipes"
+                  }
+                },
+                {
+                  "tag": {
+                    "label": "Cooking"
+                  }
+                }
+              ],
+              "content": "Guide on making the best fajitas in the world",
+              "id": 34,
+              "title": "How to make fajitas"
+            }
+          ]
+        }
+      }
+    }
+
+**How it works**
+
+1. The parent object (from the perspective of ``article``) is inserted first i.e. the ``article`` is inserted.
+
+   The ``id`` of the article is collected in this step.
+
+2. The array relationship objects (from the perspective of ``article``) are inserted next i.e. the
+   ``article_tags`` are inserted.
+
+   1. The object relationship objects (from the perspective of ``article_tags``) are inserted now i.e.
+      the ``tags`` are now inserted.
+
+      The ``ids`` of the tags are collected in this step.
+
+   2. The parent object (from the perspective of ``article_tags``) is inserted at the end i.e. the
+      ``article_tags`` are now inserted with their ``article_id`` set to the article's ``id`` collected in step 1.
+      The ``tag_id`` is set to the tag's ``id`` collected in step 2.1. Hence, it’s not possible to specify
+      ``article_id`` and ``tag_id`` in the data for the `article_tags` relationship.
+
+**on_conflict**
+
+``on_conflict`` can be passed as an argument in a nested insert statement. In our example, we say that if the unique key (``label``) already
+exists for a tag, we update the ``label`` of this respective tag (see :ref:`nested upsert caveats <nested-upsert-caveats>`).
+
+Insert an object with a JSONB field
+-----------------------------------
+**Example:** Insert a new ``author`` object with a JSONB ``address`` field:
 
 .. graphiql::
   :view_only:
@@ -371,11 +543,99 @@ Insert an object with a JSONB column
       }
     }
 
+Insert an object with an ARRAY field
+------------------------------------
+
+To insert fields of array types, you currently have to pass them as a `Postgres array literal <https://www.postgresql.org/docs/current/arrays.html#ARRAYS-INPUT>`_.
+
+**Example:** Insert a new ``author`` with a text array ``emails`` field:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_author {
+      insert_author (
+        objects: [
+          {
+            id: 1,
+            name: "Ash",
+            emails: "{ash@ash.com, ash123@ash.com}"
+          }
+        ]
+      ) {
+        affected_rows
+        returning {
+          id
+          name
+          emails
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 1,
+              "name": "Ash",
+              "emails": ["ash@ash.com", "ash123@ash.com"]
+            }
+          ]
+        }
+      }
+    }
+
+
+Using variables:
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation insert_author($emails: _text) {
+      insert_author (
+        objects: [
+          {
+            id: 1,
+            name: "Ash",
+            emails: $emails
+          }
+        ]
+      ) {
+        affected_rows
+        returning {
+          id
+          name
+          emails
+        }
+      }
+    }
+  :response:
+    {
+      "data": {
+        "insert_author": {
+          "affected_rows": 1,
+          "returning": [
+            {
+              "id": 1,
+              "name": "Ash",
+              "emails": ["ash@ash.com", "ash123@ash.com"]
+            }
+          ]
+        }
+      }
+    }
+  :variables:
+    {
+      "emails": "{ash@ash.com, ash123@ash.com}"
+    }
+
 Set a field to its default value during insert
 ----------------------------------------------
 
 To set a field to its ``default`` value, just omit it from the input object, irrespective of the
-:doc:`default value configuration <../schema/default-values/index>` i.e. via Postgres defaults or using column presets.
+:ref:`default value configuration <postgres_defaults>` i.e. via Postgres defaults or using column presets.
 
 **Example:** If the default value of ``id`` is set to auto-incrementing integer, there's no need to pass the ``id`` field to the input object:
 

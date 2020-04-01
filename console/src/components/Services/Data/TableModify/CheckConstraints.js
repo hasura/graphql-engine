@@ -1,63 +1,141 @@
 import React from 'react';
-import AceEditor from 'react-ace';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import styles from './ModifyTable.scss';
-import { removeCheckConstraint } from './ModifyActions';
+import { getCheckConstraintName } from '../../../Common/utils/pgUtils';
+import {
+  setCheckConstraints,
+  saveCheckConstraint,
+  removeCheckConstraint,
+} from './ModifyActions';
+import { getCheckConstraintBoolExp } from '../../../Common/utils/sqlUtils';
+import { ConstraintExpandedContent } from '../Common/Components/ConstraintExpandedContent';
 
-const CheckConstraints = ({ constraints, dispatch }) => {
-  // if no constraints are present
-  if (!constraints.length) {
-    return 'No check constraints';
-  }
+const CheckConstraints = ({
+  constraints,
+  dispatch,
+  checkConstraintsModify,
+}) => {
+  const init = () => {
+    const checkConstraintsState = constraints.map(c => ({
+      name: getCheckConstraintName(c),
+      check: getCheckConstraintBoolExp(c.check),
+    }));
+
+    checkConstraintsState.push({ name: '', check: '' });
+
+    dispatch(setCheckConstraints(checkConstraintsState));
+  };
+  React.useEffect(init, [constraints]);
+
+  const setCheckConstraint = (c, index) => {
+    const newConstraints = JSON.parse(JSON.stringify(checkConstraintsModify));
+    newConstraints[index] = c;
+    dispatch(setCheckConstraints(newConstraints));
+  };
 
   // map over constraints
-  return constraints.map((constraint, i) => {
-    const { constraint_name, check } = constraint;
+  return checkConstraintsModify.map((constraint, i) => {
+    const nameOnChange = e => {
+      setCheckConstraint(
+        {
+          ...constraint,
+          name: e.target.value,
+        },
+        i
+      );
+    };
 
-    // constraint name as expanded and collapsed label
-    const label = () => {
+    const checkOnChange = v => {
+      setCheckConstraint(
+        {
+          ...constraint,
+          check: v,
+        },
+        i
+      );
+    };
+
+    const isLast = constraints.length <= i;
+
+    const { name, check } = constraint;
+
+    const existingConstraintName = isLast
+      ? 'new-constraint'
+      : getCheckConstraintName(constraints[i]);
+
+    // constraint name as collapsed label
+    const collapsedLabel = () => {
+      if (isLast) {
+        if (!constraints.length) {
+          return <div>No check constraints</div>;
+        }
+        return null;
+      }
+
       return (
         <div>
-          <b>{constraint_name}</b>
+          <b>{existingConstraintName}</b>
+        </div>
+      );
+    };
+
+    // constraint name as expanded label
+    const expandedLabel = () => {
+      if (isLast) {
+        return null;
+      }
+
+      return (
+        <div>
+          <b>{existingConstraintName}</b>
         </div>
       );
     };
 
     // expand button text "View"
-    const expandButtonText = 'View';
+    const expandButtonText = isLast
+      ? constraints.length
+        ? 'Add a new check constraint'
+        : 'Add'
+      : 'Edit';
 
     // Check constraint definition in AceEditor for syntax highlighting
-    const expandedContent = () => {
-      return (
-        <AceEditor
-          mode="sql"
-          theme="github"
-          name={constraint_name}
-          value={check}
-          minLines={1}
-          maxLines={100}
-          width="100%"
-          showPrintMargin={false}
-          className={styles.add_mar_top_small}
-        />
-      );
-    };
+
+    let saveFunc;
+    if (name && check) {
+      saveFunc = toggle => {
+        dispatch(saveCheckConstraint(i, toggle));
+      };
+    }
 
     // function to remove the check constraint
-    const removeFunc = () => {
-      dispatch(removeCheckConstraint(constraint_name));
-    };
+    let removeFunc;
+    if (!isLast) {
+      removeFunc = toggle => {
+        dispatch(removeCheckConstraint(existingConstraintName, toggle));
+      };
+    }
+
+    const expandedContent = () => (
+      <ConstraintExpandedContent
+        nameOnChange={nameOnChange}
+        constraintName={existingConstraintName}
+        name={name}
+        checkOnChange={checkOnChange}
+        check={check}
+      />
+    );
 
     return (
       <ExpandableEditor
-        key={constraint_name}
+        key={existingConstraintName}
         editorExpanded={expandedContent}
-        expandedLabel={label}
-        collapsedLabel={label}
+        expandedLabel={expandedLabel}
+        collapsedLabel={collapsedLabel}
         property={`check-constraint-${i}`}
         service="modify-table"
         expandButtonText={expandButtonText}
         removeFunc={removeFunc}
+        saveFunc={saveFunc}
         isCollapsable
       />
     );

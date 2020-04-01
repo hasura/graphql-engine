@@ -1,3 +1,9 @@
+.. meta::
+   :description: Hasura GraphQL API queries and subscriptions API reference
+   :keywords: hasura, docs, GraphQL API, API reference, query, subscription
+
+.. _graphql_api_query:
+
 API Reference - Query / Subscription
 ====================================
 
@@ -61,7 +67,7 @@ Query / subscription syntax
 
 .. note::
 
-    For more examples and details of usage, please see :doc:`this <../../queries/index>`.
+    For more examples and details of usage, please see :ref:`this <queries>`.
 
 Syntax definitions
 ------------------
@@ -300,6 +306,8 @@ BoolExp
 
    AndExp_ | OrExp_ | NotExp_ | TrueExp_ | ColumnExp_
 
+.. _AndExp:
+
 AndExp
 ######
 
@@ -309,6 +317,30 @@ AndExp
       _and: [BoolExp_]
     }
 
+.. admonition:: Syntactic sugar
+
+  You can simplify an ``_and`` expression by passing the sub-expressions separated by a ``,``.
+
+  **For example:**
+
+  .. code-block:: graphql
+
+    {
+      _and: [
+        { rating: { _gte: 4 } },
+        { published_on: { _gte: "2018-01-01" } }
+      ]
+    }
+
+    # can be simplified to:
+
+    {
+      rating: { _gte: 4 },
+      published_on: { _gte: "2018-01-01" }
+    }
+
+.. _OrExp:
+
 OrExp
 #####
 
@@ -317,6 +349,46 @@ OrExp
     {
       _or: [BoolExp_]
     }
+
+.. note::
+
+  The ``_or`` operator expects an array of expressions as input. Passing an object to it will result in the
+  behaviour of the ``_and`` operator due to the way `GraphQL list input coercion <https://graphql.github.io/graphql-spec/June2018/#sec-Type-System.List>`_
+  behaves.
+
+  **For example:**
+
+  .. code-block:: graphql
+
+    {
+      _or: {
+       rating: { _gte: 4 },
+       published_on: { _gte: "2018-01-01" }
+      }
+    }
+
+    # will be coerced to:
+
+    {
+      _or: [
+        {
+          rating: { _gte: 4 },
+          published_on: { _gte: "2018-01-01" }
+        }
+      ]
+    }
+
+    # which is equivalent to:
+
+    {
+      _or: [
+        _and: [
+          { rating: { _gte: 4 } },
+          { published_on: { _gte: "2018-01-01" } }
+        ]
+      ]
+    }
+
 
 NotExp
 ######

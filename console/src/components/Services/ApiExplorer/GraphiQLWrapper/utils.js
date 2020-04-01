@@ -18,3 +18,14 @@ export const setQueryVariableSectionHeight = () => {
     variableEditor[0].style.height = '120px';
   }
 };
+
+export const copyToClipboard = copyString => {
+  const queryTextArea = document.createElement('textarea');
+  queryTextArea.value = copyString;
+  queryTextArea.setAttribute('readonly', '');
+  queryTextArea.style = { position: 'absolute', left: '-9999px' };
+  document.body.appendChild(queryTextArea);
+  queryTextArea.select();
+  document.execCommand('copy');
+  document.body.removeChild(queryTextArea);
+};

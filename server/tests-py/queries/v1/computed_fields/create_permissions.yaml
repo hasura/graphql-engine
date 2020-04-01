@@ -40,11 +40,29 @@
         - random
         filter: {}
   response:
-    path: "$.args.permission.computed_fields[1]"
-    error: computed field "random" does not exist
-    code: not-exists
-
-- description: Create select permission with computed field which returns a set of table
+    internal:
+    - definition:
+        role: user
+        comment:
+        permission:
+          allow_aggregations: false
+          computed_fields:
+          - full_name
+          - random
+          columns: '*'
+          filter: {}
+        table:
+          schema: public
+          name: author
+      reason: 'in table "author": in permission for role "user": computed field "random"
+        does not exist'
+      type: select_permission
+    path: $.args
+    error: 'in table "author": in permission for role "user": computed field "random"
+      does not exist'
+    code: constraint-violation
+- description: Create select permission with computed field which returns a set of
+    table
   url: /v1/query
   status: 400
   query:
@@ -59,10 +77,29 @@
         - get_articles
         filter: {}
   response:
-    path: "$.args.permission.computed_fields[1]"
-    error: select permissions on computed field "get_articles" are auto-derived from the permissions on its returning table "article" and cannot be specified manually
-    code: not-supported
-
+    internal:
+    - definition:
+        role: user
+        comment:
+        permission:
+          allow_aggregations: false
+          computed_fields:
+          - full_name
+          - get_articles
+          columns: '*'
+          filter: {}
+        table:
+          schema: public
+          name: author
+      reason: 'in table "author": in permission for role "user": select permissions
+        on computed field "get_articles" are auto-derived from the permissions on
+        its returning table "article" and cannot be specified manually'
+      type: select_permission
+    path: $.args
+    error: 'in table "author": in permission for role "user": select permissions on
+      computed field "get_articles" are auto-derived from the permissions on its returning
+      table "article" and cannot be specified manually'
+    code: constraint-violation
 - description: Create select permission on article table
   url: /v1/query
   status: 200
@@ -102,7 +139,7 @@
       table: author
       name: full_name
   response:
-    path: "$.args"
+    path: $.args
     error: 'cannot drop due to the following dependent objects : permission author.user.select'
     code: dependency-error
 

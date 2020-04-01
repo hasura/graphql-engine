@@ -1,6 +1,7 @@
 import pytest
+from context import PytestConf
 
-if not pytest.config.getoption("--test-cors"):
+if not PytestConf.config.getoption("--test-cors"):
     pytest.skip("--test-cors flag is missing, skipping tests", allow_module_level=True)
 
 

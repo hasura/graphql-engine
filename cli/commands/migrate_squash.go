@@ -12,13 +12,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 )
 
 func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
-	v := viper.New()
 	opts := &migrateSquashOptions{
 		EC: ec,
 	}
@@ -29,12 +27,11 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Example: `  # NOTE: This command is in PREVIEW, correctness is not guaranteed and the usage may change.
 
   # squash all migrations from version 123 to the latest one:
-  hasura migrate squash --from 123`,
+  hasura migrate squash --from 123
+
+  # Add a name for the new squashed migration
+  hasura migrate squash --name "<name>" --from 123`,
 		SilenceUsage: true,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			ec.Viper = v
-			return ec.Validate()
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.newVersion = getTime()
 			return opts.run()
@@ -42,19 +39,12 @@ func newMigrateSquashCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := migrateSquashCmd.Flags()
-	f.Uint64Var(&opts.from, "from", 0, "start squashing form this version")
+	f.Uint64Var(&opts.from, "from", 0, "start squashing from this version")
 	f.StringVar(&opts.name, "name", "squashed", "name for the new squashed migration")
 	f.BoolVar(&opts.deleteSource, "delete-source", false, "delete the source files after squashing without any confirmation")
 
-	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	f.String("access-key", "", "access key for Hasura GraphQL Engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
-
-	// need to create a new viper because https://github.com/spf13/viper/issues/233
-	v.BindPFlag("endpoint", f.Lookup("endpoint"))
-	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
-	v.BindPFlag("access_key", f.Lookup("access-key"))
+	// mark flag as required
+	migrateSquashCmd.MarkFlagRequired("from")
 
 	return migrateSquashCmd
 }
@@ -73,7 +63,7 @@ func (o *migrateSquashOptions) run() error {
 	o.EC.Logger.Warnln("This command is currently experimental and hence in preview, correctness of squashed migration is not guaranteed!")
 	o.EC.Spin(fmt.Sprintf("Squashing migrations from %d to latest...", o.from))
 	defer o.EC.Spinner.Stop()
-	migrateDrv, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, true)
+	migrateDrv, err := newMigrate(o.EC, true)
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize migrations driver")
 	}

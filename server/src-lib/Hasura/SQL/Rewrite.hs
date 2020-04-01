@@ -8,11 +8,14 @@ import           Hasura.Prelude
 import qualified Hasura.SQL.DML      as S
 import           Hasura.SQL.Types    (Iden (..))
 
+{- Note [Postgres identifier length limitations]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Postgres truncates identifiers to a maximum of 63 characters by default (see
+https://www.postgresql.org/docs/12/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS).
+-}
 
--- add an int as a prefix to all aliases.
--- This is needed in cases identifiers exceed 63 chars
--- as postgres only considers first 63 chars of
--- an identifier
+-- Prefix an Int to all aliases to preserve the uniqueness of identifiers.
+-- See Note [Postgres identifier length limitations].
 prefixNumToAliases :: S.Select -> S.Select
 prefixNumToAliases s =
   uSelect s `evalState` UniqSt 0 Map.empty
@@ -85,9 +88,13 @@ uFunctionArgs :: S.FunctionArgs -> Uniq S.FunctionArgs
 uFunctionArgs (S.FunctionArgs positional named) =
   S.FunctionArgs <$> mapM uSqlExp positional <*> mapM uSqlExp named
 
+uFunctionAlias :: S.FunctionAlias -> Uniq S.FunctionAlias
+uFunctionAlias (S.FunctionAlias alias definitionList) =
+  S.FunctionAlias <$> addAlias alias <*> pure definitionList
+
 uFunctionExp :: S.FunctionExp -> Uniq S.FunctionExp
 uFunctionExp (S.FunctionExp qf args alM) =
-  S.FunctionExp qf <$> uFunctionArgs args <*> mapM addAlias alM
+  S.FunctionExp qf <$> uFunctionArgs args <*> mapM uFunctionAlias alM
 
 uFromItem :: S.FromItem -> Uniq S.FromItem
 uFromItem fromItem = case fromItem of
@@ -158,7 +165,7 @@ uSqlExp = restoringIdens . \case
   S.SELit t                     -> return $ S.SELit t
   S.SEUnsafe t                  -> return $ S.SEUnsafe t
   S.SESelect s                  -> S.SESelect <$> uSelect s
-  S.SEStar                      -> return S.SEStar
+  S.SEStar qual                 -> S.SEStar <$> traverse uQual qual
   -- this is for row expressions
   -- todo: check if this is always okay
   S.SEIden iden                 -> return $ S.SEIden iden
@@ -196,6 +203,6 @@ uSqlExp = restoringIdens . \case
   S.SEFunction funcExp          -> S.SEFunction <$> uFunctionExp funcExp
   where
     uQual = \case
-      S.QualIden iden -> S.QualIden <$> getIden iden
+      S.QualIden iden ty -> S.QualIden <$> getIden iden <*> pure ty
       S.QualTable t   -> return $ S.QualTable t
       S.QualVar t     -> return $ S.QualVar t

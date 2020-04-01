@@ -1,0 +1,61 @@
+- description: Update actions webhook to another route which retuns object response
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: create_users
+      definition:
+        kind: synchronous
+        arguments:
+        - name: email
+          type: String!
+        - name: name
+          type: String!
+        output_type: '[UserId]'
+        handler: http://127.0.0.1:5593/create-user
+
+- description: Run create_users action
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        create_users(email: "clarke@gmail.com", name: "Clarke"){
+          id
+          user {
+            name
+            email
+            is_admin
+          }
+        }
+      }
+
+  response:
+    errors:
+      - extensions:
+          internal:
+            webhook_response:
+              id: 1
+          path: $
+          code: unexpected
+        message: expecting array for action webhook response but got object
+
+- description: Revert action definition
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: update_action
+    args:
+      name: create_users
+      definition:
+        kind: synchronous
+        arguments:
+        - name: users
+          type: '[UserInput!]!'
+        output_type: '[UserId]'
+        handler: http://127.0.0.1:5593/create-users
