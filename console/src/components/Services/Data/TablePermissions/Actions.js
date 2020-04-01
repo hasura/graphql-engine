@@ -249,7 +249,9 @@ const toggleAllFields = (permissions, allFields, fieldType) => {
 
 // fieldType: columns / computed_fields
 const toggleField = (permissions, fieldName, fieldType) => {
-  const currFields = permissions ? permissions[fieldType] : [];
+  const currFields =
+    permissions && permissions[fieldType] ? permissions[fieldType] : [];
+
   let _newFields = currFields;
 
   const fieldIndex = currFields.indexOf(fieldName);
