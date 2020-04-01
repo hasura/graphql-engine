@@ -2,6 +2,8 @@
    :description: Creating Hasura actions
    :keywords: hasura, docs, actions, create 
 
+.. _create_actions:
+
 Creating actions
 ================
 

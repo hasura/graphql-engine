@@ -2,6 +2,8 @@
    :description: Custom GraphQL types for Hasura actions
    :keywords: hasura, docs, actions, custom types
 
+.. _custom_types:
+
 Custom GraphQL types
 ====================
 

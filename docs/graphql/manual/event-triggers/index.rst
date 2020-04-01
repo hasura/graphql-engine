@@ -2,6 +2,8 @@
    :description: Manage event triggers with Hasura
    :keywords: hasura, docs, event trigger
 
+.. _event_triggers:
+
 Event Triggers
 ==============
 

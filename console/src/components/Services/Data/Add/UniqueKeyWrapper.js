@@ -1,10 +1,7 @@
 import React from 'react';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import UniqueKeySelector from '../Common/ReusableComponents/UniqueKeySelector';
-import {
-  getUkeyPkeyConfig,
-  getKeyDef,
-} from '../Common/ReusableComponents/utils';
+import UniqueKeySelector from '../Common/Components/UniqueKeySelector';
+import { getUkeyPkeyConfig, getKeyDef } from '../Common/Components/utils';
 
 const UniqueKeyWrapper = ({
   // allSchemas,

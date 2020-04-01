@@ -21,49 +21,49 @@ The ``Hasura CLI`` is a command line tool which is the primary mode of managing 
 Installation
 ------------
 
-Refer to :doc:`install-hasura-cli`.
+Refer to :ref:`install_hasura_cli`.
 
 
 Commands
 --------
 
-- :doc:`hasura <hasura>`
-- :doc:`hasura actions <hasura_actions>`
-- :doc:`hasura actions codegen <hasura_actions_codegen>`
-- :doc:`hasura actions create <hasura_actions_create>`
-- :doc:`hasura actions use-codegen <hasura_actions_use-codegen>`
-- :doc:`hasura completion <hasura_completion>`
-- :doc:`hasura console <hasura_console>`
-- :doc:`hasura init <hasura_init>`
-- :doc:`hasura metadata <hasura_metadata>`
-- :doc:`hasura metadata apply <hasura_metadata_apply>`
-- :doc:`hasura metadata clear <hasura_metadata_clear>`
-- :doc:`hasura metadata diff <hasura_metadata_diff>`
-- :doc:`hasura metadata export <hasura_metadata_export>`
-- :doc:`hasura metadata inconsistency <hasura_metadata_inconsistency>`
-- :doc:`hasura metadata inconsistency drop <hasura_metadata_inconsistency_drop>`
-- :doc:`hasura metadata inconsistency list <hasura_metadata_inconsistency_list>`
-- :doc:`hasura metadata inconsistency status <hasura_metadata_inconsistency_status>`
-- :doc:`hasura metadata reload <hasura_metadata_reload>`
-- :doc:`hasura migrate <hasura_migrate>`
-- :doc:`hasura migrate apply <hasura_migrate_apply>`
-- :doc:`hasura migrate create <hasura_migrate_create>`
-- :doc:`hasura migrate squash <hasura_migrate_squash>`
-- :doc:`hasura migrate status <hasura_migrate_status>`
-- :doc:`hasura plugins <hasura_plugins>`
-- :doc:`hasura plugins install <hasura_plugins_install>`
-- :doc:`hasura plugins list <hasura_plugins_list>`
-- :doc:`hasura plugins uninstall <hasura_plugins_uninstall>`
-- :doc:`hasura plugins upgrade <hasura_plugins_upgrade>`
-- :doc:`hasura scripts <hasura_scripts>`
-- :doc:`hasura scripts update-config-v2 <hasura_scripts_update-config-v2>`
-- :doc:`hasura update-cli <hasura_update-cli>`
-- :doc:`hasura version <hasura_version>`
+- :ref:`hasura actions <hasura_actions>`
+- :ref:`hasura <hasura>`
+- :ref:`hasura actions codegen <hasura_actions_codegen>`
+- :ref:`hasura actions create <hasura_actions_create>`
+- :ref:`hasura actions use-codegen <hasura_actions_use-codegen>`
+- :ref:`hasura completion <hasura_completion>`
+- :ref:`hasura console <hasura_console>`
+- :ref:`hasura init <hasura_init>`
+- :ref:`hasura metadata <hasura_metadata>`
+- :ref:`hasura metadata apply <hasura_metadata_apply>`
+- :ref:`hasura metadata clear <hasura_metadata_clear>`
+- :ref:`hasura metadata diff <hasura_metadata_diff>`
+- :ref:`hasura metadata export <hasura_metadata_export>`
+- :ref:`hasura metadata inconsistency <hasura_metadata_inconsistency>`
+- :ref:`hasura metadata inconsistency drop <hasura_metadata_inconsistency_drop>`
+- :ref:`hasura metadata inconsistency list <hasura_metadata_inconsistency_list>`
+- :ref:`hasura metadata inconsistency status <hasura_metadata_inconsistency_status>`
+- :ref:`hasura metadata reload <hasura_metadata_reload>`
+- :ref:`hasura migrate <hasura_migrate>`
+- :ref:`hasura migrate apply <hasura_migrate_apply>`
+- :ref:`hasura migrate create <hasura_migrate_create>`
+- :ref:`hasura migrate squash <hasura_migrate_squash>`
+- :ref:`hasura migrate status <hasura_migrate_status>`
+- :ref:`hasura plugins <hasura_plugins>`
+- :ref:`hasura plugins install <hasura_plugins_install>`
+- :ref:`hasura plugins list <hasura_plugins_list>`
+- :ref:`hasura plugins uninstall <hasura_plugins_uninstall>`
+- :ref:`hasura plugins upgrade <hasura_plugins_upgrade>`
+- :ref:`hasura scripts <hasura_scripts>`
+- :ref:`hasura scripts update-config-v2 <hasura_scripts_update-config-v2>`
+- :ref:`hasura update-cli <hasura_update-cli>`
+- :ref:`hasura version <hasura_version>`
 
 Uninstalling
 ------------
 
-Refer to :doc:`uninstall-hasura-cli`.
+Refer to :ref:`uninstall_hasura_cli`.
 
 .. toctree::
    :maxdepth: 1

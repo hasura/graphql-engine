@@ -2,6 +2,8 @@
    :description: Connecting Hasura actions with the graph
    :keywords: hasura, docs, actions, connect 
 
+.. _actions_connect:
+
 Connecting actions with the graph
 =================================
 

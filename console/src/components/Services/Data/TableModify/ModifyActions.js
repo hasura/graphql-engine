@@ -25,7 +25,7 @@ import {
   pgConfTypes,
   generateFKConstraintName,
   getUniqueConstraintName,
-} from '../Common/ReusableComponents/utils';
+} from '../Common/Components/utils';
 
 import { isPostgresFunction } from '../utils';
 import {

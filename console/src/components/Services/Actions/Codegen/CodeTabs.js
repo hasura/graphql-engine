@@ -50,10 +50,10 @@ const CodeTabs = ({
     );
   }
 
-  const files = codegenFiles.map(({ name, content }) => {
+  const files = codegenFiles.map(({ name, content }, i) => {
     const getFileTab = (component, filename) => {
       return (
-        <Tab eventKey={filename} title={filename}>
+        <Tab eventKey={filename} title={filename} key={i}>
           {component}
         </Tab>
       );
@@ -73,7 +73,7 @@ const CodeTabs = ({
     }
   });
 
-  return <Tabs id="uncontrolled-tab-example">{files} </Tabs>;
+  return <Tabs id="codegen-files-tabs">{files} </Tabs>;
 };
 
 export default CodeTabs;

@@ -2,6 +2,8 @@
    :description: Deploy Hasura GraphQL engine with Docker
    :keywords: hasura, docs, deployment, docker
 
+.. _deployment_docker:
+
 Run Hasura GraphQL engine using Docker
 ======================================
 
@@ -64,11 +66,11 @@ Examples of ``HASURA_GRAPHQL_DATABASE_URL``:
   - If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
     ``HASURA_GRAPHQL_DATABASE_URL`` env var (e.g. %40 for @).
 
-    You can check the :doc:`logs <logging>` to see if the database credentials are proper and if Hasura is able
+    You can check the :ref:`logs <docker_logs>` to see if the database credentials are proper and if Hasura is able
     to connect to the database.
 
   - Hasura GraphQL engine needs access permissions to your Postgres database as described in
-    :doc:`Postgres permissions <../postgres-permissions>`.
+    :ref:`Postgres permissions <postgres_permissions>`.
 
 Network config
 ^^^^^^^^^^^^^^
@@ -143,15 +145,15 @@ Head to http://localhost:8080/console to open the Hasura console.
 Step 5: Track existing tables and relationships
 -----------------------------------------------
 
-See :doc:`../../schema/using-existing-database` to enable GraphQL over the database.
+See :ref:`schema_existing_db` to enable GraphQL over the database.
 
 Advanced
 --------
 
-- :doc:`Securing your GraphQL endpoint <securing-graphql-endpoint>`
-- :doc:`GraphQL engine server logs <logging>`
-- :doc:`Updating GraphQL engine <updating>`
-- :doc:`Setting up migrations <../../migrations/index>`
+- :ref:`Securing your GraphQL endpoint <docker_secure>`
+- :ref:`GraphQL engine server logs <docker_logs>`
+- :ref:`Updating GraphQL engine <docker_update>`
+- :ref:`Setting up migrations <auth>`
 
 .. toctree::
    :titlesonly:

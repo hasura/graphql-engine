@@ -2,6 +2,8 @@
    :description: Rename relationships in Hasura
    :keywords: hasura, docs, schema, relationship, rename
 
+.. _rename_relationships:
+
 Renaming relationships
 ======================
 

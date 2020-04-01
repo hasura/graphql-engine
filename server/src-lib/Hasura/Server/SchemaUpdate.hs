@@ -17,6 +17,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.IORef
+import           GHC.AssertNF
 
 import qualified Control.Concurrent.Extended as C
 import qualified Control.Concurrent.STM      as STM
@@ -159,6 +160,7 @@ listener sqlGenCtx pool logger httpMgr updateEventRef
           Left e -> logError logger threadType $ TEJsonParse $ T.pack e
           Right payload -> do
             logInfo logger threadType $ object ["received_event" .= payload]
+            $assertNFHere payload  -- so we don't write thunks to mutable vars
             -- Push a notify event to Queue
             STM.atomically $ STM.writeTVar updateEventRef $ Just payload
 

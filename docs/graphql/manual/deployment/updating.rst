@@ -2,6 +2,8 @@
    :description: Update Hasura GraphQL engine version
    :keywords: hasura, docs, deployment, update, version
 
+.. _update_hge:
+
 Updating Hasura GraphQL engine
 ==============================
 
@@ -17,9 +19,9 @@ The Hasura GraphQL engine runs off a Docker image and updates are as simple as c
 
 Based on your deployment method, follow the appropriate guide to update the GraphQL engine version you're running:
 
-- :doc:`Updating on Heroku <heroku/updating>`
-- :doc:`Updating on Docker <docker/updating>`
-- :doc:`Updating on Kubernetes <kubernetes/updating>`
+- :ref:`Updating on Heroku <heroku_update>`
+- :ref:`Updating on Docker <docker_update>`
+- :ref:`Updating on Kubernetes <kubernetes_update>`
 
 Latest available versions
 -------------------------

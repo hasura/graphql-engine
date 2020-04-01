@@ -50,6 +50,7 @@ import qualified StmContainers.Map                        as STMMap
 import qualified System.Metrics.Distribution              as Metrics
 
 import           Data.List.Split                          (chunksOf)
+import           GHC.AssertNF
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
 
@@ -186,12 +187,13 @@ pushResultToCohort
   -> LiveQueryMetadata
   -> CohortSnapshot
   -> IO ()
-pushResultToCohort result respHashM (LiveQueryMetadata dTime) cohortSnapshot = do
+pushResultToCohort result !respHashM (LiveQueryMetadata dTime) cohortSnapshot = do
   prevRespHashM <- STM.readTVarIO respRef
   -- write to the current websockets if needed
   sinks <-
     if isExecError result || respHashM /= prevRespHashM
     then do
+      $assertNFHere respHashM  -- so we don't write thunks to mutable vars
       STM.atomically $ STM.writeTVar respRef respHashM
       return (newSinks <> curSinks)
     else
@@ -375,4 +377,4 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
               -- from Postgres strictly and (2) even if we didn’t, hashing will have to force the
               -- whole thing anyway.
               respHash = mkRespHash (encJToBS result)
-          in (GQSuccess result, Just respHash, actionMeta,) <$> Map.lookup respId cohortSnapshotMap
+          in (GQSuccess result, Just $! respHash, actionMeta,) <$> Map.lookup respId cohortSnapshotMap

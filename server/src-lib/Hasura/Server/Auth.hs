@@ -19,20 +19,20 @@ module Hasura.Server.Auth
   ) where
 
 import           Control.Concurrent.Extended (forkImmortal)
-import           Control.Exception      (try)
+import           Control.Exception           (try)
 import           Control.Lens
 import           Data.Aeson
-import           Data.IORef             (newIORef)
-import           Data.Time.Clock        (UTCTime)
-import           Hasura.Server.Version  (HasVersion)
+import           Data.IORef                  (newIORef)
+import           Data.Time.Clock             (UTCTime)
+import           Hasura.Server.Version       (HasVersion)
 
-import qualified Data.Aeson             as J
-import qualified Data.ByteString.Lazy   as BL
-import qualified Data.HashMap.Strict    as Map
-import qualified Data.Text              as T
-import qualified Network.HTTP.Client    as H
-import qualified Network.HTTP.Types     as N
-import qualified Network.Wreq           as Wreq
+import qualified Data.Aeson                  as J
+import qualified Data.ByteString.Lazy        as BL
+import qualified Data.HashMap.Strict         as Map
+import qualified Data.Text                   as T
+import qualified Network.HTTP.Client         as H
+import qualified Network.HTTP.Types          as N
+import qualified Network.Wreq                as Wreq
 
 import           Hasura.HTTP
 import           Hasura.Logging
@@ -294,7 +294,7 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
 
     userInfoWhenNoAdminSecret = \case
       Nothing -> throw401 $ adminSecretHeader <> "/"
-                 <>  deprecatedAccessKeyHeader <> " required, but not found"
+                 <> deprecatedAccessKeyHeader <> " required, but not found"
       Just role -> return $ mkUserInfo role usrVars
 
     withNoExpTime a = (, Nothing) <$> a

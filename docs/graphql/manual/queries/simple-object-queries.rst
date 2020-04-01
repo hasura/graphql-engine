@@ -2,6 +2,8 @@
    :description: Make simple object queries in Hasura
    :keywords: hasura, docs, query, object query
 
+.. _simple_object_queries:
+
 Simple object queries
 =====================
 

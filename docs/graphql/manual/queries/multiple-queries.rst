@@ -2,6 +2,8 @@
    :description: Run multiple queries in a request in Hasura
    :keywords: hasura, docs, query, multiple queries, request
 
+.. _multiple_queries:
+
 Multiple queries in a request
 =============================
 

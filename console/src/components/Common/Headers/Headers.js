@@ -76,7 +76,10 @@ const Headers = ({ headers, setHeaders }) => {
     };
 
     return (
-      <div className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}>
+      <div
+        className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
+        key={i}
+      >
         {getHeaderNameInput()}
         {getHeaderValueInput()}
         {getRemoveButton()}

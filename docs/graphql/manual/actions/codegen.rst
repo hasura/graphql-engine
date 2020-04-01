@@ -2,6 +2,8 @@
    :description: Codegen for Hasura actions
    :keywords: hasura, docs, actions, codegen
 
+.. _actions_codegen:
+
 Actions codegen
 ===============
 

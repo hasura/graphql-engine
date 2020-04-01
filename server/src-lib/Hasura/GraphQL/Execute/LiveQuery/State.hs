@@ -21,6 +21,7 @@ import qualified StmContainers.Map                        as STMMap
 import           Control.Concurrent.Extended              (sleep, forkImmortal)
 import           Control.Exception                        (mask_)
 import           Data.String
+import           GHC.AssertNF
 
 import qualified Hasura.Logging                           as L
 import qualified Hasura.GraphQL.Execute.LiveQuery.TMap    as TMap
@@ -73,6 +74,8 @@ addLiveQuery logger lqState plan onResultAction = do
   responseId <- newCohortId
   sinkId <- newSinkId
 
+  $assertNFHere subscriber  -- so we don't write thunks to mutable vars
+
   -- a handler is returned only when it is newly created
   handlerM <- STM.atomically $ do
     handlerM <- STMMap.lookup handlerId lqMap
@@ -84,7 +87,7 @@ addLiveQuery logger lqState plan onResultAction = do
           Nothing     -> addToPoller sinkId responseId handler
         return Nothing
       Nothing -> do
-        poller <- newPoller
+        !poller <- newPoller
         addToPoller sinkId responseId poller
         STMMap.insert poller handlerId lqMap
         return $ Just poller
@@ -96,7 +99,9 @@ addLiveQuery logger lqState plan onResultAction = do
     threadRef <- forkImmortal ("pollQuery."<>show sinkId) logger $ forever $ do
       pollQuery metrics batchSize pgExecCtx query handler
       sleep $ unRefetchInterval refetchInterval
-    STM.atomically $ STM.putTMVar (_pIOState handler) (PollerIOState threadRef metrics)
+    let !pState = PollerIOState threadRef metrics
+    $assertNFHere pState  -- so we don't write thunks to mutable vars
+    STM.atomically $ STM.putTMVar (_pIOState handler) pState
 
   pure $ LiveQueryId handlerId cohortKey sinkId
   where
@@ -106,11 +111,12 @@ addLiveQuery logger lqState plan onResultAction = do
 
     handlerId = PollerKey role query
 
+    !subscriber = Subscriber alias onResultAction
     addToCohort sinkId handlerC =
-      TMap.insert (Subscriber alias onResultAction) sinkId $ _cNewSubscribers handlerC
+      TMap.insert subscriber sinkId $ _cNewSubscribers handlerC
 
     addToPoller sinkId responseId handler = do
-      newCohort <- Cohort responseId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new
+      !newCohort <- Cohort responseId <$> STM.newTVar Nothing <*> TMap.new <*> TMap.new
       addToCohort sinkId newCohort
       TMap.insert newCohort cohortKey $ _pCohorts handler
 

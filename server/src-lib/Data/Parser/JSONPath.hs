@@ -16,7 +16,7 @@ import           Text.Read            (readMaybe)
 parseKey :: Parser JSONPathElement
 parseKey = do
   firstChar <- letter
-           <|> (char '_')
+           <|> char '_'
            <?> "the first character of property name must be a letter or underscore."
   name <- many' (letter
            <|> digit
@@ -30,15 +30,26 @@ parseBracketElement :: Parser JSONPathElement
 parseBracketElement = skip (== '[') *> anyChar >>= parseContent
   where
     parseContent :: Char -> Parser JSONPathElement
-    parseContent firstChar
-      | firstChar == ']' = fail "empty array index"
-      | otherwise = do 
-        remain <- many' (notChar ']') 
-        skip (== ']')
-        let content = firstChar:remain
-        case (readMaybe content :: Maybe Int) of
-          Nothing -> return $ Key $ T.pack content
-          Just v  -> return $ Index v
+    parseContent ']'  = fail "empty array index"
+    parseContent '\'' = parseTextContent '\''
+    parseContent '"'  = parseTextContent '"'
+    parseContent c    = parseIntContent c
+
+    parseTextContent :: Char -> Parser JSONPathElement
+    parseTextContent quote = do
+      remain <- many' (notChar quote)
+      skip (== quote)
+      skip (== ']')
+      return $ Key $ T.pack remain
+
+    parseIntContent :: Char -> Parser JSONPathElement
+    parseIntContent c = do
+      remain <- many' (notChar ']')
+      skip (== ']')
+      let content = c:remain
+      case (readMaybe content :: Maybe Int) of
+        Nothing -> fail $ "invalid array index: " ++ content
+        Just v  -> return $ Index v
 
 parseElement :: Parser JSONPathElement
 parseElement = do
@@ -67,4 +78,5 @@ parseJSONPath = parseResult . parse parseElements
           Right r
 
     invalidMessage s = "invalid property name: "  ++ T.unpack s
-      ++ ". Accept letters, digits, underscore (_) or hyphen (-) only"
+      ++ "Accept letters, digits, underscore (_) or hyphen (-) only. "
+      ++ "You should use bracket notation (e.g ['Hello!']) for special characters"
