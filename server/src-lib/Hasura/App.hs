@@ -196,8 +196,7 @@ initialiseCtx hgeCmd rci = do
 runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a
 runTxIO pool isoLevel tx = do
   eVal <- liftIO $ runExceptT $ Q.runTx pool isoLevel tx
-  val <- either printErrJExit return eVal
-  return val
+  either printErrJExit return eVal
 
 runHGEServer
   :: ( HasVersion
