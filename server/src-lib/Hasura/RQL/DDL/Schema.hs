@@ -40,6 +40,7 @@ import qualified Data.Text                      as T
 import qualified Data.Text.Encoding             as TE
 import qualified Database.PG.Query              as Q
 import qualified Database.PostgreSQL.LibPQ      as PQ
+import qualified Text.Regex.TDFA                as TDFA
 
 import           Data.Aeson
 import           Data.Aeson.Casing
@@ -54,7 +55,7 @@ import           Hasura.RQL.DDL.Schema.Rename
 import           Hasura.RQL.DDL.Schema.Table
 import           Hasura.RQL.Instances           ()
 import           Hasura.RQL.Types
-import           Hasura.Server.Utils            (matchRegex)
+import           Hasura.Server.Utils            (quoteRegex)
 
 data RunSQL
   = RunSQL
@@ -87,24 +88,51 @@ instance ToJSON RunSQL where
 
 runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
 runRunSQL RunSQL {..} = do
-  metadataCheckNeeded <- case rTxAccessMode of
-    Q.ReadOnly  -> pure False
-    Q.ReadWrite -> onNothing rCheckMetadataConsistency $ containsMutationKeyword rSql
-  bool (execRawSQL rSql) (withMetadataCheck rCascade $ execRawSQL rSql) metadataCheckNeeded
+  -- see Note [Checking metadata consistency in run_sql]
+  let metadataCheckNeeded = case rTxAccessMode of
+        Q.ReadOnly  -> False
+        Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
+  if metadataCheckNeeded
+    then withMetadataCheck rCascade $ execRawSQL rSql
+    else execRawSQL rSql
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =
       fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
       where
         rawSqlErrHandler txe =
-          let e = err400 PostgresError "query execution failed"
-           in e {qeInternal = Just $ toJSON txe}
+          (err400 PostgresError "query execution failed") { qeInternal = Just $ toJSON txe }
 
-    containsMutationKeyword :: QErrM m => T.Text -> m Bool
-    containsMutationKeyword = either throwErr return . matchRegex regex False
-      where
-        throwErr s = throw500 $ "compiling regex failed: " <> T.pack s
-        regex = "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b"
+    -- see Note [Checking metadata consistency in run_sql]
+    containsDDLKeyword :: Text -> Bool
+    containsDDLKeyword = TDFA.match $$(quoteRegex
+      TDFA.defaultCompOpt
+        { TDFA.caseSensitive = False
+        , TDFA.multiline = True
+        , TDFA.lastStarGreedy = True }
+      TDFA.defaultExecOpt
+        { TDFA.captureGroups = False }
+      "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
+
+{- Note [Checking metadata consistency in run_sql]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SQL queries executed by run_sql may change the Postgres schema in arbitrary
+ways. We attempt to automatically update the metadata to reflect those changes
+as much as possible---for example, if a table is renamed, we want to update the
+metadata to track the table under its new name instead of its old one. This
+schema diffing (plus some integrity checking) is handled by withMetadataCheck.
+
+But this process has overhead---it involves reloading the metadata, diffing it,
+and rebuilding the schema cache---so we don’t want to do it if it isn’t
+necessary. The user can explicitly disable the check via the
+check_metadata_consistency option, and we also skip it if the current
+transaction is in READ ONLY mode, since the schema can’t be modified in that
+case, anyway.
+
+However, even if neither read_only or check_metadata_consistency is passed, lots
+of queries may not modify the schema at all. As a (fairly stupid) heuristic, we
+check if the query contains any keywords for DDL operations, and if not, we skip
+the metadata check as well. -}
 
 data RunSQLRes
   = RunSQLRes
