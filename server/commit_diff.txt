@@ -576,15 +576,3 @@ Date:   Fri Apr 3 01:00:13 2020 +0100
     solves both those problems.
 
     Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-
-commit 5b74b2e2df512135b3b6ad25583c0dea96f6f3a8
-Author: Antoine Leblanc <antoine@hasura.io>
-Date:   Thu Apr 2 00:22:55 2020 +0100
-
-    server: prevent metadata checks in read-only mode (#4250)
-
-    * do not perform the metadata check in read-only mode
-    * improve the isAltrDropReplace regex
-    * quote the regex at compile-time to handle syntax errors statically
-
-    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
