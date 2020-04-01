@@ -1,5 +1,5 @@
 import pytest
-from validate import check_query_f
+from validate import check_query_f, validate_http_anyq
 
 # Marking all tests in this module that server upgrade tests can be run
 # Few of them cannot be run, which will be marked skip_server_upgrade_test
@@ -166,6 +166,52 @@ class TestGraphqlInsertPermission:
 
     def test_user_insert_account_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_insert_account_fail.yaml")
+
+    def test_admin_only_insert(self, hge_ctx, transport):
+        admin_secret = hge_ctx.hge_key
+        graphql_query = '''
+          mutation {
+            insert_user(objects: [
+              {
+                name: "FooBar"
+              }
+            ]){
+              affected_rows
+            }
+          }
+        '''
+        query = {
+            'query': graphql_query,
+            'variables': {}
+        }
+        headers = {
+            "x-hasura-role": "admin_user" # Role for which admin_only insert defined
+        }
+        if admin_secret:
+            # If admin secret present, the mutation should go through
+            headers['x-hasura-admin-secret'] = admin_secret
+            response = {
+               "data": {
+                 "insert_user": {
+                   "affected_rows": 1
+                 }
+               }
+            }
+        else:
+            # Else, the mutation fails with no such mutations exist
+            response = {
+              "errors": [
+                {
+                  "extensions": {
+                    "path": "$",
+                    "code": "validation-failed"
+                  },
+                  "message": "no mutations exist"
+                }
+              ]
+            }
+
+        validate_http_anyq(hge_ctx, '/v1/graphql', query, headers, 200, response)
 
     @classmethod
     def dir(cls):

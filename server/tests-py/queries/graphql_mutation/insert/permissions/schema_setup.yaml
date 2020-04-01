@@ -463,3 +463,14 @@ args:
           _where:
             id: X-Hasura-User-Id
             is_admin: true
+
+- type: create_insert_permission
+  args:
+    table: user
+    role: admin_user
+    permission:
+      check: {}
+      columns: '*'
+      admin_only: true
+      set:
+        is_admin: true
