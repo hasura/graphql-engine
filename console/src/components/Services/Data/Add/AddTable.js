@@ -297,11 +297,11 @@ class AddTable extends Component {
     return '';
   }
 
-  /* eslint-disable no-unused-vars */
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   isValidDefault(type, d) {
     return true;
   }
-  /* eslint-enable no-unused-vars */
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   /* punting for now
     isValidDefault(type, d) {
