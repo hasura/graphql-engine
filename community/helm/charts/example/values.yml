@@ -1,0 +1,9 @@
+hasura:
+  secret:
+    admin: attack at dawn
+ingress:
+  enabled: true
+  hosts:
+    - host: dev.hasura.your-domain
+      paths:
+        - /
