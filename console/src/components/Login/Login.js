@@ -7,7 +7,7 @@ import globals from '../../Globals';
 import { verifyLogin } from './Actions';
 import { CLI_CONSOLE_MODE } from '../../constants';
 import { getAdminSecret } from '../Services/ApiExplorer/ApiRequest/utils';
-import { Spinner } from '../UIKit/atoms';
+import { Spinner, Text } from '../UIKit/atoms';
 import styles from './Login.scss';
 
 const hasuraLogo = require('./blue-logo.svg');
@@ -30,10 +30,10 @@ const Login = ({ dispatch }) => {
 
       if (loading) {
         loginText = (
-          <span>
+          <Text>
             Verifying...
             <Spinner ml="xs" />
-          </span>
+          </Text>
         );
       } else if (error) {
         loginText = 'Error. Try again?';
@@ -115,7 +115,7 @@ const Login = ({ dispatch }) => {
     const adminSecret = getAdminSecret();
 
     const missingAdminSecretMessage = (
-      <span>
+      <Text>
         Seems like your Hasura GraphQL engine instance has an admin-secret
         configured.
         <br />
@@ -123,11 +123,11 @@ const Login = ({ dispatch }) => {
         <br />
         <br />
         hasura console --admin-secret=&lt;your-admin-secret&gt;
-      </span>
+      </Text>
     );
 
     const invalidAdminSecretMessage = (
-      <span>Invalid admin-secret passed from CLI</span>
+      <Text>Invalid admin-secret passed from CLI</Text>
     );
 
     return (

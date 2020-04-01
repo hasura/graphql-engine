@@ -8,7 +8,7 @@ import {
   manualRelRSchemaChanged,
 } from './Actions';
 import { updateSchemaInfo } from '../DataActions';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Text } from '../../../UIKit/atoms';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const ManualRelationshipSelector = ({
@@ -26,9 +26,9 @@ const ManualRelationshipSelector = ({
 
     return (
       <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Relationship Type:</b>
-        </div>
+        <Text fontWeight="bold" mb="sm">
+          Relationship Type:
+        </Text>
         <select
           value={relAdd.relType || ''}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
@@ -58,9 +58,9 @@ const ManualRelationshipSelector = ({
 
     return (
       <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Relationship Name:</b>
-        </div>
+        <Text fontWeight="bold" mb="sm">
+          Relationship Name:
+        </Text>
         <input
           onChange={dispatchSetRelName}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
@@ -82,9 +82,9 @@ const ManualRelationshipSelector = ({
 
     return (
       <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Reference Schema:</b>
-        </div>
+        <Text fontWeight="bold" mb="sm">
+          Reference Schema:
+        </Text>
         <select
           value={relAdd.rSchema || ''}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
@@ -116,9 +116,10 @@ const ManualRelationshipSelector = ({
 
     return (
       <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Reference Table:</b>
-        </div>
+        <Text fontWeight="bold" mb="sm">
+          Reference Table:
+        </Text>
+
         <select
           value={relAdd.rTable || ''}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
@@ -147,15 +148,16 @@ const ManualRelationshipSelector = ({
     const selectTitle = !relAdd.rTable
       ? 'Please select the reference table'
       : undefined;
+
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`row ${styles.add_mar_bottom_mid}`}>
-          <div className={`col-sm-4 ${styles.add_mar_right}`}>
-            <b>From:</b>
-          </div>
-          <div className={`col-sm-4 ${styles.add_mar_right}`}>
-            <b>To:</b>
-          </div>
+          <Text fontWeight="bold" mr="sm" className="col-sm-4">
+            From:
+          </Text>
+          <Text fontWeight="bold" mr="sm" className="col-sm-4">
+            To:
+          </Text>
         </div>
         {relAdd.colMappings.map((colMap, _i) => {
           // from column

@@ -22,7 +22,7 @@ import {
 import { addActionRel, removeActionRel } from '../../ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';
 import tableStyles from '../../../../Common/TableCommon/TableStyles.scss';
-import { Icon } from '../../../../UIKit/atoms';
+import { Icon, Text } from '../../../../UIKit/atoms';
 
 const RelationshipEditor = ({
   objectType,
@@ -130,9 +130,9 @@ const RelationshipEditor = ({
       : undefined;
     return (
       <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Relationship Name:</b>
-        </div>
+        <Text fontWeight="bold" mb="sm">
+          Relationship Name:
+        </Text>
         <input
           onChange={setRelName}
           type="text"
@@ -150,9 +150,9 @@ const RelationshipEditor = ({
   const getRelTypeSelect = () => {
     return (
       <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Relationship Type:</b>
-        </div>
+        <Text fontWeight="bold" mb="sm">
+          Relationship Type:
+        </Text>
         <select
           value={type}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
@@ -180,9 +180,9 @@ const RelationshipEditor = ({
     const orderedSchemaList = schemaList.map(s => getSchemaName(s)).sort();
     return (
       <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Reference Schema:</b>
-        </div>
+        <Text fontWeight="bold" mb="sm">
+          Reference Schema:
+        </Text>
         <select
           value={refSchema}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
@@ -211,9 +211,9 @@ const RelationshipEditor = ({
   const getRefTableSelect = () => {
     return (
       <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Reference Table:</b>
-        </div>
+        <Text fontWeight="bold" mb="sm">
+          Reference Table:
+        </Text>
         <select
           value={refTable}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
@@ -243,12 +243,12 @@ const RelationshipEditor = ({
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`row ${styles.add_mar_bottom_mid}`}>
-          <div className={`col-sm-4 ${styles.add_mar_right}`}>
-            <b>From:</b>
-          </div>
-          <div className={`col-sm-4 ${styles.add_mar_right}`}>
-            <b>To:</b>
-          </div>
+          <Text fontWeight="bold" mr="20px" className="col-sm-4">
+            From:
+          </Text>
+          <Text fontWeight="bold" mr="20px" className="col-sm-4">
+            To:
+          </Text>
         </div>
         {fieldMapping.map((fieldMap, i) => {
           const setColumn = e => {
@@ -377,7 +377,7 @@ const RelEditor = props => {
     if (!relConfig) return null;
     return (
       <div>
-        <b>{relConfig.name}</b>
+        <Text fontWeight="bold">{relConfig.name}</Text>
         <div className={tableStyles.relationshipTopPadding}>
           {getRelDef({ ...relConfig, typename: objectType.name })}
         </div>

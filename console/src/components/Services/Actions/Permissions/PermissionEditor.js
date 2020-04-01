@@ -1,8 +1,10 @@
 import React from 'react';
+
 import Button from '../../../Common/Button/Button';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { saveActionPermission, removeActionPermission } from '../ServerIO';
 import { permCloseEdit } from './reducer';
+import { Text } from '../../../UIKit/atoms';
+import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 const PermissionEditor = ({
   permissionEdit,
@@ -17,17 +19,17 @@ const PermissionEditor = ({
   const permRole = newRole || role;
 
   let permText = (
-    <div>
+    <Text>
       This action is allowed for role: <b>{permRole}</b>
       <br />
       Click "Remove" if you wish to disallow it.
-    </div>
+    </Text>
   );
   if (isNewPerm) {
     permText = (
-      <div>
+      <Text>
         Click save to allow this action for role: <b>{permRole}</b>
-      </div>
+      </Text>
     );
   }
 

@@ -5,7 +5,7 @@ import { addAllowedQueries } from '../Actions';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { readFile, parseQueryString } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
-import { ToolTip, Heading } from '../../../UIKit/atoms';
+import { ToolTip, Heading, Text } from '../../../UIKit/atoms';
 import styles from './AllowedQueries.scss';
 
 class AddAllowedQuery extends React.Component {
@@ -61,9 +61,10 @@ class AddAllowedQuery extends React.Component {
 
         return (
           <div>
-            <div className={styles.add_mar_bottom_mid}>
-              <b>Query name:</b>
-            </div>
+            <Text fontWeight="bold" mb="sm">
+              Query name:
+            </Text>
+
             <input
               type="text"
               className={'form-control input-sm ' + styles.inline_block}
@@ -87,9 +88,9 @@ class AddAllowedQuery extends React.Component {
 
         return (
           <div>
-            <div className={styles.add_mar_bottom_mid}>
-              <b>Query:</b>
-            </div>
+            <Text fontWeight="bold" mb="sm">
+              Query:
+            </Text>
             <AceEditor
               data-test="allowed_query_add"
               mode="graphql"
@@ -122,10 +123,10 @@ class AddAllowedQuery extends React.Component {
 
       return (
         <div>
-          <div className={styles.add_mar_bottom_mid}>
-            <b>Graphql File:</b>
+          <Text fontWeight="bold" mb="sm">
+            Graphql File:
             <ToolTip message={'.graphql file with queries'} ml="sm" />
-          </div>
+          </Text>
           <input
             type="file"
             className={'form-control input-sm ' + styles.inline_block}

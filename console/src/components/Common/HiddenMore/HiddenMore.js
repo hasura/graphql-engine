@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Icon } from '../../UIKit/atoms';
+import { Icon, Text } from '../../UIKit/atoms';
 import styles from '../Common.scss';
 
 const HiddenMore = ({ title, more, expanded = false }) => {
@@ -15,7 +15,7 @@ const HiddenMore = ({ title, more, expanded = false }) => {
         onClick={toggle}
       >
         <Icon type={isExpanded ? 'down' : 'right'} mr="xs" />
-        <b>{title}</b>
+        <Text fontWeight="bold">{title}</Text>
       </div>
     );
   };

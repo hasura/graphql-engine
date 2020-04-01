@@ -9,7 +9,7 @@ import {
 } from '../Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import Button from '../../../Common/Button/Button';
-import { Heading } from '../../../UIKit/atoms';
+import { Heading, Text } from '../../../UIKit/atoms';
 import styles from './AllowedQueries.scss';
 
 class AllowedQueriesList extends React.Component {
@@ -33,11 +33,7 @@ class AllowedQueriesList extends React.Component {
       return allowedQueries.map((query, i) => {
         const queryName = query.name;
 
-        const collapsedLabel = () => (
-          <div>
-            <b>{queryName}</b>
-          </div>
-        );
+        const collapsedLabel = () => <Text fontWeight="bold">{queryName}</Text>;
 
         const expandedLabel = collapsedLabel;
 
@@ -62,7 +58,9 @@ class AllowedQueriesList extends React.Component {
             <div>
               <div>
                 <div className={styles.add_mar_bottom_mid}>
-                  <b>Query name:</b>
+                  <Text fontWeight="bold" mb="sm">
+                    Query name:
+                  </Text>
                 </div>
                 <input
                   type="text"
@@ -73,9 +71,10 @@ class AllowedQueriesList extends React.Component {
                 />
               </div>
               <div className={styles.add_mar_top}>
-                <div className={styles.add_mar_bottom_mid}>
-                  <b>Query:</b>
-                </div>
+                >
+                <Text fontWeight="bold" mb="sm">
+                  Query:
+                </Text>
                 <AceEditor
                   data-test="allowed_query_editor"
                   mode="graphql"

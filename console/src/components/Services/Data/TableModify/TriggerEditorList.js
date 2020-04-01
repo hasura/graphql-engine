@@ -3,9 +3,10 @@ import AceEditor from 'react-ace';
 
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 
-import styles from './ModifyTable.scss';
 import { deleteTrigger } from './ModifyActions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { Text } from '../../../UIKit/atoms';
+import styles from './ModifyTable.scss';
 
 const TriggerEditorList = ({ tableSchema, dispatch }) => {
   const triggers = tableSchema.triggers;
@@ -33,7 +34,9 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
     const collapsedLabel = () => (
       <div>
         <div>
-          <b>{triggerName}</b>&nbsp;-&nbsp;
+          <Text fontWeight="bold" mr="sm">
+            {triggerName}
+          </Text>
           <i>
             {trigger.action_timing} {trigger.event_manipulation}
           </i>
@@ -42,7 +45,11 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
       </div>
     );
 
-    const expandedLabel = () => <b>{triggerName}</b>;
+    const expandedLabel = () => (
+      <Text fontWeight="bold" mr="sm">
+        {triggerName}
+      </Text>
+    );
 
     const expandedContent = () => {
       let commentText;
@@ -53,11 +60,12 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
       }
 
       let comment;
+
       if (commentText) {
         comment = (
-          <div className={styles.text_gray + ' ' + styles.add_mar_top}>
+          <Text mt="20px" color="#767e96">
             {commentText}
-          </div>
+          </Text>
         );
       }
 

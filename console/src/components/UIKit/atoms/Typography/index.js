@@ -39,7 +39,7 @@ Heading.defaultProps = {
 export const Text = props => {
   const { children, type, fontWeight, fontSize } = props;
 
-  const lineHeight = type === 'explain' ? 'body' : 'explain';
+  const lineHeight = type === 'explain' ? 'explain' : 'body';
 
   let fontWeightValue;
   let fontSizeValue;
@@ -53,7 +53,7 @@ export const Text = props => {
   if (fontSize) {
     fontSizeValue = fontSize;
   } else {
-    fontSizeValue = type === 'explain' ? 'explain' : 'p';
+    fontSizeValue = type === 'explain' ? 'explain' : '';
   }
 
   return (
@@ -66,6 +66,11 @@ export const Text = props => {
       {children}
     </StyledText>
   );
+};
+
+Text.defaultProps = {
+  mb: 0,
+  mt: 0,
 };
 
 export const TextLink = props => {

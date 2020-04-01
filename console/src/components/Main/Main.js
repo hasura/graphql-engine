@@ -258,9 +258,7 @@ class Main extends React.Component {
           <Icon type="settings" />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
-            <div>
-              <Icon type="default" />
-            </div>
+            <Icon type="default" />
           </div>
         </div>
       );
@@ -333,12 +331,11 @@ class Main extends React.Component {
             {/* phantom div to prevent overlapping of banner with content. */}
             <div className={styles.updateBannerWrapper}>
               <div className={styles.updateBanner}>
-                <span> Hey there! A new server version </span>
-                <span className={styles.versionUpdateText}>
-                  {' '}
+                <Text> Hey there! A new server version </Text>
+                <Text fontWeight="bold" mx="6px" pb="3px">
                   {updateNotificationVersion}
-                </span>
-                <span> is available </span>
+                </Text>
+                <Text>is available</Text>
                 <span className={styles.middot}> &middot; </span>
                 <a
                   href={

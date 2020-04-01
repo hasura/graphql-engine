@@ -171,4 +171,5 @@ class RelationshipEditor extends React.Component {
     return <td>{isEditting ? expanded() : collapsed()}</td>;
   }
 }
+
 export default RelationshipEditor;

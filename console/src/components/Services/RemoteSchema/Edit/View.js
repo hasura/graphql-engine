@@ -124,12 +124,10 @@ class ViewStitchedSchema extends React.Component {
     const showReloadRemoteSchema =
       !readOnlyMode && remoteSchemaName && remoteSchemaName.length > 0 ? (
         <div className={styles.commonBtn + ' ' + styles.detailsRefreshButton}>
-          <span>
-            <ReloadRemoteSchema
-              {...this.props}
-              remoteSchemaName={remoteSchemaName}
-            />
-          </span>
+          <ReloadRemoteSchema
+            {...this.props}
+            remoteSchemaName={remoteSchemaName}
+          />
           <ToolTip message={refreshText} ml="xs" />
         </div>
       ) : null;

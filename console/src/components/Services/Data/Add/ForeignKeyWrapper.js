@@ -1,8 +1,10 @@
 import React from 'react';
+
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/Components/ForeignKeySelector';
 import { getForeignKeyConfig } from '../Common/Components/utils';
 import { setForeignKeys, toggleFk, clearFkToggle } from './AddActions';
+import { Text } from '../../../UIKit/atoms';
 
 const ForeignKeyWrapper = ({
   foreignKeys,
@@ -77,7 +79,7 @@ const ForeignKeyWrapper = ({
     // Label to show next to the 'Edit' button (the FK configuration)
     let collapsedLabelText;
     if (fkConfig) {
-      collapsedLabelText = <b>{fkConfig}</b>;
+      collapsedLabelText = <Text fontWeight="bold">{fkConfig}</Text>;
     } else if (isLast && numFks === 1) {
       collapsedLabelText = <i>(You can add foreign keys later as well)</i>;
     }
@@ -85,11 +87,7 @@ const ForeignKeyWrapper = ({
     const collapsedLabel = () => <div>{collapsedLabelText}</div>;
 
     const expandedLabel = () => {
-      return (
-        <div>
-          <b>{fkConfig}</b>
-        </div>
-      );
+      return <Text fontWeight="bold">{fkConfig}</Text>;
     };
 
     // The collapse button text when the editor is collapsed

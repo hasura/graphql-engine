@@ -7,7 +7,7 @@ import requestAction from '../../../utils/requestAction';
 import { showErrorNotification } from '../Common/Notification';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { versionGT } from '../../../helpers/versionUtils';
-import { Spinner, Heading } from '../../UIKit/atoms';
+import { Spinner, Heading, Text } from '../../UIKit/atoms';
 import styles from './About.scss';
 
 class About extends Component {
@@ -55,10 +55,10 @@ class About extends Component {
     const getServerVersionSection = () => {
       return (
         <div>
-          <b>Current server version: </b>
-          <span className={styles.add_mar_left_mid}>
-            {serverVersion || spinner}
-          </span>
+          <Text fontWeight="bold" mr="sm">
+            Current server version:
+          </Text>
+          {serverVersion || spinner}
         </div>
       );
     };
@@ -102,10 +102,10 @@ class About extends Component {
 
       return (
         <div>
-          <b>Latest stable server version: </b>
-          <span className={styles.add_mar_left_mid}>
-            {latestStableServerVersion || spinner} {updateLinks}
-          </span>
+          <Text fontWeight="bold" mr="sm">
+            Latest stable server version:
+          </Text>
+          {latestStableServerVersion || spinner} {updateLinks}
         </div>
       );
     };
@@ -113,10 +113,10 @@ class About extends Component {
     const getConsoleAssetVersionSection = () => {
       return (
         <div>
-          <b>Console asset version: </b>
-          <span className={styles.add_mar_left_mid}>
-            {consoleAssetVersion || 'NA'}
-          </span>
+          <Text fontWeight="bold" mr="sm">
+            Console asset version:
+          </Text>
+          {consoleAssetVersion || 'NA'}
         </div>
       );
     };
@@ -124,10 +124,10 @@ class About extends Component {
     const getPgVersionSection = () => {
       return (
         <div>
-          <b>Postgres version: </b>
-          <span className={styles.add_mar_left_mid}>
-            {pgVersion || spinner}
-          </span>
+          <Text fontWeight="bold" mr="sm">
+            Postgres version:
+          </Text>
+          {pgVersion || spinner}
         </div>
       );
     };

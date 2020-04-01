@@ -111,6 +111,7 @@ export const getKeyDef = (config, constraintName) => {
       </div>
     );
   }
+
   return (
     <div>
       <b>{config}</b>

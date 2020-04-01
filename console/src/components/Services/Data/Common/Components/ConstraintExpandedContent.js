@@ -3,7 +3,7 @@ import AceEditor from 'react-ace';
 
 import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
 import { checkConstraintExpression } from '../TooltipMessages';
-import { ToolTip } from '../../../../UIKit/atoms';
+import { ToolTip, Text } from '../../../../UIKit/atoms';
 import styles from '../../../../Common/Common.scss';
 
 export const ConstraintExpandedContent = ({
@@ -16,9 +16,9 @@ export const ConstraintExpandedContent = ({
   return (
     <div>
       <div className={styles.add_mar_bottom}>
-        <div className={styles.add_mar_bottom_mid}>
-          <b>Constraint Name:</b>
-        </div>
+        <Text fontWeight="bold" mb="sm">
+          Constraint Name:
+        </Text>
         <input
           type="text"
           value={name}
@@ -27,11 +27,11 @@ export const ConstraintExpandedContent = ({
         />
       </div>
       <div>
-        <div className={styles.add_mar_bottom_mid}>
-          <b>Check Expression: </b>
+        <Text fontWeight="bold" mb="sm">
+          Check Expression:
           <ToolTip message={checkConstraintExpression} ml="sm" />
-          <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
-        </div>
+        </Text>
+        <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
         <AceEditor
           mode="sql"
           theme="github"

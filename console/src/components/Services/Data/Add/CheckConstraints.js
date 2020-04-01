@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { removeCheckConstraint, setCheckConstraints } from './AddActions';
 import { ConstraintExpandedContent } from '../Common/Components/ConstraintExpandedContent';
+import { Text } from '../../../UIKit/atoms';
 
 const CheckConstraints = ({ dispatch, constraints }) => {
   const [addConstraintsState, setAddConstraintsState] = useState([]);
@@ -47,11 +48,7 @@ const CheckConstraints = ({ dispatch, constraints }) => {
         ) : null;
       }
 
-      return (
-        <div>
-          <b>{existingConstraintName}</b>
-        </div>
-      );
+      return <Text fontWeight="bold">{existingConstraintName}</Text>;
     };
 
     const expandedLabel = () => {
@@ -59,11 +56,7 @@ const CheckConstraints = ({ dispatch, constraints }) => {
         return null;
       }
 
-      return (
-        <div>
-          <b>{existingConstraintName}</b>
-        </div>
-      );
+      return <Text fontWeight="bold">{existingConstraintName}</Text>;
     };
 
     const expandButtonText = isLast ? 'Add a check constraint' : 'Edit';
@@ -88,6 +81,7 @@ const CheckConstraints = ({ dispatch, constraints }) => {
         toggle();
       };
     }
+
     const expandedContent = () => (
       <ConstraintExpandedContent
         nameOnChange={onChangeName}
