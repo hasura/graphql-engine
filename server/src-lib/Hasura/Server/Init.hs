@@ -37,6 +37,8 @@ newtype DbUid
   = DbUid { getDbUid :: Text }
   deriving (Show, Eq, J.ToJSON, J.FromJSON)
 
+newtype PGVersion = PGVersion { unPGVersion :: Int } deriving (Show, Eq, J.ToJSON)
+
 getDbId :: Q.TxE QErr Text
 getDbId =
   (runIdentity . Q.getRow) <$>
@@ -45,6 +47,8 @@ getDbId =
     SELECT (hasura_uuid :: text) FROM hdb_catalog.hdb_version
   |] () False
 
+getPgVersion :: Q.TxE QErr PGVersion
+getPgVersion = PGVersion <$> Q.serverVersion
 
 newtype InstanceId
   = InstanceId { getInstanceId :: Text }
