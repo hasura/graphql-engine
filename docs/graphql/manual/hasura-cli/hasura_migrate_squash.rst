@@ -29,27 +29,30 @@ Examples
     # squash all migrations from version 123 to the latest one:
     hasura migrate squash --from 123
 
+    # Add a name for the new squashed migration
+    hasura migrate squash --name "<name>" --from 123
+
 Options
 ~~~~~~~
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL engine
-      --delete-source         delete the source files after squashing without any confirmation
-      --endpoint string       http(s) endpoint for Hasura GraphQL engine
-      --from uint             start squashing form this version
-  -h, --help                  help for squash
-      --name string           name for the new squashed migration (default "squashed")
+      --delete-source   delete the source files after squashing without any confirmation
+      --from uint       start squashing from this version
+  -h, --help            help for squash
+      --name string     name for the new squashed migration (default "squashed")
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color            do not colorize output (default: false)
-      --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   skip automatic update check on command execution
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
+      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color              do not colorize output (default: false)
+      --project string        directory where commands are executed (default: current dir)
+      --skip-update-check     skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

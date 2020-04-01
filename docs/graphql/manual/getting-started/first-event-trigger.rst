@@ -2,6 +2,8 @@
    :description: Set up a first event trigger with Hasura
    :keywords: hasura, docs, start, event trigger
 
+.. _first_event_trigger:
+
 Setting up your first event trigger
 ===================================
 
@@ -60,4 +62,4 @@ Next steps
 
 Read more about:
 
-- :doc:`Event triggers <../event-triggers/index>`
+- :ref:`Event triggers <event_triggers>`

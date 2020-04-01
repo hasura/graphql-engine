@@ -8,7 +8,7 @@ import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 // import TryItOut from '../../Common/Landing/TryItOut';
 
-const actionsArchDiagram = `${globals.assetsPath}/common/img/actions.svg`;
+const actionsArchDiagram = `${globals.assetsPath}/common/img/actions.png`;
 
 class Landing extends React.Component {
   render() {
@@ -53,7 +53,9 @@ class Landing extends React.Component {
 
     return (
       <div
-        className={`${styles.padd_left_remove} ${styles.actionsWrapper} container-fluid ${styles.padd_top}`}
+        className={`${styles.padd_left_remove} ${
+          styles.actionsWrapper
+        } container-fluid ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
           <Helmet title={`${pageTitle} | Hasura`} />

@@ -2,13 +2,15 @@
 --
 -- To add a new migration:
 --
---   1. Bump the catalog version number in "Hasura.Server.Migrate.Version".
+--   1. Bump the catalog version number in @src-rsr/catalog_version.txt@.
 --   2. Add a migration script in the @src-rsr/migrations/@ directory with the name
 --      @<old version>_to_<new version>.sql@.
 --   3. Create a downgrade script in the @src-rsr/migrations/@ directory with the name
 --      @<new version>_to_<old version>.sql@.
 --   4. If making a new release, add the mapping from application version to catalog
---      schema version in @src-lib/Hasura/Server/Init.hs@.
+--      schema version in @src-rsr/catalog_versions.txt@.
+--   5. If appropriate, add the change to @server/src-rsr/initialise.sql@ for fresh installations
+--      of hasura.
 --
 -- The Template Haskell code in this module will automatically compile the new migration script into
 -- the @graphql-engine@ executable.
@@ -137,7 +139,7 @@ migrateCatalog migrationTime = do
             permissionsMessage =
               "pgcrypto extension is required, but the current user doesn’t have permission to"
               <> " create it. Please grant superuser permission, or setup the initial schema via"
-              <> " https://docs.hasura.io/1.0/graphql/manual/deployment/postgres-permissions.html"
+              <> " https://hasura.io/docs/1.0/graphql/manual/deployment/postgres-permissions.html"
 
     -- migrates an existing catalog to the latest version from an existing verion
     migrateFrom :: T.Text -> m (MigrationResult, RebuildableSchemaCache m)
@@ -206,7 +208,8 @@ downgradeCatalog opts time = do
                     <> reason
               Right path -> do
                 sequence_ path 
-                setCatalogVersion (dgoTargetVersion opts) time
+                unless (dgoDryRun opts) do
+                  setCatalogVersion (dgoTargetVersion opts) time
                 pure (MRMigrated previousVersion)
       
       where

@@ -19,29 +19,71 @@ Apply migrations on the database.
 
   hasura migrate apply [flags]
 
+Examples
+~~~~~~~~
+
+::
+
+    # Apply all migrations
+    hasura migrate apply
+
+    # Use with admin secret:
+    hasura migrate apply --admin-secret "<admin-secret>"
+
+    # Apply migrations on another Hasura instance:
+    hasura migrate apply --endpoint "<endpoint>"
+
+    # Mark migration as applied on the server and skip execution:
+    hasura migrate apply --skip-execution
+
+    # Apply a particular migration version only:
+    hasura migrate apply --version "<version>"
+
+    # Apply last 2 down migrations:
+    hasura migrate apply --down 2
+
+    # Apply only 2 up migrations:
+    hasura migrate apply --up 2
+
+    # Apply only a particular version
+    hasura migrate apply --type up --version "<version>"
+    
+    # Apply all up migrations upto version 125, last applied is 100
+    hasura migrate apply --goto 125
+    
+    # Apply all down migrations upto version 125, last applied is 150
+    hasura migrate apply --goto 125
+
+    # Rollback a particular version:
+    hasura migrate apply --type down --version "<version>"
+
+    # Rollback all migrations:
+    hasura migrate apply --down all
+
 Options
 ~~~~~~~
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL engine
-      --down string           apply all or N down migration steps
-      --endpoint string       http(s) endpoint for Hasura GraphQL engine
-  -h, --help                  help for apply
-      --skip-execution        skip executing the migration action, but mark them as applied
-      --type string           type of migration (up, down) to be used with version flag (default "up")
-      --up string             apply all or N up migration steps
-      --version string        only apply this particular migration
+      --up string        apply all or N up migration steps
+      --down string      apply all or N down migration steps
+      --goto string      apply migration chain up to to the version specified
+      --version string   only apply this particular migration
+      --skip-execution   skip executing the migration action, but mark them as applied
+      --type string      type of migration (up, down) to be used with version flag (default "up")
+  -h, --help             help for apply
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color            do not colorize output (default: false)
-      --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
+      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color              do not colorize output (default: false)
+      --project string        directory where commands are executed (default: current dir)
+      --skip-update-check     skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

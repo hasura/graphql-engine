@@ -89,7 +89,7 @@ class About extends Component {
               &nbsp;<b>&middot;</b>&nbsp;
             </span>
             <a
-              href="https://docs.hasura.io/1.0/graphql/manual/deployment/updating.html"
+              href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
               target="_blank"
               rel="noopener noreferrer"
             >

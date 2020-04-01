@@ -1,6 +1,6 @@
 # Hasura GraphQL Engine
 
-[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
+[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://hasura.io/docs)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
@@ -12,7 +12,7 @@ Hasura GraphQLエンジンは **Postgres上で瞬時にリアルタイムのGrap
 
 Hasuraは、Postgresをバックエンドに持つGraphQLアプリケーションを構築したり、Postgresを使用して既存のアプリケーションをGraphQLに段階的に移行したりするのに役立ちます。
 
-こちらと [hasura.io](https://hasura.io) こちらから [docs](https://docs.hasura.io)　詳細を読んでください。
+こちらと [hasura.io](https://hasura.io) こちらから [docs](https://hasura.io/docs)　詳細を読んでください。
 
 ------------------
 
@@ -35,7 +35,7 @@ Hasuraは、Postgresをバックエンドに持つGraphQLアプリケーショ�
 * **管理UIと移行**: 最大15MBのドッカーイメージ。最大50MB RAM @ 1000 req/s。マルチコア対応
 * **Postgres** ❤️: Postgresの型（PostGIS/地理位置など）をサポートし、ビューをグラフに変え、保存された関数や手順を変更した手続きを起動
 
-こちらと [hasura.io](https://hasura.io) こちらから [docs](https://docs.hasura.io)詳細を読んでください。
+こちらと [hasura.io](https://hasura.io) こちらから [docs](https://hasura.io/docs)詳細を読んでください。
 
 ## 目次
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -75,7 +75,7 @@ Hasuraを試す最も早い方法はHerokuを使うことです。
 
 3. 最初のGraphQLのクエリを発行
 
-   テーブルを作成して、最初のクエリを実行します。こちらの [シンプルなガイド](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html)を参考にしてください。
+   テーブルを作成して、最初のクエリを実行します。こちらの [シンプルなガイド](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html)を参考にしてください。
 
 ### 他のワンクリックでデプロイする方法
 
@@ -83,12 +83,12 @@ Hasuraを試す最も早い方法はHerokuを使うことです。
 
 | **インフラ業者** | **ワンクリックリンク** | **追加情報** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
-| DigitalOcean | [![DigitalOceanへのデプロイ](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [ドキュメント](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-| Azure | [![Azureへのデプロイ](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [ドキュメント](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| DigitalOcean | [![DigitalOceanへのデプロイ](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [ドキュメント](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Azureへのデプロイ](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [ドキュメント](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
 
 ### 他のデプロイ方法
 
-Dockerでのデプロイと高度なカスタマイズオプションについては [デプロイガイド](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) か
+Dockerでのデプロイと高度なカスタマイズオプションについては [デプロイガイド](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) か
 [インストールマニフェスト](../install-manifests)を参考にしてください。
 
 ## アーキテクチャ
@@ -118,7 +118,7 @@ HasuraのPostgresベースのGraphQLスキーマに加えて、リモートス�
 
 ### 派生データまたはデータ変換
 
-PostgreSQLのデータを変換するか、あるいはその上でビジネスロジックを実行することでGraphQLエンジンを使用して問い合わせることができる別のデータセットを派生させる事ができます。[続きを読む](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+PostgreSQLのデータを変換するか、あるいはその上でビジネスロジックを実行することでGraphQLエンジンを使用して問い合わせることができる別のデータセットを派生させる事ができます。[続きを読む](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
 
 ## デモ
 

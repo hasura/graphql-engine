@@ -256,7 +256,7 @@ class (ToJSON a) => IsPerm a where
   getPermAcc2
     :: DropPerm a -> PermAccessor (PermInfo a)
   getPermAcc2 _ = permAccessor
-  
+
 addPermP2 :: (IsPerm a, MonadTx m, HasSystemDefined m) => QualifiedTable -> PermDef a -> m ()
 addPermP2 tn pd = do
   let pt = permAccToType $ getPermAcc1 pd

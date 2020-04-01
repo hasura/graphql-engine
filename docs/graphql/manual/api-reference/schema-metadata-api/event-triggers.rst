@@ -2,6 +2,8 @@
    :description: Manage event triggers with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, event trigger
 
+.. _api_event_triggers:
+
 Schema/Metadata API Reference: Event Triggers
 =============================================
 
@@ -29,7 +31,10 @@ create_event_trigger
        "type" : "create_event_trigger",
        "args" : {
            "name": "sample_trigger",
-           "table": "users",
+           "table": {
+              "name": "users",
+              "schema": "public",
+           },
            "webhook": "https://httpbin.org/post",
            "insert": {
                "columns": "*",
@@ -74,8 +79,8 @@ Args syntax
      - Name of the event trigger
    * - table
      - true
-     - :ref:`TableName <TableName>`
-     - Name of the table
+     - :ref:`QualifiedTable <QualifiedTable>`
+     - Object with table name and schema
    * - webhook
      - true
      - String
@@ -138,12 +143,53 @@ Args syntax
      - TriggerName_
      - Name of the event trigger
 
+
+.. _redeliver_event:
+
+redeliver_event
+---------------
+
+``redeliver_event`` is used to redeliver an existing event. For example, if an event is marked as error (
+say it did not succeed after retries), you can redeliver it using this API. Note that this will reset the count of retries so far.
+If the event fails to deliver, it will be retried automatically according to its ``retry_conf``.
+
+.. code-block:: http
+
+   POST /v1/query HTTP/1.1
+   Content-Type: application/json
+   X-Hasura-Role: admin
+
+   {
+       "type" : "redeliver_event",
+       "args" : {
+           "event_id": "ad4f698f-a14e-4a6d-a01b-38cd252dd8bf"
+       }
+   }
+
+.. _redeliver_event_syntax:
+
+Args syntax
+^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+
+   * - Key
+     - Required
+     - Schema
+     - Description
+   * - event_id
+     - true
+     - String
+     - UUID of the event
+
+
 .. _invoke_event_trigger:
 
 invoke_event_trigger
 --------------------
 
-``invoke_event_trigger`` is used to invoke an event trigger manually.
+``invoke_event_trigger`` is used to invoke an event trigger with custom payload.
 
 .. code-block:: http
 

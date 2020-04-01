@@ -137,7 +137,7 @@ You can also configure the server in JWKS mode and set `HASURA_GRAPHQL_JWT_SECRE
 { "type": "RS256", "jwk_url": "hostname:port/jwks" }
 ```
 
-More information in the [Hasura documentation](https://docs.hasura.io/1.0/graphql/manual/auth/authentication/jwt.html).
+More information in the [Hasura documentation](https://hasura.io/docs/1.0/graphql/manual/auth/authentication/jwt.html).
 
 ## Usage
 

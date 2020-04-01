@@ -2,6 +2,8 @@
    :description: Invoke event triggers on the Hasura console
    :keywords: hasura, docs, event trigger, console, invoke
 
+.. _invoke_trigger_console:
+
 Invoke event trigger via console
 ================================
 
@@ -10,7 +12,7 @@ Invoke event trigger via console
   :depth: 1
   :local:
 
-You can select the ``Via console`` trigger operation while :doc:`creating an event trigger <./create-trigger>`
+You can select the ``Via console`` trigger operation while :ref:`creating an event trigger <create_trigger>`
 to allow invoking the event trigger on rows manually using the Hasura console *(available after version v1.0.0-beta.1)*.
 
 In the ``Data -> [table-name] -> Browse Rows`` tab, clicking the ``invoke trigger`` button next to any row lets

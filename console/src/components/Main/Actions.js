@@ -22,6 +22,12 @@ const UPDATE_ADMIN_SECRET_INPUT = 'Main/UPDATE_ADMIN_SECRET_INPUT';
 const LOGIN_IN_PROGRESS = 'Main/LOGIN_IN_PROGRESS';
 const LOGIN_ERROR = 'Main/LOGIN_ERROR';
 
+const RUN_TIME_ERROR = 'Main/RUN_TIME_ERROR';
+const registerRunTimeError = data => ({
+  type: RUN_TIME_ERROR,
+  data,
+});
+
 /* Server config constants*/
 const FETCHING_SERVER_CONFIG = 'Main/FETCHING_SERVER_CONFIG';
 const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
@@ -223,7 +229,7 @@ const mainReducer = (state = defaultState, action) => {
       return {
         ...state,
         latestStableServerVersion: action.data.latest,
-        latestServerVersion: action.data.prerelease,
+        latestPreReleaseServerVersion: action.data.prerelease,
       };
     case SET_LATEST_SERVER_VERSION_ERROR:
       return {
@@ -273,6 +279,8 @@ const mainReducer = (state = defaultState, action) => {
       return { ...state, loginInProgress: action.data };
     case LOGIN_ERROR:
       return { ...state, loginError: action.data };
+    case RUN_TIME_ERROR: // To trigger telemetry event
+      return state;
     case FETCHING_SERVER_CONFIG:
       return {
         ...state,
@@ -327,4 +335,6 @@ export {
   fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,
+  RUN_TIME_ERROR,
+  registerRunTimeError,
 };

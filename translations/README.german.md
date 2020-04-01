@@ -1,6 +1,6 @@
 # Hasura GraphQL Engine
 
-[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
+[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://hasura.io/docs)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 <a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
@@ -11,7 +11,7 @@ Hasura GraphQL Engine ist ein blitzschneller GraphQL Server, welcher dir die Mö
 
 Hasura hilft dir, GraphQL-Anwendungen basierend auf Postgres zu entwickeln oder schrittweise zu GraphQL zu wechseln für schon existierende Anwendungen, die Postgres benutzen.
 
-Dazu mehr auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasura.io).
+Dazu mehr auf [hasura.io](https://hasura.io) und in den [Docs](https://hasura.io/docs).
 
 ---
 
@@ -35,7 +35,7 @@ Dazu mehr auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasu
 - **Admin UI & Migration**: Admin UI & von Rails inspirierte Schemata-Integration
 - **Postgres** ❤️: Unterstützt Postgres Typen (PostGIS/geo-location, etc.), ändert Views zu _Graphen_, löst gespeicherte Funktionen aus oder Prozesse mit Mutationen
 
-Mehr dazu auf [hasura.io](https://hasura.io) und in den [Docs](https://docs.hasura.io).
+Mehr dazu auf [hasura.io](https://hasura.io) und in den [Docs](https://hasura.io/docs).
 
 ## Inhaltsverzeichnis
 
@@ -78,7 +78,7 @@ Der schnellste Weg, Hasura auszuprobieren, ist mit Heroku.
 
 3. Erstelle deine erste GraphQL Query
 
-   Erstelle eine Tabelle und lasse deine erste Query laufen. Folge diesem [einfachem Guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Erstelle eine Tabelle und lasse deine erste Query laufen. Folge diesem [einfachem Guide](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
 ### Andere one-click Deployment Optionen
 
@@ -86,13 +86,13 @@ Probiere die folgenden Guides für die one-click Deployment Optionen:
 
 | **Infra Anbieter** |                                                                                                                         **One-click Link**                                                                                                                         |                                                            **Zusätzliche Information**                                                            |
 | :----------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------: |
-|    DigitalOcean    |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-|       Azure        | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)                    |
+|    DigitalOcean    |                  [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme)                  | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+|       Azure        | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) |                    [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html)                    |
 
 ### Andere Deployment Möglichkeiten
 
 Für auf Docker basierende Deployments and erweiterte Konfigurationsmöglichkeiten: [Deployment
-Guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) oder
+Guides](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) oder
 [Manifest installieren](../install-manifests).
 
 ## Architektur
@@ -122,7 +122,7 @@ Das ist perfekt für Benachrichtigungen, Daten-Pipelines von Postgres oder async
 
 ### Abgeleitete Daten oder Datentransformation
 
-Transformiere Daten in Postgres oder lasse deine Businesslogik eigene Daten ableiten, welche von der GraphQL Engine abefragt werden können - [mehr dazu](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+Transformiere Daten in Postgres oder lasse deine Businesslogik eigene Daten ableiten, welche von der GraphQL Engine abefragt werden können - [mehr dazu](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demos
 

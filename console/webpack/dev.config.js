@@ -17,6 +17,7 @@ const WebpackIsomorphicToolsPlugin = require('webpack-isomorphic-tools/plugin');
 const webpackIsomorphicToolsPlugin = new WebpackIsomorphicToolsPlugin(
   require('./webpack-isomorphic-tools')
 );
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 // const { UnusedFilesWebpackPlugin } = require('unused-files-webpack-plugin');
 
@@ -56,7 +57,7 @@ module.exports = {
         type: 'javascript/auto',
       },
       {
-        test: /\.jsx?$/,
+        test: /\.(j|t)sx?$/,
         exclude: /node_modules/,
         use: 'babel-loader',
       },
@@ -132,7 +133,7 @@ module.exports = {
   },
   resolve: {
     modules: ['src', 'node_modules'],
-    extensions: ['.json', '.js', '.jsx', '.mjs'],
+    extensions: ['.json', '.js', '.jsx', '.mjs', '.ts', '.tsx'],
   },
   plugins: [
     // hot reload
@@ -156,7 +157,14 @@ module.exports = {
     // set global consts
     new webpack.DefinePlugin({
       CONSOLE_ASSET_VERSION: Date.now().toString(),
+      'process.hrtime': () => null,
     }),
     webpackIsomorphicToolsPlugin.development(),
+    new ForkTsCheckerWebpackPlugin({
+      compilerOptions: {
+        allowJs: false,
+        checkJs: false,
+      },
+    }),
   ],
 };

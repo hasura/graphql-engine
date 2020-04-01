@@ -2,6 +2,8 @@
    :description: Set up GraphQL subscriptions with apollo-client
    :keywords: hasura, docs, guide, GraphQL subscriptions, apollo, apollo-client
 
+.. _guides_apollo_subscriptions:
+
 Setting up GraphQL subscriptions using apollo-client
 ====================================================
 
@@ -153,4 +155,4 @@ care of when switching to subscriptions.
 Related Blog
 ------------
 
-- `moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client <https://blog.hasura.io/moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client-cc0373e0adb0>`__.
+- `moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client <https://hasura.io/blog/moving-from-apollo-boost-to-graphql-subscriptions-with-apollo-client-cc0373e0adb0>`__.

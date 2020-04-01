@@ -65,9 +65,11 @@ class Main extends React.Component {
     dispatch(loadServerVersion()).then(() => {
       dispatch(featureCompatibilityInit());
 
-      dispatch(loadInconsistentObjects()).then(() => {
-        this.handleMetadataRedirect();
-      });
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false })).then(
+        () => {
+          this.handleMetadataRedirect();
+        }
+      );
 
       dispatch(loadLatestServerVersion()).then(() => {
         this.setShowUpdateNotification();
@@ -86,7 +88,7 @@ class Main extends React.Component {
   setShowUpdateNotification() {
     const {
       latestStableServerVersion,
-      latestServerVersion,
+      latestPreReleaseServerVersion,
       serverVersion,
       console_opts,
     } = this.props;
@@ -94,9 +96,15 @@ class Main extends React.Component {
     const allowPreReleaseNotifications =
       !console_opts || !console_opts.disablePreReleaseUpdateNotifications;
 
-    const latestServerVersionToCheck = allowPreReleaseNotifications
-      ? latestServerVersion
-      : latestStableServerVersion;
+    let latestServerVersionToCheck;
+    if (
+      allowPreReleaseNotifications &&
+      versionGT(latestPreReleaseServerVersion, latestStableServerVersion)
+    ) {
+      latestServerVersionToCheck = latestPreReleaseServerVersion;
+    } else {
+      latestServerVersionToCheck = latestStableServerVersion;
+    }
 
     try {
       const lastUpdateCheckClosed = getLocalStorageItem(
@@ -265,7 +273,7 @@ class Main extends React.Component {
         adminSecretHtml = (
           <div className={styles.secureSection}>
             <a
-              href="https://docs.hasura.io/1.0/graphql/manual/deployment/securing-graphql-endpoint.html"
+              href="https://hasura.io/docs/1.0/graphql/manual/deployment/securing-graphql-endpoint.html"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -341,7 +349,7 @@ class Main extends React.Component {
                 <span className={styles.middot}> &middot; </span>
                 <a
                   className={styles.updateLink}
-                  href="https://docs.hasura.io/1.0/graphql/manual/deployment/updating.html"
+                  href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -756,7 +764,7 @@ class Main extends React.Component {
                     </li>
                     <li className={'dropdown-item'}>
                       <a
-                        href="https://docs.hasura.io/"
+                        href="https://hasura.io/docs/"
                         target="_blank"
                         rel="noopener noreferrer"
                       >

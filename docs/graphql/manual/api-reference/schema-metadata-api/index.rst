@@ -211,15 +211,20 @@ The various types of queries are listed in the following table:
      - 1
      - Create or replace an event trigger
 
-   * - :ref:`invoke_event_trigger`
-     - :ref:`invoke_event_trigger_args <invoke_event_trigger_syntax>`
-     - 1
-     - Invoke a trigger manually
-
    * - :ref:`delete_event_trigger`
      - :ref:`delete_event_trigger_args <delete_event_trigger_syntax>`
      - 1
      - Delete an existing event trigger
+
+   * - :ref:`redeliver_event`
+     - :ref:`redeliver_event_args <redeliver_event_syntax>`
+     - 1
+     - Redeliver an existing event
+
+   * - :ref:`invoke_event_trigger`
+     - :ref:`invoke_event_trigger_args <invoke_event_trigger_syntax>`
+     - 1
+     - Invoke a trigger with custom payload
 
    * - :ref:`add_remote_schema`
      - :ref:`add_remote_schema_args <add_remote_schema_syntax>`
@@ -301,19 +306,45 @@ The various types of queries are listed in the following table:
      - 1
      - Set custom GraphQL types
 
+   * - :ref:`create_action`
+     - :ref:`create_action_args <create_action_syntax>`
+     - 1
+     - Create an action
+
+   * - :ref:`drop_action`
+     - :ref:`drop_action_args <drop_action_syntax>`
+     - 1
+     - Drop an action
+
+   * - :ref:`update_action`
+     - :ref:`update_action_args <update_action_syntax>`
+     - 1
+     - Update an action
+
+   * - :ref:`create_action_permission`
+     - :ref:`create_action_permission_args <create_action_permission_syntax>`
+     - 1
+     - Create an action permission
+
+   * - :ref:`drop_action_permission`
+     - :ref:`drop_action_permission_args <drop_action_permission_syntax>`
+     - 1
+     - Drop an action permission
+
 **See:**
 
-- :doc:`Run SQL <run-sql>`
-- :doc:`Tables/Views <table-view>`
-- :doc:`Custom SQL Functions <custom-functions>`
-- :doc:`Relationships <relationship>`
-- :doc:`Computed Fields <computed-field>`
-- :doc:`Permissions <permission>`
-- :doc:`Event Triggers <event-triggers>`
-- :doc:`Remote Schemas <remote-schemas>`
-- :doc:`Query Collections <query-collections>`
-- :doc:`Custom Types <custom-types>`
-- :doc:`Manage Metadata <manage-metadata>`
+- :ref:`Run SQL <api_run_sql>`
+- :ref:`Tables/Views <api_tables_views>`
+- :ref:`Custom SQL Functions <api_custom_functions>`
+- :ref:`Relationships <api_relationship>`
+- :ref:`Computed Fields <api_computed_field>`
+- :ref:`Permissions <api_permission>`
+- :ref:`Event Triggers <api_event_triggers>`
+- :ref:`Remote Schemas <api_remote_schemas>`
+- :ref:`Query Collections <api_query_collections>`
+- :ref:`Custom Types <api_custom_types>`
+- :ref:`Actions <api_actions>`
+- :ref:`Manage Metadata <api_manage_metadata>`
 
 Response structure
 ------------------
@@ -382,7 +413,7 @@ to explicitly state that this API is not enabled i.e. remove it from the list of
    --enabled-apis="graphql"
    HASURA_GRAPHQL_ENABLED_APIS="graphql"
 
-See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var.
+See :ref:`server_flag_reference` for info on setting the above flag/env var.
 
 .. toctree::
   :maxdepth: 1
@@ -398,5 +429,6 @@ See :doc:`../../deployment/graphql-engine-flags/reference` for info on setting t
   Remote Schemas <remote-schemas>
   Query Collections <query-collections>
   Custom Types <custom-types>
+  Actions <actions>
   Manage Metadata <manage-metadata>
   Common syntax definitions <syntax-defs>

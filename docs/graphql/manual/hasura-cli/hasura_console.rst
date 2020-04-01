@@ -30,6 +30,15 @@ Examples
     # Start console on a different address and ports:
     hasura console --address 0.0.0.0 --console-port 8080 --api-port 8081
 
+    # Start console without opening the browser automatically
+    hasura console --no-browser
+
+    # Use with admin secret:
+    hasura console --admin-secret "<admin-secret>"
+
+    # Connect to an instance specified by the flag, overrides the one mentioned in config.yaml:
+    hasura console --endpoint "<endpoint>"
+
 Options
 ~~~~~~~
 
@@ -38,6 +47,7 @@ Options
       --address string        address to serve console and migration API from (default "localhost")
       --admin-secret string   admin secret for Hasura GraphQL engine
       --api-port string       port for serving migrate api (default "9693")
+      --browser string        open console in a specific browser
       --console-port string   port for serving console (default "9695")
       --endpoint string       http(s) endpoint for Hasura GraphQL engine
   -h, --help                  help for console
@@ -52,7 +62,7 @@ Options inherited from parent commands
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --skip-update-check   skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

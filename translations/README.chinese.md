@@ -1,6 +1,6 @@
 # Hasura GraphQL引擎
 
-[![文档](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
+[![文档](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://hasura.io/docs)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
@@ -12,7 +12,7 @@ Hasura GraphQL引擎是一个高性能的GraphQL服务器，可为您提供 **Po
 
 Hasura可帮助您构建基于Postgres的GraphQL应用程序，或将使用Postgres的现有应用迁移到GraphQL上。
 
-请参阅 [hasura.io](https://hasura.io) 和 [文档](https://docs.hasura.io) 了解更多。
+请参阅 [hasura.io](https://hasura.io) 和 [文档](https://hasura.io/docs) 了解更多。
 
 ------------------
 
@@ -36,7 +36,7 @@ Hasura可帮助您构建基于Postgres的GraphQL应用程序，或将使用Postg
 * **管理界面和Schema迁移**: 管理界面和受Rails启发的Schema迁移
 * **Postgres** ❤️: 支持Postgres数据类型（PostGIS /地理位置等），将表视图转换为*图*，通过GraphQL变更触发存储函数或过程
 
-请访问 [hasura.io](https://hasura.io) 和 [文档](https://docs.hasura.io) 了解更多
+请访问 [hasura.io](https://hasura.io) 和 [文档](https://hasura.io/docs) 了解更多
 
 ## 目录
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -83,12 +83,12 @@ Hasura可帮助您构建基于Postgres的GraphQL应用程序，或将使用Postg
 
 | **基础设施提供商** | **一键式链接** | **附加信息** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
-| DigitalOcean | [![部署到 DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [文档](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-| Azure | [![部署到 Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [文档](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| DigitalOcean | [![部署到 DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [文档](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![部署到 Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [文档](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
 
 ### 其它部署方法
 
-关于基于Docker的部署和其它高级配置选项，请参阅[部署指南](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) 或者
+关于基于Docker的部署和其它高级配置选项，请参阅[部署指南](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) 或者
 [安装清单](../install-manifests).
 
 ## 架构
@@ -119,7 +119,7 @@ GraphQL Engine提供了易用，可伸缩，高性能的往后端插入自定义
 
 ### 派生数据或数据处理
 
-在Postgres中处理数据或对其做业务逻辑处理来导出另一套可以用GraphQL Engine处理的数据集 - [阅读更多](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+在Postgres中处理数据或对其做业务逻辑处理来导出另一套可以用GraphQL Engine处理的数据集 - [阅读更多](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
 
 ## 演示
 

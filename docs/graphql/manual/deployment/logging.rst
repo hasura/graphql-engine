@@ -17,9 +17,9 @@ Accessing logs
 
 Based on your deployment method, the Hasura GraphQL engine logs can be accessed as follows:
 
-- :doc:`On Heroku <heroku/logging>`
-- :doc:`On Docker <docker/logging>`
-- :doc:`On Kubernetes <kubernetes/logging>`
+- :ref:`On Heroku <heroku_logs>`
+- :ref:`On Docker <docker_logs>`
+- :ref:`On Kubernetes <kubernetes_logs>`
 
 .. _log-types:
 
@@ -31,7 +31,7 @@ The Hasura GraphQL engine has different kind of log-types depending on the sub-s
 For example, the HTTP webserver logs incoming requests as an access log and is called ``http-log``. Similarly logs from the websocket layer are called ``websocket-log``, logs from the event trigger system are called ``event-trigger`` etc.
 
 
-You can configure the GraphQL engine to enable/disable certain log-types using the the ``--enabled-log-types`` flag or the ``HASURA_GRAPHQL_ENABLED_LOG_TYPES`` env var. See :doc:`../deployment/graphql-engine-flags/reference`
+You can configure the GraphQL engine to enable/disable certain log-types using the the ``--enabled-log-types`` flag or the ``HASURA_GRAPHQL_ENABLED_LOG_TYPES`` env var. See :ref:`server_flag_reference`
 
 Default enabled log-types are: ``startup, http-log, webhook-log, websocket-log``
 
@@ -111,7 +111,7 @@ Apart from the above, there are other internal log-types which cannot be configu
 Logging levels
 --------------
 
-You can set the desired logging level on the server using the ``log-level`` flag or the ``HASURA_GRAPHQL_LOG_LEVEL`` env var. See :doc:`../deployment/graphql-engine-flags/reference`.
+You can set the desired logging level on the server using the ``log-level`` flag or the ``HASURA_GRAPHQL_LOG_LEVEL`` env var. See :ref:`server_flag_reference`.
 
 The default log-level is ``info``.
 
@@ -405,4 +405,4 @@ Monitoring frameworks
 You can integrate the logs emitted by Hasura GraphQL with external monitoring tools for better visibility as per
 your convenience.
 
-For some examples, see :doc:`../guides/monitoring/index`.
+For some examples, see :ref:`guides_monitoring_frameworks`.

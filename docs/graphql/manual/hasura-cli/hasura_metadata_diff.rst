@@ -36,24 +36,30 @@ Examples
     # Show changes between metadata from metadata.yaml and metadata_old.yaml:
     hasura metadata diff metadata.yaml metadata_old.yaml
 
+    # Apply admin secret for Hasura GraphQL engine:
+    hasura metadata diff --admin-secret "<admin-secret>"
+
+    # Diff metadata on a different Hasura instance:
+    hasura metadata diff --endpoint "<endpoint>"
+
 Options
 ~~~~~~~
 
 ::
 
-      --admin-secret string   admin secret for Hasura GraphQL engine
-      --endpoint string       http(s) endpoint for Hasura GraphQL engine
-  -h, --help                  help for diff
+  -h, --help   help for diff
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
-      --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
-      --no-color            do not colorize output (default: false)
-      --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   skip automatic update check on command execution
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
+      --log-level string      log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
+      --no-color              do not colorize output (default: false)
+      --project string        directory where commands are executed (default: current dir)
+      --skip-update-check     skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

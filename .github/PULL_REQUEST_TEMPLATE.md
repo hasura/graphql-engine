@@ -5,6 +5,10 @@
 <!-- The title might not be enough to convey how this change affects the user. -->
 <!-- Describe the changes from a user's perspective -->
 
+### Changelog
+
+- [ ] `CHANGELOG.md` is updated with user-facing content relevant to this PR.
+
 ### Affected components
 <!-- Remove non-affected components from the list -->
 
@@ -42,7 +46,7 @@
 Does this PR change Hasura Catalog version?
 - [ ] No
 - [ ] Yes
-  - [ ] Updated docs with SQL for downgrading the catalog <!-- https://docs.hasura.io/1.0/graphql/manual/deployment/downgrading.html#downgrading-across-catalogue-versions -->
+  - [ ] Updated docs with SQL for downgrading the catalog <!-- https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-across-catalogue-versions -->
 
 #### Metadata
 <!-- Hasura metadata changes -->

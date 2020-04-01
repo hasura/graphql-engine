@@ -40,7 +40,6 @@ export const getAllCodegenFrameworks = () => {
 };
 
 export const getCodegenFunc = framework => {
-  process.hrtime = () => null;
   return fetch(getCodegenFilePath(framework))
     .then(r => r.text())
     .then(rawJsString => {

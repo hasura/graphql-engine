@@ -286,6 +286,8 @@ class Permissions extends Component {
       };
 
       const getPermissionsTableBody = () => {
+        const rolePermissions = getTablePermissionsByRoles(tableSchema);
+
         const getBulkCheckbox = (role, isNewRole) => {
           const dispatchBulkSelect = e => {
             const isChecked = e.target.checked;
@@ -293,8 +295,14 @@ class Permissions extends Component {
             dispatch(permSetBulkSelect(isChecked, selectedRole));
           };
 
+          const disableCheckbox = !Object.keys(rolePermissions).includes(role);
+
           return {
             showCheckbox: !(role === 'admin' || isNewRole),
+            disableCheckbox,
+            title: disableCheckbox
+              ? 'No permissions exist'
+              : 'Select for bulk actions',
             bulkSelect: permissionsState.bulkSelect,
             onChange: dispatchBulkSelect,
             role,
@@ -334,8 +342,6 @@ class Permissions extends Component {
 
           const getRoleQueryPermission = queryType => {
             let _permission;
-
-            const rolePermissions = getTablePermissionsByRoles(tableSchema);
 
             if (role === 'admin') {
               _permission = permissionsSymbols.fullAccess;

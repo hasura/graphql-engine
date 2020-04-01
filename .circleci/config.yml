@@ -101,6 +101,8 @@ refs:
           # Setting default number of threads to 2
           # since circleci allocates 2 cpus per test container
           GHCRTS: -N2
+          # Until we can use a real webserver for TestEventFlood, limit concurrency:
+          HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
           HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
           HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
           GRAPHQL_ENGINE: /build/_server_output/graphql-engine
@@ -353,6 +355,45 @@ jobs:
         root: /build
         paths:
           - _cli_output
+  
+  test_and_build_cli_ext:
+    docker:
+    - image: hasura/graphql-engine-extension-cli-builder:20200225
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - restore_cache:
+        key:
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: cli-ext
+        command: make ci-deps
+    - save_cache:
+        key:
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+        paths:
+        - cli-ext/node_modules
+        - ~/.npm
+        - ~/.cache
+    - run:
+        name: build extension cli
+        working_directory: cli-ext
+        command: |
+          npm install -g pkg
+          npm run build
+          make deploy
+          make ci-copy-assets
+    - store_artifacts:
+        path: /build/_cli_ext_output
+        destination: cli_ext
+    - persist_to_workspace:
+        root: /build
+        paths:
+          - _cli_ext_output
 
   # build console assets
   build_console:
@@ -493,6 +534,10 @@ workflows:
   workflow_v20200120:
     jobs:
     - check_build_worthiness: *filter_only_vtags
+    - test_and_build_cli_ext:
+        <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
     - build_console:
         <<: *filter_only_vtags
         requires:
@@ -500,6 +545,11 @@ workflows:
     - build_server:
         <<: *filter_only_vtags
         requires:
+        - check_build_worthiness
+    - test_cli_with_last_release:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_cli_ext
         - check_build_worthiness
     - build_image:
         <<: *filter_only_vtags
@@ -544,13 +594,10 @@ workflows:
         - test_server_pg_9.5
         - server_unit_tests
         - test_server_upgrade
-    - test_cli_with_last_release:
-        <<: *filter_only_vtags
-        requires:
-        - check_build_worthiness
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
+        - test_and_build_cli_ext
         - build_server
     - test_console:
         <<: *filter_only_vtags
