@@ -588,12 +588,3 @@ Date:   Thu Apr 2 00:22:55 2020 +0100
     * quote the regex at compile-time to handle syntax errors statically
 
     Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-
-commit 1264fad97e33249f5a798bb58af51756abd25285
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Thu Apr 2 03:23:02 2020 +0530
-
-    fix unnecessary schema update event in run_sql API (#4266)
-
-    When consistent_metadata_check is set to false, then a new schema update
-    event should not be created.
