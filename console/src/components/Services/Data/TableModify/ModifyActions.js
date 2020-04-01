@@ -883,37 +883,7 @@ const untrackTableSql = tableName => {
     const errorMsg = 'Untrack table failed';
 
     const customOnSuccess = () => {
-      // Combine foreign_key_constraints and opp_foreign_key_constraints to get merged table data
-      const tableData = [];
-      const allSchemas = getState().tables.allSchemas;
-      const schemaInfo = allSchemas.find(
-        schema =>
-          schema.table_name === tableName &&
-          schema.table_schema === currentSchema
-      );
-      schemaInfo.foreign_key_constraints.forEach(fk_obj => {
-        tableData.push({
-          table_name: fk_obj.ref_table,
-          table_schema: fk_obj.ref_table_table_schema,
-        });
-      });
-      schemaInfo.opp_foreign_key_constraints.forEach(fk_obj => {
-        tableData.push({
-          table_name: fk_obj.table_name,
-          table_schema: fk_obj.table_schema,
-        });
-      });
-      tableData.push({
-        table_schema: currentSchema,
-        table_name: tableName,
-      });
-      dispatch(
-        updateSchemaInfo({
-          tables: tableData,
-        })
-      ).then(() => {
-        dispatch(_push('/data/'));
-      });
+      dispatch(_push('/data/'));
     };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });

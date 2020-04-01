@@ -27,6 +27,7 @@ import {
 import RootFields from './RootFields';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { changeViewRootFields } from '../Common/TooltipMessages';
+import styles from './ModifyTable.scss';
 
 const ModifyView = props => {
   const {
@@ -49,8 +50,6 @@ const ModifyView = props => {
     dispatch(setTable(tableName));
     dispatch(fetchViewDefinition(tableName, false));
   }, []);
-
-  const styles = require('./ModifyTable.scss');
 
   const tableSchema = findTable(
     allSchemas,
@@ -201,19 +200,28 @@ const ModifyView = props => {
     );
   };
 
+  const modifyViewOnClick = () => {
+    modifyViewDefinition(tableName);
+  };
   const modifyBtn = (
     <Button
       type="submit"
       size="xs"
       className={styles.add_mar_right}
-      onClick={() => {
-        modifyViewDefinition(tableName);
-      }}
+      onClick={modifyViewOnClick}
       data-test="modify-view"
     >
       Modify
     </Button>
   );
+
+  const untrackOnclick = () => {
+    const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
+    const isOk = getConfirmation(confirmMessage);
+    if (isOk) {
+      dispatch(untrackTableSql(tableName));
+    }
+  };
 
   const untrackBtn = (
     <Button
@@ -221,31 +229,26 @@ const ModifyView = props => {
       className={styles.add_mar_right}
       color="white"
       size="sm"
-      onClick={() => {
-        const confirmMessage = `This will remove the view "${tableName}" from the GraphQL schema`;
-        const isOk = getConfirmation(confirmMessage);
-        if (isOk) {
-          dispatch(untrackTableSql(tableName));
-        }
-      }}
+      onClick={untrackOnclick}
       data-test="untrack-view"
     >
       Untrack View
     </Button>
   );
 
+  const deleteOnClick = () => {
+    const confirmMessage = `This will permanently delete the view "${tableName}" from the database`;
+    const isOk = getConfirmation(confirmMessage, true, tableName);
+    if (isOk) {
+      dispatch(deleteViewSql(tableName));
+    }
+  };
   const deleteBtn = (
     <Button
       type="submit"
       color="red"
       size="sm"
-      onClick={() => {
-        const confirmMessage = `This will permanently delete the view "${tableName}" from the database`;
-        const isOk = getConfirmation(confirmMessage, true, tableName);
-        if (isOk) {
-          dispatch(deleteViewSql(tableName));
-        }
-      }}
+      onClick={deleteOnClick}
       data-test="delete-view"
     >
       Delete view

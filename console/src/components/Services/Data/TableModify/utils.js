@@ -87,7 +87,7 @@ export const sanitiseColumnNames = columnNames => {
   Object.keys(columnNames).forEach(c => {
     const trimmedCustomName = columnNames[c] ? columnNames[c].trim() : null;
     if (trimmedCustomName) {
-      sanitised[c] = columnNames[c].trim();
+      sanitised[c] = trimmedCustomName;
     }
   });
   return sanitised;
