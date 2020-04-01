@@ -42,7 +42,7 @@ If the table already exists, we can add a Postgres check constraint as follows:
    rating > 0 AND rating < 11
   );
 
-If we're now trying to add an author with a rating of ``12``, we'll get the following error:
+If someone now tries to add an author with a rating of ``12``, the following error is thrown:
 
 ``Check constraint violation. new row for relation "authors" violates check constraint "authors_rating_check"``.
 
@@ -53,7 +53,7 @@ If the validation involves checks across tables, we can use Postgres triggers.
 
 **Example:** Validate that an article can be added only for an author where ``is_active`` is true.
 
-In the ``Data -> SQL`` tab on the Hasura console, we can create a `Postgres function <https://www.postgresql.org/docs/9.1/sql-createfunction.html>`__ to perform the validation. 
+In the ``Data -> SQL`` tab on the Hasura console, we create a `Postgres function <https://www.postgresql.org/docs/9.1/sql-createfunction.html>`__ to perform the validation. 
 
 .. code-block:: plpgsql
 
@@ -62,26 +62,26 @@ In the ``Data -> SQL`` tab on the Hasura console, we can create a `Postgres func
   DECLARE active_author BOOLEAN;
   BEGIN
   SELECT author.is_active INTO active_author FROM "authors" author WHERE author.id = NEW."author_id";
-  IF active_author != TRUE THEN
+  IF active_author != 't' THEN
       RAISE EXCEPTION 'Author must be active';
   END IF;
   RETURN NEW;
   END;
   $BODY$ LANGUAGE plpgsql;
 
-Then we'll add a `Postgres trigger <https://www.postgresql.org/docs/9.1/sql-createtrigger.html>`__ that is called every time an article is inserted or updated.
+Then we add a `Postgres trigger <https://www.postgresql.org/docs/9.1/sql-createtrigger.html>`__ that is called every time an article is inserted or updated.
 
 .. code-block:: plpgsql
 
   CREATE TRIGGER insert_article BEFORE INSERT OR UPDATE ON "articles" FOR EACH ROW EXECUTE PROCEDURE check_author_active();
 
-If we're trying to insert an article for an author where ``is_active`` is ``false``, we'll get the following error:
+If someone now tries to insert an article for an author where ``is_active`` is ``false``, the following error is thrown:
 
-``Error``
+``Insert failed! unexpected : Author must be active``
 
 .. note::
 
-  If you run the above SQL statements from the SQL tab in the Hasura console, make sure that the ``Track this`` box is not checked, since these statements should go into Postgres directly and should not be tracked by Hasura. 
+  If you run the above SQL statements from the SQL tab in the Hasura console, make sure that the ``Track this`` box is **not** checked, since these statements should go into Postgres directly and should not be tracked by Hasura. 
 
 Complex data validation: actions
 --------------------------------
