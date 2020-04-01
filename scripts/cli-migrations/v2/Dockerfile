@@ -1,4 +1,4 @@
-FROM hasura/graphql-engine:v1.1.1
+FROM hasura/graphql-engine:v1.2.0-beta.3
 
 RUN wget http://ftp.us.debian.org/debian/pool/main/g/gcc-10/libstdc++6_10-20200312-2_amd64.deb -O lib.deb \
     && busybox dpkg-deb -x lib.deb / \
