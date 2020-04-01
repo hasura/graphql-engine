@@ -62,6 +62,8 @@ For ``insert`` operations or for GraphQL mutations of the type *insert*, you can
 
 * :ref:`col-presets-permissions`
 
+* :ref:`admin-only-insert-permissions`
+
 **Update** permissions
 ^^^^^^^^^^^^^^^^^^^^^^
 For ``update`` operations or for GraphQL mutations of the type *update*, you can configure the following:
@@ -245,3 +247,11 @@ While this is strictly not a permission configuration, defining
 removes access to it. This preset can be defined for ``insert`` and ``update`` operations. This configuration
 is also very useful to avoid sending sensitive user-information in the query and leverage session variables
 or static data instead.
+
+.. _admin-only-insert-permissions:
+
+Admin Only Inserts
+^^^^^^^^^^^^^^^^^^
+
+If the ``insert`` permission is marked as ``admin_only: true`` then the mutation is accessbile to
+given role (``x-hasura-role`` header) only if admin secret (``x-hasura-admin-secret`` header) is sent in the request.

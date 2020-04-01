@@ -154,10 +154,11 @@ InsertPermission
      - false
      - :ref:`PGColumn` array (or) ``'*'``
      - Can insert into only these columns (or all when ``'*'`` is specified)
-
-
-
-
+   * - admin_only
+     - false
+     - Boolean
+     - When set to ``true`` the mutation is accessible only if role header (``x-hasura-role``)
+       is sent along with admin secret header (``x-hasura-admin-secret``), defaults to ``false``
 
 
 .. _drop_insert_permission:
