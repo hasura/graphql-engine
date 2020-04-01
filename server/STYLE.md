@@ -1,30 +1,19 @@
-## Code conventions and style guide
+# Code conventions and style guide
 
-This helps enforce a uniform style for all committers.
-
-- Compiler warnings are turned on, make sure your code has no warnings.
-- Use [hlint](https://github.com/ndmitchell/hlint) to make sure your code has no
-  warnings.
-- Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format
-  your code.
-
-This is a short document describing the preferred coding style for this project.
-We've tried to cover the major areas of formatting and naming. When something
-isn't covered by this guide you should stay consistent with the code in the
-other modules.
+This is a short document describing the preferred coding style for this project. We've tried to cover the major areas of formatting and naming. When something isn't covered by this guide, err on the side of consistency with existing code.
 
 ### Formatting
 
+Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.
+
 #### Line Length
 
-Try to keep a line length within 100 characters. Small exceptions are okay if
-the line only goes over the limit by a few characters and breaking it would
-negatively impact readability; use your best judgement.
+Try to keep a line length within 100 characters. Small exceptions are okay if the line only goes over the limit by a few characters and breaking it would negatively impact readability. Use your best judgement.
 
-#### Indentation
+#### Whitespace
 
-Tabs are illegal. Use spaces for indenting. Indent your code blocks with *2
-spaces*. Indent the `where` keyword two spaces to set it apart from the rest of
+Do not use tabs. Use spaces for indenting. Indent your code blocks with **2
+spaces**. Indent the `where` keyword two spaces to set it apart from the rest of
 the code and indent the definitions in a `where` clause 2 spaces. Some examples:
 
 ```haskell
@@ -42,19 +31,7 @@ filter p (x:xs)
   | otherwise = filter p xs
 ```
 
-#### Blank Lines
-
-One blank line between top-level definitions. No blank lines between type
-signatures and definitions of a function. Add one blank line between functions
-in a type class instance declaration if the function bodies are large. Use your
-judgement.
-
-#### Whitespace
-
-Surround binary operators with a single space on either side. Use your better
-judgement for the insertion of spaces around arithmetic operators but always be
-consistent about whitespace on either side of a binary operator. Don't insert a
-space after a lambda.
+Include newlines at the ends of files. Do not include other trailing whitespace on the end of lines.
 
 #### Data Declarations
 
@@ -68,15 +45,14 @@ data Tree a
 
 ```haskell
 data HttpException
-    = InvalidStatusCode Int
-    | MissingContentHeader
+  = InvalidStatusCode Int
+  | MissingContentHeader
 ```
 
 Format records as follows:
 
 ```haskell
-data Person
-  = Person
+data Person = Person
   { firstName :: !String  -- ^ First name
   , lastName  :: !String  -- ^ Last name
   , age       :: !Int     -- ^ Age
@@ -111,8 +87,7 @@ Format export lists as follows:
 
 ```haskell
 module Data.Set
-  (
-    -- * The @Set@ type
+  ( -- * The @Set@ type
     Set
   , empty
   , singleton
@@ -126,18 +101,15 @@ module Data.Set
 
 Imports should be grouped in the following order:
 
-1. standard library imports / related third party imports
-2. qualified imports of standard library / third party imports
-3. local application/library specific imports
-4. qualified imports of local application/library specific imports
+1. `Hasura.Prelude`
+2. `qualified` imports of standard library / third party imports
+3. unqualified standard library imports / related third party imports
+4. `qualified` imports of local application/library specific imports
+5. unqualified local application/library specific imports
 
 Put a blank line between each group of imports. The imports in each group should
-be sorted alphabetically, by module name (this is done by stylish-haskell
+be sorted alphabetically, by module name (this is done by `stylish-haskell`
 automatically).
-
-Always use explicit import lists or `qualified` imports for standard and third
-party libraries. This makes the code more robust against changes in these
-libraries. Exception: The Prelude.
 
 ### Naming
 
@@ -149,10 +121,6 @@ to `ColTy` and `computeAggregateFunction` to `compAggFn`. Exceptions: extremely
 common, idiomatic abbreviations, like using “err” to mean “error” or “ref” to
 mean “reference.” When in doubt about whether or not an abbreviation is
 well-known, prefer the full name.
-
-For readability reasons, don't capitalize all letters when using an
-abbreviation. For example, write `HttpServer` instead of `HTTPServer`.
-Exception: Two letter abbreviations, e.g. `IO`.
 
 #### Functions and variables
 
@@ -203,7 +171,7 @@ parseOptionalArgument userRole value >>= \case
 ```
 
 which avoids the need for the extra name entirely. If such an approach isn’t
-feasible or is hard to read, and a type-related prefix or suffix is absolutely
+practical or is hard to read, and a type-related prefix or suffix is absolutely
 necessary, prefer a prefix with the full name of the type over abbreviations:
 
 ```haskell
@@ -221,12 +189,6 @@ Use singular, not plural, module names, e.g. use `Data.Map` and
 `Data.ByteString.Internal` instead of `Data.Maps` and
 `Data.ByteString.Internals`.
 
-### Standard library usage
-
-#### Don't use `unless`
-
-Use `when` combined with `not`. Usage of `unless` can be confusing.
-
 ### Data types
 
 #### Wrap primitives in newtype (or sum types)
@@ -236,18 +198,57 @@ It is usually a good idea to introduce a custom data type (sum types or
 `Text`, etc.). This prevents confusion and mistakes of using the wrong types in
 wrong places.
 
-#### Use sum types instead `Bool` where it makes sense
+#### Prefer sum types to `Bool`
 
-To represent two different states, use sum types rather than a `Bool`.
-Specially, in the case of data types which represents enabled/disabled state.
-The problem with `Bool` is, it is not clear what the default is.
-
-Example:
+Avoid using `Bool` to represent two different states, especially if the set of possible states could potentially grow in the future. For example, instead of writing
 
 ```haskell
-data ConsoleEnabled
-  = CEDisabled
-  | CEEnabled
+-- bad
+data LiveQuery = LiveQuery
+  { ...
+  , lqIsPaused :: !Bool
+  , ...
+  }
+```
+
+prefer a sum type that has meaning even without context:
+
+```haskell
+-- good
+data LiveQuery = LiveQuery
+  { ...
+  , lqState :: !LiveQueryState
+  , ...
+  }
+
+data LiveQueryState
+  = LQActive
+  | LQPaused
+```
+
+Also, avoid defining boolean predicates that simply select distinguish between different constructors of a sum type. For example, avoid this:
+
+```haskell
+-- bad
+isPaused :: LiveQueryState -> Bool
+isPaused LQPaused = True
+isPaused _        = False
+
+...
+
+unless (isPaused queryState) do
+  handleActiveQuery query
+```
+
+This pattern can easily bite you if you later decide to extend the sum type with a new constructor. For example, suppose `LiveQueryState` was extended with an `LQStopped` constructor. Our guard using `isPaused` would still compile, but it would return `False` for stopped queries, and we’d call `handleActiveQuery` even though the query is stopped!
+
+Pattern-matching is much more robust to this kind of code evolution, and it isn’t very much more code:
+
+```haskell
+-- good
+case queryState of
+  LQActive -> handleActiveQuery query
+  LQPaused -> pure ()
 ```
 
 ### Dealing with laziness
@@ -263,8 +264,7 @@ evaluation order.
 
 ```haskell
 -- Good
-data Point
-  = Point
+data Point = Point
   { pointX :: !Double
   , pointY :: !Double
   }
@@ -272,8 +272,7 @@ data Point
 
 ```haskell
 -- Bad
-data Point
-  = Point
+data Point = Point
   { pointX :: Double
   , pointY :: Double
   }
@@ -305,9 +304,7 @@ Use line comments (comments that start with `--`) for short comments (1–3
 lines). For longer comments, use multiline comments (comments that begin with
 `{-` and end with `-}`).
 
-Use [Haddock syntax](https://haskell-haddock.readthedocs.io/en/latest/markup.html)
-for documentation comments. Running Haddock via `stack haddock` should always
-complete successfully.
+Use [Haddock syntax](https://haskell-haddock.readthedocs.io/en/latest/markup.html) for documentation comments. Running Haddock should always complete successfully.
 
 #### Module headers
 
@@ -462,6 +459,33 @@ runSelectQuery tables constraints cache shouldPrepare =
       runQueryPlan prepared
 ```
 
+#### Out-of-line `Note`s
+
+For especially tricky details that deserve thorough explanation and may need to be referenced from multiple places, we emulate [GHC’s Notes](https://www.stackbuilders.com/news/the-notes-of-ghc). A `Note` is an out-of-line comment written at the top-level of a module, written with a short title header:
+
+```haskell
+{- Note [Checking metadata consistency in run_sql]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SQL queries executed by run_sql may change the Postgres schema in arbitrary
+ways. We attempt to automatically update the metadata to reflect those changes
+as much as possible---for example, if a table is renamed, we want to update the
+metadata to track the table under its new name instead of its old one.
+
+... -}
+```
+
+At any point where the comment is relevant, we add a short comment referring to the note:
+
+```haskell
+-- see Note [Checking metadata consistency in run_sql]
+containsDDLKeyword :: Text -> Bool
+containsDDLKeyword = TDFA.match $$(quoteRegex ...)
+```
+
+A key advantage of notes is that they can be referenced from multiple places, so information does not necessarily need to be connected to any particular binding the way it must be for Haddock comments.
+
+When updating a piece of code that includes a reference to a `Note`, take care to ensure the `Note` is updated as well if necessary! Inevitably, some will get stale and go out of sync with the code, but that’s okay—just fix them up when you find some information is outdated.
+
 ### Misc
 
 #### Point-free style
@@ -473,13 +497,9 @@ Avoid over-using point-free style. For example, this is hard to read:
 f = (g .) . h
 ```
 
-#### Warnings
-
-Code should be compilable with `-Wall -Werror`. There should be no warnings.
-
-
 ### Acknowledgement/Credits
-Parts of this coding style guide has been adapted from
+
+Parts of this coding style guide have been adapted from:
 - https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md
 - https://kowainik.github.io/posts/2019-02-06-style-guide
 - https://chrisdone.com/posts/german-naming-convention/
