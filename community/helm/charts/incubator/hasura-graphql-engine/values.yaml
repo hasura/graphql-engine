@@ -1,0 +1,56 @@
+affinity: {}
+fullnameOverride: ''
+global:
+  postgresql:
+    postgresqlPassword: hasura
+hasura:
+  console:
+    enabled: true
+  database:
+    postgres:
+      external:
+        containerDatabase: null
+        host: null
+        password: null
+        port: '5432'
+        userName: null
+      managed:
+        enabled: true
+        containerDatabase: postgres
+        userName: postgres
+  env: []
+  role:
+    unauthorized:
+      default: null
+  secret:
+    admin: null
+    jwt: null
+  server:
+    host: '*'
+    port: 8080
+image:
+  pullPolicy: IfNotPresent
+  repository: hasura/graphql-engine
+  tag: latest
+imagePullSecrets: []
+ingress:
+  annotations: {}
+  enabled: false
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+nameOverride: ''
+nodeSelector: {}
+podSecurityContext: {}
+replicaCount: 1
+resources: {}
+securityContext: {}
+service:
+  port: 80
+  type: ClusterIP
+serviceAccount:
+  annotations: {}
+  create: true
+  name: null
+tolerations: []

@@ -1,0 +1,120 @@
+{{- $fullName := include "hasura-graphql-engine.fullname" . -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}
+  labels:
+    {{- include "hasura-graphql-engine.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "hasura-graphql-engine.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "hasura-graphql-engine.selectorLabels" . | nindent 8 }}
+    spec:
+{{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+      serviceAccountName: {{ include "hasura-graphql-engine.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: 
+            - "graphql-engine"
+          args:
+            - "--host=$(HASURA_GRAPHQL_DATABASE_HOST)"
+            - "--port=$(HASURA_GRAPHQL_DATABASE_PORT)"
+            - "--user=$(HASURA_GRAPHQL_DATABASE_USER)"
+            - "--password=$(HASURA_GRAPHQL_DATABASE_PASSWORD)"
+            - "--dbname=$(HASURA_GRAPHQL_DATABASE_NAME)"
+            - "serve"
+          env:
+            - name: HASURA_GRAPHQL_DATABASE_HOST
+              value: {{ include "hasura.databaseHost" . | quote }}
+            - name: HASURA_GRAPHQL_DATABASE_PORT
+              value: {{ include "hasura.databasePort" . | quote }}
+            - name: HASURA_GRAPHQL_DATABASE_USER
+              value: {{ include "hasura.databaseUser" . | quote }}
+            - name: HASURA_GRAPHQL_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+{{- if .Values.hasura.database.postgres.managed.enabled }}
+                  name: {{ include "postgres.fullname" . }}
+                  key: postgresql-password
+{{- else }}
+                  name: {{ $fullName }}
+                  key: postgresql-password
+{{- end }}
+            - name: HASURA_GRAPHQL_DATABASE_NAME
+              value: {{ include "hasura.databaseName" . | quote }}
+            - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+              value: {{ .Values.hasura.console.enabled | quote }}
+            - name: HASURA_GRAPHQL_SERVER_PORT
+              value: {{ .Values.hasura.server.port | quote }}
+            - name: HASURA_GRAPHQL_SERVER_HOST
+              value: {{ .Values.hasura.server.host | quote }}
+{{- if .Values.hasura.role.unauthorized.default }}
+            - name: HASURA_GRAPHQL_UNAUTHORIZED_ROLE
+              value: {{ .Values.hasura.role.unauthorized.default | quote }}
+{{- end }}
+
+{{- with .Values.hasura.secret -}}
+  {{- if .jwt }}
+            - name: HASURA_GRAPHQL_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $fullName }}
+                  key: jwt
+  {{- end }}
+
+  {{- if .admin }}
+            - name: HASURA_GRAPHQL_ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $fullName }}
+                  key: admin
+  {{- end }}
+{{- end -}}
+
+{{- if .Values.hasura.env }}
+  {{- range .Values.hasura.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+  {{- end }}
+{{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.hasura.server.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.hasura.server.port }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.hasura.server.port }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+{{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+{{- end }}

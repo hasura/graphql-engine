@@ -1,0 +1,20 @@
+appVersion: 1.x.x
+dependencies:
+  - condition: hasura.database.postgres.enabled
+    name: postgresql
+    repository: 'https://charts.bitnami.com/bitnami'
+    version: 8.x.x
+description: A Helm chart for Hasura GraphQL Engine. Currently in alpha
+keywords:
+  - application
+  - graphql
+  - haskell
+  - hasura
+  - productivity
+  - web
+maintainers:
+  - email: 29133953+stevefan1999-personal@users.noreply.github.com
+    name: Steve Fan
+name: hasura-graphql-engine
+type: application
+version: 0.0.3
