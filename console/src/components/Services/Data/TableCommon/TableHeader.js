@@ -9,6 +9,7 @@ import {
   checkIfTable,
   getTableName,
   getTableSchema,
+  getTableType,
 } from '../../../Common/utils/pgUtils';
 import {
   getSchemaBaseRoute,
@@ -43,7 +44,7 @@ const TableHeader = ({
   const activeTab = tabNameMap[tabName];
 
   const saveTableNameChange = newName => {
-    dispatch(changeTableName(tableName, newName, isTable));
+    dispatch(changeTableName(tableName, newName, isTable, getTableType(table)));
   };
 
   const getBreadCrumbs = () => {

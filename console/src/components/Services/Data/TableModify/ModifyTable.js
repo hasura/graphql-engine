@@ -228,7 +228,7 @@ class ModifyTable extends React.Component {
             <TableCommentEditor
               tableComment={tableComment}
               tableCommentEdit={tableCommentEdit}
-              isTable
+              tableType={'TABLE'}
               dispatch={dispatch}
             />
             <EnumTableModifyWarning isEnum={table.is_enum} />

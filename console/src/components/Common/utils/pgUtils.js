@@ -11,6 +11,10 @@ export const getTableSchema = table => {
   return table.table_schema;
 };
 
+export const getTableType = table => {
+  return table.table_type;
+};
+
 // TODO: figure out better pattern for overloading fns
 // tableName and tableNameWithSchema are either/or arguments
 export const generateTableDef = (
@@ -51,7 +55,7 @@ export const getTableNameWithSchema = (tableDef, wrapDoubleQuotes = false) => {
 };
 
 export const checkIfTable = table => {
-  return table.table_type === 'BASE TABLE';
+  return table.table_type === 'TABLE';
 };
 
 export const displayTableName = table => {

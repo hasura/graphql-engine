@@ -399,7 +399,7 @@ FROM (
     pgn.nspname as table_schema,
     pgc.relname as table_name,
     case
-      when pgc.relkind = 'r' then 'BASE TABLE'
+      when pgc.relkind = 'r' then 'TABLE'
       when pgc.relkind = 'v' then 'VIEW'
       when pgc.relkind = 'm' then 'MATERIALIZED VIEW'
     end as table_type,
@@ -413,6 +413,10 @@ FROM (
     ON pgc.relnamespace = pgn.oid
 
   /* columns */
+  /* This is a simplified version of how information_schema.columns was
+  ** implemented in postgres 9.5, but modified to support materialized
+  ** views.
+  */
   LEFT OUTER JOIN pg_attribute AS pga
     ON pga.attrelid = pgc.oid
   LEFT OUTER JOIN (
@@ -472,10 +476,37 @@ FROM (
     AND ist.event_object_table  = pgc.relname
     AND ist.trigger_name        = pgt.tgname
 
-  /* views */
-  LEFT OUTER JOIN information_schema.views AS isv
+  /* This is a simplified version of how information_schema.views was
+  ** implemented in postgres 9.5, but modified to support materialized
+  ** views.
+  */
+  LEFT OUTER JOIN (
+    SELECT
+      current_database() AS table_catalog,
+      nc.nspname         AS table_schema,
+      c.relname          AS table_name,
+      CASE WHEN pg_has_role(c.relowner, 'USAGE') THEN pg_get_viewdef(c.oid) ELSE null END AS view_definition,
+      CASE WHEN 'check_option=cascaded' = ANY (c.reloptions) THEN 'CASCADED'
+           WHEN 'check_option=local'    = ANY (c.reloptions) THEN 'LOCAL'
+           ELSE 'NONE'
+      END AS check_option,
+      CASE WHEN pg_relation_is_updatable(c.oid, false) & 20 = 20 THEN 'YES' ELSE 'NO' END AS is_updatable,
+      CASE WHEN pg_relation_is_updatable(c.oid, false) &  8 =  8 THEN 'YES' ELSE 'NO' END AS is_insertable_into,
+      CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = c.oid AND tgtype & 81 = 81) THEN 'YES' ELSE 'NO' END AS is_trigger_updatable,
+      CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = c.oid AND tgtype & 73 = 73) THEN 'YES' ELSE 'NO' END AS is_trigger_deletable,
+      CASE WHEN EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = c.oid AND tgtype & 69 = 69) THEN 'YES' ELSE 'NO' END AS is_trigger_insertable_into
+    FROM pg_namespace nc, pg_class c
+
+    WHERE c.relnamespace = nc.oid
+      AND c.relkind in ('v', 'm')
+      AND (NOT pg_is_other_temp_schema(nc.oid))
+      AND (pg_has_role(c.relowner, 'USAGE')
+           OR has_table_privilege(c.oid, 'SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER')
+           OR has_any_column_privilege(c.oid, 'SELECT, INSERT, UPDATE, REFERENCES'))
+  ) AS isv
     ON  isv.table_schema = pgn.nspname
     AND isv.table_name   = pgc.relname
+
   WHERE
     pgc.relkind IN ('r', 'v', 'm')
     ${whereQuery}
