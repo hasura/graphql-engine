@@ -9,16 +9,14 @@ import {
 } from './utils';
 import { ToolTip } from '../../../UIKit/atoms';
 
-const OperationEditor = props => {
-  const {
-    definition,
-    allTableColumns,
-    styles,
-    save,
-    modifyTrigger,
-    dispatch,
-  } = props;
-
+const OperationEditor = ({
+  definition,
+  allTableColumns,
+  styles,
+  save,
+  modifyTrigger,
+  dispatch,
+}) => {
   const toggleOperation = upObj => {
     if (upObj.query === MANUAL_TRIGGER_VAR) {
       return toggleManualType(upObj);
@@ -99,7 +97,7 @@ const OperationEditor = props => {
           {definition.update ? (
             allTableColumns.map((col, i) => (
               <div
-                className={`${styles.opsCheckboxWrapper} col-md-4 ${styles.padd_remove}`}
+                className={`${styles.opsCheckboxWrapper} ${styles.columnListElement} ${styles.padd_remove}`}
                 key={i}
               >
                 <input
@@ -169,7 +167,7 @@ const OperationEditor = props => {
           {modifyTrigger.definition.update ? (
             allTableColumns.map((col, i) => (
               <div
-                className={`${styles.opsCheckboxWrapper} col-md-4 ${styles.padd_remove} ${styles.cursorPointer}`}
+                className={`${styles.opsCheckboxWrapper} ${styles.columnListElement} ${styles.padd_remove} ${styles.cursorPointer}`}
                 key={i}
                 onClick={() => dispatch(toggleColumn('update', col.name))}
               >

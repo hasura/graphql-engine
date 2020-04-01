@@ -105,7 +105,8 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
           onClick={() => {
             dispatch(removeFilter(i));
           }}
-          pt="xs"
+          pointer
+          mt="sm"
           data-test={`clear-filter-${i}`}
         />
       );
@@ -153,7 +154,8 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
           onClick={() => {
             dispatch(removeOrder(i));
           }}
-          pt="xs"
+          pointer
+          mt="sm"
           data-test={`clear-sorts-${i}`}
         />
       );
@@ -297,7 +299,6 @@ class FilterQuery extends Component {
             <ReloadEnumValuesButton
               dispatch={dispatch}
               isEnum={tableSchema.is_enum}
-              tooltipStyle={styles.add_mar_left_mid}
             />
             {/* <div className={styles.count + ' alert alert-info'}><i>Total <b>{tableName}</b> rows in the database for current query: {count} </i></div> */}
           </div>

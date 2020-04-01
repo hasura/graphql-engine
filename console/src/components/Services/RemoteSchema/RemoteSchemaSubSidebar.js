@@ -66,7 +66,7 @@ const RemoteSchemaSubSidebar = ({
               to={appPrefix + '/manage/' + d.name + '/details'}
               data-test={d.name}
             >
-              <Icon type="fork" />
+              <Icon type="fork" mr="xs" />
               {d.name}
             </Link>
           </li>

@@ -204,7 +204,7 @@ const ManualRelationshipSelector = ({
               <Icon
                 type="close"
                 onClick={dispatchRemoveCol}
-                cursor
+                pointer
                 size={15}
                 ml="10px"
               />

@@ -418,7 +418,7 @@ class ApiRequest extends Component {
                   data-header-id={i}
                   aria-hidden="true"
                   onClick={onShowAdminSecretClicked}
-                  className={styles.showAdminSecret}
+                  pointer
                 />
               );
             }

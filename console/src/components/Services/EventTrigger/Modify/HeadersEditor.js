@@ -113,11 +113,10 @@ const HeadersEditor = props => {
               type="close"
               className={styles.removeHeader}
               ml="10px"
-              cursor
+              pointer
               onClick={() => {
                 dispatch(removeHeader(i));
               }}
-              size={i !== modifyTrigger.headers.length - 1 ? 18 : 14}
             />
           </div>
         );

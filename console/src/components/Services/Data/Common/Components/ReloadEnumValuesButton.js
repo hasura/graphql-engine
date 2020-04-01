@@ -4,7 +4,7 @@ import ReloadEnumMetadata from '../../../Settings/MetadataOptions/ReloadMetadata
 import { Icon, ToolTip } from '../../../../UIKit/atoms';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
+const ReloadEnumValuesButton = ({ isEnum, dispatch }) => {
   if (!isEnum) return null;
 
   const tooltipText =
@@ -14,7 +14,7 @@ const ReloadEnumValuesButton = ({ isEnum, dispatch, tooltipStyle }) => {
     <React.Fragment>
       <ReloadEnumMetadata buttonText="Reload enum values" dispatch={dispatch} />
       <ToolTip message={tooltipText}>
-        <Icon type="info" cursor />
+        <Icon type="info" pointer ml="sm" />
       </ToolTip>
     </React.Fragment>
   );

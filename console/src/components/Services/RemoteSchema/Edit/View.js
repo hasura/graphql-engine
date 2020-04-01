@@ -130,7 +130,7 @@ class ViewStitchedSchema extends React.Component {
               remoteSchemaName={remoteSchemaName}
             />
           </span>
-          <ToolTip message={refreshText} />
+          <ToolTip message={refreshText} ml="xs" />
         </div>
       ) : null;
 
