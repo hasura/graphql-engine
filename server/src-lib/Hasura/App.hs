@@ -287,7 +287,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   where
     -- | prepareEvents is a function to unlock all the events that are
-    -- locked and unprocessed. Locked and unprocessed events can occur in 2 ways
+    -- locked and unprocessed, which is called while hasura is started.
+    -- Locked and unprocessed events can occur in 2 ways
     -- 1)
     -- hasura's shutdown was not graceful in which all the fetched
     -- events will remain locked and unprocessed(TODO: clean shutdown)
