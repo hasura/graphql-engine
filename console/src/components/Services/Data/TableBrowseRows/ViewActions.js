@@ -575,7 +575,7 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
         ),
       };
     case V_REQUEST_SUCCESS:
-      return { ...viewState, rows: action.data, count: action.count };
+      return { ...viewState, rows: action.data };
     case V_REQUEST_PROGRESS:
       return { ...viewState, isProgressing: action.data };
     case V_COUNT_REQUEST_SUCCESS:
