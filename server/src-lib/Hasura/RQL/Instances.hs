@@ -9,6 +9,8 @@ import qualified Data.HashSet                  as S
 import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Language.Haskell.TH.Syntax    as TH
+import qualified Text.Regex.TDFA               as TDFA
+import qualified Text.Regex.TDFA.Pattern       as TDFA
 
 import           Data.Functor.Product
 import           Data.GADT.Compare
@@ -52,6 +54,15 @@ instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
 
 instance TH.Lift a => TH.Lift (S.HashSet a) where
   lift s = [| S.fromList $(TH.lift $ S.toList s) |]
+
+deriving instance TH.Lift TDFA.CompOption
+deriving instance TH.Lift TDFA.DoPa
+deriving instance TH.Lift TDFA.ExecOption
+deriving instance TH.Lift TDFA.Pattern
+deriving instance TH.Lift TDFA.PatternSet
+deriving instance TH.Lift TDFA.PatternSetCharacterClass
+deriving instance TH.Lift TDFA.PatternSetCollatingElement
+deriving instance TH.Lift TDFA.PatternSetEquivalenceClass
 
 instance (GEq f, GEq g) => GEq (Product f g) where
   Pair a1 a2 `geq` Pair b1 b2
