@@ -36,6 +36,6 @@ Postgres constructs.
   enums
   computed-fields
   custom-field-names
-  data-validation
+  data-validations
   Using an existing database <using-existing-database>
   Export GraphQL schema <export-graphql-schema>
