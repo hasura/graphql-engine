@@ -19,7 +19,7 @@ The best solution to implement validations depends on the complexity of the use 
 Using Postgres
 --------------
 
-This is ideal if you want the validations to be in Postgres itself.
+This is ideal if you want the validations to be part of your Postgres DDL.
 
 Simple validations via check constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -106,7 +106,7 @@ Using Hasura
 Declarative validations via permissions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If the validations can be expressed **declaratively**, then we can use the permission rules in Hasura Auth.
+If the validations can be expressed **declaratively**, then we can use the permission rules in Hasura Auth to perform the validations.
 
 **Example 1:** Validate that an inventory can only have ``stock >= 0`` for any item.
 
