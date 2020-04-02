@@ -1,17 +1,12 @@
 /* eslint-disable */
 
 import React, { Component } from 'react';
-import ReactTable, { ReactTableDefaults } from 'react-table';
+import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 
 import FoldableHoc from './foldableTable';
 import Spinner from '../Spinner/Spinner';
 import styles from '../Common.scss';
-
-Object.assign(ReactTableDefaults, {
-  defaultPageSize: 10,
-  minRows: 3,
-});
 
 class DragFoldTable extends Component {
   constructor(props) {

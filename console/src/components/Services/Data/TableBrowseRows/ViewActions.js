@@ -9,7 +9,13 @@ import {
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import { getBulkDeleteQuery } from '../../../Common/utils/v1QueryUtils';
+import {
+  getBulkDeleteQuery,
+  generateSelectQuery,
+  getFetchManualTriggersQuery,
+  getDeleteQuery,
+} from '../../../Common/utils/v1QueryUtils';
+import { generateTableDef } from '../../../Common/utils/pgUtils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -60,16 +66,16 @@ const vMakeRequest = () => {
     const originalTable = getState().tables.currentTable;
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
-    const requestBody = {
-      type: 'select',
-      args: {
-        ...state.tables.view.query,
-        table: {
-          name: state.tables.currentTable,
-          schema: getState().tables.currentSchema,
-        },
-      },
-    };
+    console.log({ query: state.tables.view.query });
+
+    const requestBody = generateSelectQuery(
+      'select',
+      generateTableDef(
+        state.tables.currentTable,
+        getState().tables.currentSchema
+      ),
+      state.tables.view.query
+    );
     const options = {
       method: 'POST',
       body: JSON.stringify(requestBody),
@@ -108,16 +114,14 @@ const vMakeCountRequest = () => {
     const originalTable = getState().tables.currentTable;
     dispatch({ type: V_COUNT_REQUEST_START });
 
-    const requestBody = {
-      type: 'count',
-      args: {
-        ...state.tables.view.query,
-        table: {
-          name: state.tables.currentTable,
-          schema: getState().tables.currentSchema,
-        },
-      },
-    };
+    const requestBody = generateSelectQuery(
+      'count',
+      generateTableDef(
+        state.tables.currentTable,
+        getState().tables.currentSchema
+      ),
+      state.tables.view.query
+    );
     const options = {
       method: 'POST',
       body: JSON.stringify(requestBody),
@@ -148,24 +152,7 @@ const vMakeCountRequest = () => {
 const fetchManualTriggers = tableName => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
-    const body = {
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: ['*'],
-        order_by: {
-          column: 'name',
-          type: 'asc',
-          nulls: 'last',
-        },
-        where: {
-          table_name: tableName,
-        },
-      },
-    };
+    const body = getFetchManualTriggersQuery(tableName);
 
     const options = {
       credentials: globalCookiePolicy,
@@ -210,16 +197,12 @@ const deleteItem = pkClause => {
     const state = getState();
 
     const url = Endpoints.query;
-    const reqBody = {
-      type: 'delete',
-      args: {
-        table: {
-          name: state.tables.currentTable,
-          schema: state.tables.currentSchema,
-        },
-        where: pkClause,
-      },
-    };
+    const reqBody = getDeleteQuery(
+      pkClause,
+      state.tables.currentTable,
+      state.tables.currentSchema
+    );
+
     const options = {
       method: 'POST',
       body: JSON.stringify(reqBody),
