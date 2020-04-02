@@ -19,11 +19,21 @@ The best solution to implement validations depends on the complexity of the use 
 Using Postgres
 --------------
 
-This is ideal if you want the validations to be part of the table definition at Postgres itself.
+This is ideal if you want the validations to be in Postgres itself.
 
-**Example 1:** Check that the ``rating`` for a user is between 1 and 10 only.
+Simple validations via check constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Let's say we have a table ``author`` with a integer column ``rating``.
+If the validation can be embedded in the table definition,
+we can use `Postgres check constraints <https://www.postgresql.org/docs/9.4/ddl-constraints.html>`__.
+
+**Example:** Check that the ``rating`` for an author is between 1 and 10 only.
+
+Let's say we have a table:
+
+.. code-block:: sql
+
+   author(id uuid, name text, rating integer)
 
 Now, we can head to the ``Modify`` tab in the table page and add a check constraint in the ``Check Constraints`` section
 (this is available in ``Create Table`` page as well) :
@@ -33,14 +43,26 @@ Now, we can head to the ``Modify`` tab in the table page and add a check constra
 
 If someone now tries to add an author with a rating of ``11``, the following error is thrown:
 
-``Check constraint violation. new row for relation "authors" violates check constraint "authors_rating_check"``.
+.. code-block:: text
+
+  Check constraint violation. new row for relation "authors" violates check constraint "authors_rating_check"
 
 Learn more about `Postgres check constraints <https://www.postgresql.org/docs/9.4/ddl-constraints.html>`__.
 
+Complex checks via triggers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Example 2:** Validate that an article does not contain bad words.
+If the validation is more complex and requires use of data from many tables or complex functions,
+then we can use Postgres triggers.
 
-Suppose we have 2 tables ``articles(article_id uuid, content text)`` and ``bad_words(word text)``:
+**Example:** Validate that an article does not contain bad words.
+
+Suppose we have 2 tables:
+
+.. code-block:: sql
+
+  articles(article_id uuid, content text)
+  bad_words(word text)
 
 We can create a `Postgres function <https://www.postgresql.org/docs/9.1/sql-createfunction.html>`__ that checks if an article is "clean". For this, we will use the ``similarity`` function (read more `here <https://www.postgresql.org/docs/9.6/pgtrgm.html>`__). In the ``Data -> SQL`` tab on the Hasura console, run the following SQL:
 
@@ -81,14 +103,18 @@ Now, if we try to insert an article which has lot of bad words, we would recieve
 Using Hasura
 ------------
 
-With permissions
-^^^^^^^^^^^^^^^^
+Declarative validations via permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the validations can be expressed **declaratively**, then we can use the permission rules in Hasura Auth.
 
 **Example 1:** Validate that an inventory can only have ``stock >= 0`` for any item.
 
-Suppose, we have a table ``inventory (item_id uuid, item_name text, stock integer)``
+Suppose, we have a table:
+
+.. code-block:: sql
+
+  inventory (item_id uuid, item_name text, stock integer)
 
 Now, we can create a role ``user`` on this table with the following rule:
 
@@ -103,10 +129,16 @@ If we try to insert an item with ``stock = -1``, we will get a ``permission-erro
 
 Suppose, we have 2 tables:
 
-1. ``author (id uuid, name text, is_active boolean)``
-2. ``articles(id uuid, author_id uuid, content text)``.
+.. code-block:: sql
 
-Also, suppose there is an object relationship ``articles.author`` defined as ``articles.id -> author.id``.
+  author (id uuid, name text, is_active boolean)
+  articles(id uuid, author_id uuid, content text)
+
+Also, suppose there is an object relationship ``articles.author`` defined as:
+
+.. code-block:: sql
+
+  articles.id -> author.id
 
 Now, we can create a role ``user`` on this table with the following rule:
 
@@ -119,8 +151,8 @@ Similar to previous example, if we try to insert an article for an author for wh
 
   Permissions are scoped to a role. So, if a validation check needs to be global then you will have to define it for all roles. We have few features in the roadmap which will simplify this in the future.
 
-With Actions
-^^^^^^^^^^^^
+Custom logic via Actions
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the validations are not declarative and/or require custom business logic, we recommend using :ref:`Hasura Actions <actions>`. 
 
