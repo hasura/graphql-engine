@@ -61,7 +61,7 @@ executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs rjs = do
   where
     rjMap = Map.fromList $ toList rjs
 
--- | Path to the remote join field in response JSON
+-- | Path to the remote join field in query response JSON from Postgres.
 newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
   deriving (Show, Eq, Semigroup, Monoid, Hashable)
 
@@ -231,7 +231,7 @@ data RemoteJoinField
   } deriving (Show, Eq)
 
 -- | Generate composite JSON ('CompositeValue') parameterised over 'RemoteJoinField'
--- from remote join map and response JSON from Postgres.
+-- from remote join map and query response JSON from Postgres.
 traverseQueryResponseJSON
   :: (MonadError QErr m)
   => RemoteJoinMap -> AO.Value -> m (CompositeValue RemoteJoinField)

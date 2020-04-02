@@ -18,7 +18,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
   const inconsistentObjectsTable = () => {
     return (
       <table
-        className={`${metaDataStyles.metadataStatusTable} ${metaDataStyles.wd750}`}
+        className={`${metaDataStyles.metadataStatusTable} ${
+          metaDataStyles.wd750
+        }`}
         id="t01"
       >
         <thead>
@@ -140,7 +142,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
         </div>
         <div className={styles.add}>{inconsistentObjectsTable()}</div>
         <div
-          className={`${metaDataStyles.wd50percent} ${metaDataStyles.add_mar_top}`}
+          className={`${metaDataStyles.wd50percent} ${
+            metaDataStyles.add_mar_top
+          }`}
         >
           To resolve these inconsistencies, you can do one of the following:
           <ul className={styles.add_mar_top_small}>
@@ -156,7 +160,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
           </ul>
         </div>
         <div
-          className={`${metaDataStyles.display_flex} ${metaDataStyles.add_mar_top_small}`}
+          className={`${metaDataStyles.display_flex} ${
+            metaDataStyles.add_mar_top_small
+          }`}
         >
           <Button
             color="red"
@@ -191,7 +197,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     return (
       <div className={`${styles.errorBanner} alert alert-danger`}>
         <i
-          className={`${styles.add_mar_right_small} ${styles.fontStyleNormal} fa fa-exclamation-circle`}
+          className={`${styles.add_mar_right_small} ${
+            styles.fontStyleNormal
+          } fa fa-exclamation-circle`}
           aria-hidden="true"
         />
         <strong>
@@ -199,7 +207,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
           inconsistent state
         </strong>
         <i
-          className={`${styles.align_right} ${styles.fontStyleNormal} ${styles.cursorPointer} fa fa-times`}
+          className={`${styles.align_right} ${styles.fontStyleNormal} ${
+            styles.cursorPointer
+          } fa fa-times`}
           aria-hidden="true"
           onClick={dismissErrorBanner}
         />
@@ -211,7 +221,9 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     <div className={styles.add_mar_bottom}>
       {banner()}
       <div
-        className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${metaDataStyles.metadata_wrapper} container-fluid`}
+        className={`${styles.clear_fix} ${styles.padd_left} ${
+          styles.padd_top
+        } ${metaDataStyles.metadata_wrapper} container-fluid`}
       >
         <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
           Hasura Metadata Status

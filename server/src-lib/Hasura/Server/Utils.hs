@@ -1,11 +1,13 @@
 {-# LANGUAGE TypeApplications #-}
 module Hasura.Server.Utils where
 
+import           Hasura.Prelude
+
 import           Control.Lens               ((^..))
 import           Data.Aeson
 import           Data.Char
 import           Data.List                  (find)
-import           Language.Haskell.TH.Syntax (Lift)
+import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
@@ -15,7 +17,6 @@ import qualified Data.CaseInsensitive       as CI
 import qualified Data.HashSet               as Set
 import qualified Data.List.NonEmpty         as NE
 import qualified Data.Text                  as T
-import qualified Data.Text.Encoding         as TE
 import qualified Data.Text.IO               as TI
 import qualified Data.UUID                  as UUID
 import qualified Data.UUID.V4               as UUID
@@ -24,9 +25,10 @@ import qualified Network.HTTP.Client        as HC
 import qualified Network.HTTP.Types         as HTTP
 import qualified Network.Wreq               as Wreq
 import qualified Text.Regex.TDFA            as TDFA
-import qualified Text.Regex.TDFA.ByteString as TDFA
+import qualified Text.Regex.TDFA.ReadRegex  as TDFA
+import qualified Text.Regex.TDFA.TDFA       as TDFA
 
-import           Hasura.Prelude
+import           Hasura.RQL.Instances       ()
 
 newtype RequestId
   = RequestId { unRequestId :: Text }
@@ -72,7 +74,7 @@ getRequestId headers =
     Just reqId -> return $ RequestId $ bsToTxt reqId
 
 -- Get an env var during compile time
-getValFromEnvOrScript :: String -> String -> TH.Q (TH.TExp String)
+getValFromEnvOrScript :: String -> String -> Q (TExp String)
 getValFromEnvOrScript n s = do
   maybeVal <- TH.runIO $ lookupEnv n
   case maybeVal of
@@ -80,7 +82,7 @@ getValFromEnvOrScript n s = do
     Nothing  -> runScript s
 
 -- Run a shell script during compile time
-runScript :: FilePath -> TH.Q (TH.TExp String)
+runScript :: FilePath -> Q (TExp String)
 runScript fp = do
   TH.addDependentFile fp
   fileContent <- TH.runIO $ TI.readFile fp
@@ -91,19 +93,17 @@ runScript fp = do
     ++ show exitCode ++ " and with error : " ++ stdErr
   [|| stdOut ||]
 
--- regex related
-matchRegex :: B.ByteString -> Bool -> T.Text -> Either String Bool
-matchRegex regex caseSensitive src =
-  fmap (`TDFA.match` TE.encodeUtf8 src) compiledRegexE
+-- find duplicates
+duplicates :: Ord a => [a] -> [a]
+duplicates = mapMaybe greaterThanOne . group . sort
   where
-    compOpt = TDFA.defaultCompOpt
-      { TDFA.caseSensitive = caseSensitive
-      , TDFA.multiline = True
-      , TDFA.lastStarGreedy = True
-      }
-    execOption = TDFA.defaultExecOpt {TDFA.captureGroups = False}
-    compiledRegexE = TDFA.compile compOpt execOption regex
+    greaterThanOne l = bool Nothing (Just $ head l) $ length l > 1
 
+-- | Quotes a regex using Template Haskell so syntax errors can be reported at compile-time.
+quoteRegex :: TDFA.CompOption -> TDFA.ExecOption -> String -> Q (TExp TDFA.Regex)
+quoteRegex compOption execOption regexText = do
+  regex <- TDFA.parseRegex regexText `onLeft` (fail . show)
+  [|| TDFA.patternToRegex regex compOption execOption ||]
 
 fmapL :: (a -> a') -> Either a b -> Either a' b
 fmapL fn (Left e) = Left (fn e)
