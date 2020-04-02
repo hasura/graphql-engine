@@ -66,7 +66,9 @@ class EventTrigger extends Component {
 
     return (
       <div
-        className={`${styles.padd_left_remove} container-fluid ${styles.padd_top}`}
+        className={`${styles.padd_left_remove} container-fluid ${
+          styles.padd_top
+        }`}
       >
         <div className={styles.padd_left}>
           <Helmet title="Event Triggers | Hasura" />
