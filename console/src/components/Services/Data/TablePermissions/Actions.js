@@ -435,18 +435,18 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
     }
 
     permApplyToList.map(applyTo => {
-      const applyToTableSchema = findTable(
+      const currTableSchema = findTable(
         allSchemas,
         generateTableDef(applyTo.table, currentSchema)
       );
 
-      const applyToCurrentPermissions = applyToTableSchema.permissions.find(
+      const currentPermPermissions = currTableSchema.permissions.find(
         el => el.role_name === applyTo.role
       );
 
       if (
-        applyToCurrentPermissions &&
-        applyToCurrentPermissions.permissions[applyTo.action]
+        currentPermPermissions &&
+        currentPermPermissions.permissions[applyTo.action]
       ) {
         // existing permission is there. so drop and recreate for down migrations
         const deleteQuery = {
@@ -462,7 +462,7 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
           args: {
             table: { name: applyTo.table, schema: currentSchema },
             role: applyTo.role,
-            permission: applyToCurrentPermissions.permissions[applyTo.action],
+            permission: currentPermPermissions.permissions[applyTo.action],
           },
         };
 
