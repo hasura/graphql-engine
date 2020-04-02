@@ -283,7 +283,7 @@ export const resetMetadataQuery = {
 export const generateSelectQuery = (
   type,
   tableDef,
-  { where, limit, offset, orderBy, columns }
+  { where, limit, offset, order_by, columns }
 ) => ({
   type,
   args: {
@@ -291,7 +291,7 @@ export const generateSelectQuery = (
     where,
     limit,
     offset,
-    orderBy,
+    order_by,
     table: tableDef,
   },
 });
