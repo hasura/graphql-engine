@@ -407,7 +407,7 @@ const permRemoveMultipleRoles = tableSchema => {
   };
 };
 
-const applySamePermissionsBulk = (tableSchema, permissionsModified) => {
+const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
   return (dispatch, getState) => {
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
@@ -424,7 +424,7 @@ const applySamePermissionsBulk = (tableSchema, permissionsModified) => {
       applyTo => applyTo.table && applyTo.action && applyTo.role
     );
 
-    if (permissionsModified) {
+    if (arePermissionsModified) {
       const mainApplyTo = {
         table: table,
         action: currentQueryType,
