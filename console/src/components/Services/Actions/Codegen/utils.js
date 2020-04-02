@@ -14,7 +14,7 @@ const {
   isScalarType,
 } = require('graphql');
 const { camelize } = require('inflection');
-import { getPersistedDerivedMutation } from '../lsUtils';
+import { getPersistedDerivedAction } from '../lsUtils';
 
 export const getCodegenFilePath = framework => {
   return `${globals.assetsPath}/common/codegen/${framework}/actions-codegen.js`;
