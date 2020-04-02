@@ -99,8 +99,17 @@ func (c *Config) Install(pluginName string, mainfestFile string, version *semver
 			return errors.Wrapf(err, "failed to load plugin %q from the index", pluginName)
 		}
 
-		// get the latest version
+		// Load the installed manifest
+		pluginReceipt, err := c.LoadManifest(c.Paths.PluginInstallReceiptPath(pluginName))
+		if err != nil && !os.IsNotExist(err) {
+			return errors.Wrap(err, "failed to look up plugin receipt")
+		}
+
 		if version != nil {
+			if pluginReceipt.Version == version.Original() {
+				return ErrIsAlreadyInstalled
+			}
+			// check if version is available
 			ver := ps.Index.Search(version)
 			if ver != nil {
 				plugin = ps.Versions[ver]
@@ -108,16 +117,12 @@ func (c *Config) Install(pluginName string, mainfestFile string, version *semver
 				return ErrVersionNotAvailable
 			}
 		} else {
+			if err == nil {
+				return ErrIsAlreadyInstalled
+			}
+			// get the latest version
 			latestVersion := ps.Index[len(ps.Index)-1]
 			plugin = ps.Versions[latestVersion]
-		}
-
-		// Load the installed manifest
-		_, err = c.LoadManifest(c.Paths.PluginInstallReceiptPath(plugin.Name))
-		if err == nil {
-			return ErrIsAlreadyInstalled
-		} else if !os.IsNotExist(err) {
-			return errors.Wrap(err, "failed to look up plugin receipt")
 		}
 	} else {
 		plugin, err = c.ReadPluginFromFile(mainfestFile)
@@ -173,23 +178,27 @@ func (c *Config) installPlugin(plugin Plugin, platform Platform) error {
 	installDir := c.Paths.PluginVersionInstallPath(plugin.Name, plugin.Version)
 	binDir := c.Paths.BinPath()
 
-	// Download and extract
-	if err := os.MkdirAll(downloadStagingDir, 0755); err != nil {
-		return errors.Wrapf(err, "could not create staging dir %q", downloadStagingDir)
-	}
-	defer func() {
-		c.Logger.Debugf("Deleting the download staging directory %s", downloadStagingDir)
-		if err := os.RemoveAll(downloadStagingDir); err != nil {
-			c.Logger.Debugf("failed to clean up download staging directory: %s", err)
+	// check if install dir already exists
+	_, err := os.Stat(installDir)
+	if err != nil {
+		// Download and extract
+		if err := os.MkdirAll(downloadStagingDir, 0755); err != nil {
+			return errors.Wrapf(err, "could not create staging dir %q", downloadStagingDir)
 		}
-	}()
+		defer func() {
+			c.Logger.Debugf("Deleting the download staging directory %s", downloadStagingDir)
+			if err := os.RemoveAll(downloadStagingDir); err != nil {
+				c.Logger.Debugf("failed to clean up download staging directory: %s", err)
+			}
+		}()
 
-	if err := downloadAndExtract(downloadStagingDir, platform.URI, platform.Sha256); err != nil {
-		return errors.Wrap(err, "failed to unpack into staging dir")
-	}
+		if err := downloadAndExtract(downloadStagingDir, platform.URI, platform.Sha256); err != nil {
+			return errors.Wrap(err, "failed to unpack into staging dir")
+		}
 
-	if err := moveToInstallDir(downloadStagingDir, installDir, platform.Files); err != nil {
-		return errors.Wrap(err, "failed while moving files to the installation directory")
+		if err := moveToInstallDir(downloadStagingDir, installDir, platform.Files); err != nil {
+			return errors.Wrap(err, "failed while moving files to the installation directory")
+		}
 	}
 
 	subPathAbs, err := filepath.Abs(installDir)
