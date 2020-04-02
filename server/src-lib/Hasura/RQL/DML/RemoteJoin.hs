@@ -21,6 +21,7 @@ import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.DML.Select.Types
 import           Hasura.RQL.Types
 import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.SQL.Types                       ((<<>))
 
 import qualified Data.Aeson                             as A
 import qualified Data.Aeson.Ordered                     as AO
@@ -36,6 +37,7 @@ import qualified Language.GraphQL.Draft.Syntax          as G
 import qualified Network.HTTP.Client                    as HTTP
 import qualified Network.HTTP.Types                     as N
 
+-- | Executes given query and fetch response JSON from Postgres. Substitutes remote relationship fields.
 executeQueryWithRemoteJoins
   :: (HasVersion, MonadTx m, MonadIO m)
   => HTTP.Manager
@@ -46,19 +48,20 @@ executeQueryWithRemoteJoins
   -> RemoteJoins
   -> m EncJSON
 executeQueryWithRemoteJoins manager reqHdrs userInfo q prepArgs rjs = do
-  -- Step 1: Perform the query on Database and fetch the response
+  -- Step 1: Perform the query on database and fetch the response
   pgRes <- runIdentity . Q.getRow <$> liftTx (Q.rawQE dmlTxErrorHandler q prepArgs True)
   jsonRes <- either (throw500 . T.pack) pure $ AO.eitherDecode pgRes
-  -- Step 2: Traverse through the JSON obtained in above step and generate composite JSON value with remote fields
+  -- Step 2: Traverse through the JSON obtained in above step and generate composite JSON value with remote joins
   compositeJson <- traverseQueryResponseJSON rjMap jsonRes
   let remoteJoins = collectRemoteFields compositeJson
-  -- Step 3: Make queries to remote server and fetch remote fields response
+  -- Step 3: Make queries to remote server and fetch graphql response
   remoteServerResp <- fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins
-  -- Step 4: Replace remote fields responses in composite json.
+  -- Step 4: Replace remote fields in composite json with remote join values
   AO.toEncJSON <$> replaceRemoteFields compositeJson remoteServerResp
   where
     rjMap = Map.fromList $ toList rjs
 
+-- | Path to the remote join field in response JSON
 newtype FieldPath = FieldPath {unFieldPath :: [FieldName]}
   deriving (Show, Eq, Semigroup, Monoid, Hashable)
 
@@ -85,13 +88,14 @@ pathToAlias path counter =
   G.Alias $ G.Name $ T.intercalate "_" (map getFieldNameTxt $ unFieldPath path)
   <> "__" <> (T.pack . show . unCounter) counter
 
+-- | A 'RemoteJoin' represents the context of remote relationship to be extracted from 'AnnFldG's.
 data RemoteJoin
   = RemoteJoin
   { _rjName          :: !FieldName -- ^ The remote join field name.
   , _rjArgs          :: ![G.Argument] -- ^ User-provided arguments.
-  , _rjSelSet        :: ![G.Field] -- ^ Selection set of remote field.
+  , _rjSelSet        :: ![G.Field] -- ^ User-provided selection set of remote field.
   , _rjHasuraFields  :: !(HashSet FieldName) -- ^ Table fields.
-  , _rjFieldCall     :: !(NonEmpty FieldCall) -- ^ Remote fields.
+  , _rjFieldCall     :: !(NonEmpty FieldCall) -- ^ Remote server fields.
   , _rjRemoteSchema  :: !RemoteSchemaInfo -- ^ The remote schema server info.
   , _rjPhantomFields :: ![PGColumnInfo]
     -- ^ Hasura fields which are not in the selection set, but are required as
@@ -167,8 +171,8 @@ transformAnnFields path fields = do
     (fieldName,) <$> case field of
       FCol c -> pure $ FCol c
       FObj annRel -> FObj <$> transformAnnRel fieldPath annRel
-      FArr (ASSimple annRel) -> (FArr . ASSimple) <$> transformAnnRel fieldPath annRel
-      FArr (ASAgg aggRel) -> (FArr . ASAgg) <$> transformAnnAggRel fieldPath aggRel
+      FArr (ASSimple annRel) -> FArr . ASSimple <$> transformAnnRel fieldPath annRel
+      FArr (ASAgg aggRel) -> FArr . ASAgg <$> transformAnnAggRel fieldPath aggRel
       FComputedField computedField ->
         FComputedField <$> case computedField of
           CFSScalar _         -> pure computedField
@@ -184,16 +188,16 @@ transformAnnFields path fields = do
       modify (Map.insert path nonEmptyRemoteJoins)
       pure $ transformedFields <> phantomColumns
     where
-      getFields f = mapMaybe (sequence . (second (^? f)))
+      getFields f = mapMaybe (sequence . second (^? f))
       transformAnnRel fieldPath annRel = do
         let annSel = aarAnnSel annRel
         transformedSel <- transformSelect fieldPath annSel
-        pure $ annRel{aarAnnSel = transformedSel}
+        pure annRel{aarAnnSel = transformedSel}
 
       transformAnnAggRel fieldPath annRel = do
         let annSel = aarAnnSel annRel
         transformedSel <- transformAggSelect fieldPath annSel
-        pure $ annRel{aarAnnSel = transformedSel}
+        pure annRel{aarAnnSel = transformedSel}
 
 type CompositeObject a = OMap.InsOrdHashMap Text (CompositeValue a)
 
@@ -215,14 +219,19 @@ compositeValueToJSON = \case
   CVObjectArray vals -> AO.array $ map compositeValueToJSON vals
   CVFromRemote v -> v
 
+-- | A 'RemoteJoinField' carries the minimal GraphQL AST of a remote relationship field.
+-- All such 'RemoteJoinField's of a pariticular remote schema are batched together
+-- and made GraphQL request to remote server to fetch remote join values.
 data RemoteJoinField
   = RemoteJoinField
-  { _rjfRemoteSchema :: !RemoteSchemaInfo
-  , _rjfAlias        :: !G.Alias
-  , _rjfField        :: !G.Field
-  , _rjfFieldCall    :: ![G.Name]
+  { _rjfRemoteSchema :: !RemoteSchemaInfo -- ^ The remote schema server info.
+  , _rjfAlias        :: !G.Alias -- ^ To level alias of the field
+  , _rjfField        :: !G.Field -- ^ The field AST
+  , _rjfFieldCall    :: ![G.Name] -- ^ Path to remote join value
   } deriving (Show, Eq)
 
+-- | Generate composite JSON ('CompositeValue') parameterised over 'RemoteJoinField'
+-- from remote join map and response JSON from Postgres.
 traverseQueryResponseJSON
   :: (MonadError QErr m)
   => RemoteJoinMap -> AO.Value -> m (CompositeValue RemoteJoinField)
@@ -269,10 +278,11 @@ traverseQueryResponseJSON rjm =
                   if | fieldName `elem` phantomColumnFields -> pure Nothing
                      | otherwise ->
                          case find ((== fieldName) . _rjName) remoteJoins of
-                           Just rj -> (Just . CVFromRemote) <$> mkRemoteSchemaField fields rj
+                           Just rj -> Just . CVFromRemote <$> mkRemoteSchemaField fields rj
                            Nothing -> Just <$> traverseValue fieldPath value
           pure $ CVObject $ OMap.fromList processedFields
 
+-- | Fetch remote join field value from remote servers by batching respective 'RemoteJoinField's
 fetchRemoteJoinFields
   :: ( HasVersion
      , MonadError QErr m
@@ -295,20 +305,20 @@ fetchRemoteJoinFields manager reqHdrs userInfo remoteJoins = do
         respObj <- either throw500 pure $ AO.asObject r
         let errors = AO.lookup "errors" respObj
 
-        if | errors == Nothing || errors == Just AO.Null ->
+        if | isNothing errors || errors == Just AO.Null ->
                case AO.lookup "data" respObj of
-                 Nothing -> throw400 Unexpected $ "\"data\" field not found in remote response"
+                 Nothing -> throw400 Unexpected "\"data\" field not found in remote response"
                  Just v  -> either throw500 pure $ AO.asObject v
 
            | otherwise ->
              throwError (err400 Unexpected "Errors from remote server")
              {qeInternal = Just $ A.object ["errors" A..= (AO.fromOrdered <$> errors)]}
 
-
   either (throw500 . T.pack) pure $ foldM AO.safeUnion AO.empty results
   where
     remoteSchemaBatch = Map.groupOnNE _rjfRemoteSchema remoteJoins
 
+-- | Replace 'RemoteJoinField' in composite JSON with it's json value from remote server response.
 replaceRemoteFields
   :: MonadError QErr m
   => CompositeValue RemoteJoinField
@@ -322,6 +332,8 @@ replaceRemoteFields compositeJson remoteServerResponse =
           fieldCall = _rjfFieldCall rj
       extractAtPath (alias:fieldCall) $ AO.Object remoteServerResponse
 
+    -- | 'FieldCall' is path to remote relationship value in remote server response.
+    -- 'extractAtPath' traverse through the path and extracts the json value
     extractAtPath path v =
       case NE.nonEmpty path of
         Nothing          -> pure v
@@ -346,7 +358,7 @@ fieldCallsToField
   -> NonEmpty FieldCall
   -> m G.Field
 fieldCallsToField rrArguments variables finalSelSet topAlias =
-  fmap (\f -> f{G._fAlias = (Just topAlias)}) . nest
+  fmap (\f -> f{G._fAlias = Just topAlias}) . nest
   where
     -- almost: `foldr nest finalSelSet`
     nest ((FieldCall name remoteArgs) :| rest) = do
@@ -354,7 +366,7 @@ fieldCallsToField rrArguments variables finalSelSet topAlias =
       (args, selSet) <- case NE.nonEmpty rest of
             Just f -> do
               s <- nest f
-              pure $ (templatedArguments, pure s)
+              pure (templatedArguments, pure s)
             Nothing ->
               let argsToMap = Map.fromList . map (G._aName &&& G._aValue)
                   arguments = map (uncurry G.Argument) $ Map.toList $
@@ -387,10 +399,10 @@ fieldsToRequest opType gfields =
          GQLExecDoc
            [ G.ExecutableDefinitionOperation
                (G.OperationDefinitionTyped
-                 (emptyOperationDefinition {
-                   G._todSelectionSet = (map G.SelectionField gfields)
-                   } )
+                 ( emptyOperationDefinition
+                     {G._todSelectionSet = map G.SelectionField gfields}
                  )
+               )
            ]
      , _grVariables = Nothing -- TODO: Put variables in here?
      }
@@ -411,26 +423,21 @@ createArguments
   -> m [G.Argument]
 createArguments variables (RemoteArguments arguments) =
   either
-    (throw400 Unexpected . T.pack . show)
+    (throw400 Unexpected . \errors -> "Found errors: " <> T.intercalate ", " errors)
     (pure . map (\(G.ObjectFieldG key val) -> G.Argument key val))
     (toEither (substituteVariables variables arguments))
-
--- | An error substituting variables into the argument list.
-data SubstituteError
-  = ValueNotProvided !G.Variable
-  deriving (Show, Eq)
 
 -- | Substitute values in the argument list.
 substituteVariables
   :: HashMap G.Variable G.Value -- ^ Values to use.
   -> [G.ObjectFieldG G.Value] -- ^ A template.
-  -> Validation [SubstituteError] [G.ObjectFieldG G.Value]
+  -> Validation [Text] [G.ObjectFieldG G.Value]
 substituteVariables values = traverse (traverse go)
   where
     go v = case v of
       G.VVariable variable ->
         case Map.lookup variable values of
-          Nothing    -> Failure [ValueNotProvided variable]
+          Nothing    -> Failure ["Value for variable " <> G.unVariable variable <<> " not provided"]
           Just value -> pure value
       G.VList (G.ListValueG listValue) ->
         fmap (G.VList . G.ListValueG) (traverse go listValue)
