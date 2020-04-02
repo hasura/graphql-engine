@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver"
+
 	"gopkg.in/yaml.v2"
 
 	"github.com/briandowns/spinner"
@@ -533,4 +535,28 @@ func (ec *ExecutionContext) setVersion() {
 	if ec.Version == nil {
 		ec.Version = version.New()
 	}
+}
+
+// InstallPlugin installs a plugin depending on forceCLIVersion.
+// If forceCLIVersion is set, it uses ec.Version.ServerSemver version for the plugin to be installed.
+// Else, it installs the latest version of the plugin
+func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) error {
+	var version *semver.Version
+	if forceCLIVersion {
+		err := ec.PluginsConfig.Repo.EnsureUpdated()
+		if err != nil {
+			ec.Logger.Debugf("cannot update plugin index %v", err)
+		}
+		version = ec.Version.CLISemver
+	}
+	err := ec.PluginsConfig.Install(name, "", version)
+	if err != nil && err != plugins.ErrIsAlreadyInstalled {
+		msg := fmt.Sprintf(`unable to install %s plugin. execute the following commands to continue:
+
+  hasura plugins install %s
+`, name, name)
+		ec.Logger.Info(msg)
+		return errors.Wrapf(err, "cannot install plugin %s", name)
+	}
+	return nil
 }

@@ -33,6 +33,7 @@ type ActionConfig struct {
 	serverFeatureFlags *version.ServerFeatureFlags
 	pluginsCfg         *plugins.Config
 	cliExtensionConfig *cliextension.Config
+	pluginInstallFunc  func(string, bool) error
 
 	logger *logrus.Logger
 }
@@ -45,13 +46,14 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 		logger:             ec.Logger,
 		pluginsCfg:         ec.PluginsConfig,
 		cliExtensionConfig: cliextension.NewCLIExtensionConfig(ec.PluginsConfig.Paths.BinPath(), ec.Logger),
+		pluginInstallFunc:  ec.InstallPlugin,
 	}
 	return cfg
 }
 
 func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFrom string) error {
 	// Ensure CLI Extesnion
-	err := a.ensureCLIExtension()
+	err := a.pluginInstallFunc(pluginName, true)
 	if err != nil {
 		return errors.Wrap(err, "error in install cli-extension plugin")
 	}
@@ -283,7 +285,7 @@ input SampleInput {
 }
 
 func (a *ActionConfig) Codegen(name string, derivePld types.DerivePayload) error {
-	err := a.ensureCLIExtension()
+	err := a.pluginInstallFunc(pluginName, true)
 	if err != nil {
 		return errors.Wrap(err, "error in install cli-extension plugin")
 	}
@@ -350,7 +352,7 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 		}
 		return nil
 	}
-	err := a.ensureCLIExtension()
+	err := a.pluginInstallFunc(pluginName, true)
 	if err != nil {
 		return errors.Wrap(err, "error in install cli-extension plugin")
 	}
@@ -471,7 +473,7 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
 		return make(map[string][]byte), nil
 	}
-	err := a.ensureCLIExtension()
+	err := a.pluginInstallFunc(pluginName, true)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in install cli-extension plugin")
 	}
@@ -518,19 +520,6 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 
 func (a *ActionConfig) Name() string {
 	return "actions"
-}
-
-func (a *ActionConfig) ensureCLIExtension() error {
-	err := a.pluginsCfg.Install(pluginName, "", nil)
-	if err != nil && err != plugins.ErrIsAlreadyInstalled {
-		msg := fmt.Sprintf(`unable to install cli-ext plugin. execute the following commands to continue:
-
-  hasura plugins install %s
-`, pluginName)
-		a.logger.Info(msg)
-		return errors.Wrap(err, "cannot install cli-ext plugin")
-	}
-	return nil
 }
 
 func (a *ActionConfig) GetActionsFileContent() (content types.Common, err error) {
