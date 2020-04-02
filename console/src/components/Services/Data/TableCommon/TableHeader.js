@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import { changeTableName } from '../TableModify/ModifyActions';
+import { capitalize } from '../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
@@ -30,8 +31,6 @@ const TableHeader = ({
   dispatch,
 }) => {
   const styles = require('../../../Common/TableCommon/Table.scss');
-
-  const capitalisedTabName = tabName[0].toUpperCase() + tabName.slice(1);
 
   const tableName = getTableName(table);
   const tableSchema = getTableSchema(table);
@@ -85,7 +84,7 @@ const TableHeader = ({
   return (
     <div>
       <Helmet
-        title={capitalisedTabName + ' - ' + tableName + ' - Data | Hasura'}
+        title={capitalize(tabName) + ' - ' + tableName + ' - Data | Hasura'}
       />
       <div className={styles.subHeader}>
         <BreadCrumb breadCrumbs={getBreadCrumbs()} />

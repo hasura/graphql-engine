@@ -34,6 +34,7 @@ import {
   getDropConstraintSql,
   getDropPkSql,
   getCreatePkSql,
+  capitalize,
 } from '../../../Common/utils/sqlUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
@@ -586,14 +587,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}"
           foreign key (${Object.keys(oldConstraint.column_mapping)
-            .map(lc => `"${lc}"`)
-            .join(', ')})
+    .map(lc => `"${lc}"`)
+    .join(', ')})
           references "${oldConstraint.ref_table_table_schema}"."${
-        oldConstraint.ref_table
-      }"
+  oldConstraint.ref_table
+}"
           (${Object.values(oldConstraint.column_mapping)
-            .map(rc => `"${rc}"`)
-            .join(', ')})
+    .map(rc => `"${rc}"`)
+    .join(', ')})
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -715,11 +716,11 @@ const setUniqueKeys = keys => ({
   keys,
 });
 
-const changeTableName = (oldName, newName, isTable, objectType) => {
+const changeTableName = (oldName, newName, isTable, tableType) => {
   return (dispatch, getState) => {
     dispatch({ type: SAVE_NEW_TABLE_NAME });
 
-    const property = objectType.toLowerCase();
+    const property = tableType.toLowerCase();
     if (oldName === newName) {
       return dispatch(
         showErrorNotification(
@@ -745,7 +746,7 @@ const changeTableName = (oldName, newName, isTable, objectType) => {
       TABLE: 'table',
       VIEW: 'view',
       'MATERIALIZED VIEW': 'materialized_view',
-    }[objectType];
+    }[tableType];
     const currentSchema = getState().tables.currentSchema;
     const upSql = `alter ${property} "${currentSchema}"."${oldName}" rename to "${newName}";`;
     const downSql = `alter ${property} "${currentSchema}"."${newName}" rename to "${oldName}";`;
@@ -982,17 +983,7 @@ const deleteViewSql = (viewName, viewType) => {
   return (dispatch, getState) => {
     const currentSchema = getState().tables.currentSchema;
     const property = viewType.toLowerCase();
-    const capitalizedProperty = property[0].toUpperCase() + property.slice(1);
-    const sqlDropView =
-      'DROP ' +
-      viewType +
-      ' "' +
-      currentSchema +
-      '"' +
-      '.' +
-      '"' +
-      viewName +
-      '"';
+    const sqlDropView = `DROP ${viewType} "${currentSchema}"."${viewName}"`;
     const sqlUpQueries = [getRunSqlQuery(sqlDropView)];
     // const sqlCreateView = ''; //pending
     // const sqlDownQueries = [
@@ -1006,7 +997,7 @@ const deleteViewSql = (viewName, viewType) => {
     const migrationName = 'drop_view_' + currentSchema + '_' + viewName;
 
     const requestMsg = `Deleting ${property}...`;
-    const successMsg = `${capitalizedProperty} deleted`;
+    const successMsg = `${capitalize(property)} deleted`;
     const errorMsg = `Deleting ${property} failed`;
 
     const customOnSuccess = () => {

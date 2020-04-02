@@ -321,8 +321,7 @@ ModifyView.propTypes = {
 };
 
 const findViewType = (currentSchema, viewName, allItems) => {
-  for (let index = 0; index < allItems.length; index++) {
-    const item = allItems[index];
+  for (const item of allItems) {
     if (item.table_schema === currentSchema && item.table_name === viewName) {
       return item.table_type;
     }

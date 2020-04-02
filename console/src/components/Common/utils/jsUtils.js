@@ -78,6 +78,10 @@ export function isJsonString(str) {
   return true;
 }
 
+export function capitalize(str) {
+  return str[0].toUpperCase() + str.slice(1);
+}
+
 export function getAllJsonPaths(json, leafKeys = [], prefix = '') {
   const _paths = [];
 
