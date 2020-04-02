@@ -10,6 +10,10 @@
 
 ## `v1.2.0-beta.3`
 
+### console: support for Postgres [materialized views](https://www.postgresql.org/docs/current/rules-materializedviews.html)
+
+Postgres materialized views are views that are persisted in a table-like form. They are now supported in the Hasura Console, in the same way as views. They will appear on the 'Schema' page, under the 'Data' tab, in the 'Untracked tables or views' section.
+
 ### console: manage Postgres check constraints
 
 Postgres Check constraints allows you to specify that the value in a certain column must satisfy a Boolean (truth-value) expression. They can be used to put in simple input validations for mutations and with this release, these constraints can now be added while creating a table or later from Modify tab on the console.
