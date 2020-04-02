@@ -5,7 +5,6 @@ import 'brace/mode/json';
 import Tabs from 'react-bootstrap/lib/Tabs';
 import Tab from 'react-bootstrap/lib/Tab';
 import 'react-table/react-table.css';
-import { deleteItem, vExpandRow, vCollapseRow } from './ViewActions'; // eslint-disable-line no-unused-vars
 import FilterQuery from './FilterQuery';
 import {
   setOrderCol,
@@ -224,6 +223,11 @@ const ViewRows = ({
         accessor: column,
       });
     });
+
+    console.log('=============');
+    console.log(newCurRows);
+    console.log('=============');
+
     return (
       <ReactTable
         className="-highlight"

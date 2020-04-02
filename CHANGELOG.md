@@ -104,3 +104,24 @@ Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/ma
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
+- Check expression in update permissions (close #384) (rfc #3750) (#3804) 
+
+- console: add multi select in browse rows to allow bulk delete (close #1739) (#3735)
+
+  Adds a checkbox to each row on Browse Rows view that allows selecting one or more rows from the table and bulk delete them.
+
+- console: allow setting check constraints during table create (#3881)
+
+  Adds a component that allows adding check constraints while creating a new table in the same way as it can be done on the `Modify` view.
+
+- console: add dropdown for enum fields in insert/edit rows page (close #3748) (#3810)
+
+  If a table has a field referencing an enum table via a foreign key, then there will be a select dropdown with all possible enum values for that field on `Insert Row` and `Edit Row` views.
+
+- console: generate unique exported metadata filenames (close #1772) (#4106)
+
+  Exporting metadata from the console will now generate metadata files of the form `hasura_metadata_<timestamp>.json`.
+
+- cli(migrations-docker): add support for v2 config (close #3969)
+
+  A new CLI migrations image is introduced to account for the new CLI workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
