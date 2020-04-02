@@ -250,9 +250,9 @@ or static data instead.
 
 .. _admin-only-insert-permissions:
 
-Admin Only Inserts
+Admin only inserts
 ^^^^^^^^^^^^^^^^^^
 
-If the ``insert`` permission is marked as ``admin_only: true`` then the mutation is accessbile to
-given role (``x-hasura-role`` header) only if admin secret (``x-hasura-admin-secret`` header) is sent in the request.
-If the admin secret is not configured then the mutation is open for the given role.
+If the ``insert`` permission is marked as ``admin_only: true``, the mutation is accessible to the
+given role (``x-hasura-role`` header) only if the admin secret (``x-hasura-admin-secret`` header) is sent in the request.
+If the admin secret is not configured, the mutation is open for the given role.
