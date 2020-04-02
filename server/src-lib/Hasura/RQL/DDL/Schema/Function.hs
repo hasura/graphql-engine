@@ -157,9 +157,12 @@ mkFunctionInfo qf systemDefined config rawFuncInfo =
         let argsText = T.intercalate "," $ map getFuncArgNameTxt args
         in "the function arguments " <> argsText <> " are not in compliance with GraphQL spec"
 
-saveFunctionToCatalog :: QualifiedFunction -> FunctionConfig -> SystemDefined -> Q.TxE QErr ()
-saveFunctionToCatalog (QualifiedObject sn fn) config systemDefined =
-  Q.unitQE defaultTxErrorHandler [Q.sql|
+saveFunctionToCatalog
+  :: (MonadTx m, HasSystemDefined m)
+  => QualifiedFunction -> FunctionConfig -> m ()
+saveFunctionToCatalog (QualifiedObject sn fn) config = do
+  systemDefined <- askSystemDefined
+  liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
          INSERT INTO "hdb_catalog"."hdb_function"
            (function_schema, function_name, configuration, is_system_defined)
          VALUES ($1, $2, $3, $4)
@@ -205,8 +208,7 @@ trackFunctionP1 qf = do
 trackFunctionP2 :: (MonadTx m, CacheRWM m, HasSystemDefined m)
                 => QualifiedFunction -> FunctionConfig -> m EncJSON
 trackFunctionP2 qf config = do
-  systemDefined <- askSystemDefined
-  liftTx $ saveFunctionToCatalog qf config systemDefined
+  saveFunctionToCatalog qf config
   buildSchemaCacheFor $ MOFunction qf
   return successMsg
 

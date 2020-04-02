@@ -65,9 +65,11 @@ class Main extends React.Component {
     dispatch(loadServerVersion()).then(() => {
       dispatch(featureCompatibilityInit());
 
-      dispatch(loadInconsistentObjects()).then(() => {
-        this.handleMetadataRedirect();
-      });
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false })).then(
+        () => {
+          this.handleMetadataRedirect();
+        }
+      );
 
       dispatch(loadLatestServerVersion()).then(() => {
         this.setShowUpdateNotification();

@@ -101,6 +101,9 @@ class TestGraphqlInsertPermission:
     def test_role_has_no_permissions_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/address_permission_error.yaml")
 
+    # This test captures a bug in the previous release
+    # Avoiding this test for server upgrades
+    @pytest.mark.skip_server_upgrade_test
     def test_author_user_role_insert_check_perm_success(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_user_role_insert_check_perm_success.yaml")
 
@@ -182,6 +185,18 @@ class TestGraphqlInsertConstraints:
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/constraints"
+
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphqlInsertNullPrefixedColumnOnConflict:
+
+    def test_address_not_null_constraint_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/null_prefixed_column_ok.yaml")
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/insert/nullprefixcolumn"
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
@@ -380,6 +395,12 @@ class TestGraphqlUpdateJsonB:
 @use_mutation_fixtures
 class TestGraphqlUpdatePermissions:
 
+    # This test captures a bug in the previous release
+    # Avoiding this test for server upgrades
+    @pytest.mark.skip_server_upgrade_test
+    def test_user_update_author(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_update_author.yaml")
+
     def test_user_can_update_unpublished_article(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_can_update_unpublished_article.yaml")
 
@@ -388,7 +409,7 @@ class TestGraphqlUpdatePermissions:
 
     def test_user_cannot_update_another_users_article(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_update_another_users_article.yaml")
-    
+
     def test_user_cannot_publish(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_cannot_publish.yaml")
 

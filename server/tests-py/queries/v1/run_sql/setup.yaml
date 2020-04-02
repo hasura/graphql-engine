@@ -26,6 +26,15 @@ args:
         bool_col boolean not null default false
       );
       insert into test (name) values ('name_1'), ('name_2');
+      create table malicious(
+          id serial primary key,
+          alterable boolean,
+          droppable boolean
+      );
+      insert into malicious (alterable, droppable) values
+        (true, false),
+        (false, true);
+      create view malicious_view as select * from malicious;
 
 - type: track_table
   args:

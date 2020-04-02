@@ -45,12 +45,12 @@ refs:
     filters:
       branches:
         only: /^dev.*/
-  filter_only_vtags_dev_release_branches: &filter_only_vtags_dev_release_branches
+  filter_only_vtags_channel_branches: &filter_only_vtags_channel_branches
     filters:
       tags:
         only: /^v.*/
       branches:
-        only: /^(dev|release).*/
+        only: /^(stable|alpha|beta)$/
   filter_ignore_branches: &filter_ignore_branches
     filters:
       branches:
@@ -517,7 +517,7 @@ jobs:
 
   deploy:
     docker:
-    - image: hasura/graphql-engine-deployer:v0.3
+    - image: hasura/graphql-engine-deployer:v0.4
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -606,7 +606,7 @@ workflows:
         - test_and_build_cli
         - test_cli_with_last_release
     - deploy:
-        <<: *filter_only_vtags_dev_release_branches
+        <<: *filter_only_vtags_channel_branches
         requires:
         - build_image
         - test_console
