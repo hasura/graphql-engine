@@ -15,7 +15,7 @@ import { setPromptValue } from '../../../helpers/common';
 
 const userId = 5555;
 
-export const Createtable = (name, dict) => {
+export const createTable = (name, dict) => {
   cy.url().should('eq', `${baseUrl}/data/schema/public/table/add`);
   cy.get(getElementFromAlias('tableName')).type(`${name}_table_vt`);
   const keys = Object.keys(dict).map(k => k);
@@ -40,9 +40,9 @@ export const Createtable = (name, dict) => {
 
 export const passVCreateTables = () => {
   cy.get(getElementFromAlias('data-create-table')).click();
-  Createtable('author', { id: 'integer', name: 'text' });
+  createTable('author', { id: 'integer', name: 'text' });
   cy.get(getElementFromAlias('sidebar-add-table')).click();
-  Createtable('article', {
+  createTable('article', {
     id: 'integer',
     title: 'text',
     Content: 'text',
@@ -50,7 +50,7 @@ export const passVCreateTables = () => {
     rating: 'integer',
   });
   cy.get(getElementFromAlias('sidebar-add-table')).click();
-  Createtable('comment', {
+  createTable('comment', {
     id: 'integer',
     user_id: 'integer',
     article_id: 'integer',
@@ -431,7 +431,7 @@ export const passVDeleteMaterializedView = () => {
   validateView('author_average_rating_vt', 'failure');
 };
 
-export const Deletetable = name => {
+export const deleteTable = name => {
   cy.get(getElementFromAlias(name)).click();
   cy.get(getElementFromAlias('table-modify')).click();
   setPromptValue(name);
@@ -445,9 +445,9 @@ export const Deletetable = name => {
 };
 
 export const passVDeleteTables = () => {
-  Deletetable('comment_table_vt');
-  Deletetable('article_table_vt');
-  Deletetable('author_table_vt');
+  deleteTable('comment_table_vt');
+  deleteTable('article_table_vt');
+  deleteTable('author_table_vt');
 };
 
 // //////////////////////////////////////////////////////////////////////////////////////
