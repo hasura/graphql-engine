@@ -21,7 +21,7 @@ Using Postgres
 
 This is ideal if you want the validations to be part of the table definition at Postgres itself.
 
-**Example 1:** Check that the ``rating`` for a user is between 1 and 10 when a user is inserted or updated.
+**Example 1:** Check that the ``rating`` for a user is between 1 and 10 only.
 
 Let's say we have a table ``author`` with a integer column ``rating``.
 
@@ -30,8 +30,6 @@ Now, we can head to the ``Modify`` tab in the table page and add a check constra
 
 .. thumbnail:: ../../../img/graphql/manual/schema/add-check-constraint.png
    :alt: Add check constraint
-
-
 
 If someone now tries to add an author with a rating of ``11``, the following error is thrown:
 
@@ -42,24 +40,28 @@ Learn more about `Postgres check constraints <https://www.postgresql.org/docs/9.
 
 **Example 2:** Validate that an article does not contain bad words.
 
-Suppose we have 2 tables ``articles(article_id uuid, context text)`` and ``bad_words(word text)``:
+Suppose we have 2 tables ``articles(article_id uuid, content text)`` and ``bad_words(word text)``:
 
-We can create a `Postgres function <https://www.postgresql.org/docs/9.1/sql-createfunction.html>`__ that checks if an article is "clean".  In the ``Data -> SQL`` tab on the Hasura console, run the following SQL:
+We can create a `Postgres function <https://www.postgresql.org/docs/9.1/sql-createfunction.html>`__ that checks if an article is "clean". For this, we will use the ``similarity`` function (read more `here <https://www.postgresql.org/docs/9.6/pgtrgm.html>`__). In the ``Data -> SQL`` tab on the Hasura console, run the following SQL:
 
 .. code-block:: plpgsql
 
   CREATE FUNCTION check_article_clean()
-  RETURNS trigger AS $$
+   RETURNS trigger
+   LANGUAGE plpgsql
+  AS $$
   DECLARE
+    all_bad_words text;
     dirtyness real;
   BEGIN
-    SELECT similarity(OLD.content, bad_words) into dirtyness;
+    SELECT string_agg(name, ' ') INTO all_bad_words from bad_words;
+    SELECT similarity(NEW.content, all_bad_words) INTO dirtyness;
     IF dirtyness >= 0.25 THEN
       RAISE EXCEPTION 'article is very dirty';
     END IF;
-    RETURN OLD;
+    RETURN NEW;
   END;
-  $$ LANGUAGE plpgsql;
+  $$
 
 We also need to add a `Postgres trigger <https://www.postgresql.org/docs/9.1/sql-createtrigger.html>`__ that will be called every time an article is inserted or updated.
 
@@ -67,13 +69,13 @@ We also need to add a `Postgres trigger <https://www.postgresql.org/docs/9.1/sql
 
   CREATE TRIGGER insert_article BEFORE INSERT OR UPDATE ON "articles" FOR EACH ROW EXECUTE PROCEDURE check_article_clean();
 
-Now, if you insert an article which has lot of bad words, you would recieve an error:
+Now, if we try to insert an article which has lot of bad words, we would recieve an error:
 
 ``Insert failed! unexpected : article is very dirty``
 
 .. note::
 
-  If you create the above trigger function from the SQL tab in the Hasura console, make sure that the ``Track this`` box is **not** checked, since trigger functions cannot be be tracked by Hasura. 
+  If you create the above trigger function from the SQL tab in the Hasura console, make sure that the ``Track this`` box is **not** checked since trigger functions are note trackable. 
 
 
 Using Hasura
@@ -82,15 +84,20 @@ Using Hasura
 With permissions
 ^^^^^^^^^^^^^^^^
 
-If the validations are declarative, then permission rules in Hasura Auth can be used.
+If the validations can be expressed **declaratively**, then we can use the permission rules in Hasura Auth.
 
 **Example 1:** Validate that an inventory can only have ``stock >= 0`` for any item.
 
 Suppose, we have a table ``inventory (item_id uuid, item_name text, stock integer)``
 
-Now, suppose you create a role ``user`` on this table with the following rule:
+Now, we can create a role ``user`` on this table with the following rule:
 
-<insert image>
+.. thumbnail:: ../../../img/graphql/manual/schema/validation-stock-gte-zero.png
+   :alt: validation using permission: stock should be greater than or equal to zero
+
+If we try to insert an item with ``stock = -1``, we will get a ``permission-error``:
+
+``Check constraint violation. insert check constraint failed``
 
 **Example 2:**  Validate that an article can be added for an author only if ``is_active = true``.
 
@@ -101,9 +108,12 @@ Suppose, we have 2 tables:
 
 Also, suppose there is an object relationship ``articles.author`` defined as ``articles.id -> author.id``.
 
-Now, suppose you create a role ``user`` on this table with the following rule:
+Now, we can create a role ``user`` on this table with the following rule:
 
-<insert image>
+.. thumbnail:: ../../../img/graphql/manual/schema/validation-author-isactive.png
+   :alt: validation using permissions: author should be active
+
+Similar to previous example, if we try to insert an article for an author for whom ``is_active = false``, we will receive a ``permission-error`` response.
 
 .. note::
 
