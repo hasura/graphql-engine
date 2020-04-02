@@ -104,14 +104,31 @@ Checking with Hasura
 Using permissions
 ^^^^^^^^^^^^^^^^^
 
-**Example:** Validate that an article can be added only for an author where ``is_active`` is true.
+**Example:** Validate that an inventory can only have ``>=0`` availability for any item.
 
+Suppose, we have a table: inventory
+
+.. code-block:: plpgsql
+
+  CREATE TABLE inventory (
+    item_id serial primary key,
+    item_name text,
+    available integer
+  );
+
+Now, suppose you create a role **user** on ``inventory`` table with the following rule:
+
+<insert image>
+
+.. note::
+
+  Permissions are scoped to a role. So, if a validation check needs to be global then you will have to define it for all roles. We have few features which will simplify this in the future.
 
 Using Actions
 ^^^^^^^^^^^^^
 
-If the validation can't be captured with SQL and / or includes a third party service, we recommend using :ref:`Hasura actions <actions>`. 
+If the validation can't be captured with Postgres or Hasura permissions easily and/or includes more complexity or external services, we recommend using :ref:`Hasura Actions <actions>`. 
 
-**Example:** Make sure an author is logged in before creating an article.
+**Example:** Make sure an author is not black-listed when creating an article.
 
-An example of an action handler implementation for user login can be found :ref:`here <action_handlers>`.
+<TODO>
