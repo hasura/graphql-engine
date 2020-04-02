@@ -33,6 +33,7 @@ const ModifyView = props => {
   const {
     sql,
     tableName,
+    tableType,
     allSchemas,
     ongoingRequest,
     lastError,
@@ -239,7 +240,7 @@ const ModifyView = props => {
     const confirmMessage = `This will permanently delete the view "${tableName}" from the database`;
     const isOk = getConfirmation(confirmMessage, true, tableName);
     if (isOk) {
-      dispatch(deleteViewSql(tableName));
+      dispatch(deleteViewSql(tableName, tableType));
     }
   };
   const deleteBtn = (
