@@ -338,8 +338,8 @@ const mapStateToProps = (state, ownProps) => {
     state.tables.allSchemas
   );
   return {
-    tableName: tableName,
-    tableType: tableType,
+    tableName,
+    tableType,
     currentSchema: schemaName,
     allSchemas: state.tables.allSchemas,
     sql: state.rawSQL.sql,
