@@ -157,7 +157,7 @@ InsertPermission
    * - admin_only
      - false
      - Boolean
-     - When set to ``true`` the mutation is accessible only if role header (``x-hasura-role``)
+     - When set to ``true`` the mutation is accessible only if the role header (``x-hasura-role``)
        is sent along with admin secret header (``x-hasura-admin-secret``), defaults to ``false``
 
 
