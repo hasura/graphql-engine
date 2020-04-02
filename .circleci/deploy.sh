@@ -52,30 +52,21 @@ deploy_server_latest() {
 
 draft_github_release() {
     cd "$ROOT"
+    export GITHUB_REPOSITORY="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
     echo "drafting github release"
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -b "${RELEASE_BODY}" \
-        -draft \
+    hub release create \
+        --draft \
+        -a /build/_cli_output/binaries/cli-hasura-darwin-amd64 \
+        -a /build/_cli_output/binaries/cli-hasura-linux-amd64 \
+        -a /build/_cli_output/binaries/cli-hasura-windows-amd64.exe \
+        -a /build/_cli_ext_output/cli-ext-hasura-linux.tar.gz \
+        -a /build/_cli_ext_output/cli-ext-hasura-macos.tar.gz \
+        -a /build/_cli_ext_output/cli-ext-hasura-win.zip \
+        -m "$CIRCLE_TAG" \
+        -m "${RELEASE_BODY}" \
      "$CIRCLE_TAG"
-    echo "uploading cli assets"
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -draft \
-     "$CIRCLE_TAG" /build/_cli_output/binaries/
-    echo "uploading cli-ext assets"
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -draft \
-     "$CIRCLE_TAG" /build/_cli_ext_output/*.tar.gz
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -draft \
-     "$CIRCLE_TAG" /build/_cli_ext_output/*.zip
+
+    unset GITHUB_REPOSITORY
 }
 
 configure_git() {
@@ -100,6 +91,11 @@ deploy_console() {
 
     cd "$ROOT/console"
     export VERSION=$(../scripts/get-console-assets-version.sh)
+    # if version is not set, then skip console
+    if [ -z "$VERSION" ]; then
+        echo "version is not, skipping console deployment"
+        return
+    fi
     export DIST_PATH="/build/_console_output"
     local GS_BUCKET_ROOT="gs://graphql-engine-cdn.hasura.io/console/assets/$VERSION"
     # assets are at /build/_console_output/assets/versioned, already gzipped
@@ -213,11 +209,12 @@ fi
 
 setup_gcloud
 
-RELEASE_BRANCH_REGEX="^release-v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
-if [[ "$CIRCLE_BRANCH" =~ $RELEASE_BRANCH_REGEX ]]; then
-    # release branch, only update console
-    echo "release branch, only deploying console"
+if [[ -z "$CIRCLE_TAG" ]]; then
+    # channel branch, only update console
+    echo "channel branch, only deploying console"
+    export EXPECTED_CHANNEL="${CIRCLE_BRANCH}"
     deploy_console
+    unset EXPECTED_CHANNEL
     exit
 fi
 
