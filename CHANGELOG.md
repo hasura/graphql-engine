@@ -45,6 +45,7 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 - server: preserve cookie headers from sync action webhook (close #4021)
 - server: validate action webhook response to conform to action output type (fix #3977)
 - server: add 'ID' to default scalars in custom types (fix #4061)
+- console: persist derived action after creating action (fix #4271) (#4272)
 - console: enum field values can be selected through a dropdown in insert/edit rows page (close #3748) (#3810)
 - console: exported metadata filenames are now unique(`hasura_metadata_<timestamp>.json`) (close #1772) (#4106)
 - console: allow bulk deleting rows in 'Browse Rows' section (close #1739) (#3735)
