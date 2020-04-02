@@ -58,12 +58,12 @@ export const getFrameworkCodegen = (
   framework,
   actionName,
   actionsSdl,
-  parentMutation
+  parentOperation
 ) => {
   return getCodegenFunc(framework)
     .then(codegenerator => {
       const derive = {
-        operation: parentMutation,
+        operation: parentOperation,
         endpoint: endpoints.graphQLUrl,
       };
       const codegenFiles = codegenerator(actionName, actionsSdl, derive);
