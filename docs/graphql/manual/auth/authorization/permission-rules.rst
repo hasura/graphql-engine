@@ -255,3 +255,4 @@ Admin Only Inserts
 
 If the ``insert`` permission is marked as ``admin_only: true`` then the mutation is accessbile to
 given role (``x-hasura-role`` header) only if admin secret (``x-hasura-admin-secret`` header) is sent in the request.
+If the admin secret is not configured then the mutation is open for the given role.
