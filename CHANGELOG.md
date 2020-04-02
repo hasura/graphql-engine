@@ -5,7 +5,7 @@
 ### Bug fixes and improvements
 
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
-- console: fix clone permission migrations (close #3985)
+- console: fix clone permission migrations (close #3985) (#4277)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 
