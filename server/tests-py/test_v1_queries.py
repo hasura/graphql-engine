@@ -543,6 +543,10 @@ class TestRunSQL:
         check_query_f(hge_ctx, self.dir() + '/sql_select_query.yaml')
         hge_ctx.may_skip_test_teardown = True
 
+    def test_select_query_read_only(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_select_query_read_only.yaml')
+        hge_ctx.may_skip_test_teardown = True
+
     def test_set_timezone(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_set_timezone.yaml')
         hge_ctx.may_skip_test_teardown = True
