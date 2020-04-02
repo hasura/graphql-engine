@@ -440,13 +440,13 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
         generateTableDef(applyTo.table, currentSchema)
       );
 
-      const currentPermPermissions = currTableSchema.permissions.find(
+      const currentPermPermission = currTableSchema.permissions.find(
         el => el.role_name === applyTo.role
       );
 
       if (
-        currentPermPermissions &&
-        currentPermPermissions.permissions[applyTo.action]
+        currentPermPermission &&
+        currentPermPermission.permissions[applyTo.action]
       ) {
         // existing permission is there. so drop and recreate for down migrations
         const deleteQuery = {
@@ -462,7 +462,7 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
           args: {
             table: { name: applyTo.table, schema: currentSchema },
             role: applyTo.role,
-            permission: currentPermPermissions.permissions[applyTo.action],
+            permission: currentPermPermission.permissions[applyTo.action],
           },
         };
 
