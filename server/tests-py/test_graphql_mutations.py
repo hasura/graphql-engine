@@ -185,7 +185,7 @@ class TestGraphqlInsertPermission:
             'variables': {}
         }
         headers = {
-            "x-hasura-role": "admin_user" # Role for which admin_only insert defined
+            "X-Hasura-Role": "admin_user" # Role for which admin_only insert defined
         }
         if hge_ctx.hge_webhook or hge_ctx.hge_jwt_key:
             # If any external authentication configured
