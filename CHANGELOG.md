@@ -5,6 +5,7 @@
 ### Bug fixes and improvements
 
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
+- server: reserved keywords in column references break parser (fix #3597) #3927
 
 ## `v1.2.0-beta.3`
 
