@@ -39,10 +39,6 @@ instance Show AuthHookType where
   show AHTGet  = "GET"
   show AHTPost = "POST"
 
-isPost :: AuthHookType -> Bool
-isPost AHTGet  = False
-isPost AHTPost = True
-
 
 data AuthHookG a b
   = AuthHookG
@@ -52,18 +48,15 @@ data AuthHookG a b
 
 type AuthHook = AuthHookG T.Text AuthHookType
 
-withAuthHook :: AuthHook -> (T.Text -> a) -> (T.Text -> a) -> a
-withAuthHook (AuthHookG u t) ifGet ifPost =
-  bool (ifGet u) (ifPost u) $ isPost t
-
 hookMethod :: AuthHook -> N.StdMethod
-hookMethod = bool N.GET N.POST . isPost . ahType
+hookMethod authHook = case ahType authHook of
+  AHTGet  -> N.GET
+  AHTPost -> N.POST
 
 
--- | Extracts 'UserInfo' from the webhook answer.
---   This uses the provided manager to make the call, extracts
---   information such as response body and status, and delegates to a
---   local 'mkUserInfoFromResp'.
+-- | Makes an authentication request to the given AuthHook and returns
+--   UserInfo parsed from the response, plus an expiration time if one
+--   was returned.
 userInfoFromAuthHook
   :: (HasVersion, MonadIO m, MonadError QErr m)
   => Logger Hasura
@@ -72,33 +65,31 @@ userInfoFromAuthHook
   -> [N.Header]
   -> m (UserInfo, Maybe UTCTime)
 userInfoFromAuthHook logger manager hook reqHeaders = do
-  res  <- liftIO $ try $ withAuthHook hook withGET withPOST
-  resp <- either logAndThrow return res
+  resp <- (`onLeft` logAndThrow) =<< liftIO (try performHTTPRequest)
   let status   = resp ^. Wreq.responseStatus
       respBody = resp ^. Wreq.responseBody
   mkUserInfoFromResp logger (ahUrl hook) (hookMethod hook) status respBody
-
   where
-    withGET  url = Wreq.getWith  (mkOptions filteredHeaders) $ T.unpack url
-    withPOST url = Wreq.postWith (mkOptions [contentType]) (T.unpack url) $
-      object ["headers" J..= postHdrsPayload]
-    mkOptions = wreqOptions manager
-    contentType = ("Content-Type", "application/json")
-    postHdrsPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
+    performHTTPRequest = do
+      let url = T.unpack $ ahUrl hook
+          mkOptions = wreqOptions manager
+      case ahType hook of
+        AHTGet  -> do
+          let isCommonHeader  = (`elem` commonClientHeadersIgnored)
+              filteredHeaders = filter (not . isCommonHeader . fst) reqHeaders
+          Wreq.getWith (mkOptions filteredHeaders) url
+        AHTPost -> do
+          let contentType    = ("Content-Type", "application/json")
+              headersPayload = J.toJSON $ Map.fromList $ hdrsToText reqHeaders
+          Wreq.postWith (mkOptions [contentType]) url $ object ["headers" J..= headersPayload]
 
     logAndThrow err = do
       unLogger logger $
         WebHookLog LevelError Nothing (ahUrl hook) (hookMethod hook)
         (Just $ HttpException err) Nothing Nothing
-      throw500 "Internal Server Error"
-
-    filteredHeaders = flip filter reqHeaders $ \(n, _) ->
-      n `notElem` commonClientHeadersIgnored
+      throw500 $ "webhook authentication request failed"
 
 
--- | Processes the result of the wehook call, and tries to construct a
---   'UserInfo'. The expiration time is retrieved from either the
---   CacheControl or Expires header.
 mkUserInfoFromResp
   :: (MonadIO m, MonadError QErr m)
   => Logger Hasura
