@@ -99,9 +99,9 @@ class OperationEditor extends React.Component {
             {definition.update ? (
               allTableColumns.map((col, i) => (
                 <div
-                  className={`${styles.opsCheckboxWrapper} col-md-4 ${
-                    styles.padd_remove
-                  }`}
+                  className={`${styles.opsCheckboxWrapper} ${
+                    styles.columnListElement
+                  } ${styles.padd_remove}`}
                   key={i}
                 >
                   <input
@@ -173,9 +173,9 @@ class OperationEditor extends React.Component {
             {modifyTrigger.definition.update ? (
               allTableColumns.map((col, i) => (
                 <div
-                  className={`${styles.opsCheckboxWrapper} col-md-4 ${
-                    styles.padd_remove
-                  } ${styles.cursorPointer}`}
+                  className={`${styles.opsCheckboxWrapper} ${
+                    styles.columnListElement
+                  } ${styles.padd_remove} ${styles.cursorPointer}`}
                   key={i}
                   onClick={() => dispatch(toggleColumn('update', col.name))}
                 >

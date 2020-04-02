@@ -20,6 +20,7 @@ func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "Manage actions on hasura",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Root().PersistentPreRun(cmd, args)
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
