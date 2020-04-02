@@ -34,9 +34,8 @@ import {
   getDropConstraintSql,
   getDropPkSql,
   getCreatePkSql,
-  capitalize,
 } from '../../../Common/utils/sqlUtils';
-import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { getConfirmation, capitalize } from '../../../Common/utils/jsUtils';
 import {
   findTable,
   generateTableDef,
