@@ -523,10 +523,6 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
     };
     const customOnError = () => {};
 
-    console.log(permissionsUpQueries);
-    console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
-    console.log(permissionsDownQueries);
-
     makeMigrationCall(
       dispatch,
       getState,
