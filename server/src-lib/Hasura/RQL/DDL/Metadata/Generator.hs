@@ -279,6 +279,9 @@ instance Arbitrary ArgumentDefinition where
 instance Arbitrary ActionKind where
   arbitrary = genericArbitrary
 
+instance Arbitrary ActionType where
+  arbitrary = genericArbitrary
+
 instance (Arbitrary a) => Arbitrary (ActionDefinition a) where
   arbitrary = genericArbitrary
 
