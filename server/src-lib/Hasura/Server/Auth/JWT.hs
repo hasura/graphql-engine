@@ -14,22 +14,23 @@ module Hasura.Server.Auth.JWT
 import           Control.Exception               (try)
 import           Control.Lens
 import           Control.Monad                   (when)
+import           Control.Monad.Trans.Maybe
 import           Data.IORef                      (IORef, readIORef, writeIORef)
 import           Data.List                       (find)
-import           Data.Parser.CacheControl        (parseMaxAge)
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
                                                   getCurrentTime)
-import           Data.Time.Format                (defaultTimeLocale, parseTimeM)
 import           GHC.AssertNF
 import           Network.URI                     (URI)
 
+import           Data.Parser.CacheControl
+import           Data.Parser.Expires
 import           Hasura.HTTP
 import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (fmapL, getRequestHeader, isSessionVariable,
+import           Hasura.Server.Utils             (getRequestHeader, isSessionVariable,
                                                   userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
 import           Hasura.User
@@ -43,7 +44,6 @@ import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI
 import qualified Data.HashMap.Strict             as Map
-import qualified Data.String.Conversions         as CS
 import qualified Data.Text                       as T
 import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
@@ -157,26 +157,9 @@ updateJwkRef (Logger logger) manager url jwkRef = do
     writeIORef jwkRef jwkset
 
   -- first check for Cache-Control header to get max-age, if not found, look for Expires header
-  let cacheHeader   = resp ^? Wreq.responseHeader "Cache-Control"
-      expiresHeader = resp ^? Wreq.responseHeader "Expires"
-  case cacheHeader of
-    Just header -> getTimeFromCacheControlHeader header
-    Nothing     -> mapM getTimeFromExpiresHeader expiresHeader
+  runMaybeT $ timeFromCacheControl resp <|> timeFromExpires resp
 
   where
-    getTimeFromExpiresHeader header = do
-      let maybeExpiry = parseTimeM True defaultTimeLocale timeFmt (CS.cs header)
-      expires  <- maybe (logAndThrowInfo parseTimeErr) return maybeExpiry
-      currTime <- liftIO getCurrentTime
-      return $ diffUTCTime expires currTime
-
-    getTimeFromCacheControlHeader header =
-      case parseCacheControlHeader (bsToTxt header) of
-        Left e       -> logAndThrowInfo e
-        Right maxAge -> return $ Just $ fromInteger maxAge
-
-    parseCacheControlHeader = fmapL (parseCacheControlErr . T.pack) . parseMaxAge
-
     parseCacheControlErr e =
       JFEExpiryParseError (Just e)
       "Failed parsing Cache-Control header from JWK response. Could not find max-age or s-maxage"
@@ -184,7 +167,13 @@ updateJwkRef (Logger logger) manager url jwkRef = do
       JFEExpiryParseError Nothing
       "Failed parsing Expires header from JWK response. Value of header is not a valid timestamp"
 
-    timeFmt = "%a, %d %b %Y %T GMT"
+    timeFromCacheControl resp = do
+      header <- afold $ bsToTxt <$> resp ^? Wreq.responseHeader "Cache-Control"
+      fromInteger <$> parseMaxAge header `onLeft` \err -> logAndThrowInfo $ parseCacheControlErr $ T.pack err
+    timeFromExpires resp = do
+      header <- afold $ bsToTxt <$> resp ^? Wreq.responseHeader "Expires"
+      expiry <- parseExpirationTime header `onLeft` const (logAndThrowInfo parseTimeErr)
+      diffUTCTime expiry <$> liftIO getCurrentTime
 
     logAndThrowInfo :: (MonadIO m, MonadError JwkFetchError m) => JwkFetchError -> m a
     logAndThrowInfo err = do
