@@ -4,6 +4,7 @@
 
 ### Bug fixes and improvements
 
+- server: fix postgres specific error message that exposed database type on invalid query parameters
 - cli: template assets path in console HTML for unversioned builds
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
 - console: fix clone permission migrations (close #3985) (#4277)
