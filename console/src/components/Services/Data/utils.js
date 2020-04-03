@@ -655,3 +655,13 @@ const postgresFunctionTester = /.*\(\)$/gm;
 
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
+
+export const getEstimateCountQuery = (schemaName, tableName) => `
+SELECT
+  reltuples::BIGINT
+FROM
+  pg_class
+WHERE
+  oid = ('${schemaName}.${tableName}')::regclass::oid
+  AND relname = 'users';
+`;

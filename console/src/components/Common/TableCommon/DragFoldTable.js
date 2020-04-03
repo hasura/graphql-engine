@@ -5,8 +5,6 @@ import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 
 import FoldableHoc from './foldableTable';
-import Spinner from '../Spinner/Spinner';
-import styles from '../Common.scss';
 
 class DragFoldTable extends Component {
   constructor(props) {
@@ -85,11 +83,7 @@ class DragFoldTable extends Component {
             })
           }
           folded={this.state.folded}
-          showPagination={!this.props.countLoading}
         />
-        {this.props.countLoading && (
-          <Spinner className={styles.paginationSpinner} />
-        )}
       </div>
     );
   }

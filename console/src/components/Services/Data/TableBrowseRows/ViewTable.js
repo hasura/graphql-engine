@@ -96,8 +96,7 @@ class ViewTable extends Component {
     Promise.all([
       dispatch(setTable(tableName)),
       dispatch(vSetDefaults(tableName)),
-      dispatch(vMakeRequest()),
-      dispatch(vMakeCountRequest()),
+      dispatch(vMakeRequest()).then(() => dispatch(vMakeCountRequest())),
       dispatch(fetchManualTriggers(tableName)),
     ]);
   }
@@ -165,7 +164,6 @@ class ViewTable extends Component {
       triggeredRow,
       triggeredFunction,
       location,
-      countLoading,
     } = this.props;
 
     // check if table exists
@@ -211,7 +209,6 @@ class ViewTable extends Component {
         triggeredFunction={triggeredFunction}
         location={location}
         readOnlyMode={readOnlyMode}
-        countLoading={countLoading}
       />
     );
 
@@ -266,7 +263,6 @@ ViewTable.propTypes = {
   lastError: PropTypes.object.isRequired,
   lastSuccess: PropTypes.object.isRequired,
   dispatch: PropTypes.func.isRequired,
-  countLoading: PropTypes.bool.isRequired,
 };
 
 const mapStateToProps = (state, ownProps) => {

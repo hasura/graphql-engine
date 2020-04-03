@@ -73,7 +73,6 @@ const ViewRows = ({
   triggeredFunction,
   location,
   readOnlyMode,
-  countLoading,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
 
@@ -987,7 +986,6 @@ const ViewRows = ({
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         page={Math.floor(curFilter.offset / curFilter.limit)}
-        countLoading={countLoading}
       />
     );
   };

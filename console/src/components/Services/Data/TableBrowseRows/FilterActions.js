@@ -108,8 +108,7 @@ const runQuery = tableSchema => {
       delete newQuery.order_by;
     }
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
-    dispatch(vMakeRequest());
-    dispatch(vMakeCountRequest());
+    dispatch(vMakeRequest()).then(() => dispatch(vMakeCountRequest()));
   };
 };
 
