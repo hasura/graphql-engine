@@ -21,6 +21,7 @@ import           Control.Exception               (try)
 import           Control.Lens
 import           Control.Monad.Trans.Maybe
 import           Data.IORef                      (IORef, readIORef, writeIORef)
+
 import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diffUTCTime,
                                                   getCurrentTime)
 import           GHC.AssertNF

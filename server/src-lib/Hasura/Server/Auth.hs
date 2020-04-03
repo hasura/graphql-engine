@@ -38,6 +38,7 @@ import qualified Network.HTTP.Types          as N
 import           Hasura.Logging
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+
 import           Hasura.Server.Auth.JWT      hiding (processJwt_)
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
@@ -83,6 +84,7 @@ hashAdminSecret = AdminSecretHash . Crypto.hash . T.encodeUtf8
 -- unauthenticated (anonymous) user.
 --
 -- See: https://hasura.io/docs/1.0/graphql/manual/auth/authentication/unauthenticated-access.html
+
 data AuthMode
   = AMNoAuth
   | AMAdminSecret !AdminSecretHash !(Maybe RoleName)

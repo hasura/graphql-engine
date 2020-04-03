@@ -30,7 +30,6 @@ import           Hasura.Server.Logging
 import           Hasura.Server.Utils
 import           Hasura.Session
 
-
 data AuthHookType
   = AHTGet
   | AHTPost

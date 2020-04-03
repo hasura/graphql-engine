@@ -549,30 +549,3 @@ Date:   Thu Apr 9 13:11:24 2020 +0530
     Refactor initialisation and relax tx isolation levels where possible (#3901)
 
     Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-
-commit 5b54f9d76629383da854cc16fb9667ea36b96218
-Author: Antoine Leblanc <antoine@hasura.io>
-Date:   Fri Apr 3 01:00:13 2020 +0100
-
-    server: add support for webhook connection expiration (#4196)
-
-    * add expiry time to webhook user info
-
-    This also adds an optional message to webhook errors: if we fail to
-    parse an expiry time, we will log a warning with the parse error.
-
-    * refactored Auth
-
-    This change had one main goal: put in common all expiry time
-    extraction code between the JWT and WebHook parts of the
-    code. Furthermore, this change also moves all WebHook specific code to
-    its own module, similarly to what is done for JWT.
-
-    * Remove dependency on string-conversions in favor of text-conversions
-
-    string-conversions silently uses UTF8 instead of being explicit about
-    it, and it uses lenientDecode when decoding ByteStrings when it’s
-    usually better to reject invalid UTF8 input outright. text-conversions
-    solves both those problems.
-
-    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
