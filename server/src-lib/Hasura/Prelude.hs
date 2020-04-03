@@ -22,10 +22,8 @@ module Hasura.Prelude
 import           Control.Applicative               as M (Alternative (..))
 import           Control.Arrow                     as M (first, second, (&&&), (***), (<<<), (>>>))
 import           Control.DeepSeq                   as M (NFData, deepseq, force)
-import           Control.Monad                     as M (void, when)
 import           Control.Monad.Base                as M
 import           Control.Monad.Except              as M
-import           Control.Monad.Fail                as M (MonadFail)
 import           Control.Monad.Identity            as M
 import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M

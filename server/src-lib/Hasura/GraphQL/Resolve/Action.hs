@@ -45,7 +45,7 @@ import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
-import           Hasura.RQL.DDL.Headers            (HeaderConf, makeHeadersFromConf, toHeadersConf)
+import           Hasura.RQL.DDL.Headers            (makeHeadersFromConf, toHeadersConf)
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types

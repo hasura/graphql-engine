@@ -162,16 +162,19 @@ function wait_docker_postgres {
 #################################
 if [ "$MODE" = "graphql-engine" ]; then
   cd "$PROJECT_ROOT/server"
+  # Existing tix files for a different hge binary will cause issues:
   rm -f graphql-engine.tix
 
   # Attempt to run this after a CTRL-C:
   function cleanup {
     echo
     # Generate coverage, which can be useful for debugging or understanding
-    if command -v hpc >/dev/null; then
+    if command -v hpc >/dev/null && command -v jq >/dev/null ; then
       # Get the appropriate mix dir (the newest one). This way this hopefully
       # works when cabal.project.dev-sh.local is edited to turn on optimizations.
-      hpcdir=$(ls -td dist-newstyle/build/**/hpc/vanilla/mix/graphql-engine-* | head -1)
+      # See also: https://hackage.haskell.org/package/cabal-plan 
+      distdir=$(cat dist-newstyle/cache/plan.json | jq -r '."install-plan"[] | select(."id" == "graphql-engine-1.0.0-inplace")? | ."dist-dir"')
+      hpcdir="$distdir/hpc/vanilla/mix/graphql-engine-1.0.0"
       echo_pretty "Generating code coverage report..."
       COVERAGE_DIR="dist-newstyle/dev.sh-coverage"
       hpc_invocation=(hpc markup
@@ -194,7 +197,7 @@ if [ "$MODE" = "graphql-engine" ]; then
       echo_pretty "files, and then generate a new report with something like:"
       echo_pretty "  $ ${hpc_invocation[*]}"
     else
-      echo_warn "Please install hpc to get a code coverage report"
+      echo_warn "Please install 'hpc' and 'jq' to get a code coverage report"
     fi
   }
   trap cleanup EXIT
@@ -452,7 +455,6 @@ elif [ "$MODE" = "test" ]; then
     echo
   fi  # RUN_INTEGRATION_TESTS
 
-  # TODO generate coverage report when we CTRL-C from 'dev.sh graphql-engine'.
   # If hpc available, combine any tix from haskell/unit tests:
   if command -v hpc >/dev/null; then
     if [ "$RUN_UNIT_TESTS" = true ] && [ "$RUN_INTEGRATION_TESTS" = true ]; then
