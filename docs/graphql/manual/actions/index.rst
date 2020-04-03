@@ -128,7 +128,7 @@ However, they have different use cases.
 **Actions**
 
 Actions are used when there is a REST endpoint that we want to call from Hasura.
-Actions are especially useful when working with serverless functions.
+They are especially useful when working with serverless functions.
 
 **Remote schemas**
 
