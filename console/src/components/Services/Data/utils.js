@@ -656,12 +656,14 @@ const postgresFunctionTester = /.*\(\)$/gm;
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
 
-export const getEstimateCountQuery = (schemaName, tableName) => `
+export const getEstimateCountQuery = (schemaName, tableName) => {
+  return `
 SELECT
   reltuples::BIGINT
 FROM
   pg_class
 WHERE
-  oid = ('${schemaName}.${tableName}')::regclass::oid
+  oid = (quote_ident('${schemaName}') || '.' || quote_ident('${tableName}'))::regclass::oid
   AND relname = '${tableName}';
 `;
+};
