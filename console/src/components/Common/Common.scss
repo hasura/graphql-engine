@@ -1322,9 +1322,9 @@ code {
   visibility: hidden;
 }
 
+// keep graphiql in viewport
 .graphQLHeight {
-  height: 72vh;
-  margin-bottom: 50px;
+  height: calc(100vh - 360px);
 }
 
 .button_mar_right {
