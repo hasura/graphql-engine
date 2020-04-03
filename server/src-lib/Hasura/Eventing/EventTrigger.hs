@@ -1,30 +1,46 @@
 {-|
-  = Event Triggers
+= Event Triggers
 
-  This module implements the functionality of Event Triggers.
+This module implements the functionality of Event Triggers. Event triggers work
+in the following manner:
 
-  - Event triggers work in the following manner:
-    - When a new event trigger is created (check server/src-rsr/trigger.sql.shakespeare),
-      - a function is created in postgres with the name of hdb_view.<trigger_name> which handles the trigger logic.
-        this function will insert a new event row in the hdb_catalog.event_log table with appropriate data.
-      - a new db trigger is created it's procedure as the function discussed above.
-      - So, whenever there's a mutation on which there's an event trigger, a new event-log will be created
+- When a new event trigger is created (check @server\/src-rsr\/trigger.sql.shakespeare@),
 
-  - During startup, a thread is created which handles the processing of events (Processor)
-    - The processor will get events(max 100 events) that have not yet been delivered from the DB.
-    - If no events were fetched from the DB, then the thread will sleep. The sleep interval can be configured
-      via `HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL` (default 1000ms)
-    - If events were found, the fetched events are processed asynchronously, the HTTP pool size is configurable
-      via the `HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE` ENV variable(default is set to 100).
+    1. A function is created in postgres with the name of
+       @hdb_view.\<trigger_name\>@ which handles the trigger logic. This function
+       will insert a new event row in the @hdb_catalog.event_log@ table with
+       appropriate data.
 
-  - Post calling the webhook:
-    - If an event is processed successfully i.e the HTTP status is between (200 and 300) then the
-      it's marked as delivered
+    2. a new db trigger is created its procedure as the function discussed above.
+
+    So, whenever there's a mutation on which there's an event trigger, a new
+    event-log will be created.
+
+- During startup, a thread is created which handles the processing of events (Processor)
+
+    - The processor will get events(max 100 events) that have not yet been
+      delivered from the DB.
+    - If no events were fetched from the DB, then the thread will sleep. The
+      sleep interval can be configured via
+      @HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL@ (default 1000ms)
+    - If events were found, the fetched events are processed asynchronously, the
+      HTTP pool size is configurable via the @HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE@
+      ENV variable (default is set to 100).
+
+- Post calling the webhook:
+
+    - If an event is processed successfully i.e the HTTP status is between (200
+      and 300) then the it's marked as delivered
+
     - If there was an error while processing the event,
-      - If there is a retry configuration set, then the event will be retried for as many times/until processed successfully.
-      - If the retries have exhausted, then the event trigger's error status will be marked as true.
-      - The next retry time can be configured using the `Retry-After` header, then the event will be redelivered once more after
-        the duration (in seconds) found in the header
+
+        - If there is a retry configuration set, then the event will be retried
+          for as many times/until processed successfully.
+        - If the retries have exhausted, then the event trigger's error status
+          will be marked as true.
+        - The next retry time can be configured using the @Retry-After@ header,
+          then the event will be redelivered once more after the duration (in
+          seconds) found in the header
 -}
 {-# LANGUAGE StrictData #-}  -- TODO project-wide, maybe. See #3941
 {-# LANGUAGE RecordWildCards #-}
