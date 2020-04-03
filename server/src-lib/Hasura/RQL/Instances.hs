@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.RQL.Instances where
@@ -51,9 +52,15 @@ deriving instance (NFData a) => NFData (G.ObjectValueG a)
 
 instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
   lift m = [| M.fromList $(TH.lift $ M.toList m) |]
+#if MIN_VERSION_template_haskell(2,16,0)
+  liftTyped = TH.unsafeTExpCoerce . TH.lift
+#endif
 
 instance TH.Lift a => TH.Lift (S.HashSet a) where
   lift s = [| S.fromList $(TH.lift $ S.toList s) |]
+#if MIN_VERSION_template_haskell(2,16,0)
+  liftTyped = TH.unsafeTExpCoerce . TH.lift
+#endif
 
 deriving instance TH.Lift TDFA.CompOption
 deriving instance TH.Lift TDFA.DoPa
