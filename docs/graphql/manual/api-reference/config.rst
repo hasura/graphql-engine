@@ -50,6 +50,11 @@ Sample response
        "claims_namespace": "https://hasura.io/jwt/claims",
        "claims_format": "json"
      }
+     "is_allow_list_enabled": false,
+     "live_queries": {
+       "batch_size": 100,
+       "refetch_delay": 1
+     }
    }
 
 Disabling Config API
