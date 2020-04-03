@@ -30,7 +30,7 @@ module Hasura.Eventing.ScheduledTrigger
   ) where
 
 import           Control.Arrow.Extended          (dup)
-import           Control.Concurrent              (threadDelay)
+import           Control.Concurrent.Extended     (sleep)
 import           Data.Has
 import           Data.Int (Int64)
 import           Data.List                       (unfoldr)
@@ -59,12 +59,6 @@ import qualified Data.HashMap.Strict             as Map
 
 invocationVersion :: Version
 invocationVersion = "1"
-
-oneSecond :: Int
-oneSecond = 1000000
-
-oneMinute :: Int
-oneMinute = 60 * oneSecond
 
 newtype ScheduledTriggerInternalErr
   = ScheduledTriggerInternalErr QErr
@@ -148,7 +142,7 @@ runScheduledEventsGenerator logger pgpool getSC = do
           Right _ -> pure ()
           Left err ->
             L.unLogger logger $ ScheduledTriggerInternalErr $ err500 Unexpected (T.pack $ show err)
-    threadDelay oneMinute
+    sleep (minutes 1)
     where
       getScheduledTriggerStats = liftTx $ do
         map uncurryStats <$>
@@ -244,7 +238,7 @@ processScheduledQueue logger logEnv httpMgr pgpool getSC =
                 runReaderT (processScheduledEvent logEnv pgpool stInfo scheduledEvent) (logger, httpMgr)
               either logInternalError pure finally
       Left err -> logInternalError err
-    threadDelay oneMinute
+    sleep (minutes 1)
     where
       logInternalError err = L.unLogger logger $ ScheduledTriggerInternalErr err
 
