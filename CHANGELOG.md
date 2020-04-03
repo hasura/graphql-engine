@@ -108,6 +108,12 @@ Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/ma
 
 (close #1156) (#3760)
 
+### Expiration of connections authenticated by WebHooks
+
+When using webhooks to authenticate incoming requests to the GraphQL engine server, it is now possible to specify an expiration time; the connection to the server will be automatically closed if it's still running when the expiration delay is expired.
+
+Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/authentication/webhook.html).
+
 ### Bug fixes and improvements
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
