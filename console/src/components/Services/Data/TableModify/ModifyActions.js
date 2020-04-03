@@ -60,6 +60,7 @@ import {
   fetchColumnCastsQuery,
   convertArrayToJson,
   sanitiseRootFields,
+  sanitiseColumnNames,
 } from './utils';
 
 import {
@@ -215,9 +216,7 @@ export const saveComputedField = (
     );
   }
 
-  const migrationName = `save_computed_field_${computedField.table_schema}_${
-    computedField.table_name
-  }_${computedFieldName}`;
+  const migrationName = `save_computed_field_${computedField.table_schema}_${computedField.table_name}_${computedFieldName}`;
   const requestMsg = 'Saving computed field...';
   const successMsg = 'Saving computed field successful';
   const errorMsg = 'Saving computed field failed';
@@ -261,9 +260,7 @@ export const deleteComputedField = (computedField, table) => (
     )
   );
 
-  const migrationName = `delete_computed_field_${computedField.table_schema}_${
-    computedField.table_name
-  }_${computedFieldName}`;
+  const migrationName = `delete_computed_field_${computedField.table_schema}_${computedField.table_name}_${computedFieldName}`;
   const requestMsg = 'Deleting computed field...';
   const successMsg = 'Deleting computed field successful';
   const errorMsg = 'Deleting computed field failed';
@@ -589,14 +586,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}"
           foreign key (${Object.keys(oldConstraint.column_mapping)
-    .map(lc => `"${lc}"`)
-    .join(', ')})
+            .map(lc => `"${lc}"`)
+            .join(', ')})
           references "${oldConstraint.ref_table_table_schema}"."${
-  oldConstraint.ref_table
-}"
+        oldConstraint.ref_table
+      }"
           (${Object.values(oldConstraint.column_mapping)
-    .map(rc => `"${rc}"`)
-    .join(', ')})
+            .map(rc => `"${rc}"`)
+            .join(', ')})
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -667,9 +664,7 @@ const removeForeignKey = (index, tableSchema) => {
     const tableName = tableSchema.table_name;
     const schemaName = tableSchema.table_schema;
     const oldConstraint = tableSchema.foreign_key_constraints[index];
-    const upSql = `alter table "${schemaName}"."${tableName}" drop constraint "${
-      oldConstraint.constraint_name
-    }";`;
+    const upSql = `alter table "${schemaName}"."${tableName}" drop constraint "${oldConstraint.constraint_name}";`;
     const downSql = `alter table "${schemaName}"."${tableName}" add foreign key (${Object.keys(
       oldConstraint.column_mapping
     )
@@ -683,9 +678,7 @@ const removeForeignKey = (index, tableSchema) => {
     } on delete ${pgConfTypes[oldConstraint.on_delete]};`;
     const migrationUp = [getRunSqlQuery(upSql)];
     const migrationDown = [getRunSqlQuery(downSql)];
-    const migrationName = `delete_fk_${schemaName}_${tableName}_${
-      oldConstraint.constraint_name
-    }`;
+    const migrationName = `delete_fk_${schemaName}_${tableName}_${oldConstraint.constraint_name}`;
     const requestMsg = 'Deleting foreign key...';
     const successMsg = 'Foreign key deleted';
     const errorMsg = 'Deleting foreign key failed';
@@ -800,9 +793,7 @@ const deleteTrigger = (trigger, table) => {
     let downMigrationSql = '';
 
     downMigrationSql += `CREATE TRIGGER "${triggerName}"
-${trigger.action_timing} ${
-  trigger.event_manipulation
-} ON "${tableSchema}"."${tableName}"
+${trigger.action_timing} ${trigger.event_manipulation} ON "${tableSchema}"."${tableName}"
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
@@ -892,37 +883,7 @@ const untrackTableSql = tableName => {
     const errorMsg = 'Untrack table failed';
 
     const customOnSuccess = () => {
-      // Combine foreign_key_constraints and opp_foreign_key_constraints to get merged table data
-      const tableData = [];
-      const allSchemas = getState().tables.allSchemas;
-      const schemaInfo = allSchemas.find(
-        schema =>
-          schema.table_name === tableName &&
-          schema.table_schema === currentSchema
-      );
-      schemaInfo.foreign_key_constraints.forEach(fk_obj => {
-        tableData.push({
-          table_name: fk_obj.ref_table,
-          table_schema: fk_obj.ref_table_table_schema,
-        });
-      });
-      schemaInfo.opp_foreign_key_constraints.forEach(fk_obj => {
-        tableData.push({
-          table_name: fk_obj.table_name,
-          table_schema: fk_obj.table_schema,
-        });
-      });
-      tableData.push({
-        table_schema: currentSchema,
-        table_name: tableName,
-      });
-      dispatch(
-        updateSchemaInfo({
-          tables: tableData,
-        })
-      ).then(() => {
-        dispatch(_push('/data/'));
-      });
+      dispatch(_push('/data/'));
     };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
@@ -1974,9 +1935,7 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
     // Up migration: Drop the constraint
     const sqlUp = [
       getRunSqlQuery(
-        `alter table "${currentSchema}"."${tableName}" drop constraint "${
-          existingConstraint.constraint_name
-        }";`
+        `alter table "${currentSchema}"."${tableName}" drop constraint "${existingConstraint.constraint_name}";`
       ),
     ];
 
@@ -2275,9 +2234,7 @@ const saveUniqueKey = (
     if (index < numUniqueKeys - 1) {
       upMigration.push(
         getRunSqlQuery(
-          `alter table "${currentSchema}"."${tableName}" drop constraint "${
-            existingConstraint.constraint_name
-          }";`
+          `alter table "${currentSchema}"."${tableName}" drop constraint "${existingConstraint.constraint_name}";`
         )
       );
     }
@@ -2329,6 +2286,62 @@ const saveUniqueKey = (
       errorMsg
     );
   };
+};
+
+export const setViewCustomColumnNames = (
+  customColumnNames,
+  viewName,
+  schemaName,
+  successCb,
+  errorCb
+) => (dispatch, getState) => {
+  const viewDef = generateTableDef(viewName, schemaName);
+  const view = findTable(getState().tables.allSchemas, viewDef);
+
+  const existingCustomRootFields = getTableCustomRootFields(view);
+  const existingColumnNames = getTableCustomColumnNames(view);
+
+  const upQuery = getSetCustomRootFieldsQuery(
+    viewDef,
+    existingCustomRootFields,
+    sanitiseColumnNames(customColumnNames)
+  );
+  const downQuery = getSetCustomRootFieldsQuery(
+    viewDef,
+    existingCustomRootFields,
+    existingColumnNames
+  );
+
+  const migrationName = 'alter_view_custom_column_names';
+  const requestMsg = 'Saving column metadata...';
+  const successMsg = 'Saved column metadata successfully';
+  const errorMsg = 'Saving column metadata failed';
+
+  const customOnSuccess = () => {
+    // success callback
+    if (successCb) {
+      successCb();
+    }
+  };
+
+  const customOnError = () => {
+    if (errorCb) {
+      errorCb();
+    }
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
 };
 
 export {

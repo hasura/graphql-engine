@@ -9,8 +9,8 @@ import           Data.Aeson.TH
 import qualified Data.ByteString.Lazy    as BL
 import           Data.Char               (isSpace)
 import qualified Data.List               as L
-import qualified Data.String.Conversions as CS
 import qualified Data.Text               as T
+import           Data.Text.Conversions
 import qualified Database.PG.Query       as Q
 import           Hasura.Prelude
 import qualified Hasura.RQL.Types.Error  as RTE
@@ -36,7 +36,7 @@ execPGDump b ci = do
   output <- either throwException return eOutput
   case output of
     Left err ->
-      RTE.throw500 $ "error while executing pg_dump: " <> T.pack err
+      RTE.throw500 $ "error while executing pg_dump: " <> err
     Right dump -> return dump
   where
     throwException :: (MonadError RTE.QErr m) => IOException -> m a
@@ -45,8 +45,8 @@ execPGDump b ci = do
     execProcess = do
       (exitCode, stdOut, stdErr) <- readProcessWithExitCode "pg_dump" opts ""
       return $ case exitCode of
-        ExitSuccess   -> Right $ CS.cs (clean stdOut)
-        ExitFailure _ -> Left $ CS.cs stdErr
+        ExitSuccess   -> Right $ unUTF8 $ convertText (clean stdOut)
+        ExitFailure _ -> Left $ toText stdErr
 
     connString = T.unpack $ bsToTxt $ Q.pgConnString $ Q.ciDetails ci
     opts = connString : "--encoding=utf8" : prbOpts b

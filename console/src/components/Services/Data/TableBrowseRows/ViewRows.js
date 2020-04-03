@@ -581,7 +581,11 @@ const ViewRows = ({
           } else if (rowColumnValue === undefined) {
             cellValue = 'NULL';
             cellTitle = cellValue;
-          } else if (typeof rowColumnValue === 'object') {
+          } else if (
+            col.data_type === 'json' ||
+            col.data_type === 'jsonb' ||
+            typeof rowColumnValue === 'object'
+          ) {
             cellValue = JSON.stringify(rowColumnValue, null, 4);
             cellTitle = cellValue;
           } else {
