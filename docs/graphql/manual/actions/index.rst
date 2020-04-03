@@ -119,6 +119,22 @@ How it works?
 * The action response is returned to the client synchronously or asynchronously
   based on the kind.
 
+Actions vs. remote schemas
+--------------------------
+
+Both actions and remote schemas can be used to extend Hasura with business logic.
+However, they have different use cases.
+
+**Actions**
+
+Actions are used when there is a REST endpoint that we want to call from Hasura.
+Actions are especially useful when working with serverless functions.
+
+**Remote schemas**
+
+If you have an existing GraphQL API or if you're comfortable building a GraphQL server yourself,
+you can use :ref:`remote schemas <remote_schemas>`.
+
 Learn more
 ----------
 
