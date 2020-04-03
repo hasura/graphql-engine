@@ -663,5 +663,5 @@ FROM
   pg_class
 WHERE
   oid = ('${schemaName}.${tableName}')::regclass::oid
-  AND relname = 'users';
+  AND relname = '${tableName}';
 `;
