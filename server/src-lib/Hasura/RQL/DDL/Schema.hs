@@ -32,6 +32,7 @@ module Hasura.RQL.DDL.Schema
 
  , RunSQL(..)
  , runRunSQL
+ , containsDDLKeyword
  ) where
 
 import           Hasura.Prelude
@@ -86,6 +87,17 @@ instance ToJSON RunSQL where
           Q.ReadWrite -> False
       ]
 
+-- see Note [Checking metadata consistency in run_sql]
+containsDDLKeyword :: Text -> Bool
+containsDDLKeyword = TDFA.match $$(quoteRegex
+  TDFA.defaultCompOpt
+    { TDFA.caseSensitive = False
+    , TDFA.multiline = True
+    , TDFA.lastStarGreedy = True }
+    TDFA.defaultExecOpt
+    { TDFA.captureGroups = False }
+    "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
+
 runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
 runRunSQL RunSQL {..} = do
   -- see Note [Checking metadata consistency in run_sql]
@@ -102,17 +114,6 @@ runRunSQL RunSQL {..} = do
       where
         rawSqlErrHandler txe =
           (err400 PostgresError "query execution failed") { qeInternal = Just $ toJSON txe }
-
-    -- see Note [Checking metadata consistency in run_sql]
-    containsDDLKeyword :: Text -> Bool
-    containsDDLKeyword = TDFA.match $$(quoteRegex
-      TDFA.defaultCompOpt
-        { TDFA.caseSensitive = False
-        , TDFA.multiline = True
-        , TDFA.lastStarGreedy = True }
-      TDFA.defaultExecOpt
-        { TDFA.captureGroups = False }
-      "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
 {- Note [Checking metadata consistency in run_sql]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

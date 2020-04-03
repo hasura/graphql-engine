@@ -1,5 +1,5 @@
 {-# LANGUAGE NamedFieldPuns #-}
-
+{-# LANGUAGE RecordWildCards #-}
 module Hasura.Server.Query where
 
 import           Control.Lens
@@ -259,10 +259,10 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQAddCollectionToAllowlist _    -> True
   RQDropCollectionFromAllowlist _ -> True
 
-  RQRunSql RunSQL{rTxAccessMode, rCheckMetadataConsistency}  ->
+  RQRunSql RunSQL{ .. }  ->
     case rTxAccessMode of
       Q.ReadOnly  -> False
-      Q.ReadWrite -> fromMaybe True rCheckMetadataConsistency
+      Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
 
   RQReplaceMetadata _             -> True
   RQExportMetadata _              -> False
