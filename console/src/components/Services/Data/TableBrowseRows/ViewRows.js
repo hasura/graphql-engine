@@ -958,6 +958,7 @@ const ViewRows = ({
       if (curFilter.offset !== page * curFilter.limit) {
         dispatch(setOffset(page * curFilter.limit));
         dispatch(runQuery(tableSchema));
+        setSelectedRows([]);
       }
     };
 
@@ -966,6 +967,7 @@ const ViewRows = ({
         dispatch(setLimit(size));
         dispatch(setOffset(0));
         dispatch(runQuery(tableSchema));
+        setSelectedRows([]);
       }
     };
 
