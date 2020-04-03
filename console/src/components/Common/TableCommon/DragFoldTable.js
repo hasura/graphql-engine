@@ -4,6 +4,7 @@ import React, { Component, Fragment } from 'react';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 import FoldableHoc from './foldableTable';
+import { isObject, isNotDefined } from '../utils/jsUtils';
 
 class DragFoldTable extends Component {
   constructor(props) {
@@ -138,9 +139,9 @@ export const getColWidth = (
       const content = contentRows[i][header];
 
       let contentString;
-      if (content === null || content === undefined) {
+      if (isNotDefined(content)) {
         contentString = 'NULL';
-      } else if (typeof content === 'object') {
+      } else if (isObject(content)) {
         contentString = JSON.stringify(content, null, 4);
       } else {
         contentString = content.toString();

@@ -23,7 +23,7 @@ const defaultFoldButtonComponent = ({ header, collapsed, icon, onClick }) => {
     top: 'calc(50% - 8px)',
     left: '8px',
     padding: '5px',
-    margin: '-5px -5px -5px -5px',
+    margin: '-5px -5px -5px -5px'
   };
 
   return (
@@ -43,7 +43,7 @@ export default ReactTable => {
 
       this.state = {
         folded: props.onFoldChange ? undefined : {},
-        resized: props.resized || [],
+        resized: props.resized || []
       };
     }
 
@@ -162,21 +162,20 @@ export default ReactTable => {
     foldableHeaderRender = ({ column }) => {
       const { FoldButtonComponent, FoldIconComponent } = this.props;
       const collapsed = this.isFolded(column);
-      const icon = React.createElement(FoldIconComponent, {
-        collapsed,
-        name: column.id,
-      });
+      const icon = <FoldIconComponent collapsed={collapsed} name={column.id} />;
       const onClick = e => {
         e.stopPropagation();
         this.foldingHandler(column);
       };
 
-      return React.createElement(FoldButtonComponent, {
-        header: column.original_Header,
-        collapsed,
-        icon,
-        onClick,
-      });
+      return (
+        <FoldButtonComponent
+          header={column.original_Header}
+          collapsed={collapsed}
+          icon={icon}
+          onClick={onClick}
+        />
+      );
     };
 
     applyFoldableForColumn = column => {
@@ -189,7 +188,7 @@ export default ReactTable => {
           column.width = FoldedColumn.width;
           column.style = FoldedColumn.style;
         } else {
-          column = Object.assign(column, FoldedColumn);
+          column = { ...column, ...FoldedColumn };
         }
       } else this.restoreToOriginal(column);
     };
@@ -215,19 +214,13 @@ export default ReactTable => {
     };
 
     render() {
-      const {
-        columns: originalCols,
-        FoldButtonComponent,
-        FoldIconComponent,
-        FoldedColumn,
-        ...rest
-      } = this.props;
+      const { columns: originalCols, ...rest } = this.props;
       const columns = this.applyFoldableForColumns([...originalCols]);
 
       const extra = {
         columns,
         onResizedChange: this.onResizedChange,
-        resized: this.state.resized,
+        resized: this.state.resized
       };
 
       return (
@@ -251,8 +244,8 @@ export default ReactTable => {
       headerClassName: 'collapsed',
       sortable: false,
       resizable: false,
-      filterable: false,
-    },
+      filterable: false
+    }
   };
 
   return wrapper;
