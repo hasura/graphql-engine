@@ -1,5 +1,5 @@
 const { getTypesSdl, getActionDefinitionSdl } = require('../../../shared/utils/sdlUtils');
-const deriveMutation = require('../../../shared/utils/deriveMutation').default;
+const deriveAction = require('../../../shared/utils/deriveAction').default;
 
 const handlePayload = (payload) => {
 
@@ -17,7 +17,7 @@ const handlePayload = (payload) => {
 
   let actionSdl = '';
   let typesSdl = '';
-  let actionSdlError, typesSdlError, deriveMutationError;
+  let actionSdlError, typesSdlError, deriveActionError;
 
   if (actions) {
     try {
@@ -41,12 +41,12 @@ const handlePayload = (payload) => {
 
   if (toDeriveOperation) {
     try {
-      const derivation = deriveMutation(toDeriveOperation, introspectionSchema, actionName);
+      const derivation = deriveAction(toDeriveOperation, introspectionSchema, actionName);
       const derivedActionSdl = getActionDefinitionSdl(derivation.action.name, derivation.action.arguments, derivation.action.output_type);
       const derivedTypesSdl = getTypesSdl(derivation.types);
       sdl = `${derivedActionSdl}\n\n${derivedTypesSdl}\n\n${sdl}`
     } catch (e) {
-      deriveMutationError = e;
+      deriveActionError = e;
     }
   }
 
@@ -58,9 +58,9 @@ const handlePayload = (payload) => {
     return response;
   }
 
-  if (deriveMutationError) {
+  if (deriveActionError) {
     response.body = {
-      error: `could not derive mutation: ${deriveMutationError.message}`
+      error: `could not derive action: ${deriveActionError.message}`
     };
     response.status = 400;
     return response;
