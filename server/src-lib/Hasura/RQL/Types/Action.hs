@@ -108,7 +108,7 @@ $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionDefinition)
 instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
   parseJSON = J.withObject "ActionDefinition" $ \o ->
     ActionDefinition
-      <$> o J..:  "arguments"
+      <$> o J..:? "arguments" J..!= []
       <*> o J..:  "output_type"
       <*> o J..:? "kind" J..!= ActionSynchronous -- Synchronous is default action kind
       <*> o J..:? "headers" J..!= []
