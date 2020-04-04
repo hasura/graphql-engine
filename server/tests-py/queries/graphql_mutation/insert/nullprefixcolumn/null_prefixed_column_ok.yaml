@@ -1,0 +1,19 @@
+description: |
+  Using "null" prefixed columns in on_conflict clause should behave normally.
+  Regression test for #3597.
+
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      insert_nullPrefixTestTable(objects: [{nullName: "2"}]
+      on_conflict:{constraint:nullPrefixTestTable_pkey, update_columns:[nullName]}){
+        affected_rows
+      }
+    }
+
+response:
+  data:
+    insert_nullPrefixTestTable:
+      affected_rows: 1

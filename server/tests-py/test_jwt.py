@@ -153,7 +153,7 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        exp = datetime.now() - timedelta(minutes=1)
+        exp = datetime.utcnow() - timedelta(minutes=1)
         self.claims['exp'] = round(exp.timestamp())
 
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
@@ -239,7 +239,7 @@ class TestJWTBasic():
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
             self.conf = yaml.safe_load(c)
-        curr_time = datetime.now()
+        curr_time = datetime.utcnow()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {
             'sub': '1234567890',
@@ -274,7 +274,7 @@ def gen_rsa_key():
 class TestSubscriptionJwtExpiry(object):
 
     def test_jwt_expiry(self, hge_ctx, ws_client):
-        curr_time = datetime.now()
+        curr_time = datetime.utcnow()
         self.claims = {
             'sub': '1234567890',
             'name': 'John Doe',
@@ -353,7 +353,7 @@ class TestJwtAudienceCheck():
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
             self.conf = yaml.safe_load(c)
-        curr_time = datetime.now()
+        curr_time = datetime.utcnow()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {
             'sub': '1234567890',
@@ -425,7 +425,7 @@ class TestJwtIssuerCheck():
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
             self.conf = yaml.safe_load(c)
-        curr_time = datetime.now()
+        curr_time = datetime.utcnow()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {
             'sub': '1234567890',
