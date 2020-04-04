@@ -131,14 +131,19 @@ export const UIComponents = () => (
     {/* Spinner  *******************************/}
 
     <Heading my="md" as="h3">
-      {'<Spinner size="small" />'}
+      {'<Spinner size="sm" />'}
     </Heading>
-    <Spinner size="small" m="lg" />
+    <Spinner size="sm" m="lg" />
 
     <Heading mb="md" as="h3">
-      {'<Spinner size="large" />'}
+      {'<Spinner size="lg" />'}
     </Heading>
-    <Spinner size="large" m="lg" />
+    <Spinner size="lg" m="lg" />
+
+    <Heading mb="md" as="h3">
+      {'<Spinner size="xl" />'}
+    </Heading>
+    <Spinner size="xl" m="lg" />
 
     {/* AlertBox  *******************************/}
 
