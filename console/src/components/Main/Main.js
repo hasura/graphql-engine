@@ -243,11 +243,11 @@ class Main extends React.Component {
 
     const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <Icon className={styles.question} type="settings" size={18} />;
+        return <Icon type="settings" color="white" />;
       }
 
       return (
-        <div className={styles.question}>
+        <div>
           <Icon type="settings" />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
@@ -705,12 +705,18 @@ class Main extends React.Component {
               <div className={styles.supportSection}>
                 <div
                   id="help"
-                  className={styles.helpSection + ' dropdown-toggle'}
+                  className={styles.helpSection}
                   data-toggle="dropdown"
                   aria-expanded="false"
                   aria-haspopup="true"
                 >
-                  <Icon type="question" className={styles.question} size={18} />
+                  <Icon
+                    type="question"
+                    pointer
+                    size={12}
+                    color="white"
+                    mr="sm"
+                  />
                 </div>
                 <ul
                   className={

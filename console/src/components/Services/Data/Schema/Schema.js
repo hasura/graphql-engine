@@ -372,10 +372,7 @@ class Schema extends Component {
                 <div className={styles.display_inline}>
                   {displayTableName(table)}
                 </div>
-                <GqlCompatibilityWarning
-                  identifier={tableName}
-                  className={styles.add_mar_left_mid}
-                />
+                <GqlCompatibilityWarning identifier={tableName} />
               </div>
             );
           });
