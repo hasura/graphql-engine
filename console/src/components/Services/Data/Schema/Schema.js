@@ -96,8 +96,8 @@ class Schema extends Component {
           <h4 className={`${styles.subheading_text} ${styles.display_inline}`}>
             {headingText}
           </h4>
-          <ToolTip message={tooltip} ml="sm" />
-          <span className={styles.add_mar_left}>{actionElement}</span>
+          <ToolTip message={tooltip} mx="sm" />
+          {actionElement}
         </div>
       );
     };

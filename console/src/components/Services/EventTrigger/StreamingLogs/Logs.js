@@ -313,7 +313,7 @@ class StreamingLogs extends Component {
                       <ToolTip
                         placement="top"
                         message={tooltip.statusCodeDescription}
-                        ml="xs"
+                        ml="sm"
                       />,
                     ]
                     : null}

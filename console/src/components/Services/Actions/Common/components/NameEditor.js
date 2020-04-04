@@ -4,7 +4,7 @@ import { ToolTip } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const editorLabel = 'Name';
-const editorTooltip =
+const editorTooltipText =
   'Set a name for your action. This will be a root field in your GraphQL schema';
 
 const NameEditor = ({ value, onChange, className, placeholder }) => {
@@ -14,7 +14,7 @@ const NameEditor = ({ value, onChange, className, placeholder }) => {
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
         {editorLabel}
-        <ToolTip message={editorTooltip} ml="sm" />
+        <ToolTip message={editorTooltipText} ml="sm" />
       </h2>
       <input
         type="text"

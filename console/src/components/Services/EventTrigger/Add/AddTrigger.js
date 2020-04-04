@@ -446,7 +446,7 @@ class AddTrigger extends Component {
               <div className={styles.add_mar_bottom}>
                 <h4 className={styles.subheading_text}>
                   Webhook URL
-                  <ToolTip message={tooltip.webhookUrlDescription} />
+                  <ToolTip message={tooltip.webhookUrlDescription} ml="sm" />
                 </h4>
                 <div>
                   <div className={styles.dropdown_wrapper}>

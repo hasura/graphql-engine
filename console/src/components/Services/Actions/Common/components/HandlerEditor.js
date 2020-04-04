@@ -4,7 +4,7 @@ import { ToolTip } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const editorLabel = 'Handler';
-const editorTooltip = 'The HTTP handler for the action';
+const editorTooltipText = 'The HTTP handler for the action';
 
 const HandlerEditor = ({ value, onChange, className }) => {
   return (
@@ -13,7 +13,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
         {editorLabel}
-        <ToolTip message={editorTooltip} ml="sm" />
+        <ToolTip message={editorTooltipText} ml="sm" />
       </h2>
       <input
         type="text"

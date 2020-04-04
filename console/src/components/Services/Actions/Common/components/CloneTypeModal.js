@@ -57,13 +57,13 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
     'Prefix is required so that the type you are cloning does not collide with the existing type in Hasura.';
 
   return (
-    <div>
+    <React.Fragment>
       <div
         className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
       >
         <div className={'col-md-3'}>
           Prefix
-          <ToolTip message={prefixTooltipText} />
+          <ToolTip message={prefixTooltipText} ml="sm" />
         </div>
         <input
           type="text"
@@ -93,7 +93,7 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
           })}
         </select>
       </div>
-    </div>
+    </React.Fragment>
   );
 };
 

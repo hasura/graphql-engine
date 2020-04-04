@@ -82,6 +82,7 @@ const ColumnEditor = ({
             message={
               'Expose the column with a different name in the GraphQL API'
             }
+            ml="sm"
           />
         </label>
         <div className="col-xs-6">

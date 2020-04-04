@@ -26,11 +26,7 @@ const HandlerEditor = ({
         className={`${styles.subheading_text} ${styles.add_mar_bottom_small}`}
       >
         {editorLabel}
-        <ToolTip
-          message={editorTooltip}
-          className={styles.add_mar_left_mid}
-          ml="sm"
-        />
+        <ToolTip message={editorTooltip} ml="sm" />
       </h2>
       <div className={`${styles.add_mar_bottom_mid}`}>
         <label
