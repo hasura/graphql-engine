@@ -227,12 +227,7 @@ class Main extends React.Component {
       if (!migrationModeProgress) {
         mainContent = children && React.cloneElement(children);
       } else {
-        mainContent = (
-          <div>
-            {' '}
-            <Spinner />{' '}
-          </div>
-        );
+        mainContent = <Spinner size="xl" my="100px" mx="auto" />;
       }
 
       return mainContent;

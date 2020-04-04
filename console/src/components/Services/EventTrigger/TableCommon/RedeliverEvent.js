@@ -82,7 +82,9 @@ class RedeliverEvent extends Component {
   render() {
     const { log } = this.props;
 
-    const isLoading = this.state.intervalId ? <Spinner /> : null;
+    const isLoading = this.state.intervalId ? (
+      <Spinner ml="sm" size="sm" display="inline-block" />
+    ) : null;
 
     const renderTableBody = () => {
       if (log.eventInvocations.length === 0) {

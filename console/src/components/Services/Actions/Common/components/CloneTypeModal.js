@@ -15,7 +15,7 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
     headers
   );
 
-  if (loading) return <Spinner />;
+  if (loading) return <Spinner size="xl" my="100px" mx="auto" />;
 
   if (error) {
     return (

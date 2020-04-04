@@ -437,7 +437,11 @@ class ApiRequest extends Component {
 
               if (isAnalyzingToken && analyzingHeaderRow === i) {
                 analyzeIcon = (
-                  <Spinner className={styles.showInspectorLoading} />
+                  <Spinner
+                    size="lg"
+                    display="inline-block"
+                    className={styles.showInspectorLoading}
+                  />
                 );
               } else {
                 analyzeIcon = (
