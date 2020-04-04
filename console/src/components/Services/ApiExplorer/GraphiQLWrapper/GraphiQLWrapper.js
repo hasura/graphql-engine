@@ -198,12 +198,7 @@ class GraphiQLWrapper extends Component {
     return (
       <GraphiQLErrorBoundary>
         <div
-          className={
-            'react-container-graphql ' +
-            styles.wd100 +
-            ' ' +
-            styles.graphQLHeight
-          }
+          className={`react-container-graphql ${styles.wd100} ${styles.graphQLHeight} ${styles.box_shadow}`}
         >
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}
