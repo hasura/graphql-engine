@@ -123,10 +123,7 @@ class DataSubSidebar extends React.Component {
                 <Icon type="table" size={13} mr="xs" mb="-1px" />
                 {displayTableName(table)}
               </Link>
-              <GqlCompatibilityWarning
-                identifier={tableName}
-                className={styles.add_mar_left_mid}
-              />
+              <GqlCompatibilityWarning identifier={tableName} />
             </li>
           );
         });

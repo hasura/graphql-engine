@@ -1,10 +1,10 @@
 import React from 'react';
 
-import WarningSymbol from '../WarningSymbol/WarningSymbol';
+import { ToolTip, Icon } from '../../UIKit/atoms';
 
 const gqlPattern = /^[_A-Za-z][_0-9A-Za-z]*$/;
 
-const GqlCompatibilityWarning = ({ identifier, className = null }) => {
+const GqlCompatibilityWarning = ({ identifier }) => {
   const isGraphQLCompatible = gqlPattern.test(identifier);
 
   if (isGraphQLCompatible) {
@@ -17,9 +17,9 @@ const GqlCompatibilityWarning = ({ identifier, className = null }) => {
     'All GraphQL types depending on this identifier will not be exposed over the GraphQL API';
 
   return (
-    <span className={className}>
-      <WarningSymbol tooltipText={gqlCompatibilityTip} />
-    </span>
+    <ToolTip message={gqlCompatibilityTip}>
+      <Icon type="warning" size={12} ml="sm" />
+    </ToolTip>
   );
 };
 

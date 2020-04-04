@@ -78,10 +78,7 @@ const DataPageContainer = ({
               >
                 {getSchemaOptions()}
               </select>
-              <GqlCompatibilityWarning
-                identifier={currentSchema}
-                className={styles.add_mar_left_mid}
-              />
+              <GqlCompatibilityWarning identifier={currentSchema} />
             </div>
           </div>
         </Link>

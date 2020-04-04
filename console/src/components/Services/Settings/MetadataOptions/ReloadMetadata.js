@@ -77,7 +77,10 @@ class ReloadMetadata extends Component {
           />
           Reload all remote schemas
         </label>
-        <ToolTip message="Check this if you have inconsistent remote schemas or if your remote schema has changed." />
+        <ToolTip
+          message="Check this if you have inconsistent remote schemas or if your remote schema has changed."
+          ml="sm"
+        />
       </div>
     );
   }

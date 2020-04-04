@@ -251,7 +251,7 @@ class FilterQuery extends Component {
             >
               {this.state.isWatching ? (
                 <span>
-                  Watching <Spinner ml="xs" />
+                  Watching <Spinner ml="sm" size="sm" display="inline-block" />
                 </span>
               ) : (
                 'Watch'

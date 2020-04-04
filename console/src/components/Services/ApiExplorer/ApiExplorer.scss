@@ -16,9 +16,7 @@
   border-bottom: 1px solid rgba(155, 155, 155, 0.5);
   line-height: 2.5;
   padding-bottom: 2px;
-  .token_validity {
-    font-size: 14px;
-  }
+
   span {
     color: #979797;
     margin-left: 5px;
@@ -302,9 +300,7 @@
 
   .showInspectorLoading {
     cursor: pointer;
-    font-size: 16px;
     float: left;
-    display: inline-block;
   }
 
   .apiRequestWrapper {

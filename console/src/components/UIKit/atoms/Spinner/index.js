@@ -3,9 +3,6 @@ import { css, keyframes } from 'styled-components';
 
 import { StyledSpinner } from './Spinner';
 
-const smallSpinnerSize = 17;
-const largeSpinnerSize = 20;
-
 const circleBounceDelay = keyframes`
   0%,
   80%,
@@ -37,15 +34,32 @@ const spinnerChildStyles = css`
   }
 `;
 
+const smallSpinnerSize = 17;
+const largeSpinnerSize = 20;
+const extraLargeSpinnerSize = 40;
+
 export const Spinner = props => {
   const { size } = props;
 
-  const spinnerWidth = size === 'small' ? smallSpinnerSize : largeSpinnerSize;
+  let spinnerSize;
 
-  const spinnerHeight = size === 'small' ? smallSpinnerSize : largeSpinnerSize;
+  switch (size) {
+    case 'sm':
+      spinnerSize = smallSpinnerSize;
+      break;
+    case 'lg':
+      spinnerSize = largeSpinnerSize;
+      break;
+    case 'xl':
+      spinnerSize = extraLargeSpinnerSize;
+      break;
+    default:
+      spinnerSize = smallSpinnerSize;
+      break;
+  }
 
   return (
-    <StyledSpinner {...props} height={spinnerHeight} width={spinnerWidth}>
+    <StyledSpinner {...props} size={spinnerSize}>
       {Array.from(new Array(12), (_, i) => i).map(i => (
         <div
           key={i}
@@ -61,8 +75,4 @@ export const Spinner = props => {
       ))}
     </StyledSpinner>
   );
-};
-
-Spinner.defaultProps = {
-  size: 'small',
 };

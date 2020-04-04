@@ -111,10 +111,7 @@ class RelationshipEditor extends React.Component {
         <div>
           {getEditBtn()}
           <b>{relName}</b>
-          <GqlCompatibilityWarning
-            identifier={relName}
-            className={styles.add_mar_left_small}
-          />
+          <GqlCompatibilityWarning identifier={relName} />
           <div className={tableStyles.relationshipTopPadding}>
             {getRelDef(relConfig)}
           </div>
@@ -171,4 +168,5 @@ class RelationshipEditor extends React.Component {
     return <td>{isEditting ? expanded() : collapsed()}</td>;
   }
 }
+
 export default RelationshipEditor;

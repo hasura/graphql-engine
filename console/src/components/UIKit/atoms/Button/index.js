@@ -29,6 +29,8 @@ export const Button = props => {
 
   const buttonHeight = size === 'large' ? 'lg' : 'sm';
 
+  const spinnerSize = size === 'large' ? 'lg' : 'sm';
+
   const paddingX = size === 'large' ? 'lg' : 'md';
 
   return (
@@ -50,7 +52,7 @@ export const Button = props => {
       borderColor={borderColorValue}
     >
       {children}
-      {isLoading && <Spinner size={size} ml={18} />}
+      {isLoading && <Spinner size={spinnerSize} ml={18} />}
     </StyledButton>
   );
 };

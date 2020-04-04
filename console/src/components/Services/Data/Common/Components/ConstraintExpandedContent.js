@@ -29,7 +29,7 @@ export const ConstraintExpandedContent = ({
       <div>
         <div className={styles.add_mar_bottom_mid}>
           <b>Check Expression: </b>
-          <ToolTip message={checkConstraintExpression} ml="sm" />
+          <ToolTip message={checkConstraintExpression} mx="sm" />
           <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
         </div>
         <AceEditor

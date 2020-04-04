@@ -330,7 +330,7 @@ const RawSQL = ({
           Cascade metadata
         </label>
         <ToolTip message={cascadeTip}>
-          <Icon type="info" ml="xs" />
+          <Icon type="info" ml="sm" />
         </ToolTip>
       </div>
     );
@@ -358,7 +358,7 @@ const RawSQL = ({
           Track this
         </label>
         <ToolTip message={trackTableTip}>
-          <Icon type="info" ml="xs" />
+          <Icon type="info" ml="sm" />
         </ToolTip>
       </div>
     );
@@ -389,7 +389,7 @@ const RawSQL = ({
             This is a migration
           </label>
           <ToolTip message={migrationTip}>
-            <Icon type="info" ml="xs" />
+            <Icon type="info" ml="sm" />
           </ToolTip>
         </div>
       );
@@ -418,7 +418,7 @@ const RawSQL = ({
                 type="text"
               />
               <ToolTip message={migrationNameTip}>
-                <Icon type="info" ml="xs" />
+                <Icon type="info" ml="sm" />
               </ToolTip>
               <div
                 className={styles.add_mar_top_small + ' ' + styles.text_gray}
