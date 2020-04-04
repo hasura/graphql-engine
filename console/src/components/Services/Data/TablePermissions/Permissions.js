@@ -528,8 +528,23 @@ class Permissions extends Component {
 
       const query = permissionsState.query;
 
-      const noPermissions = !permissionsState[query];
+      const rolePermissions = tableSchema.permissions.find(
+        p => p.role_name === permissionsState.role
+      );
+
+      const currQueryPermissions = rolePermissions
+        ? rolePermissions.permissions[permissionsState.query]
+        : undefined;
+
+      const newQueryPermissions = permissionsState[query];
+
+      const noPermissions = !newQueryPermissions;
+
       const noPermissionsMsg = 'Set row permissions first';
+
+      const permsChanged =
+        JSON.stringify(newQueryPermissions) !==
+        JSON.stringify(currQueryPermissions);
 
       let sectionClasses = styles.editPermsSection;
       if (noPermissions) {
@@ -1525,7 +1540,7 @@ class Permissions extends Component {
           const confirmMessage = 'This will overwrite any existing permissions';
           const isOk = getConfirmation(confirmMessage);
           if (isOk) {
-            dispatch(applySamePermissionsBulk(tableSchema));
+            dispatch(applySamePermissionsBulk(tableSchema, permsChanged));
           }
         };
 
@@ -1720,19 +1735,7 @@ class Permissions extends Component {
             {value}
           </Button>
         );
-
-        const rolePermissions = tableSchema.permissions.find(
-          p => p.role_name === permissionsState.role
-        );
-        const currQueryPermissions = rolePermissions
-          ? rolePermissions.permissions[permissionsState.query]
-          : undefined;
-        const newQueryPermissions = permissionsState[permissionsState.query];
-
         const applySameSelected = permissionsState.applySamePermissions.length;
-        const permsChanged =
-          JSON.stringify(newQueryPermissions) !==
-          JSON.stringify(currQueryPermissions);
 
         const disableSave = applySameSelected || !permsChanged;
         const disableRemoveAccess = !currQueryPermissions;
