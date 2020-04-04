@@ -39,7 +39,7 @@ const CodeTabs = ({
   React.useEffect(init, [framework, parentMutation, shouldDerive]);
 
   if (loading) {
-    return <Spinner />;
+    return <Spinner size="xl" my="100px" mx="auto" />;
   }
 
   if (error) {

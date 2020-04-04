@@ -861,12 +861,7 @@ const ViewRows = ({
 
   const renderTableBody = () => {
     if (isProgressing) {
-      return (
-        <div>
-          {' '}
-          <Spinner />{' '}
-        </div>
-      );
+      return <Spinner size="xl" my="100px" mx="auto" />;
     }
 
     let disableSortColumn = false;

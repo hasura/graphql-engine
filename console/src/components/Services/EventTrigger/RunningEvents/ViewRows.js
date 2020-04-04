@@ -208,12 +208,7 @@ const ViewRows = ({
 
   const renderTableBody = () => {
     if (isProgressing) {
-      return (
-        <div>
-          {' '}
-          <Spinner />{' '}
-        </div>
-      );
+      return <Spinner size="xl" my="100px" mx="auto" />;
     } else if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }

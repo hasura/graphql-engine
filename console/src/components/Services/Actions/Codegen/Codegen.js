@@ -48,7 +48,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   React.useEffect(init, []);
 
   if (loading) {
-    return <Spinner />;
+    return <Spinner size="xl" my="100px" mx="auto" />;
   }
 
   if (error || !allFrameworks.length) {

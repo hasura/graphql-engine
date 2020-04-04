@@ -1,11 +1,11 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
   isMetadataStatusPage,
 } from '../Services/Settings/Actions';
-
 import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
 import { registerRunTimeError } from '../Main/Actions';
@@ -65,7 +65,7 @@ class ErrorBoundary extends React.Component {
     const { hasError, type, error } = this.state;
 
     if (hasError && metadata.ongoingRequest) {
-      return <Spinner />;
+      return <Spinner size="xl" my="100px" mx="auto" />;
     }
 
     if (hasError) {

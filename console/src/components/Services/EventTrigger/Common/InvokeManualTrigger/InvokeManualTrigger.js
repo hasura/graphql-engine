@@ -92,7 +92,7 @@ class InvokeManualTrigger extends React.Component {
       identifier,
     } = invokeEventTrigger;
 
-    const loader = () => <Spinner ml="xs" />;
+    const loader = () => <Spinner ml="sm" size="sm" display="inline-block" />;
 
     const getEventId = () =>
       (isCreatingManualTrigger && loader()) || success.event_id;
