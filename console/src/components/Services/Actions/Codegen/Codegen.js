@@ -7,7 +7,7 @@ import {
   getStarterKitPath,
   getGlitchProjectURL,
 } from './utils';
-import { getPersistedDerivedMutation } from '../lsUtils';
+import { getPersistedDerivedAction } from '../lsUtils';
 import Button from '../../../Common/Button/Button';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
@@ -21,7 +21,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   const [error, setError] = React.useState(null);
 
   const [parentMutation] = React.useState(
-    getPersistedDerivedMutation(currentAction.action_name)
+    getPersistedDerivedAction(currentAction.action_name)
   );
   const [shouldDerive, setShouldDerive] = React.useState(true);
 
