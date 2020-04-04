@@ -130,7 +130,7 @@ const RetryConfEditor = props => {
     <div className={`${styles.container} ${styles.borderBottom}`}>
       <div className={styles.modifySection}>
         <h4 className={styles.modifySectionHeading}>
-          Retry configuration{' '}
+          Retry configuration
           <ToolTip
             message="Edit your retry settings for event failures"
             ml="sm"
