@@ -27,7 +27,7 @@ import {
 } from '../../../Common/utils/pgUtils';
 import RootFields from './RootFields';
 import { changeViewRootFields } from '../Common/TooltipMessages';
-import { ToolTip } from '../../../UIKit/atoms';
+import { ToolTip, Heading } from '../../../UIKit/atoms';
 import styles from './ModifyTable.scss';
 
 const ModifyView = props => {
@@ -186,10 +186,10 @@ const ModifyView = props => {
 
     return (
       <React.Fragment>
-        <h4 className={styles.subheading_text}>
+        <Heading type="subHeading">
           Custom GraphQL Root Fields
-          <ToolTip message={changeViewRootFields} />
-        </h4>
+          <ToolTip message={changeViewRootFields} ml="sm" />
+        </Heading>
         <RootFields
           existingRootFields={existingRootFields}
           rootFieldsEdit={rootFieldsEdit}
@@ -275,13 +275,13 @@ const ModifyView = props => {
             isTable={false}
             dispatch={dispatch}
           />
-          <h4 className={styles.subheading_text}>Columns</h4>
+          <Heading type="subHeading">Columns</Heading>
           {getViewColumnsSection()}
           <br />
-          <h4 className={styles.subheading_text}>
+          <Heading type="subHeading">
             View Definition:
             <span className={styles.add_mar_left}>{modifyBtn}</span>
-          </h4>
+          </Heading>
           <AceEditor
             mode="sql"
             theme="github"
