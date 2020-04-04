@@ -928,17 +928,15 @@
 }
 
 .secureSection {
-  padding: 15px;
+  padding-right: 15px;
 
   a {
-    //color: #FFC627;
     color: #ffffff;
     text-decoration: none;
-  }
-
-  .secureSectionSymbol {
-    //color: #FFC627 !important;
-    color: inherit !important;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    font-size: 14px;
   }
 }
 
@@ -1280,25 +1278,6 @@
       .arrow {
         margin-left: 8px;
       }
-    }
-  }
-}
-
-@media (max-width: 1500px) {
-  .helpSection {
-    font-size: 12px;
-  }
-
-  .proWrapper {
-    .proName,
-    .proNameClicked {
-      font-size: 12px;
-    }
-  }
-
-  .secureSection {
-    a {
-      font-size: 12px;
     }
   }
 }

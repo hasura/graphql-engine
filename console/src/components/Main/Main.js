@@ -7,9 +7,6 @@ import * as tooltips from './Tooltips';
 import globals from '../../Globals';
 import { getPathRoot } from '../Common/utils/urlUtils';
 
-import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
-import { Icon, Spinner, ToolTip } from '../UIKit/atoms/';
-
 import {
   loadServerVersion,
   fetchServerConfig,
@@ -38,6 +35,9 @@ import {
   setLocalStorageItem,
 } from '../Common/utils/localStorageUtils';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
+
+import { Icon, Spinner, ToolTip } from '../UIKit/atoms/';
+import styles from './Main.scss';
 
 class Main extends React.Component {
   constructor(props) {
@@ -200,8 +200,6 @@ class Main extends React.Component {
 
     const { isProClicked } = this.state.proClickState;
 
-    const styles = require('./Main.scss');
-
     const appPrefix = '';
 
     const logo = require('./images/white-logo.svg');
@@ -272,16 +270,15 @@ class Main extends React.Component {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <WarningSymbol
-                tooltipText={tooltips.secureEndpoint}
-                tooltipPlacement={'left'}
-                customStyle={styles.secureSectionSymbol}
-              />
-              &nbsp;Secure your endpoint
+              <ToolTip message={tooltips.secureEndpoint} placement="left">
+                <Icon type="warning" size={12} mr="sm" />
+              </ToolTip>
+              Secure your endpoint
             </a>
           </div>
         );
       }
+
       return adminSecretHtml;
     };
 
