@@ -88,6 +88,7 @@ const renderWheres = (whereAnd, triggerSchema, dispatch) => {
       removeIcon = (
         <Icon
           type="close"
+          pointer
           onClick={() => {
             dispatch(removeFilter(i));
           }}
@@ -138,6 +139,7 @@ const renderSorts = (orderBy, triggerSchema, dispatch) => {
       removeIcon = (
         <Icon
           type="close"
+          pointer
           onClick={() => {
             dispatch(removeOrder(i));
           }}
