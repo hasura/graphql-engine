@@ -358,7 +358,7 @@ class Main extends React.Component {
                   className={styles.updateBannerClose}
                   onClick={this.closeUpdateBanner.bind(this)}
                 >
-                  <Icon type="close" />
+                  <Icon type="close" pointer />
                 </span>
               </div>
             </div>
@@ -392,7 +392,11 @@ class Main extends React.Component {
           >
             <div className={styles.dropdown_menu_container}>
               <div className={styles.closeDropDown}>
-                <Icon type="close" onClick={this.closeLoveIcon.bind(this)} />
+                <Icon
+                  type="close"
+                  onClick={this.closeLoveIcon.bind(this)}
+                  pointer
+                />
                 {/*
                         <img
                           className={'img-responsive'}

@@ -102,10 +102,10 @@ const renderWheres = (whereAnd, tableSchema, dispatch) => {
       removeIcon = (
         <Icon
           type="close"
+          pointer
           onClick={() => {
             dispatch(removeFilter(i));
           }}
-          pointer
           mt="sm"
           data-test={`clear-filter-${i}`}
         />

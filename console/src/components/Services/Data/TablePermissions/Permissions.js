@@ -1390,6 +1390,7 @@ class Permissions extends Component {
               _deleteBtn = (
                 <Icon
                   type="close"
+                  pointer
                   onClick={deletePreset}
                   data-index-id={index}
                 />
@@ -1600,6 +1601,7 @@ class Permissions extends Component {
                 _removeIcon = (
                   <Icon
                     type="close"
+                    pointer
                     className={styles.fontAwosomeClose}
                     onClick={removeApplyTo}
                   />
