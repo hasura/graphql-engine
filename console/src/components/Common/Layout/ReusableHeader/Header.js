@@ -190,9 +190,10 @@ class Header extends React.Component {
           {i !== this.props.headers.length - 1 && !isDisabled ? (
             <Icon
               type="close"
+              pointer
               onClick={this.deleteHeader.bind(this)}
               data-index-id={i}
-              ml="10px"
+              ml="sm"
             />
           ) : null}
         </div>

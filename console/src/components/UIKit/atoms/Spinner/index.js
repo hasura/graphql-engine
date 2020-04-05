@@ -54,7 +54,7 @@ export const Spinner = props => {
       spinnerSize = extraLargeSpinnerSize;
       break;
     default:
-      spinnerSize = smallSpinnerSize;
+      spinnerSize = size || smallSpinnerSize;
       break;
   }
 
