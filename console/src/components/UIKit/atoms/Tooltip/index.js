@@ -9,7 +9,7 @@ const tooltipGenerator = message => {
   return <Tooltip id={message}>{message}</Tooltip>;
 };
 
-const InfoIcon = <Icon type="questionCircle" size={12} />;
+const InfoIcon = <Icon type="questionCircle" size={12} pointer />;
 
 export const ToolTip = props => {
   const { message, placement, children } = props;
