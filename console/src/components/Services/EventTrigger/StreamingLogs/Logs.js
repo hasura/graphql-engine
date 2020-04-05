@@ -357,7 +357,7 @@ class StreamingLogs extends Component {
             {this.state.isWatching ? (
               <span>
                 <Icon type="pause" /> Streaming...
-                <Spinner ml="sm" size="sm" display="inline-block" />
+                <Spinner ml="sm" size="12px" display="inline-block" />
               </span>
             ) : (
               <span>
@@ -386,7 +386,7 @@ class StreamingLogs extends Component {
                 {log.isLoadingNewer ? (
                   <span>
                     Loading...
-                    <Spinner ml="sm" size="sm" display="inline-block" />
+                    <Spinner ml="sm" size="12px" display="inline-block" />
                   </span>
                 ) : (
                   <span>Load newer logs</span>
