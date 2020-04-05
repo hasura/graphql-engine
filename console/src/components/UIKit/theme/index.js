@@ -38,7 +38,7 @@ const colors = {
   black: {
     original: '#000',
     secondary: '#484538',
-    text: '#4d4d4d',
+    text: '#292822',
     hover: 'rgba(0, 0, 0, 0.16)',
   },
   white: '#fff',
