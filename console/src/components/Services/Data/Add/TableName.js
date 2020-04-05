@@ -7,15 +7,7 @@ import styles from '../../../Common/TableCommon/Table.scss';
 
 const TableNameInput = ({ onChange }) => {
   return [
-    <Heading
-      as="h4"
-      key="add_table_input_header"
-      fontSize="15px"
-      pb="20px"
-      mt="0px"
-      mb="0px"
-      ml="sm"
-    >
+    <Heading key="add_table_input_header" type="subHeading" mr="sm">
       Table Name
     </Heading>,
     <TextInput

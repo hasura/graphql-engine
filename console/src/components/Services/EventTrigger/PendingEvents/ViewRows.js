@@ -333,36 +333,36 @@ const ViewRows = ({
                             id="requestResponseTab"
                           >
                             <Tab eventKey={1} title="Request">
-                              <div className={styles.add_mar_top}>
-                                <Heading type="subHeading">Request</Heading>
-                                <AceEditor
-                                  mode="json"
-                                  theme="github"
-                                  name="payload"
-                                  value={currentPayload}
-                                  minLines={4}
-                                  maxLines={100}
-                                  width="100%"
-                                  showPrintMargin={false}
-                                  showGutter={false}
-                                />
-                              </div>
+                              <Heading type="subHeading" mt="20px">
+                                Request
+                              </Heading>
+                              <AceEditor
+                                mode="json"
+                                theme="github"
+                                name="payload"
+                                value={currentPayload}
+                                minLines={4}
+                                maxLines={100}
+                                width="100%"
+                                showPrintMargin={false}
+                                showGutter={false}
+                              />
                             </Tab>
                             <Tab eventKey={2} title="Response">
-                              <div className={styles.add_mar_top}>
-                                <Heading type="subHeading">Response</Heading>
-                                <AceEditor
-                                  mode="json"
-                                  theme="github"
-                                  name="response"
-                                  value={finalResponse}
-                                  minLines={4}
-                                  maxLines={100}
-                                  width="100%"
-                                  showPrintMargin={false}
-                                  showGutter={false}
-                                />
-                              </div>
+                              <Heading type="subHeading" mt="20px">
+                                Response
+                              </Heading>
+                              <AceEditor
+                                mode="json"
+                                theme="github"
+                                name="response"
+                                value={finalResponse}
+                                minLines={4}
+                                maxLines={100}
+                                width="100%"
+                                showPrintMargin={false}
+                                showGutter={false}
+                              />
                             </Tab>
                           </Tabs>
                         </div>

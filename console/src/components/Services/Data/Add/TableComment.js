@@ -7,15 +7,7 @@ import styles from '../../../Common/TableCommon/Table.scss';
 
 const TableComment = ({ onChange }) => {
   return [
-    <Heading
-      as="h4"
-      key="add_table_comment_header"
-      fontSize="15px"
-      pb="20px"
-      mt="0px"
-      mb="0px"
-      mr="sm"
-    >
+    <Heading key="add_table_comment_header" type="subHeading" mr="sm">
       Comment
     </Heading>,
     <TextInput

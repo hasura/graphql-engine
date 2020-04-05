@@ -165,7 +165,7 @@ class AllowedQueriesList extends React.Component {
       <div>
         <Heading type="subHeading">
           Allowed Queries
-          {getDeleteAllBtn()}
+          <span className={styles.add_mar_left}>{getDeleteAllBtn()}</span>
         </Heading>
 
         <div className={styles.subsection}>{getQueryList()}</div>

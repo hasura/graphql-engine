@@ -17,12 +17,7 @@ const CommonTabLayout = ({
 }) => (
   <div className={styles.subHeader}>
     <BreadCrumb breadCrumbs={breadCrumbs} />
-    <Heading
-      as="h2"
-      fontSize="18px"
-      pb="20px"
-      className={styles.set_line_height}
-    >
+    <Heading as="h2" fontSize="18px" pb="20px" lineHeight="26px">
       {heading || ''}
     </Heading>
     <Tabs

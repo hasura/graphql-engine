@@ -9,7 +9,7 @@ const editorTooltipText = 'The HTTP handler for the action';
 const HandlerEditor = ({ value, onChange, className }) => {
   return (
     <div className={className || ''}>
-      <Heading as="h2" fontSize="15px" mt="0px" mb="xs">
+      <Heading type="subHeading" mb="xs">
         {editorLabel}
         <ToolTip message={editorTooltipText} ml="sm" />
       </Heading>

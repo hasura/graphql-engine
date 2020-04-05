@@ -20,14 +20,7 @@ const TableColumns = props => {
   });
 
   return [
-    <Heading
-      as="h4"
-      key="table_columns_header"
-      fontSize="15px"
-      pb="20px"
-      mt="0px"
-      mb="0px"
-    >
+    <Heading key="table_columns_header" type="subHeading">
       Columns
     </Heading>,
     <div key="table_colums_value">{cols}</div>,
