@@ -4,12 +4,15 @@ import { getSdlComplete } from '../../../../shared/utils/sdlUtils';
 import {
   getAllCodegenFrameworks,
   getStarterKitPath,
+  getStarterKitDownloadPath,
   getGlitchProjectURL,
 } from './utils';
 import { getPersistedDerivedAction } from '../lsUtils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import styles from '../Common/components/Styles.scss';
 import Button from '../../../Common/Button/Button';
+import DownloadIcon from '../../../Common/Icons/Download';
+import GithubIcon from '../../../Common/Icons/Github';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
 
@@ -110,16 +113,33 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
       ) {
         return null;
       }
+
       return (
-        <a
-          href={getStarterKitPath(selectedFramework)}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Button color="white" className={`${styles.add_mar_right_mid}`}>
-            Get starter kit
-          </Button>
-        </a>
+        <React.Fragment>
+          <a
+            href={getStarterKitDownloadPath(selectedFramework)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.add_mar_right_small}
+            title={`Download starter kit for ${selectedFramework}`}
+          >
+            <Button color="white">
+              <DownloadIcon className={styles.add_mar_right_small} /> Starter
+              Kit
+            </Button>
+          </a>
+          <a
+            href={getStarterKitPath(selectedFramework)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.add_mar_right_small}
+            title={`View the starter kit for ${selectedFramework} on GitHub`}
+          >
+            <Button color="white">
+              <GithubIcon />
+            </Button>
+          </a>
+        </React.Fragment>
       );
     };
 
