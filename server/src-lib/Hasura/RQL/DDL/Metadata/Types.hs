@@ -487,13 +487,12 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
         actionDefinitionToOrdJSON (ActionDefinition args outputType kind headers frwrdClientHdrs handler actionType) =
           AO.object $ [ ("kind", AO.toOrdered kind)
                       , ("handler", AO.toOrdered handler)
-                      , ("arguments", AO.array $ map argDefinitionToOrdJSON args)
                       , ("output_type", AO.toOrdered outputType)
                       , ("type", AO.toOrdered actionType)
                       ]
           <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
           <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
-                       ]
+                       , listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args]
           where
             argDefinitionToOrdJSON :: ArgumentDefinition -> AO.Value
             argDefinitionToOrdJSON (ArgumentDefinition argName ty descM) =
