@@ -821,8 +821,8 @@ const ViewRows = ({
       );
     }
 
-    const collapsedColumns = getCollapsedColumns(curTableName);
-    const columnsOrder = getColumnsOrder(curTableName);
+    const collapsedColumns = getCollapsedColumns(curTableName, currentSchema);
+    const columnsOrder = getColumnsOrder(curTableName, currentSchema);
 
     let disableSortColumn = false;
 
@@ -943,11 +943,11 @@ const ViewRows = ({
         onPageSizeChange={handlePageSizeChange}
         page={Math.floor(curFilter.offset / curFilter.limit)}
         onCollapseChange={collapsedData =>
-          handleCollapseChange(curTableName, collapsedData)
+          handleCollapseChange(curTableName, currentSchema, collapsedData)
         }
         defaultCollapsed={collapsedColumns}
         onOrderChange={reorderData =>
-          handleOrderChange(curTableName, reorderData)
+          handleOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
       />

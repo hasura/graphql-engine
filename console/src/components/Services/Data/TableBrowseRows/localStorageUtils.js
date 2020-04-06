@@ -34,15 +34,16 @@ const getColumnsCollapsedState = () => {
 
 /**
  * @param {string} tableName
+ * @param {string} schemaNae
  * @param {{[colName: string]: boolean}} newCollapsedData
  *
  * @returns {void}
  */
-export const handleCollapseChange = (tableName, collapsedData) => {
+export const handleCollapseChange = (tableName, schemaName, collapsedData) => {
   const currentCollapsed = getColumnsCollapsedState();
   const newCollapsed = {
     ...currentCollapsed,
-    [tableName]: collapsedData,
+    [`${schemaName}.${tableName}`]: collapsedData,
   };
 
   setColumnsCollapsedState(newCollapsed);
@@ -50,12 +51,13 @@ export const handleCollapseChange = (tableName, collapsedData) => {
 
 /**
  * @param {string} tableName
+ * @param {string} schemaName
  *
  * @returns {{[colName: string]: boolean}|void}
  */
-export const getCollapsedColumns = tableName => {
+export const getCollapsedColumns = (tableName, schemaName) => {
   const collapsedData = getColumnsCollapsedState();
-  return collapsedData[tableName];
+  return collapsedData[`${schemaName}.${tableName}`];
 };
 
 const columnsOrderState = 'data:order';
@@ -71,8 +73,6 @@ const setColumnsOrderState = data => {
 };
 
 /**
- * @param {string} tableName
- *
  * @returns {{
  *  [tableName: string]: {newOrder: number, defaultOrder: number}[]
  * }}
@@ -100,9 +100,11 @@ const compareReorderItems = item1 => item2 =>
 
 /**
  * @param {string} tableName
+ * @param {string} schemaName
+ *
  * @param {{newOrder: number, defaultOrder: number}[]} orderData
  */
-export const handleOrderChange = (tableName, orderData) => {
+export const handleOrderChange = (tableName, schemaName, orderData) => {
   const currentOrders = getColumnsOrderState();
 
   // remove duplicates
@@ -117,23 +119,24 @@ export const handleOrderChange = (tableName, orderData) => {
   });
 
   if (!newOrders.length) {
-    delete currentOrders[tableName];
+    delete currentOrders[`${schemaName}.${tableName}`];
     setColumnsOrderState(currentOrders);
     return;
   }
 
   setColumnsOrderState({
     ...currentOrders,
-    [tableName]: newOrders,
+    [`${schemaName}.${tableName}`]: newOrders,
   });
 };
 
 /**
  * @param {string} tableName
+ * @param {string} schemaName
  *
  * @returns {{newOrder: number, defaultOrder: number}[]}
  */
-export const getColumnsOrder = tableName => {
+export const getColumnsOrder = (tableName, schemaName) => {
   const orderData = getColumnsOrderState();
-  return orderData[tableName];
+  return orderData[`${schemaName}.${tableName}`];
 };
