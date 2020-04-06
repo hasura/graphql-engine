@@ -104,7 +104,7 @@ queryFldToPGAST fld = do
     QCFuncAggQuery ctx -> do
       validateHdrs userInfo (_fqocHeaders ctx)
       QRFAgg <$> RS.convertFuncQueryAgg ctx fld
-    QCActionFetch ctx ->
+    QCAsyncActionFetch ctx ->
       QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
     QCAction ctx ->
       QRFActionExecute <$> RA.resolveActionQuery fld ctx (userVars userInfo)

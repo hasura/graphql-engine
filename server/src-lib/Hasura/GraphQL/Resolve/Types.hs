@@ -33,7 +33,7 @@ data QueryCtx
   | QCSelectAgg !SelOpCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
-  | QCActionFetch !ActionSelectOpContext
+  | QCAsyncActionFetch !ActionSelectOpContext
   | QCAction !ActionExecutionContext
   deriving (Show, Eq)
 

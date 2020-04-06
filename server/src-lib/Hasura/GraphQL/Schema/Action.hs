@@ -278,7 +278,7 @@ mkActionsSchema annotatedObjects =
         addToStateAsync queryField responseTypeInfo (rootFields, tyAgg) =
           ( addMutationField (first MCAction mutationField) $
             addQueryField
-            (first QCActionFetch queryField)
+            (first QCAsyncActionFetch queryField)
             rootFields
           , addTypeInfoToTyAgg responseTypeInfo $
             addFieldsToTyAgg fields tyAgg
