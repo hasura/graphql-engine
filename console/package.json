@@ -18,13 +18,13 @@
     "server-build": "make server-build",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "postinstall": "webpack --display-error-details --config webpack/prod.config.js",
-    "lint": "eslint -c .eslintrc src api",
+    "lint": "eslint -c .eslintrc src --ext .js,.ts,.tsx",
     "start-dev": "better-npm-run start-dev",
     "watch-client": "better-npm-run watch-client",
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
-    "precommit": "lint-staged",
     "cypress": "cypress open",
-    "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record"
+    "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\""
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
@@ -32,7 +32,7 @@
       "git add"
     ],
     "*.{js,json,ts,tsx,css,md}": [
-      "prettier --single-quote --trailing-comma es5 --write",
+      "prettier --write",
       "git add"
     ]
   },
@@ -50,6 +50,17 @@
     },
     "watch-client": {
       "command": "node -r dotenv/config webpack/webpack-dev-server.js"
+    }
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "printWidth": 80,
+    "tabWidth": 2
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
     }
   },
   "dependencies": {
@@ -75,7 +86,6 @@
     "match-sorter": "^2.3.0",
     "multireducer": "^1.0.2",
     "piping": "^0.3.2",
-    "prettier": "^1.16.4",
     "pretty-error": "^1.2.0",
     "prop-types": "^15.6.0",
     "query-string": "^6.1.0",
@@ -167,7 +177,7 @@
     "@types/ws": "^7.2.3",
     "@typescript-eslint/eslint-plugin": "^2.24.0",
     "@typescript-eslint/parser": "^2.24.0",
-    "babel-eslint": "^9.0.0",
+    "babel-eslint": "^10.0.3",
     "babel-loader": "^8.0.0",
     "babel-plugin-istanbul": "^5.1.1",
     "babel-plugin-styled-components": "^1.10.6",
@@ -183,10 +193,11 @@
     "dotenv": "^5.0.1",
     "eslint": "^6.5.1",
     "eslint-config-airbnb": "16.1.0",
+    "eslint-config-prettier": "^6.10.0",
     "eslint-loader": "^1.0.0",
     "eslint-plugin-chai-friendly": "^0.4.1",
     "eslint-plugin-cypress": "^2.0.1",
-    "eslint-plugin-import": "^2.12.0",
+    "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.9.1",
     "express": "^4.13.3",
@@ -197,7 +208,7 @@
     "font-awesome": "^4.7.0",
     "font-awesome-webpack": "0.0.4",
     "fork-ts-checker-webpack-plugin": "^4.0.2",
-    "husky": "^0.14.3",
+    "husky": "^4.2.3",
     "ignore-loader": "^0.1.2",
     "jquery": "^3.4.1",
     "json-loader": "^0.5.4",
@@ -207,6 +218,7 @@
     "node-sass": "^4.13.0",
     "nyc": "^13.3.0",
     "optimize-css-assets-webpack-plugin": "^4.0.2",
+    "prettier": "1.19.1",
     "react-a11y": "^0.2.6",
     "react-addons-test-utils": "^15.0.3",
     "react-hot-loader": "^4.6.5",
