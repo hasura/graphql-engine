@@ -188,6 +188,18 @@ class TestGraphqlInsertConstraints:
 
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
+@usefixtures('per_class_tests_db_state')
+class TestGraphqlInsertNullPrefixedColumnOnConflict:
+
+    def test_address_not_null_constraint_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/null_prefixed_column_ok.yaml")
+
+    @classmethod
+    def dir(cls):
+        return "queries/graphql_mutation/insert/nullprefixcolumn"
+
+
+@pytest.mark.parametrize("transport", ['http', 'websocket'])
 @use_mutation_fixtures
 class TestGraphqlInsertGeoJson:
 
