@@ -78,7 +78,7 @@ at https://github.com/hasura/graphql-engine/releases.
    ...
    ...
 
-Change ``v1.0.0-alpha01`` to ``v1.0.0-alpha02`` for example, and then ``git push heroku master`` to deploy.
+Change ``v1.0.0-alpha01`` to ``v1.0.0-alpha02`` for example, and then at the terminal type ``git add *``, ``git commit -m "Hasure version change within Dockerfile"`` and finally ``git push heroku master`` to deploy.
 
 .. note::
 
