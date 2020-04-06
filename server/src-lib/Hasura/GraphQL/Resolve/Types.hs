@@ -34,6 +34,7 @@ data QueryCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
   | QCActionFetch !ActionSelectOpContext
+  | QCAction !ActionExecutionContext
   deriving (Show, Eq)
 
 data MutationCtx

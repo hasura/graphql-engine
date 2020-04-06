@@ -52,12 +52,12 @@ mkAsyncActionQueryResponseObj actionName outputType =
         , unGraphQLType outputType)
       ]
 
-mkMutationField
+mkActionField
   :: ActionName
   -> ActionInfo
   -> [(PGCol, PGScalarType)]
   -> (ActionExecutionContext, ObjFldInfo)
-mkMutationField actionName actionInfo definitionList =
+mkActionField actionName actionInfo definitionList =
   ( actionExecutionContext
   , fieldInfo
   )
@@ -131,17 +131,20 @@ mkActionFieldsAndTypes
        -- context, field, response type info
      , (ActionExecutionContext, ObjFldInfo) -- mutation field
      , FieldMap
+     , ActionType
      )
 mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
   return ( mkQueryField actionName comment definition definitionList
-         , mkMutationField actionName actionInfo definitionList
+         , mkActionField actionName actionInfo definitionList
          , fieldMap
+         , actionType
          )
   where
     actionName = _aiName actionInfo
     definition = _aiDefinition actionInfo
     roleName = _apiRole permission
     comment = _aiComment actionInfo
+    actionType = _adType definition
 
     -- all the possible field references
     fieldReferences =
@@ -227,6 +230,7 @@ mkActionSchemaOne
          ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
          , (ActionExecutionContext, ObjFldInfo)
          , FieldMap
+         , ActionType
          )
        )
 mkActionSchemaOne annotatedObjects actionInfo = do
@@ -258,7 +262,7 @@ mkActionsSchema annotatedObjects =
     newRoleState = (mempty, addScalarToTyAgg PGJSON $
                             addScalarToTyAgg PGTimeStampTZ $
                             addScalarToTyAgg PGUUID mempty)
-    f roleName (queryFieldM, mutationField, fields) =
+    f roleName (queryFieldM, mutationField, fields, actionType) =
       Map.alter (Just . addToState . fromMaybe newRoleState) roleName
       where
         addToState = case queryFieldM of
@@ -266,7 +270,9 @@ mkActionsSchema annotatedObjects =
             addToStateAsync (fldCtx, fldDefinition) responseTypeInfo
           Nothing -> addToStateSync
         addToStateSync (rootFields, tyAgg) =
-          ( addMutationField (first MCAction mutationField) rootFields
+          ( case actionType of
+              ActionMutation -> addMutationField (first MCAction mutationField) rootFields
+              ActionQuery -> addQueryField (first QCAction mutationField) rootFields
           , addFieldsToTyAgg fields tyAgg
           )
         addToStateAsync queryField responseTypeInfo (rootFields, tyAgg) =
