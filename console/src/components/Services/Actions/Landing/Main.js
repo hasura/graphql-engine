@@ -53,9 +53,7 @@ class Landing extends React.Component {
 
     return (
       <div
-        className={`${styles.padd_left_remove} ${
-          styles.actionsWrapper
-        } container-fluid ${styles.padd_top}`}
+        className={`${styles.padd_left_remove} ${styles.actionsWrapper} container-fluid ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
           <Helmet title={`${pageTitle} | Hasura`} />
