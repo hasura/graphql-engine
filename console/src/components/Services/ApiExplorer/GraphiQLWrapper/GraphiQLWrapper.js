@@ -13,17 +13,17 @@ import {
 } from './utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
 import { parse as sdlParse, print } from 'graphql';
-import deriveMutation from '../../../../shared/utils/deriveMutation';
+import deriveAction from '../../../../shared/utils/deriveAction';
 import {
   getActionDefinitionSdl,
   getTypesSdl,
 } from '../../../../shared/utils/sdlUtils';
 import { showErrorNotification } from '../../Common/Notification';
-import { persistDerivedMutation } from '../../Actions/lsUtils';
 import { getActionsCreateRoute } from '../../../Common/utils/routesUtils';
 import {
   setActionDefinition,
   setTypeDefinition,
+  setDerivedActionParentOperation,
 } from '../../Actions/Add/reducer';
 
 import 'graphiql/graphiql.css';
@@ -99,19 +99,19 @@ class GraphiQLWrapper extends Component {
       }));
     };
 
-    const deriveActionFromMutation = () => {
+    const deriveActionFromOperation = () => {
       const { schema, query } = graphiqlContext.state;
       if (!schema) return;
       if (!query) return;
-      let derivedMutationMetadata;
+      let derivedOperationMetadata;
       try {
-        derivedMutationMetadata = deriveMutation(query.trim(), schema);
+        derivedOperationMetadata = deriveAction(query.trim(), schema);
       } catch (e) {
         dispatch(showErrorNotification('Unable to derive mutation', e.message));
         console.error(e);
         return;
       }
-      const { action, types } = derivedMutationMetadata;
+      const { action, types } = derivedOperationMetadata;
       const actionsSdl = getActionDefinitionSdl(
         action.name,
         action.arguments,
@@ -122,8 +122,8 @@ class GraphiQLWrapper extends Component {
         setActionDefinition(actionsSdl, null, null, sdlParse(actionsSdl))
       );
       dispatch(setTypeDefinition(typesSdl, null, null, sdlParse(typesSdl)));
-      persistDerivedMutation(action.name, query.trim());
-      dispatch(push(getActionsCreateRoute(true)));
+      dispatch(setDerivedActionParentOperation(query.trim()));
+      dispatch(push(getActionsCreateRoute()));
     };
 
     const renderGraphiql = graphiqlProps => {
@@ -165,7 +165,7 @@ class GraphiQLWrapper extends Component {
           {
             label: 'Derive action',
             title: 'Derive action for the given mutation',
-            onClick: deriveActionFromMutation,
+            onClick: deriveActionFromOperation,
           },
         ];
         return buttons.map(b => {
@@ -198,12 +198,7 @@ class GraphiQLWrapper extends Component {
     return (
       <GraphiQLErrorBoundary>
         <div
-          className={
-            'react-container-graphql ' +
-            styles.wd100 +
-            ' ' +
-            styles.graphQLHeight
-          }
+          className={`react-container-graphql ${styles.wd100} ${styles.graphQLHeight} ${styles.box_shadow}`}
         >
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}

@@ -91,7 +91,7 @@ ActionDefinition
      - Schema
      - Description
    * - arguments
-     - true
+     - false
      - Array of InputArgument_
      - Input arguments
    * - output_type
