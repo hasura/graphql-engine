@@ -60,9 +60,13 @@ const vSetDefaults = () => ({ type: V_SET_DEFAULTS });
 
 const vMakeRequest = () => {
   return (dispatch, getState) => {
-    const { tables } = getState();
+    const {
+      currentTable: originalTable,
+      currentSchema,
+      view,
+    } = getState().tables;
+
     const url = Endpoints.query;
-    const originalTable = getState().tables.currentTable;
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
     const requestBody = {
@@ -70,12 +74,10 @@ const vMakeRequest = () => {
       args: [
         generateSelectQuery(
           'select',
-          generateTableDef(tables.currentTable, tables.currentSchema),
-          tables.view.query
+          generateTableDef(originalTable, currentSchema),
+          view.query
         ),
-        getRunSqlQuery(
-          getEstimateCountQuery(tables.currentSchema, tables.currentTable)
-        ),
+        getRunSqlQuery(getEstimateCountQuery(currentSchema, originalTable)),
       ],
     };
     const options = {
@@ -86,7 +88,10 @@ const vMakeRequest = () => {
     };
     return dispatch(requestAction(url, options)).then(
       data => {
-        if (originalTable === tables.currentTable) {
+        const currentTable = getState().tables.currentTable;
+
+        // in case table has changed before count load
+        if (currentTable === originalTable) {
           Promise.all([
             dispatch({
               type: V_REQUEST_SUCCESS,
@@ -111,14 +116,17 @@ const vMakeRequest = () => {
 
 const vMakeCountRequest = () => {
   return (dispatch, getState) => {
-    const { tables } = getState();
+    const {
+      currentTable: originalTable,
+      currentSchema,
+      view,
+    } = getState().tables;
     const url = Endpoints.query;
-    const originalTable = tables.currentTable;
 
     const requestBody = generateSelectQuery(
       'count',
-      generateTableDef(tables.currentTable, tables.currentSchema),
-      tables.view.query
+      generateTableDef(originalTable, currentSchema),
+      view.query
     );
 
     const options = {
@@ -147,6 +155,10 @@ const vMakeCountRequest = () => {
       }
     );
   };
+};
+
+const vMakeTableRequests = () => dispatch => {
+  dispatch(vMakeRequest()).then(() => dispatch(vMakeCountRequest()));
 };
 
 const fetchManualTriggers = tableName => {
@@ -253,7 +265,7 @@ const deleteItems = pkClauses => {
     dispatch(requestAction(Endpoints.query, options)).then(
       data => {
         const affected = data.reduce((acc, d) => acc + d.affected_rows, 0);
-        dispatch(vMakeRequest());
+        dispatch(vMakeTableRequests());
         dispatch(
           showSuccessNotification('Rows deleted!', 'Affected rows: ' + affected)
         );
@@ -272,7 +284,7 @@ const vExpandRel = (path, relname, pk) => {
     // Modify the query (UI will automatically change)
     dispatch({ type: V_EXPAND_REL, path, relname, pk });
     // Make a request
-    return dispatch(vMakeRequest());
+    return dispatch(vMakeTableRequests());
   };
 };
 const vCloseRel = (path, relname) => {
@@ -280,7 +292,7 @@ const vCloseRel = (path, relname) => {
     // Modify the query (UI will automatically change)
     dispatch({ type: V_CLOSE_REL, path, relname });
     // Make a request
-    return dispatch(vMakeRequest());
+    return dispatch(vMakeTableRequests());
   };
 };
 /* ************ helpers ************************/
@@ -627,4 +639,5 @@ export {
   deleteItems,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
+  vMakeTableRequests,
 };

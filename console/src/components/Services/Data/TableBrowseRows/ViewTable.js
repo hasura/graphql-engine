@@ -2,12 +2,11 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import {
   vSetDefaults,
-  vMakeRequest,
   // vExpandHeading,
   fetchManualTriggers,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
-  vMakeCountRequest,
+  vMakeTableRequests,
 } from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
@@ -97,7 +96,7 @@ class ViewTable extends Component {
     Promise.all([
       dispatch(setTable(tableName)),
       dispatch(vSetDefaults(tableName)),
-      dispatch(vMakeRequest()).then(() => dispatch(vMakeCountRequest())),
+      dispatch(vMakeTableRequests),
       dispatch(fetchManualTriggers(tableName)),
     ]);
   }

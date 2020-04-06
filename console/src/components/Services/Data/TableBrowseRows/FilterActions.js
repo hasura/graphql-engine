@@ -1,6 +1,6 @@
 // import Endpoints, {globalCookiePolicy} from '../../Endpoints';
 import { defaultCurFilter } from '../DataState';
-import { vMakeRequest, vMakeCountRequest } from './ViewActions';
+import { vMakeTableRequests } from './ViewActions';
 import { Integers, Reals } from '../constants';
 
 const LOADING = 'ViewTable/FilterQuery/LOADING';
@@ -108,7 +108,7 @@ const runQuery = tableSchema => {
       delete newQuery.order_by;
     }
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
-    dispatch(vMakeRequest()).then(() => dispatch(vMakeCountRequest()));
+    dispatch(vMakeTableRequests());
   };
 };
 
