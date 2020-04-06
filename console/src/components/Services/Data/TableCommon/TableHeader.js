@@ -42,7 +42,7 @@ const TableHeader = ({
   }
   const activeTab = tabNameMap[tabName];
 
-  const saveTableNameChange = (newName) => {
+  const saveTableNameChange = newName => {
     dispatch(changeTableName(tableName, newName, isTable));
   };
 

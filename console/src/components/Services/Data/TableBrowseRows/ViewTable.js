@@ -127,7 +127,7 @@ class ViewTable extends Component {
     dispatch(vSetDefaults(this.props.tableName));
   }
 
-  updateInvocationRow = (row) => {
+  updateInvocationRow = row => {
     const { dispatch } = this.props;
     dispatch({
       type: UPDATE_TRIGGER_ROW,
@@ -135,7 +135,7 @@ class ViewTable extends Component {
     });
   };
 
-  updateInvocationFunction = (triggerFunc) => {
+  updateInvocationFunction = triggerFunc => {
     const { dispatch } = this.props;
     dispatch({
       type: UPDATE_TRIGGER_FUNCTION,
@@ -170,7 +170,7 @@ class ViewTable extends Component {
 
     // check if table exists
     const tableSchema = schemas.find(
-      (s) => s.table_name === tableName && s.table_schema === currentSchema
+      s => s.table_name === tableName && s.table_schema === currentSchema
     );
 
     if (!tableSchema) {
@@ -280,6 +280,6 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const viewTableConnector = (connect) => connect(mapStateToProps)(ViewTable);
+const viewTableConnector = connect => connect(mapStateToProps)(ViewTable);
 
 export default viewTableConnector;

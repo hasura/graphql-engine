@@ -25,24 +25,24 @@ class DragFoldTable extends Component {
     headers.forEach((header, i) => {
       header.setAttribute('draggable', true);
       //the dragged header
-      header.ondragstart = (e) => {
+      header.ondragstart = e => {
         e.stopPropagation();
         this.dragged = i;
       };
 
-      header.ondrag = (e) => e.stopPropagation;
+      header.ondrag = e => e.stopPropagation;
 
-      header.ondragend = (e) => {
+      header.ondragend = e => {
         e.stopPropagation();
         setTimeout(() => (this.dragged = null), 1000);
       };
 
       //the dropped header
-      header.ondragover = (e) => {
+      header.ondragover = e => {
         e.preventDefault();
       };
 
-      header.ondrop = (e) => {
+      header.ondrop = e => {
         e.preventDefault();
         if (this.dragged) {
           this.reorders.push({
@@ -80,7 +80,7 @@ class DragFoldTable extends Component {
     }));
 
     //run all reorder events
-    this.reorders.forEach((o) =>
+    this.reorders.forEach(o =>
       cols.splice(o.newOrder, 0, cols.splice(o.defaultOrder, 1)[0])
     );
 
@@ -93,7 +93,7 @@ class DragFoldTable extends Component {
           {...this.props}
           data={data}
           columns={cols}
-          onFoldChange={(newFolded) => {
+          onFoldChange={newFolded => {
             if (this.props.onCollapseChange) {
               this.props.onCollapseChange(newFolded);
             }
