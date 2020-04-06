@@ -45,6 +45,7 @@ data QueryRootFldAST v
   | QRFSimple !(DS.AnnSimpleSelG v)
   | QRFAgg !(DS.AnnAggSelG v)
   | QRFActionSelect !(DS.AnnSimpleSelG v)
+  | QRFActionExecute !(DS.AnnSimpleSelG v)
   deriving (Show, Eq)
 
 type QueryRootFldUnresolved = QueryRootFldAST UnresolvedVal
@@ -79,7 +80,8 @@ validateHdrs userInfo hdrs = do
 queryFldToPGAST
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
-     , Has QueryCtxMap r
+     , Has QueryCtxMap r, HasVersion, MonadIO m, Has [HTTP.Header] r
+     , Has HTTP.Manager r
      )
   => V.Field
   -> m QueryRootFldUnresolved
@@ -104,6 +106,8 @@ queryFldToPGAST fld = do
       QRFAgg <$> RS.convertFuncQueryAgg ctx fld
     QCActionFetch ctx ->
       QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
+    QCAction ctx ->
+      QRFActionExecute <$> RA.resolveActionQuery fld ctx (userVars userInfo)
 
 mutFldToTx
   :: ( HasVersion

@@ -259,7 +259,9 @@ runE ctx sqlGenCtx userInfo action = do
     insCtxMap = _gInsCtxMap ctx
 
 getQueryOp
-  :: (MonadError QErr m)
+  :: ( HasVersion
+     , MonadError QErr m
+     , MonadIO m)
   => GCtx
   -> SQLGenCtx
   -> UserInfo

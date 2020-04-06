@@ -15,6 +15,8 @@ import qualified Data.TByteString                       as TBS
 import qualified Data.Text                              as T
 import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Network.HTTP.Types                     as HTTP
+import qualified Network.HTTP.Client                    as HTTP
 
 import           Control.Lens                           ((^?))
 import           Data.Has
@@ -24,6 +26,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.GraphQL.Validate.Field          as V
 import qualified Hasura.SQL.DML                         as S
+import           Hasura.Server.Version             (HasVersion)
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Types
@@ -33,6 +36,7 @@ import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import Debug.Trace
 
 type PlanVariables = Map.HashMap G.Variable Int
 
@@ -187,6 +191,10 @@ convertQuerySelSet
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has UserInfo r
+     , HasVersion
+     , MonadIO m
+     , Has [HTTP.Header] r
+     , Has HTTP.Manager r
      )
   => QueryReusability
   -> V.SelSet

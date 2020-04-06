@@ -2,6 +2,7 @@ module Hasura.GraphQL.Resolve.Action
   ( resolveActionMutation
   , resolveAsyncActionQuery
   , asyncActionsProcessor
+  , resolveActionQuery
   ) where
 
 import           Hasura.Prelude
@@ -138,6 +139,61 @@ resolveActionMutationSync field executionContext sessionVariables = do
   astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
   let jsonAggType = mkJsonAggSelect outputType
   return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
+  where
+    SyncActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
+      forwardClientHeaders = executionContext
+
+resolveActionQuery
+  :: ( HasVersion
+     , MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , MonadIO m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     , Has HTTP.Manager r
+     , Has [HTTP.Header] r
+     )
+  => Field
+  -> ActionExecutionContext
+  -> UserVars
+  -> m (RS.AnnSimpleSelG UnresolvedVal)
+resolveActionQuery field executionContext sessionVariables = do
+  case executionContext of
+    ActionExecutionSyncWebhook executionContextSync ->
+      resolveActionQuerySync field executionContextSync sessionVariables
+
+resolveActionQuerySync
+  :: ( HasVersion
+     , MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , MonadIO m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     , Has HTTP.Manager r
+     , Has [HTTP.Header] r
+     )
+  => Field
+  -> SyncActionExecutionContext
+  -> UserVars
+  -> m (RS.AnnSimpleSelG UnresolvedVal)
+resolveActionQuerySync field executionContext sessionVariables = do
+  let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
+      actionContext = ActionContext actionName
+      handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
+  manager <- asks getter
+  reqHeaders <- asks getter
+  (webhookRes, respHeaders) <- callWebhook manager outputType outputFields reqHeaders confHeaders
+                               forwardClientHeaders resolvedWebhook handlerPayload
+  let webhookResponseExpression = RS.AEInput $ UVSQL $
+        toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+  selectAstUnresolved <-
+    processOutputSelectionSet webhookResponseExpression outputType definitionList
+    (_fType field) $ _fSelSet field
+  return selectAstUnresolved
   where
     SyncActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
