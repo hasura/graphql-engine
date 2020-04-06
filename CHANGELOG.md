@@ -8,7 +8,6 @@
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
 - server: reserved keywords in column references break parser (fix #3597) #3927
-- server: add more info about server to config api (#3412)
 
 ## `v1.2.0-beta.3`
 
