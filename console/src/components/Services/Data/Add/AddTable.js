@@ -298,7 +298,7 @@ class AddTable extends Component {
   }
 
   /* eslint-disable @typescript-eslint/no-unused-vars */
-  isValidDefault(type, d) {
+  isValidDefault() {
     return true;
   }
   /* eslint-enable @typescript-eslint/no-unused-vars */
