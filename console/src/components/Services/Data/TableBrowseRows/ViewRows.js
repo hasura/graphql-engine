@@ -715,7 +715,9 @@ const ViewRows = ({
           <b className={styles.padd_small_right}>Selected:</b>
           {selectedRows.length}
           <button
-            className={`${styles.add_mar_right_small} btn btn-xs btn-default ${styles.bulkDeleteButton}`}
+            className={`${styles.add_mar_right_small} btn btn-xs btn-default ${
+              styles.bulkDeleteButton
+            }`}
             title="Delete selected rows"
             onClick={handleDeleteItems}
           >
