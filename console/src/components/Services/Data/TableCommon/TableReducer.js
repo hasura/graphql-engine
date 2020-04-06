@@ -69,7 +69,6 @@ import {
   PERM_DEL_APPLY_SAME_PERM,
   toggleField,
   toggleAllFields,
-  getFilterKey,
   getBasePermissionsState,
   updatePermissionsState,
   deleteFromPermissionsState,
@@ -78,6 +77,7 @@ import {
   CREATE_NEW_PRESET,
   DELETE_PRESET,
   SET_PRESET_VALUE,
+  PERM_SET_FILTER_TYPE,
 } from '../TablePermissions/Actions';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
@@ -263,6 +263,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...permState,
+          filterType: action.query === 'insert' ? 'check' : 'filter', // TODO: move to utils as getDefaultFilterType
           isEditing: true,
         },
         prevPermissionState: {
@@ -329,20 +330,27 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            modifyState.permissionsState.filterType,
             action.filter
           ),
           custom_checked: false,
         },
       };
-
+    case PERM_SET_FILTER_TYPE:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...modifyState.permissionsState,
+          filterType: action.filterType,
+        },
+      };
     case PERM_SET_FILTER:
       return {
         ...modifyState,
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            modifyState.permissionsState.filterType,
             action.filter
           ),
           // custom_checked: true,
@@ -355,7 +363,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            modifyState.permissionsState.filterType,
             {}
           ),
           custom_checked: false,
@@ -368,6 +376,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
       Object.keys(action.allFields).forEach(fieldType => {
+        // TODO
         returnState = {
           ...returnState,
           permissionsState: {

@@ -34,6 +34,7 @@ const defaultPermissionsState = {
   bulkSelect: [],
   applySamePermissions: [],
   isEditing: false,
+  filterType: '',
 };
 
 const defaultPresetsState = {

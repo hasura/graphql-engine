@@ -4,6 +4,7 @@ import AceEditor from 'react-ace';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import InputGroup from 'react-bootstrap/lib/InputGroup';
 import OverlayTrigger from 'react-bootstrap/es/OverlayTrigger';
+import { Tabs, Tab } from 'react-bootstrap';
 import 'brace/mode/json';
 import 'brace/theme/github';
 
@@ -33,6 +34,7 @@ import {
   CREATE_NEW_PRESET,
   DELETE_PRESET,
   X_HASURA_CONST,
+  permSetFilterType,
 } from './Actions';
 
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
@@ -109,7 +111,8 @@ class Permissions extends Component {
 
     if (
       prevPermissionsState.role !== nextPermissionsState.role ||
-      prevPermissionsState.query !== nextPermissionsState.query
+      prevPermissionsState.query !== nextPermissionsState.query ||
+      prevPermissionsState.filterType !== nextPermissionsState.filterType
     ) {
       newState.filterString = '';
     }
@@ -569,7 +572,9 @@ class Permissions extends Component {
       const getRowSection = () => {
         let filterString = getPermissionFilterString(
           permissionsState[query],
-          query
+          query,
+          false,
+          permissionsState.filterType
         );
 
         const rowSectionStatus = getPermissionRowAccessSummary(filterString);
@@ -618,7 +623,8 @@ class Permissions extends Component {
               if (permissionsState[queryType]) {
                 queryFilterString = getPermissionFilterString(
                   permissionsState[queryType],
-                  queryType
+                  queryType,
+                  false
                 );
               }
 
@@ -846,6 +852,10 @@ class Permissions extends Component {
           </Tooltip>
         );
 
+        const onTabChange = tabIndex => {
+          dispatch(permSetFilterType(tabIndex.toLowerCase()));
+        };
+
         const rowSectionTitle = 'Row ' + query + ' permissions';
 
         return (
@@ -865,7 +875,21 @@ class Permissions extends Component {
                   Allow role <b>{permissionsState.role}</b> to{' '}
                   {permissionsState.query} <b>rows</b>:
                 </div>
-                {getFilterOptions()}
+                {permissionsState.query === 'update' ? (
+                  <Tabs
+                    id="Filter"
+                    onSelect={onTabChange}
+                    className={styles.padding_top_20}
+                  >
+                    {['Filter', 'Check'].map((permType, i) => (
+                      <Tab eventKey={permType} title={permType} key={i}>
+                        {getFilterOptions()}
+                      </Tab>
+                    ))}
+                  </Tabs>
+                ) : (
+                  getFilterOptions()
+                )}
               </div>
               <div className={styles.add_mar_top}>{getLimitSection()}</div>
             </div>

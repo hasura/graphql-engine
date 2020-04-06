@@ -18,6 +18,7 @@ import {
 } from '../../../Common/utils/v1QueryUtils';
 
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
+export const PERM_SET_FILTER_TYPE = 'ModifyTable/PERM_SET_FILTER_TYPE';
 export const PERM_SET_FILTER = 'ModifyTable/PERM_SET_FILTER';
 export const PERM_SET_FILTER_SAME_AS = 'ModifyTable/PERM_SET_FILTER_SAME_AS';
 export const PERM_TOGGLE_FIELD = 'ModifyTable/PERM_TOGGLE_FIELD';
@@ -62,6 +63,10 @@ const permOpenEdit = (tableSchema, role, query) => ({
   tableSchema,
   role,
   query,
+});
+const permSetFilterType = filterType => ({
+  type: PERM_SET_FILTER_TYPE,
+  filterType,
 });
 const permSetFilter = filter => ({ type: PERM_SET_FILTER, filter });
 const permSetFilterSameAs = filter => ({
@@ -817,4 +822,5 @@ export {
   permDelApplySamePerm,
   applySamePermissionsBulk,
   copyRolePermissions,
+  permSetFilterType,
 };
