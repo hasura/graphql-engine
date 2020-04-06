@@ -162,7 +162,7 @@ module.exports = {
     webpackIsomorphicToolsPlugin.development(),
     new ForkTsCheckerWebpackPlugin({
       compilerOptions: {
-        allowJs: false,
+        allowJs: true,
         checkJs: false,
       },
     }),
