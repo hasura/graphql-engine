@@ -216,7 +216,7 @@
     "node-sass": "^4.13.0",
     "nyc": "^13.3.0",
     "optimize-css-assets-webpack-plugin": "^4.0.2",
-    "prettier": "^1.19.1",
+    "prettier": "1.19.1",
     "react-a11y": "^0.2.6",
     "react-addons-test-utils": "^15.0.3",
     "react-hot-loader": "^4.6.5",
