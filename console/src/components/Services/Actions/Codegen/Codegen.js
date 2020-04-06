@@ -12,6 +12,7 @@ import Spinner from '../../../Common/Spinner/Spinner';
 import styles from '../Common/components/Styles.scss';
 import Button from '../../../Common/Button/Button';
 import DownloadIcon from '../../../Common/Icons/Download';
+import ExternalLink from '../../../Common/Icons/ExternalLink';
 import GithubIcon from '../../../Common/Icons/Github';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
@@ -95,9 +96,11 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
         >
           <Button
             color="white"
-            className={`${styles.add_mar_right_mid} ${styles.default_button}`}
+            size="xs"
+            className={`${styles.add_mar_right_mid}`}
           >
-            Try on glitch
+            <ExternalLink className={styles.add_mar_right_small} /> Try on
+            glitch
           </Button>
         </a>
       );
@@ -123,7 +126,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
             className={styles.add_mar_right_small}
             title={`Download starter kit for ${selectedFramework}`}
           >
-            <Button color="white">
+            <Button color="white" size="xs">
               <DownloadIcon className={styles.add_mar_right_small} /> Starter
               Kit
             </Button>
@@ -135,7 +138,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
             className={styles.add_mar_right_small}
             title={`View the starter kit for ${selectedFramework} on GitHub`}
           >
-            <Button color="white">
+            <Button color="white" size="xs">
               <GithubIcon />
             </Button>
           </a>
@@ -143,11 +146,19 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
       );
     };
 
+    const getButtons = () => {
+      return (
+        <div className={`${styles.display_flex} ${styles.marginLeftAuto}`}>
+          {getGlitchButton()}
+          {getStarterKitButton()}
+        </div>
+      );
+    };
+
     return (
       <div className={`${styles.add_mar_bottom} ${styles.display_flex}`}>
         {getDrodown()}
-        {getGlitchButton()}
-        {getStarterKitButton()}
+        {getButtons()}
       </div>
     );
   };
