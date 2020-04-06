@@ -17,7 +17,7 @@ export const validateOperation = (operationString, clientSchema) => {
   try {
     operationAst = sdlParse(operationString);
   } catch (e) {
-    throw Error('invalid SDL');
+    throw Error('invalid GraphQL query');
   }
 
   const schemaValidationErrors = validate(clientSchema, operationAst);
