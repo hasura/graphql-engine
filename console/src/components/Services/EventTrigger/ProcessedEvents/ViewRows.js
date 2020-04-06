@@ -437,26 +437,26 @@ const ViewRows = ({
                                 >
                                   {finalResponse.status_code
                                     ? [
-                                      'Status Code: ',
-                                      verifySuccessStatus(
-                                        finalResponse.status_code
-                                      )
-                                        ? successIcon
-                                        : failureIcon,
-                                      finalResponse.status_code,
-                                      ' ',
-                                      <OverlayTrigger
-                                        placement="top"
-                                        overlay={
-                                          tooltip.statusCodeDescription
-                                        }
-                                      >
-                                        <i
-                                          className="fa fa-question-circle"
-                                          aria-hidden="true"
-                                        />
-                                      </OverlayTrigger>,
-                                    ]
+                                        'Status Code: ',
+                                        verifySuccessStatus(
+                                          finalResponse.status_code
+                                        )
+                                          ? successIcon
+                                          : failureIcon,
+                                        finalResponse.status_code,
+                                        ' ',
+                                        <OverlayTrigger
+                                          placement="top"
+                                          overlay={
+                                            tooltip.statusCodeDescription
+                                          }
+                                        >
+                                          <i
+                                            className="fa fa-question-circle"
+                                            aria-hidden="true"
+                                          />
+                                        </OverlayTrigger>,
+                                      ]
                                     : null}
                                 </div>
                                 <AceEditor
