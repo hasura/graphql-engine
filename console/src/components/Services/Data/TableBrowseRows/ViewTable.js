@@ -14,6 +14,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { exists } from '../../../Common/utils/jsUtils';
 
 /*
 const genHeadings = headings => {
@@ -126,7 +127,7 @@ class ViewTable extends Component {
     dispatch(vSetDefaults(this.props.tableName));
   }
 
-  updateInvocationRow = row => {
+  updateInvocationRow = (row) => {
     const { dispatch } = this.props;
     dispatch({
       type: UPDATE_TRIGGER_ROW,
@@ -134,7 +135,7 @@ class ViewTable extends Component {
     });
   };
 
-  updateInvocationFunction = triggerFunc => {
+  updateInvocationFunction = (triggerFunc) => {
     const { dispatch } = this.props;
     dispatch({
       type: UPDATE_TRIGGER_FUNCTION,
@@ -164,11 +165,12 @@ class ViewTable extends Component {
       triggeredRow,
       triggeredFunction,
       location,
+      estimatedCount,
     } = this.props;
 
     // check if table exists
     const tableSchema = schemas.find(
-      s => s.table_name === tableName && s.table_schema === currentSchema
+      (s) => s.table_name === tableName && s.table_schema === currentSchema
     );
 
     if (!tableSchema) {
@@ -199,7 +201,7 @@ class ViewTable extends Component {
         lastSuccess={lastSuccess}
         schemas={schemas}
         curDepth={0}
-        count={count}
+        count={exists(count) ? count : estimatedCount}
         dispatch={dispatch}
         expandedRow={expandedRow}
         manualTriggers={manualTriggers}
@@ -278,6 +280,6 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const viewTableConnector = connect => connect(mapStateToProps)(ViewTable);
+const viewTableConnector = (connect) => connect(mapStateToProps)(ViewTable);
 
 export default viewTableConnector;

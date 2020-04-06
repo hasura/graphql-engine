@@ -47,7 +47,7 @@ const UPDATE_TRIGGER_FUNCTION = 'ViewTable/UPDATE_TRIGGER_FUNCTION';
 
 /* ****************** action creators *************/
 
-const vExpandRow = rowKey => ({
+const vExpandRow = (rowKey) => ({
   type: V_EXPAND_ROW,
   data: rowKey,
 });
@@ -85,19 +85,19 @@ const vMakeRequest = () => {
       credentials: globalCookiePolicy,
     };
     return dispatch(requestAction(url, options)).then(
-      data => {
+      (data) => {
         if (originalTable === tables.currentTable) {
           Promise.all([
             dispatch({
               type: V_REQUEST_SUCCESS,
               data: data[0],
-              count: data[1].result[1],
+              estimatedCount: data[1].result[1],
             }),
             dispatch({ type: V_REQUEST_PROGRESS, data: false }),
           ]);
         }
       },
-      error => {
+      (error) => {
         Promise.all([
           dispatch(
             showErrorNotification('Browse query failed!', error.error, error)
@@ -127,7 +127,7 @@ const vMakeCountRequest = () => {
       credentials: globalCookiePolicy,
     };
     return dispatch(requestAction(url, options)).then(
-      data => {
+      (data) => {
         if (originalTable === tables.currentTable) {
           dispatch({
             type: V_COUNT_REQUEST_SUCCESS,
@@ -135,7 +135,7 @@ const vMakeCountRequest = () => {
           });
         }
       },
-      error => {
+      (error) => {
         dispatch(
           showErrorNotification('Count query failed!', error.error, error)
         );
@@ -144,7 +144,7 @@ const vMakeCountRequest = () => {
   };
 };
 
-const fetchManualTriggers = tableName => {
+const fetchManualTriggers = (tableName) => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
     const body = getFetchManualTriggersQuery(tableName);
@@ -159,9 +159,9 @@ const fetchManualTriggers = tableName => {
     dispatch({ type: FETCHING_MANUAL_TRIGGER });
 
     return dispatch(requestAction(url, options)).then(
-      data => {
+      (data) => {
         // Filter only triggers whose configuration has `enable_manual` key as true
-        const manualTriggers = data.filter(trigger => {
+        const manualTriggers = data.filter((trigger) => {
           const triggerDef = trigger.configuration.definition;
 
           return (
@@ -172,7 +172,7 @@ const fetchManualTriggers = tableName => {
 
         dispatch({ type: FETCH_MANUAL_TRIGGER_SUCCESS, data: manualTriggers });
       },
-      error => {
+      (error) => {
         dispatch({ type: FETCH_MANUAL_TRIGGER_FAIL, data: error });
         console.error('Failed to load triggers' + JSON.stringify(error));
       }
@@ -180,7 +180,7 @@ const fetchManualTriggers = tableName => {
   };
 };
 
-const deleteItem = pkClause => {
+const deleteItem = (pkClause) => {
   return (dispatch, getState) => {
     const confirmMessage =
       'This will permanently delete this row from this table';
@@ -205,7 +205,7 @@ const deleteItem = pkClause => {
       credentials: globalCookiePolicy,
     };
     dispatch(requestAction(url, options)).then(
-      data => {
+      (data) => {
         dispatch(vMakeRequest());
         dispatch(
           showSuccessNotification(
@@ -214,14 +214,14 @@ const deleteItem = pkClause => {
           )
         );
       },
-      err => {
+      (err) => {
         dispatch(showErrorNotification('Deleting row failed!', err.error, err));
       }
     );
   };
 };
 
-const deleteItems = pkClauses => {
+const deleteItems = (pkClauses) => {
   return (dispatch, getState) => {
     const confirmMessage = 'This will permanently delete rows from this table';
     const isOk = getConfirmation(confirmMessage);
@@ -246,14 +246,14 @@ const deleteItems = pkClauses => {
       credentials: globalCookiePolicy,
     };
     dispatch(requestAction(Endpoints.query, options)).then(
-      data => {
+      (data) => {
         const affected = data.reduce((acc, d) => acc + d.affected_rows, 0);
         dispatch(vMakeRequest());
         dispatch(
           showSuccessNotification('Rows deleted!', 'Affected rows: ' + affected)
         );
       },
-      err => {
+      (err) => {
         dispatch(
           showErrorNotification('Deleting rows failed!', err.error, err)
         );
@@ -263,7 +263,7 @@ const deleteItems = pkClauses => {
 };
 
 const vExpandRel = (path, relname, pk) => {
-  return dispatch => {
+  return (dispatch) => {
     // Modify the query (UI will automatically change)
     dispatch({ type: V_EXPAND_REL, path, relname, pk });
     // Make a request
@@ -271,7 +271,7 @@ const vExpandRel = (path, relname, pk) => {
   };
 };
 const vCloseRel = (path, relname) => {
-  return dispatch => {
+  return (dispatch) => {
     // Modify the query (UI will automatically change)
     dispatch({ type: V_CLOSE_REL, path, relname });
     // Make a request
@@ -282,7 +282,7 @@ const vCloseRel = (path, relname) => {
 const defaultSubQuery = (relname, tableSchema) => {
   return {
     name: relname,
-    columns: tableSchema.columns.map(c => c.column_name),
+    columns: tableSchema.columns.map((c) => c.column_name),
   };
 };
 
@@ -296,7 +296,7 @@ const expandQuery = (
   isObjRel = false
 ) => {
   if (curPath.length === 0) {
-    const rel = curTable.relationships.find(r => r.rel_name === relname);
+    const rel = curTable.relationships.find((r) => r.rel_name === relname);
     const childTableSchema = findTableFromRel(schemas, curTable, rel);
 
     const newColumns = [
@@ -314,7 +314,7 @@ const expandQuery = (
 
     // If there's no oldStuff then set it
     const oldStuff = {};
-    ['where', 'limit', 'offset'].map(k => {
+    ['where', 'limit', 'offset'].map((k) => {
       if (k in curQuery) {
         oldStuff[k] = curQuery[k];
       }
@@ -323,9 +323,11 @@ const expandQuery = (
   }
 
   const curRelName = curPath[0];
-  const curRel = curTable.relationships.find(r => r.rel_name === curRelName);
+  const curRel = curTable.relationships.find((r) => r.rel_name === curRelName);
   const childTableSchema = findTableFromRel(schemas, curTable, curRel);
-  const curRelColIndex = curQuery.columns.findIndex(c => c.name === curRelName);
+  const curRelColIndex = curQuery.columns.findIndex(
+    (c) => c.name === curRelName
+  );
   return {
     ...curQuery,
     columns: [
@@ -347,7 +349,7 @@ const expandQuery = (
 const closeQuery = (curQuery, curTable, curPath, relname, schemas) => {
   // eslint-disable-line no-unused-vars
   if (curPath.length === 0) {
-    const expandedIndex = curQuery.columns.findIndex(c => c.name === relname);
+    const expandedIndex = curQuery.columns.findIndex((c) => c.name === relname);
     const newColumns = [
       ...curQuery.columns.slice(0, expandedIndex),
       ...curQuery.columns.slice(expandedIndex + 1),
@@ -358,9 +360,9 @@ const closeQuery = (curQuery, curTable, curPath, relname, schemas) => {
       newStuff.name = curQuery.name;
     }
     // If no other expanded columns are left
-    if (!newColumns.find(c => typeof c === 'object')) {
+    if (!newColumns.find((c) => typeof c === 'object')) {
       if (curQuery.oldStuff) {
-        ['where', 'limit', 'order_by', 'offset'].map(k => {
+        ['where', 'limit', 'order_by', 'offset'].map((k) => {
           if (k in curQuery.oldStuff) {
             newStuff[k] = curQuery.oldStuff[k];
           }
@@ -372,9 +374,11 @@ const closeQuery = (curQuery, curTable, curPath, relname, schemas) => {
   }
 
   const curRelName = curPath[0];
-  const curRel = curTable.relationships.find(r => r.rel_name === curRelName);
+  const curRel = curTable.relationships.find((r) => r.rel_name === curRelName);
   const childTableSchema = findTableFromRel(schemas, curTable, curRel);
-  const curRelColIndex = curQuery.columns.findIndex(c => c.name === curRelName);
+  const curRelColIndex = curQuery.columns.findIndex(
+    (c) => c.name === curRelName
+  );
   return {
     ...curQuery,
     columns: [
@@ -402,14 +406,14 @@ const setActivePath = (activePath, curPath, relname, query) => {
   let subBase = basePath.slice(1);
 
   while (subBase.length > 0) {
-    subQuery = subQuery.columns.find(c => c.name === subBase[0]); // eslint-disable-line no-loop-func
+    subQuery = subQuery.columns.find((c) => c.name === subBase[0]); // eslint-disable-line no-loop-func
     subBase = subBase.slice(1);
   }
 
-  subQuery = subQuery.columns.find(c => typeof c === 'object');
+  subQuery = subQuery.columns.find((c) => typeof c === 'object');
   while (subQuery) {
     basePath.push(subQuery.name);
-    subQuery = subQuery.columns.find(c => typeof c === 'object');
+    subQuery = subQuery.columns.find((c) => typeof c === 'object');
   }
 
   return basePath;
@@ -455,11 +459,11 @@ const addQueryOptsActivePath = (query, queryStuff, activePath) => {
   const newQuery = { ...query };
   let curQuery = newQuery;
   while (curPath.length > 0) {
-    curQuery = curQuery.columns.find(c => c.name === curPath[0]); // eslint-disable-line no-loop-func
+    curQuery = curQuery.columns.find((c) => c.name === curPath[0]); // eslint-disable-line no-loop-func
     curPath = curPath.slice(1);
   }
 
-  ['where', 'order_by', 'limit', 'offset'].map(k => {
+  ['where', 'order_by', 'limit', 'offset'].map((k) => {
     delete curQuery[k];
   });
 
@@ -479,17 +483,17 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
     };
   }
   const tableSchema = schemas.find(
-    x => x.table_name === tableName && x.table_schema === currentSchema
+    (x) => x.table_name === tableName && x.table_schema === currentSchema
   );
   switch (action.type) {
     case V_SET_DEFAULTS:
       // check if table exists and then process.
       const currentTable = schemas.find(
-        t => t.table_name === tableName && t.table_schema === currentSchema
+        (t) => t.table_name === tableName && t.table_schema === currentSchema
       );
       let currentColumns = [];
       if (currentTable) {
-        currentColumns = currentTable.columns.map(c => c.column_name);
+        currentColumns = currentTable.columns.map((c) => c.column_name);
       }
       return {
         ...defaultViewState,
@@ -553,7 +557,11 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
         ),
       };
     case V_REQUEST_SUCCESS:
-      return { ...viewState, rows: action.data, count: action.count };
+      return {
+        ...viewState,
+        rows: action.data,
+        estimatedCount: action.estimatedCount,
+      };
     case V_REQUEST_PROGRESS:
       return { ...viewState, isProgressing: action.data };
     case V_COUNT_REQUEST_SUCCESS:
