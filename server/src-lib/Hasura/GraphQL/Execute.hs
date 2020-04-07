@@ -429,6 +429,6 @@ execRemoteGQ reqId userInfo reqHdrs q rsi opDef = do
     userInfoToHdrs = map (\(k, v) -> (CI.mk $ CS.cs k, CS.cs v)) $
                      userInfoToList userInfo
 
-    getCookieHdr = fmap (\h -> ("Set-Cookie", h))
+    getCookieHdr = fmap ("Set-Cookie",)
 
     mkRespHeaders = map (\(k, v) -> Header (bsToTxt $ CI.original k, bsToTxt v))
