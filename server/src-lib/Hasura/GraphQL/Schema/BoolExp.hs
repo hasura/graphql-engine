@@ -43,7 +43,7 @@ boolExp = P.memoize 'boolExp \tableName -> do
   -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
   -- think the TH splices throw it off), so we have to define it separately.
   let specialFieldParsers =
-        [ P.fieldOptional $$(G.litName "_or") Nothing (BoolOr <$> P.list recur)
+        [ P.fieldOptional $$(G.litName "_or")  Nothing (BoolOr  <$> P.list recur)
         , P.fieldOptional $$(G.litName "_and") Nothing (BoolAnd <$> P.list recur)
         , P.fieldOptional $$(G.litName "_not") Nothing (BoolNot <$> recur)
         ]
@@ -74,11 +74,13 @@ comparisonExps
   => PGColumnType -> G.Nullability -> m (Parser 'Input n [ComparisonExp])
 comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
   columnParser <- P.column columnType nullability
+  castParser   <- castExp columnType nullability
   let name = P.getName columnParser <> $$(G.litName "_comparison_exp")
-  castParser <- castExp columnType nullability
   pure $ P.object name Nothing $ catMaybes <$> sequenceA
-    [ P.fieldOptional $$(G.litName "_cast") Nothing (ACast <$> castParser)
-    , P.fieldOptional $$(G.litName "_eq") Nothing (AEQ True . mkParameter <$> columnParser)
+    [ P.fieldOptional $$(G.litName "_cast")    Nothing (ACast <$> castParser)
+    , P.fieldOptional $$(G.litName "_eq")      Nothing (AEQ True . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_neq")     Nothing (ANE True . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
     -- TODO: the rest of the operators
     ]
 
