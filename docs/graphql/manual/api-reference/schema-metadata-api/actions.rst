@@ -114,6 +114,10 @@ ActionDefinition
      - true
      - :ref:`WebhookURL <WebhookURL>`
      - The action's webhook URL
+   * - type
+     - false
+     - [ ``mutation`` | ``query`` ]
+     - The type of the action(if ``query`` is chosen, then the kind argument is ignored)
 
 .. _InputArgument:
 
