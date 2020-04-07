@@ -219,11 +219,11 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
             (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
             pure $ ExOpMutation respHeaders tx
           VQ.RQuery selSet -> do
-            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability selSet
+            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability httpManager reqHeaders selSet
             traverse_ (addPlanToCache . EP.RPQuery) plan
             return $ ExOpQuery queryTx (Just genSql)
           VQ.RSubscription fld -> do
-            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld
+            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability httpManager reqHeaders fld
             traverse_ (addPlanToCache . EP.RPSubs) plan
             return $ ExOpSubs lqOp
 
@@ -237,6 +237,8 @@ type E m =
           , OrdByCtx
           , InsCtxMap
           , SQLGenCtx
+          , HTTP.Manager
+          , [N.Header]
           ) (ExceptT QErr m)
 
 runE
@@ -244,11 +246,14 @@ runE
   => GCtx
   -> SQLGenCtx
   -> UserInfo
+  -> HTTP.Manager
+  -> [N.Header]
   -> E m a
   -> m a
-runE ctx sqlGenCtx userInfo action = do
+runE ctx sqlGenCtx userInfo httpMgr headers action = do
   res <- runExceptT $ runReaderT action
-    (userInfo, queryCtxMap, mutationCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
+    (userInfo, queryCtxMap, mutationCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx
+    ,httpMgr, headers)
   either throwError return res
   where
     queryCtxMap = _gQueryCtxMap ctx
@@ -266,10 +271,12 @@ getQueryOp
   -> SQLGenCtx
   -> UserInfo
   -> QueryReusability
+  -> HTTP.Manager
+  -> [N.Header]
   -> VQ.SelSet
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gCtx sqlGenCtx userInfo queryReusability fields =
-  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet queryReusability fields
+getQueryOp gCtx sqlGenCtx userInfo queryReusability httpMgr reqHeaders selSet =
+  runE gCtx sqlGenCtx userInfo httpMgr reqHeaders $ EQ.convertQuerySelSet queryReusability selSet
 
 mutationRootName :: Text
 mutationRootName = "mutation_root"
@@ -344,6 +351,9 @@ getSubsOpM
      , Has SQLGenCtx r
      , Has UserInfo r
      , MonadIO m
+     , HasVersion
+     , Has HTTP.Manager r
+     , Has [N.Header] r
      )
   => PGExecCtx
   -> QueryReusability
@@ -362,16 +372,19 @@ getSubsOpM pgExecCtx initialReusability fld =
 getSubsOp
   :: ( MonadError QErr m
      , MonadIO m
+     , HasVersion
      )
   => PGExecCtx
   -> GCtx
   -> SQLGenCtx
   -> UserInfo
   -> QueryReusability
+  -> HTTP.Manager
+  -> [N.Header]
   -> VQ.Field
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld =
-  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability httpMgr reqHeaders fld =
+  runE gCtx sqlGenCtx userInfo httpMgr reqHeaders $ getSubsOpM pgExecCtx queryReusability fld
 
 execRemoteGQ
   :: ( HasVersion

@@ -61,6 +61,7 @@ traverseQueryRootFldAST f = \case
   QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
   QRFAgg s          -> QRFAgg <$> DS.traverseAnnAggSel f s
   QRFActionSelect s -> QRFActionSelect <$> DS.traverseAnnSimpleSel f s
+  QRFActionExecute s -> QRFActionExecute <$> DS.traverseAnnSimpleSel f s
 
 toPGQuery :: QueryRootFldResolved -> Q.Query
 toPGQuery = \case
@@ -68,6 +69,7 @@ toPGQuery = \case
   QRFSimple s       -> DS.selectQuerySQL DS.JASMultipleRows s
   QRFAgg s          -> DS.selectAggQuerySQL s
   QRFActionSelect s -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFActionExecute s -> DS.selectQuerySQL DS.JASMultipleRows s
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
@@ -78,10 +80,18 @@ validateHdrs userInfo hdrs = do
     throw400 NotFound $ hdr <<> " header is expected but not found"
 
 queryFldToPGAST
-  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
-     , Has OrdByCtx r, Has SQLGenCtx r, Has UserInfo r
-     , Has QueryCtxMap r, HasVersion, MonadIO m, Has [HTTP.Header] r
+  :: ( MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     , Has UserInfo r
+     , Has QueryCtxMap r
+     , HasVersion
+     , MonadIO m
      , Has HTTP.Manager r
+     , Has [HTTP.Header] r
      )
   => V.Field
   -> m QueryRootFldUnresolved
