@@ -77,11 +77,21 @@ comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
   castParser   <- castExp columnType nullability
   let name = P.getName columnParser <> $$(G.litName "_comparison_exp")
   pure $ P.object name Nothing $ catMaybes <$> sequenceA
-    [ P.fieldOptional $$(G.litName "_cast")    Nothing (ACast <$> castParser)
-    , P.fieldOptional $$(G.litName "_eq")      Nothing (AEQ True . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_neq")     Nothing (ANE True . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
-    -- TODO: the rest of the operators
+    [ P.fieldOptional $$(G.litName "_cast")     Nothing (ACast <$> castParser)
+    , P.fieldOptional $$(G.litName "_eq")       Nothing (AEQ True  . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_neq")      Nothing (ANE True  . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_gt")       Nothing (AGT       . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_lt")       Nothing (ALT       . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_gte")      Nothing (AGTE      . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_lte")      Nothing (ALTE      . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_like")     Nothing (ALIKE     . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_nlike")    Nothing (ANLIKE    . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_ilike")    Nothing (AILIKE    . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_nilike")   Nothing (ANILIKE   . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_similar")  Nothing (ASIMILAR  . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_nsimilar") Nothing (ANSIMILAR . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_is_null")  Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
+      -- TODO: the rest of the operators
     ]
 
 castExp
