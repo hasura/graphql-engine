@@ -1,6 +1,3 @@
-{-# LANGUAGE DataKinds       #-}
-{-# LANGUAGE RecordWildCards #-}
-
 module Hasura.GraphQL.Execute
   ( GQExecPlanPartial
   , GQExecPlan(..)

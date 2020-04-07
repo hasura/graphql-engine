@@ -425,9 +425,7 @@ const deleteRelMigrate = relMeta => (dispatch, getState) => {
   const relChangesDown = [upQuery];
 
   // Apply migrations
-  const migrationName = `drop_relationship_${relMeta.relName}_${
-    relMeta.lSchema
-  }_table_${relMeta.lTable}`;
+  const migrationName = `drop_relationship_${relMeta.relName}_${relMeta.lSchema}_table_${relMeta.lTable}`;
 
   const requestMsg = 'Deleting Relationship...';
   const successMsg = 'Relationship deleted';
@@ -471,9 +469,7 @@ const addRelNewFromStateMigrate = () => (dispatch, getState) => {
   const relChangesDown = [downQuery];
 
   // Apply migrations
-  const migrationName = `add_relationship_${state.name}_table_${
-    state.lSchema
-  }_${state.lTable}`;
+  const migrationName = `add_relationship_${state.name}_table_${state.lSchema}_${state.lTable}`;
 
   const requestMsg = 'Adding Relationship...';
   const successMsg = 'Relationship created';
@@ -789,9 +785,7 @@ const autoAddRelName = obj => (dispatch, getState) => {
   const relChangesDown = [obj.downQuery];
 
   // Apply migrations
-  const migrationName = `add_relationship_${relName}_table_${currentSchema}_${
-    obj.data.tableName
-  }`;
+  const migrationName = `add_relationship_${relName}_table_${currentSchema}_${obj.data.tableName}`;
 
   const requestMsg = 'Adding Relationship...';
   const successMsg = 'Relationship created';

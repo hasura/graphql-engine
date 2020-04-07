@@ -132,7 +132,6 @@ library
 
                      -- String related
                      , case-insensitive
-                     , string-conversions
                      , text-conversions
 
                      -- Http client
@@ -256,6 +255,7 @@ library
                      , Hasura.Incremental.Internal.Rule
 
                      , Hasura.Server.Auth.JWT
+                     , Hasura.Server.Auth.WebHook
                      , Hasura.Server.Middleware
                      , Hasura.Server.Cors
                      , Hasura.Server.CheckUpdates
@@ -389,6 +389,7 @@ library
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.Text.Extended
+                     , Data.Parser.Expires
 
                      , Hasura.SQL.DML
                      , Hasura.SQL.Error

@@ -7,7 +7,7 @@ OUTPUT_DIR := _output
 # compile assets
 .PHONY: assets
 assets:
-	go-bindata --pkg assets -o assets/assets.go assets/**/*.html
+	pkger -o pkg/console/templates/packed -include /pkg/console/templates/gohtml/
 
 HAS_GOX := $(shell command -v gox;)
 HAS_BINDATA := $(shell command -v go-bindata;)
