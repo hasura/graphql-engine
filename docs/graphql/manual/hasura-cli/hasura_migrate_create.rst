@@ -38,13 +38,13 @@ Options
 
 ::
 
-      --from-server                 take pg_dump of schema and Hasura metadata from the server. use ``--schema`` flag to give schemas (default: public) 
+      --from-server                 get SQL statements and Hasura metadata from the server
   -h, --help                        help for create
       --metadata-from-file string   path to a hasura metadata file to be used for up actions
       --metadata-from-server        take metadata from the server and write it as an up migration file
-      --schema string               name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. ``--schema public,user``
+      --schema stringArray          name of Postgres schema to export as a migration (default [public])
       --sql-from-file string        path to an SQL file which contains the SQL statements
-      --sql-from-server             take pg_dump from the server and save it as a migration. use ``--schema`` flag to give schemas (default: public) 
+      --sql-from-server             take pg_dump from the server and save it as a migration
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
