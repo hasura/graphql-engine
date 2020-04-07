@@ -521,7 +521,7 @@ func (a *ActionConfig) Name() string {
 }
 
 func (a *ActionConfig) ensureCLIExtension() error {
-	err := a.pluginsCfg.Install(pluginName, "")
+	err := a.pluginsCfg.Install(pluginName, "", nil)
 	if err != nil && err != plugins.ErrIsAlreadyInstalled {
 		msg := fmt.Sprintf(`unable to install cli-ext plugin. execute the following commands to continue:
 
