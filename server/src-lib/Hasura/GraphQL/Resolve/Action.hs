@@ -186,7 +186,7 @@ resolveActionQuerySync field executionContext sessionVariables = do
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
   manager <- asks getter
   reqHeaders <- asks getter
-  (webhookRes, respHeaders) <- callWebhook manager outputType outputFields reqHeaders confHeaders
+  (webhookRes, _) <- callWebhook manager outputType outputFields reqHeaders confHeaders
                                forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes

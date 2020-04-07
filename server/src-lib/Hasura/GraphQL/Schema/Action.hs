@@ -262,7 +262,7 @@ mkActionsSchema annotatedObjects =
     newRoleState = (mempty, addScalarToTyAgg PGJSON $
                             addScalarToTyAgg PGTimeStampTZ $
                             addScalarToTyAgg PGUUID mempty)
-    f roleName (queryFieldM, mutationField, fields, actionType) =
+    f roleName (queryFieldM, actionField, fields, actionType) =
       Map.alter (Just . addToState . fromMaybe newRoleState) roleName
       where
         addToState = case queryFieldM of
@@ -271,12 +271,12 @@ mkActionsSchema annotatedObjects =
           Nothing -> addToStateSync
         addToStateSync (rootFields, tyAgg) =
           ( case actionType of
-              ActionMutation -> addMutationField (first MCAction mutationField) rootFields
-              ActionQuery -> addQueryField (first QCAction mutationField) rootFields
+              ActionMutation -> addMutationField (first MCAction actionField) rootFields
+              ActionQuery -> addQueryField (first QCAction actionField) rootFields
           , addFieldsToTyAgg fields tyAgg
           )
         addToStateAsync queryField responseTypeInfo (rootFields, tyAgg) =
-          ( addMutationField (first MCAction mutationField) $
+          ( addMutationField (first MCAction actionField) $
             addQueryField
             (first QCAsyncActionFetch queryField)
             rootFields

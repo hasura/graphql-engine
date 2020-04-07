@@ -36,7 +36,6 @@ import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import Debug.Trace
 
 type PlanVariables = Map.HashMap G.Variable Int
 
