@@ -70,7 +70,7 @@ type ActionDef struct {
 	Type                 ActionType      `json:"type" yaml:"type,omitempty"`
 	Handler              string          `json:"handler" yaml:"handler"`
 	Arguments            []yaml.MapSlice `json:"arguments" yaml:"arguments,omitempty"`
-	OutputType           string          `json:"output_type" yaml:"output_type"`
+	OutputType           string          `json:"output_type" yaml:"output_type,omitempty"`
 	ForwardClientHeaders bool            `json:"-" yaml:"forward_client_headers,omitempty"`
 	Headers              []yaml.MapSlice `json:"-" yaml:"headers,omitempty"`
 }
