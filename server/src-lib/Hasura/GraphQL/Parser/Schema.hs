@@ -44,7 +44,7 @@ from its kind alone!
     with objects, which always take sub-selection sets.
 
 This allows us to conveniently re-use `Parser`s for types of kind Both to
-represent output types for selection set fields (while stile disallowing types
+represent output types for selection set fields (while still disallowing types
 of kind Input). This trick avoids the need to track that information separately,
 significantly simplifying the types! But if that happy coincidence ever ceases
 to hold, we’d have to rethink things. -}
