@@ -1,12 +1,12 @@
 {
-  "extends": ["plugin:@typescript-eslint/recommended", "eslint-config-airbnb"],
+  "extends": ["airbnb", "prettier"],
   "env": {
     "browser": true,
     "node": true,
     "mocha": true,
     "cypress/globals": true
   },
-  "parser": "@typescript-eslint/parser",
+  "parser": "babel-eslint",
   "rules": {
     "allowForLoopAfterthoughts": 0,
     "react/no-multi-comp": 0,
@@ -22,7 +22,7 @@
     "import/prefer-default-export": 0,
     "comma-dangle": 0,
     "id-length": [1, { "min": 1, "properties": "never" }],
-    "indent": [2, 2, { "SwitchCase": 1 }],
+    "indent": "off",
     "no-console": 0,
     "arrow-parens": 0,
     "no-alert": 0,
@@ -72,6 +72,7 @@
     "react/prefer-stateless-function": 0,
     "react/no-unescaped-entities": 0,
     "react/sort-comp": 0,
+    "react/jsx-indent": 0,
     "jsx-a11y/click-events-have-key-events": 0,
     "jsx-a11y/no-static-element-interactions": 0,
     "jsx-a11y/no-noninteractive-element-interactions": 0,
@@ -83,28 +84,10 @@
     "max-len": 0,
     "no-continue": 0,
     "eqeqeq": 0,
-    "no-nested-ternary": 0,
-    "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": 2,
-    "@typescript-eslint/indent": 0,
-    "@typescript-eslint/explicit-function-return-type": 0,
-    "@typescript-eslint/prefer-interface": 0,
-    "@typescript-eslint/no-namespace": "off",
-    "@typescript-eslint/camelcase": 0,
-    "@typescript-eslint/explicit-member-accessibility": 0,
-    "@typescript-eslint/no-non-null-assertion": 0,
-    "@typescript-eslint/no-object-literal-type-assertion": "off",
-    "@typescript-eslint/no-empty-interface": "off",
-    "@typescript-eslint/no-parameter-properties": "off",
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-var-requires": "off",
-    "@typescript-eslint/no-useless-constructor": "error",
-    "@typescript-eslint/no-unused-expressions": ["error"]
+    "no-nested-ternary": 0
   },
   "plugins": ["react", "import", "cypress", "@typescript-eslint/eslint-plugin"],
   "settings": {
-    "import/parser": "babel-eslint",
-    "parser": "babel-esling",
     "import/resolve": {
       "moduleDirectory": ["node_modules", "src"]
     }
@@ -121,8 +104,34 @@
   },
   "overrides": [
     {
+      "extends": [
+        "plugin:@typescript-eslint/recommended",
+        "airbnb",
+        "prettier"
+      ],
+      "parser": "@typescript-eslint/parser",
       "files": ["*.ts", "*.tsx"],
       "rules": {
+        "import/extensions": 0,
+        "react/prop-types": "off",
+        "react/jsx-filename-extension": 0,
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": 2,
+        "@typescript-eslint/indent": 0,
+        "@typescript-eslint/explicit-function-return-type": 0,
+        "@typescript-eslint/prefer-interface": 0,
+        "@typescript-eslint/no-namespace": "off",
+        "@typescript-eslint/camelcase": 0,
+        "@typescript-eslint/explicit-member-accessibility": 0,
+        "@typescript-eslint/no-non-null-assertion": 0,
+        "@typescript-eslint/no-object-literal-type-assertion": "off",
+        "@typescript-eslint/no-empty-interface": "off",
+        "@typescript-eslint/no-parameter-properties": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/no-useless-constructor": "error",
+        "@typescript-eslint/no-unused-expressions": ["error"],
+        "@typescript-eslint/no-empty-function": "off",
         /**
          * Disable things that are checked by Typescript
          */

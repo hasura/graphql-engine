@@ -24,7 +24,7 @@ func TestInitCmd(t *testing.T, ec *cli.ExecutionContext, initDir string) {
 	}{
 		{"only-init-dir", &commands.InitOptions{
 			EC:          ec,
-			Version:     "2",
+			Version:     cli.V2,
 			Endpoint:    os.Getenv("HASURA_GRAPHQL_TEST_ENDPOINT"),
 			AdminSecret: os.Getenv("HASURA_GRAPHQL_TEST_ADMIN_SECRET"),
 			InitDir:     filepath.Join(os.TempDir(), "hasura-cli-test-"+strconv.Itoa(rand.Intn(1000))),
