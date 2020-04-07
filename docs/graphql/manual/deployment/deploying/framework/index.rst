@@ -4,8 +4,8 @@
 
 .. _guides_deployment:
 
-Guides: Deployment
-==================
+Deploy using frameworks
+=======================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -17,11 +17,6 @@ Guides: Deployment
 - :ref:`Google Cloud Platform with Kubernetes engine and Cloud SQL <deploy_gc_kubernetes>`
 - :ref:`Render One-Click Deploy with Managed PostgreSQL <deploy_render>`
 - `Blog: Instant GraphQL on AWS RDS <https://hasura.io/blog/instant-graphql-on-aws-rds-1edfb85b5985>`__
-
-.. note::
-   The above are guides to deploy the Hasura GraphQL engine on some specific platforms.
-
-   For more generic guides, see :ref:`deployment`.
 
 .. toctree::
    :maxdepth: 1

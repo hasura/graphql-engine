@@ -115,11 +115,3 @@ Advanced
 - :ref:`Updating GraphQL engine <heroku_update>`
 - :ref:`Setting up migrations <auth>`
 
-.. toctree::
-   :titlesonly:
-   :hidden:
-
-   Securing your GraphQL endpoint <securing-graphql-endpoint>
-   using-existing-heroku-database
-   GraphQL engine server logs <logging>
-   Updating GraphQL engine <updating>

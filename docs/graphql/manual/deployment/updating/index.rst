@@ -47,3 +47,12 @@ The current latest pre-release version is:
 .. note::
 
   Full stability with pre-release builds is not guaranteed. They are not recommended for production use.
+
+.. toctree::
+   :maxdepth: 1
+   :titlesonly:
+   :hidden:
+
+   Heroku <heroku>
+   Docker <docker>
+   Kubernetes <kubernetes>

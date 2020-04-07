@@ -17,7 +17,6 @@ Guides / Tutorials / Resources
    :titlesonly:
 
    Data modelling guides <data-modelling/index>
-   Deployment guides <deployment/index>
    Sample apps & boilerplates <sample-apps/index>
    Integration/migration tutorials <integrations/index>
    Integrating with monitoring frameworks <monitoring/index>

@@ -97,10 +97,3 @@ Advanced
 - :ref:`Updating GraphQL engine <kubernetes_update>`
 - :ref:`Setting up migrations <auth>`
 
-.. toctree::
-   :titlesonly:
-   :hidden:
-
-   Securing your GraphQL endpoint <securing-graphql-endpoint>
-   GraphQL engine server logs <logging>
-   Updating GraphQL engine <updating>

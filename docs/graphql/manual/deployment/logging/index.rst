@@ -406,3 +406,12 @@ You can integrate the logs emitted by Hasura GraphQL with external monitoring to
 your convenience.
 
 For some examples, see :ref:`guides_monitoring_frameworks`.
+
+.. toctree::
+   :maxdepth: 1
+   :titlesonly:
+   :hidden:
+
+   Heroku <heroku>
+   Docker <docker>
+   Kubernetes <kubernetes>
