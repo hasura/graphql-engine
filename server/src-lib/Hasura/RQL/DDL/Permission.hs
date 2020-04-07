@@ -42,8 +42,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DML.Internal            hiding (askPermInfo)
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 import qualified Database.PG.Query                  as Q
 
@@ -59,10 +59,10 @@ import qualified Data.Text                          as T
 -- Insert permission
 data InsPerm
   = InsPerm
-  { ipCheck     :: !BoolExp
-  , ipSet       :: !(Maybe (ColumnValues Value))
-  , ipColumns   :: !(Maybe PermColSpec)
-  , ipAdminOnly :: !(Maybe Bool)
+  { ipCheck       :: !BoolExp
+  , ipSet         :: !(Maybe (ColumnValues Value))
+  , ipColumns     :: !(Maybe PermColSpec)
+  , ipBackendOnly :: !(Maybe Bool)
   } deriving (Show, Eq, Lift, Generic)
 instance Cacheable InsPerm
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''InsPerm)
@@ -98,7 +98,7 @@ buildInsPermInfo
   -> FieldInfoMap FieldInfo
   -> PermDef InsPerm
   -> m (WithDeps InsPermInfo)
-buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mAdminOnly) _) =
+buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mBackendOnly) _) =
   withPathK "permission" $ do
     (be, beDeps) <- withPathK "check" $ procBoolExp tn fieldInfoMap checkCond
     (setColsSQL, setHdrs, setColDeps) <- procSetObj tn fieldInfoMap set
@@ -109,9 +109,9 @@ buildInsPermInfo tn fieldInfoMap (PermDef _rn (InsPerm checkCond set mCols mAdmi
         insColDeps = map (mkColDep DRUntyped tn) insCols
         deps = mkParentDep tn : beDeps ++ setColDeps ++ insColDeps
         insColsWithoutPresets = insCols \\ HM.keys setColsSQL
-    return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL adminOnly reqHdrs, deps)
+    return (InsPermInfo (HS.fromList insColsWithoutPresets) be setColsSQL backendOnly reqHdrs, deps)
   where
-    adminOnly = fromMaybe False mAdminOnly
+    backendOnly = fromMaybe False mBackendOnly
     allCols = map pgiColumn $ getCols fieldInfoMap
     insCols = fromMaybe allCols $ convColSpec fieldInfoMap <$> mCols
 

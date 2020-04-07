@@ -239,7 +239,7 @@ library
                      , Hasura.RQL.DDL.Metadata.Generator
                      , Hasura.RQL.DDL.Schema
                      , Hasura.EncJSON
-                     , Hasura.User
+                     , Hasura.Session
 
                      , Data.Aeson.Ordered
 

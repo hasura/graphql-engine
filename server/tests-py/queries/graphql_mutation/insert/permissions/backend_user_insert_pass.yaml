@@ -1,0 +1,26 @@
+description: As backend user with header
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: backend_user
+  X-Hasura-Backend-Privilege: 'true'
+response:
+  data:
+    insert_user:
+      affected_rows: 1
+      returning:
+      - name: FooBar
+query:
+  query: |
+    mutation {
+      insert_user(objects: [
+        {
+          name: "FooBar"
+        }
+      ]){
+        affected_rows
+        returning {
+          name
+        }
+      }
+    }

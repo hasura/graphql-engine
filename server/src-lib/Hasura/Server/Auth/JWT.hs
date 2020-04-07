@@ -33,7 +33,7 @@ import           Hasura.Server.Auth.JWT.Logging
 import           Hasura.Server.Utils             (getRequestHeader, isSessionVariable,
                                                   userRoleHeader)
 import           Hasura.Server.Version           (HasVersion)
-import           Hasura.User
+import           Hasura.Session
 
 import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
@@ -214,8 +214,8 @@ processJwt jwtCtx headers mUnAuthRole =
 
     withoutAuthZHeader = do
       unAuthRole <- maybe missingAuthzHeader return mUnAuthRole
-      return $ (, Nothing) $
-        mkUserInfo unAuthRole (mkSessionVariables headers) UAdminSecretAbsent
+      userInfo <- mkUserInfo unAuthRole $ mkSessionVariables headers
+      pure (userInfo, Nothing)
 
     missingAuthzHeader =
       throw400 InvalidHeaders "Missing Authorization header in JWT authentication mode"
@@ -259,9 +259,8 @@ processAuthZHeader jwtCtx headers authzHeader = do
 
   -- transform the map of text:aeson-value -> text:text
   metadata <- decodeJSON $ J.Object finalClaims
-
-  return $ (, expTimeM) $ mkUserInfo roleName (mkSessionVariablesText $ Map.toList metadata) UAdminSecretAbsent
-
+  userInfo <- mkUserInfo roleName $ mkSessionVariablesText $ Map.toList metadata
+  pure (userInfo, expTimeM)
   where
     parseAuthzHeader = do
       let tokenParts = BLC.words authzHeader

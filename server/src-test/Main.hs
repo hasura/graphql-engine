@@ -24,7 +24,7 @@ import           Hasura.Server.Init           (RawConnInfo, mkConnInfo, mkRawCon
                                                parseRawConnInfo, runWithEnv)
 import           Hasura.Server.Migrate
 import           Hasura.Server.Version
-import           Hasura.User                  (adminUserInfo)
+import           Hasura.Session               (adminUserInfo)
 
 import qualified Data.Parser.CacheControlSpec as CacheControlParser
 import qualified Data.Parser.URLTemplate      as URLTemplate

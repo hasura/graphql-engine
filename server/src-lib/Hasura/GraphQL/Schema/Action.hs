@@ -14,8 +14,8 @@ import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 mkAsyncActionSelectionType :: ActionName -> G.NamedType
 mkAsyncActionSelectionType = G.NamedType . unActionName

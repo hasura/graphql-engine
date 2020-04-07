@@ -51,7 +51,7 @@ import           Hasura.Server.Context
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils                         (RequestId, getRequestId)
 import           Hasura.Server.Version                       (HasVersion)
-import           Hasura.User
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute                      as E
 import qualified Hasura.GraphQL.Execute.LiveQuery            as LQ

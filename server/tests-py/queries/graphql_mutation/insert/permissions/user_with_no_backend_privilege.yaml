@@ -1,0 +1,23 @@
+description: As user with no backend privilege
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-Backend-Privilege: 'true'
+response:
+  errors:
+  - extensions:
+      path: $
+      code: bad-request
+    message: Backend privilage not found for the role "user"
+query:
+  query: |
+    mutation {
+      insert_user(objects: [
+        {
+          name: "FooBar"
+        }
+      ]){
+        affected_rows
+      }
+    }

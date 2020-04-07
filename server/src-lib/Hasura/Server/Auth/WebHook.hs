@@ -28,7 +28,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
-import           Hasura.User
+import           Hasura.Session
 
 
 data AuthHookType
@@ -124,7 +124,7 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody
         Just rn -> do
           logWebHookResp LevelInfo Nothing Nothing
           expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
-          return (mkUserInfo rn sessionVariables UAdminSecretAbsent, expiration)
+          (, expiration) <$> mkUserInfo rn sessionVariables
 
     logWebHookResp :: MonadIO m => LogLevel -> Maybe BL.ByteString -> Maybe T.Text -> m ()
     logWebHookResp logLevel mResp message =

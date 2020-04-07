@@ -17,8 +17,8 @@ import           Hasura.RQL.DDL.Permission.Internal
 import           Hasura.RQL.DDL.Relationship.Types
 import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 import qualified Hasura.RQL.DDL.EventTrigger        as DS
 
@@ -201,16 +201,16 @@ updatePermFlds refQT rn pt rename = do
 updateInsPermFlds
   :: (MonadTx m, CacheRM m)
   => QualifiedTable -> Rename -> RoleName -> InsPerm -> m ()
-updateInsPermFlds refQT rename rn (InsPerm chk preset cols mAdminOnly) = do
+updateInsPermFlds refQT rename rn (InsPerm chk preset cols mBackendOnly) = do
   updatedPerm <- case rename of
     RTable rt -> do
       let updChk = updateTableInBoolExp rt chk
-      return $ InsPerm updChk preset cols mAdminOnly
+      return $ InsPerm updChk preset cols mBackendOnly
     RField rf -> do
       updChk <- updateFieldInBoolExp refQT rf chk
       let updPresetM = updatePreset refQT rf <$> preset
           updColsM = updateCols refQT rf <$> cols
-      return $ InsPerm updChk updPresetM updColsM mAdminOnly
+      return $ InsPerm updChk updPresetM updColsM mBackendOnly
   liftTx $ updatePermDefInCatalog PTInsert refQT rn updatedPerm
 
 updateSelPermFlds

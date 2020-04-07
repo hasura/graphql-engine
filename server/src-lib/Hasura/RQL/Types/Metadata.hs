@@ -5,7 +5,7 @@ import qualified Data.HashMap.Strict.Extended   as M
 import           Control.Lens                   hiding ((.=))
 import           Data.Aeson
 import           Hasura.Prelude
-import           Hasura.User
+import           Hasura.Session
 
 import           Hasura.RQL.Types.Action
 import           Hasura.RQL.Types.Common

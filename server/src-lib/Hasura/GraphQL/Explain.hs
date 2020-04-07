@@ -16,9 +16,9 @@ import           Hasura.GraphQL.Validate.Types          (evalReusabilityT, runRe
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.User
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as E
@@ -116,6 +116,7 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
+  userInfo <- mkUserInfo (fromMaybe adminRoleName $ roleFromSession sessionVariables) sessionVariables
   (execPlan, queryReusability) <- runReusabilityT $
     E.getExecPlanPartial userInfo sc enableAL query
   (gCtx, rootSelSet) <- case execPlan of
@@ -133,5 +134,4 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) =
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     sessionVariables = mkSessionVariablesText $ maybe [] Map.toList userVarsRaw
-    userInfo = mkUserInfo (fromMaybe adminRoleName $ roleFromSession sessionVariables) sessionVariables UAdminSecretAbsent
     runInTx = liftEither <=< liftIO . runExceptT . runLazyTx pgExecCtx Q.ReadOnly

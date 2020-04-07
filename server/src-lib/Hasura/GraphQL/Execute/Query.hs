@@ -25,14 +25,15 @@ import qualified Hasura.GraphQL.Validate.Field          as V
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Context
 import           Hasura.GraphQL.Resolve.Types
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.User
 
 type PlanVariables = Map.HashMap G.Variable Int
 
@@ -175,9 +176,6 @@ prepareWithPlan = \case
   where
     currentSession = S.SEPrep 1
 
-queryRootName :: Text
-queryRootName = "query_root"
-
 convertQuerySelSet
   :: ( MonadError QErr m
      , MonadReader r m
@@ -198,7 +196,7 @@ convertQuerySelSet initialReusability fields = do
       fldPlan <- case V._fName fld of
         "__type"     -> fldPlanFromJ <$> R.typeR fld
         "__schema"   -> fldPlanFromJ <$> R.schemaR fld
-        "__typename" -> pure $ fldPlanFromJ queryRootName
+        "__typename" -> pure $ fldPlanFromJ queryRootNamedType
         _            -> do
           unresolvedAst <- R.queryFldToPGAST fld
           (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $

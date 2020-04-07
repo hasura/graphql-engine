@@ -21,9 +21,9 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.CustomTypes
 import           Hasura.RQL.Types.Function
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.User
 
 import qualified Hasura.SQL.DML                 as S
 

@@ -34,8 +34,8 @@ import           Hasura.RQL.Types.Permission
 import           Hasura.RQL.Types.QueryCollection
 import           Hasura.RQL.Types.RemoteSchema
 import           Hasura.RQL.Types.SchemaCache
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 newtype CatalogForeignKey
   = CatalogForeignKey

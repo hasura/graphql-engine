@@ -6,10 +6,10 @@ import qualified Hasura.SQL.DML      as S
 import           Hasura.Prelude
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.User
 
 import           Control.Lens
 import           Data.Aeson.Types

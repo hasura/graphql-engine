@@ -35,7 +35,7 @@ import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Auth.WebHook
 import           Hasura.Server.Utils
-import           Hasura.User
+import           Hasura.Session
 
 -- | Typeclass representing the @UserInfo@ authorization and resolving effect
 class (Monad m) => UserAuthentication m where
@@ -157,7 +157,7 @@ getUserInfoWithExpTime
   -> m (UserInfo, Maybe UTCTime)
 getUserInfoWithExpTime logger manager rawHeaders = \case
 
-  AMNoAuth -> pure (userInfoFromHeaders UNoAuthSet, Nothing)
+  AMNoAuth -> (, Nothing) <$> userInfoFromHeaders
 
   AMAdminSecret adminScrt unAuthRole ->
     case adminSecretM of
@@ -187,16 +187,16 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
     userInfoWhenAdminSecret key reqKey = do
       when (reqKey /= getAdminSecret key) $ throw401 $
         "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
-      pure $ userInfoFromHeaders UAdminSecretPresent
+      userInfoFromHeaders
 
     userInfoWhenNoAdminSecret = \case
       Nothing -> throw401 $ adminSecretHeader <> "/"
                  <> deprecatedAccessKeyHeader <> " required, but not found"
-      Just roleName -> pure $ mkUserInfo roleName sessionVariables UAdminSecretAbsent
+      Just roleName -> mkUserInfo roleName sessionVariables
 
     withNoExpTime a = (, Nothing) <$> a
 
-    userInfoFromHeaders userAdminSecret =
+    userInfoFromHeaders =
       case roleFromSession sessionVariables of
-        Just rn -> mkUserInfo rn sessionVariables userAdminSecret
-        Nothing -> mkUserInfo adminRoleName sessionVariables userAdminSecret
+        Just rn -> mkUserInfo rn sessionVariables
+        Nothing -> mkUserInfo adminRoleName sessionVariables

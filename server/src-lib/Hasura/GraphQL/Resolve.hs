@@ -18,7 +18,7 @@ module Hasura.GraphQL.Resolve
   ) where
 
 import           Data.Has
-import           Hasura.User
+import           Hasura.Session
 
 import qualified Data.HashMap.Strict               as Map
 import qualified Database.PG.Query                 as Q

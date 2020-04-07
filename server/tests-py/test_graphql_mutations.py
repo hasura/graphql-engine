@@ -168,57 +168,17 @@ class TestGraphqlInsertPermission:
     def test_user_insert_account_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_insert_account_fail.yaml")
 
-    def test_admin_only_insert(self, hge_ctx, transport):
-        graphql_query = '''
-          mutation {
-            insert_user(objects: [
-              {
-                name: "FooBar"
-              }
-            ]){
-              affected_rows
-            }
-          }
-        '''
-        query = {
-            'query': graphql_query,
-            'variables': {}
-        }
-        headers = {
-            "X-Hasura-Role": "admin_user" # Role for which admin_only insert defined
-        }
-        if hge_ctx.hge_webhook or hge_ctx.hge_jwt_key:
-            # If any external authentication configured
-            response = {
-              "errors": [
-                {
-                  "extensions": {
-                    "path": "$",
-                    "code": "validation-failed"
-                  },
-                  "message": "no mutations exist"
-                }
-              ]
-            }
-        else:
-            # If no external authentication configured
-            response = {
-               "data": {
-                 "insert_user": {
-                   "affected_rows": 1
-                 }
-               }
-            }
+    def test_backend_user_insert_fail(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/backend_user_insert_fail.yaml", transport)
 
-        conf = {
-            'status': 200,
-            'url': '/v1/graphql',
-            'query': query,
-            'response': response,
-            'headers': headers
-        }
+    def test_backend_user_insert_pass(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/backend_user_insert_pass.yaml", transport)
 
-        check_query(hge_ctx, conf, transport)
+    def test_backend_user_insert_invalid_bool(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/backend_user_insert_invalid_bool.yaml")
+
+    def test_user_with_no_backend_privilege(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + "/user_with_no_backend_privilege.yaml")
 
     @classmethod
     def dir(cls):

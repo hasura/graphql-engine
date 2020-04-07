@@ -24,7 +24,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Plan
   ) where
 
 import           Hasura.Prelude
-import           Hasura.User
+import           Hasura.Session
 
 import qualified Data.Aeson.Casing                      as J
 import qualified Data.Aeson.Extended                    as J

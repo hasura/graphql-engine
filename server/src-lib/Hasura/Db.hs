@@ -30,9 +30,9 @@ import qualified Database.PG.Query.Connection as Q
 import           Hasura.EncJSON
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Error
+import           Hasura.Session
 import           Hasura.SQL.Error
 import           Hasura.SQL.Types
-import           Hasura.User
 
 import qualified Hasura.SQL.DML               as S
 

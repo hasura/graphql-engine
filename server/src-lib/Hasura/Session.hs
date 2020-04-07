@@ -1,4 +1,4 @@
-module Hasura.User
+module Hasura.Session
   ( RoleName
   , mkRoleName
   , adminRoleName
@@ -14,21 +14,21 @@ module Hasura.User
   , sessionVariablesToHeaders
   , getSessionVariableValue
   , getSessionVariables
-  , UserAdminSecret(..)
   , UserInfo
   , _uiRole
   , _uiSession
-  , _uiAdminSecret
+  , _uiBackendPrivilege
   , mkUserInfo
   , adminUserInfo
+  , BackendPrivilege(..)
   ) where
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Common    (NonEmptyText, adminText, mkNonEmptyText,
                                              unNonEmptyText)
-import           Hasura.Server.Utils        (adminSecretHeader, deprecatedAccessKeyHeader,
-                                             isSessionVariable, userRoleHeader)
+import           Hasura.RQL.Types.Error
+import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import           Data.Aeson
@@ -115,25 +115,36 @@ roleFromSession uv =
 getSessionVariableValue :: SessionVariable -> SessionVariables -> Maybe SessionVariableValue
 getSessionVariableValue k = Map.lookup k . unSessionVariables
 
-data UserAdminSecret
-  = UAdminSecretPresent
-  | UAdminSecretAbsent
-  | UNoAuthSet
+-- | Represents the 'X-Hasura-Backend-Privilege' session variable
+data BackendPrivilege
+  = BPEnabled
+  | BPDisabled
   deriving (Show, Eq, Generic)
-instance Hashable UserAdminSecret
+instance Hashable BackendPrivilege
 
 data UserInfo
   = UserInfo
-  { _uiRole        :: !RoleName
-  , _uiSession     :: !SessionVariables
-  , _uiAdminSecret :: !UserAdminSecret
+  { _uiRole             :: !RoleName
+  , _uiSession          :: !SessionVariables
+  , _uiBackendPrivilege :: !BackendPrivilege
   } deriving (Show, Eq, Generic)
 instance Hashable UserInfo
 
-mkUserInfo :: RoleName -> SessionVariables -> UserAdminSecret -> UserInfo
-mkUserInfo roleName (SessionVariables v) =
-  UserInfo roleName $ SessionVariables $ Map.insert userRoleHeader (roleNameToTxt roleName) $
-  foldl (flip Map.delete) v [adminSecretHeader, deprecatedAccessKeyHeader]
+mkUserInfo :: (MonadError QErr m) => RoleName -> SessionVariables -> m UserInfo
+mkUserInfo roleName sess@(SessionVariables sessVars) = do
+  backendPrivilege <-
+    case getSessionVariableValue backendPrivilegeHeader sess of
+      Nothing -> pure BPDisabled
+      Just varVal -> case parseStringAsBool (T.unpack varVal) of
+        Left err        -> throw400 BadRequest $ backendPrivilegeHeader <> ": " <> T.pack err
+        Right privilege -> pure $ if privilege then BPEnabled else BPDisabled
+  let modifiedSession = SessionVariables $ modifySessionVariables sessVars
+  pure $ UserInfo roleName modifiedSession backendPrivilege
+  where
+    -- Add x-hasura-role header and remove admin secret headers
+    modifySessionVariables = Map.insert userRoleHeader (roleNameToTxt roleName)
+                             . Map.delete adminSecretHeader
+                             . Map.delete deprecatedAccessKeyHeader
 
 adminUserInfo :: UserInfo
-adminUserInfo = mkUserInfo adminRoleName mempty UAdminSecretAbsent
+adminUserInfo = UserInfo adminRoleName mempty BPDisabled

@@ -43,10 +43,10 @@ import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
 import           Hasura.Server.Utils               (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version             (HasVersion)
+import           Hasura.Session
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
                                                     toTxtValue)
-import           Hasura.User
 
 newtype ActionContext
   = ActionContext {_acName :: ActionName}

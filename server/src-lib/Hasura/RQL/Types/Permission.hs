@@ -6,8 +6,8 @@ module Hasura.RQL.Types.Permission
 
 import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 import           Data.Aeson
 import           Data.Hashable

@@ -12,8 +12,8 @@ import           Hasura.RQL.Types.Common
 import           Hasura.RQL.Types.ComputedField
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 data TableObjId
   = TOCol !PGCol

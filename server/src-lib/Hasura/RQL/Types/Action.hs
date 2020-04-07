@@ -36,8 +36,8 @@ import           Hasura.Incremental            (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types.CustomTypes
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 import           Language.Haskell.TH.Syntax    (Lift)
 
 import qualified Data.Aeson                    as J

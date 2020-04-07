@@ -48,7 +48,7 @@ import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
                                                          mkSetCookieHeaders)
 import           Hasura.Server.Version                  (HasVersion)
-import           Hasura.User
+import           Hasura.Session
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -130,7 +130,7 @@ getExecPlanPartial userInfo sc enableAL req = do
   -- check if query is in allowlist
   when enableAL checkQueryInAllowlist
 
-  let gCtx = getGCtx sc (_uiAdminSecret userInfo) roleName
+  gCtx <- getGCtx (_uiBackendPrivilege userInfo) sc roleName
   queryParts <- flip runReaderT gCtx $ VQ.getQueryParts req
 
   let opDef = VQ.qpOpDef queryParts
@@ -267,9 +267,6 @@ getQueryOp
 getQueryOp gCtx sqlGenCtx userInfo queryReusability fields =
   runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet queryReusability fields
 
-mutationRootName :: Text
-mutationRootName = "mutation_root"
-
 resolveMutSelSet
   :: ( HasVersion
      , MonadError QErr m
@@ -289,7 +286,7 @@ resolveMutSelSet
 resolveMutSelSet fields = do
   aliasedTxs <- forM (toList fields) $ \fld -> do
     fldRespTx <- case VQ._fName fld of
-      "__typename" -> return (return $ encJFromJValue mutationRootName, [])
+      "__typename" -> return (return $ encJFromJValue mutationRootNamedType, [])
       _            -> evalReusabilityT $ GR.mutFldToTx fld
     return (G.unName $ G.unAlias $ VQ._fAlias fld, fldRespTx)
 

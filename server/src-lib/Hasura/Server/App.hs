@@ -52,8 +52,8 @@ import           Hasura.Server.Middleware               (corsMiddleware)
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL

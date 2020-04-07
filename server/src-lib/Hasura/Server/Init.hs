@@ -30,7 +30,7 @@ import           Hasura.Server.Auth
 import           Hasura.Server.Cors
 import           Hasura.Server.Logging
 import           Hasura.Server.Utils
-import           Hasura.User
+import           Hasura.Session
 import           Network.URI                      (parseURI)
 
 newtype DbUid
@@ -202,7 +202,7 @@ instance FromEnv RoleName where
     Just roleName -> Right roleName
 
 instance FromEnv Bool where
-  fromEnv = parseStrAsBool
+  fromEnv = parseStringAsBool
 
 instance FromEnv Q.TxIsolation where
   fromEnv = readIsoLevel
@@ -230,19 +230,6 @@ instance FromEnv L.LogLevel where
 
 instance FromEnv Cache.CacheSize where
   fromEnv = Cache.mkCacheSize
-
-parseStrAsBool :: String -> Either String Bool
-parseStrAsBool t
-  | map toLower t `elem` truthVals = Right True
-  | map toLower t `elem` falseVals = Right False
-  | otherwise = Left errMsg
-  where
-    truthVals = ["true", "t", "yes", "y"]
-    falseVals = ["false", "f", "no", "n"]
-
-    errMsg = " Not a valid boolean text. " ++ "True values are "
-             ++ show truthVals ++ " and  False values are " ++ show falseVals
-             ++ ". All values are case insensitive"
 
 readIsoLevel :: String -> Either String Q.TxIsolation
 readIsoLevel isoS =
@@ -758,7 +745,7 @@ parseConnParams =
                 help (snd pgTimeoutEnv)
               )
     allowPrepare = optional $
-      option (eitherReader parseStrAsBool)
+      option (eitherReader parseStringAsBool)
               ( long "use-prepared-statements" <>
                 metavar "<true|false>" <>
                 help (snd pgUsePrepareEnv)
@@ -896,7 +883,7 @@ parseConsoleAssetsDir = optional $
 
 parseEnableTelemetry :: Parser (Maybe Bool)
 parseEnableTelemetry = optional $
-  option (eitherReader parseStrAsBool)
+  option (eitherReader parseStringAsBool)
          ( long "enable-telemetry" <>
            help (snd enableTelemetryEnv)
          )

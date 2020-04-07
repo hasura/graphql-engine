@@ -40,8 +40,8 @@ import           Hasura.Incremental         (Cacheable)
 import           Hasura.Prelude
 import           Hasura.RQL.Types.Column
 import           Hasura.RQL.Types.Common
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 import qualified Hasura.SQL.DML             as S
 

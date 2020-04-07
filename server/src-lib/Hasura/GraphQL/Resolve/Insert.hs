@@ -8,7 +8,7 @@ import           Control.Arrow                     ((>>>))
 import           Data.Has
 import           Hasura.EncJSON
 import           Hasura.Prelude
-import           Hasura.User
+import           Hasura.Session
 
 import qualified Data.Aeson                        as J
 import qualified Data.Aeson.Casing                 as J

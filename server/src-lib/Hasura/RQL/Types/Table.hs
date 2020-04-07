@@ -88,8 +88,8 @@ import           Hasura.RQL.Types.Error
 import           Hasura.RQL.Types.EventTrigger
 import           Hasura.RQL.Types.Permission
 import           Hasura.Server.Utils            (duplicates)
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 import           Control.Lens
 import           Data.Aeson
@@ -212,7 +212,7 @@ data InsPermInfo
   { ipiCols            :: !(HS.HashSet PGCol)
   , ipiCheck           :: !AnnBoolExpPartialSQL
   , ipiSet             :: !PreSetColsPartial
-  , ipiAdminOnly       :: !Bool
+  , ipiBackendOnly     :: !Bool
   , ipiRequiredHeaders :: ![T.Text]
   } deriving (Show, Eq, Generic)
 instance NFData InsPermInfo

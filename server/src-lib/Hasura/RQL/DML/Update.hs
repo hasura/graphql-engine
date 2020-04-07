@@ -23,8 +23,8 @@ import           Hasura.RQL.DML.Returning
 import           Hasura.RQL.GBoolExp
 import           Hasura.RQL.Instances     ()
 import           Hasura.RQL.Types
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 import qualified Database.PG.Query        as Q
 import qualified Hasura.SQL.DML           as S

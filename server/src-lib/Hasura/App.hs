@@ -51,7 +51,7 @@ import           Hasura.Server.Query                  (requiresAdmin, runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
-import           Hasura.User
+import           Hasura.Session
 
 
 printErrExit :: (MonadIO m) => forall a . String -> m a

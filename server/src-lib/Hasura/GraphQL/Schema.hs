@@ -32,8 +32,8 @@ import           Hasura.Prelude
 import           Hasura.RQL.DML.Internal               (mkAdminRolePermInfo)
 import           Hasura.RQL.Types
 import           Hasura.Server.Utils                   (duplicates)
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 import           Hasura.GraphQL.Schema.Action
 import           Hasura.GraphQL.Schema.BoolExp
@@ -696,8 +696,8 @@ mkGCtxMapTable
   -> m (Map.HashMap RoleName TableSchemaCtx)
 mkGCtxMapTable tableCache funcCache tabInfo = do
   m <- flip Map.traverseWithKey rolePermsMap $ \roleName rolePerm ->
-    flip traverse rolePerm $ mkGCtxRole tableCache tn descM fields primaryKey validConstraints
-                  tabFuncs viewInfo customConfig roleName
+    for rolePerm $ mkGCtxRole tableCache tn descM fields primaryKey validConstraints
+                             tabFuncs viewInfo customConfig roleName
   adminInsCtx <- mkAdminInsCtx tableCache fields
   adminSelFlds <- mkAdminSelFlds fields tableCache
   let adminCtx = mkGCtxRole' tn descM (Just (cols, icRelations adminInsCtx))
@@ -723,9 +723,10 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
       case _permIns permInfo of
         Nothing -> RoleContext permInfo Nothing
         Just insPerm ->
-          if ipiAdminOnly insPerm then
-            RoleContext { _rctxDefault = permInfo
-                        , _rctxRoleOnly = Just permInfo{_permIns = Nothing} -- Remove insert mutation from role-only authentication
+          if ipiBackendOnly insPerm then
+            -- Remove insert permission from '_rctxdefault' and keep it in '_rctxbackend'.
+            RoleContext { _rctxDefault = permInfo{_permIns = Nothing}
+                        , _rctxBackend = Just permInfo
                         }
           else RoleContext permInfo Nothing
 
@@ -750,20 +751,17 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
       :: Map.HashMap RoleName (RootFields, TyAgg)
       -> [Map.HashMap RoleName TableSchemaCtx]
       -> m (Map.HashMap RoleName TableSchemaCtx)
-    combineTypes actionsSchema maps = do
+    combineTypes actionsSchema tableCtxMaps = do
       let listMap = foldr (Map.unionWith (++) . Map.map pure)
                           ((\(rf, tyAgg) -> pure $ RoleContext (tyAgg, rf, mempty) Nothing) <$> actionsSchema)
-                          maps
+                          tableCtxMaps
+
       flip Map.traverseWithKey listMap $ \_ schemaCtxList -> do
         let defaultGCtxTypes = map _rctxDefault schemaCtxList
-            roleOnlyTypes =
-              let typeList = flip map schemaCtxList $
-                             \r -> fromMaybe (_rctxDefault r) $ _rctxRoleOnly r
-              -- If all role-only types are Nothing then related combined types should be Nothing.
-              -- Else, if any role-only types present then it has to be combined with others'
-              in if all (isNothing . _rctxRoleOnly) schemaCtxList then Nothing else Just typeList
-
-        RoleContext <$> combineTypes' defaultGCtxTypes <*> mapM combineTypes' roleOnlyTypes
+            backendGCtxTypes = map _rctxBackend schemaCtxList
+            backendGCtxTypesMaybe =
+              if all isNothing backendGCtxTypes then Nothing else Just $ catMaybes backendGCtxTypes
+        RoleContext <$> combineTypes' defaultGCtxTypes <*> mapM combineTypes' backendGCtxTypesMaybe
       where
         combineTypes' :: [(TyAgg, RootFields, InsCtxMap)] -> m (TyAgg, RootFields, InsCtxMap)
         combineTypes' typeList = do
@@ -790,16 +788,18 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
 
           pure $ mconcat rootFields
 
-getGCtx :: SchemaCache -> UserAdminSecret -> RoleName -> GCtx
-getGCtx sc userAdminSecret roleName =
+getGCtx :: (MonadError QErr m)
+        => BackendPrivilege -> SchemaCache -> RoleName -> m GCtx
+getGCtx backendPrivilege sc roleName =
   case Map.lookup roleName (scGCtxMap sc) of
-    Nothing -> scDefaultRemoteGCtx sc
-    Just (RoleContext defaultGCtx Nothing) -> defaultGCtx
-    Just (RoleContext defaultGCtx (Just roleOnlyGCtx)) ->
-      case userAdminSecret of
-        UAdminSecretPresent -> defaultGCtx
-        UAdminSecretAbsent  -> roleOnlyGCtx
-        UNoAuthSet          -> defaultGCtx
+    Nothing                                           -> pure $ scDefaultRemoteGCtx sc
+    Just (RoleContext defaultGCtx maybeBackendGCtx)   ->
+      case backendPrivilege of
+        BPEnabled -> maybe
+          (throw400 BadRequest $ "Backend privilage not found for the role " <>> roleName)
+          (pure . unionGCtx defaultGCtx)
+          maybeBackendGCtx
+        BPDisabled -> pure defaultGCtx
 
 -- pretty print GCtx
 ppGCtx :: GCtx -> String
@@ -845,12 +845,12 @@ mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =
     colTys = Set.fromList $ map pgiType $ mapMaybe (^? _RFPGColumn) $
              Map.elems fldInfos
     mkMutRoot =
-      mkHsraObjTyInfo (Just "mutation root") (G.NamedType "mutation_root") Set.empty .
+      mkHsraObjTyInfo (Just "mutation root") mutationRootNamedType Set.empty .
       mapFromL _fiName
     mutRootM = bool (Just $ mkMutRoot mFlds) Nothing $ null mFlds
     mkSubRoot =
       mkHsraObjTyInfo (Just "subscription root")
-      (G.NamedType "subscription_root") Set.empty . mapFromL _fiName
+      subscriptionRootNamedType Set.empty . mapFromL _fiName
     subRootM = bool (Just $ mkSubRoot qFlds) Nothing $ null qFlds
 
     qFlds = rootFieldInfos queryFields

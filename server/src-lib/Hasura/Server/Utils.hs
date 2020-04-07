@@ -61,10 +61,26 @@ userIdHeader = "x-hasura-user-id"
 requestIdHeader :: IsString a => a
 requestIdHeader = "x-request-id"
 
+backendPrivilegeHeader :: IsString a => a
+backendPrivilegeHeader = "x-hasura-backend-privilege"
+
 getRequestHeader :: HTTP.HeaderName -> [HTTP.Header] -> Maybe B.ByteString
 getRequestHeader hdrName hdrs = snd <$> mHeader
   where
     mHeader = find (\h -> fst h == hdrName) hdrs
+
+parseStringAsBool :: String -> Either String Bool
+parseStringAsBool t
+  | map toLower t `elem` truthVals = Right True
+  | map toLower t `elem` falseVals = Right False
+  | otherwise = Left errMsg
+  where
+    truthVals = ["true", "t", "yes", "y"]
+    falseVals = ["false", "f", "no", "n"]
+
+    errMsg = " Not a valid boolean text. " ++ "True values are "
+             ++ show truthVals ++ " and  False values are " ++ show falseVals
+             ++ ". All values are case insensitive"
 
 getRequestId :: (MonadIO m) => [HTTP.Header] -> m RequestId
 getRequestId headers =

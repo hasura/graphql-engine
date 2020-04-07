@@ -40,8 +40,8 @@ module Hasura.RQL.Types
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.Session
 import           Hasura.SQL.Types
-import           Hasura.User
 
 import           Hasura.Db                          as R
 import           Hasura.RQL.Types.Action            as R
