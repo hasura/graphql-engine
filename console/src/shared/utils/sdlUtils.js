@@ -6,6 +6,28 @@ import {
   hydrateTypeRelationships,
 } from './hasuraCustomTypeUtils';
 
+export const isValidOperationName = (operationName) => {
+  return (operationName === 'query' || operationName === 'mutation')
+}
+
+const isValidOperationType = (operationType) => {
+  return (operationType === 'Mutation' || operationType === 'Query');
+};
+
+const getActionTypeFromOperationType = (operationType) => {
+  if (operationType === 'Query') {
+    return 'query';
+  }
+  return 'mutation';
+};
+
+const getOperationTypeFromActionType = (operationType) => {
+  if (operationType === 'query') {
+    return 'Query';
+  }
+  return 'Mutation';
+};
+
 const getAstEntityDescription = def => {
   return def.description ? def.description.value.trim() : null;
 };
@@ -118,7 +140,7 @@ export const getTypesFromSdl = sdl => {
   return typeDefinition;
 };
 
-const getActionFromMutationAstDef = astDef => {
+const getActionFromOperationAstDef = astDef => {
   const definition = {
     name: '',
     arguments: [],
@@ -146,7 +168,6 @@ const getActionFromMutationAstDef = astDef => {
 };
 
 export const getActionDefinitionFromSdl = sdl => {
-  const schemaAst = sdlParse(sdl);
   const definition = {
     name: '',
     arguments: [],
@@ -154,17 +175,27 @@ export const getActionDefinitionFromSdl = sdl => {
     comment: '',
     error: null,
   };
+  let schemaAst;
+  try {
+    schemaAst = sdlParse(sdl);
+  } catch(_) {
+    definition.error = 'Invalid SDL';
+    return definition;
+  }
+  
   if (schemaAst.definitions.length > 1) {
-    definition.error = 'Action must be defined under a single "Mutation" type';
+    definition.error = 'Action must be defined under a single "Mutation" type or a "Query" type';
     return definition;
   }
 
   const sdlDef = schemaAst.definitions[0];
 
-  if (sdlDef.name.value !== 'Mutation') {
-    definition.error = 'Action must be defined under a "Mutation" type';
+  if (!isValidOperationType(sdlDef.name.value)) {
+    definition.error = 'Action must be defined under a "Mutation" or a "Query" type';
     return definition;
   }
+
+  let actionType = getActionTypeFromOperationType(sdlDef.name.value);
 
   if (sdlDef.fields.length > 1) {
     const definedActions = sdlDef.fields
@@ -176,7 +207,8 @@ export const getActionDefinitionFromSdl = sdl => {
 
   return {
     ...definition,
-    ...getActionFromMutationAstDef(sdlDef.fields[0]),
+    type: actionType,
+    ...getActionFromOperationAstDef(sdlDef.fields[0]),
   };
 };
 
@@ -250,9 +282,9 @@ export const getTypesSdl = _types => {
   return sdl;
 };
 
-export const getActionDefinitionSdl = (name, args, outputType, description) => {
+export const getActionDefinitionSdl = (name, actionType, args, outputType, description) => {
   return getObjectTypeSdl({
-    name: 'Mutation',
+    name: getOperationTypeFromActionType(actionType),
     fields: [
       {
         name,
@@ -276,15 +308,15 @@ export const getServerTypesFromSdl = (sdl, existingTypes) => {
 
 export const getAllActionsFromSdl = sdl => {
   const ast = sdlParse(sdl);
-  ast.definitions = ast.definitions.filter(d => d.name.value === 'Mutation');
   const actions = [];
 
-  ast.definitions.forEach(d => {
+  ast.definitions.filter(d => isValidOperationType(d.name.value)).forEach(d => {
     d.fields.forEach(f => {
-      const action = getActionFromMutationAstDef(f);
+      const action = getActionFromOperationAstDef(f);
       actions.push({
         name: action.name,
         definition: {
+          type: getActionTypeFromOperationType(d.name.value),
           arguments: action.arguments,
           output_type: action.outputType,
         },
@@ -296,7 +328,7 @@ export const getAllActionsFromSdl = sdl => {
 
 export const getAllTypesFromSdl = sdl => {
   const ast = sdlParse(sdl);
-  ast.definitions = ast.definitions.filter(d => d.name.value !== 'Mutation');
+  ast.definitions = ast.definitions.filter(d => !isValidOperationType(d.name.value));
   const types = ast.definitions.map(d => {
     return getTypeFromAstDef(d);
   });
@@ -308,6 +340,7 @@ export const getSdlComplete = (allActions, allTypes) => {
   allActions.forEach(a => {
     sdl += `extend ${getActionDefinitionSdl(
       a.action_name,
+      a.action_defn.type,
       a.action_defn.arguments,
       a.action_defn.output_type,
       a.comment
