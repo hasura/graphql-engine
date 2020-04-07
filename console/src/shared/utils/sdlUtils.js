@@ -168,7 +168,6 @@ const getActionFromOperationAstDef = astDef => {
 };
 
 export const getActionDefinitionFromSdl = sdl => {
-  const schemaAst = sdlParse(sdl);
   const definition = {
     name: '',
     arguments: [],
@@ -176,6 +175,14 @@ export const getActionDefinitionFromSdl = sdl => {
     comment: '',
     error: null,
   };
+  let schemaAst;
+  try {
+    schemaAst = sdlParse(sdl);
+  } catch(_) {
+    definition.error = 'Invalid SDL';
+    return definition;
+  }
+  
   if (schemaAst.definitions.length > 1) {
     definition.error = 'Action must be defined under a single "Mutation" type or a "Query" type';
     return definition;

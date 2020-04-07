@@ -18,6 +18,7 @@ import {
   toggleForwardClientHeaders as toggleFCH,
 } from './reducer';
 import { saveAction, deleteAction } from '../ServerIO';
+import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 
 const ActionEditor = ({
   currentAction,
@@ -85,6 +86,15 @@ const ActionEditor = ({
     !actionDefinitionTimer &&
     !typeDefinitionTimer;
 
+  let actionType;
+  if (!actionDefinitionError) {
+    // TODO optimise
+    const { type, error } = getActionDefinitionFromSdl(actionDefinitionSdl);
+    if (!error) {
+      actionType = type;
+    }
+  }
+
   return (
     <div>
       <Helmet title={`Modify Action - ${actionName} - Actions | Hasura`} />
@@ -112,8 +122,18 @@ const ActionEditor = ({
         service="create-action"
       />
       <hr />
-      <KindEditor value={kind} onChange={kindOnChange} />
-      <hr />
+      {
+        actionType === "query" ? null : (
+          <React.Fragment>
+            <KindEditor
+              value={kind}
+              onChange={kindOnChange}
+              className={styles.add_mar_bottom_mid}
+            />
+            <hr />
+          </React.Fragment>
+        )
+      }
       <HeadersConfEditor
         forwardClientHeaders={forwardClientHeaders}
         toggleForwardClientHeaders={toggleForwardClientHeaders}
