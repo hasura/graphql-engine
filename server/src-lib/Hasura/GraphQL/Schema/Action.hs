@@ -90,12 +90,12 @@ mkQueryActionField actionName actionInfo definitionList =
 
     actionFieldResponseType = unGraphQLType $ _adOutputType definition
 
-mkActionField
+mkMutationActionField
   :: ActionName
   -> ActionInfo
   -> [(PGCol, PGScalarType)]
   -> (ActionMutationExecutionContext, ObjFldInfo)
-mkActionField actionName actionInfo definitionList =
+mkMutationActionField actionName actionInfo definitionList =
   ( actionExecutionContext
   , fieldInfo
   )
@@ -160,7 +160,7 @@ mkQueryField actionName comment definition definitionList =
       where
         idDescription = G.Description $ "id of the action: " <>> actionName
 
-mkActionFieldsAndTypes
+mkMutationActionFieldsAndTypes
   :: (QErrM m)
   => ActionInfo
   -> AnnotatedObjectType
@@ -170,9 +170,9 @@ mkActionFieldsAndTypes
      , (ActionMutationExecutionContext, ObjFldInfo) -- mutation field
      , FieldMap
      )
-mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
+mkMutationActionFieldsAndTypes actionInfo annotatedOutputType permission =
   return ( mkQueryField actionName comment definition definitionList
-         , mkActionField actionName actionInfo definitionList
+         , mkMutationActionField actionName actionInfo definitionList
          , fieldMap
          )
   where
@@ -348,7 +348,7 @@ mkQueryActionFieldsAndTypes actionInfo annotatedOutputType permission =
     actionOutputBaseType =
       G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
 
-mkActionSchemaOne
+mkMutationActionSchemaOne
   :: (QErrM m)
   => AnnotatedObjects
   -> ActionInfo
@@ -358,12 +358,12 @@ mkActionSchemaOne
          , FieldMap
          )
        )
-mkActionSchemaOne annotatedObjects actionInfo = do
+mkMutationActionSchemaOne annotatedObjects actionInfo = do
   annotatedOutputType <- onNothing
       (Map.lookup (ObjectTypeName actionOutputBaseType) annotatedObjects) $
       throw500 $ "missing annotated type for: " <> showNamedTy actionOutputBaseType
   forM permissions $ \permission ->
-    mkActionFieldsAndTypes actionInfo annotatedOutputType permission
+    mkMutationActionFieldsAndTypes actionInfo annotatedOutputType permission
   where
     adminPermission = ActionPermissionInfo adminRole
     permissions = Map.insert adminRole adminPermission $ _aiPermissions actionInfo
@@ -400,7 +400,7 @@ mkMutationActionsSchema annotatedObjects =
   foldM
   (\aggregate actionInfo ->
      Map.foldrWithKey f aggregate <$>
-     mkActionSchemaOne annotatedObjects actionInfo
+     mkMutationActionSchemaOne annotatedObjects actionInfo
   )
   mempty
   where
