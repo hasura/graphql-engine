@@ -52,13 +52,21 @@ deploy_server_latest() {
 
 draft_github_release() {
     cd "$ROOT"
+    export GITHUB_REPOSITORY="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
     echo "drafting github release"
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -b "${RELEASE_BODY}" \
-        -draft \
-     "$CIRCLE_TAG" /build/_cli_output/binaries/ /build/_cli_ext_output/*.tar.gz /build/_cli_ext_output/*.zip
+    hub release create \
+        --draft \
+        -a /build/_cli_output/binaries/cli-hasura-darwin-amd64 \
+        -a /build/_cli_output/binaries/cli-hasura-linux-amd64 \
+        -a /build/_cli_output/binaries/cli-hasura-windows-amd64.exe \
+        -a /build/_cli_ext_output/cli-ext-hasura-linux.tar.gz \
+        -a /build/_cli_ext_output/cli-ext-hasura-macos.tar.gz \
+        -a /build/_cli_ext_output/cli-ext-hasura-win.zip \
+        -m "$CIRCLE_TAG" \
+        -m "${RELEASE_BODY}" \
+     "$CIRCLE_TAG"
+
+    unset GITHUB_REPOSITORY
 }
 
 configure_git() {
@@ -83,6 +91,11 @@ deploy_console() {
 
     cd "$ROOT/console"
     export VERSION=$(../scripts/get-console-assets-version.sh)
+    # if version is not set, then skip console
+    if [ -z "$VERSION" ]; then
+        echo "version is not, skipping console deployment"
+        return
+    fi
     export DIST_PATH="/build/_console_output"
     local GS_BUCKET_ROOT="gs://graphql-engine-cdn.hasura.io/console/assets/$VERSION"
     # assets are at /build/_console_output/assets/versioned, already gzipped
@@ -117,20 +130,40 @@ deploy_cli_ext() {
 }
 
 # build and push container for auto-migrations
-build_and_push_cli_migrations_image() {
+build_and_push_cli_migrations_image_v1() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
-    cd "$ROOT/scripts/cli-migrations"
+    cd "$ROOT/scripts/cli-migrations/v1"
     cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
     docker build -t "$IMAGE_TAG" .
     docker push "$IMAGE_TAG"
 }
 
+# build and push container for auto-migrations-v2
+build_and_push_cli_migrations_image_v2() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v2"
+    cd "$ROOT/scripts/cli-migrations/v2"
+    cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
+    cp /build/_cli_ext_output/manifest-dev.yaml manifest.yaml
+    docker build -t "$IMAGE_TAG" .
+    docker push "$IMAGE_TAG"
+}
+
 # build and push latest container for auto-migrations
-push_latest_cli_migrations_image() {
+push_latest_cli_migrations_image_v1() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
     LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations"
 
     # push latest.cli-migrations tag
+    docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
+    docker push "$LATEST_IMAGE_TAG"
+}
+
+# build and push latest container for auto-migrations-v2
+push_latest_cli_migrations_image_v2() {
+    IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v2"
+    LATEST_IMAGE_TAG="hasura/graphql-engine:latest.cli-migrations-v2"
+
+    # push latest.cli-migrations-v2 tag
     docker tag "$IMAGE_TAG" "$LATEST_IMAGE_TAG"
     docker push "$LATEST_IMAGE_TAG"
 }
@@ -176,25 +209,28 @@ fi
 
 setup_gcloud
 
-RELEASE_BRANCH_REGEX="^release-v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
-if [[ "$CIRCLE_BRANCH" =~ $RELEASE_BRANCH_REGEX ]]; then
-    # release branch, only update console
-    echo "release branch, only deploying console"
+if [[ -z "$CIRCLE_TAG" ]]; then
+    # channel branch, only update console
+    echo "channel branch, only deploying console"
+    export EXPECTED_CHANNEL="${CIRCLE_BRANCH}"
     deploy_console
+    unset EXPECTED_CHANNEL
     exit
 fi
 
 deploy_console
 deploy_server
 if [[ ! -z "$CIRCLE_TAG" ]]; then
-    build_and_push_cli_migrations_image
+    build_and_push_cli_migrations_image_v1
+    build_and_push_cli_migrations_image_v2
     deploy_cli_ext
 
     # if this is a stable release, update all latest assets
     if [ $IS_STABLE_RELEASE = true ]; then
         deploy_server_latest
         push_server_binary
-        push_latest_cli_migrations_image
+        push_latest_cli_migrations_image_v1
+        push_latest_cli_migrations_image_v2
         send_pr_to_repo graphql-engine-heroku
         deploy_do_manifests
     fi
