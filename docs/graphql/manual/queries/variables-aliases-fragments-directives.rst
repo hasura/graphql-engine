@@ -53,10 +53,8 @@ In order to make a query re-usable, it can be made dynamic by using variables.
 Variables and performance
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To optimise for performance, it's essential that the query consists of non-nullable variables only.
-Variables are non-nullable when they have a ``!`` after the type, e.g. ``query getArticles($author_id: Int!)``.
-If this condition is met, the query caching plan kicks in, and the performance will increase significantly.
-
+To optimise for performance, use non-nullable variables by adding a ``!`` at the end of the variable type (like in the example above).
+Refer to :ref:`this page<query_performance>` to learn more about Hasura's query plan caching and about optimizing with variables.
 
 Using aliases
 -------------
