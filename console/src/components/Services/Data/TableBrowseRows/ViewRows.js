@@ -53,6 +53,8 @@ import {
   getCollapsedColumns,
   handleOrderChange,
   getColumnsOrder,
+  getPageSize,
+  handlePageSizeStateChange,
 } from './localStorageUtils';
 
 const ViewRows = ({
@@ -675,7 +677,12 @@ const ViewRows = ({
         if ('order_by' in curFilter) {
           orderBy = [...curFilter.order_by];
         }
-        const limit = 'limit' in curFilter ? curFilter.limit : 10;
+
+        let limit = getPageSize(curTableName, currentSchema);
+        if (!limit) {
+          limit = 'limit' in curFilter ? curFilter.limit : 10;
+        }
+
         const offset = 'offset' in curFilter ? curFilter.offset : 0;
 
         _filterQuery = (
@@ -923,6 +930,7 @@ const ViewRows = ({
         dispatch(setOffset(0));
         dispatch(runQuery(tableSchema));
         setSelectedRows([]);
+        handlePageSizeStateChange(curTableName, currentSchema, size);
       }
     };
 

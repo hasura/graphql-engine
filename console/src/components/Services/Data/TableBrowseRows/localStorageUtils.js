@@ -140,3 +140,41 @@ export const getColumnsOrder = (tableName, schemaName) => {
   const orderData = getColumnsOrderState();
   return orderData[`${schemaName}.${tableName}`];
 };
+
+const pageSizeState = 'data:pageSize';
+const defaultPageSizeState = {};
+
+const setPageSizeState = data => {
+  window.localStorage.setItem(pageSizeState, JSON.stringify(data));
+};
+
+const getPageSizeState = () => {
+  try {
+    const p = window.localStorage.getItem(pageSizeState);
+    if (p) {
+      return JSON.parse(p);
+    }
+    window.localStorage.setItem(
+      pageSizeState,
+      JSON.stringify(defaultPageSizeState)
+    );
+    return defaultPageSizeState;
+  } catch (e) {
+    console.error(e);
+    return defaultPageSizeState;
+  }
+};
+
+export const handlePageSizeStateChange = (tableName, schemaName, pageSize) => {
+  const currentState = getPageSizeState();
+
+  setPageSizeState({
+    ...currentState,
+    [`${schemaName}.${tableName}`]: pageSize,
+  });
+};
+
+export const getPageSize = (tableName, schemaName) => {
+  const pageSizeData = getPageSizeState();
+  return pageSizeData[`${schemaName}.${tableName}`];
+};

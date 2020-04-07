@@ -202,7 +202,7 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
 
 class FilterQuery extends Component {
   componentDidMount() {
-    const dispatch = this.props.dispatch;
+    const { dispatch, limit, tableSchema } = this.props;
     if (!this.props.urlQuery) {
       dispatch(setDefaultQuery(this.props.curQuery));
       return;
@@ -239,8 +239,8 @@ class FilterQuery extends Component {
       return { column, type, nulls };
     });
 
-    dispatch(setDefaultQuery({ where, order_by }));
-    dispatch(runQuery(this.props.tableSchema));
+    dispatch(setDefaultQuery({ where, order_by, limit }));
+    dispatch(runQuery(tableSchema));
   }
 
   setParams(query = { filters: [], sorts: [] }) {
