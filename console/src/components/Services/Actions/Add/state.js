@@ -35,6 +35,9 @@ const state = {
   forwardClientHeaders: false,
   kind: 'synchronous',
   isFetching: false,
+  derive: {
+    operation: '',
+  },
 };
 
 export default state;
