@@ -12,7 +12,7 @@ Query performance
   :depth: 2
   :local:
 
-Sometimes, queries can be slow due to large data volume or levels of nesting. 
+Sometimes, queries can become slow due to large data volumes or levels of nesting. 
 This page explains how to identify the query runtime, how the query plan caching in Hasura works, and how queries can be optimized.
 
 .. _query_runtime:
@@ -20,7 +20,7 @@ This page explains how to identify the query runtime, how the query plan caching
 Query runtime
 -------------
 
-In order to find out the execution time of a query, you can click on the ``Analyze`` button on the Hasura console:
+In order to identify the execution time of a query, you can click on the ``Analyze`` button on the Hasura console:
 
 .. thumbnail:: ../../../img/graphql/manual/queries/analyze-query.png
    :class: no-shadow
@@ -37,24 +37,129 @@ In the output of the query execution plan, the ``cost`` stands for execution tim
 Query plan caching
 ------------------
 
-A GraphQL query is processed in these steps:
+Hasura executes GraphQL queries as follows:
 
-1. The incoming GraphQL query is parsed into an AST which represents the GraphQL language.
-2. The GraphQL AST is then validated against the schema to generate an internal representation.
-3. The internal representation is then converted into a SQL statement (prepare it when possible).
-4. The statement (or the prepared statement) is executed on Postgres to retrieve the result of the query.
+1. The incoming GraphQL query is parsed into an `abstract syntax tree <https://en.wikipedia.org/wiki/Abstract_syntax_tree>`__ (AST) which is how GraphQL is represented.
+2. The GraphQL AST is validated against the schema to generate an internal representation.
+3. The internal representation is converted into an SQL statement (`prepare statement <https://www.postgresql.org/docs/9.3/sql-prepare.html>`__ whenever possible).
+4. The (prepare) statement is executed on Postgres to retrieve the result of the query.
 
-In certain cases (most typical use cases), graphql-engine can construct a 'plan' for a query so that a new instance of the same query can be executed without the overhead of steps 1 to 3.
+For most typical use cases, Hasura constructs a "plan" for a query, so that a new instance of the same query can be executed without the overhead of steps 1 to 3.
 
 For example, let's consider the following query:
 
+.. code-block:: graphql
 
+   query getAuthor($id: Int!) {
+      authors(where: {id: {_eq: $id}}) {
+         name
+         rating
+      }
+   }
 
-Optimize using variables
-------------------------
+With the following variable:
 
-Optimize using indexes
-----------------------
+.. code-block:: graphql
+
+   {
+      "id": 1
+   }
+
+For such a query, Hasura generates the following prepared statement (simplified):
+
+.. code-block:: plpgsql
+
+   select name, rating from author where id = $1
+
+With the following prepared variables:
+
+.. code-block:: plpgsql
+
+   $1 = 1
+
+Hasura now tries to map a GraphQL query to a prepare statement where the parameters have a one-to-one correspondence to the variables defined in the GraphQL query. 
+The first time a query comes in, Hasura generates a plan for the query which consists of two things:
+
+1. The prepare statement
+2. Information necessary to convert variables into the prepared statement's arguments
+
+This plan is then saved in a data structure called ``Query Plan Cache``. The next time the same query is executed, 
+Hasura uses the plan to convert the provided variables into the prepared statement's arguments and then executes the statement. 
+This will significantly cut down the execution time for a GraphQL query resulting in lower latencies and higher throughput.
+
+Caveats
+^^^^^^^
+
+This optimization is not possible for all types of queries. For example, consider this query:
+
+.. code-block:: graphql
+
+   query getAuthorWithCondition($condition: author_bool_exp!) {
+      author(where: $condition)
+         name
+         rating
+      }
+   }
+
+The statement generated for ``getAuthorWithCondition`` is now dependent on the variables, so with these variables:
+
+.. code-block:: json
+
+   {
+      "condition": {"id": {"_eq": 1}}
+   }
+
+the generated statement will be:
+
+.. code-block:: plpgsql
+
+   select name, rating from author where id = $1
+
+However, with the following variables:
+
+.. code-block:: json
+
+   {
+      "condition": {"name": {"_eq": "John"}}
+   }
+
+the generated statement will be:
+
+.. code-block:: plpgsql
+
+   select name, rating from author where name = 'John'
+
+A plan cannot be generated for such queries because the variables defined in the GraphQL query don't have a one-to-one correspondence to the parameters in the prepared statement.
+
+Query optimization
+------------------
+
+Using variables
+^^^^^^^^^^^^^^^
+
+In order to leverage Hasura's query plan caching to the full extent, GraphQL queries should be defined with variables whose types are **non-nullable** whenever possible.
+
+To make variables non-nullable, add a ``!`` at the end of the type, like here:
+
+.. code-block:: graphql
+
+   query getAuthor($id: Int!) {
+      authors(where: {id: {_eq: $id}}) {
+         name
+         rating
+      }
+   }
+
+If the ``!`` is not added and the variable is nullable, the generated query will be different depending if an ``id`` is passed or if the variables is ``null``
+(for the latter, there is no ``where`` statement present). Therefore, it's not possible for Hasura to create a reusable plan for a query in this case.
+
+.. note::
+
+   Hasura is fast even for queries which cannot have a reusable plan.
+   This should concern you only if you face a high volume of traffic (thousands of requests per second).
+
+Using indexes
+^^^^^^^^^^^^^
 
 `Postgres indexes <https://www.tutorialspoint.com/postgresql/postgresql_indexes.htm>`__ are special lookup tables that Hasura can use to speed up data lookup.
 An index acts as a pointer to data in a table, and it works very similar to an index in the back of a book. 
@@ -75,4 +180,4 @@ Let's compare the new query runtime to :ref:`the one before adding the index <qu
    :width: 75%
    :alt: Execution plan for Hasura GraphQL query
 
-We can see that the query runtime has become almost 13 times faster by adding an index.
+We can see that the query runtime has become almost 13 times faster after adding an index.
