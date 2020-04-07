@@ -225,7 +225,7 @@ compositeValueToJSON = \case
 data RemoteJoinField
   = RemoteJoinField
   { _rjfRemoteSchema :: !RemoteSchemaInfo -- ^ The remote schema server info.
-  , _rjfAlias        :: !G.Alias -- ^ To level alias of the field
+  , _rjfAlias        :: !G.Alias -- ^ Top level alias of the field
   , _rjfField        :: !G.Field -- ^ The field AST
   , _rjfFieldCall    :: ![G.Name] -- ^ Path to remote join value
   } deriving (Show, Eq)
