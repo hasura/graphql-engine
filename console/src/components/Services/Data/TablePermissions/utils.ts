@@ -82,3 +82,6 @@ export const getFilterQueries = (
 
   return filterQueries || {};
 };
+
+export const getDefaultFilterType = (query: BaseQueryType) =>
+  query === 'insert' ? 'check' : 'filter';

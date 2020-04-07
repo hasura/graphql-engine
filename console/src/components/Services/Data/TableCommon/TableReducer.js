@@ -79,6 +79,7 @@ import {
   SET_PRESET_VALUE,
   PERM_SET_FILTER_TYPE,
 } from '../TablePermissions/Actions';
+import { getDefaultFilterType } from '../TablePermissions/utils';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
   const modifyState = JSON.parse(JSON.stringify(modifyStateOrig));
@@ -263,7 +264,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...permState,
-          filterType: action.query === 'insert' ? 'check' : 'filter', // TODO: move to utils as getDefaultFilterType
+          filterType: getDefaultFilterType(action.query),
           isEditing: true,
         },
         prevPermissionState: {
@@ -377,7 +378,6 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
       Object.keys(action.allFields).forEach(fieldType => {
-        // TODO
         returnState = {
           ...returnState,
           permissionsState: {

@@ -30,7 +30,6 @@ const getQueryFilterKey = query => {
   return query === 'insert' ? 'check' : 'filter';
 };
 
-// TODO: args
 export const getPermissionFilterString = (
   permission,
   query,
