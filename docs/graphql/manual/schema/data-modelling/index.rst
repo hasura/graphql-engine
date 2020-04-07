@@ -4,8 +4,8 @@
 
 .. _guides_data_modelling:
 
-Guides: Data modelling
-======================
+Data modelling
+==============
 
 .. contents:: Table of contents
   :backlinks: none
