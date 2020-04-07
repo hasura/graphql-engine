@@ -11,6 +11,7 @@ The order and collapsed state of columns is now persisted across page navigation
 
 ### Bug fixes and improvements
 
+- cli: add support for multiple versions of plugin (close #4105)
 - cli: template assets path in console HTML for unversioned builds
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
 - console: fix clone permission migrations (close #3985) (#4277)
