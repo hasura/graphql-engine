@@ -199,6 +199,8 @@ library
 
                      -- scheduled triggers
                      , cron >= 0.6.2
+                     -- needed for deriving via
+                     , semigroups >= 0.19
 
   exposed-modules:     Control.Arrow.Extended
                      , Control.Arrow.Trans
