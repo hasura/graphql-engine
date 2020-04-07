@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"net/url"
 	nurl "net/url"
 	"runtime"
 	"strings"
@@ -134,16 +133,16 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool) (*Migrate, error) {
 }
 
 func GetDataPath(ec *cli.ExecutionContext) *nurl.URL {
-	nurl := ec.Config.ServerConfig.ParsedEndpoint
-	host := &url.URL{
+	url := ec.Config.ServerConfig.ParsedEndpoint
+	host := &nurl.URL{
 		Scheme:   "hasuradb",
-		Host:     nurl.Host,
-		Path:     nurl.Path,
+		Host:     url.Host,
+		Path:     url.Path,
 		RawQuery: ec.Config.ServerConfig.APIPaths.GetQueryParams().Encode(),
 	}
 	q := host.Query()
 	// Set sslmode in query
-	switch scheme := nurl.Scheme; scheme {
+	switch scheme := url.Scheme; scheme {
 	case "https":
 		q.Set("sslmode", "enable")
 	default:
