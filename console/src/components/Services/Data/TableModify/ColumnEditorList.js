@@ -96,14 +96,9 @@ const ColumnEditorList = ({
       }
     };
 
-    const gqlCompatibilityWarning = () => {
-      return (
-        <GqlCompatibilityWarning
-          identifier={colName}
-          className={styles.add_mar_left_small}
-        />
-      );
-    };
+    const gqlCompatibilityWarning = () => (
+      <GqlCompatibilityWarning identifier={colName} />
+    );
 
     const keyProperties = () => {
       const propertiesDisplay = [];

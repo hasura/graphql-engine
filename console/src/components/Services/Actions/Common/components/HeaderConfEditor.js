@@ -22,13 +22,9 @@ const HandlerEditor = ({
 
   return (
     <div className={`${className || ''}`}>
-      <Heading as="h2" pb="20px" fontSize="15px" mt="0px" mb="xs">
+      <Heading type="subHeading" mb="xs">
         {editorLabel}
-        <ToolTip
-          message={editorTooltip}
-          className={styles.add_mar_left_mid}
-          ml="sm"
-        />
+        <ToolTip message={editorTooltip} ml="sm" />
       </Heading>
       <div className={`${styles.add_mar_bottom_mid}`}>
         <label

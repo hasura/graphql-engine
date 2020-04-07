@@ -69,7 +69,7 @@ const Headers = ({ headers, setHeaders }) => {
 
     const getRemoveButton = () => {
       if (i === headers.length - 1) return null;
-      return <Icon type="close" onClick={removeHeader} />;
+      return <Icon type="close" onClick={removeHeader} pointer />;
     };
 
     return (

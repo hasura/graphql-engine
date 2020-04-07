@@ -12,7 +12,7 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
 
   return (
     <div>
-      <Heading as="h2" pb="20px" fontSize="15px" mt="0px" mb="xs">
+      <Heading as="h2" mb="20px" fontSize="15px" mt="0px">
         Derived mutation
         <ToolTip message={tooltipText} ml="sm" />
       </Heading>

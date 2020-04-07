@@ -476,7 +476,7 @@ class AddTable extends Component {
               dispatch={dispatch}
             />
             <hr />
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+            <Heading type="subHeading">
               Foreign Keys
               <ToolTip message={foreignKeyDescription} ml="sm" />
             </Heading>
@@ -492,7 +492,7 @@ class AddTable extends Component {
               schemaList={schemaList}
             />
             <hr />
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+            <Heading type="subHeading">
               Unique Keys
               <ToolTip message={uniqueKeyDescription} ml="sm" />
             </Heading>
@@ -506,7 +506,7 @@ class AddTable extends Component {
               setUniqueKeys={setUniqueKeys}
             />
             <hr />
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+            <Heading type="subHeading">
               Check Constraints
               <ToolTip message={checkConstraintsDescription} ml="sm" />
             </Heading>

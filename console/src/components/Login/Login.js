@@ -32,7 +32,7 @@ const Login = ({ dispatch }) => {
         loginText = (
           <Text>
             Verifying...
-            <Spinner ml="xs" />
+            <Spinner ml="sm" size="sm" display="inline-block" />
           </Text>
         );
       } else if (error) {

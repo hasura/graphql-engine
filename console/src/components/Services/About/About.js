@@ -50,7 +50,7 @@ class About extends Component {
 
     const { serverVersion, latestStableServerVersion } = this.props;
 
-    const spinner = <Spinner ml="xs" />;
+    const spinner = <Spinner size="sm" display="inline-block" />;
 
     const getServerVersionSection = () => {
       return (

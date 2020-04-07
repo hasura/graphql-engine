@@ -90,6 +90,7 @@ const renderWheres = (whereAnd, triggerSchema, dispatch) => {
       removeIcon = (
         <Icon
           type="close"
+          pointer
           mt="sm"
           onClick={() => {
             dispatch(removeFilter(i));
@@ -140,6 +141,7 @@ const renderSorts = (orderBy, triggerSchema, dispatch) => {
       removeIcon = (
         <Icon
           type="close"
+          pointer
           mt="sm"
           onClick={() => {
             dispatch(removeOrder(i));
@@ -251,7 +253,8 @@ class FilterQuery extends Component {
             >
               {this.state.isWatching ? (
                 <span>
-                  Watching <Spinner ml="xs" />
+                  Watching{' '}
+                  <Spinner ml="sm" size="12px" display="inline-block" />
                 </span>
               ) : (
                 'Watch'

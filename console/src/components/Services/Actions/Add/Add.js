@@ -15,9 +15,9 @@ import {
   setTypeDefinition,
   setHeaders as dispatchNewHeaders,
   toggleForwardClientHeaders as toggleFCH,
+  resetDerivedActionParentOperation,
 } from './reducer';
 import { createAction } from '../ServerIO';
-import { getUrlSearchParamValue } from '../../../Common/utils/jsUtils';
 import { Heading } from '../../../UIKit/atoms';
 import styles from './Styles.scss';
 
@@ -30,11 +30,15 @@ const AddAction = ({
   isFetching,
   headers,
   forwardClientHeaders,
+  derive,
 }) => {
   React.useEffect(() => {
-    if (getUrlSearchParamValue('is_derived') != 'true') {
+    if (!derive.operation) {
       dispatch(setDefaults());
     }
+    return () => {
+      dispatch(resetDerivedActionParentOperation());
+    };
   }, []);
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));

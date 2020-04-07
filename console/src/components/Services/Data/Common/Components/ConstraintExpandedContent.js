@@ -29,7 +29,7 @@ export const ConstraintExpandedContent = ({
       <div>
         <Text fontWeight="bold" mb="sm">
           Check Expression:
-          <ToolTip message={checkConstraintExpression} ml="sm" />
+          <ToolTip message={checkConstraintExpression} mx="sm" />
         </Text>
         <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
         <AceEditor

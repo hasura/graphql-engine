@@ -19,11 +19,11 @@ const HandlerEditor = ({ value, onChange, className }) => {
 
   return (
     <div className={className || ''}>
-      <Heading as="h2" pb="20px" fontSize="15px" mt="0px" mb="xs">
+      <Heading type="subHeading" mb="xs">
         {editorLabel}
         <ToolTip
           message={'Toggle between synchronous vs asynchronous action types'}
-          ml="sm"
+          mx="sm"
         />
         <KnowMoreLink href={docsRef} />
       </Heading>

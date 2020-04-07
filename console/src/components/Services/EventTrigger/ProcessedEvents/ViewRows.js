@@ -429,7 +429,7 @@ const ViewRows = ({
                                       ' ',
                                       <ToolTip
                                         placement="top"
-                                        ml="xs"
+                                        ml="sm"
                                         message={
                                           tooltip.statusCodeDescription
                                         }

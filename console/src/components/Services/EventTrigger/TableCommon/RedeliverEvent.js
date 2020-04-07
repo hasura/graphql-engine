@@ -82,7 +82,9 @@ class RedeliverEvent extends Component {
   render() {
     const { log } = this.props;
 
-    const isLoading = this.state.intervalId ? <Spinner /> : null;
+    const isLoading = this.state.intervalId ? (
+      <Spinner ml="sm" size="sm" display="inline-block" />
+    ) : null;
 
     const renderTableBody = () => {
       if (log.eventInvocations.length === 0) {
@@ -168,20 +170,20 @@ class RedeliverEvent extends Component {
                   id="requestResponseTab"
                 >
                   <Tab eventKey={1} title="Response">
-                    <div className={styles.add_mar_top}>
-                      <Heading type="subHeading">Response</Heading>
-                      <AceEditor
-                        mode="json"
-                        theme="github"
-                        name="response"
-                        value={finalResponse}
-                        minLines={4}
-                        maxLines={100}
-                        width="100%"
-                        showPrintMargin={false}
-                        showGutter={false}
-                      />
-                    </div>
+                    <Heading type="subHeading" mt="20px">
+                      Response
+                    </Heading>
+                    <AceEditor
+                      mode="json"
+                      theme="github"
+                      name="response"
+                      value={finalResponse}
+                      minLines={4}
+                      maxLines={100}
+                      width="100%"
+                      showPrintMargin={false}
+                      showGutter={false}
+                    />
                   </Tab>
                 </Tabs>
               </div>

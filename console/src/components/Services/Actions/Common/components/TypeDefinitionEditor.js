@@ -58,7 +58,7 @@ const ActionDefinitionEditor = ({
 
   return (
     <div className={`${className || ''}`}>
-      <Heading as="h2" pb="20px" fontSize="15px" mt="0px" mb="xs">
+      <Heading type="subHeading" mb="xs">
         {label}
         <ToolTip message={tooltip} ml="sm" />
       </Heading>

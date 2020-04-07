@@ -584,7 +584,7 @@ const ViewRows = ({
           } else if (
             col.data_type === 'json' ||
             col.data_type === 'jsonb' ||
-            rowColumnValue === 'object'
+            typeof rowColumnValue === 'object'
           ) {
             cellValue = JSON.stringify(rowColumnValue, null, 4);
             cellTitle = cellValue;
@@ -861,12 +861,7 @@ const ViewRows = ({
 
   const renderTableBody = () => {
     if (isProgressing) {
-      return (
-        <div>
-          {' '}
-          <Spinner />{' '}
-        </div>
-      );
+      return <Spinner size="xl" my="100px" mx="auto" />;
     }
 
     let disableSortColumn = false;

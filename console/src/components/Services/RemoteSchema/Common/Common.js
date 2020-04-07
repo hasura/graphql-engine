@@ -152,7 +152,7 @@ const Common = props => {
         Note: Specifying the server URL via an environmental variable is
         recommended if you have different URLs for multiple environments.
       </small>
-      <Heading type="subHeading" display="inline-block" pt="20px">
+      <Heading type="subHeading" pt="20px">
         Headers for the remote GraphQL server
       </Heading>
       <div className={styles.check_box}>

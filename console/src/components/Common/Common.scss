@@ -590,6 +590,10 @@ input {
   margin-right: 10px !important;
 }
 
+.box_shadow {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
 .code_space {
   padding: 3px 10px;
   border: 1px solid #f9eaef;
@@ -1285,9 +1289,9 @@ code {
   visibility: hidden;
 }
 
+// keep graphiql in viewport
 .graphQLHeight {
-  height: 72vh;
-  margin-bottom: 50px;
+  height: calc(100vh - 370px);
 }
 
 .button_mar_right {

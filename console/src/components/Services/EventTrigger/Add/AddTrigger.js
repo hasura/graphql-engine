@@ -375,7 +375,7 @@ class AddTrigger extends Component {
             <div
               className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
             >
-              <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+              <Heading type="subHeading">
                 Trigger Name
                 <ToolTip message={tooltip.triggerNameDescription} ml="sm" />
               </Heading>
@@ -391,7 +391,7 @@ class AddTrigger extends Component {
                 }}
               />
               <hr />
-              <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+              <Heading type="subHeading">
                 Schema/Table
                 <ToolTip mx="sm" message={tooltip.postgresDescription} />
               </Heading>
@@ -446,7 +446,7 @@ class AddTrigger extends Component {
               </div>
               <hr />
               <div className={styles.add_mar_bottom}>
-                <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+                <Heading type="subHeading">
                   Webhook URL
                   <ToolTip message={tooltip.webhookUrlDescription} ml="sm" />
                 </Heading>
@@ -492,26 +492,14 @@ class AddTrigger extends Component {
               </div>
               <hr />
               <CollapsibleToggle
-                title={
-                  <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
-                    Advanced Settings
-                  </Heading>
-                }
+                title={<Heading type="subHeading">Advanced Settings</Heading>}
                 testId="advanced-settings"
               >
                 <div>
                   {advancedColumnSection}
                   <hr />
                   <div className={styles.add_mar_top}>
-                    <Heading
-                      as="h4"
-                      fontSize="15px"
-                      pb="20px"
-                      mt="0px"
-                      mb="0px"
-                    >
-                      Retry Logic
-                    </Heading>
+                    <Heading type="subHeading">Retry Logic</Heading>
                     <div className={styles.retrySection}>
                       <div className={`col-md-3 ${styles.padd_left_remove}`}>
                         <label
@@ -575,15 +563,7 @@ class AddTrigger extends Component {
                   </div>
                   <hr />
                   <div className={styles.add_mar_top}>
-                    <Heading
-                      as="h4"
-                      fontSize="15px"
-                      pb="20px"
-                      mt="0px"
-                      mb="0px"
-                    >
-                      Headers
-                    </Heading>
+                    <Heading type="subHeading">Headers</Heading>
                     {headersList}
                   </div>
                 </div>

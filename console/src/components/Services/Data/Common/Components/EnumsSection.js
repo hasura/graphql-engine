@@ -62,7 +62,7 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
           message={
             'Expose the table values as GraphQL enums in the GraphQL API'
           }
-          ml="sm"
+          mx="sm"
         />
         <KnowMoreLink
           href={enumCompatibilityDocsUrl}

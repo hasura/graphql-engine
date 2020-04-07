@@ -437,7 +437,11 @@ class ApiRequest extends Component {
 
               if (isAnalyzingToken && analyzingHeaderRow === i) {
                 analyzeIcon = (
-                  <Spinner className={styles.showInspectorLoading} />
+                  <Spinner
+                    size="lg"
+                    display="inline-block"
+                    className={styles.showInspectorLoading}
+                  />
                 );
               } else {
                 analyzeIcon = (
@@ -472,6 +476,7 @@ class ApiRequest extends Component {
                 data-header-id={i}
                 aria-hidden="true"
                 onClick={onDeleteHeaderClicked}
+                pointer
                 className={styles.closeHeader}
               />
             );
@@ -601,11 +606,11 @@ class ApiRequest extends Component {
                   placement="top"
                   message={jwtValidityStatus('Valid JWT token')}
                 >
-                  <Icon type="check" color="green.original" />
+                  <Icon type="check" color="green.original" ml="sm" />
                 </ToolTip>
               );
             case !tokenVerified && JWTError.length > 0:
-              return <Icon type="close" color="red.primary" />;
+              return <Icon type="close" color="red.primary" ml="sm" />;
             default:
               return null;
           }
@@ -684,9 +689,7 @@ class ApiRequest extends Component {
             <div>
               <span className={styles.analyzerLabel}>
                 Token Validity:
-                <span className={styles.token_validity}>
-                  {generateJWTVerificationStatus()}
-                </span>
+                {generateJWTVerificationStatus()}
               </span>
               {getJWTFailMessage() || <br />}
               {getHasuraClaims() || <br />}

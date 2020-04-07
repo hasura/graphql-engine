@@ -7,9 +7,6 @@ import * as tooltips from './Tooltips';
 import globals from '../../Globals';
 import { getPathRoot } from '../Common/utils/urlUtils';
 
-import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
-import { Icon, Spinner, ToolTip, Text } from '../UIKit/atoms/';
-
 import {
   loadServerVersion,
   fetchServerConfig,
@@ -39,6 +36,7 @@ import {
 } from '../Common/utils/localStorageUtils';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 
+import { Icon, Spinner, ToolTip, Text } from '../UIKit/atoms/';
 import styles from './Main.scss';
 
 class Main extends React.Component {
@@ -227,12 +225,7 @@ class Main extends React.Component {
       if (!migrationModeProgress) {
         mainContent = children && React.cloneElement(children);
       } else {
-        mainContent = (
-          <div>
-            {' '}
-            <Spinner />{' '}
-          </div>
-        );
+        mainContent = <Spinner size="xl" my="100px" mx="auto" />;
       }
 
       return mainContent;
@@ -250,11 +243,11 @@ class Main extends React.Component {
 
     const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <Icon className={styles.question} type="settings" size={18} />;
+        return <Icon type="settings" color="white" />;
       }
 
       return (
-        <div className={styles.question}>
+        <div>
           <Icon type="settings" />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
@@ -275,16 +268,15 @@ class Main extends React.Component {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <WarningSymbol
-                tooltipText={tooltips.secureEndpoint}
-                tooltipPlacement={'left'}
-                customStyle={styles.secureSectionSymbol}
-              />
-              &nbsp;Secure your endpoint
+              <ToolTip message={tooltips.secureEndpoint} placement="left">
+                <Icon type="warning" size={12} mr="sm" />
+              </ToolTip>
+              Secure your endpoint
             </a>
           </div>
         );
       }
+
       return adminSecretHtml;
     };
 
@@ -361,7 +353,7 @@ class Main extends React.Component {
                   className={styles.updateBannerClose}
                   onClick={this.closeUpdateBanner.bind(this)}
                 >
-                  <Icon type="close" />
+                  <Icon type="close" pointer />
                 </span>
               </div>
             </div>
@@ -395,7 +387,11 @@ class Main extends React.Component {
           >
             <div className={styles.dropdown_menu_container}>
               <div className={styles.closeDropDown}>
-                <Icon type="close" onClick={this.closeLoveIcon.bind(this)} />
+                <Icon
+                  type="close"
+                  onClick={this.closeLoveIcon.bind(this)}
+                  pointer
+                />
                 {/*
                         <img
                           className={'img-responsive'}
@@ -710,12 +706,18 @@ class Main extends React.Component {
               <div className={styles.supportSection}>
                 <div
                   id="help"
-                  className={styles.helpSection + ' dropdown-toggle'}
+                  className={styles.helpSection}
                   data-toggle="dropdown"
                   aria-expanded="false"
                   aria-haspopup="true"
                 >
-                  <Icon type="question" className={styles.question} size={18} />
+                  <Icon
+                    type="question"
+                    pointer
+                    size={12}
+                    color="white"
+                    mr="sm"
+                  />
                 </div>
                 <ul
                   className={

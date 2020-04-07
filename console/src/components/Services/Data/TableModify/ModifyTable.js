@@ -187,11 +187,11 @@ class ModifyTable extends React.Component {
 
       return (
         <React.Fragment>
-          <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+          <Heading type="subHeading">
             Computed fields
             <ToolTip
               message={'Add a function as a virtual field in the GraphQL API'}
-              ml="sm"
+              mx="sm"
             />
             <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/schema/computed-fields.html" />
           </Heading>
@@ -233,9 +233,7 @@ class ModifyTable extends React.Component {
               dispatch={dispatch}
             />
             <EnumTableModifyWarning isEnum={table.is_enum} />
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
-              Columns
-            </Heading>
+            <Heading type="subHeading">Columns</Heading>
             <ColumnEditorList
               validTypeCasts={validTypeCasts}
               dataTypeIndexMap={dataTypeIndexMap}
@@ -247,9 +245,7 @@ class ModifyTable extends React.Component {
               customColumnNames={getTableCustomColumnNames(table)}
             />
             <hr />
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
-              Add a new column
-            </Heading>
+            <Heading type="subHeading">Add a new column</Heading>
             <ColumnCreator
               dispatch={dispatch}
               tableName={tableName}
@@ -259,7 +255,7 @@ class ModifyTable extends React.Component {
             />
             <hr />
             {getComputedFieldsSection()}
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+            <Heading type="subHeading">
               Primary Key
               <ToolTip message={primaryKeyDescription} ml="sm" />
             </Heading>
@@ -270,7 +266,7 @@ class ModifyTable extends React.Component {
               currentSchema={currentSchema}
             />
             <hr />
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+            <Heading type="subHeading">
               Foreign Keys
               <ToolTip message={foreignKeyDescription} ml="sm" />
             </Heading>
@@ -283,7 +279,7 @@ class ModifyTable extends React.Component {
               fkModify={fkModify}
             />
             <hr />
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+            <Heading type="subHeading">
               Unique Keys
               <ToolTip message={uniqueKeyDescription} ml="sm" />
             </Heading>
@@ -296,12 +292,10 @@ class ModifyTable extends React.Component {
               setUniqueKeys={setUniqueKeys}
             />
             <hr />
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
-              Triggers
-            </Heading>
+            <Heading type="subHeading">Triggers</Heading>
             <TriggerEditorList tableSchema={table} dispatch={dispatch} />
             <hr />
-            <Heading as="h4" fontSize="15px" pb="20px" mt="0px" mb="0px">
+            <Heading type="subHeading">
               Check Constraints
               <ToolTip message={checkConstraintsDescription} ml="sm" />
             </Heading>
