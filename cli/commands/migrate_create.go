@@ -58,7 +58,7 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.BoolVar(&opts.fromServer, "from-server", false, "take pg_dump of schema and Hasura metadata from the server. use --schema flag to give schemas (default: public)")
 	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an sql file which contains the SQL statements")
 	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from server and save it as a migration, use --schema flag to give schemas (default: public)")
-	f.StringArrayVar(&opts.schemaNames, "schema", []string{"public"}, "name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. --schema public,user")
+	f.StringSliceVar(&opts.schemaNames, "schema", []string{"public"}, "name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. --schema public,user")
 	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
 	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
 
