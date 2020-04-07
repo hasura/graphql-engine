@@ -4,7 +4,7 @@
 
 .. _heroku_logs:
 
-Hasura GraphQL engine server logs (Heroku)
+Hasura GraphQL engine server logs on Heroku
 ==========================================
 
 .. contents:: Table of contents

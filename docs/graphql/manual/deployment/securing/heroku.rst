@@ -4,8 +4,8 @@
 
 .. _heroku_secure:
 
-Securing the GraphQL endpoint (Heroku)
-======================================
+Securing the GraphQL endpoint on Heroku
+=======================================
 
 .. contents:: Table of contents
   :backlinks: none

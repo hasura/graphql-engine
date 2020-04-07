@@ -4,8 +4,8 @@
 
 .. _docker_secure:
 
-Securing the GraphQL endpoint (Docker)
-======================================
+Securing the GraphQL endpoint on Docker
+=======================================
 
 .. contents:: Table of contents
   :backlinks: none

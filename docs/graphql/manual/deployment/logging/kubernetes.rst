@@ -4,8 +4,8 @@
 
 .. _kubernetes_logs:
 
-Hasura GraphQL engine server logs (Kubernetes)
-==============================================
+Hasura GraphQL engine server logs on Kubernetes
+===============================================
 
 .. contents:: Table of contents
   :backlinks: none

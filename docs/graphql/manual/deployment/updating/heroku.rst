@@ -4,8 +4,8 @@
 
 .. _heroku_update:
 
-Updating Hasura GraphQL engine on Heroku
-========================================
+Updating Hasura GraphQL engine running on Heroku
+================================================
 
 .. contents:: Table of contents
   :backlinks: none

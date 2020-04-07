@@ -4,8 +4,8 @@
 
 .. _docker_logs:
 
-Hasura GraphQL engine server logs (Docker)
-==========================================
+Hasura GraphQL engine server logs on Docker
+===========================================
 
 .. contents:: Table of contents
   :backlinks: none

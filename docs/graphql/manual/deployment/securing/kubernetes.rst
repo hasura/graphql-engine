@@ -4,8 +4,8 @@
 
 .. _kubernetes_secure:
 
-Securing the GraphQL endpoint (Kubernetes)
-==========================================
+Securing the GraphQL endpoint on Kubernetes
+===========================================
 
 .. contents:: Table of contents
   :backlinks: none
