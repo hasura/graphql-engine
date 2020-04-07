@@ -160,6 +160,97 @@ mkQueryField actionName comment definition definitionList =
       where
         idDescription = G.Description $ "id of the action: " <>> actionName
 
+mkPGFieldType
+  :: ObjectFieldName
+  -> (G.GType, OutputFieldTypeInfo)
+  -> HashMap ObjectFieldName PGColumnInfo
+  -> PGScalarType
+mkPGFieldType fieldName (fieldType, fieldTypeInfo) fieldReferences =
+  case (G.isListType fieldType, fieldTypeInfo) of
+  -- for scalar lists, we treat them as json columns
+    (True, _) -> PGJSON
+    -- enums the same
+    (False, OutputFieldEnum _) -> PGJSON
+    -- default to PGJSON unless you have to join with a postgres table
+    -- i.e, if this field is specified as part of some relationship's
+    -- mapping, we can cast this column's value as the remote column's type
+    (False, OutputFieldScalar _) ->
+      case Map.lookup fieldName fieldReferences of
+        Just columnInfo -> unsafePGColumnToRepresentation $ pgiType columnInfo
+        Nothing         -> PGJSON
+
+
+mkDefinitionList :: AnnotatedObjectType -> HashMap ObjectFieldName PGColumnInfo -> [(PGCol, PGScalarType)]
+mkDefinitionList annotatedOutputType fieldReferences =
+  [ (unsafePGCol $ coerce k, mkPGFieldType k v fieldReferences)
+  | (k, v) <- Map.toList $ _aotAnnotatedFields annotatedOutputType
+  ]
+
+mkFieldMap
+  :: AnnotatedObjectType
+  -> ActionInfo
+  -> HashMap ObjectFieldName PGColumnInfo
+  -> RoleName
+  -> HashMap (G.NamedType,G.Name) ResolveField
+mkFieldMap annotatedOutputType actionInfo fieldReferences roleName =
+  Map.fromList $ fields <> catMaybes relationships
+  where
+    fields =
+      flip map (Map.toList $ _aotAnnotatedFields annotatedOutputType) $
+      \(fieldName, (fieldType, fieldTypeInfo)) ->
+        ( (actionOutputBaseType, unObjectFieldName fieldName)
+        , RFPGColumn $ PGColumnInfo
+          (unsafePGCol $ coerce fieldName)
+          (coerce fieldName)
+          0
+          (PGColumnScalar $ mkPGFieldType fieldName (fieldType, fieldTypeInfo) fieldReferences)
+          (G.isNullable fieldType)
+          Nothing
+        )
+    relationships =
+      flip map (Map.toList $ _aotRelationships annotatedOutputType) $
+      \(relationshipName, relationship) ->
+        let remoteTableInfo = _trRemoteTable relationship
+            remoteTable = _tciName $ _tiCoreInfo remoteTableInfo
+            filterAndLimitM = getFilterAndLimit remoteTableInfo
+            columnMapping = Map.fromList $
+                  [ (unsafePGCol $ coerce k, pgiColumn v)
+                  | (k, v) <- Map.toList $ _trFieldMapping relationship
+                  ]
+            in case filterAndLimitM of
+              Just (tableFilter, tableLimit) ->
+                Just ( ( actionOutputBaseType
+                       , unRelationshipName relationshipName
+                       )
+                     , RFRelationship $ RelationshipField
+                       (RelInfo
+                        -- RelationshipName, which is newtype wrapper over G.Name is always
+                        -- non-empty text so as to conform GraphQL spec
+                        (RelName $ mkNonEmptyTextUnsafe $ coerce relationshipName)
+                        (_trType relationship)
+                        columnMapping remoteTable True)
+                       False mempty
+                       tableFilter
+                       tableLimit
+                     )
+              Nothing -> Nothing
+
+    getFilterAndLimit remoteTableInfo =
+      if roleName == adminRole
+      then Just (annBoolExpTrue, Nothing)
+      else do
+        selectPermisisonInfo <-
+          getSelectPermissionInfoM remoteTableInfo roleName
+        return (spiFilter selectPermisisonInfo, spiLimit selectPermisisonInfo)
+
+    actionOutputBaseType =
+      G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
+
+mkFieldReferences :: AnnotatedObjectType -> HashMap ObjectFieldName PGColumnInfo
+mkFieldReferences annotatedOutputType=
+  Map.unions $ map _trFieldMapping $ Map.elems $
+  _aotRelationships annotatedOutputType
+
 mkMutationActionFieldsAndTypes
   :: (QErrM m)
   => ActionInfo
@@ -182,80 +273,11 @@ mkMutationActionFieldsAndTypes actionInfo annotatedOutputType permission =
     comment = _aiComment actionInfo
 
     -- all the possible field references
-    fieldReferences =
-      Map.unions $ map _trFieldMapping $ Map.elems $
-      _aotRelationships annotatedOutputType
+    fieldReferences = mkFieldReferences annotatedOutputType
 
-    mkPGFieldType fieldName (fieldType, fieldTypeInfo) =
-      case (G.isListType fieldType, fieldTypeInfo) of
-        -- for scalar lists, we treat them as json columns
-        (True, _) -> PGJSON
-        -- enums the same
-        (False, OutputFieldEnum _) -> PGJSON
-        -- default to PGJSON unless you have to join with a postgres table
-        -- i.e, if this field is specified as part of some relationship's
-        -- mapping, we can cast this column's value as the remote column's type
-        (False, OutputFieldScalar _) ->
-          case Map.lookup fieldName fieldReferences of
-            Just columnInfo -> unsafePGColumnToRepresentation $ pgiType columnInfo
-            Nothing         -> PGJSON
+    definitionList = mkDefinitionList annotatedOutputType fieldReferences
 
-    definitionList =
-      [ (unsafePGCol $ coerce k, mkPGFieldType k v)
-      | (k, v) <- Map.toList $ _aotAnnotatedFields annotatedOutputType
-      ]
-    -- mkFieldMap annotatedOutputType =
-    fieldMap =
-      Map.fromList $ fields <> catMaybes relationships
-      where
-        fields =
-          flip map (Map.toList $ _aotAnnotatedFields annotatedOutputType) $
-          \(fieldName, (fieldType, fieldTypeInfo)) ->
-            ( (actionOutputBaseType, unObjectFieldName fieldName)
-            , RFPGColumn $ PGColumnInfo
-              (unsafePGCol $ coerce fieldName)
-              (coerce fieldName)
-              0
-              (PGColumnScalar $ mkPGFieldType fieldName (fieldType, fieldTypeInfo))
-              (G.isNullable fieldType)
-              Nothing
-            )
-        relationships =
-          flip map (Map.toList $ _aotRelationships annotatedOutputType) $
-          \(relationshipName, relationship) ->
-            let remoteTableInfo = _trRemoteTable relationship
-                remoteTable = _tciName $ _tiCoreInfo remoteTableInfo
-                filterAndLimitM = getFilterAndLimit remoteTableInfo
-                columnMapping = Map.fromList $
-                  [ (unsafePGCol $ coerce k, pgiColumn v)
-                  | (k, v) <- Map.toList $ _trFieldMapping relationship
-                  ]
-            in case filterAndLimitM of
-              Just (tableFilter, tableLimit) ->
-                Just ( ( actionOutputBaseType
-                       , unRelationshipName relationshipName
-                       )
-                     , RFRelationship $ RelationshipField
-                       (RelInfo
-                        -- RelationshipName, which is newtype wrapper over G.Name is always
-                        -- non-empty text so as to conform GraphQL spec
-                        (RelName $ mkNonEmptyTextUnsafe $ coerce relationshipName)
-                        (_trType relationship)
-                        columnMapping remoteTable True)
-                       False mempty
-                       tableFilter
-                       tableLimit
-                     )
-              Nothing -> Nothing
-    getFilterAndLimit remoteTableInfo =
-      if roleName == adminRole
-      then Just (annBoolExpTrue, Nothing)
-      else do
-        selectPermisisonInfo <-
-          getSelectPermissionInfoM remoteTableInfo roleName
-        return (spiFilter selectPermisisonInfo, spiLimit selectPermisisonInfo)
-    actionOutputBaseType =
-      G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
+    fieldMap = mkFieldMap annotatedOutputType actionInfo fieldReferences roleName
 
 mkQueryActionFieldsAndTypes
   :: (QErrM m)
@@ -272,81 +294,12 @@ mkQueryActionFieldsAndTypes actionInfo annotatedOutputType permission =
   where
     actionName = _aiName actionInfo
     roleName = _apiRole permission
-    -- all the possible field references
-    fieldReferences =
-      Map.unions $ map _trFieldMapping $ Map.elems $
-      _aotRelationships annotatedOutputType
 
-    mkPGFieldType fieldName (fieldType, fieldTypeInfo) =
-      case (G.isListType fieldType, fieldTypeInfo) of
-        -- for scalar lists, we treat them as json columns
-        (True, _) -> PGJSON
-        -- enums the same
-        (False, OutputFieldEnum _) -> PGJSON
-        -- default to PGJSON unless you have to join with a postgres table
-        -- i.e, if this field is specified as part of some relationship's
-        -- mapping, we can cast this column's value as the remote column's type
-        (False, OutputFieldScalar _) ->
-          case Map.lookup fieldName fieldReferences of
-            Just columnInfo -> unsafePGColumnToRepresentation $ pgiType columnInfo
-            Nothing         -> PGJSON
+    fieldReferences = mkFieldReferences annotatedOutputType
 
-    definitionList =
-      [ (unsafePGCol $ coerce k, mkPGFieldType k v)
-      | (k, v) <- Map.toList $ _aotAnnotatedFields annotatedOutputType
-      ]
-    -- mkFieldMap annotatedOutputType =
-    fieldMap =
-      Map.fromList $ fields <> catMaybes relationships
-      where
-        fields =
-          flip map (Map.toList $ _aotAnnotatedFields annotatedOutputType) $
-          \(fieldName, (fieldType, fieldTypeInfo)) ->
-            ( (actionOutputBaseType, unObjectFieldName fieldName)
-            , RFPGColumn $ PGColumnInfo
-              (unsafePGCol $ coerce fieldName)
-              (coerce fieldName)
-              0
-              (PGColumnScalar $ mkPGFieldType fieldName (fieldType, fieldTypeInfo))
-              (G.isNullable fieldType)
-              Nothing
-            )
-        relationships =
-          flip map (Map.toList $ _aotRelationships annotatedOutputType) $
-          \(relationshipName, relationship) ->
-            let remoteTableInfo = _trRemoteTable relationship
-                remoteTable = _tciName $ _tiCoreInfo remoteTableInfo
-                filterAndLimitM = getFilterAndLimit remoteTableInfo
-                columnMapping = Map.fromList $
-                  [ (unsafePGCol $ coerce k, pgiColumn v)
-                  | (k, v) <- Map.toList $ _trFieldMapping relationship
-                  ]
-            in case filterAndLimitM of
-              Just (tableFilter, tableLimit) ->
-                Just ( ( actionOutputBaseType
-                       , unRelationshipName relationshipName
-                       )
-                     , RFRelationship $ RelationshipField
-                       (RelInfo
-                        -- RelationshipName, which is newtype wrapper over G.Name is always
-                        -- non-empty text so as to conform GraphQL spec
-                        (RelName $ mkNonEmptyTextUnsafe $ coerce relationshipName)
-                        (_trType relationship)
-                        columnMapping remoteTable True)
-                       False mempty
-                       tableFilter
-                       tableLimit
-                     )
-              Nothing -> Nothing
-    getFilterAndLimit remoteTableInfo =
-      if roleName == adminRole
-      then Just (annBoolExpTrue, Nothing)
-      else do
-        selectPermisisonInfo <-
-          getSelectPermissionInfoM remoteTableInfo roleName
-        return (spiFilter selectPermisisonInfo, spiLimit selectPermisisonInfo)
-    actionOutputBaseType =
-      G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
+    definitionList = mkDefinitionList annotatedOutputType fieldReferences
+
+    fieldMap = mkFieldMap annotatedOutputType actionInfo fieldReferences roleName
 
 mkMutationActionSchemaOne
   :: (QErrM m)
