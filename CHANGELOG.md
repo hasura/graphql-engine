@@ -2,6 +2,13 @@
 
 ## Next release
 
+
+### console: persist columns state in data browser
+
+The order and collapsed state of columns is now persisted across page navigation
+
+(close #3390) (#3753)
+
 ### Bug fixes and improvements
 
 - cli: template assets path in console HTML for unversioned builds
