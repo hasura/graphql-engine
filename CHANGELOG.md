@@ -14,6 +14,7 @@ The order and collapsed state of columns is now persisted across page navigation
 - cli: template assets path in console HTML for unversioned builds
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
 - console: fix clone permission migrations (close #3985) (#4277)
+- console: decouple data rows and count fetch in data browser to account for really large tables (close #3793) (#4269)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 
