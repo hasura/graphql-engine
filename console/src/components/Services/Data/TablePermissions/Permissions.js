@@ -74,6 +74,7 @@ import {
   getGroupedTableComputedFields,
 } from '../../../Common/utils/pgUtils';
 import { showErrorNotification } from '../../Common/Notification';
+import { getFilterQueries } from './utils';
 
 class Permissions extends Component {
   constructor() {
@@ -611,36 +612,9 @@ class Permissions extends Component {
             dispatch(permCustomChecked());
           };
 
-          // return queries grouped by filterString i.e. { filterString: [query] }
-          const getFilterQueries = () => {
-            const _filterQueries = {};
-            queryTypes.forEach(queryType => {
-              if (queryType === permissionsState.query) {
-                return;
-              }
-
-              let queryFilterString = '';
-              if (permissionsState[queryType]) {
-                queryFilterString = getPermissionFilterString(
-                  permissionsState[queryType],
-                  queryType,
-                  false
-                );
-              }
-
-              if (queryFilterString) {
-                _filterQueries[queryFilterString] =
-                  _filterQueries[queryFilterString] || [];
-                _filterQueries[queryFilterString].push(queryType);
-              }
-            });
-
-            return _filterQueries;
-          };
-
           const _filterOptionsSection = [];
 
-          const filterQueries = getFilterQueries();
+          const filterQueries = getFilterQueries(queryTypes, permissionsState);
 
           const selectedValue = (
             <AceEditor
