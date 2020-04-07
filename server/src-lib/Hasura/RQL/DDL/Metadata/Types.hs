@@ -199,13 +199,16 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 instance FromJSON ExportMetadata where
   parseJSON _ = return ExportMetadata
 
-data ReloadMetadata
+newtype ReloadMetadata
   = ReloadMetadata
+  { _rmReloadRemoteSchemas :: Bool}
   deriving (Show, Eq, Lift)
-$(deriveToJSON defaultOptions ''ReloadMetadata)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''ReloadMetadata)
 
 instance FromJSON ReloadMetadata where
-  parseJSON _ = return ReloadMetadata
+  parseJSON = \case
+    Object o -> ReloadMetadata <$> o .:? "reload_remote_schemas" .!= False
+    _        -> pure $ ReloadMetadata False
 
 data DumpInternalState
   = DumpInternalState
@@ -484,12 +487,11 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
         actionDefinitionToOrdJSON (ActionDefinition args outputType kind headers frwrdClientHdrs handler) =
           AO.object $ [ ("kind", AO.toOrdered kind)
                       , ("handler", AO.toOrdered handler)
-                      , ("arguments", AO.array $ map argDefinitionToOrdJSON args)
                       , ("output_type", AO.toOrdered outputType)
                       ]
           <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
           <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
-                       ]
+                       , listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args]
           where
             argDefinitionToOrdJSON :: ArgumentDefinition -> AO.Value
             argDefinitionToOrdJSON (ArgumentDefinition argName ty descM) =

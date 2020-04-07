@@ -7,10 +7,10 @@ OUTPUT_DIR := _output
 # compile assets
 .PHONY: assets
 assets:
-	go-bindata --pkg assets -o assets/assets.go assets/**/*.html
+	pkger -o pkg/console/templates/packed -include /pkg/console/templates/gohtml/
 
 HAS_GOX := $(shell command -v gox;)
-HAS_BINDATA := $(shell command -v go-bindata;)
+HAS_PKGER := $(shell command -v pkger;)
 
 .PHONY: deps
 # get dependencies
@@ -19,8 +19,8 @@ deps:
 ifndef HAS_GOX
 	go get github.com/mitchellh/gox
 endif
-ifndef HAS_BINDATA
-	go get github.com/kevinburke/go-bindata/...
+ifndef HAS_PKGER
+	go get github.com/markbates/pkger/cmd/pkger
 endif
 
 # build cli locally, for all given platform/arch
