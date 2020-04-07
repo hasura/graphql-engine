@@ -60,6 +60,7 @@ import {
   fetchColumnCastsQuery,
   convertArrayToJson,
   sanitiseRootFields,
+  sanitiseColumnNames,
 } from './utils';
 
 import {
@@ -792,9 +793,7 @@ const deleteTrigger = (trigger, table) => {
     let downMigrationSql = '';
 
     downMigrationSql += `CREATE TRIGGER "${triggerName}"
-${trigger.action_timing} ${
-      trigger.event_manipulation
-      } ON "${tableSchema}"."${tableName}"
+${trigger.action_timing} ${trigger.event_manipulation} ON "${tableSchema}"."${tableName}"
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
@@ -884,37 +883,7 @@ const untrackTableSql = tableName => {
     const errorMsg = 'Untrack table failed';
 
     const customOnSuccess = () => {
-      // Combine foreign_key_constraints and opp_foreign_key_constraints to get merged table data
-      const tableData = [];
-      const allSchemas = getState().tables.allSchemas;
-      const schemaInfo = allSchemas.find(
-        schema =>
-          schema.table_name === tableName &&
-          schema.table_schema === currentSchema
-      );
-      schemaInfo.foreign_key_constraints.forEach(fk_obj => {
-        tableData.push({
-          table_name: fk_obj.ref_table,
-          table_schema: fk_obj.ref_table_table_schema,
-        });
-      });
-      schemaInfo.opp_foreign_key_constraints.forEach(fk_obj => {
-        tableData.push({
-          table_name: fk_obj.table_name,
-          table_schema: fk_obj.table_schema,
-        });
-      });
-      tableData.push({
-        table_schema: currentSchema,
-        table_name: tableName,
-      });
-      dispatch(
-        updateSchemaInfo({
-          tables: tableData,
-        })
-      ).then(() => {
-        dispatch(_push('/data/'));
-      });
+      dispatch(_push('/data/'));
     };
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
@@ -2317,6 +2286,62 @@ const saveUniqueKey = (
       errorMsg
     );
   };
+};
+
+export const setViewCustomColumnNames = (
+  customColumnNames,
+  viewName,
+  schemaName,
+  successCb,
+  errorCb
+) => (dispatch, getState) => {
+  const viewDef = generateTableDef(viewName, schemaName);
+  const view = findTable(getState().tables.allSchemas, viewDef);
+
+  const existingCustomRootFields = getTableCustomRootFields(view);
+  const existingColumnNames = getTableCustomColumnNames(view);
+
+  const upQuery = getSetCustomRootFieldsQuery(
+    viewDef,
+    existingCustomRootFields,
+    sanitiseColumnNames(customColumnNames)
+  );
+  const downQuery = getSetCustomRootFieldsQuery(
+    viewDef,
+    existingCustomRootFields,
+    existingColumnNames
+  );
+
+  const migrationName = 'alter_view_custom_column_names';
+  const requestMsg = 'Saving column metadata...';
+  const successMsg = 'Saved column metadata successfully';
+  const errorMsg = 'Saving column metadata failed';
+
+  const customOnSuccess = () => {
+    // success callback
+    if (successCb) {
+      successCb();
+    }
+  };
+
+  const customOnError = () => {
+    if (errorCb) {
+      errorCb();
+    }
+  };
+
+  makeMigrationCall(
+    dispatch,
+    getState,
+    [upQuery],
+    [downQuery],
+    migrationName,
+    customOnSuccess,
+    customOnError,
+    requestMsg,
+    successMsg,
+    errorMsg
+  );
 };
 
 export {

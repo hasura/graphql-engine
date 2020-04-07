@@ -2,9 +2,20 @@
 
 ## Next release
 
+
+### console: persist columns state in data browser
+
+The order and collapsed state of columns is now persisted across page navigation
+
+(close #3390) (#3753)
+
 ### Bug fixes and improvements
 
+- cli: template assets path in console HTML for unversioned builds
+- console: allow customising graphql field names for columns of views (close #3689) (#4255)
+- console: fix clone permission migrations (close #3985) (#4277)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
+- server: reserved keywords in column references break parser (fix #3597) #3927
 
 ## `v1.2.0-beta.3`
 
@@ -105,6 +116,12 @@ docker run hasura/graphql-engine:v1.2.0 graphql-engine --database-url <db-url> d
 Read more about this command in the [docs](https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine).
 
 (close #1156) (#3760)
+
+### Expiration of connections authenticated by WebHooks
+
+When using webhooks to authenticate incoming requests to the GraphQL engine server, it is now possible to specify an expiration time; the connection to the server will be automatically closed if it's still running when the expiration delay is expired.
+
+Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/authentication/webhook.html).
 
 ### Bug fixes and improvements
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
