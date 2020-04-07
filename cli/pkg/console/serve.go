@@ -3,6 +3,7 @@ package console
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/hasura/graphql-engine/cli"
@@ -21,6 +22,10 @@ type ServeOpts struct {
 	ConsolePort     string
 	APIPort         string
 	Address         string
+
+	SignalChanAPIServer    chan os.Signal
+	SignalChanConsoleServer chan os.Signal
+	WG *sync.WaitGroup
 }
 
 // Server console and API Server
@@ -32,8 +37,22 @@ func Serve(opts *ServeOpts) error {
 		return errors.Wrap(err, "cannot create console server")
 	}
 
+	go func() {
+		<-opts.SignalChanAPIServer
+		if err := apiHTTPServer.Close(); err != nil {
+			opts.EC.Logger.Debugf("unable to close server running on port %s", opts.APIPort)
+		}
+	}()
+
+	go func() {
+		<-opts.SignalChanConsoleServer
+		if err := consoleHTTPServer.Close(); err != nil {
+			opts.EC.Logger.Debugf("unable to close server running on port %s", opts.ConsolePort)
+		}
+	}()
+
 	// Create WaitGroup for running 2 servers
-	wg := &sync.WaitGroup{}
+	wg := opts.WG
 	wg.Add(1)
 	go func() {
 		if err := apiHTTPServer.ListenAndServe(); err != nil {

@@ -138,16 +138,20 @@ func (o *ConsoleOptions) Run() error {
 		TemplateProvider: templateProvider,
 	})
 
+	o.WG = new(sync.WaitGroup)
 	// start console and API HTTP Servers
 	serveOpts := &console.ServeOpts{
-		APIServer:       apiServer,
-		ConsoleServer:   consoleServer,
-		EC:              o.EC,
-		DontOpenBrowser: o.DontOpenBrowser,
-		Browser:         o.Browser,
-		ConsolePort:     o.ConsolePort,
-		APIPort:         o.APIPort,
-		Address:         o.Address,
+		APIServer:               apiServer,
+		ConsoleServer:           consoleServer,
+		EC:                      o.EC,
+		DontOpenBrowser:         o.DontOpenBrowser,
+		Browser:                 o.Browser,
+		ConsolePort:             o.ConsolePort,
+		APIPort:                 o.APIPort,
+		Address:                 o.Address,
+		SignalChanConsoleServer: o.ConsoleServerInterruptSignal,
+		SignalChanAPIServer:     o.APIServerInterruptSignal,
+		WG: o.WG,
 	}
 
 	return console.Serve(serveOpts)
