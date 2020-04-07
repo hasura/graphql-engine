@@ -342,6 +342,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...modifyState.permissionsState,
           filterType: action.filterType,
+          custom_checked: false,
         },
       };
     case PERM_SET_FILTER:
