@@ -139,7 +139,9 @@ const icon = {
 
 // Border Radius ********************* //
 
-const radii = [0, 2, 4, 8, 12, 16];
+type BorderRadiusSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'circle';
+
+const radiiAll = [0, 2, 4, 8, 12, 16];
 
 /* border-radius aliases
  * xs: 2px (extra small)
@@ -150,21 +152,20 @@ const radii = [0, 2, 4, 8, 12, 16];
  * circle: 1000px
  */
 
-radii.xs = radii[1];
-
-radii.sm = radii[2];
-
-radii.md = radii[3];
-
-radii.lg = radii[4];
-
-radii.xl = radii[5];
-
-radii.circle = 1000;
+const radii: Record<BorderRadiusSize, number> = {
+  xs: radiiAll[1],
+  sm: radiiAll[2],
+  md: radiiAll[3],
+  lg: radiiAll[4],
+  xl: radiiAll[5],
+  circle: 1000,
+};
 
 // ********************************** //
 
-const fontWeights = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900];
+type FontWeight = 'normal' | 'medium' | 'bold';
+
+const fontWeightsAll = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900];
 
 /* font-weight aliases
  * normal: 400
@@ -172,16 +173,25 @@ const fontWeights = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900];
  * bold: 700
  */
 
-fontWeights.normal = fontWeights[4];
-
-fontWeights.medium = fontWeights[5];
-
-fontWeights.bold = fontWeights[7];
+const fontWeights: Record<FontWeight, number> = {
+  normal: fontWeightsAll[4],
+  medium: fontWeightsAll[5],
+  bold: fontWeightsAll[7],
+};
 
 // ********************************** //
+type Element =
+  | 'h1'
+  | 'h2'
+  | 'h3'
+  | 'h4'
+  | 'p'
+  | 'button'
+  | 'tab'
+  | 'explain'
+  | 'icon';
 
-const fontSizes = [12, 14, 16, 18, 20, 24, 30, 36, 48, 80, 96];
-
+const fontSizesAll = [12, 14, 16, 18, 20, 24, 30, 36, 48, 80, 96];
 /* font-sizes aliases
  * h1: 30px
  * h2: 24px
@@ -193,27 +203,25 @@ const fontSizes = [12, 14, 16, 18, 20, 24, 30, 36, 48, 80, 96];
  * icon: 20px
  */
 
-fontSizes.h1 = fontSizes[6];
+type FontSize = Record<Element, number>;
 
-fontSizes.h2 = fontSizes[5];
-
-fontSizes.h3 = fontSizes[4];
-
-fontSizes.h4 = fontSizes[3];
-
-fontSizes.p = fontSizes[2];
-
-fontSizes.button = fontSizes[1];
-
-fontSizes.tab = fontSizes[3];
-
-fontSizes.explain = fontSizes[0];
-
-fontSizes.icon = fontSizes[3];
+const fontSizes: FontSize = {
+  h1: fontSizesAll[6],
+  h2: fontSizesAll[5],
+  h3: fontSizesAll[4],
+  h4: fontSizesAll[3],
+  p: fontSizesAll[2],
+  button: fontSizesAll[1],
+  tab: fontSizesAll[3],
+  explain: fontSizesAll[0],
+  icon: fontSizesAll[3],
+};
 
 // ****************************** //
 
-const space = [0, 4, 6, 8, 10, 12, 14, 16, 18, 20, 32, 64];
+type Space = 'zero' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+const spacesAll = [0, 4, 6, 8, 10, 12, 14, 16, 18, 20, 32, 64];
 
 /* space ~ margin / padding aliases
  * zero: 0
@@ -224,43 +232,46 @@ const space = [0, 4, 6, 8, 10, 12, 14, 16, 18, 20, 32, 64];
  * xl: 64px (extra large)
  */
 
-space.zero = space[0];
-
-space.xs = space[1];
-
-space.sm = space[3];
-
-space.md = space[7];
-
-space.lg = space[10];
-
-space.xl = space[11];
+const space: Record<Space, number> = {
+  zero: spacesAll[0],
+  xs: spacesAll[1],
+  sm: spacesAll[3],
+  md: spacesAll[7],
+  lg: spacesAll[10],
+  xl: spacesAll[11],
+};
 
 // ********************************** //
 
-const lineHeights = [1.33, 1.5];
+type lineHeight = 'body' | 'explain';
+
+const lineHeightsAll = [1.33, 1.5];
 
 /* line-height aliases
  * body: 1.5
  * explain: 1.3 ~ Explainer Text
  */
 
-lineHeights.body = lineHeights[1];
-
-lineHeights.explain = lineHeights[0];
+const lineHeights: Record<lineHeight, number> = {
+  body: lineHeightsAll[1],
+  explain: lineHeightsAll[0],
+};
 
 // ********************************** //
+
+type Size = 'sm' | 'lg';
 
 /* sizes aliases (width & height)
  * sm: 40px
  * lg: 48px
  */
 
-const sizes = [40, 48];
+const sizesAll = [40, 48];
 
-sizes.sm = sizes[0];
-
-sizes.lg = sizes[1];
+const sizes: Record<Size, number> = {
+  sm: sizesAll[0],
+  lg: sizesAll[1],
+};
 
 // ********************************** //
 
