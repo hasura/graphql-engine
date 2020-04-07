@@ -40,14 +40,23 @@ func (q CustomQuery) MergeEventTriggers(squashList *database.CustomList) error {
 		prevElems := make([]*list.Element, 0)
 		for _, val := range g.Group {
 			element := val.(*list.Element)
-			switch element.Value.(type) {
-			case *trackTableInput:
+			switch obj := element.Value.(type) {
+			case *createEventTriggerInput:
+				if obj.Replace {
+					for _, e := range prevElems {
+						squashList.Remove(e)
+					}
+					err := eventTriggerTransition.Trigger("delete_event_trigger", &evCfg, nil)
+					if err != nil {
+						return err
+					}
+				}
 				err := eventTriggerTransition.Trigger("create_event_trigger", &evCfg, nil)
 				if err != nil {
 					return err
 				}
 				prevElems = append(prevElems, element)
-			case *unTrackTableInput:
+			case *deleteEventTriggerInput:
 				err := eventTriggerTransition.Trigger("delete_event_trigger", &evCfg, nil)
 				if err != nil {
 					return err
