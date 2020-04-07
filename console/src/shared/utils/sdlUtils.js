@@ -6,6 +6,10 @@ import {
   hydrateTypeRelationships,
 } from './hasuraCustomTypeUtils';
 
+export const isValidOperationName = (operationName) => {
+  return (operationName === 'query' || operationName === 'mutation')
+}
+
 const isValidOperationType = (operationType) => {
   return (operationType === 'Mutation' || operationType === 'Query');
 };
