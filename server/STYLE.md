@@ -8,7 +8,9 @@ Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format yo
 
 #### Line Length
 
-Try to keep a line length within 100 characters. Small exceptions are okay if the line only goes over the limit by a few characters and breaking it would negatively impact readability. Use your best judgement.
+We do not enforce a hard limit on line length, but we try to keep lines under 80 characters where possible to make it easier to tile files horizontally. It’s okay if long lines spill into the 80–100 character range if wrapping them would harm readability. In particular, we don’t want to discourage descriptive variable names, nor do we want to discourage introducing local variables, so consider 80 characters a target length rather than a limit.
+
+One exception to the above is multiline comments, which should almost always be wrapped to 80 characters. Most editors support automatically reflowing blocks of text with a configurable line length; consider learning the relevant hotkey in your editor of choice.
 
 #### Whitespace
 
