@@ -1,6 +1,10 @@
-package version
+package console
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hasura/graphql-engine/cli/version"
+)
 
 func TestGetConsoleTemplateVersion(t *testing.T) {
 	tt := []struct {
@@ -16,9 +20,10 @@ func TestGetConsoleTemplateVersion(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			v := &Version{}
+			v := &version.Version{}
 			v.SetServerVersion(tc.server)
-			tv := v.GetConsoleTemplateVersion()
+			templateProvider := NewDefaultTemplateProvider("test", "test")
+			tv := templateProvider.GetTemplateVersion(v)
 			if tv != tc.tv {
 				t.Fatalf("expected tv '%v', got '%v'", tc.tv, tv)
 			}
@@ -44,9 +49,10 @@ func TestGetConsoleAssetsVersion(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			v := &Version{}
+			v := &version.Version{}
 			v.SetServerVersion(tc.server)
-			tv := v.GetConsoleAssetsVersion()
+			templateProvider := NewDefaultTemplateProvider("test", "test")
+			tv := templateProvider.GetAssetsVersion(v)
 			if tv != tc.tv {
 				t.Fatalf("expected tv '%v', got '%v'", tc.tv, tv)
 			}
