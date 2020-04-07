@@ -190,6 +190,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.mirror_action()
             self._send_response(status, resp)
 
+        elif req_path == "/get-user-by-email":
+            resp, status = self.get_user_by_email()
+            self._send_response(status, resp)
+
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
@@ -270,6 +274,37 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
     def mirror_action(self):
         response = self.req_json['input']['arg']
         return response, HTTPStatus.OK
+
+    def get_user_by_email(self):
+        email = self.req_json['input']['email']
+        if not self.check_email(email):
+            response = {
+                'message': 'Given email address is not valid',
+                'code': 'invalid-email'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+        gql_query = '''
+        query get_user($email:String!) {
+           user(where:{email:{_eq:$email}}) {
+            id
+            name
+        }
+        }
+        '''
+        query = {
+            'query': gql_query,
+            'variables':{
+                'email':email
+            }
+        }
+        code,resp = self.execute_query(query)
+        if code != 200 or 'data' not in resp:
+            response = {
+                'message': 'GraphQL query execution failed',
+                'code': 'unexpected'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+        return resp['data']['user'][0], HTTPStatus.OK
 
 
     def check_email(self, email):

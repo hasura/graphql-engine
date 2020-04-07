@@ -1,0 +1,18 @@
+description: Run get_user_by_email query action with valid email
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      get_user_by_email(email: "clarke@gmail.com"){
+          id
+          name
+      }
+    }
+
+
+response:
+  data:
+    get_user_by_email:
+      - id: 1
+        name: Clarke
