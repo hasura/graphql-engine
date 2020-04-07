@@ -17,7 +17,7 @@ export const validateOperation = (operationString, clientSchema) => {
   try {
     operationAst = sdlParse(operationString);
   } catch (e) {
-    throw Error('invalid GraphQL query');
+    throw Error('this seems to be an invalid GraphQL query');
   }
 
   const schemaValidationErrors = validate(clientSchema, operationAst);
@@ -32,7 +32,9 @@ export const validateOperation = (operationString, clientSchema) => {
   }
 
   if (operationAst.definitions.find(d => d.operation !== 'mutation')) {
-    throw Error('queries cannot be derived into actions');
+    throw Error(
+      'queries are not supported in actions yet; so you cannot derive an action from a query'
+    );
   }
 
   operationAst.definitions = operationAst.definitions.filter(
