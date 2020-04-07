@@ -44,8 +44,8 @@ Hasura executes GraphQL queries as follows:
 
 1. The incoming GraphQL query is parsed into an `abstract syntax tree <https://en.wikipedia.org/wiki/Abstract_syntax_tree>`__ (AST) which is how GraphQL is represented.
 2. The GraphQL AST is validated against the schema to generate an internal representation.
-3. The internal representation is converted into an SQL statement (`prepare statement <https://www.postgresql.org/docs/9.3/sql-prepare.html>`__ whenever possible).
-4. The (prepare) statement is executed on Postgres to retrieve the result of the query.
+3. The internal representation is converted into an SQL statement (`prepared statement <https://www.postgresql.org/docs/9.3/sql-prepare.html>`__ whenever possible).
+4. The (prepared) statement is executed on Postgres to retrieve the result of the query.
 
 For most use cases, Hasura constructs a "plan" for a query, so that a new instance of the same query can be executed without the overhead of steps 1 to 3.
 
@@ -68,10 +68,10 @@ With the following variable:
       "id": 1
    }
 
-Hasura now tries to map a GraphQL query to a prepare statement where the parameters have a one-to-one correspondence to the variables defined in the GraphQL query. 
+Hasura now tries to map a GraphQL query to a prepared statement where the parameters have a one-to-one correspondence to the variables defined in the GraphQL query. 
 The first time a query comes in, Hasura generates a plan for the query which consists of two things:
 
-1. The prepare statement
+1. The prepared statement
 2. Information necessary to convert variables into the prepared statement's arguments
 
 For the above query, Hasura generates the following prepared statement (simplified):
