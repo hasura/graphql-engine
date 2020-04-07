@@ -148,7 +148,8 @@
         "no-dupe-class-members": "off",
         "no-redeclare": "off",
         "no-useless-constructor": "off",
-        "no-unused-expressions": "off"
+        "no-unused-expressions": "off",
+        "no-console": "off"
       }
     }
   ]

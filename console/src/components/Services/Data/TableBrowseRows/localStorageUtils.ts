@@ -1,21 +1,14 @@
 const columnsCollapsedState = 'data:collapsed';
 const defaultColumnsCollapsedState = {};
 
-/**
- * @param {{
- *  [tableName: string]: {[colName: string]: boolean}
- * }} data
- */
-const setColumnsCollapsedState = data => {
+type CollapesEntry = Record<string, boolean>;
+type CollapesState = Record<string, CollapesEntry>;
+
+const setColumnsCollapsedState = (data: CollapesState) => {
   window.localStorage.setItem(columnsCollapsedState, JSON.stringify(data));
 };
 
-/**
- * @returns {{
- *  [tableName: string]: {[colName: string]: boolean}
- * }}
- */
-const getColumnsCollapsedState = () => {
+const getColumnsCollapsedState = (): CollapesState => {
   try {
     const p = window.localStorage.getItem(columnsCollapsedState);
     if (p) {
@@ -32,14 +25,11 @@ const getColumnsCollapsedState = () => {
   }
 };
 
-/**
- * @param {string} tableName
- * @param {string} schemaNae
- * @param {{[colName: string]: boolean}} newCollapsedData
- *
- * @returns {void}
- */
-export const handleCollapseChange = (tableName, schemaName, collapsedData) => {
+export const handleCollapseChange = (
+  tableName: string,
+  schemaName: string,
+  collapsedData: CollapesEntry
+) => {
   const currentCollapsed = getColumnsCollapsedState();
   const newCollapsed = {
     ...currentCollapsed,
@@ -49,13 +39,7 @@ export const handleCollapseChange = (tableName, schemaName, collapsedData) => {
   setColumnsCollapsedState(newCollapsed);
 };
 
-/**
- * @param {string} tableName
- * @param {string} schemaName
- *
- * @returns {{[colName: string]: boolean}|void}
- */
-export const getCollapsedColumns = (tableName, schemaName) => {
+export const getCollapsedColumns = (tableName: string, schemaName: string) => {
   const collapsedData = getColumnsCollapsedState();
   return collapsedData[`${schemaName}.${tableName}`];
 };
@@ -63,21 +47,14 @@ export const getCollapsedColumns = (tableName, schemaName) => {
 const columnsOrderState = 'data:order';
 const defaultColumnsOrderState = {};
 
-/**
- * @param {{
- *  [tableName: string]: {newOrder: number, defaultOrder: number}[]
- * }} data
- */
-const setColumnsOrderState = data => {
+type OrderEntry = { newOrder: number; defaultOrder: number };
+type OrderState = Record<string, OrderEntry[]>;
+
+const setColumnsOrderState = (data: OrderState) => {
   window.localStorage.setItem(columnsOrderState, JSON.stringify(data));
 };
 
-/**
- * @returns {{
- *  [tableName: string]: {newOrder: number, defaultOrder: number}[]
- * }}
- */
-const getColumnsOrderState = () => {
+const getColumnsOrderState = (): OrderState => {
   try {
     const p = window.localStorage.getItem(columnsOrderState);
     if (p) {
@@ -94,21 +71,19 @@ const getColumnsOrderState = () => {
   }
 };
 
-const compareReorderItems = item1 => item2 =>
+const compareReorderItems = (item1: OrderEntry) => (item2: OrderEntry) =>
   item1.newOrder === item2.newOrder &&
   item1.defaultOrder === item2.defaultOrder;
 
-/**
- * @param {string} tableName
- * @param {string} schemaName
- *
- * @param {{newOrder: number, defaultOrder: number}[]} orderData
- */
-export const handleOrderChange = (tableName, schemaName, orderData) => {
+export const handleOrderChange = (
+  tableName: string,
+  schemaName: string,
+  orderData: OrderEntry[]
+) => {
   const currentOrders = getColumnsOrderState();
 
   // remove duplicates
-  const newOrders = [];
+  const newOrders: OrderEntry[] = [];
   orderData.forEach(item => {
     const sameElements = orderData.filter(compareReorderItems(item));
     const alreadyAdded = newOrders.some(compareReorderItems(item));
@@ -130,13 +105,7 @@ export const handleOrderChange = (tableName, schemaName, orderData) => {
   });
 };
 
-/**
- * @param {string} tableName
- * @param {string} schemaName
- *
- * @returns {{newOrder: number, defaultOrder: number}[]}
- */
-export const getColumnsOrder = (tableName, schemaName) => {
+export const getColumnsOrder = (tableName: string, schemaName: string) => {
   const orderData = getColumnsOrderState();
   return orderData[`${schemaName}.${tableName}`];
 };
@@ -144,11 +113,11 @@ export const getColumnsOrder = (tableName, schemaName) => {
 const pageSizeState = 'data:pageSize';
 const defaultPageSizeState = {};
 
-const setPageSizeState = data => {
+const setPageSizeState = (data: Record<string, number>) => {
   window.localStorage.setItem(pageSizeState, JSON.stringify(data));
 };
 
-const getPageSizeState = () => {
+const getPageSizeState = (): Record<string, number> => {
   try {
     const p = window.localStorage.getItem(pageSizeState);
     if (p) {
@@ -165,7 +134,11 @@ const getPageSizeState = () => {
   }
 };
 
-export const handlePageSizeStateChange = (tableName, schemaName, pageSize) => {
+export const handlePageSizeStateChange = (
+  tableName: string,
+  schemaName: string,
+  pageSize: number
+) => {
   const currentState = getPageSizeState();
 
   setPageSizeState({
@@ -174,7 +147,7 @@ export const handlePageSizeStateChange = (tableName, schemaName, pageSize) => {
   });
 };
 
-export const getPageSize = (tableName, schemaName) => {
+export const getPageSize = (tableName: string, schemaName: string) => {
   const pageSizeData = getPageSizeState();
   return pageSizeData[`${schemaName}.${tableName}`];
 };
