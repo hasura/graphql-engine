@@ -96,7 +96,7 @@ resolveActionMutation
      , Has [HTTP.Header] r
      )
   => Field
-  -> ActionExecutionContext
+  -> ActionMutationExecutionContext
   -> UserVars
   -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionMutation field executionContext sessionVariables =
@@ -120,7 +120,7 @@ resolveActionMutationSync
      , Has [HTTP.Header] r
      )
   => Field
-  -> SyncActionExecutionContext
+  -> ActionExecutionContext
   -> UserVars
   -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionMutationSync field executionContext sessionVariables = do
@@ -140,7 +140,7 @@ resolveActionMutationSync field executionContext sessionVariables = do
   let jsonAggType = mkJsonAggSelect outputType
   return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
   where
-    SyncActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
+    ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
 resolveActionQuery
@@ -160,28 +160,6 @@ resolveActionQuery
   -> UserVars
   -> m (RS.AnnSimpleSelG UnresolvedVal)
 resolveActionQuery field executionContext sessionVariables = do
-  case executionContext of
-    ActionExecutionSyncWebhook executionContextSync ->
-      resolveActionQuerySync field executionContextSync sessionVariables
-    ActionExecutionAsync -> throw500 "unexpected: query action cannot be asynchronous"
-
-resolveActionQuerySync
-  :: ( HasVersion
-     , MonadReusability m
-     , MonadError QErr m
-     , MonadReader r m
-     , MonadIO m
-     , Has FieldMap r
-     , Has OrdByCtx r
-     , Has SQLGenCtx r
-     , Has HTTP.Manager r
-     , Has [HTTP.Header] r
-     )
-  => Field
-  -> SyncActionExecutionContext
-  -> UserVars
-  -> m (RS.AnnSimpleSelG UnresolvedVal)
-resolveActionQuerySync field executionContext sessionVariables = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
@@ -196,7 +174,7 @@ resolveActionQuerySync field executionContext sessionVariables = do
     (_fType field) $ _fSelSet field
   return selectAstUnresolved
   where
-    SyncActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
+    ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
 {- Note: [Async action architecture]

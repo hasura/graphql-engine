@@ -44,7 +44,7 @@ data MutationCtx
   | MCUpdateByPk !UpdOpCtx
   | MCDelete !DelOpCtx
   | MCDeleteByPk !DelOpCtx
-  | MCAction !ActionExecutionContext
+  | MCAction !ActionMutationExecutionContext
   deriving (Show, Eq)
 
 type OpCtxMap a = Map.HashMap G.Name a
@@ -104,8 +104,8 @@ data DelOpCtx
   , _docFilter  :: !AnnBoolExpPartialSQL
   } deriving (Show, Eq)
 
-data SyncActionExecutionContext
-  = SyncActionExecutionContext
+data ActionExecutionContext
+  = ActionExecutionContext
   { _saecName                 :: !ActionName
   , _saecOutputType           :: !GraphQLType
   , _saecOutputFields         :: !ActionOutputFields
@@ -115,8 +115,8 @@ data SyncActionExecutionContext
   , _saecForwardClientHeaders :: !Bool
   } deriving (Show, Eq)
 
-data ActionExecutionContext
-  = ActionExecutionSyncWebhook !SyncActionExecutionContext
+data ActionMutationExecutionContext
+  = ActionExecutionSyncWebhook !ActionExecutionContext
   | ActionExecutionAsync
   deriving (Show, Eq)
 
