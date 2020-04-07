@@ -163,6 +163,7 @@ resolveActionQuery field executionContext sessionVariables = do
   case executionContext of
     ActionExecutionSyncWebhook executionContextSync ->
       resolveActionQuerySync field executionContextSync sessionVariables
+    ActionExecutionAsync -> throw500 "unexpected: query action cannot be asynchronous"
 
 resolveActionQuerySync
   :: ( HasVersion
