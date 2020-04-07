@@ -212,6 +212,7 @@ input SampleInput {
 			if action.Name == oldActionObj.Name {
 				sdlFromResp.Actions[actionIndex].Permissions = oldAction.Actions[oldActionIndex].Permissions
 				sdlFromResp.Actions[actionIndex].Definition.Kind = oldAction.Actions[oldActionIndex].Definition.Kind
+				sdlFromResp.Actions[actionIndex].Definition.Type = oldAction.Actions[oldActionIndex].Definition.Type
 				sdlFromResp.Actions[actionIndex].Definition.Handler = oldAction.Actions[oldActionIndex].Definition.Handler
 				sdlFromResp.Actions[actionIndex].Definition.ForwardClientHeaders = oldAction.Actions[oldActionIndex].Definition.ForwardClientHeaders
 				sdlFromResp.Actions[actionIndex].Definition.Headers = oldAction.Actions[oldActionIndex].Definition.Headers
