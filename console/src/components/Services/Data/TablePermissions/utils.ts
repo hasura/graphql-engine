@@ -13,7 +13,7 @@ type PermissionsState = {
   [key in BaseQueryType]: string;
 };
 
-const filterTypeToDisplayName = (filterType: FilterType) => {
+export const filterTypeToDisplayName = (filterType: FilterType) => {
   switch (filterType) {
     case 'check':
       return 'pre update';

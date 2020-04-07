@@ -310,3 +310,7 @@ export const getFirstArrayElement = array => {
   if (!array) return null;
   return array[0];
 };
+
+export const capitalize = s => {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};

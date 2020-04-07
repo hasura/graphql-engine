@@ -64,7 +64,11 @@ import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { getConfirmation, isJsonString } from '../../../Common/utils/jsUtils';
+import {
+  getConfirmation,
+  isJsonString,
+  capitalize,
+} from '../../../Common/utils/jsUtils';
 import {
   findTable,
   generateTableDef,
@@ -74,7 +78,7 @@ import {
   getGroupedTableComputedFields,
 } from '../../../Common/utils/pgUtils';
 import { showErrorNotification } from '../../Common/Notification';
-import { getFilterQueries } from './utils';
+import { getFilterQueries, filterTypeToDisplayName } from './utils';
 
 class Permissions extends Component {
   constructor() {
@@ -827,7 +831,7 @@ class Permissions extends Component {
         );
 
         const onTabChange = tabIndex => {
-          dispatch(permSetFilterType(tabIndex.toLowerCase()));
+          dispatch(permSetFilterType(tabIndex));
         };
 
         const rowSectionTitle = 'Row ' + query + ' permissions';
@@ -851,12 +855,16 @@ class Permissions extends Component {
                 </div>
                 {permissionsState.query === 'update' ? (
                   <Tabs
-                    id="Filter"
+                    id="filter"
                     onSelect={onTabChange}
                     className={styles.padding_top_20}
                   >
-                    {['Filter', 'Check'].map((permType, i) => (
-                      <Tab eventKey={permType} title={permType} key={i}>
+                    {['filter', 'check'].map((permType, i) => (
+                      <Tab
+                        eventKey={permType}
+                        title={capitalize(filterTypeToDisplayName(permType))}
+                        key={i}
+                      >
                         {getFilterOptions()}
                       </Tab>
                     ))}
