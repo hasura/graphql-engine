@@ -96,7 +96,7 @@ class ViewTable extends Component {
     Promise.all([
       dispatch(setTable(tableName)),
       dispatch(vSetDefaults(tableName)),
-      dispatch(vMakeTableRequests),
+      dispatch(vMakeTableRequests()),
       dispatch(fetchManualTriggers(tableName)),
     ]);
   }

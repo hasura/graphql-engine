@@ -58,7 +58,7 @@ const vCollapseRow = () => ({
 
 const vSetDefaults = () => ({ type: V_SET_DEFAULTS });
 
-const vMakeRequest = () => {
+const vMakeRowsRequest = () => {
   return (dispatch, getState) => {
     const {
       currentTable: originalTable,
@@ -158,7 +158,7 @@ const vMakeCountRequest = () => {
 };
 
 const vMakeTableRequests = () => dispatch => {
-  dispatch(vMakeRequest());
+  dispatch(vMakeRowsRequest());
   dispatch(vMakeCountRequest());
 };
 
@@ -224,7 +224,7 @@ const deleteItem = pkClause => {
     };
     dispatch(requestAction(url, options)).then(
       data => {
-        dispatch(vMakeRequest());
+        dispatch(vMakeTableRequests());
         dispatch(
           showSuccessNotification(
             'Row deleted!',
@@ -629,12 +629,10 @@ export default viewReducer;
 export {
   fetchManualTriggers,
   vSetDefaults,
-  vMakeRequest,
   vExpandRel,
   vCloseRel,
   vExpandRow,
   vCollapseRow,
-  vMakeCountRequest,
   V_SET_ACTIVE,
   deleteItem,
   deleteItems,
