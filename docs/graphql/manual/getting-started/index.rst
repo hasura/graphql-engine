@@ -23,36 +23,24 @@ To use the Hasura GraphQL engine, you need to:
    :class: no-shadow
    :alt: Running Hasura
 
-Get started from scratch
-------------------------
+Get started
+-----------
 
-- :ref:`Using Heroku <heroku_simple>` **(recommended)**: Get started in under 60 seconds with no setup required to
-  host the Hasura GraphQL engine and Postgres on Heroku's free tier.
-- :ref:`Using Docker <docker_simple>`: Run a **local development** setup that sets up both the Hasura GraphQL
-  engine and Postgres using Docker.
+Quickstart
+^^^^^^^^^^
 
-Get started using an existing database
---------------------------------------
+Get started with setting up a GraphQL API from scratch with our :doc:`Quickstart <quickstart>`.
 
-- :ref:`Using Heroku <heroku_existing_db>`: Run on Heroku using an existing Heroku
-  Postgres database.
-- :ref:`Using Docker <deployment_docker>`: Run as a docker container and connect to an existing Postgres
-  database.
-- :ref:`Using Kubernetes <deploy_kubernetes>`: Run on Kubernetes and connect to an existing Postgres
-  database.
+Tutorials
+^^^^^^^^^
 
-.. admonition:: Supported Postgres versions
-
-  Hasura GraphQL engine supports **Postgres 9.5 and above**
+Get started by building a project with our :doc:`GraphQL tutorials <tutorials>`.
 
 .. toctree::
    :maxdepth: 2
    :titlesonly:
    :hidden:
 
-   Heroku quickstart <heroku-simple>
-   Docker quickstart <docker-simple>
-   Using an existing database <using-existing-database>
-   first-graphql-query
-   first-event-trigger
+   Quickstart <quickstart>
+   Tutorials <tutorials>
 
