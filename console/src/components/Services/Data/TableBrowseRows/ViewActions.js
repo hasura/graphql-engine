@@ -158,7 +158,8 @@ const vMakeCountRequest = () => {
 };
 
 const vMakeTableRequests = () => dispatch => {
-  dispatch(vMakeRequest()).then(() => dispatch(vMakeCountRequest()));
+  dispatch(vMakeRequest());
+  dispatch(vMakeCountRequest());
 };
 
 const fetchManualTriggers = tableName => {
