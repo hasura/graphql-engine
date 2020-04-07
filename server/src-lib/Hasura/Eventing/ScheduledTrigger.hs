@@ -44,33 +44,33 @@ module Hasura.Eventing.ScheduledTrigger
   , insertScheduledEvents
   ) where
 
-import           Control.Arrow.Extended          (dup)
-import           Control.Concurrent.Extended     (sleep)
+import           Control.Arrow.Extended            (dup)
+import           Control.Concurrent.Extended       (sleep)
 import           Data.Has
-import           Data.Int (Int64)
-import           Data.List                       (unfoldr)
+import           Data.Int                          (Int64)
+import           Data.List                         (unfoldr)
 import           Data.Time.Clock
 import           Hasura.Eventing.HTTP
+import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
-import           Hasura.RQL.Types.ScheduledTrigger
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.ScheduledTrigger
+import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.DML
 import           Hasura.SQL.Types
 import           System.Cron
-import           Hasura.HTTP
-import           Hasura.Server.Version         (HasVersion)
 
-import qualified Data.Aeson                      as J
-import qualified Data.Aeson.Casing               as J
-import qualified Data.Aeson.TH                   as J
-import qualified Data.TByteString                as TBS
-import qualified Data.Text                       as T
-import qualified Database.PG.Query               as Q
-import qualified Hasura.Logging                  as L
-import qualified Network.HTTP.Client             as HTTP
-import qualified Text.Builder                    as TB (run)
-import qualified Data.HashMap.Strict             as Map
+import qualified Data.Aeson                        as J
+import qualified Data.Aeson.Casing                 as J
+import qualified Data.Aeson.TH                     as J
+import qualified Data.HashMap.Strict               as Map
+import qualified Data.TByteString                  as TBS
+import qualified Data.Text                         as T
+import qualified Database.PG.Query                 as Q
+import qualified Hasura.Logging                    as L
+import qualified Network.HTTP.Client               as HTTP
+import qualified Text.Builder                      as TB (run)
 
 invocationVersion :: Version
 invocationVersion = "1"
@@ -215,7 +215,7 @@ generateScheduledEventsFrom :: UTCTime -> ScheduledTriggerInfo-> [ScheduledEvent
 generateScheduledEventsFrom startTime ScheduledTriggerInfo{..} =
   let events =
         case stiSchedule of
-          AdHoc _ -> empty -- ad-hoc scheduled events are created through 'create_scheduled_event' API
+          AdHoc _   -> empty -- ad-hoc scheduled events are created through 'create_scheduled_event' API
           Cron cron -> generateScheduleTimes startTime 100 cron -- by default, generate next 100 events
    in map (ScheduledEventSeed stiName) events
 
@@ -272,7 +272,7 @@ processScheduledEvent ::
   -> m ()
 processScheduledEvent logEnv pgpool ScheduledTriggerInfo {..} se@ScheduledEventFull {..} = do
   currentTime <- liftIO getCurrentTime
-  if diffUTCTime currentTime sefScheduledTime > rcstTolerance stiRetryConf
+  if convertDuration (diffUTCTime currentTime sefScheduledTime) > rcstTolerance stiRetryConf
     then processDead pgpool se
     else do
       let timeoutSeconds = round $ rcstTimeoutSec stiRetryConf

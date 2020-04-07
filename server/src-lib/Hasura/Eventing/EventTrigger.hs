@@ -42,27 +42,27 @@ in the following manner:
           then the event will be redelivered once more after the duration (in
           seconds) found in the header
 -}
-{-# LANGUAGE StrictData #-}  -- TODO project-wide, maybe. See #3941
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE StrictData      #-}
 module Hasura.Eventing.EventTrigger
   ( initEventEngineCtx
   , processEventQueue
   , unlockAllEvents
   , defaultMaxEventThreads
-  , defaultFetchIntervalMilliSec
+  , defaultFetchInterval
   , Event(..)
   ) where
 
-import           Control.Concurrent.Extended   (sleep)
-import           Control.Concurrent.Async      (wait, withAsync)
+import           Control.Concurrent.Async    (wait, withAsync)
+import           Control.Concurrent.Extended (sleep)
 import           Control.Concurrent.STM.TVar
+import           Control.Monad.Catch         (MonadMask, bracket_)
 import           Control.Monad.STM
-import           Control.Monad.Catch           (MonadMask, bracket_)
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Data.Has
-import           Data.Int                      (Int64)
+import           Data.Int                    (Int64)
 import           Data.String
 import           Data.Time.Clock
 import           Data.Word
@@ -71,16 +71,16 @@ import           Hasura.HTTP
 import           Hasura.Prelude
 import           Hasura.RQL.DDL.Headers
 import           Hasura.RQL.Types
-import           Hasura.Server.Version         (HasVersion)
+import           Hasura.Server.Version       (HasVersion)
 import           Hasura.SQL.Types
 
-import qualified Data.HashMap.Strict           as M
-import qualified Data.TByteString              as TBS
-import qualified Data.Text                     as T
-import qualified Data.Time.Clock               as Time
-import qualified Database.PG.Query             as Q
-import qualified Hasura.Logging                as L
-import qualified Network.HTTP.Client           as HTTP
+import qualified Data.HashMap.Strict         as M
+import qualified Data.TByteString            as TBS
+import qualified Data.Text                   as T
+import qualified Data.Time.Clock             as Time
+import qualified Database.PG.Query           as Q
+import qualified Hasura.Logging              as L
+import qualified Network.HTTP.Client         as HTTP
 
 invocationVersion :: Version
 invocationVersion = "2"
@@ -115,8 +115,8 @@ $(deriveFromJSON (aesonDrop 1 snakeCase){omitNothingFields=True} ''Event)
 
 data EventEngineCtx
   = EventEngineCtx
-  { _eeCtxEventThreadsCapacity  :: TVar Int
-  , _eeCtxFetchInterval         :: DiffTime
+  { _eeCtxEventThreadsCapacity :: TVar Int
+  , _eeCtxFetchInterval        :: DiffTime
   }
 
 data DeliveryInfo
@@ -152,8 +152,8 @@ $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''EventPayload)
 defaultMaxEventThreads :: Int
 defaultMaxEventThreads = 100
 
-defaultFetchIntervalMilliSec :: (Milliseconds 'Absolute)
-defaultFetchIntervalMilliSec = 1000
+defaultFetchInterval :: DiffTime
+defaultFetchInterval = seconds 1
 
 initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval = do

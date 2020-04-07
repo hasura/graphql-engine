@@ -223,7 +223,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
           CSInitialised _ expTimeM _ ->
             maybe STM.retry return expTimeM
       currTime <- TC.getCurrentTime
-      sleep $ fromUnits $ TC.diffUTCTime expTime currTime
+      sleep $ convertDuration $ TC.diffUTCTime expTime currTime
 
     accept hdrs errType = do
       logger $ mkWsInfoLog Nothing (WsConnInfo wsId Nothing Nothing) EAccepted
@@ -355,7 +355,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
               -- Telemetry. NOTE: don't time network IO:
               telemTimeTot <- Seconds <$> timerTot
               sendSuccResp encJson $ LQ.LiveQueryMetadata telemTimeIO_DT
-              let telemTimeIO = fromUnits telemTimeIO_DT
+              let telemTimeIO = convertDuration telemTimeIO_DT
               Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
           sendCompleted (Just reqId)
@@ -381,7 +381,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
             -- Telemetry. NOTE: don't time network IO:
             telemTimeTot <- Seconds <$> timerTot
             sendRemoteResp reqId (_hrBody val) $ LQ.LiveQueryMetadata telemTimeIO_DT
-            let telemTimeIO = fromUnits telemTimeIO_DT
+            let telemTimeIO = convertDuration telemTimeIO_DT
             Telem.recordTimingMetric Telem.RequestDimensions{..} Telem.RequestTimings{..}
 
       sendCompleted (Just reqId)
@@ -541,7 +541,7 @@ onConnInit logger manager wsConn authMode connParamsM = do
       let !initErr = CSInitError $ qeError e
       liftIO $ do
         $assertNFHere initErr  -- so we don't write thunks to mutable vars
-        STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) initErr 
+        STM.atomically $ STM.writeTVar (_wscUser $ WS.getData wsConn) initErr
 
       let connErr = ConnErrMsg $ qeError e
       logWSEvent logger wsConn $ EConnErr connErr

@@ -10,18 +10,18 @@ module Hasura.RQL.Types.ScheduledTrigger
   , defaultRetryConfST
   ) where
 
-import           Data.Time.Clock
-import           Data.Time.Clock.Units
-import           Data.Time.Format.ISO8601
 import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
+import           Data.Time.Clock
+import           Data.Time.Clock.Units
+import           Data.Time.Format.ISO8601
+import           Hasura.Incremental
 import           Hasura.Prelude
 import           System.Cron.Types
-import           Hasura.Incremental
 
-import qualified Data.Text                     as T
 import qualified Data.Aeson                    as J
+import qualified Data.Text                     as T
 import qualified Hasura.RQL.Types.EventTrigger as ET
 
 data RetryConfST
@@ -29,7 +29,7 @@ data RetryConfST
   { rcstNumRetries  :: !Int
   , rcstIntervalSec :: !DiffTime
   , rcstTimeoutSec  :: !DiffTime
-  , rcstTolerance   :: !NominalDiffTime
+  , rcstTolerance   :: !DiffTime
   } deriving (Show, Eq, Generic)
 
 instance NFData RetryConfST
@@ -57,23 +57,23 @@ instance FromJSON ScheduleType where
     withObject "ScheduleType" $ \o -> do
       type' <- o .: "type"
       case type' of
-        String "cron" -> Cron <$> o .: "value"
+        String "cron"  -> Cron <$> o .: "value"
         String "adhoc" -> AdHoc <$> o .:? "value"
-        _ -> fail "expected type to be cron or adhoc"
+        _              -> fail "expected type to be cron or adhoc"
 
 instance ToJSON ScheduleType where
-  toJSON (Cron cs) = object ["type" .= String "cron", "value" .= toJSON cs]
+  toJSON (Cron cs)         = object ["type" .= String "cron", "value" .= toJSON cs]
   toJSON (AdHoc (Just ts)) = object ["type" .= String "adhoc", "value" .= toJSON ts]
-  toJSON (AdHoc Nothing) = object ["type" .= String "adhoc"]
+  toJSON (AdHoc Nothing)   = object ["type" .= String "adhoc"]
 
 data CreateScheduledTrigger
   = CreateScheduledTrigger
-  { stName           :: !ET.TriggerName
-  , stWebhook        :: !ET.WebhookConf
-  , stSchedule       :: !ScheduleType
-  , stPayload        :: !(Maybe J.Value)
-  , stRetryConf      :: !RetryConfST
-  , stHeaders        :: ![ET.HeaderConf]
+  { stName      :: !ET.TriggerName
+  , stWebhook   :: !ET.WebhookConf
+  , stSchedule  :: !ScheduleType
+  , stPayload   :: !(Maybe J.Value)
+  , stRetryConf :: !RetryConfST
+  , stHeaders   :: ![ET.HeaderConf]
   } deriving (Show, Eq, Generic)
 
 instance NFData CreateScheduledTrigger
@@ -94,9 +94,9 @@ $(deriveToJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''CreateScheduled
 
 data CreateScheduledEvent
   = CreateScheduledEvent
-  { steName          :: !ET.TriggerName
-  , steTimestamp     :: !UTCTime
-  , stePayload       :: !(Maybe J.Value)
+  { steName      :: !ET.TriggerName
+  , steTimestamp :: !UTCTime
+  , stePayload   :: !(Maybe J.Value)
   } deriving (Show, Eq, Generic)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''CreateScheduledEvent)

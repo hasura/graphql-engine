@@ -114,7 +114,7 @@ jwkRefreshCtrl logger manager url ref time = liftIO $ do
       res <- runExceptT $ updateJwkRef logger manager url ref
       mTime <- either (const $ logNotice >> return Nothing) return res
       -- if can't parse time from header, defaults to 1 min
-      let delay = maybe (minutes 1) (fromUnits) mTime
+      let delay = maybe (minutes 1) (convertDuration) mTime
       C.sleep delay
   where
     logNotice = do

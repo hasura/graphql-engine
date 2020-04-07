@@ -191,9 +191,9 @@ data OperationLog
   { olRequestId          :: !RequestId
   , olUserVars           :: !(Maybe UserVars)
   , olResponseSize       :: !(Maybe Int64)
-  , olRequestReadTime    :: !(Maybe (Seconds 'Absolute))
+  , olRequestReadTime    :: !(Maybe Seconds)
   -- ^ Request IO wait time, i.e. time spent reading the full request from the socket.
-  , olQueryExecutionTime :: !(Maybe (Seconds 'Absolute))
+  , olQueryExecutionTime :: !(Maybe Seconds)
   -- ^ Service time, not including request IO wait time.
   , olQuery              :: !(Maybe Value)
   , olRawQuery           :: !(Maybe Text)
