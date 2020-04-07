@@ -107,7 +107,7 @@
 }
 
 .view_all_wrapper a {
-  color: #FEC53D !important;
+  color: #1CD3C6 !important;
   text-decoration: underline;
 }
 
@@ -130,10 +130,10 @@
 
 .common_btn button {
   padding: 5px 15px;
-  background-color: #FEC53D;
+  background-color: #1CD3C6;
   color: #000;
   border-radius: 5px;
-  border: 1px solid #FEC53D;
+  border: 1px solid #1CD3C6;
   font-size: 14px;
   font-weight: 600;
   font-family: 'Gudea';
@@ -177,7 +177,7 @@
 
 .docs_link {
   display: inline;
-  color: #FEC53D;
+  color: #1CD3C6;
   font-weight: 600;
   text-decoration: underline;
 }

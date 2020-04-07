@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import pytest
 import ruamel.yaml as yaml
 from ruamel.yaml.compat import ordereddict, StringIO
 from ruamel.yaml.comments import CommentedMap
@@ -9,11 +8,9 @@ import copy
 import graphql
 import os
 import base64
-import json
 import jsondiff
 import jwt
 import random
-import time
 import warnings
 
 from context import GQLWsClient, PytestConf
@@ -79,26 +76,28 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
         headers = conf['headers']
 
     # Test without admin secret
-    code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
+    code, resp, resp_hdrs = hge_ctx.anyq(conf['url'], conf['query'], headers)
     #assert code in [401,404], "\n" + yaml.dump({
     assert code in status, "\n" + yaml.dump({
         "expected": "Should be access denied as admin secret is not provided",
         "actual": {
             "code": code,
             "response": resp
-        }
+        },
+        'request id': resp_hdrs.get('x-request-id')
     })
 
     # Test with random admin secret
     headers['X-Hasura-Admin-Secret'] = base64.b64encode(os.urandom(30))
-    code, resp = hge_ctx.anyq(conf['url'], conf['query'], headers)
+    code, resp, resp_hdrs = hge_ctx.anyq(conf['url'], conf['query'], headers)
     #assert code in [401,404], "\n" + yaml.dump({
     assert code in status, "\n" + yaml.dump({
         "expected": "Should be access denied as an incorrect admin secret is provided",
         "actual": {
             "code": code,
             "response": resp
-        }
+        },
+        'request id': resp_hdrs.get('x-request-id')
     })
 
 
@@ -112,20 +111,22 @@ def test_forbidden_webhook(hge_ctx, conf):
         status = [401, 404]
 
     h = {'Authorization': 'Bearer ' + base64.b64encode(base64.b64encode(os.urandom(30))).decode('utf-8')}
-    code, resp = hge_ctx.anyq(conf['url'], conf['query'], h)
+    code, resp, resp_hdrs = hge_ctx.anyq(conf['url'], conf['query'], h)
     #assert code in [401,404], "\n" + yaml.dump({
     assert code in status, "\n" + yaml.dump({
         "expected": "Should be access denied as it is denied from webhook",
         "actual": {
             "code": code,
             "response": resp
-        }
+        },
+        'request id': resp_hdrs.get('x-request-id')
     })
 
 
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
 def check_query(hge_ctx, conf, transport='http', add_auth=True):
+    hge_ctx.tests_passed = True
     headers = {}
     if 'headers' in conf:
         headers = conf['headers']
@@ -228,16 +229,16 @@ def validate_gql_ws_q(hge_ctx, endpoint, query, headers, exp_http_response, retr
     resp_done = next(query_resp)
     assert resp_done['type'] == 'complete'
 
-    return assert_graphql_resp_expected(resp['payload'], exp_http_response, query)
+    return assert_graphql_resp_expected(resp['payload'], exp_http_response, query, skip_if_err_msg=hge_ctx.avoid_err_msg_checks)
 
 
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
-    code, resp = hge_ctx.anyq(url, query, headers)
+    code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers)
     print(headers)
     assert code == exp_code, resp
     print('http resp: ', resp)
     if exp_response:
-        return assert_graphql_resp_expected(resp, exp_response, query)
+        return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks)
     else:
         return resp, True
 
@@ -247,7 +248,7 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response):
 #
 # Returns 'resp' and a bool indicating whether the test passed or not (this
 # will always be True unless we are `--accepting`)
-def assert_graphql_resp_expected(resp_orig, exp_response_orig, query):
+def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_if_err_msg=False):
     # Prepare actual and respected responses so comparison takes into
     # consideration only the ordering that we care about:
     resp         = collapse_order_not_selset(resp_orig,         query)
@@ -260,16 +261,37 @@ def assert_graphql_resp_expected(resp_orig, exp_response_orig, query):
         yml = yaml.YAML()
         # https://yaml.readthedocs.io/en/latest/example.html#output-of-dump-as-a-string  :
         dump_str = StringIO()
-        yml.dump({
+        test_output = {
             # Keep strict received order when displaying errors:
             'response': resp_orig,
             'expected': exp_response_orig,
-            'diff': 
-              (lambda diff: 
+            'diff':
+              (lambda diff:
                  "(results differ only in their order of keys)" if diff == {} else diff)
-              (stringify_keys(jsondiff.diff(exp_response, resp)))
-        }, stream=dump_str)
-        assert matched, dump_str.getvalue()
+              (stringify_keys(jsondiff.diff(exp_response, resp))),
+              'query': query
+        }
+        if 'x-request-id' in resp_hdrs:
+            test_output['request id'] = resp_hdrs['x-request-id']
+        yml.dump(test_output, stream=dump_str)
+        if not skip_if_err_msg:
+            assert matched, '\n' + dump_str.getvalue()
+        elif matched:
+            return resp, matched
+        else:
+            def is_err_msg(msg):
+                return any(msg.get(x) for x in ['error','errors'])
+            def as_list(x):
+                return x if isinstance(x, list) else [x]
+            # If it is a batch GraphQL query, compare each individual response separately
+            for (exp, out) in zip(as_list(exp_response), as_list(resp)):
+                matched_ = equal_CommentedMap(exp, out)
+                if is_err_msg(exp):
+                    if not matched_:
+                        warnings.warn("Response does not have the expected error message\n" + dump_str.getvalue())
+                        return resp, matched
+                else:
+                    assert matched_, '\n' + dump_str.getvalue()
     return resp, matched  # matched always True unless --accept
 
 # This really sucks; newer ruamel made __eq__ ignore ordering:
@@ -286,8 +308,8 @@ def equal_CommentedMap(m1, m2):
         else:
             m1_l = sorted(list(m1.items()))
             m2_l = sorted(list(m2.items()))
-        return (len(m1_l) == len(m2_l) and 
-                all(k1 == k2 and equal_CommentedMap(v1,v2) 
+        return (len(m1_l) == len(m2_l) and
+                all(k1 == k2 and equal_CommentedMap(v1,v2)
                     for (k1,v1),(k2,v2) in zip(m1_l,m2_l)))
     # else this is a scalar:
     else:
@@ -332,7 +354,7 @@ def check_query_f(hge_ctx, f, transport='http', add_auth=True):
                 "\n   NOTE: if this case was marked 'xfail' this won't be correct!"
             )
             c.seek(0)
-            c.write(yml.dump(conf))
+            yml.dump(conf, stream=c)
             c.truncate()
 
 
@@ -384,25 +406,15 @@ def collapse_order_not_selset(result_inp, query):
 
 # Use this since jsondiff seems to produce object/dict structures that can't
 # always be serialized to json.
-# Copy-pasta from: https://stackoverflow.com/q/12734517/176841 
 def stringify_keys(d):
- """Convert a dict's keys to strings if they are not."""
- for key in d.keys():
-     # check inner dict
-     if isinstance(d[key], dict):
-         value = stringify_keys(d[key])
-     else:
-         value = d[key]
-     # convert nonstring to string if needed
-     if not isinstance(key, str):
-         try:
-             d[key.decode("utf-8")] = value
-         except Exception:
-             try:
-                 d[repr(key)] = value
-             except Exception:
-                 raise
+    """Recursively convert a dict's keys to strings."""
+    if not isinstance(d, dict): return d
 
-         # delete old key
-         del d[key]
- return d
+    def decode(k):
+        if isinstance(k, str): return k
+        try:
+            return k.decode("utf-8")
+        except Exception:
+            return repr(k)
+
+    return { decode(k): stringify_keys(v) for k, v in d.items() }

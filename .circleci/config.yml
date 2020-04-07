@@ -45,12 +45,12 @@ refs:
     filters:
       branches:
         only: /^dev.*/
-  filter_only_vtags_dev_release_branches: &filter_only_vtags_dev_release_branches
+  filter_only_vtags_channel_branches: &filter_only_vtags_channel_branches
     filters:
       tags:
         only: /^v.*/
       branches:
-        only: /^(dev|release).*/
+        only: /^(stable|alpha|beta)$/
   filter_ignore_branches: &filter_ignore_branches
     filters:
       branches:
@@ -79,12 +79,6 @@ refs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - restore_cache:
-        keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
-    - restore_cache:
-        keys:
-        - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - *wait_for_postgres
     - run:
         name: Install deps
@@ -107,19 +101,14 @@ refs:
           # Setting default number of threads to 2
           # since circleci allocates 2 cpus per test container
           GHCRTS: -N2
-          HASURA_GRAPHQL_DATABASE_URL: 'postgresql://gql_test:@localhost:5432/gql_test'
-          HASURA_GRAPHQL_DATABASE_URL_2: 'postgresql://gql_test:@localhost:5432/gql_test2'
-          GRAPHQL_ENGINE: '/build/_server_output/graphql-engine'
-          GRAPHQL_ENGINE_TESTS: '/build/_server_output/graphql-engine-tests'
-        command: |
-          OUTPUT_FOLDER=/build/_server_test_output/$PG_VERSION .circleci/test-server.sh
-    - run:
-        name: Generate coverage report
-        working_directory: ./server
-        environment:
-          LC_ALL: 'C.UTF-8'
-        command: |
-          stack --system-ghc hpc report /build/_server_test_output/$PG_VERSION/graphql-engine.tix --destdir /build/_server_test_output/$PG_VERSION
+          # Until we can use a real webserver for TestEventFlood, limit concurrency:
+          HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
+          HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
+          HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
+          GRAPHQL_ENGINE: /build/_server_output/graphql-engine
+          GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
+          MIX_FILES_FOLDER: /build/_server_output/mix
+        command: OUTPUT_FOLDER="/build/_server_test_output/$PG_VERSION" .circleci/test-server.sh
     - store_artifacts:
         path: /build/_server_test_output
         destination: server_test
@@ -130,7 +119,7 @@ jobs:
   # changes only contains files in .ciignore
   check_build_worthiness:
     docker:
-    - image: hasura/graphql-engine-cli-builder:v0.4
+    - image: hasura/graphql-engine-cli-builder:20191205
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -144,23 +133,22 @@ jobs:
         paths:
         - ciignore
 
-  # build the server binary, and package into docker image
   build_server:
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:2020-01-14
+    resource_class: large
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - *setup_remote_docker
     - restore_cache:
         keys:
-        - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
-    - restore_cache:
-        keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
+        - cabal-store-v1-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        - cabal-store-v1-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-
+        - cabal-store-v1-{{ checksum "server/cabal.project" }}-
+        - cabal-store-v1-
     - run:
         name: Install latest postgresql client tools
         command: |
@@ -173,11 +161,33 @@ jobs:
           # for PRs non-optimized build, else optimized build
           if [[ "$CIRCLE_BRANCH" =~ ^(dev|release) || "$CIRCLE_TAG" =~ ^v ]]; then
             echo "Branch starts with dev or release, or tagged commit starts with v. Optimized build"
-            make ci-binary
+            make ci-build
           else
             echo "Non-release branch, build with coverage"
-            BUILD_FLAGS="--coverage" make ci-binary
+            make enable_coverage=true ci-build
           fi
+    - save_cache:
+        key: cabal-store-v1-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
+        paths:
+        - ~/.cabal/packages
+        - ~/.cabal/store
+    - store_artifacts:
+        path: /build/_server_output
+        destination: server
+    - persist_to_workspace:
+        root: /build
+        paths: [_server_output]
+
+  build_image:
+    docker:
+    - image: hasura/graphql-engine-server-builder:2020-01-14
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - *setup_remote_docker
     - run:
         name: Build the docker image
         working_directory: ./server
@@ -190,22 +200,12 @@ jobs:
           # build and save the image
           make ci-image
           make ci-save-image
-    - save_cache:
-        key: server-app-cache-{{ .Branch }}-{{ .Revision }}
-        paths:
-        - ./server/.stack-work
-    - save_cache:
-        key: server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
-        paths:
-        - ~/.stack
     - store_artifacts:
-        path: /build/_server_output
-        destination: server
+        path: /build/_server_output/image.tar
+        destination: server/image.tar
     - persist_to_workspace:
         root: /build
-        paths:
-          - _server_output # binary is called graphql-engine
-
+        paths: [_server_output/image.tar]
 
   # job to execute when all server tests pass. later we can collect test
   # reports and publish them etc.
@@ -222,9 +222,10 @@ jobs:
     <<: *test_server
     environment:
       PG_VERSION: "12"
+      POSTGIS_VERSION: "3.0.0"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
-    - image: circleci/postgres:12-alpine-postgis
+    - image: hasura/graphql-engine-server-builder:2020-01-14
+    - image: hasura/postgres-12.0-alpine-postgis3:6cbd863d47c0
       <<: *test_pg_env
 
   test_server_pg_11:
@@ -232,7 +233,7 @@ jobs:
     environment:
       PG_VERSION: "11"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     - image: circleci/postgres:11-alpine-postgis
       <<: *test_pg_env
 
@@ -241,7 +242,7 @@ jobs:
     environment:
       PG_VERSION: "10"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     - image: circleci/postgres:10-alpine-postgis
       <<: *test_pg_env
 
@@ -250,7 +251,7 @@ jobs:
     environment:
       PG_VERSION: "9_6"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     - image: circleci/postgres:9.6-alpine-postgis
       <<: *test_pg_env
 
@@ -259,32 +260,25 @@ jobs:
     environment:
       PG_VERSION: "9_5"
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     - image: circleci/postgres:9.5-alpine-postgis
       <<: *test_pg_env
 
-  server_property_tests:
+  server_unit_tests:
     resource_class: large
     docker:
-    - image: hasura/graphql-engine-server-builder:20190826
+    - image: hasura/graphql-engine-server-builder:2020-01-14
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - restore_cache:
-        keys:
-        - server-app-cache-{{ .Branch }}-{{ .Revision }}
-    - restore_cache:
-        keys:
-        - server-deps-cache-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/stack.yaml" }}
     - run:
-        name: Run property tests
+        name: Run unit tests
         environment:
           GHCRTS: -N2
-        command: |
-          /build/_server_output/graphql-engine-tests property
+        command: /build/_server_output/graphql-engine-tests unit
 
   test_cli_with_last_release:
     docker:
@@ -361,6 +355,45 @@ jobs:
         root: /build
         paths:
           - _cli_output
+  
+  test_and_build_cli_ext:
+    docker:
+    - image: hasura/graphql-engine-extension-cli-builder:20200225
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - restore_cache:
+        key:
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: cli-ext
+        command: make ci-deps
+    - save_cache:
+        key:
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+        paths:
+        - cli-ext/node_modules
+        - ~/.npm
+        - ~/.cache
+    - run:
+        name: build extension cli
+        working_directory: cli-ext
+        command: |
+          npm install -g pkg
+          npm run build
+          make deploy
+          make ci-copy-assets
+    - store_artifacts:
+        path: /build/_cli_ext_output
+        destination: cli_ext
+    - persist_to_workspace:
+        root: /build
+        paths:
+          - _cli_ext_output
 
   # build console assets
   build_console:
@@ -417,7 +450,7 @@ jobs:
   # test console
   test_console:
     docker:
-    - image: hasura/graphql-engine-console-builder:v0.4
+    - image: hasura/graphql-engine-console-builder:v0.3
       environment:
         CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
         GHCRTS: -N1
@@ -454,10 +487,11 @@ jobs:
   # test server upgrade from last version to current build
   test_server_upgrade:
     docker:
-    - image: hasura/graphql-engine-upgrade-tester:v0.5
+    # Using the image for pytests, since server upgrade tests are now a bunch of pytests
+    - image: hasura/graphql-engine-server-builder:2020-01-14
       environment:
         HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
-    - image: circleci/postgres:10-alpine
+    - image: circleci/postgres:11-alpine-postgis
       environment:
         POSTGRES_USER: gql_test
         POSTGRES_DB: gql_test
@@ -468,15 +502,22 @@ jobs:
     - *skip_job_on_ciignore
     - checkout
     - run:
+        name: install_necessary_packages
+        command: |
+          apt-get update
+          apt install -y curl procps
+    - run:
         name: upgrade_test
         command: .circleci/server-upgrade/run.sh
+        environment:
+          HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
     - store_artifacts:
         path: /build/_server_output
         destination: server
 
   deploy:
     docker:
-    - image: hasura/graphql-engine-deployer:v0.3
+    - image: hasura/graphql-engine-deployer:v0.4
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -490,9 +531,13 @@ jobs:
 
 workflows:
   version: 2
-  workflow_v20190516:
+  workflow_v20200120:
     jobs:
     - check_build_worthiness: *filter_only_vtags
+    - test_and_build_cli_ext:
+        <<: *filter_only_vtags
+        requires:
+        - check_build_worthiness
     - build_console:
         <<: *filter_only_vtags
         requires:
@@ -500,6 +545,16 @@ workflows:
     - build_server:
         <<: *filter_only_vtags
         requires:
+        - check_build_worthiness
+    - test_cli_with_last_release:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_cli_ext
+        - check_build_worthiness
+    - build_image:
+        <<: *filter_only_vtags
+        requires:
+        - build_server
         - build_console
     - test_server_pg_12:
         <<: *filter_only_vtags
@@ -521,7 +576,7 @@ workflows:
         <<: *filter_only_vtags
         requires:
         - build_server
-    - server_property_tests:
+    - server_unit_tests:
         <<: *filter_only_vtags
         requires:
         - build_server
@@ -537,23 +592,22 @@ workflows:
         - test_server_pg_10
         - test_server_pg_9.6
         - test_server_pg_9.5
-        - server_property_tests
+        - server_unit_tests
         - test_server_upgrade
-    - test_cli_with_last_release:
-        <<: *filter_only_vtags
-        requires:
-        - check_build_worthiness
     - test_and_build_cli:
         <<: *filter_only_vtags
         requires:
+        - test_and_build_cli_ext
         - build_server
     - test_console:
         <<: *filter_only_vtags
         requires:
+        - build_console
         - test_and_build_cli
         - test_cli_with_last_release
     - deploy:
-        <<: *filter_only_vtags_dev_release_branches
+        <<: *filter_only_vtags_channel_branches
         requires:
+        - build_image
         - test_console
         - all_server_tests_pass

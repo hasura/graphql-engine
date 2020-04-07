@@ -1,3 +1,5 @@
+import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
+
 // check 2xx success status codes
 export const verifySuccessStatus = status => {
   return /^2[0-9][0-9]$/.test(status.toString());
@@ -136,13 +138,7 @@ FROM
       hdb_et.name ASC NULLS LAST
   ) AS info
 `;
-  return {
-    type: 'run_sql',
-    args: {
-      sql: runSql,
-      read_only: true,
-    },
-  };
+  return getRunSqlQuery(runSql, false, true);
 };
 
 export const parseRowData = (row, dataType) => {

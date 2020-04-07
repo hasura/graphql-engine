@@ -81,7 +81,7 @@ class ViewStitchedSchema extends React.Component {
     const styles = require('../RemoteSchema.scss');
 
     const { remoteSchemaName } = this.props.params;
-    const { manualUrl, envName, headers } = this.props;
+    const { manualUrl, envName, headers, readOnlyMode } = this.props;
 
     const filterHeaders = headers.filter(h => !!h.name);
 
@@ -121,8 +121,12 @@ class ViewStitchedSchema extends React.Component {
       </Tooltip>
     );
 
+    if (readOnlyMode) {
+      delete tabInfo.modify;
+    }
+
     const showReloadRemoteSchema =
-      remoteSchemaName && remoteSchemaName.length > 0 ? (
+      !readOnlyMode && remoteSchemaName && remoteSchemaName.length > 0 ? (
         <div className={styles.commonBtn + ' ' + styles.detailsRefreshButton}>
           <span>
             <ReloadRemoteSchema
@@ -205,6 +209,7 @@ const mapStateToProps = state => {
     ...state.remoteSchemas.headerData,
     allRemoteSchemas: state.remoteSchemas.listData.remoteSchemas,
     dataHeaders: { ...state.tables.dataHeaders },
+    readOnlyMode: state.main.readOnlyMode,
   };
 };
 

@@ -7,12 +7,6 @@
     :copyright: Copyright 2007-2017 by the Sphinx team, see AUTHORS.
     :license: BSD, see LICENSE for details.
 #}
-{%- block doctype -%}{%- if html5_doctype %}
-<!DOCTYPE html>
-{%- else %}
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-{%- endif %}{%- endblock %}
 {%- set reldelim1 = reldelim1 is not defined and ' &#187;' or reldelim1 %}
 {%- set reldelim2 = reldelim2 is not defined and ' |' or reldelim2 %}
 {%- set render_sidebar = (not embedded) and (not theme_nosidebar|tobool) and
@@ -117,7 +111,8 @@
 {%- if html_tag %}
 {{ html_tag }}
 {%- else %}
-<html xmlns="http://www.w3.org/1999/xhtml"{% if language is not none %} lang="{{ language }}"{% endif %}>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 {%- endif %}
   <head>
     {%- if not html5_doctype %}
@@ -130,10 +125,11 @@
     {%- endif %}
     {{- metatags }}
     {%- if pagename == "404" %}
-    <base href="/{{ version }}/{{ pagename }}">
+    <base href="/docs/{{ version }}/{{ pagename }}">
     {% endif %}
     {%- block htmltitle %}
     <title>{{ title|striptags|e }}{{ titlesuffix }}</title>
+    <meta name="title" content="{{ title|striptags|e }}{{ titlesuffix }}" />
     {%- endblock %}
     {%- block csss %}
     {{- css() }}
@@ -154,9 +150,6 @@
 {%- block linktags %}
     {%- if hasdoc('about') %}
     <link rel="author" title="{{ _('About these documents') }}" href="{{ pathto('about') }}" />
-    {%- endif %}
-    {%- if hasdoc('genindex') %}
-    <link rel="index" title="{{ _('Index') }}" href="{{ pathto('genindex') }}" />
     {%- endif %}
     {%- if hasdoc('search') %}
     <link rel="search" title="{{ _('Search') }}" href="{{ pathto('search') }}" />

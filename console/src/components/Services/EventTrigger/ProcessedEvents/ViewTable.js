@@ -6,6 +6,7 @@ import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
+/* Functions are unused
 const genHeadings = headings => {
   if (headings.length === 0) {
     return [];
@@ -60,6 +61,7 @@ const genRow = (row, headings) => {
 
   throw 'Incomplete pattern match'; // eslint-disable-line no-throw-literal
 };
+*/
 
 class ViewTable extends Component {
   constructor(props) {
@@ -138,6 +140,7 @@ class ViewTable extends Component {
       lastSuccess,
       dispatch,
       expandedRow,
+      readOnlyMode,
     } = this.props; // eslint-disable-line no-unused-vars
 
     // check if table exists
@@ -178,6 +181,7 @@ class ViewTable extends Component {
         dispatch={dispatch}
         triggerName={triggerName}
         tabName="processed"
+        readOnlyMode={readOnlyMode}
       />
     );
 
@@ -198,6 +202,7 @@ ViewTable.propTypes = {
   query: PropTypes.object.isRequired,
   curFilter: PropTypes.object.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   rows: PropTypes.array.isRequired,
   expandedRow: PropTypes.string.isRequired,
   count: PropTypes.number,
@@ -210,6 +215,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     triggerName: ownProps.params.trigger,
     triggerList: state.triggers.triggerList,
+    readOnlyMode: state.main.readOnlyMode,
     ...state.triggers.view,
   };
 };

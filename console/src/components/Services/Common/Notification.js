@@ -4,7 +4,7 @@ import { showNotification } from '../../App/Actions';
 import Button from '../../Common/Button/Button';
 
 import './Notification/NotificationOverrides.css';
-import { isString } from '../../Common/utils/jsUtils';
+import { isObject, isString } from '../../Common/utils/jsUtils';
 
 const styles = require('./Notification/Notification.scss');
 
@@ -31,48 +31,47 @@ const getNotificationDetails = (detailsJson, children = null) => {
 const showErrorNotification = (title, message, error) => {
   const getErrorMessage = () => {
     let notificationMessage;
-    if (
-      error &&
-      error.message &&
-      (error.message.error === 'postgres query error' ||
-        error.message.error === 'query execution failed')
-    ) {
-      if (error.message.internal) {
-        notificationMessage =
-          error.message.code + ': ' + error.message.internal.error.message;
-      } else {
-        notificationMessage = error.code + ': ' + error.message.error;
-      }
-    } else if (error && 'info' in error) {
-      notificationMessage = error.info;
-    } else if (error && 'message' in error) {
-      if (error.code) {
-        if (error.message.error) {
-          notificationMessage = error.message.error.message;
+
+    if (error) {
+      if (isString(error)) {
+        notificationMessage = error;
+      } else if (
+        error.message &&
+        (error.message.error === 'postgres query error' ||
+          error.message.error === 'query execution failed')
+      ) {
+        if (error.message.internal) {
+          notificationMessage =
+            error.message.code + ': ' + error.message.internal.error.message;
         } else {
-          notificationMessage = error.message;
+          notificationMessage = error.code + ': ' + error.message.error;
         }
-      } else if (error && error.message && isString(error.message)) {
-        notificationMessage = error.message;
-      } else if (error && error.message && 'code' in error.message) {
-        notificationMessage = error.message.code + ' : ' + message;
-      } else {
-        notificationMessage = error.code;
+      } else if ('info' in error) {
+        notificationMessage = error.info;
+      } else if ('message' in error) {
+        if (error.code) {
+          if (error.message.error) {
+            notificationMessage = error.message.error.message;
+          } else {
+            notificationMessage = error.message;
+          }
+        } else if (error.message && isString(error.message)) {
+          notificationMessage = error.message;
+        } else if (error.message && 'code' in error.message) {
+          notificationMessage = error.message.code + ' : ' + message;
+        } else {
+          notificationMessage = error.code;
+        }
+      } else if ('internal' in error && 'error' in error.internal) {
+        notificationMessage = error.code + ' : ' + error.internal.error.message;
+      } else if ('custom' in error) {
+        notificationMessage = error.custom;
+      } else if ('code' in error && 'error' in error && 'path' in error) {
+        // Data API error
+        notificationMessage = error.error;
       }
-    } else if (error && 'internal' in error && 'error' in error.internal) {
-      notificationMessage = error.code + ' : ' + error.internal.error.message;
-    } else if (error && 'custom' in error) {
-      notificationMessage = error.custom;
-    } else if (
-      error &&
-      'code' in error &&
-      'error' in error &&
-      'path' in error
-    ) {
-      // Data API error
-      notificationMessage = error.error;
     } else {
-      notificationMessage = error ? error : message;
+      notificationMessage = message;
     }
 
     return notificationMessage;
@@ -102,12 +101,14 @@ const showErrorNotification = (title, message, error) => {
   const getErrorJson = () => {
     let errorJson;
 
-    if (error && 'action' in error) {
-      errorJson = error.action;
-    } else if (error && 'internal' in error) {
-      errorJson = error.internal;
-    } else if (error && 'message' in error && !isString(error.message)) {
-      errorJson = error.message;
+    if (error && isObject(error)) {
+      if ('action' in error) {
+        errorJson = error.action;
+      } else if ('internal' in error) {
+        errorJson = error.internal;
+      } else if ('message' in error && !isString(error.message)) {
+        errorJson = error.message;
+      }
     }
 
     return errorJson;

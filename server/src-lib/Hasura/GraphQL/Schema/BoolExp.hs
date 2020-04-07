@@ -283,7 +283,7 @@ mkBoolExpInp tn fields =
       ]
 
     mkFldExpInp = \case
-      SFPGColumn (PGColumnInfo _ name colTy _ _) ->
+      SFPGColumn (PGColumnInfo _ name _ colTy _ _) ->
         Just $ mk name (mkCompExpTy colTy)
       SFRelationship relationshipField ->
         let relationshipName = riName $ _rfiInfo relationshipField

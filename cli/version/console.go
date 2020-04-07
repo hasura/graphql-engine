@@ -2,7 +2,7 @@ package version
 
 import (
 	"fmt"
-	"strings"
+	"regexp"
 )
 
 var (
@@ -44,14 +44,13 @@ func (v *Version) GetConsoleAssetsVersion() (av string) {
 			// check for release channels
 			preRelease := v.ServerSemver.Prerelease()
 			channel := "stable"
-			if strings.HasPrefix(preRelease, "alpha") {
-				channel = "alpha"
-			}
-			if strings.HasPrefix(preRelease, "beta") {
-				channel = "beta"
-			}
-			if strings.HasPrefix(preRelease, "rc") {
-				channel = "rc"
+			if preRelease != "" {
+				// Get the correct channel from the prerelease tag
+				var re = regexp.MustCompile(`^[a-z]+`)
+				tag := re.FindString(preRelease)
+				if tag != "" {
+					channel = tag
+				}
 			}
 			return fmt.Sprintf("channel/%s/v%d.%d", channel, v.ServerSemver.Major(), v.ServerSemver.Minor())
 		}

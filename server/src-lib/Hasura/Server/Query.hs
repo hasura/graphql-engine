@@ -16,7 +16,9 @@ import qualified Network.HTTP.Client                as HTTP
 
 import           Hasura.EncJSON
 import           Hasura.Prelude
+import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
+import           Hasura.RQL.DDL.CustomTypes
 import           Hasura.RQL.DDL.EventTrigger
 import           Hasura.RQL.DDL.Metadata
 import           Hasura.RQL.DDL.Permission
@@ -31,8 +33,10 @@ import           Hasura.RQL.DML.Insert
 import           Hasura.RQL.DML.Select
 import           Hasura.RQL.DML.Update
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.Init                 (InstanceId (..))
 import           Hasura.Server.Utils
+import           Hasura.Server.Version              (HasVersion)
 
 
 data RQLQueryV1
@@ -60,10 +64,10 @@ data RQLQueryV1
   | RQCreateUpdatePermission !CreateUpdPerm
   | RQCreateDeletePermission !CreateDelPerm
 
-  | RQDropInsertPermission !DropInsPerm
-  | RQDropSelectPermission !DropSelPerm
-  | RQDropUpdatePermission !DropUpdPerm
-  | RQDropDeletePermission !DropDelPerm
+  | RQDropInsertPermission !(DropPerm InsPerm)
+  | RQDropSelectPermission !(DropPerm SelPerm)
+  | RQDropUpdatePermission !(DropPerm UpdPerm)
+  | RQDropDeletePermission !(DropPerm DelPerm)
   | RQSetPermissionComment !SetPermComment
 
   | RQGetInconsistentMetadata !GetInconsistentMetadata
@@ -101,7 +105,14 @@ data RQLQueryV1
   | RQClearMetadata !ClearMetadata
   | RQReloadMetadata !ReloadMetadata
 
+  | RQCreateAction !CreateAction
+  | RQDropAction !DropAction
+  | RQUpdateAction !UpdateAction
+  | RQCreateActionPermission !CreateActionPermission
+  | RQDropActionPermission !DropActionPermission
+
   | RQDumpInternalState !DumpInternalState
+  | RQSetCustomTypes !CustomTypes
   deriving (Show, Eq, Lift)
 
 data RQLQueryV2
@@ -148,89 +159,54 @@ $(deriveJSON
   ''RQLQueryV2
  )
 
-data RunCtx
-  = RunCtx
-  { _rcUserInfo  :: !UserInfo
-  , _rcHttpMgr   :: !HTTP.Manager
-  , _rcSqlGenCtx :: !SQLGenCtx
-  }
+fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime, CacheInvalidations))
+fetchLastUpdate = over (_Just._3) Q.getAltJ <$> Q.withQE defaultTxErrorHandler [Q.sql|
+  SELECT instance_id::text, occurred_at, invalidations
+  FROM hdb_catalog.hdb_schema_update_event
+  ORDER BY occurred_at DESC LIMIT 1
+  |] () True
 
-newtype Run a
-  = Run {unRun :: StateT SchemaCache (ReaderT RunCtx (LazyTx QErr)) a}
-  deriving ( Functor, Applicative, Monad
-           , MonadError QErr
-           , MonadState SchemaCache
-           , MonadReader RunCtx
-           , CacheRM
-           , CacheRWM
-           , MonadTx
-           , MonadIO
-           )
-
-instance UserInfoM Run where
-  askUserInfo = asks _rcUserInfo
-
-instance HasHttpManager Run where
-  askHttpManager = asks _rcHttpMgr
-
-instance HasSQLGenCtx Run where
-  askSQLGenCtx = asks _rcSqlGenCtx
-
-fetchLastUpdate :: Q.TxE QErr (Maybe (InstanceId, UTCTime))
-fetchLastUpdate = do
-  Q.withQE defaultTxErrorHandler
-    [Q.sql|
-       SELECT instance_id::text, occurred_at
-       FROM hdb_catalog.hdb_schema_update_event
-       ORDER BY occurred_at DESC LIMIT 1
-          |] () True
-
-recordSchemaUpdate :: InstanceId -> Q.TxE QErr ()
-recordSchemaUpdate instanceId =
+recordSchemaUpdate :: InstanceId -> CacheInvalidations -> Q.TxE QErr ()
+recordSchemaUpdate instanceId invalidations =
   liftTx $ Q.unitQE defaultTxErrorHandler [Q.sql|
              INSERT INTO hdb_catalog.hdb_schema_update_event
-               (instance_id, occurred_at) VALUES ($1::uuid, DEFAULT)
+               (instance_id, occurred_at, invalidations) VALUES ($1::uuid, DEFAULT, $2::json)
              ON CONFLICT ((occurred_at IS NOT NULL))
-             DO UPDATE SET instance_id = $1::uuid, occurred_at = DEFAULT
-            |] (Identity instanceId) True
-
-peelRun
-  :: (MonadIO m)
-  => SchemaCache
-  -> RunCtx
-  -> PGExecCtx
-  -> Q.TxAccess
-  -> Run a
-  -> ExceptT QErr m (a, SchemaCache)
-peelRun sc runCtx@(RunCtx userInfo _ _) pgExecCtx txAccess (Run m) =
-  runLazyTx pgExecCtx txAccess $ withUserInfo userInfo lazyTx
-  where
-    lazyTx = runReaderT (runStateT m sc) runCtx
+             DO UPDATE SET instance_id = $1::uuid, occurred_at = DEFAULT, invalidations = $2::json
+            |] (instanceId, Q.AltJ invalidations) True
 
 runQuery
-  :: (MonadIO m, MonadError QErr m)
+  :: (HasVersion, MonadIO m, MonadError QErr m)
   => PGExecCtx -> InstanceId
-  -> UserInfo -> SchemaCache -> HTTP.Manager
-  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, SchemaCache)
+  -> UserInfo -> RebuildableSchemaCache Run -> HTTP.Manager
+  -> SQLGenCtx -> SystemDefined -> RQLQuery -> m (EncJSON, RebuildableSchemaCache Run)
 runQuery pgExecCtx instanceId userInfo sc hMgr sqlGenCtx systemDefined query = do
   accessMode <- getQueryAccessMode query
   resE <- runQueryM query
     & runHasSystemDefinedT systemDefined
-    & peelRun sc runCtx pgExecCtx accessMode
+    & runCacheRWT sc
+    & peelRun runCtx pgExecCtx accessMode
     & runExceptT
     & liftIO
   either throwError withReload resE
   where
     runCtx = RunCtx userInfo hMgr sqlGenCtx
-    withReload r = do
-      when (queryNeedsReload query) $ do
-        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite
-             $ liftTx $ recordSchemaUpdate instanceId
+    withReload (result, updatedCache, invalidations) = do
+      when (queryModifiesSchemaCache query) $ do
+        e <- liftIO $ runExceptT $ runLazyTx pgExecCtx Q.ReadWrite $ liftTx $
+          recordSchemaUpdate instanceId invalidations
         liftEither e
-      return r
+      return (result, updatedCache)
 
-queryNeedsReload :: RQLQuery -> Bool
-queryNeedsReload (RQV1 qi) = case qi of
+-- | A predicate that determines whether the given query might modify/rebuild the schema cache. If
+-- so, it needs to acquire the global lock on the schema cache so that other queries do not modify
+-- it concurrently.
+--
+-- Ideally, we would enforce this using the type system — queries for which this function returns
+-- 'False' should not be allowed to modify the schema cache. But for now we just ensure consistency
+-- by hand.
+queryModifiesSchemaCache :: RQLQuery -> Bool
+queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQAddExistingTableOrView _      -> True
   RQTrackTable _                  -> True
   RQUntrackTable _                -> True
@@ -283,20 +259,27 @@ queryNeedsReload (RQV1 qi) = case qi of
   RQAddCollectionToAllowlist _    -> True
   RQDropCollectionFromAllowlist _ -> True
 
-  RQRunSql RunSQL{rTxAccessMode}  ->
+  RQRunSql RunSQL{rTxAccessMode, rCheckMetadataConsistency}  ->
     case rTxAccessMode of
       Q.ReadOnly  -> False
-      Q.ReadWrite -> True
+      Q.ReadWrite -> fromMaybe True rCheckMetadataConsistency
 
   RQReplaceMetadata _             -> True
   RQExportMetadata _              -> False
   RQClearMetadata _               -> True
   RQReloadMetadata _              -> True
 
-  RQDumpInternalState _           -> False
+  RQCreateAction _                -> True
+  RQDropAction _                  -> True
+  RQUpdateAction _                -> True
+  RQCreateActionPermission _      -> True
+  RQDropActionPermission _        -> True
 
-  RQBulk qs                       -> any queryNeedsReload qs
-queryNeedsReload (RQV2 qi) = case qi of
+  RQDumpInternalState _           -> False
+  RQSetCustomTypes _              -> True
+
+  RQBulk qs                       -> any queryModifiesSchemaCache qs
+queryModifiesSchemaCache (RQV2 qi) = case qi of
   RQV2TrackTable _           -> True
   RQV2SetTableCustomFields _ -> True
   RQV2TrackFunction _        -> True
@@ -337,21 +320,16 @@ reconcileAccessModes (Just mode1) (Just mode2)
   | otherwise = Left mode2
 
 runQueryM
-  :: ( QErrM m, CacheRWM m, UserInfoM m, MonadTx m
+  :: ( HasVersion, QErrM m, CacheRWM m, UserInfoM m, MonadTx m
      , MonadIO m, HasHttpManager m, HasSQLGenCtx m
      , HasSystemDefined m
      )
   => RQLQuery
   -> m EncJSON
-runQueryM rq =
-  withPathK "args" $ runQueryM' <* rebuildGCtx
+runQueryM rq = withPathK "args" $ case rq of
+  RQV1 q -> runQueryV1M q
+  RQV2 q -> runQueryV2M q
   where
-    rebuildGCtx = when (queryNeedsReload rq) buildGCtxMap
-
-    runQueryM' = case rq of
-      RQV1 q -> runQueryV1M q
-      RQV2 q -> runQueryV2M q
-
     runQueryV1M = \case
       RQAddExistingTableOrView q   -> runTrackTableQ q
       RQTrackTable q               -> runTrackTableQ q
@@ -361,8 +339,8 @@ runQueryM rq =
       RQTrackFunction q            -> runTrackFunc q
       RQUntrackFunction q          -> runUntrackFunc q
 
-      RQCreateObjectRelationship q -> runCreateObjRel q
-      RQCreateArrayRelationship  q -> runCreateArrRel q
+      RQCreateObjectRelationship q -> runCreateRelationship ObjRel q
+      RQCreateArrayRelationship  q -> runCreateRelationship ArrRel q
       RQDropRelationship  q        -> runDropRel q
       RQSetRelationshipComment  q  -> runSetRelComment q
       RQRenameRelationship q       -> runRenameRel q
@@ -411,9 +389,17 @@ runQueryM rq =
       RQExportMetadata q           -> runExportMetadata q
       RQReloadMetadata q           -> runReloadMetadata q
 
+      RQCreateAction q           -> runCreateAction q
+      RQDropAction q             -> runDropAction q
+      RQUpdateAction q           -> runUpdateAction q
+      RQCreateActionPermission q -> runCreateActionPermission q
+      RQDropActionPermission q   -> runDropActionPermission q
+
       RQDumpInternalState q        -> runDumpInternalState q
 
       RQRunSql q                   -> runRunSQL q
+
+      RQSetCustomTypes q           -> runSetCustomTypes q
 
       RQBulk qs                    -> encJFromList <$> indexedMapM runQueryM qs
 
@@ -484,7 +470,14 @@ requiresAdmin = \case
     RQExportMetadata _              -> True
     RQReloadMetadata _              -> True
 
+    RQCreateAction _                -> True
+    RQDropAction _                  -> True
+    RQUpdateAction _                -> True
+    RQCreateActionPermission _      -> True
+    RQDropActionPermission _        -> True
+
     RQDumpInternalState _           -> True
+    RQSetCustomTypes _              -> True
 
     RQRunSql _                      -> True
 

@@ -318,12 +318,14 @@ const checkOrder = order => {
           .find('[role=gridcell]')
           .first()
           .next()
+          .next()
           .contains(2);
       }
       if (index === 2) {
         cy.wrap($el)
           .find('[role=gridcell]')
           .first()
+          .next()
           .next()
           .contains(userId);
       }
@@ -335,12 +337,14 @@ const checkOrder = order => {
           .find('[role=gridcell]')
           .first()
           .next()
+          .next()
           .contains(2);
       }
       if (index === 1) {
         cy.wrap($el)
           .find('[role=gridcell]')
           .first()
+          .next()
           .next()
           .contains(userId);
       }

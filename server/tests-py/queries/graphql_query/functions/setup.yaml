@@ -61,6 +61,11 @@ args:
       select * from test where uuid_col = uuid_arg and name = name_arg
       $$ language sql stable;
 
+      create function get_test_session_id(hasura_session json)
+      returns setof test as $$
+      select * from test where id = (hasura_session ->> 'x-hasura-user-id')::Int
+      $$ language sql stable;
+
 - type: track_table
   args:
     name: test
@@ -70,6 +75,14 @@ args:
   args:
     name: get_test
     schema: public
+- type: track_function
+  version: 2
+  args:
+    function:
+      name: get_test_session_id
+      schema: public
+    configuration:
+      session_argument: hasura_session
 
 # custom add sql function
 - type: run_sql

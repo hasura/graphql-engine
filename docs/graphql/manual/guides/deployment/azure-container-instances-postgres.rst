@@ -1,3 +1,7 @@
+.. meta::
+   :description: Deploy Hasura GraphQL engine on Azure with Container Instances and Postgres
+   :keywords: hasura, docs, guide, deployment, azure, container, postgres
+
 .. _deploy_azure_ci_pg:
 
 Hasura GraphQL engine on Azure with Container Instances and Postgres
@@ -28,10 +32,10 @@ All resources mentioned in this guide can be deployed using the one-click button
        :width: 200px
        :alt: azure_deploy_button_new_pg
        :class: no-shadow
-       :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json
+       :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json
      
      (This button takes you to the Azure Portal, you might want to :kbd:`Ctrl+Click` to
-     open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-container-with-pg>`__).
+     open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/stable/install-manifests/azure-container-with-pg>`__).
 
   .. tab:: With an existing Postgres Server
 
@@ -39,10 +43,10 @@ All resources mentioned in this guide can be deployed using the one-click button
        :width: 200px
        :alt: azure_deploy_button_existing_pg
        :class: no-shadow
-       :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container%2fazuredeploy.json
+       :target: https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fstable%2finstall-manifests%2fazure-container%2fazuredeploy.json
      
      (This button takes you to the Azure Portal, you might want to :kbd:`Ctrl+Click` to
-     open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/master/install-manifests/azure-container>`__).
+     open it in a new tab. Read more about this Resource Manager Template `here <https://github.com/hasura/graphql-engine/tree/stable/install-manifests/azure-container>`__).
 
 
 Pre-requisites

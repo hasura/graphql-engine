@@ -1,9 +1,9 @@
+import pytest
 import ruamel.yaml as yaml
 from validate import check_query_f, check_query
-from super_classes import DefaultTestSelectQueries
 
-
-class TestGraphqlIntrospection(DefaultTestSelectQueries):
+@pytest.mark.usefixtures('per_class_tests_db_state')
+class TestGraphqlIntrospection:
 
     def test_introspection(self, hge_ctx):
         with open(self.dir() + "/introspection.yaml") as c:

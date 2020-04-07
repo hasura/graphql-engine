@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura config API reference
+   :keywords: hasura, docs, config API, API reference
+
 .. _config_api_reference:
 
 Config API Reference
@@ -45,6 +49,11 @@ Sample response
      "jwt": {
        "claims_namespace": "https://hasura.io/jwt/claims",
        "claims_format": "json"
+     },
+     "is_allow_list_enabled": false,
+     "live_queries": {
+       "batch_size": 100,
+       "refetch_delay": 1
      }
    }
 
@@ -62,4 +71,4 @@ the list of enabled APIs.
    --enabled-apis="graphql,metadata"
    HASURA_GRAPHQL_ENABLED_APIS="graphql,metadata"
 
-See :doc:`../deployment/graphql-engine-flags/reference` for info on setting the above flag/env var.
+See :ref:`server_flag_reference` for info on setting the above flag/env var.

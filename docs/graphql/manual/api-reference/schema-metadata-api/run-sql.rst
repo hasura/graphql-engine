@@ -1,3 +1,9 @@
+.. meta::
+   :description: Execute SQL with the Hasura schema/metadata API
+   :keywords: hasura, docs, schema/metadata API, API reference, run_sql
+
+.. _api_run_sql:
+
 Schema/Metadata API Reference: Run SQL
 ======================================
 

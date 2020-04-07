@@ -1,0 +1,42 @@
+-- Global project configuration.
+--
+-- This file can be overridden with cabal.project.local (see e.g. cabal.project.dev)
+--
+-- If you need to switch between several local configurations you can also
+-- create a symlink to this file with a different name, e.g.:
+--     $ ln -s cabal.project cabal.project.myconfig
+--     $ ln -s cabal.project.freeze cabal.project.myconfig.freeze
+-- ...and then create a new set of overrides in:
+--     cabal.project.myconfig.local
+-- ...and then invoke cabal with
+--     $ cabal new-build --project-file=cabal.project.myconfig
+--
+-- See: https://www.haskell.org/cabal/users-guide/nix-local-build.html#configuring-builds-with-cabal-project
+packages: .
+
+package *
+  optimization: 2
+
+  haddock-html: true
+  haddock-hoogle: true
+  haddock-hyperlink-source: true
+  haddock-quickjump: true
+
+package graphql-engine
+  ghc-options: -j
+  haddock-options: "--show-all"
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/pg-client-hs.git
+  tag: 70a849d09bea9461e72c5a5bbde06df65aab61c0
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/graphql-parser-hs.git
+  tag: 1380495a7b3269b70a7ab3081d745a5f54171a9c
+
+source-repository-package
+  type: git
+  location: https://github.com/hasura/ci-info-hs.git
+  tag: 6af5a68450347a02295a9cd050d05a8b2f5c06ab

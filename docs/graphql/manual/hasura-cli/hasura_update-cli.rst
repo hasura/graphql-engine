@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura update-cli to update the Hasura CLI to the latest version
+   :keywords: hasura, docs, CLI, hasura update-cli
+
 .. _hasura_update-cli:
 
 Hasura CLI: hasura update-cli
@@ -43,7 +47,7 @@ Options inherited from parent commands
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --skip-update-check   skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

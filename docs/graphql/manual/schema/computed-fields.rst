@@ -1,3 +1,9 @@
+.. meta::
+   :description: Use computed fields in Hasura
+   :keywords: hasura, docs, schema, computed field
+
+.. _computed_fields:
+
 Computed fields
 ===============
 
@@ -9,12 +15,14 @@ Computed fields
 What are computed fields?
 -------------------------
 
-Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table's columns.
-Computed fields are computed when requested for via SQL functions using other columns of the table and other custom inputs if needed.
+Computed fields are virtual values or objects that are dynamically computed and can be queried along with a table's
+columns. Computed fields are computed when requested for via SQL functions using other columns of the table and other
+custom inputs if needed.
 
 .. note::
 
-  Computed fields are only exposed over the GraphQL API and the database schema is not modified on addition of a computed field.
+  Computed fields are only exposed over the GraphQL API and the database schema is not modified on addition of a
+  computed field.
 
 Supported SQL functions
 ***********************
@@ -27,8 +35,13 @@ Only functions which satisfy the following constraints can be added as a compute
 - **Table Argument**: One input argument with a table row type
 - **Return type**: Either ``SETOF <table-name>`` or ``BASE`` type
 
-Defining computed fields
-------------------------
+.. note::
+
+  Functions used as computed fields can also accept other arguments other than the mandatory table row argument.
+  Values for these extra arguments can be passed as arguments to the computed field in the GraphQL API.
+
+Computed field types
+--------------------
 
 Based on the SQL function's return type, we can define two types of computed fields:
 
@@ -37,7 +50,7 @@ Based on the SQL function's return type, we can define two types of computed fie
 
 Computed fields whose associated SQL function returns a
 `base type <https://www.postgresql.org/docs/current/extend-type-system.html#id-1.8.3.5.9>`__ like *Integer*,
-*Boolean*, *Geography* etc.
+*Boolean*, *Geography* etc. are scalar computed fields.
 
 **Example:**
 
@@ -52,8 +65,7 @@ Define an SQL function called ``author_full_name``:
     SELECT author_row.first_name || ' ' || author_row.last_name
   $$ LANGUAGE sql STABLE;
 
-Add a computed field called ``full_name`` to the ``author`` table using the SQL function above.
-See :doc:`API Reference <../api-reference/schema-metadata-api/computed-field>`.
+:ref:`Add a computed field <add-computed-field>` called ``full_name`` to the ``author`` table using the SQL function above.
 
 Query data from the ``author`` table:
 
@@ -90,15 +102,16 @@ The return table must be tracked to define such a computed field.
 
 **Example:**
 
-In a simple ``author <-> article`` schema, we can define a :doc:`relationship <../schema/relationships/index>` on the ``author``
-table to fetch authors along with their articles. We can make use of computed fields to fetch the author's articles
-by search.
+In a simple ``author <-> article`` schema, we can define a :ref:`relationship <relationships>` on the ``author``
+table to fetch authors along with their articles.
 
-Define an SQL function called ``fetch_articles``:
+We can make use of computed fields to fetch the author's articles with a search parameter.
+
+Define an SQL function called ``filter_author_articles``:
 
 .. code-block:: plpgsql
 
-   CREATE FUNCTION fetch_articles(search text, author_row author)
+   CREATE FUNCTION filter_author_articles(author_row author, search text)
    RETURNS SETOF article AS $$
      SELECT *
      FROM article
@@ -108,8 +121,7 @@ Define an SQL function called ``fetch_articles``:
        ) AND author_id = author_row.id
    $$ LANGUAGE sql STABLE;
 
-Add a computed field called ``get_articles`` to the ``author`` table using the SQL function above.
-See :doc:`API Reference <../api-reference/schema-metadata-api/computed-field>`.
+:ref:`Add a computed field <add-computed-field>` called ``filtered_articles`` to the ``author`` table using the SQL function above.
 
 Query data from the ``author`` table:
 
@@ -121,7 +133,7 @@ Query data from the ``author`` table:
         id
         first_name
         last_name
-        get_articles(args: {search: "Hasura"}){
+        filtered_articles(args: {search: "Hasura"}){
           id
           title
           content
@@ -136,7 +148,7 @@ Query data from the ``author`` table:
             "id": 1,
             "first_name": "Chris",
             "last_name": "Raichael",
-            "get_articles": [
+            "filtered_articles": [
               {
                 "id": 1,
                 "title": "Computed fields in Hasura",
@@ -147,6 +159,41 @@ Query data from the ``author`` table:
         ]
       }
     }
+
+.. _add-computed-field:
+
+Adding a computed field to a table
+----------------------------------
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+     Head to the ``Modify`` tab of the table and click on the ``Add`` button in the ``Computed fields``
+     section:
+
+     .. thumbnail:: ../../../img/graphql/manual/schema/computed-field-create.png
+
+     .. admonition:: Supported from
+
+       Console support is available in ``v1.1.0`` and above
+
+  .. tab:: API
+
+     A computed field can be added to a table using the :ref:`add_computed_field <api_computed_field>`
+     metadata API
+
+Computed fields permissions
+---------------------------
+
+:ref:`Access control <authorization>` to computed fields depends on the type of computed field.
+
+- For **scalar computed fields**, permissions are managed similar to the :ref:`columns permissions <col-level-permissions>`
+  of the table.
+
+- For **table computed fields**, the permissions set on the return table are respected.
+
 
 Computed fields vs. Postgres generated columns
 ----------------------------------------------

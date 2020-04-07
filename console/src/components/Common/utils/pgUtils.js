@@ -193,6 +193,53 @@ export function getRelationshipRefTable(table, relationship) {
   return _refTable;
 }
 
+/**
+ * @param {string} currentSchema
+ * @param {string} currentTable
+ * @param {Array<{[key: string]: any}>} allSchemas
+ *
+ * @returns {Array<{
+ *   columnName: string,
+ *   enumTableName: string,
+ *   enumColumnName: string,
+ * }>}
+ */
+export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
+  const currentTable = findTable(
+    allSchemas,
+    generateTableDef(tableName, tableSchema)
+  );
+
+  const relationsMap = [];
+  if (!currentTable.foreign_key_constraints.length) return;
+
+  currentTable.foreign_key_constraints.map(
+    ({ ref_table, ref_table_table_schema, column_mapping }) => {
+      const refTableSchema = findTable(
+        allSchemas,
+        generateTableDef(ref_table, ref_table_table_schema)
+      );
+      if (!refTableSchema.is_enum) return;
+
+      const keys = Object.keys(column_mapping);
+      if (!keys.length) return;
+
+      const _columnName = keys[0];
+      const _enumColumnName = column_mapping[_columnName];
+
+      if (_columnName && _enumColumnName) {
+        relationsMap.push({
+          columnName: _columnName,
+          enumTableName: ref_table,
+          enumColumnName: _enumColumnName,
+        });
+      }
+    }
+  );
+
+  return relationsMap;
+};
+
 /*** Table/View permissions utils ***/
 
 export const getTablePermissions = (table, role = null, action = null) => {
@@ -235,6 +282,22 @@ export const getFunctionName = pgFunction => {
   return pgFunction.function_name;
 };
 
+export const getFunctionDefinition = pgFunction => {
+  return pgFunction.function_definition;
+};
+
+export const getSchemaFunctions = (allFunctions, fnSchema) => {
+  return allFunctions.filter(fn => getFunctionSchema(fn) === fnSchema);
+};
+
+export const findFunction = (allFunctions, functionName, functionSchema) => {
+  return allFunctions.find(
+    f =>
+      getFunctionName(f) === functionName &&
+      getFunctionSchema(f) === functionSchema
+  );
+};
+
 /*** Schema utils ***/
 
 export const getSchemaName = schema => {
@@ -264,3 +327,53 @@ export const getTableCustomColumnNames = table => {
   }
   return {};
 };
+
+/*** Table/View Computed Field utils ***/
+
+export const getTableComputedFields = table => {
+  return table.computed_fields;
+};
+
+export const getComputedFieldName = computedField => {
+  return computedField.computed_field_name;
+};
+
+export const getGroupedTableComputedFields = (table, allFunctions) => {
+  const groupedComputedFields = { scalar: [], table: [] };
+
+  getTableComputedFields(table).forEach(computedField => {
+    const computedFieldFnDef = computedField.definition.function;
+    const computedFieldFn = findFunction(
+      allFunctions,
+      computedFieldFnDef.name,
+      computedFieldFnDef.schema
+    );
+
+    if (computedFieldFn && computedFieldFn.return_type_type === 'b') {
+      groupedComputedFields.scalar.push(computedField);
+    } else {
+      groupedComputedFields.table.push(computedField);
+    }
+  });
+
+  return groupedComputedFields;
+};
+
+// export const getDependentTables = (table) => {
+
+//   return [
+//     {
+//       table_schema: table.table_schema,
+//       table_name: table.table_name,
+//     },
+//     ...table.foreign_key_constraints.map(fk_obj => ({
+//       table_name: fk_obj.ref_table,
+//       table_schema: fk_obj.ref_table_table_schema
+//     })),
+//     ...table.opp_foreign_key_constraints.map(fk_obj => ({
+//       table_name: fk_obj.table_name,
+//       table_schema: fk_obj.table_schema,
+//     }))
+//   ]
+
+// };

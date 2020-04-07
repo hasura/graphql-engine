@@ -9,4 +9,6 @@ args:
       DROP TABLE author;
       DROP FUNCTION locations_distance(json, locations);
       DROP TABLE locations;
+      DROP FUNCTION get_sum(float_test);
+      DROP TABLE float_test;
     cascade: true

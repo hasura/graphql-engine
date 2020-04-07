@@ -10,3 +10,9 @@ export const getHeadersAsJSON = (headers = []) => {
 
   return headerJSON;
 };
+
+export const isValidGraphQLOperation = operation => {
+  return (
+    operation.name && operation.name.value && operation.operation === 'query'
+  );
+};

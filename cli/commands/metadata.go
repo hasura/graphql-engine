@@ -1,21 +1,29 @@
 package commands
 
 import (
-	"io/ioutil"
-	"os"
-
-	"github.com/ghodss/yaml"
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	v2yaml "gopkg.in/yaml.v2"
+	"github.com/spf13/viper"
 )
 
+// NewMetadataCmd returns the metadata command
 func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
+	v := viper.New()
 	metadataCmd := &cobra.Command{
-		Use:          "metadata",
-		Short:        "Manage Hasura GraphQL Engine metadata saved in the database",
+		Use:     "metadata",
+		Aliases: []string{"md"},
+		Short:   "Manage Hasura GraphQL Engine metadata saved in the database",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Root().PersistentPreRun(cmd, args)
+			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
+			return ec.Validate()
+		},
 		SilenceUsage: true,
 	}
 	metadataCmd.AddCommand(
@@ -24,31 +32,31 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newMetadataClearCmd(ec),
 		newMetadataReloadCmd(ec),
 		newMetadataApplyCmd(ec),
+		newMetadataInconsistencyCmd(ec),
 	)
+
+	metadataCmd.PersistentFlags().String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	metadataCmd.PersistentFlags().String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	metadataCmd.PersistentFlags().String("access-key", "", "access key for Hasura GraphQL Engine")
+	metadataCmd.PersistentFlags().MarkDeprecated("access-key", "use --admin-secret instead")
+
+	v.BindPFlag("endpoint", metadataCmd.PersistentFlags().Lookup("endpoint"))
+	v.BindPFlag("admin_secret", metadataCmd.PersistentFlags().Lookup("admin-secret"))
+	v.BindPFlag("access_key", metadataCmd.PersistentFlags().Lookup("access-key"))
+
 	return metadataCmd
 }
 
 func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) error {
 	switch cmd {
 	case "export":
-		metaData, err := t.ExportMetadata()
+		files, err := t.ExportMetadata()
 		if err != nil {
-			return errors.Wrap(err, "cannot export metadata")
+			return errors.Wrap(err, "cannot export metadata from server")
 		}
-
-		databyt, err := v2yaml.Marshal(metaData)
+		err = t.WriteMetadata(files)
 		if err != nil {
-			return err
-		}
-
-		metadataPath, err := ec.GetMetadataFilePath("yaml")
-		if err != nil {
-			return errors.Wrap(err, "cannot save metadata")
-		}
-
-		err = ioutil.WriteFile(metadataPath, databyt, 0644)
-		if err != nil {
-			return errors.Wrap(err, "cannot save metadata")
+			return errors.Wrap(err, "cannot write metadata")
 		}
 	case "clear":
 		err := t.ResetMetadata()
@@ -61,34 +69,7 @@ func executeMetadata(cmd string, t *migrate.Migrate, ec *cli.ExecutionContext) e
 			return errors.Wrap(err, "cannot reload Metadata")
 		}
 	case "apply":
-		var data interface{}
-		var metadataContent []byte
-		for _, format := range []string{"yaml", "json"} {
-			metadataPath, err := ec.GetMetadataFilePath(format)
-			if err != nil {
-				return errors.Wrap(err, "cannot apply metadata")
-			}
-
-			metadataContent, err = ioutil.ReadFile(metadataPath)
-			if err != nil {
-				if os.IsNotExist(err) {
-					continue
-				}
-				return err
-			}
-			break
-		}
-
-		if metadataContent == nil {
-			return errors.New("Unable to locate metadata.[yaml|json] file under migrations directory")
-		}
-
-		err := yaml.Unmarshal(metadataContent, &data)
-		if err != nil {
-			return errors.Wrap(err, "cannot parse metadata file")
-		}
-
-		err = t.ApplyMetadata(data)
+		err := t.ApplyMetadata()
 		if err != nil {
 			return errors.Wrap(err, "cannot apply metadata on the database")
 		}

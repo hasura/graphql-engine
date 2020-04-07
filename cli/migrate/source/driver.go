@@ -40,7 +40,11 @@ type Driver interface {
 	// Migrate will call this function only once per instance.
 	Close() error
 
+	// Scan scans the local migration files
 	Scan() error
+
+	// Default Parser to be used for scanning the file system
+	DefaultParser(Parser)
 
 	// First returns the very first migration version available to the driver.
 	// Migrate will call this function multiple times.
@@ -96,6 +100,9 @@ type Driver interface {
 	// ReadName returns an name that helps
 	// finding this migration in the source for a given version
 	ReadName(version uint64) (name string)
+
+	// WriteMetadaa writes the files in the metadata folder
+	WriteMetadata(files map[string][]byte) error
 }
 
 // Open returns a new driver instance.

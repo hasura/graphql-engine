@@ -8,6 +8,16 @@ args:
 - type: run_sql
   args:
     sql: |
+      DO $$
+      BEGIN
+        IF PostGIS_lib_version() ~ '^3.*' THEN
+          CREATE EXTENSION IF NOT EXISTS postgis_raster;
+        END IF;
+      END$$;
+
+- type: run_sql
+  args:
+    sql: |
      CREATE EXTENSION IF NOT EXISTS postgis_topology;
 
 #Create table
@@ -54,29 +64,29 @@ args:
     sql: |
       INSERT INTO geom_table (type, geom_col)
       VALUES
-      ('point', ST_GeomFromText('POINT(1 2)')),
-      ('linestring', ST_GeomFromText('LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)')),
-      ('linestring', ST_GeomFromText('LINESTRING(1 0, 0.5 0.5, 0 1)')),
-      ('polygon', ST_GeomFromText('POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')),
-      ('polygon', ST_GeomFromText('POLYGON((2 0, 2 1, 3 1, 3 0, 2 0))'))
+      ('point', ST_GeomFromEWKT('SRID=4326;POINT(1 2)')),
+      ('linestring', ST_GeomFromEWKT('SRID=4326;LINESTRING(0 0, 0.5 1, 1 2, 1.5 3)')),
+      ('linestring', ST_GeomFromEWKT('SRID=4326;LINESTRING(1 0, 0.5 0.5, 0 1)')),
+      ('polygon', ST_GeomFromEWKT('SRID=4326;POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))')),
+      ('polygon', ST_GeomFromEWKT('SRID=4326;POLYGON((2 0, 2 1, 3 1, 3 0, 2 0))'))
       ;
 - type: run_sql
   args:
     sql: |
       INSERT INTO geog_table (name, geog_col)
       VALUES
-      ('London', ST_GeographyFromText('POINT(0.1278 51.5074)') ),
-      ('Paris',  ST_GeographyFromText('POINT(2.3522 48.8566)') ),
-      ('Moscow', ST_GeographyFromText('POINT(37.6173 55.7558)') ),
-      ('New York', ST_GeographyFromText('POINT(-74.0060 40.7128)') ),
-      ('Linestring', ST_GeographyFromText('SRID=4326;LINESTRING(-43.23456 72.4567,-43.23456 72.4568)')),
-      ('Point', ST_GeographyFromText('SRID=4326;POINT(-43.23456 72.4567772)'));
+      ('London', ST_GeographyFromText('SRID=4326;POINT(0.1278 51.5074)') ),
+      ('Paris',  ST_GeographyFromText('SRID=4326;POINT(2.3522 48.8566)') ),
+      ('Moscow', ST_GeographyFromText('SRID=4326;POINT(37.6173 55.7558)') ),
+      ('New York', ST_GeographyFromText('SRID=4326;POINT(-74.0060 40.7128)') ),
+      ('Linestring', ST_GeographyFromText('SRID=4326;LINESTRING(0.0 0.0,0.0 1.0)')),
+      ('Point', ST_GeographyFromText('SRID=4326;POINT(0.0 0.5)'));
 - type: run_sql
   args:
     sql: |
       INSERT INTO geog_as_geom_table (name, geom_col)
       VALUES
-      ('London', ST_GeomFromText('SRID=4326;POINT(0.1278 51.5074)')),
-      ('Paris',  ST_GeomFromText('SRID=4326;POINT(2.3522 48.8566)')),
-      ('Moscow', ST_GeomFromText('SRID=4326;POINT(37.6173 55.7558)')),
-      ('New York', ST_GeomFromText('SRID=4326;POINT(-74.0060 40.7128)'));
+      ('London', ST_GeomFromEWKT('SRID=4326;POINT(0.1278 51.5074)')),
+      ('Paris',  ST_GeomFromEWKT('SRID=4326;POINT(2.3522 48.8566)')),
+      ('Moscow', ST_GeomFromEWKT('SRID=4326;POINT(37.6173 55.7558)')),
+      ('New York', ST_GeomFromEWKT('SRID=4326;POINT(-74.0060 40.7128)'));

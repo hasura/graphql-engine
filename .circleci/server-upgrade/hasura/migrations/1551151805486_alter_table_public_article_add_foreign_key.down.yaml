@@ -1,3 +1,0 @@
-- args:
-    sql: ALTER TABLE "public"."article" DROP CONSTRAINT "article_author_id_fkey"
-  type: run_sql

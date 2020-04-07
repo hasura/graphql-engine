@@ -1,4 +1,4 @@
-description: Export schema cache (metadata)
+description: Export metadata
 url: /v1/query
 status: 200
 response:

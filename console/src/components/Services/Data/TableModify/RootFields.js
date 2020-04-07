@@ -1,6 +1,6 @@
 import React from 'react';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import RootFieldEditor from '../Common/ReusableComponents/RootFieldEditor';
+import RootFieldEditor from '../Common/Components/RootFieldEditor';
 import { modifyRootFields, setCustomRootFields } from './ModifyActions';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 
@@ -64,11 +64,20 @@ const RootFields = ({
       insertOnChange={e => {
         onChange('insert', e.target.value);
       }}
+      insertOneOnChange={e => {
+        onChange('insert_one', e.target.value);
+      }}
       updateOnChange={e => {
         onChange('update', e.target.value);
       }}
+      updateByPkOnChange={e => {
+        onChange('update_by_pk', e.target.value);
+      }}
       deleteOnChange={e => {
         onChange('delete', e.target.value);
+      }}
+      deleteByPkOnChange={e => {
+        onChange('delete_by_pk', e.target.value);
       }}
     />
   );

@@ -14,6 +14,7 @@ import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 
+/*
 const genHeadings = headings => {
   if (headings.length === 0) {
     return [];
@@ -68,6 +69,7 @@ const genRow = (row, headings) => {
 
   throw 'Incomplete pattern match'; // eslint-disable-line no-throw-literal
 };
+*/
 
 class ViewTable extends Component {
   constructor(props) {
@@ -148,6 +150,7 @@ class ViewTable extends Component {
       count,
       activePath,
       migrationMode,
+      readOnlyMode,
       ongoingRequest,
       isProgressing,
       lastError,
@@ -158,6 +161,7 @@ class ViewTable extends Component {
       manualTriggers = [],
       triggeredRow,
       triggeredFunction,
+      location,
     } = this.props;
 
     // check if table exists
@@ -201,6 +205,8 @@ class ViewTable extends Component {
         updateInvocationFunction={this.updateInvocationFunction.bind(this)}
         triggeredRow={triggeredRow}
         triggeredFunction={triggeredFunction}
+        location={location}
+        readOnlyMode={readOnlyMode}
       />
     );
 
@@ -212,6 +218,7 @@ class ViewTable extends Component {
         table={tableSchema}
         tabName="browse"
         migrationMode={migrationMode}
+        readOnlyMode={readOnlyMode}
       />
     );
 
@@ -245,6 +252,7 @@ ViewTable.propTypes = {
   query: PropTypes.object.isRequired,
   curFilter: PropTypes.object.isRequired,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   isProgressing: PropTypes.bool.isRequired,
   rows: PropTypes.array.isRequired,
@@ -262,6 +270,7 @@ const mapStateToProps = (state, ownProps) => {
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.view,
   };

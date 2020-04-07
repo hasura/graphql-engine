@@ -75,6 +75,6 @@ Ces limitations seront adressées dans les prochaines versions.
 
 ## Documentation
 
-Consultez l'intégralité de la [documentation](https://docs.hasura.io/1.0/graphql/manual/remote-schemas/index.html).
+Consultez l'intégralité de la [documentation](https://hasura.io/docs/1.0/graphql/manual/remote-schemas/index.html).
 
 
