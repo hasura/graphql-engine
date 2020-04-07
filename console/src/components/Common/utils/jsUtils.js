@@ -22,6 +22,10 @@ export const isString = value => {
   return typeof value === 'string';
 };
 
+export const isNumber = value => {
+  return typeof value === 'number';
+};
+
 export const isPromise = value => {
   if (!value) return false;
   return value.constructor.name === 'Promise';
@@ -283,6 +287,13 @@ export const getCurrTimeForFileName = () => {
     .padStart(3, '0');
 
   return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
+};
+
+// return number with commas for readability
+export const getReadableNumber = (number) => {
+  if (!isNumber(number)) return number;
+
+  return number.toLocaleString();
 };
 
 export const isValidTemplateLiteral = literal_ => {
