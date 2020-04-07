@@ -139,14 +139,10 @@ class InvokeManualTrigger extends React.Component {
       getEventIdErrorText('Unable to invoke trigger');
     const getEventData = () => (
       <div
-        className={`${styles.remove_padding_left} container-fluid ${
-          styles.clear_fix
-        } ${styles.padd_right_remove}`}
+        className={`${styles.remove_padding_left} container-fluid ${styles.clear_fix} ${styles.padd_right_remove}`}
       >
         <div
-          className={`${styles.remove_padding_left} col-md-12 ${
-            styles.padd_right_remove
-          }`}
+          className={`${styles.remove_padding_left} col-md-12 ${styles.padd_right_remove}`}
         >
           <div className={`${styles.margin_bottom_20} `}>
             Event ID - {eventInfo}
