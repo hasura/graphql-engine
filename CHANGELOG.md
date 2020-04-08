@@ -11,7 +11,7 @@ The order and collapsed state of columns is now persisted across page navigation
 
 ### Bug fixes and improvements
 
-- server: reusing Postgres scalars is allowed for custom types
+- server: reusing Postgres scalars in custom types is allowed (close #4125)
 - cli: allow customization of server api paths (close #4016)
 - cli: clean up migration files created during a failed migrate api (close #4312) (#4319)
 - cli: add support for multiple versions of plugin (close #4105)

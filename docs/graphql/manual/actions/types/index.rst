@@ -141,6 +141,11 @@ a scalar called ``Date``, you can define it like.
 These scalars can be used as arguments of the mutation or as fields of object
 types and input types.
 
+.. admonition:: Postgres scalars
+
+   The base types from Postgres can be reusable as custom scalars without explicitly declaring them.
+   For example, the ``uuid`` type from ``pgcrypto`` extension can be used to resolve a UUID data.
+
 Enum types
 ----------
 
@@ -165,4 +170,3 @@ This means that wherever we use the type ``Color`` in our schema, we expect it
 to be exactly one of RED, GREEN, or BLUE.
 
 `See reference <https://graphql.org/learn/schema/#enumeration-types>`__
-
