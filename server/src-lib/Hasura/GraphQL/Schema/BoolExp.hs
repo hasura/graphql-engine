@@ -7,8 +7,6 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended  as M
 import qualified Language.GraphQL.Draft.Syntax as G
 
-import           Language.GraphQL.Draft.Syntax         (Nullability (..))
-
 import qualified Hasura.GraphQL.Parser         as P
 
 import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser, UnpreparedValue,
@@ -79,30 +77,50 @@ comparisonExps
 comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
   columnParser <- P.column columnType nullability
   castParser   <- castExp columnType nullability
-  stringParser <- P.column (PGColumnScalar PGText) (Nullability False)
-  -- ^ TODO: make this a common parser, perhaps?
   let name       = P.getName columnParser <> $$(G.litName "_comparison_exp")
       listParser = P.list columnParser `P.bind` traverse P.openOpaque
-  pure $ P.object name Nothing $ catMaybes <$> sequenceA
-    [ P.fieldOptional $$(G.litName "_cast")     Nothing (ACast <$> castParser)
-    , P.fieldOptional $$(G.litName "_eq")       Nothing (AEQ True  . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_neq")      Nothing (ANE True  . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_gt")       Nothing (AGT       . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_lt")       Nothing (ALT       . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_gte")      Nothing (AGTE      . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_lte")      Nothing (ALTE      . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_like")     Nothing (ALIKE     . mkParameter <$> stringParser)
-    , P.fieldOptional $$(G.litName "_nlike")    Nothing (ANLIKE    . mkParameter <$> stringParser)
-    , P.fieldOptional $$(G.litName "_ilike")    Nothing (AILIKE    . mkParameter <$> stringParser)
-    , P.fieldOptional $$(G.litName "_nilike")   Nothing (ANILIKE   . mkParameter <$> stringParser)
-    , P.fieldOptional $$(G.litName "_similar")  Nothing (ASIMILAR  . mkParameter <$> stringParser)
-    , P.fieldOptional $$(G.litName "_nsimilar") Nothing (ANSIMILAR . mkParameter <$> stringParser)
-    , P.fieldOptional $$(G.litName "_is_null")  Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
-    , P.fieldOptional $$(G.litName "_in")       Nothing (AIN  . mkListLiteral columnType <$> listParser)
-    , P.fieldOptional $$(G.litName "_nin")      Nothing (ANIN . mkListLiteral columnType <$> listParser)
-      -- TODO: the rest of the operators
+  pure $ P.object name Nothing $ fmap catMaybes $ sequenceA $ concat
+    [ [ P.fieldOptional $$(G.litName "_cast")    Nothing (ACast <$> castParser)
+      , P.fieldOptional $$(G.litName "_is_null") Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
+      , P.fieldOptional $$(G.litName "_eq")      Nothing (AEQ True . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_neq")     Nothing (ANE True . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_in")      Nothing (AIN  . mkListLiteral columnType <$> listParser)
+      , P.fieldOptional $$(G.litName "_nin")     Nothing (ANIN . mkListLiteral columnType <$> listParser)
+      ]
+    , guard (isScalarColumnWhere (/= PGRaster) columnType) *>
+      [ P.fieldOptional $$(G.litName "_gt")  Nothing (AGT  . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_lt")  Nothing (ALT  . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_gte") Nothing (AGTE . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_lte") Nothing (ALTE . mkParameter <$> columnParser)
+      ]
+    , guard (isScalarColumnWhere isStringType columnType) *>
+      [ P.fieldOptional $$(G.litName "_like")     Nothing (ALIKE     . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_nlike")    Nothing (ANLIKE    . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_ilike")    Nothing (AILIKE    . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_nilike")   Nothing (ANILIKE   . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_similar")  Nothing (ASIMILAR  . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_nsimilar") Nothing (ANSIMILAR . mkParameter <$> columnParser)
+      ]
+    , guard (isScalarColumnWhere (== PGJSONB) columnType) *>
+      [ P.fieldOptional $$(G.litName "_contains")
+        (Just "does the column contain the given json value at the top level")
+        (AContains    . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_contained_in")
+        (Just "is the column contained in the given json value")
+        (AContainedIn . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_has_key")
+        (Just "does the string exist as a top-level key in the column")
+        (AHasKey      . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_has_key_any")
+        (Just "do any of these strings exist as top-level keys in the column")
+        (AHasKeysAny . mkListLiteral columnType <$> listParser)
+      , P.fieldOptional $$(G.litName "_has_key_all")
+        (Just "do all of these strings exist as top-level keys in the column")
+        (AHasKeysAll . mkListLiteral columnType <$> listParser)
+      ]
     ]
   where
+    mkListLiteral :: PGColumnType -> [P.PGColumnValue] -> UnpreparedValue
     mkListLiteral columnType columnValues = P.UVLiteral $ SETyAnn
       (SEArray $ txtEncoder . pstValue . P.pcvValue <$> columnValues)
       (mkTypeAnn $ PGTypeArray $ unsafePGColumnToRepresentation columnType)
