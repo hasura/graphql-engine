@@ -84,36 +84,41 @@ getSessVarVal userInfo sessVar =
     usrVars = userVars userInfo
 
 explainField
-  :: (MonadTx m, HasVersion, MonadIO m)
+  :: (MonadError QErr m, MonadTx m, HasVersion, MonadIO m)
   => UserInfo
   -> GCtx
   -> SQLGenCtx
   -> HTTP.Manager
   -> [N.Header]
+  -> ActionCache
   -> GV.Field
   -> m FieldPlan
-explainField userInfo gCtx sqlGenCtx httpMgr reqHeaders fld =
-  case fName of
-    "__type"     -> return $ FieldPlan fName Nothing Nothing
-    "__schema"   -> return $ FieldPlan fName Nothing Nothing
-    "__typename" -> return $ FieldPlan fName Nothing Nothing
-    _            -> do
-      unresolvedAST <-
-        runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx, httpMgr, reqHeaders) $
-          evalReusabilityT $ RS.queryFldToPGAST fld
-      resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo)
-                     unresolvedAST
-      let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
-          withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
-      planLines <- liftTx $ map runIdentity <$>
-        Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
-      return $ FieldPlan fName (Just txtSQL) $ Just planLines
+explainField userInfo gCtx sqlGenCtx httpMgr reqHeaders actionCache fld =
+  case mAction of
+    Just _ ->  throw400 InvalidParams "query actions cannot be explained"
+    Nothing ->
+      case fName of
+        "__type"     -> return $ FieldPlan fName Nothing Nothing
+        "__schema"   -> return $ FieldPlan fName Nothing Nothing
+        "__typename" -> return $ FieldPlan fName Nothing Nothing
+        _            -> do
+          unresolvedAST <-
+            runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx, httpMgr, reqHeaders) $
+            evalReusabilityT $ RS.queryFldToPGAST fld
+          resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
+          let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
+              withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
+          planLines <- liftTx $ map runIdentity <$>
+            Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
+          return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = GV._fName fld
 
     queryCtxMap = _gQueryCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
+    actionName = ActionName $ G.Name $ G.unName fName
+    mAction = Map.lookup actionName actionCache
 
 explainGQLQuery
   :: (MonadError QErr m, MonadIO m,HasVersion)
@@ -135,7 +140,8 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL httpMgr reqHeaders (GQLExplain q
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet ->
-      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx httpMgr reqHeaders) (toList selSet)
+      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx httpMgr reqHeaders (scActions sc))
+      (toList selSet)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
     GV.RSubscription rootField -> do

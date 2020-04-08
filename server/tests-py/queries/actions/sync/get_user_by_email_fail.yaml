@@ -6,7 +6,6 @@ query:
     query {
       get_user_by_email(email: "random-email"){
           id
-          name
       }
     }
 
