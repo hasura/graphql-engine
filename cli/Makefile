@@ -7,6 +7,9 @@ OUTPUT_DIR := _output
 # compile assets
 .PHONY: assets
 assets:
+ifndef HAS_PKGER
+	go get github.com/markbates/pkger/cmd/pkger
+endif
 	pkger -o pkg/console/templates/packed -include /pkg/console/templates/gohtml/
 
 HAS_GOX := $(shell command -v gox;)
@@ -18,9 +21,6 @@ deps:
 	go mod download
 ifndef HAS_GOX
 	go get github.com/mitchellh/gox
-endif
-ifndef HAS_PKGER
-	go get github.com/markbates/pkger/cmd/pkger
 endif
 
 # build cli locally, for all given platform/arch

@@ -474,8 +474,8 @@ func (ec *ExecutionContext) WriteConfig(config *Config) error {
 func (ec *ExecutionContext) readConfig() error {
 	// need to get existing viper because https://github.com/spf13/viper/issues/233
 	v := ec.Viper
-	v.SetEnvPrefix("HASURA_GRAPHQL")
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.SetEnvPrefix(util.ViperEnvPrefix)
+	v.SetEnvKeyReplacer(util.ViperEnvReplacer)
 	v.AutomaticEnv()
 	v.SetConfigName("config")
 	v.SetDefault("version", "1")
