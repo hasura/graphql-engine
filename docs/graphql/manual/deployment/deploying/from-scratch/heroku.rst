@@ -106,6 +106,10 @@ Remember to change ``HEROKU_GIT_REMOTE`` to your git remote below. In our case:
 Visit ``https://graphql-on-postgres.herokuapp.com`` (replace ``graphql-on-postgres`` with your app name) and
 you should see the Hasura console.
 
+.. admonition:: Limitations
+
+  There are no limitations from the side of Hasura. Read `here <https://www.heroku.com/dynos>`_ about limitations of Heroku's free tier.
+
 Advanced
 --------
 
