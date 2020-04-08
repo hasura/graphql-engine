@@ -1762,18 +1762,29 @@ class Permissions extends Component {
       };
 
       const getBackendOnlySection = () => {
-        if (!isQueryTypeBackendOnlyCompatible(permissionsState.query)) { return null; }
-        const tooltip = `When set to true, this ${permissionsState.query} mutation is accessible only if x-hasura-backend-privilege session variable exists and is set to true`;
+        if (!isQueryTypeBackendOnlyCompatible(permissionsState.query)) {
+          return null;
+        }
+        const tooltip = (
+          <Tooltip id="tooltip-backend-only">
+            When set to true, this {permissionsState.query} mutation is
+            accessible only if x-hasura-backend-privilege session variable
+            exists and is set to true
+          </Tooltip>
+        );
         const isBackendOnly = !!(
           permissionsState[permissionsState.query] &&
           permissionsState[permissionsState.query].backend_only
         );
+        const backendStatus = isBackendOnly
+          ? 'allowed from backend only'
+          : 'allowed without backend priviles as well';
         return (
           <CollapsibleToggle
-            title={getSectionHeader('Backend only', tooltip)}
+            title={getSectionHeader('Backend only', tooltip, backendStatus)}
             useDefaultTitleStyle
-            testId={'toggle-clone-permission'}
-            isOpen
+            testId={'toggle-backend-only'}
+            isOpen={!isBackendOnly}
           >
             <div
               className={`${styles.editPermsSection} ${styles.display_flex}`}
@@ -1784,9 +1795,7 @@ class Permissions extends Component {
                 icons={false}
                 className={styles.add_mar_right_mid}
               />
-              <span>
-                Allow {permissionsState.query} only with backend priviliges
-              </span>
+              <span>Allow from backend only</span>
             </div>
           </CollapsibleToggle>
         );
