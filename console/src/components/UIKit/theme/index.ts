@@ -1,29 +1,6 @@
 // Theme specification for the Design-System.
-type ColorName =
-  | 'red'
-  | 'green'
-  | 'blue'
-  | 'orange'
-  | 'yellow'
-  | 'grey'
-  | 'black'
-  | 'white'
-  | 'transparent'
-  | 'tab';
 
-type ColorType =
-  | 'original'
-  | 'primary'
-  | 'secondary'
-  | 'hover'
-  | 'light'
-  | 'border'
-  | 'text'
-  | 'tab';
-
-type Color = Partial<Record<ColorType, string>> | any;
-
-const colors: Record<ColorName, Color> = {
+const colors = {
   red: {
     original: '#ff0000',
     primary: '#e53935',
@@ -71,20 +48,7 @@ const colors: Record<ColorName, Color> = {
 
 // ********************************** //
 
-type ButtonType =
-  | 'primary'
-  | 'secondary'
-  | 'success'
-  | 'danger'
-  | 'warning'
-  | 'info'
-  | 'default';
-interface Button {
-  backgroundColor: string;
-  boxShadowColor: string;
-  color: string;
-}
-const button: Record<ButtonType, Button> = {
+const button = {
   primary: {
     backgroundColor: colors.yellow.primary,
     boxShadowColor: colors.yellow.hover,
@@ -124,11 +88,7 @@ const button: Record<ButtonType, Button> = {
 
 // ********************************** //
 
-type AlertBoxType = 'success' | 'info' | 'warning' | 'error' | 'default';
-type AlertBoxStyleProp = 'backgroundColor' | 'borderColor' | 'message';
-type AlertBox = Record<AlertBoxType, Record<AlertBoxStyleProp, string>>;
-
-const alertBox: AlertBox = {
+const alertBox = {
   success: {
     backgroundColor: colors.green.light,
     borderColor: colors.green.primary,
@@ -158,12 +118,7 @@ const alertBox: AlertBox = {
 
 // ********************************** //
 
-type IconType = 'success' | 'info' | 'warning' | 'error' | 'default';
-interface Icon {
-  color: string;
-}
-
-const icon: Record<IconType, Icon> = {
+const icon = {
   success: {
     color: colors.green.primary,
   },
@@ -219,9 +174,9 @@ radii.circle = 1000;
  * bold: 700
  */
 
-type FontWeight = 'normal' | 'medium' | 'bold';
+type FontWeightKey = 'normal' | 'medium' | 'bold';
 
-const fontWeights: Partial<Record<number | FontWeight, number>> = {
+const fontWeights: Partial<Record<number | FontWeightKey, number>> = {
   0: 0,
   1: 100,
   2: 200,
@@ -251,7 +206,7 @@ fontWeights.bold = fontWeights[7];
  * icon: 20px
  */
 
-type Element =
+type FontSizeKey =
   | 'h1'
   | 'h2'
   | 'h3'
@@ -262,7 +217,7 @@ type Element =
   | 'explain'
   | 'icon';
 
-const fontSizes: Partial<Record<number | Element, number>> = {
+const fontSizes: Partial<Record<number | FontSizeKey, number>> = {
   0: 12,
   1: 14,
   2: 16,
@@ -296,9 +251,9 @@ fontSizes.icon = fontSizes[3];
  * xl: 64px (extra large)
  */
 
-type Space = 'zero' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+type SpaceKey = 'zero' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
-const space: Partial<Record<Space | number, number>> = {
+const space: Partial<Record<SpaceKey | number, number>> = {
   0: 0,
   1: 4,
   2: 6,
@@ -326,9 +281,9 @@ space.xl = space[11];
  * explain: 1.3 ~ Explainer Text
  */
 
-type lineHeight = 'body' | 'explain';
+type lineHeightKey = 'body' | 'explain';
 
-const lineHeights: Partial<Record<number | lineHeight, number>> = {
+const lineHeights: Partial<Record<number | lineHeightKey, number>> = {
   0: 1.33,
   1: 1.5,
 };
@@ -337,14 +292,14 @@ lineHeights.explain = lineHeights[0];
 
 // ********************************** //
 
-type Size = 'sm' | 'lg';
+type SizeKey = 'sm' | 'lg';
 
 /* sizes aliases (width & height)
  * sm: 40px
  * lg: 48px
  */
 
-const sizes: Partial<Record<number | Size, number>> = {
+const sizes: Partial<Record<number | SizeKey, number>> = {
   0: 40,
   1: 48,
 };
