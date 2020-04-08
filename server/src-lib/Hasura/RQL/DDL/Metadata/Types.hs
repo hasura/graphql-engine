@@ -483,23 +483,32 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                    , listToMaybeOrdPair "permissions" permToOrdJSON permissions
                    ]
       where
+        argDefinitionToOrdJSON :: ArgumentDefinition -> AO.Value
+        argDefinitionToOrdJSON (ArgumentDefinition argName ty descM) =
+          AO.object $  [ ("name", AO.toOrdered argName)
+                       , ("type", AO.toOrdered ty)
+                       ]
+          <> catMaybes [maybeAnyToMaybeOrdPair "description" AO.toOrdered descM]
+
         actionDefinitionToOrdJSON :: ActionDefinitionInput -> AO.Value
-        actionDefinitionToOrdJSON (ActionDefinition args outputType kind headers frwrdClientHdrs handler actionType) =
-          AO.object $ [ ("kind", AO.toOrdered kind)
-                      , ("handler", AO.toOrdered handler)
+        actionDefinitionToOrdJSON (ActionDefinition args outputType ActionQuery headers frwrdClientHdrs handler) =
+          AO.object $ [ ("handler", AO.toOrdered handler)
                       , ("output_type", AO.toOrdered outputType)
-                      , ("type", AO.toOrdered actionType)
+                      , ("type",  AO.toOrdered ("query" :: String))
                       ]
           <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
           <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
                        , listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args]
-          where
-            argDefinitionToOrdJSON :: ArgumentDefinition -> AO.Value
-            argDefinitionToOrdJSON (ArgumentDefinition argName ty descM) =
-              AO.object $  [ ("name", AO.toOrdered argName)
-                           , ("type", AO.toOrdered ty)
-                           ]
-              <> catMaybes [maybeAnyToMaybeOrdPair "description" AO.toOrdered descM]
+        actionDefinitionToOrdJSON (ActionDefinition args outputType (ActionMutation kind) headers frwrdClientHdrs handler) =
+          AO.object $ [ ("kind", AO.toOrdered kind)
+                      , ("handler", AO.toOrdered handler)
+                      , ("output_type", AO.toOrdered outputType)
+                      , ("type", AO.toOrdered ("mutation" :: String))
+                      ]
+          <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
+          <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
+                       , listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args]
+
 
         permToOrdJSON :: ActionPermissionMetadata -> AO.Value
         permToOrdJSON (ActionPermissionMetadata role permComment) =

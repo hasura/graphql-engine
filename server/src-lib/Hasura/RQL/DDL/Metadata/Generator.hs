@@ -276,7 +276,7 @@ instance Arbitrary ArgumentName where
 instance Arbitrary ArgumentDefinition where
   arbitrary = genericArbitrary
 
-instance Arbitrary ActionKind where
+instance Arbitrary ActionMutationKind where
   arbitrary = genericArbitrary
 
 instance Arbitrary ActionType where

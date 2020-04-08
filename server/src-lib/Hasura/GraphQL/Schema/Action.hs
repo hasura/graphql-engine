@@ -102,8 +102,8 @@ mkMutationActionField actionName actionInfo definitionList =
   where
     definition = _aiDefinition actionInfo
     actionExecutionContext =
-      case _adKind definition of
-        ActionSynchronous  ->
+      case _adType definition of
+        ActionMutation ActionSynchronous  ->
           ActionExecutionSyncWebhook $ ActionExecutionContext actionName
           (_adOutputType definition)
           (_aiOutputFields actionInfo)
@@ -111,7 +111,7 @@ mkMutationActionField actionName actionInfo definitionList =
           (_adHandler definition)
           (_adHeaders definition)
           (_adForwardClientHeaders definition)
-        ActionAsynchronous -> ActionExecutionAsync
+        ActionMutation ActionAsynchronous -> ActionExecutionAsync
 
     description = mkDescriptionWith (PGDescription <$> (_aiComment actionInfo)) $
                   "perform the action: " <>> actionName
@@ -128,9 +128,9 @@ mkMutationActionField actionName actionInfo definitionList =
       Nothing $ unGraphQLType $ _argType argument
 
     actionFieldResponseType =
-      case _adKind definition of
-        ActionSynchronous  -> unGraphQLType $ _adOutputType definition
-        ActionAsynchronous -> G.toGT $ G.toNT $ mkScalarTy PGUUID
+      case _adType definition of
+        ActionMutation ActionSynchronous  -> unGraphQLType $ _adOutputType definition
+        ActionMutation ActionAsynchronous -> G.toGT $ G.toNT $ mkScalarTy PGUUID
 
 mkQueryField
   :: ActionName
@@ -139,8 +139,8 @@ mkQueryField
   -> [(PGCol, PGScalarType)]
   -> Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
 mkQueryField actionName comment definition definitionList =
-  case _adKind definition of
-    ActionAsynchronous ->
+  case _adType definition of
+    ActionMutation ActionAsynchronous ->
       Just ( ActionSelectOpContext (_adOutputType definition) definitionList
 
            , mkHsraObjFldInfo (Just description) (unActionName actionName)
@@ -150,7 +150,7 @@ mkQueryField actionName comment definition definitionList =
            , TIObj $ mkAsyncActionQueryResponseObj actionName $
              _adOutputType definition
            )
-    ActionSynchronous -> Nothing
+    ActionMutation ActionSynchronous -> Nothing
   where
     description = mkDescriptionWith (PGDescription <$> comment) $
                   "retrieve the result of action: " <>> actionName
