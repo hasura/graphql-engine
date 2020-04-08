@@ -204,7 +204,7 @@ class FilterQuery extends Component {
   componentDidMount() {
     const { dispatch, limit, tableSchema } = this.props;
     if (!this.props.urlQuery) {
-      dispatch(setDefaultQuery(this.props.curQuery));
+      dispatch(setDefaultQuery({ ...this.props.curQuery, limit }));
       return;
     }
 

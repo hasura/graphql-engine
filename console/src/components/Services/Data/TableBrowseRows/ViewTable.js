@@ -14,6 +14,7 @@ import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
+import { getPageSize } from './localStorageUtils';
 
 /*
 const genHeadings = headings => {
@@ -92,10 +93,11 @@ class ViewTable extends Component {
   }
 
   getInitialData(tableName) {
-    const { dispatch } = this.props;
+    const { dispatch, currentSchema } = this.props;
+    const limit = getPageSize(tableName, currentSchema);
     Promise.all([
       dispatch(setTable(tableName)),
-      dispatch(vSetDefaults(tableName)),
+      dispatch(vSetDefaults(limit)),
       dispatch(vMakeTableRequests()),
       dispatch(fetchManualTriggers(tableName)),
     ]);
@@ -123,7 +125,7 @@ class ViewTable extends Component {
   componentWillUnmount() {
     // Remove state data beloging to this table
     const dispatch = this.props.dispatch;
-    dispatch(vSetDefaults(this.props.tableName));
+    dispatch(vSetDefaults());
   }
 
   updateInvocationRow = row => {
