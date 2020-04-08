@@ -16,6 +16,7 @@ import {
   getCreatePermissionQuery,
   getDropPermissionQuery,
 } from '../../../Common/utils/v1QueryUtils';
+import { upperCaseFirstChar } from '../../../Common/utils/jsUtils';
 
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
 export const PERM_SET_FILTER = 'ModifyTable/PERM_SET_FILTER';
@@ -40,6 +41,7 @@ export const PERM_RESET_BULK_SELECT = 'ModifyTable/PERM_RESET_BULK_SELECT';
 export const PERM_RESET_APPLY_SAME = 'ModifyTable/PERM_RESET_APPLY_SAME';
 export const PERM_SET_APPLY_SAME_PERM = 'ModifyTable/PERM_SET_APPLY_SAME_PERM';
 export const PERM_DEL_APPLY_SAME_PERM = 'ModifyTable/PERM_DEL_APPLY_SAME_PERM';
+export const PERM_TOGGLE_BACKEND_ONLY = 'ModifyTable/PERM_TOGGLE_BACKEND_ONLY';
 
 export const X_HASURA_CONST = 'x-hasura-';
 
@@ -92,6 +94,9 @@ const permToggleAllowUpsert = checked => ({
 const permToggleAllowAggregation = checked => ({
   type: PERM_TOGGLE_ALLOW_AGGREGATION,
   data: checked,
+});
+export const permToggleBackendOnly = () => ({
+  type: PERM_TOGGLE_BACKEND_ONLY,
 });
 const permToggleModifyLimit = limit => ({
   type: PERM_TOGGLE_MODIFY_LIMIT,
@@ -536,6 +541,10 @@ const applySamePermissionsBulk = tableSchema => {
   };
 };
 
+export const isQueryTypeBackendOnlyCompatible = queryType => {
+  return queryType === 'insert';
+};
+
 const copyRolePermissions = (
   fromRole,
   tableNameWithSchema,
@@ -751,9 +760,13 @@ const permChangePermissions = changeType => {
       '_table_' +
       table;
 
-    const requestMsg = getIngForm(changeType) + ' Permissions...';
+    const requestMsg = upperCaseFirstChar(
+      getIngForm(changeType) + ' permissions...'
+    );
     const successMsg = 'Permissions ' + getEdForm(changeType);
-    const errorMsg = getIngForm(changeType) + ' permissions failed';
+    const errorMsg = upperCaseFirstChar(
+      getIngForm(changeType) + ' permissions failed'
+    );
 
     const customOnSuccess = () => {
       if (changeType === permChangeTypes.save) {

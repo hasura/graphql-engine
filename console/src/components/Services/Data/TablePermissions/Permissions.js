@@ -28,7 +28,9 @@ import {
   permRemoveMultipleRoles,
   permSetApplySamePerm,
   permDelApplySamePerm,
+  permToggleBackendOnly,
   applySamePermissionsBulk,
+  isQueryTypeBackendOnlyCompatible,
   SET_PRESET_VALUE,
   CREATE_NEW_PRESET,
   DELETE_PRESET,
@@ -43,6 +45,7 @@ import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
+import Toggle from '../../../Common/Toggle/Toggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
 import {
   fetchFunctionInit,
@@ -1758,6 +1761,37 @@ class Permissions extends Component {
         );
       };
 
+      const getBackendOnlySection = () => {
+        if (!isQueryTypeBackendOnlyCompatible(permissionsState.query)) { return null; }
+        const tooltip = `When set to true, this ${permissionsState.query} mutation is accessible only if x-hasura-backend-privilege session variable exists and is set to true`;
+        const isBackendOnly = !!(
+          permissionsState[permissionsState.query] &&
+          permissionsState[permissionsState.query].backend_only
+        );
+        return (
+          <CollapsibleToggle
+            title={getSectionHeader('Backend only', tooltip)}
+            useDefaultTitleStyle
+            testId={'toggle-clone-permission'}
+            isOpen
+          >
+            <div
+              className={`${styles.editPermsSection} ${styles.display_flex}`}
+            >
+              <Toggle
+                checked={isBackendOnly}
+                onChange={() => dispatch(permToggleBackendOnly())}
+                icons={false}
+                className={styles.add_mar_right_mid}
+              />
+              <span>
+                Allow {permissionsState.query} only with backend priviliges
+              </span>
+            </div>
+          </CollapsibleToggle>
+        );
+      };
+
       return (
         <div
           id={'permission-edit-section'}
@@ -1780,6 +1814,7 @@ class Permissions extends Component {
             <span>Action: {permissionsState.query}</span>
           </div>
           <div>
+            {getBackendOnlySection()}
             {getRowSection()}
             {getColumnSection()}
             {getAggregationSection()}

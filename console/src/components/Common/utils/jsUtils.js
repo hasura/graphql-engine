@@ -306,3 +306,10 @@ export const getFirstArrayElement = array => {
   if (!array) return null;
   return array[0];
 };
+
+export const upperCaseFirstChar = str => {
+  if (!str.length) {
+    return;
+  }
+  return str[0].toUpperCase() + str.substring(1);
+};

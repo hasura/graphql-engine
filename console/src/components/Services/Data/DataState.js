@@ -50,6 +50,7 @@ const defaultQueryPermissions = {
   insert: {
     check: {},
     allow_upsert: true,
+    backend_only: false,
     set: {},
     columns: [],
     localPresets: [
@@ -61,6 +62,7 @@ const defaultQueryPermissions = {
   select: {
     columns: [],
     computed_fields: [],
+    backend_only: false,
     filter: {},
     limit: null,
     allow_aggregations: false,
@@ -68,6 +70,7 @@ const defaultQueryPermissions = {
   update: {
     columns: [],
     filter: {},
+    backend_only: false,
     set: {},
     localPresets: [
       {
@@ -76,6 +79,7 @@ const defaultQueryPermissions = {
     ],
   },
   delete: {
+    backend_only: false,
     filter: {},
   },
 };
