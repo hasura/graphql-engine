@@ -38,7 +38,7 @@ Run the Docker command with an admin-secret env var
 Use the admin secret with the CLI
 ---------------------------------
 
-If you're using the Hasura console from the CLI, you have two options to pass the admin secret.
+There are two options to pass the admin secret.
 
 Pass admin secret as a flag
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
