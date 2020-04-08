@@ -108,11 +108,9 @@ data InitCtx
   = InitCtx
   { _icHttpManager :: !HTTP.Manager
   , _icInstanceId  :: !InstanceId
-  , _icDbUid       :: !Text
   , _icLoggers     :: !Loggers
   , _icConnInfo    :: !Q.ConnInfo
   , _icPgPool      :: !Q.PGPool
-  , _icPgVersion   :: !PGVersion
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -160,11 +158,7 @@ initialiseCtx hgeCmd rci = do
       pool <- getMinimalPool pgLogger connInfo
       pure (l, pool)
 
-  -- get the unique db id
-  (dbId, pgVersion) <- liftIO $ runTxIO pool (Q.ReadCommitted, Nothing) $
-    (,) <$> getDbId <*> getPgVersion
-
-  pure (InitCtx httpManager instanceId dbId loggers connInfo pool pgVersion, initTime)
+  pure (InitCtx httpManager instanceId loggers connInfo pool, initTime)
   where
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
@@ -272,8 +266,10 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   -- start a background thread for telemetry
   when soEnableTelemetry $ do
     unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
+    (dbId, pgVersion) <- liftIO $ runTxIO _icPgPool (Q.ReadCommitted, Nothing) $
+      (,) <$> getDbId <*> getPgVersion
     void $ C.forkImmortal "runTelemetry" logger $ liftIO $
-      runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId _icPgVersion
+      runTelemetry logger _icHttpManager (getSCFromRef cacheRef) dbId _icInstanceId pgVersion
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
