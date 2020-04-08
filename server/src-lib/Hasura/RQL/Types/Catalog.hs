@@ -153,6 +153,7 @@ data CatalogMetadata
   , _cmComputedFields       :: ![CatalogComputedField]
   , _cmCustomTypes          :: !CustomTypes
   , _cmActions              :: ![CatalogAction]
+  , _cmScalarTypes          :: ![PGScalarType]
   } deriving (Show, Eq, Generic)
 instance NFData CatalogMetadata
 instance Cacheable CatalogMetadata

@@ -198,7 +198,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (catalogMetadata, invalidationKeys) -> do
       let CatalogMetadata tables relationships permissions
             eventTriggers remoteSchemas functions allowlistDefs
-            computedFields customTypes actions = catalogMetadata
+            computedFields customTypes actions pgScalars = catalogMetadata
 
       -- tables
       tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
@@ -256,7 +256,10 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
             & HS.fromList
 
       -- custom types
-      resolvedCustomTypes <- bindA -< resolveCustomTypes tableCache customTypes
+      maybeResolvedCustomTypes <-
+        (| withRecordInconsistency
+             (bindErrorA -< resolveCustomTypes tableCache customTypes pgScalars)
+         |) (MetadataObject MOCustomTypes $ toJSON customTypes)
 
       -- actions
       actionCache <- (mapFromL _amName actions >- returnA)
@@ -267,6 +270,9 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
                    addActionContext e = "in action " <> name <<> "; " <> e
                (| withRecordInconsistency (
                   (| modifyErrA ( do
+                       resolvedCustomTypes <-
+                         (| onNothingA (throwA -< err400 Unexpected "custom types are inconsistent")
+                          |) maybeResolvedCustomTypes
                        (resolvedDef, outFields) <- bindErrorA -< resolveAction resolvedCustomTypes def
                        let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
                            permissionMap = mapFromL _apiRole permissionInfos
@@ -287,7 +293,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
         , _boFunctions = functionCache
         , _boRemoteSchemas = remoteSchemaMap
         , _boAllowlist = allowList
-        , _boCustomTypes = resolvedCustomTypes
+        , _boCustomTypes = fromMaybe (NonObjectTypeMap mempty, mempty) maybeResolvedCustomTypes
         }
 
     mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =
