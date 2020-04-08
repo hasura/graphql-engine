@@ -11,6 +11,8 @@ The order, collapsed state of columns and page size is now persisted across page
 
 ### Bug fixes and improvements
 
+- cli: allow customization of server api paths (close #4016)
+- cli: clean up migration files created during a failed migrate api (close #4312) (#4319)
 - cli: add support for multiple versions of plugin (close #4105)
 - cli: template assets path in console HTML for unversioned builds
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
@@ -18,6 +20,7 @@ The order, collapsed state of columns and page size is now persisted across page
 - console: decouple data rows and count fetch in data browser to account for really large tables (close #3793) (#4269)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
 - server: reserved keywords in column references break parser (fix #3597) #3927
+- server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
 
 ## `v1.2.0-beta.3`
 
