@@ -61,7 +61,7 @@ $(J.deriveJSON J.defaultOptions { J.sumEncoding = J.ObjectWithSingleField
 
 data JWTConfig
   = JWTConfig
-  { jcType         :: !T.Text
+  { jcType         :: !(Maybe T.Text)
   , jcKeyOrUrl     :: !(Either Jose.JWK URI)
   , jcClaimNs      :: !(Maybe T.Text)
   , jcAudience     :: !(Maybe Jose.Audience)
@@ -388,7 +388,7 @@ instance J.ToJSON JWTConfig where
 instance J.FromJSON JWTConfig where
 
   parseJSON = J.withObject "JWTConfig" $ \o -> do
-    keyType <- o J..: "type"
+    keyType <- o J..:? "type"
     mRawKey <- o J..:? "key"
     claimNs <- o J..:? "claims_namespace"
     aud     <- o J..:? "audience"
@@ -400,13 +400,14 @@ instance J.FromJSON JWTConfig where
       (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
       (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
       (Just rawKey, Nothing) -> do
-        key <- parseKey keyType rawKey
+        keyType' <- onNothing keyType $ fail "type of key not provided"
+        key <- parseKey rawKey keyType'
         return $ JWTConfig keyType (Left key) claimNs aud isStrngfd iss
       (Nothing, Just url) ->
         return $ JWTConfig keyType (Right url) claimNs aud isStrngfd iss
 
     where
-      parseKey keyType rawKey =
+      parseKey rawKey keyType =
        case keyType of
           "HS256" -> runEither $ parseHmacKey rawKey 256
           "HS384" -> runEither $ parseHmacKey rawKey 384
