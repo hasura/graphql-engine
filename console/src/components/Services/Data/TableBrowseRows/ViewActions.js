@@ -166,7 +166,7 @@ const fetchManualTriggers = tableName => {
   };
 };
 
-const deleteItem = pkClause => {
+const deleteItem = (pkClause, tableName, tableSchema) => {
   return (dispatch, getState) => {
     const confirmMessage =
       'This will permanently delete this row from this table';
@@ -175,15 +175,13 @@ const deleteItem = pkClause => {
       return;
     }
 
-    const state = getState();
-
     const url = Endpoints.query;
     const reqBody = {
       type: 'delete',
       args: {
         table: {
-          name: state.tables.currentTable,
-          schema: state.tables.currentSchema,
+          name: tableName,
+          schema: tableSchema,
         },
         where: pkClause,
       },
@@ -211,7 +209,7 @@ const deleteItem = pkClause => {
   };
 };
 
-const deleteItems = pkClauses => {
+const deleteItems = (pkClauses, tableName, tableSchema) => {
   return (dispatch, getState) => {
     const confirmMessage = 'This will permanently delete rows from this table';
     const isOk = getConfirmation(confirmMessage);
@@ -219,14 +217,12 @@ const deleteItems = pkClauses => {
       return;
     }
 
-    const state = getState();
-
     const reqBody = {
       type: 'bulk',
       args: getBulkDeleteQuery(
         pkClauses,
-        state.tables.currentTable,
-        state.tables.currentSchema
+        tableName,
+        tableSchema
       ),
     };
     const options = {
