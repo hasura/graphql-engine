@@ -17,6 +17,8 @@ import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common  (qualifiedObjectToName)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
+import           Hasura.SQL.Value
+import           Hasura.SQL.DML
 
 type ComparisonExp = OpExpG UnpreparedValue
 
@@ -79,7 +81,8 @@ comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
   castParser   <- castExp columnType nullability
   stringParser <- P.column (PGColumnScalar PGText) (Nullability False)
   -- ^ TODO: make this a common parser, perhaps?
-  let name = P.getName columnParser <> $$(G.litName "_comparison_exp")
+  let name       = P.getName columnParser <> $$(G.litName "_comparison_exp")
+      listParser = P.list columnParser `P.bind` traverse P.openOpaque
   pure $ P.object name Nothing $ catMaybes <$> sequenceA
     [ P.fieldOptional $$(G.litName "_cast")     Nothing (ACast <$> castParser)
     , P.fieldOptional $$(G.litName "_eq")       Nothing (AEQ True  . mkParameter <$> columnParser)
@@ -95,8 +98,14 @@ comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
     , P.fieldOptional $$(G.litName "_similar")  Nothing (ASIMILAR  . mkParameter <$> stringParser)
     , P.fieldOptional $$(G.litName "_nsimilar") Nothing (ANSIMILAR . mkParameter <$> stringParser)
     , P.fieldOptional $$(G.litName "_is_null")  Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
+    , P.fieldOptional $$(G.litName "_in")       Nothing (AIN  . mkListLiteral columnType <$> listParser)
+    , P.fieldOptional $$(G.litName "_nin")      Nothing (ANIN . mkListLiteral columnType <$> listParser)
       -- TODO: the rest of the operators
     ]
+  where
+    mkListLiteral columnType columnValues = P.UVLiteral $ SETyAnn
+      (SEArray $ txtEncoder . pstValue . P.pcvValue <$> columnValues)
+      (mkTypeAnn $ PGTypeArray $ unsafePGColumnToRepresentation columnType)
 
 castExp
   :: forall m n. (MonadSchema n m, MonadError QErr m)
