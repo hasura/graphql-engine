@@ -104,14 +104,14 @@ mkMutationActionField actionName actionInfo definitionList kind =
     actionExecutionContext =
       case kind of
         ActionSynchronous  ->
-          ActionExecutionSyncWebhook $ ActionExecutionContext actionName
+          ActionMutationSyncWebhook $ ActionExecutionContext actionName
           (_adOutputType definition)
           (_aiOutputFields actionInfo)
           definitionList
           (_adHandler definition)
           (_adHeaders definition)
           (_adForwardClientHeaders definition)
-        ActionAsynchronous -> ActionExecutionAsync
+        ActionAsynchronous -> ActionMutationAsync
 
     description = mkDescriptionWith (PGDescription <$> (_aiComment actionInfo)) $
                   "perform the action: " <>> actionName

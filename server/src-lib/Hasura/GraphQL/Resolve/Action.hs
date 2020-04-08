@@ -102,9 +102,9 @@ resolveActionMutation
   -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionMutation field executionContext sessionVariables =
   case executionContext of
-    ActionExecutionSyncWebhook executionContextSync ->
+    ActionMutationSyncWebhook executionContextSync ->
       resolveActionMutationSync field executionContextSync sessionVariables
-    ActionExecutionAsync ->
+    ActionMutationAsync ->
       (,[]) <$> resolveActionMutationAsync field sessionVariables
 
 -- | Synchronously execute webhook handler and resolve response to action "output"

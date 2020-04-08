@@ -116,8 +116,8 @@ data ActionExecutionContext
   } deriving (Show, Eq)
 
 data ActionMutationExecutionContext
-  = ActionExecutionSyncWebhook !ActionExecutionContext
-  | ActionExecutionAsync
+  = ActionMutationSyncWebhook !ActionExecutionContext
+  | ActionMutationAsync
   deriving (Show, Eq)
 
 data ActionSelectOpContext
