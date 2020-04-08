@@ -66,7 +66,7 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 			}
 			// install the plugin
 			ec.Spin("Installing cli-ext plugin...")
-			err = ec.PluginsConfig.Install("cli-ext", "")
+			err = ec.PluginsConfig.Install("cli-ext", "", nil)
 			if err != nil && err != plugins.ErrIsAlreadyInstalled {
 				return errors.Wrap(err, "cannot install plugin")
 			}
