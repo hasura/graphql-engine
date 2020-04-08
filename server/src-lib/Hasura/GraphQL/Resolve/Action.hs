@@ -64,8 +64,15 @@ data ActionWebhookErrorResponse
   = ActionWebhookErrorResponse
   { _awerMessage :: !Text
   , _awerCode    :: !(Maybe Text)
+  , _awerExtensions :: !(Maybe J.Value)
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
+$(J.deriveFromJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
+
+data ActionWebhookErrorExtension
+  = ActionWebhookErrorExtension
+  { _aweeExtension :: !J.Value
+  }
+$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorExtension)
 
 data ActionWebhookResponse
   = AWRArray ![J.Object]
@@ -414,10 +421,11 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
                pure (webhookResponse, mkSetCookieHeaders responseWreq)
 
          | HTTP.statusIsClientError responseStatus -> do
-             ActionWebhookErrorResponse message maybeCode <-
+             ActionWebhookErrorResponse message maybeCode maybeExtension <-
                modifyErr ("webhook response: " <>) $ decodeValue responseValue
              let code = maybe Unexpected ActionWebhookCode maybeCode
-                 qErr = QErr [] responseStatus message code Nothing
+                 qErr = QErr [] responseStatus message code
+                   (maybe Nothing (Just . J.toJSON . ActionWebhookErrorExtension) maybeExtension)
              throwError qErr
 
          | otherwise ->
