@@ -7,6 +7,8 @@ import           Hasura.Prelude
 import qualified Data.HashMap.Strict.Extended  as M
 import qualified Language.GraphQL.Draft.Syntax as G
 
+import           Language.GraphQL.Draft.Syntax         (Nullability (..))
+
 import qualified Hasura.GraphQL.Parser         as P
 
 import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser, UnpreparedValue,
@@ -75,6 +77,8 @@ comparisonExps
 comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
   columnParser <- P.column columnType nullability
   castParser   <- castExp columnType nullability
+  stringParser <- P.column (PGColumnScalar PGText) (Nullability False)
+  -- ^ TODO: make this a common parser, perhaps?
   let name = P.getName columnParser <> $$(G.litName "_comparison_exp")
   pure $ P.object name Nothing $ catMaybes <$> sequenceA
     [ P.fieldOptional $$(G.litName "_cast")     Nothing (ACast <$> castParser)
@@ -84,12 +88,12 @@ comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
     , P.fieldOptional $$(G.litName "_lt")       Nothing (ALT       . mkParameter <$> columnParser)
     , P.fieldOptional $$(G.litName "_gte")      Nothing (AGTE      . mkParameter <$> columnParser)
     , P.fieldOptional $$(G.litName "_lte")      Nothing (ALTE      . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_like")     Nothing (ALIKE     . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_nlike")    Nothing (ANLIKE    . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_ilike")    Nothing (AILIKE    . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_nilike")   Nothing (ANILIKE   . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_similar")  Nothing (ASIMILAR  . mkParameter <$> columnParser)
-    , P.fieldOptional $$(G.litName "_nsimilar") Nothing (ANSIMILAR . mkParameter <$> columnParser)
+    , P.fieldOptional $$(G.litName "_like")     Nothing (ALIKE     . mkParameter <$> stringParser)
+    , P.fieldOptional $$(G.litName "_nlike")    Nothing (ANLIKE    . mkParameter <$> stringParser)
+    , P.fieldOptional $$(G.litName "_ilike")    Nothing (AILIKE    . mkParameter <$> stringParser)
+    , P.fieldOptional $$(G.litName "_nilike")   Nothing (ANILIKE   . mkParameter <$> stringParser)
+    , P.fieldOptional $$(G.litName "_similar")  Nothing (ASIMILAR  . mkParameter <$> stringParser)
+    , P.fieldOptional $$(G.litName "_nsimilar") Nothing (ANSIMILAR . mkParameter <$> stringParser)
     , P.fieldOptional $$(G.litName "_is_null")  Nothing (bool ANISNOTNULL ANISNULL <$> P.boolean)
       -- TODO: the rest of the operators
     ]
