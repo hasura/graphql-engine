@@ -8,9 +8,8 @@ select
     'functions', functions.items,
     'allowlist_collections', allowlist.item,
     'computed_fields', computed_field.items,
-    'custom_types', coalesce((select custom_types from hdb_catalog.hdb_custom_types), '{}'),
-    'actions', actions.items,
-    'scalar_types', scalar_types.items
+    'custom_types', custom_types.item,
+    'actions', actions.items
   )
 from
   (
@@ -176,6 +175,15 @@ from
   ) as computed_field,
   (
     select
+      json_build_object(
+        'custom_types',
+         coalesce((select custom_types from hdb_catalog.hdb_custom_types), '{}'),
+        'pg_scalars',
+         coalesce((select json_agg(typname) from pg_catalog.pg_type where typtype = 'b'), '[]')
+      ) as item
+  ) as custom_types,
+  (
+    select
       coalesce(
         json_agg(
           json_build_object(
@@ -206,8 +214,4 @@ from
               hdb_catalog.hdb_action_permission hap
           where hap.action_name = ha.action_name
       ) p on 'true'
-  ) as actions,
-  (
-    select coalesce(json_agg(typname), '[]') as items
-      from pg_catalog.pg_type where typtype = 'b'
-  ) as scalar_types
+  ) as actions

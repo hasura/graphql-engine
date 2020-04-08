@@ -22,9 +22,13 @@ import           Hasura.SQL.Types
 
 import           Hasura.GraphQL.Schema.CustomTypes (buildCustomTypesSchemaPartial)
 
+-- | Validate the custom types and return any reused Postgres base types (as scalars)
 validateCustomTypeDefinitions
   :: (MonadValidate [CustomTypeValidationError] m)
-  => TableCache -> CustomTypes -> [PGScalarType] -> m [PGScalarType]
+  => TableCache -- ^ The Postgres tables
+  -> CustomTypes -- ^ Custom types subject to validation
+  -> [PGScalarType] -- ^ List of all Postgres base types
+  -> m [PGScalarType] -- ^ List of reused Postgres base types (as scalars) in custom types
 validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
   unless (null duplicateTypes) $ dispute $ pure $ DuplicateTypeNames duplicateTypes
   traverse_ validateEnum enumDefinitions
@@ -88,15 +92,16 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
       fmap (catMaybes . toList) $
         for (_iotdFields inputObjectDefinition) $ \inputObjectField -> do
           let fieldBaseType = G.getBaseType $ unGraphQLType $ _iofdType inputObjectField
-        -- Check if field type uses any Postgres scalar type and return the same
-          case findReusedPGScalar fieldBaseType of
-            Just reusedScalar -> pure $ Just reusedScalar
-            Nothing -> do
-              unless (Set.member fieldBaseType inputTypes) $
+          if Set.member fieldBaseType inputTypes then pure Nothing
+          else
+            -- Check if field type uses any Postgres scalar type and return the same
+            case findReusedPGScalar fieldBaseType of
+              Just reusedScalar -> pure $ Just reusedScalar
+              Nothing -> do
                 refute $ pure $ InputObjectFieldTypeDoesNotExist
-                (_iotdName inputObjectDefinition)
-                (_iofdName inputObjectField) fieldBaseType
-              pure Nothing
+                  (_iotdName inputObjectDefinition)
+                  (_iofdName inputObjectField) fieldBaseType
+                pure Nothing
 
     validateObject
       :: (MonadValidate [CustomTypeValidationError] m)
@@ -129,21 +134,23 @@ validateCustomTypeDefinitions tableCache customTypes allPGScalars = do
         let objectTypes = Set.fromList $ map (unObjectTypeName . _otdName)
                           objectDefinitions
 
-        -- Check if field type uses any Postgres scalar type and return the same
-        maybeReusedPGScalar <- case findReusedPGScalar fieldBaseType of
-          Just ty -> pure $ Just ty
-          Nothing -> do
-            -- check that the fields only reference scalars and enums
-            -- and not other object types
-            if | Set.member fieldBaseType scalarTypes -> pure ()
-               | Set.member fieldBaseType enumTypes -> pure ()
-               | Set.member fieldBaseType objectTypes ->
-                   dispute $ pure $ ObjectFieldObjectBaseType
+        maybeReusedPGScalar <-
+          -- check that the fields only reference scalars and enums
+          -- and not other object types
+          if | Set.member fieldBaseType scalarTypes -> pure Nothing
+             | Set.member fieldBaseType enumTypes -> pure Nothing
+             | Set.member fieldBaseType objectTypes -> do
+                 dispute $ pure $ ObjectFieldObjectBaseType
                    objectTypeName fieldName fieldBaseType
-               | otherwise ->
-                   dispute $ pure $ ObjectFieldTypeDoesNotExist
-                   objectTypeName fieldName fieldBaseType
-            pure Nothing
+                 pure Nothing
+             | otherwise ->
+                 -- Check if field type uses any Postgres scalar type and return the same
+                 case findReusedPGScalar fieldBaseType of
+                   Just ty -> pure $ Just ty
+                   Nothing -> do
+                     dispute $ pure $ ObjectFieldTypeDoesNotExist
+                       objectTypeName fieldName fieldBaseType
+                     pure Nothing
 
         -- collect all non list scalar types of this object
         maybeScalar <- if (not (isListType fieldType) && Set.member fieldBaseType scalarTypes)

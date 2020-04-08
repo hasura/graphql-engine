@@ -198,7 +198,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (catalogMetadata, invalidationKeys) -> do
       let CatalogMetadata tables relationships permissions
             eventTriggers remoteSchemas functions allowlistDefs
-            computedFields customTypes actions pgScalars = catalogMetadata
+            computedFields catalogCustomTypes actions = catalogMetadata
 
       -- tables
       tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
@@ -256,6 +256,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
             & HS.fromList
 
       -- custom types
+      let CatalogCustomTypes customTypes pgScalars = catalogCustomTypes
       maybeResolvedCustomTypes <-
         (| withRecordInconsistency
              (bindErrorA -< resolveCustomTypes tableCache customTypes pgScalars)
@@ -293,6 +294,8 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
         , _boFunctions = functionCache
         , _boRemoteSchemas = remoteSchemaMap
         , _boAllowlist = allowList
+        -- If 'maybeResolvedCustomTypes' is 'Nothing', then custom types are inconsinstent.
+        -- In such case, use empty resolved value of custom types.
         , _boCustomTypes = fromMaybe (NonObjectTypeMap mempty, mempty) maybeResolvedCustomTypes
         }
 

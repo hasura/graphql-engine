@@ -12,6 +12,7 @@ module Hasura.RQL.Types.Catalog
   , CatalogPermission(..)
   , CatalogEventTrigger(..)
   , CatalogFunction(..)
+  , CatalogCustomTypes(..)
   ) where
 
 import           Hasura.Prelude
@@ -139,6 +140,20 @@ instance NFData CatalogFunction
 instance Cacheable CatalogFunction
 $(deriveFromJSON (aesonDrop 3 snakeCase) ''CatalogFunction)
 
+data CatalogCustomTypes
+  = CatalogCustomTypes
+  { _cctCustomTypes :: !CustomTypes
+  , _cctPgScalars   :: ![PGScalarType]
+  -- ^ Base types from Postgres required for validating custom types
+  -- to check if any one of them uses the Postgres base type name
+  -- and publish them in generated GraphQL schema as Scalars.
+  -- These won't be tracked in the metadata.
+  -- See https://github.com/hasura/graphql-engine/issues/4125
+  } deriving (Show, Eq, Generic)
+instance NFData CatalogCustomTypes
+instance Cacheable CatalogCustomTypes
+$(deriveFromJSON (aesonDrop 4 snakeCase) ''CatalogCustomTypes)
+
 type CatalogAction = ActionMetadata
 
 data CatalogMetadata
@@ -151,9 +166,8 @@ data CatalogMetadata
   , _cmFunctions            :: ![CatalogFunction]
   , _cmAllowlistCollections :: ![CollectionDef]
   , _cmComputedFields       :: ![CatalogComputedField]
-  , _cmCustomTypes          :: !CustomTypes
+  , _cmCustomTypes          :: !CatalogCustomTypes
   , _cmActions              :: ![CatalogAction]
-  , _cmScalarTypes          :: ![PGScalarType]
   } deriving (Show, Eq, Generic)
 instance NFData CatalogMetadata
 instance Cacheable CatalogMetadata
