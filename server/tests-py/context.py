@@ -191,7 +191,11 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             self._send_response(status, resp)
 
         elif req_path == "/get-user-by-email":
-            resp, status = self.get_user_by_email()
+            resp, status = self.get_users_by_email(True)
+            self._send_response(status, resp)
+
+        elif req_path == "/get-users-by-email":
+            resp, status = self.get_users_by_email(False)
             self._send_response(status, resp)
 
         else:
@@ -275,7 +279,7 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
         response = self.req_json['input']['arg']
         return response, HTTPStatus.OK
 
-    def get_user_by_email(self):
+    def get_users_by_email(self, singleUser = False):
         email = self.req_json['input']['email']
         if not self.check_email(email):
             response = {
@@ -285,9 +289,8 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             return response, HTTPStatus.BAD_REQUEST
         gql_query = '''
         query get_user($email:String!) {
-           user(where:{email:{_eq:$email}}) {
+           user(where:{email:{_eq:$email}},order_by: {id: asc}) {
             id
-            name
         }
         }
         '''
@@ -304,7 +307,11 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
                 'code': 'unexpected'
             }
             return response, HTTPStatus.BAD_REQUEST
-        return resp['data']['user'][0], HTTPStatus.OK
+        if singleUser:
+            return resp['data']['user'][0], HTTPStatus.OK
+        else:
+            return resp['data']['user'], HTTPStatus.OK
+
 
 
     def check_email(self, email):

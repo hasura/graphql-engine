@@ -96,5 +96,16 @@ args:
       arguments:
       - name: email
         type: 'String!'
-      output_type: 'OutObject'
+      output_type: 'UserId!'
       handler: http://127.0.0.1:5593/get-user-by-email
+
+- type: create_action
+  args:
+    name: get_users_by_email
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: 'String!'
+      output_type: '[UserId]!'
+      handler: http://127.0.0.1:5593/get-users-by-email
