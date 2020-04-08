@@ -12,6 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 	"github.com/hasura/graphql-engine/cli/migrate/source/file"
@@ -319,7 +320,23 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				return errors.Wrap(err, "cannot write metadata")
 			}
 			ec.Spin("Writing new config file...")
-			err = ec.WriteConfig(nil)
+			// Read the config from config.yaml
+			cfgByt, err := ioutil.ReadFile(ec.ConfigFile)
+			if err != nil {
+				return errors.Wrap(err, "cannot read config file")
+			}
+			var cfg cli.Config
+			err = yaml.Unmarshal(cfgByt, &cfg)
+			if err != nil {
+				return errors.Wrap(err, "cannot parse config file")
+			}
+			cfg.Version = cli.V2
+			cfg.MetadataDirectory = ec.Viper.GetString("metadata_directory")
+			cfg.ActionConfig = &types.ActionExecutionConfig{
+				Kind:                  ec.Viper.GetString("actions.kind"),
+				HandlerWebhookBaseURL: ec.Viper.GetString("actions.handler_webhook_baseurl"),
+			}
+			err = ec.WriteConfig(&cfg)
 			if err != nil {
 				return errors.Wrap(err, "cannot write config file")
 			}
