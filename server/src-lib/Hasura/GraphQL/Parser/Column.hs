@@ -107,7 +107,7 @@ column columnType (Nullability isNullable) =
     -- increment the value by 1, so we’d use the wrong value!
     --
     -- We could theoretically solve this by retaining a reference to the parser
-    -- itself  and re-parsing each new value, using the saved parser, which
+    -- itself and re-parsing each new value, using the saved parser, which
     -- would admittedly be neat. But it’s more complicated, and it isn’t clear
     -- that it would actually be useful, so for now we don’t support it.
     opaque :: Functor m => Parser 'Both m a -> Parser 'Both m (Opaque a)
