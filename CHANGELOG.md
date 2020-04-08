@@ -2,7 +2,6 @@
 
 ## Next release
 
-
 ### console: persist columns state in data browser
 
 The order and collapsed state of columns is now persisted across page navigation
@@ -26,6 +25,7 @@ Postgres Check constraints allows you to specify that the value in a certain col
 
 **Example**:
 When a product is created, ensure that the price is greater than zero. The SQL would look like this:
+
 ```sql
 CREATE TABLE products (
     product_id UUID DEFAULT gen_random_uuid(),
@@ -33,7 +33,9 @@ CREATE TABLE products (
     price NUMERIC CONSTRAINT positive_price CHECK (price > 0)
 );
 ```
+
 To create this table with Hasura Console, on the 'Add a new table' screen, after adding all the columns, scroll down to 'Check constraints' section and 'Add a new check constraint' with the following properties:
+
 - Constraint name: `positive_price`
 - Check expression: `price > 0`
 
@@ -43,11 +45,12 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 ### CLI: V2 migrations architecture
 
-  A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
+A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
 
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
+
 - server: improve performance of replace_metadata tracking many tables (fix #3802)
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption
@@ -105,6 +108,7 @@ Read more about actions in the [docs](https://docs.hasura.io/1.0/graphql/manual/
 A new command is added to the server executable for downgrading to earlier releases. Previously, if you ran a newer Hasura version and wanted to go back to an old version on the same database, you had to stop Hasura, run some SQL statements and start Hasura again. With the new `downgrade` command, these SQL statements can be run automatically.
 
 **Example**: Downgrade from `v1.2.0` to `v1.0.0`:
+
 ```bash
 # stop hasura v1.2.0
 
@@ -125,6 +129,8 @@ When using webhooks to authenticate incoming requests to the GraphQL engine serv
 Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/authentication/webhook.html).
 
 ### Bug fixes and improvements
+
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
+- docs: restructure docs: make getting started guide more comprehensive, restructure deployment section
