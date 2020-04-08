@@ -3,6 +3,7 @@ module Hasura.GraphQL.Resolve.Action
   , resolveAsyncActionQuery
   , asyncActionsProcessor
   , resolveActionQuery
+  , mkJsonAggSelect
   ) where
 
 import           Hasura.Prelude

@@ -45,7 +45,8 @@ data QueryRootFldAST v
   | QRFSimple !(DS.AnnSimpleSelG v)
   | QRFAgg !(DS.AnnAggSelG v)
   | QRFActionSelect !(DS.AnnSimpleSelG v)
-  | QRFActionExecute !(DS.AnnSimpleSelG v)
+  | QRFActionExecuteObject !(DS.AnnSimpleSelG v)
+  | QRFActionExecuteList !(DS.AnnSimpleSelG v)
   deriving (Show, Eq)
 
 type QueryRootFldUnresolved = QueryRootFldAST UnresolvedVal
@@ -57,19 +58,21 @@ traverseQueryRootFldAST
   -> QueryRootFldAST a
   -> f (QueryRootFldAST b)
 traverseQueryRootFldAST f = \case
-  QRFPk s           -> QRFPk <$> DS.traverseAnnSimpleSel f s
-  QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
-  QRFAgg s          -> QRFAgg <$> DS.traverseAnnAggSel f s
-  QRFActionSelect s -> QRFActionSelect <$> DS.traverseAnnSimpleSel f s
-  QRFActionExecute s -> QRFActionExecute <$> DS.traverseAnnSimpleSel f s
+  QRFPk s                  -> QRFPk <$> DS.traverseAnnSimpleSel f s
+  QRFSimple s              -> QRFSimple <$> DS.traverseAnnSimpleSel f s
+  QRFAgg s                 -> QRFAgg <$> DS.traverseAnnAggSel f s
+  QRFActionSelect s        -> QRFActionSelect <$> DS.traverseAnnSimpleSel f s
+  QRFActionExecuteObject s -> QRFActionExecuteObject <$> DS.traverseAnnSimpleSel f s
+  QRFActionExecuteList s   -> QRFActionExecuteList <$> DS.traverseAnnSimpleSel f s
 
 toPGQuery :: QueryRootFldResolved -> Q.Query
 toPGQuery = \case
-  QRFPk s           -> DS.selectQuerySQL DS.JASSingleObject s
-  QRFSimple s       -> DS.selectQuerySQL DS.JASMultipleRows s
-  QRFAgg s          -> DS.selectAggQuerySQL s
-  QRFActionSelect s -> DS.selectQuerySQL DS.JASSingleObject s
-  QRFActionExecute s -> DS.selectQuerySQL DS.JASMultipleRows s
+  QRFPk s                  -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFSimple s              -> DS.selectQuerySQL DS.JASMultipleRows s
+  QRFAgg s                 -> DS.selectAggQuerySQL s
+  QRFActionSelect s        -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFActionExecuteObject s -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFActionExecuteList s   -> DS.selectQuerySQL DS.JASMultipleRows s
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
@@ -116,8 +119,14 @@ queryFldToPGAST fld = do
       QRFAgg <$> RS.convertFuncQueryAgg ctx fld
     QCAsyncActionFetch ctx ->
       QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
-    QCAction ctx ->
-      QRFActionExecute <$> RA.resolveActionQuery fld ctx (userVars userInfo)
+    QCAction ctx -> do
+      case jsonAggType of
+        DS.JASMultipleRows -> QRFActionExecuteList
+        DS.JASSingleObject -> QRFActionExecuteObject
+      <$> RA.resolveActionQuery fld ctx (userVars userInfo)
+      where
+        outputType = _saecOutputType ctx
+        jsonAggType = RA.mkJsonAggSelect outputType
 
 mutFldToTx
   :: ( HasVersion

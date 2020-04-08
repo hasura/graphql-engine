@@ -14,5 +14,5 @@ query:
 response:
   data:
     get_user_by_email:
-      - id: 1
-        name: Clarke
+      id: 1
+      name: Clarke
