@@ -34,3 +34,24 @@ Run the Docker command with an admin-secret env var
   The ``HASURA_GRAPHQL_ADMIN_SECRET`` should never be passed from the client to the Hasura GraphQL engine as it would
   give the client full admin rights to your Hasura instance. See :ref:`auth` for information on
   setting up authentication.
+
+Use the admin secret with the CLI
+---------------------------------
+
+If you're using the Hasura console from the CLI, you have two options to pass the admin secret.
+
+Pass admin secret as a flag
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   hasura console --admin-secret=myadminsecretkey
+
+Set admin secret in the ``config.yaml``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+   :emphasize-lines: 2
+
+   endpoint: https://your-app-url.com
+   admin_secret: myadminsecretkey

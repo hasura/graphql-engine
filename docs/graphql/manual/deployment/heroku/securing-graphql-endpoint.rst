@@ -40,9 +40,21 @@ prompted for the admin secret key.
 (optional) Use the admin secret with the CLI
 --------------------------------------------
 
-In case you're using the CLI to open the Hasura console, use the ``admin-secret`` flag when you open the console:
+If you're using the Hasura console from the CLI, you have two options to pass the admin secret.
+
+Pass admin secret as a flag
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
    hasura console --admin-secret=myadminsecretkey
+
+Set admin secret in the ``config.yaml``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+   :emphasize-lines: 2
+
+   endpoint: https://your-heroku-app.herokuapp.com
+   admin_secret: myadminsecretkey
 
