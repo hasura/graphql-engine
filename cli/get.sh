@@ -36,8 +36,7 @@ release=${1:-latest}
 log "Getting $release version..."
 
 # adapted from https://github.com/openfaas/faas-cli/blob/master/get.sh
-version=$(curl -s -f https://releases.hasura.io/graphql-engine?agent=cli-get.sh)
-version=`echo $version | sed -n -e "s/^.*\"$release\":\"\([^\",}]*\)\".*$/\1/p"`
+version=`echo $(curl -s -f -H 'Content-Type: application/json' https://releases.hasura.io/graphql-engine?agent=cli-get.sh) | sed -n -e "s/^.*\"$release\":\"\([^\",}]*\)\".*$/\1/p"`
 if [ ! $version ]; then
     log "${YELLOW}"
     log "Failed while attempting to install hasura graphql-engine cli. Please manually install:"
