@@ -84,9 +84,10 @@ func MigrateAPI(c *gin.Context) {
 		c.JSON(http.StatusOK, status)
 	case "POST":
 		var request Request
+		var err error
 
 		// Bind Request body to Request struct
-		if err := c.BindJSON(&request); err != nil {
+		if err = c.BindJSON(&request); err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "request_parse_error", Message: err.Error()})
 			return
 		}
@@ -135,14 +136,14 @@ func MigrateAPI(c *gin.Context) {
 			}
 
 			if sqlUp.String() != "" {
-				err := createOptions.SetSQLUp(sqlUp.String())
+				err = createOptions.SetSQLUp(sqlUp.String())
 				if err != nil {
 					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 					return
 				}
 			}
 			if sqlDown.String() != "" {
-				err := createOptions.SetSQLDown(sqlDown.String())
+				err = createOptions.SetSQLDown(sqlDown.String())
 				if err != nil {
 					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 					return
@@ -150,25 +151,16 @@ func MigrateAPI(c *gin.Context) {
 			}
 
 			if sqlUp.String() != "" || sqlDown.String() != "" {
-				err := createOptions.Create()
+				err = createOptions.Create()
 				if err != nil {
 					c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 					return
 				}
-
-				defer func() {
-					if err != nil {
-						err := createOptions.Delete()
-						if err != nil {
-							logger.Debug(err)
-						}
-					}
-				}()
 			} else {
 				timestamp = 0
 			}
 		} else {
-			err := createOptions.SetMetaUp(request.Up)
+			err = createOptions.SetMetaUp(request.Up)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 				return
@@ -184,19 +176,19 @@ func MigrateAPI(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, &Response{Code: "create_file_error", Message: err.Error()})
 				return
 			}
-
-			defer func() {
-				if err != nil {
-					err = createOptions.Delete()
-					if err != nil {
-						logger.Debug(err)
-					}
-				}
-			}()
 		}
 
+		defer func() {
+			if err != nil && timestamp != 0 {
+				err := createOptions.Delete()
+				if err != nil {
+					logger.Debug(err)
+				}
+			}
+		}()
+
 		// Rescan file system
-		err := t.ReScan()
+		err = t.ReScan()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 			return

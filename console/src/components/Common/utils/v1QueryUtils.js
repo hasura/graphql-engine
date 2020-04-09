@@ -279,3 +279,38 @@ export const resetMetadataQuery = {
   type: 'clear_metadata',
   args: {},
 };
+
+export const generateSelectQuery = (
+  type,
+  tableDef,
+  { where, limit, offset, order_by, columns }
+) => ({
+  type,
+  args: {
+    columns,
+    where,
+    limit,
+    offset,
+    order_by,
+    table: tableDef,
+  },
+});
+
+export const getFetchManualTriggersQuery = tableName => ({
+  type: 'select',
+  args: {
+    table: {
+      name: 'event_triggers',
+      schema: 'hdb_catalog',
+    },
+    columns: ['*'],
+    order_by: {
+      column: 'name',
+      type: 'asc',
+      nulls: 'last',
+    },
+    where: {
+      table_name: tableName,
+    },
+  },
+});
