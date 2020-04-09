@@ -299,32 +299,32 @@ class StreamingLogs extends Component {
                 >
                   {finalResponse.status_code
                     ? [
-                      'Status Code: ',
-                      verifySuccessStatus(finalResponse.status_code) ? (
-                        <i
-                          className={
-                            styles.invocationSuccess + ' fa fa-check'
-                          }
-                        />
-                      ) : (
-                        <i
-                          className={
-                            styles.invocationFailure + ' fa fa-times'
-                          }
-                        />
-                      ),
-                      finalResponse.status_code,
-                      ' ',
-                      <OverlayTrigger
-                        placement="top"
-                        overlay={tooltip.statusCodeDescription}
-                      >
-                        <i
-                          className="fa fa-question-circle"
-                          aria-hidden="true"
-                        />
-                      </OverlayTrigger>,
-                    ]
+                        'Status Code: ',
+                        verifySuccessStatus(finalResponse.status_code) ? (
+                          <i
+                            className={
+                              styles.invocationSuccess + ' fa fa-check'
+                            }
+                          />
+                        ) : (
+                          <i
+                            className={
+                              styles.invocationFailure + ' fa fa-times'
+                            }
+                          />
+                        ),
+                        finalResponse.status_code,
+                        ' ',
+                        <OverlayTrigger
+                          placement="top"
+                          overlay={tooltip.statusCodeDescription}
+                        >
+                          <i
+                            className="fa fa-question-circle"
+                            aria-hidden="true"
+                          />
+                        </OverlayTrigger>,
+                      ]
                     : null}
                 </div>
                 <AceEditor

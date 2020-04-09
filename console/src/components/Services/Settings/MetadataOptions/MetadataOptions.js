@@ -61,9 +61,7 @@ const MetadataOptions = props => {
 
   return (
     <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${
-        styles.metadata_wrapper
-      } container-fluid`}
+      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
     >
       <div className={styles.subHeader}>
         <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>

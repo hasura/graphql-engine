@@ -12,7 +12,9 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -45,6 +47,11 @@ const (
 	LastUpdateCheckFileName = "last_update_check_at"
 )
 
+const (
+	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
+	XHasuraAccessKey   = "X-Hasura-Access-Key"
+)
+
 // String constants
 const (
 	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which
@@ -62,6 +69,36 @@ const (
 	// V2 represents config version 2
 	V2
 )
+
+// ServerAPIPaths has the custom paths defined for server api
+type ServerAPIPaths struct {
+	Query   string `yaml:"query,omitempty"`
+	GraphQL string `yaml:"graphql,omitempty"`
+	Config  string `yaml:"config,omitempty"`
+	PGDump  string `yaml:"pg_dump,omitempty"`
+	Version string `yaml:"version,omitempty"`
+}
+
+// GetQueryParams - encodes the values in url
+func (s ServerAPIPaths) GetQueryParams() url.Values {
+	vals := url.Values{}
+	t := reflect.TypeOf(s)
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		tag := field.Tag.Get("yaml")
+		splitTag := strings.Split(tag, ",")
+		if len(splitTag) == 0 {
+			continue
+		}
+		name := splitTag[0]
+		if name == "-" {
+			continue
+		}
+		v := reflect.ValueOf(s).Field(i)
+		vals.Add(name, v.String())
+	}
+	return vals
+}
 
 // ErrInvalidConfigVersion - if the config version is not valid
 var ErrInvalidConfigVersion error = fmt.Errorf("invalid config version")
@@ -107,8 +144,17 @@ type ServerConfig struct {
 	AccessKey string `yaml:"access_key,omitempty"`
 	// AdminSecret (optional) Admin secret required to query the endpoint
 	AdminSecret string `yaml:"admin_secret,omitempty"`
+	// APIPaths (optional) API paths for server
+	APIPaths *ServerAPIPaths `yaml:"api_paths,omitempty"`
 
 	ParsedEndpoint *url.URL `yaml:"-"`
+}
+
+// GetVersionEndpoint provides the url to contact the version API
+func (s *ServerConfig) GetVersionEndpoint() string {
+	nurl := *s.ParsedEndpoint
+	nurl.Path = path.Join(nurl.Path, s.APIPaths.Version)
+	return nurl.String()
 }
 
 // ParseEndpoint ensures the endpoint is valid.
@@ -165,6 +211,8 @@ type ExecutionContext struct {
 	MetadataDir string
 	// ConfigFile is the file where endpoint etc. are stored.
 	ConfigFile string
+	// HGE Headers, are the custom headers which can be passed to HGE API
+	HGEHeaders map[string]string
 
 	// Config is the configuration object storing the endpoint and admin secret
 	// information after reading from config file or env var.
@@ -325,6 +373,10 @@ func (ec *ExecutionContext) setupInitTemplatesRepo() error {
 	return nil
 }
 
+func (ec *ExecutionContext) SetHGEHeaders(headers map[string]string) {
+	ec.HGEHeaders = headers
+}
+
 // Validate prepares the ExecutionContext ec and then validates the
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
@@ -396,11 +448,18 @@ func (ec *ExecutionContext) Validate() error {
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
 
+	// Set headers required for communicating with HGE
+	if ec.Config.AdminSecret != "" {
+		headers := map[string]string{
+			GetAdminSecretHeaderName(ec.Version): ec.Config.AdminSecret,
+		}
+		ec.SetHGEHeaders(headers)
+	}
 	return nil
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	v, err := version.FetchServerVersion(ec.Config.ServerConfig.Endpoint)
+	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint())
 	if err != nil {
 		return errors.Wrap(err, "failed to get version from server")
 	}
@@ -435,14 +494,19 @@ func (ec *ExecutionContext) WriteConfig(config *Config) error {
 func (ec *ExecutionContext) readConfig() error {
 	// need to get existing viper because https://github.com/spf13/viper/issues/233
 	v := ec.Viper
-	v.SetEnvPrefix("HASURA_GRAPHQL")
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.SetEnvPrefix(util.ViperEnvPrefix)
+	v.SetEnvKeyReplacer(util.ViperEnvReplacer)
 	v.AutomaticEnv()
 	v.SetConfigName("config")
 	v.SetDefault("version", "1")
 	v.SetDefault("endpoint", "http://localhost:8080")
 	v.SetDefault("admin_secret", "")
 	v.SetDefault("access_key", "")
+	v.SetDefault("api_paths.query", "v1/query")
+	v.SetDefault("api_paths.graphql", "v1/graphql")
+	v.SetDefault("api_paths.config", "v1alpha1/config")
+	v.SetDefault("api_paths.pg_dump", "v1alpha1/pg_dump")
+	v.SetDefault("api_paths.version", "v1/version")
 	v.SetDefault("metadata_directory", "")
 	v.SetDefault("migrations_directory", "migrations")
 	v.SetDefault("actions.kind", "synchronous")
@@ -464,6 +528,13 @@ func (ec *ExecutionContext) readConfig() error {
 		ServerConfig: ServerConfig{
 			Endpoint:    v.GetString("endpoint"),
 			AdminSecret: adminSecret,
+			APIPaths: &ServerAPIPaths{
+				Query:   v.GetString("api_paths.query"),
+				GraphQL: v.GetString("api_paths.graphql"),
+				Config:  v.GetString("api_paths.config"),
+				PGDump:  v.GetString("api_paths.pg_dump"),
+				Version: v.GetString("api_paths.version"),
+			},
 		},
 		MetadataDirectory:   v.GetString("metadata_directory"),
 		MigrationsDirectory: v.GetString("migrations_directory"),
@@ -559,4 +630,11 @@ func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) erro
 		return errors.Wrapf(err, "cannot install plugin %s", name)
 	}
 	return nil
+}
+
+func GetAdminSecretHeaderName(v *version.Version) string {
+	if v.ServerFeatureFlags.HasAccessKey {
+		return XHasuraAccessKey
+	}
+	return XHasuraAdminSecret
 }

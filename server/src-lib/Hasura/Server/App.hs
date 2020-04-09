@@ -12,7 +12,7 @@ import           Data.Aeson                             hiding (json)
 import           Data.Either                            (isRight)
 import           Data.Int                               (Int64)
 import           Data.IORef
-import           Data.Time.Clock                        (UTCTime)
+import           Data.Time.Clock                        (UTCTime, getCurrentTime)
 import           Data.Time.Clock.POSIX                  (getPOSIXTime)
 import           Network.Mime                           (defaultMimeLookup)
 import           System.Exit                            (exitFailure)
@@ -49,6 +49,7 @@ import           Hasura.Server.Cors
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Middleware               (corsMiddleware)
+import           Hasura.Server.Migrate                  (migrateCatalog)
 import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
@@ -468,31 +469,18 @@ mkWaiApp
 mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts planCacheOptions = do
 
-    let pgExecCtx = PGExecCtx pool isoLevel
-        pgExecCtxSer = PGExecCtx pool Q.Serializable
-        runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
-
-    (cacheRef, cacheBuiltTime) <- do
-      pgResp <- runExceptT $ peelRun runCtx pgExecCtxSer Q.ReadWrite $
-        (,) <$> buildRebuildableSchemaCache <*> liftTx fetchLastUpdate
-      (schemaCache, event) <- liftIO $ either initErrExit return pgResp
-      scRef <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
-      return (scRef, view _2 <$> event)
-
-    cacheLock <- liftIO $ newMVar ()
-    planCache <- liftIO $ E.initPlanCache planCacheOptions
+    (planCache, schemaCacheRef, cacheBuiltTime) <- migrateAndInitialiseSchemaCache
+    let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
-        getSchemaCache = first lastBuiltSchemaCache <$> readIORef cacheRef
-
+        pgExecCtx = PGExecCtx pool isoLevel
     lqState <- liftIO $ EL.initLiveQueriesState lqOpts pgExecCtx
     wsServerEnv <- WS.createWSServerEnv logger pgExecCtx lqState getSchemaCache httpManager
                                         corsPolicy sqlGenCtx enableAL planCache
 
     ekgStore <- liftIO EKG.newStore
 
-    let schemaCacheRef = SchemaCacheRef cacheLock cacheRef (E.clearPlanCache planCache)
-        serverCtx = ServerCtx
+    let serverCtx = ServerCtx
                     { scPGExecCtx       =  pgExecCtx
                     , scConnInfo        =  ci
                     , scLogger          =  logger
@@ -526,6 +514,30 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
+    migrateAndInitialiseSchemaCache :: m (E.PlanCache, SchemaCacheRef, Maybe UTCTime)
+    migrateAndInitialiseSchemaCache = do
+      let pgExecCtx = PGExecCtx pool Q.Serializable
+          adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+      currentTime <- liftIO getCurrentTime
+      initialiseResult <- runExceptT $ peelRun adminRunCtx pgExecCtx Q.ReadWrite do
+        (,) <$> migrateCatalog currentTime <*> liftTx fetchLastUpdate
+
+      ((migrationResult, schemaCache), lastUpdateEvent) <-
+        initialiseResult `onLeft` \err -> do
+          L.unLogger logger StartupLog
+            { slLogLevel = L.LevelError
+            , slKind = "db_migrate"
+            , slInfo = toJSON err
+            }
+          liftIO exitFailure
+      L.unLogger logger migrationResult
+
+      cacheLock <- liftIO $ newMVar ()
+      cacheCell <- liftIO $ newIORef (schemaCache, initSchemaCacheVer)
+      planCache <- liftIO $ E.initPlanCache planCacheOptions
+      let cacheRef = SchemaCacheRef cacheLock cacheCell (E.clearPlanCache planCache)
+
+      pure (planCache, cacheRef, view _2 <$> lastUpdateEvent)
 
 httpApp
   :: (HasVersion, MonadIO m, MonadBaseControl IO m, ConsoleRenderer m, HttpLog m, UserAuthentication m, MetadataApiAuthorization m)
@@ -580,7 +592,11 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
       Spock.get "v1alpha1/config" $ spockAction encodeQErr id $
         mkGetHandler $ do
           onlyAdmin
-          let res = encJFromJValue $ runGetConfig (scAuthMode serverCtx)
+          let res = encJFromJValue $ runGetConfig
+                      (scAuthMode serverCtx)
+                      (scEnableAllowlist serverCtx)
+                      (EL._lqsOptions $ scLQState serverCtx)
+
           return $ JSONResp $ HttpResponse res []
 
     when enableGraphQL $ do

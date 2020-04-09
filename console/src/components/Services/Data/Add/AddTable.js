@@ -297,11 +297,11 @@ class AddTable extends Component {
     return '';
   }
 
-  /* eslint-disable no-unused-vars */
-  isValidDefault(type, d) {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  isValidDefault() {
     return true;
   }
-  /* eslint-enable no-unused-vars */
+  /* eslint-enable @typescript-eslint/no-unused-vars */
 
   /* punting for now
     isValidDefault(type, d) {
@@ -427,9 +427,7 @@ class AddTable extends Component {
 
     return (
       <div
-        className={`${styles.addTablesBody} ${styles.clear_fix} ${
-          styles.padd_left
-        }`}
+        className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
       >
         <Helmet title="Add Table - Data | Hasura" />
         <div className={styles.subHeader}>
