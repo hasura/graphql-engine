@@ -10,6 +10,9 @@ import {
   FaCloud,
   FaCog,
   FaQuestion,
+  FaGithub,
+  FaExternalLinkAlt,
+  FaDownload
 } from 'react-icons/fa';
 
 import { theme } from '../../theme';
@@ -27,10 +30,10 @@ const iconReferenceMap = {
   settings: FaCog,
   question: FaQuestion,
   default: FaExclamationCircle,
+  github: FaGithub,
+  externalLink: FaExternalLinkAlt,
+  download: FaDownload
 };
-
-const iconWidth = 18;
-const iconHeight = 18;
 
 export const Icon = props => {
   const { type } = props;
@@ -45,10 +48,7 @@ export const Icon = props => {
 
   return (
     <StyledIcon
-      fontSize="icon"
       color={iconColor}
-      width={iconWidth}
-      height={iconHeight}
       as={CurrentActiveIcon}
       {...props}
     />

@@ -79,24 +79,27 @@ const ActionDefinitionEditor = ({
               <div>{errorMessage}</div>
             </div>
           )}
-          <a
-            className={`${styles.cloneTypeText} ${styles.cursorPointer} ${styles.add_mar_right}`}
-            onClick={toggleModal}
-          >
-            <CopyIcon className={styles.add_mar_right_small} />
-            Clone an existing type
-          </a>
-          <Modal
-            show={modalOpen}
-            title={'Clone an existing type'}
-            onClose={toggleModal}
-            customClass={styles.modal}
-          >
-            <CloneTypeModal
-              handleClonedTypes={handleClonedTypes}
-              toggleModal={toggleModal}
-            />
-          </Modal>
+          {/*
+            <a
+              className={`${styles.cloneTypeText} ${styles.cursorPointer} ${styles.add_mar_right}`}
+              onClick={toggleModal}
+            >
+              <CopyIcon className={styles.add_mar_right_small} />
+              Clone an existing type
+            </a>
+            <Modal
+              show={modalOpen}
+              title={'Clone an existing type'}
+              onClose={toggleModal}
+              customClass={styles.modal}
+            >
+              <CloneTypeModal
+                handleClonedTypes={handleClonedTypes}
+                toggleModal={toggleModal}
+              />
+            </Modal>
+            
+          */}
         </div>
         <SDLEditor
           name="sdl-editor"

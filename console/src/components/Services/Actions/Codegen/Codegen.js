@@ -14,6 +14,7 @@ import Button from '../../../Common/Button/Button';
 import DownloadIcon from '../../../Common/Icons/Download';
 import ExternalLink from '../../../Common/Icons/ExternalLink';
 import GithubIcon from '../../../Common/Icons/Github';
+import { Icon } from '../../../UIKit/atoms'
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
 
@@ -35,6 +36,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
 
   const init = () => {
     setLoading(true);
+    setError(null);
     getAllCodegenFrameworks()
       .then(frameworks => {
         setAllFrameworks(frameworks);
@@ -58,7 +60,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     return (
       <div>
         Error fetching codegen assets.&nbsp;
-        <a onClick={init}>Try again</a>
+        <a onClick={init} className={styles.cursorPointer}>Try again</a>
       </div>
     );
   }
@@ -97,9 +99,9 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
           <Button
             color="white"
             size="xs"
-            className={`${styles.add_mar_right_mid}`}
+            className={`${styles.add_mar_right_mid} ${styles.display_flex}`}
           >
-            <ExternalLink className={styles.add_mar_right_small} /> Try on
+            <Icon type="externalLink" className={styles.add_mar_right_small} /> Try on
             glitch
           </Button>
         </a>
@@ -126,8 +128,8 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
             className={styles.add_mar_right_small}
             title={`Download starter kit for ${selectedFramework}`}
           >
-            <Button color="white" size="xs">
-              <DownloadIcon className={styles.add_mar_right_small} /> Starter
+            <Button color="white" size="xs" className={styles.display_flex}>
+              <Icon type="download" className={styles.add_mar_right_small} /> Starter
               Kit
             </Button>
           </a>
@@ -138,27 +140,21 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
             className={styles.add_mar_right_small}
             title={`View the starter kit for ${selectedFramework} on GitHub`}
           >
-            <Button color="white" size="xs">
-              <GithubIcon />
+            <Button color="white" size="xs" className={styles.display_flex}>
+              <Icon type="github"/>
             </Button>
           </a>
         </React.Fragment>
       );
     };
 
-    const getButtons = () => {
-      return (
+    return (
+      <div className={`${styles.add_mar_bottom} ${styles.display_flex}`}>
+        {getDrodown()}
         <div className={`${styles.display_flex} ${styles.marginLeftAuto}`}>
           {getGlitchButton()}
           {getStarterKitButton()}
         </div>
-      );
-    };
-
-    return (
-      <div className={`${styles.add_mar_bottom} ${styles.display_flex}`}>
-        {getDrodown()}
-        {getButtons()}
       </div>
     );
   };
