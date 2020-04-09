@@ -40,9 +40,9 @@ var (
 type Config struct {
 	MigrationsTable string
 	SettingsTable   string
-	v1URL           *nurl.URL
+	queryURL        *nurl.URL
 	graphqlURL      *nurl.URL
-	schemDumpURL    *nurl.URL
+	pgDumpURL       *nurl.URL
 	Headers         map[string]string
 	isCMD           bool
 	Plugins         types.MetadataPlugins
@@ -115,20 +115,20 @@ func (h *HasuraDB) Open(url string, isCMD bool, logger *log.Logger) (database.Dr
 	config := &Config{
 		MigrationsTable: DefaultMigrationsTable,
 		SettingsTable:   DefaultSettingsTable,
-		v1URL: &nurl.URL{
+		queryURL: &nurl.URL{
 			Scheme: scheme,
 			Host:   hurl.Host,
-			Path:   path.Join(hurl.Path, "v1/query"),
+			Path:   path.Join(hurl.Path, params.Get("query")),
 		},
 		graphqlURL: &nurl.URL{
 			Scheme: scheme,
 			Host:   hurl.Host,
-			Path:   path.Join(hurl.Path, "v1/graphql"),
+			Path:   path.Join(hurl.Path, params.Get("graphql")),
 		},
-		schemDumpURL: &nurl.URL{
+		pgDumpURL: &nurl.URL{
 			Scheme: scheme,
 			Host:   hurl.Host,
-			Path:   path.Join(hurl.Path, "v1alpha1/pg_dump"),
+			Path:   path.Join(hurl.Path, params.Get("pg_dump")),
 		},
 		isCMD:   isCMD,
 		Headers: headers,
@@ -417,7 +417,7 @@ func (h *HasuraDB) ensureVersionTable() error {
 
 func (h *HasuraDB) sendv1Query(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := gorequest.New()
-	request = request.Post(h.config.v1URL.String()).Send(m)
+	request = request.Post(h.config.queryURL.String()).Send(m)
 	for headerName, headerValue := range h.config.Headers {
 		request.Set(headerName, headerValue)
 	}
@@ -455,7 +455,7 @@ func (h *HasuraDB) sendv1GraphQL(query interface{}) (resp *http.Response, body [
 func (h *HasuraDB) sendSchemaDumpQuery(m interface{}) (resp *http.Response, body []byte, err error) {
 	request := gorequest.New()
 
-	request = request.Post(h.config.schemDumpURL.String()).Send(m)
+	request = request.Post(h.config.pgDumpURL.String()).Send(m)
 
 	for headerName, headerValue := range h.config.Headers {
 		request.Set(headerName, headerValue)
