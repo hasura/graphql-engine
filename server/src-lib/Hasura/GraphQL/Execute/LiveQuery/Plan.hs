@@ -154,12 +154,8 @@ mkCohortVariables
   -> ValidatedSyntheticVariables
   -> CohortVariables
 mkCohortVariables requiredSessionVariables sessionVariableValues =
-  CohortVariables requiredSessionVariableValues
-  where
-    requiredSessionVariableValues =
-      filterSessionVariables
-      (\k _ -> Set.member k requiredSessionVariables)
-      sessionVariableValues
+  CohortVariables $ filterSessionVariables (\k _ -> Set.member k requiredSessionVariables)
+  sessionVariableValues
 
 instance J.ToJSON CohortVariables where
   toJSON (CohortVariables sessionVars queryVars syntheticVars) =
