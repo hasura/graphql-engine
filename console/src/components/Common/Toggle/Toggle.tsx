@@ -7,11 +7,9 @@ type ToggleProps = {
   onChange: () => void;
   icons: boolean;
   checked: boolean;
-  className?: string;
 };
 
-const ToggleComponent = (props: ToggleProps) => (
-  <Toggle className={props.className || ''} {...props} />
-);
+const ToggleComponent = (props: ToggleProps) => <Toggle {...props} />;
+
 
 export default ToggleComponent;

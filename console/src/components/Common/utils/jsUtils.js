@@ -307,7 +307,7 @@ export const getFirstArrayElement = array => {
   return array[0];
 };
 
-export const capitalizeFirstChar = str => {
+export const capitalize = str => {
   if (!str.length) {
     return;
   }

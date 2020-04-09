@@ -1784,17 +1784,17 @@ class Permissions extends Component {
             title={getSectionHeader('Backend only', tooltip, backendStatus)}
             useDefaultTitleStyle
             testId={'toggle-backend-only'}
-            isOpen={!isBackendOnly}
           >
             <div
               className={`${styles.editPermsSection} ${styles.display_flex}`}
             >
-              <Toggle
-                checked={isBackendOnly}
-                onChange={() => dispatch(permToggleBackendOnly())}
-                icons={false}
-                className={styles.add_mar_right_mid}
-              />
+              <div className={`${styles.display_flex} ${styles.add_mar_right_mid}`}>
+                <Toggle
+                  checked={isBackendOnly}
+                  onChange={() => dispatch(permToggleBackendOnly())}
+                  icons={false}
+                />
+              </div>
               <span>Allow from backend only</span>
             </div>
           </CollapsibleToggle>
@@ -1823,13 +1823,13 @@ class Permissions extends Component {
             <span>Action: {permissionsState.query}</span>
           </div>
           <div>
-            {getBackendOnlySection()}
             {getRowSection()}
             {getColumnSection()}
             {getAggregationSection()}
             {/*{getUpsertSection()}*/}
             {getPresetsSection('insert')}
             {getPresetsSection('update')}
+            {getBackendOnlySection()}
             {getButtonsSection()}
             {getClonePermsSection()}
           </div>
