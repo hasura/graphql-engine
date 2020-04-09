@@ -174,16 +174,11 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
         store.dispatch(fetchDataInit()),
         store.dispatch(updateSchemaInfo()),
         store.dispatch(fetchFunctionInit()),
-      ]).then(
-        () => {
-          cb();
-        },
-        () => {
-          // alert('Could not load schema.');
-          replaceState('/');
-          cb();
-        }
-      );
+      ]).then(cb, () => {
+        // alert('Could not load schema.');
+        replaceState('/');
+        cb();
+      });
     });
   };
 
