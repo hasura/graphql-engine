@@ -143,8 +143,8 @@ types and input types.
 
 .. admonition:: Postgres scalars
 
-   Postgres base types are reusable as custom scalars without explicitly declaring them.
-   For example, we might have a ``type`` like this:
+   Postgres base types are implicitly made available as GraphQL scalars; there
+   is no need to declare them separately. For example, in the definition
 
    .. code-block:: graphql
 
@@ -154,7 +154,8 @@ types and input types.
          location: geography
        }
 
-   The ``uuid`` and ``geography`` types are Postgres scalars, not separately-defined custom GraphQL types.
+   the ``uuid`` and ``geography`` types are assumed to refer to Postgres
+   scalars (assuming no other definition for them is provided).
 
 Enum types
 ----------
