@@ -1,0 +1,23 @@
+description: Run an action with a failing handler returning 5xx status
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      server_error_action(email:"clarke@gmail.com") {
+        id
+        name
+      }
+    }
+
+response:
+  errors:
+  - extensions:
+      internal:
+        webhook_response:
+          extensions:
+            foo1: baz1
+          message: something went wrong
+      path: $
+      code: unexpected
+    message: internal error

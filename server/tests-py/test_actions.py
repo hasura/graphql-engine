@@ -96,6 +96,18 @@ class TestActionsSyncResponseHeaders:
         assert ('Set-Cookie' in resp_headers and
                 resp_headers['Set-Cookie'] == 'abcd'), resp_headers
 
+@use_action_fixtures
+class TestActionsErrorHandling:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/sync'
+
+    def test_handle_action_server_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/server_error_response.yaml')
+
+    def test_handle_action_client_error(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/client_error_response.yaml')
 
 @use_action_fixtures
 class TestActionsAsync:

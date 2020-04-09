@@ -190,6 +190,24 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.mirror_action()
             self._send_response(status, resp)
 
+        elif req_path == "/server-error":
+            resp = {
+                "message":"something went wrong",
+                "extensions": {
+                    "foo1":"baz1"
+                }
+            }
+            self._send_response(501, resp)
+
+        elif req_path == "/client-error":
+            resp = {
+                "message":"something went wrong",
+                "extensions": {
+                    "foo1":"baz1"
+                }
+            }
+            self._send_response(401, resp)
+
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
