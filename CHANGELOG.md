@@ -79,6 +79,7 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 - docs: add note on pg versions for actions (#4034)
 - docs: add latest prerelease build info (close #4041) (#4048)
 - docs: add AuthGuardian JWT guide (#3958)
+- server: add ability to accept custom json (extensions) while error handling actions (#4001)
 
 ## `v1.2.0-beta.2`
 

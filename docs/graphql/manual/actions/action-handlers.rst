@@ -59,7 +59,7 @@ An error object looks like:
 
     {
       "message": "<mandatory error message>",
-      "code": "<optional error code>"
+      "extensions": "<optional custom json>"
     }
 
 The HTTP status code must be ``4xx`` for an error response.
