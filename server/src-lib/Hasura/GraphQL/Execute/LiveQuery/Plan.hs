@@ -111,15 +111,30 @@ newCohortId = CohortId <$> liftIO UUID.nextRandom
 data CohortVariables
   = CohortVariables
   { _cvSessionVariables   :: !SessionVariables
-  -- ^ Only the session variables that are required for this query. For example,
-  -- if a permisson for 'user' role  on 'article' table is @{"is_public": true}@,
-  -- the result of a subscription on 'article' table for 'user' role is not dependent on
-  -- any session variables. But a 'user' role is most likely accompanied with
-  -- a session variable such as @user_id@, so if we include the 'user_id' as part
-  -- of the cohort's variables, we'll end up with multiple cohorts retrieving the
-  -- same result. Hence, only the session variables that will be referenced in the
-  -- generated SQL should be part of the cohort
-  --
+-- ^ A set of session variables, pruned to the minimal set actually used by
+-- this query. To illustrate the need for this pruning, suppose we have the
+-- following query:
+--
+-- > query {
+-- >   articles {
+-- >     id
+-- >     title
+-- >   }
+-- > }
+--
+-- If the select permission on @articles@ is just @{"is_public": true}@, we
+-- just generate the SQL query
+--
+-- > SELECT id, title FROM articles WHERE is_public = true
+--
+-- which doesn’t use any session variables at all. Therefore, we ought to be
+-- able to multiplex all queries of this shape into a single cohort, for quite
+-- good performance! But if we don’t prune the session variables, we’ll
+-- needlessly split subscribers into several cohorts simply because they have
+-- different values for, say, @X-Hasura-User-Id@.
+--
+-- The 'mkCohortVariables' smart constructor handles pruning the session
+-- variables to a minimal set, avoiding this pessimization.
   , _cvQueryVariables     :: !ValidatedQueryVariables
   , _cvSyntheticVariables :: !ValidatedSyntheticVariables
   -- ^ To allow more queries to be multiplexed together, we introduce “synthetic”
