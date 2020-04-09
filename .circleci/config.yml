@@ -91,8 +91,8 @@ refs:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
-    - *skip_server_tests
     - checkout
+    - *skip_server_tests
     - *wait_for_postgres
     - run:
         name: Install deps
@@ -156,8 +156,8 @@ jobs:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
-    - *skip_server_tests
     - checkout
+    - *skip_server_tests
     - restore_cache:
         keys:
         - cabal-store-v1-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
@@ -288,8 +288,8 @@ jobs:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
-    - *skip_server_tests
     - checkout
+    - *skip_server_tests
     - run:
         name: Run unit tests
         environment:
@@ -516,8 +516,8 @@ jobs:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
-    - *skip_server_tests
     - checkout
+    - *skip_server_tests
     - run:
         name: install_necessary_packages
         command: |
