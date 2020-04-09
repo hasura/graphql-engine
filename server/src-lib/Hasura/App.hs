@@ -9,14 +9,14 @@ import           Control.Monad.STM                    (atomically)
 import           Control.Concurrent.STM.TVar          (readTVarIO)
 import           Control.Monad.Trans.Control          (MonadBaseControl (..))
 import           Data.Aeson                           ((.=))
-import           Data.Time.Clock                      (UTCTime, getCurrentTime)
+import           Data.Time.Clock                      (UTCTime)
 import           GHC.AssertNF
 import           Options.Applicative
 import           System.Environment                   (getEnvironment, lookupEnv)
 import           System.Exit                          (exitFailure)
 
-import qualified Control.Concurrent.Extended          as C
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Control.Concurrent.Extended          as C
 import qualified Data.Aeson                           as A
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.ByteString.Lazy.Char8           as BLC
@@ -49,7 +49,6 @@ import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates           (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Migrate                (migrateCatalog)
 import           Hasura.Server.Query                  (requiresAdmin, runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
@@ -111,11 +110,9 @@ data InitCtx
   = InitCtx
   { _icHttpManager :: !HTTP.Manager
   , _icInstanceId  :: !InstanceId
-  , _icDbUid       :: !Text
   , _icLoggers     :: !Loggers
   , _icConnInfo    :: !Q.ConnInfo
   , _icPgPool      :: !Q.PGPool
-  , _icPgVersion   :: !PGVersion
   }
 
 -- | Collection of the LoggerCtx, the regular Logger and the PGLogger
@@ -136,7 +133,7 @@ newtype AppM a = AppM { unAppM :: IO a }
 -- this exists as a separate function because the context (logger, http manager, pg pool) can be
 -- used by other functions as well
 initialiseCtx
-  :: (HasVersion, MonadIO m)
+  :: MonadIO m
   => HGECommand Hasura
   -> RawConnInfo
   -> m (InitCtx, UTCTime)
@@ -155,25 +152,15 @@ initialiseCtx hgeCmd rci = do
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
       pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
-      -- safe init catalog
-      initialiseCatalog pool (SQLGenCtx soStringifyNum) httpManager logger
-
-      return (l, pool)
+      pure (l, pool)
 
     -- for other commands generate a minimal pool
     _ -> do
       l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       pool <- getMinimalPool pgLogger connInfo
-      return (l, pool)
+      pure (l, pool)
 
-  -- get the unique db id
-  dbId <- liftIO $ runTxIO pool (Q.Serializable, Nothing) getDbId
-
-  -- get the pg version
-  pgVersion <- liftIO $ runTxIO pool (Q.ReadCommitted, Nothing) getPgVersion
-
-  return (InitCtx httpManager instanceId dbId loggers connInfo pool pgVersion, initTime)
-
+  pure (InitCtx httpManager instanceId loggers connInfo pool, initTime)
   where
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
@@ -187,12 +174,6 @@ initialiseCtx hgeCmd rci = do
       let logger = mkLogger loggerCtx
           pgLogger = mkPGLogger logger
       return $ Loggers loggerCtx logger pgLogger
-
-    initialiseCatalog pool sqlGenCtx httpManager (Logger logger) = do
-      currentTime <- liftIO getCurrentTime
-      -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
-      either printErrJExit (\(result, schemaCache) -> logger result $> schemaCache) initRes
 
 -- | Run a transaction and if an error is encountered, log the error and abort the program
 runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a
@@ -281,8 +262,10 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   -- start a background thread for telemetry
   when soEnableTelemetry $ do
     unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
+    (dbId, pgVersion) <- liftIO $ runTxIO _icPgPool (Q.ReadCommitted, Nothing) $
+      (,) <$> getDbId <*> getPgVersion
     void $ C.forkImmortal "runTelemetry" logger $ liftIO $
-      runTelemetry logger _icHttpManager (getSCFromRef cacheRef) _icDbUid _icInstanceId _icPgVersion
+      runTelemetry logger _icHttpManager (getSCFromRef cacheRef) dbId _icInstanceId pgVersion
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
@@ -309,7 +292,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     -- So, unlocking all the locked events might re-deliver an event(due to #2).
     prepareEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-      res <- liftIO $ runTx pool (Q.Serializable, Nothing) unlockAllEvents
+      res <- liftIO $ runTx pool (Q.ReadCommitted, Nothing) unlockAllEvents
       either printErrJExit return res
 
     -- | shutdownEvents will be triggered when a graceful shutdown has been inititiated, it will
