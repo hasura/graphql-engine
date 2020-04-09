@@ -2,7 +2,7 @@ const setLSState = (key: string, data: any) => {
   window.localStorage.setItem(key, JSON.stringify(data));
 };
 
-const getLSState = (key: string, defaultValue = {}) => {
+const getLSState = (key: string, defaultValue: null | {} = {}) => {
   try {
     const p = window.localStorage.getItem(key);
     if (p) {
@@ -91,5 +91,5 @@ export const handlePageSizeStateChange = (pageSize: number) => {
 };
 
 export const getPageSize = () => {
-  return getLSState(pageSizeKey);
+  return getLSState(pageSizeKey, null);
 };
