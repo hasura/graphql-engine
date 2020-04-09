@@ -1,3 +1,6 @@
+-- This pragma is needed for allowQueryActionExecuter
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
+
 module Hasura.GraphQL.Resolve.Action
   ( resolveActionMutation
   , resolveAsyncActionQuery
@@ -147,6 +150,11 @@ resolveActionMutationSync field executionContext sessionVariables = do
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
+-- QueryActionExecuter is a type for a higher function, this is being used
+-- to allow or disallow where a query action can be executed. We would like
+-- to explicitly control where a query action can be run.
+-- Example: We do not explain a query action, so we use the `restrictActionExecuter`
+-- to prevent resolving the action query.
 type QueryActionExecuter =
   forall m a. (MonadError QErr m)
   => (HTTP.Manager -> [HTTP.Header] -> m a)
