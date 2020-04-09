@@ -76,7 +76,7 @@ export const isEqual = (value1, value2) => {
   return _isEqual;
 };
 
-export function isJsonString(str) {
+export const isJsonString = str => {
   try {
     JSON.parse(str);
   } catch (e) {
@@ -85,8 +85,8 @@ export function isJsonString(str) {
 
   return true;
 }
-
-export function getAllJsonPaths(json, leafKeys = [], prefix = '') {
+;
+export const getAllJsonPaths = (json, leafKeys = [], prefix = '') => {
   const _paths = [];
 
   const addPrefix = subPath => {
@@ -122,7 +122,7 @@ export function getAllJsonPaths(json, leafKeys = [], prefix = '') {
   }
 
   return _paths;
-}
+};
 
 // use browser confirm and prompt to get user confirmation for actions
 export const getConfirmation = (
@@ -320,4 +320,12 @@ export const getLastArrayElement = array => {
 export const getFirstArrayElement = array => {
   if (!array) return null;
   return array[0];
+};
+
+export const deleteArrayElementAtIndex = (array, index) =>{
+  return array.splice(index, 1);
+};
+
+export const arrayDiff = (arr1, arr2) => {
+  return arr1.filter(v => !arr2.includes(v));
 };

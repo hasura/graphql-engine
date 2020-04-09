@@ -1,7 +1,6 @@
 import {
   defaultPermissionsState,
   defaultQueryPermissions,
-  defaultPresetsState,
 } from '../DataState';
 import { getEdForm, getIngForm } from '../utils';
 import { makeMigrationCall, fetchRoleList } from '../DataActions';
@@ -45,8 +44,6 @@ export const X_HASURA_CONST = 'x-hasura-';
 
 /* preset operations */
 export const SET_PRESET_VALUE = 'ModifyTable/SET_PRESET_VALUE';
-
-export const CREATE_NEW_PRESET = 'ModifyTable/CREATE_NEW_PRESET';
 
 export const DELETE_PRESET = 'ModifyTable/DELETE_PRESET';
 
@@ -137,34 +134,14 @@ const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
 
   if (rolePermissions) {
     Object.keys(rolePermissions.permissions).forEach(q => {
-      const localPresets = [];
       _permissions[q] = rolePermissions.permissions[q];
-      // If the query is insert, transform set object if exists to an array
+
       if (q === 'insert' || q === 'update') {
         if (!_permissions[q].columns) {
           _permissions[q].columns = [];
         }
 
-        if ('set' in _permissions[q]) {
-          if (
-            Object.keys(_permissions[q].set).length > 0 &&
-            !(_permissions[q].set.length > 0)
-          ) {
-            Object.keys(_permissions[q].set).map(s => {
-              localPresets.push({
-                key: s,
-                value: _permissions[q].set[s],
-              });
-            });
-          }
-
-          localPresets.push(defaultPresetsState[q]);
-
-          _permissions[q].localPresets = [...localPresets];
-        } else {
-          // Just to support version changes
-          // If user goes from current to previous version and back
-          _permissions[q].localPresets = [defaultPresetsState[q]];
+        if (!_permissions[q].set) {
           _permissions[q].set = {};
         }
       }
@@ -713,20 +690,6 @@ const permChangePermissions = changeType => {
           permission: permissionsState[query],
         },
       };
-
-      if (
-        (query === 'insert' || query === 'update') &&
-        'localPresets' in permissionsState[query]
-      ) {
-        // Convert preset array to Object
-        const presetsObject = {};
-        permissionsState[query].localPresets.forEach(s => {
-          if (s.key) {
-            presetsObject[s.key] = s.value;
-          }
-        });
-        permissionsState[query].set = { ...presetsObject };
-      }
 
       const deleteQuery = {
         type: 'drop_' + query + '_permission',
