@@ -20,9 +20,6 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver"
-
-	"gopkg.in/yaml.v2"
-
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
@@ -34,6 +31,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
+	"gopkg.in/yaml.v2"
 )
 
 // Other constants used in the package
@@ -609,7 +607,7 @@ func (ec *ExecutionContext) setVersion() {
 }
 
 // InstallPlugin installs a plugin depending on forceCLIVersion.
-// If forceCLIVersion is set, it uses ec.Version.ServerSemver version for the plugin to be installed.
+// If forceCLIVersion is set, it uses ec.Version.CLISemver version for the plugin to be installed.
 // Else, it installs the latest version of the plugin
 func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) error {
 	var version *semver.Version
