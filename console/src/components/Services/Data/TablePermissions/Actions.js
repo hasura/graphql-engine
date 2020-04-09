@@ -16,7 +16,7 @@ import {
   getCreatePermissionQuery,
   getDropPermissionQuery,
 } from '../../../Common/utils/v1QueryUtils';
-import { upperCaseFirstChar } from '../../../Common/utils/jsUtils';
+import { capitalizeFirstChar } from '../../../Common/utils/jsUtils';
 
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
 export const PERM_SET_FILTER = 'ModifyTable/PERM_SET_FILTER';
@@ -760,11 +760,11 @@ const permChangePermissions = changeType => {
       '_table_' +
       table;
 
-    const requestMsg = upperCaseFirstChar(
+    const requestMsg = capitalizeFirstChar(
       getIngForm(changeType) + ' permissions...'
     );
     const successMsg = 'Permissions ' + getEdForm(changeType);
-    const errorMsg = upperCaseFirstChar(
+    const errorMsg = capitalizeFirstChar(
       getIngForm(changeType) + ' permissions failed'
     );
 

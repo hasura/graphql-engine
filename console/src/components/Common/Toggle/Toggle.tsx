@@ -7,7 +7,7 @@ type ToggleProps = {
   onChange: () => void;
   icons: boolean;
   checked: boolean;
-  className: string;
+  className?: string;
 };
 
 const ToggleComponent = (props: ToggleProps) => (
