@@ -11,69 +11,69 @@ import { wrapTypename, getAstTypeMetadata } from './wrappingTypeUtils';
 import { inbuiltTypes } from './hasuraCustomTypeUtils';
 import { getTypeFields, getUnderlyingType } from './graphqlSchemaUtils';
 
-export const validateMutation = (mutationString, clientSchema) => {
-  // parse mutation string
-  let mutationAst;
+export const validateOperation = (operationString, clientSchema) => {
+  // parse operation string
+  let operationAst;
   try {
-    mutationAst = sdlParse(mutationString);
+    operationAst = sdlParse(operationString);
   } catch (e) {
     throw Error('invalid SDL');
   }
 
-  const schemaValidationErrors = validate(clientSchema, mutationAst);
+  const schemaValidationErrors = validate(clientSchema, operationAst);
   if (schemaValidationErrors.length) {
     throw Error(
       'this is not a valid GraphQL query as per the current GraphQL schema'
     );
   }
 
-  if (mutationAst.definitions.find(d => d.kind === 'FragmentDefinition')) {
+  if (operationAst.definitions.find(d => d.kind === 'FragmentDefinition')) {
     throw Error('fragments are not supported');
   }
 
-  if (mutationAst.definitions.find(d => d.operation !== 'mutation')) {
+  if (operationAst.definitions.find(d => d.operation !== 'mutation')) {
     throw Error('queries cannot be derived into actions');
   }
 
-  mutationAst.definitions = mutationAst.definitions.filter(
+  operationAst.definitions = operationAst.definitions.filter(
     d => d.operation === 'mutation'
   );
 
   // throw error if the AST is empty
-  if (!mutationAst.definitions.length) {
+  if (!operationAst.definitions.length) {
     throw Error('could not find any mutation operations');
   }
 
-  if (mutationAst.definitions.length !== 1) {
+  if (operationAst.definitions.length !== 1) {
     throw Error('you can derive action from only one operation');
   }
 
-  if (mutationAst.definitions[0].kind !== 'OperationDefinition') {
+  if (operationAst.definitions[0].kind !== 'OperationDefinition') {
     throw Error('could not find any operation in the given query');
   }
 
   // filter schema specific fields from the operation
-  mutationAst.definitions[0].selectionSet.selections = mutationAst.definitions[0].selectionSet.selections.filter(
+  operationAst.definitions[0].selectionSet.selections = operationAst.definitions[0].selectionSet.selections.filter(
     s => {
       return s.name.value.indexOf('__') !== 0;
     }
   );
 
-  // throw error if no mutation is being made
-  if (!mutationAst.definitions[0].selectionSet.selections.length) {
-    throw Error('the given mutation must ask for at least one root field');
+  // throw error if no operation is being made
+  if (!operationAst.definitions[0].selectionSet.selections.length) {
+    throw Error('the given operation must ask for at least one root field');
   }
 
-  // throw error if the mutation does not have variables
-  if (!mutationAst.definitions[0].variableDefinitions.length) {
-    throw Error('only mutations using variables can be derived');
+  // throw error if the operation does not have variables
+  if (!operationAst.definitions[0].variableDefinitions.length) {
+    throw Error('only operations using variables can be derived');
   }
 
-  return mutationAst;
+  return operationAst;
 };
 
-const deriveMutation = (
-  mutationString,
+const deriveAction = (
+  operationString,
   introspectionSchema,
   actionName = null
 ) => {
@@ -81,25 +81,25 @@ const deriveMutation = (
     ? buildClientSchema(introspectionSchema)
     : introspectionSchema;
 
-  let mutationAst;
+  let operationAst;
   try {
-    mutationAst = validateMutation(mutationString, clientSchema);
+    operationAst = validateOperation(operationString, clientSchema);
   } catch (e) {
     throw e;
   }
 
-  const variables = mutationAst.definitions[0].variableDefinitions;
+  const variables = operationAst.definitions[0].variableDefinitions;
 
-  // get mutation name
-  const rootFields = mutationAst.definitions[0].selectionSet.selections;
-  const mutationDefinition = rootFields[0];
-  const mutationName = mutationDefinition.name.value;
+  // get operation name
+  const rootFields = operationAst.definitions[0].selectionSet.selections;
+  const operationDefinition = rootFields[0];
+  const operationName = operationDefinition.name.value;
 
   // get action name if not provided
   if (!actionName) {
-    actionName = mutationAst.definitions[0].name
-      ? mutationAst.definitions[0].name.value
-      : camelize(`${mutationName}_derived`);
+    actionName = operationAst.definitions[0].name
+      ? operationAst.definitions[0].name.value
+      : camelize(`${operationName}_derived`);
   }
 
   // function to prefix typename with the action name
@@ -108,7 +108,7 @@ const deriveMutation = (
   };
 
   const allHasuraTypes = clientSchema._typeMap;
-  const mutationType = clientSchema._mutationType;
+  const operationType = clientSchema._mutationType; // TODO better handling for queries
 
   const actionArguments = [];
   const newTypes = {};
@@ -193,11 +193,11 @@ const deriveMutation = (
   const outputTypeFields = {};
   rootFields.forEach(f => {
     const rfName = f.name.value;
-    const refMutationOutputType = getUnderlyingType(
-      getTypeFields(mutationType)[rfName].type
+    const refOperationOutputType = getUnderlyingType(
+      getTypeFields(operationType)[rfName].type
     ).type;
 
-    Object.values(getTypeFields(refMutationOutputType)).forEach(
+    Object.values(getTypeFields(refOperationOutputType)).forEach(
       outputTypeField => {
         const fieldTypeMetadata = getUnderlyingType(outputTypeField.type);
         if (isScalarType(fieldTypeMetadata.type)) {
@@ -238,4 +238,4 @@ const deriveMutation = (
   };
 };
 
-export default deriveMutation;
+export default deriveAction;
