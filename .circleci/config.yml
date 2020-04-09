@@ -155,6 +155,7 @@ jobs:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
+    - *skip_server_tests
     - checkout
     - restore_cache:
         keys:
