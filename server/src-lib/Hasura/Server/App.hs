@@ -469,7 +469,7 @@ mkWaiApp
 mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
          enableTelemetry instanceId apis lqOpts planCacheOptions = do
 
-    (planCache, schemaCacheRef, cacheBuiltTime) <- initialiseSchemaCache
+    (planCache, schemaCacheRef, cacheBuiltTime) <- migrateAndInitialiseSchemaCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
@@ -514,8 +514,8 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
     getTimeMs :: IO Int64
     getTimeMs = (round . (* 1000)) `fmap` getPOSIXTime
 
-    initialiseSchemaCache :: m (E.PlanCache, SchemaCacheRef, Maybe UTCTime)
-    initialiseSchemaCache = do
+    migrateAndInitialiseSchemaCache :: m (E.PlanCache, SchemaCacheRef, Maybe UTCTime)
+    migrateAndInitialiseSchemaCache = do
       let pgExecCtx = PGExecCtx pool Q.Serializable
           adminRunCtx = RunCtx adminUserInfo httpManager sqlGenCtx
       currentTime <- liftIO getCurrentTime
