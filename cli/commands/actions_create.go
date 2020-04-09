@@ -49,8 +49,8 @@ func newActionsCreateCmd(ec *cli.ExecutionContext, v *viper.Viper) *cobra.Comman
 	f.String("webhook", "", "webhook to use in action")
 
 	// bind to viper
-	v.BindPFlag("actions.kind", f.Lookup("kind"))
-	v.BindPFlag("actions.handler_webhook_baseurl", f.Lookup("webhook"))
+	util.BindPFlag(v, "actions.kind", f.Lookup("kind"))
+	util.BindPFlag(v, "actions.handler_webhook_baseurl", f.Lookup("webhook"))
 
 	return actionsCreateCmd
 }
