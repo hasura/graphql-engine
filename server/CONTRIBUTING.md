@@ -1,5 +1,4 @@
 # Contributing
-dummy change
 
 This guide explains how to set up the graphql-engine server for development on your
 own machine and how to contribute.
