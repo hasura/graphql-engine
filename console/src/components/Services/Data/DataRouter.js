@@ -34,6 +34,7 @@ import {
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
   updateSchemaInfo,
+  fetchSchemaList,
   // ADMIN_SECRET_ERROR,
 } from './DataActions';
 
@@ -142,42 +143,48 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
     // if admin secret is not available in localstorage, check if cli is giving it via window.__env
     // if admin secret is not available in localstorage and cli, make a api call to data without admin secret.
     // if the api fails, then redirect to login - this is a fresh user/browser flow
-    const {
-      tables: { allSchemas },
-    } = store.getState();
+    store.dispatch(fetchSchemaList()).then(() => {
+      const {
+        tables: { schemaList, currentSchema: prevSchema },
+      } = store.getState();
 
-    if (allSchemas.length) {
-      cb();
-      return;
-    }
-
-    let currentSchema = nextState.params.schema;
-    if (
-      currentSchema === null ||
-      currentSchema === undefined ||
-      currentSchema === ''
-    ) {
-      currentSchema = 'public';
-    }
-
-    Promise.all([
-      store.dispatch({
-        type: UPDATE_CURRENT_SCHEMA,
-        currentSchema: currentSchema,
-      }),
-      store.dispatch(fetchDataInit()),
-      store.dispatch(updateSchemaInfo()),
-      store.dispatch(fetchFunctionInit()),
-    ]).then(
-      () => {
-        cb();
-      },
-      () => {
-        // alert('Could not load schema.');
-        replaceState('/');
-        cb();
+      let currentSchema = nextState.params.schema;
+      if (currentSchema && prevSchema === currentSchema) {
+        return cb();
       }
-    );
+
+      if (
+        currentSchema === null ||
+        currentSchema === undefined ||
+        currentSchema === ''
+      ) {
+        if (schemaList.map(s => s.schema_name).includes('public')) {
+          currentSchema = 'public';
+        } else {
+          currentSchema = schemaList[0].schema_name;
+          replaceState(`/data/schema/${currentSchema}`);
+        }
+      }
+
+      Promise.all([
+        store.dispatch({
+          type: UPDATE_CURRENT_SCHEMA,
+          currentSchema: currentSchema,
+        }),
+        store.dispatch(fetchDataInit()),
+        store.dispatch(updateSchemaInfo()),
+        store.dispatch(fetchFunctionInit()),
+      ]).then(
+        () => {
+          cb();
+        },
+        () => {
+          // alert('Could not load schema.');
+          replaceState('/');
+          cb();
+        }
+      );
+    });
   };
 
   const migrationRedirects = (nextState, replaceState, cb) => {

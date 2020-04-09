@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router';
 import globals from '../../../Globals';
 
@@ -11,6 +11,7 @@ import { updateCurrentSchema } from './DataActions';
 import { NotFoundError } from '../../Error/PageNotFound';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
+import { showInfoNotification } from '../Common/Notification';
 
 const DataPageContainer = ({
   currentSchema,
@@ -27,6 +28,15 @@ const DataPageContainer = ({
     // throw a 404 exception
     throw new NotFoundError();
   }
+
+  useEffect(() => {
+    if (
+      currentSchema !== 'public' &&
+      !schemaList.map(s => s.schema_name).includes('public')
+    ) {
+      dispatch(showInfoNotification('No public schema'));
+    }
+  }, [currentSchema]);
 
   const currentLocation = location.pathname;
 
