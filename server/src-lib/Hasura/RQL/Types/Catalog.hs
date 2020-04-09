@@ -144,11 +144,14 @@ data CatalogCustomTypes
   = CatalogCustomTypes
   { _cctCustomTypes :: !CustomTypes
   , _cctPgScalars   :: ![PGScalarType]
-  -- ^ Base types from Postgres required for validating custom types
-  -- to check if any one of them uses the Postgres base type name
-  -- and publish them in generated GraphQL schema as Scalars.
-  -- These won't be tracked in the metadata.
-  -- See https://github.com/hasura/graphql-engine/issues/4125
+  -- ^ All Postgres base types, which may be referenced in custom type definitions.
+  -- When we validate the custom types (see 'validateCustomTypeDefinitions'),
+  -- we record which base types were referenced so that we can be sure to include them
+  -- in the generated GraphQL schema.
+  -- These are not actually part of the Hasura metadata --- we fetch them from
+  -- @pg_catalog.pg_type@ --- but they’re needed when validating the custom type
+  -- metadata, so we include them here.
+  -- See Note [Postgres scalars in custom types] for more details.
   } deriving (Show, Eq, Generic)
 instance NFData CatalogCustomTypes
 instance Cacheable CatalogCustomTypes

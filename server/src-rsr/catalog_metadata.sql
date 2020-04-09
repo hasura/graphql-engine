@@ -178,7 +178,7 @@ from
       json_build_object(
         'custom_types',
          coalesce((select custom_types from hdb_catalog.hdb_custom_types), '{}'),
-        'pg_scalars',
+        'pg_scalars', -- See Note [Postgres scalars in custom types]
          coalesce((select json_agg(typname) from pg_catalog.pg_type where typtype = 'b'), '[]')
       ) as item
   ) as custom_types,
