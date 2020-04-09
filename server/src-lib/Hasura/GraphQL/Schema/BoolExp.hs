@@ -75,8 +75,10 @@ comparisonExps
   :: (MonadSchema n m, MonadError QErr m)
   => PGColumnType -> G.Nullability -> m (Parser 'Input n [ComparisonExp])
 comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
-  columnParser <- P.column columnType nullability
-  castParser   <- castExp columnType nullability
+  geogInputParser <- geographyWithinDistanceInput
+  geomInputParser <- geometryWithinDistanceInput
+  columnParser    <- P.column columnType nullability
+  castParser      <- castExp columnType nullability
   let name       = P.getName columnParser <> $$(G.litName "_comparison_exp")
       listParser = P.list columnParser `P.bind` traverse P.openOpaque
   pure $ P.object name Nothing $ fmap catMaybes $ sequenceA $ concat
@@ -130,12 +132,70 @@ comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
         (Just "do all of these strings exist as top-level keys in the column")
         (AHasKeysAll . mkListLiteral columnType <$> listParser)
       ]
+    , guard (isScalarColumnWhere (== PGGeography) columnType) *>
+      [ P.fieldOptional $$(G.litName "_st_intersects")
+        (Just $ "does the column spatially intersect the given geography value")
+        (ASTIntersects . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_st_d_within")
+        (Just $ "is the column within a given distance from the given geography value")
+        (ASTDWithinGeog <$> geogInputParser)
+      ]
+    , guard (isScalarColumnWhere (== PGGeometry) columnType) *>
+      [ P.fieldOptional $$(G.litName "_st_contains")
+        (Just $ "does the column contain the given geometry value")
+        (ASTContains   . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_st_crosses")
+        (Just $ "does the column cross the given geometry value")
+        (ASTCrosses    . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_st_equals")
+        (Just $ "is the column equal to given geometry value (directionality is ignored)")
+        (ASTEquals     . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_st_overlaps")
+        (Just $ "does the column 'spatially overlap' (intersect but not completely contain) the given geometry value")
+        (ASTOverlaps   . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_st_touches")
+        (Just $ "does the column have atleast one point in common with the given geometry value")
+        (ASTTouches    . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_st_within")
+        (Just $ "is the column contained in the given geometry value")
+        (ASTWithin     . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_st_intersects")
+        (Just $ "does the column spatially intersect the given geometry value")
+        (ASTIntersects . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_st_d_within")
+        (Just $ "is the column within a given distance from the given geometry value")
+        (ASTDWithinGeom <$> geomInputParser)
+      ]
     ]
   where
     mkListLiteral :: PGColumnType -> [P.PGColumnValue] -> UnpreparedValue
     mkListLiteral columnType columnValues = P.UVLiteral $ SETyAnn
       (SEArray $ txtEncoder . pstValue . P.pcvValue <$> columnValues)
       (mkTypeAnn $ PGTypeArray $ unsafePGColumnToRepresentation columnType)
+
+
+geographyWithinDistanceInput
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => m (Parser 'Input n (DWithinGeogOp UnpreparedValue))
+geographyWithinDistanceInput = do
+  geographyParser <- P.column (PGColumnScalar PGGeography) (G.Nullability False)
+  booleanParser   <- P.column (PGColumnScalar PGBoolean)   (G.Nullability False)
+  floatParser     <- P.column (PGColumnScalar PGFloat)     (G.Nullability False)
+  pure $ P.object $$(G.litName "st_d_within_geography_input") Nothing $
+    DWithinGeogOp <$> (mkParameter <$> P.field $$(G.litName "distance")     Nothing floatParser)
+                  <*> (mkParameter <$> P.field $$(G.litName "from")         Nothing geographyParser)
+                  <*> (mkParameter <$> P.field $$(G.litName "use_spheroid") Nothing booleanParser)
+
+geometryWithinDistanceInput
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => m (Parser 'Input n (DWithinGeomOp UnpreparedValue))
+geometryWithinDistanceInput = do
+  geometryParser <- P.column (PGColumnScalar PGGeometry) (G.Nullability False)
+  floatParser    <- P.column (PGColumnScalar PGFloat)    (G.Nullability False)
+  pure $ P.object $$(G.litName "st_d_within_input") Nothing $
+    DWithinGeomOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
+                  <*> (mkParameter <$> P.field $$(G.litName "from")     Nothing geometryParser)
+
 
 castExp
   :: forall m n. (MonadSchema n m, MonadError QErr m)
