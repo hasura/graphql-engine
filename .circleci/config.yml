@@ -10,6 +10,18 @@ refs:
         else
           echo "no skip_job file present, full steam ahead"
         fi
+  skip_server_tests: &skip_server_tests
+    run:
+      name: checking if server changes present
+      command: |
+        for folder in `git log --format="" --name-only ${CIRCLE_COMPARE_URL##http*/} | cut -d"/" -f1 | sort -u`; do
+          echo "contents in $folder were modified"
+          if [ "$folder" = "server" ]; then
+            echo "Server changes present" && exit 0
+          fi
+        done
+        echo "No server changes present"
+        circleci-agent step halt
   wait_for_postgres: &wait_for_postgres
     run:
       name: waiting for postgres to be ready
@@ -78,6 +90,7 @@ refs:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
+    - *skip_server_tests
     - checkout
     - *wait_for_postgres
     - run:
@@ -500,6 +513,7 @@ jobs:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
+    - *skip_server_tests
     - checkout
     - run:
         name: install_necessary_packages
