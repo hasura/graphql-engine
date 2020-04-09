@@ -263,26 +263,15 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
          |) (MetadataObject MOCustomTypes $ toJSON customTypes)
 
       -- actions
-      actionCache <- (mapFromL _amName actions >- returnA)
-        >-> (| Inc.keyed (\_ action -> do
-               let ActionMetadata name comment def actionPermissions = action
-                   metadataObj = MetadataObject (MOAction name) $ toJSON $
-                                 CreateAction name def comment
-                   addActionContext e = "in action " <> name <<> "; " <> e
-               (| withRecordInconsistency (
-                  (| modifyErrA ( do
-                       resolvedCustomTypes <-
-                         (| onNothingA (throwA -< err400 Unexpected "custom types are inconsistent")
-                          |) maybeResolvedCustomTypes
-                       (resolvedDef, outFields) <- bindErrorA -< resolveAction resolvedCustomTypes def
-                       let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
-                           permissionMap = mapFromL _apiRole permissionInfos
-                       returnA -< ActionInfo name outFields resolvedDef permissionMap comment
-                     )
-                   |) addActionContext)
-                |) metadataObj)
-             |)
-        >-> (\actionMap -> returnA -< M.catMaybes actionMap)
+      actionCache <- case maybeResolvedCustomTypes of
+        Just resolvedCustomTypes -> buildActions -< (resolvedCustomTypes, actions)
+
+        -- If the custom types themselves are inconsistent, we can’t really do
+        -- anything with actions, so just mark them all inconsistent.
+        Nothing -> do
+          recordInconsistencies -< ( map mkActionMetadataObject actions
+                                   , "custom types are inconsistent" )
+          returnA -< M.empty
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
@@ -303,6 +292,9 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       let objectId = MOTableObj qt $ MTOTrigger trn
           definition = object ["table" .= qt, "configuration" .= configuration]
       in MetadataObject objectId definition
+
+    mkActionMetadataObject (ActionMetadata name comment defn _) =
+      MetadataObject (MOAction name) (toJSON $ CreateAction name defn comment)
 
     mkRemoteSchemaMetadataObject remoteSchema =
       MetadataObject (MORemoteSchema (_arsqName remoteSchema)) (toJSON remoteSchema)
@@ -361,6 +353,27 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
             when (buildReason == CatalogUpdate) $ do
               liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
               mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
+
+    buildActions
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m )
+      => ( (NonObjectTypeMap, AnnotatedObjects)
+         , [ActionMetadata]
+         ) `arr` HashMap ActionName ActionInfo
+    buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
+      where
+        buildAction = proc (resolvedCustomTypes, action) -> do
+          let ActionMetadata name comment def actionPermissions = action
+              addActionContext e = "in action " <> name <<> "; " <> e
+          (| withRecordInconsistency (
+             (| modifyErrA (do
+                  (resolvedDef, outFields) <- liftEitherA <<< bindA -<
+                    runExceptT $ resolveAction resolvedCustomTypes def
+                  let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
+                      permissionMap = mapFromL _apiRole permissionInfos
+                  returnA -< ActionInfo name outFields resolvedDef permissionMap comment)
+              |) addActionContext)
+           |) (mkActionMetadataObject action)
 
     buildRemoteSchemas
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
