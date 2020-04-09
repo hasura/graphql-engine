@@ -1,5 +1,5 @@
 import React from 'react';
-import Endpoints from '../../../../../Endpoints';
+// import Endpoints from '../../../../../Endpoints';
 import Button from '../../../../Common/Button/Button';
 import { useScheduledTriggerAdd, defaultCronExpr } from '../Add/state';
 import { ScheduledTrigger } from '../../Types';
@@ -15,14 +15,19 @@ import Modal from '../../../../Common/Modal/Modal';
 import CronBuilder from '../../../../Common/CronBuilder/CronBuilder';
 import AceEditor from '../../../../Common/AceEditor/BaseEditor';
 import Headers from '../../../../Common/Headers/Headers';
-import { saveScheduledTrigger, deleteScheduledTrigger } from '../../ServerIO';
-import { getCreateScheduledEventQuery } from '../../../../Common/utils/v1QueryUtils';
+import {
+  invokeScheduledTrigger,
+  saveScheduledTrigger,
+  deleteScheduledTrigger,
+} from '../../ServerIO';
+// import { getCreateScheduledEventQuery } from '../../../../Common/utils/v1QueryUtils';
 
 type ModifyProps = {
   dispatch: any;
   currentTrigger?: ScheduledTrigger;
 };
 
+/* TODO using a function inside ServerIO because headers needs to be present
 const invokeTrigger = (triggerName: string) => {
   const query = getCreateScheduledEventQuery(triggerName);
   return fetch(Endpoints.query, {
@@ -40,6 +45,7 @@ const invokeTrigger = (triggerName: string) => {
       return Promise.reject();
     });
 };
+*/
 
 const Modify = (props: ModifyProps) => {
   const [invokeButtonText, setInvokeButtonText] = React.useState('Invoke');
@@ -65,7 +71,6 @@ const Modify = (props: ModifyProps) => {
     loading,
     showScheduleModal,
   } = state;
-  console.log(state);
 
   React.useEffect(() => {
     setCronBuilderState(schedule.value || defaultCronExpr);
@@ -76,7 +81,7 @@ const Modify = (props: ModifyProps) => {
   }
 
   const deleteFunc = () => {
-    const isOk = getConfirmation('Are you sure?');
+    const isOk = getConfirmation();
     if (!isOk) return;
     dispatch(deleteScheduledTrigger(currentTrigger));
   };
@@ -227,12 +232,14 @@ const Modify = (props: ModifyProps) => {
         <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
           {getScheduleInputText(false, styles.add_mar_right_mid)}
           {modal}
+          {/*
           <a
             onClick={setState.toggleScheduleModal}
             className={styles.cursorPointer}
           >
             Build a cron expression
           </a>
+          */}
         </div>
       </React.Fragment>
     );
@@ -288,9 +295,12 @@ const Modify = (props: ModifyProps) => {
 
     const invoke = () => {
       setInvokeButtonText('Invoking...');
-      invokeTrigger(currentTrigger.name)
+      dispatch(invokeScheduledTrigger(currentTrigger.name))
         .then(() => {
-          setInvokeButtonText('Invoke');
+          setInvokeButtonText('Invocation Successful');
+          setTimeout(() => {
+            setInvokeButtonText('Invoke');
+          }, 2000);
         })
         .catch(() => {
           setInvokeButtonText('Invoke');

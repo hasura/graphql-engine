@@ -187,12 +187,14 @@ const Main = ({ dispatch, initState }: AddScheduledTriggerProps) => {
         <div className={`${styles.add_mar_bottom_mid} ${styles.display_flex}`}>
           {getScheduleInputText(false, styles.add_mar_right_mid)}
           {modal}
+          {/*
           <a
             onClick={setState.toggleScheduleModal}
             className={styles.cursorPointer}
           >
             Build a cron expression
           </a>
+          */}
         </div>
       </React.Fragment>
     );
