@@ -5,7 +5,7 @@ import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 import FoldableHoc from './foldableTable';
 
-import { isObject, isNotDefined } from '../utils/jsUtils';
+import { isObject } from '../utils/jsUtils';
 
 class DragFoldTable extends Component {
   constructor(props) {
@@ -140,7 +140,7 @@ export const getColWidth = (
       const content = contentRows[i][header];
 
       let contentString;
-      if (isNotDefined(content)) {
+      if (!exists(content)) {
         contentString = 'NULL';
       } else if (isObject(content)) {
         contentString = JSON.stringify(content, null, 4);
