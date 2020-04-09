@@ -541,11 +541,3 @@ Date:   Fri Apr 10 19:25:59 2020 +0530
     * fix docs with new format
 
     Co-authored-by: Alexis King <lexi.lambda@gmail.com>
-
-commit ca15ef8c96bfd70a75b4ae3be26704345b11f1ed
-Author: Tirumarai Selvan <tiru@hasura.io>
-Date:   Thu Apr 9 13:11:24 2020 +0530
-
-    Refactor initialisation and relax tx isolation levels where possible (#3901)
-
-    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
