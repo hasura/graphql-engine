@@ -146,11 +146,11 @@ buildSchemaCacheFor objectId = do
 
   for_ (M.lookup objectId newInconsistentObjects) $ \matchingObjects -> do
     let reasons = T.intercalate ", " $ map imReason $ toList matchingObjects
-    throwError (err400 ConstraintViolation reasons) { qeInternal = Just $ toJSON matchingObjects }
+    throwError (err400 ConstraintViolation reasons) { qeExtra = Just $ EEInternal $ toJSON matchingObjects }
 
   unless (null newInconsistentObjects) $
     throwError (err400 Unexpected "cannot continue due to new inconsistent metadata")
-      { qeInternal = Just $ toJSON (nub . concatMap toList $ M.elems newInconsistentObjects) }
+      { qeExtra = Just $ EEInternal $ toJSON (nub . concatMap toList $ M.elems newInconsistentObjects) }
 
 -- | Like 'buildSchemaCache', but fails if there is any inconsistent metadata.
 buildSchemaCacheStrict :: (QErrM m, CacheRWM m) => m ()
@@ -160,7 +160,7 @@ buildSchemaCacheStrict = do
   let inconsObjs = scInconsistentObjs sc
   unless (null inconsObjs) $ do
     let err = err400 Unexpected "cannot continue due to inconsistent metadata"
-    throwError err{ qeInternal = Just $ toJSON inconsObjs }
+    throwError err{ qeExtra = Just $ EEInternal $ toJSON inconsObjs }
 
 -- | Executes the given action, and if any new 'InconsistentMetadata's are added to the schema
 -- cache as a result of its execution, raises an error.
@@ -175,6 +175,6 @@ withNewInconsistentObjsCheck action = do
         nub $ concatMap toList $ M.elems (currentObjects `diffInconsistentObjects` originalObjects)
   unless (null newInconsistentObjects) $
     throwError (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
-      { qeInternal = Just $ toJSON newInconsistentObjects }
+      { qeExtra = Just $ EEInternal $ toJSON newInconsistentObjects }
 
   pure result

@@ -163,7 +163,7 @@ getExecPlanPartial userInfo sc enableAL req = do
 
     modErr e =
       let msg = "query is not in any of the allowlists"
-      in e{qeInternal = Just $ J.object [ "message" J..= J.String msg]}
+      in e{qeExtra = Just $ EEInternal $ J.object [ "message" J..= J.String msg]}
 
 
 -- An execution operation, in case of

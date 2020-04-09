@@ -499,7 +499,7 @@ withMetadataCheck cascade action = do
     checkNewInconsistentMeta originalInconsMeta currentInconsMeta =
       unless (null newInconsistentObjects) $
         throwError (err500 Unexpected "cannot continue due to newly found inconsistent metadata")
-          { qeInternal = Just $ toJSON newInconsistentObjects }
+          { qeExtra = Just $ EEInternal $ toJSON newInconsistentObjects }
       where
         diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
         newInconsistentObjects = nub $ concatMap toList $

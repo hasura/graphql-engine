@@ -67,12 +67,6 @@ data ActionWebhookErrorResponse
   } deriving (Show, Eq)
 $(J.deriveFromJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
 
-data ActionWebhookErrorExtension
-  = ActionWebhookErrorExtension
-  { _aweeExtension :: !J.Value
-  }
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorExtension)
-
 data ActionWebhookResponse
   = AWRArray ![J.Object]
   | AWRObject !J.Object
@@ -404,7 +398,7 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
 
       if | HTTP.statusIsSuccessful responseStatus  -> do
              let expectingArray = isListType outputType
-                 addInternalToErr e = e{qeInternal = Just webhookResponseObject}
+                 addInternalToErr e = e{qeExtra = Just $ EEInternal $ webhookResponseObject}
              -- Incase any error, add webhook response in internal
              modifyQErr addInternalToErr $ do
                webhookResponse <- decodeValue responseValue
@@ -423,7 +417,7 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
              ActionWebhookErrorResponse message maybeExtension <-
                modifyErr ("webhook response: " <>) $ decodeValue responseValue
              let qErr = QErr [] responseStatus message Unexpected $
-                   (maybe Nothing (Just . J.toJSON . ActionWebhookErrorExtension) maybeExtension)
+                   (maybe Nothing (Just . EEExtensions) maybeExtension)
              throwError qErr
 
          | otherwise ->

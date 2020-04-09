@@ -101,7 +101,7 @@ runRunSQL RunSQL {..} = do
       fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
       where
         rawSqlErrHandler txe =
-          (err400 PostgresError "query execution failed") { qeInternal = Just $ toJSON txe }
+          (err400 PostgresError "query execution failed") { qeExtra = Just $ EEInternal $ toJSON txe }
 
     -- see Note [Checking metadata consistency in run_sql]
     containsDDLKeyword :: Text -> Bool

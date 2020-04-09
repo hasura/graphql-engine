@@ -111,7 +111,7 @@ defaultTxErrorHandler = mkTxErrorHandler (const False)
 mkTxErrorHandler :: (PGErrorType -> Bool) -> Q.PGTxErr -> QErr
 mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
   where
-    unexpectedError = (internalError "postgres query error") { qeInternal = Just $ J.toJSON txe }
+    unexpectedError = (internalError "postgres query error") { qeExtra = Just $ EEInternal $ J.toJSON txe }
     expectedError = uncurry err400 <$> do
       errorDetail <- Q.getPGStmtErr txe
       message <- Q.edMessage errorDetail
