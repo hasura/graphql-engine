@@ -8,10 +8,10 @@ const getLSState = (key: string, defaultValue: null | {} = {}) => {
     if (p) {
       return JSON.parse(p);
     }
-    setLSState(key, defaultValue);
     return defaultValue;
   } catch (e) {
     console.error(e);
+    setLSState(key, defaultValue);
     return defaultValue;
   }
 };

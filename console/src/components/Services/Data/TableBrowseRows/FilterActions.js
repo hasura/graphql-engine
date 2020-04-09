@@ -133,7 +133,8 @@ const filterReducer = (state = defaultCurFilter, action) => {
           'order_by' in q
             ? [...q.order_by, ...defaultCurFilter.order_by]
             : [...defaultCurFilter.order_by];
-        newCurFilterQ.limit = 'limit' in q ? q.limit : defaultCurFilter.limit;
+        newCurFilterQ.limit =
+          'limit' in q && q.limit ? q.limit : defaultCurFilter.limit;
         newCurFilterQ.offset =
           'offset' in q ? q.offset : defaultCurFilter.offset;
         return newCurFilterQ;
