@@ -61,11 +61,11 @@ import telemetryReducer from './src/telemetry/Actions';
 
 // React components
 import Spinner from './src/components/Common/Spinner/Spinner';
-import Button from './src/components/Common/Button/Button';
+// import Button from './src/components/Common/Button/Button';
 // Css modules
 const CommonScss = require('./src/components/Common/Common.scss');
 
-export { Spinner, Button, CommonScss };
+export { Spinner, CommonScss };
 
 // Meta data
 
@@ -167,3 +167,5 @@ export { CONSOLE_ADMIN_SECRET };
 
 // export styles
 export { filterQueryScss, tableScss };
+
+export * from './src/components/Common';
