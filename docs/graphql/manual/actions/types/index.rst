@@ -143,8 +143,8 @@ types and input types.
 
 .. admonition:: Postgres scalars
 
-   The base types from Postgres can be reusable as custom scalars without explicitly declaring them.
-   For example, the ``uuid`` type from ``pgcrypto`` extension can be used to resolve a UUID data.
+   Postgres base types are reusable as custom scalars without explicitly declaring them.
+   For example, the ``uuid`` type from the ``pgcrypto`` extension can be used to resolve a ``uuid`` data field.
 
 Enum types
 ----------
