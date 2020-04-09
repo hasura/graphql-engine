@@ -26,7 +26,6 @@
     "no-console": 0,
     "arrow-parens": 0,
     "no-alert": 0,
-    "no-plusplus": 0,
     "no-unsafe-negation": 0,
     "no-loop-func": 0,
     "no-lonely-if": 0,
@@ -51,6 +50,7 @@
     "prefer-destructuring": ["error", { "object": false, "array": false }],
     "prefer-rest-params": 0,
     "function-paren-newline": 0,
+    "no-plusplus": 0,
     "no-case-declarations": 0,
     "no-restricted-globals": 0,
     "no-unneeded-ternary": 0,
@@ -83,6 +83,7 @@
     "jsx-a11y/no-autofocus": 0,
     "max-len": 0,
     "no-continue": 0,
+    "no-new": 0,
     "eqeqeq": 0,
     "no-nested-ternary": 0
   },
@@ -148,7 +149,10 @@
         "no-dupe-class-members": "off",
         "no-redeclare": "off",
         "no-useless-constructor": "off",
-        "no-unused-expressions": "off"
+        "no-unused-expressions": "off",
+        "no-plusplus": "off",
+        "camelcase": "off",
+        "import/prefer-default-export": "off"
       }
     }
   ]

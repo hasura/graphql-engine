@@ -2,60 +2,60 @@
 
 /*** DATA ROUTES ***/
 
-export const getSchemaBaseRoute = schemaName => {
+export const getSchemaBaseRoute = (schemaName: string) => {
   // return `${globals.urlPrefix}/data/schema/${schemaName}`;
   return `/data/schema/${encodeURIComponent(schemaName)}`;
 };
 
-export const getSchemaAddTableRoute = schemaName => {
+export const getSchemaAddTableRoute = (schemaName: string) => {
   return `${getSchemaBaseRoute(schemaName)}/table/add`;
 };
 
-export const getSchemaPermissionsRoute = schemaName => {
+export const getSchemaPermissionsRoute = (schemaName: string) => {
   return `${getSchemaBaseRoute(schemaName)}/permissions`;
 };
 
-const getTableBaseRoute = (schemaName, tableName, isTable) => {
+const getTableBaseRoute = (schemaName: string, tableName: string, isTable: boolean) => {
   return `${getSchemaBaseRoute(schemaName)}/${
     isTable ? 'tables' : 'views'
   }/${encodeURIComponent(tableName)}`;
 };
 
-export const getTableBrowseRoute = (schemaName, tableName, isTable) => {
+export const getTableBrowseRoute = (schemaName: string, tableName: string, isTable: boolean) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/browse`;
 };
 
-export const getTableInsertRowRoute = (schemaName, tableName, isTable) => {
+export const getTableInsertRowRoute = (schemaName: string, tableName: string, isTable: boolean) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/insert`;
 };
 
-export const getTableEditRowRoute = (schemaName, tableName, isTable) => {
+export const getTableEditRowRoute = (schemaName: string, tableName: string, isTable: boolean) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/edit`;
 };
 
-export const getTableModifyRoute = (schemaName, tableName, isTable) => {
+export const getTableModifyRoute = (schemaName: string, tableName: string, isTable: boolean) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/modify`;
 };
 
-export const getTableRelationshipsRoute = (schemaName, tableName, isTable) => {
+export const getTableRelationshipsRoute = (schemaName: string, tableName: string, isTable: boolean) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/relationships`;
 };
 
-export const getTablePermissionsRoute = (schemaName, tableName, isTable) => {
+export const getTablePermissionsRoute = (schemaName: string, tableName: string, isTable: boolean) => {
   return `${getTableBaseRoute(schemaName, tableName, isTable)}/permissions`;
 };
 
-export const getFunctionBaseRoute = (schemaName, functionName) => {
+export const getFunctionBaseRoute = (schemaName: string, functionName: string) => {
   return `${getSchemaBaseRoute(schemaName)}/functions/${encodeURIComponent(
     functionName
   )}`;
 };
 
-export const getFunctionModifyRoute = (schemaName, functionName) => {
+export const getFunctionModifyRoute = (schemaName: string, functionName: string) => {
   return `${getFunctionBaseRoute(schemaName, functionName)}/modify`;
 };
 
-export const getFunctionPermissionsRoute = (schemaName, functionName) => {
+export const getFunctionPermissionsRoute = (schemaName: string, functionName: string) => {
   return `${getFunctionBaseRoute(schemaName, functionName)}/permissions`;
 };
 

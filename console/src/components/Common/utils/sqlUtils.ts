@@ -1,4 +1,4 @@
-export const sqlEscapeText = text => {
+export const sqlEscapeText = (text: string) => {
   let _text = text;
 
   if (_text) {
@@ -9,7 +9,7 @@ export const sqlEscapeText = text => {
 };
 
 // detect DDL statements in SQL
-export const checkSchemaModification = _sql => {
+export const checkSchemaModification = (_sql: string) => {
   let _isSchemaModification = false;
 
   const sqlStatements = _sql
@@ -30,7 +30,7 @@ export const checkSchemaModification = _sql => {
   return _isSchemaModification;
 };
 
-export const getCheckConstraintBoolExp = check => {
+export const getCheckConstraintBoolExp = (check: string) => {
   if (check) {
     return check.substring(7, check.length - 1);
   }
@@ -41,15 +41,15 @@ export const getCheckConstraintBoolExp = check => {
 /* queries */
 
 export const getCreateCheckConstraintSql = (
-  tableName,
-  schemaName,
-  constraintName,
-  check
+  tableName: string,
+  schemaName: string,
+  constraintName: string,
+  check: string
 ) => {
   return `alter table "${schemaName}"."${tableName}" add constraint "${constraintName}" check (${check})`;
 };
 
-export const getDropConstraintSql = (tableName, schemaName, constraintName) => {
+export const getDropConstraintSql = (tableName: string, schemaName: string, constraintName: string) => {
   return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}"`;
 };
 
@@ -58,17 +58,22 @@ export const getCreatePkSql = ({
   tableName,
   selectedPkColumns,
   constraintName,
+}: {
+  schemaName: string,
+  tableName: string,
+  selectedPkColumns: string[],
+  constraintName: string,
 }) => {
   return `alter table "${schemaName}"."${tableName}"
     add constraint "${constraintName}" 
     primary key ( ${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')} );`;
 };
 
-export const getDropPkSql = ({ schemaName, tableName, constraintName }) => {
+export const getDropPkSql = ({ schemaName, tableName, constraintName }: { schemaName: string, tableName: string, constraintName: string}) => {
   return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`;
 };
 
-export const terminateSql = sql => {
+export const terminateSql = (sql: string) => {
   const sqlSanitised = sql.trim();
   return sqlSanitised[sqlSanitised.length - 1] !== ';'
     ? sqlSanitised + ';'
