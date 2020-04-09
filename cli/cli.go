@@ -45,6 +45,11 @@ const (
 	LastUpdateCheckFileName = "last_update_check_at"
 )
 
+const (
+	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
+	XHasuraAccessKey   = "X-Hasura-Access-Key"
+)
+
 // String constants
 const (
 	StrTelemetryNotice = `Help us improve Hasura! The cli collects anonymized usage stats which
@@ -204,6 +209,8 @@ type ExecutionContext struct {
 	MetadataDir string
 	// ConfigFile is the file where endpoint etc. are stored.
 	ConfigFile string
+	// HGE Headers, are the custom headers which can be passed to HGE API
+	HGEHeaders map[string]string
 
 	// Config is the configuration object storing the endpoint and admin secret
 	// information after reading from config file or env var.
@@ -364,6 +371,10 @@ func (ec *ExecutionContext) setupInitTemplatesRepo() error {
 	return nil
 }
 
+func (ec *ExecutionContext) SetHGEHeaders(headers map[string]string) {
+	ec.HGEHeaders = headers
+}
+
 // Validate prepares the ExecutionContext ec and then validates the
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
@@ -435,6 +446,13 @@ func (ec *ExecutionContext) Validate() error {
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
 
+	// Set headers required for communicating with HGE
+	if ec.Config.AdminSecret != "" {
+		headers := map[string]string{
+			GetAdminSecretHeaderName(ec.Version): ec.Config.AdminSecret,
+		}
+		ec.SetHGEHeaders(headers)
+	}
 	return nil
 }
 
@@ -586,4 +604,11 @@ func (ec *ExecutionContext) setVersion() {
 	if ec.Version == nil {
 		ec.Version = version.New()
 	}
+}
+
+func GetAdminSecretHeaderName(v *version.Version) string {
+	if v.ServerFeatureFlags.HasAccessKey {
+		return XHasuraAccessKey
+	}
+	return XHasuraAdminSecret
 }
