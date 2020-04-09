@@ -93,12 +93,11 @@ queryFldToPGAST
      , Has QueryCtxMap r
      , HasVersion
      , MonadIO m
-     , Has HTTP.Manager r
-     , Has [HTTP.Header] r
      )
   => V.Field
+  -> RA.QueryActionExecuter
   -> m QueryRootFldUnresolved
-queryFldToPGAST fld = do
+queryFldToPGAST fld actionExecuter = do
   opCtx <- getOpCtx $ V._fName fld
   userInfo <- asks getter
   case opCtx of
@@ -123,7 +122,7 @@ queryFldToPGAST fld = do
       case jsonAggType of
         DS.JASMultipleRows -> QRFActionExecuteList
         DS.JASSingleObject -> QRFActionExecuteObject
-      <$> RA.resolveActionQuery fld ctx (userVars userInfo)
+      <$> actionExecuter (RA.resolveActionQuery fld ctx (userVars userInfo))
       where
         outputType = _saecOutputType ctx
         jsonAggType = RA.mkJsonAggSelect outputType

@@ -4,6 +4,9 @@ module Hasura.GraphQL.Resolve.Action
   , asyncActionsProcessor
   , resolveActionQuery
   , mkJsonAggSelect
+  , QueryActionExecuter
+  , allowQueryActionExecuter
+  , restrictActionExecuter
   ) where
 
 import           Hasura.Prelude
@@ -144,6 +147,19 @@ resolveActionMutationSync field executionContext sessionVariables = do
     ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
+type QueryActionExecuter =
+  forall m a. (MonadError QErr m)
+  => (HTTP.Manager -> [HTTP.Header] -> m a)
+  -> m a
+
+allowQueryActionExecuter :: HTTP.Manager -> [HTTP.Header] -> QueryActionExecuter
+allowQueryActionExecuter manager reqHeaders actionResolver =
+  actionResolver manager reqHeaders
+
+restrictActionExecuter :: Text -> QueryActionExecuter
+restrictActionExecuter errMsg _ =
+  throw400 NotSupported errMsg
+
 resolveActionQuery
   :: ( HasVersion
      , MonadReusability m
@@ -153,20 +169,18 @@ resolveActionQuery
      , Has FieldMap r
      , Has OrdByCtx r
      , Has SQLGenCtx r
-     , Has HTTP.Manager r
-     , Has [HTTP.Header] r
      )
   => Field
   -> ActionExecutionContext
   -> UserVars
+  -> HTTP.Manager
+  -> [HTTP.Header]
   -> m (RS.AnnSimpleSelG UnresolvedVal)
-resolveActionQuery field executionContext sessionVariables = do
+resolveActionQuery field executionContext sessionVariables httpManager reqHeaders = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
-  manager <- asks getter
-  reqHeaders <- asks getter
-  (webhookRes, _) <- callWebhook manager outputType outputFields reqHeaders confHeaders
+  (webhookRes, _) <- callWebhook httpManager outputType outputFields reqHeaders confHeaders
                                forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes

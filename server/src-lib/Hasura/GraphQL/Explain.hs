@@ -19,9 +19,8 @@ import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
 import           Hasura.Server.Version             (HasVersion)
+import           Hasura.GraphQL.Resolve.Action
 
-import qualified Network.HTTP.Client                    as HTTP
-import qualified Network.HTTP.Types                     as N
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as E
 import qualified Hasura.GraphQL.Resolve                 as RS
@@ -88,37 +87,30 @@ explainField
   => UserInfo
   -> GCtx
   -> SQLGenCtx
-  -> HTTP.Manager
-  -> [N.Header]
-  -> ActionCache
+  -> QueryActionExecuter
   -> GV.Field
   -> m FieldPlan
-explainField userInfo gCtx sqlGenCtx httpMgr reqHeaders actionCache fld =
-  case mAction of
-    Just _ ->  throw400 InvalidParams "query actions cannot be explained"
-    Nothing ->
-      case fName of
-        "__type"     -> return $ FieldPlan fName Nothing Nothing
-        "__schema"   -> return $ FieldPlan fName Nothing Nothing
-        "__typename" -> return $ FieldPlan fName Nothing Nothing
-        _            -> do
-          unresolvedAST <-
-            runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx, httpMgr, reqHeaders) $
-            evalReusabilityT $ RS.queryFldToPGAST fld
-          resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
-          let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
-              withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
-          planLines <- liftTx $ map runIdentity <$>
-            Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
-          return $ FieldPlan fName (Just txtSQL) $ Just planLines
+explainField userInfo gCtx sqlGenCtx actionExecuter fld =
+  case fName of
+    "__type"     -> return $ FieldPlan fName Nothing Nothing
+    "__schema"   -> return $ FieldPlan fName Nothing Nothing
+    "__typename" -> return $ FieldPlan fName Nothing Nothing
+    _            -> do
+      unresolvedAST <-
+        runExplain (queryCtxMap, userInfo, fldMap, orderByCtx, sqlGenCtx) $
+        evalReusabilityT $ RS.queryFldToPGAST fld actionExecuter
+      resolvedAST <- RS.traverseQueryRootFldAST (resolveVal userInfo) unresolvedAST
+      let txtSQL = Q.getQueryText $ RS.toPGQuery resolvedAST
+          withExplain = "EXPLAIN (FORMAT TEXT) " <> txtSQL
+      planLines <- liftTx $ map runIdentity <$>
+                     Q.listQE dmlTxErrorHandler (Q.fromText withExplain) () True
+      return $ FieldPlan fName (Just txtSQL) $ Just planLines
   where
     fName = GV._fName fld
 
     queryCtxMap = _gQueryCtxMap gCtx
     fldMap = _gFields gCtx
     orderByCtx = _gOrdByCtx gCtx
-    actionName = ActionName $ G.Name $ G.unName fName
-    mAction = Map.lookup actionName actionCache
 
 explainGQLQuery
   :: (MonadError QErr m, MonadIO m,HasVersion)
@@ -126,11 +118,10 @@ explainGQLQuery
   -> SchemaCache
   -> SQLGenCtx
   -> Bool
-  -> HTTP.Manager
-  -> [N.Header]
+  -> QueryActionExecuter
   -> GQLExplain
   -> m EncJSON
-explainGQLQuery pgExecCtx sc sqlGenCtx enableAL httpMgr reqHeaders (GQLExplain query userVarsRaw) = do
+explainGQLQuery pgExecCtx sc sqlGenCtx enableAL actionExecuter (GQLExplain query userVarsRaw) = do
   (execPlan, queryReusability) <- runReusabilityT $
     E.getExecPlanPartial userInfo sc enableAL query
   (gCtx, rootSelSet) <- case execPlan of
@@ -140,12 +131,12 @@ explainGQLQuery pgExecCtx sc sqlGenCtx enableAL httpMgr reqHeaders (GQLExplain q
       throw400 InvalidParams "only hasura queries can be explained"
   case rootSelSet of
     GV.RQuery selSet ->
-      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx httpMgr reqHeaders (scActions sc))
+      runInTx $ encJFromJValue <$> traverse (explainField userInfo gCtx sqlGenCtx actionExecuter)
       (toList selSet)
     GV.RMutation _ ->
       throw400 InvalidParams "only queries can be explained"
     GV.RSubscription rootField -> do
-      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability httpMgr reqHeaders rootField
+      (plan, _) <- E.getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter rootField
       runInTx $ encJFromJValue <$> E.explainLiveQueryPlan plan
   where
     usrVars = mkUserVars $ maybe [] Map.toList userVarsRaw

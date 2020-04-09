@@ -50,6 +50,7 @@ import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
                                                          mkSetCookieHeaders)
 import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.GraphQL.Resolve.Action
 
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
 import qualified Hasura.GraphQL.Execute.Plan            as EP
@@ -219,11 +220,11 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
             (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
             pure $ ExOpMutation respHeaders tx
           VQ.RQuery selSet -> do
-            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability httpManager reqHeaders selSet
+            (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability (allowQueryActionExecuter httpManager reqHeaders) selSet
             traverse_ (addPlanToCache . EP.RPQuery) plan
             return $ ExOpQuery queryTx (Just genSql)
           VQ.RSubscription fld -> do
-            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability httpManager reqHeaders fld
+            (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability (restrictActionExecuter "query actions cannot be run as a subscription") fld
             traverse_ (addPlanToCache . EP.RPSubs) plan
             return $ ExOpSubs lqOp
 
@@ -237,8 +238,6 @@ type E m =
           , OrdByCtx
           , InsCtxMap
           , SQLGenCtx
-          , HTTP.Manager
-          , [N.Header]
           ) (ExceptT QErr m)
 
 runE
@@ -246,14 +245,11 @@ runE
   => GCtx
   -> SQLGenCtx
   -> UserInfo
-  -> HTTP.Manager
-  -> [N.Header]
   -> E m a
   -> m a
-runE ctx sqlGenCtx userInfo httpMgr headers action = do
+runE ctx sqlGenCtx userInfo action = do
   res <- runExceptT $ runReaderT action
-    (userInfo, queryCtxMap, mutationCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx
-    ,httpMgr, headers)
+    (userInfo, queryCtxMap, mutationCtxMap, typeMap, fldMap, ordByCtx, insCtxMap, sqlGenCtx)
   either throwError return res
   where
     queryCtxMap = _gQueryCtxMap ctx
@@ -271,12 +267,11 @@ getQueryOp
   -> SQLGenCtx
   -> UserInfo
   -> QueryReusability
-  -> HTTP.Manager
-  -> [N.Header]
+  -> QueryActionExecuter
   -> VQ.SelSet
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gCtx sqlGenCtx userInfo queryReusability httpMgr reqHeaders selSet =
-  runE gCtx sqlGenCtx userInfo httpMgr reqHeaders $ EQ.convertQuerySelSet queryReusability selSet
+getQueryOp gCtx sqlGenCtx userInfo queryReusability actionExecuter selSet =
+  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet queryReusability selSet actionExecuter
 
 mutationRootName :: Text
 mutationRootName = "mutation_root"
@@ -352,20 +347,19 @@ getSubsOpM
      , Has UserInfo r
      , MonadIO m
      , HasVersion
-     , Has HTTP.Manager r
-     , Has [N.Header] r
      )
   => PGExecCtx
   -> QueryReusability
   -> VQ.Field
+  -> QueryActionExecuter
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOpM pgExecCtx initialReusability fld =
+getSubsOpM pgExecCtx initialReusability fld actionExecuter =
   case VQ._fName fld of
     "__typename" ->
       throwVE "you cannot create a subscription on '__typename' field"
     _            -> do
       (astUnresolved, finalReusability) <- runReusabilityTWith initialReusability $
-        GR.queryFldToPGAST fld
+        GR.queryFldToPGAST fld actionExecuter
       let varTypes = finalReusability ^? _Reusable
       EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved varTypes
 
@@ -379,12 +373,11 @@ getSubsOp
   -> SQLGenCtx
   -> UserInfo
   -> QueryReusability
-  -> HTTP.Manager
-  -> [N.Header]
+  -> QueryActionExecuter
   -> VQ.Field
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability httpMgr reqHeaders fld =
-  runE gCtx sqlGenCtx userInfo httpMgr reqHeaders $ getSubsOpM pgExecCtx queryReusability fld
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter fld =
+  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld actionExecuter
 
 execRemoteGQ
   :: ( HasVersion
