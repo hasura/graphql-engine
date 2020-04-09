@@ -54,7 +54,10 @@ export const useInvocationLogs = (
     if (logs.length) {
       return logs[0].created_at;
     }
-    return 'now()';
+
+    /* TODO: If there aren't any rows, lets just fetch everything since beginning of time :) */
+    return new Date(0).toISOString();
+    // return 'now()';
   };
 
   const getAllIds = () => {
