@@ -25,14 +25,20 @@ const LeftSidebar = ({ appPrefix, common: { actions, currentAction } }) => {
   let actionsList = [];
   if (searchText) {
     const secondaryResults = [];
+    const primaryResultsLower = [];
+    const secondaryResultsLower = [];
     actions.forEach(a => {
       if (a.action_name.startsWith(searchText)) {
         actionsList.push(a);
       } else if (a.action_name.includes(searchText)) {
         secondaryResults.push(a);
+      } else if(a.action_name.toLowerCase.startsWith(searchText.toLowerCase)){
+        primaryResultsLower.push(a);
+      } else if(a.action_name.toLowerCase.includes(searchText.toLowerCase)){
+        secondaryResultsLower.push(a);
       }
     });
-    actionsList = [...actionsList, ...secondaryResults];
+    actionsList = [...actionsList, ...secondaryResults, ...primaryResultsLower, ...secondaryResultsLower];
   } else {
     actionsList = [...actions];
   }
