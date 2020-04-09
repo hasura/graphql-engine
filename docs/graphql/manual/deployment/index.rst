@@ -1,3 +1,9 @@
+.. meta::
+   :description: Deploy Hasura GraphQL engine
+   :keywords: hasura, docs, deployment
+
+.. _deployment:
+
 Deploying Hasura GraphQL engine
 ===============================
 
@@ -9,7 +15,7 @@ Deploying Hasura GraphQL engine
 .. note::
   This section talks in depth about deploying the Hasura GraphQL engine for a **production-like environment**.
   If you would simply like to take the Hasura GraphQL engine for a quick spin, choose from our
-  :doc:`Getting started guides <../getting-started/index>`.
+  :ref:`Getting started guides <getting_started>`.
 
 Deployment guides
 -----------------
@@ -18,11 +24,11 @@ The Hasura GraphQL engine is a binary that is shipped as a Docker container.
 
 Choose from the following guides to deploy the Hasura GraphQL engine and connect it to a Postgres database:
 
-- :doc:`Deploy using Heroku <heroku/index>`
-- :doc:`Deploy using Docker <docker/index>`
-- :doc:`Deploy using Kubernetes <kubernetes/index>`
+- :ref:`Deploy using Heroku <deploy_heroku>`
+- :ref:`Deploy using Docker <deployment_docker>`
+- :ref:`Deploy using Kubernetes <deploy_kubernetes>`
 
-You can also check :doc:`../guides/deployment/index` for more specific examples.
+You can also check :ref:`guides_deployment` for more specific examples.
 
 Configuration
 -------------
@@ -30,16 +36,16 @@ Configuration
 By default, Hasura GraphQL engine runs in a very permissive mode for easier development. Check out the below pages
 to configure the Hasura GraphQL engine for your production environment:
 
-- :doc:`securing-graphql-endpoint`
-- :doc:`postgres-permissions`
-- :doc:`GraphQL engine server configuration <graphql-engine-flags/index>`
+- :ref:`securing_graphql_endpoint`
+- :ref:`postgres_permissions`
+- :ref:`GraphQL engine server configuration <hge_flags>`
 
 Logs
 ----
 
 For access to Hasura GraphQL engine logs, check the below page for details:
 
-- :doc:`Logging <logging>`
+- :ref:`Logging <hge_logs>`
 
 
 .. toctree::

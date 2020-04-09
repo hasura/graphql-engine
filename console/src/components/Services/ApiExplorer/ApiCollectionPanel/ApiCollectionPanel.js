@@ -318,9 +318,9 @@ class ApiCollectionPanel extends Component {
               }
             >
               {tabContent.title}
-              <span className={styles.serviceBaseDomain + ' hide'}>{`.${
-                Globals.projectDomain
-              }`}</span>
+              <span className={styles.serviceBaseDomain + ' hide'}>
+                {Globals.projectDomain}
+              </span>
             </div>
           ) : null}
           <div className={styles.apiCollectionGetPost + ' ' + styles.wd100}>

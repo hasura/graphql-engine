@@ -34,15 +34,20 @@ selFromToFromItem :: Iden -> SelectFrom -> S.FromItem
 selFromToFromItem pfx = \case
   FromTable tn -> S.FISimple tn Nothing
   FromIden i   -> S.FIIden i
-  FromFunction qf args ->
+  FromFunction qf args defListM ->
     S.FIFunc $ S.FunctionExp qf (fromTableRowArgs pfx args) $
-    Just $ S.toAlias $ functionToIden qf
+    Just $ S.mkFunctionAlias (functionToIden qf) defListM
 
+-- This function shouldn't be present ideally
+-- You should be able to retrieve this information
+-- from the FromItem generated with selFromToFromItem
+-- however given from S.FromItem is modelled, it is not
+-- possible currently
 selFromToQual :: SelectFrom -> S.Qual
 selFromToQual = \case
   FromTable tn         -> S.QualTable tn
-  FromIden i           -> S.QualIden i
-  FromFunction qf _    -> S.QualIden $ functionToIden qf
+  FromIden i           -> S.QualIden i Nothing
+  FromFunction qf _ _  -> S.QualIden (functionToIden qf) Nothing
 
 aggFldToExp :: AggFlds -> S.SQLExp
 aggFldToExp aggFlds = jsonRow
@@ -138,12 +143,11 @@ withJsonAggExtr subQueryReq permLimitM ordBy alias =
                     )
 
 asJsonAggExtr
-  :: Bool -> S.Alias -> Bool -> Maybe Int -> Maybe S.OrderByExp -> S.Extractor
-asJsonAggExtr singleObj als subQueryReq permLimit ordByExpM =
-  flip S.Extractor (Just als) $
-  bool (withJsonAggExtr subQueryReq permLimit ordByExpM als)
-       (asSingleRowExtr als)
-       singleObj
+  :: JsonAggSelect -> S.Alias -> Bool -> Maybe Int -> Maybe S.OrderByExp -> S.Extractor
+asJsonAggExtr jsonAggSelect als subQueryReq permLimit ordByExpM =
+  flip S.Extractor (Just als) $ case jsonAggSelect of
+    JASMultipleRows -> withJsonAggExtr subQueryReq permLimit ordByExpM als
+    JASSingleObject -> asSingleRowExtr als
 
 -- array relationships are not grouped, so have to be prefixed by
 -- parent's alias
@@ -172,8 +176,8 @@ mkBaseTableAls pfx =
   pfx <> Iden ".base"
 
 mkBaseTableColAls :: Iden -> PGCol -> Iden
-mkBaseTableColAls pfx pgCol =
-  pfx <> Iden ".pg." <> toIden pgCol
+mkBaseTableColAls pfx pgColumn =
+  pfx <> Iden ".pg." <> toIden pgColumn
 
 mkOrderByFieldName :: RelName -> FieldName
 mkOrderByFieldName relName =
@@ -185,8 +189,9 @@ fromTableRowArgs pfx = toFunctionArgs . fmap toSQLExp
   where
     toFunctionArgs (FunctionArgsExp positional named) =
       S.FunctionArgs positional named
-    toSQLExp AETableRow  = S.SERowIden $ mkBaseTableAls pfx
-    toSQLExp (AEInput s) = s
+    toSQLExp (AETableRow Nothing)    = S.SERowIden $ mkBaseTableAls pfx
+    toSQLExp (AETableRow (Just acc)) = S.mkQIdenExp (mkBaseTableAls pfx) acc
+    toSQLExp (AEInput s)             = s
 
 -- posttgres ignores anything beyond 63 chars for an iden
 -- in this case, we'll need to use json_build_object function
@@ -223,7 +228,7 @@ buildJsonObject pfx parAls arrRelCtx strfyNum flds =
         in S.mkQIdenExp arrPfx fldAls
       FComputedField (CFSScalar computedFieldScalar) ->
         fromScalarComputedField computedFieldScalar
-      FComputedField (CFSTable _) ->
+      FComputedField (CFSTable _ _) ->
         let ccPfx = mkComputedFieldTableAls pfx fldAls
         in S.mkQIdenExp ccPfx fldAls
 
@@ -271,9 +276,9 @@ mkAggObExtrAndFlds annAggOb = case annAggOb of
     ( S.Extractor S.countStar als
     , [(FieldName "count", AFCount S.CTStar)]
     )
-  AAOOp op pgCol ->
-    ( S.Extractor (S.SEFnApp op [S.SEIden $ toIden pgCol] Nothing) als
-    , [(FieldName op, AFOp $ AggOp op [(fromPGCol pgCol, PCFCol pgCol)])]
+  AAOOp op pgColumn ->
+    ( S.Extractor (S.SEFnApp op [S.SEIden $ toIden pgColumn] Nothing) als
+    , [(FieldName op, AFOp $ AggOp op [(fromPGCol pgColumn, PCFCol pgColumn)])]
     )
   where
     als = Just $ S.toAlias $ mkAggObFld annAggOb
@@ -317,10 +322,10 @@ processAnnOrderByCol
      , OrderByNode
      )
 processAnnOrderByCol pfx parAls arrRelCtx strfyNum = \case
-  AOCPG colInfo ->
+  AOCPG pgColumn ->
     let
-      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden $ pgiColumn colInfo)
-      obColAls = mkBaseTableColAls pfx $ pgiColumn colInfo
+      qualCol  = S.mkQIdenExp (mkBaseTableAls pfx) (toIden pgColumn)
+      obColAls = mkBaseTableColAls pfx pgColumn
     in ( (S.Alias obColAls, qualCol)
        , OBNNothing
        )
@@ -566,7 +571,7 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
                          map (mkArrItem arrRelCtx) arrFlds
               -- all computed fields with table returns
               computedFieldNodes = HM.fromList $ map mkComputedFieldTable $
-                             mapMaybe getComputedFieldTable flds
+                                   mapMaybe getComputedFieldTable flds
 
               (obExtrs, ordByObjs, ordByArrs, obeM)
                       = mkOrdByItems' arrRelCtx
@@ -623,7 +628,7 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
 
     distItemsM = processDistinctOnCol thisPfx <$> distM
     distExprM = fst <$> distItemsM
-    distExtrs = fromMaybe [] (snd <$> distItemsM)
+    distExtrs = maybe [] snd distItemsM
 
     -- process an object relationship
     mkObjItem (fld, objSel) =
@@ -640,10 +645,10 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
       in (arrAls, arrNode)
 
     -- process a computed field, which returns a table
-    mkComputedFieldTable (fld, sel) =
+    mkComputedFieldTable (fld, jsonAggSelect, sel) =
       let prefixes = Prefixes (mkComputedFieldTableAls thisPfx fld) thisPfx
           baseNode = annSelToBaseNode False prefixes fld sel
-      in (fld, baseNode)
+      in (fld, CFTableNode jsonAggSelect baseNode)
 
     getAnnObj (f, annFld) = case annFld of
       FObj ob -> Just (f, ob)
@@ -654,8 +659,8 @@ mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
       _       -> Nothing
 
     getComputedFieldTable (f, annFld) = case annFld of
-      FComputedField (CFSTable sel) -> Just (f, sel)
-      _                             -> Nothing
+      FComputedField (CFSTable jas sel) -> Just (f, jas, sel)
+      _                                 -> Nothing
 
 annSelToBaseNode :: Bool -> Prefixes -> FieldName -> AnnSimpleSel -> BaseNode
 annSelToBaseNode subQueryReq pfxs fldAls annSel =
@@ -672,7 +677,7 @@ mkArrNode subQueryReq pfxs (fldName, annArrSel) = case annArrSel of
   ASSimple annArrRel ->
     let bn = annSelToBaseNode subQueryReq pfxs fldName $ aarAnnSel annArrRel
         permLimit = getPermLimit $ aarAnnSel annArrRel
-        extr = asJsonAggExtr False (S.toAlias fldName) subQueryReq permLimit $
+        extr = asJsonAggExtr JASMultipleRows (S.toAlias fldName) subQueryReq permLimit $
                _bnOrderBy bn
     in ArrNode [extr] (aarMapping annArrRel) bn
 
@@ -684,10 +689,9 @@ injectJoinCond :: S.BoolExp       -- ^ Join condition
 injectJoinCond joinCond whereCond =
   S.WhereFrag $ S.simplifyBoolExp $ S.BEBin S.AndOp joinCond whereCond
 
-mkJoinCond :: S.Alias -> [(PGCol, PGCol)] -> S.BoolExp
+mkJoinCond :: S.Alias -> HashMap PGCol PGCol -> S.BoolExp
 mkJoinCond baseTablepfx colMapn =
-  foldl' (S.BEBin S.AndOp) (S.BELit True) $ flip map colMapn $
-  \(lCol, rCol) ->
+  foldl' (S.BEBin S.AndOp) (S.BELit True) $ flip map (HM.toList colMapn) $ \(lCol, rCol) ->
     S.BECompare S.SEQ (S.mkQIdenExp baseTablepfx lCol) (S.mkSIdenExp rCol)
 
 baseNodeToSel :: S.BoolExp -> BaseNode -> S.Select
@@ -706,7 +710,7 @@ baseNodeToSel joinCond baseNode =
              = baseNode
     -- this is the table which is aliased as "pfx.base"
     baseSel = S.mkSelect
-      { S.selExtr  = [S.Extractor S.SEStar Nothing]
+      { S.selExtr  = [S.Extractor (S.SEStar Nothing) Nothing]
       , S.selFrom  = Just $ S.FromExp [fromItem]
       , S.selWhere = Just $ injectJoinCond joinCond whr
       }
@@ -737,11 +741,11 @@ baseNodeToSel joinCond baseNode =
           als = S.Alias $ _bnPrefix bn
       in S.mkLateralFromItem sel als
 
-    computedFieldNodeToFromItem :: (FieldName, BaseNode) -> S.FromItem
-    computedFieldNodeToFromItem (fld, bn) =
+    computedFieldNodeToFromItem :: (FieldName, CFTableNode) -> S.FromItem
+    computedFieldNodeToFromItem (fld, CFTableNode jsonAggSelect bn) =
       let internalSel = baseNodeToSel (S.BELit True) bn
           als = S.Alias $ _bnPrefix bn
-          extr = asJsonAggExtr False (S.toAlias fld) False Nothing $
+          extr = asJsonAggExtr jsonAggSelect (S.toAlias fld) False Nothing $
                  _bnOrderBy bn
           internalSelFrom = S.mkSelFromItem internalSel als
           sel = S.mkSelect
@@ -754,18 +758,18 @@ mkAggSelect :: AnnAggSel -> S.Select
 mkAggSelect annAggSel =
   prefixNumToAliases $ arrNodeToSelect bn extr $ S.BELit True
   where
-    aggSel = AnnRelG rootRelName [] annAggSel
+    aggSel = AnnRelG rootRelName HM.empty annAggSel
     rootIden = Iden "root"
     rootPrefix = Prefixes rootIden rootIden
     ArrNode extr _ bn =
       aggSelToArrNode rootPrefix (FieldName "root") aggSel
 
-mkSQLSelect :: Bool -> AnnSimpleSel -> S.Select
-mkSQLSelect isSingleObject annSel =
+mkSQLSelect :: JsonAggSelect -> AnnSimpleSel -> S.Select
+mkSQLSelect jsonAggSelect annSel =
   prefixNumToAliases $ arrNodeToSelect baseNode extrs $ S.BELit True
   where
     permLimit = getPermLimit annSel
-    extrs = pure $ asJsonAggExtr isSingleObject rootFldAls False permLimit
+    extrs = pure $ asJsonAggExtr jsonAggSelect rootFldAls False permLimit
             $ _bnOrderBy baseNode
     rootFldIden = toIden rootFldName
     rootPrefix = Prefixes rootFldIden rootFldIden

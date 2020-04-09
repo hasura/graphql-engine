@@ -1,0 +1,18 @@
+-- A project configuration for general-purpose development: this builds documentation for
+-- dependencies and disables optimizations for graphql-engine to improve compilation times.
+--
+-- To enable this, you can do:
+--   $ ln -s cabal.project.dev cabal.project.local
+-- Or, if you want to customize the configuration:
+--   $ cp cabal.project.dev cabal.project.local
+
+package *
+  documentation: true
+
+package graphql-engine
+  -- NOTE: this seems to work so long as there is no 'ghc-options: -O2' in the cabal file,
+  -- but new-build will report 'Build profile: -O1' for some reason. 
+  -- See:https://github.com/haskell/cabal/issues/6221 
+  optimization: 0
+  documentation: false
+  flags: +developer

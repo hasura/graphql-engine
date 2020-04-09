@@ -33,6 +33,7 @@ class Modify extends React.Component {
       modifyTriggerName,
       modifyTrigger,
       triggerList,
+      readOnlyMode,
       dispatch,
     } = this.props;
 
@@ -59,6 +60,7 @@ class Modify extends React.Component {
           dispatch={dispatch}
           triggerName={modifyTriggerName}
           tabName="modify"
+          readOnlyMode={readOnlyMode}
         />
         <br />
         <div className={styles.container}>

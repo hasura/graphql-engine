@@ -1,3 +1,5 @@
+{-# LANGUAGE Arrows #-}
+
 module Hasura.RQL.Types.Error
        ( Code(..)
        , QErr(..)
@@ -28,26 +30,33 @@ module Hasura.RQL.Types.Error
        , modifyErr
        , modifyErrAndSet500
        , modifyQErr
+       , modifyErrA
 
          -- Attach context
        , withPathK
+       , withPathKA
        , withPathI
+       , withPathIA
        , indexedFoldM
+       , indexedFoldlA'
        , indexedForM
        , indexedMapM
+       , indexedTraverseA
        , indexedForM_
        , indexedMapM_
+       , indexedTraverseA_
        ) where
 
+import           Control.Arrow.Extended
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
-import qualified Database.PG.Query   as Q
+import qualified Database.PG.Query      as Q
 import           Hasura.Prelude
-import           Text.Show           (Show (..))
+import           Text.Show              (Show (..))
 
-import qualified Data.Text           as T
-import qualified Network.HTTP.Types  as N
+import qualified Data.Text              as T
+import qualified Network.HTTP.Types     as N
 
 data Code
   = PermissionDenied
@@ -88,6 +97,9 @@ data Code
   | RemoteSchemaConflicts
   -- Websocket/Subscription errors
   | StartFailed
+  | InvalidCustomTypes
+  -- Actions Webhook code
+  | ActionWebhookCode !Text
   deriving (Eq)
 
 instance Show Code where
@@ -126,6 +138,8 @@ instance Show Code where
     RemoteSchemaError     -> "remote-schema-error"
     RemoteSchemaConflicts -> "remote-schema-conflicts"
     StartFailed           -> "start-failed"
+    InvalidCustomTypes    -> "invalid-custom-types"
+    ActionWebhookCode t   -> T.unpack t
 
 data QErr
   = QErr
@@ -241,6 +255,9 @@ modifyErr :: (QErrM m)
           -> m a -> m a
 modifyErr f = modifyQErr (liftTxtMod f)
 
+modifyErrA :: (ArrowError QErr arr) => arr (e, s) a -> arr (e, (Text -> Text, s)) a
+modifyErrA f = proc (e, (g, s)) -> (| mapErrorA (f -< (e, s)) |) (liftTxtMod g)
+
 liftTxtMod :: (T.Text -> T.Text) -> QErr -> QErr
 liftTxtMod f (QErr path st s c i) = QErr path st (f s) c i
 
@@ -252,48 +269,58 @@ modifyErrAndSet500 f = modifyQErr (liftTxtMod500 f)
 liftTxtMod500 :: (T.Text -> T.Text) -> QErr -> QErr
 liftTxtMod500 f (QErr path _ s c i) = QErr path N.status500 (f s) c i
 
-withPathE :: (QErrM m)
-          => JSONPathElement -> m a -> m a
-withPathE pe m =
-  catchError m (throwError . injectPrefix)
+withPathE :: (ArrowError QErr arr) => arr (e, s) a -> arr (e, (JSONPathElement, s)) a
+withPathE f = proc (e, (pe, s)) -> (| mapErrorA ((e, s) >- f) |) (injectPrefix pe)
   where
-    injectPrefix (QErr path st msg code i) = QErr (pe:path) st msg code i
+    injectPrefix pe (QErr path st msg code i) = QErr (pe:path) st msg code i
 
-withPathK :: (QErrM m)
-          => T.Text -> m a -> m a
-withPathK = withPathE . Key
+withPathKA :: (ArrowError QErr arr) => arr (e, s) a -> arr (e, (Text, s)) a
+withPathKA f = second (first $ arr Key) >>> withPathE f
 
-withPathI :: (QErrM m)
-          => Int -> m a -> m a
-withPathI = withPathE . Index
+withPathK :: (QErrM m) => Text -> m a -> m a
+withPathK a = runKleisli proc m -> (| withPathKA (m >- bindA) |) a
 
-indexedFoldM :: (QErrM m)
-             => (b -> a -> m b)
-             -> b -> [a] -> m b
-indexedFoldM f b al =
-  foldM f' b $ zip [0..] al
-  where
-    f' accum (i, a) = withPathE (Index i) (f accum a)
+withPathIA :: (ArrowError QErr arr) => arr (e, s) a -> arr (e, (Int, s)) a
+withPathIA f = second (first $ arr Index) >>> withPathE f
 
-indexedForM :: (QErrM m)
-            => [a] -> (a -> m b) -> m [b]
-indexedForM l f =
-  forM (zip [0..] l) $ \(i, a) ->
-    withPathE (Index i) (f a)
+withPathI :: (QErrM m) => Int -> m a -> m a
+withPathI a = runKleisli proc m -> (| withPathIA (m >- bindA) |) a
 
-indexedMapM :: (QErrM m)
-            => (a -> m b) -> [a] -> m [b]
-indexedMapM = flip indexedForM
+indexedFoldlA'
+  :: (ArrowChoice arr, ArrowError QErr arr, Foldable t)
+  => arr (e, (b, (a, s))) b -> arr (e, (b, (t a, s))) b
+indexedFoldlA' f = proc (e, (acc0, (xs, s))) ->
+  (| foldlA' (\acc (i, v) -> (| withPathIA ((e, (acc, (v, s))) >- f) |) i)
+  |) acc0 (zip [0..] (toList xs))
 
-indexedForM_ :: (QErrM m)
-             => [a] -> (a -> m ()) -> m ()
-indexedForM_ l f =
-  forM_ (zip [0..] l) $ \(i, a) ->
-    withPathE (Index i) (f a)
+indexedFoldM :: (QErrM m, Foldable t) => (b -> a -> m b) -> b -> t a -> m b
+indexedFoldM f acc0 = runKleisli proc xs ->
+  (| indexedFoldlA' (\acc v -> f acc v >- bindA) |) acc0 xs
 
-indexedMapM_ :: (QErrM m)
-            => (a -> m ()) -> [a] -> m ()
-indexedMapM_ = flip indexedForM_
+indexedTraverseA_
+  :: (ArrowChoice arr, ArrowError QErr arr, Foldable t)
+  => arr (e, (a, s)) b -> arr (e, (t a, s)) ()
+indexedTraverseA_ f = proc (e, (xs, s)) ->
+  (| indexedFoldlA' (\() x -> do { (e, (x, s)) >- f; () >- returnA }) |) () xs
+
+indexedMapM_ :: (QErrM m, Foldable t) => (a -> m b) -> t a -> m ()
+indexedMapM_ f = runKleisli proc xs -> (| indexedTraverseA_ (\x -> f x >- bindA) |) xs
+
+indexedForM_ :: (QErrM m, Foldable t) => t a -> (a -> m b) -> m ()
+indexedForM_ = flip indexedMapM_
+
+indexedTraverseA
+  :: (ArrowChoice arr, ArrowError QErr arr)
+  => arr (e, (a, s)) b -> arr (e, ([a], s)) [b]
+indexedTraverseA f = proc (e, (xs, s)) ->
+  (| traverseA (\(i, x) -> (| withPathIA ((e, (x, s)) >- f) |) i)
+  |) (zip [0..] (toList xs))
+
+indexedMapM :: (QErrM m) => (a -> m b) -> [a] -> m [b]
+indexedMapM f = traverse (\(i, x) -> withPathI i (f x)) . zip [0..]
+
+indexedForM :: (QErrM m) => [a] -> (a -> m b) -> m [b]
+indexedForM = flip indexedMapM
 
 liftIResult :: (QErrM m) => IResult a -> m a
 liftIResult (IError path msg) =

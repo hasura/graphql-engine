@@ -11,7 +11,7 @@ Boilerplate to get started with Quasar Framework, Hasura GraphQL engine as CMS a
   [![Deploy to
   heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/hasura/graphql-engine-heroku)
 
-  Please checkout our [docs](https://docs.hasura.io/1.0/graphql/manual/deployment/index.html) for other deployment methods
+  Please checkout our [docs](https://hasura.io/docs/1.0/graphql/manual/deployment/index.html) for other deployment methods
 
 - Get the Heroku app URL (say `my-app.herokuapp.com`)
 - Create `author` table:
@@ -36,7 +36,7 @@ columns: `id`, `title`, `content`, `author_id` (foreign key to `author` table's 
 - Clone this repo:
   ```bash
   git clone https://github.com/hasura/graphql-engine
-  cd graphql-engine/community/sample-apps/nuxtjs-postgres-graphql
+  cd graphql-engine/community/sample-apps/quasar-framework-vue-graphql
   ```
 
 - Install node modules:

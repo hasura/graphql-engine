@@ -1,21 +1,16 @@
 package commands
 
 import (
-	"fmt"
-	"net/http"
+	"os"
 	"sync"
 
-	"github.com/fatih/color"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/static"
+	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/util"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/migrate/api"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/pkg/console"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/skratchdot/open-golang/open"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -23,7 +18,7 @@ import (
 // NewConsoleCmd returns the console command
 func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	v := viper.New()
-	opts := &consoleOptions{
+	opts := &ConsoleOptions{
 		EC: ec,
 	}
 	consoleCmd := &cobra.Command{
@@ -47,10 +42,14 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ec.Viper = v
+			err := ec.Prepare()
+			if err != nil {
+				return err
+			}
 			return ec.Validate()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return opts.run()
+			return opts.Run()
 		},
 	}
 	f := consoleCmd.Flags()
@@ -60,6 +59,7 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
 	f.StringVar(&opts.StaticDir, "static-dir", "", "directory where static assets mentioned in the console html template can be served from")
+	f.StringVar(&opts.Browser, "browser", "", "open console in a specific browser")
 
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
@@ -67,13 +67,14 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
-	v.BindPFlag("endpoint", f.Lookup("endpoint"))
-	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
-	v.BindPFlag("access_key", f.Lookup("access-key"))
+	util.BindPFlag(v, "endpoint", f.Lookup("endpoint"))
+	util.BindPFlag(v, "admin_secret", f.Lookup("admin-secret"))
+	util.BindPFlag(v, "access_key", f.Lookup("access-key"))
+
 	return consoleCmd
 }
 
-type consoleOptions struct {
+type ConsoleOptions struct {
 	EC *cli.ExecutionContext
 
 	APIPort     string
@@ -85,56 +86,40 @@ type consoleOptions struct {
 	WG *sync.WaitGroup
 
 	StaticDir string
+	Browser   string
+
+	APIServerInterruptSignal     chan os.Signal
+	ConsoleServerInterruptSignal chan os.Signal
 }
 
-func (o *consoleOptions) run() error {
-	log := o.EC.Logger
-	// Switch to "release" mode in production.
-	gin.SetMode(gin.ReleaseMode)
-
-	// An Engine instance with the Logger and Recovery middleware already attached.
-	g := gin.New()
-
-	g.Use(allowCors())
-
+func (o *ConsoleOptions) Run() error {
 	if o.EC.Version == nil {
 		return errors.New("cannot validate version, object is nil")
 	}
 
-	metadataPath, err := o.EC.GetMetadataFilePath("yaml")
+	apiServer, err := console.NewAPIServer(o.Address, o.APIPort, o.EC)
 	if err != nil {
 		return err
 	}
 
-	t, err := newMigrate(o.EC.MigrationDir, o.EC.ServerConfig.ParsedEndpoint, o.EC.ServerConfig.AdminSecret, o.EC.Logger, o.EC.Version, false)
-	if err != nil {
-		return err
-	}
-
-	// My Router struct
-	r := &cRouter{
-		g,
-		t,
-	}
-
-	r.setRoutes(o.EC.MigrationDir, metadataPath, o.EC.Logger)
-
-	consoleTemplateVersion := o.EC.Version.GetConsoleTemplateVersion()
-	consoleAssetsVersion := o.EC.Version.GetConsoleAssetsVersion()
-
+	// Setup console server
+	const basePath = "/pkg/console/templates/gohtml/"
+	const templateFilename = "console.gohtml"
+	templateProvider := console.NewDefaultTemplateProvider(basePath, templateFilename)
+	consoleTemplateVersion := templateProvider.GetTemplateVersion(o.EC.Version)
+	consoleAssetsVersion := templateProvider.GetAssetsVersion(o.EC.Version)
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
-	adminSecretHeader := getAdminSecretHeaderName(o.EC.Version)
-
-	consoleRouter, err := serveConsole(consoleTemplateVersion, o.StaticDir, gin.H{
+	adminSecretHeader := migrate.GetAdminSecretHeaderName(o.EC.Version)
+	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,
 		"cliVersion":      o.EC.Version.GetCLIVersion(),
 		"serverVersion":   o.EC.Version.GetServerVersion(),
-		"dataApiUrl":      o.EC.ServerConfig.ParsedEndpoint.String(),
+		"dataApiUrl":      o.EC.Config.ServerConfig.ParsedEndpoint.String(),
 		"dataApiVersion":  "",
-		"hasAccessKey":    adminSecretHeader == XHasuraAccessKey,
-		"adminSecret":     o.EC.ServerConfig.AdminSecret,
+		"hasAccessKey":    adminSecretHeader == migrate.XHasuraAccessKey,
+		"adminSecret":     o.EC.Config.ServerConfig.AdminSecret,
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
@@ -142,142 +127,34 @@ func (o *consoleOptions) run() error {
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
 	}
-
-	// Create WaitGroup for running 3 servers
-	wg := &sync.WaitGroup{}
-	o.WG = wg
-	wg.Add(1)
-	go func() {
-		err = r.router.Run(o.Address + ":" + o.APIPort)
-		if err != nil {
-			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.APIPort)
-		}
-		wg.Done()
-	}()
-	wg.Add(1)
-	go func() {
-		err = consoleRouter.Run(o.Address + ":" + o.ConsolePort)
-		if err != nil {
-			o.EC.Logger.WithError(err).Errorf("error listening on port %s", o.ConsolePort)
-		}
-		wg.Done()
-	}()
-
-	consoleURL := fmt.Sprintf("http://%s:%s/", o.Address, o.ConsolePort)
-
-	if !o.DontOpenBrowser {
-		o.EC.Spin(color.CyanString("Opening console using default browser..."))
-		defer o.EC.Spinner.Stop()
-
-		err = open.Run(consoleURL)
-		if err != nil {
-			o.EC.Logger.WithError(err).Warn("Error opening browser, try to open the url manually?")
-		}
-	}
-
-	o.EC.Spinner.Stop()
-	log.Infof("console running at: %s", consoleURL)
-
-	o.EC.Telemetry.Beam()
-
-	wg.Wait()
-	return nil
-}
-
-type cRouter struct {
-	router  *gin.Engine
-	migrate *migrate.Migrate
-}
-
-func (r *cRouter) setRoutes(migrationDir, metadataFile string, logger *logrus.Logger) {
-	apis := r.router.Group("/apis")
-	{
-		apis.Use(setLogger(logger))
-		apis.Use(setFilePath(migrationDir))
-		apis.Use(setMigrate(r.migrate))
-		// Migrate api endpoints and middleware
-		migrateAPIs := apis.Group("/migrate")
-		{
-			settingsAPIs := migrateAPIs.Group("/settings")
-			{
-				settingsAPIs.Any("", api.SettingsAPI)
-			}
-			squashAPIs := migrateAPIs.Group("/squash")
-			{
-				squashAPIs.POST("/create", api.SquashCreateAPI)
-				squashAPIs.POST("/delete", api.SquashDeleteAPI)
-			}
-			migrateAPIs.Any("", api.MigrateAPI)
-		}
-		// Migrate api endpoints and middleware
-		metadataAPIs := apis.Group("/metadata")
-		{
-			metadataAPIs.Use(setMetadataFile(metadataFile))
-			metadataAPIs.Any("", api.MetadataAPI)
-		}
-	}
-}
-
-func setMigrate(t *migrate.Migrate) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("migrate", t)
-		c.Next()
-	}
-}
-
-func setFilePath(dir string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		host := getFilePath(dir)
-		c.Set("filedir", host)
-		c.Next()
-	}
-}
-
-func setMetadataFile(file string) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("metadataFile", file)
-		c.Next()
-	}
-}
-
-func setLogger(logger *logrus.Logger) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("logger", logger)
-		c.Next()
-	}
-}
-
-func allowCors() gin.HandlerFunc {
-	config := cors.DefaultConfig()
-	config.AddAllowHeaders("X-Hasura-User-Id")
-	config.AddAllowHeaders(XHasuraAccessKey)
-	config.AddAllowHeaders(XHasuraAdminSecret)
-	config.AddAllowHeaders("X-Hasura-Role")
-	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
-	config.AddAllowMethods("DELETE")
-	config.AllowAllOrigins = true
-	config.AllowCredentials = false
-	return cors.New(config)
-}
-
-func serveConsole(assetsVersion, staticDir string, opts gin.H) (*gin.Engine, error) {
-	// An Engine instance with the Logger and Recovery middleware already attached.
-	r := gin.New()
-
-	// Template console.html
-	templateRender, err := util.LoadTemplates("assets/"+assetsVersion+"/", "console.html")
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot fetch template")
-	}
-	r.HTMLRender = templateRender
-
-	if staticDir != "" {
-		r.Use(static.Serve("/static", static.LocalFile(staticDir, false)))
-		opts["cliStaticDir"] = staticDir
-	}
-	r.GET("/*action", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "console.html", &opts)
+	consoleServer := console.NewConsoleServer(&console.NewConsoleServerOpts{
+		Logger:           o.EC.Logger,
+		APIPort:          o.APIPort,
+		Address:          o.Address,
+		Browser:          o.Browser,
+		DontOpenBrowser:  o.DontOpenBrowser,
+		EC:               o.EC,
+		Port:             o.ConsolePort,
+		Router:           consoleRouter,
+		StaticDir:        o.StaticDir,
+		TemplateProvider: templateProvider,
 	})
 
-	return r, nil
+	o.WG = new(sync.WaitGroup)
+	// start console and API HTTP Servers
+	serveOpts := &console.ServeOpts{
+		APIServer:               apiServer,
+		ConsoleServer:           consoleServer,
+		EC:                      o.EC,
+		DontOpenBrowser:         o.DontOpenBrowser,
+		Browser:                 o.Browser,
+		ConsolePort:             o.ConsolePort,
+		APIPort:                 o.APIPort,
+		Address:                 o.Address,
+		SignalChanConsoleServer: o.ConsoleServerInterruptSignal,
+		SignalChanAPIServer:     o.APIServerInterruptSignal,
+		WG:                      o.WG,
+	}
+
+	return console.Serve(serveOpts)
 }

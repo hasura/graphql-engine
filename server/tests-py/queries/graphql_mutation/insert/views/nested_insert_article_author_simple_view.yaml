@@ -6,18 +6,18 @@ response:
     insert_article:
       affected_rows: 4
       returning:
-      - author_simple:
-          name: Author 1
-          id: 1
-        content: Article content for article by author 1
-        id: 1
+      - id: 1
         title: Article by author 1
-      - author_simple:
-          name: Author 2
-          id: 2
-        content: Article content for article by author 2
-        id: 2
+        content: Article content for article by author 1
+        author_simple:
+          id: 1
+          name: Author 1
+      - id: 2
         title: Article by author 2
+        content: Article content for article by author 2
+        author_simple:
+          id: 2
+          name: Author 2
 query:
   query: |-
     mutation article_author_simple{

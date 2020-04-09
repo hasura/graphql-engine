@@ -2,18 +2,20 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import {
   vSetDefaults,
-  vMakeRequest,
   // vExpandHeading,
   fetchManualTriggers,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
+  vMakeTableRequests,
 } from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { exists } from '../../../Common/utils/jsUtils';
 
+/*
 const genHeadings = headings => {
   if (headings.length === 0) {
     return [];
@@ -46,6 +48,7 @@ const genHeadings = headings => {
   throw 'Incomplete pattern match'; // eslint-disable-line no-throw-literal
 };
 
+
 const genRow = (row, headings) => {
   if (headings.length === 0) {
     return [];
@@ -68,6 +71,7 @@ const genRow = (row, headings) => {
 
   throw 'Incomplete pattern match'; // eslint-disable-line no-throw-literal
 };
+*/
 
 class ViewTable extends Component {
   constructor(props) {
@@ -92,7 +96,7 @@ class ViewTable extends Component {
     Promise.all([
       dispatch(setTable(tableName)),
       dispatch(vSetDefaults(tableName)),
-      dispatch(vMakeRequest()),
+      dispatch(vMakeTableRequests()),
       dispatch(fetchManualTriggers(tableName)),
     ]);
   }
@@ -148,6 +152,7 @@ class ViewTable extends Component {
       count,
       activePath,
       migrationMode,
+      readOnlyMode,
       ongoingRequest,
       isProgressing,
       lastError,
@@ -158,6 +163,8 @@ class ViewTable extends Component {
       manualTriggers = [],
       triggeredRow,
       triggeredFunction,
+      location,
+      estimatedCount,
     } = this.props;
 
     // check if table exists
@@ -193,7 +200,7 @@ class ViewTable extends Component {
         lastSuccess={lastSuccess}
         schemas={schemas}
         curDepth={0}
-        count={count}
+        count={exists(count) ? count : estimatedCount}
         dispatch={dispatch}
         expandedRow={expandedRow}
         manualTriggers={manualTriggers}
@@ -201,6 +208,8 @@ class ViewTable extends Component {
         updateInvocationFunction={this.updateInvocationFunction.bind(this)}
         triggeredRow={triggeredRow}
         triggeredFunction={triggeredFunction}
+        location={location}
+        readOnlyMode={readOnlyMode}
       />
     );
 
@@ -212,6 +221,7 @@ class ViewTable extends Component {
         table={tableSchema}
         tabName="browse"
         migrationMode={migrationMode}
+        readOnlyMode={readOnlyMode}
       />
     );
 
@@ -245,6 +255,7 @@ ViewTable.propTypes = {
   query: PropTypes.object.isRequired,
   curFilter: PropTypes.object.isRequired,
   migrationMode: PropTypes.bool.isRequired,
+  readOnlyMode: PropTypes.bool.isRequired,
   ongoingRequest: PropTypes.bool.isRequired,
   isProgressing: PropTypes.bool.isRequired,
   rows: PropTypes.array.isRequired,
@@ -262,6 +273,7 @@ const mapStateToProps = (state, ownProps) => {
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
     serverVersion: state.main.serverVersion,
     ...state.tables.view,
   };

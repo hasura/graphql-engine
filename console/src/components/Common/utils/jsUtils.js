@@ -2,6 +2,10 @@
 
 import { showErrorNotification } from '../../Services/Common/Notification';
 
+export const isNotDefined = value => {
+  return value === null || value === undefined;
+};
+
 export const exists = value => {
   return value !== null && value !== undefined;
 };
@@ -11,11 +15,16 @@ export const isArray = value => {
 };
 
 export const isObject = value => {
-  return typeof value === 'object';
+  return typeof value === 'object' && value !== null;
 };
 
 export const isString = value => {
   return typeof value === 'string';
+};
+
+export const isPromise = value => {
+  if (!value) return false;
+  return value.constructor.name === 'Promise';
 };
 
 export const isEmpty = value => {
@@ -225,7 +234,79 @@ export const downloadObjectAsJsonFile = (fileName, object) => {
     : fileName + jsonSuffix;
 
   const dataString =
-    'data:' + contentType + ',' + encodeURIComponent(JSON.stringify(object));
+    'data:' +
+    contentType +
+    ',' +
+    encodeURIComponent(JSON.stringify(object, null, 2));
 
   downloadFile(fileNameWithSuffix, dataString);
+};
+
+export const getFileExtensionFromFilename = filename => {
+  return filename.match(/\.[0-9a-z]+$/i)[0];
+};
+
+// return time in format YYYY_MM_DD_hh_mm_ss_s
+export const getCurrTimeForFileName = () => {
+  const currTime = new Date();
+
+  const year = currTime
+    .getFullYear()
+    .toString()
+    .padStart(4, '0');
+
+  const month = (currTime.getMonth() + 1).toString().padStart(2, '0');
+
+  const day = currTime
+    .getDate()
+    .toString()
+    .padStart(2, '0');
+
+  const hours = currTime
+    .getHours()
+    .toString()
+    .padStart(2, '0');
+
+  const minutes = currTime
+    .getMinutes()
+    .toString()
+    .padStart(2, '0');
+
+  const seconds = currTime
+    .getSeconds()
+    .toString()
+    .padStart(2, '0');
+
+  const milliSeconds = currTime
+    .getMilliseconds()
+    .toString()
+    .padStart(3, '0');
+
+  return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
+};
+
+export const isValidTemplateLiteral = literal_ => {
+  const literal = literal_.trim();
+  if (!literal) return false;
+  const templateStartIndex = literal.indexOf('{{');
+  const templateEndEdex = literal.indexOf('}}');
+  return (
+    templateStartIndex !== '-1' && templateEndEdex > templateStartIndex + 2
+  );
+};
+
+export const getUrlSearchParamValue = param => {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  return urlSearchParams.get(param);
+};
+
+export const getLastArrayElement = array => {
+  if (!array) return null;
+  if (!array.length) return null;
+  return array[array.length - 1];
+};
+
+export const getFirstArrayElement = array => {
+  if (!array) return null;
+  return array[0];
 };

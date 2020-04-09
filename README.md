@@ -1,6 +1,6 @@
 # Hasura GraphQL Engine
 
-[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
+[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://hasura.io/docs)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
@@ -12,7 +12,7 @@ Hasura GraphQL Engine is a blazing-fast GraphQL server that gives you **instant,
 
 Hasura helps you build GraphQL apps backed by Postgres or incrementally move to GraphQL for existing applications using Postgres.
 
-Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
+Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/docs).
 
 ------------------
 
@@ -36,7 +36,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.i
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
 * **Postgres** ❤️: Supports Postgres types (PostGIS/geo-location, etc.), turns views to *graphs*, trigger stored functions or procedures with mutations
 
-Read more at [hasura.io](https://hasura.io) and the [docs](https://docs.hasura.io).
+Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/docs).
 
 ## Table of contents
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -77,7 +77,7 @@ The fastest way to try Hasura out is via Heroku.
 
 3. Make your first GraphQL query
 
-   Create a table and instantly run your first query. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Create a table and instantly run your first query. Follow this [simple guide](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
 ### Other one-click deployment options
 
@@ -85,13 +85,14 @@ Check out the instructions for the following one-click deployment options:
 
 | **Infra provider** | **One-click link** | **Additional information** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
-| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| Render | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/render-examples/hasura-graphql) | [docs](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/render-one-click.html) |
 
 ### Other deployment methods
 
 For Docker-based deployment and advanced configuration options, see [deployment
-guides](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) or
+guides](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) or
 [install manifests](install-manifests).
 
 ## Architecture
@@ -122,14 +123,11 @@ processing - [read more](event-triggers.md).
 
 ### Derived data or data transformations
 
-Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [read more](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+Transform data in Postgres or run business logic on it to derive another dataset that can be queried using GraphQL Engine - [read more](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demos
 
-Check out all the example applications in the
-
-[community/sample-apps](community/sample-apps) directory.
-
+Check out all the example applications in the [community/sample-apps](community/sample-apps) directory.
 
 ### Realtime applications
 
@@ -214,10 +212,15 @@ This readme is available in the following translations:
 
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
+- [Bosnian :bosnia_herzegovina:](translations/README.bosnian.md) (:pray: [@hajro92](https://github.com/hajro92))
 - [Russian :ru:](translations/README.russian.md) (:pray: [@highflyer910](https://github.com/highflyer910))
 - [Greek 🇬🇷](translations/README.greek.md) (:pray: [@MIP2000](https://github.com/MIP2000))
+- [Spanish 🇲🇽](/translations/README.mx_spanish.md)(:pray: [@ferdox2](https://github.com/ferdox2))
 - [Indonesian :indonesia:](translations/README.indonesian.md) (:pray: [@anwari666](https://github.com/anwari666))
 - [Brazilian Portuguese :brazil:](translations/README.portuguese_br.md) (:pray: [@rubensmp](https://github.com/rubensmp))
 - [German 🇩🇪](translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
+- [Chinese :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
+- [Turkish :tr:](translations/README.turkish.md) (:pray: [@berat](https://github.com/berat))
+- [Korean :kr:](translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
 
 Translations for other files can be found [here](translations).

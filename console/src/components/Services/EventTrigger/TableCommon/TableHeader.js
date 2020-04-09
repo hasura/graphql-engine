@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import Helmet from 'react-helmet';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 
-const TableHeader = ({ triggerName, tabName, count }) => {
+const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
   const styles = require('./EventTable.scss');
   let capitalised = tabName;
   capitalised = capitalised[0].toUpperCase() + capitalised.slice(1);
@@ -99,15 +99,17 @@ const TableHeader = ({ triggerName, tabName, count }) => {
                 Invocation Logs
               </Link>
             </li>
-            <li
-              role="presentation"
-              className={tabName === 'modify' ? styles.active : ''}
-              data-test="trigger-modify"
-            >
-              <Link to={'/events/manage/triggers/' + triggerName + '/modify'}>
-                Modify
-              </Link>
-            </li>
+            {!readOnlyMode && (
+              <li
+                role="presentation"
+                className={tabName === 'modify' ? styles.active : ''}
+                data-test="trigger-modify"
+              >
+                <Link to={'/events/manage/triggers/' + triggerName + '/modify'}>
+                  Modify
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
         <div className="clearfix" />

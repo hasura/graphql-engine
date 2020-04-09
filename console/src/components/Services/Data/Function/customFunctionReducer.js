@@ -20,6 +20,7 @@ import { fetchTrackedFunctions } from '../DataActions';
 
 import _push from '../push';
 import { getSchemaBaseRoute } from '../../../Common/utils/routesUtils';
+import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 
 /* Constants */
 
@@ -193,19 +194,11 @@ const deleteFunctionSql = () => {
     const sqlDropFunction =
       'DROP FUNCTION ' + functionNameWithSchema + functionArgString;
 
-    const sqlUpQueries = [
-      {
-        type: 'run_sql',
-        args: { sql: sqlDropFunction },
-      },
-    ];
+    const sqlUpQueries = [getRunSqlQuery(sqlDropFunction)];
 
     const sqlDownQueries = [];
     if (functionDefinition && functionDefinition.length > 0) {
-      sqlDownQueries.push({
-        type: 'run_sql',
-        args: { sql: functionDefinition },
-      });
+      sqlDownQueries.push(getRunSqlQuery(functionDefinition));
     }
 
     // Apply migrations

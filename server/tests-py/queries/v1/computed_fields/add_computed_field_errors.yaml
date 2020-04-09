@@ -9,7 +9,7 @@
       definition:
         function: full_name
   response:
-    path: "$.args.table"
+    path: $.args.table
     error: table "random" does not exist
     code: not-exists
 
@@ -24,10 +24,23 @@
       definition:
         function: full_name
   response:
-    path: "$.args.name"
-    error: column/relationship/computed field "first_name" of table "author" already exists
-    code: already-exists
-
+    internal:
+    - definition:
+        definition:
+          function:
+            schema: public
+            name: full_name
+          table_argument:
+        name: first_name
+        comment:
+        table:
+          schema: public
+          name: author
+      reason: field definition conflicts with postgres column
+      type: computed_field
+    path: $.args
+    error: field definition conflicts with postgres column
+    code: constraint-violation
 - description: Try adding computed field with invalid function
   url: /v1/query
   status: 400
@@ -39,10 +52,25 @@
       definition:
         function: random_function
   response:
-    path: "$.args.definition.function"
-    error: 'no such function exists in postgres : "random_function"'
-    code: not-exists
-
+    internal:
+    - definition:
+        definition:
+          function:
+            schema: public
+            name: random_function
+          table_argument:
+        name: full_name
+        comment:
+        table:
+          schema: public
+          name: author
+      reason: 'in table "author": in computed field "full_name": no such function
+        exists in postgres : "random_function"'
+      type: computed_field
+    path: $.args
+    error: 'in table "author": in computed field "full_name": no such function exists
+      in postgres : "random_function"'
+    code: constraint-violation
 - description: Try adding computed field with invalid table argument name
   url: /v1/query
   status: 400
@@ -55,11 +83,27 @@
         function: full_name
         table_argument: random
   response:
-    path: "$.args.definition"
-    error: the computed field "full_name" cannot be added to table "author" because "random"
-      is not an input argument of "full_name" function
-    code: not-supported
-
+    internal:
+    - definition:
+        definition:
+          function:
+            schema: public
+            name: full_name
+          table_argument: random
+        name: full_name
+        comment:
+        table:
+          schema: public
+          name: author
+      reason: 'in table "author": in computed field "full_name": the computed field
+        "full_name" cannot be added to table "author" because "random" is not an input
+        argument of "full_name" function'
+      type: computed_field
+    path: $.args
+    error: 'in table "author": in computed field "full_name": the computed field "full_name"
+      cannot be added to table "author" because "random" is not an input argument
+      of "full_name" function'
+    code: constraint-violation
 - description: Try adding computed field with a volatile function
   url: /v1/query
   status: 400
@@ -72,13 +116,31 @@
         function: fetch_articles_volatile
         table_argument: random
   response:
-    path: "$.args.definition"
-    error: "the computed field \"get_articles\" cannot be added to table \"author\" for
-      the following reasons:\n  • the function \"fetch_articles_volatile\" is of type
-      VOLATILE; cannot be added as a computed field\n  • \"random\" is not an input argument
-      of \"fetch_articles_volatile\" function\n"
-    code: not-supported
-
+    internal:
+    - definition:
+        definition:
+          function:
+            schema: public
+            name: fetch_articles_volatile
+          table_argument: random
+        name: get_articles
+        comment:
+        table:
+          schema: public
+          name: author
+      reason: "in table \"author\": in computed field \"get_articles\": the computed\
+        \ field \"get_articles\" cannot be added to table \"author\" for the following\
+        \ reasons:\n  • the function \"fetch_articles_volatile\" is of type VOLATILE;\
+        \ cannot be added as a computed field\n  • \"random\" is not an input argument\
+        \ of \"fetch_articles_volatile\" function\n"
+      type: computed_field
+    path: $.args
+    error: "in table \"author\": in computed field \"get_articles\": the computed\
+      \ field \"get_articles\" cannot be added to table \"author\" for the following\
+      \ reasons:\n  • the function \"fetch_articles_volatile\" is of type VOLATILE;\
+      \ cannot be added as a computed field\n  • \"random\" is not an input argument\
+      \ of \"fetch_articles_volatile\" function\n"
+    code: constraint-violation
 - description: Try adding a computed field with a function with no input arguments
   url: /v1/query
   status: 400
@@ -90,11 +152,27 @@
       definition:
         function: hello_world
   response:
-    path: "$.args.definition"
-    error: the computed field "hello_world" cannot be added to table "author" because
-      the function "hello_world" has no input arguments
-    code: not-supported
-
+    internal:
+    - definition:
+        definition:
+          function:
+            schema: public
+            name: hello_world
+          table_argument:
+        name: hello_world
+        comment:
+        table:
+          schema: public
+          name: author
+      reason: 'in table "author": in computed field "hello_world": the computed field
+        "hello_world" cannot be added to table "author" because the function "hello_world"
+        has no input arguments'
+      type: computed_field
+    path: $.args
+    error: 'in table "author": in computed field "hello_world": the computed field
+      "hello_world" cannot be added to table "author" because the function "hello_world"
+      has no input arguments'
+    code: constraint-violation
 - description: Try adding a computed field with first argument as table argument
   url: /v1/query
   status: 400
@@ -106,9 +184,28 @@
       definition:
         function: fetch_articles
   response:
-    path: "$.args.definition"
-    error: "the computed field \"get_articles\" cannot be added to table \"author\" for
-      the following reasons:\n  • first argument of the function \"fetch_articles\" is
-      not COMPOSITE type\n  • first argument of the function \"fetch_articles\" of type
-      \"pg_catalog.text\" is not the table to which the computed field is being added\n"
-    code: not-supported
+    internal:
+    - definition:
+        definition:
+          function:
+            schema: public
+            name: fetch_articles
+          table_argument:
+        name: get_articles
+        comment:
+        table:
+          schema: public
+          name: author
+      reason: "in table \"author\": in computed field \"get_articles\": the computed\
+        \ field \"get_articles\" cannot be added to table \"author\" for the following\
+        \ reasons:\n  • first argument of the function \"fetch_articles\" is not COMPOSITE\
+        \ type\n  • first argument of the function \"fetch_articles\" of type \"pg_catalog.text\"\
+        \ is not the table to which the computed field is being added\n"
+      type: computed_field
+    path: $.args
+    error: "in table \"author\": in computed field \"get_articles\": the computed\
+      \ field \"get_articles\" cannot be added to table \"author\" for the following\
+      \ reasons:\n  • first argument of the function \"fetch_articles\" is not COMPOSITE\
+      \ type\n  • first argument of the function \"fetch_articles\" of type \"pg_catalog.text\"\
+      \ is not the table to which the computed field is being added\n"
+    code: constraint-violation

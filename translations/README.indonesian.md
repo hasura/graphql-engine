@@ -1,6 +1,6 @@
 # Hasura GraphQL Engine
 
-[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://docs.hasura.io)
+[![Docs](https://img.shields.io/badge/docs-v1.0-brightgreen.svg?style=flat)](https://hasura.io/docs)
 [![CircleCI](https://circleci.com/gh/hasura/graphql-engine.svg?style=shield)](https://circleci.com/gh/hasura/graphql-engine)
 
 
@@ -12,7 +12,7 @@ _Hasura GraphQL Engine_ adalah sebuah _server_ GraphQL ultra-cepat yang menyedia
 
 Hasura dapat membantu Anda membangun aplikasi berbasis GraphQL dengan Postgres atau membantu aplikasi yang sudah ada untuk berpindah ke GraphQL secara bertahap.
 
-Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https://docs.hasura.io).
+Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https://hasura.io/docs).
 
 ------------------
 
@@ -36,7 +36,7 @@ Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https:/
 * **Antarmuka untuk admin & proses migrasi**: Antarmuka untuk admin & proses migrasi yang terinspirasi dari Rails.
 * **Postgres** ❤️: Mendukung _types_ dari Postgres (PostGIS/geo-location, dll.), ubah _views_ menjadi *graphs*, memicu fungsi tersimpan (_stored functions_) atau prosedur dengan mutasi.
 
-Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https://docs.hasura.io).
+Baca lebih lanjut di [hasura.io](https://hasura.io) dan [dokumentasinya](https://hasura.io/docs).
 
 ## Daftar isi
 <!-- markdown-toc **start** - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
@@ -77,7 +77,7 @@ Cara paling cepat untuk mencoba Hasura adalah menggunakan Heroku.
 
 3. Buat _query_ GraphQL pertama Anda
 
-    Buat sebuah tabel dan langsung jalankan _query_ pertama Anda. Ikuti [petunjuk sederhana ini](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+    Buat sebuah tabel dan langsung jalankan _query_ pertama Anda. Ikuti [petunjuk sederhana ini](https://hasura.io/docs/1.0/graphql/manual/getting-started/first-graphql-query.html).
 
 ### Pilihan menjalankan aplikasi dengan satu klik lainnya
 
@@ -85,12 +85,12 @@ Coba lihat pilihan lainnya untuk menjalankan aplikasi dengan satu klik:
 
 | **Penyedia infrastruktur** | **Tautan satu klik** | **Informasi tambahan** |
 |:------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------:|
-| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [dokumentasi](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
-| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [dokumentasi](https://docs.hasura.io/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
+| DigitalOcean | [![Deploy to DigitalOcean](https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet_200px.png)](https://marketplace.digitalocean.com/apps/hasura?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=readme) | [dokumentasi](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/digital-ocean-one-click.html#hasura-graphql-engine-digitalocean-one-click-app) |
+| Azure | [![Deploy to Azure](http://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json) | [dokumentasi](https://hasura.io/docs/1.0/graphql/manual/guides/deployment/azure-container-instances-postgres.html) |
 
 ### Metode menjalankan lainnya
 
-Untuk menjalankan berbasis Docker dan konfigurasi lebih lanjut, coba lihat [petunjuk menjalankan](https://docs.hasura.io/1.0/graphql/manual/getting-started/index.html) atau
+Untuk menjalankan berbasis Docker dan konfigurasi lebih lanjut, coba lihat [petunjuk menjalankan](https://hasura.io/docs/1.0/graphql/manual/getting-started/index.html) atau
 [manifestasi instalasi](../install-manifests).
 
 ## Arsitektur
@@ -119,7 +119,7 @@ Tambahkan logika bisnis asinkron yang dipicu oleh _event_ basis data. Ideal untu
 
 ### Data turunan atau transformasi data
 
-Transformasi data di Postgres atau jalankan logika bisnis untuk menghasilkan set data turunan lainnya yang dapat di-_query_ menggunakan GraphQL Engine -  [baca lebih lanjut](https://docs.hasura.io/1.0/graphql/manual/queries/derived-data.html).
+Transformasi data di Postgres atau jalankan logika bisnis untuk menghasilkan set data turunan lainnya yang dapat di-_query_ menggunakan GraphQL Engine -  [baca lebih lanjut](https://hasura.io/docs/1.0/graphql/manual/queries/derived-data.html).
 
 ## Demo
 

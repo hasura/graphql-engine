@@ -27,6 +27,8 @@ class TestMetadataDisabled:
     def test_metadata_api_1_disabled(self, hge_ctx):
         check_post_404(hge_ctx,'/api/1/table/foo/select')
 
+    def test_graphql_explain_disabled(self, hge_ctx):
+        check_post_404(hge_ctx, '/v1/graphql/explain')
 
 @pytest.mark.skipif(not graphql_api_disabled,
                     reason="--test-graphql-disabled is not set. Cannot run GraphQL disabled tests")
@@ -34,10 +36,6 @@ class TestGraphQLDisabled:
 
     def test_graphql_endpoint_disabled(self, hge_ctx):
         check_post_404(hge_ctx, '/v1/graphql')
-
-    def test_graphql_explain_disabled(self, hge_ctx):
-        check_post_404(hge_ctx, '/v1/graphql/explain')
-
 
 @pytest.mark.skipif(graphql_api_disabled,
                     reason="--test-graphql-disabled is set. Cannot run GraphQL enabled tests")

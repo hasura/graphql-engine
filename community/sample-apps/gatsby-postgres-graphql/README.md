@@ -52,12 +52,7 @@ npm install
       options: {
         typeName: "HASURA",
         fieldName: "hasura", // <- fieldName under which schema will be stitched
-        createLink: () =>
-          createHttpLink({
-            uri: `${process.env.GATSBY_HASURA_GRAPHQL_URL}`, // <- Configure connection GraphQL url
-            headers: {},
-            fetch
-          }),
+        url: process.env.GATSBY_HASURA_GRAPHQL_URL,
         refetchInterval: 10 // Refresh every 10 seconds for new data
       }
     }

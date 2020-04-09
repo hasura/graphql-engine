@@ -26,8 +26,20 @@ args:
         content TEXT,
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
-        published_on TIMESTAMP
-      )
+        published_on TIMESTAMP,
+        tags JSON
+      );
+
+      CREATE FUNCTION fetch_articles(search text, author_row author)
+      RETURNS SETOF article AS $$
+        SELECT *
+        FROM article
+        WHERE
+          ( title ilike ('%' || search || '%')
+            OR content ilike ('%' || search || '%')
+          ) AND author_id = author_row.id
+      $$ LANGUAGE sql STABLE;
+
 - type: track_table
   args:
     schema: public
@@ -49,3 +61,12 @@ args:
       foreign_key_constraint_on:
         table: article
         column: author_id
+
+# add a computed field
+- type: add_computed_field
+  args:
+    table: author
+    name: fetch_articles
+    definition:
+      function: fetch_articles
+      table_argument: author_row

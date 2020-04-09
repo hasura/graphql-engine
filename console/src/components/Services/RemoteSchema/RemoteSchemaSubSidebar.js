@@ -11,6 +11,7 @@ const RemoteSchemaSubSidebar = ({
   location,
   filterItem,
   viewRemoteSchema,
+  main,
 }) => {
   const styles = require('../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss');
 
@@ -80,7 +81,7 @@ const RemoteSchemaSubSidebar = ({
 
   return (
     <LeftSubSidebar
-      showAddBtn
+      showAddBtn={!main.readOnlyMode}
       searchInput={getSearchInput()}
       heading={`Remote Schemas (${dataList.length})`}
       addLink={`${appPrefix}/manage/add`}

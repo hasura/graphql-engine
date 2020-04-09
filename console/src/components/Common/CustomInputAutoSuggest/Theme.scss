@@ -2,10 +2,10 @@ $suggestion-width: 280px;
 $set-top: 34px;
 $suggestion-padding: 6px 12px;
 
-.container { 
+.container {
   position: relative;
 }
-.input { 
+.input {
   border: 1px solid #aaa;
   border-radius: 4px;
 }
@@ -57,16 +57,16 @@ $suggestion-padding: 6px 12px;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   box-sizing: border-box;
 
   &:hover {
-    background-color: #DEEBFF;
+    background-color: #deebff;
   }
 }
 
 .suggestionHighlighted {
-  background-color: #DEEBFF;
+  background-color: #deebff;
 }
 
 .sectionTitle {

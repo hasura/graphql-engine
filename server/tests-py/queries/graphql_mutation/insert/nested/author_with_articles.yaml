@@ -35,6 +35,11 @@ query:
             content
             is_published
           }
+          fetch_articles(args: {search: "Article"}){
+            id
+            title
+            content
+          }
         }
       }
    }
@@ -48,10 +53,17 @@ response:
         name: Author 3
         articles:
         - id: 4
-          title: "Article 1 by Author 3"
-          content: "Content for Article 1 by Author 3"
+          title: Article 1 by Author 3
+          content: Content for Article 1 by Author 3
           is_published: false
         - id: 5
-          title: "Article 2 by Author 3"
-          content: "Content for Article 2 by Author 3"
+          title: Article 2 by Author 3
+          content: Content for Article 2 by Author 3
           is_published: false
+        fetch_articles:
+        - id: 4
+          title: Article 1 by Author 3
+          content: Content for Article 1 by Author 3
+        - id: 5
+          title: Article 2 by Author 3
+          content: Content for Article 2 by Author 3

@@ -1,3 +1,7 @@
+.. meta::
+   :description: Use hasura migrate to manage Hasura migrations on the database with the Hasura CLI
+   :keywords: hasura, docs, CLI, hasura migrate
+
 .. _hasura_migrate:
 
 Hasura CLI: hasura migrate
@@ -16,7 +20,9 @@ Options
 
 ::
 
-  -h, --help   help for migrate
+      --admin-secret string   admin secret for Hasura GraphQL engine
+      --endpoint string       http(s) endpoint for Hasura GraphQL engine
+  -h, --help                  help for migrate
 
 Options inherited from parent commands
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,7 +32,7 @@ Options inherited from parent commands
       --log-level string    log level (DEBUG, INFO, WARN, ERROR, FATAL) (default "INFO")
       --no-color            do not colorize output (default: false)
       --project string      directory where commands are executed (default: current dir)
-      --skip-update-check   Skip automatic update check on command execution
+      --skip-update-check   skip automatic update check on command execution
 
 SEE ALSO
 ~~~~~~~~

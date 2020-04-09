@@ -2,12 +2,21 @@ description: Attempts to mark a non-enum table as an enum are rejected
 url: /v1/query
 status: 400
 response:
-  code: constraint-violation
-  error: |
-    the table "employees" cannot be used as an enum for the following reasons:
-      • the table’s primary key ("id") must have type "text", not type "integer"
-      • the table must have exactly one primary key and optionally one comment column, not 4 columns (favorite_color, gets_paid_on, id, name)
+  internal:
+  - definition:
+      schema: public
+      name: employees
+    reason: "the table \"employees\" cannot be used as an enum for the following reasons:\n\
+      \  • the table’s primary key (\"id\") must have type \"text\", not type \"integer\"\
+      \n  • the table must have exactly one primary key and optionally one comment\
+      \ column, not 4 columns (favorite_color, gets_paid_on, id, name)\n"
+    type: table
   path: $.args
+  error: "the table \"employees\" cannot be used as an enum for the following reasons:\n\
+    \  • the table’s primary key (\"id\") must have type \"text\", not type \"integer\"\
+    \n  • the table must have exactly one primary key and optionally one comment column,\
+    \ not 4 columns (favorite_color, gets_paid_on, id, name)\n"
+  code: constraint-violation
 query:
   type: set_table_is_enum
   args:

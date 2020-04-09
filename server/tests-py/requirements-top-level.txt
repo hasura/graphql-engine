@@ -9,6 +9,5 @@ pyjwt >= 1.5.3
 jsondiff
 cryptography
 graphene
-brotlipy
 ruamel.yaml > 0.15
 graphql-core

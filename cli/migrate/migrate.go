@@ -9,14 +9,17 @@ import (
 	"bytes"
 	"container/list"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"time"
 
+	"github.com/hasura/graphql-engine/cli/metadata/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
-
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 // DefaultPrefetchMigrations sets the number of migrations to pre-read
@@ -99,7 +102,7 @@ type Migrate struct {
 
 // New returns a new Migrate instance from a source URL and a database URL.
 // The URL scheme is defined by each driver.
-func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*Migrate, error) {
+func New(sourceUrl string, databaseUrl string, cmd bool, configVersion int, logger *log.Logger) (*Migrate, error) {
 	m := newCommon(cmd)
 
 	sourceName, err := schemeFromUrl(sourceUrl)
@@ -129,6 +132,9 @@ func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*M
 		return nil, err
 	}
 	m.sourceDrv = sourceDrv
+	if configVersion >= 2 {
+		m.sourceDrv.DefaultParser(source.DefaultParsev2)
+	}
 
 	databaseDrv, err := database.Open(databaseUrl, cmd, logger)
 	if err != nil {
@@ -137,8 +143,10 @@ func New(sourceUrl string, databaseUrl string, cmd bool, logger *log.Logger) (*M
 	}
 	m.databaseDrv = databaseDrv
 
-	m.status = NewStatus()
-
+	err = m.ReScan()
+	if err != nil {
+		return nil, err
+	}
 	return m, nil
 }
 
@@ -307,8 +315,20 @@ func (m *Migrate) GetUnappliedMigrations(version uint64) []uint64 {
 	return m.sourceDrv.GetUnappliedMigrations(version)
 }
 
-func (m *Migrate) ExportMetadata() (interface{}, error) {
+func (m *Migrate) GetIntroSpectionSchema() (interface{}, error) {
+	return m.databaseDrv.GetIntroSpectionSchema()
+}
+
+func (m *Migrate) SetMetadataPlugins(plugins types.MetadataPlugins) {
+	m.databaseDrv.SetMetadataPlugins(plugins)
+}
+
+func (m *Migrate) ExportMetadata() (map[string][]byte, error) {
 	return m.databaseDrv.ExportMetadata()
+}
+
+func (m *Migrate) WriteMetadata(files map[string][]byte) error {
+	return m.sourceDrv.WriteMetadata(files)
 }
 
 func (m *Migrate) ResetMetadata() error {
@@ -320,15 +340,47 @@ func (m *Migrate) ReloadMetadata() error {
 	return m.databaseDrv.ReloadMetadata()
 }
 
-func (m *Migrate) ApplyMetadata(data interface{}) error {
-	return m.databaseDrv.ApplyMetadata(data)
+func (m *Migrate) GetInconsistentMetadata() (bool, []database.InconsistentMetadataInterface, error) {
+	return m.databaseDrv.GetInconsistentMetadata()
+}
+
+func (m *Migrate) DropInconsistentMetadata() error {
+	return m.databaseDrv.DropInconsistentMetadata()
+}
+
+func (m *Migrate) BuildMetadata() (yaml.MapSlice, error) {
+	return m.databaseDrv.BuildMetadata()
+}
+
+func (m *Migrate) ApplyMetadata() error {
+	return m.databaseDrv.ApplyMetadata()
 }
 
 func (m *Migrate) ExportSchemaDump(schemName []string) ([]byte, error) {
 	return m.databaseDrv.ExportSchemaDump(schemName)
 }
 
-func (m *Migrate) Query(data []interface{}) error {
+func (m *Migrate) RemoveVersions(versions []uint64) error {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return err
+	}
+
+	if mode != "true" {
+		return ErrNoMigrationMode
+	}
+
+	if err := m.lock(); err != nil {
+		return err
+	}
+
+	for _, version := range versions {
+		m.databaseDrv.RemoveVersion(int64(version))
+	}
+	return m.unlockErr(nil)
+}
+
+func (m *Migrate) Query(data interface{}) error {
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
 		return err
@@ -337,7 +389,6 @@ func (m *Migrate) Query(data []interface{}) error {
 	if mode == "true" {
 		return ErrMigrationMode
 	}
-
 	return m.databaseDrv.Query(data)
 }
 
@@ -348,7 +399,6 @@ func (m *Migrate) Query(data []interface{}) error {
 // the squashed metadata for all down steps: dm
 // the squashed SQL for all down steps: ds
 func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm []interface{}, ds []byte, err error) {
-
 	// check the migration mode on the database
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
@@ -376,7 +426,7 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 	go m.squashMigrations(retUp, retDown, dataUp, dataDown, retVersions)
 
 	// make a chan for errors
-	errChn := make(chan error)
+	errChn := make(chan error, 2)
 
 	// create a waitgroup to wait for all goroutines to finish execution
 	var wg sync.WaitGroup
@@ -395,7 +445,8 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 			case error:
 				// it's an error, set error and return
 				// note: this return is returning the goroutine, not the current function
-				err = r.(error)
+				m.isGracefulStop = true
+				errChn <- r.(error)
 				return
 			case []byte:
 				// it's SQL, concat all of them
@@ -421,7 +472,8 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 			case error:
 				// it's an error, set error and return
 				// note: this return is returning the goroutine, not the current function
-				err = r.(error)
+				m.isGracefulStop = true
+				errChn <- r.(error)
 				return
 			case []byte:
 				// it's SQL, concat all of them
@@ -451,15 +503,16 @@ func (m *Migrate) Squash(v uint64) (vs []int64, um []interface{}, us []byte, dm 
 	// wait until all tasks (3) in the workgroup are completed
 	wg.Wait()
 
+	// close the errChn
+	close(errChn)
+
 	// check for errors in the error channel
-	select {
-	// we got an error, set err and return
-	case err = <-errChn:
-		return
-	default:
-		// set nothing and return, all is well
+	for e := range errChn {
+		err = e
 		return
 	}
+
+	return
 }
 
 // Migrate looks at the currently active migration version,
@@ -482,6 +535,34 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 	go m.read(version, direction, ret)
 
 	return m.unlockErr(m.runMigrations(ret))
+}
+
+func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser) error {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return err
+	}
+
+	if mode != "true" {
+		return ErrNoMigrationMode
+	}
+
+	if err := m.lock(); err != nil {
+		return err
+	}
+
+	if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
+		m.databaseDrv.ResetQuery()
+		return m.unlockErr(err)
+	}
+
+	if version != 0 {
+		if err := m.databaseDrv.InsertVersion(int64(version)); err != nil {
+			m.databaseDrv.ResetQuery()
+			return m.unlockErr(err)
+		}
+	}
+	return m.unlockErr(nil)
 }
 
 // Steps looks at the currently active migration version.
@@ -576,11 +657,6 @@ func (m *Migrate) Down() error {
 	go m.readDown(-1, ret)
 
 	return m.unlockErr(m.runMigrations(ret))
-}
-
-// Reset resets public schema and hasuradb metadata
-func (m *Migrate) Reset() (err error) {
-	return m.databaseDrv.Reset()
 }
 
 func (m *Migrate) squashUp(version uint64, ret chan<- interface{}) {
@@ -678,6 +754,10 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			return
 		}
 
+		if from < version {
+			return
+		}
+
 		err = m.versionDownExists(from)
 		if err != nil {
 			ret <- err
@@ -685,7 +765,7 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 		}
 
 		prev, err := m.sourceDrv.Prev(from)
-		if err != nil {
+		if os.IsNotExist(err) {
 			migr, err := m.metanewMigration(from, -1)
 			if err != nil {
 				ret <- err
@@ -701,9 +781,9 @@ func (m *Migrate) squashDown(version uint64, ret chan<- interface{}) {
 			}
 			ret <- migr
 			go migr.Buffer()
-		}
-
-		if from == version {
+			return
+		} else if err != nil {
+			ret <- err
 			return
 		}
 
@@ -792,7 +872,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 		prev, err := m.sourceDrv.Prev(version)
 		if os.IsNotExist(err) {
 			// apply nil migration
-			migr, err := m.newMigration(version, -1)
+			migr, err := m.metanewMigration(version, -1)
 			if err != nil {
 				ret <- err
 				return
@@ -800,7 +880,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 			ret <- migr
 			go migr.Buffer()
 
-			migr, err = m.metanewMigration(version, -1)
+			migr, err = m.newMigration(version, -1)
 			if err != nil {
 				ret <- err
 				return
@@ -813,7 +893,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 			return
 		}
 
-		migr, err := m.newMigration(version, int64(prev))
+		migr, err := m.metanewMigration(version, int64(prev))
 		if err != nil {
 			ret <- err
 			return
@@ -822,7 +902,7 @@ func (m *Migrate) read(version uint64, direction string, ret chan<- interface{})
 		ret <- migr
 		go migr.Buffer()
 
-		migr, err = m.metanewMigration(version, int64(prev))
+		migr, err = m.newMigration(version, int64(prev))
 		if err != nil {
 			ret <- err
 			return
@@ -1107,11 +1187,17 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 		defer close(dataUp)
 		defer close(versions)
 
+		var err error
+
 		squashList := database.CustomList{
 			list.New(),
 		}
 
-		defer m.databaseDrv.Squash(&squashList, dataUp)
+		defer func() {
+			if err == nil {
+				m.databaseDrv.Squash(&squashList, dataUp)
+			}
+		}()
 
 		for r := range retUp {
 			if m.stop() {
@@ -1123,8 +1209,9 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 			case *Migration:
 				migr := r.(*Migration)
 				if migr.Body != nil {
-					if err := m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
+					if err = m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
 						dataUp <- err
+						return
 					}
 				}
 
@@ -1139,12 +1226,17 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 
 	go func() {
 		defer close(dataDown)
+		var err error
 
 		squashList := database.CustomList{
 			list.New(),
 		}
 
-		defer m.databaseDrv.Squash(&squashList, dataDown)
+		defer func() {
+			if err == nil {
+				m.databaseDrv.Squash(&squashList, dataDown)
+			}
+		}()
 
 		for r := range retDown {
 			if m.stop() {
@@ -1156,8 +1248,9 @@ func (m *Migrate) squashMigrations(retUp <-chan interface{}, retDown <-chan inte
 			case *Migration:
 				migr := r.(*Migration)
 				if migr.Body != nil {
-					if err := m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
+					if err = m.databaseDrv.PushToList(migr.BufferedBody, migr.FileType, &squashList); err != nil {
 						dataDown <- err
+						return
 					}
 				}
 			}
@@ -1207,7 +1300,7 @@ func (m *Migrate) versionUpExists(version uint64) error {
 // versionDownExists checks the source if either the up or down migration for
 // the specified migration version exists.
 func (m *Migrate) versionDownExists(version uint64) error {
-	// try up migration first
+	// try down migration first
 	directions := m.sourceDrv.GetDirections(version)
 	if !directions[source.Down] && !directions[source.MetaDown] {
 		return fmt.Errorf("%d down migration not found", version)
@@ -1445,4 +1538,229 @@ func (m *Migrate) unlockErr(prevErr error) error {
 		return NewMultiError(prevErr, err)
 	}
 	return prevErr
+}
+
+// GotoVersion will apply a version also applying the migration chain
+// leading to it
+func (m *Migrate) GotoVersion(gotoVersion int64) error {
+	mode, err := m.databaseDrv.GetSetting("migration_mode")
+	if err != nil {
+		return err
+	}
+	if mode != "true" {
+		return ErrNoMigrationMode
+	}
+
+	currentVersion, dirty, err := m.Version()
+	currVersion := int64(currentVersion)
+	if err != nil {
+		if err == ErrNilVersion {
+			currVersion = database.NilVersion
+		} else {
+			return errors.Wrap(err, "cannot determine version")
+		}
+	}
+	if dirty {
+		return ErrDirty{currVersion}
+	}
+
+	if err := m.lock(); err != nil {
+		return err
+	}
+
+	ret := make(chan interface{})
+	if currVersion <= gotoVersion {
+		go m.readUpFromVersion(-1, gotoVersion, ret)
+	} else if currVersion > gotoVersion {
+		go m.readDownFromVersion(currVersion, gotoVersion, ret)
+	}
+
+	return m.unlockErr(m.runMigrations(ret))
+
+}
+
+// readUpFromVersion reads up migrations from `from` limitted by `limit`. (is a modified version of readUp)
+// limit can be -1, implying no limit and reading until there are no more migrations.
+// Each migration is then written to the ret channel.
+// If an error occurs during reading, that error is written to the ret channel, too.
+// Once readUpFromVersion is done reading it will close the ret channel.
+func (m *Migrate) readUpFromVersion(from int64, to int64, ret chan<- interface{}) {
+	defer close(ret)
+	var noOfAppliedMigrations int
+	for {
+		if m.stop() {
+			return
+		}
+		if from == to {
+			if noOfAppliedMigrations == 0 {
+				ret <- ErrNoChange
+			}
+			return
+		}
+
+		if from == -1 {
+			firstVersion, err := m.sourceDrv.First()
+			if err != nil {
+				ret <- err
+				return
+			}
+
+			// Check if this version present in DB
+			ok := m.databaseDrv.Read(firstVersion)
+			if ok {
+				from = int64(firstVersion)
+				continue
+			}
+
+			// Check if firstVersion files exists (yaml or sql)
+			if err = m.versionUpExists(firstVersion); err != nil {
+				ret <- err
+				return
+			}
+
+			migr, err := m.newMigration(firstVersion, int64(firstVersion))
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+			go migr.Buffer()
+
+			migr, err = m.metanewMigration(firstVersion, int64(firstVersion))
+			if err != nil {
+				ret <- err
+				return
+			}
+			ret <- migr
+
+			go migr.Buffer()
+			from = int64(firstVersion)
+			noOfAppliedMigrations++
+			continue
+		}
+
+		// apply next migration
+		next, err := m.sourceDrv.Next(suint64(from))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		// Check if this version present in DB
+		ok := m.databaseDrv.Read(next)
+		if ok {
+			from = int64(next)
+			continue
+		}
+
+		// Check if next files exists (yaml or sql)
+		if err = m.versionUpExists(next); err != nil {
+			ret <- err
+			return
+		}
+
+		migr, err := m.newMigration(next, int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+
+		migr, err = m.metanewMigration(next, int64(next))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+		from = int64(next)
+		noOfAppliedMigrations++
+	}
+}
+
+// readDownFromVersion reads down migrations from `from` limitted by `limit`. (modified version of readDown)
+// limit can be -1, implying no limit and reading until there are no more migrations.
+// Each migration is then written to the ret channel.
+// If an error occurs during reading, that error is written to the ret channel, too.
+// Once readDownFromVersion is done reading it will close the ret channel.
+func (m *Migrate) readDownFromVersion(from int64, to int64, ret chan<- interface{}) {
+	defer close(ret)
+	var err error
+	var noOfAppliedMigrations int
+	for {
+		if m.stop() {
+			return
+		}
+
+		if from == to {
+			if noOfAppliedMigrations == 0 {
+				ret <- ErrNoChange
+			}
+			return
+		}
+
+		err = m.versionDownExists(suint64(from))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		prev, ok := m.databaseDrv.Prev(suint64(from))
+		if !ok {
+			// Check if any prev version available in source
+			prev, err = m.sourceDrv.Prev(suint64(from))
+			if os.IsNotExist(err) && to == -1 {
+				// apply nil migration
+				migr, err := m.metanewMigration(suint64(from), -1)
+				if err != nil {
+					ret <- err
+					return
+				}
+
+				ret <- migr
+				go migr.Buffer()
+
+				migr, err = m.newMigration(suint64(from), -1)
+				if err != nil {
+					ret <- err
+					return
+				}
+
+				ret <- migr
+				go migr.Buffer()
+
+				from = database.NilVersion
+				noOfAppliedMigrations++
+				continue
+			} else if err != nil {
+				ret <- err
+				return
+			}
+			ret <- fmt.Errorf("%v not applied on database", prev)
+			return
+		}
+
+		migr, err := m.metanewMigration(suint64(from), int64(prev))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+
+		migr, err = m.newMigration(suint64(from), int64(prev))
+		if err != nil {
+			ret <- err
+			return
+		}
+
+		ret <- migr
+		go migr.Buffer()
+		from = int64(prev)
+		noOfAppliedMigrations++
+	}
 }

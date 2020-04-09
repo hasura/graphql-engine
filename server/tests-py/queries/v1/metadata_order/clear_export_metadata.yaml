@@ -244,10 +244,12 @@
         permission:
           columns: "*"
           filter: {}
+          check:
       - role: role2
         permission:
           columns: "*"
           filter: {}
+          check:
       delete_permissions:
       - role: role1
         permission:

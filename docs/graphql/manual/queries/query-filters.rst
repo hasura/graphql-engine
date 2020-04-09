@@ -1,3 +1,9 @@
+.. meta::
+   :description: Filter query results and search queries in Hasura
+   :keywords: hasura, docs, query, filter, search
+
+.. _filter_queries:
+
 Filter query results / search queries
 =====================================
 
@@ -1026,7 +1032,8 @@ Fetch a list of articles published in a specific time-frame (for example: in yea
 
 .. note::
 
-  It is possible to simplify the ``_and`` expression. See the :ref:`API reference <AndExp>` for more details.
+  Certain ``_and`` expressions can be expressed in a simpler format using some syntactic sugar. See the
+  :ref:`API reference <AndExp>` for more details.
 
 **Example:  _or**
 
@@ -1085,8 +1092,8 @@ Fetch a list of articles rated more than 4 or published after "01/01/2018":
 
 .. note::
 
-  The ``_or`` operator expects an array of expressions as input. See the :ref:`API reference <OrExp>` for details on
-  the behaviour if an object is passed as input.
+  The ``_or`` operator expects an array of expressions as input. If an object is passed as input it will behave like
+  the ``_and`` operator as explained in the :ref:`API reference <OrExp>`
 
 .. _nested_filter:
 

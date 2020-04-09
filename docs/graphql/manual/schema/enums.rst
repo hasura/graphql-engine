@@ -1,3 +1,9 @@
+.. meta::
+   :description: Use enums in Hasura
+   :keywords: hasura, docs, schema, enum
+
+.. _enums:
+
 Enum type fields
 ================
 
@@ -139,6 +145,7 @@ we need to tell Hasura that this table represents an enum.
     ``Set table as enum`` section:
 
     .. thumbnail:: ../../../img/graphql/manual/schema/enum-set.png
+       :alt: Set table as enum
 
   .. tab:: API
 
@@ -232,7 +239,7 @@ This can be achieved via the console by performing the following steps while set
 2. Use the ``RawSQL`` tab of the console to insert the enum values into the table and mark the insert as a migration
 3. Set the table as an enum
 
-You can also :doc:`manually create migration files <../migrations/advanced/writing-migrations-manually>` to achieve
+You can also :ref:`manually create migration files <manual_migrations>` to achieve
 this.
 
 Current limitations

@@ -8,13 +8,14 @@ import           Control.Monad.Stateless
 import           Control.Monad.STM                    (atomically)
 import           Control.Monad.Trans.Control          (MonadBaseControl (..))
 import           Data.Aeson                           ((.=))
-import           Data.Time.Clock                      (UTCTime, getCurrentTime)
+import           Data.Time.Clock                      (UTCTime)
+import           GHC.AssertNF
 import           Options.Applicative
 import           System.Environment                   (getEnvironment, lookupEnv)
 import           System.Exit                          (exitFailure)
 
-import qualified Control.Concurrent                   as C
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
+import qualified Control.Concurrent.Extended          as C
 import qualified Data.Aeson                           as A
 import qualified Data.ByteString.Char8                as BC
 import qualified Data.ByteString.Lazy.Char8           as BLC
@@ -31,23 +32,22 @@ import qualified Text.Mustache.Compile                as M
 import           Hasura.Db
 import           Hasura.EncJSON
 import           Hasura.Events.Lib
+import           Hasura.GraphQL.Resolve.Action        (asyncActionsProcessor)
 import           Hasura.Logging
 import           Hasura.Prelude
-import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.Types                     (CacheRWM, Code (..), HasHttpManager,
                                                        HasSQLGenCtx, HasSystemDefined, QErr (..),
                                                        SQLGenCtx (..), SchemaCache (..), UserInfoM,
-                                                       adminRole, adminUserInfo, decodeValue,
-                                                       emptySchemaCache, throw400, userRole,
-                                                       withPathK)
+                                                       adminRole, adminUserInfo,
+                                                       buildSchemaCacheStrict, decodeValue,
+                                                       throw400, userRole, withPathK)
+import           Hasura.RQL.Types.Run
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates           (checkForUpdates)
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
-import           Hasura.Server.Migrate                (migrateCatalog)
-import           Hasura.Server.Query                  (Run, RunCtx (..), peelRun, requiresAdmin,
-                                                       runQueryM)
+import           Hasura.Server.Query                  (requiresAdmin, runQueryM)
 import           Hasura.Server.SchemaUpdate
 import           Hasura.Server.Telemetry
 import           Hasura.Server.Version
@@ -72,6 +72,8 @@ parseHGECommand =
           ( progDesc "Clean graphql-engine's metadata to start afresh" ))
         <> command "execute" (info (pure  HCExecute)
           ( progDesc "Execute a query" ))
+        <> command "downgrade" (info (HCDowngrade <$> downgradeOptionsParser)
+          (progDesc "Downgrade the GraphQL Engine schema to the specified version"))
         <> command "version" (info (pure  HCVersion)
           (progDesc "Prints the version of GraphQL Engine"))
     )
@@ -106,7 +108,6 @@ data InitCtx
   = InitCtx
   { _icHttpManager :: !HTTP.Manager
   , _icInstanceId  :: !InstanceId
-  , _icDbUid       :: !Text
   , _icLoggers     :: !Loggers
   , _icConnInfo    :: !Q.ConnInfo
   , _icPgPool      :: !Q.PGPool
@@ -130,7 +131,7 @@ newtype AppM a = AppM { unAppM :: IO a }
 -- this exists as a separate function because the context (logger, http manager, pg pool) can be
 -- used by other functions as well
 initialiseCtx
-  :: (MonadIO m)
+  :: MonadIO m
   => HGECommand Hasura
   -> RawConnInfo
   -> m (InitCtx, UTCTime)
@@ -149,22 +150,15 @@ initialiseCtx hgeCmd rci = do
       -- log postgres connection info
       unLogger logger $ connInfoToLog connInfo
       pool <- liftIO $ Q.initPGPool connInfo soConnParams pgLogger
-      -- safe init catalog
-      initialiseCatalog pool (SQLGenCtx soStringifyNum) httpManager logger
-
-      return (l, pool)
+      pure (l, pool)
 
     -- for other commands generate a minimal pool
     _ -> do
       l@(Loggers _ _ pgLogger) <- mkLoggers defaultEnabledLogTypes LevelInfo
       pool <- getMinimalPool pgLogger connInfo
-      return (l, pool)
+      pure (l, pool)
 
-  -- get the unique db id
-  eDbId <- liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) getDbId
-  dbId <- either printErrJExit return eDbId
-
-  return (InitCtx httpManager instanceId dbId loggers connInfo pool, initTime)
+  pure (InitCtx httpManager instanceId loggers connInfo pool, initTime)
   where
     procConnInfo =
       either (printErrExit . connInfoErrModifier) return $ mkConnInfo rci
@@ -179,15 +173,15 @@ initialiseCtx hgeCmd rci = do
           pgLogger = mkPGLogger logger
       return $ Loggers loggerCtx logger pgLogger
 
-    initialiseCatalog pool sqlGenCtx httpManager (Logger logger) = do
-      currentTime <- liftIO getCurrentTime
-      -- initialise the catalog
-      initRes <- runAsAdmin pool sqlGenCtx httpManager $ migrateCatalog currentTime
-      either printErrJExit logger initRes
-
+-- | Run a transaction and if an error is encountered, log the error and abort the program
+runTxIO :: Q.PGPool -> Q.TxMode -> Q.TxE QErr a -> IO a
+runTxIO pool isoLevel tx = do
+  eVal <- liftIO $ runExceptT $ Q.runTx pool isoLevel tx
+  either printErrJExit return eVal
 
 runHGEServer
-  :: ( MonadIO m
+  :: ( HasVersion
+     , MonadIO m
      , MonadStateless IO m
      , UserAuthentication m
      , MetadataApiAuthorization m
@@ -201,6 +195,13 @@ runHGEServer
   -- ^ start time
   -> m ()
 runHGEServer ServeOptions{..} InitCtx{..} initTime = do
+  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to
+  -- STDOUT containing "not in normal form". In the future we could try to integrate this into
+  -- our tests. For now this is a development tool.
+  --
+  -- NOTE: be sure to compile WITHOUT code coverage, for this to work properly.
+  liftIO disableAssertNF
+
   let sqlGenCtx = SQLGenCtx soStringifyNum
       Loggers loggerCtx logger _ = _icLoggers
 
@@ -228,11 +229,12 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)
-  logInconsObjs logger inconsObjs
+  liftIO $ logInconsObjs logger inconsObjs
 
-  -- start a background thread for schema sync
-  startSchemaSync sqlGenCtx _icPgPool logger _icHttpManager
-                  cacheRef _icInstanceId cacheInitTime
+  -- start background threads for schema sync
+  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <-
+    startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
+                           cacheRef _icInstanceId cacheInitTime
 
   let warpSettings = Warp.setPort soPort
                      . Warp.setHost soHost
@@ -241,24 +243,33 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
                      $ Warp.defaultSettings
 
   maxEvThrds <- liftIO $ getFromEnv defaultMaxEventThreads "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-  evFetchMilliSec  <- liftIO $ getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
+  fetchI  <- fmap milliseconds $ liftIO $
+    getFromEnv defaultFetchIntervalMilliSec "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
   logEnvHeaders <- liftIO $ getFromEnv False "LOG_HEADERS_FROM_ENV"
 
   -- prepare event triggers data
   prepareEvents _icPgPool logger
-  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds evFetchMilliSec
-  let scRef = _scrCache cacheRef
+  eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEvThrds fetchI
   unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
-  void $ liftIO $ C.forkIO $ processEventQueue logger logEnvHeaders
-    _icHttpManager _icPgPool scRef eventEngineCtx
+  _eventQueueThread <- C.forkImmortal "processEventQueue" logger $ liftIO $
+    processEventQueue logger logEnvHeaders
+    _icHttpManager _icPgPool (getSCFromRef cacheRef) eventEngineCtx
+
+  -- start a backgroud thread to handle async actions
+  _asyncActionsThread <- C.forkImmortal "asyncActionsProcessor" logger $ liftIO $
+    asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
 
   -- start a background thread to check for updates
-  void $ liftIO $ C.forkIO $ checkForUpdates loggerCtx _icHttpManager
+  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
+    checkForUpdates loggerCtx _icHttpManager
 
   -- start a background thread for telemetry
   when soEnableTelemetry $ do
     unLogger logger $ mkGenericStrLog LevelInfo "telemetry" telemetryNotice
-    void $ liftIO $ C.forkIO $ runTelemetry logger _icHttpManager scRef _icDbUid _icInstanceId
+    (dbId, pgVersion) <- liftIO $ runTxIO _icPgPool (Q.ReadCommitted, Nothing) $
+      (,) <$> getDbId <*> getPgVersion
+    void $ C.forkImmortal "runTelemetry" logger $ liftIO $
+      runTelemetry logger _icHttpManager (getSCFromRef cacheRef) dbId _icInstanceId pgVersion
 
   finishTime <- liftIO Clock.getCurrentTime
   let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
@@ -269,7 +280,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   where
     prepareEvents pool (Logger logger) = do
       liftIO $ logger $ mkGenericStrLog LevelInfo "event_triggers" "preparing data"
-      res <- runTx pool unlockAllEvents
+      res <- runUnlockTx pool unlockAllEvents
       either printErrJExit return res
 
     getFromEnv :: (Read a) => a -> String -> IO a
@@ -281,8 +292,8 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
           eRes = maybe (Left $ "Wrong expected type for environment variable: " <> env) Right mRes
       either printErrExit return eRes
 
-    runTx pool tx =
-      liftIO $ runExceptT $ Q.runTx pool (Q.Serializable, Nothing) tx
+    runUnlockTx pool tx =
+      liftIO $ runExceptT $ Q.runTx pool (Q.ReadCommitted, Nothing) tx
 
     -- | Catches the SIGTERM signal and initiates a graceful shutdown. Graceful shutdown for regular HTTP
     -- requests is already implemented in Warp, and is triggered by invoking the 'closeSocket' callback.
@@ -310,13 +321,13 @@ runAsAdmin
   -> Run a
   -> m (Either QErr a)
 runAsAdmin pool sqlGenCtx httpManager m = do
-  res <- runExceptT $ peelRun emptySchemaCache
-   (RunCtx adminUserInfo httpManager sqlGenCtx)
-   (PGExecCtx pool Q.Serializable) Q.ReadWrite m
-  return $ fmap fst res
+  let runCtx = RunCtx adminUserInfo httpManager sqlGenCtx
+      pgCtx = PGExecCtx pool Q.Serializable
+  runExceptT $ peelRun runCtx pgCtx Q.ReadWrite m
 
 execQuery
-  :: ( CacheRWM m
+  :: ( HasVersion
+     , CacheRWM m
      , MonadTx m
      , MonadIO m
      , HasHttpManager m
@@ -359,7 +370,7 @@ instance ConsoleRenderer AppM where
   renderConsole path authMode enableTelemetry consoleAssetsDir =
     return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
 
-mkConsoleHTML :: Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
+mkConsoleHTML :: HasVersion => Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
 mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
   renderHtmlTemplate consoleTmplt $
       -- variables required to render the template
@@ -367,7 +378,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
                , "consolePath" .= consolePath
                , "enableTelemetry" .= boolToText enableTelemetry
                , "cdnAssets" .= boolToText (isNothing consoleAssetsDir)
-               , "assetsVersion" .= consoleVersion
+               , "assetsVersion" .= consoleAssetsVersion
                , "serverVersion" .= currentVersion
                ]
     where
@@ -382,4 +393,4 @@ telemetryNotice :: String
 telemetryNotice =
   "Help us improve Hasura! The graphql-engine server collects anonymized "
   <> "usage stats which allows us to keep improving Hasura at warp speed. "
-  <> "To read more or opt-out, visit https://docs.hasura.io/1.0/graphql/manual/guides/telemetry.html"
+  <> "To read more or opt-out, visit https://hasura.io/docs/1.0/graphql/manual/guides/telemetry.html"
