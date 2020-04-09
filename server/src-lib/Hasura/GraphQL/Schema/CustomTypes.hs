@@ -116,16 +116,18 @@ annotateObjectType tableCache nonObjectTypeMap objectDefinition = do
 
 buildCustomTypesSchemaPartial
   :: (QErrM m)
-  => TableCache -- ^ The Postgres tables
-  -> CustomTypes -- ^ Custom types to be resolved
-  -> [PGScalarType] -- ^ Any reused Postgres base types (as scalars) in custom types
+  => TableCache
+  -> CustomTypes
+  -> HashSet PGScalarType
+  -- ^ Postgres base types used in the custom type definitions;
+  -- see Note [Postgres scalars in custom types].
   -> m (NonObjectTypeMap, AnnotatedObjects)
 buildCustomTypesSchemaPartial tableCache customTypes pgScalars = do
   let typeInfos =
         map (VT.TIEnum . convertEnumDefinition) enumDefinitions <>
         map (VT.TIInpObj . convertInputObjectDefinition) inputObjectDefinitions <>
         map (VT.TIScalar . convertScalarDefinition) scalarDefinitions <>
-        map (VT.TIScalar . VT.mkHsraScalarTyInfo) pgScalars
+        map (VT.TIScalar . VT.mkHsraScalarTyInfo) (toList pgScalars)
       nonObjectTypeMap = NonObjectTypeMap $ mapFromL VT.getNamedTy typeInfos
 
   annotatedObjectTypes <- mapFromL (_otdName . _aotDefinition) <$>

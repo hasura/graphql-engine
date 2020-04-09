@@ -28,7 +28,8 @@ import           Control.Monad.Fail                as M (MonadFail)
 import           Control.Monad.Identity            as M
 import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M
-import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..))
+import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..),
+                                                         execWriterT, runWriterT)
 import           Data.Align                        as M (Align (align, alignWith))
 import           Data.Align.Key                    as M (AlignWithKey (..))
 import           Data.Bool                         as M (bool)
