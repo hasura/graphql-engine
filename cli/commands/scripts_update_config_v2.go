@@ -12,6 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 	"github.com/hasura/graphql-engine/cli/migrate/source/file"
@@ -319,7 +320,23 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				return errors.Wrap(err, "cannot write metadata")
 			}
 			ec.Spin("Writing new config file...")
-			err = ec.WriteConfig(nil)
+			// Read the config from config.yaml
+			cfgByt, err := ioutil.ReadFile(ec.ConfigFile)
+			if err != nil {
+				return errors.Wrap(err, "cannot read config file")
+			}
+			var cfg cli.Config
+			err = yaml.Unmarshal(cfgByt, &cfg)
+			if err != nil {
+				return errors.Wrap(err, "cannot parse config file")
+			}
+			cfg.Version = cli.V2
+			cfg.MetadataDirectory = ec.Viper.GetString("metadata_directory")
+			cfg.ActionConfig = &types.ActionExecutionConfig{
+				Kind:                  ec.Viper.GetString("actions.kind"),
+				HandlerWebhookBaseURL: ec.Viper.GetString("actions.handler_webhook_baseurl"),
+			}
+			err = ec.WriteConfig(&cfg)
 			if err != nil {
 				return errors.Wrap(err, "cannot write config file")
 			}
@@ -330,17 +347,17 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 
 	f := scriptsUpdateConfigV2Cmd.Flags()
-	f.StringVar(&metadataDir, "metadata-dir", "metadata", "")
 
+	f.StringVar(&metadataDir, "metadata-dir", "metadata", "")
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
 	f.String("access-key", "", "access key for Hasura GraphQL Engine")
 	f.MarkDeprecated("access-key", "use --admin-secret instead")
 
 	// need to create a new viper because https://github.com/spf13/viper/issues/233
-	v.BindPFlag("endpoint", f.Lookup("endpoint"))
-	v.BindPFlag("admin_secret", f.Lookup("admin-secret"))
-	v.BindPFlag("access_key", f.Lookup("access-key"))
+	util.BindPFlag(v, "endpoint", f.Lookup("endpoint"))
+	util.BindPFlag(v, "admin_secret", f.Lookup("admin-secret"))
+	util.BindPFlag(v, "access_key", f.Lookup("access-key"))
 
 	return scriptsUpdateConfigV2Cmd
 }
