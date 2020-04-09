@@ -77,6 +77,8 @@ comparisonExps
 comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
   geogInputParser <- geographyWithinDistanceInput
   geomInputParser <- geometryWithinDistanceInput
+  ignInputParser  <- intersectsGeomNbandInput
+  ingInputParser  <- intersectsNbandGeomInput
   columnParser    <- P.column columnType nullability
   castParser      <- castExp columnType nullability
   let name       = P.getName columnParser <> $$(G.litName "_comparison_exp")
@@ -94,6 +96,17 @@ comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
       , P.fieldOptional $$(G.litName "_lt")  Nothing (ALT  . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_gte") Nothing (AGTE . mkParameter <$> columnParser)
       , P.fieldOptional $$(G.litName "_lte") Nothing (ALTE . mkParameter <$> columnParser)
+      ]
+    , guard (isScalarColumnWhere (== PGRaster) columnType) *>
+      [ P.fieldOptional $$(G.litName "_st_intersects_rast")
+        Nothing
+        (ASTIntersectsRast . mkParameter <$> columnParser)
+      , P.fieldOptional $$(G.litName "_st_intersects_nband_geom")
+        Nothing
+        (ASTIntersectsNbandGeom <$> ingInputParser)
+      , P.fieldOptional $$(G.litName "_st_intersects_geom_nband")
+        Nothing
+        (ASTIntersectsGeomNband <$> ignInputParser)
       ]
     , guard (isScalarColumnWhere isStringType columnType) *>
       [ P.fieldOptional $$(G.litName "_like")
@@ -174,6 +187,25 @@ comparisonExps = P.memoize2 'comparisonExps \columnType nullability -> do
       (mkTypeAnn $ PGTypeArray $ unsafePGColumnToRepresentation columnType)
 
 
+castExp
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => PGColumnType -> G.Nullability -> m (Parser 'Input n (CastExp UnpreparedValue))
+castExp sourceType nullability = do
+  sourceName <- P.mkColumnTypeName sourceType <&> (<> $$(G.litName "_cast_exp"))
+  fields <- sequenceA <$> traverse mkField targetTypes
+  pure $ P.object sourceName Nothing $ M.fromList . catMaybes <$> fields
+  where
+    targetTypes = case sourceType of
+      PGColumnScalar PGGeometry  -> [PGGeography]
+      PGColumnScalar PGGeography -> [PGGeometry]
+      _                          -> []
+
+    mkField :: PGScalarType -> m (FieldsParser 'Input n (Maybe (PGScalarType, [ComparisonExp])))
+    mkField targetType = do
+      targetName <- P.mkScalarTypeName targetType
+      value <- comparisonExps (PGColumnScalar targetType) nullability
+      pure $ P.fieldOptional targetName Nothing $ (targetType,) <$> value
+
 geographyWithinDistanceInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => m (Parser 'Input n (DWithinGeogOp UnpreparedValue))
@@ -196,22 +228,22 @@ geometryWithinDistanceInput = do
     DWithinGeomOp <$> (mkParameter <$> P.field $$(G.litName "distance") Nothing floatParser)
                   <*> (mkParameter <$> P.field $$(G.litName "from")     Nothing geometryParser)
 
-
-castExp
+intersectsNbandGeomInput
   :: forall m n. (MonadSchema n m, MonadError QErr m)
-  => PGColumnType -> G.Nullability -> m (Parser 'Input n (CastExp UnpreparedValue))
-castExp sourceType nullability = do
-  sourceName <- P.mkColumnTypeName sourceType <&> (<> $$(G.litName "_cast_exp"))
-  fields <- sequenceA <$> traverse mkField targetTypes
-  pure $ P.object sourceName Nothing $ M.fromList . catMaybes <$> fields
-  where
-    targetTypes = case sourceType of
-      PGColumnScalar PGGeometry  -> [PGGeography]
-      PGColumnScalar PGGeography -> [PGGeometry]
-      _                          -> []
+  => m (Parser 'Input n (STIntersectsNbandGeommin UnpreparedValue))
+intersectsNbandGeomInput = do
+  geometryParser <- P.column (PGColumnScalar PGGeometry) (G.Nullability False)
+  integerParser  <- P.column (PGColumnScalar PGInteger)  (G.Nullability False)
+  pure $ P.object $$(G.litName "st_intersects_nband_geom_input") Nothing $
+    STIntersectsNbandGeommin <$> (mkParameter <$> P.field $$(G.litName "nband")   Nothing integerParser)
+                             <*> (mkParameter <$> P.field $$(G.litName "geommin") Nothing geometryParser)
 
-    mkField :: PGScalarType -> m (FieldsParser 'Input n (Maybe (PGScalarType, [ComparisonExp])))
-    mkField targetType = do
-      targetName <- P.mkScalarTypeName targetType
-      value <- comparisonExps (PGColumnScalar targetType) nullability
-      pure $ P.fieldOptional targetName Nothing $ (targetType,) <$> value
+intersectsGeomNbandInput
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => m (Parser 'Input n (STIntersectsGeomminNband UnpreparedValue))
+intersectsGeomNbandInput = do
+  geometryParser <- P.column (PGColumnScalar PGGeometry) (G.Nullability False)
+  integerParser  <- P.column (PGColumnScalar PGInteger)  (G.Nullability False)
+  pure $ P.object $$(G.litName "st_intersects_geom_nband_input") Nothing $ STIntersectsGeomminNband
+    <$> (     mkParameter <$> P.field         $$(G.litName "geommin") Nothing geometryParser)
+    <*> (fmap mkParameter <$> P.fieldOptional $$(G.litName "nband")   Nothing integerParser)
