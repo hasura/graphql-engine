@@ -31,10 +31,13 @@ if [ "$?" = "1" ]; then
     die "You need to install curl to use this script."
 fi
 
-log "Getting latest version..."
+release=${1:-latest}
+
+log "Getting $release version..."
 
 # adapted from https://github.com/openfaas/faas-cli/blob/master/get.sh
-version=$(curl -s -f -H 'Content-Type: text/plain' https://releases.hasura.io/graphql-engine?agent=cli-get.sh)
+version=$(curl -s -f https://releases.hasura.io/graphql-engine?agent=cli-get.sh)
+version=`echo $version | sed -n -e "s/^.*\"$release\":\"\([^\",}]*\)\".*$/\1/p"`
 if [ ! $version ]; then
     log "${YELLOW}"
     log "Failed while attempting to install hasura graphql-engine cli. Please manually install:"
