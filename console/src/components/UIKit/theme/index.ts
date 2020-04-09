@@ -148,9 +148,9 @@ const icon = {
  * circle: 1000px
  */
 
-type BorderRadiusSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'circle';
+type BorderRadiusKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'circle';
 
-const radii: Partial<Record<number | BorderRadiusSize, number>> = {
+const radii: Partial<Record<number | BorderRadiusKey, number>> = {
   0: 0,
   1: 2,
   2: 4,
@@ -281,9 +281,9 @@ space.xl = space[11];
  * explain: 1.3 ~ Explainer Text
  */
 
-type lineHeightKey = 'body' | 'explain';
+type LineHeightKey = 'body' | 'explain';
 
-const lineHeights: Partial<Record<number | lineHeightKey, number>> = {
+const lineHeights: Partial<Record<number | LineHeightKey, number>> = {
   0: 1.33,
   1: 1.5,
 };
