@@ -14,7 +14,6 @@ refs:
     run:
       name: checking if server changes present
       command: |
-        echo "Compare URL: ${CIRCLE_COMPARE_URL##http*/}" 
         for folder in `git log --format="" --name-only ${CIRCLE_COMPARE_URL##http*/} | cut -d"/" -f1 | sort -u`; do
           echo "contents in $folder were modified"
           if [ "$folder" = "server" ]; then
@@ -288,7 +287,6 @@ jobs:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
-    - *skip_server_tests
     - checkout
     - run:
         name: Run unit tests
