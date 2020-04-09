@@ -1,6 +1,4 @@
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE DerivingVia #-}
 
 -- | Construction of multiplexed live query plans; see
 -- "Hasura.GraphQL.Execute.LiveQuery" for details.
