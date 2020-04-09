@@ -259,7 +259,15 @@ processEventQueue logger logenv httpMgr pool getSchemaCache EventEngineCtx{..} =
       let meti = getEventTriggerInfoFromEvent cache e
       case meti of
         Nothing -> do
+          --  This rare error can happen in the following known cases:
+          --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
+          --  ii) the event trigger is dropped when this event was just fetched
           logQErr $ err500 Unexpected "table or event-trigger not found in schema cache"
+          liftIO . runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+            currentTime <- liftIO getCurrentTime
+            -- For such an event, we unlock the event and retry after a minute
+            setRetry e (addUTCTime 60 currentTime)
+          >>= flip onLeft logQErr
         Just eti -> do
           let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
               retryConf = etiRetryConf eti
