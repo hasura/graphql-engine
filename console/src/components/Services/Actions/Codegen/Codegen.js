@@ -11,10 +11,7 @@ import { getPersistedDerivedAction } from '../lsUtils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import styles from '../Common/components/Styles.scss';
 import Button from '../../../Common/Button/Button';
-import DownloadIcon from '../../../Common/Icons/Download';
-import ExternalLink from '../../../Common/Icons/ExternalLink';
-import GithubIcon from '../../../Common/Icons/Github';
-import { Icon } from '../../../UIKit/atoms'
+import { Icon } from '../../../UIKit/atoms';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
 
@@ -60,7 +57,9 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     return (
       <div>
         Error fetching codegen assets.&nbsp;
-        <a onClick={init} className={styles.cursorPointer}>Try again</a>
+        <a onClick={init} className={styles.cursorPointer}>
+          Try again
+        </a>
       </div>
     );
   }
@@ -101,7 +100,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
             size="xs"
             className={`${styles.add_mar_right_mid} ${styles.display_flex}`}
           >
-            <Icon type="externalLink" className={styles.add_mar_right_small} /> Try on
+            <Icon type="link" className={styles.add_mar_right_small} /> Try on
             glitch
           </Button>
         </a>
@@ -129,20 +128,18 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
             title={`Download starter kit for ${selectedFramework}`}
           >
             <Button color="white" size="xs" className={styles.display_flex}>
-              <Icon type="download" className={styles.add_mar_right_small} /> Starter
-              Kit
+              <Icon type="download" className={styles.add_mar_right_small} />{' '}
+              Starter Kit
             </Button>
           </a>
           <a
             href={getStarterKitPath(selectedFramework)}
             target="_blank"
             rel="noopener noreferrer"
-            className={styles.add_mar_right_small}
+            className={styles.display_flex}
             title={`View the starter kit for ${selectedFramework} on GitHub`}
           >
-            <Button color="white" size="xs" className={styles.display_flex}>
-              <Icon type="github"/>
-            </Button>
+            <Icon type="github" color="black.original" />
           </a>
         </React.Fragment>
       );
