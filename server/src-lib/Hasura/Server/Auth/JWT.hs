@@ -61,8 +61,7 @@ $(J.deriveJSON J.defaultOptions { J.sumEncoding = J.ObjectWithSingleField
 
 data JWTConfig
   = JWTConfig
-  { jcType         :: !(Maybe T.Text)
-  , jcKeyOrUrl     :: !(Either Jose.JWK URI)
+  { jcKeyOrUrl     :: !(Either Jose.JWK URI)
   , jcClaimNs      :: !(Maybe T.Text)
   , jcAudience     :: !(Maybe Jose.Audience)
   , jcClaimsFormat :: !(Maybe JWTClaimsFormat)
@@ -369,12 +368,12 @@ verifyJwt ctx (RawJWT rawJWT) = do
 
 
 instance J.ToJSON JWTConfig where
-  toJSON (JWTConfig ty keyOrUrl claimNs aud claimsFmt iss) =
+  toJSON (JWTConfig keyOrUrl claimNs aud claimsFmt iss) =
     case keyOrUrl of
          Left _    -> mkObj ("key" J..= J.String "<JWK REDACTED>")
          Right url -> mkObj ("jwk_url" J..= url)
     where
-      mkObj item = J.object [ "type" J..= ty
+      mkObj item = J.object [ "type" J..= J.String "<TYPE REDACTED>"
                             , "claims_namespace" J..= claimNs
                             , "claims_format" J..= claimsFmt
                             , "audience" J..= aud
@@ -388,7 +387,6 @@ instance J.ToJSON JWTConfig where
 instance J.FromJSON JWTConfig where
 
   parseJSON = J.withObject "JWTConfig" $ \o -> do
-    keyType <- o J..:? "type"
     mRawKey <- o J..:? "key"
     claimNs <- o J..:? "claims_namespace"
     aud     <- o J..:? "audience"
@@ -400,11 +398,11 @@ instance J.FromJSON JWTConfig where
       (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
       (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
       (Just rawKey, Nothing) -> do
-        keyType' <- onNothing keyType $ fail "type of key not provided"
-        key <- parseKey rawKey keyType'
-        return $ JWTConfig keyType (Left key) claimNs aud isStrngfd iss
+        keyType <- o J..: "type"
+        key <- parseKey rawKey keyType
+        return $ JWTConfig (Left key) claimNs aud isStrngfd iss
       (Nothing, Just url) ->
-        return $ JWTConfig keyType (Right url) claimNs aud isStrngfd iss
+        return $ JWTConfig (Right url) claimNs aud isStrngfd iss
 
     where
       parseKey rawKey keyType =
