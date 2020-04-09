@@ -224,6 +224,7 @@ ${enumValuesSdl.join('\n')}
 };
 
 const getTypeSdl = type => {
+  if (!type) return '';
   switch (type.kind) {
     case 'scalar':
       return getScalarTypeSdl(type);

@@ -229,7 +229,7 @@ export const getActionTypes = (currentAction, allTypes) => {
     const type = findType(allTypes, typename);
     actionTypes[typename] = type;
 
-    if (type.fields) {
+    if (type && type.fields) {
       type.fields.forEach(f => {
         getDependentTypes(f.type);
         if (f.arguments) {
@@ -266,7 +266,7 @@ export const getOverlappingTypeConfirmation = (
     const action = otherActions[i];
     const actionTypes = getActionTypes(action, allTypes);
     actionTypes.forEach(t => {
-      if (typeCollisionMap[t.name]) return;
+      if (!t || typeCollisionMap[t.name]) return;
       overlappingTypenames.forEach(ot => {
         if (ot === t.name) {
           typeCollisionMap[ot] = true;

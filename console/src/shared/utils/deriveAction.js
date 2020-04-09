@@ -110,6 +110,10 @@ const deriveAction = (
   const allHasuraTypes = clientSchema._typeMap;
   const operationType = clientSchema._mutationType; // TODO better handling for queries
 
+  const isHasuraScalar = name => {
+    return allHasuraTypes[name] && isScalarType(allHasuraTypes[name]);
+  };
+
   const actionArguments = [];
   const newTypes = {};
 
@@ -121,7 +125,7 @@ const deriveAction = (
     newType.name = typename;
 
     if (isScalarType(type)) {
-      if (!inbuiltTypes[type.name]) {
+      if (!inbuiltTypes[type.name] && !allHasuraTypes[type.name]) {
         newType.kind = 'scalar';
         newTypes[typename] = newType;
       }
@@ -149,7 +153,10 @@ const deriveAction = (
           type: underLyingType,
           wraps: fieldTypeWraps,
         } = getUnderlyingType(tf.type);
-        if (inbuiltTypes[underLyingType.name]) {
+        if (
+          inbuiltTypes[underLyingType.name] ||
+          isHasuraScalar(underLyingType.name)
+        ) {
           _tf.type = wrapTypename(underLyingType.name, fieldTypeWraps);
         } else {
           _tf.type = wrapTypename(
@@ -170,7 +177,10 @@ const deriveAction = (
       name: v.variable.name.value,
     };
     const argTypeMetadata = getAstTypeMetadata(v.type);
-    if (!inbuiltTypes[argTypeMetadata.typename]) {
+    if (
+      !inbuiltTypes[argTypeMetadata.typename] &&
+      !isHasuraScalar(argTypeMetadata.type)
+    ) {
       const argTypename = prefixTypename(argTypeMetadata.typename);
       generatedArg.type = wrapTypename(argTypename, argTypeMetadata.stack);
       const typeInSchema = allHasuraTypes[argTypeMetadata.typename];
@@ -201,19 +211,10 @@ const deriveAction = (
       outputTypeField => {
         const fieldTypeMetadata = getUnderlyingType(outputTypeField.type);
         if (isScalarType(fieldTypeMetadata.type)) {
-          if (inbuiltTypes[fieldTypeMetadata.type.name]) {
-            outputTypeFields[outputTypeField.name] = wrapTypename(
-              fieldTypeMetadata.type.name,
-              fieldTypeMetadata.wraps
-            );
-          } else {
-            const fieldTypename = prefixTypename(fieldTypeMetadata.type.name);
-            outputTypeFields[outputTypeField.name] = wrapTypename(
-              fieldTypename,
-              fieldTypeMetadata.wraps
-            );
-            handleType(fieldTypeMetadata.type, fieldTypename);
-          }
+          outputTypeFields[outputTypeField.name] = wrapTypename(
+            fieldTypeMetadata.type.name,
+            fieldTypeMetadata.wraps
+          );
         }
       }
     );
