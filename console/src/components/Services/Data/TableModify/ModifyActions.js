@@ -55,14 +55,12 @@ import {
   getUntrackTableQuery,
   getTrackTableQuery,
 } from '../../../Common/utils/v1QueryUtils';
-
 import {
   fetchColumnCastsQuery,
   convertArrayToJson,
   sanitiseRootFields,
   sanitiseColumnNames,
 } from './utils';
-
 import {
   getSchemaBaseRoute,
   getTableModifyRoute,
