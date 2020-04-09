@@ -121,7 +121,7 @@ func FilterCustomQuery(u *nurl.URL) *nurl.URL {
 }
 
 func NewMigrate(ec *cli.ExecutionContext, isCmd bool) (*Migrate, error) {
-	dbURL := GetDataPath(ec.Config.ServerConfig.ParsedEndpoint, GetAdminSecretHeaderName(ec.Version), ec.Config.ServerConfig.AdminSecret)
+	dbURL := GetDataPath(ec)
 	fileURL := GetFilePath(ec.MigrationDir)
 	t, err := New(fileURL.String(), dbURL.String(), isCmd, int(ec.Config.Version), ec.Logger)
 	if err != nil {
@@ -132,13 +132,15 @@ func NewMigrate(ec *cli.ExecutionContext, isCmd bool) (*Migrate, error) {
 	return t, nil
 }
 
-func GetDataPath(url *nurl.URL, adminSecretHeader, adminSecretValue string) *nurl.URL {
+func GetDataPath(ec *cli.ExecutionContext) *nurl.URL {
+	url := ec.Config.ServerConfig.ParsedEndpoint
 	host := &nurl.URL{
-		Scheme: "hasuradb",
-		Host:   url.Host,
-		Path:   url.Path,
+		Scheme:   "hasuradb",
+		Host:     url.Host,
+		Path:     url.Path,
+		RawQuery: ec.Config.ServerConfig.APIPaths.GetQueryParams().Encode(),
 	}
-	q := url.Query()
+	q := host.Query()
 	// Set sslmode in query
 	switch scheme := url.Scheme; scheme {
 	case "https":
@@ -146,8 +148,8 @@ func GetDataPath(url *nurl.URL, adminSecretHeader, adminSecretValue string) *nur
 	default:
 		q.Set("sslmode", "disable")
 	}
-	if adminSecretValue != "" {
-		q.Add("headers", fmt.Sprintf("%s:%s", adminSecretHeader, adminSecretValue))
+	if GetAdminSecretHeaderName(ec.Version) != "" {
+		q.Add("headers", fmt.Sprintf("%s:%s", GetAdminSecretHeaderName(ec.Version), ec.Config.ServerConfig.AdminSecret))
 	}
 	host.RawQuery = q.Encode()
 	return host
