@@ -15,8 +15,8 @@ Actions (beta)
 What are actions?
 -----------------
 
-Actions are a way to extend Hasura's auto-generated mutations with entirely
-custom mutations with custom business logic. Actions can be
+Actions are a way to extend Hasura's auto-generated queries/mutations with entirely
+custom queries/mutations with custom business logic. Actions can be
 added to Hasura to handle various use cases such as data validation, data
 enrichment from external sources and any other complex business logic.
 
@@ -39,20 +39,32 @@ Action description
 
 An action consists of the following parts:
 
-1. ``Definition``: The definition of the mutation
-2. ``Handler``: The logic to be run when the mutation is executed
-3. ``Kind``: Sync or async
+1. ``Type``: The type of the action.
+2. ``Definition``: The definition of the query/mutation
+3. ``Handler``: The logic to be run when the query/mutation is executed
+4. ``Kind``: Sync or async.
+
+NOTE: In case of a Query Action, there is no ``Kind`` associated with the action.
+A query action works like a ``Synchronous`` Mutation Action.
+
+Type
+****
+
+Actions are of two types:
+
+- **Mutation Action**: An action whose handler does a mutation.
+- **Query Action**: An action whose handler executes a query.
 
 Definition
 **********
 
 The action definition consists of the following:
 
-- ``Action Name``: The action will be available as a mutation in the GraphQL
+- ``Action Name``: The action will be available as a query/mutation in the GraphQL
   schema named as the action name
 - ``Arguments``: Arguments are used to pass dynamic values along with the
-  mutation.
-- ``Response type``: The GraphQL type of the response that the mutation will
+  query/mutation.
+- ``Response type``: The GraphQL type of the response that the query/mutation will
   return. Actions can only return object types.
 
 For instance, consider this action definition:
@@ -98,7 +110,7 @@ Learn more about :ref:`writing an action handler<action_handlers>`.
 Kind
 ****
 
-Actions are of two kinds:
+Mutation Actions are of two kinds:
 
 * **Synchronous actions**: Sync actions return a response to the client after
   receiving a response from the handler.
@@ -107,10 +119,12 @@ Actions are of two kinds:
   handler and allow the client to subscribe to the actual response using the
   ``action id``.
 
+Query Actions don't have a kind, they behave like ``Synchronous Mutation Actions``.
+
 How it works?
 -------------
 
-* Hasura receives the action GraphQL mutation and converts this request into an
+* Hasura receives the action GraphQL query/mutation and converts this request into an
   event payload.
 * The event is captured, persisted and then delivered to the action handler with
   the appropriate retry/delivery guarantees.

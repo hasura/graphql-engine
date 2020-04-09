@@ -101,7 +101,8 @@ ActionDefinition
    * - kind
      - false
      - [ ``synchronous`` | ``asynchronous`` ]
-     - The kind of the action (default: ``synchronous``)
+     - The kind of the mutation action (default: ``synchronous``). If the type of
+       the action is ``query`` then the ``kind`` field should be omitted.
    * - headers
      - false
      - [ :ref:`HeaderFromValue <HeaderFromValue>` | :ref:`HeaderFromEnv <HeaderFromEnv>` ]
@@ -117,7 +118,7 @@ ActionDefinition
    * - type
      - false
      - [ ``mutation`` | ``query`` ]
-     - The type of the action(if ``query`` is chosen, then the kind argument is ignored)
+     - The type of the action (default: ``mutation``)
 
 .. _InputArgument:
 

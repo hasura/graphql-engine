@@ -15,12 +15,12 @@ Creating actions
 Introduction
 ------------
 
-An action is a GraphQL mutation. You have to define the GraphQL type of the
-arguments that the mutation accepts and the GraphQL type of its response.
+An action is a GraphQL query/mutation. You have to define the GraphQL type of the
+arguments that the query/mutation accepts and the GraphQL type of its response.
 
 To create an action, you have to:
 
-1. Define the mutation
+1. Define the query/mutation
 2. Define the required types
 3. Create a handler
 
