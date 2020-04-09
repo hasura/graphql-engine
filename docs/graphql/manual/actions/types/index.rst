@@ -144,7 +144,17 @@ types and input types.
 .. admonition:: Postgres scalars
 
    Postgres base types are reusable as custom scalars without explicitly declaring them.
-   For example, the ``uuid`` type from the ``pgcrypto`` extension can be used to resolve a ``uuid`` data field.
+   For example, we might have a ``type`` like this:
+
+   .. code-block:: graphql
+
+       type User {
+         id: uuid!
+         name: String!
+         location: geography
+       }
+
+   The ``uuid`` and ``geography`` types are Postgres scalars, not separately-defined custom GraphQL types.
 
 Enum types
 ----------
