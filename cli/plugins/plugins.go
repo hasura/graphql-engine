@@ -159,7 +159,7 @@ func (c *Config) Uninstall(name string) error {
 		return errors.Wrapf(err, "failed to look up install receipt for plugin %q", name)
 	}
 
-	symlinkPath := filepath.Join(c.Paths.BinPath(), pluginNameToBin(name, IsWindows()))
+	symlinkPath := filepath.Join(c.Paths.BinPath(), PluginNameToBin(name, IsWindows()))
 	if err := removeLink(symlinkPath); err != nil {
 		return errors.Wrap(err, "could not uninstall symlink of plugin")
 	}

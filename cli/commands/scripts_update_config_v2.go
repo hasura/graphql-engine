@@ -65,10 +65,10 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				return errors.Wrap(err, "cannot update plugin index")
 			}
 			// install the plugin
-			ec.Spin("Installing cli-ext plugin...")
-			err = ec.InstallPlugin("cli-ext", true)
+			ec.Spin(fmt.Sprintf("Installing %s plugin...", cli.CLIExtPluginName))
+			err = ec.InstallPlugin(cli.CLIExtPluginName, true)
 			if err != nil {
-				return errors.Wrap(err, "cannot install plugin")
+				return err
 			}
 			// Move copy migrations directory to migrations_backup
 			ec.Spin("Backing up migrations...")

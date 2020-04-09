@@ -24,7 +24,6 @@ import (
 const (
 	actionsFileName string = "actions.yaml"
 	graphqlFileName        = "actions.graphql"
-	pluginName             = "cli-ext"
 )
 
 type ActionConfig struct {
@@ -53,9 +52,9 @@ func New(ec *cli.ExecutionContext, baseDir string) *ActionConfig {
 
 func (a *ActionConfig) Create(name string, introSchema interface{}, deriveFrom string) error {
 	// Ensure CLI Extesnion
-	err := a.pluginInstallFunc(pluginName, true)
+	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
 	if err != nil {
-		return errors.Wrap(err, "error in install cli-extension plugin")
+		return err
 	}
 	// Read the content of graphql file
 	graphqlFileContent, err := a.GetActionsGraphQLFileContent()
@@ -285,9 +284,9 @@ input SampleInput {
 }
 
 func (a *ActionConfig) Codegen(name string, derivePld types.DerivePayload) error {
-	err := a.pluginInstallFunc(pluginName, true)
+	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
 	if err != nil {
-		return errors.Wrap(err, "error in install cli-extension plugin")
+		return err
 	}
 
 	graphqlFileContent, err := a.GetActionsGraphQLFileContent()
@@ -352,9 +351,9 @@ func (a *ActionConfig) Build(metadata *yaml.MapSlice) error {
 		}
 		return nil
 	}
-	err := a.pluginInstallFunc(pluginName, true)
+	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
 	if err != nil {
-		return errors.Wrap(err, "error in install cli-extension plugin")
+		return err
 	}
 	// Read actions.graphql
 	graphqlFileContent, err := a.GetActionsGraphQLFileContent()
@@ -473,9 +472,9 @@ func (a *ActionConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error)
 		a.logger.Debugf("Skipping creating %s and %s", actionsFileName, graphqlFileName)
 		return make(map[string][]byte), nil
 	}
-	err := a.pluginInstallFunc(pluginName, true)
+	err := a.pluginInstallFunc(cli.CLIExtPluginName, true)
 	if err != nil {
-		return nil, errors.Wrap(err, "error in install cli-extension plugin")
+		return nil, err
 	}
 	var actions yaml.MapSlice
 	for _, item := range metadata {
