@@ -53,9 +53,7 @@ instance ToJSON GCtx where
 data RoleContext a
   = RoleContext
   { _rctxDefault :: !a -- ^ The default context for normal sessions
-  , _rctxBackend :: !(Maybe a)
-  -- ^ The incremental context for backend privilege sessions.
-  -- ^ It should be used only after merging with '_rctxDefault'.
+  , _rctxBackend :: !(Maybe a) -- ^ The context for sessions with backend privilege.
   } deriving (Show, Eq, Functor, Foldable, Traversable)
 $(deriveToJSON (aesonDrop 5 snakeCase) ''RoleContext)
 
