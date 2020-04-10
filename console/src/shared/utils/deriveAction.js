@@ -111,7 +111,7 @@ const deriveAction = (
   const operationType = clientSchema._mutationType; // TODO better handling for queries
 
   const isHasuraScalar = name => {
-    return allHasuraTypes[name] && isScalarType(allHasuraTypes[name]);
+    return isScalarType(allHasuraTypes[name]);
   };
 
   const actionArguments = [];
@@ -179,7 +179,7 @@ const deriveAction = (
     const argTypeMetadata = getAstTypeMetadata(v.type);
     if (
       !inbuiltTypes[argTypeMetadata.typename] &&
-      !isHasuraScalar(argTypeMetadata.type)
+      !isHasuraScalar(argTypeMetadata.typename)
     ) {
       const argTypename = prefixTypename(argTypeMetadata.typename);
       generatedArg.type = wrapTypename(argTypename, argTypeMetadata.stack);
