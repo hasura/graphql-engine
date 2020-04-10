@@ -119,6 +119,7 @@ mkComputedFieldFunctionArgSeq inputArgs =
     Seq.fromList $ procFuncArgs inputArgs faName $
     \fa t -> FunctionArgItem (G.Name t) (faName fa) (faHasDefault fa)
 
+-- see Note [Split schema generation (TODO)]
 mkGCtxRole'
   :: QualifiedTable
   -> Maybe PGDescription
@@ -324,6 +325,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     computedFieldFuncArgsInps = map (TIInpObj . fst) computedFieldReqTypes
     computedFieldFuncArgScalars = Set.fromList $ concatMap snd computedFieldReqTypes
 
+-- see Note [Split schema generation (TODO)]
 getRootFldsRole'
   :: QualifiedTable
   -> Maybe (PrimaryKey PGColumnInfo)
@@ -719,12 +721,13 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
       (Just (cols, mempty, noFilter, Nothing, [])) (Just (noFilter, []))
       viewInfo customConfig
 
+    rolePermsMap :: Map.HashMap RoleName (RoleContext RolePermInfo)
     rolePermsMap = flip Map.map rolePerms $ \permInfo ->
       case _permIns permInfo of
-        Nothing -> RoleContext permInfo Nothing
+        Nothing      -> RoleContext permInfo Nothing
         Just insPerm ->
           if ipiBackendOnly insPerm then
-            -- Remove insert permission from '_rctxdefault' and keep it in '_rctxbackend'.
+            -- Remove insert permission from 'default' context and keep it in 'backend' context.
             RoleContext { _rctxDefault = permInfo{_permIns = Nothing}
                         , _rctxBackend = Just permInfo
                         }
@@ -732,6 +735,22 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
 
 noFilter :: AnnBoolExpPartialSQL
 noFilter = annBoolExpTrue
+
+{- Note [Split schema generation (TODO)]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+As of writing this, the schema is generated per table per role and for all permissions.
+See functions  "mkGCtxRole'" and "getRootFldsRole'". This approach makes hard to
+differentiate schema generation for each operation (select, insert, delete and update)
+based on respective permission information and safe merging those schemas eventually.
+For backend-only inserts (see https://github.com/hasura/graphql-engine/pull/4224)
+we need to somehow defer the logic of merging schema for inserts with others based on its
+backend-only credibility. This requires significant refactor of this module and
+we can't afford to do it as of now since we're going to rewrite the entire GraphQL schema
+generation (see https://github.com/hasura/graphql-engine/pull/4111). For aforementioned
+backend-only inserts, we're following a hacky implementation of generating schema for
+both default session and one with backend privilege -- the later differs with the former by
+only having the schema related to insert operation.
+-}
 
 mkGCtxMap
   :: forall m. (MonadError QErr m)
@@ -752,16 +771,24 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
       -> [Map.HashMap RoleName TableSchemaCtx]
       -> m (Map.HashMap RoleName TableSchemaCtx)
     combineTypes actionsSchema tableCtxMaps = do
-      let listMap = foldr (Map.unionWith (++) . Map.map pure)
-                          ((\(rf, tyAgg) -> pure $ RoleContext (tyAgg, rf, mempty) Nothing) <$> actionsSchema)
-                          tableCtxMaps
+      let tableCtxsMap =
+            foldr (Map.unionWith (++) . Map.map pure)
+            ((\(rf, tyAgg) -> pure $ RoleContext (tyAgg, rf, mempty) Nothing) <$> actionsSchema)
+            tableCtxMaps
 
-      flip Map.traverseWithKey listMap $ \_ schemaCtxList -> do
-        let defaultGCtxTypes = map _rctxDefault schemaCtxList
-            backendGCtxTypes = map _rctxBackend schemaCtxList
+      flip Map.traverseWithKey tableCtxsMap $ \_ tableSchemaCtxs -> do
+        let defaultTableSchemaCtxs = map _rctxDefault tableSchemaCtxs
             backendGCtxTypesMaybe =
-              if all isNothing backendGCtxTypes then Nothing else Just $ catMaybes backendGCtxTypes
-        RoleContext <$> combineTypes' defaultGCtxTypes <*> mapM combineTypes' backendGCtxTypesMaybe
+              -- If no table has 'backend' schema context then
+              -- aggregated context should be Nothing
+              if all (isNothing . _rctxBackend) tableSchemaCtxs then Nothing
+              else Just $ flip map tableSchemaCtxs $
+                   -- Consider 'default' if 'backend' doesn't exist for any table
+                   -- see Note [Split schema generation (TODO)]
+                   \(RoleContext def backend) -> fromMaybe def backend
+
+        RoleContext <$> combineTypes' defaultTableSchemaCtxs
+                    <*> mapM combineTypes' backendGCtxTypesMaybe
       where
         combineTypes' :: [(TyAgg, RootFields, InsCtxMap)] -> m (TyAgg, RootFields, InsCtxMap)
         combineTypes' typeList = do
@@ -797,7 +824,7 @@ getGCtx backendPrivilege sc roleName =
       case backendPrivilege of
         BPEnabled -> maybe
           (throw400 BadRequest $ "Backend privilage not found for the role " <>> roleName)
-          (pure . unionGCtx defaultGCtx)
+          pure
           maybeBackendGCtx
         BPDisabled -> pure defaultGCtx
 

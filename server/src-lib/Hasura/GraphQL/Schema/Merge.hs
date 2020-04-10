@@ -1,6 +1,5 @@
 module Hasura.GraphQL.Schema.Merge
   ( mergeGCtx
-  , unionGCtx
   , checkSchemaConflicts
   , checkConflictingNode
   ) where
@@ -20,20 +19,16 @@ import           Hasura.RQL.Types
 mergeGCtx :: (MonadError QErr m) => GCtx -> GCtx -> m GCtx
 mergeGCtx lGCtx rGCtx = do
   checkSchemaConflicts lGCtx rGCtx
-  pure $ unionGCtx lGCtx rGCtx
-
-unionGCtx :: GCtx -> GCtx -> GCtx
-unionGCtx lGCtx rGCtx =
-  GCtx { _gTypes = mergedTypeMap
-       , _gFields = _gFields lGCtx <> _gFields rGCtx
-       , _gQueryRoot = mergedQueryRoot
-       , _gMutRoot = mergedMutationRoot
-       , _gSubRoot = mergedSubRoot
-       , _gOrdByCtx = _gOrdByCtx lGCtx <> _gOrdByCtx rGCtx
-       , _gQueryCtxMap = _gQueryCtxMap lGCtx <> _gQueryCtxMap rGCtx
-       , _gMutationCtxMap = _gMutationCtxMap lGCtx <> _gMutationCtxMap rGCtx
-       , _gInsCtxMap = _gInsCtxMap lGCtx <> _gInsCtxMap rGCtx
-       }
+  pure GCtx { _gTypes = mergedTypeMap
+            , _gFields = _gFields lGCtx <> _gFields rGCtx
+            , _gQueryRoot = mergedQueryRoot
+            , _gMutRoot = mergedMutationRoot
+            , _gSubRoot = mergedSubRoot
+            , _gOrdByCtx = _gOrdByCtx lGCtx <> _gOrdByCtx rGCtx
+            , _gQueryCtxMap = _gQueryCtxMap lGCtx <> _gQueryCtxMap rGCtx
+            , _gMutationCtxMap = _gMutationCtxMap lGCtx <> _gMutationCtxMap rGCtx
+            , _gInsCtxMap = _gInsCtxMap lGCtx <> _gInsCtxMap rGCtx
+           }
   where
     mergedQueryRoot = _gQueryRoot lGCtx <> _gQueryRoot rGCtx
     mergedMutationRoot = _gMutRoot lGCtx <> _gMutRoot rGCtx

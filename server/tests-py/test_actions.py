@@ -117,6 +117,7 @@ class TestActionsAsync:
         assert status == 200, resp
         assert 'data' in resp
         action_id = resp['data']['create_user']
+        time.sleep(3)
 
         query_async = '''
         query ($action_id: uuid!){
@@ -151,7 +152,7 @@ class TestActionsAsync:
             'status': 200,
             'response': response
         }
-        check_query_timeout(hge_ctx, conf, True, 10)
+        check_query(hge_ctx, conf)
 
     def test_create_user_success(self, hge_ctx):
         graphql_mutation = '''
@@ -167,6 +168,7 @@ class TestActionsAsync:
         assert status == 200, resp
         assert 'data' in resp
         action_id = resp['data']['create_user']
+        time.sleep(3)
 
         query_async = '''
         query ($action_id: uuid!){
@@ -217,7 +219,7 @@ class TestActionsAsync:
             'status': 200,
             'response': response
         }
-        check_query_timeout(hge_ctx, conf, True, 10)
+        check_query(hge_ctx, conf)
 
     def test_create_user_roles(self, hge_ctx):
         graphql_mutation = '''
@@ -238,6 +240,7 @@ class TestActionsAsync:
         assert status == 200, resp
         assert 'data' in resp
         action_id = resp['data']['create_user']
+        time.sleep(3)
 
         query_async = '''
         query ($action_id: uuid!){
@@ -273,7 +276,7 @@ class TestActionsAsync:
         }
         # Query the action as user-id 2
         # Make request without auth using admin_secret
-        check_query_timeout(hge_ctx, conf_user_2, add_auth = False, timeout = 10)
+        check_query(hge_ctx, conf_user_2, add_auth = False)
 
         conf_user_1 = {
             'url': '/v1/graphql',
@@ -293,20 +296,4 @@ class TestActionsAsync:
         }
         # Query the action as user-id 1
         # Make request without auth using admin_secret
-        check_query_timeout(hge_ctx, conf_user_1, add_auth = False, timeout = 10)
-
-def check_query_timeout(hge_ctx, conf, add_auth, timeout):
-    wait_until = time.time() + timeout
-    exception_occurred = False
-    while True:
-        time.sleep(2)
-        try:
-            check_query(hge_ctx, conf, add_auth = add_auth)
-        except AssertionError:
-            exception_occurred = True
-            if time.time() > wait_until:
-                raise
-            else:
-                continue
-        if not exception_occurred:
-            break
+        check_query(hge_ctx, conf_user_1, add_auth = False)
