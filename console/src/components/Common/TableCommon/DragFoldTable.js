@@ -1,9 +1,10 @@
 /* eslint-disable */
 
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
 import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 import FoldableHoc from './foldableTable';
+
 import { isObject, isNotDefined } from '../utils/jsUtils';
 
 class DragFoldTable extends Component {

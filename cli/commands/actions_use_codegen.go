@@ -120,17 +120,6 @@ func (o *actionsUseCodegenOptions) run() error {
 		o.withStarterKit = shouldCloneStarterKit == "y"
 	}
 
-	// if output directory is not provided, make them enter it
-	if o.outputDir == "" {
-		outputDir, err := util.GetFSPathPrompt("Where do you want to place the codegen files?", o.EC.Config.ActionConfig.Codegen.OutputDir)
-		if err != nil {
-			return errors.Wrap(err, "error in getting output directory input")
-		}
-		newCodegenExecutionConfig.OutputDir = outputDir
-	} else {
-		newCodegenExecutionConfig.OutputDir = o.outputDir
-	}
-
 	// clone the starter kit
 	o.EC.Spin("Clonning the starter kit...")
 	if o.withStarterKit && hasStarterKit {
@@ -157,6 +146,17 @@ func (o *actionsUseCodegenOptions) run() error {
 			return errors.Wrap(err, "error in copying starter kit")
 		}
 		o.EC.Logger.Info("Starter kit cloned at " + destinationDir)
+	}
+
+	// if output directory is not provided, make them enter it
+	if o.outputDir == "" {
+		outputDir, err := util.GetFSPathPrompt("Where do you want to place the codegen files?", o.EC.Config.ActionConfig.Codegen.OutputDir)
+		if err != nil {
+			return errors.Wrap(err, "error in getting output directory input")
+		}
+		newCodegenExecutionConfig.OutputDir = outputDir
+	} else {
+		newCodegenExecutionConfig.OutputDir = o.outputDir
 	}
 
 	newConfig := o.EC.Config

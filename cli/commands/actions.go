@@ -46,14 +46,16 @@ func NewActionsCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newActionsUseCodegenCmd(ec),
 	)
 
-	actionsCmd.PersistentFlags().String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	actionsCmd.PersistentFlags().String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	actionsCmd.PersistentFlags().String("access-key", "", "access key for Hasura GraphQL Engine")
-	actionsCmd.PersistentFlags().MarkDeprecated("access-key", "use --admin-secret instead")
+	f := actionsCmd.PersistentFlags()
 
-	v.BindPFlag("endpoint", actionsCmd.PersistentFlags().Lookup("endpoint"))
-	v.BindPFlag("admin_secret", actionsCmd.PersistentFlags().Lookup("admin-secret"))
-	v.BindPFlag("access_key", actionsCmd.PersistentFlags().Lookup("access-key"))
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
+
+	util.BindPFlag(v, "endpoint", f.Lookup("endpoint"))
+	util.BindPFlag(v, "admin_secret", f.Lookup("admin-secret"))
+	util.BindPFlag(v, "access_key", f.Lookup("access-key"))
 
 	return actionsCmd
 }
