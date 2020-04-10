@@ -613,6 +613,10 @@ func (ec *ExecutionContext) setVersion() {
 // If forceCLIVersion is set, it uses ec.Version.CLISemver version for the plugin to be installed.
 // Else, it installs the latest version of the plugin
 func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) error {
+	prevPrefix := ec.Spinner.Prefix
+	ec.Spin(fmt.Sprintf("Installing plugin %s...", name))
+	defer ec.Spin(prevPrefix)
+
 	var version *semver.Version
 	if forceCLIVersion {
 		err := ec.PluginsConfig.Repo.EnsureUpdated()
@@ -621,15 +625,21 @@ func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) erro
 		}
 		version = ec.Version.CLISemver
 	}
-	err := ec.PluginsConfig.Install(name, "", version)
-	if err != nil && err != plugins.ErrIsAlreadyInstalled {
-		msg := fmt.Sprintf(`unable to install %s plugin. execute the following commands to continue:
+	err := ec.PluginsConfig.Install(name, plugins.InstallOpts{
+		Version: version,
+	})
+	if err != nil {
+		if err != plugins.ErrIsAlreadyInstalled {
+			msg := fmt.Sprintf(`unable to install %s plugin. execute the following commands to continue:
 
   hasura plugins install %s
 `, name, name)
-		ec.Logger.Info(msg)
-		return errors.Wrapf(err, "cannot install plugin %s", name)
+			ec.Logger.Info(msg)
+			return errors.Wrapf(err, "cannot install plugin %s", name)
+		}
+		return nil
 	}
+	ec.Logger.WithField("name", name).Infoln("plugin installed")
 	return nil
 }
 
