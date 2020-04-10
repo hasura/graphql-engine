@@ -521,23 +521,3 @@ Date:   Tue Apr 14 11:31:50 2020 +0530
     * update changelog
 
     Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
-
-commit 76fbe90b60a80303e5b3bf284d85604a2fce3f5f
-Author: Tirumarai Selvan <tiru@hasura.io>
-Date:   Fri Apr 10 19:25:59 2020 +0530
-
-    type is not required for jwk_url in JWT config (#4334)
-
-    * type is not required for jwk_url
-
-    * remove type from JWTConfig
-
-    * Omit type field in JWTConfig serialization if jwk_url is provided
-
-    * remove type from jwk_url test suite
-
-    * add changelog
-
-    * fix docs with new format
-
-    Co-authored-by: Alexis King <lexi.lambda@gmail.com>
