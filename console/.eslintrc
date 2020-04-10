@@ -152,7 +152,8 @@
         "no-unused-expressions": "off",
         "no-plusplus": "off",
         "camelcase": "off",
-        "import/prefer-default-export": "off"
+        "import/prefer-default-export": "off",
+        "no-alert": "off"
       }
     }
   ]
