@@ -508,7 +508,7 @@ jobs:
           apt install -y curl procps
     - run:
         name: upgrade_test
-        command: .circleci/server-upgrade/run.sh
+        command: .circleci/server-upgrade-downgrade/run.sh
         environment:
           HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
     - store_artifacts:

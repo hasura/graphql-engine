@@ -23,6 +23,7 @@ The order and collapsed state of columns is now persisted across page navigation
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
 - server: fix an edge case where some events wouldn't be processed because of internal erorrs (#4213)
+- server: fix downgrade not working to version v1.1.1 (#4354)
 
 ## `v1.2.0-beta.3`
 
