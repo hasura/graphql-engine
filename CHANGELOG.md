@@ -26,6 +26,7 @@ The order and collapsed state of columns is now persisted across page navigation
 - server: fix an edge case where some events wouldn't be processed because of internal erorrs (#4213)
 - server: fix downgrade not working to version v1.1.1 (#4354)
 - server: `type` field is not required if `jwk_url` is provided in JWT config
+- server: add a new field `claims_namespace_path` which accepts a JSON Path for looking up hasura claim in the JWT token (#4349)
 
 ## `v1.2.0-beta.3`
 

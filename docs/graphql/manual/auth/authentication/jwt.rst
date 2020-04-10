@@ -130,6 +130,7 @@ JSON object:
      "jwk_url": "<optional-url-to-refresh-jwks>",
      "claims_namespace": "<optional-key-name-in-claims>",
      "claims_format": "json|stringified_json",
+     "claims_namespace_path":"<optional-JSON-Path-to-the-claims>",
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
      "issuer": "<optional-string-to-verify-issuer>"
    }
@@ -167,6 +168,35 @@ https://tools.ietf.org/html/rfc7517.
 
 This is an optional field. You can also provide the key (certificate, PEM
 encoded public key) as a string - in the ``key`` field along with the ``type``.
+
+``claims_namespace_path``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+An optional JSON path value to the hasura claims in the JWT token (e.g. ``$.hasura.claims``)
+
+For example, the JWT token should in this format if the ``claims_namespace_path`` is
+set to ``$.hasura.claims``:
+
+.. code-block:: json
+
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "hasura": {
+       "claims": {
+          "x-hasura-allowed-roles": ["editor","user", "mod"],
+          "x-hasura-default-role": "user",
+          "x-hasura-user-id": "1234567890",
+          "x-hasura-org-id": "123",
+          "x-hasura-custom": "custom-value"
+       }
+     }
+  }
+
+
+This is an optional field, if the value is not provided, then the ``claims_namespace`` value
+is used to get the name of the claims field among the top-level keys.
 
 Rotating JWKs
 +++++++++++++
