@@ -214,7 +214,7 @@ runHGEServer
   -- ^ start time
   -> m ()
 runHGEServer ServeOptions{..} InitCtx{..} initTime = do
-  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to 
+  -- Comment this to enable expensive assertions from "GHC.AssertNF". These will log lines to
   -- STDOUT containing "not in normal form". In the future we could try to integrate this into
   -- our tests. For now this is a development tool.
   --
@@ -251,7 +251,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
   liftIO $ logInconsObjs logger inconsObjs
 
   -- start background threads for schema sync
-  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <- 
+  (_schemaSyncListenerThread, _schemaSyncProcessorThread) <-
     startSchemaSyncThreads sqlGenCtx _icPgPool logger _icHttpManager
                            cacheRef _icInstanceId cacheInitTime
 
@@ -279,7 +279,7 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
     asyncActionsProcessor (_scrCache cacheRef) _icPgPool _icHttpManager
 
   -- start a background thread to check for updates
-  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $ 
+  _updateThread <- C.forkImmortal "checkForUpdates" logger $ liftIO $
     checkForUpdates loggerCtx _icHttpManager
 
   -- start a background thread for telemetry

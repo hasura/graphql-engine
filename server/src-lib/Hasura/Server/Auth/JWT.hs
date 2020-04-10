@@ -22,6 +22,7 @@ import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diff
 import           GHC.AssertNF
 import           Network.URI                     (URI)
 
+import           Data.Aeson.Internal             (JSONPath)
 import           Data.Parser.CacheControl
 import           Data.Parser.Expires
 import           Hasura.HTTP
@@ -30,7 +31,7 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (getRequestHeader, userRoleHeader)
+import           Hasura.Server.Utils             (getRequestHeader, userRoleHeader, executeJSONPath)
 import           Hasura.Server.Version           (HasVersion)
 
 import qualified Control.Concurrent.Extended     as C
@@ -38,6 +39,7 @@ import qualified Crypto.JWT                      as Jose
 import qualified Data.Aeson                      as J
 import qualified Data.Aeson.Casing               as J
 import qualified Data.Aeson.TH                   as J
+import qualified Data.Aeson.Internal             as J
 import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI
@@ -47,7 +49,7 @@ import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
-
+import qualified Data.Parser.JSONPath            as JSONPath
 
 newtype RawJWT = RawJWT BL.ByteString
 
@@ -64,6 +66,7 @@ data JWTConfig
   { jcType         :: !T.Text
   , jcKeyOrUrl     :: !(Either Jose.JWK URI)
   , jcClaimNs      :: !(Maybe T.Text)
+  , jcClaimNsPath  :: !(Maybe JSONPath)
   , jcAudience     :: !(Maybe Jose.Audience)
   , jcClaimsFormat :: !(Maybe JWTClaimsFormat)
   , jcIssuer       :: !(Maybe Jose.StringOrURI)
@@ -73,14 +76,15 @@ data JWTCtx
   = JWTCtx
   { jcxKey          :: !(IORef Jose.JWKSet)
   , jcxClaimNs      :: !(Maybe T.Text)
+  , jcxClaimNsPath  :: !(Maybe JSONPath)
   , jcxAudience     :: !(Maybe Jose.Audience)
   , jcxClaimsFormat :: !JWTClaimsFormat
   , jcxIssuer       :: !(Maybe Jose.StringOrURI)
   } deriving (Eq)
 
 instance Show JWTCtx where
-  show (JWTCtx _ nsM audM cf iss) =
-    show ["<IORef JWKSet>", show nsM, show audM, show cf, show iss]
+  show (JWTCtx _ nsM nsPath audM cf iss) =
+    show ["<IORef JWKSet>", show nsM,show nsPath,show audM, show cf, show iss]
 
 data HasuraClaims
   = HasuraClaims
@@ -237,7 +241,12 @@ processAuthZHeader jwtCtx headers authzHeader = do
       expTimeM = fmap (\(Jose.NumericDate t) -> t) $ claims ^. Jose.claimExp
 
   -- see if the hasura claims key exist in the claims map
-  let mHasuraClaims = Map.lookup claimsNs $ claims ^. Jose.unregisteredClaims
+  let mHasuraClaims =
+        case jcxClaimNsPath jwtCtx of
+          -- if `claim_namespace_path` is null, then look for hasura claims in the key `claim_namespace`
+          Nothing -> Map.lookup claimsNs $ claims ^. Jose.unregisteredClaims
+          Just path -> parseIValueJsonValue $ executeJSONPath path (J.toJSON $ claims ^. Jose.unregisteredClaims)
+
   hasuraClaimsV <- maybe claimsNotFound return mHasuraClaims
 
   -- get hasura claims value as an object. parse from string possibly
@@ -283,6 +292,9 @@ processAuthZHeader jwtCtx headers authzHeader = do
                    <> "', but found: " <> v
 
     claimsErr = throw400 JWTInvalidClaims
+
+    parseIValueJsonValue (J.IError _ _) = Nothing
+    parseIValueJsonValue (J.ISuccess v) = Just v
 
     -- see if there is a x-hasura-role header, or else pick the default role
     getCurrentRole defaultRole =
@@ -369,13 +381,14 @@ verifyJwt ctx (RawJWT rawJWT) = do
 
 
 instance J.ToJSON JWTConfig where
-  toJSON (JWTConfig ty keyOrUrl claimNs aud claimsFmt iss) =
+  toJSON (JWTConfig ty keyOrUrl claimNs claimNsPath aud claimsFmt iss) =
     case keyOrUrl of
          Left _    -> mkObj ("key" J..= J.String "<JWK REDACTED>")
          Right url -> mkObj ("jwk_url" J..= url)
     where
       mkObj item = J.object [ "type" J..= ty
                             , "claims_namespace" J..= claimNs
+                            , "claims_namespace_path" J..= maybe Nothing (Just . JSONPath.formatPath) claimNsPath
                             , "claims_format" J..= claimsFmt
                             , "audience" J..= aud
                             , "issuer" J..= iss
@@ -391,19 +404,37 @@ instance J.FromJSON JWTConfig where
     keyType <- o J..: "type"
     mRawKey <- o J..:? "key"
     claimNs <- o J..:? "claims_namespace"
+    claimNsPathStr <- o J..:? "claims_namespace_path"
     aud     <- o J..:? "audience"
     iss     <- o J..:? "issuer"
     jwkUrl  <- o J..:? "jwk_url"
     isStrngfd <- o J..:? "claims_format"
 
-    case (mRawKey, jwkUrl) of
-      (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
-      (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
-      (Just rawKey, Nothing) -> do
-        key <- parseKey keyType rawKey
-        return $ JWTConfig keyType (Left key) claimNs aud isStrngfd iss
-      (Nothing, Just url) ->
-        return $ JWTConfig keyType (Right url) claimNs aud isStrngfd iss
+    case claimNsPathStr of
+      Just nsPathStr ->
+        let eClaimNsPath = JSONPath.parseJSONPath nsPathStr
+        in case eClaimNsPath of
+          Left err -> fail ("invalid JSON path claims_namespace_path " ++ (show nsPathStr)
+                           ++ " error " ++ (show err))
+          Right nsPath ->
+            case (mRawKey, jwkUrl) of
+              (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
+              (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
+              (Just rawKey, Nothing) -> do
+                key <- parseKey keyType rawKey
+                return $ JWTConfig keyType (Left key) claimNs (Just nsPath) aud isStrngfd iss
+              (Nothing, Just url) ->
+                return $ JWTConfig keyType (Right url) claimNs (Just nsPath) aud isStrngfd iss
+      Nothing ->
+        case (mRawKey, jwkUrl) of
+          (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
+          (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
+          (Just rawKey, Nothing) -> do
+            key <- parseKey keyType rawKey
+            return $ JWTConfig keyType (Left key) claimNs Nothing aud isStrngfd iss
+          (Nothing, Just url) ->
+            return $ JWTConfig keyType (Right url) claimNs Nothing aud isStrngfd iss
+
 
     where
       parseKey keyType rawKey =
