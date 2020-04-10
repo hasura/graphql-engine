@@ -234,7 +234,7 @@ executeJSONPath :: JSONPath -> Value -> IResult Value
 executeJSONPath jsonPath = iparse (valueParser jsonPath)
   where
     valueParser path value = case path of
-      []                      -> fail "Empty JSON Path"
+      []                      -> pure value
       [pathElement]           -> parseWithPathElement pathElement value
       (pathElement:remaining) -> parseWithPathElement pathElement value >>=
                                  ((<?> pathElement) . valueParser remaining)

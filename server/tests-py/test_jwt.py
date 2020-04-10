@@ -31,11 +31,6 @@ def get_claims_fmt(raw_conf):
 
 def mk_claims(conf, claims):
     claims_fmt = get_claims_fmt(conf)
-    claims_namespace_path = PytestConf.config.getoption('--hge-jwt-claims-ns-path')
-    if claims_namespace_path == '$.hasuraClaims':
-        claims = {
-            "hasuraClaims":claims
-        }
     if claims_fmt == 'json':
         return claims
     elif claims_fmt == 'stringified_json':
@@ -47,16 +42,20 @@ def mk_claims(conf, claims):
 class TestJWTBasic():
 
     def test_jwt_valid_claims_success(self, hge_ctx, endpoint):
-        self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
+        claims = mk_claims(hge_ctx.hge_jwt_conf, {
             'x-hasura-user-id': '1',
             'x-hasura-allowed-roles': ['user', 'editor'],
             'x-hasura-default-role': 'user'
         })
+        if claims_namespace_path is None:
+            self.claims['https://hasura.io/jwt/claims'] = claims
+        elif claims_namespace_path == "$.hasuraClaims":
+            self.claims['hasuraClaims'] = claims
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['url'] = endpoint
         self.conf['status'] = 200
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False, claims_namespace_path=claims_namespace_path)
 
     def test_jwt_invalid_role_in_request_header(self, hge_ctx, endpoint):
         self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -80,7 +79,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False, claims_namespace_path=claims_namespace_path)
 
     def test_jwt_no_allowed_roles_in_claim(self, hge_ctx, endpoint):
         self.claims['https://hasura.io/jwt/claims'] = mk_claims(hge_ctx.hge_jwt_conf, {
