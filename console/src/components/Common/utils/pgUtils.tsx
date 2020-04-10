@@ -4,20 +4,46 @@ import { TableDefinition, FunctionDefinition } from './v1QueryUtils';
 
 /** * Table/View utils ** */
 
+export type Action = 'select' | 'insert' | 'update' | 'delete';
+
+export type ManulaRelationshipDef = {
+  manual_configuration: {
+    remote_table: {
+      schema: string;
+      name: string;
+    };
+    column_mapping: Record<string, string>;
+  };
+};
+
+export type FKRelationshipDef = {
+  foreign_key_constraint_on:
+    | {
+        table: {
+          schema: string;
+          name: string;
+        };
+        column: string;
+      }
+    | string;
+};
+
 export type TableRelationship = {
   rel_name: string;
-  rel_def: {
-    manual_configuration?: any;
-    foreign_key_constraint_on?: any; // TODO
-  };
+  rel_def: ManulaRelationshipDef | FKRelationshipDef;
   rel_type: 'object' | 'array';
+};
+
+export type Permission = {
+  filter: Record<string, any>;
+  columns: string[];
+  computed_fields: string[];
+  allow_aggregation: boolean;
 };
 
 export type TablePermission = {
   role_name: string;
-  permissions: {
-    [action: string]: any;
-  };
+  permissions: Record<Action, Permission>;
 };
 
 export type TableColumn = {
@@ -30,9 +56,7 @@ export type TableColumn = {
 export type ForeignKeyConstraint = {
   ref_table: string;
   ref_table_table_schema: string;
-  column_mapping: {
-    [lcol: string]: string;
-  };
+  column_mapping: Record<string, string>;
 };
 
 export type CheckConstraint = {
@@ -58,9 +82,7 @@ export type Table = {
   foreign_key_constraints: ForeignKeyConstraint[];
   check_constraints: CheckConstraint[];
   configuration?: {
-    custom_column_names: {
-      [column: string]: string;
-    };
+    custom_column_names: Record<string, string>;
     custom_root_fields: {
       select?: string;
       select_by_pk?: string;
@@ -119,7 +141,7 @@ export const getTableDef = (table: Table) => {
 };
 
 export const getQualifiedTableDef = (tableDef: TableDefinition | string) => {
-  return isString(tableDef) ? generateTableDef(tableDef as string) : tableDef;
+  return isString(tableDef) ? generateTableDef(tableDef) : tableDef;
 };
 
 export const getTableNameWithSchema = (
@@ -247,14 +269,23 @@ export function getRelationshipRefTable(
   const relationshipType = getRelationshipType(relationship);
 
   // if manual relationship
-  if (relationshipDef.manual_configuration) {
+  if (
+    'manual_configuration' in relationshipDef &&
+    relationshipDef.manual_configuration
+  ) {
     refTable = relationshipDef.manual_configuration.remote_table;
   }
 
   // if foreign-key based relationship
-  if (relationshipDef.foreign_key_constraint_on) {
+  if (
+    'foreign_key_constraint_on' in relationshipDef &&
+    relationshipDef.foreign_key_constraint_on
+  ) {
     // if array relationship
-    if (relationshipType === 'array') {
+    if (
+      relationshipType === 'array' &&
+      !isString(relationshipDef.foreign_key_constraint_on)
+    ) {
       refTable = relationshipDef.foreign_key_constraint_on.table;
     }
 
@@ -283,18 +314,11 @@ export function getRelationshipRefTable(
   return refTable;
 }
 
-/**
- * @param {string} currentSchema
- * @param {string} currentTable
- * @param {Array<{[key: string]: any}>} allSchemas
- *
- * @returns {Array<{
- *   columnName: string,
- *   enumTableName: string,
- *   enumColumnName: string,
- * }>}
- */
-
+type RelationsMap = {
+  columnName: string;
+  enumTableName: string;
+  enumColumnName: string;
+};
 export const getEnumColumnMappings = (
   allSchemas: Table[],
   tableName: string,
@@ -341,7 +365,7 @@ export const getEnumColumnMappings = (
 export const getTablePermissions = (
   table: Table,
   role: string | null = null,
-  action: string | null = null
+  action: 'insert' | 'select' | 'update' | 'delete' | null = null
 ) => {
   const tablePermissions = table.permissions;
 
