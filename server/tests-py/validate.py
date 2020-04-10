@@ -125,7 +125,7 @@ def test_forbidden_webhook(hge_ctx, conf):
 
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
-def check_query(hge_ctx, conf, transport='http', add_auth=True):
+def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace_path=None):
     hge_ctx.tests_passed = True
     headers = {}
     if 'headers' in conf:
@@ -150,8 +150,11 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
             claim = {
                 "sub": "foo",
                 "name": "bar",
-                "https://hasura.io/jwt/claims": hClaims
             }
+            if claims_namespace_path is None:
+                claim["https://hasura.io/jwt/claims"] = hClaims
+            elif claims_namespace_path == "$.hasuraClaims":
+                claim['hasuraClaims'] = hClaims
             headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm='RS512').decode(
                 'UTF-8')
 
