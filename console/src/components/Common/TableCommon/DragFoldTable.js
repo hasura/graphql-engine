@@ -5,7 +5,7 @@ import ReactTable from 'react-table';
 import 'react-table/react-table.css';
 import FoldableHoc from './foldableTable';
 
-import { isObject } from '../utils/jsUtils';
+import { isObject, exists } from '../utils/jsUtils';
 
 class DragFoldTable extends Component {
   constructor(props) {
