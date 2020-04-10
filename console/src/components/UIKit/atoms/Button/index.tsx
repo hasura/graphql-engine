@@ -1,11 +1,18 @@
 import React from 'react';
 
-import { theme } from '../../theme';
+import { theme, Theme } from '../../theme';
 import { Spinner } from '../Spinner';
 
-import { StyledButton } from './Button';
+import { StyledButton, StyledButtonProps } from './Button';
 
-export const Button = props => {
+interface ButtonProps extends StyledButtonProps {
+  type: keyof Theme['button'];
+  size: string;
+  disabled: boolean;
+  isLoading: boolean;
+}
+
+export const Button: React.FC<ButtonProps> = props => {
   const { children, type, size, disabled, isLoading } = props;
 
   const { button } = theme;
