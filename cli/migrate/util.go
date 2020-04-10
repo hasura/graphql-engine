@@ -9,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	version2 "github.com/hasura/graphql-engine/cli/version"
-
 	"github.com/hasura/graphql-engine/cli/metadata"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/metadata/allowlist"
@@ -148,8 +146,8 @@ func GetDataPath(ec *cli.ExecutionContext) *nurl.URL {
 	default:
 		q.Set("sslmode", "disable")
 	}
-	if GetAdminSecretHeaderName(ec.Version) != "" {
-		q.Add("headers", fmt.Sprintf("%s:%s", GetAdminSecretHeaderName(ec.Version), ec.Config.ServerConfig.AdminSecret))
+	for k, v := range ec.HGEHeaders {
+		q.Add("headers", fmt.Sprintf("%s:%s", k, v))
 	}
 	host.RawQuery = q.Encode()
 	return host
@@ -176,18 +174,6 @@ func SetMetadataPluginsWithDir(ec *cli.ExecutionContext, drv *Migrate, dir ...st
 	}
 	drv.SetMetadataPlugins(plugins)
 }
-
-func GetAdminSecretHeaderName(v *version2.Version) string {
-	if v.ServerFeatureFlags.HasAccessKey {
-		return XHasuraAccessKey
-	}
-	return XHasuraAdminSecret
-}
-
-const (
-	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
-	XHasuraAccessKey   = "X-Hasura-Access-Key"
-)
 
 func GetFilePath(dir string) *nurl.URL {
 	host := &nurl.URL{
