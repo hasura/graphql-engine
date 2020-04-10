@@ -31,7 +31,7 @@ import {
   SET_PRESET_VALUE,
   CREATE_NEW_PRESET,
   DELETE_PRESET,
-  X_HASURA_CONST,
+  X_HASURA_CONST
 } from './Actions';
 
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
@@ -46,7 +46,7 @@ import {
   fetchFunctionInit,
   setTable,
   updateSchemaInfo,
-  fetchRoleList,
+  fetchRoleList
 } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
@@ -54,7 +54,7 @@ import {
   getPermissionFilterString,
   getPermissionColumnAccessSummary,
   getTablePermissionsByRoles,
-  getPermissionRowAccessSummary,
+  getPermissionRowAccessSummary
 } from '../PermissionsSummary/utils';
 import Button from '../../../Common/Button/Button';
 import { defaultPresetsState } from '../DataState';
@@ -67,7 +67,7 @@ import {
   getColumnName,
   getComputedFieldName,
   getTableColumns,
-  getGroupedTableComputedFields,
+  getGroupedTableComputedFields
 } from '../../../Common/utils/pgUtils';
 import { showErrorNotification } from '../../Common/Notification';
 import { Icon, ToolTip, Heading, Text } from '../../../UIKit/atoms';
@@ -80,14 +80,14 @@ class Permissions extends Component {
     this.state = {
       presetsInfo: {
         insert: {
-          columnTypeMap: {},
+          columnTypeMap: {}
         },
         update: {
-          columnTypeMap: {},
-        },
+          columnTypeMap: {}
+        }
       },
       filterString: '',
-      prevPermissionsState: {},
+      prevPermissionsState: {}
     };
   }
 
@@ -104,7 +104,7 @@ class Permissions extends Component {
     const nextPermissionsState = nextProps.permissionsState;
 
     const newState = {
-      prevPermissionsState: nextPermissionsState,
+      prevPermissionsState: nextPermissionsState
     };
 
     if (
@@ -159,7 +159,7 @@ class Permissions extends Component {
       readOnlyMode,
       currentSchema,
       nonTrackableFunctions,
-      trackableFunctions,
+      trackableFunctions
     } = this.props;
 
     const localFilterString = this.state.filterString;
@@ -184,7 +184,7 @@ class Permissions extends Component {
       return (
         <span>
           {text}
-          <ToolTip message={tooltip} ml="sm" />
+          <ToolTip message={tooltip} ml='sm' />
         </span>
       );
     };
@@ -214,7 +214,7 @@ class Permissions extends Component {
       }
 
       return (
-        <div className={`hidden alert ${alertStyle}`} role="alert">
+        <div className={`hidden alert ${alertStyle}`} role='alert'>
           {alertText}
         </div>
       );
@@ -225,7 +225,7 @@ class Permissions extends Component {
         <TableHeader
           dispatch={dispatch}
           table={tableSchema}
-          tabName="permissions"
+          tabName='permissions'
           migrationMode={migrationMode}
           readOnlyMode={readOnlyMode}
         />
@@ -269,7 +269,7 @@ class Permissions extends Component {
         if (!hasPermissions) {
           note = (
             <div className={styles.permissionsLegend}>
-              <Icon type="info" mr="xs" />
+              <Icon type='info' mr='xs' />
               You cannot insert/update into this view
             </div>
           );
@@ -305,7 +305,7 @@ class Permissions extends Component {
             onChange: dispatchBulkSelect,
             role,
             isNewRole,
-            checked: permissionsState.bulkSelect.filter(e => e === role).length,
+            checked: permissionsState.bulkSelect.filter(e => e === role).length
           };
         };
 
@@ -333,7 +333,7 @@ class Permissions extends Component {
           const getEditIcon = () => {
             return (
               <span className={styles.editPermsIcon}>
-                <Icon type="pencil" />
+                <Icon type='pencil' />
               </span>
             );
           };
@@ -425,7 +425,7 @@ class Permissions extends Component {
               onClick,
               dataTest: `${role}-${queryType}`,
               access: getRoleQueryPermission(queryType),
-              editIcon,
+              editIcon
             };
           });
         };
@@ -437,7 +437,7 @@ class Permissions extends Component {
           return {
             roleName: r,
             permTypes: getQueryTypes(r),
-            bulkSection: getBulkCheckbox(r, false),
+            bulkSection: getBulkCheckbox(r, false)
           };
         });
 
@@ -445,7 +445,7 @@ class Permissions extends Component {
           roleName: permissionsState.newRole,
           permTypes: getQueryTypes(permissionsState.newRole, true),
           bulkSection: getBulkCheckbox(permissionsState.newRole, true),
-          isNewRole: true,
+          isNewRole: true
         });
 
         const dispatchRoleNameChange = e => {
@@ -482,7 +482,7 @@ class Permissions extends Component {
       const getSelectedRoles = () => {
         return bulkSelectedRoles.map(r => {
           return (
-            <Text key={r} fontWeight="bold" pr="sm">
+            <Text key={r} fontWeight='bold' pr='sm'>
               {r}
             </Text>
           );
@@ -506,7 +506,7 @@ class Permissions extends Component {
             {getSelectedRoles()}
           </div>
           <div className={styles.add_mar_top + ' ' + styles.add_mar_bottom_mid}>
-            <Button onClick={handleBulkRemoveClick} color="red" size="sm">
+            <Button onClick={handleBulkRemoveClick} color='red' size='sm'>
               Remove All Permissions
             </Button>
           </div>
@@ -638,23 +638,23 @@ class Permissions extends Component {
 
           const selectedValue = (
             <AceEditor
-              mode="json"
+              mode='json'
               value={localFilterString || filterString}
               onChange={dispatchFuncSetFilter}
-              theme="github"
-              height="5em"
+              theme='github'
+              height='5em'
               maxLines={15}
-              width="100%"
+              width='100%'
               showPrintMargin={false}
               key={-3}
             />
           );
 
           const getFilterRadio = (key, checked, value, onClick, label) => (
-            <div className="radio" key={key}>
+            <div className='radio' key={key}>
               <label>
                 <input
-                  type="radio"
+                  type='radio'
                   checked={checked}
                   value={value}
                   onClick={onClick}
@@ -683,7 +683,7 @@ class Permissions extends Component {
             }
 
             const allowAllLabel = (
-              <span data-test="without-checks">
+              <span data-test='without-checks'>
                 Without any checks {allowAllQueryInfo}
               </span>
             );
@@ -715,7 +715,7 @@ class Permissions extends Component {
 
               const queries = filterQueries[filter].join(', ');
               const queryLabel = (
-                <span data-test="mutual-check">
+                <span data-test='mutual-check'>
                   With same custom check as <b>{queries}</b>
                 </span>
               );
@@ -752,9 +752,9 @@ class Permissions extends Component {
               'Create custom check using permissions builder';
 
             const customChecklabel = (
-              <span data-test="custom-check">
+              <span data-test='custom-check'>
                 With custom check:
-                <ToolTip message={customCheckToolTip} ml="sm" />
+                <ToolTip message={customCheckToolTip} ml='sm' />
               </span>
             );
 
@@ -821,8 +821,8 @@ class Permissions extends Component {
                   onChange={e => dispatchLimit(e.target.value)}
                   disabled={noPermissions}
                   title={noPermissions ? noPermissionsMsg : ''}
-                  type="number"
-                  min="0"
+                  type='number'
+                  min='0'
                 />
                 <div className={styles.clear_fix} />
               </div>
@@ -886,10 +886,10 @@ class Permissions extends Component {
 
             return (
               <div key={fieldName} className={styles.columnListElement}>
-                <div className="checkbox">
+                <div className='checkbox'>
                   <label>
                     <input
-                      type="checkbox"
+                      type='checkbox'
                       checked={checked}
                       value={fieldName}
                       onChange={dispatchToggleField(fieldType)}
@@ -942,7 +942,7 @@ class Permissions extends Component {
 
           if (externalObjects.length) {
             _externalPermissionsMsg = (
-              <Text mt="sm">
+              <Text mt='sm'>
                 For <b>{externalObjects.join(', ')}</b>, set permissions for the
                 corresponding tables/views.
               </Text>
@@ -1032,7 +1032,7 @@ class Permissions extends Component {
                 title={noPermissions ? noPermissionsMsg : ''}
               >
                 <div>
-                  <Text mr="20px">
+                  <Text mr='20px' display='inline-block'>
                     Allow role <b>{permissionsState.role}</b> {getAccessText()}{' '}
                     <b>columns</b>:
                   </Text>
@@ -1110,7 +1110,7 @@ class Permissions extends Component {
         const queryState = permissionsState[query];
 
         const presets = (queryState && queryState.localPresets) || [
-          defaultPresetsState[query],
+          defaultPresetsState[query]
         ];
 
         const getPresetValues = () => {
@@ -1132,7 +1132,7 @@ class Permissions extends Component {
 
               this.props.dispatch({
                 type: SET_PRESET_VALUE,
-                data: { ...actionData, queryType: query },
+                data: { ...actionData, queryType: query }
               });
             }
           };
@@ -1158,13 +1158,13 @@ class Permissions extends Component {
 
               this.props.dispatch({
                 type: SET_PRESET_VALUE,
-                data: { ...actionData, queryType: query },
+                data: { ...actionData, queryType: query }
               });
 
               if (indexId === presets.length - 1) {
                 this.props.dispatch({
                   type: CREATE_NEW_PRESET,
-                  data: { query },
+                  data: { query }
                 });
               }
 
@@ -1175,10 +1175,10 @@ class Permissions extends Component {
                     ...this.state.presetsInfo[query],
                     columnTypeMap: {
                       ...this.state.presetsInfo[query].columnTypeMap,
-                      [indexId]: columnType,
-                    },
-                  },
-                },
+                      [indexId]: columnType
+                    }
+                  }
+                }
               });
             }
           };
@@ -1199,7 +1199,7 @@ class Permissions extends Component {
 
               this.props.dispatch({
                 type: SET_PRESET_VALUE,
-                data: { ...actionData, queryType: query },
+                data: { ...actionData, queryType: query }
               });
             }
           };
@@ -1214,8 +1214,8 @@ class Permissions extends Component {
                 type: DELETE_PRESET,
                 data: {
                   index: deleteIndex,
-                  queryType: query,
-                },
+                  queryType: query
+                }
               });
             }
           };
@@ -1243,7 +1243,7 @@ class Permissions extends Component {
               const _columnOptions = [];
 
               _columnOptions.push(
-                <option value="" disabled key={-1}>
+                <option value='' disabled key={-1}>
                   Column Name
                 </option>
               );
@@ -1267,7 +1267,7 @@ class Permissions extends Component {
 
             return (
               <select
-                className="input-sm form-control"
+                className='input-sm form-control'
                 value={preset.key}
                 onChange={setPresetKey}
                 data-index-id={index}
@@ -1287,7 +1287,7 @@ class Permissions extends Component {
 
             return (
               <select
-                className="input-sm form-control"
+                className='input-sm form-control'
                 onChange={setPresetType}
                 data-index-id={index}
                 data-test={'column-presets-type-' + index}
@@ -1295,11 +1295,11 @@ class Permissions extends Component {
                 disabled={selectTypeDisabled}
                 title={selectTypeDisabled ? 'Choose column first' : ''}
               >
-                <option value="" disabled>
+                <option value='' disabled>
                   Select Preset Type
                 </option>
-                <option value="static">static</option>
-                <option value="session">from session variable</option>
+                <option value='static'>static</option>
+                <option value='session'>from session variable</option>
               </select>
             );
           };
@@ -1317,7 +1317,7 @@ class Permissions extends Component {
                   <InputGroup.Addon>X-Hasura-</InputGroup.Addon>
                   <input
                     className={'input-sm form-control '}
-                    placeholder="column_value"
+                    placeholder='column_value'
                     value={preset.value.slice(X_HASURA_CONST.length)}
                     onChange={setPresetValue}
                     data-test={'column-presets-value-' + index}
@@ -1329,7 +1329,7 @@ class Permissions extends Component {
             } else {
               _presetInput = (
                 <EnhancedInput
-                  placeholder="column_value"
+                  placeholder='column_value'
                   type={
                     index in this.state.presetsInfo[query].columnTypeMap
                       ? this.state.presetsInfo[query].columnTypeMap[index]
@@ -1371,7 +1371,7 @@ class Permissions extends Component {
             if (presetType) {
               _deleteBtn = (
                 <Icon
-                  type="close"
+                  type='close'
                   pointer
                   onClick={deletePreset}
                   data-index-id={index}
@@ -1481,12 +1481,12 @@ class Permissions extends Component {
               className={sectionClasses}
               title={noPermissions ? noPermissionsMsg : ''}
             >
-              <div className="checkbox">
+              <div className='checkbox'>
                 <label>
                   <input
-                    type="checkbox"
+                    type='checkbox'
                     checked={aggregationAllowed}
-                    value="toggle_aggregation"
+                    value='toggle_aggregation'
                     onChange={handleClick}
                     disabled={noPermissions}
                     title={noPermissions ? noPermissionsMsg : ''}
@@ -1556,7 +1556,7 @@ class Permissions extends Component {
                   disabled={noPermissions}
                   title={noPermissions ? disabledCloneMsg : ''}
                 >
-                  <option disabled value="">
+                  <option disabled value=''>
                     Select {type}
                   </option>
                   {optionsList}
@@ -1574,7 +1574,7 @@ class Permissions extends Component {
               if (applyTo.table && applyTo.role && applyTo.action) {
                 _removeIcon = (
                   <Icon
-                    type="close"
+                    type='close'
                     pointer
                     className={styles.fontAwosomeClose}
                     onClick={removeApplyTo}
@@ -1641,15 +1641,15 @@ class Permissions extends Component {
                   <div className={styles.add_mar_top_small}>
                     {applyToListHtml}
                   </div>
-                  <Text mt="20px">
+                  <Text mt='20px'>
                     <b>Note:</b> While applying permissions for other tables,
                     the column permissions and presets will be ignored
                   </Text>
                   <Button
                     onClick={applySameBulk}
                     className={styles.add_mar_top}
-                    color="yellow"
-                    size="sm"
+                    color='yellow'
+                    size='sm'
                     disabled={!validApplyToList.length}
                   >
                     Save Permissions
@@ -1700,7 +1700,7 @@ class Permissions extends Component {
           <Button
             className={styles.add_mar_right}
             color={color}
-            size="sm"
+            size='sm'
             onClick={onClickFn}
             disabled={disabled}
             title={title}
@@ -1747,7 +1747,7 @@ class Permissions extends Component {
           <div className={styles.editPermsHeading}>
             <span className={styles.add_mar_right}>
               <Button
-                size="xs"
+                size='xs'
                 onClick={dispatchCloseEdit}
                 data-test={'close-button'}
               >
@@ -1825,7 +1825,7 @@ class Permissions extends Component {
         <br />
         <div className={styles.padd_left_remove}>
           <div className={`${styles.padd_remove} col-xs-12`}>
-            <Heading type="subHeading">Permissions</Heading>
+            <Heading type='subHeading'>Permissions</Heading>
             {getPermissionsTable(tSchema, qTypes, allRolesList)}
             {getBulkSection(tSchema)}
             {getEditSection(tSchema, qTypes, allRolesList)}
@@ -1853,7 +1853,7 @@ Permissions.propTypes = {
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,
-  lastSuccess: PropTypes.bool,
+  lastSuccess: PropTypes.bool
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -1868,7 +1868,7 @@ const mapStateToProps = (state, ownProps) => ({
   readOnlyMode: state.main.readOnlyMode,
   currentSchema: state.tables.currentSchema,
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
-  ...state.tables.modify,
+  ...state.tables.modify
 });
 
 const permissionsConnector = connect => connect(mapStateToProps)(Permissions);
