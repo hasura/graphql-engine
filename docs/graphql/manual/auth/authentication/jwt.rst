@@ -125,7 +125,7 @@ JSON object:
 .. code-block:: none
 
    {
-     "type": "<standard-JWT-algorithms>",
+     "type": "<optional-type-of-key>",
      "key": "<optional-key-as-string>",
      "jwk_url": "<optional-url-to-refresh-jwks>",
      "claims_namespace": "<optional-key-name-in-claims>",
@@ -134,7 +134,7 @@ JSON object:
      "issuer": "<optional-string-to-verify-issuer>"
    }
 
-``key`` or ``jwk_url``, **one of them has to be present**.
+(``type``, ``key``) pair or ``jwk_url``, **one of them has to be present**.
 
 ``type``
 ^^^^^^^^
@@ -145,6 +145,8 @@ Valid values are : ``HS256``, ``HS384``, ``HS512``, ``RS256``,
 example, if your auth server is using HMAC-SHA256 for signing the JWTs, then
 use ``HS256``. If it is using RSA with 512-bit keys, then use ``RS512``. EC
 public keys are not yet supported.
+
+This is an optional field. This is required only if you are using ``key`` in the config.
 
 ``key``
 ^^^^^^^
@@ -164,7 +166,7 @@ JWTs). The URL **must** publish the JWKs in the standard format as described in
 https://tools.ietf.org/html/rfc7517.
 
 This is an optional field. You can also provide the key (certificate, PEM
-encoded public key) as a string - under the ``key`` field.
+encoded public key) as a string - in the ``key`` field along with the ``type``.
 
 Rotating JWKs
 +++++++++++++
@@ -284,7 +286,6 @@ Examples:
 .. code-block:: json
 
    {
-     "type": "RS512",
      "jwk_url": "https://......",
      "audience": "myapp-1234"
    }
@@ -294,7 +295,6 @@ or
 .. code-block:: json
 
    {
-     "type": "RS512",
      "jwk_url": "https://......",
      "audience": ["myapp-1234", "myapp-6789"]
    }
@@ -327,7 +327,6 @@ Examples:
 .. code-block:: json
 
    {
-     "type": "RS512",
      "jwk_url": "https://......",
      "issuer": "https://my-auth-server.com"
    }
@@ -384,7 +383,6 @@ the JWT config only needs to have the public key.
 .. code-block:: json
 
     {
-      "type":"RS512",
       "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
     }
 
@@ -446,7 +444,6 @@ If you are using Firebase and Hasura, use this config:
 .. code-block:: json
 
    {
-     "type":"RS256",
      "jwk_url": "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com",
      "audience": "<firebase-project-id>",
      "issuer": "https://securetoken.google.com/<firebase-project-id>"
