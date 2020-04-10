@@ -10,7 +10,6 @@ import {
 import { getPersistedDerivedAction } from '../lsUtils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import styles from '../Common/components/Styles.scss';
-import Button from '../../../Common/Button/Button';
 import { Icon } from '../../../UIKit/atoms';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
@@ -94,15 +93,9 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
           href={getGlitchProjectURL()}
           target="_blank"
           rel="noopener noreferrer"
+          className={styles.add_mar_right}
         >
-          <Button
-            color="white"
-            size="xs"
-            className={`${styles.add_mar_right_mid} ${styles.display_flex}`}
-          >
-            <Icon type="link" className={styles.add_mar_right_small} /> Try on
-            glitch
-          </Button>
+          <Icon type="link" /> Try on glitch
         </a>
       );
     };
@@ -124,13 +117,10 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
             href={getStarterKitDownloadPath(selectedFramework)}
             target="_blank"
             rel="noopener noreferrer"
-            className={styles.add_mar_right_small}
+            className={styles.add_mar_right}
             title={`Download starter kit for ${selectedFramework}`}
           >
-            <Button color="white" size="xs" className={styles.display_flex}>
-              <Icon type="download" className={styles.add_mar_right_small} />{' '}
-              Starter Kit
-            </Button>
+            <Icon type="download" /> Starter-kit.zip
           </a>
           <a
             href={getStarterKitPath(selectedFramework)}
@@ -139,7 +129,8 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
             className={styles.display_flex}
             title={`View the starter kit for ${selectedFramework} on GitHub`}
           >
-            <Icon type="github" color="black.original" />
+            <Icon type="github" className={styles.add_mar_right_small} /> View
+            on GitHub
           </a>
         </React.Fragment>
       );
@@ -148,9 +139,16 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     return (
       <div className={`${styles.add_mar_bottom} ${styles.display_flex}`}>
         {getDrodown()}
-        <div className={`${styles.display_flex} ${styles.marginLeftAuto}`}>
-          {getGlitchButton()}
-          {getStarterKitButton()}
+        <div className={styles.marginLeftAuto}>
+          <div className={styles.add_mar_bottom_small}>
+            <b>Need help getting started quickly?</b>
+          </div>
+          <div
+            className={`${styles.display_flex} ${styles.codegenOnboardingButtons}`}
+          >
+            {getGlitchButton()}
+            {getStarterKitButton()}
+          </div>
         </div>
       </div>
     );
