@@ -1,29 +1,38 @@
 // TODO: make functions from this file available without imports
 import React from 'react';
+
 import { showErrorNotification } from '../../Services/Common/Notification';
 
-export const exists = (value: any) => {
+type Json =
+  | null
+  | boolean
+  | number
+  | string
+  | Json[]
+  | { [prop: string]: Json };
+
+export const exists = (value: unknown) => {
   return value !== null && value !== undefined;
 };
 
-export const isArray = (value: any) => {
+export const isArray = (value: unknown): value is Array<any> => {
   return Array.isArray(value);
 };
 
-export const isObject = (value: any) => {
+export const isObject = (value: unknown): value is Record<PropertyKey, any> => {
   return typeof value === 'object' && value !== null;
 };
 
-export const isString = (value: any) => {
+export const isString = (value: unknown): value is string => {
   return typeof value === 'string';
 };
 
-export const isPromise = (value: any) => {
+export const isPromise = (value: unknown): value is Promise<any> => {
   if (!value) return false;
-  return value.constructor.name === 'Promise';
+  return (value as Promise<any>).constructor.name === 'Promise';
 };
 
-export const isEmpty = (value: any) => {
+export const isEmpty = (value: unknown) => {
   let empty = false;
 
   if (!exists(value)) {
@@ -39,22 +48,27 @@ export const isEmpty = (value: any) => {
   return empty;
 };
 
-export const isEqual = (value1: any, value2: any) => {
+export const isEqual = (value1: Json, value2: Json) => {
   let equal = false;
 
   if (typeof value1 === typeof value2) {
     if (isArray(value1)) {
       equal = JSON.stringify(value1) === JSON.stringify(value2);
     } else if (isObject(value2)) {
-      const value1Keys = Object.keys(value1);
-      const value2Keys = Object.keys(value2);
+      const value1Keys = Object.keys(value1 as Exclude<Json, null>);
+      const value2Keys = Object.keys(value2 as Exclude<Json, null>);
 
       if (value1Keys.length === value2Keys.length) {
         equal = true;
 
         for (let i = 0; i < value1Keys.length; i++) {
           const key = value1Keys[i];
-          if (!isEqual(value1[key], value2[key])) {
+          if (
+            !isEqual(
+              (value1 as Record<PropertyKey, any>)[key],
+              (value2 as Record<PropertyKey, any>)[key]
+            )
+          ) {
             equal = false;
             break;
           }
@@ -78,14 +92,18 @@ export function isJsonString(str: string) {
   return true;
 }
 
-export function getAllJsonPaths(json: any, leafKeys: any[], prefix = '') {
+export function getAllJsonPaths(
+  json: Json,
+  leafKeys: string[] = [],
+  prefix = ''
+) {
   const paths = [];
 
   const addPrefix = (subPath: string) => {
     return prefix + (prefix && subPath ? '.' : '') + subPath;
   };
 
-  const handleSubJson = (subJson: any, newPrefix: string) => {
+  const handleSubJson = (subJson: Json, newPrefix: string) => {
     const subPaths = getAllJsonPaths(subJson, leafKeys, newPrefix);
 
     subPaths.forEach(subPath => {
@@ -110,7 +128,7 @@ export function getAllJsonPaths(json: any, leafKeys: any[], prefix = '') {
       }
     });
   } else {
-    paths.push(addPrefix(json));
+    paths.push(addPrefix(json as string));
   }
 
   return paths;
@@ -159,11 +177,11 @@ export const uploadFile = (
 ) => (dispatch: any) => {
   const fileInputElement = document.createElement('div');
   fileInputElement.innerHTML = '<input style="display:none" type="file">';
-  const fileInput: any = fileInputElement.firstChild;
+  const fileInput = fileInputElement.firstChild as HTMLElement;
   document.body.appendChild(fileInputElement);
 
   const onFileUpload = () => {
-    const file = fileInput.files[0];
+    const file = (fileInput as HTMLInputElement)!.files![0];
     const fileName = file.name;
 
     let isValidFile = true;
@@ -222,7 +240,7 @@ export const downloadFile = (fileName: string, dataString: string) => {
   downloadLinkElem.remove();
 };
 
-export const downloadObjectAsJsonFile = (fileName: string, object: any) => {
+export const downloadObjectAsJsonFile = (fileName: string, object: Json) => {
   const contentType = 'application/json;charset=utf-8;';
 
   const jsonSuffix = '.json';
@@ -294,13 +312,13 @@ export const getUrlSearchParamValue = (param: string) => {
   return urlSearchParams.get(param);
 };
 
-export const getLastArrayElement = (array: Array<any>) => {
+export const getLastArrayElement = <T = any>(array: Array<T>) => {
   if (!array) return null;
   if (!array.length) return null;
   return array[array.length - 1];
 };
 
-export const getFirstArrayElement = (array: Array<any>) => {
+export const getFirstArrayElement = <T = any>(array: Array<T>) => {
   if (!array) return null;
   return array[0];
 };
