@@ -57,7 +57,7 @@ class TestJWTBasic():
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['url'] = endpoint
         self.conf['status'] = 200
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     def test_jwt_invalid_role_in_request_header(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -85,7 +85,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     def test_jwt_no_allowed_roles_in_claim(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -112,7 +112,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     def test_jwt_invalid_allowed_roles_in_claim(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -140,7 +140,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     def test_jwt_no_default_role(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -167,7 +167,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     def test_jwt_expired(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -198,7 +198,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     def test_jwt_invalid_signature(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -227,7 +227,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     def test_jwt_no_audience_in_conf(self, hge_ctx, endpoint):
         jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
@@ -247,7 +247,7 @@ class TestJWTBasic():
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['url'] = endpoint
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     def test_jwt_no_issuer_in_conf(self, hge_ctx, endpoint):
         jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
@@ -267,7 +267,7 @@ class TestJWTBasic():
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['url'] = endpoint
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     @pytest.fixture(autouse=True)
     def transact(self, setup):
@@ -275,7 +275,7 @@ class TestJWTBasic():
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
             self.conf = yaml.safe_load(c)
         curr_time = datetime.utcnow()
-        exp_time = curr_time + timedelta(hours=1)
+        exp_time = curr_time + timedelta(hours=10)
         self.claims = {
             'sub': '1234567890',
             'name': 'John Doe',
@@ -359,7 +359,7 @@ class TestJwtAudienceCheck():
 
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     def test_jwt_invalid_audience(self, hge_ctx, endpoint):
         jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
@@ -394,7 +394,7 @@ class TestJwtAudienceCheck():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     @pytest.fixture(autouse=True)
     def transact(self, setup):
@@ -441,7 +441,7 @@ class TestJwtIssuerCheck():
 
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     def test_jwt_invalid_issuer(self, hge_ctx, endpoint):
         jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
@@ -476,7 +476,7 @@ class TestJwtIssuerCheck():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
     @pytest.fixture(autouse=True)
     def transact(self, setup):
