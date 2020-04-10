@@ -31,6 +31,11 @@ def get_claims_fmt(raw_conf):
 
 def mk_claims(conf, claims):
     claims_fmt = get_claims_fmt(conf)
+    claims_namespace_path = PytestConf.config.getoption('--hge-jwt-claims-ns-path')
+    if claims_namespace_path == '$.hasuraClaims':
+        claims = {
+            "hasuraClaims":claims
+        }
     if claims_fmt == 'json':
         return claims
     elif claims_fmt == 'stringified_json':

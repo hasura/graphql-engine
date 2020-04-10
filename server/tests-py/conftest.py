@@ -40,6 +40,10 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
+        "--hge-jwt-claims-ns-path", metavar="HGE_JWT_CLAIMS_NS_PATH", help="The JWT conf claims namespace path", required=False
+    )
+
+    parser.addoption(
         "--test-cors", action="store_true",
         required=False,
         help="Run testcases for CORS configuration"

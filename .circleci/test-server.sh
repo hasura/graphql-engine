@@ -318,6 +318,21 @@ kill_hge_servers
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
+##########
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_namespace_path) #####################################>\n"
+TEST_TYPE="jwt"
+
+init_jwt
+
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasuraClaims"}')"
+
+start_multiple_hge_servers
+
+run_pytest_parallel --hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" --hge-jwt-key-file="$OUTPUT_FOLDER/ssl/jwt_private.key" --hge-jwt-conf="$HASURA_GRAPHQL_JWT_SECRET" --hge-jwt-claims-ns-path="$.hasuraClaims"
+
+kill_hge_servers
+
+unset HASURA_GRAPHQL_JWT_SECRET
 
 # test with CORS modes
 
