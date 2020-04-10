@@ -1,4 +1,5 @@
 import React from 'react';
+import { css } from 'styled-components';
 
 import { StyledHeading, StyledText, StyledTextLink } from './Typography';
 
@@ -8,11 +9,11 @@ export const Heading = props => {
   if (type === 'subHeading') {
     return (
       <StyledHeading
-        as="h4"
-        fontSize="15px"
-        pb="20px"
-        mt="0px"
-        mb="0px"
+        as='h4'
+        fontSize='15px'
+        pb='20px'
+        mt='0px'
+        mb='0px'
         {...props}
       >
         {children}
@@ -26,7 +27,7 @@ export const Heading = props => {
 
 Heading.defaultProps = {
   color: 'black.text',
-  fontWeight: 'bold',
+  fontWeight: 'bold'
 };
 
 /**
@@ -70,19 +71,38 @@ export const Text = props => {
 
 Text.defaultProps = {
   mb: 0,
-  mt: 0,
+  mt: 0
 };
 
 export const TextLink = props => {
-  const { children, underline } = props;
+  const { children, underline, type, href } = props;
+
+  if (type === 'moreInfo') {
+    return (
+      <StyledTextLink
+        {...props}
+        fontSize='12px'
+        href={href}
+        target='_blank'
+        rel='noopener noreferrer'
+        color='blue.link'
+        css={css`
+          &:hover {
+            text-decoration: underline !important;
+          }
+        `}
+      >
+        <i>{`(${children || 'Know more'})`}</i>
+      </StyledTextLink>
+    );
+  }
 
   return (
     <StyledTextLink
       {...props}
       borderBottom={underline ? 2 : 'none'}
       borderColor={underline ? 'yellow.primary' : 'none'}
-      fontWeight="medium"
-      fontSize="p"
+      href={href}
     >
       {children}
     </StyledTextLink>
@@ -91,4 +111,6 @@ export const TextLink = props => {
 
 TextLink.defaultProps = {
   color: 'black.text',
+  fontWeight: 'medium',
+  fontSize: 'p'
 };

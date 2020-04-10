@@ -5,45 +5,46 @@ const colors = {
     original: '#ff0000',
     primary: '#e53935',
     hover: 'rgba(229, 57, 53, 0.4)',
-    light: '#f7e9e9',
+    light: '#f7e9e9'
   },
   green: {
     original: '#008000',
     primary: '#69cb43',
     hover: 'rgba(123, 179, 66, 0.4)',
-    light: '#f0f8e7',
+    light: '#f0f8e7'
   },
   blue: {
     original: '#0000ff',
     primary: '#1f88e5',
+    link: '#337ab7',
     hover: 'rgba(31, 136, 229, 0.4)',
-    light: '#f0f8ff',
+    light: '#f0f8ff'
   },
   orange: {
     original: '#ffa500',
     primary: '#fdb02c',
     hover: 'rgba(253, 176, 44, 0.4)',
-    light: '#fff8ed',
+    light: '#fff8ed'
   },
   yellow: {
     original: '#ffff00',
     primary: '#f8d721',
-    hover: 'rgba(204, 177, 25, 0.4)',
+    hover: 'rgba(204, 177, 25, 0.4)'
   },
   grey: {
     original: '#888888',
     tab: '#939390',
-    border: '#ededed',
+    border: '#ededed'
   },
   black: {
     original: '#000',
     secondary: '#484538',
     text: '#4d4d4d',
-    hover: 'rgba(0, 0, 0, 0.16)',
+    hover: 'rgba(0, 0, 0, 0.16)'
   },
   white: '#fff',
   transparent: 'transparent',
-  tab: '#1fd6e5',
+  tab: '#1fd6e5'
 };
 
 // ********************************** //
@@ -52,38 +53,38 @@ const button = {
   primary: {
     backgroundColor: colors.yellow.primary,
     boxShadowColor: colors.yellow.hover,
-    color: colors.black.text,
+    color: colors.black.text
   },
   secondary: {
     backgroundColor: colors.white,
     boxShadowColor: colors.black.hover,
-    color: colors.black.text,
+    color: colors.black.text
   },
   success: {
     backgroundColor: colors.green.primary,
     boxShadowColor: colors.green.hover,
-    color: colors.white,
+    color: colors.white
   },
   danger: {
     backgroundColor: colors.red.primary,
     boxShadowColor: colors.red.hover,
-    color: colors.white,
+    color: colors.white
   },
   warning: {
     backgroundColor: colors.orange.primary,
     boxShadowColor: colors.orange.hover,
-    color: colors.white,
+    color: colors.white
   },
   info: {
     backgroundColor: colors.blue.primary,
     boxShadowColor: colors.blue.hover,
-    color: colors.white,
+    color: colors.white
   },
   default: {
     backgroundColor: colors.yellow.primary,
     boxShadowColor: colors.black.hover,
-    color: colors.white,
-  },
+    color: colors.white
+  }
 };
 
 // ********************************** //
@@ -92,49 +93,49 @@ const alertBox = {
   success: {
     backgroundColor: colors.green.light,
     borderColor: colors.green.primary,
-    message: 'You did something awesome. Well done!',
+    message: 'You did something awesome. Well done!'
   },
   info: {
     backgroundColor: colors.blue.light,
     borderColor: colors.blue.primary,
-    message: 'You need to do something.',
+    message: 'You need to do something.'
   },
   warning: {
     backgroundColor: colors.orange.light,
     borderColor: colors.orange.primary,
-    message: 'You are about to do something wrong.',
+    message: 'You are about to do something wrong.'
   },
   error: {
     backgroundColor: colors.red.light,
     borderColor: colors.red.primary,
-    message: 'You did something wrong.',
+    message: 'You did something wrong.'
   },
   default: {
     backgroundColor: colors.green.light,
     borderColor: colors.green.primary,
-    message: '',
-  },
+    message: ''
+  }
 };
 
 // ********************************** //
 
 const icon = {
   success: {
-    color: colors.green.primary,
+    color: colors.green.primary
   },
   info: {
-    color: colors.blue.primary,
+    color: colors.blue.primary
   },
   warning: {
-    color: colors.orange.primary,
+    color: colors.orange.primary
   },
   error: {
-    color: colors.red.primary,
+    color: colors.red.primary
   },
   // type ~ out of range
   default: {
-    color: colors.black.secondary,
-  },
+    color: colors.black.secondary
+  }
 };
 
 // Border Radius ********************* //
@@ -268,7 +269,7 @@ export const theme = {
   colors,
   radii,
   fonts: {
-    roboto: 'Roboto',
+    roboto: 'Roboto'
   },
   fontWeights,
   fontSizes,
@@ -280,10 +281,10 @@ export const theme = {
     '0 0 3px 0 rgba(0, 0, 0, 0.16)',
     '0 3px 6px 0 rgba(0, 0, 0, 0.16)',
     '0 3px 10px 0 rgba(0, 0, 0, 0.16)',
-    '0 7px 24px 0 rgba(0, 0, 0, 0.32)',
+    '0 7px 24px 0 rgba(0, 0, 0, 0.32)'
   ],
   borders: [0, '1px solid', '2px solid', '3px solid', '4px solid', '5px solid'],
   button,
   alertBox,
-  icon,
+  icon
 };

@@ -1,12 +1,6 @@
 import React from 'react';
-// import styles from './KnowMoreLink.scss';
+import { TextLink } from '../../UIKit/atoms';
 
-const KnowMoreLink = ({ href, text = 'Know more' }) => (
-  <a href={href} target="_blank" rel="noopener noreferrer">
-    <small>
-      <i>({text})</i>
-    </small>
-  </a>
-);
+const KnowMoreLink = ({ href }) => <TextLink href={href} type='moreInfo' />;
 
 export default KnowMoreLink;
