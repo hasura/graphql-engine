@@ -310,3 +310,6 @@ class TestSetCustomTypes:
 
     def test_resuse_unknown_pgscalar(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/reuse_unknown_pgscalar.yaml')
+
+    def test_create_action_pg_scalar(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_action_pg_scalar.yaml')

@@ -264,7 +264,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
 
       -- actions
       actionCache <- case maybeResolvedCustomTypes of
-        Just resolvedCustomTypes -> buildActions -< (resolvedCustomTypes, actions)
+        Just resolvedCustomTypes -> buildActions -< ((resolvedCustomTypes, pgScalars), actions)
 
         -- If the custom types themselves are inconsistent, we can’t really do
         -- anything with actions, so just mark them all inconsistent.
@@ -357,21 +357,21 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     buildActions
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
          , ArrowWriter (Seq CollectedInfo) arr, MonadIO m )
-      => ( (NonObjectTypeMap, AnnotatedObjects)
+      => ( ((NonObjectTypeMap, AnnotatedObjects), HashSet PGScalarType)
          , [ActionMetadata]
          ) `arr` HashMap ActionName ActionInfo
     buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
       where
-        buildAction = proc (resolvedCustomTypes, action) -> do
+        buildAction = proc ((resolvedCustomTypes, pgScalars), action) -> do
           let ActionMetadata name comment def actionPermissions = action
               addActionContext e = "in action " <> name <<> "; " <> e
           (| withRecordInconsistency (
              (| modifyErrA (do
-                  (resolvedDef, outFields) <- liftEitherA <<< bindA -<
-                    runExceptT $ resolveAction resolvedCustomTypes def
+                  (resolvedDef, outObject, reusedPgScalars) <- liftEitherA <<< bindA -<
+                    runExceptT $ resolveAction resolvedCustomTypes pgScalars def
                   let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
                       permissionMap = mapFromL _apiRole permissionInfos
-                  returnA -< ActionInfo name outFields resolvedDef permissionMap comment)
+                  returnA -< ActionInfo name outObject resolvedDef permissionMap reusedPgScalars comment)
               |) addActionContext)
            |) (mkActionMetadataObject action)
 
@@ -406,7 +406,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
          , ActionCache
          ) `arr` (RemoteSchemaMap, GS.GCtxMap, GS.GCtx)
     buildGQLSchema = proc (tableCache, functionCache, remoteSchemas, customTypes, actionCache) -> do
-      baseGQLSchema <- bindA -< GS.mkGCtxMap (snd customTypes) tableCache functionCache actionCache
+      baseGQLSchema <- bindA -< GS.mkGCtxMap tableCache functionCache actionCache
       (| foldlA' (\(remoteSchemaMap, gqlSchemas, remoteGQLSchemas)
                    (remoteSchemaName, (remoteSchema, metadataObject)) ->
            (| withRecordInconsistency (do

@@ -17,3 +17,11 @@ args:
         name TEXT NOT NULL,
         location geography
       );
+
+- type: set_custom_types
+  args:
+    objects:
+    - name: User
+      fields:
+      - name: user_id
+        type: ID!
