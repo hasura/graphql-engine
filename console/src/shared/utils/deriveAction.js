@@ -9,8 +9,12 @@ import {
 } from 'graphql';
 import { wrapTypename, getAstTypeMetadata } from './wrappingTypeUtils';
 import { inbuiltTypes } from './hasuraCustomTypeUtils';
-import { getTypeFields, getUnderlyingType, getOperationType } from './graphqlSchemaUtils';
-import { isValidOperationName } from './sdlUtils'
+import {
+  getTypeFields,
+  getUnderlyingType,
+  getOperationType,
+} from './graphqlSchemaUtils';
+import { isValidOperationName } from './sdlUtils';
 
 export const validateOperation = (operationString, clientSchema) => {
   // parse operation string
@@ -36,8 +40,8 @@ export const validateOperation = (operationString, clientSchema) => {
     throw Error('subscriptions cannot be derived into actions');
   }
 
-  operationAst.definitions = operationAst.definitions.filter(
-    d => isValidOperationName(d.operation)
+  operationAst.definitions = operationAst.definitions.filter(d =>
+    isValidOperationName(d.operation)
   );
 
   // throw error if the AST is empty
@@ -111,7 +115,7 @@ const deriveAction = (
   };
 
   const allHasuraTypes = clientSchema._typeMap;
-  const operationType =  getOperationType(clientSchema, operation); // TODO better handling for queries
+  const operationType = getOperationType(clientSchema, operation);
 
   const actionArguments = [];
   const newTypes = {};
