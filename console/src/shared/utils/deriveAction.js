@@ -66,11 +66,6 @@ export const validateOperation = (operationString, clientSchema) => {
     throw Error('the given operation must ask for at least one root field');
   }
 
-  // throw error if the operation does not have variables
-  if (!operationAst.definitions[0].variableDefinitions.length) {
-    throw Error('only operations using variables can be derived');
-  }
-
   return operationAst;
 };
 
