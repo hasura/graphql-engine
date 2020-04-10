@@ -145,11 +145,11 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
     // if the api fails, then redirect to login - this is a fresh user/browser flow
     store.dispatch(fetchSchemaList()).then(() => {
       const {
-        tables: { schemaList, currentSchema: prevSchema },
+        tables: { schemaList, allSchemas, currentSchema: prevSchema },
       } = store.getState();
 
       let currentSchema = nextState.params.schema;
-      if (currentSchema && prevSchema === currentSchema) {
+      if (currentSchema && prevSchema === currentSchema && allSchemas.length) {
         return cb();
       }
 
