@@ -21,6 +21,8 @@ if not PytestConf.config.getoption('--hge-jwt-key-file'):
 if not PytestConf.config.getoption('--hge-jwt-conf'):
     pytest.skip('--hge-jwt-key-conf is missing, skipping JWT tests', allow_module_level=True)
 
+claims_namespace_path = PytestConf.config.getoption('--hge-jwt-claims-ns-path')
+
 def get_claims_fmt(raw_conf):
     conf = json.loads(raw_conf)
     try:
@@ -49,13 +51,13 @@ class TestJWTBasic():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['url'] = endpoint
         self.conf['status'] = 200
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     def test_jwt_invalid_role_in_request_header(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -65,7 +67,7 @@ class TestJWTBasic():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
@@ -83,7 +85,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     def test_jwt_no_allowed_roles_in_claim(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -92,7 +94,7 @@ class TestJWTBasic():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
@@ -110,7 +112,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     def test_jwt_invalid_allowed_roles_in_claim(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -120,7 +122,7 @@ class TestJWTBasic():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
@@ -138,7 +140,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     def test_jwt_no_default_role(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -147,7 +149,7 @@ class TestJWTBasic():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
@@ -165,7 +167,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     def test_jwt_expired(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -175,7 +177,7 @@ class TestJWTBasic():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
         exp = datetime.utcnow() - timedelta(minutes=1)
         self.claims['exp'] = round(exp.timestamp())
@@ -196,7 +198,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     def test_jwt_invalid_signature(self, hge_ctx, endpoint):
         claims = mk_claims(hge_ctx.hge_jwt_conf, {
@@ -206,7 +208,7 @@ class TestJWTBasic():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
         wrong_key = gen_rsa_key()
         token = jwt.encode(self.claims, wrong_key, algorithm='HS256').decode('utf-8')
@@ -225,7 +227,7 @@ class TestJWTBasic():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     def test_jwt_no_audience_in_conf(self, hge_ctx, endpoint):
         jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
@@ -239,13 +241,13 @@ class TestJWTBasic():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
         self.claims['aud'] = 'hasura-test-suite'
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['url'] = endpoint
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     def test_jwt_no_issuer_in_conf(self, hge_ctx, endpoint):
         jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
@@ -259,13 +261,13 @@ class TestJWTBasic():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
         self.claims['iss'] = 'rubbish-issuer'
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['url'] = endpoint
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     @pytest.fixture(autouse=True)
     def transact(self, setup):
@@ -320,7 +322,7 @@ class TestSubscriptionJwtExpiry(object):
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
         exp = curr_time + timedelta(seconds=4)
         self.claims['exp'] = round(exp.timestamp())
@@ -351,13 +353,13 @@ class TestJwtAudienceCheck():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
         self.claims['aud'] = audience
 
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     def test_jwt_invalid_audience(self, hge_ctx, endpoint):
         jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
@@ -371,7 +373,7 @@ class TestJwtAudienceCheck():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
 
         self.claims['aud'] = 'rubbish_audience'
@@ -392,7 +394,7 @@ class TestJwtAudienceCheck():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     @pytest.fixture(autouse=True)
     def transact(self, setup):
@@ -432,14 +434,14 @@ class TestJwtIssuerCheck():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
 
         self.claims['iss'] = issuer
 
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     def test_jwt_invalid_issuer(self, hge_ctx, endpoint):
         jwt_conf = json.loads(hge_ctx.hge_jwt_conf)
@@ -453,7 +455,7 @@ class TestJwtIssuerCheck():
         })
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
-        else if claims_namespace_path == "$.hasuraClaims":
+        elif claims_namespace_path == "$.hasuraClaims":
             self.claims['hasuraClaims'] = claims
 
         self.claims['iss'] = 'rubbish_issuer'
@@ -474,7 +476,7 @@ class TestJwtIssuerCheck():
             self.conf['status'] = 200
         if endpoint == '/v1alpha1/graphql':
             self.conf['status'] = 400
-        check_query(hge_ctx, self.conf, add_auth=False)
+        check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path)
 
     @pytest.fixture(autouse=True)
     def transact(self, setup):
