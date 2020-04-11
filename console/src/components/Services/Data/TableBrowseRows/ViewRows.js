@@ -13,7 +13,7 @@ import {
   deleteItems,
   deleteItem,
   vExpandRow,
-  vCollapseRow,
+  vCollapseRow
 } from './ViewActions'; // eslint-disable-line no-unused-vars
 
 import {
@@ -23,7 +23,7 @@ import {
   runQuery,
   setOffset,
   setLimit,
-  addOrder,
+  addOrder
 } from './FilterActions';
 
 import _push from '../push';
@@ -36,13 +36,13 @@ import { E_SET_EDITITEM } from './EditActions';
 import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
 import {
   getTableInsertRowRoute,
-  getTableEditRowRoute,
+  getTableEditRowRoute
 } from '../../../Common/utils/routesUtils';
 import {
   findTable,
   getRelationshipRefTable,
   getTableName,
-  getTableSchema,
+  getTableSchema
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
 
@@ -71,7 +71,7 @@ const ViewRows = ({
   triggeredRow,
   triggeredFunction,
   location,
-  readOnlyMode,
+  readOnlyMode
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
 
@@ -193,7 +193,7 @@ const ViewRows = ({
       Header: '',
       accessor: 'tableRowActionButtons',
       id: 'tableRowActionButtons',
-      width: 152,
+      width: 152
     });
 
     _gridHeadings.push({
@@ -206,14 +206,14 @@ const ViewRows = ({
             }
             disabled={_disableBulkSelect}
             title={_disableBulkSelect ? 'No primary key to identify row' : ''}
-            type="checkbox"
+            type='checkbox'
             onChange={handleAllCheckboxChange}
           />
         </div>
       ),
       accessor: 'tableRowSelectAction',
       id: 'tableRowSelectAction',
-      width: 60,
+      width: 60
     });
 
     _columns.map(col => {
@@ -232,16 +232,16 @@ const ViewRows = ({
 
       _gridHeadings.push({
         Header: (
-          <div className="ellipsis" title="Click to sort">
+          <div className='ellipsis' title='Click to sort'>
             <span className={styles.tableHeaderCell}>
-              {columnName} <Icon type={sortIcon} size={12} pl="xs" />
+              {columnName} <Icon type={sortIcon} size={12} pl='xs' />
             </span>
           </div>
         ),
         accessor: columnName,
         id: columnName,
         foldable: true,
-        width: getColWidth(columnName, curRows),
+        width: getColWidth(columnName, curRows)
       });
     });
 
@@ -250,14 +250,14 @@ const ViewRows = ({
 
       _gridHeadings.push({
         Header: (
-          <div className="ellipsis">
+          <div className='ellipsis'>
             <span className={styles.tableHeaderCell}>{relName}</span>
           </div>
         ),
         accessor: relName,
         id: relName,
         foldable: true,
-        width: getColWidth(relName),
+        width: getColWidth(relName)
       });
     });
 
@@ -346,8 +346,8 @@ const ViewRows = ({
           return (
             <Button
               className={styles.add_mar_right_small}
-              color="white"
-              size="xs"
+              color='white'
+              size='xs'
               onClick={disabled ? disabledOnClick : handleClick}
               title={disabled ? 'No primary key to identify row' : title}
               data-test={`row-${type}-button-${rowIndex}`}
@@ -382,7 +382,7 @@ const ViewRows = ({
         };
 
         const getEditButton = pkClause => {
-          const editIcon = <Icon type="edit" size={10} />;
+          const editIcon = <Icon type='edit' size={10} />;
 
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
@@ -403,7 +403,7 @@ const ViewRows = ({
         };
 
         const getDeleteButton = pkClause => {
-          const deleteIcon = <Icon type="delete" size={10} />;
+          const deleteIcon = <Icon type='delete' size={10} />;
 
           const handleDeleteClick = () => {
             dispatch(deleteItem(pkClause));
@@ -421,7 +421,7 @@ const ViewRows = ({
         };
 
         const getCloneButton = () => {
-          const cloneIcon = <Icon type="clone" size={10} />;
+          const cloneIcon = <Icon type='clone' size={10} />;
 
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
@@ -451,8 +451,8 @@ const ViewRows = ({
               content: (
                 <div>
                   <Button
-                    color="white"
-                    size="xs"
+                    color='white'
+                    size='xs'
                     data-test={`run_manual_trigger_${m.name}`}
                     onClick={() =>
                       invokeTrigger.apply(undefined, [m.name, rowIndex])
@@ -462,11 +462,11 @@ const ViewRows = ({
                   </Button>
                   {`${m.name}`}
                 </div>
-              ),
+              )
             };
           });
 
-          const triggerIcon = <Icon type="playbox" />;
+          const triggerIcon = <Icon type='playbox' />;
           const triggerTitle = 'Invoke event trigger';
 
           const triggerBtn = getActionButton(
@@ -493,7 +493,7 @@ const ViewRows = ({
               <Dropdown
                 testId={`data_browse_rows_trigger_${rowIndex}`}
                 options={triggerOptions}
-                position="right"
+                position='right'
                 key={`invoke_data_dropdown_${rowIndex}`}
                 keyPrefix={`invoke_data_dropdown_${rowIndex}`}
               >
@@ -538,7 +538,7 @@ const ViewRows = ({
         <div className={styles.tableCenterContent}>
           <input
             className={styles.inputCheckbox}
-            type="checkbox"
+            type='checkbox'
             disabled={_disableBulkSelect}
             title={_disableBulkSelect ? NO_PRIMARY_KEY_MSG : ''}
             checked={selectedRows.some(selectedRow =>
@@ -615,7 +615,7 @@ const ViewRows = ({
 
           const getRelExpander = (value, className, clickHandler) => {
             return (
-              <a href="#" className={className} onClick={clickHandler}>
+              <a href='#' className={className} onClick={clickHandler}>
                 {value}
               </a>
             );
@@ -764,10 +764,10 @@ const ViewRows = ({
           {selectedRows.length}
           <button
             className={`${styles.add_mar_right_small} btn btn-xs btn-default ${styles.bulkDeleteButton}`}
-            title="Delete selected rows"
+            title='Delete selected rows'
             onClick={handleDeleteItems}
           >
-            <Icon type="delete" size={10} />
+            <Icon type='delete' size={10} />
           </button>
         </div>
       );
@@ -790,9 +790,9 @@ const ViewRows = ({
     const childTabs = childQueries.map((q, i) => {
       const isActive = q.name === activePath[curDepth + 1] ? 'active' : null;
       return (
-        <li key={i} className={isActive} role="presentation">
+        <li key={i} className={isActive} role='presentation'>
           <a
-            href="#"
+            href='#'
             onClick={e => {
               e.preventDefault();
               dispatch({ type: V_SET_ACTIVE, path: curPath, relname: q.name });
@@ -850,7 +850,7 @@ const ViewRows = ({
     if (childQueries.length > 0) {
       _childComponent = (
         <div>
-          <ul className="nav nav-tabs">{childTabs}</ul>
+          <ul className='nav nav-tabs'>{childTabs}</ul>
           {childViewRows}
         </div>
       );
@@ -861,7 +861,7 @@ const ViewRows = ({
 
   const renderTableBody = () => {
     if (isProgressing) {
-      return <Spinner size="xl" my="100px" mx="auto" />;
+      return <Spinner size='xl' my='100px' mx='auto' />;
     }
 
     let disableSortColumn = false;
@@ -939,14 +939,14 @@ const ViewRows = ({
         }
 
         disableSortColumn = false;
-      },
+      }
     });
 
     const getResizerProps = (finalState, none, column, ctx) => ({
       onMouseDown: e => {
         disableSortColumn = true;
         ctx.resizeColumnStart(e, column, false);
-      },
+      }
     });
 
     const handlePageChange = page => {
@@ -966,7 +966,7 @@ const ViewRows = ({
 
     return (
       <DragFoldTable
-        className="-highlight -fit-content"
+        className='-highlight -fit-content'
         data={_gridRows}
         columns={_gridHeadings}
         resizable
@@ -996,7 +996,7 @@ const ViewRows = ({
       {getFilterQuery()}
       <div className={`row ${styles.add_mar_top}`}>
         {getSelectedRowsSection()}
-        <div className="col-xs-12">
+        <div className='col-xs-12'>
           <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />
           <br />

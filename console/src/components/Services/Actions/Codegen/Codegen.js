@@ -5,7 +5,7 @@ import { getSdlComplete } from '../../../../shared/utils/sdlUtils';
 import {
   getAllCodegenFrameworks,
   getStarterKitPath,
-  getGlitchProjectURL,
+  getGlitchProjectURL
 } from './utils';
 import { getPersistedDerivedAction } from '../lsUtils';
 import Button from '../../../Common/Button/Button';
@@ -48,7 +48,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   React.useEffect(init, []);
 
   if (loading) {
-    return <Spinner size="xl" my="100px" mx="auto" />;
+    return <Spinner size='xl' my='100px' mx='auto' />;
   }
 
   if (error || !allFrameworks.length) {
@@ -88,11 +88,11 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
       return (
         <a
           href={getGlitchProjectURL()}
-          target="_blank"
-          rel="noopener noreferrer"
+          target='_blank'
+          rel='noopener noreferrer'
         >
           <Button
-            color="white"
+            color='white'
             className={`${styles.add_mar_right_mid} ${styles.default_button}`}
           >
             Try on glitch
@@ -114,10 +114,10 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
       return (
         <a
           href={getStarterKitPath(selectedFramework)}
-          target="_blank"
-          rel="noopener noreferrer"
+          target='_blank'
+          rel='noopener noreferrer'
         >
-          <Button color="white" className={`${styles.add_mar_right_mid}`}>
+          <Button color='white' className={`${styles.add_mar_right_mid}`}>
             Get starter kit
           </Button>
         </a>

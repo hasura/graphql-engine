@@ -19,11 +19,12 @@ const HandlerEditor = ({ value, onChange, className }) => {
 
   return (
     <div className={className || ''}>
-      <Heading type="subHeading" mb="xs">
+      <Heading type='subHeading' mb='xs'>
         {editorLabel}
         <ToolTip
           message={'Toggle between synchronous vs asynchronous action types'}
-          mx="sm"
+          ml='sm'
+          mr='20px'
         />
         <KnowMoreLink href={docsRef} />
       </Heading>
@@ -33,7 +34,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
           onClick={setSynchronous}
         >
           <input
-            type="radio"
+            type='radio'
             checked={value === 'synchronous'}
             readOnly
             className={styles.add_mar_right_small}
@@ -45,7 +46,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
           className={`${styles.add_mar_right} ${styles.cursorPointer}`}
         >
           <input
-            type="radio"
+            type='radio'
             readOnly
             checked={value === 'asynchronous'}
             className={styles.add_mar_right_small}
