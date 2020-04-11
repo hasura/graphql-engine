@@ -191,7 +191,8 @@ class ModifyTable extends React.Component {
             Computed fields
             <ToolTip
               message={'Add a function as a virtual field in the GraphQL API'}
-              mx='sm'
+              ml='sm'
+              mr='20px'
             />
             <TextLink
               type='moreInfo'

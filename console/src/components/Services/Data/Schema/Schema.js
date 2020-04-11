@@ -94,7 +94,7 @@ class Schema extends Component {
           <Heading type='subHeading' display='inline-block'>
             {headingText}
           </Heading>
-          <ToolTip message={tooltip} mx='sm' />
+          <ToolTip message={tooltip} ml='sm' mr='20px' />
           {actionElement}
         </div>
       );

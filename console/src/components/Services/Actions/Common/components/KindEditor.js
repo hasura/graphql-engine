@@ -22,7 +22,8 @@ const HandlerEditor = ({ value, onChange, className }) => {
         {editorLabel}
         <ToolTip
           message={'Toggle between synchronous vs asynchronous action types'}
-          mx='sm'
+          ml='sm'
+          mr='20px'
         />
         <TextLink type='moreInfo' href={docsRef} />
       </Heading>

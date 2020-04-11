@@ -12,7 +12,7 @@ const CodeTabs = ({
   actionsSdl,
   currentAction,
   parentMutation,
-  shouldDerive,
+  shouldDerive
 }) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
@@ -39,7 +39,7 @@ const CodeTabs = ({
   React.useEffect(init, [framework, parentMutation, shouldDerive]);
 
   if (loading) {
-    return <Spinner size="xl" my="100px" mx="auto" />;
+    return <Spinner size='xl' my='100px' mx='auto' />;
   }
 
   if (error) {
@@ -63,7 +63,7 @@ const CodeTabs = ({
     const editorProps = {
       width: '600px',
       value: content.trim(),
-      readOnly: true,
+      readOnly: true
     };
 
     switch (getFileExtensionFromFilename(name)) {
@@ -74,7 +74,7 @@ const CodeTabs = ({
     }
   });
 
-  return <Tabs id="codegen-files-tabs">{files} </Tabs>;
+  return <Tabs id='codegen-files-tabs'>{files} </Tabs>;
 };
 
 export default CodeTabs;

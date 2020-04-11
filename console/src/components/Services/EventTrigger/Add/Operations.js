@@ -49,7 +49,11 @@ const Operations = ({
       displayName: (
         <span>
           Via console
-          <ToolTip mx='sm' message={tooltip.manualOperationsDescription} />
+          <ToolTip
+            ml='sm'
+            mr='20px'
+            message={tooltip.manualOperationsDescription}
+          />
           <TextLink
             type='moreInfo'
             href='https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html'
@@ -92,7 +96,7 @@ const Operations = ({
       <div className={styles.add_mar_bottom + ' ' + styles.selectOperations}>
         <Heading type='subHeading'>
           Trigger Operations
-          <ToolTip mx='sm' message={tooltip.operationsDescription} />
+          <ToolTip ml='sm' mr='20px' message={tooltip.operationsDescription} />
         </Heading>
         <div className={styles.add_mar_left_small}>{getOperationsList()}</div>
       </div>

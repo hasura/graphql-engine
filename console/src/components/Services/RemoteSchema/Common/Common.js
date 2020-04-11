@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import {
   inputChange,
-  UPDATE_FORWARD_CLIENT_HEADERS,
+  UPDATE_FORWARD_CLIENT_HEADERS
 } from '../Add/addRemoteSchemaReducer';
 import CommonHeader from '../../../Common/Layout/ReusableHeader/Header';
 import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
@@ -19,7 +19,7 @@ const Common = props => {
     forwardClientHeaders,
     dispatch,
     editState,
-    headers,
+    headers
   } = props;
 
   const { isModify, id } = editState;
@@ -56,15 +56,15 @@ const Common = props => {
     additionalHeaders: 'Custom headers to be sent to the remote GraphQL server',
     schema: 'Give this GraphQL schema a friendly name.',
     timeoutConf:
-      'Configure timeout for your remote GraphQL server. Defaults to 60 seconds.',
+      'Configure timeout for your remote GraphQL server. Defaults to 60 seconds.'
   };
 
   const getTimeoutSection = () => {
     return (
       <React.Fragment>
-        <Heading type="subHeading">
+        <Heading type='subHeading'>
           GraphQL server timeout
-          <ToolTip message={tooltips.timeoutConf} ml="sm" />
+          <ToolTip message={tooltips.timeoutConf} ml='sm' />
         </Heading>
         <label
           className={
@@ -73,15 +73,15 @@ const Common = props => {
         >
           <input
             className={'form-control'}
-            type="text"
-            placeholder="Timeout in seconds"
+            type='text'
+            placeholder='Timeout in seconds'
             value={timeoutConf}
-            data-key="timeoutConf"
+            data-key='timeoutConf'
             onChange={handleInputChange}
             disabled={isDisabled}
-            data-test="remote-schema-timeout-conf"
-            pattern="^\d+$"
-            title="Only non negative integers are allowed"
+            data-test='remote-schema-timeout-conf'
+            pattern='^\d+$'
+            title='Only non negative integers are allowed'
           />
         </label>
       </React.Fragment>
@@ -90,9 +90,9 @@ const Common = props => {
 
   return (
     <div className={styles.CommonWrapper}>
-      <Heading type="subHeading" pt="20px">
+      <Heading type='subHeading' pt='20px'>
         Remote Schema name *
-        <ToolTip message={tooltips.schema} ml="sm" />
+        <ToolTip message={tooltips.schema} ml='sm' />
       </Heading>
       <label
         className={
@@ -101,28 +101,28 @@ const Common = props => {
       >
         <input
           className={'form-control'}
-          type="text"
-          placeholder="Name of the schema"
+          type='text'
+          placeholder='Name of the schema'
           value={name}
-          data-key="name"
+          data-key='name'
           onChange={handleInputChange}
           disabled={isDisabled}
           required
-          data-test="remote-schema-schema-name"
-          pattern="^[a-zA-Z0-9-_]*$"
+          data-test='remote-schema-schema-name'
+          pattern='^[a-zA-Z0-9-_]*$'
           title="Special characters except '-' or '_' are not allowed"
         />
       </label>
       <hr />
-      <Heading type="subHeading">
+      <Heading type='subHeading'>
         GraphQL server URL *
-        <ToolTip message={tooltips.graphqlurl} ml="sm" />
+        <ToolTip message={tooltips.graphqlurl} ml='sm' />
       </Heading>
       <div className={styles.wd_300}>
         <DropdownButton
           dropdownOptions={[
             { display_text: 'URL', value: 'manualUrl' },
-            { display_text: 'From env var', value: 'envName' },
+            { display_text: 'From env var', value: 'envName' }
           ]}
           title={
             (manualUrl !== null && 'URL') ||
@@ -139,12 +139,12 @@ const Common = props => {
           bsClass={styles.dropdown_button}
           inputVal={manualUrl || envName}
           disabled={isDisabled}
-          id="graphql-server-url"
+          id='graphql-server-url'
           inputPlaceHolder={
             (manualUrl !== null && 'https://my-graphql-service.com/graphql') ||
             (envName !== null && 'MY_GRAPHQL_ENDPOINT')
           }
-          testId="remote-schema-graphql-url"
+          testId='remote-schema-graphql-url'
         />
       </div>
       <br />
@@ -152,7 +152,7 @@ const Common = props => {
         Note: Specifying the server URL via an environmental variable is
         recommended if you have different URLs for multiple environments.
       </small>
-      <Heading type="subHeading" pt="20px">
+      <Heading type='subHeading' pt='20px'>
         Headers for the remote GraphQL server
       </Heading>
       <div className={styles.check_box}>
@@ -160,31 +160,31 @@ const Common = props => {
           <input
             onChange={toggleForwardHeaders}
             className={styles.display_inline + ' ' + styles.add_mar_right}
-            type="checkbox"
-            value="forwardHeaders"
-            data-test="forward-remote-schema-headers"
+            type='checkbox'
+            value='forwardHeaders'
+            data-test='forward-remote-schema-headers'
             checked={forwardClientHeaders}
             disabled={isDisabled}
           />
           <span>Forward all headers from client</span>
         </label>
-        <ToolTip message={tooltips.clientHeaderForward} ml="sm" />
+        <ToolTip message={tooltips.clientHeaderForward} />
       </div>
-      <Heading type="subHeading" fontWeight="normal">
+      <Heading type='subHeading' fontWeight='normal'>
         Additional headers:
-        <ToolTip message={tooltips.additionalHeaders} ml="sm" />
+        <ToolTip message={tooltips.additionalHeaders} ml='sm' />
       </Heading>
       <CommonHeader
-        eventPrefix="REMOTE_SCHEMA"
+        eventPrefix='REMOTE_SCHEMA'
         headers={headers}
         dispatch={dispatch}
         typeOptions={[
           { display_text: 'Value', value: 'static' },
-          { display_text: 'From env var', value: 'env' },
+          { display_text: 'From env var', value: 'env' }
         ]}
         isDisabled={isDisabled}
         placeHolderText={getPlaceHolderText}
-        keyInputPlaceholder="header name"
+        keyInputPlaceholder='header name'
       />
       <hr />
       {getTimeoutSection()}
@@ -198,7 +198,7 @@ Common.propTypes = {
   manualUrl: PropTypes.string.isRequired,
   headers: PropTypes.array.isRequired,
   forwardClientHeaders: PropTypes.bool.isRequired,
-  dispatch: PropTypes.func.isRequired,
+  dispatch: PropTypes.func.isRequired
 };
 
 export default Common;

@@ -61,7 +61,8 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
           message={
             'Expose the table values as GraphQL enums in the GraphQL API'
           }
-          mx='sm'
+          ml='sm'
+          mr='20px'
         />
         <TextLink type='moreInfo' href={enumCompatibilityDocsUrl}>
           See table requirements

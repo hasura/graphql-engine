@@ -28,7 +28,7 @@ export const ConstraintExpandedContent = ({
       <div>
         <Text fontWeight='bold' mb='sm'>
           Check Expression:
-          <ToolTip message={checkConstraintExpression} mx='sm' />
+          <ToolTip message={checkConstraintExpression} ml='sm' mr='20px' />
         </Text>
         <TextLink
           type='moreInfo'
