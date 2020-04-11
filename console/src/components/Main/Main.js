@@ -265,7 +265,6 @@ class Main extends React.Component {
           <TextLink
             href='https://hasura.io/docs/1.0/graphql/manual/deployment/securing-graphql-endpoint.html'
             target='_blank'
-            rel='noopener noreferrer'
             color='white'
             display='block'
             pr='15px'
@@ -347,7 +346,6 @@ class Main extends React.Component {
                     updateNotificationVersion
                   }
                   target='_blank'
-                  rel='noopener noreferrer'
                   underline
                 >
                   <span>View Changelog</span>
@@ -356,7 +354,6 @@ class Main extends React.Component {
                 <TextLink
                   href='https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html'
                   target='_blank'
-                  rel='noopener noreferrer'
                   underline
                 >
                   <span>Update Now</span>
@@ -438,7 +435,6 @@ class Main extends React.Component {
                   <TextLink
                     href='https://github.com/hasura/graphql-engine'
                     target='_blank'
-                    rel='noopener noreferrer'
                   >
                     <div className={styles.socialIcon}>
                       <img
@@ -469,7 +465,6 @@ class Main extends React.Component {
                   <TextLink
                     href='https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com/hasura/graphql-engine%0A'
                     target='_blank'
-                    rel='noopener noreferrer'
                   >
                     <div className={styles.socialIcon}>
                       <img
@@ -632,7 +627,6 @@ class Main extends React.Component {
                   'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'
                 }
                 target={'_blank'}
-                rel='noopener noreferrer'
                 color='red.primary'
               >
                 Set up a chat to learn more{' '}
@@ -748,7 +742,6 @@ class Main extends React.Component {
                       <TextLink
                         href='https://github.com/hasura/graphql-engine/issues'
                         target='_blank'
-                        rel='noopener noreferrer'
                       >
                         <img
                           className={'img-responsive'}
@@ -762,7 +755,6 @@ class Main extends React.Component {
                       <TextLink
                         href='https://discordapp.com/invite/vBPpJkS'
                         target='_blank'
-                        rel='noopener noreferrer'
                       >
                         <img
                           className={'img-responsive'}
@@ -783,11 +775,7 @@ class Main extends React.Component {
                       </TextLink>
                     </li>
                     <li className={'dropdown-item'}>
-                      <TextLink
-                        href='https://hasura.io/docs/'
-                        target='_blank'
-                        rel='noopener noreferrer'
-                      >
+                      <TextLink href='https://hasura.io/docs/' target='_blank'>
                         <img
                           className={'img-responsive'}
                           src={docs}

@@ -81,18 +81,19 @@ export const TextLink = props => {
     return (
       <StyledTextLink
         {...props}
-        fontSize='12px'
         href={href}
+        fontSize='12px'
         target='_blank'
         rel='noopener noreferrer'
         color='blue.link'
+        fontStyle='italic'
         css={css`
           &:hover {
             text-decoration: underline !important;
           }
         `}
       >
-        <i>{`(${children || 'Know more'})`}</i>
+        {`(${children || 'Know more'})`}
       </StyledTextLink>
     );
   }
@@ -100,8 +101,9 @@ export const TextLink = props => {
   return (
     <StyledTextLink
       {...props}
-      borderBottom={underline ? 1 : 'none'}
       href={href}
+      borderBottom={underline ? 1 : 'none'}
+      rel='noopener noreferrer'
       css={
         hover === 'underline' &&
         css`
