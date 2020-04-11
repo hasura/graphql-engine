@@ -18,7 +18,7 @@ const GqlCompatibilityWarning = ({ identifier }) => {
 
   return (
     <ToolTip message={gqlCompatibilityTip}>
-      <Icon type="warning" size={12} ml="sm" />
+      <Icon type='warning' size={12} ml='sm' />
     </ToolTip>
   );
 };

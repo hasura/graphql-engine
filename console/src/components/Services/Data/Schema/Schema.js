@@ -9,21 +9,21 @@ import {
   setTableName,
   addExistingTableSql,
   addAllUntrackedTablesSql,
-  addExistingFunction,
+  addExistingFunction
 } from '../Add/AddExistingTableViewActions';
 import {
   updateSchemaInfo,
   fetchFunctionInit,
-  updateCurrentSchema,
+  updateCurrentSchema
 } from '../DataActions';
 import {
   autoAddRelName,
-  autoTrackRelations,
+  autoTrackRelations
 } from '../TableRelationships/Actions';
 import { getRelDef } from '../TableRelationships/utils';
 import {
   getSchemaAddTableRoute,
-  getSchemaPermissionsRoute,
+  getSchemaPermissionsRoute
 } from '../../../Common/utils/routesUtils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
@@ -32,7 +32,7 @@ import {
   displayTableName,
   getFunctionName,
   getSchemaTables,
-  getUntrackedTables,
+  getUntrackedTables
 } from '../../../Common/utils/pgUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
@@ -47,7 +47,7 @@ class Schema extends Component {
     this.state = {
       isExporting: false,
       createSchemaOpen: false,
-      schemaNameEdit: '',
+      schemaNameEdit: ''
     };
 
     this.props.dispatch(fetchFunctionInit());
@@ -67,7 +67,7 @@ class Schema extends Component {
       dispatch,
       functionsList,
       nonTrackableFunctions,
-      trackedFunctions,
+      trackedFunctions
     } = this.props;
 
     const styles = require('../../../Common/Common.scss');
@@ -96,7 +96,7 @@ class Schema extends Component {
           <h4 className={`${styles.subheading_text} ${styles.display_inline}`}>
             {headingText}
           </h4>
-          <ToolTip message={tooltip} mx="sm" />
+          <ToolTip message={tooltip} ml='sm' mr='20px' />
           {actionElement}
         </div>
       );
@@ -121,9 +121,9 @@ class Schema extends Component {
 
         createBtn = (
           <Button
-            data-test="data-create-table"
-            color="yellow"
-            size="sm"
+            data-test='data-create-table'
+            color='yellow'
+            size='sm'
             className={styles.add_mar_left}
             onClick={handleClick}
           >
@@ -169,7 +169,7 @@ class Schema extends Component {
 
               this.setState({
                 schemaNameEdit: '',
-                createSchemaOpen: false,
+                createSchemaOpen: false
               });
             };
 
@@ -178,18 +178,18 @@ class Schema extends Component {
 
           const handleCancelCreateNewSchema = () => {
             this.setState({
-              createSchemaOpen: false,
+              createSchemaOpen: false
             });
           };
 
           const closedCreateSection = (
             <Button
-              color="white"
-              size="xs"
+              color='white'
+              size='xs'
               onClick={handleCreateNewClick}
-              title="Create new schema"
+              title='Create new schema'
             >
-              <Icon type="add" size={10} />
+              <Icon type='add' size={10} />
             </Button>
           );
 
@@ -197,25 +197,25 @@ class Schema extends Component {
             <div className={styles.display_inline + ' ' + styles.add_mar_left}>
               <div className={styles.display_inline}>
                 <input
-                  id="schema-name-input"
-                  type="text"
+                  id='schema-name-input'
+                  type='text'
                   value={schemaNameEdit}
                   onChange={handleSchemaNameChange}
-                  placeholder="schema_name"
+                  placeholder='schema_name'
                   className={'form-control input-sm ' + styles.display_inline}
                 />
               </div>
               <Button
-                color="white"
-                size="xs"
+                color='white'
+                size='xs'
                 onClick={handleCreateClick}
                 className={styles.add_mar_left_mid}
               >
                 Create
               </Button>
               <Button
-                color="white"
-                size="xs"
+                color='white'
+                size='xs'
                 onClick={handleCancelCreateNewSchema}
                 className={styles.add_mar_left_mid}
               >
@@ -246,12 +246,12 @@ class Schema extends Component {
 
           deleteSchemaBtn = (
             <Button
-              color="white"
-              size="xs"
+              color='white'
+              size='xs'
               onClick={handleDelete}
-              title="Delete current schema"
+              title='Delete current schema'
             >
-              <Icon type="delete" size={10} />
+              <Icon type='delete' size={10} />
             </Button>
           );
         }
@@ -314,8 +314,8 @@ class Schema extends Component {
           trackAllBtn = (
             <Button
               className={`${styles.display_inline}`}
-              color="white"
-              size="xs"
+              color='white'
+              size='xs'
               onClick={trackAllTables}
             >
               Track All
@@ -331,7 +331,7 @@ class Schema extends Component {
 
         if (isEmpty(allUntrackedTables)) {
           untrackedTablesList.push(
-            <div key="no-untracked">There are no untracked tables or views</div>
+            <div key='no-untracked'>There are no untracked tables or views</div>
           );
         } else {
           allUntrackedTables.forEach((table, i) => {
@@ -356,8 +356,8 @@ class Schema extends Component {
                   <Button
                     data-test={`add-track-table-${tableName}`}
                     className={`${styles.display_inline}`}
-                    color="white"
-                    size="xs"
+                    color='white'
+                    size='xs'
                     onClick={handleTrackTable}
                   >
                     Track
@@ -426,9 +426,9 @@ class Schema extends Component {
             <Button
               onClick={trackAllRelations}
               className={`${styles.display_inline}`}
-              color="white"
-              size="xs"
-              data-test="track-all-relationships"
+              color='white'
+              size='xs'
+              data-test='track-all-relationships'
             >
               Track All
             </Button>
@@ -443,7 +443,7 @@ class Schema extends Component {
 
         if (isEmpty(untrackedRelations)) {
           untrackedRelList.push(
-            <div key="no-untracked-rel">There are no untracked relations</div>
+            <div key='no-untracked-rel'>There are no untracked relations</div>
           );
         } else {
           untrackedRelations.forEach((rel, i) => {
@@ -466,8 +466,8 @@ class Schema extends Component {
                 >
                   <Button
                     className={styles.display_inline}
-                    color="white"
-                    size="xs"
+                    color='white'
+                    size='xs'
                     onClick={handleTrackRel}
                   >
                     Track
@@ -528,7 +528,7 @@ class Schema extends Component {
 
         if (noTrackableFunctions) {
           trackableFunctionList.push(
-            <div key="no-untracked-fns">
+            <div key='no-untracked-fns'>
               <div>There are no untracked functions</div>
             </div>
           );
@@ -592,7 +592,7 @@ class Schema extends Component {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
-        <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/queries/custom-functions.html" />
+        <KnowMoreLink href='https://hasura.io/docs/1.0/graphql/manual/queries/custom-functions.html' />
       );
 
       return (
@@ -619,7 +619,7 @@ class Schema extends Component {
 
         if (noNonTrackableFuncs) {
           nonTrackableFunctionList.push(
-            <div key="no-nontracked-fns">
+            <div key='no-nontracked-fns'>
               <div>There are no non trackable functions</div>
             </div>
           );
@@ -685,7 +685,7 @@ class Schema extends Component {
         className={`container-fluid ${styles.padd_left_remove} ${styles.padd_top}`}
       >
         <div className={styles.padd_left}>
-          <Helmet title="Schema - Data | Hasura" />
+          <Helmet title='Schema - Data | Hasura' />
           <div className={styles.display_flex}>
             <h2 className={`${styles.headerText} ${styles.display_inline}`}>
               Schema
@@ -710,7 +710,7 @@ Schema.propTypes = {
   untrackedRelations: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
-  dispatch: PropTypes.func.isRequired,
+  dispatch: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
@@ -723,7 +723,7 @@ const mapStateToProps = state => ({
   functionsList: [...state.tables.postgresFunctions],
   nonTrackableFunctions: [...state.tables.nonTrackablePostgresFunctions],
   trackedFunctions: [...state.tables.trackedFunctions],
-  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : ''
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);

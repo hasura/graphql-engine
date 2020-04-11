@@ -24,7 +24,7 @@ import {
   setOperationSelection,
   setDefaults,
   UPDATE_WEBHOOK_URL_TYPE,
-  loadTableList,
+  loadTableList
 } from './AddActions';
 import { listDuplicate } from '../../../../utils/data';
 import { showErrorNotification } from '../../Common/Notification';
@@ -37,7 +37,7 @@ import {
   getSchemaName,
   getSchemaTables,
   getTableName,
-  getTrackedTables,
+  getTrackedTables
 } from '../../../Common/utils/pgUtils';
 import { Icon, ToolTip } from '../../../UIKit/atoms';
 import styles from '../TableCommon/EventTable.scss';
@@ -156,7 +156,7 @@ class AddTrigger extends Component {
     } else {
       this.props.dispatch(
         showErrorNotification('Error creating trigger!', errorMsg, {
-          custom: customMsg,
+          custom: customMsg
         })
       );
     }
@@ -178,7 +178,7 @@ class AddTrigger extends Component {
       headers,
       webhookURL,
       webhookUrlType,
-      enableManual,
+      enableManual
     } = this.props;
 
     let createBtnText = 'Create Event Trigger';
@@ -241,7 +241,7 @@ class AddTrigger extends Component {
         const isDisabled = false;
         const inputHtml = (
           <input
-            type="checkbox"
+            type='checkbox'
             checked={checked}
             value={column}
             onChange={dispatchToggleColumn}
@@ -273,7 +273,11 @@ class AddTrigger extends Component {
       <div>
         <h4 className={styles.subheading_text}>
           Listen columns for update
-          <ToolTip message={tooltip.advancedOperationDescription} mx="sm" />
+          <ToolTip
+            message={tooltip.advancedOperationDescription}
+            ml='sm'
+            mr='20px'
+          />
         </h4>
         {selectedOperations.update ? (
           <div className={styles.clear_fix + ' ' + styles.listenColumnWrapper}>
@@ -295,13 +299,13 @@ class AddTrigger extends Component {
       } else {
         removeIcon = (
           <Icon
-            type="close"
+            type='close'
             onClick={() => {
               dispatch(removeHeader(i));
             }}
             pointer
             size={15}
-            ml="10px"
+            ml='10px'
           />
         );
       }
@@ -309,10 +313,10 @@ class AddTrigger extends Component {
       return (
         <div key={i} className={`${styles.display_flex} form-group`}>
           <input
-            type="text"
+            type='text'
             className={`${styles.input} form-control ${styles.add_mar_right}`}
             value={header.key}
-            placeholder="key"
+            placeholder='key'
             onChange={e => {
               dispatch(setHeaderKey(e.target.value, i));
             }}
@@ -322,7 +326,7 @@ class AddTrigger extends Component {
             <DropdownButton
               dropdownOptions={[
                 { display_text: 'Value', value: 'static' },
-                { display_text: 'From env var', value: 'env' },
+                { display_text: 'From env var', value: 'env' }
               ]}
               title={
                 (header.type === 'static' && 'Value') ||
@@ -362,10 +366,10 @@ class AddTrigger extends Component {
       <div
         className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
       >
-        <Helmet title="Create Trigger - Events | Hasura" />
+        <Helmet title='Create Trigger - Events | Hasura' />
         <div className={styles.subHeader}>
           <h2 className={styles.heading_text}>Create a new event trigger</h2>
-          <div className="clearfix" />
+          <div className='clearfix' />
         </div>
         <br />
         <div className={`container-fluid ${styles.padd_left_remove}`}>
@@ -375,14 +379,14 @@ class AddTrigger extends Component {
             >
               <h4 className={styles.subheading_text}>
                 Trigger Name
-                <ToolTip message={tooltip.triggerNameDescription} ml="sm" />
+                <ToolTip message={tooltip.triggerNameDescription} ml='sm' />
               </h4>
               <input
-                type="text"
-                data-test="trigger-name"
-                placeholder="trigger_name"
+                type='text'
+                data-test='trigger-name'
+                placeholder='trigger_name'
                 required
-                pattern="^[A-Za-z]+[A-Za-z0-9_\\-]*$"
+                pattern='^[A-Za-z]+[A-Za-z0-9_\\-]*$'
                 className={`${styles.tableNameInput} form-control`}
                 onChange={e => {
                   dispatch(setTriggerName(e.target.value));
@@ -391,11 +395,15 @@ class AddTrigger extends Component {
               <hr />
               <h4 className={styles.subheading_text}>
                 Schema/Table
-                <ToolTip mx="sm" message={tooltip.postgresDescription} />
+                <ToolTip
+                  ml='sm'
+                  mr='20px'
+                  message={tooltip.postgresDescription}
+                />
               </h4>
               <select
                 onChange={updateTableList}
-                data-test="select-schema"
+                data-test='select-schema'
                 className={styles.selectTrigger + ' form-control'}
               >
                 {schemaList.map(s => {
@@ -413,13 +421,13 @@ class AddTrigger extends Component {
               </select>
               <select
                 onChange={updateTableSelection}
-                data-test="select-table"
+                data-test='select-table'
                 required
                 className={
                   styles.selectTrigger + ' form-control ' + styles.add_mar_left
                 }
               >
-                <option value="">Select table</option>
+                <option value=''>Select table</option>
                 {trackedSchemaTables.map(t => {
                   const tName = getTableName(t);
                   return (
@@ -446,14 +454,14 @@ class AddTrigger extends Component {
               <div className={styles.add_mar_bottom}>
                 <h4 className={styles.subheading_text}>
                   Webhook URL
-                  <ToolTip message={tooltip.webhookUrlDescription} ml="sm" />
+                  <ToolTip message={tooltip.webhookUrlDescription} ml='sm' />
                 </h4>
                 <div>
                   <div className={styles.dropdown_wrapper}>
                     <DropdownButton
                       dropdownOptions={[
                         { display_text: 'URL', value: 'url' },
-                        { display_text: 'From env var', value: 'env' },
+                        { display_text: 'From env var', value: 'env' }
                       ]}
                       title={
                         (webhookUrlType === 'url' && 'URL') ||
@@ -471,13 +479,13 @@ class AddTrigger extends Component {
                       required
                       bsClass={styles.dropdown_button}
                       inputVal={webhookURL}
-                      id="webhook-url"
+                      id='webhook-url'
                       inputPlaceHolder={
                         (webhookUrlType === 'url' &&
                           'http://httpbin.org/post') ||
                         (webhookUrlType === 'env' && 'MY_WEBHOOK_URL')
                       }
-                      testId="webhook"
+                      testId='webhook'
                     />
                   </div>
                 </div>
@@ -493,7 +501,7 @@ class AddTrigger extends Component {
                 title={
                   <h4 className={styles.subheading_text}>Advanced Settings</h4>
                 }
-                testId="advanced-settings"
+                testId='advanced-settings'
               >
                 <div>
                   {advancedColumnSection}
@@ -513,10 +521,10 @@ class AddTrigger extends Component {
                           onChange={e => {
                             dispatch(setRetryNum(e.target.value));
                           }}
-                          data-test="no-of-retries"
+                          data-test='no-of-retries'
                           className={`${styles.display_inline} form-control ${styles.width300}`}
-                          type="text"
-                          placeholder="no of retries"
+                          type='text'
+                          placeholder='no of retries'
                         />
                       </div>
                     </div>
@@ -533,10 +541,10 @@ class AddTrigger extends Component {
                           onChange={e => {
                             dispatch(setRetryInterval(e.target.value));
                           }}
-                          data-test="interval-seconds"
+                          data-test='interval-seconds'
                           className={`${styles.display_inline} form-control ${styles.width300}`}
-                          type="text"
-                          placeholder="interval time in seconds"
+                          type='text'
+                          placeholder='interval time in seconds'
                         />
                       </div>
                     </div>
@@ -553,10 +561,10 @@ class AddTrigger extends Component {
                           onChange={e => {
                             dispatch(setRetryTimeout(e.target.value));
                           }}
-                          data-test="timeout-seconds"
+                          data-test='timeout-seconds'
                           className={`${styles.display_inline} form-control ${styles.width300}`}
-                          type="text"
-                          placeholder="timeout in seconds"
+                          type='text'
+                          placeholder='timeout in seconds'
                         />
                       </div>
                     </div>
@@ -570,10 +578,10 @@ class AddTrigger extends Component {
               </CollapsibleToggle>
               <hr />
               <Button
-                type="submit"
-                color="yellow"
-                size="sm"
-                data-test="trigger-create"
+                type='submit'
+                color='yellow'
+                size='sm'
+                data-test='trigger-create'
               >
                 {createBtnText}
               </Button>
@@ -597,7 +605,7 @@ AddTrigger.propTypes = {
   lastError: PropTypes.object,
   internalError: PropTypes.string,
   lastSuccess: PropTypes.bool,
-  dispatch: PropTypes.func.isRequired,
+  dispatch: PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => {
@@ -605,7 +613,7 @@ const mapStateToProps = state => {
     ...state.addTrigger,
     schemaList: state.tables.schemaList,
     allSchemas: state.tables.allSchemas,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
+    serverVersion: state.main.serverVersion ? state.main.serverVersion : ''
   };
 };
 

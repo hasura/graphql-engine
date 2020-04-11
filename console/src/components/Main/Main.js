@@ -12,19 +12,19 @@ import {
   fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,
-  emitProClickedEvent,
+  emitProClickedEvent
 } from './Actions';
 
 import {
   loadInconsistentObjects,
-  redirectToMetadataStatus,
+  redirectToMetadataStatus
 } from '../Services/Settings/Actions';
 
 import {
   getLoveConsentState,
   setLoveConsentState,
   getProClickState,
-  setProClickState,
+  setProClickState
 } from './utils';
 
 import { checkStableVersion, versionGT } from '../../helpers/versionUtils';
@@ -32,7 +32,7 @@ import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
 import {
   getLocalStorageItem,
   LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
-  setLocalStorageItem,
+  setLocalStorageItem
 } from '../Common/utils/localStorageUtils';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 
@@ -47,7 +47,7 @@ class Main extends React.Component {
       updateNotificationVersion: null,
       loveConsentState: getLoveConsentState(),
       proClickState: getProClickState(),
-      isPopUpOpen: false,
+      isPopUpOpen: false
     };
 
     this.handleBodyClick = this.handleBodyClick.bind(this);
@@ -88,7 +88,7 @@ class Main extends React.Component {
       latestStableServerVersion,
       latestPreReleaseServerVersion,
       serverVersion,
-      console_opts,
+      console_opts
     } = this.props;
 
     const allowPreReleaseNotifications =
@@ -117,7 +117,7 @@ class Main extends React.Component {
 
         if (isUpdateAvailable) {
           this.setState({
-            updateNotificationVersion: latestServerVersionToCheck,
+            updateNotificationVersion: latestServerVersionToCheck
           });
         }
       }
@@ -153,11 +153,11 @@ class Main extends React.Component {
 
   closeLoveIcon() {
     const s = {
-      isDismissed: true,
+      isDismissed: true
     };
     setLoveConsentState(s);
     this.setState({
-      loveConsentState: { ...getLoveConsentState() },
+      loveConsentState: { ...getLoveConsentState() }
     });
   }
 
@@ -165,10 +165,10 @@ class Main extends React.Component {
     const s = getProClickState();
     if (s && 'isProClicked' in s && !s.isProClicked) {
       setProClickState({
-        isProClicked: !s.isProClicked,
+        isProClicked: !s.isProClicked
       });
       this.setState({
-        proClickState: { ...getProClickState() },
+        proClickState: { ...getProClickState() }
       });
     }
   }
@@ -195,7 +195,7 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       metadata,
-      dispatch,
+      dispatch
     } = this.props;
 
     const { isProClicked } = this.state.proClickState;
@@ -225,7 +225,7 @@ class Main extends React.Component {
       if (!migrationModeProgress) {
         mainContent = children && React.cloneElement(children);
       } else {
-        mainContent = <Spinner size="xl" my="100px" mx="auto" />;
+        mainContent = <Spinner size='xl' my='100px' mx='auto' />;
       }
 
       return mainContent;
@@ -243,16 +243,16 @@ class Main extends React.Component {
 
     const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <Icon type="settings" color="white" />;
+        return <Icon type='settings' color='white' />;
       }
 
       return (
         <div>
-          <Icon type="settings" />
+          <Icon type='settings' />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
             <div>
-              <Icon type="default" />
+              <Icon type='default' />
             </div>
           </div>
         </div>
@@ -266,12 +266,12 @@ class Main extends React.Component {
         adminSecretHtml = (
           <div className={styles.secureSection}>
             <a
-              href="https://hasura.io/docs/1.0/graphql/manual/deployment/securing-graphql-endpoint.html"
-              target="_blank"
-              rel="noopener noreferrer"
+              href='https://hasura.io/docs/1.0/graphql/manual/deployment/securing-graphql-endpoint.html'
+              target='_blank'
+              rel='noopener noreferrer'
             >
-              <ToolTip message={tooltips.secureEndpoint} placement="left">
-                <Icon type="warning" size={12} mr="sm" />
+              <ToolTip message={tooltips.secureEndpoint} placement='left'>
+                <Icon type='warning' size={12} mr='sm' />
               </ToolTip>
               Secure your endpoint
             </a>
@@ -310,8 +310,8 @@ class Main extends React.Component {
               </a>
               <ToolTip
                 message={'Only be notified about stable releases'}
-                placement="top"
-                ml="xs"
+                placement='top'
+                ml='xs'
               />
             </i>
           </React.Fragment>
@@ -337,17 +337,17 @@ class Main extends React.Component {
                     'https://github.com/hasura/graphql-engine/releases/tag/' +
                     updateNotificationVersion
                   }
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  target='_blank'
+                  rel='noopener noreferrer'
                 >
                   <span>View Changelog</span>
                 </a>
                 <span className={styles.middot}> &middot; </span>
                 <a
                   className={styles.updateLink}
-                  href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href='https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html'
+                  target='_blank'
+                  rel='noopener noreferrer'
                 >
                   <span>Update Now</span>
                 </a>
@@ -356,7 +356,7 @@ class Main extends React.Component {
                   className={styles.updateBannerClose}
                   onClick={this.closeUpdateBanner.bind(this)}
                 >
-                  <Icon type="close" pointer />
+                  <Icon type='close' pointer />
                 </span>
               </div>
             </div>
@@ -373,9 +373,9 @@ class Main extends React.Component {
       if (!this.state.loveConsentState.isDismissed) {
         loveSectionHtml = [
           <div
-            key="main_love_1"
+            key='main_love_1'
             className={styles.shareSection + ' dropdown-toggle'}
-            aria-expanded="false"
+            aria-expanded='false'
             onClick={this.handleDropdownToggle.bind(this)}
           >
             <img
@@ -385,13 +385,13 @@ class Main extends React.Component {
             />
           </div>,
           <ul
-            key="main_love_2"
+            key='main_love_2'
             className={'dropdown-menu ' + styles.dropdown_menu}
           >
             <div className={styles.dropdown_menu_container}>
               <div className={styles.closeDropDown}>
                 <Icon
-                  type="close"
+                  type='close'
                   onClick={this.closeLoveIcon.bind(this)}
                   pointer
                 />
@@ -422,23 +422,23 @@ class Main extends React.Component {
                   <br />
                   Star us on GitHub,
                   <br />
-                  To make our <Icon type="love" size={10} /> go wooooo!
+                  To make our <Icon type='love' size={10} /> go wooooo!
                 </li>
                 <li className={'dropdown-item'}>
                   <a
-                    href="https://github.com/hasura/graphql-engine"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href='https://github.com/hasura/graphql-engine'
+                    target='_blank'
+                    rel='noopener noreferrer'
                   >
                     <div className={styles.socialIcon}>
                       <img
-                        className="img img-responsive"
+                        className='img img-responsive'
                         src={`${globals.assetsPath}/common/img/githubicon.png`}
                         alt={'GitHub'}
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <Icon type="star" size={12} />
+                      <Icon type='star' size={12} />
                       &nbsp; Star
                     </div>
                   </a>
@@ -457,26 +457,26 @@ class Main extends React.Component {
                 </li>
                 <li className={'dropdown-item '}>
                   <a
-                    href="https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com/hasura/graphql-engine%0A"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href='https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com/hasura/graphql-engine%0A'
+                    target='_blank'
+                    rel='noopener noreferrer'
                   >
                     <div className={styles.socialIcon}>
                       <img
-                        className="img img-responsive"
+                        className='img img-responsive'
                         src={`${globals.assetsPath}/common/img/twittericon.png`}
                         alt={'Twitter'}
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <Icon type="twitter" size={12} />
+                      <Icon type='twitter' size={12} />
                       &nbsp; Tweet
                     </div>
                   </a>
                 </li>
               </div>
             </div>
-          </ul>,
+          </ul>
         ];
       }
 
@@ -503,7 +503,7 @@ class Main extends React.Component {
       const block = getPathRoot(path);
 
       return (
-        <ToolTip message={tooltipText} height="100%">
+        <ToolTip message={tooltipText} height='100%'>
           <li>
             <Link
               className={
@@ -622,7 +622,7 @@ class Main extends React.Component {
                   'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'
                 }
                 target={'_blank'}
-                rel="noopener noreferrer"
+                rel='noopener noreferrer'
               >
                 Set up a chat to learn more{' '}
                 <img
@@ -644,11 +644,11 @@ class Main extends React.Component {
           <div className={styles.header_logo_wrapper}>
             <div className={styles.logoParent}>
               <div className={styles.logo}>
-                <Link to="/">
-                  <img className="img img-responsive" src={logo} />
+                <Link to='/'>
+                  <img className='img img-responsive' src={logo} />
                 </Link>
               </div>
-              <Link to="/">
+              <Link to='/'>
                 <div className={styles.project_version}>{serverVersion}</div>
               </Link>
             </div>
@@ -687,7 +687,7 @@ class Main extends React.Component {
                 '/events/manage/triggers'
               )}
             </ul>
-            <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
+            <div id='dropdown_wrapper' className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
               <div className={styles.helpSection + ' ' + styles.proWrapper}>
                 <span
@@ -700,7 +700,7 @@ class Main extends React.Component {
                 </span>
                 {renderProPopup()}
               </div>
-              <Link to="/settings">
+              <Link to='/settings'>
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
                   {getMetadataStatusIcon()}
                   {getSettingsSelectedMarker()}
@@ -708,18 +708,18 @@ class Main extends React.Component {
               </Link>
               <div className={styles.supportSection}>
                 <div
-                  id="help"
+                  id='help'
                   className={styles.helpSection}
-                  data-toggle="dropdown"
-                  aria-expanded="false"
-                  aria-haspopup="true"
+                  data-toggle='dropdown'
+                  aria-expanded='false'
+                  aria-haspopup='true'
                 >
                   <Icon
-                    type="question"
+                    type='question'
                     pointer
                     size={12}
-                    color="white"
-                    mr="sm"
+                    color='white'
+                    mr='sm'
                   />
                 </div>
                 <ul
@@ -729,14 +729,14 @@ class Main extends React.Component {
                     ' ' +
                     getHelpDropdownPosStyle()
                   }
-                  aria-labelledby="help"
+                  aria-labelledby='help'
                 >
                   <div className={styles.help_dropdown_menu_container}>
                     <li className={'dropdown-item'}>
                       <a
-                        href="https://github.com/hasura/graphql-engine/issues"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href='https://github.com/hasura/graphql-engine/issues'
+                        target='_blank'
+                        rel='noopener noreferrer'
                       >
                         <img
                           className={'img-responsive'}
@@ -748,9 +748,9 @@ class Main extends React.Component {
                     </li>
                     <li className={'dropdown-item'}>
                       <a
-                        href="https://discordapp.com/invite/vBPpJkS"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href='https://discordapp.com/invite/vBPpJkS'
+                        target='_blank'
+                        rel='noopener noreferrer'
                       >
                         <img
                           className={'img-responsive'}
@@ -761,7 +761,7 @@ class Main extends React.Component {
                       </a>
                     </li>
                     <li className={'dropdown-item'}>
-                      <a href="mailto:support@hasura.io">
+                      <a href='mailto:support@hasura.io'>
                         <img
                           className={'img-responsive'}
                           src={mail}
@@ -772,9 +772,9 @@ class Main extends React.Component {
                     </li>
                     <li className={'dropdown-item'}>
                       <a
-                        href="https://hasura.io/docs/"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href='https://hasura.io/docs/'
+                        target='_blank'
+                        rel='noopener noreferrer'
                       >
                         <img
                           className={'img-responsive'}
@@ -785,7 +785,7 @@ class Main extends React.Component {
                       </a>
                     </li>
                     <li className={'dropdown-item'}>
-                      <Link to="/about">
+                      <Link to='/about'>
                         <img
                           className={'img-responsive'}
                           src={about}
@@ -820,7 +820,7 @@ const mapStateToProps = (state, ownProps) => {
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
     metadata: state.metadata,
-    console_opts: state.telemetry.console_opts,
+    console_opts: state.telemetry.console_opts
   };
 };
 

@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
-  isMetadataStatusPage,
+  isMetadataStatusPage
 } from '../Services/Settings/Actions';
 import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
@@ -16,7 +16,7 @@ class ErrorBoundary extends React.Component {
     hasError: false,
     info: null,
     error: null,
-    type: '500',
+    type: '500'
   };
 
   constructor(props) {
@@ -35,7 +35,7 @@ class ErrorBoundary extends React.Component {
     // for invalid path segment errors
     if (error instanceof NotFoundError) {
       this.setState({
-        type: '404',
+        type: '404'
       });
     }
 
@@ -65,7 +65,7 @@ class ErrorBoundary extends React.Component {
     const { hasError, type, error } = this.state;
 
     if (hasError && metadata.ongoingRequest) {
-      return <Spinner size="xl" my="100px" mx="auto" />;
+      return <Spinner size='xl' my='100px' mx='auto' />;
     }
 
     if (hasError) {
@@ -81,7 +81,7 @@ class ErrorBoundary extends React.Component {
 }
 
 ErrorBoundary.propTypes = {
-  children: PropTypes.element,
+  children: PropTypes.element
 };
 
 export default ErrorBoundary;
