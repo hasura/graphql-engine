@@ -15,17 +15,3 @@ export const StyledText = styled.p`
     ${border}
     ${layout}
 `;
-
-export const StyledTextLink = styled.a`
-  cursor: pointer;
-
-  &&& {
-    text-decoration: none;
-  }
-
-  ${typography}
-  ${color}
-  ${space}
-  ${border}
-  ${layout}
-`;
