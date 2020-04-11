@@ -100,8 +100,7 @@ export const TextLink = props => {
   return (
     <StyledTextLink
       {...props}
-      borderBottom={underline ? 2 : 'none'}
-      borderColor={underline ? 'yellow.primary' : 'none'}
+      borderBottom={underline ? 1 : 'none'}
       href={href}
     >
       {children}
@@ -112,5 +111,5 @@ export const TextLink = props => {
 TextLink.defaultProps = {
   color: 'black.text',
   fontWeight: 'medium',
-  fontSize: 'p'
+  fontSize: 'link'
 };

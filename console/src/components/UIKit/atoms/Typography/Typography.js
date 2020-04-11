@@ -17,14 +17,15 @@ export const StyledText = styled.p`
 `;
 
 export const StyledTextLink = styled.a`
+  cursor: pointer;
+
   &&& {
     text-decoration: none;
   }
-
-  cursor: pointer;
 
   ${typography}
   ${color}
   ${space}
   ${border}
+  ${layout}
 `;

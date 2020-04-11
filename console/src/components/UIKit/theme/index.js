@@ -206,6 +206,8 @@ fontSizes.p = fontSizes[2];
 
 fontSizes.button = fontSizes[1];
 
+fontSizes.link = fontSizes[1];
+
 fontSizes.tab = fontSizes[3];
 
 fontSizes.explain = fontSizes[0];

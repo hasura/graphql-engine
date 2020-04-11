@@ -886,19 +886,6 @@
   }
 }
 
-.secureSection {
-  padding-right: 15px;
-
-  a {
-    color: #ffffff;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    height: 100%;
-    font-size: 14px;
-  }
-}
-
 .graphqlHeartText {
   font-size: 14px;
   font-weight: 300;
@@ -1193,9 +1180,7 @@
     .popUpFooter {
       border-top: 1px solid #ddd;
       padding: 20px 24px;
-      color: #ff3264;
-      font-weight: normal;
-      font-size: 15px;
+
       a {
         color: #ff3264;
         &:hover {
@@ -1209,6 +1194,7 @@
       }
       .arrow {
         margin-left: 8px;
+        margin-top: -2px;
       }
     }
   }
