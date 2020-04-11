@@ -11,37 +11,37 @@ export const ConstraintExpandedContent = ({
   constraintName,
   name,
   checkOnChange,
-  check,
+  check
 }) => {
   return (
     <div>
       <div className={styles.add_mar_bottom}>
-        <Text fontWeight="bold" mb="sm">
+        <Text fontWeight='bold' mb='sm'>
           Constraint Name:
         </Text>
         <input
-          type="text"
+          type='text'
           value={name}
           onChange={nameOnChange}
           className={`form-control ${styles.wd50percent}`}
         />
       </div>
       <div>
-        <Text fontWeight="bold" mb="sm">
+        <Text fontWeight='bold' mb='sm'>
           Check Expression:
-          <ToolTip message={checkConstraintExpression} mx="sm" />
+          <ToolTip message={checkConstraintExpression} ml='sm' mr='20px' />
         </Text>
-        <KnowMoreLink href="https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS" />
+        <KnowMoreLink href='https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-CHECK-CONSTRAINTS' />
         <AceEditor
-          mode="sql"
-          theme="github"
+          mode='sql'
+          theme='github'
           name={constraintName}
           onChange={checkOnChange}
           value={check}
           minLines={1}
           maxLines={100}
           fontSize={15}
-          width="100%"
+          width='100%'
           showPrintMargin={false}
         />
       </div>

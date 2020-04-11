@@ -15,7 +15,7 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
     headers
   );
 
-  if (loading) return <Spinner size="xl" my="100px" mx="auto" />;
+  if (loading) return <Spinner size='xl' my='100px' mx='auto' />;
 
   if (error) {
     return (
@@ -63,10 +63,10 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
       >
         <div className={'col-md-3'}>
           Prefix
-          <ToolTip message={prefixTooltipText} ml="sm" />
+          <ToolTip message={prefixTooltipText} ml='sm' />
         </div>
         <input
-          type="text"
+          type='text'
           value={prefix}
           onChange={prefixOnChange}
           className={`form-control col-md-3 ${styles.inputWidth}`}
@@ -75,15 +75,15 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
       <div
         className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
       >
-        <div className="col-md-3"> Type to clone</div>
+        <div className='col-md-3'> Type to clone</div>
         <select
-          value=""
+          value=''
           className={`form-control col-md-3 ${styles.inputWidth}`}
           onChange={onSelection}
           disabled={prefix === ''}
           title={dropdownTitle}
         >
-          <option value="">---select an existing type---</option>
+          <option value=''>---select an existing type---</option>
           {cloneableTypes.map(t => {
             return (
               <option value={t} key={t}>
@@ -99,7 +99,7 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
 
 const mapStateToprops = state => {
   return {
-    headers: state.tables.dataHeaders,
+    headers: state.tables.dataHeaders
   };
 };
 
