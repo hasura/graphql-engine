@@ -1,8 +1,7 @@
 import React from 'react';
 import Toggle from 'react-toggle';
 
-import { ToolTip, Heading } from '../../../../UIKit/atoms';
-import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
+import { ToolTip, Heading, TextLink } from '../../../../UIKit/atoms';
 import styles from '../../../../Common/Common.scss';
 
 const enumCompatibilityDocsUrl =
@@ -21,8 +20,8 @@ export const EnumTableModifyWarning = ({ isEnum }) => {
         <br />
         <a
           href={enumCompatibilityDocsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+          target='_blank'
+          rel='noopener noreferrer'
         >
           See enum table requirements.
         </a>
@@ -56,23 +55,22 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
 
   return (
     <div>
-      <Heading type="subHeading">
+      <Heading type='subHeading'>
         Set table as enum
         <ToolTip
           message={
             'Expose the table values as GraphQL enums in the GraphQL API'
           }
-          mx="sm"
+          mx='sm'
         />
-        <KnowMoreLink
-          href={enumCompatibilityDocsUrl}
-          text={'See table requirements'}
-        />
+        <TextLink type='moreInfo' href={enumCompatibilityDocsUrl}>
+          See table requirements
+        </TextLink>
       </Heading>
       <div
         className={`${styles.display_flex} ${styles.add_mar_bottom}`}
         title={title}
-        data-toggle="tooltip"
+        data-toggle='tooltip'
       >
         <Toggle checked={isEnum} icons={false} onChange={toggleEnum} />
       </div>

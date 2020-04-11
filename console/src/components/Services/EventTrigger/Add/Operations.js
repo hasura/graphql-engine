@@ -3,15 +3,14 @@ import PropTypes from 'prop-types';
 
 import * as tooltip from './Tooltips';
 import { TOGGLE_ENABLE_MANUAL_CONFIG } from './AddActions';
-import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
-import { ToolTip, Heading } from '../../../UIKit/atoms';
+import { ToolTip, Heading, TextLink } from '../../../UIKit/atoms';
 import styles from '../TableCommon/EventTable.scss';
 
 const Operations = ({
   enableManual,
   selectedOperations,
   handleOperationSelection,
-  dispatch,
+  dispatch
 }) => {
   const databaseOperations = [
     {
@@ -19,22 +18,22 @@ const Operations = ({
       testIdentifier: 'insert-operation',
       isChecked: selectedOperations.insert,
       onChange: handleOperationSelection,
-      displayName: 'Insert',
+      displayName: 'Insert'
     },
     {
       name: 'update',
       testIdentifier: 'update-operation',
       isChecked: selectedOperations.update,
       onChange: handleOperationSelection,
-      displayName: 'Update',
+      displayName: 'Update'
     },
     {
       name: 'delete',
       testIdentifier: 'delete-operation',
       isChecked: selectedOperations.delete,
       onChange: handleOperationSelection,
-      displayName: 'Delete',
-    },
+      displayName: 'Delete'
+    }
   ];
 
   const getManualInvokeOperation = () => {
@@ -50,10 +49,13 @@ const Operations = ({
       displayName: (
         <span>
           Via console
-          <ToolTip mx="sm" message={tooltip.manualOperationsDescription} />
-          <KnowMoreLink href="https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html" />
+          <ToolTip mx='sm' message={tooltip.manualOperationsDescription} />
+          <TextLink
+            type='moreInfo'
+            href='https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html'
+          />
         </span>
-      ),
+      )
     };
   };
 
@@ -75,7 +77,7 @@ const Operations = ({
             onChange={o.onChange}
             data-test={o.testIdentifier}
             className={`${styles.display_inline} ${styles.add_mar_right}`}
-            type="checkbox"
+            type='checkbox'
             value={o.name}
             checked={o.isChecked}
           />
@@ -88,9 +90,9 @@ const Operations = ({
   return (
     <div>
       <div className={styles.add_mar_bottom + ' ' + styles.selectOperations}>
-        <Heading type="subHeading">
+        <Heading type='subHeading'>
           Trigger Operations
-          <ToolTip mx="sm" message={tooltip.operationsDescription} />
+          <ToolTip mx='sm' message={tooltip.operationsDescription} />
         </Heading>
         <div className={styles.add_mar_left_small}>{getOperationsList()}</div>
       </div>
@@ -101,7 +103,7 @@ const Operations = ({
 Operations.propTypes = {
   enableManual: PropTypes.bool.isRequired,
   selectedOperations: PropTypes.object.isRequired,
-  handleOperationSelection: PropTypes.func.isRequired,
+  handleOperationSelection: PropTypes.func.isRequired
 };
 
 export default Operations;

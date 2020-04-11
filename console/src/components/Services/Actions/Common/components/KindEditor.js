@@ -1,7 +1,6 @@
 import React from 'react';
 
-import KnowMoreLink from '../../../../Common/KnowMoreLink/KnowMoreLink';
-import { ToolTip, Heading } from '../../../../UIKit/atoms';
+import { ToolTip, Heading, TextLink } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const editorLabel = 'Kind';
@@ -19,13 +18,13 @@ const HandlerEditor = ({ value, onChange, className }) => {
 
   return (
     <div className={className || ''}>
-      <Heading type="subHeading" mb="xs">
+      <Heading type='subHeading' mb='xs'>
         {editorLabel}
         <ToolTip
           message={'Toggle between synchronous vs asynchronous action types'}
-          mx="sm"
+          mx='sm'
         />
-        <KnowMoreLink href={docsRef} />
+        <TextLink type='moreInfo' href={docsRef} />
       </Heading>
       <div className={styles.display_flex}>
         <label
@@ -33,7 +32,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
           onClick={setSynchronous}
         >
           <input
-            type="radio"
+            type='radio'
             checked={value === 'synchronous'}
             readOnly
             className={styles.add_mar_right_small}
@@ -45,7 +44,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
           className={`${styles.add_mar_right} ${styles.cursorPointer}`}
         >
           <input
-            type="radio"
+            type='radio'
             readOnly
             checked={value === 'asynchronous'}
             className={styles.add_mar_right_small}
