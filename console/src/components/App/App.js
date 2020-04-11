@@ -9,7 +9,7 @@ import { ThemeProvider } from 'styled-components';
 import ErrorBoundary from '../Error/ErrorBoundary';
 import {
   loadConsoleOpts,
-  telemetryNotificationShown,
+  telemetryNotificationShown
 } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
 
@@ -51,7 +51,7 @@ class App extends Component {
       notifications,
       connectionFailed,
       dispatch,
-      metadata,
+      metadata
     } = this.props;
 
     if (requestError && error) {
@@ -112,7 +112,7 @@ App.propTypes = {
   children: PropTypes.element,
   dispatch: PropTypes.func.isRequired,
 
-  notifications: PropTypes.array,
+  notifications: PropTypes.array
 };
 
 const mapStateToProps = state => {
@@ -120,7 +120,7 @@ const mapStateToProps = state => {
     ...state.progressBar,
     notifications: state.notifications,
     telemetry: state.telemetry,
-    metadata: state.metadata,
+    metadata: state.metadata
   };
 };
 

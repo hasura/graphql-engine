@@ -92,7 +92,7 @@ const routes = store => {
 
   const uiKitRouter = globals.isProduction ? null : (
     <Route
-      path="/ui-elements"
+      path='/ui-elements'
       // TODO: fix me
       component={() => (
         <div>
@@ -104,39 +104,39 @@ const routes = store => {
   );
 
   return (
-    <Route path="/" component={App} onEnter={validateLogin(store)}>
-      <Route path="login" component={generatedLoginConnector(connect)} />
+    <Route path='/' component={App} onEnter={validateLogin(store)}>
+      <Route path='login' component={generatedLoginConnector(connect)} />
       <Route
-        path=""
+        path=''
         component={Main}
         onEnter={composeOnEnterHooks([requireSchema, requireMigrationStatus])}
       >
-        <Route path="">
+        <Route path=''>
           <IndexRoute component={generatedApiExplorer(connect)} />
           <Route
-            path="api-explorer"
+            path='api-explorer'
             component={generatedApiExplorer(connect)}
           />
           <Route
-            path="voyager-view"
+            path='voyager-view'
             component={generatedVoyagerConnector(connect)}
           />
-          <Route path="about" component={about(connect)} />
-          <Route path="settings" component={settingsContainer(connect)}>
-            <IndexRedirect to="metadata-actions" />
+          <Route path='about' component={about(connect)} />
+          <Route path='settings' component={settingsContainer(connect)}>
+            <IndexRedirect to='metadata-actions' />
             <Route
-              path="metadata-actions"
+              path='metadata-actions'
               component={metadataOptionsContainer(connect)}
             />
             <Route
-              path="metadata-status"
+              path='metadata-status'
               component={metadataStatusContainer(connect)}
             />
             <Route
-              path="allowed-queries"
+              path='allowed-queries'
               component={allowedQueriesContainer(connect)}
             />
-            <Route path="logout" component={logoutContainer(connect)} />
+            <Route path='logout' component={logoutContainer(connect)} />
           </Route>
           {dataRouter}
           {eventRouter}
@@ -145,8 +145,8 @@ const routes = store => {
           {uiKitRouter}
         </Route>
       </Route>
-      <Route path="404" component={PageNotFound} status="404" />
-      <Route path="*" component={PageNotFound} status="404" />
+      <Route path='404' component={PageNotFound} status='404' />
+      <Route path='*' component={PageNotFound} status='404' />
     </Route>
   );
 };

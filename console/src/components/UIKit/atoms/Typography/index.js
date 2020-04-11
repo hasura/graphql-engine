@@ -75,7 +75,7 @@ Text.defaultProps = {
 };
 
 export const TextLink = props => {
-  const { children, underline, type, href } = props;
+  const { children, underline, type, href, hover } = props;
 
   if (type === 'moreInfo') {
     return (
@@ -102,6 +102,14 @@ export const TextLink = props => {
       {...props}
       borderBottom={underline ? 1 : 'none'}
       href={href}
+      css={
+        hover === 'underline' &&
+        css`
+          &:hover {
+            text-decoration: underline !important;
+          }
+        `
+      }
     >
       {children}
     </StyledTextLink>
