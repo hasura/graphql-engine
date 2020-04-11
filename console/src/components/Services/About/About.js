@@ -7,7 +7,7 @@ import requestAction from '../../../utils/requestAction';
 import { showErrorNotification } from '../Common/Notification';
 import { getRunSqlQuery } from '../../Common/utils/v1QueryUtils';
 import { versionGT } from '../../../helpers/versionUtils';
-import { Spinner, Heading, Text } from '../../UIKit/atoms';
+import { Spinner, Heading, Text, TextLink } from '../../UIKit/atoms';
 import styles from './About.scss';
 
 class About extends Component {
@@ -71,32 +71,32 @@ class About extends Component {
         versionGT(latestStableServerVersion, serverVersion)
       ) {
         updateLinks = (
-          <span className={styles.add_mar_left_mid}>
-            <a
+          <>
+            <TextLink
               href={
                 'https://github.com/hasura/graphql-engine/releases/tag/' +
                 latestStableServerVersion
               }
               target='_blank'
-              rel='noopener noreferrer'
+              fontStyle='italic'
+              color='blue.link'
+              hover='underline'
+              mx='sm'
             >
-              <span>
-                <i>View Changelog</i>
-              </span>
-            </a>
-            <span>
-              &nbsp;<b>&middot;</b>&nbsp;
-            </span>
-            <a
+              View Changelog
+            </TextLink>
+            <b>&middot;</b>
+            <TextLink
               href='https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html'
               target='_blank'
-              rel='noopener noreferrer'
+              fontStyle='italic'
+              color='blue.link'
+              hover='underline'
+              ml='sm'
             >
-              <span>
-                <i>Update Now</i>
-              </span>
-            </a>
-          </span>
+              Update Now
+            </TextLink>
+          </>
         );
       }
 
