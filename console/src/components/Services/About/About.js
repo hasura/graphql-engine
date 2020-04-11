@@ -13,7 +13,7 @@ import styles from './About.scss';
 class About extends Component {
   state = {
     consoleAssetVersion: globals.consoleAssetVersion,
-    pgVersion: null,
+    pgVersion: null
   };
 
   componentDidMount() {
@@ -25,13 +25,13 @@ class About extends Component {
         method: 'POST',
         credentials: globalCookiePolicy,
         headers: dataHeaders,
-        body: JSON.stringify(getRunSqlQuery('SELECT version();', false, true)),
+        body: JSON.stringify(getRunSqlQuery('SELECT version();', false, true))
       };
 
       dispatch(requestAction(url, options)).then(
         data => {
           this.setState({
-            pgVersion: data.result[1][0],
+            pgVersion: data.result[1][0]
           });
         },
         error => {
@@ -50,16 +50,16 @@ class About extends Component {
 
     const { serverVersion, latestStableServerVersion } = this.props;
 
-    const spinner = <Spinner size="sm" display="inline-block" />;
+    const spinner = <Spinner size='sm' display='inline-block' />;
 
     const getServerVersionSection = () => {
       return (
-        <div>
-          <Text fontWeight="bold" mr="sm">
+        <>
+          <Text fontWeight='bold' mr='15px' display='inline-block'>
             Current server version:
           </Text>
           {serverVersion || spinner}
-        </div>
+        </>
       );
     };
 
@@ -77,8 +77,8 @@ class About extends Component {
                 'https://github.com/hasura/graphql-engine/releases/tag/' +
                 latestStableServerVersion
               }
-              target="_blank"
-              rel="noopener noreferrer"
+              target='_blank'
+              rel='noopener noreferrer'
             >
               <span>
                 <i>View Changelog</i>
@@ -88,9 +88,9 @@ class About extends Component {
               &nbsp;<b>&middot;</b>&nbsp;
             </span>
             <a
-              href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
-              target="_blank"
-              rel="noopener noreferrer"
+              href='https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html'
+              target='_blank'
+              rel='noopener noreferrer'
             >
               <span>
                 <i>Update Now</i>
@@ -101,34 +101,34 @@ class About extends Component {
       }
 
       return (
-        <div>
-          <Text fontWeight="bold" mr="sm">
+        <>
+          <Text fontWeight='bold' mr='15px' display='inline-block'>
             Latest stable server version:
           </Text>
           {latestStableServerVersion || spinner} {updateLinks}
-        </div>
+        </>
       );
     };
 
     const getConsoleAssetVersionSection = () => {
       return (
-        <div>
-          <Text fontWeight="bold" mr="sm">
+        <>
+          <Text fontWeight='bold' mr='sm' display='inline-block'>
             Console asset version:
           </Text>
           {consoleAssetVersion || 'NA'}
-        </div>
+        </>
       );
     };
 
     const getPgVersionSection = () => {
       return (
-        <div>
-          <Text fontWeight="bold" mr="sm">
+        <>
+          <Text fontWeight='bold' mr='15px' display='inline-block'>
             Postgres version:
           </Text>
           {pgVersion || spinner}
-        </div>
+        </>
       );
     };
 
@@ -136,7 +136,7 @@ class About extends Component {
       <div className={`container-fluid ${styles.full_container}`}>
         <div className={styles.subHeader}>
           <Helmet title={'About | Hasura'} />
-          <Heading as="h2" fontSize="h2">
+          <Heading as='h2' fontSize='h2'>
             About
           </Heading>
           <div className={styles.wd60}>
@@ -161,7 +161,7 @@ const mapStateToProps = state => {
   return {
     dataHeaders: state.tables.dataHeaders,
     serverVersion: state.main.serverVersion,
-    latestStableServerVersion: state.main.latestStableServerVersion,
+    latestStableServerVersion: state.main.latestStableServerVersion
   };
 };
 
