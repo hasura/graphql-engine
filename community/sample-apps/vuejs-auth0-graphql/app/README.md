@@ -113,7 +113,16 @@ admin_secret: <your-admin-secret>
 
 ## Create Auth0 Rule
 
-Everytime user signs up via Auth0, we need to sync that user into our postgres database. This is done using Auth0 rules. Create a Rule and insert the following code:
+Everytime a user signs up via Auth0, we need to sync that user into our postgres database. This is done using Auth0 rules.
+
+### Add an Auth0 rule configuration value
+Go to https://manage.auth0.com/dashboard/us/your-auth0-app/rules and add a configuration value to the `Settings` section.
+
+* Key: `x-hasura-admin-secret`
+* Value: your admin secret
+
+## Create the Auth0 rule
+Create a Rule and insert the following code:
 
 ```
 function (user, context, callback) {
@@ -135,7 +144,7 @@ mutation ($id: String!, $email: String!) {
   const body = { query: mutation, variables };
 
   request.post({
-    headers: {'content-type': 'application/json', 'x-hasura-admin-secret': 'your-admin-secret'},
+    headers: {'content-type': 'application/json', 'x-hasura-admin-secret': configuration['x-hasura-admin-secret']},
     url:     'https://your-app.herokuapp.com/v1/graphql',
     body:    JSON.stringify(body)
   }, function(error, response, body) {

@@ -21,6 +21,7 @@ The order and collapsed state of columns is now persisted across page navigation
 - console: decouple data rows and count fetch in data browser to account for really large tables (close #3793) (#4269)
 - console: update cookie policy for API calls to "same-origin"
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
+- docs: clarify & improve `vuejs-autho0-graphql` sample app readme (#4383)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
 - server: fix an edge case where some events wouldn't be processed because of internal erorrs (#4213)
