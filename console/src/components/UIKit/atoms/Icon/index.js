@@ -42,13 +42,13 @@ import {
   FaCaretLeft,
   FaRegClone,
   FaRegCaretSquareRight,
-  FaCopy,
+  FaRegCopy,
   FaExternalLinkAlt,
   FaTable,
   FaFilter,
   FaWrench,
   FaRegPaperPlane,
-  FaCodeBranch,
+  FaCodeBranch
 } from 'react-icons/fa';
 
 import { StyledIcon } from './Icon';
@@ -97,13 +97,13 @@ const iconReferenceMap = {
   caretRight: FaCaretRight,
   caretLeft: FaCaretLeft,
   clone: FaRegClone,
-  copy: FaCopy,
+  copy: FaRegCopy,
   link: FaExternalLinkAlt,
   table: FaTable,
   filter: FaFilter,
   wrench: FaWrench,
   send: FaRegPaperPlane,
-  fork: FaCodeBranch,
+  fork: FaCodeBranch
 };
 
 export const Icon = props => {
@@ -117,5 +117,5 @@ export const Icon = props => {
 };
 
 Icon.defaultProps = {
-  size: 14,
+  size: 14
 };

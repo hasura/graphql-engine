@@ -25,7 +25,7 @@ export const generateTableDef = (
 
   return {
     schema: tableSchema,
-    name: tableName,
+    name: tableName
   };
 };
 
@@ -231,7 +231,7 @@ export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
         relationsMap.push({
           columnName: _columnName,
           enumTableName: ref_table,
-          enumColumnName: _enumColumnName,
+          enumColumnName: _enumColumnName
         });
       }
     }
