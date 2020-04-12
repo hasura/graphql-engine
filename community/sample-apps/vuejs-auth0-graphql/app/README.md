@@ -102,7 +102,7 @@ To do this, open `auth_config.json`, and replace the values within with your own
 ```
 
 ## Create the initial tables
-1. Add your database URL and admin secret in `hasura/config.yaml`
+1. Add your graphql URL (like https://your-app.herokuapp.com/v1/graphql) and admin secret in `hasura/config.yaml`
 
 ```yaml
 endpoint: https://<hge-heroku-url>
@@ -113,21 +113,35 @@ admin_secret: <your-admin-secret>
 
 ## Create Auth0 Rule
 
-Everytime user signups on Auth0, we need to sync that user into our postgres database. This is done using Auth0 rules. Create a Rule and insert the following code:
+Everytime user signs up via Auth0, we need to sync that user into our postgres database. This is done using Auth0 rules. Create a Rule and insert the following code:
 
 ```
 function (user, context, callback) {
-  const userId = user.user_id;
-  const nickname = user.nickname;
+  const mutation = `
+mutation ($id: String!, $email: String!) {
+  insert_user(objects: [{
+    id: $id,
+    email: $email
+  }]) {
+    affected_rows
+  }
+}`;
+
+  const variables = {
+    id: user.user_id,
+    email: user.email
+  };
   
+  const body = { query: mutation, variables };
+
   request.post({
-  headers: {'content-type' : 'application/json', 'x-hasura-admin-secret': '<your-admin-secret>'},
-  url:     'http://myapp.herokuapp.com/v1/graphql',
-  body:    `{\"query\":\"mutation($userId: String!, $nickname: String) {\\n          insert_users(\\n            objects: [{ auth0_id: $userId, name: $nickname }]\\n            on_conflict: {\\n              constraint: users_pkey\\n              update_columns: [last_seen, name]\\n            }\\n          ) {\\n            affected_rows\\n          }\\n        }\",\"variables\":{\"userId\":\"${userId}\",\"nickname\":\"${nickname}\"}}`
-}, function(error, response, body){
+    headers: {'content-type': 'application/json', 'x-hasura-admin-secret': 'your-admin-secret'},
+    url:     'https://your-app.herokuapp.com/v1/graphql',
+    body:    JSON.stringify(body)
+  }, function(error, response, body) {
     console.log(body);
-    callback(null, user, context);
-});
+    callback(error, user, context);
+  });
 }
 ```
 
