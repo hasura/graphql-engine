@@ -221,7 +221,7 @@ const mapStateToProps = state => {
   return {
     ...state.main,
     metadata: state.metadata,
-    dataHeaders: { ...state.tables.dataHeaders },
+    dataHeaders: { ...state.tables.dataHeaders }
   };
 };
 

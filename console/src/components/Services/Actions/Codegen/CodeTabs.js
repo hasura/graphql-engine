@@ -5,7 +5,7 @@ import JSEditor from '../../../Common/AceEditor/JavaScriptEditor';
 import TSEditor from '../../../Common/AceEditor/TypescriptEditor';
 import { getFrameworkCodegen } from './utils';
 import { getFileExtensionFromFilename } from '../../../Common/utils/jsUtils';
-import { Spinner } from '../../../UIKit/atoms';
+import { Spinner, TextLink } from '../../../UIKit/atoms';
 
 const CodeTabs = ({
   framework,
@@ -39,14 +39,16 @@ const CodeTabs = ({
   React.useEffect(init, [framework, parentMutation, shouldDerive]);
 
   if (loading) {
-    return <Spinner size='xl' my='100px' mx='auto' />;
+    return <Spinner size="xl" my="100px" mx="auto" />;
   }
 
   if (error) {
     return (
       <div>
         Error generating code.&nbsp;
-        <a onClick={init}>Try again</a>
+        <TextLink onClick={init} color="blue.link" hover="underline">
+          Try again
+        </TextLink>
       </div>
     );
   }
@@ -74,7 +76,7 @@ const CodeTabs = ({
     }
   });
 
-  return <Tabs id='codegen-files-tabs'>{files} </Tabs>;
+  return <Tabs id="codegen-files-tabs">{files} </Tabs>;
 };
 
 export default CodeTabs;

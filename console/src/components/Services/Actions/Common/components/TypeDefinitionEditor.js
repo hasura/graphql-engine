@@ -64,9 +64,9 @@ const ActionDefinitionEditor = ({
 
   return (
     <div className={`${className || ''}`}>
-      <Heading type='subHeading' mb='xs'>
+      <Heading type="subHeading" mb="xs">
         {label}
-        <ToolTip message={tooltip} ml='sm' />
+        <ToolTip message={tooltip} ml="sm" />
       </Heading>
       <div className={styles.sdlEditorContainer}>
         <div
@@ -74,18 +74,18 @@ const ActionDefinitionEditor = ({
         >
           {error && (
             <div className={styles.display_flex}>
-              <Icon mr='xs' type='close' color='red.primary' />
-              <Text color='red.primary'>{errorMessage}</Text>
+              <Icon mr="xs" type="close" color="red.primary" />
+              <Text color="red.primary">{errorMessage}</Text>
             </div>
           )}
           <TextLink
-            ml='auto'
-            mr='20px'
-            color='blue.link'
+            ml="auto"
+            mr="20px"
+            color="blue.link"
             onClick={toggleModal}
-            hover='underline'
+            hover="underline"
           >
-            <Icon type='copy' mr='xs' size={12} mb='-1px' />
+            <Icon type="copy" mr="xs" size={12} mb="-1px" />
             Clone an existing type
           </TextLink>
           <Modal
@@ -101,7 +101,7 @@ const ActionDefinitionEditor = ({
           </Modal>
         </div>
         <SDLEditor
-          name='sdl-editor'
+          name="sdl-editor"
           value={value}
           onChange={onChangeWithError}
           placeholder={placeholder}

@@ -12,17 +12,17 @@ const errorImage = `${globals.assetsPath}/common/img/hasura_icon_green.svg`;
 
 const RuntimeError = ({ resetCallback, error }) => (
   <div className={styles.viewContainer}>
-    <Helmet title='Error | Hasura' />
+    <Helmet title="Error | Hasura" />
     <div className={'container ' + styles.centerContent}>
       <div className={'row ' + styles.message}>
-        <div className='col-xs-8'>
-          <Heading fontSize='54px' color='#333'>
+        <div className="col-xs-8">
+          <Heading fontSize="54px" color="#333">
             Error
           </Heading>
           <br />
           <div>
             Something went wrong. Head back{' '}
-            <Link to='/' onClick={resetCallback}>
+            <Link to="/" onClick={resetCallback}>
               Home
             </Link>
             .
@@ -35,30 +35,30 @@ const RuntimeError = ({ resetCallback, error }) => (
           <div>
             You can report this issue on our
             <TextLink
-              mx='xs'
-              href='https://github.com/hasura/graphql-engine/issues'
-              color='blue.link'
-              hover='underline'
+              mx="xs"
+              href="https://github.com/hasura/graphql-engine/issues"
+              color="blue.link"
+              hover="underline"
             >
               GitHub
             </TextLink>
             or chat with us on
             <TextLink
-              href='http://discord.gg/hasura'
-              color='blue.link'
-              hover='underline'
-              ml='xs'
+              href="http://discord.gg/hasura"
+              color="blue.link"
+              hover="underline"
+              ml="xs"
             >
               Discord
             </TextLink>
           </div>
         </div>
-        <div className='col-xs-4'>
+        <div className="col-xs-4">
           <img
             src={errorImage}
-            className='img-responsive'
-            name='hasura'
-            title='Something went wrong!'
+            className="img-responsive"
+            name="hasura"
+            title="Something went wrong!"
           />
         </div>
       </div>

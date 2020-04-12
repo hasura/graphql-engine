@@ -11,7 +11,7 @@ import { getPersistedDerivedAction } from '../lsUtils';
 import Button from '../../../Common/Button/Button';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
-import { Spinner } from '../../../UIKit/atoms';
+import { Spinner, TextLink } from '../../../UIKit/atoms';
 import styles from '../Common/components/Styles.scss';
 
 const Codegen = ({ allActions, allTypes, currentAction }) => {
@@ -48,14 +48,16 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   React.useEffect(init, []);
 
   if (loading) {
-    return <Spinner size='xl' my='100px' mx='auto' />;
+    return <Spinner size="xl" my="100px" mx="auto" />;
   }
 
   if (error || !allFrameworks.length) {
     return (
       <div>
         Error fetching codegen assets.&nbsp;
-        <a onClick={init}>Try again</a>
+        <TextLink onClick={init} color="blue.link" hover="underline">
+          Try again
+        </TextLink>
       </div>
     );
   }
@@ -86,18 +88,14 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     const getGlitchButton = () => {
       if (selectedFramework !== 'nodejs-express') return null;
       return (
-        <a
-          href={getGlitchProjectURL()}
-          target='_blank'
-          rel='noopener noreferrer'
-        >
+        <TextLink href={getGlitchProjectURL()} target="_blank">
           <Button
-            color='white'
+            color="white"
             className={`${styles.add_mar_right_mid} ${styles.default_button}`}
           >
             Try on glitch
           </Button>
-        </a>
+        </TextLink>
       );
     };
 
@@ -112,15 +110,11 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
         return null;
       }
       return (
-        <a
-          href={getStarterKitPath(selectedFramework)}
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          <Button color='white' className={`${styles.add_mar_right_mid}`}>
+        <TextLink href={getStarterKitPath(selectedFramework)} target="_blank">
+          <Button color="white" className={`${styles.add_mar_right_mid}`}>
             Get starter kit
           </Button>
-        </a>
+        </TextLink>
       );
     };
 

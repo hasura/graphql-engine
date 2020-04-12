@@ -12,10 +12,10 @@ export const TextLink = props => {
         {...props}
         href={href}
         fontSize={fontSize || '12px'}
-        target='_blank'
-        rel='noopener noreferrer'
-        color='blue.link'
-        fontStyle='italic'
+        target="_blank"
+        rel="noopener noreferrer"
+        color="blue.link"
+        fontStyle="italic"
         css={css`
           &:hover {
             text-decoration: underline !important;
@@ -32,7 +32,7 @@ export const TextLink = props => {
       {...props}
       href={href}
       borderBottom={underline ? 1 : 'none'}
-      rel='noopener noreferrer'
+      rel="noopener noreferrer"
       fontSize={fontSize || '14px'}
       css={
         hover === 'underline' &&

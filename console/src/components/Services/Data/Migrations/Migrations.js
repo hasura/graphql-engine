@@ -6,7 +6,7 @@ import 'react-toggle/style.css';
 
 import { updateMigrationModeStatus } from '../../../Main/Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
-import { Heading } from '../../../UIKit/atoms';
+import { Heading, TextLink } from '../../../UIKit/atoms';
 import '../../../Common/ReactToggle/ReactToggleOverrides.css';
 import styles from './Migrations.scss';
 
@@ -28,13 +28,14 @@ const Migrations = ({ dispatch, migrationMode }) => {
         </li>
         <li>
           Read more about managing migrations with Hasura at the{' '}
-          <a
-            href='https://hasura.io/docs/1.0/graphql/manual/migrations/index.html'
-            target='_blank'
-            rel='noopener noreferrer'
+          <TextLink
+            href="https://hasura.io/docs/1.0/graphql/manual/migrations/index.html"
+            target="_blank"
+            color="blue.link"
+            hover="underline"
           >
             Hasura migrations guide
-          </a>
+          </TextLink>
         </li>
       </ul>
     );
@@ -44,18 +45,18 @@ const Migrations = ({ dispatch, migrationMode }) => {
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
     >
-      <Helmet title='Migrations - Data | Hasura' />
+      <Helmet title="Migrations - Data | Hasura" />
       <div className={styles.subHeader}>
-        <Heading as='h2' pb='0px' fontSize='18px'>
+        <Heading as="h2" pb="0px" fontSize="18px">
           Database Migrations
         </Heading>
-        <div className='clearfix' />
+        <div className="clearfix" />
       </div>
       <div className={styles.add_mar_top}>
         <div className={`${styles.padd_left_remove} col-xs-8`}>
           {getNotesSection()}
         </div>
-        <div className='clearfix' />
+        <div className="clearfix" />
         <div className={styles.migration_mode + ' ' + styles.add_mar_top}>
           <label>
             <span> Allow Postgres schema changes via console </span>
