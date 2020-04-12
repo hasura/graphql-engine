@@ -109,7 +109,11 @@ const iconReferenceMap = {
   download: FaDownload,
 };
 
-export const Icon = props => {
+export type IconProps = {
+  type: keyof typeof theme.icon;
+}
+
+export const Icon: React.FC<IconProps> = props => {
   const { type } = props;
   const CurrentActiveIcon = iconReferenceMap[type]
     ? iconReferenceMap[type]
