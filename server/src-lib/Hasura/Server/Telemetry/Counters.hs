@@ -29,7 +29,6 @@ import qualified Data.Aeson.Casing     as A
 import qualified Data.Aeson.TH         as A
 import qualified Data.HashMap.Strict   as HM
 
-import           Data.Hashable
 import           Data.IORef
 import           Data.Ord              (Down (..))
 import           Data.Time.Clock.POSIX (POSIXTime, getPOSIXTime)
