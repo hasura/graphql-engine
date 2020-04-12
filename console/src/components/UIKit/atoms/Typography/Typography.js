@@ -6,6 +6,7 @@ export const StyledHeading = styled.h1`
     ${color}
     ${space}
     ${layout}
+    ${border}
 `;
 
 export const StyledText = styled.p`

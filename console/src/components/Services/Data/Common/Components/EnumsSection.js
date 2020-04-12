@@ -37,13 +37,12 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
   //     <div>
   //       <i>
   //         * The table must meet some requirements for you to set it as an enum.{' '}
-  //         <a
+  //         <TextLink
   //           href={enumCompatibilityDocsUrl}
-  //           target="_blank"
-  //           rel="noopener noreferrer"
+  //           type="moreInfo"
   //         >
   //           See requirements.
-  //         </a>
+  //         </TextLink>
   //       </i>
   //     </div>
   //   );

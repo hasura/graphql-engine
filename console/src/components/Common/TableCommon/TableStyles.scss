@@ -71,19 +71,8 @@
   }
 }
 
-.expandable {
-  color: #779ecb;
-  text-decoration: underline;
-}
-
 a.expanded {
   color: red;
-}
-
-.expandable:hover {
-  background: #eee;
-  transition: 0.2s;
-  cursor: pointer;
 }
 
 .tableNameInput {

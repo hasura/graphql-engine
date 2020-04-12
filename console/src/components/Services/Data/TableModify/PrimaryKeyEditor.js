@@ -2,7 +2,7 @@ import React from 'react';
 import {
   DELETE_PK_WARNING,
   setPrimaryKeys,
-  savePrimaryKeys,
+  savePrimaryKeys
 } from './ModifyActions';
 import PrimaryKeySelector from '../Common/Components/PrimaryKeySelector';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
@@ -17,7 +17,7 @@ const PrimaryKeyEditor = ({
   tableSchema,
   pkModify,
   dispatch,
-  currentSchema,
+  currentSchema
 }) => {
   const columns = tableSchema.columns;
   const tablePrimaryKeyColumns = tableSchema.primary_key
@@ -28,7 +28,7 @@ const PrimaryKeyEditor = ({
   const orderedCols = columns.map((c, _i) => ({
     name: c.column_name,
     type: c.data_type,
-    index: _i,
+    index: _i
   }));
 
   // generate primary keys in the order respecting the column order
@@ -117,7 +117,7 @@ const PrimaryKeyEditor = ({
       expandedLabel={pkEditorExpandedLabel}
       editorExpanded={pkEditorExpanded}
       property={'pks'}
-      service="modify-table"
+      service='modify-table'
       saveFunc={onSave}
       removeFunc={onRemove}
       expandCallback={setPkEditState}

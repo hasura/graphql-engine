@@ -11,14 +11,14 @@ const UniqueKeyEditor = ({
   uniqueKeys,
   tableSchema,
   setUniqueKeys,
-  dispatch,
+  dispatch
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
   // columns in the right order with their indices
   const orderedColumns = columns.map((c, i) => ({
     name: c.column_name,
     index: i,
-    type: c.data_type,
+    type: c.data_type
   }));
 
   // initialise unique key modify state with the existing unique constraints
@@ -33,7 +33,7 @@ const UniqueKeyEditor = ({
           });
           return cols;
         }),
-        [],
+        []
       ])
     );
   };
@@ -165,7 +165,7 @@ const UniqueKeyEditor = ({
           expandedLabel={expandedLabel}
           collapsedLabel={collapsedLabel}
           property={`unique-key-${i}`}
-          service="modify-table"
+          service='modify-table'
           saveFunc={saveFunc}
           removeFunc={removeFunc}
           expandButtonText={expandButtonText}
