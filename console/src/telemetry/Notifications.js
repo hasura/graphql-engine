@@ -23,7 +23,6 @@ const showTelemetryNotification = () => {
             Help us improve Hasura! The console collects anonymized usage stats
             which allows us to keep improving Hasura at warp speed.
             <TextLink
-              color="blue.link"
               href="https://hasura.io/docs/1.0/graphql/manual/guides/telemetry.html"
               target="_blank"
               mx="xs"

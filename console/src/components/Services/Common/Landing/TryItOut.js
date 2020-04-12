@@ -35,7 +35,7 @@ const TryItOut = ({
     <div>
       <div className={styles.subHeaderText}>
         <img className={'img-responsive'} src={Rectangle} alt={'Rectangle'} />
-        <Heading as='h4' display='inline-block' fontSize='18px' fontWeight={6}>
+        <Heading as="h4" display="inline-block" fontSize="18px" fontWeight={6}>
           Try it out
         </Heading>
       </div>
@@ -44,7 +44,7 @@ const TryItOut = ({
           <div className={styles.logoIcon}>
             <img className={'img-responsive'} src={glitch} alt={'glitch'} />
           </div>
-          <TextLink href={glitchLink} target='_blank'>
+          <TextLink href={glitchLink} target="_blank">
             <button className={styles.default_button}>
               Try it with Glitch{' '}
               <img
@@ -117,7 +117,7 @@ const TryItOut = ({
             </div>
           </TextLink>
           <div className={styles.instructions}>
-            <TextLink href={adMoreLink} target='_blank' fontWeight='bold'>
+            <TextLink href={adMoreLink} target="_blank" fontWeight="bold">
               And many more
               <div className={styles.rightArrow} />
             </TextLink>

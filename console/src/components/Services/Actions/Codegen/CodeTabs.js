@@ -46,7 +46,7 @@ const CodeTabs = ({
     return (
       <div>
         Error generating code.&nbsp;
-        <TextLink onClick={init} color="blue.link" hover="underline">
+        <TextLink onClick={init} hover="underline">
           Try again
         </TextLink>
       </div>

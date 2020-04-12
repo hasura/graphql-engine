@@ -78,13 +78,7 @@ const ActionDefinitionEditor = ({
               <Text color="red.primary">{errorMessage}</Text>
             </div>
           )}
-          <TextLink
-            ml="auto"
-            mr="20px"
-            color="blue.link"
-            onClick={toggleModal}
-            hover="underline"
-          >
+          <TextLink ml="auto" mr="20px" onClick={toggleModal} hover="underline">
             <Icon type="copy" mr="xs" size={12} mb="-1px" />
             Clone an existing type
           </TextLink>

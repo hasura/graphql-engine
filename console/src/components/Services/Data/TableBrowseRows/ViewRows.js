@@ -618,6 +618,7 @@ const ViewRows = ({
                 href="#"
                 color={color}
                 hover="underline"
+                hover={color === 'blue.link' ? 'underline' : ''}
                 onClick={clickHandler}
               >
                 {value}
@@ -797,6 +798,7 @@ const ViewRows = ({
         <li key={i} className={isActive} role="presentation">
           <TextLink
             href="#"
+            color="black.text"
             onClick={e => {
               e.preventDefault();
               dispatch({ type: V_SET_ACTIVE, path: curPath, relname: q.name });

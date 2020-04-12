@@ -14,7 +14,6 @@ export const TextLink = props => {
         fontSize={fontSize || '12px'}
         target="_blank"
         rel="noopener noreferrer"
-        color="blue.link"
         fontStyle="italic"
         css={css`
           &:hover {
@@ -49,6 +48,6 @@ export const TextLink = props => {
 };
 
 TextLink.defaultProps = {
-  color: 'black.text',
+  color: 'blue.link',
   fontWeight: 'medium'
 };

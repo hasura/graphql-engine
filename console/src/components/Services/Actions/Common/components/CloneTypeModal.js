@@ -21,9 +21,7 @@ const CloneType = ({ headers, toggleModal, handleClonedTypes }) => {
     return (
       <div>
         Error introspecting schema.&nbsp;
-        <TextLink onClick={introspect} color="blue.link">
-          Try again
-        </TextLink>
+        <TextLink onClick={introspect}>Try again</TextLink>
       </div>
     );
   }

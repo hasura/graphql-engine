@@ -31,7 +31,6 @@ const Migrations = ({ dispatch, migrationMode }) => {
           <TextLink
             href="https://hasura.io/docs/1.0/graphql/manual/migrations/index.html"
             target="_blank"
-            color="blue.link"
             hover="underline"
           >
             Hasura migrations guide

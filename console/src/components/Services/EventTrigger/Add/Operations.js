@@ -50,13 +50,13 @@ const Operations = ({
         <span>
           Via console
           <ToolTip
-            ml='sm'
-            mr='20px'
+            ml="sm"
+            mr="20px"
             message={tooltip.manualOperationsDescription}
           />
           <TextLink
-            type='moreInfo'
-            href='https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html'
+            type="moreInfo"
+            href="https://hasura.io/docs/1.0/graphql/manual/event-triggers/invoke-trigger-console.html"
           />
         </span>
       )
@@ -81,7 +81,7 @@ const Operations = ({
             onChange={o.onChange}
             data-test={o.testIdentifier}
             className={`${styles.display_inline} ${styles.add_mar_right}`}
-            type='checkbox'
+            type="checkbox"
             value={o.name}
             checked={o.isChecked}
           />
@@ -94,9 +94,9 @@ const Operations = ({
   return (
     <div>
       <div className={styles.add_mar_bottom + ' ' + styles.selectOperations}>
-        <Heading type='subHeading'>
+        <Heading type="subHeading">
           Trigger Operations
-          <ToolTip ml='sm' mr='20px' message={tooltip.operationsDescription} />
+          <ToolTip ml="sm" mr="20px" message={tooltip.operationsDescription} />
         </Heading>
         <div className={styles.add_mar_left_small}>{getOperationsList()}</div>
       </div>

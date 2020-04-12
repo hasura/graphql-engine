@@ -79,7 +79,6 @@ class About extends Component {
               }
               target="_blank"
               fontStyle="italic"
-              color="blue.link"
               hover="underline"
               mx="sm"
             >
@@ -90,7 +89,6 @@ class About extends Component {
               href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
               target="_blank"
               fontStyle="italic"
-              color="blue.link"
               hover="underline"
               ml="sm"
             >

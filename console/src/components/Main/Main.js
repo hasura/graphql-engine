@@ -225,7 +225,7 @@ class Main extends React.Component {
       if (!migrationModeProgress) {
         mainContent = children && React.cloneElement(children);
       } else {
-        mainContent = <Spinner size='xl' my='100px' mx='auto' />;
+        mainContent = <Spinner size="xl" my="100px" mx="auto" />;
       }
 
       return mainContent;
@@ -243,15 +243,15 @@ class Main extends React.Component {
 
     const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <Icon type='settings' color='white' />;
+        return <Icon type="settings" color="white" />;
       }
 
       return (
         <div>
-          <Icon type='settings' />
+          <Icon type="settings" />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
-            <Icon type='default' />
+            <Icon type="default" />
           </div>
         </div>
       );
@@ -263,13 +263,13 @@ class Main extends React.Component {
       if (!globals.isAdminSecretSet) {
         adminSecretHtml = (
           <TextLink
-            href='https://hasura.io/docs/1.0/graphql/manual/deployment/securing-graphql-endpoint.html'
-            target='_blank'
-            color='white'
-            display='block'
-            pr='15px'
-            height='100%'
-            fontWeight='bold'
+            href="https://hasura.io/docs/1.0/graphql/manual/deployment/securing-graphql-endpoint.html"
+            target="_blank"
+            color="white"
+            display="block"
+            pr="15px"
+            height="100%"
+            fontWeight="bold"
             css={css`
               display: flex;
               align-items: center;
@@ -280,8 +280,8 @@ class Main extends React.Component {
               }
             `}
           >
-            <ToolTip message={tooltips.secureEndpoint} placement='left'>
-              <Icon type='warning' size={12} mr='sm' />
+            <ToolTip message={tooltips.secureEndpoint} placement="left">
+              <Icon type="warning" size={12} mr="sm" />
             </ToolTip>
             Secure your endpoint
           </TextLink>
@@ -314,13 +314,18 @@ class Main extends React.Component {
             <i>
               This is a pre-release version. Not recommended for production use.
               <span className={styles.middot}> &middot; </span>
-              <TextLink href={'#'} onClick={handlePreRelNotifOptOut} underline>
+              <TextLink
+                href={'#'}
+                onClick={handlePreRelNotifOptOut}
+                underline
+                color="black.text"
+              >
                 Opt out of pre-release notifications
               </TextLink>
               <ToolTip
                 message={'Only be notified about stable releases'}
-                placement='top'
-                ml='sm'
+                placement="top"
+                ml="sm"
               />
             </i>
           </React.Fragment>
@@ -335,7 +340,7 @@ class Main extends React.Component {
             <div className={styles.updateBannerWrapper}>
               <div className={styles.updateBanner}>
                 <Text> Hey there! A new server version </Text>
-                <Text fontWeight='bold' mx='6px' pb='3px'>
+                <Text fontWeight="bold" mx="6px" pb="3px">
                   {updateNotificationVersion}
                 </Text>
                 <Text>is available</Text>
@@ -345,16 +350,18 @@ class Main extends React.Component {
                     'https://github.com/hasura/graphql-engine/releases/tag/' +
                     updateNotificationVersion
                   }
-                  target='_blank'
+                  target="_blank"
                   underline
+                  color="black.text"
                 >
                   <span>View Changelog</span>
                 </TextLink>
                 <span className={styles.middot}> &middot; </span>
                 <TextLink
-                  href='https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html'
-                  target='_blank'
+                  href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
+                  target="_blank"
                   underline
+                  color="black.text"
                 >
                   <span>Update Now</span>
                 </TextLink>
@@ -363,7 +370,7 @@ class Main extends React.Component {
                   className={styles.updateBannerClose}
                   onClick={this.closeUpdateBanner.bind(this)}
                 >
-                  <Icon type='close' pointer />
+                  <Icon type="close" pointer />
                 </span>
               </div>
             </div>
@@ -380,9 +387,9 @@ class Main extends React.Component {
       if (!this.state.loveConsentState.isDismissed) {
         loveSectionHtml = [
           <div
-            key='main_love_1'
+            key="main_love_1"
             className={styles.shareSection + ' dropdown-toggle'}
-            aria-expanded='false'
+            aria-expanded="false"
             onClick={this.handleDropdownToggle.bind(this)}
           >
             <img
@@ -392,13 +399,13 @@ class Main extends React.Component {
             />
           </div>,
           <ul
-            key='main_love_2'
+            key="main_love_2"
             className={'dropdown-menu ' + styles.dropdown_menu}
           >
             <div className={styles.dropdown_menu_container}>
               <div className={styles.closeDropDown}>
                 <Icon
-                  type='close'
+                  type="close"
                   onClick={this.closeLoveIcon.bind(this)}
                   pointer
                 />
@@ -429,22 +436,23 @@ class Main extends React.Component {
                   <br />
                   Star us on GitHub,
                   <br />
-                  To make our <Icon type='love' size={10} mx='xs' /> go wooooo!
+                  To make our <Icon type="love" size={10} mx="xs" /> go wooooo!
                 </li>
                 <li className={'dropdown-item'}>
                   <TextLink
-                    href='https://github.com/hasura/graphql-engine'
-                    target='_blank'
+                    href="https://github.com/hasura/graphql-engine"
+                    target="_blank"
+                    color="black.text"
                   >
                     <div className={styles.socialIcon}>
                       <img
-                        className='img img-responsive'
+                        className="img img-responsive"
                         src={`${globals.assetsPath}/common/img/githubicon.png`}
                         alt={'GitHub'}
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <Icon type='star' size={12} mr='xs' />
+                      <Icon type="star" size={12} mr="xs" />
                       Star
                     </div>
                   </TextLink>
@@ -463,18 +471,19 @@ class Main extends React.Component {
                 </li>
                 <li className={'dropdown-item '}>
                   <TextLink
-                    href='https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com/hasura/graphql-engine%0A'
-                    target='_blank'
+                    href="https://twitter.com/intent/tweet?hashtags=graphql,postgres&text=Just%20deployed%20a%20GraphQL%20backend%20with%20@HasuraHQ!%20%E2%9D%A4%EF%B8%8F%20%F0%9F%9A%80%0Ahttps://github.com/hasura/graphql-engine%0A"
+                    target="_blank"
+                    color="black.text"
                   >
                     <div className={styles.socialIcon}>
                       <img
-                        className='img img-responsive'
+                        className="img img-responsive"
                         src={`${globals.assetsPath}/common/img/twittericon.png`}
                         alt={'Twitter'}
                       />
                     </div>
                     <div className={styles.pixelText}>
-                      <Icon type='twitter' size={12} mr='xs' />
+                      <Icon type="twitter" size={12} mr="xs" />
                       Tweet
                     </div>
                   </TextLink>
@@ -508,7 +517,7 @@ class Main extends React.Component {
       const block = getPathRoot(path);
 
       return (
-        <ToolTip message={tooltipText} height='100%'>
+        <ToolTip message={tooltipText} height="100%">
           <li>
             <Link
               className={
@@ -529,7 +538,7 @@ class Main extends React.Component {
                       `
                     : ''
                 }
-                mr='xs'
+                mr="xs"
               />
               <Text>{title}</Text>
             </Link>
@@ -627,7 +636,7 @@ class Main extends React.Component {
                   'https://hasura.io/getintouch?type=hasuraprodemo&utm_source=console'
                 }
                 target={'_blank'}
-                color='red.primary'
+                color="red.primary"
               >
                 Set up a chat to learn more{' '}
                 <img
@@ -650,11 +659,11 @@ class Main extends React.Component {
           <div className={styles.header_logo_wrapper}>
             <div className={styles.logoParent}>
               <div className={styles.logo}>
-                <Link to='/'>
-                  <img className='img img-responsive' src={logo} />
+                <Link to="/">
+                  <img className="img img-responsive" src={logo} />
                 </Link>
               </div>
-              <Link to='/'>
+              <Link to="/">
                 <div className={styles.project_version}>{serverVersion}</div>
               </Link>
             </div>
@@ -693,7 +702,7 @@ class Main extends React.Component {
                 '/events/manage/triggers'
               )}
             </ul>
-            <div id='dropdown_wrapper' className={styles.clusterInfoWrapper}>
+            <div id="dropdown_wrapper" className={styles.clusterInfoWrapper}>
               {getAdminSecretSection()}
               <div className={styles.helpSection + ' ' + styles.proWrapper}>
                 <span
@@ -706,7 +715,7 @@ class Main extends React.Component {
                 </span>
                 {renderProPopup()}
               </div>
-              <Link to='/settings'>
+              <Link to="/settings">
                 <div className={styles.helpSection + ' ' + styles.settingsIcon}>
                   {getMetadataStatusIcon()}
                   {getSettingsSelectedMarker()}
@@ -714,18 +723,18 @@ class Main extends React.Component {
               </Link>
               <div className={styles.supportSection}>
                 <div
-                  id='help'
+                  id="help"
                   className={styles.helpSection}
-                  data-toggle='dropdown'
-                  aria-expanded='false'
-                  aria-haspopup='true'
+                  data-toggle="dropdown"
+                  aria-expanded="false"
+                  aria-haspopup="true"
                 >
                   <Icon
-                    type='question'
+                    type="question"
                     pointer
                     size={12}
-                    color='white'
-                    mr='sm'
+                    color="white"
+                    mr="sm"
                   />
                 </div>
                 <ul
@@ -735,13 +744,13 @@ class Main extends React.Component {
                     ' ' +
                     getHelpDropdownPosStyle()
                   }
-                  aria-labelledby='help'
+                  aria-labelledby="help"
                 >
                   <div className={styles.help_dropdown_menu_container}>
                     <li className={'dropdown-item'}>
                       <TextLink
-                        href='https://github.com/hasura/graphql-engine/issues'
-                        target='_blank'
+                        href="https://github.com/hasura/graphql-engine/issues"
+                        target="_blank"
                       >
                         <img
                           className={'img-responsive'}
@@ -753,8 +762,8 @@ class Main extends React.Component {
                     </li>
                     <li className={'dropdown-item'}>
                       <TextLink
-                        href='https://discordapp.com/invite/vBPpJkS'
-                        target='_blank'
+                        href="https://discordapp.com/invite/vBPpJkS"
+                        target="_blank"
                       >
                         <img
                           className={'img-responsive'}
@@ -765,7 +774,7 @@ class Main extends React.Component {
                       </TextLink>
                     </li>
                     <li className={'dropdown-item'}>
-                      <TextLink href='mailto:support@hasura.io'>
+                      <TextLink href="mailto:support@hasura.io">
                         <img
                           className={'img-responsive'}
                           src={mail}
@@ -775,7 +784,7 @@ class Main extends React.Component {
                       </TextLink>
                     </li>
                     <li className={'dropdown-item'}>
-                      <TextLink href='https://hasura.io/docs/' target='_blank'>
+                      <TextLink href="https://hasura.io/docs/" target="_blank">
                         <img
                           className={'img-responsive'}
                           src={docs}
@@ -785,7 +794,7 @@ class Main extends React.Component {
                       </TextLink>
                     </li>
                     <li className={'dropdown-item'}>
-                      <Link to='/about'>
+                      <Link to="/about">
                         <img
                           className={'img-responsive'}
                           src={about}

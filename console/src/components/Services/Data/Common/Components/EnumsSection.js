@@ -18,7 +18,7 @@ export const EnumTableModifyWarning = ({ isEnum }) => {
         * This table is set as an enum. Modifying it may cause your Hasura
         metadata to become inconsistent.
         <br />
-        <TextLink href={enumCompatibilityDocsUrl} type='moreInfo'>
+        <TextLink href={enumCompatibilityDocsUrl} type="moreInfo">
           See enum table requirements
         </TextLink>
       </i>
@@ -50,23 +50,23 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
 
   return (
     <div>
-      <Heading type='subHeading'>
+      <Heading type="subHeading">
         Set table as enum
         <ToolTip
           message={
             'Expose the table values as GraphQL enums in the GraphQL API'
           }
-          ml='sm'
-          mr='20px'
+          ml="sm"
+          mr="20px"
         />
-        <TextLink type='moreInfo' href={enumCompatibilityDocsUrl}>
+        <TextLink type="moreInfo" href={enumCompatibilityDocsUrl}>
           See table requirements
         </TextLink>
       </Heading>
       <div
         className={`${styles.display_flex} ${styles.add_mar_bottom}`}
         title={title}
-        data-toggle='tooltip'
+        data-toggle="tooltip"
       >
         <Toggle checked={isEnum} icons={false} onChange={toggleEnum} />
       </div>

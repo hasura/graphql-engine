@@ -37,18 +37,12 @@ const RuntimeError = ({ resetCallback, error }) => (
             <TextLink
               mx="xs"
               href="https://github.com/hasura/graphql-engine/issues"
-              color="blue.link"
               hover="underline"
             >
               GitHub
             </TextLink>
             or chat with us on
-            <TextLink
-              href="http://discord.gg/hasura"
-              color="blue.link"
-              hover="underline"
-              ml="xs"
-            >
+            <TextLink href="http://discord.gg/hasura" hover="underline" ml="xs">
               Discord
             </TextLink>
           </div>

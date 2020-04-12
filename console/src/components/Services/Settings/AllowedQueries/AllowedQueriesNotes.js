@@ -11,14 +11,14 @@ const AllowedQueriesNotes = () => (
       <code>--enable-allowlist</code> flag set to <i>true</i>, only queries
       added to the allow-list will be allowed to be executed.&nbsp;
       <TextLink
-        href='https://hasura.io/docs/1.0/graphql/manual/deployment/allow-list.html'
-        type='moreInfo'
-        fontSize='14px'
+        href="https://hasura.io/docs/1.0/graphql/manual/deployment/allow-list.html"
+        type="moreInfo"
+        fontSize="14px"
       >
         Read more
       </TextLink>
     </div>
-    <Text fontWeight='bold' mt='20px'>
+    <Text fontWeight="bold" mt="20px">
       Notes
     </Text>
     <div className={styles.subsection}>

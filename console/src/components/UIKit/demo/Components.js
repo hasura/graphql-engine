@@ -12,7 +12,7 @@ import {
   SwitchButton,
   Tabs,
   Spinner,
-  Icon,
+  Icon
 } from '../atoms';
 import { Flex } from './styles';
 
@@ -21,24 +21,24 @@ import { Flex } from './styles';
 const dummytabsData = [
   {
     title: 'Title 1',
-    tabContent: 'Content 1',
+    tabContent: 'Content 1'
   },
   {
     title: 'Title 2',
-    tabContent: 'Content 2',
+    tabContent: 'Content 2'
   },
   {
     title: 'Title 3',
-    tabContent: 'Content 3',
+    tabContent: 'Content 3'
   },
   {
     title: 'Title 4',
-    tabContent: 'Content 4',
+    tabContent: 'Content 4'
   },
   {
     title: 'Title 5',
-    tabContent: 'Content 5',
-  },
+    tabContent: 'Content 5'
+  }
 ];
 
 export const UIComponents = () => (

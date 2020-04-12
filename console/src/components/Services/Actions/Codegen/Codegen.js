@@ -55,7 +55,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     return (
       <div>
         Error fetching codegen assets.&nbsp;
-        <TextLink onClick={init} color="blue.link" hover="underline">
+        <TextLink onClick={init} hover="underline">
           Try again
         </TextLink>
       </div>
