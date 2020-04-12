@@ -83,7 +83,7 @@ instance (ArrowChoice arr) => Arrow (ErrorA e arr) where
   {-# INLINE first #-}
 
 reassociateEither :: Either (Either a b) c -> Either a (Either b c)
-reassociateEither = either (either Left (Right . Left)) (Right . Right)
+reassociateEither = either (fmap Left) (Right . Right)
 
 instance (ArrowChoice arr) => ArrowChoice (ErrorA e arr) where
   left (ErrorA f) = ErrorA (arr reassociateEither . left f)

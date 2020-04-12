@@ -17,6 +17,7 @@ module Hasura.RQL.DDL.Schema.Enum (
 import           Hasura.Prelude
 
 import           Control.Monad.Validate
+import           Data.Bifunctor                (bimap)
 import           Data.List                     (delete)
 
 import qualified Data.HashMap.Strict           as M
@@ -106,8 +107,7 @@ fetchAndValidateEnumValues tableName maybePrimaryKey columnInfos =
                 , S.selExtr = [S.mkExtr (prciName primaryKeyColumn), commentExtr] }
           fmap mkEnumValues . liftTx $ Q.withQE defaultTxErrorHandler query () True
 
-        mkEnumValues rows = M.fromList . flip map rows $ \(key, comment) ->
-          (EnumValue key, EnumValueInfo comment)
+        mkEnumValues rows = M.fromList . flip map rows $ bimap EnumValue EnumValueInfo
 
         validateEnumValues enumValues = do
           let enumValueNames = map (G.Name . getEnumValue) (M.keys enumValues)

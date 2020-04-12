@@ -24,19 +24,17 @@ import           Hasura.GraphQL.Transport.HTTP.Protocol
 import           Hasura.Prelude
 
 -- | These come from the client and are websocket connection-local.
-newtype OperationId
-  = OperationId { unOperationId :: Text }
-  deriving (Show, Eq, J.ToJSON, J.FromJSON, Hashable)
+newtype OperationId = OperationId
+  { unOperationId :: Text
+  } deriving (Show, Eq, J.ToJSON, J.FromJSON, Hashable)
 
-data StartMsg
-  = StartMsg
+data StartMsg = StartMsg
   { _smId      :: !OperationId
   , _smPayload :: !GQLReqUnparsed
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StartMsg)
 
-data StopMsg
-  = StopMsg
+newtype StopMsg = StopMsg
   { _stId :: OperationId
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''StopMsg)
@@ -48,8 +46,7 @@ data ClientMsg
   | CMConnTerm
   deriving (Show, Eq)
 
-data ConnParams
-  = ConnParams
+newtype ConnParams = ConnParams
   { _cpHeaders :: Maybe (Map.HashMap Text Text)
   } deriving (Show, Eq)
 $(J.deriveJSON (J.aesonDrop 3 J.snakeCase) ''ConnParams)

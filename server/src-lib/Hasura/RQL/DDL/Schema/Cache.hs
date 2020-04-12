@@ -67,8 +67,7 @@ mergeCustomTypes
   => M.HashMap RoleName GS.GCtx -> GS.GCtx -> (NonObjectTypeMap, AnnotatedObjects)
   -> f (GS.GCtxMap, GS.GCtx)
 mergeCustomTypes gCtxMap remoteSchemaCtx customTypesState = do
-  let adminCustomTypes = buildCustomTypesSchema (fst customTypesState)
-                         (snd customTypesState) adminRole
+  let adminCustomTypes = uncurry buildCustomTypesSchema customTypesState adminRole
   let commonTypes = M.intersectionWith (,) existingTypes adminCustomTypes
       conflictingCustomTypes =
         map (G.unNamedType . fst) $ M.toList $
@@ -83,8 +82,7 @@ mergeCustomTypes gCtxMap remoteSchemaCtx customTypesState = do
     <> showNames conflictingCustomTypes
 
   let gCtxMapWithCustomTypes = flip M.mapWithKey gCtxMap $ \roleName gCtx ->
-        let customTypes = buildCustomTypesSchema (fst customTypesState)
-                          (snd customTypesState) roleName
+        let customTypes = uncurry buildCustomTypesSchema customTypesState roleName
         in addCustomTypes gCtx customTypes
 
   -- populate the gctx of each role with the custom types
@@ -444,10 +442,9 @@ withMetadataCheck cascade action = do
   mapM_ purgeDependentObject indirectDeps
 
   -- Purge all dropped functions
-  let purgedFuncs = flip mapMaybe indirectDeps $ \dep ->
-        case dep of
-          SOFunction qf -> Just qf
-          _             -> Nothing
+  let purgedFuncs = flip mapMaybe indirectDeps $ \case
+        SOFunction qf -> Just qf
+        _             -> Nothing
 
   forM_ (droppedFuncs \\ purgedFuncs) $ \qf -> do
     liftTx $ delFunctionFromCatalog qf

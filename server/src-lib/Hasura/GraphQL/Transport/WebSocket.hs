@@ -349,7 +349,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
           logOpEv ODStarted (Just reqId)
           -- log the generated SQL and the graphql query
           L.unLogger logger $ QueryLog query genSql reqId
-          (withElapsedTime $ liftIO $ runExceptT action) >>= \case
+          withElapsedTime (liftIO $ runExceptT action) >>= \case
             (_,      Left err) -> postExecErr reqId err
             (telemTimeIO_DT, Right encJson) -> do
               -- Telemetry. NOTE: don't time network IO:
@@ -374,7 +374,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
         G.OperationTypeQuery    -> return Telem.Query
 
       -- if it's not a subscription, use HTTP to execute the query on the remote
-      (runExceptT $ flip runReaderT execCtx $
+      runExceptT (flip runReaderT execCtx $
         E.execRemoteGQ reqId userInfo reqHdrs q rsi opDef) >>= \case
           Left  err           -> postExecErr reqId err
           Right (telemTimeIO_DT, !val) -> do

@@ -87,7 +87,7 @@ userInfoFromAuthHook logger manager hook reqHeaders = do
       unLogger logger $
         WebHookLog LevelError Nothing (ahUrl hook) (hookMethod hook)
         (Just $ HttpException err) Nothing Nothing
-      throw500 $ "webhook authentication request failed"
+      throw500 "webhook authentication request failed"
 
 
 mkUserInfoFromResp

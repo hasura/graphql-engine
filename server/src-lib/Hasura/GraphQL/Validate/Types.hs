@@ -642,7 +642,7 @@ fromTyDef tyDef loc = case tyDef of
 
 fromSchemaDoc :: G.SchemaDocument -> TypeLoc -> Either Text TypeMap
 fromSchemaDoc (G.SchemaDocument tyDefs) loc = do
-  let tyMap = mkTyInfoMap $ map (flip fromTyDef loc) tyDefs
+  let tyMap = mkTyInfoMap $ map (`fromTyDef` loc) tyDefs
   validateTypeMap tyMap
   return tyMap
 

@@ -72,13 +72,12 @@ $(J.deriveJSON
   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 6}
   ''ActionKind)
 
-newtype ArgumentName
-  = ArgumentName { unArgumentName :: G.Name }
-  deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
-           , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
+newtype ArgumentName = ArgumentName
+  { unArgumentName :: G.Name
+  } deriving ( Show, Eq, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey
+             , Hashable, DQuote, Lift, Generic, NFData, Cacheable)
 
-data ArgumentDefinition
-  = ArgumentDefinition
+data ArgumentDefinition = ArgumentDefinition
   { _argName        :: !ArgumentName
   , _argType        :: !GraphQLType
   , _argDescription :: !(Maybe G.Description)
@@ -87,8 +86,7 @@ instance NFData ArgumentDefinition
 instance Cacheable ArgumentDefinition
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ArgumentDefinition)
 
-data ActionDefinition a
-  = ActionDefinition
+data ActionDefinition a = ActionDefinition
   { _adArguments            :: ![ArgumentDefinition]
   , _adOutputType           :: !GraphQLType
   , _adKind                 :: !ActionKind
@@ -112,9 +110,8 @@ instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
 
 type ResolvedActionDefinition = ActionDefinition ResolvedWebhook
 
-data ActionPermissionInfo
-  = ActionPermissionInfo
-  { _apiRole   :: !RoleName
+data ActionPermissionInfo = ActionPermissionInfo
+  { _apiRole :: !RoleName
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionInfo)
 

@@ -46,7 +46,7 @@ printURLTemplate :: URLTemplate -> Text
 printURLTemplate = T.concat . map printTemplateItem . unURLTemplate
 
 parseURLTemplate :: Text -> Either String URLTemplate
-parseURLTemplate t = parseOnly parseTemplate t
+parseURLTemplate = parseOnly parseTemplate
   where
     parseTemplate :: Parser URLTemplate
     parseTemplate = do

@@ -61,12 +61,12 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
   typMap <- either remoteSchemaErr return $ VT.fromSchemaDoc sDoc $
      VT.TLRemoteType name def
   let mQrTyp = Map.lookup qRootN typMap
-      mMrTyp = maybe Nothing (`Map.lookup` typMap) mRootN
-      mSrTyp = maybe Nothing (`Map.lookup` typMap) sRootN
+      mMrTyp = (`Map.lookup` typMap) =<< mRootN
+      mSrTyp = (`Map.lookup` typMap) =<< sRootN
   qrTyp <- liftMaybe noQueryRoot mQrTyp
   let mRmQR = VT.getObjTyM qrTyp
-      mRmMR = join $ VT.getObjTyM <$> mMrTyp
-      mRmSR = join $ VT.getObjTyM <$> mSrTyp
+      mRmMR = VT.getObjTyM =<< mMrTyp
+      mRmSR = VT.getObjTyM =<< mSrTyp
   rmQR <- liftMaybe (err400 Unexpected "query root has to be an object type") mRmQR
   return $ GC.RemoteGCtx typMap rmQR mRmMR mRmSR
 

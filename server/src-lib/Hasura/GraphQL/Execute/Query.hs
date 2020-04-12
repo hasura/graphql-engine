@@ -156,9 +156,7 @@ prepareWithPlan :: (MonadState PlanningSt m) => UnresolvedVal -> m S.SQLExp
 prepareWithPlan = \case
   R.UVPG annPGVal -> do
     let AnnPGVal varM _ colVal = annPGVal
-    argNum <- case varM of
-      Just var -> getVarArgNum var
-      Nothing  -> getNextArgNum
+    argNum <- maybe getNextArgNum getVarArgNum varM
     addPrepArg argNum (toBinaryValue colVal, pstValue colVal)
     return $ toPrepParam argNum (pstType colVal)
 

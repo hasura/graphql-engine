@@ -188,7 +188,7 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
     -- column fields used in insert input object
     insInpObjFldsM = (mkColFldMap (mkInsInpTy tn) . fst) <$> insPermM
     -- relationship input objects
-    relInsInpObjsM = const (mkRelInsInps tn isUpsertable) <$> insPermM
+    relInsInpObjsM = mkRelInsInps tn isUpsertable <$ insPermM
     -- update set input type
     updSetInpObjM = mkUpdSetInp tn <$> updColsM
     -- update increment input type
@@ -754,11 +754,11 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
             concatMap (Map.keys . _rootMutationFields) rootFields
 
       -- TODO: The following exception should result in inconsistency
-      when (not $ null duplicateQueryFields) $
+      unless (null duplicateQueryFields) $
         throw400 Unexpected $ "following query root fields are duplicated: "
         <> showNames duplicateQueryFields
 
-      when (not $ null duplicateMutationFields) $
+      unless (null duplicateMutationFields) $
         throw400 Unexpected $ "following mutation root fields are duplicated: "
         <> showNames duplicateMutationFields
 

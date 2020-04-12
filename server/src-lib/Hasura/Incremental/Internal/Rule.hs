@@ -268,7 +268,7 @@ class (Arrow arr) => ArrowDistribute arr where
     -> arr (e, (HashMap k a, s)) (HashMap k b)
 
 instance (Monoid w, ArrowDistribute arr) => ArrowDistribute (WriterA w arr) where
-  keyed (WriterA f) = WriterA (arr (swap . sequence . fmap swap) . keyed f)
+  keyed (WriterA f) = WriterA (arr (swap . traverse swap) . keyed f)
   {-# INLINE keyed #-}
 
 -- | Unlike 'traverseA', using 'keyed' preserves incrementalization: if the input rule is

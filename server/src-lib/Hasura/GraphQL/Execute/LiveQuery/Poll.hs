@@ -64,15 +64,13 @@ import           Hasura.RQL.Types
 -- -------------------------------------------------------------------------------------------------
 -- Subscribers
 
-data Subscriber
-  = Subscriber
+data Subscriber = Subscriber
   { _sRootAlias        :: !G.Alias
   , _sOnChangeCallback :: !OnChange
   }
 
 -- | live query onChange metadata, used for adding more extra analytics data
-data LiveQueryMetadata
-  = LiveQueryMetadata
+data LiveQueryMetadata = LiveQueryMetadata
   { _lqmExecutionTime :: !Clock.DiffTime
   -- ^ Time spent waiting on the generated query to execute on postgres or the remote.
   }
@@ -146,7 +144,7 @@ mkRespHash = ResponseHash . CH.hash
 -- 'CohortId'; the latter is a completely synthetic key used only to identify the cohort in the
 -- generated SQL query.
 type CohortKey = CohortVariables
--- | This has the invariant, maintained in 'removeLiveQuery', that it contains no 'Cohort' with 
+-- | This has the invariant, maintained in 'removeLiveQuery', that it contains no 'Cohort' with
 -- zero total (existing + new) subscribers.
 type CohortMap = TMap.TMap CohortKey Cohort
 
@@ -234,7 +232,7 @@ data Poller
 data PollerIOState
   = PollerIOState
   { _pThread  :: !(Immortal.Thread)
-  -- ^ a handle on the poller’s worker thread that can be used to 'Immortal.stop' it if all its 
+  -- ^ a handle on the poller’s worker thread that can be used to 'Immortal.stop' it if all its
   -- cohorts stop listening
   , _pMetrics :: !RefetchMetrics
   }
@@ -330,7 +328,7 @@ pollQuery metrics batchSize pgExecCtx pgQuery handler =
       return (cohortSnapshotMap, queryVarsBatches)
 
     flip A.mapConcurrently_ queryVarsBatches $ \queryVars -> do
-      (dt, mxRes) <- timing _rmQuery $ 
+      (dt, mxRes) <- timing _rmQuery $
         runExceptT $ runLazyTx' pgExecCtx $ executeMultiplexedQuery pgQuery queryVars
       let lqMeta = LiveQueryMetadata $ fromUnits dt
           operations = getCohortOperations cohortSnapshotMap lqMeta mxRes

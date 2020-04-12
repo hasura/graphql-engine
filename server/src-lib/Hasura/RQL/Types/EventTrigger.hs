@@ -174,8 +174,7 @@ instance FromJSON CreateEventTriggerQuery where
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''CreateEventTriggerQuery)
 
 -- | The table operations on which the event trigger will be invoked.
-data TriggerOpsDef
-  = TriggerOpsDef
+data TriggerOpsDef = TriggerOpsDef
   { tdInsert       :: !(Maybe SubscribeOpSpec)
   , tdUpdate       :: !(Maybe SubscribeOpSpec)
   , tdDelete       :: !(Maybe SubscribeOpSpec)
@@ -185,8 +184,7 @@ instance NFData TriggerOpsDef
 instance Cacheable TriggerOpsDef
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
-data DeleteEventTriggerQuery
-  = DeleteEventTriggerQuery
+data DeleteEventTriggerQuery = DeleteEventTriggerQuery
   { detqName :: !TriggerName
   } deriving (Show, Eq, Lift)
 

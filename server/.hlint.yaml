@@ -1,0 +1,72 @@
+# HLint configuration file
+# https://github.com/ndmitchell/hlint
+##########################
+
+# This file contains a template configuration file, which is typically
+# placed as .hlint.yaml in the root of your project
+
+
+# Specify additional command line arguments
+#
+# - arguments: [--color, --cpp-simple, -XQuasiQuotes]
+
+
+# Control which extensions/flags/modules/functions can be used
+#
+# - extensions:
+#   - default: false # all extension are banned by default
+#   - name: [PatternGuards, ViewPatterns] # only these listed extensions can be used
+#   - {name: CPP, within: CrossPlatform} # CPP can only be used in a given module
+#
+# - flags:
+#   - {name: -w, within: []} # -w is allowed nowhere
+#
+# - modules:
+#   - {name: [Data.Set, Data.HashSet], as: Set} # if you import Data.Set qualified, it must be as 'Set'
+#   - {name: Control.Arrow, within: []} # Certain modules are banned entirely
+#
+# - functions:
+#   - {name: unsafePerformIO, within: []} # unsafePerformIO can only appear in no modules
+
+
+# Add custom hints for this project
+#
+# Will suggest replacing "wibbleMany [myvar]" with "wibbleOne myvar"
+# - error: {lhs: "wibbleMany [x]", rhs: wibbleOne x}
+
+
+# Turn on hints that are off by default
+#
+# Ban "module X(module X) where", to require a real export list
+# - warn: {name: Use explicit module export list}
+#
+# Replace a $ b $ c with a . b $ c
+# - group: {name: dollar, enabled: true}
+#
+# Generalise map to fmap, ++ to <>
+# - group: {name: generalise, enabled: true}
+
+
+# Ignore some builtin hints
+# - ignore: {name: Use let}
+# - ignore: {name: Use const, within: SpecialModule} # Only within certain modules
+
+- ignore: {name: Parse error}
+- ignore: {name: Reduce duplication}
+- ignore: {name: Redundant bracket}
+- ignore: {name: Redundant do}
+- ignore: {name: Redundant multi-way if}
+
+- ignore: {name: Use $>,        within: Hasura.RQL.Types.DML}
+- ignore: {name: Use camelCase, within: Control.Arrow.Extended}
+- ignore: {name: Use fmap,      within: Control.Arrow.Extended}
+- ignore: {name: Use fmap,      within: Control.Arrow.Trans}
+- ignore: {name: Use fmap,      within: Hasura.Incremental.Internal.Cache}
+
+
+# Define some custom infix operators
+# - fixity: infixr 3 ~^#^~
+
+
+# To generate a suitable file for HLint do:
+# $ hlint --default > .hlint.yaml

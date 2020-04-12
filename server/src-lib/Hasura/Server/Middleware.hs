@@ -4,6 +4,7 @@ import           Data.Maybe           (fromMaybe)
 import           Network.Wai
 
 import           Control.Applicative
+import           Control.Arrow        (first)
 import           Hasura.Prelude
 import           Hasura.Server.Cors
 import           Hasura.Server.Utils
@@ -65,4 +66,4 @@ corsMiddleware policy app req sendResp = do
       ]
 
     setHeaders hdrs = mapResponseHeaders (\h -> mkRespHdrs hdrs ++ h)
-    mkRespHdrs = map (\(k,v) -> (CI.mk k, v))
+    mkRespHdrs = map $ first CI.mk
