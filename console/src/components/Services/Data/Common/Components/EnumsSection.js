@@ -18,13 +18,9 @@ export const EnumTableModifyWarning = ({ isEnum }) => {
         * This table is set as an enum. Modifying it may cause your Hasura
         metadata to become inconsistent.
         <br />
-        <a
-          href={enumCompatibilityDocsUrl}
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          See enum table requirements.
-        </a>
+        <TextLink href={enumCompatibilityDocsUrl} type='moreInfo'>
+          See enum table requirements
+        </TextLink>
       </i>
     </div>
   );

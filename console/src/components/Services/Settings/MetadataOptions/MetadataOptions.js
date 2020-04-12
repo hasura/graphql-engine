@@ -4,7 +4,7 @@ import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
-import { Heading } from '../../../UIKit/atoms';
+import { Heading, TextLink } from '../../../UIKit/atoms';
 import styles from '../Settings.scss';
 
 const MetadataOptions = props => {
@@ -12,7 +12,7 @@ const MetadataOptions = props => {
     return (
       <div>
         <div className={styles.intro_note}>
-          <Heading as="h4">Import/Export metadata</Heading>
+          <Heading as='h4'>Import/Export metadata</Heading>
           <div className={styles.content_width}>
             Get Hasura metadata as JSON.
           </div>
@@ -32,20 +32,20 @@ const MetadataOptions = props => {
   const getMetadataUpdateSection = () => {
     return (
       <div>
-        <div key="meta_data_1" className={styles.intro_note}>
-          <Heading as="h4">Reload metadata</Heading>
+        <div key='meta_data_1' className={styles.intro_note}>
+          <Heading as='h4'>Reload metadata</Heading>
           <div className={styles.content_width}>
             Refresh Hasura metadata, typically required if you have changed the
             underlying postgres or if you have updated your remote schemas.
           </div>
         </div>
 
-        <div key="meta_data_2">
+        <div key='meta_data_2'>
           <ReloadMetadata {...props} />
         </div>
 
-        <div key="meta_data_3" className={styles.intro_note}>
-          <Heading as="h4">Reset metadata</Heading>
+        <div key='meta_data_3' className={styles.intro_note}>
+          <Heading as='h4'>Reset metadata</Heading>
           <div className={styles.content_width}>
             Permanently clear GraphQL Engine's metadata and configure it from
             scratch (tracking relevant tables and relationships). This process
@@ -53,7 +53,7 @@ const MetadataOptions = props => {
           </div>
         </div>
 
-        <div key="meta_data_4">
+        <div key='meta_data_4'>
           <ResetMetadata {...props} />
         </div>
       </div>
@@ -65,21 +65,21 @@ const MetadataOptions = props => {
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
     >
       <div className={styles.subHeader}>
-        <Heading as="h2" pb="0px" fontSize="18px">
+        <Heading as='h2' pb='0px' fontSize='18px'>
           Hasura Metadata Actions
         </Heading>
-        <div className="clearfix" />
+        <div className='clearfix' />
         <div className={styles.content_width}>
           Hasura metadata stores information about your tables, relationships,
-          permissions, etc. that is used to generate the GraphQL schema and
-          API.&nbsp;
-          <a
-            href="https://hasura.io/docs/1.0/graphql/manual/how-it-works/metadata-schema.html"
-            target="_blank"
-            rel="noopener noreferrer"
+          permissions, etc. that is used to generate the GraphQL schema and API.
+          <TextLink
+            href='https://hasura.io/docs/1.0/graphql/manual/how-it-works/metadata-schema.html'
+            type='moreInfo'
+            ml='sm'
+            fontSize='link'
           >
-            <i>(Read more)</i>
-          </a>
+            Read more
+          </TextLink>
         </div>
       </div>
 
@@ -94,7 +94,7 @@ const mapStateToProps = state => {
   return {
     ...state.main,
     metadata: state.metadata,
-    dataHeaders: { ...state.tables.dataHeaders },
+    dataHeaders: { ...state.tables.dataHeaders }
   };
 };
 

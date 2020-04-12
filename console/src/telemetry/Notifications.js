@@ -21,9 +21,9 @@ const showTelemetryNotification = () => {
             Help us improve Hasura! The console collects anonymized usage stats
             which allows us to keep improving Hasura at warp speed.
             <a
-              href="https://hasura.io/docs/1.0/graphql/manual/guides/telemetry.html"
-              target="_blank"
-              rel="noopener noreferrer"
+              href='https://hasura.io/docs/1.0/graphql/manual/guides/telemetry.html'
+              target='_blank'
+              rel='noopener noreferrer'
             >
               {' '}
               Click here
@@ -31,7 +31,7 @@ const showTelemetryNotification = () => {
             to read more or to opt-out.
           </div>
         ),
-        onRemove: () => dispatch(onRemove()),
+        onRemove: () => dispatch(onRemove())
       })
     );
   };

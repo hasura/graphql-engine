@@ -4,14 +4,14 @@ import { css } from 'styled-components';
 import { StyledTextLink } from './TextLink';
 
 export const TextLink = props => {
-  const { children, underline, type, href, hover } = props;
+  const { children, underline, type, href, hover, fontSize } = props;
 
   if (type === 'moreInfo') {
     return (
       <StyledTextLink
         {...props}
         href={href}
-        fontSize='12px'
+        fontSize={fontSize || '12px'}
         target='_blank'
         rel='noopener noreferrer'
         color='blue.link'
@@ -33,6 +33,7 @@ export const TextLink = props => {
       href={href}
       borderBottom={underline ? 1 : 'none'}
       rel='noopener noreferrer'
+      fontSize={fontSize || '14px'}
       css={
         hover === 'underline' &&
         css`
@@ -49,6 +50,5 @@ export const TextLink = props => {
 
 TextLink.defaultProps = {
   color: 'black.text',
-  fontWeight: 'medium',
-  fontSize: 'link'
+  fontWeight: 'medium'
 };
