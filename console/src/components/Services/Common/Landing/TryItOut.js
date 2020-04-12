@@ -8,7 +8,7 @@ import googleCloud from './images/google_cloud.svg';
 import MicrosoftAzure from './images/Microsoft_Azure_Logo.svg';
 import AWS from './images/AWS.png';
 import externalLink from './images/external-link.svg';
-import { Heading, TextLink } from '../../../UIKit/atoms';
+import { Heading, TextLink, Icon } from '../../../UIKit/atoms';
 import styles from '../../RemoteSchema/RemoteSchema.scss';
 
 const TryItOut = ({
@@ -60,7 +60,7 @@ const TryItOut = ({
               className={styles.instructions + ' ' + styles.displayFlex}
             >
               <span>Instructions</span>
-              <div className={styles.rightArrow} />
+              <Icon type="play" ml="12px" mb="-2px" size={10} />
             </span>
             {isPopUp && (
               <PopUp
@@ -119,7 +119,7 @@ const TryItOut = ({
           <div className={styles.instructions}>
             <TextLink href={adMoreLink} target="_blank" fontWeight="bold">
               And many more
-              <div className={styles.rightArrow} />
+              <Icon type="play" ml="12px" size={10} />
             </TextLink>
           </div>
         </div>

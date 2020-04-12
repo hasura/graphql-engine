@@ -191,10 +191,6 @@
     color: #505050;
     text-decoration: none;
   }
-
-  .rightArrow {
-    margin-top: 3px;
-  }
 }
 
 .displayFlex {
@@ -203,22 +199,8 @@
   justify-content: center;
 }
 
-.rightArrow {
-  width: 0;
-  height: 0;
-  border-top: 6px solid transparent;
-  border-bottom: 6px solid transparent;
-  border-left: 8px solid #909090;
-  margin-left: 12px;
-  display: inline-block;
-}
-
 .instructions:hover {
   color: #505050;
-
-  .rightArrow {
-    border-left: 8px solid #505050;
-  }
 }
 
 .tryOutWrapper {
@@ -268,10 +250,6 @@
     .instructionsWrapperPos:hover {
       .instructions {
         color: #505050;
-      }
-
-      .rightArrow {
-        border-left: 8px solid #505050;
       }
     }
   }
