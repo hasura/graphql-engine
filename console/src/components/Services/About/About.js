@@ -50,12 +50,12 @@ class About extends Component {
 
     const { serverVersion, latestStableServerVersion } = this.props;
 
-    const spinner = <Spinner size='sm' display='inline-block' />;
+    const spinner = <Spinner size="sm" display="inline-block" />;
 
     const getServerVersionSection = () => {
       return (
         <>
-          <Text fontWeight='bold' mr='15px' display='inline-block'>
+          <Text fontWeight="bold" mr="15px" display="inline-block">
             Current server version:
           </Text>
           {serverVersion || spinner}
@@ -77,8 +77,8 @@ class About extends Component {
                 'https://github.com/hasura/graphql-engine/releases/tag/' +
                 latestStableServerVersion
               }
-              target='_blank'
-              rel='noopener noreferrer'
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <span>
                 <i>View Changelog</i>
@@ -88,9 +88,9 @@ class About extends Component {
               &nbsp;<b>&middot;</b>&nbsp;
             </span>
             <a
-              href='https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html'
-              target='_blank'
-              rel='noopener noreferrer'
+              href="https://hasura.io/docs/1.0/graphql/manual/deployment/updating.html"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <span>
                 <i>Update Now</i>
@@ -102,7 +102,7 @@ class About extends Component {
 
       return (
         <>
-          <Text fontWeight='bold' mr='15px' display='inline-block'>
+          <Text fontWeight="bold" mr="15px" display="inline-block">
             Latest stable server version:
           </Text>
           {latestStableServerVersion || spinner} {updateLinks}
@@ -113,7 +113,7 @@ class About extends Component {
     const getConsoleAssetVersionSection = () => {
       return (
         <>
-          <Text fontWeight='bold' mr='sm' display='inline-block'>
+          <Text fontWeight="bold" mr="sm" display="inline-block">
             Console asset version:
           </Text>
           {consoleAssetVersion || 'NA'}
@@ -124,7 +124,7 @@ class About extends Component {
     const getPgVersionSection = () => {
       return (
         <>
-          <Text fontWeight='bold' mr='15px' display='inline-block'>
+          <Text fontWeight="bold" mr="15px" display="inline-block">
             Postgres version:
           </Text>
           {pgVersion || spinner}
@@ -136,7 +136,7 @@ class About extends Component {
       <div className={`container-fluid ${styles.full_container}`}>
         <div className={styles.subHeader}>
           <Helmet title={'About | Hasura'} />
-          <Heading as='h2' fontSize='h2'>
+          <Heading as="h2" fontSize="h2">
             About
           </Heading>
           <div className={styles.wd60}>

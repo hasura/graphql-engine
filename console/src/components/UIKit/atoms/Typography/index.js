@@ -26,7 +26,7 @@ export const Heading = props => {
 
 Heading.defaultProps = {
   color: 'black.text',
-  fontWeight: 'bold',
+  fontWeight: 'bold'
 };
 
 /**
@@ -41,27 +41,16 @@ export const Text = props => {
 
   const lineHeight = type === 'explain' ? 'explain' : 'body';
 
-  let fontWeightValue;
-  let fontSizeValue;
+  const fontWeightValue = type === 'explain' ? 'bold' : '';
 
-  if (fontWeight) {
-    fontWeightValue = fontWeight;
-  } else if (type === 'explain') {
-    fontWeightValue = 'bold';
-  }
-
-  if (fontSize) {
-    fontSizeValue = fontSize;
-  } else {
-    fontSizeValue = type === 'explain' ? 'explain' : '';
-  }
+  const fontSizeValue = type === 'explain' ? 'explain' : '';
 
   return (
     <StyledText
       {...props}
       lineHeight={lineHeight}
-      fontSize={fontSizeValue}
-      fontWeight={fontWeightValue}
+      fontSize={fontSize || fontSizeValue}
+      fontWeight={fontWeight || fontWeightValue}
     >
       {children}
     </StyledText>
@@ -70,7 +59,7 @@ export const Text = props => {
 
 Text.defaultProps = {
   mb: 0,
-  mt: 0,
+  mt: 0
 };
 
 export const TextLink = props => {
@@ -90,5 +79,5 @@ export const TextLink = props => {
 };
 
 TextLink.defaultProps = {
-  color: 'black.text',
+  color: 'black.text'
 };

@@ -5,7 +5,7 @@ import DropdownButton from '../../../Common/DropdownButton/DropdownButton';
 import {
   setWebhookUrl,
   setWebhookUrlType,
-  showValidationError,
+  showValidationError
 } from './Actions';
 import { ToolTip, Heading, Text } from '../../../UIKit/atoms';
 
@@ -16,7 +16,7 @@ const WebhookEditor = props => {
     dispatch,
     modifyTrigger,
     styles,
-    save: saveWebhook,
+    save: saveWebhook
   } = props;
 
   const setValues = () => {
@@ -49,8 +49,9 @@ const WebhookEditor = props => {
 
   const collapsed = () => (
     <div className={styles.modifyProperty}>
-      <Text mr="xs" fontSize="button">
+      <Text fontSize="14px">
         {webhook}
+        &nbsp;
       </Text>
       <i>{env && '- from env'}</i>
     </div>
@@ -61,7 +62,7 @@ const WebhookEditor = props => {
       <DropdownButton
         dropdownOptions={[
           { display_text: 'URL', value: 'url' },
-          { display_text: 'From env var', value: 'env' },
+          { display_text: 'From env var', value: 'env' }
         ]}
         title={modifyTrigger.webhookUrlType === 'env' ? 'From env var' : 'URL'}
         dataKey={modifyTrigger.webhookUrlType === 'env' ? 'env' : 'url'}

@@ -15,7 +15,7 @@ const ActionDefinitionEditor = ({
   className,
   placeholder,
   error,
-  timer,
+  timer
 }) => {
   const onChangeWithError = v => {
     if (timer) {
@@ -46,7 +46,7 @@ const ActionDefinitionEditor = ({
       column: l.column,
       type: 'error',
       message: errorMessage,
-      className: styles.errorMarker,
+      className: styles.errorMarker
     }));
   }
 
@@ -62,7 +62,7 @@ const ActionDefinitionEditor = ({
         >
           {error && (
             <div className={styles.display_flex}>
-              <Icon type="close" color="red.primary" mr="xs" mb="12px" />
+              <Icon type="close" color="red.primary" mr="xs" />
               <Text color="red.primary">{errorMessage}</Text>
             </div>
           )}

@@ -22,7 +22,7 @@ const ActionDefinitionEditor = ({
   label = editorLabel,
   tooltip = editorTooltip,
   editorHeight = '200px',
-  editorWidth = '600px',
+  editorWidth = '600px'
 }) => {
   const [modalOpen, setModalState] = React.useState(false);
   const toggleModal = () => setModalState(!modalOpen);
