@@ -10,7 +10,7 @@ export default class QueryAnalyser extends React.Component {
     Modal.setAppElement('body');
     this.state = {
       analyseData: [],
-      activeNode: 0,
+      activeNode: 0
     };
   }
 
@@ -26,7 +26,7 @@ export default class QueryAnalyser extends React.Component {
       .then(data => {
         this.setState({
           analyseData: data,
-          activeNode: 0,
+          activeNode: 0
         });
       })
       .catch(e => {
@@ -104,7 +104,7 @@ export default class QueryAnalyser extends React.Component {
                                   .sql,
                                 { language: 'sql' }
                               )
-                            ).value,
+                            ).value
                         }}
                       />
                     </pre>
@@ -150,8 +150,8 @@ export default class QueryAnalyser extends React.Component {
                       {this.state.activeNode >= 0 &&
                       this.state.analyseData.length > 0
                         ? this.state.analyseData[
-                          this.state.activeNode
-                        ].plan.join('\n')
+                            this.state.activeNode
+                          ].plan.join('\n')
                         : ''}
                     </code>
                   </pre>
@@ -190,9 +190,9 @@ export default class QueryAnalyser extends React.Component {
       if (type === 'sql') {
         text = window.sqlFormatter
           ? window.sqlFormatter.format(
-            this.state.analyseData[this.state.activeNode].sql,
-            { language: 'sql' }
-          )
+              this.state.analyseData[this.state.activeNode].sql,
+              { language: 'sql' }
+            )
           : this.state.analyseData[this.state.activeNode].sql;
       } else {
         text = this.state.analyseData[this.state.activeNode].plan.join('\n');
@@ -228,5 +228,5 @@ QueryAnalyser.propTypes = {
   show: PropTypes.bool.isRequired,
   analyseQuery: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   clearAnalyse: PropTypes.func.isRequired,
-  analyzeFetcher: PropTypes.func.isRequired,
+  analyzeFetcher: PropTypes.func.isRequired
 };

@@ -8,18 +8,17 @@ export const Heading = props => {
   if (type === 'subHeading') {
     return (
       <StyledHeading
-        as='h4'
-        fontSize='15px'
-        pb='20px'
-        mt='0px'
-        mb='0px'
+        as="h4"
+        fontSize="15px"
+        pb="20px"
+        mt="0px"
+        mb="0px"
         {...props}
       >
         {children}
       </StyledHeading>
     );
   }
-  // No else block here.
 
   return <StyledHeading {...props}>{children}</StyledHeading>;
 };
@@ -41,27 +40,16 @@ export const Text = props => {
 
   const lineHeight = type === 'explain' ? 'explain' : 'body';
 
-  let fontWeightValue;
-  let fontSizeValue;
+  const fontWeightValue = type === 'explain' ? 'bold' : '';
 
-  if (fontWeight) {
-    fontWeightValue = fontWeight;
-  } else if (type === 'explain') {
-    fontWeightValue = 'bold';
-  }
-
-  if (fontSize) {
-    fontSizeValue = fontSize;
-  } else {
-    fontSizeValue = type === 'explain' ? 'explain' : '';
-  }
+  const fontSizeValue = type === 'explain' ? 'explain' : '';
 
   return (
     <StyledText
       {...props}
       lineHeight={lineHeight}
-      fontSize={fontSizeValue}
-      fontWeight={fontWeightValue}
+      fontSize={fontSize || fontSizeValue}
+      fontWeight={fontWeight || fontWeightValue}
     >
       {children}
     </StyledText>

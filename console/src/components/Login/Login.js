@@ -69,7 +69,7 @@ const Login = ({ dispatch }) => {
         shouldPersist,
         successCallback,
         errorCallback,
-        dispatch,
+        dispatch
       });
     };
 

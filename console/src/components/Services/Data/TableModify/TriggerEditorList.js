@@ -34,7 +34,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
     const collapsedLabel = () => (
       <div>
         <div>
-          <Text fontWeight="bold" mr="sm">
+          <Text fontWeight="bold" mr="sm" display="inline-block">
             {triggerName}
           </Text>
           <i>
@@ -46,7 +46,7 @@ const TriggerEditorList = ({ tableSchema, dispatch }) => {
     );
 
     const expandedLabel = () => (
-      <Text fontWeight="bold" mr="sm">
+      <Text fontWeight="bold" mr="sm" display="inline-block">
         {triggerName}
       </Text>
     );
