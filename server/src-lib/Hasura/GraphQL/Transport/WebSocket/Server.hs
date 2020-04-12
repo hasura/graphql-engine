@@ -1,5 +1,5 @@
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE NondecreasingIndentation #-}
+{-# LANGUAGE RankNTypes               #-}
 
 module Hasura.GraphQL.Transport.WebSocket.Server
   ( WSId(..)
@@ -39,9 +39,9 @@ import qualified Data.TByteString                     as TBS
 import qualified Data.UUID                            as UUID
 import qualified Data.UUID.V4                         as UUID
 import           Data.Word                            (Word16)
+import           GHC.AssertNF
 import           GHC.Int                              (Int64)
 import           Hasura.Prelude
-import           GHC.AssertNF
 import qualified ListT
 import qualified Network.WebSockets                   as WS
 import qualified StmContainers.Map                    as STMMap
@@ -234,13 +234,13 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !p
       onReject wsId shuttingDownReject
 
   where
-    -- It's not clear what the unexpected exception handling story here should be. So at 
+    -- It's not clear what the unexpected exception handling story here should be. So at
     -- least log properly and re-raise:
     logUnexpectedExceptions = handle $ \(e :: SomeException) -> do
       writeLog $ L.UnstructuredLog L.LevelError $ fromString $
         "Unexpected exception raised in websocket. Please report this as a bug: "<>show e
       throwIO e
-      
+
     shuttingDownReject =
       WS.RejectRequest 503
                         "Service Unavailable"
@@ -272,7 +272,7 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !p
 
       -- ensure we clean up connMap even if an unexpected exception is raised from our worker
       -- threads, or an async exception is raised somewhere in the body here:
-      bracket 
+      bracket
         whenAcceptingInsertConn
         (onConnClose wsConn)
         $ \case

@@ -10,10 +10,10 @@ module Hasura.Server.Telemetry
   )
   where
 
-import           Control.Exception     (try)
+import           Control.Exception                (try)
 import           Control.Lens
 import           Data.List
-import           Data.Text.Conversions (UTF8 (..), decodeText)
+import           Data.Text.Conversions            (UTF8 (..), decodeText)
 
 import           Hasura.HTTP
 import           Hasura.Logging
@@ -24,17 +24,17 @@ import           Hasura.Server.Telemetry.Counters
 import           Hasura.Server.Version
 
 import qualified CI
-import qualified Control.Concurrent.Extended   as C
-import qualified Data.Aeson                    as A
-import qualified Data.Aeson.Casing             as A
-import qualified Data.Aeson.TH                 as A
-import qualified Data.ByteString.Lazy          as BL
-import qualified Data.HashMap.Strict           as Map
-import qualified Data.Text                     as T
-import qualified Network.HTTP.Client           as HTTP
-import qualified Network.HTTP.Types            as HTTP
-import qualified Network.Wreq                  as Wreq
-import qualified Language.GraphQL.Draft.Syntax as G
+import qualified Control.Concurrent.Extended      as C
+import qualified Data.Aeson                       as A
+import qualified Data.Aeson.Casing                as A
+import qualified Data.Aeson.TH                    as A
+import qualified Data.ByteString.Lazy             as BL
+import qualified Data.HashMap.Strict              as Map
+import qualified Data.Text                        as T
+import qualified Language.GraphQL.Draft.Syntax    as G
+import qualified Network.HTTP.Client              as HTTP
+import qualified Network.HTTP.Types               as HTTP
+import qualified Network.Wreq                     as Wreq
 
 data RelationshipMetric
   = RelationshipMetric

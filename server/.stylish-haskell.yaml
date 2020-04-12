@@ -15,9 +15,37 @@ steps:
   #     # true.
   #     add_language_pragma: true
 
+  # Format record definitions. This is disabled by default.
+  #
+  # You can control the layout of record fields. The only rules that can't be configured
+  # are these:
+  #
+  # - "|" is always aligned with "="
+  # - "," in fields is always aligned with "{"
+  # - "}" is likewise always aligned with "{"
+  #
+  # - records:
+  #     # How to format equals sign between type constructor and data constructor.
+  #     # Possible values:
+  #     # - "same_line" -- leave "=" AND data constructor on the same line as the type constructor.
+  #     # - "indent N" -- insert a new line and N spaces from the beginning of the next line.
+  #     equals: "indent 2"
+  #
+  #     # How to format first field of each record constructor.
+  #     # Possible values:
+  #     # - "same_line" -- "{" and first field goes on the same line as the data constructor.
+  #     # - "indent N" -- insert a new line and N spaces from the beginning of the data constructor
+  #     first_field: "indent 2"
+  #
+  #     # How many spaces to insert between the column with "," and the beginning of the comment in the next line.
+  #     field_comment: 2
+  #
+  #     # How many spaces to insert before "deriving" clause. Deriving clauses are always on separate lines.
+  #     deriving: 2
+
   # Align the right hand side of some elements.  This is quite conservative
   # and only applies to statements where each element occupies a single
-  # line.
+  # line. All default to true.
   - simple_align:
       cases: true
       top_level_patterns: true
@@ -55,6 +83,18 @@ steps:
       #
       #   > import qualified Data.List      as List (concat, foldl, foldr, head,
       #   >                                 init, last, length)
+      #
+      # - with_module_name: Import list is aligned `list_padding` spaces after
+      #   the module name.
+      #
+      #   > import qualified Data.List      as List (concat, foldl, foldr, head,
+      #                          init, last, length)
+      #
+      #   This is mainly intended for use with `pad_module_names: false`.
+      #
+      #   > import qualified Data.List as List (concat, foldl, foldr, head,
+      #                          init, last, length, scanl, scanr, take, drop,
+      #                          sort, nub)
       #
       # - new_line: Import list starts always on new line.
       #
@@ -126,6 +166,8 @@ steps:
       #
       # - module_name: align under start of module name.
       #   Useful for 'file' and 'group' align settings.
+      #
+      # Default: 4
       list_padding: 4
 
       # Separate lists option affects formatting of import list for type
@@ -189,11 +231,16 @@ steps:
       # is set to true, it will remove those redundant pragmas. Default: true.
       remove_redundant: true
 
+      # Language prefix to be used for pragma declaration, this allows you to
+      # use other options non case-sensitive like "language" or "Language".
+      # If a non correct String is provided, it will default to: LANGUAGE.
+      language_prefix: LANGUAGE
+
   # Replace tabs by spaces. This is disabled by default.
-  # - tabs:
-  #     # Number of spaces to use for each tab. Default: 8, as specified by the
-  #     # Haskell report.
-  #     spaces: 8
+  - tabs:
+      # Number of spaces to use for each tab. Default: 8, as specified by the
+      # Haskell report.
+      spaces: 8
 
   # Remove trailing whitespace
   - trailing_whitespace: {}
@@ -204,7 +251,11 @@ steps:
   # - squash: {}
 
 # A common setting is the number of columns (parts of) code will be wrapped
-# to. Different steps take this into account. Default: 80.
+# to. Different steps take this into account.
+#
+# Set this to null to disable all line wrapping.
+#
+# Default: 80.
 columns: 100
 
 # By default, line endings are converted according to the OS. You can override
@@ -217,7 +268,7 @@ columns: 100
 # - crlf: Convert to CRLF ("\r\n").
 #
 # Default: native.
-newline: native
+newline: lf
 
 # Sometimes, language extensions are specified in a cabal file or from the
 # command line instead of using language pragmas in the file. stylish-haskell
@@ -258,3 +309,9 @@ language_extensions:
 - TypeApplications
 - TypeFamilies
 - TypeOperators
+
+# Attempt to find the cabal file in ancestors of the current directory, and
+# parse options (currently only language extensions) from that.
+#
+# Default: true
+cabal: true

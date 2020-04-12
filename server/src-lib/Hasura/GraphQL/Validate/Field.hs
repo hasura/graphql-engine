@@ -144,7 +144,7 @@ withDirectives dirs act = do
       when (isJust $ _aivVariable val) markNotReusable
       case _aivValue val of
         AGScalar _ (Just (PGValBoolean v)) -> return v
-        _ -> throw500 "did not find boolean scalar for if argument"
+        _                                  -> throw500 "did not find boolean scalar for if argument"
 
 denormSel
   :: ( MonadReader ValidationCtx m

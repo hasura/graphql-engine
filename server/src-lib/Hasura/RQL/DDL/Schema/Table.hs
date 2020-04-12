@@ -36,8 +36,8 @@ import           Hasura.Server.Utils
 import           Hasura.SQL.Types
 
 import qualified Database.PG.Query                  as Q
-import qualified Hasura.GraphQL.Schema              as GS
 import qualified Hasura.GraphQL.Context             as GC
+import qualified Hasura.GraphQL.Schema              as GS
 import qualified Hasura.Incremental                 as Inc
 import qualified Language.GraphQL.Draft.Syntax      as G
 

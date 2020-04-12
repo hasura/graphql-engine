@@ -7,7 +7,7 @@ module Hasura.GraphQL.Execute.LiveQuery.Options
 
 import           Hasura.Prelude
 
-import qualified Data.Aeson            as J
+import qualified Data.Aeson     as J
 
 data LiveQueriesOptions
   = LiveQueriesOptions
@@ -30,7 +30,7 @@ instance J.ToJSON LiveQueriesOptions where
 newtype BatchSize = BatchSize { unBatchSize :: Int }
   deriving (Show, Eq, J.ToJSON)
 
--- TODO this is treated as milliseconds in fromEnv and as seconds in ToJSON. 
+-- TODO this is treated as milliseconds in fromEnv and as seconds in ToJSON.
 --      ideally this would have e.g. ... unRefetchInterval :: Milliseconds
 newtype RefetchInterval = RefetchInterval { unRefetchInterval :: DiffTime }
   deriving (Show, Eq, J.ToJSON)

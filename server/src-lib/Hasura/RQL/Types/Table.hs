@@ -279,12 +279,12 @@ data EventTriggerInfo
    , etiOpsDef      :: !TriggerOpsDef
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo
-   -- ^ The HTTP(s) URL which will be called with the event payload on configured operation. 
-   -- Must be a POST handler. This URL can be entered manually or can be picked up from an 
-   -- environment variable (the environment variable needs to be set before using it for 
-   -- this configuration). 
+   -- ^ The HTTP(s) URL which will be called with the event payload on configured operation.
+   -- Must be a POST handler. This URL can be entered manually or can be picked up from an
+   -- environment variable (the environment variable needs to be set before using it for
+   -- this configuration).
    , etiHeaders     :: ![EventHeaderInfo]
-   -- ^ Custom headers can be added to an event trigger. Each webhook request will have these 
+   -- ^ Custom headers can be added to an event trigger. Each webhook request will have these
    -- headers added.
    } deriving (Show, Eq, Generic)
 instance NFData EventTriggerInfo

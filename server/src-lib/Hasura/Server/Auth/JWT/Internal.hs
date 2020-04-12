@@ -7,8 +7,7 @@ import           Crypto.PubKey.RSA        (PublicKey (..))
 import           Data.ASN1.BinaryEncoding (DER (..))
 import           Data.ASN1.Encoding       (decodeASN1')
 import           Data.ASN1.Types          (ASN1 (End, IntVal, Start),
-                                           ASN1ConstructionType (Sequence),
-                                           fromASN1)
+                                           ASN1ConstructionType (Sequence), fromASN1)
 import           Data.Int                 (Int64)
 import           Data.Text.Conversions
 
@@ -82,7 +81,7 @@ fromX509Pem s = do
       pubKey = X509.certPubKey cert
   case pubKey of
     X509.PubKeyRSA pk -> return $ X509.PubKeyRSA pk
-    _ -> Left "Could not decode RSA public key from x509 cert"
+    _                 -> Left "Could not decode RSA public key from x509 cert"
 
 
 pubKeyToJwk :: X509.PubKey -> Either Text JWK

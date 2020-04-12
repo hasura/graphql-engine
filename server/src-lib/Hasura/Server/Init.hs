@@ -491,7 +491,7 @@ serveCmdFooter =
         , "Max event threads"
         )
       , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Interval in milliseconds to sleep before trying to fetch events again after a " 
+        , "Interval in milliseconds to sleep before trying to fetch events again after a "
           <> "fetch returned no events from postgres."
         )
       ]
@@ -809,7 +809,7 @@ readAPIs = mapM readAPI . T.splitOn "," . T.pack
           "PGDUMP"    -> Right PGDUMP
           "DEVELOPER" -> Right DEVELOPER
           "CONFIG"    -> Right CONFIG
-          _            -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer,config"
+          _           -> Left "Only expecting list of comma separated API types metadata,graphql,pgdump,developer,config"
 
 readLogLevel :: String -> Either String L.LogLevel
 readLogLevel s = case T.toLower $ T.strip $ T.pack s of
@@ -1090,17 +1090,17 @@ serveOptionsParser =
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
 downgradeShortcuts :: [(String, String)]
-downgradeShortcuts = 
+downgradeShortcuts =
   $(do let s = $(embedStringFile "src-rsr/catalog_versions.txt")
-          
+
            parseVersions = map (parseVersion . words) . lines
-     
+
            parseVersion [tag, version] = (tag, version)
-           parseVersion other = error ("unrecognized tag/catalog mapping " ++ show other)
-       TH.lift (parseVersions s))     
+           parseVersion other          = error ("unrecognized tag/catalog mapping " ++ show other)
+       TH.lift (parseVersions s))
 
 downgradeOptionsParser :: Parser DowngradeOptions
-downgradeOptionsParser = 
+downgradeOptionsParser =
     DowngradeOptions
     <$> choice
         (strOption
@@ -1115,7 +1115,7 @@ downgradeOptionsParser =
           help "Don't run any migrations, just print out the SQL."
         )
   where
-    shortcut v catalogVersion = 
+    shortcut v catalogVersion =
       flag' (DataString.fromString catalogVersion)
         ( long ("to-" <> v) <>
           help ("Downgrade to graphql-engine version " <> v <> " (equivalent to --to-catalog-version " <> catalogVersion <> ")")

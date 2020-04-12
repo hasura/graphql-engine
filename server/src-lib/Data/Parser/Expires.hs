@@ -5,7 +5,7 @@ module Data.Parser.Expires
 import           Control.Monad.Except
 import           Data.Text.Conversions
 import           Data.Time.Clock
-import           Data.Time.Format        (defaultTimeLocale, parseTimeM)
+import           Data.Time.Format      (defaultTimeLocale, parseTimeM)
 
 import           Hasura.Prelude
 

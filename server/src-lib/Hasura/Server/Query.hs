@@ -291,11 +291,11 @@ getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q
          (MonadError QErr m) => RQLQuery -> m (Maybe Q.TxAccess)
     getQueryAccessMode' (RQV1 q') =
       case q' of
-        RQSelect _ -> pure Nothing
-        RQCount _ -> pure Nothing
+        RQSelect _                      -> pure Nothing
+        RQCount _                       -> pure Nothing
         RQRunSql RunSQL {rTxAccessMode} -> pure $ Just rTxAccessMode
-        RQBulk qs -> foldM reconcileAccessModeWith Nothing (zip [0 :: Integer ..] qs)
-        _ -> pure $ Just Q.ReadWrite
+        RQBulk qs                       -> foldM reconcileAccessModeWith Nothing (zip [0 :: Integer ..] qs)
+        _                               -> pure $ Just Q.ReadWrite
       where
         reconcileAccessModeWith expectedMode (i, query) = do
           queryMode <- getQueryAccessMode' query

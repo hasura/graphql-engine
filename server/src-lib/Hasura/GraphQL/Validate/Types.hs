@@ -510,8 +510,8 @@ validateUnion tyMap (UnionTyInfo _ un mt) = do
   where
     valIsObjTy mn = case Map.lookup mn tyMap of
       Just (TIObj t) -> return t
-      Nothing -> throwError $ "Could not find type " <> showNamedTy mn <> ", which is defined as a member type of Union " <> showNamedTy un
-      _ -> throwError $ "Union type " <> showNamedTy un <> " can only include object types. It cannot include " <> showNamedTy mn
+      Nothing        -> throwError $ "Could not find type " <> showNamedTy mn <> ", which is defined as a member type of Union " <> showNamedTy un
+      _              -> throwError $ "Union type " <> showNamedTy un <> " can only include object types. It cannot include " <> showNamedTy mn
 
 implmntsIFace :: TypeMap -> ObjTyInfo -> IFaceTyInfo -> Either Text ()
 implmntsIFace tyMap objTyInfo iFaceTyInfo = do

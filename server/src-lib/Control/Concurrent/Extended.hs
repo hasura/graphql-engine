@@ -9,20 +9,20 @@ module Control.Concurrent.Extended
   , forkIO
   ) where
 
-import           Prelude
 import           Control.Exception
-import           Control.Monad.IO.Class
 import           Control.Monad
+import           Control.Monad.IO.Class
 import           Data.Aeson
 import           Data.Void
+import           Prelude
 
 import qualified Control.Concurrent                   as Base
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Control.Immortal                     as Immortal
 import qualified Control.Monad.Trans.Control          as MC
 
-import           Control.Concurrent    hiding (threadDelay, forkIO)
-import           Data.Time.Clock.Units (seconds, Microseconds (..), DiffTime)
+import           Control.Concurrent                   hiding (forkIO, threadDelay)
+import           Data.Time.Clock.Units                (DiffTime, Microseconds (..), seconds)
 
 -- For forkImmortal. We could also have it take a cumbersome continuation if we
 -- want to break this dependency. Probably best to move Hasura.Logging into a
@@ -40,16 +40,16 @@ sleep = Base.threadDelay . round . Microseconds
 threadDelay :: Int -> IO ()
 threadDelay = Base.threadDelay
 
-{-# DEPRECATED forkIO 
+{-# DEPRECATED forkIO
    "Please use 'Control.Control.Concurrent.Async.Lifted.Safe.withAsync'\
-  \ or our 'forkImmortal' instead formore robust threading." 
+  \ or our 'forkImmortal' instead formore robust threading."
 #-}
-forkIO :: IO () -> IO ThreadId 
+forkIO :: IO () -> IO ThreadId
 forkIO = Base.forkIO
 
-forkImmortal 
+forkImmortal
   :: ForkableMonadIO m
-  => String 
+  => String
   -- ^ A label describing this thread's function (see 'labelThread').
   -> Logger Hasura
   -> m Void
@@ -65,7 +65,7 @@ forkImmortal label logger m =
           Left e  -> liftIO $ do
             liftIO $ unLogger logger $
               ImmortalThreadLog label e
-            -- pause before restarting some arbitrary amount of time. The idea is not to flood 
+            -- pause before restarting some arbitrary amount of time. The idea is not to flood
             -- logs or cause other cascading failures.
             sleep (seconds 1)
 
@@ -76,12 +76,12 @@ instance ToEngineLog ImmortalThreadLog Hasura where
     (LevelError, ELTInternal ILTUnstructured, toJSON msg)
    where msg = "Unexpected exception in immortal thread \""<>label<>"\" (it will be restarted):\n"
                <> show e
-          
 
--- TODO 
+
+-- TODO
 --   - maybe use this everywhere, but also:
 --     - consider unifying with: src-lib/Control/Monad/Stateless.hs  ?
---   - nice TypeError:  https://kodimensional.dev/type-errors 
+--   - nice TypeError:  https://kodimensional.dev/type-errors
 --
 -- | Like 'MonadIO' but constrained to stacks in which forking a new thread is reasonable/safe.
 -- In particular 'StateT' causes problems.
@@ -90,8 +90,8 @@ instance ToEngineLog ImmortalThreadLog Hasura where
 type ForkableMonadIO m = (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m))
 
 
--- TODO consider deprecating async. 
+-- TODO consider deprecating async.
 --        export something with polymorphic return type, which makes "fork and forget" difficult
 --        this could automatically link in one variant
 --        another variant might return ThreadId that self destructs w/ finalizer (mkWeakThreadId)
---          and note: "Holding a normal ThreadId reference will prevent the delivery of BlockedIndefinitely exceptions because the reference could be used as the target of throwTo at any time,  " 
+--          and note: "Holding a normal ThreadId reference will prevent the delivery of BlockedIndefinitely exceptions because the reference could be used as the target of throwTo at any time,  "

@@ -68,8 +68,8 @@ $(makeLenses ''BuildOutputs)
 data RebuildableSchemaCache m
   = RebuildableSchemaCache
   { lastBuiltSchemaCache :: !SchemaCache
-  , _rscInvalidationMap :: !InvalidationKeys
-  , _rscRebuild :: !(Inc.Rule (ReaderT BuildReason m) (CatalogMetadata, InvalidationKeys) SchemaCache)
+  , _rscInvalidationMap  :: !InvalidationKeys
+  , _rscRebuild          :: !(Inc.Rule (ReaderT BuildReason m) (CatalogMetadata, InvalidationKeys) SchemaCache)
   }
 $(makeLenses ''RebuildableSchemaCache)
 

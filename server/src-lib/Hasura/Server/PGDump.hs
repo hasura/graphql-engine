@@ -3,20 +3,20 @@ module Hasura.Server.PGDump
   , execPGDump
   ) where
 
-import           Control.Exception       (IOException, try)
+import           Control.Exception      (IOException, try)
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
-import qualified Data.ByteString.Lazy    as BL
-import           Data.Char               (isSpace)
-import qualified Data.List               as L
-import qualified Data.Text               as T
+import qualified Data.ByteString.Lazy   as BL
+import           Data.Char              (isSpace)
+import qualified Data.List              as L
+import qualified Data.Text              as T
 import           Data.Text.Conversions
-import qualified Database.PG.Query       as Q
+import qualified Database.PG.Query      as Q
 import           Hasura.Prelude
-import qualified Hasura.RQL.Types.Error  as RTE
+import qualified Hasura.RQL.Types.Error as RTE
 import           System.Exit
 import           System.Process
-import qualified Text.Regex.TDFA         as TDFA
+import qualified Text.Regex.TDFA        as TDFA
 
 data PGDumpReqBody =
   PGDumpReqBody

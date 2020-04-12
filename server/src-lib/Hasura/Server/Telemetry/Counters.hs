@@ -148,24 +148,24 @@ recordTimingMetric reqDimensions RequestTimings{..} = liftIO $ do
 -- | The final shape of this part of our metrics data JSON. This should allow
 -- reasonably efficient querying using GIN indexes and JSONB containment
 -- operations (which treat arrays as sets).
-data ServiceTimingMetrics 
+data ServiceTimingMetrics
   = ServiceTimingMetrics
   { collectionTag        :: Int
     -- ^ This is set to a new unique value when the counters reset (e.g. because of a restart)
   , serviceTimingMetrics :: [ServiceTimingMetric]
-  } 
+  }
   deriving (Show, Generic, Eq)
-data ServiceTimingMetric 
+data ServiceTimingMetric
   = ServiceTimingMetric
   { dimensions :: RequestDimensions
-  , bucket   :: RunningTimeBucket
-  , metrics  :: RequestTimingsCount
+  , bucket     :: RunningTimeBucket
+  , metrics    :: RequestTimingsCount
   }
   deriving (Show, Generic, Eq)
 
 
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestTimingsCount) 
-$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestDimensions) 
+$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestTimingsCount)
+$(A.deriveJSON (A.aesonDrop 5 A.snakeCase) ''RequestDimensions)
 
 instance A.ToJSON ServiceTimingMetric
 instance A.FromJSON ServiceTimingMetric

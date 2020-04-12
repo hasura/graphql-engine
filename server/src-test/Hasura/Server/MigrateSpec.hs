@@ -68,7 +68,7 @@ spec
 spec pgConnInfo = do
   let dropAndInit time = CacheRefT $ flip modifyMVar \_ ->
         dropCatalog *> (swap <$> migrateCatalog time)
-      
+
   describe "migrateCatalog" $ do
     it "initializes the catalog" $ singleTransaction do
       (dropAndInit =<< liftIO getCurrentTime) `shouldReturn` MRInitialized
@@ -81,7 +81,7 @@ spec pgConnInfo = do
       transact (dropAndInit time) `shouldReturn` MRInitialized
       secondDump <- transact dumpSchema
       secondDump `shouldBe` firstDump
-      
+
     it "supports upgrades after downgrade to version 12" \(NT transact) -> do
       let downgradeTo v = downgradeCatalog DowngradeOptions{ dgoDryRun = False, dgoTargetVersion = v }
           upgradeToLatest time = CacheRefT $ flip modifyMVar \_ ->
@@ -93,14 +93,14 @@ spec pgConnInfo = do
         MRMigrated{} -> True
         _ -> False
       transact (upgradeToLatest time) `shouldReturn` MRMigrated "12"
-      
+
     it "supports downgrades for every Git tag" $ singleTransaction do
       gitOutput <- liftIO $ readProcess "git" ["log", "--no-walk", "--tags", "--pretty=%D"] ""
       let filterOldest = filter (not . isPrefixOf "v1.0.0-alpha")
           extractTagName = Safe.headMay . splitOn ", " <=< stripPrefix "tag: "
           supportedDowngrades = sort (map fst downgradeShortcuts)
           gitTags = (sort . filterOldest . mapMaybe extractTagName . tail . lines) gitOutput
-      for_ gitTags \t -> 
+      for_ gitTags \t ->
         t `shouldSatisfy` (`elem` supportedDowngrades)
 
   describe "recreateSystemMetadata" $ do

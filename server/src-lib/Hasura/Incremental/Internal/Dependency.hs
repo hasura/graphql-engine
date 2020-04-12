@@ -7,9 +7,9 @@ module Hasura.Incremental.Internal.Dependency where
 import           Hasura.Prelude
 
 import qualified Data.Dependent.Map            as DM
+import qualified Data.URL.Template             as UT
 import qualified Language.GraphQL.Draft.Syntax as G
 import qualified Network.URI.Extended          as N
-import qualified Data.URL.Template             as UT
 
 import           Control.Applicative
 import           Data.Aeson                    (Value)

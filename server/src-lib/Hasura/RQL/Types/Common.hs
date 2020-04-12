@@ -44,7 +44,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing
 import           Data.Aeson.TH
 import           Instances.TH.Lift             ()
-import           Language.Haskell.TH.Syntax    (Q, TExp, Lift)
+import           Language.Haskell.TH.Syntax    (Lift, Q, TExp)
 
 import qualified Data.HashMap.Strict           as HM
 import qualified Data.Text                     as T

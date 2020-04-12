@@ -2,10 +2,10 @@ module Hasura.Server.CheckUpdates
   ( checkForUpdates
   ) where
 
-import           Control.Exception     (try)
+import           Control.Exception           (try)
 import           Control.Lens
-import           Control.Monad         (forever)
-import           Data.Text.Conversions (toText)
+import           Control.Monad               (forever)
+import           Data.Text.Conversions       (toText)
 
 import qualified CI
 import qualified Control.Concurrent.Extended as C
@@ -19,9 +19,9 @@ import qualified Network.Wreq                as Wreq
 import qualified System.Log.FastLogger       as FL
 
 import           Hasura.HTTP
-import           Hasura.Logging        (LoggerCtx (..))
+import           Hasura.Logging              (LoggerCtx (..))
 import           Hasura.Prelude
-import           Hasura.Server.Version (HasVersion, Version, currentVersion)
+import           Hasura.Server.Version       (HasVersion, Version, currentVersion)
 
 
 newtype UpdateInfo

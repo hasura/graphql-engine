@@ -25,21 +25,21 @@ You can also go the other way using the constructors rather than the selectors:
 0.5
 @
 
-NOTE: the 'Real' and 'Fractional' instances just essentially add or strip the unit label (as 
-above), so you can't use 'realToFrac' to convert between the units types here. Instead try 
+NOTE: the 'Real' and 'Fractional' instances just essentially add or strip the unit label (as
+above), so you can't use 'realToFrac' to convert between the units types here. Instead try
 'fromUnits' which is less of a foot-gun.
 
 The 'Read' instances for these types mirror the behavior of the 'RealFrac' instance wrt numeric
 literals for convenient serialization (e.g. when working with env vars):
 
 @
->>> read "1.2" :: Milliseconds 
+>>> read "1.2" :: Milliseconds
 Milliseconds {milliseconds = 0.0012s}
 @
 
 Generally, if you need to pass around a duration between functions you should use 'DiffTime'
 directly. However if storing a duration in a type that will be serialized, e.g. one having
-a 'ToJSON' instance, it is better to use one of these explicit wrapper types so that it's 
+a 'ToJSON' instance, it is better to use one of these explicit wrapper types so that it's
 obvious what units will be used. -}
 module Data.Time.Clock.Units
   ( Days(..)
@@ -149,7 +149,7 @@ instance (KnownNat picosPerUnit) => RealFrac (TimeUnit picosPerUnit) where
 
 -- we can ignore unit:
 instance Hashable (TimeUnit a) where
-  hashWithSalt salt (TimeUnit dt) = hashWithSalt salt $ 
+  hashWithSalt salt (TimeUnit dt) = hashWithSalt salt $
     (realToFrac :: DiffTime -> Double) dt
 
 

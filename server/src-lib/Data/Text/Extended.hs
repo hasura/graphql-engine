@@ -8,7 +8,7 @@ module Data.Text.Extended
 
 import           Hasura.Prelude
 
-import           Data.Text as DT
+import           Data.Text      as DT
 
 squote :: DT.Text -> DT.Text
 squote t = DT.singleton '\'' <> t <> DT.singleton '\''
