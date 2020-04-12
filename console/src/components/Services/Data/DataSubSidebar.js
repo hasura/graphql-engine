@@ -10,12 +10,12 @@ import {
   getSchemaTables,
   getTableName,
   checkIfTable,
-  getFunctionSchema,
+  getFunctionSchema
 } from '../../Common/utils/pgUtils';
 import {
   getFunctionModifyRoute,
   getSchemaAddTableRoute,
-  getTableBrowseRoute,
+  getTableBrowseRoute
 } from '../../Common/utils/routesUtils';
 import { Icon } from '../../UIKit/atoms';
 
@@ -24,7 +24,7 @@ class DataSubSidebar extends React.Component {
     super();
 
     this.state = {
-      searchInput: '',
+      searchInput: ''
     };
 
     this.tableSearch = this.tableSearch.bind(this);
@@ -42,7 +42,7 @@ class DataSubSidebar extends React.Component {
     const searchTerm = e.target.value;
 
     this.setState({
-      searchInput: searchTerm,
+      searchInput: searchTerm
     });
   }
 
@@ -57,7 +57,7 @@ class DataSubSidebar extends React.Component {
       location,
       currentFunction,
       trackedFunctions,
-      allSchemas,
+      allSchemas
     } = this.props;
 
     const { searchInput } = this.state;
@@ -120,7 +120,7 @@ class DataSubSidebar extends React.Component {
                 )}
                 data-test={tableName}
               >
-                <Icon type="table" size={13} mr="xs" mb="-1px" />
+                <Icon type="table" size={13} mr="6px" mb="-1.5px" />
                 {displayTableName(table)}
               </Link>
               <GqlCompatibilityWarning
@@ -134,14 +134,14 @@ class DataSubSidebar extends React.Component {
         tableLinks = [
           <li className={styles.noChildren} key="no-tables-1">
             <i>No tables/views available</i>
-          </li>,
+          </li>
         ];
       }
 
       const dividerHr = [
         <li key={'fn-divider-1'}>
           <hr className={styles.tableFunctionDivider} />
-        </li>,
+        </li>
       ];
 
       if (filteredFunctionsList && filteredFunctionsList.length > 0) {
@@ -182,7 +182,7 @@ class DataSubSidebar extends React.Component {
         const noFunctionsMsg = [
           <li className={styles.noChildren} key="no-fns-1">
             <i>No matching functions available</i>
-          </li>,
+          </li>
         ];
 
         childList = [...tableLinks, ...dividerHr, ...noFunctionsMsg];
@@ -218,7 +218,7 @@ const mapStateToProps = state => {
     currentTable: state.tables.currentTable,
     currentSchema: state.tables.currentSchema,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
-    metadata: state.metadata,
+    metadata: state.metadata
   };
 };
 
