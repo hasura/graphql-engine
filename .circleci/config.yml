@@ -407,7 +407,13 @@ jobs:
     - checkout
     - *setup_remote_docker
     - run:
-        name: build cli-migrations image
+        name: Install Docker Compose
+        command: |
+          set -x
+          curl -L https://github.com/docker/compose/releases/download/1.25.3/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+    - run:
+        name: Build cli-migrations image
         working_directory: scripts/cli-migrations
         command: |
           mkdir -p /build/_cli_migrations_output
