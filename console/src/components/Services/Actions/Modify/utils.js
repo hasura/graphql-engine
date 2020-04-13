@@ -8,6 +8,7 @@ import {
   getActionName,
   getActionOutputType,
   getActionComment,
+  getActionType
 } from '../utils';
 import { getActionTypes } from '../Common/utils';
 
@@ -18,6 +19,7 @@ export const getModifyState = (currentAction, allTypes) => {
     actionDefinition: {
       sdl: getActionDefinitionSdl(
         getActionName(currentAction),
+        getActionType(currentAction),
         getActionArguments(currentAction),
         getActionOutputType(currentAction),
         getActionComment(currentAction)
