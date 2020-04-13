@@ -20,7 +20,6 @@ export const parseLSState = (data: any) => {
 const columnsCollapsedKey = 'data:collapsed';
 
 type CollapesEntry = Record<string, boolean>;
-type CollapesState = Record<string, CollapesEntry>;
 
 export const persistColumnCollapseChange = (
   tableName: string,
@@ -48,7 +47,6 @@ export const getPersistedCollapsedColumns = (
 const columnsOrderKey = 'data:order';
 
 type OrderEntry = { newOrder: number; defaultOrder: number };
-type OrderState = Record<string, OrderEntry[]>;
 
 const compareReorderItems = (item1: OrderEntry) => (item2: OrderEntry) =>
   item1.newOrder === item2.newOrder &&
