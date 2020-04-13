@@ -816,17 +816,17 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
           pure $ mconcat rootFields
 
 getGCtx :: (MonadError QErr m)
-        => BackendPrivilege -> SchemaCache -> RoleName -> m GCtx
-getGCtx backendPrivilege sc roleName =
+        => BackendOnlyPermissions -> SchemaCache -> RoleName -> m GCtx
+getGCtx useBackendOnlyPermissions sc roleName =
   case Map.lookup roleName (scGCtxMap sc) of
     Nothing                                           -> pure $ scDefaultRemoteGCtx sc
     Just (RoleContext defaultGCtx maybeBackendGCtx)   ->
-      case backendPrivilege of
-        BPEnabled -> maybe
+      case useBackendOnlyPermissions of
+        BOPEnabled -> maybe
           (throw400 BadRequest $ "Backend privilage not found for the role " <>> roleName)
           pure
           maybeBackendGCtx
-        BPDisabled -> pure defaultGCtx
+        BOPDisabled -> pure defaultGCtx
 
 -- pretty print GCtx
 ppGCtx :: GCtx -> String

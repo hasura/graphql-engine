@@ -3,13 +3,13 @@ url: /v1/graphql
 status: 200
 headers:
   X-Hasura-Role: backend_user
-  X-Hasura-Backend-Privilege: random
+  X-Hasura-Use-Backend-Only-Permissions: random
 response:
   errors:
   - extensions:
       path: $
       code: bad-request
-    message: 'x-hasura-backend-privilege:  Not a valid boolean text. True values are
+    message: 'x-hasura-use-backend-only-permissions:  Not a valid boolean text. True values are
       ["true","t","yes","y"] and  False values are ["false","f","no","n"]. All values
       are case insensitive'
 query:

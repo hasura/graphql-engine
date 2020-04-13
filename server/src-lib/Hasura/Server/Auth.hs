@@ -157,7 +157,7 @@ getUserInfoWithExpTime
   -> m (UserInfo, Maybe UTCTime)
 getUserInfoWithExpTime logger manager rawHeaders = \case
 
-  AMNoAuth -> (, Nothing) <$> userInfoFromHeaders
+  AMNoAuth -> (, Nothing) <$> userInfoFromHeaders UAuthNotSet
 
   AMAdminSecret adminScrt unAuthRole ->
     case adminSecretM of
@@ -187,16 +187,14 @@ getUserInfoWithExpTime logger manager rawHeaders = \case
     userInfoWhenAdminSecret key reqKey = do
       when (reqKey /= getAdminSecret key) $ throw401 $
         "invalid " <> adminSecretHeader <> "/" <> deprecatedAccessKeyHeader
-      userInfoFromHeaders
+      userInfoFromHeaders UAdminSecretSent
 
     userInfoWhenNoAdminSecret = \case
       Nothing -> throw401 $ adminSecretHeader <> "/"
                  <> deprecatedAccessKeyHeader <> " required, but not found"
-      Just roleName -> mkUserInfo roleName sessionVariables
+      Just roleName -> mkUserInfo UAdminSecretNotSent sessionVariables $ Just roleName
 
     withNoExpTime a = (, Nothing) <$> a
 
-    userInfoFromHeaders =
-      case roleFromSession sessionVariables of
-        Just rn -> mkUserInfo rn sessionVariables
-        Nothing -> mkUserInfo adminRoleName sessionVariables
+    userInfoFromHeaders uas =
+      mkUserInfo uas sessionVariables $ Just adminRoleName

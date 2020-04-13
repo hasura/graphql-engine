@@ -315,6 +315,11 @@ def equal_CommentedMap(m1, m2):
     else:
         return m1 == m2
 
+def get_conf_f(f):
+    with open(f, 'r+') as c:
+        yml = yaml.YAML()
+        return yml.load(c)
+
 def check_query_f(hge_ctx, f, transport='http', add_auth=True):
     print("Test file: " + f)
     hge_ctx.may_skip_test_teardown = False

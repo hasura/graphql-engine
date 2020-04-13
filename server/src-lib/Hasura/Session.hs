@@ -10,17 +10,17 @@ module Hasura.Session
   , sessionVariableToText
   , mkSessionVariablesText
   , mkSessionVariables
-  , roleFromSession
   , sessionVariablesToHeaders
   , getSessionVariableValue
   , getSessionVariables
+  , UserAdminSecret(..)
   , UserInfo
   , _uiRole
   , _uiSession
-  , _uiBackendPrivilege
+  , _uiBackendOnlyPermissions
   , mkUserInfo
   , adminUserInfo
-  , BackendPrivilege(..)
+  , BackendOnlyPermissions(..)
   ) where
 
 import           Hasura.Incremental         (Cacheable)
@@ -107,44 +107,70 @@ sessionVariablesToHeaders =
 getSessionVariables :: SessionVariables -> [Text]
 getSessionVariables = map sessionVariableToText . Map.keys . unSessionVariables
 
--- returns Nothing if x-hasura-role is an empty string
-roleFromSession :: SessionVariables -> Maybe RoleName
-roleFromSession uv =
-  getSessionVariableValue userRoleHeader uv >>= mkRoleName
-
 getSessionVariableValue :: SessionVariable -> SessionVariables -> Maybe SessionVariableValue
 getSessionVariableValue k = Map.lookup k . unSessionVariables
 
--- | Represents the 'X-Hasura-Backend-Privilege' session variable
-data BackendPrivilege
-  = BPEnabled
-  | BPDisabled
+-- | Represent the admin secret state; whether the secret is sent
+-- in the request or if actually authorization is not configured.
+data UserAdminSecret
+  = UAdminSecretSent
+  | UAdminSecretNotSent
+  | UAuthNotSet
+  deriving (Show, Eq)
+
+-- | Represents the 'X-Hasura-Use-Backend-Only-Permissions' session variable
+-- and request made with 'X-Hasura-Admin-Secret' if any auth configured.
+-- For more details see Note [Backend only permissions]
+data BackendOnlyPermissions
+  = BOPEnabled
+  | BOPDisabled
   deriving (Show, Eq, Generic)
-instance Hashable BackendPrivilege
+instance Hashable BackendOnlyPermissions
 
 data UserInfo
   = UserInfo
-  { _uiRole             :: !RoleName
-  , _uiSession          :: !SessionVariables
-  , _uiBackendPrivilege :: !BackendPrivilege
+  { _uiRole                   :: !RoleName
+  , _uiSession                :: !SessionVariables
+  , _uiBackendOnlyPermissions :: !BackendOnlyPermissions
   } deriving (Show, Eq, Generic)
 instance Hashable UserInfo
 
-mkUserInfo :: (MonadError QErr m) => RoleName -> SessionVariables -> m UserInfo
-mkUserInfo roleName sess@(SessionVariables sessVars) = do
-  backendPrivilege <-
-    case getSessionVariableValue backendPrivilegeHeader sess of
-      Nothing -> pure BPDisabled
-      Just varVal -> case parseStringAsBool (T.unpack varVal) of
-        Left err        -> throw400 BadRequest $ backendPrivilegeHeader <> ": " <> T.pack err
-        Right privilege -> pure $ if privilege then BPEnabled else BPDisabled
-  let modifiedSession = SessionVariables $ modifySessionVariables sessVars
-  pure $ UserInfo roleName modifiedSession backendPrivilege
+-- | Build user info from @'SessionVariables'
+mkUserInfo
+  :: (MonadError QErr m)
+  => UserAdminSecret
+  -> SessionVariables
+  -> Maybe RoleName -- ^ Default role if x-hasura-role session variable not found
+  -> m UserInfo
+mkUserInfo userAdminSecret sess@(SessionVariables sessVars) defaultRole = do
+  roleName <- onNothing (maybeRoleFromSession <|> defaultRole) $
+              throw400 InvalidParams $ userRoleHeader <> " not found in session variables"
+  -- see Note [Backend only permissions] to know more about the following logic.
+  useBackendOnlyPermissions <- case userAdminSecret of
+      UAdminSecretNotSent -> pure BOPDisabled
+      UAdminSecretSent    -> lookForBackendOnlyPermissionsConfig
+      UAuthNotSet         -> lookForBackendOnlyPermissionsConfig
+  let modifiedSession = SessionVariables $ modifySessionVariables roleName sessVars
+  pure $ UserInfo roleName modifiedSession useBackendOnlyPermissions
   where
     -- Add x-hasura-role header and remove admin secret headers
-    modifySessionVariables = Map.insert userRoleHeader (roleNameToTxt roleName)
-                             . Map.delete adminSecretHeader
-                             . Map.delete deprecatedAccessKeyHeader
+    modifySessionVariables roleName
+      = Map.insert userRoleHeader (roleNameToTxt roleName)
+        . Map.delete adminSecretHeader
+        . Map.delete deprecatedAccessKeyHeader
+
+    -- returns Nothing if x-hasura-role is an empty string
+    maybeRoleFromSession =
+      getSessionVariableValue userRoleHeader sess >>= mkRoleName
+
+    lookForBackendOnlyPermissionsConfig =
+      case getSessionVariableValue useBackendOnlyPermissionsHeader sess of
+        Nothing     -> pure BOPDisabled
+        Just varVal ->
+          case parseStringAsBool (T.unpack varVal) of
+            Left err        -> throw400 BadRequest $
+              useBackendOnlyPermissionsHeader <> ": " <> T.pack err
+            Right privilege -> pure $ if privilege then BOPEnabled else BOPDisabled
 
 adminUserInfo :: UserInfo
-adminUserInfo = UserInfo adminRoleName mempty BPDisabled
+adminUserInfo = UserInfo adminRoleName mempty BOPDisabled

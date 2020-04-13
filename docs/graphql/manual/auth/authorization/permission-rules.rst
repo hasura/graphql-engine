@@ -254,4 +254,5 @@ Backend only inserts
 ^^^^^^^^^^^^^^^^^^^^
 
 If the ``insert`` permission is marked as ``backend_only: true``, the mutation is accessible to the
-given role only if the ``x-hasura-backend-privilege`` session variable exists and is set to ``true``.
+given role only if ``x-hasura-use-backend-only-permissions`` session variable exists and set to ``true``
+and request is made with ``x-hasura-admin-secret`` if any auth is configured.

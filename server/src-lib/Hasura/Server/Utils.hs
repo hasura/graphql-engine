@@ -61,8 +61,8 @@ userIdHeader = "x-hasura-user-id"
 requestIdHeader :: IsString a => a
 requestIdHeader = "x-request-id"
 
-backendPrivilegeHeader :: IsString a => a
-backendPrivilegeHeader = "x-hasura-backend-privilege"
+useBackendOnlyPermissionsHeader :: IsString a => a
+useBackendOnlyPermissionsHeader = "x-hasura-use-backend-only-permissions"
 
 getRequestHeader :: HTTP.HeaderName -> [HTTP.Header] -> Maybe B.ByteString
 getRequestHeader hdrName hdrs = snd <$> mHeader

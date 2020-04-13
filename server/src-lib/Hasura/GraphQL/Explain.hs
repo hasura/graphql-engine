@@ -116,7 +116,7 @@ explainGQLQuery
   -> GQLExplain
   -> m EncJSON
 explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (GQLExplain query userVarsRaw) = do
-  userInfo <- mkUserInfo (fromMaybe adminRoleName $ roleFromSession sessionVariables) sessionVariables
+  userInfo <- mkUserInfo UAdminSecretSent sessionVariables $ Just adminRoleName
   (execPlan, queryReusability) <- runReusabilityT $
     E.getExecPlanPartial userInfo sc enableAL query
   (gCtx, rootSelSet) <- case execPlan of

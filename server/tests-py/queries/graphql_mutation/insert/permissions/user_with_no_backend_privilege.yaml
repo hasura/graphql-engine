@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 headers:
   X-Hasura-Role: user
-  X-Hasura-Backend-Privilege: 'true'
+  X-Hasura-Use-Backend-Only-Permissions: 'true'
 response:
   errors:
   - extensions:

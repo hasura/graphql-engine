@@ -116,15 +116,12 @@ mkUserInfoFromResp (Logger logger) url method statusCode respBody
     throw500 "Invalid response from authorization hook"
   where
     getUserInfoFromHdrs rawHeaders = do
-      let sessionVariables = mkSessionVariablesText $ Map.toList rawHeaders
-      case roleFromSession sessionVariables of
-        Nothing -> do
-          logError
-          throw500 "missing x-hasura-role key in webhook response"
-        Just rn -> do
-          logWebHookResp LevelInfo Nothing Nothing
-          expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
-          (, expiration) <$> mkUserInfo rn sessionVariables
+      userInfo <- mkUserInfo UAdminSecretNotSent
+                  (mkSessionVariablesText $ Map.toList rawHeaders)
+                  Nothing
+      logWebHookResp LevelInfo Nothing Nothing
+      expiration <- runMaybeT $ timeFromCacheControl rawHeaders <|> timeFromExpires rawHeaders
+      pure (userInfo, expiration)
 
     logWebHookResp :: MonadIO m => LogLevel -> Maybe BL.ByteString -> Maybe T.Text -> m ()
     logWebHookResp logLevel mResp message =
