@@ -195,7 +195,7 @@ set to ``$.hasura.claims``:
   }
 
 
-This is an optional field, if the value is not provided, then the ``claims_namespace`` value
+This is an optional field. If the value is not provided, then the ``claims_namespace`` value
 is used to get the name of the claims field among the top-level keys.
 
 Rotating JWKs
