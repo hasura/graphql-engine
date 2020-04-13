@@ -320,7 +320,7 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
         update hdb_catalog.hdb_action_log
         set errors = $1, status = 'error'
         where id = $2
-      |] (Q.AltJ e, actionId) False
+      |] (Q.AltJ $ encodeGQLErr True e, actionId) False -- includeInternal set to true due to the status 500 errors
 
     setCompleted :: UUID.UUID -> J.Value -> IO ()
     setCompleted actionId responsePayload =
