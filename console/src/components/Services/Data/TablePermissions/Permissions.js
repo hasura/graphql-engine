@@ -75,6 +75,7 @@ import {
   getGroupedTableComputedFields,
 } from '../../../Common/utils/pgUtils';
 import { showErrorNotification } from '../../Common/Notification';
+import KnowMoreLink from "../../../Common/KnowMoreLink/KnowMoreLink";
 
 class Permissions extends Component {
   constructor() {
@@ -537,7 +538,7 @@ class Permissions extends Component {
         sectionClasses += ' ' + styles.disabled;
       }
 
-      const getSectionHeader = (title, toolTip, sectionStatus) => {
+      const getSectionHeader = (title, toolTip, sectionStatus, knowMoreRef) => {
         let sectionStatusHtml;
         if (sectionStatus) {
           sectionStatusHtml = (
@@ -547,9 +548,18 @@ class Permissions extends Component {
           );
         }
 
+        let knowMoreHtml;
+        if(knowMoreRef) {
+          knowMoreHtml = (
+            <span className={`${styles.add_mar_left_small} ${styles.sectionStatus}`}>
+              <KnowMoreLink href={knowMoreRef}/>
+            </span>
+          )
+        }
+
         return (
           <div>
-            {addTooltip(title, toolTip)} {sectionStatusHtml}
+            {addTooltip(title, toolTip)} {knowMoreHtml} {sectionStatusHtml}
           </div>
         );
       };
@@ -1768,9 +1778,7 @@ class Permissions extends Component {
         const tooltip = (
           <Tooltip id="tooltip-backend-only">
             When enabled, this {permissionsState.query} mutation is accessible
-            only if "x-hasura-use-backend-only-permissions" session variable exists
-            and is set to true and the request is made with "x-hasura-admin-secret"
-            set
+            only via "trusted backends"
           </Tooltip>
         );
         const isBackendOnly = !!(
@@ -1780,7 +1788,7 @@ class Permissions extends Component {
         const backendStatus = isBackendOnly ? 'enabled' : 'disabled';
         return (
           <CollapsibleToggle
-            title={getSectionHeader('Backend only', tooltip, backendStatus)}
+            title={getSectionHeader('Backend only', tooltip, backendStatus, 'https://docs.hasura.io/1.0/graphql/manual/auth/authorization/permission-rules.html#backend-only-inserts')}
             useDefaultTitleStyle
             testId={'toggle-backend-only'}
           >
