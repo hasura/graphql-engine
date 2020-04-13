@@ -25,7 +25,7 @@ wait_for_port() {
 }
 
 fail_if_port_busy 8080
+set -x
 docker-compose up -d
-docker run --network container:server appropriate/curl --retry 10 --retry-connrefused http://localhost:8080/v1/version
-wait_for_port 8080
+docker run --network container:server appropriate/curl --retry 10 --retry-delay 6 --retry-connrefused http://localhost:8080/v1/version
 docker-compose down -v

@@ -3,8 +3,7 @@ PARENT_DIR := $(shell dirname $(PWD))
 VERSION ?= $(shell ../get-version.sh)
 BUILD_DIR ?= /build
 BINARY ?= $(BUILD_DIR)/_cli_output/binaries/cli-hasura-linux-amd64
-REGISTRY ?= hasura
-IMAGE_TAG ?= ${REGISTRY}/graphql-engine:cli-migrations
+IMAGE_TAG ?= cli-migrations
 BUILD_OUTPUT ?= $(BUILD_DIR)/_cli_migrations_output
 CLI_EXT_MANIFEST_FILE ?= $(BUILD_DIR)/_cli_ext_output/manifest-dev.yaml
 
