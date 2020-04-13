@@ -24,7 +24,13 @@ const migrateCreateCmdExamples = `  # Setup migration files for the first time b
   hasura migrate create --admin-secret "<admin-secret>"
 
   # Setup migration files from an instance mentioned by the flag:
-  hasura migrate create init --from-server --endpoint "<endpoint>"`
+  hasura migrate create init --from-server --endpoint "<endpoint>"
+
+  # Take pg_dump of schema and hasura metadata from server while specifying the schemas to include
+  hasura migrate create init --from-server --schema myschema1,myschema2
+
+  # Take pg_dump from server and save it as a migration and specify the schemas to include
+  hasura migrate create init --sql-from-server --schema myschema1,myschema2`
 
 func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	opts := &migrateCreateOptions{
@@ -55,10 +61,10 @@ func newMigrateCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	}
 	f := migrateCreateCmd.Flags()
 	opts.flags = f
-	f.BoolVar(&opts.fromServer, "from-server", false, "get SQL statements and hasura metadata from the server")
+	f.BoolVar(&opts.fromServer, "from-server", false, "take pg_dump of schema (default: public) and Hasura metadata from the server")
 	f.StringVar(&opts.sqlFile, "sql-from-file", "", "path to an sql file which contains the SQL statements")
-	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from server and save it as a migration")
-	f.StringArrayVar(&opts.schemaNames, "schema", []string{"public"}, "name of Postgres schema to export as migration")
+	f.BoolVar(&opts.sqlServer, "sql-from-server", false, "take pg_dump from server (default: public) and save it as a migration")
+	f.StringSliceVar(&opts.schemaNames, "schema", []string{"public"}, "name of Postgres schema to export as a migration. provide multiple schemas with a comma separated list e.g. --schema public,user")
 	f.StringVar(&opts.metaDataFile, "metadata-from-file", "", "path to a hasura metadata file to be used for up actions")
 	f.BoolVar(&opts.metaDataServer, "metadata-from-server", false, "take metadata from the server and write it as an up migration file")
 
@@ -111,7 +117,7 @@ func (o *migrateCreateOptions) run() (version int64, err error) {
 
 	var migrateDrv *migrate.Migrate
 	if o.sqlServer || o.metaDataServer {
-		migrateDrv, err = newMigrate(o.EC, true)
+		migrateDrv, err = migrate.NewMigrate(o.EC, true)
 		if err != nil {
 			return 0, errors.Wrap(err, "cannot create migrate instance")
 		}

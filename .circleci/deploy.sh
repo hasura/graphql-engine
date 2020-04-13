@@ -119,7 +119,11 @@ deploy_cli_ext() {
     git clone https://github.com/hasura/cli-plugins-index.git ~/plugins-index
     cd ~/plugins-index
     git checkout -b cli-ext-${LATEST_TAG}
+    mkdir -p ./plugins/cli-ext/${LATEST_TAG}
+    # Replace existing cli-ext.yaml to work with previous versions of plugin system
     cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext.yaml
+    # Copy the manifest to versioned folder structure
+    cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext/${LATEST_TAG}/manifest.yaml
     git add .
     git commit -m "update cli-ext manifest to ${LATEST_TAG}"
     git push -q https://${GITHUB_TOKEN}@github.com/hasura/cli-plugins-index.git cli-ext-${LATEST_TAG}

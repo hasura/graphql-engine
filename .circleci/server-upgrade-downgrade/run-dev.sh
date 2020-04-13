@@ -13,7 +13,8 @@ SERVER_DIR="$ROOT/../../server"
 cd $SERVER_DIR
 set -x
 cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine
-export SERVER_BINARY=$(cabal new-exec which graphql-engine)
+export SERVER_BINARY="$(cabal new-exec --verbose=0 which graphql-engine)"
+echo "server binary: $SERVER_BINARY"
 cd -
 set +x
 
