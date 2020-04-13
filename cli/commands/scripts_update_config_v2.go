@@ -16,7 +16,6 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 	"github.com/hasura/graphql-engine/cli/migrate/source/file"
-	"github.com/hasura/graphql-engine/cli/plugins"
 	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -66,10 +65,10 @@ func newScriptsUpdateConfigV2Cmd(ec *cli.ExecutionContext) *cobra.Command {
 				return errors.Wrap(err, "cannot update plugin index")
 			}
 			// install the plugin
-			ec.Spin("Installing cli-ext plugin...")
-			err = ec.PluginsConfig.Install("cli-ext", "", nil)
-			if err != nil && err != plugins.ErrIsAlreadyInstalled {
-				return errors.Wrap(err, "cannot install plugin")
+			ec.Spin(fmt.Sprintf("Installing %s plugin...", cli.CLIExtPluginName))
+			err = ec.InstallPlugin(cli.CLIExtPluginName, true)
+			if err != nil {
+				return err
 			}
 			// Move copy migrations directory to migrations_backup
 			ec.Spin("Backing up migrations...")
