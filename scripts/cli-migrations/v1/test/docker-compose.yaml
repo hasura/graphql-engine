@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: postgrespassword
   graphql-engine:
     container_name: server
-    image: hasura/graphql-engine:cli-migrations
+    image: cli-migrations
     ports:
     - "8080:8080"
     depends_on:
