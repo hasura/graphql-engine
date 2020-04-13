@@ -405,6 +405,7 @@ jobs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
+    - *setup_remote_docker
     - run:
         name: build cli-migrations image
         working_directory: scrfipts/cli-migrations
@@ -638,4 +639,5 @@ workflows:
         requires:
         - build_image
         - test_console
+        - test_and_build_cli_migrations
         - all_server_tests_pass

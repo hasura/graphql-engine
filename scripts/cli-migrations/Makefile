@@ -19,5 +19,5 @@ build-cli-migrations-v2:
 	cd v2
 	cp ${BINARY} .
 	cp ${CLI_EXT_MANIFEST_FILE} manifest.yaml
-	docker build -t ${IMAGE_TAG} .
+	docker build -t '${IMAGE_TAG}-v2' .
 	docker save -o '$(build_output)/v2.tar' '$(registry)/graphql-engine:$(VERSION)'
