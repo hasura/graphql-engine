@@ -173,7 +173,7 @@ encoded public key) as a string - in the ``key`` field along with the ``type``.
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 An optional JSON path value to the hasura claims in the JWT token (e.g. ``$.hasura.claims``)
 
-For example, the JWT token should in this format if the ``claims_namespace_path`` is
+The JWT token should be in this format if the ``claims_namespace_path`` is
 set to ``$.hasura.claims``:
 
 .. code-block:: json
