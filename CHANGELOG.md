@@ -18,10 +18,12 @@ The order and collapsed state of columns is now persisted across page navigation
 - cli: clean up migration files created during a failed migrate api (close #4312) (#4319)
 - cli: add support for multiple versions of plugin (close #4105)
 - cli: template assets path in console HTML for unversioned builds
+- console: recover from SDL parse in actions type definition editor (fix #4385) (#4389)
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
 - console: fix clone permission migrations (close #3985) (#4277)
 - console: decouple data rows and count fetch in data browser to account for really large tables (close #3793) (#4269)
 - console: update cookie policy for API calls to "same-origin"
+- console: redirect to /:table/browse from /:table (close #4330) (#4374)
 - console: fix generating unnecessary migrations after modifying table columns (close #4125) (#4393)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
 - server: reserved keywords in column references break parser (fix #3597) #3927
