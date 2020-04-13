@@ -314,7 +314,7 @@ export function getRelationshipRefTable(
   return refTable;
 }
 
-type RelationsMap = {
+type Relation = {
   columnName: string;
   enumTableName: string;
   enumColumnName: string;
@@ -329,7 +329,7 @@ export const getEnumColumnMappings = (
     generateTableDef(tableName, tableSchema)
   );
 
-  const relationsMap: any[] = [];
+  const relationsMap: Relation[] = [];
   if (!currentTable) return null;
   if (!currentTable.foreign_key_constraints.length) return null;
 
@@ -365,7 +365,7 @@ export const getEnumColumnMappings = (
 export const getTablePermissions = (
   table: Table,
   role: string | null = null,
-  action: 'insert' | 'select' | 'update' | 'delete' | null = null
+  action: Action | null = null
 ) => {
   const tablePermissions = table.permissions;
 
