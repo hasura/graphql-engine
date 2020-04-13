@@ -18,6 +18,7 @@ import {
   resetDerivedActionParentOperation,
 } from './reducer';
 import { createAction } from '../ServerIO';
+import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 
 const AddAction = ({
   handler,
@@ -82,6 +83,15 @@ const AddAction = ({
     !actionParseTimer &&
     !typedefParseTimer;
 
+  let actionType;
+  if (!actionDefinitionError) {
+    // TODO optimise
+    const { type, error } = getActionDefinitionFromSdl(actionDefinitionSdl);
+    if (!error) {
+      actionType = type;
+    }
+  }
+
   return (
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
@@ -110,12 +120,18 @@ const AddAction = ({
         service="create-action"
       />
       <hr />
-      <KindEditor
-        value={kind}
-        onChange={kindOnChange}
-        className={styles.add_mar_bottom_mid}
-      />
-      <hr />
+      {
+        actionType === "query" ? null : (
+          <React.Fragment>
+            <KindEditor
+              value={kind}
+              onChange={kindOnChange}
+              className={styles.add_mar_bottom_mid}
+            />
+            <hr />
+          </React.Fragment>
+        )
+      }
       <HeadersConfEditor
         forwardClientHeaders={forwardClientHeaders}
         toggleForwardClientHeaders={toggleForwardClientHeaders}
