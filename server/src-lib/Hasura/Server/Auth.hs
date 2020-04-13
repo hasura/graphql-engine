@@ -114,7 +114,7 @@ mkJwtCtx JWTConfig{..} httpManager logger = do
     Left jwk  -> liftIO $ newIORef (JWKSet [jwk])
     Right url -> getJwkFromUrl url
   let claimsFmt = fromMaybe JCFJson jcClaimsFormat
-  return $ JWTCtx jwkRef jcClaimNs jcClaimNsPath jcAudience claimsFmt jcIssuer
+  return $ JWTCtx jwkRef jcClaimNs jcAudience claimsFmt jcIssuer
   where
     -- if we can't find any expiry time for the JWK (either in @Expires@ header or @Cache-Control@
     -- header), do not start a background thread for refreshing the JWK
