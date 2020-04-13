@@ -467,7 +467,7 @@ export const getSelectQuery = (
   order_by?: OrderBy[]
 ) => {
   return {
-    type: 'select',
+    type,
     args: {
       table,
       columns,
