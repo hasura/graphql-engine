@@ -411,8 +411,7 @@ jobs:
         working_directory: scripts/cli-migrations
         command: |
           mkdir -p /build/_cli_migrations_output
-          make build-cli-migrations-v1
-          make build-cli-migrations-v2
+          make all
     - store_artifacts:
         path: /build/_cli_migrations_output
         destination: cli-migrations
