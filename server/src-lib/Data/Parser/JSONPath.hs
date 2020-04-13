@@ -8,7 +8,6 @@ import           Control.Applicative  ((<|>))
 import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
 import           Data.Attoparsec.Text
 import           Data.Bool            (bool)
-import           Data.Char
 import           Prelude              hiding (takeWhile)
 import           Text.Read            (readMaybe)
 import qualified Data.Text            as T
