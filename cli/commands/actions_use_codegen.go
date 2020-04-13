@@ -147,6 +147,7 @@ func (o *actionsUseCodegenOptions) run() error {
 		}
 		o.EC.Logger.Info("Starter kit cloned at " + destinationDir)
 	}
+	o.EC.Spinner.Stop()
 
 	// if output directory is not provided, make them enter it
 	if o.outputDir == "" {
