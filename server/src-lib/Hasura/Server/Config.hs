@@ -27,11 +27,11 @@ instance J.ToJSON JWTInfo where
   toJSON (JWTInfo ns (Just nsPath) fmt) =
     J.object [ "claims_namespace" J..= J.String ns
              , "claims_namespace_path" J..= encodeJSONPath nsPath
-             , "claims_formatPath" J..= fmt
+             , "claims_format" J..= fmt
            ]
   toJSON (JWTInfo ns Nothing fmt) =
     J.object [ "claims_namespace" J..= J.String ns
-             , "claims_formatPath" J..= fmt
+             , "claims_format" J..= fmt
            ]
 
 data ServerConfig

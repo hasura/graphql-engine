@@ -406,11 +406,12 @@ class HGECtx:
     def __init__(self, hge_url, pg_url, config):
 
         self.http = requests.Session()
-        self. hge_key = config.getoption('--hge-key')
+        self.hge_key = config.getoption('--hge-key')
         self.hge_url = hge_url
         self.pg_url = pg_url
         self.hge_webhook = config.getoption('--hge-webhook')
         hge_jwt_key_file = config.getoption('--hge-jwt-key-file')
+        self.hge_jwt_claims_ns_path = config.getoption('--hge-jwt-claims-ns-path')
         if hge_jwt_key_file is None:
             self.hge_jwt_key = None
         else:
