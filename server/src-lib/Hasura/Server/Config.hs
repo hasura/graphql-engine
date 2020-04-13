@@ -24,9 +24,8 @@ data JWTInfo
   } deriving (Show, Eq)
 
 instance J.ToJSON JWTInfo where
-  toJSON (JWTInfo ns (Just nsPath) fmt) =
-    J.object [ "claims_namespace" J..= J.String ns
-             , "claims_namespace_path" J..= encodeJSONPath nsPath
+  toJSON (JWTInfo _ (Just nsPath) fmt) =
+    J.object [ "claims_namespace_path" J..= encodeJSONPath nsPath
              , "claims_format" J..= fmt
            ]
   toJSON (JWTInfo ns Nothing fmt) =
