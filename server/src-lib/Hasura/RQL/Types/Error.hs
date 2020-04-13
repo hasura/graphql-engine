@@ -52,7 +52,6 @@ import           Data.Aeson.Types
 import qualified Database.PG.Query      as Q
 import           Hasura.Prelude
 import           Text.Show              (Show (..))
-import           Data.Char
 
 import qualified Data.Text              as T
 import qualified Network.HTTP.Types     as N
@@ -194,29 +193,13 @@ encodeQErr _    = noInternalQErrEnc
 encodeJSONPath :: JSONPath -> String
 encodeJSONPath = format "$"
   where
-    format :: String -> JSONPath -> String
     format pfx []                = pfx
     format pfx (Index idx:parts) = format (pfx ++ "[" ++ show idx ++ "]") parts
-    format pfx (Key key:parts)   = format (pfx ++ formatKey key) parts
+    format pfx (Key key:parts)   = format (pfx ++ "." ++ formatKey key) parts
 
-    formatKey :: T.Text -> String
     formatKey key
-       | isIdentifierKey strKey = "." ++ strKey
-       | otherwise              = "['" ++ escapeKey strKey ++ "']"
-      where strKey = T.unpack key
-
-    isIdentifierKey :: String -> Bool
-    isIdentifierKey []     = False
-    isIdentifierKey (x:xs) = isAlpha x && all isAlphaNum xs
-
-    escapeKey :: String -> String
-    escapeKey = concatMap escapeChar
-
-    escapeChar :: Char -> String
-    escapeChar '\'' = "\\'"
-    escapeChar '\\' = "\\\\"
-    escapeChar c    = [c]
-
+      | T.any (=='.') key = "['" ++ T.unpack key ++ "']"
+      | otherwise         = T.unpack key
 
 instance Q.FromPGConnErr QErr where
   fromPGConnErr c =
