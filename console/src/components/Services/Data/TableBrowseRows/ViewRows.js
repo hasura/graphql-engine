@@ -49,11 +49,11 @@ import {
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
 import {
-  handleCollapseChange,
-  getCollapsedColumns,
-  handleOrderChange,
-  getColumnsOrder,
-  handlePageSizeStateChange,
+  persistColumnCollapseChange,
+  getPersistedCollapsedColumns,
+  persistColumnOrderChange,
+  getPersistedColumnsOrder,
+  persistPageSizeChange,
 } from './localStorageUtils';
 
 const ViewRows = ({
@@ -821,8 +821,11 @@ const ViewRows = ({
       );
     }
 
-    const collapsedColumns = getCollapsedColumns(curTableName, currentSchema);
-    const columnsOrder = getColumnsOrder(curTableName, currentSchema);
+    const collapsedColumns = getPersistedCollapsedColumns(
+      curTableName,
+      currentSchema
+    );
+    const columnsOrder = getPersistedColumnsOrder(curTableName, currentSchema);
 
     let disableSortColumn = false;
 
@@ -923,7 +926,7 @@ const ViewRows = ({
         dispatch(setOffset(0));
         dispatch(runQuery(tableSchema));
         setSelectedRows([]);
-        handlePageSizeStateChange(size);
+        persistPageSizeChange(size);
       }
     };
 
@@ -946,11 +949,15 @@ const ViewRows = ({
         onPageSizeChange={handlePageSizeChange}
         page={Math.floor(curFilter.offset / curFilter.limit)}
         onCollapseChange={collapsedData =>
-          handleCollapseChange(curTableName, currentSchema, collapsedData)
+          persistColumnCollapseChange(
+            curTableName,
+            currentSchema,
+            collapsedData
+          )
         }
         defaultCollapsed={collapsedColumns}
         onOrderChange={reorderData =>
-          handleOrderChange(curTableName, currentSchema, reorderData)
+          persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
       />

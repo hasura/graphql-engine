@@ -14,7 +14,7 @@ import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
-import { getPageSize } from './localStorageUtils';
+import { getPersistedPageSize } from './localStorageUtils';
 
 /*
 const genHeadings = headings => {
@@ -94,7 +94,7 @@ class ViewTable extends Component {
 
   getInitialData(tableName) {
     const { dispatch, currentSchema } = this.props;
-    const limit = getPageSize(tableName, currentSchema);
+    const limit = getPersistedPageSize(tableName, currentSchema);
     Promise.all([
       dispatch(setTable(tableName)),
       dispatch(vSetDefaults(limit)),

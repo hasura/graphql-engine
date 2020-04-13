@@ -1,18 +1,19 @@
-const setLSState = (key: string, data: any) => {
-  window.localStorage.setItem(key, JSON.stringify(data));
+export const setLSState = (key: string, data: string) => {
+  window.localStorage.setItem(key, data);
 };
 
-const getLSState = (key: string, defaultValue: null | {} = {}) => {
+export const getLSState = (key: string) => {
+  return window.localStorage.getItem(key);
+};
+
+export const parseLSState = (data: any) => {
   try {
-    const p = window.localStorage.getItem(key);
-    if (p) {
-      return JSON.parse(p);
+    if (data) {
+      return JSON.parse(data);
     }
-    return defaultValue;
-  } catch (e) {
-    console.error(e);
-    setLSState(key, defaultValue);
-    return defaultValue;
+    return null;
+  } catch {
+    return null;
   }
 };
 
@@ -21,22 +22,26 @@ const columnsCollapsedKey = 'data:collapsed';
 type CollapesEntry = Record<string, boolean>;
 type CollapesState = Record<string, CollapesEntry>;
 
-export const handleCollapseChange = (
+export const persistColumnCollapseChange = (
   tableName: string,
   schemaName: string,
   collapsedData: CollapesEntry
 ) => {
-  const currentCollapsed = getLSState(columnsCollapsedKey);
+  const state = getLSState(columnsCollapsedKey);
+  const currentCollapsed = parseLSState(state) || {};
   const newCollapsed = {
     ...currentCollapsed,
     [`${schemaName}.${tableName}`]: collapsedData,
   };
 
-  setLSState(columnsCollapsedKey, newCollapsed);
+  setLSState(columnsCollapsedKey, JSON.stringify(newCollapsed));
 };
 
-export const getCollapsedColumns = (tableName: string, schemaName: string) => {
-  const collapsedData = getLSState(columnsCollapsedKey) as CollapesState;
+export const getPersistedCollapsedColumns = (
+  tableName: string,
+  schemaName: string
+) => {
+  const collapsedData = parseLSState(getLSState(columnsCollapsedKey)) || {};
   return collapsedData[`${schemaName}.${tableName}`];
 };
 
@@ -49,12 +54,12 @@ const compareReorderItems = (item1: OrderEntry) => (item2: OrderEntry) =>
   item1.newOrder === item2.newOrder &&
   item1.defaultOrder === item2.defaultOrder;
 
-export const handleOrderChange = (
+export const persistColumnOrderChange = (
   tableName: string,
   schemaName: string,
   orderData: OrderEntry[]
 ) => {
-  const currentOrders = getLSState(columnsOrderKey);
+  const currentOrders = parseLSState(getLSState(columnsOrderKey)) || {};
 
   // remove duplicates
   const newOrders: OrderEntry[] = [];
@@ -69,27 +74,33 @@ export const handleOrderChange = (
 
   if (!newOrders.length) {
     delete currentOrders[`${schemaName}.${tableName}`];
-    setLSState(columnsOrderKey, currentOrders);
+    setLSState(columnsOrderKey, JSON.stringify(currentOrders));
     return;
   }
 
-  setLSState(columnsOrderKey, {
-    ...currentOrders,
-    [`${schemaName}.${tableName}`]: newOrders,
-  });
+  setLSState(
+    columnsOrderKey,
+    JSON.stringify({
+      ...currentOrders,
+      [`${schemaName}.${tableName}`]: newOrders,
+    })
+  );
 };
 
-export const getColumnsOrder = (tableName: string, schemaName: string) => {
-  const orderData = getLSState(columnsOrderKey) as OrderState;
-  return orderData[`${schemaName}.${tableName}`];
+export const getPersistedColumnsOrder = (
+  tableName: string,
+  schemaName: string
+) => {
+  const orderData = parseLSState(getLSState(columnsOrderKey));
+  return orderData ? orderData[`${schemaName}.${tableName}`] : [];
 };
 
 const pageSizeKey = 'data:pageSize';
 
-export const handlePageSizeStateChange = (pageSize: number) => {
-  setLSState(pageSizeKey, pageSize);
+export const persistPageSizeChange = (pageSize: number) => {
+  setLSState(pageSizeKey, JSON.stringify(pageSize));
 };
 
-export const getPageSize = () => {
-  return getLSState(pageSizeKey, null);
+export const getPersistedPageSize = () => {
+  return parseLSState(getLSState(pageSizeKey));
 };

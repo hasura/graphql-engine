@@ -26,7 +26,7 @@ import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
-import { getPageSize } from './localStorageUtils';
+import { getPersistedPageSize } from './localStorageUtils';
 
 const history = createHistory();
 
@@ -204,7 +204,7 @@ const renderSorts = (orderBy, tableSchema, dispatch) => {
 class FilterQuery extends Component {
   componentDidMount() {
     const { dispatch, tableSchema, curQuery } = this.props;
-    const limit = getPageSize();
+    const limit = getPersistedPageSize();
     if (!this.props.urlQuery) {
       dispatch(setDefaultQuery({ ...curQuery, limit }));
       return;
