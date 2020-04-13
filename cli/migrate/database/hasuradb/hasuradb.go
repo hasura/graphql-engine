@@ -238,14 +238,14 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 			break
 		}
 		t := HasuraInterfaceQuery{
-			Type: "run_sql",
-			Args: HasuraArgs{
-				SQL: string(body),
+			Type: RunSQL,
+			Args: RunSQLInput{
+				SQL:                      string(body),
+				CheckMetadataConsistency: func() *bool { b := false; return &b }(),
 			},
 		}
 		h.migrationQuery.Args = append(h.migrationQuery.Args, t)
 		h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
-
 	case "meta":
 		var t []interface{}
 		err := yaml.Unmarshal(migr, &t)
