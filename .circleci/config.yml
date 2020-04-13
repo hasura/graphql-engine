@@ -398,7 +398,7 @@ jobs:
   
   test_and_build_cli_migrations:
     docker:
-    - image: hasura/graphql-engine-deployer:v0.4
+    - image: hasura/graphql-engine-cli-migrations-builder:20200414
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
