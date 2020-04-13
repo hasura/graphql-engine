@@ -235,7 +235,6 @@ executeJSONPath jsonPath = iparse (valueParser jsonPath)
   where
     valueParser path value = case path of
       []                      -> pure value
-      [pathElement]           -> parseWithPathElement pathElement value
       (pathElement:remaining) -> parseWithPathElement pathElement value >>=
                                  ((<?> pathElement) . valueParser remaining)
       where

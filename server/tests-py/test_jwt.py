@@ -21,8 +21,6 @@ if not PytestConf.config.getoption('--hge-jwt-key-file'):
 if not PytestConf.config.getoption('--hge-jwt-conf'):
     pytest.skip('--hge-jwt-key-conf is missing, skipping JWT tests', allow_module_level=True)
 
-claims_namespace_path = PytestConf.config.getoption('--hge-jwt-claims-ns-path')
-
 def get_claims_fmt(raw_conf):
     conf = json.loads(raw_conf)
     try:
@@ -49,6 +47,7 @@ class TestJWTBasic():
                 'x-hasura-allowed-roles': ['user', 'editor'],
                 'x-hasura-default-role': 'user'
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -65,6 +64,7 @@ class TestJWTBasic():
             'x-hasura-allowed-roles': ['contractor', 'editor'],
             'x-hasura-default-role': 'contractor'
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -92,6 +92,7 @@ class TestJWTBasic():
             'x-hasura-user-id': '1',
             'x-hasura-default-role': 'user'
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -120,6 +121,7 @@ class TestJWTBasic():
             'x-hasura-allowed-roles': 'user',
             'x-hasura-default-role': 'user'
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -147,6 +149,7 @@ class TestJWTBasic():
             'x-hasura-user-id': '1',
             'x-hasura-allowed-roles': ['user'],
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -175,6 +178,7 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -206,6 +210,7 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -239,6 +244,7 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -259,6 +265,7 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -320,6 +327,7 @@ class TestSubscriptionJwtExpiry(object):
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -351,6 +359,7 @@ class TestJwtAudienceCheck():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -371,6 +380,7 @@ class TestJwtAudienceCheck():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -432,6 +442,7 @@ class TestJwtIssuerCheck():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
@@ -453,6 +464,7 @@ class TestJwtIssuerCheck():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
+        claims_namespace_path = hge_ctx.hge_jwt_claims_ns_path
         if claims_namespace_path is None:
             self.claims['https://hasura.io/jwt/claims'] = claims
         elif claims_namespace_path == "$.hasuraClaims":
