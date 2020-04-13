@@ -158,8 +158,8 @@ InsertPermission
      - false
      - Boolean
      - When set to ``true`` the mutation is accessible only if ``x-hasura-use-backend-only-permissions``
-       session variable exists and set to ``true`` and request is made with ``x-hasura-admin-secret`` if
-       any auth is configured
+       session variable exists and is set to ``true`` and request is made with ``x-hasura-admin-secret``
+       set if any auth is configured
 
 .. _drop_insert_permission:
 
