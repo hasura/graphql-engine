@@ -130,7 +130,7 @@ JSON object:
      "jwk_url": "<optional-url-to-refresh-jwks>",
      "claims_namespace": "<optional-key-name-in-claims>",
      "claims_format": "json|stringified_json",
-     "claims_namespace_path":"<optional-JSON-Path-to-the-claims>",
+     "claims_namespace_path":"<optional-json-path-to-the-claims>",
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
      "issuer": "<optional-string-to-verify-issuer>"
    }
