@@ -119,6 +119,7 @@ export const createAction = () => (dispatch, getState) => {
     outputType,
     error: actionDefError,
     comment: actionDescription,
+    type: actionType,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
   if (actionDefError) {
     return dispatch(
@@ -140,6 +141,7 @@ export const createAction = () => (dispatch, getState) => {
     handler: rawState.handler,
     kind: rawState.kind,
     types,
+    actionType,
     name: actionName,
     arguments: args,
     outputType,
@@ -235,6 +237,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     name: actionName,
     arguments: args,
     outputType,
+    type: actionType,
     error: actionDefError,
     comment: actionDescription,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
@@ -258,6 +261,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     handler: rawState.handler,
     kind: rawState.kind,
     types,
+    actionType,
     name: actionName,
     arguments: args,
     outputType,
