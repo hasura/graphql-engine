@@ -2,7 +2,6 @@ module Data.Parser.JSONPath
   ( parseJSONPath
   , JSONPathElement(..)
   , JSONPath
-  , formatPath
   ) where
 
 import           Control.Applicative  ((<|>))
@@ -64,33 +63,3 @@ parseJSONPath = parseResult . parse parseElements
     invalidMessage s = "invalid property name: "  ++ T.unpack s
       ++ ". Accept letters, digits, underscore (_) or hyphen (-) only"
       ++ ". Use single quotes enclosed in bracket if there are any special characters"
-
--- available in Data.Aeson.Types but not importing
-formatPath :: JSONPath -> String
-formatPath path = "$" ++ formatRelativePath path
-
-formatRelativePath :: JSONPath -> String
-formatRelativePath path = format "" path
-  where
-    format :: String -> JSONPath -> String
-    format pfx []                = pfx
-    format pfx (Index idx:parts) = format (pfx ++ "[" ++ show idx ++ "]") parts
-    format pfx (Key key:parts)   = format (pfx ++ formatKey key) parts
-
-    formatKey :: T.Text -> String
-    formatKey key
-       | isIdentifierKey strKey = "." ++ strKey
-       | otherwise              = "['" ++ escapeKey strKey ++ "']"
-      where strKey = T.unpack key
-
-    isIdentifierKey :: String -> Bool
-    isIdentifierKey []     = False
-    isIdentifierKey (x:xs) = isAlpha x && all isAlphaNum xs
-
-    escapeKey :: String -> String
-    escapeKey = concatMap escapeChar
-
-    escapeChar :: Char -> String
-    escapeChar '\'' = "\\'"
-    escapeChar '\\' = "\\\\"
-    escapeChar c    = [c]

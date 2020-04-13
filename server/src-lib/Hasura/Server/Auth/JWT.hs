@@ -34,6 +34,7 @@ import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
 import           Hasura.Server.Utils             (getRequestHeader, userRoleHeader, executeJSONPath)
 import           Hasura.Server.Version           (HasVersion)
+import           Hasura.RQL.Types.Error          (encodeJSONPath)
 
 import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
@@ -51,6 +52,7 @@ import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
 import qualified Data.Parser.JSONPath            as JSONPath
+
 
 newtype RawJWT = RawJWT BL.ByteString
 
@@ -296,7 +298,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
         claimsLocation :: Text
         claimsLocation =
           case jcxClaimNs jwtCtx of
-            ClaimNsPath path -> T.pack $ "claims_namespace_path " <> JSONPath.formatPath path
+            ClaimNsPath path -> T.pack $ "claims_namespace_path " <> encodeJSONPath path
             ClaimNs ns -> "claims_namespace " <> ns
 
     claimsErr = throw400 JWTInvalidClaims
@@ -327,7 +329,7 @@ processAuthZHeader jwtCtx headers authzHeader = do
       throw400 AccessDenied "Your current role is not in allowed roles"
     claimsNotFound = do
       let claimsNsError = case jcxClaimNs jwtCtx of
-                            ClaimNsPath path -> T.pack $ "claims not found at claims_namespace_path: '" <> (JSONPath.formatPath path) <> "'"
+                            ClaimNsPath path -> T.pack $ "claims not found at claims_namespace_path: '" <> (encodeJSONPath path) <> "'"
                             ClaimNs ns -> "claims key: '" <> ns <> "' not found"
       throw400 JWTInvalidClaims $ claimsNsError
 
@@ -401,7 +403,7 @@ instance J.ToJSON JWTConfig where
 
       claimsNsFields = case claimNs of
         ClaimNsPath nsPath ->
-          ["claims_namespace_path" J..= (JSONPath.formatPath nsPath)]
+          ["claims_namespace_path" J..= (encodeJSONPath nsPath)]
         ClaimNs ns -> ["claims_ns" J..= J.String ns]
 
       sharedFields = [ "claims_format" J..= claimsFmt

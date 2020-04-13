@@ -10,6 +10,7 @@ import           Hasura.Prelude
 import           Hasura.Server.Auth
 import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Version                    (HasVersion, Version, currentVersion)
+import           Hasura.RQL.Types.Error                   (encodeJSONPath)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
 import qualified Data.Aeson                               as J
@@ -25,7 +26,7 @@ data JWTInfo
 instance J.ToJSON JWTInfo where
   toJSON (JWTInfo ns (Just nsPath) fmt) =
     J.object [ "claims_namespace" J..= J.String ns
-             , "claims_namespace_path" J..= JSONPath.formatPath nsPath
+             , "claims_namespace_path" J..= encodeJSONPath nsPath
              , "claims_formatPath" J..= fmt
            ]
   toJSON (JWTInfo ns Nothing fmt) =
