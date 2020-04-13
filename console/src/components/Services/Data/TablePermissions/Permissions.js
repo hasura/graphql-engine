@@ -1768,7 +1768,7 @@ class Permissions extends Component {
         const tooltip = (
           <Tooltip id="tooltip-backend-only">
             When set to true, this {permissionsState.query} mutation is
-            accessible only if x-hasura-backend-privilege session variable
+            accessible only if x-hasura-use-backend-only-permissions session variable
             exists and is set to true
           </Tooltip>
         );
