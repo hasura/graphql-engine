@@ -4,7 +4,7 @@ VERSION ?= $(shell ../get-version.sh)
 BUILD_DIR ?= /build
 BINARY ?= $(BUILD_DIR)/_cli_output/binaries/cli-hasura-linux-amd64
 REGISTRY ?= hasura
-IMAGE_TAG ?= ${REGISTRY}/graphql-engine:$(VERSION).cli-migrations
+IMAGE_TAG ?= ${REGISTRY}/graphql-engine:cli-migrations
 BUILD_OUTPUT ?= $(BUILD_DIR)/_cli_migrations_output
 CLI_EXT_MANIFEST_FILE ?= $(BUILD_DIR)/_cli_ext_output/manifest-dev.yaml
 
@@ -16,6 +16,12 @@ build-cli-migrations-v1:
 	docker build -t ${IMAGE_TAG} .
 	docker save -o '$(BUILD_OUTPUT)/v1.tar' '$(IMAGE_TAG)'
 
+.PHONY: test-cli-migrations-v1
+.ONESHELL:
+test-cli-migrations-v1:
+	cd v1/test
+	./test.sh
+
 .PHONY: build-cli-migrations-v2
 .ONESHELL:
 build-cli-migrations-v2:
@@ -26,4 +32,4 @@ build-cli-migrations-v2:
 	docker save -o '$(BUILD_OUTPUT)/v2.tar' '$(IMAGE_TAG)-v2'
 
 .PHONY: all
-all: build-cli-migrations-v1 build-cli-migrations-v2
+all: build-cli-migrations-v1 build-cli-migrations-v2 test-cli-migrations-v1
