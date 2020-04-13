@@ -150,9 +150,10 @@ class TestActionsAsync:
                 'create_user': {
                     'id': action_id,
                     'errors': {
-                        'code': 'invalid-email',
-                        'path': '$',
-                        'error': 'Given email address is not valid'
+                        'message': 'Email address is not valid: random-email',
+                        'extensions': {
+                            'validation_error': "random-email is not a valid email"
+                        }
                     }
                 }
             }

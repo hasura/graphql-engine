@@ -12,6 +12,5 @@ query:
 response:
   errors:
     - extensions:
-        path: $
-        code: invalid-email
-      message: Given email address is not valid
+        validation_error: random-email is not a valid email
+      message: 'Email address is not valid: random-email'

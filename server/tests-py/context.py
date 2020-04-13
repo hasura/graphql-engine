@@ -218,8 +218,10 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
         if not self.check_email(email_address):
             response = {
-                'message': 'Given email address is not valid',
-                'code': 'invalid-email'
+                'message': 'Email address is not valid: ' + email_address,
+                'extensions':{
+                    "validation_error": email_address + " is not a valid email"
+                }
             }
             return response, HTTPStatus.BAD_REQUEST
 
@@ -255,7 +257,9 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             if not self.check_email(email_address):
                 response = {
                     'message': 'Email address is not valid: ' + email_address,
-                    'code': 'invalid-email'
+                    'extensions': {
+                        "validation_error": email_address + " is not a valid email"
+                    }
                 }
                 return response, HTTPStatus.BAD_REQUEST
 
