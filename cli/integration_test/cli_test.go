@@ -94,12 +94,12 @@ func TestCommands(t *testing.T) {
 		t.Run("cli-ext-plugin-install", func(t *testing.T) {
 			installOpts := &commands.PluginInstallOptions{
 				EC:           ec,
-				Name:         "cli-ext",
+				Name:         cli.CLIExtPluginName,
 				ManifestFile: "/build/_cli_ext_output/manifest-dev.yaml",
 			}
 			err := installOpts.Run()
 			if err != nil {
-				t.Fatalf("unable to install cli-ext plugin, got %v", err)
+				t.Fatalf("unable to install %s plugin, got %v", cli.CLIExtPluginName, err)
 			}
 		})
 

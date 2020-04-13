@@ -77,5 +77,8 @@ type PluginInstallOptions struct {
 }
 
 func (o *PluginInstallOptions) Run() error {
-	return o.EC.PluginsConfig.Install(o.Name, o.ManifestFile, o.Version.Version)
+	return o.EC.PluginsConfig.Install(o.Name, plugins.InstallOpts{
+		ManifestFile: o.ManifestFile,
+		Version:      o.Version.Version,
+	})
 }
