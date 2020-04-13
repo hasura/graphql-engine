@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgrespassword
   graphql-engine:
-    container_name: server
+    container_name: graphql-engine
     image: cli-migrations
     ports:
     - "8080:8080"

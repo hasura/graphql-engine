@@ -25,7 +25,8 @@ wait_for_port() {
 }
 
 fail_if_port_busy 8080
-set -x
-docker-compose up -d
-docker run --network container:server appropriate/curl --retry 10 --retry-delay 6 --retry-connrefused http://localhost:8080/v1/version
+docker-compose up --no-start graphql-engine
+docker cp ./migrations/. graphql-engine:/hasura-migrations
+docker-compose up -d --no-recreate graphql-engine
+docker run --network container:graphql-engine appropriate/curl --retry 10 --retry-delay 6 --retry-connrefused http://localhost:8080/v1/version
 docker-compose down -v
