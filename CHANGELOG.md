@@ -11,6 +11,8 @@ The order and collapsed state of columns is now persisted across page navigation
 
 ### Bug fixes and improvements
 
+- console: query support for actions (#4318)
+- cli: query support for actions (#4318)
 - cli: add retry_conf in event trigger for squashing migrations (close #4296) (#4324)
 - cli: allow customization of server api paths (close #4016)
 - cli: clean up migration files created during a failed migrate api (close #4312) (#4319)
