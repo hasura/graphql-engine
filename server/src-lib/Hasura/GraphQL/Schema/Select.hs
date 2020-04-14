@@ -3,6 +3,7 @@ module Hasura.GraphQL.Schema.Select where
 import           Hasura.Prelude
 
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.GraphQL.Parser         as P
@@ -19,10 +20,11 @@ import           Hasura.SQL.Value
 
 
 
-type SelectExp  = RQL.AnnSimpleSelG UnpreparedValue
-type TableArgs  = RQL.TableArgsG UnpreparedValue
-type TablePerms = RQL.TablePermG UnpreparedValue
-
+type SelectExp       = RQL.AnnSimpleSelG UnpreparedValue
+type TableArgs       = RQL.TableArgsG UnpreparedValue
+type TablePerms      = RQL.TablePermG UnpreparedValue
+type AnnotatedFields = RQL.AnnFldsG UnpreparedValue
+type AnnotatedField  = RQL.AnnFldG UnpreparedValue
 
 
 queryExp
@@ -32,54 +34,59 @@ queryExp
   -> m (Parser 'Output n (HashMap G.Name SelectExp))
 queryExp allTables stringifyNum = do
   selectExpParsers <- for (toList allTables) $ \tableName -> do
-    tablePermissions <- tablePerms tableName
-    for tablePermissions $ \perms ->
-      selectExp tableName perms stringifyNum
+    selPerms <- tableSelectPermissions tableName
+    for selPerms $ \perms -> selectExp tableName perms stringifyNum
   let queryFieldsParser = fmap (Map.fromList . catMaybes) $ sequenceA $ catMaybes selectExpParsers
   pure $ P.selectionSet $$(G.litName "Query") Nothing queryFieldsParser
-
-
-
 
 selectExp
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
-  -> TablePerms
+  -> SelPermInfo
   -> Bool
   -> m (FieldsParser 'Output n (Maybe (G.Name, SelectExp)))
-selectExp table tablePermissions stringifyNum = do
+selectExp table selectPermissions stringifyNum = do
   name               <- qualifiedObjectToName table
   tableArgsParser    <- tableArgs table
-  selectionSetParser <- tableSelectionSet table
+  selectionSetParser <- tableSelectionSet table selectPermissions
   return $ P.selection name Nothing tableArgsParser selectionSetParser <&> fmap
     \(aliasName, tableArgs, tableFields) -> (aliasName, RQL.AnnSelG
       { RQL._asnFields   = tableFields
       , RQL._asnFrom     = RQL.FromTable table
-      , RQL._asnPerm     = tablePermissions
+      , RQL._asnPerm     = tablePermissions selectPermissions
       , RQL._asnArgs     = tableArgs
       , RQL._asnStrfyNum = stringifyNum
       })
 
-
-tablePerms
+tableSelectPermissions
   :: forall m n. (MonadSchema n m)
   => QualifiedTable
-  -> m (Maybe TablePerms)
-tablePerms table = do
+  -> m (Maybe SelPermInfo)
+tableSelectPermissions table = do
   roleName  <- askRoleName
   tableInfo <- _tiRolePermInfoMap <$> askTableInfo table
-  return $ do
-    rolePermissions   <- Map.lookup roleName tableInfo
-    selectPermissions <- _permSel rolePermissions
-    return $ RQL.TablePerm
-      { RQL._tpFilter = fmapAnnBoolExp toUnpreparedValue $ spiFilter selectPermissions
-      , RQL._tpLimit  = spiLimit selectPermissions
-      }
+  return $ _permSel =<< Map.lookup roleName tableInfo
+
+tablePermissions :: SelPermInfo -> TablePerms
+tablePermissions selectPermissions =
+  RQL.TablePerm { RQL._tpFilter = fmapAnnBoolExp toUnpreparedValue $ spiFilter selectPermissions
+                , RQL._tpLimit  = spiLimit selectPermissions
+                }
   where
     toUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
-    toUnpreparedValue (PSESQLExp exp)         = P.UVLiteral exp
+    toUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
 
 
+-- | Corresponds to an object type for table argumuments:
+--
+-- FIXME: is that the correct name?
+-- > type table_arguments {
+-- >   distinct_on: [card_types_select_column!]
+-- >   limit: Int
+-- >   offset: Int
+-- >   order_by: [card_types_order_by!]
+-- >   where: card_types_bool_exp
+-- > }
 tableArgs
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
@@ -95,24 +102,11 @@ tableArgs table = do
       , RQL._taOrderBy  = Nothing -- TODO
       , RQL._taLimit    = fromIntegral <$> limit
       , RQL._taOffset   = txtEncoder . PGValInteger <$> offset
-      , RQL._taDistCols = Nothing
+      , RQL._taDistCols = Nothing -- TODO
       }
   where limitName  = $$(G.litName "limit")
         offsetName = $$(G.litName "offset")
         whereName  = $$(G.litName "where")
-
--- SELit . Text.pack . show <$>
-{-
-distinct_on: [card_types_select_column!]
-limit: Intoffset: Int
-order_by: [card_types_order_by!]
-where: card_types_bool_exp
--}
-
-
-type AnnotatedFields = RQL.AnnFldsG UnpreparedValue
-type AnnotatedField = RQL.AnnFldG UnpreparedValue
-
 
 
 -- | Corresponds to an object type for a table:
@@ -125,12 +119,14 @@ type AnnotatedField = RQL.AnnFldG UnpreparedValue
 tableSelectionSet
   :: (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
+  -> SelPermInfo
   -> m (Parser 'Output n AnnotatedFields)
-tableSelectionSet = P.memoize 'tableSelectionSet \tableName -> do
+tableSelectionSet tableName selectPermissions = memoizeOn 'tableSelectionSet tableName $ do
   tableInfo <- _tiCoreInfo <$> askTableInfo tableName
   name <- qualifiedObjectToName $ _tciName tableInfo
-  -- FIXME: permissions!
-  fields <- catMaybes <$> traverse fieldSelection (Map.elems $ _tciFieldInfoMap tableInfo)
+  fields <- fmap catMaybes $ traverse (fieldSelection selectPermissions)
+                           $ Map.elems
+                           $ _tciFieldInfoMap tableInfo
   pure $ P.selectionSet name (_tciDescription tableInfo) $ catMaybes <$> sequenceA fields
 
 -- | A field for a table. Returns 'Nothing' if the field’s name is not a valid
@@ -139,14 +135,17 @@ tableSelectionSet = P.memoize 'tableSelectionSet \tableName -> do
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection
   :: (MonadSchema n m, MonadError QErr m)
-  => FieldInfo
+  => SelPermInfo
+  -> FieldInfo
   -> m (Maybe (FieldsParser 'Output n (Maybe (FieldName, AnnotatedField))))
-fieldSelection fieldInfo = for (fieldInfoGraphQLName fieldInfo) \fieldName ->
+fieldSelection selectPermissions fieldInfo = for (fieldInfoGraphQLName fieldInfo) \fieldName ->
   aliasToFieldName <$> case fieldInfo of
     FIColumn columnInfo -> do
       let annotated = RQL.mkAnnColField columnInfo Nothing -- FIXME: support ColOp
       field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-      pure $ fmap (, annotated) <$> P.selection_ fieldName fieldDescription field
+      pure $ if Set.member (pgiColumn columnInfo) $ spiCols selectPermissions
+             then fmap (, annotated) <$> P.selection_ fieldName fieldDescription field
+             else pure Nothing
     FIRelationship relationshipInfo -> undefined -- TODO: implement
     FIComputedField computedFieldInfo -> undefined -- TODO: implement
   where
