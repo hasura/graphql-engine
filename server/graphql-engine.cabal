@@ -361,6 +361,7 @@ library
                      , Hasura.GraphQL.Schema
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
+                     , Hasura.GraphQL.Schema.Select
 
                      -- , Hasura.Events.Lib
                      -- , Hasura.Events.HTTP
