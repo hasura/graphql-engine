@@ -91,7 +91,7 @@ https://github.com/haskell/haskell-ide-engine
 
 > This project aims to be the universal interface to a growing number of Haskell tools, providing a fully-featured Language Server Protocol server for editors and IDEs that require Haskell-specific functionality.
 
-You can install HIE and its dependencies locally, or you 
+You can install HIE and its dependencies locally, or you can use the [community VS Code Devcontainer](https://github.com/hmemcpy/haskell-hie-devcontainer) to install GHC + HIE and the VS Code extension in an isolated container environment for you.
 
 HIE has a couple of requirements, namely that you have `stack` installed and in your path, and, depending on your OS, a few build tool libs that must be installed in order to compile correctly. You can follow the guide under `Installation from source` on the HIE repository page, or if you are on Arch, you can install it from the AUR:
 
