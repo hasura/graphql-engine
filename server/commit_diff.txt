@@ -502,22 +502,3 @@ Date:   Thu Apr 16 12:15:21 2020 +0530
     Co-authored-by: Marion Schleifer <marion@hasura.io>
     Co-authored-by: rakeshkky <12475069+rakeshkky@users.noreply.github.com>
     Co-authored-by: Tirumarai Selvan <tirumarai.selvan@gmail.com>
-
-commit a23c633bd7a90952a8e482cda45b87a624e99140
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Tue Apr 14 11:31:50 2020 +0530
-
-    unlock inflight events when gracefully shutdown (close #3548) (#4214)
-
-    * unlock the locked-events during graceful shutdown
-
-    * Some events can still be delivered multiple times due to
-      ungraceful shutdown
-
-    * modify the preparevents documentation
-
-    * modify the prepareEvents doc
-
-    * update changelog
-
-    Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
