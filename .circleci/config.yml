@@ -14,6 +14,7 @@ refs:
     run:
       name: checking if is PR build & server changes not present
       command: |
+        echo "PR number: $CIRCLE_PR_NUMBER"
         if [ -z "$CIRCLE_PR_NUMBER" ]; then
           echo "Not a PR build, continue test" && exit 0
         fi
