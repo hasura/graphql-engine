@@ -114,6 +114,7 @@ class GraphiQLWrapper extends Component {
       const { action, types } = derivedOperationMetadata;
       const actionsSdl = getActionDefinitionSdl(
         action.name,
+        action.type,
         action.arguments,
         action.output_type
       );
