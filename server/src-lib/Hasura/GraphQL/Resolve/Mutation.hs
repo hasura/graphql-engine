@@ -126,7 +126,7 @@ convertUpdateP1 opCtx boolExpParser selectionResolver fld = do
   whereExp <- boolExpParser args
   -- increment operator on integer columns
   incExpM <- resolveUpdateOperator "_inc" $
-    convObjWithOp' $ rhsExpOp S.incOp S.intTypeAnn
+    convObjWithOp' $ rhsExpOp S.incOp S.numericTypeAnn
   -- append jsonb value
   appendExpM <- resolveUpdateOperator "_append" $
     convObjWithOp' $ rhsExpOp S.jsonbConcatOp S.jsonbTypeAnn
