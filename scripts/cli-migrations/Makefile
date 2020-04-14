@@ -30,5 +30,11 @@ build-cli-migrations-v2:
 	docker build -t '${IMAGE_TAG}-v2' .
 	docker save -o '$(BUILD_OUTPUT)/v2.tar' '$(IMAGE_TAG)-v2'
 
+.PHONY: test-cli-migrations-v2
+.ONESHELL:
+test-cli-migrations-v2:
+	cd v2/test
+	./test.sh
+
 .PHONY: all
-all: build-cli-migrations-v1 build-cli-migrations-v2 test-cli-migrations-v1
+all: build-cli-migrations-v1 build-cli-migrations-v2 test-cli-migrations-v1 test-cli-migrations-v2
