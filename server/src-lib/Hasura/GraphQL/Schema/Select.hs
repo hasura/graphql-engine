@@ -24,6 +24,23 @@ type TableArgs  = RQL.TableArgsG UnpreparedValue
 type TablePerms = RQL.TablePermG UnpreparedValue
 
 
+
+queryExp
+  :: forall m n. (MonadSchema n m, MonadError QErr m)
+  => HashSet QualifiedTable
+  -> Bool
+  -> m (Parser 'Output n (HashMap G.Name SelectExp))
+queryExp allTables stringifyNum = do
+  selectExpParsers <- for (toList allTables) $ \tableName -> do
+    tablePermissions <- tablePerms tableName
+    for tablePermissions $ \perms ->
+      selectExp tableName perms stringifyNum
+  let queryFieldsParser = fmap (Map.fromList . catMaybes) $ sequenceA $ catMaybes selectExpParsers
+  pure $ P.selectionSet $$(G.litName "Query") Nothing queryFieldsParser
+
+
+
+
 selectExp
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
