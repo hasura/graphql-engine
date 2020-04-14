@@ -86,9 +86,11 @@ const AddAction = ({
   let actionType;
   if (!actionDefinitionError) {
     // TODO optimise
-    const { type, error } = getActionDefinitionFromSdl(actionDefinitionSdl);
-    if (!error) {
-      actionType = type;
+    if (!actionParseTimer) {
+      const { type, error } = getActionDefinitionFromSdl(actionDefinitionSdl);
+      if (!error) {
+        actionType = type;
+      }
     }
   }
 
