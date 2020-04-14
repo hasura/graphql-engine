@@ -12,7 +12,7 @@ refs:
         fi
   skip_server_tests: &skip_server_tests
     run:
-      name: checking if server changes present
+      name: checking if is PR build & server changes not present
       command: |
         if [ -z "$CIRCLE_PR_NUMBER" ]; then
           echo "Not a PR build, continue test" && exit 0
