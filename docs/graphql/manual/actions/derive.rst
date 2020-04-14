@@ -23,7 +23,7 @@ To help with creation of such actions, Hasura lets you derive an action from an
 existing query or a mutation by:
 
 - Auto-generating the GraphQL types defining the action
-- Generating the handler code to delegate the action back to the original query/mutation
+- Generating the handler code to delegate the action back to the original query or mutation
   after executing some business logic
 
 Generate derived action GraphQL types
@@ -127,7 +127,7 @@ derive our action:
 .. note::
 
   - The derived output type will be derived from the actual output type of the
-    original query/mutation and not the selection-set of the given query/mutation string.
+    original query or mutation and not the selection-set of the given query or mutation string.
   - As currently custom object types can only have scalar / enum fields any
     object type fields in the original output type will be dropped in the derived
     output type.
@@ -169,12 +169,9 @@ the action back to the original operation.
     the corresponding codegen files. Hit `y` to generate the codegen files with
     the delegation logic.
 
-    The CLI does not persist information about derived actions. Hence if you wish to generate the delegation code, you want to pass the query/mutation string while running the codegen command:
+    The CLI does not persist information about derived actions. Hence if you wish to generate the delegation code,
+    you might want to pass the query or mutation string while running the codegen command:
 
     .. code-block:: bash
 
         hasura actions codegen <action-name> --derive-from '<query/mutation string>'
-
-
-
-

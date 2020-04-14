@@ -15,16 +15,16 @@ Creating actions
 Introduction
 ------------
 
-An action is a GraphQL query/mutation. You have to define the GraphQL type of the
-arguments that the query/mutation accepts and the GraphQL type of its response.
+An action is a GraphQL query or mutation. You have to define the GraphQL type of the
+arguments that the query or mutation accepts and the GraphQL type of its response.
 
 To create an action, you have to:
 
-1. Define the query/mutation
+1. Define the query or mutation
 2. Define the required types
 3. Create a handler
 
-Let's look at **examples** for query and mutation type actions.
+Let's look at **examples** for mutation and query type actions.
 
 Setup
 -----
@@ -136,7 +136,7 @@ Start with defining the mutation and the required types. These types will reflec
 
 The above definition means:
 
-* This action will be available in your GraphQL schema as a mutation called ``login``
+* This action will be available in your GraphQL schema as a mutation called ``login``.
 * It accepts two arguments called ``username`` and ``password`` of type ``String!``.
 * It returns an output type called ``LoginResponse``.
 * ``LoginResponse`` is a simple object type with a field called ``accessToken`` of type ``String!``.
@@ -164,7 +164,7 @@ for this handler would look something like:
 
     };
 
-You can deploy this code somewhere and get URI. For getting started quickly, we
+You can deploy this code somewhere and get the URI. For getting started quickly, we
 also have this handler ready at ``https://hasura-actions-starter-kit.glitch.me/login``.
 
 **Set the handler**
@@ -233,7 +233,7 @@ In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
       }
     }
 
-And that's it. You have created extended your Hasura schema with a new mutation.
+And that's it. You have extended your Hasura schema with a new mutation.
 
 Query type action
 -----------------
@@ -331,7 +331,7 @@ for this handler would look something like:
       }
     };
 
-You can deploy this code somewhere and get URI. For getting started quickly, we
+You can deploy this code somewhere and get the URI. For getting started quickly, we
 also have this handler ready at ``https://hasura-actions-starter-kit.glitch.me/addNumbers``.
 
 **Set the handler**
@@ -400,4 +400,4 @@ In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
       }
     }
 
-And that's it. You have created extended your Hasura schema with a new query.
+And that's it. You have extended your Hasura schema with a new query.
