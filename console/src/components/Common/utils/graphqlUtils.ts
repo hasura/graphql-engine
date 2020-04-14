@@ -1,8 +1,12 @@
 import React from 'react';
-import { getIntrospectionQuery, buildClientSchema, GraphQLSchema } from 'graphql';
+import {
+  getIntrospectionQuery,
+  buildClientSchema,
+  GraphQLSchema,
+} from 'graphql';
 import endpoints, { globalCookiePolicy } from '../../../Endpoints';
 
-export const useIntrospectionSchema = (headers?: any) => {
+export const useIntrospectionSchema = (headers?: Record<string, string>) => {
   const [schema, setSchema] = React.useState<GraphQLSchema | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
@@ -13,7 +17,7 @@ export const useIntrospectionSchema = (headers?: any) => {
       method: 'POST',
       headers: headers || {},
       body: JSON.stringify({ query: getIntrospectionQuery() }),
-      credentials: globalCookiePolicy
+      credentials: globalCookiePolicy,
     })
       .then(r => r.json())
       .then(response => {
