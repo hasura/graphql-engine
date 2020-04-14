@@ -23,8 +23,8 @@ docker cp migrations/. graphql-engine:/hasura-migrations
 docker-compose up -d --no-recreate graphql-engine
 wait_for_server
 # export metadata and run diff with validation/metadata.json
-docker run --network container:graphql-engine appropriate/curl -s -f   -d'{"type" : "export_metadata", "args" : {} }' localhost:8080/v1/query | jq '.' | diff validation/metadata.json -
+docker run --network container:graphql-engine appropriate/curl -s -f   -d'{"type" : "export_metadata", "args" : {} }' localhost:8080/v1/query | jq -j '.' | diff validation/metadata.json -
 # get list of migrations applied from graphql-engine server
-docker run --network container:graphql-engine appropriate/curl -s -f   -d'{"type" : "run_sql", "args" : {"sql": "select * from hdb_catalog.schema_migrations"} }' localhost:8080/v1/query | jq '.' | diff validation/schema_migrations.json -
+docker run --network container:graphql-engine appropriate/curl -s -f   -d'{"type" : "run_sql", "args" : {"sql": "select * from hdb_catalog.schema_migrations"} }' localhost:8080/v1/query | jq -j '.' | diff validation/schema_migrations.json -
 # delete postgres and graphql-engine
 docker-compose down -v
