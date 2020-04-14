@@ -15,8 +15,8 @@ Actions (beta)
 What are actions?
 -----------------
 
-Actions are a way to extend Hasura's auto-generated queries/mutations with entirely
-custom queries/mutations with custom business logic. Actions can be
+Actions are a way to extend Hasura's schema with entirely
+custom queries or mutations with custom business logic. Actions can be
 added to Hasura to handle various use cases such as data validation, data
 enrichment from external sources and any other complex business logic.
 
@@ -39,7 +39,7 @@ Action description
 
 An action consists of the following parts:
 
-1. ``Type``: The type of the action.
+1. ``Type``: The type of the action (``query`` or ``mutation``).
 2. ``Definition``: The definition of the query/mutation
 3. ``Handler``: The logic to be run when the query/mutation is executed
 4. ``Kind``: Sync or async.
@@ -52,8 +52,8 @@ Type
 
 Actions are of two types:
 
-- **Mutation Action**: An action whose handler does a mutation.
-- **Query Action**: An action whose handler executes a query.
+- **Query Action**: An action of type ``query`` extends the query root of the Hasura schema. This means that you can execute this action through a GraphQL query. Query actions must be used where you want to fetch data from a data source without changing anything on the data source.
+- **Mutation Action**: An action of type ``mutation`` extends the mutation root of the Hasura schema. This means that you can execute this action through a GraphQL mutation. Mutation actions must be used when you want to mutate the state of a data source and fetch some data.
 
 Definition
 **********
@@ -101,7 +101,7 @@ Handler
 *******
 
 Once you define the action types, you also have to specify the logic to run
-when the action mutation is executed. This can be done in an HTTP webhook,
+when the action is executed. This can be done in an HTTP webhook,
 also called the action handler. It could be a REST endpoint or a serverless
 function.
 
@@ -119,7 +119,7 @@ Mutation Actions are of two kinds:
   handler and allow the client to subscribe to the actual response using the
   ``action id``.
 
-Query Actions don't have a kind, they behave like ``Synchronous Mutation Actions``.
+Query Actions don't have a kind, they always behave like ``Synchronous Mutation Actions``.
 
 How it works?
 -------------
