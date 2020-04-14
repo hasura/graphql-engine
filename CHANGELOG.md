@@ -2,7 +2,6 @@
 
 ## Next release
 
-
 ### console: persist columns state in data browser
 
 The order and collapsed state of columns is now persisted across page navigation
@@ -27,6 +26,7 @@ The order and collapsed state of columns is now persisted across page navigation
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
+- server: manage inflight events when HGE instance is gracefully shutdown (close #3548)
 - server: fix an edge case where some events wouldn't be processed because of internal erorrs (#4213)
 - server: fix downgrade not working to version v1.1.1 (#4354)
 - server: `type` field is not required if `jwk_url` is provided in JWT config
