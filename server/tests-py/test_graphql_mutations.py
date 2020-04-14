@@ -102,9 +102,6 @@ class TestGraphqlInsertPermission:
     def test_role_has_no_permissions_err(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/address_permission_error.yaml")
 
-    # This test captures a bug in the previous release
-    # Avoiding this test for server upgrades
-    @pytest.mark.skip_server_upgrade_test
     def test_author_user_role_insert_check_perm_success(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_user_role_insert_check_perm_success.yaml")
 
@@ -278,11 +275,9 @@ class TestGraphqlInsertGeoJson:
 # Those tests capture bugs in the previous release
 class TestGraphqlNestedInserts:
 
-    @pytest.mark.skip_server_upgrade_test
     def test_author_with_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles.yaml")
 
-    @pytest.mark.skip_server_upgrade_test
     def test_author_with_articles_empty(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles_empty.yaml")
 
@@ -292,7 +287,6 @@ class TestGraphqlNestedInserts:
     def test_author_with_articles_author_id_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_with_articles_author_id_fail.yaml")
 
-    @pytest.mark.skip_server_upgrade_test
     def test_articles_with_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/articles_with_author.yaml")
 
@@ -305,7 +299,6 @@ class TestGraphqlNestedInserts:
     def test_articles_author_upsert_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/articles_author_upsert_fail.yaml")
 
-    @pytest.mark.skip_server_upgrade_test
     def test_articles_with_author_returning(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/articles_with_author_returning.yaml")
 
@@ -336,9 +329,6 @@ class TestGraphqlInsertViews:
     def test_insert_view_author_complex_fail(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/insert_view_author_complex_fail.yaml")
 
-    # This test captures a bug in the previous release
-    # Avoiding this test for server upgrades
-    @pytest.mark.skip_server_upgrade_test
     def test_nested_insert_article_author_simple_view(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/nested_insert_article_author_simple_view.yaml")
 
@@ -354,9 +344,6 @@ class TestGraphqlInsertViews:
 @use_mutation_fixtures
 class TestGraphqlUpdateBasic:
 
-    # This test captures a bug in the previous release
-    # Avoiding this test for server upgrades
-    @pytest.mark.skip_server_upgrade_test
     def test_set_author_name(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_set_name.yaml")
 
@@ -421,9 +408,6 @@ class TestGraphqlUpdateJsonB:
 @use_mutation_fixtures
 class TestGraphqlUpdatePermissions:
 
-    # This test captures a bug in the previous release
-    # Avoiding this test for server upgrades
-    @pytest.mark.skip_server_upgrade_test
     def test_user_update_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/user_update_author.yaml")
 
@@ -531,9 +515,6 @@ class TestGraphqlMutationCustomSchema:
     def test_insert_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_author.yaml', transport)
 
-    # This test captures a bug in the previous release
-    # Avoiding this test for server upgrades
-    @pytest.mark.skip_server_upgrade_test
     def test_insert_article_author(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/insert_article_author.yaml', transport)
 

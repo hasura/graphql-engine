@@ -63,8 +63,7 @@ $(J.deriveJSON J.defaultOptions { J.sumEncoding = J.ObjectWithSingleField
 
 data JWTConfig
   = JWTConfig
-  { jcType         :: !T.Text
-  , jcKeyOrUrl     :: !(Either Jose.JWK URI)
+  { jcKeyOrUrl     :: !(Either Jose.JWK URI)
   , jcClaimNs      :: !(Maybe T.Text)
   , jcAudience     :: !(Maybe Jose.Audience)
   , jcClaimsFormat :: !(Maybe JWTClaimsFormat)
@@ -371,18 +370,18 @@ verifyJwt ctx (RawJWT rawJWT) = do
 
 
 instance J.ToJSON JWTConfig where
-  toJSON (JWTConfig ty keyOrUrl claimNs aud claimsFmt iss) =
-    case keyOrUrl of
-         Left _    -> mkObj ("key" J..= J.String "<JWK REDACTED>")
-         Right url -> mkObj ("jwk_url" J..= url)
+  toJSON (JWTConfig keyOrUrl claimNs aud claimsFmt iss) =
+    J.object (jwkFields ++ sharedFields)
     where
-      mkObj item = J.object [ "type" J..= ty
-                            , "claims_namespace" J..= claimNs
-                            , "claims_format" J..= claimsFmt
-                            , "audience" J..= aud
-                            , "issuer" J..= iss
-                            , item
-                            ]
+      jwkFields = case keyOrUrl of
+        Left _    -> [ "type" J..= J.String "<TYPE REDACTED>"
+                     , "key" J..= J.String "<JWK REDACTED>" ]
+        Right url -> [ "jwk_url" J..= url ]
+      sharedFields = [ "claims_namespace" J..= claimNs
+                     , "claims_format" J..= claimsFmt
+                     , "audience" J..= aud
+                     , "issuer" J..= iss
+                     ]
 
 -- | Parse from a json string like:
 -- | `{"type": "RS256", "key": "<PEM-encoded-public-key-or-X509-cert>"}`
@@ -390,7 +389,6 @@ instance J.ToJSON JWTConfig where
 instance J.FromJSON JWTConfig where
 
   parseJSON = J.withObject "JWTConfig" $ \o -> do
-    keyType <- o J..: "type"
     mRawKey <- o J..:? "key"
     claimNs <- o J..:? "claims_namespace"
     aud     <- o J..:? "audience"
@@ -402,13 +400,14 @@ instance J.FromJSON JWTConfig where
       (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
       (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
       (Just rawKey, Nothing) -> do
-        key <- parseKey keyType rawKey
-        return $ JWTConfig keyType (Left key) claimNs aud isStrngfd iss
+        keyType <- o J..: "type"
+        key <- parseKey rawKey keyType
+        return $ JWTConfig (Left key) claimNs aud isStrngfd iss
       (Nothing, Just url) ->
-        return $ JWTConfig keyType (Right url) claimNs aud isStrngfd iss
+        return $ JWTConfig (Right url) claimNs aud isStrngfd iss
 
     where
-      parseKey keyType rawKey =
+      parseKey rawKey keyType =
        case keyType of
           "HS256" -> runEither $ parseHmacKey rawKey 256
           "HS384" -> runEither $ parseHmacKey rawKey 384

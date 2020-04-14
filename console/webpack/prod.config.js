@@ -200,7 +200,7 @@ module.exports = {
     }),
     new ForkTsCheckerWebpackPlugin({
       compilerOptions: {
-        allowJs: false,
+        allowJs: true,
         checkJs: false,
       },
     }),

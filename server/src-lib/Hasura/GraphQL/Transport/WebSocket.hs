@@ -488,15 +488,22 @@ onMessage authMode serverEnv wsConn msgRaw =
 
 onStop :: WSServerEnv -> WSConn -> StopMsg -> IO ()
 onStop serverEnv wsConn (StopMsg opId) = do
+  -- When a stop message is received for an operation, it may not be present in OpMap
+  -- in these cases:
+  -- 1. If the operation is a query/mutation - as we remove the operation from the
+  -- OpMap as soon as it is executed
+  -- 2. A misbehaving client
+  -- 3. A bug on our end
   opM <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   case opM of
     Just (lqId, opNameM) -> do
       logWSEvent logger wsConn $ EOperation $ opDet opNameM
       LQ.removeLiveQuery logger lqMap lqId
     Nothing    ->
-      L.unLogger logger $ L.UnstructuredLog L.LevelError $ fromString $
-        "Received STOP for an operation "<>(show opId)<>" we have no record for. "<>
-        "this could be a misbehaving client or a bug"
+      L.unLogger logger $ L.UnstructuredLog L.LevelDebug $ fromString $
+        "Received STOP for an operation that we have no record for: "
+        <> show (unOperationId opId)
+        <> " (could be a query/mutation operation or a misbehaving client or a bug)"
   STM.atomically $ STMMap.delete opId opMap
   where
     logger = _wseLogger serverEnv

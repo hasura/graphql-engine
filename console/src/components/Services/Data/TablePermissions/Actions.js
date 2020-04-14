@@ -412,7 +412,7 @@ const permRemoveMultipleRoles = tableSchema => {
   };
 };
 
-const applySamePermissionsBulk = tableSchema => {
+const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
   return (dispatch, getState) => {
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
@@ -425,30 +425,29 @@ const applySamePermissionsBulk = tableSchema => {
     const currentQueryType = permissionsState.query;
     const toBeAppliedPermission = permissionsState[currentQueryType];
 
-    const mainApplyTo = {
-      table: table,
-      action: currentQueryType,
-      role: permissionsState.role,
-    };
+    const permApplyToList = permissionsState.applySamePermissions.filter(
+      applyTo => applyTo.table && applyTo.action && applyTo.role
+    );
 
-    const permApplyToList = permissionsState.applySamePermissions
-      .filter(applyTo => applyTo.table && applyTo.action && applyTo.role)
-      .concat([mainApplyTo]);
+    if (arePermissionsModified) {
+      const mainApplyTo = {
+        table: table,
+        action: currentQueryType,
+        role: permissionsState.role,
+      };
 
-    let currentPermissions = [];
-    allSchemas.forEach(tSchema => {
-      currentPermissions = currentPermissions.concat(tSchema.permissions);
-    });
+      permApplyToList.push(mainApplyTo);
+    }
 
     permApplyToList.map(applyTo => {
-      const currTableSchema = allSchemas.find(
-        tSchema =>
-          tSchema.table_name === applyTo.table &&
-          tSchema.table_schema === currentSchema
+      const currTableSchema = findTable(
+        allSchemas,
+        generateTableDef(applyTo.table, currentSchema)
       );
-      const currentPermPermission = currTableSchema.permissions.find(el => {
-        return el.role_name === applyTo.role;
-      });
+
+      const currentPermPermission = currTableSchema.permissions.find(
+        el => el.role_name === applyTo.role
+      );
 
       if (
         currentPermPermission &&
@@ -462,6 +461,7 @@ const applySamePermissionsBulk = tableSchema => {
             role: applyTo.role,
           },
         };
+
         const createQuery = {
           type: 'create_' + applyTo.action + '_permission',
           args: {
@@ -470,8 +470,9 @@ const applySamePermissionsBulk = tableSchema => {
             permission: currentPermPermission.permissions[applyTo.action],
           },
         };
+
         permissionsUpQueries.push(deleteQuery);
-        permissionsDownQueries.push(createQuery);
+        permissionsDownQueries.unshift(createQuery);
       }
 
       // modify query depending on table and action
@@ -480,6 +481,7 @@ const applySamePermissionsBulk = tableSchema => {
         sanitizedPermission.columns = [];
         sanitizedPermission.set = {};
       }
+
       if (applyTo.action === 'insert' && currentQueryType !== 'insert') {
         sanitizedPermission.check = sanitizedPermission.filter;
       } else if (applyTo.action !== 'insert' && currentQueryType === 'insert') {
@@ -503,7 +505,7 @@ const applySamePermissionsBulk = tableSchema => {
         },
       };
       permissionsUpQueries.push(createQuery);
-      permissionsDownQueries.push(deleteQuery);
+      permissionsDownQueries.unshift(deleteQuery);
     });
 
     // Apply migration
