@@ -404,7 +404,7 @@ instance J.ToJSON JWTConfig where
       claimsNsFields = case claimNs of
         ClaimNsPath nsPath ->
           ["claims_namespace_path" J..= (encodeJSONPath nsPath)]
-        ClaimNs ns -> ["claims_ns" J..= J.String ns]
+        ClaimNs ns -> ["claims_namespace" J..= J.String ns]
 
       sharedFields = [ "claims_format" J..= claimsFmt
                      , "audience" J..= aud
@@ -419,39 +419,28 @@ instance J.FromJSON JWTConfig where
   parseJSON = J.withObject "JWTConfig" $ \o -> do
     mRawKey <- o J..:? "key"
     claimNs <- o J..:? "claims_namespace"
-    claimNsPathStr <- o J..:? "claims_namespace_path"
     aud     <- o J..:? "audience"
     iss     <- o J..:? "issuer"
     jwkUrl  <- o J..:? "jwk_url"
     isStrngfd <- o J..:? "claims_format"
 
-    let hasuraClaimsNs :: Either String JWTConfigClaims
-        hasuraClaimsNs =
-          case claimNsPathStr of
-            Just nsPathStr ->
-              let eClaimNsPath = JSONPath.parseJSONPath nsPathStr
-              in
-                case eClaimNsPath of
-                  Left err -> Left err
-                  Right nsPath -> Right $ ClaimNsPath nsPath
-            Nothing ->
-              case claimNs of
-                Just ns -> Right $ ClaimNs ns
-                Nothing -> Right $ ClaimNs defaultClaimNs
+    maybeClaimNsPath <- (o J..:? "claims_namespace_path")  >>=
+      mapM (either failJSONPathParsing pure . JSONPath.parseJSONPath)
 
-    case hasuraClaimsNs of
-      Left err -> fail ("invalid JSON path claims_namespace_path error:" ++
-                        (show err))
-      Right claimsNs ->
-        case (mRawKey, jwkUrl) of
-          (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
-          (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
-          (Just rawKey, Nothing) -> do
-            keyType <- o J..: "type"
-            key <- parseKey keyType rawKey
-            return $ JWTConfig (Left key) claimsNs aud isStrngfd iss
-          (Nothing, Just url) ->
-            return $ JWTConfig (Right url) claimsNs aud isStrngfd iss
+
+    let hasuraClaimsNs = case maybeClaimNsPath of
+          Just claimsNsPath -> ClaimNsPath claimsNsPath
+          Nothing -> ClaimNs $ fromMaybe defaultClaimNs claimNs
+
+    case (mRawKey, jwkUrl) of
+      (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
+      (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
+      (Just rawKey, Nothing) -> do
+        keyType <- o J..: "type"
+        key <- parseKey keyType rawKey
+        return $ JWTConfig (Left key) hasuraClaimsNs aud isStrngfd iss
+      (Nothing, Just url) ->
+        return $ JWTConfig (Right url) hasuraClaimsNs aud isStrngfd iss
 
     where
       parseKey keyType rawKey =
@@ -466,4 +455,7 @@ instance J.FromJSON JWTConfig where
           _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
 
       runEither = either (invalidJwk . T.unpack) return
+
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
+
+      failJSONPathParsing err = fail $ "invalid JSON path claims_namespace_path error: " ++ err
