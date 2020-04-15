@@ -136,11 +136,17 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
       );
     };
 
-    return (
-      <div className={`${styles.add_mar_bottom} ${styles.display_flex}`}>
-        {getDrodown()}
+    const getHelperToolsSection = () => {
+      const glitchButton = getGlitchButton();
+      const starterKitButtons = getStarterKitButton();
+      if (!glitchButton && !starterKitButtons) {
+        return null;
+      }
+      return (
         <div className={styles.marginLeftAuto}>
-          <div className={styles.add_mar_bottom_small}>
+          <div
+            className={`${styles.add_mar_bottom_small} ${styles.textAlignRight}`}
+          >
             <b>Need help getting started quickly?</b>
           </div>
           <div
@@ -150,6 +156,13 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
             {getStarterKitButton()}
           </div>
         </div>
+      );
+    };
+
+    return (
+      <div className={`${styles.add_mar_bottom} ${styles.display_flex}`}>
+        {getDrodown()}
+        {getHelperToolsSection()}
       </div>
     );
   };
