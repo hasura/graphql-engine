@@ -34,8 +34,8 @@ queryExp
   -> m (Parser 'Output n (HashMap G.Name SelectExp))
 queryExp allTables stringifyNum = do
   selectExpParsers <- for (toList allTables) $ \tableName -> do
-    selPerms <- tableSelectPermissions tableName
-    for selPerms $ \perms -> selectExp tableName perms stringifyNum
+    selectPerms <- tableSelectPermissions tableName
+    for selectPerms $ \perms -> selectExp tableName perms stringifyNum
   let queryFieldsParser = fmap (Map.fromList . catMaybes) $ sequenceA $ catMaybes selectExpParsers
   pure $ P.selectionSet $$(G.litName "Query") Nothing queryFieldsParser
 
@@ -48,7 +48,7 @@ selectExp
 selectExp table selectPermissions stringifyNum = do
   name               <- qualifiedObjectToName table
   tableArgsParser    <- tableArgs table
-  selectionSetParser <- tableSelectionSet table selectPermissions
+  selectionSetParser <- tableSelectionSet table selectPermissions stringifyNum
   return $ P.selection name Nothing tableArgsParser selectionSetParser <&> fmap
     \(aliasName, tableArgs, tableFields) -> (aliasName, RQL.AnnSelG
       { RQL._asnFields   = tableFields
@@ -120,13 +120,15 @@ tableSelectionSet
   :: (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
   -> SelPermInfo
+  -> Bool
   -> m (Parser 'Output n AnnotatedFields)
-tableSelectionSet tableName selectPermissions = memoizeOn 'tableSelectionSet tableName $ do
+tableSelectionSet tableName selectPermissions stringifyNum = memoizeOn 'tableSelectionSet tableName $ do
   tableInfo <- _tiCoreInfo <$> askTableInfo tableName
   name <- qualifiedObjectToName $ _tciName tableInfo
-  fields <- fmap catMaybes $ traverse (fieldSelection selectPermissions)
-                           $ Map.elems
-                           $ _tciFieldInfoMap tableInfo
+  fields <- fmap catMaybes
+    $ traverse (\fieldInfo -> fieldSelection fieldInfo selectPermissions stringifyNum)
+    $ Map.elems
+    $ _tciFieldInfoMap tableInfo
   pure $ P.selectionSet name (_tciDescription tableInfo) $ catMaybes <$> sequenceA fields
 
 -- | A field for a table. Returns 'Nothing' if the field’s name is not a valid
@@ -135,19 +137,37 @@ tableSelectionSet tableName selectPermissions = memoizeOn 'tableSelectionSet tab
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection
   :: (MonadSchema n m, MonadError QErr m)
-  => SelPermInfo
-  -> FieldInfo
+  => FieldInfo
+  -> SelPermInfo
+  -> Bool
   -> m (Maybe (FieldsParser 'Output n (Maybe (FieldName, AnnotatedField))))
-fieldSelection selectPermissions fieldInfo = for (fieldInfoGraphQLName fieldInfo) \fieldName ->
-  aliasToFieldName <$> case fieldInfo of
-    FIColumn columnInfo -> do
-      let annotated = RQL.mkAnnColField columnInfo Nothing -- FIXME: support ColOp
-      field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
-      pure $ if Set.member (pgiColumn columnInfo) $ spiCols selectPermissions
-             then fmap (, annotated) <$> P.selection_ fieldName fieldDescription field
-             else pure Nothing
-    FIRelationship relationshipInfo -> undefined -- TODO: implement
-    FIComputedField computedFieldInfo -> undefined -- TODO: implement
+fieldSelection fieldInfo selectPermissions stringifyNum =
+  for (fieldInfoGraphQLName fieldInfo) \fieldName ->
+    aliasToFieldName <$> case fieldInfo of
+      FIColumn columnInfo -> do
+        let annotated = RQL.mkAnnColField columnInfo Nothing -- FIXME: support ColOp
+        field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
+        pure $ if Set.member (pgiColumn columnInfo) $ spiCols selectPermissions
+               then fmap (, annotated) <$> P.selection_ fieldName fieldDescription field
+               else pure Nothing
+      FIRelationship relationshipInfo -> do
+        let otherTable = riRTable  relationshipInfo
+            colMapping = riMapping relationshipInfo
+            relName    = riName    relationshipInfo
+        tableSelectPermissions otherTable >>= \case
+          Nothing    -> pure $ pure Nothing
+          Just perms -> do
+            otherTableParser <- selectExp otherTable perms stringifyNum
+            pure $ otherTableParser <&> fmap \(psName, selectExp) ->
+              ( psName
+              , let annotatedRelationship = RQL.AnnRelG relName colMapping selectExp
+                in case riType relationshipInfo of
+                  -- FIXME: where do we set the description?
+                  -- FIXME: support aggregation
+                  ObjRel -> RQL.FObj annotatedRelationship
+                  ArrRel -> RQL.FArr $ RQL.ASSimple annotatedRelationship
+              )
+      FIComputedField computedFieldInfo -> undefined -- TODO: implement
   where
     aliasToFieldName = fmap $ fmap $ first $ FieldName . G.unName
 
