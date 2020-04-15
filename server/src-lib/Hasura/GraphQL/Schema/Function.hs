@@ -2,6 +2,7 @@ module Hasura.GraphQL.Schema.Function
   ( procFuncArgs
   , mkFuncArgsInp
   , mkFuncQueryFld
+  , mkFuncQueryConnectionFld
   , mkFuncAggQueryFld
   , mkFuncArgsTy
   ) where
@@ -92,6 +93,20 @@ mkFuncQueryFld funInfo descM =
 
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy retTable
 
+mkFuncQueryConnectionFld
+  :: FunctionInfo -> Maybe PGDescription -> ObjFldInfo
+mkFuncQueryConnectionFld funInfo descM =
+  mkHsraObjFldInfo (Just desc) fldName (mkFuncArgs funInfo) ty
+  where
+    retTable = fiReturnType funInfo
+    funcName = fiName funInfo
+
+    desc = mkDescriptionWith descM $ "execute function " <> funcName
+           <<> " which returns " <>> retTable
+    fldName = qualObjectToName funcName <> "_connection"
+
+    ty = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableConnectionTy retTable
+
 {-
 
 function_aggregate(
@@ -118,3 +133,5 @@ mkFuncAggQueryFld funInfo descM =
     fldName = qualObjectToName funcName <> "_aggregate"
 
     ty = G.toGT $ G.toNT $ mkTableAggTy retTable
+
+

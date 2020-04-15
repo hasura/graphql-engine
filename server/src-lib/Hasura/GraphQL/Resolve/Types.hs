@@ -29,10 +29,12 @@ import qualified Hasura.SQL.DML                 as S
 
 data QueryCtx
   = QCSelect !SelOpCtx
+  | QCSelectConnection !SelOpCtx
   | QCSelectPkey !SelPkOpCtx
   | QCSelectAgg !SelOpCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
+  | QCFuncConnection !FuncQOpCtx
   | QCActionFetch !ActionSelectOpContext
   deriving (Show, Eq)
 

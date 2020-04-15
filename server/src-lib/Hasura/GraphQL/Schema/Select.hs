@@ -4,10 +4,15 @@ module Hasura.GraphQL.Schema.Select
   , mkSelColumnTy
   , mkTableAggFldsObj
   , mkTableColAggFldsObj
+  , mkTableEdgeObj
+  , mkPageInfoObj
+  , mkTableConnectionObj
+  , mkTableConnectionTy
 
   , mkSelFld
   , mkAggSelFld
   , mkSelFldPKey
+  , mkSelFldConnection
 
   , mkSelArgs
   ) where
@@ -138,7 +143,7 @@ mkRelationshipField
   -> Bool
   -> [ObjFldInfo]
 mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = case rTy of
-  ArrRel -> bool [arrRelFld] [arrRelFld, aggArrRelFld] allowAgg
+  ArrRel -> bool [arrRelFld] [arrRelFld, arrConnectionFld, aggArrRelFld] allowAgg
   ObjRel -> [objRelFld]
   where
     objRelFld = mkHsraObjFldInfo (Just "An object relationship")
@@ -149,8 +154,14 @@ mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = cas
 
     arrRelFld =
       mkHsraObjFldInfo (Just "An array relationship") (mkRelName rn)
-      (fromInpValL $ mkSelArgs remTab) arrRelTy
-    arrRelTy = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
+      (fromInpValL $ mkSelArgs remTab) $
+      G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy remTab
+
+    arrConnectionFld =
+      mkHsraObjFldInfo Nothing (mkRelName rn <> "_connection")
+      (fromInpValL $ mkSelArgs remTab) $
+      G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableConnectionTy remTab
+
     aggArrRelFld = mkHsraObjFldInfo (Just "An aggregated array relationship")
       (mkAggRelName rn) (fromInpValL $ mkSelArgs remTab) $
       G.toGT $ G.toNT $ mkTableAggTy remTab
@@ -279,6 +290,93 @@ mkSelFld mCustomName tn =
     fldName = fromMaybe (qualObjectToName tn) mCustomName
     args    = fromInpValL $ mkSelArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableTy tn
+
+{-
+
+table(
+  where: table_bool_exp
+  limit: Int
+  offset: Int
+):  [tableConnection!]!
+
+-}
+
+mkSelFldConnection :: Maybe G.Name -> QualifiedTable -> ObjFldInfo
+mkSelFldConnection mCustomName tn =
+  mkHsraObjFldInfo (Just desc) fldName args ty
+  where
+    desc    = G.Description $ "fetch data from the table: " <>> tn
+    fldName = fromMaybe (qualObjectToName tn <> "_connection") mCustomName
+    args    = fromInpValL $ mkSelArgs tn
+    ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableConnectionTy tn
+
+{-
+type tableConnection {
+  pageInfo: PageInfo!
+  edges: [tableEdge!]!
+}
+-}
+mkTableConnectionObj
+  :: QualifiedTable -> ObjTyInfo
+mkTableConnectionObj tn =
+  mkHsraObjTyInfo (Just desc) (mkTableConnectionTy tn) Set.empty $ mapFromL _fiName
+  [pageInfoFld, edgesFld]
+  where
+    desc = G.Description $ "A Relay Connection object on " <>> tn
+    pageInfoFld = mkHsraObjFldInfo Nothing "pageInfo" Map.empty $
+                  G.toGT $ G.toNT $ pageInfoTy
+    edgesFld = mkHsraObjFldInfo Nothing "edges" Map.empty $ G.toGT $
+               G.toNT $ G.toLT $ G.toNT $ mkTableEdgeTy tn
+
+booleanScalar :: G.NamedType
+booleanScalar = G.NamedType "Boolean"
+
+stringScalar :: G.NamedType
+stringScalar = G.NamedType "String"
+
+pageInfoTyName :: G.Name
+pageInfoTyName = "PageInfo"
+
+pageInfoTy :: G.NamedType
+pageInfoTy = G.NamedType pageInfoTyName
+{-
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPrevousPage: Boolean!
+  startCursor: String!
+  endCursor: String!
+}
+-}
+mkPageInfoObj :: ObjTyInfo
+mkPageInfoObj =
+  mkHsraObjTyInfo Nothing pageInfoTy Set.empty $ mapFromL _fiName
+  [hasNextPage, hasPreviousPage, startCursor, endCursor]
+  where
+    hasNextPage = mkHsraObjFldInfo Nothing "hasNextPage" Map.empty $
+                  G.toGT $ G.toNT booleanScalar
+    hasPreviousPage = mkHsraObjFldInfo Nothing "hasPreviousPage" Map.empty $
+                      G.toGT $ G.toNT booleanScalar
+    startCursor = mkHsraObjFldInfo Nothing "startCursor" Map.empty $
+                  G.toGT $ G.toNT stringScalar
+    endCursor = mkHsraObjFldInfo Nothing "endCursor" Map.empty $
+                G.toGT $ G.toNT stringScalar
+
+{-
+type tableConnection {
+  cursor: String!
+  node: table
+}
+-}
+mkTableEdgeObj
+  :: QualifiedTable -> ObjTyInfo
+mkTableEdgeObj tn =
+  mkHsraObjTyInfo Nothing (mkTableEdgeTy tn) Set.empty $ mapFromL _fiName
+  [cursor, node]
+  where
+    cursor = mkHsraObjFldInfo Nothing "cursor" Map.empty $
+             G.toGT $ G.toNT stringScalar
+    node = mkHsraObjFldInfo Nothing "node" Map.empty $ G.toGT $
+           mkTableTy tn
 
 {-
 table_by_pk(

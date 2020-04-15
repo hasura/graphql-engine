@@ -16,6 +16,8 @@ module Hasura.GraphQL.Schema.Common
   , mkComputedFieldName
 
   , mkTableTy
+  , mkTableConnectionTy
+  , mkTableEdgeTy
   , mkTableEnumType
   , mkTableAggTy
 
@@ -90,6 +92,12 @@ mkColumnType = \case
 
 mkTableTy :: QualifiedTable -> G.NamedType
 mkTableTy = G.NamedType . qualObjectToName
+
+mkTableConnectionTy :: QualifiedTable -> G.NamedType
+mkTableConnectionTy = addTypeSuffix "Connection" . mkTableTy
+
+mkTableEdgeTy :: QualifiedTable -> G.NamedType
+mkTableEdgeTy = addTypeSuffix "Edge" . mkTableTy
 
 mkTableEnumType :: QualifiedTable -> G.NamedType
 mkTableEnumType = addTypeSuffix "_enum" . mkTableTy

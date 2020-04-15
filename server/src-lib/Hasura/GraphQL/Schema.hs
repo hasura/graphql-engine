@@ -154,10 +154,10 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
                <> queryTypes <> aggQueryTypes <> mutationTypes
                <> funcInpArgTys <> referencedEnumTypes <> computedFieldFuncArgsInps
 
-    queryTypes = catMaybes
+    queryTypes = map TIObj selectObjects <>
+      catMaybes
       [ TIInpObj <$> boolExpInpObjM
       , TIInpObj <$> ordByInpObjM
-      , TIObj <$> selObjM
       ]
     aggQueryTypes = map TIObj aggObjs <> map TIInpObj aggOrdByInps
 
@@ -254,7 +254,13 @@ mkGCtxRole' tn descM insPermM selPermM updColsM delPermM pkeyCols constraints vi
             && any (`isMutable` viM) [viIsInsertable, viIsUpdatable, viIsDeletable]
 
     -- table obj
-    selObjM = mkTableObj tn descM <$> selFldsM
+    selectObjects = case selPermM of
+      Just (_, selFlds) ->
+        [ mkTableObj tn descM selFlds
+        , mkTableEdgeObj tn
+        , mkTableConnectionObj tn
+        ]
+      Nothing -> []
 
     -- aggregate objs and order by inputs
     (aggObjs, aggOrdByInps) = case selPermM of
@@ -339,9 +345,11 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
   RootFields
     { _rootQueryFields = makeFieldMap $
         funcQueries
+        <> funcConnectionQueries
         <> funcAggQueries
         <> catMaybes
           [ getSelDet <$> selM
+          , getSelConnectionDet <$> selM
           , getSelAggDet selM
           , getPKeySelDet <$> selM <*> primaryKey
           ]
@@ -360,6 +368,7 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
     colGNameMap = mkPGColGNameMap $ getCols fields
 
     funcQueries = maybe [] getFuncQueryFlds selM
+    funcConnectionQueries = maybe [] getFuncQueryConnectionFlds selM
     funcAggQueries = maybe [] getFuncAggQueryFlds selM
 
     mutHelper :: (ViewInfo -> Bool) -> (a -> b) -> Maybe a -> Maybe b
@@ -411,6 +420,8 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
     selCustName = getCustomNameWith _tcrfSelect
     getSelDet (selFltr, pLimit, hdrs, _) =
       selFldHelper QCSelect (mkSelFld selCustName) selFltr pLimit hdrs
+    getSelConnectionDet (selFltr, pLimit, hdrs, _) =
+      selFldHelper QCSelectConnection (mkSelFldConnection Nothing) selFltr pLimit hdrs
 
     selAggCustName = getCustomNameWith _tcrfSelectAggregate
     getSelAggDet (Just (selFltr, pLimit, hdrs, True)) =
@@ -432,6 +443,9 @@ getRootFldsRole' tn primaryKey constraints fields funcs insM
 
     getFuncQueryFlds (selFltr, pLimit, hdrs, _) =
       funcFldHelper QCFuncQuery mkFuncQueryFld selFltr pLimit hdrs
+
+    getFuncQueryConnectionFlds (selFltr, pLimit, hdrs, _) =
+      funcFldHelper QCFuncConnection mkFuncQueryConnectionFld selFltr pLimit hdrs
 
     getFuncAggQueryFlds (selFltr, pLimit, hdrs, True) =
       funcFldHelper QCFuncAggQuery mkFuncAggQueryFld selFltr pLimit hdrs
@@ -802,6 +816,7 @@ mkGCtx tyAgg (RootFields queryFields mutationFields) insCtxMap =
                             , TIObj <$> mutRootM
                             , TIObj <$> subRootM
                             , TIEnum <$> ordByEnumTyM
+                            , Just $ TIObj mkPageInfoObj
                             ] <>
                   scalarTys <> compTys <> defaultTypes <> wiredInGeoInputTypes
                   <> wiredInRastInputTypes
