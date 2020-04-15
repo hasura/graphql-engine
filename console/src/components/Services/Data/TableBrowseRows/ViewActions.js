@@ -56,7 +56,7 @@ const vCollapseRow = () => ({
   type: V_COLLAPSE_ROW,
 });
 
-const vSetDefaults = () => ({ type: V_SET_DEFAULTS });
+const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
 
 const vMakeRowsRequest = () => {
   return (dispatch, getState) => {
@@ -502,7 +502,11 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
         ...defaultViewState,
         query: {
           columns: currentColumns,
-          limit: 10,
+          limit: action.limit || 10,
+        },
+        curFilter: {
+          ...defaultViewState.curFilter,
+          limit: action.limit || 10,
         },
         activePath: [tableName],
         rows: [],
