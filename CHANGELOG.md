@@ -10,6 +10,7 @@
 
   Added a checkbox to each row on Browse Rows view that allows selecting one or more rows from the table and bulk delete them.
 
+- server: support reusing Postgres scalars in custom types (close #4125)
 - console: allow setting check constraints during table create (#3881)
 
   Added a component that allows adding check constraints while creating a new table in the same way as it can be done on the `Modify` view.

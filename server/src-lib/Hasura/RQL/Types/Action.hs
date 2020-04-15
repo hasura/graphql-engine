@@ -14,10 +14,12 @@ module Hasura.RQL.Types.Action
   , ResolvedActionDefinition
 
   , ActionOutputFields
+  , getActionOutputFields
   , ActionInfo(..)
   , aiName
-  , aiOutputFields
+  , aiOutputObject
   , aiDefinition
+  , aiPgScalars
   , aiPermissions
   , aiComment
   , ActionPermissionInfo(..)
@@ -122,14 +124,20 @@ data ActionPermissionInfo
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionInfo)
 
 type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
+
 type ActionOutputFields = Map.HashMap G.Name G.GType
+
+getActionOutputFields :: ObjectTypeDefinition -> ActionOutputFields
+getActionOutputFields =
+  Map.fromList . map ((unObjectFieldName . _ofdName) &&& (unGraphQLType . _ofdType)) . toList . _otdFields
 
 data ActionInfo
   = ActionInfo
   { _aiName         :: !ActionName
-  , _aiOutputFields :: !ActionOutputFields
+  , _aiOutputObject :: !ObjectTypeDefinition
   , _aiDefinition   :: !ResolvedActionDefinition
   , _aiPermissions  :: !ActionPermissionMap
+  , _aiPgScalars    :: !(HashSet PGScalarType)
   , _aiComment      :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)
