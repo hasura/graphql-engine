@@ -113,6 +113,7 @@
       "files": ["*.ts", "*.tsx"],
       "rules": {
         "import/extensions": 0,
+        "import/prefer-default-export": "off",
         "react/prop-types": "off",
         "react/jsx-filename-extension": 0,
         "no-unused-vars": "off",
@@ -149,7 +150,7 @@
         "no-redeclare": "off",
         "no-useless-constructor": "off",
         "no-unused-expressions": "off",
-        "import/prefer-default-export": "off"
+        "prefer-destructuring": "off"
       }
     }
   ]
