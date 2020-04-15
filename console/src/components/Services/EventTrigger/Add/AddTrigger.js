@@ -360,9 +360,7 @@ class AddTrigger extends Component {
 
     return (
       <div
-        className={`${styles.addTablesBody} ${styles.clear_fix} ${
-          styles.padd_left
-        }`}
+        className={`${styles.addTablesBody} ${styles.clear_fix} ${styles.padd_left}`}
       >
         <Helmet title="Create Trigger - Events | Hasura" />
         <div className={styles.subHeader}>
@@ -373,9 +371,7 @@ class AddTrigger extends Component {
         <div className={`container-fluid ${styles.padd_left_remove}`}>
           <form onSubmit={this.submitValidation.bind(this)}>
             <div
-              className={`${styles.addCol} col-xs-12 ${
-                styles.padd_left_remove
-              }`}
+              className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
             >
               <h4 className={styles.subheading_text}>
                 Trigger Name &nbsp; &nbsp;
@@ -522,9 +518,7 @@ class AddTrigger extends Component {
                     <div className={styles.retrySection}>
                       <div className={`col-md-3 ${styles.padd_left_remove}`}>
                         <label
-                          className={`${styles.add_mar_right} ${
-                            styles.retryLabel
-                          }`}
+                          className={`${styles.add_mar_right} ${styles.retryLabel}`}
                         >
                           Number of retries (default: 0)
                         </label>
@@ -535,9 +529,7 @@ class AddTrigger extends Component {
                             dispatch(setRetryNum(e.target.value));
                           }}
                           data-test="no-of-retries"
-                          className={`${styles.display_inline} form-control ${
-                            styles.width300
-                          }`}
+                          className={`${styles.display_inline} form-control ${styles.width300}`}
                           type="text"
                           placeholder="no of retries"
                         />
@@ -546,9 +538,7 @@ class AddTrigger extends Component {
                     <div className={styles.retrySection}>
                       <div className={`col-md-3 ${styles.padd_left_remove}`}>
                         <label
-                          className={`${styles.add_mar_right} ${
-                            styles.retryLabel
-                          }`}
+                          className={`${styles.add_mar_right} ${styles.retryLabel}`}
                         >
                           Retry Interval in seconds (default: 10)
                         </label>
@@ -559,9 +549,7 @@ class AddTrigger extends Component {
                             dispatch(setRetryInterval(e.target.value));
                           }}
                           data-test="interval-seconds"
-                          className={`${styles.display_inline} form-control ${
-                            styles.width300
-                          }`}
+                          className={`${styles.display_inline} form-control ${styles.width300}`}
                           type="text"
                           placeholder="interval time in seconds"
                         />
@@ -570,9 +558,7 @@ class AddTrigger extends Component {
                     <div className={styles.retrySection}>
                       <div className={`col-md-3 ${styles.padd_left_remove}`}>
                         <label
-                          className={`${styles.add_mar_right} ${
-                            styles.retryLabel
-                          }`}
+                          className={`${styles.add_mar_right} ${styles.retryLabel}`}
                         >
                           Timeout in seconds (default: 60)
                         </label>
@@ -583,9 +569,7 @@ class AddTrigger extends Component {
                             dispatch(setRetryTimeout(e.target.value));
                           }}
                           data-test="timeout-seconds"
-                          className={`${styles.display_inline} form-control ${
-                            styles.width300
-                          }`}
+                          className={`${styles.display_inline} form-control ${styles.width300}`}
                           type="text"
                           placeholder="timeout in seconds"
                         />
