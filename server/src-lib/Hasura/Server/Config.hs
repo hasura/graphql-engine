@@ -10,15 +10,12 @@ import           Hasura.Prelude
 import           Hasura.Server.Auth
 import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Version                    (HasVersion, Version, currentVersion)
-import           Hasura.RQL.Types.Error                   (encodeJSONPath)
-import           Data.Text                                (pack)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
 
 data JWTInfo
   = JWTInfo
-  { jwtiClaimsNamespace     :: !(Maybe Text)
-  , jwtiClaimsNamespacePath :: !(Maybe Text)
+  { jwtiClaimsNamespace     :: !JWTConfigClaims
   , jwtiClaimsFormat        :: !JWTClaimsFormat
   } deriving (Show, Eq)
 
@@ -64,9 +61,8 @@ isJWTSet = \case
 
 getJWTInfo :: AuthMode -> Maybe JWTInfo
 getJWTInfo (AMAdminSecretAndJWT _ jwtCtx _) =
-  case jcxClaimNs jwtCtx of
-    ClaimNsPath nsPath -> Just $ JWTInfo Nothing (Just . pack $  encodeJSONPath nsPath) format
-    ClaimNs ns -> Just $ JWTInfo (Just ns) Nothing format
+  Just $ JWTInfo claimsNs format
   where
+    claimsNs = jcxClaimNs jwtCtx
     format = jcxClaimsFormat jwtCtx
 getJWTInfo _ = Nothing

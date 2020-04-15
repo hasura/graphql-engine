@@ -53,7 +53,6 @@ import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
 import qualified Data.Parser.JSONPath            as JSONPath
 
-
 newtype RawJWT = RawJWT BL.ByteString
 
 data JWTClaimsFormat
@@ -68,6 +67,10 @@ data JWTConfigClaims
   = ClaimNsPath JSONPath
   | ClaimNs T.Text
   deriving (Show, Eq)
+
+instance J.ToJSON JWTConfigClaims where
+  toJSON (ClaimNsPath nsPath) = J.String . T.pack $ encodeJSONPath nsPath
+  toJSON (ClaimNs ns) = J.String ns
 
 data JWTConfig
   = JWTConfig
