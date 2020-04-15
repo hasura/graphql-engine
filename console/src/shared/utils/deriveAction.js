@@ -238,6 +238,7 @@ const deriveAction = (
       arguments: actionArguments,
       output_type: actionOutputTypename,
     },
+    variables,
   };
 };
 
