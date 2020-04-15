@@ -149,9 +149,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
           >
             <b>Need help getting started quickly?</b>
           </div>
-          <div
-            className={`${styles.display_flex} ${styles.codegenOnboardingButtons}`}
-          >
+          <div className={`${styles.display_flex}`}>
             {getGlitchButton()}
             {getStarterKitButton()}
           </div>
