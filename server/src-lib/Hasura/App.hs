@@ -18,11 +18,9 @@ import           System.Exit                          (exitFailure)
 import qualified Control.Concurrent.Async.Lifted.Safe as LA
 import qualified Control.Concurrent.Extended          as C
 import qualified Data.Aeson                           as A
-import qualified Data.ByteString.Char8                as BC
 import qualified Data.ByteString.Lazy.Char8           as BLC
 import qualified Data.Text                            as T
 import qualified Data.Time.Clock                      as Clock
-import qualified Data.Yaml                            as Y
 import qualified Database.PG.Query                    as Q
 import qualified Network.HTTP.Client                  as HTTP
 import qualified Network.HTTP.Client.TLS              as HTTP
@@ -96,9 +94,6 @@ parseArgs = do
 
 printJSON :: (A.ToJSON a, MonadIO m) => a -> m ()
 printJSON = liftIO . BLC.putStrLn . A.encode
-
-printYaml :: (A.ToJSON a, MonadIO m) => a -> m ()
-printYaml = liftIO . BC.putStrLn . Y.encode
 
 mkPGLogger :: Logger Hasura -> Q.PGLogger
 mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =

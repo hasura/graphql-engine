@@ -12,8 +12,6 @@ module Hasura.RQL.DDL.Action
   , runDropAction
   , deleteActionFromCatalog
 
-  , fetchActions
-
   , CreateActionPermission
   , runCreateActionPermission
   , persistCreateActionPermission
@@ -226,18 +224,6 @@ clearActionDataFromCatalog actionName =
       DELETE FROM hdb_catalog.hdb_action_log
         WHERE action_name = $1
       |] (Identity actionName) True
-
-fetchActions :: Q.TxE QErr [CreateAction]
-fetchActions =
-  map fromRow <$> Q.listQE defaultTxErrorHandler
-    [Q.sql|
-     SELECT action_name, action_defn, comment
-       FROM hdb_catalog.hdb_action
-       ORDER BY action_name ASC
-     |] () True
-  where
-    fromRow (actionName, Q.AltJ definition, comment) =
-      CreateAction actionName definition comment
 
 newtype ActionMetadataField
   = ActionMetadataField { unActionMetadataField :: Text }

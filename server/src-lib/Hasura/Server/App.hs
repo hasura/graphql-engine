@@ -192,14 +192,6 @@ onlyAdmin = do
   when (uRole /= adminRole) $
     throw400 AccessDenied "You have to be an admin to access this endpoint"
 
-buildQCtx :: (MonadIO m) => Handler m QCtx
-buildQCtx = do
-  scRef    <- scCacheRef . hcServerCtx <$> ask
-  userInfo <- asks hcUser
-  cache <- getSCFromRef scRef
-  sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
-  return $ QCtx userInfo cache sqlGenCtx
-
 setHeader :: MonadIO m => HTTP.Header -> Spock.ActionT m ()
 setHeader (headerName, headerValue) =
   Spock.setHeader (bsToTxt $ CI.original headerName) (bsToTxt headerValue)
@@ -422,13 +414,6 @@ legacyQueryHandler tn queryType req =
     Nothing          -> throw404 "No such resource exists"
   where
     qt = QualifiedObject publicSchema tn
-
-initErrExit :: QErr -> IO a
-initErrExit e = do
-  putStrLn $
-    "failed to build schema-cache because of inconsistent metadata: "
-    <> (show e)
-  exitFailure
 
 data HasuraApp
   = HasuraApp

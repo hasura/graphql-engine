@@ -1,8 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module Hasura.Server.Auth
-  ( getUserInfo
-  , getUserInfoWithExpTime
+  ( getUserInfoWithExpTime
   , AuthMode (..)
   , mkAuthMode
   , AdminSecret (..)
@@ -139,17 +138,6 @@ mkJwtCtx JWTConfig{..} httpManager logger = do
           JFEJwkParseError _ e    -> throwError e
           JFEExpiryParseError _ _ -> return Nothing
 
-
-
-
-getUserInfo
-  :: (HasVersion, MonadIO m, MonadError QErr m)
-  => Logger Hasura
-  -> H.Manager
-  -> [N.Header]
-  -> AuthMode
-  -> m UserInfo
-getUserInfo l m r a = fst <$> getUserInfoWithExpTime l m r a
 
 getUserInfoWithExpTime
   :: (HasVersion, MonadIO m, MonadError QErr m)

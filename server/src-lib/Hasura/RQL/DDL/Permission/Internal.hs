@@ -209,24 +209,6 @@ valueParser pgType = \case
         (S.SEArray $ map (toTxtValue . WithScalarType scalarType) scalarValues)
         (S.mkTypeAnn $ PGTypeArray scalarType)
 
-injectDefaults :: QualifiedTable -> QualifiedTable -> Q.Query
-injectDefaults qv qt =
-  Q.fromText $ mconcat
-  [ "SELECT hdb_catalog.inject_table_defaults("
-  , pgFmtLit vsn
-  , ", "
-  , pgFmtLit vn
-  , ", "
-  , pgFmtLit tsn
-  , ", "
-  , pgFmtLit tn
-  , ");"
-  ]
-
-  where
-    QualifiedObject (SchemaName vsn) (TableName vn) = qv
-    QualifiedObject (SchemaName tsn) (TableName tn) = qt
-
 data DropPerm a
   = DropPerm
   { dipTable :: !QualifiedTable

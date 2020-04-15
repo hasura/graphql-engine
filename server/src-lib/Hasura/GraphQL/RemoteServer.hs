@@ -4,7 +4,6 @@ import           Control.Exception             (try)
 import           Control.Lens                  ((^.))
 import           Data.Aeson                    ((.:), (.:?))
 import           Data.FileEmbed                (embedStringFile)
-import           Data.Foldable                 (foldlM)
 import           Hasura.HTTP
 import           Hasura.Prelude
 
@@ -93,25 +92,6 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
     decodeNon200Resp bs = case J.eitherDecode bs of
       Right a -> J.object ["response" J..= (a :: J.Value)]
       Left _  -> J.object ["raw_body" J..= bsToTxt (BL.toStrict bs)]
-
-mergeSchemas
-  :: (MonadError QErr m)
-  => RemoteSchemaMap
-  -> GS.GCtxMap
-  -- the merged GCtxMap and the default GCtx without roles
-  -> m (GS.GCtxMap, GS.GCtx)
-mergeSchemas rmSchemaMap gCtxMap = do
-  def <- mkDefaultRemoteGCtx remoteSchemas
-  merged <- mergeRemoteSchema gCtxMap def
-  return (merged, def)
-  where
-    remoteSchemas = map rscGCtx $ Map.elems rmSchemaMap
-
-mkDefaultRemoteGCtx
-  :: (MonadError QErr m)
-  => [GC.RemoteGCtx] -> m GS.GCtx
-mkDefaultRemoteGCtx =
-  foldlM (\combG -> mergeGCtx combG . convRemoteGCtx) GC.emptyGCtx
 
 -- merge a remote schema `gCtx` into current `gCtxMap`
 mergeRemoteSchema
@@ -376,13 +356,3 @@ instance J.FromJSON (FromIntrospection IntrospectionResult) where
             , subsRoot
             )
     return $ FromIntrospection r
-
-
-getNamedTyp :: G.TypeDefinition -> G.Name
-getNamedTyp ty = case ty of
-  G.TypeDefinitionScalar t      -> G._stdName t
-  G.TypeDefinitionObject t      -> G._otdName t
-  G.TypeDefinitionInterface t   -> G._itdName t
-  G.TypeDefinitionUnion t       -> G._utdName t
-  G.TypeDefinitionEnum t        -> G._etdName t
-  G.TypeDefinitionInputObject t -> G._iotdName t

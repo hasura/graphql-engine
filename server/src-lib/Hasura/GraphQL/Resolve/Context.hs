@@ -10,7 +10,6 @@ module Hasura.GraphQL.Resolve.Context
   , resolveValTxt
   , InsertTxConflictCtx(..)
   , getFldInfo
-  , getPGColInfo
   , getArg
   , withArg
   , withArgM
@@ -58,20 +57,6 @@ getFldInfo nt n = do
   onNothing (Map.lookup (nt,n) fldMap) $
     throw500 $ "could not lookup " <> showName n <> " in " <>
     showNamedTy nt
-
-getPGColInfo
-  :: (MonadError QErr m, MonadReader r m, Has FieldMap r)
-  => G.NamedType -> G.Name -> m PGColumnInfo
-getPGColInfo nt n = do
-  fldInfo <- getFldInfo nt n
-  case fldInfo of
-    RFPGColumn pgColInfo -> return pgColInfo
-    RFRelationship _     -> throw500 $ mkErrMsg "relation"
-    RFComputedField _    -> throw500 $ mkErrMsg "computed field"
-  where
-    mkErrMsg ty =
-      "found " <> ty <> " when expecting pgcolinfo for "
-      <> showNamedTy nt <> ":" <> showName n
 
 getArg
   :: (MonadError QErr m)

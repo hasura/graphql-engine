@@ -20,7 +20,6 @@ module Hasura.GraphQL.Transport.WebSocket.Server
   , WSEventInfo(..)
   , WSQueueResponse(..)
   , createWSServer
-  , closeAll
   , createServerApp
   , shutdown
   ) where
@@ -164,12 +163,6 @@ createWSServer logger = do
   connMap <- STMMap.new
   serverStatus <- STM.newTVar (AcceptingConns connMap)
   return $ WSServer logger serverStatus
-
-closeAll :: WSServer a -> BL.ByteString -> IO ()
-closeAll (WSServer (L.Logger writeLog) serverStatus) msg = do
-  writeLog $ L.debugT "closing all connections"
-  conns <- STM.atomically $ flushConnMap serverStatus
-  closeAllWith (flip closeConn) msg conns
 
 closeAllWith
   :: (BL.ByteString -> WSConn a -> IO ())

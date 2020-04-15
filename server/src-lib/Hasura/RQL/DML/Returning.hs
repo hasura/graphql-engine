@@ -46,14 +46,6 @@ traverseMutationOutput f = \case
 
 type MutationOutput = MutationOutputG S.SQLExp
 
-traverseMutFlds
-  :: (Applicative f)
-  => (a -> f b)
-  -> MutFldsG a
-  -> f (MutFldsG b)
-traverseMutFlds f =
-  traverse (traverse (traverseMutFld f))
-
 type MutFlds = MutFldsG S.SQLExp
 
 hasNestedFld :: MutationOutputG a -> Bool
@@ -68,18 +60,6 @@ hasNestedFld = \case
       FObj _ -> True
       FArr _ -> True
       _      -> False
-
-pgColsFromMutFld :: MutFld -> [(PGCol, PGColumnType)]
-pgColsFromMutFld = \case
-  MCount -> []
-  MExp _ -> []
-  MRet selFlds ->
-    flip mapMaybe selFlds $ \(_, annFld) -> case annFld of
-    FCol (AnnColField (PGColumnInfo col _ _ colTy _ _) _ _) -> Just (col, colTy)
-    _                                                       -> Nothing
-
-pgColsFromMutFlds :: MutFlds -> [(PGCol, PGColumnType)]
-pgColsFromMutFlds = concatMap (pgColsFromMutFld . snd)
 
 pgColsToSelFlds :: [PGColumnInfo] -> [(FieldName, AnnFld)]
 pgColsToSelFlds cols =
