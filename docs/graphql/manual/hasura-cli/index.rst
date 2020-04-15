@@ -104,3 +104,4 @@ Refer to :ref:`uninstall_hasura_cli`.
    hasura update-cli <hasura_update-cli>
    hasura version <hasura_version>
    uninstall-hasura-cli
+   reference
