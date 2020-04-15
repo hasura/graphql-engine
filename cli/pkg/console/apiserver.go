@@ -121,6 +121,8 @@ func allowCors() gin.HandlerFunc {
 	config.AddAllowHeaders("X-Hasura-User-Id")
 	config.AddAllowHeaders(XHasuraAccessKey)
 	config.AddAllowHeaders(XHasuraAdminSecret)
+	config.AddAllowHeaders("hasura-client-name")
+	config.AddAllowHeaders("hasura-collaborator-token")
 	config.AddAllowHeaders("X-Hasura-Role")
 	config.AddAllowHeaders("X-Hasura-Allowed-Roles")
 	config.AddAllowMethods("DELETE")
