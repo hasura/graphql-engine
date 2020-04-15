@@ -3,6 +3,7 @@ module Hasura.GraphQL.Schema.Action
   ) where
 
 import qualified Data.HashMap.Strict           as Map
+import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import           Data.Coerce                   (coerce)
@@ -68,14 +69,14 @@ mkMutationField actionName actionInfo definitionList =
         ActionSynchronous  ->
           ActionExecutionSyncWebhook $ SyncActionExecutionContext actionName
           (_adOutputType definition)
-          (_aiOutputFields actionInfo)
+          (getActionOutputFields $ _aiOutputObject actionInfo)
           definitionList
           (_adHandler definition)
           (_adHeaders definition)
           (_adForwardClientHeaders definition)
         ActionAsynchronous -> ActionExecutionAsync
 
-    description = mkDescriptionWith (PGDescription <$> (_aiComment actionInfo)) $
+    description = mkDescriptionWith (PGDescription <$> _aiComment actionInfo) $
                   "perform the action: " <>> actionName
 
     fieldInfo =
@@ -123,22 +124,21 @@ mkQueryField actionName comment definition definitionList =
         idDescription = G.Description $ "id of the action: " <>> actionName
 
 mkActionFieldsAndTypes
-  :: (QErrM m)
-  => ActionInfo
-  -> AnnotatedObjectType
+  :: ActionInfo
   -> ActionPermissionInfo
-  -> m ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
+  -> ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
        -- context, field, response type info
      , (ActionExecutionContext, ObjFldInfo) -- mutation field
      , FieldMap
      )
-mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
-  return ( mkQueryField actionName comment definition definitionList
-         , mkMutationField actionName actionInfo definitionList
-         , fieldMap
-         )
+mkActionFieldsAndTypes actionInfo permission =
+  ( mkQueryField actionName comment definition definitionList
+  , mkMutationField actionName actionInfo definitionList
+  , fieldMap
+  )
   where
     actionName = _aiName actionInfo
+    annotatedOutputType = _aiOutputObject actionInfo
     definition = _aiDefinition actionInfo
     roleName = _apiRole permission
     comment = _aiComment actionInfo
@@ -220,46 +220,38 @@ mkActionFieldsAndTypes actionInfo annotatedOutputType permission =
       G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
 
 mkActionSchemaOne
-  :: (QErrM m)
-  => AnnotatedObjects
-  -> ActionInfo
-  -> m (Map.HashMap RoleName
-         ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
-         , (ActionExecutionContext, ObjFldInfo)
-         , FieldMap
-         )
+  :: ActionInfo
+  -> Map.HashMap RoleName
+       ( Maybe (ActionSelectOpContext, ObjFldInfo, TypeInfo)
+       , (ActionExecutionContext, ObjFldInfo)
+       , FieldMap
        )
-mkActionSchemaOne annotatedObjects actionInfo = do
-  annotatedOutputType <- onNothing
-      (Map.lookup (ObjectTypeName actionOutputBaseType) annotatedObjects) $
-      throw500 $ "missing annotated type for: " <> showNamedTy actionOutputBaseType
-  forM permissions $ \permission ->
-    mkActionFieldsAndTypes actionInfo annotatedOutputType permission
+mkActionSchemaOne actionInfo =
+  flip Map.map permissions $ \permission ->
+    mkActionFieldsAndTypes actionInfo permission
   where
     adminPermission = ActionPermissionInfo adminRole
     permissions = Map.insert adminRole adminPermission $ _aiPermissions actionInfo
-    actionOutputBaseType =
-      G.getBaseType $ unGraphQLType $ _adOutputType $ _aiDefinition actionInfo
 
 mkActionsSchema
-  :: (QErrM m)
-  => AnnotatedObjects
-  -> ActionCache
-  -> m (Map.HashMap RoleName (RootFields, TyAgg))
-mkActionsSchema annotatedObjects =
-  foldM
+  :: ActionCache
+  -> Map.HashMap RoleName (RootFields, TyAgg)
+mkActionsSchema =
+  foldl'
   (\aggregate actionInfo ->
-     Map.foldrWithKey f aggregate <$>
-     mkActionSchemaOne annotatedObjects actionInfo
+     Map.foldrWithKey (accumulate (_aiPgScalars actionInfo)) aggregate $ mkActionSchemaOne actionInfo
   )
   mempty
   where
     -- we'll need to add uuid and timestamptz for actions
-    newRoleState = (mempty, addScalarToTyAgg PGJSON $
-                            addScalarToTyAgg PGTimeStampTZ $
-                            addScalarToTyAgg PGUUID mempty)
-    f roleName (queryFieldM, mutationField, fields) =
-      Map.alter (Just . addToState . fromMaybe newRoleState) roleName
+    mkNewRoleState pgScalars =
+      ( mempty
+      , foldr addScalarToTyAgg mempty $
+        pgScalars <> Set.fromList [PGJSON, PGTimeStampTZ, PGUUID]
+      )
+
+    accumulate pgScalars roleName (queryFieldM, mutationField, fields) =
+      Map.alter (Just . addToState . fromMaybe (mkNewRoleState pgScalars)) roleName
       where
         addToState = case queryFieldM of
           Just (fldCtx, fldDefinition, responseTypeInfo) ->

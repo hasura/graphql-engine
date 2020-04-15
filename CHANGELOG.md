@@ -4,12 +4,13 @@
 
 ### console: persist columns state in data browser
 
-The order and collapsed state of columns is now persisted across page navigation
+The order, collapsed state of columns and page size is now persisted across page navigation
 
 (close #3390) (#3753)
 
 ### Bug fixes and improvements
 
+- server: support reusing Postgres scalars in custom types (close #4125)
 - cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
 - console: query support for actions (#4318)
 - cli: query support for actions (#4318)
