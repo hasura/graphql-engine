@@ -198,8 +198,10 @@ encodeJSONPath = format "$"
     format pfx (Key key:parts)   = format (pfx ++ "." ++ formatKey key) parts
 
     formatKey key
-      | T.any (=='.') key = "['" ++ T.unpack key ++ "']"
-      | otherwise         = T.unpack key
+      | T.any specialChar key = "['" ++ T.unpack key ++ "']"
+      | otherwise             = T.unpack key
+      where
+        specialChar = flip notElem (alphaNumerics ++ "_-")
 
 instance Q.FromPGConnErr QErr where
   fromPGConnErr c =
