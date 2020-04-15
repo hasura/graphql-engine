@@ -353,7 +353,7 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
         Nothing -> return ()
         Just actionInfo -> do
           let definition = _aiDefinition actionInfo
-              outputFields = _aiOutputFields actionInfo
+              outputFields = getActionOutputFields $ _aiOutputObject actionInfo
               webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition
