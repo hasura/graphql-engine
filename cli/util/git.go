@@ -79,7 +79,7 @@ func (g *GitUtil) updateAndCleanUntracked() error {
 		return err
 	}
 	err = repo.Fetch(&git.FetchOptions{
-		RefSpecs: []config.RefSpec{"refs/*:refs/*", "HEAD:refs/heads/HEAD"},
+		RefSpecs: []config.RefSpec{"refs/*:refs/*"},
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return err
@@ -101,8 +101,7 @@ func (g *GitUtil) updateAndCleanUntracked() error {
 		return err
 	}
 	err = wt.Reset(&git.ResetOptions{
-		Commit: plumbing.ZeroHash,
-		Mode:   git.HardReset,
+		Mode: git.HardReset,
 	})
 	if err != nil {
 		return err
