@@ -82,7 +82,7 @@ fetchRemoteSchema manager name def@(RemoteSchemaInfo url headerConf _ timeout) =
 
     throwWithInternal msg v =
       let err = err400 RemoteSchemaError $ T.pack msg
-      in throwError err{qeInternal = Just $ J.toJSON v}
+      in throwError err{qeExtra = Just $ EEInternal $ J.toJSON v}
 
     httpExceptMsg =
       "HTTP exception occurred while sending the request to " <> show url

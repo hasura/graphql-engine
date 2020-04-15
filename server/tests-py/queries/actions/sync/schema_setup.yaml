@@ -87,3 +87,25 @@ args:
         type: 'InObject!'
       output_type: 'OutObject'
       handler: http://127.0.0.1:5593/mirror-action
+
+- type: create_action
+  args:
+    name: server_error_action
+    definition:
+      kind: synchronous
+      arguments:
+      - name: email
+        type: 'String!'
+      output_type: 'OutObject'
+      handler: http://127.0.0.1:5593/server-error
+
+- type: create_action
+  args:
+    name: client_error_action
+    definition:
+      kind: synchronous
+      arguments:
+      - name: email
+        type: 'String!'
+      output_type: 'OutObject'
+      handler: http://127.0.0.1:5593/client-error

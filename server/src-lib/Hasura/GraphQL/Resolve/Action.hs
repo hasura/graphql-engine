@@ -63,9 +63,9 @@ $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ActionWebhookPayload)
 data ActionWebhookErrorResponse
   = ActionWebhookErrorResponse
   { _awerMessage :: !Text
-  , _awerCode    :: !(Maybe Text)
+  , _awerExtensions :: !(Maybe J.Value)
   } deriving (Show, Eq)
-$(J.deriveJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
+$(J.deriveFromJSON (J.aesonDrop 5 J.snakeCase) ''ActionWebhookErrorResponse)
 
 data ActionWebhookResponse
   = AWRArray ![J.Object]
@@ -320,7 +320,7 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
         update hdb_catalog.hdb_action_log
         set errors = $1, status = 'error'
         where id = $2
-      |] (Q.AltJ e, actionId) False
+      |] (Q.AltJ $ encodeGQLErr True e, actionId) False -- includeInternal set to true due to the status 500 errors
 
     setCompleted :: UUID.UUID -> J.Value -> IO ()
     setCompleted actionId responsePayload =
@@ -398,7 +398,7 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
 
       if | HTTP.statusIsSuccessful responseStatus  -> do
              let expectingArray = isListType outputType
-                 addInternalToErr e = e{qeInternal = Just webhookResponseObject}
+                 addInternalToErr e = e{qeExtra = Just $ EEInternal $ webhookResponseObject}
              -- Incase any error, add webhook response in internal
              modifyQErr addInternalToErr $ do
                webhookResponse <- decodeValue responseValue
@@ -414,10 +414,10 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
                pure (webhookResponse, mkSetCookieHeaders responseWreq)
 
          | HTTP.statusIsClientError responseStatus -> do
-             ActionWebhookErrorResponse message maybeCode <-
+             ActionWebhookErrorResponse message maybeExtension <-
                modifyErr ("webhook response: " <>) $ decodeValue responseValue
-             let code = maybe Unexpected ActionWebhookCode maybeCode
-                 qErr = QErr [] responseStatus message code Nothing
+             let qErr = QErr [] responseStatus message Unexpected $
+                   (maybe Nothing (Just . EEExtensions) maybeExtension)
              throwError qErr
 
          | otherwise ->

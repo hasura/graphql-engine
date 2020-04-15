@@ -3,6 +3,7 @@
 module Hasura.RQL.Types.Error
        ( Code(..)
        , QErr(..)
+       , ErrorExtra(..)
        , encodeQErr
        , encodeGQLErr
        , noInternalQErrEnc
@@ -138,13 +139,31 @@ instance Show Code where
     InvalidCustomTypes    -> "invalid-custom-types"
     ActionWebhookCode t   -> T.unpack t
 
+-- ErrorExtra is a data type used to give
+-- additional information of the error
+-- occurred in JSON format.
+-- EEInternal is used when there's an error in the HGE
+-- or Postgres
+-- EEExtensions is used when the error has occurred outside
+-- hasura and we get an custom JSON error object
+-- Eg: Actions error handling of client side errors
+data ErrorExtra
+  = EEInternal !Value
+  | EEExtensions !Value
+  deriving (Show, Eq)
+
+instance ToJSON ErrorExtra where
+  toJSON = \case
+    EEInternal v -> v
+    EEExtensions v -> v
+
 data QErr
   = QErr
   { qePath     :: !JSONPath
   , qeStatus   :: !N.Status
   , qeError    :: !T.Text
   , qeCode     :: !Code
-  , qeInternal :: !(Maybe Value)
+  , qeExtra    :: !(Maybe ErrorExtra)
   } deriving (Show, Eq)
 
 instance ToJSON QErr where
@@ -154,12 +173,12 @@ instance ToJSON QErr where
     , "error" .= msg
     , "code"  .= show code
     ]
-  toJSON (QErr jPath _ msg code (Just ie)) =
+  toJSON (QErr jPath _ msg code (Just err)) =
     object
     [ "path"  .= encodeJSONPath jPath
     , "error" .= msg
     , "code"  .= show code
-    , "internal" .= ie
+    , "internal" .= err
     ]
 
 noInternalQErrEnc :: QErr -> Value
@@ -171,18 +190,21 @@ noInternalQErrEnc (QErr jPath _ msg code _) =
   ]
 
 encodeGQLErr :: Bool -> QErr -> Value
-encodeGQLErr includeInternal (QErr jPath _ msg code mIE) =
+encodeGQLErr includeInternal (QErr jPath _ msg code mExtra) =
   object
   [ "message" .= msg
   , "extensions" .= extnsObj
   ]
   where
-    extnsObj = object $ bool codeAndPath
-               (codeAndPath ++ internal) includeInternal
+    extnsObj = case mExtra of
+      Nothing -> object codeAndPath
+      Just (EEExtensions v) -> v
+      Just (EEInternal v) -> object $
+        bool codeAndPath (codeAndPath ++ ["internal" .= v]) includeInternal
+
     codeAndPath = [ "code" .= show code
                   , "path" .= encodeJSONPath jPath
                   ]
-    internal = maybe [] (\ie -> ["internal" .= ie]) mIE
 
 -- whether internal should be included or not
 encodeQErr :: Bool -> QErr -> Value
@@ -203,12 +225,12 @@ encodeJSONPath = format "$"
 instance Q.FromPGConnErr QErr where
   fromPGConnErr c =
     let e = err500 PostgresError "connection error"
-    in e {qeInternal = Just $ toJSON c}
+    in e {qeExtra = Just $ EEInternal $ toJSON c}
 
 instance Q.FromPGTxErr QErr where
   fromPGTxErr txe =
     let e = err500 PostgresError "postgres tx error"
-    in e {qeInternal = Just $ toJSON txe}
+    in e {qeExtra = Just $ EEInternal $ toJSON txe}
 
 err400 :: Code -> T.Text -> QErr
 err400 c t = QErr [] N.status400 t c Nothing
@@ -241,7 +263,7 @@ internalError = err500 Unexpected
 
 throw500WithDetail :: (QErrM m) => T.Text -> Value -> m a
 throw500WithDetail t detail =
-  throwError $ (err500 Unexpected t) {qeInternal = Just detail}
+  throwError $ (err500 Unexpected t) {qeExtra = Just $ EEInternal detail}
 
 modifyQErr :: (QErrM m)
            => (QErr -> QErr) -> m a -> m a
