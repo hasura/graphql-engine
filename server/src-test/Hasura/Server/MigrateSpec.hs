@@ -95,9 +95,9 @@ spec pgConnInfo = do
       transact (upgradeToLatest time) `shouldReturn` MRMigrated "12"
       
     it "supports downgrades for every Git tag" $ singleTransaction do
-      gitOutput <- liftIO $ readProcess "git" ["log", "--no-walk", "--tags", "--pretty=%D"] ""
+      gitOutput <- liftIO $ readProcess "git" ["tag", "--merged"] ""
       let filterOldest = filter (not . isPrefixOf "v1.0.0-alpha")
-          extractTagName = Safe.headMay . splitOn ", " <=< stripPrefix "tag: "
+          extractTagName = Safe.headMay . splitOn ", "
           supportedDowngrades = sort (map fst downgradeShortcuts)
           gitTags = (sort . filterOldest . mapMaybe extractTagName . tail . lines) gitOutput
       for_ gitTags \t -> 
