@@ -151,10 +151,7 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
                 "sub": "foo",
                 "name": "bar",
             }
-            if claims_namespace_path is None:
-                claim["https://hasura.io/jwt/claims"] = hClaims
-            elif claims_namespace_path == "$.hasuraClaims":
-                claim['hasuraClaims'] = hClaims
+            claim = mk_claims_with_namespace_path(claim,hClaims,claims_namespace_path)
             headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm='RS512').decode(
                 'UTF-8')
 
