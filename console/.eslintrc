@@ -150,6 +150,7 @@
         "no-redeclare": "off",
         "no-useless-constructor": "off",
         "no-unused-expressions": "off",
+        "no-console": "off",
         "prefer-destructuring": "off"
       }
     }

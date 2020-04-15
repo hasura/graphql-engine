@@ -4,7 +4,7 @@
 
 ### console: persist columns state in data browser
 
-The order and collapsed state of columns is now persisted across page navigation
+The order, collapsed state of columns and page size is now persisted across page navigation
 
 (close #3390) (#3753)
 
