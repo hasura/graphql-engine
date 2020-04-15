@@ -11,27 +11,18 @@ import           Hasura.Server.Auth
 import           Hasura.Server.Auth.JWT
 import           Hasura.Server.Version                    (HasVersion, Version, currentVersion)
 import           Hasura.RQL.Types.Error                   (encodeJSONPath)
+import           Data.Text                                (pack)
 
 import qualified Hasura.GraphQL.Execute.LiveQuery.Options as LQ
-import qualified Data.Aeson                               as J
-import qualified Data.Parser.JSONPath                     as JSONPath
 
 data JWTInfo
   = JWTInfo
-  { jwtiClaimsNamespace     :: !Text
-  , jwtiClaimsNamespacePath :: !(Maybe JSONPath.JSONPath)
+  { jwtiClaimsNamespace     :: !(Maybe Text)
+  , jwtiClaimsNamespacePath :: !(Maybe Text)
   , jwtiClaimsFormat        :: !JWTClaimsFormat
   } deriving (Show, Eq)
 
-instance J.ToJSON JWTInfo where
-  toJSON (JWTInfo _ (Just nsPath) fmt) =
-    J.object [ "claims_namespace_path" J..= encodeJSONPath nsPath
-             , "claims_format" J..= fmt
-           ]
-  toJSON (JWTInfo ns Nothing fmt) =
-    J.object [ "claims_namespace" J..= J.String ns
-             , "claims_format" J..= fmt
-           ]
+$(deriveToJSON (aesonDrop 4 snakeCase) ''JWTInfo)
 
 data ServerConfig
   = ServerConfig
@@ -56,7 +47,6 @@ runGetConfig am isAllowListEnabled liveQueryOpts = ServerConfig
     isAllowListEnabled
     liveQueryOpts
 
-
 isAdminSecretSet :: AuthMode -> Bool
 isAdminSecretSet = \case
   AMNoAuth -> False
@@ -75,8 +65,8 @@ isJWTSet = \case
 getJWTInfo :: AuthMode -> Maybe JWTInfo
 getJWTInfo (AMAdminSecretAndJWT _ jwtCtx _) =
   case jcxClaimNs jwtCtx of
-    ClaimNsPath nsPath -> Just $ JWTInfo "" (Just nsPath) format -- Keeping it empty for backward compatibility
-    ClaimNs ns -> Just $ JWTInfo ns Nothing format
+    ClaimNsPath nsPath -> Just $ JWTInfo Nothing (Just . pack $  encodeJSONPath nsPath) format
+    ClaimNs ns -> Just $ JWTInfo (Just ns) Nothing format
   where
     format = jcxClaimsFormat jwtCtx
 getJWTInfo _ = Nothing
