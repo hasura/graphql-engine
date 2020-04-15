@@ -92,7 +92,8 @@ etc.) JWT claims, as well as Hasura specific claims inside a custom namespace
 (or key) i.e. ``https://hasura.io/jwt/claims``.
 
 The ``https://hasura.io/jwt/claims`` is the custom namespace where all Hasura
-specific claims have to be present. This value can be configured in the JWT
+specific claims have to be present. This value can be configured using
+``claims_namespace`` or ``claims_namespace_path`` in the JWT
 config while starting the server.
 
 **Note**: ``x-hasura-default-role`` and ``x-hasura-allowed-roles`` are
@@ -102,6 +103,14 @@ mandatory, while the rest of them are optional.
 
    All ``x-hasura-*`` values should be of type ``String``, they will be converted to the
    right type automatically.
+
+.. note::
+
+   The JWT config should either have the ``claims_namespace`` or ``claims_namespace_path``
+   value set. If both the keys are missing, then the ``claims_namespace`` will default to
+   ``https://hasura.io/jwt/claims`` and if both are set then the server will throw a fatal
+   error and not start.
+
 
 The default role can be overridden by the ``x-hasura-role`` header, while making a
 request.
@@ -194,9 +203,6 @@ set to ``$.hasura.claims``:
      }
   }
 
-
-This is an optional field. If the value is not provided, then the ``claims_namespace`` value
-is used to get the name of the claims field among the top-level keys.
 
 Rotating JWKs
 +++++++++++++
