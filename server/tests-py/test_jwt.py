@@ -11,7 +11,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
-from validate import check_query
+from validate import check_query, mk_claims_with_namespace_path
 from context import PytestConf
 
 
@@ -36,18 +36,6 @@ def mk_claims(conf, claims):
     elif claims_fmt == 'stringified_json':
         return json.dumps(claims)
     else:
-        return claims
-
-def mk_claims_with_namespace_path(claims,hasura_claims,namespace_path):
-        if namespace_path is None:
-            claims['https://hasura.io/jwt/claims'] = hasura_claims
-        elif namespace_path == "$.hasuraClaims":
-            claims['hasuraClaims'] = hasura_claims
-        else:
-            raise Exception(
-                '''claims_namespace_path should not be anything
-                other than $.hasuraClaims for testing. The
-                value of claims_namespace_path was {}'''.format(namespace_path))
         return claims
 
 @pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])

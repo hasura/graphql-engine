@@ -421,19 +421,20 @@ instance J.FromJSON JWTConfig where
 
   parseJSON = J.withObject "JWTConfig" $ \o -> do
     mRawKey <- o J..:? "key"
-    claimNs <- o J..:? "claims_namespace"
+    claimsNs <- o J..:? "claims_namespace"
+    claimsNsPath <- o J..:? "claims_namespace_path"
     aud     <- o J..:? "audience"
     iss     <- o J..:? "issuer"
     jwkUrl  <- o J..:? "jwk_url"
     isStrngfd <- o J..:? "claims_format"
 
-    maybeClaimNsPath <- (o J..:? "claims_namespace_path")  >>=
-      mapM (either failJSONPathParsing pure . JSONPath.parseJSONPath)
 
-
-    let hasuraClaimsNs = case maybeClaimNsPath of
-          Just claimsNsPath -> ClaimNsPath claimsNsPath
-          Nothing -> ClaimNs $ fromMaybe defaultClaimNs claimNs
+    hasuraClaimsNs <-
+      case (claimsNsPath,claimsNs) of
+        (Nothing, Nothing) -> return $ ClaimNs defaultClaimNs
+        (Just nsPath, Nothing) -> either failJSONPathParsing (return . ClaimNsPath) . JSONPath.parseJSONPath $ nsPath
+        (Nothing, Just ns) -> return $ ClaimNs ns
+        (Just _, Just _) -> fail "claims_namespace and claims_namespace_path both cannot be set"
 
     case (mRawKey, jwkUrl) of
       (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
