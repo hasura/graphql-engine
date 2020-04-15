@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 import { theme } from '../../theme';
 import { Icon } from '../Icon';
@@ -7,7 +7,12 @@ import { Text } from '../Typography';
 
 const alertBoxWidth = 866;
 
-export const AlertBox = props => {
+interface AlertBoxProps {
+  children: ReactNode;
+  type: keyof typeof theme.alertBox;
+}
+
+export const AlertBox = (props: AlertBoxProps) => {
   const { children, type } = props;
 
   const backgroundColorValue = theme.alertBox[type]

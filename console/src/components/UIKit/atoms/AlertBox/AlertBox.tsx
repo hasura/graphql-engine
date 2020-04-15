@@ -9,7 +9,22 @@ import {
   shadow,
 } from 'styled-system';
 
-export const StyledAlertBox = styled.div`
+interface Props {
+  width: number;
+  bg: string;
+  borderRadius: string;
+  fontSize: string;
+  borderLeft: number;
+  borderColor: string;
+  boxShadow: number;
+  height: string;
+  pl: string;
+  display: string;
+  alignItems: string;
+  color: string;
+}
+
+export const StyledAlertBox = styled.div<Props>`
   ${flexbox};
   ${color}
   ${border}
