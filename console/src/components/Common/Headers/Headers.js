@@ -37,9 +37,7 @@ const Headers = ({ headers, setHeaders }) => {
           value={name}
           onChange={setHeaderKey}
           placeholder="key"
-          className={`form-control ${styles.add_mar_right} ${
-            styles.headerInputWidth
-          }`}
+          className={`form-control ${styles.add_mar_right} ${styles.headerInputWidth}`}
         />
       );
     };

@@ -6,7 +6,7 @@ import {
   getStarterKitPath,
   getGlitchProjectURL,
 } from './utils';
-import { getPersistedDerivedMutation } from '../lsUtils';
+import { getPersistedDerivedAction } from '../lsUtils';
 import Spinner from '../../../Common/Spinner/Spinner';
 import styles from '../Common/components/Styles.scss';
 import Button from '../../../Common/Button/Button';
@@ -20,7 +20,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   const [error, setError] = React.useState(null);
 
   const [parentMutation] = React.useState(
-    getPersistedDerivedMutation(currentAction.action_name)
+    getPersistedDerivedAction(currentAction.action_name)
   );
   const [shouldDerive, setShouldDerive] = React.useState(true);
 
@@ -67,9 +67,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     const getDrodown = () => {
       return (
         <select
-          className={`form-control ${styles.inputWidth} ${
-            styles.add_mar_right
-          } ${styles.add_mar_right}`}
+          className={`form-control ${styles.inputWidth} ${styles.add_mar_right} ${styles.add_mar_right}`}
           value={selectedFramework}
           onChange={onChange}
         >

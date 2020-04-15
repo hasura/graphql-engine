@@ -1,5 +1,15 @@
 import { isWrappingType, isListType, isNonNullType } from 'graphql';
 
+export const getOperationType = (schema, operation) => {
+  if (operation === 'query') {
+    return schema._queryType;
+  }
+  if (operation === 'subscription') {
+    return schema._subscriptionType
+  }
+  return schema._mutationType;
+};
+
 export const getMutationType = schema => {
   return schema._mutationType;
 };

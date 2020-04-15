@@ -559,10 +559,10 @@ TEST_TYPE="jwk-url"
 python3 jwk_server.py > "$OUTPUT_FOLDER/jwk_server.log" 2>&1  & JWKS_PID=$!
 wait_for_port 5001
 
-cache_control_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-cache-control"}'
-expires_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-expires"}'
-cc_nomaxage_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-cache-control?nomaxage"}'
-cc_nocache_jwk_url='{"type": "RS256", "jwk_url": "http://localhost:5001/jwk-cache-control?nocache"}'
+cache_control_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control"}'
+expires_jwk_url='{"jwk_url": "http://localhost:5001/jwk-expires"}'
+cc_nomaxage_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control?nomaxage"}'
+cc_nocache_jwk_url='{"jwk_url": "http://localhost:5001/jwk-cache-control?nocache"}'
 
 # start HGE with cache control JWK URL
 export HASURA_GRAPHQL_JWT_SECRET=$cache_control_jwk_url

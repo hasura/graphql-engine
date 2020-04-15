@@ -15,9 +15,10 @@ import {
   setTypeDefinition,
   setHeaders as dispatchNewHeaders,
   toggleForwardClientHeaders as toggleFCH,
+  resetDerivedActionParentOperation,
 } from './reducer';
 import { createAction } from '../ServerIO';
-import { getUrlSearchParamValue } from '../../../Common/utils/jsUtils';
+import { getActionDefinitionFromSdl } from '../../../../shared/utils/sdlUtils';
 
 const AddAction = ({
   handler,
@@ -28,11 +29,15 @@ const AddAction = ({
   isFetching,
   headers,
   forwardClientHeaders,
+  derive,
 }) => {
   React.useEffect(() => {
-    if (getUrlSearchParamValue('is_derived') != 'true') {
+    if (!derive.operation) {
       dispatch(setDefaults());
     }
+    return () => {
+      dispatch(resetDerivedActionParentOperation());
+    };
   }, []);
 
   const handlerOnChange = e => dispatch(setActionHandler(e.target.value));
@@ -78,6 +83,15 @@ const AddAction = ({
     !actionParseTimer &&
     !typedefParseTimer;
 
+  let actionType;
+  if (!actionDefinitionError) {
+    // TODO optimise
+    const { type, error } = getActionDefinitionFromSdl(actionDefinitionSdl);
+    if (!error) {
+      actionType = type;
+    }
+  }
+
   return (
     <div>
       <Helmet title={'Add Action - Actions | Hasura'} />
@@ -106,12 +120,18 @@ const AddAction = ({
         service="create-action"
       />
       <hr />
-      <KindEditor
-        value={kind}
-        onChange={kindOnChange}
-        className={styles.add_mar_bottom_mid}
-      />
-      <hr />
+      {
+        actionType === "query" ? null : (
+          <React.Fragment>
+            <KindEditor
+              value={kind}
+              onChange={kindOnChange}
+              className={styles.add_mar_bottom_mid}
+            />
+            <hr />
+          </React.Fragment>
+        )
+      }
       <HeadersConfEditor
         forwardClientHeaders={forwardClientHeaders}
         toggleForwardClientHeaders={toggleForwardClientHeaders}
