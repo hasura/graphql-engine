@@ -18,9 +18,8 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate/database"
 	"github.com/hasura/graphql-engine/cli/migrate/source"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
-
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 )
 
 // DefaultPrefetchMigrations sets the number of migrations to pre-read

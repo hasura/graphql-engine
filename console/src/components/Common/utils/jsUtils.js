@@ -2,6 +2,10 @@
 
 import { showErrorNotification } from '../../Services/Common/Notification';
 
+export const isNotDefined = value => {
+  return value === null || value === undefined;
+};
+
 export const exists = value => {
   return value !== null && value !== undefined;
 };

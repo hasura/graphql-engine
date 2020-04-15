@@ -14,10 +14,12 @@ module Hasura.RQL.Types.Action
   , ResolvedActionDefinition
 
   , ActionOutputFields
+  , getActionOutputFields
   , ActionInfo(..)
   , aiName
-  , aiOutputFields
+  , aiOutputObject
   , aiDefinition
+  , aiPgScalars
   , aiPermissions
   , aiComment
   , ActionPermissionInfo(..)
@@ -103,7 +105,7 @@ $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionDefinition)
 instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
   parseJSON = J.withObject "ActionDefinition" $ \o ->
     ActionDefinition
-      <$> o J..:  "arguments"
+      <$> o J..:? "arguments" J..!= []
       <*> o J..:  "output_type"
       <*> o J..:? "kind" J..!= ActionSynchronous -- Synchronous is default action kind
       <*> o J..:? "headers" J..!= []
@@ -119,14 +121,20 @@ data ActionPermissionInfo
 $(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionPermissionInfo)
 
 type ActionPermissionMap = Map.HashMap RoleName ActionPermissionInfo
+
 type ActionOutputFields = Map.HashMap G.Name G.GType
+
+getActionOutputFields :: AnnotatedObjectType -> ActionOutputFields
+getActionOutputFields =
+  Map.fromList . map (unObjectFieldName *** fst) . Map.toList . _aotAnnotatedFields
 
 data ActionInfo
   = ActionInfo
   { _aiName         :: !ActionName
-  , _aiOutputFields :: !ActionOutputFields
+  , _aiOutputObject :: !AnnotatedObjectType
   , _aiDefinition   :: !ResolvedActionDefinition
   , _aiPermissions  :: !ActionPermissionMap
+  , _aiPgScalars    :: !(HashSet PGScalarType)
   , _aiComment      :: !(Maybe Text)
   } deriving (Show, Eq)
 $(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionInfo)

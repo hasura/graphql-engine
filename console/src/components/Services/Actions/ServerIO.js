@@ -31,7 +31,11 @@ import {
   getOverlappingTypeConfirmation,
 } from './Common/utils';
 import { showErrorNotification } from '../Common/Notification';
-import { removePersistedDerivedMutation } from './lsUtils';
+import {
+  removePersistedDerivedAction,
+  persistDerivedAction,
+  updatePersistedDerivation,
+} from './lsUtils';
 import { appPrefix } from './constants';
 import { push } from 'react-router-redux';
 import {
@@ -115,6 +119,7 @@ export const createAction = () => (dispatch, getState) => {
     outputType,
     error: actionDefError,
     comment: actionDescription,
+    type: actionType
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
   if (actionDefError) {
     return dispatch(
@@ -125,6 +130,7 @@ export const createAction = () => (dispatch, getState) => {
   const { types, error: typeDefError } = getTypesFromSdl(
     rawState.typeDefinition.sdl
   );
+
   if (typeDefError) {
     return dispatch(
       showErrorNotification('Invalid Types Definition', typeDefError)
@@ -135,6 +141,7 @@ export const createAction = () => (dispatch, getState) => {
     handler: rawState.handler,
     kind: rawState.kind,
     types,
+    actionType,
     name: actionName,
     arguments: args,
     outputType,
@@ -194,6 +201,9 @@ export const createAction = () => (dispatch, getState) => {
   const successMsg = 'Created action successfully';
   const errorMsg = 'Creating action failed';
   const customOnSuccess = () => {
+    if (rawState.derive.operation) {
+      persistDerivedAction(state.name, rawState.derive.operation);
+    }
     dispatch(fetchActions()).then(() => {
       dispatch(createActionRequestComplete());
       dispatch(
@@ -227,6 +237,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     name: actionName,
     arguments: args,
     outputType,
+    type: actionType,
     error: actionDefError,
     comment: actionDescription,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
@@ -250,6 +261,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
     handler: rawState.handler,
     kind: rawState.kind,
     types,
+    actionType,
     name: actionName,
     arguments: args,
     outputType,
@@ -330,15 +342,14 @@ export const saveAction = currentAction => (dispatch, getState) => {
     downQueries = [actionQueryDown, customFieldsQueryDown, oldActionQueryUp];
   }
 
-  const migrationName = `modify_action_${currentAction.action_name}_to_${
-    state.name
-  }`;
+  const migrationName = `modify_action_${currentAction.action_name}_to_${state.name}`;
   const requestMsg = 'Saving action...';
   const successMsg = 'Action saved successfully';
   const errorMsg = 'Saving action failed';
   const customOnSuccess = () => {
     dispatch(modifyActionRequestComplete());
     if (isActionNameChange) {
+      updatePersistedDerivation(currentAction.action_name, state.name);
       const newHref = window.location.href.replace(
         `/manage/${currentAction.action_name}/modify`,
         `/manage/${state.name}/modify`
@@ -368,9 +379,7 @@ export const saveAction = currentAction => (dispatch, getState) => {
 };
 
 export const deleteAction = currentAction => (dispatch, getState) => {
-  const confirmMessage = `This will permanently delete the action "${
-    currentAction.action_name
-  }" from this table`;
+  const confirmMessage = `This will permanently delete the action "${currentAction.action_name}" from this table`;
   const isOk = getConfirmation(confirmMessage, true, currentAction.action_name);
   if (!isOk) {
     return;
@@ -390,7 +399,7 @@ export const deleteAction = currentAction => (dispatch, getState) => {
     dispatch(modifyActionRequestComplete());
     dispatch(push(`${globals.urlPrefix}${appPrefix}/manage`));
     dispatch(fetchActions());
-    removePersistedDerivedMutation(currentAction.action_name);
+    removePersistedDerivedAction(currentAction.action_name);
   };
   const customOnError = () => {
     dispatch(modifyActionRequestComplete());
