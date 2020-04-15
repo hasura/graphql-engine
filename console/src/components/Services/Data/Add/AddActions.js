@@ -9,7 +9,7 @@ import {
 import { UPDATE_MIGRATION_STATUS_ERROR } from '../../../Main/Actions';
 import { setTable } from '../DataActions.js';
 
-import { isPostgresFunction } from '../utils';
+import { isColTypeQuote, isPostgresFunction } from '../utils';
 import { sqlEscapeText } from '../../../Common/utils/sqlUtils';
 import { getRunSqlQuery } from '../../../Common/utils/v1QueryUtils';
 import { getTableModifyRoute } from '../../../Common/utils/routesUtils';
@@ -188,7 +188,7 @@ const createTableSql = () => {
         currentCols[i].default.value !== ''
       ) {
         if (
-          currentCols[i].type === 'text' &&
+          isColTypeQuote(currentCols[i].type) &&
           !isPostgresFunction(currentCols[i].default.value)
         ) {
           // if a column type is text and if it has a non-func default value, add a single quote by default
