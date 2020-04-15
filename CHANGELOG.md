@@ -10,6 +10,7 @@ The order and collapsed state of columns is now persisted across page navigation
 
 ### Bug fixes and improvements
 
+- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
 - console: query support for actions (#4318)
 - cli: query support for actions (#4318)
 - cli: add retry_conf in event trigger for squashing migrations (close #4296) (#4324)
