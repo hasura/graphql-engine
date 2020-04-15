@@ -432,7 +432,7 @@ test-suite graphql-engine-tests
   other-modules:
     Data.Parser.CacheControlSpec
     Data.Parser.URLTemplate
-    Data.Parser.JsonPath
+    Data.Parser.JSONPathSpec
     Data.TimeSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec

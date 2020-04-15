@@ -26,7 +26,7 @@ import           Hasura.Server.Migrate
 import           Hasura.Server.Version
 
 import qualified Data.Parser.CacheControlSpec as CacheControlParser
-import qualified Data.Parser.JsonPath         as JsonPath
+import qualified Data.Parser.JSONPathSpec     as JsonPath
 import qualified Data.Parser.URLTemplate      as URLTemplate
 import qualified Data.TimeSpec                as TimeSpec
 import qualified Hasura.IncrementalSpec       as IncrementalSpec
