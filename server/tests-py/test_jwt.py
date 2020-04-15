@@ -47,7 +47,9 @@ class TestJWTBasic():
                 'x-hasura-allowed-roles': ['user', 'editor'],
                 'x-hasura-default-role': 'user'
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
@@ -61,7 +63,10 @@ class TestJWTBasic():
             'x-hasura-allowed-roles': ['contractor', 'editor'],
             'x-hasura-default-role': 'contractor'
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
@@ -86,7 +91,10 @@ class TestJWTBasic():
             'x-hasura-user-id': '1',
             'x-hasura-default-role': 'user'
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
@@ -112,7 +120,10 @@ class TestJWTBasic():
             'x-hasura-allowed-roles': 'user',
             'x-hasura-default-role': 'user'
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
@@ -137,7 +148,10 @@ class TestJWTBasic():
             'x-hasura-user-id': '1',
             'x-hasura-allowed-roles': ['user'],
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
         self.conf['headers']['Authorization'] = 'Bearer ' + token
@@ -163,7 +177,10 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         exp = datetime.utcnow() - timedelta(minutes=1)
         self.claims['exp'] = round(exp.timestamp())
@@ -192,7 +209,10 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         wrong_key = gen_rsa_key()
         token = jwt.encode(self.claims, wrong_key, algorithm='HS256').decode('utf-8')
@@ -223,7 +243,10 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['aud'] = 'hasura-test-suite'
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
@@ -241,7 +264,10 @@ class TestJWTBasic():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['iss'] = 'rubbish-issuer'
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
@@ -300,7 +326,10 @@ class TestSubscriptionJwtExpiry(object):
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         exp = curr_time + timedelta(seconds=4)
         self.claims['exp'] = round(exp.timestamp())
@@ -329,7 +358,10 @@ class TestJwtAudienceCheck():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['aud'] = audience
         token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
@@ -346,7 +378,10 @@ class TestJwtAudienceCheck():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['aud'] = 'rubbish_audience'
 
@@ -404,7 +439,10 @@ class TestJwtIssuerCheck():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['iss'] = issuer
 
@@ -422,7 +460,10 @@ class TestJwtIssuerCheck():
             'x-hasura-default-role': 'user',
             'x-hasura-allowed-roles': ['user'],
         })
-        claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+        claims_namespace_path = None
+        if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
+            claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
+
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['iss'] = 'rubbish_issuer'
 
