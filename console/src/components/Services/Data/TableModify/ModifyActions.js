@@ -223,7 +223,7 @@ export const saveComputedField = (
   const customOnSuccess = () => {
     successCb();
   };
-  const customOnError = () => { };
+  const customOnError = () => {};
 
   makeMigrationCall(
     dispatch,
@@ -264,8 +264,8 @@ export const deleteComputedField = (computedField, table) => (
   const requestMsg = 'Deleting computed field...';
   const successMsg = 'Deleting computed field successful';
   const errorMsg = 'Deleting computed field failed';
-  const customOnSuccess = () => { };
-  const customOnError = () => { };
+  const customOnSuccess = () => {};
+  const customOnError = () => {};
 
   makeMigrationCall(
     dispatch,
@@ -490,7 +490,7 @@ const savePrimaryKeys = (tableName, schemaName, constraintName) => {
     const requestMsg = `${pkAction} primary key constraint...`;
     const successMsg = `${pkAction} primary key constraint successful`;
     const errorMsg = `${pkAction} primary key constraint failed`;
-    const customOnSuccess = () => { };
+    const customOnSuccess = () => {};
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
@@ -534,7 +534,7 @@ const saveForeignKeys = (index, tableSchema, columns) => {
             showErrorNotification(
               'Failed setting foreign key',
               `The column "${
-              columns[cm.column].name
+                columns[cm.column].name
               }" seems to be referencing multiple foreign columns`
             )
           );
@@ -586,14 +586,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}"
           foreign key (${Object.keys(oldConstraint.column_mapping)
-          .map(lc => `"${lc}"`)
-          .join(', ')})
+            .map(lc => `"${lc}"`)
+            .join(', ')})
           references "${oldConstraint.ref_table_table_schema}"."${
         oldConstraint.ref_table
-        }"
+      }"
           (${Object.values(oldConstraint.column_mapping)
-          .map(rc => `"${rc}"`)
-          .join(', ')})
+            .map(rc => `"${rc}"`)
+            .join(', ')})
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -671,11 +671,11 @@ const removeForeignKey = (index, tableSchema) => {
       .map(lc => `"${lc}"`)
       .join(', ')}) references "${oldConstraint.ref_table_table_schema}"."${
       oldConstraint.ref_table
-      }"(${Object.values(oldConstraint.column_mapping)
-        .map(rc => `"${rc}"`)
-        .join(', ')}) on update ${
+    }"(${Object.values(oldConstraint.column_mapping)
+      .map(rc => `"${rc}"`)
+      .join(', ')}) on update ${
       pgConfTypes[oldConstraint.on_update]
-      } on delete ${pgConfTypes[oldConstraint.on_delete]};`;
+    } on delete ${pgConfTypes[oldConstraint.on_delete]};`;
     const migrationUp = [getRunSqlQuery(upSql)];
     const migrationDown = [getRunSqlQuery(downSql)];
     const migrationName = `delete_fk_${schemaName}_${tableName}_${oldConstraint.constraint_name}`;
@@ -808,7 +808,7 @@ IS ${sqlEscapeText(trigger.comment)};`;
     const successMsg = 'Trigger deleted';
     const errorMsg = 'Deleting trigger failed';
 
-    const customOnSuccess = () => { };
+    const customOnSuccess = () => {};
     const customOnError = err => {
       dispatch({ type: UPDATE_MIGRATION_STATUS_ERROR, data: err });
     };
@@ -983,7 +983,7 @@ const deleteViewSql = viewName => {
     const customOnSuccess = () => {
       dispatch(_push('/data/'));
     };
-    const customOnError = () => { };
+    const customOnError = () => {};
 
     makeMigrationCall(
       dispatch,
@@ -1066,15 +1066,15 @@ const deleteColumnSql = (column, tableSchema) => {
         schemaChangesDown.push(
           getRunSqlQuery(
             alterStatement +
-            'ADD CONSTRAINT ' +
-            `${fkc.constraint_name} ` +
-            'FOREIGN KEY ' +
-            `(${lcol.join(', ')}) ` +
-            'REFERENCES ' +
-            `"${fkc.ref_table_table_schema}"."${fkc.ref_table}" ` +
-            `(${rcol.join(', ')}) ` +
-            `ON DELETE ${onDelete} ` +
-            `ON UPDATE ${onUpdate}`
+              'ADD CONSTRAINT ' +
+              `${fkc.constraint_name} ` +
+              'FOREIGN KEY ' +
+              `(${lcol.join(', ')}) ` +
+              'REFERENCES ' +
+              `"${fkc.ref_table_table_schema}"."${fkc.ref_table}" ` +
+              `(${rcol.join(', ')}) ` +
+              `ON DELETE ${onDelete} ` +
+              `ON UPDATE ${onUpdate}`
           )
         );
       });
@@ -1086,10 +1086,10 @@ const deleteColumnSql = (column, tableSchema) => {
         schemaChangesDown.push(
           getRunSqlQuery(
             alterStatement +
-            'ADD CONSTRAINT ' +
-            `${uc.constraint_name} ` +
-            'UNIQUE ' +
-            `(${uc.columns.join(', ')})`
+              'ADD CONSTRAINT ' +
+              `${uc.constraint_name} ` +
+              'UNIQUE ' +
+              `(${uc.columns.join(', ')})`
           )
         );
       });
@@ -1100,10 +1100,10 @@ const deleteColumnSql = (column, tableSchema) => {
       schemaChangesDown.push(
         getRunSqlQuery(
           alterStatement +
-          'ALTER COLUMN ' +
-          `"${name}" ` +
-          'SET DEFAULT ' +
-          column.column_default
+            'ALTER COLUMN ' +
+            `"${name}" ` +
+            'SET DEFAULT ' +
+            column.column_default
         )
       );
     }
@@ -1113,20 +1113,20 @@ const deleteColumnSql = (column, tableSchema) => {
       schemaChangesDown.push(
         getRunSqlQuery(
           'COMMENT ON COLUMN ' +
-          '"' +
-          currentSchema +
-          '"' +
-          '.' +
-          '"' +
-          tableName +
-          '"' +
-          '.' +
-          '"' +
-          name +
-          '"' +
-          ' ' +
-          'IS ' +
-          sqlEscapeText(comment)
+            '"' +
+            currentSchema +
+            '"' +
+            '.' +
+            '"' +
+            tableName +
+            '"' +
+            '.' +
+            '"' +
+            name +
+            '"' +
+            ' ' +
+            'IS ' +
+            sqlEscapeText(comment)
         )
       );
     }
@@ -1146,13 +1146,13 @@ const deleteColumnSql = (column, tableSchema) => {
           showWarningNotification(
             'Check down migration',
             'Please verify that the down migration will reset the DB to the previous state (you ' +
-            'might need to add recreation of some dependent objects like indexes, etc.)',
+              'might need to add recreation of some dependent objects like indexes, etc.)',
             data
           )
         );
       }
     };
-    const customOnError = () => { };
+    const customOnError = () => {};
 
     makeMigrationCall(
       dispatch,
@@ -1285,7 +1285,7 @@ const addColSql = (
     const customOnSuccess = () => {
       callback();
     };
-    const customOnError = () => { };
+    const customOnError = () => {};
 
     makeMigrationCall(
       dispatch,
@@ -1340,8 +1340,8 @@ const deleteConstraintSql = (tableName, cName) => {
     const successMsg = 'Constraint deleted';
     const errorMsg = 'Deleting constraint failed';
 
-    const customOnSuccess = () => { };
-    const customOnError = () => { };
+    const customOnSuccess = () => {};
+    const customOnError = () => {};
 
     makeMigrationCall(
       dispatch,
@@ -1419,7 +1419,7 @@ const saveTableCommentSql = isTable => {
       });
       dispatch(activateCommentEdit(false, null));
     };
-    const customOnError = () => { };
+    const customOnError = () => {};
 
     makeMigrationCall(
       dispatch,
@@ -1867,7 +1867,7 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
       dispatch(resetColumnEdit(colName));
       onSuccess();
     };
-    const customOnError = () => { };
+    const customOnError = () => {};
 
     if (schemaChangesUp.length > 0) {
       makeMigrationCall(
@@ -1979,7 +1979,7 @@ const removeUniqueKey = (index, tableName, existingConstraints, callback) => {
       );
     };
 
-    const customOnError = () => { };
+    const customOnError = () => {};
 
     makeMigrationCall(
       dispatch,
@@ -2002,7 +2002,7 @@ export const toggleTableAsEnum = (isEnum, successCallback, failureCallback) => (
 ) => {
   const confirmMessage = `This will ${
     isEnum ? 'un' : ''
-    }set this table as an enum`;
+  }set this table as an enum`;
   const isOk = getConfirmation(confirmMessage);
   if (!isOk) {
     return;
@@ -2271,7 +2271,7 @@ const saveUniqueKey = (
       dispatch(setUniqueKeys([...uniqueKeysInState, []]));
     };
 
-    const customOnError = () => { };
+    const customOnError = () => {};
 
     makeMigrationCall(
       dispatch,
