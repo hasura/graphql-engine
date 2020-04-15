@@ -10,8 +10,14 @@ import {
 } from 'styled-system';
 
 // Parent Div ~ Global Styles ************* //
-
-export const UIKitWrapperDiv = styled.div`
+interface UIKitWrapperDivProps {
+  py: string;
+  px: string;
+  mb: string;
+  bg: string;
+  fontFamily: string;
+}
+export const UIKitWrapperDiv = styled.div<UIKitWrapperDivProps>`
   ${typography}
   ${space}
   ${color}
@@ -46,8 +52,11 @@ export const Box = styled.div`
 `;
 
 // Flexbox Div ********************** //
-
-export const Flex = styled(Box)`
+interface FlexProps {
+  display: string;
+  alignItems: string;
+}
+export const Flex = styled(Box)<FlexProps>`
   ${flexbox}
 `;
 

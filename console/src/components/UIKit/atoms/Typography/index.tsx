@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 import { StyledHeading, StyledText, StyledTextLink } from './Typography';
 
@@ -8,6 +8,18 @@ Heading.defaultProps = {
   color: 'black.text',
 };
 
+interface TextProps {
+  children?: ReactNode;
+  type?: string;
+  fontWeight?: string;
+  fontSize?: string;
+  as?: any;
+  mb?: string;
+  mt?: string;
+  mr?: string;
+  ml?: string;
+  pl?: string;
+}
 /**
  * @example
  *  Explainer Text
@@ -15,7 +27,7 @@ Heading.defaultProps = {
  *  fontSize: 'explain'
  *  fontWeight: 'bold'
  */
-export const Text = props => {
+export const Text = (props: TextProps) => {
   const { children, type, fontWeight, fontSize } = props;
 
   const lineHeight = type === 'explain' ? 'body' : 'explain';
@@ -55,7 +67,12 @@ Text.defaultProps = {
   ml: 'zero',
 };
 
-export const TextLink = props => {
+interface TextLinkProps {
+  children: ReactNode;
+  underline?: boolean;
+  color?: string;
+}
+export const TextLink = (props: TextLinkProps) => {
   const { children, underline } = props;
 
   return (
