@@ -136,6 +136,7 @@
          * Disable things that are checked by Typescript
          */
         "import/no-unresolved": 0,
+        "import/prefer-default-export": "off",
         "getter-return": "off",
         "no-dupe-args": "off",
         "no-dupe-keys": "off",
@@ -149,7 +150,8 @@
         "no-redeclare": "off",
         "no-useless-constructor": "off",
         "no-unused-expressions": "off",
-        "no-console": "off"
+        "no-console": "off",
+        "prefer-destructuring": "off"
       }
     }
   ]
