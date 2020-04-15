@@ -24,6 +24,7 @@ import qualified Control.Concurrent.Async          as A
 import qualified Data.Aeson                        as J
 import qualified Data.Aeson.Casing                 as J
 import qualified Data.Aeson.TH                     as J
+import qualified Data.ByteString.Lazy              as BL
 import qualified Data.CaseInsensitive              as CI
 import qualified Data.HashMap.Strict               as Map
 import qualified Data.Text                         as T
@@ -44,7 +45,7 @@ import           Hasura.GraphQL.Resolve.Select     (processTableSelectionSet)
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.Types
 import           Hasura.HTTP
-import           Hasura.RQL.DDL.Headers            (HeaderConf, makeHeadersFromConf)
+import           Hasura.RQL.DDL.Headers            (HeaderConf, makeHeadersFromConf, toHeadersConf)
 import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
@@ -89,6 +90,48 @@ instance J.FromJSON ActionWebhookResponse where
 instance J.ToJSON ActionWebhookResponse where
   toJSON (AWRArray objects) = J.toJSON objects
   toJSON (AWRObject object) = J.toJSON object
+
+data ActionDebugRequest
+  = ActionDebugRequest
+  { _adreqUrl     :: !Text
+  , _adreqBody    :: !J.Value
+  , _adreqHeaders :: ![HeaderConf]
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 6 J.snakeCase) ''ActionDebugRequest)
+
+data ActionDebugResponse
+  = ActionDebugResponse
+  { _adresStatus  :: !Int
+  , _adresBody    :: !J.Value
+  , _adresHeaders :: ![HeaderConf]
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 6 J.snakeCase) ''ActionDebugResponse)
+
+data ActionDebugInfo
+  = ActionDebugInfo
+  { _adiRequest  :: !ActionDebugRequest
+  , _adiResponse :: !(Maybe ActionDebugResponse)
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionDebugInfo)
+
+data ActionErrorType
+  = AETHttpException -- ^ The HTTP exception
+  | AETInvalidJson -- ^ Response is not valid JSON
+  | AETUnexpectedJson -- ^ Unexpected JSON response
+  | AETUnexpectedStatus -- ^ Non 2xx, 4xx status
+  deriving (Show, Eq)
+$(J.deriveToJSON
+  J.defaultOptions{J.constructorTagModifier = J.snakeCase . drop 3}
+  ''ActionErrorType
+ )
+
+data ActionInternalError
+  = ActionInternalError
+  { _aieType      :: !ActionErrorType
+  , _aieError     :: !J.Value
+  , _aieDebugInfo :: !ActionDebugInfo
+  } deriving (Show, Eq)
+$(J.deriveToJSON (J.aesonDrop 4 J.snakeCase) ''ActionInternalError)
 
 resolveActionMutation
   :: ( HasVersion
@@ -417,7 +460,7 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
     getUndeliveredEvents = runTx undeliveredEventsQuery
 
 callWebhook
-  :: (HasVersion, MonadIO m, MonadError QErr m)
+  :: forall m. (HasVersion, MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> GraphQLType
   -> ActionOutputFields
@@ -437,49 +480,66 @@ callWebhook manager outputType outputFields reqHeaders confHeaders
                 -- and client headers where configuration headers are preferred
                 contentType : (Map.toList . Map.fromList) (resolvedConfHeaders <> clientHeaders)
       postPayload = J.toJSON actionWebhookPayload
-      url = (T.unpack $ unResolvedWebhook resolvedWebhook)
-  httpResponse <- liftIO $ try $ try $
-                  Wreq.asJSON =<< Wreq.postWith options url postPayload
+      url = unResolvedWebhook resolvedWebhook
+  httpResponse <- liftIO $ try $ Wreq.postWith options (T.unpack url) postPayload
+  let debugRequest = ActionDebugRequest url postPayload $
+                     confHeaders <> toHeadersConf clientHeaders
   case httpResponse of
     Left e ->
       throw500WithDetail "http exception when calling webhook" $
-      J.toJSON $ HttpException e
+      J.toJSON $ ActionInternalError AETHttpException
+                 (J.toJSON $ HttpException e) $
+                 ActionDebugInfo debugRequest Nothing
 
-    Right (Left (Wreq.JSONError e)) ->
-      throw500WithDetail "not a valid json response from webhook" $
-      J.toJSON e
-
-    Right (Right responseWreq) -> do
-      let responseValue = responseWreq ^. Wreq.responseBody
+    Right responseWreq -> do
+      let responseBody = responseWreq ^. Wreq.responseBody
           responseStatus = responseWreq ^. Wreq.responseStatus
-          webhookResponseObject = J.object ["webhook_response" J..= responseValue]
+          mkDebugResponse respBody =
+            ActionDebugResponse (HTTP.statusCode responseStatus) respBody $
+            toHeadersConf $ responseWreq ^. Wreq.responseHeaders
+      case J.eitherDecode responseBody of
+        Left e -> do
+          let debugResponse = mkDebugResponse $ J.String $ bsToTxt $ BL.toStrict responseBody
+          throw500WithDetail "not a valid json response from webhook" $ J.toJSON $
+            ActionInternalError AETInvalidJson (J.toJSON e) $
+            ActionDebugInfo debugRequest $ Just debugResponse
 
-      if | HTTP.statusIsSuccessful responseStatus  -> do
-             let expectingArray = isListType outputType
-                 addInternalToErr e = e{qeInternal = Just webhookResponseObject}
-             -- Incase any error, add webhook response in internal
-             modifyQErr addInternalToErr $ do
-               webhookResponse <- decodeValue responseValue
-               case webhookResponse of
-                 AWRArray objs -> do
-                   when (not expectingArray) $
-                     throwUnexpected "expecting object for action webhook response but got array"
-                   mapM_ validateResponseObject objs
-                 AWRObject obj -> do
-                   when expectingArray $
-                     throwUnexpected "expecting array for action webhook response but got object"
-                   validateResponseObject obj
-               pure (webhookResponse, mkSetCookieHeaders responseWreq)
+        Right responseValue -> do
+          let debugResponse = mkDebugResponse responseValue
+              addInternalToErr e =
+                let actionInternalError = J.toJSON $
+                      ActionInternalError AETUnexpectedJson (J.toJSON $ qeError e) $
+                      ActionDebugInfo debugRequest $ Just debugResponse
+                in e{qeInternal = Just actionInternalError}
 
-         | HTTP.statusIsClientError responseStatus -> do
-             ActionWebhookErrorResponse message maybeCode <-
-               modifyErr ("webhook response: " <>) $ decodeValue responseValue
-             let code = maybe Unexpected ActionWebhookCode maybeCode
-                 qErr = QErr [] responseStatus message code Nothing
-             throwError qErr
+          if | HTTP.statusIsSuccessful responseStatus  -> do
+                 let expectingArray = isListType outputType
+                 modifyQErr addInternalToErr $ do
+                   webhookResponse <- decodeValue responseValue
+                   case webhookResponse of
+                     AWRArray objs -> do
+                       when (not expectingArray) $
+                         throwUnexpected "expecting object for action webhook response but got array"
+                       mapM_ validateResponseObject objs
+                     AWRObject obj -> do
+                       when expectingArray $
+                         throwUnexpected "expecting array for action webhook response but got object"
+                       validateResponseObject obj
+                   pure (webhookResponse, mkSetCookieHeaders responseWreq)
 
-         | otherwise ->
-             throw500WithDetail "internal error" webhookResponseObject
+             | HTTP.statusIsClientError responseStatus -> do
+                 ActionWebhookErrorResponse message maybeCode <-
+                   modifyQErr addInternalToErr $ decodeValue responseValue
+                 let code = maybe Unexpected ActionWebhookCode maybeCode
+                     qErr = QErr [] responseStatus message code Nothing
+                 throwError qErr
+
+             | otherwise -> do
+                 let err = J.toJSON $ "expecting 2xx or 4xx status code, but found "
+                           ++ show (HTTP.statusCode responseStatus)
+                 throw500WithDetail "internal error" $ J.toJSON $
+                   ActionInternalError AETUnexpectedStatus err $
+                   ActionDebugInfo debugRequest $ Just debugResponse
     where
       throwUnexpected = throw400 Unexpected
 

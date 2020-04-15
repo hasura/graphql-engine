@@ -240,7 +240,7 @@ onConn (L.Logger logger) corsPolicy wsId requestHead = do
       return $ Left $ WS.RejectRequest
         (H.statusCode $ qeStatus qErr)
         (H.statusMessage $ qeStatus qErr) []
-        (BL.toStrict $ J.encode $ encodeGQLErr False qErr)
+        (BL.toStrict $ J.encode $ encodeGQLErr noDebugResponseConfig False qErr)
 
     checkPath = case WS.requestPath requestHead of
       "/v1alpha1/graphql" -> return ERTLegacy
@@ -411,7 +411,7 @@ onStart serverEnv wsConn (StartMsg opId q) = catchAndIgnore $ do
     getErrFn errTy =
       case errTy of
         ERTLegacy           -> encodeQErr
-        ERTGraphqlCompliant -> encodeGQLErr
+        ERTGraphqlCompliant -> encodeGQLErr noDebugResponseConfig
 
     sendStartErr e = do
       let errFn = getErrFn errRespTy

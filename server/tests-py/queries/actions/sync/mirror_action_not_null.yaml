@@ -5,15 +5,37 @@ response:
   errors:
   - extensions:
       internal:
-        webhook_response:
-          name: Alice
-          id: null
+        debug_info:
+          response:
+            status: 200
+            body:
+              name: Alice
+              id:
+            headers:
+            - value: application/json
+              name: Content-Type
+            - value: abcd
+              name: Set-Cookie
+          request:
+            body:
+              session_variables:
+                x-hasura-role: admin
+              input:
+                arg:
+                  name: Alice
+                  id:
+              action:
+                name: mirror
+            url: http://127.0.0.1:5593/mirror-action
+            headers: []
+        error: expecting not null value for field "id"
+        type: unexpected_json
       path: $
       code: unexpected
     message: expecting not null value for field "id"
 query:
   variables:
-    id: null
+    id:
     name: Alice
   query: |
     mutation ($id: ID, $name: String) {

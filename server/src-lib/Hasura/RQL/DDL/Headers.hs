@@ -45,10 +45,11 @@ instance ToJSON HeaderConf where
 
 
 -- | Resolve configuration headers
-makeHeadersFromConf :: (MonadError QErr m, MonadIO m) => [HeaderConf] -> m [HTTP.Header]
+makeHeadersFromConf
+  :: (MonadError QErr m, MonadIO m) => [HeaderConf] -> m [HTTP.Header]
 makeHeadersFromConf = mapM getHeader
   where
-    getHeader hconf = do
+    getHeader hconf =
       ((CI.mk . txtToBs) *** txtToBs) <$>
         case hconf of
           (HeaderConf name (HVValue val)) -> return (name, val)
@@ -57,3 +58,8 @@ makeHeadersFromConf = mapM getHeader
             case mEnv of
               Nothing     -> throw400 NotFound $ "environment variable '" <> val <> "' not set"
               Just envval -> pure (name, T.pack envval)
+
+-- | Encode headers to HeaderConf
+toHeadersConf :: [HTTP.Header] -> [HeaderConf]
+toHeadersConf =
+  map (uncurry HeaderConf . ((bsToTxt . CI.original) *** (HVValue . bsToTxt)))

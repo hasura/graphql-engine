@@ -61,11 +61,12 @@ runGQBatched
      , MonadReader E.ExecutionCtx m
      )
   => RequestId
+  -> GraphQLResponseConfig
   -> UserInfo
   -> [N.Header]
   -> GQLBatchedReqs GQLQueryText
   -> m (HttpResponse EncJSON)
-runGQBatched reqId userInfo reqHdrs reqs =
+runGQBatched reqId responseConfig userInfo reqHdrs reqs =
   case reqs of
     GQLSingleRequest req ->
       runGQ reqId userInfo reqHdrs req
@@ -76,10 +77,11 @@ runGQBatched reqId userInfo reqHdrs reqs =
       let removeHeaders =
             flip HttpResponse []
             . encJFromList
-            . map (either (encJFromJValue . encodeGQErr False) _hrBody)
+            . map (either (encJFromJValue . encodeGQErr responseConfig isAdminRole) _hrBody)
           try = flip catchError (pure . Left) . fmap Right
-      fmap removeHeaders $
-        traverse (try . runGQ reqId userInfo reqHdrs) batch
+      removeHeaders <$> traverse (try . runGQ reqId userInfo reqHdrs) batch
+  where
+    isAdminRole = isAdmin $ userRole userInfo
 
 runHasuraGQ
   :: ( MonadIO m

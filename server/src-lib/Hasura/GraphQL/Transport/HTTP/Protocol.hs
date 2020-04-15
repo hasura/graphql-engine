@@ -22,6 +22,7 @@ import           Hasura.EncJSON
 import           Hasura.GraphQL.Utils
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.Server.Context
 
 import           Language.GraphQL.Draft.Instances ()
 
@@ -74,14 +75,14 @@ data GQLBatchedReqs a
   = GQLSingleRequest (GQLReq a)
   | GQLBatchedReqs [GQLReq a]
   deriving (Show, Eq, Generic)
-  
+
 instance J.ToJSON a => J.ToJSON (GQLBatchedReqs a) where
   toJSON (GQLSingleRequest q) = J.toJSON q
-  toJSON (GQLBatchedReqs qs) = J.toJSON qs
+  toJSON (GQLBatchedReqs qs)  = J.toJSON qs
 
 instance J.FromJSON a => J.FromJSON (GQLBatchedReqs a) where
   parseJSON arr@J.Array{} = GQLBatchedReqs <$> J.parseJSON arr
-  parseJSON other = GQLSingleRequest <$> J.parseJSON other
+  parseJSON other         = GQLSingleRequest <$> J.parseJSON other
 
 newtype GQLQueryText
   = GQLQueryText
@@ -98,9 +99,9 @@ toParsed req = case G.parseExecutableDoc gqlText of
   where
     gqlText = _unGQLQueryText $ _grQuery req
 
-encodeGQErr :: Bool -> QErr -> J.Value
-encodeGQErr includeInternal qErr =
-  J.object [ "errors" J..= [encodeGQLErr includeInternal qErr]]
+encodeGQErr :: GraphQLResponseConfig -> Bool -> QErr -> J.Value
+encodeGQErr responseConfig isAdminRole qErr =
+  J.object [ "errors" J..= [encodeGQLErr responseConfig isAdminRole qErr]]
 
 data GQResult a
   = GQSuccess !a

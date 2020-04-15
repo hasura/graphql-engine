@@ -47,6 +47,7 @@ import           Hasura.RQL.Types.Run
 import           Hasura.Server.App
 import           Hasura.Server.Auth
 import           Hasura.Server.CheckUpdates           (checkForUpdates)
+import           Hasura.Server.Context
 import           Hasura.Server.Init
 import           Hasura.Server.Logging
 import           Hasura.Server.Query                  (requiresAdmin, runQueryM)
@@ -212,22 +213,24 @@ runHGEServer ServeOptions{..} InitCtx{..} initTime = do
 
   authMode <- either (printErrExit . T.unpack) return authModeRes
 
-  HasuraApp app cacheRef cacheInitTime shutdownApp <- mkWaiApp soTxIso
-                                                               logger
-                                                               sqlGenCtx
-                                                               soEnableAllowlist
-                                                               _icPgPool
-                                                               _icConnInfo
-                                                               _icHttpManager
-                                                               authMode
-                                                               soCorsConfig
-                                                               soEnableConsole
-                                                               soConsoleAssetsDir
-                                                               soEnableTelemetry
-                                                               _icInstanceId
-                                                               soEnabledAPIs
-                                                               soLiveQueryOpts
-                                                               soPlanCacheOptions
+  HasuraApp app cacheRef cacheInitTime shutdownApp <-
+    mkWaiApp soTxIso
+             logger
+             sqlGenCtx
+             soEnableAllowlist
+             _icPgPool
+             _icConnInfo
+             _icHttpManager
+             authMode
+             soCorsConfig
+             soEnableConsole
+             soConsoleAssetsDir
+             soEnableTelemetry
+             _icInstanceId
+             soEnabledAPIs
+             soLiveQueryOpts
+             soPlanCacheOptions
+             (GraphQLResponseConfig soDevMode soAdminInternalErrors)
 
   -- log inconsistent schema objects
   inconsObjs <- scInconsistentObjs <$> liftIO (getSCFromRef cacheRef)

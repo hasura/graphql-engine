@@ -45,15 +45,17 @@ module Hasura.RQL.Types.Error
        , indexedTraverseA_
        ) where
 
+import           Hasura.Prelude
+import           Hasura.Server.Context
+
 import           Control.Arrow.Extended
 import           Data.Aeson
 import           Data.Aeson.Internal
 import           Data.Aeson.Types
-import qualified Database.PG.Query      as Q
-import           Hasura.Prelude
 import           Text.Show              (Show (..))
 
 import qualified Data.Text              as T
+import qualified Database.PG.Query      as Q
 import qualified Network.HTTP.Types     as N
 
 data Code
@@ -171,8 +173,8 @@ noInternalQErrEnc (QErr jPath _ msg code _) =
   , "code"  .= show code
   ]
 
-encodeGQLErr :: Bool -> QErr -> Value
-encodeGQLErr includeInternal (QErr jPath _ msg code mIE) =
+encodeGQLErr :: GraphQLResponseConfig -> Bool -> QErr -> Value
+encodeGQLErr responseConfig isAdminRole (QErr jPath _ msg code mIE) =
   object
   [ "message" .= msg
   , "extensions" .= extnsObj
@@ -184,6 +186,11 @@ encodeGQLErr includeInternal (QErr jPath _ msg code mIE) =
                   , "path" .= encodeJSONPath jPath
                   ]
     internal = maybe [] (\ie -> ["internal" .= ie]) mIE
+
+    -- Include 'internal' if dev-mode is set to `true`
+    -- OR (current role is admin AND admin-internal-errors is set to `true`)
+    includeInternal = _gscDeveloperMode responseConfig
+                      || (_gscAdminInternalErrors responseConfig && isAdminRole)
 
 -- whether internal should be included or not
 encodeQErr :: Bool -> QErr -> Value

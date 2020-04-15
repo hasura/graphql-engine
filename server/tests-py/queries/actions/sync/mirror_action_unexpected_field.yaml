@@ -5,10 +5,33 @@ response:
   errors:
   - extensions:
       internal:
-        webhook_response:
-          age: 25
-          name: Alice
-          id: some-id
+        debug_info:
+          response:
+            status: 200
+            body:
+              age: 25
+              name: Alice
+              id: some-id
+            headers:
+            - value: application/json
+              name: Content-Type
+            - value: abcd
+              name: Set-Cookie
+          request:
+            body:
+              session_variables:
+                x-hasura-role: admin
+              input:
+                arg:
+                  age: 25
+                  name: Alice
+                  id: some-id
+              action:
+                name: mirror
+            url: http://127.0.0.1:5593/mirror-action
+            headers: []
+        error: 'unexpected fields in webhook response: age'
+        type: unexpected_json
       path: $
       code: unexpected
     message: 'unexpected fields in webhook response: age'

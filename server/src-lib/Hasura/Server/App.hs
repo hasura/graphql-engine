@@ -90,19 +90,20 @@ data SchemaCacheRef
 
 data ServerCtx
   = ServerCtx
-  { scPGExecCtx       :: !PGExecCtx
-  , scConnInfo        :: !Q.ConnInfo
-  , scLogger          :: !(L.Logger L.Hasura)
-  , scCacheRef        :: !SchemaCacheRef
-  , scAuthMode        :: !AuthMode
-  , scManager         :: !HTTP.Manager
-  , scSQLGenCtx       :: !SQLGenCtx
-  , scEnabledAPIs     :: !(S.HashSet API)
-  , scInstanceId      :: !InstanceId
-  , scPlanCache       :: !E.PlanCache
-  , scLQState         :: !EL.LiveQueriesState
-  , scEnableAllowlist :: !Bool
-  , scEkgStore        :: !EKG.Store
+  { scPGExecCtx             :: !PGExecCtx
+  , scConnInfo              :: !Q.ConnInfo
+  , scLogger                :: !(L.Logger L.Hasura)
+  , scCacheRef              :: !SchemaCacheRef
+  , scAuthMode              :: !AuthMode
+  , scManager               :: !HTTP.Manager
+  , scSQLGenCtx             :: !SQLGenCtx
+  , scEnabledAPIs           :: !(S.HashSet API)
+  , scInstanceId            :: !InstanceId
+  , scPlanCache             :: !E.PlanCache
+  , scLQState               :: !EL.LiveQueriesState
+  , scEnableAllowlist       :: !Bool
+  , scEkgStore              :: !EKG.Store
+  , scGraphqlResponseConfig :: !GraphQLResponseConfig
   }
 
 data HandlerCtx
@@ -212,7 +213,7 @@ class MetadataApiAuthorization m where
 mkSpockAction
   :: (HasVersion, MonadIO m, FromJSON a, ToJSON a, UserAuthentication m, HttpLog m)
   => ServerCtx
-  -> (Bool -> QErr -> Value)
+  -> (GraphQLResponseConfig -> Bool -> QErr -> Value)
   -- ^ `QErr` JSON encoder function
   -> (QErr -> QErr)
   -- ^ `QErr` modifier
@@ -257,6 +258,8 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
 
     where
       logger = scLogger serverCtx
+      responseConfig = scGraphqlResponseConfig serverCtx
+
 
       logErrorAndResp
         :: (MonadIO m, HttpLog m)
@@ -268,10 +271,10 @@ mkSpockAction serverCtx qErrEncoder qErrModifier apiHandler = do
         -> [HTTP.Header]
         -> QErr
         -> Spock.ActionCtxT ctx m a
-      logErrorAndResp userInfo reqId req reqBody includeInternal headers qErr = do
+      logErrorAndResp userInfo reqId req reqBody isAdminRole headers qErr = do
         lift $ logHttpError logger userInfo reqId req reqBody qErr headers
         Spock.setStatus $ qeStatus qErr
-        Spock.json $ qErrEncoder includeInternal qErr
+        Spock.json $ qErrEncoder responseConfig isAdminRole qErr
 
       logSuccessAndResp userInfo reqId req reqBody result qTime reqHeaders =
         case result of
@@ -314,7 +317,9 @@ v1QueryHandler query = do
       instanceId <- scInstanceId . hcServerCtx <$> ask
       runQuery pgExecCtx instanceId userInfo schemaCache httpMgr sqlGenCtx (SystemDefined False) query
 
-v1Alpha1GQHandler :: (HasVersion, MonadIO m) => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
+v1Alpha1GQHandler
+  :: (HasVersion, MonadIO m)
+  => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1Alpha1GQHandler query = do
   userInfo <- asks hcUser
   reqHeaders <- asks hcReqHeaders
@@ -327,14 +332,14 @@ v1Alpha1GQHandler query = do
   enableAL  <- scEnableAllowlist . hcServerCtx <$> ask
   logger    <- scLogger . hcServerCtx <$> ask
   requestId <- asks hcRequestId
+  responseConfig <- scGraphqlResponseConfig . hcServerCtx <$> ask
   let execCtx = E.ExecutionCtx logger sqlGenCtx pgExecCtx planCache
                 (lastBuiltSchemaCache sc) scVer manager enableAL
-  flip runReaderT execCtx $ GH.runGQBatched requestId userInfo reqHeaders query
+  flip runReaderT execCtx $ GH.runGQBatched requestId responseConfig userInfo reqHeaders query
 
 v1GQHandler
   :: (HasVersion, MonadIO m)
-  => GH.GQLBatchedReqs GH.GQLQueryText
-  -> Handler m (HttpResponse EncJSON)
+  => GH.GQLBatchedReqs GH.GQLQueryText -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
 
 gqlExplainHandler :: (HasVersion, MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
@@ -466,9 +471,10 @@ mkWaiApp
   -> S.HashSet API
   -> EL.LiveQueriesOptions
   -> E.PlanCacheOptions
+  -> GraphQLResponseConfig
   -> m HasuraApp
 mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg enableConsole consoleAssetsDir
-         enableTelemetry instanceId apis lqOpts planCacheOptions = do
+         enableTelemetry instanceId apis lqOpts planCacheOptions responseConfig = do
 
     (planCache, schemaCacheRef, cacheBuiltTime) <- migrateAndInitialiseSchemaCache
     let getSchemaCache = first lastBuiltSchemaCache <$> readIORef (_scrCache schemaCacheRef)
@@ -495,6 +501,7 @@ mkWaiApp isoLevel logger sqlGenCtx enableAL pool ci httpManager mode corsCfg ena
                     , scLQState         =  lqState
                     , scEnableAllowlist =  enableAL
                     , scEkgStore        =  ekgStore
+                    , scGraphqlResponseConfig = responseConfig
                     }
 
     when (isDeveloperAPIEnabled serverCtx) $ do
@@ -577,20 +584,20 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
       Spock.post "v1alpha1/graphql/explain" gqlExplainAction
 
-      Spock.post "v1/query" $ spockAction encodeQErr id $
+      Spock.post "v1/query" $ spockAction encodeQErr' id $
         mkPostHandler $ mkAPIRespHandler v1QueryHandler
 
       Spock.post ("api/1/table" <//> Spock.var <//> Spock.var) $ \tableName queryType ->
-        mkSpockAction serverCtx encodeQErr id $ mkPostHandler $
+        mkSpockAction serverCtx (const encodeQErr) id $ mkPostHandler $
           mkAPIRespHandler $ legacyQueryHandler (TableName tableName) queryType
 
     when enablePGDump $
 
-      Spock.post "v1alpha1/pg_dump" $ spockAction encodeQErr id $
+      Spock.post "v1alpha1/pg_dump" $ spockAction encodeQErr' id $
         mkPostHandler v1Alpha1PGDumpHandler
 
     when enableConfig $
-      Spock.get "v1alpha1/config" $ spockAction encodeQErr id $
+      Spock.get "v1alpha1/config" $ spockAction encodeQErr' id $
         mkGetHandler $ do
           onlyAdmin
           let res = encJFromJValue $ runGetConfig
@@ -608,22 +615,22 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         mkPostHandler $ mkAPIRespHandler v1GQHandler
 
     when (isDeveloperAPIEnabled serverCtx) $ do
-      Spock.get "dev/ekg" $ spockAction encodeQErr id $
+      Spock.get "dev/ekg" $ spockAction encodeQErr' id $
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ EKG.sampleAll $ scEkgStore serverCtx
           return $ JSONResp $ HttpResponse (encJFromJValue $ EKG.sampleToJson respJ) []
-      Spock.get "dev/plan_cache" $ spockAction encodeQErr id $
+      Spock.get "dev/plan_cache" $ spockAction encodeQErr' id $
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ E.dumpPlanCache $ scPlanCache serverCtx
           return $ JSONResp $ HttpResponse (encJFromJValue respJ) []
-      Spock.get "dev/subscriptions" $ spockAction encodeQErr id $
+      Spock.get "dev/subscriptions" $ spockAction encodeQErr' id $
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ EL.dumpLiveQueriesState False $ scLQState serverCtx
           return $ JSONResp $ HttpResponse (encJFromJValue respJ) []
-      Spock.get "dev/subscriptions/extended" $ spockAction encodeQErr id $
+      Spock.get "dev/subscriptions/extended" $ spockAction encodeQErr' id $
         mkGetHandler $ do
           onlyAdmin
           respJ <- liftIO $ EL.dumpLiveQueriesState True $ scLQState serverCtx
@@ -637,10 +644,12 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
 
   where
     logger = scLogger serverCtx
+    encodeQErr' _ = encodeQErr
 
     spockAction
       :: (FromJSON a, ToJSON a, MonadIO m, UserAuthentication m, HttpLog m)
-      => (Bool -> QErr -> Value) -> (QErr -> QErr) -> APIHandler m a -> Spock.ActionT m ()
+      => (GraphQLResponseConfig -> Bool -> QErr -> Value)
+      -> (QErr -> QErr) -> APIHandler m a -> Spock.ActionT m ()
     spockAction = mkSpockAction serverCtx
 
 
@@ -648,7 +657,7 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
     allMod200 qe = qe { qeStatus = HTTP.status200 }
 
     gqlExplainAction =
-      spockAction encodeQErr id $ mkPostHandler $
+      spockAction (const encodeQErr) id $ mkPostHandler $
         mkAPIRespHandler gqlExplainHandler
 
     enableGraphQL = isGraphQLEnabled serverCtx

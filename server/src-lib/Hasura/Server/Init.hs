@@ -76,50 +76,54 @@ type RawAuthHook = AuthHookG (Maybe T.Text) (Maybe AuthHookType)
 
 data RawServeOptions impl
   = RawServeOptions
-  { rsoPort             :: !(Maybe Int)
-  , rsoHost             :: !(Maybe HostPreference)
-  , rsoConnParams       :: !RawConnParams
-  , rsoTxIso            :: !(Maybe Q.TxIsolation)
-  , rsoAdminSecret      :: !(Maybe AdminSecret)
-  , rsoAuthHook         :: !RawAuthHook
-  , rsoJwtSecret        :: !(Maybe JWTConfig)
-  , rsoUnAuthRole       :: !(Maybe RoleName)
-  , rsoCorsConfig       :: !(Maybe CorsConfig)
-  , rsoEnableConsole    :: !Bool
-  , rsoConsoleAssetsDir :: !(Maybe Text)
-  , rsoEnableTelemetry  :: !(Maybe Bool)
-  , rsoWsReadCookie     :: !Bool
-  , rsoStringifyNum     :: !Bool
-  , rsoEnabledAPIs      :: !(Maybe [API])
-  , rsoMxRefetchInt     :: !(Maybe LQ.RefetchInterval)
-  , rsoMxBatchSize      :: !(Maybe LQ.BatchSize)
-  , rsoEnableAllowlist  :: !Bool
-  , rsoEnabledLogTypes  :: !(Maybe [L.EngineLogType impl])
-  , rsoLogLevel         :: !(Maybe L.LogLevel)
-  , rsoPlanCacheSize    :: !(Maybe Cache.CacheSize)
+  { rsoPort                :: !(Maybe Int)
+  , rsoHost                :: !(Maybe HostPreference)
+  , rsoConnParams          :: !RawConnParams
+  , rsoTxIso               :: !(Maybe Q.TxIsolation)
+  , rsoAdminSecret         :: !(Maybe AdminSecret)
+  , rsoAuthHook            :: !RawAuthHook
+  , rsoJwtSecret           :: !(Maybe JWTConfig)
+  , rsoUnAuthRole          :: !(Maybe RoleName)
+  , rsoCorsConfig          :: !(Maybe CorsConfig)
+  , rsoEnableConsole       :: !Bool
+  , rsoConsoleAssetsDir    :: !(Maybe Text)
+  , rsoEnableTelemetry     :: !(Maybe Bool)
+  , rsoWsReadCookie        :: !Bool
+  , rsoStringifyNum        :: !Bool
+  , rsoEnabledAPIs         :: !(Maybe [API])
+  , rsoMxRefetchInt        :: !(Maybe LQ.RefetchInterval)
+  , rsoMxBatchSize         :: !(Maybe LQ.BatchSize)
+  , rsoEnableAllowlist     :: !Bool
+  , rsoEnabledLogTypes     :: !(Maybe [L.EngineLogType impl])
+  , rsoLogLevel            :: !(Maybe L.LogLevel)
+  , rsoPlanCacheSize       :: !(Maybe Cache.CacheSize)
+  , rsoDevMode             :: !Bool
+  , rsoAdminInternalErrors :: !Bool
   }
 
 data ServeOptions impl
   = ServeOptions
-  { soPort             :: !Int
-  , soHost             :: !HostPreference
-  , soConnParams       :: !Q.ConnParams
-  , soTxIso            :: !Q.TxIsolation
-  , soAdminSecret      :: !(Maybe AdminSecret)
-  , soAuthHook         :: !(Maybe AuthHook)
-  , soJwtSecret        :: !(Maybe JWTConfig)
-  , soUnAuthRole       :: !(Maybe RoleName)
-  , soCorsConfig       :: !CorsConfig
-  , soEnableConsole    :: !Bool
-  , soConsoleAssetsDir :: !(Maybe Text)
-  , soEnableTelemetry  :: !Bool
-  , soStringifyNum     :: !Bool
-  , soEnabledAPIs      :: !(Set.HashSet API)
-  , soLiveQueryOpts    :: !LQ.LiveQueriesOptions
-  , soEnableAllowlist  :: !Bool
-  , soEnabledLogTypes  :: !(Set.HashSet (L.EngineLogType impl))
-  , soLogLevel         :: !L.LogLevel
-  , soPlanCacheOptions :: !E.PlanCacheOptions
+  { soPort                :: !Int
+  , soHost                :: !HostPreference
+  , soConnParams          :: !Q.ConnParams
+  , soTxIso               :: !Q.TxIsolation
+  , soAdminSecret         :: !(Maybe AdminSecret)
+  , soAuthHook            :: !(Maybe AuthHook)
+  , soJwtSecret           :: !(Maybe JWTConfig)
+  , soUnAuthRole          :: !(Maybe RoleName)
+  , soCorsConfig          :: !CorsConfig
+  , soEnableConsole       :: !Bool
+  , soConsoleAssetsDir    :: !(Maybe Text)
+  , soEnableTelemetry     :: !Bool
+  , soStringifyNum        :: !Bool
+  , soEnabledAPIs         :: !(Set.HashSet API)
+  , soLiveQueryOpts       :: !LQ.LiveQueriesOptions
+  , soEnableAllowlist     :: !Bool
+  , soEnabledLogTypes     :: !(Set.HashSet (L.EngineLogType impl))
+  , soLogLevel            :: !L.LogLevel
+  , soPlanCacheOptions    :: !E.PlanCacheOptions
+  , soDevMode             :: !Bool
+  , soAdminInternalErrors :: !Bool
   }
 
 data DowngradeOptions
@@ -345,10 +349,14 @@ mkServeOptions rso = do
                  withEnv (rsoEnabledLogTypes rso) (fst enabledLogsEnv)
   serverLogLevel <- fromMaybe L.LevelInfo <$> withEnv (rsoLogLevel rso) (fst logLevelEnv)
   planCacheOptions <- E.mkPlanCacheOptions <$> withEnv (rsoPlanCacheSize rso) (fst planCacheSizeEnv)
+  devMode <- withEnvBool (rsoDevMode rso) $ fst devModeEnv
+  graphqlAdminInternalErrors <- withEnvBool (rsoAdminInternalErrors rso) $
+                                fst adminInternalErrorsEnv
   return $ ServeOptions port host connParams txIso adminScrt authHook jwtSecret
                         unAuthRole corsCfg enableConsole consoleAssetsDir
                         enableTelemetry strfyNum enabledAPIs lqOpts enableAL
                         enabledLogs serverLogLevel planCacheOptions
+                        devMode graphqlAdminInternalErrors
   where
 #ifdef DeveloperAPIs
     defaultAPIs = [METADATA,GRAPHQL,PGDUMP,CONFIG,DEVELOPER]
@@ -483,7 +491,8 @@ serveCmdFooter =
       , adminSecretEnv , accessKeyEnv, authHookEnv, authHookModeEnv
       , jwtSecretEnv, unAuthRoleEnv, corsDomainEnv, corsDisableEnv, enableConsoleEnv
       , enableTelemetryEnv, wsReadCookieEnv, stringifyNumEnv, enabledAPIsEnv
-      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv
+      , enableAllowlistEnv, enabledLogsEnv, logLevelEnv, devModeEnv
+      , adminInternalErrorsEnv
       ]
 
     eventEnvs =
@@ -491,7 +500,7 @@ serveCmdFooter =
         , "Max event threads"
         )
       , ( "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL"
-        , "Interval in milliseconds to sleep before trying to fetch events again after a " 
+        , "Interval in milliseconds to sleep before trying to fetch events again after a "
           <> "fetch returned no events from postgres."
         )
       ]
@@ -651,6 +660,18 @@ logLevelEnv :: (String, String)
 logLevelEnv =
   ( "HASURA_GRAPHQL_LOG_LEVEL"
   , "Server log level (default: info) (all: error, warn, info, debug)"
+  )
+
+devModeEnv :: (String, String)
+devModeEnv =
+  ( "HASURA_GRAPHQL_DEV_MODE"
+  , "Set dev mode for GraphQL requests; include 'internal' key in errors extensions (if required)"
+  )
+
+adminInternalErrorsEnv :: (String, String)
+adminInternalErrorsEnv =
+  ( "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS"
+  , "Include 'internal' key in errors extensions (if required) for GraphQL requests with 'admin' role"
   )
 
 parseRawConnInfo :: Parser RawConnInfo
@@ -944,6 +965,18 @@ parseEnableAllowlist =
            help (snd enableAllowlistEnv)
          )
 
+parseGraphqlDevMode :: Parser Bool
+parseGraphqlDevMode =
+  switch ( long "dev-mode" <>
+           help (snd devModeEnv)
+         )
+
+parseGraphqlAdminInternalErrors :: Parser Bool
+parseGraphqlAdminInternalErrors =
+  switch ( long "admin-internal-errors" <>
+           help (snd adminInternalErrorsEnv)
+         )
+
 mxRefetchDelayEnv :: (String, String)
 mxRefetchDelayEnv =
   ( "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL"
@@ -1086,21 +1119,23 @@ serveOptionsParser =
   <*> parseEnabledLogs
   <*> parseLogLevel
   <*> parsePlanCacheSize
+  <*> parseGraphqlDevMode
+  <*> parseGraphqlAdminInternalErrors
 
 -- | This implements the mapping between application versions
 -- and catalog schema versions.
 downgradeShortcuts :: [(String, String)]
-downgradeShortcuts = 
+downgradeShortcuts =
   $(do let s = $(embedStringFile "src-rsr/catalog_versions.txt")
-          
+
            parseVersions = map (parseVersion . words) . lines
-     
+
            parseVersion [tag, version] = (tag, version)
-           parseVersion other = error ("unrecognized tag/catalog mapping " ++ show other)
-       TH.lift (parseVersions s))     
+           parseVersion other          = error ("unrecognized tag/catalog mapping " ++ show other)
+       TH.lift (parseVersions s))
 
 downgradeOptionsParser :: Parser DowngradeOptions
-downgradeOptionsParser = 
+downgradeOptionsParser =
     DowngradeOptions
     <$> choice
         (strOption
@@ -1115,7 +1150,7 @@ downgradeOptionsParser =
           help "Don't run any migrations, just print out the SQL."
         )
   where
-    shortcut v catalogVersion = 
+    shortcut v catalogVersion =
       flag' (DataString.fromString catalogVersion)
         ( long ("to-" <> v) <>
           help ("Downgrade to graphql-engine version " <> v <> " (equivalent to --to-catalog-version " <> catalogVersion <> ")")

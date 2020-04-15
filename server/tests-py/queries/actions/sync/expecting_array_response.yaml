@@ -35,14 +35,34 @@
 
   response:
     errors:
-      - extensions:
-          internal:
-            webhook_response:
-              id: 1
-          path: $
-          code: unexpected
-        message: expecting array for action webhook response but got object
-
+    - extensions:
+        internal:
+          debug_info:
+            response:
+              status: 200
+              body:
+                id: 1
+              headers:
+              - value: application/json
+                name: Content-Type
+              - value: abcd
+                name: Set-Cookie
+            request:
+              body:
+                session_variables:
+                  x-hasura-role: admin
+                input:
+                  email: clarke@gmail.com
+                  name: Clarke
+                action:
+                  name: create_users
+              url: http://127.0.0.1:5593/create-user
+              headers: []
+          error: expecting array for action webhook response but got object
+          type: unexpected_json
+        path: $
+        code: unexpected
+      message: expecting array for action webhook response but got object
 - description: Revert action definition
   url: /v1/query
   status: 200

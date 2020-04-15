@@ -1,4 +1,5 @@
-- description: Update actions webhook to another route which retuns non-object/array response
+- description: Update actions webhook to another route which retuns non-object/array
+    response
   url: /v1/query
   status: 200
   response:
@@ -35,13 +36,33 @@
 
   response:
     errors:
-      - extensions:
-          internal:
-            webhook_response: some-string
-          path: $
-          code: parse-failed
-        message: expecting object or array of objects for action webhook response
-
+    - extensions:
+        internal:
+          debug_info:
+            response:
+              status: 200
+              body: some-string
+              headers:
+              - value: application/json
+                name: Content-Type
+              - value: abcd
+                name: Set-Cookie
+            request:
+              body:
+                session_variables:
+                  x-hasura-role: admin
+                input:
+                  email: clarke@gmail.com
+                  name: Clarke
+                action:
+                  name: create_user
+              url: http://127.0.0.1:5593/invalid-response
+              headers: []
+          error: expecting object or array of objects for action webhook response
+          type: unexpected_json
+        path: $
+        code: parse-failed
+      message: expecting object or array of objects for action webhook response
 - description: Revert action wehbook
   url: /v1/query
   status: 200
