@@ -1,46 +1,31 @@
 {-|
 = Event Triggers
 
-This module implements the functionality of Event Triggers. Event triggers work
-in the following manner:
+Event triggers are like ordinary SQL triggers, except instead of calling a SQL
+procedure, they call a webhook. The event delivery mechanism involves coordination
+between both the database and graphql-engine: only the SQL database knows
+when the events should fire, but only graphql-engine know how to actually
+deliver them.
 
-- When a new event trigger is created (check @server\/src-rsr\/trigger.sql.shakespeare@),
+Therefore, event triggers are implemented in two parts:
 
-    1. A function is created in postgres with the name of
-       @hdb_view.\<trigger_name\>@ which handles the trigger logic. This function
-       will insert a new event row in the @hdb_catalog.event_log@ table with
-       appropriate data.
+1. Every event trigger is backed by a bona fide SQL trigger. When the SQL trigger
+   fires, it creates a new record in the hdb_catalog.event_log table.
 
-    2. a new db trigger is created its procedure as the function discussed above.
+2. Concurrently, a thread in graphql-engine monitors the hdb_catalog.event_log
+   table for new events. When new event(s) are found, it uses the information
+   (URL,payload and headers) stored in the event to deliver the event
+   to the webhook.
 
-    So, whenever there's a mutation on which there's an event trigger, a new
-    event-log will be created.
+The creation and deletion of SQL trigger itself is managed by the metadata DDL
+APIs (see Hasura.RQL.DDL.EventTrigger), so this module focuses on event delivery.
 
-- During startup, a thread is created which handles the processing of events (Processor)
+Most of the subtleties involve guaranteeing reliable delivery of events:
+we guarantee that every event will be delivered at least once,
+even if graphql-engine crashes. This means we have to record the state
+of each event in the database, and we have to retry
+failed requests at a regular (user-configurable) interval.
 
-    - The processor will get events(max 100 events) that have not yet been
-      delivered from the DB.
-    - If no events were fetched from the DB, then the thread will sleep. The
-      sleep interval can be configured via
-      @HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL@ (default 1000ms)
-    - If events were found, the fetched events are processed asynchronously, the
-      HTTP pool size is configurable via the @HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE@
-      ENV variable (default is set to 100).
-
-- Post calling the webhook:
-
-    - If an event is processed successfully i.e the HTTP status is between (200
-      and 300) then the it's marked as delivered
-
-    - If there was an error while processing the event,
-
-        - If there is a retry configuration set, then the event will be retried
-          for as many times/until processed successfully.
-        - If the retries have exhausted, then the event trigger's error status
-          will be marked as true.
-        - The next retry time can be configured using the @Retry-After@ header,
-          then the event will be redelivered once more after the duration (in
-          seconds) found in the header
 -}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE StrictData      #-}
@@ -160,6 +145,52 @@ initEventEngineCtx maxT _eeCtxFetchInterval = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
   return $ EventEngineCtx{..}
 
+{- Note [Event Triggers working mechanism]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Event triggers work in the following manner:
+
+- When a new event trigger is created (check @server\/src-rsr\/trigger.sql.shakespeare@),
+
+    1. An SQL function is created in the DB with the name of
+       @hdb_view.\<trigger_name\>@ which handles the trigger logic. This function
+       will insert a new event row in the @hdb_catalog.event_log@ table with
+       appropriate data.
+
+    2. A new SQL DB trigger is created its procedure as the function discussed above.
+
+    So, whenever there's a mutation on which there's an event trigger, a new
+    event-log will be created. The event log will have the URL, headers, payload
+    and the retry_conf required to make an HTTP POST call to the webhook.
+
+- During startup, a thread is created which handles the processing of events (Processor)
+
+    - The processor will fetch events(max 100 events) that have not yet been
+      delivered from the DB.
+    - If no events were fetched from the DB, then the thread will sleep. The
+      sleep interval can be configured via
+      @HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL@ (default 1000ms)
+    - If events were found, it dispatches a worker thread to asynchronously
+      call the webhook.
+      the fetched events are processed asynchronously, the
+      HTTP pool size is configurable via the @HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE@
+      ENV variable (default is set to 100).
+
+- Post calling the webhook:
+
+    - If an event is processed successfully i.e the HTTP status is between (200
+      and 300) then the it's marked as delivered
+
+    - If there was an error while processing the event,
+
+        - If there is a retry configuration set, then the event will be retried
+          for as many times/until processed successfully.
+        - If the retries have exhausted, then the event trigger's error status
+          will be marked as true.
+        - The next retry time can be configured using the @Retry-After@ header,
+          then the event will be redelivered once more after the duration (in
+          seconds) found in the header
+-}
+
 -- | Service events from our in-DB queue.
 --
 -- There are a few competing concerns and constraints here; we want to...
@@ -169,6 +200,7 @@ initEventEngineCtx maxT _eeCtxFetchInterval = do
 --     on exit (TODO clean shutdown procedure))
 --   - try not to cause webhook workers to stall waiting on DB fetch
 --   - limit webhook HTTP concurrency per HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE
+-- see Note [Event Triggers working mechanism]
 processEventQueue
   :: (HasVersion) => L.Logger L.Hasura -> LogEnvHeaders -> HTTP.Manager-> Q.PGPool
   -> IO SchemaCache -> EventEngineCtx
@@ -271,7 +303,6 @@ decrementThreadCount (EventEngineCtx c _) = liftIO $ atomically $ do
   if countThreads > 0
      then modifyTVar' c (\v -> v - 1)
      else retry
-
 
 createEventPayload :: RetryConf -> Event ->  EventPayload
 createEventPayload retryConf e = EventPayload
