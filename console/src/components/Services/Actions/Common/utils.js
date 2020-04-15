@@ -31,6 +31,7 @@ export const generateActionDefinition = ({
   outputType,
   kind = 'synchronous',
   handler,
+  actionType,
   headers,
   forwardClientHeaders,
 }) => {
@@ -39,6 +40,7 @@ export const generateActionDefinition = ({
     kind,
     output_type: outputType,
     handler,
+    type: actionType,
     headers: transformHeaders(headers),
     forward_client_headers: forwardClientHeaders,
   };
@@ -290,3 +292,4 @@ export const getOverlappingTypeConfirmation = (
 
   return isOk;
 };
+

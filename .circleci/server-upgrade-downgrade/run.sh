@@ -110,27 +110,42 @@ cur_server_version(){
 log "Run pytests with server upgrade"
 
 WORKTREE_DIR="$(mktemp -d)"
+RELEASE_PYTEST_DIR="${WORKTREE_DIR}/server/tests-py"
+RELEASE_VERSION="$( $LATEST_SERVER_BINARY version | cut -d':' -f2 | awk '{print $1}' )"
 rm_worktree(){
 	rm -rf "$WORKTREE_DIR"
 }
 trap rm_worktree ERR
 
 make_latest_release_worktree() {
-	version="$( $LATEST_SERVER_BINARY version | cut -d':' -f2 | awk '{print $1}' )"
-	git worktree add --detach "$WORKTREE_DIR" "$version"
+	git worktree add --detach "$WORKTREE_DIR" "$RELEASE_VERSION"
 }
 
-cleanup_hasura_metadata() {
-	set -x
-	psql "$HASURA_GRAPHQL_DATABASE_URL" -c 'drop schema if exists hdb_catalog cascade;
-		drop schema if exists hdb_views cascade' >/dev/null 2>/dev/null
-	set +x
+cleanup_hasura_metadata_if_present() {
+       set -x
+       psql "$HASURA_GRAPHQL_DATABASE_URL" -c 'drop schema if exists hdb_catalog cascade;
+               drop schema if exists hdb_views cascade' >/dev/null 2>/dev/null
+       set +x
 }
 
+get_tables_of_interest() {
+	psql $HASURA_GRAPHQL_DATABASE_URL -P pager=off -c "
+select table_schema as schema, table_name as name
+from information_schema.tables
+where table_schema not in ('hdb_catalog','hdb_views', 'pg_catalog', 'information_schema','topology', 'tiger')
+  and (table_schema <> 'public'
+         or table_name not in ('geography_columns','geometry_columns','spatial_ref_sys','raster_columns','raster_overviews')
+      );
+"
+}
+
+get_current_catalog_version() {
+	psql $HASURA_GRAPHQL_DATABASE_URL -P pager=off -c "SELECT version FROM hdb_catalog.hdb_version"
+}
 
 args=("$@")
 get_server_upgrade_tests() {
-	cd $PYTEST_DIR
+	cd $RELEASE_PYTEST_DIR
 	tmpfile="$(mktemp --dry-run)"
 	set -x
 	python3 -m pytest -q --collect-only --collect-upgrade-tests-to-file "$tmpfile" -m 'allow_server_upgrade_test and not skip_server_upgrade_test' "${args[@]}" 1>/dev/null 2>/dev/null
@@ -140,107 +155,143 @@ get_server_upgrade_tests() {
 	rm "$tmpfile"
 }
 
-# TODO: Fix me
-# The right way to run the server-upgrade tests is get the worktree of the latest release, and run the pytests in it.
-# This will not work for us for this release cycle (Since the old pytest do not have the options needed to run server-upgrade tests)
-# So for now we are running pytests in the current build, but filtering out only the the tests which are also present in the previous release
-# From the next release onwards, we should run tests corresponding to the latest release (and not pytests in the current build)
 run_server_upgrade_pytest() {
-	local RELEASE_PYTEST_DIR="${WORKTREE_DIR}/server/tests-py"
-	local HGE_URL="http://localhost:${HASURA_GRAPHQL_SERVER_PORT}"
-	collect_common_tests() {
-		cd "$RELEASE_PYTEST_DIR"
-		set -x
-		pytest --hge-urls "${HGE_URL}"  --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --collect-only -q  "$1" 2>/dev/null | grep '::'
-		cd - > /dev/null
-	}
-
-	[ -n "$1" ] || ( echo "Got no test as input" && false )
-
-	local tests_to_run="$(collect_common_tests $1)"
-	[ -z "$tests_to_run" ] && log "could not collect any tests for $1" && return
-
-	log "Removing schemas with hasura metadata"
-	# This is required since we do not have a dowgrade command, yet.
-	cleanup_hasura_metadata
-
-	# Start the old GraphQL Engine
-	log "starting latest graphql engine release"
-	$LATEST_SERVER_BINARY serve > $LATEST_SERVER_LOG 2>&1 &
-	HGE_PID=$!
+	HGE_PID=""
 	cleanup_hge(){
 		kill $HGE_PID || true
 		wait $HGE_PID || true
-		cleanup_hasura_metadata || true
+		# cleanup_hasura_metadata_if_present
 		rm_worktree
 	}
 	trap cleanup_hge ERR
+	local HGE_URL="http://localhost:${HASURA_GRAPHQL_SERVER_PORT}"
+	local tests_to_run="$1"
+
+	[ -n "$tests_to_run" ] || ( echo "Got no test as input" && false )
+
+	run_pytest(){
+		cd $RELEASE_PYTEST_DIR
+		set -x
+
+		# With --avoid-error-message-checks, we are only going to throw warnings if the error message has changed between releases
+		pytest --hge-urls "${HGE_URL}"  --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" \
+			--avoid-error-message-checks "$@" \
+			-m 'allow_server_upgrade_test and not skip_server_upgrade_test' -v $tests_to_run
+		set +x
+		cd -
+	}
+
+	############## Tests for latest release GraphQL engine #########################
+
+	# Start the old (latest release) GraphQL Engine
+	log "starting latest graphql engine release"
+	$LATEST_SERVER_BINARY serve > $LATEST_SERVER_LOG 2>&1 &
+	HGE_PID=$!
+
 
 	# Wait for server start
 	wait_for_port $HASURA_GRAPHQL_SERVER_PORT $HGE_PID $LATEST_SERVER_LOG
 
+	log "Catalog version for $(cur_server_version)"
+	get_current_catalog_version
+
 	log "Run pytest for latest graphql-engine release $(cur_server_version) while skipping schema teardown"
-	cd $PYTEST_DIR
-	set -x
-	# We are only going to throw warnings if the error message has changed between releases
-	pytest --hge-urls "${HGE_URL}"  --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --skip-schema-teardown --avoid-error-message-checks -m 'allow_server_upgrade_test and not skip_server_upgrade_test' -v $tests_to_run
-	set +x
-	cd -
+	run_pytest --skip-schema-teardown
 
 	log "kill the api server $(cur_server_version)"
 	kill $HGE_PID || true
 	wait $HGE_PID || true
 
 	log "the tables of interest in the database are: "
-	psql $HASURA_GRAPHQL_DATABASE_URL -P pager=off -c "
-select table_schema as schema, table_name as name
-from information_schema.tables
-where table_schema not in ('hdb_catalog','hdb_views', 'pg_catalog', 'information_schema','topology', 'tiger')
-  and (table_schema <> 'public'
-         or table_name not in ('geography_columns','geometry_columns','spatial_ref_sys','raster_columns','raster_overviews')
-      );
-"
+	get_tables_of_interest
+
+	############## Tests for the current build GraphQL engine #########################
 
 	if [[ "$1" =~ "test_schema_stitching" ]] ; then
-		# Hasura metadata would have GraphQL servers defined as remote.
-		# In such a case we need to have remote GraphQL server running
-		# for the graphql-engine to start
-		cd $PYTEST_DIR
+		# In this case, Hasura metadata will have GraphQL servers defined as remote.
+		# We need to have remote GraphQL server running for the graphql-engine to avoid
+		# inconsistent metadata error
+		cd $RELEASE_PYTEST_DIR
 		python3 graphql_server.py & REMOTE_GQL_PID=$!
 		wait_for_port 5000
 		cd -
 	fi
 
 	log "start the current build"
+	set -x
+	rm -f graphql-engine.tix
 	$SERVER_BINARY serve > $CURRENT_SERVER_LOG 2>&1 &
 	HGE_PID=$!
+	set +x
 
 	# Wait for server start
 	wait_for_port $HASURA_GRAPHQL_SERVER_PORT $HGE_PID $CURRENT_SERVER_LOG
+
+	log "Catalog version for $(cur_server_version)"
+	get_current_catalog_version
 
 	if [[ "$1" =~ "test_schema_stitching" ]] ; then
 		kill $REMOTE_GQL_PID || true
 		wait $REMOTE_GQL_PID || true
 	fi
 
-	log "Run pytest for the current build $(cur_server_version) while skipping schema setup "
-	cd $PYTEST_DIR
-	set -x
-	pytest -vv --hge-urls "$HGE_URL"  --pg-urls "$HASURA_GRAPHQL_DATABASE_URL" --skip-schema-setup -v $tests_to_run
-	set +x
-	cd -
+	log "Run pytest for the current build $(cur_server_version) without modifying schema"
+	run_pytest --skip-schema-setup --skip-schema-teardown
 
 	log "kill the api server $(cur_server_version)"
 	kill $HGE_PID || true
 	wait $HGE_PID || true
+
+
+	#################### Downgrade to release version ##########################
+
+	log "Downgrade graphql-engine to $RELEASE_VERSION"
+	$SERVER_BINARY downgrade "--to-$RELEASE_VERSION"
+
+
+	############## Tests for latest release GraphQL engine once more after downgrade #########################
+
+	if [[ "$1" =~ "test_schema_stitching" ]] ; then
+		cd $RELEASE_PYTEST_DIR
+		python3 graphql_server.py & REMOTE_GQL_PID=$!
+		wait_for_port 5000
+		cd -
+	fi
+
+	# Start the old (latest release) GraphQL Engine
+	log "starting latest graphql engine release"
+	$LATEST_SERVER_BINARY serve > $LATEST_SERVER_LOG 2>&1 &
+	HGE_PID=$!
+
+	# Wait for server start
+	wait_for_port $HASURA_GRAPHQL_SERVER_PORT $HGE_PID $LATEST_SERVER_LOG
+
+	log "Catalog version for $(cur_server_version)"
+	get_current_catalog_version
+
+	if [[ "$1" =~ "test_schema_stitching" ]] ; then
+		kill $REMOTE_GQL_PID || true
+		wait $REMOTE_GQL_PID || true
+	fi
+
+	log "Run pytest for latest graphql-engine release $(cur_server_version) (once more) while skipping schema setup"
+	run_pytest --skip-schema-setup
+
+	log "kill the api server $(cur_server_version)"
+	kill $HGE_PID || true
+	wait $HGE_PID || true
+
 }
 
 make_latest_release_worktree
+
+cleanup_hasura_metadata_if_present
 
 for pytest in $(get_server_upgrade_tests) ; do
 	log "Running pytest $pytest"
 	run_server_upgrade_pytest "$pytest"
 done
-cleanup_hasura_metadata
+
+cleanup_hasura_metadata_if_present
 
 exit 0

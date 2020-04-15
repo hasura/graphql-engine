@@ -26,6 +26,10 @@ export const getActionArguments = action => {
   return action.action_defn.arguments;
 };
 
+export const getActionType = action => {
+  return action.action_defn.type
+};
+
 export const getAllActions = getState => {
   return getState().actions.common.actions;
 };

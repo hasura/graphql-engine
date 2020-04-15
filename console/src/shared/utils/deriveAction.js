@@ -9,7 +9,12 @@ import {
 } from 'graphql';
 import { wrapTypename, getAstTypeMetadata } from './wrappingTypeUtils';
 import { inbuiltTypes } from './hasuraCustomTypeUtils';
-import { getTypeFields, getUnderlyingType } from './graphqlSchemaUtils';
+import {
+  getTypeFields,
+  getUnderlyingType,
+  getOperationType,
+} from './graphqlSchemaUtils';
+import { isValidOperationName } from './sdlUtils';
 
 export const validateOperation = (operationString, clientSchema) => {
   // parse operation string
@@ -27,16 +32,16 @@ export const validateOperation = (operationString, clientSchema) => {
     );
   }
 
-  if (operationAst.definitions.find(d => d.kind === 'FragmentDefinition')) {
+  if (operationAst.definitions.some(d => d.kind === 'FragmentDefinition')) {
     throw Error('fragments are not supported');
   }
 
-  if (operationAst.definitions.find(d => d.operation !== 'mutation')) {
-    throw Error('queries cannot be derived into actions');
+  if (operationAst.definitions.some(d => !isValidOperationName(d.operation))) {
+    throw Error('subscriptions cannot be derived into actions');
   }
 
-  operationAst.definitions = operationAst.definitions.filter(
-    d => d.operation === 'mutation'
+  operationAst.definitions = operationAst.definitions.filter(d =>
+    isValidOperationName(d.operation)
   );
 
   // throw error if the AST is empty
@@ -88,6 +93,8 @@ const deriveAction = (
     throw e;
   }
 
+  const operation = operationAst.definitions[0].operation;
+
   const variables = operationAst.definitions[0].variableDefinitions;
 
   // get operation name
@@ -108,7 +115,7 @@ const deriveAction = (
   };
 
   const allHasuraTypes = clientSchema._typeMap;
-  const operationType = clientSchema._mutationType; // TODO better handling for queries
+  const operationType = getOperationType(clientSchema, operation);
 
   const isHasuraScalar = name => {
     return isScalarType(allHasuraTypes[name]);
@@ -233,6 +240,7 @@ const deriveAction = (
     types: Object.values(newTypes),
     action: {
       name: actionName,
+      type: operation,
       arguments: actionArguments,
       output_type: actionOutputTypename,
     },
