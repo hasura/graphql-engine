@@ -259,10 +259,7 @@ queryModifiesSchemaCache (RQV1 qi) = case qi of
   RQAddCollectionToAllowlist _    -> True
   RQDropCollectionFromAllowlist _ -> True
 
-  RQRunSql RunSQL{ .. }  ->
-    case rTxAccessMode of
-      Q.ReadOnly  -> False
-      Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
+  RQRunSql q                      -> isSchemaCacheBuildRequiredRunSQL q
 
   RQReplaceMetadata _             -> True
   RQExportMetadata _              -> False

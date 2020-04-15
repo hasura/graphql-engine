@@ -32,7 +32,7 @@ module Hasura.RQL.DDL.Schema
 
  , RunSQL(..)
  , runRunSQL
- , containsDDLKeyword
+ , isSchemaCacheBuildRequiredRunSQL
  ) where
 
 import           Hasura.Prelude
@@ -98,12 +98,16 @@ containsDDLKeyword = TDFA.match $$(quoteRegex
     { TDFA.captureGroups = False }
     "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
+isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
+isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
+  case rTxAccessMode of
+    Q.ReadOnly -> False
+    Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
+
 runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
-runRunSQL RunSQL {..} = do
+runRunSQL q@RunSQL {..} = do
+  let metadataCheckNeeded = isSchemaCacheBuildRequiredRunSQL q
   -- see Note [Checking metadata consistency in run_sql]
-  let metadataCheckNeeded = case rTxAccessMode of
-        Q.ReadOnly  -> False
-        Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
   if metadataCheckNeeded
     then withMetadataCheck rCascade $ execRawSQL rSql
     else execRawSQL rSql
