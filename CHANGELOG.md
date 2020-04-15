@@ -2,7 +2,6 @@
 
 ## Next release
 
-
 ### console: persist columns state in data browser
 
 The order and collapsed state of columns is now persisted across page navigation
@@ -11,18 +10,27 @@ The order and collapsed state of columns is now persisted across page navigation
 
 ### Bug fixes and improvements
 
+- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
+- console: query support for actions (#4318)
+- cli: query support for actions (#4318)
+- cli: add retry_conf in event trigger for squashing migrations (close #4296) (#4324)
 - cli: allow customization of server api paths (close #4016)
 - cli: clean up migration files created during a failed migrate api (close #4312) (#4319)
 - cli: add support for multiple versions of plugin (close #4105)
 - cli: template assets path in console HTML for unversioned builds
+- console: recover from SDL parse in actions type definition editor (fix #4385) (#4389)
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
 - console: fix clone permission migrations (close #3985) (#4277)
 - console: decouple data rows and count fetch in data browser to account for really large tables (close #3793) (#4269)
 - console: update cookie policy for API calls to "same-origin"
+- console: redirect to /:table/browse from /:table (close #4330) (#4374)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
+- server: manage inflight events when HGE instance is gracefully shutdown (close #3548)
 - server: fix an edge case where some events wouldn't be processed because of internal erorrs (#4213)
+- server: fix downgrade not working to version v1.1.1 (#4354)
+- server: `type` field is not required if `jwk_url` is provided in JWT config
 
 ## `v1.2.0-beta.3`
 
@@ -62,6 +70,7 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 - server: preserve cookie headers from sync action webhook (close #4021)
 - server: validate action webhook response to conform to action output type (fix #3977)
 - server: add 'ID' to default scalars in custom types (fix #4061)
+- server: fix erroneous error log "Received STOP for an operation ..."
 - console: enum field values can be selected through a dropdown in insert/edit rows page (close #3748) (#3810)
 - console: exported metadata filenames are now unique(`hasura_metadata_<timestamp>.json`) (close #1772) (#4106)
 - console: allow bulk deleting rows in 'Browse Rows' section (close #1739) (#3735)
