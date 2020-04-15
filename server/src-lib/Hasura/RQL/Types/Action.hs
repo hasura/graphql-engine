@@ -95,9 +95,6 @@ data ActionType
   deriving (Show, Eq, Lift, Generic)
 instance NFData ActionType
 instance Cacheable ActionType
-$(J.deriveJSON
-  J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 6}
-  ''ActionType)
 
 data ActionDefinition a
   = ActionDefinition
@@ -126,26 +123,18 @@ instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
     return ActionDefinition {..}
 
 instance (J.ToJSON a) => J.ToJSON (ActionDefinition a) where
-  toJSON (ActionDefinition args outputType ActionQuery headers forwardClientHeaders handler) =
-    J.object
+  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders handler) =
+    let typeAndKind = case actionType of
+          ActionQuery -> [ "type" J..= ("query" :: String)]
+          ActionMutation kind -> [ "type" J..= ("mutation" :: String)
+                                 , "kind" J..= kind]
+    in J.object $
     [ "arguments"              J..= args
     , "output_type"            J..= outputType
     , "headers"                J..= headers
     , "forward_client_headers" J..= forwardClientHeaders
     , "handler"                J..= handler
-    , "type"                   J..= ("query" :: String)
-    ]
-  toJSON (ActionDefinition args outputType (ActionMutation kind) headers forwardClientHeaders handler) =
-    J.object
-    [ "arguments"              J..= args
-    , "output_type"            J..= outputType
-    , "headers"                J..= headers
-    , "forward_client_headers" J..= forwardClientHeaders
-    , "handler"                J..= handler
-    , "type"                   J..= ("mutation" :: String)
-    , "kind"                   J..= kind
-    ]
-
+    ] <> typeAndKind
 
 type ResolvedActionDefinition = ActionDefinition ResolvedWebhook
 
