@@ -39,6 +39,7 @@ The order, collapsed state of columns and page size is now persisted across page
 - console: add undefined check to fix error (close #4444) (#4445)
 - console: change react ace editor theme to eclipse (close #4437)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
+- server: support inserting unquoted bigint, and generate an integer overflow error on insert (fix #576) (fix #4368)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
 - server: manage inflight events when HGE instance is gracefully shutdown (close #3548)
