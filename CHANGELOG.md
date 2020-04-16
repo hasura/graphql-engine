@@ -35,7 +35,7 @@ The order, collapsed state of columns and page size is now persisted across page
 - console: move pre-release notification tooltip msg to top (#4433)
 - console: remove extra localPresets key from migrations (#4433)
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
-- fix row delete for relationships in data browser
+- console: fix row delete for relationships in data browser
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
