@@ -2,6 +2,9 @@ module Hasura.GraphQL.Schema.Select where
 
 import           Hasura.Prelude
 
+import           Control.Monad.Trans.Maybe
+import           Data.Foldable                 (toList)
+
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -167,7 +170,34 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
                   ObjRel -> RQL.FObj annotatedRelationship
                   ArrRel -> RQL.FArr $ RQL.ASSimple annotatedRelationship
               )
-      FIComputedField computedFieldInfo -> undefined -- TODO: implement
+      FIComputedField computedFieldInfo ->
+        case _cfiReturnType computedFieldInfo of
+          CFRScalar scalarReturnType -> do
+            functionArgsParser <- sequenceA <$>
+              for (toList $ _cffInputArgs $ _cfiFunction computedFieldInfo) \arg -> do
+                inputParser <- undefined {- P.column
+                  (PGColumnScalar $ _qptName $ faType arg)
+                  (G.Nullability $ unHasDefault $ faHasDefault arg) -}
+                pure $ inputParser <&> \input ->
+                  faName arg <&> \name -> ( getFuncArgNameTxt name
+                                          , RQL.AEInput $ P.mkParameter input
+                                          ) -- FIXME: what about AETableRow?
+            pure $ functionArgsParser <&> \functionArgs -> do
+              parseArgs <- sequenceA functionArgs
+              fieldName <- G.mkName $ computedFieldNameToText $ _cfiName computedFieldInfo
+              pure ( fieldName
+                   , RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
+                       { RQL._cfssFunction  = _cffName $ _cfiFunction $ computedFieldInfo
+                       , RQL._cfssType      = scalarReturnType
+                       , RQL._cfssColumnOp  = Nothing -- FIXME: support ColOp
+                       , RQL._cfssArguments = RQL.FunctionArgsExp
+                          { RQL._faePositional = snd <$> parseArgs
+                          , RQL._faeNamed      = Map.fromList parseArgs
+                          }
+                       }
+                   )
+          CFRSetofTable tableName -> undefined
+
   where
     aliasToFieldName = fmap $ fmap $ first $ FieldName . G.unName
 
