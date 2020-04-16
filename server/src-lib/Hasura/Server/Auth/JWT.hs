@@ -47,6 +47,7 @@ import qualified Data.Aeson                      as J
 import qualified Data.Aeson.Casing               as J
 import qualified Data.Aeson.Internal             as J
 import qualified Data.Aeson.TH                   as J
+import qualified Data.Aeson.Internal             as J
 import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI

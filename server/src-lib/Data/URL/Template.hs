@@ -82,12 +82,12 @@ renderURLTemplate template = do
 
 -- QuickCheck generators
 instance Arbitrary Variable where
-  arbitrary = Variable . T.pack <$> listOf1 (elements $ alphaNumerics <> "-_")
+  arbitrary = Variable . T.pack <$> listOf1 (elements $ alphaNumerics <> " -_")
 
 instance Arbitrary URLTemplate where
   arbitrary = URLTemplate <$> listOf (oneof [genText, genVariable])
     where
-      genText = (TIText . T.pack) <$> listOf1 (elements $ alphaNumerics <> "://")
+      genText = (TIText . T.pack) <$> listOf1 (elements $ alphaNumerics <> " ://")
       genVariable = TIVariable <$> arbitrary
 
 genURLTemplate :: Gen URLTemplate
