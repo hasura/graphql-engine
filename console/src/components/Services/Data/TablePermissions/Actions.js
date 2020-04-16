@@ -129,10 +129,6 @@ const permCustomChecked = filterType => ({
   filterType,
 });
 
-const getFilterKey = query => {
-  return query === 'insert' ? 'check' : 'filter';
-};
-
 const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
   const _permissions = JSON.parse(JSON.stringify(defaultPermissionsState));
 
@@ -815,7 +811,6 @@ export {
   permSetBulkSelect,
   toggleField,
   toggleAllFields,
-  getFilterKey,
   getBasePermissionsState,
   updatePermissionsState,
   deleteFromPermissionsState,

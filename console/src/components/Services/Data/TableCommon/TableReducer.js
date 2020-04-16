@@ -77,8 +77,8 @@ import {
   CREATE_NEW_PRESET,
   DELETE_PRESET,
   SET_PRESET_VALUE,
-  getFilterKey,
 } from '../TablePermissions/Actions';
+import { getDefaultFilterType } from '../TablePermissions/utils';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
   const modifyState = JSON.parse(JSON.stringify(modifyStateOrig));
@@ -331,10 +331,9 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...updatePermissionsState(
-            // it can be done ith optional second arg
             modifyState.permissionsState,
             action.filterType ||
-              getFilterKey(modifyState.permissionsState.query),
+              getDefaultFilterType(modifyState.permissionsState.query),
             action.filter
           ),
           custom_checked: {
@@ -350,7 +349,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...updatePermissionsState(
             modifyState.permissionsState,
             action.filterType ||
-              getFilterKey(modifyState.permissionsState.query),
+              getDefaultFilterType(modifyState.permissionsState.query),
             action.filter
           ),
         },
@@ -363,7 +362,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...updatePermissionsState(
             modifyState.permissionsState,
             action.filterType ||
-              getFilterKey(modifyState.permissionsState.query),
+              getDefaultFilterType(modifyState.permissionsState.query),
             {}
           ),
           custom_checked: {
