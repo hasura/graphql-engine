@@ -104,14 +104,6 @@ mandatory, while the rest of them are optional.
    All ``x-hasura-*`` values should be of type ``String``, they will be converted to the
    right type automatically.
 
-.. note::
-
-   The JWT config should either have the ``claims_namespace`` or ``claims_namespace_path``
-   value set. If both the keys are missing, then the ``claims_namespace`` will default to
-   ``https://hasura.io/jwt/claims`` and if both are set then the server will throw a fatal
-   error and not start.
-
-
 The default role can be overridden by the ``x-hasura-role`` header, while making a
 request.
 
@@ -138,8 +130,8 @@ JSON object:
      "key": "<optional-key-as-string>",
      "jwk_url": "<optional-url-to-refresh-jwks>",
      "claims_namespace": "<optional-key-name-in-claims>",
-     "claims_format": "json|stringified_json",
      "claims_namespace_path":"<optional-json-path-to-the-claims>",
+     "claims_format": "json|stringified_json",
      "audience": <optional-string-or-list-of-strings-to-verify-audience>,
      "issuer": "<optional-string-to-verify-issuer>"
    }
@@ -177,32 +169,6 @@ https://tools.ietf.org/html/rfc7517.
 
 This is an optional field. You can also provide the key (certificate, PEM
 encoded public key) as a string - in the ``key`` field along with the ``type``.
-
-``claims_namespace_path``
-^^^^^^^^^^^^^^^^^^^^^^^^^
-An optional JSON path value to the Hasura claims in the JWT token (e.g. ``$.hasura.claims``).
-
-The JWT token should be in this format if the ``claims_namespace_path`` is
-set to ``$.hasura.claims``:
-
-.. code-block:: json
-
-  {
-    "sub": "1234567890",
-    "name": "John Doe",
-    "admin": true,
-    "iat": 1516239022,
-    "hasura": {
-       "claims": {
-          "x-hasura-allowed-roles": ["editor","user", "mod"],
-          "x-hasura-default-role": "user",
-          "x-hasura-user-id": "1234567890",
-          "x-hasura-org-id": "123",
-          "x-hasura-custom": "custom-value"
-       }
-     }
-  }
-
 
 Rotating JWKs
 +++++++++++++
@@ -256,6 +222,38 @@ inside which the Hasura specific claims will be present, e.g. ``https://mydomain
 
 **Default value** is: ``https://hasura.io/jwt/claims``.
 
+``claims_namespace_path``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+An optional JSON path value to the Hasura claims in the JWT token.
+
+Example values are ``$.hasura.claims`` or ``$`` (i.e. root of the payload)
+
+The JWT token should be in this format if the ``claims_namespace_path`` is
+set to ``$.hasura.claims``:
+
+.. code-block:: json
+
+  {
+    "sub": "1234567890",
+    "name": "John Doe",
+    "admin": true,
+    "iat": 1516239022,
+    "hasura": {
+       "claims": {
+          "x-hasura-allowed-roles": ["editor","user", "mod"],
+          "x-hasura-default-role": "user",
+          "x-hasura-user-id": "1234567890",
+          "x-hasura-org-id": "123",
+          "x-hasura-custom": "custom-value"
+       }
+     }
+  }
+
+.. note::
+
+   The JWT config can only have one of claims_namespace or claims_namespace_path values set.
+   If neither keys are set, then the default value of
+   claims_namespace i.e. https://hasura.io/jwt/claims will be used.
 
 ``claims_format``
 ^^^^^^^^^^^^^^^^^
