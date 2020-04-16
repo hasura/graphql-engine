@@ -4,4 +4,4 @@ import 'ace-builds/src-noconflict/mode-sql';
 import 'ace-builds/src-noconflict/ext-searchbox';
 
 export const ACE_EDITOR_THEME = 'dawn';
-export const ACE_EDITOR_FONT_SIZE = 16;
+export const ACE_EDITOR_FONT_SIZE = 14;
