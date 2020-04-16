@@ -665,13 +665,13 @@ logLevelEnv =
 devModeEnv :: (String, String)
 devModeEnv =
   ( "HASURA_GRAPHQL_DEV_MODE"
-  , "Set dev mode for GraphQL requests; include 'internal' key in errors extensions (if required)"
+  , "Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response"
   )
 
 adminInternalErrorsEnv :: (String, String)
 adminInternalErrorsEnv =
   ( "HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS"
-  , "Include 'internal' key in errors extensions (if required) for GraphQL requests with 'admin' role"
+  , "Include 'internal' key in the errors extensions (if required) of the response for GraphQL requests with the 'admin' role"
   )
 
 parseRawConnInfo :: Parser RawConnInfo

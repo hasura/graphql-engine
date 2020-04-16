@@ -169,3 +169,36 @@ the right content-type headers.
    a ``major.minor`` version is updated continuously across all patches. If
    you're using the assets on the server with a Docker image, it might not be the latest
    version of console.
+
+.. _errors-debugging:
+
+Errors debugging
+----------------
+
+The Hasura GraphQL Engine may provide additional information in ``extensions`` key for each
+object in ``errors``. This will include ``internal`` information of the error which'll have the
+generated SQL statement and exception information from the Postgres. This will help in debugging
+the error. This is highly useful in the case of debugging :doc:`Action <../../actions/debugging>` requests.
+
+By default the ``extensions`` is not sent in the ``errors`` response. To enable this,
+start the GraphQL Engine server in debugging mode with following configuration
+
+.. code-block:: bash
+
+   # Flag
+   --dev-mode
+
+   # Or env var
+
+   HASURA_GRAPHQL_DEV_MODE=true
+
+If you want debugging mode enabled only for ``admin`` role requests, configure as following instead of the above
+
+.. code-block:: bash
+
+   # Flag
+   --admin-internal-errors
+
+   # Or env var
+
+   HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS=true
