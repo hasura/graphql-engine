@@ -30,6 +30,9 @@ var (
 	ErrVersionNotAvailable = errors.New("plugin version is not available")
 )
 
+// IndexBranchRef - branch to be used for index
+var IndexBranchRef = "master"
+
 const (
 	indexURI string = "https://github.com/hasura/cli-plugins-index.git"
 )
@@ -56,7 +59,7 @@ func New(base string) *Config {
 	p := paths.NewPaths(base)
 	return &Config{
 		Paths: p,
-		Repo:  util.NewGitUtil(indexURI, p.IndexPath(), "multiple-version"),
+		Repo:  util.NewGitUtil(indexURI, p.IndexPath(), IndexBranchRef),
 	}
 }
 
