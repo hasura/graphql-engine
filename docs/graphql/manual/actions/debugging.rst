@@ -17,8 +17,6 @@ configured for the action. Start the server in :ref:`debugging mode <errors-debu
 In case of any errors the GraphQL response contains debugging information of webhook
 calls in ``extensions.internal`` field.
 
-However, it is highly recommended no to use debug mode in production.
-
 For example:
 
 .. code-block:: graphql

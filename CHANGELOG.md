@@ -17,8 +17,6 @@ The order, collapsed state of columns and page size is now persisted across page
 
 ### Bug fixes and improvements
 
-- server: start-up configuration for sending debug information with errors (close #4031)
-- server: support reusing Postgres scalars in custom types (close #4125)
 - cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
 - console: query support for actions (#4318)
 - cli: query support for actions (#4318)
@@ -42,6 +40,7 @@ The order, collapsed state of columns and page size is now persisted across page
 - server: `type` field is not required if `jwk_url` is provided in JWT config
 - server: add a new field `claims_namespace_path` which accepts a JSON Path for looking up hasura claim in the JWT token (#4349)
 - server: support reusing Postgres scalars in custom types (close #4125)
+- server: start-up configuration for sending debug information with errors (close #4031)
 
 ## `v1.2.0-beta.3`
 

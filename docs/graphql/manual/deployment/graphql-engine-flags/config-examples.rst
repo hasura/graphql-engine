@@ -202,3 +202,7 @@ If you want debugging mode enabled only for ``admin`` role requests, configure a
    # Or env var
 
    HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS=true
+
+.. note::
+
+   It is highly recommended to enable debugging for only ``admin`` role in production.
