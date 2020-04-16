@@ -314,3 +314,12 @@ export const getFetchManualTriggersQuery = tableName => ({
     },
   },
 });
+
+export const getConsoleOptsQuery = () =>
+  generateSelectQuery(
+    'select',
+    { name: 'hdb_version', schema: 'hdb_catalog' },
+    {
+      columns: ['hasura_uuid', 'console_state'],
+    }
+  );

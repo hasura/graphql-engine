@@ -2,7 +2,10 @@ import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import requestAction from '../utils/requestAction';
 import dataHeaders from '../components/Services/Data/Common/Headers';
 import defaultTelemetryState from './State';
-import { getRunSqlQuery } from '../components/Common/utils/v1QueryUtils';
+import {
+  getRunSqlQuery,
+  getConsoleOptsQuery,
+} from '../components/Common/utils/v1QueryUtils';
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -105,16 +108,7 @@ const loadConsoleOpts = () => {
       credentials: globalCookiePolicy,
       method: 'POST',
       headers: dataHeaders(getState),
-      body: JSON.stringify({
-        type: 'select',
-        args: {
-          table: {
-            name: 'hdb_version',
-            schema: 'hdb_catalog',
-          },
-          columns: ['hasura_uuid', 'console_state'],
-        },
-      }),
+      body: JSON.stringify(getConsoleOptsQuery()),
     };
 
     return dispatch(requestAction(url, options)).then(

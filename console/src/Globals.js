@@ -42,6 +42,7 @@ const globals = {
   featuresCompatibility: window.__env.serverVersion
     ? getFeaturesCompatibility(window.__env.serverVersion)
     : null,
+  cliUUID: window.__env.cliUUID,
   isProduction,
 };
 
