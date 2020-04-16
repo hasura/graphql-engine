@@ -33,7 +33,6 @@ import {
   CREATE_NEW_PRESET,
   DELETE_PRESET,
   X_HASURA_CONST,
-  getFilterKey,
 } from './Actions';
 
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
@@ -77,6 +76,7 @@ import {
   replaceLegacyOperators,
   getAllowedFilterKeys,
   updateFilterTypeToLabel,
+  getDefaultFilterType,
 } from './utils';
 
 class Permissions extends Component {
@@ -598,7 +598,7 @@ class Permissions extends Component {
             ),
           };
         } else {
-          const key = getFilterKey(query);
+          const key = getDefaultFilterType(query);
           filterString = {
             [key]: getPermissionFilterString(
               permissionsState[query],
@@ -610,7 +610,7 @@ class Permissions extends Component {
         }
 
         const rowSectionStatus = getPermissionRowAccessSummary(
-          filterString[getFilterKey(query)]
+          filterString[getDefaultFilterType(query)]
         ); // default
 
         filterString = replaceLegacyOperators(filterString);
@@ -904,7 +904,7 @@ class Permissions extends Component {
                     {getUpdateFilterOptions('check', noPermissions)}
                   </>
                 ) : (
-                  getFilterOptions(getFilterKey(query))
+                  getFilterOptions(getDefaultFilterType(query))
                 )}
               </div>
               <div className={styles.add_mar_top}>{getLimitSection()}</div>
