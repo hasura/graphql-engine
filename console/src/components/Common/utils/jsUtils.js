@@ -1,7 +1,5 @@
 // TODO: make functions from this file available without imports
 
-import { showErrorNotification } from '../../Services/Common/Notification';
-
 export const isNotDefined = value => {
   return value === null || value === undefined;
 };
@@ -159,8 +157,9 @@ export const getConfirmation = (
 export const uploadFile = (
   fileHandler,
   fileFormat = null,
-  invalidFileHandler = null
-) => dispatch => {
+  invalidFileHandler = null,
+  errorCallback = null
+) => {
   const fileInputElement = document.createElement('div');
   fileInputElement.innerHTML = '<input style="display:none" type="file">';
   const fileInput = fileInputElement.firstChild;
@@ -180,12 +179,12 @@ export const uploadFile = (
         if (invalidFileHandler) {
           invalidFileHandler(fileName);
         } else {
-          dispatch(
-            showErrorNotification(
+          if (errorCallback) {
+            errorCallback(
               'Invalid file format',
               `Expected a ${expectedFileSuffix} file`
-            )
-          );
+            );
+          }
         }
 
         fileInputElement.remove();

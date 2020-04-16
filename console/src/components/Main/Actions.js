@@ -121,16 +121,18 @@ const fetchServerConfig = () => (dispatch, getState) => {
   });
   return dispatch(requestAction(url, options)).then(
     data => {
-      return dispatch({
+      dispatch({
         type: SERVER_CONFIG_FETCH_SUCCESS,
         data: data,
       });
+      return Promise.resolve();
     },
     error => {
-      return dispatch({
+      dispatch({
         type: SERVER_CONFIG_FETCH_FAIL,
         data: error,
       });
+      return Promise.reject();
     }
   );
 };

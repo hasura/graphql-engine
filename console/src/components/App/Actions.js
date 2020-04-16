@@ -1,5 +1,7 @@
 import defaultState from './State';
 import Notifications from 'react-notification-system-redux';
+import { loadConsoleOpts } from '../../telemetry/Actions';
+import { fetchServerConfig } from '../Main/Actions';
 
 const LOAD_REQUEST = 'App/ONGOING_REQUEST';
 const DONE_REQUEST = 'App/DONE_REQUEST';
@@ -43,6 +45,17 @@ const showNotification = ({
         level
       )
     );
+  };
+};
+
+export const requireAsyncGlobals = ({ dispatch }) => {
+  return (nextState, finalState, callback) => {
+    Promise.all([
+      dispatch(loadConsoleOpts()),
+      dispatch(fetchServerConfig()),
+    ]).finally(() => {
+      callback();
+    });
   };
 };
 

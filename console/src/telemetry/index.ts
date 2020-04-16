@@ -84,7 +84,7 @@ export const trackReduxAction = (action: ReduxAction, getState: any) => {
   }
 };
 
-export const trackRuntimeError = (telemeteryGlobals: any, data: any) => {
+export const trackRuntimeError = (telemeteryGlobals: any, error: Error) => {
   const reqBody = {
     server_version: telemeteryGlobals.serverVersion,
     event_type: RUN_TIME_ERROR,
@@ -92,7 +92,7 @@ export const trackRuntimeError = (telemeteryGlobals: any, data: any) => {
     console_mode: telemeteryGlobals.consoleMode,
     cli_uuid: telemeteryGlobals.cliUUID,
     server_uuid: telemeteryGlobals.hasuraUUID,
-    data,
+    data: { message: error.message, stack: error.stack },
   };
   sendEvent(reqBody);
 };

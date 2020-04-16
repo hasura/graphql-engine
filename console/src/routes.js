@@ -27,7 +27,7 @@ import generatedVoyagerConnector from './components/Services/VoyagerView/Voyager
 
 import about from './components/Services/About/About';
 
-import { requireConsoleOpts } from './telemetry/Actions';
+import { requireAsyncGlobals } from './components/App/Actions';
 
 import generatedLoginConnector from './components/Login/Login';
 
@@ -111,7 +111,7 @@ const routes = store => {
       component={App}
       onEnter={composeOnEnterHooks([
         validateLogin(store),
-        requireConsoleOpts(store),
+        requireAsyncGlobals(store),
       ])}
     >
       <Route path="login" component={generatedLoginConnector(connect)} />

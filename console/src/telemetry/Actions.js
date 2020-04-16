@@ -102,7 +102,7 @@ const setPreReleaseNotificationOptOutInDB = () => dispatch => {
   return dispatch(setConsoleOptsInDB(opts, successCb, errorCb));
 };
 
-const loadConsoleOpts = () => {
+export const loadConsoleOpts = () => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
     const options = {
