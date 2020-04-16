@@ -104,6 +104,7 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 - cli: fix flags in actions, migrate and metadata cmd (fix #3982) (#3991)
 - cli: preserve action definition in metadata apply (fix… (#3993)
 - cli: bug fixes related to actions (#3951)
+- server: add support for query actions (#4032)
 
 ## `v1.2.0-beta.1`
 
