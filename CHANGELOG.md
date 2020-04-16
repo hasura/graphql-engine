@@ -17,20 +17,25 @@ The order, collapsed state of columns and page size is now persisted across page
 
 ### Bug fixes and improvements
 
-- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
-- console: query support for actions (#4318)
 - cli: query support for actions (#4318)
 - cli: add retry_conf in event trigger for squashing migrations (close #4296) (#4324)
 - cli: allow customization of server api paths (close #4016)
 - cli: clean up migration files created during a failed migrate api (close #4312) (#4319)
 - cli: add support for multiple versions of plugin (close #4105)
 - cli: template assets path in console HTML for unversioned builds
+- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
+- console: query support for actions (#4318)
 - console: recover from SDL parse in actions type definition editor (fix #4385) (#4389)
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
 - console: fix clone permission migrations (close #3985) (#4277)
 - console: decouple data rows and count fetch in data browser to account for really large tables (close #3793) (#4269)
 - console: update cookie policy for API calls to "same-origin"
 - console: redirect to /:table/browse from /:table (close #4330) (#4374)
+- console: format row count in data browser for readaiblity (#4433)
+- console: move pre-release notification tooltip msg to top (#4433)
+- console: remove extra localPresets key from migrations (#4433)
+- console: make nullable and unique labels for columns clickable in insert and modify (#4433)
+- fix row delete for relationships in data browser
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
