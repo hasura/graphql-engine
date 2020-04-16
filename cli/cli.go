@@ -382,20 +382,8 @@ func (ec *ExecutionContext) SetHGEHeaders(headers map[string]string) {
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
 func (ec *ExecutionContext) Validate() error {
-	// ensure plugins index exists
-	err := ec.PluginsConfig.Repo.EnsureCloned()
-	if err != nil {
-		return errors.Wrap(err, "ensuring plugins index failed")
-	}
-
-	// ensure codegen-assets repo exists
-	err = ec.CodegenAssetsRepo.EnsureCloned()
-	if err != nil {
-		return errors.Wrap(err, "ensuring codegen-assets repo failed")
-	}
-
 	// validate execution directory
-	err = ec.validateDirectory()
+	err := ec.validateDirectory()
 	if err != nil {
 		return errors.Wrap(err, "validating current directory failed")
 	}
@@ -455,6 +443,20 @@ func (ec *ExecutionContext) Validate() error {
 			GetAdminSecretHeaderName(ec.Version): ec.Config.AdminSecret,
 		}
 		ec.SetHGEHeaders(headers)
+	}
+
+	if ec.GlobalConfig.CLIEnvironment != ServerOnDockerEnvironment {
+		// ensure plugins index exists
+		err = ec.PluginsConfig.Repo.EnsureCloned()
+		if err != nil {
+			return errors.Wrap(err, "ensuring plugins index failed")
+		}
+
+		// ensure codegen-assets repo exists
+		err = ec.CodegenAssetsRepo.EnsureCloned()
+		if err != nil {
+			return errors.Wrap(err, "ensuring codegen-assets repo failed")
+		}
 	}
 	return nil
 }

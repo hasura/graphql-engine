@@ -14,6 +14,16 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Environment defines the environment the CLI is running
+type Environment string
+
+const (
+	// DefaultEnvironment - CLI running in default mode
+	DefaultEnvironment Environment = "default"
+	// ServerOnDockerEnvironment - CLI running in cli-migrations image
+	ServerOnDockerEnvironment = "server-on-docker"
+)
+
 // GlobalConfig is the configuration object stored in the GlobalConfigFile.
 type GlobalConfig struct {
 	// UUID used for telemetry, generated on first run.
@@ -24,12 +34,16 @@ type GlobalConfig struct {
 
 	// Indicates whether update notifications should be shown or not
 	ShowUpdateNotification bool `json:"show_update_notification"`
+
+	// CLIEnvironment defines the environment the CLI is running
+	CLIEnvironment Environment `json:"cli_environment"`
 }
 
 type rawGlobalConfig struct {
-	UUID                   *string `json:"uuid"`
-	EnableTelemetry        *bool   `json:"enable_telemetry"`
-	ShowUpdateNotification *bool   `json:"show_update_notification"`
+	UUID                   *string     `json:"uuid"`
+	EnableTelemetry        *bool       `json:"enable_telemetry"`
+	ShowUpdateNotification *bool       `json:"show_update_notification"`
+	CLIEnvironment         Environment `json:"cli_environment"`
 
 	logger      *logrus.Logger
 	shoudlWrite bool
@@ -71,6 +85,10 @@ func (c *rawGlobalConfig) validateKeys() error {
 		trueVal := true
 		c.ShowUpdateNotification = &trueVal
 		c.shoudlWrite = true
+	}
+
+	if c.CLIEnvironment == "" {
+		c.CLIEnvironment = DefaultEnvironment
 	}
 
 	return nil
@@ -181,6 +199,7 @@ func (ec *ExecutionContext) readGlobalConfig() error {
 	v.AutomaticEnv()
 	v.SetConfigName("config")
 	v.AddConfigPath(ec.GlobalConfigDir)
+	v.SetDefault("cli_environment", DefaultEnvironment)
 	err := v.ReadInConfig()
 	if err != nil {
 		return errors.Wrap(err, "cannot read global config from file/env")
@@ -191,6 +210,7 @@ func (ec *ExecutionContext) readGlobalConfig() error {
 			UUID:                   v.GetString("uuid"),
 			EnableTelemetry:        v.GetBool("enable_telemetry"),
 			ShowUpdateNotification: v.GetBool("show_update_notification"),
+			CLIEnvironment:         Environment(v.GetString("cli_environment")),
 		}
 	} else {
 		ec.Logger.Debugf("global config is pre-set to %#v", ec.GlobalConfig)
@@ -198,6 +218,7 @@ func (ec *ExecutionContext) readGlobalConfig() error {
 	ec.Logger.Debugf("global config: uuid: %v", ec.GlobalConfig.UUID)
 	ec.Logger.Debugf("global config: enableTelemetry: %v", ec.GlobalConfig.EnableTelemetry)
 	ec.Logger.Debugf("global config: showUpdateNotification: %v", ec.GlobalConfig.ShowUpdateNotification)
+	ec.Logger.Debugf("global config: cliEnvironment: %v", ec.GlobalConfig.CLIEnvironment)
 
 	// set if telemetry can be beamed or not
 	ec.Telemetry.CanBeam = ec.GlobalConfig.EnableTelemetry
