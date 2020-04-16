@@ -71,6 +71,7 @@
 - docs: remove wip actions docs (#3909)
 - docs: use install manifests from stable branch (#3906)
 - console: add actions support (#3889)
+- server: add support for query actions (#4032)
 - console: show pre-release update notifications with opt out option (#3888)
 - translation(readme): add korean (#3818)
 - allow custom mutations through actions (#3042)

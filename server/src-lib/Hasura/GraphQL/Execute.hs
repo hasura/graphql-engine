@@ -43,6 +43,7 @@ import           Hasura.Server.Context
 import           Hasura.Server.Utils                    (RequestId, mkClientHeadersForward,
                                                          mkSetCookieHeaders)
 import           Hasura.Server.Version                  (HasVersion)
+import           Hasura.GraphQL.Resolve.Action
 
 import qualified Hasura.GraphQL.Context                 as C
 import qualified Hasura.GraphQL.Execute.Inline          as EI
@@ -228,11 +229,11 @@ getResolvedExecPlan pgExecCtx planCache userInfo sqlGenCtx
       --       (tx, respHeaders) <- getMutOp gCtx sqlGenCtx userInfo httpManager reqHeaders selSet
       --       pure $ ExOpMutation respHeaders tx
       --     VQ.RQuery selSet -> do
-      --       (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability selSet
+      --       (queryTx, plan, genSql) <- getQueryOp gCtx sqlGenCtx userInfo queryReusability (allowQueryActionExecuter httpManager reqHeaders) selSet
       --       traverse_ (addPlanToCache . EP.RPQuery) plan
       --       return $ ExOpQuery queryTx (Just genSql)
       --     VQ.RSubscription fld -> do
-      --       (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability fld
+      --       (lqOp, plan) <- getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability (restrictActionExecuter "query actions cannot be run as a subscription") fld
       --       traverse_ (addPlanToCache . EP.RPSubs) plan
       --       return $ ExOpSubs lqOp
 
@@ -269,15 +270,18 @@ runE ctx sqlGenCtx userInfo action = do
     insCtxMap = _gInsCtxMap ctx
 
 getQueryOp
-  :: (MonadError QErr m)
+  :: ( HasVersion
+     , MonadError QErr m
+     , MonadIO m)
   => GCtx
   -> SQLGenCtx
   -> UserInfo
   -> QueryReusability
+  -> QueryActionExecuter
   -> VQ.SelSet
   -> m (LazyRespTx, Maybe EQ.ReusableQueryPlan, EQ.GeneratedSqlMap)
-getQueryOp gCtx sqlGenCtx userInfo queryReusability fields =
-  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet queryReusability fields
+getQueryOp gCtx sqlGenCtx userInfo queryReusability actionExecuter selSet =
+  runE gCtx sqlGenCtx userInfo $ EQ.convertQuerySelSet queryReusability selSet actionExecuter
 
 mutationRootName :: Text
 mutationRootName = "mutation_root"
@@ -346,20 +350,40 @@ getMutOp ctx sqlGenCtx userInfo manager reqHeaders selSet =
 getSubsOpM
   :: ( MonadError QErr m
      , MonadIO m
+     , HasVersion
      )
   => PGExecCtx
-  -> UserInfo
-  -> G.SelectionSet G.NoFragments G.Name
+  -> QueryReusability
+  -> VQ.Field
+  -> QueryActionExecuter
   -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
-getSubsOpM pgExecCtx userInfo flds =
-  case G._fName flds of
+getSubsOpM pgExecCtx initialReusability fld actionExecuter =
+  case VQ._fName fld of
     "__typename" ->
       _throwVE "you cannot create a subscription on '__typename' field"
     _            -> do
-      (astUnresolved, finalReusability) <- _queryFldToPGAST fld
+      (astUnresolved, finalReusability) <- runReusabilityTWith initialReusability $
+        GR.queryFldToPGAST fld actionExecuter
       let varTypes = finalReusability ^? _Reusable
-      EL.buildLiveQueryPlan pgExecCtx userInfo (G._fAlias fld) astUnresolved varTypes
+      EL.buildLiveQueryPlan pgExecCtx (VQ._fAlias fld) astUnresolved varTypes
 -}
+
+getSubsOp
+  :: ( MonadError QErr m
+     , MonadIO m
+     , HasVersion
+     )
+  => PGExecCtx
+  -> GCtx
+  -> SQLGenCtx
+  -> UserInfo
+  -> QueryReusability
+  -> QueryActionExecuter
+  -> VQ.Field
+  -> m (EL.LiveQueryPlan, Maybe EL.ReusableLiveQueryPlan)
+getSubsOp pgExecCtx gCtx sqlGenCtx userInfo queryReusability actionExecuter fld =
+  runE gCtx sqlGenCtx userInfo $ getSubsOpM pgExecCtx queryReusability fld actionExecuter
+>>>>>>> 5116e16e1... server(actions): add support for queries (close #4032) (#4309)
 
 execRemoteGQ
   :: ( HasVersion

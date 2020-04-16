@@ -21,14 +21,16 @@ import qualified Database.PG.Query                      as Q
 import qualified Language.GraphQL.Draft.Syntax          as G
 
 import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
+import           Hasura.Server.Version                  (HasVersion)
 import qualified Hasura.SQL.DML                         as S
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Execute.Prepare
+import           Hasura.GraphQL.Execute.Resolve
 import           Hasura.GraphQL.Parser.Column
 import           Hasura.GraphQL.Parser.Monad
+import           Hasura.GraphQL.Resolve.Action
 import           Hasura.Prelude
 import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types

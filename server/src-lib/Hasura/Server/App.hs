@@ -36,6 +36,7 @@ import qualified Text.Mustache                          as M
 import qualified Web.Spock.Core                         as Spock
 
 import           Hasura.EncJSON
+import           Hasura.GraphQL.Resolve.Action
 import           Hasura.Prelude                         hiding (get, put)
 import           Hasura.RQL.DDL.Schema
 import           Hasura.RQL.Types
@@ -334,7 +335,7 @@ v1GQHandler
   -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
 
--- gqlExplainHandler :: (MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
+-- gqlExplainHandler :: (HasVersion, MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
 -- gqlExplainHandler query = do
 --   onlyAdmin
 --   scRef <- scCacheRef . hcServerCtx <$> ask
@@ -342,7 +343,7 @@ v1GQHandler = v1Alpha1GQHandler
 --   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
 --   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
 --   enableAL <- scEnableAllowlist . hcServerCtx <$> ask
---   res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
+--   res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (restrictActionExecuter "query actions cannot be explained") query
 --   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m) => PGD.PGDumpReqBody -> Handler m APIResp
