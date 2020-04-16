@@ -15,6 +15,7 @@ Guides: Integration/migration tutorials
 - :ref:`guides_auth0_jwt`
 - :ref:`guides_auth_guardian_jwt`
 - :ref:`guides_aws_cognito`
+- :ref:`custom_jwt`
 - :ref:`guides_apollo_subscriptions`
 - `Blog: Move from firebase to realtime GraphQL on Postgres <https://hasura.io/blog/firebase2graphql-moving-from-firebase-to-realtime-graphql-on-postgres-4d36cb7f4eaf>`__
 - `Blog: Create a Gatsby site using GraphQL on Postgres <https://hasura.io/blog/create-gatsby-sites-using-graphql-on-postgres-603b5dd1e516>`__
@@ -29,4 +30,5 @@ Guides: Integration/migration tutorials
   Auth0 JWT Integration <auth0-jwt>
   OneGraph's AuthGuardian JWT Integration <auth-guardian-jwt>
   Using AWS Cognito for authentication <aws-cognito>
+  Custom JWT auth server <custom-jwt>
   Subscriptions using apollo-client <apollo-subscriptions>
