@@ -133,7 +133,7 @@ class Editor extends React.Component {
     }
 
     return (
-      <div className={editorClass}>
+      <div className={`${editorClass} ${this.props.className || ''}`}>
         <div className={styles.display_flex + ' ' + styles.add_mar_bottom_mid}>
           {this.toggleButton()}
           {editorLabel}

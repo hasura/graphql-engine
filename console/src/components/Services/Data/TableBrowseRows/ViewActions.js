@@ -31,6 +31,9 @@ const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
 
 const V_COUNT_REQUEST_SUCCESS = 'ViewTable/V_COUNT_REQUEST_SUCCESS';
 
+const V_SET_QUERY_COLUMNS = 'ViewTable/V_SET_QUERY_COLUMN';
+const V_RESET_QUERY_COLUMNS = 'ViewTable/V_RESET_QUERY_COLUMN';
+
 const FETCHING_MANUAL_TRIGGER = 'ViewTable/FETCHING_MANUAL_TRIGGER';
 const FETCH_MANUAL_TRIGGER_SUCCESS = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
 const FETCH_MANUAL_TRIGGER_FAIL = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
@@ -57,6 +60,15 @@ const vCollapseRow = () => ({
 });
 
 const vSetDefaults = () => ({ type: V_SET_DEFAULTS });
+
+const vSetColumns = columns => ({
+  type: V_SET_QUERY_COLUMNS,
+  columns,
+});
+
+const vResetColumns = () => ({
+  type: V_RESET_QUERY_COLUMNS,
+});
 
 const vMakeRowsRequest = () => {
   return (dispatch, getState) => {
@@ -528,6 +540,26 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
           viewState.activePath
         ),
       };
+    case V_SET_QUERY_COLUMNS:
+      return {
+        ...viewState,
+        query: {
+          ...viewState.query,
+          columns: action.columns,
+        },
+      };
+    case V_RESET_QUERY_COLUMNS:
+      const table = schemas.find(
+        t => t.table_name === tableName && t.table_schema === currentSchema
+      );
+      const allColumns = table ? table.columns.map(c => c.column_name) : [];
+      return {
+        ...viewState,
+        query: {
+          ...viewState.query,
+          columns: allColumns,
+        },
+      };
     case V_EXPAND_REL:
       return {
         ...viewState,
@@ -639,4 +671,6 @@ export {
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
   vMakeTableRequests,
+  vSetColumns,
+  vResetColumns,
 };

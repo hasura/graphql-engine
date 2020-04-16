@@ -358,22 +358,3 @@ export const getGroupedTableComputedFields = (table, allFunctions) => {
 
   return groupedComputedFields;
 };
-
-// export const getDependentTables = (table) => {
-
-//   return [
-//     {
-//       table_schema: table.table_schema,
-//       table_name: table.table_name,
-//     },
-//     ...table.foreign_key_constraints.map(fk_obj => ({
-//       table_name: fk_obj.ref_table,
-//       table_schema: fk_obj.ref_table_table_schema
-//     })),
-//     ...table.opp_foreign_key_constraints.map(fk_obj => ({
-//       table_name: fk_obj.table_name,
-//       table_schema: fk_obj.table_schema,
-//     }))
-//   ]
-
-// };

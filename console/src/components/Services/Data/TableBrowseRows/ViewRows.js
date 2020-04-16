@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
 import DragFoldTable, {
@@ -17,6 +17,7 @@ import {
   deleteItem,
   vExpandRow,
   vCollapseRow,
+  vSetColumns,
 } from './ViewActions'; // eslint-disable-line no-unused-vars
 
 import {
@@ -54,6 +55,7 @@ import {
   handleOrderChange,
   getColumnsOrder,
 } from './localStorageUtils';
+import { ColumnsSelector } from './ColumnsSelector';
 
 const ViewRows = ({
   curTableName,
@@ -83,6 +85,16 @@ const ViewRows = ({
   readOnlyMode,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
+
+  const allColumns = useMemo(() => {
+    const currentTable = schemas.find(
+      schema => schema.table_name === curTableName
+    );
+    if (currentTable) {
+      return currentTable.columns.map(col => col.column_name);
+    }
+    return [];
+  }, [schemas, curTableName]);
 
   const styles = require('../../../Common/TableCommon/Table.scss');
 
@@ -637,7 +649,10 @@ const ViewRows = ({
     x => x.table_name === curTableName && x.table_schema === currentSchema
   );
 
-  const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
+  const tableColumnsSorted = tableSchema.columns
+    .sort(ordinalColSort)
+    .filter(({ column_name }) => curQuery.columns.includes(column_name));
+
   const tableRelationships = tableSchema.relationships;
 
   const hasPrimaryKey = checkIfHasPrimaryKey(tableSchema);
@@ -962,11 +977,21 @@ const ViewRows = ({
     isVisible = true;
   }
 
+  const onSelectedColumnsChange = newSelected => {
+    dispatch(vSetColumns(newSelected));
+    dispatch(runQuery(tableSchema));
+  };
+
   return (
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
       <div className={`row ${styles.add_mar_top}`}>
         {getSelectedRowsSection()}
+        <ColumnsSelector
+          allColumns={allColumns}
+          selectedColumns={curQuery.columns}
+          setSelected={onSelectedColumnsChange}
+        />
         <div className="col-xs-12">
           <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />
