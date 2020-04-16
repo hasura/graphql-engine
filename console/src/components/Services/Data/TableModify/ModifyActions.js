@@ -27,7 +27,7 @@ import {
   getUniqueConstraintName,
 } from '../Common/Components/utils';
 
-import { isColTypeQuote, isPostgresFunction } from '../utils';
+import { isColTypeString, isPostgresFunction } from '../utils';
 import {
   sqlEscapeText,
   getCreateCheckConstraintSql,
@@ -1182,7 +1182,7 @@ const addColSql = (
   let defWithQuotes = "''";
 
   const checkIfFunctionFormat = isPostgresFunction(colDefault);
-  if (isColTypeQuote(colType) && colDefault !== '' && !checkIfFunctionFormat) {
+  if (isColTypeString(colType) && colDefault !== '' && !checkIfFunctionFormat) {
     defWithQuotes = "'" + colDefault + "'";
   } else {
     defWithQuotes = colDefault;
@@ -1544,11 +1544,11 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     }
 
     const colDefaultWithQuotes =
-      isColTypeQuote(colType) && !isPostgresFunction(colDefault)
+      isColTypeString(colType) && !isPostgresFunction(colDefault)
         ? `'${colDefault}'`
         : colDefault;
     const originalColDefaultWithQuotes =
-      isColTypeQuote(colType) && !isPostgresFunction(originalColDefault)
+      isColTypeString(colType) && !isPostgresFunction(originalColDefault)
         ? `'${originalColDefault}'`
         : originalColDefault;
 

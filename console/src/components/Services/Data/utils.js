@@ -668,5 +668,5 @@ WHERE
 `;
 };
 
-export const isColTypeQuote = colType =>
-  colType === 'text' || colType === 'varchar';
+export const isColTypeString = colType =>
+  ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
