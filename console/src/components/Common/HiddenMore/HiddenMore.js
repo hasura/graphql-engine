@@ -1,26 +1,20 @@
 import React from 'react';
 
-import { Icon, Text } from '../../UIKit/atoms';
-import styles from '../Common.scss';
+import { Icon, Text, Flex } from '../../UIKit/atoms';
 
 const HiddenMore = ({ title, more, expanded = false }) => {
   const [isExpanded, setIsExpanded] = React.useState(expanded);
 
   const toggle = () => setIsExpanded(!isExpanded);
 
-  const getTitle = () => {
-    return (
-      <div
-        className={`${styles.display_flex} ${styles.add_mar_bottom} ${styles.cursorPointer} ${styles.hiddenMoreWidth}`}
-        onClick={toggle}
-      >
-        <Icon type={isExpanded ? 'down' : 'right'} mr="xs" />
-        <Text fontWeight="bold" display="inline-block">
-          {title}
-        </Text>
-      </div>
-    );
-  };
+  const getTitle = () => (
+    <Flex mb="20px" pointer width="300px" onClick={toggle}>
+      <Icon type={isExpanded ? 'down' : 'right'} mr="xs" />
+      <Text fontWeight="bold" display="inline-block">
+        {title}
+      </Text>
+    </Flex>
+  );
 
   return (
     <div>

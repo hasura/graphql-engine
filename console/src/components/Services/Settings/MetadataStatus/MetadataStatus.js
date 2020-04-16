@@ -6,7 +6,7 @@ import { permissionTypes, getTableNameFromDef } from '../utils';
 import metaDataStyles from '../Settings.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ReloadMetadata from '../MetadataOptions/ReloadMetadata';
-import { Icon, Heading } from '../../../UIKit/atoms';
+import { Icon, Heading, Text, Box, Flex } from '../../../UIKit/atoms';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const MetadataStatus = ({ dispatch, metadata }) => {
@@ -97,44 +97,37 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     );
     if (metadata.inconsistentObjects.length === 0) {
       return (
-        <div className={styles.add_mar_top}>
-          <div className={metaDataStyles.content_width}>
-            <div className={styles.display_flex}>
-              <Icon type="check" size={16} color="green.original" mr="xs" />
-              <Heading as="h4">
-                GraphQL Engine metadata is consistent with database
-              </Heading>
-            </div>
-          </div>
-        </div>
+        <Flex mt="20px">
+          <Icon type="check" color="green.original" mr="sm" />
+          <Heading as="h4">
+            GraphQL Engine metadata is consistent with database
+          </Heading>
+        </Flex>
       );
     }
 
     return (
-      <div className={styles.add_mar_top}>
-        <div className={metaDataStyles.content_width}>
-          <div className={styles.display_flex}>
-            <Icon type="close" color="red.primary" size={16} mr="xs" />
-            <Heading as="h4">
-              GraphQL Engine metadata is inconsistent with database
-            </Heading>
+      <Flex mt="20px">
+        <Icon type="close" color="red.primary" mr="sm" />
+        <Heading as="h4">
+          GraphQL Engine metadata is inconsistent with database
+        </Heading>
+        <div className={styles.add_mar_top}>
+          <div className={styles.add_mar_top_small}>
+            The following objects in your metadata are inconsistent because they
+            reference database or remote-schema entities which do not seem to
+            exist or are conflicting
           </div>
-          <div className={styles.add_mar_top}>
-            <div className={styles.add_mar_top_small}>
-              The following objects in your metadata are inconsistent because
-              they reference database or remote-schema entities which do not
-              seem to exist or are conflicting
-            </div>
-            <div className={styles.add_mar_top_small}>
-              The GraphQL API has been generated using only the consistent parts
-              of the metadata
-            </div>
-            <div className={styles.add_mar_top_small}>
-              The console will also not be able to display these inconsistent
-              objects
-            </div>
+          <div className={styles.add_mar_top_small}>
+            The GraphQL API has been generated using only the consistent parts
+            of the metadata
+          </div>
+          <div className={styles.add_mar_top_small}>
+            The console will also not be able to display these inconsistent
+            objects
           </div>
         </div>
+
         <div className={styles.add}>{inconsistentObjectsTable()}</div>
         <div
           className={`${metaDataStyles.wd50percent} ${metaDataStyles.add_mar_top}`}
@@ -170,7 +163,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
             shouldReloadRemoteSchemas={isInconsistentRemoteSchemaPresent}
           />
         </div>
-      </div>
+      </Flex>
     );
   };
 
@@ -185,25 +178,26 @@ const MetadataStatus = ({ dispatch, metadata }) => {
     if (urlSearchParams.get('is_redirected') !== 'true') {
       return null;
     }
+
     return (
-      <div className={`${styles.errorBanner} alert alert-danger`}>
-        <Icon type="error" mr="xs" />
-        <strong>
+      <Flex
+        top={0}
+        zIndex={1000}
+        className="alert alert-danger"
+        justifyContent="space-between"
+      >
+        <Text fontWeight="bold">
+          <Icon type="error" mr="sm" mb="-2px" />
           You have been redirected because your GraphQL Engine metadata is in an
           inconsistent state
-        </strong>
-        <Icon
-          type="close"
-          onClick={dismissErrorBanner}
-          pointer
-          className={styles.align_right}
-        />
-      </div>
+        </Text>
+        <Icon type="close" onClick={dismissErrorBanner} pointer />
+      </Flex>
     );
   };
 
   return (
-    <div className={styles.add_mar_bottom}>
+    <Box mb="20px">
       {banner()}
       <div
         className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${metaDataStyles.metadata_wrapper} container-fluid`}
@@ -213,7 +207,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
         </Heading>
         {content()}
       </div>
-    </div>
+    </Box>
   );
 };
 
@@ -221,7 +215,7 @@ const mapStateToProps = state => {
   return {
     ...state.main,
     metadata: state.metadata,
-    dataHeaders: { ...state.tables.dataHeaders }
+    dataHeaders: { ...state.tables.dataHeaders },
   };
 };
 

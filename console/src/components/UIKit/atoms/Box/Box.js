@@ -11,6 +11,8 @@ import {
 } from 'styled-system';
 
 export const Box = styled.div`
+  cursor: ${props => (props.pointer ? 'pointer' : '')};
+
   ${color}
   ${border}
   ${typography}

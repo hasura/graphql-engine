@@ -4,6 +4,7 @@ import { flexbox } from 'styled-system';
 import { Box } from '../Box';
 
 export const Flex = styled(Box)`
+  cursor: ${props => (props.pointer ? 'pointer' : '')};
   ${flexbox}
 `;
 
