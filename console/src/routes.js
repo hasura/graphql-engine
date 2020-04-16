@@ -3,9 +3,9 @@ import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
-import { App, Main, PageNotFound } from 'components';
-
 import globals from './Globals';
+
+import { App, Main, PageNotFound } from 'components';
 
 import validateLogin from './utils/validateLogin';
 
@@ -26,6 +26,8 @@ import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer'
 import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
 
 import about from './components/Services/About/About';
+
+import { requireConsoleOpts } from './telemetry/Actions';
 
 import generatedLoginConnector from './components/Login/Login';
 
@@ -104,7 +106,14 @@ const routes = store => {
   );
 
   return (
-    <Route path="/" component={App} onEnter={validateLogin(store)}>
+    <Route
+      path="/"
+      component={App}
+      onEnter={composeOnEnterHooks([
+        validateLogin(store),
+        requireConsoleOpts(store),
+      ])}
+    >
       <Route path="login" component={generatedLoginConnector(connect)} />
       <Route
         path=""

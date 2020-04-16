@@ -10,6 +10,7 @@ import {
   showErrorNotification,
   showSuccessNotification,
 } from '../components/Services/Common/Notification';
+import globals from '../Globals';
 
 const SET_CONSOLE_OPTS = 'Telemetry/SET_CONSOLE_OPTS';
 const SET_NOTIFICATION_SHOWN = 'Telemetry/SET_NOTIFICATION_SHOWN';
@@ -118,19 +119,34 @@ const loadConsoleOpts = () => {
             type: SET_HASURA_UUID,
             data: data[0].hasura_uuid,
           });
+          globals.hasuraUUID = data[0].hasura_uuid;
           dispatch({
             type: SET_CONSOLE_OPTS,
             data: data[0].console_state,
           });
+          globals.telemetryNotificationShown =
+            data[0].console_state.telemetryNotificationShown;
         }
+        return Promise.resolve();
       },
       error => {
         console.error(
           'Failed to load console options: ' + JSON.stringify(error)
         );
+        return Promise.reject();
       }
     );
   };
+};
+
+export const requireConsoleOpts = ({ dispatch }) => (
+  nextState,
+  replaceState,
+  callback
+) => {
+  dispatch(loadConsoleOpts()).finally(() => {
+    callback();
+  });
 };
 
 const telemetryReducer = (state = defaultTelemetryState, action) => {
@@ -162,7 +178,6 @@ const telemetryReducer = (state = defaultTelemetryState, action) => {
 
 export default telemetryReducer;
 export {
-  loadConsoleOpts,
   telemetryNotificationShown,
   setPreReleaseNotificationOptOutInDB,
   setTelemetryNotificationShownInDB,
