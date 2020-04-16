@@ -52,30 +52,21 @@ deploy_server_latest() {
 
 draft_github_release() {
     cd "$ROOT"
+    export GITHUB_REPOSITORY="${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
     echo "drafting github release"
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -b "${RELEASE_BODY}" \
-        -draft \
+    hub release create \
+        --draft \
+        -a /build/_cli_output/binaries/cli-hasura-darwin-amd64 \
+        -a /build/_cli_output/binaries/cli-hasura-linux-amd64 \
+        -a /build/_cli_output/binaries/cli-hasura-windows-amd64.exe \
+        -a /build/_cli_ext_output/cli-ext-hasura-linux.tar.gz \
+        -a /build/_cli_ext_output/cli-ext-hasura-macos.tar.gz \
+        -a /build/_cli_ext_output/cli-ext-hasura-win.zip \
+        -m "$CIRCLE_TAG" \
+        -m "${RELEASE_BODY}" \
      "$CIRCLE_TAG"
-    echo "uploading cli assets"
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -draft \
-     "$CIRCLE_TAG" /build/_cli_output/binaries/
-    echo "uploading cli-ext assets"
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -draft \
-     "$CIRCLE_TAG" /build/_cli_ext_output/*.tar.gz
-    ghr -t "$GITHUB_TOKEN" \
-        -u "$CIRCLE_PROJECT_USERNAME" \
-        -r "$CIRCLE_PROJECT_REPONAME" \
-        -draft \
-     "$CIRCLE_TAG" /build/_cli_ext_output/*.zip
+
+    unset GITHUB_REPOSITORY
 }
 
 configure_git() {
@@ -100,6 +91,11 @@ deploy_console() {
 
     cd "$ROOT/console"
     export VERSION=$(../scripts/get-console-assets-version.sh)
+    # if version is not set, then skip console
+    if [ -z "$VERSION" ]; then
+        echo "version is not, skipping console deployment"
+        return
+    fi
     export DIST_PATH="/build/_console_output"
     local GS_BUCKET_ROOT="gs://graphql-engine-cdn.hasura.io/console/assets/$VERSION"
     # assets are at /build/_console_output/assets/versioned, already gzipped
@@ -123,7 +119,11 @@ deploy_cli_ext() {
     git clone https://github.com/hasura/cli-plugins-index.git ~/plugins-index
     cd ~/plugins-index
     git checkout -b cli-ext-${LATEST_TAG}
+    mkdir -p ./plugins/cli-ext/${LATEST_TAG}
+    # Replace existing cli-ext.yaml to work with previous versions of plugin system
     cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext.yaml
+    # Copy the manifest to versioned folder structure
+    cp ${DIST_PATH}/manifest.yaml ./plugins/cli-ext/${LATEST_TAG}/manifest.yaml
     git add .
     git commit -m "update cli-ext manifest to ${LATEST_TAG}"
     git push -q https://${GITHUB_TOKEN}@github.com/hasura/cli-plugins-index.git cli-ext-${LATEST_TAG}
@@ -136,19 +136,16 @@ deploy_cli_ext() {
 # build and push container for auto-migrations
 build_and_push_cli_migrations_image_v1() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations"
-    cd "$ROOT/scripts/cli-migrations/v1"
-    cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
-    docker build -t "$IMAGE_TAG" .
+    docker load -i /build/_cli_migrations_output/v1.tar
+    docker tag cli-migrations "$IMAGE_TAG"
     docker push "$IMAGE_TAG"
 }
 
 # build and push container for auto-migrations-v2
 build_and_push_cli_migrations_image_v2() {
     IMAGE_TAG="hasura/graphql-engine:${CIRCLE_TAG}.cli-migrations-v2"
-    cd "$ROOT/scripts/cli-migrations/v2"
-    cp /build/_cli_output/binaries/cli-hasura-linux-amd64 .
-    cp /build/_cli_ext_output/manifest-dev.yaml manifest.yaml
-    docker build -t "$IMAGE_TAG" .
+    docker load -i /build/_cli_migrations_output/v2.tar
+    docker tag cli-migrations-v2 "$IMAGE_TAG"
     docker push "$IMAGE_TAG"
 }
 
@@ -213,11 +210,12 @@ fi
 
 setup_gcloud
 
-RELEASE_BRANCH_REGEX="^release-v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
-if [[ "$CIRCLE_BRANCH" =~ $RELEASE_BRANCH_REGEX ]]; then
-    # release branch, only update console
-    echo "release branch, only deploying console"
+if [[ -z "$CIRCLE_TAG" ]]; then
+    # channel branch, only update console
+    echo "channel branch, only deploying console"
+    export EXPECTED_CHANNEL="${CIRCLE_BRANCH}"
     deploy_console
+    unset EXPECTED_CHANNEL
     exit
 fi
 

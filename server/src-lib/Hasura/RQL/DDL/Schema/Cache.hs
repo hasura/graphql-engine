@@ -199,7 +199,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (catalogMetadata, invalidationKeys) -> do
       let CatalogMetadata tables relationships permissions
             eventTriggers remoteSchemas functions allowlistDefs
-            computedFields customTypes actions scheduledTriggers = catalogMetadata
+            computedFields catalogCustomTypes actions scheduledTriggers = catalogMetadata
 
       -- tables
       tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
@@ -257,26 +257,22 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
             & HS.fromList
 
       -- custom types
-      resolvedCustomTypes <- bindA -< resolveCustomTypes tableCache customTypes
+      let CatalogCustomTypes customTypes pgScalars = catalogCustomTypes
+      maybeResolvedCustomTypes <-
+        (| withRecordInconsistency
+             (bindErrorA -< resolveCustomTypes tableCache customTypes pgScalars)
+         |) (MetadataObject MOCustomTypes $ toJSON customTypes)
 
       -- actions
-      actionCache <- (mapFromL _amName actions >- returnA)
-        >-> (| Inc.keyed (\_ action -> do
-               let ActionMetadata name comment def actionPermissions = action
-                   metadataObj = MetadataObject (MOAction name) $ toJSON $
-                                 CreateAction name def comment
-                   addActionContext e = "in action " <> name <<> "; " <> e
-               (| withRecordInconsistency (
-                  (| modifyErrA ( do
-                       (resolvedDef, outFields) <- bindErrorA -< resolveAction resolvedCustomTypes def
-                       let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
-                           permissionMap = mapFromL _apiRole permissionInfos
-                       returnA -< ActionInfo name outFields resolvedDef permissionMap comment
-                     )
-                   |) addActionContext)
-                |) metadataObj)
-             |)
-        >-> (\actionMap -> returnA -< M.catMaybes actionMap)
+      actionCache <- case maybeResolvedCustomTypes of
+        Just resolvedCustomTypes -> buildActions -< ((resolvedCustomTypes, pgScalars), actions)
+
+        -- If the custom types themselves are inconsistent, we can’t really do
+        -- anything with actions, so just mark them all inconsistent.
+        Nothing -> do
+          recordInconsistencies -< ( map mkActionMetadataObject actions
+                                   , "custom types are inconsistent" )
+          returnA -< M.empty
 
       -- scheduled triggers
       scheduledTriggersMap <- (mapFromL _cstName scheduledTriggers >- returnA)
@@ -310,7 +306,9 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
         , _boFunctions = functionCache
         , _boRemoteSchemas = remoteSchemaMap
         , _boAllowlist = allowList
-        , _boCustomTypes = resolvedCustomTypes
+        -- If 'maybeResolvedCustomTypes' is 'Nothing', then custom types are inconsinstent.
+        -- In such case, use empty resolved value of custom types.
+        , _boCustomTypes = fromMaybe (NonObjectTypeMap mempty, mempty) maybeResolvedCustomTypes
         , _boScheduledTriggers = scheduledTriggersMap
         }
 
@@ -318,6 +316,9 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
       let objectId = MOTableObj qt $ MTOTrigger trn
           definition = object ["table" .= qt, "configuration" .= configuration]
       in MetadataObject objectId definition
+
+    mkActionMetadataObject (ActionMetadata name comment defn _) =
+      MetadataObject (MOAction name) (toJSON $ CreateAction name defn comment)
 
     mkRemoteSchemaMetadataObject remoteSchema =
       MetadataObject (MORemoteSchema (_arsqName remoteSchema)) (toJSON remoteSchema)
@@ -377,6 +378,27 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
               liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
               mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
 
+    buildActions
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m )
+      => ( ((NonObjectTypeMap, AnnotatedObjects), HashSet PGScalarType)
+         , [ActionMetadata]
+         ) `arr` HashMap ActionName ActionInfo
+    buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
+      where
+        buildAction = proc ((resolvedCustomTypes, pgScalars), action) -> do
+          let ActionMetadata name comment def actionPermissions = action
+              addActionContext e = "in action " <> name <<> "; " <> e
+          (| withRecordInconsistency (
+             (| modifyErrA (do
+                  (resolvedDef, outObject, reusedPgScalars) <- liftEitherA <<< bindA -<
+                    runExceptT $ resolveAction resolvedCustomTypes pgScalars def
+                  let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
+                      permissionMap = mapFromL _apiRole permissionInfos
+                  returnA -< ActionInfo name outObject resolvedDef permissionMap reusedPgScalars comment)
+              |) addActionContext)
+           |) (mkActionMetadataObject action)
+
     buildRemoteSchemas
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr , MonadIO m, HasHttpManager m )
@@ -408,7 +430,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
          , ActionCache
          ) `arr` (RemoteSchemaMap, GS.GCtxMap, GS.GCtx)
     buildGQLSchema = proc (tableCache, functionCache, remoteSchemas, customTypes, actionCache) -> do
-      baseGQLSchema <- bindA -< GS.mkGCtxMap (snd customTypes) tableCache functionCache actionCache
+      baseGQLSchema <- bindA -< GS.mkGCtxMap tableCache functionCache actionCache
       (| foldlA' (\(remoteSchemaMap, gqlSchemas, remoteGQLSchemas)
                    (remoteSchemaName, (remoteSchema, metadataObject)) ->
            (| withRecordInconsistency (do

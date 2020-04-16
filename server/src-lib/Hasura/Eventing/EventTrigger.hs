@@ -36,6 +36,8 @@ module Hasura.Eventing.EventTrigger
   , defaultMaxEventThreads
   , defaultFetchInterval
   , Event(..)
+  , unlockEvents
+  , EventEngineCtx(..)
   ) where
 
 import           Control.Concurrent.Async    (wait, withAsync)
@@ -66,6 +68,9 @@ import qualified Data.Time.Clock             as Time
 import qualified Database.PG.Query           as Q
 import qualified Hasura.Logging              as L
 import qualified Network.HTTP.Client         as HTTP
+import qualified Database.PG.Query.PTI         as PTI
+import qualified PostgreSQL.Binary.Encoding    as PE
+import qualified Data.Set                      as Set
 
 invocationVersion :: Version
 invocationVersion = "2"
@@ -102,6 +107,7 @@ data EventEngineCtx
   = EventEngineCtx
   { _eeCtxEventThreadsCapacity :: TVar Int
   , _eeCtxFetchInterval        :: DiffTime
+  , _eeCtxLockedEvents         :: TVar (Set.Set EventId)
   }
 
 data DeliveryInfo
@@ -143,6 +149,7 @@ defaultFetchInterval = seconds 1
 initEventEngineCtx :: Int -> DiffTime -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
+  _eeCtxLockedEvents <- newTVar Set.empty
   return $ EventEngineCtx{..}
 
 {- Note [Event Triggers working mechanism]
@@ -216,8 +223,21 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
           Left err -> do
             L.unLogger logger $ EventInternalErr err
             return []
-          Right events ->
+          Right events -> do
+            saveLockedEvents events
             return events
+
+    -- After the events are fetched from the DB, we store the locked events
+    -- in a hash set(order doesn't matter and look ups are faster) in the
+    -- event engine context
+    saveLockedEvents :: [Event] -> IO ()
+    saveLockedEvents evts =
+      liftIO $ atomically $ do
+        lockedEvents <- readTVar _eeCtxLockedEvents
+        let evtsIds = map eId evts
+        let newLockedEvents = Set.union lockedEvents (Set.fromList evtsIds)
+        writeTVar _eeCtxLockedEvents newLockedEvents
+
 
     -- work on this batch of events while prefetching the next. Recurse after we've forked workers
     -- for each in the batch, minding the requested pool size.
@@ -268,7 +288,15 @@ processEventQueue logger logenv httpMgr pool getSchemaCache eeCtx@EventEngineCtx
       let meti = getEventTriggerInfoFromEvent cache e
       case meti of
         Nothing -> do
+          --  This rare error can happen in the following known cases:
+          --  i) schema cache is not up-to-date (due to some bug, say during schema syncing across multiple instances)
+          --  ii) the event trigger is dropped when this event was just fetched
           logQErr $ err500 Unexpected "table or event-trigger not found in schema cache"
+          liftIO . runExceptT $ Q.runTx pool (Q.RepeatableRead, Just Q.ReadWrite) $ do
+            currentTime <- liftIO getCurrentTime
+            -- For such an event, we unlock the event and retry after a minute
+            setRetry e (addUTCTime 60 currentTime)
+          >>= flip onLeft logQErr
         Just eti -> do
           let webhook = T.unpack $ wciCachedValue $ etiWebhookInfo eti
               retryConf = etiRetryConf eti
@@ -295,10 +323,10 @@ withEventEngineCtx ::
 withEventEngineCtx eeCtx = bracket_ (decrementThreadCount eeCtx) (incrementThreadCount eeCtx)
 
 incrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-incrementThreadCount (EventEngineCtx c _) = liftIO $ atomically $ modifyTVar' c (+1)
+incrementThreadCount (EventEngineCtx c _ _) = liftIO $ atomically $ modifyTVar' c (+1)
 
 decrementThreadCount :: MonadIO m => EventEngineCtx -> m ()
-decrementThreadCount (EventEngineCtx c _) = liftIO $ atomically $ do
+decrementThreadCount (EventEngineCtx c _ _) = liftIO $ atomically $ do
   countThreads <- readTVar c
   if countThreads > 0
      then modifyTVar' c (\v -> v - 1)
@@ -442,7 +470,7 @@ insertInvocation invo = do
           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
           VALUES ($1, $2, $3, $4)
           |] ( iEventId invo
-             , fromIntegral $ iStatus invo :: Int64
+             , toInt64 $ iStatus invo :: Int64
              , Q.AltJ $ toJSON $ iRequest invo
              , Q.AltJ $ toJSON $ iResponse invo) True
   Q.unitQE defaultTxErrorHandler [Q.sql|
@@ -479,4 +507,27 @@ unlockAllEvents =
           UPDATE hdb_catalog.event_log
           SET locked = 'f'
           WHERE locked = 't'
-          |] () False
+          |] () True
+
+toInt64 :: (Integral a) => a -> Int64
+toInt64 = fromIntegral
+
+-- EventIdArray is only used for PG array encoding
+newtype EventIdArray = EventIdArray { unEventIdArray :: [EventId]} deriving (Show, Eq)
+
+instance Q.ToPrepArg EventIdArray where
+  toPrepVal (EventIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ l
+    where
+      -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
+      encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
+
+unlockEvents :: [EventId] -> Q.TxE QErr Int
+unlockEvents eventIds =
+   (runIdentity . Q.getRow) <$> Q.withQE defaultTxErrorHandler
+   [Q.sql|
+     WITH "cte" AS
+     (UPDATE hdb_catalog.event_log
+     SET locked = 'f'
+     WHERE id = ANY($1::text[]) RETURNING *)
+     SELECT count(*) FROM "cte"
+   |] (Identity $ EventIdArray eventIds) True

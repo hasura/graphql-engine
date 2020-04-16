@@ -57,6 +57,7 @@ data ActionMetric
     = ActionMetric
     { _amSynchronous       :: !Int
     , _amAsynchronous      :: !Int
+    , _amQueryActions      :: !Int
     , _amTypeRelationships :: !Int
     , _amCustomTypes       :: !Int
     } deriving (Show, Eq)
@@ -64,15 +65,16 @@ $(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''ActionMetric)
 
 data Metrics
   = Metrics
-  { _mtTables        :: !Int
-  , _mtViews         :: !Int
-  , _mtEnumTables    :: !Int
-  , _mtRelationships :: !RelationshipMetric
-  , _mtPermissions   :: !PermissionMetric
-  , _mtEventTriggers :: !Int
-  , _mtRemoteSchemas :: !Int
-  , _mtFunctions     :: !Int
+  { _mtTables         :: !Int
+  , _mtViews          :: !Int
+  , _mtEnumTables     :: !Int
+  , _mtRelationships  :: !RelationshipMetric
+  , _mtPermissions    :: !PermissionMetric
+  , _mtEventTriggers  :: !Int
+  , _mtRemoteSchemas  :: !Int
+  , _mtFunctions      :: !Int
   , _mtServiceTimings :: !ServiceTimingMetrics
+  , _mtPgVersion      :: !PGVersion
   , _mtActions        :: !ActionMetric
   } deriving (Show, Eq)
 $(A.deriveToJSON (A.aesonDrop 3 A.snakeCase) ''Metrics)
@@ -116,13 +118,14 @@ runTelemetry
   -- ^ an action that always returns the latest schema cache
   -> Text
   -> InstanceId
+  -> PGVersion
   -> IO void
-runTelemetry (Logger logger) manager getSchemaCache dbId instanceId = do
+runTelemetry (Logger logger) manager getSchemaCache dbId instanceId pgVersion = do
   let options = wreqOptions manager []
   forever $ do
     schemaCache <- getSchemaCache
     serviceTimings <- dumpServiceTimingMetrics
-    let metrics = computeMetrics schemaCache serviceTimings
+    let metrics = computeMetrics schemaCache serviceTimings pgVersion
     payload <- A.encode <$> mkPayload dbId instanceId currentVersion metrics
     logger $ debugLBS $ "metrics_info: " <> payload
     resp <- try $ Wreq.postWith options (T.unpack telemetryUrl) payload
@@ -142,8 +145,8 @@ runTelemetry (Logger logger) manager getSchemaCache dbId instanceId = do
         let httpErr = Just $ mkHttpError telemetryUrl (Just resp) Nothing
         logger $ mkTelemetryLog "http_error" "failed to post telemetry" httpErr
 
-computeMetrics :: SchemaCache -> ServiceTimingMetrics -> Metrics
-computeMetrics sc _mtServiceTimings =
+computeMetrics :: SchemaCache -> ServiceTimingMetrics -> PGVersion -> Metrics
+computeMetrics sc _mtServiceTimings _mtPgVersion =
   let _mtTables = countUserTables (isNothing . _tciViewInfo . _tiCoreInfo)
       _mtViews = countUserTables (isJust . _tciViewInfo . _tiCoreInfo)
       _mtEnumTables = countUserTables (isJust . _tciEnumValues . _tiCoreInfo)
@@ -178,10 +181,12 @@ computeMetrics sc _mtServiceTimings =
     permsOfTbl = Map.toList . _tiRolePermInfoMap
 
 computeActionsMetrics :: ActionCache -> AnnotatedObjects -> ActionMetric
-computeActionsMetrics ac ao = ActionMetric syncActionsLen asyncActionsLen typeRelationships customTypesLen
+computeActionsMetrics ac ao =
+  ActionMetric syncActionsLen asyncActionsLen queryActionsLen typeRelationships customTypesLen
   where actions = Map.elems ac
-        syncActionsLen  = length . filter ((==ActionSynchronous) . _adKind . _aiDefinition) $ actions
-        asyncActionsLen = (length actions) - syncActionsLen
+        syncActionsLen  = length . filter ((==(ActionMutation ActionSynchronous)) . _adType . _aiDefinition) $ actions
+        asyncActionsLen  = length . filter ((==(ActionMutation ActionAsynchronous)) . _adType . _aiDefinition) $ actions
+        queryActionsLen = length . filter ((==ActionQuery) . _adType . _aiDefinition) $ actions
 
         outputTypesLen = length . nub . (map (_adOutputType . _aiDefinition)) $ actions
         inputTypesLen = length . nub . concat . (map ((map _argType) . _adArguments . _aiDefinition)) $ actions

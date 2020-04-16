@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import 'react-table/react-table.css';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
-import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
+import DragFoldTable, {
+  getColWidth,
+} from '../../../Common/TableCommon/DragFoldTable';
 
 import Dropdown from '../../../Common/Dropdown/Dropdown';
 
@@ -46,6 +48,13 @@ import {
   getTableSchema,
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
+import {
+  persistColumnCollapseChange,
+  getPersistedCollapsedColumns,
+  persistColumnOrderChange,
+  getPersistedColumnsOrder,
+  persistPageSizeChange,
+} from './localStorageUtils';
 
 const ViewRows = ({
   curTableName,
@@ -132,64 +141,6 @@ const ViewRows = ({
   const getGridHeadings = (_columns, _relationships, _disableBulkSelect) => {
     const _gridHeadings = [];
 
-    const getColWidth = (header, contentRows = []) => {
-      const MAX_WIDTH = 600;
-      const HEADER_PADDING = 42;
-      const CONTENT_PADDING = 18;
-      const HEADER_FONT = 'bold 16px Gudea';
-      const CONTENT_FONT = '14px Gudea';
-
-      const getTextWidth = (text, font) => {
-        // Doesn't work well with non-monospace fonts
-        // const CHAR_WIDTH = 8;
-        // return text.length * CHAR_WIDTH;
-
-        // if given, use cached canvas for better performance
-        // else, create new canvas
-        const canvas =
-          getTextWidth.canvas ||
-          (getTextWidth.canvas = document.createElement('canvas'));
-
-        const context = canvas.getContext('2d');
-        context.font = font;
-
-        const metrics = context.measureText(text);
-        return metrics.width;
-      };
-
-      let maxContentWidth = 0;
-      for (let i = 0; i < contentRows.length; i++) {
-        if (contentRows[i] !== undefined && contentRows[i][header] !== null) {
-          const content = contentRows[i][header];
-
-          let contentString;
-          if (content === null || content === undefined) {
-            contentString = 'NULL';
-          } else if (typeof content === 'object') {
-            contentString = JSON.stringify(content, null, 4);
-          } else {
-            contentString = content.toString();
-          }
-
-          const currLength = getTextWidth(contentString, CONTENT_FONT);
-
-          if (currLength > maxContentWidth) {
-            maxContentWidth = currLength;
-          }
-        }
-      }
-
-      const maxContentCellWidth = maxContentWidth + CONTENT_PADDING;
-
-      const headerCellWidth =
-        getTextWidth(header, HEADER_FONT) + HEADER_PADDING;
-
-      return Math.min(
-        MAX_WIDTH,
-        Math.max(maxContentCellWidth, headerCellWidth)
-      );
-    };
-
     _gridHeadings.push({
       Header: '',
       accessor: 'tableRowActionButtons',
@@ -222,8 +173,6 @@ const ViewRows = ({
 
       let sortIcon = 'fa-sort';
       if (curQuery.order_by && curQuery.order_by.length) {
-        sortIcon = '';
-
         curQuery.order_by.forEach(orderBy => {
           if (orderBy.column === columnName) {
             sortIcon = orderBy.type === 'asc' ? 'fa-caret-up' : 'fa-caret-down';
@@ -233,7 +182,7 @@ const ViewRows = ({
 
       _gridHeadings.push({
         Header: (
-          <div className="ellipsis" title="Click to sort">
+          <div className="ellipsis">
             <span className={styles.tableHeaderCell}>
               {columnName} <i className={'fa ' + sortIcon} />
             </span>
@@ -364,8 +313,12 @@ const ViewRows = ({
           let title;
           let handleClick;
 
-          const handleExpand = () => dispatch(vExpandRow(rowCellIndex));
-          const handleCollapse = () => dispatch(vCollapseRow());
+          const handleExpand = () => {
+            dispatch(vExpandRow(rowCellIndex));
+          };
+          const handleCollapse = () => {
+            dispatch(vCollapseRow());
+          };
 
           if (isExpanded) {
             icon = 'fa-compress';
@@ -584,7 +537,7 @@ const ViewRows = ({
           } else if (
             col.data_type === 'json' ||
             col.data_type === 'jsonb' ||
-            rowColumnValue === 'object'
+            typeof rowColumnValue === 'object'
           ) {
             cellValue = JSON.stringify(rowColumnValue, null, 4);
             cellTitle = cellValue;
@@ -723,7 +676,7 @@ const ViewRows = ({
         if ('order_by' in curFilter) {
           orderBy = [...curFilter.order_by];
         }
-        const limit = 'limit' in curFilter ? curFilter.limit : 10;
+
         const offset = 'offset' in curFilter ? curFilter.offset : 0;
 
         _filterQuery = (
@@ -732,7 +685,6 @@ const ViewRows = ({
             whereAnd={wheres}
             tableSchema={tableSchema}
             orderBy={orderBy}
-            limit={limit}
             dispatch={dispatch}
             count={count}
             tableName={curTableName}
@@ -869,6 +821,12 @@ const ViewRows = ({
       );
     }
 
+    const collapsedColumns = getPersistedCollapsedColumns(
+      curTableName,
+      currentSchema
+    );
+    const columnsOrder = getPersistedColumnsOrder(curTableName, currentSchema);
+
     let disableSortColumn = false;
 
     const sortByColumn = (col, clearExisting = true) => {
@@ -958,6 +916,7 @@ const ViewRows = ({
       if (curFilter.offset !== page * curFilter.limit) {
         dispatch(setOffset(page * curFilter.limit));
         dispatch(runQuery(tableSchema));
+        setSelectedRows([]);
       }
     };
 
@@ -966,6 +925,8 @@ const ViewRows = ({
         dispatch(setLimit(size));
         dispatch(setOffset(0));
         dispatch(runQuery(tableSchema));
+        setSelectedRows([]);
+        persistPageSizeChange(size);
       }
     };
 
@@ -974,6 +935,7 @@ const ViewRows = ({
         className="-highlight -fit-content"
         data={_gridRows}
         columns={_gridHeadings}
+        headerTitle={'Click to sort / Drag to rearrange'}
         resizable
         manual
         sortable={false}
@@ -986,6 +948,18 @@ const ViewRows = ({
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         page={Math.floor(curFilter.offset / curFilter.limit)}
+        onCollapseChange={collapsedData =>
+          persistColumnCollapseChange(
+            curTableName,
+            currentSchema,
+            collapsedData
+          )
+        }
+        defaultCollapsed={collapsedColumns}
+        onOrderChange={reorderData =>
+          persistColumnOrderChange(curTableName, currentSchema, reorderData)
+        }
+        defaultReorders={columnsOrder}
       />
     );
   };

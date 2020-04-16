@@ -6,6 +6,7 @@ module Hasura.Prelude
   , onJust
   , onLeft
   , choice
+  , afold
   , bsToTxt
   , txtToBs
   , spanMaybeM
@@ -27,7 +28,8 @@ import           Control.Monad.Fail                as M (MonadFail)
 import           Control.Monad.Identity            as M
 import           Control.Monad.Reader              as M
 import           Control.Monad.State.Strict        as M
-import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..))
+import           Control.Monad.Writer.Strict       as M (MonadWriter (..), WriterT (..),
+                                                         execWriterT, runWriterT)
 import           Data.Align                        as M (Semialign (align, alignWith))
 import           Data.Bool                         as M (bool)
 import           Data.Data                         as M (Data (..))
@@ -44,6 +46,7 @@ import           Data.List                         as M (find, findIndex, foldl'
 import           Data.List.NonEmpty                as M (NonEmpty (..))
 import           Data.Maybe                        as M (catMaybes, fromMaybe, isJust, isNothing,
                                                          listToMaybe, mapMaybe, maybeToList)
+import           Data.Monoid                       as M (getAlt)
 import           Data.Ord                          as M (comparing)
 import           Data.Semigroup                    as M (Semigroup (..))
 import           Data.Sequence                     as M (Seq)
@@ -68,7 +71,7 @@ import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
 
 alphaNumerics :: String
-alphaNumerics = ['a'..'z'] ++ ['A'..'Z'] ++ "0123456789 "
+alphaNumerics = ['a'..'z'] ++ ['A'..'Z'] ++ "0123456789"
 
 instance Arbitrary Text where
   arbitrary = T.pack <$> QC.listOf (QC.elements alphaNumerics)
@@ -84,6 +87,9 @@ onLeft e f = either f return e
 
 choice :: (Alternative f) => [f a] -> f a
 choice = asum
+
+afold :: (Foldable t, Alternative f) => t a -> f a
+afold = getAlt . foldMap pure
 
 bsToTxt :: B.ByteString -> Text
 bsToTxt = TE.decodeUtf8With TE.lenientDecode

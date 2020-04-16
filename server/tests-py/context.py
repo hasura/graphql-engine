@@ -190,6 +190,14 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
             resp, status = self.mirror_action()
             self._send_response(status, resp)
 
+        elif req_path == "/get-user-by-email":
+            resp, status = self.get_users_by_email(True)
+            self._send_response(status, resp)
+
+        elif req_path == "/get-users-by-email":
+            resp, status = self.get_users_by_email(False)
+            self._send_response(status, resp)
+
         else:
             self.send_response(HTTPStatus.NO_CONTENT)
             self.end_headers()
@@ -270,6 +278,40 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
     def mirror_action(self):
         response = self.req_json['input']['arg']
         return response, HTTPStatus.OK
+
+    def get_users_by_email(self, singleUser = False):
+        email = self.req_json['input']['email']
+        if not self.check_email(email):
+            response = {
+                'message': 'Given email address is not valid',
+                'code': 'invalid-email'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+        gql_query = '''
+        query get_user($email:String!) {
+           user(where:{email:{_eq:$email}},order_by: {id: asc}) {
+            id
+        }
+        }
+        '''
+        query = {
+            'query': gql_query,
+            'variables':{
+                'email':email
+            }
+        }
+        code,resp = self.execute_query(query)
+        if code != 200 or 'data' not in resp:
+            response = {
+                'message': 'GraphQL query execution failed',
+                'code': 'unexpected'
+            }
+            return response, HTTPStatus.BAD_REQUEST
+        if singleUser:
+            return resp['data']['user'][0], HTTPStatus.OK
+        else:
+            return resp['data']['user'], HTTPStatus.OK
+
 
 
     def check_email(self, email):
@@ -409,7 +451,7 @@ class HGECtx:
     def __init__(self, hge_url, pg_url, config):
 
         self.http = requests.Session()
-        self. hge_key = config.getoption('--hge-key')
+        self.hge_key = config.getoption('--hge-key')
         self.hge_url = hge_url
         self.pg_url = pg_url
         self.hge_webhook = config.getoption('--hge-webhook')
@@ -420,6 +462,8 @@ class HGECtx:
             with open(hge_jwt_key_file) as f:
                 self.hge_jwt_key = f.read()
         self.hge_jwt_conf = config.getoption('--hge-jwt-conf')
+        if self.hge_jwt_conf is not None:
+            self.hge_jwt_conf_dict = json.loads(self.hge_jwt_conf)
         self.webhook_insecure = config.getoption('--test-webhook-insecure')
         self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False

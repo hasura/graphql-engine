@@ -15,7 +15,7 @@ Connecting actions with the graph
 Use case
 --------
 
-Actions are a way to extend your GraphQL schema by adding custom mutations. It
+Actions are a way to extend your GraphQL schema with custom queries or mutations. It
 is a typical use case that the custom actions' response is actually related to
 existing objects in the schema. e.g. a custom ``insertAuthor`` action will be
 related to the ``author`` object in the schema. Hence, we would want to be able
