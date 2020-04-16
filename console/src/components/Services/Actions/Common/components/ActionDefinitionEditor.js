@@ -69,7 +69,7 @@ const ActionDefinitionEditor = ({
           {error && (
             <div className={`${styles.display_flex}  ${styles.errorMessage}`}>
               <CrossIcon className={styles.add_mar_right_small} />
-              <p>{errorMessage}</p>
+              <div>{errorMessage}</div>
             </div>
           )}
         </div>
