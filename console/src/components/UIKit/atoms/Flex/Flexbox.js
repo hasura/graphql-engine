@@ -9,5 +9,5 @@ export const Flex = styled(Box)`
 
 Flex.defaultProps = {
   alignItems: 'center',
-  justifyContent: 'center'
+  justifyContent: 'center',
 };

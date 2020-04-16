@@ -5,15 +5,18 @@ import {
   typography,
   layout,
   space,
-  shadow
+  background,
+  shadow,
+  position,
 } from 'styled-system';
 
 export const Box = styled.div`
-  ${color}
   ${color}
   ${border}
   ${typography}
   ${layout}
   ${space}
   ${shadow}
+  ${background}
+  ${position}
 `;
