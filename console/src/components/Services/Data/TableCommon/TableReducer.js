@@ -77,9 +77,8 @@ import {
   CREATE_NEW_PRESET,
   DELETE_PRESET,
   SET_PRESET_VALUE,
-  PERM_SET_FILTER_TYPE,
+  getFilterKey,
 } from '../TablePermissions/Actions';
-import { getDefaultFilterType } from '../TablePermissions/utils';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
   const modifyState = JSON.parse(JSON.stringify(modifyStateOrig));
@@ -264,7 +263,6 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...permState,
-          filterType: getDefaultFilterType(action.query),
           isEditing: true,
         },
         prevPermissionState: {
@@ -285,7 +283,10 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          custom_checked: true,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: true,
+          },
         },
       };
 
@@ -330,20 +331,16 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...updatePermissionsState(
+            // it can be done ith optional second arg
             modifyState.permissionsState,
-            modifyState.permissionsState.filterType,
+            action.filterType ||
+              getFilterKey(modifyState.permissionsState.query),
             action.filter
           ),
-          custom_checked: false,
-        },
-      };
-    case PERM_SET_FILTER_TYPE:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...modifyState.permissionsState,
-          filterType: action.filterType,
-          custom_checked: false,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: false,
+          },
         },
       };
     case PERM_SET_FILTER:
@@ -352,10 +349,10 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            modifyState.permissionsState.filterType,
+            action.filterType ||
+              getFilterKey(modifyState.permissionsState.query),
             action.filter
           ),
-          // custom_checked: true,
         },
       };
 
@@ -365,10 +362,14 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            modifyState.permissionsState.filterType,
+            action.filterType ||
+              getFilterKey(modifyState.permissionsState.query),
             {}
           ),
-          custom_checked: false,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: false,
+          },
         },
       };
 

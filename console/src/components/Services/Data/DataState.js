@@ -28,7 +28,10 @@ const defaultPermissionsState = {
   table: '',
   role: '',
   query: '',
-  custom_checked: false,
+  custom_checked: {
+    check: false,
+    filter: false,
+  },
   newRole: '',
   limitEnabled: true,
   bulkSelect: [],

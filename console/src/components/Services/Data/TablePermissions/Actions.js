@@ -64,14 +64,15 @@ const permOpenEdit = (tableSchema, role, query) => ({
   role,
   query,
 });
-const permSetFilterType = filterType => ({
-  type: PERM_SET_FILTER_TYPE,
+const permSetFilter = (filter, filterType) => ({
+  type: PERM_SET_FILTER,
+  filter,
   filterType,
 });
-const permSetFilter = filter => ({ type: PERM_SET_FILTER, filter });
-const permSetFilterSameAs = filter => ({
+const permSetFilterSameAs = (filter, filterType) => ({
   type: PERM_SET_FILTER_SAME_AS,
   filter,
+  filterType,
 });
 const permToggleField = (fieldType, fieldName) => ({
   type: PERM_TOGGLE_FIELD,
@@ -82,7 +83,7 @@ const permToggleAllFields = allFields => ({
   type: PERM_TOGGLE_ALL_FIELDS,
   allFields,
 });
-const permAllowAll = () => ({ type: PERM_ALLOW_ALL });
+const permAllowAll = filterType => ({ type: PERM_ALLOW_ALL, filterType });
 const permCloseEdit = () => ({ type: PERM_CLOSE_EDIT });
 const permSetRoleName = roleName => ({
   type: PERM_SET_ROLE_NAME,
@@ -123,7 +124,10 @@ const permDelApplySamePerm = index => {
     dispatch({ type: PERM_DEL_APPLY_SAME_PERM, data: index });
   };
 };
-const permCustomChecked = () => ({ type: PERM_CUSTOM_CHECKED });
+const permCustomChecked = filterType => ({
+  type: PERM_CUSTOM_CHECKED,
+  filterType,
+});
 
 const getFilterKey = query => {
   return query === 'insert' ? 'check' : 'filter';
@@ -822,5 +826,4 @@ export {
   permDelApplySamePerm,
   applySamePermissionsBulk,
   copyRolePermissions,
-  permSetFilterType,
 };
