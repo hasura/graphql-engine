@@ -4,7 +4,7 @@ RUN apt-get update && apt-get download libstdc++6
 
 FROM hasura/graphql-engine:v1.1.1
 
-# install libstdc++6
+# install libstdc++6 from .deb file
 COPY --from=packager /tmp/libstdc++6* .
 RUN busybox dpkg-deb -x libstdc++6*.deb / \
     && rm libstdc++6*.deb
