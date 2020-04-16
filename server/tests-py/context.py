@@ -406,7 +406,7 @@ class HGECtx:
     def __init__(self, hge_url, pg_url, config):
 
         self.http = requests.Session()
-        self. hge_key = config.getoption('--hge-key')
+        self.hge_key = config.getoption('--hge-key')
         self.hge_url = hge_url
         self.pg_url = pg_url
         self.hge_webhook = config.getoption('--hge-webhook')
@@ -417,6 +417,8 @@ class HGECtx:
             with open(hge_jwt_key_file) as f:
                 self.hge_jwt_key = f.read()
         self.hge_jwt_conf = config.getoption('--hge-jwt-conf')
+        if self.hge_jwt_conf is not None:
+            self.hge_jwt_conf_dict = json.loads(self.hge_jwt_conf)
         self.webhook_insecure = config.getoption('--test-webhook-insecure')
         self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False

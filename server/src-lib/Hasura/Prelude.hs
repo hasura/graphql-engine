@@ -72,7 +72,7 @@ import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
 
 alphaNumerics :: String
-alphaNumerics = ['a'..'z'] ++ ['A'..'Z'] ++ "0123456789 "
+alphaNumerics = ['a'..'z'] ++ ['A'..'Z'] ++ "0123456789"
 
 instance Arbitrary Text where
   arbitrary = T.pack <$> QC.listOf (QC.elements alphaNumerics)
