@@ -1,7 +1,15 @@
+-- This pragma is needed for allowQueryActionExecuter
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
+
 module Hasura.GraphQL.Resolve.Action
   ( resolveActionMutation
   , resolveAsyncActionQuery
   , asyncActionsProcessor
+  , resolveActionQuery
+  , mkJsonAggSelect
+  , QueryActionExecuter
+  , allowQueryActionExecuter
+  , restrictActionExecuter
   ) where
 
 import           Hasura.Prelude
@@ -95,14 +103,14 @@ resolveActionMutation
      , Has [HTTP.Header] r
      )
   => Field
-  -> ActionExecutionContext
+  -> ActionMutationExecutionContext
   -> UserVars
   -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionMutation field executionContext sessionVariables =
   case executionContext of
-    ActionExecutionSyncWebhook executionContextSync ->
+    ActionMutationSyncWebhook executionContextSync ->
       resolveActionMutationSync field executionContextSync sessionVariables
-    ActionExecutionAsync ->
+    ActionMutationAsync ->
       (,[]) <$> resolveActionMutationAsync field sessionVariables
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
@@ -119,7 +127,7 @@ resolveActionMutationSync
      , Has [HTTP.Header] r
      )
   => Field
-  -> SyncActionExecutionContext
+  -> ActionExecutionContext
   -> UserVars
   -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionMutationSync field executionContext sessionVariables = do
@@ -139,7 +147,57 @@ resolveActionMutationSync field executionContext sessionVariables = do
   let jsonAggType = mkJsonAggSelect outputType
   return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
   where
-    SyncActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
+    ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
+      forwardClientHeaders = executionContext
+
+-- QueryActionExecuter is a type for a higher function, this is being used
+-- to allow or disallow where a query action can be executed. We would like
+-- to explicitly control where a query action can be run.
+-- Example: We do not explain a query action, so we use the `restrictActionExecuter`
+-- to prevent resolving the action query.
+type QueryActionExecuter =
+  forall m a. (MonadError QErr m)
+  => (HTTP.Manager -> [HTTP.Header] -> m a)
+  -> m a
+
+allowQueryActionExecuter :: HTTP.Manager -> [HTTP.Header] -> QueryActionExecuter
+allowQueryActionExecuter manager reqHeaders actionResolver =
+  actionResolver manager reqHeaders
+
+restrictActionExecuter :: Text -> QueryActionExecuter
+restrictActionExecuter errMsg _ =
+  throw400 NotSupported errMsg
+
+resolveActionQuery
+  :: ( HasVersion
+     , MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , MonadIO m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     )
+  => Field
+  -> ActionExecutionContext
+  -> UserVars
+  -> HTTP.Manager
+  -> [HTTP.Header]
+  -> m (RS.AnnSimpleSelG UnresolvedVal)
+resolveActionQuery field executionContext sessionVariables httpManager reqHeaders = do
+  let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
+      actionContext = ActionContext actionName
+      handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
+  (webhookRes, _) <- callWebhook httpManager outputType outputFields reqHeaders confHeaders
+                               forwardClientHeaders resolvedWebhook handlerPayload
+  let webhookResponseExpression = RS.AEInput $ UVSQL $
+        toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+  selectAstUnresolved <-
+    processOutputSelectionSet webhookResponseExpression outputType definitionList
+    (_fType field) $ _fSelSet field
+  return selectAstUnresolved
+  where
+    ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
 {- Note: [Async action architecture]
