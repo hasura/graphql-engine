@@ -1,4 +1,5 @@
 import defaultState from './State';
+import globals from '../../Globals';
 import requestAction from '../../utils/requestAction';
 import requestActionPlain from '../../utils/requestActionPlain';
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
@@ -125,6 +126,7 @@ const fetchServerConfig = () => (dispatch, getState) => {
         type: SERVER_CONFIG_FETCH_SUCCESS,
         data: data,
       });
+      globals.serverConfig = data;
       return Promise.resolve();
     },
     error => {
