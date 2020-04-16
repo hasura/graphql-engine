@@ -251,8 +251,8 @@ set to ``$.hasura.claims``:
 
 .. note::
 
-   The JWT config can only have one of claims_namespace or claims_namespace_path values set.
-   If neither keys are set, then the default value of
+   The JWT config can only have one of ``claims_namespace`` or ``claims_namespace_path``
+   values set. If neither keys are set, then the default value of
    claims_namespace i.e. https://hasura.io/jwt/claims will be used.
 
 ``claims_format``
