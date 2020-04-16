@@ -1,4 +1,4 @@
-@import "../../Common.scss";
+@import '../../Common.scss';
 
 .editorExpanded {
   margin: 10px 0;
@@ -11,8 +11,4 @@
 .editorCollapsed {
   display: block;
   margin-bottom: 20px;
-}
-
-.editorContent {
-  padding: 10px 15px;
 }

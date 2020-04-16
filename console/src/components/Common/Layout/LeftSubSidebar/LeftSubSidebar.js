@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router';
 
 import Button from '../../Button/Button';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Flex } from '../../../UIKit/atoms';
 import styles from './LeftSubSidebar.scss';
 
 const LeftSubSidebar = props => {
@@ -44,7 +44,7 @@ const LeftSubSidebar = props => {
 
   return (
     <div className={styles.subSidebarList}>
-      <div className={styles.display_flex + ' ' + styles.padd_top_medium}>
+      <Flex pt="10px">
         <div
           className={
             styles.sidebarSearch + ' form-group col-xs-12 ' + styles.padd_remove
@@ -53,7 +53,7 @@ const LeftSubSidebar = props => {
           <Icon type="search" color="grey.tab" />
           {searchInput}
         </div>
-      </div>
+      </Flex>
       <div>
         <div className={styles.sidebarHeadingWrapper}>
           <div

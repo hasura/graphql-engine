@@ -1,5 +1,7 @@
 import React from 'react';
+
 import Button from '../../Button/Button';
+import { Box, Flex } from '../../../UIKit/atoms';
 import styles from './Editor.scss';
 
 class Editor extends React.Component {
@@ -118,7 +120,9 @@ class Editor extends React.Component {
 
       if (editorExpanded) {
         editorContent = (
-          <div className={styles.editorContent}>{editorExpanded()}</div>
+          <Box py="10px" px="15px">
+            {editorExpanded()}
+          </Box>
         );
       }
     } else {
@@ -127,19 +131,21 @@ class Editor extends React.Component {
 
       if (editorCollapsed) {
         editorContent = (
-          <div className={styles.editorContent}>{editorCollapsed()}</div>
+          <Box py="10px" px="15px">
+            {editorCollapsed()}
+          </Box>
         );
       }
     }
 
     return (
       <div className={editorClass}>
-        <div className={styles.display_flex + ' ' + styles.add_mar_bottom_mid}>
+        <Flex mb="10px">
           {this.toggleButton()}
           {editorLabel}
-        </div>
+        </Flex>
         {editorContent}
-        <div className={styles.add_mar_top_small}>{actionButtons}</div>
+        <Box mt="10px">{actionButtons}</Box>
       </div>
     );
   }

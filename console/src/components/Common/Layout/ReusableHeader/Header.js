@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 
 import { generateHeaderSyms } from './HeaderReducer';
 import DropdownButton from '../../DropdownButton/DropdownButton';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Flex, Box } from '../../../UIKit/atoms';
+import styles from './Header.scss';
 
 class Header extends React.Component {
   constructor(props) {
@@ -100,28 +101,15 @@ class Header extends React.Component {
   }
 
   render() {
-    const styles = require('./Header.scss');
     const { isDisabled } = this.props;
     const generateHeaderHtml = this.props.headers.map((h, i) => {
       const getTitle = this.getTitle(this.props.typeOptions, h.type);
       return (
-        <div
-          className={
-            styles.common_header_wrapper +
-            ' ' +
-            styles.display_flex +
-            ' form-group'
-          }
-          key={i}
-        >
+        <Flex className="form-group" key={i}>
           <input
             type="text"
             className={
-              styles.input +
-              ' form-control ' +
-              styles.add_mar_right +
-              ' ' +
-              styles.defaultWidth
+              styles.input + ' form-control ' + ' ' + styles.defaultWidth
             }
             data-index-id={i}
             value={h.name}
@@ -131,8 +119,10 @@ class Header extends React.Component {
             disabled={isDisabled}
             data-test={`remote-schema-header-test${i + 1}-key`}
           />
-          <span className={styles.header_colon}>:</span>
-          <span className={styles.value_wd}>
+          <Box as="span" mx="10px" fontWeight="bold" fontSize="24px">
+            :
+          </Box>
+          <Box as="span" width="300px">
             <DropdownButton
               dropdownOptions={this.props.typeOptions}
               title={getTitle.length > 0 ? getTitle[0].display_text : 'Value'}
@@ -146,7 +136,7 @@ class Header extends React.Component {
               inputPlaceHolder={this.props.placeHolderText(h.type)}
               testId={`remote-schema-header-test${i + 1}`}
             />
-          </span>
+          </Box>
           {/*
           <select
             className={
@@ -196,7 +186,7 @@ class Header extends React.Component {
               ml="sm"
             />
           ) : null}
-        </div>
+        </Flex>
       );
     });
     return <div className={this.props.wrapper_class}>{generateHeaderHtml}</div>;
