@@ -31,6 +31,7 @@ The Hasura GraphQL engine lets you set up a GraphQL server and event triggers ov
   migrations/index
   Deploying <deployment/index>
   hasura-cli/index
+  postgres/index
   API Reference <api-reference/index>
   How it works <how-it-works/index>
   Troubleshooting <troubleshooting/index>
