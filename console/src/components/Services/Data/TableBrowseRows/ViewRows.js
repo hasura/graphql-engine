@@ -49,10 +49,11 @@ import {
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
 import {
-  handleCollapseChange,
-  getCollapsedColumns,
-  handleOrderChange,
-  getColumnsOrder,
+  persistColumnCollapseChange,
+  getPersistedCollapsedColumns,
+  persistColumnOrderChange,
+  getPersistedColumnsOrder,
+  persistPageSizeChange,
 } from './localStorageUtils';
 
 const ViewRows = ({
@@ -675,7 +676,7 @@ const ViewRows = ({
         if ('order_by' in curFilter) {
           orderBy = [...curFilter.order_by];
         }
-        const limit = 'limit' in curFilter ? curFilter.limit : 10;
+
         const offset = 'offset' in curFilter ? curFilter.offset : 0;
 
         _filterQuery = (
@@ -684,7 +685,6 @@ const ViewRows = ({
             whereAnd={wheres}
             tableSchema={tableSchema}
             orderBy={orderBy}
-            limit={limit}
             dispatch={dispatch}
             count={count}
             tableName={curTableName}
@@ -821,8 +821,11 @@ const ViewRows = ({
       );
     }
 
-    const collapsedColumns = getCollapsedColumns(curTableName, currentSchema);
-    const columnsOrder = getColumnsOrder(curTableName, currentSchema);
+    const collapsedColumns = getPersistedCollapsedColumns(
+      curTableName,
+      currentSchema
+    );
+    const columnsOrder = getPersistedColumnsOrder(curTableName, currentSchema);
 
     let disableSortColumn = false;
 
@@ -913,6 +916,7 @@ const ViewRows = ({
       if (curFilter.offset !== page * curFilter.limit) {
         dispatch(setOffset(page * curFilter.limit));
         dispatch(runQuery(tableSchema));
+        setSelectedRows([]);
       }
     };
 
@@ -921,6 +925,8 @@ const ViewRows = ({
         dispatch(setLimit(size));
         dispatch(setOffset(0));
         dispatch(runQuery(tableSchema));
+        setSelectedRows([]);
+        persistPageSizeChange(size);
       }
     };
 
@@ -943,11 +949,15 @@ const ViewRows = ({
         onPageSizeChange={handlePageSizeChange}
         page={Math.floor(curFilter.offset / curFilter.limit)}
         onCollapseChange={collapsedData =>
-          handleCollapseChange(curTableName, currentSchema, collapsedData)
+          persistColumnCollapseChange(
+            curTableName,
+            currentSchema,
+            collapsedData
+          )
         }
         defaultCollapsed={collapsedColumns}
         onOrderChange={reorderData =>
-          handleOrderChange(curTableName, currentSchema, reorderData)
+          persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
       />

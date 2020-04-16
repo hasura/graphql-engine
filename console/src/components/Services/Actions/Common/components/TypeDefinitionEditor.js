@@ -35,7 +35,7 @@ const ActionDefinitionEditor = ({
 
     const parseDebounceTimer = setTimeout(() => {
       if (v === '') {
-        return;
+        return onChange(v, null, null, null);
       }
       let _e = null;
       let ast = null;
