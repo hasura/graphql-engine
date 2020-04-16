@@ -4,7 +4,6 @@ import styles from './Styles.scss';
 import Tooltip from './Tooltip';
 import CrossIcon from '../../../../Common/Icons/Cross';
 import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
-// import { getTypesSdl } from '../../../../../shared/utils/sdlUtils';
 
 const editorLabel = 'New types definition';
 const editorTooltip =
@@ -22,9 +21,6 @@ const ActionDefinitionEditor = ({
   editorHeight = '200px',
   editorWidth = '600px',
 }) => {
-  // const [modalOpen, setModalState] = React.useState(false);
-  // const toggleModal = () => setModalState(!modalOpen);
-
   const onChangeWithError = v => {
     if (timer) {
       clearTimeout(timer);
@@ -49,10 +45,6 @@ const ActionDefinitionEditor = ({
 
   const errorMessage =
     error && (error.message || 'This is not valid GraphQL SDL');
-
-  // const handleClonedTypes = types => {
-  //   onChange(`${value}\n\n${getTypesSdl(types)}`);
-  // };
 
   return (
     <div className={`${className || ''}`}>
