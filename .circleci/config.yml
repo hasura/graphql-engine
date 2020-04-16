@@ -12,21 +12,19 @@ refs:
         fi
   skip_server_tests: &skip_server_tests
     run:
-      name: checking if is PR build & server changes not present
+      name: checking if server tests can be skipped
       command: |
         echo "PR number: $CIRCLE_PR_NUMBER"
         if [ -z "$CIRCLE_PR_NUMBER" ]; then
-          echo "Not a PR build, continue test" && exit 0
+          echo "Not a PR build, continuing test" && exit 0
         fi
         echo "Compare refs: ${CIRCLE_COMPARE_URL##http*/}" 
-        for folder in `git log --format="" --name-only ${CIRCLE_COMPARE_URL##http*/} | cut -d"/" -f1 | sort -u`; do
-          echo "contents in $folder were modified"
-          if [ "$folder" = "server" ]; then
-            echo "Server changes present, continue test" && exit 0
-          fi
-        done
-        echo "No server changes present, skipping test"
-        circleci-agent step halt
+        if git diff --quiet "${CIRCLE_COMPARE_URL##http*/}" -- server; then
+          echo "No server changes present, skipping test"
+          circleci-agent step halt
+        else
+          echo "Server changes present, continuing test"
+        fi
   wait_for_postgres: &wait_for_postgres
     run:
       name: waiting for postgres to be ready
