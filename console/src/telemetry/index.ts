@@ -44,7 +44,9 @@ const isTelemetryConnectionReady = () => {
 
 const sendEvent = (payload: any) => {
   if (client && isTelemetryConnectionReady()) {
-    client.send(JSON.stringify(payload));
+    client.send(
+      JSON.stringify({ data: payload, topic: globals.telemetryTopic })
+    );
   }
 };
 
@@ -78,6 +80,19 @@ export const trackReduxAction = (action: ReduxAction, getState: any) => {
     }
 
     // Send the data
-    sendEvent({ data: reqBody, topic: globals.telemetryTopic });
+    sendEvent(reqBody);
   }
+};
+
+export const trackRuntimeError = (telemeteryGlobals: any, data: any) => {
+  const reqBody = {
+    server_version: telemeteryGlobals.serverVersion,
+    event_type: RUN_TIME_ERROR,
+    url: sanitiseUrl(window.location.pathname),
+    console_mode: telemeteryGlobals.consoleMode,
+    cli_uuid: telemeteryGlobals.cliUUID,
+    server_uuid: telemeteryGlobals.hasuraUUID,
+    data,
+  };
+  sendEvent(reqBody);
 };
