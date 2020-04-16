@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { Icon } from '../../UIKit/atoms';
 import DropdownButton from '../DropdownButton/DropdownButton';
 import { addPlaceholderHeader } from './utils';
+import { Icon, Flex } from '../../UIKit/atoms';
 import styles from './Headers.scss';
 
 const Headers = ({ headers, setHeaders }) => {
@@ -44,43 +44,39 @@ const Headers = ({ headers, setHeaders }) => {
       );
     };
 
-    const getHeaderValueInput = () => {
-      return (
-        <div className={styles.headerInputWidth}>
-          <DropdownButton
-            dropdownOptions={[
-              { display_text: 'Value', value: 'static' },
-              { display_text: 'From env var', value: 'env' },
-            ]}
-            title={type === 'env' ? 'From env var' : 'Value'}
-            dataKey={type === 'env' ? 'env' : 'static'}
-            onButtonChange={setHeaderType}
-            onInputChange={setHeaderValue}
-            required
-            bsClass={styles.dropdown_button}
-            inputVal={value}
-            id={`header-value-${i}`}
-            inputPlaceHolder={type === 'env' ? 'HEADER_FROM_ENV' : 'value'}
-            testId={`header-value-${i}`}
-          />
-        </div>
-      );
-    };
+    const getHeaderValueInput = () => (
+      <div className={styles.headerInputWidth}>
+        <DropdownButton
+          dropdownOptions={[
+            { display_text: 'Value', value: 'static' },
+            { display_text: 'From env var', value: 'env' },
+          ]}
+          title={type === 'env' ? 'From env var' : 'Value'}
+          dataKey={type === 'env' ? 'env' : 'static'}
+          onButtonChange={setHeaderType}
+          onInputChange={setHeaderValue}
+          required
+          bsClass={styles.dropdown_button}
+          inputVal={value}
+          id={`header-value-${i}`}
+          inputPlaceHolder={type === 'env' ? 'HEADER_FROM_ENV' : 'value'}
+          testId={`header-value-${i}`}
+        />
+      </div>
+    );
 
     const getRemoveButton = () => {
       if (i === headers.length - 1) return null;
+
       return <Icon type="close" onClick={removeHeader} pointer />;
     };
 
     return (
-      <div
-        className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}
-        key={i}
-      >
+      <Flex key={i} mb="10px">
         {getHeaderNameInput()}
         {getHeaderValueInput()}
         {getRemoveButton()}
-      </div>
+      </Flex>
     );
   });
 };

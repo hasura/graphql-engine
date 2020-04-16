@@ -6,7 +6,7 @@ import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
-import { Heading } from '../../../UIKit/atoms';
+import { Heading, Flex, Box } from '../../../UIKit/atoms';
 import styles from '../Actions.scss';
 // import TryItOut from '../../Common/Landing/TryItOut';
 
@@ -50,24 +50,20 @@ const Landing = ({ dispatch }) => {
   };
 
   return (
-    <div
-      className={`${styles.padd_left_remove} ${styles.actionsWrapper} container-fluid ${styles.padd_top}`}
-    >
+    <Box pl="0px" pt="20px" className="container-fluid">
       <div className={styles.padd_left}>
         <Helmet title={`${pageTitle} | Hasura`} />
-        <div>
-          <div className={styles.display_flex}>
-            <Heading as="h2" fontSize="h2" display="inline-block" pr="20px">
-              Actions
-            </Heading>
-            {getAddBtn()}
-          </div>
-          <hr />
+        <Flex>
+          <Heading as="h2" fontSize="h2" display="inline-block" pr="20px">
+            Actions
+          </Heading>
+          {getAddBtn()}
+        </Flex>
+        <hr />
 
-          {getIntroSection()}
-        </div>
+        {getIntroSection()}
       </div>
-    </div>
+    </Box>
   );
 };
 
