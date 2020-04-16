@@ -5,6 +5,7 @@
 ### Bug fixes and improvements
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
+- server: add graphql-engine support for timestamps without timezones (fix #1217)
 
 ## `v1.2.0-beta.4`
 
