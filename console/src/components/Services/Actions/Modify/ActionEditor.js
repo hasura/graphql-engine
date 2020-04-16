@@ -122,18 +122,16 @@ const ActionEditor = ({
         service="create-action"
       />
       <hr />
-      {
-        actionType === "query" ? null : (
-          <React.Fragment>
-            <KindEditor
-              value={kind}
-              onChange={kindOnChange}
-              className={styles.add_mar_bottom_mid}
-            />
-            <hr />
-          </React.Fragment>
-        )
-      }
+      {actionType === 'query' ? null : (
+        <React.Fragment>
+          <KindEditor
+            value={kind}
+            onChange={kindOnChange}
+            className={styles.add_mar_bottom_mid}
+          />
+          <hr />
+        </React.Fragment>
+      )}
       <HeadersConfEditor
         forwardClientHeaders={forwardClientHeaders}
         toggleForwardClientHeaders={toggleForwardClientHeaders}

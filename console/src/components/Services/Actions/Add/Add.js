@@ -86,9 +86,11 @@ const AddAction = ({
   let actionType;
   if (!actionDefinitionError) {
     // TODO optimise
-    const { type, error } = getActionDefinitionFromSdl(actionDefinitionSdl);
-    if (!error) {
-      actionType = type;
+    if (!actionParseTimer) {
+      const { type, error } = getActionDefinitionFromSdl(actionDefinitionSdl);
+      if (!error) {
+        actionType = type;
+      }
     }
   }
 
@@ -120,18 +122,16 @@ const AddAction = ({
         service="create-action"
       />
       <hr />
-      {
-        actionType === "query" ? null : (
-          <React.Fragment>
-            <KindEditor
-              value={kind}
-              onChange={kindOnChange}
-              className={styles.add_mar_bottom_mid}
-            />
-            <hr />
-          </React.Fragment>
-        )
-      }
+      {actionType === 'query' ? null : (
+        <React.Fragment>
+          <KindEditor
+            value={kind}
+            onChange={kindOnChange}
+            className={styles.add_mar_bottom_mid}
+          />
+          <hr />
+        </React.Fragment>
+      )}
       <HeadersConfEditor
         forwardClientHeaders={forwardClientHeaders}
         toggleForwardClientHeaders={toggleForwardClientHeaders}
