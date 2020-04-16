@@ -159,6 +159,7 @@ jobs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
+    - *skip_server_tests
     - restore_cache:
         keys:
         - cabal-store-v1-{{ checksum "server/cabal.project" }}-{{ checksum "server/graphql-engine.cabal" }}-{{ checksum "server/cabal.project.freeze" }}
