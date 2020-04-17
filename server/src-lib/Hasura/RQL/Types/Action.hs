@@ -1,10 +1,12 @@
+{-# LANGUAGE RecordWildCards #-}
 module Hasura.RQL.Types.Action
   ( ArgumentName(..)
   , ArgumentDefinition(..)
 
   , ActionName(..)
-  , ActionKind(..)
+  , ActionMutationKind(..)
   , ActionDefinition(..)
+  , ActionType(..)
   , CreateAction(..)
   , UpdateAction(..)
   , ActionDefinitionInput
@@ -64,15 +66,15 @@ newtype ResolvedWebhook
   = ResolvedWebhook { unResolvedWebhook :: Text}
   deriving ( Show, Eq, J.FromJSON, J.ToJSON, Hashable, DQuote, Lift)
 
-data ActionKind
+data ActionMutationKind
   = ActionSynchronous
   | ActionAsynchronous
   deriving (Show, Eq, Lift, Generic)
-instance NFData ActionKind
-instance Cacheable ActionKind
+instance NFData ActionMutationKind
+instance Cacheable ActionMutationKind
 $(J.deriveJSON
   J.defaultOptions { J.constructorTagModifier = J.snakeCase . drop 6}
-  ''ActionKind)
+  ''ActionMutationKind)
 
 newtype ArgumentName
   = ArgumentName { unArgumentName :: G.Name }
@@ -89,28 +91,52 @@ instance NFData ArgumentDefinition
 instance Cacheable ArgumentDefinition
 $(J.deriveJSON (J.aesonDrop 4 J.snakeCase) ''ArgumentDefinition)
 
+data ActionType
+  = ActionQuery
+  | ActionMutation !ActionMutationKind
+  deriving (Show, Eq, Lift, Generic)
+instance NFData ActionType
+instance Cacheable ActionType
+
 data ActionDefinition a
   = ActionDefinition
   { _adArguments            :: ![ArgumentDefinition]
   , _adOutputType           :: !GraphQLType
-  , _adKind                 :: !ActionKind
+  , _adType                 :: !ActionType
   , _adHeaders              :: ![HeaderConf]
   , _adForwardClientHeaders :: !Bool
   , _adHandler              :: !a
   } deriving (Show, Eq, Lift, Functor, Foldable, Traversable, Generic)
 instance (NFData a) => NFData (ActionDefinition a)
 instance (Cacheable a) => Cacheable (ActionDefinition a)
-$(J.deriveToJSON (J.aesonDrop 3 J.snakeCase) ''ActionDefinition)
 
 instance (J.FromJSON a) => J.FromJSON (ActionDefinition a) where
-  parseJSON = J.withObject "ActionDefinition" $ \o ->
-    ActionDefinition
-      <$> o J..:? "arguments" J..!= []
-      <*> o J..:  "output_type"
-      <*> o J..:? "kind" J..!= ActionSynchronous -- Synchronous is default action kind
-      <*> o J..:? "headers" J..!= []
-      <*> o J..:? "forward_client_headers" J..!= False
-      <*> o J..:  "handler"
+  parseJSON = J.withObject "ActionDefinition" $ \o -> do
+    _adArguments <- o J..: "arguments"
+    _adOutputType <- o J..: "output_type"
+    _adHeaders <- o J..:? "headers" J..!= []
+    _adForwardClientHeaders <- o J..:? "forward_client_headers" J..!= False
+    _adHandler <- o J..:  "handler"
+    actionType <- o J..:? "type" J..!= "mutation"
+    _adType <- case actionType of
+      "mutation" -> ActionMutation <$> o J..:? "kind" J..!= ActionSynchronous
+      "query"    -> pure ActionQuery
+      t          -> fail $ "expected mutation or query, but found " <> t
+    return ActionDefinition {..}
+
+instance (J.ToJSON a) => J.ToJSON (ActionDefinition a) where
+  toJSON (ActionDefinition args outputType actionType headers forwardClientHeaders handler) =
+    let typeAndKind = case actionType of
+          ActionQuery -> [ "type" J..= ("query" :: String)]
+          ActionMutation kind -> [ "type" J..= ("mutation" :: String)
+                                 , "kind" J..= kind]
+    in J.object $
+    [ "arguments"              J..= args
+    , "output_type"            J..= outputType
+    , "headers"                J..= headers
+    , "forward_client_headers" J..= forwardClientHeaders
+    , "handler"                J..= handler
+    ] <> typeAndKind
 
 type ResolvedActionDefinition = ActionDefinition ResolvedWebhook
 
