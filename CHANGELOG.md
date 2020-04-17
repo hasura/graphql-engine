@@ -16,7 +16,7 @@
 
 (close #4032) (#4309)
 
-### console: persist columns state in data browser
+### console: persist page state in data browser across navigation
 
 The order, collapsed state of columns and rows limit is now persisted across page navigation
 
