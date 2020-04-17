@@ -44,6 +44,7 @@ data QueryRootFldAST v
   = QRFPk !(DS.AnnSimpleSelG v)
   | QRFSimple !(DS.AnnSimpleSelG v)
   | QRFAgg !(DS.AnnAggSelG v)
+  | QRFConnection !(DS.ConnectionSelect v)
   | QRFActionSelect !(DS.AnnSimpleSelG v)
   deriving (Show, Eq)
 
@@ -59,6 +60,7 @@ traverseQueryRootFldAST f = \case
   QRFPk s           -> QRFPk <$> DS.traverseAnnSimpleSel f s
   QRFSimple s       -> QRFSimple <$> DS.traverseAnnSimpleSel f s
   QRFAgg s          -> QRFAgg <$> DS.traverseAnnAggSel f s
+  QRFConnection s   -> QRFConnection <$> DS.traverseConnectionSelect f s
   QRFActionSelect s -> QRFActionSelect <$> DS.traverseAnnSimpleSel f s
 
 toPGQuery :: QueryRootFldResolved -> Q.Query
@@ -67,6 +69,7 @@ toPGQuery = \case
   QRFSimple s       -> DS.selectQuerySQL DS.JASMultipleRows s
   QRFAgg s          -> DS.selectAggQuerySQL s
   QRFActionSelect s -> DS.selectQuerySQL DS.JASSingleObject s
+  QRFConnection s   -> Q.fromBuilder $ toSQL $ DS.mkConnectionSelect s
 
 validateHdrs
   :: (Foldable t, QErrM m) => UserInfo -> t Text -> m ()
@@ -104,6 +107,10 @@ queryFldToPGAST fld = do
       QRFAgg <$> RS.convertFuncQueryAgg ctx fld
     QCActionFetch ctx ->
       QRFActionSelect <$> RA.resolveAsyncActionQuery userInfo ctx fld
+    QCSelectConnection ctx -> do
+      QRFConnection <$> RS.convertConnectionSelect ctx fld
+    QCFuncConnection ctx -> do
+      QRFConnection <$> RS.convertConnectionFuncQuery ctx fld
 
 mutFldToTx
   :: ( HasVersion

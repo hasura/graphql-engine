@@ -142,6 +142,7 @@ data RelInfo
   } deriving (Show, Eq, Generic)
 instance NFData RelInfo
 instance Cacheable RelInfo
+instance Hashable RelInfo
 $(deriveToJSON (aesonDrop 2 snakeCase) ''RelInfo)
 
 newtype FieldName

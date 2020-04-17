@@ -1,5 +1,7 @@
 module Hasura.GraphQL.Resolve.Select
   ( convertSelect
+  , convertConnectionSelect
+  , convertConnectionFuncQuery
   , convertSelectByPKey
   , convertAggSelect
   , convertFuncQuerySimple
@@ -129,6 +131,53 @@ fromAggSelSet colGNameMap fldTy selSet = fmap toFields $
       "aggregate"  -> RS.TAFAgg <$> convertAggFld colGNameMap fTy fSelSet
       "nodes"      -> RS.TAFNodes <$> processTableSelectionSet fTy fSelSet
       G.Name t     -> throw500 $ "unexpected field in _agg node: " <> t
+
+fromConnectionSelSet
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => G.NamedType -> SelSet -> m (RS.ConnectionFields UnresolvedVal)
+fromConnectionSelSet fldTy selSet = fmap toFields $
+  withSelSet selSet $ \f -> do
+    let fTy = _fType f
+        fSelSet = _fSelSet f
+    case _fName f of
+      "__typename" -> return $ RS.ConnectionTypename $ G.unName $ G.unNamedType fldTy
+      "pageInfo"   -> RS.ConnectionPageInfo <$> parsePageInfoSelectionSet fTy fSelSet
+      "edges"      -> RS.ConnectionEdges <$> parseEdgeSelectionSet fTy fSelSet
+      -- "aggregate"  -> RS.TAFAgg <$> convertAggFld colGNameMap fTy fSelSet
+      -- "nodes"      -> RS.TAFNodes <$> processTableSelectionSet fTy fSelSet
+      G.Name t     -> throw500 $ "unexpected field in _connection node: " <> t
+
+parseEdgeSelectionSet
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => G.NamedType -> SelSet -> m (RS.EdgeFields UnresolvedVal)
+parseEdgeSelectionSet fldTy selSet = fmap toFields $
+  withSelSet selSet $ \f -> do
+    let fTy = _fType f
+        fSelSet = _fSelSet f
+    case _fName f of
+      "__typename" -> pure $ RS.EdgeTypename $ G.unName $ G.unNamedType fldTy
+      "cursor"     -> pure $ RS.EdgeCursor
+      "node"       -> RS.EdgeNode <$> processTableSelectionSet fTy fSelSet
+      G.Name t     -> throw500 $ "unexpected field in Edge node: " <> t
+
+parsePageInfoSelectionSet
+  :: ( MonadReusability m, MonadError QErr m)
+  => G.NamedType -> SelSet -> m RS.PageInfoFields
+parsePageInfoSelectionSet fldTy selSet =
+  fmap toFields $ withSelSet selSet $ \f ->
+    case _fName f of
+      "__typename"  -> pure $ RS.PageInfoTypename $ G.unName $ G.unNamedType fldTy
+      "hasNextPage" -> pure $ RS.PageInfoHasNextPage
+      "hasPreviousPage" -> pure $ RS.PageInfoHasPreviousPage
+      "startCursor" -> pure $ RS.PageInfoStartCursor
+      "endCursor" -> pure $ RS.PageInfoEndCursor
+      -- "aggregate"  -> RS.TAFAgg <$> convertAggFld colGNameMap fTy fSelSet
+      -- "nodes"      -> RS.TAFNodes <$> processTableSelectionSet fTy fSelSet
+      G.Name t     -> throw500 $ "unexpected field in PageInfo node: " <> t
 
 type TableArgs = RS.TableArgsG UnresolvedVal
 
@@ -344,14 +393,18 @@ convertSelectByPKey opCtx fld =
     SelPkOpCtx qt _ permFilter colArgMap = opCtx
 
 -- agg select related
-parseColumns :: (MonadReusability m, MonadError QErr m) => PGColGNameMap -> AnnInpVal -> m [PGCol]
+parseColumns
+  :: (MonadReusability m, MonadError QErr m)
+  => PGColGNameMap -> AnnInpVal -> m [PGCol]
 parseColumns allColFldMap val =
   flip withArray val $ \_ vals ->
     forM vals $ \v -> do
       (_, G.EnumValue enumVal) <- asEnumVal v
       pgiColumn <$> resolvePGCol allColFldMap enumVal
 
-convertCount :: (MonadReusability m, MonadError QErr m) => PGColGNameMap -> ArgsMap -> m S.CountType
+convertCount
+  :: (MonadReusability m, MonadError QErr m)
+  => PGColGNameMap -> ArgsMap -> m S.CountType
 convertCount colGNameMap args = do
   columnsM <- withArgM args "columns" $ parseColumns colGNameMap
   isDistinct <- or <$> withArgM args "distinct" parseDistinct
@@ -419,6 +472,37 @@ fromAggField selectFrom colGNameMap permFilter permLimit fld = fieldAsPath fld $
   where
     args = _fArguments fld
 
+fromConnectionField
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => RS.SelectFromG UnresolvedVal
+  -> AnnBoolExpPartialSQL
+  -> Maybe Int
+  -> Field -> m (RS.ConnectionSelect UnresolvedVal)
+fromConnectionField selectFrom permFilter permLimit fld = fieldAsPath fld $ do
+  tableArgs   <- parseConnectionArgs args
+  aggSelFlds  <- fromConnectionSelSet (_fType fld) (_fSelSet fld)
+  let unresolvedPermFltr =
+        fmapAnnBoolExp partialSQLExpToUnresolvedVal permFilter
+  let tabPerm = RS.TablePerm unresolvedPermFltr permLimit
+  strfyNum <- stringifyNum <$> asks getter
+  return $ RS.AnnSelG aggSelFlds selectFrom tabPerm tableArgs strfyNum
+  where
+    args = _fArguments fld
+
+parseConnectionArgs
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m
+     , Has FieldMap r, Has OrdByCtx r
+     )
+  => ArgsMap -> m TableArgs
+parseConnectionArgs args = do
+  whereExpM  <- withArgM args "where" parseBoolExp
+  ordByExpML <- withArgM args "order_by" parseOrderBy
+  let ordByExpM = NE.nonEmpty =<< ordByExpML
+  -- limitExpM  <- withArgM args "limit" parseLimit
+  return $ RS.TableArgs whereExpM ordByExpM Nothing Nothing Nothing
+
 convertAggSelect
   :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
      , Has OrdByCtx r, Has SQLGenCtx r
@@ -429,6 +513,17 @@ convertAggSelect opCtx fld =
   fromAggField (RS.FromTable qt) colGNameMap permFilter permLimit fld
   where
     SelOpCtx qt _ colGNameMap permFilter permLimit = opCtx
+
+convertConnectionSelect
+  :: ( MonadReusability m, MonadError QErr m, MonadReader r m, Has FieldMap r
+     , Has OrdByCtx r, Has SQLGenCtx r
+     )
+  => SelOpCtx -> Field -> m (RS.ConnectionSelect UnresolvedVal)
+convertConnectionSelect opCtx fld =
+  withPathK "selectionSet" $
+  fromConnectionField (RS.FromTable qt) permFilter permLimit fld
+  where
+    SelOpCtx qt _ _ permFilter permLimit = opCtx
 
 parseFunctionArgs
   :: (MonadReusability m, MonadError QErr m)
@@ -512,3 +607,19 @@ convertFuncQueryAgg funcOpCtx fld =
     fromAggField selectFrom colGNameMap permFilter permLimit fld
   where
     FuncQOpCtx qf argSeq _ colGNameMap permFilter permLimit = funcOpCtx
+
+convertConnectionFuncQuery
+  :: ( MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     )
+  => FuncQOpCtx -> Field -> m (RS.ConnectionSelect UnresolvedVal)
+convertConnectionFuncQuery funcOpCtx fld =
+  withPathK "selectionSet" $ fieldAsPath fld $ do
+    selectFrom <- makeFunctionSelectFrom qf argSeq fld
+    fromConnectionField selectFrom permFilter permLimit fld
+  where
+    FuncQOpCtx qf argSeq _ _ permFilter permLimit = funcOpCtx

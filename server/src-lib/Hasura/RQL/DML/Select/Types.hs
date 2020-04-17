@@ -53,13 +53,15 @@ instance FromJSON ExtCol where
 data AnnAggOrdBy
   = AAOCount
   | AAOOp !T.Text !PGCol
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+instance Hashable AnnAggOrdBy
 
 data AnnObColG v
   = AOCPG !PGCol
   | AOCObj !RelInfo !(AnnBoolExp v) !(AnnObColG v)
   | AOCAgg !RelInfo !(AnnBoolExp v) !AnnAggOrdBy
-  deriving (Show, Eq)
+  deriving (Show, Eq, Generic)
+instance (Hashable v) => Hashable (AnnObColG v)
 
 traverseAnnObCol
   :: (Applicative f)
@@ -99,6 +101,7 @@ type ObjSel = ObjSelG S.SQLExp
 
 type ArrRelG v = AnnRelG (AnnSimpleSelG v)
 type ArrRelAggG v = AnnRelG (AnnAggSelG v)
+type ArrRelConnection v = AnnRelG (ConnectionSelect v)
 type ArrRelAgg = ArrRelAggG S.SQLExp
 
 data ComputedFieldScalarSel v
@@ -127,6 +130,7 @@ type Fields a = [(FieldName, a)]
 data ArrSelG v
   = ASSimple !(ArrRelG v)
   | ASAgg !(ArrRelAggG v)
+  | ASConnection !(ArrRelConnection v)
   deriving (Show, Eq)
 
 traverseArrSel
@@ -137,6 +141,8 @@ traverseArrSel
 traverseArrSel f = \case
   ASSimple arrRel -> ASSimple <$> traverse (traverseAnnSimpleSel f) arrRel
   ASAgg arrRelAgg -> ASAgg <$> traverse (traverseAnnAggSel f) arrRelAgg
+  ASConnection relConnection ->
+    ASConnection <$> traverse (traverseConnectionSelect f) relConnection
 
 type ArrSel = ArrSelG S.SQLExp
 
@@ -193,7 +199,8 @@ data TableArgsG v
   , _taLimit    :: !(Maybe Int)
   , _taOffset   :: !(Maybe S.SQLExp)
   , _taDistCols :: !(Maybe (NE.NonEmpty PGCol))
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Generic)
+instance (Hashable v) => Hashable (TableArgsG v)
 
 traverseTableArgs
   :: (Applicative f)
@@ -247,6 +254,46 @@ data TableAggFldG v
   | TAFExp !T.Text
   deriving (Show, Eq)
 
+data PageInfoField
+  = PageInfoTypename !Text
+  | PageInfoHasNextPage
+  | PageInfoHasPreviousPage
+  | PageInfoStartCursor
+  | PageInfoEndCursor
+  deriving (Show, Eq)
+type PageInfoFields = Fields PageInfoField
+
+data EdgeField v
+  = EdgeTypename !Text
+  | EdgeCursor
+  | EdgeNode !(AnnFldsG v)
+  deriving (Show, Eq)
+type EdgeFields v = Fields (EdgeField v)
+
+traverseEdgeField
+  :: (Applicative f)
+  => (a -> f b) -> EdgeField a -> f (EdgeField b)
+traverseEdgeField f = \case
+  EdgeTypename t -> pure $ EdgeTypename t
+  EdgeCursor -> pure EdgeCursor
+  EdgeNode fields -> EdgeNode <$> traverseAnnFlds f fields
+
+data ConnectionField v
+  = ConnectionTypename !Text
+  | ConnectionPageInfo !PageInfoFields
+  | ConnectionEdges !(EdgeFields v)
+  deriving (Show, Eq)
+type ConnectionFields v = Fields (ConnectionField v)
+
+traverseConnectionField
+  :: (Applicative f)
+  => (a -> f b) -> ConnectionField a -> f (ConnectionField b)
+traverseConnectionField f = \case
+  ConnectionTypename t -> pure $ ConnectionTypename t
+  ConnectionPageInfo fields -> pure $ ConnectionPageInfo fields
+  ConnectionEdges fields ->
+    ConnectionEdges <$> traverse (traverse (traverseEdgeField f)) fields
+
 traverseTableAggFld
   :: (Applicative f)
   => (a -> f b) -> TableAggFldG a -> f (TableAggFldG b)
@@ -262,7 +309,8 @@ type TableAggFlds = TableAggFldsG S.SQLExp
 data ArgumentExp a
   = AETableRow !(Maybe Iden) -- ^ table row accessor
   | AEInput !a
-  deriving (Show, Eq, Functor, Foldable, Traversable)
+  deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
+instance (Hashable v) => Hashable (ArgumentExp v)
 
 type FunctionArgsExpTableRow v = FunctionArgsExpG (ArgumentExp v)
 
@@ -271,8 +319,10 @@ data SelectFromG v
   | FromIden !Iden
   | FromFunction !QualifiedFunction
                  !(FunctionArgsExpTableRow v)
+                 -- a definition list
                  !(Maybe [(PGCol, PGScalarType)])
-  deriving (Show, Eq, Functor, Foldable, Traversable)
+  deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
+instance (Hashable v) => Hashable (SelectFromG v)
 
 type SelectFrom = SelectFromG S.SQLExp
 
@@ -280,7 +330,8 @@ data TablePermG v
   = TablePerm
   { _tpFilter :: !(AnnBoolExp v)
   , _tpLimit  :: !(Maybe Int)
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic)
+instance (Hashable v) => Hashable (TablePermG v)
 
 traverseTablePerm
   :: (Applicative f)
@@ -341,19 +392,29 @@ type AnnSimpleSel = AnnSimpleSelG S.SQLExp
 type AnnAggSelG v = AnnSelG (TableAggFldsG v) v
 type AnnAggSel = AnnAggSelG S.SQLExp
 
+type ConnectionSelect v = AnnSelG (ConnectionFields v) v
+traverseConnectionSelect
+  :: (Applicative f)
+  => (a -> f b)
+  -> ConnectionSelect a -> f (ConnectionSelect b)
+traverseConnectionSelect f =
+  traverseAnnSel (traverse (traverse (traverseConnectionField f))) f
+
 data FunctionArgsExpG a
   = FunctionArgsExp
   { _faePositional :: ![a]
   , _faeNamed      :: !(HM.HashMap Text a)
-  } deriving (Show, Eq, Functor, Foldable, Traversable)
+  } deriving (Show, Eq, Functor, Foldable, Traversable, Generic)
+instance (Hashable a) => Hashable (FunctionArgsExpG a)
 
 emptyFunctionArgsExp :: FunctionArgsExpG a
 emptyFunctionArgsExp = FunctionArgsExp [] HM.empty
 
 type FunctionArgExp = FunctionArgsExpG S.SQLExp
 
--- | If argument positional index is less than or equal to length of 'positional' arguments then
--- insert the value in 'positional' arguments else insert the value with argument name in 'named' arguments
+-- | If argument positional index is less than or equal to length of
+-- 'positional' arguments then insert the value in 'positional' arguments else
+-- insert the value with argument name in 'named' arguments
 insertFunctionArg
   :: FunctionArgName
   -> Int

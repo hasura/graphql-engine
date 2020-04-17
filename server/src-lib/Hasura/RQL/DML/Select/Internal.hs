@@ -1,6 +1,8 @@
 module Hasura.RQL.DML.Select.Internal
   ( mkSQLSelect
   , mkAggSelect
+  -- , mkConnectionSelect
+  -- , JoinCandidate(..)
   , module Hasura.RQL.DML.Select.Types
   )
 where
@@ -426,6 +428,39 @@ aggSelToArrNode pfxs als aggSel =
 
     subQueryReq = hasAggFld aggFlds
 
+-- connectionSelToArrNode
+--   :: Prefixes -> FieldName -> ArrRelConnection S.SQLExp -> ArrNode
+-- connectionSelToArrNode pfxs als aggSel =
+--   ArrNode [extr] colMapping mergedBN
+--   where
+--     AnnRelG _ colMapping annSel = aggSel
+--     AnnSelG aggFlds tabFrm tabPerm tabArgs strfyNum = annSel
+--     fldAls = S.Alias $ toIden als
+
+--     extr = flip S.Extractor (Just fldAls) $ S.applyJsonBuildObj $
+--            concatMap selFldToExtr aggFlds
+
+--     permLimit = _tpLimit tabPerm
+--     ordBy = _bnOrderBy mergedBN
+
+--     allBNs = map mkAggBaseNode aggFlds
+--     emptyBN = mkEmptyBaseNode (_pfThis pfxs) tabFrm
+--     mergedBN = foldr mergeBaseNodes emptyBN allBNs
+
+--     mkAggBaseNode (fn, selFld) =
+--       mkBaseNode subQueryReq pfxs fn selFld tabFrm tabPerm tabArgs strfyNum
+
+--     selFldToExtr (FieldName t, fld) = (:) (S.SELit t) $ pure $ case fld of
+--       TAFAgg flds -> aggFldToExp flds
+--       TAFNodes _  ->
+--         withJsonAggExtr subQueryReq permLimit ordBy $ S.Alias $ Iden t
+--       TAFExp e    ->
+--         -- bool_or to force aggregation
+--         S.SEFnApp "coalesce"
+--         [ S.SELit e , S.SEUnsafe "bool_or('true')::text"] Nothing
+
+--     subQueryReq = hasAggFld aggFlds
+
 hasAggFld :: Foldable t => t (a, TableAggFldG v) -> Bool
 hasAggFld = any (isTabAggFld . snd)
   where
@@ -534,6 +569,7 @@ mkBaseNode
   -> BaseNode
 mkBaseNode subQueryReq pfxs fldAls annSelFlds selectFrom
            tablePerm tableArgs strfyNum =
+
   BaseNode thisPfx distExprM fromItem finalWhere ordByExpM finalLimit offsetM
   allExtrs allObjsWithOb allArrsWithOb computedFields
   where
@@ -682,6 +718,7 @@ mkArrNode subQueryReq pfxs (fldName, annArrSel) = case annArrSel of
     in ArrNode [extr] (aarMapping annArrRel) bn
 
   ASAgg annAggSel -> aggSelToArrNode pfxs fldName annAggSel
+  -- TODO: ASConnection connectionSel -> connectionSelToArrNode pfxs fldName connectionSel
 
 injectJoinCond :: S.BoolExp       -- ^ Join condition
                -> S.BoolExp -- ^ Where condition
@@ -753,6 +790,119 @@ baseNodeToSel joinCond baseNode =
                 , S.selFrom = Just $ S.FromExp [internalSelFrom]
                 }
       in S.mkLateralFromItem sel als
+
+-- mkConnectionSelect :: ConnectionSelect S.SQLExp -> S.Select
+-- mkConnectionSelect annConnectionSel =
+--   prefixNumToAliases $ arrNodeToSelect bn extr $ S.BELit True
+--   where
+--     connectionSelect = AnnRelG rootRelName HM.empty annConnectionSel
+--     rootIden = Iden "root"
+--     rootPrefix = Prefixes rootIden rootIden
+--     ArrNode extr _ bn =
+--       connectionSelToArrNode rootPrefix (FieldName "root") connectionSelect
+
+data TableSource
+  = TableSource
+    { _tsFrom       :: !SelectFrom
+    , _tsPermission :: !TablePerm
+    , _tsArgs       :: !TableArgs
+    }
+  deriving (Show, Eq, Generic)
+instance Hashable TableSource
+
+
+-- data TableSource
+--   = TableSource
+--     { _tsFrom   :: !S.FromItem
+--     , _tsAlias  :: !S.Alias
+--     , _tsWhere  :: !S.BoolExp
+--     , _tsLimit  :: !(Maybe Int)
+--     , _tsOffset :: !(Maybe S.SQLExp)
+--     -- , _tsArgs       :: !TableArgs
+--     }
+--   deriving (Show, Eq, Generic)
+
+
+data BuildState
+  = BuildState
+    { _bsAliasGenerator  :: !Int
+    , _bsJoinTree        :: !JoinTree
+    }
+
+type Build = State BuildState
+
+-- | this is need in those cases where you need a single row when the table
+-- returns multiple
+forceAggregation :: S.SQLExp -> S.SQLExp
+forceAggregation e =
+  S.SEFnApp "coalesce" [ e, S.SEUnsafe "bool_or('true')::text"] Nothing
+
+-- | Returns the SQL expression that will construct the response
+-- for given field
+buildConnectionFieldExpression
+  :: S.Alias
+  -- ^ The table alias
+  -> ConnectionField S.SQLExp
+  -> Build S.SQLExp
+buildConnectionFieldExpression tableAlias = \case
+  ConnectionTypename typename -> pure $ forceAggregation $ S.SELit typename
+  ConnectionPageInfo fields ->
+    pure $ S.SELit "should be pageinfo"
+  ConnectionEdges fields -> do
+    fieldPairs <- forM fields $ \(fieldAlias, field) -> do
+      fieldExpression <- buildEdgeFieldExpression field
+      pure [S.SELit $ getFieldNameTxt fieldAlias, fieldExpression]
+    pure $ S.applyJsonBuildObj $ concat fieldPairs
+  where
+    buildEdgeFieldExpression = \case
+      EdgeTypename typename -> pure $ S.SELit typename
+      EdgeCursor -> pure $ S.SELit "will return a cursor"
+      EdgeNode fields -> undefined
+
+data Selector
+  = Selector !S.SQLExp !S.SQLExp
+  deriving (Show, Eq)
+
+-- | Returns the SQL expression that will construct the response
+-- for given field
+buildTableFieldExpression
+  :: S.Alias
+  -- ^ The table alias
+  -> AnnFldG S.SQLExp
+  -> Build S.SQLExp
+buildTableFieldExpression tableAlias = \case
+  FCol field -> undefined
+  FObj field -> undefined
+  FArr field -> undefined
+  FComputedField field -> undefined
+  FExp typename -> pure $ S.SELit typename
+
+processFields
+  :: ConnectionFields S.SQLExp
+  -> Maybe (NE.NonEmpty (AnnOrderByItemG S.SQLExp))
+  -> Build ()
+processFields = undefined
+
+mkSelectNode
+  :: ConnectionSelect S.SQLExp -> Build (TableSource, SelectNode)
+mkSelectNode = undefined
+
+data SelectNode
+  = SelectNode
+    { _jnColumns  :: !(HM.HashMap S.Alias S.SQLExp)
+    , _jnFrom     :: !S.FromItem
+    , _jnAlias    :: !S.Alias
+    , _jnJoinTree :: !JoinTree
+    , _jnWhere    :: !S.BoolExp
+    , _jnOrderBy  :: !(Maybe S.OrderByExp)
+    , _jnLimit    :: !(Maybe Int)
+    , _jnOffset   :: !(Maybe S.SQLExp)
+    }
+  deriving (Show, Eq)
+
+newtype JoinTree
+  = JoinTree { unJoinTree :: HM.HashMap TableSource SelectNode }
+  deriving (Show, Eq, Semigroup, Monoid)
 
 mkAggSelect :: AnnAggSel -> S.Select
 mkAggSelect annAggSel =

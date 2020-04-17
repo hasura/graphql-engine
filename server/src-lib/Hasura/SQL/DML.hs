@@ -35,6 +35,7 @@ data Select
     } deriving (Show, Eq, Generic, Data)
 instance NFData Select
 instance Cacheable Select
+instance Hashable Select
 
 mkSelect :: Select
 mkSelect = Select Nothing [] Nothing
@@ -43,7 +44,7 @@ mkSelect = Select Nothing [] Nothing
 
 newtype LimitExp
   = LimitExp SQLExp
-  deriving (Show, Eq, NFData, Data, Cacheable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL LimitExp where
   toSQL (LimitExp se) =
@@ -51,7 +52,7 @@ instance ToSQL LimitExp where
 
 newtype OffsetExp
   = OffsetExp SQLExp
-  deriving (Show, Eq, NFData, Data, Cacheable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL OffsetExp where
   toSQL (OffsetExp se) =
@@ -59,7 +60,7 @@ instance ToSQL OffsetExp where
 
 newtype OrderByExp
   = OrderByExp [OrderByItem]
-  deriving (Show, Eq, NFData, Data, Cacheable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 data OrderByItem
   = OrderByItem
@@ -69,6 +70,7 @@ data OrderByItem
     } deriving (Show, Eq, Generic, Data)
 instance NFData OrderByItem
 instance Cacheable OrderByItem
+instance Hashable OrderByItem
 
 instance ToSQL OrderByItem where
   toSQL (OrderByItem e ot no) =
@@ -78,6 +80,7 @@ data OrderType = OTAsc | OTDesc
   deriving (Show, Eq, Lift, Generic, Data)
 instance NFData OrderType
 instance Cacheable OrderType
+instance Hashable OrderType
 
 instance ToSQL OrderType where
   toSQL OTAsc  = "ASC"
@@ -89,6 +92,7 @@ data NullsOrder
   deriving (Show, Eq, Lift, Generic, Data)
 instance NFData NullsOrder
 instance Cacheable NullsOrder
+instance Hashable NullsOrder
 
 instance ToSQL NullsOrder where
   toSQL NFirst = "NULLS FIRST"
@@ -100,7 +104,7 @@ instance ToSQL OrderByExp where
 
 newtype GroupByExp
   = GroupByExp [SQLExp]
-  deriving (Show, Eq, NFData, Data, Cacheable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL GroupByExp where
   toSQL (GroupByExp idens) =
@@ -108,7 +112,7 @@ instance ToSQL GroupByExp where
 
 newtype FromExp
   = FromExp [FromItem]
-  deriving (Show, Eq, NFData, Data, Cacheable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL FromExp where
   toSQL (FromExp items) =
@@ -148,7 +152,7 @@ mkRowExp extrs = let
 
 newtype HavingExp
   = HavingExp BoolExp
-  deriving (Show, Eq, NFData, Data, Cacheable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL HavingExp where
   toSQL (HavingExp be) =
@@ -156,7 +160,7 @@ instance ToSQL HavingExp where
 
 newtype WhereFrag
   = WhereFrag { getWFBoolExp :: BoolExp }
-  deriving (Show, Eq, NFData, Data, Cacheable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL WhereFrag where
   toSQL (WhereFrag be) =
@@ -188,6 +192,7 @@ data Qual
   deriving (Show, Eq, Generic, Data)
 instance NFData Qual
 instance Cacheable Qual
+instance Hashable Qual
 
 mkQual :: QualifiedTable -> Qual
 mkQual = QualTable
@@ -205,6 +210,7 @@ data QIden
   deriving (Show, Eq, Generic, Data)
 instance NFData QIden
 instance Cacheable QIden
+instance Hashable QIden
 
 instance ToSQL QIden where
   toSQL (QIden qual iden) =
@@ -212,7 +218,7 @@ instance ToSQL QIden where
 
 newtype SQLOp
   = SQLOp {sqlOpTxt :: T.Text}
-  deriving (Show, Eq, NFData, Data, Cacheable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 incOp :: SQLOp
 incOp = SQLOp "+"
@@ -234,7 +240,7 @@ jsonbDeleteAtPathOp = SQLOp "#-"
 
 newtype TypeAnn
   = TypeAnn { unTypeAnn :: T.Text }
-  deriving (Show, Eq, NFData, Data, Cacheable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL TypeAnn where
   toSQL (TypeAnn ty) = "::" <> TB.text ty
@@ -264,6 +270,7 @@ data CountType
   deriving (Show, Eq, Generic, Data)
 instance NFData CountType
 instance Cacheable CountType
+instance Hashable CountType
 
 instance ToSQL CountType where
   toSQL CTStar            = "*"
@@ -274,7 +281,7 @@ instance ToSQL CountType where
 
 newtype TupleExp
   = TupleExp [SQLExp]
-  deriving (Show, Eq, NFData, Data, Cacheable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance ToSQL TupleExp where
   toSQL (TupleExp exps) =
@@ -306,6 +313,7 @@ data SQLExp
   deriving (Show, Eq, Generic, Data)
 instance NFData SQLExp
 instance Cacheable SQLExp
+instance Hashable SQLExp
 
 withTyAnn :: PGScalarType -> SQLExp -> SQLExp
 withTyAnn colTy v = SETyAnn v . mkTypeAnn $ PGTypeScalar colTy
@@ -315,7 +323,7 @@ instance J.ToJSON SQLExp where
 
 newtype Alias
   = Alias { getAlias :: Iden }
-  deriving (Show, Eq, NFData, Hashable, Data, Cacheable)
+  deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
 instance IsIden Alias where
   toIden (Alias iden) = iden
@@ -381,6 +389,7 @@ data Extractor = Extractor !SQLExp !(Maybe Alias)
   deriving (Show, Eq, Generic, Data)
 instance NFData Extractor
 instance Cacheable Extractor
+instance Hashable Extractor
 
 mkSQLOpExp
   :: SQLOp
@@ -428,6 +437,7 @@ data DistinctExpr
   deriving (Show, Eq, Generic, Data)
 instance NFData DistinctExpr
 instance Cacheable DistinctExpr
+instance Hashable DistinctExpr
 
 instance ToSQL DistinctExpr where
   toSQL DistinctSimple    = "DISTINCT"
@@ -441,6 +451,7 @@ data FunctionArgs
   } deriving (Show, Eq, Generic, Data)
 instance NFData FunctionArgs
 instance Cacheable FunctionArgs
+instance Hashable FunctionArgs
 
 instance ToSQL FunctionArgs where
   toSQL (FunctionArgs positionalArgs namedArgsMap) =
@@ -455,6 +466,7 @@ data DefinitionListItem
   } deriving (Show, Eq, Data, Generic)
 instance NFData DefinitionListItem
 instance Cacheable DefinitionListItem
+instance Hashable DefinitionListItem
 
 instance ToSQL DefinitionListItem where
   toSQL (DefinitionListItem column columnType) =
@@ -467,6 +479,7 @@ data FunctionAlias
   } deriving (Show, Eq, Data, Generic)
 instance NFData FunctionAlias
 instance Cacheable FunctionAlias
+instance Hashable FunctionAlias
 
 mkSimpleFunctionAlias :: Iden -> FunctionAlias
 mkSimpleFunctionAlias identifier =
@@ -491,6 +504,7 @@ data FunctionExp
   } deriving (Show, Eq, Generic, Data)
 instance NFData FunctionExp
 instance Cacheable FunctionExp
+instance Hashable FunctionExp
 
 instance ToSQL FunctionExp where
   toSQL (FunctionExp qf args alsM) =
@@ -507,6 +521,7 @@ data FromItem
   deriving (Show, Eq, Generic, Data)
 instance NFData FromItem
 instance Cacheable FromItem
+instance Hashable FromItem
 
 mkSelFromItem :: Select -> Alias -> FromItem
 mkSelFromItem = FISelect (Lateral False)
@@ -536,7 +551,7 @@ instance ToSQL FromItem where
     toSQL je
 
 newtype Lateral = Lateral Bool
-  deriving (Show, Eq, Data, NFData, Cacheable)
+  deriving (Show, Eq, Data, NFData, Cacheable, Hashable)
 
 instance ToSQL Lateral where
   toSQL (Lateral True)  = "LATERAL"
@@ -551,6 +566,7 @@ data JoinExpr
   } deriving (Show, Eq, Generic, Data)
 instance NFData JoinExpr
 instance Cacheable JoinExpr
+instance Hashable JoinExpr
 
 instance ToSQL JoinExpr where
   toSQL je =
@@ -567,6 +583,7 @@ data JoinType
   deriving (Eq, Show, Generic, Data)
 instance NFData JoinType
 instance Cacheable JoinType
+instance Hashable JoinType
 
 instance ToSQL JoinType where
   toSQL Inner      = "INNER JOIN"
@@ -580,6 +597,7 @@ data JoinCond
   deriving (Show, Eq, Generic, Data)
 instance NFData JoinCond
 instance Cacheable JoinCond
+instance Hashable JoinCond
 
 instance ToSQL JoinCond where
   toSQL (JoinOn be) =
@@ -603,6 +621,7 @@ data BoolExp
   deriving (Show, Eq, Generic, Data)
 instance NFData BoolExp
 instance Cacheable BoolExp
+instance Hashable BoolExp
 
 -- removes extraneous 'AND true's
 simplifyBoolExp :: BoolExp -> BoolExp
@@ -658,6 +677,7 @@ data BinOp = AndOp | OrOp
   deriving (Show, Eq, Generic, Data)
 instance NFData BinOp
 instance Cacheable BinOp
+instance Hashable BinOp
 
 instance ToSQL BinOp where
   toSQL AndOp = "AND"
@@ -686,6 +706,7 @@ data CompareOp
   deriving (Eq, Generic, Data)
 instance NFData CompareOp
 instance Cacheable CompareOp
+instance Hashable CompareOp
 
 instance Show CompareOp where
   show = \case
@@ -832,7 +853,7 @@ instance ToSQL SQLConflict where
 
 newtype ValuesExp
   = ValuesExp [TupleExp]
-  deriving (Show, Eq, Data, NFData, Cacheable)
+  deriving (Show, Eq, Data, NFData, Cacheable, Hashable)
 
 instance ToSQL ValuesExp where
   toSQL (ValuesExp tuples) =

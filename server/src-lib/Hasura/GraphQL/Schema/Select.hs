@@ -15,6 +15,7 @@ module Hasura.GraphQL.Schema.Select
   , mkSelFldConnection
 
   , mkSelArgs
+  , mkConnectionArgs
   ) where
 
 import qualified Data.HashMap.Strict           as Map
@@ -83,6 +84,7 @@ mkComputedFieldFld field =
       in (inputParams, G.toGT $ mkScalarTy scalarTy)
     CFTTable computedFieldtable ->
       let table = _cftTable computedFieldtable
+      -- TODO: connection stuff
       in ( fromInpValL $ maybeToList maybeFunctionInputArg <> mkSelArgs table
          , G.toGT $ G.toLT $ G.toNT $ mkTableTy table
          )
@@ -119,6 +121,30 @@ mkSelArgs tn =
     whereDesc   = "filter the rows returned"
     limitDesc   = "limit the number of rows returned"
     offsetDesc  = "skip the first n rows. Use only with order_by"
+    orderByDesc = "sort the rows by one or more columns"
+    distinctDesc = "distinct select on columns"
+
+-- distinct_on: [table_select_column!]
+-- where: table_bool_exp
+-- order_by: table_order_by
+-- first: Int
+-- after: String
+-- last: Int
+-- before: String
+mkConnectionArgs :: QualifiedTable -> [InpValInfo]
+mkConnectionArgs tn =
+  [ InpValInfo (Just whereDesc) "where" Nothing $ G.toGT $ mkBoolExpTy tn
+  , InpValInfo (Just orderByDesc) "order_by" Nothing $ G.toGT $ G.toLT $ G.toNT $
+    mkOrdByTy tn
+  , InpValInfo (Just distinctDesc) "distinct_on" Nothing $ G.toGT $ G.toLT $
+    G.toNT $ mkSelColumnInpTy tn
+  , InpValInfo Nothing "first" Nothing $ G.toGT $ mkScalarTy PGInteger
+  , InpValInfo Nothing "after" Nothing $ G.toGT $ mkScalarTy PGText
+  , InpValInfo Nothing "last" Nothing $ G.toGT $ mkScalarTy PGInteger
+  , InpValInfo Nothing "before" Nothing $ G.toGT $ mkScalarTy PGText
+  ]
+  where
+    whereDesc   = "filter the rows returned"
     orderByDesc = "sort the rows by one or more columns"
     distinctDesc = "distinct select on columns"
 
@@ -159,7 +185,7 @@ mkRelationshipField allowAgg (RelInfo rn rTy _ remTab isManual) isNullable = cas
 
     arrConnectionFld =
       mkHsraObjFldInfo Nothing (mkRelName rn <> "_connection")
-      (fromInpValL $ mkSelArgs remTab) $
+      (fromInpValL $ mkConnectionArgs remTab) $
       G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableConnectionTy remTab
 
     aggArrRelFld = mkHsraObjFldInfo (Just "An aggregated array relationship")
@@ -307,7 +333,7 @@ mkSelFldConnection mCustomName tn =
   where
     desc    = G.Description $ "fetch data from the table: " <>> tn
     fldName = fromMaybe (qualObjectToName tn <> "_connection") mCustomName
-    args    = fromInpValL $ mkSelArgs tn
+    args    = fromInpValL $ mkConnectionArgs tn
     ty      = G.toGT $ G.toNT $ G.toLT $ G.toNT $ mkTableConnectionTy tn
 
 {-
