@@ -295,7 +295,6 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
            |)
         >-> (\infos -> M.catMaybes infos >- returnA)
 
-
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
       remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, remoteSchemas)
