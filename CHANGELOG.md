@@ -8,7 +8,7 @@
 - console: move pre-release notification tooltip msg to top (#4433)
 - console: remove extra localPresets key from migrations (#4433)
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
-- console: fix row delete for relationships in data browser
+- console: fix row delete for relationships in data browser (#4433)
 
 ## `v1.2.0-beta.4`
 
