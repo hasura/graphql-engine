@@ -4,12 +4,14 @@
 
 ### console: persist columns state in data browser
 
-The order and collapsed state of columns is now persisted across page navigation
+The order, collapsed state of columns and page size is now persisted across page navigation
 
 (close #3390) (#3753)
 
 ### Bug fixes and improvements
 
+- server: support reusing Postgres scalars in custom types (close #4125)
+- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
 - console: query support for actions (#4318)
 - cli: query support for actions (#4318)
 - cli: add retry_conf in event trigger for squashing migrations (close #4296) (#4324)
@@ -30,6 +32,7 @@ The order and collapsed state of columns is now persisted across page navigation
 - server: fix an edge case where some events wouldn't be processed because of internal erorrs (#4213)
 - server: fix downgrade not working to version v1.1.1 (#4354)
 - server: `type` field is not required if `jwk_url` is provided in JWT config
+- server: add a new field `claims_namespace_path` which accepts a JSON Path for looking up hasura claim in the JWT token (#4349)
 
 ## `v1.2.0-beta.3`
 
@@ -101,6 +104,7 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 - cli: fix flags in actions, migrate and metadata cmd (fix #3982) (#3991)
 - cli: preserve action definition in metadata apply (fix… (#3993)
 - cli: bug fixes related to actions (#3951)
+- server: add support for query actions (#4032)
 
 ## `v1.2.0-beta.1`
 

@@ -312,6 +312,46 @@ jobs:
         path: /build/_cli_output
         destination: cli
 
+  # test and build cli extension
+  test_and_build_cli_ext:
+    docker:
+    - image: hasura/graphql-engine-extension-cli-builder:20200225
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - restore_cache:
+        key:
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: cli-ext
+        command: make ci-deps
+    - save_cache:
+        key:
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+        paths:
+        - cli-ext/node_modules
+        - ~/.npm
+        - ~/.cache
+    - run:
+        name: build extension cli
+        working_directory: cli-ext
+        command: |
+          npm install -g pkg
+          npm run build
+          make deploy
+          make ci-copy-assets
+    - store_artifacts:
+        path: /build/_cli_ext_output
+        destination: cli_ext
+    - persist_to_workspace:
+        root: /build
+        paths:
+          - _cli_ext_output
+
   # test and build cli
   test_and_build_cli:
     docker:
@@ -356,44 +396,35 @@ jobs:
         paths:
           - _cli_output
   
-  test_and_build_cli_ext:
+  test_and_build_cli_migrations:
     docker:
-    - image: hasura/graphql-engine-extension-cli-builder:20200225
+    - image: hasura/graphql-engine-cli-migrations-builder:20200415
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - restore_cache:
-        key:
-          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+    - *setup_remote_docker
     - run:
-        name: install dependencies
-        working_directory: cli-ext
-        command: make ci-deps
-    - save_cache:
-        key:
-          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
-        paths:
-        - cli-ext/node_modules
-        - ~/.npm
-        - ~/.cache
-    - run:
-        name: build extension cli
-        working_directory: cli-ext
+        name: Install Docker Compose
         command: |
-          npm install -g pkg
-          npm run build
-          make deploy
-          make ci-copy-assets
+          set -x
+          curl -L https://github.com/docker/compose/releases/download/1.25.3/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+    - run:
+        name: Build cli-migrations image
+        working_directory: scripts/cli-migrations
+        command: |
+          mkdir -p /build/_cli_migrations_output
+          make all
     - store_artifacts:
-        path: /build/_cli_ext_output
-        destination: cli_ext
+        path: /build/_cli_migrations_output
+        destination: cli-migrations
     - persist_to_workspace:
         root: /build
         paths:
-          - _cli_ext_output
+          - _cli_migrations_output
 
   # build console assets
   build_console:
@@ -531,7 +562,7 @@ jobs:
 
 workflows:
   version: 2
-  workflow_v20200120:
+  workflow_v20200414:
     jobs:
     - check_build_worthiness: *filter_only_vtags
     - test_and_build_cli_ext:
@@ -599,6 +630,10 @@ workflows:
         requires:
         - test_and_build_cli_ext
         - build_server
+    - test_and_build_cli_migrations:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_cli
     - test_console:
         <<: *filter_only_vtags
         requires:
@@ -610,4 +645,5 @@ workflows:
         requires:
         - build_image
         - test_console
+        - test_and_build_cli_migrations
         - all_server_tests_pass

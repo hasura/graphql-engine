@@ -8,7 +8,7 @@
     "pretranspile": "npm run get-shared-modules",
     "transpile": "rm -rf build/* && babel ./src ./tests --out-dir build",
     "prebuild": "npm run transpile",
-    "build": "rm -rf ./bin/* && pkg ./build/command.js --output ./bin/cli-ext-hasura -t node8-linux-x64,node8-macos-x64,node8-win-x64",
+    "build": "rm -rf ./bin/* && pkg ./build/command.js --output ./bin/cli-ext-hasura -t node12-linux-x64,node12-macos-x64,node12-win-x64",
     "pretest": "npm run transpile && babel ./tests --out-dir _tmptests",
     "posttest": "rm -rf _tmptests",
     "test": "node ./_tmptests/index.js"

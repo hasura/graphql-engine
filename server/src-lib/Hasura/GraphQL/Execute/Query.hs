@@ -24,6 +24,7 @@ import qualified Hasura.GraphQL.Transport.HTTP.Protocol as GH
 import qualified Hasura.GraphQL.Validate                as GV
 import qualified Hasura.GraphQL.Validate.Field          as V
 import qualified Hasura.SQL.DML                         as S
+import           Hasura.Server.Version             (HasVersion)
 
 import           Hasura.EncJSON
 import           Hasura.GraphQL.Resolve.Types
@@ -33,6 +34,7 @@ import           Hasura.RQL.DML.Select                  (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
+import           Hasura.GraphQL.Resolve.Action
 
 type PlanVariables = Map.HashMap G.Variable Int
 
@@ -187,11 +189,14 @@ convertQuerySelSet
      , Has OrdByCtx r
      , Has SQLGenCtx r
      , Has UserInfo r
+     , HasVersion
+     , MonadIO m
      )
   => QueryReusability
   -> V.SelSet
+  -> QueryActionExecuter
   -> m (LazyRespTx, Maybe ReusableQueryPlan, GeneratedSqlMap)
-convertQuerySelSet initialReusability fields = do
+convertQuerySelSet initialReusability fields actionRunner = do
   usrVars <- asks (userVars . getter)
   (fldPlans, finalReusability) <- runReusabilityTWith initialReusability $
     forM (toList fields) $ \fld -> do
@@ -200,7 +205,7 @@ convertQuerySelSet initialReusability fields = do
         "__schema"   -> fldPlanFromJ <$> R.schemaR fld
         "__typename" -> pure $ fldPlanFromJ queryRootName
         _            -> do
-          unresolvedAst <- R.queryFldToPGAST fld
+          unresolvedAst <- R.queryFldToPGAST fld actionRunner
           (q, PlanningSt _ vars prepped) <- flip runStateT initPlanningSt $
             R.traverseQueryRootFldAST prepareWithPlan unresolvedAst
           pure . RFPPostgres $ PGPlan (R.toPGQuery q) vars prepped
