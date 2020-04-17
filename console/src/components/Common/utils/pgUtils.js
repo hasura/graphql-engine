@@ -260,7 +260,7 @@ export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
         allSchemas,
         generateTableDef(ref_table, ref_table_table_schema)
       );
-      if (!refTableSchema.is_enum) return;
+      if (!refTableSchema || !refTableSchema.is_enum) return;
 
       const keys = Object.keys(column_mapping);
       if (!keys.length) return;

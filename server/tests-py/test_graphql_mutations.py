@@ -347,10 +347,12 @@ class TestGraphqlUpdateBasic:
     def test_author_by_pk_null(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_by_pk_null.yaml")
 
+    def test_numerics_inc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/numerics_inc.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/update/basic"
-
 
 @use_mutation_fixtures
 class TestGraphqlUpdateJsonB:
