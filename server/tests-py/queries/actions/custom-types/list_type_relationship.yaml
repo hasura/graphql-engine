@@ -1,0 +1,52 @@
+description: Set custom types; relationships for objects with list type fields
+url: /v1/query
+status: 400
+response:
+  internal:
+  - definition:
+      input_objects:
+      objects:
+      - name: User
+        relationships:
+        - remote_table:
+            schema: public
+            name: user
+          name: Names
+          type: array
+          field_mapping:
+            names: name
+        description:
+        fields:
+        - arguments:
+          name: user_id
+          type: uuid!
+          description:
+        - arguments:
+          name: names
+          type: '[String!]'
+          description:
+      scalars:
+      enums:
+    reason: validation for the given custom types failed because the type of the field
+      "names" for relationship "Names" in object type "User" is a list type
+    type: custom_types
+  path: $.args
+  error: validation for the given custom types failed because the type of the field
+    "names" for relationship "Names" in object type "User" is a list type
+  code: constraint-violation
+query:
+  type: set_custom_types
+  args:
+    objects:
+    - name: User
+      fields:
+      - name: user_id
+        type: uuid!
+      - name: names
+        type: '[String!]'
+      relationships:
+      - name: Names
+        type: array
+        remote_table: user
+        field_mapping:
+          names: name

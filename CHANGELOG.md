@@ -3,9 +3,13 @@
 ## Next release
 
 
+## `v1.2.0-beta.5`
+
+- server: fix creating relationships for custom object types with fields reusing Postgres scalars (close #4447)
+
 ## `v1.2.0-beta.4`
 
-### add query support in actions 
+### add query support in actions
 
 (close #4032) (#4309)
 
