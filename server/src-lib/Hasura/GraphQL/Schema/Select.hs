@@ -2,8 +2,8 @@ module Hasura.GraphQL.Schema.Select where
 
 import           Hasura.Prelude
 
-import           Control.Monad.Trans.Maybe
 import           Data.Foldable                 (toList)
+import           Data.Maybe                    (fromJust)
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
@@ -170,34 +170,7 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
                   ObjRel -> RQL.FObj annotatedRelationship
                   ArrRel -> RQL.FArr $ RQL.ASSimple annotatedRelationship
               )
-      FIComputedField computedFieldInfo ->
-        case _cfiReturnType computedFieldInfo of
-          CFRScalar scalarReturnType -> do
-            functionArgsParser <- sequenceA <$>
-              for (toList $ _cffInputArgs $ _cfiFunction computedFieldInfo) \arg -> do
-                inputParser <- undefined {- P.column
-                  (PGColumnScalar $ _qptName $ faType arg)
-                  (G.Nullability $ unHasDefault $ faHasDefault arg) -}
-                pure $ inputParser <&> \input ->
-                  faName arg <&> \name -> ( getFuncArgNameTxt name
-                                          , RQL.AEInput $ P.mkParameter input
-                                          ) -- FIXME: what about AETableRow?
-            pure $ functionArgsParser <&> \functionArgs -> do
-              parseArgs <- sequenceA functionArgs
-              fieldName <- G.mkName $ computedFieldNameToText $ _cfiName computedFieldInfo
-              pure ( fieldName
-                   , RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
-                       { RQL._cfssFunction  = _cffName $ _cfiFunction $ computedFieldInfo
-                       , RQL._cfssType      = scalarReturnType
-                       , RQL._cfssColumnOp  = Nothing -- FIXME: support ColOp
-                       , RQL._cfssArguments = RQL.FunctionArgsExp
-                          { RQL._faePositional = snd <$> parseArgs
-                          , RQL._faeNamed      = Map.fromList parseArgs
-                          }
-                       }
-                   )
-          CFRSetofTable tableName -> undefined
-
+      FIComputedField computedFieldInfo -> computedField computedFieldInfo
   where
     aliasToFieldName = fmap $ fmap $ first $ FieldName . G.unName
 
@@ -205,3 +178,69 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
       FIColumn info        -> pgiDescription info
       FIRelationship _     -> Nothing
       FIComputedField info -> _cffDescription $ _cfiFunction info
+
+
+computedField
+  :: (MonadSchema n m, MonadError QErr m)
+  => ComputedFieldInfo
+  -> m (FieldsParser 'Output n (Maybe (G.Name, AnnotatedField)))
+computedField computedFieldInfo = case _cfiReturnType computedFieldInfo of
+  CFRScalar scalarReturnType -> do
+    case G.mkName $ computedFieldNameToText $ _cfiName computedFieldInfo of
+      Nothing        -> pure $ pure Nothing
+      Just fieldName -> do
+        -- TODO: handle permissions
+        fieldParser <- P.column (PGColumnScalar scalarReturnType) (G.Nullability True)
+        argsParser  <- sequenceA <$>
+          for (toList $ _cffInputArgs $ _cfiFunction computedFieldInfo) \arg ->
+            case faName arg of
+              Nothing   -> pure $ pure Nothing
+              Just name -> do
+                columnParser <- P.column
+                  (PGColumnScalar $ _qptName $ faType arg)
+                  (G.Nullability $ unHasDefault $ faHasDefault arg)
+                let fieldName  = fromJust $ G.mkName $ getFuncArgNameTxt name
+                    -- ^ FIXME: there probably is a better way than using fromJust
+                    argParser = P.field fieldName Nothing columnParser
+                pure $ argParser <&> \value ->
+                  Just ( getFuncArgNameTxt name
+                       , RQL.AEInput $ P.mkParameter value
+                       )
+        let funcName   = _cffName $ _cfiFunction $ computedFieldInfo
+            objName    = fromJust $ G.mkName $ getFunctionTxt (qName $ funcName) <> "_args"
+            -- ^ FIXME: there probably is a better way than using fromJust
+            argsDesc   = G.Description $ "input parameters for function " <>> funcName
+            argsObj    = P.object objName Nothing argsParser
+            argsField  = P.field $$(G.litName "args") (Just argsDesc) argsObj
+            fieldDesc  = _cffDescription $ _cfiFunction computedFieldInfo
+            parser     = P.selection fieldName fieldDesc argsField fieldParser
+        pure $ parser <&> \result -> do
+          (name, args) <- result
+          parsedArgs   <- sequenceA args
+          pure ( name
+               , RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
+                   { RQL._cfssFunction  = funcName
+                   , RQL._cfssType      = scalarReturnType
+                   , RQL._cfssColumnOp  = Nothing -- FIXME: support ColOp
+                   , RQL._cfssArguments = RQL.FunctionArgsExp
+                      { RQL._faePositional = []
+                      , RQL._faeNamed      = Map.fromList parsedArgs
+                      }
+                   }
+               )
+  -- WIP: notes
+  -- The code above is based on the following assumptions:
+  --   - the _cffInputArgs are what the underlying SQL function expects,
+  --     and should therefore be parsed as field of an args object
+  --   - there is only one parameter to the computed field: an args object with
+  --     said arguments
+  -- Things I still find unclear:
+  --   - what happens if we have Nothing for an arg name? How can it even happen?
+  --   - what about positional arguments? old code seems to handle them...
+  --   - is it okay to just "move the Maybes up" all the way back? Or do we want
+  --     to explicitly fail here if we fail to parse a mandatory input?
+  --   - can we safely assume all names are GraphQL-compatible? If not, why? What
+  --     should we do on error?
+  --   - is it okay to use the column parser for the field as a whole, as an argument
+  --     to selection? I am not sure I understand how selection works...
+  CFRSetofTable tableName -> undefined
