@@ -66,6 +66,7 @@ import {
   getConfirmation,
   isEmpty,
   isJsonString,
+  isObject,
 } from '../../../Common/utils/jsUtils';
 import {
   findTable,
@@ -87,7 +88,7 @@ class Permissions extends Component {
     this.state = {
       localFilterString: '',
       prevPermissionsState: {},
-      presetsOrdered: null,
+      presetsOrdered: [],
     };
   }
 
@@ -114,7 +115,11 @@ class Permissions extends Component {
     ) {
       newState.localFilterString = '';
 
-      if (nextPermissionsState.query) {
+      if (
+        nextPermissionsState.query &&
+        nextPermissionsState[nextPermissionsState.query] &&
+        isObject(nextPermissionsState[nextPermissionsState.query].set)
+      ) {
         newState.presetsOrdered = Object.keys(
           nextPermissionsState[nextPermissionsState.query].set
         );
@@ -170,7 +175,7 @@ class Permissions extends Component {
       trackableFunctions,
     } = this.props;
 
-    const { localFilterString, presetsOrder } = this.state;
+    const { localFilterString, presetsOrdered } = this.state;
 
     const currentTableSchema = findTable(
       allSchemas,
@@ -1162,7 +1167,7 @@ class Permissions extends Component {
             const prevKey = selectNode.getAttribute('data-preset-column');
             const index = selectNode.getAttribute('data-index-id');
 
-            const updatedPresetOrder = [...presetsOrder];
+            const updatedPresetOrder = [...presetsOrdered];
             updatedPresetOrder[index] = selectedColumn;
             this.setState({ presetsOrdered: updatedPresetOrder });
 
@@ -1197,7 +1202,7 @@ class Permissions extends Component {
             const column = e.target.getAttribute('data-preset-column');
             const index = e.target.getAttribute('data-index-id');
 
-            const updatedPresetOrder = [...presetsOrder];
+            const updatedPresetOrder = [...presetsOrdered];
             deleteArrayElementAtIndex(updatedPresetOrder, index);
             this.setState({ presetsOrdered: updatedPresetOrder });
 
@@ -1375,7 +1380,7 @@ class Permissions extends Component {
             return _deleteBtn;
           };
 
-          return presetsOrder.concat('').map((presetColumn, i) => {
+          return presetsOrdered.concat('').map((presetColumn, i) => {
             const presetObj = {
               column: presetColumn,
               value: presets[presetColumn],
