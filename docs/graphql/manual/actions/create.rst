@@ -91,7 +91,7 @@ Start with defining the mutation and the required types. These types will reflec
      Go to the ``Actions`` tab on the console and click on ``Create``. This will
      take you to a page like this:
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/action-create-page.png
+     .. thumbnail:: ../../../img/graphql/manual/actions/mutation-action-create.png
         :alt: Console action create
 
      Define the action as follows in the ``Action Definition`` editor.
@@ -254,7 +254,7 @@ Start with defining the query and the required types. These types will reflect i
      Go to the ``Actions`` tab on the console and click on ``Create``. This will
      take you to a page like this:
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/action-create-page.png
+     .. thumbnail:: ../../../img/graphql/manual/actions/query-action-create.png
         :alt: Console action create
 
      Define the action as follows in the ``Action Definition`` editor.
