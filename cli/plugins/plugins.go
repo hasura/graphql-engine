@@ -98,6 +98,7 @@ func (c *Config) ListPlugins() (Plugins, error) {
 
 func (c *Config) GetPlugin(pluginName string, opts FetchOpts) (Plugin, error) {
 	var plugin Plugin
+	var err error
 	if opts.ManifestFile == "" {
 		// Load the plugin index by name
 		ps, err := c.LoadPluginByName(pluginName)
@@ -134,7 +135,7 @@ func (c *Config) GetPlugin(pluginName string, opts FetchOpts) (Plugin, error) {
 			plugin = ps.Versions[latestVersion]
 		}
 	} else {
-		plugin, err := c.ReadPluginFromFile(opts.ManifestFile)
+		plugin, err = c.ReadPluginFromFile(opts.ManifestFile)
 		if err != nil {
 			return plugin, errors.Wrap(err, "failed to load plugin manifest from file")
 		}
