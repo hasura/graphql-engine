@@ -19,7 +19,7 @@ import {
   getTablePermissionsRoute,
   getTableRelationshipsRoute,
 } from '../../../Common/utils/routesUtils';
-import {getReadableNumber} from "../../../Common/utils/jsUtils";
+import { getReadableNumber } from '../../../Common/utils/jsUtils';
 
 const TableHeader = ({
   tabName,

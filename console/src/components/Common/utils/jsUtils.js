@@ -84,8 +84,7 @@ export const isJsonString = str => {
   }
 
   return true;
-}
-;
+};
 export const getAllJsonPaths = (json, leafKeys = [], prefix = '') => {
   const _paths = [];
 
@@ -290,7 +289,7 @@ export const getCurrTimeForFileName = () => {
 };
 
 // return number with commas for readability
-export const getReadableNumber = (number) => {
+export const getReadableNumber = number => {
   if (!isNumber(number)) return number;
 
   return number.toLocaleString();
@@ -322,7 +321,7 @@ export const getFirstArrayElement = array => {
   return array[0];
 };
 
-export const deleteArrayElementAtIndex = (array, index) =>{
+export const deleteArrayElementAtIndex = (array, index) => {
   return array.splice(index, 1);
 };
 

@@ -1,7 +1,4 @@
-import {
-  defaultPermissionsState,
-  defaultQueryPermissions,
-} from '../DataState';
+import { defaultPermissionsState, defaultQueryPermissions } from '../DataState';
 import { getEdForm, getIngForm } from '../utils';
 import { makeMigrationCall, fetchRoleList } from '../DataActions';
 import {

@@ -88,7 +88,8 @@ export const getTableSupportedQueries = table => {
 
   if (checkIfTable(table)) {
     supportedQueryTypes = QUERY_TYPES;
-  } else { // is View
+  } else {
+    // is View
     supportedQueryTypes = [];
 
     // Add insert/update permission if it is insertable/updatable as returned by pg

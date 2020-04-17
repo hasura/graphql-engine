@@ -65,7 +65,7 @@ import {
   deleteArrayElementAtIndex,
   getConfirmation,
   isEmpty,
-  isJsonString
+  isJsonString,
 } from '../../../Common/utils/jsUtils';
 import {
   findTable,
@@ -87,7 +87,7 @@ class Permissions extends Component {
     this.state = {
       localFilterString: '',
       prevPermissionsState: {},
-      presetsOrdered: null
+      presetsOrdered: null,
     };
   }
 
@@ -115,8 +115,9 @@ class Permissions extends Component {
       newState.localFilterString = '';
 
       if (nextPermissionsState.query) {
-        newState.presetsOrdered =
-          Object.keys(nextPermissionsState[nextPermissionsState.query].set);
+        newState.presetsOrdered = Object.keys(
+          nextPermissionsState[nextPermissionsState.query].set
+        );
       }
     }
 
@@ -153,7 +154,7 @@ class Permissions extends Component {
     const {
       dispatch,
       tableName,
-      tableType,
+      // tableType,
       allSchemas,
       schemaList,
       ongoingRequest,
@@ -169,7 +170,7 @@ class Permissions extends Component {
       trackableFunctions,
     } = this.props;
 
-    const {localFilterString, presetsOrder} = this.state;
+    const { localFilterString, presetsOrder } = this.state;
 
     const currentTableSchema = findTable(
       allSchemas,
@@ -241,7 +242,11 @@ class Permissions extends Component {
       );
     };
 
-    const getPermissionsTable = (tableSchema, supportedQueryTypes, roleList) => {
+    const getPermissionsTable = (
+      tableSchema,
+      supportedQueryTypes,
+      roleList
+    ) => {
       const getPermissionsLegend = () => (
         <div>
           <div className={styles.permissionsLegend}>
@@ -261,7 +266,10 @@ class Permissions extends Component {
       const getViewPermissionNote = () => {
         let note;
 
-        const unsupportedQueryTypes = arrayDiff(QUERY_TYPES, supportedQueryTypes);
+        const unsupportedQueryTypes = arrayDiff(
+          QUERY_TYPES,
+          supportedQueryTypes
+        );
 
         if (unsupportedQueryTypes.length) {
           note = (
@@ -374,12 +382,12 @@ class Permissions extends Component {
                       (!permissions.columns ||
                         (!permissions.columns.includes('*') &&
                           permissions.columns.length !==
-                          tableSchema.columns.length))) ||
+                            tableSchema.columns.length))) ||
                     (checkComputedFields &&
                       (!permissions.computed_fields ||
                         (!permissions.computed_fields.includes('*') &&
                           permissions.computed_fields.length !==
-                          groupedComputedFields.scalar.length)))
+                            groupedComputedFields.scalar.length)))
                   ) {
                     _permission = permissionsSymbols.partialAccess;
                   } else {
@@ -1136,7 +1144,7 @@ class Permissions extends Component {
 
             const actionData = {
               column,
-              value: (prefixVal || '') + inputNode.value
+              value: (prefixVal || '') + inputNode.value,
             };
 
             dispatch({
@@ -1156,7 +1164,7 @@ class Permissions extends Component {
 
             const updatedPresetOrder = [...presetsOrder];
             updatedPresetOrder[index] = selectedColumn;
-            this.setState({presetsOrdered: updatedPresetOrder});
+            this.setState({ presetsOrdered: updatedPresetOrder });
 
             if (selectedOption) {
               const actionData = {};
@@ -1176,7 +1184,7 @@ class Permissions extends Component {
             const column = selectNode.getAttribute('data-preset-column');
             const actionData = {
               column,
-              value: e.target.value === 'session' ? X_HASURA_CONST : ''
+              value: e.target.value === 'session' ? X_HASURA_CONST : '',
             };
 
             dispatch({
@@ -1191,7 +1199,7 @@ class Permissions extends Component {
 
             const updatedPresetOrder = [...presetsOrder];
             deleteArrayElementAtIndex(updatedPresetOrder, index);
-            this.setState({presetsOrdered: updatedPresetOrder});
+            this.setState({ presetsOrdered: updatedPresetOrder });
 
             dispatch({
               type: DELETE_PRESET,
@@ -1233,12 +1241,12 @@ class Permissions extends Component {
               if (columns && columns.length > 0) {
                 columns.forEach((c, i) => {
                   const columnName = getColumnName(c);
-                  if (columnName === preset.column || !presetColumns.includes(columnName)) {
+                  if (
+                    columnName === preset.column ||
+                    !presetColumns.includes(columnName)
+                  ) {
                     _columnOptions.push(
-                      <option
-                        value={columnName}
-                        key={i}
-                      >
+                      <option value={columnName} key={i}>
                         {columnName}
                       </option>
                     );
@@ -1296,7 +1304,9 @@ class Permissions extends Component {
 
             const presetInputDisabled = !preset.column;
 
-            const columnInfo = columns.find(c => getColumnName(c) === preset.column);
+            const columnInfo = columns.find(
+              c => getColumnName(c) === preset.column
+            );
             const columnType = columnInfo ? getColumnType(columnInfo) : '';
 
             if (presetType === 'session') {
@@ -1365,10 +1375,10 @@ class Permissions extends Component {
             return _deleteBtn;
           };
 
-          return (presetsOrder.concat('')).map((presetColumn, i) => {
+          return presetsOrder.concat('').map((presetColumn, i) => {
             const presetObj = {
               column: presetColumn,
-              value: presets[presetColumn]
+              value: presets[presetColumn],
             };
 
             const rowElementStyle =
@@ -1379,7 +1389,10 @@ class Permissions extends Component {
               styles.input_element_wrapper;
 
             return (
-              <div className={styles.insertSetConfigRow} key={presetColumn || i}>
+              <div
+                className={styles.insertSetConfigRow}
+                key={presetColumn || i}
+              >
                 <div className={rowElementStyle}>
                   {getPresetColumnSelect(presetObj, i)}
                 </div>
@@ -1406,7 +1419,6 @@ class Permissions extends Component {
             columns while {getIngForm(query)}
           </Tooltip>
         );
-
 
         const presetStatus = !isEmpty(presets)
           ? Object.keys(presets).join(', ')
@@ -1775,7 +1787,11 @@ class Permissions extends Component {
         <div className={styles.padd_left_remove}>
           <div className={`${styles.padd_remove} col-xs-12`}>
             <h4 className={styles.subheading_text}>Permissions</h4>
-            {getPermissionsTable(currentTableSchema, supportedQueryTypes, allRoles)}
+            {getPermissionsTable(
+              currentTableSchema,
+              supportedQueryTypes,
+              allRoles
+            )}
             {getBulkSection(currentTableSchema)}
             {getEditSection(currentTableSchema, supportedQueryTypes, allRoles)}
           </div>

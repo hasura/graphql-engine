@@ -1,7 +1,4 @@
-import {
-  defaultModifyState,
-  defaultPermissionsState,
-} from '../DataState';
+import { defaultModifyState, defaultPermissionsState } from '../DataState';
 
 import { MAKE_REQUEST, REQUEST_SUCCESS, REQUEST_ERROR } from '../DataActions';
 
@@ -479,7 +476,9 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case DELETE_PRESET:
-      const deletedSet = { ...modifyState.permissionsState[action.data.queryType].set };
+      const deletedSet = {
+        ...modifyState.permissionsState[action.data.queryType].set,
+      };
       delete deletedSet[action.data.column];
 
       return {
@@ -488,15 +487,15 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...modifyState.permissionsState,
           [action.data.queryType]: {
             ...modifyState.permissionsState[action.data.queryType],
-            set:{
-              ...deletedSet
-            }
+            set: deletedSet,
           },
         },
       };
 
     case SET_PRESET_VALUE:
-      const updatedSet = {...modifyState.permissionsState[action.data.queryType].set};
+      const updatedSet = {
+        ...modifyState.permissionsState[action.data.queryType].set,
+      };
       if (action.data.prevKey) {
         updatedSet[action.data.column] = updatedSet[action.data.prevKey];
         delete updatedSet[action.data.prevKey];
@@ -510,9 +509,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...modifyState.permissionsState,
           [action.data.queryType]: {
             ...modifyState.permissionsState[action.data.queryType],
-            set: {
-              ...updatedSet
-            },
+            set: updatedSet,
           },
         },
       };

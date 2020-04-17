@@ -37,13 +37,7 @@ class InputChecker extends Component {
       });
   }
   render() {
-    const {
-      value,
-      onChange,
-      placeholder,
-      disabled,
-      title,
-    } = this.props;
+    const { value, onChange, placeholder, disabled, title } = this.props;
 
     const style = {
       border: '1px solid red',
