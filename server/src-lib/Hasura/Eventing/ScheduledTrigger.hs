@@ -77,9 +77,6 @@ import qualified Hasura.Logging                    as L
 import qualified Network.HTTP.Client               as HTTP
 import qualified Text.Builder                      as TB (run)
 
-invocationVersion :: Version
-invocationVersion = "1"
-
 newtype ScheduledTriggerInternalErr
   = ScheduledTriggerInternalErr QErr
   deriving (Show, Eq)
@@ -387,7 +384,7 @@ setRetry se time =
 
 mkInvocation
   :: ScheduledEventFull -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
-  -> Invocation
+  -> (Invocation 'ScheduledType)
 mkInvocation se status reqHeaders respBody respHeaders
   = let resp = if isClientError status
           then mkClientErr respBody
@@ -396,10 +393,10 @@ mkInvocation se status reqHeaders respBody respHeaders
       Invocation
       (sefId se)
       status
-      (mkWebhookReq (J.toJSON se) reqHeaders invocationVersion)
+      (mkWebhookReq (J.toJSON se) reqHeaders invocationVersionST)
       resp
 
-insertInvocation :: Invocation -> Q.TxE QErr ()
+insertInvocation :: (Invocation 'ScheduledType) -> Q.TxE QErr ()
 insertInvocation invo = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
           INSERT INTO hdb_catalog.hdb_scheduled_event_invocation_logs

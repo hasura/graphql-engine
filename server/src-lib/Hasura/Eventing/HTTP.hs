@@ -20,7 +20,7 @@ module Hasura.Eventing.HTTP
   , ExtraLogContext(..)
   , EventId
   , Invocation(..)
-  , Version
+  , InvocationVersion
   , Response(..)
   , WebhookRequest(..)
   , WebhookResponse(..)
@@ -35,6 +35,9 @@ module Hasura.Eventing.HTTP
   , getRetryAfterHeaderFromHTTPErr
   , getRetryAfterHeaderFromResp
   , parseRetryHeaderValue
+  , TriggerTypes(..)
+  , invocationVersionET
+  , invocationVersionST
   ) where
 
 import qualified Data.ByteString               as BS
@@ -86,29 +89,51 @@ $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''WebhookResponse
 newtype ClientError =  ClientError { _ceMessage :: TBS.TByteString}
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''ClientError)
 
-type Version = T.Text
+type InvocationVersion = T.Text
 
--- | There are two types of events: Event (for event triggers) and Scheduled (for scheduled triggers)
-data TriggerTypes = Event | Scheduled
+invocationVersionET :: InvocationVersion
+invocationVersionET = "2"
 
-data Response = ResponseHTTP WebhookResponse | ResponseError ClientError
+invocationVersionST :: InvocationVersion
+invocationVersionST = "1"
 
-instance ToJSON Response where
+-- | There are two types of events: EventType (for event triggers) and ScheduledType (for scheduled triggers)
+data TriggerTypes = EventType | ScheduledType
+
+data Response (a :: TriggerTypes) =
+  ResponseHTTP WebhookResponse | ResponseError ClientError
+
+instance ToJSON (Response 'EventType) where
   toJSON (ResponseHTTP resp) = object
     [ "type" .= String "webhook_response"
     , "data" .= toJSON resp
+    , "version" .= invocationVersionET
     ]
   toJSON (ResponseError err) = object
     [ "type" .= String "client_error"
     , "data" .= toJSON err
+    , "version" .= invocationVersionET
     ]
 
-data Invocation
+instance ToJSON (Response 'ScheduledType) where
+  toJSON (ResponseHTTP resp) = object
+    [ "type" .= String "webhook_response"
+    , "data" .= toJSON resp
+    , "version" .= invocationVersionST
+    ]
+  toJSON (ResponseError err) = object
+    [ "type" .= String "client_error"
+    , "data" .= toJSON err
+    , "version" .= invocationVersionST
+    ]
+
+
+data Invocation (a :: TriggerTypes)
   = Invocation
   { iEventId  :: EventId
   , iStatus   :: Int
   , iRequest  :: WebhookRequest
-  , iResponse :: Response
+  , iResponse :: (Response a)
   }
 
 data ExtraLogContext
@@ -128,10 +153,10 @@ data HTTPResp (a :: TriggerTypes)
 
 $(deriveToJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''HTTPResp)
 
-instance ToEngineLog (HTTPResp 'Event) Hasura where
+instance ToEngineLog (HTTPResp 'EventType) Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, toJSON resp)
 
-instance ToEngineLog (HTTPResp 'Scheduled) Hasura where
+instance ToEngineLog (HTTPResp 'ScheduledType) Hasura where
   toEngineLog resp = (LevelInfo, scheduledTriggerLogType, toJSON resp)
 
 data HTTPErr (a :: TriggerTypes)
@@ -154,12 +179,12 @@ instance ToJSON (HTTPErr a) where
     where
       toObj :: (T.Text, Value) -> Value
       toObj (k, v) = object [ "type" .= k
-                              , "detail" .= v]
+                            , "detail" .= v]
 
-instance ToEngineLog (HTTPErr 'Event) Hasura where
+instance ToEngineLog (HTTPErr 'EventType) Hasura where
   toEngineLog err = (LevelError, eventTriggerLogType, toJSON err)
 
-instance ToEngineLog (HTTPErr 'Scheduled) Hasura where
+instance ToEngineLog (HTTPErr 'ScheduledType) Hasura where
   toEngineLog err = (LevelError, scheduledTriggerLogType, toJSON err)
 
 mkHTTPResp :: HTTP.Response LBS.ByteString -> HTTPResp a
@@ -182,10 +207,10 @@ data HTTPRespExtra (a :: TriggerTypes)
 
 $(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''HTTPRespExtra)
 
-instance ToEngineLog (HTTPRespExtra 'Event) Hasura where
+instance ToEngineLog (HTTPRespExtra 'EventType) Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, toJSON resp)
 
-instance ToEngineLog (HTTPRespExtra 'Scheduled) Hasura where
+instance ToEngineLog (HTTPRespExtra 'ScheduledType) Hasura where
   toEngineLog resp = (LevelInfo, scheduledTriggerLogType, toJSON resp)
 
 isNetworkError :: HTTPErr a -> Bool
@@ -228,7 +253,7 @@ logHTTPForET
      , Has (Logger Hasura) r
      , MonadIO m
      )
-  => Either (HTTPErr 'Event) (HTTPResp 'Event) -> ExtraLogContext -> m ()
+  => Either (HTTPErr 'EventType) (HTTPResp 'EventType) -> ExtraLogContext -> m ()
 logHTTPForET eitherResp extraLogCtx = do
   logger :: Logger Hasura <- asks getter
   unLogger logger $ HTTPRespExtra eitherResp extraLogCtx
@@ -238,7 +263,7 @@ logHTTPForST
      , Has (Logger Hasura) r
      , MonadIO m
      )
-  => Either (HTTPErr 'Scheduled) (HTTPResp 'Scheduled) -> ExtraLogContext -> m ()
+  => Either (HTTPErr 'ScheduledType) (HTTPResp 'ScheduledType) -> ExtraLogContext -> m ()
 logHTTPForST eitherResp extraLogCtx = do
   logger :: Logger Hasura <- asks getter
   unLogger logger $ HTTPRespExtra eitherResp extraLogCtx
@@ -275,17 +300,17 @@ tryWebhook headers timeout payload webhook = do
       eitherResp <- runHTTP manager req
       onLeft eitherResp throwError
 
-mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response
+mkResp :: Int -> TBS.TByteString -> [HeaderConf] -> Response a
 mkResp status payload headers =
   let wr = WebhookResponse payload headers status
   in ResponseHTTP wr
 
-mkClientErr :: TBS.TByteString -> Response
+mkClientErr :: TBS.TByteString -> Response a
 mkClientErr message =
   let cerr = ClientError message
   in ResponseError cerr
 
-mkWebhookReq :: Value -> [HeaderConf] -> Version -> WebhookRequest
+mkWebhookReq :: Value -> [HeaderConf] -> InvocationVersion -> WebhookRequest
 mkWebhookReq payload headers = WebhookRequest payload headers
 
 isClientError :: Int -> Bool

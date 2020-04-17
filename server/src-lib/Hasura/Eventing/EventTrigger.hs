@@ -72,9 +72,6 @@ import qualified Database.PG.Query.PTI         as PTI
 import qualified PostgreSQL.Binary.Encoding    as PE
 import qualified Data.Set                      as Set
 
-invocationVersion :: Version
-invocationVersion = "2"
-
 data TriggerMetadata
   = TriggerMetadata { tmName :: TriggerName }
   deriving (Show, Eq)
@@ -407,7 +404,7 @@ retryOrSetError e retryConf err = do
 
 mkInvocation
   :: EventPayload -> Int -> [HeaderConf] -> TBS.TByteString -> [HeaderConf]
-  -> Invocation
+  -> (Invocation 'EventType)
 mkInvocation ep status reqHeaders respBody respHeaders
   = let resp = if isClientError status
           then mkClientErr respBody
@@ -416,7 +413,7 @@ mkInvocation ep status reqHeaders respBody respHeaders
       Invocation
       (epId ep)
       status
-      (mkWebhookReq (toJSON ep) reqHeaders invocationVersion)
+      (mkWebhookReq (toJSON ep) reqHeaders invocationVersionET)
       resp
 
 logQErr :: ( MonadReader r m, Has (L.Logger L.Hasura) r, MonadIO m) => QErr -> m ()
@@ -464,7 +461,7 @@ fetchEvents limitI =
           }
         limit = fromIntegral limitI :: Word64
 
-insertInvocation :: Invocation -> Q.TxE QErr ()
+insertInvocation :: Invocation 'EventType -> Q.TxE QErr ()
 insertInvocation invo = do
   Q.unitQE defaultTxErrorHandler [Q.sql|
           INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
