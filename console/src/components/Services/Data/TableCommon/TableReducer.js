@@ -488,7 +488,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           ...modifyState.permissionsState,
           [action.data.queryType]: {
             ...modifyState.permissionsState[action.data.queryType],
-            set:{
+            set: deletedSet,
               ...deletedSet
             }
           },
