@@ -1,3 +1,4 @@
+# NB: Don't test for the returned num_real, since the precision depends on the PG version.
 description: Updated numerics data using _inc operator
 url: /v1/graphql
 status: 200
@@ -22,7 +23,6 @@ query:
           num_smallint
           num_integer
           num_bigint
-          num_real
           num_double
           num_money
           num_numeric
@@ -39,7 +39,6 @@ response:
         num_smallint: 12344
         num_integer: 12344
         num_bigint: '12344'
-        num_real: 12344.6
         num_double: '12344.57'
         num_money: $12,344.57
         num_numeric: '12344.5700'
