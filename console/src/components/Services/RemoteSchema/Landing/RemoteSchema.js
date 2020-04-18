@@ -7,7 +7,7 @@ import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 import TryItOut from '../../Common/Landing/TryItOut';
-import { Heading } from '../../../UIKit/atoms';
+import { Heading, Box, Flex } from '../../../UIKit/atoms';
 import styles from '../RemoteSchema.scss';
 
 const RemoteSchema = ({ dispatch, readOnlyMode }) => {
@@ -35,43 +35,39 @@ const RemoteSchema = ({ dispatch, readOnlyMode }) => {
   };
 
   return (
-    <div
-      className={`${styles.padd_left_remove} ${styles.remoteSchemaWrapper} container-fluid ${styles.padd_top}`}
-    >
-      <div className={styles.padd_left}>
-        <Helmet title={`${pageTitle}s | Hasura`} />
-        <div>
-          <div className={styles.display_flex}>
-            <Heading as="h2" fontSize="h2" display="inline-block">
-              Remote Schemas
-            </Heading>
-            {getAddBtn()}
-          </div>
-          <hr />
+    <Box pl="15px" className="container-fluid" pt="20px">
+      <Helmet title={`${pageTitle}s | Hasura`} />
+      <div>
+        <Flex>
+          <Heading as="h2" fontSize="h2" display="inline-block">
+            Remote Schemas
+          </Heading>
+          {getAddBtn()}
+        </Flex>
+        <hr />
 
-          <TopicDescription
-            title="What are Remote Schemas?"
-            imgUrl={`${globals.assetsPath}/common/img/remote_schema.png`}
-            imgAlt="Remote Schema"
-            description="Remote schemas are external GraphQL services which can be merged with Hasura to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework."
-          />
-          <hr className={styles.clear_fix} />
+        <TopicDescription
+          title="What are Remote Schemas?"
+          imgUrl={`${globals.assetsPath}/common/img/remote_schema.png`}
+          imgAlt="Remote Schema"
+          description="Remote schemas are external GraphQL services which can be merged with Hasura to provide a unified GraphQL API. Think of it like automated schema stitching. All you need to do is build a GraphQL service and then provide its HTTP endpoint to Hasura. Your GraphQL service can be written in any language or framework."
+        />
+        <hr className={styles.clear_fix} />
 
-          <TryItOut
-            service="remoteSchema"
-            queryDefinition="query { hello }"
-            title="Steps to deploy an example GraphQL service to Glitch"
-            footerDescription="You just added a remote schema and queried it!"
-            glitchLink="https://glitch.com/edit/#!/hasura-sample-remote-schema"
-            googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/google-cloud-functions/nodejs"
-            MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/azure-functions/nodejs"
-            awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs"
-            adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/"
-            isAvailable
-          />
-        </div>
+        <TryItOut
+          service="remoteSchema"
+          queryDefinition="query { hello }"
+          title="Steps to deploy an example GraphQL service to Glitch"
+          footerDescription="You just added a remote schema and queried it!"
+          glitchLink="https://glitch.com/edit/#!/hasura-sample-remote-schema"
+          googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/google-cloud-functions/nodejs"
+          MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/azure-functions/nodejs"
+          awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/aws-lambda/nodejs"
+          adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas/"
+          isAvailable
+        />
       </div>
-    </div>
+    </Box>
   );
 };
 

@@ -54,7 +54,7 @@
 
 .clickableCell,
 .actionCell {
-  .flex_space_between > div:first-child {
+  div:first-child {
     width: calc(100% - 20px);
   }
 }

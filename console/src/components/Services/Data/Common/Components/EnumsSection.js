@@ -1,8 +1,7 @@
 import React from 'react';
 import Toggle from 'react-toggle';
 
-import { ToolTip, Heading, TextLink } from '../../../../UIKit/atoms';
-import styles from '../../../../Common/Common.scss';
+import { ToolTip, Heading, TextLink, Flex, Box } from '../../../../UIKit/atoms';
 
 const enumCompatibilityDocsUrl =
   'https://hasura.io/docs/1.0/graphql/manual/schema/enums.html#create-enum-table';
@@ -13,7 +12,7 @@ export const EnumTableModifyWarning = ({ isEnum }) => {
   }
 
   return (
-    <div className={styles.add_mar_bottom}>
+    <Box mb="20px">
       <i>
         * This table is set as an enum. Modifying it may cause your Hasura
         metadata to become inconsistent.
@@ -22,7 +21,7 @@ export const EnumTableModifyWarning = ({ isEnum }) => {
           See enum table requirements
         </TextLink>
       </i>
-    </div>
+    </Box>
   );
 };
 
@@ -63,13 +62,9 @@ const EnumsSection = ({ isEnum, toggleEnum, loading }) => {
           See table requirements
         </TextLink>
       </Heading>
-      <div
-        className={`${styles.display_flex} ${styles.add_mar_bottom}`}
-        title={title}
-        data-toggle="tooltip"
-      >
+      <Flex title={title} data-toggle="tooltip" mb="20px">
         <Toggle checked={isEnum} icons={false} onChange={toggleEnum} />
-      </div>
+      </Flex>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ToolTip, Heading, TextLink } from '../../../../UIKit/atoms';
+import { ToolTip, Heading, TextLink, Flex } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const editorLabel = 'Kind';
@@ -27,7 +27,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
         />
         <TextLink type="moreInfo" href={docsRef} />
       </Heading>
-      <div className={styles.display_flex}>
+      <Flex>
         <label
           className={`${styles.add_mar_right} ${styles.cursorPointer}`}
           onClick={setSynchronous}
@@ -52,7 +52,7 @@ const HandlerEditor = ({ value, onChange, className }) => {
           />
           Asynchronous
         </label>
-      </div>
+      </Flex>
     </div>
   );
 };

@@ -3,7 +3,7 @@ import React from 'react';
 import styles from '../../../../Common/TableCommon/Table.scss';
 import { fkViolationOnUpdate, fkViolationOnDelete } from '../TooltipMessages';
 import { updateSchemaInfo } from '../../DataActions';
-import { Icon, ToolTip } from '../../../../UIKit/atoms';
+import { Icon, ToolTip, Text, Flex, Box } from '../../../../UIKit/atoms';
 
 const violiationActions = [
   'restrict',
@@ -61,10 +61,10 @@ const ForeignKeySelector = ({
     };
 
     return (
-      <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Reference Schema:</b>
-        </div>
+      <Box mb="20px">
+        <Text fontWeight="bold" mb="10px">
+          Reference Schema:
+        </Text>
         <select
           value={refSchemaName || ''}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
@@ -73,7 +73,7 @@ const ForeignKeySelector = ({
         >
           {getRefSchemaOptions()}
         </select>
-      </div>
+      </Box>
     );
   };
 
@@ -127,10 +127,10 @@ const ForeignKeySelector = ({
     };
 
     return (
-      <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
-          <b>Reference Table:</b>
-        </div>
+      <Box mb="20px">
+        <Text fontWeight="bold" mb="10px">
+          Reference Table:
+        </Text>
         <select
           value={refTableName || ''}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
@@ -140,7 +140,7 @@ const ForeignKeySelector = ({
         >
           {getRefTableOptions()}
         </select>
-      </div>
+      </Box>
     );
   };
 
@@ -151,7 +151,7 @@ const ForeignKeySelector = ({
       ? 'Please select the reference table'
       : undefined;
     return (
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <div className={`row ${styles.add_mar_bottom_mid}`}>
           <div className={`col-sm-4 ${styles.add_mar_right}`}>
             <b>From:</b>
@@ -218,10 +218,7 @@ const ForeignKeySelector = ({
           }
 
           return (
-            <div
-              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
-              key={`fk-col-${index}-${_i}`}
-            >
+            <Flex mb="20px" key={`fk-col-${index}-${_i}`}>
               <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
                   className={`form-control ${styles.select} ${styles.wd100Percent}`}
@@ -270,10 +267,10 @@ const ForeignKeySelector = ({
                 </select>
               </div>
               <div>{removeIcon}</div>
-            </div>
+            </Flex>
           );
         })}
-      </div>
+      </Box>
     );
   };
 
@@ -295,10 +292,7 @@ const ForeignKeySelector = ({
               dispatch(setForeignKeys(newFks));
             };
             return (
-              <div
-                className={`col-sm-2 ${styles.display_flex}`}
-                key={`${action}_${va}`}
-              >
+              <Flex className="col-sm-2" key={`${action}_${va}`}>
                 <input
                   type="radio"
                   checked={selected === va}
@@ -309,7 +303,7 @@ const ForeignKeySelector = ({
                   disabled={disabled}
                 />
                 <div>{va.toLowerCase()}</div>
-              </div>
+              </Flex>
             );
           })}
         </div>
@@ -317,22 +311,22 @@ const ForeignKeySelector = ({
     };
 
     return (
-      <div>
-        <div className={`${styles.add_mar_bottom}`}>
-          <div className={`${styles.add_mar_bottom_mid}`}>
-            <b>On Update Violation:</b>
+      <>
+        <Box mb="20px">
+          <Text fontWeight="bold" mb="10px">
+            On Update Violation:
             <ToolTip message={fkViolationOnUpdate} ml="sm" />
-          </div>
+          </Text>
           {radios('onUpdate')}
-        </div>
-        <div className={`${styles.add_mar_bottom}`}>
-          <div className={`${styles.add_mar_bottom_mid}`}>
-            <b>On Delete Violation:</b>
+        </Box>
+        <Box mb="20px">
+          <Text fontWeight="bold" mb="10px">
+            On Delete Violation:
             <ToolTip message={fkViolationOnDelete} ml="sm" />
-          </div>
+          </Text>
           {radios('onDelete')}
-        </div>
-      </div>
+        </Box>
+      </>
     );
   };
 

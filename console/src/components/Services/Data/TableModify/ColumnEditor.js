@@ -3,7 +3,7 @@ import React from 'react';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 import { getValidAlterOptions } from './utils';
-import { ToolTip } from '../../../UIKit/atoms';
+import { ToolTip, Flex } from '../../../UIKit/atoms';
 import styles from './ModifyTable.scss';
 
 const ColumnEditor = ({
@@ -75,7 +75,7 @@ const ColumnEditor = ({
 
   const getColumnCustomFieldInput = () => {
     return (
-      <div className={`${styles.display_flex} form-group`}>
+      <Flex className="form-group">
         <label className={'col-xs-4'}>
           GraphQL field name
           <ToolTip
@@ -95,7 +95,7 @@ const ColumnEditor = ({
             data-test="edit-col-custom-field"
           />
         </div>
-      </div>
+      </Flex>
     );
   };
 
@@ -119,7 +119,7 @@ const ColumnEditor = ({
   return (
     <div className={`${styles.colEditor} container-fluid`}>
       <form className="form-horizontal" onSubmit={onSubmit}>
-        <div className={`${styles.display_flex} form-group`}>
+        <Flex className="form-group">
           <label className={'col-xs-4'}>Name</label>
           <div className="col-xs-6">
             <input
@@ -130,8 +130,8 @@ const ColumnEditor = ({
               data-test="edit-col-name"
             />
           </div>
-        </div>
-        <div className={`${styles.display_flex} form-group`}>
+        </Flex>
+        <Flex className="form-group">
           <label className={'col-xs-4'}>Type</label>
           <div className="col-xs-6">
             <SearchableSelectBox
@@ -144,8 +144,8 @@ const ColumnEditor = ({
               placeholder="column_type"
             />
           </div>
-        </div>
-        <div className={`${styles.display_flex} form-group`}>
+        </Flex>
+        <Flex className="form-group">
           <label className={'col-xs-4'}>Nullable</label>
           <div className="col-xs-6">
             <select
@@ -159,8 +159,8 @@ const ColumnEditor = ({
               <option value="false">False</option>
             </select>
           </div>
-        </div>
-        <div className={`${styles.display_flex} form-group`}>
+        </Flex>
+        <Flex className="form-group">
           <label className={'col-xs-4'}>Unique</label>
           <div className="col-xs-6">
             <select
@@ -174,12 +174,12 @@ const ColumnEditor = ({
               <option value="false">False</option>
             </select>
           </div>
-        </div>
-        <div className={`${styles.display_flex} form-group`}>
+        </Flex>
+        <Flex className="form-group">
           <label className={'col-xs-4'}>Default</label>
           <div className="col-xs-6">{getColumnDefaultInput()}</div>
-        </div>
-        <div className={`${styles.display_flex} form-group`}>
+        </Flex>
+        <Flex className="form-group">
           <label className={'col-xs-4'}>Comment</label>
           <div className="col-xs-6">
             <input
@@ -190,7 +190,7 @@ const ColumnEditor = ({
               data-test="edit-col-comment"
             />
           </div>
-        </div>
+        </Flex>
         {getColumnCustomFieldInput()}
       </form>
       <div className="row">

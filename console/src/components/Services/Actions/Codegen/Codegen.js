@@ -5,13 +5,13 @@ import { getSdlComplete } from '../../../../shared/utils/sdlUtils';
 import {
   getAllCodegenFrameworks,
   getStarterKitPath,
-  getGlitchProjectURL
+  getGlitchProjectURL,
 } from './utils';
 import { getPersistedDerivedAction } from '../lsUtils';
 import Button from '../../../Common/Button/Button';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
-import { Spinner, TextLink } from '../../../UIKit/atoms';
+import { Spinner, TextLink, Flex, Box } from '../../../UIKit/atoms';
 import styles from '../Common/components/Styles.scss';
 
 const Codegen = ({ allActions, allTypes, currentAction }) => {
@@ -119,11 +119,11 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     };
 
     return (
-      <div className={`${styles.add_mar_bottom} ${styles.display_flex}`}>
+      <Flex mb="20px">
         {getDrodown()}
         {getGlitchButton()}
         {getStarterKitButton()}
-      </div>
+      </Flex>
     );
   };
 
@@ -138,7 +138,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   };
 
   return (
-    <div style={{ width: '600px' }}>
+    <Box width="600px">
       <Helmet
         title={`Codegen - ${currentAction.action_name} - Actions | Hasura`}
       />
@@ -154,7 +154,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
       </div>
       <hr />
       {getDerivationInfo()}
-    </div>
+    </Box>
   );
 };
 

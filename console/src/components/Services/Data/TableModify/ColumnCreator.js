@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
+
 import { showErrorNotification } from '../../Common/Notification';
 import gqlPattern, { gqlColumnErrorNotif } from '../Common/GraphQLValidation';
 import { commonDataTypes } from '../utils';
-
-import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
-import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
-
 import {
   getDataOptions,
   getDefaultFunctionsOptions,
   inferDefaultValues,
 } from '../Common/utils';
 
+import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
+
 import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
 
-import styles from './ModifyTable.scss';
 import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
+import { Flex } from '../../../UIKit/atoms';
+import styles from './ModifyTable.scss';
 
 const useColumnEditor = (dispatch, tableName) => {
   const initialState = {
@@ -272,10 +273,7 @@ const ColumnCreator = ({
 
   return (
     <div className={styles.activeEdit}>
-      <form
-        className={`form-inline ${styles.display_flex}`}
-        onSubmit={onSubmit}
-      >
+      <Flex as="form" className="form-inline" onSubmit={onSubmit}>
         {getColumnNameInput()}
         {getColumnTypeInput()}
         {getColumnNullableInput()}
@@ -283,7 +281,7 @@ const ColumnCreator = ({
         {getColumnDefaultInput()}
 
         {getSubmitButton()}
-      </form>
+      </Flex>
       <div className={styles.add_mar_top}>
         {getFrequentlyUsedColumnSelector()}
       </div>

@@ -6,7 +6,7 @@ import { commonDataTypes } from '../utils';
 import { getDataOptions, inferDefaultValues } from '../Common/utils';
 
 import TableColumnDefault from './TableColumnDefault';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Flex } from '../../../UIKit/atoms';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -90,7 +90,7 @@ const TableColumn = props => {
       : getInferredDefaultValues();
 
   return (
-    <div key={i} className={`${styles.display_flex} form-group`}>
+    <Flex key={i} className="form-group">
       <input
         type="text"
         className={`${styles.input} form-control`}
@@ -161,7 +161,7 @@ const TableColumn = props => {
       />{' '}
       <label>Unique</label>
       {getRemoveIcon(colLength)}
-    </div>
+    </Flex>
   );
 };
 

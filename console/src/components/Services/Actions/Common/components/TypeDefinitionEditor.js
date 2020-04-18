@@ -10,7 +10,9 @@ import {
   ToolTip,
   Heading,
   Text,
-  TextLink
+  TextLink,
+  Flex,
+  Box,
 } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
@@ -28,7 +30,7 @@ const ActionDefinitionEditor = ({
   label = editorLabel,
   tooltip = editorTooltip,
   editorHeight = '200px',
-  editorWidth = '600px'
+  editorWidth = '600px',
 }) => {
   const [modalOpen, setModalState] = React.useState(false);
   const toggleModal = () => setModalState(!modalOpen);
@@ -68,15 +70,13 @@ const ActionDefinitionEditor = ({
         {label}
         <ToolTip message={tooltip} ml="sm" />
       </Heading>
-      <div className={styles.sdlEditorContainer}>
-        <div
-          className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}
-        >
+      <Box width="600px">
+        <Flex mb="5px">
           {error && (
-            <div className={styles.display_flex}>
+            <Flex>
               <Icon mr="xs" type="close" color="red.primary" />
               <Text color="red.primary">{errorMessage}</Text>
-            </div>
+            </Flex>
           )}
           <TextLink ml="auto" mr="20px" onClick={toggleModal} hover="underline">
             <Icon type="copy" mr="xs" size={12} mb="-1px" />
@@ -93,7 +93,7 @@ const ActionDefinitionEditor = ({
               toggleModal={toggleModal}
             />
           </Modal>
-        </div>
+        </Flex>
         <SDLEditor
           name="sdl-editor"
           value={value}
@@ -102,7 +102,7 @@ const ActionDefinitionEditor = ({
           height={editorHeight}
           width={editorWidth}
         />
-      </div>
+      </Box>
     </div>
   );
 };

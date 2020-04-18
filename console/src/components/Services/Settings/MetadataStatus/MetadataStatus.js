@@ -145,9 +145,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
             </li>
           </ul>
         </div>
-        <div
-          className={`${metaDataStyles.display_flex} ${metaDataStyles.add_mar_top_small}`}
-        >
+        <Flex mt="5px">
           <Button
             color="red"
             size="sm"
@@ -162,7 +160,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
             buttonText="Reload metadata"
             shouldReloadRemoteSchemas={isInconsistentRemoteSchemaPresent}
           />
-        </div>
+        </Flex>
       </Flex>
     );
   };

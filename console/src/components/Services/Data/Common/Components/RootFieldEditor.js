@@ -1,7 +1,9 @@
 import React from 'react';
-import styles from '../../../../Common/Common.scss';
+
 import { getRootFieldLabel } from './utils';
 import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
+import { Box, Flex } from '../../../../UIKit/atoms';
+import styles from '../../../../Common/Common.scss';
 
 const RootFieldEditor = ({
   rootFields,
@@ -37,13 +39,11 @@ const RootFieldEditor = ({
   };
 
   const getRow = (rfType, value, onChange) => (
-    <div
-      className={`${styles.display_flex} row ${styles.add_mar_bottom_small}`}
-    >
-      <div className={`${styles.add_mar_right} col-md-3`}>
+    <Flex mb="5px">
+      <Box mr="20px" className="col-md-3">
         {getRootFieldLabel(rfType)}
-      </div>
-      <div className={'col-md-5'}>
+      </Box>
+      <Box className="col-md-5">
         <input
           type="text"
           value={value || ''}
@@ -52,13 +52,13 @@ const RootFieldEditor = ({
           onChange={onChange}
           disabled={disabled}
         />
-      </div>
-    </div>
+      </Box>
+    </Flex>
   );
 
   const getSection = rfType => {
     return (
-      <div className={`${styles.add_mar_bottom_mid}`}>
+      <Box mb="10px">
         <CollapsibleToggle
           title={rfType === 'query' ? 'Query and Subscription' : 'Mutation'}
           useDefaultTitleStyle
@@ -82,17 +82,15 @@ const RootFieldEditor = ({
             </div>
           )}
         </CollapsibleToggle>
-      </div>
+      </Box>
     );
   };
 
   return (
-    <div>
-      <div className={styles.add_mar_bottom_mid}>
-        {getSection('query')}
-        {getSection('mutation')}
-      </div>
-    </div>
+    <Box mb="10px">
+      {getSection('query')}
+      {getSection('mutation')}
+    </Box>
   );
 };
 

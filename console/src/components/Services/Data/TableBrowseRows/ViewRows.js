@@ -13,7 +13,7 @@ import {
   deleteItems,
   deleteItem,
   vExpandRow,
-  vCollapseRow
+  vCollapseRow,
 } from './ViewActions'; // eslint-disable-line no-unused-vars
 
 import {
@@ -23,7 +23,7 @@ import {
   runQuery,
   setOffset,
   setLimit,
-  addOrder
+  addOrder,
 } from './FilterActions';
 
 import _push from '../push';
@@ -34,17 +34,17 @@ import { E_SET_EDITITEM } from './EditActions';
 import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
 import {
   getTableInsertRowRoute,
-  getTableEditRowRoute
+  getTableEditRowRoute,
 } from '../../../Common/utils/routesUtils';
 import {
   findTable,
   getRelationshipRefTable,
   getTableName,
-  getTableSchema
+  getTableSchema,
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
 import Button from '../../../Common/Button/Button';
-import { Icon, Spinner, TextLink } from '../../../UIKit/atoms';
+import { Icon, Spinner, TextLink, Flex, Text } from '../../../UIKit/atoms';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const ViewRows = ({
@@ -72,7 +72,7 @@ const ViewRows = ({
   triggeredRow,
   triggeredFunction,
   location,
-  readOnlyMode
+  readOnlyMode,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
 
@@ -192,7 +192,7 @@ const ViewRows = ({
       Header: '',
       accessor: 'tableRowActionButtons',
       id: 'tableRowActionButtons',
-      width: 152
+      width: 152,
     });
 
     _gridHeadings.push({
@@ -212,7 +212,7 @@ const ViewRows = ({
       ),
       accessor: 'tableRowSelectAction',
       id: 'tableRowSelectAction',
-      width: 60
+      width: 60,
     });
 
     _columns.map(col => {
@@ -240,7 +240,7 @@ const ViewRows = ({
         accessor: columnName,
         id: columnName,
         foldable: true,
-        width: getColWidth(columnName, curRows)
+        width: getColWidth(columnName, curRows),
       });
     });
 
@@ -256,7 +256,7 @@ const ViewRows = ({
         accessor: relName,
         id: relName,
         foldable: true,
-        width: getColWidth(relName)
+        width: getColWidth(relName),
       });
     });
 
@@ -461,7 +461,7 @@ const ViewRows = ({
                   </Button>
                   {`${m.name}`}
                 </div>
-              )
+              ),
             };
           });
 
@@ -764,8 +764,10 @@ const ViewRows = ({
 
     if (selectedRows.length > 0) {
       selectedRowsSection = (
-        <div className={`${styles.display_flex} ${styles.add_padd_left_18}`}>
-          <b className={styles.padd_small_right}>Selected:</b>
+        <Flex pl="18px">
+          <Text fontWeight="bold" pr="5px">
+            Selected:
+          </Text>
           {selectedRows.length}
           <button
             className={`${styles.add_mar_right_small} btn btn-xs btn-default ${styles.bulkDeleteButton}`}
@@ -774,7 +776,7 @@ const ViewRows = ({
           >
             <Icon type="delete" size={10} />
           </button>
-        </div>
+        </Flex>
       );
     }
 
@@ -945,14 +947,14 @@ const ViewRows = ({
         }
 
         disableSortColumn = false;
-      }
+      },
     });
 
     const getResizerProps = (finalState, none, column, ctx) => ({
       onMouseDown: e => {
         disableSortColumn = true;
         ctx.resizeColumnStart(e, column, false);
-      }
+      },
     });
 
     const handlePageChange = page => {

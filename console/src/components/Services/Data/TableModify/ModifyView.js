@@ -27,7 +27,7 @@ import {
 } from '../../../Common/utils/pgUtils';
 import RootFields from './RootFields';
 import { changeViewRootFields } from '../Common/TooltipMessages';
-import { ToolTip, Heading } from '../../../UIKit/atoms';
+import { ToolTip, Heading, Flex } from '../../../UIKit/atoms';
 import styles from './ModifyTable.scss';
 
 const ModifyView = props => {
@@ -120,7 +120,7 @@ const ModifyView = props => {
 
       const columnExpanded = () => {
         return (
-          <div className={`${styles.display_flex}`}>
+          <Flex>
             <label className={'col-xs-4'}>
               GraphQL field name
               <ToolTip
@@ -138,7 +138,7 @@ const ModifyView = props => {
                 onChange={setCustomColumnName}
               />
             </div>
-          </div>
+          </Flex>
         );
       };
 

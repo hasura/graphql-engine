@@ -10,7 +10,7 @@ import globals from '../../../../Globals';
 import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 import TryItOut from '../../Common/Landing/TryItOut';
-import { Heading } from '../../../UIKit/atoms';
+import { Heading, Flex, Box } from '../../../UIKit/atoms';
 import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 
 const appPrefix = globals.urlPrefix + '/events';
@@ -64,41 +64,37 @@ class EventTrigger extends Component {
     );
 
     return (
-      <div
-        className={`${styles.padd_left_remove} container-fluid ${styles.padd_top}`}
-      >
-        <div className={styles.padd_left}>
-          <Helmet title="Event Triggers | Hasura" />
-          <div className={styles.display_flex}>
-            <Heading as="h2" display="inline-block" fontSize="h2">
-              Event Triggers
-            </Heading>
-            {getAddBtn()}
-          </div>
-          <hr />
+      <Box pl="15px" className="container-fluid" pt="20px">
+        <Helmet title="Event Triggers | Hasura" />
+        <Flex>
+          <Heading as="h2" display="inline-block" fontSize="h2">
+            Event Triggers
+          </Heading>
+          {getAddBtn()}
+        </Flex>
+        <hr />
 
-          <TopicDescription
-            title="What are Event Triggers?"
-            imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
-            imgAlt="Event Triggers"
-            description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
-          />
-          <hr className={styles.clear_fix} />
+        <TopicDescription
+          title="What are Event Triggers?"
+          imgUrl={`${globals.assetsPath}/common/img/event-trigger.png`}
+          imgAlt="Event Triggers"
+          description="Hasura can be used to create event triggers on tables. An Event Trigger atomically captures events (insert, update, delete) on a specified table and then reliably calls a webhook that can carry out any custom logic."
+        />
+        <hr className={styles.clear_fix} />
 
-          <TryItOut
-            service="eventTrigger"
-            title="Steps to deploy an example Event Trigger to Glitch"
-            queryDefinition={queryDefinition}
-            footerDescription={footerEvent}
-            glitchLink="https://glitch.com/edit/#!/hasura-sample-event-trigger"
-            googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/google-cloud-functions/nodejs8"
-            MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/azure-functions/nodejs"
-            awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/aws-lambda/nodejs8"
-            adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/"
-            isAvailable
-          />
-        </div>
-      </div>
+        <TryItOut
+          service="eventTrigger"
+          title="Steps to deploy an example Event Trigger to Glitch"
+          queryDefinition={queryDefinition}
+          footerDescription={footerEvent}
+          glitchLink="https://glitch.com/edit/#!/hasura-sample-event-trigger"
+          googleCloudLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/google-cloud-functions/nodejs8"
+          MicrosoftAzureLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/azure-functions/nodejs"
+          awsLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/aws-lambda/nodejs8"
+          adMoreLink="https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/event-triggers/"
+          isAvailable
+        />
+      </Box>
     );
   }
 }

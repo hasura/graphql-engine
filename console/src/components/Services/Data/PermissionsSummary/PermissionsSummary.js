@@ -3,10 +3,6 @@ import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 
-import Modal from '../../../Common/Modal/Modal';
-import Button from '../../../Common/Button/Button';
-import { Icon, Heading } from '../../../UIKit/atoms';
-
 import { getTablePermissionsRoute } from '../../../Common/utils/routesUtils';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import {
@@ -32,6 +28,9 @@ import {
   getTablePermissionsByRoles,
   getPermissionRowAccessSummary,
 } from './utils';
+import Modal from '../../../Common/Modal/Modal';
+import Button from '../../../Common/Button/Button';
+import { Icon, Heading, Box, Flex } from '../../../UIKit/atoms';
 import styles from './PermissionsSummary.scss';
 
 class PermissionsSummary extends Component {
@@ -176,12 +175,10 @@ class PermissionsSummary extends Component {
           className={styles.clickableCell}
           onClick={onClick}
         >
-          <div
-            className={styles.display_flex + ' ' + styles.flex_space_between}
-          >
+          <Flex justifyContent="space-between">
             <div>{content}</div>
             <div>{actionIcon}</div>
-          </div>
+          </Flex>
         </td>
       );
     };
@@ -201,18 +198,10 @@ class PermissionsSummary extends Component {
           headerContent = content;
         } else {
           headerContent = (
-            <div
-              className={
-                styles.actionCell +
-                ' ' +
-                styles.display_flex +
-                ' ' +
-                styles.flex_space_between
-              }
-            >
+            <Flex justifyContent="space-between" className={styles.actionCell}>
               <div>{content}</div>
               <div>{actionBtn}</div>
-            </div>
+            </Flex>
           );
         }
 
@@ -466,7 +455,7 @@ class PermissionsSummary extends Component {
             };
 
             columnsDisplay = (
-              <div className={styles.add_mar_bottom_small}>
+              <Box mb="5px">
                 <b>Columns</b> -{' '}
                 <i>
                   {getPermissionColumnAccessSummary(actionPermission, {
@@ -474,7 +463,7 @@ class PermissionsSummary extends Component {
                   })}
                 </i>
                 {showDetails && getColumnsDetails()}
-              </div>
+              </Box>
             );
           }
 
@@ -937,7 +926,7 @@ class PermissionsSummary extends Component {
         };
 
         return (
-          <div className={styles.display_flex}>
+          <Flex>
             <input
               type="text"
               className={'form-control'}
@@ -954,7 +943,7 @@ class PermissionsSummary extends Component {
             >
               <Icon type="add" />
             </Button>
-          </div>
+          </Flex>
         );
       };
 

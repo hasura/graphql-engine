@@ -5,7 +5,7 @@ import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import globals from '../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
-import { Icon } from '../../UIKit/atoms';
+import { Icon, Flex } from '../../UIKit/atoms';
 import styles from '../../Common/TableCommon/Table.scss';
 
 const Sidebar = ({ location, metadata }) => {
@@ -30,10 +30,10 @@ const Sidebar = ({ location, metadata }) => {
     link: '/settings/metadata-status',
     dataTestVal: 'metadata-status-link',
     title: (
-      <div className={styles.display_flex}>
+      <Flex>
         Metadata Status
         {consistentIcon}
-      </div>
+      </Flex>
     ),
   });
 

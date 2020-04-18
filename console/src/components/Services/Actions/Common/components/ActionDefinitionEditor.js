@@ -2,7 +2,14 @@ import React from 'react';
 import { parse as sdlParse } from 'graphql/language/parser';
 
 import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
-import { Icon, ToolTip, Heading, Text } from '../../../../UIKit/atoms';
+import {
+  Icon,
+  ToolTip,
+  Heading,
+  Text,
+  Flex,
+  Box,
+} from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const editorLabel = 'Action definition';
@@ -15,7 +22,7 @@ const ActionDefinitionEditor = ({
   className,
   placeholder,
   error,
-  timer
+  timer,
 }) => {
   const onChangeWithError = v => {
     if (timer) {
@@ -46,7 +53,7 @@ const ActionDefinitionEditor = ({
       column: l.column,
       type: 'error',
       message: errorMessage,
-      className: styles.errorMarker
+      className: styles.errorMarker,
     }));
   }
 
@@ -56,17 +63,15 @@ const ActionDefinitionEditor = ({
         {editorLabel}
         <ToolTip message={editorTooltip} ml="sm" />
       </Heading>
-      <div className={styles.sdlEditorContainer}>
-        <div
-          className={`${styles.display_flex} ${styles.add_mar_bottom_small}`}
-        >
+      <Box>
+        <Flex mb="5px">
           {error && (
-            <div className={styles.display_flex}>
+            <Flex>
               <Icon type="close" color="red.primary" mr="xs" />
               <Text color="red.primary">{errorMessage}</Text>
-            </div>
+            </Flex>
           )}
-        </div>
+        </Flex>
         <SDLEditor
           name="sdl-editor"
           value={value}
@@ -76,7 +81,7 @@ const ActionDefinitionEditor = ({
           height="200px"
           width="600px"
         />
-      </div>
+      </Box>
     </div>
   );
 };

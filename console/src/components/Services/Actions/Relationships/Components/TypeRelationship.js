@@ -21,8 +21,8 @@ import {
 } from '../../Common/stateDefaults';
 import { addActionRel, removeActionRel } from '../../ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';
+import { Icon, Text, Box, Flex } from '../../../../UIKit/atoms';
 import tableStyles from '../../../../Common/TableCommon/TableStyles.scss';
-import { Icon, Text } from '../../../../UIKit/atoms';
 
 const RelationshipEditor = ({
   objectType,
@@ -129,7 +129,7 @@ const RelationshipEditor = ({
       ? 'A relationship cannot be renamed. Please drop and re-create if you really must.'
       : undefined;
     return (
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <Text fontWeight="bold" mb="sm">
           Relationship Name:
         </Text>
@@ -142,14 +142,14 @@ const RelationshipEditor = ({
           title={relNameInputTitle}
           value={name}
         />
-      </div>
+      </Box>
     );
   };
 
   // rel type select
   const getRelTypeSelect = () => {
     return (
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <Text fontWeight="bold" mb="sm">
           Relationship Type:
         </Text>
@@ -171,7 +171,7 @@ const RelationshipEditor = ({
             Array Relationship
           </option>
         </select>
-      </div>
+      </Box>
     );
   };
 
@@ -303,10 +303,7 @@ const RelationshipEditor = ({
             : undefined;
 
           return (
-            <div
-              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
-              key={`fk-col-${i}`}
-            >
+            <Flex key={`fk-col-${i}`} mb="10px">
               <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
                   className={`form-control ${styles.select} ${styles.wd100Percent}`}
@@ -355,7 +352,7 @@ const RelationshipEditor = ({
                 </select>
               </div>
               <div>{removeIcon}</div>
-            </div>
+            </Flex>
           );
         })}
       </div>

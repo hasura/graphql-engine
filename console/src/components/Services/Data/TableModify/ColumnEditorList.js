@@ -242,7 +242,6 @@ const ColumnEditorList = ({
           service="modify-table"
           saveFunc={onSubmit}
           removeFunc={columnProperties.pkConstraint ? null : onDelete}
-          collapsedClass={styles.display_flex}
           expandedLabel={expandedLabel}
           collapsedLabel={collapsedLabel}
           expandCallback={editorExpandCallback}

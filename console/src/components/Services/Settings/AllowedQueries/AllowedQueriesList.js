@@ -128,7 +128,6 @@ class AllowedQueriesList extends React.Component {
               service="modify-allowed-query"
               saveFunc={onSubmit}
               removeFunc={onDelete}
-              collapsedClass={styles.display_flex}
               expandedLabel={expandedLabel}
               collapsedLabel={collapsedLabel}
               expandCallback={editorExpandCallback}

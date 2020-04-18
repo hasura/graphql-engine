@@ -8,7 +8,7 @@ import {
   manualRelRSchemaChanged,
 } from './Actions';
 import { updateSchemaInfo } from '../DataActions';
-import { Icon, Text } from '../../../UIKit/atoms';
+import { Icon, Text, Flex, Box } from '../../../UIKit/atoms';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const ManualRelationshipSelector = ({
@@ -25,7 +25,7 @@ const ManualRelationshipSelector = ({
     };
 
     return (
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <Text fontWeight="bold" mb="sm">
           Relationship Type:
         </Text>
@@ -47,7 +47,7 @@ const ManualRelationshipSelector = ({
             Array Relationship
           </option>
         </select>
-      </div>
+      </Box>
     );
   };
 
@@ -81,7 +81,7 @@ const ManualRelationshipSelector = ({
     };
 
     return (
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <Text fontWeight="bold" mb="sm">
           Reference Schema:
         </Text>
@@ -105,7 +105,7 @@ const ManualRelationshipSelector = ({
               </option>
             ))}
         </select>
-      </div>
+      </Box>
     );
   };
 
@@ -115,11 +115,10 @@ const ManualRelationshipSelector = ({
     };
 
     return (
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <Text fontWeight="bold" mb="sm">
           Reference Table:
         </Text>
-
         <select
           value={relAdd.rTable || ''}
           className={`${styles.select} form-control ${styles.add_pad_left}`}
@@ -140,7 +139,7 @@ const ManualRelationshipSelector = ({
               </option>
             ))}
         </select>
-      </div>
+      </Box>
     );
   };
 
@@ -150,15 +149,15 @@ const ManualRelationshipSelector = ({
       : undefined;
 
     return (
-      <div className={`${styles.add_mar_bottom}`}>
-        <div className={`row ${styles.add_mar_bottom_mid}`}>
+      <Box mb="20px">
+        <Box mb="10px" className="row">
           <Text fontWeight="bold" mr="sm" className="col-sm-4">
             From:
           </Text>
           <Text fontWeight="bold" mr="sm" className="col-sm-4">
             To:
           </Text>
-        </div>
+        </Box>
         {relAdd.colMappings.map((colMap, _i) => {
           // from column
           const lc = colMap.column;
@@ -214,10 +213,7 @@ const ManualRelationshipSelector = ({
           }
 
           return (
-            <div
-              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
-              key={`fk-col-${_i}`}
-            >
+            <Flex key={`fk-col-${_i}`} className="row" mb="10px">
               <div className={`col-sm-4 ${styles.add_mar_right}`}>
                 <select
                   className={`form-control ${styles.select} ${styles.wd100Percent}`}
@@ -268,10 +264,10 @@ const ManualRelationshipSelector = ({
                 </select>
               </div>
               <div>{removeIcon}</div>
-            </div>
+            </Flex>
           );
         })}
-      </div>
+      </Box>
     );
   };
 

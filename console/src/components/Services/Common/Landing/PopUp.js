@@ -10,7 +10,7 @@ import styles from './Popup.scss';
 
 const ContentMap = {
   remoteSchema: <RemoteSchemaContent styles={styles} />,
-  eventTrigger: <EventTriggerContent styles={styles} />
+  eventTrigger: <EventTriggerContent styles={styles} />,
 };
 
 const PopUp = ({
@@ -19,7 +19,7 @@ const PopUp = ({
   title,
   queryDefinition,
   footerDescription,
-  isAvailable
+  isAvailable,
 }) => {
   // const queryDefinition = 'query { hello }';
   const commonPopupStyle = isAvailable
@@ -30,12 +30,12 @@ const PopUp = ({
     <div className={commonPopupStyle}>
       <div className={styles.wd100}>
         <Heading
-          type='subHeading'
-          fontSize='16px'
-          pb='18px'
+          type="subHeading"
+          fontSize="16px"
+          pb="18px"
           borderBottom={1}
-          textAlign='left'
-          borderColor='black.hover'
+          textAlign="left"
+          borderColor="black.hover"
         >
           {title}
         </Heading>
@@ -52,7 +52,7 @@ const PopUp = ({
           />
         </div>
         <div className={styles.listItems}>
-          <Text pl='20px' textAlign='left'>
+          <Text pl="20px" textAlign="left">
             {footerDescription}
           </Text>
         </div>
@@ -66,7 +66,7 @@ PopUp.propTypes = {
   title: PropTypes.string.isRequired,
   queryDefinition: PropTypes.string.isRequired,
   footerDescription: PropTypes.string.isRequired,
-  service: PropTypes.string.isRequired
+  service: PropTypes.string.isRequired,
 };
 
 export default PopUp;

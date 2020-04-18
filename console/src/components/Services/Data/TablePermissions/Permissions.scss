@@ -1,9 +1,10 @@
-@import "../TableModify/ModifyTable.scss";
+@import '../TableModify/ModifyTable.scss';
 
 .permissionsTable {
   width: 85%;
 
-  td, th {
+  td,
+  th {
     text-align: center;
     vertical-align: middle !important;
     position: relative;
@@ -13,12 +14,14 @@
     font-weight: bold;
   }
 
-  td:last-child, th:last-child {
+  td:last-child,
+  th:last-child {
     border-left: 4px double #ddd;
     width: 10%;
   }
 
-  td:first-child, th:first-child {
+  td:first-child,
+  th:first-child {
     overflow: auto;
     border-right: 4px double #ddd;
     max-width: 250px;
@@ -56,9 +59,10 @@
     }
   }
 
-  .currEdit, .currEdit:hover {
-    background-color: #FFF3D5;
-    color: #FD9540;
+  .currEdit,
+  .currEdit:hover {
+    background-color: #fff3d5;
+    color: #fd9540;
 
     .editPermsIcon {
       display: inline-block;

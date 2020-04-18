@@ -9,21 +9,21 @@ import {
   setTableName,
   addExistingTableSql,
   addAllUntrackedTablesSql,
-  addExistingFunction
+  addExistingFunction,
 } from '../Add/AddExistingTableViewActions';
 import {
   updateSchemaInfo,
   fetchFunctionInit,
-  updateCurrentSchema
+  updateCurrentSchema,
 } from '../DataActions';
 import {
   autoAddRelName,
-  autoTrackRelations
+  autoTrackRelations,
 } from '../TableRelationships/Actions';
 import { getRelDef } from '../TableRelationships/utils';
 import {
   getSchemaAddTableRoute,
-  getSchemaPermissionsRoute
+  getSchemaPermissionsRoute,
 } from '../../../Common/utils/routesUtils';
 import { createNewSchema, deleteCurrentSchema } from './Actions';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
@@ -32,12 +32,19 @@ import {
   displayTableName,
   getFunctionName,
   getSchemaTables,
-  getUntrackedTables
+  getUntrackedTables,
 } from '../../../Common/utils/pgUtils';
 import { isEmpty } from '../../../Common/utils/jsUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import RawSqlButton from '../Common/Components/RawSqlButton';
-import { Icon, ToolTip, Heading, TextLink } from '../../../UIKit/atoms';
+import {
+  Icon,
+  ToolTip,
+  Heading,
+  TextLink,
+  Box,
+  Flex,
+} from '../../../UIKit/atoms';
 import styles from '../../../Common/Common.scss';
 
 class Schema extends Component {
@@ -47,7 +54,7 @@ class Schema extends Component {
     this.state = {
       isExporting: false,
       createSchemaOpen: false,
-      schemaNameEdit: ''
+      schemaNameEdit: '',
     };
 
     this.props.dispatch(fetchFunctionInit());
@@ -67,7 +74,7 @@ class Schema extends Component {
       dispatch,
       functionsList,
       nonTrackableFunctions,
-      trackedFunctions
+      trackedFunctions,
     } = this.props;
 
     const handleSchemaChange = e => {
@@ -167,7 +174,7 @@ class Schema extends Component {
 
               this.setState({
                 schemaNameEdit: '',
-                createSchemaOpen: false
+                createSchemaOpen: false,
               });
             };
 
@@ -176,7 +183,7 @@ class Schema extends Component {
 
           const handleCancelCreateNewSchema = () => {
             this.setState({
-              createSchemaOpen: false
+              createSchemaOpen: false,
             });
           };
 
@@ -192,8 +199,8 @@ class Schema extends Component {
           );
 
           const openCreateSection = (
-            <div className={styles.display_inline + ' ' + styles.add_mar_left}>
-              <div className={styles.display_inline}>
+            <Box display="inline-block" ml="20px">
+              <Box display="inline-block">
                 <input
                   id="schema-name-input"
                   type="text"
@@ -202,7 +209,7 @@ class Schema extends Component {
                   placeholder="schema_name"
                   className={'form-control input-sm ' + styles.display_inline}
                 />
-              </div>
+              </Box>
               <Button
                 color="white"
                 size="xs"
@@ -219,7 +226,7 @@ class Schema extends Component {
               >
                 Cancel
               </Button>
-            </div>
+            </Box>
           );
 
           createSchemaSection = createSchemaOpen
@@ -683,26 +690,22 @@ class Schema extends Component {
     };
 
     return (
-      <div
-        className={`container-fluid ${styles.padd_left_remove} ${styles.padd_top}`}
-      >
-        <div className={styles.padd_left}>
-          <Helmet title="Schema - Data | Hasura" />
-          <div className={styles.display_flex}>
-            <Heading as="h2" display="inline-block" fontSize="h2">
-              Schema
-            </Heading>
-            {getCreateBtn()}
-          </div>
-          {getCurrentSchemaSection()}
-          {getUntrackedTablesSection()}
-          {getUntrackedRelationsSection()}
-          {getUntrackedFunctionsSection()}
-          {getNonTrackableFunctionsSection()}
-          <hr />
-          {getPermissionsSummaryLink()}
-        </div>
-      </div>
+      <Box pl="15px" pt="20px" className="container-fluid">
+        <Helmet title="Schema - Data | Hasura" />
+        <Flex>
+          <Heading as="h2" display="inline-block" fontSize="h2">
+            Schema
+          </Heading>
+          {getCreateBtn()}
+        </Flex>
+        {getCurrentSchemaSection()}
+        {getUntrackedTablesSection()}
+        {getUntrackedRelationsSection()}
+        {getUntrackedFunctionsSection()}
+        {getNonTrackableFunctionsSection()}
+        <hr />
+        {getPermissionsSummaryLink()}
+      </Box>
     );
   }
 }
@@ -712,7 +715,7 @@ Schema.propTypes = {
   untrackedRelations: PropTypes.array.isRequired,
   migrationMode: PropTypes.bool.isRequired,
   currentSchema: PropTypes.string.isRequired,
-  dispatch: PropTypes.func.isRequired
+  dispatch: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = state => ({
@@ -725,7 +728,7 @@ const mapStateToProps = state => ({
   functionsList: [...state.tables.postgresFunctions],
   nonTrackableFunctions: [...state.tables.nonTrackablePostgresFunctions],
   trackedFunctions: [...state.tables.trackedFunctions],
-  serverVersion: state.main.serverVersion ? state.main.serverVersion : ''
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);
