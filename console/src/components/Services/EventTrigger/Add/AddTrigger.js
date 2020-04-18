@@ -39,7 +39,7 @@ import {
   getTableName,
   getTrackedTables,
 } from '../../../Common/utils/pgUtils';
-import { Icon, ToolTip, Heading, Flex } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading, Flex, Box } from '../../../UIKit/atoms';
 import styles from '../TableCommon/EventTable.scss';
 
 class AddTrigger extends Component {
@@ -440,20 +440,16 @@ class AddTrigger extends Component {
                 })}
               </select>
               <hr />
-              <div
-                className={
-                  styles.add_mar_bottom + ' ' + styles.selectOperations
-                }
-              >
+              <Box mb="20px">
                 <Operations
                   dispatch={dispatch}
                   enableManual={enableManual}
                   selectedOperations={selectedOperations}
                   handleOperationSelection={handleOperationSelection}
                 />
-              </div>
+              </Box>
               <hr />
-              <div className={styles.add_mar_bottom}>
+              <Box mb="20px">
                 <Heading type="subHeading">
                   Webhook URL
                   <ToolTip message={tooltip.webhookUrlDescription} ml="sm" />
@@ -497,7 +493,7 @@ class AddTrigger extends Component {
                   is recommended if you have different URLs for multiple
                   environments.
                 </small>
-              </div>
+              </Box>
               <hr />
               <CollapsibleToggle
                 title={<Heading type="subHeading">Advanced Settings</Heading>}

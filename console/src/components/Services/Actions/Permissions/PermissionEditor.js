@@ -3,7 +3,7 @@ import React from 'react';
 import Button from '../../../Common/Button/Button';
 import { saveActionPermission, removeActionPermission } from '../ServerIO';
 import { permCloseEdit } from './reducer';
-import { Text } from '../../../UIKit/atoms';
+import { Text, Box } from '../../../UIKit/atoms';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 const PermissionEditor = ({
@@ -83,7 +83,7 @@ const PermissionEditor = ({
 
   return (
     <div className={styles.activeEdit}>
-      <div className={styles.add_mar_bottom}>{permText}</div>
+      <Box mb="20px">{permText}</Box>
       {getSaveButton()}
       {getRemoveButton()}
       {getCancelButton()}

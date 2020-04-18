@@ -2,7 +2,7 @@ import React from 'react';
 import AceEditor from 'react-ace';
 
 import { checkConstraintExpression } from '../TooltipMessages';
-import { ToolTip, Text, TextLink } from '../../../../UIKit/atoms';
+import { ToolTip, Text, TextLink, Box } from '../../../../UIKit/atoms';
 import styles from '../../../../Common/Common.scss';
 
 export const ConstraintExpandedContent = ({
@@ -10,11 +10,11 @@ export const ConstraintExpandedContent = ({
   constraintName,
   name,
   checkOnChange,
-  check
+  check,
 }) => {
   return (
-    <div>
-      <div className={styles.add_mar_bottom}>
+    <Box>
+      <Box mb="20px">
         <Text fontWeight="bold" mb="sm">
           Constraint Name:
         </Text>
@@ -24,7 +24,7 @@ export const ConstraintExpandedContent = ({
           onChange={nameOnChange}
           className={`form-control ${styles.wd50percent}`}
         />
-      </div>
+      </Box>
       <div>
         <Text fontWeight="bold" mb="sm">
           Check Expression:
@@ -47,6 +47,6 @@ export const ConstraintExpandedContent = ({
           showPrintMargin={false}
         />
       </div>
-    </div>
+    </Box>
   );
 };

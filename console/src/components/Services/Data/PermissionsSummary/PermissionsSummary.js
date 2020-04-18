@@ -1007,17 +1007,9 @@ class PermissionsSummary extends Component {
                   <div className="form-group col-md-4">
                     <label>Roles</label>
                     {getToRolesList()}
-                    <div
-                      className={
-                        styles.add_mar_top +
-                        ' ' +
-                        styles.add_mar_bottom +
-                        ' ' +
-                        styles.add_mar_left
-                      }
-                    >
+                    <Box my="20px" ml="20px">
                       OR
-                    </div>
+                    </Box>
                     {getNewRoleCreator()}
                   </div>
                 </div>

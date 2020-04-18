@@ -143,7 +143,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
         title={`Codegen - ${currentAction.action_name} - Actions | Hasura`}
       />
       {getFrameworkActions()}
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <CodeTabs
           framework={selectedFramework}
           actionsSdl={getSdlComplete(allActions, allTypes)}
@@ -151,7 +151,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
           shouldDerive={shouldDerive}
           parentMutation={parentMutation}
         />
-      </div>
+      </Box>
       <hr />
       {getDerivationInfo()}
     </Box>

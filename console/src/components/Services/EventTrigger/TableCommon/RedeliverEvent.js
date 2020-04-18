@@ -16,7 +16,7 @@ import {
 import 'brace/mode/json';
 import Button from '../../../Common/Button/Button';
 import { verifySuccessStatus } from '../utils';
-import { Icon, Spinner, Heading } from '../../../UIKit/atoms';
+import { Icon, Spinner, Heading, Box } from '../../../UIKit/atoms';
 import styles from './EventTable.scss';
 
 class RedeliverEvent extends Component {
@@ -231,7 +231,7 @@ class RedeliverEvent extends Component {
                     styles.padd_right_remove
                   }
                 >
-                  <div className={styles.add_mar_bottom}>
+                  <Box mb="20px">
                     Event ID - {log.redeliverEventId}
                     <Button
                       onClick={this.handleRedeliver.bind(this)}
@@ -241,7 +241,7 @@ class RedeliverEvent extends Component {
                     >
                       Deliver again
                     </Button>
-                  </div>
+                  </Box>
                   <div className={styles.padd_left_remove + ' col-md-6'}>
                     <div> Request </div>
                     <AceEditor
@@ -314,9 +314,9 @@ class RedeliverEvent extends Component {
                     ' redeliverEventSection'
                   }
                 >
-                  <div className={styles.add_mar_bottom}>
+                  <Box mb="20px">
                     <em>Recent Invocations</em>
-                  </div>
+                  </Box>
                   {renderTableBody()}
                 </div>
               </div>

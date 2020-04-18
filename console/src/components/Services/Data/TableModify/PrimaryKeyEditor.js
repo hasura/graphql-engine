@@ -1,23 +1,22 @@
 import React from 'react';
+
 import {
   DELETE_PK_WARNING,
   setPrimaryKeys,
-  savePrimaryKeys
+  savePrimaryKeys,
 } from './ModifyActions';
 import PrimaryKeySelector from '../Common/Components/PrimaryKeySelector';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { showSuccessNotification } from '../../Common/Notification';
 import { getUkeyPkeyConfig, getKeyDef } from '../Common/Components/utils';
-
-import styles from './ModifyTable.scss';
-
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { Box } from '../../../UIKit/atoms';
 
 const PrimaryKeyEditor = ({
   tableSchema,
   pkModify,
   dispatch,
-  currentSchema
+  currentSchema,
 }) => {
   const columns = tableSchema.columns;
   const tablePrimaryKeyColumns = tableSchema.primary_key
@@ -28,7 +27,7 @@ const PrimaryKeyEditor = ({
   const orderedCols = columns.map((c, _i) => ({
     name: c.column_name,
     type: c.data_type,
-    index: _i
+    index: _i,
   }));
 
   // generate primary keys in the order respecting the column order
@@ -59,16 +58,14 @@ const PrimaryKeyEditor = ({
 
   // expanded editor content
   const pkEditorExpanded = () => (
-    <div>
-      <div className={`${styles.add_mar_top_small} ${styles.add_mar_bottom}`}>
-        <PrimaryKeySelector
-          dispatch={dispatch}
-          setPk={setPrimaryKeys}
-          columns={orderedCols}
-          primaryKeys={pkModify}
-        />
-      </div>
-    </div>
+    <Box mt="5px" mb="20px">
+      <PrimaryKeySelector
+        dispatch={dispatch}
+        setPk={setPrimaryKeys}
+        columns={orderedCols}
+        primaryKeys={pkModify}
+      />
+    </Box>
   );
 
   // set PK edit state when editor is expanded
@@ -117,7 +114,7 @@ const PrimaryKeyEditor = ({
       expandedLabel={pkEditorExpandedLabel}
       editorExpanded={pkEditorExpanded}
       property={'pks'}
-      service='modify-table'
+      service="modify-table"
       saveFunc={onSave}
       removeFunc={onRemove}
       expandCallback={setPkEditState}

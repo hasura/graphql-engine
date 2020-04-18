@@ -11,24 +11,23 @@ import {
   getTableColumnNames,
   getTableName,
   getTableSchema,
-  getTrackedTables
+  getTrackedTables,
 } from '../../../Common/utils/pgUtils';
-import { Text } from '../../../UIKit/atoms';
-import styles from '../TableModify/ModifyTable.scss';
+import { Text, Box } from '../../../UIKit/atoms';
 
 const AddManualRelationship = ({
   tableSchema,
   allSchemas,
   schemaList,
   relAdd,
-  dispatch
+  dispatch,
 }) => {
   const columns = tableSchema.columns.sort(ordinalColSort);
 
   // columns in the right order with their indices
   const orderedColumns = columns.map((c, i) => ({
     name: getColumnName(c),
-    index: i
+    index: i,
   }));
 
   relAdd.rSchema = relAdd.rSchema || getTableSchema(tableSchema);
@@ -70,9 +69,9 @@ const AddManualRelationship = ({
 
   return (
     <div key="add_manual_relationship">
-      <div className={styles.add_mar_bottom}>
+      <Box mb="20px" as="label">
         <label> Add a new relationship manually </label>
-      </div>
+      </Box>
       <ExpandableEditor
         editorExpanded={expandedContent}
         expandedLabel={expandedLabel}

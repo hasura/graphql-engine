@@ -1,7 +1,7 @@
 import React from 'react';
 
 import Headers from '../../../../Common/Headers/Headers';
-import { ToolTip, Heading } from '../../../../UIKit/atoms';
+import { ToolTip, Heading, Box } from '../../../../UIKit/atoms';
 import styles from './Styles.scss';
 
 const editorLabel = 'Headers';
@@ -26,7 +26,7 @@ const HandlerEditor = ({
         {editorLabel}
         <ToolTip message={editorTooltip} ml="sm" />
       </Heading>
-      <div className={`${styles.add_mar_bottom_mid}`}>
+      <Box mb="20px">
         <label
           className={`${styles.add_mar_right} ${styles.cursorPointer}`}
           onClick={toggleForwardClientHeaders}
@@ -39,7 +39,7 @@ const HandlerEditor = ({
           />
           Forward client headers to webhook
         </label>
-      </div>
+      </Box>
       {getHeaders()}
     </div>
   );

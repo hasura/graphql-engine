@@ -188,11 +188,6 @@ table tbody tr th {
   cursor: pointer;
 }
 
-.flex_space_between {
-  display: flex;
-  justify-content: space-between;
-}
-
 .flex_0 {
   flex: 0;
 }
@@ -294,10 +289,6 @@ table tbody tr th {
     font-size: 12px;
     padding-right: 10px;
   }
-}
-
-.apiExplorerFlex {
-  display: flex;
 }
 
 .collectionWrapper {

@@ -9,7 +9,7 @@ import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbol
 import { permOpenEdit, permCloseEdit, permSetRoleName } from './reducer';
 import PermissionEditor from './PermissionEditor';
 import { setDefaults } from './reducer';
-import { Icon } from '../../../UIKit/atoms';
+import { Icon, Box } from '../../../UIKit/atoms';
 import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 const queryTypes = ['Permission'];
@@ -171,14 +171,14 @@ const Permissions = ({
         title={`Permissions - ${currentAction.action_name} - Actions | Hasura`}
       />
       {getPermissionsTable()}
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <PermissionEditor
           permissionEdit={permissionEdit}
           dispatch={dispatch}
           isFetching={isFetching}
           isEditing={isEditing}
         />
-      </div>
+      </Box>
     </div>
   );
 };

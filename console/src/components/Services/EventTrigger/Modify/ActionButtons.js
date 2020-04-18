@@ -2,6 +2,7 @@ import React from 'react';
 import { deleteTrigger } from '../EventActions';
 import Button from '../../../Common/Button/Button';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { Box } from '../../../UIKit/atoms';
 
 const verifyDeleteTrigger = (triggerName, dispatch) => {
   const confirmMessage = `This will permanently delete the event trigger "${triggerName}"`;
@@ -11,8 +12,8 @@ const verifyDeleteTrigger = (triggerName, dispatch) => {
   }
 };
 
-const Buttons = ({ styles, dispatch, triggerName, ongoingRequest }) => (
-  <div className={styles.add_mar_bottom}>
+const Buttons = ({ dispatch, triggerName, ongoingRequest }) => (
+  <Box mb="20px">
     <Button
       color="red"
       size="sm"
@@ -22,7 +23,7 @@ const Buttons = ({ styles, dispatch, triggerName, ongoingRequest }) => (
     >
       {ongoingRequest === 'delete' ? 'Deleting ...' : 'Delete'}
     </Button>
-  </div>
+  </Box>
 );
 
 export default Buttons;

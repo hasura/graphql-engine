@@ -9,7 +9,7 @@ import {
 } from '../Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import Button from '../../../Common/Button/Button';
-import { Heading, Text } from '../../../UIKit/atoms';
+import { Heading, Text, Box } from '../../../UIKit/atoms';
 import styles from './AllowedQueries.scss';
 
 class AllowedQueriesList extends React.Component {
@@ -57,11 +57,9 @@ class AllowedQueriesList extends React.Component {
           return (
             <div>
               <div>
-                <div className={styles.add_mar_bottom_mid}>
-                  <Text fontWeight="bold" mb="sm">
-                    Query name:
-                  </Text>
-                </div>
+                <Text fontWeight="bold" mb="10px">
+                  Query name:
+                </Text>
                 <input
                   type="text"
                   className={'form-control input-sm ' + styles.inline_block}
@@ -70,8 +68,7 @@ class AllowedQueriesList extends React.Component {
                   onChange={handleNameChange}
                 />
               </div>
-              <div className={styles.add_mar_top}>
-                >
+              <Box mt="20px">
                 <Text fontWeight="bold" mb="sm">
                   Query:
                 </Text>
@@ -87,7 +84,7 @@ class AllowedQueriesList extends React.Component {
                   showPrintMargin={false}
                   onChange={handleQueryChange}
                 />
-              </div>
+              </Box>
             </div>
           );
         };

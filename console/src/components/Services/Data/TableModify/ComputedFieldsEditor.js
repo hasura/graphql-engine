@@ -15,7 +15,7 @@ import {
 import { deleteComputedField, saveComputedField } from './ModifyActions';
 import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
-import { ToolTip } from '../../../UIKit/atoms';
+import { ToolTip, Box, Text } from '../../../UIKit/atoms';
 import styles from './ModifyTable.scss';
 
 const tooltipText =
@@ -176,10 +176,10 @@ const ComputedFieldsEditor = ({
 
         return (
           <div>
-            <div className={`${styles.add_mar_bottom_mid}`}>
+            <Box mb="10px">
               <b>Function definition: </b>
               {computedFieldFunctionDefinition && modifyFunctionBtn}
-            </div>
+            </Box>
             <AceEditor
               mode="sql"
               readOnly
@@ -272,9 +272,9 @@ const ComputedFieldsEditor = ({
       return (
         <div>
           <div>
-            <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Computed field name:</b>
-            </div>
+            <Text mb="10px" fontWeight="bold">
+              Computed field name:
+            </Text>
             <input
               type="text"
               value={computedFieldName}
@@ -283,9 +283,9 @@ const ComputedFieldsEditor = ({
             />
           </div>
           <div className={`${styles.add_mar_top}`}>
-            <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Function schema: </b>
-            </div>
+            <Text mb="10px" fontWeight="bold">
+              Function schema:
+            </Text>
             <div className={styles.wd50percent}>
               <SearchableSelectBox
                 options={schemaList.map(s => getSchemaName(s))}
@@ -302,8 +302,8 @@ const ComputedFieldsEditor = ({
               />
             </div>
           </div>
-          <div className={`${styles.add_mar_top}`}>
-            <div className={`${styles.add_mar_bottom_mid}`}>
+          <Box mt="20px">
+            <Box mb="10px">
               <b>Function name: </b>
               <RawSqlButton
                 dataTestId={'create-function'}
@@ -313,7 +313,7 @@ const ComputedFieldsEditor = ({
               >
                 Create new
               </RawSqlButton>
-            </div>
+            </Box>
             <div className={styles.wd50percent}>
               <SearchableSelectBox
                 options={getSchemaFunctions(
@@ -332,15 +332,13 @@ const ComputedFieldsEditor = ({
                 placeholder="function_name"
               />
             </div>
-          </div>
-          <div className={`${styles.add_mar_top}`}>
-            {getFunctionDefinitionSection()}
-          </div>
-          <div className={`${styles.add_mar_top}`}>
-            <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Table row argument:</b>
+          </Box>
+          <Box mt="20px">{getFunctionDefinitionSection()}</Box>
+          <Box mt="20px">
+            <Text fontWeight="bold" mb="10px">
+              Table row argument:
               <ToolTip message={tooltipText} ml="sm" />
-            </div>
+            </Text>
             <input
               type="text"
               value={computedFieldTableRowArg}
@@ -348,18 +346,18 @@ const ComputedFieldsEditor = ({
               onChange={handleTableRowArgChange}
               className={`form-control ${styles.wd50percent}`}
             />
-          </div>
-          <div className={`${styles.add_mar_top}`}>
-            <div className={`${styles.add_mar_bottom_mid}`}>
-              <b>Comment:</b>
-            </div>
+          </Box>
+          <Box mt="20px">
+            <Text fontWeight="bold" mb="10px">
+              Comment:
+            </Text>
             <input
               type="text"
               value={computedFieldComment}
               onChange={handleCommentChange}
               className={`form-control ${styles.wd50percent}`}
             />
-          </div>
+          </Box>
         </div>
       );
     };

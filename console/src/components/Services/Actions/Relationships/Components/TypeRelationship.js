@@ -179,7 +179,7 @@ const RelationshipEditor = ({
   const getRefSchemaSelect = () => {
     const orderedSchemaList = schemaList.map(s => getSchemaName(s)).sort();
     return (
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <Text fontWeight="bold" mb="sm">
           Reference Schema:
         </Text>
@@ -203,14 +203,14 @@ const RelationshipEditor = ({
               </option>
             ))}
         </select>
-      </div>
+      </Box>
     );
   };
 
   // ref table select
   const getRefTableSelect = () => {
     return (
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <Text fontWeight="bold" mb="sm">
           Reference Table:
         </Text>
@@ -234,22 +234,22 @@ const RelationshipEditor = ({
               </option>
             ))}
         </select>
-      </div>
+      </Box>
     );
   };
 
   // field mapping array builder
   const getRelFieldMappings = () => {
     return (
-      <div className={`${styles.add_mar_bottom}`}>
-        <div className={`row ${styles.add_mar_bottom_mid}`}>
+      <Box mb="20px">
+        <Box mb="10px">
           <Text fontWeight="bold" mr="20px" className="col-sm-4">
             From:
           </Text>
           <Text fontWeight="bold" mr="20px" className="col-sm-4">
             To:
           </Text>
-        </div>
+        </Box>
         {fieldMapping.map((fieldMap, i) => {
           const setColumn = e => {
             const selectedCol = e.target.value;
@@ -355,7 +355,7 @@ const RelationshipEditor = ({
             </Flex>
           );
         })}
-      </div>
+      </Box>
     );
   };
 

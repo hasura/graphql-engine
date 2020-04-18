@@ -57,7 +57,7 @@ const ManualRelationshipSelector = ({
     };
 
     return (
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <Text fontWeight="bold" mb="sm">
           Relationship Name:
         </Text>
@@ -68,7 +68,7 @@ const ManualRelationshipSelector = ({
           disabled={!relAdd.relType}
           data-test="rel-name"
         />
-      </div>
+      </Box>
     );
   };
 

@@ -1,7 +1,7 @@
 import React from 'react';
 
 import GraphQLEditor from '../../../Common/AceEditor/SDLEditor';
-import { ToolTip, Heading } from '../../../UIKit/atoms';
+import { ToolTip, Heading, Box } from '../../../UIKit/atoms';
 import styles from '../Common/components/Styles.scss';
 
 const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
@@ -16,7 +16,7 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
         Derived mutation
         <ToolTip message={tooltipText} ml="sm" />
       </Heading>
-      <div className={`${styles.add_mar_bottom}`}>
+      <Box mb="20px">
         <label className={`${styles.cursorPointer}`} onClick={toggleDerivation}>
           <input
             type="checkbox"
@@ -25,7 +25,7 @@ const DerivedFrom = ({ shouldDerive, parentMutation, toggleDerivation }) => {
           />
           Generate code with delegation to the derived mutation
         </label>
-      </div>
+      </Box>
       <GraphQLEditor
         value={parentMutation}
         width={'600px'}

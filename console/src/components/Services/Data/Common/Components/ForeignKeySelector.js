@@ -152,14 +152,14 @@ const ForeignKeySelector = ({
       : undefined;
     return (
       <Box mb="20px">
-        <div className={`row ${styles.add_mar_bottom_mid}`}>
+        <Box mb="10px" className="row">
           <div className={`col-sm-4 ${styles.add_mar_right}`}>
             <b>From:</b>
           </div>
           <div className={`col-sm-4 ${styles.add_mar_right}`}>
             <b>To:</b>
           </div>
-        </div>
+        </Box>
         {colMappings.map((colMap, _i) => {
           // from column
           const lc = colMap.column;
