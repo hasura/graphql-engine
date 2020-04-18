@@ -44,7 +44,7 @@ import {
 } from '../../../Common/utils/pgUtils';
 import { updateSchemaInfo } from '../DataActions';
 import Button from '../../../Common/Button/Button';
-import { Icon, Spinner, TextLink, Flex, Text } from '../../../UIKit/atoms';
+import { Icon, Spinner, TextLink, Flex, Text, Box } from '../../../UIKit/atoms';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const ViewRows = ({
@@ -1002,7 +1002,7 @@ const ViewRows = ({
   return (
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
-      <div className={`row ${styles.add_mar_top}`}>
+      <Box mt="20px" className="row">
         {getSelectedRowsSection()}
         <div className="col-xs-12">
           <div className={styles.tableContainer}>{renderTableBody()}</div>
@@ -1010,7 +1010,7 @@ const ViewRows = ({
           <br />
           <div>{getChildComponent()}</div>
         </div>
-      </div>
+      </Box>
     </div>
   );
 };

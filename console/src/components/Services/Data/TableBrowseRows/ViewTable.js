@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import PropTypes from 'prop-types';
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+
 import {
   vSetDefaults,
   vMakeRequest,
@@ -12,6 +13,8 @@ import {
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
+import { Box } from '../../../UIKit/atoms';
+import styles from '../../../Common/Common.scss';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
 
@@ -173,8 +176,6 @@ class ViewTable extends Component {
       throw new NotFoundError();
     }
 
-    const styles = require('../../../Common/Common.scss');
-
     // Is this a view
     const isView = tableSchema.table_type !== 'BASE TABLE';
 
@@ -224,11 +225,11 @@ class ViewTable extends Component {
     let comment = null;
     if (tableSchema.comment) {
       comment = (
-        <div className={styles.add_mar_top}>
+        <Box mt="20px">
           <div className={styles.commentText + ' alert alert-warning'}>
             {tableSchema.comment}
           </div>
-        </div>
+        </Box>
       );
     }
 

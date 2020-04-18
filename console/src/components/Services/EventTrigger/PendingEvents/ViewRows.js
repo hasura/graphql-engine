@@ -21,7 +21,7 @@ import {
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
 import { verifySuccessStatus } from '../utils';
-import { Icon, Heading } from '../../../UIKit/atoms';
+import { Icon, Heading, Box } from '../../../UIKit/atoms';
 
 const ViewRows = ({
   curTriggerName,
@@ -221,6 +221,7 @@ const ViewRows = ({
         accessor: column,
       });
     });
+
     return (
       <ReactTable
         className="-highlight"
@@ -299,8 +300,9 @@ const ViewRows = ({
             });
             invocationRowsData.push(newRow);
           });
+
           return (
-            <div style={{ padding: '20px' }}>
+            <Box p="20px">
               <em>Recent Invocations</em>
               <div
                 className={styles.invocationsSection + ' invocationsSection'}
@@ -370,12 +372,12 @@ const ViewRows = ({
                     }}
                   />
                 ) : (
-                  <div className={styles.add_mar_top}>No data available</div>
+                  <Box mt="20px">No data available</Box>
                 )}
               </div>
               <br />
               <br />
-            </div>
+            </Box>
           );
         }}
       />

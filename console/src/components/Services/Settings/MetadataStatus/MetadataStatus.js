@@ -112,26 +112,23 @@ const MetadataStatus = ({ dispatch, metadata }) => {
         <Heading as="h4">
           GraphQL Engine metadata is inconsistent with database
         </Heading>
-        <div className={styles.add_mar_top}>
-          <div className={styles.add_mar_top_small}>
+        <Box mt="20px">
+          <Box my="5px">
             The following objects in your metadata are inconsistent because they
             reference database or remote-schema entities which do not seem to
             exist or are conflicting
-          </div>
-          <div className={styles.add_mar_top_small}>
+          </Box>
+          <Box>
             The GraphQL API has been generated using only the consistent parts
             of the metadata
-          </div>
-          <div className={styles.add_mar_top_small}>
+          </Box>
+          <Box mt="5px">
             The console will also not be able to display these inconsistent
             objects
-          </div>
-        </div>
-
+          </Box>
+        </Box>
         <div className={styles.add}>{inconsistentObjectsTable()}</div>
-        <div
-          className={`${metaDataStyles.wd50percent} ${metaDataStyles.add_mar_top}`}
-        >
+        <Box mt="20px" width="50%">
           To resolve these inconsistencies, you can do one of the following:
           <ul className={styles.add_mar_top_small}>
             <li>
@@ -144,7 +141,7 @@ const MetadataStatus = ({ dispatch, metadata }) => {
               inconsistencies have been resolved
             </li>
           </ul>
-        </div>
+        </Box>
         <Flex mt="5px">
           <Button
             color="red"

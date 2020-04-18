@@ -16,12 +16,12 @@ import {
   runQuery,
   setOffset,
   setLimit,
-  addOrder
+  addOrder,
 } from './FilterActions';
 import { ordinalColSort, convertDateTimeToLocale } from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
 import { verifySuccessStatus } from '../utils';
-import { Icon, Spinner, Heading } from '../../../UIKit/atoms';
+import { Icon, Spinner, Heading, Box } from '../../../UIKit/atoms';
 
 const ViewRows = ({
   curTriggerName,
@@ -36,7 +36,7 @@ const ViewRows = ({
   isProgressing,
   isView,
   count,
-  expandedRow
+  expandedRow,
 }) => {
   const styles = require('../TableCommon/EventTable.scss');
   const triggerSchema = triggerList.find(x => x.name === curTriggerName);
@@ -55,7 +55,7 @@ const ViewRows = ({
     tableHeadings.push(<th key={i}>{column}</th>);
     gridHeadings.push({
       Header: column,
-      accessor: column
+      accessor: column,
     });
   });
 
@@ -208,7 +208,7 @@ const ViewRows = ({
 
   const renderTableBody = () => {
     if (isProgressing) {
-      return <Spinner size='xl' my='100px' mx='auto' />;
+      return <Spinner size="xl" my="100px" mx="auto" />;
     } else if (newCurRows.length === 0) {
       return <div> No rows found. </div>;
     }
@@ -218,13 +218,13 @@ const ViewRows = ({
     invocationColumns.map(column => {
       invocationGridHeadings.push({
         Header: column,
-        accessor: column
+        accessor: column,
       });
     });
 
     return (
       <ReactTable
-        className='-highlight'
+        className="-highlight"
         data={newCurRows}
         columns={gridHeadings}
         resizable
@@ -241,13 +241,13 @@ const ViewRows = ({
               sortByColumn(column.Header);
             }
             shouldSortColumn = true;
-          }
+          },
         })}
         getResizerProps={(finalState, none, column, ctx) => ({
           onMouseDown: e => {
             shouldSortColumn = false;
             ctx.resizeColumnStart(e, column, false);
-          }
+          },
         })}
         showPagination={count > curFilter.limit}
         defaultPageSize={Math.min(curFilter.limit, count)}
@@ -262,9 +262,9 @@ const ViewRows = ({
           currentRow.logs.map((r, rowIndex) => {
             const newRow = {};
             const status = verifySuccessStatus(r.status) ? (
-              <Icon type='check' color='green.original' />
+              <Icon type="check" color="green.original" />
             ) : (
-              <Icon type='close' color='red.original' />
+              <Icon type="close" color="red.original" />
             );
 
             // Insert cells corresponding to all rows
@@ -299,6 +299,7 @@ const ViewRows = ({
             });
             invocationRowsData.push(newRow);
           });
+
           return (
             <div style={{ padding: '20px' }}>
               <em>Recent Invocations</em>
@@ -328,39 +329,39 @@ const ViewRows = ({
                           <Tabs
                             animation={false}
                             defaultActiveKey={1}
-                            id='requestResponseTab'
+                            id="requestResponseTab"
                           >
-                            <Tab eventKey={1} title='Request'>
-                              <div className={styles.add_mar_top}>
-                                <Heading type="subHeading">Request</Heading>
-                                <AceEditor
-                                  mode='json'
-                                  theme='github'
-                                  name='payload'
-                                  value={currentPayload}
-                                  minLines={4}
-                                  maxLines={100}
-                                  width='100%'
-                                  showPrintMargin={false}
-                                  showGutter={false}
-                                />
-                              </div>
+                            <Tab eventKey={1} title="Request">
+                              <Heading type="subHeading" mt="20px">
+                                Request
+                              </Heading>
+                              <AceEditor
+                                mode="json"
+                                theme="github"
+                                name="payload"
+                                value={currentPayload}
+                                minLines={4}
+                                maxLines={100}
+                                width="100%"
+                                showPrintMargin={false}
+                                showGutter={false}
+                              />
                             </Tab>
-                            <Tab eventKey={2} title='Response'>
-                              <div className={styles.add_mar_top}>
-                                <Heading type="subHeading">Response</Heading>
-                                <AceEditor
-                                  mode='json'
-                                  theme='github'
-                                  name='response'
-                                  value={finalResponse}
-                                  minLines={4}
-                                  maxLines={100}
-                                  width='100%'
-                                  showPrintMargin={false}
-                                  showGutter={false}
-                                />
-                              </div>
+                            <Tab eventKey={2} title="Response">
+                              <Heading type="subHeading" mt="20px">
+                                Response
+                              </Heading>
+                              <AceEditor
+                                mode="json"
+                                theme="github"
+                                name="response"
+                                value={finalResponse}
+                                minLines={4}
+                                maxLines={100}
+                                width="100%"
+                                showPrintMargin={false}
+                                showGutter={false}
+                              />
                             </Tab>
                           </Tabs>
                         </div>
@@ -368,7 +369,7 @@ const ViewRows = ({
                     }}
                   />
                 ) : (
-                  <div className={styles.add_mar_top}>No data available</div>
+                  <Box mt="20px">No data available</Box>
                 )}
               </div>
               <br />
@@ -384,8 +385,8 @@ const ViewRows = ({
     <div className={isVisible ? '' : 'hide '}>
       {filterQuery}
       <hr />
-      <div className='row'>
-        <div className='col-xs-12'>
+      <div className="row">
+        <div className="col-xs-12">
           <div className={styles.tableContainer + ' eventsTableBody'}>
             {renderTableBody()}
           </div>

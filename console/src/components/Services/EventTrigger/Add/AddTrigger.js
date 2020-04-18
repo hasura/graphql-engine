@@ -502,7 +502,7 @@ class AddTrigger extends Component {
                 <div>
                   {advancedColumnSection}
                   <hr />
-                  <div className={styles.add_mar_top}>
+                  <Box mt="20px">
                     <Heading type="subHeading">Retry Logic</Heading>
                     <div className={styles.retrySection}>
                       <div className={`col-md-3 ${styles.padd_left_remove}`}>
@@ -564,12 +564,12 @@ class AddTrigger extends Component {
                         />
                       </div>
                     </div>
-                  </div>
+                  </Box>
                   <hr />
-                  <div className={styles.add_mar_top}>
-                    <Heading type="subHeading">Headers</Heading>
-                    {headersList}
-                  </div>
+                  <Heading type="subHeading" mt="20px">
+                    Headers
+                  </Heading>
+                  {headersList}
                 </div>
               </CollapsibleToggle>
               <hr />

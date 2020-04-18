@@ -16,7 +16,7 @@ import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
 
 import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
-import { Flex } from '../../../UIKit/atoms';
+import { Box, Flex } from '../../../UIKit/atoms';
 import styles from './ModifyTable.scss';
 
 const useColumnEditor = (dispatch, tableName) => {
@@ -272,7 +272,7 @@ const ColumnCreator = ({
   };
 
   return (
-    <div className={styles.activeEdit}>
+    <Box bg="white" p="10px" border={1} borderColor="#ccc" mb="15px">
       <Flex as="form" className="form-inline" onSubmit={onSubmit}>
         {getColumnNameInput()}
         {getColumnTypeInput()}
@@ -282,10 +282,8 @@ const ColumnCreator = ({
 
         {getSubmitButton()}
       </Flex>
-      <div className={styles.add_mar_top}>
-        {getFrequentlyUsedColumnSelector()}
-      </div>
-    </div>
+      <Box mt="20px">{getFrequentlyUsedColumnSelector()}</Box>
+    </Box>
   );
 };
 

@@ -282,26 +282,24 @@ const ComputedFieldsEditor = ({
               className={`form-control ${styles.wd50percent}`}
             />
           </div>
-          <div className={`${styles.add_mar_top}`}>
-            <Text mb="10px" fontWeight="bold">
-              Function schema:
-            </Text>
-            <div className={styles.wd50percent}>
-              <SearchableSelectBox
-                options={schemaList.map(s => getSchemaName(s))}
-                onChange={handleFnSchemaChange}
-                value={computedFieldFunctionSchema}
-                bsClass={'function-schema-select'}
-                styleOverrides={{
-                  menu: {
-                    zIndex: 5,
-                  },
-                }}
-                filterOption={'prefix'}
-                placeholder="function_name"
-              />
-            </div>
-          </div>
+          <Text mb="10px" mt="20px" fontWeight="bold">
+            Function schema:
+          </Text>
+          <Box width="50%">
+            <SearchableSelectBox
+              options={schemaList.map(s => getSchemaName(s))}
+              onChange={handleFnSchemaChange}
+              value={computedFieldFunctionSchema}
+              bsClass={'function-schema-select'}
+              styleOverrides={{
+                menu: {
+                  zIndex: 5,
+                },
+              }}
+              filterOption={'prefix'}
+              placeholder="function_name"
+            />
+          </Box>
           <Box mt="20px">
             <Box mb="10px">
               <b>Function name: </b>

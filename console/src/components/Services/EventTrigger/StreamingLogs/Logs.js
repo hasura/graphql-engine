@@ -29,7 +29,7 @@ import * as tooltip from '../Common/Tooltips';
 import { convertDateTimeToLocale } from '../utils';
 import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import { Icon, Spinner, ToolTip, Heading } from '../../../UIKit/atoms';
+import { Icon, Spinner, ToolTip, Heading, Box } from '../../../UIKit/atoms';
 import styles from '../TableCommon/EventTable.scss';
 
 class StreamingLogs extends Component {
@@ -239,7 +239,7 @@ class StreamingLogs extends Component {
           <Tabs animation={false} defaultActiveKey={1} id="requestResponseTab">
             <Tab eventKey={1} title="Request">
               {finalRequest.headers ? (
-                <div className={styles.add_mar_top}>
+                <Box mt="20px">
                   <Heading type="subHeading">Headers</Heading>
                   <AceEditor
                     mode="json"
@@ -252,9 +252,9 @@ class StreamingLogs extends Component {
                     showPrintMargin={false}
                     showGutter={false}
                   />
-                </div>
+                </Box>
               ) : null}
-              <div className={styles.add_mar_top}>
+              <Box mt="20px">
                 <Heading type="subHeading">Payload</Heading>
                 <AceEditor
                   mode="json"
@@ -267,11 +267,11 @@ class StreamingLogs extends Component {
                   showPrintMargin={false}
                   showGutter={false}
                 />
-              </div>
+              </Box>
             </Tab>
             <Tab eventKey={2} title="Response">
               {finalResponse.headers ? (
-                <div className={styles.add_mar_top}>
+                <Box mt="20px">
                   <Heading type="subHeading">Headers</Heading>
                   <AceEditor
                     mode="json"
@@ -284,9 +284,9 @@ class StreamingLogs extends Component {
                     showPrintMargin={false}
                     showGutter={false}
                   />
-                </div>
+                </Box>
               ) : null}
-              <div className={styles.add_mar_top}>
+              <Box mt="20px">
                 <div className="col-md-6">
                   <Heading type="subHeading" px="0px">
                     {finalResponse.status_code ? 'Payload' : 'Error'}
@@ -326,7 +326,7 @@ class StreamingLogs extends Component {
                   showPrintMargin={false}
                   showGutter={false}
                 />
-              </div>
+              </Box>
             </Tab>
           </Tabs>
         </div>
@@ -428,7 +428,7 @@ class StreamingLogs extends Component {
             </div>
           </div>
         ) : (
-          <div className={styles.add_mar_top}>No data available</div>
+          <Box mt="20px">No data available</Box>
         )}
         <br />
         <br />

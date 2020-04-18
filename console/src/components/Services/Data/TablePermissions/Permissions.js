@@ -857,7 +857,7 @@ class Permissions extends Component {
                 </div>
                 {getFilterOptions()}
               </div>
-              <div className={styles.add_mar_top}>{getLimitSection()}</div>
+              <Box mt="20px">{getLimitSection()}</Box>
             </div>
           </CollapsibleToggle>
         );
@@ -1638,9 +1638,7 @@ class Permissions extends Component {
                   title={noPermissions ? disabledCloneMsg : ''}
                 >
                   <div>Apply same permissions for:</div>
-                  <div className={styles.add_mar_top_small}>
-                    {applyToListHtml}
-                  </div>
+                  <Box mt="5px">{applyToListHtml}</Box>
                   <Text mt="20px">
                     <b>Note:</b> While applying permissions for other tables,
                     the column permissions and presets will be ignored
@@ -1731,10 +1729,10 @@ class Permissions extends Component {
         );
 
         return (
-          <div className={styles.add_mar_top + ' ' + styles.add_pad_left}>
+          <Box mt="20px" pl="15px">
             {saveButton}
             {removeAccessButton}
-          </div>
+          </Box>
         );
       };
 

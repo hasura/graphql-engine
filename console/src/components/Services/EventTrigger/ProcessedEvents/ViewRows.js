@@ -24,7 +24,7 @@ import {
 } from '../utils';
 import '../TableCommon/EventReactTableOverrides.css';
 import * as tooltip from '../Common/Tooltips';
-import { Icon, ToolTip, Heading } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading, Box } from '../../../UIKit/atoms';
 import styles from '../TableCommon/EventTable.scss';
 
 const ViewRows = ({
@@ -343,7 +343,7 @@ const ViewRows = ({
                           >
                             <Tab eventKey={1} title="Request">
                               {finalRequest.headers ? (
-                                <div className={styles.add_mar_top}>
+                                <Box mt="20px">
                                   <Heading type="subHeading">Headers</Heading>
                                   <AceEditor
                                     mode="json"
@@ -360,9 +360,9 @@ const ViewRows = ({
                                     showPrintMargin={false}
                                     showGutter={false}
                                   />
-                                </div>
+                                </Box>
                               ) : null}
-                              <div className={styles.add_mar_top}>
+                              <Box mt="20px">
                                 <Heading type="subHeading">Payload</Heading>
                                 <AceEditor
                                   mode="json"
@@ -379,11 +379,11 @@ const ViewRows = ({
                                   showPrintMargin={false}
                                   showGutter={false}
                                 />
-                              </div>
+                              </Box>
                             </Tab>
                             <Tab eventKey={2} title="Response">
                               {finalResponse.headers ? (
-                                <div className={styles.add_mar_top}>
+                                <Box mt="20px">
                                   <Heading type="subHeading">Headers</Heading>
                                   <AceEditor
                                     mode="json"
@@ -400,9 +400,9 @@ const ViewRows = ({
                                     showPrintMargin={false}
                                     showGutter={false}
                                   />
-                                </div>
+                                </Box>
                               ) : null}
-                              <div className={styles.add_mar_top}>
+                              <Box mt="20px">
                                 <div className="col-md-6">
                                   <Heading type="subHeading" px="0px">
                                     {finalResponse.status_code
@@ -452,7 +452,7 @@ const ViewRows = ({
                                   showPrintMargin={false}
                                   showGutter={false}
                                 />
-                              </div>
+                              </Box>
                             </Tab>
                           </Tabs>
                         </div>
@@ -460,7 +460,7 @@ const ViewRows = ({
                     }}
                   />
                 ) : (
-                  <div className={styles.add_mar_top}>No data available</div>
+                  <Box mt="20px">No data available</Box>
                 )}
               </div>
               <br />

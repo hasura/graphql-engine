@@ -265,9 +265,9 @@ class Schema extends Component {
       };
 
       return (
-        <div className={styles.add_mar_top}>
-          <div className={styles.display_inline}>Current Postgres schema</div>
-          <div className={styles.display_inline}>
+        <Box mt="20px">
+          <Box display="inline-block">Current Postgres schema</Box>
+          <Box display="inline-block">
             <select
               onChange={handleSchemaChange}
               className={
@@ -280,16 +280,14 @@ class Schema extends Component {
             >
               {getSchemaOptions()}
             </select>
-          </div>
-          <div className={styles.display_inline + ' ' + styles.add_mar_left}>
-            <div className={styles.display_inline}>{getDeleteSchemaBtn()}</div>
-            <div
-              className={`${styles.display_inline} ${styles.add_mar_left_mid}`}
-            >
+          </Box>
+          <Flex display="inline-block" ml="20px">
+            {getDeleteSchemaBtn()}
+            <Box ml="10px" display="inline-block">
               {getCreateSchemaSection()}
-            </div>
-          </div>
-        </div>
+            </Box>
+          </Flex>
+        </Box>
       );
     };
 
@@ -393,14 +391,14 @@ class Schema extends Component {
       );
 
       return (
-        <div className={styles.add_mar_top}>
+        <Box mt="20px">
           <CollapsibleToggle title={heading} isOpen>
             <div className={`${styles.padd_left_remove} col-xs-12`}>
               {getUntrackedTablesList()}
             </div>
             <div className={styles.clear_fix} />
           </CollapsibleToggle>
-        </div>
+        </Box>
       );
     };
 
@@ -514,14 +512,14 @@ class Schema extends Component {
       );
 
       return (
-        <div className={styles.add_mar_top}>
+        <Box mt="20px">
           <CollapsibleToggle title={heading} isOpen>
             <div className={`${styles.padd_left_remove} col-xs-12`}>
               {getUntrackedRelList()}
             </div>
             <div className={styles.clear_fix} />
           </CollapsibleToggle>
-        </div>
+        </Box>
       );
     };
 
@@ -605,18 +603,18 @@ class Schema extends Component {
       );
 
       return (
-        <div className={styles.add_mar_top} key={'custom-functions-content'}>
+        <Box mt="20px" key={'custom-functions-content'}>
           <CollapsibleToggle
             title={heading}
             isOpen={!noTrackableFunctions}
             testId={'toggle-trackable-functions'}
           >
-            <div className={`${styles.padd_left_remove} col-xs-12`}>
+            <Box pl="0px" className="col-xs-12">
               {getTrackableFunctionsList()}
-            </div>
+            </Box>
             <div className={styles.clear_fix} />
           </CollapsibleToggle>
-        </div>
+        </Box>
       );
     };
 
@@ -665,27 +663,24 @@ class Schema extends Component {
       );
 
       return (
-        <div
-          className={styles.add_mar_top}
-          key={'non-trackable-custom-functions'}
-        >
+        <Box key={'non-trackable-custom-functions'} mt="20px">
           <CollapsibleToggle title={heading} isOpen={false}>
             <div className={`${styles.padd_left_remove} col-xs-12`}>
               {getNonTrackableFuncList()}
             </div>
             <div className={styles.clear_fix} />
           </CollapsibleToggle>
-        </div>
+        </Box>
       );
     };
 
     const getPermissionsSummaryLink = () => {
       return (
-        <div className={styles.add_mar_top}>
+        <Box mt="20px">
           <Link to={getSchemaPermissionsRoute(currentSchema)}>
             Schema permissions summary
           </Link>
-        </div>
+        </Box>
       );
     };
 

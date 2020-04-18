@@ -5,7 +5,7 @@ import { addAllowedQueries } from '../Actions';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { readFile, parseQueryString } from './utils';
 import { showErrorNotification } from '../../Common/Notification';
-import { ToolTip, Heading, Text } from '../../../UIKit/atoms';
+import { ToolTip, Heading, Text, Box } from '../../../UIKit/atoms';
 import styles from './AllowedQueries.scss';
 
 class AddAllowedQuery extends React.Component {
@@ -110,7 +110,7 @@ class AddAllowedQuery extends React.Component {
       return (
         <div>
           <div>{getNameInput()}</div>
-          <div className={styles.add_mar_top}>{getQueryInput()}</div>
+          <Box mt="20px">{getQueryInput()}</Box>
         </div>
       );
     };
@@ -151,18 +151,16 @@ class AddAllowedQuery extends React.Component {
               saveFunc={handleManualSubmit}
             />
           </div>
-          <div className={styles.add_mar_top}>OR</div>
-          <div className={styles.add_mar_top}>
-            <ExpandableEditor
-              expandButtonText="Upload graphql file"
-              editorExpanded={getFileUploadInput}
-              collapseCallback={handleFileUploadCollapse}
-              property="upload-allowed-queries"
-              service="upload-allowed-queries"
-              saveButtonText="Upload"
-              saveFunc={handleFileUploadSubmit}
-            />
-          </div>
+          <Box my="20px">OR</Box>
+          <ExpandableEditor
+            expandButtonText="Upload graphql file"
+            editorExpanded={getFileUploadInput}
+            collapseCallback={handleFileUploadCollapse}
+            property="upload-allowed-queries"
+            service="upload-allowed-queries"
+            saveButtonText="Upload"
+            saveFunc={handleFileUploadSubmit}
+          />
         </div>
       </div>
     );

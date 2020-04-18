@@ -636,7 +636,7 @@ class PermissionsSummary extends Component {
       };
 
       return (
-        <Flex>
+        <Flex alignItems="flex-start">
           <div className={styles.flex_0}>{getTablesColumnTable()}</div>
           <div>{getTableAllRolesAllActionsTable()}</div>
         </Flex>
@@ -957,65 +957,61 @@ class PermissionsSummary extends Component {
           submitTestId={'copy-roles-button'}
         >
           <div>
-            <div>
-              <b>From:</b>
-              <div className={styles.add_mar_top_small}>
-                <div className="row form-row">
-                  <div className="form-group col-md-4">
-                    <label>Role</label>
-                    <select
-                      className={'form-control ' + styles.add_mar_top_small}
-                      value={copyFromRole}
-                      onChange={onFromRoleChange}
-                    >
-                      {getFromRoleOptions()}
-                    </select>
-                  </div>
-                  <div className="form-group col-md-4">
-                    <label>Table</label>
-                    <select
-                      className={'form-control ' + styles.add_mar_top_small}
-                      value={copyFromTable}
-                      onChange={onFromTableChange}
-                    >
-                      <option key={'all'} value={'all'}>
-                        All
-                      </option>
-                      {getFromTableOptions()}
-                    </select>
-                  </div>
-                  <div className="form-group col-md-4">
-                    <label>Action</label>
-                    <select
-                      className={'form-control ' + styles.add_mar_top_small}
-                      value={copyFromAction}
-                      onChange={onFromActionChange}
-                    >
-                      <option key={'all'} value={'all'}>
-                        All
-                      </option>
-                      {getFromActionOptions()}
-                    </select>
-                  </div>
-                </div>
+            <b>From:</b>
+            <Box mt="5px" className="row form-row">
+              <div className="form-group col-md-4">
+                <label>Role</label>
+                <select
+                  className={'form-control ' + styles.add_mar_top_small}
+                  value={copyFromRole}
+                  onChange={onFromRoleChange}
+                >
+                  {getFromRoleOptions()}
+                </select>
               </div>
-            </div>
-            <div className={styles.add_mar_top}>
-              <b>To:</b>
-              <div className={styles.add_mar_top_small}>
-                <div className="row form-row">
-                  <div className="form-group col-md-4">
-                    <label>Roles</label>
-                    {getToRolesList()}
-                    <Box my="20px" ml="20px">
-                      OR
-                    </Box>
-                    {getNewRoleCreator()}
-                  </div>
-                </div>
+              <div className="form-group col-md-4">
+                <label>Table</label>
+                <select
+                  className={'form-control ' + styles.add_mar_top_small}
+                  value={copyFromTable}
+                  onChange={onFromTableChange}
+                >
+                  <option key={'all'} value={'all'}>
+                    All
+                  </option>
+                  {getFromTableOptions()}
+                </select>
               </div>
-            </div>
+              <div className="form-group col-md-4">
+                <label>Action</label>
+                <select
+                  className={'form-control ' + styles.add_mar_top_small}
+                  value={copyFromAction}
+                  onChange={onFromActionChange}
+                >
+                  <option key={'all'} value={'all'}>
+                    All
+                  </option>
+                  {getFromActionOptions()}
+                </select>
+              </div>
+            </Box>
           </div>
+          <Box mt="20px">
+            <b>To:</b>
+            <Box mt="5px">
+              <div className="row form-row">
+                <div className="form-group col-md-4">
+                  <label>Roles</label>
+                  {getToRolesList()}
+                  <Box my="20px" ml="20px">
+                    OR
+                  </Box>
+                  {getNewRoleCreator()}
+                </div>
+              </div>
+            </Box>
+          </Box>
         </Modal>
       );
     };

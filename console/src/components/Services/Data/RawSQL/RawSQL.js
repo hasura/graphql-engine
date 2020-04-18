@@ -23,7 +23,7 @@ import {
   ACE_EDITOR_FONT_SIZE,
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
-import { Icon, ToolTip, Heading, Box } from '../../../UIKit/atoms';
+import { Icon, ToolTip, Heading, Box, Text } from '../../../UIKit/atoms';
 import styles from '../../../Common/TableCommon/Table.scss';
 
 const RawSQL = ({
@@ -221,7 +221,7 @@ const RawSQL = ({
     };
 
     return (
-      <div className={styles.add_mar_top}>
+      <Box mt="20px">
         <AceEditor
           data-test="sql-test-editor"
           mode="sql"
@@ -244,7 +244,7 @@ const RawSQL = ({
           ]}
           onChange={handleSQLChange}
         />
-      </div>
+      </Box>
     );
   };
 
@@ -311,30 +311,28 @@ const RawSQL = ({
     );
   };
 
-  const getMetadataCascadeSection = () => {
-    return (
-      <div className={styles.add_mar_top_small}>
-        <label>
-          <input
-            checked={isCascadeChecked}
-            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
-            id="cascade-checkbox"
-            type="checkbox"
-            onChange={() => {
-              dispatch({
-                type: SET_CASCADE_CHECKED,
-                data: !isCascadeChecked,
-              });
-            }}
-          />
-          Cascade metadata
-        </label>
-        <ToolTip message={cascadeTip}>
-          <Icon type="info" ml="sm" size={12} />
-        </ToolTip>
-      </div>
-    );
-  };
+  const getMetadataCascadeSection = () => (
+    <Box mt="5px">
+      <label>
+        <input
+          checked={isCascadeChecked}
+          className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+          id="cascade-checkbox"
+          type="checkbox"
+          onChange={() => {
+            dispatch({
+              type: SET_CASCADE_CHECKED,
+              data: !isCascadeChecked,
+            });
+          }}
+        />
+        Cascade metadata
+      </label>
+      <ToolTip message={cascadeTip}>
+        <Icon type="info" ml="sm" size={12} />
+      </ToolTip>
+    </Box>
+  );
 
   const getTrackThisSection = () => {
     const dispatchTrackThis = () => {
@@ -345,7 +343,7 @@ const RawSQL = ({
     };
 
     return (
-      <div className={styles.add_mar_top}>
+      <Box mt="20px">
         <label>
           <input
             checked={isTableTrackChecked}
@@ -360,7 +358,7 @@ const RawSQL = ({
         <ToolTip message={trackTableTip}>
           <Icon type="info" ml="sm" size={12} />
         </ToolTip>
-      </div>
+      </Box>
     );
   };
 
@@ -400,7 +398,7 @@ const RawSQL = ({
 
       if (isMigrationChecked) {
         migrationNameSection = (
-          <div className={styles.add_mar_top_small + ' ' + styles.add_mar_left}>
+          <Box mt="5px" ml="20px">
             <div>
               <label className={styles.add_mar_right}>Migration name:</label>
               <input
@@ -420,16 +418,12 @@ const RawSQL = ({
               <ToolTip message={migrationNameTip}>
                 <Icon type="info" ml="sm" size={12} />
               </ToolTip>
-              <div
-                className={styles.add_mar_top_small + ' ' + styles.text_gray}
-              >
-                <i>
-                  Note: down migration will not be generated for statements run
-                  using Raw SQL.
-                </i>
-              </div>
+              <Text fontStyle="italic" color="grey.tab" mt="5px">
+                Note: down migration will not be generated for statements run
+                using Raw SQL.
+              </Text>
             </div>
-          </div>
+          </Box>
         );
       }
 
@@ -438,10 +432,10 @@ const RawSQL = ({
 
     if (migrationMode && globals.consoleMode === CLI_CONSOLE_MODE) {
       migrationSection = (
-        <div className={styles.add_mar_top_small}>
+        <Box mt="5px">
           {getIsMigrationSection()}
           {getMigrationNameSection()}
-        </div>
+        </Box>
       );
     }
 
@@ -474,7 +468,7 @@ const RawSQL = ({
         </Heading>
         <div className="clearfix" />
       </div>
-      <div className={styles.add_mar_top}>
+      <Box mt="20px">
         <div>
           <div className={`${styles.padd_left_remove} col-xs-8`}>
             {getNotesSection()}
@@ -492,7 +486,7 @@ const RawSQL = ({
           </Box>
         </div>
         <div className="hidden col-xs-4">{alert}</div>
-      </div>
+      </Box>
 
       {getMigrationWarningModal()}
       <Box mb="20px">{getResultTable()}</Box>

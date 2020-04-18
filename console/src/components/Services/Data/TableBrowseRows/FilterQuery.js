@@ -25,7 +25,7 @@ import {
 import { setDefaultQuery, runQuery, setOffset } from './FilterActions';
 import Button from '../../../Common/Button/Button';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
-import { Icon, Heading } from '../../../UIKit/atoms';
+import { Icon, Heading, Box } from '../../../UIKit/atoms';
 import styles from '../../../Common/FilterQuery/FilterQuery.scss';
 
 const history = createHistory();
@@ -263,7 +263,7 @@ class FilterQuery extends Component {
     const { dispatch, whereAnd, tableSchema, orderBy } = this.props; // eslint-disable-line no-unused-vars
 
     return (
-      <div className={styles.add_mar_top}>
+      <Box mt="20px">
         <form
           onSubmit={e => {
             e.preventDefault();
@@ -307,7 +307,7 @@ class FilterQuery extends Component {
             {/* <div className={styles.count + ' alert alert-info'}><i>Total <b>{tableName}</b> rows in the database for current query: {count} </i></div> */}
           </div>
         </form>
-      </div>
+      </Box>
     );
   }
 }
