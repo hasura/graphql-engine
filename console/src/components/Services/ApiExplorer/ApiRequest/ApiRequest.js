@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 import Modal from '../../../Common/Modal/Modal';
-import { ToolTip } from '../../../UIKit/atoms';
+import { ToolTip, Box } from '../../../UIKit/atoms';
 
 import {
   changeRequestHeader,
@@ -558,7 +558,7 @@ class ApiRequest extends Component {
       switch (this.props.bodyType) {
         case 'graphql':
           return (
-            <div className={styles.add_mar_top}>
+            <Box mt="20px">
               <GraphiQLWrapper
                 data={this.props}
                 numberOfTables={this.props.numberOfTables}
@@ -566,7 +566,7 @@ class ApiRequest extends Component {
                 headerFocus={this.props.headerFocus}
                 urlParams={this.props.urlParams}
               />
-            </div>
+            </Box>
           );
         default:
           return '';
