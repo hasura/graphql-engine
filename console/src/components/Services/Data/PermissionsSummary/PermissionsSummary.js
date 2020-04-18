@@ -636,10 +636,10 @@ class PermissionsSummary extends Component {
       };
 
       return (
-        <div className={styles.displayFlexContainer}>
+        <Flex>
           <div className={styles.flex_0}>{getTablesColumnTable()}</div>
           <div>{getTableAllRolesAllActionsTable()}</div>
-        </div>
+        </Flex>
       );
     };
 

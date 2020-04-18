@@ -9,7 +9,7 @@ import {
   loadEventInvocations,
   RESET,
 } from './InvokeManualTriggerAction';
-import { Spinner } from '../../../../UIKit/atoms';
+import { Spinner, Flex, Box } from '../../../../UIKit/atoms';
 import styles from './InvokeManualTrigger.scss';
 
 /* This component accepts for following props
@@ -102,8 +102,8 @@ class InvokeManualTrigger extends React.Component {
       }
 
       return (
-        <div className={styles.displayFlexContainer}>
-          <div className={`${styles.padd_left_remove} col-md-6`}>
+        <Flex className="col-md-6" pl="0px">
+          <Box pl="0px" className="col-md-6">
             <div> Request </div>
             <AceEditor
               mode="json"
@@ -117,8 +117,8 @@ class InvokeManualTrigger extends React.Component {
               showGutter={false}
               style={{ backgroundColor: '#fdf9ed', marginTop: '10px' }}
             />
-          </div>
-          <div className={`${styles.padd_right_remove} col-md-6`}>
+          </Box>
+          <Box pl="0px" className="col-md-6">
             <div> Latest Invocation Response</div>
             <AceEditor
               mode="json"
@@ -135,8 +135,8 @@ class InvokeManualTrigger extends React.Component {
                 marginTop: '10px',
               }}
             />
-          </div>
-        </div>
+          </Box>
+        </Flex>
       );
     };
     /*
