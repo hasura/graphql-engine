@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Heading } from '../../../UIKit/atoms';
+import { Heading, Box } from '../../../UIKit/atoms';
 import styles from '../../RemoteSchema/RemoteSchema.scss';
 import Rectangle from './images/Rectangle.svg';
 
@@ -16,9 +16,9 @@ const TopicDescription = ({ title, imgUrl, imgAlt, description }) => (
     <div className={styles.remoteSchemaImg}>
       <img className={'img-responsive'} src={imgUrl} alt={imgAlt} />
     </div>
-    <div className={styles.descriptionText + ' ' + styles.wd60}>
+    <Box width="60%" fontSize="15px" lineHeight="1.2" fontWeight="normal">
       {description}
-    </div>
+    </Box>
   </div>
 );
 

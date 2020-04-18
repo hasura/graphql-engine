@@ -744,14 +744,12 @@ div.CodeMirror-lint-tooltip > * + * {
   width: 75%;
   display: inline-block;
 }
+
 .wd40 {
   width: 40%;
   display: inline-block;
 }
-.wd60 {
-  width: 60%;
-  display: inline-block;
-}
+
 .modalWrapper {
   position: absolute;
   top: 40px;

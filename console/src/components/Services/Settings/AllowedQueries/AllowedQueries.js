@@ -4,7 +4,7 @@ import AllowedQueriesNotes from './AllowedQueriesNotes';
 import AddAllowedQuery from './AddAllowedQuery';
 import AllowedQueriesList from './AllowedQueriesList';
 import { loadAllowedQueries } from '../Actions';
-import { Heading } from '../../../UIKit/atoms';
+import { Heading, Box } from '../../../UIKit/atoms';
 import styles from './AllowedQueries.scss';
 
 class AllowedQueries extends React.Component {
@@ -27,7 +27,7 @@ class AllowedQueries extends React.Component {
           <Heading as="h2" pb="0px" fontSize="18px">
             Allowed Queries
           </Heading>
-          <div className={styles.add_mar_top + ' ' + styles.wd60}>
+          <Box width="60%" mt="20px">
             <AllowedQueriesNotes />
             <hr />
             <AddAllowedQuery
@@ -39,7 +39,7 @@ class AllowedQueries extends React.Component {
               dispatch={dispatch}
               allowedQueries={allowedQueries}
             />
-          </div>
+          </Box>
         </div>
       </div>
     );
