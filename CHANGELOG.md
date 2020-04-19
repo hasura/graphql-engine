@@ -16,7 +16,7 @@ The order, collapsed state of columns and page size is now persisted across page
 
 ### docs improvements
 
-- add postgres reference page to docs (close #4440)
+- add postgres reference page to docs (#4471) (close #4440)
 
 ### Bug fixes and improvements
 
