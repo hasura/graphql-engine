@@ -537,7 +537,7 @@ func (m *Migrate) Migrate(version uint64, direction string) error {
 	return m.unlockErr(m.runMigrations(ret))
 }
 
-func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser) error {
+func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser, skipExecution bool) error {
 	mode, err := m.databaseDrv.GetSetting("migration_mode")
 	if err != nil {
 		return err
@@ -551,9 +551,11 @@ func (m *Migrate) QueryWithVersion(version uint64, data io.ReadCloser) error {
 		return err
 	}
 
-	if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
-		m.databaseDrv.ResetQuery()
-		return m.unlockErr(err)
+	if !skipExecution {
+		if err := m.databaseDrv.Run(data, "meta", ""); err != nil {
+			m.databaseDrv.ResetQuery()
+			return m.unlockErr(err)
+		}
 	}
 
 	if version != 0 {
