@@ -2,6 +2,7 @@
 
 ## Next release
 
+- cli: add support for skipping execution while generating migrations through the migrate REST API
 
 ## `v1.2.0-beta.4`
 
