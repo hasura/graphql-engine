@@ -55,7 +55,7 @@ sub-path if it is configured that way.
 
 .. code-block:: bash
 
-  hasura init --directory my-project --endpoint http://my-graphql.herokuapp.com
+  hasura init --directory-name my-project --endpoint http://my-graphql.herokuapp.com
 
   cd my-project
 
