@@ -64,6 +64,60 @@ class TestActionsSync:
     def test_mirror_action_success(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/mirror_action_success.yaml')
 
+@use_action_fixtures
+class TestQueryActions:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/sync'
+
+    def test_query_action_fail(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/get_user_by_email_fail.yaml')
+
+    def test_query_action_success_output_object(self, hge_ctx):
+        gql_query = '''
+        mutation {
+          insert_user_one(object: {email: "clarke@gmail.com", name:"Clarke"}){
+            id
+          }
+        }
+        '''
+        query = {
+            'query': gql_query
+        }
+        headers = {}
+        admin_secret = hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query, headers)
+        assert code == 200,resp
+        check_query_f(hge_ctx, self.dir() + '/get_user_by_email_success.yaml')
+
+    def test_query_action_success_output_list(self, hge_ctx):
+        gql_query = '''
+        mutation {
+          insert_user(objects:
+        [{id:1,email: "clarke@gmail.com", name:"Clarke 1"},
+         {id:2,email: "clarke@gmail.com", name:"Clarke 2"}])
+        {
+            returning {
+               id
+           }
+          }
+        }
+        '''
+        query = {
+            'query': gql_query
+        }
+        headers = {}
+        admin_secret = hge_ctx.hge_key
+        if admin_secret is not None:
+            headers['X-Hasura-Admin-Secret'] = admin_secret
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query, headers)
+        assert code == 200,resp
+        check_query_f(hge_ctx, self.dir() + '/get_users_by_email_success.yaml')
+
+
 def mk_headers_with_secret(hge_ctx, headers={}):
     admin_secret = hge_ctx.hge_key
     if admin_secret:
@@ -297,3 +351,19 @@ class TestActionsAsync:
         # Query the action as user-id 1
         # Make request without auth using admin_secret
         check_query(hge_ctx, conf_user_1, add_auth = False)
+
+@pytest.mark.usefixtures('per_class_tests_db_state')
+class TestSetCustomTypes:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/custom-types'
+
+    def test_resuse_pgscalars(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/reuse_pgscalars.yaml')
+
+    def test_resuse_unknown_pgscalar(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/reuse_unknown_pgscalar.yaml')
+
+    def test_create_action_pg_scalar(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/create_action_pg_scalar.yaml')
