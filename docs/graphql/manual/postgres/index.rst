@@ -13,7 +13,7 @@ Postgres Reference
   :local:
 
 
-This page is a Postgres reference demonstrating Postgres features that you can use to enhance your GraphQL API. 
+This page is a Postgres reference demonstrating the most common Postgres features that you can use to enhance your GraphQL API. 
 
 Constraints
 -----------
