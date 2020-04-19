@@ -6,6 +6,7 @@ module Hasura.Server.Auth.JWT
   , Jose.JWKSet (..)
   , JWTClaimsFormat (..)
   , JwkFetchError (..)
+  , JWTConfigClaims (..)
   , updateJwkRef
   , jwkRefreshCtrl
   , defaultClaimNs
@@ -22,6 +23,7 @@ import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diff
 import           GHC.AssertNF
 import           Network.URI                     (URI)
 
+import           Data.Aeson.Internal             (JSONPath)
 import           Data.Parser.CacheControl
 import           Data.Parser.Expires
 import           Hasura.HTTP
@@ -30,14 +32,16 @@ import           Hasura.Prelude
 import           Hasura.RQL.Types
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
-import           Hasura.Server.Utils             (getRequestHeader, userRoleHeader)
+import           Hasura.Server.Utils             (getRequestHeader, userRoleHeader, executeJSONPath)
 import           Hasura.Server.Version           (HasVersion)
+import           Hasura.RQL.Types.Error          (encodeJSONPath)
 
 import qualified Control.Concurrent.Extended     as C
 import qualified Crypto.JWT                      as Jose
 import qualified Data.Aeson                      as J
 import qualified Data.Aeson.Casing               as J
 import qualified Data.Aeson.TH                   as J
+import qualified Data.Aeson.Internal             as J
 import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI
@@ -47,7 +51,7 @@ import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
 import qualified Network.HTTP.Types              as HTTP
 import qualified Network.Wreq                    as Wreq
-
+import qualified Data.Parser.JSONPath            as JSONPath
 
 newtype RawJWT = RawJWT BL.ByteString
 
@@ -59,10 +63,19 @@ data JWTClaimsFormat
 $(J.deriveJSON J.defaultOptions { J.sumEncoding = J.ObjectWithSingleField
                                 , J.constructorTagModifier = J.snakeCase . drop 3 } ''JWTClaimsFormat)
 
+data JWTConfigClaims
+  = ClaimNsPath JSONPath
+  | ClaimNs T.Text
+  deriving (Show, Eq)
+
+instance J.ToJSON JWTConfigClaims where
+  toJSON (ClaimNsPath nsPath) = J.String . T.pack $ encodeJSONPath nsPath
+  toJSON (ClaimNs ns) = J.String ns
+
 data JWTConfig
   = JWTConfig
   { jcKeyOrUrl     :: !(Either Jose.JWK URI)
-  , jcClaimNs      :: !(Maybe T.Text)
+  , jcClaimNs      :: !JWTConfigClaims
   , jcAudience     :: !(Maybe Jose.Audience)
   , jcClaimsFormat :: !(Maybe JWTClaimsFormat)
   , jcIssuer       :: !(Maybe Jose.StringOrURI)
@@ -71,7 +84,7 @@ data JWTConfig
 data JWTCtx
   = JWTCtx
   { jcxKey          :: !(IORef Jose.JWKSet)
-  , jcxClaimNs      :: !(Maybe T.Text)
+  , jcxClaimNs      :: !JWTConfigClaims
   , jcxAudience     :: !(Maybe Jose.Audience)
   , jcxClaimsFormat :: !JWTClaimsFormat
   , jcxIssuer       :: !(Maybe Jose.StringOrURI)
@@ -79,7 +92,7 @@ data JWTCtx
 
 instance Show JWTCtx where
   show (JWTCtx _ nsM audM cf iss) =
-    show ["<IORef JWKSet>", show nsM, show audM, show cf, show iss]
+    show ["<IORef JWKSet>", show nsM,show audM, show cf, show iss]
 
 data HasuraClaims
   = HasuraClaims
@@ -231,12 +244,15 @@ processAuthZHeader jwtCtx headers authzHeader = do
   -- verify the JWT
   claims <- liftJWTError invalidJWTError $ verifyJwt jwtCtx $ RawJWT jwt
 
-  let claimsNs  = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
-      claimsFmt = jcxClaimsFormat jwtCtx
+  let claimsFmt = jcxClaimsFormat jwtCtx
       expTimeM = fmap (\(Jose.NumericDate t) -> t) $ claims ^. Jose.claimExp
 
-  -- see if the hasura claims key exist in the claims map
-  let mHasuraClaims = Map.lookup claimsNs $ claims ^. Jose.unregisteredClaims
+  -- see if the hasura claims key exists in the claims map
+  let mHasuraClaims =
+        case jcxClaimNs jwtCtx of
+          ClaimNs k -> Map.lookup k $ claims ^. Jose.unregisteredClaims
+          ClaimNsPath path -> parseIValueJsonValue $ executeJSONPath path (J.toJSON $ claims ^. Jose.unregisteredClaims)
+
   hasuraClaimsV <- maybe claimsNotFound return mHasuraClaims
 
   -- get hasura claims value as an object. parse from string possibly
@@ -277,11 +293,21 @@ processAuthZHeader jwtCtx headers authzHeader = do
         (JCFJson, _) ->
           claimsErr "expecting a json object when claims_format is json"
 
-    strngfyErr v = "expecting stringified json at: '"
-                   <> fromMaybe defaultClaimNs (jcxClaimNs jwtCtx)
-                   <> "', but found: " <> v
+    strngfyErr v =
+      "expecting stringified json at: '"
+      <> claimsLocation
+      <> "', but found: " <> v
+      where
+        claimsLocation :: Text
+        claimsLocation =
+          case jcxClaimNs jwtCtx of
+            ClaimNsPath path -> T.pack $ "claims_namespace_path " <> encodeJSONPath path
+            ClaimNs ns -> "claims_namespace " <> ns
 
     claimsErr = throw400 JWTInvalidClaims
+
+    parseIValueJsonValue (J.IError _ _) = Nothing
+    parseIValueJsonValue (J.ISuccess v) = Just v
 
     -- see if there is a x-hasura-role header, or else pick the default role
     getCurrentRole defaultRole =
@@ -305,8 +331,10 @@ processAuthZHeader jwtCtx headers authzHeader = do
     currRoleNotAllowed =
       throw400 AccessDenied "Your current role is not in allowed roles"
     claimsNotFound = do
-      let claimsNs = fromMaybe defaultClaimNs $ jcxClaimNs jwtCtx
-      throw400 JWTInvalidClaims $ "claims key: '" <> claimsNs <> "' not found"
+      let claimsNsError = case jcxClaimNs jwtCtx of
+                            ClaimNsPath path -> T.pack $ "claims not found at claims_namespace_path: '" <> (encodeJSONPath path) <> "'"
+                            ClaimNs ns -> "claims key: '" <> ns <> "' not found"
+      throw400 JWTInvalidClaims $ claimsNsError
 
 
 -- parse x-hasura-allowed-roles, x-hasura-default-role from JWT claims
@@ -369,14 +397,19 @@ verifyJwt ctx (RawJWT rawJWT) = do
 
 instance J.ToJSON JWTConfig where
   toJSON (JWTConfig keyOrUrl claimNs aud claimsFmt iss) =
-    J.object (jwkFields ++ sharedFields)
+    J.object (jwkFields ++ sharedFields ++ claimsNsFields)
     where
       jwkFields = case keyOrUrl of
         Left _    -> [ "type" J..= J.String "<TYPE REDACTED>"
                      , "key" J..= J.String "<JWK REDACTED>" ]
         Right url -> [ "jwk_url" J..= url ]
-      sharedFields = [ "claims_namespace" J..= claimNs
-                     , "claims_format" J..= claimsFmt
+
+      claimsNsFields = case claimNs of
+        ClaimNsPath nsPath ->
+          ["claims_namespace_path" J..= (encodeJSONPath nsPath)]
+        ClaimNs ns -> ["claims_namespace" J..= J.String ns]
+
+      sharedFields = [ "claims_format" J..= claimsFmt
                      , "audience" J..= aud
                      , "issuer" J..= iss
                      ]
@@ -388,24 +421,33 @@ instance J.FromJSON JWTConfig where
 
   parseJSON = J.withObject "JWTConfig" $ \o -> do
     mRawKey <- o J..:? "key"
-    claimNs <- o J..:? "claims_namespace"
+    claimsNs <- o J..:? "claims_namespace"
+    claimsNsPath <- o J..:? "claims_namespace_path"
     aud     <- o J..:? "audience"
     iss     <- o J..:? "issuer"
     jwkUrl  <- o J..:? "jwk_url"
     isStrngfd <- o J..:? "claims_format"
+
+
+    hasuraClaimsNs <-
+      case (claimsNsPath,claimsNs) of
+        (Nothing, Nothing) -> return $ ClaimNs defaultClaimNs
+        (Just nsPath, Nothing) -> either failJSONPathParsing (return . ClaimNsPath) . JSONPath.parseJSONPath $ nsPath
+        (Nothing, Just ns) -> return $ ClaimNs ns
+        (Just _, Just _) -> fail "claims_namespace and claims_namespace_path both cannot be set"
 
     case (mRawKey, jwkUrl) of
       (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
       (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
       (Just rawKey, Nothing) -> do
         keyType <- o J..: "type"
-        key <- parseKey rawKey keyType
-        return $ JWTConfig (Left key) claimNs aud isStrngfd iss
+        key <- parseKey keyType rawKey
+        return $ JWTConfig (Left key) hasuraClaimsNs aud isStrngfd iss
       (Nothing, Just url) ->
-        return $ JWTConfig (Right url) claimNs aud isStrngfd iss
+        return $ JWTConfig (Right url) hasuraClaimsNs aud isStrngfd iss
 
     where
-      parseKey rawKey keyType =
+      parseKey keyType rawKey =
        case keyType of
           "HS256" -> runEither $ parseHmacKey rawKey 256
           "HS384" -> runEither $ parseHmacKey rawKey 384
@@ -417,4 +459,7 @@ instance J.FromJSON JWTConfig where
           _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
 
       runEither = either (invalidJwk . T.unpack) return
+
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
+
+      failJSONPathParsing err = fail $ "invalid JSON path claims_namespace_path error: " ++ err

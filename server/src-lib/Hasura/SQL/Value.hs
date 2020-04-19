@@ -64,6 +64,7 @@ data PGScalarValue
   | PGValFloat !Float
   | PGValDouble !Double
   | PGValNumeric !Scientific
+  | PGValMoney !Scientific
   | PGValBoolean !Bool
   | PGValChar !Char
   | PGValVarchar !T.Text
@@ -89,6 +90,7 @@ pgScalarValueToJson = \case
   PGValFloat f    -> toJSON f
   PGValDouble d   -> toJSON d
   PGValNumeric sc -> toJSON sc
+  PGValMoney m    -> toJSON m
   PGValBoolean b  -> toJSON b
   PGValChar t     -> toJSON t
   PGValVarchar t  -> toJSON t
@@ -136,6 +138,7 @@ parsePGValue ty val = case (ty, val) of
       PGFloat -> PGValFloat <$> parseJSON val
       PGDouble -> PGValDouble <$> parseJSON val
       PGNumeric -> PGValNumeric <$> parseJSON val
+      PGMoney -> PGValMoney <$> parseJSON val
       PGBoolean -> PGValBoolean <$> parseJSON val
       PGChar -> PGValChar <$> parseJSON val
       PGVarchar -> PGValVarchar <$> parseJSON val
@@ -178,6 +181,7 @@ txtEncodedPGVal colVal = case colVal of
   PGValFloat f    -> TELit $ T.pack $ show f
   PGValDouble d   -> TELit $ T.pack $ show d
   PGValNumeric sc -> TELit $ T.pack $ show sc
+  PGValMoney m    -> TELit $ T.pack $ show m
   PGValBoolean b  -> TELit $ bool "false" "true" b
   PGValChar t     -> TELit $ T.pack $ show t
   PGValVarchar t  -> TELit t
@@ -208,6 +212,7 @@ binEncoder colVal = case colVal of
   PGValFloat f                     -> Q.toPrepVal f
   PGValDouble d                    -> Q.toPrepVal d
   PGValNumeric sc                  -> Q.toPrepVal sc
+  PGValMoney m                     -> Q.toPrepVal m
   PGValBoolean b                   -> Q.toPrepVal b
   PGValChar t                      -> Q.toPrepVal t
   PGValVarchar t                   -> Q.toPrepVal t
