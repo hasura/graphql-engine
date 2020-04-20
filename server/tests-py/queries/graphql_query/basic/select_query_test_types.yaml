@@ -40,16 +40,41 @@ response:
         obj:
           c1: c2
         arr: [1,2,3]
-
+        _underscore: 0                                                                                                                                                         
+        '!@#$%^': special                                                                                                                                                      
+        translations:                                                                                                                                                          
+          hello world!: hi                                                                                                                                                     
+        objs:                                                                                                                                                                  
+          - 你好: Hello!    
       c32_json_child_prop: c2
+      c32_json_child_prop_no_dot: b
       c32_json_array_item: 1
+      c32_json_underscore_prefix: 0
+      c32_json_special_chars: special
+      c32_json_translations: hi
+      c32_json_nested_special_array: Hello!
+      c32_json_nested_special_array_double_quote: Hello!
+      c32_json_nested_special_array_double_quote_dot: Hello!
       c33_jsonb:
         c: d
         obj:
           e1: e2
-        arr: [4,5,6]
+        arr: [4,5,6]                                                                                                                                                        
+        objs:                                                                                                                                                                  
+          - 你好: Hello!                                                                                                                                                         
+        '!@#$%^': special                                                                                                                                                      
+        _underscore: 0                                                                                                                                                         
+        translations:                                                                                                                                                          
+          hello world!: hi   
       c33_jsonb_child_prop: e2
+      c33_jsonb_child_prop_no_dot: d
       c33_jsonb_array_item: 6
+      c33_jsonb_underscore_prefix: 0
+      c33_jsonb_special_chars: special
+      c33_jsonb_translations: hi
+      c33_jsonb_nested_special_array: Hello!
+      c33_jsonb_nested_special_array_double_quote: Hello!
+      c33_jsonb_nested_special_array_double_quote_dot: Hello!
       c34_text_array: ["a","b","c"]
       c35_integer_2d_array:
         - [4,5,6]
@@ -68,6 +93,7 @@ response:
       c42_range_timestamp: '["2010-01-01 14:30:00","2010-01-01 15:30:02")'
       c43_range_timestamptz: '("2011-02-05 12:03:00+00","2012-03-04 16:40:04+00"]'
       c44_xml: '<foo>bar</foo>'
+      c45_money: $123.45
 query:
   query: |
     query {
@@ -105,10 +131,24 @@ query:
         c31_macaddr
         c32_json
         c32_json_child_prop: c32_json(path: ".obj.c1")
+        c32_json_child_prop_no_dot: c32_json(path: "a")
         c32_json_array_item: c32_json(path: "arr[0]")
+        c32_json_underscore_prefix: c32_json(path: "._underscore")
+        c32_json_special_chars: c32_json(path: "['!@#$%^']")
+        c32_json_translations: c32_json(path: "translations['hello world!']")
+        c32_json_nested_special_array: c32_json(path: "objs[0]['你好']")
+        c32_json_nested_special_array_double_quote: c32_json(path: "objs[0][\"你好\"]")
+        c32_json_nested_special_array_double_quote_dot: c32_json(path: "objs[0].[\"你好\"]")
         c33_jsonb
         c33_jsonb_child_prop: c33_jsonb(path: ".obj.e1")
+        c33_jsonb_child_prop_no_dot: c33_jsonb(path: "c")
         c33_jsonb_array_item: c33_jsonb(path: "arr[2]")
+        c33_jsonb_underscore_prefix: c33_jsonb(path: "._underscore")
+        c33_jsonb_special_chars: c33_jsonb(path: "['!@#$%^']")
+        c33_jsonb_translations: c33_jsonb(path: "translations['hello world!']")
+        c33_jsonb_nested_special_array: c33_jsonb(path: "objs[0]['你好']")
+        c33_jsonb_nested_special_array_double_quote: c33_jsonb(path: "objs[0][\"你好\"]")
+        c33_jsonb_nested_special_array_double_quote_dot: c33_jsonb(path: "objs.[0].[\"你好\"]")
         c34_text_array
         c35_integer_2d_array
         c36_uuid
@@ -120,5 +160,6 @@ query:
         c42_range_timestamp
         c43_range_timestamptz
         c44_xml
+        c45_money
       }
     }

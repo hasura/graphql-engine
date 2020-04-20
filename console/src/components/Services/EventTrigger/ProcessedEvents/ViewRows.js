@@ -430,27 +430,27 @@ const ViewRows = ({
                                 >
                                   {finalResponse.status_code
                                     ? [
-                                      'Status Code: ',
-                                      verifySuccessStatus(
-                                        finalResponse.status_code
-                                      )
-                                        ? successIcon
-                                        : failureIcon,
-                                      finalResponse.status_code,
-                                      ' ',
-                                      <OverlayTrigger
-                                        placement="top"
-                                        overlay={
-                                          tooltip.statusCodeDescription
-                                        }
-                                      >
-                                        <Icon
-                                          type="questionCircle"
-                                          size={12}
-                                          ml="xs"
-                                        />
-                                      </OverlayTrigger>,
-                                    ]
+                                        'Status Code: ',
+                                        verifySuccessStatus(
+                                          finalResponse.status_code
+                                        )
+                                          ? successIcon
+                                          : failureIcon,
+                                        finalResponse.status_code,
+                                        ' ',
+                                        <OverlayTrigger
+                                          placement="top"
+                                          overlay={
+                                            tooltip.statusCodeDescription
+                                          }
+                                        >
+                                          <Icon
+                                            type="questionCircle"
+                                            size={12}
+                                            ml="xs"
+                                          />
+                                        </OverlayTrigger>,
+                                      ]
                                     : null}
                                 </div>
                                 <AceEditor
