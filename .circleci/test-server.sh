@@ -318,9 +318,8 @@ kill_hge_servers
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
-##########
-echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_namespace_path) #####################################>\n"
-TEST_TYPE="jwt-with-claims-namespace-path"
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_namespace_path = '$') #####################################>\n"
+TEST_TYPE="jwt-with-claims-namespace-path-root"
 
 # hasura claims at the root of the JWT token
 export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$"}')"
@@ -334,6 +333,9 @@ kill_hge_servers
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_namespace_path = '$.hasura_claims') #####################################>\n"
+TEST_TYPE="jwt-with-claims-namespace-path-one-level-nest"
+
 # hasura claims at one level of nesting
 export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura_claims"}')"
 
@@ -346,8 +348,11 @@ kill_hge_servers
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
+echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_namespace_path = '$.hasura['claims%']') #####################################>\n"
+TEST_TYPE="jwt-with-claims-namespace-path-two-level-nest-with-special-chars"
+
 # hasura claims at two levels of nesting
-export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura.claims"}')"
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura['\''claims%'\'']"}')"
 
 run_hge_with_args serve
 wait_for_port 8080

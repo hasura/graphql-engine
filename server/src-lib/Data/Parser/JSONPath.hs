@@ -53,4 +53,3 @@ bracketElement = do
       pure result
 
     charOrEscape delimiter = (char '\\' *> anyChar) <|> notChar delimiter
-
