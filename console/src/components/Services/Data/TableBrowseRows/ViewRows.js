@@ -998,7 +998,6 @@ const ViewRows = ({
 
   const onSelectedColumnsChange = newSelected => {
     dispatch(vSetColumns(newSelected, currentTable, curTableName));
-    console.log({ curTableName });
     dispatch(runQuery(tableSchema));
   };
 
