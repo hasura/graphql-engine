@@ -75,8 +75,9 @@ import {
   getFilterQueries,
   replaceLegacyOperators,
   getAllowedFilterKeys,
-  updateFilterTypeToLabel,
+  updateFilterTypeLabel,
   getDefaultFilterType,
+  getUpdateTooltip,
 } from './utils';
 
 class Permissions extends Component {
@@ -552,7 +553,7 @@ class Permissions extends Component {
 
       const noPermissionsMsg = 'Set row permissions first';
 
-      const noFilterPermissionMsg = 'Set filter permissions first';
+      const noFilterPermissionMsg = 'Set pre-update permissions first';
 
       const permsChanged =
         JSON.stringify(newQueryPermissions) !==
@@ -873,7 +874,10 @@ class Permissions extends Component {
               title={disabled ? noFilterPermissionMsg : ''}
             >
               <hr />
-              {updateFilterTypeToLabel(filterType)}
+              {addTooltip(
+                updateFilterTypeLabel[filterType],
+                getUpdateTooltip(filterType)
+              )}
               {getFilterOptions(filterType, disabled)}
             </div>
           );

@@ -1,3 +1,6 @@
+import React from 'react';
+import Tooltip from 'react-bootstrap/lib/Tooltip';
+
 import { getPermissionFilterString } from '../PermissionsSummary/utils';
 import { getLegacyOperator, allOperators } from './PermissionBuilder/utils';
 import { escapeRegExp } from '../utils';
@@ -27,16 +30,21 @@ export const filterTypeToDisplayName = (filterType: FilterType) => {
   }
 };
 
-export const updateFilterTypeToLabel = (filterType: FilterType) => {
-  switch (filterType) {
-    case 'check':
-      return 'Post-condition check (rows must satisfy the check after update)';
-    case 'filter':
-      return 'Pre-condition check (only rows satisfying the check will be updatable)';
-    default:
-      return '';
-  }
+export const updateFilterTypeLabel: Record<FilterType, React.ReactElement> = {
+  check: <b>Post-update check</b>,
+  filter: <b>Pre-update check</b>,
 };
+
+const tooltipMsg: Record<FilterType, string> = {
+  filter: 'Only rows satisfying the check will be updatable',
+  check: 'Rows must satisfy the check after update',
+};
+
+export const getUpdateTooltip = (filterType: FilterType) => (
+  <Tooltip id={`tooltip-update-${filterType}`}>
+    {tooltipMsg[filterType]}
+  </Tooltip>
+);
 
 const getOptionsForUpdate = (
   currentFilterType: FilterType,
