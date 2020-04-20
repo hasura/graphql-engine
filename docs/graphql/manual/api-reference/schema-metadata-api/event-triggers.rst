@@ -86,7 +86,7 @@ Args syntax
      - String
      - Full url of webhook
    * - webhook_from_env
-     - true
+     - false
      - String
      - Environment variable name of webhook (must exists at boot time)
    * - insert
