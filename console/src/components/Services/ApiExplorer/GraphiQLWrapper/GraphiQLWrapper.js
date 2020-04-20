@@ -20,6 +20,7 @@ import {
 } from '../../../../shared/utils/sdlUtils';
 import { showErrorNotification } from '../../Common/Notification';
 import { getActionsCreateRoute } from '../../../Common/utils/routesUtils';
+import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
   setActionDefinition,
   setTypeDefinition,
@@ -111,12 +112,19 @@ class GraphiQLWrapper extends Component {
         console.error(e);
         return;
       }
-      const { action, types } = derivedOperationMetadata;
+      const { action, types, variables } = derivedOperationMetadata;
       const actionsSdl = getActionDefinitionSdl(
         action.name,
+        action.type,
         action.arguments,
         action.output_type
       );
+      if (variables && !variables.length) {
+        const ok = getConfirmation(
+          `Looks like your ${action.type} does not have variables. This means that the derived action will have no arguments.`
+        );
+        if (!ok) return;
+      }
       const typesSdl = getTypesSdl(types);
       dispatch(
         setActionDefinition(actionsSdl, null, null, sdlParse(actionsSdl))

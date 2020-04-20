@@ -12,6 +12,7 @@ import           Language.Haskell.TH.Syntax (Lift, Q, TExp)
 import           System.Environment
 import           System.Exit
 import           System.Process
+import           Data.Aeson.Internal
 
 import qualified Data.ByteString            as B
 import qualified Data.CaseInsensitive       as CI
@@ -29,6 +30,7 @@ import qualified Network.Wreq               as Wreq
 import qualified Text.Regex.TDFA            as TDFA
 import qualified Text.Regex.TDFA.ReadRegex  as TDFA
 import qualified Text.Regex.TDFA.TDFA       as TDFA
+import qualified Data.Vector                as V
 
 import           Hasura.RQL.Instances       ()
 
@@ -234,8 +236,7 @@ executeJSONPath :: JSONPath -> Value -> IResult Value
 executeJSONPath jsonPath = iparse (valueParser jsonPath)
   where
     valueParser path value = case path of
-      []                      -> fail "Empty JSON Path"
-      [pathElement]           -> parseWithPathElement pathElement value
+      []                      -> pure value
       (pathElement:remaining) -> parseWithPathElement pathElement value >>=
                                  ((<?> pathElement) . valueParser remaining)
       where

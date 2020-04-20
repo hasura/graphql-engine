@@ -26,7 +26,7 @@ import           Hasura.Server.Migrate
 import           Hasura.Server.Version
 
 import qualified Data.Parser.CacheControlSpec as CacheControlParser
-import qualified Data.Parser.JsonPath         as JsonPath
+import qualified Data.Parser.JSONPathSpec     as JsonPath
 import qualified Data.Parser.URLTemplate      as URLTemplate
 import qualified Data.TimeSpec                as TimeSpec
 import qualified Hasura.IncrementalSpec       as IncrementalSpec
@@ -58,7 +58,7 @@ unitSpecs :: Spec
 unitSpecs = do
   describe "Data.Parser.CacheControl" CacheControlParser.spec
   describe "Data.Parser.URLTemplate" URLTemplate.spec
-  describe "Data.Parser.JsonPath" JsonPath.spec
+  describe "Data.Parser.JSONPath" JsonPath.spec
   describe "Hasura.Incremental" IncrementalSpec.spec
   -- describe "Hasura.RQL.Metadata" MetadataSpec.spec -- Commenting until optimizing the test in CI
   describe "Data.Time" TimeSpec.spec

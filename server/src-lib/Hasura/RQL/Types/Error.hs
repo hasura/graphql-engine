@@ -6,6 +6,7 @@ module Hasura.RQL.Types.Error
        , encodeJSONPath
        , encodeQErr
        , encodeGQLErr
+       , encodeJSONPath
        , noInternalQErrEnc
        , err400
        , err404
@@ -197,11 +198,17 @@ encodeJSONPath = format "$"
   where
     format pfx []                = pfx
     format pfx (Index idx:parts) = format (pfx ++ "[" ++ show idx ++ "]") parts
-    format pfx (Key key:parts)   = format (pfx ++ "." ++ formatKey key) parts
+    format pfx (Key key:parts)   = format (pfx ++ formatKey key) parts
 
     formatKey key
-      | T.any (`notElem` (alphaNumerics ++ "_-")) key = "['" ++ T.unpack key ++ "']"
-      | otherwise                                     = T.unpack key
+      | specialChars sKey = "['" ++ sKey ++ "']"
+      | otherwise         = "." ++ sKey
+      where
+        sKey = T.unpack key
+        specialChars []     = True
+        -- first char must not be number
+        specialChars (c:xs) = notElem c (alphabet ++ "_") ||
+          any (flip notElem (alphaNumerics ++ "_-")) xs
 
 instance Q.FromPGConnErr QErr where
   fromPGConnErr c =

@@ -8,6 +8,7 @@ module Hasura.Server.Auth.JWT
   , JWTClaims(..)
   , JWTClaimsMap
   , JwkFetchError (..)
+  , JWTNamespace (..)
   , updateJwkRef
   , jwkRefreshCtrl
   , defaultClaimsFormat
@@ -27,12 +28,14 @@ import           Data.Time.Clock                 (NominalDiffTime, UTCTime, diff
 import           GHC.AssertNF
 import           Network.URI                     (URI)
 
+import           Data.Aeson.Internal             (JSONPath)
 import           Data.Parser.CacheControl
 import           Data.Parser.Expires
 import           Hasura.HTTP
 import           Hasura.Logging                  (Hasura, LogLevel (..), Logger (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types
+import           Hasura.RQL.Types.Error          (encodeJSONPath)
 import           Hasura.Server.Auth.JWT.Internal (parseHmacKey, parseRsaKey)
 import           Hasura.Server.Auth.JWT.Logging
 import           Hasura.Server.Utils             (executeJSONPath, getRequestHeader, userRoleHeader)
@@ -49,6 +52,7 @@ import qualified Data.ByteString.Lazy            as BL
 import qualified Data.ByteString.Lazy.Char8      as BLC
 import qualified Data.CaseInsensitive            as CI
 import qualified Data.HashMap.Strict             as Map
+import qualified Data.Parser.JSONPath            as JSONPath
 import qualified Data.Text                       as T
 import qualified Data.Text.Encoding              as T
 import qualified Network.HTTP.Client             as HTTP
@@ -74,9 +78,6 @@ allowedRolesClaim = "x-hasura-allowed-roles"
 defaultRoleClaim :: T.Text
 defaultRoleClaim = "x-hasura-default-role"
 
-isXHasuraPrefix :: T.Text -> Bool
-isXHasuraPrefix = T.isPrefixOf "x-hasura-" . T.toLower
-
 defaultClaimsNamespace :: Text
 defaultClaimsNamespace = "https://hasura.io/jwt/claims"
 
@@ -91,7 +92,7 @@ data JWTClaimsMap
 
 instance J.FromJSON JWTClaimsMap where
   parseJSON = J.withObject "Object" $ \obj -> do
-    let onlyXHasuraTuples = filter (isXHasuraPrefix . fst) $ Map.toList obj
+    let onlyXHasuraTuples = filter (isUserVar . fst) $ Map.toList obj
     jsonPathTuples <- forM onlyXHasuraTuples $
       \(t, val) -> flip (J.<?>) (J.Key t) $ (T.toLower t,) <$> case val of
                          J.String s -> either fail pure $ parseJSONPath s
@@ -111,15 +112,23 @@ instance J.ToJSON JWTClaimsMap where
                       , (allowedRolesClaim, J.String $ encodeJSONPath' allowedRoles)
                       ] <> map (second (J.String . encodeJSONPath')) (Map.toList customClaims)
 
+data JWTNamespace
+  = ClaimNsPath JSONPath
+  | ClaimNs T.Text
+  deriving (Show, Eq)
+
+instance J.ToJSON JWTNamespace where
+  toJSON (ClaimNsPath nsPath) = J.String . T.pack $ encodeJSONPath nsPath
+  toJSON (ClaimNs ns)         = J.String ns
+
 data JWTClaims
-  = JCNamespace !Text !JWTClaimsFormat
+  = JCNamespace !JWTNamespace !JWTClaimsFormat
   | JCMap !JWTClaimsMap
   deriving (Show, Eq)
 
 data JWTConfig
   = JWTConfig
-  { jcType     :: !T.Text
-  , jcKeyOrUrl :: !(Either Jose.JWK URI)
+  { jcKeyOrUrl :: !(Either Jose.JWK URI)
   , jcAudience :: !(Maybe Jose.Audience)
   , jcIssuer   :: !(Maybe Jose.StringOrURI)
   , jcClaims   :: !JWTClaims
@@ -311,7 +320,6 @@ processAuthZHeader jwtCtx headers authzHeader = do
     currRoleNotAllowed =
       throw400 AccessDenied "Your current role is not in allowed roles"
 
-
 -- parse x-hasura-allowed-roles, x-hasura-default-role and other JWT claims
 parseHasuraClaims
   :: (MonadError QErr m)
@@ -320,7 +328,9 @@ parseHasuraClaims
   -> m (HasuraClaims, Map.HashMap Text Text) -- ^ Hasura claims and other claims
 parseHasuraClaims unregisteredClaims = \case
   JCNamespace namespace claimsFormat -> do
-    claimsV <- maybe (claimsNotFound namespace) pure $ Map.lookup namespace unregisteredClaims
+    claimsV <- maybe (claimsNotFound namespace) pure $ case namespace of
+          ClaimNs k -> Map.lookup k unregisteredClaims
+          ClaimNsPath path -> parseIValueJsonValue $ executeJSONPath path (J.toJSON unregisteredClaims)
     -- get hasura claims value as an object. parse from string possibly
     claimsObject <- Map.fromList . map (first T.toLower) . Map.toList <$>
                     parseObjectFromString namespace claimsFormat claimsV
@@ -352,6 +362,10 @@ parseHasuraClaims unregisteredClaims = \case
     pure (HasuraClaims allowedRoles defaultRole, otherClaims)
 
   where
+    parseIValueJsonValue = \case
+      J.IError _ _ -> Nothing
+      J.ISuccess v -> Just v
+
     parseAllowedRolesClaim = \case
       Nothing -> throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> allowedRolesClaim
       Just v -> parseJwtClaim (J.fromJSON v) $ "invalid " <> allowedRolesClaim <>
@@ -371,10 +385,13 @@ parseHasuraClaims unregisteredClaims = \case
       either (throw400 JWTInvalidClaims . T.pack) pure $ J.parseEither
       (J.modifyFailure ("x-hasura-* cliams: " <>) . J.withText (T.unpack key) pure) value
 
-    claimsNotFound claimNs =
-      throw400 JWTInvalidClaims $ "claims key: '" <> claimNs <> "' not found"
+    claimsNotFound namespace =
+      throw400 JWTInvalidClaims $ case namespace of
+      ClaimNsPath path -> T.pack $ "claims not found at claims_namespace_path: '"
+                          <> encodeJSONPath path <> "'"
+      ClaimNs ns -> "claims key: '" <> ns <> "' not found"
 
-    parseObjectFromString claimNs claimsFmt jVal =
+    parseObjectFromString namespace claimsFmt jVal =
       case (claimsFmt, jVal) of
         (JCFStringifiedJson, J.String v) ->
           either (const $ claimsErr $ strngfyErr v) return
@@ -385,8 +402,13 @@ parseHasuraClaims unregisteredClaims = \case
         (JCFJson, _) ->
           claimsErr "expecting a json object when claims_format is json"
       where
-        strngfyErr v = "expecting stringified json at: '" <> claimNs
-                       <> "', but found: " <> v
+        strngfyErr v =
+          let claimsLocation = case namespace of
+                ClaimNsPath path -> T.pack $ "claims_namespace_path " <> encodeJSONPath path
+                ClaimNs ns       -> "claims_namespace " <> ns
+          in "expecting stringified json at: '"
+             <> claimsLocation
+             <> "', but found: " <> v
 
         claimsErr = throw400 JWTInvalidClaims
 
@@ -417,20 +439,22 @@ verifyJwt ctx (RawJWT rawJWT) = do
 
 
 instance J.ToJSON JWTConfig where
-  toJSON (JWTConfig ty keyOrUrl aud iss claims) =
-    let keyOrUrlPair = case keyOrUrl of
-          Left _    -> "key" J..= J.String "<JWK REDACTED>"
-          Right url -> "jwk_url" J..= url
+  toJSON (JWTConfig keyOrUrl aud iss claims) =
+    let keyOrUrlPairs = case keyOrUrl of
+          Left _    -> [ "type" J..= J.String "<TYPE REDACTED>"
+                       , "key" J..= J.String "<JWK REDACTED>"
+                       ]
+          Right url -> ["jwk_url" J..= url]
         claimsPairs = case claims of
           JCNamespace namespace claimsFormat ->
-            [ "claims_namespace" J..= namespace
-            , "claims_format" J..= claimsFormat
-            ]
-          JCMap claimsMap ->
-            ["claims_map" J..= claimsMap]
-    in J.object $ [ "type" J..= ty
-                  , keyOrUrlPair
-                  , "audience" J..= aud
+            let namespacePairs = case namespace of
+                  ClaimNsPath nsPath ->
+                    ["claims_namespace_path" J..= encodeJSONPath nsPath]
+                  ClaimNs ns -> ["claims_namespace" J..= J.String ns]
+            in namespacePairs <> ["claims_format" J..= claimsFormat]
+          JCMap claimsMap -> ["claims_map" J..= claimsMap]
+    in J.object $ keyOrUrlPairs <>
+                  [ "audience" J..= aud
                   , "issuer" J..= iss
                   ] <> claimsPairs
 
@@ -440,25 +464,33 @@ instance J.ToJSON JWTConfig where
 instance J.FromJSON JWTConfig where
 
   parseJSON = J.withObject "JWTConfig" $ \o -> do
-    keyType <- o J..: "type"
     mRawKey <- o J..:? "key"
-    claimNs <- o J..:? "claims_namespace" J..!= defaultClaimsNamespace
+    claimsNs <- o J..:? "claims_namespace"
+    claimsNsPath <- o J..:? "claims_namespace_path"
     aud     <- o J..:? "audience"
     iss     <- o J..:? "issuer"
     jwkUrl  <- o J..:? "jwk_url"
     claimsFormat <- o J..:? "claims_format" J..!= defaultClaimsFormat
     claimsMap <- o J..:? "claims_map"
 
+    hasuraClaimsNs <-
+      case (claimsNsPath,claimsNs) of
+        (Nothing, Nothing) -> pure $ ClaimNs defaultClaimsNamespace
+        (Just nsPath, Nothing) -> either failJSONPathParsing (return . ClaimNsPath) . JSONPath.parseJSONPath $ nsPath
+        (Nothing, Just ns) -> return $ ClaimNs ns
+        (Just _, Just _) -> fail "claims_namespace and claims_namespace_path both cannot be set"
+
     keyOrUrl <- case (mRawKey, jwkUrl) of
       (Nothing, Nothing) -> fail "key and jwk_url both cannot be empty"
       (Just _, Just _)   -> fail "key, jwk_url both cannot be present"
       (Just rawKey, Nothing) -> do
+        keyType <- o J..: "type"
         key <- parseKey keyType rawKey
         pure $ Left key
       (Nothing, Just url) -> pure $ Right url
 
-    pure $ JWTConfig keyType keyOrUrl aud iss $
-           maybe (JCNamespace claimNs claimsFormat) JCMap claimsMap
+    pure $ JWTConfig keyOrUrl aud iss $
+           maybe (JCNamespace hasuraClaimsNs claimsFormat) JCMap claimsMap
 
     where
       parseKey keyType rawKey =
@@ -473,4 +505,7 @@ instance J.FromJSON JWTConfig where
           _       -> invalidJwk ("Key type: " <> T.unpack keyType <> " is not supported")
 
       runEither = either (invalidJwk . T.unpack) return
+
       invalidJwk msg = fail ("Invalid JWK: " <> msg)
+
+      failJSONPathParsing err = fail $ "invalid JSON path claims_namespace_path error: " ++ err

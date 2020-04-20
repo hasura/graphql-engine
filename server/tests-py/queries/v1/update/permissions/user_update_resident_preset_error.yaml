@@ -4,15 +4,15 @@ status: 400
 headers:
   X-Hasura-Role: user1
 response:
-  path: "$.args.['$set']"
-  error: column "city" is not updatable for role "user1"; its value is predefined in
-    permission
+  path: $.args['$set']
+  error: column "city" is not updatable for role "user1"; its value is predefined
+    in permission
   code: not-supported
 query:
   type: update
   args:
     table: resident
-    "$set":
+    $set:
       city: hobart
     where:
       name: clarke

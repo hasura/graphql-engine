@@ -5,7 +5,7 @@ headers:
   X-Hasura-User-Id: '1'
 status: 400
 response:
-  path: "$.args.['$set']"
+  path: $.args['$set']
   error: role "user" does not have permission to update column "id"
   code: permission-denied
 query:
