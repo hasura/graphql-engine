@@ -138,7 +138,7 @@
 }
 
 .clusterInfoWrapper {
-  width: 35%;
+  width: auto;
   display: flex;
   justify-content: flex-end;
   position: relative;
@@ -928,7 +928,7 @@
 }
 
 .secureSection {
-  padding: 15px;
+  padding: 16px 15px 14px 15px;
 
   a {
     //color: #FFC627;
@@ -937,8 +937,8 @@
   }
 
   .secureSectionSymbol {
-    //color: #FFC627 !important;
     color: inherit !important;
+    padding-top: 3px;
   }
 }
 
@@ -1293,6 +1293,20 @@
     .proName,
     .proNameClicked {
       font-size: 12px;
+    }
+  }
+}
+
+@media (max-width: 1350px) {
+  .sidebar {
+    .sidebarItems {
+      li {
+        margin-left: 15px;
+
+        a {
+          padding: 0 5px;
+        }
+      }
     }
   }
 
