@@ -16,6 +16,7 @@ class DragFoldTable extends Component {
       trigger: 0,
       folded: props.defaultCollapsed || {},
     };
+    this.tableRef = React.createRef();
   }
 
   getOrderedColumns() {
@@ -40,7 +41,7 @@ class DragFoldTable extends Component {
 
   mountEvents() {
     const headers = Array.prototype.slice.call(
-      document.querySelectorAll('.draggable-header')
+      this.tableRef.current.querySelectorAll('.draggable-header')
     );
 
     headers.forEach((header, i) => {
@@ -104,7 +105,7 @@ class DragFoldTable extends Component {
 
     //render
     return (
-      <div className="esr-table">
+      <div className="esr-table" ref={this.tableRef}>
         <FoldableTable
           {...this.props}
           data={data}

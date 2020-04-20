@@ -17,6 +17,7 @@ import {
   getRunSqlQuery,
 } from '../../../Common/utils/v1QueryUtils';
 import { generateTableDef } from '../../../Common/utils/pgUtils';
+import { setSelectedColumns } from './utils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -61,10 +62,11 @@ const vCollapseRow = () => ({
 
 const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
 
-const vSetColumns = (columns, tableName) => ({
+const vSetColumns = (columns, currentTable, tableName) => ({
   type: V_SET_QUERY_COLUMNS,
   columns,
   tableName,
+  currentTable,
 });
 
 const vResetColumns = () => ({
@@ -548,13 +550,12 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
     case V_SET_QUERY_COLUMNS:
       return {
         ...viewState,
-        query: {
-          ...viewState.query,
-        },
-        selectedColumns: {
-          ...viewState.selectedColumns,
-          [action.tableName]: action.columns,
-        },
+        query: setSelectedColumns(
+          viewState.query,
+          action.currentTable,
+          action.tableName,
+          action.columns
+        ),
       };
     case V_EXPAND_REL:
       return {

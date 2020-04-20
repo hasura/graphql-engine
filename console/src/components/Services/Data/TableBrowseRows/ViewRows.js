@@ -57,6 +57,7 @@ import {
   persistPageSizeChange,
 } from './localStorageUtils';
 import { ColumnsSelector } from './ColumnsSelector';
+import { getSelectedColumns } from './utils';
 
 const ViewRows = ({
   curTableName,
@@ -84,16 +85,16 @@ const ViewRows = ({
   triggeredFunction,
   location,
   readOnlyMode,
-  selectedColumns,
+  currentTable,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
 
   const allColumns = useMemo(() => {
-    const currentTable = schemas.find(
+    const currSchema = schemas.find(
       schema => schema.table_name === curTableName
     );
-    if (currentTable) {
-      return currentTable.columns.map(col => col.column_name);
+    if (currSchema) {
+      return currSchema.columns.map(col => col.column_name);
     }
     return [];
   }, [schemas, curTableName]);
@@ -805,7 +806,6 @@ const ViewRows = ({
               dispatch={dispatch}
               expandedRow={expandedRow}
               readOnlyMode={readOnlyMode}
-              selectedColumns={selectedColumns}
             />
           );
         }
@@ -946,9 +946,10 @@ const ViewRows = ({
     };
 
     const hiddenColumns = [];
-    if (selectedColumns && selectedColumns[curTableName]) {
+    const columns = getSelectedColumns(curQuery, currentTable, curTableName);
+    if (columns && columns.length) {
       allColumns.forEach(col => {
-        if (!selectedColumns[curTableName].includes(col)) {
+        if (!columns.includes(col)) {
           hiddenColumns.push(col);
         }
       });
@@ -996,13 +997,16 @@ const ViewRows = ({
   }
 
   const onSelectedColumnsChange = newSelected => {
-    dispatch(vSetColumns(newSelected, curTableName));
+    dispatch(vSetColumns(newSelected, currentTable, curTableName));
+    console.log({ curTableName });
+    dispatch(runQuery(tableSchema));
   };
 
-  const currentSelected =
-    selectedColumns && selectedColumns[curTableName]
-      ? selectedColumns[curTableName]
-      : allColumns;
+  const currentSelected = getSelectedColumns(
+    curQuery,
+    currentTable,
+    curTableName
+  );
 
   return (
     <div className={isVisible ? '' : 'hide '}>
@@ -1010,7 +1014,9 @@ const ViewRows = ({
       <div className={`row ${styles.add_mar_top}`}>
         <ColumnsSelector
           allColumns={allColumns}
-          selectedColumns={currentSelected}
+          selectedColumns={
+            currentSelected.length ? currentSelected : allColumns
+          }
           setSelected={onSelectedColumnsChange}
         />
         {getSelectedRowsSection()}

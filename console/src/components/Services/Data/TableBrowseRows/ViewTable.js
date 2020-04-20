@@ -167,7 +167,7 @@ class ViewTable extends Component {
       triggeredFunction,
       location,
       estimatedCount,
-      selectedColumns,
+      currentTable,
     } = this.props;
 
     // check if table exists
@@ -213,7 +213,7 @@ class ViewTable extends Component {
         triggeredFunction={triggeredFunction}
         location={location}
         readOnlyMode={readOnlyMode}
-        selectedColumns={selectedColumns}
+        currentTable={currentTable}
       />
     );
 
@@ -274,6 +274,7 @@ const mapStateToProps = (state, ownProps) => {
   return {
     tableName: ownProps.params.table,
     currentSchema: state.tables.currentSchema,
+    currentTable: state.tables.currentTable,
     schemas: state.tables.allSchemas,
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
