@@ -2,6 +2,8 @@
 
 ## Next release
 
+- console: add selector to limit columns fetched and displayed in browse rows (close #2168) (#4446)
+
 ## `v1.2.0-beta.4`
 
 ### add query support in actions
