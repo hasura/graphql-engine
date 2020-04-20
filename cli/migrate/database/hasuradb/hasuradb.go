@@ -38,14 +38,15 @@ var (
 )
 
 type Config struct {
-	MigrationsTable string
-	SettingsTable   string
-	queryURL        *nurl.URL
-	graphqlURL      *nurl.URL
-	pgDumpURL       *nurl.URL
-	Headers         map[string]string
-	isCMD           bool
-	Plugins         types.MetadataPlugins
+	MigrationsTable                string
+	SettingsTable                  string
+	queryURL                       *nurl.URL
+	graphqlURL                     *nurl.URL
+	pgDumpURL                      *nurl.URL
+	Headers                        map[string]string
+	isCMD                          bool
+	Plugins                        types.MetadataPlugins
+	enableCheckMetadataConsistency bool
 }
 
 type HasuraDB struct {
@@ -237,12 +238,15 @@ func (h *HasuraDB) Run(migration io.Reader, fileType, fileName string) error {
 		if body == "" {
 			break
 		}
+		sqlInput := RunSQLInput{
+			SQL: string(body),
+		}
+		if h.config.enableCheckMetadataConsistency {
+			sqlInput.CheckMetadataConsistency = func() *bool { b := false; return &b }()
+		}
 		t := HasuraInterfaceQuery{
 			Type: RunSQL,
-			Args: RunSQLInput{
-				SQL:                      string(body),
-				CheckMetadataConsistency: func() *bool { b := false; return &b }(),
-			},
+			Args: sqlInput,
 		}
 		h.migrationQuery.Args = append(h.migrationQuery.Args, t)
 		h.jsonPath[fmt.Sprintf("%d", len(h.migrationQuery.Args)-1)] = fileName
