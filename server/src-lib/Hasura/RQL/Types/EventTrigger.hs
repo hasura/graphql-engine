@@ -9,17 +9,9 @@ module Hasura.RQL.Types.EventTrigger
   , TriggerOpsDef(..)
   , EventTriggerConf(..)
   , RetryConf(..)
-  , DeleteEventTriggerQuery(..)
-  , RedeliverEventQuery(..)
-  , InvokeEventTriggerQuery(..)
-  -- , HeaderConf(..)
-  -- , HeaderValue(..)
-  -- , HeaderName
   , EventHeaderInfo(..)
   , WebhookConf(..)
   , WebhookConfInfo(..)
-  , PauseEventTriggerQuery(..)
-  , ResumeEventTriggerQuery(..)
 
   , defaultRetryConf
   , defaultTimeoutSeconds
@@ -187,13 +179,6 @@ instance NFData TriggerOpsDef
 instance Cacheable TriggerOpsDef
 $(deriveJSON (aesonDrop 2 snakeCase){omitNothingFields=True} ''TriggerOpsDef)
 
-data DeleteEventTriggerQuery
-  = DeleteEventTriggerQuery
-  { detqName :: !TriggerName
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''DeleteEventTriggerQuery)
-
 data EventTriggerConf
   = EventTriggerConf
   { etcName           :: !TriggerName
@@ -205,32 +190,3 @@ data EventTriggerConf
   } deriving (Show, Eq, Lift, Generic)
 
 $(deriveJSON (aesonDrop 3 snakeCase){omitNothingFields=True} ''EventTriggerConf)
-
-newtype RedeliverEventQuery
-  = RedeliverEventQuery
-  { rdeqEventId :: EventId
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''RedeliverEventQuery)
-
-data InvokeEventTriggerQuery
-  = InvokeEventTriggerQuery
-  { ietqName    :: !TriggerName
-  , ietqPayload :: !Value
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''InvokeEventTriggerQuery)
-
-data PauseEventTriggerQuery
-  = PauseEventTriggerQuery
-  { petqName  :: !TriggerName
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''PauseEventTriggerQuery)
-
-data ResumeEventTriggerQuery
-  = ResumeEventTriggerQuery
-  { retqName  :: !TriggerName
-  } deriving (Show, Eq, Lift)
-
-$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''ResumeEventTriggerQuery)
