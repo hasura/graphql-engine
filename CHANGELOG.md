@@ -160,4 +160,5 @@ Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/
 
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
+- Allow special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
