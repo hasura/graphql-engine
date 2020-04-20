@@ -3,18 +3,21 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import {
   vSetDefaults,
-  vMakeRequest,
   // vExpandHeading,
   fetchManualTriggers,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
+  vMakeTableRequests,
 } from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 
 import { NotFoundError } from '../../../Error/PageNotFound';
+import { exists } from '../../../Common/utils/jsUtils';
+import { getPersistedPageSize } from './localStorageUtils';
 
+/*
 const genHeadings = headings => {
   if (headings.length === 0) {
     return [];
@@ -47,6 +50,7 @@ const genHeadings = headings => {
   throw 'Incomplete pattern match'; // eslint-disable-line no-throw-literal
 };
 
+
 const genRow = (row, headings) => {
   if (headings.length === 0) {
     return [];
@@ -69,6 +73,7 @@ const genRow = (row, headings) => {
 
   throw 'Incomplete pattern match'; // eslint-disable-line no-throw-literal
 };
+*/
 
 class ViewTable extends Component {
   constructor(props) {
@@ -89,11 +94,12 @@ class ViewTable extends Component {
   }
 
   getInitialData(tableName) {
-    const { dispatch } = this.props;
+    const { dispatch, currentSchema } = this.props;
+    const limit = getPersistedPageSize(tableName, currentSchema);
     Promise.all([
       dispatch(setTable(tableName)),
-      dispatch(vSetDefaults(tableName)),
-      dispatch(vMakeRequest()),
+      dispatch(vSetDefaults(limit)),
+      dispatch(vMakeTableRequests()),
       dispatch(fetchManualTriggers(tableName)),
     ]);
   }
@@ -120,7 +126,7 @@ class ViewTable extends Component {
   componentWillUnmount() {
     // Remove state data beloging to this table
     const dispatch = this.props.dispatch;
-    dispatch(vSetDefaults(this.props.tableName));
+    dispatch(vSetDefaults());
   }
 
   updateInvocationRow = row => {
@@ -161,6 +167,7 @@ class ViewTable extends Component {
       triggeredRow,
       triggeredFunction,
       location,
+      estimatedCount,
     } = this.props;
 
     // check if table exists
@@ -196,7 +203,7 @@ class ViewTable extends Component {
         lastSuccess={lastSuccess}
         schemas={schemas}
         curDepth={0}
-        count={count}
+        count={exists(count) ? count : estimatedCount}
         dispatch={dispatch}
         expandedRow={expandedRow}
         manualTriggers={manualTriggers}

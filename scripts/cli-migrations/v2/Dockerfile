@@ -1,8 +1,13 @@
-FROM hasura/graphql-engine:v1.1.1
+FROM hasura/haskell-docker-packager:20190731 as packager
+WORKDIR /tmp
+RUN apt-get update && apt-get download libstdc++6
 
-RUN wget http://ftp.us.debian.org/debian/pool/main/g/gcc-10/libstdc++6_10-20200312-2_amd64.deb -O lib.deb \
-    && busybox dpkg-deb -x lib.deb / \
-    && rm lib.deb
+FROM hasura/graphql-engine:v1.2.0-beta.4
+
+# install libstdc++6 from .deb file
+COPY --from=packager /tmp/libstdc++6* .
+RUN busybox dpkg-deb -x libstdc++6*.deb / \
+    && rm libstdc++6*.deb
 
 # set an env var to let the cli know that
 # it is running in server environment

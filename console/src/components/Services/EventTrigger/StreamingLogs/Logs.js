@@ -303,21 +303,21 @@ class StreamingLogs extends Component {
                 >
                   {finalResponse.status_code
                     ? [
-                      'Status Code: ',
-                      verifySuccessStatus(finalResponse.status_code) ? (
-                        <Icon type="check" color="green.original" />
-                      ) : (
-                        <Icon type="close" color="red.original" />
-                      ),
-                      finalResponse.status_code,
-                      ' ',
-                      <OverlayTrigger
-                        placement="top"
-                        overlay={tooltip.statusCodeDescription}
-                      >
-                        <Icon type="questionCircle" size={12} ml="xs" />
-                      </OverlayTrigger>,
-                    ]
+                        'Status Code: ',
+                        verifySuccessStatus(finalResponse.status_code) ? (
+                          <Icon type="check" color="green.original" />
+                        ) : (
+                          <Icon type="close" color="red.original" />
+                        ),
+                        finalResponse.status_code,
+                        ' ',
+                        <OverlayTrigger
+                          placement="top"
+                          overlay={tooltip.statusCodeDescription}
+                        >
+                          <Icon type="questionCircle" size={12} ml="xs" />
+                        </OverlayTrigger>,
+                      ]
                     : null}
                 </div>
                 <AceEditor

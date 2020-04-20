@@ -48,9 +48,10 @@ import {
   FaFilter,
   FaWrench,
   FaRegPaperPlane,
-  FaCodeBranch
+  FaCodeBranch,
+  FaGithub,
+  FaDownload,
 } from 'react-icons/fa';
-
 import { StyledIcon } from './Icon';
 
 const iconReferenceMap = {
@@ -103,19 +104,19 @@ const iconReferenceMap = {
   filter: FaFilter,
   wrench: FaWrench,
   send: FaRegPaperPlane,
-  fork: FaCodeBranch
+  fork: FaCodeBranch,
+  github: FaGithub,
+  download: FaDownload,
 };
 
 export const Icon = props => {
   const { type } = props;
-
   const CurrentActiveIcon = iconReferenceMap[type]
     ? iconReferenceMap[type]
     : iconReferenceMap.default;
-
   return <StyledIcon as={CurrentActiveIcon} {...props} aria-hidden="true" />;
 };
 
 Icon.defaultProps = {
-  size: 14
+  size: 14,
 };
