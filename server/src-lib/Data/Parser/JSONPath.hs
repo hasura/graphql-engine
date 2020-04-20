@@ -4,16 +4,21 @@ module Data.Parser.JSONPath
   , JSONPath
   ) where
 
-import           Prelude
-
+import           Data.Bifunctor
 import qualified Data.Text            as T
+import           Prelude
 
 import           Control.Applicative
 import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
 import           Data.Attoparsec.Text
 
 parseJSONPath :: T.Text -> Either String JSONPath
-parseJSONPath = parseOnly (optional (char '$') *> many1' element <* endOfInput)
+parseJSONPath txt = first (const invalidMessage) $
+  parseOnly (optional (char '$') *> many1' element <* endOfInput) txt
+  where
+    invalidMessage = T.unpack txt
+      ++ ". Accept letters, digits, underscore (_) or hyphen (-) only"
+      ++ ". Use single quotes enclosed in bracket (['...']) if there is any special character"
 
 element :: Parser JSONPathElement
 element = Key <$> (optional (char '.') *> name)   -- field or .field
@@ -24,7 +29,7 @@ name = go <?> "property name" where
   go = do
     firstChar <- letter
              <|> char '_'
-             <|> fail "first character of property name must be a letter or underscore"
+             <?> "first character of property name must be a letter or underscore"
     otherChars <- many' (letter <|> digit <|> satisfy (inClass "-_"))
     pure $ T.pack (firstChar:otherChars)
 
@@ -48,3 +53,4 @@ bracketElement = do
       pure result
 
     charOrEscape delimiter = (char '\\' *> anyChar) <|> notChar delimiter
+

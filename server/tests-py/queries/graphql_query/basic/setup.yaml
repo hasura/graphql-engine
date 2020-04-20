@@ -66,7 +66,8 @@ args:
           c41_range_numeric numrange,
           c42_range_timestamp tsrange,
           c43_range_timestamptz tstzrange,
-          c44_xml xml
+          c44_xml xml,
+          c45_money money
       );
 - type: track_table
   args:
@@ -171,6 +172,7 @@ args:
       , c42_range_timestamp
       , c43_range_timestamptz
       , c44_xml
+      , c45_money
       )
       values
       ( 32767                                       -- c1_smallint
@@ -214,6 +216,7 @@ args:
       , '[2010-01-01 14:30:00, 2010-01-01 15:30:02)' -- c42_range_timestamp
       , '(2011-02-05T12:03:00+00:00, 2012-03-04T16:40:04+00:00]' -- c43_range_timestamptz
       , '<foo>bar</foo>'                            -- c44_xml
+      ,  123.45                                     -- c45_money
       )
 
 #Insert values

@@ -123,9 +123,21 @@ def test_forbidden_webhook(hge_ctx, conf):
     })
 
 
+def mk_claims_with_namespace_path(claims,hasura_claims,namespace_path):
+        if namespace_path is None:
+            claims['https://hasura.io/jwt/claims'] = hasura_claims
+        elif namespace_path == "$.hasuraClaims":
+            claims['hasuraClaims'] = hasura_claims
+        else:
+            raise Exception(
+                '''claims_namespace_path should not be anything
+                other than $.hasuraClaims for testing. The
+                value of claims_namespace_path was {}'''.format(namespace_path))
+        return claims
+
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
-def check_query(hge_ctx, conf, transport='http', add_auth=True):
+def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace_path=None):
     hge_ctx.tests_passed = True
     headers = {}
     if 'headers' in conf:
@@ -150,8 +162,8 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True):
             claim = {
                 "sub": "foo",
                 "name": "bar",
-                "https://hasura.io/jwt/claims": hClaims
             }
+            claim = mk_claims_with_namespace_path(claim,hClaims,claims_namespace_path)
             headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm='RS512').decode(
                 'UTF-8')
 
