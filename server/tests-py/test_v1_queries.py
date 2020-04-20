@@ -543,6 +543,10 @@ class TestRunSQL:
         check_query_f(hge_ctx, self.dir() + '/sql_select_query.yaml')
         hge_ctx.may_skip_test_teardown = True
 
+    def test_select_query_read_only(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_select_query_read_only.yaml')
+        hge_ctx.may_skip_test_teardown = True
+
     def test_set_timezone(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_set_timezone.yaml')
         hge_ctx.may_skip_test_teardown = True
@@ -627,6 +631,10 @@ class TestTrackTables:
 
     def test_track_untrack_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/track_untrack_table.yaml')
+        hge_ctx.may_skip_test_teardown = True
+
+    def test_track_untrack_materialized_view(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/track_untrack_materialized_view.yaml')
         hge_ctx.may_skip_test_teardown = True
 
     def test_track_untrack_table_with_deps(self, hge_ctx):

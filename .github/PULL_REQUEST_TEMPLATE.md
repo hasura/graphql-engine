@@ -5,6 +5,10 @@
 <!-- The title might not be enough to convey how this change affects the user. -->
 <!-- Describe the changes from a user's perspective -->
 
+### Changelog
+
+- [ ] `CHANGELOG.md` is updated with user-facing content relevant to this PR.
+
 ### Affected components
 <!-- Remove non-affected components from the list -->
 

@@ -16,7 +16,7 @@ import Button from '../../../Common/Button/Button';
 import { addColSql } from '../TableModify/ModifyActions';
 
 import styles from './ModifyTable.scss';
-import FrequentlyUsedColumnSelector from '../Common/ReusableComponents/FrequentlyUsedColumnSelector';
+import FrequentlyUsedColumnSelector from '../Common/Components/FrequentlyUsedColumnSelector';
 
 const useColumnEditor = (dispatch, tableName) => {
   const initialState = {

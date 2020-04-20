@@ -58,13 +58,13 @@ mkUpdIncInp
   :: QualifiedTable -> Maybe [PGColumnInfo] -> Maybe InpObjTyInfo
 mkUpdIncInp tn = maybe Nothing mkType
   where
-    mkType cols = let intCols = onlyIntCols cols
+    mkType cols = let numCols = onlyNumCols cols
                       incObjTy =
                         mkHsraInpTyInfo (Just desc) (mkUpdIncTy tn) $
-                          fromInpValL $ map mkPGColInp intCols
-                  in bool (Just incObjTy) Nothing $ null intCols
+                          fromInpValL $ map mkPGColInp numCols
+                  in bool (Just incObjTy) Nothing $ null numCols
     desc = G.Description $
-      "input type for incrementing integer columne in table " <>> tn
+      "input type for incrementing integer column in table " <>> tn
 
 -- table_<json-op>_input
 mkJSONOpTy :: QualifiedTable -> G.Name -> G.NamedType
@@ -194,9 +194,9 @@ update_table(
 -}
 
 mkIncInpVal :: QualifiedTable -> [PGColumnInfo] -> Maybe InpValInfo
-mkIncInpVal tn cols = bool (Just incArg) Nothing $ null intCols
+mkIncInpVal tn cols = bool (Just incArg) Nothing $ null numCols
   where
-    intCols = onlyIntCols cols
+    numCols = onlyNumCols cols
     incArgDesc = "increments the integer columns with given value of the filtered values"
     incArg =
       InpValInfo (Just incArgDesc) "_inc" Nothing $ G.toGT $ mkUpdIncTy tn

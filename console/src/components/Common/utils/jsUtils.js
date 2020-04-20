@@ -2,6 +2,10 @@
 
 import { showErrorNotification } from '../../Services/Common/Notification';
 
+export const isNotDefined = value => {
+  return value === null || value === undefined;
+};
+
 export const exists = value => {
   return value !== null && value !== undefined;
 };
@@ -240,6 +244,45 @@ export const downloadObjectAsJsonFile = (fileName, object) => {
 
 export const getFileExtensionFromFilename = filename => {
   return filename.match(/\.[0-9a-z]+$/i)[0];
+};
+
+// return time in format YYYY_MM_DD_hh_mm_ss_s
+export const getCurrTimeForFileName = () => {
+  const currTime = new Date();
+
+  const year = currTime
+    .getFullYear()
+    .toString()
+    .padStart(4, '0');
+
+  const month = (currTime.getMonth() + 1).toString().padStart(2, '0');
+
+  const day = currTime
+    .getDate()
+    .toString()
+    .padStart(2, '0');
+
+  const hours = currTime
+    .getHours()
+    .toString()
+    .padStart(2, '0');
+
+  const minutes = currTime
+    .getMinutes()
+    .toString()
+    .padStart(2, '0');
+
+  const seconds = currTime
+    .getSeconds()
+    .toString()
+    .padStart(2, '0');
+
+  const milliSeconds = currTime
+    .getMilliseconds()
+    .toString()
+    .padStart(3, '0');
+
+  return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
 };
 
 export const isValidTemplateLiteral = literal_ => {

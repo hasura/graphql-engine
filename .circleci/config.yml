@@ -10,6 +10,21 @@ refs:
         else
           echo "no skip_job file present, full steam ahead"
         fi
+  skip_server_tests: &skip_server_tests
+    run:
+      name: checking if server tests can be skipped
+      command: |
+        echo "PR number: $CIRCLE_PR_NUMBER"
+        if [ -z "$CIRCLE_PR_NUMBER" ]; then
+          echo "Not a PR build, continuing test" && exit 0
+        fi
+        echo "Compare refs: ${CIRCLE_COMPARE_URL##http*/}" 
+        if git diff --quiet "${CIRCLE_COMPARE_URL##http*/}" -- server; then
+          echo "No server changes present, skipping test"
+          circleci-agent step halt
+        else
+          echo "Server changes present, continuing test"
+        fi
   wait_for_postgres: &wait_for_postgres
     run:
       name: waiting for postgres to be ready
@@ -45,12 +60,12 @@ refs:
     filters:
       branches:
         only: /^dev.*/
-  filter_only_vtags_dev_release_branches: &filter_only_vtags_dev_release_branches
+  filter_only_vtags_channel_branches: &filter_only_vtags_channel_branches
     filters:
       tags:
         only: /^v.*/
       branches:
-        only: /^(dev|release).*/
+        only: /^(stable|alpha|beta)$/
   filter_ignore_branches: &filter_ignore_branches
     filters:
       branches:
@@ -79,6 +94,7 @@ refs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
+    - *skip_server_tests
     - *wait_for_postgres
     - run:
         name: Install deps
@@ -101,6 +117,8 @@ refs:
           # Setting default number of threads to 2
           # since circleci allocates 2 cpus per test container
           GHCRTS: -N2
+          # Until we can use a real webserver for TestEventFlood, limit concurrency:
+          HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
           HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
           HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
           GRAPHQL_ENGINE: /build/_server_output/graphql-engine
@@ -272,6 +290,7 @@ jobs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
+    - *skip_server_tests
     - run:
         name: Run unit tests
         environment:
@@ -309,6 +328,46 @@ jobs:
     - store_artifacts:
         path: /build/_cli_output
         destination: cli
+
+  # test and build cli extension
+  test_and_build_cli_ext:
+    docker:
+    - image: hasura/graphql-engine-extension-cli-builder:20200225
+    working_directory: ~/graphql-engine
+    steps:
+    - attach_workspace:
+        at: /build
+    - *skip_job_on_ciignore
+    - checkout
+    - restore_cache:
+        key:
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+    - run:
+        name: install dependencies
+        working_directory: cli-ext
+        command: make ci-deps
+    - save_cache:
+        key:
+          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+        paths:
+        - cli-ext/node_modules
+        - ~/.npm
+        - ~/.cache
+    - run:
+        name: build extension cli
+        working_directory: cli-ext
+        command: |
+          npm install -g pkg
+          npm run build
+          make deploy
+          make ci-copy-assets
+    - store_artifacts:
+        path: /build/_cli_ext_output
+        destination: cli_ext
+    - persist_to_workspace:
+        root: /build
+        paths:
+          - _cli_ext_output
 
   # test and build cli
   test_and_build_cli:
@@ -354,44 +413,35 @@ jobs:
         paths:
           - _cli_output
   
-  test_and_build_cli_ext:
+  test_and_build_cli_migrations:
     docker:
-    - image: hasura/graphql-engine-extension-cli-builder:20200225
+    - image: hasura/graphql-engine-cli-migrations-builder:20200415
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
         at: /build
     - *skip_job_on_ciignore
     - checkout
-    - restore_cache:
-        key:
-          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
+    - *setup_remote_docker
     - run:
-        name: install dependencies
-        working_directory: cli-ext
-        command: make ci-deps
-    - save_cache:
-        key:
-          cli-ext-npm-cache-v2-{{ checksum "cli-ext/package.json" }}-{{ checksum "cli-ext/package-lock.json" }}
-        paths:
-        - cli-ext/node_modules
-        - ~/.npm
-        - ~/.cache
-    - run:
-        name: build extension cli
-        working_directory: cli-ext
+        name: Install Docker Compose
         command: |
-          npm install -g pkg
-          npm run build
-          make deploy
-          make ci-copy-assets
+          set -x
+          curl -L https://github.com/docker/compose/releases/download/1.25.3/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+    - run:
+        name: Build cli-migrations image
+        working_directory: scripts/cli-migrations
+        command: |
+          mkdir -p /build/_cli_migrations_output
+          make all
     - store_artifacts:
-        path: /build/_cli_ext_output
-        destination: cli_ext
+        path: /build/_cli_migrations_output
+        destination: cli-migrations
     - persist_to_workspace:
         root: /build
         paths:
-          - _cli_ext_output
+          - _cli_migrations_output
 
   # build console assets
   build_console:
@@ -499,6 +549,7 @@ jobs:
         at: /build
     - *skip_job_on_ciignore
     - checkout
+    - *skip_server_tests
     - run:
         name: install_necessary_packages
         command: |
@@ -506,7 +557,7 @@ jobs:
           apt install -y curl procps
     - run:
         name: upgrade_test
-        command: .circleci/server-upgrade/run.sh
+        command: .circleci/server-upgrade-downgrade/run.sh
         environment:
           HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
     - store_artifacts:
@@ -515,7 +566,7 @@ jobs:
 
   deploy:
     docker:
-    - image: hasura/graphql-engine-deployer:v0.3
+    - image: hasura/graphql-engine-deployer:v0.4
     working_directory: ~/graphql-engine
     steps:
     - attach_workspace:
@@ -529,7 +580,7 @@ jobs:
 
 workflows:
   version: 2
-  workflow_v20200120:
+  workflow_v20200414:
     jobs:
     - check_build_worthiness: *filter_only_vtags
     - test_and_build_cli_ext:
@@ -597,6 +648,10 @@ workflows:
         requires:
         - test_and_build_cli_ext
         - build_server
+    - test_and_build_cli_migrations:
+        <<: *filter_only_vtags
+        requires:
+        - test_and_build_cli
     - test_console:
         <<: *filter_only_vtags
         requires:
@@ -604,8 +659,9 @@ workflows:
         - test_and_build_cli
         - test_cli_with_last_release
     - deploy:
-        <<: *filter_only_vtags_dev_release_branches
+        <<: *filter_only_vtags_channel_branches
         requires:
         - build_image
         - test_console
+        - test_and_build_cli_migrations
         - all_server_tests_pass

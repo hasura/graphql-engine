@@ -33,14 +33,14 @@ import           Data.List                                (nub)
 
 import qualified Hasura.GraphQL.Context                   as GC
 import qualified Hasura.GraphQL.Schema                    as GS
-import qualified Hasura.GraphQL.Validate.Types      as VT
-import qualified Language.GraphQL.Draft.Syntax      as G
+import qualified Hasura.GraphQL.Validate.Types            as VT
 import qualified Hasura.Incremental                       as Inc
+import qualified Language.GraphQL.Draft.Syntax            as G
 
 import           Hasura.Db
 import           Hasura.GraphQL.RemoteServer
 import           Hasura.GraphQL.Schema.CustomTypes
-import           Hasura.GraphQL.Utils               (showNames)
+import           Hasura.GraphQL.Utils                     (showNames)
 import           Hasura.RQL.DDL.Action
 import           Hasura.RQL.DDL.ComputedField
 import           Hasura.RQL.DDL.CustomTypes
@@ -55,7 +55,7 @@ import           Hasura.RQL.DDL.Schema.Catalog
 import           Hasura.RQL.DDL.Schema.Diff
 import           Hasura.RQL.DDL.Schema.Function
 import           Hasura.RQL.DDL.Schema.Table
-import           Hasura.RQL.DDL.Utils
+import           Hasura.RQL.DDL.Utils                     (clearHdbViews)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Catalog
 import           Hasura.RQL.Types.QueryCollection
@@ -146,7 +146,8 @@ instance (MonadIO m, MonadTx m) => CacheRWM (CacheRWT m) where
       -- Prunes invalidation keys that no longer exist in the schema to avoid leaking memory by
       -- hanging onto unnecessary keys.
       pruneInvalidationKeys schemaCache = over ikRemoteSchemas $ M.filterWithKey \name _ ->
-        M.member name (scRemoteSchemas schemaCache)
+        -- see Note [Keep invalidation keys for inconsistent objects]
+        name `elem` getAllRemoteSchemas schemaCache
 
 buildSchemaCacheRule
   -- Note: by supplying BuildReason via MonadReader, it does not participate in caching, which is
@@ -197,7 +198,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
     buildAndCollectInfo = proc (catalogMetadata, invalidationKeys) -> do
       let CatalogMetadata tables relationships permissions
             eventTriggers remoteSchemas functions allowlistDefs
-            computedFields customTypes actions = catalogMetadata
+            computedFields catalogCustomTypes actions = catalogMetadata
 
       -- tables
       tableRawInfos <- buildTableCache -< (tables, Inc.selectD #_ikMetadata invalidationKeys)
@@ -255,26 +256,22 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
             & HS.fromList
 
       -- custom types
-      resolvedCustomTypes <- bindA -< resolveCustomTypes tableCache customTypes
+      let CatalogCustomTypes customTypes pgScalars = catalogCustomTypes
+      maybeResolvedCustomTypes <-
+        (| withRecordInconsistency
+             (bindErrorA -< resolveCustomTypes tableCache customTypes pgScalars)
+         |) (MetadataObject MOCustomTypes $ toJSON customTypes)
 
       -- actions
-      actionCache <- (mapFromL _amName actions >- returnA)
-        >-> (| Inc.keyed (\_ action -> do
-               let ActionMetadata name comment def actionPermissions = action
-                   metadataObj = MetadataObject (MOAction name) $ toJSON $
-                                 CreateAction name def comment
-                   addActionContext e = "in action " <> name <<> "; " <> e
-               (| withRecordInconsistency (
-                  (| modifyErrA ( do
-                       resolvedDef <- bindErrorA -< resolveAction resolvedCustomTypes def
-                       let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
-                           permissionMap = mapFromL _apiRole permissionInfos
-                       returnA -< ActionInfo name resolvedDef permissionMap comment
-                     )
-                   |) addActionContext)
-                |) metadataObj)
-             |)
-        >-> (\actionMap -> returnA -< M.catMaybes actionMap)
+      actionCache <- case maybeResolvedCustomTypes of
+        Just resolvedCustomTypes -> buildActions -< ((resolvedCustomTypes, pgScalars), actions)
+
+        -- If the custom types themselves are inconsistent, we can’t really do
+        -- anything with actions, so just mark them all inconsistent.
+        Nothing -> do
+          recordInconsistencies -< ( map mkActionMetadataObject actions
+                                   , "custom types are inconsistent" )
+          returnA -< M.empty
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
@@ -286,13 +283,18 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
         , _boFunctions = functionCache
         , _boRemoteSchemas = remoteSchemaMap
         , _boAllowlist = allowList
-        , _boCustomTypes = resolvedCustomTypes
+        -- If 'maybeResolvedCustomTypes' is 'Nothing', then custom types are inconsinstent.
+        -- In such case, use empty resolved value of custom types.
+        , _boCustomTypes = fromMaybe (NonObjectTypeMap mempty, mempty) maybeResolvedCustomTypes
         }
 
     mkEventTriggerMetadataObject (CatalogEventTrigger qt trn configuration) =
       let objectId = MOTableObj qt $ MTOTrigger trn
           definition = object ["table" .= qt, "configuration" .= configuration]
       in MetadataObject objectId definition
+
+    mkActionMetadataObject (ActionMetadata name comment defn _) =
+      MetadataObject (MOAction name) (toJSON $ CreateAction name defn comment)
 
     mkRemoteSchemaMetadataObject remoteSchema =
       MetadataObject (MORemoteSchema (_arsqName remoteSchema)) (toJSON remoteSchema)
@@ -352,6 +354,27 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
               liftTx $ delTriggerQ triggerName -- executes DROP IF EXISTS.. sql
               mkAllTriggersQ triggerName tableName (M.elems tableColumns) triggerDefinition
 
+    buildActions
+      :: ( ArrowChoice arr, Inc.ArrowDistribute arr, Inc.ArrowCache m arr
+         , ArrowWriter (Seq CollectedInfo) arr, MonadIO m )
+      => ( ((NonObjectTypeMap, AnnotatedObjects), HashSet PGScalarType)
+         , [ActionMetadata]
+         ) `arr` HashMap ActionName ActionInfo
+    buildActions = buildInfoMap _amName mkActionMetadataObject buildAction
+      where
+        buildAction = proc ((resolvedCustomTypes, pgScalars), action) -> do
+          let ActionMetadata name comment def actionPermissions = action
+              addActionContext e = "in action " <> name <<> "; " <> e
+          (| withRecordInconsistency (
+             (| modifyErrA (do
+                  (resolvedDef, outObject, reusedPgScalars) <- liftEitherA <<< bindA -<
+                    runExceptT $ resolveAction resolvedCustomTypes pgScalars def
+                  let permissionInfos = map (ActionPermissionInfo . _apmRole) actionPermissions
+                      permissionMap = mapFromL _apiRole permissionInfos
+                  returnA -< ActionInfo name outObject resolvedDef permissionMap reusedPgScalars comment)
+              |) addActionContext)
+           |) (mkActionMetadataObject action)
+
     buildRemoteSchemas
       :: ( ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr
          , Inc.ArrowCache m arr , MonadIO m, HasHttpManager m )
@@ -383,7 +406,7 @@ buildSchemaCacheRule = proc (catalogMetadata, invalidationKeys) -> do
          , ActionCache
          ) `arr` (RemoteSchemaMap, GS.GCtxMap, GS.GCtx)
     buildGQLSchema = proc (tableCache, functionCache, remoteSchemas, customTypes, actionCache) -> do
-      baseGQLSchema <- bindA -< GS.mkGCtxMap (snd customTypes) tableCache functionCache actionCache
+      baseGQLSchema <- bindA -< GS.mkGCtxMap tableCache functionCache actionCache
       (| foldlA' (\(remoteSchemaMap, gqlSchemas, remoteGQLSchemas)
                    (remoteSchemaName, (remoteSchema, metadataObject)) ->
            (| withRecordInconsistency (do
@@ -503,3 +526,16 @@ withMetadataCheck cascade action = do
         diffInconsistentObjects = M.difference `on` groupInconsistentMetadataById
         newInconsistentObjects = nub $ concatMap toList $
           M.elems (currentInconsMeta `diffInconsistentObjects` originalInconsMeta)
+
+{- Note [Keep invalidation keys for inconsistent objects]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+After building the schema cache, we prune InvalidationKeys for objects
+that no longer exist in the schema to avoid leaking memory for objects
+that have been dropped. However, note that we *don’t* want to drop
+keys for objects that are simply inconsistent!
+
+Why? The object is still in the metadata, so next time we reload it,
+we’ll reprocess that object. We want to reuse the cache if its
+definition hasn’t changed, but if we dropped the invalidation key, it
+will incorrectly be reprocessed (since the invalidation key changed
+from present to absent). -}

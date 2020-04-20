@@ -2,6 +2,8 @@
    :description: Manage pagination with Hasura
    :keywords: hasura, docs, query, pagination
 
+.. _pagination:
+
 Paginate query results
 ======================
 
@@ -321,6 +323,6 @@ articles to return.
 
 .. admonition:: Caveat
 
-  If this needs to be done over :doc:`subscriptions <../subscriptions/index>`, two subscriptions will need to be run
+  If this needs to be done over :ref:`subscriptions <subscriptions>`, two subscriptions will need to be run
   as Hasura follows the `GraphQL spec <https://graphql.github.io/graphql-spec/June2018/#sec-Single-root-field>`_ which
   allows for only one root field in a subscription.

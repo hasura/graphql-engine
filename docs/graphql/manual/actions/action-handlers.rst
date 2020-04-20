@@ -1,3 +1,9 @@
+.. meta::
+   :description: Action handlers for Hasura actions
+   :keywords: hasura, docs, actions, handlers
+
+.. _action_handlers:
+
 Action handlers
 ===============
 
@@ -17,8 +23,8 @@ defined in a handler which is an HTTP webhook.
 HTTP handler
 ------------
 
-When the action mutation is called, Hasura makes a ``POST`` request to the
-handler with the mutation arguments and the session variables.
+When the action is executed i.e. when the query or the mutation is called, Hasura makes a ``POST`` request to the
+handler with the action arguments and the session variables.
 
 The request payload is of the format:
 
@@ -46,13 +52,14 @@ response type. The HTTP status code must be ``2xx`` for a successful response.
 Returning an error response
 ---------------------------
 
-To return an error response, you must send back an error object or a list of
-error objects. An error object looks like:
+To return an error response, you must send back an error object.
+An error object looks like:
 
 .. code-block:: json
 
     {
-      "message": "<error message>"
+      "message": "<mandatory error message>",
+      "code": "<optional error code>"
     }
 
 The HTTP status code must be ``4xx`` for an error response.
@@ -91,7 +98,7 @@ Hasura will call the handler with the following payload:
 .. code-block:: json
 
     {
-      "action": "UserInfo",
+      "action": "UserLogin",
       "input": {
         "username": "jake",
         "password": "secretpassword"

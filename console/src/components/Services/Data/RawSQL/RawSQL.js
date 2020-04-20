@@ -173,14 +173,14 @@ const RawSQL = ({
         title={'Run SQL'}
         onClose={onModalClose}
         onSubmit={onConfirmNoMigration}
-        submitText={'Yes, i confirm'}
+        submitText={'Yes, I confirm'}
         submitTestId={'not-migration-confirm'}
       >
         <div className="content-fluid">
           <div className="row">
             <div className="col-xs-12">
-              Your SQL Statement is most likely modifying the database schema.
-              Are you sure its not a migration?
+              Your SQL statement is most likely modifying the database schema.
+              Are you sure it is not a migration?
             </div>
           </div>
         </div>

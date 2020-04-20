@@ -103,6 +103,7 @@ data WebHookLog
   , whlMethod     :: !HTTP.StdMethod
   , whlError      :: !(Maybe HttpException)
   , whlResponse   :: !(Maybe T.Text)
+  , whlMessage    :: !(Maybe T.Text)
   } deriving (Show)
 
 instance ToEngineLog WebHookLog Hasura where
@@ -116,6 +117,7 @@ instance ToJSON WebHookLog where
            , "method" .= show (whlMethod whl)
            , "http_error" .= whlError whl
            , "response" .= whlResponse whl
+           , "message" .= whlMessage whl
            ]
 
 

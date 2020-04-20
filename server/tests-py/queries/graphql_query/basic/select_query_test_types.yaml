@@ -68,6 +68,7 @@ response:
       c42_range_timestamp: '["2010-01-01 14:30:00","2010-01-01 15:30:02")'
       c43_range_timestamptz: '("2011-02-05 12:03:00+00","2012-03-04 16:40:04+00"]'
       c44_xml: '<foo>bar</foo>'
+      c45_money: $123.45
 query:
   query: |
     query {
@@ -120,5 +121,6 @@ query:
         c42_range_timestamp
         c43_range_timestamptz
         c44_xml
+        c45_money
       }
     }

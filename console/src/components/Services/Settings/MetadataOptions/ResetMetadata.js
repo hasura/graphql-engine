@@ -1,15 +1,11 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import Button from '../../../Common/Button/Button';
 
 import styles from '../../../Common/Common.scss';
 
-import {
-  showSuccessNotification,
-  showErrorNotification,
-} from '../../Common/Notification';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import { resetMetadata } from '../Actions';
 
 class ResetMetadata extends Component {
   constructor() {
@@ -23,43 +19,15 @@ class ResetMetadata extends Component {
 
     const handleReset = e => {
       e.preventDefault();
-
       const confirmMessage =
-        'This will permanently reset the GraphQL schema configuration and you will need to start from scratch';
+        'This will permanently reset the Hasura metadata related to your tables, remote schemas, actions and triggers';
       const isOk = getConfirmation(confirmMessage, true);
       if (!isOk) {
         return;
       }
-
+      const completionCallback = () => this.setState({ isResetting: false });
       this.setState({ isResetting: true });
-
-      const url = Endpoints.query;
-      const requestBody = {
-        type: 'clear_metadata',
-        args: {},
-      };
-      const options = {
-        method: 'POST',
-        credentials: globalCookiePolicy,
-        headers: {
-          ...this.props.dataHeaders,
-        },
-        body: JSON.stringify(requestBody),
-      };
-
-      fetch(url, options).then(response => {
-        response.json().then(data => {
-          this.setState({ isResetting: false });
-
-          if (response.ok) {
-            dispatch(showSuccessNotification('Metadata reset successfully!'));
-          } else {
-            dispatch(
-              showErrorNotification('Metadata reset failed', null, data)
-            );
-          }
-        });
-      });
+      dispatch(resetMetadata(completionCallback, completionCallback));
     };
 
     return (

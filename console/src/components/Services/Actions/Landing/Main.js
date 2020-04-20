@@ -8,7 +8,7 @@ import Button from '../../../Common/Button/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
 // import TryItOut from '../../Common/Landing/TryItOut';
 
-const actionsArchDiagram = `${globals.assetsPath}/common/img/actions.svg`;
+const actionsArchDiagram = `${globals.assetsPath}/common/img/actions.png`;
 
 class Landing extends React.Component {
   render() {
@@ -23,7 +23,7 @@ class Landing extends React.Component {
             // imgUrl={`${globals.assetsPath}/common/img/remote_schema.png`} // TODO: update image & description
             imgUrl={actionsArchDiagram}
             imgAlt="Actions"
-            description="Actions are custom mutations that are resolved via HTTP handlers. Actions can be used to carry out complex data validations, data enrichment from external sources or execute just about any custom business logic."
+            description="Actions are custom queries or mutations that are resolved via HTTP handlers. Actions can be used to carry out complex data validations, data enrichment from external sources or execute just about any custom business logic."
           />
           <hr className={styles.clear_fix} />
         </div>

@@ -6,6 +6,7 @@ query:
     mutation {
       create_users(users: [{email: "blake@hasura.io", name: "Blake"}, {email: "random-email", name: "Elsa"}]){
         id
+        __typename
       }
     }
 

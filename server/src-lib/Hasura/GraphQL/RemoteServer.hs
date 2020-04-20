@@ -11,7 +11,6 @@ import           Hasura.Prelude
 import qualified Data.Aeson                    as J
 import qualified Data.ByteString.Lazy          as BL
 import qualified Data.HashMap.Strict           as Map
-import qualified Data.HashSet                  as Set
 import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Parser as G
 import qualified Language.GraphQL.Draft.Syntax as G
@@ -159,43 +158,10 @@ mergeQueryRoot :: GS.GCtx -> GS.GCtx -> VT.ObjTyInfo
 mergeQueryRoot a b = GS._gQueryRoot a <> GS._gQueryRoot b
 
 mergeMutRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
-mergeMutRoot a b =
-  let objA' = fromMaybe mempty $ GS._gMutRoot a
-      objB  = fromMaybe mempty $ GS._gMutRoot b
-      objA  = newRootOrEmpty objA' objB
-      merged = objA <> objB
-  in bool (Just merged) Nothing $ merged == mempty
-  where
-    newRootOrEmpty x y =
-      if x == mempty && y /= mempty
-      then mkNewEmptyMutRoot
-      else x
-
-mkNewEmptyMutRoot :: VT.ObjTyInfo
-mkNewEmptyMutRoot = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") Set.empty Map.empty
-
-mkNewMutRoot :: VT.ObjFieldMap -> VT.ObjTyInfo
-mkNewMutRoot flds = VT.ObjTyInfo (Just "mutation root")
-                    (G.NamedType "mutation_root") Set.empty flds
+mergeMutRoot a b = GS._gMutRoot a <> GS._gMutRoot b
 
 mergeSubRoot :: GS.GCtx -> GS.GCtx -> Maybe VT.ObjTyInfo
-mergeSubRoot a b =
-  let objA' = fromMaybe mempty $ GS._gSubRoot a
-      objB  = fromMaybe mempty $ GS._gSubRoot b
-      objA  = newRootOrEmpty objA' objB
-      merged = objA <> objB
-  in bool (Just merged) Nothing $ merged == mempty
-  where
-    newRootOrEmpty x y =
-      if x == mempty && y /= mempty
-      then mkNewEmptySubRoot
-      else x
-
-mkNewEmptySubRoot :: VT.ObjTyInfo
-mkNewEmptySubRoot = VT.ObjTyInfo (Just "subscription root")
-                    (G.NamedType "subscription_root") Set.empty Map.empty
-
+mergeSubRoot a b = GS._gSubRoot a <> GS._gSubRoot b
 
 mergeTyMaps
   :: VT.TypeMap
