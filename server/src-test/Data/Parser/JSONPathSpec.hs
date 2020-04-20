@@ -1,5 +1,6 @@
 module Data.Parser.JSONPathSpec (spec) where
 
+import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
 import           Hasura.Prelude
 import           Hasura.RQL.Types     (encodeJSONPath)
 
@@ -10,7 +11,11 @@ import           Test.QuickCheck
 import qualified Data.Text            as T
 
 spec :: Spec
-spec = describe "parseJSONPath" $
+spec = describe "encode and parse JSONPath" $ do
+  it "JSONPath encoder" $
+    forM_ generateTestEncodeJSONPath $ \(jsonPath, result) ->
+      encodeJSONPath jsonPath `shouldBe` result
+
   it "JSONPath parser" $
     withMaxSuccess 1000 $
     forAll(resize 20 generateJSONPath) $ \jsonPath ->
@@ -19,6 +24,13 @@ spec = describe "parseJSONPath" $
       in case parsedJSONPathE of
            Left err             -> counterexample (err <> ": " <> encPath) False
            Right parsedJSONPath -> property $ parsedJSONPath == jsonPath
+
+
+generateTestEncodeJSONPath :: [(JSONPath, String)]
+generateTestEncodeJSONPath =
+  [ ([Key "7seven", Index 0, Key "@!^@*#(!("], "$['7seven'][0]['@!^@*#(!(']")
+  , ([Key "ABCD"], "$.ABCD")
+  ]
 
 generateJSONPath :: Gen JSONPath
 generateJSONPath = map (either id id) <$> listOf1 genPathElementEither
