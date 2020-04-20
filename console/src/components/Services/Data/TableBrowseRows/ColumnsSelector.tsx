@@ -32,15 +32,14 @@ const ColumnsSelectorContent = ({
   );
 };
 
-export interface ColumnSelectorProps extends Props {
+export interface ColumnsSelectorProps extends Props {
   setSelected: (columns: string[]) => void;
 }
-export const ColumnsSelector: React.FC<ColumnSelectorProps> = ({
+export const ColumnsSelector: React.FC<ColumnsSelectorProps> = ({
   allColumns,
   selectedColumns,
   setSelected,
 }) => {
-  console.log({ selectedColumns, allColumns });
   const toggleSelect = (colName: string) => {
     if (selectedColumns.includes(colName)) {
       setSelected(selectedColumns.filter(c => c !== colName));
