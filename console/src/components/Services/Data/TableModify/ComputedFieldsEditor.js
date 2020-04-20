@@ -15,8 +15,8 @@ import {
   getSchemaName,
 } from '../../../Common/utils/pgUtils';
 import { deleteComputedField, saveComputedField } from './ModifyActions';
-import { fetchFunctionInit } from '../DataActions';
 import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
+import { updateSchemaInfo } from '../DataActions';
 
 const ComputedFieldsEditor = ({
   table,
@@ -206,7 +206,12 @@ const ComputedFieldsEditor = ({
 
       const handleFnSchemaChange = selectedOption => {
         // fetch schema fns
-        dispatch(fetchFunctionInit(selectedOption.value));
+        dispatch(
+          updateSchemaInfo({
+            schemas: [selectedOption.value],
+            tables: [],
+          })
+        );
 
         const newState = [...stateComputedFields];
 
@@ -374,7 +379,12 @@ const ComputedFieldsEditor = ({
 
     const refreshFunctions = () => {
       if (computedFieldFunctionSchema) {
-        dispatch(fetchFunctionInit(computedFieldFunctionSchema));
+        dispatch(
+          updateSchemaInfo({
+            schemas: [computedFieldFunctionSchema],
+            tables: [],
+          })
+        );
       }
     };
 

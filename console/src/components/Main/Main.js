@@ -250,7 +250,10 @@ class Main extends React.Component {
     };
 
     const getMetadataStatusIcon = () => {
-      if (metadata.inconsistentObjects.length === 0) {
+      if (
+        !metadata.inconsistentObjects ||
+        metadata.inconsistentObjects.length === 0
+      ) {
         return <i className={styles.question + ' fa fa-cog'} />;
       }
       return (

@@ -198,6 +198,7 @@ module.exports = {
       CONSOLE_ASSET_VERSION: Date.now().toString(),
       'process.hrtime': () => null,
     }),
+    new webpack.optimize.AggressiveMergingPlugin(),
     new ForkTsCheckerWebpackPlugin({
       compilerOptions: {
         allowJs: true,

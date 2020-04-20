@@ -44,12 +44,7 @@ import PermissionBuilder from './PermissionBuilder/PermissionBuilder';
 import TableHeader from '../TableCommon/TableHeader';
 import CollapsibleToggle from '../../../Common/CollapsibleToggle/CollapsibleToggle';
 import EnhancedInput from '../../../Common/InputChecker/InputChecker';
-import {
-  fetchFunctionInit,
-  setTable,
-  updateSchemaInfo,
-  fetchRoleList,
-} from '../DataActions';
+import { setTable, updateSchemaInfo, fetchRoleList } from '../DataActions';
 import { getIngForm, getEdForm, escapeRegExp } from '../utils';
 import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
 import {
@@ -96,7 +91,7 @@ class Permissions extends Component {
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchRoleList());
-    dispatch(fetchFunctionInit());
+    dispatch(updateSchemaInfo({ tables: [] }));
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {

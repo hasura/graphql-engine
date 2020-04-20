@@ -15,7 +15,7 @@ import {
   setTable,
   fetchColumnTypeInfo,
   RESET_COLUMN_TYPE_INFO,
-  fetchFunctionInit,
+  updateSchemaInfo,
 } from '../DataActions';
 import Button from '../../../Common/Button/Button';
 import ColumnEditorList from './ColumnEditorList';
@@ -54,11 +54,11 @@ import {
 
 class ModifyTable extends React.Component {
   componentDidMount() {
-    const { dispatch } = this.props;
+    const { dispatch, currentSchema } = this.props;
     dispatch({ type: RESET });
     dispatch(setTable(this.props.tableName));
     dispatch(fetchColumnTypeInfo());
-    dispatch(fetchFunctionInit());
+    dispatch(updateSchemaInfo({ schemas: [currentSchema], tables: [] }));
   }
 
   componentWillUnmount() {

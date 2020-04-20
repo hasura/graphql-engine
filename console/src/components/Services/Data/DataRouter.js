@@ -29,13 +29,7 @@ import {
 
 import { rightContainerConnector } from '../../Common/Layout';
 
-import {
-  fetchDataInit,
-  fetchFunctionInit,
-  UPDATE_CURRENT_SCHEMA,
-  updateSchemaInfo,
-  // ADMIN_SECRET_ERROR,
-} from './DataActions';
+import { fetchDataInit, UPDATE_CURRENT_SCHEMA } from './DataActions';
 
 // import { changeRequestHeader } from '../../ApiExplorer/Actions';
 // import { validateLogin } from '../../Main/Actions';
@@ -173,8 +167,6 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
         currentSchema: currentSchema,
       }),
       store.dispatch(fetchDataInit()),
-      store.dispatch(updateSchemaInfo()),
-      store.dispatch(fetchFunctionInit()),
     ]).then(
       () => {
         cb();
