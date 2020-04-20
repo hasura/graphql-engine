@@ -68,9 +68,9 @@ response:
       c32_json_nested_special_array_double_quote_dot: Hello!
       c33_jsonb:
         c: d
+        arr: [4,5,6]    
         obj:
-          e1: e2
-        arr: [4,5,6]                                                                                                                                                        
+          e1: e2                                                                                                                                                    
         objs:                                                                                                                                                                  
           - 你好: Hello!                                                                                                                                                         
         '!@#$%^': special                                                                                                                                                      
@@ -79,9 +79,9 @@ response:
           hello world!: hi   
       c33_jsonb_dollar:
         c: d
+        arr: [4,5,6]  
         obj:
-          e1: e2
-        arr: [4,5,6]                                                                                                                                                        
+          e1: e2                                                                                                                                                      
         objs:                                                                                                                                                                  
           - 你好: Hello!                                                                                                                                                         
         '!@#$%^': special                                                                                                                                                      
