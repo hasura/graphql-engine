@@ -13,7 +13,6 @@ type ReduxAction = {
 
 interface TelemetryGlobals {
   serverVersion: string;
-  url: string;
   consoleMode: string;
   cliUUID: string;
   hasuraUUID: string;
