@@ -1,11 +1,8 @@
 import React, { useEffect } from 'react';
 import { ordinalColSort } from '../utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
-import UniqueKeySelector from '../Common/ReusableComponents/UniqueKeySelector';
-import {
-  getUkeyPkeyConfig,
-  getKeyDef,
-} from '../Common/ReusableComponents/utils';
+import UniqueKeySelector from '../Common/Components/UniqueKeySelector';
+import { getUkeyPkeyConfig, getKeyDef } from '../Common/Components/utils';
 import { saveUniqueKey, removeUniqueKey } from './ModifyActions';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';

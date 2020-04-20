@@ -35,7 +35,7 @@ export const unwrapType = wrappedTypename => {
 };
 
 export const getAstTypeMetadata = type => {
-  let _t = { type };
+  let _t = { ...type };
   const typewraps = [];
   while (_t.kind !== 'NamedType') {
     if (_t.kind === 'ListType') {
@@ -74,7 +74,7 @@ export const getSchemaTypeMetadata = type => {
 
 export const wrapTypename = (name, wrapperStack) => {
   let wrappedTypename = name;
-  wrapperStack.forEach(w => {
+  wrapperStack.reverse().forEach(w => {
     if (w === 'l') {
       wrappedTypename = `[${wrappedTypename}]`;
     }

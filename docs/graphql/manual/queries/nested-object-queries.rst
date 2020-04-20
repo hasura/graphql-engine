@@ -2,6 +2,8 @@
    :description: Make nested object queries in Hasura
    :keywords: hasura, docs, query, nested object query
 
+.. _nested_object_queries:
+
 Nested object queries
 =====================
 
@@ -10,7 +12,7 @@ Nested object queries
   :depth: 2
   :local:
 
-You can use the object (one-to-one) or array (one-to-many) :doc:`relationships <../schema/relationships/index>` defined
+You can use the object (one-to-one) or array (one-to-many) :ref:`relationships <relationships>` defined
 in your schema to make a nested query i.e. fetch data for a type along with data from a nested or related type.
 
 The **name of the nested object** is the same as the name of the object/array relationship configured in

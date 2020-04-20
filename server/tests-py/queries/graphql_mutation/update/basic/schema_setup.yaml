@@ -74,3 +74,23 @@ args:
   args:
     schema: public
     name: person
+
+#Numerics table
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE numerics (
+        id SERIAL PRIMARY KEY,
+        num_smallint SMALLINT,
+        num_integer INTEGER,
+        num_bigint BIGINT,
+        num_real REAL,
+        num_double DOUBLE PRECISION,
+        num_money MONEY,
+        num_numeric NUMERIC
+      )
+- type: track_table
+  args:
+    schema: public
+    name: numerics

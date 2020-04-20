@@ -2,6 +2,8 @@
    :description: Required Postgres permissions for Hasura GraphQL engine
    :keywords: hasura, docs, deployment, postgres, postgres permissions
 
+.. _postgres_permissions:
+
 Postgres permissions
 ====================
 
@@ -64,6 +66,7 @@ Here's a sample SQL block that you can run on your database to create the right 
     GRANT USAGE ON SCHEMA public TO hasurauser;
     GRANT ALL ON ALL TABLES IN SCHEMA public TO hasurauser;
     GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO hasurauser;
+    GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO hasurauser;
 
     -- Similarly add this for other schemas, if you have any.
     -- GRANT USAGE ON SCHEMA <schema-name> TO hasurauser;

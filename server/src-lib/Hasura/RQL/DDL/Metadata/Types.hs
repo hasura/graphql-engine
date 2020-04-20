@@ -199,13 +199,16 @@ $(deriveToJSON defaultOptions ''ExportMetadata)
 instance FromJSON ExportMetadata where
   parseJSON _ = return ExportMetadata
 
-data ReloadMetadata
+newtype ReloadMetadata
   = ReloadMetadata
+  { _rmReloadRemoteSchemas :: Bool}
   deriving (Show, Eq, Lift)
-$(deriveToJSON defaultOptions ''ReloadMetadata)
+$(deriveToJSON (aesonDrop 3 snakeCase) ''ReloadMetadata)
 
 instance FromJSON ReloadMetadata where
-  parseJSON _ = return ReloadMetadata
+  parseJSON = \case
+    Object o -> ReloadMetadata <$> o .:? "reload_remote_schemas" .!= False
+    _        -> pure $ ReloadMetadata False
 
 data DumpInternalState
   = DumpInternalState
@@ -480,23 +483,27 @@ replaceMetadataToOrdJSON ( ReplaceMetadata
                    , listToMaybeOrdPair "permissions" permToOrdJSON permissions
                    ]
       where
+        argDefinitionToOrdJSON :: ArgumentDefinition -> AO.Value
+        argDefinitionToOrdJSON (ArgumentDefinition argName ty descM) =
+          AO.object $  [ ("name", AO.toOrdered argName)
+                       , ("type", AO.toOrdered ty)
+                       ]
+          <> catMaybes [maybeAnyToMaybeOrdPair "description" AO.toOrdered descM]
+
         actionDefinitionToOrdJSON :: ActionDefinitionInput -> AO.Value
-        actionDefinitionToOrdJSON (ActionDefinition args outputType kind headers frwrdClientHdrs handler) =
-          AO.object $ [ ("kind", AO.toOrdered kind)
-                      , ("handler", AO.toOrdered handler)
-                      , ("arguments", AO.array $ map argDefinitionToOrdJSON args)
+        actionDefinitionToOrdJSON (ActionDefinition args outputType actionType headers frwrdClientHdrs handler) =
+          let typeAndKind = case actionType of
+                ActionQuery -> [("type", AO.toOrdered ("query" :: String))]
+                ActionMutation kind -> [ ("type", AO.toOrdered ("mutation" :: String))
+                                       , ("kind", AO.toOrdered kind)]
+          in
+          AO.object $ [ ("handler", AO.toOrdered handler)
                       , ("output_type", AO.toOrdered outputType)
                       ]
           <> [("forward_client_headers", AO.toOrdered frwrdClientHdrs) | frwrdClientHdrs]
           <> catMaybes [ listToMaybeOrdPair "headers" AO.toOrdered headers
-                       ]
-          where
-            argDefinitionToOrdJSON :: ArgumentDefinition -> AO.Value
-            argDefinitionToOrdJSON (ArgumentDefinition argName ty descM) =
-              AO.object $  [ ("name", AO.toOrdered argName)
-                           , ("type", AO.toOrdered ty)
-                           ]
-              <> catMaybes [maybeAnyToMaybeOrdPair "description" AO.toOrdered descM]
+                       , listToMaybeOrdPair "arguments" argDefinitionToOrdJSON args]
+          <> typeAndKind
 
         permToOrdJSON :: ActionPermissionMetadata -> AO.Value
         permToOrdJSON (ActionPermissionMetadata role permComment) =

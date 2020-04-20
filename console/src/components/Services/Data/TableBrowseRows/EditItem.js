@@ -1,11 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import TableHeader from '../TableCommon/TableHeader';
-import JsonInput from '../../../Common/CustomInputTypes/JsonInput';
-import TextInput from '../../../Common/CustomInputTypes/TextInput';
 import Button from '../../../Common/Button/Button';
-import ReloadEnumValuesButton from '../Common/ReusableComponents/ReloadEnumValuesButton';
-import { getPlaceholder, BOOLEAN, JSONB, JSONDTYPE, TEXT } from '../utils';
+import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import { ordinalColSort } from '../utils';
 
 // import RichTextEditor from 'react-rte';
@@ -14,11 +11,17 @@ import globals from '../../../../Globals';
 import { E_ONGOING_REQ, editItem } from './EditActions';
 import { findTable, generateTableDef } from '../../../Common/utils/pgUtils';
 import { getTableBrowseRoute } from '../../../Common/utils/routesUtils';
+import { TypedInput } from '../Common/Components/TypedInput';
+import { fetchEnumOptions } from './EditActions';
 
 class EditItem extends Component {
   constructor() {
     super();
     this.state = { insertedRows: 0, editorColumnMap: {}, currentColumn: null };
+  }
+
+  componentDidMount() {
+    this.props.dispatch(fetchEnumOptions());
   }
 
   render() {
@@ -34,6 +37,7 @@ class EditItem extends Component {
       lastSuccess,
       count,
       dispatch,
+      enumOptions,
     } = this.props;
 
     // check if item exists
@@ -63,7 +67,6 @@ class EditItem extends Component {
 
     const elements = columns.map((col, i) => {
       const colName = col.column_name;
-      const colType = col.data_type;
       const hasDefault = col.column_default && col.column_default.trim() !== '';
       const isNullable = col.is_nullable && col.is_nullable !== 'NO';
       const isIdentity = col.is_identity && col.is_identity !== 'NO';
@@ -76,79 +79,6 @@ class EditItem extends Component {
         nullNode: null,
         defaultNode: null,
       };
-      const inputRef = node => (refs[colName].valueInput = node);
-
-      const clicker = e => {
-        e.target
-          .closest('.radio-inline')
-          .querySelector('input[type="radio"]').checked = true;
-        e.target.focus();
-      };
-
-      const standardEditProps = {
-        className: `form-control ${styles.insertBox}`,
-        'data-test': `typed-input-${i}`,
-        defaultValue: prevValue,
-        ref: inputRef,
-        type: 'text',
-        onClick: clicker,
-      };
-
-      const placeHolder = hasDefault
-        ? col.column_default
-        : getPlaceholder(colType);
-
-      let typedInput = (
-        <input {...standardEditProps} placeholder={placeHolder} />
-      );
-
-      if (typeof prevValue === 'object') {
-        typedInput = (
-          <JsonInput
-            standardProps={{
-              ...standardEditProps,
-              defaultValue: JSON.stringify(prevValue),
-            }}
-            placeholderProp={getPlaceholder(colType)}
-          />
-        );
-      }
-
-      switch (colType) {
-        case JSONB:
-        case JSONDTYPE:
-          typedInput = (
-            <JsonInput
-              standardProps={{
-                ...standardEditProps,
-                defaultValue: JSON.stringify(prevValue),
-              }}
-              placeholderProp={getPlaceholder(colType)}
-            />
-          );
-          break;
-        case TEXT:
-          typedInput = (
-            <TextInput
-              standardProps={{ ...standardEditProps }}
-              placeholderProp={getPlaceholder(colType)}
-            />
-          );
-          break;
-        case BOOLEAN:
-          typedInput = (
-            <select {...standardEditProps}>
-              <option value="" disabled>
-                -- bool --
-              </option>
-              <option value="true">True</option>
-              <option value="false">False</option>
-            </select>
-          );
-          break;
-        default:
-          break;
-      }
 
       return (
         <div key={i} className="form-group">
@@ -167,7 +97,16 @@ class EditItem extends Component {
               name={colName + '-value'}
               value="option1"
             />
-            {typedInput}
+            <TypedInput
+              inputRef={node => {
+                refs[colName].valueInput = node;
+              }}
+              prevValue={prevValue}
+              enumOptions={enumOptions}
+              col={col}
+              index={i}
+              hasDefault={hasDefault}
+            />
           </label>
           <label className={styles.radioLabel + ' radio-inline'}>
             <input
@@ -297,6 +236,7 @@ EditItem.propTypes = {
   readOnlyMode: PropTypes.bool.isRequired,
   count: PropTypes.number,
   dispatch: PropTypes.func.isRequired,
+  enumOptions: PropTypes.object,
 };
 
 const mapStateToProps = (state, ownProps) => {
