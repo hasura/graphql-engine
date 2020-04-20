@@ -2,6 +2,7 @@
 
 ## Next release
 
+- console: allow setting filter and check for update permissions (close #4142) (#4313)
 
 ## `v1.2.0-beta.4`
 
