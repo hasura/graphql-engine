@@ -167,6 +167,7 @@ class ViewTable extends Component {
       triggeredFunction,
       location,
       estimatedCount,
+      selectedColumns,
     } = this.props;
 
     // check if table exists
@@ -212,6 +213,7 @@ class ViewTable extends Component {
         triggeredFunction={triggeredFunction}
         location={location}
         readOnlyMode={readOnlyMode}
+        selectedColumns={selectedColumns}
       />
     );
 

@@ -3,11 +3,7 @@ import { parse as sdlParse } from 'graphql/language/parser';
 import styles from './Styles.scss';
 import Tooltip from './Tooltip';
 import CrossIcon from '../../../../Common/Icons/Cross';
-import CopyIcon from '../../../../Common/Icons/Copy';
 import SDLEditor from '../../../../Common/AceEditor/SDLEditor';
-import Modal from '../../../../Common/Modal/Modal';
-import CloneTypeModal from './CloneTypeModal';
-import { getTypesSdl } from '../../../../../shared/utils/sdlUtils';
 
 const editorLabel = 'New types definition';
 const editorTooltip =
@@ -25,8 +21,8 @@ const ActionDefinitionEditor = ({
   editorHeight = '200px',
   editorWidth = '600px',
 }) => {
-  const [modalOpen, setModalState] = React.useState(false);
-  const toggleModal = () => setModalState(!modalOpen);
+  // const [modalOpen, setModalState] = React.useState(false);
+  // const toggleModal = () => setModalState(!modalOpen);
 
   const onChangeWithError = v => {
     if (timer) {
@@ -53,9 +49,9 @@ const ActionDefinitionEditor = ({
   const errorMessage =
     error && (error.message || 'This is not valid GraphQL SDL');
 
-  const handleClonedTypes = types => {
-    onChange(`${value}\n\n${getTypesSdl(types)}`);
-  };
+  // const handleClonedTypes = types => {
+  //   onChange(`${value}\n\n${getTypesSdl(types)}`);
+  // };
 
   return (
     <div className={`${className || ''}`}>

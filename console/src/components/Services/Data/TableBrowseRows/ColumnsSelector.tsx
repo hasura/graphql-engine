@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import styles from '../../../Common/TableCommon/Table.scss';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 
@@ -18,13 +18,12 @@ const ColumnsSelectorContent = ({
   return (
     <>
       {allColumns.map(col => (
-        <label htmlFor={col} style={{ paddingRight: 10 }}>
+        <label key={col} htmlFor={col} className={styles.add_mar_right_mid}>
           <input
             type="checkbox"
-            className={`${styles.cursorPointer}`}
+            className={`${styles.cursorPointer} ${styles.add_mar_right_small}`}
             onChange={() => onChange(col)}
             checked={selectedColumns.includes(col)}
-            style={{ marginRight: 5 }}
           />
           {col}
         </label>
@@ -41,6 +40,7 @@ export const ColumnsSelector: React.FC<ColumnSelectorProps> = ({
   selectedColumns,
   setSelected,
 }) => {
+  console.log({ selectedColumns, allColumns });
   const toggleSelect = (colName: string) => {
     if (selectedColumns.includes(colName)) {
       setSelected(selectedColumns.filter(c => c !== colName));
@@ -63,25 +63,28 @@ export const ColumnsSelector: React.FC<ColumnSelectorProps> = ({
       : undefined;
   }, [allColumns, selectedColumns]);
 
+  const editorContent = useCallback(
+    () => (
+      <ColumnsSelectorContent
+        allColumns={allColumns}
+        selectedColumns={selectedColumns}
+        onChange={toggleSelect}
+      />
+    ),
+    [allColumns, selectedColumns]
+  );
+
   return (
     <div className={styles.padd_left}>
-      <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div className={styles.display_flex}>
         <h2 className={`${styles.subheading_text} ${styles.padd_bottom}`}>
           Columns
         </h2>
-        <i style={{ paddingBottom: 9, paddingLeft: 10 }}>
-          {selectedColumnsLabel}
-        </i>
+        <i className={styles.selectedColumnsLabel}>{selectedColumnsLabel}</i>
       </div>
       <ExpandableEditor
         className={styles.remove_margin_top}
-        editorExpanded={() => (
-          <ColumnsSelectorContent
-            allColumns={allColumns}
-            selectedColumns={selectedColumns}
-            onChange={toggleSelect}
-          />
-        )}
+        editorExpanded={editorContent}
         expandButtonText="Configure"
         collapseButtonText="Close"
         removeButtonText="Reset"

@@ -84,6 +84,7 @@ const ViewRows = ({
   triggeredFunction,
   location,
   readOnlyMode,
+  selectedColumns,
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
 
@@ -650,9 +651,7 @@ const ViewRows = ({
     x => x.table_name === curTableName && x.table_schema === currentSchema
   );
 
-  const tableColumnsSorted = tableSchema.columns
-    .sort(ordinalColSort)
-    .filter(({ column_name }) => curQuery.columns.includes(column_name));
+  const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
 
   const tableRelationships = tableSchema.relationships;
 
@@ -806,6 +805,7 @@ const ViewRows = ({
               dispatch={dispatch}
               expandedRow={expandedRow}
               readOnlyMode={readOnlyMode}
+              selectedColumns={selectedColumns}
             />
           );
         }
@@ -945,6 +945,15 @@ const ViewRows = ({
       }
     };
 
+    const hiddenColumns = [];
+    if (selectedColumns && selectedColumns[curTableName]) {
+      allColumns.forEach(col => {
+        if (!selectedColumns[curTableName].includes(col)) {
+          hiddenColumns.push(col);
+        }
+      });
+    }
+
     return (
       <DragFoldTable
         className="-highlight -fit-content"
@@ -975,6 +984,7 @@ const ViewRows = ({
           persistColumnOrderChange(curTableName, currentSchema, reorderData)
         }
         defaultReorders={columnsOrder}
+        hiddenColumns={hiddenColumns}
       />
     );
   };
@@ -986,20 +996,24 @@ const ViewRows = ({
   }
 
   const onSelectedColumnsChange = newSelected => {
-    dispatch(vSetColumns(newSelected));
-    dispatch(runQuery(tableSchema));
+    dispatch(vSetColumns(newSelected, curTableName));
   };
+
+  const currentSelected =
+    selectedColumns && selectedColumns[curTableName]
+      ? selectedColumns[curTableName]
+      : allColumns;
 
   return (
     <div className={isVisible ? '' : 'hide '}>
       {getFilterQuery()}
       <div className={`row ${styles.add_mar_top}`}>
-        {getSelectedRowsSection()}
         <ColumnsSelector
           allColumns={allColumns}
-          selectedColumns={curQuery.columns}
+          selectedColumns={currentSelected}
           setSelected={onSelectedColumnsChange}
         />
+        {getSelectedRowsSection()}
         <div className="col-xs-12">
           <div className={styles.tableContainer}>{renderTableBody()}</div>
           <br />

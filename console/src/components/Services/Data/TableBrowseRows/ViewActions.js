@@ -61,9 +61,10 @@ const vCollapseRow = () => ({
 
 const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
 
-const vSetColumns = columns => ({
+const vSetColumns = (columns, tableName) => ({
   type: V_SET_QUERY_COLUMNS,
   columns,
+  tableName,
 });
 
 const vResetColumns = () => ({
@@ -549,19 +550,10 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
         ...viewState,
         query: {
           ...viewState.query,
-          columns: action.columns,
         },
-      };
-    case V_RESET_QUERY_COLUMNS:
-      const table = schemas.find(
-        t => t.table_name === tableName && t.table_schema === currentSchema
-      );
-      const allColumns = table ? table.columns.map(c => c.column_name) : [];
-      return {
-        ...viewState,
-        query: {
-          ...viewState.query,
-          columns: allColumns,
+        selectedColumns: {
+          ...viewState.selectedColumns,
+          [action.tableName]: action.columns,
         },
       };
     case V_EXPAND_REL:
