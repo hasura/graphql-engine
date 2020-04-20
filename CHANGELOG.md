@@ -2,6 +2,10 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+- docs: add API docs for `webhook_from_env` in event triggers
+
 
 ## `v1.2.0-beta.4`
 
