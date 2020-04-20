@@ -104,7 +104,7 @@ args:
 - type: run_sql
   args:
     sql: |
-      CREATE FUNCTION fetch_articles(search text, author_row author)
+      CREATE FUNCTION fetch_articles(search text, author_row author, session json)
       RETURNS SETOF article AS $$
         SELECT *
         FROM article
@@ -121,6 +121,7 @@ args:
     definition:
       function: fetch_articles
       table_argument: author_row
+      session_argument: session
 
 - type: run_sql
   args:

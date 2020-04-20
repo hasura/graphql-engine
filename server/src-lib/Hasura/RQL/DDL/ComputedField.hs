@@ -36,12 +36,13 @@ import qualified Language.GraphQL.Draft.Syntax      as G
 
 data ComputedFieldDefinition
   = ComputedFieldDefinition
-  { _cfdFunction      :: !QualifiedFunction
-  , _cfdTableArgument :: !(Maybe FunctionArgName)
+  { _cfdFunction        :: !QualifiedFunction
+  , _cfdTableArgument   :: !(Maybe FunctionArgName)
+  , _cfdSessionArgument :: !(Maybe FunctionArgName)
   } deriving (Show, Eq, Lift, Generic)
 instance NFData ComputedFieldDefinition
 instance Cacheable ComputedFieldDefinition
-$(deriveJSON (aesonDrop 4 snakeCase) ''ComputedFieldDefinition)
+$(deriveJSON (aesonDrop 4 snakeCase){omitNothingFields = True} ''ComputedFieldDefinition)
 
 data AddComputedField
   = AddComputedField
@@ -64,6 +65,7 @@ runAddComputedField q = do
 data ComputedFieldValidateError
   = CFVENotValidGraphQLName !ComputedFieldName
   | CFVEInvalidTableArgument !InvalidTableArgument
+  | CFVEInvalidSessionArgument !InvalidSessionArgument
   | CFVENotBaseReturnType !PGScalarType
   | CFVEReturnTableNotFound !QualifiedTable
   | CFVENoInputArguments
@@ -74,6 +76,11 @@ data InvalidTableArgument
   = ITANotFound !FunctionArgName
   | ITANotComposite !FunctionTableArgument
   | ITANotTable !QualifiedTable !FunctionTableArgument
+  deriving (Show, Eq)
+
+data InvalidSessionArgument
+  = ISANotFound !FunctionArgName
+  | ISANotJSON !FunctionSessionArgument
   deriving (Show, Eq)
 
 showError :: QualifiedFunction -> ComputedFieldValidateError -> Text
@@ -87,6 +94,10 @@ showError qf = \case
   CFVEInvalidTableArgument (ITANotTable ty functionArg) ->
     showFunctionTableArgument functionArg <> " of type " <> ty
     <<> " is not the table to which the computed field is being added"
+  CFVEInvalidSessionArgument (ISANotFound argName) ->
+    argName <<> " is not an input argument of " <> qf <<> " function"
+  CFVEInvalidSessionArgument (ISANotJSON functionArg) ->
+    showFunctionSessionArgument functionArg <> " is not of type JSON"
   CFVENotBaseReturnType scalarType ->
     "the function " <> qf <<> " returning type " <> toSQLTxt scalarType
     <> " is not a BASE type"
@@ -101,6 +112,8 @@ showError qf = \case
     showFunctionTableArgument = \case
       FTAFirst          -> "first argument of the function " <>> qf
       FTANamed argName _ -> argName <<> " argument of the function " <>> qf
+    showFunctionSessionArgument = \case
+      FunctionSessionArgument argName _ -> argName <<> " argument of the function " <>> qf
 
 addComputedFieldP2Setup
   :: (QErrM m)
@@ -116,7 +129,7 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
   either (throw400 NotSupported . showErrors) pure =<< MV.runValidateT (mkComputedFieldInfo)
   where
     inputArgNames = rfiInputArgNames rawFunctionInfo
-    ComputedFieldDefinition function maybeTableArg = definition
+    ComputedFieldDefinition function maybeTableArg maybeSessionArg = definition
     functionReturnType = QualifiedPGType (rfiReturnTypeSchema rawFunctionInfo)
                          (rfiReturnTypeName rawFunctionInfo)
                          (rfiReturnTypeType rawFunctionInfo)
@@ -166,10 +179,21 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
               validateTableArgumentType FTAFirst $ faType firstArg
           pure FTAFirst
 
+      maybePGSessionArg <- sequence $ do
+          argName <- maybeSessionArg
+          return $ case findWithIndex (maybe False (argName ==) . faName) inputArgs of
+            Just (sessionArg, index) -> do
+              let functionSessionArg = FunctionSessionArgument argName index
+              validateSessionArgumentType functionSessionArg $ faType sessionArg
+              pure functionSessionArg
+            Nothing ->
+              MV.refute $ pure $ CFVEInvalidSessionArgument $ ISANotFound argName
 
-      let inputArgSeq = Seq.fromList $ dropTableArgument tableArgument inputArgs
+
+      let inputArgSeq = Seq.fromList $ dropTableAndSessionArgument tableArgument
+                        maybePGSessionArg inputArgs
           computedFieldFunction =
-            ComputedFieldFunction function inputArgSeq tableArgument $
+            ComputedFieldFunction function inputArgSeq tableArgument maybePGSessionArg $
             rfiDescription rawFunctionInfo
 
       pure $ ComputedFieldInfo computedField computedFieldFunction returnType comment
@@ -185,6 +209,14 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
       unless (table == typeTable) $
         MV.dispute $ pure $ CFVEInvalidTableArgument $ ITANotTable typeTable tableArg
 
+    validateSessionArgumentType :: (MV.MonadValidate [ComputedFieldValidateError] m)
+                                => FunctionSessionArgument
+                                -> QualifiedPGType
+                                -> m ()
+    validateSessionArgumentType sessionArg qpt = do
+      when (not . isJSONType . _qptName $ qpt) $
+        MV.dispute $ pure $ CFVEInvalidSessionArgument $ ISANotJSON sessionArg
+
     showErrors :: [ComputedFieldValidateError] -> Text
     showErrors allErrors =
       "the computed field " <> computedField <<> " cannot be added to table "
@@ -192,12 +224,20 @@ addComputedFieldP2Setup trackedTables table computedField definition rawFunction
       where
         reasonMessage = makeReasonMessage allErrors (showError function)
 
-    dropTableArgument :: FunctionTableArgument -> [FunctionArg] -> [FunctionArg]
-    dropTableArgument tableArg inputArgs =
-      case tableArg of
-        FTAFirst  -> tail inputArgs
-        FTANamed argName _ ->
-          filter ((/=) (Just argName) . faName) inputArgs
+    dropTableAndSessionArgument :: FunctionTableArgument
+                                -> Maybe FunctionSessionArgument -> [FunctionArg]
+                                -> [FunctionArg]
+    dropTableAndSessionArgument tableArg sessionArg inputArgs =
+      let withoutTable = case tableArg of
+            FTAFirst  -> tail inputArgs
+            FTANamed argName _ ->
+              filter ((/=) (Just argName) . faName) inputArgs
+          alsoWithoutSession = case sessionArg of
+            Nothing -> withoutTable
+            Just (FunctionSessionArgument name _) ->
+              filter ((/=) (Just name) . faName) withoutTable
+      in alsoWithoutSession
+
 
 addComputedFieldToCatalog
   :: MonadTx m

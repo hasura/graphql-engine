@@ -44,6 +44,17 @@ instance ToJSON FunctionTableArgument where
   toJSON FTAFirst             = String "first_argument"
   toJSON (FTANamed argName _) = object ["name" .= argName]
 
+-- | The session argument, which passes Hasura session variables to a
+-- SQL function as a JSON object.
+data FunctionSessionArgument
+  = FunctionSessionArgument !FunctionArgName !Int
+  deriving (Show, Eq, Generic)
+instance Cacheable FunctionSessionArgument
+
+instance ToJSON FunctionSessionArgument where
+  -- TODO is this the right JSON to output?
+  toJSON (FunctionSessionArgument argName _) = object ["name" .= argName]
+
 data ComputedFieldReturn
   = CFRScalar !PGScalarType
   | CFRSetofTable !QualifiedTable
@@ -58,10 +69,11 @@ $(makePrisms ''ComputedFieldReturn)
 
 data ComputedFieldFunction
   = ComputedFieldFunction
-  { _cffName          :: !QualifiedFunction
-  , _cffInputArgs     :: !(Seq.Seq FunctionArg)
-  , _cffTableArgument :: !FunctionTableArgument
-  , _cffDescription   :: !(Maybe PGDescription)
+  { _cffName            :: !QualifiedFunction
+  , _cffInputArgs       :: !(Seq.Seq FunctionArg)
+  , _cffTableArgument   :: !FunctionTableArgument
+  , _cffSessionArgument :: !(Maybe FunctionSessionArgument)
+  , _cffDescription     :: !(Maybe PGDescription)
   } deriving (Show, Eq, Generic)
 instance Cacheable ComputedFieldFunction
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ComputedFieldFunction)

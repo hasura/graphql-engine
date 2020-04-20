@@ -30,6 +30,7 @@ response:
           schema: public
           name: fetch_articles
         table_argument: author_row
+        session_argument: session
   functions:
   - function:
       schema: public
