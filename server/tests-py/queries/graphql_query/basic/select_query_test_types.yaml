@@ -54,6 +54,7 @@ response:
       c32_json_translations: hi
       c32_json_nested_special_array: Hello!
       c32_json_nested_special_array_double_quote: Hello!
+      c32_json_nested_special_array_double_quote_dot: Hello!
       c33_jsonb:
         c: d
         obj:
@@ -73,6 +74,7 @@ response:
       c33_jsonb_translations: hi
       c33_jsonb_nested_special_array: Hello!
       c33_jsonb_nested_special_array_double_quote: Hello!
+      c33_jsonb_nested_special_array_double_quote_dot: Hello!
       c34_text_array: ["a","b","c"]
       c35_integer_2d_array:
         - [4,5,6]
@@ -136,6 +138,7 @@ query:
         c32_json_translations: c32_json(path: "translations['hello world!']")
         c32_json_nested_special_array: c32_json(path: "objs[0]['你好']")
         c32_json_nested_special_array_double_quote: c32_json(path: "objs[0][\"你好\"]")
+        c32_json_nested_special_array_double_quote_dot: c32_json(path: "objs[0].[\"你好\"]")
         c33_jsonb
         c33_jsonb_child_prop: c33_jsonb(path: ".obj.e1")
         c33_jsonb_child_prop_no_dot: c33_jsonb(path: "c")
@@ -145,6 +148,7 @@ query:
         c33_jsonb_translations: c33_jsonb(path: "translations['hello world!']")
         c33_jsonb_nested_special_array: c33_jsonb(path: "objs[0]['你好']")
         c33_jsonb_nested_special_array_double_quote: c33_jsonb(path: "objs[0][\"你好\"]")
+        c33_jsonb_nested_special_array_double_quote_dot: c33_jsonb(path: "objs.[0].[\"你好\"]")
         c34_text_array
         c35_integer_2d_array
         c36_uuid

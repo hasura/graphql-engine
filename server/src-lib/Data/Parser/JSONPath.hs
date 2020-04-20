@@ -39,7 +39,7 @@ name = go <?> "property name" where
 -- > ['你好']
 bracketElement :: Parser JSONPathElement
 bracketElement = do
-  char '['
+  optional (char '.') *> char '['
   result <- Index <$> decimal
         <|>   Key <$> quotedString '"'
         <|>   Key <$> quotedString '\''
