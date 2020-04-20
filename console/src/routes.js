@@ -104,18 +104,25 @@ const routes = store => {
   );
 
   return (
-    <Route path="/" component={App} onEnter={validateLogin(store)}>
+    <Route
+      path="/"
+      component={App}
+      onEnter={composeOnEnterHooks([
+        validateLogin(store),
+        requireMigrationStatus,
+      ])}
+    >
       <Route path="login" component={generatedLoginConnector(connect)} />
-      <Route
-        path=""
-        component={Main}
-        onEnter={composeOnEnterHooks([requireSchema, requireMigrationStatus])}
-      >
+      <Route path="" component={Main}>
         <Route path="">
-          <IndexRoute component={generatedApiExplorer(connect)} />
+          <IndexRoute
+            component={generatedApiExplorer(connect)}
+            onEnter={composeOnEnterHooks([requireSchema])}
+          />
           <Route
             path="api-explorer"
             component={generatedApiExplorer(connect)}
+            onEnter={composeOnEnterHooks([requireSchema])}
           />
           <Route
             path="voyager-view"

@@ -49,7 +49,11 @@ const makeDataRouter = (
   consoleModeRedirects
 ) => {
   return (
-    <Route path="data" component={dataPageConnector(connect)}>
+    <Route
+      path="data"
+      component={dataPageConnector(connect)}
+      onEnter={composeOnEnterHooks([requireSchema])}
+    >
       <IndexRedirect to="schema/public" />
       <Route path="schema" component={rightContainerConnector(connect)}>
         <IndexRedirect to="public" />
