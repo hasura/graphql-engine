@@ -928,7 +928,7 @@
 }
 
 .secureSection {
-  padding: 15px;
+  padding: 16px 15px 14px 15px;
 
   a {
     //color: #FFC627;
@@ -937,8 +937,8 @@
   }
 
   .secureSectionSymbol {
-    //color: #FFC627 !important;
     color: inherit !important;
+    padding-top: 3px;
   }
 }
 
