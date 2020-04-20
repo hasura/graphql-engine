@@ -8,7 +8,7 @@ import {
   getActionName,
   getActionOutputType,
   getActionComment,
-  getActionType
+  getActionType,
 } from '../utils';
 import { getActionTypes } from '../Common/utils';
 
