@@ -1,14 +1,10 @@
 export type Query = {
-  name: string;
+  name?: string;
   columns: (Query | string)[];
 };
 
 const isQuery = (x: unknown): x is Query => {
-  return (
-    typeof x === 'object' &&
-    (x as Query).columns !== undefined &&
-    (x as Query).name !== undefined
-  );
+  return typeof x === 'object' && (x as Query).columns !== undefined;
 };
 
 export const getSelectedColumns = (
