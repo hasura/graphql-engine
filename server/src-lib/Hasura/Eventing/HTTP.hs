@@ -205,7 +205,17 @@ data HTTPRespExtra (a :: TriggerTypes)
   , _hreContext  :: ExtraLogContext
   }
 
-$(deriveToJSON (aesonDrop 4 snakeCase){omitNothingFields=True} ''HTTPRespExtra)
+instance ToJSON (HTTPRespExtra a) where
+  toJSON (HTTPRespExtra resp ctxt) = do
+    case resp of
+      Left errResp ->
+        object [ "response" .= toJSON errResp
+               , "context" .= toJSON ctxt
+               ]
+      Right rsp ->
+        object [ "response" .= toJSON rsp
+               , "context" .= toJSON ctxt
+               ]
 
 instance ToEngineLog (HTTPRespExtra 'EventType) Hasura where
   toEngineLog resp = (LevelInfo, eventTriggerLogType, toJSON resp)
