@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Hasura.Prelude
   ( module M
+  , alphabet
   , alphaNumerics
   , onNothing
   , onJust
@@ -71,8 +72,11 @@ import qualified Data.Text.Encoding.Error          as TE
 import qualified GHC.Clock                         as Clock
 import qualified Test.QuickCheck                   as QC
 
+alphabet :: String
+alphabet = ['a'..'z'] ++ ['A'..'Z']
+
 alphaNumerics :: String
-alphaNumerics = ['a'..'z'] ++ ['A'..'Z'] ++ "0123456789"
+alphaNumerics = alphabet ++ "0123456789"
 
 instance Arbitrary Text where
   arbitrary = T.pack <$> QC.listOf (QC.elements alphaNumerics)

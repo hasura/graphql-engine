@@ -2,6 +2,13 @@
 
 ## Next release
 
+
+## `v1.2.0-beta.4`
+
+### add query support in actions 
+
+(close #4032) (#4309)
+
 ### console: persist columns state in data browser
 
 The order, collapsed state of columns and page size is now persisted across page navigation
@@ -10,7 +17,6 @@ The order, collapsed state of columns and page size is now persisted across page
 
 ### Bug fixes and improvements
 
-- server: support reusing Postgres scalars in custom types (close #4125)
 - cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
 - console: query support for actions (#4318)
 - cli: query support for actions (#4318)
@@ -25,7 +31,10 @@ The order, collapsed state of columns and page size is now persisted across page
 - console: decouple data rows and count fetch in data browser to account for really large tables (close #3793) (#4269)
 - console: update cookie policy for API calls to "same-origin"
 - console: redirect to /:table/browse from /:table (close #4330) (#4374)
+- console: surround string type column default value with quotes (close #4371) (#4423)
+- console: add undefined check to fix error (close #4444) (#4445)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
+- server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
 - server: manage inflight events when HGE instance is gracefully shutdown (close #3548)
@@ -33,6 +42,7 @@ The order, collapsed state of columns and page size is now persisted across page
 - server: fix downgrade not working to version v1.1.1 (#4354)
 - server: `type` field is not required if `jwk_url` is provided in JWT config
 - server: add a new field `claims_namespace_path` which accepts a JSON Path for looking up hasura claim in the JWT token (#4349)
+- server: support reusing Postgres scalars in custom types (close #4125)
 
 ## `v1.2.0-beta.3`
 
@@ -104,7 +114,6 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 - cli: fix flags in actions, migrate and metadata cmd (fix #3982) (#3991)
 - cli: preserve action definition in metadata apply (fix… (#3993)
 - cli: bug fixes related to actions (#3951)
-- server: add support for query actions (#4032)
 
 ## `v1.2.0-beta.1`
 
@@ -145,4 +154,5 @@ Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/
 ### Bug fixes and improvements
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
+- Allow special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
