@@ -334,8 +334,8 @@ kill_hge_servers
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
-# hasura claims at the root of the JWT token
-export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$"}')"
+# hasura claims at two levels of nesting with claims_namespace_path containing special character
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura['\''claims%'\'']"}')"
 
 run_hge_with_args serve
 wait_for_port 8080
@@ -346,8 +346,8 @@ kill_hge_servers
 
 unset HASURA_GRAPHQL_JWT_SECRET
 
-# hasura claims at two levels of nesting with claims_namespace_path containing special character
-export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura['\''claims%'\'']"}')"
+# hasura claims at the root of the JWT token
+export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$"}')"
 
 run_hge_with_args serve
 wait_for_port 8080
