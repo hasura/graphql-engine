@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/migrate"
+	"github.com/hasura/graphql-engine/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,6 +17,7 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Aliases: []string{"md"},
 		Short:   "Manage Hasura GraphQL Engine metadata saved in the database",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Root().PersistentPreRun(cmd, args)
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
@@ -34,14 +36,16 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 		newMetadataInconsistencyCmd(ec),
 	)
 
-	metadataCmd.PersistentFlags().String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
-	metadataCmd.PersistentFlags().String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
-	metadataCmd.PersistentFlags().String("access-key", "", "access key for Hasura GraphQL Engine")
-	metadataCmd.PersistentFlags().MarkDeprecated("access-key", "use --admin-secret instead")
+	f := metadataCmd.PersistentFlags()
 
-	v.BindPFlag("endpoint", metadataCmd.PersistentFlags().Lookup("endpoint"))
-	v.BindPFlag("admin_secret", metadataCmd.PersistentFlags().Lookup("admin-secret"))
-	v.BindPFlag("access_key", metadataCmd.PersistentFlags().Lookup("access-key"))
+	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL Engine")
+	f.String("admin-secret", "", "admin secret for Hasura GraphQL Engine")
+	f.String("access-key", "", "access key for Hasura GraphQL Engine")
+	f.MarkDeprecated("access-key", "use --admin-secret instead")
+
+	util.BindPFlag(v, "endpoint", f.Lookup("endpoint"))
+	util.BindPFlag(v, "admin_secret", f.Lookup("admin-secret"))
+	util.BindPFlag(v, "access_key", f.Lookup("access-key"))
 
 	return metadataCmd
 }
