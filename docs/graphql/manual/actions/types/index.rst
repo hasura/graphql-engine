@@ -88,8 +88,8 @@ The object type will now be modified as:
 Input types
 -----------
 
-You can pass complex objects as arguments to a mutation. This is particularly
-valuable in the case of mutations where you might want to pass in a whole
+You can pass complex objects as arguments to queries and mutations. This is particularly
+valuable in cases where you might want to pass in a whole
 object to be created. In the GraphQL SDL, input types look exactly the same as
 regular object types, but with the keyword input instead of type:
 
@@ -138,7 +138,7 @@ a scalar called ``Date``, you can define it like.
 
     scalar Date
 
-These scalars can be used as arguments of the mutation or as fields of object
+These scalars can be used as arguments of queries and mutations or as fields of object
 types and input types.
 
 .. admonition:: Postgres scalars
