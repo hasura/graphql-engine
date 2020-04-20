@@ -165,7 +165,7 @@ for this handler would look something like:
     };
 
 You can deploy this code somewhere and get the URI. For getting started quickly, we
-also have this handler ready at ``https://hasura-actions-starter-kit.glitch.me/login``.
+also have this handler ready at ``https://hasura-actions-demo.glitch.me/login``.
 
 **Set the handler**
 
@@ -332,7 +332,7 @@ for this handler would look something like:
     };
 
 You can deploy this code somewhere and get the URI. For getting started quickly, we
-also have this handler ready at ``https://hasura-actions-starter-kit.glitch.me/addNumbers``.
+also have this handler ready at ``https://hasura-actions-demo.glitch.me/addNumbers``.
 
 **Set the handler**
 
