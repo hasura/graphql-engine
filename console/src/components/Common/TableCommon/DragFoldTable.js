@@ -70,7 +70,6 @@ class DragFoldTable extends Component {
       };
 
       header.ondrop = e => {
-        console.log({ newOrder: i, defaultOrder: this.dragged });
         e.preventDefault();
         if (this.dragged) {
           this.reorders.push({
