@@ -114,6 +114,7 @@ export const Icon = props => {
   const CurrentActiveIcon = iconReferenceMap[type]
     ? iconReferenceMap[type]
     : iconReferenceMap.default;
+
   return <StyledIcon as={CurrentActiveIcon} {...props} aria-hidden="true" />;
 };
 
