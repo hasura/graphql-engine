@@ -35,7 +35,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			},
 			nil,
 			"",
-			filepath.Join(currDir, getMetadataDir(), "1_metadata.yaml"),
+			filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "1_metadata.yaml"),
 		},
 		{
 			"metadata-apply",
@@ -44,7 +44,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 				ActionType: "apply",
 			},
 			nil,
-			filepath.Join(currDir, getMetadataDir(), "2_metadata.yaml"),
+			filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "2_metadata.yaml"),
 			"",
 		},
 		{
@@ -55,7 +55,7 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			},
 			nil,
 			"",
-			filepath.Join(currDir, getMetadataDir(), "2_metadata.yaml"),
+			filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "2_metadata.yaml"),
 		},
 		{
 			"metadata-clear",
@@ -75,13 +75,13 @@ func TestMetadataCmd(t *testing.T, ec *cli.ExecutionContext) {
 			},
 			nil,
 			"",
-			filepath.Join(currDir, getMetadataDir(), "1_metadata.yaml"),
+			filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "1_metadata.yaml"),
 		},
 		{
 			"metadata-diff",
 			&commands.MetadataDiffOptions{
 				EC:     ec,
-				Args:   []string{filepath.Join(currDir, getMetadataDir(), "2_metadata.yaml")},
+				Args:   []string{filepath.Join(currDir, getMetadataDir(ec.Version.ServerSemver), "2_metadata.yaml")},
 				Output: new(bytes.Buffer),
 			},
 			nil,
