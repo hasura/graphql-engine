@@ -11,6 +11,14 @@ type ReduxAction = {
   data: any;
 };
 
+interface TelemetryGlobals {
+  serverVersion: string;
+  url: string;
+  consoleMode: string;
+  cliUUID: string;
+  hasuraUUID: string;
+}
+
 const createClient = () => {
   if (globals.enableTelemetry) {
     try {
@@ -84,7 +92,10 @@ export const trackReduxAction = (action: ReduxAction, getState: any) => {
   }
 };
 
-export const trackRuntimeError = (telemeteryGlobals: any, error: Error) => {
+export const trackRuntimeError = (
+  telemeteryGlobals: TelemetryGlobals,
+  error: Error
+) => {
   const reqBody = {
     server_version: telemeteryGlobals.serverVersion,
     event_type: RUN_TIME_ERROR,
