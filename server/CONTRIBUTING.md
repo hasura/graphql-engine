@@ -52,6 +52,10 @@ After making your changes
     $ cabal new-update
     $ cabal new-build
 
+To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal.project.dev-sh.local` instead of `cabal.project.dev`:
+
+    $ ln -s cabal.project.dev-sh.local cabal.project.local
+
 ### Run and test via `dev.sh`
 
 The `dev.sh` script in the top-level `scripts/` directory is a turnkey solution to build, run, and
