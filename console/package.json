@@ -18,13 +18,15 @@
     "server-build": "make server-build",
     "build-unused": "webpack --verbose --colors --display-error-details --config webpack/prod.config.js --json | webpack-unused -s src",
     "postinstall": "webpack --display-error-details --config webpack/prod.config.js",
-    "lint": "eslint -c .eslintrc src --ext .js,.ts,.tsx",
     "start-dev": "better-npm-run start-dev",
     "watch-client": "better-npm-run watch-client",
     "dev": "concurrently --kill-others \"npm run watch-client\" \"npm run start-dev\" ",
     "cypress": "cypress open",
     "test": "cypress run --spec 'cypress/integration/**/**/test.js' --key $CYPRESS_KEY --parallel --record",
-    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\""
+    "lint": "eslint -c .eslintrc src --ext .js,.ts,.tsx",
+    "lint:quiet": "eslint --quiet -c .eslintrc src --ext .js,.ts,.tsx",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\""
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
