@@ -4,7 +4,7 @@
 
 ### Bug fixes and improvements
 
-- server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']`. Single `$` can be accepted as root object (#3890) (#4482)
+- server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
   
 ## `v1.2.0-beta.4`
 
