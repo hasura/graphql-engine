@@ -77,7 +77,7 @@ You can run the test suite with:
 
     $ scripts/dev.sh test
 
-This should run in isolation.
+This should run in isolation.  The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report).  Errors and failures are indicated by `F`s and `E`s.
 
 ### Run and test manually
 
