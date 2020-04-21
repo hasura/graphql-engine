@@ -10,7 +10,7 @@
 - console: fix columns reordering for relationship tables in data browser (#4483)
 - console: format row count in data browser for readablity (#4433)
 - console: move pre-release notification tooltip msg to top (#4433)
-- console: remove extra localPresets key from migrations (close #3976) (#4433)
+- console: remove extra localPresets key present in migration files on permissions change (close #3976) (#4433)
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
 - console: fix row delete for relationships in data browser (#4433)
 - docs: add API docs for using environment variables as webhook urls in event triggers
