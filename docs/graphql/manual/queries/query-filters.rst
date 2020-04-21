@@ -830,7 +830,7 @@ Checking for null values can be achieved using the ``_is_null`` operator.
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/8.3/functions-comparison.html>`_ for more details on the ``_is_null`` operator.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/8.3/functions-comparison.html>`_ for more details on the ``IS NULL`` construct.
 
 **Example: Filter null values in a field**
 
