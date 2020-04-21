@@ -37,7 +37,11 @@ const spinnerChildStyles = css`
   }
 `;
 
-export const Spinner = props => {
+export type SpinnerProps = {
+  size: string
+};
+
+export const Spinner: React.FC<SpinnerProps> = props => {
   const { size } = props;
 
   const spinnerWidth = size === 'small' ? smallSpinnerSize : largeSpinnerSize;
