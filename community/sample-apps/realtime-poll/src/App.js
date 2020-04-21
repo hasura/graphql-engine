@@ -2,25 +2,27 @@ import React, { Component } from 'react';
 import logo from './img/logo-white.svg';
 import './App.css';
 import { ApolloProvider } from 'react-apollo';
-import client, {HASURA_GRAPHQL_ENGINE_HOSTNAME} from './apollo';
+import client from './apollo';
 import Poll from './Poll';
 import { getUserId } from './session';
 import { GraphQL } from './GraphQL';
+import { Users } from './Users';
+
 
 class App extends Component {
-  constructor (props) {
+  constructor(props) {
     super(props);
-    this.state = {loading: true, userId: ''};
+    this.state = { loading: true, userId: '' };
   }
 
-  componentWillMount() {
+  componentDidMount() {
     getUserId().then((userId) => {
-      this.setState({loading: false, userId});
+      this.setState({ loading: false, userId });
     });
   }
 
   render() {
-    if (this.state.loading) return <p>Loading...</p>;
+    // if (this.state.loading) return <p>Loading...</p>;
     return (
       <ApolloProvider client={client}>
         <div className="App">
@@ -32,8 +34,9 @@ class App extends Component {
             </div>
           </header>
 
+          <Users />
 
-          <Poll userId={this.state.userId}/>
+          <Poll userId={this.state.userId} />
 
           <GraphQL />
 
