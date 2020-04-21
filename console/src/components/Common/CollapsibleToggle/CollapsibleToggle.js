@@ -66,7 +66,7 @@ class CollapsibleToggle extends React.Component {
           <Icon
             type="right"
             size={12}
-            mr="10px"
+            mr="sm"
             className={`${styles.collapsibleIndicator} ${isOpen &&
               styles.collapsibleIndicatorOpen}`}
           />

@@ -29,12 +29,12 @@ runApp (HGEOptionsG rci hgeCmd) =
       runHGEServer serveOptions initCtx initTime
     HCExport -> do
       (initCtx, _) <- initialiseCtx hgeCmd rci
-      res <- runTx' initCtx fetchMetadata
+      res <- runTx' initCtx fetchMetadata Q.ReadCommitted
       either printErrJExit printJSON res
 
     HCClean -> do
       (initCtx, _) <- initialiseCtx hgeCmd rci
-      res <- runTx' initCtx dropCatalog
+      res <- runTx' initCtx dropCatalog Q.ReadCommitted
       either printErrJExit (const cleanSuccess) res
 
     HCExecute -> do
@@ -58,7 +58,7 @@ runApp (HGEOptionsG rci hgeCmd) =
 
     HCVersion -> liftIO $ putStrLn $ "Hasura GraphQL Engine: " ++ convertText currentVersion
   where
-    runTx' initCtx tx =
-      liftIO $ runExceptT $ Q.runTx (_icPgPool initCtx) (Q.Serializable, Nothing) tx
+    runTx' initCtx tx txIso =
+      liftIO $ runExceptT $ Q.runTx (_icPgPool initCtx) (txIso, Nothing) tx
 
     cleanSuccess = liftIO $ putStrLn "successfully cleaned graphql-engine related data"

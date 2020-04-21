@@ -13,14 +13,14 @@ import {
   SET_SQL,
   SET_CASCADE_CHECKED,
   SET_MIGRATION_CHECKED,
-  SET_TRACK_TABLE_CHECKED
+  SET_TRACK_TABLE_CHECKED,
 } from './Actions';
 import { modalOpen, modalClose } from './Actions';
 import globals from '../../../../Globals';
 import './AceEditorFix.css';
 import {
   ACE_EDITOR_THEME,
-  ACE_EDITOR_FONT_SIZE
+  ACE_EDITOR_FONT_SIZE,
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import { Icon, ToolTip } from '../../../UIKit/atoms';
@@ -40,7 +40,7 @@ const RawSQL = ({
   isMigrationChecked,
   isTableTrackChecked,
   migrationMode,
-  allSchemas
+  allSchemas,
 }) => {
   // local storage key for SQL
   const LS_RAW_SQL_SQL = 'rawSql:sql';
@@ -119,7 +119,7 @@ const RawSQL = ({
   if (ongoingRequest) {
     alert = (
       <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className='hidden alert alert-warning' role='alert'>
+        <div className="hidden alert alert-warning" role="alert">
           Running...
         </div>
       </div>
@@ -127,7 +127,7 @@ const RawSQL = ({
   } else if (lastError) {
     alert = (
       <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className='hidden alert alert-danger' role='alert'>
+        <div className="hidden alert alert-danger" role="alert">
           Error: {JSON.stringify(lastError)}
         </div>
       </div>
@@ -135,7 +135,7 @@ const RawSQL = ({
   } else if (lastSuccess) {
     alert = (
       <div className={`${styles.padd_left_remove} col-xs-12`}>
-        <div className='hidden alert alert-success' role='alert'>
+        <div className="hidden alert alert-success" role="alert">
           Executed Query
         </div>
       </div>
@@ -162,9 +162,9 @@ const RawSQL = ({
         submitText={'Yes, I confirm'}
         submitTestId={'not-migration-confirm'}
       >
-        <div className='content-fluid'>
-          <div className='row'>
-            <div className='col-xs-12'>
+        <div className="content-fluid">
+          <div className="row">
+            <div className="col-xs-12">
               Your SQL statement is most likely modifying the database schema.
               Are you sure it is not a migration?
             </div>
@@ -223,15 +223,15 @@ const RawSQL = ({
     return (
       <div className={styles.add_mar_top}>
         <AceEditor
-          data-test='sql-test-editor'
-          mode='sql'
+          data-test="sql-test-editor"
+          mode="sql"
           theme={ACE_EDITOR_THEME}
           fontSize={ACE_EDITOR_FONT_SIZE}
-          name='raw_sql'
+          name="raw_sql"
           value={sql}
           minLines={15}
           maxLines={100}
-          width='100%'
+          width="100%"
           showPrintMargin={false}
           commands={[
             {
@@ -239,8 +239,8 @@ const RawSQL = ({
               bindKey: { win: 'Ctrl-Enter', mac: 'Command-Enter' },
               exec: () => {
                 submitSQL();
-              }
-            }
+              },
+            },
           ]}
           onChange={handleSQLChange}
         />
@@ -318,19 +318,19 @@ const RawSQL = ({
           <input
             checked={isCascadeChecked}
             className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
-            id='cascade-checkbox'
-            type='checkbox'
+            id="cascade-checkbox"
+            type="checkbox"
             onChange={() => {
               dispatch({
                 type: SET_CASCADE_CHECKED,
-                data: !isCascadeChecked
+                data: !isCascadeChecked,
               });
             }}
           />
           Cascade metadata
         </label>
         <ToolTip message={cascadeTip}>
-          <Icon type='info' ml='sm' size={12} />
+          <Icon type="info" ml="sm" size={12} />
         </ToolTip>
       </div>
     );
@@ -340,7 +340,7 @@ const RawSQL = ({
     const dispatchTrackThis = () => {
       dispatch({
         type: SET_TRACK_TABLE_CHECKED,
-        data: !isTableTrackChecked
+        data: !isTableTrackChecked,
       });
     };
 
@@ -350,15 +350,15 @@ const RawSQL = ({
           <input
             checked={isTableTrackChecked}
             className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
-            id='track-checkbox'
-            type='checkbox'
+            id="track-checkbox"
+            type="checkbox"
             onChange={dispatchTrackThis}
-            data-test='raw-sql-track-check'
+            data-test="raw-sql-track-check"
           />
           Track this
         </label>
         <ToolTip message={trackTableTip}>
-          <Icon type='info' ml='sm' size={12} />
+          <Icon type="info" ml="sm" size={12} />
         </ToolTip>
       </div>
     );
@@ -371,7 +371,7 @@ const RawSQL = ({
       const dispatchIsMigration = () => {
         dispatch({
           type: SET_MIGRATION_CHECKED,
-          data: !isMigrationChecked
+          data: !isMigrationChecked,
         });
       };
 
@@ -381,15 +381,15 @@ const RawSQL = ({
             <input
               checked={isMigrationChecked}
               className={styles.add_mar_right_small}
-              id='migration-checkbox'
-              type='checkbox'
+              id="migration-checkbox"
+              type="checkbox"
               onChange={dispatchIsMigration}
-              data-test='raw-sql-migration-check'
+              data-test="raw-sql-migration-check"
             />
             This is a migration
           </label>
           <ToolTip message={migrationTip}>
-            <Icon type='info' ml='sm' size={12} />
+            <Icon type="info" ml="sm" size={12} />
           </ToolTip>
         </div>
       );
@@ -414,11 +414,11 @@ const RawSQL = ({
                   ' form-control'
                 }
                 placeholder={'run_sql_migration'}
-                id='migration-name'
-                type='text'
+                id="migration-name"
+                type="text"
               />
               <ToolTip message={migrationNameTip}>
-                <Icon type='info' ml='sm' size={12} />
+                <Icon type="info" ml="sm" size={12} />
               </ToolTip>
               <div
                 className={styles.add_mar_top_small + ' ' + styles.text_gray}
@@ -451,12 +451,12 @@ const RawSQL = ({
   const getRunButton = () => {
     return (
       <Button
-        type='submit'
+        type="submit"
         className={styles.add_mar_top}
         onClick={submitSQL}
-        color='yellow'
-        size='sm'
-        data-test='run-sql'
+        color="yellow"
+        size="sm"
+        data-test="run-sql"
       >
         Run!
       </Button>
@@ -467,12 +467,12 @@ const RawSQL = ({
     <div
       className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
     >
-      <Helmet title='Run SQL - Data | Hasura' />
+      <Helmet title="Run SQL - Data | Hasura" />
       <div className={styles.subHeader}>
         <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
           Raw SQL
         </h2>
-        <div className='clearfix' />
+        <div className="clearfix" />
       </div>
       <div className={styles.add_mar_top}>
         <div>
@@ -494,7 +494,7 @@ const RawSQL = ({
             {getRunButton()}
           </div>
         </div>
-        <div className='hidden col-xs-4'>{alert}</div>
+        <div className="hidden col-xs-4">{alert}</div>
       </div>
 
       {getMigrationWarningModal()}
@@ -518,7 +518,7 @@ RawSQL.propTypes = {
   isMigrationChecked: PropTypes.bool.isRequired,
   isTableTrackChecked: PropTypes.bool.isRequired,
   migrationMode: PropTypes.bool.isRequired,
-  currentSchema: PropTypes.string.isRequired
+  currentSchema: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = state => ({
@@ -526,7 +526,7 @@ const mapStateToProps = state => ({
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
   allSchemas: state.tables.allSchemas,
-  serverVersion: state.main.serverVersion ? state.main.serverVersion : ''
+  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);

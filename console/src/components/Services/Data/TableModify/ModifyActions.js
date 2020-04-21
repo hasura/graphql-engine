@@ -27,7 +27,7 @@ import {
   getUniqueConstraintName,
 } from '../Common/Components/utils';
 
-import { isPostgresFunction } from '../utils';
+import { isColTypeString, isPostgresFunction } from '../utils';
 import {
   sqlEscapeText,
   getCreateCheckConstraintSql,
@@ -586,14 +586,14 @@ const saveForeignKeys = (index, tableSchema, columns) => {
           alter table "${schemaName}"."${tableName}" drop constraint "${generatedConstraintName}",
           add constraint "${constraintName}"
           foreign key (${Object.keys(oldConstraint.column_mapping)
-    .map(lc => `"${lc}"`)
-    .join(', ')})
+            .map(lc => `"${lc}"`)
+            .join(', ')})
           references "${oldConstraint.ref_table_table_schema}"."${
-  oldConstraint.ref_table
-}"
+        oldConstraint.ref_table
+      }"
           (${Object.values(oldConstraint.column_mapping)
-    .map(rc => `"${rc}"`)
-    .join(', ')})
+            .map(rc => `"${rc}"`)
+            .join(', ')})
           on update ${pgConfTypes[oldConstraint.on_update]}
           on delete ${pgConfTypes[oldConstraint.on_delete]};
         `;
@@ -797,7 +797,7 @@ ${trigger.action_timing} ${trigger.event_manipulation} ON "${tableSchema}"."${ta
 FOR EACH ${trigger.action_orientation} ${trigger.action_statement};`;
 
     if (trigger.comment) {
-      downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}" 
+      downMigrationSql += `COMMENT ON TRIGGER "${triggerName}" ON "${tableSchema}"."${tableName}"
 IS ${sqlEscapeText(trigger.comment)};`;
     }
     const migrationDown = [getRunSqlQuery(downMigrationSql)];
@@ -1182,7 +1182,7 @@ const addColSql = (
   let defWithQuotes = "''";
 
   const checkIfFunctionFormat = isPostgresFunction(colDefault);
-  if (colType === 'text' && colDefault !== '' && !checkIfFunctionFormat) {
+  if (isColTypeString(colType) && colDefault !== '' && !checkIfFunctionFormat) {
     defWithQuotes = "'" + colDefault + "'";
   } else {
     defWithQuotes = colDefault;
@@ -1544,11 +1544,11 @@ const saveColumnChangesSql = (colName, column, onSuccess) => {
     }
 
     const colDefaultWithQuotes =
-      colType === 'text' && !isPostgresFunction(colDefault)
+      isColTypeString(colType) && !isPostgresFunction(colDefault)
         ? `'${colDefault}'`
         : colDefault;
     const originalColDefaultWithQuotes =
-      colType === 'text' && !isPostgresFunction(originalColDefault)
+      isColTypeString(colType) && !isPostgresFunction(originalColDefault)
         ? `'${originalColDefault}'`
         : originalColDefault;
 

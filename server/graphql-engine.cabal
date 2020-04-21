@@ -231,6 +231,7 @@ library
                      , Hasura.Server.PGDump
                      -- Exposed for testing:
                      , Hasura.Server.Telemetry.Counters
+                     , Data.Parser.JSONPath
 
                      , Hasura.RQL.Types
                      , Hasura.RQL.Types.Run
@@ -374,7 +375,6 @@ library
                      , Data.List.Extended
                      , Data.HashMap.Strict.Extended
                      , Data.HashMap.Strict.InsOrd.Extended
-                     , Data.Parser.JSONPath
                      , Data.Sequence.NonEmpty
                      , Data.TByteString
                      , Data.Text.Extended
@@ -426,11 +426,13 @@ test-suite graphql-engine-tests
     , time
     , transformers-base
     , unordered-containers
+    , text
   hs-source-dirs: src-test
   main-is: Main.hs
   other-modules:
     Data.Parser.CacheControlSpec
     Data.Parser.URLTemplate
+    Data.Parser.JSONPathSpec
     Data.TimeSpec
     Hasura.IncrementalSpec
     Hasura.RQL.MetadataSpec

@@ -31,6 +31,7 @@ export const generateActionDefinition = ({
   outputType,
   kind = 'synchronous',
   handler,
+  actionType,
   headers,
   forwardClientHeaders,
 }) => {
@@ -39,6 +40,7 @@ export const generateActionDefinition = ({
     kind,
     output_type: outputType,
     handler,
+    type: actionType,
     headers: transformHeaders(headers),
     forward_client_headers: forwardClientHeaders,
   };
@@ -125,20 +127,20 @@ export const deriveExistingType = (
       _f.type = wrapTypename(prefixdTypename, fieldTypeMetadata.stack);
       _f.arguments = f.arguments
         ? f.arguments.map(a => {
-          const _a = {
-            name: a.name,
-            description: getEntityDescription(a),
-          };
+            const _a = {
+              name: a.name,
+              description: getEntityDescription(a),
+            };
 
-          const argTypeMetadata = getSchemaTypeMetadata(a.type);
-          let prefixdArgTypename = argTypeMetadata.typename;
-          if (!isInbuiltType(argTypeMetadata.typename)) {
-            prefixdArgTypename = prefixTypename(argTypeMetadata.typename);
-            parentTypes.push(argTypeMetadata.typename);
-          }
-          _a.type = wrapTypename(prefixdArgTypename, argTypeMetadata.stack);
-          return _a;
-        })
+            const argTypeMetadata = getSchemaTypeMetadata(a.type);
+            let prefixdArgTypename = argTypeMetadata.typename;
+            if (!isInbuiltType(argTypeMetadata.typename)) {
+              prefixdArgTypename = prefixTypename(argTypeMetadata.typename);
+              parentTypes.push(argTypeMetadata.typename);
+            }
+            _a.type = wrapTypename(prefixdArgTypename, argTypeMetadata.stack);
+            return _a;
+          })
         : [];
 
       types[typename].fields.push(_f);
@@ -229,7 +231,7 @@ export const getActionTypes = (currentAction, allTypes) => {
     const type = findType(allTypes, typename);
     actionTypes[typename] = type;
 
-    if (type.fields) {
+    if (type && type.fields) {
       type.fields.forEach(f => {
         getDependentTypes(f.type);
         if (f.arguments) {
@@ -266,7 +268,7 @@ export const getOverlappingTypeConfirmation = (
     const action = otherActions[i];
     const actionTypes = getActionTypes(action, allTypes);
     actionTypes.forEach(t => {
-      if (typeCollisionMap[t.name]) return;
+      if (!t || typeCollisionMap[t.name]) return;
       overlappingTypenames.forEach(ot => {
         if (ot === t.name) {
           typeCollisionMap[ot] = true;

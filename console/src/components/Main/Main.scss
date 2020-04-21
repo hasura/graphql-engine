@@ -138,7 +138,7 @@
 }
 
 .clusterInfoWrapper {
-  width: 35%;
+  width: auto;
   display: flex;
   height: 100%;
   justify-content: flex-end;
@@ -908,7 +908,7 @@
 }
 
 .secureSection {
-  padding-right: 15px;
+  padding: 16px 15px 14px 15px;
 
   a {
     color: #ffffff;
@@ -917,6 +917,37 @@
     align-items: center;
     height: 100%;
     font-size: 14px;
+  }
+
+  .secureSectionSymbol {
+    color: inherit !important;
+    padding-top: 3px;
+  }
+}
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(0.75);
+  }
+
+  20% {
+    transform: scale(1);
+  }
+
+  40% {
+    transform: scale(0.75);
+  }
+
+  60% {
+    transform: scale(1);
+  }
+
+  80% {
+    transform: scale(0.75);
+  }
+
+  100% {
+    transform: scale(0.75);
   }
 }
 
@@ -1231,6 +1262,39 @@
       .arrow {
         margin-left: 8px;
       }
+    }
+  }
+}
+
+@media (max-width: 1500px) {
+  .helpSection {
+    font-size: 12px;
+  }
+
+  .proWrapper {
+    .proName,
+    .proNameClicked {
+      font-size: 12px;
+    }
+  }
+}
+
+@media (max-width: 1350px) {
+  .sidebar {
+    .sidebarItems {
+      li {
+        margin-left: 15px;
+
+        a {
+          padding: 0 5px;
+        }
+      }
+    }
+  }
+
+  .secureSection {
+    a {
+      font-size: 12px;
     }
   }
 }
