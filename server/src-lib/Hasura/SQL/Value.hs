@@ -130,26 +130,28 @@ parsePGValue ty val = case (ty, val) of
   (_          , _)        -> parseTyped
   where
     parseBoundedInt :: forall i. (Integral i, Bounded i) => Value -> AT.Parser i
-    parseBoundedInt val' = do
-      parsedM <-
-        withScientific
-          ("Integer expected for input type: " ++ show ty)
-          (pure . toBoundedInteger)
-          val'
-      case parsedM of
-        Just parsed -> return parsed
-        Nothing     -> fail $ "Integer does not fit.  Maybe it is a float,"
-                       ++ " or is there integer overflow?"
+    parseBoundedInt val' =
+      withScientific
+        ("Integer expected for input type: " ++ show ty)
+        go
+        val'
+      where
+        go num = case toBoundedInteger num of
+          Just parsed -> return parsed
+          Nothing     -> fail $ "The value " ++ show num ++ " lies outside the "
+                         ++ "bounds or is not an integer.  Maybe it is a "
+                         ++ "float, or is there integer overflow?"
     parseBoundedFloat :: forall a. (RealFloat a) => Value -> AT.Parser a
-    parseBoundedFloat val' = do
-      parsedM <-
-        withScientific
-          ("Float expected for input type: " ++ show ty)
-          (pure . toBoundedRealFloat)
-          val'
-      case parsedM of
-        Left _       -> fail $ "Float does not fit; is there an overflow?"
-        Right parsed -> return parsed
+    parseBoundedFloat val' =
+      withScientific
+        ("Float expected for input type: " ++ show ty)
+        go
+        val'
+      where
+        go num = case toBoundedRealFloat num of
+          Left _       -> fail $ "The value " ++ show num ++ " lies outside the "
+                          ++ "bounds.  Is it overflowing the float bounds?"
+          Right parsed -> return parsed
     parseTyped = case ty of
       PGSmallInt -> PGValSmallInt <$> parseBoundedInt val
       PGInteger -> PGValInteger <$> parseBoundedInt val

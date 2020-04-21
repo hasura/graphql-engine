@@ -5,7 +5,8 @@
     - extensions:
         path: $.selectionSet.insert_test_types.args.objects[0].c2_integer
         code: parse-failed
-      message: Integer does not fit.  Maybe it is a float, or is there integer overflow?
+      message: The value 2.147483648e9 lies outside the bounds or is not an
+               integer.  Maybe it is a float, or is there integer overflow?
   status: 200
   query:
    query: |
