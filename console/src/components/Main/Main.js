@@ -268,6 +268,7 @@ class Main extends React.Component {
             color="white"
             display="block"
             pr="15px"
+            pt="1px"
             height="100%"
             fontWeight="bold"
             css={css`

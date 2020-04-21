@@ -437,6 +437,7 @@
         font-size: 14px;
         letter-spacing: 1px;
         margin: 0 0 0px;
+        line-height: 1;
       }
 
       a {
@@ -872,19 +873,6 @@
   }
 }
 
-.secureSection {
-  padding: 16px 15px 14px 15px;
-
-  a {
-    color: #ffffff;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    height: 100%;
-    font-size: 14px;
-  }
-}
-
 .graphqlHeartText {
   font-size: 14px;
   font-weight: 300;
@@ -1224,16 +1212,20 @@
       }
     }
   }
-
-  .secureSection {
-    a {
-      font-size: 12px;
-    }
-  }
 }
 
 @media (max-width: 1380px) {
   .updateBannerWrapper {
-    font-size: 12px;
+    p,
+    i,
+    span,
+    a {
+      font-size: 12px;
+      padding-bottom: 0;
+    }
+
+    #server-version {
+      padding-bottom: 0;
+    }
   }
 }
