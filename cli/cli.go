@@ -165,7 +165,7 @@ func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 	}
 
 	if c.AdminSecret != "" {
-		req.Header.Set(hasuradb.XHasuraAdminSecret, c.AdminSecret)
+		req.Header.Set(XHasuraAdminSecret, c.AdminSecret)
 	}
 
 	r, err := client.Do(req)
