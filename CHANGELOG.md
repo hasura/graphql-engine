@@ -22,6 +22,10 @@ The order, collapsed state of columns and page size is now persisted across page
 
 (close #3390) (#3753)
 
+### Docs improvements
+
+- Map Postgres operators to corresponding Hasura operators in docs and link to PG documentation (close #4056)
+
 ### Bug fixes and improvements
 
 - cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
@@ -49,7 +53,7 @@ The order, collapsed state of columns and page size is now persisted across page
 - server: `type` field is not required if `jwk_url` is provided in JWT config
 - server: add a new field `claims_namespace_path` which accepts a JSON Path for looking up hasura claim in the JWT token (#4349)
 - server: support reusing Postgres scalars in custom types (close #4125)
-  
+
 ## `v1.2.0-beta.3`
 
 ### console: manage Postgres check constraints
