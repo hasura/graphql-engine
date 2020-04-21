@@ -13,7 +13,7 @@ import { getPersistedDerivedAction } from '../lsUtils';
 import { Icon } from '../../../UIKit/atoms';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
-import { Spinner } from '../../../UIKit/atoms';
+import { Spinner, TextLink } from '../../../UIKit/atoms';
 import styles from '../Common/components/Styles.scss';
 
 const Codegen = ({ allActions, allTypes, currentAction }) => {
@@ -58,9 +58,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     return (
       <div>
         Error fetching codegen assets.&nbsp;
-        <a onClick={init} className={styles.cursorPointer}>
-          Try again
-        </a>
+        <TextLink onClick={init}>Try again</TextLink>
       </div>
     );
   }
@@ -91,14 +89,14 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     const getGlitchButton = () => {
       if (selectedFramework !== 'nodejs-express') return null;
       return (
-        <a
+        <TextLink
           href={getGlitchProjectURL()}
           target="_blank"
-          rel="noopener noreferrer"
-          className={styles.add_mar_right}
+          mr="20px"
+          hover="underline"
         >
-          <Icon type="link" /> Try on glitch
-        </a>
+          <Icon type="link" mb="-2px" mr="3px" /> Try on glitch
+        </TextLink>
       );
     };
 
@@ -115,25 +113,23 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
 
       return (
         <React.Fragment>
-          <a
+          <TextLink
             href={getStarterKitDownloadPath(selectedFramework)}
             target="_blank"
-            rel="noopener noreferrer"
-            className={styles.add_mar_right}
+            mr="20px"
             title={`Download starter kit for ${selectedFramework}`}
+            hover="underline"
           >
-            <Icon type="download" /> Starter-kit.zip
-          </a>
-          <a
+            <Icon type="download" mr="3px" /> Starter-kit.zip
+          </TextLink>
+          <TextLink
             href={getStarterKitPath(selectedFramework)}
             target="_blank"
-            rel="noopener noreferrer"
-            className={styles.display_flex}
             title={`View the starter kit for ${selectedFramework} on GitHub`}
+            hover="underline"
           >
-            <Icon type="github" className={styles.add_mar_right_small} /> View
-            on GitHub
-          </a>
+            <Icon type="github" mr="3px" mb="-2px" /> View on GitHub
+          </TextLink>
         </React.Fragment>
       );
     };
