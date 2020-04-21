@@ -77,11 +77,11 @@ The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible w
    * - ``_eq``
      - ``=``
    * - ``_neq``
-     - ``<>``
+     - ``<>`` or ``!=``
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/6.3/c09.htm>`_ for more details on these operators.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.0/functions-comparison.html>`_ for more details on equality operators.
 
 The following are examples of using the equality operators on different types.
 
@@ -236,7 +236,7 @@ The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/6.3/c09.htm>`_ for more details on these operators.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.0/functions-comparison.html>`_ for more details on these operators.
 
 The following are examples of using these operators on different types:
 
@@ -1057,6 +1057,10 @@ filter set for a condition.
    * - ``_not``
      - ``NOT``
 
+.. note::
+
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.1/functions-logical.html>`_ for more details on the ``NOT`` operator.
+
 **Example: _not**
 
 Fetch all authors who don't have any published articles:
@@ -1128,6 +1132,9 @@ results based on more than one criteria.
    * - ``_or``
      - ``OR`` 
 
+.. note::
+
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.1/functions-logical.html>`_ for more details on these operators.
 
 .. note::
   You can use the ``_or`` and ``_and`` operators along with the ``_not`` operator to create arbitrarily complex boolean
