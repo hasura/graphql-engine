@@ -3,8 +3,6 @@ import PropTypes from 'prop-types';
 import AceEditor from 'react-ace';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 
-import CopyToClipboard from 'react-copy-to-clipboard';
-
 import generateSuggestionBox from './generateSuggestionBox';
 
 import suggestionFunctions from './suggestionFunctions';
@@ -120,20 +118,9 @@ class ApiResponse extends React.Component {
             <div className="input-group">
               <pre>{imgHTMLTag}</pre>
               <span className="input-group-btn">
-                <CopyToClipboard
-                  text={imgHTMLTag}
-                  onCopy={() => {
-                    this.setState({ helpCopied: true });
-                    const timer = setInterval(() => {
-                      this.setState({ helpCopied: false });
-                      clearInterval(timer);
-                    }, 3000);
-                  }}
-                >
-                  <button className={styles.copyBtn + ' btn'} type="button">
-                    {this.state.helpCopied ? 'Copied' : 'Copy'}
-                  </button>
-                </CopyToClipboard>
+                <button className={styles.copyBtn + ' btn'} type="button">
+                  {this.state.helpCopied ? 'Copied' : 'Copy'}
+                </button>
               </span>
             </div>
           </div>
