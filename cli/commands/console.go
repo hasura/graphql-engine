@@ -84,8 +84,8 @@ type ConsoleOptions struct {
 
 	WG *sync.WaitGroup
 
-	StaticDir string
-	Browser   string
+	StaticDir       string
+	Browser         string
 	UseServerAssets bool
 
 	APIServerInterruptSignal     chan os.Signal
@@ -127,6 +127,7 @@ func (o *ConsoleOptions) Run() error {
 		"assetsVersion":   consoleAssetsVersion,
 		"enableTelemetry": o.EC.GlobalConfig.EnableTelemetry,
 		"cliUUID":         o.EC.GlobalConfig.UUID,
+		"cdnAssets":       !o.UseServerAssets,
 	})
 	if err != nil {
 		return errors.Wrap(err, "error serving console")
