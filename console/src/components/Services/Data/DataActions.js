@@ -4,7 +4,7 @@ import { getSchemaBaseRoute } from '../../Common/utils/routesUtils';
 import { isObject } from '../../Common/utils/jsUtils';
 import {
   getRunSqlQuery,
-  inconsistentObjectsQuery,
+  //  inconsistentObjectsQuery,
 } from '../../Common/utils/v1QueryUtils';
 import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
@@ -21,7 +21,10 @@ import {
 import dataHeaders from './Common/Headers';
 import { loadMigrationStatus } from '../../Main/Actions';
 import returnMigrateUrl from './Common/getMigrateUrl';
-import { handleInconsistentObjects } from '../Settings/Actions';
+import {
+  //  handleInconsistentObjects,
+  loadInconsistentObjects,
+} from '../Settings/Actions';
 import { filterInconsistentMetadataObjects } from '../Settings/utils';
 import globals from '../../../Globals';
 
@@ -346,7 +349,7 @@ const loadSchema = configOptions => {
         fetchTrackedTableFkQuery(configOptions),
         fetchTrackedTableReferencedFkQuery(configOptions),
         fetchFunctionQueries(configOptions),
-        inconsistentObjectsQuery,
+        // inconsistentObjectsQuery,
       ],
     };
 
@@ -373,8 +376,10 @@ const loadSchema = configOptions => {
         dispatch({ type: LOAD_NON_TRACKABLE_FUNCTIONS, data: fnData[1] });
         let consistentFunctions = fnData[2];
 
-        const inconsistentObjects = data[5].inconsistent_objects;
-        dispatch(handleInconsistentObjects(inconsistentObjects));
+        // const inconsistentObjects = data[5].inconsistent_objects;
+        // dispatch(handleInconsistentObjects(inconsistentObjects));
+
+        const { inconsistentObjects } = getState().metadata;
 
         if (inconsistentObjects.length > 0) {
           consistentSchemas = filterInconsistentMetadataObjects(
@@ -394,12 +399,15 @@ const loadSchema = configOptions => {
           allSchemas: consistentSchemas,
         });
         dispatch({ type: LOAD_TRACKED_FUNCTIONS, data: consistentFunctions });
+        dispatch(loadInconsistentObjects({ shouldReloadRemoteSchemas: false }));
+        return Promise.resolve();
       },
       error => {
         console.error('loadSchema error: ' + JSON.stringify(error));
         dispatch(
           showErrorNotification('DB schema loading failed', null, error)
         );
+        return Promise.reject();
       }
     );
   };
