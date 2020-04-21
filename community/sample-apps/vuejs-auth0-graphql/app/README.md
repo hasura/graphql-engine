@@ -102,7 +102,7 @@ To do this, open `auth_config.json`, and replace the values within with your own
 ```
 
 ## Create the initial tables
-1. Add your graphql URL (like https://your-app.herokuapp.com/v1/graphql) and admin secret in `hasura/config.yaml`
+1. Add your graphql URL (like https://your-app.herokuapp.com) and admin secret in `hasura/config.yaml`
 
 ```yaml
 endpoint: https://<hge-heroku-url>
