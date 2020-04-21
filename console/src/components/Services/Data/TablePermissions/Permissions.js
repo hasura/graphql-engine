@@ -612,7 +612,7 @@ class Permissions extends Component {
 
         const rowSectionStatus = getPermissionRowAccessSummary(
           filterString[getDefaultFilterType(query)]
-        ); // default
+        );
 
         filterString = replaceLegacyOperators(filterString);
 
