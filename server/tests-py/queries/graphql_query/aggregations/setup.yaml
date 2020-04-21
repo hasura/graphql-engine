@@ -6,7 +6,7 @@ args:
   args:
     sql: |
       create table author(
-          id serial primary key, 
+          id serial primary key,
           name text unique
       );
 - type: track_table
@@ -57,28 +57,31 @@ args:
       insert into author (name)
       values
       ('Author 1'),
-      ('Author 2') 
+      ('Author 2')
 
 - type: run_sql
   args:
     sql: |
-      insert into article (title,content,author_id,is_published)
+      insert into article (title,content,author_id,is_published,published_on)
       values
       (
         'Article 1',
         'Sample article content 1',
         1,
-        false
+        false,
+        '1999-01-08 04:05:06'
       ),
       (
         'Article 2',
         'Sample article content 2',
         1,
-        true
+        true,
+        '1999-01-08 04:05:07'
       ),
       (
         'Article 3',
         'Sample article content 3',
         2,
-        true
+        true,
+        '1999-01-09 04:05:06'
       )

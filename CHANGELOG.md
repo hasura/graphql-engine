@@ -6,6 +6,7 @@
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
+- server: add graphql-engine support for timestamps without timezones (fix #1217)
 - server: support inserting unquoted bigint, and generate an integer overflow error on insert (fix #576) (fix #4368)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
