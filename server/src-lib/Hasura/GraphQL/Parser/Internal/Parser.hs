@@ -279,17 +279,67 @@ selectionSet name description parser = Parser
   where
     fieldNames = S.fromList (dName <$> ifDefinitions parser)
 
+-- | See 'selection'.
 type family SelectionResult k a b = r | r -> k a where
   SelectionResult 'Both   a _ = (Name, a)
   SelectionResult 'Output a b = (Name, a, b)
 
+-- | Constructs a parser for a field of a 'selectionSet'. Fields of a selection
+-- set have two peculiarities:
+--
+--   1. They can have /arguments/, such as in @table(where: {field: {_eq: $blah}})@.
+--
+--   2. They have a sub-selection set /if and only if/ their result type is an
+--      object type.
+--
+-- The first requirement is satisfied easily by providing a
+-- @'FieldsParser' ''Input'@ to parse the arguments, but the second requirement
+-- is more subtle. One might expect us to have two variants of 'selection':
+--
+--   1. One variant that accepts a @'Parser' ''Output'@ to parse a sub-selection
+--      set.
+--
+--   2. Another variant that doesn’t accept a child 'Parser' at all and doesn’t
+--      parse a sub-selection set.
+--
+-- However, that leaves us with a problem in case 2: how do we know what type
+-- the field has? After all, we use the provided 'Parser' to build the GraphQL
+-- schema in addition to parsing the GraphQL query.
+--
+-- We could solve this problem by passing in a @'Type' ''Both'@ instead of a
+-- 'Parser', but generally the parsing code isn’t expected to deal with 'Type's
+-- directly. Therefore, we just accept a @'Parser' ''Both'@, and we happen to
+-- only use its type.
+--
+-- But this leaves us with /another/ problem: what is the result type of
+-- 'selection'? If we have a sub-selection set, we must return three results:
+-- the field alias, the parsed field arguments, and the parsed sub-selection
+-- set. But if we /don’t/ have a sub-selection set, we have no third result to
+-- return! So that complication is handled by the 'SelectionResult' type family,
+-- which computes how many results should be returned.
+--
+-- All quite subtle when you spell it out, but in practice, most of the above
+-- can be ignored when actually writing parsers: just pass a 'Parser' for the
+-- field’s result type, and everything “just works”.
+--
+-- Finally, a couple miscellaneous other details:
+--
+--   * All fields of a selection set are always optional according to the
+--     GraphQL specification, so 'selection' always returns a 'Maybe'.
+--
+--   * It was alluded to above, but the 'Name' in the result is the field’s
+--     /alias/, which must be used when constructing the query result, since it
+--     may be different from the field name.
+--
+--   * If you have a field that takes no input arguments, use the 'selection_'
+--     shorthand combinator.
 selection
   :: forall k m a b
    . (MonadParse m, 'Output <: k)
   => Name
   -> Maybe Description
-  -> FieldsParser 'Input m a
-  -> Parser k m b
+  -> FieldsParser 'Input m a -- ^ parser for the input arguments
+  -> Parser k m b -- ^ parser for the result type
   -> FieldsParser 'Output m (Maybe (SelectionResult k a b))
 selection name description argumentsParser bodyParser = FieldsParser
   { ifDefinitions = [mkDefinition name description $
@@ -313,6 +363,7 @@ selection name description argumentsParser bodyParser = FieldsParser
   where
     argumentNames = S.fromList (dName <$> ifDefinitions argumentsParser)
 
+-- | Analogous to 'SelectionResult', but for 'selection_'.
 type family SelectionResult_ k a = r | r -> k where
   SelectionResult_ 'Both   _ = Name
   SelectionResult_ 'Output a = (Name, a)
