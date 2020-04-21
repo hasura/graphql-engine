@@ -69,6 +69,16 @@ The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible w
 ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
 ``Date``/``Time``/``Timestamp``, etc.).
 
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_eq``
+     - ``=``
+   * - ``_neq``
+     - ``<>``
+
 The following are examples of using the equality operators on different types.
 
 **Example: Integer (works with Double, Float, Numeric, etc.)**
@@ -206,6 +216,20 @@ The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal
 ``_lte`` (less than or equal to) operators are compatible with any Postgres type other than ``json`` or ``jsonB``
 (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_gt``
+     - ``>``
+   * - ``_lt``
+     - ``<``
+   * - ``_gte``
+     - ``>=``
+   * - ``_lte``
+     - ``<=``
+
 The following are examples of using these operators on different types:
 
 
@@ -331,6 +355,16 @@ The ``_in`` (in a list) and ``_nin`` (not in list) operators are used to compare
 They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``,
 ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_in``
+     - 
+   * - ``_nin``
+     - ``!!=``
+
 The following are examples of using these operators on different types:
 
 **Example: Integer (works with Double, Float, etc.)**
@@ -422,7 +456,25 @@ Text search or pattern matching operators (_like, _similar, etc.)
 The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators are used for
 pattern matching on string/text fields.
 
-These operators behave exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_like``
+     - ``_like``
+   * - ``_nlike``
+     - ``_nlike``
+   * - ``_ilike``
+     - ``_ilike``
+   * - ``_nilike``
+     - ``_nilike``
+   * - ``_similar``
+     - ``_similar``
+   * - ``_nsimilar``
+     - ``_nsimilar``
+
+These operators behave exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__.
 
 **Example: _like**
 
@@ -510,6 +562,22 @@ JSONB operators (_contains, _has_key, etc.)
 
 The ``_contains``, ``_contained_in``, ``_has_key``, ``_has_key_any`` and ``_has_key_all`` operators are used to filter
 based on ``JSONB`` columns.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_contains``
+     - ``@>``
+   * - ``_contained_in``
+     - ``<@``
+   * - ``_has_key``
+     - ``?``
+   * - ``_has_key_any``
+     - ``?|``
+   * - ``_has_key_all``
+     - ``?&``
 
 For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.
 
@@ -601,6 +669,28 @@ The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st
 ``_st_within`` and ``_st_d_within`` operators are used to filter based on ``geometry`` like columns.
 
 ``_st_d_within`` and ``_st_intersects`` can be used on ``geography`` columns also.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostGIS equivalent
+   * - ``_st_contains``
+     - ``ST_Contains``
+   * - ``_st_crosses``
+     - ``ST_Crosses``
+   * - ``_st_equals``
+     - ``ST_Equals``
+   * - ``_st_intersects``
+     - ``ST_Intersect``
+   * - ``_st_overlaps``
+     - ``ST_Overlaps``
+   * - ``_st_touches``
+     - ``ST_Touches``
+   * - ``_st_within``
+     -  ``ST_Within``
+   * - ``_st_d_within``
+     - ``ST_DWithin``
 
 For more details on what these operators do, refer to
 `PostGIS spatial relationship docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`_.
@@ -712,6 +802,14 @@ Filter or check for null values (_is_null)
 
 Checking for null values can be achieved using the ``_is_null`` operator.
 
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_is_null``
+     - ``IS NULL``
+
 **Example: Filter null values in a field**
 
 Fetch a list of articles that have a value in the ``published_on`` field:
@@ -760,8 +858,21 @@ Intersect operators on RASTER columns (_st_intersects_rast, etc)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Intersect operators on columns with ``raster`` type are supported.
+Please submit a feature request via `GitHub <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_st_intersects_rast``
+     - 
+   * - ``_st_intersects_geom_nband``
+     - 
+   * - ``_st_intersects_nband_geom``
+     - 
+
 Refer to `Postgis docs <https://postgis.net/docs/RT_ST_Intersects.html>`__ to know more about intersect functions on ``raster`` columns.
-Please submit a feature request via `github <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
 
 **Example: _st_intersects_rast**
 
@@ -914,6 +1025,14 @@ Filter based on failure of some criteria (_not)
 The ``_not`` operator can be used to fetch results for which some condition does not hold true. i.e. to invert the
 filter set for a condition.
 
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_not``
+     - ``NOT``
+
 **Example: _not**
 
 Fetch all authors who don't have any published articles:
@@ -970,10 +1089,20 @@ Fetch all authors who don't have any published articles:
     }
 
 Using multiple filters in the same query (_and, _or)
-----------------------------------------------------
+---------------------------------------------------- 
 
 You can group multiple parameters in the same ``where`` argument using the ``_and`` or the ``_or`` operators to filter
 results based on more than one criteria.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_and``
+     - ``AND``
+   * - ``_or``
+     - ``OR`` 
 
 
 .. note::

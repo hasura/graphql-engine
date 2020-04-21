@@ -320,17 +320,17 @@ Operator
    * - Operator
      - PostgreSQL equivalent
    * - ``"$like"``
-     - 
+     - ``like``
    * - ``"$nlike"``
-     - 
+     - ``nlike``
    * - ``"$ilike"``
-     - 
+     - ``ilike``
    * - ``"$nilike"``
-     - 
+     - ``nilike``
    * - ``"$similar"``
-     - 
+     - ``similar``
    * - ``"$nsimilar"``
-     - 
+     - ``nsimilar``
 
 
 **Operators for comparing columns (all column types except json, jsonb):**
@@ -361,7 +361,7 @@ Operator
    * - Operator
      - PostgreSQL equivalent
    * - ``_is_null`` (takes true/false as values)
-     - 
+     - ``NOT NULL``
 
 **JSONB operators :**
 
