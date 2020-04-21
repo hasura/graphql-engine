@@ -122,18 +122,22 @@ def test_forbidden_webhook(hge_ctx, conf):
         'request id': resp_hdrs.get('x-request-id')
     })
 
-
 def mk_claims_with_namespace_path(claims,hasura_claims,namespace_path):
-        if namespace_path is None:
-            claims['https://hasura.io/jwt/claims'] = hasura_claims
-        elif namespace_path == "$.hasuraClaims":
-            claims['hasuraClaims'] = hasura_claims
-        else:
-            raise Exception(
+    if namespace_path is None:
+        claims['https://hasura.io/jwt/claims'] = hasura_claims
+    elif namespace_path == "$":
+        claims.update(hasura_claims)
+    elif namespace_path == "$.hasura_claims":
+        claims['hasura_claims'] = hasura_claims
+    elif namespace_path == "$.hasura['claims%']":
+        claims['hasura'] = {}
+        claims['hasura']['claims%'] = hasura_claims
+    else:
+        raise Exception(
                 '''claims_namespace_path should not be anything
-                other than $.hasuraClaims for testing. The
+                other than $.hasura_claims, $.hasura['claims%'] or $ for testing. The
                 value of claims_namespace_path was {}'''.format(namespace_path))
-        return claims
+    return claims
 
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
