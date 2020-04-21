@@ -6,6 +6,8 @@
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
+- console: change react ace editor theme to eclipse (close #4437)
+- console: fix columns reordering for relationship tables in data browser (#4483)
 
 ## `v1.2.0-beta.4`
 
@@ -37,8 +39,6 @@ The order, collapsed state of columns and page size is now persisted across page
 - console: redirect to /:table/browse from /:table (close #4330) (#4374)
 - console: surround string type column default value with quotes (close #4371) (#4423)
 - console: add undefined check to fix error (close #4444) (#4445)
-- console: change react ace editor theme to eclipse (close #4437)
-- console: fix columns reordering for relationship tables (#4483)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
