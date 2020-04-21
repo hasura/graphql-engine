@@ -132,11 +132,11 @@
   content: '';
   display: inline-block;
   height: 9px;
-  margin: 0 3px -1px 0;
   position: relative;
   -webkit-transform: rotate(-45deg);
   transform: rotate(-45deg);
   width: 9px;
+  margin: 0 4px;
 }
 
 .graphiql-container .editorBar {
@@ -1528,11 +1528,11 @@ span.CodeMirror-selectedtext {
   content: '';
   display: inline-block;
   height: 9px;
-  margin: 0 3px -1px 0;
   position: relative;
   -webkit-transform: rotate(-45deg);
   transform: rotate(-45deg);
   width: 9px;
+  margin: 0 4px;
 }
 
 .graphiql-container .doc-explorer-rhs {
