@@ -7,6 +7,7 @@
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
 - server: support inserting unquoted bigint, and generate an integer overflow error on insert (fix #576) (fix #4368)
+- docs: add API docs for using environment variables as webhook urls in event triggers
 
 ## `v1.2.0-beta.4`
 
