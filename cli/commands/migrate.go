@@ -7,12 +7,10 @@ import (
 	"github.com/hasura/graphql-engine/cli/migrate"
 	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
 	"github.com/hasura/graphql-engine/cli/util"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	// Initialize migration drivers
-
 	_ "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
 	_ "github.com/hasura/graphql-engine/cli/migrate/source/file"
 )
@@ -53,18 +51,6 @@ func NewMigrateCmd(ec *cli.ExecutionContext) *cobra.Command {
 	util.BindPFlag(v, "access_key", f.Lookup("access-key"))
 
 	return migrateCmd
-}
-
-func newMigrate(ec *cli.ExecutionContext, isCmd bool) (*migrate.Migrate, error) {
-	dbURL := migrate.GetDataPath(ec)
-	fileURL := migrate.GetFilePath(ec.MigrationDir)
-	t, err := migrate.New(fileURL.String(), dbURL.String(), isCmd, int(ec.Config.Version), ec.Logger)
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot create migrate instance")
-	}
-	// Set Plugins
-	migrate.SetMetadataPluginsWithDir(ec, t)
-	return t, nil
 }
 
 // ExecuteMigration runs the actual migration
