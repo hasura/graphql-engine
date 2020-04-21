@@ -15,6 +15,7 @@
 - console: remove extra localPresets key present in migration files on permissions change (close #3976) (#4433)
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
 - console: fix row delete for relationships in data browser (#4433)
+- console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 
 ## `v1.2.0-beta.4`
