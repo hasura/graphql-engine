@@ -8,6 +8,7 @@
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
+- docs: add API docs for using environment variables as webhook urls in event triggers
 
 ## `v1.2.0-beta.4`
 
