@@ -36,7 +36,11 @@ export const StyledSwitchButton = styled.div`
   }
 `;
 
-export const StyledSlider = styled.span`
+type StyledSliderProps = {
+  checked: boolean;
+};
+
+export const StyledSlider = styled.span<StyledSliderProps>`
   position: absolute;
   cursor: pointer;
   top: 0;
