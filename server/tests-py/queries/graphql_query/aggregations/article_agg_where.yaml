@@ -97,6 +97,8 @@ response:
           content_max: Sample article content 3
           author_id: 2
           author_id_max: 2
+          published_on: '1999-01-09T04:05:06'
+          published_on_max: '1999-01-09T04:05:06'
         max_fields:
           id: 3
           id_max: 3
@@ -106,6 +108,8 @@ response:
           content_max: Sample article content 3
           author_id: 2
           author_id_max: 2
+          published_on: '1999-01-09T04:05:06'
+          published_on_max: '1999-01-09T04:05:06'
         min:
           id: 2
           id_min: 2
@@ -115,6 +119,8 @@ response:
           content_min: Sample article content 2
           author_id: 1
           author_id_min: 1
+          published_on: '1999-01-08T04:05:07'
+          published_on_min: '1999-01-08T04:05:07'
         min_fields:
           id: 2
           id_min: 2
@@ -124,11 +130,14 @@ response:
           content_min: Sample article content 2
           author_id: 1
           author_id_min: 1
+          published_on: '1999-01-08T04:05:07'
+          published_on_min: '1999-01-08T04:05:07'
       nodes:
       - id: 2
         title: Article 2
         content: Sample article content 2
         is_published: true
+        published_on: '1999-01-08T04:05:07'
         author:
           id: 1
           name: Author 1
@@ -136,6 +145,7 @@ response:
         title: Article 3
         content: Sample article content 3
         is_published: true
+        published_on: '1999-01-09T04:05:06'
         author:
           id: 2
           name: Author 2
@@ -144,6 +154,7 @@ response:
         title: Article 2
         content: Sample article content 2
         is_published: true
+        published_on: '1999-01-08T04:05:07'
         author:
           id: 1
           name: Author 1
@@ -151,6 +162,7 @@ response:
         title: Article 3
         content: Sample article content 3
         is_published: true
+        published_on: '1999-01-09T04:05:06'
         author:
           id: 2
           name: Author 2
@@ -268,6 +280,8 @@ query:
             content_max: content
             author_id
             author_id_max: author_id
+            published_on
+            published_on_max: published_on
           }
           max_fields: max {
             id
@@ -278,6 +292,8 @@ query:
             content_max: content
             author_id
             author_id_max: author_id
+            published_on
+            published_on_max: published_on
           }
           min {
             id
@@ -288,6 +304,8 @@ query:
             content_min: content
             author_id
             author_id_min: author_id
+            published_on
+            published_on_min: published_on
           }
           min_fields: min {
             id
@@ -298,6 +316,8 @@ query:
             content_min: content
             author_id
             author_id_min: author_id
+            published_on
+            published_on_min: published_on
           }
         }
         nodes {
@@ -305,6 +325,7 @@ query:
           title
           content
           is_published
+          published_on
           author {
             id
             name
@@ -315,6 +336,7 @@ query:
           title
           content
           is_published
+          published_on
           author {
             id
             name
