@@ -12,19 +12,19 @@ import {
   fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,
-  emitProClickedEvent
+  emitProClickedEvent,
 } from './Actions';
 
 import {
   loadInconsistentObjects,
-  redirectToMetadataStatus
+  redirectToMetadataStatus,
 } from '../Services/Settings/Actions';
 
 import {
   getLoveConsentState,
   setLoveConsentState,
   getProClickState,
-  setProClickState
+  setProClickState,
 } from './utils';
 
 import { checkStableVersion, versionGT } from '../../helpers/versionUtils';
@@ -32,7 +32,7 @@ import { getSchemaBaseRoute } from '../Common/utils/routesUtils';
 import {
   getLocalStorageItem,
   LS_VERSION_UPDATE_CHECK_LAST_CLOSED,
-  setLocalStorageItem
+  setLocalStorageItem,
 } from '../Common/utils/localStorageUtils';
 import { setPreReleaseNotificationOptOutInDB } from '../../telemetry/Actions';
 
@@ -47,7 +47,7 @@ class Main extends React.Component {
       updateNotificationVersion: null,
       loveConsentState: getLoveConsentState(),
       proClickState: getProClickState(),
-      isPopUpOpen: false
+      isPopUpOpen: false,
     };
 
     this.handleBodyClick = this.handleBodyClick.bind(this);
@@ -88,7 +88,7 @@ class Main extends React.Component {
       latestStableServerVersion,
       latestPreReleaseServerVersion,
       serverVersion,
-      console_opts
+      console_opts,
     } = this.props;
 
     const allowPreReleaseNotifications =
@@ -117,7 +117,7 @@ class Main extends React.Component {
 
         if (isUpdateAvailable) {
           this.setState({
-            updateNotificationVersion: latestServerVersionToCheck
+            updateNotificationVersion: latestServerVersionToCheck,
           });
         }
       }
@@ -153,11 +153,11 @@ class Main extends React.Component {
 
   closeLoveIcon() {
     const s = {
-      isDismissed: true
+      isDismissed: true,
     };
     setLoveConsentState(s);
     this.setState({
-      loveConsentState: { ...getLoveConsentState() }
+      loveConsentState: { ...getLoveConsentState() },
     });
   }
 
@@ -165,10 +165,10 @@ class Main extends React.Component {
     const s = getProClickState();
     if (s && 'isProClicked' in s && !s.isProClicked) {
       setProClickState({
-        isProClicked: !s.isProClicked
+        isProClicked: !s.isProClicked,
       });
       this.setState({
-        proClickState: { ...getProClickState() }
+        proClickState: { ...getProClickState() },
       });
     }
   }
@@ -195,7 +195,7 @@ class Main extends React.Component {
       currentSchema,
       serverVersion,
       metadata,
-      dispatch
+      dispatch,
     } = this.props;
 
     const { isProClicked } = this.state.proClickState;
@@ -268,6 +268,7 @@ class Main extends React.Component {
             color="white"
             display="block"
             pr="15px"
+            pt="1px"
             height="100%"
             fontWeight="bold"
             css={css`
@@ -490,7 +491,7 @@ class Main extends React.Component {
                 </li>
               </div>
             </div>
-          </ul>
+          </ul>,
         ];
       }
 
@@ -829,7 +830,7 @@ const mapStateToProps = (state, ownProps) => {
     pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
     metadata: state.metadata,
-    console_opts: state.telemetry.console_opts
+    console_opts: state.telemetry.console_opts,
   };
 };
 

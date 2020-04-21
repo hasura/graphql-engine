@@ -32,7 +32,7 @@ now
 ```
 
 Once the deployment is done, you'll get an endpoint like
-`https://zeit-echo-hhasdewasd.now.sh`. Not this down as `NOW_URL`. 
+`https://zeit-echo-hhasdewasd.now.sh`. Note this down as `NOW_URL`. 
 
 > **Note**: Now.sh deployments are immutable, i.e. each time you deploy the
 > code, a new URL will be provisioned. You can [alias the

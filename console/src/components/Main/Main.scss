@@ -138,7 +138,7 @@
 }
 
 .clusterInfoWrapper {
-  width: 35%;
+  width: auto;
   display: flex;
   height: 100%;
   justify-content: flex-end;
@@ -332,12 +332,6 @@
     font-weight: 600;
   }
 
-  .subheading_text {
-    font-size: 45px;
-    font-family: 'Gudea';
-    font-weight: 400;
-  }
-
   .description {
     font-size: 16px;
     font-family: 'Gudea';
@@ -443,6 +437,7 @@
         font-size: 14px;
         letter-spacing: 1px;
         margin: 0 0 0px;
+        line-height: 1;
       }
 
       a {
@@ -687,10 +682,6 @@
   }
 }
 
-.exploreDisabled {
-  // opacity: 0.2;
-}
-
 .exploreSidebar {
   box-shadow: -3px 7px 14px 0px rgba(222, 222, 222, 1);
   float: right;
@@ -750,10 +741,6 @@
       text-align: center;
       padding: 7px 0;
     }
-  }
-
-  .exploreTaskDisabled {
-    // opacity: 0.1;
   }
 
   .progressBtn {
@@ -1196,6 +1183,49 @@
         margin-left: 8px;
         margin-top: -2px;
       }
+    }
+  }
+}
+
+@media (max-width: 1500px) {
+  .helpSection {
+    font-size: 12px;
+  }
+
+  .proWrapper {
+    .proName,
+    .proNameClicked {
+      font-size: 12px;
+    }
+  }
+}
+
+@media (max-width: 1350px) {
+  .sidebar {
+    .sidebarItems {
+      li {
+        margin-left: 15px;
+
+        a {
+          padding: 0 5px;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 1380px) {
+  .updateBannerWrapper {
+    p,
+    i,
+    span,
+    a {
+      font-size: 12px;
+      padding-bottom: 0;
+    }
+
+    #server-version {
+      padding-bottom: 0;
     }
   }
 }

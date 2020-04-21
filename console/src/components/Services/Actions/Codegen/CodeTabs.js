@@ -12,7 +12,7 @@ const CodeTabs = ({
   actionsSdl,
   currentAction,
   parentMutation,
-  shouldDerive
+  shouldDerive,
 }) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
@@ -20,6 +20,7 @@ const CodeTabs = ({
 
   const init = () => {
     setLoading(true);
+    setError(null);
     getFrameworkCodegen(
       framework,
       currentAction.action_name,
@@ -65,7 +66,7 @@ const CodeTabs = ({
     const editorProps = {
       width: '600px',
       value: content.trim(),
-      readOnly: true
+      readOnly: true,
     };
 
     switch (getFileExtensionFromFilename(name)) {

@@ -6,9 +6,11 @@ import {
   getAllCodegenFrameworks,
   getStarterKitPath,
   getGlitchProjectURL,
+  getStarterKitDownloadPath,
 } from './utils';
 import { getPersistedDerivedAction } from '../lsUtils';
-import Button from '../../../Common/Button/Button';
+
+import { Icon } from '../../../UIKit/atoms';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
 import { Spinner, TextLink, Flex, Box } from '../../../UIKit/atoms';
@@ -32,6 +34,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
 
   const init = () => {
     setLoading(true);
+    setError(null);
     getAllCodegenFrameworks()
       .then(frameworks => {
         setAllFrameworks(frameworks);
@@ -55,9 +58,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     return (
       <div>
         Error fetching codegen assets.&nbsp;
-        <TextLink onClick={init} hover="underline">
-          Try again
-        </TextLink>
+        <TextLink onClick={init}>Try again</TextLink>
       </div>
     );
   }
@@ -88,13 +89,13 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
     const getGlitchButton = () => {
       if (selectedFramework !== 'nodejs-express') return null;
       return (
-        <TextLink href={getGlitchProjectURL()} target="_blank">
-          <Button
-            color="white"
-            className={`${styles.add_mar_right_mid} ${styles.default_button}`}
-          >
-            Try on glitch
-          </Button>
+        <TextLink
+          href={getGlitchProjectURL()}
+          target="_blank"
+          mr="20px"
+          hover="underline"
+        >
+          <Icon type="link" mb="-2px" mr="3px" /> Try on glitch
         </TextLink>
       );
     };
@@ -109,20 +110,57 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
       ) {
         return null;
       }
+
       return (
-        <TextLink href={getStarterKitPath(selectedFramework)} target="_blank">
-          <Button color="white" className={`${styles.add_mar_right_mid}`}>
-            Get starter kit
-          </Button>
-        </TextLink>
+        <React.Fragment>
+          <TextLink
+            href={getStarterKitDownloadPath(selectedFramework)}
+            target="_blank"
+            mr="20px"
+            title={`Download starter kit for ${selectedFramework}`}
+            hover="underline"
+          >
+            <Icon type="download" mr="3px" /> Starter-kit.zip
+          </TextLink>
+          <TextLink
+            href={getStarterKitPath(selectedFramework)}
+            target="_blank"
+            title={`View the starter kit for ${selectedFramework} on GitHub`}
+            hover="underline"
+          >
+            <Icon type="github" mr="3px" mb="-2px" /> View on GitHub
+          </TextLink>
+        </React.Fragment>
+      );
+    };
+
+    const getHelperToolsSection = () => {
+      const glitchButton = getGlitchButton();
+      const starterKitButtons = getStarterKitButton();
+
+      if (!glitchButton && !starterKitButtons) {
+        return null;
+      }
+
+      return (
+        <div className={styles.marginLeftAuto}>
+          <div
+            className={`${styles.add_mar_bottom_small} ${styles.textAlignRight}`}
+          >
+            <b>Need help getting started quickly?</b>
+          </div>
+          <Flex mb="20px">
+            {getGlitchButton()}
+            {getStarterKitButton()}
+          </Flex>
+        </div>
       );
     };
 
     return (
       <Flex mb="20px">
         {getDrodown()}
-        {getGlitchButton()}
-        {getStarterKitButton()}
+        {getHelperToolsSection()}
       </Flex>
     );
   };

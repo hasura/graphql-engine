@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React from 'react';
 import { parse as sdlParse } from 'graphql/language/parser';
 
@@ -42,7 +43,7 @@ const ActionDefinitionEditor = ({
 
     const parseDebounceTimer = setTimeout(() => {
       if (v === '') {
-        return;
+        return onChange(v, null, null, null);
       }
       let _e = null;
       let ast = null;
@@ -78,7 +79,7 @@ const ActionDefinitionEditor = ({
               <Text color="red.primary">{errorMessage}</Text>
             </Flex>
           )}
-          <TextLink ml="auto" mr="20px" onClick={toggleModal} hover="underline">
+          {/* <TextLink ml="auto" mr="20px" onClick={toggleModal} hover="underline">
             <Icon type="copy" mr="xs" size={12} mb="-1px" />
             Clone an existing type
           </TextLink>
@@ -92,7 +93,7 @@ const ActionDefinitionEditor = ({
               handleClonedTypes={handleClonedTypes}
               toggleModal={toggleModal}
             />
-          </Modal>
+          </Modal> */}
         </Flex>
         <SDLEditor
           name="sdl-editor"
