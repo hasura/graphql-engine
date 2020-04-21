@@ -65,9 +65,12 @@ const makeDataRouter = (
           <Route path="permissions" component={PermissionCustomFunction} />
         </Route>
         <Route
-          path=":schema/tables/:table/browse"
+          path=":schema/tables/:table"
           component={viewTableConnector(connect)}
-        />
+        >
+          <IndexRedirect to="browse" />
+          <Route path="browse" component={viewTableConnector(connect)} />
+        </Route>
         <Route
           path=":schema/tables/:table/edit"
           component={editItemConnector(connect)}

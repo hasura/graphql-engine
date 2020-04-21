@@ -6,13 +6,14 @@ import TSEditor from '../../../Common/AceEditor/TypescriptEditor';
 import { getFrameworkCodegen } from './utils';
 import { getFileExtensionFromFilename } from '../../../Common/utils/jsUtils';
 import { Spinner } from '../../../UIKit/atoms';
+import styles from '../Actions.scss';
 
 const CodeTabs = ({
   framework,
   actionsSdl,
   currentAction,
   parentMutation,
-  shouldDerive
+  shouldDerive,
 }) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
@@ -20,6 +21,7 @@ const CodeTabs = ({
 
   const init = () => {
     setLoading(true);
+    setError(null);
     getFrameworkCodegen(
       framework,
       currentAction.action_name,
@@ -39,14 +41,16 @@ const CodeTabs = ({
   React.useEffect(init, [framework, parentMutation, shouldDerive]);
 
   if (loading) {
-    return <Spinner size='xl' my='100px' mx='auto' />;
+    return <Spinner size="xl" my="100px" mx="auto" />;
   }
 
   if (error) {
     return (
       <div>
         Error generating code.&nbsp;
-        <a onClick={init}>Try again</a>
+        <a onClick={init} className={styles.cursorPointer}>
+          Try again
+        </a>
       </div>
     );
   }
@@ -63,7 +67,7 @@ const CodeTabs = ({
     const editorProps = {
       width: '600px',
       value: content.trim(),
-      readOnly: true
+      readOnly: true,
     };
 
     switch (getFileExtensionFromFilename(name)) {
@@ -74,7 +78,7 @@ const CodeTabs = ({
     }
   });
 
-  return <Tabs id='codegen-files-tabs'>{files} </Tabs>;
+  return <Tabs id="codegen-files-tabs">{files} </Tabs>;
 };
 
 export default CodeTabs;

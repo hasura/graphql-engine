@@ -1357,6 +1357,13 @@ code {
   margin-right: 50px !important;
 }
 
+.marginLeftAuto {
+  margin-left: auto;
+}
+
+.textAlignRight {
+  text-align: right;
+}
 /* container height subtracting top header and bottom scroll bar */
 $mainContainerHeight: calc(100vh - 50px - 25px);
 
