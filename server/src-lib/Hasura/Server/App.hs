@@ -594,9 +594,10 @@ httpApp corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
         mkGetHandler $ do
           onlyAdmin
           let res = encJFromJValue $ runGetConfig
-                      (scAuthMode serverCtx) consoleAssetsDir
+                      (scAuthMode serverCtx)
                       (scEnableAllowlist serverCtx)
                       (EL._lqsOptions $ scLQState serverCtx)
+                      consoleAssetsDir
 
           return $ JSONResp $ HttpResponse res []
 

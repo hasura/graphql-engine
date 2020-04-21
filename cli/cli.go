@@ -181,7 +181,7 @@ func (c *ServerConfig) GetHasuraInternalServerConfig() error {
 			return fmt.Errorf("error fetching server config")
 		}
 
-		return fmt.Errorf("error fetching server config: %v", horror.CMDError())
+		return fmt.Errorf("error fetching server config: %v", horror.Error())
 	}
 
 	return json.NewDecoder(r.Body).Decode(&c.HasuraServerInternalConfig)
@@ -507,10 +507,6 @@ func (ec *ExecutionContext) Validate() error {
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint())
-	if err != nil {
-		return errors.Wrap(err, "failed to get version from server")
-	}
 	ec.Version.SetServerVersion(ec.Config.ServerConfig.HasuraServerInternalConfig.Version)
 	ec.Telemetry.ServerVersion = ec.Version.GetServerVersion()
 	isCompatible, reason := ec.Version.CheckCLIServerCompatibility()

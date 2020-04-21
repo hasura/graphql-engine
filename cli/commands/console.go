@@ -86,6 +86,7 @@ type ConsoleOptions struct {
 
 	StaticDir string
 	Browser   string
+	UseServerAssets bool
 
 	APIServerInterruptSignal     chan os.Signal
 	ConsoleServerInterruptSignal chan os.Signal
@@ -110,6 +111,10 @@ func (o *ConsoleOptions) Run() error {
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
 
 	adminSecretHeader := cli.GetAdminSecretHeaderName(o.EC.Version)
+	if o.EC.Config.ServerConfig.HasuraServerInternalConfig.ConsoleAssetsDir != "" {
+		o.UseServerAssets = true
+	}
+
 	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
 		"apiHost":         "http://" + o.Address,
 		"apiPort":         o.APIPort,

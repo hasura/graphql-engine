@@ -35,8 +35,8 @@ data ServerConfig
 
 $(deriveToJSON (aesonDrop 4 snakeCase) ''ServerConfig)
 
-runGetConfig :: HasVersion => AuthMode -> Bool -> LQ.LiveQueriesOptions -> ServerConfig
-runGetConfig am isAllowListEnabled liveQueryOpts = ServerConfig
+runGetConfig :: HasVersion => AuthMode -> Bool -> LQ.LiveQueriesOptions -> Maybe Text -> ServerConfig
+runGetConfig am isAllowListEnabled liveQueryOpts consoleAssetsDir = ServerConfig
     currentVersion
     (isAdminSecretSet am)
     (isAuthHookSet am)
