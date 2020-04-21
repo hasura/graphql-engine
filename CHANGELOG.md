@@ -7,6 +7,7 @@
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
 - server: add graphql-engine support for timestamps without timezones (fix #1217)
+- server: support inserting unquoted bigint, and throw an error if value overflows the bounds of the integer type (fix #576) (fix #4368)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
 - console: format row count in data browser for readablity (#4433)
@@ -55,7 +56,7 @@ The order, collapsed state of columns and rows limit is now persisted across pag
 - server: `type` field is not required if `jwk_url` is provided in JWT config
 - server: add a new field `claims_namespace_path` which accepts a JSON Path for looking up hasura claim in the JWT token (#4349)
 - server: support reusing Postgres scalars in custom types (close #4125)
-  
+
 ## `v1.2.0-beta.3`
 
 ### console: manage Postgres check constraints

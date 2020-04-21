@@ -132,14 +132,37 @@ parsePGValue ty val = case (ty, val) of
   (_          , String t) -> parseTyped <|> pure (PGValUnknown t)
   (_          , _)        -> parseTyped
   where
+    parseBoundedInt :: forall i. (Integral i, Bounded i) => Value -> AT.Parser i
+    parseBoundedInt val' =
+      withScientific
+        ("Integer expected for input type: " ++ show ty)
+        go
+        val'
+      where
+        go num = case toBoundedInteger num of
+          Just parsed -> return parsed
+          Nothing     -> fail $ "The value " ++ show num ++ " lies outside the "
+                         ++ "bounds or is not an integer.  Maybe it is a "
+                         ++ "float, or is there integer overflow?"
+    parseBoundedFloat :: forall a. (RealFloat a) => Value -> AT.Parser a
+    parseBoundedFloat val' =
+      withScientific
+        ("Float expected for input type: " ++ show ty)
+        go
+        val'
+      where
+        go num = case toBoundedRealFloat num of
+          Left _       -> fail $ "The value " ++ show num ++ " lies outside the "
+                          ++ "bounds.  Is it overflowing the float bounds?"
+          Right parsed -> return parsed
     parseTyped = case ty of
-      PGSmallInt -> PGValSmallInt <$> parseJSON val
-      PGInteger -> PGValInteger <$> parseJSON val
-      PGBigInt -> PGValBigInt <$> parseJSON val
-      PGSerial -> PGValInteger <$> parseJSON val
-      PGBigSerial -> PGValBigInt <$> parseJSON val
-      PGFloat -> PGValFloat <$> parseJSON val
-      PGDouble -> PGValDouble <$> parseJSON val
+      PGSmallInt -> PGValSmallInt <$> parseBoundedInt val
+      PGInteger -> PGValInteger <$> parseBoundedInt val
+      PGBigInt -> PGValBigInt <$> parseBoundedInt val
+      PGSerial -> PGValInteger <$> parseBoundedInt val
+      PGBigSerial -> PGValBigInt <$> parseBoundedInt val
+      PGFloat -> PGValFloat <$> parseBoundedFloat val
+      PGDouble -> PGValDouble <$> parseBoundedFloat val
       PGNumeric -> PGValNumeric <$> parseJSON val
       PGMoney -> PGValMoney <$> parseJSON val
       PGBoolean -> PGValBoolean <$> parseJSON val
@@ -158,7 +181,7 @@ parsePGValue ty val = case (ty, val) of
       PGRaster -> PGValRaster <$> parseJSON val
       PGUUID -> PGValUUID <$> parseJSON val
       PGUnknown tyName ->
-        fail $ "A string is expected for type : " ++ T.unpack tyName
+        fail $ "A string is expected for type: " ++ T.unpack tyName
 
 data TxtEncodedPGVal
   = TENull
