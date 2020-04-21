@@ -1,12 +1,11 @@
 {-|
   = Hasura.Eventing.HTTP
 
-  This module is an utility module providing HTTP utilities for Hasura.Eventing.EventTriggers and
-  Hasura.Eventing.ScheduledTriggers.
+  This module is an utility module providing HTTP utilities for
+  "Hasura.Eventing.EventTriggers" and "Hasura.Eventing.ScheduledTriggers".
 
-  The EventTriggers and ScheduledTriggers share the event delivery mechanism using the `tryWebhook`
-  function defined in this module.
-
+  The event triggers and scheduled triggers share the event delivery
+  mechanism using the `tryWebhook` function defined in this module.
 -}
 module Hasura.Eventing.HTTP
   ( HTTPErr(..)

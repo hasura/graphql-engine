@@ -311,6 +311,22 @@ instance Arbitrary RetryConfST where
 instance Arbitrary CronSchedule where
   arbitrary = elements sampleCronSchedules
 
--- TODO: add more
 sampleCronSchedules :: [CronSchedule]
-sampleCronSchedules = rights $ map Cr.parseCronSchedule [ "* * * * *" ]
+sampleCronSchedules = rights $ map Cr.parseCronSchedule $
+  [ "* * * * *"
+  -- every minute
+  , "5 * * * *"
+  -- every hour at the 5th minute
+  , "\5 * * * *"
+  -- every 5 minutes
+  , "* 5 * * *"
+  -- every minute of the 5th hour of the day
+  , "5 5 * * *"
+  -- fifth minute of the fifth hour every day
+  , "0 0 5 * *"
+  -- 00:00 of the 5th day of every month
+  , "0 0 1 1 *"
+  -- 00:00 of 1st of January
+  , "0 0 * * 0"
+  -- Every sunday at 00:00
+  ]
