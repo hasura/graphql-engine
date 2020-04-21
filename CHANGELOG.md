@@ -4,15 +4,20 @@
 
 ### Bug fixes and improvements
 
-- console: format row count in data browser for readaiblity (#4433)
+- server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
+- server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
+- console: change react ace editor theme to eclipse (close #4437)
+- console: fix columns reordering for relationship tables in data browser (#4483)
+- console: format row count in data browser for readablity (#4433)
 - console: move pre-release notification tooltip msg to top (#4433)
 - console: remove extra localPresets key from migrations (#4433)
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
 - console: fix row delete for relationships in data browser (#4433)
+- docs: add API docs for using environment variables as webhook urls in event triggers
 
 ## `v1.2.0-beta.4`
 
-### add query support in actions 
+### add query support in actions
 
 (close #4032) (#4309)
 
@@ -41,7 +46,6 @@ The order, collapsed state of columns and rows limit is now persisted across pag
 - console: surround string type column default value with quotes (close #4371) (#4423)
 - console: add undefined check to fix error (close #4444) (#4445)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
-- server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
 - server: manage inflight events when HGE instance is gracefully shutdown (close #3548)
@@ -50,7 +54,7 @@ The order, collapsed state of columns and rows limit is now persisted across pag
 - server: `type` field is not required if `jwk_url` is provided in JWT config
 - server: add a new field `claims_namespace_path` which accepts a JSON Path for looking up hasura claim in the JWT token (#4349)
 - server: support reusing Postgres scalars in custom types (close #4125)
-
+  
 ## `v1.2.0-beta.3`
 
 ### console: manage Postgres check constraints
@@ -59,6 +63,7 @@ Postgres Check constraints allows you to specify that the value in a certain col
 
 **Example**:
 When a product is created, ensure that the price is greater than zero. The SQL would look like this:
+
 ```sql
 CREATE TABLE products (
     product_id UUID DEFAULT gen_random_uuid(),
@@ -66,7 +71,9 @@ CREATE TABLE products (
     price NUMERIC CONSTRAINT positive_price CHECK (price > 0)
 );
 ```
+
 To create this table with Hasura Console, on the 'Add a new table' screen, after adding all the columns, scroll down to 'Check constraints' section and 'Add a new check constraint' with the following properties:
+
 - Constraint name: `positive_price`
 - Check expression: `price > 0`
 
@@ -76,11 +83,12 @@ Read more about check constraints on [Postgres Docs](https://www.postgresql.org/
 
 ### CLI: V2 migrations architecture
 
-  A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
+A new CLI migrations image is introduced to account for the new migrations workflow. If you're have a project with `version: 2` in `config.yaml`, you should use the new image: `hasura/graphql-engine:v1.2.0-cli-migrations-v2`. Mount the migrations at `/hasura-migrations` and metadata at `/hasura-metadata`.
 
 (close #3969) (#4145)
 
 ### Bug fixes and improvements
+
 - server: improve performance of replace_metadata tracking many tables (fix #3802)
 - server: option to reload remote schemas in 'reload_metadata' API (fix #3792, #4117)
 - server: fix various space leaks to avoid excessive memory consumption
@@ -139,6 +147,7 @@ Read more about actions in the [docs](https://docs.hasura.io/1.0/graphql/manual/
 A new command is added to the server executable for downgrading to earlier releases. Previously, if you ran a newer Hasura version and wanted to go back to an old version on the same database, you had to stop Hasura, run some SQL statements and start Hasura again. With the new `downgrade` command, these SQL statements can be run automatically.
 
 **Example**: Downgrade from `v1.2.0` to `v1.0.0`:
+
 ```bash
 # stop hasura v1.2.0
 
@@ -159,6 +168,7 @@ When using webhooks to authenticate incoming requests to the GraphQL engine serv
 Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/authentication/webhook.html).
 
 ### Bug fixes and improvements
+
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
