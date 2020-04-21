@@ -608,7 +608,8 @@ func (ec *ExecutionContext) readConfig() error {
 	// this populates the ec.Config.ServerConfig.HasuraServerInternalConfig
 	err = ec.Config.ServerConfig.GetHasuraInternalServerConfig()
 	if err != nil {
-		return errors.Wrap(err, "cannot get config information from server")
+		// If config API is not enabled log it and don't fail
+		ec.Logger.Debugf("cannot get config information from server, this might be because config API is not enabled: %v", err)
 	}
 
 	return nil
