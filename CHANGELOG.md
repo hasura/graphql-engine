@@ -9,6 +9,11 @@
 - server: add graphql-engine support for timestamps without timezones (fix #1217)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
+- console: format row count in data browser for readablity (#4433)
+- console: move pre-release notification tooltip msg to top (#4433)
+- console: remove extra localPresets key present in migration files on permissions change (close #3976) (#4433)
+- console: make nullable and unique labels for columns clickable in insert and modify (#4433)
+- console: fix row delete for relationships in data browser (#4433)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 
 ## `v1.2.0-beta.4`
@@ -17,22 +22,22 @@
 
 (close #4032) (#4309)
 
-### console: persist columns state in data browser
+### console: persist page state in data browser across navigation
 
-The order, collapsed state of columns and page size is now persisted across page navigation
+The order, collapsed state of columns and rows limit is now persisted across page navigation
 
 (close #3390) (#3753)
 
 ### Bug fixes and improvements
 
-- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
-- console: query support for actions (#4318)
 - cli: query support for actions (#4318)
 - cli: add retry_conf in event trigger for squashing migrations (close #4296) (#4324)
 - cli: allow customization of server api paths (close #4016)
 - cli: clean up migration files created during a failed migrate api (close #4312) (#4319)
 - cli: add support for multiple versions of plugin (close #4105)
 - cli: template assets path in console HTML for unversioned builds
+- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
+- console: query support for actions (#4318)
 - console: recover from SDL parse in actions type definition editor (fix #4385) (#4389)
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
 - console: fix clone permission migrations (close #3985) (#4277)
