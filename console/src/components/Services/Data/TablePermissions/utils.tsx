@@ -8,10 +8,12 @@ import { UNSAFE_keys } from '../../../Common/utils/tsUtils';
 
 type FilterType = 'check' | 'filter';
 type BaseQueryType = 'select' | 'update' | 'insert' | 'delete';
+
 type DisplayQueryType =
   | Exclude<BaseQueryType, 'update'>
   | 'post update'
   | 'pre update';
+
 type PermissionsState = {
   query: BaseQueryType;
   filterType: FilterType;
@@ -19,20 +21,18 @@ type PermissionsState = {
   [key in BaseQueryType]: string;
 };
 
-export const filterTypeToDisplayName = (filterType: FilterType) => {
-  switch (filterType) {
-    case 'check':
-      return 'pre update';
-    case 'filter':
-      return 'post update';
-    default:
-      throw new Error('invalid filter type');
-  }
+export const filterTypeDisplayName: Record<FilterType, DisplayQueryType> = {
+  filter: 'pre update',
+  check: 'post update',
 };
 
 export const updateFilterTypeLabel: Record<FilterType, React.ReactElement> = {
-  check: <b>Post-update check</b>,
   filter: <b>Pre-update check</b>,
+  check: (
+    <>
+      <b>Post-update check</b> <i>(optional)</i>
+    </>
+  ),
 };
 
 const tooltipMsg: Record<FilterType, string> = {
@@ -77,7 +77,7 @@ export const getFilterQueries = (
         if (filterString) {
           filterQueries[filterString] = filterQueries[filterString] || [];
           filterQueries[filterString].push(
-            filterTypeToDisplayName(fType as FilterType)
+            filterTypeDisplayName[fType as FilterType]
           );
         }
       });
