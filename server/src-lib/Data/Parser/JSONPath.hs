@@ -13,6 +13,7 @@ import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
 import           Data.Attoparsec.Text
 
 parseJSONPath :: T.Text -> Either String JSONPath
+parseJSONPath "$" = Right []
 parseJSONPath txt = first (const invalidMessage) $
   parseOnly (optional (char '$') *> many1' element <* endOfInput) txt
   where

@@ -46,6 +46,17 @@ response:
           hello world!: hi                                                                                                                                                     
         objs:                                                                                                                                                                  
           - 你好: Hello!    
+      c32_json_dollar:
+        a: b
+        obj:
+          c1: c2
+        arr: [1,2,3]
+        _underscore: 0                                                                                                                                                         
+        '!@#$%^': special                                                                                                                                                      
+        translations:                                                                                                                                                          
+          hello world!: hi                                                                                                                                                     
+        objs:                                                                                                                                                                  
+          - 你好: Hello!    
       c32_json_child_prop: c2
       c32_json_child_prop_no_dot: b
       c32_json_array_item: 1
@@ -57,9 +68,20 @@ response:
       c32_json_nested_special_array_double_quote_dot: Hello!
       c33_jsonb:
         c: d
+        arr: [4,5,6]    
         obj:
-          e1: e2
-        arr: [4,5,6]                                                                                                                                                        
+          e1: e2                                                                                                                                                    
+        objs:                                                                                                                                                                  
+          - 你好: Hello!                                                                                                                                                         
+        '!@#$%^': special                                                                                                                                                      
+        _underscore: 0                                                                                                                                                         
+        translations:                                                                                                                                                          
+          hello world!: hi   
+      c33_jsonb_dollar:
+        c: d
+        arr: [4,5,6]  
+        obj:
+          e1: e2                                                                                                                                                      
         objs:                                                                                                                                                                  
           - 你好: Hello!                                                                                                                                                         
         '!@#$%^': special                                                                                                                                                      
@@ -130,6 +152,7 @@ query:
         c30_inet
         c31_macaddr
         c32_json
+        c32_json_dollar: c32_json(path: "$")
         c32_json_child_prop: c32_json(path: ".obj.c1")
         c32_json_child_prop_no_dot: c32_json(path: "a")
         c32_json_array_item: c32_json(path: "arr[0]")
@@ -140,6 +163,7 @@ query:
         c32_json_nested_special_array_double_quote: c32_json(path: "objs[0][\"你好\"]")
         c32_json_nested_special_array_double_quote_dot: c32_json(path: "objs[0].[\"你好\"]")
         c33_jsonb
+        c33_jsonb_dollar: c33_jsonb(path: "$")
         c33_jsonb_child_prop: c33_jsonb(path: ".obj.e1")
         c33_jsonb_child_prop_no_dot: c33_jsonb(path: "c")
         c33_jsonb_array_item: c33_jsonb(path: "arr[2]")
