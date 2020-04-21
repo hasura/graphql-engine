@@ -507,7 +507,11 @@ func (ec *ExecutionContext) Validate() error {
 }
 
 func (ec *ExecutionContext) checkServerVersion() error {
-	ec.Version.SetServerVersion(ec.Config.ServerConfig.HasuraServerInternalConfig.Version)
+	v, err := version.FetchServerVersion(ec.Config.ServerConfig.GetVersionEndpoint())
+	if err != nil {
+		return errors.Wrap(err, "failed to get version from server")
+	}
+	ec.Version.SetServerVersion(v)
 	ec.Telemetry.ServerVersion = ec.Version.GetServerVersion()
 	isCompatible, reason := ec.Version.CheckCLIServerCompatibility()
 	ec.Logger.Debugf("versions: cli: [%s] server: [%s]", ec.Version.GetCLIVersion(), ec.Version.GetServerVersion())
