@@ -68,15 +68,13 @@ resolveScheduledTrigger
 resolveScheduledTrigger CreateScheduledTrigger {..} = do
   webhookInfo <- getWebhookInfoFromConf stWebhook
   headerInfo <- getHeaderInfosFromConf stHeaders
-  let stInfo =
-        ScheduledTriggerInfo
-          stName
-          stSchedule
-          stPayload
-          stRetryConf
-          webhookInfo
-          headerInfo
-  pure stInfo
+  pure $
+    ScheduledTriggerInfo stName
+                         stSchedule
+                         stPayload
+                         stRetryConf
+                         webhookInfo
+                         headerInfo
 
 runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger -> m EncJSON
 runUpdateScheduledTrigger q = do
