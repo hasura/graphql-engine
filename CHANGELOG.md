@@ -7,6 +7,7 @@
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
 - docs: add API docs for using environment variables as webhook urls in event triggers
+- server: fix recreating action's permissions (close #4377)
 
 ## `v1.2.0-beta.4`
 
@@ -48,7 +49,7 @@ The order, collapsed state of columns and page size is now persisted across page
 - server: `type` field is not required if `jwk_url` is provided in JWT config
 - server: add a new field `claims_namespace_path` which accepts a JSON Path for looking up hasura claim in the JWT token (#4349)
 - server: support reusing Postgres scalars in custom types (close #4125)
-  
+
 ## `v1.2.0-beta.3`
 
 ### console: manage Postgres check constraints
