@@ -315,23 +315,23 @@ const generateWhereClause = options => {
 export const fetchTrackedTableFkQuery = options => {
   const whereQuery = generateWhereClause(options);
 
-  const runSql = `select 
+  const runSql = `select
   COALESCE(
     json_agg(
       row_to_json(info)
-    ), 
+    ),
     '[]' :: JSON
-  ) AS tables 
-FROM 
+  ) AS tables
+FROM
   (
     select
-      hdb_fkc.*, 
-      fk_ref_table.table_name IS NOT NULL AS is_ref_table_tracked 
-    from 
-      hdb_catalog.hdb_table AS ist 
-      JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc ON hdb_fkc.table_schema = ist.table_schema 
-      and hdb_fkc.table_name = ist.table_name 
-      LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.ref_table_table_schema 
+      hdb_fkc.*,
+      fk_ref_table.table_name IS NOT NULL AS is_ref_table_tracked
+    from
+      hdb_catalog.hdb_table AS ist
+      JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc ON hdb_fkc.table_schema = ist.table_schema
+      and hdb_fkc.table_name = ist.table_name
+      LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.ref_table_table_schema
       and fk_ref_table.table_name = hdb_fkc.ref_table
     ${whereQuery}
   ) as info
@@ -346,24 +346,24 @@ FROM
 export const fetchTrackedTableReferencedFkQuery = options => {
   const whereQuery = generateWhereClause(options);
 
-  const runSql = `select 
+  const runSql = `select
   COALESCE(
     json_agg(
       row_to_json(info)
-    ), 
+    ),
     '[]' :: JSON
-  ) AS tables 
-FROM 
+  ) AS tables
+FROM
   (
     select DISTINCT ON (hdb_fkc.constraint_oid)
-      hdb_fkc.*, 
+      hdb_fkc.*,
       fk_ref_table.table_name IS NOT NULL AS is_table_tracked,
       hdb_uc.constraint_name IS NOT NULL AS is_unique
-    from 
-      hdb_catalog.hdb_table AS ist 
-      JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc ON hdb_fkc.ref_table_table_schema = ist.table_schema 
-      and hdb_fkc.ref_table = ist.table_name 
-      LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.table_schema 
+    from
+      hdb_catalog.hdb_table AS ist
+      JOIN hdb_catalog.hdb_foreign_key_constraint AS hdb_fkc ON hdb_fkc.ref_table_table_schema = ist.table_schema
+      and hdb_fkc.ref_table = ist.table_name
+      LEFT OUTER JOIN hdb_catalog.hdb_table AS fk_ref_table ON fk_ref_table.table_schema = hdb_fkc.table_schema
       and fk_ref_table.table_name = hdb_fkc.table_name
       LEFT OUTER JOIN hdb_catalog.hdb_unique_constraint AS hdb_uc ON hdb_uc.table_schema = hdb_fkc.table_schema
       and hdb_uc.table_name = hdb_fkc.table_name and ARRAY(select json_array_elements_text(hdb_uc.columns) ORDER BY json_array_elements_text) = ARRAY(select json_object_keys(hdb_fkc.column_mapping) ORDER BY json_object_keys)
@@ -382,36 +382,36 @@ export const fetchTableListQuery = options => {
 
   // TODO: optimise this. Multiple OUTER JOINS causes data bloating
   const runSql = `
-select 
+select
   COALESCE(
     json_agg(
       row_to_json(info)
-    ), 
+    ),
     '[]' :: JSON
-  ) AS tables 
-FROM 
+  ) AS tables
+FROM
   (
-    select 
-      ist.table_schema, 
+    select
+      ist.table_schema,
       ist.table_name,
       ist.table_type,
       obj_description(
         (
           quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)
-        ):: regclass, 
+        ):: regclass,
         'pg_class'
-      ) AS comment, 
+      ) AS comment,
       COALESCE(json_agg(
         DISTINCT row_to_json(is_columns) :: JSONB || jsonb_build_object(
           'comment',
           (
-            SELECT 
+            SELECT
               pg_catalog.col_description(
                 c.oid, is_columns.ordinal_position :: int
-              ) 
-            FROM 
-              pg_catalog.pg_class c 
-            WHERE 
+              )
+            FROM
+              pg_catalog.pg_class c
+            WHERE
               c.oid = (quote_ident(ist.table_schema) || '.' || quote_ident(ist.table_name)):: regclass :: oid
               AND c.relname = is_columns.table_name
           )
@@ -421,27 +421,27 @@ FROM
         DISTINCT row_to_json(is_triggers) :: JSONB || jsonb_build_object(
           'comment',
           (
-            SELECT description FROM pg_description JOIN pg_trigger ON pg_description.objoid = pg_trigger.oid 
-            WHERE 
-              tgname = is_triggers.trigger_name 
+            SELECT description FROM pg_description JOIN pg_trigger ON pg_description.objoid = pg_trigger.oid
+            WHERE
+              tgname = is_triggers.trigger_name
               AND tgrelid = (quote_ident(is_triggers.event_object_schema) || '.' || quote_ident(is_triggers.event_object_table)):: regclass :: oid
           )
         )
       ) FILTER (WHERE is_triggers.trigger_name IS NOT NULL), '[]' :: JSON) AS triggers,
       row_to_json(is_views) AS view_info
-    FROM 
-      information_schema.tables AS ist 
-      LEFT OUTER JOIN information_schema.columns AS is_columns ON 
-        is_columns.table_schema = ist.table_schema 
-        AND is_columns.table_name = ist.table_name 
+    FROM
+      information_schema.tables AS ist
+      LEFT OUTER JOIN information_schema.columns AS is_columns ON
+        is_columns.table_schema = ist.table_schema
+        AND is_columns.table_name = ist.table_name
       LEFT OUTER JOIN information_schema.views AS is_views ON is_views.table_schema = ist.table_schema
         AND is_views.table_name = ist.table_name
-      LEFT OUTER JOIN information_schema.triggers AS is_triggers ON 
-        is_triggers.event_object_schema = ist.table_schema AND 
+      LEFT OUTER JOIN information_schema.triggers AS is_triggers ON
+        is_triggers.event_object_schema = ist.table_schema AND
         is_triggers.event_object_table = ist.table_name
-    ${whereQuery} 
-    GROUP BY 
-      ist.table_schema, 
+    ${whereQuery}
+    GROUP BY
+      ist.table_schema,
       ist.table_name,
       ist.table_type,
       is_views.*
@@ -617,7 +617,7 @@ export const commonDataTypes = [
  * Filter types whose typename is unknown and type category is not 'Pseudo' and it is valid and available to be used
  * */
 export const fetchColumnTypesQuery = `
-SELECT 
+SELECT
   string_agg(t.typname, ',') as "Type Name",
   string_agg(pg_catalog.format_type(t.oid, NULL), ',') as "Display Name",
   string_agg(coalesce(pg_catalog.obj_description(t.oid, 'pg_type'), ''), ':') as "Descriptions",
@@ -667,3 +667,6 @@ WHERE
   AND relname = '${tableName}';
 `;
 };
+
+export const isColTypeString = colType =>
+  ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
