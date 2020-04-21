@@ -4,8 +4,6 @@ import gql from 'graphql-tag';
 import { Button, Form } from 'react-bootstrap';
 import { Result } from './Result';
 import { QUERY_GET_POLL, MUTATION_VOTE } from './GraphQL';
-// import { defaultNormalizedCacheFactory } from 'apollo-boost';
-
 
 class PollQuestion extends Component {
   constructor(props) {
