@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hasura/graphql-engine/cli/migrate"
+
 	"github.com/hasura/graphql-engine/cli"
 	"github.com/hasura/graphql-engine/cli/metadata/actions"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
@@ -47,8 +49,8 @@ func newActionsCreateCmd(ec *cli.ExecutionContext, v *viper.Viper) *cobra.Comman
 	f.String("webhook", "", "webhook to use in action")
 
 	// bind to viper
-	v.BindPFlag("actions.kind", f.Lookup("kind"))
-	v.BindPFlag("actions.handler_webhook_baseurl", f.Lookup("webhook"))
+	util.BindPFlag(v, "actions.kind", f.Lookup("kind"))
+	util.BindPFlag(v, "actions.handler_webhook_baseurl", f.Lookup("webhook"))
 
 	return actionsCreateCmd
 }
@@ -62,7 +64,7 @@ type actionsCreateOptions struct {
 }
 
 func (o *actionsCreateOptions) run() error {
-	migrateDrv, err := newMigrate(o.EC, true)
+	migrateDrv, err := migrate.NewMigrate(o.EC, true)
 	if err != nil {
 		return err
 	}

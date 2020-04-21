@@ -23,7 +23,7 @@ import {
   functionWrapperConnector,
   permissionsSummaryConnector,
   ModifyCustomFunction,
-  PermissionCustomFunction
+  PermissionCustomFunction,
   // metadataConnector,
 } from '.';
 
@@ -33,7 +33,7 @@ import {
   fetchDataInit,
   fetchFunctionInit,
   UPDATE_CURRENT_SCHEMA,
-  updateSchemaInfo
+  updateSchemaInfo,
   // ADMIN_SECRET_ERROR,
 } from './DataActions';
 
@@ -49,85 +49,88 @@ const makeDataRouter = (
   consoleModeRedirects
 ) => {
   return (
-    <Route path='data' component={dataPageConnector(connect)}>
-      <IndexRedirect to='schema/public' />
-      <Route path='schema' component={rightContainerConnector(connect)}>
-        <IndexRedirect to='public' />
-        <Route path=':schema' component={schemaConnector(connect)} />
-        <Route path=':schema/tables' component={schemaConnector(connect)} />
-        <Route path=':schema/views' component={schemaConnector(connect)} />
+    <Route path="data" component={dataPageConnector(connect)}>
+      <IndexRedirect to="schema/public" />
+      <Route path="schema" component={rightContainerConnector(connect)}>
+        <IndexRedirect to="public" />
+        <Route path=":schema" component={schemaConnector(connect)} />
+        <Route path=":schema/tables" component={schemaConnector(connect)} />
+        <Route path=":schema/views" component={schemaConnector(connect)} />
         <Route
-          path=':schema/functions/:functionName'
+          path=":schema/functions/:functionName"
           component={functionWrapperConnector(connect)}
         >
-          <IndexRedirect to='modify' />
-          <Route path='modify' component={ModifyCustomFunction} />
-          <Route path='permissions' component={PermissionCustomFunction} />
+          <IndexRedirect to="modify" />
+          <Route path="modify" component={ModifyCustomFunction} />
+          <Route path="permissions" component={PermissionCustomFunction} />
         </Route>
         <Route
-          path=':schema/tables/:table/browse'
+          path=":schema/tables/:table"
           component={viewTableConnector(connect)}
-        />
+        >
+          <IndexRedirect to="browse" />
+          <Route path="browse" component={viewTableConnector(connect)} />
+        </Route>
         <Route
-          path=':schema/tables/:table/edit'
+          path=":schema/tables/:table/edit"
           component={editItemConnector(connect)}
         />
         <Route
-          path=':schema/tables/:table/insert'
+          path=":schema/tables/:table/insert"
           component={insertItemConnector(connect)}
         />
         <Route
-          path=':schema/tables/:table/modify'
+          path=":schema/tables/:table/modify"
           onEnter={migrationRedirects}
           component={modifyTableConnector(connect)}
         />
         <Route
-          path=':schema/tables/:table/relationships'
+          path=":schema/tables/:table/relationships"
           component={relationshipsConnector(connect)}
         />
         <Route
-          path=':schema/tables/:table/permissions'
+          path=":schema/tables/:table/permissions"
           component={permissionsConnector(connect)}
           tableType={'table'}
         />
         <Route
-          path=':schema/views/:table/browse'
+          path=":schema/views/:table/browse"
           component={viewTableConnector(connect)}
         />
         <Route
-          path=':schema/views/:table/modify'
+          path=":schema/views/:table/modify"
           onEnter={migrationRedirects}
           component={modifyViewConnector(connect)}
         />
         <Route
-          path=':schema/views/:table/relationships'
+          path=":schema/views/:table/relationships"
           component={relationshipsViewConnector(connect)}
         />
         <Route
-          path=':schema/views/:table/permissions'
+          path=":schema/views/:table/permissions"
           component={permissionsConnector(connect)}
           tableType={'view'}
         />
         <Route
-          path=':schema/permissions'
+          path=":schema/permissions"
           component={permissionsSummaryConnector(connect)}
         />
       </Route>
       <Route
-        path='schema/:schema/table/add'
+        path="schema/:schema/table/add"
         onEnter={composeOnEnterHooks([migrationRedirects])}
         component={addTableConnector(connect)}
       />
       <Route
-        path='schema/:schema/existing-table-view/add'
+        path="schema/:schema/existing-table-view/add"
         component={addExistingTableViewConnector(connect)}
       />
-      <Route path='sql' component={rawSQLConnector(connect)} />
+      <Route path="sql" component={rawSQLConnector(connect)} />
       {/*
       <Route path="metadata" component={metadataConnector(connect)} />
       */}
       <Route
-        path='migrations'
+        path="migrations"
         onEnter={composeOnEnterHooks([consoleModeRedirects])}
         component={migrationsConnector(connect)}
       />
@@ -143,7 +146,7 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
     // if admin secret is not available in localstorage and cli, make a api call to data without admin secret.
     // if the api fails, then redirect to login - this is a fresh user/browser flow
     const {
-      tables: { allSchemas }
+      tables: { allSchemas },
     } = store.getState();
 
     if (allSchemas.length) {
@@ -163,11 +166,11 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
     Promise.all([
       store.dispatch({
         type: UPDATE_CURRENT_SCHEMA,
-        currentSchema: currentSchema
+        currentSchema: currentSchema,
       }),
       store.dispatch(fetchDataInit()),
       store.dispatch(updateSchemaInfo()),
-      store.dispatch(fetchFunctionInit())
+      store.dispatch(fetchFunctionInit()),
     ]).then(
       () => {
         cb();
@@ -207,7 +210,7 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
       consoleModeRedirects
     ),
     requireSchema,
-    migrationRedirects
+    migrationRedirects,
   };
 };
 

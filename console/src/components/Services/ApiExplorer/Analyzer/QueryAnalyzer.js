@@ -10,7 +10,7 @@ export default class QueryAnalyser extends React.Component {
     Modal.setAppElement('body');
     this.state = {
       analyseData: [],
-      activeNode: 0
+      activeNode: 0,
     };
   }
 
@@ -26,7 +26,7 @@ export default class QueryAnalyser extends React.Component {
       .then(data => {
         this.setState({
           analyseData: data,
-          activeNode: 0
+          activeNode: 0,
         });
       })
       .catch(e => {
@@ -104,7 +104,7 @@ export default class QueryAnalyser extends React.Component {
                                   .sql,
                                 { language: 'sql' }
                               )
-                            ).value
+                            ).value,
                         }}
                       />
                     </pre>
@@ -228,5 +228,5 @@ QueryAnalyser.propTypes = {
   show: PropTypes.bool.isRequired,
   analyseQuery: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   clearAnalyse: PropTypes.func.isRequired,
-  analyzeFetcher: PropTypes.func.isRequired
+  analyzeFetcher: PropTypes.func.isRequired,
 };

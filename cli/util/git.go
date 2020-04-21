@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 )
 
@@ -77,7 +78,9 @@ func (g *GitUtil) updateAndCleanUntracked() error {
 	if err != nil {
 		return err
 	}
-	err = repo.Fetch(&git.FetchOptions{})
+	err = repo.Fetch(&git.FetchOptions{
+		RefSpecs: []config.RefSpec{"refs/*:refs/*"},
+	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return err
 	}
@@ -85,13 +88,20 @@ func (g *GitUtil) updateAndCleanUntracked() error {
 	if err != nil {
 		return err
 	}
-	err = wt.Pull(&git.PullOptions{})
+	err = wt.Checkout(&git.CheckoutOptions{
+		Branch: g.ReferenceName,
+	})
+	if err != nil {
+		return err
+	}
+	err = wt.Pull(&git.PullOptions{
+		ReferenceName: g.ReferenceName,
+	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return err
 	}
 	err = wt.Reset(&git.ResetOptions{
-		Commit: plumbing.ZeroHash,
-		Mode:   git.HardReset,
+		Mode: git.HardReset,
 	})
 	if err != nil {
 		return err
