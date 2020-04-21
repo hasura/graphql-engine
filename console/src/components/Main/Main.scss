@@ -773,10 +773,6 @@
     }
   }
 
-  .exploreTaskDisabled {
-    // opacity: 0.1;
-  }
-
   .progressBtn {
     float: right;
     padding-top: 10px;
@@ -917,37 +913,6 @@
     align-items: center;
     height: 100%;
     font-size: 14px;
-  }
-
-  .secureSectionSymbol {
-    color: inherit !important;
-    padding-top: 3px;
-  }
-}
-
-@keyframes heartbeat {
-  0% {
-    transform: scale(0.75);
-  }
-
-  20% {
-    transform: scale(1);
-  }
-
-  40% {
-    transform: scale(0.75);
-  }
-
-  60% {
-    transform: scale(1);
-  }
-
-  80% {
-    transform: scale(0.75);
-  }
-
-  100% {
-    transform: scale(0.75);
   }
 }
 
