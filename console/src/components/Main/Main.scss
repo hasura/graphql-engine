@@ -138,7 +138,7 @@
 }
 
 .clusterInfoWrapper {
-  width: 35%;
+  width: auto;
   display: flex;
   height: 100%;
   justify-content: flex-end;
@@ -773,10 +773,6 @@
     }
   }
 
-  .exploreTaskDisabled {
-    // opacity: 0.1;
-  }
-
   .progressBtn {
     float: right;
     padding-top: 10px;
@@ -908,7 +904,7 @@
 }
 
 .secureSection {
-  padding-right: 15px;
+  padding: 16px 15px 14px 15px;
 
   a {
     color: #ffffff;
@@ -1232,5 +1228,44 @@
         margin-left: 8px;
       }
     }
+  }
+}
+
+@media (max-width: 1500px) {
+  .helpSection {
+    font-size: 12px;
+  }
+
+  .proWrapper {
+    .proName,
+    .proNameClicked {
+      font-size: 12px;
+    }
+  }
+}
+
+@media (max-width: 1350px) {
+  .sidebar {
+    .sidebarItems {
+      li {
+        margin-left: 15px;
+
+        a {
+          padding: 0 5px;
+        }
+      }
+    }
+  }
+
+  .secureSection {
+    a {
+      font-size: 12px;
+    }
+  }
+}
+
+@media (max-width: 1380px) {
+  .updateBannerWrapper {
+    font-size: 12px;
   }
 }

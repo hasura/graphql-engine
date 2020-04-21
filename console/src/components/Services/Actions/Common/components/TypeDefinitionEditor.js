@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React from 'react';
 import { parse as sdlParse } from 'graphql/language/parser';
 
@@ -34,7 +35,7 @@ const ActionDefinitionEditor = ({
 
     const parseDebounceTimer = setTimeout(() => {
       if (v === '') {
-        return;
+        return onChange(v, null, null, null);
       }
       let _e = null;
       let ast = null;
@@ -72,24 +73,27 @@ const ActionDefinitionEditor = ({
               <div>{errorMessage}</div>
             </div>
           )}
-          <a
-            className={`${styles.cloneTypeText} ${styles.cursorPointer} ${styles.add_mar_right}`}
-            onClick={toggleModal}
-          >
-            <Icon type="copy" mr="xs" />
-            Clone an existing type
-          </a>
-          <Modal
-            show={modalOpen}
-            title={'Clone an existing type'}
-            onClose={toggleModal}
-            customClass={styles.modal}
-          >
-            <CloneTypeModal
-              handleClonedTypes={handleClonedTypes}
-              toggleModal={toggleModal}
-            />
-          </Modal>
+          {/*
+            <a
+              className={`${styles.cloneTypeText} ${styles.cursorPointer} ${styles.add_mar_right}`}
+              onClick={toggleModal}
+            >
+              <Icon type="copy" mr="xs" />
+              Clone an existing type
+            </a>
+            <Modal
+              show={modalOpen}
+              title={'Clone an existing type'}
+              onClose={toggleModal}
+              customClass={styles.modal}
+            >
+              <CloneTypeModal
+                handleClonedTypes={handleClonedTypes}
+                toggleModal={toggleModal}
+              />
+            </Modal>
+            
+          */}
         </div>
         <SDLEditor
           name="sdl-editor"

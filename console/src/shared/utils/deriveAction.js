@@ -9,7 +9,12 @@ import {
 } from 'graphql';
 import { wrapTypename, getAstTypeMetadata } from './wrappingTypeUtils';
 import { inbuiltTypes } from './hasuraCustomTypeUtils';
-import { getTypeFields, getUnderlyingType } from './graphqlSchemaUtils';
+import {
+  getTypeFields,
+  getUnderlyingType,
+  getOperationType,
+} from './graphqlSchemaUtils';
+import { isValidOperationName } from './sdlUtils';
 
 export const validateOperation = (operationString, clientSchema) => {
   // parse operation string
@@ -17,7 +22,7 @@ export const validateOperation = (operationString, clientSchema) => {
   try {
     operationAst = sdlParse(operationString);
   } catch (e) {
-    throw Error('invalid SDL');
+    throw Error('this seems to be an invalid GraphQL query');
   }
 
   const schemaValidationErrors = validate(clientSchema, operationAst);
@@ -27,16 +32,16 @@ export const validateOperation = (operationString, clientSchema) => {
     );
   }
 
-  if (operationAst.definitions.find(d => d.kind === 'FragmentDefinition')) {
+  if (operationAst.definitions.some(d => d.kind === 'FragmentDefinition')) {
     throw Error('fragments are not supported');
   }
 
-  if (operationAst.definitions.find(d => d.operation !== 'mutation')) {
-    throw Error('queries cannot be derived into actions');
+  if (operationAst.definitions.some(d => !isValidOperationName(d.operation))) {
+    throw Error('subscriptions cannot be derived into actions');
   }
 
-  operationAst.definitions = operationAst.definitions.filter(
-    d => d.operation === 'mutation'
+  operationAst.definitions = operationAst.definitions.filter(d =>
+    isValidOperationName(d.operation)
   );
 
   // throw error if the AST is empty
@@ -64,11 +69,6 @@ export const validateOperation = (operationString, clientSchema) => {
     throw Error('the given operation must ask for at least one root field');
   }
 
-  // throw error if the operation does not have variables
-  if (!operationAst.definitions[0].variableDefinitions.length) {
-    throw Error('only operations using variables can be derived');
-  }
-
   return operationAst;
 };
 
@@ -87,6 +87,8 @@ const deriveAction = (
   } catch (e) {
     throw e;
   }
+
+  const operation = operationAst.definitions[0].operation;
 
   const variables = operationAst.definitions[0].variableDefinitions;
 
@@ -108,7 +110,11 @@ const deriveAction = (
   };
 
   const allHasuraTypes = clientSchema._typeMap;
-  const operationType = clientSchema._mutationType; // TODO better handling for queries
+  const operationType = getOperationType(clientSchema, operation);
+
+  const isHasuraScalar = name => {
+    return isScalarType(allHasuraTypes[name]);
+  };
 
   const actionArguments = [];
   const newTypes = {};
@@ -121,7 +127,7 @@ const deriveAction = (
     newType.name = typename;
 
     if (isScalarType(type)) {
-      if (!inbuiltTypes[type.name]) {
+      if (!inbuiltTypes[type.name] && !allHasuraTypes[type.name]) {
         newType.kind = 'scalar';
         newTypes[typename] = newType;
       }
@@ -149,7 +155,10 @@ const deriveAction = (
           type: underLyingType,
           wraps: fieldTypeWraps,
         } = getUnderlyingType(tf.type);
-        if (inbuiltTypes[underLyingType.name]) {
+        if (
+          inbuiltTypes[underLyingType.name] ||
+          isHasuraScalar(underLyingType.name)
+        ) {
           _tf.type = wrapTypename(underLyingType.name, fieldTypeWraps);
         } else {
           _tf.type = wrapTypename(
@@ -170,7 +179,10 @@ const deriveAction = (
       name: v.variable.name.value,
     };
     const argTypeMetadata = getAstTypeMetadata(v.type);
-    if (!inbuiltTypes[argTypeMetadata.typename]) {
+    if (
+      !inbuiltTypes[argTypeMetadata.typename] &&
+      !isHasuraScalar(argTypeMetadata.typename)
+    ) {
       const argTypename = prefixTypename(argTypeMetadata.typename);
       generatedArg.type = wrapTypename(argTypename, argTypeMetadata.stack);
       const typeInSchema = allHasuraTypes[argTypeMetadata.typename];
@@ -201,19 +213,10 @@ const deriveAction = (
       outputTypeField => {
         const fieldTypeMetadata = getUnderlyingType(outputTypeField.type);
         if (isScalarType(fieldTypeMetadata.type)) {
-          if (inbuiltTypes[fieldTypeMetadata.type.name]) {
-            outputTypeFields[outputTypeField.name] = wrapTypename(
-              fieldTypeMetadata.type.name,
-              fieldTypeMetadata.wraps
-            );
-          } else {
-            const fieldTypename = prefixTypename(fieldTypeMetadata.type.name);
-            outputTypeFields[outputTypeField.name] = wrapTypename(
-              fieldTypename,
-              fieldTypeMetadata.wraps
-            );
-            handleType(fieldTypeMetadata.type, fieldTypename);
-          }
+          outputTypeFields[outputTypeField.name] = wrapTypename(
+            fieldTypeMetadata.type.name,
+            fieldTypeMetadata.wraps
+          );
         }
       }
     );
@@ -232,9 +235,11 @@ const deriveAction = (
     types: Object.values(newTypes),
     action: {
       name: actionName,
+      type: operation,
       arguments: actionArguments,
       output_type: actionOutputTypename,
     },
+    variables,
   };
 };
 

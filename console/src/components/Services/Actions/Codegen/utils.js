@@ -24,6 +24,9 @@ export const getStarterKitPath = framework => {
   return `https://github.com/${CODEGEN_REPO}/tree/master/${framework}/starter-kit/`;
 };
 
+export const getStarterKitDownloadPath = framework => {
+  return `https://github.com/${CODEGEN_REPO}/raw/master/${framework}/${framework}.zip`;
+};
 export const getGlitchProjectURL = () => {
   return 'https://glitch.com/edit/?utm_content=project_hasura-actions-starter-kit&utm_source=remix_this&utm_medium=button&utm_campaign=glitchButton#!/remix/hasura-actions-starter-kit';
 };

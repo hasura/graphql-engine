@@ -5,10 +5,12 @@ import { getSdlComplete } from '../../../../shared/utils/sdlUtils';
 import {
   getAllCodegenFrameworks,
   getStarterKitPath,
-  getGlitchProjectURL
+  getGlitchProjectURL,
+  getStarterKitDownloadPath,
 } from './utils';
 import { getPersistedDerivedAction } from '../lsUtils';
-import Button from '../../../Common/Button/Button';
+
+import { Icon } from '../../../UIKit/atoms';
 import CodeTabs from './CodeTabs';
 import DerivedFrom from './DerivedFrom';
 import { Spinner } from '../../../UIKit/atoms';
@@ -32,6 +34,7 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
 
   const init = () => {
     setLoading(true);
+    setError(null);
     getAllCodegenFrameworks()
       .then(frameworks => {
         setAllFrameworks(frameworks);
@@ -48,14 +51,16 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
   React.useEffect(init, []);
 
   if (loading) {
-    return <Spinner size='xl' my='100px' mx='auto' />;
+    return <Spinner size="xl" my="100px" mx="auto" />;
   }
 
   if (error || !allFrameworks.length) {
     return (
       <div>
         Error fetching codegen assets.&nbsp;
-        <a onClick={init}>Try again</a>
+        <a onClick={init} className={styles.cursorPointer}>
+          Try again
+        </a>
       </div>
     );
   }
@@ -88,15 +93,11 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
       return (
         <a
           href={getGlitchProjectURL()}
-          target='_blank'
-          rel='noopener noreferrer'
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.add_mar_right}
         >
-          <Button
-            color='white'
-            className={`${styles.add_mar_right_mid} ${styles.default_button}`}
-          >
-            Try on glitch
-          </Button>
+          <Icon type="link" /> Try on glitch
         </a>
       );
     };
@@ -111,24 +112,57 @@ const Codegen = ({ allActions, allTypes, currentAction }) => {
       ) {
         return null;
       }
+
       return (
-        <a
-          href={getStarterKitPath(selectedFramework)}
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          <Button color='white' className={`${styles.add_mar_right_mid}`}>
-            Get starter kit
-          </Button>
-        </a>
+        <React.Fragment>
+          <a
+            href={getStarterKitDownloadPath(selectedFramework)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.add_mar_right}
+            title={`Download starter kit for ${selectedFramework}`}
+          >
+            <Icon type="download" /> Starter-kit.zip
+          </a>
+          <a
+            href={getStarterKitPath(selectedFramework)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.display_flex}
+            title={`View the starter kit for ${selectedFramework} on GitHub`}
+          >
+            <Icon type="github" className={styles.add_mar_right_small} /> View
+            on GitHub
+          </a>
+        </React.Fragment>
+      );
+    };
+
+    const getHelperToolsSection = () => {
+      const glitchButton = getGlitchButton();
+      const starterKitButtons = getStarterKitButton();
+      if (!glitchButton && !starterKitButtons) {
+        return null;
+      }
+      return (
+        <div className={styles.marginLeftAuto}>
+          <div
+            className={`${styles.add_mar_bottom_small} ${styles.textAlignRight}`}
+          >
+            <b>Need help getting started quickly?</b>
+          </div>
+          <div className={`${styles.display_flex}`}>
+            {getGlitchButton()}
+            {getStarterKitButton()}
+          </div>
+        </div>
       );
     };
 
     return (
       <div className={`${styles.add_mar_bottom} ${styles.display_flex}`}>
         {getDrodown()}
-        {getGlitchButton()}
-        {getStarterKitButton()}
+        {getHelperToolsSection()}
       </div>
     );
   };
