@@ -287,7 +287,7 @@ type family SelectionResult k a b = r | r -> k a where
 -- | Constructs a parser for a field of a 'selectionSet'. Fields of a selection
 -- set have two peculiarities:
 --
---   1. They can have /arguments/, such as in @table(where: {field: {_eq: $blah}})@.
+--   1. They can have arguments, such as in @table(where: {field: {_eq: $blah}})@.
 --
 --   2. They have a sub-selection set /if and only if/ their result type is an
 --      object type.
@@ -296,7 +296,7 @@ type family SelectionResult k a b = r | r -> k a where
 -- @'FieldsParser' ''Input'@ to parse the arguments, but the second requirement
 -- is more subtle. One might expect us to have two variants of 'selection':
 --
---   1. One variant that accepts a @'Parser' ''Output'@ to parse a sub-selection
+--   1. A variant that accepts a @'Parser' ''Output'@ to parse a sub-selection
 --      set.
 --
 --   2. Another variant that doesn’t accept a child 'Parser' at all and doesn’t
@@ -309,13 +309,13 @@ type family SelectionResult k a b = r | r -> k a where
 -- We could solve this problem by passing in a @'Type' ''Both'@ instead of a
 -- 'Parser', but generally the parsing code isn’t expected to deal with 'Type's
 -- directly. Therefore, we just accept a @'Parser' ''Both'@, and we happen to
--- only use its type.
+-- only use it for its type.
 --
 -- But this leaves us with /another/ problem: what is the result type of
 -- 'selection'? If we have a sub-selection set, we must return three results:
 -- the field alias, the parsed field arguments, and the parsed sub-selection
 -- set. But if we /don’t/ have a sub-selection set, we have no third result to
--- return! So that complication is handled by the 'SelectionResult' type family,
+-- return! That complication is handled by the 'SelectionResult' type family,
 -- which computes how many results should be returned.
 --
 -- All quite subtle when you spell it out, but in practice, most of the above
