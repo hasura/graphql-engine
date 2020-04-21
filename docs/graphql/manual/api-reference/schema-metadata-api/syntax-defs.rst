@@ -290,36 +290,78 @@ Operator
 
 **Generic operators (all column types except json, jsonb) :**
 
-- ``"$eq"``
-- ``"$ne"``
-- ``"$in"``
-- ``"$nin"``
-- ``"$gt"``
-- ``"$lt"``
-- ``"$gte"``
-- ``"$lte"``
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``"$eq"``
+     - 
+   * - ``"$ne"``
+     - 
+   * - ``"$in"``
+     - 
+   * - ``"$nin"``
+     - 
+   * - ``"$gt"``
+     - 
+   * - ``"$lt"``
+     - 
+   * - ``"$gte"``
+     - 
+   * - ``"$lte"``
+     - 
 
 **Text related operators :**
 
-- ``"$like"``
-- ``"$nlike"``
-- ``"$ilike"``
-- ``"$nilike"``
-- ``"$similar"``
-- ``"$nsimilar"``
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``"$like"``
+     - 
+   * - ``"$nlike"``
+     - 
+   * - ``"$ilike"``
+     - 
+   * - ``"$nilike"``
+     - 
+   * - ``"$similar"``
+     - 
+   * - ``"$nsimilar"``
+     - 
+
 
 **Operators for comparing columns (all column types except json, jsonb):**
 
-- ``"$ceq"``
-- ``"$cne"``
-- ``"$cgt"``
-- ``"$clt"``
-- ``"$cgte"``
-- ``"$clte"``
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``"$ceq"``
+     - 
+   * - ``"$cne"``
+     - 
+   * - ``"$cgt"``
+     - 
+   * - ``"$clt"``
+     - 
+   * - ``"$cgte"``
+     - 
+   * - ``"$clte"``
+     - 
 
 **Checking for NULL values :**
 
-- ``_is_null`` (takes true/false as values)
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_is_null`` (takes true/false as values)
+     - 
 
 **JSONB operators :**
 
