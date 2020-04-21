@@ -2,6 +2,12 @@
 
 ## Next release
 
+### Allow access to session variables by computed fields (fix #3846)
+
+Sometimes it is useful for computed fields to have access to the Hasura session variables directly.  Support for this is now added through the `add_computed_field` API.
+
+Read more about actions in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
+
 ### Bug fixes and improvements
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
