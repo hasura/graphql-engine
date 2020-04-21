@@ -6,6 +6,7 @@
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
+- server: add graphql-engine support for timestamps without timezones (fix #1217)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
 - docs: add API docs for using environment variables as webhook urls in event triggers

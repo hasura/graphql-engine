@@ -71,6 +71,7 @@ data PGScalarValue
   | PGValText !T.Text
   | PGValCitext !T.Text
   | PGValDate !Day
+  | PGValTimeStamp !LocalTime
   | PGValTimeStampTZ !UTCTime
   | PGValTimeTZ !ZonedTimeOfDay
   | PGNull !PGScalarType
@@ -97,6 +98,8 @@ pgScalarValueToJson = \case
   PGValText t     -> toJSON t
   PGValCitext t   -> toJSON t
   PGValDate d     -> toJSON d
+  PGValTimeStamp u ->
+    toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeStampTZ u ->
     toJSON $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
@@ -145,6 +148,7 @@ parsePGValue ty val = case (ty, val) of
       PGText -> PGValText <$> parseJSON val
       PGCitext -> PGValCitext <$> parseJSON val
       PGDate -> PGValDate <$> parseJSON val
+      PGTimeStamp -> PGValTimeStamp <$> parseJSON val
       PGTimeStampTZ -> PGValTimeStampTZ <$> parseJSON val
       PGTimeTZ -> PGValTimeTZ <$> parseJSON val
       PGJSON -> PGValJSON . Q.JSON <$> parseJSON val
@@ -188,6 +192,8 @@ txtEncodedPGVal colVal = case colVal of
   PGValText t     -> TELit t
   PGValCitext t   -> TELit t
   PGValDate d     -> TELit $ T.pack $ showGregorian d
+  PGValTimeStamp u ->
+    TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeStampTZ u ->
     TELit $ T.pack $ formatTime defaultTimeLocale "%FT%T%QZ" u
   PGValTimeTZ (ZonedTimeOfDay tod tz) ->
@@ -219,6 +225,7 @@ binEncoder colVal = case colVal of
   PGValText t                      -> Q.toPrepVal t
   PGValCitext t                    -> Q.toPrepVal t
   PGValDate d                      -> Q.toPrepVal d
+  PGValTimeStamp u                 -> Q.toPrepVal u
   PGValTimeStampTZ u               -> Q.toPrepVal u
   PGValTimeTZ (ZonedTimeOfDay t z) -> Q.toPrepValHelper PTI.timetz PE.timetz_int (t, z)
   PGNull ty                        -> (pgTypeOid ty, Nothing)
