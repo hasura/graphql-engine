@@ -16,6 +16,7 @@ The order, collapsed state of columns and page size is now persisted across page
 
 ### Bug fixes and improvements
 
+- cli: load assets from server when HASURA_GRAPHQL_CONSOLE_ASSETS_DIR is set (close #3382)
 - cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
 - console: query support for actions (#4318)
 - cli: query support for actions (#4318)
