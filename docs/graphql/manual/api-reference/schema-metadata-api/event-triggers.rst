@@ -88,7 +88,7 @@ Args syntax
    * - webhook_from_env
      - false
      - String
-     - Environment variable name of webhook (must exists at boot time) (*)
+     - Environment variable name of webhook (must exist at boot time) (*)
    * - insert
      - false
      - OperationSpec_
