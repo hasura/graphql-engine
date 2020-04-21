@@ -2,6 +2,14 @@
 
 ## Next release
 
+### Bug fixes and improvements
+
+- server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
+- server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
+- console: change react ace editor theme to eclipse (close #4437)
+- console: fix columns reordering for relationship tables in data browser (#4483)
+- docs: add API docs for using environment variables as webhook urls in event triggers
+
 ## `v1.2.0-beta.4`
 
 ### add query support in actions
@@ -32,9 +40,7 @@ The order, collapsed state of columns and page size is now persisted across page
 - console: redirect to /:table/browse from /:table (close #4330) (#4374)
 - console: surround string type column default value with quotes (close #4371) (#4423)
 - console: add undefined check to fix error (close #4444) (#4445)
-- console: change react ace editor theme to eclipse (close #4437)
 - docs: add One-Click Render deployment guide (close #3683) (#4209)
-- server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: reserved keywords in column references break parser (fix #3597) #3927
 - server: fix postgres specific error message that exposed database type on invalid query parameters (#4294)
 - server: manage inflight events when HGE instance is gracefully shutdown (close #3548)
@@ -43,7 +49,7 @@ The order, collapsed state of columns and page size is now persisted across page
 - server: `type` field is not required if `jwk_url` is provided in JWT config
 - server: add a new field `claims_namespace_path` which accepts a JSON Path for looking up hasura claim in the JWT token (#4349)
 - server: support reusing Postgres scalars in custom types (close #4125)
-
+  
 ## `v1.2.0-beta.3`
 
 ### console: manage Postgres check constraints
@@ -160,5 +166,4 @@ Read more about it in the [docs](https://hasura.io/docs/1.0/graphql/manual/auth/
 
 - server: check expression in update permissions (close #384) (rfc #3750) (#3804)
 - console: show pre-release update notifications with opt out option (#3888)
-- Allow special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890)
 - console: handle invalid keys in permission builder (close #3848) (#3863)
