@@ -80,12 +80,10 @@ resolveScheduledTrigger CreateScheduledTrigger {..} = do
 
 runUpdateScheduledTrigger :: (CacheRWM m, MonadTx m) => CreateScheduledTrigger -> m EncJSON
 runUpdateScheduledTrigger q = do
-  updateScheduledTriggerP1 (stName q)
+  checkExists (stName q)
   updateScheduledTriggerInCatalog q
   buildSchemaCacheFor $ MOScheduledTrigger $ stName q
   return successMsg
-  where
-    updateScheduledTriggerP1 = checkExists
 
 updateScheduledTriggerInCatalog :: (MonadTx m) => CreateScheduledTrigger -> m ()
 updateScheduledTriggerInCatalog CreateScheduledTrigger {..} = liftTx $ do
