@@ -242,7 +242,7 @@ Use the :ref:`add_computed_field` API to add a function, and specify the name of
         "data": {
             "article": [
                 {
-                    "id": "3"
+                    "id": "3",
                     "article_liked_by_user": true
                 }
              ]
