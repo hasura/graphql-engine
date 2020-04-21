@@ -2,7 +2,7 @@ name: lint
 on:
   pull_request:
     paths:
-      - 'console/**/*.{js,jsx,ts,tsx}'
+      - 'console/**'
 
 jobs:
   lint:
