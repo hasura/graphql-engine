@@ -79,6 +79,10 @@ The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible w
    * - ``_neq``
      - ``<>``
 
+.. note::
+
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/6.3/c09.htm>`_ for more details on these operators.
+
 The following are examples of using the equality operators on different types.
 
 **Example: Integer (works with Double, Float, Numeric, etc.)**
@@ -230,6 +234,10 @@ The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal
    * - ``_lte``
      - ``<=``
 
+.. note::
+
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/6.3/c09.htm>`_ for more details on these operators.
+
 The following are examples of using these operators on different types:
 
 
@@ -365,6 +373,10 @@ They are compatible with any Postgres type other than ``json`` or ``jsonB`` (lik
    * - ``_nin``
      - ``!!=``
 
+.. note::
+
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/6.3/c09.htm>`_ for more details on search operators.
+
 The following are examples of using these operators on different types:
 
 **Example: Integer (works with Double, Float, etc.)**
@@ -474,7 +486,10 @@ pattern matching on string/text fields.
    * - ``_nsimilar``
      - ``_nsimilar``
 
-These operators behave exactly like their `SQL counterparts <https://www.postgresql.org/docs/current/static/functions-matching.html>`__.
+.. note::
+
+  These operators behave exactly like their SQL counterparts.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/functions-matching.html>`_ for more details on pattern matching operators.
 
 **Example: _like**
 
@@ -579,7 +594,9 @@ based on ``JSONB`` columns.
    * - ``_has_key_all``
      - ``?&``
 
-For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.
+.. note::
+
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_ for more details on JSONB operators.
 
 **Example: _contains**
 
@@ -692,8 +709,9 @@ The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st
    * - ``_st_d_within``
      - ``ST_DWithin``
 
-For more details on what these operators do, refer to
-`PostGIS spatial relationship docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`_.
+.. note::
+
+  Please refer to the `Postgres documentation <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`_ for more details on spatial relationship operators.
 
 Use JSON representation (see `GeoJSON <https://tools.ietf.org/html/rfc7946>`_) of ``geometry`` and ``geography`` values in
 ``variables`` as shown in the following examples:
@@ -810,6 +828,10 @@ Checking for null values can be achieved using the ``_is_null`` operator.
    * - ``_is_null``
      - ``IS NULL``
 
+.. note::
+
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/8.3/functions-comparison.html>`_ for more details on the ``_is_null`` operator.
+
 **Example: Filter null values in a field**
 
 Fetch a list of articles that have a value in the ``published_on`` field:
@@ -872,7 +894,9 @@ Please submit a feature request via `GitHub <https://github.com/hasura/graphql-e
    * - ``_st_intersects_nband_geom``
      - 
 
-Refer to `Postgis docs <https://postgis.net/docs/RT_ST_Intersects.html>`__ to know more about intersect functions on ``raster`` columns.
+.. note::
+
+  Please refer to the `Postgres documentation <https://postgis.net/docs/RT_ST_Intersects.html>`_ for more details about intersect functions on ``raster`` columns.
 
 **Example: _st_intersects_rast**
 
