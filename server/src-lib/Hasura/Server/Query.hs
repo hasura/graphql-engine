@@ -292,7 +292,10 @@ getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q
     getQueryAccessMode' (RQV1 q') =
       case q' of
         RQSelect _ -> pure Nothing
-        RQCount _ -> pure Nothing
+        RQCount _  -> pure Nothing
+        RQGetInconsistentMetadata _     -> pure Nothing
+        RQExportMetadata _              -> pure Nothing
+        RQDumpInternalState _           -> pure Nothing
         RQRunSql RunSQL {rTxAccessMode} -> pure $ Just rTxAccessMode
         RQBulk qs -> foldM reconcileAccessModeWith Nothing (zip [0 :: Integer ..] qs)
         _ -> pure $ Just Q.ReadWrite
@@ -304,10 +307,7 @@ getQueryAccessMode q = (fromMaybe Q.ReadOnly) <$> getQueryAccessMode' q
             "incompatible access mode requirements in bulk query, " <>
             "expected access mode: " <>
             (T.pack $ maybe "ANY" show expectedMode) <>
-            " but " <>
-            "$.args[" <>
-            (T.pack $ show i) <>
-            "] forces " <>
+            " but " <> "$.args[" <> (T.pack $ show i) <> "] forces " <>
             (T.pack $ show errMode)
     getQueryAccessMode' (RQV2 _) = pure $ Just Q.ReadWrite
 
