@@ -110,7 +110,7 @@ Args syntax
      - Boolean
      - If set to true, the event trigger is replaced with the new definition
 
-(*) Either `webhook` or `webhook_from_env` are required.
+(*) Either ``webhook`` or ``webhook_from_env`` are required.
 
 .. _delete_event_trigger:
 
