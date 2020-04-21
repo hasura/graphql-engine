@@ -19,8 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
+	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
@@ -32,6 +31,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
+	"gopkg.in/yaml.v2"
 )
 
 // Other constants used in the package
@@ -43,6 +43,14 @@ const (
 
 	// Name of the file to store last update check time
 	LastUpdateCheckFileName = "last_update_check_at"
+
+	// Name of the cli extension plugin
+	CLIExtPluginName = "cli-ext"
+)
+
+const (
+	XHasuraAdminSecret = "X-Hasura-Admin-Secret"
+	XHasuraAccessKey   = "X-Hasura-Access-Key"
 )
 
 // String constants
@@ -204,6 +212,8 @@ type ExecutionContext struct {
 	MetadataDir string
 	// ConfigFile is the file where endpoint etc. are stored.
 	ConfigFile string
+	// HGE Headers, are the custom headers which can be passed to HGE API
+	HGEHeaders map[string]string
 
 	// Config is the configuration object storing the endpoint and admin secret
 	// information after reading from config file or env var.
@@ -364,6 +374,10 @@ func (ec *ExecutionContext) setupInitTemplatesRepo() error {
 	return nil
 }
 
+func (ec *ExecutionContext) SetHGEHeaders(headers map[string]string) {
+	ec.HGEHeaders = headers
+}
+
 // Validate prepares the ExecutionContext ec and then validates the
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
@@ -435,6 +449,13 @@ func (ec *ExecutionContext) Validate() error {
 	ec.Telemetry.ServerUUID = ec.ServerUUID
 	ec.Logger.Debugf("server: uuid: %s", ec.ServerUUID)
 
+	// Set headers required for communicating with HGE
+	if ec.Config.AdminSecret != "" {
+		headers := map[string]string{
+			GetAdminSecretHeaderName(ec.Version): ec.Config.AdminSecret,
+		}
+		ec.SetHGEHeaders(headers)
+	}
 	return nil
 }
 
@@ -586,4 +607,45 @@ func (ec *ExecutionContext) setVersion() {
 	if ec.Version == nil {
 		ec.Version = version.New()
 	}
+}
+
+// InstallPlugin installs a plugin depending on forceCLIVersion.
+// If forceCLIVersion is set, it uses ec.Version.CLISemver version for the plugin to be installed.
+// Else, it installs the latest version of the plugin
+func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) error {
+	prevPrefix := ec.Spinner.Prefix
+	ec.Spin(fmt.Sprintf("Installing plugin %s...", name))
+	defer ec.Spin(prevPrefix)
+
+	var version *semver.Version
+	if forceCLIVersion {
+		err := ec.PluginsConfig.Repo.EnsureUpdated()
+		if err != nil {
+			ec.Logger.Debugf("cannot update plugin index %v", err)
+		}
+		version = ec.Version.CLISemver
+	}
+	err := ec.PluginsConfig.Install(name, plugins.InstallOpts{
+		Version: version,
+	})
+	if err != nil {
+		if err != plugins.ErrIsAlreadyInstalled {
+			msg := fmt.Sprintf(`unable to install %s plugin. execute the following commands to continue:
+
+  hasura plugins install %s
+`, name, name)
+			ec.Logger.Info(msg)
+			return errors.Wrapf(err, "cannot install plugin %s", name)
+		}
+		return nil
+	}
+	ec.Logger.WithField("name", name).Infoln("plugin installed")
+	return nil
+}
+
+func GetAdminSecretHeaderName(v *version.Version) string {
+	if v.ServerFeatureFlags.HasAccessKey {
+		return XHasuraAccessKey
+	}
+	return XHasuraAdminSecret
 }

@@ -475,8 +475,15 @@ type createEventTriggerInput struct {
 	Definition     *createEventTriggerOperationInput `json:"definition,omitempty" yaml:"definition,omitempty"`
 	Headers        interface{}                       `json:"headers" yaml:"headers"`
 	Replace        bool                              `json:"replace" yaml:"replace"`
+	RetryConf      *createEventTriggerRetryConfInput `json:"retry_conf" yaml:"retry_conf"`
 
 	createEventTriggerOperationInput
+}
+
+type createEventTriggerRetryConfInput struct {
+	IntervalSec int `json:"interval_sec" yaml:"interval_sec"`
+	NumRetries  int `json:"num_retries" yaml:"num_retries"`
+	TimeOutSec  int `json:"timeout_sec" yaml:"timeout_sec"`
 }
 
 type createEventTriggerOperationInput struct {
@@ -493,15 +500,16 @@ func (c *createEventTriggerInput) MarshalJSON() ([]byte, error) {
 		c.Definition = nil
 	}
 	return json.Marshal(&struct {
-		Name           string      `json:"name" yaml:"name"`
-		Table          tableSchema `json:"table" yaml:"table"`
-		Webhook        string      `json:"webhook,omitempty" yaml:"webhook,omitempty"`
-		WebhookFromEnv string      `json:"webhook_from_env,omitempty" yaml:"webhook_from_env,omitempty"`
-		Headers        interface{} `json:"headers" yaml:"headers"`
-		Replace        bool        `json:"replace" yaml:"replace"`
-		Insert         interface{} `json:"insert,omitempty" yaml:"insert,omitempty"`
-		Update         interface{} `json:"update,omitempty" yaml:"update,omitempty"`
-		Delete         interface{} `json:"delete,omitempty" yaml:"delete,omitempty"`
+		Name           string                            `json:"name" yaml:"name"`
+		Table          tableSchema                       `json:"table" yaml:"table"`
+		Webhook        string                            `json:"webhook,omitempty" yaml:"webhook,omitempty"`
+		WebhookFromEnv string                            `json:"webhook_from_env,omitempty" yaml:"webhook_from_env,omitempty"`
+		Headers        interface{}                       `json:"headers" yaml:"headers"`
+		Replace        bool                              `json:"replace" yaml:"replace"`
+		RetryConf      *createEventTriggerRetryConfInput `json:"retry_conf" yaml:"retry_conf"`
+		Insert         interface{}                       `json:"insert,omitempty" yaml:"insert,omitempty"`
+		Update         interface{}                       `json:"update,omitempty" yaml:"update,omitempty"`
+		Delete         interface{}                       `json:"delete,omitempty" yaml:"delete,omitempty"`
 	}{
 		Name:           c.Name,
 		Table:          c.Table,
@@ -509,6 +517,7 @@ func (c *createEventTriggerInput) MarshalJSON() ([]byte, error) {
 		WebhookFromEnv: c.WebhookFromEnv,
 		Headers:        c.Headers,
 		Replace:        c.Replace,
+		RetryConf:      c.RetryConf,
 		Insert:         c.Insert,
 		Update:         c.Update,
 		Delete:         c.Delete,

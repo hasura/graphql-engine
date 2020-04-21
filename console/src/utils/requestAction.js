@@ -7,7 +7,8 @@ import {
   DONE_REQUEST,
   FAILED_REQUEST,
   ERROR_REQUEST,
-} from 'components/App/Actions';
+} from '../components/App/Actions';
+import { globalCookiePolicy } from '../Endpoints';
 
 const requestAction = (
   url,
@@ -17,7 +18,7 @@ const requestAction = (
   includeCredentials = true
 ) => {
   if (!options.credentials && includeCredentials) {
-    options.credentials = 'omit';
+    options.credentials = globalCookiePolicy;
   }
 
   return dispatch => {
