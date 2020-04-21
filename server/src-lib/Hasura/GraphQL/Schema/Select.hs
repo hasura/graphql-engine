@@ -270,6 +270,7 @@ computedField
 computedField ComputedFieldInfo{..} = case _cfiReturnType of
   CFRScalar scalarReturnType -> do
     case G.mkName $ computedFieldNameToText $ _cfiName of
+      -- TODO: can we assume there is always a name instead?
       Nothing        -> pure $ pure Nothing
       Just fieldName -> do
         -- TODO: handle permissions
@@ -277,17 +278,20 @@ computedField ComputedFieldInfo{..} = case _cfiReturnType of
         argsParser  <- computedFieldFunctionArgs _cfiFunction
         jsonColOp   <- computedFieldColOp scalarReturnType
         let defaultDescription = "A computed field, executes function " <>> _cffName _cfiFunction
-            fieldDescription = case _cffDescription _cfiFunction of
+            fieldDescription = Just $ G.Description $ case _cffDescription _cfiFunction of
                 Nothing                   -> defaultDescription
-                Just (G.Description desc) -> T.unlines [desc, "", defaultDescription]
-            arguments = liftA2 (,) argsParser jsonColOp
-            parser = P.selection fieldName (Just $ G.Description fieldDescription) arguments dummyParser
-            createResult (args, colOp) =
-              RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
+                Just (G.Description desc) -> T.unlines [desc, "", "", defaultDescription]
+                -- the original code contained a "\n" instead ^
+                -- I kept that behaviour but made it explicit
+                -- I feel it's an error and should be only one ""?
+            fieldArgsParser = do
+              args  <- argsParser
+              colOp <- jsonColOp
+              pure $ RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
                 { RQL._cfssFunction  = _cffName _cfiFunction
                 , RQL._cfssType      = scalarReturnType
                 , RQL._cfssColumnOp  = colOp
                 , RQL._cfssArguments = args
                 }
-        pure $ fmap (fmap createResult) <$> parser
+        pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser
   CFRSetofTable tableName -> undefined -- FIXME: todo
