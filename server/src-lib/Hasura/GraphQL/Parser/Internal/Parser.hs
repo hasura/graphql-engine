@@ -77,6 +77,10 @@ data FieldsParser k m a = FieldsParser
   , ifParser      :: HashMap Name (FieldInput k) -> m a
   } deriving (Functor)
 
+infixl 1 `bindFields`
+bindFields :: Monad m => FieldsParser k m a -> (a -> m b) -> FieldsParser k m b
+bindFields p f = p { ifParser = ifParser p >=> f }
+
 type family FieldInput k = r | r -> k where
   FieldInput 'Input = Value Variable
   FieldInput 'Output = Field Variable

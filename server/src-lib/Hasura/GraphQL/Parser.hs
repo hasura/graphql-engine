@@ -3,6 +3,7 @@ module Hasura.GraphQL.Parser
   , parserType
   , runParser
   , bind
+  , bindFields
 
   , ScalarRepresentation(..)
   , scalar

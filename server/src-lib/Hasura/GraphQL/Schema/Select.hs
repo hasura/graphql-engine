@@ -1,16 +1,25 @@
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns    #-}
+
 module Hasura.GraphQL.Schema.Select where
 
 import           Hasura.Prelude
 
+import           Data.Either                   (partitionEithers)
 import           Data.Foldable                 (toList)
 import           Data.Maybe                    (fromJust)
+import           Data.Parser.JSONPath
+import           Data.Traversable              (mapAccumL)
 
 import qualified Data.HashMap.Strict           as Map
 import qualified Data.HashSet                  as Set
+import qualified Data.Sequence                 as Seq
+import qualified Data.Text                     as T
 import qualified Language.GraphQL.Draft.Syntax as G
 
 import qualified Hasura.GraphQL.Parser         as P
 import qualified Hasura.RQL.DML.Select         as RQL
+import qualified Hasura.SQL.DML                as S
 
 import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser,
                                                 UnpreparedValue (..))
@@ -80,7 +89,7 @@ tablePermissions selectPermissions =
     toUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
 
 
--- | Corresponds to an object type for table argumuments:
+-- | Corresponds to an object type for table arguments:
 --
 -- FIXME: is that the correct name?
 -- > type table_arguments {
@@ -180,67 +189,105 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
       FIComputedField info -> _cffDescription $ _cfiFunction info
 
 
+{- WIP notes on computed field
+
+if the underlying function has no args         => no argument
+if the underlying function has at least one    => "args" object argument
+if the function's return type is a JSON scalar => "path" string argument for JSON colop
+if it's a set of table field                   => table selection arguments (where, limit, offset, order_by, distinct_on)
+
+the code has a branch to deal with the lack of "args" object and treat everything as positional, but GraphiQL doesn't seem to allow it? Is it for some other cases where we parse function arguments?
+
+-}
+
+
+-- | Parses the "args" argument of a computed field.
+--   All arguments to the underlying function are parsed as an "args"
+--   object. Named arguments are expecterd in a field with the same
+--   name, while positional arguments are expected in an field named
+--   "arg_$n".
+--   Note that collisions are possible, but ignored for now.
+--   (FIXME: link to an issue?)
+computedFieldFunctionArgs
+  :: (MonadSchema n m, MonadError QErr m)
+  => ComputedFieldFunction
+  -> m (FieldsParser 'Input n (RQL.FunctionArgsExpTableRow UnpreparedValue))
+computedFieldFunctionArgs ComputedFieldFunction{..}
+  | Seq.null _cffInputArgs = pure $ pure RQL.emptyFunctionArgsExp
+  | otherwise = do
+      argsParser <- sequenceA $ snd $ mapAccumL createField (1 :: Int) $ toList _cffInputArgs
+      let argsDesc = G.Description $ "input parameters for function " <>> _cffName
+          argsObj  = P.object objName Nothing $ sequenceA argsParser
+          objName  = fromJust $ G.mkName $ getFunctionTxt (qName $ _cffName) <> "_args"
+      pure $ P.field $$(G.litName "args") (Just argsDesc) argsObj <&> \args ->
+        let (positional, Map.fromList -> named) = partitionEithers $ catMaybes args
+            tableRowArg = RQL.AETableRow Nothing
+        in case _cffTableArgument of
+          FTAFirst -> RQL.FunctionArgsExp (tableRowArg:positional) named
+          FTANamed argName index ->
+            RQL.insertFunctionArg argName index tableRowArg $
+              RQL.FunctionArgsExp positional named
+  where
+    -- This uses Either solely to use partitionEithers.
+    -- Arbitrarily, Left is for positional fields, and Right for named fields.
+    createField positionalIndex arg = case faName arg of
+      Nothing   -> ( positionalIndex + 1
+                   , fmap (fmap Left) <$> createField' arg ("arg_" <> T.pack (show positionalIndex))
+                   )
+      Just name -> ( positionalIndex
+                   , let nameText = getFuncArgNameTxt name
+                     in fmap (fmap $ Right . (nameText, )) <$> createField' arg nameText
+                   )
+    createField' arg name = do
+      columnParser <- P.column (PGColumnScalar $ _qptName $ faType arg) (G.Nullability False)
+      let fieldName  = fromJust $ G.mkName name
+          -- ^ FIXME: there probably is a better way than using fromJust
+          -- can we safely assume all field names are GraphQL-compatible? If not, why?
+          argParser = if unHasDefault $ faHasDefault arg
+                      then P.fieldOptional  fieldName Nothing columnParser
+                      else Just <$> P.field fieldName Nothing columnParser
+      pure $ fmap (RQL.AEInput . P.mkParameter) <$> argParser
+
+computedFieldColOp
+  :: (MonadSchema n m)
+  => PGScalarType
+  -> m (FieldsParser 'Input n (Maybe RQL.ColOp))
+computedFieldColOp functionReturnType
+  | isJSONType functionReturnType =
+      pure $ P.fieldOptional $$(G.litName "path") (Just "JSON select path") P.string `P.bindFields` traverse toColExp
+  | otherwise = pure $ pure Nothing
+  where
+    toColExp textValue = case parseJSONPath textValue of
+      Left err     -> parseError $ T.pack $ "parse json path error: " ++ err
+      Right jPaths -> return $ RQL.ColOp S.jsonbPathOp $ S.SEArray $ map elToColExp jPaths
+    elToColExp (Key k)   = S.SELit k
+    elToColExp (Index i) = S.SELit $ T.pack (show i)
+
 computedField
   :: (MonadSchema n m, MonadError QErr m)
   => ComputedFieldInfo
   -> m (FieldsParser 'Output n (Maybe (G.Name, AnnotatedField)))
-computedField computedFieldInfo = case _cfiReturnType computedFieldInfo of
+computedField ComputedFieldInfo{..} = case _cfiReturnType of
   CFRScalar scalarReturnType -> do
-    case G.mkName $ computedFieldNameToText $ _cfiName computedFieldInfo of
+    case G.mkName $ computedFieldNameToText $ _cfiName of
       Nothing        -> pure $ pure Nothing
       Just fieldName -> do
         -- TODO: handle permissions
-        fieldParser <- P.column (PGColumnScalar scalarReturnType) (G.Nullability True)
-        argsParser  <- sequenceA <$>
-          for (toList $ _cffInputArgs $ _cfiFunction computedFieldInfo) \arg ->
-            case faName arg of
-              Nothing   -> pure $ pure Nothing
-              Just name -> do
-                columnParser <- P.column
-                  (PGColumnScalar $ _qptName $ faType arg)
-                  (G.Nullability $ unHasDefault $ faHasDefault arg)
-                let fieldName  = fromJust $ G.mkName $ getFuncArgNameTxt name
-                    -- ^ FIXME: there probably is a better way than using fromJust
-                    argParser = P.field fieldName Nothing columnParser
-                pure $ argParser <&> \value ->
-                  Just ( getFuncArgNameTxt name
-                       , RQL.AEInput $ P.mkParameter value
-                       )
-        let funcName   = _cffName $ _cfiFunction $ computedFieldInfo
-            objName    = fromJust $ G.mkName $ getFunctionTxt (qName $ funcName) <> "_args"
-            -- ^ FIXME: there probably is a better way than using fromJust
-            argsDesc   = G.Description $ "input parameters for function " <>> funcName
-            argsObj    = P.object objName Nothing argsParser
-            argsField  = P.field $$(G.litName "args") (Just argsDesc) argsObj
-            fieldDesc  = _cffDescription $ _cfiFunction computedFieldInfo
-            parser     = P.selection fieldName fieldDesc argsField fieldParser
-        pure $ parser <&> \result -> do
-          (name, args) <- result
-          parsedArgs   <- sequenceA args
-          pure ( name
-               , RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
-                   { RQL._cfssFunction  = funcName
-                   , RQL._cfssType      = scalarReturnType
-                   , RQL._cfssColumnOp  = Nothing -- FIXME: support ColOp
-                   , RQL._cfssArguments = RQL.FunctionArgsExp
-                      { RQL._faePositional = []
-                      , RQL._faeNamed      = Map.fromList parsedArgs
-                      }
-                   }
-               )
-  -- WIP: notes
-  -- The code above is based on the following assumptions:
-  --   - the _cffInputArgs are what the underlying SQL function expects,
-  --     and should therefore be parsed as field of an args object
-  --   - there is only one parameter to the computed field: an args object with
-  --     said arguments
-  -- Things I still find unclear:
-  --   - what happens if we have Nothing for an arg name? How can it even happen?
-  --   - what about positional arguments? old code seems to handle them...
-  --   - is it okay to just "move the Maybes up" all the way back? Or do we want
-  --     to explicitly fail here if we fail to parse a mandatory input?
-  --   - can we safely assume all names are GraphQL-compatible? If not, why? What
-  --     should we do on error?
-  --   - is it okay to use the column parser for the field as a whole, as an argument
-  --     to selection? I am not sure I understand how selection works...
-  CFRSetofTable tableName -> undefined
+        dummyParser <- P.column (PGColumnScalar scalarReturnType) (G.Nullability False)
+        argsParser  <- computedFieldFunctionArgs _cfiFunction
+        jsonColOp   <- computedFieldColOp scalarReturnType
+        let defaultDescription = "A computed field, executes function " <>> _cffName _cfiFunction
+            fieldDescription = case _cffDescription _cfiFunction of
+                Nothing                   -> defaultDescription
+                Just (G.Description desc) -> T.unlines [desc, "", defaultDescription]
+            arguments = liftA2 (,) argsParser jsonColOp
+            parser = P.selection fieldName (Just $ G.Description fieldDescription) arguments dummyParser
+            createResult (args, colOp) =
+              RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
+                { RQL._cfssFunction  = _cffName _cfiFunction
+                , RQL._cfssType      = scalarReturnType
+                , RQL._cfssColumnOp  = colOp
+                , RQL._cfssArguments = args
+                }
+        pure $ fmap (fmap createResult) <$> parser
+  CFRSetofTable tableName -> undefined -- FIXME: todo
