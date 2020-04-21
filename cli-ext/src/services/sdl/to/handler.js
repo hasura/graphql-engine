@@ -22,7 +22,7 @@ const handlePayload = (payload) => {
   if (actions) {
     try {
       actions.forEach(a => {
-        actionSdl += getActionDefinitionSdl(a.name, a.definition.arguments, a.definition.output_type) + '\n';
+        actionSdl += getActionDefinitionSdl(a.name, a.definition.type, a.definition.arguments, a.definition.output_type) + '\n';
       })
     } catch (e) {
       actionSdlError = e;
@@ -42,7 +42,7 @@ const handlePayload = (payload) => {
   if (toDeriveOperation) {
     try {
       const derivation = deriveAction(toDeriveOperation, introspectionSchema, actionName);
-      const derivedActionSdl = getActionDefinitionSdl(derivation.action.name, derivation.action.arguments, derivation.action.output_type);
+      const derivedActionSdl = getActionDefinitionSdl(derivation.action.name, derivation.action.type, derivation.action.arguments, derivation.action.output_type);
       const derivedTypesSdl = getTypesSdl(derivation.types);
       sdl = `${derivedActionSdl}\n\n${derivedTypesSdl}\n\n${sdl}`
     } catch (e) {

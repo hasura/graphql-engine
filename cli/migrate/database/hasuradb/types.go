@@ -66,6 +66,8 @@ func (h *newHasuraIntefaceQuery) UnmarshalJSON(b []byte) error {
 		}
 	case setTableCustomFields:
 		q.Args = &setTableCustomFieldsV2Input{}
+	case setTableIsEnum:
+		q.Args = &setTableIsEnumInput{}
 	case untrackTable:
 		q.Args = &unTrackTableInput{}
 	case createObjectRelationship:
@@ -250,6 +252,7 @@ const (
 	trackTable                  requestTypes = "track_table"
 	addExistingTableOrView                   = "add_existing_table_or_view"
 	setTableCustomFields                     = "set_table_custom_fields"
+	setTableIsEnum                           = "set_table_is_enum"
 	untrackTable                             = "untrack_table"
 	trackFunction                            = "track_function"
 	unTrackFunction                          = "untrack_function"
@@ -359,6 +362,11 @@ type trackTableV2Input struct {
 type setTableCustomFieldsV2Input struct {
 	Table tableSchema `json:"table" yaml:"table"`
 	tableConfiguration
+}
+
+type setTableIsEnumInput struct {
+	Table  tableSchema `json:"table" yaml:"table"`
+	IsEnum bool        `json:"is_enum" yaml:"is_enum"`
 }
 
 type unTrackTableInput struct {

@@ -335,6 +335,7 @@ data PGScalarType
   | PGFloat
   | PGDouble
   | PGNumeric
+  | PGMoney
   | PGBoolean
   | PGChar
   | PGVarchar
@@ -365,6 +366,7 @@ instance ToSQL PGScalarType where
     PGFloat       -> "real"
     PGDouble      -> "float8"
     PGNumeric     -> "numeric"
+    PGMoney       -> "money"
     PGBoolean     -> "boolean"
     PGChar        -> "character"
     PGVarchar     -> "varchar"
@@ -413,6 +415,8 @@ textToPGScalarType t = case t of
   "numeric"                  -> PGNumeric
   "decimal"                  -> PGNumeric
 
+  "money"                    -> PGMoney
+
   "boolean"                  -> PGBoolean
   "bool"                     -> PGBoolean
 
@@ -456,6 +460,7 @@ pgTypeOid PGBigSerial   = PTI.int8
 pgTypeOid PGFloat       = PTI.float4
 pgTypeOid PGDouble      = PTI.float8
 pgTypeOid PGNumeric     = PTI.numeric
+pgTypeOid PGMoney       = PTI.numeric
 pgTypeOid PGBoolean     = PTI.bool
 pgTypeOid PGChar        = PTI.char
 pgTypeOid PGVarchar     = PTI.varchar
@@ -482,6 +487,7 @@ isNumType :: PGScalarType -> Bool
 isNumType PGFloat   = True
 isNumType PGDouble  = True
 isNumType PGNumeric = True
+isNumType PGMoney   = True
 isNumType ty        = isIntegerType ty
 
 stringTypes :: [PGScalarType]
@@ -511,6 +517,7 @@ isBigNum = \case
   PGBigSerial -> True
   PGNumeric   -> True
   PGDouble    -> True
+  PGMoney     -> True
   _           -> False
 
 geoTypes :: [PGScalarType]
