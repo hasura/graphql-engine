@@ -139,8 +139,6 @@ const icon = {
 
 // Border Radius ********************* //
 
-const radii = [0, 2, 4, 8, 12, 16];
-
 /* border-radius aliases
  * xs: 2px (extra small)
  * sm: 4px (small)
@@ -150,21 +148,25 @@ const radii = [0, 2, 4, 8, 12, 16];
  * circle: 1000px
  */
 
+type BorderRadiusKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'circle';
+
+const radii: Partial<Record<number | BorderRadiusKey, number>> = {
+  0: 0,
+  1: 2,
+  2: 4,
+  3: 8,
+  4: 12,
+  5: 16,
+};
+
 radii.xs = radii[1];
-
 radii.sm = radii[2];
-
 radii.md = radii[3];
-
 radii.lg = radii[4];
-
 radii.xl = radii[5];
-
 radii.circle = 1000;
 
 // ********************************** //
-
-const fontWeights = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900];
 
 /* font-weight aliases
  * normal: 400
@@ -172,15 +174,26 @@ const fontWeights = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900];
  * bold: 700
  */
 
+type FontWeightKey = 'normal' | 'medium' | 'bold';
+
+const fontWeights: Partial<Record<number | FontWeightKey, number>> = {
+  0: 0,
+  1: 100,
+  2: 200,
+  3: 300,
+  4: 400,
+  5: 500,
+  6: 600,
+  7: 700,
+  8: 800,
+  9: 900,
+};
+
 fontWeights.normal = fontWeights[4];
-
 fontWeights.medium = fontWeights[5];
-
 fontWeights.bold = fontWeights[7];
 
 // ********************************** //
-
-const fontSizes = [12, 14, 16, 18, 20, 24, 30, 36, 48, 80, 96];
 
 /* font-sizes aliases
  * h1: 30px
@@ -193,27 +206,41 @@ const fontSizes = [12, 14, 16, 18, 20, 24, 30, 36, 48, 80, 96];
  * icon: 20px
  */
 
+type FontSizeKey =
+  | 'h1'
+  | 'h2'
+  | 'h3'
+  | 'h4'
+  | 'p'
+  | 'button'
+  | 'tab'
+  | 'explain'
+  | 'icon';
+
+const fontSizes: Partial<Record<number | FontSizeKey, number>> = {
+  0: 12,
+  1: 14,
+  2: 16,
+  3: 18,
+  4: 20,
+  5: 24,
+  6: 30,
+  7: 36,
+  8: 48,
+  9: 80,
+  10: 96,
+};
 fontSizes.h1 = fontSizes[6];
-
 fontSizes.h2 = fontSizes[5];
-
 fontSizes.h3 = fontSizes[4];
-
 fontSizes.h4 = fontSizes[3];
-
 fontSizes.p = fontSizes[2];
-
 fontSizes.button = fontSizes[1];
-
 fontSizes.tab = fontSizes[3];
-
 fontSizes.explain = fontSizes[0];
-
 fontSizes.icon = fontSizes[3];
 
 // ****************************** //
-
-const space = [0, 4, 6, 8, 10, 12, 14, 16, 18, 20, 32, 64];
 
 /* space ~ margin / padding aliases
  * zero: 0
@@ -224,42 +251,60 @@ const space = [0, 4, 6, 8, 10, 12, 14, 16, 18, 20, 32, 64];
  * xl: 64px (extra large)
  */
 
+type SpaceKey = 'zero' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+const space: Partial<Record<SpaceKey | number, number>> = {
+  0: 0,
+  1: 4,
+  2: 6,
+  3: 8,
+  4: 10,
+  5: 12,
+  6: 14,
+  7: 16,
+  8: 18,
+  9: 20,
+  10: 32,
+  11: 64,
+};
 space.zero = space[0];
-
 space.xs = space[1];
-
 space.sm = space[3];
-
 space.md = space[7];
-
 space.lg = space[10];
-
 space.xl = space[11];
 
 // ********************************** //
-
-const lineHeights = [1.33, 1.5];
 
 /* line-height aliases
  * body: 1.5
  * explain: 1.3 ~ Explainer Text
  */
 
-lineHeights.body = lineHeights[1];
+type LineHeightKey = 'body' | 'explain';
 
+const lineHeights: Partial<Record<number | LineHeightKey, number>> = {
+  0: 1.33,
+  1: 1.5,
+};
+lineHeights.body = lineHeights[1];
 lineHeights.explain = lineHeights[0];
 
 // ********************************** //
+
+type SizeKey = 'sm' | 'lg';
 
 /* sizes aliases (width & height)
  * sm: 40px
  * lg: 48px
  */
 
-const sizes = [40, 48];
+const sizes: Partial<Record<number | SizeKey, number>> = {
+  0: 40,
+  1: 48,
+};
 
 sizes.sm = sizes[0];
-
 sizes.lg = sizes[1];
 
 // ********************************** //
@@ -287,3 +332,6 @@ export const theme = {
   alertBox,
   icon,
 };
+
+type _Theme = typeof theme;
+export interface Theme extends _Theme {}
