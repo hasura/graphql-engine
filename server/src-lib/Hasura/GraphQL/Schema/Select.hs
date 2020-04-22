@@ -61,7 +61,7 @@ selectExp table selectPermissions stringifyNum = do
   name               <- qualifiedObjectToName table
   tableArgsParser    <- tableArgs table
   selectionSetParser <- tableSelectionSet table selectPermissions stringifyNum
-  return $ P.selection name Nothing tableArgsParser selectionSetParser <&> fmap
+  pure $ P.selection name Nothing tableArgsParser selectionSetParser <&> fmap
     \(aliasName, tableArgs, tableFields) -> (aliasName, RQL.AnnSelG
       { RQL._asnFields   = tableFields
       , RQL._asnFrom     = RQL.FromTable table
@@ -77,7 +77,7 @@ tableSelectPermissions
 tableSelectPermissions table = do
   roleName  <- askRoleName
   tableInfo <- _tiRolePermInfoMap <$> askTableInfo table
-  return $ _permSel =<< Map.lookup roleName tableInfo
+  pure $ _permSel =<< Map.lookup roleName tableInfo
 
 tablePermissions :: SelPermInfo -> TablePerms
 tablePermissions selectPermissions =
@@ -93,11 +93,11 @@ tablePermissions selectPermissions =
 --
 -- FIXME: is that the correct name?
 -- > type table_arguments {
--- >   distinct_on: [card_types_select_column!]
+-- >   distinct_on: [table_select_column!]
 -- >   limit: Int
 -- >   offset: Int
--- >   order_by: [card_types_order_by!]
--- >   where: card_types_bool_exp
+-- >   order_by: [table_order_by!]
+-- >   where: table_bool_exp
 -- > }
 tableArgs
   :: forall m n. (MonadSchema n m, MonadError QErr m)
@@ -105,11 +105,11 @@ tableArgs
   -> m (FieldsParser 'Input n TableArgs)
 tableArgs table = do
   boolExpParser <- boolExp table
-  return $ do
+  pure $ do
     limit  <- P.fieldOptional limitName  Nothing P.int
     offset <- P.fieldOptional offsetName Nothing P.int
     whereF <- P.fieldOptional whereName  Nothing boolExpParser
-    return $ RQL.TableArgs
+    pure $ RQL.TableArgs
       { RQL._taWhere    = whereF
       , RQL._taOrderBy  = Nothing -- TODO
       , RQL._taLimit    = fromIntegral <$> limit
@@ -179,7 +179,7 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
                   ObjRel -> RQL.FObj annotatedRelationship
                   ArrRel -> RQL.FArr $ RQL.ASSimple annotatedRelationship
               )
-      FIComputedField computedFieldInfo -> computedField computedFieldInfo
+      FIComputedField computedFieldInfo -> computedField computedFieldInfo stringifyNum
   where
     aliasToFieldName = fmap $ fmap $ first $ FieldName . G.unName
 
@@ -191,8 +191,9 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
 
 {- WIP notes on computed field
 
-if the underlying function has no args         => no argument
+if the underlying function has no args         => no "args" argument
 if the underlying function has at least one    => "args" object argument
+
 if the function's return type is a JSON scalar => "path" string argument for JSON colop
 if it's a set of table field                   => table selection arguments (where, limit, offset, order_by, distinct_on)
 
@@ -203,7 +204,7 @@ the code has a branch to deal with the lack of "args" object and treat everythin
 
 -- | Parses the "args" argument of a computed field.
 --   All arguments to the underlying function are parsed as an "args"
---   object. Named arguments are expecterd in a field with the same
+--   object. Named arguments are expected in a field with the same
 --   name, while positional arguments are expected in an field named
 --   "arg_$n".
 --   Note that collisions are possible, but ignored for now.
@@ -248,15 +249,14 @@ computedFieldFunctionArgs ComputedFieldFunction{..}
                       else Just <$> P.field fieldName Nothing columnParser
       pure $ fmap (RQL.AEInput . P.mkParameter) <$> argParser
 
-computedFieldColOp
-  :: (MonadSchema n m)
-  => PGScalarType
-  -> m (FieldsParser 'Input n (Maybe RQL.ColOp))
-computedFieldColOp functionReturnType
+jsonPathArg :: MonadParse n => PGScalarType -> FieldsParser 'Input n (Maybe RQL.ColOp)
+jsonPathArg functionReturnType
   | isJSONType functionReturnType =
-      pure $ P.fieldOptional $$(G.litName "path") (Just "JSON select path") P.string `P.bindFields` traverse toColExp
-  | otherwise = pure $ pure Nothing
+      P.fieldOptional fieldName description P.string `P.bindFields` traverse toColExp
+  | otherwise = pure Nothing
   where
+    fieldName = $$(G.litName "path")
+    description = Just "JSON select path"
     toColExp textValue = case parseJSONPath textValue of
       Left err     -> parseError $ T.pack $ "parse json path error: " ++ err
       Right jPaths -> return $ RQL.ColOp S.jsonbPathOp $ S.SEArray $ map elToColExp jPaths
@@ -266,32 +266,50 @@ computedFieldColOp functionReturnType
 computedField
   :: (MonadSchema n m, MonadError QErr m)
   => ComputedFieldInfo
+  -> Bool
   -> m (FieldsParser 'Output n (Maybe (G.Name, AnnotatedField)))
-computedField ComputedFieldInfo{..} = case _cfiReturnType of
-  CFRScalar scalarReturnType -> do
-    case G.mkName $ computedFieldNameToText $ _cfiName of
-      -- TODO: can we assume there is always a name instead?
-      Nothing        -> pure $ pure Nothing
-      Just fieldName -> do
-        -- TODO: handle permissions
-        dummyParser <- P.column (PGColumnScalar scalarReturnType) (G.Nullability False)
-        argsParser  <- computedFieldFunctionArgs _cfiFunction
-        jsonColOp   <- computedFieldColOp scalarReturnType
-        let defaultDescription = "A computed field, executes function " <>> _cffName _cfiFunction
-            fieldDescription = Just $ G.Description $ case _cffDescription _cfiFunction of
-                Nothing                   -> defaultDescription
-                Just (G.Description desc) -> T.unlines [desc, "", "", defaultDescription]
-                -- the original code contained a "\n" instead ^
-                -- I kept that behaviour but made it explicit
-                -- I feel it's an error and should be only one ""?
-            fieldArgsParser = do
-              args  <- argsParser
-              colOp <- jsonColOp
-              pure $ RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
-                { RQL._cfssFunction  = _cffName _cfiFunction
-                , RQL._cfssType      = scalarReturnType
-                , RQL._cfssColumnOp  = colOp
-                , RQL._cfssArguments = args
-                }
-        pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser
-  CFRSetofTable tableName -> undefined -- FIXME: todo
+computedField ComputedFieldInfo{..} stringifyNum =
+  case G.mkName $ computedFieldNameToText $ _cfiName of
+    -- TODO: can we assume there is always a name instead?
+    Nothing        -> pure $ pure Nothing
+    Just fieldName -> do
+      functionArgsParser <- computedFieldFunctionArgs _cfiFunction
+      case _cfiReturnType of
+        CFRScalar scalarReturnType -> do
+          -- TODO: handle permissions
+          let fieldArgsParser = do
+                args  <- functionArgsParser
+                colOp <- jsonPathArg scalarReturnType
+                pure $ RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
+                  { RQL._cfssFunction  = _cffName _cfiFunction
+                  , RQL._cfssType      = scalarReturnType
+                  , RQL._cfssColumnOp  = colOp
+                  , RQL._cfssArguments = args
+                  }
+          dummyParser <- P.column (PGColumnScalar scalarReturnType) (G.Nullability False)
+          pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser
+        CFRSetofTable tableName -> tableSelectPermissions tableName >>= \case
+          Nothing    -> pure $ pure Nothing
+          Just perms -> do
+            selectArgsParser   <- tableArgs tableName
+            selectionSetParser <- tableSelectionSet tableName perms stringifyNum
+            let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
+            pure $ P.selection fieldName Nothing fieldArgsParser selectionSetParser
+              <&> fmap \(aliasName, (functionArgs, tableArgs), tableFields) ->
+                ( aliasName
+                , RQL.FComputedField $ RQL.CFSTable RQL.JASMultipleRows $ RQL.AnnSelG
+                  { RQL._asnFields   = tableFields
+                  , RQL._asnFrom     = RQL.FromFunction (_cffName _cfiFunction) functionArgs Nothing
+                  , RQL._asnPerm     = tablePermissions perms
+                  , RQL._asnArgs     = tableArgs
+                  , RQL._asnStrfyNum = stringifyNum
+                  }
+                )
+  where
+    defaultDescription = "A computed field, executes function " <>> _cffName _cfiFunction
+    fieldDescription = Just $ G.Description $ case _cffDescription _cfiFunction of
+      Nothing                   -> defaultDescription
+      Just (G.Description desc) -> T.unlines [desc, "", "", defaultDescription]
+      -- the original code contained a "\n" instead ^
+      -- I kept that behaviour but made it explicit
+      -- I feel it's an error and should be only one ""?
