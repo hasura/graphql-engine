@@ -58,8 +58,8 @@ class ApiExplorer extends Component {
       explorerData,
       route,
       dataHeaders,
-      tables,
       headerFocus,
+      trackedTableCount,
       location,
       serverConfig,
     } = this.props;
@@ -83,7 +83,7 @@ class ApiExplorer extends Component {
             request={displayedApi.request}
             route={route}
             dataHeaders={dataHeaders}
-            numberOfTables={tables.length}
+            numberOfTables={trackedTableCount}
             headerFocus={headerFocus}
             urlParams={location.query}
             serverVersion={globals.serverVersion}
@@ -103,6 +103,7 @@ ApiExplorer.propTypes = {
   route: PropTypes.object.isRequired,
   tables: PropTypes.array.isRequired,
   headerFocus: PropTypes.bool.isRequired,
+  trackedTableCount: PropTypes.number.isRequired,
   location: PropTypes.object.isRequired,
 };
 

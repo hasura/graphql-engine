@@ -180,7 +180,7 @@ const defaultState = {
   trackedFunctions: [],
   listingSchemas: [],
   untrackedRelations: [],
-  schemaList: ['public'],
+  schemaList: [{ schema_name: 'public' }],
   currentSchema: 'public',
   adminSecretError: false,
   dataHeaders: {

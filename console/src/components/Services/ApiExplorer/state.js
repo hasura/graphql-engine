@@ -64,6 +64,7 @@ const defaultState = {
   explorerData,
   authApiExpanded: 'Username-password Login',
   headerFocus: false,
+  trackedTableCount: 0,
 };
 
 export default defaultState;

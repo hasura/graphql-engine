@@ -166,13 +166,10 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
         type: UPDATE_CURRENT_SCHEMA,
         currentSchema: currentSchema,
       }),
-      store.dispatch(fetchDataInit()),
+      store.dispatch(fetchDataInit(currentSchema)),
     ]).then(
       () => {
-        console.log('=====================');
-        console.log('Calling callback');
         cb();
-        console.log('=====================');
       },
       () => {
         // alert('Could not load schema.');

@@ -22,6 +22,8 @@ import {
   loadRunningEvents,
 } from '../EventTrigger/EventActions';
 
+import { requireSchemaList } from '../Data/DataActions';
+
 const makeEventRouter = (
   connect,
   store,
@@ -62,6 +64,7 @@ const makeEventRouter = (
       <Route
         path="manage/triggers/add"
         component={addTriggerConnector(connect)}
+        onEnter={requireSchemaList(store)}
       />
       <Route
         path="manage/triggers/:trigger/modify"

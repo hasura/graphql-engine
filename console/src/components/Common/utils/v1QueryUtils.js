@@ -296,6 +296,20 @@ export const generateSelectQuery = (
   },
 });
 
+export const getTrackedTablesCountQuery = () =>
+  generateSelectQuery(
+    'count',
+    {
+      name: 'hdb_table',
+      schema: 'hdb_catalog',
+    },
+    {
+      where: {
+        is_system_defined: 'f',
+      },
+    }
+  );
+
 export const getFetchManualTriggersQuery = tableName => ({
   type: 'select',
   args: {

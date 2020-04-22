@@ -12,6 +12,7 @@ import ModifyAction from './Modify';
 import AddAction from './Add';
 import TypesManage from './Types/Manage';
 import TypesRelationships from './Types/Relationships';
+import { requireSchemaList } from '../Data/DataActions';
 
 const actionsInit = ({ dispatch }) => {
   return (nextState, replaceState, cb) => {
@@ -44,6 +45,7 @@ const getActionsRouter = (connect, store, composeOnEnterHooks) => {
         <Route
           path=":actionName/relationships"
           component={ActionRelationships(connect)}
+          onEnter={requireSchemaList(store)}
         />
         <Route path=":actionName/codegen" component={ActionsCodegen(connect)} />
         <Route

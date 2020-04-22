@@ -429,36 +429,6 @@ const setConsistentFunctions = data => ({
   data,
 });
 
-const fetchDataInit = () => (dispatch, getState) => {
-  const url = Endpoints.getSchema;
-
-  const body = {
-    type: 'bulk',
-    args: [initQueries.schemaList],
-  };
-
-  const options = {
-    credentials: globalCookiePolicy,
-    method: 'POST',
-    headers: dataHeaders(getState),
-    body: JSON.stringify(body),
-  };
-
-  return dispatch(requestAction(url, options)).then(
-    data => {
-      const schemaList = data[0];
-      dispatch({ type: FETCH_SCHEMA_LIST, schemaList });
-      const indexSchema = schemaList.includes('public')
-        ? 'public'
-        : schemaList[0];
-      dispatch(updateSchemaInfo({ schemas: [indexSchema] }));
-    },
-    error => {
-      console.error('Failed to fetch schema ' + JSON.stringify(error));
-    }
-  );
-};
-
 const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
   if (redirect) {
     dispatch(_push(getSchemaBaseRoute(schemaName)));
@@ -483,11 +453,33 @@ const fetchSchemaList = () => (dispatch, getState) => {
   return dispatch(requestAction(url, options)).then(
     data => {
       dispatch({ type: FETCH_SCHEMA_LIST, schemaList: data });
+      return Promise.resolve();
     },
     error => {
       console.error('Failed to fetch schema ' + JSON.stringify(error));
+      return Promise.reject();
     }
   );
+};
+export const requireSchemaList = ({ dispatch }) => {
+  return (nextState, replaceState, callback) => {
+    dispatch(fetchSchemaList()).then(() => {
+      callback();
+    });
+  };
+};
+
+const fetchDataInit = schemaName => (dispatch, getState) => {
+  dispatch(fetchSchemaList()).then(() => {
+    const schemaList = getState().tables.schemaList;
+    let indexSchema = schemaName;
+    if (!indexSchema) {
+      indexSchema = schemaList.some(s => s.schema_name === 'public')
+        ? 'public'
+        : schemaList[0].schema_name; // TODO handle properly if no schema found
+    }
+    dispatch(updateCurrentSchema(indexSchema));
+  });
 };
 
 const setTable = tableName => ({ type: SET_TABLE, tableName });

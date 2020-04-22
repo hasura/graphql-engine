@@ -12,6 +12,8 @@ import { execute } from 'apollo-link';
 import { getHeadersAsJSON } from './utils';
 import { saveAppState, clearState } from '../../AppState.js';
 import { ADMIN_SECRET_HEADER_KEY } from '../../../constants';
+import { getTrackedTablesCountQuery } from '../../Common/utils/v1QueryUtils';
+import dataHeaders from '../Data/Common/Headers';
 
 const CHANGE_TAB = 'ApiExplorer/CHANGE_TAB';
 const CHANGE_API_SELECTION = 'ApiExplorer/CHANGE_API_SELECTION';
@@ -411,6 +413,34 @@ const getRemoteQueries = (queryUrl, cb) => {
     .catch(e => console.error('Invalid query file URL: ', e));
 };
 
+const SET_TRACKED_TABLES_COUNT = 'ApiExplorer/SET_TRACKED_TABLES_COUNT';
+export const fetchTrackedTablesCount = () => (dispatch, getState) => {
+  dispatch(
+    requestAction(Endpoints.query, {
+      method: 'POST',
+      headers: dataHeaders(getState),
+      body: JSON.stringify(getTrackedTablesCountQuery()),
+    })
+  ).then(
+    data => {
+      dispatch({
+        type: SET_TRACKED_TABLES_COUNT,
+        data: data.count,
+      });
+    },
+    error => {
+      console.error('Error fetching number of tracked tables', error);
+    }
+  );
+};
+
+export const apiExplorerOnEnter = ({ dispatch }) => {
+  return (nextState, replaceState, callback) => {
+    dispatch(fetchTrackedTablesCount());
+    callback();
+  };
+};
+
 const apiExplorerReducer = (state = defaultState, action) => {
   switch (action.type) {
     case CHANGE_TAB:
@@ -447,6 +477,11 @@ const apiExplorerReducer = (state = defaultState, action) => {
           ...state.modalState,
           isOpen: false,
         },
+      };
+    case SET_TRACKED_TABLES_COUNT:
+      return {
+        ...state,
+        trackedTableCount: action.data,
       };
     case CODE_GENERATOR_CHANGE_SELECTION:
       return {

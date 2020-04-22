@@ -22,6 +22,7 @@ import { getRemoteSchemaRouter } from './components/Services/RemoteSchema';
 import { getActionsRouter } from './components/Services/Actions';
 
 import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer';
+import { apiExplorerOnEnter } from './components/Services/ApiExplorer/Actions';
 
 import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
 
@@ -74,7 +75,6 @@ const routes = store => {
   };
 
   const _dataRouterUtils = dataRouterUtils(connect, store, composeOnEnterHooks);
-  const requireSchema = _dataRouterUtils.requireSchema;
   const dataRouter = _dataRouterUtils.makeDataRouter;
 
   const _eventRouterUtils = eventRouterUtils(
@@ -120,12 +120,12 @@ const routes = store => {
         <Route path="">
           <IndexRoute
             component={generatedApiExplorer(connect)}
-            onEnter={composeOnEnterHooks([requireSchema])}
+            onEnter={composeOnEnterHooks([apiExplorerOnEnter(store)])}
           />
           <Route
             path="api-explorer"
             component={generatedApiExplorer(connect)}
-            onEnter={composeOnEnterHooks([requireSchema])}
+            onEnter={composeOnEnterHooks([apiExplorerOnEnter(store)])}
           />
           <Route
             path="voyager-view"
