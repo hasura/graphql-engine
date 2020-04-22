@@ -6,6 +6,8 @@
 
 Along with the check for filtering rows that can be updated, you can now set a post-update permission check that needs to be satisfied by the updated rows after the update is made.
 
+<add-screenshot>
+
 (close #4142) (#4313)
 
 ### Bug fixes and improvements
