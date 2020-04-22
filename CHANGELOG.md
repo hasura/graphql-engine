@@ -2,9 +2,8 @@
 
 ## Next release
 
-- console: allow setting filter and check for update permissions (close #4142) (#4313)
-
 ### Bug fixes and improvements
+
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
@@ -18,6 +17,7 @@
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
 - console: fix row delete for relationships in data browser (#4433)
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
+- console: allow setting filter and check for update permissions (close #4142) (#4313)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
 
