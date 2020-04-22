@@ -1,8 +1,4 @@
-import {
-  defaultModifyState,
-  defaultPermissionsState,
-  defaultPresetsState,
-} from '../DataState';
+import { defaultModifyState, defaultPermissionsState } from '../DataState';
 
 import { MAKE_REQUEST, REQUEST_SUCCESS, REQUEST_ERROR } from '../DataActions';
 
@@ -69,16 +65,15 @@ import {
   PERM_DEL_APPLY_SAME_PERM,
   toggleField,
   toggleAllFields,
-  getFilterKey,
   getBasePermissionsState,
   updatePermissionsState,
   deleteFromPermissionsState,
   updateBulkSelect,
   updateApplySamePerms,
-  CREATE_NEW_PRESET,
   DELETE_PRESET,
   SET_PRESET_VALUE,
 } from '../TablePermissions/Actions';
+import { getDefaultFilterType } from '../TablePermissions/utils';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
   const modifyState = JSON.parse(JSON.stringify(modifyStateOrig));
@@ -283,7 +278,10 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          custom_checked: true,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: true,
+          },
         },
       };
 
@@ -329,23 +327,26 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            action.filterType ||
+              getDefaultFilterType(modifyState.permissionsState.query),
             action.filter
           ),
-          custom_checked: false,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: false,
+          },
         },
       };
-
     case PERM_SET_FILTER:
       return {
         ...modifyState,
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            action.filterType ||
+              getDefaultFilterType(modifyState.permissionsState.query),
             action.filter
           ),
-          // custom_checked: true,
         },
       };
 
@@ -355,10 +356,14 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            action.filterType ||
+              getDefaultFilterType(modifyState.permissionsState.query),
             {}
           ),
-          custom_checked: false,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: false,
+          },
         },
       };
 
@@ -480,77 +485,45 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         },
       };
 
-    /* Preset operations */
-    case CREATE_NEW_PRESET:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...modifyState.permissionsState,
-          [action.data.query]: {
-            ...modifyState.permissionsState[action.data.query],
-            localPresets: [
-              ...modifyState.permissionsState[action.data.query].localPresets,
-              { ...defaultPresetsState[action.data.query] },
-            ],
-          },
-        },
-      };
     case DELETE_PRESET:
-      const deleteIndex = action.data.index;
+      const deletedSet = {
+        ...modifyState.permissionsState[action.data.queryType].set,
+      };
+      delete deletedSet[action.data.column];
+
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
           [action.data.queryType]: {
             ...modifyState.permissionsState[action.data.queryType],
-            localPresets: [
-              ...modifyState.permissionsState[
-                action.data.queryType
-              ].localPresets.slice(0, deleteIndex),
-              ...modifyState.permissionsState[
-                action.data.queryType
-              ].localPresets.slice(
-                deleteIndex + 1,
-                modifyState.permissionsState[action.data.queryType].localPresets
-                  .length
-              ),
-            ],
+            set: deletedSet,
           },
         },
       };
+
     case SET_PRESET_VALUE:
-      const updatedIndex = action.data.index;
-      const setKeyVal =
-        modifyState.permissionsState[action.data.queryType].localPresets[
-          updatedIndex
-        ];
-      setKeyVal[action.data.key] = action.data.value;
-      if (action.data.key === 'key') {
-        // Clear if key changes
-        setKeyVal.value = '';
+      const updatedSet = {
+        ...modifyState.permissionsState[action.data.queryType].set,
+      };
+      if (action.data.prevKey) {
+        updatedSet[action.data.column] = updatedSet[action.data.prevKey];
+        delete updatedSet[action.data.prevKey];
+      } else {
+        updatedSet[action.data.column] = action.data.value || '';
       }
+
       return {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
           [action.data.queryType]: {
             ...modifyState.permissionsState[action.data.queryType],
-            localPresets: [
-              ...modifyState.permissionsState[
-                action.data.queryType
-              ].localPresets.slice(0, updatedIndex),
-              { ...setKeyVal },
-              ...modifyState.permissionsState[
-                action.data.queryType
-              ].localPresets.slice(
-                updatedIndex + 1,
-                modifyState.permissionsState[action.data.queryType].localPresets
-                  .length
-              ),
-            ],
+            set: updatedSet,
           },
         },
       };
+
     case PERM_RESET_BULK_SELECT:
       return {
         ...modifyState,

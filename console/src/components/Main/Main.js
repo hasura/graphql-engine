@@ -316,7 +316,10 @@ class Main extends React.Component {
               <a href={'#'} onClick={handlePreRelNotifOptOut}>
                 Opt out of pre-release notifications
               </a>
-              <ToolTip message={'Only be notified about stable releases'} />
+              <ToolTip
+                message={'Only be notified about stable releases'}
+                placement={'top'}
+              />
             </i>
           </React.Fragment>
         );
