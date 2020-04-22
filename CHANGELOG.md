@@ -8,6 +8,7 @@
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
 - server: add graphql-engine support for timestamps without timezones (fix #1217)
 - server: support inserting unquoted bigint, and throw an error if value overflows the bounds of the integer type (fix #576) (fix #4368)
+- server: fix creating relationships for custom object types with fields reusing Postgres scalars (close #4447)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
 - console: format row count in data browser for readablity (#4433)
@@ -18,9 +19,6 @@
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 
-## `v1.2.0-beta.5`
-
-- server: fix creating relationships for custom object types with fields reusing Postgres scalars (close #4447)
 
 ## `v1.2.0-beta.4`
 
