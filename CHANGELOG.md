@@ -2,6 +2,12 @@
 
 ## Next release
 
+### console: allow setting post-update check in update permissions
+
+Along with the check for filtering rows that can be updated, you can now set a post-update permission check that needs to be satisfied by the updated rows after the update is made.
+
+(close #4142) (#4313)
+
 ### Bug fixes and improvements
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
@@ -16,7 +22,7 @@
 - console: make nullable and unique labels for columns clickable in insert and modify (#4433)
 - console: fix row delete for relationships in data browser (#4433)
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
-- console: allow setting filter and check for update permissions (close #4142) (#4313)
+
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
 
