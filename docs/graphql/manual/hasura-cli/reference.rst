@@ -205,6 +205,9 @@ The configuration can also be set in the form of environment variables:
      - ``actions.codegen.uri``
      - URI to codegen for actions.
 
+CLI flags
+^^^^^^^^^
+
 The above keys can be set using command-line flags as well. The corresponding flag, 
 for the ENV vars or the configuration keys, can be found in the respective commands 
 reference manual. 
@@ -212,9 +215,10 @@ reference manual.
 .env file
 ^^^^^^^^^
 
-ENV variables can now be read from .env file present at the project root directory. A 
-global flag, ``--envfile``, is added to explicitly provide the .env filename, which 
-defaults to ``.env`` filename if no flag is provided. 
+Alternatively, environment variables can also be read from .env file, created manually 
+by the user, at the project root directory. A global flag, ``--envfile``, is added to 
+explicitly get the .env filename from users, which defaults to ``.env`` filename if 
+no flag is provided. 
 
 It's important to note that this will not override an ENV variable that already exists.
 
