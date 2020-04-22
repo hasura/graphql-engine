@@ -465,14 +465,3 @@ Date:   Mon Apr 27 17:07:03 2020 +0200
     Co-authored-by: Tirumarai Selvan <tiru@hasura.io>
     Co-authored-by: Marion Schleifer <marion@hasura.io>
     Co-authored-by: Rakesh Emmadi <12475069+rakeshkky@users.noreply.github.com>
-
-commit 246a0b7ab80b74f1d79bef28801efcd39f3d7164
-Author: Karthikeyan Chinnakonda <karthikeyan@hasura.io>
-Date:   Thu Apr 23 02:33:23 2020 +0530
-
-    server: Improve `queryModifiesSchemaCache` check for run_sql (#4283)
-
-    The previous check was too conservative and acquired a lock on the
-    schema cache in situations where it was unnecessary. This change
-    exposes the logic run_sql uses to determine whether to use the
-    metadata check to make the check more precise.
