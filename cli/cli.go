@@ -351,6 +351,10 @@ func (ec *ExecutionContext) setupPlugins() error {
 	}
 	ec.PluginsConfig = plugins.New(base)
 	ec.PluginsConfig.Logger = ec.Logger
+	ec.PluginsConfig.Repo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.PluginsConfig.Repo.DisableCloneOrUpdate = true
+	}
 	return ec.PluginsConfig.Prepare()
 }
 
@@ -361,6 +365,10 @@ func (ec *ExecutionContext) setupCodegenAssetsRepo() error {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
 	ec.CodegenAssetsRepo = util.NewGitUtil(util.ActionsCodegenRepoURI, base, "")
+	ec.CodegenAssetsRepo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.CodegenAssetsRepo.DisableCloneOrUpdate = true
+	}
 	return nil
 }
 
@@ -371,6 +379,10 @@ func (ec *ExecutionContext) setupInitTemplatesRepo() error {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
 	ec.InitTemplatesRepo = util.NewGitUtil(util.InitTemplatesRepoURI, base, "")
+	ec.InitTemplatesRepo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.InitTemplatesRepo.DisableCloneOrUpdate = true
+	}
 	return nil
 }
 
@@ -382,8 +394,20 @@ func (ec *ExecutionContext) SetHGEHeaders(headers map[string]string) {
 // ExecutionDirectory to see if all the required files and directories are in
 // place.
 func (ec *ExecutionContext) Validate() error {
+	// ensure plugins index exists
+	err := ec.PluginsConfig.Repo.EnsureCloned()
+	if err != nil {
+		return errors.Wrap(err, "ensuring plugins index failed")
+	}
+
+	// ensure codegen-assets repo exists
+	err = ec.CodegenAssetsRepo.EnsureCloned()
+	if err != nil {
+		return errors.Wrap(err, "ensuring codegen-assets repo failed")
+	}
+
 	// validate execution directory
-	err := ec.validateDirectory()
+	err = ec.validateDirectory()
 	if err != nil {
 		return errors.Wrap(err, "validating current directory failed")
 	}
@@ -443,20 +467,6 @@ func (ec *ExecutionContext) Validate() error {
 			GetAdminSecretHeaderName(ec.Version): ec.Config.AdminSecret,
 		}
 		ec.SetHGEHeaders(headers)
-	}
-
-	if ec.GlobalConfig.CLIEnvironment != ServerOnDockerEnvironment {
-		// ensure plugins index exists
-		err = ec.PluginsConfig.Repo.EnsureCloned()
-		if err != nil {
-			return errors.Wrap(err, "ensuring plugins index failed")
-		}
-
-		// ensure codegen-assets repo exists
-		err = ec.CodegenAssetsRepo.EnsureCloned()
-		if err != nil {
-			return errors.Wrap(err, "ensuring codegen-assets repo failed")
-		}
 	}
 	return nil
 }
