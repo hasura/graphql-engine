@@ -4,8 +4,8 @@
 
 .. _cli_reference:
 
-Hasura CLI configuration reference 
-==================================
+Configuration reference 
+=======================
 
 .. contents:: Table of contents
   :backlinks: none
@@ -16,8 +16,9 @@ Hasura CLI commands get key values from flags, ENV variables, ``.env`` file and 
 
 Configuration file
 ^^^^^^^^^^^^^^^^^^
-
-The configuration file, ``config.yaml`` format:
+ 
+In order for the Hasura CLI to work, the ``config.yaml`` file is required (created automatically via the :ref:`hasura init<hasura_init>` command).
+The configuration file can be configured with the following config keys:
 
 .. code-block:: none
 
@@ -128,6 +129,9 @@ The configuration file, ``config.yaml`` format:
 
 Environment variables
 ^^^^^^^^^^^^^^^^^^^^^
+
+The configuration can also be set in the form of environment variables:
+
 .. list-table::
    :header-rows: 1
    :widths: 25 20 30
@@ -142,15 +146,15 @@ Environment variables
 
    * - ``HASURA_GRAPHQL_ENDPOINT``
      - ``endpoint``
-     - http(s) endpoint for Hasura GraphQL Engine.
+     - http(s) endpoint for Hasura GraphQL engine.
 
    * - ``HASURA_GRAPHQL_ADMIN_SECRET``
      - ``admin_secret``  
-     - Admin secret for Hasura GraphQL Engine. 
+     - Admin secret for Hasura GraphQL engine. 
 
    * - ``HASURA_GRAPHQL_ACCESS_KEY``
      - ``access_key``
-     - Access key for Hasura GraphQL Engine. Note: Deprecated. Use admin 
+     - Access key for Hasura GraphQL engine. Note: Deprecated. Use admin 
        secret instead. 
 
    * - ``HASURA_GRAPHQL_API_PATHS_QUERY``
@@ -212,7 +216,7 @@ ENV variables can now be read from .env file present at the project root directo
 global flag, ``--envfile``, is added to explicitly provide the .env filename, which 
 defaults to ``.env`` filename if no flag is provided. 
 
-It's important to note that it will not override an ENV variable that already exists.
+It's important to note that this will not override an ENV variable that already exists.
 
 Example:
 
@@ -225,4 +229,4 @@ project root directory.
 
 .. note::
 
-  Precedence order is Flag > ENV vars > ``.env`` file values > Configuration file values > default
+  Precedence order is flag > ENV vars > ``.env`` file values > configuration file values > default.

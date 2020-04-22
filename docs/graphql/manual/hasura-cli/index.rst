@@ -23,6 +23,10 @@ Installation
 
 Refer to :ref:`install_hasura_cli`.
 
+Configuration
+-------------
+
+Refer to :ref:`cli_reference`.
 
 Commands
 --------
@@ -71,6 +75,7 @@ Refer to :ref:`uninstall_hasura_cli`.
    :hidden:
 
    install-hasura-cli
+   reference
    hasura <hasura>
    hasura actions <hasura_actions>
    hasura actions codegen <hasura_actions_codegen>
@@ -104,4 +109,3 @@ Refer to :ref:`uninstall_hasura_cli`.
    hasura update-cli <hasura_update-cli>
    hasura version <hasura_version>
    uninstall-hasura-cli
-   reference
