@@ -30,6 +30,9 @@ class TestGraphQLInsert:
     def test_inserts_various_postgres_types(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_various_postgres_types.yaml")
 
+    def test_insert_integer_overflow(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_integer_overflow.yaml")
+
     @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine/issues/348")
     def test_insert_into_array_col_with_array_input(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_into_array_col_with_array_input.yaml")
@@ -347,10 +350,12 @@ class TestGraphqlUpdateBasic:
     def test_author_by_pk_null(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/author_by_pk_null.yaml")
 
+    def test_numerics_inc(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/numerics_inc.yaml")
+
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/update/basic"
-
 
 @use_mutation_fixtures
 class TestGraphqlUpdateJsonB:

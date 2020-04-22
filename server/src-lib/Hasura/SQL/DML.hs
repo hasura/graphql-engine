@@ -242,6 +242,9 @@ mkTypeAnn = TypeAnn . toSQLTxt
 intTypeAnn :: TypeAnn
 intTypeAnn = mkTypeAnn $ PGTypeScalar PGInteger
 
+numericTypeAnn :: TypeAnn
+numericTypeAnn = mkTypeAnn $ PGTypeScalar PGNumeric
+
 textTypeAnn :: TypeAnn
 textTypeAnn = mkTypeAnn $ PGTypeScalar PGText
 

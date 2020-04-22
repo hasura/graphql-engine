@@ -18,7 +18,9 @@ class TestGraphQLQueryBasic:
 
     def test_select_query_author_with_include_directive(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_author_include_directive.yaml', transport)
-
+    
+    # Can't run server upgrade tests, as this test has a schema change
+    @pytest.mark.skip_server_upgrade_test
     def test_select_various_postgres_types(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/select_query_test_types.yaml', transport)
 

@@ -119,7 +119,7 @@ export const createAction = () => (dispatch, getState) => {
     outputType,
     error: actionDefError,
     comment: actionDescription,
-    type: actionType
+    type: actionType,
   } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
   if (actionDefError) {
     return dispatch(

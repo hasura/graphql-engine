@@ -54,6 +54,7 @@ import           Hasura.Server.Query
 import           Hasura.Server.Utils
 import           Hasura.Server.Version
 import           Hasura.SQL.Types
+import           Hasura.GraphQL.Resolve.Action
 
 import qualified Hasura.GraphQL.Execute                 as E
 import qualified Hasura.GraphQL.Execute.LiveQuery       as EL
@@ -328,7 +329,7 @@ v1GQHandler
   -> Handler m (HttpResponse EncJSON)
 v1GQHandler = v1Alpha1GQHandler
 
-gqlExplainHandler :: (MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
+gqlExplainHandler :: (HasVersion, MonadIO m) => GE.GQLExplain -> Handler m (HttpResponse EncJSON)
 gqlExplainHandler query = do
   onlyAdmin
   scRef <- scCacheRef . hcServerCtx <$> ask
@@ -336,7 +337,7 @@ gqlExplainHandler query = do
   pgExecCtx <- scPGExecCtx . hcServerCtx <$> ask
   sqlGenCtx <- scSQLGenCtx . hcServerCtx <$> ask
   enableAL <- scEnableAllowlist . hcServerCtx <$> ask
-  res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL query
+  res <- GE.explainGQLQuery pgExecCtx sc sqlGenCtx enableAL (restrictActionExecuter "query actions cannot be explained") query
   return $ HttpResponse res []
 
 v1Alpha1PGDumpHandler :: (MonadIO m) => PGD.PGDumpReqBody -> Handler m APIResp

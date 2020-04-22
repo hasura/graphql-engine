@@ -857,7 +857,10 @@ func (i InconsistentMeatadataObject) GetReason() string {
 }
 
 type RunSQLInput struct {
-	SQL string `json:"sql" yaml:"sql"`
+	SQL                      string `json:"sql" yaml:"sql"`
+	Cascade                  bool   `json:"cascade,omitempty" yaml:"cascade,omitempty"`
+	ReadOnly                 bool   `json:"read_only,omitempty" yaml:"read_only,omitempty"`
+	CheckMetadataConsistency *bool  `json:"check_metadata_consistency,omitempty" yaml:"check_metadata_consistency,omitempty"`
 }
 
 type tableConfig struct {
