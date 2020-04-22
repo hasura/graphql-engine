@@ -77,7 +77,7 @@ The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible w
    * - ``_eq``
      - ``=``
    * - ``_neq``
-     - ``<>`` or ``!=``
+     - ``<>``
 
 .. note::
 
@@ -369,13 +369,13 @@ They are compatible with any Postgres type other than ``json`` or ``jsonB`` (lik
    * - Operator
      - PostgreSQL equivalent
    * - ``_in``
-     - 
+     - ``IN``
    * - ``_nin``
-     - ``!!=``
+     - ``NOT IN``
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/6.3/c09.htm>`_ for more details on search operators.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.4/functions-comparisons.html>`_ for more details on search operators.
 
 The following are examples of using these operators on different types:
 
@@ -474,17 +474,17 @@ pattern matching on string/text fields.
    * - Operator
      - PostgreSQL equivalent
    * - ``_like``
-     - ``_like``
+     - ``LIKE``
    * - ``_nlike``
-     - ``_nlike``
+     - ``NOT LIKE``
    * - ``_ilike``
-     - ``_ilike``
+     - ``ILIKE``
    * - ``_nilike``
-     - ``_nilike``
+     - ``NOT ILIKE``
    * - ``_similar``
-     - ``_similar``
+     - ``SIMILAR TO``
    * - ``_nsimilar``
-     - ``_nsimilar``
+     - ``NOT SIMILAR TO``
 
 .. note::
 
@@ -590,7 +590,7 @@ based on ``JSONB`` columns.
    * - ``_has_key``
      - ``?``
    * - ``_has_key_any``
-     - ``?|``
+     - ``?!``
    * - ``_has_key_all``
      - ``?&``
 
@@ -693,21 +693,21 @@ The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st
    * - Operator
      - PostGIS equivalent
    * - ``_st_contains``
-     - ``ST_Contains``
+     - ``ST_Contains(lhs, val)``
    * - ``_st_crosses``
-     - ``ST_Crosses``
+     - ``ST_Crosses(lhs, val)``
    * - ``_st_equals``
-     - ``ST_Equals``
+     - ``ST_Equals(lhs, val)``
    * - ``_st_intersects``
-     - ``ST_Intersect``
+     - ``ST_Intersect(lht, val)``
    * - ``_st_overlaps``
-     - ``ST_Overlaps``
+     - ``ST_Overlaps(lhs, val)``
    * - ``_st_touches``
-     - ``ST_Touches``
+     - ``ST_Touches(lhs, val)``
    * - ``_st_within``
-     -  ``ST_Within``
+     -  ``ST_Within(lhs, val)``
    * - ``_st_d_within``
-     - ``ST_DWithin``
+     - ``ST_DWithin(lhs, val)``
 
 .. note::
 
@@ -888,11 +888,11 @@ Please submit a feature request via `GitHub <https://github.com/hasura/graphql-e
    * - Operator
      - PostgreSQL equivalent
    * - ``_st_intersects_rast``
-     - 
+     - ``ST_Intersects(lhs, value)``
    * - ``_st_intersects_geom_nband``
-     - 
+     - ``ST_Intersects(lhs, geommin, nband)``
    * - ``_st_intersects_nband_geom``
-     - 
+     - ``ST_Intersects(lhs, nband, geommin)``
 
 .. note::
 

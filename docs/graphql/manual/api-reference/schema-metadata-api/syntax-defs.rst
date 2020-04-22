@@ -296,21 +296,21 @@ Operator
    * - Operator
      - PostgreSQL equivalent
    * - ``"$eq"``
-     - 
+     - ``=``
    * - ``"$ne"``
-     - 
+     - ``<>``
    * - ``"$in"``
-     - 
+     - ``IN``
    * - ``"$nin"``
-     - 
+     - ``NOT IN``
    * - ``"$gt"``
-     - 
+     - ``>``
    * - ``"$lt"``
-     - 
+     - ``<``
    * - ``"$gte"``
-     - 
+     - ``>=``
    * - ``"$lte"``
-     - 
+     - ``<=``
 
 **Text related operators :**
 
@@ -320,17 +320,17 @@ Operator
    * - Operator
      - PostgreSQL equivalent
    * - ``"$like"``
-     - ``like``
+     - ``LIKE``
    * - ``"$nlike"``
-     - ``nlike``
+     - ``NOT LIKE``
    * - ``"$ilike"``
-     - ``ilike``
+     - ``ILIKE``
    * - ``"$nilike"``
-     - ``nilike``
+     - ``NOT ILIKE``
    * - ``"$similar"``
-     - ``similar``
+     - ``SIMILAR TO``
    * - ``"$nsimilar"``
-     - ``nsimilar``
+     - ``NOT SIMILAR TO``
 
 
 **Operators for comparing columns (all column types except json, jsonb):**
@@ -341,17 +341,17 @@ Operator
    * - Operator
      - PostgreSQL equivalent
    * - ``"$ceq"``
-     - 
+     - ``=``
    * - ``"$cne"``
-     - 
+     - ``<>``
    * - ``"$cgt"``
-     - 
+     - ``>``
    * - ``"$clt"``
-     - 
+     - ``<``
    * - ``"$cgte"``
-     - 
+     - ``>=``
    * - ``"$clte"``
-     - 
+     - ``<=``
 
 **Checking for NULL values :**
 
@@ -361,7 +361,7 @@ Operator
    * - Operator
      - PostgreSQL equivalent
    * - ``_is_null`` (takes true/false as values)
-     - ``NOT NULL``
+     - ``IS NULL``
 
 **JSONB operators :**
 
@@ -377,7 +377,7 @@ Operator
    * - ``_has_key``
      - ``?``
    * - ``_has_keys_any``
-     - ``?|``
+     - ``?!``
    * - ``_has_keys_all``
      - ``?&``
 
@@ -391,21 +391,21 @@ Operator
    * - Operator
      - PostGIS equivalent
    * - ``_st_contains``
-     - ``ST_Contains``
+     - ``ST_Contains(lhs, val)``
    * - ``_st_crosses``
-     - ``ST_Crosses``
+     - ``ST_Crosses(lhs, val)``
    * - ``_st_equals``
-     - ``ST_Equals``
+     - ``ST_Equals(lhs, val)``
    * - ``_st_intersects``
-     - ``ST_Intersects``
+     - ``ST_Intersects(lht, val)``
    * - ``_st_overlaps``
-     - ``ST_Overlaps``
+     - ``ST_Overlaps(lhs, val)``
    * - ``_st_touches``
-     - ``ST_Touches``
+     - ``ST_Touches(lhs, val)``
    * - ``_st_within``
-     - ``ST_Within``
+     - ``ST_within(lhs, val)``
    * - ``_st_d_within``
-     - ``ST_DWithin``
+     - ``ST_DWithin(lhs, val)``
 
 (For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
 
