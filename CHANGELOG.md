@@ -22,7 +22,7 @@ The order, collapsed state of columns and page size is now persisted across page
 
 (close #3390) (#3753)
 
-### Docs improvements
+### Docs
 
 - Map Postgres operators to corresponding Hasura operators in docs and link to PG documentation (#4502) (close #4056)
 
