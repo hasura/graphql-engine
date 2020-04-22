@@ -30,6 +30,9 @@ class TestGraphQLInsert:
     def test_inserts_various_postgres_types(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_various_postgres_types.yaml")
 
+    def test_insert_integer_overflow(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/insert_integer_overflow.yaml")
+
     @pytest.mark.xfail(reason="Refer https://github.com/hasura/graphql-engine/issues/348")
     def test_insert_into_array_col_with_array_input(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/insert_into_array_col_with_array_input.yaml")
