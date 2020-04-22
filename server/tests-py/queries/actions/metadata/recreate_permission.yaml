@@ -1,0 +1,32 @@
+# For https://github.com/hasura/graphql-engine/issues/4377
+- description: Create permission for action
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: create_action_permission
+    args:
+      action: create_user
+      role: user
+- description: Drop the permission
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: drop_action_permission
+    args:
+      action: create_user
+      role: user
+
+- description: Recreate action permission
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: create_action_permission
+    args:
+      action: create_user
+      role: user
