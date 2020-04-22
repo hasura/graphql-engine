@@ -184,6 +184,17 @@ Adding a computed field to a table
      A computed field can be added to a table using the :ref:`add_computed_field <api_computed_field>`
      metadata API
 
+Computed fields permissions
+---------------------------
+
+:ref:`Access control <authorization>` to computed fields depends on the type of computed field.
+
+- For **scalar computed fields**, permissions are managed similar to the :ref:`columns permissions <col-level-permissions>`
+  of the table.
+
+- For **table computed fields**, the permissions set on the return table are respected.
+
+
 Accessing Hasura session variables in computed fields
 -----------------------------------------------------
 
@@ -252,17 +263,6 @@ Use the :ref:`add_computed_field` API to add a function, and specify the name of
 .. note::
 
    The specified session argument is not included in the ``<function-name>_args`` input object in the GraphQL schema.
-
-
-Computed fields permissions
----------------------------
-
-:ref:`Access control <authorization>` to computed fields depends on the type of computed field.
-
-- For **scalar computed fields**, permissions are managed similar to the :ref:`columns permissions <col-level-permissions>`
-  of the table.
-
-- For **table computed fields**, the permissions set on the return table are respected.
 
 
 Computed fields vs. Postgres generated columns
