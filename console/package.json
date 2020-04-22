@@ -62,7 +62,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "node ./scripts/preCommit.js"
     }
   },
   "dependencies": {
