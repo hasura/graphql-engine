@@ -19,8 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
+	"github.com/Masterminds/semver"
 	"github.com/briandowns/spinner"
 	"github.com/gofrs/uuid"
 	"github.com/hasura/graphql-engine/cli/metadata/actions/types"
@@ -32,6 +31,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh/terminal"
+	"gopkg.in/yaml.v2"
 )
 
 // Other constants used in the package
@@ -43,6 +43,9 @@ const (
 
 	// Name of the file to store last update check time
 	LastUpdateCheckFileName = "last_update_check_at"
+
+	// Name of the cli extension plugin
+	CLIExtPluginName = "cli-ext"
 )
 
 const (
@@ -348,6 +351,10 @@ func (ec *ExecutionContext) setupPlugins() error {
 	}
 	ec.PluginsConfig = plugins.New(base)
 	ec.PluginsConfig.Logger = ec.Logger
+	ec.PluginsConfig.Repo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.PluginsConfig.Repo.DisableCloneOrUpdate = true
+	}
 	return ec.PluginsConfig.Prepare()
 }
 
@@ -358,6 +365,10 @@ func (ec *ExecutionContext) setupCodegenAssetsRepo() error {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
 	ec.CodegenAssetsRepo = util.NewGitUtil(util.ActionsCodegenRepoURI, base, "")
+	ec.CodegenAssetsRepo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.CodegenAssetsRepo.DisableCloneOrUpdate = true
+	}
 	return nil
 }
 
@@ -368,6 +379,10 @@ func (ec *ExecutionContext) setupInitTemplatesRepo() error {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
 	ec.InitTemplatesRepo = util.NewGitUtil(util.InitTemplatesRepoURI, base, "")
+	ec.InitTemplatesRepo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.InitTemplatesRepo.DisableCloneOrUpdate = true
+	}
 	return nil
 }
 
@@ -604,6 +619,46 @@ func (ec *ExecutionContext) setVersion() {
 	if ec.Version == nil {
 		ec.Version = version.New()
 	}
+}
+
+// InstallPlugin installs a plugin depending on forceCLIVersion.
+// If forceCLIVersion is set, it uses ec.Version.CLISemver version for the plugin to be installed.
+// Else, it installs the latest version of the plugin
+func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) error {
+	var version *semver.Version
+	if forceCLIVersion {
+		err := ec.PluginsConfig.Repo.EnsureUpdated()
+		if err != nil {
+			ec.Logger.Debugf("cannot update plugin index %v", err)
+		}
+		version = ec.Version.CLISemver
+	}
+	plugin, err := ec.PluginsConfig.GetPlugin(name, plugins.FetchOpts{
+		Version: version,
+	})
+	if err != nil {
+		if err != plugins.ErrIsAlreadyInstalled {
+			return errors.Wrapf(err, "cannot fetch plugin manfiest %s", name)
+		}
+		return nil
+	}
+	if ec.Spinner.Active() {
+		prevPrefix := ec.Spinner.Prefix
+		defer ec.Spin(prevPrefix)
+	}
+	ec.Spin(fmt.Sprintf("Installing plugin %s...", name))
+	defer ec.Spinner.Stop()
+	err = ec.PluginsConfig.Install(plugin)
+	if err != nil {
+		msg := fmt.Sprintf(`unable to install %s plugin. execute the following commands to continue:
+
+  hasura plugins install %s
+`, name, name)
+		ec.Logger.Info(msg)
+		return errors.Wrapf(err, "cannot install plugin %s", name)
+	}
+	ec.Logger.WithField("name", name).Infoln("plugin installed")
+	return nil
 }
 
 func GetAdminSecretHeaderName(v *version.Version) string {

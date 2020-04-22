@@ -12,7 +12,6 @@ const (
 )
 
 func GetYesNoPrompt(message string) (promptResp string, err error) {
-
 	prompt := promptui.Prompt{
 		Label: message + " (y/n)",
 		Validate: func(_resp string) (err error) {
@@ -28,15 +27,12 @@ func GetYesNoPrompt(message string) (promptResp string, err error) {
 		},
 		Default: "y",
 	}
-
 	promptResp, err = prompt.Run()
 	if err != nil {
 		return
 	}
 	promptResp = string(strings.ToLower(promptResp)[0])
-
 	return
-
 }
 
 func GetSelectPrompt(message string, options []string) (selection string, err error) {
@@ -44,22 +40,15 @@ func GetSelectPrompt(message string, options []string) (selection string, err er
 		Label: message,
 		Items: options,
 	}
-
 	_, selection, err = prompt.Run()
-
 	return
 }
 
 func GetFSPathPrompt(message string, def string) (input string, err error) {
-
 	prompt := promptui.Prompt{
 		Label:    message,
 		Validate: FSCheckIfDirPathExists,
 		Default:  def,
 	}
-
-	input, err = prompt.Run()
-
-	return
-
+	return prompt.Run()
 }

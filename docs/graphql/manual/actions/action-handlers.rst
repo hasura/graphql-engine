@@ -23,8 +23,8 @@ defined in a handler which is an HTTP webhook.
 HTTP handler
 ------------
 
-When the action mutation is called, Hasura makes a ``POST`` request to the
-handler with the mutation arguments and the session variables.
+When the action is executed i.e. when the query or the mutation is called, Hasura makes a ``POST`` request to the
+handler with the action arguments and the session variables.
 
 The request payload is of the format:
 
