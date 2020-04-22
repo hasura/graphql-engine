@@ -7,6 +7,7 @@
 - Introducing Actions: https://docs.hasura.io/1.0/graphql/manual/actions/index.html
 - Downgrade command: https://hasura.io/docs/1.0/graphql/manual/deployment/downgrading.html#downgrading-hasura-graphql-engine
 - console: add multi select to data table and bulk delete (#3735)
+- server: fix recreating action's permissions (close #4377)
 
   Added a checkbox to each row on Browse Rows view that allows selecting one or more rows from the table and bulk delete them.
 

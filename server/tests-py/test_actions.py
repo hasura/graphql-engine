@@ -323,3 +323,13 @@ class TestSetCustomTypes:
 
     def test_create_action_pg_scalar(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_action_pg_scalar.yaml')
+
+@pytest.mark.usefixtures('per_class_tests_db_state')
+class TestActionsMetadata:
+
+    @classmethod
+    def dir(cls):
+        return 'queries/actions/metadata'
+
+    def test_recreate_permission(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/recreate_permission.yaml')
