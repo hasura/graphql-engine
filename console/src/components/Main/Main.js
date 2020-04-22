@@ -17,10 +17,7 @@ import {
   emitProClickedEvent,
 } from './Actions';
 
-import {
-  loadInconsistentObjects,
-  redirectToMetadataStatus,
-} from '../Services/Settings/Actions';
+import { redirectToMetadataStatus } from '../Services/Settings/Actions';
 
 import {
   getLoveConsentState,
@@ -56,17 +53,13 @@ class Main extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
 
+    this.handleMetadataRedirect();
+
     document
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
 
     dispatch(featureCompatibilityInit());
-
-    dispatch(loadInconsistentObjects({ shouldReloadMetadata: false })).then(
-      () => {
-        this.handleMetadataRedirect();
-      }
-    );
 
     dispatch(loadLatestServerVersion()).then(() => {
       this.setShowUpdateNotification();
