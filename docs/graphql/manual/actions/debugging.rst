@@ -13,11 +13,11 @@ Debugging actions
   :local:
 
 While you're developing actions for your application, you may want to debug the webhook
-configured for the action. Start the server in :ref:`debugging mode <errors-debugging>`.
-In case of any errors the GraphQL response contains debugging information of webhook
-calls in ``extensions.internal`` field.
+configured for the action. To do so, start the server in :ref:`debugging mode <errors-debugging>`.
+In the case of errors, the GraphQL response contains debugging information of webhook
+calls in the ``extensions.internal`` field.
 
-For example:
+For example, let's consider the following mutation:
 
 .. code-block:: graphql
 
@@ -32,7 +32,7 @@ For example:
         }
       }
 
-In case of errors, the reponse will look like the following in debugging mode.
+In case of errors, the response will look like the following if the debugging mode is enabled.
 
 .. code-block:: json
 

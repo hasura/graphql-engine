@@ -203,11 +203,11 @@ For the ``serve`` sub-command these are the available flags and ENV variables:
 
    * - ``--dev-mode``
      - ``HASURA_GRAPHQL_DEV_MODE``
-     - Set dev mode for GraphQL requests; include 'internal' key in the errors extensions (if required) of the response.
+     - Set dev mode for GraphQL requests; include the ``internal`` key in the errors extensions of the response (if required).
 
    * - ``--admin-internal-errors``
      - ``HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS``
-     - Include 'internal' key in the errors extensions (if required) of the response for GraphQL requests with the 'admin' role.
+     - Include the ``internal`` key in the errors extensions of the response for GraphQL requests with the admin role (if required).
 
 .. note::
 

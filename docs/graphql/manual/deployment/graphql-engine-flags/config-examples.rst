@@ -172,16 +172,16 @@ the right content-type headers.
 
 .. _errors-debugging:
 
-Errors debugging
+Debugging mode
 ----------------
 
-The Hasura GraphQL Engine may provide additional information in ``extensions`` key for each
-object in ``errors``. This will include ``internal`` information of the error which'll have the
-generated SQL statement and exception information from the Postgres. This will help in debugging
-the error. This is highly useful in the case of debugging :doc:`Action <../../actions/debugging>` requests.
+The Hasura GraphQL engine may provide additional information for each object in the ``extensions`` key of ``errors``.
+The ``internal`` key contains error information including the
+generated SQL statement and exception information from Postgres. 
+This can be highly useful, especially in the case of debugging errors in :doc:`action <../../actions/debugging>` requests.
 
-By default the ``extensions`` is not sent in the ``errors`` response. To enable this,
-start the GraphQL Engine server in debugging mode with following configuration
+By default the ``extensions`` key is not sent in the ``errors`` response. To enable this,
+start the GraphQL engine server in debugging mode with the following configuration:
 
 .. code-block:: bash
 
@@ -192,7 +192,7 @@ start the GraphQL Engine server in debugging mode with following configuration
 
    HASURA_GRAPHQL_DEV_MODE=true
 
-If you want debugging mode enabled only for ``admin`` role requests, configure as following instead of the above
+If you want the debugging mode enabled only for ``admin`` role requests, configure as follows instead of the above:
 
 .. code-block:: bash
 
@@ -205,4 +205,4 @@ If you want debugging mode enabled only for ``admin`` role requests, configure a
 
 .. note::
 
-   It is highly recommended to enable debugging for only ``admin`` role in production.
+   It is highly recommended to enable debugging only for the ``admin`` role in production.
