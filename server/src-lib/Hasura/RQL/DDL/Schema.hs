@@ -87,30 +87,30 @@ instance ToJSON RunSQL where
           Q.ReadWrite -> False
       ]
 
--- see Note [Checking metadata consistency in run_sql]
-containsDDLKeyword :: Text -> Bool
-containsDDLKeyword = TDFA.match $$(quoteRegex
-  TDFA.defaultCompOpt
-    { TDFA.caseSensitive = False
-    , TDFA.multiline = True
-    , TDFA.lastStarGreedy = True }
-    TDFA.defaultExecOpt
-    { TDFA.captureGroups = False }
-    "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
-
+-- | see Note [Checking metadata consistency in run_sql]
 isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
 isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
   case rTxAccessMode of
-    Q.ReadOnly -> False
+    Q.ReadOnly  -> False
     Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
+  where
+    containsDDLKeyword :: Text -> Bool
+    containsDDLKeyword = TDFA.match $$(quoteRegex
+      TDFA.defaultCompOpt
+        { TDFA.caseSensitive = False
+        , TDFA.multiline = True
+        , TDFA.lastStarGreedy = True }
+        TDFA.defaultExecOpt
+        { TDFA.captureGroups = False }
+        "\\balter\\b|\\bdrop\\b|\\breplace\\b|\\bcreate function\\b|\\bcomment on\\b")
 
 runRunSQL :: (MonadTx m, CacheRWM m, HasSQLGenCtx m) => RunSQL -> m EncJSON
-runRunSQL q@RunSQL {..} = do
-  let metadataCheckNeeded = isSchemaCacheBuildRequiredRunSQL q
+runRunSQL q@RunSQL {..}
   -- see Note [Checking metadata consistency in run_sql]
-  if metadataCheckNeeded
-    then withMetadataCheck rCascade $ execRawSQL rSql
-    else execRawSQL rSql
+  | isSchemaCacheBuildRequiredRunSQL q
+  = withMetadataCheck rCascade $ execRawSQL rSql
+  | otherwise
+  = execRawSQL rSql
   where
     execRawSQL :: (MonadTx m) => Text -> m EncJSON
     execRawSQL =
