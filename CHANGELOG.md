@@ -4,9 +4,9 @@
 
 ### Allow access to session variables by computed fields (fix #3846)
 
-Sometimes it is useful for computed fields to have access to the Hasura session variables directly.  Support for this is now added through the `add_computed_field` API.
+Sometimes it is useful for computed fields to have access to the Hasura session variables directly.  This allows, for example, to have a Boolean-valued computed field indicating whether the current user has liked an article.  Support for this is now added through the `add_computed_field` API.
 
-Read more about actions in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
+Read more about the session argument for computed fields in the [docs](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/computed-field.html).
 
 ### Bug fixes and improvements
 
