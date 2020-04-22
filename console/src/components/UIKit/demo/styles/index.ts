@@ -7,11 +7,18 @@ import {
   border,
   shadow,
   layout,
+  LayoutProps,
+  FlexboxProps,
+  TypographyProps,
+  SpaceProps,
+  ColorProps,
 } from 'styled-system';
 
 // Parent Div ~ Global Styles ************* //
 
-export const UIKitWrapperDiv = styled.div`
+export const UIKitWrapperDiv = styled.div<
+  TypographyProps & SpaceProps & ColorProps
+>`
   ${typography}
   ${space}
   ${color}
@@ -46,8 +53,7 @@ export const Box = styled.div`
 `;
 
 // Flexbox Div ********************** //
-
-export const Flex = styled(Box)`
+export const Flex = styled(Box)<LayoutProps & FlexboxProps>`
   ${flexbox}
 `;
 

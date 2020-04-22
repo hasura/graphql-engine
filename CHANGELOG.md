@@ -2,17 +2,37 @@
 
 ## Next release
 
-### Docs
+### console: allow setting post-update check in update permissions
 
-- Map Postgres operators to corresponding Hasura operators in docs and link to PG documentation (#4502) (close #4056)
+Along with the check for filtering rows that can be updated, you can now set a post-update permission check that needs to be satisfied by the updated rows after the update is made.
+
+<add-screenshot>
+
+(close #4142) (#4313)
+
+### docs: map Postgres operators to corresponding Hasura operators 
+
+Map Postgres operators to corresponding Hasura operators at various places in docs and link to PG documentation for reference.
+For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/schema-metadata-api/syntax-defs.html#operator).
+
+(#4502) (close #4056)
 
 ### Bug fixes and improvements
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
 - server: support special characters in JSON path query argument with bracket `[]` notation, e.g `obj['Hello World!']` (#3890) (#4482)
+- server: add graphql-engine support for timestamps without timezones (fix #1217)
+- server: support inserting unquoted bigint, and throw an error if value overflows the bounds of the integer type (fix #576) (fix #4368)
 - console: change react ace editor theme to eclipse (close #4437)
 - console: fix columns reordering for relationship tables in data browser (#4483)
+- console: format row count in data browser for readablity (#4433)
+- console: move pre-release notification tooltip msg to top (#4433)
+- console: remove extra localPresets key present in migration files on permissions change (close #3976) (#4433)
+- console: make nullable and unique labels for columns clickable in insert and modify (#4433)
+- console: fix row delete for relationships in data browser (#4433)
+- console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
+- server: fix recreating action's permissions (close #4377)
 
 ## `v1.2.0-beta.4`
 
@@ -20,22 +40,22 @@
 
 (close #4032) (#4309)
 
-### console: persist columns state in data browser
+### console: persist page state in data browser across navigation
 
-The order, collapsed state of columns and page size is now persisted across page navigation
+The order, collapsed state of columns and rows limit is now persisted across page navigation
 
 (close #3390) (#3753)
 
 ### Bug fixes and improvements
 
-- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
-- console: query support for actions (#4318)
 - cli: query support for actions (#4318)
 - cli: add retry_conf in event trigger for squashing migrations (close #4296) (#4324)
 - cli: allow customization of server api paths (close #4016)
 - cli: clean up migration files created during a failed migrate api (close #4312) (#4319)
 - cli: add support for multiple versions of plugin (close #4105)
 - cli: template assets path in console HTML for unversioned builds
+- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
+- console: query support for actions (#4318)
 - console: recover from SDL parse in actions type definition editor (fix #4385) (#4389)
 - console: allow customising graphql field names for columns of views (close #3689) (#4255)
 - console: fix clone permission migrations (close #3985) (#4277)
