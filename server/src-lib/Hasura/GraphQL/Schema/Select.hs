@@ -179,7 +179,8 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
                   ObjRel -> RQL.FObj annotatedRelationship
                   ArrRel -> RQL.FArr $ RQL.ASSimple annotatedRelationship
               )
-      FIComputedField computedFieldInfo -> computedField computedFieldInfo stringifyNum
+      FIComputedField computedFieldInfo ->
+        computedField computedFieldInfo selectPermissions stringifyNum
   where
     aliasToFieldName = fmap $ fmap $ first $ FieldName . G.unName
 
@@ -266,28 +267,31 @@ jsonPathArg functionReturnType
 computedField
   :: (MonadSchema n m, MonadError QErr m)
   => ComputedFieldInfo
+  -> SelPermInfo
   -> Bool
   -> m (FieldsParser 'Output n (Maybe (G.Name, AnnotatedField)))
-computedField ComputedFieldInfo{..} stringifyNum =
+computedField ComputedFieldInfo{..} selectPermissions stringifyNum =
   case G.mkName $ computedFieldNameToText $ _cfiName of
     -- TODO: can we assume there is always a name instead?
     Nothing        -> pure $ pure Nothing
     Just fieldName -> do
       functionArgsParser <- computedFieldFunctionArgs _cfiFunction
       case _cfiReturnType of
-        CFRScalar scalarReturnType -> do
-          -- TODO: handle permissions
-          let fieldArgsParser = do
-                args  <- functionArgsParser
-                colOp <- jsonPathArg scalarReturnType
-                pure $ RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
-                  { RQL._cfssFunction  = _cffName _cfiFunction
-                  , RQL._cfssType      = scalarReturnType
-                  , RQL._cfssColumnOp  = colOp
-                  , RQL._cfssArguments = args
-                  }
-          dummyParser <- P.column (PGColumnScalar scalarReturnType) (G.Nullability False)
-          pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser
+        CFRScalar scalarReturnType ->
+          if Set.member _cfiName $ spiScalarComputedFields selectPermissions
+          then do
+            let fieldArgsParser = do
+                  args  <- functionArgsParser
+                  colOp <- jsonPathArg scalarReturnType
+                  pure $ RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
+                    { RQL._cfssFunction  = _cffName _cfiFunction
+                    , RQL._cfssType      = scalarReturnType
+                    , RQL._cfssColumnOp  = colOp
+                    , RQL._cfssArguments = args
+                    }
+            dummyParser <- P.column (PGColumnScalar scalarReturnType) (G.Nullability False)
+            pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser
+          else pure $ pure Nothing
         CFRSetofTable tableName -> tableSelectPermissions tableName >>= \case
           Nothing    -> pure $ pure Nothing
           Just perms -> do
