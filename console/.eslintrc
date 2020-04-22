@@ -112,6 +112,11 @@
       "parser": "@typescript-eslint/parser",
       "files": ["*.ts", "*.tsx"],
       "rules": {
+        "jsx-a11y/label-has-for": [ 0, {
+          "required": {
+            "some": [ "nesting", "id"  ]
+          }
+        }],
         "import/extensions": 0,
         "import/prefer-default-export": "off",
         "react/prop-types": "off",

@@ -7,8 +7,9 @@ import {
   space,
   shadow,
 } from 'styled-system';
+import { RadioButtonProps } from './index';
 
-export const StyledRadioButton = styled.div`
+export const StyledRadioButton = styled.div<RadioButtonProps>`
   [type='radio']:checked,
   [type='radio']:not(:checked) {
     position: absolute;
