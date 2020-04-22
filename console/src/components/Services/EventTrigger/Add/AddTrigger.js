@@ -178,6 +178,7 @@ class AddTrigger extends Component {
       webhookURL,
       webhookUrlType,
       enableManual,
+      currentSchema,
     } = this.props;
 
     const styles = require('../TableCommon/EventTable.scss');
@@ -406,6 +407,7 @@ class AddTrigger extends Component {
               </h4>
               <select
                 onChange={updateTableList}
+                value={currentSchema}
                 data-test="select-schema"
                 className={styles.selectTrigger + ' form-control'}
               >
