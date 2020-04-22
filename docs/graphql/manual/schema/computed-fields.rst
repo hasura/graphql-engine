@@ -251,7 +251,7 @@ Use the :ref:`add_computed_field` API to add a function, and specify the name of
 
 .. note::
 
-   The specified session argument will not be included in the ``<function-name>_args`` input object in the GraphQL schema.
+   The specified session argument is not included in the ``<function-name>_args`` input object in the GraphQL schema.
 
 
 Computed fields permissions
