@@ -351,6 +351,10 @@ func (ec *ExecutionContext) setupPlugins() error {
 	}
 	ec.PluginsConfig = plugins.New(base)
 	ec.PluginsConfig.Logger = ec.Logger
+	ec.PluginsConfig.Repo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.PluginsConfig.Repo.DisableCloneOrUpdate = true
+	}
 	return ec.PluginsConfig.Prepare()
 }
 
@@ -361,6 +365,10 @@ func (ec *ExecutionContext) setupCodegenAssetsRepo() error {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
 	ec.CodegenAssetsRepo = util.NewGitUtil(util.ActionsCodegenRepoURI, base, "")
+	ec.CodegenAssetsRepo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.CodegenAssetsRepo.DisableCloneOrUpdate = true
+	}
 	return nil
 }
 
@@ -371,6 +379,10 @@ func (ec *ExecutionContext) setupInitTemplatesRepo() error {
 		return errors.Wrap(err, "cannot get absolute path")
 	}
 	ec.InitTemplatesRepo = util.NewGitUtil(util.InitTemplatesRepoURI, base, "")
+	ec.InitTemplatesRepo.Logger = ec.Logger
+	if ec.GlobalConfig.CLIEnvironment == ServerOnDockerEnvironment {
+		ec.InitTemplatesRepo.DisableCloneOrUpdate = true
+	}
 	return nil
 }
 
@@ -613,10 +625,6 @@ func (ec *ExecutionContext) setVersion() {
 // If forceCLIVersion is set, it uses ec.Version.CLISemver version for the plugin to be installed.
 // Else, it installs the latest version of the plugin
 func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) error {
-	prevPrefix := ec.Spinner.Prefix
-	ec.Spin(fmt.Sprintf("Installing plugin %s...", name))
-	defer ec.Spin(prevPrefix)
-
 	var version *semver.Version
 	if forceCLIVersion {
 		err := ec.PluginsConfig.Repo.EnsureUpdated()
@@ -625,19 +633,29 @@ func (ec ExecutionContext) InstallPlugin(name string, forceCLIVersion bool) erro
 		}
 		version = ec.Version.CLISemver
 	}
-	err := ec.PluginsConfig.Install(name, plugins.InstallOpts{
+	plugin, err := ec.PluginsConfig.GetPlugin(name, plugins.FetchOpts{
 		Version: version,
 	})
 	if err != nil {
 		if err != plugins.ErrIsAlreadyInstalled {
-			msg := fmt.Sprintf(`unable to install %s plugin. execute the following commands to continue:
+			return errors.Wrapf(err, "cannot fetch plugin manfiest %s", name)
+		}
+		return nil
+	}
+	if ec.Spinner.Active() {
+		prevPrefix := ec.Spinner.Prefix
+		defer ec.Spin(prevPrefix)
+	}
+	ec.Spin(fmt.Sprintf("Installing plugin %s...", name))
+	defer ec.Spinner.Stop()
+	err = ec.PluginsConfig.Install(plugin)
+	if err != nil {
+		msg := fmt.Sprintf(`unable to install %s plugin. execute the following commands to continue:
 
   hasura plugins install %s
 `, name, name)
-			ec.Logger.Info(msg)
-			return errors.Wrapf(err, "cannot install plugin %s", name)
-		}
-		return nil
+		ec.Logger.Info(msg)
+		return errors.Wrapf(err, "cannot install plugin %s", name)
 	}
 	ec.Logger.WithField("name", name).Infoln("plugin installed")
 	return nil
