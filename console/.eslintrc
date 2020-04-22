@@ -118,9 +118,11 @@
           }
         }],
         "import/extensions": 0,
+        "import/prefer-default-export": "off",
         "react/prop-types": "off",
         "react/jsx-filename-extension": 0,
         "no-unused-vars": "off",
+        "camelcase": "off",
         "@typescript-eslint/no-unused-vars": 2,
         "@typescript-eslint/indent": 0,
         "@typescript-eslint/explicit-function-return-type": 0,
@@ -141,7 +143,6 @@
          * Disable things that are checked by Typescript
          */
         "import/no-unresolved": 0,
-        "import/prefer-default-export": "off",
         "getter-return": "off",
         "no-dupe-args": "off",
         "no-dupe-keys": "off",

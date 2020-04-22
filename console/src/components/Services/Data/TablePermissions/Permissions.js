@@ -49,8 +49,7 @@ import {
   updateSchemaInfo,
   fetchRoleList,
 } from '../DataActions';
-import { getIngForm, getEdForm, escapeRegExp } from '../utils';
-import { allOperators, getLegacyOperator } from './PermissionBuilder/utils';
+import { getIngForm, getEdForm } from '../utils';
 import {
   getPermissionFilterString,
   getPermissionColumnAccessSummary,
@@ -80,13 +79,32 @@ import {
   QUERY_TYPES,
 } from '../../../Common/utils/pgUtils';
 import { showErrorNotification } from '../../Common/Notification';
+import {
+  getFilterQueries,
+  replaceLegacyOperators,
+  getAllowedFilterKeys,
+  updateFilterTypeLabel,
+  getDefaultFilterType,
+  getUpdateTooltip,
+} from './utils';
 
 class Permissions extends Component {
   constructor() {
     super();
 
     this.state = {
-      localFilterString: '',
+      presetsInfo: {
+        insert: {
+          columnTypeMap: {},
+        },
+        update: {
+          columnTypeMap: {},
+        },
+      },
+      localFilterString: {
+        filter: '',
+        check: '',
+      },
       prevPermissionsState: {},
       presetsOrdered: [],
     };
@@ -113,7 +131,10 @@ class Permissions extends Component {
       prevPermissionsState.role !== nextPermissionsState.role ||
       prevPermissionsState.query !== nextPermissionsState.query
     ) {
-      newState.localFilterString = '';
+      newState.localFilterString = {
+        check: '',
+        filter: '',
+      };
 
       if (
         nextPermissionsState.query &&
@@ -550,6 +571,8 @@ class Permissions extends Component {
 
       const noPermissionsMsg = 'Set row permissions first';
 
+      const noFilterPermissionMsg = 'Set pre-update permissions first';
+
       const permsChanged =
         JSON.stringify(newQueryPermissions) !==
         JSON.stringify(currQueryPermissions);
@@ -577,79 +600,80 @@ class Permissions extends Component {
       };
 
       const getRowSection = () => {
-        let filterString = getPermissionFilterString(
-          permissionsState[query],
-          query
+        let filterString;
+        if (query === 'update') {
+          filterString = {
+            check: getPermissionFilterString(
+              permissionsState[query],
+              query,
+              false,
+              'check'
+            ),
+            filter: getPermissionFilterString(
+              permissionsState[query],
+              query,
+              false,
+              'filter'
+            ),
+          };
+        } else {
+          const key = getDefaultFilterType(query);
+          filterString = {
+            [key]: getPermissionFilterString(
+              permissionsState[query],
+              query,
+              false,
+              key
+            ),
+          };
+        }
+
+        const rowSectionStatus = getPermissionRowAccessSummary(
+          filterString[getDefaultFilterType(query)]
         );
 
-        const rowSectionStatus = getPermissionRowAccessSummary(filterString);
+        filterString = replaceLegacyOperators(filterString);
 
-        // replace legacy operator values
-        allOperators.forEach(operator => {
-          const currentString = '"' + operator + '"';
-          const legacyString = '"' + getLegacyOperator(operator) + '"';
+        const getFilterOptions = (filterType, disabled = false) => {
+          const currentFilterString = this.state.localFilterString[filterType];
 
-          filterString = filterString.replace(
-            new RegExp(escapeRegExp(legacyString), 'g'),
-            currentString
-          );
-        });
-
-        const getFilterOptions = () => {
           const dispatchAllowAll = () => {
-            dispatch(permAllowAll());
+            dispatch(permAllowAll(filterType));
           };
 
           const dispatchFuncSetFilter = filter => {
-            this.setState({ localFilterString: filter });
+            this.setState(prev => ({
+              filterString: {
+                ...prev,
+                [filterType]: filter,
+              },
+            }));
 
             if (isJsonString(filter)) {
-              dispatch(permSetFilter(JSON.parse(filter)));
+              dispatch(permSetFilter(JSON.parse(filter), filterType));
             }
           };
 
           const dispatchSetFilterSameAs = filter => () => {
-            dispatch(permSetFilterSameAs(JSON.parse(filter)));
+            dispatch(permSetFilterSameAs(JSON.parse(filter), filterType));
           };
 
           const dispatchCustomChecked = () => {
-            dispatch(permCustomChecked());
-          };
-
-          // return queries grouped by filterString i.e. { filterString: [query] }
-          const getFilterQueries = () => {
-            const _filterQueries = {};
-            supportedQueryTypes.forEach(queryType => {
-              if (queryType === permissionsState.query) {
-                return;
-              }
-
-              let queryFilterString = '';
-              if (permissionsState[queryType]) {
-                queryFilterString = getPermissionFilterString(
-                  permissionsState[queryType],
-                  queryType
-                );
-              }
-
-              if (queryFilterString) {
-                _filterQueries[queryFilterString] =
-                  _filterQueries[queryFilterString] || [];
-                _filterQueries[queryFilterString].push(queryType);
-              }
-            });
-
-            return _filterQueries;
+            dispatch(permCustomChecked(filterType));
           };
 
           const _filterOptionsSection = [];
 
-          const filterQueries = getFilterQueries();
+          const filterQueries = getFilterQueries(
+            supportedQueryTypes,
+            permissionsState,
+            filterType
+          );
 
           const selectedValue = (
             <AceEditor
               mode="json"
-              value={localFilterString || filterString}
+              value={currentFilterString || filterString[filterType]}
               onChange={dispatchFuncSetFilter}
               theme="github"
               height="5em"
@@ -668,6 +692,9 @@ class Permissions extends Component {
                   checked={checked}
                   value={value}
                   onClick={onClick}
+                  disabled={disabled}
+                  title={disabled ? noFilterPermissionMsg : ''}
+                  className={styles.bottom5}
                   readOnly
                 />
                 {label}
@@ -679,8 +706,9 @@ class Permissions extends Component {
 
           const addNoChecksOption = () => {
             const isSelected =
-              !permissionsState.custom_checked &&
-              rowSectionStatus === 'without any checks';
+              !permissionsState.custom_checked[filterType] &&
+              getPermissionRowAccessSummary(filterString[filterType]) ===
+                'without any checks';
 
             // Add allow all option
             let allowAllQueryInfo = '';
@@ -721,7 +749,8 @@ class Permissions extends Component {
               }
 
               const isSelected =
-                !permissionsState.custom_checked && filterString === filter;
+                !permissionsState.custom_checked[filterType] &&
+                filterString[filterType] === filter;
 
               const queries = filterQueries[filter].join(', ');
               const queryLabel = (
@@ -751,12 +780,12 @@ class Permissions extends Component {
             };
 
             const isUniqueFilter =
-              filterString !== '' &&
-              filterString !== '{}' &&
-              !filterQueries[filterString];
+              filterString[filterType] !== '' &&
+              filterString[filterType] !== '{}' &&
+              !filterQueries[filterString[filterType]];
 
             const isSelected =
-              permissionsState.custom_checked || isUniqueFilter;
+              permissionsState.custom_checked[filterType] || isUniqueFilter;
 
             const customCheckToolTip = (
               <Tooltip id="tooltip-custom-check">
@@ -793,7 +822,7 @@ class Permissions extends Component {
                   tableDef={generateTableDef(tableName, currentSchema)}
                   allTableSchemas={allSchemas}
                   schemaList={schemaList}
-                  filter={filterString}
+                  filter={filterString[filterType]}
                   dispatch={dispatch}
                   key={-4}
                 />
@@ -856,6 +885,22 @@ class Permissions extends Component {
           </Tooltip>
         );
 
+        const getUpdateFilterOptions = (filterType, disabled = false) => {
+          return (
+            <div
+              className={disabled ? styles.disabled : ''}
+              title={disabled ? noFilterPermissionMsg : ''}
+            >
+              <hr />
+              {addTooltip(
+                updateFilterTypeLabel[filterType],
+                getUpdateTooltip(filterType)
+              )}
+              {getFilterOptions(filterType, disabled)}
+            </div>
+          );
+        };
+
         const rowSectionTitle = 'Row ' + query + ' permissions';
 
         return (
@@ -875,7 +920,14 @@ class Permissions extends Component {
                   Allow role <b>{permissionsState.role}</b> to{' '}
                   {permissionsState.query} <b>rows</b>:
                 </div>
-                {getFilterOptions()}
+                {permissionsState.query === 'update' ? (
+                  <>
+                    {getUpdateFilterOptions('filter')}
+                    {getUpdateFilterOptions('check', noPermissions)}
+                  </>
+                ) : (
+                  getFilterOptions(getDefaultFilterType(query))
+                )}
               </div>
               <div className={styles.add_mar_top}>{getLimitSection()}</div>
             </div>
@@ -1679,7 +1731,18 @@ class Permissions extends Component {
         }
 
         const dispatchSavePermissions = () => {
-          if (localFilterString && !isJsonString(localFilterString)) {
+          const filterKeys = getAllowedFilterKeys(query);
+          const isInvalid = filterKeys.some(key => {
+            if (
+              localFilterString[key] &&
+              !isJsonString(localFilterString[key])
+            ) {
+              return true;
+            }
+            return false;
+          });
+
+          if (isInvalid) {
             dispatch(
               showErrorNotification(
                 'Saving permissions failed',
@@ -1688,6 +1751,7 @@ class Permissions extends Component {
             );
             return;
           }
+
           dispatch(permChangePermissions(permChangeTypes.save));
         };
 
