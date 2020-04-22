@@ -1,9 +1,27 @@
 import Endpoints, { globalCookiePolicy } from '../../Endpoints';
+import push from 'react-router-redux';
 import { UPDATE_DATA_HEADERS } from '../Services/Data/DataActions';
 import { saveAdminSecretState } from '../AppState';
-import { ADMIN_SECRET_HEADER_KEY, CLI_CONSOLE_MODE } from '../../constants';
+import { ADMIN_SECRET_HEADER_KEY } from '../../constants';
 import requestAction from '../../utils/requestAction';
 import globals from '../../Globals';
+
+export const hyrateAdminSecret = (adminSecret, callback) => dispatch => {
+  // set admin secret in globals
+  globals.adminSecret = adminSecret;
+
+  // set data headers in redux
+  dispatch({
+    type: UPDATE_DATA_HEADERS,
+    data: {
+      'content-type': 'application/json',
+      [ADMIN_SECRET_HEADER_KEY]: adminSecret,
+    },
+  });
+  if (callback) {
+    callback();
+  }
+};
 
 export const verifyLogin = ({
   adminSecret,
@@ -36,29 +54,13 @@ export const verifyLogin = ({
 
   dispatch(requestAction(url, requestOptions)).then(
     () => {
-      if (adminSecret) {
-        if (globals.consoleMode !== CLI_CONSOLE_MODE) {
-          // set admin secret to local storage
-          if (shouldPersist) {
-            saveAdminSecretState(adminSecret);
-          }
-
-          // set admin secret in globals
-          globals.adminSecret = adminSecret;
-        }
-
-        // set data headers in redux
-        dispatch({
-          type: UPDATE_DATA_HEADERS,
-          data: {
-            'content-type': 'application/json',
-            [ADMIN_SECRET_HEADER_KEY]: adminSecret,
-          },
-        });
-      }
       if (successCallback) {
         successCallback();
       }
+      if (adminSecret && shouldPersist) {
+        saveAdminSecretState(adminSecret);
+      }
+      dispatch(hyrateAdminSecret(adminSecret, () => dispatch(push('/'))));
     },
     error => {
       errorCallback(error);

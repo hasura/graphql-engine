@@ -11,11 +11,7 @@ import {
   addAllUntrackedTablesSql,
   addExistingFunction,
 } from '../Add/AddExistingTableViewActions';
-import {
-  updateSchemaInfo,
-  fetchFunctionInit,
-  updateCurrentSchema,
-} from '../DataActions';
+import { updateSchemaInfo, updateCurrentSchema } from '../DataActions';
 import {
   autoAddRelName,
   autoTrackRelations,
@@ -50,7 +46,6 @@ class Schema extends Component {
       schemaNameEdit: '',
     };
 
-    this.props.dispatch(fetchFunctionInit());
     this.props.dispatch(
       updateSchemaInfo({ schemas: [this.props.currentSchema] })
     );

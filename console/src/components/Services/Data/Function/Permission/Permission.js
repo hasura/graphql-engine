@@ -14,7 +14,6 @@ import { fetchCustomFunction } from '../customFunctionReducer';
 import {
   updateSchemaInfo,
   UPDATE_CURRENT_SCHEMA,
-  fetchFunctionInit,
   setTable,
 } from '../../DataActions';
 import { NotFoundError } from '../../../../Error/PageNotFound';
@@ -95,8 +94,7 @@ class Permission extends React.Component {
             type: UPDATE_CURRENT_SCHEMA,
             currentSchema: setOffTableSchema,
           }),
-          dispatch(updateSchemaInfo()),
-          dispatch(fetchFunctionInit()),
+          dispatch(updateSchemaInfo({ tables: [] })),
           dispatch(setTable(setOffTable)),
         ]);
       }

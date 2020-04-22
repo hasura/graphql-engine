@@ -184,7 +184,7 @@ export const replaceMetadataFromFile = (
   dispatch(replaceMetadata(parsedFileContent, onSuccess, onError));
 };
 
-const handleInconsistentObjects = inconsistentObjects => {
+export const handleInconsistentObjects = inconsistentObjects => {
   return (dispatch, getState) => {
     const allSchemas = getState().tables.allSchemas;
     const functions = getState().tables.trackedFunctions;

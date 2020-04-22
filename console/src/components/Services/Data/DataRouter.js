@@ -29,13 +29,7 @@ import {
 
 import { rightContainerConnector } from '../../Common/Layout';
 
-import {
-  fetchDataInit,
-  fetchFunctionInit,
-  UPDATE_CURRENT_SCHEMA,
-  updateSchemaInfo,
-  // ADMIN_SECRET_ERROR,
-} from './DataActions';
+import { fetchDataInit, UPDATE_CURRENT_SCHEMA } from './DataActions';
 
 // import { changeRequestHeader } from '../../ApiExplorer/Actions';
 // import { validateLogin } from '../../Main/Actions';
@@ -49,7 +43,11 @@ const makeDataRouter = (
   consoleModeRedirects
 ) => {
   return (
-    <Route path="data" component={dataPageConnector(connect)}>
+    <Route
+      path="data"
+      component={dataPageConnector(connect)}
+      onEnter={composeOnEnterHooks([requireSchema])}
+    >
       <IndexRedirect to="schema/public" />
       <Route path="schema" component={rightContainerConnector(connect)}>
         <IndexRedirect to="public" />
@@ -169,11 +167,12 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
         currentSchema: currentSchema,
       }),
       store.dispatch(fetchDataInit()),
-      store.dispatch(updateSchemaInfo()),
-      store.dispatch(fetchFunctionInit()),
     ]).then(
       () => {
+        console.log('=====================');
+        console.log('Calling callback');
         cb();
+        console.log('=====================');
       },
       () => {
         // alert('Could not load schema.');
