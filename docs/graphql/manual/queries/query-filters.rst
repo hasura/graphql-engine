@@ -81,7 +81,7 @@ The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible w
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.0/functions-comparison.html>`_ for more details on equality operators.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.0/functions-comparison.html>`__ for more details on equality operators.
 
 The following are examples of using the equality operators on different types.
 
@@ -236,7 +236,7 @@ The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.0/functions-comparison.html>`_ for more details on these operators.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.0/functions-comparison.html>`__ for more details on these operators.
 
 The following are examples of using these operators on different types:
 
@@ -375,7 +375,7 @@ They are compatible with any Postgres type other than ``json`` or ``jsonB`` (lik
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.4/functions-comparisons.html>`_ for more details on search operators.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.4/functions-comparisons.html>`__ for more details on search operators.
 
 The following are examples of using these operators on different types:
 
@@ -489,7 +489,7 @@ pattern matching on string/text fields.
 .. note::
 
   These operators behave exactly like their SQL counterparts.
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/functions-matching.html>`_ for more details on pattern matching operators.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/functions-matching.html>`__ for more details on pattern matching operators.
 
 **Example: _like**
 
@@ -596,7 +596,7 @@ based on ``JSONB`` columns.
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`_ for more details on JSONB operators.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__ for more details on JSONB operators.
 
 **Example: _contains**
 
@@ -693,25 +693,25 @@ The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st
    * - Operator
      - PostGIS equivalent
    * - ``_st_contains``
-     - ``ST_Contains(lhs, val)``
+     - ``ST_Contains(column, input)``
    * - ``_st_crosses``
-     - ``ST_Crosses(lhs, val)``
+     - ``ST_Crosses(column, input)``
    * - ``_st_equals``
-     - ``ST_Equals(lhs, val)``
+     - ``ST_Equals(column, input)``
    * - ``_st_intersects``
-     - ``ST_Intersect(lht, val)``
+     - ``ST_Intersect(column, input)``
    * - ``_st_overlaps``
-     - ``ST_Overlaps(lhs, val)``
+     - ``ST_Overlaps(column, input)``
    * - ``_st_touches``
-     - ``ST_Touches(lhs, val)``
+     - ``ST_Touches(column, input)``
    * - ``_st_within``
-     -  ``ST_Within(lhs, val)``
+     -  ``ST_Within(column, input)``
    * - ``_st_d_within``
-     - ``ST_DWithin(lhs, val)``
+     - ``ST_DWithin(column, input)``
 
 .. note::
 
-  Please refer to the `Postgres documentation <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`_ for more details on spatial relationship operators.
+  Please refer to the `Postgres documentation <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__ for more details on spatial relationship operators.
 
 Use JSON representation (see `GeoJSON <https://tools.ietf.org/html/rfc7946>`_) of ``geometry`` and ``geography`` values in
 ``variables`` as shown in the following examples:
@@ -830,7 +830,7 @@ Checking for null values can be achieved using the ``_is_null`` operator.
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/8.3/functions-comparison.html>`_ for more details on the ``IS NULL`` construct.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/8.3/functions-comparison.html>`__ for more details on the ``IS NULL`` construct.
 
 **Example: Filter null values in a field**
 
@@ -888,15 +888,15 @@ Please submit a feature request via `GitHub <https://github.com/hasura/graphql-e
    * - Operator
      - PostgreSQL equivalent
    * - ``_st_intersects_rast``
-     - ``ST_Intersects(lhs, value)``
+     - ``ST_Intersects(column, value)``
    * - ``_st_intersects_geom_nband``
-     - ``ST_Intersects(lhs, geommin, nband)``
+     - ``ST_Intersects(column, geommin, nband)``
    * - ``_st_intersects_nband_geom``
-     - ``ST_Intersects(lhs, nband, geommin)``
+     - ``ST_Intersects(column, nband, geommin)``
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://postgis.net/docs/RT_ST_Intersects.html>`_ for more details about intersect functions on ``raster`` columns.
+  Please refer to the `Postgres documentation <https://postgis.net/docs/RT_ST_Intersects.html>`__ for more details about intersect functions on ``raster`` columns.
 
 **Example: _st_intersects_rast**
 
@@ -1059,7 +1059,7 @@ filter set for a condition.
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.1/functions-logical.html>`_ for more details on the ``NOT`` operator.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.1/functions-logical.html>`__ for more details on the ``NOT`` operator.
 
 **Example: _not**
 
@@ -1134,7 +1134,7 @@ results based on more than one criteria.
 
 .. note::
 
-  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.1/functions-logical.html>`_ for more details on these operators.
+  Please refer to the `Postgres documentation <https://www.postgresql.org/docs/9.1/functions-logical.html>`__ for more details on these operators.
 
 .. note::
   You can use the ``_or`` and ``_and`` operators along with the ``_not`` operator to create arbitrarily complex boolean

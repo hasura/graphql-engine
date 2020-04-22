@@ -424,31 +424,67 @@ Operator
 ########
 **Generic operators (all column types except json, jsonb):**
 
-- ``_eq``
-- ``_neq``
-- ``_in``
-- ``_nin``
-- ``_gt``
-- ``_lt``
-- ``_gte``
-- ``_lte``
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_eq``
+     - ``=``
+   * - ``_neq``
+     - ``<>``
+   * - ``_in``
+     - ``IN``
+   * - ``_nin``
+     - ``NOT IN`` 
+   * - ``_gt``
+     - ``>``
+   * - ``_lt``
+     - ``<`` 
+   * - ``_gte``
+     - ``>=``
+   * - ``_lte``
+     - ``<=``   
 
 **Text related operators:**
 
-- ``_like``
-- ``_nlike``
-- ``_ilike``
-- ``_nilike``
-- ``_similar``
-- ``_nsimilar``
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_like``
+     - ``LIKE``
+   * - ``_nlike``
+     - ``NOT LIKE``
+   * - ``_ilike``
+     - ``ILIKE``
+   * - ``_nilike``
+     - ``NOT ILIKE``
+   * - ``_similar``
+     - ``SIMILAR TO``
+   * - ``_nsimilar``
+     - ``NOT SIMILAR TO``
 
 **Checking for NULL values:**
 
-- ``_is_null`` (takes true/false as values)
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_is_null`` (takes true/false as values)
+     - ``IS NULL``
 
 **Type casting:**
 
-- ``_cast`` (takes a CastExp_ as a value)
+.. list-table::
+   :header-rows: 1
+
+   * - Operator
+     - PostgreSQL equivalent
+   * - ``_cast`` (takes a CastExp_ as a value)
+     - ``::``
 
 **JSONB operators:**
 
@@ -464,7 +500,7 @@ Operator
    * - ``_has_key``
      - ``?``
    * - ``_has_keys_any``
-     - ``?|``
+     - ``?!``
    * - ``_has_keys_all``
      - ``?&``
 
@@ -478,21 +514,21 @@ Operator
    * - Operator
      - PostGIS equivalent
    * - ``_st_contains``
-     - ``ST_Contains``
+     - ``ST_Contains(column, input)``
    * - ``_st_crosses``
-     - ``ST_Crosses``
+     - ``ST_Crosses(column, input)``
    * - ``_st_equals``
-     - ``ST_Equals``
+     - ``ST_Equals(column, input)``
    * - ``_st_intersects``
-     - ``ST_Intersects``
+     - ``ST_Intersect(column, input)``
    * - ``_st_overlaps``
-     - ``ST_Overlaps``
+     - ``ST_Overlaps(column, input)``
    * - ``_st_touches``
-     - ``ST_Touches``
+     - ``ST_Touches(column, input)``
    * - ``_st_within``
-     - ``ST_Within``
+     -  ``ST_Within(column, input)``
    * - ``_st_d_within``
-     - ``ST_DWithin``
+     - ``ST_DWithin(column, input)``
 
 (For more details on what these operators do, refer to the `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
 

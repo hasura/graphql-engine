@@ -391,21 +391,21 @@ Operator
    * - Operator
      - PostGIS equivalent
    * - ``_st_contains``
-     - ``ST_Contains(lhs, val)``
+     - ``ST_Contains(column, input)``
    * - ``_st_crosses``
-     - ``ST_Crosses(lhs, val)``
+     - ``ST_Crosses(column, input)``
    * - ``_st_equals``
-     - ``ST_Equals(lhs, val)``
+     - ``ST_Equals(column, input)``
    * - ``_st_intersects``
-     - ``ST_Intersects(lht, val)``
+     - ``ST_Intersects(column, input)``
    * - ``_st_overlaps``
-     - ``ST_Overlaps(lhs, val)``
+     - ``ST_Overlaps(column, input)``
    * - ``_st_touches``
-     - ``ST_Touches(lhs, val)``
+     - ``ST_Touches(column, input)``
    * - ``_st_within``
-     - ``ST_within(lhs, val)``
+     - ``ST_within(column, input)``
    * - ``_st_d_within``
-     - ``ST_DWithin(lhs, val)``
+     - ``ST_DWithin(column, input)``
 
 (For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
 
