@@ -2,6 +2,10 @@
 
 ## Next release
 
+### Docs
+
+- Map Postgres operators to corresponding Hasura operators in docs and link to PG documentation (#4502) (close #4056)
+
 ### Bug fixes and improvements
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
@@ -21,10 +25,6 @@
 The order, collapsed state of columns and page size is now persisted across page navigation
 
 (close #3390) (#3753)
-
-### Docs
-
-- Map Postgres operators to corresponding Hasura operators in docs and link to PG documentation (#4502) (close #4056)
 
 ### Bug fixes and improvements
 
