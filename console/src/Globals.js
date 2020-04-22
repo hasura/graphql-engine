@@ -1,3 +1,4 @@
+console.log('Globals');
 import { SERVER_CONSOLE_MODE } from './constants';
 import { getFeaturesCompatibility } from './helpers/versionUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
@@ -42,6 +43,9 @@ const globals = {
   featuresCompatibility: window.__env.serverVersion
     ? getFeaturesCompatibility(window.__env.serverVersion)
     : null,
+  cliUUID: window.__env.cliUUID,
+  hasuraUUID: '',
+  telemetryNotificationShown: '',
   isProduction,
 };
 

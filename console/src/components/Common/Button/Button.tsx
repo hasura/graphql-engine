@@ -2,6 +2,9 @@ import React from 'react';
 
 import styles from '../Common.scss';
 
+import { GlobalContext } from '../../App/App';
+import { trackRuntimeError } from '../../../telemetry';
+
 /*
   This is a Button HOC that takes all the props supported by <button>
   - color(default: white): color of the button; currently supports yellow, red, green, gray and white
@@ -16,7 +19,7 @@ export interface ButtonProps extends React.ComponentProps<'button'> {
 }
 
 const Button: React.FC<ButtonProps> = props => {
-  const { children, size, color, className, type = 'button' } = props;
+  const { children, onClick, size, color, className, type = 'button' } = props;
   let extendedClassName = `${className || ''} btn ${
     size ? `btn-${size} ` : 'button '
   }`;
@@ -37,8 +40,29 @@ const Button: React.FC<ButtonProps> = props => {
       extendedClassName += 'btn-default';
       break;
   }
+
+  const globals = React.useContext(GlobalContext);
+
+  const trackedOnClick = (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    try {
+      if (onClick) {
+        onClick(e);
+      }
+    } catch (error) {
+      console.error(error);
+      trackRuntimeError(globals, error);
+    }
+  };
+
   return (
-    <button {...props} className={extendedClassName} type={type}>
+    <button
+      {...props}
+      className={extendedClassName}
+      type={type}
+      onClick={onClick ? trackedOnClick : undefined}
+    >
       {children}
     </button>
   );

@@ -1,4 +1,4 @@
-import globals from './Globals';
+import globals from '../Globals';
 
 const filterEventsBlockList = [
   'App/ONGOING_REQUEST',
@@ -10,14 +10,14 @@ const filterEventsBlockList = [
   'RNS_REMOVE_ALL_NOTIFICATIONS',
 ];
 
-const filterPayloadAllowList = [];
+const filterPayloadAllowList: any[] = [];
 
 const DATA_PATH = '/data';
 const API_EXPLORER_PATH = '/api-explorer';
 const REMOTE_SCHEMAS_PATH = '/remote-schemas';
 const EVENTS_PATH = '/events';
 
-const dataHandler = path => {
+const dataHandler = (path: string) => {
   return (
     DATA_PATH +
     path
@@ -38,22 +38,22 @@ const apiExplorerHandler = () => {
   return API_EXPLORER_PATH;
 };
 
-const remoteSchemasHandler = path => {
+const remoteSchemasHandler = (path: string) => {
   return (
     REMOTE_SCHEMAS_PATH +
     path.replace(/(\/manage\/)[^/]*(\/\w+.*)$/, '$1REMOTE_SCHEMA_NAME$2')
   );
 };
 
-const eventsHandler = path => {
+const eventsHandler = (path: string) => {
   return (
     EVENTS_PATH +
     path.replace(/(\/manage\/triggers\/)[^/]*(\/\w+.*)$/, '$1TRIGGER_NAME$2')
   );
 };
 
-const sanitiseUrl = path => {
-  path = path.replace(new RegExp(globals.urlPrefix, 'g'), '');
+const sanitiseUrl = (rawPath: string) => {
+  const path = rawPath.replace(new RegExp(globals.urlPrefix, 'g'), '');
   if (path.indexOf(DATA_PATH) === 0) {
     return dataHandler(path.slice(DATA_PATH.length));
   }

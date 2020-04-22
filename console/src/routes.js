@@ -3,9 +3,9 @@ import { Route, IndexRoute, IndexRedirect } from 'react-router';
 
 import { connect } from 'react-redux';
 
-import { App, Main, PageNotFound } from 'components';
-
 import globals from './Globals';
+
+import { App, Main, PageNotFound } from 'components';
 
 import validateLogin from './utils/validateLogin';
 
@@ -26,6 +26,8 @@ import generatedApiExplorer from './components/Services/ApiExplorer/ApiExplorer'
 import generatedVoyagerConnector from './components/Services/VoyagerView/VoyagerView';
 
 import about from './components/Services/About/About';
+
+import { requireAsyncGlobals } from './components/App/Actions';
 
 import generatedLoginConnector from './components/Login/Login';
 
@@ -109,6 +111,7 @@ const routes = store => {
       component={App}
       onEnter={composeOnEnterHooks([
         validateLogin(store),
+        requireAsyncGlobals(store),
         requireMigrationStatus,
       ])}
     >
