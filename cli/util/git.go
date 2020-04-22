@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
@@ -27,7 +28,9 @@ type GitUtil struct {
 	Path string
 
 	// Optional
-	ReferenceName plumbing.ReferenceName
+	ReferenceName        plumbing.ReferenceName
+	DisableCloneOrUpdate bool
+	Logger               *logrus.Logger
 }
 
 func NewGitUtil(uri string, path string, refName string) *GitUtil {
@@ -43,6 +46,10 @@ func NewGitUtil(uri string, path string, refName string) *GitUtil {
 }
 
 func (g *GitUtil) EnsureCloned() error {
+	if g.DisableCloneOrUpdate {
+		g.Logger.Debugf("skipping clone/update for %s", g.URI)
+		return nil
+	}
 	if ok, err := g.IsGitCloned(); err != nil {
 		return err
 	} else if !ok {
@@ -67,6 +74,10 @@ func (g *GitUtil) IsGitCloned() (bool, error) {
 
 // EnsureUpdated will ensure the destination path exists and is up to date.
 func (g *GitUtil) EnsureUpdated() error {
+	if g.DisableCloneOrUpdate {
+		g.Logger.Debugf("skipping clone/update for %s", g.URI)
+		return nil
+	}
 	if err := g.EnsureCloned(); err != nil {
 		return err
 	}

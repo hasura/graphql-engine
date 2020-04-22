@@ -321,6 +321,10 @@ export const getFirstArrayElement = array => {
   return array[0];
 };
 
+export const capitalize = s => {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
 export const deleteArrayElementAtIndex = (array, index) => {
   return array.splice(index, 1);
 };
