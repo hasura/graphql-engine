@@ -43,12 +43,13 @@ import {
 class AddTrigger extends Component {
   constructor(props) {
     super(props);
-    this.props.dispatch(loadTableList('public'));
+    this.props.dispatch(loadTableList(props.currentSchema));
   }
 
   componentDidMount() {
     // set defaults
     this.props.dispatch(setDefaults());
+    this.props.dispatch(setSchemaName(this.props.currentSchema));
   }
 
   componentWillUnmount() {
@@ -411,11 +412,7 @@ class AddTrigger extends Component {
                 {schemaList.map(s => {
                   const sName = getSchemaName(s);
                   return (
-                    <option
-                      value={sName}
-                      key={sName}
-                      selected={sName === schemaName}
-                    >
+                    <option value={sName} key={sName}>
                       {sName}
                     </option>
                   );
@@ -618,6 +615,7 @@ AddTrigger.propTypes = {
 const mapStateToProps = state => {
   return {
     ...state.addTrigger,
+    currentSchema: state.tables.currentSchema,
     schemaList: state.tables.schemaList,
     allSchemas: state.tables.allSchemas,
     serverVersion: state.main.serverVersion ? state.main.serverVersion : '',

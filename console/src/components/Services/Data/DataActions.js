@@ -427,7 +427,18 @@ const fetchFunctionInit = (schema = null) => (dispatch, getState) => {
   );
 };
 
-const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
+const updateCurrentSchema = (
+  schemaName,
+  redirect = true,
+  schemaList = []
+) => dispatch => {
+  if (
+    schemaList.length &&
+    !schemaList.map(s => s.schema_name).includes(schemaName)
+  ) {
+    schemaName = schemaList[0].schema_name;
+  }
+
   if (redirect) {
     dispatch(_push(getSchemaBaseRoute(schemaName)));
   }

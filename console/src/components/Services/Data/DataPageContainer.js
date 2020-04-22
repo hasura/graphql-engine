@@ -23,7 +23,7 @@ const DataPageContainer = ({
   const styles = require('../../Common/TableCommon/Table.scss');
 
   if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
-    dispatch(updateCurrentSchema('public', false));
+    dispatch(updateCurrentSchema('public', false, schemaList));
 
     // throw a 404 exception
     throw new NotFoundError();
@@ -34,7 +34,11 @@ const DataPageContainer = ({
       currentSchema !== 'public' &&
       !schemaList.map(s => s.schema_name).includes('public')
     ) {
-      dispatch(showInfoNotification('No public schema'));
+      dispatch(
+        showInfoNotification(
+          `No public schema, showing ${currentSchema} schema instead`
+        )
+      );
     }
   }, [currentSchema]);
 
