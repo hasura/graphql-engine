@@ -69,15 +69,15 @@ class ApiRequest extends Component {
       },
     };
 
+    this.analyzeBearerToken = this.analyzeBearerToken.bind(this);
+    this.onAnalyzeBearerClose = this.onAnalyzeBearerClose.bind(this);
+
     if (this.props.numberOfTables !== 0) {
       const graphqlQueryInLS = window.localStorage.getItem('graphiql:query');
       if (graphqlQueryInLS && graphqlQueryInLS.indexOf('do not have') !== -1) {
         window.localStorage.removeItem('graphiql:query');
       }
     }
-
-    this.analyzeBearerToken = this.analyzeBearerToken.bind(this);
-    this.onAnalyzeBearerClose = this.onAnalyzeBearerClose.bind(this);
   }
 
   componentDidMount() {

@@ -6,51 +6,7 @@ import ApiRequestWrapper from './ApiRequestWrapper';
 
 import globals from '../../../Globals';
 
-/*
-import ApiCollectionPanel from './ApiCollectionPanel';
-
-import {
-  changeTabSelection,
-  changeApiSelection,
-  expandAuthApi,
-  clearHistory,
-  // changeRequestParams,
-} from './Actions';
-
-import {triggerOnBoarding} from '../Main/Actions';
-*/
-
 class ApiExplorer extends Component {
-  /*
-  onTabSelectionChanged = tabIndex => {
-    this.props.dispatch(changeTabSelection(tabIndex));
-  };
-
-  onApiSelectionChanged = (selectedApi, authApiExpanded) => {
-    this.props.dispatch(changeApiSelection(selectedApi, authApiExpanded));
-  };
-
-  onAuthApiExpanded = index => {
-    this.props.dispatch(expandAuthApi(index));
-  };
-
-  onClearHistoryClicked = () => {
-    this.props.dispatch(clearHistory());
-  };
-
-  getDQBQuery(propsObj) {
-    const { type, args } = propsObj;
-    const _query = {};
-    _query.type = type;
-    _query.args = JSON.parse(JSON.stringify(args));
-    return _query;
-  }
-
-  updateDQBState(data) {
-    this.props.dispatch(hydrateDQBData(data));
-  }
-  */
-
   render() {
     const {
       displayedApi,

@@ -415,7 +415,7 @@ const getRemoteQueries = (queryUrl, cb) => {
 
 const SET_TRACKED_TABLES_COUNT = 'ApiExplorer/SET_TRACKED_TABLES_COUNT';
 export const fetchTrackedTablesCount = () => (dispatch, getState) => {
-  dispatch(
+  return dispatch(
     requestAction(Endpoints.query, {
       method: 'POST',
       headers: dataHeaders(getState),
@@ -436,8 +436,9 @@ export const fetchTrackedTablesCount = () => (dispatch, getState) => {
 
 export const apiExplorerOnEnter = ({ dispatch }) => {
   return (nextState, replaceState, callback) => {
-    dispatch(fetchTrackedTablesCount());
-    callback();
+    dispatch(fetchTrackedTablesCount()).then(() => {
+      callback();
+    });
   };
 };
 
