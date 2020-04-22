@@ -443,6 +443,7 @@ const updateCurrentSchema = (schemaName, redirect = true) => dispatch => {
 
 /* ************ action creators *********************** */
 const fetchSchemaList = () => (dispatch, getState) => {
+  console.log('Fetching schema list');
   const url = Endpoints.getSchema;
   const options = {
     credentials: globalCookiePolicy,
@@ -470,7 +471,7 @@ export const requireSchemaList = ({ dispatch }) => {
 };
 
 const fetchDataInit = schemaName => (dispatch, getState) => {
-  dispatch(fetchSchemaList()).then(() => {
+  return dispatch(fetchSchemaList()).then(() => {
     const schemaList = getState().tables.schemaList;
     let indexSchema = schemaName;
     if (!indexSchema) {
@@ -478,7 +479,8 @@ const fetchDataInit = schemaName => (dispatch, getState) => {
         ? 'public'
         : schemaList[0].schema_name; // TODO handle properly if no schema found
     }
-    dispatch(updateCurrentSchema(indexSchema));
+    dispatch(updateCurrentSchema(indexSchema, false));
+    return dispatch(updateSchemaInfo({ schema_name: indexSchema }));
   });
 };
 

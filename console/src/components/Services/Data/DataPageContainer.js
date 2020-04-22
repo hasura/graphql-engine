@@ -21,6 +21,11 @@ const DataPageContainer = ({
 }) => {
   const styles = require('../../Common/TableCommon/Table.scss');
 
+  console.log('====================');
+  console.log(schemaList);
+  console.log(currentSchema);
+  console.log('====================');
+
   if (!schemaList.map(s => s.schema_name).includes(currentSchema)) {
     dispatch(updateCurrentSchema('public', false));
 

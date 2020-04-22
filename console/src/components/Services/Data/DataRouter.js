@@ -147,11 +147,6 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
       tables: { allSchemas },
     } = store.getState();
 
-    if (allSchemas.length) {
-      cb();
-      return;
-    }
-
     let currentSchema = nextState.params.schema;
     if (
       currentSchema === null ||
@@ -159,6 +154,14 @@ const dataRouterUtils = (connect, store, composeOnEnterHooks) => {
       currentSchema === ''
     ) {
       currentSchema = 'public';
+    }
+
+    if (allSchemas.length) {
+      console.log('Length of all schemas lolz');
+      console.log(allSchemas);
+      console.log('Length of all schemas lolz');
+      cb();
+      return;
     }
 
     Promise.all([
