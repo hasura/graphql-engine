@@ -316,7 +316,6 @@ ModifyView.propTypes = {
   lastError: PropTypes.object,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
-  serverVersion: PropTypes.string,
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -327,7 +326,6 @@ const mapStateToProps = (state, ownProps) => {
     currentSchema: state.tables.currentSchema,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
-    serverVersion: state.main.serverVersion,
     ...state.tables.modify,
   };
 };

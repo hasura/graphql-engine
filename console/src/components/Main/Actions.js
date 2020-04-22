@@ -7,8 +7,6 @@ import { getFeaturesCompatibility } from '../../helpers/versionUtils';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
-const SET_SERVER_VERSION_SUCCESS = 'Main/SET_SERVER_VERSION_SUCCESS';
-const SET_SERVER_VERSION_ERROR = 'Main/SET_SERVER_VERSION_ERROR';
 const SET_LATEST_SERVER_VERSION_SUCCESS =
   'Main/SET_LATEST_SERVER_VERSION_SUCCESS';
 const SET_LATEST_SERVER_VERSION_ERROR = 'Main/SET_LATEST_SERVER_VERSION_ERROR';
@@ -53,12 +51,8 @@ const setReadOnlyMode = data => ({
 });
 
 const featureCompatibilityInit = () => {
-  return (dispatch, getState) => {
-    const { serverVersion } = getState().main;
-
-    if (!serverVersion) {
-      return;
-    }
+  return dispatch => {
+    const { serverVersion } = globals;
 
     const featuresCompatibility = getFeaturesCompatibility(serverVersion);
 
@@ -80,33 +74,6 @@ const loadMigrationStatus = () => dispatch => {
       SET_MIGRATION_STATUS_SUCCESS,
       SET_MIGRATION_STATUS_ERROR
     )
-  );
-};
-
-const loadServerVersion = () => dispatch => {
-  const url = Endpoints.version;
-  const options = {
-    method: 'GET',
-    credentials: globalCookiePolicy,
-    headers: { 'content-type': 'application/json' },
-  };
-  return dispatch(requestActionPlain(url, options)).then(
-    data => {
-      let parsedVersion;
-      try {
-        parsedVersion = JSON.parse(data);
-        dispatch({
-          type: SET_SERVER_VERSION_SUCCESS,
-          data: parsedVersion.version,
-        });
-      } catch (e) {
-        console.error(e);
-      }
-    },
-    error => {
-      console.error(error);
-      dispatch({ type: SET_SERVER_VERSION_ERROR, data: null });
-    }
   );
 };
 
@@ -139,11 +106,9 @@ const fetchServerConfig = () => (dispatch, getState) => {
   );
 };
 
-const loadLatestServerVersion = () => (dispatch, getState) => {
+const loadLatestServerVersion = () => dispatch => {
   const url =
-    Endpoints.updateCheck +
-    '?agent=console&version=' +
-    getState().main.serverVersion;
+    Endpoints.updateCheck + '?agent=console&version=' + globals.serverVersion;
   const options = {
     method: 'GET',
     credentials: globalCookiePolicy,
@@ -218,16 +183,6 @@ const mainReducer = (state = defaultState, action) => {
       return {
         ...state,
         migrationMode: action.data.migration_mode === 'true',
-      };
-    case SET_SERVER_VERSION_SUCCESS:
-      return {
-        ...state,
-        serverVersion: action.data,
-      };
-    case SET_SERVER_VERSION_ERROR:
-      return {
-        ...state,
-        serverVersion: null,
       };
     case SET_LATEST_SERVER_VERSION_SUCCESS:
       return {
@@ -335,7 +290,6 @@ export {
   LOGIN_IN_PROGRESS,
   LOGIN_ERROR,
   emitProClickedEvent,
-  loadServerVersion,
   fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,

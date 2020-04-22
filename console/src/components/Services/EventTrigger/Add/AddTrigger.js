@@ -620,7 +620,6 @@ const mapStateToProps = state => {
     ...state.addTrigger,
     schemaList: state.tables.schemaList,
     allSchemas: state.tables.allSchemas,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   };
 };
 

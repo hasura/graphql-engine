@@ -8,7 +8,6 @@ const defaultState = {
   adminSecretInput: null,
   loginInProgress: false,
   loginError: false,
-  serverVersion: null,
   latestStableServerVersion: null,
   telemetryEnabled: true,
   serverConfig: {

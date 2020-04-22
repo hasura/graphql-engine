@@ -61,11 +61,10 @@ export const trackReduxAction = (action: ReduxAction, getState: any) => {
   const actionType = action.type;
   // filter events
   if (!filterEventsBlockList.includes(actionType)) {
-    const serverVersion = getState().main.serverVersion;
     const url = sanitiseUrl(window.location.pathname);
 
     const reqBody = {
-      server_version: serverVersion,
+      server_version: globals.serverVersion,
       event_type: actionType,
       url,
       console_mode: globals.consoleMode,

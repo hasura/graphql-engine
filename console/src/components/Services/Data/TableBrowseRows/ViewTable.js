@@ -276,7 +276,6 @@ const mapStateToProps = (state, ownProps) => {
     tableComment: state.tables.tableComment,
     migrationMode: state.main.migrationMode,
     readOnlyMode: state.main.readOnlyMode,
-    serverVersion: state.main.serverVersion,
     ...state.tables.view,
   };
 };

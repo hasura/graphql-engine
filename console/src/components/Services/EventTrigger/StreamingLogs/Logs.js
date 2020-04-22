@@ -460,7 +460,6 @@ StreamingLogs.propTypes = {
 const mapStateToProps = (state, ownProps) => {
   return {
     ...state.triggers,
-    serverVersion: state.main.serverVersion,
     readOnlyMode: state.main.readOnlyMode,
     triggerName: ownProps.params.trigger,
     currentSchema: state.tables.currentSchema,

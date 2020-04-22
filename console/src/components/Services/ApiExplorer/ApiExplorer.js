@@ -61,7 +61,6 @@ class ApiExplorer extends Component {
       tables,
       headerFocus,
       location,
-      serverVersion,
       serverConfig,
     } = this.props;
 
@@ -87,7 +86,7 @@ class ApiExplorer extends Component {
             numberOfTables={tables.length}
             headerFocus={headerFocus}
             urlParams={location.query}
-            serverVersion={serverVersion}
+            serverVersion={globals.serverVersion}
             consoleUrl={consoleUrl}
             serverConfig={serverConfig}
           />
@@ -111,7 +110,6 @@ const generatedApiExplorer = connect => {
   const mapStateToProps = state => {
     return {
       ...state.apiexplorer,
-      serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
       credentials: {},
       dataApiExplorerData: { ...state.dataApiExplorer },
       dataHeaders: state.tables.dataHeaders,

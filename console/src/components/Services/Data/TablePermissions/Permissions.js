@@ -1885,7 +1885,6 @@ const mapStateToProps = (state, ownProps) => ({
   trackableFunctions: state.tables.postgresFunctions || [],
   readOnlyMode: state.main.readOnlyMode,
   currentSchema: state.tables.currentSchema,
-  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   ...state.tables.modify,
 });
 

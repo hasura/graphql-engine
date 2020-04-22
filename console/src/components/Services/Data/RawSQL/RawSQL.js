@@ -552,7 +552,6 @@ const mapStateToProps = state => ({
   migrationMode: state.main.migrationMode,
   currentSchema: state.tables.currentSchema,
   allSchemas: state.tables.allSchemas,
-  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);

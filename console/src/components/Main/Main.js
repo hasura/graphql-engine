@@ -12,8 +12,6 @@ import Spinner from '../Common/Spinner/Spinner';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
 
 import {
-  loadServerVersion,
-  fetchServerConfig,
   loadLatestServerVersion,
   featureCompatibilityInit,
   emitProClickedEvent,
@@ -62,21 +60,17 @@ class Main extends React.Component {
       .querySelector('body')
       .addEventListener('click', this.handleBodyClick);
 
-    dispatch(loadServerVersion()).then(() => {
-      dispatch(featureCompatibilityInit());
+    dispatch(featureCompatibilityInit());
 
-      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false })).then(
-        () => {
-          this.handleMetadataRedirect();
-        }
-      );
+    dispatch(loadInconsistentObjects({ shouldReloadMetadata: false })).then(
+      () => {
+        this.handleMetadataRedirect();
+      }
+    );
 
-      dispatch(loadLatestServerVersion()).then(() => {
-        this.setShowUpdateNotification();
-      });
+    dispatch(loadLatestServerVersion()).then(() => {
+      this.setShowUpdateNotification();
     });
-
-    dispatch(fetchServerConfig());
   }
 
   toggleProPopup() {
@@ -89,7 +83,6 @@ class Main extends React.Component {
     const {
       latestStableServerVersion,
       latestPreReleaseServerVersion,
-      serverVersion,
       console_opts,
     } = this.props;
 
@@ -114,7 +107,7 @@ class Main extends React.Component {
       if (lastUpdateCheckClosed !== latestServerVersionToCheck) {
         const isUpdateAvailable = versionGT(
           latestServerVersionToCheck,
-          serverVersion
+          globals.serverVersion
         );
 
         if (isUpdateAvailable) {
@@ -195,7 +188,6 @@ class Main extends React.Component {
       location,
       migrationModeProgress,
       currentSchema,
-      serverVersion,
       metadata,
       dispatch,
     } = this.props;
@@ -649,7 +641,9 @@ class Main extends React.Component {
                   </Link>
                 </div>
                 <Link to="/">
-                  <div className={styles.project_version}>{serverVersion}</div>
+                  <div className={styles.project_version}>
+                    {globals.serverVersion}
+                  </div>
                 </Link>
               </div>
             </div>

@@ -49,7 +49,8 @@ class About extends Component {
   render() {
     const { consoleAssetVersion, pgVersion } = this.state;
 
-    const { serverVersion, latestStableServerVersion } = this.props;
+    const { latestStableServerVersion } = this.props;
+    const { serverVersion } = globals;
 
     const spinner = <i className="fa fa-spinner fa-spin" />;
 
@@ -159,7 +160,6 @@ class About extends Component {
 const mapStateToProps = state => {
   return {
     dataHeaders: state.tables.dataHeaders,
-    serverVersion: state.main.serverVersion,
     latestStableServerVersion: state.main.latestStableServerVersion,
   };
 };

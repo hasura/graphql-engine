@@ -69,7 +69,6 @@ class ApiRequestWrapper extends Component {
           numberOfTables={this.props.numberOfTables}
           headerFocus={this.props.headerFocus}
           urlParams={this.props.urlParams}
-          serverVersion={this.props.serverVersion}
           consoleUrl={this.props.consoleUrl}
           serverConfig={this.props.serverConfig}
         />

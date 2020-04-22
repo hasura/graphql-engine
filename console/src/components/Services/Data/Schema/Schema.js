@@ -723,7 +723,6 @@ const mapStateToProps = state => ({
   functionsList: [...state.tables.postgresFunctions],
   nonTrackableFunctions: [...state.tables.nonTrackablePostgresFunctions],
   trackedFunctions: [...state.tables.trackedFunctions],
-  serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
 });
 
 const schemaConnector = connect => connect(mapStateToProps)(Schema);

@@ -219,7 +219,6 @@ const mapStateToProps = state => {
     allSchemas: state.tables.allSchemas,
     currentTable: state.tables.currentTable,
     currentSchema: state.tables.currentSchema,
-    serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
     metadata: state.metadata,
   };
 };

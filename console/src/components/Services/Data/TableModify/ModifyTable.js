@@ -334,7 +334,6 @@ ModifyTable.propTypes = {
   dispatch: PropTypes.func.isRequired,
   pkModify: PropTypes.array.isRequired,
   fkModify: PropTypes.array.isRequired,
-  serverVersion: PropTypes.string,
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -344,7 +343,6 @@ const mapStateToProps = (state, ownProps) => ({
   trackableFunctions: state.tables.postgresFunctions || [],
   migrationMode: state.main.migrationMode,
   readOnlyMode: state.main.readOnlyMode,
-  serverVersion: state.main.serverVersion,
   currentSchema: state.tables.currentSchema,
   columnEdit: state.tables.modify.columnEdit,
   pkModify: state.tables.modify.pkModify,
