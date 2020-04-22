@@ -193,7 +193,7 @@ Use the :ref:`add_computed_field` API to add a function, and specify the name of
 
 .. code-block:: plpgsql
 
-      -- 'hasura_session' will be session argument
+      -- 'hasura_session' will be the session argument
       CREATE OR REPLACE FUNCTION article_liked_by_user(article_row article, hasura_session json)
       RETURNS boolean AS $$
       SELECT EXISTS (
