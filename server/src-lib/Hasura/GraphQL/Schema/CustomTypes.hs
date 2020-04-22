@@ -18,12 +18,11 @@ import qualified Hasura.GraphQL.Validate.Types as VT
 
 buildObjectTypeInfo :: RoleName -> AnnotatedObjectType -> VT.ObjTyInfo
 buildObjectTypeInfo roleName annotatedObjectType =
-    VT.ObjTyInfo
-    { VT._otiDesc = _otdDescription objectDefinition
-    , VT._otiName = unObjectTypeName $ _otdName objectDefinition
-    , VT._otiImplIFaces = mempty
-    , VT._otiFields = mapFromL VT._fiName $ fields <> catMaybes relationships
-    }
+  let description = _otdDescription objectDefinition
+      namedType = unObjectTypeName $ _otdName objectDefinition
+      fieldMap = mapFromL VT._fiName $ fields <> catMaybes relationships
+  -- 'mkObjTyInfo' function takes care of inserting `__typename` field
+  in VT.mkObjTyInfo description namedType mempty fieldMap VT.TLCustom
   where
     objectDefinition = _aotDefinition annotatedObjectType
 
@@ -32,7 +31,7 @@ buildObjectTypeInfo roleName annotatedObjectType =
       \(TypeRelationship name ty remoteTableInfo _) ->
         if isJust (getSelectPermissionInfoM remoteTableInfo roleName) ||
            roleName == adminRole
-        then Just (relationshipToFieldInfo name ty $ _tciName $ _tiCoreInfo $ remoteTableInfo)
+        then Just (relationshipToFieldInfo name ty $ _tciName $ _tiCoreInfo remoteTableInfo)
         else Nothing
       where
         relationshipToFieldInfo name relTy remoteTableName =
@@ -117,14 +116,18 @@ annotateObjectType tableCache nonObjectTypeMap objectDefinition = do
 
 buildCustomTypesSchemaPartial
   :: (QErrM m)
-  => TableCache -> CustomTypes -> m (NonObjectTypeMap, AnnotatedObjects)
-buildCustomTypesSchemaPartial tableCache customTypes = do
+  => TableCache
+  -> CustomTypes
+  -> HashSet PGScalarType
+  -- ^ Postgres base types used in the custom type definitions;
+  -- see Note [Postgres scalars in custom types].
+  -> m (NonObjectTypeMap, AnnotatedObjects)
+buildCustomTypesSchemaPartial tableCache customTypes pgScalars = do
   let typeInfos =
         map (VT.TIEnum . convertEnumDefinition) enumDefinitions <>
-        -- map (VT.TIObj . convertObjectDefinition) objectDefinitions <>
         map (VT.TIInpObj . convertInputObjectDefinition) inputObjectDefinitions <>
-        map (VT.TIScalar . convertScalarDefinition) scalarDefinitions
-        -- <> defaultTypes
+        map (VT.TIScalar . convertScalarDefinition) scalarDefinitions <>
+        map (VT.TIScalar . VT.mkHsraScalarTyInfo) (toList pgScalars)
       nonObjectTypeMap = NonObjectTypeMap $ mapFromL VT.getNamedTy typeInfos
 
   annotatedObjectTypes <- mapFromL (_otdName . _aotDefinition) <$>

@@ -2,6 +2,8 @@
    :description: Make aggregation queries with Hasura
    :keywords: hasura, docs, query, aggregation query
 
+.. _aggregation_queries:
+
 Aggregation queries
 ===================
 

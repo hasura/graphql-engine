@@ -1,7 +1,15 @@
+-- This pragma is needed for allowQueryActionExecuter
+{-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
+
 module Hasura.GraphQL.Resolve.Action
   ( resolveActionMutation
   , resolveAsyncActionQuery
   , asyncActionsProcessor
+  , resolveActionQuery
+  , mkJsonAggSelect
+  , QueryActionExecuter
+  , allowQueryActionExecuter
+  , restrictActionExecuter
   ) where
 
 import           Hasura.Prelude
@@ -41,7 +49,7 @@ import           Hasura.RQL.DDL.Schema.Cache
 import           Hasura.RQL.DML.Select             (asSingleRowJsonResp)
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.Run
-import           Hasura.Server.Utils               (mkClientHeadersForward)
+import           Hasura.Server.Utils               (mkClientHeadersForward, mkSetCookieHeaders)
 import           Hasura.Server.Version             (HasVersion)
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value                  (PGScalarValue (..), pgScalarValueToJson,
@@ -95,15 +103,15 @@ resolveActionMutation
      , Has [HTTP.Header] r
      )
   => Field
-  -> ActionExecutionContext
+  -> ActionMutationExecutionContext
   -> UserVars
-  -> m RespTx
+  -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionMutation field executionContext sessionVariables =
   case executionContext of
-    ActionExecutionSyncWebhook executionContextSync ->
+    ActionMutationSyncWebhook executionContextSync ->
       resolveActionMutationSync field executionContextSync sessionVariables
-    ActionExecutionAsync ->
-      resolveActionMutationAsync field sessionVariables
+    ActionMutationAsync ->
+      (,[]) <$> resolveActionMutationAsync field sessionVariables
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionMutationSync
@@ -119,16 +127,17 @@ resolveActionMutationSync
      , Has [HTTP.Header] r
      )
   => Field
-  -> SyncActionExecutionContext
+  -> ActionExecutionContext
   -> UserVars
-  -> m RespTx
+  -> m (RespTx, HTTP.ResponseHeaders)
 resolveActionMutationSync field executionContext sessionVariables = do
   let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
       actionContext = ActionContext actionName
       handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
   manager <- asks getter
   reqHeaders <- asks getter
-  webhookRes <- callWebhook manager outputType reqHeaders confHeaders forwardClientHeaders resolvedWebhook handlerPayload
+  (webhookRes, respHeaders) <- callWebhook manager outputType outputFields reqHeaders confHeaders
+                               forwardClientHeaders resolvedWebhook handlerPayload
   let webhookResponseExpression = RS.AEInput $ UVSQL $
         toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
   selectAstUnresolved <-
@@ -136,9 +145,59 @@ resolveActionMutationSync field executionContext sessionVariables = do
     (_fType field) $ _fSelSet field
   astResolved <- RS.traverseAnnSimpleSel resolveValTxt selectAstUnresolved
   let jsonAggType = mkJsonAggSelect outputType
-  return $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
+  return $ (,respHeaders) $ asSingleRowJsonResp (RS.selectQuerySQL jsonAggType astResolved) []
   where
-    SyncActionExecutionContext actionName outputType definitionList resolvedWebhook confHeaders
+    ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
+      forwardClientHeaders = executionContext
+
+-- QueryActionExecuter is a type for a higher function, this is being used
+-- to allow or disallow where a query action can be executed. We would like
+-- to explicitly control where a query action can be run.
+-- Example: We do not explain a query action, so we use the `restrictActionExecuter`
+-- to prevent resolving the action query.
+type QueryActionExecuter =
+  forall m a. (MonadError QErr m)
+  => (HTTP.Manager -> [HTTP.Header] -> m a)
+  -> m a
+
+allowQueryActionExecuter :: HTTP.Manager -> [HTTP.Header] -> QueryActionExecuter
+allowQueryActionExecuter manager reqHeaders actionResolver =
+  actionResolver manager reqHeaders
+
+restrictActionExecuter :: Text -> QueryActionExecuter
+restrictActionExecuter errMsg _ =
+  throw400 NotSupported errMsg
+
+resolveActionQuery
+  :: ( HasVersion
+     , MonadReusability m
+     , MonadError QErr m
+     , MonadReader r m
+     , MonadIO m
+     , Has FieldMap r
+     , Has OrdByCtx r
+     , Has SQLGenCtx r
+     )
+  => Field
+  -> ActionExecutionContext
+  -> UserVars
+  -> HTTP.Manager
+  -> [HTTP.Header]
+  -> m (RS.AnnSimpleSelG UnresolvedVal)
+resolveActionQuery field executionContext sessionVariables httpManager reqHeaders = do
+  let inputArgs = J.toJSON $ fmap annInpValueToJson $ _fArguments field
+      actionContext = ActionContext actionName
+      handlerPayload = ActionWebhookPayload actionContext sessionVariables inputArgs
+  (webhookRes, _) <- callWebhook httpManager outputType outputFields reqHeaders confHeaders
+                               forwardClientHeaders resolvedWebhook handlerPayload
+  let webhookResponseExpression = RS.AEInput $ UVSQL $
+        toTxtValue $ WithScalarType PGJSONB $ PGValJSONB $ Q.JSONB $ J.toJSON webhookRes
+  selectAstUnresolved <-
+    processOutputSelectionSet webhookResponseExpression outputType definitionList
+    (_fType field) $ _fSelSet field
+  return selectAstUnresolved
+  where
+    ActionExecutionContext actionName outputType outputFields definitionList resolvedWebhook confHeaders
       forwardClientHeaders = executionContext
 
 {- Note: [Async action architecture]
@@ -210,7 +269,7 @@ resolveAsyncActionQuery userInfo selectOpCtx field = do
 
   annotatedFields <- fmap (map (first FieldName)) $ withSelSet (_fSelSet field) $ \fld ->
     case _fName fld of
-      "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType fld
+      "__typename" -> return $ RS.FExp $ G.unName $ G.unNamedType $ _fType field
       "output"     -> do
         -- See Note [Resolving async action query/subscription]
         let inputTableArgument = RS.AETableRow $ Just $ Iden "response_payload"
@@ -281,9 +340,6 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
   A.mapConcurrently_ (callHandler actionCache) asyncInvocations
   threadDelay (1 * 1000 * 1000)
   where
-    getActionDefinition actionCache actionName =
-      _aiDefinition <$> Map.lookup actionName actionCache
-
     runTx :: (Monoid a) => Q.TxE QErr a -> IO a
     runTx q = do
       res <- runExceptT $ Q.runTx' pgPool q
@@ -293,20 +349,23 @@ asyncActionsProcessor cacheRef pgPool httpManager = forever $ do
     callHandler actionCache actionLogItem = do
       let ActionLogItem actionId actionName reqHeaders
             sessionVariables inputPayload = actionLogItem
-      case getActionDefinition actionCache actionName of
+      case Map.lookup actionName actionCache of
         Nothing -> return ()
-        Just definition -> do
-          let webhookUrl = _adHandler definition
+        Just actionInfo -> do
+          let definition = _aiDefinition actionInfo
+              outputFields = getActionOutputFields $ _aiOutputObject actionInfo
+              webhookUrl = _adHandler definition
               forwardClientHeaders = _adForwardClientHeaders definition
               confHeaders = _adHeaders definition
               outputType = _adOutputType definition
               actionContext = ActionContext actionName
-          eitherRes <- runExceptT $ callWebhook httpManager outputType reqHeaders confHeaders
-                                    forwardClientHeaders webhookUrl $
-                                    ActionWebhookPayload actionContext sessionVariables inputPayload
+          eitherRes <- runExceptT $
+                       callWebhook httpManager outputType outputFields reqHeaders confHeaders
+                         forwardClientHeaders webhookUrl $
+                         ActionWebhookPayload actionContext sessionVariables inputPayload
           case eitherRes of
-            Left e                -> setError actionId e
-            Right responsePayload -> setCompleted actionId $ J.toJSON responsePayload
+            Left e                     -> setError actionId e
+            Right (responsePayload, _) -> setCompleted actionId $ J.toJSON responsePayload
 
     setError :: UUID.UUID -> QErr -> IO ()
     setError actionId e =
@@ -361,13 +420,15 @@ callWebhook
   :: (HasVersion, MonadIO m, MonadError QErr m)
   => HTTP.Manager
   -> GraphQLType
+  -> ActionOutputFields
   -> [HTTP.Header]
   -> [HeaderConf]
   -> Bool
   -> ResolvedWebhook
   -> ActionWebhookPayload
-  -> m ActionWebhookResponse
-callWebhook manager outputType reqHeaders confHeaders forwardClientHeaders resolvedWebhook actionWebhookPayload = do
+  -> m (ActionWebhookResponse, HTTP.ResponseHeaders)
+callWebhook manager outputType outputFields reqHeaders confHeaders
+            forwardClientHeaders resolvedWebhook actionWebhookPayload = do
   resolvedConfHeaders <- makeHeadersFromConf confHeaders
   let clientHeaders = if forwardClientHeaders then mkClientHeadersForward reqHeaders else []
       contentType = ("Content-Type", "application/json")
@@ -396,14 +457,19 @@ callWebhook manager outputType reqHeaders confHeaders forwardClientHeaders resol
       if | HTTP.statusIsSuccessful responseStatus  -> do
              let expectingArray = isListType outputType
                  addInternalToErr e = e{qeInternal = Just webhookResponseObject}
-                 throw400Detail t = throwError $ addInternalToErr $ err400 Unexpected t
-             webhookResponse <- modifyQErr addInternalToErr $ decodeValue responseValue
-             case webhookResponse of
-               AWRArray{} -> when (not expectingArray) $
-                 throw400Detail "expecting object for action webhook response but got array"
-               AWRObject{} -> when expectingArray $
-                 throw400Detail "expecting array for action webhook response but got object"
-             pure webhookResponse
+             -- Incase any error, add webhook response in internal
+             modifyQErr addInternalToErr $ do
+               webhookResponse <- decodeValue responseValue
+               case webhookResponse of
+                 AWRArray objs -> do
+                   when (not expectingArray) $
+                     throwUnexpected "expecting object for action webhook response but got array"
+                   mapM_ validateResponseObject objs
+                 AWRObject obj -> do
+                   when expectingArray $
+                     throwUnexpected "expecting array for action webhook response but got object"
+                   validateResponseObject obj
+               pure (webhookResponse, mkSetCookieHeaders responseWreq)
 
          | HTTP.statusIsClientError responseStatus -> do
              ActionWebhookErrorResponse message maybeCode <-
@@ -414,6 +480,23 @@ callWebhook manager outputType reqHeaders confHeaders forwardClientHeaders resol
 
          | otherwise ->
              throw500WithDetail "internal error" webhookResponseObject
+    where
+      throwUnexpected = throw400 Unexpected
+
+      -- Webhook response object should conform to action output fields
+      validateResponseObject obj = do
+        -- Fields not specified in the output type shouldn't be present in the response
+        let extraFields = filter (not . flip Map.member outputFields) $ map G.Name $ Map.keys obj
+        when (not $ null extraFields) $ throwUnexpected $
+          "unexpected fields in webhook response: " <> showNames extraFields
+
+        void $ flip Map.traverseWithKey outputFields $ \fieldName fieldTy ->
+          -- When field is non-nullable, it has to present in the response with no null value
+          when (not $ G.isNullable fieldTy) $ case Map.lookup (G.unName fieldName) obj of
+            Nothing -> throwUnexpected $
+                       "field " <> fieldName <<> " expected in webhook response, but not found"
+            Just v -> when (v == J.Null) $ throwUnexpected $
+                      "expecting not null value for field " <>> fieldName
 
 annInpValueToJson :: AnnInpVal -> J.Value
 annInpValueToJson annInpValue =

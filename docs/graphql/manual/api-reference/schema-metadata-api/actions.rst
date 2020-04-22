@@ -2,6 +2,8 @@
    :description: Manage actions with the Hasura schema/metadata API
    :keywords: hasura, docs, schema/metadata API, API reference, actions
 
+.. _api_actions:
+
 Schema/Metadata API Reference: Actions
 ======================================
 
@@ -89,7 +91,7 @@ ActionDefinition
      - Schema
      - Description
    * - arguments
-     - true
+     - false
      - Array of InputArgument_
      - Input arguments
    * - output_type
@@ -99,7 +101,8 @@ ActionDefinition
    * - kind
      - false
      - [ ``synchronous`` | ``asynchronous`` ]
-     - The kind of the action (default: ``synchronous``)
+     - The kind of the mutation action (default: ``synchronous``). If the type of
+       the action is ``query`` then the ``kind`` field should be omitted.
    * - headers
      - false
      - [ :ref:`HeaderFromValue <HeaderFromValue>` | :ref:`HeaderFromEnv <HeaderFromEnv>` ]
@@ -112,6 +115,10 @@ ActionDefinition
      - true
      - :ref:`WebhookURL <WebhookURL>`
      - The action's webhook URL
+   * - type
+     - false
+     - [ ``mutation`` | ``query`` ]
+     - The type of the action (default: ``mutation``)
 
 .. _InputArgument:
 
@@ -136,7 +143,7 @@ InputArgument
 
 .. note::
 
-   The ``GraphQL Types`` used in creating an action must be defined before via :doc:`Custom Types <custom-types>`
+   The ``GraphQL Types`` used in creating an action must be defined before via :ref:`Custom Types <api_custom_types>`
 
 .. _drop_action:
 

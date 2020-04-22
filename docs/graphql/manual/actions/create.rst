@@ -1,3 +1,9 @@
+.. meta::
+   :description: Creating Hasura actions
+   :keywords: hasura, docs, actions, create 
+
+.. _create_actions:
+
 Creating actions
 ================
 
@@ -9,20 +15,19 @@ Creating actions
 Introduction
 ------------
 
-An action is a GraphQL mutation. You have to define the GraphQL type of the
-arguments that the mutation accepts and the GraphQL type of its response.
+An action is a GraphQL query or mutation. You have to define the GraphQL type of the
+arguments that the query or mutation accepts and the GraphQL type of its response.
 
 To create an action, you have to:
 
-1. Define the mutation
+1. Define the query or mutation
 2. Define the required types
 3. Create a handler
 
-**For example**, let's start with a basic mutation that accepts a list of numbers and returns
-their sum. We'll call this mutation ``addNumbers``.
+Let's look at **examples** for mutation and query type actions.
 
-Step 0: Setup
--------------
+Setup
+-----
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -67,8 +72,16 @@ Step 0: Setup
      ``metadata/`` directory.
 
 
+Mutation type action
+--------------------
+
+Let's start with a mutation that accepts a username and password, and returns
+an access token. We'll call this mutation ``login``.
+
 Step 1: Define your mutation and associated types
--------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Start with defining the mutation and the required types. These types will reflect in the GraphQL schema.
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -78,7 +91,7 @@ Step 1: Define your mutation and associated types
      Go to the ``Actions`` tab on the console and click on ``Create``. This will
      take you to a page like this:
 
-     .. thumbnail:: ../../../img/graphql/manual/actions/action-create-page.png
+     .. thumbnail:: ../../../img/graphql/manual/actions/mutation-action-create.png
         :alt: Console action create
 
      Define the action as follows in the ``Action Definition`` editor.
@@ -86,6 +99,169 @@ Step 1: Define your mutation and associated types
      .. code-block:: graphql
 
         type Mutation {
+          login (username: String!, password: String!): LoginResponse
+        }
+
+     In the above action, we called the returning object type to be ``LoginResponse``.
+     Define it in the ``New types definition`` as:
+
+     .. code-block:: graphql
+
+        type LoginResponse {
+          accessToken: String!
+        }
+
+  .. tab:: CLI
+
+     To create an action, run
+
+     .. code-block:: bash
+
+         hasura actions create login
+
+     This will open up an editor with ``metadata/actions.graphql``. You can enter
+     the action's mutation definition and the required types in this file. For your
+     ``login`` mutation, replace the content of this file with the following
+     and save:
+
+     .. code-block:: graphql
+
+        type Mutation {
+          login (username: String!, password: String!): LoginResponse
+        }
+
+        type LoginResponse {
+          accessToken: String!
+        }
+
+The above definition means:
+
+* This action will be available in your GraphQL schema as a mutation called ``login``.
+* It accepts two arguments called ``username`` and ``password`` of type ``String!``.
+* It returns an output type called ``LoginResponse``.
+* ``LoginResponse`` is a simple object type with a field called ``accessToken`` of type ``String!``.
+
+Step 2: Create the action handler
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A handler is an HTTP webhook where you can perform the custom logic for the
+action. In this case, we will just return an access token, but typically you would want to run all the business logic that the action demands. NodeJS/Express code
+for this handler would look something like:
+
+.. code-block:: js
+
+    const handler = (req, resp) => {
+      // You can access their arguments input at req.body.input
+      const { username, password } = req.body.input;
+
+      // perform your custom business logic
+      // check if the username and password are valid and login the user
+
+      // return the response
+      return resp.json({
+        accessToken: "Ew8jkGCNDGAo7p35RV72e0Lk3RGJoJKB"
+      })
+
+    };
+
+You can deploy this code somewhere and get the URI. For getting started quickly, we
+also have this handler ready at ``https://hasura-actions-demo.glitch.me/login``.
+
+**Set the handler**
+
+Now, set the handler for the action:
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+     Set the value of the ``handler`` field to the above endpoint.
+
+  .. tab:: CLI
+
+     Go to ``metadata/actions.yaml``. You must see a handler like ``http://localhost:3000``
+     or ``http://host.docker.internal:3000`` under the action named ``login``.
+     This is a default value taken from ``config.yaml``.
+
+     Update the ``handler`` to the above endpoint.
+
+.. admonition:: URL templating
+
+  To manage handler endpoints across environments it is possible to template
+  the endpoints using ENV variables.
+
+  e.g. ``https://my-handler-endpoint/addNumbers`` can be templated to ``{{ACTION_BASE_ENDPOINT}}/addNumbers``
+  where ``ACTION_BASE_ENDPOINT`` is an ENV variable whose value is set to ``https://my-handler-endpoint``
+
+Step 3: Finish action creation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Finally, to save the action:
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+     Hit ``Create``.
+
+  .. tab:: CLI
+
+     Run ``hasura metadata apply``.
+
+
+Step 4: Try it out
+~~~~~~~~~~~~~~~~~~
+
+In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
+
+.. graphiql::
+  :view_only:
+  :query:
+    mutation {
+      login (username: "jondoe", password: "mysecretpassword") {
+        accessToken
+      }
+    }
+  :response:
+    {
+      "data": {
+        "login": {
+          "accessToken": "Ew8jkGCNDGAo7p35RV72e0Lk3RGJoJKB"
+        }
+      }
+    }
+
+And that's it. You have extended your Hasura schema with a new mutation.
+
+Query type action
+-----------------
+
+Let's start with a basic query that accepts a list of numbers and returns
+their sum. We'll call this query ``addNumbers``.
+
+Step 1: Define your query and associated types
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Start with defining the query and the required types. These types will reflect in the GraphQL schema.
+
+.. rst-class:: api_tabs
+.. tabs::
+
+  .. tab:: Console
+
+     Go to the ``Actions`` tab on the console and click on ``Create``. This will
+     take you to a page like this:
+
+     .. thumbnail:: ../../../img/graphql/manual/actions/query-action-create.png
+        :alt: Console action create
+
+     Define the action as follows in the ``Action Definition`` editor.
+
+     .. code-block:: graphql
+
+        type Query {
           addNumbers (numbers: [Int]): AddResult
         }
 
@@ -107,13 +283,13 @@ Step 1: Define your mutation and associated types
          hasura actions create addNumbers
 
      This will open up an editor with ``metadata/actions.graphql``. You can enter
-     the action's mutation definition and the required types in this file. For your
-     ``addNumbers`` mutation, replace the content of this file with the following
+     the action's query definition and the required types in this file. For your
+     ``addNumbers`` query, replace the content of this file with the following
      and save:
 
      .. code-block:: graphql
 
-        type Mutation {
+        type Query {
           addNumbers (numbers: [Int]): AddResult
         }
 
@@ -123,13 +299,13 @@ Step 1: Define your mutation and associated types
 
 The above definition means:
 
-* This action will be available in your GraphQL schema as a mutation called ``addNumbers``
+* This action will be available in your GraphQL schema as a query called ``addNumbers``
 * It accepts an argument called ``numbers`` which is a list of integers.
 * It returns an output type called ``AddResult``.
 * ``AddResult`` is a simple object type with a field called ``sum`` of type integer.
 
 Step 2: Create the action handler
----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A handler is an HTTP webhook where you can perform the custom logic for the
 action. In this case, it is the addition of the numbers. NodeJS/Express code
@@ -155,11 +331,10 @@ for this handler would look something like:
       }
     };
 
-You can deploy this code somewhere and get URI. For getting started quickly, we
-also have this handler ready at ``https://hasura-actions-starter-kit.glitch.me/addNumbers``.
+You can deploy this code somewhere and get the URI. For getting started quickly, we
+also have this handler ready at ``https://hasura-actions-demo.glitch.me/addNumbers``.
 
-Set the handler
-***************
+**Set the handler**
 
 Now, set the handler for the action:
 
@@ -183,11 +358,13 @@ Now, set the handler for the action:
   To manage handler endpoints across environments it is possible to template
   the endpoints using ENV variables.
 
-  e.g. ``https://my-handler-endpoint/addNumbers`` can be templated to ``{{ ACTION_BASE_ENDPOINT }}/addNumbers``
+  e.g. ``https://my-handler-endpoint/addNumbers`` can be templated to ``{{ACTION_BASE_ENDPOINT}}/addNumbers``
   where ``ACTION_BASE_ENDPOINT`` is an ENV variable whose value is set to ``https://my-handler-endpoint``
 
 Step 3: Finish action creation
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Finally, to save the action:
 
 .. rst-class:: api_tabs
 .. tabs::
@@ -202,14 +379,14 @@ Step 3: Finish action creation
 
 
 Step 4: Try it out
-------------------
+~~~~~~~~~~~~~~~~~~
 
 In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
 
 .. graphiql::
   :view_only:
   :query:
-    mutation MyMutation {
+    query {
       addNumbers(numbers: [1, 2, 3, 4]) {
         sum
       }
@@ -223,4 +400,4 @@ In the Hasura console, head to the ``GraphiQL`` tab and try out the new action.
       }
     }
 
-And that's it. You have created your first action!
+And that's it. You have extended your Hasura schema with a new query.

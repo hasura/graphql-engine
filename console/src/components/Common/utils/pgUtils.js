@@ -81,6 +81,48 @@ export const getOnlyViews = tablesOrViews => {
   return tablesOrViews.filter(t => !checkIfTable(t));
 };
 
+export const QUERY_TYPES = ['insert', 'select', 'update', 'delete'];
+
+export const getTableSupportedQueries = table => {
+  let supportedQueryTypes;
+
+  if (checkIfTable(table)) {
+    supportedQueryTypes = QUERY_TYPES;
+  } else {
+    // is View
+    supportedQueryTypes = [];
+
+    // Add insert/update permission if it is insertable/updatable as returned by pg
+    if (table.view_info) {
+      if (
+        table.view_info.is_insertable_into === 'YES' ||
+        table.view_info.is_trigger_insertable_into === 'YES'
+      ) {
+        supportedQueryTypes.push('insert');
+      }
+
+      supportedQueryTypes.push('select'); // to maintain order
+
+      if (table.view_info.is_updatable === 'YES') {
+        supportedQueryTypes.push('update');
+        supportedQueryTypes.push('delete');
+      } else {
+        if (table.view_info.is_trigger_updatable === 'YES') {
+          supportedQueryTypes.push('update');
+        }
+
+        if (table.view_info.is_trigger_deletable === 'YES') {
+          supportedQueryTypes.push('delete');
+        }
+      }
+    } else {
+      supportedQueryTypes.push('select');
+    }
+  }
+
+  return supportedQueryTypes;
+};
+
 /*** Table/View column utils ***/
 
 export const getTableColumns = table => {
@@ -192,6 +234,53 @@ export function getRelationshipRefTable(table, relationship) {
 
   return _refTable;
 }
+
+/**
+ * @param {string} currentSchema
+ * @param {string} currentTable
+ * @param {Array<{[key: string]: any}>} allSchemas
+ *
+ * @returns {Array<{
+ *   columnName: string,
+ *   enumTableName: string,
+ *   enumColumnName: string,
+ * }>}
+ */
+export const getEnumColumnMappings = (allSchemas, tableName, tableSchema) => {
+  const currentTable = findTable(
+    allSchemas,
+    generateTableDef(tableName, tableSchema)
+  );
+
+  const relationsMap = [];
+  if (!currentTable.foreign_key_constraints.length) return;
+
+  currentTable.foreign_key_constraints.map(
+    ({ ref_table, ref_table_table_schema, column_mapping }) => {
+      const refTableSchema = findTable(
+        allSchemas,
+        generateTableDef(ref_table, ref_table_table_schema)
+      );
+      if (!refTableSchema || !refTableSchema.is_enum) return;
+
+      const keys = Object.keys(column_mapping);
+      if (!keys.length) return;
+
+      const _columnName = keys[0];
+      const _enumColumnName = column_mapping[_columnName];
+
+      if (_columnName && _enumColumnName) {
+        relationsMap.push({
+          columnName: _columnName,
+          enumTableName: ref_table,
+          enumColumnName: _enumColumnName,
+        });
+      }
+    }
+  );
+
+  return relationsMap;
+};
 
 /*** Table/View permissions utils ***/
 
@@ -311,3 +400,22 @@ export const getGroupedTableComputedFields = (table, allFunctions) => {
 
   return groupedComputedFields;
 };
+
+// export const getDependentTables = (table) => {
+
+//   return [
+//     {
+//       table_schema: table.table_schema,
+//       table_name: table.table_name,
+//     },
+//     ...table.foreign_key_constraints.map(fk_obj => ({
+//       table_name: fk_obj.ref_table,
+//       table_schema: fk_obj.ref_table_table_schema
+//     })),
+//     ...table.opp_foreign_key_constraints.map(fk_obj => ({
+//       table_name: fk_obj.table_name,
+//       table_schema: fk_obj.table_schema,
+//     }))
+//   ]
+
+// };

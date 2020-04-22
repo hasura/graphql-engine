@@ -1,3 +1,7 @@
+.. meta::
+   :description: Hasura explain API reference
+   :keywords: hasura, docs, explain API, API reference
+
 .. _explain_api_reference:
 
 Explain API Reference
@@ -118,4 +122,4 @@ Sample response for a subscription
 Disabling Explain API
 ---------------------
 
-The Explain API is part of the :doc:`Metadata API <schema-metadata-api/index>` and can only be disabled by disabling the same.
+The Explain API is part of the :ref:`Metadata API <metadata_apis>` and can only be disabled by disabling the same.

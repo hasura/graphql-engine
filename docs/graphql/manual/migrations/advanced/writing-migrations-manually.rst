@@ -2,6 +2,8 @@
    :description: Write manual migrations for Hasura GraphQL engine
    :keywords: hasura, docs, migration, manual
 
+.. _manual_migrations:
+
 Writing migrations manually
 ===========================
 
@@ -26,7 +28,7 @@ Postgres schema and YAML for Hasura metadata actions.
 
 #. Edit the file and add your migration actions. For the file format and
    instructions on what actions can be added, refer to
-   :doc:`../reference/migration-file-format`.
+   :ref:`migration_file_format`.
 
 #. Apply the migration:
 

@@ -2,6 +2,8 @@
    :description: Hasura GraphQL API queries and subscriptions API reference
    :keywords: hasura, docs, GraphQL API, API reference, query, subscription
 
+.. _graphql_api_query:
+
 API Reference - Query / Subscription
 ====================================
 
@@ -65,7 +67,7 @@ Query / subscription syntax
 
 .. note::
 
-    For more examples and details of usage, please see :doc:`this <../../queries/index>`.
+    For more examples and details of usage, please see :ref:`this <queries>`.
 
 Syntax definitions
 ------------------
@@ -117,9 +119,12 @@ E.g.
       name  # scalar text field
 
       address(path: "$.city") # scalar JSON field -> property
+      address(path: "$.city.altitude") # scalar JSON field -> property -> property
       address(path: "city") # scalar JSON field -> property; '$.' prefix is optional
       contacts(path: "[0]") # scalar JSON field -> array_item
       contacts(path: "[0].phone") # scalar JSON field -> array_item_property
+      contacts(path: "['Hello world!']") # scalar JSON field -> property; used for special characters key
+      contacts(path: "[\"Hello world!\"]") # same as above; the syntax is ugly, but still works
 
       article {  # nested object
         title

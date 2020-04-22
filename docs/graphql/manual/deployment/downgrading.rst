@@ -2,6 +2,8 @@
    :description: Downgrade Hasura GraphQL engine version
    :keywords: hasura, docs, deployment, downgrade, version
 
+.. _downgrade_hge:
+
 Downgrading Hasura GraphQL engine
 =================================
 
@@ -20,9 +22,9 @@ as changing the image tag to the version you want.
 Based on your deployment method, follow the appropriate guide to downgrade the
 GraphQL engine version you're running:
 
-- :doc:`Updating on Heroku <heroku/updating>`
-- :doc:`Updating on Docker <docker/updating>`
-- :doc:`Updating on Kubernetes <kubernetes/updating>`
+- :ref:`Updating on Heroku <heroku_update>`
+- :ref:`Updating on Docker <docker_update>`
+- :ref:`Updating on Kubernetes <kubernetes_update>`
 
 If the GraphQL engine version you are downgrading to has a different catalogue
 version than your current, you will have to downgrade the catalogue

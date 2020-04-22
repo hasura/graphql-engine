@@ -42,6 +42,7 @@ const globals = {
   featuresCompatibility: window.__env.serverVersion
     ? getFeaturesCompatibility(window.__env.serverVersion)
     : null,
+  isProduction,
 };
 
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {

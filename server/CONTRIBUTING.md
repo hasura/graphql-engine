@@ -17,6 +17,11 @@ The last two prerequisites can be installed on Debian with:
 
     $ sudo apt install libpq-dev python3 python3-pip python3-venv
 
+Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
+
+- [PostgreSQL](https://www.postgresql.org) >= 9.5
+- [postgis](https://postgis.net)
+
 ### Upgrading npm
 
 If your npm is too old (>= 5.7 required):
@@ -47,6 +52,10 @@ After making your changes
     $ cabal new-update
     $ cabal new-build
 
+To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal.project.dev-sh.local` instead of `cabal.project.dev`:
+
+    $ ln -s cabal.project.dev-sh.local cabal.project.local
+
 ### Run and test via `dev.sh`
 
 The `dev.sh` script in the top-level `scripts/` directory is a turnkey solution to build, run, and
@@ -68,7 +77,7 @@ You can run the test suite with:
 
     $ scripts/dev.sh test
 
-This should run in isolation.
+This should run in isolation.  The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report).  Errors and failures are indicated by `F`s and `E`s.
 
 ### Run and test manually
 

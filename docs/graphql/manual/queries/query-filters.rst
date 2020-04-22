@@ -2,6 +2,8 @@
    :description: Filter query results and search queries in Hasura
    :keywords: hasura, docs, query, filter, search
 
+.. _filter_queries:
+
 Filter query results / search queries
 =====================================
 
@@ -506,7 +508,7 @@ Fetch a list of authors whose names begin with A or C:
 JSONB operators (_contains, _has_key, etc.)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``_contains``, ``_contained_in``, ``_has_key``, ``_has_key_any`` and ``_has_key_all`` operators are used to filter
+The ``_contains``, ``_contained_in``, ``_has_key``, ``_has_keys_any`` and ``_has_keys_all`` operators are used to filter
 based on ``JSONB`` columns.
 
 For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.

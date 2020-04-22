@@ -44,6 +44,7 @@ module Hasura.RQL.Types.Table
        , getFieldInfoM
        , getPGColumnInfoM
        , getCols
+       , sortCols
        , getRels
        , getComputedFieldInfos
 
@@ -193,6 +194,10 @@ fieldInfoGraphQLNames = \case
 getCols :: FieldInfoMap FieldInfo -> [PGColumnInfo]
 getCols = mapMaybe (^? _FIColumn) . M.elems
 
+-- | Sort columns based on their ordinal position
+sortCols :: [PGColumnInfo] -> [PGColumnInfo]
+sortCols = sortBy (\l r -> compare (pgiPosition l) (pgiPosition r))
+
 getRels :: FieldInfoMap FieldInfo -> [RelInfo]
 getRels = mapMaybe (^? _FIRelationship) . M.elems
 
@@ -274,7 +279,13 @@ data EventTriggerInfo
    , etiOpsDef      :: !TriggerOpsDef
    , etiRetryConf   :: !RetryConf
    , etiWebhookInfo :: !WebhookConfInfo
+   -- ^ The HTTP(s) URL which will be called with the event payload on configured operation. 
+   -- Must be a POST handler. This URL can be entered manually or can be picked up from an 
+   -- environment variable (the environment variable needs to be set before using it for 
+   -- this configuration). 
    , etiHeaders     :: ![EventHeaderInfo]
+   -- ^ Custom headers can be added to an event trigger. Each webhook request will have these 
+   -- headers added.
    } deriving (Show, Eq, Generic)
 instance NFData EventTriggerInfo
 $(deriveToJSON (aesonDrop 3 snakeCase) ''EventTriggerInfo)

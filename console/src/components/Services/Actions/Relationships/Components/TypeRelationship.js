@@ -118,6 +118,15 @@ const RelationshipEditor = ({
 
   // rel name input
   const getRelNameInput = () => {
+    /*
+      There is no neat solution to renaming a relationship.
+      This is because name is the only unique identifier of a relationship.
+      TODO FIXME
+    */
+    const isDisabled = !!existingRelConfig;
+    const relNameInputTitle = isDisabled
+      ? 'A relationship cannot be renamed. Please drop and re-create if you really must.'
+      : undefined;
     return (
       <div className={`${styles.add_mar_bottom}`}>
         <div className={`${styles.add_mar_bottom_mid}`}>
@@ -129,6 +138,7 @@ const RelationshipEditor = ({
           className={`${styles.select} form-control ${styles.add_pad_left}`}
           placeholder="Enter relationship name"
           data-test="rel-name"
+          title={relNameInputTitle}
           value={name}
         />
       </div>
@@ -180,17 +190,17 @@ const RelationshipEditor = ({
           disabled={!name}
         >
           {// default unselected option
-            refSchema === '' && (
-              <option value={''} disabled>
-                {'-- reference schema --'}
-              </option>
-            )}
+          refSchema === '' && (
+            <option value={''} disabled>
+              {'-- reference schema --'}
+            </option>
+          )}
           {// all reference schema options
-            orderedSchemaList.map((rs, j) => (
-              <option key={j} value={rs}>
-                {rs}
-              </option>
-            ))}
+          orderedSchemaList.map((rs, j) => (
+            <option key={j} value={rs}>
+              {rs}
+            </option>
+          ))}
         </select>
       </div>
     );
@@ -360,7 +370,7 @@ const RelationshipEditor = ({
 };
 
 const RelEditor = props => {
-  const { dispatch, relConfig, objectType } = props;
+  const { dispatch, relConfig, objectType, isNew } = props;
 
   const [relConfigState, setRelConfigState] = React.useState(null);
 
@@ -371,7 +381,7 @@ const RelEditor = props => {
       <div>
         <b>{relConfig.name}</b>
         <div className={tableStyles.relationshipTopPadding}>
-          {getRelDef(relConfig)}
+          {getRelDef({ ...relConfig, typename: objectType.name })}
         </div>
       </div>
     );
@@ -407,20 +417,24 @@ const RelEditor = props => {
       );
     }
     dispatch(
-      addActionRel({ ...relConfigState, typename: objectType.name }, toggle)
+      addActionRel(
+        { ...relConfigState, typename: objectType.name },
+        toggle,
+        isNew ? null : relConfig
+      )
     );
   };
 
   // function to remove the relationship
   let removeFunc;
-  if (relConfig) {
+  if (!isNew) {
     removeFunc = toggle => {
       dispatch(removeActionRel(relConfig.name, objectType.name, toggle));
     };
   }
 
-  const expandButtonText = relConfig ? 'Edit' : 'Add a relationship';
-  const collapseButtonText = relConfig ? 'Close' : 'Cancel';
+  const expandButtonText = isNew ? 'Add a relationship' : 'Edit';
+  const collapseButtonText = isNew ? 'Cancel' : 'Close';
 
   return (
     <ExpandableEditor

@@ -2,13 +2,21 @@ import { defaultViewState } from '../DataState';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import requestAction from 'utils/requestAction';
 import filterReducer from './FilterActions';
-import { findTableFromRel } from '../utils';
+import { findTableFromRel, getEstimateCountQuery } from '../utils';
 import {
   showSuccessNotification,
   showErrorNotification,
 } from '../../Common/Notification';
 import dataHeaders from '../Common/Headers';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import {
+  getBulkDeleteQuery,
+  generateSelectQuery,
+  getFetchManualTriggersQuery,
+  getDeleteQuery,
+  getRunSqlQuery,
+} from '../../../Common/utils/v1QueryUtils';
+import { generateTableDef } from '../../../Common/utils/pgUtils';
 
 /* ****************** View actions *************/
 const V_SET_DEFAULTS = 'ViewTable/V_SET_DEFAULTS';
@@ -20,6 +28,8 @@ const V_SET_QUERY_OPTS = 'ViewTable/V_SET_QUERY_OPTS';
 const V_REQUEST_PROGRESS = 'ViewTable/V_REQUEST_PROGRESS';
 const V_EXPAND_ROW = 'ViewTable/V_EXPAND_ROW';
 const V_COLLAPSE_ROW = 'ViewTable/V_COLLAPSE_ROW';
+
+const V_COUNT_REQUEST_SUCCESS = 'ViewTable/V_COUNT_REQUEST_SUCCESS';
 
 const FETCHING_MANUAL_TRIGGER = 'ViewTable/FETCHING_MANUAL_TRIGGER';
 const FETCH_MANUAL_TRIGGER_SUCCESS = 'ViewTable/FETCH_MANUAL_TRIGGER_SUCCESS';
@@ -46,38 +56,28 @@ const vCollapseRow = () => ({
   type: V_COLLAPSE_ROW,
 });
 
-const vSetDefaults = () => ({ type: V_SET_DEFAULTS });
+const vSetDefaults = limit => ({ type: V_SET_DEFAULTS, limit });
 
-const vMakeRequest = () => {
+const vMakeRowsRequest = () => {
   return (dispatch, getState) => {
-    const state = getState();
+    const {
+      currentTable: originalTable,
+      currentSchema,
+      view,
+    } = getState().tables;
+
     const url = Endpoints.query;
-    const originalTable = getState().tables.currentTable;
     dispatch({ type: V_REQUEST_PROGRESS, data: true });
 
     const requestBody = {
       type: 'bulk',
       args: [
-        {
-          type: 'select',
-          args: {
-            ...state.tables.view.query,
-            table: {
-              name: state.tables.currentTable,
-              schema: getState().tables.currentSchema,
-            },
-          },
-        },
-        {
-          type: 'count',
-          args: {
-            ...state.tables.view.query,
-            table: {
-              name: state.tables.currentTable,
-              schema: getState().tables.currentSchema,
-            },
-          },
-        },
+        generateSelectQuery(
+          'select',
+          generateTableDef(originalTable, currentSchema),
+          view.query
+        ),
+        getRunSqlQuery(getEstimateCountQuery(currentSchema, originalTable)),
       ],
     };
     const options = {
@@ -89,12 +89,14 @@ const vMakeRequest = () => {
     return dispatch(requestAction(url, options)).then(
       data => {
         const currentTable = getState().tables.currentTable;
-        if (originalTable === currentTable) {
+
+        // in case table has changed before count load
+        if (currentTable === originalTable) {
           Promise.all([
             dispatch({
               type: V_REQUEST_SUCCESS,
               data: data[0],
-              count: data[1].count,
+              estimatedCount: data[1].result[1],
             }),
             dispatch({ type: V_REQUEST_PROGRESS, data: false }),
           ]);
@@ -112,27 +114,58 @@ const vMakeRequest = () => {
   };
 };
 
+const vMakeCountRequest = () => {
+  return (dispatch, getState) => {
+    const {
+      currentTable: originalTable,
+      currentSchema,
+      view,
+    } = getState().tables;
+    const url = Endpoints.query;
+
+    const requestBody = generateSelectQuery(
+      'count',
+      generateTableDef(originalTable, currentSchema),
+      view.query
+    );
+
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      headers: dataHeaders(getState),
+      credentials: globalCookiePolicy,
+    };
+
+    return dispatch(requestAction(url, options)).then(
+      data => {
+        const currentTable = getState().tables.currentTable;
+
+        // in case table has changed before count load
+        if (currentTable === originalTable) {
+          dispatch({
+            type: V_COUNT_REQUEST_SUCCESS,
+            count: data.count,
+          });
+        }
+      },
+      error => {
+        dispatch(
+          showErrorNotification('Count query failed!', error.error, error)
+        );
+      }
+    );
+  };
+};
+
+const vMakeTableRequests = () => dispatch => {
+  dispatch(vMakeRowsRequest());
+  dispatch(vMakeCountRequest());
+};
+
 const fetchManualTriggers = tableName => {
   return (dispatch, getState) => {
     const url = Endpoints.getSchema;
-    const body = {
-      type: 'select',
-      args: {
-        table: {
-          name: 'event_triggers',
-          schema: 'hdb_catalog',
-        },
-        columns: ['*'],
-        order_by: {
-          column: 'name',
-          type: 'asc',
-          nulls: 'last',
-        },
-        where: {
-          table_name: tableName,
-        },
-      },
-    };
+    const body = getFetchManualTriggersQuery(tableName);
 
     const options = {
       credentials: globalCookiePolicy,
@@ -165,7 +198,7 @@ const fetchManualTriggers = tableName => {
   };
 };
 
-const deleteItem = pkClause => {
+const deleteItem = (pkClause, tableName, tableSchema) => {
   return (dispatch, getState) => {
     const confirmMessage =
       'This will permanently delete this row from this table';
@@ -174,19 +207,10 @@ const deleteItem = pkClause => {
       return;
     }
 
-    const state = getState();
-
     const url = Endpoints.query;
-    const reqBody = {
-      type: 'delete',
-      args: {
-        table: {
-          name: state.tables.currentTable,
-          schema: state.tables.currentSchema,
-        },
-        where: pkClause,
-      },
-    };
+
+    const reqBody = getDeleteQuery(pkClause, tableName, tableSchema);
+
     const options = {
       method: 'POST',
       body: JSON.stringify(reqBody),
@@ -195,7 +219,7 @@ const deleteItem = pkClause => {
     };
     dispatch(requestAction(url, options)).then(
       data => {
-        dispatch(vMakeRequest());
+        dispatch(vMakeTableRequests());
         dispatch(
           showSuccessNotification(
             'Row deleted!',
@@ -210,12 +234,47 @@ const deleteItem = pkClause => {
   };
 };
 
+const deleteItems = (pkClauses, tableName, tableSchema) => {
+  return (dispatch, getState) => {
+    const confirmMessage = 'This will permanently delete rows from this table';
+    const isOk = getConfirmation(confirmMessage);
+    if (!isOk) {
+      return;
+    }
+
+    const reqBody = {
+      type: 'bulk',
+      args: getBulkDeleteQuery(pkClauses, tableName, tableSchema),
+    };
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(reqBody),
+      headers: dataHeaders(getState),
+      credentials: globalCookiePolicy,
+    };
+    dispatch(requestAction(Endpoints.query, options)).then(
+      data => {
+        const affected = data.reduce((acc, d) => acc + d.affected_rows, 0);
+        dispatch(vMakeTableRequests());
+        dispatch(
+          showSuccessNotification('Rows deleted!', 'Affected rows: ' + affected)
+        );
+      },
+      err => {
+        dispatch(
+          showErrorNotification('Deleting rows failed!', err.error, err)
+        );
+      }
+    );
+  };
+};
+
 const vExpandRel = (path, relname, pk) => {
   return dispatch => {
     // Modify the query (UI will automatically change)
     dispatch({ type: V_EXPAND_REL, path, relname, pk });
     // Make a request
-    return dispatch(vMakeRequest());
+    return dispatch(vMakeTableRequests());
   };
 };
 const vCloseRel = (path, relname) => {
@@ -223,7 +282,7 @@ const vCloseRel = (path, relname) => {
     // Modify the query (UI will automatically change)
     dispatch({ type: V_CLOSE_REL, path, relname });
     // Make a request
-    return dispatch(vMakeRequest());
+    return dispatch(vMakeTableRequests());
   };
 };
 /* ************ helpers ************************/
@@ -443,7 +502,11 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
         ...defaultViewState,
         query: {
           columns: currentColumns,
-          limit: 10,
+          limit: action.limit || 10,
+        },
+        curFilter: {
+          ...defaultViewState.curFilter,
+          limit: action.limit || 10,
         },
         activePath: [tableName],
         rows: [],
@@ -501,9 +564,15 @@ const viewReducer = (tableName, currentSchema, schemas, viewState, action) => {
         ),
       };
     case V_REQUEST_SUCCESS:
-      return { ...viewState, rows: action.data, count: action.count };
+      return {
+        ...viewState,
+        rows: action.data,
+        estimatedCount: action.estimatedCount,
+      };
     case V_REQUEST_PROGRESS:
       return { ...viewState, isProgressing: action.data };
+    case V_COUNT_REQUEST_SUCCESS:
+      return { ...viewState, count: action.count };
     case V_EXPAND_ROW:
       return {
         ...viewState,
@@ -553,13 +622,14 @@ export default viewReducer;
 export {
   fetchManualTriggers,
   vSetDefaults,
-  vMakeRequest,
   vExpandRel,
   vCloseRel,
   vExpandRow,
   vCollapseRow,
   V_SET_ACTIVE,
   deleteItem,
+  deleteItems,
   UPDATE_TRIGGER_ROW,
   UPDATE_TRIGGER_FUNCTION,
+  vMakeTableRequests,
 };

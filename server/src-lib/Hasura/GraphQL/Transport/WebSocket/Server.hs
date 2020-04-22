@@ -41,6 +41,7 @@ import qualified Data.UUID.V4                         as UUID
 import           Data.Word                            (Word16)
 import           GHC.Int                              (Int64)
 import           Hasura.Prelude
+import           GHC.AssertNF
 import qualified ListT
 import qualified Network.WebSockets                   as WS
 import qualified StmContainers.Map                    as STMMap
@@ -141,7 +142,9 @@ closeConnWithCode wsConn code bs = do
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
-sendMsg wsConn = STM.atomically . STM.writeTQueue (_wcSendQ wsConn)
+sendMsg wsConn = \ !resp -> do
+  $assertNFHere resp  -- so we don't write thunks to mutable vars
+  STM.atomically $ STM.writeTQueue (_wcSendQ wsConn) resp
 
 type ConnMap a = STMMap.Map WSId (WSConn a)
 
@@ -193,8 +196,8 @@ data AcceptWith a
   = AcceptWith
   { _awData        :: !a
   , _awReq         :: !WS.AcceptRequest
-  , _awKeepAlive   :: !(Maybe (WSConn a -> IO ()))
-  , _awOnJwtExpiry :: !(Maybe (WSConn a -> IO ()))
+  , _awKeepAlive   :: !(WSConn a -> IO ())
+  , _awOnJwtExpiry :: !(WSConn a -> IO ())
   }
 
 type OnConnH m a    = WSId -> WS.RequestHead -> m (Either WS.RejectRequest (AcceptWith a))
@@ -216,7 +219,8 @@ createServerApp
   -- aka WS.ServerApp
   -> WS.PendingConnection
   -> m ()
-createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pendingConn = do
+{-# INLINE createServerApp #-}
+createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
   writeLog $ WSLog wsId EConnectionRequest Nothing
   status <- liftIO $ STM.readTVarIO serverStatus
@@ -247,11 +251,17 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
       liftIO $ WS.rejectRequestWith pendingConn rejectRequest
       writeLog $ WSLog wsId ERejected Nothing
 
-    onAccept wsId (AcceptWith a acceptWithParams keepAliveM onJwtExpiryM) = do
+    onAccept wsId (AcceptWith a acceptWithParams keepAlive onJwtExpiry) = do
       conn  <- liftIO $ WS.acceptRequestWith pendingConn acceptWithParams
       writeLog $ WSLog wsId EAccepted Nothing
       sendQ <- liftIO STM.newTQueueIO
-      let wsConn = WSConn wsId logger conn sendQ a
+      let !wsConn = WSConn wsId logger conn sendQ a
+      -- TODO there are many thunks here. Difficult to trace how much is retained, and
+      --      how much of that would be shared anyway.
+      --      Requires a fork of 'wai-websockets' and 'websockets', it looks like.
+      --      Adding `package` stanzas with -Xstrict -XStrictData for those two packages
+      --      helped, cutting the number of thunks approximately in half.
+      liftIO $ $assertNFHere wsConn  -- so we don't write thunks to mutable vars
 
       let whenAcceptingInsertConn = liftIO $ STM.atomically $ do
             status <- STM.readTVar serverStatus
@@ -284,21 +294,15 @@ createServerApp (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers pe
                 liftIO $ WS.sendTextData conn msg
                 writeLog $ WSLog wsId (EMessageSent $ TBS.fromLBS msg) wsInfo
 
-          let withAsyncM mAction cont = case mAction of
-                Nothing -> cont Nothing
-                Just action -> LA.withAsync (liftIO $ action wsConn) $ 
-                  \actRef -> cont $ Just actRef
-
           -- withAsync lets us be very sure that if e.g. an async exception is raised while we're
           -- forking that the threads we launched will be cleaned up. See also below.
           LA.withAsync rcv $ \rcvRef -> do
           LA.withAsync send $ \sendRef -> do
-          withAsyncM keepAliveM $ \keepAliveRefM -> do
-          withAsyncM onJwtExpiryM $ \onJwtExpiryRefM -> do
+          LA.withAsync (liftIO $ keepAlive wsConn) $ \keepAliveRef -> do
+          LA.withAsync (liftIO $ onJwtExpiry wsConn) $ \onJwtExpiryRef -> do
 
           -- terminates on WS.ConnectionException and JWT expiry
-          let waitOnRefs = catMaybes [keepAliveRefM, onJwtExpiryRefM]
-                           <> [rcvRef, sendRef]
+          let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]
           -- withAnyCancel re-raises exceptions from forkedThreads, and is guarenteed to cancel in
           -- case of async exceptions raised while blocking here:
           try (LA.waitAnyCancel waitOnRefs) >>= \case

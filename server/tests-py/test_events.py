@@ -27,11 +27,14 @@ def select_last_event_fromdb(hge_ctx):
 
 
 def insert(hge_ctx, table, row, returning=[], headers = {}):
+    return insert_many(hge_ctx, table, [row], returning, headers)
+
+def insert_many(hge_ctx, table, rows, returning=[], headers = {}):
     q = {
         "type": "insert",
         "args": {
             "table": table,
-            "objects": [row],
+            "objects": rows,
             "returning": returning
         }
     }
@@ -80,6 +83,34 @@ class TestCreateAndDelete:
     @classmethod
     def dir(cls):
         return 'queries/event_triggers/create-delete'
+
+# Smoke test for handling a backlog of events
+@usefixtures("per_method_tests_db_state")
+class TestEventFlood(object):
+
+    @classmethod
+    def dir(cls):
+        return 'queries/event_triggers/basic'
+
+    def test_flood(self, hge_ctx, evts_webhook):
+        table = {"schema": "hge_tests", "name": "test_t1"}
+
+        payload = range(1,1001)
+        rows = list(map(lambda x: {"c1": x, "c2": "hello"}, payload))
+        st_code, resp = insert_many(hge_ctx, table, rows)
+        assert st_code == 200, resp
+
+        def get_evt():
+            # TODO ThreadedHTTPServer helps locally (I only need a timeout of
+            # 10 here), but we still need a bit of a long timeout here for CI
+            # it seems, since webhook can't keep up there:
+            ev_full = evts_webhook.get_event(600)
+            return ev_full['body']['event']['data']['new']['c1']
+        # Make sure we got all payloads (probably out of order):
+        ns = list(map(lambda _: get_evt(), payload))
+        ns.sort()
+        assert ns == list(payload)
+
 
 @usefixtures("per_method_tests_db_state")
 class TestCreateEvtQuery(object):

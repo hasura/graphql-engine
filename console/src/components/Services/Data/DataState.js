@@ -36,27 +36,12 @@ const defaultPermissionsState = {
   isEditing: false,
 };
 
-const defaultPresetsState = {
-  insert: {
-    key: '',
-    value: '',
-  },
-  update: {
-    key: '',
-    value: '',
-  },
-};
 const defaultQueryPermissions = {
   insert: {
     check: {},
     allow_upsert: true,
     set: {},
     columns: [],
-    localPresets: [
-      {
-        ...defaultPresetsState.insert,
-      },
-    ],
   },
   select: {
     columns: [],
@@ -69,11 +54,6 @@ const defaultQueryPermissions = {
     columns: [],
     filter: {},
     set: {},
-    localPresets: [
-      {
-        ...defaultPresetsState.update,
-      },
-    ],
   },
   delete: {
     filter: {},
@@ -133,8 +113,11 @@ const defaultModifyState = {
     select_by_pk: '',
     select_aggregate: '',
     insert: '',
+    insert_one: '',
     update: '',
+    update_by_pk: '',
     delete: '',
+    delete_by_pk: '',
   },
   permissionsState: { ...defaultPermissionsState },
   prevPermissionState: { ...defaultPermissionsState },
@@ -192,5 +175,4 @@ export {
   defaultModifyState,
   defaultPermissionsState,
   defaultQueryPermissions,
-  defaultPresetsState,
 };

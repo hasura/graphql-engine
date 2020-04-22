@@ -118,7 +118,7 @@ rFirst (Rule r) = Rule \s (a, c) k -> r s a \s' b r' -> k s' (b, c) (rFirst r')
 {-# INLINABLE[0] rFirst #-}
 {-# RULES
 "first/id"         rFirst rId = rId
-"first/arr"        forall f. rFirst (rArr f) = rArr (second f)
+"first/arr"        forall f. rFirst (rArr f) = rArr (first f)
 "first/arrM"       forall f. rFirst (rArrM f) = rArrM (runKleisli (first (Kleisli f)))
 "first/push"  [~1] forall f g. rFirst (f `rComp` g) = rFirst f `rComp` rFirst g
 "first/pull"   [1] forall f g. rFirst f `rComp` rFirst g = rFirst (f `rComp` g)

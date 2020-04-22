@@ -33,7 +33,8 @@ data QueryCtx
   | QCSelectAgg !SelOpCtx
   | QCFuncQuery !FuncQOpCtx
   | QCFuncAggQuery !FuncQOpCtx
-  | QCActionFetch !ActionSelectOpContext
+  | QCAsyncActionFetch !ActionSelectOpContext
+  | QCAction !ActionExecutionContext
   deriving (Show, Eq)
 
 data MutationCtx
@@ -43,7 +44,7 @@ data MutationCtx
   | MCUpdateByPk !UpdOpCtx
   | MCDelete !DelOpCtx
   | MCDeleteByPk !DelOpCtx
-  | MCAction !ActionExecutionContext
+  | MCAction !ActionMutationExecutionContext
   deriving (Show, Eq)
 
 type OpCtxMap a = Map.HashMap G.Name a
@@ -103,19 +104,20 @@ data DelOpCtx
   , _docFilter  :: !AnnBoolExpPartialSQL
   } deriving (Show, Eq)
 
-data SyncActionExecutionContext
-  = SyncActionExecutionContext
+data ActionExecutionContext
+  = ActionExecutionContext
   { _saecName                 :: !ActionName
   , _saecOutputType           :: !GraphQLType
+  , _saecOutputFields         :: !ActionOutputFields
   , _saecDefinitionList       :: ![(PGCol, PGScalarType)]
   , _saecWebhook              :: !ResolvedWebhook
   , _saecHeaders              :: ![HeaderConf]
   , _saecForwardClientHeaders :: !Bool
   } deriving (Show, Eq)
 
-data ActionExecutionContext
-  = ActionExecutionSyncWebhook !SyncActionExecutionContext
-  | ActionExecutionAsync
+data ActionMutationExecutionContext
+  = ActionMutationSyncWebhook !ActionExecutionContext
+  | ActionMutationAsync
   deriving (Show, Eq)
 
 data ActionSelectOpContext

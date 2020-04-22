@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+shopt -s globstar
 
 # A development swiss army knife script. The goals are to:
 #
@@ -163,6 +164,42 @@ if [ "$MODE" = "graphql-engine" ]; then
   cd "$PROJECT_ROOT/server"
   rm -f graphql-engine.tix
 
+  # Attempt to run this after a CTRL-C:
+  function cleanup {
+    echo
+    # Generate coverage, which can be useful for debugging or understanding 
+    if command -v hpc >/dev/null; then
+      # Get the appropriate mix dir (the newest one). This way this hopefully
+      # works when cabal.project.dev-sh.local is edited to turn on optimizations.
+      hpcdir=$(ls -td dist-newstyle/build/**/hpc/vanilla/mix/graphql-engine-* | head -1)
+      echo_pretty "Generating code coverage report..."
+      COVERAGE_DIR="dist-newstyle/dev.sh-coverage"
+      hpc_invocation=(hpc markup 
+        --exclude=Main 
+        --hpcdir "$hpcdir" 
+        --reset-hpcdirs graphql-engine.tix 
+        --fun-entry-count 
+        --destdir="$COVERAGE_DIR")
+      ${hpc_invocation[@]} >/dev/null
+
+      echo_pretty "To view full coverage report open:"
+      echo_pretty "  file://$(pwd)/$COVERAGE_DIR/hpc_index.html"
+
+      tix_archive=dist-newstyle/graphql-engine.tix.$(date "+%Y.%m.%d-%H.%M.%S")
+      mv graphql-engine.tix "$tix_archive"
+      echo_pretty ""
+      echo_pretty "The tix file we used has been archived to: $tix_archive"
+      echo_pretty ""
+      echo_pretty "You might want to use 'hpc combine' to create a diff of two different tix" 
+      echo_pretty "files, and then generate a new report with something like:"
+      echo_pretty "  $ ${hpc_invocation[*]}"
+    else
+      echo_warn "Please install hpc to get a code coverage report"
+    fi
+  }
+  trap cleanup EXIT
+
+
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
 
   echo_pretty "We will connect to postgres container '$PG_CONTAINER_NAME'"
@@ -319,6 +356,9 @@ elif [ "$MODE" = "test" ]; then
   ###     Integration / unit tests     ###
   ########################################
   cd "$PROJECT_ROOT/server"
+
+  # Until we can use a real webserver for TestEventFlood, limit concurrency
+  export HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE=8
 
   # We'll get an hpc error if these exist; they will be deleted below too:
   rm -f graphql-engine-tests.tix graphql-engine.tix graphql-engine-combined.tix
