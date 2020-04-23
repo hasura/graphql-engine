@@ -131,7 +131,7 @@ class TestQueryActions:
     #     }
     #   ]
     # }
-    def test_query_actions_with_variables(self, hge_ctx):
+    def test_query_action_should_not_throw_validation_error(self, hge_ctx):
         for _ in range(100):
             self.test_query_action_success_output_object(hge_ctx)
 
