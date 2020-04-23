@@ -312,6 +312,8 @@ Operator
    * - ``"$lte"``
      - ``<=``
 
+(For more details on these operators, refer to the `Postgres docs <https://www.postgresql.org/docs/9.0/functions-comparison.html>`__.)
+
 **Text related operators :**
 
 .. list-table::
@@ -332,6 +334,7 @@ Operator
    * - ``"$nsimilar"``
      - ``NOT SIMILAR TO``
 
+(For more details on text related operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-matching.html>`__.)
 
 **Operators for comparing columns (all column types except json, jsonb):**
 
@@ -353,6 +356,8 @@ Operator
    * - ``"$clte"``
      - ``<=``
 
+(For more details on comparison operators, refer to the `Postgres docs <https://www.postgresql.org/docs/9.0/functions-comparison.html>`__.)
+
 **Checking for NULL values :**
 
 .. list-table::
@@ -362,6 +367,8 @@ Operator
      - PostgreSQL equivalent
    * - ``_is_null`` (takes true/false as values)
      - ``IS NULL``
+
+(For more details on the ``IS NULL`` expression, refer to the `Postgres docs <https://www.postgresql.org/docs/8.3/functions-comparison.html>`__.)
 
 **JSONB operators :**
 
@@ -381,7 +388,7 @@ Operator
    * - ``_has_keys_all``
      - ``?&``
 
-(For more details on what these operators do, refer to `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
+(For more details on JSONB operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/static/functions-json.html#FUNCTIONS-JSONB-OP-TABLE>`__.)
 
 **PostGIS related operators on GEOMETRY columns:**
 
@@ -407,7 +414,7 @@ Operator
    * - ``_st_d_within``
      - ``ST_DWithin(column, input)``
 
-(For more details on what these operators do, refer to `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__).
+(For more details on spatial relationship operators, refer to the `PostGIS docs <http://postgis.net/workshops/postgis-intro/spatial_relationships.html>`__.)
 
 .. note::
 
