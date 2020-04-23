@@ -718,7 +718,7 @@ const permChangePermissions = changeType => {
       '_table_' +
       table;
 
-    const requestMsg = getIngForm(changeType) + ' Permissions...';
+    const requestMsg = getIngForm(changeType) + ' permissions...';
     const successMsg = 'Permissions ' + getEdForm(changeType);
     const errorMsg = getIngForm(changeType) + ' permissions failed';
 
