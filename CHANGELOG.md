@@ -40,6 +40,7 @@ Along with the check for filtering rows that can be updated, you can now set a p
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
+- cli: load assets from server when HASURA_GRAPHQL_CONSOLE_ASSETS_DIR is set (close #3382)
 
 ## `v1.2.0-beta.4`
 
@@ -55,8 +56,6 @@ The order, collapsed state of columns and rows limit is now persisted across pag
 
 ### Bug fixes and improvements
 
-- cli: load assets from server when HASURA_GRAPHQL_CONSOLE_ASSETS_DIR is set (close #3382)
-- cli: set_table_is_enum metadata type for squashing migrations (close #4394) (#4395)
 - cli: query support for actions (#4318)
 - cli: add retry_conf in event trigger for squashing migrations (close #4296) (#4324)
 - cli: allow customization of server api paths (close #4016)
