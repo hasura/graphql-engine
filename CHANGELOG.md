@@ -2,6 +2,20 @@
 
 ## Next release
 
+### server: backend only insert permissions
+
+Introduces optional `backend_only` (default: `false`) configuration in insert permissions
+(see [api reference](https://deploy-preview-4224--hasura-docs.netlify.com/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission)).
+If this is set to `true`, the insert mutation is accessible to the role only if the request
+is accompanied by `x-hasura-use-backend-only-permissions` session variable whose value is set to `true` and `x-hasura-admin-secret` header.
+Otherwise, the behavior of the permission remains unchanged.
+
+This feature is highly useful in case of accessing insert mutations from a Action webhook handler. If marked `backend_only: true`,
+then the mutation is hidden for frontend clients and webhook handlers can access the mutation with admin secret and
+`x-hasura-use-backend-only-permissions` header.
+
+(rfc #4120) (#4224)
+
 ### cli: add support for .env file
 
 ENV vars can now be read from .env file present at the project root directory. A global flag, `--envfile`, is added so you can explicitly provide the .env filename, which defaults to `.env` filename if no flag is provided.
@@ -48,7 +62,6 @@ For example, see [here](https://hasura.io/docs/1.0/graphql/manual/api-reference/
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
 - docs: add reference docs for CLI (clsoe #4327) (#4408)
-- server: `backend_only` insert permissions (rfc #4120) (#4224)
 
 ## `v1.2.0-beta.4`
 
