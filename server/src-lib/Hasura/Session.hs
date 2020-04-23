@@ -17,10 +17,10 @@ module Hasura.Session
   , UserInfo
   , _uiRole
   , _uiSession
-  , _uiBackendOnlyPermissions
+  , _uiBackendOnlyFieldAccess
   , mkUserInfo
   , adminUserInfo
-  , BackendOnlyPermissions(..)
+  , BackendOnlyFieldAccess(..)
   ) where
 
 import           Hasura.Incremental         (Cacheable)
@@ -121,17 +121,17 @@ data UserAdminSecret
 -- | Represents the 'X-Hasura-Use-Backend-Only-Permissions' session variable
 -- and request made with 'X-Hasura-Admin-Secret' if any auth configured.
 -- For more details see Note [Backend only permissions]
-data BackendOnlyPermissions
-  = BOPEnabled
-  | BOPDisabled
+data BackendOnlyFieldAccess
+  = BOFAAllowed
+  | BOFADisallowed
   deriving (Show, Eq, Generic)
-instance Hashable BackendOnlyPermissions
+instance Hashable BackendOnlyFieldAccess
 
 data UserInfo
   = UserInfo
   { _uiRole                   :: !RoleName
   , _uiSession                :: !SessionVariables
-  , _uiBackendOnlyPermissions :: !BackendOnlyPermissions
+  , _uiBackendOnlyFieldAccess :: !BackendOnlyFieldAccess
   } deriving (Show, Eq, Generic)
 instance Hashable UserInfo
 
@@ -146,12 +146,12 @@ mkUserInfo userAdminSecret sess@(SessionVariables sessVars) defaultRole = do
   roleName <- onNothing (maybeRoleFromSession <|> defaultRole) $
               throw400 InvalidParams $ userRoleHeader <> " not found in session variables"
   -- see Note [Backend only permissions] to know more about the following logic.
-  useBackendOnlyPermissions <- case userAdminSecret of
-      UAdminSecretNotSent -> pure BOPDisabled
+  backendOnlyFieldAccess <- case userAdminSecret of
+      UAdminSecretNotSent -> pure BOFADisallowed
       UAdminSecretSent    -> lookForBackendOnlyPermissionsConfig
       UAuthNotSet         -> lookForBackendOnlyPermissionsConfig
   let modifiedSession = SessionVariables $ modifySessionVariables roleName sessVars
-  pure $ UserInfo roleName modifiedSession useBackendOnlyPermissions
+  pure $ UserInfo roleName modifiedSession backendOnlyFieldAccess
   where
     -- Add x-hasura-role header and remove admin secret headers
     modifySessionVariables roleName
@@ -165,12 +165,12 @@ mkUserInfo userAdminSecret sess@(SessionVariables sessVars) defaultRole = do
 
     lookForBackendOnlyPermissionsConfig =
       case getSessionVariableValue useBackendOnlyPermissionsHeader sess of
-        Nothing     -> pure BOPDisabled
+        Nothing     -> pure BOFADisallowed
         Just varVal ->
           case parseStringAsBool (T.unpack varVal) of
             Left err        -> throw400 BadRequest $
               useBackendOnlyPermissionsHeader <> ": " <> T.pack err
-            Right privilege -> pure $ if privilege then BOPEnabled else BOPDisabled
+            Right privilege -> pure $ if privilege then BOFAAllowed else BOFADisallowed
 
 adminUserInfo :: UserInfo
-adminUserInfo = UserInfo adminRoleName mempty BOPDisabled
+adminUserInfo = UserInfo adminRoleName mempty BOFADisallowed

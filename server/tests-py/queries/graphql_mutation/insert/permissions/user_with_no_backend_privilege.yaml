@@ -7,9 +7,10 @@ headers:
 response:
   errors:
   - extensions:
-      path: $
-      code: bad-request
-    message: Backend privilage not found for the role "user"
+      path: $.selectionSet.insert_user
+      code: validation-failed
+    message: "field \"insert_user\" not found in type: 'mutation_root'"
+
 query:
   query: |
     mutation {

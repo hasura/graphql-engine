@@ -731,7 +731,10 @@ mkGCtxMapTable tableCache funcCache tabInfo = do
             RoleContext { _rctxDefault = permInfo{_permIns = Nothing}
                         , _rctxBackend = Just permInfo
                         }
-          else RoleContext permInfo Nothing
+          -- Remove insert permission from 'backend' context and keep it in 'default' context.
+          else RoleContext { _rctxDefault = permInfo
+                           , _rctxBackend = Just permInfo{_permIns = Nothing}
+                           }
 
 noFilter :: AnnBoolExpPartialSQL
 noFilter = annBoolExpTrue
@@ -815,18 +818,17 @@ mkGCtxMap annotatedObjects tableCache functionCache actionCache = do
 
           pure $ mconcat rootFields
 
-getGCtx :: (MonadError QErr m)
-        => BackendOnlyPermissions -> SchemaCache -> RoleName -> m GCtx
-getGCtx useBackendOnlyPermissions sc roleName =
+getGCtx :: BackendOnlyFieldAccess -> SchemaCache -> RoleName -> GCtx
+getGCtx backendOnlyFieldAccess sc roleName =
   case Map.lookup roleName (scGCtxMap sc) of
-    Nothing                                           -> pure $ scDefaultRemoteGCtx sc
+    Nothing                                           -> scDefaultRemoteGCtx sc
     Just (RoleContext defaultGCtx maybeBackendGCtx)   ->
-      case useBackendOnlyPermissions of
-        BOPEnabled -> maybe
-          (throw400 BadRequest $ "Backend privilage not found for the role " <>> roleName)
-          pure
-          maybeBackendGCtx
-        BOPDisabled -> pure defaultGCtx
+      case backendOnlyFieldAccess of
+        BOFAAllowed    ->
+          -- When backend field access is allowed and if there's no 'backend_only'
+          -- permissions defined, we should allow access to non backend only fields
+          fromMaybe defaultGCtx maybeBackendGCtx
+        BOFADisallowed -> defaultGCtx
 
 -- pretty print GCtx
 ppGCtx :: GCtx -> String
