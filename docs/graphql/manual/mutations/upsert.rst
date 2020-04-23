@@ -61,7 +61,7 @@ If not all required columns are present, an error like ``NULL value unexpected f
 
 Update selected columns on conflict
 -----------------------------------
-Insert a new object in the ``article`` table or, if the primary key constraint ``article_pkey`` is violated, update
+Insert a new object in the ``article`` table or, if the primary key constraint ``article_title_key`` is violated, update
 the columns specified in ``update_columns``:
 
 .. graphiql::
@@ -78,7 +78,7 @@ the columns specified in ``update_columns``:
         ],
         on_conflict: {
           constraint: article_title_key,
-          update_columns: [title, content]
+          update_columns: [content]
         }
       ) {
         returning {
@@ -109,7 +109,7 @@ The ``published_on`` column is left unchanged as it wasn't present in ``update_c
 
 Update selected columns on conflict using a filter
 --------------------------------------------------
-Insert a new object in the ``article`` table, or if the primary key constraint ``article_pkey`` is violated, update
+Insert a new object in the ``article`` table, or if the primary key constraint ``article_title_key`` is violated, update
 the columns specified in ``update_columns`` only if the provided ``where`` condition is met:
 
 
@@ -208,7 +208,7 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
               ],
               on_conflict: {
                 constraint: article_title_key,
-                update_columns: [title, content]
+                update_columns: [content]
               }
             }
           }
