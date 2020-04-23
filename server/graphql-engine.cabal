@@ -359,9 +359,11 @@ library
                      , Hasura.GraphQL.Parser.Schema
 
                      , Hasura.GraphQL.Schema
+                     , Hasura.GraphQL.Schema.Table
                      , Hasura.GraphQL.Schema.BoolExp
                      , Hasura.GraphQL.Schema.Common
                      , Hasura.GraphQL.Schema.Select
+                     , Hasura.GraphQL.Schema.OrderBy
 
                      -- , Hasura.Events.Lib
                      -- , Hasura.Events.HTTP

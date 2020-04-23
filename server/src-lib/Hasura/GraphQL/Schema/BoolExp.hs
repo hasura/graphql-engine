@@ -13,10 +13,11 @@ import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser,
                                                 mkParameter)
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.Common  (qualifiedObjectToName)
+import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
+import           Hasura.SQL.DML
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
-import           Hasura.SQL.DML
 
 type ComparisonExp = OpExpG UnpreparedValue
 
@@ -37,10 +38,7 @@ boolExp = P.memoize 'boolExp \tableName -> do
         "Boolean expression to filter rows from the table " <> tableName <<>
         ". All fields are combined with a logical 'AND'."
 
-  tableInfo <- _tiCoreInfo <$> askTableInfo tableName
-  -- FIXME: permissions!
-  tableFieldParsers <- catMaybes <$> traverse mkField (M.elems $ _tciFieldInfoMap tableInfo)
-
+  tableFieldParsers <- fmap catMaybes $ traverse mkField =<< tableSelectFields tableName
   recur <- boolExp tableName
   -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
   -- think the TH splices throw it off), so we have to define it separately.

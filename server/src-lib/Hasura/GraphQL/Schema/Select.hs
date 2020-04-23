@@ -25,7 +25,9 @@ import           Hasura.GraphQL.Parser         (FieldsParser, Kind (..), Parser,
                                                 UnpreparedValue (..))
 import           Hasura.GraphQL.Parser.Class
 import           Hasura.GraphQL.Schema.BoolExp
-import           Hasura.GraphQL.Schema.Common  (qualifiedObjectToName)
+import           Hasura.GraphQL.Schema.Common  (qualifiedObjectToName, textToName)
+import           Hasura.GraphQL.Schema.OrderBy
+import           Hasura.GraphQL.Schema.Table
 import           Hasura.RQL.Types
 import           Hasura.SQL.Types
 import           Hasura.SQL.Value
@@ -50,6 +52,7 @@ queryExp allTables stringifyNum = do
     let desc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName tableName) <> "\""
     for selectPerms $ \perms -> selectFromTable tableName (Just desc) perms stringifyNum
     -- TODO: add aggregation tables and primary key queries?
+    -- WIP note: move this to Schema.hs?
   let queryFieldsParser = fmap (Map.fromList . catMaybes) $ sequenceA $ catMaybes selectExpParsers
   pure $ P.selectionSet $$(G.litName "Query") Nothing queryFieldsParser
 
@@ -76,15 +79,6 @@ selectFromTable table description selectPermissions stringifyNum = do
         }
       )
 
-tableSelectPermissions
-  :: forall m n. (MonadSchema n m)
-  => QualifiedTable
-  -> m (Maybe SelPermInfo)
-tableSelectPermissions table = do
-  roleName  <- askRoleName
-  tableInfo <- _tiRolePermInfoMap <$> askTableInfo table
-  pure $ _permSel =<< Map.lookup roleName tableInfo
-
 tablePermissions :: SelPermInfo -> TablePerms
 tablePermissions selectPermissions =
   RQL.TablePerm { RQL._tpFilter = fmapAnnBoolExp toUnpreparedValue $ spiFilter selectPermissions
@@ -93,7 +87,6 @@ tablePermissions selectPermissions =
   where
     toUnpreparedValue (PSESessVar pftype var) = P.UVSessionVar pftype var
     toUnpreparedValue (PSESQLExp sqlExp)      = P.UVLiteral sqlExp
-
 
 -- | Corresponds to an object type for table arguments:
 --
@@ -111,20 +104,32 @@ tableArgs
   -> m (FieldsParser 'Input n TableArgs)
 tableArgs table = do
   boolExpParser <- boolExp table
+  orderByParser <- orderByExp table
   pure $ do
-    limit  <- P.fieldOptional limitName  Nothing P.int
-    offset <- P.fieldOptional offsetName Nothing P.int
-    whereF <- P.fieldOptional whereName  Nothing boolExpParser
+    whereF  <- P.fieldOptional whereName   whereDesc   boolExpParser
+    orderBy <- P.fieldOptional orderByName orderByDesc orderByParser
+    limit   <- P.fieldOptional limitName   limitDesc   P.int
+    offset  <- P.fieldOptional offsetName  offsetDesc  P.int
     pure $ RQL.TableArgs
       { RQL._taWhere    = whereF
-      , RQL._taOrderBy  = Nothing -- TODO
+      , RQL._taOrderBy  = nonEmpty =<< orderBy
       , RQL._taLimit    = fromIntegral <$> limit
       , RQL._taOffset   = txtEncoder . PGValInteger <$> offset
       , RQL._taDistCols = Nothing -- TODO
       }
-  where limitName  = $$(G.litName "limit")
-        offsetName = $$(G.litName "offset")
-        whereName  = $$(G.litName "where")
+  where
+    -- TH splices mess up ApplicativeDo
+    -- see (FIXME: link to bug here)
+    whereName      = $$(G.litName "where")
+    orderByName    = $$(G.litName "order_by")
+    limitName      = $$(G.litName "limit")
+    offsetName     = $$(G.litName "offset")
+    distinctOnName = $$(G.litName "distinct_in")
+    whereDesc      = Just $ G.Description "filter the rows returned"
+    orderByDesc    = Just $ G.Description "sort the rows by one or more columns"
+    limitDesc      = Just $ G.Description "limit the number of rows returned"
+    offsetDesc     = Just $ G.Description "skip the first n rows. Use only with order_by"
+    distinctOnDesc = Just $ G.Description "distinct select on columns"
 
 
 -- | Corresponds to an object type for a table:
@@ -149,8 +154,7 @@ tableSelectionSet tableName selectPermissions stringifyNum = memoizeOn 'tableSel
     $ _tciFieldInfoMap tableInfo
   pure $ P.selectionSet name (_tciDescription tableInfo) $ catMaybes <$> sequenceA fields
 
--- | A field for a table. Returns 'Nothing' if the field’s name is not a valid
--- GraphQL 'Name'.
+-- | A field for a table.
 --
 -- > field_name(arg_name: arg_type, ...): field_type
 fieldSelection
