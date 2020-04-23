@@ -23,6 +23,12 @@ Along with the check for filtering rows that can be updated, you can now set a p
 
 (close #4142) (#4313)
 
+### console: support for Postgres [materialized views](https://www.postgresql.org/docs/current/rules-materializedviews.html)
+
+Postgres materialized views are views that are persisted in a table-like form. They are now supported in the Hasura Console, in the same way as views. They will appear on the 'Schema' page, under the 'Data' tab, in the 'Untracked tables or views' section.
+
+(close #91) (#4270)
+
 ### Bug fixes and improvements
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
@@ -82,10 +88,6 @@ The order, collapsed state of columns and rows limit is now persisted across pag
 - server: support reusing Postgres scalars in custom types (close #4125)
 
 ## `v1.2.0-beta.3`
-
-### console: support for Postgres [materialized views](https://www.postgresql.org/docs/current/rules-materializedviews.html)
-
-Postgres materialized views are views that are persisted in a table-like form. They are now supported in the Hasura Console, in the same way as views. They will appear on the 'Schema' page, under the 'Data' tab, in the 'Untracked tables or views' section.
 
 ### console: manage Postgres check constraints
 
