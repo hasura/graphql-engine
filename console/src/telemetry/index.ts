@@ -2,6 +2,7 @@ import endpoints from '../Endpoints';
 import globals from '../Globals';
 import { filterEventsBlockList, sanitiseUrl } from './filters';
 import { RUN_TIME_ERROR } from '../components/Main/Actions';
+import { REDUX_LOCATION_CHANGE_ACTION_TYPE } from '../constants';
 
 type ReduxAction = {
   type: string;
@@ -74,7 +75,7 @@ export const trackReduxAction = (action: ReduxAction, getState: any) => {
       data: null,
     };
 
-    const isLocationType = actionType === '@@router/LOCATION_CHANGE';
+    const isLocationType = actionType === REDUX_LOCATION_CHANGE_ACTION_TYPE;
     if (isLocationType) {
       // capture page views
       const payload = action.payload;

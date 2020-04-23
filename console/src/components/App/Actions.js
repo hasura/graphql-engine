@@ -53,9 +53,7 @@ export const requireAsyncGlobals = ({ dispatch }) => {
     Promise.all([
       dispatch(loadConsoleOpts()),
       dispatch(fetchServerConfig()),
-    ]).finally(() => {
-      callback();
-    });
+    ]).finally(callback);
   };
 };
 
@@ -106,6 +104,7 @@ const progressBarReducer = (state = defaultState, action) => {
         ...state,
         modalOpen: true,
         error: true,
+        ongoingRequest: false,
         connectionFailed: true,
       };
     default:

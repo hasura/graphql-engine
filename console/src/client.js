@@ -20,18 +20,13 @@ import reducer from './reducer';
 import globals from './Globals';
 import { trackReduxAction } from './telemetry';
 
-const { enableTelemetry } = window.__env;
-
-const telemetryEnabled =
-  enableTelemetry !== undefined && enableTelemetry === true;
-
 function analyticsLogger({ getState }) {
   return next => action => {
     // Call the next dispatch method in the middleware chain.
     const returnValue = next(action);
 
     // check if analytics tracking is enabled
-    if (telemetryEnabled) {
+    if (globals.enableTelemetry) {
       trackReduxAction(action, getState);
     }
     // This will likely be the action itself, unless

@@ -47,8 +47,7 @@ const App = ({
   if (connectionFailed) {
     connectionFailMsg = (
       <div
-        style={{ marginBottom: '0px' }}
-        className={styles.alertDanger + ' alert alert-danger'}
+        className={`${styles.alertDanger} ${styles.remove_margin_bottom} alert alert-danger `}
       >
         <strong>
           Hasura console is not able to reach your Hasura GraphQL engine
