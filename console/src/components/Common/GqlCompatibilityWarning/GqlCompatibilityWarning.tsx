@@ -9,7 +9,10 @@ export interface GqlCompatibilityWarningProps {
   className?: string;
 }
 
-const GqlCompatibilityWarning: React.FC<GqlCompatibilityWarningProps> = ({ identifier, className }) => {
+const GqlCompatibilityWarning: React.FC<GqlCompatibilityWarningProps> = ({
+  identifier,
+  className = '',
+}) => {
   const isGraphQLCompatible = gqlPattern.test(identifier);
 
   if (isGraphQLCompatible) {
