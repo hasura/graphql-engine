@@ -65,7 +65,6 @@ import {
   PERM_DEL_APPLY_SAME_PERM,
   toggleField,
   toggleAllFields,
-  getFilterKey,
   getBasePermissionsState,
   updatePermissionsState,
   deleteFromPermissionsState,
@@ -74,6 +73,7 @@ import {
   DELETE_PRESET,
   SET_PRESET_VALUE,
 } from '../TablePermissions/Actions';
+import { getDefaultFilterType } from '../TablePermissions/utils';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
   const modifyState = JSON.parse(JSON.stringify(modifyStateOrig));
@@ -278,7 +278,10 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         permissionsState: {
           ...modifyState.permissionsState,
-          custom_checked: true,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: true,
+          },
         },
       };
 
@@ -324,23 +327,26 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            action.filterType ||
+              getDefaultFilterType(modifyState.permissionsState.query),
             action.filter
           ),
-          custom_checked: false,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: false,
+          },
         },
       };
-
     case PERM_SET_FILTER:
       return {
         ...modifyState,
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            action.filterType ||
+              getDefaultFilterType(modifyState.permissionsState.query),
             action.filter
           ),
-          // custom_checked: true,
         },
       };
 
@@ -350,10 +356,14 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         permissionsState: {
           ...updatePermissionsState(
             modifyState.permissionsState,
-            getFilterKey(modifyState.permissionsState.query),
+            action.filterType ||
+              getDefaultFilterType(modifyState.permissionsState.query),
             {}
           ),
-          custom_checked: false,
+          custom_checked: {
+            ...modifyState.permissionsState.custom_checked,
+            [action.filterType]: false,
+          },
         },
       };
 

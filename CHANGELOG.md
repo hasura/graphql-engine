@@ -15,6 +15,14 @@ The above command will read ENV vars from `production.env` file present at the p
 
 (close #4129) (#4454)
 
+### console: allow setting post-update check in update permissions
+
+Along with the check for filtering rows that can be updated, you can now set a post-update permission check that needs to be satisfied by the updated rows after the update is made.
+
+<add-screenshot>
+
+(close #4142) (#4313)
+
 ### Bug fixes and improvements
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
