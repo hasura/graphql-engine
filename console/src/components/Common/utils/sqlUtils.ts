@@ -23,7 +23,7 @@ export const checkSchemaModification = (_sql: string) => {
   const sqlStatements = _sql
     .toLowerCase()
     .split(';')
-    .map(s=> s.trim());
+    .map(s => s.trim());
 
   sqlStatements.forEach((statement: string) => {
     if (
@@ -65,9 +65,12 @@ export const getDropConstraintSql = (
   return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}"`;
 };
 
-export const getCreatePkSql = ({ schemaName, tableName, selectedPkColumns, constraintName }: SqlUtilsOptions) => {
-  const { schemaName, tableName, selectedPkColumns, constraintName } = options;
-
+export const getCreatePkSql = ({
+  schemaName,
+  tableName,
+  selectedPkColumns,
+  constraintName,
+}: SqlUtilsOptions) => {
   // if no primary key columns provided, return empty query
   if (!selectedPkColumns || selectedPkColumns.length === 0) {
     return '';
@@ -75,14 +78,14 @@ export const getCreatePkSql = ({ schemaName, tableName, selectedPkColumns, const
 
   return `alter table "${schemaName}"."${tableName}"
     add constraint "${constraintName}"
-    primary key ( ${selectedPkColumns
-      .map(pkc => `"${pkc}"`)
-      .join(', ')} );`;
+    primary key ( ${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')} );`;
 };
 
-export const getDropPkSql = ({ schemaName, tableName, constraintName }: SqlUtilsOptions) => {
-  const { schemaName, tableName, constraintName } = options;
-
+export const getDropPkSql = ({
+  schemaName,
+  tableName,
+  constraintName,
+}: SqlUtilsOptions) => {
   return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`;
 };
 
