@@ -1,7 +1,7 @@
 import React from 'react';
 import { css, keyframes } from 'styled-components';
 
-import { StyledSpinner } from './Spinner';
+import { StyledSpinner, StyledSpinnerProps } from './Spinner';
 
 const smallSpinnerSize = 17;
 const largeSpinnerSize = 20;
@@ -38,10 +38,10 @@ const spinnerChildStyles = css`
 `;
 
 export type SpinnerProps = {
-  size: string
+  size: string;
 };
 
-export const Spinner: React.FC<SpinnerProps> = props => {
+export const Spinner: React.FC<SpinnerProps & StyledSpinnerProps> = props => {
   const { size } = props;
 
   const spinnerWidth = size === 'small' ? smallSpinnerSize : largeSpinnerSize;
@@ -49,7 +49,11 @@ export const Spinner: React.FC<SpinnerProps> = props => {
   const spinnerHeight = size === 'small' ? smallSpinnerSize : largeSpinnerSize;
 
   return (
-    <StyledSpinner {...props} height={spinnerHeight} width={spinnerWidth}>
+    <StyledSpinner
+      {...(props as SpinnerProps)}
+      height={spinnerHeight}
+      width={spinnerWidth}
+    >
       {Array.from(new Array(12), (_, i) => i).map(i => (
         <div
           key={i}

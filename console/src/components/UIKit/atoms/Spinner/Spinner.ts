@@ -13,17 +13,15 @@ import {
   SpaceProps,
   ShadowProps,
 } from 'styled-system';
-import { SpinnerProps } from '.';
 
-export const StyledSpinner = styled.div<
-  SpinnerProps &
-    ColorProps &
-    BorderProps &
-    TypographyProps &
-    LayoutProps &
-    SpaceProps &
-    ShadowProps
->`
+export type StyledSpinnerProps = ColorProps &
+  BorderProps &
+  TypographyProps &
+  LayoutProps &
+  SpaceProps &
+  ShadowProps;
+
+export const StyledSpinner = styled.div<StyledSpinnerProps>`
   position: relative;
 
   ${color}
