@@ -99,6 +99,9 @@ func (m *mockDriver) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	return
 }
 
+func (m *mockDriver) EnableCheckMetadataConsistency(enabled bool) {
+}
+
 func (m *mockDriver) GetInconsistentMetadata() (bool, []InconsistentMetadataInterface, error) {
 	return false, []InconsistentMetadataInterface{}, nil
 }

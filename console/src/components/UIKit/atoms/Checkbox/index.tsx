@@ -2,7 +2,11 @@ import React from 'react';
 
 import { StyledCheckBox } from './Checkbox';
 
-export const Checkbox = props => {
+export type CheckBoxProps = {
+  name: string;
+};
+
+export const Checkbox: React.FC<CheckBoxProps> = props => {
   const { children, name } = props;
 
   return (

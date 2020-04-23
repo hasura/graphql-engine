@@ -323,6 +323,10 @@ func (m *Migrate) SetMetadataPlugins(plugins types.MetadataPlugins) {
 	m.databaseDrv.SetMetadataPlugins(plugins)
 }
 
+func (m *Migrate) EnableCheckMetadataConsistency(enabled bool) {
+	m.databaseDrv.EnableCheckMetadataConsistency(enabled)
+}
+
 func (m *Migrate) ExportMetadata() (map[string][]byte, error) {
 	return m.databaseDrv.ExportMetadata()
 }

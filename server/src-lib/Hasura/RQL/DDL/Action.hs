@@ -249,8 +249,8 @@ runCreateActionPermission
 runCreateActionPermission createActionPermission = do
   actionInfo <- getActionInfo actionName
   void $ onJust (Map.lookup role $ _aiPermissions actionInfo) $ const $
-    throw400 AlreadyExists $ "permission for role: " <> role
-    <<> "is already defined on " <>> actionName
+    throw400 AlreadyExists $ "permission for role " <> role
+    <<> " is already defined on " <>> actionName
   persistCreateActionPermission createActionPermission
   buildSchemaCacheFor $ MOActionPermission actionName role
   pure successMsg
@@ -282,6 +282,7 @@ runDropActionPermission dropActionPermission = do
     throw400 NotExists $
     "permission for role: " <> role <<> " is not defined on " <>> actionName
   liftTx $ deleteActionPermissionFromCatalog actionName role
+  buildSchemaCacheFor $ MOActionPermission actionName role
   return successMsg
   where
     actionName = _dapAction dropActionPermission

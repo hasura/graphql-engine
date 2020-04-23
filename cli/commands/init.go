@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -183,6 +184,9 @@ func (o *InitOptions) createFiles() error {
 		}
 	}
 	if o.Endpoint != "" {
+		if _, err := url.ParseRequestURI(o.Endpoint); err != nil {
+			return errors.Wrap(err, "error validating endpoint URL")
+		}
 		config.ServerConfig.Endpoint = o.Endpoint
 	}
 	if o.AdminSecret != "" {
