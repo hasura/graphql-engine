@@ -69,9 +69,7 @@ The ``_eq`` (equal to) or the ``_neq`` (not equal to) operators are compatible w
 ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``,
 ``Date``/``Time``/``Timestamp``, etc.).
 
-.. note::
-
-  For more details on equality operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
+For more details on equality operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
 
 The following are examples of using the equality operators on different types.
 
@@ -210,9 +208,7 @@ The ``_gt`` (greater than), ``_lt`` (less than), ``_gte`` (greater than or equal
 ``_lte`` (less than or equal to) operators are compatible with any Postgres type other than ``json`` or ``jsonB``
 (like ``Integer``, ``Float``, ``Double``, ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
-.. note::
-
-  For more details on greater than or less than operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
+For more details on greater than or less than operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
 
 The following are examples of using these operators on different types:
 
@@ -339,9 +335,7 @@ The ``_in`` (in a list) and ``_nin`` (not in list) operators are used to compare
 They are compatible with any Postgres type other than ``json`` or ``jsonB`` (like ``Integer``, ``Float``, ``Double``,
 ``Text``, ``Boolean``, ``Date``/``Time``/``Timestamp``, etc.).
 
-.. note::
-
-  For more details on list based search operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
+For more details on list based search operators and Postgres equivalents, refer to the :ref:`API reference <generic_operators>`.
 
 The following are examples of using these operators on different types:
 
@@ -434,9 +428,7 @@ Text search or pattern matching operators (_like, _similar, etc.)
 The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators are used for
 pattern matching on string/text fields.
 
-.. note::
-
-  These operators behave exactly like their SQL counterparts. For more details on these operators and Postgres equivalents, refer to the :ref:`API reference <text_operators>`.
+These operators behave exactly like their SQL counterparts. For more details on these operators and Postgres equivalents, refer to the :ref:`API reference <text_operators>`.
 
 **Example: _like**
 
@@ -525,9 +517,7 @@ JSONB operators (_contains, _has_key, etc.)
 The ``_contains``, ``_contained_in``, ``_has_key``, ``_has_keys_any`` and ``_has_keys_all`` operators are used to filter
 based on ``JSONB`` columns.
 
-.. note::
-
-  For more details on JSONB operators and Postgres equivalents, refer to the :ref:`API reference <jsonb_operators>`.
+For more details on JSONB operators and Postgres equivalents, refer to the :ref:`API reference <jsonb_operators>`.
 
 **Example: _contains**
 
@@ -618,9 +608,7 @@ The ``_st_contains``, ``_st_crosses``, ``_st_equals``, ``_st_intersects``, ``_st
 
 ``_st_d_within`` and ``_st_intersects`` can be used on ``geography`` columns also.
 
-.. note::
-
-  For more details on spatial relationship operators and Postgres equivalents, refer to the :ref:`API reference <geometry_operators>`.
+For more details on spatial relationship operators and Postgres equivalents, refer to the :ref:`API reference <geometry_operators>`.
 
 Use JSON representation (see `GeoJSON <https://tools.ietf.org/html/rfc7946>`_) of ``geometry`` and ``geography`` values in
 ``variables`` as shown in the following examples:
@@ -729,9 +717,7 @@ Filter or check for null values (_is_null)
 
 Checking for null values can be achieved using the ``_is_null`` operator.
 
-.. note::
-
-  For more details on the ``_is_null`` operator and Postgres equivalent, refer to the :ref:`API reference <null_expression>`.
+For more details on the ``_is_null`` operator and Postgres equivalent, refer to the :ref:`API reference <null_expression>`.
 
 **Example: Filter null values in a field**
 
@@ -783,9 +769,7 @@ Intersect operators on RASTER columns (_st_intersects_rast, etc)
 Intersect operators on columns with ``raster`` type are supported.
 Please submit a feature request via `GitHub <https://github.com/hasura/graphql-engine>`__ if you want support for more functions.
 
-.. note::
-
-  For more details on intersect operators on raster columns and Postgres equivalents, refer to the :ref:`API reference <intersect_operators>`.
+For more details on intersect operators on raster columns and Postgres equivalents, refer to the :ref:`API reference <intersect_operators>`.
 
 **Example: _st_intersects_rast**
 
