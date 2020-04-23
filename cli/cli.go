@@ -30,6 +30,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"github.com/subosito/gotenv"
 	"golang.org/x/crypto/ssh/terminal"
 	"gopkg.in/yaml.v2"
 )
@@ -160,7 +161,7 @@ func (s *ServerConfig) GetVersionEndpoint() string {
 
 // ParseEndpoint ensures the endpoint is valid.
 func (s *ServerConfig) ParseEndpoint() error {
-	nurl, err := url.Parse(s.Endpoint)
+	nurl, err := url.ParseRequestURI(s.Endpoint)
 	if err != nil {
 		return err
 	}
@@ -206,6 +207,8 @@ type ExecutionContext struct {
 
 	// ExecutionDirectory is the directory in which command is being executed.
 	ExecutionDirectory string
+	// Envfile is the .env file to load ENV vars from
+	Envfile string
 	// MigrationDir is the name of directory where migrations are stored.
 	MigrationDir string
 	// MetadataDir is the name of directory where metadata files are stored.
@@ -412,6 +415,11 @@ func (ec *ExecutionContext) Validate() error {
 		return errors.Wrap(err, "validating current directory failed")
 	}
 
+	// load .env file
+	err = ec.loadEnvfile()
+	if err != nil {
+		return errors.Wrap(err, "loading .env file failed")
+	}
 	// set names of config file
 	ec.ConfigFile = filepath.Join(ec.ExecutionDirectory, "config.yaml")
 
@@ -586,6 +594,25 @@ func (ec *ExecutionContext) Spin(message string) {
 	} else {
 		ec.Logger.Println(message)
 	}
+}
+
+// loadEnvfile loads .env file
+func (ec *ExecutionContext) loadEnvfile() error {
+	envfile := filepath.Join(ec.ExecutionDirectory, ec.Envfile)
+	err := gotenv.Load(envfile)
+	if err != nil {
+		// return error if user provided envfile name
+		if ec.Envfile != ".env" {
+			return err
+		}
+		if !os.IsNotExist(err) {
+			ec.Logger.Warn(err)
+		}
+	}
+	if err == nil {
+		ec.Logger.Debug("ENV vars read from: ", envfile)
+	}
+	return nil
 }
 
 // setupLogger creates a default logger if context does not have one set.

@@ -2,6 +2,27 @@
 
 ## Next release
 
+### cli: add support for .env file
+
+ENV vars can now be read from .env file present at the project root directory. A global flag, `--envfile`, is added so you can explicitly provide the .env filename, which defaults to `.env` filename if no flag is provided.
+
+**Example**:
+
+```
+hasura console --envfile production.env
+```
+The above command will read ENV vars from `production.env` file present at the project root directory.
+
+(close #4129) (#4454)
+
+### console: allow setting post-update check in update permissions
+
+Along with the check for filtering rows that can be updated, you can now set a post-update permission check that needs to be satisfied by the updated rows after the update is made.
+
+<add-screenshot>
+
+(close #4142) (#4313)
+
 ### Bug fixes and improvements
 
 - server: add support for `_inc` on `real`, `double`, `numeric` and `money` (fix #3573)
@@ -18,6 +39,7 @@
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
+- docs: add reference docs for CLI (clsoe #4327) (#4408)
 
 ## `v1.2.0-beta.4`
 
