@@ -47,28 +47,34 @@ queryExp
 queryExp allTables stringifyNum = do
   selectExpParsers <- for (toList allTables) $ \tableName -> do
     selectPerms <- tableSelectPermissions tableName
-    for selectPerms $ \perms -> selectExp tableName perms stringifyNum
+    let desc = G.Description $ "fetch data from the table: \"" <> getTableTxt (qName tableName) <> "\""
+    for selectPerms $ \perms -> selectFromTable tableName (Just desc) perms stringifyNum
+    -- TODO: add aggregation tables and primary key queries?
   let queryFieldsParser = fmap (Map.fromList . catMaybes) $ sequenceA $ catMaybes selectExpParsers
   pure $ P.selectionSet $$(G.litName "Query") Nothing queryFieldsParser
 
-selectExp
+selectFromTable
   :: forall m n. (MonadSchema n m, MonadError QErr m)
   => QualifiedTable
+  -> Maybe G.Description
   -> SelPermInfo
   -> Bool
   -> m (FieldsParser 'Output n (Maybe (G.Name, SelectExp)))
-selectExp table selectPermissions stringifyNum = do
+selectFromTable table description selectPermissions stringifyNum = do
   name               <- qualifiedObjectToName table
   tableArgsParser    <- tableArgs table
   selectionSetParser <- tableSelectionSet table selectPermissions stringifyNum
-  pure $ P.selection name Nothing tableArgsParser selectionSetParser <&> fmap
-    \(aliasName, tableArgs, tableFields) -> (aliasName, RQL.AnnSelG
-      { RQL._asnFields   = tableFields
-      , RQL._asnFrom     = RQL.FromTable table
-      , RQL._asnPerm     = tablePermissions selectPermissions
-      , RQL._asnArgs     = tableArgs
-      , RQL._asnStrfyNum = stringifyNum
-      })
+  pure $ P.selection name description tableArgsParser selectionSetParser <&> fmap
+    \(aliasName, tableArgs, tableFields) ->
+      ( aliasName
+      , RQL.AnnSelG
+        { RQL._asnFields   = tableFields
+        , RQL._asnFrom     = RQL.FromTable table
+        , RQL._asnPerm     = tablePermissions selectPermissions
+        , RQL._asnArgs     = tableArgs
+        , RQL._asnStrfyNum = stringifyNum
+        }
+      )
 
 tableSelectPermissions
   :: forall m n. (MonadSchema n m)
@@ -160,7 +166,7 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
         let annotated = RQL.mkAnnColField columnInfo Nothing -- FIXME: support ColOp
         field <- P.column (pgiType columnInfo) (G.Nullability $ pgiIsNullable columnInfo)
         pure $ if Set.member (pgiColumn columnInfo) $ spiCols selectPermissions
-               then fmap (, annotated) <$> P.selection_ fieldName fieldDescription field
+               then fmap (, annotated) <$> P.selection_ fieldName (pgiDescription columnInfo) field
                else pure Nothing
       FIRelationship relationshipInfo -> do
         let otherTable = riRTable  relationshipInfo
@@ -169,13 +175,15 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
         tableSelectPermissions otherTable >>= \case
           Nothing    -> pure $ pure Nothing
           Just perms -> do
-            otherTableParser <- selectExp otherTable perms stringifyNum
+            -- FIXME: support aggregation
+            let desc = Just $ G.Description $ case riType relationshipInfo of
+                  ObjRel -> "An object relationship"
+                  ArrRel -> "An array relationship"
+            otherTableParser <- selectFromTable otherTable desc perms stringifyNum
             pure $ otherTableParser <&> fmap \(psName, selectExp) ->
               ( psName
               , let annotatedRelationship = RQL.AnnRelG relName colMapping selectExp
                 in case riType relationshipInfo of
-                  -- FIXME: where do we set the description?
-                  -- FIXME: support aggregation
                   ObjRel -> RQL.FObj annotatedRelationship
                   ArrRel -> RQL.FArr $ RQL.ASSimple annotatedRelationship
               )
@@ -184,10 +192,6 @@ fieldSelection fieldInfo selectPermissions stringifyNum =
   where
     aliasToFieldName = fmap $ fmap $ first $ FieldName . G.unName
 
-    fieldDescription = case fieldInfo of
-      FIColumn info        -> pgiDescription info
-      FIRelationship _     -> Nothing
-      FIComputedField info -> _cffDescription $ _cfiFunction info
 
 
 {- WIP notes on computed field
@@ -295,6 +299,10 @@ computedField ComputedFieldInfo{..} selectPermissions stringifyNum =
         CFRSetofTable tableName -> tableSelectPermissions tableName >>= \case
           Nothing    -> pure $ pure Nothing
           Just perms -> do
+            -- WIP note: this is very similar to selectFromTable
+            -- I wonder if it would make sense to merge them
+            -- I'm erring on the side of no for now, but to be reconsidered
+            -- when we clean the code after reaching feature parity
             selectArgsParser   <- tableArgs tableName
             selectionSetParser <- tableSelectionSet tableName perms stringifyNum
             let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
@@ -314,6 +322,6 @@ computedField ComputedFieldInfo{..} selectPermissions stringifyNum =
     fieldDescription = Just $ G.Description $ case _cffDescription _cfiFunction of
       Nothing                   -> defaultDescription
       Just (G.Description desc) -> T.unlines [desc, "", "", defaultDescription]
-      -- the original code contained a "\n" instead ^
+      -- WIP note: the original code contained one "\n" (^ here) instead
       -- I kept that behaviour but made it explicit
       -- I feel it's an error and should be only one ""?
