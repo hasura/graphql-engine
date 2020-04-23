@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import {
   loadInconsistentObjects,
   redirectToMetadataStatus,
@@ -11,15 +10,33 @@ import PageNotFound, { NotFoundError } from './PageNotFound';
 import RuntimeError from './RuntimeError';
 import { registerRunTimeError } from '../Main/Actions';
 
-class ErrorBoundary extends React.Component {
-  initialState = {
+export type DefaultState = {
+  inconsistentObjects: Array<object>;
+  ongoingRequest: boolean;
+  allowedQueries: Array<object>;
+}
+
+export interface ErrorBoundaryProps {
+  metadata: DefaultState;
+  dispatch: (arg: object) => Promise<object>;
+}
+
+type ErrorBoundaryState = {
+  hasError: boolean;
+  info: object | null;
+  error: Error | null;
+  type: string;
+} 
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
+  initialState: ErrorBoundaryState = {
     hasError: false,
     info: null,
     error: null,
     type: '500',
   };
 
-  constructor(props) {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
 
     this.state = this.initialState;
@@ -29,7 +46,7 @@ class ErrorBoundary extends React.Component {
     this.setState({ ...this.initialState });
   };
 
-  componentDidCatch(error, info) {
+  componentDidCatch(error: Error, info: object) {
     const { dispatch } = this.props;
 
     // for invalid path segment errors
@@ -62,7 +79,7 @@ class ErrorBoundary extends React.Component {
 
   render() {
     const { metadata } = this.props;
-    const { hasError, type, error } = this.state;
+    const { hasError, type, error } = this.state as ErrorBoundaryState;
 
     if (hasError && metadata.ongoingRequest) {
       return (
@@ -83,9 +100,5 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
-
-ErrorBoundary.propTypes = {
-  children: PropTypes.element,
-};
 
 export default ErrorBoundary;
