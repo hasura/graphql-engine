@@ -6,8 +6,9 @@ import {
   StyledTabListItem,
   StyledTabContent,
 } from './Tabs';
+import { Props } from './typings'
 
-export const Tabs = props => {
+export const Tabs = (props: Props) => {
   const [currentActiveTabIndex, changeCurrentActiveTab] = useState(0);
   const { tabsData } = props;
 

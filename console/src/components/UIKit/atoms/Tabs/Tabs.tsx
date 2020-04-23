@@ -9,6 +9,9 @@ import {
   shadow,
 } from 'styled-system';
 
+import { IStyledTabListItemProp, IStyledTabListProp, styledTabListDefaultProps, styledTabListItemDefaultProps } from './typings'
+
+
 const StyledTab = styled.div`
   ${color}
   ${border}
@@ -18,7 +21,8 @@ const StyledTab = styled.div`
   ${shadow}
 `;
 
-const StyledTabList = styled.ul`
+
+const StyledTabList = styled.ul<IStyledTabListProp>`
   list-style-type: none;
 
   ${border}
@@ -28,19 +32,13 @@ const StyledTabList = styled.ul`
   ${typography}
 `;
 
-StyledTabList.defaultProps = {
-  borderBottom: 1,
-  borderColor: 'grey.border',
-  display: 'flex',
-  justifyContent: 'flex-start',
-  alignItems: 'center',
-  px: 0,
-};
+StyledTabList.defaultProps = styledTabListDefaultProps
+
 const selectedBorderStyles = css`
   border-color: ${props => props.theme.colors.tab};
 `;
 
-const StyledTabListItem = styled.li`
+const StyledTabListItem = styled.li<IStyledTabListItemProp>`
   cursor: pointer;
 
   &:hover {
@@ -55,15 +53,7 @@ const StyledTabListItem = styled.li`
   ${props => (props.selected ? selectedBorderStyles : '')};
 `;
 
-StyledTabListItem.defaultProps = {
-  fontSize: 'tab',
-  mr: 40,
-  pb: 'sm',
-  fontWeight: 'medium',
-  borderBottom: 4,
-  borderColor: 'transparent',
-  color: 'grey.tab',
-};
+StyledTabListItem.defaultProps = styledTabListItemDefaultProps
 
 const StyledTabContent = styled.div`
   ${color}
