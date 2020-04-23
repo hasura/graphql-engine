@@ -131,7 +131,7 @@ $(makeLenses ''ActionDefinition)
 
 instance (J.FromJSON a, J.FromJSON b) => J.FromJSON (ActionDefinition a b) where
   parseJSON = J.withObject "ActionDefinition" $ \o -> do
-    _adArguments <- o J..: "arguments"
+    _adArguments <- o J..:? "arguments" J..!= []
     _adOutputType <- o J..: "output_type"
     _adHeaders <- o J..:? "headers" J..!= []
     _adForwardClientHeaders <- o J..:? "forward_client_headers" J..!= False
