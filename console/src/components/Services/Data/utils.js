@@ -390,7 +390,7 @@ export const fetchTableListQuery = options => {
     'and'
   );
 
-  // TODO: optimise this. Multiple OUTER JOINS causes data bloating
+  // TODO: optimise this.
   const runSql = `
 SELECT
   COALESCE(Json_agg(Row_to_json(info)), '[]' :: json) AS tables
@@ -733,3 +733,6 @@ WHERE
   AND relname = '${tableName}';
 `;
 };
+
+export const isColTypeString = colType =>
+  ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);

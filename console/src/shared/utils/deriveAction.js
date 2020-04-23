@@ -22,7 +22,7 @@ export const validateOperation = (operationString, clientSchema) => {
   try {
     operationAst = sdlParse(operationString);
   } catch (e) {
-    throw Error('invalid SDL');
+    throw Error('this seems to be an invalid GraphQL query');
   }
 
   const schemaValidationErrors = validate(clientSchema, operationAst);
@@ -67,11 +67,6 @@ export const validateOperation = (operationString, clientSchema) => {
   // throw error if no operation is being made
   if (!operationAst.definitions[0].selectionSet.selections.length) {
     throw Error('the given operation must ask for at least one root field');
-  }
-
-  // throw error if the operation does not have variables
-  if (!operationAst.definitions[0].variableDefinitions.length) {
-    throw Error('only operations using variables can be derived');
   }
 
   return operationAst;
@@ -244,6 +239,7 @@ const deriveAction = (
       arguments: actionArguments,
       output_type: actionOutputTypename,
     },
+    variables,
   };
 };
 

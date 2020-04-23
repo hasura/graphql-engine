@@ -2,6 +2,8 @@
 
 import { showErrorNotification } from '../../Services/Common/Notification';
 
+/* TYPE utils */
+
 export const isNotDefined = value => {
   return value === null || value === undefined;
 };
@@ -22,9 +24,33 @@ export const isString = value => {
   return typeof value === 'string';
 };
 
+export const isNumber = value => {
+  return typeof value === 'number';
+};
+
 export const isPromise = value => {
   if (!value) return false;
   return value.constructor.name === 'Promise';
+};
+
+export const isValidTemplateLiteral = literal_ => {
+  const literal = literal_.trim();
+  if (!literal) return false;
+  const templateStartIndex = literal.indexOf('{{');
+  const templateEndEdex = literal.indexOf('}}');
+  return (
+    templateStartIndex !== '-1' && templateEndEdex > templateStartIndex + 2
+  );
+};
+
+export const isJsonString = str => {
+  try {
+    JSON.parse(str);
+  } catch (e) {
+    return false;
+  }
+
+  return true;
 };
 
 export const isEmpty = value => {
@@ -72,57 +98,50 @@ export const isEqual = (value1, value2) => {
   return _isEqual;
 };
 
-export function isJsonString(str) {
-  try {
-    JSON.parse(str);
-  } catch (e) {
-    return false;
-  }
+/* ARRAY utils */
 
-  return true;
-}
+export const getLastArrayElement = array => {
+  if (!array) return null;
+  if (!array.length) return null;
+  return array[array.length - 1];
+};
 
-export function capitalize(str) {
-  return str[0].toUpperCase() + str.slice(1);
-}
+export const getFirstArrayElement = array => {
+  if (!array) return null;
+  return array[0];
+};
 
-export function getAllJsonPaths(json, leafKeys = [], prefix = '') {
-  const _paths = [];
+export const deleteArrayElementAtIndex = (array, index) => {
+  return array.splice(index, 1);
+};
 
-  const addPrefix = subPath => {
-    return prefix + (prefix && subPath ? '.' : '') + subPath;
-  };
+export const arrayDiff = (arr1, arr2) => {
+  return arr1.filter(v => !arr2.includes(v));
+};
 
-  const handleSubJson = (subJson, newPrefix) => {
-    const subPaths = getAllJsonPaths(subJson, leafKeys, newPrefix);
+/* JSON utils */
 
-    subPaths.forEach(subPath => {
-      _paths.push(subPath);
-    });
+/* TRANSFORM utils*/
 
-    if (!subPaths.length) {
-      _paths.push(newPrefix);
-    }
-  };
+export const capitalize = s => {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
 
-  if (isArray(json)) {
-    json.forEach((subJson, i) => {
-      handleSubJson(subJson, addPrefix(i.toString()));
-    });
-  } else if (isObject(json)) {
-    Object.keys(json).forEach(key => {
-      if (leafKeys.includes(key)) {
-        _paths.push({ [addPrefix(key)]: json[key] });
-      } else {
-        handleSubJson(json[key], addPrefix(key));
-      }
-    });
-  } else {
-    _paths.push(addPrefix(json));
-  }
+// return number with commas for readability
+export const getReadableNumber = number => {
+  if (!isNumber(number)) return number;
 
-  return _paths;
-}
+  return number.toLocaleString();
+};
+
+/* URL utils */
+
+export const getUrlSearchParamValue = param => {
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  return urlSearchParams.get(param);
+};
+
+/* ALERT utils */
 
 // use browser confirm and prompt to get user confirmation for actions
 export const getConfirmation = (
@@ -159,6 +178,8 @@ export const getConfirmation = (
 
   return isConfirmed;
 };
+
+/* FILE utils */
 
 export const uploadFile = (
   fileHandler,
@@ -287,30 +308,4 @@ export const getCurrTimeForFileName = () => {
     .padStart(3, '0');
 
   return [year, month, day, hours, minutes, seconds, milliSeconds].join('_');
-};
-
-export const isValidTemplateLiteral = literal_ => {
-  const literal = literal_.trim();
-  if (!literal) return false;
-  const templateStartIndex = literal.indexOf('{{');
-  const templateEndEdex = literal.indexOf('}}');
-  return (
-    templateStartIndex !== '-1' && templateEndEdex > templateStartIndex + 2
-  );
-};
-
-export const getUrlSearchParamValue = param => {
-  const urlSearchParams = new URLSearchParams(window.location.search);
-  return urlSearchParams.get(param);
-};
-
-export const getLastArrayElement = array => {
-  if (!array) return null;
-  if (!array.length) return null;
-  return array[array.length - 1];
-};
-
-export const getFirstArrayElement = array => {
-  if (!array) return null;
-  return array[0];
 };

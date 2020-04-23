@@ -21,6 +21,7 @@ import {
   getTablePermissionsRoute,
   getTableRelationshipsRoute,
 } from '../../../Common/utils/routesUtils';
+import { getReadableNumber } from '../../../Common/utils/jsUtils';
 
 const TableHeader = ({
   tabName,
@@ -38,7 +39,7 @@ const TableHeader = ({
 
   let countDisplay = '';
   if (!(count === null || count === undefined)) {
-    countDisplay = '(' + count + ')';
+    countDisplay = '(' + getReadableNumber(count) + ')';
   }
   const activeTab = tabNameMap[tabName];
 

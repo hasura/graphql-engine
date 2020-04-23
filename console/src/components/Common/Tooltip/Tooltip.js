@@ -7,8 +7,8 @@ const tooltipGen = message => {
   return <Tooltip id={message}>{message}</Tooltip>;
 };
 
-const ToolTip = ({ message }) => (
-  <OverlayTrigger placement="right" overlay={tooltipGen(message)}>
+const ToolTip = ({ message, placement = 'right' }) => (
+  <OverlayTrigger placement={placement} overlay={tooltipGen(message)}>
     <i
       className={`fa fa-question-circle + ${styles.tooltipIcon}`}
       aria-hidden="true"
