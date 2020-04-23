@@ -1,5 +1,6 @@
 module Hasura.GraphQL.Schema.Common
   ( qualifiedObjectToName
+  , textToName
   ) where
 
 import           Hasura.Prelude
@@ -15,3 +16,8 @@ qualifiedObjectToName objectName = do
   mkName textName `onNothing` throw400 ValidationFailed
     ("cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
     <<> " is not a valid GraphQL identifier")
+
+textToName :: MonadError QErr m => Text -> m Name
+textToName textName = mkName textName `onNothing` throw400 ValidationFailed
+                      ("cannot include " <> textName <<> " in the GraphQL schema because "
+                       <> " it is not a valid GraphQL identifier")

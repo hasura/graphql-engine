@@ -274,49 +274,46 @@ computedField
   -> SelPermInfo
   -> Bool
   -> m (FieldsParser 'Output n (Maybe (G.Name, AnnotatedField)))
-computedField ComputedFieldInfo{..} selectPermissions stringifyNum =
-  case G.mkName $ computedFieldNameToText $ _cfiName of
-    -- TODO: can we assume there is always a name instead?
-    Nothing        -> pure $ pure Nothing
-    Just fieldName -> do
-      functionArgsParser <- computedFieldFunctionArgs _cfiFunction
-      case _cfiReturnType of
-        CFRScalar scalarReturnType ->
-          if Set.member _cfiName $ spiScalarComputedFields selectPermissions
-          then do
-            let fieldArgsParser = do
-                  args  <- functionArgsParser
-                  colOp <- jsonPathArg scalarReturnType
-                  pure $ RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
-                    { RQL._cfssFunction  = _cffName _cfiFunction
-                    , RQL._cfssType      = scalarReturnType
-                    , RQL._cfssColumnOp  = colOp
-                    , RQL._cfssArguments = args
-                    }
-            dummyParser <- P.column (PGColumnScalar scalarReturnType) (G.Nullability False)
-            pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser
-          else pure $ pure Nothing
-        CFRSetofTable tableName -> tableSelectPermissions tableName >>= \case
-          Nothing    -> pure $ pure Nothing
-          Just perms -> do
-            -- WIP note: this is very similar to selectFromTable
-            -- I wonder if it would make sense to merge them
-            -- I'm erring on the side of no for now, but to be reconsidered
-            -- when we clean the code after reaching feature parity
-            selectArgsParser   <- tableArgs tableName
-            selectionSetParser <- tableSelectionSet tableName perms stringifyNum
-            let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
-            pure $ P.selection fieldName Nothing fieldArgsParser selectionSetParser
-              <&> fmap \(aliasName, (functionArgs, tableArgs), tableFields) ->
-                ( aliasName
-                , RQL.FComputedField $ RQL.CFSTable RQL.JASMultipleRows $ RQL.AnnSelG
-                  { RQL._asnFields   = tableFields
-                  , RQL._asnFrom     = RQL.FromFunction (_cffName _cfiFunction) functionArgs Nothing
-                  , RQL._asnPerm     = tablePermissions perms
-                  , RQL._asnArgs     = tableArgs
-                  , RQL._asnStrfyNum = stringifyNum
-                  }
-                )
+computedField ComputedFieldInfo{..} selectPermissions stringifyNum = do
+  fieldName <- textToName $ computedFieldNameToText $ _cfiName
+  functionArgsParser <- computedFieldFunctionArgs _cfiFunction
+  case _cfiReturnType of
+    CFRScalar scalarReturnType ->
+      if Set.member _cfiName $ spiScalarComputedFields selectPermissions
+      then do
+        let fieldArgsParser = do
+              args  <- functionArgsParser
+              colOp <- jsonPathArg scalarReturnType
+              pure $ RQL.FComputedField $ RQL.CFSScalar $ RQL.ComputedFieldScalarSel
+                { RQL._cfssFunction  = _cffName _cfiFunction
+                , RQL._cfssType      = scalarReturnType
+                , RQL._cfssColumnOp  = colOp
+                , RQL._cfssArguments = args
+                }
+        dummyParser <- P.column (PGColumnScalar scalarReturnType) (G.Nullability False)
+        pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser
+      else pure $ pure Nothing
+    CFRSetofTable tableName -> tableSelectPermissions tableName >>= \case
+      Nothing    -> pure $ pure Nothing
+      Just perms -> do
+        -- WIP note: this is very similar to selectFromTable
+        -- I wonder if it would make sense to merge them
+        -- I'm erring on the side of no for now, but to be reconsidered
+        -- when we clean the code after reaching feature parity
+        selectArgsParser   <- tableArgs tableName
+        selectionSetParser <- tableSelectionSet tableName perms stringifyNum
+        let fieldArgsParser = liftA2 (,) functionArgsParser selectArgsParser
+        pure $ P.selection fieldName Nothing fieldArgsParser selectionSetParser
+          <&> fmap \(aliasName, (functionArgs, tableArgs), tableFields) ->
+            ( aliasName
+            , RQL.FComputedField $ RQL.CFSTable RQL.JASMultipleRows $ RQL.AnnSelG
+              { RQL._asnFields   = tableFields
+              , RQL._asnFrom     = RQL.FromFunction (_cffName _cfiFunction) functionArgs Nothing
+              , RQL._asnPerm     = tablePermissions perms
+              , RQL._asnArgs     = tableArgs
+              , RQL._asnStrfyNum = stringifyNum
+              }
+            )
   where
     defaultDescription = "A computed field, executes function " <>> _cffName _cfiFunction
     fieldDescription = Just $ G.Description $ case _cffDescription _cfiFunction of
