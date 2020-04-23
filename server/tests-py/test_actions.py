@@ -117,6 +117,23 @@ class TestQueryActions:
         assert code == 200,resp
         check_query_f(hge_ctx, self.dir() + '/get_users_by_email_success.yaml')
 
+    # This test is to make sure that query actions work well with variables.
+    # Earlier the HGE used to add the query action to the plan cache, which
+    # results in interrmittent validation errors, like:
+    # {
+    #   "errors": [
+    #     {
+    #       "extensions": {
+    #         "path": "$.variableValues",
+    #         "code": "validation-failed"
+    #       },
+    #       "message": "unexpected variables: email"
+    #     }
+    #   ]
+    # }
+    def test_query_actions_with_variables(self, hge_ctx):
+        for _ in range(100):
+            self.test_query_action_success_output_object(hge_ctx)
 
 def mk_headers_with_secret(hge_ctx, headers={}):
     admin_secret = hge_ctx.hge_key
