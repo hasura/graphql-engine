@@ -149,7 +149,10 @@ const ColumnEditor = ({
             <ColumnTypeSelector
               options={alterOptions}
               onChange={updateColumnType}
-              value={columnTypePG && alterOptionsValueMap[columnTypePG]}
+              value={
+                (columnTypePG && alterOptionsValueMap[columnTypePG]) ||
+                columnTypePG
+              }
               colIdentifier={0}
               bsClass={`col-type-${0} modify_select`}
               styleOverrides={customSelectBoxStyles}
