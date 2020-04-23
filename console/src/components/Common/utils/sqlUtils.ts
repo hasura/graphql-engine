@@ -23,7 +23,7 @@ export const checkSchemaModification = (_sql: string) => {
   const sqlStatements = _sql
     .toLowerCase()
     .split(';')
-    .map((s: string) => s.trim());
+    .map(s=> s.trim());
 
   sqlStatements.forEach((statement: string) => {
     if (
