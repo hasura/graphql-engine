@@ -228,7 +228,7 @@ Example:
 
   hasura console --envfile production.env
 
-The above command will read ENV vars from ``production.env`` file present at the 
+The above command will read ENV vars from the ``production.env`` file present at the 
 project root directory. 
 
 .. note::
