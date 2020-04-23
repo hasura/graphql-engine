@@ -6,3 +6,5 @@ declare module '*.scss' {
 declare namespace SvgPanZoom {
   export interface Instance {}
 }
+
+declare module 'react-bootstrap/lib/Tooltip';
