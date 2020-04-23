@@ -80,7 +80,7 @@ export const getCreatePkSql = ({ schemaName, tableName, selectedPkColumns, const
       .join(', ')} );`;
 };
 
-export const getDropPkSql = (options: SqlUtilsOptions) => {
+export const getDropPkSql = ({ schemaName, tableName, constraintName }: SqlUtilsOptions) => {
   const { schemaName, tableName, constraintName } = options;
 
   return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}";`;
