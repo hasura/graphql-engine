@@ -7,8 +7,9 @@ import {
   space,
   shadow,
 } from 'styled-system';
+import { CheckBoxProps } from './index';
 
-export const StyledCheckBox = styled.div`
+export const StyledCheckBox = styled.div<CheckBoxProps>`
   input[type='checkbox'] {
     position: absolute;
     opacity: 0;

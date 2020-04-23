@@ -52,6 +52,8 @@ import {
   FaGithub,
   FaDownload,
 } from 'react-icons/fa';
+
+import { Theme } from '../../theme';
 import { StyledIcon } from './Icon';
 
 const iconReferenceMap = {
@@ -109,7 +111,13 @@ const iconReferenceMap = {
   download: FaDownload,
 };
 
-export const Icon = props => {
+export type IconProps = {
+  pointer: boolean;
+  size: number;
+  type: keyof Theme['icon'];
+};
+
+export const Icon: React.FC<IconProps> = props => {
   const { type } = props;
   const CurrentActiveIcon = iconReferenceMap[type]
     ? iconReferenceMap[type]
