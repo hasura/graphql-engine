@@ -39,6 +39,7 @@ Along with the check for filtering rows that can be updated, you can now set a p
 - console: prevent trailing spaces while creating new role (close #3871) (#4497)
 - docs: add API docs for using environment variables as webhook urls in event triggers
 - server: fix recreating action's permissions (close #4377)
+- docs: add reference docs for CLI (clsoe #4327) (#4408)
 
 ## `v1.2.0-beta.4`
 
