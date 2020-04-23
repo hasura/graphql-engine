@@ -217,7 +217,7 @@ reference manual.
 
 Alternatively, environment variables can also be read from the ``.env`` file, created manually 
 by the user, at the project root directory. A global flag, ``--envfile``, is added to 
-explicitly get the .env filename from users, which defaults to ``.env`` filename if 
+explicitly get the ``.env`` file created by the user, which defaults to ``.env`` if 
 no flag is provided. 
 
 It's important to note that this will not override an ENV variable that already exists.
