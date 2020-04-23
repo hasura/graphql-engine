@@ -91,5 +91,7 @@ export const getDropPkSql = (options: SqlUtilsOptions) => {
 export const terminateSql = (sql: string) => {
   const sqlSanitised = sql.trim();
 
-  return sqlSanitised[sqlSanitised.length - 1] !== ';' || sqlSanitised;
+  return sqlSanitised[sqlSanitised.length - 1] !== ';'
+    ? `${sqlSanitised};`
+    : sqlSanitised;
 };
