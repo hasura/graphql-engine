@@ -610,7 +610,7 @@ func (ec *ExecutionContext) loadEnvfile() error {
 		}
 	}
 	if err == nil {
-		ec.Logger.Info("ENV vars read from: ", envfile)
+		ec.Logger.Debug("ENV vars read from: ", envfile)
 	}
 	return nil
 }
