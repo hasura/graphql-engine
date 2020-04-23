@@ -428,7 +428,7 @@ Text search or pattern matching operators (_like, _similar, etc.)
 The ``_like``, ``_nlike``, ``_ilike``, ``_nilike``, ``_similar``, ``_nsimilar`` operators are used for
 pattern matching on string/text fields.
 
-These operators behave exactly like their SQL counterparts. For more details on these operators and Postgres equivalents, refer to the :ref:`API reference <text_operators>`.
+For more details on text search operators and Postgres equivalents, refer to the :ref:`API reference <text_operators>`.
 
 **Example: _like**
 
