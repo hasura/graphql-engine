@@ -228,6 +228,11 @@ const deriveAction = (
       }
     );
   });
+  if (!Object.keys(outputTypeFields).length) {
+    throw new Error(
+      `no scalar found in the selection set of your operation; only scalar fields of the operation get mapped onto the output type of the derived action`
+    );
+  }
 
   Object.keys(outputTypeFields).forEach(fieldName => {
     actionOutputType.fields.push({
