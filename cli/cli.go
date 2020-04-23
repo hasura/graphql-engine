@@ -161,7 +161,7 @@ func (s *ServerConfig) GetVersionEndpoint() string {
 
 // ParseEndpoint ensures the endpoint is valid.
 func (s *ServerConfig) ParseEndpoint() error {
-	nurl, err := url.Parse(s.Endpoint)
+	nurl, err := url.ParseRequestURI(s.Endpoint)
 	if err != nil {
 		return err
 	}
