@@ -99,6 +99,7 @@ mkWithScalarType = \case
   x@(PGValText _) -> WithScalarType PGText x
   x@(PGValCitext _) -> WithScalarType PGCitext x
   x@(PGValDate _) -> WithScalarType PGDate x
+  x@(PGValTimeStamp _) -> WithScalarType PGTimeStamp x
   x@(PGValTimeStampTZ _) -> WithScalarType PGTimeStampTZ x
   x@(PGValTimeTZ _) -> WithScalarType PGTimeTZ x
   x@(PGNull t) -> WithScalarType t x
