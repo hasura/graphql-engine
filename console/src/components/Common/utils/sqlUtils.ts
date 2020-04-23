@@ -6,7 +6,6 @@ interface SqlUtilsOptions {
   selectedPkColumns?: string[];
 }
 
-// requires editing other files to update call references, so will update in next iteration
 export const sqlEscapeText = (text: string) => {
   let escapedText = text;
 
