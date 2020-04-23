@@ -163,6 +163,7 @@
     "@types/react-redux": "^7.1.7",
     "@types/react-router": "^5.1.4",
     "@types/react-router-redux": "^5.0.18",
+    "@types/react-select": "^3.0.11",
     "@types/redux-devtools": "^3.0.47",
     "@types/redux-devtools-dock-monitor": "^1.1.33",
     "@types/redux-devtools-log-monitor": "^1.0.34",

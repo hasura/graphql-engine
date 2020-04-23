@@ -112,17 +112,21 @@
       "parser": "@typescript-eslint/parser",
       "files": ["*.ts", "*.tsx"],
       "rules": {
-        "jsx-a11y/label-has-for": [ 0, {
-          "required": {
-            "some": [ "nesting", "id"  ]
+        "jsx-a11y/label-has-for": [
+          0,
+          {
+            "required": {
+              "some": ["nesting", "id"]
+            }
           }
-        }],
+        ],
         "import/extensions": 0,
         "import/prefer-default-export": "off",
         "react/prop-types": "off",
         "react/jsx-filename-extension": 0,
         "no-unused-vars": "off",
         "camelcase": "off",
+        "no-param-reassign": "off",
         "@typescript-eslint/no-unused-vars": 2,
         "@typescript-eslint/indent": 0,
         "@typescript-eslint/explicit-function-return-type": 0,

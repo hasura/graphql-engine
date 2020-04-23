@@ -1,10 +1,10 @@
 import React from 'react';
 
-import SearchableSelectBox from '../../../Common/SearchableSelect/SearchableSelect';
 import CustomInputAutoSuggest from '../../../Common/CustomInputAutoSuggest/CustomInputAutoSuggest';
 
 import { getValidAlterOptions } from './utils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
+import { ColumnTypeSelector } from '../Common/Components/ColumnTypeSelector';
 
 const ColumnEditor = ({
   onSubmit,
@@ -30,7 +30,10 @@ const ColumnEditor = ({
       selectedProperties[colName].type
     );
   };
-  const columnTypePG = getColumnType();
+  let columnTypePG = getColumnType();
+  if (columnProperties.display_type_name === 'ARRAY') {
+    columnTypePG = columnTypePG.replace('_', '') + '[]';
+  }
 
   const customSelectBoxStyles = {
     dropdownIndicator: {
@@ -117,6 +120,14 @@ const ColumnEditor = ({
     );
   };
 
+  console.log({
+    alterOptions,
+    columnTypePG,
+    alterOptionsValueMap,
+    alterTypeOptions,
+    columnProperties,
+  });
+
   return (
     <div className={`${styles.colEditor} container-fluid`}>
       <form className="form-horizontal" onSubmit={onSubmit}>
@@ -135,14 +146,13 @@ const ColumnEditor = ({
         <div className={`${styles.display_flex} form-group`}>
           <label className={'col-xs-4'}>Type</label>
           <div className="col-xs-6">
-            <SearchableSelectBox
+            <ColumnTypeSelector
               options={alterOptions}
               onChange={updateColumnType}
               value={columnTypePG && alterOptionsValueMap[columnTypePG]}
+              colIdentifier={0}
               bsClass={`col-type-${0} modify_select`}
               styleOverrides={customSelectBoxStyles}
-              filterOption={'prefix'}
-              placeholder="column_type"
             />
           </div>
         </div>
