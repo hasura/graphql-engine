@@ -23,6 +23,7 @@ import qualified Data.HashMap.Strict                    as Map
 import qualified Data.HashSet                           as HS
 import qualified Data.Sequence                          as Seq
 import qualified Language.GraphQL.Draft.Syntax          as G
+import qualified Database.PG.Query                      as Q
 
 import           Hasura.GraphQL.Schema
 import           Hasura.GraphQL.Transport.HTTP.Protocol
@@ -30,6 +31,8 @@ import           Hasura.GraphQL.Validate.Context
 import           Hasura.GraphQL.Validate.Field
 import           Hasura.GraphQL.Validate.InputValue
 import           Hasura.GraphQL.Validate.Types
+import           Hasura.SQL.Value
+import           Hasura.SQL.Types
 import           Hasura.RQL.Types
 import           Hasura.RQL.Types.QueryCollection
 
@@ -114,8 +117,15 @@ showVars = showNames . fmap G.unVariable
 -- would be nice to be able to share more of the logic instead of duplicating it.)
 validateVariablesForReuse
   :: (MonadError QErr m)
-  => ReusableVariableTypes -> Maybe VariableValues -> m ReusableVariableValues
-validateVariablesForReuse (ReusableVariableTypes varTypes) varValsM =
+  => ReusableVariableTypes
+  -- ^ The required types of the query variables
+  -> Map.HashMap G.Variable (Q.PrepArg, PGScalarValue)
+  -- ^ Default values specified as part of the query
+  -> Maybe VariableValues
+  -- ^ Request-provided values
+  -> m (Map.HashMap G.Variable (Q.PrepArg, PGScalarValue))
+  -- ^ Parsed and validated values with defaults
+validateVariablesForReuse (ReusableVariableTypes varTypes) defaultVals varValsM =
   withPathK "variableValues" $ do
     let unexpectedVars = filter (not . (`Map.member` varTypes)) $ Map.keys varVals
     unless (null unexpectedVars) $
@@ -123,11 +133,16 @@ validateVariablesForReuse (ReusableVariableTypes varTypes) varValsM =
 
     flip Map.traverseWithKey varTypes $ \varName varType ->
       withPathK (G.unName $ G.unVariable varName) $ do
-        varVal <- onNothing (Map.lookup varName varVals) $
+        let varValM = Map.lookup varName varVals
+        parsedValM <- traverse (parsePGScalarValue varType) varValM
+        let preppedValM = fmap (\val -> (toBinaryValue val, pstValue val)) parsedValM
+        let defaultValM = Map.lookup varName defaultVals
+        let combinedM = preppedValM <|> defaultValM
+        onNothing combinedM $
           throwVE "expected a value for non-nullable variable"
           -- TODO: we don't have the graphql type
           -- <> " of type: " <> T.pack (show varType)
-        parsePGScalarValue varType varVal
+        --parsePGScalarValue varType varVal
     where
       varVals = fromMaybe Map.empty varValsM
 

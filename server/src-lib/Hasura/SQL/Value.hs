@@ -4,6 +4,7 @@ module Hasura.SQL.Value
   , pgScalarValueToJson
   , withConstructorFn
   , parsePGValue
+  , mkWithScalarType
 
   , TxtEncodedPGVal(..)
   , txtEncodedPGVal
@@ -82,6 +83,31 @@ data PGScalarValue
   | PGValUUID !UUID.UUID
   | PGValUnknown !T.Text
   deriving (Show, Eq)
+
+mkWithScalarType :: PGScalarValue -> WithScalarType PGScalarValue
+mkWithScalarType = \case
+  x@(PGValInteger _) -> WithScalarType PGInteger x
+  x@(PGValSmallInt _) -> WithScalarType PGSmallInt x
+  x@(PGValBigInt _) -> WithScalarType PGBigInt x
+  x@(PGValFloat _) -> WithScalarType PGFloat x
+  x@(PGValDouble _) -> WithScalarType PGDouble x
+  x@(PGValNumeric _) -> WithScalarType PGNumeric x
+  x@(PGValMoney _) -> WithScalarType PGMoney x
+  x@(PGValBoolean _) -> WithScalarType PGBoolean x
+  x@(PGValChar _) -> WithScalarType PGChar x
+  x@(PGValVarchar _) -> WithScalarType PGVarchar x
+  x@(PGValText _) -> WithScalarType PGText x
+  x@(PGValCitext _) -> WithScalarType PGCitext x
+  x@(PGValDate _) -> WithScalarType PGDate x
+  x@(PGValTimeStampTZ _) -> WithScalarType PGTimeStampTZ x
+  x@(PGValTimeTZ _) -> WithScalarType PGTimeTZ x
+  x@(PGNull t) -> WithScalarType t x
+  x@(PGValJSON _) -> WithScalarType PGJSON x
+  x@(PGValJSONB _) -> WithScalarType PGJSONB x
+  x@(PGValGeo _) -> WithScalarType PGGeography x
+  x@(PGValRaster _) -> WithScalarType PGRaster x
+  x@(PGValUUID _) -> WithScalarType PGUUID x
+  x@(PGValUnknown t) -> WithScalarType (PGUnknown t) x
 
 pgScalarValueToJson :: PGScalarValue -> Value
 pgScalarValueToJson = \case

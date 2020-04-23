@@ -285,8 +285,9 @@ reuseLiveQueryPlan
   -> m LiveQueryPlan
 reuseLiveQueryPlan pgExecCtx sessionVars queryVars reusablePlan = do
   let ReusableLiveQueryPlan parameterizedPlan syntheticVars queryVarTypes = reusablePlan
-  annVarVals <- GV.validateVariablesForReuse queryVarTypes queryVars
-  validatedVars <- validateVariables pgExecCtx annVarVals
+  -- TODO: is it correct that we don't take default values? This seems odd to me.
+  annVarVals <- GV.validateVariablesForReuse queryVarTypes Map.empty queryVars
+  validatedVars <- validateVariables pgExecCtx $ Map.map (mkWithScalarType . snd) annVarVals
   pure $ LiveQueryPlan parameterizedPlan (CohortVariables sessionVars validatedVars syntheticVars)
 
 data LiveQueryPlanExplanation

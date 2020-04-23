@@ -43,6 +43,10 @@ type PlanVariables = Map.HashMap G.Variable Int
 -- prepared argument and not the binary encoding in PG format
 type PrepArgMap = IntMap.IntMap (Q.PrepArg, PGScalarValue)
 
+horizontalComposition :: PlanVariables -> PrepArgMap -> Map.HashMap G.Variable (Q.PrepArg, PGScalarValue)
+horizontalComposition plan prep =
+  Map.mapMaybe (\index -> IntMap.lookup index prep) plan
+
 data PGPlan
   = PGPlan
   { _ppQuery     :: !Q.Query
@@ -85,18 +89,19 @@ instance J.ToJSON ReusableQueryPlan where
 
 withPlan
   :: (MonadError QErr m)
-  => SessionVariables -> PGPlan -> ReusableVariableValues -> m PreparedSql
+  => SessionVariables -> PGPlan -> Map.HashMap G.Variable (Q.PrepArg, PGScalarValue)
+  -> m SafePreparedSql
 withPlan usrVars (PGPlan q reqVars prepMap) annVars = do
   prepMap' <- foldM getVar prepMap (Map.toList reqVars)
-  let args = withSessionVariables usrVars $ IntMap.elems prepMap'
-  return $ PreparedSql q args
+  let args = withUserVars usrVars $ DataArgs $ IntMap.elems prepMap'
+  return $ SafePreparedSql q args
   where
     getVar accum (var, prepNo) = do
       let varName = G.unName $ G.unVariable var
       colVal <- onNothing (Map.lookup var annVars) $
         throw500 $ "missing variable in annVars : " <> varName
-      let prepVal = (toBinaryValue colVal, pstValue colVal)
-      return $ IntMap.insert prepNo prepVal accum
+
+      return $ IntMap.insert prepNo colVal accum
 
 -- turn the current plan into a transaction
 mkCurPlanTx
@@ -108,25 +113,27 @@ mkCurPlanTx usrVars fldPlans = do
   -- generate the SQL and prepared vars or the bytestring
   resolved <- forM fldPlans $ \(alias, fldPlan) -> do
     fldResp <- case fldPlan of
-      RFPRaw resp                      -> return $ RRRaw resp
+      RFPRaw resp                      -> return $ SRRRaw resp
       RFPPostgres (PGPlan q _ prepMap) -> do
-        let args = withSessionVariables usrVars $ IntMap.elems prepMap
-        return $ RRSql $ PreparedSql q args
+        let args = withSessionVariables usrVars $ DataArgs $ IntMap.elems prepMap
+        return $ SRRSql $ SafePreparedSql q args
     return (alias, fldResp)
 
   return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
 
-withSessionVariables :: SessionVariables -> [(Q.PrepArg, PGScalarValue)] -> [(Q.PrepArg, PGScalarValue)]
-withSessionVariables usrVars list =
-  let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
-      prepArg = Q.toPrepVal (Q.AltJ usrVars)
-  in (prepArg, usrVarsAsPgScalar):list
-
+-- | A plan of variables getting passed to a prepared statement. Note
+-- that the argument indices are 1-indexed in PostgreSQL, and we
+-- always pass the current user session variable as a first argument,
+-- so that the next argument number should be 2, as is reflected in
+-- 'initPlanningSt'.
 data PlanningSt
   = PlanningSt
   { _psArgNumber :: !Int
+  -- ^ Next index for a newly added variable
   , _psVariables :: !PlanVariables
+  -- ^ Mapping from variable names to variable indices
   , _psPrepped   :: !PrepArgMap
+  -- ^ Mapping from variable indices to default values including debug info
   }
 
 initPlanningSt :: PlanningSt
@@ -176,6 +183,7 @@ prepareWithPlan = \case
   R.UVSQL sqlExp -> pure sqlExp
   R.UVSession    -> pure currentSession
   where
+    -- We always pass the session variable as the first argument
     currentSession = S.SEPrep 1
 
 convertQuerySelSet
@@ -221,12 +229,13 @@ queryOpFromPlan
   -> ReusableQueryPlan
   -> m (LazyRespTx, GeneratedSqlMap)
 queryOpFromPlan usrVars varValsM (ReusableQueryPlan varTypes fldPlans) = do
-  validatedVars <- GV.validateVariablesForReuse varTypes varValsM
   -- generate the SQL and prepared vars or the bytestring
   resolved <- forM fldPlans $ \(alias, fldPlan) ->
     (alias,) <$> case fldPlan of
-      RFPRaw resp        -> return $ RRRaw resp
-      RFPPostgres pgPlan -> RRSql <$> withPlan usrVars pgPlan validatedVars
+      RFPRaw resp -> return $ SRRRaw resp
+      RFPPostgres pgPlan@(PGPlan _ plan prep) -> do
+        validatedVars <- GV.validateVariablesForReuse varTypes (horizontalComposition plan prep) varValsM
+        SRRSql <$> withPlan usrVars pgPlan validatedVars
 
   return (mkLazyRespTx resolved, mkGeneratedSqlMap resolved)
 
@@ -237,6 +246,31 @@ data PreparedSql
   , _psPrepArgs :: ![(Q.PrepArg, PGScalarValue)]
     -- ^ The value is (Q.PrepArg, PGScalarValue) because we want to log the human-readable value of the
     -- prepared argument (PGScalarValue) and not the binary encoding in PG format (Q.PrepArg)
+  }
+
+newtype DataArgs
+  = DataArgs { unDataArgs :: [(Q.PrepArg, PGScalarValue)] }
+-- ^ The value is (Q.PrepArg, PGScalarValue) because we want to log the human-readable value of the
+-- prepared argument (PGScalarValue) and not the binary encoding in PG format (Q.PrepArg)
+
+newtype UserArgs = UserArgs (Q.PrepArg, PGScalarValue)
+
+data SafePreparedArgs
+  = SafePreparedArgs
+  { _spaUserArgs:: UserArgs
+  , _spaDataArgs:: DataArgs
+  }
+
+withUserVars :: UserVars -> DataArgs -> SafePreparedArgs
+withUserVars usrVars dataArgs =
+  let usrVarsAsPgScalar = PGValJSON $ Q.JSON $ J.toJSON usrVars
+      prepArg = Q.toPrepVal (Q.AltJ usrVars)
+  in SafePreparedArgs (UserArgs (prepArg, usrVarsAsPgScalar)) dataArgs
+
+data SafePreparedSql
+  = SafePreparedSql
+  { _spsQuery    :: !Q.Query
+  , _spsPrepArgs :: !SafePreparedArgs
   }
 
 -- | Required to log in `query-log`
@@ -254,23 +288,31 @@ data ResolvedQuery
   = RRRaw !B.ByteString
   | RRSql !PreparedSql
 
+data SafeResolvedQuery
+  = SRRRaw !B.ByteString
+  | SRRSql !SafePreparedSql
+
 -- | The computed SQL with alias which can be logged. Nothing here represents no
 -- SQL for cases like introspection responses. Tuple of alias to a (maybe)
 -- prepared statement
 type GeneratedSqlMap = [(G.Alias, Maybe PreparedSql)]
 
-mkLazyRespTx :: [(G.Alias, ResolvedQuery)] -> LazyRespTx
+mkLazyRespTx :: [(G.Alias, SafeResolvedQuery)] -> LazyRespTx
 mkLazyRespTx resolved =
   fmap encJFromAssocList $ forM resolved $ \(alias, node) -> do
     resp <- case node of
-      RRRaw bs                   -> return $ encJFromBS bs
-      RRSql (PreparedSql q args) -> liftTx $ asSingleRowJsonResp q (map fst args)
+      SRRRaw bs
+        -> return $ encJFromBS bs
+      SRRSql (SafePreparedSql q (SafePreparedArgs (UserArgs userArgs) (DataArgs dataArgs)))
+        -> liftTx $ asSingleRowJsonResp q (map fst (userArgs:dataArgs))
     return (G.unName $ G.unAlias alias, resp)
 
-mkGeneratedSqlMap :: [(G.Alias, ResolvedQuery)] -> GeneratedSqlMap
+mkGeneratedSqlMap :: [(G.Alias, SafeResolvedQuery)] -> GeneratedSqlMap
 mkGeneratedSqlMap resolved =
   flip map resolved $ \(alias, node) ->
     let res = case node of
-                RRRaw _  -> Nothing
-                RRSql ps -> Just ps
+                SRRRaw _
+                  -> Nothing
+                SRRSql (SafePreparedSql q (SafePreparedArgs (UserArgs userArgs) (DataArgs dataArgs)))
+                  -> Just (PreparedSql q (userArgs:dataArgs))
     in (alias, res)
