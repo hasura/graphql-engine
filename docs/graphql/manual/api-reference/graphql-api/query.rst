@@ -436,10 +436,6 @@ Operator
      - ``=``
    * - ``_neq``
      - ``<>``
-   * - ``_in``
-     - ``IN``
-   * - ``_nin``
-     - ``NOT IN`` 
    * - ``_gt``
      - ``>``
    * - ``_lt``
@@ -447,9 +443,13 @@ Operator
    * - ``_gte``
      - ``>=``
    * - ``_lte``
-     - ``<=``   
+     - ``<=``  
+   * - ``_in``
+     - ``IN``
+   * - ``_nin``
+     - ``NOT IN``  
 
-(For more details on these operators, refer to the `Postgres docs <https://www.postgresql.org/docs/9.0/functions-comparison.html>`__.)
+(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/9.0/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/9.6/functions-comparisons.html>`_.)
 
 .. _text_operators:
 
@@ -547,7 +547,7 @@ Operator
    * - ``_st_touches``
      - ``ST_Touches(column, input)``
    * - ``_st_within``
-     -  ``ST_Within(column, input)``
+     - ``ST_Within(column, input)``
    * - ``_st_d_within``
      - ``ST_DWithin(column, input)``
 

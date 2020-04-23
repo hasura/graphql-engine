@@ -436,7 +436,7 @@ pattern matching on string/text fields.
 
 .. note::
 
-  For more details on search or pattern matching operators and Postgres equivalents, refer to the :ref:`API reference <text_operators>`.
+  These operators behave exactly like their SQL counterparts. For more details on these operators and Postgres equivalents, refer to the :ref:`API reference <text_operators>`.
 
 **Example: _like**
 
