@@ -299,10 +299,6 @@ Operator
      - ``=``
    * - ``"$ne"``
      - ``<>``
-   * - ``"$in"``
-     - ``IN``
-   * - ``"$nin"``
-     - ``NOT IN``
    * - ``"$gt"``
      - ``>``
    * - ``"$lt"``
@@ -311,8 +307,12 @@ Operator
      - ``>=``
    * - ``"$lte"``
      - ``<=``
+   * - ``"$in"``
+     - ``IN``
+   * - ``"$nin"``
+     - ``NOT IN``
 
-(For more details on these operators, refer to the `Postgres docs <https://www.postgresql.org/docs/9.0/functions-comparison.html>`__.)
+(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/9.0/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/9.6/functions-comparisons.html>`_.)
 
 **Text related operators :**
 
