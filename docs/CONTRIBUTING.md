@@ -106,11 +106,11 @@ without losing any visible quality.
 syntax in which case you'll have to set the language type to `none` to avoid warnings during builds.
 - Use `:ref:` instead of `:doc:` to link to pages to avoid having to set the relative path and chances of broken links
 while moving pages
-- For external links, add a double `_` in the end, e.g. \``Google <https://www.google.com/>__`\`
 
 ### Reference links
 
-- If you link to an external resource, make sure to link to the most current version of the same, e.g. `https://www.postgresql.org/docs/current/functions-comparison.html` rather than `https://www.postgresql.org/docs/8.3/functions-comparison.html`
+- For external links, add a double `_` in the end to avoid `Duplicate explicit target name` warnings  , e.g. \``Google <https://www.google.com/>__`\`
+- If you link to an external resource, make sure to link to the most current version of the same, e.g. `https://www.postgresql.org/docs/current/intro-whatis.html` rather than `https://www.postgresql.org/docs/9.6/intro-whatis.html`
 
 ### Pre-commit checks
 - Just before committing your changes, delete your local `_build` folder completely and then build docs again. Scan 
