@@ -1,5 +1,3 @@
-import { CSSProp } from 'styled-components';
-
 declare module '*.scss' {
   const content: { [className: string]: string };
   export default content;
@@ -8,9 +6,10 @@ declare module '*.scss' {
 declare namespace SvgPanZoom {
   export interface Instance {}
 }
-declare module 'react' {
+
+declare namespace React {
   interface HTMLAttributes<T> extends DOMAttributes<T> {
-    css?: CSSProp;
+    css?: import('styled-components').CSSProp;
   }
 }
 
