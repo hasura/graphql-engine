@@ -65,7 +65,7 @@ export const getDropConstraintSql = (
   return `alter table "${schemaName}"."${tableName}" drop constraint "${constraintName}"`;
 };
 
-export const getCreatePkSql = (options: SqlUtilsOptions) => {
+export const getCreatePkSql = ({ schemaName, tableName, selectedPkColumns, constraintName }: SqlUtilsOptions) => {
   const { schemaName, tableName, selectedPkColumns, constraintName } = options;
 
   // if no primary key columns provided, return empty query
