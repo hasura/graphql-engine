@@ -78,7 +78,7 @@ export const getCreatePkSql = (options: SqlUtilsOptions) => {
   return `alter table "${schemaName}"."${tableName}"
     add constraint "${constraintName}"
     primary key ( ${selectedPkColumns
-      .map((pkc: string) => `"${pkc}"`)
+      .map(pkc => `"${pkc}"`)
       .join(', ')} );`;
 };
 
