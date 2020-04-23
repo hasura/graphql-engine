@@ -132,7 +132,7 @@ class TestQueryActions:
     #   ]
     # }
     def test_query_action_should_not_throw_validation_error(self, hge_ctx):
-        for _ in range(100):
+        for _ in range(25):
             self.test_query_action_success_output_object(hge_ctx)
 
 def mk_headers_with_secret(hge_ctx, headers={}):
