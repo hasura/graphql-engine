@@ -6,7 +6,6 @@ interface SqlUtilsOptions {
   selectedPkColumns?: string[];
 }
 
-// all function could benefit from above interface for uniform function systax
 // requires editing other files to update call references, so will update in next iteration
 export const sqlEscapeText = (text: string) => {
   let escapedText = text;
