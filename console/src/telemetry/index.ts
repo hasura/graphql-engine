@@ -3,14 +3,7 @@ import globals from '../Globals';
 import { filterEventsBlockList, sanitiseUrl } from './filters';
 import { RUN_TIME_ERROR } from '../components/Main/Actions';
 import { REDUX_LOCATION_CHANGE_ACTION_TYPE } from '../constants';
-
-type ReduxAction = {
-  type: string;
-  payload: {
-    pathname: string;
-  };
-  data: any;
-};
+import { GetReduxState, ReduxAction } from '../types';
 
 interface TelemetryGlobals {
   serverVersion: string;
@@ -58,7 +51,10 @@ const sendEvent = (payload: any) => {
   }
 };
 
-export const trackReduxAction = (action: ReduxAction, getState: any) => {
+export const trackReduxAction = (
+  action: ReduxAction,
+  getState: GetReduxState
+) => {
   const actionType = action.type;
   // filter events
   if (!filterEventsBlockList.includes(actionType)) {

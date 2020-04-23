@@ -144,9 +144,7 @@ export const requireConsoleOpts = ({ dispatch }) => (
   replaceState,
   callback
 ) => {
-  dispatch(loadConsoleOpts()).finally(() => {
-    callback();
-  });
+  dispatch(loadConsoleOpts()).finally(callback);
 };
 
 const telemetryReducer = (state = defaultTelemetryState, action) => {
