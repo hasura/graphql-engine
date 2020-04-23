@@ -449,7 +449,7 @@ Operator
    * - ``_nin``
      - ``NOT IN``  
 
-(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/9.0/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/9.6/functions-comparisons.html>`_.)
+(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/current/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/current/functions-comparisons.html>`_.)
 
 .. _text_operators:
 
@@ -487,7 +487,7 @@ Operator
    * - ``_is_null`` (takes true/false as values)
      - ``IS NULL``
 
-(For more details on the ``IS NULL`` expression, refer to the `Postgres docs <https://www.postgresql.org/docs/8.3/functions-comparison.html>`__.)
+(For more details on the ``IS NULL`` expression, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-comparison.html>`__.)
 
 .. _type_casting:
 
@@ -501,7 +501,7 @@ Operator
    * - ``_cast`` (takes a CastExp_ as a value)
      - ``::``
 
-(For more details on type casting, refer to the `Postgres docs <https://www.postgresql.org/docs/9.2/sql-createcast.html>`__.)
+(For more details on type casting, refer to the `Postgres docs <https://www.postgresql.org/docs/current/sql-createcast.html>`__.)
 
 .. _jsonb_operators:
 

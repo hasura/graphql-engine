@@ -312,7 +312,7 @@ Operator
    * - ``"$nin"``
      - ``NOT IN``
 
-(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/9.0/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/9.6/functions-comparisons.html>`_.)
+(For more details, refer to the Postgres docs for `comparison operators <https://www.postgresql.org/docs/current/functions-comparison.html>`__ and `list based search operators <https://www.postgresql.org/docs/current/functions-comparisons.html>`_.)
 
 **Text related operators :**
 
@@ -356,7 +356,7 @@ Operator
    * - ``"$clte"``
      - ``<=``
 
-(For more details on comparison operators, refer to the `Postgres docs <https://www.postgresql.org/docs/9.0/functions-comparison.html>`__.)
+(For more details on comparison operators, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-comparison.html>`__.)
 
 **Checking for NULL values :**
 
@@ -368,7 +368,7 @@ Operator
    * - ``_is_null`` (takes true/false as values)
      - ``IS NULL``
 
-(For more details on the ``IS NULL`` expression, refer to the `Postgres docs <https://www.postgresql.org/docs/8.3/functions-comparison.html>`__.)
+(For more details on the ``IS NULL`` expression, refer to the `Postgres docs <https://www.postgresql.org/docs/current/functions-comparison.html>`__.)
 
 **JSONB operators :**
 
