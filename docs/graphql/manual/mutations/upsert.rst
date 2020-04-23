@@ -71,14 +71,13 @@ the columns specified in ``update_columns``:
       insert_article (
         objects: [
           {
-            id: 2,
-            title: "ex quis mattis",
-            content: "Pellentesque lobortis quam non leo faucibus efficitur",
+            title: "Article 1",
+            content: "Article 1 content",
             published_on: "2018-10-12"
           }
         ],
         on_conflict: {
-          constraint: article_pkey,
+          constraint: article_title_key,
           update_columns: [title, content]
         }
       ) {
@@ -96,10 +95,10 @@ the columns specified in ``update_columns``:
         "insert_article": {
           "returning": [
             {
-              "id": 2,
-              "title": "ex quis mattis",
-              "content": "Pellentesque lobortis quam non leo faucibus efficitur",
-              "published_on": "2018-06-10"
+              "id": 1,
+              "title": "Article 1",
+              "content": "Article 1 content",
+              "published_on": "2018-10-12"
             }
           ]
         }
@@ -121,12 +120,12 @@ the columns specified in ``update_columns`` only if the provided ``where`` condi
       insert_article (
         objects: [
           {
-            id: 2,
+            title: "Article 2",
             published_on: "2018-10-12"
           }
         ],
         on_conflict: {
-          constraint: article_pkey,
+          constraint: article_title_key,
           update_columns: [published_on],
           where: {
             published_on: {_lt: "2018-10-12"}
@@ -166,7 +165,7 @@ the author table or, if the unique constraint ``author_name_key`` is violated, i
     mutation upsert_author {
       insert_author(
         objects: [
-          {name: "John", id: 10}
+          { name: "John" }
         ],
         on_conflict: {
           constraint: author_name_key,
@@ -199,18 +198,16 @@ You can specify the ``on_conflict`` clause while inserting nested objects:
       insert_author(
         objects: [
           {
-            id: 10,
             name: "John",
             articles: {
               data: [
                 {
-                  id: 1,
-                  title: "Article 1 title",
-                  content: "Article 1 content"
+                  title: "Article 3",
+                  content: "Article 3 content"
                 }
               ],
               on_conflict: {
-                constraint: article_pkey,
+                constraint: article_title_key,
                 update_columns: [title, content]
               }
             }
