@@ -148,7 +148,7 @@ Here are a couple of examples:
     mutation add_author {
       insert_author(
         objects: [
-          {name: "Jane"}
+          { name: "Jane" }
         ]
       ) {
         affected_rows
